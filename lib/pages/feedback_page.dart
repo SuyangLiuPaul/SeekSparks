@@ -2,17 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 
-import 'package:yswords/constants/ui_strings.dart';
-import 'package:yswords/models/app_settings.dart';
-import 'package:yswords/providers/main_provider.dart';
-import 'package:yswords/services/cloud_auth_service.dart';
-import 'package:yswords/services/feedback_service.dart';
-import 'package:yswords/services/link_opener.dart';
-import 'package:yswords/utils/clipboard_helper.dart';
-import 'package:yswords/widgets/home_icon_button.dart';
-import 'package:yswords/widgets/liquid_glass.dart';
-import 'package:yswords/widgets/localized_back_button.dart';
-import 'package:yswords/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/models/app_settings.dart';
+import 'package:seeksparks/providers/main_provider.dart';
+import 'package:seeksparks/services/cloud_auth_service.dart';
+import 'package:seeksparks/services/feedback_service.dart';
+import 'package:seeksparks/services/link_opener.dart';
+import 'package:seeksparks/utils/clipboard_helper.dart';
+import 'package:seeksparks/widgets/home_icon_button.dart';
+import 'package:seeksparks/widgets/liquid_glass.dart';
+import 'package:seeksparks/widgets/localized_back_button.dart';
+import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 
 /// 2026-05-07 (v12 → v16): user-facing feedback form. The user
 /// (paulsyliu@gmail.com) wanted a single place inside the app
@@ -141,13 +141,13 @@ class _FeedbackPageState extends State<FeedbackPage> {
     if (mp.currentBook != null && mp.currentChapter != null) {
       lines.add('Last position: ${mp.currentBook} ${mp.currentChapter}');
     }
-    lines.add('App: YsWords (web)');
+    lines.add('App: SeekSparks (web)');
     return lines.join('\n');
   }
 
   String _composeSubject(String locale) {
     final tag = _categoryShort(_category);
-    return 'YsWords feedback [$tag]';
+    return 'SeekSparks feedback [$tag]';
   }
 
   /// Compose a position-line metadata snippet ("创世纪 1") for the

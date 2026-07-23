@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:yswords/services/realtime_db_sync_service.dart';
+import 'package:seeksparks/services/realtime_db_sync_service.dart';
 
 void main() {
   final svc = RealtimeDbSyncService.instance;

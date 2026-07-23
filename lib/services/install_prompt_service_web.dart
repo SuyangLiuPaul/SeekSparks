@@ -1,5 +1,5 @@
 /// Web implementation of the install-prompt service. Reads
-/// `window.yswordsInstall` (set up by `web/index.html`) to detect
+/// `window.seekSparksInstall` (set up by `web/index.html`) to detect
 /// whether the user is already installed AND whether Chrome /
 /// Edge has fired `beforeinstallprompt`.
 library;
@@ -7,10 +7,10 @@ library;
 import 'dart:js_interop';
 
 import 'package:web/web.dart' as web;
-import 'package:yswords/services/install_prompt_service.dart';
+import 'package:seeksparks/services/install_prompt_service.dart';
 
-@JS('yswordsInstall')
-external _YsInstall? get _yswordsInstall;
+@JS('seekSparksInstall')
+external _YsInstall? get _seekSparksInstall;
 
 @JS()
 @staticInterop
@@ -23,7 +23,7 @@ extension _YsInstallExt on _YsInstall {
 }
 
 InstallFlowKind detect() {
-  final bridge = _yswordsInstall;
+  final bridge = _seekSparksInstall;
   if (bridge != null && bridge.isStandalone) {
     return InstallFlowKind.alreadyInstalled;
   }
@@ -55,7 +55,7 @@ bool _hasTouch() {
 }
 
 Future<String> show() async {
-  final bridge = _yswordsInstall;
+  final bridge = _seekSparksInstall;
   if (bridge == null) return 'unavailable';
   try {
     final result = await bridge.show().toDart;

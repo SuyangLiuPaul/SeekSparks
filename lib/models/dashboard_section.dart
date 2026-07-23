@@ -1,4 +1,4 @@
-import 'package:yswords/constants/ui_strings.dart';
+import 'package:seeksparks/constants/ui_strings.dart';
 
 /// One reorderable / toggleable block on the dashboard.
 ///

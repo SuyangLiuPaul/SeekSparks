@@ -1,25 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:yswords/utils/clipboard_helper.dart';
+import 'package:seeksparks/utils/clipboard_helper.dart';
 // 2026-05-24 (v1.3.7): get package no longer used directly here —
 // navigateToReader helper encapsulates all push/pop logic.
 // import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 
-import 'package:yswords/constants/text_patterns.dart' show sanitizeVerseText;
-import 'package:yswords/constants/ui_strings.dart';
-import 'package:yswords/models/app_settings.dart';
-import 'package:yswords/models/verse.dart';
+import 'package:seeksparks/constants/text_patterns.dart' show sanitizeVerseText;
+import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/models/app_settings.dart';
+import 'package:seeksparks/models/verse.dart';
 // 2026-05-24 (v1.3.7): home_page direct import gone — navigateToReader
 // helper owns the HomePage construction.
-// import 'package:yswords/pages/home_page.dart';
-import 'package:yswords/providers/main_provider.dart';
-import 'package:yswords/services/fetch_books.dart' show bookNameToEnglish;
-import 'package:yswords/utils/floating_toast.dart' show showFloatingToast;
-import 'package:yswords/utils/jump_to_reference.dart' as jumper;
-import 'package:yswords/utils/navigate_to_reader.dart';
-import 'package:yswords/utils/reference_parser.dart';
-import 'package:yswords/utils/version_mapper.dart' show localeAwareBookName;
-import 'package:yswords/utils/font_catalog.dart' show kCjkFontFallback;
+// import 'package:seeksparks/pages/home_page.dart';
+import 'package:seeksparks/providers/main_provider.dart';
+import 'package:seeksparks/services/fetch_books.dart' show bookNameToEnglish;
+import 'package:seeksparks/utils/floating_toast.dart' show showFloatingToast;
+import 'package:seeksparks/utils/jump_to_reference.dart' as jumper;
+import 'package:seeksparks/utils/navigate_to_reader.dart';
+import 'package:seeksparks/utils/reference_parser.dart';
+import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
+import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 
 /// Modal bottom sheet that previews a Bible reference in-place
 /// without navigating away. Used by the sermon detail page so

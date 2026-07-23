@@ -2,23 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 
-import 'package:yswords/constants/text_patterns.dart'
+import 'package:seeksparks/constants/text_patterns.dart'
     show notePattern, bracePattern, squarePattern;
-import 'package:yswords/constants/ui_strings.dart';
-import 'package:yswords/models/app_settings.dart';
-import 'package:yswords/models/strongs.dart';
-import 'package:yswords/pages/home_page.dart';
-import 'package:yswords/providers/main_provider.dart';
-import 'package:yswords/services/concordance_service.dart';
-import 'package:yswords/services/strongs_service.dart';
-import 'package:yswords/utils/clipboard_helper.dart';
-import 'package:yswords/utils/jump_to_reference.dart' show prepareJumpToVerse;
-import 'package:yswords/utils/version_mapper.dart'
+import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/models/app_settings.dart';
+import 'package:seeksparks/models/strongs.dart';
+import 'package:seeksparks/pages/home_page.dart';
+import 'package:seeksparks/providers/main_provider.dart';
+import 'package:seeksparks/services/concordance_service.dart';
+import 'package:seeksparks/services/strongs_service.dart';
+import 'package:seeksparks/utils/clipboard_helper.dart';
+import 'package:seeksparks/utils/jump_to_reference.dart' show prepareJumpToVerse;
+import 'package:seeksparks/utils/version_mapper.dart'
     show translateBookName, localeAwareBookName, toEnglish;
-import 'package:yswords/widgets/collapsible_english_ref.dart';
-import 'package:yswords/widgets/home_icon_button.dart';
-import 'package:yswords/widgets/localized_back_button.dart';
-import 'package:yswords/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:seeksparks/widgets/collapsible_english_ref.dart';
+import 'package:seeksparks/widgets/home_icon_button.dart';
+import 'package:seeksparks/widgets/localized_back_button.dart';
+import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 
 /// Collapses runs of 2+ spaces left after stripping inline annotations
 /// from a verse-text preview. Module-level so it compiles once.

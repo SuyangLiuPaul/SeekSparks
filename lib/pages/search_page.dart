@@ -1,34 +1,36 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:yswords/models/strongs.dart';
-import 'package:yswords/models/verse.dart';
-import 'package:yswords/providers/main_provider.dart';
-import 'package:yswords/services/ai_bible_search_service.dart';
-import 'package:yswords/services/concordance_service.dart';
-import 'package:yswords/services/fetch_books.dart' show standardBookOrder;
-import 'package:yswords/utils/strongs_boolean_search.dart';
-import 'package:yswords/services/fetch_verses.dart';
-import 'package:yswords/pages/strongs_entry_page.dart';
-import 'package:yswords/pages/home_page.dart';
-import 'package:yswords/pages/settings_page.dart';
-import 'package:yswords/services/recent_searches_service.dart';
-import 'package:yswords/utils/clipboard_helper.dart' show ClipboardHelper;
-import 'package:yswords/utils/format_searched_text.dart';
-import 'package:yswords/utils/jump_to_reference.dart';
-import 'package:yswords/utils/reference_parser.dart';
-import 'package:yswords/utils/version_mapper.dart'
+import 'package:seeksparks/models/strongs.dart';
+import 'package:seeksparks/models/verse.dart';
+import 'package:seeksparks/providers/main_provider.dart';
+import 'package:seeksparks/services/ai_bible_search_service.dart';
+import 'package:seeksparks/services/concordance_service.dart';
+import 'package:seeksparks/services/fetch_books.dart' show standardBookOrder;
+import 'package:seeksparks/services/originals_service.dart';
+import 'package:seeksparks/utils/strongs_boolean_search.dart';
+import 'package:seeksparks/utils/strongs_proximity.dart';
+import 'package:seeksparks/services/fetch_verses.dart';
+import 'package:seeksparks/pages/strongs_entry_page.dart';
+import 'package:seeksparks/pages/home_page.dart';
+import 'package:seeksparks/pages/settings_page.dart';
+import 'package:seeksparks/services/recent_searches_service.dart';
+import 'package:seeksparks/utils/clipboard_helper.dart' show ClipboardHelper;
+import 'package:seeksparks/utils/format_searched_text.dart';
+import 'package:seeksparks/utils/jump_to_reference.dart';
+import 'package:seeksparks/utils/reference_parser.dart';
+import 'package:seeksparks/utils/version_mapper.dart'
     show localeAwareBookName, toEnglish, translateBookName;
 import 'package:provider/provider.dart';
 import 'dart:async';
-import 'package:yswords/constants/ui_strings.dart';
-import 'package:yswords/constants/text_patterns.dart';
-import 'package:yswords/models/app_settings.dart';
-import 'package:yswords/widgets/home_icon_button.dart';
-import 'package:yswords/widgets/localized_back_button.dart';
-import 'package:yswords/utils/ai_markdown.dart' show parseAiMarkdown;
-import 'package:yswords/utils/relative_time.dart' show relativeTime;
-import 'package:yswords/utils/responsive.dart';
-import 'package:yswords/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/constants/text_patterns.dart';
+import 'package:seeksparks/models/app_settings.dart';
+import 'package:seeksparks/widgets/home_icon_button.dart';
+import 'package:seeksparks/widgets/localized_back_button.dart';
+import 'package:seeksparks/utils/ai_markdown.dart' show parseAiMarkdown;
+import 'package:seeksparks/utils/relative_time.dart' show relativeTime;
+import 'package:seeksparks/utils/responsive.dart';
+import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 
 // 2026-05-10 (v1.2.31): hoisted regex — used inside the AI-results
 // `itemBuilder` for every visible row during scroll, plus the
@@ -492,9 +494,9 @@ class _SearchPageState extends State<SearchPage> {
                   label: Text(
                     _aiBusy
                         ? (uiStrings['aiSearching']?[locale] ??
-                            'YsWords AI searching…')
+                            'SeekSparks AI searching…')
                         : (uiStrings['askAiForVerses']?[locale] ??
-                            'Search with YsWords AI (reference only)'),
+                            'Search with SeekSparks AI (reference only)'),
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -754,7 +756,7 @@ class _SearchPageState extends State<SearchPage> {
         _resetSearchState();
         _lastResultsFromAi = true;
         _aiNotice = uiStrings['aiBibleSearchNoMatches']?[settings.locale] ??
-            'YsWords AI didn\'t find any matching passages for that '
+            'SeekSparks AI didn\'t find any matching passages for that '
                 'query (reference only).';
         searchPerformed = true;
       });
@@ -840,14 +842,14 @@ class _SearchPageState extends State<SearchPage> {
       final notes = <String>[];
       if (outOfScope > 0) {
         notes.add((uiStrings['aiBibleSearchOutOfScope']?[settings.locale] ??
-                'YsWords AI also suggested {n} passages outside your '
+                'SeekSparks AI also suggested {n} passages outside your '
                     'current filter scope.')
             .replaceAll('{n}', outOfScope.toString()));
       }
       if (missing.isNotEmpty) {
         notes.add(
             (uiStrings['aiBibleSearchSomeMissing']?[settings.locale] ??
-                    'YsWords AI also suggested {n} passages not in your '
+                    'SeekSparks AI also suggested {n} passages not in your '
                         'current Bible version (reference only).')
                 .replaceAll('{n}', missing.length.toString()));
       }
@@ -1050,8 +1052,8 @@ class _SearchPageState extends State<SearchPage> {
                     _SearchHelpRow(
                       icon: Icons.auto_awesome,
                       label: uiStrings['searchHelpAdvAi']?[locale] ??
-                          'YsWords AI search: when keyword search '
-                              'returns nothing, tap "Search with YsWords '
+                          'SeekSparks AI search: when keyword search '
+                              'returns nothing, tap "Search with SeekSparks '
                               'AI" for fuzzy / thematic queries (e.g. '
                               '"the love chapter"). Results are for '
                               'reference only — verify before use.',
@@ -1722,7 +1724,7 @@ class _SearchPageState extends State<SearchPage> {
                               // matches.
                               ? (uiStrings['aiBibleSearchHeader']
                                           ?[settings.locale] ??
-                                      'YsWords AI found {count} passages for '
+                                      'SeekSparks AI found {count} passages for '
                                           '"{query}" (reference only)')
                                   .replaceAll(
                                       '{count}', _results.length.toString())
@@ -1770,7 +1772,7 @@ class _SearchPageState extends State<SearchPage> {
                   child: Text(
                     (uiStrings['aiBibleSearchHeader']
                                 ?[settings.locale] ??
-                            'YsWords AI found {count} passages for '
+                            'SeekSparks AI found {count} passages for '
                                 '"{query}" (reference only)')
                         .replaceAll(
                             '{count}', _aiRefs.length.toString())
@@ -1920,22 +1922,40 @@ class _SearchPageState extends State<SearchPage> {
           padding: const EdgeInsets.fromLTRB(8, 4, 4, 4),
           child: Row(
             children: [
-              chip(
-                  'AND',
-                  ' AND ',
-                  uiStrings['searchOpAndTip']?[settings.locale] ??
-                      'Verses with BOTH'),
-              chip(
-                  'OR',
-                  ' OR ',
-                  uiStrings['searchOpOrTip']?[settings.locale] ??
-                      'Verses with EITHER'),
-              chip(
-                  '✶',
-                  '*',
-                  uiStrings['searchOpStarTip']?[settings.locale] ??
-                      'Prefix wildcard'),
-              const Spacer(),
+              Expanded(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      chip(
+                          'AND',
+                          ' AND ',
+                          uiStrings['searchOpAndTip']?[settings.locale] ??
+                              'Verses with BOTH'),
+                      chip(
+                          'OR',
+                          ' OR ',
+                          uiStrings['searchOpOrTip']?[settings.locale] ??
+                              'Verses with EITHER'),
+                      chip(
+                          'NOT',
+                          ' NOT ',
+                          uiStrings['searchOpNotTip']?[settings.locale] ??
+                              'Verses with the first but not the second'),
+                      chip(
+                          'NEAR',
+                          ' NEAR5 ',
+                          uiStrings['searchOpNearTip']?[settings.locale] ??
+                              'Within 5 words of each other (edit the number)'),
+                      chip(
+                          '✶',
+                          '*',
+                          uiStrings['searchOpStarTip']?[settings.locale] ??
+                              'Prefix wildcard'),
+                    ],
+                  ),
+                ),
+              ),
               IconButton(
                 visualDensity: VisualDensity.compact,
                 tooltip: uiStrings['operatorHelpTitle']?[settings.locale] ??
@@ -1978,6 +1998,19 @@ class _SearchPageState extends State<SearchPage> {
                 icon: Icons.join_full_rounded,
                 label: uiStrings['operatorHelpOr']?[locale] ??
                     'OR — "G25 OR G26": verses with EITHER.',
+              ),
+              const SizedBox(height: 10),
+              _SearchHelpRow(
+                icon: Icons.remove_circle_outline_rounded,
+                label: uiStrings['operatorHelpNot']?[locale] ??
+                    'NOT — "G25 NOT G26": has G25, WITHOUT G26.',
+              ),
+              const SizedBox(height: 10),
+              _SearchHelpRow(
+                icon: Icons.social_distance_rounded,
+                label: uiStrings['operatorHelpNear']?[locale] ??
+                    'NEARn — "G25 NEAR5 G26": within 5 words of each '
+                        'other in the same verse.',
               ),
               const SizedBox(height: 10),
               _SearchHelpRow(
@@ -2029,8 +2062,35 @@ class _SearchPageState extends State<SearchPage> {
       }
       termRefs[t] = labels;
     }
-    final resultLabels = evaluateStrongsBoolean(
+    var resultLabels = evaluateStrongsBoolean(
         query, (t) => termRefs[t] ?? const <String>{});
+    // SeekSparks addition: a NEARn operator needs actual word order, which
+    // the set algebra above can't see — narrow the AND-style candidate set
+    // with a per-verse word-position check (assets/originals/<book>.json
+    // via OriginalsService), one NEAR pair at a time.
+    if (query.hasProximity && resultLabels.isNotEmpty) {
+      for (final (i, j, maxWords) in nearPairs(query)) {
+        final termA = query.terms[i];
+        final termB = query.terms[j];
+        final keep = <String>{};
+        for (final label in resultLabels) {
+          final parsed = ConcordanceRef.tryParse(label);
+          if (parsed == null) continue;
+          final words = await OriginalsService.forVerse(
+              parsed.englishBook, parsed.chapter, parsed.verse);
+          if (words == null) continue;
+          final numsInOrder = words.map((w) => w.strongs).toList();
+          if (verseSatisfiesProximity(
+              strongsNumbersInOrder: numsInOrder,
+              termA: termA,
+              termB: termB,
+              maxWords: maxWords)) {
+            keep.add(label);
+          }
+        }
+        resultLabels = keep;
+      }
+    }
     final refs = <ConcordanceRef>[];
     for (final label in resultLabels) {
       final parsed = ConcordanceRef.tryParse(label);
@@ -2054,7 +2114,20 @@ class _SearchPageState extends State<SearchPage> {
   String _booleanQueryLabel(StrongsBooleanQuery q) {
     final buf = StringBuffer(q.terms.first.toString());
     for (var i = 0; i < q.ops.length; i++) {
-      buf.write(q.ops[i] == StrongsOp.and ? ' AND ' : ' OR ');
+      switch (q.ops[i]) {
+        case StrongsOp.and:
+          buf.write(' AND ');
+          break;
+        case StrongsOp.or:
+          buf.write(' OR ');
+          break;
+        case StrongsOp.not:
+          buf.write(' NOT ');
+          break;
+        case StrongsOp.near:
+          buf.write(' NEAR${q.nearDistance[i]} ');
+          break;
+      }
       buf.write(q.terms[i + 1].toString());
     }
     return buf.toString();

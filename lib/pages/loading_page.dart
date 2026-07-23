@@ -2,12 +2,12 @@ import 'dart:async';
 // 2026-05-20 (v1.2.67): `dart:js_interop` was here, blocking
 // native compile. Replaced with a conditional-export helper —
 // see lib/utils/clear_cache_helper.dart.
-import 'package:yswords/utils/clear_cache_helper.dart';
+import 'package:seeksparks/utils/clear_cache_helper.dart';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:yswords/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 import '../models/app_settings.dart';
 import '../models/verse.dart';
 import '../providers/main_provider.dart';
@@ -512,7 +512,7 @@ class _LoadingPageState extends State<LoadingPage> {
                 children: [
                   // v1.3.75: tint the loading logo with the chosen theme
                   // colour so it matches the themed app icon + the
-                  // "YsWords / 雅偉之言" text below. loading.png is a single-
+                  // "SeekSparks / 尋光" text below. loading.png is a single-
                   // hue silhouette (mostly #295E8C with alpha edges), so a
                   // srcIn tint recolours it cleanly without losing the mark.
                   ColorFiltered(
@@ -530,7 +530,7 @@ class _LoadingPageState extends State<LoadingPage> {
                   Column(
                     children: [
                       Text(
-                        'YsWords',
+                        'SeekSparks',
                         style: TextStyle(
                           fontSize: settings.fontSize * 1.2,
                           fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
@@ -540,7 +540,7 @@ class _LoadingPageState extends State<LoadingPage> {
                       ),
                       SizedBox(height: 4 * s),
                       Text(
-                        '雅伟之言',
+                        '寻光',
                         style: TextStyle(
                           fontSize: settings.fontSize * 1.0,
                           color: Theme.of(context).colorScheme.primary,
@@ -727,7 +727,7 @@ class _LoadingPageState extends State<LoadingPage> {
             ),
             SizedBox(height: 24 * s),
             Text(
-              'YsWords',
+              'SeekSparks',
               style: TextStyle(
                 fontSize: settings.fontSize * 1.2,
                 fontFamily: settings.fontFamily,
@@ -738,7 +738,7 @@ class _LoadingPageState extends State<LoadingPage> {
             ),
             SizedBox(height: 4 * s),
             Text(
-              '雅伟之言',
+              '寻光',
               style: TextStyle(
                 fontSize: settings.fontSize * 1.0,
                 color: Theme.of(context).colorScheme.primary,
@@ -913,7 +913,7 @@ class _LoadingPageState extends State<LoadingPage> {
               // the no-cache headers) then any number of in-page
               // retries will hit the same broken code. This button
               // calls into web/index.html's
-              // window.yswordsClearCacheAndReload() which
+              // window.seekSparksClearCacheAndReload() which
               // unregisters every SW + nukes every cache bucket
               // before doing a hard `location.reload()`. User-
               // localStorage (profiles / bookmarks / settings)

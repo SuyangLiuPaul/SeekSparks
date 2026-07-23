@@ -2,35 +2,35 @@ import 'dart:async';
 import 'package:flutter/foundation.dart' show kIsWeb, kReleaseMode;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:yswords/constants/build_flags.dart';
-import 'package:yswords/models/sermon.dart';
-import 'package:yswords/pages/dashboard_page.dart';
-import 'package:yswords/pages/home_page.dart';
-import 'package:yswords/pages/loading_page.dart';
-import 'package:yswords/pages/sermon_detail_page.dart';
-import 'package:yswords/models/verse.dart';
-import 'package:yswords/providers/main_provider.dart';
-import 'package:yswords/models/app_settings.dart';
-import 'package:yswords/services/sermon_service.dart';
-import 'package:yswords/utils/jump_to_reference.dart' as jumper;
-import 'package:yswords/utils/reference_parser.dart' show BibleReference;
-import 'package:yswords/services/cloud_auth_service.dart';
-import 'package:yswords/services/daily_verse_service.dart';
-import 'package:yswords/services/error_reporter.dart';
-import 'package:yswords/utils/breadcrumb_observer.dart';
-import 'package:yswords/services/notification_scheduler.dart'
+import 'package:seeksparks/constants/build_flags.dart';
+import 'package:seeksparks/models/sermon.dart';
+import 'package:seeksparks/pages/dashboard_page.dart';
+import 'package:seeksparks/pages/home_page.dart';
+import 'package:seeksparks/pages/loading_page.dart';
+import 'package:seeksparks/pages/sermon_detail_page.dart';
+import 'package:seeksparks/models/verse.dart';
+import 'package:seeksparks/providers/main_provider.dart';
+import 'package:seeksparks/models/app_settings.dart';
+import 'package:seeksparks/services/sermon_service.dart';
+import 'package:seeksparks/utils/jump_to_reference.dart' as jumper;
+import 'package:seeksparks/utils/reference_parser.dart' show BibleReference;
+import 'package:seeksparks/services/cloud_auth_service.dart';
+import 'package:seeksparks/services/daily_verse_service.dart';
+import 'package:seeksparks/services/error_reporter.dart';
+import 'package:seeksparks/utils/breadcrumb_observer.dart';
+import 'package:seeksparks/services/notification_scheduler.dart'
     as notif_scheduler;
-import 'package:yswords/services/realtime_db_sync_service.dart';
-import 'package:yswords/services/offline_pack_service.dart';
-import 'package:yswords/services/fetch_books.dart';
-import 'package:yswords/services/fetch_verses.dart';
-import 'package:yswords/services/profile_service.dart';
-import 'package:yswords/services/book_intro_service.dart';
-import 'package:yswords/services/section_title_service.dart';
-import 'package:yswords/services/url_sync_service.dart';
+import 'package:seeksparks/services/realtime_db_sync_service.dart';
+import 'package:seeksparks/services/offline_pack_service.dart';
+import 'package:seeksparks/services/fetch_books.dart';
+import 'package:seeksparks/services/fetch_verses.dart';
+import 'package:seeksparks/services/profile_service.dart';
+import 'package:seeksparks/services/book_intro_service.dart';
+import 'package:seeksparks/services/section_title_service.dart';
+import 'package:seeksparks/services/url_sync_service.dart';
 import 'package:provider/provider.dart';
-import 'package:yswords/utils/font_catalog.dart' show kCjkFontFallback;
-import 'package:yswords/utils/theme_accent.dart'
+import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:seeksparks/utils/theme_accent.dart'
     show darkReadingAccent, onAccentColor;
 
 void main() {

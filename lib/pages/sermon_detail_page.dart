@@ -2,23 +2,23 @@ import 'dart:async';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:yswords/utils/clipboard_helper.dart';
+import 'package:seeksparks/utils/clipboard_helper.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:yswords/constants/sermon_topics.dart';
-import 'package:yswords/constants/ui_strings.dart';
-import 'package:yswords/models/app_settings.dart';
-import 'package:yswords/models/sermon.dart';
-import 'package:yswords/utils/floating_toast.dart' show showFloatingToast;
-import 'package:yswords/utils/passage_localizer.dart'
+import 'package:seeksparks/constants/sermon_topics.dart';
+import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/models/app_settings.dart';
+import 'package:seeksparks/models/sermon.dart';
+import 'package:seeksparks/utils/floating_toast.dart' show showFloatingToast;
+import 'package:seeksparks/utils/passage_localizer.dart'
     show localizePassage, passageRefPattern;
-import 'package:yswords/widgets/verse_popup_sheet.dart' show showVersePopup;
-import 'package:yswords/services/sermon_service.dart';
-import 'package:yswords/utils/reference_parser.dart';
-import 'package:yswords/utils/version_mapper.dart' show localeAwareBookName;
-import 'package:yswords/widgets/home_icon_button.dart';
-import 'package:yswords/widgets/localized_back_button.dart';
+import 'package:seeksparks/widgets/verse_popup_sheet.dart' show showVersePopup;
+import 'package:seeksparks/services/sermon_service.dart';
+import 'package:seeksparks/utils/reference_parser.dart';
+import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
+import 'package:seeksparks/widgets/home_icon_button.dart';
+import 'package:seeksparks/widgets/localized_back_button.dart';
 
 /// Reads one sermon body in the user's preferred language with a
 /// language-toggle (EN / 简 / 繁) at the top.
@@ -488,7 +488,7 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
     final url =
         'https://yswords.netlify.app/?sermon=${Uri.encodeComponent(s.id)}';
     final attribution = uiStrings['sermonAttribution']?[locale] ??
-        'From YsWords (Yahweh\'s Words)';
+        'From SeekSparks';
     final buf = StringBuffer();
     buf.writeln(title);
     final metaParts = <String>[];

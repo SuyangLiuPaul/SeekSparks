@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'package:yswords/constants/ui_strings.dart';
-import 'package:yswords/services/share_service.dart';
-import 'package:yswords/utils/clipboard_fallback_stub.dart'
-    if (dart.library.js_interop) 'package:yswords/utils/clipboard_fallback_web.dart';
+import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/services/share_service.dart';
+import 'package:seeksparks/utils/clipboard_fallback_stub.dart'
+    if (dart.library.js_interop) 'package:seeksparks/utils/clipboard_fallback_web.dart';
 
 abstract class ClipboardHelper {
   /// Copy [text] to the system clipboard. Returns whether the copy

@@ -20,7 +20,7 @@ import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 
-import 'package:yswords/constants/app_version.dart';
+import 'package:seeksparks/constants/app_version.dart';
 
 /// Result of an update check. [updateAvailable] is the only thing the UI
 /// branches on; the URLs are pre-resolved for the current platform.
@@ -43,7 +43,7 @@ class UpdateInfo {
 class UpdateService {
   UpdateService._();
 
-  static const String repo = 'SuyangLiuPaul/YsWords';
+  static const String repo = 'SuyangLiuPaul/SeekSparks';
   static const String _latestApi =
       'https://api.github.com/repos/$repo/releases/latest';
   static const String releasesPage =
@@ -125,7 +125,7 @@ class UpdateService {
 
   /// Pick the release asset whose name matches the current platform, by
   /// the substrings the release-build workflows use in their filenames
-  /// (`YsWords-Android-…apk`, `…Windows…zip`, `…macOS…zip`, `…Linux…tar.gz`).
+  /// (`SeekSparks-Android-…apk`, `…Windows…zip`, `…macOS…zip`, `…Linux…tar.gz`).
   /// iOS has no directly-installable asset, so it returns null → the UI
   /// falls back to the release page.
   static String? _assetUrlForPlatform(List<dynamic> assets) {

@@ -5,18 +5,18 @@ import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:yswords/constants/sermon_topics.dart';
-import 'package:yswords/constants/ui_strings.dart';
-import 'package:yswords/models/app_settings.dart';
-import 'package:yswords/models/sermon.dart';
-import 'package:yswords/providers/main_provider.dart';
-import 'package:yswords/pages/sermon_detail_page.dart';
-import 'package:yswords/services/fetch_books.dart' show standardBookOrder;
-import 'package:yswords/services/sermon_service.dart';
-import 'package:yswords/utils/passage_localizer.dart' show localizePassage;
-import 'package:yswords/utils/version_mapper.dart' show localeAwareBookName;
-import 'package:yswords/widgets/home_icon_button.dart';
-import 'package:yswords/widgets/localized_back_button.dart';
+import 'package:seeksparks/constants/sermon_topics.dart';
+import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/models/app_settings.dart';
+import 'package:seeksparks/models/sermon.dart';
+import 'package:seeksparks/providers/main_provider.dart';
+import 'package:seeksparks/pages/sermon_detail_page.dart';
+import 'package:seeksparks/services/fetch_books.dart' show standardBookOrder;
+import 'package:seeksparks/services/sermon_service.dart';
+import 'package:seeksparks/utils/passage_localizer.dart' show localizePassage;
+import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
+import 'package:seeksparks/widgets/home_icon_button.dart';
+import 'package:seeksparks/widgets/localized_back_button.dart';
 
 /// Topic-grouped browser for the Pastor Eric sermon corpus.
 ///

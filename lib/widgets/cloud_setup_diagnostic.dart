@@ -4,13 +4,13 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
-import 'package:yswords/constants/ui_strings.dart';
-import 'package:yswords/services/api_base.dart';
+import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/services/api_base.dart';
 import 'package:firebase_core/firebase_core.dart' show FirebaseException;
 import 'package:firebase_database/firebase_database.dart';
-import 'package:yswords/services/cloud_auth_service.dart';
-import 'package:yswords/services/link_opener.dart';
-import 'package:yswords/utils/theme_color_helpers.dart';
+import 'package:seeksparks/services/cloud_auth_service.dart';
+import 'package:seeksparks/services/link_opener.dart';
+import 'package:seeksparks/utils/theme_color_helpers.dart';
 
 /// Resolve a localised uiStrings entry, with a hardcoded English
 /// fallback. Avoids null-bang access scattered through the probes.

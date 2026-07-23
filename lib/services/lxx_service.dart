@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
 
-import 'package:yswords/models/strongs.dart';
-import 'package:yswords/services/strongs_service.dart';
+import 'package:seeksparks/models/strongs.dart';
+import 'package:seeksparks/services/strongs_service.dart';
 
 /// Lookup of Septuagint (LXX) Greek equivalents for Hebrew Strong's
 /// numbers. Backed by `assets/strongs/lxx_hebrew_to_greek.json`, a

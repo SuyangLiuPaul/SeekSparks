@@ -41,20 +41,20 @@
        can even start. -->
   <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="YsWords — A bilingual Bible reader app to help you listen to His voice and abide in Him daily.">
+  <meta name="description" content="SeekSparks — a bilingual Bible exegesis tool for bigger screens, with structured original-language search.">
 
   <!-- Disable iOS Safari data-detection (auto-linking of dates/phone numbers)
        and spell-check underlining on Flutter web HTML renderer elements. -->
   <meta name="format-detection" content="telephone=no,address=no,email=no,date=no,url=no">
 
   <!-- iOS PWA meta tags. Without apple-mobile-web-app-capable=yes,
-       Add-to-Home-Screen on iPhone opens YsWords in Safari instead
+       Add-to-Home-Screen on iPhone opens SeekSparks in Safari instead
        of full-screen, breaking the app feel. Status bar style is
        'default' so the iOS status bar contrasts our white surface. -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="YsWords">
+  <meta name="apple-mobile-web-app-title" content="SeekSparks">
   <!-- 2026-05-10 (v1.2.31): align theme-color across the meta tags
        and the manifest. Previously the manifest claimed Material
        blue (#2196F3) while the meta tag claimed white — Android's
@@ -84,7 +84,7 @@
   <link rel="icon" type="image/png" sizes="512x512" href="icons/Icon-512.png">
   <link rel="icon" type="image/png" href="favicon.png"/>
 
-  <title>YsWords</title>
+  <title>SeekSparks</title>
   <link rel="manifest" href="manifest.json">
 
   <!--
@@ -163,7 +163,7 @@
        ('default' vs 'black-translucent') and the LAST one won,
        producing the wrong status-bar tint on iOS PWAs. -->
   <meta name="msapplication-TileImage" content="assets/app_icon.png">
-  <meta name="msapplication-TileColor" content="#2196F3">
+  <meta name="msapplication-TileColor" content="#3730A3">
 </head>
 <body>
   <!-- Cache-busting self-heal. Old Flutter service workers from a
@@ -184,13 +184,13 @@
        deploy). Removed the stamp logic; the SW-unregister path
        does the heavy lifting alone, plus the `no-cache` HTTP
        headers ensure the next navigation pulls fresh bytes. The
-       `window.yswordsClearCacheAndReload` helper below remains
+       `window.seekSparksClearCacheAndReload` helper below remains
        available for the LoadingPage error scaffold + Settings →
        "Clear cache & reload" — it's the manual escape hatch on
        top of the auto-recovery here. -->
   <script>
     (function() {
-      var RELOAD_KEY = 'yswords_self_heal_reloaded';
+      var RELOAD_KEY = 'seeksparks_self_heal_reloaded';
       var alreadyReloaded = false;
       try {
         alreadyReloaded = sessionStorage.getItem(RELOAD_KEY) === '1';
@@ -230,9 +230,9 @@
   <!-- 2026-05-24 (v1.3.25): PWA install-prompt bridge.
        Captures the `beforeinstallprompt` event Chrome / Edge fire
        when the user could install the PWA. The Flutter side reads
-       `window.yswordsInstall.available` to decide whether to show
-       the "Install YsWords" affordance, and calls
-       `window.yswordsInstall.show()` to trigger the native picker.
+       `window.seekSparksInstall.available` to decide whether to show
+       the "Install SeekSparks" affordance, and calls
+       `window.seekSparksInstall.show()` to trigger the native picker.
        Also exposes `isStandalone` so the same affordance hides
        once the user is already running in installed mode.
 
@@ -245,7 +245,7 @@
        installs on iOS Safari + post-install Chrome) so the
        "already installed" check stays useful. -->
   <script>
-    window.yswordsInstall = {
+    window.seekSparksInstall = {
       // True after a beforeinstallprompt event arrives.
       available: false,
       // The captured event — Flutter calls `.prompt()` via show().
@@ -282,12 +282,12 @@
       // Prevent Chrome's default mini-infobar so we can drive the
       // UX from the app side.
       e.preventDefault();
-      window.yswordsInstall._event = e;
-      window.yswordsInstall.available = true;
+      window.seekSparksInstall._event = e;
+      window.seekSparksInstall.available = true;
     });
     window.addEventListener('appinstalled', function() {
-      window.yswordsInstall._event = null;
-      window.yswordsInstall.available = false;
+      window.seekSparksInstall._event = null;
+      window.seekSparksInstall.available = false;
     });
   </script>
   <!-- Avatar picker: opens an `<input type="file">`, reads the
@@ -299,7 +299,7 @@
        trick handles the cancel case (file inputs don't fire any
        event when the user closes the picker without choosing). -->
   <script>
-    window.yswordsPickAvatar = function() {
+    window.seekSparksPickAvatar = function() {
       return new Promise(function(resolve) {
         var done = false;
         function finish(v) { if (done) return; done = true; resolve(v); }
@@ -360,7 +360,7 @@
        bag without hitting Dart's inline-class language feature (only available
        in Dart 3.3+; we target 3.2.3). -->
   <script>
-    window.yswordsShowNotification = function(title, options) {
+    window.seekSparksShowNotification = function(title, options) {
       try {
         if (typeof Notification === 'undefined') return null;
         if (Notification.permission !== 'granted') return null;
@@ -374,12 +374,12 @@
        → About card via dart:js_interop. Wipes the same surfaces the
        boot-time self-heal does (service workers, Cache Storage,
        build-stamp localStorage entry) but ALSO marks
-       yswords_self_heal_reloaded fresh so the post-reload self-heal
+       seeksparks_self_heal_reloaded fresh so the post-reload self-heal
        picks up the new build cleanly. Local profile data
        (highlights / notes / bookmarks in IndexedDB / SharedPreferences)
        is intentionally left alone. -->
   <script>
-    window.yswordsClearCacheAndReload = async function() {
+    window.seekSparksClearCacheAndReload = async function() {
       try {
         if ('serviceWorker' in navigator) {
           const regs = await navigator.serviceWorker.getRegistrations();
@@ -396,8 +396,8 @@
           }));
         }
       } catch (e) { console.warn('Cache delete failed:', e); }
-      try { localStorage.removeItem('yswords_build_stamp'); } catch (_) {}
-      try { sessionStorage.removeItem('yswords_self_heal_reloaded'); } catch (_) {}
+      try { localStorage.removeItem('seeksparks_build_stamp'); } catch (_) {}
+      try { sessionStorage.removeItem('seeksparks_self_heal_reloaded'); } catch (_) {}
       // Hard reload from server, bypassing browser disk cache.
       // location.reload(true) is non-standard but still works in
       // Safari/Chrome/Edge/Firefox; falls through to plain reload.

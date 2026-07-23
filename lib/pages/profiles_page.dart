@@ -3,13 +3,13 @@ import 'package:provider/provider.dart';
 
 import 'package:get/get.dart';
 
-import 'package:yswords/constants/ui_strings.dart';
-import 'package:yswords/models/app_settings.dart';
-import 'package:yswords/pages/profile_edit_page.dart';
-import 'package:yswords/services/profile_service.dart';
-import 'package:yswords/widgets/home_icon_button.dart';
-import 'package:yswords/widgets/localized_back_button.dart';
-import 'package:yswords/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/models/app_settings.dart';
+import 'package:seeksparks/pages/profile_edit_page.dart';
+import 'package:seeksparks/services/profile_service.dart';
+import 'package:seeksparks/widgets/home_icon_button.dart';
+import 'package:seeksparks/widgets/localized_back_button.dart';
+import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 
 /// Manage local profiles — switch active profile, add a new one,
 /// rename, or delete. Reachable from Settings → Account.

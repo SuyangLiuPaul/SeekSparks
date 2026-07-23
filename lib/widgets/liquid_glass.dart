@@ -3,8 +3,8 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:yswords/models/app_settings.dart';
-import 'package:yswords/models/app_style_preset.dart' show CardMaterial;
+import 'package:seeksparks/models/app_settings.dart';
+import 'package:seeksparks/models/app_style_preset.dart' show CardMaterial;
 
 /// 2026-05-08 (v1.1.0 — Liquid Glass design pass): primitive widgets
 /// that translate Apple's iOS 26 / macOS Tahoe "Liquid Glass" material

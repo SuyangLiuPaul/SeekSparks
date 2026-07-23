@@ -5,28 +5,28 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 
-import 'package:yswords/constants/text_patterns.dart'
+import 'package:seeksparks/constants/text_patterns.dart'
     show sanitizeForSearch, notePattern, bracePattern, squarePattern;
-import 'package:yswords/constants/ui_strings.dart';
-import 'package:yswords/models/app_settings.dart';
-import 'package:yswords/models/original_word.dart';
-import 'package:yswords/models/strongs.dart';
-import 'package:yswords/models/verse.dart';
-import 'package:yswords/pages/settings_page.dart';
-import 'package:yswords/widgets/collapsible_english_ref.dart';
-import 'package:yswords/widgets/left_accent_card.dart';
-import 'package:yswords/services/ai_word_service.dart';
-import 'package:yswords/services/concordance_service.dart';
-import 'package:yswords/services/lxx_service.dart';
-import 'package:yswords/services/originals_service.dart';
-import 'package:yswords/services/strongs_service.dart';
-import 'package:yswords/utils/ai_markdown.dart' show parseAiMarkdown;
-import 'package:yswords/utils/clipboard_helper.dart';
-import 'package:yswords/utils/theme_color_helpers.dart';
-import 'package:yswords/utils/version_mapper.dart'
+import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/models/app_settings.dart';
+import 'package:seeksparks/models/original_word.dart';
+import 'package:seeksparks/models/strongs.dart';
+import 'package:seeksparks/models/verse.dart';
+import 'package:seeksparks/pages/settings_page.dart';
+import 'package:seeksparks/widgets/collapsible_english_ref.dart';
+import 'package:seeksparks/widgets/left_accent_card.dart';
+import 'package:seeksparks/services/ai_word_service.dart';
+import 'package:seeksparks/services/concordance_service.dart';
+import 'package:seeksparks/services/lxx_service.dart';
+import 'package:seeksparks/services/originals_service.dart';
+import 'package:seeksparks/services/strongs_service.dart';
+import 'package:seeksparks/utils/ai_markdown.dart' show parseAiMarkdown;
+import 'package:seeksparks/utils/clipboard_helper.dart';
+import 'package:seeksparks/utils/theme_color_helpers.dart';
+import 'package:seeksparks/utils/version_mapper.dart'
     show localeAwareBookName, toEnglish;
-import 'package:yswords/widgets/word_distribution.dart';
-import 'package:yswords/widgets/word_distribution_table.dart';
+import 'package:seeksparks/widgets/word_distribution.dart';
+import 'package:seeksparks/widgets/word_distribution_table.dart';
 
 /// Bottom sheet that shows the original Hebrew/Greek text for one or
 /// more selected verses, with each word as a tappable chip linked to

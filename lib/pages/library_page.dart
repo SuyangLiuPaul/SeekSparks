@@ -4,26 +4,26 @@ import 'package:flutter/material.dart';
 // import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 
-import 'package:yswords/constants/text_patterns.dart' show sanitizeForSearch;
-import 'package:yswords/constants/ui_strings.dart';
-import 'package:yswords/models/app_settings.dart';
-import 'package:yswords/models/verse.dart';
+import 'package:seeksparks/constants/text_patterns.dart' show sanitizeForSearch;
+import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/models/app_settings.dart';
+import 'package:seeksparks/models/verse.dart';
 // 2026-05-24 (v1.3.7): home_page direct import gone — navigateToReader
 // helper owns the HomePage construction.
-// import 'package:yswords/pages/home_page.dart';
-import 'package:yswords/providers/main_provider.dart';
-import 'package:yswords/utils/clipboard_helper.dart';
-import 'package:yswords/utils/jump_to_reference.dart' as jumper;
-import 'package:yswords/utils/navigate_to_reader.dart';
-import 'package:yswords/utils/note_reference_parser.dart';
-import 'package:yswords/utils/reference_parser.dart' show BibleReference;
-import 'package:yswords/widgets/verse_popup_sheet.dart' show showVersePopup;
-import 'package:yswords/widgets/left_accent_card.dart';
-import 'package:yswords/widgets/home_icon_button.dart';
-import 'package:yswords/widgets/localized_back_button.dart';
-import 'package:yswords/utils/font_catalog.dart' show kCjkFontFallback;
-import 'package:yswords/utils/relative_time.dart' show relativeTime;
-import 'package:yswords/widgets/bible_reading_pane.dart' show showNoteEditor;
+// import 'package:seeksparks/pages/home_page.dart';
+import 'package:seeksparks/providers/main_provider.dart';
+import 'package:seeksparks/utils/clipboard_helper.dart';
+import 'package:seeksparks/utils/jump_to_reference.dart' as jumper;
+import 'package:seeksparks/utils/navigate_to_reader.dart';
+import 'package:seeksparks/utils/note_reference_parser.dart';
+import 'package:seeksparks/utils/reference_parser.dart' show BibleReference;
+import 'package:seeksparks/widgets/verse_popup_sheet.dart' show showVersePopup;
+import 'package:seeksparks/widgets/left_accent_card.dart';
+import 'package:seeksparks/widgets/home_icon_button.dart';
+import 'package:seeksparks/widgets/localized_back_button.dart';
+import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:seeksparks/utils/relative_time.dart' show relativeTime;
+import 'package:seeksparks/widgets/bible_reading_pane.dart' show showNoteEditor;
 
 /// "Library" — a single page with two tabs: Notes and Bookmarks.
 /// Each tab shows the user's saved annotations for the current

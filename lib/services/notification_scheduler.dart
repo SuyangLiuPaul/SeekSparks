@@ -29,9 +29,9 @@ import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 
-import 'package:yswords/models/app_settings.dart';
-import 'package:yswords/models/notification_category.dart';
-import 'package:yswords/utils/passage_localizer.dart' show localizePassage;
+import 'package:seeksparks/models/app_settings.dart';
+import 'package:seeksparks/models/notification_category.dart';
+import 'package:seeksparks/utils/passage_localizer.dart' show localizePassage;
 
 final FlutterLocalNotificationsPlugin _plugin =
     FlutterLocalNotificationsPlugin();
@@ -86,7 +86,7 @@ bool _isSupported() {
   }
 }
 
-/// Cancel every scheduled YsWords notification and re-create the
+/// Cancel every scheduled SeekSparks notification and re-create the
 /// enabled categories with fresh content.
 Future<void> rescheduleAll(AppSettings settings) async {
   if (!_isSupported()) return;
@@ -115,7 +115,7 @@ Future<void> rescheduleAll(AppSettings settings) async {
 
 const _kAndroidChannel = AndroidNotificationDetails(
   'yswords_scheduled',
-  'Scheduled YsWords notifications',
+  'Scheduled SeekSparks notifications',
   channelDescription:
       'Daily Bible verse, sermon, and evidence digests',
   importance: Importance.high,
@@ -231,7 +231,7 @@ String _label(String categoryId, String locale) {
       m = const {'en': 'Bedtime Verse', 'zh-Hans': '睡前经文', 'zh-Hant': '睡前經文'};
       break;
     default:
-      m = const {'en': 'YsWords', 'zh-Hans': 'YsWords', 'zh-Hant': 'YsWords'};
+      m = const {'en': 'SeekSparks', 'zh-Hans': 'SeekSparks', 'zh-Hant': 'SeekSparks'};
   }
   return m[locale] ?? m['en']!;
 }
@@ -239,9 +239,9 @@ String _label(String categoryId, String locale) {
 /// Localized "tap to open" body, used when only a reference is available.
 String _openPrompt(String locale) {
   const m = {
-    'en': "Tap to read today's verse in YsWords",
-    'zh-Hans': '点按在 YsWords 中阅读今日经文',
-    'zh-Hant': '點按在 YsWords 中閱讀今日經文',
+    'en': "Tap to read today's verse in SeekSparks",
+    'zh-Hans': '点按在 SeekSparks 中阅读今日经文',
+    'zh-Hant': '點按在 SeekSparks 中閱讀今日經文',
   };
   return m[locale] ?? m['en']!;
 }

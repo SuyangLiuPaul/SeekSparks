@@ -2,18 +2,18 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:yswords/models/book.dart';
-import 'package:yswords/models/chapter.dart';
-import 'package:yswords/providers/main_provider.dart';
+import 'package:seeksparks/models/book.dart';
+import 'package:seeksparks/models/chapter.dart';
+import 'package:seeksparks/providers/main_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:scroll_to_index/scroll_to_index.dart';
-import 'package:yswords/constants/book_groups.dart'
+import 'package:seeksparks/constants/book_groups.dart'
     show oldTestamentBooks, newTestamentBooks;
-import 'package:yswords/constants/ui_strings.dart';
-import 'package:yswords/models/app_settings.dart';
-import 'package:yswords/utils/responsive.dart';
-import 'package:yswords/utils/version_mapper.dart' show toEnglish;
-import 'package:yswords/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/models/app_settings.dart';
+import 'package:seeksparks/utils/responsive.dart';
+import 'package:seeksparks/utils/version_mapper.dart' show toEnglish;
+import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 
 class BookChapterPicker extends StatefulWidget {
   final String currentBook;

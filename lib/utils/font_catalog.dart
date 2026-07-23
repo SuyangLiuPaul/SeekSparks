@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:google_fonts/google_fonts.dart';
 
-import 'package:yswords/constants/build_flags.dart';
+import 'package:seeksparks/constants/build_flags.dart';
 
 /// Round 56: central font catalogue for the Settings → Font Family
 /// dropdown.

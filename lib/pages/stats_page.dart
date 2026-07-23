@@ -1,27 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:yswords/widgets/originals_sheet.dart';
-import 'package:yswords/widgets/word_distribution_table.dart';
+import 'package:seeksparks/widgets/originals_sheet.dart';
+import 'package:seeksparks/widgets/word_distribution_table.dart';
 
-import 'package:yswords/constants/ui_strings.dart';
-import 'package:yswords/models/app_settings.dart';
-import 'package:yswords/models/verse.dart';
-import 'package:yswords/providers/main_provider.dart';
-import 'package:yswords/services/bible_stats_service.dart';
-import 'package:yswords/services/daily_verse_service.dart';
-import 'package:yswords/services/fetch_books.dart' show standardBookOrder;
-import 'package:yswords/services/originals_stats_service.dart';
-import 'package:yswords/utils/clipboard_helper.dart';
-import 'package:yswords/utils/theme_color_helpers.dart';
-import 'package:yswords/services/concordance_service.dart' show ConcordanceRef;
-import 'package:yswords/utils/jump_to_reference.dart' show resolveAndPrepareJump;
-import 'package:yswords/utils/reference_parser.dart'
+import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/models/app_settings.dart';
+import 'package:seeksparks/models/verse.dart';
+import 'package:seeksparks/providers/main_provider.dart';
+import 'package:seeksparks/services/bible_stats_service.dart';
+import 'package:seeksparks/services/daily_verse_service.dart';
+import 'package:seeksparks/services/fetch_books.dart' show standardBookOrder;
+import 'package:seeksparks/services/originals_stats_service.dart';
+import 'package:seeksparks/utils/clipboard_helper.dart';
+import 'package:seeksparks/utils/theme_color_helpers.dart';
+import 'package:seeksparks/services/concordance_service.dart' show ConcordanceRef;
+import 'package:seeksparks/utils/jump_to_reference.dart' show resolveAndPrepareJump;
+import 'package:seeksparks/utils/reference_parser.dart'
     show BibleReference, parseReference;
-import 'package:yswords/utils/version_mapper.dart' show toEnglish, localeAwareBookName;
-import 'package:yswords/widgets/home_icon_button.dart';
-import 'package:yswords/widgets/localized_back_button.dart';
-import 'package:yswords/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:seeksparks/utils/version_mapper.dart' show toEnglish, localeAwareBookName;
+import 'package:seeksparks/widgets/home_icon_button.dart';
+import 'package:seeksparks/widgets/localized_back_button.dart';
+import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 
 /// Bible Tools page — three tabs (Overview / Lookup / Distribution).
 /// Round 56 cleanup: the Vocabulary tab and the Strong's-search

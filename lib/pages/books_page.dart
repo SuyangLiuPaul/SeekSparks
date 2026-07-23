@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:yswords/providers/main_provider.dart';
+import 'package:seeksparks/providers/main_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:yswords/constants/ui_strings.dart';
-import 'package:yswords/models/app_settings.dart';
-import 'package:yswords/widgets/home_icon_button.dart';
-import 'package:yswords/widgets/localized_back_button.dart';
-import 'package:yswords/widgets/book_chapter_picker.dart';
-import 'package:yswords/utils/responsive.dart';
+import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/models/app_settings.dart';
+import 'package:seeksparks/widgets/home_icon_button.dart';
+import 'package:seeksparks/widgets/localized_back_button.dart';
+import 'package:seeksparks/widgets/book_chapter_picker.dart';
+import 'package:seeksparks/utils/responsive.dart';
 
 class BooksPage extends StatelessWidget {
   final int chapterIdx;

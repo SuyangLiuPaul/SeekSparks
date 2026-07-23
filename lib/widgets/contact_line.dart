@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:yswords/constants/ui_strings.dart';
-import 'package:yswords/models/app_settings.dart';
-import 'package:yswords/services/link_opener.dart';
-import 'package:yswords/utils/clipboard_helper.dart';
-import 'package:yswords/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/models/app_settings.dart';
+import 'package:seeksparks/services/link_opener.dart';
+import 'package:seeksparks/utils/clipboard_helper.dart';
+import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 
 /// Single source of truth for the "Made by Paul Liu · contact" line
-/// shown across YsWords, DailyNews, bible-evidence redirect stub,
+/// shown across YsWords, SeekSparks, DailyNews, bible-evidence redirect stub,
 /// and SmartHome. Copy is unified so updates only need to happen in
 /// one place per app surface.
 ///
@@ -80,7 +80,7 @@ class ContactLine extends StatelessWidget {
   }
 
   Future<void> _open(BuildContext context) async {
-    final uri = 'mailto:$email?subject=YsWords%20feedback';
+    final uri = 'mailto:$email?subject=SeekSparks%20feedback';
     if (LinkOpener.isAvailable) {
       final ok = await LinkOpener.open(uri);
       if (ok) return;

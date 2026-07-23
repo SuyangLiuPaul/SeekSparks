@@ -1,20 +1,20 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:yswords/utils/clipboard_helper.dart';
+import 'package:seeksparks/utils/clipboard_helper.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 
-import 'package:yswords/constants/ui_strings.dart';
-import 'package:yswords/models/biblical_person.dart';
-import 'package:yswords/pages/home_page.dart';
-import 'package:yswords/providers/main_provider.dart';
-import 'package:yswords/services/family_tree_service.dart';
-import 'package:yswords/utils/theme_color_helpers.dart';
-import 'package:yswords/utils/biblical_role.dart' show localizedRole;
-import 'package:yswords/utils/jump_to_reference.dart' as jumper;
-import 'package:yswords/utils/reference_parser.dart';
-import 'package:yswords/utils/version_mapper.dart' show localeAwareBookName;
+import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/models/biblical_person.dart';
+import 'package:seeksparks/pages/home_page.dart';
+import 'package:seeksparks/providers/main_provider.dart';
+import 'package:seeksparks/services/family_tree_service.dart';
+import 'package:seeksparks/utils/theme_color_helpers.dart';
+import 'package:seeksparks/utils/biblical_role.dart' show localizedRole;
+import 'package:seeksparks/utils/jump_to_reference.dart' as jumper;
+import 'package:seeksparks/utils/reference_parser.dart';
+import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
 
 /// Bottom sheet showing the full record for one [BiblicalPerson].
 /// Sections (in render order):

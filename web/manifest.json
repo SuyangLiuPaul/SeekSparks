@@ -1,12 +1,11 @@
 {
-    "name": "YsWords",
-    "short_name": "YsWords",
+    "name": "SeekSparks",
+    "short_name": "SeekSparks",
     "start_url": "/",
     "display": "standalone",
     "background_color": "#ffffff",
     "theme_color": "#ffffff",
-    "description": "YsWords means Yahweh's words. A bilingual Bible app to help you listen to His voice and abide in Him daily.",
-    "orientation": "portrait-primary",
+    "description": "SeekSparks — a bilingual Bible exegesis tool for bigger screens, with structured original-language search.",
     "prefer_related_applications": false,
     "icons": [
         {

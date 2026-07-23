@@ -32,6 +32,10 @@ lib_source_dump.txt
 # Local agent dev settings (preview launch config, etc.)
 .claude/
 
+# Scratch brand-asset generator (canvas prototype, not shipped)
+gen.html
+gen2.html
+
 # Cloud Functions local deps (installed via `cd functions && npm install`).
 functions/node_modules/
 # Bundled at deploy time only — sourced from assets/bible_evidence.json.

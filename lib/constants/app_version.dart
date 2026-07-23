@@ -506,7 +506,7 @@
 /// in the China build with "all stays on this device". The slide-
 /// builder in `onboarding_dialog.dart` now branches on `kChinaMode`
 /// for the title + body, leaving the international tour byte-
-/// identical. New `import 'package:yswords/constants/build_flags.dart'`
+/// identical. New `import 'package:seeksparks/constants/build_flags.dart'`
 /// in onboarding_dialog.
 ///
 /// 2026-05-10 (v1.2.12 — v1.2.10's retry was a placebo): user came
@@ -527,7 +527,7 @@
 ///    ~15 s; 12 s was false-failing real loads.
 /// 3. New "Reload page (clear cache)" escape-hatch button on the
 ///    error scaffold (web only). Calls into the existing
-///    `window.yswordsClearCacheAndReload()` JS helper that
+///    `window.seekSparksClearCacheAndReload()` JS helper that
 ///    Settings already uses — unregisters every SW + nukes every
 ///    cache bucket + hard-reloads. User-localStorage is preserved.
 ///    Plus a "Show details" expander that surfaces the raw
@@ -1963,7 +1963,7 @@
 ///   the four self-references in `index.html` itself), so the
 ///   `stampChanged` branch was always false. Kept the SW-unregister
 ///   + cache-bucket-nuke + auto-reload-once path which IS
-///   functional. Manual `window.yswordsClearCacheAndReload` (used
+///   functional. Manual `window.seekSparksClearCacheAndReload` (used
 ///   by Settings + LoadingPage's "Reload page" button) untouched.
 ///
 /// QUALITY (Dart):

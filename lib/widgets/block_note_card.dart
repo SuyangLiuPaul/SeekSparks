@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-import 'package:yswords/models/app_settings.dart';
-import 'package:yswords/utils/responsive.dart';
-import 'package:yswords/utils/font_catalog.dart' show kCjkFontFallback;
-import 'package:yswords/widgets/left_accent_card.dart';
+import 'package:seeksparks/models/app_settings.dart';
+import 'package:seeksparks/utils/responsive.dart';
+import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:seeksparks/widgets/left_accent_card.dart';
 
 /// 2026-05-19 (v1.2.57): block-level editorial footnote rendered
 /// BELOW a verse. Used by both `paragraph_group_widget` (paragraph

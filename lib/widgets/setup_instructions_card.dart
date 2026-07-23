@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:yswords/utils/clipboard_helper.dart';
+import 'package:seeksparks/utils/clipboard_helper.dart';
 
-import 'package:yswords/constants/ui_strings.dart';
-import 'package:yswords/services/link_opener.dart';
+import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/services/link_opener.dart';
 
 /// Collapsible card that mirrors the contents of `SETUP.md` so the
 /// developer can see the cloud-setup walkthrough inside the app

@@ -8,9 +8,9 @@ library;
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:yswords/models/verse.dart';
-import 'package:yswords/providers/main_provider.dart';
-import 'package:yswords/services/export_service.dart';
+import 'package:seeksparks/models/verse.dart';
+import 'package:seeksparks/providers/main_provider.dart';
+import 'package:seeksparks/services/export_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -19,7 +19,7 @@ void main() {
     test('empty MainProvider → header + empty sections', () {
       final mp = MainProvider();
       final md = ExportService.toMarkdown(mp);
-      expect(md, contains('# YsWords export'));
+      expect(md, contains('# SeekSparks export'));
       expect(md, contains('## Highlights'));
       expect(md, contains('## Bookmarks'));
       expect(md, contains('## Notes'));

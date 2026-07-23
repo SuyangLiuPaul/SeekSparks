@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
-import 'package:yswords/models/verse.dart';
-import 'package:yswords/models/app_settings.dart';
-import 'package:yswords/utils/clipboard_helper.dart';
-import 'package:yswords/constants/text_patterns.dart';
-import 'package:yswords/constants/ui_strings.dart';
-import 'package:yswords/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:seeksparks/models/verse.dart';
+import 'package:seeksparks/models/app_settings.dart';
+import 'package:seeksparks/utils/clipboard_helper.dart';
+import 'package:seeksparks/constants/text_patterns.dart';
+import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 
 /// Builds InlineSpan list for a single verse (number + text with annotations).
 /// Shared by VerseWidget and ParagraphGroupWidget.

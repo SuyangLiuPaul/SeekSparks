@@ -38,13 +38,13 @@ import 'dart:js_interop';
 
 import 'package:flutter/foundation.dart';
 
-import 'package:yswords/constants/bible_versions.dart' show bibleVersions;
-import 'package:yswords/constants/book_slugs.dart';
-import 'package:yswords/models/app_settings.dart';
-import 'package:yswords/providers/main_provider.dart';
-import 'package:yswords/services/fetch_books.dart';
-import 'package:yswords/services/fetch_verses.dart';
-import 'package:yswords/utils/version_mapper.dart' show translateBookName;
+import 'package:seeksparks/constants/bible_versions.dart' show bibleVersions;
+import 'package:seeksparks/constants/book_slugs.dart';
+import 'package:seeksparks/models/app_settings.dart';
+import 'package:seeksparks/providers/main_provider.dart';
+import 'package:seeksparks/services/fetch_books.dart';
+import 'package:seeksparks/services/fetch_verses.dart';
+import 'package:seeksparks/utils/version_mapper.dart' show translateBookName;
 
 // ── JS interop bindings ─────────────────────────────────────────
 

@@ -1,11 +1,11 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:yswords/constants/ui_strings.dart';
-import 'package:yswords/models/app_settings.dart';
-import 'package:yswords/models/bible_map.dart';
-import 'package:yswords/services/map_service.dart';
-import 'package:yswords/widgets/illustration_image.dart';
+import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/models/app_settings.dart';
+import 'package:seeksparks/models/bible_map.dart';
+import 'package:seeksparks/services/map_service.dart';
+import 'package:seeksparks/widgets/illustration_image.dart';
 import 'package:provider/provider.dart';
 
 /// Full-screen map viewer with a glass header and an optional bottom

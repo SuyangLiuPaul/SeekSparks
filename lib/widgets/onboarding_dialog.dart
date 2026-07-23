@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:yswords/constants/build_flags.dart';
-import 'package:yswords/constants/ui_strings.dart';
-import 'package:yswords/models/app_settings.dart';
+import 'package:seeksparks/constants/build_flags.dart';
+import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/models/app_settings.dart';
 import 'package:provider/provider.dart';
-import 'package:yswords/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 
 /// First-run onboarding carousel. ~4 slides explaining the
 /// non-obvious features (daily verse, reading plans, library,
@@ -234,7 +234,7 @@ class _OnboardingDialogState extends State<OnboardingDialog> {
         _Slide(
           icon: Icons.menu_book_rounded,
           title: uiStrings['onboardWelcomeTitle']?[locale] ??
-              'Welcome to YsWords',
+              'Welcome to SeekSparks',
           body: uiStrings['onboardWelcomeBody']?[locale] ??
               'A bilingual Bible reader with 14 translations across English and Chinese. The "Read Bible" card on Home picks up exactly where you left off.',
         ),

@@ -1650,9 +1650,9 @@ const uiStrings = {
   // for any localizations downstream that might still reference
   // them.
   'onboardWelcomeTitle': {
-    'zh-Hans': '欢迎使用 YsWords',
-    'zh-Hant': '歡迎使用 YsWords',
-    'en': 'Welcome to YsWords',
+    'zh-Hans': '欢迎使用 SeekSparks',
+    'zh-Hant': '歡迎使用 SeekSparks',
+    'en': 'Welcome to SeekSparks',
   },
   'onboardWelcomeBody': {
     'zh-Hans': '双语圣经阅读应用，14 个译本（英文／简体／繁体）。主页的「读经」卡片会带你回到上次离开的位置。',
@@ -1682,8 +1682,8 @@ const uiStrings = {
     'en': 'AI study helpers',
   },
   'onboardAiBody': {
-    'zh-Hans': '按主题搜经文（"爱"、"信心"），点希腊文／希伯来文原文看 BDAG 级深度释义，对考古和手稿提具体问题。AI 由 Gemini 驱动——可在 设置 → YsWords AI 粘贴自己的免费密钥（按 Test 验证），用自己的额度跳过共享池。',
-    'zh-Hant': '按主題搜經文（「愛」、「信心」），點希臘文／希伯來文原文看 BDAG 級深度釋義，對考古和手稿提具體問題。AI 由 Gemini 驅動——可在 設定 → YsWords AI 貼上自己的免費密鑰（按 Test 驗證），用自己的額度跳過共享池。',
+    'zh-Hans': '按主题搜经文（"爱"、"信心"），点希腊文／希伯来文原文看 BDAG 级深度释义，对考古和手稿提具体问题。AI 由 Gemini 驱动——可在 设置 → SeekSparks AI 粘贴自己的免费密钥（按 Test 验证），用自己的额度跳过共享池。',
+    'zh-Hant': '按主題搜經文（「愛」、「信心」），點希臘文／希伯來文原文看 BDAG 級深度釋義，對考古和手稿提具體問題。AI 由 Gemini 驅動——可在 設定 → SeekSparks AI 貼上自己的免費密鑰（按 Test 驗證），用自己的額度跳過共享池。',
     'en':
         'Search the Bible by theme ("love", "faith"), tap any Greek or Hebrew word for a BDAG-style deep dive, or ask questions about archaeology and manuscripts. Powered by Gemini — paste your own free key in Settings → AI (and tap Test to verify) to skip the shared developer pool.',
   },
@@ -1905,14 +1905,14 @@ const uiStrings = {
   },
   // ── AI BYOK + Drive sync (2026-05-06) ────────────────────────
   'settingsSectionAi': {
-    'zh-Hans': 'YsWords AI 释义',
-    'zh-Hant': 'YsWords AI 釋義',
-    'en': 'YsWords AI',
+    'zh-Hans': 'SeekSparks AI 释义',
+    'zh-Hant': 'SeekSparks AI 釋義',
+    'en': 'SeekSparks AI',
   },
   'aboutSectionAi': {
-    'zh-Hans': 'YsWords AI（高级 · 可选）',
-    'zh-Hant': 'YsWords AI（進階 · 可選）',
-    'en': 'YsWords AI (advanced · optional)',
+    'zh-Hans': 'SeekSparks AI（高级 · 可选）',
+    'zh-Hant': 'SeekSparks AI（進階 · 可選）',
+    'en': 'SeekSparks AI (advanced · optional)',
   },
   'cloudDiagSection': {
     'zh-Hans': '云端配置自检（开发者 / 诊断用）',
@@ -1934,7 +1934,7 @@ const uiStrings = {
     'en':
         'Probes Firebase Auth, Drive sync, and the AI proxy. End '
             'users never need to enable anything — these are '
-            'developer-side checks for the YsWords project. The app '
+            'developer-side checks for the SeekSparks project. The app '
             'keeps working in degraded mode either way (sync goes '
             'local-only, AI shows "not available").',
   },
@@ -2223,15 +2223,15 @@ const uiStrings = {
     'en': 'No access token.',
   },
   'cloudDiagDriveApiOkEmpty': {
-    'zh-Hans': 'API 可达；YsWords.json 还不存在（首次同步时会创建）。',
-    'zh-Hant': 'API 可達；YsWords.json 還不存在（首次同步時會建立）。',
+    'zh-Hans': 'API 可达；SeekSparks.json 还不存在（首次同步时会创建）。',
+    'zh-Hant': 'API 可達；SeekSparks.json 還不存在（首次同步時會建立）。',
     'en':
-        'API reachable; no YsWords.json yet (will be created on first sync).',
+        'API reachable; no SeekSparks.json yet (will be created on first sync).',
   },
   'cloudDiagDriveApiOkExists': {
-    'zh-Hans': 'API 可达；YsWords.json 已存在。',
-    'zh-Hant': 'API 可達；YsWords.json 已存在。',
-    'en': 'API reachable; YsWords.json exists.',
+    'zh-Hans': 'API 可达；SeekSparks.json 已存在。',
+    'zh-Hant': 'API 可達；SeekSparks.json 已存在。',
+    'en': 'API reachable; SeekSparks.json exists.',
   },
   'cloudDiagDriveApi401': {
     'zh-Hans': '401 未授权——访问令牌已过期。下次同步会自动静默刷新。',
@@ -2424,25 +2424,25 @@ const uiStrings = {
   // Triggered from the search page's no-results state. Lets the
   // user ask Gemini for Bible references that match a fuzzy /
   // thematic query when exact-text search returns nothing.
-  // 2026-05-07: rebrand. The user prefers the YsWords brand to be
+  // 2026-05-07: rebrand. The user prefers the SeekSparks brand to be
   // surfaced rather than a generic "AI" label, with a "for reference
   // only" caveat to set expectations about LLM-generated content.
   // Older "ask AI" wording across the search page maps to the new
-  // "search with YsWords AI" copy.
+  // "search with SeekSparks AI" copy.
   'askAiForVerses': {
-    'zh-Hans': '用 YsWords AI 智能搜索（仅供参考）',
-    'zh-Hant': '用 YsWords AI 智慧搜尋（僅供參考）',
-    'en': 'Search with YsWords AI (reference only)',
+    'zh-Hans': '用 SeekSparks AI 智能搜索（仅供参考）',
+    'zh-Hant': '用 SeekSparks AI 智慧搜尋（僅供參考）',
+    'en': 'Search with SeekSparks AI (reference only)',
   },
   'aiSearching': {
-    'zh-Hans': 'YsWords 正在搜索…',
-    'zh-Hant': 'YsWords 正在搜尋…',
-    'en': 'YsWords AI searching…',
+    'zh-Hans': 'SeekSparks 正在搜索…',
+    'zh-Hant': 'SeekSparks 正在搜尋…',
+    'en': 'SeekSparks AI searching…',
   },
   'aiBibleSearchHeader': {
-    'zh-Hans': 'YsWords 为「{query}」找到了 {count} 处经文（仅供参考）',
-    'zh-Hant': 'YsWords 為「{query}」找到了 {count} 處經文（僅供參考）',
-    'en': 'YsWords AI found {count} passages for "{query}" (reference only)',
+    'zh-Hans': 'SeekSparks 为「{query}」找到了 {count} 处经文（仅供参考）',
+    'zh-Hant': 'SeekSparks 為「{query}」找到了 {count} 處經文（僅供參考）',
+    'en': 'SeekSparks AI found {count} passages for "{query}" (reference only)',
   },
   'aiBibleSearchNoMatches': {
     'zh-Hans': 'AI 没有找到相关经文，换个说法再试一下吧。',
@@ -2466,7 +2466,7 @@ const uiStrings = {
   // 2026-05-08 (v1.1.10): deep-link CTA for the BYOK Gemini key.
   // Shown under the AI error notice when the failure is a quota /
   // not-configured one AND the user hasn't already set up their own
-  // key. Tapping navigates to Settings → YsWords AI section and
+  // key. Tapping navigates to Settings → SeekSparks AI section and
   // scrolls the GeminiKeyCard into view.
   'aiOpenByokSettings': {
     'zh-Hans': '使用您自己的 Gemini Key',
@@ -2479,20 +2479,20 @@ const uiStrings = {
   // a parseable `error` body — in normal operation the backend
   // sends a user-locale message that's surfaced directly.
   'aiQuotaExhaustedFallback': {
-    'zh-Hans': 'YsWords AI 今天的共享配额已用完。明天再试，或在「设置 → '
-        'YsWords AI」粘贴您自己的 Gemini API Key 用您的配额。',
-    'zh-Hant': 'YsWords AI 今天的共享配額已用完。明天再試，或在「設定 → '
-        'YsWords AI」貼上您自己的 Gemini API Key 用您的配額。',
+    'zh-Hans': 'SeekSparks AI 今天的共享配额已用完。明天再试，或在「设置 → '
+        'SeekSparks AI」粘贴您自己的 Gemini API Key 用您的配额。',
+    'zh-Hant': 'SeekSparks AI 今天的共享配額已用完。明天再試，或在「設定 → '
+        'SeekSparks AI」貼上您自己的 Gemini API Key 用您的配額。',
     'en':
-        'YsWords AI quota for the developer\'s shared key is used up for today. Try again tomorrow, or paste your own Gemini API key in Settings → AI to use your own quota.',
+        'SeekSparks AI quota for the developer\'s shared key is used up for today. Try again tomorrow, or paste your own Gemini API key in Settings → AI to use your own quota.',
   },
   'aiNotConfiguredFallback': {
-    'zh-Hans': 'YsWords AI 还没有配置。开发者需要在 Netlify 环境变量里设置 '
+    'zh-Hans': 'SeekSparks AI 还没有配置。开发者需要在 Netlify 环境变量里设置 '
         'GEMINI_API_KEY。',
-    'zh-Hant': 'YsWords AI 還沒有配置。開發者需要在 Netlify 環境變數裡設置 '
+    'zh-Hant': 'SeekSparks AI 還沒有配置。開發者需要在 Netlify 環境變數裡設置 '
         'GEMINI_API_KEY。',
     'en':
-        'YsWords AI is not configured. The developer needs to set GEMINI_API_KEY in Netlify env.',
+        'SeekSparks AI is not configured. The developer needs to set GEMINI_API_KEY in Netlify env.',
   },
   // 2026-05-09 (v1.2.0): tag appended to the AboutPage footer when
   // the build was compiled with `--dart-define=CHINA_MODE=true`.
@@ -2515,22 +2515,22 @@ const uiStrings = {
         "Cloud sync isn't available in the China build. Highlights, notes, and bookmarks stay on this device.",
   },
   'aiBibleSearchSomeMissing': {
-    'zh-Hans': 'YsWords AI 还找到 {n} 处经文，但您当前圣经版本中没有匹配（仅供参考）。',
-    'zh-Hant': 'YsWords AI 還找到 {n} 處經文，但您當前聖經版本中沒有匹配（僅供參考）。',
+    'zh-Hans': 'SeekSparks AI 还找到 {n} 处经文，但您当前圣经版本中没有匹配（仅供参考）。',
+    'zh-Hant': 'SeekSparks AI 還找到 {n} 處經文，但您當前聖經版本中沒有匹配（僅供參考）。',
     'en':
-        'YsWords AI also suggested {n} passages not in your current '
+        'SeekSparks AI also suggested {n} passages not in your current '
             'Bible version (reference only).',
   },
   // 2026-05-07 (post-fix v3): AI-result note when the active search
   // filter (e.g. "Search current book") excluded some of the
-  // passages YsWords returned. Distinct from
+  // passages SeekSparks returned. Distinct from
   // aiBibleSearchSomeMissing which is for refs not present in the
   // user's loaded Bible version at all.
   'aiBibleSearchOutOfScope': {
-    'zh-Hans': 'YsWords AI 还推荐了 {n} 处经文，但当前筛选范围之外（仅供参考）。',
-    'zh-Hant': 'YsWords AI 還推薦了 {n} 處經文，但當前篩選範圍之外（僅供參考）。',
+    'zh-Hans': 'SeekSparks AI 还推荐了 {n} 处经文，但当前筛选范围之外（仅供参考）。',
+    'zh-Hant': 'SeekSparks AI 還推薦了 {n} 處經文，但當前篩選範圍之外（僅供參考）。',
     'en':
-        'YsWords AI also suggested {n} passages outside your current '
+        'SeekSparks AI also suggested {n} passages outside your current '
             'filter scope.',
   },
   // 2026-05-07: italic caveat shown directly below the AI search
@@ -2653,7 +2653,7 @@ const uiStrings = {
     'zh-Hans': '深入 · Gemini 3 Flash Preview。带"思考"模式的高速推理模型——接近 Pro 级别的释经深度，但速度快得多（约 4-8 秒）。**免费配额可用**：~250 RPD，独立于 Standard / Fast 配额池。Google 在 2026 年 4 月把 gemini-2.5-pro 收费了——所以我们改用这款，免费即可使用，不需要 BYOK。BYOK 仍然推荐用于高频使用（您自己的密钥有独立配额，更稳定）。',
     'zh-Hant': '深入 · Gemini 3 Flash Preview。帶「思考」模式的高速推理模型——接近 Pro 級別的釋經深度，但速度快得多（約 4-8 秒）。**免費配額可用**：~250 RPD，獨立於 Standard / Fast 配額池。Google 在 2026 年 4 月把 gemini-2.5-pro 收費了——所以我們改用這款，免費即可使用，不需要 BYOK。BYOK 仍然推薦用於高頻使用（您自己的密鑰有獨立配額，更穩定）。',
     'en':
-        'Deep · Gemini 3 Flash Preview. High-speed thinking model with near-Pro reasoning quality — substantially faster than Pro (~4-8 s). **Free-tier compatible** at ~250 RPD, with quota separate from the Standard / Fast pools. Google moved gemini-2.5-pro behind a paywall in April 2026, so YsWords switched Deep to this model — free, no BYOK needed. BYOK still recommended for heavy use (your own key has its own quota pool).',
+        'Deep · Gemini 3 Flash Preview. High-speed thinking model with near-Pro reasoning quality — substantially faster than Pro (~4-8 s). **Free-tier compatible** at ~250 RPD, with quota separate from the Standard / Fast pools. Google moved gemini-2.5-pro behind a paywall in April 2026, so SeekSparks switched Deep to this model — free, no BYOK needed. BYOK still recommended for heavy use (your own key has its own quota pool).',
   },
   // 2026-05-11 (v1.2.42): three short-lived strings were removed
   // here as dead code:
@@ -3384,9 +3384,9 @@ const uiStrings = {
     'en': 'This is a test notification.',
   },
   'appName': {
-    'zh-Hans': 'YsWords 雅伟之言',
-    'zh-Hant': 'YsWords 雅偉之言',
-    'en': 'YsWords',
+    'zh-Hans': 'SeekSparks 寻光',
+    'zh-Hant': 'SeekSparks 尋光',
+    'en': 'SeekSparks',
   },
   'startReading': {
     // Hero CTA shown when the user has no saved reading position
@@ -3512,20 +3512,24 @@ const uiStrings = {
             'entry plus every verse that uses that word.',
   },
   // v1.3.91: combined / boolean Strong's search help + operator tooltips.
+  // SeekSparks addition: NOT + NEARn (word-proximity) operators.
   'searchHelpAdvBoolean': {
     'zh-Hans':
-        '组合检索：用 AND / OR / ✶ 按钮（输入编号后自动出现）组合多个原文编号。'
+        '组合检索：用 AND / OR / NOT / NEAR / ✶ 按钮（输入编号后自动出现）组合多个原文编号。'
             '「G25 AND G26」=同时含两者的经文；「G25 OR G26」=含其一；'
+            '「G25 NOT G26」=含 G25 但不含 G26；「G25 NEAR5 G26」=两者在同一节内相距 5 个字以内；'
             '「G25✶」=所有以 G25 开头的编号。',
     'zh-Hant':
-        '組合檢索：用 AND / OR / ✶ 按鈕（輸入編號後自動出現）組合多個原文編號。'
+        '組合檢索：用 AND / OR / NOT / NEAR / ✶ 按鈕（輸入編號後自動出現）組合多個原文編號。'
             '「G25 AND G26」=同時含兩者的經文；「G25 OR G26」=含其一；'
+            '「G25 NOT G26」=含 G25 但不含 G26；「G25 NEAR5 G26」=兩者在同一節內相距 5 個字以內；'
             '「G25✶」=所有以 G25 開頭的編號。',
     'en':
-        'Combine Strong\'s numbers with the AND / OR / ✶ buttons (they '
-            'appear once you type a number): "G25 AND G26" → verses with '
-            'BOTH; "G25 OR G26" → EITHER; "G25✶" → every number starting '
-            'with G25.',
+        'Combine Strong\'s numbers with the AND / OR / NOT / NEAR / ✶ '
+            'buttons (they appear once you type a number): "G25 AND G26" → '
+            'verses with BOTH; "G25 OR G26" → EITHER; "G25 NOT G26" → G25 '
+            'without G26; "G25 NEAR5 G26" → within 5 words of each other in '
+            'the same verse; "G25✶" → every number starting with G25.',
   },
   'booleanSearchHeader': {
     'zh-Hans': '{query} — 共 {count} 节',
@@ -3542,16 +3546,27 @@ const uiStrings = {
     'zh-Hant': '含其中之一',
     'en': 'Verses with EITHER',
   },
+  'searchOpNotTip': {
+    'zh-Hans': '含第一个但不含第二个',
+    'zh-Hant': '含第一個但不含第二個',
+    'en': 'Verses with the first but not the second',
+  },
+  'searchOpNearTip': {
+    'zh-Hans': '两者相距 5 个字以内（可编辑数字）',
+    'zh-Hant': '兩者相距 5 個字以內（可編輯數字）',
+    'en': 'Within 5 words of each other (edit the number)',
+  },
   'searchOpStarTip': {
     'zh-Hans': '前缀通配符（如 G25✶）',
     'zh-Hant': '前綴萬用字元（如 G25✶）',
     'en': 'Prefix wildcard (e.g. G25✶)',
   },
-  // v1.3.91: focused help dialog opened from the ? beside the AND/OR/✶ bar.
+  // v1.3.91: focused help dialog opened from the ? beside the operator bar.
+  // SeekSparks addition: NOT + NEARn.
   'operatorHelpTitle': {
-    'zh-Hans': '组合检索（AND / OR / ✶）',
-    'zh-Hant': '組合檢索（AND / OR / ✶）',
-    'en': 'Combined search (AND / OR / ✶)',
+    'zh-Hans': '组合检索（AND / OR / NOT / NEAR / ✶）',
+    'zh-Hant': '組合檢索（AND / OR / NOT / NEAR / ✶）',
+    'en': 'Combined search (AND / OR / NOT / NEAR / ✶)',
   },
   'operatorHelpAnd': {
     'zh-Hans': 'AND —「G25 AND G26」：同时含两个编号的经文。',
@@ -3563,15 +3578,29 @@ const uiStrings = {
     'zh-Hant': 'OR —「G25 OR G26」：含其中任一編號的經文。',
     'en': 'OR — "G25 OR G26": verses that contain EITHER number.',
   },
+  'operatorHelpNot': {
+    'zh-Hans': 'NOT —「G25 NOT G26」：含 G25，但不含 G26。',
+    'zh-Hant': 'NOT —「G25 NOT G26」：含 G25，但不含 G26。',
+    'en': 'NOT — "G25 NOT G26": has G25, WITHOUT G26.',
+  },
+  'operatorHelpNear': {
+    'zh-Hans': 'NEARn —「G25 NEAR5 G26」：两者在同一节经文中相距 5 个字以内。',
+    'zh-Hant': 'NEARn —「G25 NEAR5 G26」：兩者在同一節經文中相距 5 個字以內。',
+    'en':
+        'NEARn — "G25 NEAR5 G26": within 5 words of each other in the '
+            'same verse.',
+  },
   'operatorHelpStar': {
     'zh-Hans': '✶ —「G25✶」：所有以 G25 开头的 Strong\'s 编号。',
     'zh-Hant': '✶ —「G25✶」：所有以 G25 開頭的 Strong\'s 編號。',
     'en': '✶ — "G25✶": every Strong\'s number that starts with G25.',
   },
   'operatorHelpTip': {
-    'zh-Hans': '先输入一个编号（如 G25），再点按钮加入 AND / OR / ✶。',
-    'zh-Hant': '先輸入一個編號（如 G25），再點按鈕加入 AND / OR / ✶。',
-    'en': 'Type a Strong\'s number (e.g. G25), then tap a button to add it.',
+    'zh-Hans': '先输入一个编号（如 G25），再点按钮加入 AND / OR / NOT / NEAR / ✶。',
+    'zh-Hant': '先輸入一個編號（如 G25），再點按鈕加入 AND / OR / NOT / NEAR / ✶。',
+    'en':
+        'Type a Strong\'s number (e.g. G25), then tap a button to add '
+            'AND / OR / NOT / NEAR / ✶.',
   },
   'searchHelpAdvLemma': {
     'zh-Hans': '直接输入希腊文（ἀγάπη）或希伯来文（אהבה）原文词，匹配后会打开对应的词典条目。',
@@ -3591,13 +3620,13 @@ const uiStrings = {
             '"Did you mean…" card alongside text results.',
   },
   'searchHelpAdvAi': {
-    'zh-Hans': 'YsWords AI 搜索：当关键字搜索没有结果时，可以点击「用 YsWords AI 智能搜索」'
+    'zh-Hans': 'SeekSparks AI 搜索：当关键字搜索没有结果时，可以点击「用 SeekSparks AI 智能搜索」'
         '让 AI 帮你查找主题或模糊查询（如「最爱的章节」）。结果仅供参考，使用前请自行核对。',
-    'zh-Hant': 'YsWords AI 搜尋：當關鍵字搜尋沒有結果時，可以點擊「用 YsWords AI 智慧搜尋」'
+    'zh-Hant': 'SeekSparks AI 搜尋：當關鍵字搜尋沒有結果時，可以點擊「用 SeekSparks AI 智慧搜尋」'
         '讓 AI 幫你查找主題或模糊查詢（如「最愛的章節」）。結果僅供參考，使用前請自行核對。',
     'en':
-        'YsWords AI search: when keyword search returns nothing, tap '
-            '"Search with YsWords AI" for fuzzy or thematic queries '
+        'SeekSparks AI search: when keyword search returns nothing, tap '
+            '"Search with SeekSparks AI" for fuzzy or thematic queries '
             '(e.g. "the love chapter"). Results are for reference '
             'only — verify before use.',
   },
@@ -3655,17 +3684,17 @@ const uiStrings = {
             'concordance.',
   },
   'searchModeAi': {
-    'zh-Hans': 'YsWords AI',
-    'zh-Hant': 'YsWords AI',
-    'en': 'YsWords AI',
+    'zh-Hans': 'SeekSparks AI',
+    'zh-Hant': 'SeekSparks AI',
+    'en': 'SeekSparks AI',
   },
   'searchModeAiTip': {
-    'zh-Hans': '通过 YsWords AI 进行模糊或主题搜索（如「最爱的章节」）。结果仅供参考，'
+    'zh-Hans': '通过 SeekSparks AI 进行模糊或主题搜索（如「最爱的章节」）。结果仅供参考，'
         '使用前请自行核对。',
-    'zh-Hant': '透過 YsWords AI 進行模糊或主題搜尋（如「最愛的章節」）。結果僅供參考，'
+    'zh-Hant': '透過 SeekSparks AI 進行模糊或主題搜尋（如「最愛的章節」）。結果僅供參考，'
         '使用前請自行核對。',
     'en':
-        'Fuzzy / thematic search via YsWords AI (e.g. "the love '
+        'Fuzzy / thematic search via SeekSparks AI (e.g. "the love '
             'chapter"). Results are reference-only — verify before use.',
   },
   'searchWordStudyNoMatch': {
@@ -3891,15 +3920,15 @@ const uiStrings = {
     'zh-Hant': '間接證據',
     'en': 'Circumstantial',
   },
-  // YsWords AI search (Round 39, Stage 4 — Cloud Functions Gemini
+  // SeekSparks AI search (Round 39, Stage 4 — Cloud Functions Gemini
   // proxy). Used by the Bible Evidence search button. Rebranded
-  // 2026-05-07 from "Ask AI" so the YsWords brand is in front of the
+  // 2026-05-07 from "Ask AI" so the SeekSparks brand is in front of the
   // user instead of a generic "AI" label, with reference-only caveat
   // surfaced via the disclaimer strings.
   'askAi': {
-    'zh-Hans': '问 YsWords',
-    'zh-Hant': '問 YsWords',
-    'en': 'Ask YsWords',
+    'zh-Hans': '问 SeekSparks',
+    'zh-Hant': '問 SeekSparks',
+    'en': 'Ask SeekSparks',
   },
   'ask': {
     'zh-Hans': '提问',
@@ -3927,9 +3956,9 @@ const uiStrings = {
     'en': 'About',
   },
   'appTagline': {
-    'zh-Hans': '双语圣经研读应用。',
-    'zh-Hant': '雙語聖經研讀應用。',
-    'en': 'A bilingual Bible study app.',
+    'zh-Hans': '面向大屏幕的双语圣经解经工具。',
+    'zh-Hant': '面向大螢幕的雙語聖經解經工具。',
+    'en': 'A bilingual Bible exegesis tool for bigger screens.',
   },
   'contactIntro': {
     'zh-Hans': '作者 Paul Liu',
@@ -3998,12 +4027,12 @@ const uiStrings = {
   // filled in with the actual device (iOS/Android/macOS/Windows/Linux/
   // browser) — it used to hardcode "iOS" on every device.
   'notificationsTestSent': {
-    'zh-Hans': '测试通知已发送。如果没有看到横幅，请在 {platform} 的通知设置中查看 YsWords'
+    'zh-Hans': '测试通知已发送。如果没有看到横幅，请在 {platform} 的通知设置中查看 SeekSparks'
         '（以及系统的专注 / 勿扰模式）。',
-    'zh-Hant': '測試通知已發送。如果沒有看到橫幅，請在 {platform} 的通知設定中查看 YsWords'
+    'zh-Hant': '測試通知已發送。如果沒有看到橫幅，請在 {platform} 的通知設定中查看 SeekSparks'
         '（以及系統的專注 / 勿擾模式）。',
     'en': "Test notification sent. If you don't see a banner, check your "
-        '{platform} notification settings for YsWords (or Focus / Do Not '
+        '{platform} notification settings for SeekSparks (or Focus / Do Not '
         'Disturb).',
   },
   'platformBrowser': {
@@ -4252,9 +4281,9 @@ const uiStrings = {
     'en': 'SIL OFL · loaded via google_fonts.',
   },
   'aboutAi': {
-    'zh-Hans': 'YsWords AI 经文释义（仅供参考）',
-    'zh-Hant': 'YsWords AI 經文釋義（僅供參考）',
-    'en': 'YsWords AI explanations (reference only)',
+    'zh-Hans': 'SeekSparks AI 经文释义（仅供参考）',
+    'zh-Hant': 'SeekSparks AI 經文釋義（僅供參考）',
+    'en': 'SeekSparks AI explanations (reference only)',
   },
   'aboutLicenseAi': {
     'zh-Hans': 'Google Gemini API · 输出可在 API 条款下重新分发。',
@@ -5380,9 +5409,9 @@ const uiStrings = {
     'en': 'Save to note',
   },
   'aiNoteAttribution': {
-    'zh-Hans': '——YsWords AI 生成，仅供参考',
-    'zh-Hant': '——YsWords AI 生成，僅供參考',
-    'en': '— generated by YsWords AI, for reference',
+    'zh-Hans': '——SeekSparks AI 生成，仅供参考',
+    'zh-Hant': '——SeekSparks AI 生成，僅供參考',
+    'en': '— generated by SeekSparks AI, for reference',
   },
   'aiExplainAsking': {
     'zh-Hans': 'AI 正在生成解释…',
@@ -5476,9 +5505,9 @@ const uiStrings = {
   // canonical pattern / theological weight). Free-tier substitute
   // for what Logos+BDAG charges $200+ for.
   'aiScopeDeepExegesis': {
-    'zh-Hans': '深度释经（BDAG 级 · YsWords 智能分析，仅供参考）',
-    'zh-Hant': '深度釋經（BDAG 級 · YsWords 智慧分析，僅供參考）',
-    'en': 'Deep exegesis (BDAG-level · YsWords AI, reference only)',
+    'zh-Hans': '深度释经（BDAG 级 · SeekSparks 智能分析，仅供参考）',
+    'zh-Hant': '深度釋經（BDAG 級 · SeekSparks 智慧分析，僅供參考）',
+    'en': 'Deep exegesis (BDAG-level · SeekSparks AI, reference only)',
   },
   'familyTree': {
     'zh-Hans': '圣经家谱',
@@ -5821,9 +5850,9 @@ const uiStrings = {
     'zh-Hant': '講道尚未載入完成 — 請等待內容顯示',
   },
   'sermonAttribution': {
-    'en': "From YsWords (Yahweh's Words) — bilingual Bible app",
-    'zh-Hans': '来自 YsWords 雅伟之言 — 双语圣经应用',
-    'zh-Hant': '來自 YsWords 雅偉之言 — 雙語聖經應用',
+    'en': "From SeekSparks (Yahweh's Words) — bilingual Bible app",
+    'zh-Hans': '来自 SeekSparks 雅伟之言 — 双语圣经应用',
+    'zh-Hant': '來自 SeekSparks 雅偉之言 — 雙語聖經應用',
   },
   // Verse popup sheet
   'versePopupExpand': {

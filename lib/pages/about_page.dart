@@ -1,23 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:yswords/constants/app_version.dart';
-import 'package:yswords/widgets/update_check_tile.dart';
-import 'package:yswords/constants/build_flags.dart';
-import 'package:yswords/constants/ui_strings.dart';
-import 'package:yswords/models/app_settings.dart';
-import 'package:yswords/services/link_opener.dart';
-import 'package:yswords/utils/clipboard_helper.dart';
-import 'package:yswords/utils/responsive.dart';
-import 'package:yswords/widgets/cloud_setup_diagnostic.dart';
-import 'package:yswords/widgets/home_icon_button.dart';
-import 'package:yswords/widgets/setup_instructions_card.dart';
-import 'package:yswords/widgets/localized_back_button.dart';
+import 'package:seeksparks/constants/app_version.dart';
+import 'package:seeksparks/widgets/update_check_tile.dart';
+import 'package:seeksparks/constants/build_flags.dart';
+import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/models/app_settings.dart';
+import 'package:seeksparks/services/link_opener.dart';
+import 'package:seeksparks/utils/clipboard_helper.dart';
+import 'package:seeksparks/utils/responsive.dart';
+import 'package:seeksparks/widgets/cloud_setup_diagnostic.dart';
+import 'package:seeksparks/widgets/home_icon_button.dart';
+import 'package:seeksparks/widgets/setup_instructions_card.dart';
+import 'package:seeksparks/widgets/localized_back_button.dart';
 
 /// Settings → About → "About / 关于" — full attributions + licensing
 /// + takedown contact page.
 ///
-/// Why this page exists: YsWords bundles or references material that
+/// Why this page exists: SeekSparks bundles or references material that
 /// belongs to other rights holders (Bible publishers, lexicon
 /// projects, sermon authors, font foundries). This page is the
 /// app's single source of truth for who owns what, the licence each
@@ -209,7 +209,7 @@ class _Header extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    uiStrings['appName']?[locale] ?? 'YsWords',
+                    uiStrings['appName']?[locale] ?? 'SeekSparks',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
@@ -277,7 +277,7 @@ class _ContactCard extends StatelessWidget {
   static const _email = 'paul.sy.liu@gmail.com';
 
   Future<void> _open(BuildContext context) async {
-    final uri = 'mailto:$_email?subject=YsWords%20copyright%20enquiry';
+    final uri = 'mailto:$_email?subject=SeekSparks%20copyright%20enquiry';
     if (LinkOpener.isAvailable) {
       final ok = await LinkOpener.open(uri);
       if (ok) return;
@@ -639,7 +639,7 @@ class _AppLicenseCard extends StatelessWidget {
 
   Future<void> _openRepo(BuildContext context) async {
     if (!LinkOpener.isAvailable) return;
-    await LinkOpener.open('https://github.com/SuyangLiuPaul/YsWords');
+    await LinkOpener.open('https://github.com/SuyangLiuPaul/SeekSparks');
   }
 
   @override

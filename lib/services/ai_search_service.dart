@@ -3,8 +3,8 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
-import 'package:yswords/constants/ui_strings.dart';
-import 'package:yswords/services/api_base.dart';
+import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/services/api_base.dart';
 
 /// Calls the YsWords Cloud Function that proxies Gemini for AI-powered
 /// search over the Bible Evidence dataset.
@@ -86,7 +86,7 @@ class AiSearchService {
       Duration(milliseconds: 1800),
     ];
     var transientReason =
-        'YsWords AI is busy right now. Showing keyword matches — tap Ask to '
+        'SeekSparks AI is busy right now. Showing keyword matches — tap Ask to '
         'try again.';
     for (var attempt = 0; attempt < backoffs.length; attempt++) {
       if (backoffs[attempt] > Duration.zero) {
@@ -110,7 +110,7 @@ class AiSearchService {
         // Network / DNS / CORS / not-deployed. No runtimeType — release
         // builds minify it to meaningless names.
         transientReason =
-            'YsWords search is not available right now. Showing keyword '
+            'SeekSparks search is not available right now. Showing keyword '
             'matches instead.';
         continue; // transient → retry
       }
@@ -128,14 +128,14 @@ class AiSearchService {
           return AiSearchResult.fromJson(body);
         } catch (_) {
           return AiSearchResult.unavailable(
-            'YsWords search returned an unexpected response. Showing '
+            'SeekSparks search returned an unexpected response. Showing '
             'keyword matches instead.',
           );
         }
       }
       if (code == 404) {
         return AiSearchResult.unavailable(
-          'YsWords search is not available yet. Showing keyword matches '
+          'SeekSparks search is not available yet. Showing keyword matches '
           'instead.',
         );
       }
@@ -143,7 +143,7 @@ class AiSearchService {
         return AiSearchResult.unavailable(
           serverError() ??
               uiStrings['aiQuotaExhaustedFallback']?[locale] ??
-              'YsWords AI quota for the developer\'s shared key is used '
+              'SeekSparks AI quota for the developer\'s shared key is used '
                   'up for today. Try again tomorrow, or paste your own '
                   'Gemini API key in Settings → AI.',
         );
@@ -157,7 +157,7 @@ class AiSearchService {
       // Other terminal non-2xx.
       return AiSearchResult.unavailable(
         serverError() ??
-            'YsWords search returned an error ($code). Showing keyword '
+            'SeekSparks search returned an error ($code). Showing keyword '
                 'matches instead.',
       );
     }

@@ -26,7 +26,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import 'package:yswords/pages/home_page.dart';
+import 'package:seeksparks/pages/home_page.dart';
 
 /// The canonical route name for HomePage. All Get.to / Get.off
 /// pushes of HomePage MUST pass this as `routeName:` so popUntil

@@ -3,23 +3,23 @@ import 'package:flutter/services.dart' show LogicalKeyboardKey;
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 
-import 'package:yswords/constants/ui_strings.dart';
-import 'package:yswords/models/app_settings.dart';
-import 'package:yswords/utils/theme_color_helpers.dart';
-import 'package:yswords/models/bible_evidence.dart';
-import 'package:yswords/pages/evidence_detail_page.dart';
-import 'package:yswords/pages/home_page.dart';
-import 'package:yswords/pages/settings_page.dart';
-import 'package:yswords/providers/main_provider.dart';
-import 'package:yswords/services/ai_search_service.dart';
-import 'package:yswords/services/bible_evidence_service.dart';
-import 'package:yswords/utils/ai_markdown.dart' show parseAiMarkdown;
-import 'package:yswords/utils/jump_to_reference.dart';
-import 'package:yswords/utils/reference_parser.dart';
-import 'package:yswords/widgets/confidence_badge.dart';
-import 'package:yswords/widgets/home_icon_button.dart';
-import 'package:yswords/widgets/localized_back_button.dart';
-import 'package:yswords/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/models/app_settings.dart';
+import 'package:seeksparks/utils/theme_color_helpers.dart';
+import 'package:seeksparks/models/bible_evidence.dart';
+import 'package:seeksparks/pages/evidence_detail_page.dart';
+import 'package:seeksparks/pages/home_page.dart';
+import 'package:seeksparks/pages/settings_page.dart';
+import 'package:seeksparks/providers/main_provider.dart';
+import 'package:seeksparks/services/ai_search_service.dart';
+import 'package:seeksparks/services/bible_evidence_service.dart';
+import 'package:seeksparks/utils/ai_markdown.dart' show parseAiMarkdown;
+import 'package:seeksparks/utils/jump_to_reference.dart';
+import 'package:seeksparks/utils/reference_parser.dart';
+import 'package:seeksparks/widgets/confidence_badge.dart';
+import 'package:seeksparks/widgets/home_icon_button.dart';
+import 'package:seeksparks/widgets/localized_back_button.dart';
+import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 
 /// Browse the Biblical Evidence Archive — 225 archaeological,
 /// manuscript, scientific, and historical findings that intersect

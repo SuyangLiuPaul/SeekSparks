@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:yswords/providers/main_provider.dart';
-import 'package:yswords/services/fetch_books.dart';
-import 'package:yswords/services/fetch_verses.dart';
-import 'package:yswords/utils/jump_to_reference.dart' as jumper;
-import 'package:yswords/widgets/sidebar_panel.dart';
-import 'package:yswords/widgets/bible_reading_pane.dart';
-import 'package:yswords/utils/responsive.dart';
+import 'package:seeksparks/providers/main_provider.dart';
+import 'package:seeksparks/services/fetch_books.dart';
+import 'package:seeksparks/services/fetch_verses.dart';
+import 'package:seeksparks/utils/jump_to_reference.dart' as jumper;
+import 'package:seeksparks/widgets/sidebar_panel.dart';
+import 'package:seeksparks/widgets/bible_reading_pane.dart';
+import 'package:seeksparks/utils/responsive.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -21,6 +21,28 @@ class _HomePageState extends State<HomePage> {
   MainProvider? _secondaryProvider;
   double _splitRatio = 0.5;
   double _splitWidthRatio = 0.5;
+
+  // SeekSparks is desktop/tablet-first: on first layout, if the screen
+  // is already tablet-width or wider, open the sidebar and activate
+  // Split View by default — the two power-user affordances YsWords
+  // otherwise leaves off until the user asks for them. Applied exactly
+  // once per HomePage lifetime so a manual close/deactivate afterward
+  // sticks (this isn't a "always force wide layout" rule, just a
+  // better starting point on a big screen).
+  bool _appliedDesktopDefaults = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_appliedDesktopDefaults) return;
+    _appliedDesktopDefaults = true;
+    final width = MediaQuery.of(context).size.width;
+    if (!ResponsiveBreakpoints.isTabletOrWider(width)) return;
+    _sidebarOpen = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _activateSplitView();
+    });
+  }
 
   @override
   void dispose() {

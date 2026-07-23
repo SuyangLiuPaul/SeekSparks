@@ -8,66 +8,67 @@ import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
-import 'package:yswords/constants/bible_versions.dart';
-import 'package:yswords/constants/text_patterns.dart';
-import 'package:yswords/constants/ui_strings.dart';
-import 'package:yswords/widgets/note_reference_picker_sheet.dart';
-import 'package:yswords/models/app_settings.dart';
-import 'package:yswords/models/bible_map.dart';
-import 'package:yswords/models/verse.dart';
-import 'package:yswords/pages/bible_trivia_page.dart' as trivia;
-import 'package:yswords/pages/books_page.dart';
-import 'package:yswords/pages/evidence_page.dart';
-import 'package:yswords/pages/highlights_page.dart';
-import 'package:yswords/pages/library_page.dart';
-import 'package:yswords/pages/map_viewer_page.dart';
-import 'package:yswords/pages/search_page.dart';
-import 'package:yswords/pages/settings_page.dart';
-import 'package:yswords/pages/stats_page.dart';
-import 'package:yswords/providers/main_provider.dart';
-import 'package:yswords/services/fetch_books.dart';
-import 'package:yswords/services/ai_word_service.dart';
-import 'package:yswords/utils/ai_text_cleaner.dart';
-import 'package:yswords/utils/chapter_scroll_progress.dart';
-import 'package:yswords/services/concordance_service.dart';
-import 'package:yswords/services/cloud_auth_service.dart';
-import 'package:yswords/constants/sermon_topics.dart';
-import 'package:yswords/models/sermon.dart';
-import 'package:yswords/pages/sermon_detail_page.dart';
-import 'package:yswords/services/cross_reference_service.dart';
-import 'package:yswords/services/fetch_verses.dart';
-import 'package:yswords/services/book_intro_service.dart';
-import 'package:yswords/services/map_service.dart';
-import 'package:yswords/services/section_title_service.dart';
-import 'package:yswords/services/sermon_service.dart';
-import 'package:yswords/services/synopsis_service.dart';
-import 'package:yswords/utils/clipboard_helper.dart';
-import 'package:yswords/utils/haptics.dart';
-import 'package:yswords/utils/illustration_grouping.dart';
+import 'package:seeksparks/constants/bible_versions.dart';
+import 'package:seeksparks/constants/text_patterns.dart';
+import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/widgets/note_reference_picker_sheet.dart';
+import 'package:seeksparks/models/app_settings.dart';
+import 'package:seeksparks/models/bible_map.dart';
+import 'package:seeksparks/models/verse.dart';
+import 'package:seeksparks/pages/bible_trivia_page.dart' as trivia;
+import 'package:seeksparks/pages/books_page.dart';
+import 'package:seeksparks/pages/evidence_page.dart';
+import 'package:seeksparks/pages/highlights_page.dart';
+import 'package:seeksparks/pages/library_page.dart';
+import 'package:seeksparks/pages/map_viewer_page.dart';
+import 'package:seeksparks/pages/search_page.dart';
+import 'package:seeksparks/pages/settings_page.dart';
+import 'package:seeksparks/pages/stats_page.dart';
+import 'package:seeksparks/providers/main_provider.dart';
+import 'package:seeksparks/services/fetch_books.dart';
+import 'package:seeksparks/services/ai_word_service.dart';
+import 'package:seeksparks/utils/ai_text_cleaner.dart';
+import 'package:seeksparks/utils/chapter_scroll_progress.dart';
+import 'package:seeksparks/services/concordance_service.dart';
+import 'package:seeksparks/services/cloud_auth_service.dart';
+import 'package:seeksparks/constants/sermon_topics.dart';
+import 'package:seeksparks/models/sermon.dart';
+import 'package:seeksparks/pages/sermon_detail_page.dart';
+import 'package:seeksparks/services/cross_reference_service.dart';
+import 'package:seeksparks/services/fetch_verses.dart';
+import 'package:seeksparks/services/book_intro_service.dart';
+import 'package:seeksparks/services/map_service.dart';
+import 'package:seeksparks/services/section_title_service.dart';
+import 'package:seeksparks/services/sermon_service.dart';
+import 'package:seeksparks/services/synopsis_service.dart';
+import 'package:seeksparks/utils/clipboard_helper.dart';
+import 'package:seeksparks/utils/haptics.dart';
+import 'package:seeksparks/utils/illustration_grouping.dart';
 // 2026-05-10 (v1.2.13): the `as jumper` import was only needed by
 // the `_captureChapterRelativeVerseNum` / `_scrollToVerseInChapter`
 // thin wrappers that v1.2.13 removed alongside the version-switch
 // scroll-restore complexity. Only `prepareJumpToVerse` is still
 // used in this file (jump-to-reference flow on a verse tap).
-import 'package:yswords/utils/jump_to_reference.dart' show prepareJumpToVerse;
-import 'package:yswords/utils/note_reference_parser.dart'
+import 'package:seeksparks/utils/jump_to_reference.dart' show prepareJumpToVerse;
+import 'package:seeksparks/utils/note_reference_parser.dart'
     show extractNoteReferences, NoteReferenceMatch;
-import 'package:yswords/utils/reference_parser.dart';
-import 'package:yswords/widgets/verse_popup_sheet.dart' show showVersePopup;
-import 'package:yswords/utils/responsive.dart';
-import 'package:yswords/utils/short_book_name.dart';
-import 'package:yswords/widgets/google_g_logo.dart';
-import 'package:yswords/widgets/illustration_image.dart';
-import 'package:yswords/utils/floating_toast.dart' show showFloatingToast;
-import 'package:yswords/utils/version_mapper.dart'
+import 'package:seeksparks/utils/reference_parser.dart';
+import 'package:seeksparks/widgets/verse_popup_sheet.dart' show showVersePopup;
+import 'package:seeksparks/utils/responsive.dart';
+import 'package:seeksparks/widgets/docked_panel.dart';
+import 'package:seeksparks/utils/short_book_name.dart';
+import 'package:seeksparks/widgets/google_g_logo.dart';
+import 'package:seeksparks/widgets/illustration_image.dart';
+import 'package:seeksparks/utils/floating_toast.dart' show showFloatingToast;
+import 'package:seeksparks/utils/version_mapper.dart'
     show translateBookName, toEnglish, localeAwareBookName;
-import 'package:yswords/widgets/highlights_sheet.dart';
-import 'package:yswords/widgets/originals_sheet.dart';
-import 'package:yswords/widgets/verse_widget.dart';
-import 'package:yswords/widgets/paragraph_group_widget.dart';
-import 'package:yswords/widgets/version_picker_sheet.dart'
+import 'package:seeksparks/widgets/highlights_sheet.dart';
+import 'package:seeksparks/widgets/originals_sheet.dart';
+import 'package:seeksparks/widgets/verse_widget.dart';
+import 'package:seeksparks/widgets/paragraph_group_widget.dart';
+import 'package:seeksparks/widgets/version_picker_sheet.dart'
     show showLanguageGroupedVersionMenu;
-import 'package:yswords/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 
 class BibleReadingPane extends StatefulWidget {
   final bool showSidebarToggle;
@@ -3030,6 +3031,36 @@ void _showOriginalsSheet({
   // concordance reference the sheet's BuildContext may be defunct, so
   // we rely on the provider reference instead.
   final mainProvider = context.read<MainProvider>();
+
+  Widget buildSheet(BuildContext sheetCtx) => OriginalsSheet(
+        verses: verses,
+        allVerses: mainProvider.verses,
+        locale: locale,
+        currentVersion: mainProvider.currentVersion,
+        onNavigateRef: (ref) {
+          Navigator.of(sheetCtx).maybePop();
+          _navigateToConcordanceRef(
+            mainProvider: mainProvider,
+            ref: ref,
+            locale: locale,
+          );
+        },
+      );
+
+  // SeekSparks: on desktop/tablet-wide screens this is a persistent
+  // docked panel (built to stay open alongside the reader while the
+  // structured Strong's search lives in the same panel) rather than a
+  // bottom sheet, which is the more natural "power user reference
+  // panel" shape on a big screen. `showDockedPanel` reuses a real
+  // Navigator route (see docked_panel.dart) so `OriginalsSheet`'s own
+  // internal close button (`Navigator.of(context).maybePop()`) keeps
+  // working unmodified in either presentation.
+  final width = MediaQuery.of(context).size.width;
+  if (ResponsiveBreakpoints.isDesktopOrWider(width)) {
+    showDockedPanel(context: context, builder: buildSheet, width: 520);
+    return;
+  }
+
   showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
@@ -3041,20 +3072,7 @@ void _showOriginalsSheet({
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
     ),
-    builder: (sheetCtx) => OriginalsSheet(
-      verses: verses,
-      allVerses: mainProvider.verses,
-      locale: locale,
-      currentVersion: mainProvider.currentVersion,
-      onNavigateRef: (ref) {
-        Navigator.of(sheetCtx).maybePop();
-        _navigateToConcordanceRef(
-          mainProvider: mainProvider,
-          ref: ref,
-          locale: locale,
-        );
-      },
-    ),
+    builder: buildSheet,
   );
 }
 
@@ -3309,7 +3327,7 @@ class _AiExplainSheetState extends State<_AiExplainSheet> {
     final sel = turn.selectedText.trim();
     final text = sel.isNotEmpty ? sel : (turn.answer ?? '').trim();
     if (text.isEmpty) return;
-    final attribution = uiStrings['aiNoteAttribution']?[_loc] ?? '— YsWords AI';
+    final attribution = uiStrings['aiNoteAttribution']?[_loc] ?? '— SeekSparks AI';
     final snippet = '「${widget.refLabel}」\n$text\n$attribution';
     showNoteEditor(
       context: context,

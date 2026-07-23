@@ -1,6 +1,6 @@
 // 2026-06-18 (v1.3.91): tests for the boolean Strong's-search logic.
 import 'package:flutter_test/flutter_test.dart';
-import 'package:yswords/utils/strongs_boolean_search.dart';
+import 'package:seeksparks/utils/strongs_boolean_search.dart';
 
 void main() {
   group('parseStrongsBoolean', () {
@@ -66,6 +66,48 @@ void main() {
       expect(parseStrongsBoolean('G99999 AND G26'), isNull);
       expect(parseStrongsBoolean('H99999 OR H1'), isNull);
     });
+
+    test('NOT operator, word and symbol form', () {
+      final q1 = parseStrongsBoolean('G25 NOT G26')!;
+      expect(q1.ops, [StrongsOp.not]);
+      final q2 = parseStrongsBoolean('G25 ! G26')!;
+      expect(q2.ops, [StrongsOp.not]);
+    });
+
+    test('NOT is case-insensitive', () {
+      expect(parseStrongsBoolean('g25 not h7225')!.ops, [StrongsOp.not]);
+    });
+
+    test('NEARn operator parses distance, NEAR and WITHIN both work', () {
+      final q1 = parseStrongsBoolean('G25 NEAR5 G26')!;
+      expect(q1.ops, [StrongsOp.near]);
+      expect(q1.nearDistance, [5]);
+      final q2 = parseStrongsBoolean('G25 WITHIN10 G26')!;
+      expect(q2.ops, [StrongsOp.near]);
+      expect(q2.nearDistance, [10]);
+    });
+
+    test('NEAR is case-insensitive', () {
+      final q = parseStrongsBoolean('g25 near3 h7225')!;
+      expect(q.ops, [StrongsOp.near]);
+      expect(q.nearDistance, [3]);
+    });
+
+    test('NEAR distance out of range rejected', () {
+      expect(parseStrongsBoolean('G25 NEAR0 G26'), isNull);
+      expect(parseStrongsBoolean('G25 NEAR51 G26'), isNull);
+    });
+
+    test('hasProximity reflects presence of a NEAR op', () {
+      expect(parseStrongsBoolean('G25 AND G26')!.hasProximity, false);
+      expect(parseStrongsBoolean('G25 NEAR5 G26')!.hasProximity, true);
+    });
+
+    test('mixed AND/NOT/NEAR keeps parallel nearDistance list', () {
+      final q = parseStrongsBoolean('G25 AND G26 NOT G27 NEAR4 H100')!;
+      expect(q.ops, [StrongsOp.and, StrongsOp.not, StrongsOp.near]);
+      expect(q.nearDistance, [null, null, 4]);
+    });
   });
 
   group('evaluateStrongsBoolean (set algebra)', () {
@@ -108,6 +150,35 @@ void main() {
     test('empty term set yields empty AND result', () {
       final q = parseStrongsBoolean('G25 AND H7225')!; // H7225 absent in stub
       expect(evaluateStrongsBoolean(q, refsFor), isEmpty);
+    });
+
+    test('NOT = difference', () {
+      final q = parseStrongsBoolean('G25 NOT G26')!;
+      // G25 {John 3:16, Romans 5:8, 1 John 4:8} minus G26 → John 3:16 only
+      expect(evaluateStrongsBoolean(q, refsFor), {'John 3:16'});
+    });
+
+    test('NEAR behaves as AND in the plain set-algebra evaluator', () {
+      final q = parseStrongsBoolean('G25 NEAR5 G26')!;
+      expect(evaluateStrongsBoolean(q, refsFor),
+          {'Romans 5:8', '1 John 4:8'});
+    });
+  });
+
+  group('nearPairs', () {
+    test('empty for a query with no NEAR operator', () {
+      final q = parseStrongsBoolean('G25 AND G26 NOT G27')!;
+      expect(nearPairs(q), isEmpty);
+    });
+
+    test('extracts (termIndex, termIndex+1, maxWords) for each NEAR', () {
+      final q = parseStrongsBoolean('G25 NEAR5 G26')!;
+      expect(nearPairs(q), [(0, 1, 5)]);
+    });
+
+    test('finds every NEAR in a longer chain, ignoring other ops', () {
+      final q = parseStrongsBoolean('G25 AND G26 NEAR3 G27 OR H1 NEAR8 H2')!;
+      expect(nearPairs(q), [(1, 2, 3), (3, 4, 8)]);
     });
   });
 }

@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:yswords/constants/bible_versions.dart';
-import 'package:yswords/services/daily_verse_fallback.dart';
+import 'package:seeksparks/constants/bible_versions.dart';
+import 'package:seeksparks/services/daily_verse_fallback.dart';
 
 /// 2026-06-11 audit: regression coverage for the d1eb87b daily-verse
 /// fallback. LJK1/LJK2 (biblexg*) ship NT only; an OT daily verse on

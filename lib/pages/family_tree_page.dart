@@ -2,19 +2,19 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:yswords/utils/clipboard_helper.dart';
+import 'package:seeksparks/utils/clipboard_helper.dart';
 import 'package:provider/provider.dart';
 
-import 'package:yswords/constants/text_patterns.dart' show sanitizeForSearch;
-import 'package:yswords/constants/ui_strings.dart';
-import 'package:yswords/models/app_settings.dart';
-import 'package:yswords/models/biblical_person.dart';
-import 'package:yswords/services/family_tree_service.dart';
-import 'package:yswords/utils/biblical_role.dart' show localizedRole;
-import 'package:yswords/utils/theme_color_helpers.dart';
-import 'package:yswords/widgets/home_icon_button.dart';
-import 'package:yswords/widgets/localized_back_button.dart';
-import 'package:yswords/widgets/person_detail_sheet.dart';
+import 'package:seeksparks/constants/text_patterns.dart' show sanitizeForSearch;
+import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/models/app_settings.dart';
+import 'package:seeksparks/models/biblical_person.dart';
+import 'package:seeksparks/services/family_tree_service.dart';
+import 'package:seeksparks/utils/biblical_role.dart' show localizedRole;
+import 'package:seeksparks/utils/theme_color_helpers.dart';
+import 'package:seeksparks/widgets/home_icon_button.dart';
+import 'package:seeksparks/widgets/localized_back_button.dart';
+import 'package:seeksparks/widgets/person_detail_sheet.dart';
 
 /// Browseable Bible family tree, modelled on the structure of the
 /// Wikipedia article *"Genealogies in the Bible"*:

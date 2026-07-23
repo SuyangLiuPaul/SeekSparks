@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs><linearGradient id="g" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#3730A3"/><stop offset="1" stop-color="#EA580C"/></linearGradient>
+  <linearGradient id="sh" x1="0" y1="0" x2="0" y2="64" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#ffffff" stop-opacity="0.14"/><stop offset="0.5" stop-color="#ffffff" stop-opacity="0"/><stop offset="1" stop-color="#000000" stop-opacity="0.10"/></linearGradient></defs>
+  <rect width="64" height="64" rx="14.4" fill="url(#g)"/>
+  <rect width="64" height="64" rx="14.4" fill="url(#sh)"/>
+  <path d="M8.32,38.4 L32.0,41.92 L32.0,48.96 L8.32,47.68 Z" fill="#fff"/>
+  <path d="M55.68,38.4 L32.0,41.92 L32.0,48.96 L55.68,47.68 Z" fill="#fff"/>
+  <path d="M14.95,41.357 L30.579,44.877" stroke="#3730A3" stroke-opacity="0.35" stroke-width="1.0"/>
+  <path d="M49.05,41.357 L33.421,44.877" stroke="#3730A3" stroke-opacity="0.35" stroke-width="1.0"/>
+  <path d="M32.0,41.92 L32.0,48.96" stroke="#3730A3" stroke-opacity="0.6" stroke-width="1.2"/>
+  <path d="M32.0,17.28 Q33.301,30.059 37.914,31.36 Q33.301,32.661 32.0,45.44 Q30.699,32.661 26.086,31.36 Q30.699,30.059 32.0,17.28 Z" fill="#fff"/>
+  <path d="M45.798,17.843 Q46.241,22.188 47.809,22.63 Q46.241,23.073 45.798,27.418 Q45.356,23.073 43.788,22.63 Q45.356,22.188 45.798,17.843 Z" fill="#fff" fill-opacity="0.92"/>
+</svg>

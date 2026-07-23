@@ -42,12 +42,20 @@ import 'package:flutter/material.dart' show Color, Colors;
 import 'package:flutter/services.dart'
     show MethodChannel, PlatformException, rootBundle;
 
-import 'package:yswords/services/app_icon_service_web.dart'
-    if (dart.library.io) 'package:yswords/services/app_icon_service_web_stub.dart'
+import 'package:seeksparks/services/app_icon_service_web.dart'
+    if (dart.library.io) 'package:seeksparks/services/app_icon_service_web_stub.dart'
     as web_impl;
 
 class AppIconService {
   AppIconService._();
+
+  /// SeekSparks' own brand seed colour (the indigo half of the
+  /// icon's indigo→ember gradient) — the app's default theme, matching
+  /// the app icon and marketing mark. Falls through variantForColor's
+  /// named-colour buckets untouched, so it naturally resolves to "no
+  /// variant" (the default gradient icon), the same way YsWords' own
+  /// default blue did.
+  static const Color kDefaultPrimaryColor = Color(0xFF3730A3);
 
   static const _iosChannel = MethodChannel('yswords/ios_icon');
   static const _androidChannel = MethodChannel('yswords/android_icon');

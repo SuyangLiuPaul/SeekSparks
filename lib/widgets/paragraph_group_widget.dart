@@ -3,14 +3,14 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:yswords/models/app_settings.dart';
-import 'package:yswords/models/verse.dart';
-import 'package:yswords/providers/main_provider.dart';
-import 'package:yswords/utils/build_verse_content_spans.dart';
-import 'package:yswords/utils/responsive.dart';
-import 'package:yswords/widgets/bible_reading_pane.dart' show showNoteEditor;
-import 'package:yswords/widgets/block_note_card.dart';
-import 'package:yswords/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:seeksparks/models/app_settings.dart';
+import 'package:seeksparks/models/verse.dart';
+import 'package:seeksparks/providers/main_provider.dart';
+import 'package:seeksparks/utils/build_verse_content_spans.dart';
+import 'package:seeksparks/utils/responsive.dart';
+import 'package:seeksparks/widgets/bible_reading_pane.dart' show showNoteEditor;
+import 'package:seeksparks/widgets/block_note_card.dart';
+import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 
 /// Renders a group of consecutive verses as one flowing paragraph (RichText).
 /// Used in paragraph mode. Eliminates per-verse line breaks so verses read

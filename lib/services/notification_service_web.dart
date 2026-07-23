@@ -17,7 +17,7 @@ external JSAny? get _windowNotification;
 // We construct via a small JS shim defined inline in web/index.html
 // so the Dart side can pass an options bag without hitting the
 // extension-type / inline-class dance (which needs Dart 3.3).
-@JS('window.yswordsShowNotification')
+@JS('window.seekSparksShowNotification')
 external JSAny? _windowShowNotification(String title, JSObject? options);
 
 bool notificationIsSupported() => _windowNotification != null;

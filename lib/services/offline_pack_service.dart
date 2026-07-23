@@ -4,7 +4,7 @@ import 'dart:convert';
 // the conditional-export helper. Web build still uses
 // `fetch(url)`; native build skips with a debug log (the
 // offline-pack UI is web-only anyway).
-import 'package:yswords/utils/fetch_helper.dart';
+import 'package:seeksparks/utils/fetch_helper.dart';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';

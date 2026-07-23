@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:yswords/models/app_settings.dart';
-import 'package:yswords/pages/about_page.dart';
-import 'package:yswords/pages/dashboard_page.dart';
-import 'package:yswords/pages/library_page.dart';
-import 'package:yswords/pages/settings_page.dart';
-import 'package:yswords/providers/main_provider.dart';
+import 'package:seeksparks/models/app_settings.dart';
+import 'package:seeksparks/pages/about_page.dart';
+import 'package:seeksparks/pages/dashboard_page.dart';
+import 'package:seeksparks/pages/library_page.dart';
+import 'package:seeksparks/pages/settings_page.dart';
+import 'package:seeksparks/providers/main_provider.dart';
 
 /// 2026-06-11 audit: responsive overflow smoke tests.
 ///

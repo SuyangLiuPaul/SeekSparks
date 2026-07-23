@@ -14,8 +14,8 @@
 // edit to the parser or the name map breaks any name, this fails loudly.
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:yswords/constants/book_names.dart' show bookNameToEnglish;
-import 'package:yswords/utils/note_reference_parser.dart';
+import 'package:seeksparks/constants/book_names.dart' show bookNameToEnglish;
+import 'package:seeksparks/utils/note_reference_parser.dart';
 
 bool _isAscii(String s) => s.codeUnits.every((c) => c < 128);
 

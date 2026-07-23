@@ -1,49 +1,50 @@
 // 2026-05-20 (v1.2.67): `dart:js_interop` was here. See
 // `lib/utils/clear_cache_helper.dart` for the conditional-import
 // pattern that replaced it.
-import 'package:yswords/utils/clear_cache_helper.dart';
-import 'package:yswords/utils/clipboard_helper.dart';
+import 'package:seeksparks/utils/clear_cache_helper.dart';
+import 'package:seeksparks/utils/clipboard_helper.dart';
 
 import 'package:flutter/foundation.dart'
     show kIsWeb, defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/material.dart';
-import 'package:yswords/constants/app_version.dart';
-import 'package:yswords/constants/build_flags.dart';
-import 'package:yswords/constants/text_patterns.dart' show sanitizeForCopy;
-import 'package:yswords/constants/ui_strings.dart';
+import 'package:seeksparks/constants/app_version.dart';
+import 'package:seeksparks/constants/build_flags.dart';
+import 'package:seeksparks/constants/text_patterns.dart' show sanitizeForCopy;
+import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:provider/provider.dart';
-import 'package:yswords/models/app_settings.dart';
-import 'package:yswords/models/app_style_preset.dart';
-import 'package:yswords/models/dashboard_section.dart';
-import 'package:yswords/providers/main_provider.dart';
+import 'package:seeksparks/models/app_settings.dart';
+import 'package:seeksparks/models/app_style_preset.dart';
+import 'package:seeksparks/models/dashboard_section.dart';
+import 'package:seeksparks/providers/main_provider.dart';
+import 'package:seeksparks/services/app_icon_service.dart';
 import 'package:get/get.dart';
-import 'package:yswords/pages/about_page.dart';
-import 'package:yswords/utils/ai_markdown.dart' show parseAiMarkdown;
-import 'package:yswords/utils/theme_color_helpers.dart';
-import 'package:yswords/pages/profiles_page.dart';
-import 'package:yswords/services/cloud_auth_service.dart';
-import 'package:yswords/widgets/gemini_key_card.dart';
-import 'package:yswords/widgets/google_g_logo.dart';
+import 'package:seeksparks/pages/about_page.dart';
+import 'package:seeksparks/utils/ai_markdown.dart' show parseAiMarkdown;
+import 'package:seeksparks/utils/theme_color_helpers.dart';
+import 'package:seeksparks/pages/profiles_page.dart';
+import 'package:seeksparks/services/cloud_auth_service.dart';
+import 'package:seeksparks/widgets/gemini_key_card.dart';
+import 'package:seeksparks/widgets/google_g_logo.dart';
 import 'dart:async' show Timer;
 
-import "package:yswords/services/cloud_sync_service.dart" show CloudSyncStatus;
-import "package:yswords/services/realtime_db_sync_service.dart";
-import 'package:yswords/models/notification_category.dart';
-import 'package:yswords/services/notification_service.dart';
-import 'package:yswords/widgets/contact_line.dart';
-import 'package:yswords/widgets/profile_avatar.dart';
+import "package:seeksparks/services/cloud_sync_service.dart" show CloudSyncStatus;
+import "package:seeksparks/services/realtime_db_sync_service.dart";
+import 'package:seeksparks/models/notification_category.dart';
+import 'package:seeksparks/services/notification_service.dart';
+import 'package:seeksparks/widgets/contact_line.dart';
+import 'package:seeksparks/widgets/profile_avatar.dart';
 // 2026-05-07 (v17): fetch_books / fetch_verses imports removed; the
 // only consumer was the deleted "Check for Updates" reload path.
-import 'package:yswords/services/export_service.dart';
-import 'package:yswords/services/install_prompt_service.dart';
-import 'package:yswords/services/profile_service.dart';
-import 'package:yswords/utils/font_catalog.dart';
+import 'package:seeksparks/services/export_service.dart';
+import 'package:seeksparks/services/install_prompt_service.dart';
+import 'package:seeksparks/services/profile_service.dart';
+import 'package:seeksparks/utils/font_catalog.dart';
 
-import 'package:yswords/services/offline_pack_service.dart';
-import 'package:yswords/widgets/home_icon_button.dart';
-import 'package:yswords/widgets/localized_back_button.dart';
-import 'package:yswords/widgets/onboarding_dialog.dart';
-import 'package:yswords/utils/responsive.dart';
+import 'package:seeksparks/services/offline_pack_service.dart';
+import 'package:seeksparks/widgets/home_icon_button.dart';
+import 'package:seeksparks/widgets/localized_back_button.dart';
+import 'package:seeksparks/widgets/onboarding_dialog.dart';
+import 'package:seeksparks/utils/responsive.dart';
 
 String getDevotionalFormattedText(
     List<Map<String, dynamic>> verses, String? book, int? chapter) {
@@ -208,7 +209,7 @@ class _SettingsPageBodyState extends State<_SettingsPageBody> {
           final currentChapter = mainProvider.currentChapter;
 
           // 2026-06-16 (v1.3.87): exactly 7 swatches, each mapping 1:1 to one
-          // of the 7 themed app icons (default-blue, Red, Orange, Green,
+          // of the 7 themed app icons (default-indigo, Red, Orange, Green,
           // Purple, Pink, Dark) via AppIconService.variantForColor — so every
           // pick predictably changes BOTH the theme AND the home-screen / dock
           // / favicon icon. Previously the picker offered 18 Material colours
@@ -216,8 +217,13 @@ class _SettingsPageBodyState extends State<_SettingsPageBody> {
           // light-blue silently mapped to the default icon → "why didn't my
           // icon change?". Order matches the README "Your theme, your icon"
           // row. Keep this list in lock-step with variantForColor's buckets.
+          //
+          // SeekSparks fork: swatch 0 is the app's own brand indigo (the
+          // icon's gradient start colour) instead of YsWords' blue, so the
+          // "default" pick matches the actual logo instead of clashing with
+          // it.
           final List<Color> palette = [
-            Colors.blue, // → default (blue) icon
+            AppIconService.kDefaultPrimaryColor, // → default (indigo) icon
             Colors.red, // → AppIcon-Red
             Colors.orange, // → AppIcon-Orange
             Colors.green, // → AppIcon-Green
@@ -2197,11 +2203,11 @@ class _NotificationsCardState extends State<_NotificationsCard> {
           // they look like.
           await NotificationService.show(
             title: uiStrings['appName']?[widget.settings.locale] ??
-                'YsWords',
+                'SeekSparks',
             body: uiStrings['notificationsEnabledBody']
                     ?[widget.settings.locale] ??
                 'Notifications are on. You\'ll get gentle daily reminders.',
-            tag: 'yswords-confirm',
+            tag: 'seeksparks-confirm',
           );
         } else {
           await widget.settings.setNotificationsEnabled(false);
@@ -2286,11 +2292,11 @@ class _NotificationsCardState extends State<_NotificationsCard> {
                       final messenger = ScaffoldMessenger.of(context);
                       try {
                         await NotificationService.show(
-                          title: uiStrings['appName']?[locale] ?? 'YsWords',
+                          title: uiStrings['appName']?[locale] ?? 'SeekSparks',
                           body: uiStrings['notificationsTestBody']
                                   ?[locale] ??
                               'This is a test notification.',
-                          tag: 'yswords-test',
+                          tag: 'seeksparks-test',
                         );
                         if (!mounted) return;
                         // 2026-06-18 (v1.3.89): name the ACTUAL platform in
@@ -2321,7 +2327,7 @@ class _NotificationsCardState extends State<_NotificationsCard> {
                                     ?[locale] ??
                                 "Test notification sent. If you don't see a "
                                     'banner, check your {platform} '
-                                    'notification settings for YsWords (or '
+                                    'notification settings for SeekSparks (or '
                                     'Focus / Do Not Disturb).')
                             .replaceAll('{platform}', plat);
                         messenger.showSnackBar(
@@ -2744,7 +2750,7 @@ class _AboutCard extends StatelessWidget {
                     size: settings.fontSize + 4),
                 SizedBox(width: 8 * s),
                 Text(
-                  uiStrings['appName']?[locale] ?? 'YsWords',
+                  uiStrings['appName']?[locale] ?? 'SeekSparks',
                   style: TextStyle(
                     fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
                     fontSize: settings.fontSize + 2,
@@ -2970,13 +2976,13 @@ class _AboutCard extends StatelessWidget {
     if (ok != true) return;
     // The heavy lifting (unregister service workers, delete Cache
     // Storage entries, clear the build-stamp, reload) lives in
-    // web/index.html as window.yswordsClearCacheAndReload(). The
+    // web/index.html as window.seekSparksClearCacheAndReload(). The
     // Dart side just calls it.
     if (kIsWeb) clearCacheAndReload();
   }
 }
 
-// 2026-05-20 (v1.2.67): the `@JS('yswordsClearCacheAndReload')`
+// 2026-05-20 (v1.2.67): the `@JS('seekSparksClearCacheAndReload')`
 // binding was here. Moved to `lib/utils/clear_cache_helper.dart`
 // (conditional export — web stub + native no-op) so this file
 // compiles on iOS / Android. Same UX, same web behaviour.
@@ -3648,7 +3654,7 @@ class _OfflinePackCardState extends State<_OfflinePackCard> {
 /// app is already an installed binary. Within web, the card
 /// branches on what the browser is offering:
 ///   * `nativePrompt`   — Chrome / Edge has fired
-///     beforeinstallprompt. Show "Install YsWords" button which
+///     beforeinstallprompt. Show "Install SeekSparks" button which
 ///     triggers the OS install picker.
 ///   * `iosManual`      — iOS Safari has no programmatic install
 ///     API. Show a 2-step guide pointing at the Share sheet.
@@ -3693,7 +3699,7 @@ class _InstallAppCardState extends State<_InstallAppCard> {
     });
     if (outcome == 'accepted') {
       messenger.showSnackBar(const SnackBar(
-        content: Text('Installing YsWords…'),
+        content: Text('Installing SeekSparks…'),
         duration: Duration(seconds: 2),
       ));
     }
@@ -3716,10 +3722,10 @@ class _InstallAppCardState extends State<_InstallAppCard> {
 
     switch (_flow) {
       case InstallFlowKind.nativePrompt:
-        title = isZh ? '安装 YsWords' : 'Install YsWords';
+        title = isZh ? '安装 SeekSparks' : 'Install SeekSparks';
         body = isZh
-            ? '把 YsWords 安装到主屏幕,获得更快的启动速度和离线访问。'
-            : 'Install YsWords to your home screen for faster launch + offline access.';
+            ? '把 SeekSparks 安装到主屏幕,获得更快的启动速度和离线访问。'
+            : 'Install SeekSparks to your home screen for faster launch + offline access.';
         action = FilledButton.icon(
           onPressed: _busy ? null : _onInstallPressed,
           icon: const Icon(Icons.install_mobile_outlined, size: 18),
@@ -3729,14 +3735,14 @@ class _InstallAppCardState extends State<_InstallAppCard> {
       case InstallFlowKind.iosManual:
         title = isZh ? '添加到主屏幕' : 'Add to Home Screen';
         body = isZh
-            ? '1. 点击 Safari 底部的「分享」按钮（⬆️）\n2. 选择「添加到主屏幕」\n3. 点击「添加」 — YsWords 就会像原生 App 一样运行。'
-            : '1. Tap the Safari Share button at the bottom (⬆️)\n2. Choose "Add to Home Screen"\n3. Tap "Add" — YsWords runs like a native app.';
+            ? '1. 点击 Safari 底部的「分享」按钮（⬆️）\n2. 选择「添加到主屏幕」\n3. 点击「添加」 — SeekSparks 就会像原生 App 一样运行。'
+            : '1. Tap the Safari Share button at the bottom (⬆️)\n2. Choose "Add to Home Screen"\n3. Tap "Add" — SeekSparks runs like a native app.';
         break;
       case InstallFlowKind.desktopManual:
-        title = isZh ? '安装 YsWords 桌面版' : 'Install YsWords as a desktop app';
+        title = isZh ? '安装 SeekSparks 桌面版' : 'Install SeekSparks as a desktop app';
         body = isZh
-            ? '在地址栏右侧找到「安装」图标（⊕）, 或者打开浏览器菜单 → 「安装 YsWords」。安装后 YsWords 会有自己的窗口和 Dock / 开始菜单图标。'
-            : 'Look for the install icon (⊕) on the right side of the address bar, or open the browser menu → "Install YsWords". Once installed YsWords gets its own window + Dock / Start Menu icon.';
+            ? '在地址栏右侧找到「安装」图标（⊕）, 或者打开浏览器菜单 → 「安装 SeekSparks」。安装后 SeekSparks 会有自己的窗口和 Dock / 开始菜单图标。'
+            : 'Look for the install icon (⊕) on the right side of the address bar, or open the browser menu → "Install SeekSparks". Once installed SeekSparks gets its own window + Dock / Start Menu icon.';
         break;
       case InstallFlowKind.alreadyInstalled:
       case InstallFlowKind.notApplicable:

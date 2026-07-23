@@ -4,16 +4,16 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:yswords/models/app_style_preset.dart' show CardMaterial;
-import 'package:yswords/models/dashboard_section.dart';
-import 'package:yswords/models/notification_category.dart';
-import 'package:yswords/services/app_icon_service.dart';
-import 'package:yswords/services/notification_scheduler.dart'
+import 'package:seeksparks/models/app_style_preset.dart' show CardMaterial;
+import 'package:seeksparks/models/dashboard_section.dart';
+import 'package:seeksparks/models/notification_category.dart';
+import 'package:seeksparks/services/app_icon_service.dart';
+import 'package:seeksparks/services/notification_scheduler.dart'
     as scheduler;
-import 'package:yswords/services/cloud_auth_service.dart';
-import 'package:yswords/services/profile_service.dart';
-import 'package:yswords/services/realtime_db_sync_service.dart';
-import 'package:yswords/utils/font_catalog.dart';
+import 'package:seeksparks/services/cloud_auth_service.dart';
+import 'package:seeksparks/services/profile_service.dart';
+import 'package:seeksparks/services/realtime_db_sync_service.dart';
+import 'package:seeksparks/utils/font_catalog.dart';
 
 const _kFontFamily = 'fontFamily';
 const _kFontSize = 'fontSize';
@@ -114,7 +114,7 @@ class AppSettings extends ChangeNotifier {
   String _fontFamily = '-apple-system';
   double _fontSize = 20.0;
   double _lineSpacing = 1.5;
-  Color _primaryColor = Colors.lightBlue;
+  Color _primaryColor = AppIconService.kDefaultPrimaryColor;
   // 2026-05-17 (v1.2.47): default changed from 'withRef' →
   // 'devotional' per user request — devotional puts the
   // reference in parens AFTER the text (灵修 / 抄经 friendly
@@ -733,7 +733,7 @@ class AppSettings extends ChangeNotifier {
     _fontFamily = '-apple-system';
     _fontSize = 20.0;
     _lineSpacing = 1.5;
-    _primaryColor = Colors.lightBlue;
+    _primaryColor = AppIconService.kDefaultPrimaryColor;
     _copyFormat = 'devotional';
     _themeMode = ThemeMode.system;
     _paragraphMode = true;
@@ -864,7 +864,7 @@ class AppSettings extends ChangeNotifier {
     final rawLineSpacing = prefs.getDouble(_kLineSpacing) ?? 1.5;
     _lineSpacing = (rawLineSpacing * 10).roundToDouble() / 10;
     _primaryColor =
-        Color(prefs.getInt(_kPrimaryColor) ?? Colors.lightBlue.toARGB32());
+        Color(prefs.getInt(_kPrimaryColor) ?? AppIconService.kDefaultPrimaryColor.toARGB32());
     // 2026-06-14 (v1.3.70): re-apply the themed home-screen / dock /
     // favicon icon on startup so it tracks the saved theme colour.
     // iOS resets `alternateIconName` to the primary icon on every app

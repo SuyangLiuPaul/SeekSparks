@@ -24,8 +24,8 @@ library;
 
 import 'dart:convert';
 
-import 'package:yswords/constants/app_version.dart';
-import 'package:yswords/providers/main_provider.dart';
+import 'package:seeksparks/constants/app_version.dart';
+import 'package:seeksparks/providers/main_provider.dart';
 
 class ExportService {
   /// Returns a Markdown document with three sections (Highlights,
@@ -38,7 +38,7 @@ class ExportService {
     final highlightCount = mp.highlights.length;
     final bookmarkCount = mp.bookmarks.length;
     final noteCount = mp.verseNotes.length;
-    buf.writeln('# YsWords export');
+    buf.writeln('# SeekSparks export');
     buf.writeln();
     buf.writeln('- Generated: $now');
     buf.writeln('- App version: $kAppVersion');

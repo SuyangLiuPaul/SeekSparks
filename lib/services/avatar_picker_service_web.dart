@@ -1,13 +1,13 @@
 // Web binding for the avatar picker. The actual file-input + canvas
-// resize logic lives in `web/index.html` as `window.yswordsPickAvatar()`
+// resize logic lives in `web/index.html` as `window.seekSparksPickAvatar()`
 // — see the comment block above the script there. Keeping the JS
 // inline in the HTML rather than building the same flow with raw
 // js_interop primitives is much shorter and easier to maintain.
 
 import 'dart:js_interop';
 
-@JS('yswordsPickAvatar')
-external JSPromise<JSAny?> _yswordsPickAvatar();
+@JS('seekSparksPickAvatar')
+external JSPromise<JSAny?> _seekSparksPickAvatar();
 
 bool avatarPickerIsAvailable() {
   // The function is defined in web/index.html. We can't tear off
@@ -22,7 +22,7 @@ bool avatarPickerIsAvailable() {
 
 Future<String?> avatarPick() async {
   try {
-    final result = await _yswordsPickAvatar().toDart;
+    final result = await _seekSparksPickAvatar().toDart;
     if (result == null) return null;
     // Result is a JS string (data URL) or null.
     final str = result as JSString?;

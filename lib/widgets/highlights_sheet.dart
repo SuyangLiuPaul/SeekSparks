@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'package:yswords/constants/ui_strings.dart';
-import 'package:yswords/utils/version_mapper.dart'
+import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/utils/version_mapper.dart'
     show localeAwareBookName;
 
 /// A parsed verse reference recovered from a stored highlight ID.

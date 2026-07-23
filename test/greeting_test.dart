@@ -3,7 +3,7 @@
 // not morning. Now morning starts at 05:00.
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:yswords/utils/greeting.dart';
+import 'package:seeksparks/utils/greeting.dart';
 
 void main() {
   group('dayPartForHour', () {

@@ -9,7 +9,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:yswords/services/app_icon_service.dart';
+import 'package:seeksparks/services/app_icon_service.dart';
 
 void main() {
   group('AppIconService.variantForColor', () {
@@ -42,6 +42,20 @@ void main() {
       expect(AppIconService.variantForColor(Colors.cyan), isNull);
       // Plain-Color form too.
       expect(AppIconService.variantForColor(Color(Colors.blue.toARGB32())),
+          isNull);
+    });
+
+    // SeekSparks fork: the app's own brand indigo (swatch 0 / the default
+    // AppSettings.primaryColor) must also fall through to "no variant" —
+    // it's a distinct value from Colors.indigo (which maps to 'Purple'),
+    // so this isn't automatically covered by the existing indigo case
+    // above and is worth its own regression guard.
+    test('SeekSparks default brand colour maps to the primary icon', () {
+      expect(AppIconService.variantForColor(AppIconService.kDefaultPrimaryColor),
+          isNull);
+      expect(
+          AppIconService.variantForColor(
+              Color(AppIconService.kDefaultPrimaryColor.toARGB32())),
           isNull);
     });
   });

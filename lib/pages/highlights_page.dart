@@ -2,17 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 
-import 'package:yswords/constants/text_patterns.dart' show sanitizeForSearch;
-import 'package:yswords/constants/ui_strings.dart';
-import 'package:yswords/models/app_settings.dart';
-import 'package:yswords/models/verse.dart';
-import 'package:yswords/pages/home_page.dart';
-import 'package:yswords/providers/main_provider.dart';
-import 'package:yswords/utils/clipboard_helper.dart';
-import 'package:yswords/utils/jump_to_reference.dart';
-import 'package:yswords/widgets/home_icon_button.dart';
-import 'package:yswords/widgets/localized_back_button.dart';
-import 'package:yswords/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:seeksparks/constants/text_patterns.dart' show sanitizeForSearch;
+import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/models/app_settings.dart';
+import 'package:seeksparks/models/verse.dart';
+import 'package:seeksparks/pages/home_page.dart';
+import 'package:seeksparks/providers/main_provider.dart';
+import 'package:seeksparks/utils/clipboard_helper.dart';
+import 'package:seeksparks/utils/jump_to_reference.dart';
+import 'package:seeksparks/widgets/home_icon_button.dart';
+import 'package:seeksparks/widgets/localized_back_button.dart';
+import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 
 /// Standalone highlights browser. Filters by color (or "All") and a
 /// free-text search box; tap a row to jump to the verse in the
@@ -208,7 +208,7 @@ class _HighlightsPageState extends State<HighlightsPage> {
     }
     if (!context.mounted) return;
     await ClipboardHelper.shareOrCopy(context, buf.toString().trim(),
-        title: 'YsWords highlights');
+        title: 'SeekSparks highlights');
   }
 
   void _showActions(BuildContext context, _HighlightItem it,

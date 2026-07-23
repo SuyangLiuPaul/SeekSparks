@@ -1,5 +1,5 @@
 // Cross-platform image picker for the profile editor. On web uses a
-// small JS helper in `web/index.html` (yswordsPickAvatar) that
+// small JS helper in `web/index.html` (seekSparksPickAvatar) that
 // opens a file input, center-crops + resizes to 256×256, and
 // returns a JPEG data URL. On non-web targets stubbed to null —
 // we ship web only, but conditional import keeps types clean.

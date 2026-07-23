@@ -1,4 +1,4 @@
-import 'package:yswords/constants/book_name_mapping.dart' show zhToEn, toLocale;
+import 'package:seeksparks/constants/book_name_mapping.dart' show zhToEn, toLocale;
 
 String translateBookName(String? book, String version) {
   if (book == null) return '';

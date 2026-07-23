@@ -2,9 +2,9 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:yswords/models/bible_map.dart';
-import 'package:yswords/services/fetch_books.dart' show standardBookOrder;
-import 'package:yswords/utils/illustration_grouping.dart';
+import 'package:seeksparks/models/bible_map.dart';
+import 'package:seeksparks/services/fetch_books.dart' show standardBookOrder;
+import 'package:seeksparks/utils/illustration_grouping.dart';
 
 /// Regression tests for the browse-all illustrations grouping.
 ///

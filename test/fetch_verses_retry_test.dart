@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:yswords/providers/main_provider.dart';
-import 'package:yswords/services/fetch_verses.dart';
+import 'package:seeksparks/providers/main_provider.dart';
+import 'package:seeksparks/services/fetch_verses.dart';
 
 /// 2026-06-11: coverage for `FetchVerses.execute` — the cold-load
 /// retry/timeout pipeline. Listed as an open coverage gap in

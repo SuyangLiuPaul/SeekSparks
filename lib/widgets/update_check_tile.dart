@@ -9,9 +9,9 @@
 
 import 'package:flutter/material.dart';
 
-import 'package:yswords/constants/ui_strings.dart';
-import 'package:yswords/services/link_opener.dart';
-import 'package:yswords/services/update_service.dart';
+import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/services/link_opener.dart';
+import 'package:seeksparks/services/update_service.dart';
 
 class UpdateCheckTile extends StatefulWidget {
   final String locale;
