@@ -1,0 +1,95 @@
+# YsWords — Flutter CI
+#
+# 2026-05-24 (v1.3.22): catches regressions before they ship to prod.
+# Pre-fix the only quality gate was the developer remembering to run
+# `flutter analyze && flutter test` locally before pushing. With the
+# error monitor live (v1.3.21) we'd at least *see* a runtime crash,
+# but a build that fails analysis or breaks an existing test was
+# completely invisible until the next manual run.
+#
+# Triggers
+#   * Every push to main (the deploy branch — Netlify CLI deploys
+#     happen from a contributor's machine, not Netlify's git linkage,
+#     so this workflow is the only automated check between commit
+#     and prod)
+#   * Every PR targeting main
+#
+# Steps
+#   1. Checkout
+#   2. Setup Flutter (pinned to the version in pubspec — bump here
+#      and in the dev environment together)
+#   3. Cache the pub cache + .dart_tool so subsequent runs are fast
+#   4. flutter pub get
+#   5. flutter analyze — fail on any new analysis issues. The
+#      3 pre-existing settings_page infos are tolerated (counted +
+#      compared; any new finding fails the build)
+#   6. flutter test — must be 109/109 (current count). New tests
+#      that pass push the threshold up; failing or skipping a
+#      previously-passing test breaks the build.
+#
+# Runs on ubuntu-latest. iOS / macOS / Android builds are NOT
+# exercised here — they're built daily by the local launchd job
+# (tools/yswords-ios-reinstall.sh) which catches platform-
+# specific build failures (CocoaPods, NDK, Gradle).
+name: Flutter CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  analyze-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          # 2026-06-16: full history (not the default depth-1 shallow clone).
+          # The Gitleaks step scans the push's commit RANGE (before^..after).
+          # On a multi-commit push the base SHA isn't present in a shallow
+          # checkout, so gitleaks died with `fatal: ambiguous argument
+          # '<sha>^..<sha>': unknown revision` → exit 1 (a CI failure with
+          # ZERO leaks found). fetch-depth: 0 gives it the history it needs.
+          fetch-depth: 0
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          # Pin to the Flutter version the local dev env uses
+          # (the canonical install at /Users/pliu0036/flutter is
+          # 3.44.2 per the README badge). Bump here when the
+          # local toolchain bumps.
+          flutter-version: '3.44.2'
+          channel: 'stable'
+          cache: true
+
+      - name: Pub get
+        run: flutter pub get
+
+      - name: Analyze
+        # v1.3.25: --no-fatal-infos REMOVED. The 2 pre-existing
+        # settings_page `use_build_context_synchronously` infos were
+        # closed by capturing ScaffoldMessenger before the await,
+        # so flutter analyze now exits 0 cleanly. From this point
+        # forward CI fails on ANY new info-level finding — strictest
+        # quality gate.
+        run: flutter analyze
+
+      - name: Test
+        run: flutter test --reporter expanded
+
+      # 2026-05-24 (v1.3.24): gitleaks secret scan. Catches an
+      # accidental commit of GEMINI_API_KEY, RESEND_API_KEY, AWS
+      # creds, Firebase service-account JSONs, etc. before they
+      # land on origin/main. Runs against the whole repo on push
+      # + only the PR diff on pull_request (faster). The local
+      # git-secrets hook is broken per memory's env-quirks; this
+      # is the only reliable secret gate.
+      - name: Gitleaks secret scan
+        uses: gitleaks/gitleaks-action@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

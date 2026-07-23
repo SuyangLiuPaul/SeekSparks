@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html spellcheck="false">
+<head>
+  <!--
+    If you are serving your web app in a path other than the root, change the
+    href value below to reflect the base path you are serving from.
+
+    The path provided below has to start and end with a slash "/" in order for
+    it to work correctly.
+
+    For more details:
+    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+
+    This is a placeholder for base href that will be replaced by the value of
+    the `--base-href` argument provided to `flutter build`.
+  -->
+  <base href="$FLUTTER_BASE_HREF">
+
+  <meta charset="UTF-8">
+  <!-- 2026-06-11 audit: this tag was MISSING since project creation
+       (git log -S confirms it never existed here). Without it, mobile
+       browsers lay the page out at the legacy 980px desktop viewport
+       and scale down — a root cause of "iOS web vs Android looks
+       different" reports. Standard Flutter-template value. -->
+  <!-- 2026-06-28: viewport-fit=cover was tried (to read env(safe-area-
+       inset-*) for the forward-looking iPadOS-26 window-control inset) but
+       REVERTED the same day — it caused a GLOBAL tap-position offset on
+       iOS Safari: every icon tap landed on the element BELOW it. Cause:
+       with viewport-fit=cover the iOS Safari VISUAL viewport diverges from
+       the LAYOUT viewport and Flutter web's pointer mapping ends up offset
+       from what's painted (flutter/flutter#183596, #179208). The env()
+       inset never worked on iPadOS 26 anyway (WebKit doesn't report the
+       windowed traffic-light controls to a PWA — Apple gap), so this was
+       all downside. Native app is the path for clean windowed iPad.
+       Keep the plain, weeks-stable value. -->
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
+  <!-- 2026-06-12 (v1.3.62 perf): pre-open the TLS connection to the
+       CDN that serves CanvasKit (~1.5 MB, on the boot critical path).
+       Saves a DNS + TCP + TLS round trip before the engine download
+       can even start. -->
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="YsWords — A bilingual Bible reader app to help you listen to His voice and abide in Him daily.">
+
+  <!-- Disable iOS Safari data-detection (auto-linking of dates/phone numbers)
+       and spell-check underlining on Flutter web HTML renderer elements. -->
+  <meta name="format-detection" content="telephone=no,address=no,email=no,date=no,url=no">
+
+  <!-- iOS PWA meta tags. Without apple-mobile-web-app-capable=yes,
+       Add-to-Home-Screen on iPhone opens YsWords in Safari instead
+       of full-screen, breaking the app feel. Status bar style is
+       'default' so the iOS status bar contrasts our white surface. -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="YsWords">
+  <!-- 2026-05-10 (v1.2.31): align theme-color across the meta tags
+       and the manifest. Previously the manifest claimed Material
+       blue (#2196F3) while the meta tag claimed white — Android's
+       installed PWA address-bar would tint blue while iOS Safari
+       and the meta-aware Chrome tab tinted white. Align both to
+       the white surface that the LIGHT theme actually paints. The
+       second meta tag below kicks in when the OS reports
+       prefers-color-scheme: dark so the address bar / status bar
+       matches the app's dark surface (closer to the dark theme's
+       Card colour) instead of staying white. -->
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#FFFFFF">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1F1F1F">
+
+  <!-- iOS Add-to-Home-Screen icons. iOS picks the closest size to
+       its current launcher (180×180 on iPhone, 167×167 on iPad,
+       152×152 on older iPads). We point all sizes at the 1024×1024
+       master and let iOS downscale — looks crisper than shipping
+       pre-baked downscales for our simple flat icon. -->
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/Icon-512.png">
+  <link rel="apple-touch-icon" sizes="167x167" href="icons/Icon-512.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="icons/Icon-192.png">
+  <link rel="apple-touch-icon" href="icons/Icon-512.png">
+
+  <!-- Favicon — link to the 192 icon as an SVG-equivalent fallback,
+       plus the legacy favicon.png for older browsers. -->
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/Icon-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="icons/Icon-512.png">
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <title>YsWords</title>
+  <link rel="manifest" href="manifest.json">
+
+  <!--
+    Preload tags removed (round 51).
+
+    The previous preloads pointed at `assets/<file>` (e.g.
+    `assets/kjv.json`, `assets/loading.png`), but Flutter web
+    actually fetches bundled assets from `assets/assets/<file>`
+    (the user-facing `assets/` directory is itself nested under
+    Flutter's `assets/` URL prefix). The browser preloaded the
+    WRONG URLs, never used them, and fired ~198 "preloaded but not
+    used within a few seconds" warnings on every page load. We do
+    not need preloads anyway — Flutter's own asset loader handles
+    the fetch, and the bundle is service-worker-cached after the
+    first visit. Keeping this comment here so the rationale is
+    obvious if anyone considers re-adding them.
+  -->
+
+  <style>
+    /* CSS reset: strip the default body margin + paint a warm
+       background so the browser's default white 8px-margin body
+       doesn't bleed through at the edges of the Flutter canvas
+       (the thin white strips flanking the reader).
+
+       v1.3.x (post-revert): DELIBERATELY minimal. The earlier
+       version also forced `overflow: hidden; width/height: 100%`
+       on html+body — that was unnecessary for the white-edge fix
+       and is the prime suspect for the blank-home regression that
+       reverted prod off v1.3.48/49. Flutter's engine sizes its own
+       view; we only need to kill the margin + set a backdrop colour
+       and let Flutter manage layout/scroll. */
+    html, body {
+      margin: 0;
+      padding: 0;
+      background-color: #FFF8F6;
+    }
+    @media (prefers-color-scheme: dark) {
+      html, body { background-color: #1F1F1F; }
+    }
+    /* Strip browser-injected styling from iOS Safari data-detector <a> tags
+       (phone numbers, dates, addresses auto-linked by Safari on the HTML renderer). */
+    a[x-apple-data-detectors] {
+      color: inherit !important;
+      text-decoration: inherit !important;
+      font-size: inherit !important;
+      font-weight: inherit !important;
+    }
+    /* Suppress tap highlight flash on all Flutter interactive elements. */
+    * {
+      -webkit-tap-highlight-color: transparent;
+    }
+    /* iPhone 14 (iOS 17/18 Safari) sometimes renders certain glyphs in
+       the profile / greeting card stacked vertically — happens when a
+       fallback CJK font's OpenType `vert` feature gets applied or
+       Safari's data-detector wraps the text in a way that flips
+       writing-mode.  Force horizontal layout globally so the bug
+       can't surface on any device.  Other phones already render
+       horizontally, so this is a no-op for them. */
+    html, body, flutter-view, flt-glass-pane, flt-scene-host {
+      writing-mode: horizontal-tb !important;
+      text-orientation: mixed !important;
+      -webkit-text-orientation: mixed !important;
+      -webkit-locale: auto;
+    }
+    /* Belt-and-braces: nuke any inherited `vert` font-feature setting
+       that ships in Microsoft YaHei or other CJK fallbacks. */
+    body, body * {
+      font-feature-settings: "vert" off;
+    }
+  </style>
+
+  <!-- Windows tile metadata — kept here, NOT the iOS / generic PWA
+       meta tags which already appear earlier in <head> with their
+       intended values.  The previous duplicates redefined
+       theme-color / status-bar-style with conflicting values
+       ('default' vs 'black-translucent') and the LAST one won,
+       producing the wrong status-bar tint on iOS PWAs. -->
+  <meta name="msapplication-TileImage" content="assets/app_icon.png">
+  <meta name="msapplication-TileColor" content="#2196F3">
+</head>
+<body>
+  <!-- Cache-busting self-heal. Old Flutter service workers from a
+       previous build can keep serving stale HTML / JS to returning
+       users; Netlify's `Cache-Control: no-cache` headers on /,
+       /index.html, /flutter_bootstrap.js, and /main.dart.js handle
+       the HTTP cache layer, but a leftover SW would still bypass
+       that. This script unregisters every SW + nukes every cache
+       bucket on each load and forces a single auto-reload if
+       anything was torn down — guarded by sessionStorage to prevent
+       loops.
+
+       2026-05-10 (v1.2.31): the previous version of this script
+       included a `__BUILD_STAMP__` token meant to be rewritten by
+       a Netlify post-processing step that never existed. The
+       `stampChanged` branch was dead code (`BUILD_STAMP ===
+       '__BUILD_STAMP__'` short-circuited it to false on every
+       deploy). Removed the stamp logic; the SW-unregister path
+       does the heavy lifting alone, plus the `no-cache` HTTP
+       headers ensure the next navigation pulls fresh bytes. The
+       `window.yswordsClearCacheAndReload` helper below remains
+       available for the LoadingPage error scaffold + Settings →
+       "Clear cache & reload" — it's the manual escape hatch on
+       top of the auto-recovery here. -->
+  <script>
+    (function() {
+      var RELOAD_KEY = 'yswords_self_heal_reloaded';
+      var alreadyReloaded = false;
+      try {
+        alreadyReloaded = sessionStorage.getItem(RELOAD_KEY) === '1';
+      } catch (_) {}
+
+      function maybeReload() {
+        if (alreadyReloaded) return;
+        try { sessionStorage.setItem(RELOAD_KEY, '1'); } catch (_) {}
+        // Netlify's no-cache headers on / index.html / bootstrap /
+        // main.dart.js force network re-fetch on the reload.
+        location.reload();
+      }
+
+      var unregisterCount = 0;
+      var swPromise = ('serviceWorker' in navigator)
+        ? navigator.serviceWorker.getRegistrations().then(function(regs) {
+            unregisterCount = regs.length;
+            return Promise.all(regs.map(function(r) {
+              return r.unregister().catch(function() {});
+            }));
+          }).catch(function() { return; })
+        : Promise.resolve();
+
+      var cachePromise = (window.caches && caches.keys)
+        ? caches.keys().then(function(keys) {
+            return Promise.all(keys.map(function(k) {
+              return caches.delete(k).catch(function() {});
+            }));
+          }).catch(function() { return; })
+        : Promise.resolve();
+
+      Promise.all([swPromise, cachePromise]).then(function() {
+        if (unregisterCount > 0) maybeReload();
+      });
+    })();
+  </script>
+  <!-- 2026-05-24 (v1.3.25): PWA install-prompt bridge.
+       Captures the `beforeinstallprompt` event Chrome / Edge fire
+       when the user could install the PWA. The Flutter side reads
+       `window.yswordsInstall.available` to decide whether to show
+       the "Install YsWords" affordance, and calls
+       `window.yswordsInstall.show()` to trigger the native picker.
+       Also exposes `isStandalone` so the same affordance hides
+       once the user is already running in installed mode.
+
+       Why this is safe alongside the SW-unregister script above:
+       Chrome only fires beforeinstallprompt when a service worker
+       IS registered, so today (with SW being torn down on every
+       load) the event never fires. The bridge is in place for the
+       future round that re-introduces a versioned-cache SW; for
+       now `isStandalone` still works (detects Add-to-Home-Screen
+       installs on iOS Safari + post-install Chrome) so the
+       "already installed" check stays useful. -->
+  <script>
+    window.yswordsInstall = {
+      // True after a beforeinstallprompt event arrives.
+      available: false,
+      // The captured event — Flutter calls `.prompt()` via show().
+      _event: null,
+      // True if the page is running in standalone / installed mode
+      // (Add-to-Home-Screen on iOS, installed PWA on Android,
+      // chrome://apps launch on desktop).
+      get isStandalone() {
+        try {
+          if (window.navigator.standalone === true) return true; // iOS Safari
+          if (window.matchMedia('(display-mode: standalone)').matches) return true;
+          if (window.matchMedia('(display-mode: fullscreen)').matches) return true;
+          if (window.matchMedia('(display-mode: minimal-ui)').matches) return true;
+        } catch (_) {}
+        return false;
+      },
+      // Triggers the browser's native install picker. Returns a
+      // promise that resolves to 'accepted' | 'dismissed' | 'unavailable'.
+      show: async function() {
+        var e = this._event;
+        if (!e) return 'unavailable';
+        try {
+          e.prompt();
+          var choice = await e.userChoice;
+          this._event = null;
+          this.available = false;
+          return (choice && choice.outcome) || 'dismissed';
+        } catch (err) {
+          return 'dismissed';
+        }
+      }
+    };
+    window.addEventListener('beforeinstallprompt', function(e) {
+      // Prevent Chrome's default mini-infobar so we can drive the
+      // UX from the app side.
+      e.preventDefault();
+      window.yswordsInstall._event = e;
+      window.yswordsInstall.available = true;
+    });
+    window.addEventListener('appinstalled', function() {
+      window.yswordsInstall._event = null;
+      window.yswordsInstall.available = false;
+    });
+  </script>
+  <!-- Avatar picker: opens an `<input type="file">`, reads the
+       chosen image, center-crops to a square, resizes to 256×256
+       via Canvas, and resolves with a JPEG data URL. Used by the
+       Profile editor so local users can set a custom avatar
+       without shipping any image-picker package. Resolves with
+       null on cancel / read error. The setTimeout-after-focus
+       trick handles the cancel case (file inputs don't fire any
+       event when the user closes the picker without choosing). -->
+  <script>
+    window.yswordsPickAvatar = function() {
+      return new Promise(function(resolve) {
+        var done = false;
+        function finish(v) { if (done) return; done = true; resolve(v); }
+        var input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.style.display = 'none';
+        document.body.appendChild(input);
+        function cleanup() {
+          if (input.parentNode) document.body.removeChild(input);
+        }
+        input.addEventListener('change', function() {
+          var file = input.files && input.files[0];
+          if (!file) { cleanup(); return finish(null); }
+          var reader = new FileReader();
+          reader.onload = function() {
+            var img = new Image();
+            img.onload = function() {
+              var size = 256;
+              var canvas = document.createElement('canvas');
+              canvas.width = size;
+              canvas.height = size;
+              var ctx = canvas.getContext('2d');
+              var srcSize = Math.min(img.width, img.height);
+              var sx = (img.width - srcSize) / 2;
+              var sy = (img.height - srcSize) / 2;
+              ctx.drawImage(img, sx, sy, srcSize, srcSize, 0, 0, size, size);
+              cleanup();
+              try {
+                finish(canvas.toDataURL('image/jpeg', 0.85));
+              } catch (e) {
+                finish(null);
+              }
+            };
+            img.onerror = function() { cleanup(); finish(null); };
+            img.src = reader.result;
+          };
+          reader.onerror = function() { cleanup(); finish(null); };
+          reader.readAsDataURL(file);
+        });
+        // Cancel detection: when the file picker closes without a
+        // selection, no event fires on the input. Listen for window
+        // re-focus and assume cancel after a small delay — gives
+        // the change event time to fire if the user did choose a
+        // file just before the picker closes.
+        window.addEventListener('focus', function once() {
+          window.removeEventListener('focus', once);
+          setTimeout(function() {
+            if (!done) { cleanup(); finish(null); }
+          }, 800);
+        }, {once: true});
+        input.click();
+      });
+    };
+  </script>
+  <!-- Browser Notification helper used by lib/services/notification_service_web.dart.
+       Wraps `new Notification(title, options)` so the Dart side can pass an options
+       bag without hitting Dart's inline-class language feature (only available
+       in Dart 3.3+; we target 3.2.3). -->
+  <script>
+    window.yswordsShowNotification = function(title, options) {
+      try {
+        if (typeof Notification === 'undefined') return null;
+        if (Notification.permission !== 'granted') return null;
+        return new Notification(title, options || {});
+      } catch (e) {
+        return null;
+      }
+    };
+  </script>
+  <!-- In-app "Clear cache & reload" helper. Called from the Settings
+       → About card via dart:js_interop. Wipes the same surfaces the
+       boot-time self-heal does (service workers, Cache Storage,
+       build-stamp localStorage entry) but ALSO marks
+       yswords_self_heal_reloaded fresh so the post-reload self-heal
+       picks up the new build cleanly. Local profile data
+       (highlights / notes / bookmarks in IndexedDB / SharedPreferences)
+       is intentionally left alone. -->
+  <script>
+    window.yswordsClearCacheAndReload = async function() {
+      try {
+        if ('serviceWorker' in navigator) {
+          const regs = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(regs.map(function(r) {
+            return r.unregister().catch(function() {});
+          }));
+        }
+      } catch (e) { console.warn('SW unregister failed:', e); }
+      try {
+        if (window.caches && caches.keys) {
+          const keys = await caches.keys();
+          await Promise.all(keys.map(function(k) {
+            return caches.delete(k).catch(function() {});
+          }));
+        }
+      } catch (e) { console.warn('Cache delete failed:', e); }
+      try { localStorage.removeItem('yswords_build_stamp'); } catch (_) {}
+      try { sessionStorage.removeItem('yswords_self_heal_reloaded'); } catch (_) {}
+      // Hard reload from server, bypassing browser disk cache.
+      // location.reload(true) is non-standard but still works in
+      // Safari/Chrome/Edge/Firefox; falls through to plain reload.
+      try {
+        location.reload(true);
+      } catch (_) {
+        location.reload();
+      }
+    };
+  </script>
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>
