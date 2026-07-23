@@ -468,8 +468,8 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
   /// Copy the full sermon — title + metadata + body + attribution
   /// footer — to the clipboard so users can paste into their
   /// notes / Word / messaging apps. Always appends a "From
-  /// YsWords (Yahweh's Words)" line with the deep-link URL so
-  /// recipients know the source. Floating toast confirms.
+  /// SeekSparks" line with the deep-link URL so recipients know
+  /// the source. Floating toast confirms.
   Future<void> _copySermonBody(Sermon s, String locale) async {
     final body = _body ?? '';
     if (body.isEmpty) {
@@ -486,7 +486,7 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
     }
     final title = s.titles[_titleLocaleKey(locale)] ?? s.title;
     final url =
-        'https://yswords.netlify.app/?sermon=${Uri.encodeComponent(s.id)}';
+        'https://seeksparks.netlify.app/?sermon=${Uri.encodeComponent(s.id)}';
     final attribution = uiStrings['sermonAttribution']?[locale] ??
         'From SeekSparks';
     final buf = StringBuffer();
@@ -526,7 +526,7 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
   Future<void> _shareSermon(Sermon s, String locale) async {
     final title = s.titles[_titleLocaleKey(locale)] ?? s.title;
     final url =
-        'https://yswords.netlify.app/?sermon=${Uri.encodeComponent(s.id)}';
+        'https://seeksparks.netlify.app/?sermon=${Uri.encodeComponent(s.id)}';
     final payload = '$title\n$url';
     final ok = await ClipboardHelper.copyText(payload);
     if (!mounted) return;

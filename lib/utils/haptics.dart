@@ -1,4 +1,4 @@
-/// Centralized haptic feedback wrapper for YsWords interactions.
+/// Centralized haptic feedback wrapper for SeekSparks interactions.
 library;
 ///
 /// 2026-05-24 (v1.3.17): added in response to "ios macos and android

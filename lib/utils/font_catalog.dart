@@ -68,8 +68,8 @@ enum FontCategory { bundled, englishSerif, englishSans, chinese, system }
 /// (e.g. `赒` U+8D52 in Acts 10:2, `䍁` U+4341, `𨱔` U+28C54) render
 /// even if the primary font's subset doesn't include them.
 ///
-/// 2026-05-24 (v1.3.31): The first entry `NotoSansSC-YsWords` is a
-/// BUNDLED font subset (assets/fonts/NotoSansSC-YsWords.otf) covering
+/// 2026-05-24 (v1.3.31): The first entry `NotoSansSC-Sub` is a
+/// BUNDLED font subset (assets/fonts/NotoSansSC-Sub.otf) covering
 /// every CJK character used anywhere in the app. It's the only entry
 /// in this list that Flutter web's CanvasKit renderer can actually
 /// see — the rest are CSS names that only work on native iOS / macOS /
@@ -81,7 +81,7 @@ enum FontCategory { bundled, englishSerif, englishSans, chinese, system }
 /// build even though the chain has 20+ candidates.
 ///
 /// Order rationale:
-///   • Bundled → `NotoSansSC-YsWords` (registered via pubspec, web-safe)
+///   • Bundled → `NotoSansSC-Sub` (registered via pubspec, web-safe)
 ///   • Apple system → PingFang SC / Heiti SC — complete CJK on macOS/iOS
 ///   • Apple legacy → STSong / STFangsong
 ///   • Windows → Microsoft YaHei
@@ -95,7 +95,7 @@ const List<String> kCjkFontFallback = [
   // Skia engine. Per-glyph fallback means CJK characters skip these
   // (no Latin-only font has the glyph) and still resolve via the CJK
   // families below. Web/CanvasKit skips the unresolvable system names
-  // and uses bundled Roboto for Latin, then NotoSansSC-YsWords for CJK
+  // and uses bundled Roboto for Latin, then NotoSansSC-Sub for CJK
   // — so this is safe on web too.
   'Segoe UI',
   'Roboto',
@@ -105,7 +105,7 @@ const List<String> kCjkFontFallback = [
   // FIRST CJK: the bundled subset — the only CJK fallback that CanvasKit
   // can resolve on Flutter web. See `pubspec.yaml` for the bundle
   // declaration + the build script `tools/build_cjk_font_subset.sh`.
-  'NotoSansSC-YsWords',
+  'NotoSansSC-Sub',
   // After: native-platform / browser-CSS fallbacks. These work on
   // iOS / macOS / Android where Flutter can access OS-installed fonts,
   // and on the HTML renderer (not CanvasKit) where the browser

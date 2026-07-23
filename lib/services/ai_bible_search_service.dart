@@ -6,7 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/services/api_base.dart';
 
-/// Calls the YsWords Cloud Function that proxies Gemini for AI-
+/// Calls the SeekSparks Netlify Function that proxies Gemini for AI-
 /// powered Bible reference search. Different from `AiSearchService`
 /// (which queries the Bible Evidence corpus): this returns raw Bible
 /// references like `John 3:16` that the caller resolves against

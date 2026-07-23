@@ -12,7 +12,7 @@ import 'package:seeksparks/services/profile_service.dart';
 
 /// Replaces Drive sync (and the older Firestore-based CloudSyncService)
 /// with Firebase Realtime Database. Why this is the right call for
-/// YsWords:
+/// SeekSparks:
 ///
 ///   • **No extra OAuth scope** — sign-in only needs `email + profile`.
 ///     Other users see a normal Google sign-in dialog, not the scary

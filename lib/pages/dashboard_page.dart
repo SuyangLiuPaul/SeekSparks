@@ -1149,7 +1149,7 @@ class _ThumbIcon extends StatelessWidget {
 }
 
 /// Primary "Continue reading" hero card. Shipped as the top-most
-/// action on the dashboard because YsWords is first and foremost a
+/// action on the dashboard because SeekSparks is first and foremost a
 /// Bible reading app — the user's most likely next move when they
 /// open Home is "open the Bible". Showing the current book / chapter /
 /// version under the CTA gives a clear "resume" affordance instead

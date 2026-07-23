@@ -1,4 +1,4 @@
-# YsWords — iOS release build (UNSIGNED)
+# SeekSparks — iOS release build (UNSIGNED)
 #
 # Builds the iOS app on a GitHub-hosted macos-latest runner and
 # publishes an UNSIGNED .ipa as a release asset. Mirrors
@@ -84,7 +84,7 @@ jobs:
           # An .ipa is just a zip with the .app under Payload/.
           rm -rf Payload && mkdir Payload
           cp -R "$app" Payload/
-          pkg="YsWords-iOS-${tag}-unsigned.ipa"
+          pkg="SeekSparks-iOS-${tag}-unsigned.ipa"
           zip -qry "$pkg" Payload
           echo "PKG=$pkg" >> "$GITHUB_ENV"
           echo "Packaged $pkg ($(du -h "$pkg" | cut -f1)) from $app"
@@ -92,7 +92,7 @@ jobs:
       - name: Upload workflow artifact (always)
         uses: actions/upload-artifact@v7
         with:
-          name: YsWords-iOS-unsigned
+          name: SeekSparks-iOS-unsigned
           path: ${{ env.PKG }}
           if-no-files-found: error
 

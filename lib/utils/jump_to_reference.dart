@@ -254,7 +254,7 @@ void scrollToVerseNumInChapter(MainProvider mp, int verseNum) {
 /// controller and the verse map to both be ready, so the scroll
 /// always fires correctly.
 void prepareJumpToVerse(Verse verse, MainProvider mp) {
-  debugPrint('[YsWords prepareJumpToVerse] verse=${verse.book} '
+  debugPrint('[SeekSparks prepareJumpToVerse] verse=${verse.book} '
       '${verse.chapter}:${verse.verse} '
       'currentVersion=${mp.currentVersion} '
       'mp.verses.length=${mp.verses.length}');
@@ -288,7 +288,7 @@ void prepareJumpToVerse(Verse verse, MainProvider mp) {
     }
   }
   if (matchedBook == null) {
-    debugPrint('[YsWords prepareJumpToVerse] BAIL: no matching book '
+    debugPrint('[SeekSparks prepareJumpToVerse] BAIL: no matching book '
         'in mp.verses for ${verse.book} (candidates=$candidates)');
     // Couldn't find a matching book in the loaded version. Bail —
     // setting an invalid currentBook would leave the reader on a
@@ -296,7 +296,7 @@ void prepareJumpToVerse(Verse verse, MainProvider mp) {
     // which is preferable to landing on an empty chapter.
     return;
   }
-  debugPrint('[YsWords prepareJumpToVerse] matchedBook=$matchedBook');
+  debugPrint('[SeekSparks prepareJumpToVerse] matchedBook=$matchedBook');
   mp.setCurrentChapter(book: matchedBook, chapter: verse.chapter);
   // Find the canonical Verse in the loaded version that
   // corresponds to the same chapter:verse. updateCurrentVerse
@@ -312,7 +312,7 @@ void prepareJumpToVerse(Verse verse, MainProvider mp) {
   if (hit.isNotEmpty) current = hit.first;
   mp.updateCurrentVerse(verse: current);
   final relIdx = chapterVerses.indexWhere((v) => v.verse == verse.verse);
-  debugPrint('[YsWords prepareJumpToVerse] '
+  debugPrint('[SeekSparks prepareJumpToVerse] '
       'relIdx=$relIdx chapterVerses.length=${chapterVerses.length}');
   if (relIdx >= 0) {
     mp.setPendingJump(chapterVerseIndex: relIdx);

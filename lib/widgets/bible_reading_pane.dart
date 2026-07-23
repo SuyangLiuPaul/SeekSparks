@@ -1095,7 +1095,7 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
     final v = verses.first;
     final ref = '${v.book}:${v.chapter}:${v.verse}';
     final url =
-        'https://yswords.netlify.app/?verse=${Uri.encodeComponent(ref)}';
+        'https://seeksparks.netlify.app/?verse=${Uri.encodeComponent(ref)}';
     final text =
         _formattedSelectedVerses(verses: mainProvider.selectedVerses);
     final payload = '$text\n\n$url';
@@ -1300,7 +1300,7 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
         if (mainProvider.hasPendingJump && verses.isNotEmpty) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (!mounted) {
-              debugPrint('[YsWords jump] post-frame bail: !mounted');
+              debugPrint('[SeekSparks jump] post-frame bail: !mounted');
               return;
             }
             // Round 56 fix for "first note tap goes to top, second
@@ -1321,7 +1321,7 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
             // it on the next post-frame tick.
             final route = ModalRoute.of(context);
             if (route != null && !route.isCurrent) {
-              debugPrint('[YsWords jump] post-frame bail: '
+              debugPrint('[SeekSparks jump] post-frame bail: '
                   '!route.isCurrent (older HomePage in stack)');
               return;
             }
@@ -1329,14 +1329,14 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
             final mp = context.read<MainProvider>();
             final pendingIdx = mp.consumePendingJump();
             if (pendingIdx == null) {
-              debugPrint('[YsWords jump] post-frame bail: '
+              debugPrint('[SeekSparks jump] post-frame bail: '
                   'consumePendingJump returned null (already consumed)');
               return;
             }
             // Defensive clamp: a stale pending jump from a
             // different chapter could land out-of-range.
             if (pendingIdx < 0 || pendingIdx >= verses.length) {
-              debugPrint('[YsWords jump] post-frame bail: '
+              debugPrint('[SeekSparks jump] post-frame bail: '
                   'pendingIdx=$pendingIdx out of range '
                   '[0, ${verses.length})');
               return;
@@ -1364,13 +1364,13 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
             // who still report problems can paste the browser
             // console output. Each step logs whether it ran or
             // bailed.
-            debugPrint('[YsWords jump] pendingIdx=$pendingIdx '
+            debugPrint('[SeekSparks jump] pendingIdx=$pendingIdx '
                 'verses.length=${verses.length} '
                 'currentBook=${mainProvider.currentBook} '
                 'currentChapter=${mainProvider.currentChapter}');
             void tryJump([int attempt = 0]) {
               if (!mounted) {
-                debugPrint('[YsWords jump] bail: !mounted (attempt $attempt)');
+                debugPrint('[SeekSparks jump] bail: !mounted (attempt $attempt)');
                 return;
               }
               if (mp.itemScrollController.isAttached) {
@@ -1406,10 +1406,10 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
                       );
                     } catch (_) {/* harmless — already at target */}
                   });
-                  debugPrint('[YsWords jump] scrolled to chapter-verse '
+                  debugPrint('[SeekSparks jump] scrolled to chapter-verse '
                       'index $pendingIdx (attempt $attempt)');
                 } catch (e) {
-                  debugPrint('[YsWords jump] scroll threw: $e '
+                  debugPrint('[SeekSparks jump] scroll threw: $e '
                       '(attempt $attempt) — retrying');
                   // If scrollTo can't run yet (very rare — e.g.
                   // controller detached between the isAttached
@@ -1421,20 +1421,20 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
                   return;
                 }
                 mp.setHighlightIndex(pendingIdx);
-                debugPrint('[YsWords jump] highlight set to $pendingIdx');
+                debugPrint('[SeekSparks jump] highlight set to $pendingIdx');
                 Future.delayed(const Duration(milliseconds: 3500), () {
                   // Only clear if the highlight is still on OUR target —
                   // a subsequent jump (e.g. user navigated chapters) may
                   // have already overwritten it.
                   if (mp.highlightIndex == pendingIdx) {
                     mp.clearHighlightIndex();
-                    debugPrint('[YsWords jump] highlight cleared');
+                    debugPrint('[SeekSparks jump] highlight cleared');
                   }
                 });
                 return;
               }
               if (attempt > 60) {
-                debugPrint('[YsWords jump] gave up after 60 attempts '
+                debugPrint('[SeekSparks jump] gave up after 60 attempts '
                     '— controller never attached');
                 return;
               }

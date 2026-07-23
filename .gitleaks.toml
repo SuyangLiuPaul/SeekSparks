@@ -1,4 +1,4 @@
-# YsWords gitleaks config — extends the default rule set, then
+# SeekSparks gitleaks config — extends the default rule set, then
 # allowlists a small number of false-positive paths.
 #
 # 2026-05-24 (v1.3.27): added after the v1.3.24-introduced gitleaks
@@ -22,7 +22,7 @@
 # the allowlist below). We're only suppressing per-path false
 # positives, not weakening the rules globally.
 
-title = "YsWords gitleaks config"
+title = "SeekSparks gitleaks config"
 
 [extend]
 useDefault = true

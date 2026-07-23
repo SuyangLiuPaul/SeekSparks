@@ -714,7 +714,7 @@ class _AnnotationTile extends StatelessWidget {
                     // output to point at the failing step.
                     onRefTap: (ref) {
                       debugPrint(
-                          '[YsWords noteRefTap] tapped '
+                          '[SeekSparks noteRefTap] tapped '
                           '${ref.englishBook} ${ref.chapter}:'
                           '${ref.verses.join(',')} '
                           '(start=${ref.verseStart} '
@@ -729,13 +729,13 @@ class _AnnotationTile extends StatelessWidget {
                       try {
                         showVersePopup(context, bibleRef).then((_) {
                           debugPrint(
-                              '[YsWords noteRefTap] popup closed');
+                              '[SeekSparks noteRefTap] popup closed');
                         });
                         debugPrint(
-                            '[YsWords noteRefTap] showVersePopup called');
+                            '[SeekSparks noteRefTap] showVersePopup called');
                       } catch (e, st) {
                         debugPrint(
-                            '[YsWords noteRefTap] showVersePopup '
+                            '[SeekSparks noteRefTap] showVersePopup '
                             'threw: $e\n$st');
                       }
                     },

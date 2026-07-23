@@ -33,7 +33,7 @@
 ///   • Daily News + Bible Evidence: their JSON lives on
 ///     `yswords-data.netlify.app` which is the same Netlify
 ///     infrastructure as the app, so reachability is identical.
-///   • BYOK Gemini API key (Settings → YsWords AI) — saves to
+///   • BYOK Gemini API key (Settings → AI) — saves to
 ///     localStorage exactly like the international build.
 ///
 /// Build commands:

@@ -1469,7 +1469,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
             // 2026-05-08 (v1.1.10): Try-again is the primary action;
             // when the failure is quota-related AND the user hasn't
             // already pasted their own Gemini key, also show a
-            // deep-link to Settings → YsWords AI so they can keep
+            // deep-link to Settings → AI so they can keep
             // working without waiting for the shared quota to reset.
             Wrap(
               spacing: 8,

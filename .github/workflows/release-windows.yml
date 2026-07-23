@@ -1,4 +1,4 @@
-# YsWords — Windows desktop release build
+# SeekSparks — Windows desktop release build
 #
 # Builds the native Windows (x64) app on a GitHub-hosted windows-latest
 # runner (no local machine needed) and publishes it as a downloadable
@@ -70,18 +70,18 @@ jobs:
           $tag = "${{ steps.ver.outputs.tag }}"
           if ([string]::IsNullOrWhiteSpace($tag)) { $tag = "dev-$($env:GITHUB_SHA.Substring(0,7))" }
           $src   = "build/windows/x64/runner/Release"
-          $stage = "staging/YsWords"
+          $stage = "staging/SeekSparks"
           New-Item -ItemType Directory -Force -Path $stage | Out-Null
           Get-ChildItem $src -Exclude *.lib,*.exp | Copy-Item -Destination $stage -Recurse -Force
-          $zip = "YsWords-Windows-x64-$tag.zip"
-          Compress-Archive -Path "staging/YsWords" -DestinationPath $zip -Force
+          $zip = "SeekSparks-Windows-x64-$tag.zip"
+          Compress-Archive -Path "staging/SeekSparks" -DestinationPath $zip -Force
           "ZIP=$zip" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
           Write-Host "Packaged $zip ($([math]::Round((Get-Item $zip).Length/1MB,1)) MB)"
 
       - name: Upload workflow artifact (always)
         uses: actions/upload-artifact@v7
         with:
-          name: YsWords-Windows-x64
+          name: SeekSparks-Windows-x64
           path: ${{ env.ZIP }}
           if-no-files-found: error
 
@@ -95,5 +95,5 @@ jobs:
           gh release view "$tag" >/dev/null 2>&1 || \
             gh release create "$tag" \
               --title "$tag — Windows desktop build" \
-              --notes "Automated Windows x64 build. Download the zip, extract, and run \`YsWords\\yswords.exe\`. The exe is unsigned — on first launch click **More info → Run anyway** past Windows SmartScreen."
+              --notes "Automated Windows x64 build. Download the zip, extract, and run \`SeekSparks\\yswords.exe\`. The exe is unsigned — on first launch click **More info → Run anyway** past Windows SmartScreen."
           gh release upload "$tag" "$ZIP" --clobber

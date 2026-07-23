@@ -1,7 +1,7 @@
 {
   "_meta": {
     "title": "Biblical Evidence Archive",
-    "description": "Archaeological, manuscript, scientific, and historical evidence intersecting with biblical accounts. Migrated from the bible-evidence.netlify.app project (Vite/React/TS) into YsWords; translations inlined for offline use.",
+    "description": "Archaeological, manuscript, scientific, and historical evidence intersecting with biblical accounts. Migrated from the bible-evidence.netlify.app project (Vite/React/TS) into SeekSparks; translations inlined for offline use.",
     "license": "Reference data only; images are linked from Wikimedia Commons (PD or CC).",
     "version": 4,
     "count": 225,

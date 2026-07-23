@@ -24,7 +24,7 @@ class _HomePageState extends State<HomePage> {
 
   // SeekSparks is desktop/tablet-first: on first layout, if the screen
   // is already tablet-width or wider, open the sidebar and activate
-  // Split View by default — the two power-user affordances YsWords
+  // Split View by default — the two power-user affordances SeekSparks
   // otherwise leaves off until the user asks for them. Applied exactly
   // once per HomePage lifetime so a manual close/deactivate afterward
   // sticks (this isn't a "always force wide layout" rule, just a

@@ -1,4 +1,4 @@
-# YsWords — Flutter CI
+# SeekSparks — Flutter CI
 #
 # 2026-05-24 (v1.3.22): catches regressions before they ship to prod.
 # Pre-fix the only quality gate was the developer remembering to run

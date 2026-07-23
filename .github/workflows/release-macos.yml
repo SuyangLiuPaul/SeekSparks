@@ -1,4 +1,4 @@
-# YsWords — macOS desktop release build
+# SeekSparks — macOS desktop release build
 #
 # Builds the native macOS app on a GitHub-hosted macos-latest runner
 # and publishes it as a downloadable release asset. Mirrors
@@ -102,7 +102,7 @@ jobs:
           [ -z "$tag" ] && tag="dev-${GITHUB_SHA::7}"
           app="$(ls -d build/macos/Build/Products/Release/*.app | head -1)"
           if [ -z "$app" ]; then echo "No .app produced"; exit 1; fi
-          pkg="YsWords-macOS-${tag}.zip"
+          pkg="SeekSparks-macOS-${tag}.zip"
           # ditto preserves the bundle structure / symlinks / resource
           # forks that a plain `zip` would corrupt for a macOS .app.
           ditto -c -k --sequesterRsrc --keepParent "$app" "$pkg"
@@ -112,7 +112,7 @@ jobs:
       - name: Upload workflow artifact (always)
         uses: actions/upload-artifact@v7
         with:
-          name: YsWords-macOS
+          name: SeekSparks-macOS
           path: ${{ env.PKG }}
           if-no-files-found: error
 
@@ -126,6 +126,6 @@ jobs:
           gh release view "$tag" >/dev/null 2>&1 || \
             gh release create "$tag" \
               --title "$tag" \
-              --notes "Automated macOS desktop build (unsigned). Unzip, then clear the quarantine flag so Gatekeeper allows it: \`xattr -dr com.apple.quarantine YsWords.app\` (or right-click the app → Open the first time)." \
+              --notes "Automated macOS desktop build (unsigned). Unzip, then clear the quarantine flag so Gatekeeper allows it: \`xattr -dr com.apple.quarantine SeekSparks.app\` (or right-click the app → Open the first time)." \
               || true
           gh release upload "$tag" "$PKG" --clobber

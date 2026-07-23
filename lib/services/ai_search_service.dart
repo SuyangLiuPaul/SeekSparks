@@ -6,7 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/services/api_base.dart';
 
-/// Calls the YsWords Cloud Function that proxies Gemini for AI-powered
+/// Calls the SeekSparks Netlify Function that proxies Gemini for AI-powered
 /// search over the Bible Evidence dataset.
 ///
 /// The function lives in `functions/index.js` and is deployed to:

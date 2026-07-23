@@ -44,7 +44,7 @@ final RegExp _kMultiSpaceRe = RegExp(r' {2,}');
 // live, AI search is reachable as a fallback button inside the
 // empty state). The `_lastResultsFromAi` boolean already covers
 // the only remaining consumer — the result header copy that
-// branches "YsWords AI found N passages …" vs the per-book
+// branches "SeekSparks AI found N passages …" vs the per-book
 // breakdown.
 
 class SearchPage extends StatefulWidget {
@@ -95,8 +95,8 @@ class _SearchPageState extends State<SearchPage> {
   List<ConcordanceRef>? _booleanRefs;
   bool _booleanLoading = false;
 
-  // 2026-05-07: YsWords AI Bible search state. The user can hit
-  // "Search with YsWords AI" when keyword search returns no results,
+  // 2026-05-07: SeekSparks AI Bible search state. The user can hit
+  // "Search with SeekSparks AI" when keyword search returns no results,
   // or use it for fuzzy / thematic queries (e.g. "the love chapter",
   // "雅各信仰", "Sermon on the Mount"). Gemini returns up to 10
   // references; we resolve them against the user's currently-loaded
@@ -104,7 +104,7 @@ class _SearchPageState extends State<SearchPage> {
   // keyword results take. Always tagged "for reference only" since
   // LLM-generated references can be wrong.
   bool _aiBusy = false;
-  String? _aiNotice; // YsWords-AI status / "no matches" — small inline note.
+  String? _aiNotice; // SeekSparks-AI status / "no matches" — small inline note.
   bool _lastResultsFromAi = false; // toggles header above _results.
 
   // 2026-05-10 (v1.2.31): cached verse-index map for the AI-refs
@@ -532,8 +532,8 @@ class _SearchPageState extends State<SearchPage> {
                   // 2026-05-08 (v1.1.10): when the AI notice indicates
                   // a quota / not-configured failure AND the user
                   // hasn't already set up their own Gemini key,
-                  // surface a one-tap deep-link to Settings → YsWords
-                  // AI so they can paste their own AI Studio key.
+                  // surface a one-tap deep-link to Settings → AI so
+                  // they can paste their own AI Studio key.
                   if (_shouldOfferByokForNotice(_aiNotice) &&
                       !settings.hasUserGeminiKey) ...[
                     const SizedBox(height: 10),
@@ -775,7 +775,7 @@ class _SearchPageState extends State<SearchPage> {
       final key = '$eb|${v.chapter}';
       (byBookChapter[key] ??= []).add(v);
     }
-    // 2026-05-07 (post-fix v3): apply book filter to YsWords AI
+    // 2026-05-07 (post-fix v3): apply book filter to SeekSparks AI
     // results too. The user expected the filter scope to apply to
     // every search mode (text / Strong's / AI). Pre-compute the
     // active scope here so refs from other books are dropped before
@@ -1118,7 +1118,7 @@ class _SearchPageState extends State<SearchPage> {
       // bubbles into the console with a CLEAR marker. The user's
       // recent screenshot shows search() printing "start" + "mp"
       // and then nothing — most likely an uncaught exception.
-      debugPrint('[YsWords search] EXCEPTION: $e\n$st');
+      debugPrint('[SeekSparks search] EXCEPTION: $e\n$st');
       if (mounted) {
         setState(() {
           _versesLoadError = 'Search crashed: $e';
@@ -1137,21 +1137,21 @@ class _SearchPageState extends State<SearchPage> {
     // the separate StrongsEntryPage via parseStrongsNumber inside
     // the TextField onSubmitted handler, before _searchImpl runs.
     final query = _textEditingController.text.trim();
-    debugPrint('[YsWords search] start query="$query"');
+    debugPrint('[SeekSparks search] start query="$query"');
     if (query.isEmpty) {
       setState(() => _resetSearchState());
       return;
     }
 
     final mp = Provider.of<MainProvider>(context, listen: false);
-    debugPrint('[YsWords search] mp=${mp.hashCode} '
+    debugPrint('[SeekSparks search] mp=${mp.hashCode} '
         'verses=${mp.verses.length} ver=${mp.currentVersion} '
         'curBook=${mp.currentBook}');
-    debugPrint('[YsWords search] CHECKPOINT-1');
+    debugPrint('[SeekSparks search] CHECKPOINT-1');
 
     // Load corpus if missing. Direct, no latch.
     if (mp.verses.isEmpty) {
-      debugPrint('[YsWords search] verses empty, loading...');
+      debugPrint('[SeekSparks search] verses empty, loading...');
       setState(() {
         _isLoadingVerses = true;
         _versesLoadError = null;
@@ -1159,7 +1159,7 @@ class _SearchPageState extends State<SearchPage> {
       try {
         await FetchVerses.execute(mainProvider: mp);
       } catch (e) {
-        debugPrint('[YsWords search] load failed: $e');
+        debugPrint('[SeekSparks search] load failed: $e');
         if (!mounted) return;
         setState(() {
           _isLoadingVerses = false;
@@ -1170,11 +1170,11 @@ class _SearchPageState extends State<SearchPage> {
       if (!mounted) return;
       setState(() => _isLoadingVerses = false);
       debugPrint(
-          '[YsWords search] loaded; verses=${mp.verses.length}');
+          '[SeekSparks search] loaded; verses=${mp.verses.length}');
     }
     if (mp.verses.isEmpty) {
       debugPrint(
-          '[YsWords search] still empty after load attempt — bail');
+          '[SeekSparks search] still empty after load attempt — bail');
       setState(() {
         _resetSearchState();
         _versesLoadError =
@@ -1184,7 +1184,7 @@ class _SearchPageState extends State<SearchPage> {
     }
     _lastVersesLength = mp.verses.length;
     _lastLoadedVersion = mp.currentVersion;
-    debugPrint('[YsWords search] CHECKPOINT-2');
+    debugPrint('[SeekSparks search] CHECKPOINT-2');
 
     // 2026-05-07 (v8): Word Study removed at user request. Text
     // search no longer redirects to Strong's / lemma views. The
@@ -1196,7 +1196,7 @@ class _SearchPageState extends State<SearchPage> {
     // end so there is exactly one rebuild cycle and zero window
     // for state to drift.
     final verses = mp.verses;
-    debugPrint('[YsWords search] for-loop verses=${verses.length} '
+    debugPrint('[SeekSparks search] for-loop verses=${verses.length} '
         'searchAll=$searchAll filter=$filterBook curBook=${mp.currentBook}');
 
     // 2026-05-08 (v1.0.1 perf): walk the parallel `verses` /
@@ -1224,7 +1224,7 @@ class _SearchPageState extends State<SearchPage> {
         localCounts[verse.book] = (localCounts[verse.book] ?? 0) + 1;
       }
     }
-    debugPrint('[YsWords search] matches.length=${matches.length}');
+    debugPrint('[SeekSparks search] matches.length=${matches.length}');
 
     // 2026-05-08 (v1.0.1 perf): bookOrder is cached on MainProvider
     // and only rebuilt when `setBooks` runs.
@@ -1459,7 +1459,7 @@ class _SearchPageState extends State<SearchPage> {
             // 2026-05-07 (post-fix): help icon. Opens a localized
             // dialog explaining basic + advanced search syntax —
             // direct text, Bible refs, Strong's #s, Greek/Hebrew
-            // lemmas, transliterations, and YsWords AI fallback.
+            // lemmas, transliterations, and SeekSparks AI fallback.
             // Replaces the implicit-only learning curve where
             // advanced features were undiscoverable.
             IconButton(
@@ -1473,7 +1473,7 @@ class _SearchPageState extends State<SearchPage> {
               icon: const Icon(Icons.filter_list),
               onSelected: (value) async {
                 // 2026-05-07 (post-fix v3): replay the LAST search
-                // mode (text / Strong's / YsWords AI) with the new
+                // mode (text / Strong's / SeekSparks AI) with the new
                 // filter, instead of always defaulting to text
                 // search. Without this, a user who got AI results
                 // and changed the filter saw their AI results
@@ -1492,7 +1492,7 @@ class _SearchPageState extends State<SearchPage> {
                   }
                 });
                 if (wasAi) {
-                  // Re-run YsWords AI in the new scope. The
+                  // Re-run SeekSparks AI in the new scope. The
                   // post-resolve filter inside _askAi() drops refs
                   // outside the active filterBook / searchAll, with
                   // a notice line so the user can see how many were
@@ -1586,7 +1586,7 @@ class _SearchPageState extends State<SearchPage> {
             //     were equivalent modes. The user's mental model:
             //     「找不到才用 AI 搜索」.
             //
-            // The "Search with YsWords AI" button rendered inside
+            // The "Search with SeekSparks AI" button rendered inside
             // `_buildEmptyState` (only when text search returns 0
             // results) is now the single entry point for AI.
             // Removed two ergonomic problems with the old chip:
@@ -2814,7 +2814,7 @@ class _RecentSearchRow extends StatelessWidget {
 //     misled users into thinking they were equivalent modes. The
 //     correct mental model: 「找不到才用 AI 搜索」.
 //
-// AI is now reachable only via the "Search with YsWords AI" button
+// AI is now reachable only via the "Search with SeekSparks AI" button
 // inside `_buildEmptyState`, which surfaces when `searchPerformed
 // == true && _results.isEmpty`. Same `_askAi` handler — only the
 // entry point changed.

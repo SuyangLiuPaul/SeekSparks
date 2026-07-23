@@ -294,7 +294,7 @@ class _CloudSetupDiagnosticState extends State<CloudSetupDiagnostic> {
           .get(
             Uri.parse(
               'https://www.googleapis.com/drive/v3/files'
-              '?q=${Uri.encodeQueryComponent("name='YsWords.json'")}'
+              '?q=${Uri.encodeQueryComponent("name='SeekSparks.json'")}'
               '&fields=files(id,name)',
             ),
             headers: {'Authorization': 'Bearer $t'},
@@ -309,9 +309,9 @@ class _CloudSetupDiagnosticState extends State<CloudSetupDiagnostic> {
               ? _l(
                   'cloudDiagDriveApiOkEmpty',
                   _loc,
-                  'API reachable; no YsWords.json yet (will be created on first sync).')
+                  'API reachable; no SeekSparks.json yet (will be created on first sync).')
               : _l('cloudDiagDriveApiOkExists', _loc,
-                  'API reachable; YsWords.json exists.'),
+                  'API reachable; SeekSparks.json exists.'),
         );
       }
       if (r.statusCode == 401) {

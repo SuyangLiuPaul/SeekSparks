@@ -534,7 +534,7 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
             // chain. Each entry tries the next platform's
             // canonical UI font; the first one Flutter / the
             // browser can resolve wins. Order:
-            //   • CJK fallback (bundled) → NotoSansSC-YsWords — added
+            //   • CJK fallback (bundled) → NotoSansSC-Sub — added
             //     2026-05-24 v1.3.31; works on Flutter web CanvasKit
             //     where the CSS-only system fonts below are invisible
             //     to Skia. See `lib/utils/font_catalog.dart` for the
@@ -564,7 +564,7 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
               // Verse text + word spans already use kCjkFontFallback
               // which has the same entry. Cheap to list twice — the
               // engine just walks until it finds a glyph.
-              'NotoSansSC-YsWords',
+              'NotoSansSC-Sub',
               'Microsoft YaHei',
               '微软雅黑',
               'Source Han Sans SC',
@@ -635,7 +635,7 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
             // 2026-05-08 (v1.1.0 / v1.1.2): same comprehensive OS-
             // native font fallback chain as light theme. See light
             // theme above for the rationale + per-platform mapping.
-            // 2026-05-24 (v1.3.31): bundled NotoSansSC-YsWords added
+            // 2026-05-24 (v1.3.31): bundled NotoSansSC-Sub added
             // for CanvasKit CJK coverage (see light theme comment).
             fontFamilyFallback: const [
               '-apple-system',
@@ -646,7 +646,7 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
               'Helvetica Neue',
               'Cantarell',
               'Noto Sans',
-              'NotoSansSC-YsWords',
+              'NotoSansSC-Sub',
               'Microsoft YaHei',
               '微软雅黑',
               'Source Han Sans SC',

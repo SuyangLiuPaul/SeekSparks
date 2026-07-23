@@ -28,7 +28,7 @@ class Profile {
 /// continue as Guest) so notes / bookmarks / highlights / reading-
 /// plan progress can be kept separate per-person on a shared device.
 ///
-/// Why no real auth? YsWords ships as a static Flutter web bundle on
+/// Why no real auth? SeekSparks ships as a static Flutter web bundle on
 /// Netlify with no backend, so there is no server to verify a
 /// password against. Profiles here are an organizational tool, not
 /// a security boundary — anyone with access to the browser can pick

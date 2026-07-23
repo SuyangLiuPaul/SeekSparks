@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 
 import 'package:seeksparks/services/api_base.dart';
 
-/// Asks the YsWords Cloud Function to explain a Hebrew/Greek word
+/// Asks the SeekSparks Netlify Function to explain a Hebrew/Greek word
 /// in the context of a specific verse. Sister of [AiSearchService] —
 /// uses the same Netlify Function pipeline + Gemini API key.
 ///

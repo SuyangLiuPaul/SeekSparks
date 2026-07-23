@@ -63,13 +63,13 @@ class CloudAuthService extends ChangeNotifier {
 
   /// Drive scope — `drive.file` instead of `drive.appdata` so the
   /// sync file is **visible** in the user's My Drive (a single
-  /// `YsWords.json` at the root). Per-file scope: app can only see
+  /// `SeekSparks.json` at the root). Per-file scope: app can only see
   /// files it created or files the user explicitly opened via a
   /// Drive picker, NOT arbitrary user files. Same sensitivity tier
   /// as `drive.appdata` for OAuth-consent verification purposes.
   ///
   /// Why visible (`drive.file`) over hidden (`drive.appdata`):
-  /// the user explicitly wanted to see "YsWords" in their Drive
+  /// the user explicitly wanted to see "SeekSparks" in their Drive
   /// rather than have an invisible app-private blob. Trade-off: the
   /// user can manually delete the file (which would reset sync) but
   /// they always know what data the app is storing on their behalf.

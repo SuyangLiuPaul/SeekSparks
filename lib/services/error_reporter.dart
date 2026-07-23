@@ -1,4 +1,4 @@
-/// Best-effort crash reporter for YsWords.
+/// Best-effort crash reporter for SeekSparks.
 ///
 /// Captures uncaught Flutter / async errors on every platform we
 /// ship (web / iOS / macOS / Android) and POSTs a JSON blob to
@@ -6,7 +6,7 @@
 /// inbox (`lsy95112@gmail.com`).
 ///
 /// 2026-05-24 (v1.3.21): added in response to the priorities.md
-/// item #2 — "Today, a crash on yswords.netlify.app is invisible
+/// item #2 — "Today, a crash on seeksparks.netlify.app is invisible
 /// to the developer." A user-facing crash now generates a single
 /// email with stack, app version, platform, locale, route,
 /// last ~10 breadcrumbs, and basic device info.
@@ -254,7 +254,7 @@ class ErrorReporter {
     // are rare; the daily-fire reinstall job builds against the
     // committed main, which uses prod-deployed JSON anyway.)
     if (platform.platformName != 'web') {
-      return 'https://yswords.netlify.app$_endpoint';
+      return 'https://seeksparks.netlify.app$_endpoint';
     }
     return _endpoint;
   }
