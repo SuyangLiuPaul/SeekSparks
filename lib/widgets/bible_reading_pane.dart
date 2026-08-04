@@ -79,6 +79,18 @@ class BibleReadingPane extends StatefulWidget {
   final VoidCallback? onClose;
   final bool showSearchAndSettings;
 
+  /// 2026-08-04 (Workbench): when non-null the overflow menu shows a
+  /// "Workbench" entry that swaps this classic reader for the
+  /// three-pane study workspace. Null hides the entry — pass null from
+  /// the Workbench's own center pane.
+  final VoidCallback? onOpenWorkbench;
+
+  /// 2026-08-04 (Workbench): the inverse of [onOpenWorkbench] — shown
+  /// by the Workbench's center pane as a "Classic Reader" menu entry
+  /// (the way back to the single-pane reader and its Split View).
+  /// Null hides the entry.
+  final VoidCallback? onOpenClassicReader;
+
   const BibleReadingPane({
     super.key,
     this.showSidebarToggle = false,
@@ -88,6 +100,8 @@ class BibleReadingPane extends StatefulWidget {
     this.splitViewActive = false,
     this.onClose,
     this.showSearchAndSettings = true,
+    this.onOpenWorkbench,
+    this.onOpenClassicReader,
   });
 
   @override
@@ -1887,6 +1901,8 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
                       splitViewActive: widget.splitViewActive,
                       onClose: widget.onClose,
                       showSearchAndSettings: widget.showSearchAndSettings,
+                      onOpenWorkbench: widget.onOpenWorkbench,
+                      onOpenClassicReader: widget.onOpenClassicReader,
                       chapterMaps: _chapterMaps,
                       bookMaps: _bookMaps,
                       chapterSermons: _chapterSermons,
@@ -6551,6 +6567,12 @@ class _FloatingHeader extends StatelessWidget {
   final bool splitViewActive;
   final VoidCallback? onClose;
   final bool showSearchAndSettings;
+  /// 2026-08-04 (Workbench): overflow-menu "Workbench" entry. Null
+  /// hides it (the Workbench's own center pane passes null).
+  final VoidCallback? onOpenWorkbench;
+  /// 2026-08-04 (Workbench): overflow-menu "Classic Reader" entry —
+  /// the way back, shown only by the Workbench's center pane.
+  final VoidCallback? onOpenClassicReader;
   final List<BibleMap> chapterMaps;
   final List<BibleMap> bookMaps;
   /// Pastor Eric sermons whose body or passage hint cites any verse
@@ -6593,6 +6615,8 @@ class _FloatingHeader extends StatelessWidget {
     this.splitViewActive = false,
     this.onClose,
     this.showSearchAndSettings = true,
+    this.onOpenWorkbench,
+    this.onOpenClassicReader,
     this.chapterMaps = const [],
     this.bookMaps = const [],
     this.chapterSermons = const [],
@@ -7152,6 +7176,36 @@ class _FloatingHeader extends StatelessWidget {
                                 : null,
                           ),
                         ));
+                        // 2026-08-04 (Workbench): swap the classic
+                        // reader for the three-pane study workspace.
+                        // Hidden when null — the Workbench's own
+                        // center pane passes null.
+                        if (onOpenWorkbench != null) {
+                          items.add(PopupMenuItem(
+                            value: 'workbench',
+                            onTap: () => onOpenWorkbench?.call(),
+                            child: _menuRow(
+                              context,
+                              icon: Icons.view_week_outlined,
+                              label: uiStrings['workbench']?[locale] ??
+                                  'Workbench',
+                            ),
+                          ));
+                        }
+                        // 2026-08-04 (Workbench): the way back — only
+                        // the Workbench's center pane shows this.
+                        if (onOpenClassicReader != null) {
+                          items.add(PopupMenuItem(
+                            value: 'classicReader',
+                            onTap: () => onOpenClassicReader?.call(),
+                            child: _menuRow(
+                              context,
+                              icon: Icons.menu_book_outlined,
+                              label: uiStrings['classicReader']?[locale] ??
+                                  'Classic Reader',
+                            ),
+                          ));
+                        }
                         if (onToggleSplitView != null) {
                           items.add(PopupMenuItem(
                             value: 'split',

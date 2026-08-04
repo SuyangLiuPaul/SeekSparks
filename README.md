@@ -41,10 +41,12 @@ of its code or data; the search grammar and UI here are an independent design.
 ## Quick start
 
 ### For users — nothing to install
-Open **<https://seeksparks.netlify.app>** in a desktop or iPad browser. At tablet width and
-above the reader opens in Split View with the sidebar already out. Tap "Original" on any
-verse to open the word study — on desktop widths (≥1024px) it docks to the right instead of
-covering the reader.
+Open **<https://seeksparks.netlify.app>** in a desktop or iPad browser. On pad-landscape and
+desktop widths (≥1024px) the reader opens as the **Workbench** — a BibleWorks-style
+three-pane workspace: command line + results on the left, Bible text in the center, and a
+live original-language analysis panel on the right that follows your verse taps. At tablet
+width (600–1023px) the classic reader opens in Split View with the sidebar already out; its
+word study docks to the right at desktop widths and sheets up from the bottom below them.
 
 ### For developers — clone, run, ship
 ```bash
@@ -65,7 +67,8 @@ stay on CocoaPods — run `flutter config --no-enable-swift-package-manager` onc
 | Category | Details |
 | --- | --- |
 | Structured search | Combine Strong's numbers with **AND** / **OR** / **NOT** / **NEAR*n*** (word-proximity, e.g. `G25 NEAR5 G26` = within 5 words of each other in the same verse) and a `*` prefix wildcard — evaluated over the bundled Strong's concordance, with NEAR narrowed further by the real per-verse word order in the original-language text. Operator chips + a focused "?" help dialog, EN/中文. |
-| Wide-screen layout | Split View and the sidebar are open by default at tablet width (≥600px) and up — no extra tap needed on a bigger screen. |
+| Workbench (3-pane workspace) | On pad-landscape/desktop (≥1024px) the reader is a BibleWorks-style workspace: command line + results verse list (left), Bible text (center), live original-language analysis that follows verse taps (right). Panes resize by drag, collapse by double-tap / fling / header button, widths persist. A "Classic Reader" menu entry leads back to the single-pane reader (and its Split View). |
+| Wide-screen layout | Split View and the sidebar are open by default in the classic reader at tablet width (600–1023px) — no extra tap needed on a bigger screen. |
 | Docked side panels | The Original-language word study opens as a persistent right-hand panel at desktop widths (≥1024px) instead of covering the text with a bottom sheet; falls back to the familiar bottom sheet below that width. |
 | Reading | 13 Bible translations across English and Chinese; Light / Dark / System theme; adjustable font, size, line spacing; paragraph or verse-by-verse mode. |
 | Word Study | Word-by-word interlinear with Strong's number, transliteration, and gloss; tap a word for the full lexicon entry, word family, and concordance. |
@@ -123,7 +126,11 @@ new indexing pipeline.
 
 ```
 lib/
+  pages/workbench_page.dart        Three-pane Workbench host (dividers, collapse, persisted widths)
+  providers/workbench_provider.dart   Workbench state: command-line search + selection→analysis mirroring
+  widgets/command_pane.dart        Left pane: command line + results verse list
   pages/search_page.dart          Search UI: text/AI modes + the boolean-search operator bar
+  services/search_service.dart    Shared text-scan + Strong's boolean computation (SearchPage + Workbench)
   utils/strongs_boolean_search.dart   Query parser + AND/OR/NOT/NEAR set algebra (pure, tested)
   utils/strongs_proximity.dart        Per-verse word-order proximity check (pure, tested)
   services/concordance_service.dart   Strong's-number → verse-refs reverse index

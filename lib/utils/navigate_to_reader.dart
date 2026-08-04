@@ -33,9 +33,19 @@ import 'package:seeksparks/pages/home_page.dart';
 /// can detect existing instances reliably.
 const String kHomePageRouteName = '/HomePage';
 
-/// Navigate to the Bible Reader, re-using an existing HomePage
-/// instance if one is already in the navigator stack; otherwise
-/// push a fresh one. Idempotent — calling multiple times in a row
+/// 2026-08-04 (Workbench): the three-pane Workbench IS a reader on
+/// wide screens — its center pane is a BibleReadingPane on the same
+/// primary MainProvider, so a pendingJump fires in it identically.
+/// It must count as "an existing reader" for the dedupe logic below,
+/// otherwise "Open in Reader" from a popup while the Workbench is on
+/// the stack would pop the Workbench away.
+const String kWorkbenchRouteName = '/Workbench';
+
+/// Navigate to the Bible Reader, re-using an existing reader route if
+/// one is already in the navigator stack — that means HomePage OR, on
+/// wide screens, the three-pane Workbench (which IS a reader: same
+/// primary MainProvider, same pendingJump handshake); otherwise push
+/// a fresh HomePage. Idempotent — calling multiple times in a row
 /// never produces duplicates.
 ///
 /// Callers are responsible for setting `mainProvider.pendingJump`
@@ -47,11 +57,15 @@ void navigateToReader(BuildContext context) {
   bool foundExistingHome = false;
   navigator.popUntil((route) {
     final name = route.settings.name ?? '';
-    // Match the canonical name AND any future variant ending in
-    // "HomePage" (defensive — if some future push site forgets the
-    // explicit routeName and Get happens to produce something
-    // ending in HomePage, we still detect it).
-    if (name == kHomePageRouteName || name.endsWith('HomePage')) {
+    // Match the canonical reader route names (classic reader AND the
+    // wide-screen Workbench) AND any future variant ending in
+    // "HomePage"/"WorkbenchPage" (defensive — if some future push site
+    // forgets the explicit routeName and Get happens to produce
+    // something ending in either, we still detect it).
+    if (name == kHomePageRouteName ||
+        name == kWorkbenchRouteName ||
+        name.endsWith('HomePage') ||
+        name.endsWith('WorkbenchPage')) {
       foundExistingHome = true;
       return true;
     }

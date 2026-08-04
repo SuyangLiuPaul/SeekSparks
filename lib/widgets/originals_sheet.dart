@@ -47,6 +47,17 @@ class OriginalsSheet extends StatefulWidget {
   final String? currentVersion;
   final void Function(ConcordanceRef ref)? onNavigateRef;
 
+  /// 2026-08-04 (Workbench): when true the sheet renders as a
+  /// persistent embedded panel (the Workbench's right-hand analysis
+  /// pane) instead of a modal sheet/route. The close button — which
+  /// calls `Navigator.maybePop()` and would pop a route it doesn't
+  /// own — is replaced by a collapse button wired to [onCollapse].
+  final bool embedded;
+
+  /// Invoked by the collapse button shown in place of the close
+  /// button when [embedded] is true. May be null (button disabled).
+  final VoidCallback? onCollapse;
+
   const OriginalsSheet({
     super.key,
     required this.verses,
@@ -54,6 +65,8 @@ class OriginalsSheet extends StatefulWidget {
     required this.locale,
     this.currentVersion,
     this.onNavigateRef,
+    this.embedded = false,
+    this.onCollapse,
   });
 
   @override
@@ -593,11 +606,23 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                       tooltip: uiStrings['copyTable']?[locale] ?? 'Copy word table',
                       onPressed: () => _copyInterlinearTable(context),
                     ),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    iconSize: 20,
-                    onPressed: () => Navigator.of(context).maybePop(),
-                  ),
+                  // Embedded (Workbench analysis pane): there is no
+                  // route to pop — offer a collapse button instead.
+                  // Sheet/route presentation: close pops, as before.
+                  if (widget.embedded)
+                    IconButton(
+                      icon: const Icon(Icons.chevron_right_rounded),
+                      iconSize: 20,
+                      tooltip: uiStrings['collapsePanel']?[locale] ??
+                          'Collapse panel',
+                      onPressed: widget.onCollapse,
+                    )
+                  else
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      iconSize: 20,
+                      onPressed: () => Navigator.of(context).maybePop(),
+                    ),
                 ],
               ),
             ),

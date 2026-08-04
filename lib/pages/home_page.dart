@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:provider/provider.dart';
+import 'package:seeksparks/pages/workbench_page.dart';
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/services/fetch_books.dart';
 import 'package:seeksparks/services/fetch_verses.dart';
 import 'package:seeksparks/utils/jump_to_reference.dart' as jumper;
+import 'package:seeksparks/utils/navigate_to_reader.dart'
+    show kWorkbenchRouteName;
 import 'package:seeksparks/widgets/sidebar_panel.dart';
 import 'package:seeksparks/widgets/bible_reading_pane.dart';
 import 'package:seeksparks/utils/responsive.dart';
@@ -181,6 +185,15 @@ class _HomePageState extends State<HomePage> {
       splitViewActive: _splitViewActive,
       onClose: null,
       showSearchAndSettings: true,
+      // 2026-08-04 (Workbench): overflow-menu entry that swaps this
+      // classic reader for the three-pane study workspace (Get.off —
+      // the Workbench REPLACES HomePage on the stack so Back returns
+      // to the Dashboard, not to a duplicate reader).
+      onOpenWorkbench: () => Get.off(
+        () => const WorkbenchPage(),
+        routeName: kWorkbenchRouteName,
+        transition: Transition.rightToLeft,
+      ),
     );
 
     if (!_splitViewActive || _secondaryProvider == null) {

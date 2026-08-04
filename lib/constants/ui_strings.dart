@@ -3561,6 +3561,52 @@ const uiStrings = {
     'zh-Hant': '前綴萬用字元（如 G25✶）',
     'en': 'Prefix wildcard (e.g. G25✶)',
   },
+
+  // ====== Workbench (BibleWorks-style three-pane pad workspace) ======
+  // 2026-08-04: command pane (left), Bible reader (center), live
+  // original-language analysis (right). See workbench_page.dart.
+  'workbench': {
+    'zh-Hans': '研经工作台',
+    'zh-Hant': '研經工作台',
+    'en': 'Workbench',
+  },
+  'classicReader': {
+    'zh-Hans': '经典阅读模式',
+    'zh-Hant': '經典閱讀模式',
+    'en': 'Classic Reader',
+  },
+  'commandSearchHint': {
+    'zh-Hans': '搜索经文，或原文编号：G25 AND G26',
+    'zh-Hant': '搜尋經文，或原文編號：G25 AND G26',
+    'en': "Search text, or Strong's: G25 AND G26",
+  },
+  'commandEmptyState': {
+    'zh-Hans': '搜索经文，或组合原文编号：\nG25 AND G26 · G25 NEAR5 G26 · G25✶',
+    'zh-Hant': '搜尋經文，或組合原文編號：\nG25 AND G26 · G25 NEAR5 G26 · G25✶',
+    'en': "Search the text, or combine Strong's numbers:\n"
+        'G25 AND G26 · G25 NEAR5 G26 · G25✶',
+  },
+  'wordStudyTitle': {
+    'zh-Hans': '原文研读',
+    'zh-Hant': '原文研讀',
+    'en': 'Word Study',
+  },
+  'analysisEmptyHint': {
+    'zh-Hans': '在中间的经文面板点选一节，这里会显示它的原文逐词研读。',
+    'zh-Hant': '在中間的經文面板點選一節，這裡會顯示它的原文逐詞研讀。',
+    'en': 'Tap a verse in the Bible pane and its original-language '
+        'word study appears here.',
+  },
+  'collapsePanel': {
+    'zh-Hans': '收起面板',
+    'zh-Hant': '收起面板',
+    'en': 'Collapse panel',
+  },
+  'expandPanel': {
+    'zh-Hans': '展开面板',
+    'zh-Hant': '展開面板',
+    'en': 'Expand panel',
+  },
   // v1.3.91: focused help dialog opened from the ? beside the operator bar.
   // SeekSparks addition: NOT + NEARn.
   'operatorHelpTitle': {

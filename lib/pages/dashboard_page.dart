@@ -21,7 +21,7 @@ import 'package:seeksparks/pages/sermon_detail_page.dart';
 import 'package:seeksparks/pages/sermons_page.dart';
 import 'package:seeksparks/widgets/liquid_glass.dart';
 import 'package:seeksparks/pages/highlights_page.dart';
-import 'package:seeksparks/pages/home_page.dart';
+import 'package:seeksparks/utils/open_reader.dart';
 import 'package:seeksparks/pages/library_page.dart';
 import 'package:seeksparks/pages/feedback_page.dart';
 import 'package:seeksparks/pages/search_page.dart';
@@ -463,10 +463,7 @@ class _DashboardPageState extends State<DashboardPage> {
           currentVersion: mainProvider.currentVersion,
           locale: locale,
           settings: settings,
-          onTap: () => Get.to(
-            () => const HomePage(),
-            transition: Transition.rightToLeft,
-          ),
+          onTap: () => openReader(context),
         );
 
       case DashboardSection.resumeSermon:
@@ -502,10 +499,7 @@ class _DashboardPageState extends State<DashboardPage> {
               fromVersionLabel: _dailyVerseFromVersionLabel,
               onTap: () {
                 jumper.prepareJumpToVerse(_dailyVerse!, mainProvider);
-                Get.to(
-                  () => const HomePage(),
-                  transition: Transition.rightToLeft,
-                );
+                openReader(context);
               },
             ),
           ],
@@ -586,10 +580,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 ),
                 onTap: () {
                   jumper.prepareJumpToVerse(v, mainProvider);
-                  Get.to(
-                    () => const HomePage(),
-                    transition: Transition.rightToLeft,
-                  );
+                  openReader(context);
                 },
               ),
           ],

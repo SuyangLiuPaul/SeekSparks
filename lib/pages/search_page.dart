@@ -5,10 +5,8 @@ import 'package:seeksparks/models/verse.dart';
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/services/ai_bible_search_service.dart';
 import 'package:seeksparks/services/concordance_service.dart';
-import 'package:seeksparks/services/fetch_books.dart' show standardBookOrder;
-import 'package:seeksparks/services/originals_service.dart';
+import 'package:seeksparks/services/search_service.dart';
 import 'package:seeksparks/utils/strongs_boolean_search.dart';
-import 'package:seeksparks/utils/strongs_proximity.dart';
 import 'package:seeksparks/services/fetch_verses.dart';
 import 'package:seeksparks/pages/strongs_entry_page.dart';
 import 'package:seeksparks/pages/home_page.dart';
@@ -1206,43 +1204,23 @@ class _SearchPageState extends State<SearchPage> {
     // built once per `setVerses` (lazy on first read) and reused
     // across keystrokes — collapsing each search from O(n × regex
     // chain) to O(n × String.contains).
-    final searchKeys = mp.searchKeys;
-    final queryNorm = query.replaceAll(' ', '').toLowerCase();
-    final matches = <Verse>[];
-    final localCounts = <String, int>{};
-    final useFilter = filterBook != null;
-    final useCurBook = !useFilter && !searchAll && mp.currentBook != null;
-    final filterTarget = filterBook ?? mp.currentBook;
-    int scanCount = 0;
-    for (int i = 0; i < verses.length; i++) {
-      final verse = verses[i];
-      if (useFilter && verse.book != filterTarget) continue;
-      if (useCurBook && verse.book != filterTarget) continue;
-      scanCount++;
-      if (searchKeys[i].contains(queryNorm)) {
-        matches.add(verse);
-        localCounts[verse.book] = (localCounts[verse.book] ?? 0) + 1;
-      }
-    }
+    // 2026-08-04: the scan + canonical sort moved to
+    // `SearchService.scanText` (shared with the Workbench command
+    // pane). Identical algorithm, extracted verbatim — this page now
+    // only owns its own UI state.
+    final scan = SearchService.scanText(
+      verses: verses,
+      searchKeys: mp.searchKeys,
+      query: query,
+      bookOrder: mp.bookOrder,
+      filterBook: filterBook,
+      searchAll: searchAll,
+      currentBook: mp.currentBook,
+    );
+    final matches = scan.matches;
+    final orderedCounts = scan.bookCounts;
+    final scanCount = scan.scannedCount;
     debugPrint('[SeekSparks search] matches.length=${matches.length}');
-
-    // 2026-05-08 (v1.0.1 perf): bookOrder is cached on MainProvider
-    // and only rebuilt when `setBooks` runs.
-    final bookOrder = mp.bookOrder;
-    matches.sort((a, b) {
-      final orderA = bookOrder[a.book] ?? 9999;
-      final orderB = bookOrder[b.book] ?? 9999;
-      if (orderA != orderB) return orderA.compareTo(orderB);
-      if (a.chapter != b.chapter) return a.chapter.compareTo(b.chapter);
-      return a.verse.compareTo(b.verse);
-    });
-    final sortedEntries = localCounts.entries.toList()
-      ..sort((a, b) {
-        final orderA = bookOrder[a.key] ?? 9999;
-        final orderB = bookOrder[b.key] ?? 9999;
-        return orderA.compareTo(orderB);
-      });
-    final orderedCounts = {for (final e in sortedEntries) e.key: e.value};
 
     if (!mounted) return;
     // Single atomic state update — replaces the previous pattern
@@ -2044,65 +2022,10 @@ class _SearchPageState extends State<SearchPage> {
       _booleanQuery = query;
       _booleanLoading = true;
     });
-    // Resolve each term to its occurrence label-set (expanding wildcards),
-    // then apply the AND/OR set algebra.
-    final termRefs = <StrongsTerm, Set<String>>{};
-    for (final t in query.terms) {
-      if (termRefs.containsKey(t)) continue;
-      final labels = <String>{};
-      if (t.wildcard) {
-        final nums = await ConcordanceService.numbersMatchingPrefix(t.number);
-        for (final n in nums) {
-          final r = await ConcordanceService.lookup(n);
-          if (r != null) labels.addAll(r.refs.map((e) => e.label));
-        }
-      } else {
-        final r = await ConcordanceService.lookup(t.number);
-        if (r != null) labels.addAll(r.refs.map((e) => e.label));
-      }
-      termRefs[t] = labels;
-    }
-    var resultLabels = evaluateStrongsBoolean(
-        query, (t) => termRefs[t] ?? const <String>{});
-    // SeekSparks addition: a NEARn operator needs actual word order, which
-    // the set algebra above can't see — narrow the AND-style candidate set
-    // with a per-verse word-position check (assets/originals/<book>.json
-    // via OriginalsService), one NEAR pair at a time.
-    if (query.hasProximity && resultLabels.isNotEmpty) {
-      for (final (i, j, maxWords) in nearPairs(query)) {
-        final termA = query.terms[i];
-        final termB = query.terms[j];
-        final keep = <String>{};
-        for (final label in resultLabels) {
-          final parsed = ConcordanceRef.tryParse(label);
-          if (parsed == null) continue;
-          final words = await OriginalsService.forVerse(
-              parsed.englishBook, parsed.chapter, parsed.verse);
-          if (words == null) continue;
-          final numsInOrder = words.map((w) => w.strongs).toList();
-          if (verseSatisfiesProximity(
-              strongsNumbersInOrder: numsInOrder,
-              termA: termA,
-              termB: termB,
-              maxWords: maxWords)) {
-            keep.add(label);
-          }
-        }
-        resultLabels = keep;
-      }
-    }
-    final refs = <ConcordanceRef>[];
-    for (final label in resultLabels) {
-      final parsed = ConcordanceRef.tryParse(label);
-      if (parsed != null) refs.add(parsed);
-    }
-    refs.sort((a, b) {
-      final ai = standardBookOrder.indexOf(a.englishBook);
-      final bi = standardBookOrder.indexOf(b.englishBook);
-      if (ai != bi) return ai.compareTo(bi);
-      if (a.chapter != b.chapter) return a.chapter.compareTo(b.chapter);
-      return a.verse.compareTo(b.verse);
-    });
+    // 2026-08-04: the set algebra + NEAR narrowing moved to
+    // `SearchService.runStrongsBoolean` (shared with the Workbench
+    // command pane). Identical algorithm, extracted verbatim.
+    final refs = await SearchService.runStrongsBoolean(query);
     if (!mounted) return;
     setState(() {
       _booleanRefs = refs;

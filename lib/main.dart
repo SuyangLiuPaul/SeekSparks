@@ -5,7 +5,6 @@ import 'package:get/get.dart';
 import 'package:seeksparks/constants/build_flags.dart';
 import 'package:seeksparks/models/sermon.dart';
 import 'package:seeksparks/pages/dashboard_page.dart';
-import 'package:seeksparks/pages/home_page.dart';
 import 'package:seeksparks/pages/loading_page.dart';
 import 'package:seeksparks/pages/sermon_detail_page.dart';
 import 'package:seeksparks/models/verse.dart';
@@ -13,6 +12,7 @@ import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/services/sermon_service.dart';
 import 'package:seeksparks/utils/jump_to_reference.dart' as jumper;
+import 'package:seeksparks/utils/open_reader.dart';
 import 'package:seeksparks/utils/reference_parser.dart' show BibleReference;
 import 'package:seeksparks/services/cloud_auth_service.dart';
 import 'package:seeksparks/services/daily_verse_service.dart';
@@ -885,14 +885,13 @@ class _RootRouterState extends State<_RootRouter> {
         if (!mounted) return;
         // 2026-05-24 (v1.3.6): explicit routeName so the
         // verse_popup_sheet "Open in Reader" path can detect an
-        // existing HomePage in the stack and pop to it instead of
+        // existing reader in the stack and pop to it instead of
         // pushing a duplicate. Get's auto-name resolves the
         // closure's runtimeType to something unpredictable like
-        // `/_Closure` — explicit '/HomePage' is the only reliable
-        // detection key.
-        Get.to(() => const HomePage(),
-            routeName: '/HomePage',
-            transition: Transition.rightToLeft);
+        // `/_Closure` — explicit route names are the only reliable
+        // detection key. 2026-08-04: openReader picks Workbench vs
+        // HomePage by width and passes the right routeName itself.
+        openReader(context);
       });
     }
   }
@@ -908,13 +907,14 @@ class _RootRouterState extends State<_RootRouter> {
       _bootHashLandingPending = false;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
-        Get.to(() => const HomePage(),
-            routeName: '/HomePage', transition: Transition.rightToLeft);
+        openReader(context);
       });
     }
     // After Round 32: Dashboard is the home / root page. The Bible
-    // reader (HomePage) is pushed on top via Dashboard's "Continue
-    // reading" tile. This gives users a personal landing page with
+    // reader is pushed on top via Dashboard's "Continue reading"
+    // tile — `openReader` picks the three-pane Workbench on
+    // pad-landscape/desktop widths and the classic HomePage reader
+    // below them. This gives users a personal landing page with
     // greeting + today's reading + bookmark counts instead of
     // dropping straight into a verse list, which felt like a
     // sub-page rather than a home.
