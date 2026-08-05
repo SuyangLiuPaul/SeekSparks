@@ -22,6 +22,7 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 import 'package:seeksparks/constants/bible_versions.dart'
     show shortBibleVersionLabel;
@@ -118,7 +119,16 @@ class _BrowseWindowState extends State<BrowseWindow> {
   static final Map<String, Future<List<Verse>?>> _inflight = {};
 
   late Future<List<_BrowseRow>> _future;
-  final ScrollController _scroll = ScrollController();
+
+  /// A positioned list, not a plain ListView: picking a verse from the
+  /// nav strip has to SCROLL there, and row heights vary too much
+  /// (a one-line KJV verse vs a wrapped originals line) to compute an
+  /// offset.
+  final ItemScrollController _scroll = ItemScrollController();
+
+  /// Row index of the first line of each verse, so a jump lands on the
+  /// verse's own block rather than mid-way through the previous one.
+  final Map<int, int> _firstRowOfVerse = {};
 
   /// Strong's number -> entry, for every original word in the chapter.
   /// Prefetched with the rows: the hover popup has to appear the instant
@@ -136,18 +146,34 @@ class _BrowseWindowState extends State<BrowseWindow> {
   void didUpdateWidget(covariant BrowseWindow old) {
     super.didUpdateWidget(old);
     // The focused verse deliberately does NOT reload: moving the cursor
-    // within a chapter is a highlight change, not a fetch.
+    // within a chapter is a highlight change plus a scroll, not a fetch.
     if (old.book != widget.book ||
         old.chapter != widget.chapter ||
         !_sameList(old.versionCodes, widget.versionCodes)) {
       setState(() => _future = _load());
+    } else if (old.focusedVerse != widget.focusedVerse) {
+      _scrollToFocused();
     }
   }
 
-  @override
-  void dispose() {
-    _scroll.dispose();
-    super.dispose();
+  /// Bring the focused verse into view. Deferred a frame so it also
+  /// works right after a load, when the list has not been laid out yet.
+  void _scrollToFocused() {
+    final v = widget.focusedVerse;
+    if (v == null) return;
+    final index = _firstRowOfVerse[v];
+    if (index == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_scroll.isAttached) return;
+      _scroll.scrollTo(
+        index: index,
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOut,
+        // A little headroom so the verse is not flush against the
+        // pane's top edge.
+        alignment: 0.08,
+      );
+    });
   }
 
   static bool _sameList(List<String> a, List<String> b) =>
@@ -194,8 +220,10 @@ class _BrowseWindowState extends State<BrowseWindow> {
     await OriginalsService.forVerse(widget.book, widget.chapter, 1);
 
     final rows = <_BrowseRow>[];
+    _firstRowOfVerse.clear();
     for (var n = 1; n <= lastVerse; n++) {
       var first = true;
+      _firstRowOfVerse[n] = rows.length;
       final reference =
           '${localeAwareBookName(widget.book, locale, widget.versionCodes.isEmpty ? '' : widget.versionCodes.first)} '
           '${widget.chapter}:$n';
@@ -264,13 +292,12 @@ class _BrowseWindowState extends State<BrowseWindow> {
             ),
           );
         }
+        // Land on the focused verse as soon as the rows exist.
+        _scrollToFocused();
         return Container(
           color: wb.paneBg,
-          child: Scrollbar(
-            controller: _scroll,
-            child: ListView.builder(
-              controller: _scroll,
-              primary: false,
+          child: ScrollablePositionedList.builder(
+              itemScrollController: _scroll,
               padding: EdgeInsets.zero,
               itemCount: rows.length,
               itemBuilder: (context, i) => _RowView(
@@ -283,7 +310,6 @@ class _BrowseWindowState extends State<BrowseWindow> {
                     ? null
                     : () => widget.onVerseTap!(rows[i].verse),
               ),
-            ),
           ),
         );
       },

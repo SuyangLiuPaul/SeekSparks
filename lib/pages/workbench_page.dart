@@ -24,6 +24,7 @@ import 'package:seeksparks/pages/settings_page.dart';
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/providers/workbench_provider.dart';
 import 'package:seeksparks/services/concordance_service.dart';
+import 'package:seeksparks/services/fetch_verses.dart';
 import 'package:seeksparks/services/originals_service.dart';
 import 'package:seeksparks/utils/jump_to_reference.dart' as jumper;
 import 'package:seeksparks/utils/reference_parser.dart' show BibleReference;
@@ -37,6 +38,7 @@ import 'package:seeksparks/widgets/command_pane.dart';
 import 'package:seeksparks/pages/strongs_entry_page.dart';
 import 'package:seeksparks/utils/app_nav.dart';
 import 'package:seeksparks/widgets/analysis_tabs.dart';
+import 'package:seeksparks/widgets/browse_nav_strip.dart';
 import 'package:seeksparks/widgets/browse_window.dart';
 import 'package:seeksparks/widgets/workbench_chrome.dart';
 import 'package:seeksparks/widgets/originals_sheet.dart';
@@ -639,6 +641,23 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
               ),
             ],
           ),
+          // `NAS ▾ Genesis ▾ 1 ▾ 1 ▾` — how you move in BibleWorks, and
+          // the answer to "how do I change verse" that the continuous
+          // Browse window otherwise left unanswered.
+          if (book != null && chapter != null)
+            BrowseNavStrip(
+              corpus: mp.verses,
+              version: mp.currentVersion,
+              localBook: localBook,
+              chapter: chapter,
+              verse: verse,
+              bookLabel: (b) => localeAwareBookName(
+                  bookNameToEnglish[b] ?? b, locale, mp.currentVersion),
+              onVersion: (v) => _switchVersion(v),
+              onBook: (b) => _goTo(book: b, chapter: 1, verse: 1),
+              onChapter: (c) => _goTo(book: localBook!, chapter: c, verse: 1),
+              onVerse: (n) => _moveBrowseCursor(localBook!, chapter, n),
+            ),
           Expanded(
             child: (book == null || chapter == null)
                 ? Center(
@@ -677,6 +696,22 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         ],
       ),
     );
+  }
+
+  /// Change the reading version from the Browse nav strip. Reloads the
+  /// corpus, which the Browse window and every pane keys off.
+  Future<void> _switchVersion(String code) async {
+    final mp = context.read<MainProvider>();
+    if (code == mp.currentVersion) return;
+    mp.setVersion(code);
+    await FetchVerses.execute(mainProvider: mp);
+  }
+
+  /// Jump the workspace to a book/chapter/verse chosen in the nav strip.
+  void _goTo({required String book, required int chapter, required int verse}) {
+    final mp = context.read<MainProvider>();
+    mp.setCurrentChapter(book: book, chapter: chapter);
+    _moveBrowseCursor(book, chapter, verse);
   }
 
   /// Step the Browse cursor to verse [target] of the current chapter.

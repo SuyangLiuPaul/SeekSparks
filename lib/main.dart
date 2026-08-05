@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart' show kIsWeb, kReleaseMode;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/utils/app_nav.dart';
 import 'package:seeksparks/utils/app_scroll_behavior.dart';
 import 'package:seeksparks/constants/build_flags.dart';
@@ -530,7 +531,14 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
             ),
           ),
           themeMode: settings.themeMode,
-          theme: ThemeData(
+          // 2026-08-06: SeekSparks is a study tool, not a reading app,
+          // and the whole product should read as one. The Workbench's
+          // dense BibleWorks theme is layered OVER the app's own
+          // ThemeData rather than replacing it, so the font settings,
+          // the CJK fallback chain and every per-widget theme below
+          // still apply — `workbenchTheme` then overrides the palette,
+          // the corner radii, the text scale and the ripple.
+          theme: workbenchTheme(ThemeData(
             fontFamily: settings.fontFamily,
             // 2026-05-08 (v1.1.0 — Liquid Glass / v1.1.2 — system
             // defaults): a comprehensive OS-native font fallback
@@ -640,8 +648,8 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
                   lightScheme.onPrimary.withValues(alpha: 0.78),
               indicatorColor: lightScheme.onPrimary,
             ),
-          ),
-          darkTheme: ThemeData(
+          )),
+          darkTheme: workbenchTheme(ThemeData(
             fontFamily: settings.fontFamily,
             // 2026-05-08 (v1.1.0 / v1.1.2): same comprehensive OS-
             // native font fallback chain as light theme. See light
@@ -767,7 +775,7 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
             iconTheme: const IconThemeData(
               color: Color(0xFFCCCCCC),
             ),
-          ),
+          )),
           builder: (context, child) {
             return ScrollConfiguration(
               // 2026-08 (ported from YsWords v1.4.5): AppScrollBehavior
