@@ -4273,6 +4273,36 @@ const uiStrings = {
     'en': 'Treasury of Scripture Knowledge (TSK) cross-references',
   },
   // ── Workbench: menu bar, toolbar, status bar ──
+  'analysisFrozen': {
+    'zh-Hans': '已冻结 — Shift',
+    'zh-Hant': '已凍結 — Shift',
+    'en': 'FROZEN — Shift',
+  },
+  'analysisMeaning': {
+    'zh-Hans': '词义',
+    'zh-Hant': '詞義',
+    'en': 'Meaning',
+  },
+  'analysisOrigin': {
+    'zh-Hans': '字源',
+    'zh-Hant': '字源',
+    'en': 'Origin',
+  },
+  'analysisDefinition': {
+    'zh-Hans': '释义',
+    'zh-Hant': '釋義',
+    'en': 'Definition',
+  },
+  'analysisFullEntry': {
+    'zh-Hans': '完整词条、同源词与经文汇编 →',
+    'zh-Hant': '完整詞條、同源詞與經文彙編 →',
+    'en': 'Full entry, word family & concordance →',
+  },
+  'analysisNoEntry': {
+    'zh-Hans': '此编号没有词典条目。',
+    'zh-Hant': '此編號沒有詞典條目。',
+    'en': 'No lexicon entry for this number.',
+  },
   'parallelBrowseShort': {
     'zh-Hans': '对照',
     'zh-Hant': '對照',

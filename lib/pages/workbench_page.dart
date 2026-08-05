@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show HardwareKeyboard;
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -40,6 +41,7 @@ import 'package:seeksparks/utils/app_nav.dart';
 import 'package:seeksparks/widgets/analysis_tabs.dart';
 import 'package:seeksparks/widgets/browse_nav_strip.dart';
 import 'package:seeksparks/widgets/browse_window.dart';
+import 'package:seeksparks/widgets/word_analysis_pane.dart';
 import 'package:seeksparks/widgets/workbench_chrome.dart';
 import 'package:seeksparks/widgets/originals_sheet.dart';
 
@@ -136,9 +138,21 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
   AnalysisTab _analysisTab = AnalysisTab.wordStudy;
   static const _kAnalysisTabKey = 'workbench.analysisTab';
 
-  /// What the mouse is over in the Browse window. Drives the status
-  /// bar, so it updates with no click — BibleWorks' whole reading model.
+  /// What the mouse is over RIGHT NOW. Drives the status bar, which
+  /// clears when the pointer leaves the text.
   BrowseHover? _hover;
+
+  /// The word the Analysis window is showing. Unlike [_hover] this is
+  /// sticky: BibleWorks keeps the last word up when the pointer leaves
+  /// the text, so you can move the mouse onto the pane and read it.
+  BrowseHover? _analysisWord;
+
+  /// True while Shift is held. From the manual: "If you hold down the
+  /// Shift key as you move the mouse cursor the content of the Word
+  /// Analysis Window will not change." It is the brake that makes a
+  /// pointer-driven readout usable — without it you cannot look away
+  /// from the text without losing what you were reading about.
+  bool _analysisFrozen = false;
 
   /// Focus for the command line, so View ▸ menu and Ctrl+L can jump to
   /// it the way a desktop tool's command line always can.
@@ -348,13 +362,47 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
     ].join('   ');
   }
 
-  List<String> _statusFields(MainProvider mp, String locale) {
+  /// The status bar's right-hand readouts. Every one is a control:
+  /// BibleWorks changes options by double-clicking them here and greys
+  /// the ones that are off. Shipping them as plain labels threw away a
+  /// whole row of affordances for nothing.
+  List<WbStatusField> _statusFields(MainProvider mp, String locale) {
+    final settings = context.read<AppSettings>();
+    String s(String key, String fallback) =>
+        uiStrings[key]?[locale] ?? fallback;
     final book = mp.currentBook;
     final chapter = mp.currentChapter;
+
     return [
       if (book != null && chapter != null)
-        '${localeAwareBookName(bookNameToEnglish[book] ?? book, locale, mp.currentVersion)} $chapter',
-      mp.currentVersion.toUpperCase(),
+        WbStatusField(
+          '${localeAwareBookName(bookNameToEnglish[book] ?? book, locale, mp.currentVersion)} $chapter',
+          onTap: () =>
+              pushPage(BooksPage(bookIdx: book, chapterIdx: chapter)),
+        ),
+      WbStatusField(
+        mp.currentVersion.toUpperCase(),
+        onTap: () => _pickParallelVersions(context),
+      ),
+      WbStatusField(
+        s(_parallelMode ? 'parallelBrowseShort' : 'classicReaderShort',
+            _parallelMode ? 'Browse' : 'Reader'),
+        onTap: () {
+          setState(() => _parallelMode = !_parallelMode);
+          _persistPrefs();
+        },
+      ),
+      WbStatusField(
+        "Strong's",
+        enabled: settings.showStrongsInOriginals,
+        onTap: () => settings
+            .setShowStrongsInOriginals(!settings.showStrongsInOriginals),
+      ),
+      WbStatusField(
+        s('menuAnalysisWindow', 'Analysis'),
+        enabled: _rightOpen,
+        onTap: () => _setRightOpen(!_rightOpen),
+      ),
     ];
   }
 
@@ -680,15 +728,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
                     focusedVerse: verse,
                     onWordTap: (w) =>
                         pushPage(StrongsEntryPage(number: w.strongs)),
-                    onWordHover: (h) {
-                      // Rebuilds only the status bar's text — cheap, and
-                      // it fires on every pointer move between words.
-                      if (_hover?.word.strongs == h?.word.strongs &&
-                          _hover?.reference == h?.reference) {
-                        return;
-                      }
-                      setState(() => _hover = h);
-                    },
+                    onWordHover: _onWordHover,
                     onVerseTap: (n) =>
                         _moveBrowseCursor(localBook!, chapter, n),
                   ),
@@ -696,6 +736,26 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         ],
       ),
     );
+  }
+
+  /// The pointer moved onto (or off) an original-language word.
+  ///
+  /// One event, two lifetimes: the status bar tracks the pointer exactly
+  /// and clears on exit, while the Analysis window latches the last
+  /// word. Shift suspends the latch.
+  void _onWordHover(BrowseHover? h) {
+    final frozen = HardwareKeyboard.instance.isShiftPressed;
+    final next = (h != null && !frozen) ? h : _analysisWord;
+    final sameHover = _hover?.word.strongs == h?.word.strongs &&
+        _hover?.reference == h?.reference;
+    final sameAnalysis = _analysisWord?.word.strongs == next?.word.strongs &&
+        _analysisWord?.reference == next?.reference;
+    if (sameHover && sameAnalysis && frozen == _analysisFrozen) return;
+    setState(() {
+      _hover = h;
+      _analysisWord = next;
+      _analysisFrozen = frozen;
+    });
   }
 
   /// Change the reading version from the Browse nav strip. Reloads the
@@ -876,6 +936,20 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
   ) {
     switch (_analysisTab) {
       case AnalysisTab.wordStudy:
+        // A hovered word wins. The Analysis window's job is to report
+        // the pointer; the verse-wide word grid is what you get before
+        // the pointer has been anywhere.
+        final hovered = _analysisWord;
+        if (hovered != null) {
+          return WordAnalysisPane(
+            word: hovered.word,
+            reference: hovered.reference,
+            locale: locale,
+            frozen: _analysisFrozen,
+            onOpenFullEntry: () =>
+                pushPage(StrongsEntryPage(number: hovered.word.strongs)),
+          );
+        }
         // Key forces OriginalsSheet to re-run its load Future when the
         // selection changes (the sheet caches its Future in initState,
         // so a bare field swap wouldn't reload).

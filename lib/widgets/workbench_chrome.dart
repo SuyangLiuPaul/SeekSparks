@@ -326,6 +326,25 @@ class WbPaneTitle extends StatelessWidget {
 /// text with the mouse and never open a dialog. [message] is whatever
 /// the hover target last reported; [fields] are the persistent
 /// right-hand readouts (version, reference, verse count).
+/// One clickable readout in the status bar.
+///
+/// From the manual: "Many options can also be changed by double-clicking
+/// on the various status windows. When a particular option is disabled
+/// the text … will be grayed out." So these are controls, not labels —
+/// which is why the status bar is worth its 20 pixels.
+class WbStatusField {
+  const WbStatusField(this.label, {this.enabled = true, this.onTap});
+
+  final String label;
+
+  /// Greyed when false, exactly as BibleWorks reports a disabled option.
+  final bool enabled;
+
+  /// Fired on double-tap, matching the desktop convention. Null makes
+  /// the field a plain readout.
+  final VoidCallback? onTap;
+}
+
 class WorkbenchStatusBar extends StatelessWidget {
   const WorkbenchStatusBar({
     super.key,
@@ -334,7 +353,7 @@ class WorkbenchStatusBar extends StatelessWidget {
   });
 
   final String message;
-  final List<String> fields;
+  final List<WbStatusField> fields;
 
   @override
   Widget build(BuildContext context) {
@@ -363,14 +382,25 @@ class WorkbenchStatusBar extends StatelessWidget {
             Container(
               width: WbMetrics.hairline,
               height: 12,
-              margin: const EdgeInsets.symmetric(horizontal: 7),
+              margin: const EdgeInsets.symmetric(horizontal: 4),
               color: wb.border,
             ),
-            Text(
-              f,
-              style: TextStyle(
-                fontSize: WbMetrics.chrome,
-                color: wb.mutedText,
+            Tooltip(
+              message: f.onTap == null ? '' : 'Double-click to change',
+              child: _HoverBox(
+                onDoubleTap: f.onTap,
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Text(
+                  f.label,
+                  style: TextStyle(
+                    fontSize: WbMetrics.chrome,
+                    fontWeight:
+                        f.enabled ? FontWeight.w600 : FontWeight.w400,
+                    color: f.enabled
+                        ? wb.text
+                        : wb.mutedText.withValues(alpha: 0.55),
+                  ),
+                ),
               ),
             ),
           ],
@@ -425,12 +455,14 @@ class _HoverBox extends StatefulWidget {
   const _HoverBox({
     required this.child,
     this.onTap,
+    this.onDoubleTap,
     this.padding = EdgeInsets.zero,
     this.baseColor,
   });
 
   final Widget child;
   final VoidCallback? onTap;
+  final VoidCallback? onDoubleTap;
   final EdgeInsets padding;
   final Color? baseColor;
 
@@ -444,18 +476,20 @@ class _HoverBoxState extends State<_HoverBox> {
   @override
   Widget build(BuildContext context) {
     final wb = WbColors.of(context);
+    final interactive = widget.onTap != null || widget.onDoubleTap != null;
     return MouseRegion(
-      cursor: widget.onTap == null
-          ? SystemMouseCursors.basic
-          : SystemMouseCursors.click,
+      cursor: interactive
+          ? SystemMouseCursors.click
+          : SystemMouseCursors.basic,
       onEnter: (_) => setState(() => _hovering = true),
       onExit: (_) => setState(() => _hovering = false),
       child: GestureDetector(
         onTap: widget.onTap,
+        onDoubleTap: widget.onDoubleTap,
         behavior: HitTestBehavior.opaque,
         child: Container(
           padding: widget.padding,
-          color: _hovering ? wb.hoverBg : widget.baseColor,
+          color: _hovering && interactive ? wb.hoverBg : widget.baseColor,
           child: widget.child,
         ),
       ),

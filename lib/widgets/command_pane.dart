@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'package:seeksparks/constants/bible_versions.dart'
+    show bibleVersions;
 import 'package:seeksparks/constants/text_patterns.dart';
 import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/constants/workbench_theme.dart';
@@ -8,6 +10,7 @@ import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/verse.dart';
 import 'package:seeksparks/providers/workbench_provider.dart';
 import 'package:seeksparks/services/concordance_service.dart';
+import 'package:seeksparks/services/fetch_verses.dart';
 import 'package:seeksparks/utils/clipboard_helper.dart';
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 import 'package:seeksparks/utils/jump_to_reference.dart' as jumper;
@@ -64,6 +67,25 @@ class _CommandPaneState extends State<CommandPane> {
     final raw = _controller.text.trim();
     if (raw.isEmpty) return;
 
+    // A bare version abbreviation switches the reading version, before
+    // anything else is tried. From the manual: "The easiest way to do
+    // this is to type the BibleWorks abbreviation for the version on
+    // the Command Line … and pressing the Return key." Checked first
+    // because these tokens are short and would otherwise be swallowed
+    // by the text search.
+    final versionCode = _matchVersion(raw);
+    if (versionCode != null) {
+      final mp = context.read<MainProvider>();
+      if (versionCode != mp.currentVersion) {
+        mp.setVersion(versionCode);
+        await FetchVerses.execute(mainProvider: mp);
+      }
+      if (!mounted) return;
+      _controller.clear();
+      setState(() {});
+      return;
+    }
+
     final ref = parseReference(raw);
     if (ref != null) {
       final mp = context.read<MainProvider>();
@@ -90,6 +112,22 @@ class _CommandPaneState extends State<CommandPane> {
     }
     if (!mounted) return;
     context.read<WorkbenchProvider>().runSearch(raw);
+  }
+
+  /// `nas`, `NASB`, `kjv`… → that version's code. Matches the internal
+  /// code and the short label, case-insensitively; returns null for
+  /// anything else so the token falls through to reference-parsing and
+  /// then to search.
+  String? _matchVersion(String raw) {
+    final q = raw.trim().toLowerCase();
+    if (q.isEmpty || q.contains(' ')) return null;
+    for (final v in bibleVersions) {
+      if (v.value.toLowerCase() == q ||
+          v.shortLabel.toLowerCase() == q) {
+        return v.value;
+      }
+    }
+    return null;
   }
 
   /// Insert an operator/wildcard token at the caret (used by the
