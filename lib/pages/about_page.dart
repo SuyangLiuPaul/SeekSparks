@@ -584,6 +584,24 @@ class _LexiconsTable extends StatelessWidget {
         licence: uiStrings['aboutLicenseOshb']?[locale] ??
             'CC BY 4.0 · Open Scriptures.',
         url: 'https://github.com/openscriptures/morphhb',
+      ),
+      // Used with the permission of the publisher at yahwehdehua.net.
+      // These two are what let the Chinese column identify a word
+      // rather than only its verse.
+      _AttribRow(
+        name: uiStrings['aboutLexCuvsTagged']?[locale] ??
+            '和合本【雅伟】简体版＋［附原文编号］',
+        licence: uiStrings['aboutLicenseCuvsTagged']?[locale] ??
+            '修订编辑：孙树民 · Used with permission (yahwehdehua.net).',
+        url: 'https://yahwehdehua.net/cn/resource/bible',
+      ),
+      _AttribRow(
+        name: uiStrings['aboutLexBdbThayer']?[locale] ??
+            'BDB (Hebrew) + Thayer (Greek) lexicons, Chinese edition',
+        licence: uiStrings['aboutLicenseBdbThayer']?[locale] ??
+            'Brown-Driver-Briggs (1906) & Thayer (1889), public domain · '
+                'Chinese edition used with permission (yahwehdehua.net).',
+        url: 'https://yahwehdehua.net/cn/resource/bible',
         last: true,
       ),
     ];

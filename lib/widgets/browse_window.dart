@@ -35,6 +35,7 @@ import 'package:seeksparks/services/fetch_verses.dart';
 import 'package:seeksparks/models/strongs.dart';
 import 'package:seeksparks/services/originals_service.dart';
 import 'package:seeksparks/services/strongs_service.dart';
+import 'package:seeksparks/services/tagged_text_service.dart';
 import 'package:seeksparks/utils/morphology.dart' show describeMorphology;
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
@@ -49,6 +50,7 @@ class _BrowseRow {
     required this.firstOfVerse,
     this.text,
     this.words,
+    this.runs,
     this.rtl = false,
   });
 
@@ -65,6 +67,12 @@ class _BrowseRow {
 
   final String? text;
   final List<OriginalWord>? words;
+
+  /// Strong's-tagged runs, when this version ships tagging. Present
+  /// alongside [text]: the plain string is still the fallback for any
+  /// verse the tagger missed.
+  final List<TaggedRun>? runs;
+
   final bool rtl;
 }
 
@@ -246,12 +254,26 @@ class _BrowseWindowState extends State<BrowseWindow> {
       for (final code in widget.versionCodes) {
         final text = byVersion[code]?[n];
         if (text == null) continue;
+        final runs = await TaggedTextService.forVerse(
+          version: code,
+          englishBook: widget.book,
+          chapter: widget.chapter,
+          verse: n,
+        );
+        if (runs != null) {
+          for (final r in runs) {
+            if (r.strongs.isNotEmpty && !_glosses.containsKey(r.strongs)) {
+              _glosses[r.strongs] = await StrongsService.lookup(r.strongs);
+            }
+          }
+        }
         rows.add(_BrowseRow(
           verse: n,
           label: shortBibleVersionLabel(code),
           reference: reference,
           firstOfVerse: first,
           text: text,
+          runs: runs,
         ));
         first = false;
       }
@@ -382,16 +404,26 @@ class _RowView extends StatelessWidget {
                       onWordTap: onWordTap,
                       onWordHover: onWordHover,
                     )
-                  // A translation line reports the VERSE. Its words are
-                  // untagged, so claiming to identify one would be a
-                  // guess; the verse is exactly what we can stand behind.
-                  : MouseRegion(
-                      onEnter: (_) => onWordHover?.call(BrowseHover(
-                        reference: row.reference,
-                        verse: row.verse,
-                      )),
-                      child: _TranslationLine(row: row, settings: settings),
-                    ),
+                  : row.runs != null
+                      // Tagged translation: every run is its own hover
+                      // target, exactly like the originals line.
+                      ? _TaggedLine(
+                          row: row,
+                          glosses: glosses,
+                          onWordTap: onWordTap,
+                          onWordHover: onWordHover,
+                        )
+                      // Untagged translation reports the VERSE. Guessing
+                      // which original word an untagged word renders
+                      // would be a heuristic dressed as fact.
+                      : MouseRegion(
+                          onEnter: (_) => onWordHover?.call(BrowseHover(
+                            reference: row.reference,
+                            verse: row.verse,
+                          )),
+                          child:
+                              _TranslationLine(row: row, settings: settings),
+                        ),
             ),
           ],
         ),
@@ -430,6 +462,76 @@ class _TranslationLine extends StatelessWidget {
         height: WbMetrics.lineHeight,
         fontFamilyFallback: kCjkFontFallback,
       ),
+    );
+  }
+}
+
+/// A Strong's-tagged translation line: the reference, then the verse
+/// text broken into runs that each carry an original-language word.
+/// Reads as ordinary prose; hovers like an interlinear.
+class _TaggedLine extends StatelessWidget {
+  const _TaggedLine({
+    required this.row,
+    required this.glosses,
+    this.onWordTap,
+    this.onWordHover,
+  });
+
+  final _BrowseRow row;
+  final Map<String, StrongsEntry?> glosses;
+  final void Function(OriginalWord word)? onWordTap;
+  final void Function(BrowseHover? hover)? onWordHover;
+
+  @override
+  Widget build(BuildContext context) {
+    final wb = WbColors.of(context);
+    final runs = row.runs ?? const <TaggedRun>[];
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(right: 6),
+          child: Text(
+            row.reference,
+            style: TextStyle(
+              fontSize: WbMetrics.text,
+              height: WbMetrics.lineHeight,
+              fontWeight: FontWeight.w600,
+              color: wb.link,
+            ),
+          ),
+        ),
+        Expanded(
+          child: Wrap(
+            children: [
+              for (final r in runs)
+                if (r.isTagged)
+                  _HoverWord(
+                    // Reuse the originals hover target: same behaviour,
+                    // same popup, only the script differs.
+                    word: OriginalWord(text: r.text, strongs: r.strongs),
+                    reference: row.reference,
+                    verse: row.verse,
+                    entry: glosses[r.strongs],
+                    grammar: r.grammar,
+                    translation: true,
+                    onTap: onWordTap,
+                    onHover: onWordHover,
+                  )
+                else
+                  Text(
+                    r.text,
+                    style: TextStyle(
+                      fontSize: WbMetrics.text,
+                      height: WbMetrics.lineHeight,
+                      color: wb.text,
+                      fontFamilyFallback: kCjkFontFallback,
+                    ),
+                  ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
@@ -502,6 +604,8 @@ class _HoverWord extends StatefulWidget {
     required this.reference,
     required this.verse,
     required this.entry,
+    this.grammar = const [],
+    this.translation = false,
     this.onTap,
     this.onHover,
   });
@@ -514,6 +618,13 @@ class _HoverWord extends StatefulWidget {
   /// the number is missing from the lexicon — the popup then shows just
   /// the word and its number rather than nothing.
   final StrongsEntry? entry;
+
+  /// Grammar codes carried by a tagged translation run.
+  final List<String> grammar;
+
+  /// Translation text renders at body size in the body colour; only the
+  /// originals line gets the larger original-script treatment.
+  final bool translation;
   final void Function(OriginalWord word)? onTap;
   final void Function(BrowseHover? hover)? onHover;
 

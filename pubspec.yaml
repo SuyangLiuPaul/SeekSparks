@@ -124,6 +124,7 @@ flutter:
     - assets/bible_evidence.json
     - assets/strongs/
     - assets/originals/
+    - assets/tagged/cuvs-yhwh/
     - assets/sermons/index.json
     - assets/sermons/refs.json
     - assets/family_tree.json

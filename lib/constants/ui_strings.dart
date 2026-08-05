@@ -4424,6 +4424,29 @@ const uiStrings = {
     'zh-Hant': '全聖經出現次數，由少到多。',
     'en': 'Whole-Bible occurrences, rarest first.',
   },
+  'aboutLexCuvsTagged': {
+    'zh-Hans': '和合本【雅伟】简体版＋［附原文编号］',
+    'zh-Hant': '和合本【雅偉】簡體版＋［附原文編號］',
+    'en': 'Chinese Union [YHWH] Version with Strong\'s numbers',
+  },
+  'aboutLicenseCuvsTagged': {
+    'zh-Hans': '修订编辑：孙树民 · 经出版方许可使用（yahwehdehua.net）。',
+    'zh-Hant': '修訂編輯：孫樹民 · 經出版方許可使用（yahwehdehua.net）。',
+    'en': 'Revised by 孙树民 · used with permission (yahwehdehua.net).',
+  },
+  'aboutLexBdbThayer': {
+    'zh-Hans': 'BDB（希伯来文）+ Thayer（希腊文）词典 中文版',
+    'zh-Hant': 'BDB（希伯來文）+ Thayer（希臘文）詞典 中文版',
+    'en': 'BDB (Hebrew) + Thayer (Greek) lexicons, Chinese edition',
+  },
+  'aboutLicenseBdbThayer': {
+    'zh-Hans': 'Brown-Driver-Briggs（1906）与 Thayer（1889）原著属公有领域 · '
+        '中文版经许可使用（yahwehdehua.net）。',
+    'zh-Hant': 'Brown-Driver-Briggs（1906）與 Thayer（1889）原著屬公有領域 · '
+        '中文版經許可使用（yahwehdehua.net）。',
+    'en': 'Brown-Driver-Briggs (1906) & Thayer (1889) public domain · '
+        'Chinese edition used with permission (yahwehdehua.net).',
+  },
   'aboutLexMorphGnt': {
     'zh-Hans': '希腊文新约词形分析 — MorphGNT / SBLGNT',
     'zh-Hant': '希臘文新約詞形分析 — MorphGNT / SBLGNT',
