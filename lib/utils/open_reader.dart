@@ -3,7 +3,7 @@
 // it stays the classic single-pane HomePage reader.
 
 import 'package:flutter/widgets.dart';
-import 'package:get/get.dart';
+import 'package:seeksparks/utils/app_nav.dart';
 
 import 'package:seeksparks/pages/home_page.dart';
 import 'package:seeksparks/pages/workbench_page.dart';
@@ -22,12 +22,10 @@ import 'package:seeksparks/utils/responsive.dart';
 void openReader(BuildContext context) {
   final width = MediaQuery.sizeOf(context).width;
   if (ResponsiveBreakpoints.isDesktopOrWider(width)) {
-    Get.to(() => const WorkbenchPage(),
-        routeName: kWorkbenchRouteName,
-        transition: Transition.rightToLeft);
+    pushPage(const WorkbenchPage(),
+        routeName: kWorkbenchRouteName);
     return;
   }
-  Get.to(() => const HomePage(),
-      routeName: kHomePageRouteName,
-      transition: Transition.rightToLeft);
+  pushPage(const HomePage(),
+      routeName: kHomePageRouteName);
 }

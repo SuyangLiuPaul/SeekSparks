@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/widgets/home_icon_button.dart';
+import 'package:seeksparks/widgets/language_switcher_button.dart';
 import 'package:seeksparks/widgets/localized_back_button.dart';
 import 'package:seeksparks/widgets/book_chapter_picker.dart';
 import 'package:seeksparks/utils/responsive.dart';
@@ -49,7 +50,7 @@ class BooksPage extends StatelessWidget {
           leading: const LocalizedBackButton(),
           title: Text(
               uiStrings['bibleBooks']?[settings.locale] ?? 'Bible Books'),
-          actions: const [HomeIconButton()],
+          actions: const [LanguageSwitcherButton(), HomeIconButton()],
         ),
         body: Center(
           child: ConstrainedBox(

@@ -220,10 +220,13 @@ const uiStrings = {
     'zh-Hant': '分享',
     'en': 'Share',
   },
+  // 2026-08: SeekSparks — this panel is an original-language word
+  // study, not the AI exegesis sheet it was called in YsWords. The
+  // inherited "Exegesis / 释经" label described the wrong feature.
   'originalText': {
-    'zh-Hans': '释经',
-    'zh-Hant': '釋經',
-    'en': 'Exegesis',
+    'zh-Hans': '原文逐字',
+    'zh-Hant': '原文逐字',
+    'en': 'Original Text',
   },
   'originalHint': {
     'zh-Hans': '点击词语查看 Strong\'s 词条。',
@@ -4186,11 +4189,6 @@ const uiStrings = {
     'en':
         '© The Lockman Foundation · used under quotation provisions.',
   },
-  'aboutVerCuv': {
-    'zh-Hans': 'CUV 和合本 1919（简 / 繁）',
-    'zh-Hant': 'CUV 和合本 1919（簡 / 繁）',
-    'en': 'CUV 1919 (和合本, simplified / traditional)',
-  },
   'aboutVerCuvsYhwh': {
     'zh-Hans': 'CUVS-YHWH 和合本雅伟版（简 / 繁）',
     'zh-Hant': 'CUVS-YHWH 和合本雅偉版（簡 / 繁）',
@@ -4202,21 +4200,10 @@ const uiStrings = {
     'en':
         '© Yahweh De Hua Ministry · used with permission.',
   },
-  'aboutVerCnv': {
-    'zh-Hans': 'CNV 新译本 1992 / 2011（简 / 繁）',
-    'zh-Hant': 'CNV 新譯本 1992 / 2011（簡 / 繁）',
-    'en': 'CNV 1992 / 2011 (新译本, simplified / traditional)',
-  },
-  'aboutLicenseCnv': {
-    'zh-Hans': '© 环球圣经公会 · 雅伟版社群研经版本。',
-    'zh-Hant': '© 環球聖經公會 · 雅偉版社群研經版本。',
-    'en':
-        '© Worldwide Bible Society · Yahweh-substituted community-study edition.',
-  },
   'aboutVerLjk': {
-    'zh-Hans': 'LJK1 / LJK2 原文释经圣经（简 / 繁）',
-    'zh-Hant': 'LJK1 / LJK2 原文釋經聖經（簡 / 繁）',
-    'en': 'LJK1 / LJK2 (原文释经圣经, simplified / traditional)',
+    'zh-Hans': 'LJK1 / LJK2 梁家铿译本（2025年 · 第二版，简 / 繁）',
+    'zh-Hant': 'LJK1 / LJK2 梁家鏗譯本（2025年 · 第二版，簡 / 繁）',
+    'en': 'LJK1 / LJK2 — Liang Jiakeng translation (2025, 2nd ed., simplified / traditional)',
   },
   'aboutLicenseLjk': {
     'zh-Hans': '© 圣经释经事工 · 经授权使用。',
@@ -4383,6 +4370,12 @@ const uiStrings = {
     'zh-Hans': '本页最后更新于 {time}。',
     'zh-Hant': '本頁最後更新於 {time}。',
     'en': 'Last updated {time}.',
+  },
+  // 2026-08 (ported from YsWords v1.3.171/172): Home footer version line.
+  'homeFooterUpdated': {
+    'zh-Hans': '更新于 {time}',
+    'zh-Hant': '更新於 {time}',
+    'en': 'Updated {time}',
   },
   'refresh': {
     'zh-Hans': '刷新',
@@ -4690,6 +4683,21 @@ const uiStrings = {
     'zh-Hans': '此节经文暂无人工整理的相互参照。',
     'zh-Hant': '此節經文暫無人工整理的相互參照。',
     'en': 'No curated cross-references for this verse yet.',
+  },
+  // 2026-08 (ported from YsWords v1.3.156): 护眼纸质阅读主题 — warm
+  // sepia background for the Bible reading pane, independent of the
+  // app-wide light/dark theme.
+  'readingPaperTheme': {
+    'zh-Hans': '护眼纸质背景',
+    'zh-Hant': '護眼紙質背景',
+    'en': 'Paper reading theme',
+  },
+  'readingPaperThemeSubtitle': {
+    'zh-Hans': '阅经页面改用暖色纸质背景与更柔和的配色，长时间阅读更舒适。',
+    'zh-Hant': '閱經頁面改用暖色紙質背景與更柔和的配色，長時間閱讀更舒適。',
+    'en':
+        'Switch the reading pane to a warm, paper-like background for more '
+            'comfortable long reading sessions.',
   },
   'boldVerseText': {
     'zh-Hans': '加粗经文',

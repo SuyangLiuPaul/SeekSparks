@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show LogicalKeyboardKey;
-import 'package:get/get.dart';
+import 'package:seeksparks/utils/app_nav.dart';
 import 'package:provider/provider.dart';
 
 import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/widgets/press_scale.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/utils/theme_color_helpers.dart';
 import 'package:seeksparks/models/bible_evidence.dart';
@@ -11,6 +12,8 @@ import 'package:seeksparks/pages/evidence_detail_page.dart';
 import 'package:seeksparks/pages/home_page.dart';
 import 'package:seeksparks/pages/settings_page.dart';
 import 'package:seeksparks/providers/main_provider.dart';
+import 'package:seeksparks/utils/version_mapper.dart'
+    show localizedReferenceLabel;
 import 'package:seeksparks/services/ai_search_service.dart';
 import 'package:seeksparks/services/bible_evidence_service.dart';
 import 'package:seeksparks/utils/ai_markdown.dart' show parseAiMarkdown;
@@ -18,6 +21,7 @@ import 'package:seeksparks/utils/jump_to_reference.dart';
 import 'package:seeksparks/utils/reference_parser.dart';
 import 'package:seeksparks/widgets/confidence_badge.dart';
 import 'package:seeksparks/widgets/home_icon_button.dart';
+import 'package:seeksparks/widgets/language_switcher_button.dart';
 import 'package:seeksparks/widgets/localized_back_button.dart';
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 
@@ -204,6 +208,7 @@ class _EvidencePageState extends State<EvidencePage> {
             icon: const Icon(Icons.auto_awesome_outlined),
             onPressed: () => _openAiDialog(context, locale),
           ),
+          const LanguageSwitcherButton(),
           const HomeIconButton(),
         ],
       ),
@@ -365,11 +370,8 @@ class _EvidencePageState extends State<EvidencePage> {
                           itemBuilder: (_, i) => _EvidenceCard(
                             evidence: filtered[i],
                             locale: locale,
-                            onTap: () => Get.to(
-                              () => EvidenceDetailPage(
-                                  evidence: filtered[i]),
-                              transition: Transition.rightToLeft,
-                            ),
+                            onTap: () => pushPage(EvidenceDetailPage(
+                                  evidence: filtered[i])),
                           ),
                         ),
                         ),
@@ -402,10 +404,7 @@ class _EvidencePageState extends State<EvidencePage> {
         all: _all,
         onCitationTap: (ev) {
           Navigator.of(context).pop();
-          Get.to(
-            () => EvidenceDetailPage(evidence: ev),
-            transition: Transition.rightToLeft,
-          );
+          pushPage(EvidenceDetailPage(evidence: ev));
         },
       ),
     );
@@ -446,8 +445,13 @@ class _EvidenceCard extends StatelessWidget {
     required this.onTap,
   });
 
+  // 2026-08 (ported from YsWords v1.4.5): press-scale feedback on the
+  // whole card. PressScale is passive (Listener-based), so the InkWell
+  // inside still owns the tap — see lib/widgets/press_scale.dart.
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => PressScale(child: _buildCard(context));
+
+  Widget _buildCard(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     // PERF: scoped select instead of full watch<AppSettings>() — this
     // card is instantiated per evidence entry (225 entries) inside a
@@ -457,6 +461,10 @@ class _EvidenceCard extends StatelessWidget {
     context.select<AppSettings, (String, double)>(
         (s) => (s.fontFamily, s.fontSize));
     final settings = context.read<AppSettings>();
+    // Scoped select (not watch) for the same perf reason as above: only
+    // a Bible-version change should re-render these reference labels.
+    final currentVersion =
+        context.select<MainProvider, String>((m) => m.currentVersion);
     final imgUrl =
         evidence.images.isNotEmpty ? evidence.images.first : null;
 
@@ -600,7 +608,15 @@ class _EvidenceCard extends StatelessWidget {
                             const SizedBox(width: 4),
                             Flexible(
                               child: Text(
-                                evidence.scriptureReference,
+                                // 2026-08 (ported from YsWords v1.4.x):
+                                // scriptureReference is always stored in
+                                // English; render it through the same
+                                // locale-aware path every other reference
+                                // surface already uses.
+                                localizedReferenceLabel(
+                                    evidence.scriptureReference,
+                                    locale,
+                                    currentVersion),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
@@ -668,10 +684,7 @@ class _EvidenceCard extends StatelessWidget {
     if (!context.mounted) return;
     final ok = await showJumpResultSnackBar(context, result);
     if (!ok || !context.mounted) return;
-    Get.to(
-      () => const HomePage(),
-      transition: Transition.rightToLeft,
-    );
+    pushPage(const HomePage());
   }
 }
 
@@ -1119,11 +1132,8 @@ class _AiSearchDialogState extends State<_AiSearchDialog> {
                             style: const TextStyle(fontSize: 12),
                           ),
                           onPressed: () {
-                            Get.to(
-                              () => const SettingsPage(
-                                  initialSection: SettingsSection.ai),
-                              transition: Transition.rightToLeft,
-                            );
+                            pushPage(const SettingsPage(
+                                  initialSection: SettingsSection.ai));
                           },
                         ),
                       ),

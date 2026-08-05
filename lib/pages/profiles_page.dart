@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:get/get.dart';
+import 'package:seeksparks/utils/app_nav.dart';
 
 import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/pages/profile_edit_page.dart';
 import 'package:seeksparks/services/profile_service.dart';
 import 'package:seeksparks/widgets/home_icon_button.dart';
+import 'package:seeksparks/widgets/language_switcher_button.dart';
 import 'package:seeksparks/widgets/localized_back_button.dart';
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 
@@ -170,6 +171,7 @@ class _ProfilesPageState extends State<ProfilesPage> {
             onPressed: _createProfile,
             icon: const Icon(Icons.person_add_alt_outlined),
           ),
+          const LanguageSwitcherButton(),
           const HomeIconButton(),
         ],
       ),
@@ -237,10 +239,7 @@ class _ProfilesPageState extends State<ProfilesPage> {
                     // Editing only makes sense on the active profile
                     // (the edit page reads/writes ProfileService.current).
                     if (!isActive) svc.setCurrent(p.id);
-                    Get.to(
-                      () => const ProfileEditPage(),
-                      transition: Transition.rightToLeft,
-                    );
+                    pushPage(const ProfileEditPage());
                     break;
                   case 'rename':
                     _rename(p);

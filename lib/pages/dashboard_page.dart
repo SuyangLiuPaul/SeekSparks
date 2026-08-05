@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:seeksparks/utils/app_nav.dart';
+import 'package:seeksparks/widgets/language_switcher_button.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:seeksparks/constants/app_version.dart'
+    show kAppVersion, formatReleaseTimeLocal;
+import 'package:seeksparks/constants/build_flags.dart' show kChinaMode;
 import 'package:seeksparks/constants/bible_versions.dart';
 import 'package:seeksparks/utils/short_book_name.dart' show shortBookName;
 import 'package:seeksparks/constants/text_patterns.dart' show sanitizeForSearch;
@@ -194,10 +198,7 @@ class _DashboardPageState extends State<DashboardPage> {
   /// session-progress invariants apply (id is already saved; the
   /// detail page will write a fresh offset on dispose).
   Future<void> _openResumeSermon(Sermon s) async {
-    await Get.to(
-      () => SermonDetailPage(sermon: s),
-      transition: Transition.rightToLeft,
-    );
+    await pushPage(SermonDetailPage(sermon: s));
     if (!mounted) return;
     // Pull the new scroll offset (the detail page wrote it on
     // dispose) so the meter on the dashboard immediately reflects
@@ -371,6 +372,10 @@ class _DashboardPageState extends State<DashboardPage> {
         leading: null,
         title: Text(uiStrings['home']?[locale] ?? 'Home'),
         centerTitle: true,
+        // 2026-08 (ported from YsWords v1.3.154): a visible language
+        // switcher on Home, so changing interface language doesn't mean
+        // digging into Settings → App → Interface Language every time.
+        actions: const [LanguageSwitcherButton()],
       ),
       body: Center(
         child: ConstrainedBox(
@@ -396,6 +401,10 @@ class _DashboardPageState extends State<DashboardPage> {
             isWide: isWide,
             headerSize: headerSize,
           ),
+          const SizedBox(height: 20),
+          // 2026-08 (ported from YsWords v1.3.171/172): copyright /
+          // tagline + version footer at the bottom of the dashboard.
+          _HomeFooter(locale: locale, scheme: scheme),
         ],
       ),
         ),
@@ -513,10 +522,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 icon: Icons.bookmark_outline_rounded,
                 count: mainProvider.bookmarks.length,
                 label: uiStrings['tabBookmarks']?[locale] ?? 'Bookmarks',
-                onTap: () => Get.to(
-                  () => const LibraryPage(),
-                  transition: Transition.rightToLeft,
-                ),
+                onTap: () => pushPage(const LibraryPage()),
               ),
             ),
             const SizedBox(width: 8),
@@ -525,10 +531,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 icon: Icons.sticky_note_2_outlined,
                 count: mainProvider.verseNotes.length,
                 label: uiStrings['tabNotes']?[locale] ?? 'Notes',
-                onTap: () => Get.to(
-                  () => const LibraryPage(),
-                  transition: Transition.rightToLeft,
-                ),
+                onTap: () => pushPage(const LibraryPage()),
               ),
             ),
             const SizedBox(width: 8),
@@ -537,10 +540,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 icon: Icons.format_color_fill,
                 count: mainProvider.highlights.length,
                 label: uiStrings['highlights']?[locale] ?? 'Highlights',
-                onTap: () => Get.to(
-                  () => const HighlightsPage(),
-                  transition: Transition.rightToLeft,
-                ),
+                onTap: () => pushPage(const HighlightsPage()),
               ),
             ),
           ],
@@ -604,10 +604,7 @@ class _DashboardPageState extends State<DashboardPage> {
             _DashboardEvidenceCard(
               evidence: _dailyEvidence!,
               locale: locale,
-              onTap: () => Get.to(
-                () => EvidenceDetailPage(evidence: _dailyEvidence!),
-                transition: Transition.rightToLeft,
-              ),
+              onTap: () => pushPage(EvidenceDetailPage(evidence: _dailyEvidence!)),
             ),
           ],
         );
@@ -629,68 +626,44 @@ class _DashboardPageState extends State<DashboardPage> {
             _LinkTile(
               icon: Icons.search_rounded,
               label: uiStrings['search']?[locale] ?? 'Search',
-              onTap: () => Get.to(
-                () => const SearchPage(),
-                transition: Transition.rightToLeft,
-              ),
+              onTap: () => pushPage(const SearchPage()),
             ),
             _LinkTile(
               icon: Icons.collections_bookmark_outlined,
               label: uiStrings['library']?[locale] ?? 'Library',
-              onTap: () => Get.to(
-                () => const LibraryPage(),
-                transition: Transition.rightToLeft,
-              ),
+              onTap: () => pushPage(const LibraryPage()),
             ),
             _LinkTile(
               icon: Icons.insights_outlined,
               label: uiStrings['statistics']?[locale] ?? 'Statistics',
-              onTap: () => Get.to(
-                () => const StatsPage(),
-                transition: Transition.rightToLeft,
-              ),
+              onTap: () => pushPage(const StatsPage()),
             ),
             if (settings.isDashboardSectionVisible(
                 DashboardSection.todayEvidence))
               _LinkTile(
                 icon: Icons.museum_outlined,
                 label: uiStrings['bibleEvidence']?[locale] ?? 'Bible Evidence',
-                onTap: () => Get.to(
-                  () => const EvidencePage(),
-                  transition: Transition.rightToLeft,
-                ),
+                onTap: () => pushPage(const EvidencePage()),
               ),
             _LinkTile(
               icon: Icons.menu_book_outlined,
               label: uiStrings['sermons']?[locale] ?? 'Sermons',
-              onTap: () => Get.to(
-                () => const SermonsPage(),
-                transition: Transition.rightToLeft,
-              ),
+              onTap: () => pushPage(const SermonsPage()),
             ),
             _LinkTile(
               icon: Icons.account_tree_outlined,
               label: uiStrings['familyTree']?[locale] ?? 'Family Tree',
-              onTap: () => Get.to(
-                () => const FamilyTreePage(),
-                transition: Transition.rightToLeft,
-              ),
+              onTap: () => pushPage(const FamilyTreePage()),
             ),
             _LinkTile(
               icon: Icons.timeline_rounded,
               label: uiStrings['bibleTimeline']?[locale] ?? 'Bible Timeline',
-              onTap: () => Get.to(
-                () => const BibleTimelinePage(),
-                transition: Transition.rightToLeft,
-              ),
+              onTap: () => pushPage(const BibleTimelinePage()),
             ),
             _LinkTile(
               icon: Icons.auto_awesome_rounded,
               label: uiStrings['bibleTrivia']?[locale] ?? 'Bible Trivia',
-              onTap: () => Get.to(
-                () => const BibleTriviaPage(),
-                transition: Transition.rightToLeft,
-              ),
+              onTap: () => pushPage(const BibleTriviaPage()),
             ),
             // 2026-05-07 (v12): feedback tile -- mailto-driven form
             // page that lands directly in the developer's inbox via
@@ -698,18 +671,12 @@ class _DashboardPageState extends State<DashboardPage> {
             _LinkTile(
               icon: Icons.feedback_outlined,
               label: uiStrings['feedback']?[locale] ?? 'Feedback',
-              onTap: () => Get.to(
-                () => const FeedbackPage(),
-                transition: Transition.rightToLeft,
-              ),
+              onTap: () => pushPage(const FeedbackPage()),
             ),
             _LinkTile(
               icon: Icons.settings_outlined,
               label: uiStrings['settings']?[locale] ?? 'Settings',
-              onTap: () => Get.to(
-                () => const SettingsPage(),
-                transition: Transition.rightToLeft,
-              ),
+              onTap: () => pushPage(const SettingsPage()),
             ),
           ],
         );
@@ -1396,6 +1363,54 @@ class _ResumeSermonHero extends StatelessWidget {
               ],
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Small copyright/tagline + version footer at the bottom of the
+/// dashboard. 2026-08 (ported from YsWords v1.3.171/172). Phrased at
+/// the app level ("app updated {time}") rather than "this page
+/// updated" — Home isn't editorial content the way About is.
+class _HomeFooter extends StatelessWidget {
+  final String locale;
+  final ColorScheme scheme;
+  const _HomeFooter({required this.locale, required this.scheme});
+
+  @override
+  Widget build(BuildContext context) {
+    final tagline = uiStrings['appTagline']?[locale] ??
+        'A bilingual Bible exegesis tool.';
+    final updated =
+        (uiStrings['homeFooterUpdated']?[locale] ?? 'Updated {time}')
+            .replaceFirst('{time}', formatReleaseTimeLocal());
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: Column(
+          children: [
+            Text(
+              '\u00a9 ${DateTime.now().year} '
+              '${uiStrings['appName']?[locale] ?? 'SeekSparks'} \u00b7 $tagline',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 11.5,
+                color: scheme.onSurfaceVariant.withValues(alpha: 0.75),
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+            const SizedBox(height: 3),
+            Text(
+              'v$kAppVersion \u00b7 $updated'
+              '${kChinaMode ? ' \u00b7 ${uiStrings['chinaBuildTag']?[locale] ?? 'China build'}' : ''}',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 11,
+                color: scheme.onSurfaceVariant.withValues(alpha: 0.6),
+              ),
+            ),
+          ],
         ),
       ),
     );

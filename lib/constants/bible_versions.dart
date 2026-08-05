@@ -12,8 +12,7 @@ class BibleVersionInfo {
   /// Round 56 user feedback: "和合本新译本should mention which year
   /// version". Year / edition info shown in the version-picker
   /// secondary line so the reader knows which published edition the
-  /// asset corresponds to (1919 vs 1989 CUV; 1992 vs 2011 CNV; etc.).
-  /// Empty string when not applicable / unknown.
+  /// asset corresponds to. Empty string when not applicable / unknown.
   final String editionYear;
 
   const BibleVersionInfo({
@@ -58,28 +57,18 @@ const bibleVersions = <BibleVersionInfo>[
     shortLabel: 'CUVS(简)',
     menuLabel: '和合本雅伟版(简体)',
     language: 'zh-Hans',
-    editionYear: '基于和合本 1919 / 现代标点 1989',
+    // 2026-08 (ported from YsWords v1.4.6): the edition-year sub-line was
+    // dropped — this and the 繁體 row below were the only ones carrying a
+    // note in the version picker, which made the list look inconsistent
+    // next to the 梁家铿译本 rows (no editionYear). `editionYear` defaults
+    // to '' and is only rendered by version_picker_sheet.dart behind an
+    // isNotEmpty guard, so omitting it simply hides the line.
   ),
   BibleVersionInfo(
     value: 'cuvs-yhwh-tr',
     shortLabel: 'CUVS(繁)',
     menuLabel: '和合本雅伟版(繁體)',
     language: 'zh-Hant',
-    editionYear: '基於和合本 1919 / 現代標點 1989',
-  ),
-  BibleVersionInfo(
-    value: 'biblexg',
-    shortLabel: 'LJK1(简)',
-    menuLabel: '梁家铿译本 第一版(简体)',
-    language: 'zh-Hans',
-    editionYear: '第一版',
-  ),
-  BibleVersionInfo(
-    value: 'biblexg-tr',
-    shortLabel: 'LJK1(繁)',
-    menuLabel: '梁家铿譯本 第一版(繁體)',
-    language: 'zh-Hant',
-    editionYear: '第一版',
   ),
   BibleVersionInfo(
     value: 'biblexg-v2',
@@ -93,52 +82,16 @@ const bibleVersions = <BibleVersionInfo>[
     menuLabel: '梁家铿譯本(繁體)',
     language: 'zh-Hant',
   ),
-  BibleVersionInfo(
-    value: 'cuv',
-    shortLabel: '和合本(简)',
-    menuLabel: '和合本(简体)',
-    language: 'zh-Hans',
-    editionYear: '1919 / 现代标点 1989',
-  ),
-  BibleVersionInfo(
-    value: 'cuv-tr',
-    shortLabel: '和合本(繁)',
-    menuLabel: '和合本(繁體)',
-    language: 'zh-Hant',
-    editionYear: '1919 / 現代標點 1989',
-  ),
-  BibleVersionInfo(
-    value: 'cnv',
-    shortLabel: '新译本·雅伟',
-    menuLabel: '新译本（简体·雅伟版）',
-    language: 'zh-Hans',
-    editionYear: '基于新译本 1992 / 三版 2011',
-  ),
-  BibleVersionInfo(
-    value: 'cnv-tr',
-    // 2026-05-10 (v1.2.33): 雅威 → 雅偉. Project canonical
-    // simp→trad pairing is 雅伟 → 雅偉; historical mistake using
-    // 雅威 (might) instead of 雅偉 (great). User reported
-    // "很多地方寫雅威但是需要雅偉".
-    shortLabel: '新譯本·雅偉',
-    menuLabel: '新譯本（繁體·雅偉版）',
-    language: 'zh-Hant',
-    editionYear: '基於新譯本 1992 / 三版 2011',
-  ),
 ];
 
-/// Versions hidden from the picker. `biblexg`/`biblexg-tr` (LJK1, the
-/// first edition of 梁家铿译本) are superseded by the v2 edition and
-/// kept only as a fallback source; `cuv`/`cuv-tr`/`cnv`/`cnv-tr` are
-/// hidden in favour of `cuvs-yhwh`/`cuvs-yhwh-tr`. All remain in
-/// [bibleVersions] (not deleted) so label lookups, the
-/// full-canon-fallback chain, and shared-link version codes for
-/// existing readers keep working.
-const disabledVersions = <String>{
-  'cuv', 'cuv-tr',
-  'cnv', 'cnv-tr',
-  'biblexg', 'biblexg-tr',
-};
+/// Versions hidden from the picker (currently none). CUV, CNV, and LJK1
+/// (`biblexg`/`biblexg-tr`) were REMOVED OUTRIGHT (2026-08, ported from
+/// YsWords v1.4.0) rather than hidden — superseded by CUVS-YHWH /
+/// biblexg-v2. ⚠️ Old shared links using those version codes no longer
+/// resolve; this mirrors the explicit product choice made for YsWords.
+/// Kept as a mechanism in case a future edition needs to be superseded
+/// without breaking old shared links.
+const disabledVersions = <String>{};
 
 /// Versions shown in the picker (excludes disabled ones).
 List<BibleVersionInfo> get availableVersions =>
@@ -196,10 +149,8 @@ String shortBibleVersionLabel(String version) {
 /// already has full OT+NT coverage.
 String? bibleVersionFullCanonFallback(String version) {
   switch (version) {
-    case 'biblexg':       // LJK1 (Simplified Chinese, NT only)
     case 'biblexg-v2':    // LJK2 (Simplified Chinese, NT only)
       return 'cuvs-yhwh';      // 和合本雅伟版 (Simplified, full canon)
-    case 'biblexg-tr':    // LJK1 (Traditional Chinese, NT only)
     case 'biblexg-v2-tr': // LJK2 (Traditional Chinese, NT only)
       return 'cuvs-yhwh-tr';   // 和合本雅伟版 (Traditional, full canon)
   }

@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:flutter/foundation.dart' show kIsWeb, kReleaseMode;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:seeksparks/utils/app_nav.dart';
+import 'package:seeksparks/utils/app_scroll_behavior.dart';
 import 'package:seeksparks/constants/build_flags.dart';
 import 'package:seeksparks/models/sermon.dart';
 import 'package:seeksparks/pages/dashboard_page.dart';
@@ -402,20 +404,25 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
   }
 
   /// 2026-05-10 (v1.2.25 — restored from v1.2.18): eager pre-load
-  /// of ALL 13 Bible versions before the splash dismisses. User
+  /// of ALL bundled Bible versions before the splash dismisses. User
   /// chose this trade ("反正第一次用才 load version") again after
   /// noticing v1.2.22's hybrid stopped at "4/4" in the splash
   /// progress.
   ///
-  /// Sequential, no-gap parse of all 12 non-active versions
-  /// (~15-25 s). Updates `MainProvider.versionPreloadProgress`
-  /// so the splash paints "Loading versions: 5/12" while the
-  /// user waits. Total cold-boot wall-clock: 1-3 s for the
-  /// active version + ~15-25 s for the other 12 = ~20-30 s
-  /// splash before home appears.
+  /// Sequential, no-gap parse of the non-active versions. Updates
+  /// `MainProvider.versionPreloadProgress` so the splash paints
+  /// "Loading versions: n/total" while the user waits.
+  ///
+  /// 2026-08 (ported from YsWords v1.4.0): CUV / CUV-tr / CNV / CNV-tr /
+  /// biblexg (LJK1) / biblexg-tr were REMOVED from the candidate list —
+  /// those versions were deleted outright (superseded by cuvs-yhwh /
+  /// biblexg-v2; see lib/constants/bible_versions.dart). This also cuts
+  /// real boot time: cuv/cuv-tr/cnv/cnv-tr were among the largest bundled
+  /// assets (~6.7-7 MB each), so the splash now has noticeably less to
+  /// parse.
   ///
   /// Order: simplified Chinese staples (largest user base) →
-  /// English → traditional Chinese → LJK 1/2 NT-only specialty.
+  /// English → traditional Chinese → LJK2 NT-only specialty.
   /// Most-likely-next picks land in the LRU first, so even if
   /// the user is impatient and force-quits during pre-load,
   /// the first session-start switches still hit the cache.
@@ -425,22 +432,16 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
   Future<void> _eagerPreloadAllVersions(MainProvider mainProvider) async {
     if (!mounted) return;
     const candidates = <String>[
-      // Simplified Chinese staples — largest user base.
+      // Simplified Chinese staple — largest user base.
       'cuvs-yhwh',
-      'cuv',
-      'cnv',
       // English flagships.
       'kjv',
       'nasb',
       'leb',
-      // Traditional Chinese variants.
-      'cuv-tr',
+      // Traditional Chinese variant.
       'cuvs-yhwh-tr',
-      'cnv-tr',
-      // LJK 1/2 — NT-only specialty translations.
-      'biblexg',
+      // LJK2 — NT-only specialty translation.
       'biblexg-v2',
-      'biblexg-tr',
       'biblexg-v2-tr',
     ];
     final toLoad =
@@ -590,6 +591,14 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
                       ),
                 ),
             colorScheme: lightScheme,
+            // 2026-08 (ported from YsWords v1.4.5): one ripple on every
+            // platform. Flutter's own Material 3 default only uses
+            // InkSparkle off-web (its fragment shader isn't supported on
+            // every web renderer), so leaving it to the default gives web
+            // a different ripple than native. Pinning InkRipple — which
+            // is web-safe and what web already falls back to — makes the
+            // press feedback identical everywhere.
+            splashFactory: InkRipple.splashFactory,
             // 2026-05-08 (v1.1.0): Card & Dialog corner radii bumped
             // to 18 to match Apple's iOS 26 shape language (concentric
             // with the new 24-radius outer surfaces). The app's bespoke
@@ -685,6 +694,9 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
             ),
             colorScheme: darkScheme,
             brightness: Brightness.dark,
+            // 2026-08 (ported from YsWords v1.4.5): mirror of the light
+            // theme — see the InkRipple rationale there.
+            splashFactory: InkRipple.splashFactory,
             cardTheme: CardThemeData(
               color: Color(0xFF1F1F1F),
               elevation: 2,
@@ -756,8 +768,12 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
           ),
           builder: (context, child) {
             return ScrollConfiguration(
-              behavior:
-                  const MaterialScrollBehavior().copyWith(scrollbars: true),
+              // 2026-08 (ported from YsWords v1.4.5): AppScrollBehavior
+              // adds bouncy physics to EVERY scrollable app-wide (see its
+              // doc comment) instead of a per-widget opt-in that only
+              // covers a fraction of the list files. `scrollbars: true`
+              // is preserved.
+              behavior: const AppScrollBehavior().copyWith(scrollbars: true),
               child: child!,
             );
           },
@@ -860,8 +876,7 @@ class _RootRouterState extends State<_RootRouter> {
           }
         }
         if (s != null && mounted) {
-          Get.to(() => SermonDetailPage(sermon: s!),
-              transition: Transition.rightToLeft);
+          pushPage(SermonDetailPage(sermon: s));
         }
       });
       return;

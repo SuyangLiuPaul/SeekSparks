@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:seeksparks/utils/app_nav.dart';
+import 'package:seeksparks/widgets/press_scale.dart';
 import 'package:provider/provider.dart';
 
 import 'package:seeksparks/constants/ui_strings.dart';
@@ -12,6 +13,7 @@ import 'package:seeksparks/utils/responsive.dart';
 import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
 import 'package:seeksparks/pages/home_page.dart';
 import 'package:seeksparks/widgets/home_icon_button.dart';
+import 'package:seeksparks/widgets/language_switcher_button.dart';
 import 'package:seeksparks/widgets/localized_back_button.dart';
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 
@@ -120,7 +122,7 @@ class _BibleTriviaPageState extends State<BibleTriviaPage> {
       appBar: AppBar(
         leading: const LocalizedBackButton(),
         title: Text(uiStrings['bibleTrivia']?[locale] ?? 'Bible Trivia'),
-        actions: const [HomeIconButton()],
+        actions: const [LanguageSwitcherButton(), HomeIconButton()],
       ),
       body: Center(
         child: ConstrainedBox(
@@ -813,13 +815,16 @@ class _TriviaTileState extends State<_TriviaTile> {
     if (!ok || !context.mounted) return;
     // 2026-05-24 (v1.3.6): explicit routeName — see main.dart for
     // the duplicate-HomePage-detection rationale.
-    Get.to(() => const HomePage(),
-        routeName: '/HomePage',
-        transition: Transition.rightToLeft);
+    pushPage(const HomePage(),
+        routeName: '/HomePage');
   }
 
+  // 2026-08 (ported from YsWords v1.4.5): passive press-scale; the
+  // InkWell still owns the tap.
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => PressScale(child: _buildCard(context));
+
+  Widget _buildCard(BuildContext context) {
     final locale = widget.settings.locale;
     final entry = widget.entry;
     final scheme = widget.scheme;
@@ -1589,10 +1594,7 @@ Future<void> showBibleTriviaSheet({
                                 ),
                                 onPressed: () {
                                   Navigator.of(sheetCtx).maybePop();
-                                  Get.to(
-                                    () => const BibleTriviaPage(),
-                                    transition: Transition.rightToLeft,
-                                  );
+                                  pushPage(const BibleTriviaPage());
                                 },
                               ),
                             ],
@@ -1621,11 +1623,7 @@ Future<void> showBibleTriviaSheet({
                                     onPressed: () {
                                       Navigator.of(sheetCtx)
                                           .maybePop();
-                                      Get.to(
-                                        () => const BibleTriviaPage(),
-                                        transition:
-                                            Transition.rightToLeft,
-                                      );
+                                      pushPage(const BibleTriviaPage());
                                     },
                                   ),
                                 ),

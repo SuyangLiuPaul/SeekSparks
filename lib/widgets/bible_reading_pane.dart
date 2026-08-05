@@ -4,7 +4,7 @@ import 'dart:ui';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:get/get.dart';
+import 'package:seeksparks/utils/app_nav.dart';
 import 'package:provider/provider.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
@@ -51,7 +51,12 @@ import 'package:seeksparks/utils/illustration_grouping.dart';
 // used in this file (jump-to-reference flow on a verse tap).
 import 'package:seeksparks/utils/jump_to_reference.dart' show prepareJumpToVerse;
 import 'package:seeksparks/utils/note_reference_parser.dart'
-    show extractNoteReferences, NoteReferenceMatch;
+    show
+        extractNoteReferences,
+        NoteReferenceMatch,
+        buildNoteSpans,
+        spliceComposingUnderline,
+        normalizeNoteReferenceBookNames;
 import 'package:seeksparks/utils/reference_parser.dart';
 import 'package:seeksparks/widgets/verse_popup_sheet.dart' show showVersePopup;
 import 'package:seeksparks/utils/responsive.dart';
@@ -69,6 +74,26 @@ import 'package:seeksparks/widgets/paragraph_group_widget.dart';
 import 'package:seeksparks/widgets/version_picker_sheet.dart'
     show showLanguageGroupedVersionMenu;
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
+
+/// 2026-08 (ported from YsWords v1.3.156): "护眼" (easy-on-eyes) reading
+/// theme — a warm sepia/paper palette for the Bible reading pane, toggled
+/// independently of the app-wide light/dark [ThemeMode] via
+/// `AppSettings.readingPaperTheme`. Deliberately fixed/warm rather than
+/// dark-mode-aware — Kindle/WeChat Read-style "paper" modes stay warm
+/// regardless of system theme, since the whole point is a paper-like read,
+/// not a tinted dark mode.
+class _PaperTheme {
+  static const background = Color(0xFFF7F1E0);
+  static const surface = Color(0xFFEFE5C9);
+  static const ink = Color(0xFF4A3826);
+  static const inkMuted = Color(0xFF7A6A50);
+  static const accent = Color(0xFF9C7A3C);
+  static const border = Color(0xFFDED0A8);
+  /// Selected/highlighted-verse background — a deeper tan so the
+  /// selection still reads clearly against the cream page instead of
+  /// the app's default blue `primaryContainer`.
+  static const selection = Color(0xFFE3D19D);
+}
 
 class BibleReadingPane extends StatefulWidget {
   final bool showSidebarToggle;
@@ -1524,8 +1549,7 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
                         _goToNextChapter,
                     const SingleActivator(LogicalKeyboardKey.slash): () {
                       if (widget.showSearchAndSettings) {
-                        Get.to(() => SearchPage(),
-                            transition: Transition.rightToLeft);
+                        pushPage(SearchPage());
                       }
                     },
                     // v1.3.19: Shift+T (toggle TTS) removed with the
@@ -1550,8 +1574,7 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
                     const SingleActivator(LogicalKeyboardKey.keyF,
                         meta: true): () {
                       if (widget.showSearchAndSettings) {
-                        Get.to(() => SearchPage(),
-                            transition: Transition.rightToLeft);
+                        pushPage(SearchPage());
                       }
                     },
                     // ⌘, → settings. Standard Mac "open Preferences"
@@ -1559,8 +1582,7 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
                     const SingleActivator(LogicalKeyboardKey.comma,
                         meta: true): () {
                       if (widget.showSearchAndSettings) {
-                        Get.to(() => const SettingsPage(),
-                            transition: Transition.rightToLeft);
+                        pushPage(const SettingsPage());
                       }
                     },
                     // Ctrl+ variants for Windows / Linux desktop users
@@ -1574,6 +1596,12 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
                   child: Focus(
                     autofocus: true,
                     child: Scaffold(
+                // 2026-08 (ported from YsWords v1.3.156): warm page
+                // background when the 护眼 paper theme is on; null keeps
+                // the normal Material scaffold colour.
+                backgroundColor: settings.readingPaperTheme
+                    ? _PaperTheme.background
+                    : null,
                 // Round 56 fix: when the user opens the note editor
                 // (modal bottom sheet) and the keyboard appears, the
                 // default `resizeToAvoidBottomInset: true` shrinks
@@ -1920,17 +1948,11 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
                                   mainProvider.currentVerse?.book ?? '';
                               final provider =
                                   context.read<MainProvider>();
-                              Get.to(
-                                () => BooksPage(
+                              pushPage(BooksPage(
                                   chapterIdx: chapter,
                                   bookIdx: book,
                                   providerOverride: provider,
-                                ),
-                                transition: Transition.leftToRight,
-                                duration:
-                                    const Duration(milliseconds: 300),
-                                curve: Curves.easeInOut,
-                              );
+                                ), reverse: true);
                             },
                       onVersionSelected: (version) async {
                         // 2026-05-10 (v1.2.13): rewritten end-to-end
@@ -2101,14 +2123,11 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
                       },
                       onSearch: () {
                         mainProvider.clearSelectedVerses();
-                        Get.to(
-                          () => SearchPage(),
-                          transition: Transition.rightToLeft,
-                        );
+                        pushPage(SearchPage());
                       },
                       onSettings: () {
                         mainProvider.clearSelectedVerses();
-                        Get.to(() => SettingsPage());
+                        pushPage(SettingsPage());
                       },
                       highlightCount:
                           mainProvider.highlights.length,
@@ -2118,10 +2137,7 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
                       // so the floating-header entry now opens it.
                       // The modal HighlightsSheet remains for the
                       // long-press color-picker context only.
-                      onHighlights: () => Get.to(
-                        () => const HighlightsPage(),
-                        transition: Transition.rightToLeft,
-                      ),
+                      onHighlights: () => pushPage(const HighlightsPage()),
                       // Reload — re-runs FetchVerses+FetchBooks on the
                       // current version. User asked for this so they
                       // don't have to relaunch the app when verses
@@ -2220,10 +2236,7 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
                         onNextChapter: _goToNextChapter,
                         onOpenNotes: () {
                           mainProvider.clearSelectedVerses();
-                          Get.to(
-                            () => const LibraryPage(),
-                            transition: Transition.rightToLeft,
-                          );
+                          pushPage(const LibraryPage());
                         },
                         onOpenIllustrations: (_chapterMaps.isEmpty &&
                                 _bookMaps.isEmpty)
@@ -2609,12 +2622,19 @@ class _GlassSurface extends StatelessWidget {
   /// (covering the status-bar / notch area) with no visible gap.
   final bool bottomRoundedOnly;
 
+  /// 2026-08 (ported from YsWords v1.3.156): when true, render with the
+  /// warm 护眼/paper palette instead of the app's blue-tinted Material
+  /// surface — used by the top/bottom chrome bars when
+  /// `AppSettings.readingPaperTheme` is on.
+  final bool paperTheme;
+
   const _GlassSurface({
     required this.child,
     this.radius = 20,
     this.opaque = false,
     this.topRoundedOnly = false,
     this.bottomRoundedOnly = false,
+    this.paperTheme = false,
   });
 
   @override
@@ -2627,9 +2647,11 @@ class _GlassSurface extends StatelessWidget {
     // (Material 3's deepest-tinted variant) so the chrome bar reads
     // as a clear visual layer — most distinct from the scaffold
     // background while still feeling like part of the surface family.
-    final fillColor = opaque
-        ? scheme.surfaceContainerHighest
-        : scheme.surface.withValues(alpha: fillAlpha);
+    final fillColor = paperTheme
+        ? _PaperTheme.surface
+        : opaque
+            ? scheme.surfaceContainerHighest
+            : scheme.surface.withValues(alpha: fillAlpha);
     final br = topRoundedOnly
         ? BorderRadius.only(
             topLeft: Radius.circular(radius),
@@ -2641,8 +2663,9 @@ class _GlassSurface extends StatelessWidget {
                 bottomRight: Radius.circular(radius),
               )
             : BorderRadius.circular(radius);
-    final outlineColor =
-        scheme.outlineVariant.withValues(alpha: isDark ? 0.35 : 0.6);
+    final outlineColor = paperTheme
+        ? _PaperTheme.border
+        : scheme.outlineVariant.withValues(alpha: isDark ? 0.35 : 0.6);
     // 2026-05-22 (v1.2.71): bolder hairline on the chrome bars so they
     // read as distinct strips against the body. Half-rounded variants
     // (topRoundedOnly / bottomRoundedOnly) are the chrome bars; full-
@@ -4022,10 +4045,7 @@ class _PreloadedSermonsSheetBody extends StatelessWidget {
                           const Icon(Icons.chevron_right, size: 20),
                       onTap: () {
                         Navigator.of(context).maybePop();
-                        Get.to(
-                          () => SermonDetailPage(sermon: s),
-                          transition: Transition.rightToLeft,
-                        );
+                        pushPage(SermonDetailPage(sermon: s));
                       },
                     );
                   },
@@ -4197,10 +4217,7 @@ class _RelatedSermonsSheetBodyState extends State<_RelatedSermonsSheetBody> {
                     trailing: const Icon(Icons.chevron_right, size: 20),
                     onTap: () {
                       Navigator.of(context).maybePop();
-                      Get.to(
-                        () => SermonDetailPage(sermon: s),
-                        transition: Transition.rightToLeft,
-                      );
+                      pushPage(SermonDetailPage(sermon: s));
                     },
                   );
                 },
@@ -4236,6 +4253,45 @@ void _navigateToBibleReference({
   // pendingJump handshake — see lib/utils/jump_to_reference.dart for
   // the rationale. Replaces the previous Future.delayed(300ms).
   prepareJumpToVerse(hit, mainProvider);
+}
+
+/// 2026-08 (ported from YsWords v1.3.150/151): renders `[Book Ch:V]`
+/// references inside the note editor as inline pills while the user
+/// types, so a typed reference reads as a recognized entity rather than
+/// raw bracket syntax.
+///
+/// Deliberately passes no `onRefTap` — a [TapGestureRecognizer] would
+/// fight the editable field's own selection gesture, so tap-to-preview
+/// stays with the separate ref-chip strip below the field.
+class _RefHighlightingController extends TextEditingController {
+  _RefHighlightingController({super.text});
+
+  @override
+  TextSpan buildTextSpan({
+    required BuildContext context,
+    TextStyle? style,
+    required bool withComposing,
+  }) {
+    final scheme = Theme.of(context).colorScheme;
+    final refSpans = buildNoteSpans(
+      noteText: text,
+      baseStyle: style ?? const TextStyle(),
+      refColor: scheme.primary,
+      refBackgroundColor: scheme.primaryContainer.withValues(alpha: 0.35),
+    );
+
+    // Splice the IME composing-region underline into our highlighted
+    // spans instead of discarding all highlighting while composing is
+    // active — without this the pills flicker off on every keystroke
+    // of a Chinese IME. See spliceComposingUnderline's doc comment.
+    final composingRegionOutOfRange =
+        !value.isComposingRangeValid || !withComposing;
+    final finalSpans = composingRegionOutOfRange
+        ? refSpans
+        : spliceComposingUnderline(refSpans, value.composing,
+            fallbackStyle: style);
+    return TextSpan(style: style, children: finalSpans);
+  }
 }
 
 /// Modal text-editing sheet for attaching a note to a single verse.
@@ -4310,7 +4366,7 @@ void showNoteEditor({
   if (addText.isNotEmpty) {
     initialBody = initialBody.isEmpty ? addText : '$initialBody\n\n$addText';
   }
-  final controller = TextEditingController(text: initialBody);
+  final controller = _RefHighlightingController(text: initialBody);
   final titleController = TextEditingController(text: prefillTitle ?? '');
   // Reference label: single verse → "Genesis 1:16"; range → "Genesis 1:16-18".
   String ref;
@@ -4910,10 +4966,24 @@ void showNoteEditor({
                     // to every verse in the selection too. All
                     // verses in a passage note share one title so
                     // the Library tile renders consistently.
+                    // 2026-08 (ported from YsWords v1.3.152/153):
+                    // normalize every [Book Ch:V] ref's book name to the
+                    // current locale/version before persisting. A quick
+                    // English abbreviation typed mid-note (e.g.
+                    // "[1 Kings 17:21]") otherwise stayed English forever
+                    // while the read-only chip strip already showed
+                    // "列王纪上 17:21", which read as inconsistent. Done at
+                    // Save (not on every keystroke) so it never fights the
+                    // live cursor while the user is still typing.
+                    final savedText = normalizeNoteReferenceBookNames(
+                      controller.text,
+                      (canonical) => localeAwareBookName(
+                          canonical, locale, mainProvider.currentVersion),
+                    );
                     for (final v in verses) {
                       mainProvider.setVerseNote(
                         verse: v,
-                        text: controller.text,
+                        text: savedText,
                         title: titleController.text,
                       );
                     }
@@ -5707,11 +5777,11 @@ class _MapTile extends StatelessWidget {
           Icon(Icons.chevron_right_rounded, size: 20, color: scheme.outline),
       onTap: () {
         onClose();
-        Get.to(() => MapViewerPage(
-              map: map,
-              locale: locale,
-              relatedMaps: related,
-            ));
+        pushPage(MapViewerPage(
+          map: map,
+          locale: locale,
+          relatedMaps: related,
+        ));
       },
     );
   }
@@ -6228,7 +6298,7 @@ class _ChapterPageState extends State<_ChapterPage>
     final isSelected = mp.selectedVerses.isNotEmpty;
     final dc = widget.deviceClass;
 
-    return Padding(
+    final Widget content = Padding(
       padding: EdgeInsets.only(
         right: ResponsiveBreakpoints.readingPadding(dc),
       ),
@@ -6329,6 +6399,32 @@ class _ChapterPageState extends State<_ChapterPage>
         scrollOffsetListener: _controllers.scrollOffsetListener,
       ),
     );
+
+    if (!settings.readingPaperTheme) return content;
+    // 2026-08 (ported from YsWords v1.3.156): wrap the verse content in a
+    // paper-tinted Theme override so it flows down through VerseWidget /
+    // ParagraphGroupWidget / buildVerseContentSpans — none of which take
+    // an explicit color parameter, they all read `Theme.of(context)`
+    // directly. This is the standard Flutter pattern for re-theming a
+    // subtree without touching every call site.
+    final baseTheme = Theme.of(context);
+    return Theme(
+      data: baseTheme.copyWith(
+        colorScheme: baseTheme.colorScheme.copyWith(
+          primary: _PaperTheme.accent,
+          onSurface: _PaperTheme.ink,
+          onSurfaceVariant: _PaperTheme.inkMuted,
+          surface: _PaperTheme.background,
+          primaryContainer: _PaperTheme.selection,
+          onPrimaryContainer: _PaperTheme.ink,
+        ),
+        textTheme: baseTheme.textTheme.apply(
+          bodyColor: _PaperTheme.ink,
+          displayColor: _PaperTheme.ink,
+        ),
+      ),
+      child: content,
+    );
   }
 }
 
@@ -6370,7 +6466,22 @@ class _BibleReaderBottomBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<AppSettings>();
-    final scheme = Theme.of(context).colorScheme;
+    // 2026-08 (ported from YsWords v1.3.156): paper-tinted ColorScheme
+    // swap for the chrome bar's own contents (icons/labels), so they
+    // don't stay blue against the cream surface. Whole-scheme
+    // substitution rather than per-widget overrides.
+    final baseScheme = Theme.of(context).colorScheme;
+    final scheme = settings.readingPaperTheme
+        ? baseScheme.copyWith(
+            primary: _PaperTheme.accent,
+            onSurface: _PaperTheme.ink,
+            onSurfaceVariant: _PaperTheme.inkMuted,
+            outline: _PaperTheme.border,
+            outlineVariant: _PaperTheme.border,
+            surfaceContainerHigh: _PaperTheme.surface,
+            surfaceContainerHighest: _PaperTheme.surface,
+          )
+        : baseScheme;
     final iconSize =
         (settings.fontSize.clamp(16.0, 28.0) * settings.menuScale)
             .toDouble();
@@ -6400,6 +6511,7 @@ class _BibleReaderBottomBar extends StatelessWidget {
             radius: 22,
             opaque: true,
             topRoundedOnly: true,
+            paperTheme: settings.readingPaperTheme,
             child: SafeArea(
               top: false,
               // Inner padding keeps the buttons above the home indicator
@@ -6631,7 +6743,22 @@ class _FloatingHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<AppSettings>();
-    final scheme = Theme.of(context).colorScheme;
+    // 2026-08 (ported from YsWords v1.3.156): paper-tinted ColorScheme
+    // swap for the chrome bar's own contents (icons/labels), so they
+    // don't stay blue against the cream surface. Whole-scheme
+    // substitution rather than per-widget overrides.
+    final baseScheme = Theme.of(context).colorScheme;
+    final scheme = settings.readingPaperTheme
+        ? baseScheme.copyWith(
+            primary: _PaperTheme.accent,
+            onSurface: _PaperTheme.ink,
+            onSurfaceVariant: _PaperTheme.inkMuted,
+            outline: _PaperTheme.border,
+            outlineVariant: _PaperTheme.border,
+            surfaceContainerHigh: _PaperTheme.surface,
+            surfaceContainerHighest: _PaperTheme.surface,
+          )
+        : baseScheme;
     final fontSize =
         (settings.fontSize.clamp(12.0, 19.0) * settings.menuScale).toDouble();
     final iconSize =
@@ -6669,6 +6796,7 @@ class _FloatingHeader extends StatelessWidget {
             radius: 22,
             opaque: true,
             bottomRoundedOnly: true,
+            paperTheme: settings.readingPaperTheme,
             child: SafeArea(
             bottom: false,
             child: Padding(
@@ -7018,10 +7146,7 @@ class _FloatingHeader extends StatelessWidget {
                         items.add(PopupMenuItem(
                           value: 'library',
                           onTap: () {
-                            Get.to(
-                              () => const LibraryPage(),
-                              transition: Transition.rightToLeft,
-                            );
+                            pushPage(const LibraryPage());
                           },
                           child: _menuRow(
                             context,
@@ -7032,10 +7157,7 @@ class _FloatingHeader extends StatelessWidget {
                         items.add(PopupMenuItem(
                           value: 'stats',
                           onTap: () {
-                            Get.to(
-                              () => const StatsPage(),
-                              transition: Transition.rightToLeft,
-                            );
+                            pushPage(const StatsPage());
                           },
                           child: _menuRow(
                             context,
@@ -7054,13 +7176,10 @@ class _FloatingHeader extends StatelessWidget {
                         items.add(PopupMenuItem(
                           value: 'evidence',
                           onTap: () {
-                            Get.to(
-                              () => EvidencePage(
+                            pushPage(EvidencePage(
                                 filterBook: toEnglish(book),
                                 filterChapter: chapter,
-                              ),
-                              transition: Transition.rightToLeft,
-                            );
+                              ));
                           },
                           child: _menuRow(
                             context,

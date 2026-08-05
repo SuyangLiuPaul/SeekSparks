@@ -16,7 +16,9 @@ void main() {
   test('happy path: loads a real bundled version end-to-end and '
       'fires onAttempt exactly once', () async {
     final mp = MainProvider();
-    mp.currentVersion = 'biblexg'; // smallest real bundle (NT only)
+    // 2026-08 (ported from YsWords v1.4.0): 'biblexg' (LJK1) was removed
+    // outright — 'biblexg-v2' is now the smallest real bundle (NT only).
+    mp.currentVersion = 'biblexg-v2';
 
     final attempts = <(int, Object?)>[];
     await FetchVerses.execute(
@@ -25,7 +27,7 @@ void main() {
     );
 
     expect(mp.verses, isNotEmpty,
-        reason: 'biblexg.json must parse into verses');
+        reason: 'biblexg-v2.json must parse into verses');
     expect(mp.versesInChapter('馬太福音', 1).isNotEmpty ||
         mp.versesInChapter('马太福音', 1).isNotEmpty ||
         mp.verses.first.book.isNotEmpty, isTrue);

@@ -10,6 +10,7 @@ import 'package:seeksparks/services/feedback_service.dart';
 import 'package:seeksparks/services/link_opener.dart';
 import 'package:seeksparks/utils/clipboard_helper.dart';
 import 'package:seeksparks/widgets/home_icon_button.dart';
+import 'package:seeksparks/widgets/language_switcher_button.dart';
 import 'package:seeksparks/widgets/liquid_glass.dart';
 import 'package:seeksparks/widgets/localized_back_button.dart';
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
@@ -272,7 +273,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
       appBar: AppBar(
         leading: const LocalizedBackButton(),
         title: Text(uiStrings['feedback']?[locale] ?? 'Feedback'),
-        actions: const [HomeIconButton()],
+        actions: const [LanguageSwitcherButton(), HomeIconButton()],
       ),
       body: SafeArea(
         // 2026-05-07 (v14): center + cap the form width on wide

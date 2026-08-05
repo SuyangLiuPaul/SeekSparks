@@ -18,6 +18,7 @@ import 'package:seeksparks/services/sermon_service.dart';
 import 'package:seeksparks/utils/reference_parser.dart';
 import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
 import 'package:seeksparks/widgets/home_icon_button.dart';
+import 'package:seeksparks/widgets/language_switcher_button.dart';
 import 'package:seeksparks/widgets/localized_back_button.dart';
 
 /// Reads one sermon body in the user's preferred language with a
@@ -361,6 +362,7 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
                 'Share link',
             onPressed: () => _shareSermon(s, settings.locale),
           ),
+          const LanguageSwitcherButton(),
           const HomeIconButton(),
         ],
         // Reading-progress strip under the AppBar — width-tracks the

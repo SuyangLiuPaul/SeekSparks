@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:seeksparks/utils/app_nav.dart';
 import 'package:seeksparks/models/strongs.dart';
 import 'package:seeksparks/models/verse.dart';
 import 'package:seeksparks/providers/main_provider.dart';
@@ -24,6 +25,7 @@ import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/constants/text_patterns.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/widgets/home_icon_button.dart';
+import 'package:seeksparks/widgets/language_switcher_button.dart';
 import 'package:seeksparks/widgets/localized_back_button.dart';
 import 'package:seeksparks/utils/ai_markdown.dart' show parseAiMarkdown;
 import 'package:seeksparks/utils/relative_time.dart' show relativeTime;
@@ -543,11 +545,8 @@ class _SearchPageState extends State<SearchPage> {
                         style: const TextStyle(fontSize: 12),
                       ),
                       onPressed: () {
-                        Get.to(
-                          () => const SettingsPage(
-                              initialSection: SettingsSection.ai),
-                          transition: Transition.rightToLeft,
-                        );
+                        pushPage(const SettingsPage(
+                              initialSection: SettingsSection.ai));
                       },
                     ),
                   ],
@@ -1404,8 +1403,7 @@ class _SearchPageState extends State<SearchPage> {
               // because "H1" could otherwise match a malformed ref.
               final strongs = parseStrongsNumber(trimmed);
               if (strongs != null) {
-                Get.to(() => StrongsEntryPage(number: strongs),
-                    transition: Transition.rightToLeft);
+                pushPage(StrongsEntryPage(number: strongs));
                 return;
               }
               // Then try parsing as a Bible reference. If it
@@ -1535,6 +1533,7 @@ class _SearchPageState extends State<SearchPage> {
                 },
                 icon: const Icon(Icons.close_rounded),
               ),
+            const LanguageSwitcherButton(),
             const HomeIconButton(),
           ],
         ),

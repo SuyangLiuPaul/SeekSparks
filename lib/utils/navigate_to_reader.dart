@@ -24,7 +24,7 @@
 // Either way the stack ends with EXACTLY ONE HomePage.
 
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:seeksparks/utils/app_nav.dart';
 
 import 'package:seeksparks/pages/home_page.dart';
 
@@ -73,8 +73,7 @@ void navigateToReader(BuildContext context) {
     return false;
   });
   if (!foundExistingHome) {
-    Get.to(() => const HomePage(),
-        routeName: kHomePageRouteName,
-        transition: Transition.rightToLeft);
+    pushPage(const HomePage(),
+        routeName: kHomePageRouteName);
   }
 }

@@ -56,21 +56,26 @@ void main() {
         containsAll(<String>['cuvs-yhwh-tr', 'biblexg-v2-tr']));
   });
 
-  test('cuv/cnv/biblexg(v1) are hidden from the picker but stay resolvable',
+  test(
+      'cuv/cnv/biblexg(v1) were removed outright — no longer resolve at all',
       () {
-    const hidden = <String>[
+    // 2026-08 (ported from YsWords v1.4.0): these versions used to be
+    // hidden-but-resolvable (see git history); now deleted entirely —
+    // superseded by cuvs-yhwh / biblexg-v2. Old shared links using these
+    // codes no longer resolve, which is the explicit product choice.
+    const removed = <String>[
       'cuv', 'cuv-tr',
       'cnv', 'cnv-tr',
       'biblexg', 'biblexg-tr',
     ];
-    final availableCodes = availableVersions.map((v) => v.value).toSet();
     final allCodes = bibleVersions.map((v) => v.value).toSet();
-    for (final code in hidden) {
-      expect(availableCodes.contains(code), isFalse,
-          reason: '$code should be hidden from the picker');
-      expect(allCodes.contains(code), isTrue,
-          reason: '$code should still resolve (labels/fallback/shared links)');
+    for (final code in removed) {
+      expect(allCodes.contains(code), isFalse,
+          reason: '$code should no longer exist in the catalog at all');
     }
+    expect(disabledVersions, isEmpty,
+        reason: 'nothing should be hidden — the mechanism is unused '
+            'until a future version needs it');
   });
 
   test('bibleVersionLanguage resolves known codes + falls back safely', () {

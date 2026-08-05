@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:seeksparks/utils/app_nav.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -16,7 +16,9 @@ import 'package:seeksparks/services/sermon_service.dart';
 import 'package:seeksparks/utils/passage_localizer.dart' show localizePassage;
 import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
 import 'package:seeksparks/widgets/home_icon_button.dart';
+import 'package:seeksparks/widgets/language_switcher_button.dart';
 import 'package:seeksparks/widgets/localized_back_button.dart';
+import 'package:seeksparks/widgets/press_scale.dart';
 
 /// Topic-grouped browser for the Pastor Eric sermon corpus.
 ///
@@ -137,10 +139,7 @@ class _SermonsPageState extends State<SermonsPage> {
       _lastReadSermonId = sermon.id;
       _flashActive = false; // Don't flash the tile they're leaving
     });
-    await Get.to(
-      () => SermonDetailPage(sermon: sermon),
-      transition: Transition.rightToLeft,
-    );
+    await pushPage(SermonDetailPage(sermon: sermon));
     // Returned from detail — re-arm the flash for THIS sermon's row
     // so the user immediately sees where they were.
     if (!mounted) return;
@@ -181,7 +180,7 @@ class _SermonsPageState extends State<SermonsPage> {
           uiStrings['sermons']?[locale] ?? 'Sermons',
           style: const TextStyle(fontWeight: FontWeight.w600),
         ),
-        actions: const [HomeIconButton()],
+        actions: const [LanguageSwitcherButton(), HomeIconButton()],
       ),
       body: FutureBuilder<_PageData>(
         future: _future,
@@ -652,8 +651,12 @@ class _TopicGroup extends StatelessWidget {
     required this.onSermonTap,
   });
 
+  // 2026-08 (ported from YsWords v1.4.5): passive press-scale; the tap
+  // handler inside still owns the gesture. See lib/widgets/press_scale.dart.
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => PressScale(child: _buildCard(context));
+
+  Widget _buildCard(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final locale = context.watch<AppSettings>().locale;
     return Card(

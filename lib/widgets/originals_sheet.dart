@@ -2,7 +2,7 @@ import 'dart:async' show unawaited;
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:seeksparks/utils/app_nav.dart';
 import 'package:provider/provider.dart';
 
 import 'package:seeksparks/constants/text_patterns.dart'
@@ -194,8 +194,13 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
     };
   }
 
+  /// Scroll controller for the embedded (docked-pane) presentation; the
+  /// modal presentation gets one from DraggableScrollableSheet instead.
+  final ScrollController _embeddedScroll = ScrollController();
+
   @override
   void dispose() {
+    _embeddedScroll.dispose();
     _clearTapRecognizers();
     super.dispose();
   }
@@ -544,36 +549,66 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
     final locale = widget.locale;
     final title = uiStrings['originalText']?[locale] ?? 'Original Text';
 
+    // 2026-08 (SeekSparks): DraggableScrollableSheet is a bottom-sheet
+    // affordance. Inside the docked Workbench pane it rendered this panel
+    // as a floating sheet starting 30% down the pane (initialChildSize:
+    // 0.7), which left a large empty gap above the header and made the
+    // "Word Study" title visibly jump down the moment a verse was
+    // selected. Embedded fills the pane; the modal keeps the sheet.
+    if (widget.embedded) {
+      return _buildPanel(context, scheme, locale, title, _embeddedScroll);
+    }
     return DraggableScrollableSheet(
       initialChildSize: 0.7,
       minChildSize: 0.4,
       maxChildSize: 0.95,
       expand: false,
-      builder: (context, scrollController) {
-        // Local Scaffold so snackbars from ScaffoldMessenger.of(ctx)
-        // (e.g. the "Copied!" feedback after tapping a copy icon)
-        // render INSIDE this modal sheet — without it the snackbar
-        // anchors to the root scaffold below the modal and the user
-        // never sees the feedback.
-        return Scaffold(
-          backgroundColor: Colors.transparent,
-          body: Column(
-          mainAxisSize: MainAxisSize.min,
+      // Local Scaffold so snackbars from ScaffoldMessenger.of(ctx)
+      // (e.g. the "Copied!" feedback after tapping a copy icon)
+      // render INSIDE this modal sheet — without it the snackbar
+      // anchors to the root scaffold below the modal and the user
+      // never sees the feedback.
+      builder: (context, scrollController) => Scaffold(
+        backgroundColor: Colors.transparent,
+        body: _buildPanel(context, scheme, locale, title, scrollController),
+      ),
+    );
+  }
+
+  Widget _buildPanel(BuildContext context, ColorScheme scheme, String locale,
+      String title, ScrollController scrollController) {
+    return Column(
+          mainAxisSize:
+              widget.embedded ? MainAxisSize.max : MainAxisSize.min,
           children: [
-            Container(
-              margin: const EdgeInsets.only(top: 8),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: scheme.outlineVariant,
-                borderRadius: BorderRadius.circular(2),
+            // 2026-08 (SeekSparks): the drag handle is a bottom-sheet
+            // affordance — meaningless in the docked Workbench pane.
+            if (!widget.embedded)
+              Container(
+                margin: const EdgeInsets.only(top: 8),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: scheme.outlineVariant,
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
-            ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
+              padding: widget.embedded
+                  ? const EdgeInsets.fromLTRB(12, 4, 8, 0)
+                  : const EdgeInsets.fromLTRB(20, 12, 20, 8),
               child: Row(
                 children: [
-                  Icon(Icons.auto_stories, color: scheme.primary, size: 20),
+                  Icon(
+                    // Same icon the Workbench pane header uses, so the
+                    // panel keeps its identity between the empty and
+                    // populated states (was auto_stories vs translate).
+                    widget.embedded
+                        ? Icons.translate_rounded
+                        : Icons.auto_stories,
+                    color: scheme.primary,
+                    size: 20,
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Column(
@@ -581,21 +616,33 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          title,
+                          // 2026-08 (SeekSparks): when this sheet is the
+                          // Workbench's right pane it IS the pane header,
+                          // so it uses the same "Word Study" label as the
+                          // empty state — previously it read "Exegesis",
+                          // which named a YsWords feature this panel isn't.
+                          widget.embedded
+                              ? (uiStrings['wordStudyTitle']?[locale] ??
+                                  'Word Study')
+                              : title,
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
                             color: scheme.onSurface,
                           ),
                         ),
-                        Text(
-                          uiStrings['interlinearHint']?[locale] ??
-                              'Original · Strong\'s gloss',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: scheme.onSurfaceVariant,
+                        // Subtitle is helpful when the sheet opens
+                        // standalone; in the narrow docked pane it is
+                        // one more line of chrome above the actual data.
+                        if (!widget.embedded)
+                          Text(
+                            uiStrings['interlinearHint']?[locale] ??
+                                'Original · Strong\'s gloss',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: scheme.onSurfaceVariant,
+                            ),
                           ),
-                        ),
                       ],
                     ),
                   ),
@@ -653,10 +700,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
               ),
             ),
           ],
-        ),
         );
-      },
-    );
   }
 
   Widget _buildVerseBlock(_VerseOriginals vo, ColorScheme scheme) {
@@ -772,8 +816,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
     // beneath the original word so a reader who doesn't know
     // Hebrew/Greek can immediately see what each word means.
     final entry = _glossCache[w.strongs];
-    final gloss =
-        entry?.localizedGloss(widget.locale) ?? '';
+    final gloss = compactGloss(entry?.localizedGloss(widget.locale) ?? '');
     // Aramaic chips: teal-tinted background + 1.5px teal border, even
     // when not selected. Selected Aramaic chips switch to the primary
     // colour scheme so the selection cue stays unambiguous.
@@ -798,7 +841,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
       borderRadius: BorderRadius.circular(8),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-        constraints: const BoxConstraints(minWidth: 56, maxWidth: 140),
+        constraints: const BoxConstraints(minWidth: 56, maxWidth: 118),
         decoration: BoxDecoration(
           color: bgColor,
           borderRadius: BorderRadius.circular(8),
@@ -1519,11 +1562,8 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                     !context.read<AppSettings>().hasUserGeminiKey)
                   TextButton.icon(
                     onPressed: () {
-                      Get.to(
-                        () => const SettingsPage(
-                            initialSection: SettingsSection.ai),
-                        transition: Transition.rightToLeft,
-                      );
+                      pushPage(const SettingsPage(
+                            initialSection: SettingsSection.ai));
                     },
                     icon: const Icon(Icons.key_rounded, size: 16),
                     label: Text(
@@ -2719,3 +2759,42 @@ const Set<String> _aramaicGreekStrongs = {
   'G4518', // σαβαχθανι (sabachthani)
   'G3134', // μαρὰν ἀθά (maranatha)
 };
+
+/// Compacts a raw Strong's gloss into a short chip label.
+///
+/// 2026-08 (SeekSparks): the lexicon glosses are full prose — e.g.
+/// "a desolation (of surface), i.e. desert" or "above, over, upon, or
+/// against (yet always in this last relation with a downward aspect)".
+/// Rendered straight into a 140px chip with `maxLines: 2` they clipped
+/// mid-abbreviation ("a desolation (of surface), i"), which reads as a
+/// rendering bug rather than a definition. We keep the leading sense and
+/// drop the parenthetical elaboration; the full text is still shown in
+/// the entry card when the word is tapped.
+String compactGloss(String raw) {
+  var s = raw.trim();
+  if (s.isEmpty) return s;
+  // Strong's separates distinct senses with ';' (or '；' in the
+  // Chinese data) — the first is the primary one.
+  for (final sep in const [';', '；']) {
+    final i = s.indexOf(sep);
+    if (i > 0) s = s.substring(0, i);
+  }
+  // "x, i.e. y" / "x, 即 y" — the part before is the gloss proper.
+  for (final marker in const [', i.e.', ' i.e.', '，即', ', 即']) {
+    final i = s.indexOf(marker);
+    if (i > 0) s = s.substring(0, i);
+  }
+  // Parenthetical elaboration is detail, not definition.
+  for (final open in const ['(', '（']) {
+    final i = s.indexOf(open);
+    if (i > 0) s = s.substring(0, i);
+  }
+  s = s.trim().replaceAll(RegExp(r'[,\uFF0C.、]+$'), '').trim();
+  // Final safety cap — break on a word boundary rather than mid-word.
+  const maxLen = 28;
+  if (s.length > maxLen) {
+    final cut = s.lastIndexOf(' ', maxLen);
+    s = '${s.substring(0, cut > 12 ? cut : maxLen).trimRight()}…';
+  }
+  return s;
+}

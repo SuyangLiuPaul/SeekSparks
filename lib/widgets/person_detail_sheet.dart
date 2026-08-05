@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:seeksparks/utils/clipboard_helper.dart';
-import 'package:get/get.dart';
+import 'package:seeksparks/utils/app_nav.dart';
 import 'package:provider/provider.dart';
 
 import 'package:seeksparks/constants/ui_strings.dart';
@@ -531,10 +531,7 @@ class PersonDetailSheet extends StatelessWidget {
     final ok = await jumper.showJumpResultSnackBar(context, result);
     if (!ok || !context.mounted) return;
     Navigator.of(context).maybePop();
-    Get.to(
-      () => const HomePage(),
-      transition: Transition.rightToLeft,
-    );
+    pushPage(const HomePage());
   }
 }
 

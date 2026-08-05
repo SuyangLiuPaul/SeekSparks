@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:seeksparks/utils/app_nav.dart';
 import 'package:provider/provider.dart';
 
 import 'package:seeksparks/constants/ui_strings.dart';
@@ -12,6 +12,7 @@ import 'package:seeksparks/utils/jump_to_reference.dart';
 import 'package:seeksparks/utils/reference_parser.dart';
 import 'package:seeksparks/widgets/confidence_badge.dart';
 import 'package:seeksparks/widgets/home_icon_button.dart';
+import 'package:seeksparks/widgets/language_switcher_button.dart';
 import 'package:seeksparks/widgets/localized_back_button.dart';
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 
@@ -80,6 +81,7 @@ class _EvidenceDetailPageState extends State<EvidenceDetailPage> {
             icon: const Icon(Icons.share_outlined),
             onPressed: () => _share(context, locale),
           ),
+          const LanguageSwitcherButton(),
           const HomeIconButton(),
         ],
       ),
@@ -479,10 +481,7 @@ class _EvidenceDetailPageState extends State<EvidenceDetailPage> {
     if (!context.mounted) return;
     final ok = await showJumpResultSnackBar(context, result);
     if (!ok || !context.mounted) return;
-    Get.to(
-      () => const HomePage(),
-      transition: Transition.rightToLeft,
-    );
+    pushPage(const HomePage());
   }
 }
 

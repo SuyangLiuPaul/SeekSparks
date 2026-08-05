@@ -20,6 +20,7 @@ import 'package:seeksparks/utils/reference_parser.dart' show BibleReference;
 import 'package:seeksparks/widgets/verse_popup_sheet.dart' show showVersePopup;
 import 'package:seeksparks/widgets/left_accent_card.dart';
 import 'package:seeksparks/widgets/home_icon_button.dart';
+import 'package:seeksparks/widgets/language_switcher_button.dart';
 import 'package:seeksparks/widgets/localized_back_button.dart';
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 import 'package:seeksparks/utils/relative_time.dart' show relativeTime;
@@ -45,7 +46,7 @@ class LibraryPage extends StatelessWidget {
         appBar: AppBar(
           leading: const LocalizedBackButton(),
           title: Text(uiStrings['library']?[locale] ?? 'Library'),
-          actions: const [HomeIconButton()],
+          actions: const [LanguageSwitcherButton(), HomeIconButton()],
           bottom: TabBar(
             tabs: [
               Tab(

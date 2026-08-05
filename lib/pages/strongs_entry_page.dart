@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:seeksparks/utils/app_nav.dart';
 import 'package:provider/provider.dart';
 
 import 'package:seeksparks/constants/text_patterns.dart'
@@ -17,6 +18,7 @@ import 'package:seeksparks/utils/version_mapper.dart'
     show translateBookName, localeAwareBookName, toEnglish;
 import 'package:seeksparks/widgets/collapsible_english_ref.dart';
 import 'package:seeksparks/widgets/home_icon_button.dart';
+import 'package:seeksparks/widgets/language_switcher_button.dart';
 import 'package:seeksparks/widgets/localized_back_button.dart';
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 
@@ -134,7 +136,7 @@ class _StrongsEntryPageState extends State<StrongsEntryPage> {
       appBar: AppBar(
         leading: const LocalizedBackButton(),
         title: Text(widget.number),
-        actions: const [HomeIconButton()],
+        actions: const [LanguageSwitcherButton(), HomeIconButton()],
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
@@ -297,13 +299,12 @@ class _StrongsEntryPageState extends State<StrongsEntryPage> {
                 _RelatedChip(
                   entry: f,
                   locale: locale,
-                  onTap: () => Get.to(
-                        () => StrongsEntryPage(number: f.number),
-                        transition: Transition.rightToLeft,
-                        // v1.3.91: a StrongsEntryPage → StrongsEntryPage push
-                        // has the same GetX route name, so without this the
-                        // navigation is silently blocked (preventDuplicates)
-                        // and tapping a related/root word does nothing.
+                  // v1.3.91: a StrongsEntryPage → StrongsEntryPage push has
+                  // the same GetX route name, so without this the
+                  // navigation is silently blocked (preventDuplicates) and
+                  // tapping a related/root word does nothing.
+                  onTap: () => pushPage(
+                        StrongsEntryPage(number: f.number),
                         preventDuplicates: false,
                       ),
                 ),
@@ -324,13 +325,12 @@ class _StrongsEntryPageState extends State<StrongsEntryPage> {
                 _RelatedChip(
                   entry: f,
                   locale: locale,
-                  onTap: () => Get.to(
-                        () => StrongsEntryPage(number: f.number),
-                        transition: Transition.rightToLeft,
-                        // v1.3.91: a StrongsEntryPage → StrongsEntryPage push
-                        // has the same GetX route name, so without this the
-                        // navigation is silently blocked (preventDuplicates)
-                        // and tapping a related/root word does nothing.
+                  // v1.3.91: a StrongsEntryPage → StrongsEntryPage push has
+                  // the same GetX route name, so without this the
+                  // navigation is silently blocked (preventDuplicates) and
+                  // tapping a related/root word does nothing.
+                  onTap: () => pushPage(
+                        StrongsEntryPage(number: f.number),
                         preventDuplicates: false,
                       ),
                 ),
@@ -453,11 +453,7 @@ class _StrongsEntryPageState extends State<StrongsEntryPage> {
           alignment: PlaceholderAlignment.baseline,
           baseline: TextBaseline.alphabetic,
           child: GestureDetector(
-            onTap: () => Get.to(
-              () => StrongsEntryPage(number: num),
-              transition: Transition.rightToLeft,
-              preventDuplicates: false,
-            ),
+            onTap: () => pushPage(StrongsEntryPage(number: num), preventDuplicates: false),
             child: Text(
               token,
               style: baseStyle.copyWith(

@@ -912,6 +912,50 @@ class MainProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Merges imported user data into the current profile, returning how
+  /// many entries of each kind were applied.
+  ///
+  /// 2026-08 (ported from YsWords v1.4.0). Merge, not replace: imported
+  /// entries win on key collision, but anything the user already has that
+  /// isn't in the import file is left untouched — importing an old backup
+  /// must never silently delete newer work. Each collection is saved only
+  /// when it actually changed, so a highlights-only import doesn't
+  /// needlessly rewrite notes.
+  ({int highlights, int bookmarks, int notes}) importMergedData({
+    Map<String, int> highlights = const {},
+    Iterable<String> bookmarks = const [],
+    Map<String, ({String text, String? title, int? updatedAtMs})> notes =
+        const {},
+  }) {
+    _highlights.addAll(highlights);
+    _bookmarks.addAll(bookmarks);
+    for (final entry in notes.entries) {
+      _verseNotes[entry.key] = entry.value.text;
+      final title = entry.value.title;
+      if (title != null && title.isNotEmpty) {
+        _verseNoteTitles[entry.key] = title;
+      } else {
+        _verseNoteTitles.remove(entry.key);
+      }
+      _verseNoteTimestamps[entry.key] =
+          entry.value.updatedAtMs ?? DateTime.now().millisecondsSinceEpoch;
+    }
+    if (highlights.isNotEmpty) {
+      _saveHighlights();
+      onHighlightsMutated?.call();
+    }
+    if (bookmarks.isNotEmpty) _saveBookmarks();
+    if (notes.isNotEmpty) _saveNotes();
+    if (highlights.isNotEmpty || bookmarks.isNotEmpty || notes.isNotEmpty) {
+      notifyListeners();
+    }
+    return (
+      highlights: highlights.length,
+      bookmarks: bookmarks.length,
+      notes: notes.length,
+    );
+  }
+
   void _saveNotes() async {
     try {
       final prefs = await SharedPreferences.getInstance();

@@ -20,36 +20,27 @@ const sectionTitleSetByVersion = <String, String>{
   // 'niv' entry removed in 2026-05 along with the NIV version itself
   // (see lib/constants/bible_versions.dart for the licence rationale).
 
-  // CUV proper — the master Chinese set.
-  'cuv': 'cuv',
-  'cuv-tr': 'cuv-tr',
+  // 2026-08 (ported from YsWords v1.4.0): the 'cuv'/'cuv-tr'/'cnv'/
+  // 'cnv-tr'/'biblexg'/'biblexg-tr' VERSION entries were removed here —
+  // those versions were deleted outright (see bible_versions.dart). The
+  // 'cuv'/'cuv-tr' SET IDs stay below since cuvs-yhwh and biblexg-v2
+  // still reuse the CUV title set.
 
   // Yahweh-edition CUV uses CUV titles.
   'cuvs-yhwh': 'cuv',
   'cuvs-yhwh-tr': 'cuv-tr',
 
-  // LJK1 (梁家铿译本 第一版) uses CUV titles.
-  'biblexg': 'cuv',
-  'biblexg-tr': 'cuv-tr',
-
   // LJK2 (梁家铿译本 第二版) uses CUV titles.
   'biblexg-v2': 'cuv',
   'biblexg-v2-tr': 'cuv-tr',
-
-  // CNV (新译本) — its own set when authored, falls back to CUV via
-  // the service layer when a chapter has no CNV-specific entry.
-  'cnv': 'cnv',
-  'cnv-tr': 'cnv-tr',
 };
 
 /// When a primary title set has no entry for a given chapter, the
 /// service falls back to the corresponding "fallback set" if one is
-/// configured here. CNV → CUV is the canonical use of this — until
-/// CNV-specific headings are authored, CNV readers see CUV's.
-const sectionTitleFallbackSet = <String, String>{
-  'cnv': 'cuv',
-  'cnv-tr': 'cuv-tr',
-};
+/// configured here. Currently unused — was CNV → CUV until CNV was
+/// removed (2026-08, ported from YsWords v1.4.0); kept as a mechanism
+/// for a future version that needs the same fallback shape.
+const sectionTitleFallbackSet = <String, String>{};
 
 String sectionTitleSetFor(String version) =>
     sectionTitleSetByVersion[version] ?? '';

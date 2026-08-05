@@ -20,6 +20,7 @@ import 'package:seeksparks/utils/reference_parser.dart'
     show BibleReference, parseReference;
 import 'package:seeksparks/utils/version_mapper.dart' show toEnglish, localeAwareBookName;
 import 'package:seeksparks/widgets/home_icon_button.dart';
+import 'package:seeksparks/widgets/language_switcher_button.dart';
 import 'package:seeksparks/widgets/localized_back_button.dart';
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 
@@ -91,6 +92,7 @@ class StatsPage extends StatelessWidget {
             ],
           ),
           actions: const [
+            LanguageSwitcherButton(),
             HomeIconButton(),
           ],
         ),

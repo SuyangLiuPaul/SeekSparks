@@ -121,9 +121,22 @@ List<int> _parseVerseSpec(String spec) {
 }
 
 /// Builds an [InlineSpan] list from [noteText]. Any well-formed
-/// `[Book Ch:V]` becomes a tappable [TextSpan] that invokes
-/// [onRefTap] when tapped. Everything else flows through as plain
-/// text.
+/// `[Book Ch:V]` becomes a styled [TextSpan] — tappable (invoking
+/// [onRefTap]) when [onRefTap] is provided. Everything else flows
+/// through as plain text.
+///
+/// [onRefTap] is optional: pass `null` for read-only rendering
+/// without tap handling (a [TapGestureRecognizer] fighting an
+/// editable field's own selection gesture detector is the kind of
+/// thing that's easy to get subtly wrong, so editable callers —
+/// see the note editor's ref-highlighting `TextEditingController`
+/// — skip it entirely and rely on the separate ref-chip strip for
+/// tap-to-preview).
+///
+/// [refBackgroundColor], when supplied, paints a solid block behind
+/// each matched reference (in addition to [refColor]'s text tint),
+/// giving it a pill-like look. Omit for the original underlined-link
+/// style.
 ///
 /// Returns a single-element list with one plain [TextSpan] when
 /// [noteText] is empty or contains no references — keeps callers
@@ -133,7 +146,8 @@ List<InlineSpan> buildNoteSpans({
   required String noteText,
   required TextStyle baseStyle,
   required Color refColor,
-  required void Function(NoteReferenceMatch ref) onRefTap,
+  void Function(NoteReferenceMatch ref)? onRefTap,
+  Color? refBackgroundColor,
 }) {
   if (noteText.isEmpty) {
     return [TextSpan(text: '', style: baseStyle)];
@@ -181,14 +195,27 @@ List<InlineSpan> buildNoteSpans({
       );
       spans.add(TextSpan(
         text: noteText.substring(m.start, m.end),
-        style: baseStyle.copyWith(
-          color: refColor,
-          decoration: TextDecoration.underline,
-          decorationStyle: TextDecorationStyle.dotted,
-          decorationColor: refColor.withValues(alpha: 0.7),
-          decorationThickness: 1.2,
-        ),
-        recognizer: TapGestureRecognizer()..onTap = () => onRefTap(ref),
+        style: refBackgroundColor != null
+            // Pill look (note editor, inline highlight): solid
+            // background instead of the underlined-link treatment —
+            // dotted underlines read as "tap me" against a plain
+            // background, but inside an editable field with no tap
+            // handler that promise would be broken.
+            ? baseStyle.copyWith(
+                color: refColor,
+                fontWeight: FontWeight.w600,
+                backgroundColor: refBackgroundColor,
+              )
+            : baseStyle.copyWith(
+                color: refColor,
+                decoration: TextDecoration.underline,
+                decorationStyle: TextDecorationStyle.dotted,
+                decorationColor: refColor.withValues(alpha: 0.7),
+                decorationThickness: 1.2,
+              ),
+        recognizer: onRefTap == null
+            ? null
+            : (TapGestureRecognizer()..onTap = () => onRefTap(ref)),
       ));
     } else {
       // Looks like a reference but the book name isn't canonical
@@ -323,4 +350,116 @@ String formatCompactReference({
   parts.add(start == end ? '$start' : '$start-$end');
 
   return '[${displayBook ?? englishBook} $chapter:${parts.join(',')}]';
+}
+
+/// 2026-08-02: splice the platform's IME composing-region underline
+/// into an already-styled span list (e.g. from [buildNoteSpans])
+/// WITHOUT discarding the rest of that styling.
+///
+/// Field report: the note editor's ref-highlighting controller used
+/// to bail out to a completely plain render for the WHOLE text
+/// whenever ANY composing session was active anywhere in the note —
+/// so every already-inserted `[Book Ch:V]` pill (English or Chinese)
+/// would flicker back to plain text on every pinyin keystroke, even
+/// far from the composing cursor, then snap back once the syllable
+/// committed. "如果中文英文插入这个不是跟着变的" (typing Chinese/
+/// English, the highlight doesn't keep up).
+///
+/// [composing] must be a valid, non-collapsed range (callers should
+/// check `value.isComposingRangeValid` first — this function doesn't
+/// re-derive that from a bare `TextEditingValue` because
+/// `TextEditingController.value.composing` is what callers already
+/// have on hand). [spans] must be the FLAT `TextSpan(text: ..., style:
+/// ...)` list [buildNoteSpans] returns (no nested children) — that's
+/// the only shape this walks.
+List<InlineSpan> spliceComposingUnderline(
+  List<InlineSpan> spans,
+  TextRange composing, {
+  TextStyle? fallbackStyle,
+}) {
+  final spliced = <InlineSpan>[];
+  var consumed = 0;
+  for (final span in spans) {
+    if (span is! TextSpan || span.text == null) {
+      spliced.add(span);
+      continue;
+    }
+    final spanText = span.text!;
+    final start = consumed;
+    final end = consumed + spanText.length;
+    consumed = end;
+    if (end <= composing.start || start >= composing.end) {
+      // This span doesn't overlap the composing range at all.
+      spliced.add(span);
+      continue;
+    }
+    final composingStyle = (span.style ?? fallbackStyle)
+            ?.merge(const TextStyle(decoration: TextDecoration.underline)) ??
+        const TextStyle(decoration: TextDecoration.underline);
+    final localStart = (composing.start - start).clamp(0, spanText.length);
+    final localEnd = (composing.end - start).clamp(0, spanText.length);
+    if (localStart > 0) {
+      spliced.add(TextSpan(
+          text: spanText.substring(0, localStart), style: span.style));
+    }
+    spliced.add(TextSpan(
+        text: spanText.substring(localStart, localEnd),
+        style: composingStyle));
+    if (localEnd < spanText.length) {
+      spliced.add(TextSpan(
+          text: spanText.substring(localEnd), style: span.style));
+    }
+  }
+  return spliced;
+}
+
+/// 2026-08-02: rewrites every matched `[Book Ch:V]` reference's BOOK
+/// NAME to [displayBookFor]'s answer, leaving chapter/verse digits,
+/// non-reference text, and any bracket-shaped-but-invalid text
+/// completely untouched.
+///
+/// Field request: a user typing a quick English abbreviation like
+/// `[1 Kings 17:21]` in an otherwise-Chinese note saw the ref-chip
+/// strip correctly preview it as "列王纪上 17:21" (chips always
+/// localize for display — see [buildNoteSpans]'s note-editor caller),
+/// but the note BODY stayed in English, which read as inconsistent:
+/// "你看下面是列王纪上但是文字是1King". Call this once at SAVE time
+/// (not on every keystroke) — see `showNoteEditor`'s Save handler —
+/// so normalizing a reference's script never fights the user's live
+/// cursor position while they're still typing.
+///
+/// [displayBookFor] takes the resolved CANONICAL English book name
+/// and returns the name to substitute — callers pass
+/// `(canonical) => localeAwareBookName(canonical, locale, currentVersion)`,
+/// the exact same resolution the chip strip already uses, so the
+/// saved text and the chip preview always agree.
+String normalizeNoteReferenceBookNames(
+  String noteText,
+  String Function(String canonicalEnglishBook) displayBookFor,
+) {
+  if (noteText.isEmpty) return noteText;
+  final buffer = StringBuffer();
+  var cursor = 0;
+  for (final m in _referenceRegex.allMatches(noteText)) {
+    final rawBook = m.group(1)?.trim() ?? '';
+    final canonical = resolveBookName(rawBook);
+    final chapter = int.tryParse(m.group(2) ?? '');
+    final verseSpec = m.group(3) ?? '';
+    final verses = _parseVerseSpec(verseSpec);
+    if (canonical == null || chapter == null || verses.isEmpty) {
+      continue; // Not a real reference — leave verbatim.
+    }
+    final replacement = formatCompactReference(
+      englishBook: canonical,
+      chapter: chapter,
+      verses: verses,
+      displayBook: displayBookFor(canonical),
+    );
+    if (replacement.isEmpty) continue; // Defensive — shouldn't happen.
+    buffer.write(noteText.substring(cursor, m.start));
+    buffer.write(replacement);
+    cursor = m.end;
+  }
+  buffer.write(noteText.substring(cursor));
+  return buffer.toString();
 }

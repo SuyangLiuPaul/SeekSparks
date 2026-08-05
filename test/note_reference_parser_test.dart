@@ -317,4 +317,204 @@ void main() {
       expect(refs, isEmpty);
     });
   });
+
+  // 2026-08-01: pill-highlight mode for the note editor's inline
+  // TextEditingController override — onRefTap omitted (no tap
+  // recognizer, since a TapGestureRecognizer inside an editable
+  // field's own text-selection gesture area is the kind of thing
+  // that's easy to get subtly wrong) and refBackgroundColor supplied
+  // for a solid-background "pill" look instead of the underlined-link
+  // style.
+  group('buildNoteSpans — pill-highlight mode (no onRefTap)', () {
+    test('matched ref gets background + color styling, no recognizer',
+        () {
+      final spans = buildNoteSpans(
+        noteText: 'See [John 3:16] for the gospel.',
+        baseStyle: const TextStyle(fontSize: 14),
+        refColor: const Color(0xFF3730A3),
+        refBackgroundColor: const Color(0x593730A3),
+      );
+      // plain prefix, ref, plain suffix — same 3-span shape as the
+      // tappable-link mode.
+      expect(spans.length, 3);
+      final refSpan = spans[1] as TextSpan;
+      expect(refSpan.text, '[John 3:16]');
+      expect(refSpan.style?.backgroundColor, const Color(0x593730A3));
+      expect(refSpan.style?.color, const Color(0xFF3730A3));
+      // No underline in pill mode — that's the tappable-link mode's
+      // affordance, and would be misleading here since tapping this
+      // span just places the text cursor.
+      expect(refSpan.style?.decoration, isNot(TextDecoration.underline));
+      // The whole point: nothing to accidentally fight the
+      // TextField's own tap-to-place-cursor gesture.
+      expect(refSpan.recognizer, isNull);
+    });
+
+    test('plain-text-only note is unaffected by pill mode', () {
+      final spans = buildNoteSpans(
+        noteText: 'Just a note about prayer.',
+        baseStyle: const TextStyle(),
+        refColor: const Color(0xFF000000),
+        refBackgroundColor: const Color(0x59000000),
+      );
+      expect(spans.length, 1);
+      expect((spans.first as TextSpan).style?.backgroundColor, isNull);
+    });
+
+    test('default (no refBackgroundColor) keeps the original '
+        'underlined-link style — existing callers unaffected', () {
+      final spans = buildNoteSpans(
+        noteText: '[John 3:16]',
+        baseStyle: const TextStyle(),
+        refColor: const Color(0xFF000000),
+        onRefTap: (_) {},
+      );
+      final refSpan = spans.first as TextSpan;
+      expect(refSpan.style?.decoration, TextDecoration.underline);
+      expect(refSpan.style?.backgroundColor, isNull);
+      expect(refSpan.recognizer, isNotNull);
+    });
+  });
+
+  // 2026-08-02: field report — "如果中文英文插入这个不是跟着变的"
+  // (typing Chinese/English, the highlight doesn't keep up). The note
+  // editor's ref-highlighting controller used to bail out to a
+  // completely PLAIN render for the entire note text whenever any IME
+  // composing session was active anywhere in it, so every already-
+  // inserted [Book Ch:V] pill would flicker away on every pinyin
+  // keystroke. spliceComposingUnderline lets the composing region get
+  // its underline WITHOUT discarding the rest of the text's styling.
+  group('spliceComposingUnderline', () {
+    List<TextSpan> pillSpans(String text) => buildNoteSpans(
+          noteText: text,
+          baseStyle: const TextStyle(fontSize: 14),
+          refColor: const Color(0xFF3730A3),
+          refBackgroundColor: const Color(0x593730A3),
+        ).cast<TextSpan>();
+
+    test('composing region inside plain text splits into 3 parts, '
+        'middle part gets underline', () {
+      final spans = pillSpans('Just a note about prayer.');
+      // "note" starts at index 7, ends at 11.
+      final result = spliceComposingUnderline(
+        spans,
+        const TextRange(start: 7, end: 11),
+      );
+      final joined = result.whereType<TextSpan>().map((s) => s.text).join();
+      expect(joined, 'Just a note about prayer.',
+          reason: 'splicing must not lose or duplicate any text');
+      final composingSpan = result.whereType<TextSpan>().firstWhere(
+            (s) => s.text == 'note',
+          );
+      expect(composingSpan.style?.decoration, TextDecoration.underline);
+    });
+
+    test('composing region overlapping a ref pill keeps the pill '
+        'background AND adds the underline', () {
+      final spans = pillSpans('See [John 3:16] now.');
+      // "[John 3:16]" occupies indices 4..15. Compose over "3:16"
+      // (indices 10..14), well inside the pill span.
+      final result = spliceComposingUnderline(
+        spans,
+        const TextRange(start: 10, end: 14),
+      );
+      final joined = result.whereType<TextSpan>().map((s) => s.text).join();
+      expect(joined, 'See [John 3:16] now.');
+      final composingSpan =
+          result.whereType<TextSpan>().firstWhere((s) => s.text == '3:16');
+      expect(composingSpan.style?.decoration, TextDecoration.underline,
+          reason: 'composing region must show the IME underline');
+      expect(composingSpan.style?.backgroundColor, const Color(0x593730A3),
+          reason: 'the ref pill background must survive composing, not '
+              'be discarded like the old full-text bailout did');
+    });
+
+    test('composing region spanning a span boundary splits both '
+        'sides correctly', () {
+      final spans = pillSpans('[Gen 1:1] hello');
+      // "[Gen 1:1]" is indices 0..9; " hello" starts at 9. Compose
+      // over indices 7..12 — crosses from inside the pill into the
+      // plain suffix.
+      final result = spliceComposingUnderline(
+        spans,
+        const TextRange(start: 7, end: 12),
+      );
+      final joined = result.whereType<TextSpan>().map((s) => s.text).join();
+      expect(joined, '[Gen 1:1] hello',
+          reason: 'no characters lost across the span boundary');
+    });
+
+    test('composing region with no overlap leaves spans untouched', () {
+      final spans = pillSpans('[Gen 1:1] hello');
+      final result = spliceComposingUnderline(
+        spans,
+        const TextRange(start: 100, end: 105),
+      );
+      expect(result, spans);
+    });
+  });
+
+  // 2026-08-02: field report — "你看下面是列王纪上但是文字是1King".
+  // A manually-typed English abbreviation stayed English in the note
+  // body forever, even though the read-only chip strip already
+  // localized it. normalizeNoteReferenceBookNames rewrites the BOOK
+  // NAME (only) of every valid reference to whatever the caller's
+  // localizer returns, called once at Save time.
+  group('normalizeNoteReferenceBookNames', () {
+    test('rewrites an English abbreviation to the localized name', () {
+      final result = normalizeNoteReferenceBookNames(
+        'See [1 Kings 17:21] please.',
+        (canonical) => canonical == '1 Kings' ? '列王纪上' : canonical,
+      );
+      expect(result, 'See [列王纪上 17:21] please.');
+    });
+
+    test('leaves surrounding text and verse digits untouched', () {
+      final result = normalizeNoteReferenceBookNames(
+        '奴隶\n[2 Kings 4:34] 神迹',
+        (canonical) => canonical == '2 Kings' ? '列王纪下' : canonical,
+      );
+      expect(result, '奴隶\n[列王纪下 4:34] 神迹');
+    });
+
+    test('multiple references in one note all get rewritten', () {
+      final result = normalizeNoteReferenceBookNames(
+        '[1 Kings 17:21] and [2 Kings 4:34]',
+        (canonical) {
+          if (canonical == '1 Kings') return '列王纪上';
+          if (canonical == '2 Kings') return '列王纪下';
+          return canonical;
+        },
+      );
+      expect(result, '[列王纪上 17:21] and [列王纪下 4:34]');
+    });
+
+    test('already-localized references pass through unchanged '
+        '(idempotent)', () {
+      final result = normalizeNoteReferenceBookNames(
+        '[列王纪上 17:21]',
+        (canonical) => canonical == '1 Kings' ? '列王纪上' : canonical,
+      );
+      expect(result, '[列王纪上 17:21]');
+    });
+
+    test('invalid / malformed bracket text is left verbatim', () {
+      const text = '[Not A Real Book 1:1] and plain text';
+      final result = normalizeNoteReferenceBookNames(text, (c) => c);
+      expect(result, text);
+    });
+
+    test('compact multi-verse specs (ranges, commas) survive '
+        'the rewrite intact', () {
+      final result = normalizeNoteReferenceBookNames(
+        '[Gen 1:2-3,5,9-10]',
+        (canonical) => canonical == 'Genesis' ? '创世记' : canonical,
+      );
+      expect(result, '[创世记 1:2-3,5,9-10]');
+    });
+
+    test('empty note returns empty', () {
+      expect(normalizeNoteReferenceBookNames('', (c) => c), '');
+    });
+  });
 }
