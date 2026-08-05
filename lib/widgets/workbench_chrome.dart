@@ -245,12 +245,18 @@ class WbPaneTitle extends StatelessWidget {
     super.key,
     required this.title,
     this.trailing = const [],
+    this.onTitleTap,
   });
 
   final String title;
 
   /// Small icon buttons at the right end of the strip.
   final List<WbToolButton> trailing;
+
+  /// Makes the title itself a control. Used by the Browse window, whose
+  /// title lists the active versions — clicking that list to change it
+  /// is what a reader tries first.
+  final VoidCallback? onTitleTap;
 
   @override
   Widget build(BuildContext context) {
@@ -265,15 +271,22 @@ class WbPaneTitle extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: Text(
-              title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: WbMetrics.chrome,
-                fontWeight: FontWeight.w600,
-                color: wb.text,
-                letterSpacing: 0.2,
+            child: _HoverBox(
+              onTap: onTitleTap,
+              padding: const EdgeInsets.symmetric(vertical: 3),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: WbMetrics.chrome,
+                    fontWeight: FontWeight.w600,
+                    color: wb.text,
+                    letterSpacing: 0.2,
+                  ),
+                ),
               ),
             ),
           ),

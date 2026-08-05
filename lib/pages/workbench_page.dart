@@ -103,9 +103,30 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
   /// on, the centre pane stacks the same verse in every selected version
   /// plus the original-language line, instead of the chapter reader.
   bool _parallelMode = true;
-  static const _kParallelKey = 'workbench.parallelMode';
+  // Deliberately a NEW key. v1.1.0 defaulted this off and persisted the
+  // value on any pane interaction, so every existing install had `false`
+  // stored and never saw the Browse window even after it became the
+  // default. Renaming re-applies the new default exactly once.
+  static const _kParallelKey = 'workbench.browseMode.v2';
   static const _kParallelVersionsKey = 'workbench.parallelVersions';
-  List<String> _parallelVersions = const ['kjv', 'nasb', 'leb'];
+  /// Empty until [_restorePrefs] picks a default for the reader's
+  /// language — an English-only stack is the wrong first impression for
+  /// a Chinese reader.
+  List<String> _parallelVersions = const [];
+
+  /// The stack a first-time reader gets. BibleWorks ships version sets
+  /// per language and this is the same idea: pair the reading version
+  /// with the two most useful comparisons in that language.
+  List<String> _defaultParallelVersions(String locale) {
+    switch (locale) {
+      case 'zh-Hans':
+        return const ['cuvs-yhwh', 'biblexg-v2', 'nasb'];
+      case 'zh-Hant':
+        return const ['cuvs-yhwh-tr', 'biblexg-v2-tr', 'nasb'];
+      default:
+        return const ['nasb', 'kjv', 'leb'];
+    }
+  }
 
   /// Which Analysis tab the right pane is showing. Persisted, because
   /// a reader who works in cross-references expects to still be there
@@ -344,7 +365,9 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
       _rightOpen = prefs.getBool(_kRightOpenKey) ?? true;
       _parallelMode = prefs.getBool(_kParallelKey) ?? true;
       final saved = prefs.getStringList(_kParallelVersionsKey);
-      if (saved != null && saved.isNotEmpty) _parallelVersions = saved;
+      _parallelVersions = (saved != null && saved.isNotEmpty)
+          ? saved
+          : _defaultParallelVersions(context.read<AppSettings>().locale);
       final tab = prefs.getInt(_kAnalysisTabKey);
       if (tab != null && tab >= 0 && tab < AnalysisTab.values.length) {
         _analysisTab = AnalysisTab.values[tab];
@@ -590,6 +613,9 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
                 ? (uiStrings['parallelBrowse']?[locale] ?? 'Browse')
                 : '${localeAwareBookName(book, locale, mp.currentVersion)} '
                     '$chapter  —  ${codes.map(shortBibleVersionLabel).join(" · ")}',
+            // The version list IS the control for changing it — that is
+            // where a reader looks first, not at an unlabelled icon.
+            onTitleTap: () => _pickParallelVersions(context),
             trailing: [
               WbToolButton(
                 icon: Icons.view_column_outlined,
