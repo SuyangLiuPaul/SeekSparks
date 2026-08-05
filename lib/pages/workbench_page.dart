@@ -88,6 +88,10 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
   static const _kParallelVersionsKey = 'workbench.parallelVersions';
   List<String> _parallelVersions = const ['kjv', 'nasb', 'leb'];
 
+  /// Verse the parallel pane is pinned to. Null = follow the reader's
+  /// selection; set by the pane's own prev/next stepper.
+  int? _parallelVerse;
+
   @override
   void initState() {
     super.initState();
@@ -259,7 +263,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         ? (bookNameToEnglish[sel.book] ?? sel.book)
         : (bookNameToEnglish[mp.currentBook ?? ''] ?? mp.currentBook);
     final chapter = sel?.chapter ?? mp.currentChapter;
-    final verse = sel?.verse ?? 1;
+    final verse = _parallelVerse ?? sel?.verse ?? 1;
 
     // Always include the reader's own version first, then the configured
     // comparison stack (deduplicated, order preserved).
@@ -307,6 +311,15 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
                     versionCodes: codes,
                     onWordTap: (w) => pushPage(StrongsEntryPage(number: w.strongs)),
                     onEditVersions: () => _pickParallelVersions(context),
+                    // Verse stepping keeps the pane navigable on its own,
+                    // the way BibleWorks' Browse window is. Clamped at 1;
+                    // the upper bound is enforced by the view returning
+                    // no rows for a verse that does not exist.
+                    onPrevVerse: verse > 1
+                        ? () => setState(() => _parallelVerse = verse - 1)
+                        : null,
+                    onNextVerse: () =>
+                        setState(() => _parallelVerse = verse + 1),
                   ),
           ),
         ],

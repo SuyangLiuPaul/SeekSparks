@@ -22,6 +22,7 @@ import 'package:seeksparks/models/original_word.dart';
 import 'package:seeksparks/models/verse.dart';
 import 'package:seeksparks/services/fetch_verses.dart';
 import 'package:seeksparks/services/originals_service.dart';
+import 'package:seeksparks/services/section_title_service.dart';
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
 
@@ -56,6 +57,16 @@ class ParallelVerseView extends StatefulWidget {
   /// Fired when the user asks to change which versions are stacked.
   final VoidCallback? onEditVersions;
 
+  /// BibleWorks-style navigation row callbacks. Each opens the
+  /// corresponding picker; null hides that control.
+  final VoidCallback? onPickBook;
+  final VoidCallback? onPickChapter;
+  final void Function(int verse)? onPickVerse;
+
+  /// Step to the previous / next verse. Null at the ends of a chapter.
+  final VoidCallback? onPrevVerse;
+  final VoidCallback? onNextVerse;
+
   const ParallelVerseView({
     super.key,
     required this.book,
@@ -64,6 +75,11 @@ class ParallelVerseView extends StatefulWidget {
     required this.versionCodes,
     this.onWordTap,
     this.onEditVersions,
+    this.onPickBook,
+    this.onPickChapter,
+    this.onPickVerse,
+    this.onPrevVerse,
+    this.onNextVerse,
   });
 
   @override
@@ -172,41 +188,191 @@ class _ParallelVerseViewState extends State<ParallelVerseView> {
             ),
           );
         }
-        final ref = '${localeAwareBookName(widget.book, locale, '')} '
-            '${widget.chapter}:${widget.verse}';
-        return ListView(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    ref,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: scheme.onSurfaceVariant,
-                      letterSpacing: 0.3,
-                    ),
-                  ),
-                ),
-                if (widget.onEditVersions != null)
-                  TextButton.icon(
-                    onPressed: widget.onEditVersions,
-                    icon: const Icon(Icons.tune_rounded, size: 15),
-                    label: const Text('Versions'),
-                    style: TextButton.styleFrom(
-                      visualDensity: VisualDensity.compact,
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                    ),
-                  ),
-              ],
+            _buildNavRow(scheme, settings, locale, rows),
+            _buildContextLine(scheme, locale),
+            const Divider(height: 1),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+                children: [
+                  for (final r in rows) _buildRow(r, scheme, settings, locale),
+                ],
+              ),
             ),
-            const Divider(height: 14),
-            for (final r in rows) _buildRow(r, scheme, settings, locale),
           ],
         );
       },
+    );
+  }
+
+  /// BibleWorks' Browse-window navigation strip:
+  ///   [☰] [version ▾] [book ▾] [chapter ▾] [verse ▾]   ‹ ›
+  /// Every control is a real selector, so the pane navigates on its own
+  /// rather than only following the reader's selection.
+  Widget _buildNavRow(
+    ColorScheme scheme,
+    AppSettings settings,
+    String locale,
+    List<_Row> rows,
+  ) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(10, 6, 6, 6),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest.withValues(alpha: 0.35),
+        border: Border(
+          bottom: BorderSide(
+            color: scheme.outlineVariant.withValues(alpha: 0.5),
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          _navChip(
+            scheme,
+            label: rows.isNotEmpty && rows.first.code.isNotEmpty
+                ? rows.first.label
+                : '—',
+            tooltip: 'Versions in the stack',
+            onTap: widget.onEditVersions,
+            icon: Icons.layers_outlined,
+          ),
+          const SizedBox(width: 6),
+          _navChip(
+            scheme,
+            label: localeAwareBookName(widget.book, locale, ''),
+            tooltip: 'Book',
+            onTap: widget.onPickBook,
+          ),
+          const SizedBox(width: 6),
+          _navChip(
+            scheme,
+            label: '${widget.chapter}',
+            tooltip: 'Chapter',
+            onTap: widget.onPickChapter,
+          ),
+          const SizedBox(width: 6),
+          _navChip(
+            scheme,
+            label: '${widget.verse}',
+            tooltip: 'Verse',
+            onTap: widget.onPickVerse == null
+                ? null
+                : () => widget.onPickVerse!(widget.verse),
+          ),
+          const Spacer(),
+          IconButton(
+            icon: const Icon(Icons.chevron_left_rounded),
+            iconSize: 20,
+            visualDensity: VisualDensity.compact,
+            tooltip: 'Previous verse',
+            onPressed: widget.onPrevVerse,
+          ),
+          IconButton(
+            icon: const Icon(Icons.chevron_right_rounded),
+            iconSize: 20,
+            visualDensity: VisualDensity.compact,
+            tooltip: 'Next verse',
+            onPressed: widget.onNextVerse,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _navChip(
+    ColorScheme scheme, {
+    required String label,
+    required String tooltip,
+    required VoidCallback? onTap,
+    IconData? icon,
+  }) {
+    final enabled = onTap != null;
+    return Tooltip(
+      message: tooltip,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(5),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: scheme.surface,
+            borderRadius: BorderRadius.circular(5),
+            border: Border.all(
+              color: scheme.outlineVariant.withValues(alpha: 0.8),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (icon != null) ...[
+                Icon(icon, size: 13, color: scheme.onSurfaceVariant),
+                const SizedBox(width: 4),
+              ],
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: enabled ? scheme.onSurface : scheme.outline,
+                ),
+              ),
+              if (enabled) ...[
+                const SizedBox(width: 2),
+                Icon(Icons.arrow_drop_down,
+                    size: 15, color: scheme.onSurfaceVariant),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// The line BibleWorks prints above the verses — reference plus the
+  /// pericope heading ("Gen 1:1 Six Days of Creation and the Sabbath").
+  /// Section titles already ship with the app, keyed per version.
+  Widget _buildContextLine(ColorScheme scheme, String locale) {
+    final heading = SectionTitleService.headingAt(
+      version: widget.versionCodes.isNotEmpty
+          ? widget.versionCodes.first
+          : 'kjv',
+      englishBook: widget.book,
+      chapter: widget.chapter,
+      verse: widget.verse,
+    );
+    final ref = '${localeAwareBookName(widget.book, locale, '')} '
+        '${widget.chapter}:${widget.verse}';
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 6, 12, 6),
+      child: Row(
+        children: [
+          Text(
+            ref,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: scheme.onSurface,
+            ),
+          ),
+          if (heading != null) ...[
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                heading.title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: scheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 

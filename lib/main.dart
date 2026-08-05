@@ -6,7 +6,9 @@ import 'package:seeksparks/utils/app_nav.dart';
 import 'package:seeksparks/utils/app_scroll_behavior.dart';
 import 'package:seeksparks/constants/build_flags.dart';
 import 'package:seeksparks/models/sermon.dart';
-import 'package:seeksparks/pages/dashboard_page.dart';
+import 'package:seeksparks/pages/home_page.dart';
+import 'package:seeksparks/pages/workbench_page.dart';
+import 'package:seeksparks/utils/responsive.dart';
 import 'package:seeksparks/pages/loading_page.dart';
 import 'package:seeksparks/pages/sermon_detail_page.dart';
 import 'package:seeksparks/models/verse.dart';
@@ -913,28 +915,31 @@ class _RootRouterState extends State<_RootRouter> {
 
   @override
   Widget build(BuildContext context) {
-    // v1.3.62 UX: boot deep link → land in the reader. Runs once,
-    // post-frame, after the gate is out of the way; the reader opens
-    // on the book/chapter the URL-sync apply already set. Same
-    // explicit routeName convention as the notification-tap path
-    // above so popUntil-based dedupe keeps working.
+    // 2026-08 (SeekSparks): the boot deep link used to push the reader
+    // on top of the dashboard root. The root IS the reader now, so that
+    // push stacked a SECOND Workbench over the first — two Search panes
+    // side by side. URL-sync has already applied the book/chapter by
+    // this point, so simply consuming the flag is enough.
     if (_showHome && _bootHashLandingPending) {
       _bootHashLandingPending = false;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        openReader(context);
-      });
     }
-    // After Round 32: Dashboard is the home / root page. The Bible
-    // reader is pushed on top via Dashboard's "Continue reading"
-    // tile — `openReader` picks the three-pane Workbench on
-    // pad-landscape/desktop widths and the classic HomePage reader
-    // below them. This gives users a personal landing page with
-    // greeting + today's reading + bookmark counts instead of
-    // dropping straight into a verse list, which felt like a
-    // sub-page rather than a home.
+    // 2026-08 (SeekSparks): the study workspace is the root, not a
+    // dashboard. SeekSparks is a Bible STUDY tool, not a devotional
+    // reader — landing on a greeting + verse-of-the-day + bookmark
+    // counts made it feel like the wrong product, and put a page
+    // between the user and the thing they opened the app for.
+    // BibleWorks opens straight into its panes; so does this.
+    //
+    // Width-aware, mirroring `openReader`: the three-pane Workbench
+    // needs desktop / iPad-landscape room, so narrower screens still
+    // land on the single-pane reader. Either way it is the Bible, not
+    // a dashboard. DashboardPage stays reachable from the reader's
+    // Home affordance for the counts / quick links it still owns.
     return _showHome
-        ? const DashboardPage()
+        ? (ResponsiveBreakpoints.isDesktopOrWider(
+                MediaQuery.sizeOf(context).width)
+            ? const WorkbenchPage()
+            : const HomePage())
         : LoadingPage(
             verses: widget.initialVerses,
             onAdvance: _advance,
