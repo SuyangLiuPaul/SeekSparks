@@ -284,8 +284,12 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         ),
       ],
       [
+        // Labelled, unlike every other toolbar button: this is the one
+        // switch a reader can get stuck on the wrong side of, and two
+        // unlabelled book glyphs gave no clue which way was back.
         WbToolButton(
           icon: Icons.view_agenda_outlined,
+          label: s('parallelBrowseShort', 'Browse'),
           tooltip: s('parallelBrowse', 'Browse (parallel versions)'),
           active: _parallelMode,
           onPressed: () {
@@ -295,6 +299,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         ),
         WbToolButton(
           icon: Icons.menu_book_outlined,
+          label: s('classicReaderShort', 'Reader'),
           tooltip: s('classicReader', 'Chapter reader'),
           active: !_parallelMode,
           onPressed: () {
@@ -625,6 +630,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
               ),
               WbToolButton(
                 icon: Icons.menu_book_outlined,
+                label: uiStrings['classicReaderShort']?[locale] ?? 'Reader',
                 tooltip: uiStrings['classicReader']?[locale] ?? 'Chapter reader',
                 onPressed: () {
                   setState(() => _parallelMode = false);

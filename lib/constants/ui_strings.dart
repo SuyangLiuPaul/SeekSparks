@@ -4273,6 +4273,16 @@ const uiStrings = {
     'en': 'Treasury of Scripture Knowledge (TSK) cross-references',
   },
   // ── Workbench: menu bar, toolbar, status bar ──
+  'parallelBrowseShort': {
+    'zh-Hans': '对照',
+    'zh-Hant': '對照',
+    'en': 'Browse',
+  },
+  'classicReaderShort': {
+    'zh-Hans': '阅读',
+    'zh-Hant': '閱讀',
+    'en': 'Reader',
+  },
   'menuFile': {
     'zh-Hans': '文件',
     'zh-Hant': '檔案',

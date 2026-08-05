@@ -166,6 +166,7 @@ class WbToolButton {
     required this.tooltip,
     this.onPressed,
     this.active = false,
+    this.label,
   });
 
   final IconData icon;
@@ -174,6 +175,12 @@ class WbToolButton {
 
   /// Drawn pressed-in, for toggles that are currently on.
   final bool active;
+
+  /// Prints the label beside the icon. Used for the Browse/Reader mode
+  /// switch: two book-ish glyphs side by side are indistinguishable, and
+  /// a reader who lands in the wrong mode has no way to guess the way
+  /// back. Everything else stays icon-only.
+  final String? label;
 }
 
 /// A strip of small square icon buttons, separated into groups.
@@ -223,13 +230,28 @@ class _ToolIcon extends StatelessWidget {
       child: _HoverBox(
         onTap: button.onPressed,
         baseColor: button.active ? wb.selectionBg : null,
-        padding: const EdgeInsets.symmetric(horizontal: 5),
-        child: Center(
-          child: Icon(
-            button.icon,
-            size: 15,
-            color: enabled ? wb.text : wb.mutedText.withValues(alpha: 0.5),
-          ),
+        padding: EdgeInsets.symmetric(horizontal: button.label == null ? 5 : 7),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              button.icon,
+              size: 15,
+              color: enabled ? wb.text : wb.mutedText.withValues(alpha: 0.5),
+            ),
+            if (button.label != null) ...[
+              const SizedBox(width: 4),
+              Text(
+                button.label!,
+                style: TextStyle(
+                  fontSize: WbMetrics.chrome,
+                  fontWeight:
+                      button.active ? FontWeight.w700 : FontWeight.w400,
+                  color: enabled ? wb.text : wb.mutedText,
+                ),
+              ),
+            ],
+          ],
         ),
       ),
     );

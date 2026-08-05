@@ -31,7 +31,10 @@ import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/original_word.dart';
 import 'package:seeksparks/models/verse.dart';
 import 'package:seeksparks/services/fetch_verses.dart';
+import 'package:seeksparks/models/strongs.dart';
 import 'package:seeksparks/services/originals_service.dart';
+import 'package:seeksparks/services/strongs_service.dart';
+import 'package:seeksparks/utils/morphology.dart' show describeMorphology;
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
 import 'package:seeksparks/widgets/workbench_chrome.dart' show WbVersionTag;
@@ -116,6 +119,12 @@ class _BrowseWindowState extends State<BrowseWindow> {
 
   late Future<List<_BrowseRow>> _future;
   final ScrollController _scroll = ScrollController();
+
+  /// Strong's number -> entry, for every original word in the chapter.
+  /// Prefetched with the rows: the hover popup has to appear the instant
+  /// the pointer lands, and an async lookup per word would make it
+  /// arrive after the pointer has already moved on.
+  final Map<String, StrongsEntry?> _glosses = {};
 
   @override
   void initState() {
@@ -207,6 +216,11 @@ class _BrowseWindowState extends State<BrowseWindow> {
       final words =
           await OriginalsService.forVerse(widget.book, widget.chapter, n);
       if (words != null && words.isNotEmpty) {
+        for (final w in words) {
+          if (w.strongs.isNotEmpty && !_glosses.containsKey(w.strongs)) {
+            _glosses[w.strongs] = await StrongsService.lookup(w.strongs);
+          }
+        }
         final isHebrew = words.first.strongs.startsWith('H');
         rows.add(_BrowseRow(
           verse: n,
@@ -262,6 +276,7 @@ class _BrowseWindowState extends State<BrowseWindow> {
               itemBuilder: (context, i) => _RowView(
                 row: rows[i],
                 focused: rows[i].verse == widget.focusedVerse,
+                glosses: _glosses,
                 onWordTap: widget.onWordTap,
                 onWordHover: widget.onWordHover,
                 onTap: widget.onVerseTap == null
@@ -282,6 +297,7 @@ class _RowView extends StatelessWidget {
   const _RowView({
     required this.row,
     required this.focused,
+    required this.glosses,
     this.onWordTap,
     this.onWordHover,
     this.onTap,
@@ -289,6 +305,7 @@ class _RowView extends StatelessWidget {
 
   final _BrowseRow row;
   final bool focused;
+  final Map<String, StrongsEntry?> glosses;
   final void Function(OriginalWord word)? onWordTap;
   final void Function(BrowseHover? hover)? onWordHover;
   final VoidCallback? onTap;
@@ -320,6 +337,7 @@ class _RowView extends StatelessWidget {
               child: row.words != null
                   ? _OriginalsLine(
                       row: row,
+                      glosses: glosses,
                       onWordTap: onWordTap,
                       onWordHover: onWordHover,
                     )
@@ -371,11 +389,13 @@ class _TranslationLine extends StatelessWidget {
 class _OriginalsLine extends StatelessWidget {
   const _OriginalsLine({
     required this.row,
+    required this.glosses,
     this.onWordTap,
     this.onWordHover,
   });
 
   final _BrowseRow row;
+  final Map<String, StrongsEntry?> glosses;
   final void Function(OriginalWord word)? onWordTap;
   final void Function(BrowseHover? hover)? onWordHover;
 
@@ -412,6 +432,7 @@ class _OriginalsLine extends StatelessWidget {
                   _HoverWord(
                     word: w,
                     reference: row.reference,
+                    entry: glosses[w.strongs],
                     onTap: onWordTap,
                     onHover: onWordHover,
                   ),
@@ -428,12 +449,18 @@ class _HoverWord extends StatefulWidget {
   const _HoverWord({
     required this.word,
     required this.reference,
+    required this.entry,
     this.onTap,
     this.onHover,
   });
 
   final OriginalWord word;
   final String reference;
+
+  /// Prefetched lexicon entry, used to build the hover popup. Null when
+  /// the number is missing from the lexicon — the popup then shows just
+  /// the word and its number rather than nothing.
+  final StrongsEntry? entry;
   final void Function(OriginalWord word)? onTap;
   final void Function(BrowseHover? hover)? onHover;
 
@@ -444,37 +471,101 @@ class _HoverWord extends StatefulWidget {
 class _HoverWordState extends State<_HoverWord> {
   bool _hovering = false;
 
+  /// The popup BibleWorks shows beside the cursor: Strong's number, the
+  /// word itself in the accent colour, its transliteration, then the
+  /// gloss — and, since we have it, the parsing. This is the whole
+  /// reason its Browse window can be *read* with the mouse: you never
+  /// leave the text to find out what a word is.
+  InlineSpan _popup(BuildContext context) {
+    final wb = WbColors.of(context);
+    final locale = context.read<AppSettings>().locale;
+    final e = widget.entry;
+    final gloss = e?.localizedGloss(locale) ?? '';
+    final parse = describeMorphology(widget.word.morph, locale);
+
+    TextStyle base(Color c, {FontWeight? w, double? size}) => TextStyle(
+          fontSize: size ?? WbMetrics.chrome,
+          height: 1.4,
+          fontWeight: w,
+          color: c,
+        );
+
+    return TextSpan(children: [
+      TextSpan(
+        text: '${widget.word.strongs}  ',
+        style: base(wb.mutedText),
+      ),
+      TextSpan(
+        text: widget.word.text,
+        // Red, as BibleWorks prints the headword.
+        style: base(const Color(0xFFB3261E),
+            w: FontWeight.w600, size: WbMetrics.original),
+      ),
+      if ((e?.translit ?? '').isNotEmpty)
+        TextSpan(
+          text: '  (${e!.translit})',
+          style: base(wb.mutedText).copyWith(fontStyle: FontStyle.italic),
+        ),
+      if (gloss.isNotEmpty)
+        TextSpan(text: '\n$gloss', style: base(wb.text, w: FontWeight.w600)),
+      if (parse != null && parse.isNotEmpty)
+        TextSpan(text: '\n$parse', style: base(wb.mutedText)),
+    ]);
+  }
+
   @override
   Widget build(BuildContext context) {
     final wb = WbColors.of(context);
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) {
-        setState(() => _hovering = true);
-        widget.onHover?.call(
-          BrowseHover(word: widget.word, reference: widget.reference),
-        );
-      },
-      onExit: (_) {
-        setState(() => _hovering = false);
-        widget.onHover?.call(null);
-      },
-      child: GestureDetector(
-        onTap: widget.onTap == null ? null : () => widget.onTap!(widget.word),
-        behavior: HitTestBehavior.opaque,
-        child: Container(
-          color: _hovering ? wb.selectionBg : null,
-          child: Text(
-            widget.word.text,
-            style: TextStyle(
-              fontSize: WbMetrics.original,
-              height: WbMetrics.lineHeight,
-              color: wb.text,
-              // Underline on hover, so touch users (who get no hover) and
-              // mouse users both see that words are live.
-              decoration:
-                  _hovering ? TextDecoration.underline : TextDecoration.none,
-              decorationColor: wb.link,
+    return Tooltip(
+      richMessage: _popup(context),
+      // A pale bordered box, not Material's dark rounded bubble.
+      decoration: BoxDecoration(
+        color: wb.paneBg,
+        border: Border.all(color: wb.border),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.18),
+            blurRadius: 4,
+            offset: const Offset(1, 2),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      margin: const EdgeInsets.only(left: 4),
+      // Fast enough to feel like a readout, slow enough not to strobe
+      // while the pointer crosses a line of text.
+      waitDuration: const Duration(milliseconds: 180),
+      preferBelow: false,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        onEnter: (_) {
+          setState(() => _hovering = true);
+          widget.onHover?.call(
+            BrowseHover(word: widget.word, reference: widget.reference),
+          );
+        },
+        onExit: (_) {
+          setState(() => _hovering = false);
+          widget.onHover?.call(null);
+        },
+        child: GestureDetector(
+          onTap:
+              widget.onTap == null ? null : () => widget.onTap!(widget.word),
+          behavior: HitTestBehavior.opaque,
+          child: Container(
+            color: _hovering ? wb.selectionBg : null,
+            child: Text(
+              widget.word.text,
+              style: TextStyle(
+                fontSize: WbMetrics.original,
+                height: WbMetrics.lineHeight,
+                color: wb.text,
+                // Underline on hover, so touch users (who get no hover)
+                // and mouse users both see that words are live.
+                decoration:
+                    _hovering ? TextDecoration.underline : TextDecoration.none,
+                decorationColor: wb.link,
+              ),
             ),
           ),
         ),
