@@ -4272,6 +4272,87 @@ const uiStrings = {
     'zh-Hant': '互參資料庫（TSK）',
     'en': 'Treasury of Scripture Knowledge (TSK) cross-references',
   },
+  // ── Workbench: menu bar, toolbar, status bar ──
+  'menuFile': {
+    'zh-Hans': '文件',
+    'zh-Hant': '檔案',
+    'en': 'File',
+  },
+  'menuView': {
+    'zh-Hans': '视图',
+    'zh-Hant': '檢視',
+    'en': 'View',
+  },
+  'menuTools': {
+    'zh-Hans': '工具',
+    'zh-Hant': '工具',
+    'en': 'Tools',
+  },
+  'menuResources': {
+    'zh-Hans': '资源',
+    'zh-Hant': '資源',
+    'en': 'Resources',
+  },
+  'menuHelp': {
+    'zh-Hans': '帮助',
+    'zh-Hant': '說明',
+    'en': 'Help',
+  },
+  'menuClassicReader': {
+    'zh-Hans': '退出到阅读器',
+    'zh-Hant': '退出到閱讀器',
+    'en': 'Exit to reader',
+  },
+  'menuSearchWindow': {
+    'zh-Hans': '搜索窗口',
+    'zh-Hant': '搜尋視窗',
+    'en': 'Search window',
+  },
+  'menuAnalysisWindow': {
+    'zh-Hans': '分析窗口',
+    'zh-Hant': '分析視窗',
+    'en': 'Analysis window',
+  },
+  'menuDarkMode': {
+    'zh-Hans': '深色模式',
+    'zh-Hant': '深色模式',
+    'en': 'Dark mode',
+  },
+  'menuFocusCommandLine': {
+    'zh-Hans': '命令行',
+    'zh-Hant': '命令列',
+    'en': 'Command line',
+  },
+  'menuClearResults': {
+    'zh-Hans': '清除结果',
+    'zh-Hant': '清除結果',
+    'en': 'Clear results',
+  },
+  'parallelPickVersions': {
+    'zh-Hans': '选择版本…',
+    'zh-Hant': '選擇版本…',
+    'en': 'Choose versions…',
+  },
+  'timeline': {
+    'zh-Hans': '时间线',
+    'zh-Hant': '時間線',
+    'en': 'Timeline',
+  },
+  'trivia': {
+    'zh-Hans': '圣经知识',
+    'zh-Hant': '聖經知識',
+    'en': 'Trivia',
+  },
+  'books': {
+    'zh-Hans': '跳转书卷…',
+    'zh-Hant': '跳轉書卷…',
+    'en': 'Go to book…',
+  },
+  'about': {
+    'zh-Hans': '关于与数据来源',
+    'zh-Hant': '關於與資料來源',
+    'en': 'About & data sources',
+  },
   // ── Workbench: Analysis window tabs ──
   'analysisTitle': {
     'zh-Hans': '分析',

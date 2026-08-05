@@ -19,6 +19,7 @@ import 'package:seeksparks/models/verse.dart';
 import 'package:seeksparks/pages/workbench_page.dart';
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/widgets/bible_reading_pane.dart';
+import 'package:seeksparks/widgets/browse_window.dart';
 import 'package:seeksparks/widgets/command_pane.dart';
 import 'package:seeksparks/widgets/originals_sheet.dart';
 
@@ -39,6 +40,7 @@ void main() {
               Verse(book: 'Genesis', chapter: 1, verse: 1, text: 'seed 1'),
               Verse(book: 'Genesis', chapter: 1, verse: 2, text: 'seed 2'),
             ]);
+            mp.setCurrentChapter(book: 'Genesis', chapter: 1);
             return mp;
           }),
           ChangeNotifierProvider(create: (_) => AppSettings()),
@@ -57,7 +59,11 @@ void main() {
     await pumpWorkbench(tester, const Size(1194, 820));
     expect(tester.takeException(), isNull);
     expect(find.byType(CommandPane), findsOneWidget);
-    expect(find.byType(BibleReadingPane), findsOneWidget);
+    // 2026-08-06: the centre pane now defaults to the Browse window
+    // (whole chapter × every version), matching BibleWorks. The chapter
+    // reader is the alternate mode, reachable from View / the toolbar.
+    expect(find.byType(BrowseWindow), findsOneWidget);
+    expect(find.byType(BibleReadingPane), findsNothing);
     // No selection yet → analysis empty-state hint, no embedded sheet.
     expect(find.byType(OriginalsSheet), findsNothing);
     expect(find.byKey(const ValueKey('workbench-divider-left')), findsOneWidget);
@@ -71,6 +77,8 @@ void main() {
     await pumpWorkbench(tester, const Size(768, 1024));
     expect(tester.takeException(), isNull);
     expect(find.byType(CommandPane), findsOneWidget);
+    // 768 is below the three-pane breakpoint, so Browse is suppressed
+    // and the chapter reader holds the centre.
     expect(find.byType(BibleReadingPane), findsOneWidget);
     expect(find.byKey(const ValueKey('workbench-divider-right')), findsNothing);
     expect(find.byType(OriginalsSheet), findsNothing);
@@ -105,9 +113,10 @@ void main() {
     addTearDown(tester.view.reset);
     await pumpWorkbench(tester, const Size(1366, 900));
 
-    // The command pane's header carries the only left-pointing
-    // collapse chevron (the analysis header's points right).
-    await tester.tap(find.byIcon(Icons.chevron_left_rounded));
+    // The Search window's title strip carries the only left-pointing
+    // collapse chevron (the Analysis strip's points right). Plain
+    // `chevron_left` since the dense chrome dropped the rounded icons.
+    await tester.tap(find.byIcon(Icons.chevron_left));
     await tester.pump(const Duration(milliseconds: 100));
     await tester.pump(const Duration(milliseconds: 300));
 

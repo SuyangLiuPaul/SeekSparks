@@ -3,11 +3,13 @@ import 'package:provider/provider.dart';
 
 import 'package:seeksparks/constants/text_patterns.dart';
 import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/verse.dart';
 import 'package:seeksparks/providers/workbench_provider.dart';
 import 'package:seeksparks/services/concordance_service.dart';
 import 'package:seeksparks/utils/clipboard_helper.dart';
+import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 import 'package:seeksparks/utils/jump_to_reference.dart' as jumper;
 import 'package:seeksparks/utils/reference_parser.dart' show parseReference;
 import 'package:seeksparks/providers/main_provider.dart';
@@ -27,7 +29,12 @@ final RegExp _kMultiSpaceRe = RegExp(r' {2,}');
 /// navigation, the reader is right beside us) and focuses it in the
 /// analysis pane.
 class CommandPane extends StatefulWidget {
-  const CommandPane({super.key});
+  const CommandPane({super.key, this.focusNode});
+
+  /// Supplied by the Workbench so View ▸ Command line and the toolbar's
+  /// search button can put the caret here — a desktop tool's command
+  /// line is always one keystroke away.
+  final FocusNode? focusNode;
 
   @override
   State<CommandPane> createState() => _CommandPaneState();
@@ -176,71 +183,63 @@ class _CommandPaneState extends State<CommandPane> {
     final locale = settings.locale;
     final scheme = Theme.of(context).colorScheme;
 
+    final wbc = WbColors.of(context);
     return Column(
       children: [
         // ── Command line ──────────────────────────────────────────
+        // BibleWorks puts this at the very top of the Search window as
+        // a single hairline box, not a padded pill.
         Padding(
-          padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
+          padding: const EdgeInsets.fromLTRB(4, 4, 4, 3),
           child: TextField(
             controller: _controller,
+            focusNode: widget.focusNode,
             textInputAction: TextInputAction.search,
             onSubmitted: (_) => _submit(),
             onChanged: (_) => setState(() {}), // toggle clear button
-            style: TextStyle(fontSize: settings.fontSize),
+            style: TextStyle(
+                fontSize: WbMetrics.text, height: WbMetrics.lineHeight),
             decoration: InputDecoration(
-              isDense: true,
-              border: const OutlineInputBorder(),
               hintText: uiStrings['commandSearchHint']?[locale] ??
                   "Search text, or Strong's: G25 AND G26",
-              hintStyle: TextStyle(fontSize: settings.fontSize - 2),
+              suffixIconConstraints:
+                  const BoxConstraints(minWidth: 20, minHeight: 20),
               suffixIcon: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (_controller.text.isNotEmpty)
-                    IconButton(
-                      icon: const Icon(Icons.clear_rounded, size: 18),
+                    _MiniIcon(
+                      icon: Icons.close,
                       tooltip: uiStrings['clear']?[locale] ?? 'Clear',
-                      onPressed: _clear,
+                      onTap: _clear,
                     ),
-                  IconButton(
-                    icon: Icon(Icons.search_rounded,
-                        size: 20, color: scheme.primary),
+                  _MiniIcon(
+                    icon: Icons.search,
                     tooltip: uiStrings['search']?[locale] ?? 'Search',
-                    onPressed: _submit,
+                    onTap: _submit,
+                    color: wbc.link,
                   ),
+                  const SizedBox(width: 3),
                 ],
               ),
             ),
           ),
         ),
-        // ── Operator chips (BibleWorks-style structured search) ────
+        // ── Operator buttons (structured Strong's search) ──────────
+        // Wrap, not Row: the Search window can be dragged down to 240px
+        // and a fixed row of five buttons overflowed it.
         Padding(
-          padding: const EdgeInsets.fromLTRB(12, 0, 12, 4),
-          child: SizedBox(
-            height: 34,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              children: [
-                for (final token in const ['AND', 'OR', 'NOT', 'NEAR5'])
-                  Padding(
-                    padding: const EdgeInsets.only(right: 6),
-                    child: ActionChip(
-                      label: Text(token),
-                      visualDensity: VisualDensity.compact,
-                      onPressed: () => _insertToken(token),
-                    ),
-                  ),
-                Padding(
-                  padding: const EdgeInsets.only(right: 6),
-                  child: ActionChip(
-                    label: const Text('✶'),
-                    tooltip: 'G25*',
-                    visualDensity: VisualDensity.compact,
-                    onPressed: () => _insertToken('*'),
-                  ),
+          padding: const EdgeInsets.fromLTRB(4, 0, 4, 4),
+          child: Wrap(
+            spacing: 3,
+            runSpacing: 3,
+            children: [
+              for (final token in const ['AND', 'OR', 'NOT', 'NEAR5', '*'])
+                _OperatorButton(
+                  label: token,
+                  onTap: () => _insertToken(token),
                 ),
-              ],
-            ),
+            ],
           ),
         ),
         const Divider(height: 1),
@@ -305,33 +304,15 @@ class _CommandPaneState extends State<CommandPane> {
                   wb.verseByRef['${ref.englishBook}-${ref.chapter}-${ref.verse}']
                           ?.text ??
                       '');
-              return DecoratedBox(
-                decoration: BoxDecoration(
-                  border: Border(
-                    bottom: BorderSide(color: Theme.of(context).hoverColor),
-                  ),
-                ),
-                child: ListTile(
-                  dense: true,
-                  onTap: () {
-                    final verse = wb.verseForRef(ref);
-                    if (verse != null) _openVerse(verse);
-                  },
-                  onLongPress: () => ClipboardHelper.copyWithFeedback(
-                      context, '$displayBook ${ref.chapter}:${ref.verse}  $preview'),
-                  title: Text(
-                    '$displayBook ${ref.chapter}:${ref.verse}',
-                    style: TextStyle(fontSize: settings.fontSize),
-                  ),
-                  subtitle: preview.isNotEmpty
-                      ? Text(
-                          preview,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(fontSize: settings.fontSize - 2),
-                        )
-                      : null,
-                ),
+              return _ResultRow(
+                reference: '$displayBook ${ref.chapter}:${ref.verse}',
+                text: preview,
+                onTap: () {
+                  final verse = wb.verseForRef(ref);
+                  if (verse != null) _openVerse(verse);
+                },
+                onLongPress: () => ClipboardHelper.copyWithFeedback(context,
+                    '$displayBook ${ref.chapter}:${ref.verse}  $preview'),
               );
             },
           ),
@@ -361,28 +342,13 @@ class _CommandPaneState extends State<CommandPane> {
               final v = results[index];
               final displayBook = localeAwareBookName(
                   v.book, locale, wb.mainProvider.currentVersion);
-              return DecoratedBox(
-                decoration: BoxDecoration(
-                  border: Border(
-                    bottom: BorderSide(color: Theme.of(context).hoverColor),
-                  ),
-                ),
-                child: ListTile(
-                  dense: true,
-                  onTap: () => _openVerse(v),
-                  onLongPress: () => ClipboardHelper.copyWithFeedback(context,
-                      '$displayBook ${v.chapter}:${v.verseLabel}  ${sanitizeForSearch(v.text)}'),
-                  title: Text(
-                    '$displayBook ${v.chapter}:${v.verseLabel}',
-                    style: TextStyle(fontSize: settings.fontSize),
-                  ),
-                  subtitle: Text(
-                    sanitizeForSearch(v.text),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: settings.fontSize - 2),
-                  ),
-                ),
+              final clean = sanitizeForSearch(v.text);
+              return _ResultRow(
+                reference: '$displayBook ${v.chapter}:${v.verseLabel}',
+                text: clean,
+                onTap: () => _openVerse(v),
+                onLongPress: () => ClipboardHelper.copyWithFeedback(context,
+                    '$displayBook ${v.chapter}:${v.verseLabel}  $clean'),
               );
             },
           ),
@@ -391,42 +357,184 @@ class _CommandPaneState extends State<CommandPane> {
     );
   }
 
+  /// The hit-count strip above the list, e.g. "G25 AND G26 — 14 verses".
   Widget _resultHeader(
       String summary, VoidCallback onCopy, AppSettings settings, String locale) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 6, 4, 4),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              summary,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: settings.fontSize - 1,
+    return Builder(builder: (context) {
+      final wbc = WbColors.of(context);
+      return Container(
+        height: WbMetrics.paneTitleHeight,
+        decoration: BoxDecoration(
+          color: wbc.chromeBg,
+          border: Border(
+            top: BorderSide(color: wbc.border),
+            bottom: BorderSide(color: wbc.border),
+          ),
+        ),
+        padding: const EdgeInsets.only(left: 6),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                summary,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: WbMetrics.chrome,
+                  color: wbc.text,
+                ),
               ),
             ),
-          ),
-          IconButton(
-            tooltip: uiStrings['copyAllResults']?[locale] ?? 'Copy all results',
-            icon: const Icon(Icons.content_copy_rounded, size: 18),
-            onPressed: onCopy,
-          ),
-        ],
-      ),
-    );
+            _MiniIcon(
+              icon: Icons.content_copy_outlined,
+              tooltip:
+                  uiStrings['copyAllResults']?[locale] ?? 'Copy all results',
+              onTap: onCopy,
+            ),
+            const SizedBox(width: 4),
+          ],
+        ),
+      );
+    });
   }
 
   Widget _noResults(AppSettings settings, ColorScheme scheme, String locale) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
+    return Builder(builder: (context) {
+      final wbc = WbColors.of(context);
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Text(
+            uiStrings['noResults']?[locale] ?? 'No results found',
+            style:
+                TextStyle(fontSize: WbMetrics.text, color: wbc.mutedText),
+          ),
+        ),
+      );
+    });
+  }
+}
+
+/// One search hit, printed the way BibleWorks prints it: a single tight
+/// line, coloured reference first, verse text after. The card list this
+/// replaces cost about four times the vertical space per hit, which
+/// meant a 40-hit search showed six results instead of the whole screen
+/// full that makes a result list useful.
+class _ResultRow extends StatefulWidget {
+  const _ResultRow({
+    required this.reference,
+    required this.text,
+    required this.onTap,
+    required this.onLongPress,
+  });
+
+  final String reference;
+  final String text;
+  final VoidCallback onTap;
+  final VoidCallback onLongPress;
+
+  @override
+  State<_ResultRow> createState() => _ResultRowState();
+}
+
+class _ResultRowState extends State<_ResultRow> {
+  bool _hovering = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final wbc = WbColors.of(context);
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hovering = true),
+      onExit: (_) => setState(() => _hovering = false),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        onLongPress: widget.onLongPress,
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          color: _hovering ? wbc.hoverBg : null,
+          padding: const EdgeInsets.symmetric(
+              horizontal: WbMetrics.rowPadH, vertical: 2),
+          child: Text.rich(
+            TextSpan(children: [
+              TextSpan(
+                text: '${widget.reference}  ',
+                style: TextStyle(
+                    color: wbc.link, fontWeight: FontWeight.w600),
+              ),
+              TextSpan(
+                  text: widget.text, style: TextStyle(color: wbc.text)),
+            ]),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: WbMetrics.text,
+              height: WbMetrics.lineHeight,
+              fontFamilyFallback: kCjkFontFallback,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A 20px square icon button — the only size that fits the chrome.
+class _MiniIcon extends StatelessWidget {
+  const _MiniIcon({
+    required this.icon,
+    required this.tooltip,
+    required this.onTap,
+    this.color,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback onTap;
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) {
+    final wbc = WbColors.of(context);
+    return Tooltip(
+      message: tooltip,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(3),
+          child: Icon(icon, size: 14, color: color ?? wbc.mutedText),
+        ),
+      ),
+    );
+  }
+}
+
+/// AND / OR / NOT / NEAR5 / * — small square buttons, not Material
+/// chips, so the operator strip costs one line instead of three.
+class _OperatorButton extends StatelessWidget {
+  const _OperatorButton({required this.label, required this.onTap});
+
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final wbc = WbColors.of(context);
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        decoration: BoxDecoration(
+          color: wbc.chromeBg,
+          border: Border.all(color: wbc.border),
+        ),
         child: Text(
-          uiStrings['noResults']?[locale] ?? 'No results found',
+          label,
           style: TextStyle(
-            fontSize: settings.fontSize,
-            color: scheme.outline,
-            fontWeight: FontWeight.w500,
+            fontSize: WbMetrics.chrome,
+            fontWeight: FontWeight.w600,
+            color: wbc.text,
           ),
         ),
       ),

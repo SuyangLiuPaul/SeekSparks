@@ -3,13 +3,24 @@ import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:seeksparks/constants/bible_versions.dart' show bibleVersions;
+import 'package:seeksparks/constants/bible_versions.dart'
+    show bibleVersions, shortBibleVersionLabel;
 import 'package:seeksparks/constants/book_names.dart' show bookNameToEnglish;
+import 'package:seeksparks/constants/app_version.dart' show kAppVersion;
 import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/original_word.dart';
 import 'package:seeksparks/models/verse.dart';
+import 'package:seeksparks/pages/about_page.dart';
+import 'package:seeksparks/pages/bible_timeline_page.dart';
+import 'package:seeksparks/pages/bible_trivia_page.dart';
+import 'package:seeksparks/pages/books_page.dart';
+import 'package:seeksparks/pages/evidence_page.dart';
 import 'package:seeksparks/pages/home_page.dart';
+import 'package:seeksparks/pages/library_page.dart';
+import 'package:seeksparks/pages/sermons_page.dart';
+import 'package:seeksparks/pages/settings_page.dart';
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/providers/workbench_provider.dart';
 import 'package:seeksparks/services/concordance_service.dart';
@@ -18,14 +29,17 @@ import 'package:seeksparks/utils/jump_to_reference.dart' as jumper;
 import 'package:seeksparks/utils/reference_parser.dart' show BibleReference;
 import 'package:seeksparks/utils/navigate_to_reader.dart'
     show kHomePageRouteName;
+import 'package:seeksparks/utils/morphology.dart' show describeMorphology;
 import 'package:seeksparks/utils/responsive.dart';
+import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
 import 'package:seeksparks/widgets/bible_reading_pane.dart';
 import 'package:seeksparks/widgets/command_pane.dart';
 import 'package:seeksparks/pages/strongs_entry_page.dart';
 import 'package:seeksparks/utils/app_nav.dart';
 import 'package:seeksparks/widgets/analysis_tabs.dart';
+import 'package:seeksparks/widgets/browse_window.dart';
+import 'package:seeksparks/widgets/workbench_chrome.dart';
 import 'package:seeksparks/widgets/originals_sheet.dart';
-import 'package:seeksparks/widgets/parallel_verse_view.dart';
 
 /// SeekSparks' BibleWorks-style pad workspace — three panes on one
 /// screen:
@@ -88,7 +102,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
   /// 2026-08 (SeekSparks): BibleWorks-style parallel Browse mode. When
   /// on, the centre pane stacks the same verse in every selected version
   /// plus the original-language line, instead of the chapter reader.
-  bool _parallelMode = false;
+  bool _parallelMode = true;
   static const _kParallelKey = 'workbench.parallelMode';
   static const _kParallelVersionsKey = 'workbench.parallelVersions';
   List<String> _parallelVersions = const ['kjv', 'nasb', 'leb'];
@@ -99,12 +113,13 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
   AnalysisTab _analysisTab = AnalysisTab.wordStudy;
   static const _kAnalysisTabKey = 'workbench.analysisTab';
 
-  /// Memo for "last verse number in the currently-browsed chapter",
-  /// used only to disable the Browse pane's Next button at the end of a
-  /// chapter. `mp.verses` is the whole Bible (~31k rows), so without
-  /// this the scan would rerun on every MainProvider notification.
-  String? _chapterExtentKey;
-  int _chapterExtent = 0;
+  /// What the mouse is over in the Browse window. Drives the status
+  /// bar, so it updates with no click — BibleWorks' whole reading model.
+  BrowseHover? _hover;
+
+  /// Focus for the command line, so View ▸ menu and Ctrl+L can jump to
+  /// it the way a desktop tool's command line always can.
+  final FocusNode _commandFocus = FocusNode();
 
   @override
   void initState() {
@@ -115,8 +130,204 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
 
   @override
   void dispose() {
+    _commandFocus.dispose();
     _wb.dispose();
     super.dispose();
+  }
+
+  // ── Menu bar / toolbar / status bar ───────────────────────────────
+
+  /// The menu bar. Every entry is wired to something real; a capability
+  /// we don't have is left out rather than stubbed, and one we have but
+  /// can't use right now is present-and-greyed (a null callback), which
+  /// is how a desktop menu communicates state.
+  List<WbMenu> _buildMenus(BuildContext context, String locale) {
+    final mp = context.read<MainProvider>();
+    final settings = context.read<AppSettings>();
+    String s(String key, String fallback) =>
+        uiStrings[key]?[locale] ?? fallback;
+
+    return [
+      WbMenu(s('menuFile', 'File'), [
+        WbMenuItem(s('settings', 'Settings…'),
+            () => pushPage(const SettingsPage())),
+        const WbMenuItem.separator(),
+        WbMenuItem(s('menuClassicReader', 'Exit to reader'), () => Get.off(
+              () => const HomePage(),
+              routeName: kHomePageRouteName,
+              transition: Transition.leftToRight,
+            )),
+      ]),
+      WbMenu(s('menuView', 'View'), [
+        WbMenuItem(
+          s('menuSearchWindow', 'Search window'),
+          () => _setLeftOpen(!_leftOpen),
+          checked: _leftOpen,
+        ),
+        WbMenuItem(
+          s('menuAnalysisWindow', 'Analysis window'),
+          () => _setRightOpen(!_rightOpen),
+          checked: _rightOpen,
+        ),
+        const WbMenuItem.separator(),
+        WbMenuItem(
+          s('parallelBrowse', 'Browse (parallel versions)'),
+          () {
+            setState(() => _parallelMode = true);
+            _persistPrefs();
+          },
+          checked: _parallelMode,
+        ),
+        WbMenuItem(
+          s('classicReader', 'Chapter reader'),
+          () {
+            setState(() => _parallelMode = false);
+            _persistPrefs();
+          },
+          checked: !_parallelMode,
+        ),
+        const WbMenuItem.separator(),
+        WbMenuItem(s('parallelPickVersions', 'Choose versions…'),
+            () => _pickParallelVersions(context)),
+        const WbMenuItem.separator(),
+        WbMenuItem(
+          s('menuDarkMode', 'Dark mode'),
+          () => settings.setThemeMode(
+              settings.themeMode == ThemeMode.dark
+                  ? ThemeMode.light
+                  : ThemeMode.dark),
+          checked: Theme.of(context).brightness == Brightness.dark,
+        ),
+      ]),
+      WbMenu(s('search', 'Search'), [
+        WbMenuItem(s('menuFocusCommandLine', 'Command line'),
+            () => _commandFocus.requestFocus(),
+            shortcut: 'Ctrl+L'),
+        const WbMenuItem.separator(),
+        // Greyed until there is something to clear — the menu reports
+        // state rather than silently doing nothing.
+        WbMenuItem(
+          s('menuClearResults', 'Clear results'),
+          _wb.textResults.isEmpty && _wb.strongsRefs == null
+              ? null
+              : _wb.clearResults,
+        ),
+      ]),
+      WbMenu(s('menuTools', 'Tools'), [
+        WbMenuItem(s('bibleEvidence', 'Bible Evidence'),
+            () => pushPage(const EvidencePage())),
+        WbMenuItem(s('timeline', 'Timeline'),
+            () => pushPage(const BibleTimelinePage())),
+        WbMenuItem(s('trivia', 'Trivia'),
+            () => pushPage(const BibleTriviaPage())),
+      ]),
+      WbMenu(s('menuResources', 'Resources'), [
+        WbMenuItem(s('sermons', 'Sermons'),
+            () => pushPage(const SermonsPage())),
+        WbMenuItem(s('library', 'Notes & highlights'),
+            () => pushPage(const LibraryPage())),
+        WbMenuItem(
+          s('books', 'Go to book…'),
+          () => pushPage(BooksPage(
+            bookIdx: mp.currentBook ?? '',
+            chapterIdx: mp.currentChapter ?? 1,
+          )),
+        ),
+      ]),
+      WbMenu(s('menuHelp', 'Help'), [
+        WbMenuItem(s('about', 'About & data sources'),
+            () => pushPage(const AboutPage())),
+        const WbMenuItem.separator(),
+        WbMenuItem('${mp.currentVersion.toUpperCase()} · v$kAppVersion', null),
+      ]),
+    ];
+  }
+
+  List<List<WbToolButton>> _buildToolbar(BuildContext context) {
+    final locale = context.read<AppSettings>().locale;
+    String s(String key, String fallback) =>
+        uiStrings[key]?[locale] ?? fallback;
+    return [
+      [
+        WbToolButton(
+          icon: Icons.vertical_split_outlined,
+          tooltip: s('menuSearchWindow', 'Search window'),
+          active: _leftOpen,
+          onPressed: () => _setLeftOpen(!_leftOpen),
+        ),
+        WbToolButton(
+          icon: Icons.analytics_outlined,
+          tooltip: s('menuAnalysisWindow', 'Analysis window'),
+          active: _rightOpen,
+          onPressed: () => _setRightOpen(!_rightOpen),
+        ),
+      ],
+      [
+        WbToolButton(
+          icon: Icons.view_agenda_outlined,
+          tooltip: s('parallelBrowse', 'Browse (parallel versions)'),
+          active: _parallelMode,
+          onPressed: () {
+            setState(() => _parallelMode = true);
+            _persistPrefs();
+          },
+        ),
+        WbToolButton(
+          icon: Icons.menu_book_outlined,
+          tooltip: s('classicReader', 'Chapter reader'),
+          active: !_parallelMode,
+          onPressed: () {
+            setState(() => _parallelMode = false);
+            _persistPrefs();
+          },
+        ),
+        WbToolButton(
+          icon: Icons.view_column_outlined,
+          tooltip: s('parallelPickVersions', 'Choose versions'),
+          onPressed: () => _pickParallelVersions(context),
+        ),
+      ],
+      [
+        WbToolButton(
+          icon: Icons.search,
+          tooltip: s('menuFocusCommandLine', 'Command line'),
+          onPressed: () {
+            if (!_leftOpen) _setLeftOpen(true);
+            _commandFocus.requestFocus();
+          },
+        ),
+        WbToolButton(
+          icon: Icons.settings_outlined,
+          tooltip: s('settings', 'Settings'),
+          onPressed: () => pushPage(const SettingsPage()),
+        ),
+      ],
+    ];
+  }
+
+  /// The status bar's left-hand readout: whatever the mouse is over.
+  /// This is why BibleWorks can be read with the mouse — you never open
+  /// a dialog to find out what a word is.
+  String _statusMessage(String locale) {
+    final h = _hover;
+    if (h == null) return '';
+    final parse = describeMorphology(h.word.morph, locale);
+    return [
+      h.reference,
+      h.word.text,
+      h.word.strongs,
+      if (parse != null && parse.isNotEmpty) parse,
+    ].join('   ');
+  }
+
+  List<String> _statusFields(MainProvider mp, String locale) {
+    final book = mp.currentBook;
+    final chapter = mp.currentChapter;
+    return [
+      if (book != null && chapter != null)
+        '${localeAwareBookName(bookNameToEnglish[book] ?? book, locale, mp.currentVersion)} $chapter',
+      mp.currentVersion.toUpperCase(),
+    ];
   }
 
   Future<void> _restorePrefs() async {
@@ -131,7 +342,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
           .toDouble();
       _leftOpen = prefs.getBool(_kLeftOpenKey) ?? true;
       _rightOpen = prefs.getBool(_kRightOpenKey) ?? true;
-      _parallelMode = prefs.getBool(_kParallelKey) ?? false;
+      _parallelMode = prefs.getBool(_kParallelKey) ?? true;
       final saved = prefs.getStringList(_kParallelVersionsKey);
       if (saved != null && saved.isNotEmpty) _parallelVersions = saved;
       final tab = prefs.getInt(_kAnalysisTabKey);
@@ -190,10 +401,70 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider<WorkbenchProvider>.value(
-      value: _wb,
-      child: Builder(
-        builder: (context) {
+    // The Workbench runs on its own dense, neutral theme. The rest of
+    // SeekSparks stays a touch-first reading app; putting BibleWorks'
+    // three windows inside Material 3 chrome is what made this read as
+    // "a phone app in three columns".
+    return Theme(
+      data: workbenchTheme(Theme.of(context)),
+      child: ChangeNotifierProvider<WorkbenchProvider>.value(
+        value: _wb,
+        child: Builder(
+          builder: (context) => _buildShell(context),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildShell(BuildContext context) {
+    final wb = WbColors.of(context);
+    final mp = context.watch<MainProvider>();
+    final settings = context.watch<AppSettings>();
+    final locale = settings.locale;
+
+    // The menu bar and toolbar are desktop affordances: six menu titles
+    // plus a version label do not fit a phone, and trying overflowed the
+    // Row (the responsive smoke tests caught it at 390 and 768). Below
+    // the three-pane breakpoint the workspace keeps only the status bar,
+    // and every menu action stays reachable from the reader's own
+    // controls.
+    final width = MediaQuery.sizeOf(context).width;
+    final showChrome = ResponsiveBreakpoints.isDesktopOrWider(width);
+
+    return Scaffold(
+      backgroundColor: wb.chromeBg,
+      body: SafeArea(
+        child: Column(
+          children: [
+            if (showChrome) ...[
+              WorkbenchMenuBar(
+                menus: _buildMenus(context, locale),
+                // The version label is the first thing to go when the
+                // menu titles need the room.
+                trailing: width >= 1200
+                    ? Text(
+                        'SeekSparks $kAppVersion',
+                        style: TextStyle(
+                            fontSize: WbMetrics.chrome, color: wb.mutedText),
+                      )
+                    : null,
+              ),
+              WorkbenchToolbar(groups: _buildToolbar(context)),
+            ],
+            Expanded(child: _buildPanes(context)),
+            WorkbenchStatusBar(
+              message: _statusMessage(locale),
+              fields: showChrome ? _statusFields(mp, locale) : const [],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPanes(BuildContext context) {
+    return Builder(
+      builder: (context) {
           final width = MediaQuery.sizeOf(context).width;
           final threePane = ResponsiveBreakpoints.isDesktopOrWider(width);
           final showLeft = _leftOpen && width >= 600;
@@ -209,9 +480,9 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
               ? (_rightWidth > maxSide ? maxSide : _rightWidth)
               : 0.0;
 
-          return Scaffold(
-            body: SafeArea(
-              child: Row(
+          return ColoredBox(
+            color: WbColors.of(context).chromeBg,
+            child: Row(
                 children: [
                   if (showLeft) ...[
                     SizedBox(
@@ -226,7 +497,12 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
                         isLeft: true),
                   ],
                   Expanded(
-                    child: _parallelMode
+                    // Browse only makes sense with room for it: three
+                    // translations plus an originals line on a phone is
+                    // unreadable, so below the three-pane breakpoint the
+                    // centre is always the chapter reader regardless of
+                    // the persisted preference.
+                    child: (_parallelMode && threePane)
                         ? _buildParallelFrame(context)
                         : BibleReadingPane(
                       key: const ValueKey('workbench-reader'),
@@ -268,66 +544,69 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
                         isLeft: false),
                   ],
                 ],
-              ),
             ),
           );
         },
-      ),
-    );
+      );
   }
 
   // ── Centre: BibleWorks-style parallel Browse ──────────────────────
 
-  /// Stacks the current verse across every selected version plus the
-  /// original-language line — the BibleWorks Browse-window idiom. Falls
-  /// back to verse 1 of the current chapter when nothing is selected.
+  /// The Browse window: the WHOLE chapter, every selected version
+  /// printed one after another for each verse, continuously scrolling —
+  /// which is what BibleWorks actually does. The first cut here showed
+  /// one verse at a time with a stepper, and that made the pane read as
+  /// a flash card rather than as a text you work in.
   Widget _buildParallelFrame(BuildContext context) {
     final mp = context.watch<MainProvider>();
-    final wb = context.watch<WorkbenchProvider>();
+    final wbp = context.watch<WorkbenchProvider>();
     final settings = context.watch<AppSettings>();
-    final scheme = Theme.of(context).colorScheme;
+    final wb = WbColors.of(context);
     final locale = settings.locale;
 
-    final sel = wb.analysisVerses.isNotEmpty ? wb.analysisVerses.first : null;
-    // BibleWorks' Browse and Analysis windows share ONE cursor, so this
-    // pane has no private pin: it shows whatever verse the app is
-    // focused on. Selection wins (the user just tapped it), otherwise
-    // `currentVerse` — which is what the command line's reference jump
-    // and every other navigation path set.
+    final sel = wbp.analysisVerses.isNotEmpty ? wbp.analysisVerses.first : null;
+    // Browse and Analysis share ONE cursor, so this pane has no private
+    // pin: it shows whatever verse the workspace is focused on.
     final localBook = sel?.book ?? mp.currentBook;
     final book = localBook == null
         ? null
         : (bookNameToEnglish[localBook] ?? localBook);
     final chapter = sel?.chapter ?? mp.currentChapter;
     final verse = sel?.verse ?? mp.currentVerse?.verse ?? 1;
-    final lastVerse = (localBook != null && chapter != null)
-        ? _chapterLastVerse(mp, localBook, chapter)
-        : 0;
 
-    // Always include the reader's own version first, then the configured
+    // Always the reader's own version first, then the configured
     // comparison stack (deduplicated, order preserved).
     final codes = <String>[
       mp.currentVersion,
-      ...
-          _parallelVersions.where((c) => c != mp.currentVersion),
+      ..._parallelVersions.where((c) => c != mp.currentVersion),
     ];
 
     return ColoredBox(
-      color: scheme.surface,
+      color: wb.paneBg,
       child: Column(
         children: [
-          _paneHeader(
-            context,
-            icon: Icons.view_agenda_rounded,
-            title: uiStrings['parallelBrowse']?[locale] ?? 'Parallel',
-            collapseIcon: Icons.menu_book_rounded,
-            onCollapse: () {
-              setState(() => _parallelMode = false);
-              _persistPrefs();
-            },
-            settings: settings,
+          WbPaneTitle(
+            title: book == null || chapter == null
+                ? (uiStrings['parallelBrowse']?[locale] ?? 'Browse')
+                : '${localeAwareBookName(book, locale, mp.currentVersion)} '
+                    '$chapter  —  ${codes.map(shortBibleVersionLabel).join(" · ")}',
+            trailing: [
+              WbToolButton(
+                icon: Icons.view_column_outlined,
+                tooltip: uiStrings['parallelPickVersions']?[locale] ??
+                    'Choose versions',
+                onPressed: () => _pickParallelVersions(context),
+              ),
+              WbToolButton(
+                icon: Icons.menu_book_outlined,
+                tooltip: uiStrings['classicReader']?[locale] ?? 'Chapter reader',
+                onPressed: () {
+                  setState(() => _parallelMode = false);
+                  _persistPrefs();
+                },
+              ),
+            ],
           ),
-          const Divider(height: 1),
           Expanded(
             child: (book == null || chapter == null)
                 ? Center(
@@ -337,50 +616,35 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
                         uiStrings['parallelEmptyHint']?[locale] ??
                             'Open a chapter to compare versions side by side.',
                         textAlign: TextAlign.center,
-                        style: TextStyle(color: scheme.outline, height: 1.6),
+                        style: TextStyle(
+                            fontSize: WbMetrics.text, color: wb.mutedText),
                       ),
                     ),
                   )
-                : ParallelVerseView(
-                    key: ValueKey('parallel-$book-$chapter-$verse-'
-                        '${codes.join(",")}'),
+                : BrowseWindow(
+                    key: ValueKey('browse-$book-$chapter-${codes.join(",")}'),
                     book: book,
                     chapter: chapter,
-                    verse: verse,
                     versionCodes: codes,
-                    onWordTap: (w) => pushPage(StrongsEntryPage(number: w.strongs)),
-                    onEditVersions: () => _pickParallelVersions(context),
-                    // Verse stepping keeps the pane navigable on its own,
-                    // the way BibleWorks' Browse window is. Moving the
-                    // cursor re-focuses the verse, so the Word Study pane
-                    // follows along instead of going stale.
-                    onPrevVerse: verse > 1
-                        ? () => _moveBrowseCursor(localBook!, chapter, verse - 1)
-                        : null,
-                    onNextVerse: verse < lastVerse
-                        ? () => _moveBrowseCursor(localBook!, chapter, verse + 1)
-                        : null,
+                    focusedVerse: verse,
+                    onWordTap: (w) =>
+                        pushPage(StrongsEntryPage(number: w.strongs)),
+                    onWordHover: (h) {
+                      // Rebuilds only the status bar's text — cheap, and
+                      // it fires on every pointer move between words.
+                      if (_hover?.word.strongs == h?.word.strongs &&
+                          _hover?.reference == h?.reference) {
+                        return;
+                      }
+                      setState(() => _hover = h);
+                    },
+                    onVerseTap: (n) =>
+                        _moveBrowseCursor(localBook!, chapter, n),
                   ),
           ),
         ],
       ),
     );
-  }
-
-  /// Highest verse number present in [localBook] [chapter] for the
-  /// loaded version. Memoised — see [_chapterExtentKey].
-  int _chapterLastVerse(MainProvider mp, String localBook, int chapter) {
-    final key = '$localBook|$chapter|${mp.currentVersion}|${mp.verses.length}';
-    if (_chapterExtentKey == key) return _chapterExtent;
-    var last = 0;
-    for (final v in mp.verses) {
-      if (v.book == localBook && v.chapter == chapter && v.verse > last) {
-        last = v.verse;
-      }
-    }
-    _chapterExtentKey = key;
-    _chapterExtent = last;
-    return last;
   }
 
   /// Step the Browse cursor to verse [target] of the current chapter.
@@ -451,21 +715,22 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
   Widget _buildCommandFrame(BuildContext context) {
     final settings = context.watch<AppSettings>();
     final locale = settings.locale;
-    final scheme = Theme.of(context).colorScheme;
+    final wb = WbColors.of(context);
     return ColoredBox(
-      color: scheme.surface,
+      color: wb.paneBg,
       child: Column(
         children: [
-          _paneHeader(
-            context,
-            icon: Icons.manage_search_rounded,
+          WbPaneTitle(
             title: uiStrings['search']?[locale] ?? 'Search',
-            collapseIcon: Icons.chevron_left_rounded,
-            onCollapse: () => _setLeftOpen(false),
-            settings: settings,
+            trailing: [
+              WbToolButton(
+                icon: Icons.chevron_left,
+                tooltip: uiStrings['collapse']?[locale] ?? 'Collapse',
+                onPressed: () => _setLeftOpen(false),
+              ),
+            ],
           ),
-          const Divider(height: 1),
-          const Expanded(child: CommandPane()),
+          Expanded(child: CommandPane(focusNode: _commandFocus)),
         ],
       ),
     );
@@ -490,17 +755,17 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
       color: scheme.surface,
       child: Column(
         children: [
-          if (needsHeader) ...[
-            _paneHeader(
-              context,
-              icon: Icons.analytics_outlined,
+          if (needsHeader)
+            WbPaneTitle(
               title: uiStrings['analysisTitle']?[locale] ?? 'Analysis',
-              collapseIcon: Icons.chevron_right_rounded,
-              onCollapse: () => _setRightOpen(false),
-              settings: settings,
+              trailing: [
+                WbToolButton(
+                  icon: Icons.chevron_right,
+                  tooltip: uiStrings['collapse']?[locale] ?? 'Collapse',
+                  onPressed: () => _setRightOpen(false),
+                ),
+              ],
             ),
-            const Divider(height: 1),
-          ],
           AnalysisTabStrip(
             current: _analysisTab,
             locale: locale,
@@ -595,42 +860,6 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
   }
 
   // ── Chrome: headers, dividers, collapsed rails ────────────────────
-
-  Widget _paneHeader(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required IconData collapseIcon,
-    required VoidCallback onCollapse,
-    required AppSettings settings,
-  }) {
-    final scheme = Theme.of(context).colorScheme;
-    final locale = settings.locale;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(14, 4, 4, 4),
-      child: Row(
-        children: [
-          Icon(icon, color: scheme.primary, size: 20),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              title,
-              style: TextStyle(
-                fontSize: settings.fontSize,
-                fontWeight: FontWeight.w700,
-                color: scheme.onSurface,
-              ),
-            ),
-          ),
-          IconButton(
-            icon: Icon(collapseIcon, size: 20),
-            tooltip: uiStrings['collapsePanel']?[locale] ?? 'Collapse panel',
-            onPressed: onCollapse,
-          ),
-        ],
-      ),
-    );
-  }
 
   /// Draggable divider between panes — same visual pattern as
   /// HomePage's split-view divider. Drag resizes; double-tap or a fast
