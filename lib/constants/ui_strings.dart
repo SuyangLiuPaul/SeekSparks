@@ -4272,6 +4272,57 @@ const uiStrings = {
     'zh-Hant': '互參資料庫（TSK）',
     'en': 'Treasury of Scripture Knowledge (TSK) cross-references',
   },
+  // ── Workbench: Analysis window tabs ──
+  'analysisTitle': {
+    'zh-Hans': '分析',
+    'zh-Hant': '分析',
+    'en': 'Analysis',
+  },
+  'analysisTabCrossRefs': {
+    'zh-Hans': '互参',
+    'zh-Hant': '互參',
+    'en': 'X-Refs',
+  },
+  'analysisTabStats': {
+    'zh-Hans': '统计',
+    'zh-Hant': '統計',
+    'en': 'Stats',
+  },
+  'analysisNoCrossRefs': {
+    'zh-Hans': '这节经文没有互参资料。',
+    'zh-Hant': '這節經文沒有互參資料。',
+    'en': 'No cross-references for this verse.',
+  },
+  'analysisNoStats': {
+    'zh-Hans': '这节经文没有原文数据。',
+    'zh-Hant': '這節經文沒有原文資料。',
+    'en': 'No original-language data for this verse.',
+  },
+  'analysisStatsHint': {
+    'zh-Hans': '全圣经出现次数，由少到多。',
+    'zh-Hant': '全聖經出現次數，由少到多。',
+    'en': 'Whole-Bible occurrences, rarest first.',
+  },
+  'aboutLexMorphGnt': {
+    'zh-Hans': '希腊文新约词形分析 — MorphGNT / SBLGNT',
+    'zh-Hant': '希臘文新約詞形分析 — MorphGNT / SBLGNT',
+    'en': 'Greek NT morphology — MorphGNT / SBLGNT',
+  },
+  'aboutLicenseMorphGnt': {
+    'zh-Hans': 'CC BY-SA 3.0 · James Tauber 等。',
+    'zh-Hant': 'CC BY-SA 3.0 · James Tauber 等。',
+    'en': 'CC BY-SA 3.0 · James Tauber et al.',
+  },
+  'aboutLexOshb': {
+    'zh-Hans': '希伯来文旧约词形分析 — Open Scriptures（WLC）',
+    'zh-Hant': '希伯來文舊約詞形分析 — Open Scriptures（WLC）',
+    'en': 'Hebrew OT morphology — Open Scriptures Hebrew Bible (WLC)',
+  },
+  'aboutLicenseOshb': {
+    'zh-Hans': 'CC BY 4.0 · Open Scriptures。',
+    'zh-Hant': 'CC BY 4.0 · Open Scriptures。',
+    'en': 'CC BY 4.0 · Open Scriptures.',
+  },
   'aboutLicenseTsk': {
     'zh-Hans': '公有领域（R.A. Torrey, 1834）· 与 OpenBible.info 社群投票数据合并（CC-BY）。'
         '共 29,319 条经文索引。',

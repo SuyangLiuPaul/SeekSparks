@@ -9,6 +9,8 @@ import 'package:seeksparks/providers/workbench_provider.dart';
 import 'package:seeksparks/services/concordance_service.dart';
 import 'package:seeksparks/utils/clipboard_helper.dart';
 import 'package:seeksparks/utils/jump_to_reference.dart' as jumper;
+import 'package:seeksparks/utils/reference_parser.dart' show parseReference;
+import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
 
 // Hoisted regex — same rationale as search_page.dart's `_kMultiSpaceRe`:
@@ -40,8 +42,47 @@ class _CommandPaneState extends State<CommandPane> {
     super.dispose();
   }
 
-  void _submit() {
-    context.read<WorkbenchProvider>().runSearch(_controller.text);
+  /// BibleWorks' defining interaction: ONE box that does two jobs.
+  /// Type a reference and it navigates; type anything else and it
+  /// searches. In BibleWorks the command line is the primary control —
+  /// you rarely touch the mouse — and until now this box could only
+  /// search, so `Gen 1:1` ran a *text search* for those words instead
+  /// of going there.
+  ///
+  /// A bare book name ("John") deliberately still searches: it is far
+  /// more likely to be a word the reader wants found than a request to
+  /// jump to John 1, and the ambiguity is not worth the surprise. A
+  /// chapter number makes the intent explicit ("John 3", "约翰福音 3").
+  Future<void> _submit() async {
+    final raw = _controller.text.trim();
+    if (raw.isEmpty) return;
+
+    final ref = parseReference(raw);
+    if (ref != null) {
+      final mp = context.read<MainProvider>();
+      final res = await jumper.resolveAndPrepareJump(reference: ref, mp: mp);
+      if (!mounted) return;
+      if (res.ready) {
+        // The workbench centre pane is a BibleReadingPane on this same
+        // provider, so preparing the jump is enough — no navigation.
+        final wb = context.read<WorkbenchProvider>();
+        wb.clearResults();
+        // Focus the verse we landed on. Without this the reader scrolls
+        // but any PREVIOUS selection still owns the Browse and Word
+        // Study panes, so they keep showing the verse you navigated
+        // away from.
+        final landed = mp.currentVerse;
+        if (landed != null) wb.focusVerse(landed);
+        _controller.clear();
+        setState(() {});
+        return;
+      }
+      // Reference parsed but the verse is not in any available canon
+      // (e.g. an OT reference while on an NT-only version with no
+      // fallback). Fall through to search rather than failing silently.
+    }
+    if (!mounted) return;
+    context.read<WorkbenchProvider>().runSearch(raw);
   }
 
   /// Insert an operator/wildcard token at the caret (used by the

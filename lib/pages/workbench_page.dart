@@ -7,11 +7,15 @@ import 'package:seeksparks/constants/bible_versions.dart' show bibleVersions;
 import 'package:seeksparks/constants/book_names.dart' show bookNameToEnglish;
 import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/models/app_settings.dart';
+import 'package:seeksparks/models/original_word.dart';
+import 'package:seeksparks/models/verse.dart';
 import 'package:seeksparks/pages/home_page.dart';
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/providers/workbench_provider.dart';
 import 'package:seeksparks/services/concordance_service.dart';
+import 'package:seeksparks/services/originals_service.dart';
 import 'package:seeksparks/utils/jump_to_reference.dart' as jumper;
+import 'package:seeksparks/utils/reference_parser.dart' show BibleReference;
 import 'package:seeksparks/utils/navigate_to_reader.dart'
     show kHomePageRouteName;
 import 'package:seeksparks/utils/responsive.dart';
@@ -19,6 +23,7 @@ import 'package:seeksparks/widgets/bible_reading_pane.dart';
 import 'package:seeksparks/widgets/command_pane.dart';
 import 'package:seeksparks/pages/strongs_entry_page.dart';
 import 'package:seeksparks/utils/app_nav.dart';
+import 'package:seeksparks/widgets/analysis_tabs.dart';
 import 'package:seeksparks/widgets/originals_sheet.dart';
 import 'package:seeksparks/widgets/parallel_verse_view.dart';
 
@@ -88,9 +93,18 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
   static const _kParallelVersionsKey = 'workbench.parallelVersions';
   List<String> _parallelVersions = const ['kjv', 'nasb', 'leb'];
 
-  /// Verse the parallel pane is pinned to. Null = follow the reader's
-  /// selection; set by the pane's own prev/next stepper.
-  int? _parallelVerse;
+  /// Which Analysis tab the right pane is showing. Persisted, because
+  /// a reader who works in cross-references expects to still be there
+  /// after a reload.
+  AnalysisTab _analysisTab = AnalysisTab.wordStudy;
+  static const _kAnalysisTabKey = 'workbench.analysisTab';
+
+  /// Memo for "last verse number in the currently-browsed chapter",
+  /// used only to disable the Browse pane's Next button at the end of a
+  /// chapter. `mp.verses` is the whole Bible (~31k rows), so without
+  /// this the scan would rerun on every MainProvider notification.
+  String? _chapterExtentKey;
+  int _chapterExtent = 0;
 
   @override
   void initState() {
@@ -120,6 +134,10 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
       _parallelMode = prefs.getBool(_kParallelKey) ?? false;
       final saved = prefs.getStringList(_kParallelVersionsKey);
       if (saved != null && saved.isNotEmpty) _parallelVersions = saved;
+      final tab = prefs.getInt(_kAnalysisTabKey);
+      if (tab != null && tab >= 0 && tab < AnalysisTab.values.length) {
+        _analysisTab = AnalysisTab.values[tab];
+      }
     });
   }
 
@@ -131,6 +149,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
     await prefs.setBool(_kRightOpenKey, _rightOpen);
     await prefs.setBool(_kParallelKey, _parallelMode);
     await prefs.setStringList(_kParallelVersionsKey, _parallelVersions);
+    await prefs.setInt(_kAnalysisTabKey, _analysisTab.index);
   }
 
   // ── Pane open/collapse ────────────────────────────────────────────
@@ -151,6 +170,17 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
   // change) and focuses the verse so the pane follows along.
   void _onAnalysisNavigateRef(ConcordanceRef ref) {
     final verse = _wb.verseForRef(ref);
+    if (verse == null) return;
+    jumper.prepareJumpToVerse(verse, _wb.mainProvider);
+    _wb.focusVerse(verse);
+  }
+
+  /// Same handshake for a cross-reference, which carries a
+  /// [BibleReference] (a range) rather than a concordance hit. A
+  /// chapter-only reference lands on verse 1.
+  void _onCrossRefTap(BibleReference ref) {
+    final verse =
+        _wb.verseByRef['${ref.englishBook}-${ref.chapter}-${ref.verseStart ?? 1}'];
     if (verse == null) return;
     jumper.prepareJumpToVerse(verse, _wb.mainProvider);
     _wb.focusVerse(verse);
@@ -259,11 +289,20 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
     final locale = settings.locale;
 
     final sel = wb.analysisVerses.isNotEmpty ? wb.analysisVerses.first : null;
-    final book = sel != null
-        ? (bookNameToEnglish[sel.book] ?? sel.book)
-        : (bookNameToEnglish[mp.currentBook ?? ''] ?? mp.currentBook);
+    // BibleWorks' Browse and Analysis windows share ONE cursor, so this
+    // pane has no private pin: it shows whatever verse the app is
+    // focused on. Selection wins (the user just tapped it), otherwise
+    // `currentVerse` — which is what the command line's reference jump
+    // and every other navigation path set.
+    final localBook = sel?.book ?? mp.currentBook;
+    final book = localBook == null
+        ? null
+        : (bookNameToEnglish[localBook] ?? localBook);
     final chapter = sel?.chapter ?? mp.currentChapter;
-    final verse = _parallelVerse ?? sel?.verse ?? 1;
+    final verse = sel?.verse ?? mp.currentVerse?.verse ?? 1;
+    final lastVerse = (localBook != null && chapter != null)
+        ? _chapterLastVerse(mp, localBook, chapter)
+        : 0;
 
     // Always include the reader's own version first, then the configured
     // comparison stack (deduplicated, order preserved).
@@ -312,19 +351,51 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
                     onWordTap: (w) => pushPage(StrongsEntryPage(number: w.strongs)),
                     onEditVersions: () => _pickParallelVersions(context),
                     // Verse stepping keeps the pane navigable on its own,
-                    // the way BibleWorks' Browse window is. Clamped at 1;
-                    // the upper bound is enforced by the view returning
-                    // no rows for a verse that does not exist.
+                    // the way BibleWorks' Browse window is. Moving the
+                    // cursor re-focuses the verse, so the Word Study pane
+                    // follows along instead of going stale.
                     onPrevVerse: verse > 1
-                        ? () => setState(() => _parallelVerse = verse - 1)
+                        ? () => _moveBrowseCursor(localBook!, chapter, verse - 1)
                         : null,
-                    onNextVerse: () =>
-                        setState(() => _parallelVerse = verse + 1),
+                    onNextVerse: verse < lastVerse
+                        ? () => _moveBrowseCursor(localBook!, chapter, verse + 1)
+                        : null,
                   ),
           ),
         ],
       ),
     );
+  }
+
+  /// Highest verse number present in [localBook] [chapter] for the
+  /// loaded version. Memoised — see [_chapterExtentKey].
+  int _chapterLastVerse(MainProvider mp, String localBook, int chapter) {
+    final key = '$localBook|$chapter|${mp.currentVersion}|${mp.verses.length}';
+    if (_chapterExtentKey == key) return _chapterExtent;
+    var last = 0;
+    for (final v in mp.verses) {
+      if (v.book == localBook && v.chapter == chapter && v.verse > last) {
+        last = v.verse;
+      }
+    }
+    _chapterExtentKey = key;
+    _chapterExtent = last;
+    return last;
+  }
+
+  /// Step the Browse cursor to verse [target] of the current chapter.
+  /// Focusing (rather than pinning a local override) is what keeps the
+  /// Browse pane, the reader's selection and the Word Study pane on the
+  /// same verse.
+  void _moveBrowseCursor(String localBook, int chapter, int target) {
+    final mp = context.read<MainProvider>();
+    for (final v in mp.verses) {
+      if (v.book == localBook && v.chapter == chapter && v.verse == target) {
+        mp.updateCurrentVerse(verse: v);
+        _wb.focusVerse(v);
+        return;
+      }
+    }
   }
 
   /// Lets the reader choose which translations sit in the parallel stack.
@@ -410,22 +481,38 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
     final scheme = Theme.of(context).colorScheme;
     final verses = wb.analysisVerses;
 
+    // The word-study tab keeps OriginalsSheet's own header (it carries
+    // the collapse chevron, and when embedded there is no `_paneHeader`
+    // above it). The other two tabs are plain panes, so they get one.
+    final needsHeader = _analysisTab != AnalysisTab.wordStudy;
+
     return ColoredBox(
       color: scheme.surface,
-      child: verses.isEmpty
-          ? Column(
-              children: [
-                _paneHeader(
-                  context,
-                  icon: Icons.translate_rounded,
-                  title: uiStrings['wordStudyTitle']?[locale] ?? 'Word Study',
-                  collapseIcon: Icons.chevron_right_rounded,
-                  onCollapse: () => _setRightOpen(false),
-                  settings: settings,
-                ),
-                const Divider(height: 1),
-                Expanded(
-                  child: Center(
+      child: Column(
+        children: [
+          if (needsHeader) ...[
+            _paneHeader(
+              context,
+              icon: Icons.analytics_outlined,
+              title: uiStrings['analysisTitle']?[locale] ?? 'Analysis',
+              collapseIcon: Icons.chevron_right_rounded,
+              onCollapse: () => _setRightOpen(false),
+              settings: settings,
+            ),
+            const Divider(height: 1),
+          ],
+          AnalysisTabStrip(
+            current: _analysisTab,
+            locale: locale,
+            onChanged: (t) {
+              setState(() => _analysisTab = t);
+              _persistPrefs();
+            },
+          ),
+          const Divider(height: 1),
+          Expanded(
+            child: verses.isEmpty
+                ? Center(
                     child: Padding(
                       padding: const EdgeInsets.all(24),
                       child: Text(
@@ -440,25 +527,71 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
                         ),
                       ),
                     ),
-                  ),
-                ),
-              ],
-            )
-          // Key forces OriginalsSheet to re-run its load Future when
-          // the selection changes (the sheet caches its Future in
-          // initState, so a bare field swap wouldn't reload).
-          : OriginalsSheet(
-              key: ValueKey<String>(
-                  'analysis-${verses.map((v) => v.id).join('|')}'),
-              verses: verses,
-              allVerses: mp.verses,
-              locale: locale,
-              currentVersion: mp.currentVersion,
-              embedded: true,
-              onCollapse: () => _setRightOpen(false),
-              onNavigateRef: _onAnalysisNavigateRef,
-            ),
+                  )
+                : _buildAnalysisBody(context, wb, mp, verses, locale),
+          ),
+        ],
+      ),
     );
+  }
+
+  Widget _buildAnalysisBody(
+    BuildContext context,
+    WorkbenchProvider wb,
+    MainProvider mp,
+    List<Verse> verses,
+    String locale,
+  ) {
+    switch (_analysisTab) {
+      case AnalysisTab.wordStudy:
+        // Key forces OriginalsSheet to re-run its load Future when the
+        // selection changes (the sheet caches its Future in initState,
+        // so a bare field swap wouldn't reload).
+        return OriginalsSheet(
+          key: ValueKey<String>(
+              'analysis-${verses.map((v) => v.id).join('|')}'),
+          verses: verses,
+          allVerses: mp.verses,
+          locale: locale,
+          currentVersion: mp.currentVersion,
+          embedded: true,
+          onCollapse: () => _setRightOpen(false),
+          onNavigateRef: _onAnalysisNavigateRef,
+        );
+
+      case AnalysisTab.crossRefs:
+        final v = verses.first;
+        return CrossRefsPane(
+          englishBook: bookNameToEnglish[v.book] ?? v.book,
+          chapter: v.chapter,
+          verse: v.verse,
+          locale: locale,
+          version: mp.currentVersion,
+          verseByRef: wb.verseByRef,
+          onOpenRef: _onCrossRefTap,
+        );
+
+      case AnalysisTab.stats:
+        final v = verses.first;
+        return FutureBuilder<List<OriginalWord>?>(
+          key: ValueKey<String>('stats-${v.id}'),
+          future: OriginalsService.forVerse(
+            bookNameToEnglish[v.book] ?? v.book,
+            v.chapter,
+            v.verse,
+          ),
+          builder: (context, snap) {
+            if (snap.connectionState != ConnectionState.done) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            return WordStatsPane(
+              words: snap.data ?? const <OriginalWord>[],
+              locale: locale,
+              onOpenStrongs: (n) => pushPage(StrongsEntryPage(number: n)),
+            );
+          },
+        );
+    }
   }
 
   // ── Chrome: headers, dividers, collapsed rails ────────────────────

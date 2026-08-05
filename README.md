@@ -71,7 +71,11 @@ stay on CocoaPods — run `flutter config --no-enable-swift-package-manager` onc
 | Wide-screen layout | Split View and the sidebar are open by default in the classic reader at tablet width (600–1023px) — no extra tap needed on a bigger screen. |
 | Docked side panels | The Original-language word study opens as a persistent right-hand panel at desktop widths (≥1024px) instead of covering the text with a bottom sheet; falls back to the familiar bottom sheet below that width. |
 | Reading | 13 Bible translations across English and Chinese; Light / Dark / System theme; adjustable font, size, line spacing; paragraph or verse-by-verse mode. |
-| Word Study | Word-by-word interlinear with Strong's number, transliteration, and gloss; tap a word for the full lexicon entry, word family, and concordance. |
+| Unified command line | One box, BibleWorks' defining interaction: type a reference (`Gen 1:1`, `John 3`, `约翰福音 3:16`) and it navigates; type anything else and it searches. Navigating focuses the verse, so the Browse and Analysis panes follow. |
+| Morphology (parsing) | Every original-language word carries a real parse — `Qal perfect 3rd person masculine singular`, `verb · aorist active indicative · 3rd person singular` — in the word-study card, with the part of speech inline on each word chip. 436,618 of 438,821 words (99.5%) tagged across all 66 books, in EN / 简体 / 繁體. |
+| Analysis window (tabbed) | The right pane is tabbed: **Word Study**, **X-Refs** (TSK + OpenBible cross-references shown with their text, tappable), **Stats** (whole-Bible frequency of the verse's original words, rarest first). The chosen tab persists. |
+| Parallel Browse | A BibleWorks Browse-window centre pane: the current verse stacked across every selected translation plus the original-language line, with verse stepping that moves the shared cursor. |
+| Word Study | Word-by-word interlinear with Strong's number, transliteration, gloss, and parsing; tap a word for the full lexicon entry, word family, and concordance. |
 | Highlights, bookmarks, notes | Same local-first tools as YsWords, persisted with `shared_preferences`. |
 | Bible Evidence, Sermons, Timeline, Trivia, Family Tree | Ported as-is from YsWords — same bundled datasets. |
 
@@ -147,9 +151,25 @@ See YsWords' own [README](https://github.com/SuyangLiuPaul/YsWords#data-sources)
 [LICENSE](https://github.com/SuyangLiuPaul/YsWords/blob/main/LICENSE) for the full breakdown —
 in short: KJV/LEB (public domain), NASB 2020 (© The Lockman Foundation, non-commercial use),
 和合本 (public domain), 和合本雅伟版 / 原文释经圣经 (used with permission), and the Strong's
-Greek/Hebrew concordance (public domain, 1890s). The **application code** in this repository
-is released under the [MIT License](LICENSE); the bundled scripture texts and lexicon data are
-licensed separately as above and take precedence over the MIT licence on the code.
+Greek/Hebrew concordance (public domain, 1890s).
+
+The **morphology** added in v1.1 comes from two open corpora, both of which require
+attribution as a condition of use (credited in-app under *About → Lexicons & data*):
+
+| Source | Covers | Licence |
+| --- | --- | --- |
+| [MorphGNT / SBLGNT](https://github.com/morphgnt/sblgnt) | Greek NT | CC BY-SA 3.0 |
+| [Open Scriptures Hebrew Bible (WLC)](https://github.com/openscriptures/morphhb) | Hebrew OT | CC BY 4.0 |
+
+Neither is the same text edition as the Strong's-tagged originals already bundled, so
+`tools/merge_morphology.py` aligns them by sequence rather than position and tags only the
+words the alignment proves equal — 99.5% of them. The rest are left unparsed on purpose: a
+wrong parse would be worse than none. Run `tools/fetch_morphology_sources.sh` then that
+script to reproduce the merge.
+
+The **application code** in this repository is released under the
+[MIT License](LICENSE); the bundled scripture texts and lexicon data are licensed separately
+as above and take precedence over the MIT licence on the code.
 
 This is a **non-commercial personal / community Bible-study tool**, not affiliated with or
 endorsed by any publisher, ministry, or the original BibleWorks software.

@@ -567,6 +567,23 @@ class _LexiconsTable extends StatelessWidget {
         licence: uiStrings['aboutLicenseTsk']?[locale] ??
             'Public domain (R.A. Torrey, 1834) · merged with OpenBible.info community votes (CC-BY).',
         url: 'https://www.openbible.info/labs/cross-references',
+      ),
+      // Both morphology corpora require attribution by licence, so
+      // these two rows are a condition of shipping the parsing line —
+      // not optional credits.
+      _AttribRow(
+        name: uiStrings['aboutLexMorphGnt']?[locale] ??
+            'Greek NT morphology — MorphGNT / SBLGNT',
+        licence: uiStrings['aboutLicenseMorphGnt']?[locale] ??
+            'CC BY-SA 3.0 · James Tauber et al.',
+        url: 'https://github.com/morphgnt/sblgnt',
+      ),
+      _AttribRow(
+        name: uiStrings['aboutLexOshb']?[locale] ??
+            'Hebrew OT morphology — Open Scriptures Hebrew Bible (WLC)',
+        licence: uiStrings['aboutLicenseOshb']?[locale] ??
+            'CC BY 4.0 · Open Scriptures.',
+        url: 'https://github.com/openscriptures/morphhb',
         last: true,
       ),
     ];

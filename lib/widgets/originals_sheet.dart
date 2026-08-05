@@ -22,6 +22,7 @@ import 'package:seeksparks/services/originals_service.dart';
 import 'package:seeksparks/services/strongs_service.dart';
 import 'package:seeksparks/utils/ai_markdown.dart' show parseAiMarkdown;
 import 'package:seeksparks/utils/clipboard_helper.dart';
+import 'package:seeksparks/utils/morphology.dart';
 import 'package:seeksparks/utils/theme_color_helpers.dart';
 import 'package:seeksparks/utils/version_mapper.dart'
     show localeAwareBookName, toEnglish;
@@ -817,6 +818,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
     // Hebrew/Greek can immediately see what each word means.
     final entry = _glossCache[w.strongs];
     final gloss = compactGloss(entry?.localizedGloss(widget.locale) ?? '');
+    final pos = morphologyPartOfSpeech(w.morph, widget.locale);
     // Aramaic chips: teal-tinted background + 1.5px teal border, even
     // when not selected. Selected Aramaic chips switch to the primary
     // colour scheme so the selection cue stays unambiguous.
@@ -949,6 +951,74 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                 ),
               ),
             ],
+            // Part of speech, inline. BibleWorks shows parsing without
+            // asking, so the chip carries the one-word form and the
+            // full parse appears in the card once the word is tapped.
+            if (pos != null && pos.isNotEmpty) ...[
+              const SizedBox(height: 2),
+              Directionality(
+                textDirection: TextDirection.ltr,
+                child: Text(
+                  pos,
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 9,
+                    fontStyle: FontStyle.italic,
+                    color: scheme.onSurfaceVariant.withValues(alpha: 0.8),
+                    height: 1.2,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// The parsing line for one word occurrence, e.g.
+  /// "verb · aorist active indicative · 3rd person singular".
+  ///
+  /// Data is MorphGNT (Greek NT) / Open Scriptures (Hebrew OT), merged
+  /// into the originals assets offline — see `lib/utils/morphology.dart`.
+  /// Returns an empty box when this word has no code, which is the
+  /// honest rendering for the small fraction the two text editions
+  /// couldn't be aligned on.
+  Widget _buildParsingLine(
+      OriginalWord w, ColorScheme scheme, String locale) {
+    final parse = describeMorphology(w.morph, locale);
+    if (parse == null || parse.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: scheme.primary.withValues(alpha: 0.07),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: scheme.primary.withValues(alpha: 0.18)),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 1, right: 6),
+              child: Icon(Icons.account_tree_outlined,
+                  size: 13, color: scheme.primary.withValues(alpha: 0.75)),
+            ),
+            Expanded(
+              child: Text(
+                parse,
+                style: TextStyle(
+                  fontSize: 12,
+                  height: 1.35,
+                  fontWeight: FontWeight.w600,
+                  color: scheme.primary,
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -1133,6 +1203,13 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
             ],
           ),
           const SizedBox(height: 6),
+          // Parsing line — the instance's morphology, not the lemma's.
+          // This is the line BibleWorks' Analysis window is built
+          // around, and it describes THIS occurrence, so it stays put
+          // even while browsing a root entry would change everything
+          // below it. Absent for the ~0.5% of words the corpora
+          // couldn't align; nothing is shown rather than a guess.
+          if (!isBrowsingRoot) _buildParsingLine(w, scheme, locale),
           if (entry != null) ...[
             if (entry.translit.isNotEmpty || entry.pronunciation.isNotEmpty)
               Text(
