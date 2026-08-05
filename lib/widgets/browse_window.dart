@@ -70,10 +70,25 @@ class _BrowseRow {
 
 /// What the mouse is currently over, reported to the status bar and the
 /// Analysis window.
+///
+/// The manual describes the Analysis window as showing "information
+/// about the word **or verse** being examined" — so a hover has two
+/// grades. Over an original-language word you get that word; over a
+/// translation, whose words carry no Strong's tagging in any version we
+/// ship, you get the verse. Only the originals line being live was the
+/// gap: the other three lines were dead text.
 class BrowseHover {
-  const BrowseHover({required this.word, required this.reference});
-  final OriginalWord word;
+  const BrowseHover({
+    required this.reference,
+    required this.verse,
+    this.word,
+  });
+
+  /// Null for a verse-level hover (a translation line).
+  final OriginalWord? word;
+
   final String reference;
+  final int verse;
 }
 
 class BrowseWindow extends StatefulWidget {
@@ -367,7 +382,16 @@ class _RowView extends StatelessWidget {
                       onWordTap: onWordTap,
                       onWordHover: onWordHover,
                     )
-                  : _TranslationLine(row: row, settings: settings),
+                  // A translation line reports the VERSE. Its words are
+                  // untagged, so claiming to identify one would be a
+                  // guess; the verse is exactly what we can stand behind.
+                  : MouseRegion(
+                      onEnter: (_) => onWordHover?.call(BrowseHover(
+                        reference: row.reference,
+                        verse: row.verse,
+                      )),
+                      child: _TranslationLine(row: row, settings: settings),
+                    ),
             ),
           ],
         ),
@@ -458,6 +482,7 @@ class _OriginalsLine extends StatelessWidget {
                   _HoverWord(
                     word: w,
                     reference: row.reference,
+                    verse: row.verse,
                     entry: glosses[w.strongs],
                     onTap: onWordTap,
                     onHover: onWordHover,
@@ -475,6 +500,7 @@ class _HoverWord extends StatefulWidget {
   const _HoverWord({
     required this.word,
     required this.reference,
+    required this.verse,
     required this.entry,
     this.onTap,
     this.onHover,
@@ -482,6 +508,7 @@ class _HoverWord extends StatefulWidget {
 
   final OriginalWord word;
   final String reference;
+  final int verse;
 
   /// Prefetched lexicon entry, used to build the hover popup. Null when
   /// the number is missing from the lexicon — the popup then shows just
@@ -566,9 +593,11 @@ class _HoverWordState extends State<_HoverWord> {
         cursor: SystemMouseCursors.click,
         onEnter: (_) {
           setState(() => _hovering = true);
-          widget.onHover?.call(
-            BrowseHover(word: widget.word, reference: widget.reference),
-          );
+          widget.onHover?.call(BrowseHover(
+            word: widget.word,
+            reference: widget.reference,
+            verse: widget.verse,
+          ));
         },
         onExit: (_) {
           setState(() => _hovering = false);

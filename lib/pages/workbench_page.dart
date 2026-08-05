@@ -353,11 +353,13 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
   String _statusMessage(String locale) {
     final h = _hover;
     if (h == null) return '';
-    final parse = describeMorphology(h.word.morph, locale);
+    final w = h.word;
+    if (w == null) return h.reference;
+    final parse = describeMorphology(w.morph, locale);
     return [
       h.reference,
-      h.word.text,
-      h.word.strongs,
+      w.text,
+      w.strongs,
       if (parse != null && parse.isNotEmpty) parse,
     ].join('   ');
   }
@@ -746,16 +748,29 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
   void _onWordHover(BrowseHover? h) {
     final frozen = HardwareKeyboard.instance.isShiftPressed;
     final next = (h != null && !frozen) ? h : _analysisWord;
-    final sameHover = _hover?.word.strongs == h?.word.strongs &&
-        _hover?.reference == h?.reference;
-    final sameAnalysis = _analysisWord?.word.strongs == next?.word.strongs &&
-        _analysisWord?.reference == next?.reference;
+    bool same(BrowseHover? a, BrowseHover? b) =>
+        a?.word?.strongs == b?.word?.strongs &&
+        a?.reference == b?.reference &&
+        a?.verse == b?.verse;
+    final sameHover = same(_hover, h);
+    final sameAnalysis = same(_analysisWord, next);
     if (sameHover && sameAnalysis && frozen == _analysisFrozen) return;
     setState(() {
       _hover = h;
       _analysisWord = next;
       _analysisFrozen = frozen;
     });
+  }
+
+  /// The [Verse] object for verse [n] of the chapter now on screen.
+  Verse? _verseAt(MainProvider mp, int n) {
+    final book = mp.currentBook;
+    final chapter = mp.currentChapter;
+    if (book == null || chapter == null) return null;
+    for (final v in mp.verses) {
+      if (v.book == book && v.chapter == chapter && v.verse == n) return v;
+    }
+    return null;
   }
 
   /// Change the reading version from the Browse nav strip. Reloads the
@@ -940,15 +955,34 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         // the pointer; the verse-wide word grid is what you get before
         // the pointer has been anywhere.
         final hovered = _analysisWord;
-        if (hovered != null) {
+        final hoveredWord = hovered?.word;
+        if (hovered != null && hoveredWord != null) {
           return WordAnalysisPane(
-            word: hovered.word,
+            word: hoveredWord,
             reference: hovered.reference,
             locale: locale,
             frozen: _analysisFrozen,
             onOpenFullEntry: () =>
-                pushPage(StrongsEntryPage(number: hovered.word.strongs)),
+                pushPage(StrongsEntryPage(number: hoveredWord.strongs)),
           );
+        }
+        // Verse-level hover: a translation line. Show that verse's
+        // interlinear rather than whatever happens to be selected —
+        // the pane still reports the pointer, one grade coarser.
+        if (hovered != null) {
+          final hv = _verseAt(mp, hovered.verse);
+          if (hv != null) {
+            return OriginalsSheet(
+              key: ValueKey<String>('analysis-hover-${hv.id}'),
+              verses: [hv],
+              allVerses: mp.verses,
+              locale: locale,
+              currentVersion: mp.currentVersion,
+              embedded: true,
+              onCollapse: () => _setRightOpen(false),
+              onNavigateRef: _onAnalysisNavigateRef,
+            );
+          }
         }
         // Key forces OriginalsSheet to re-run its load Future when the
         // selection changes (the sheet caches its Future in initState,
