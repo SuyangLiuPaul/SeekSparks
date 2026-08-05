@@ -3573,6 +3573,17 @@ const uiStrings = {
     'zh-Hant': '研經工作台',
     'en': 'Workbench',
   },
+  // 2026-08 (SeekSparks): BibleWorks-style parallel Browse.
+  'parallelBrowse': {
+    'zh-Hans': '并排对照',
+    'zh-Hant': '並排對照',
+    'en': 'Parallel',
+  },
+  'parallelEmptyHint': {
+    'zh-Hans': '打开一章经文，即可并排比较多个译本与原文。',
+    'zh-Hant': '開啟一章經文，即可並排比較多個譯本與原文。',
+    'en': 'Open a chapter to compare versions side by side.',
+  },
   'classicReader': {
     'zh-Hans': '经典阅读模式',
     'zh-Hant': '經典閱讀模式',

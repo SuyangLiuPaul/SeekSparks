@@ -116,6 +116,10 @@ class BibleReadingPane extends StatefulWidget {
   /// Null hides the entry.
   final VoidCallback? onOpenClassicReader;
 
+  /// 2026-08 (SeekSparks): switch the Workbench centre pane to the
+  /// BibleWorks-style parallel Browse stack. Null everywhere else.
+  final VoidCallback? onOpenParallel;
+
   const BibleReadingPane({
     super.key,
     this.showSidebarToggle = false,
@@ -127,6 +131,7 @@ class BibleReadingPane extends StatefulWidget {
     this.showSearchAndSettings = true,
     this.onOpenWorkbench,
     this.onOpenClassicReader,
+    this.onOpenParallel,
   });
 
   @override
@@ -1931,6 +1936,7 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
                       showSearchAndSettings: widget.showSearchAndSettings,
                       onOpenWorkbench: widget.onOpenWorkbench,
                       onOpenClassicReader: widget.onOpenClassicReader,
+                      onOpenParallel: widget.onOpenParallel,
                       chapterMaps: _chapterMaps,
                       bookMaps: _bookMaps,
                       chapterSermons: _chapterSermons,
@@ -6685,6 +6691,7 @@ class _FloatingHeader extends StatelessWidget {
   /// 2026-08-04 (Workbench): overflow-menu "Classic Reader" entry —
   /// the way back, shown only by the Workbench's center pane.
   final VoidCallback? onOpenClassicReader;
+  final VoidCallback? onOpenParallel;
   final List<BibleMap> chapterMaps;
   final List<BibleMap> bookMaps;
   /// Pastor Eric sermons whose body or passage hint cites any verse
@@ -6729,6 +6736,7 @@ class _FloatingHeader extends StatelessWidget {
     this.showSearchAndSettings = true,
     this.onOpenWorkbench,
     this.onOpenClassicReader,
+    this.onOpenParallel,
     this.chapterMaps = const [],
     this.bookMaps = const [],
     this.chapterSermons = const [],
@@ -7313,6 +7321,21 @@ class _FloatingHeader extends StatelessWidget {
                         }
                         // 2026-08-04 (Workbench): the way back — only
                         // the Workbench's center pane shows this.
+                        // 2026-08 (SeekSparks): BibleWorks-style
+                        // parallel Browse — same verse across every
+                        // selected version plus the original line.
+                        if (onOpenParallel != null) {
+                          items.add(PopupMenuItem(
+                            value: 'parallel',
+                            onTap: () => onOpenParallel?.call(),
+                            child: _menuRow(
+                              context,
+                              icon: Icons.view_agenda_outlined,
+                              label: uiStrings['parallelBrowse']?[locale] ??
+                                  'Parallel',
+                            ),
+                          ));
+                        }
                         if (onOpenClassicReader != null) {
                           items.add(PopupMenuItem(
                             value: 'classicReader',

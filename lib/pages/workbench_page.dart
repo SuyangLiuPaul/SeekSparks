@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:seeksparks/constants/bible_versions.dart' show bibleVersions;
+import 'package:seeksparks/constants/book_names.dart' show bookNameToEnglish;
 import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/pages/home_page.dart';
@@ -15,7 +17,10 @@ import 'package:seeksparks/utils/navigate_to_reader.dart'
 import 'package:seeksparks/utils/responsive.dart';
 import 'package:seeksparks/widgets/bible_reading_pane.dart';
 import 'package:seeksparks/widgets/command_pane.dart';
+import 'package:seeksparks/pages/strongs_entry_page.dart';
+import 'package:seeksparks/utils/app_nav.dart';
 import 'package:seeksparks/widgets/originals_sheet.dart';
+import 'package:seeksparks/widgets/parallel_verse_view.dart';
 
 /// SeekSparks' BibleWorks-style pad workspace — three panes on one
 /// screen:
@@ -75,6 +80,14 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
   bool _leftOpen = true;
   bool _rightOpen = true;
 
+  /// 2026-08 (SeekSparks): BibleWorks-style parallel Browse mode. When
+  /// on, the centre pane stacks the same verse in every selected version
+  /// plus the original-language line, instead of the chapter reader.
+  bool _parallelMode = false;
+  static const _kParallelKey = 'workbench.parallelMode';
+  static const _kParallelVersionsKey = 'workbench.parallelVersions';
+  List<String> _parallelVersions = const ['kjv', 'nasb', 'leb'];
+
   @override
   void initState() {
     super.initState();
@@ -100,6 +113,9 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
           .toDouble();
       _leftOpen = prefs.getBool(_kLeftOpenKey) ?? true;
       _rightOpen = prefs.getBool(_kRightOpenKey) ?? true;
+      _parallelMode = prefs.getBool(_kParallelKey) ?? false;
+      final saved = prefs.getStringList(_kParallelVersionsKey);
+      if (saved != null && saved.isNotEmpty) _parallelVersions = saved;
     });
   }
 
@@ -109,6 +125,8 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
     await prefs.setDouble(_kRightWidthKey, _rightWidth);
     await prefs.setBool(_kLeftOpenKey, _leftOpen);
     await prefs.setBool(_kRightOpenKey, _rightOpen);
+    await prefs.setBool(_kParallelKey, _parallelMode);
+    await prefs.setStringList(_kParallelVersionsKey, _parallelVersions);
   }
 
   // ── Pane open/collapse ────────────────────────────────────────────
@@ -174,7 +192,9 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
                         isLeft: true),
                   ],
                   Expanded(
-                    child: BibleReadingPane(
+                    child: _parallelMode
+                        ? _buildParallelFrame(context)
+                        : BibleReadingPane(
                       key: const ValueKey('workbench-reader'),
                       showSidebarToggle: false,
                       sidebarOpen: false,
@@ -188,13 +208,19 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
                       // 2026-08-04: the overflow menu's way back to
                       // the classic single-pane reader (and its Split
                       // View, which the workbench supersedes).
+                      // 2026-08 (SeekSparks): switch this pane to the
+                      // BibleWorks-style parallel Browse stack.
+                      onOpenParallel: () {
+                        setState(() => _parallelMode = true);
+                        _persistPrefs();
+                      },
                       onOpenClassicReader: () => Get.off(
                         () => const HomePage(),
                         routeName: kHomePageRouteName,
                         transition: Transition.leftToRight,
                       ),
                     ),
-                  ),
+                        ),
                   if (showRight) ...[
                     _buildDivider(context,
                         key: const ValueKey('workbench-divider-right'),
@@ -214,6 +240,126 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         },
       ),
     );
+  }
+
+  // ── Centre: BibleWorks-style parallel Browse ──────────────────────
+
+  /// Stacks the current verse across every selected version plus the
+  /// original-language line — the BibleWorks Browse-window idiom. Falls
+  /// back to verse 1 of the current chapter when nothing is selected.
+  Widget _buildParallelFrame(BuildContext context) {
+    final mp = context.watch<MainProvider>();
+    final wb = context.watch<WorkbenchProvider>();
+    final settings = context.watch<AppSettings>();
+    final scheme = Theme.of(context).colorScheme;
+    final locale = settings.locale;
+
+    final sel = wb.analysisVerses.isNotEmpty ? wb.analysisVerses.first : null;
+    final book = sel != null
+        ? (bookNameToEnglish[sel.book] ?? sel.book)
+        : (bookNameToEnglish[mp.currentBook ?? ''] ?? mp.currentBook);
+    final chapter = sel?.chapter ?? mp.currentChapter;
+    final verse = sel?.verse ?? 1;
+
+    // Always include the reader's own version first, then the configured
+    // comparison stack (deduplicated, order preserved).
+    final codes = <String>[
+      mp.currentVersion,
+      ...
+          _parallelVersions.where((c) => c != mp.currentVersion),
+    ];
+
+    return ColoredBox(
+      color: scheme.surface,
+      child: Column(
+        children: [
+          _paneHeader(
+            context,
+            icon: Icons.view_agenda_rounded,
+            title: uiStrings['parallelBrowse']?[locale] ?? 'Parallel',
+            collapseIcon: Icons.menu_book_rounded,
+            onCollapse: () {
+              setState(() => _parallelMode = false);
+              _persistPrefs();
+            },
+            settings: settings,
+          ),
+          const Divider(height: 1),
+          Expanded(
+            child: (book == null || chapter == null)
+                ? Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Text(
+                        uiStrings['parallelEmptyHint']?[locale] ??
+                            'Open a chapter to compare versions side by side.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: scheme.outline, height: 1.6),
+                      ),
+                    ),
+                  )
+                : ParallelVerseView(
+                    key: ValueKey('parallel-$book-$chapter-$verse-'
+                        '${codes.join(",")}'),
+                    book: book,
+                    chapter: chapter,
+                    verse: verse,
+                    versionCodes: codes,
+                    onWordTap: (w) => pushPage(StrongsEntryPage(number: w.strongs)),
+                    onEditVersions: () => _pickParallelVersions(context),
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Lets the reader choose which translations sit in the parallel stack.
+  Future<void> _pickParallelVersions(BuildContext context) async {
+    final scheme = Theme.of(context).colorScheme;
+    final current = _parallelVersions.toSet();
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheet) => SafeArea(
+          child: ListView(
+            shrinkWrap: true,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+                child: Text(
+                  'Versions in the parallel stack',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: scheme.onSurface,
+                  ),
+                ),
+              ),
+              for (final v in bibleVersions)
+                CheckboxListTile(
+                  dense: true,
+                  value: current.contains(v.value),
+                  title: Text(v.menuLabel),
+                  subtitle: Text(v.shortLabel),
+                  onChanged: (on) => setSheet(() {
+                    if (on == true) {
+                      current.add(v.value);
+                    } else {
+                      current.remove(v.value);
+                    }
+                  }),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (!mounted) return;
+    setState(() => _parallelVersions =
+        bibleVersions.map((v) => v.value).where(current.contains).toList());
+    _persistPrefs();
   }
 
   // ── Left: command pane ────────────────────────────────────────────
