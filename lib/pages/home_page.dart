@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:seeksparks/constants/bible_versions.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:seeksparks/pages/workbench_page.dart';
@@ -43,6 +45,11 @@ class _HomePageState extends State<HomePage> {
     final width = MediaQuery.of(context).size.width;
     if (!ResponsiveBreakpoints.isTabletOrWider(width)) return;
     _sidebarOpen = true;
+    // The sidebar earns its place from 600px up, but Split View needs
+    // room for two readable columns — see `shouldAutoSplit`. Below
+    // that the user can still open it themselves; the app just
+    // doesn't assume it.
+    if (!ResponsiveBreakpoints.shouldAutoSplit(width)) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _activateSplitView();
     });
@@ -99,7 +106,24 @@ class _HomePageState extends State<HomePage> {
       _secondaryProvider = sp;
     });
 
-    sp.currentVersion = primary.currentVersion;
+    // 2026-08-06: this used to be `sp.currentVersion =
+    // primary.currentVersion`, which made Split View show the same
+    // chapter in the same translation twice — half the screen spent
+    // saying nothing. A comparison view has to compare something, so
+    // seed a DIFFERENT version by default — see
+    // `defaultSecondaryVersion`.
+    //
+    // If the user already picked a version in this pane, that choice
+    // wins: `_persist` has always written `secondary_version`, but
+    // nothing ever read it back, so their pick was discarded on every
+    // reopen.
+    final prefs = await SharedPreferences.getInstance();
+    final savedSecondary = prefs.getString('secondary_version');
+    final validSaved = savedSecondary != null &&
+        availableVersions.any((v) => v.value == savedSecondary);
+    sp.currentVersion = validSaved
+        ? savedSecondary
+        : defaultSecondaryVersion(primary.currentVersion);
     await FetchVerses.execute(mainProvider: sp);
     await FetchBooks.execute(mainProvider: sp);
 

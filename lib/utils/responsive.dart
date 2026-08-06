@@ -118,4 +118,22 @@ class ResponsiveBreakpoints {
       };
 
   static double get sidebarWidth => 280.0;
+
+  /// Narrowest a reading column can get and still read as prose rather
+  /// than a stack of fragments. At 430 an English verse runs 6–7 words
+  /// a line and wraps three times; 480 is where it stops fighting you.
+  static const double minReadingPaneWidth = 480.0;
+
+  /// Whether to open Split View automatically on first layout.
+  ///
+  /// 2026-08-06: this used to share `isTabletOrWider` (≥600) with the
+  /// sidebar default, so a 600px window auto-split into two 300px
+  /// columns — narrower than the phone layout the app is meant to
+  /// improve on. Split View hides the sidebar while it is active
+  /// (`home_page.dart`'s `showSidebar`), so the requirement is just
+  /// two readable columns, with no sidebar to budget for.
+  ///
+  /// Split View stays available manually at any width — this only
+  /// governs whether the app reaches for it unasked.
+  static bool shouldAutoSplit(double w) => w >= minReadingPaneWidth * 2;
 }

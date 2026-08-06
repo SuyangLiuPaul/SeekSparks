@@ -1,0 +1,75 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:seeksparks/constants/bible_versions.dart';
+import 'package:seeksparks/utils/responsive.dart';
+
+/// Split View used to seed its second pane with the primary's version,
+/// so it rendered the same chapter twice. These pin the replacement
+/// rule down: never the same version, and prefer one the reader can
+/// actually read.
+void main() {
+  group('defaultSecondaryVersion', () {
+    test('never returns the primary version', () {
+      for (final v in availableVersions) {
+        expect(defaultSecondaryVersion(v.value), isNot(v.value),
+            reason: '${v.value} would duplicate the primary pane');
+      }
+    });
+
+    test('always returns a version that exists in the catalog', () {
+      for (final v in availableVersions) {
+        final secondary = defaultSecondaryVersion(v.value);
+        expect(availableVersions.any((c) => c.value == secondary), isTrue,
+            reason: '$secondary is not a real version');
+      }
+    });
+
+    test('prefers a sibling in the same language', () {
+      for (final v in availableVersions) {
+        final siblings =
+            versionsForLanguage(v.language).where((c) => c.value != v.value);
+        if (siblings.isEmpty) continue;
+        expect(bibleVersionLanguage(defaultSecondaryVersion(v.value)),
+            v.language,
+            reason: '${v.value} has a same-language sibling to pair with');
+      }
+    });
+
+    test('pairs the concrete cases the catalog actually holds', () {
+      // NASB against KJV, 和合本 against 梁家铿译本 — a real comparison,
+      // in a script the reader already has open.
+      expect(defaultSecondaryVersion('nasb'), 'kjv');
+      expect(defaultSecondaryVersion('kjv'), 'leb');
+      expect(defaultSecondaryVersion('cuvs-yhwh'), 'biblexg-v2');
+      expect(defaultSecondaryVersion('cuvs-yhwh-tr'), 'biblexg-v2-tr');
+    });
+
+    test('an unknown version code still yields something readable', () {
+      // bibleVersionLanguage falls back to zh-Hans for unknown codes, so
+      // a stale saved version from an old build lands on a Chinese
+      // edition rather than crashing or duplicating.
+      final secondary = defaultSecondaryVersion('some-retired-code');
+      expect(availableVersions.any((c) => c.value == secondary), isTrue);
+      expect(bibleVersionLanguage(secondary), 'zh-Hans');
+    });
+  });
+
+  group('shouldAutoSplit', () {
+    test('does not split a screen too narrow for two readable columns', () {
+      // The width from the report: two ~440px columns, 6-7 words a line.
+      expect(ResponsiveBreakpoints.shouldAutoSplit(880), isFalse);
+      expect(ResponsiveBreakpoints.shouldAutoSplit(600), isFalse);
+      expect(ResponsiveBreakpoints.shouldAutoSplit(390), isFalse);
+    });
+
+    test('splits once both columns clear the readable minimum', () {
+      expect(ResponsiveBreakpoints.shouldAutoSplit(960), isTrue);
+      expect(ResponsiveBreakpoints.shouldAutoSplit(1400), isTrue);
+    });
+
+    test('is stricter than the sidebar breakpoint it used to share', () {
+      // The bug: both defaults keyed off isTabletOrWider (>=600).
+      expect(ResponsiveBreakpoints.isTabletOrWider(880), isTrue);
+      expect(ResponsiveBreakpoints.shouldAutoSplit(880), isFalse);
+    });
+  });
+}

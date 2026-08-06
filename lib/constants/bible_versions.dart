@@ -46,6 +46,13 @@ const bibleVersions = <BibleVersionInfo>[
     language: 'en',
     editionYear: '2020 update',
   ),
+  BibleVersionInfo(
+    value: 'bsb',
+    shortLabel: 'BSB',
+    menuLabel: 'Berean Standard Bible',
+    language: 'en',
+    editionYear: '2020 / public domain',
+  ),
   // NIV (New International Version) was previously listed here.
   // Removed in 2026-05 — Biblica / Zondervan retain commercial
   // copyright on the full text and we cannot redistribute the bundled
@@ -155,4 +162,43 @@ String? bibleVersionFullCanonFallback(String version) {
       return 'cuvs-yhwh-tr';   // 和合本雅伟版 (Traditional, full canon)
   }
   return null;
+}
+
+/// The version a NEW split-view pane should open with, given what the
+/// primary pane is showing.
+///
+/// 2026-08-06: the second pane used to be seeded with
+/// `primary.currentVersion`, so opening Split View produced the same
+/// chapter in the same translation twice — half the screen spent saying
+/// nothing. A comparison view has to compare something.
+///
+/// Prefers a different version in the SAME language, because that is
+/// the comparison a reader can actually use: NASB beside KJV, 和合本
+/// beside 梁家铿译本. Cross-language is the second choice, not the
+/// first — a pane in a script you don't read is only marginally better
+/// than the duplicate it replaces. Script variants of one language
+/// (繁體/简体) count as the same family for that fallback, since
+/// 和合本繁體 beside 和合本简体 is one text in two character sets.
+///
+/// Falls back to any other available version, and finally to
+/// [primaryVersion] itself when the catalog holds only one — duplicated
+/// is still better than blank.
+String defaultSecondaryVersion(String primaryVersion) {
+  final all = availableVersions;
+  final others = all.where((v) => v.value != primaryVersion).toList();
+  if (others.isEmpty) return primaryVersion;
+
+  final primaryLang = bibleVersionLanguage(primaryVersion);
+  for (final v in others) {
+    if (v.language == primaryLang) return v.value;
+  }
+
+  // 'en' vs 'zh' — zh-Hant and zh-Hans collapse into one family.
+  String family(String lang) => lang.startsWith('zh') ? 'zh' : lang;
+  final primaryFamily = family(primaryLang);
+  for (final v in others) {
+    if (family(v.language) == primaryFamily) return v.value;
+  }
+
+  return others.first.value;
 }
