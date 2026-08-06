@@ -33,6 +33,8 @@ import 'package:seeksparks/services/section_title_service.dart';
 import 'package:seeksparks/services/url_sync_service.dart';
 import 'package:provider/provider.dart';
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:seeksparks/widgets/small_screen_advisory.dart'
+    show SmallScreenGate;
 import 'package:seeksparks/utils/theme_accent.dart'
     show darkReadingAccent, onAccentColor;
 
@@ -949,8 +951,14 @@ class _RootRouterState extends State<_RootRouter> {
     //
     // HomePage is not gone; it stays reachable from the Reader control
     // as a MODE within the workspace rather than a separate front door.
+    //
+    // 2026-08-07: routing phones here made the app visually consistent
+    // and thereby made a real problem worse — consistency with a
+    // workbench you cannot show is a menu bar over one column, which
+    // is YsWords with extra steps. SmallScreenGate says so once, on
+    // phone-sized viewports only, and then never again.
     return _showHome
-        ? const WorkbenchPage()
+        ? const SmallScreenGate(child: WorkbenchPage())
         : LoadingPage(
             verses: widget.initialVerses,
             onAdvance: _advance,

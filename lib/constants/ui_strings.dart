@@ -6703,4 +6703,67 @@ const uiStrings = {
     'en': 'No verse in this book is readable with this deck yet. Ask for '
         'fewer list words, or allow an unknown word or two.',
   },
+
+  // ====== Small-screen advisory ======
+  // Shown once, on phone-sized viewports, then dismissible forever.
+  // Tone matters here: this is information, not a scolding and not an
+  // error. It states what the layout needs and what this screen is,
+  // and lets the reader overrule it.
+  'fitTitle': {
+    'zh-Hans': 'SeekSparks 是研经工作台',
+    'zh-Hant': 'SeekSparks 是研經工作檯',
+    'en': 'SeekSparks is a study workbench',
+  },
+  'fitLead': {
+    'zh-Hans': '搜索、经文、字词分析三栏并排在同一屏上。这种并排本身就是工具，'
+        '不是装饰——把它压成一栏，就只剩一个读经器了。',
+    'zh-Hant': '搜尋、經文、字詞分析三欄並排在同一畫面上。這種並排本身就是工具，'
+        '不是裝飾——把它壓成一欄，就只剩一個讀經器了。',
+    'en': 'Search, the text, and word analysis sit side by side — three '
+        'columns on one screen. The side-by-side is the tool, not '
+        'decoration; squeezed to one column it is just a reader.',
+  },
+  'fitNeeds': {
+    'zh-Hans': '三栏约需 {three} 像素宽，两栏约需 {two}。当前屏幕为 {w} × {h}。',
+    'zh-Hant': '三欄約需 {three} 像素寬，兩欄約需 {two}。目前螢幕為 {w} × {h}。',
+    'en': 'Three columns need about {three} px of width, two need about '
+        '{two}. This screen is {w} × {h}.',
+  },
+  'fitRotate': {
+    'zh-Hans': '把手机横过来就能得到两栏：搜索与经文并排。三栏则需要平板或笔记本电脑。',
+    'zh-Hant': '把手機橫過來就能得到兩欄：搜尋與經文並排。三欄則需要平板或筆記型電腦。',
+    'en': 'Turning the phone sideways gets you two: search beside the text. '
+        'All three needs a tablet or a laptop.',
+  },
+  'fitLarger': {
+    'zh-Hans': '这块屏幕横竖都到不了两栏。平板或笔记本电脑（大致 4:3 至 16:10）'
+        '才是这套版面的设计目标。手机横屏时，工具栏之下只剩约八行经文。',
+    'zh-Hant': '這塊螢幕橫豎都到不了兩欄。平板或筆記型電腦（大致 4:3 至 16:10）'
+        '才是這套版面的設計目標。手機橫向時，工具列之下只剩約八行經文。',
+    'en': 'This screen does not reach two columns in either direction. A '
+        'tablet or a laptop — roughly 4:3 to 16:10 — is what this layout '
+        'was drawn for. A phone held sideways leaves about eight lines of '
+        'text under the toolbars.',
+  },
+  'fitYsWords': {
+    'zh-Hans': '若只是在手机上读经，YsWords 正是为此而生——同一家族，手机优先。',
+    'zh-Hant': '若只是在手機上讀經，YsWords 正是為此而生——同一家族，手機優先。',
+    'en': 'For reading on a phone, YsWords is built for exactly that — same '
+        'family, phone-first.',
+  },
+  'fitOpenYsWords': {
+    'zh-Hans': '打开 YsWords',
+    'zh-Hant': '開啟 YsWords',
+    'en': 'Open YsWords',
+  },
+  'fitContinue': {
+    'zh-Hans': '仍然继续',
+    'zh-Hant': '仍然繼續',
+    'en': 'Continue anyway',
+  },
+  'fitContinueNote': {
+    'zh-Hans': '此提示只出现这一次。',
+    'zh-Hant': '此提示只會出現這一次。',
+    'en': 'This only appears once.',
+  },
 };
