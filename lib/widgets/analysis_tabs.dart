@@ -30,7 +30,8 @@ import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
 /// 2026-08-06: `kwic` joins them — BibleWorks' Key Word In Context
 /// (help topic bwh31), then `related` — the Related Verses Tool
 /// (bwh50), then `verseLists` — the Verse List Manager (bwh27), then
-/// `phrases` — the Phrase Matching Tool (bwh51).
+/// `phrases` — the Phrase Matching Tool (bwh51), then `vocabulary` —
+/// the Vocabulary Flashcard Module (bwh40).
 /// Appended rather than inserted because the tab is persisted by
 /// INDEX (`workbench.analysisTab`), so reordering would silently move
 /// every existing reader to a different tab.
@@ -42,6 +43,7 @@ enum AnalysisTab {
   related,
   verseLists,
   phrases,
+  vocabulary,
 }
 
 /// The tab strip itself. Deliberately a plain segmented row rather than
@@ -78,6 +80,8 @@ class AnalysisTabStrip extends StatelessWidget {
           'analysisTabVerseLists', 'Lists'),
       (AnalysisTab.phrases, Icons.format_quote_rounded,
           'analysisTabPhrases', 'Phrases'),
+      (AnalysisTab.vocabulary, Icons.style_outlined, 'analysisTabVocabulary',
+          'Vocab'),
     ];
     return Container(
       padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),

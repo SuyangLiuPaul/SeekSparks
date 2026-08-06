@@ -48,6 +48,7 @@ import 'package:seeksparks/utils/verse_list.dart' show VerseRef, verseListKeys;
 import 'package:seeksparks/widgets/kwic_pane.dart';
 import 'package:seeksparks/widgets/related_verses_pane.dart';
 import 'package:seeksparks/widgets/phrase_match_pane.dart';
+import 'package:seeksparks/widgets/vocabulary_pane.dart';
 import 'package:seeksparks/widgets/language_switcher_button.dart';
 import 'package:seeksparks/widgets/browse_nav_strip.dart';
 import 'package:seeksparks/widgets/browse_window.dart';
@@ -1260,6 +1261,28 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
               chapter: hit.chapter,
               verseStart: hit.verse,
               verseEnd: hit.verse,
+            ),
+          ),
+        );
+
+      case AnalysisTab.vocabulary:
+        final v = _analysisVerse(mp, verses);
+        if (v == null) return _analysisHint(context, locale);
+        final book = bookNameToEnglish[v.book] ?? v.book;
+        // Keyed on the BOOK, not the verse: the deck follows the chapter
+        // through `didUpdateWidget` so that scrolling a chapter-scoped
+        // deck does not throw away a drill in progress.
+        return VocabularyPane(
+          key: ValueKey<String>('vocabulary-$book'),
+          englishBook: book,
+          chapter: v.chapter,
+          locale: locale,
+          onOpenVerse: (chapter, verse) => _onCrossRefTap(
+            BibleReference(
+              englishBook: book,
+              chapter: chapter,
+              verseStart: verse,
+              verseEnd: verse,
             ),
           ),
         );

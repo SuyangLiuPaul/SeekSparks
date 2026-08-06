@@ -65,14 +65,14 @@ class OriginalsLemma {
   /// string) so the filter is deterministic and easy to audit.
   /// Proper nouns and verbs of saying/seeing/doing are deliberately
   /// LEFT IN — they're high-frequency but semantically meaningful.
-  bool get isStopword => _stopwordStrongs.contains(strongs);
+  bool get isStopword => kStopwordStrongs.contains(strongs);
 }
 
 /// Strong's numbers for grammatical particles / structural markers
 /// that dominate raw frequency tables but carry no theological
 /// content on their own. Filtering these surfaces verbs, nouns, and
 /// proper names that the user actually wants to study.
-const Set<String> _stopwordStrongs = {
+const Set<String> kStopwordStrongs = {
   // ── Hebrew (OT) ────────────────────────────────────────────────
   'H834',  // ʾăšer — relative pronoun (which/who/that)
   'H853',  // ʾēṯ    — direct-object marker (untranslated)

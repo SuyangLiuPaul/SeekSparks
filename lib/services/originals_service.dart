@@ -97,6 +97,18 @@ class OriginalsService {
     return [for (final k in keys) ...?book[k]];
   }
 
+  /// Every verse of a book, keyed `"chapter:verse"`.
+  ///
+  /// 2026-08-07: added for the Vocabulary tab, which needs the tagged
+  /// text broken by VERSE rather than flattened — bwh40's Example Verse
+  /// Finder reports which verses you can read, so it cannot use
+  /// [forBook]'s single reading-order list.
+  ///
+  /// Returns the shared cache; treat it as read-only.
+  static Future<Map<String, List<OriginalWord>>> versesOfBook(
+          String englishBook) =>
+      _bookMap(englishBook);
+
   static Future<Map<String, List<OriginalWord>>> _bookMap(
       String englishBook) async {
     if (!_byBook.containsKey(englishBook)) {

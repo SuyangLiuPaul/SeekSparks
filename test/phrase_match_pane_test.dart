@@ -296,11 +296,15 @@ void main() {
       expect(find.text('Phrases'), findsOneWidget);
     });
 
-    testWidgets('the tab is last, so persisted indices still resolve',
+    testWidgets('the tab keeps its index, so persisted ones still resolve',
         (tester) async {
       // The tab is stored by index. Anything but "appended" silently
       // moves every existing reader to a different tab.
-      expect(AnalysisTab.values.last, AnalysisTab.phrases);
+      //
+      // Pinning the INDEX rather than `values.last`: lastness is not the
+      // invariant, and asserting it broke the moment bwh40 was appended
+      // — which is the one operation this test exists to bless.
+      expect(AnalysisTab.values.indexOf(AnalysisTab.phrases), 6);
       expect(AnalysisTab.values.indexOf(AnalysisTab.wordStudy), 0);
       expect(AnalysisTab.values.indexOf(AnalysisTab.verseLists), 5);
     });
