@@ -64,7 +64,18 @@ class TaggedRun {
 class TaggedTextService {
   /// Version codes that have a tagged asset set. Checked before any
   /// load so an untagged version costs nothing.
-  static const Set<String> taggedVersions = {'cuvs-yhwh', 'bsb'};
+  /// 2026-08-07: kjvs / lxxwh / cuvs-plus join them, imported from
+  /// Eagle's View by `tools/import_eaglesview.py`. That module tags
+  /// BOTH testaments, so the English and Chinese columns are now tagged
+  /// in the Old Testament too — previously only the BSB reached back
+  /// past Malachi.
+  static const Set<String> taggedVersions = {
+    'cuvs-yhwh',
+    'bsb',
+    'kjvs',
+    'lxxwh',
+    'cuvs-plus',
+  };
 
   static final Map<String, Map<String, List<TaggedRun>>> _cache = {};
   static final Map<String, Future<Map<String, List<TaggedRun>>>> _inflight = {};

@@ -101,6 +101,8 @@ class _LanguageGroupedVersionBodyState
         return _t('versionLangEnglish', 'English');
       case 'zh-Hant':
         return _t('versionLangTraditional', 'Traditional');
+      case 'grc':
+        return _t('versionLangGreek', 'Greek');
       case 'zh-Hans':
       default:
         return _t('versionLangSimplified', 'Simplified');

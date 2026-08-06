@@ -160,6 +160,34 @@ const uiStrings = {
     'zh-Hant': '简体中文',
     'en': '简体中文',
   },
+  // Original-language column (LXX + Westcott-Hort). Named for the
+  // language, not the edition, to match the three rows above it.
+  'versionLangGreek': {
+    'zh-Hans': '希腊文',
+    'zh-Hant': '希臘文',
+    'en': 'Greek',
+  },
+  // Eagle's View imports (v1.6.18) — About > Scriptures attribution.
+  'aboutVerKjvs': {
+    'zh-Hans': "KJV+S（1769 带 Strong's 及时态语态语气）",
+    'zh-Hant': "KJV+S（1769 帶 Strong's 及時態語態語氣）",
+    'en': "KJV+S (1769 with Strong's + TVM)",
+  },
+  'aboutVerLxxwh': {
+    'zh-Hans': 'LXX+WH（七十士译本 + 韦斯科特-霍特希腊文）',
+    'zh-Hant': 'LXX+WH（七十士譯本 + 韋斯科特-霍特希臘文）',
+    'en': 'LXX+WH (Septuagint + Westcott-Hort)',
+  },
+  'aboutVerCuvsPlus': {
+    'zh-Hans': "CUV+S 和合本+Strong's（简体）",
+    'zh-Hant': "CUV+S 和合本+Strong's（簡體）",
+    'en': "CUV+S (Chinese Union Version with Strong's, Simplified)",
+  },
+  'aboutLicenseEaglesView': {
+    'zh-Hans': '经文属公有领域 · 电子版本及编号对照来自 Eagle\'s View。',
+    'zh-Hant': '經文屬公有領域 · 電子版本及編號對照來自 Eagle\'s View。',
+    'en': "Public domain text \u00b7 electronic edition from Eagle's View.",
+  },
   'chapter': {
     'zh-Hans': '第 {n} 章',
     'zh-Hant': '第 {n} 章',

@@ -53,6 +53,36 @@ const bibleVersions = <BibleVersionInfo>[
     language: 'en',
     editionYear: '2020 / public domain',
   ),
+  // 2026-08-07: the three editions below come from Eagle's View, the
+  // electronic statistical concordance by Pastor Ho
+  // (eaglesviewsoftware.com), imported by tools/import_eaglesview.py.
+  // All three are public-domain texts and all three ship Strong's
+  // tagging, which is why they earn a row of their own rather than
+  // replacing anything.
+  //
+  // KJVS is a SEPARATE row from `kjv` on purpose. They are different
+  // editions of the same translation — EV keeps 1769 British spelling
+  // (shewbread, honour, alway) where the bundled `kjv` is modernised,
+  // and they disagree on ~3% of verses. Word-level tagging has to travel
+  // with the exact text it was aligned against, so grafting EV's tags
+  // onto the existing `kjv` would mis-tag roughly 960 verses.
+  BibleVersionInfo(
+    value: 'kjvs',
+    shortLabel: 'KJV+S',
+    menuLabel: "King James Version + Strong's",
+    language: 'en',
+    editionYear: "1769 / with Strong's + TVM",
+  ),
+  BibleVersionInfo(
+    value: 'lxxwh',
+    shortLabel: 'LXX+WH',
+    menuLabel: 'Septuagint + Westcott-Hort',
+    language: 'grc',
+    // Unaccented, as the source encodes it — worth saying, because a
+    // reader who knows Greek will notice the missing breathings before
+    // they notice anything else.
+    editionYear: 'Greek OT + NT / unaccented',
+  ),
   // NIV (New International Version) was previously listed here.
   // Removed in 2026-05 — Biblica / Zondervan retain commercial
   // copyright on the full text and we cannot redistribute the bundled
@@ -89,6 +119,20 @@ const bibleVersions = <BibleVersionInfo>[
     menuLabel: '梁家铿譯本(繁體)',
     language: 'zh-Hant',
   ),
+  // Deliberately LAST among the 简体 rows, not next to its two sibling
+  // Eagle's View imports. `defaultSecondaryVersion` seeds a new split
+  // pane with the first other edition in the same language, and this is
+  // the standard 和合本 — the same base text as 和合本雅伟版, differing
+  // mostly by the 4,857 divine-name restorations. Opening it beside
+  // 雅伟版 would make Split View compare a text against itself. 梁家铿译本
+  // is a genuinely different translation, so it keeps the default.
+  BibleVersionInfo(
+    value: 'cuvs-plus',
+    shortLabel: 'CUV+S(简)',
+    menuLabel: "和合本+Strong's(简体)",
+    language: 'zh-Hans',
+    editionYear: '1919 / 和合本原文',
+  ),
 ];
 
 /// Versions hidden from the picker (currently none). CUV, CNV, and LJK1
@@ -106,11 +150,13 @@ List<BibleVersionInfo> get availableVersions =>
 
 /// The order languages appear in the version picker's language selector.
 /// English first, then Traditional, then Simplified — matches the way
-/// the user phrased it ("英语繁体简体"). Only languages that actually have
-/// at least one available version are kept (defensive against a future
-/// all-disabled language).
+/// the user phrased it ("英语繁体简体"). Greek goes last: it is an
+/// original-language column for study, not a reading language anyone
+/// picks by default. Only languages that actually have at least one
+/// available version are kept (defensive against a future all-disabled
+/// language).
 List<String> get bibleLanguageOrder {
-  const order = ['en', 'zh-Hant', 'zh-Hans'];
+  const order = ['en', 'zh-Hant', 'zh-Hans', 'grc'];
   final present = availableVersions.map((v) => v.language).toSet();
   return order.where(present.contains).toList();
 }

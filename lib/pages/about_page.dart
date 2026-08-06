@@ -511,6 +511,30 @@ class _ScripturesTable extends StatelessWidget {
         licence: uiStrings['aboutLicenseLjk']?[locale] ??
             '© Bible Exegesis Ministry · used with permission.',
         url: 'https://www.biblexg.com/',
+      ),
+      // The three Eagle's View imports. Each underlying text is public
+      // domain; the electronic editions and their Strong's alignment
+      // come from Eagle's View, so it is credited by name.
+      _AttribRow(
+        name: uiStrings['aboutVerKjvs']?[locale] ??
+            "KJV+S (1769 with Strong's + TVM)",
+        licence: uiStrings['aboutLicenseEaglesView']?[locale] ??
+            "Public domain text · electronic edition from Eagle's View.",
+        url: 'https://eaglesviewsoftware.com/en/download/',
+      ),
+      _AttribRow(
+        name: uiStrings['aboutVerLxxwh']?[locale] ??
+            'LXX+WH (Septuagint + Westcott-Hort)',
+        licence: uiStrings['aboutLicenseEaglesView']?[locale] ??
+            "Public domain text · electronic edition from Eagle's View.",
+        url: 'https://eaglesviewsoftware.com/en/download/',
+      ),
+      _AttribRow(
+        name: uiStrings['aboutVerCuvsPlus']?[locale] ??
+            "CUV+S 和合本+Strong's（简体）",
+        licence: uiStrings['aboutLicenseEaglesView']?[locale] ??
+            "Public domain text · electronic edition from Eagle's View.",
+        url: 'https://eaglesviewsoftware.com/en/download/',
         last: true,
       ),
     ];

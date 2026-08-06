@@ -105,6 +105,9 @@ flutter:
     - assets/biblexg-v2-tr.json
     - assets/nasb.json
     - assets/bsb.json
+    - assets/kjvs.json
+    - assets/cuvs-plus.json
+    - assets/lxxwh.json
     # NIV (Biblica/Zondervan) removed in 2026-05 — its complete text
     # cannot be redistributed without a publisher licence.
     # CUV, CUV-tr, CNV, CNV-tr, biblexg (LJK1), biblexg-tr removed
@@ -127,6 +130,9 @@ flutter:
     - assets/originals/
     - assets/tagged/cuvs-yhwh/
     - assets/tagged/bsb/
+    - assets/tagged/kjvs/
+    - assets/tagged/cuvs-plus/
+    - assets/tagged/lxxwh/
     - assets/sermons/index.json
     - assets/sermons/refs.json
     - assets/family_tree.json
