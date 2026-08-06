@@ -32,3 +32,4 @@ for that day's ship. From here on, each run appends one line.
 - **v1.5.2** — fix: Compare-two-versions actually compared two versions instead of duplicating one.
 - **v1.5.1** — release plumbing fix.
 - **v1.5.0** — per-word Strong's on the Chinese line (和合本雅伟版 + BDB/Thayer).
+- v1.6.18 — Eagle's View import: three public-domain Strong's-tagged editions (kjvs KJV+Strong's/TVM, lxxwh Septuagint+Westcott-Hort in a new `grc` language group, cuvs-plus 和合本+Strong's). Decoder in tools/import_eaglesview.py. NASB/nsn+/RSV/NET deliberately excluded — redistribution not permitted. OPEN: ask the pastor about the AOSurvey conversion rights + the Modern Concordance index before importing it.
