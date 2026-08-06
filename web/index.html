@@ -190,15 +190,31 @@
        top of the auto-recovery here. -->
   <script>
     (function() {
-      var RELOAD_KEY = 'seeksparks_self_heal_reloaded';
+      // 2026-08-06: this used to be a once-per-SESSION boolean, which
+      // meant the self-heal fired for the first deploy a tab ever saw
+      // and never again. Refresh across a second deploy in the same tab
+      // and you got: service worker unregistered, caches cleared, but NO
+      // reload — so the already-running main.dart.js kept executing
+      // against a manifest that had moved under it. That threw
+      // `Invalid argument: 0` during build, killed the widget subtree,
+      // and showed a blank pane until you refreshed a second time.
+      //
+      // It is now a TIMESTAMP, so the guard does only the job it was
+      // ever needed for — breaking a reload loop — while every later
+      // deploy still gets its one self-heal.
+      var RELOAD_KEY = 'seeksparks_self_heal_reloaded_at';
+      var LOOP_WINDOW_MS = 30000;
       var alreadyReloaded = false;
       try {
-        alreadyReloaded = sessionStorage.getItem(RELOAD_KEY) === '1';
+        var last = Number(sessionStorage.getItem(RELOAD_KEY) || 0);
+        alreadyReloaded = last > 0 && (Date.now() - last) < LOOP_WINDOW_MS;
       } catch (_) {}
 
       function maybeReload() {
         if (alreadyReloaded) return;
-        try { sessionStorage.setItem(RELOAD_KEY, '1'); } catch (_) {}
+        try {
+          sessionStorage.setItem(RELOAD_KEY, String(Date.now()));
+        } catch (_) {}
         // Netlify's no-cache headers on / index.html / bootstrap /
         // main.dart.js force network re-fetch on the reload.
         location.reload();

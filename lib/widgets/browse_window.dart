@@ -317,6 +317,24 @@ class _BrowseWindowState extends State<BrowseWindow> {
             ),
           );
         }
+        // Surface a load failure instead of rendering nothing. A blank
+        // pane gives the reader no idea whether the chapter is empty,
+        // still loading, or broken.
+        if (snap.hasError) {
+          return Container(
+            color: wb.paneBg,
+            alignment: Alignment.center,
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Text(
+                'Could not load this chapter.\n${snap.error}',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                    fontSize: WbMetrics.text, color: wb.mutedText),
+              ),
+            ),
+          );
+        }
         final rows = snap.data ?? const <_BrowseRow>[];
         if (rows.isEmpty) {
           return Container(
