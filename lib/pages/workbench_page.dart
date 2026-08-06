@@ -23,6 +23,7 @@ import 'package:seeksparks/pages/home_page.dart';
 import 'package:seeksparks/pages/library_page.dart';
 import 'package:seeksparks/pages/sermons_page.dart';
 import 'package:seeksparks/pages/settings_page.dart';
+import 'package:seeksparks/pages/word_list_page.dart';
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/providers/workbench_provider.dart';
 import 'package:seeksparks/services/concordance_service.dart';
@@ -265,6 +266,15 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         ),
       ]),
       WbMenu(s('menuTools', 'Tools'), [
+        WbMenuItem(
+          s('wordListTitle', 'Word List'),
+          () => pushPage(WordListPage(
+            book: mp.currentBook ?? '',
+            chapter: mp.currentChapter ?? 1,
+            locale: locale,
+            version: mp.currentVersion,
+          )),
+        ),
         WbMenuItem(s('bibleEvidence', 'Bible Evidence'),
             () => pushPage(const EvidencePage())),
         WbMenuItem(s('timeline', 'Timeline'),

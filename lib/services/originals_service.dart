@@ -51,6 +51,61 @@ class OriginalsService {
     return words;
   }
 
+  /// Every original-language word in one chapter, in verse order.
+  ///
+  /// 2026-08-06: added for the Word List Manager, which counts a whole
+  /// passage rather than looking a verse up. Reuses the same per-book
+  /// cache `forVerse` fills, so opening the word list for a chapter you
+  /// are already reading costs no extra load.
+  static Future<List<OriginalWord>> forChapter(
+    String englishBook,
+    int chapter,
+  ) async {
+    final book = await _bookMap(englishBook);
+    final out = <OriginalWord>[];
+    // Verse keys are "c:v" strings; walk them numerically so the list
+    // is in reading order rather than "10" before "2".
+    final verses = <int>[];
+    for (final key in book.keys) {
+      final parts = key.split(':');
+      if (parts.length != 2) continue;
+      if (int.tryParse(parts[0]) != chapter) continue;
+      final v = int.tryParse(parts[1]);
+      if (v != null) verses.add(v);
+    }
+    verses.sort();
+    for (final v in verses) {
+      out.addAll(book['$chapter:$v'] ?? const []);
+    }
+    return out;
+  }
+
+  /// Every original-language word in a book, in reading order.
+  static Future<List<OriginalWord>> forBook(String englishBook) async {
+    final book = await _bookMap(englishBook);
+    final keys = book.keys.toList()
+      ..sort((a, b) {
+        final pa = a.split(':');
+        final pb = b.split(':');
+        final ca = int.tryParse(pa.first) ?? 0;
+        final cb = int.tryParse(pb.first) ?? 0;
+        if (ca != cb) return ca.compareTo(cb);
+        final va = int.tryParse(pa.length > 1 ? pa[1] : '0') ?? 0;
+        final vb = int.tryParse(pb.length > 1 ? pb[1] : '0') ?? 0;
+        return va.compareTo(vb);
+      });
+    return [for (final k in keys) ...?book[k]];
+  }
+
+  static Future<Map<String, List<OriginalWord>>> _bookMap(
+      String englishBook) async {
+    if (!_byBook.containsKey(englishBook)) {
+      _byBook[englishBook] =
+          await (_loading[englishBook] ??= _load(englishBook));
+    }
+    return _byBook[englishBook] ?? const {};
+  }
+
   /// Whether bundled original-language data exists for any verse in
   /// [englishBook]. Useful for showing/hiding the "Original" affordance
   /// without per-verse probing.

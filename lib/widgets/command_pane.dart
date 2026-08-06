@@ -17,6 +17,10 @@ import 'package:seeksparks/utils/jump_to_reference.dart' as jumper;
 import 'package:seeksparks/utils/reference_parser.dart' show parseReference;
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
+import 'package:seeksparks/constants/book_groups.dart'
+    show oldTestamentBooks, canonicalOtBooks, canonicalNtBooks;
+import 'package:seeksparks/utils/search_stats.dart';
+import 'package:seeksparks/widgets/search_stats_strip.dart';
 
 // Hoisted regex — same rationale as search_page.dart's `_kMultiSpaceRe`:
 // built once, reused for every preview row during scroll.
@@ -323,6 +327,15 @@ class _CommandPaneState extends State<CommandPane> {
     if (refs.isEmpty) {
       return _noResults(settings, scheme, locale);
     }
+    // 2026-08-06: the distribution goes ABOVE the list. BibleWorks puts
+    // search statistics in their own window, which on a pad would mean
+    // a second surface for something you want to read alongside the
+    // hits, not instead of them.
+    final distribution = buildDistribution(
+      hitBooks: refs.map((r) => r.englishBook),
+      bookOrder: const [...canonicalOtBooks, ...canonicalNtBooks],
+      oldTestamentBooks: oldTestamentBooks,
+    );
     return Column(
       children: [
         _resultHeader(
@@ -330,6 +343,11 @@ class _CommandPaneState extends State<CommandPane> {
           () => _copyAllStrongsRefs(wb, settings, refs),
           settings,
           locale,
+        ),
+        SearchStatsStrip(
+          distribution: distribution,
+          locale: locale,
+          version: wb.mainProvider.currentVersion,
         ),
         Expanded(
           child: ListView.builder(

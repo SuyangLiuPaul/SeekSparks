@@ -4189,6 +4189,31 @@ const uiStrings = {
     'zh-Hant': '© Logos Bible Software · 僅限非商業研經使用。',
     'en': '© Logos Bible Software · non-commercial study only.',
   },
+  'wordListTitle': {'zh-Hans': '词汇表', 'zh-Hant': '詞彙表', 'en': 'Word List'},
+  'wordListScopeChapter': {
+    'zh-Hans': '本章', 'zh-Hant': '本章', 'en': 'This chapter',
+  },
+  'wordListScopeBook': {
+    'zh-Hans': '整卷', 'zh-Hant': '整卷', 'en': 'Whole book',
+  },
+  'wordListDistinct': {'zh-Hans': '个词', 'zh-Hant': '個詞', 'en': 'distinct'},
+  'wordListTotal': {'zh-Hans': '字', 'zh-Hant': '字', 'en': 'words'},
+  'wordListHapax': {
+    'zh-Hans': '只出现一次', 'zh-Hant': '只出現一次', 'en': 'used once',
+  },
+  'wordListSortFreq': {'zh-Hans': '按词频', 'zh-Hant': '按詞頻', 'en': 'Frequency'},
+  'wordListSortRare': {'zh-Hans': '最罕见', 'zh-Hant': '最罕見', 'en': 'Rarest'},
+  'wordListSortNum': {'zh-Hans': '按编号', 'zh-Hant': '按編號', 'en': 'Number'},
+  'wordListSortAlpha': {
+    'zh-Hans': '按字母', 'zh-Hant': '按字母', 'en': 'Alphabetical',
+  },
+  'wordListNone': {
+    'zh-Hans': '此段没有原文数据。',
+    'zh-Hant': '此段沒有原文數據。',
+    'en': 'No original-language data for this passage.',
+  },
+  'searchStatsTop': {'zh-Hans': '最多出现于', 'zh-Hant': '最多出現於', 'en': 'Most in'},
+  'searchStatsBooks': {'zh-Hans': '卷书', 'zh-Hant': '卷書', 'en': 'books'},
   'analysisTabKwic': {
     'zh-Hans': '上下文',
     'zh-Hant': '上下文',
