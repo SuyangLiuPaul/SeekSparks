@@ -12,6 +12,7 @@ for that day's ship. From here on, each run appends one line.
 
 ---
 
+- **v1.6.12** — removed the U+25A1 missing-glyph markers from 士师记 13:7 and 18:10 (and the mirrored traditional verses in 士師記). The two □ glyphs were a corruption of the reverence space CUV prints before 神 — every other occurrence in the file is normalised away. Added a regression test that verifies both CUVS-YHWH editions have exactly 31,102 verses with no U+25A1, and spot-checks the two fixed verses carry the canonical text.
 - **v1.6.11** — 护眼纸质 reaches the workbench. The paper theme used to stop at BibleReadingPane's content subtree; chrome, the parallel Browse window, and every `WbColors.of` call site stayed on the neutral desktop palette. Added `WbColors.paper` + a `paper:` flag on `workbenchTheme`, watched `AppSettings.readingPaperTheme` in `WorkbenchPage.build`. Also added value equality to `WbColors`.
 - **v1.6.10** — search hits are now marked in the Browse text itself, not only in the verse list. A hit list without marked hits is a table of contents.
 - **v1.6.9** — the chrome (menu/toolbar/status bars) is present at every width. Phones read as the same tool with side panes collapsed, not as a different app.
