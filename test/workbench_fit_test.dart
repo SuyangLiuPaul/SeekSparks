@@ -21,20 +21,37 @@ void main() {
     });
   });
 
-  group('the gate is the short edge, never the width', () {
-    test('phone portrait is advised', () {
+  // 2026-08-07: this group used to assert "the gate is the short edge,
+  // never the width" and passed happily — while the shipped app told a
+  // portrait phone that rotating would buy a second column and then, once
+  // rotated, insisted the screen "does not reach two columns in EITHER
+  // direction" beside the printed numbers 844 x 390 and "two need 736".
+  // The tests were green because they encoded the same contradiction the
+  // spec did. What is asserted now is the promise the UI actually makes.
+  group('the gate is the current width, because that is what the panes use',
+      () {
+    test('phone portrait is advised — 390 carries one column', () {
       expect(advice(390, 844), WorkbenchAdvice.rotate);
     });
 
-    test('phone landscape is advised too — 844 wide is still a phone', () {
-      expect(advice(844, 390), WorkbenchAdvice.largerDisplay);
+    test('the SAME phone rotated is fine — 844 carries two', () {
+      // The bug in one line: this returned largerDisplay, so turning the
+      // phone changed nothing and the advice contradicted itself.
+      expect(WorkbenchFit.paneCountFor(844), 2);
+      expect(advice(844, 390), WorkbenchAdvice.none);
     });
 
-    test('479 is a phone, 480 is not', () {
+    test('the boundary is the two-pane minimum, in either orientation', () {
+      expect(advice(735, 400), WorkbenchAdvice.largerDisplay);
+      expect(advice(736, 400), WorkbenchAdvice.none);
+      expect(advice(400, 735), WorkbenchAdvice.largerDisplay);
+      expect(advice(400, 736), WorkbenchAdvice.rotate);
+    });
+
+    test('a tall narrow window is judged on its width, not its short edge',
+        () {
       expect(advice(479, 900), WorkbenchAdvice.rotate);
-      expect(advice(480, 900), WorkbenchAdvice.none);
-      expect(advice(900, 479), WorkbenchAdvice.largerDisplay);
-      expect(advice(900, 480), WorkbenchAdvice.none);
+      expect(advice(900, 479), WorkbenchAdvice.none);
     });
   });
 
@@ -54,9 +71,13 @@ void main() {
       expect(advice(400, 736), WorkbenchAdvice.rotate);
     });
 
-    test('a landscape phone is never told to rotate', () {
-      expect(advice(844, 390), WorkbenchAdvice.largerDisplay);
-      expect(advice(1000, 400), WorkbenchAdvice.largerDisplay);
+    test('a landscape screen is never told to rotate', () {
+      // Wide enough already — nothing to advise.
+      expect(advice(844, 390), WorkbenchAdvice.none);
+      expect(advice(1000, 400), WorkbenchAdvice.none);
+      // Too narrow even sideways — say so, do not offer a rotation that
+      // would not help.
+      expect(advice(700, 400), WorkbenchAdvice.largerDisplay);
     });
 
     test('square counts as landscape — there is nothing to turn', () {

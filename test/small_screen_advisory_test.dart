@@ -82,10 +82,23 @@ void main() {
       expect(find.byKey(workbenchMarker), findsNothing);
     });
 
-    testWidgets('phone landscape gets it too — 844 wide is still a phone',
+    testWidgets('the same phone rotated goes straight to the workbench',
         (tester) async {
+      // 2026-08-07: this asserted the OPPOSITE — that a landscape phone
+      // still gets the advisory — which is what made rotating change
+      // nothing on screen while the portrait copy promised it would.
+      // 844 clears the 736 two-pane minimum, so the workbench is exactly
+      // what the reader was told they would get.
       addTearDown(tester.view.reset);
       await pumpGate(tester, const Size(844, 390));
+      expect(find.byType(SmallScreenAdvisory), findsNothing);
+      expect(find.byKey(workbenchMarker), findsOneWidget);
+    });
+
+    testWidgets('a screen too narrow even sideways still gets it',
+        (tester) async {
+      addTearDown(tester.view.reset);
+      await pumpGate(tester, const Size(700, 400));
       expect(find.byType(SmallScreenAdvisory), findsOneWidget);
     });
 

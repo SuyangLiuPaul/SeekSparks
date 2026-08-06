@@ -57,12 +57,6 @@ class WorkbenchFit {
   /// never get, at any width.
   static const double chromeHeight = 68;
 
-  /// A phone is a phone in either orientation, so the gate is the
-  /// short edge, never the width. A phone in landscape is ~844x390:
-  /// wide enough to pass a width test, but ~320px of text after the
-  /// chrome. iPad mini (744) clears this comfortably.
-  static const double phoneShortestSide = 480;
-
   static int paneCountFor(double width) {
     if (width >= threePaneMinWidth) return 3;
     if (width >= twoPaneMinWidth) return 2;
@@ -81,12 +75,27 @@ class WorkbenchFit {
   }) {
     if (dismissed) return WorkbenchAdvice.none;
 
-    final shortest = width < height ? width : height;
-    if (shortest >= phoneShortestSide) return WorkbenchAdvice.none;
+    // 2026-08-07: gate on the CURRENT width, not the shortest side.
+    //
+    // This used to bail out when `min(width, height) >= 480`, on the
+    // reasoning that "a phone is a phone in either orientation". That
+    // reasoning is sound about hardware and wrong about layout, and the
+    // two contradicted each other on screen: a phone's short edge does
+    // not change when it rotates, so the advisory offered rotation as
+    // the fix in portrait and then, once rotated, told the reader "this
+    // screen does not reach two columns in EITHER direction" — while
+    // printing "two need about 736. This screen is 844 x 390". 844 > 736.
+    // It argued against itself using its own numbers.
+    //
+    // What matters is whether the columns fit RIGHT NOW. If they do, the
+    // workbench works and there is nothing to advise about.
+    if (paneCountFor(width) >= 2) return WorkbenchAdvice.none;
 
-    // Square counts as landscape: there is nothing for a rotation to
-    // change, and a square viewport under 480 fails the two-pane test
-    // anyway.
+    // One column at this width. Offer rotation only when rotating would
+    // genuinely cross the two-pane threshold — on a 360x640 phone the
+    // landscape width is 640, still short of 736, so rotating there is a
+    // promise the layout cannot keep. Square counts as landscape: there
+    // is nothing for a rotation to change.
     final portrait = height > width;
     if (portrait && paneCountFor(height) >= 2) return WorkbenchAdvice.rotate;
 
