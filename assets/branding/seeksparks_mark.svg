@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <!--
+    SeekSparks / 寻光 — app mark.
+
+    Concept: a prism. One beam enters; three leave. That is what the
+    Workbench does to a verse — takes one text and refracts it into the
+    Hebrew or Greek behind it, the lexicon, the parsing, the parallel
+    versions. It also says "seeking light" without drawing a book, a
+    cross, a flame or a dove, which is what every other Bible app on the
+    shelf already draws.
+
+    The restraint IS the premium signal: one accent (gold), a deep ink
+    ground, geometry on an even grid, and nothing decorative. No mesh
+    gradient, no sparkle.
+  -->
+  <defs>
+    <linearGradient id="ground" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0"   stop-color="#16233A"/>
+      <stop offset="0.55" stop-color="#0E1728"/>
+      <stop offset="1"   stop-color="#080E1A"/>
+    </linearGradient>
+
+    <radialGradient id="lift" cx="0.30" cy="0.30" r="0.85">
+      <stop offset="0" stop-color="#2A3D5F" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#2A3D5F" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- The prism face catches light along its left edge only. -->
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0"    stop-color="#C9A227" stop-opacity="0.30"/>
+      <stop offset="0.45" stop-color="#C9A227" stop-opacity="0.07"/>
+      <stop offset="1"    stop-color="#C9A227" stop-opacity="0.16"/>
+    </linearGradient>
+
+    <!-- Each emergent ray fades as it leaves, so the eye reads travel. -->
+    <linearGradient id="rayGold" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#F0D98A"/>
+      <stop offset="1" stop-color="#C9A227" stop-opacity="0.15"/>
+    </linearGradient>
+    <linearGradient id="rayWarm" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#FFFBF0"/>
+      <stop offset="1" stop-color="#E8D8A8" stop-opacity="0.15"/>
+    </linearGradient>
+    <linearGradient id="rayCool" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#AFC6EE"/>
+      <stop offset="1" stop-color="#6E8FC7" stop-opacity="0.12"/>
+    </linearGradient>
+    <linearGradient id="rayIn" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#F5F2EA" stop-opacity="0.10"/>
+      <stop offset="1" stop-color="#F5F2EA" stop-opacity="0.95"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1024" height="1024" fill="url(#ground)"/>
+  <rect width="1024" height="1024" fill="url(#lift)"/>
+
+  <!-- Incoming beam: one line, entering the left face at its midpoint. -->
+  <path d="M 96 470 L 396 470" stroke="url(#rayIn)" stroke-width="17"
+        stroke-linecap="round" fill="none"/>
+
+  <!-- The prism. Equilateral, sitting on an optical centre slightly
+       above the geometric one so it reads level at icon sizes. -->
+  <g>
+    <path d="M 512 268 L 700 616 L 324 616 Z" fill="url(#glass)"/>
+    <path d="M 512 268 L 700 616 L 324 616 Z"
+          fill="none" stroke="#C9A227" stroke-width="26"
+          stroke-linejoin="round"/>
+    <!-- Highlight on the entry face only — one light source. -->
+    <path d="M 512 268 L 324 616" fill="none" stroke="#F0D98A"
+          stroke-width="26" stroke-linecap="round" opacity="0.9"/>
+  </g>
+
+  <!-- Three emergent rays, fanned on an even 46px pitch at the exit. -->
+  <g stroke-width="17" stroke-linecap="round" fill="none">
+    <path d="M 636 500 L 946 428" stroke="url(#rayWarm)"/>
+    <path d="M 648 546 L 946 546" stroke="url(#rayGold)"/>
+    <path d="M 636 592 L 946 664" stroke="url(#rayCool)"/>
+  </g>
+</svg>

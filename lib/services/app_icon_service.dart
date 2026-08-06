@@ -49,13 +49,27 @@ import 'package:seeksparks/services/app_icon_service_web.dart'
 class AppIconService {
   AppIconService._();
 
-  /// SeekSparks' own brand seed colour (the indigo half of the
-  /// icon's indigo→ember gradient) — the app's default theme, matching
-  /// the app icon and marketing mark. Falls through variantForColor's
-  /// named-colour buckets untouched, so it naturally resolves to "no
-  /// variant" (the default gradient icon), the same way YsWords' own
-  /// default blue did.
-  static const Color kDefaultPrimaryColor = Color(0xFF3730A3);
+  /// SeekSparks' brand seed — the ink blue of the app icon's ground.
+  ///
+  /// 2026-08-06: was `0xFF3730A3`, the indigo of the old indigo→ember
+  /// gradient icon. That icon is gone, so the whole app was themed off
+  /// a colour that no longer appeared anywhere in the product. This is
+  /// the mid tone of the new icon's ground gradient, which means every
+  /// surface `ColorScheme.fromSeed` derives — Settings included —
+  /// now descends from the same ink the mark is built on.
+  ///
+  /// Falls through variantForColor's named-colour buckets untouched, so
+  /// it still resolves to "no variant" (the default icon).
+  static const Color kDefaultPrimaryColor = Color(0xFF27395A);
+
+  /// The icon's gold. Used as the accent against [kDefaultPrimaryColor]
+  /// — the same pairing the mark uses: ink ground, gold sparks.
+  static const Color kBrandGold = Color(0xFFC9A227);
+
+  /// The seed SeekSparks shipped with before the icon was redesigned.
+  /// Kept so [AppSettings] can recognise a stored value that was never
+  /// a deliberate choice and move it forward — see the migration there.
+  static const Color kLegacyPrimaryColor = Color(0xFF3730A3);
 
   static const _iosChannel = MethodChannel('yswords/ios_icon');
   static const _androidChannel = MethodChannel('yswords/android_icon');

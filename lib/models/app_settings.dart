@@ -879,6 +879,15 @@ class AppSettings extends ChangeNotifier {
     _lineSpacing = (rawLineSpacing * 10).roundToDouble() / 10;
     _primaryColor =
         Color(prefs.getInt(_kPrimaryColor) ?? AppIconService.kDefaultPrimaryColor.toARGB32());
+    // 2026-08-06: the icon was redesigned and the brand seed moved from
+    // indigo to the mark's ink blue. Anyone still carrying the old seed
+    // never picked it — it was just the shipped default — so move them
+    // forward. A colour the reader actually chose is left alone.
+    if (_primaryColor.toARGB32() ==
+        AppIconService.kLegacyPrimaryColor.toARGB32()) {
+      _primaryColor = AppIconService.kDefaultPrimaryColor;
+      await prefs.setInt(_kPrimaryColor, _primaryColor.toARGB32());
+    }
     // 2026-06-14 (v1.3.70): re-apply the themed home-screen / dock /
     // favicon icon on startup so it tracks the saved theme colour.
     // iOS resets `alternateIconName` to the primary icon on every app
