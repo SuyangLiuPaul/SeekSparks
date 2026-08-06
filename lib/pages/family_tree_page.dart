@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+
+import 'package:seeksparks/constants/era_palette.dart';
 import 'package:flutter/rendering.dart';
 import 'package:seeksparks/utils/clipboard_helper.dart';
 import 'package:provider/provider.dart';
@@ -2241,29 +2243,7 @@ String _eraLabel(String era, String locale) {
   return labels[era]?[locale] ?? era;
 }
 
-Color _eraColor(String era) {
-  switch (era) {
-    case 'antediluvian':
-      return const Color(0xFF6B5E3F);
-    case 'post_flood':
-      return const Color(0xFF2F7C5C);
-    case 'patriarchs':
-      return const Color(0xFF8C5A2F);
-    case 'mosaic':
-      return const Color(0xFFB42E2E);
-    case 'davidic_line':
-      return const Color(0xFF505590);
-    case 'kings':
-      return const Color(0xFF2A4FB0);
-    case 'exile':
-      return const Color(0xFF5F3F86);
-    case 'lukan_lineage':
-      return const Color(0xFF8B3A62);
-    case 'nt':
-      return const Color(0xFFB8860B);
-  }
-  return const Color(0xFF555555);
-}
+Color _eraColor(String era) => eraColor(era);
 
 /// 2026-05-10 (v1.2.36): brightness-aware variant of `_eraColor`.
 /// Mirror of the helper added in `bible_timeline_page.dart` for the

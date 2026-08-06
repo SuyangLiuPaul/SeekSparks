@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import 'package:seeksparks/constants/era_palette.dart';
 import 'package:seeksparks/utils/app_nav.dart';
 import 'package:provider/provider.dart';
 
@@ -569,27 +571,12 @@ String _eraLabel(String era, String locale) {
   return labels[era]?[locale] ?? era.toUpperCase();
 }
 
-Color _eraColor(String era) {
-  switch (era) {
-    case 'antediluvian':
-      return const Color(0xFF6B5E3F);
-    case 'patriarchs':
-      return const Color(0xFF8C5A2F);
-    case 'mosaic':
-      return const Color(0xFFB42E2E);
-    case 'conquest':
-      return const Color(0xFF2F7C5C);
-    case 'monarchy':
-      return const Color(0xFF2A4FB0);
-    case 'exile':
-      return const Color(0xFF5F3F86);
-    case 'intertestamental':
-      return const Color(0xFF505590);
-    case 'nt':
-      return const Color(0xFFB8860B);
-  }
-  return const Color(0xFF555555);
-}
+// The palette itself lives in constants/era_palette.dart — it was
+// written out here AND in family_tree_page.dart, with a
+// brightness-aware variant in each, so re-toning it meant four edits
+// kept in step by hand. The era vocabularies still differ per view;
+// only the colours are shared.
+Color _eraColor(String era) => eraColor(era);
 
 /// 2026-05-10 (v1.2.36): brightness-aware variant of `_eraColor`.
 /// User reported that era titles ("OT / NT / Patriarchs / …") were
