@@ -59,7 +59,12 @@ class _SmallScreenGateState extends State<SmallScreenGate> {
     final advice = WorkbenchFit.adviceFor(
       width: size.width,
       height: size.height,
-      dismissed: _dismissed ?? false,
+      // 2026-08-07: always false. The gate is now a hard block, so a
+      // dismissal persisted by v1.6.20 or earlier must not keep letting
+      // that reader through — the stale bit would quietly exempt exactly
+      // the people who had already seen the broken advisory.
+      // `adviceFor` keeps the parameter; only this caller stops using it.
+      dismissed: false,
     );
 
     // Big screens answer `none` regardless of the flag, so they never
@@ -206,16 +211,21 @@ class SmallScreenAdvisory extends StatelessWidget {
                       style: theme.textTheme.bodyMedium
                           ?.copyWith(color: cs.primary),
                     ),
-                  const SizedBox(height: 26),
-                  TextButton(
-                    onPressed: onContinue,
-                    child: Text(s('fitContinue', 'Continue anyway')),
-                  ),
-                  Text(
-                    s('fitContinueNote', 'This only appears once.'),
-                    style: theme.textTheme.bodySmall
-                        ?.copyWith(color: cs.onSurface.withValues(alpha: 0.5)),
-                  ),
+                  // 2026-08-07: "Continue anyway" REMOVED at the user's
+                  // instruction — 「不要有仍然继续，就一直是block住」. The
+                  // earlier reasoning was that a reminder which will not
+                  // take no for an answer is a nag; the owner's call is
+                  // that a one-column workbench is not a product they
+                  // want shipped at all, and letting readers past the
+                  // gate is how it gets judged as one. There is a real
+                  // destination here (YsWords, above) rather than a dead
+                  // end, which is what makes a hard gate defensible.
+                  //
+                  // `onContinue` is intentionally left on the widget's
+                  // API: it is still the escape hatch a future setting
+                  // or a QA build would wire up, and deleting it would
+                  // make restoring the choice a bigger change than the
+                  // decision deserves.
                 ],
               ),
             ),

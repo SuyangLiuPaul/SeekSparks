@@ -131,43 +131,41 @@ void main() {
     });
   });
 
-  group('continue anyway', () {
-    testWidgets('hands over the workbench and persists the answer',
-        (tester) async {
+  group('the gate is hard — there is no way past it', () {
+    testWidgets('no "continue anyway" escape is offered', (tester) async {
+      // 2026-08-07: removed at the owner's instruction —
+      // 「不要有仍然继续，就一直是block住」. A one-column workbench is not a
+      // product they want shipped, and every reader let past the gate
+      // judges the app on it.
       addTearDown(tester.view.reset);
       await pumpGate(tester, const Size(390, 844));
-
-      await tester.tap(find.text(s('fitContinue', 'zh-Hans')));
-      await tester.pump();
-      expect(find.byKey(workbenchMarker), findsOneWidget);
-      expect(find.byType(SmallScreenAdvisory), findsNothing);
-
-      await tester.pump(const Duration(milliseconds: 50));
-      final prefs = await SharedPreferences.getInstance();
-      expect(prefs.getBool(kSmallScreenDismissedKey), isTrue);
+      expect(find.text(s('fitContinue', 'zh-Hans')), findsNothing);
+      expect(find.byType(SmallScreenAdvisory), findsOneWidget);
+      expect(find.byKey(workbenchMarker), findsNothing);
     });
 
-    testWidgets('a reader who already said no is never asked again',
+    testWidgets('a dismissal saved by an older build no longer exempts anyone',
         (tester) async {
+      // Readers who tapped "Continue anyway" in v1.6.20 are exactly the
+      // ones who saw the self-contradicting advisory. Honouring that
+      // stale bit would leave them permanently past a gate that is now
+      // meant to hold.
       addTearDown(tester.view.reset);
       await pumpGate(
         tester,
         const Size(390, 844),
         prefs: const {kSmallScreenDismissedKey: true},
       );
-      expect(find.byType(SmallScreenAdvisory), findsNothing);
-      expect(find.byKey(workbenchMarker), findsOneWidget);
+      expect(find.byType(SmallScreenAdvisory), findsOneWidget);
+      expect(find.byKey(workbenchMarker), findsNothing);
     });
 
-    testWidgets('dismissal survives a rotation into landscape',
+    testWidgets('rotating into two columns is the only way through',
         (tester) async {
       addTearDown(tester.view.reset);
-      await pumpGate(
-        tester,
-        const Size(844, 390),
-        prefs: const {kSmallScreenDismissedKey: true},
-      );
+      await pumpGate(tester, const Size(844, 390));
       expect(find.byType(SmallScreenAdvisory), findsNothing);
+      expect(find.byKey(workbenchMarker), findsOneWidget);
     });
   });
 
