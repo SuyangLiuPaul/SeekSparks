@@ -7,9 +7,7 @@ import 'package:seeksparks/utils/app_nav.dart';
 import 'package:seeksparks/utils/app_scroll_behavior.dart';
 import 'package:seeksparks/constants/build_flags.dart';
 import 'package:seeksparks/models/sermon.dart';
-import 'package:seeksparks/pages/home_page.dart';
 import 'package:seeksparks/pages/workbench_page.dart';
-import 'package:seeksparks/utils/responsive.dart';
 import 'package:seeksparks/pages/loading_page.dart';
 import 'package:seeksparks/pages/sermon_detail_page.dart';
 import 'package:seeksparks/models/verse.dart';
@@ -938,16 +936,21 @@ class _RootRouterState extends State<_RootRouter> {
     // between the user and the thing they opened the app for.
     // BibleWorks opens straight into its panes; so does this.
     //
-    // Width-aware, mirroring `openReader`: the three-pane Workbench
-    // needs desktop / iPad-landscape room, so narrower screens still
-    // land on the single-pane reader. Either way it is the Bible, not
-    // a dashboard. DashboardPage stays reachable from the reader's
-    // Home affordance for the counts / quick links it still owns.
+    // 2026-08-06: EVERY width lands on the Workbench now.
+    //
+    // It used to route phones to HomePage and only desktops to the
+    // Workbench, which meant SeekSparks looked like two different apps
+    // depending on the screen — the complaint that prompted this. The
+    // Workbench already degrades correctly on its own: below 1024 it
+    // drops the Analysis pane, below 600 the Search pane too, leaving
+    // exactly the centre reading pane. So a phone gets the same shell
+    // and the same typography as the desktop, just with the side panes
+    // collapsed — one app, one identity, fewer panes.
+    //
+    // HomePage is not gone; it stays reachable from the Reader control
+    // as a MODE within the workspace rather than a separate front door.
     return _showHome
-        ? (ResponsiveBreakpoints.isDesktopOrWider(
-                MediaQuery.sizeOf(context).width)
-            ? const WorkbenchPage()
-            : const HomePage())
+        ? const WorkbenchPage()
         : LoadingPage(
             verses: widget.initialVerses,
             onAdvance: _advance,

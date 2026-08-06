@@ -540,14 +540,24 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
     // and every menu action stays reachable from the reader's own
     // controls.
     final width = MediaQuery.sizeOf(context).width;
-    final showChrome = ResponsiveBreakpoints.isDesktopOrWider(width);
+    // 2026-08-06: the chrome is present at EVERY width now. Hiding it
+    // below 1024 was what made a phone look like a different app — same
+    // codebase, but no menu bar, no status bar, nothing identifying the
+    // workspace. The bars are 22px and 20px and scale with Menu Size, so
+    // they cost little; what they buy is that a phone reads as the same
+    // tool with its side panes collapsed, which is the point.
+    //
+    // `compact` trims what goes IN the bars rather than removing them:
+    // the full six-field status line and the whole menu row do not fit
+    // in 390px, and an overflowing bar is worse than a shorter one.
+    final compact = !ResponsiveBreakpoints.isDesktopOrWider(width);
 
     return Scaffold(
       backgroundColor: wb.chromeBg,
       body: SafeArea(
         child: Column(
           children: [
-            if (showChrome) ...[
+            ...[
               WorkbenchMenuBar(
                 menus: _buildMenus(context, locale),
                 // The version label is the first thing to go when the
@@ -582,7 +592,11 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
             Expanded(child: _buildPanes(context)),
             WorkbenchStatusBar(
               message: _statusMessage(locale),
-              fields: showChrome ? _statusFields(mp, locale) : const [],
+              // Reference and version only on a phone — the rest
+              // (Browse/Strong's/Analysis state) is desktop detail.
+              fields: compact
+                  ? _statusFields(mp, locale).take(2).toList()
+                  : _statusFields(mp, locale),
             ),
           ],
         ),
