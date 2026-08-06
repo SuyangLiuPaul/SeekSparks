@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import 'package:seeksparks/constants/bible_versions.dart'
-    show bibleVersions;
+    show bibleVersions, shortBibleVersionLabel;
 import 'package:seeksparks/constants/text_patterns.dart';
 import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/constants/workbench_theme.dart';
@@ -14,11 +14,13 @@ import 'package:seeksparks/services/concordance_service.dart';
 import 'package:seeksparks/services/fetch_verses.dart';
 import 'package:seeksparks/utils/clipboard_helper.dart';
 import 'package:seeksparks/utils/command_query.dart';
+import 'package:seeksparks/utils/command_verb.dart';
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 import 'package:seeksparks/utils/jump_to_reference.dart' as jumper;
 import 'package:seeksparks/utils/reference_parser.dart' show parseReference;
 import 'package:seeksparks/providers/main_provider.dart';
-import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
+import 'package:seeksparks/utils/version_mapper.dart'
+    show localeAwareBookName, toEnglish;
 import 'package:seeksparks/constants/book_groups.dart'
     show oldTestamentBooks, canonicalOtBooks, canonicalNtBooks;
 import 'package:seeksparks/utils/search_stats.dart';
@@ -102,6 +104,17 @@ class _CommandPaneState extends State<CommandPane> {
     if (_history.isEmpty || _history.last != raw) _history.add(raw);
     _historyAt = _history.length;
 
+    // Verbs first (bwh44). They are the narrowest thing on the line —
+    // a single letter followed by whitespace, or a bare number — so
+    // testing them first costs nothing, and testing them LAST would
+    // cost everything: `d nas` is a perfectly good text search that
+    // finds nothing, which reads exactly like an unimplemented feature.
+    final parse = parseCommandVerb(raw, _verbContext());
+    if (parse.isVerb) {
+      await _runVerb(parse);
+      return;
+    }
+
     // A bare version abbreviation switches the reading version, before
     // anything else is tried. From the manual: "The easiest way to do
     // this is to type the BibleWorks abbreviation for the version on
@@ -152,6 +165,106 @@ class _CommandPaneState extends State<CommandPane> {
     // a command line: after a search you refine it — widen the context,
     // drop a term — and both ↑ and Esc are dead the moment focus leaves.
     // Navigation does NOT do this; there your attention moves to the text.
+    _focus.requestFocus();
+  }
+
+  /// Everything the verb grammar needs to know about where the reader
+  /// currently is. Rebuilt per submission rather than cached: the
+  /// version, the chapter and the Browse stack all change underneath
+  /// this pane from the reader's other hand.
+  VerbContext _verbContext() {
+    final mp = context.read<MainProvider>();
+    final wb = context.read<WorkbenchProvider>();
+    final book = mp.currentBook;
+    return VerbContext(
+      versions: [
+        for (final v in bibleVersions)
+          VerbVersion(code: v.value, label: v.shortLabel, language: v.language),
+      ],
+      searchVersion: mp.currentVersion,
+      displayVersions: wb.displayVersions,
+      currentEnglishBook: book == null ? null : (toEnglish(book) ?? book),
+      currentChapter: mp.currentChapter,
+    );
+  }
+
+  /// Carry out a parsed verb, then say what happened.
+  ///
+  /// Every branch ends in either a notice or a visible move, because a
+  /// verb's whole effect lands somewhere other than the pane you typed
+  /// it in — the Browse stack, the limit banner, the centre reader —
+  /// and below the three-pane breakpoint some of those are not even on
+  /// screen.
+  Future<void> _runVerb(CommandVerbParse parse) async {
+    final locale = context.read<AppSettings>().locale;
+    final wb = context.read<WorkbenchProvider>();
+
+    if (parse.issue != null) {
+      wb.showVerbNotice(describeVerbIssue(
+        parse.issue!,
+        parse.detail,
+        locale,
+        available: parse.issue == CommandVerbIssue.unknownVersion
+            ? [for (final v in bibleVersions) v.shortLabel]
+            : const [],
+      ));
+      _controller.clear();
+      setState(() {});
+      _focus.requestFocus();
+      return;
+    }
+
+    final verb = parse.verb!;
+    switch (verb.kind) {
+      case CommandVerbKind.displayAdd:
+      case CommandVerbKind.displayRemove:
+      case CommandVerbKind.displayClear:
+      case CommandVerbKind.displaySet:
+        final mp = context.read<MainProvider>();
+        final stack =
+            applyDisplayVerb(verb, wb.displayVersions, mp.currentVersion);
+        // The search version is implicit in the stack everywhere else in
+        // the app, so it is not part of the parallel list.
+        wb.setParallelVersions(
+            stack.where((c) => c != mp.currentVersion).toList());
+        wb.setParallelMode(true);
+        wb.showVerbNotice(describeDisplayStack(
+            [for (final c in stack) shortBibleVersionLabel(c)], locale));
+      case CommandVerbKind.browseOn:
+        wb.setParallelMode(true);
+        wb.showVerbNotice(
+            uiStrings['cmdvBrowseOn']?[locale] ?? 'Browse view.');
+      case CommandVerbKind.limitSet:
+        final spec = verb.limit!;
+        final key = spec.labelKey;
+        final label =
+            key == null ? spec.label : (uiStrings[key]?[locale] ?? spec.label);
+        final applied = await wb.setSearchLimitFromSpec(spec, label);
+        if (!mounted) return;
+        wb.showVerbNotice(applied
+            ? null
+            : describeVerbIssue(
+                CommandVerbIssue.emptyScope, label, locale));
+      case CommandVerbKind.limitClear:
+        await wb.setSearchLimit(null, null);
+        if (!mounted) return;
+        wb.showVerbNotice(null);
+      case CommandVerbKind.goToReference:
+        final mp = context.read<MainProvider>();
+        final res = await jumper.resolveAndPrepareJump(
+            reference: verb.reference!, mp: mp);
+        if (!mounted) return;
+        if (res.ready) {
+          wb.clearResults();
+          final landed = mp.currentVerse;
+          if (landed != null) wb.focusVerse(landed);
+        } else {
+          wb.showVerbNotice(res.errorMessage);
+        }
+    }
+    if (!mounted) return;
+    _controller.clear();
+    setState(() {});
     _focus.requestFocus();
   }
 
@@ -416,6 +529,7 @@ class _CommandPaneState extends State<CommandPane> {
         'cmdSyntaxWild',
         'cmdSyntaxGap',
         'cmdSyntaxContext',
+        'cmdSyntaxVerbs',
         'cmdSyntaxHistory',
       ];
       return Container(
@@ -458,15 +572,53 @@ class _CommandPaneState extends State<CommandPane> {
     // wherever the hits are. BibleWorks shows the active limit on the
     // command line; here it is a strip above the results, and tapping
     // it lifts the limit.
-    if (wb.hasSearchLimit) {
+    final notice = wb.verbNotice;
+    if (wb.hasSearchLimit || notice != null) {
       return Column(
         children: [
-          _limitBanner(wb, scheme, locale),
+          if (notice != null) _verbNoticeStrip(wb, scheme, notice),
+          if (wb.hasSearchLimit) _limitBanner(wb, scheme, locale),
           Expanded(child: _buildResultsBody(context, wb, settings, scheme, locale)),
         ],
       );
     }
     return _buildResultsBody(context, wb, settings, scheme, locale);
+  }
+
+  /// What the last verb did, above the results rather than instead of
+  /// them: `d nas` must not throw away a hit list you spent three
+  /// commands building.
+  Widget _verbNoticeStrip(
+      WorkbenchProvider wb, ColorScheme scheme, String notice) {
+    return Material(
+      color: scheme.secondaryContainer,
+      child: InkWell(
+        onTap: () => wb.showVerbNotice(null),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          child: Row(
+            children: [
+              Icon(Icons.terminal,
+                  size: 14, color: scheme.onSecondaryContainer),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  notice,
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w600,
+                    color: scheme.onSecondaryContainer,
+                    fontFamilyFallback: kCjkFontFallback,
+                  ),
+                ),
+              ),
+              Icon(Icons.close_rounded,
+                  size: 14, color: scheme.onSecondaryContainer),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _limitBanner(

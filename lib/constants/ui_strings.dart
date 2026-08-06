@@ -3745,6 +3745,88 @@ const uiStrings = {
     'zh-Hant': '語法說明',
     'en': 'Syntax help',
   },
+  // ── Command verbs (bwh44) ─────────────────────────────────────────
+  'cmdvNeedsArgument': {
+    'zh-Hans': 'd 之后要写版本（d kjv）、语言（d 英文）、'
+        '移除（d -kjv），或 c 清空。',
+    'zh-Hant': 'd 之後要寫版本（d kjv）、語言（d 英文）、'
+        '移除（d -kjv），或 c 清空。',
+    'en': 'After d, name an edition (d kjv), a language (d english), '
+        'a removal (d -kjv) or c to clear.',
+  },
+  'cmdvUnknownVersion': {
+    'zh-Hans': '没有名为「{x}」的版本。',
+    'zh-Hant': '沒有名為「{x}」的版本。',
+    'en': 'No edition called "{x}".',
+  },
+  'cmdvAvailable': {
+    'zh-Hans': '现有：{list}',
+    'zh-Hant': '現有：{list}',
+    'en': 'Available: {list}',
+  },
+  'cmdvCannotRemoveSearch': {
+    'zh-Hans': '{x} 是当前阅读与检索的版本，始终显示。',
+    'zh-Hant': '{x} 是目前閱讀與檢索的版本，始終顯示。',
+    'en': '{x} is the edition you are reading and searching, '
+        'so it is always shown.',
+  },
+  'cmdvAlreadyDisplayed': {
+    'zh-Hans': '{x} 已在对照栏中。',
+    'zh-Hant': '{x} 已在對照欄中。',
+    'en': '{x} is already in the stack.',
+  },
+  'cmdvNotDisplayed': {
+    'zh-Hans': '{x} 不在对照栏中。',
+    'zh-Hant': '{x} 不在對照欄中。',
+    'en': '{x} is not in the stack.',
+  },
+  'cmdvUnknownScope': {
+    'zh-Hans': '「{x}」不是书卷、章范围或约。可用：l 创、l 太 5-7、'
+        'l 新约，或只输入 l 取消限定。',
+    'zh-Hant': '「{x}」不是書卷、章範圍或約。可用：l 創、l 太 5-7、'
+        'l 新約，或只輸入 l 取消限定。',
+    'en': '"{x}" is not a book, a chapter range or a testament. '
+        'Try l gen, l matt 5-7, l nt, or l on its own to clear.',
+  },
+  'cmdvEmptyScope': {
+    'zh-Hans': '当前版本在 {x} 没有经文。',
+    'zh-Hant': '目前版本在 {x} 沒有經文。',
+    'en': 'This edition has no verses in {x}.',
+  },
+  'cmdvNoPassage': {
+    'zh-Hans': '请先打开一章 — 只输入数字表示当前章的某一节。',
+    'zh-Hant': '請先開啟一章 — 只輸入數字表示目前章的某一節。',
+    'en': 'Open a chapter first — a bare number is a verse in the chapter '
+        'you are reading.',
+  },
+  'cmdvVlsFile': {
+    'zh-Hans': '这里不读经文列表文件。请在「经文列表」页建立列表，'
+        '再打开它的限定开关。',
+    'zh-Hant': '這裡不讀經文列表檔案。請在「經文列表」頁建立列表，'
+        '再開啟它的限定開關。',
+    'en': 'Verse-list files are not read here. Build the list in the '
+        'Verse Lists tab and switch its filter on.',
+  },
+  'cmdvStackNow': {
+    'zh-Hans': '对照栏：{list}',
+    'zh-Hant': '對照欄：{list}',
+    'en': 'Browse stack: {list}',
+  },
+  'cmdvScopeOt': {'zh-Hans': '旧约', 'zh-Hant': '舊約', 'en': 'Old Testament'},
+  'cmdvScopeNt': {'zh-Hans': '新约', 'zh-Hant': '新約', 'en': 'New Testament'},
+  'cmdvBrowseOn': {
+    'zh-Hans': '中栏已切换到对照阅读。',
+    'zh-Hant': '中欄已切換到對照閱讀。',
+    'en': 'The centre pane is now the Browse stack.',
+  },
+  'cmdSyntaxVerbs': {
+    'zh-Hans': 'd kjv / d -kjv / d c 增删对照版本 · p kjv bsb 重排 · '
+        'l 创 限定检索范围 · 17 跳到本章第 17 节',
+    'zh-Hant': 'd kjv / d -kjv / d c 增刪對照版本 · p kjv bsb 重排 · '
+        'l 創 限定檢索範圍 · 17 跳到本章第 17 節',
+    'en': 'd kjv / d -kjv / d c stack editions · p kjv bsb restack · '
+        'l gen scope the search · 17 verse 17 of this chapter',
+  },
   'cmdTryAndHint': {
     'zh-Hans': '没有整段匹配。试试 “.{q}”，查找同一节里都出现这些词的经文。',
     'zh-Hant': '沒有整段匹配。試試「.{q}」，尋找同一節裡都出現這些詞的經文。',

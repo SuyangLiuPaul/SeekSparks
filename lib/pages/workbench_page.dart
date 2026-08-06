@@ -114,20 +114,20 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
   bool _leftOpen = true;
   bool _rightOpen = true;
 
-  /// 2026-08 (SeekSparks): BibleWorks-style parallel Browse mode. When
-  /// on, the centre pane stacks the same verse in every selected version
-  /// plus the original-language line, instead of the chapter reader.
-  bool _parallelMode = true;
+  // 2026-08 (SeekSparks): BibleWorks-style parallel Browse mode — when
+  // on, the centre pane stacks the same verse in every selected version
+  // plus the original-language line, instead of the chapter reader.
+  //
+  // 2026-08-07: the mode flag and the stack itself moved to
+  // WorkbenchProvider, because the command line addresses them (`d nas`,
+  // `p a b c`, bwh44) and the command line is this page's SIBLING, not
+  // its child. The page keeps the persistence, which is its job.
   // Deliberately a NEW key. v1.1.0 defaulted this off and persisted the
   // value on any pane interaction, so every existing install had `false`
   // stored and never saw the Browse window even after it became the
   // default. Renaming re-applies the new default exactly once.
   static const _kParallelKey = 'workbench.browseMode.v2';
   static const _kParallelVersionsKey = 'workbench.parallelVersions';
-  /// Empty until [_restorePrefs] picks a default for the reader's
-  /// language — an English-only stack is the wrong first impression for
-  /// a Chinese reader.
-  List<String> _parallelVersions = const [];
 
   /// The stack a first-time reader gets. BibleWorks ships version sets
   /// per language and this is the same idea: pair the reading version
@@ -140,7 +140,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
   /// see. With BSB in the stack the English row does what the 和合本
   /// row already did: numbers on the words themselves.
   ///
-  /// Only a default. It seeds `_parallelVersions` on first run and a
+  /// Only a default. It seeds the stack on first run and a
   /// reader's own selection is persisted over it.
   List<String> _defaultParallelVersions(String locale) {
     switch (locale) {
@@ -194,6 +194,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
   void initState() {
     super.initState();
     _wb = WorkbenchProvider(mainProvider: context.read<MainProvider>());
+    _wb.onBrowseStateChanged = _persistPrefs;
     _restorePrefs();
   }
 
@@ -242,18 +243,18 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         WbMenuItem(
           s('parallelBrowse', 'Browse (parallel versions)'),
           () {
-            setState(() => _parallelMode = true);
+            _wb.setParallelMode(true);
             _persistPrefs();
           },
-          checked: _parallelMode,
+          checked: _wb.parallelMode,
         ),
         WbMenuItem(
           s('classicReader', 'Chapter reader'),
           () {
-            setState(() => _parallelMode = false);
+            _wb.setParallelMode(false);
             _persistPrefs();
           },
-          checked: !_parallelMode,
+          checked: !_wb.parallelMode,
         ),
         const WbMenuItem.separator(),
         WbMenuItem(s('parallelPickVersions', 'Choose versions…'),
@@ -348,9 +349,9 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
           icon: Icons.view_agenda_outlined,
           label: s('parallelBrowseShort', 'Browse'),
           tooltip: s('parallelBrowse', 'Browse (parallel versions)'),
-          active: _parallelMode,
+          active: _wb.parallelMode,
           onPressed: () {
-            setState(() => _parallelMode = true);
+            _wb.setParallelMode(true);
             _persistPrefs();
           },
         ),
@@ -358,9 +359,9 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
           icon: Icons.menu_book_outlined,
           label: s('classicReaderShort', 'Reader'),
           tooltip: s('classicReader', 'Chapter reader'),
-          active: !_parallelMode,
+          active: !_wb.parallelMode,
           onPressed: () {
-            setState(() => _parallelMode = false);
+            _wb.setParallelMode(false);
             _persistPrefs();
           },
         ),
@@ -428,10 +429,10 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         onTap: () => _pickParallelVersions(context),
       ),
       WbStatusField(
-        s(_parallelMode ? 'parallelBrowseShort' : 'classicReaderShort',
-            _parallelMode ? 'Browse' : 'Reader'),
+        s(_wb.parallelMode ? 'parallelBrowseShort' : 'classicReaderShort',
+            _wb.parallelMode ? 'Browse' : 'Reader'),
         onTap: () {
-          setState(() => _parallelMode = !_parallelMode);
+          _wb.setParallelMode(!_wb.parallelMode);
           _persistPrefs();
         },
       ),
@@ -468,9 +469,11 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
           .toDouble();
       _leftOpen = prefs.getBool(_kLeftOpenKey) ?? true;
       _rightOpen = prefs.getBool(_kRightOpenKey) ?? true;
-      _parallelMode = prefs.getBool(_kParallelKey) ?? true;
+      // Assigned rather than set: the setters call back into
+      // _persistPrefs, and restoring is not a change worth writing back.
+      _wb.parallelMode = prefs.getBool(_kParallelKey) ?? true;
       final saved = prefs.getStringList(_kParallelVersionsKey);
-      _parallelVersions = (saved != null && saved.isNotEmpty)
+      _wb.parallelVersions = (saved != null && saved.isNotEmpty)
           ? saved
           : _defaultParallelVersions(context.read<AppSettings>().locale);
       final tab = prefs.getInt(_kAnalysisTabKey);
@@ -486,8 +489,8 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
     await prefs.setDouble(_kRightWidthKey, _rightWidth);
     await prefs.setBool(_kLeftOpenKey, _leftOpen);
     await prefs.setBool(_kRightOpenKey, _rightOpen);
-    await prefs.setBool(_kParallelKey, _parallelMode);
-    await prefs.setStringList(_kParallelVersionsKey, _parallelVersions);
+    await prefs.setBool(_kParallelKey, _wb.parallelMode);
+    await prefs.setStringList(_kParallelVersionsKey, _wb.parallelVersions);
     await prefs.setInt(_kAnalysisTabKey, _analysisTab.index);
   }
 
@@ -558,6 +561,11 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
     final mp = context.watch<MainProvider>();
     final settings = context.watch<AppSettings>();
     final locale = settings.locale;
+    // The Browse-mode checkmarks in the menu bar, the toolbar and the
+    // status bar all read the provider now, and the command line can
+    // change it (`p`, `d nas`) without this page hearing about it any
+    // other way.
+    context.watch<WorkbenchProvider>();
 
     // The menu bar and toolbar are desktop affordances: six menu titles
     // plus a version label do not fit a phone, and trying overflowed the
@@ -670,7 +678,8 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
                     // unreadable, so below the three-pane breakpoint the
                     // centre is always the chapter reader regardless of
                     // the persisted preference.
-                    child: (_parallelMode && threePane)
+                    child: (context.watch<WorkbenchProvider>().parallelMode &&
+                            threePane)
                         ? _buildParallelFrame(context)
                         : BibleReadingPane(
                       key: const ValueKey('workbench-reader'),
@@ -689,8 +698,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
                       // 2026-08 (SeekSparks): switch this pane to the
                       // BibleWorks-style parallel Browse stack.
                       onOpenParallel: () {
-                        setState(() => _parallelMode = true);
-                        _persistPrefs();
+                        _wb.setParallelMode(true);
                       },
                       onOpenClassicReader: () => Get.off(
                         () => const HomePage(),
@@ -746,7 +754,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
     // comparison stack (deduplicated, order preserved).
     final codes = <String>[
       mp.currentVersion,
-      ..._parallelVersions.where((c) => c != mp.currentVersion),
+      ...wbp.parallelVersions.where((c) => c != mp.currentVersion),
     ];
 
     return ColoredBox(
@@ -792,8 +800,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
                 label: uiStrings['classicReaderShort']?[locale] ?? 'Reader',
                 tooltip: uiStrings['classicReader']?[locale] ?? 'Chapter reader',
                 onPressed: () {
-                  setState(() => _parallelMode = false);
-                  _persistPrefs();
+                  _wb.setParallelMode(false);
                 },
               ),
             ],
@@ -938,7 +945,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
   /// Lets the reader choose which translations sit in the parallel stack.
   Future<void> _pickParallelVersions(BuildContext context) async {
     final scheme = Theme.of(context).colorScheme;
-    final current = _parallelVersions.toSet();
+    final current = _wb.parallelVersions.toSet();
     await showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
@@ -978,9 +985,11 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
       ),
     );
     if (!mounted) return;
-    setState(() => _parallelVersions =
+    // Registry order, because a checkbox list cannot express an order.
+    // The command line can (`p bsb nas kjv`), which is the one place the
+    // keyboard is strictly more expressive than the dialog it shadows.
+    _wb.setParallelVersions(
         bibleVersions.map((v) => v.value).where(current.contains).toList());
-    _persistPrefs();
   }
 
   // ── Left: command pane ────────────────────────────────────────────

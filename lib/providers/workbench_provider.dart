@@ -5,6 +5,7 @@ import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/services/concordance_service.dart';
 import 'package:seeksparks/services/search_service.dart';
 import 'package:seeksparks/utils/command_query.dart';
+import 'package:seeksparks/utils/command_verb.dart' show LimitSpec;
 import 'package:seeksparks/utils/strongs_boolean_search.dart';
 import 'package:seeksparks/utils/verse_list.dart' show applySearchLimit;
 import 'package:seeksparks/utils/version_mapper.dart' show toEnglish;
@@ -83,6 +84,90 @@ class WorkbenchProvider extends ChangeNotifier {
     if (lastQuery.isNotEmpty) await runSearch(lastQuery);
   }
 
+  /// Install the `l gen` / `l nt` style limit described by [spec].
+  ///
+  /// Returns false, changing nothing, when the spec selects no verses in
+  /// the loaded edition — `l revelation 30`, or a book the current
+  /// edition does not carry. Emptiness is only knowable here, not at
+  /// parse time, and installing an empty limit would silently make every
+  /// subsequent search return nothing.
+  ///
+  /// The keys are a SNAPSHOT of the loaded corpus, matching how the
+  /// Verse List Manager's limit already works. Versification differs
+  /// between editions, so a limit taken in one edition is not re-derived
+  /// when the reader switches to another; at book and chapter
+  /// granularity that is almost always harmless, and the alternative —
+  /// a live predicate — would change the shape every limit in the app
+  /// already has.
+  Future<bool> setSearchLimitFromSpec(LimitSpec spec, String label) async {
+    final keys = <String>{};
+    for (final v in mainProvider.verses) {
+      final book = toEnglish(v.book) ?? v.book;
+      if (spec.covers(book, v.chapter)) keys.add('$book-${v.chapter}-${v.verse}');
+    }
+    if (keys.isEmpty) return false;
+    await setSearchLimit(keys, label);
+    return true;
+  }
+
+  // ── Browse stack (centre pane) ────────────────────────────────────
+
+  /// Whether the centre pane is the Browse stack (several editions of
+  /// the same verse) rather than the chapter reader.
+  bool parallelMode = true;
+
+  /// The comparison editions in the Browse stack, in display order.
+  ///
+  /// Lives here rather than in `_WorkbenchPageState` because the command
+  /// line addresses it (`d nas`, `p a b c`, bwh44) and the command line
+  /// is a sibling widget, not a child. The page still owns persistence
+  /// and calls back through [onBrowseStateChanged].
+  List<String> parallelVersions = const [];
+
+  /// Called after the command line changes [parallelMode] or
+  /// [parallelVersions], so the page can persist them.
+  VoidCallback? onBrowseStateChanged;
+
+  /// What the Browse pane actually renders: the edition being read
+  /// FIRST, then the comparisons.
+  ///
+  /// BibleWorks defines `d c` as clearing "all versions except the
+  /// search version", which makes the search version's presence an
+  /// invariant of the display rather than a default. Deriving the stack
+  /// here means the command line validates against what is on screen —
+  /// otherwise `d -kjv` while reading the KJV would remove it from
+  /// storage, this getter would put it straight back, and the reader
+  /// would be told nothing.
+  List<String> get displayVersions => [
+        mainProvider.currentVersion,
+        ...parallelVersions.where((c) => c != mainProvider.currentVersion),
+      ];
+
+  void setParallelMode(bool on) {
+    if (parallelMode == on) return;
+    parallelMode = on;
+    _notify();
+    onBrowseStateChanged?.call();
+  }
+
+  void setParallelVersions(List<String> codes) {
+    parallelVersions = List.unmodifiable(codes);
+    _notify();
+    onBrowseStateChanged?.call();
+  }
+
+  /// One line of feedback from a command verb — an echo of the new
+  /// Browse stack, or the reason a verb was refused.
+  ///
+  /// Cleared by the next search, because a notice that outlives the
+  /// thing it describes is worse than no notice.
+  String? verbNotice;
+
+  void showVerbNotice(String? text) {
+    verbNotice = text;
+    _notify();
+  }
+
   // ── Analysis pane (right) ─────────────────────────────────────────
 
   /// Verses currently shown in the analysis pane (mirrors the reader's
@@ -150,6 +235,7 @@ class WorkbenchProvider extends ChangeNotifier {
     strongsRefs = null;
     commandQuery = null;
     commandIssue = null;
+    verbNotice = null;
     textResults = const [];
     _notify();
 
@@ -233,6 +319,7 @@ class WorkbenchProvider extends ChangeNotifier {
     strongsRefs = null;
     commandQuery = null;
     commandIssue = null;
+    verbNotice = null;
     textResults = const [];
     _notify();
   }
