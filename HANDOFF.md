@@ -1,0 +1,28 @@
+# HANDOFF
+
+Running log of what each autonomous iteration shipped. Newest entry on
+top. One line per ship — describe what changed and why, not how.
+
+The launchd prompt that drives these iterations expects this file to
+exist and to be appended to as the last step of every run. It was
+deleted by mistake in `be8176f` (the YsWords-remnant audit, 2026-07-23)
+and silently missing until 2026-08-06. Recreated then with everything
+back to v1.5.0 reconstructed from `git log`, plus a single new entry
+for that day's ship. From here on, each run appends one line.
+
+---
+
+- **v1.6.11** — 护眼纸质 reaches the workbench. The paper theme used to stop at BibleReadingPane's content subtree; chrome, the parallel Browse window, and every `WbColors.of` call site stayed on the neutral desktop palette. Added `WbColors.paper` + a `paper:` flag on `workbenchTheme`, watched `AppSettings.readingPaperTheme` in `WorkbenchPage.build`. Also added value equality to `WbColors`.
+- **v1.6.10** — search hits are now marked in the Browse text itself, not only in the verse list. A hit list without marked hits is a table of contents.
+- **v1.6.9** — the chrome (menu/toolbar/status bars) is present at every width. Phones read as the same tool with side panes collapsed, not as a different app.
+- **v1.6.8** — finished the `WbType` migration: 82 hardcoded size call sites reduced to 5. Settings sliders (Font Size, Menu Size, Line Spacing) now drive the workbench.
+- **v1.6.7** — Settings actually reach the workbench: 2 of 10 user settings honoured before, now all of them through `WbType.of(context)`.
+- **v1.6.6** — stripped the NASB pilcrow (¶) that was being printed as scripture, without touching the actual verse text.
+- **v1.6.5** — stopped printing publisher markup (StripePosition tags etc.) as if it were scripture.
+- **v1.6.4** — Word List Manager + search-hit distribution. Two BibleWorks analysis tabs backed by real data.
+- **v1.6.3** — Key Word In Context (KWIC), straight from the BibleWorks feature set.
+- **v1.6.2 (BSB)** — added the Berean Standard Bible, the only English translation here with Strong's tagging. Closes the gap that left the English parallel row untagged.
+- **v1.6.1** — release plumbing fix.
+- **v1.5.2** — fix: Compare-two-versions actually compared two versions instead of duplicating one.
+- **v1.5.1** — release plumbing fix.
+- **v1.5.0** — per-word Strong's on the Chinese line (和合本雅伟版 + BDB/Thayer).
