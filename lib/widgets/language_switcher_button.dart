@@ -11,7 +11,11 @@ import 'package:seeksparks/models/app_settings.dart';
 /// time. Calls the same `settings.setLocale` the Settings dropdown
 /// already uses, so the two stay in sync — neither is "the real one".
 class LanguageSwitcherButton extends StatelessWidget {
-  const LanguageSwitcherButton({super.key});
+  const LanguageSwitcherButton({super.key, this.dense = false});
+
+  /// Compact form for the Workbench menu bar, whose chrome is 11px and
+  /// whose row height a stock 48px IconButton would break.
+  final bool dense;
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +23,10 @@ class LanguageSwitcherButton extends StatelessWidget {
     final locale = settings.locale;
     return PopupMenuButton<String>(
       tooltip: uiStrings['interfaceLanguage']?[locale] ?? 'Interface Language',
-      icon: const Icon(Icons.language_rounded),
+      icon: Icon(Icons.language_rounded, size: dense ? 15 : 24),
+      padding: dense ? EdgeInsets.zero : const EdgeInsets.all(8),
+      iconSize: dense ? 15 : 24,
+      splashRadius: dense ? 14 : 20,
       initialValue: locale,
       onSelected: (val) => settings.setLocale(val),
       itemBuilder: (context) => const [

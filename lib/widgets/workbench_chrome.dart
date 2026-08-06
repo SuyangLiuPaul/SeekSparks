@@ -419,7 +419,7 @@ class WorkbenchStatusBar extends StatelessWidget {
 /// colour, without reading. Rendered inline (not as a chip on its own
 /// row) so it costs no vertical space.
 class WbVersionTag extends StatelessWidget {
-  const WbVersionTag({super.key, required this.code, this.width = 34});
+  const WbVersionTag({super.key, required this.code, this.width = 52});
 
   final String code;
 

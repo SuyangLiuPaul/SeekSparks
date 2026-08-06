@@ -7,7 +7,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:seeksparks/constants/bible_versions.dart'
     show bibleVersions, shortBibleVersionLabel;
 import 'package:seeksparks/constants/book_names.dart' show bookNameToEnglish;
-import 'package:seeksparks/constants/app_version.dart' show kAppVersion;
+import 'package:seeksparks/constants/app_version.dart'
+    show kAppVersion, formatReleaseTimeLocal;
 import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/app_settings.dart';
@@ -38,7 +39,9 @@ import 'package:seeksparks/widgets/bible_reading_pane.dart';
 import 'package:seeksparks/widgets/command_pane.dart';
 import 'package:seeksparks/pages/strongs_entry_page.dart';
 import 'package:seeksparks/utils/app_nav.dart';
+import 'package:seeksparks/utils/strongs_inline.dart';
 import 'package:seeksparks/widgets/analysis_tabs.dart';
+import 'package:seeksparks/widgets/language_switcher_button.dart';
 import 'package:seeksparks/widgets/browse_nav_strip.dart';
 import 'package:seeksparks/widgets/browse_window.dart';
 import 'package:seeksparks/widgets/word_analysis_pane.dart';
@@ -405,6 +408,13 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         enabled: _rightOpen,
         onTap: () => _setRightOpen(!_rightOpen),
       ),
+      // Which build you are actually looking at, and when it shipped —
+      // rendered in the reader's OWN timezone, not the build machine's.
+      // Same place BibleWorks keeps its build info: the status bar.
+      WbStatusField(
+        'v$kAppVersion · ${formatReleaseTimeLocal()}',
+        onTap: () => pushPage(const AboutPage()),
+      ),
     ];
   }
 
@@ -521,13 +531,30 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
                 menus: _buildMenus(context, locale),
                 // The version label is the first thing to go when the
                 // menu titles need the room.
-                trailing: width >= 1200
-                    ? Text(
-                        'SeekSparks $kAppVersion',
-                        style: TextStyle(
-                            fontSize: WbMetrics.chrome, color: wb.mutedText),
-                      )
-                    : null,
+                // Language first, then the build. The switcher stays even
+                // on a narrow window — changing interface language must
+                // not require hunting through Settings — while the build
+                // label is what drops when the menu titles need the room.
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (width >= 1200)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 10),
+                        child: Text(
+                          'SeekSparks $kAppVersion · '
+                          '${formatReleaseTimeLocal()}',
+                          style: TextStyle(
+                              fontSize: WbMetrics.chrome,
+                              color: wb.mutedText),
+                        ),
+                      ),
+                    const SizedBox(
+                      height: 26,
+                      child: LanguageSwitcherButton(dense: true),
+                    ),
+                  ],
+                ),
               ),
               WorkbenchToolbar(groups: _buildToolbar(context)),
             ],
@@ -674,6 +701,25 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
             // where a reader looks first, not at an unlabelled icon.
             onTitleTap: () => _pickParallelVersions(context),
             trailing: [
+              // yahwehdehua.net puts this switch at the top right of the
+              // chapter, and it is the right place for it: the numbers
+              // are a reading mode, not a setting you go hunting for.
+              WbToolButton(
+                icon: settings.showStrongsInOriginals
+                    ? Icons.tag
+                    : Icons.tag_outlined,
+                label: settings.showStrongsInOriginals
+                    ? (uiStrings['wbHideStrongsShort']?[locale] ?? 'G#')
+                    : (uiStrings['wbShowStrongsShort']?[locale] ?? 'G#'),
+                active: settings.showStrongsInOriginals,
+                tooltip: settings.showStrongsInOriginals
+                    ? (uiStrings['wbHideStrongs']?[locale] ??
+                        'Hide Strong\'s numbers')
+                    : (uiStrings['wbShowStrongs']?[locale] ??
+                        'Show Strong\'s numbers'),
+                onPressed: () => settings.setShowStrongsInOriginals(
+                    !settings.showStrongsInOriginals),
+              ),
               WbToolButton(
                 icon: Icons.view_column_outlined,
                 tooltip: uiStrings['parallelPickVersions']?[locale] ??
@@ -728,8 +774,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
                     chapter: chapter,
                     versionCodes: codes,
                     focusedVerse: verse,
-                    onWordTap: (w) =>
-                        pushPage(StrongsEntryPage(number: w.strongs)),
+                    onWordTap: (w, g) => _selectWord(w, g, book, verse),
                     onWordHover: _onWordHover,
                     onVerseTap: (n) =>
                         _moveBrowseCursor(localBook!, chapter, n),
@@ -738,6 +783,27 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         ],
       ),
     );
+  }
+
+  /// A word was tapped. On a pad there is no hover at all, so tap has to
+  /// do hover's whole job: latch the word AND bring the Word Study tab
+  /// forward, since a readout behind an unselected tab looks broken.
+  /// The full lexicon entry stays one click further in, from the pane.
+  void _selectWord(
+      OriginalWord w, List<String> grammar, String? book, int verse) {
+    final locale = context.read<AppSettings>().locale;
+    final label = book == null
+        ? ''
+        : '${localeAwareBookName(book, locale, context.read<MainProvider>().currentVersion)} '
+            '${context.read<MainProvider>().currentChapter}:$verse';
+    setState(() {
+      _analysisWord = BrowseHover(
+          word: w, reference: label, verse: verse, grammar: grammar);
+      _analysisFrozen = false;
+      _analysisTab = AnalysisTab.wordStudy;
+      _rightOpen = true;
+    });
+    _persistPrefs();
   }
 
   /// The pointer moved onto (or off) an original-language word.
@@ -918,7 +984,12 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
           ),
           const Divider(height: 1),
           Expanded(
-            child: verses.isEmpty
+            // The hint is for "nothing to analyse yet" — NOT for "no
+            // verse is selected". A hovered or tapped word is something
+            // to analyse on its own, and gating on `verses` alone threw
+            // that readout away before it could ever be built, which is
+            // what made hover and tap both look dead.
+            child: verses.isEmpty && _analysisWord == null
                 ? Center(
                     child: Padding(
                       padding: const EdgeInsets.all(24),
@@ -962,6 +1033,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
             reference: hovered.reference,
             locale: locale,
             frozen: _analysisFrozen,
+            grammar: hovered.grammar,
             onOpenFullEntry: () =>
                 pushPage(StrongsEntryPage(number: hoveredWord.strongs)),
           );
@@ -1000,7 +1072,8 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         );
 
       case AnalysisTab.crossRefs:
-        final v = verses.first;
+        final v = _analysisVerse(mp, verses);
+        if (v == null) return _analysisHint(context, locale);
         return CrossRefsPane(
           englishBook: bookNameToEnglish[v.book] ?? v.book,
           chapter: v.chapter,
@@ -1012,7 +1085,8 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         );
 
       case AnalysisTab.stats:
-        final v = verses.first;
+        final v = _analysisVerse(mp, verses);
+        if (v == null) return _analysisHint(context, locale);
         return FutureBuilder<List<OriginalWord>?>(
           key: ValueKey<String>('stats-${v.id}'),
           future: OriginalsService.forVerse(
@@ -1033,6 +1107,45 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         );
     }
   }
+
+  /// The verse these tabs should report on.
+  ///
+  /// 2026-08-06: this exists because v1.5.4 broke the Workbench. The
+  /// Analysis pane used to bail out to a hint whenever nothing was
+  /// selected, which incidentally guaranteed `verses` was non-empty by
+  /// the time these branches ran. Relaxing that guard — so a hovered
+  /// word could reach the Word Study tab — let an EMPTY list through to
+  /// `verses.first` here, and `List.first` throws on empty. In a
+  /// release build the resulting ErrorWidget is a plain grey rectangle,
+  /// so the whole workspace went blank while the menu bar and status
+  /// bar (outside the failing subtree) kept painting and updating. The
+  /// tab choice is persisted, so anyone left on Stats hit it on every
+  /// reload.
+  ///
+  /// Falling back to the hovered verse is also simply better: these
+  /// panes can now follow the pointer instead of needing a selection.
+  Verse? _analysisVerse(MainProvider mp, List<Verse> verses) {
+    final h = _analysisWord;
+    return pickAnalysisVerse(
+        verses, h == null ? null : _verseAt(mp, h.verse));
+  }
+
+  Widget _analysisHint(BuildContext context, String locale) => Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Text(
+            uiStrings['analysisEmptyHint']?[locale] ??
+                'Tap a verse in the Bible pane and its '
+                    'original-language word study appears here.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: WbMetrics.text,
+              color: Theme.of(context).colorScheme.outline,
+              height: 1.6,
+            ),
+          ),
+        ),
+      );
 
   // ── Chrome: headers, dividers, collapsed rails ────────────────────
 
