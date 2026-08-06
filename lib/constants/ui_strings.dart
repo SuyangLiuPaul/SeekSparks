@@ -4250,6 +4250,40 @@ const uiStrings = {
     'en': 'Tap a tagged word in the text to see every place it occurs, '
         'aligned on the word.',
   },
+  'analysisTabRelated': {
+    'zh-Hans': '相关经文',
+    'zh-Hant': '相關經文',
+    'en': 'Related',
+  },
+  'relatedWords': {'zh-Hans': '个词', 'zh-Hant': '個詞', 'en': 'words'},
+  'relatedWordsHint': {
+    'zh-Hans': '点一下取用或弃用某词，长按加权三倍。',
+    'zh-Hant': '點一下取用或棄用某詞，長按加權三倍。',
+    'en': 'Tap a word to use it or drop it; hold to weight it ×3.',
+  },
+  'relatedAddWord': {
+    'zh-Hans': '加入本节以外的词…',
+    'zh-Hant': '加入本節以外的詞…',
+    'en': 'Add a word not in the verse…',
+  },
+  'relatedThreshold': {'zh-Hans': '至少', 'zh-Hant': '至少', 'en': 'Min'},
+  'relatedSortHits': {'zh-Hans': '按词数', 'zh-Hant': '按詞數', 'en': 'Hits'},
+  'relatedHitsInVerse': {
+    'zh-Hans': '个共用词',
+    'zh-Hant': '個共用詞',
+    'en': 'shared words',
+  },
+  'relatedNoWords': {
+    'zh-Hans': '此节没有可供比对的词。',
+    'zh-Hant': '此節沒有可供比對的詞。',
+    'en': 'This verse has no words to match on.',
+  },
+  'relatedNoHits': {
+    'zh-Hans': '没有经文共用这么多词。请调低下限，或多选几个词。',
+    'zh-Hant': '沒有經文共用這麼多詞。請調低下限，或多選幾個詞。',
+    'en': 'No verse shares that many words. Lower the threshold, or '
+        'check more words.',
+  },
   'aboutVerBsb': {
     'zh-Hans': 'BSB（Berean 标准译本）',
     'zh-Hant': 'BSB（Berean 標準譯本）',

@@ -106,6 +106,10 @@ class MainProvider extends ChangeNotifier {
     // needs the cache pays for it.
     _searchKeysCache = null;
     _searchKeysCacheLength = -1;
+    _wordKeysCache = null;
+    _wordKeysCacheLength = -1;
+    _verseIndexCache = null;
+    _verseIndexCacheLength = -1;
     // 2026-05-10 (v1.2.16): no longer null out the paragraph-groups
     // cache here — it became a multi-slot LRU keyed by version +
     // book + chapter, so old entries from a different version stay
@@ -285,6 +289,10 @@ class MainProvider extends ChangeNotifier {
     // swap.
     _searchKeysCache = null;
     _searchKeysCacheLength = -1;
+    _wordKeysCache = null;
+    _wordKeysCacheLength = -1;
+    _verseIndexCache = null;
+    _verseIndexCacheLength = -1;
     _bookOrderCache = null;
     // 2026-05-25 (v1.3.40): also invalidate the (book, chapter) →
     // verses index. Without this, switching FROM a partial-canon
@@ -343,6 +351,54 @@ class MainProvider extends ChangeNotifier {
     _searchKeysCache = out;
     _searchKeysCacheLength = verses.length;
     return out;
+  }
+
+  // ── Word-boundary corpus (2026-08-06, Related Verses) ─────────────
+  List<String>? _wordKeysCache;
+  int _wordKeysCacheLength = -1;
+
+  /// Parallel array of sanitized verse text with SPACES INTACT.
+  ///
+  /// [searchKeys] strips whitespace, which is right for the substring
+  /// scan (Chinese has no spaces, so a query typed with them still
+  /// matches) and useless to anything that needs to know where one
+  /// word ends and the next begins. The Related Verses tool tokenizes,
+  /// so it needs the boundaries back.
+  ///
+  /// Costs a second copy of the corpus, so it is built only when
+  /// something asks — a reader who never opens the Related tab never
+  /// pays for it. Invalidated wherever [searchKeys] is.
+  List<String> get wordKeys {
+    if (_wordKeysCache != null && _wordKeysCacheLength == verses.length) {
+      return _wordKeysCache!;
+    }
+    final out = List<String>.filled(verses.length, '', growable: false);
+    for (int i = 0; i < verses.length; i++) {
+      out[i] = sanitizeForSearch(verses[i].text);
+    }
+    _wordKeysCache = out;
+    _wordKeysCacheLength = verses.length;
+    return out;
+  }
+
+  Map<String, int>? _verseIndexCache;
+  int _verseIndexCacheLength = -1;
+
+  /// `Verse.id` → position in [verses], which is also its position in
+  /// [wordKeys]. Anything that hands a verse to a corpus-wide tool needs
+  /// to turn it into an index, and the Analysis pane rebuilds on hover —
+  /// often enough that a linear scan of 31k verses per rebuild would be
+  /// felt.
+  int indexOfVerse(Verse v) {
+    if (_verseIndexCache == null || _verseIndexCacheLength != verses.length) {
+      final m = <String, int>{};
+      for (int i = 0; i < verses.length; i++) {
+        m[verses[i].id] = i;
+      }
+      _verseIndexCache = m;
+      _verseIndexCacheLength = verses.length;
+    }
+    return _verseIndexCache![v.id] ?? -1;
   }
 
   // ── Paragraph-grouping cache (v1.0.1 perf, refactored multi-slot

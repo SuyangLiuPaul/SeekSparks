@@ -28,10 +28,11 @@ import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
 
 /// Which pane the Analysis window is showing.
 /// 2026-08-06: `kwic` joins them — BibleWorks' Key Word In Context
-/// (help topic bwh31). Appended rather than inserted because the tab is
+/// (help topic bwh31), then `related` — the Related Verses Tool
+/// (bwh50). Appended rather than inserted because the tab is
 /// persisted by INDEX (`workbench.analysisTab`), so reordering would
 /// silently move every existing reader to a different tab.
-enum AnalysisTab { wordStudy, crossRefs, stats, kwic }
+enum AnalysisTab { wordStudy, crossRefs, stats, kwic, related }
 
 /// The tab strip itself. Deliberately a plain segmented row rather than
 /// a Material `TabBar`: the pane is narrow (320–560 px) and the strip
@@ -61,25 +62,37 @@ class AnalysisTabStrip extends StatelessWidget {
           'Stats'),
       (AnalysisTab.kwic, Icons.format_align_center_rounded,
           'analysisTabKwic', 'KWIC'),
+      (AnalysisTab.related, Icons.linear_scale_rounded,
+          'analysisTabRelated', 'Related'),
     ];
     return Container(
       padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
       color: scheme.surface,
-      child: Row(
-        children: [
-          for (final (tab, icon, key, fallback) in items)
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 2),
-                child: _TabButton(
-                  icon: icon,
-                  label: uiStrings[key]?[locale] ?? fallback,
-                  selected: tab == current,
-                  onTap: () => onChanged(tab),
+      child: LayoutBuilder(
+        builder: (context, box) {
+          // Five labelled tabs need ~66 px each; the Analysis pane can be
+          // as narrow as 320. Below that the label is what goes — an
+          // ellipsised "Wor…/X-R…/Sta…" identifies nothing, whereas the
+          // icons already differ from one another at a glance.
+          final showLabels = box.maxWidth / items.length >= 66;
+          return Row(
+            children: [
+              for (final (tab, icon, key, fallback) in items)
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 2),
+                    child: _TabButton(
+                      icon: icon,
+                      label: uiStrings[key]?[locale] ?? fallback,
+                      showLabel: showLabels,
+                      selected: tab == current,
+                      onTap: () => onChanged(tab),
+                    ),
+                  ),
                 ),
-              ),
-            ),
-        ],
+            ],
+          );
+        },
       ),
     );
   }
@@ -91,43 +104,51 @@ class _TabButton extends StatelessWidget {
     required this.label,
     required this.selected,
     required this.onTap,
+    this.showLabel = true,
   });
 
   final IconData icon;
   final String label;
   final bool selected;
+  final bool showLabel;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final fg = selected ? scheme.onPrimaryContainer : scheme.onSurfaceVariant;
-    return Material(
-      color: selected ? scheme.primaryContainer : Colors.transparent,
-      borderRadius: BorderRadius.circular(8),
-      child: InkWell(
-        onTap: onTap,
+    return Tooltip(
+      message: label,
+      child: Material(
+        color: selected ? scheme.primaryContainer : Colors.transparent,
         borderRadius: BorderRadius.circular(8),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 4),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 15, color: fg),
-              const SizedBox(width: 5),
-              Flexible(
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 11.5,
-                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                    color: fg,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(8),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 4),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, size: showLabel ? 15 : 17, color: fg),
+                if (showLabel) ...[
+                  const SizedBox(width: 5),
+                  Flexible(
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        fontWeight:
+                            selected ? FontWeight.w700 : FontWeight.w500,
+                        color: fg,
+                      ),
+                    ),
                   ),
-                ),
-              ),
-            ],
+                ],
+              ],
+            ),
           ),
         ),
       ),

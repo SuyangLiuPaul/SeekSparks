@@ -44,6 +44,7 @@ import 'package:seeksparks/utils/strongs_inline.dart';
 import 'package:seeksparks/utils/search_highlight.dart';
 import 'package:seeksparks/widgets/analysis_tabs.dart';
 import 'package:seeksparks/widgets/kwic_pane.dart';
+import 'package:seeksparks/widgets/related_verses_pane.dart';
 import 'package:seeksparks/widgets/language_switcher_button.dart';
 import 'package:seeksparks/widgets/browse_nav_strip.dart';
 import 'package:seeksparks/widgets/browse_window.dart';
@@ -1175,6 +1176,27 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
               chapter: chapter,
               verseStart: verse,
               verseEnd: verse,
+            ),
+          ),
+        );
+
+      case AnalysisTab.related:
+        final v = _analysisVerse(mp, verses);
+        if (v == null) return _analysisHint(context, locale);
+        final base = mp.indexOfVerse(v);
+        if (base < 0) return _analysisHint(context, locale);
+        return RelatedVersesPane(
+          key: ValueKey<String>('related-${v.id}-${mp.currentVersion}'),
+          corpus: mp.wordKeys,
+          verses: mp.verses,
+          baseIndex: base,
+          locale: locale,
+          onOpenVerse: (hit) => _onCrossRefTap(
+            BibleReference(
+              englishBook: bookNameToEnglish[hit.book] ?? hit.book,
+              chapter: hit.chapter,
+              verseStart: hit.verse,
+              verseEnd: hit.verse,
             ),
           ),
         );
