@@ -78,4 +78,43 @@ void main() {
         versions: ['nasb', 'cuvs-yhwh'], book: 'John', chapter: 3);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('a rebuild does not move the scroll position', (tester) async {
+    // v1.5.1 called _scrollToFocused() from build(), so every hover —
+    // which rebuilds the workspace to update the Analysis window — threw
+    // the reader back to the cursor verse. The pane appeared to scroll
+    // on its own while the mouse merely moved over the text.
+    await pumpBrowse(tester, versions: ['nasb', 'kjv']);
+    if (find.byType(Scrollable).evaluate().isEmpty) {
+      // No chapter loaded in this environment; nothing to assert about
+      // scrolling, and a false pass is worse than a skip.
+      return;
+    }
+
+    // Scroll well away from verse 1, where the cursor sits.
+    await tester.drag(
+        find.byType(BrowseWindow), const Offset(0, -600));
+    await tester.pump(const Duration(milliseconds: 300));
+
+    Rect? anchor() {
+      final f = find.textContaining('Genesis', findRichText: true);
+      if (f.evaluate().isEmpty) return null;
+      return tester.getRect(f.first);
+    }
+
+    final before = anchor();
+    if (before == null) return;
+
+    // Rebuild repeatedly, exactly as a hover does.
+    for (var i = 0; i < 6; i++) {
+      await tester.pump(const Duration(milliseconds: 16));
+    }
+    final after = anchor();
+
+    expect(after, isNotNull);
+    // Same first-visible row, in the same place: no jump was scheduled.
+    expect((after!.top - before.top).abs(), lessThan(1.0),
+        reason: 'rebuilding must not scroll the Browse window');
+    expect(tester.takeException(), isNull);
+  });
 }

@@ -153,6 +153,10 @@ class _BrowseWindowState extends State<BrowseWindow> {
   /// verse's own block rather than mid-way through the previous one.
   final Map<int, int> _firstRowOfVerse = {};
 
+  /// The verse the pane has already scrolled to. Guards against
+  /// re-scrolling to where we already are — see [_scrollToFocused].
+  int? _scrolledTo;
+
   /// Strong's number -> entry, for every original word in the chapter.
   /// Prefetched with the rows: the hover popup has to appear the instant
   /// the pointer lands, and an async lookup per word would make it
@@ -162,7 +166,18 @@ class _BrowseWindowState extends State<BrowseWindow> {
   @override
   void initState() {
     super.initState();
-    _future = _load();
+    _startLoad();
+  }
+
+  /// Load, then scroll ONCE when the rows land. Doing this here rather
+  /// than in `build` is the whole point: build must have no side
+  /// effects, and a scroll is about as side-effecting as it gets.
+  void _startLoad() {
+    _scrolledTo = null;
+    _future = _load()
+      ..then((_) {
+        if (mounted) _scrollToFocused();
+      });
   }
 
   @override
@@ -173,7 +188,7 @@ class _BrowseWindowState extends State<BrowseWindow> {
     if (old.book != widget.book ||
         old.chapter != widget.chapter ||
         !_sameList(old.versionCodes, widget.versionCodes)) {
-      setState(() => _future = _load());
+      setState(_startLoad);
     } else if (old.focusedVerse != widget.focusedVerse) {
       _scrollToFocused();
     }
@@ -183,9 +198,12 @@ class _BrowseWindowState extends State<BrowseWindow> {
   /// works right after a load, when the list has not been laid out yet.
   void _scrollToFocused() {
     final v = widget.focusedVerse;
-    if (v == null) return;
+    if (v == null || v == _scrolledTo) return;
     final index = _firstRowOfVerse[v];
     if (index == null) return;
+    // Record before the frame lands so a rebuild in between cannot
+    // queue the same jump twice.
+    _scrolledTo = v;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || !_scroll.isAttached) return;
       _scroll.scrollTo(
@@ -347,8 +365,6 @@ class _BrowseWindowState extends State<BrowseWindow> {
             ),
           );
         }
-        // Land on the focused verse as soon as the rows exist.
-        _scrollToFocused();
         return Container(
           color: wb.paneBg,
           child: ScrollablePositionedList.builder(
