@@ -41,6 +41,7 @@ import 'package:seeksparks/pages/strongs_entry_page.dart';
 import 'package:seeksparks/utils/app_nav.dart';
 import 'package:seeksparks/utils/strongs_inline.dart';
 import 'package:seeksparks/widgets/analysis_tabs.dart';
+import 'package:seeksparks/widgets/kwic_pane.dart';
 import 'package:seeksparks/widgets/language_switcher_button.dart';
 import 'package:seeksparks/widgets/browse_nav_strip.dart';
 import 'package:seeksparks/widgets/browse_window.dart';
@@ -1115,8 +1116,52 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
             );
           },
         );
+
+      case AnalysisTab.kwic:
+        // KWIC reports on a WORD, not a verse — the pointer's word if
+        // there is one, otherwise the first tagged word of the focused
+        // verse so the tab is never empty just because nobody has
+        // hovered yet.
+        final number = _analysisWord?.word?.strongs;
+        if (number == null || number.isEmpty) {
+          return _kwicHint(context, locale);
+        }
+        return KwicPane(
+          key: ValueKey<String>('kwic-$number-${mp.currentVersion}'),
+          strongs: number,
+          version: mp.currentVersion,
+          locale: locale,
+          onOpenRef: (book, chapter, verse) => _onCrossRefTap(
+            BibleReference(
+              englishBook: book,
+              chapter: chapter,
+              verseStart: verse,
+              verseEnd: verse,
+            ),
+          ),
+        );
     }
   }
+
+  /// KWIC reports on a WORD, so its empty state has to ask for a word.
+  /// The generic analysis hint asks for a verse, which would send the
+  /// reader to do the wrong thing.
+  Widget _kwicHint(BuildContext context, String locale) => Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Text(
+            uiStrings['kwicHint']?[locale] ??
+                'Tap a tagged word in the text to see every place it '
+                    'occurs, aligned on the word.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: WbMetrics.text,
+              color: Theme.of(context).colorScheme.outline,
+              height: 1.6,
+            ),
+          ),
+        ),
+      );
 
   /// The verse these tabs should report on.
   ///

@@ -26,7 +26,11 @@ import 'package:seeksparks/utils/reference_parser.dart' show BibleReference;
 import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
 
 /// Which pane the Analysis window is showing.
-enum AnalysisTab { wordStudy, crossRefs, stats }
+/// 2026-08-06: `kwic` joins them — BibleWorks' Key Word In Context
+/// (help topic bwh31). Appended rather than inserted because the tab is
+/// persisted by INDEX (`workbench.analysisTab`), so reordering would
+/// silently move every existing reader to a different tab.
+enum AnalysisTab { wordStudy, crossRefs, stats, kwic }
 
 /// The tab strip itself. Deliberately a plain segmented row rather than
 /// a Material `TabBar`: the pane is narrow (320–560 px) and the strip
@@ -54,6 +58,8 @@ class AnalysisTabStrip extends StatelessWidget {
           'X-Refs'),
       (AnalysisTab.stats, Icons.bar_chart_rounded, 'analysisTabStats',
           'Stats'),
+      (AnalysisTab.kwic, Icons.format_align_center_rounded,
+          'analysisTabKwic', 'KWIC'),
     ];
     return Container(
       padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),

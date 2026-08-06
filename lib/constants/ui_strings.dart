@@ -4189,6 +4189,42 @@ const uiStrings = {
     'zh-Hant': '© Logos Bible Software · 僅限非商業研經使用。',
     'en': '© Logos Bible Software · non-commercial study only.',
   },
+  'analysisTabKwic': {
+    'zh-Hans': '上下文',
+    'zh-Hant': '上下文',
+    'en': 'KWIC',
+  },
+  'kwicHits': {'zh-Hans': '处', 'zh-Hant': '處', 'en': 'hits'},
+  'kwicRefs': {'zh-Hans': '处经文', 'zh-Hant': '處經文', 'en': 'references'},
+  'kwicSortRef': {'zh-Hans': '按经卷', 'zh-Hant': '按經卷', 'en': 'Reference'},
+  'kwicSortLeft': {'zh-Hans': '按左侧', 'zh-Hant': '按左側', 'en': 'Left'},
+  'kwicSortRight': {'zh-Hans': '按右侧', 'zh-Hant': '按右側', 'en': 'Right'},
+  'kwicCollocates': {
+    'zh-Hans': '常与之搭配',
+    'zh-Hant': '常與之搭配',
+    'en': 'Occurs with',
+  },
+  'kwicCopy': {'zh-Hans': '全部复制', 'zh-Hant': '全部複製', 'en': 'Copy all'},
+  'kwicCopied': {'zh-Hans': '已复制', 'zh-Hant': '已複製', 'en': 'Copied'},
+  'kwicMore': {'zh-Hans': '加载更多', 'zh-Hant': '載入更多', 'en': 'Load more'},
+  'kwicAllShown': {'zh-Hans': '共', 'zh-Hant': '共', 'en': 'All'},
+  'kwicNoHits': {
+    'zh-Hans': '此译本中没有出现。',
+    'zh-Hant': '此譯本中沒有出現。',
+    'en': 'No occurrences in this version.',
+  },
+  'kwicUntagged': {
+    'zh-Hans': '此译本没有原文编号标注，无法对齐上下文。请切换到 BSB 或和合本雅伟版。',
+    'zh-Hant': '此譯本沒有原文編號標註，無法對齊上下文。請切換到 BSB 或和合本雅偉版。',
+    'en': 'This translation carries no Strong\'s tagging, so its context '
+        'cannot be aligned. Switch to BSB or 和合本雅伟版.',
+  },
+  'kwicHint': {
+    'zh-Hans': '在经文中点选一个带编号的词，这里会列出它在全本圣经中的每一处上下文。',
+    'zh-Hant': '在經文中點選一個帶編號的詞，這裡會列出它在全本聖經中的每一處上下文。',
+    'en': 'Tap a tagged word in the text to see every place it occurs, '
+        'aligned on the word.',
+  },
   'aboutVerBsb': {
     'zh-Hans': 'BSB（Berean 标准译本）',
     'zh-Hant': 'BSB（Berean 標準譯本）',
