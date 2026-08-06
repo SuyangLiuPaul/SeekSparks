@@ -140,6 +140,9 @@ BibleReference? parseReference(String input) {
       int.tryParse(cm.group(2)!) ?? 0,
       null,
       null,
+      // In a single-chapter book both numbers are verses, so the range
+      // end must survive; for every other book it really is a chapter.
+      chapterRangeEnd: int.tryParse(cm.group(3)!),
     );
     if (ref != null) return ref;
   }
@@ -177,7 +180,8 @@ const _singleChapterBooks = {
 };
 
 BibleReference? _buildRef(
-    String bookPart, int chapter, int? verseStart, int? verseEnd) {
+    String bookPart, int chapter, int? verseStart, int? verseEnd,
+    {int? chapterRangeEnd}) {
   if (chapter <= 0) return null;
 
   // Empty book part is invalid — "3:16" alone needs a book.
@@ -189,11 +193,12 @@ BibleReference? _buildRef(
   // Single-chapter book: "Jude 14-15" parses as ch 14 ve 15, but Jude
   // has only 1 chapter — re-interpret as ch 1 vs 14-15.
   if (_singleChapterBooks.contains(canonical) && chapter > 1) {
+    final end = verseStart ?? chapterRangeEnd;
     return BibleReference(
       englishBook: canonical,
       chapter: 1,
       verseStart: chapter,
-      verseEnd: verseStart,
+      verseEnd: (end != null && end >= chapter) ? end : chapter,
     );
   }
 

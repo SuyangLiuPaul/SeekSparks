@@ -6435,4 +6435,166 @@ const uiStrings = {
     'zh-Hant': '原文 · Strong\'s 中文釋義',
     'en': 'Original · Strong\'s gloss',
   },
+  // ====== Verse List Manager (BibleWorks bwh27) ======
+  'analysisTabVerseLists': {
+    'zh-Hans': '经文列表',
+    'zh-Hant': '經文列表',
+    'en': 'Lists',
+  },
+  'vlmMain': {'zh-Hans': '主列表', 'zh-Hant': '主列表', 'en': 'Main'},
+  'vlmSecondary': {'zh-Hans': '副列表', 'zh-Hant': '副列表', 'en': 'Secondary'},
+  'vlmImport': {'zh-Hans': '导入', 'zh-Hant': '匯入', 'en': 'Import'},
+  'vlmImportCurrent': {
+    'zh-Hans': '当前经文',
+    'zh-Hant': '當前經文',
+    'en': 'Current verse',
+  },
+  'vlmImportResults': {
+    'zh-Hans': '搜索结果',
+    'zh-Hant': '搜尋結果',
+    'en': 'Search results',
+  },
+  'vlmImportText': {
+    'zh-Hans': '从文本导入',
+    'zh-Hant': '從文字匯入',
+    'en': 'Import from text',
+  },
+  'vlmImportTextHint': {
+    'zh-Hans': '粘贴任意文本，其中的经文出处都会被加入。',
+    'zh-Hant': '貼上任意文字，其中的經文出處都會被加入。',
+    'en': 'Paste any text. Every reference in it is added.',
+  },
+  'vlmEdit': {'zh-Hans': '编辑', 'zh-Hant': '編輯', 'en': 'Edit'},
+  'vlmSortDedupe': {
+    'zh-Hans': '排序（并去重）',
+    'zh-Hant': '排序（並去重）',
+    'en': 'Sort list (removes duplicates)',
+  },
+  'vlmDeleteSelected': {
+    'zh-Hans': '删除已选',
+    'zh-Hant': '刪除已選',
+    'en': 'Delete selected',
+  },
+  'vlmCopyToOther': {
+    'zh-Hans': '把已选复制到{other}',
+    'zh-Hant': '把已選複製到{other}',
+    'en': 'Copy selected to {other}',
+  },
+  'vlmClear': {'zh-Hans': '清空列表', 'zh-Hant': '清空列表', 'en': 'Clear list'},
+  'vlmSelect': {'zh-Hans': '选择', 'zh-Hant': '選擇', 'en': 'Select'},
+  'vlmSelectAll': {'zh-Hans': '全选', 'zh-Hant': '全選', 'en': 'Select all'},
+  'vlmSelectNone': {
+    'zh-Hans': '取消全选',
+    'zh-Hant': '取消全選',
+    'en': 'Unselect all',
+  },
+  'vlmInvertSelection': {
+    'zh-Hans': '反选',
+    'zh-Hant': '反選',
+    'en': 'Invert selection',
+  },
+  'vlmSelectCommon': {
+    'zh-Hans': '与{other}的共有部分',
+    'zh-Hant': '與{other}的共有部分',
+    'en': 'Common with {other}',
+  },
+  'vlmSelectUnique': {
+    'zh-Hans': '不在{other}中的',
+    'zh-Hant': '不在{other}中的',
+    'en': 'Not in {other}',
+  },
+  'vlmFile': {'zh-Hans': '文件', 'zh-Hant': '檔案', 'en': 'File'},
+  'vlmSaveAs': {
+    'zh-Hans': '另存列表为',
+    'zh-Hant': '另存列表為',
+    'en': 'Save list as',
+  },
+  'vlmOpen': {'zh-Hans': '打开列表', 'zh-Hant': '開啟列表', 'en': 'Open list'},
+  'vlmDeleteSaved': {
+    'zh-Hans': '删除已存列表',
+    'zh-Hant': '刪除已存列表',
+    'en': 'Delete saved list',
+  },
+  'vlmCopyText': {
+    'zh-Hans': '复制为文本',
+    'zh-Hant': '複製為文字',
+    'en': 'Copy as text',
+  },
+  'vlmListName': {'zh-Hans': '列表名称', 'zh-Hant': '列表名稱', 'en': 'List name'},
+  'vlmDescription': {'zh-Hans': '说明', 'zh-Hant': '說明', 'en': 'Description'},
+  'vlmSave': {'zh-Hans': '保存', 'zh-Hant': '儲存', 'en': 'Save'},
+  'vlmAdd': {'zh-Hans': '加入', 'zh-Hant': '加入', 'en': 'Add'},
+  'vlmAddHint': {
+    'zh-Hans': '加入经文，例如 弗 2:8-10',
+    'zh-Hant': '加入經文，例如 弗 2:8-10',
+    'en': 'Add a verse, e.g. Eph 2:8-10',
+  },
+  'vlmAddedCount': {
+    'zh-Hans': '已加入 {count} 处',
+    'zh-Hant': '已加入 {count} 處',
+    'en': '{count} added',
+  },
+  'vlmEmptyHint': {
+    'zh-Hans': '列表为空。可导入当前经文或搜索结果，也可在下方输入经文出处。',
+    'zh-Hant': '列表為空。可匯入當前經文或搜尋結果，也可在下方輸入經文出處。',
+    'en': 'Empty. Import the current verse or your search results, '
+        'or type a reference below.',
+  },
+  'vlmNoCurrentVerse': {
+    'zh-Hans': '阅读区未选中经文。',
+    'zh-Hant': '閱讀區未選中經文。',
+    'en': 'No verse is selected in the reader.',
+  },
+  'vlmNoSearchResults': {
+    'zh-Hans': '没有可加入的搜索结果。',
+    'zh-Hant': '沒有可加入的搜尋結果。',
+    'en': 'No search results to add.',
+  },
+  'vlmNothingSelected': {
+    'zh-Hans': '未选中任何条目。',
+    'zh-Hant': '未選中任何條目。',
+    'en': 'Nothing is selected.',
+  },
+  'vlmNoRefsFound': {
+    'zh-Hans': '文本中未找到经文出处。',
+    'zh-Hant': '文字中未找到經文出處。',
+    'en': 'No references found in that text.',
+  },
+  'vlmNotAReference': {
+    'zh-Hans': '不是有效的经文出处。',
+    'zh-Hant': '不是有效的經文出處。',
+    'en': 'Not a reference.',
+  },
+  'vlmNoSavedLists': {
+    'zh-Hans': '尚无已保存的列表。',
+    'zh-Hant': '尚無已儲存的列表。',
+    'en': 'No saved lists yet.',
+  },
+  'vlmListEmpty': {
+    'zh-Hans': '该列表为空。',
+    'zh-Hant': '該列表為空。',
+    'en': 'This list is empty.',
+  },
+  'vlmSaved': {'zh-Hans': '已保存。', 'zh-Hant': '已儲存。', 'en': 'Saved.'},
+  'vlmOpened': {
+    'zh-Hans': '已并入当前列表。',
+    'zh-Hant': '已併入當前列表。',
+    'en': 'Merged into the active list.',
+  },
+  'vlmCopied': {'zh-Hans': '已复制。', 'zh-Hant': '已複製。', 'en': 'Copied.'},
+  'vlmLimitOn': {
+    'zh-Hans': '搜索已限定在此列表内',
+    'zh-Hant': '搜尋已限定在此列表內',
+    'en': 'Searches are limited to this list',
+  },
+  'vlmLimitOff': {
+    'zh-Hans': '把搜索限定在此列表内',
+    'zh-Hant': '把搜尋限定在此列表內',
+    'en': 'Limit searches to this list',
+  },
+  'vlmLimitBanner': {
+    'zh-Hans': '限定：{name}（{count} 处）',
+    'zh-Hant': '限定：{name}（{count} 處）',
+    'en': 'Limited to {name} ({count})',
+  },
 };

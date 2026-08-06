@@ -29,10 +29,11 @@ import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
 /// Which pane the Analysis window is showing.
 /// 2026-08-06: `kwic` joins them — BibleWorks' Key Word In Context
 /// (help topic bwh31), then `related` — the Related Verses Tool
-/// (bwh50). Appended rather than inserted because the tab is
-/// persisted by INDEX (`workbench.analysisTab`), so reordering would
-/// silently move every existing reader to a different tab.
-enum AnalysisTab { wordStudy, crossRefs, stats, kwic, related }
+/// (bwh50), then `verseLists` — the Verse List Manager (bwh27).
+/// Appended rather than inserted because the tab is persisted by
+/// INDEX (`workbench.analysisTab`), so reordering would silently move
+/// every existing reader to a different tab.
+enum AnalysisTab { wordStudy, crossRefs, stats, kwic, related, verseLists }
 
 /// The tab strip itself. Deliberately a plain segmented row rather than
 /// a Material `TabBar`: the pane is narrow (320–560 px) and the strip
@@ -64,14 +65,16 @@ class AnalysisTabStrip extends StatelessWidget {
           'analysisTabKwic', 'KWIC'),
       (AnalysisTab.related, Icons.linear_scale_rounded,
           'analysisTabRelated', 'Related'),
+      (AnalysisTab.verseLists, Icons.playlist_add_check_rounded,
+          'analysisTabVerseLists', 'Lists'),
     ];
     return Container(
       padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
       color: scheme.surface,
       child: LayoutBuilder(
         builder: (context, box) {
-          // Five labelled tabs need ~66 px each; the Analysis pane can be
-          // as narrow as 320. Below that the label is what goes — an
+          // A labelled tab needs ~66 px; the Analysis pane can be as
+          // narrow as 320. Below that the label is what goes — an
           // ellipsised "Wor…/X-R…/Sta…" identifies nothing, whereas the
           // icons already differ from one another at a glance.
           final showLabels = box.maxWidth / items.length >= 66;

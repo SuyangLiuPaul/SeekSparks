@@ -5,6 +5,7 @@ import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/services/concordance_service.dart';
 import 'package:seeksparks/services/search_service.dart';
 import 'package:seeksparks/utils/strongs_boolean_search.dart';
+import 'package:seeksparks/utils/verse_list.dart' show applySearchLimit;
 import 'package:seeksparks/utils/version_mapper.dart' show toEnglish;
 
 /// State glue for the three-pane Workbench (`workbench_page.dart`) —
@@ -44,6 +45,31 @@ class WorkbenchProvider extends ChangeNotifier {
   /// plus refs. Null when the last search was a text scan.
   String? strongsQueryLabel;
   List<ConcordanceRef>? strongsRefs;
+
+  /// Search limit — restrict results to these
+  /// `'EnglishBook-chapter-verse'` keys. Null means unrestricted.
+  ///
+  /// BibleWorks sets this from a saved verse list (`l test.vls`, bwh29
+  /// / bwh44); here it comes from the Verse List Manager tab. Kept as a
+  /// key set rather than a `VerseList` so the search path does not have
+  /// to know what produced it.
+  Set<String>? searchLimit;
+
+  /// What to call the active limit in the UI (the list's name). Null
+  /// exactly when [searchLimit] is null.
+  String? searchLimitLabel;
+
+  bool get hasSearchLimit => searchLimit != null;
+
+  /// Point subsequent searches at [keys], labelled [label], and re-run
+  /// the last query so the results on screen match the limit that is
+  /// now displayed. Passing null clears the limit.
+  Future<void> setSearchLimit(Set<String>? keys, String? label) async {
+    searchLimit = keys;
+    searchLimitLabel = keys == null ? null : (label ?? '');
+    _notify();
+    if (lastQuery.isNotEmpty) await runSearch(lastQuery);
+  }
 
   // ── Analysis pane (right) ─────────────────────────────────────────
 
@@ -108,14 +134,14 @@ class WorkbenchProvider extends ChangeNotifier {
       final bq = parseStrongsBoolean(query);
       if (bq != null) {
         strongsQueryLabel = query.toUpperCase();
-        strongsRefs = await SearchService.runStrongsBoolean(bq);
+        strongsRefs = _limitRefs(await SearchService.runStrongsBoolean(bq));
       } else if (_singleStrongsRe.hasMatch(query)) {
         final number = query.toUpperCase();
         final result = await ConcordanceService.lookup(number);
         strongsQueryLabel = number;
         // The bundled concordance already lists refs in canonical
         // order (Genesis … Revelation), so no re-sort here.
-        strongsRefs = result?.refs ?? const [];
+        strongsRefs = _limitRefs(result?.refs ?? const []);
       } else {
         final scan = SearchService.scanText(
           verses: mainProvider.verses,
@@ -126,7 +152,11 @@ class WorkbenchProvider extends ChangeNotifier {
           // book scoping lives in the standalone SearchPage.
           searchAll: true,
         );
-        textResults = scan.matches;
+        textResults = applySearchLimit(
+          scan.matches,
+          searchLimit,
+          (v) => '${toEnglish(v.book) ?? v.book}-${v.chapter}-${v.verse}',
+        );
       }
     } finally {
       searching = false;
@@ -134,6 +164,12 @@ class WorkbenchProvider extends ChangeNotifier {
       _notify();
     }
   }
+
+  List<ConcordanceRef> _limitRefs(List<ConcordanceRef> refs) => applySearchLimit(
+        refs,
+        searchLimit,
+        (r) => '${r.englishBook}-${r.chapter}-${r.verse}',
+      );
 
   void clearResults() {
     searching = false;

@@ -43,6 +43,8 @@ import 'package:seeksparks/utils/app_nav.dart';
 import 'package:seeksparks/utils/strongs_inline.dart';
 import 'package:seeksparks/utils/search_highlight.dart';
 import 'package:seeksparks/widgets/analysis_tabs.dart';
+import 'package:seeksparks/widgets/verse_list_pane.dart';
+import 'package:seeksparks/utils/verse_list.dart' show VerseRef, verseListKeys;
 import 'package:seeksparks/widgets/kwic_pane.dart';
 import 'package:seeksparks/widgets/related_verses_pane.dart';
 import 'package:seeksparks/widgets/language_switcher_button.dart';
@@ -1200,7 +1202,49 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
             ),
           ),
         );
+
+      case AnalysisTab.verseLists:
+        final v = _analysisVerse(mp, verses);
+        return VerseListPane(
+          locale: locale,
+          version: mp.currentVersion,
+          verseByRef: wb.verseByRef,
+          currentRef: v == null
+              ? null
+              : VerseRef(
+                  bookNameToEnglish[v.book] ?? v.book, v.chapter, v.verse),
+          searchResults: _searchResultRefs(wb),
+          searchLimitActive: wb.hasSearchLimit,
+          onOpenRef: (ref) => _onCrossRefTap(
+            BibleReference(
+              englishBook: ref.englishBook,
+              chapter: ref.chapter,
+              verseStart: ref.verse,
+              verseEnd: ref.verse,
+            ),
+          ),
+          onSetSearchLimit: (list) => list == null
+              ? wb.setSearchLimit(null, null)
+              : wb.setSearchLimit(verseListKeys(list),
+                  list.name.isEmpty ? null : list.name),
+        );
     }
+  }
+
+  /// The command pane's current results as plain refs, so the Verse
+  /// List pane can import them without knowing whether the last search
+  /// was a text scan or a Strong's lookup.
+  List<VerseRef> _searchResultRefs(WorkbenchProvider wb) {
+    final strongs = wb.strongsRefs;
+    if (strongs != null) {
+      return [
+        for (final r in strongs) VerseRef(r.englishBook, r.chapter, r.verse),
+      ];
+    }
+    return [
+      for (final v in wb.textResults)
+        VerseRef(bookNameToEnglish[v.book] ?? v.book, v.chapter, v.verse),
+    ];
   }
 
   /// KWIC reports on a WORD, so its empty state has to ask for a word.

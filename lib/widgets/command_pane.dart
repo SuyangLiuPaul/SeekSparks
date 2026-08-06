@@ -294,6 +294,62 @@ class _CommandPaneState extends State<CommandPane> {
 
   Widget _buildResults(BuildContext context, WorkbenchProvider wb,
       AppSettings settings, ColorScheme scheme, String locale) {
+    // A search limit silently removes hits, so it has to be visible
+    // wherever the hits are. BibleWorks shows the active limit on the
+    // command line; here it is a strip above the results, and tapping
+    // it lifts the limit.
+    if (wb.hasSearchLimit) {
+      return Column(
+        children: [
+          _limitBanner(wb, scheme, locale),
+          Expanded(child: _buildResultsBody(context, wb, settings, scheme, locale)),
+        ],
+      );
+    }
+    return _buildResultsBody(context, wb, settings, scheme, locale);
+  }
+
+  Widget _limitBanner(
+      WorkbenchProvider wb, ColorScheme scheme, String locale) {
+    final name = wb.searchLimitLabel ?? '';
+    final label = (uiStrings['vlmLimitBanner']?[locale] ??
+            'Limited to {name} ({count})')
+        .replaceAll('{name}',
+            name.isEmpty ? (uiStrings['vlmMain']?[locale] ?? 'Main') : name)
+        .replaceAll('{count}', '${wb.searchLimit?.length ?? 0}');
+    return Material(
+      color: scheme.tertiaryContainer,
+      child: InkWell(
+        onTap: () => wb.setSearchLimit(null, null),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          child: Row(
+            children: [
+              Icon(Icons.filter_alt, size: 14, color: scheme.onTertiaryContainer),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w600,
+                    color: scheme.onTertiaryContainer,
+                  ),
+                ),
+              ),
+              Icon(Icons.close_rounded,
+                  size: 14, color: scheme.onTertiaryContainer),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildResultsBody(BuildContext context, WorkbenchProvider wb,
+      AppSettings settings, ColorScheme scheme, String locale) {
     if (wb.searching) {
       return const Center(child: CircularProgressIndicator());
     }
