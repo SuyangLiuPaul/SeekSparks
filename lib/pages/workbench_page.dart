@@ -517,8 +517,17 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
     // SeekSparks stays a touch-first reading app; putting BibleWorks'
     // three windows inside Material 3 chrome is what made this read as
     // "a phone app in three columns".
+    //
+    // 2026-08: 护眼纸质 reaches the workbench now. The reader's paper
+    // theme used to stop at BibleReadingPane's content subtree, so the
+    // panes/chrome/Browse window stayed on the neutral desktop palette
+    // and a paper-mode reader got a cream square in a grey workspace.
+    // Watching the setting here rebuilds the whole Theme whenever it
+    // flips, so the new palette flows through every WbColors.of context
+    // at once.
+    final paper = context.watch<AppSettings>().readingPaperTheme;
     return Theme(
-      data: workbenchTheme(Theme.of(context)),
+      data: workbenchTheme(Theme.of(context), paper: paper),
       child: ChangeNotifierProvider<WorkbenchProvider>.value(
         value: _wb,
         child: Builder(

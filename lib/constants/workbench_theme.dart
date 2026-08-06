@@ -147,6 +147,33 @@ class WbColors extends ThemeExtension<WbColors> {
     strongsGrammar: Color(0xFF77A6F0),
   );
 
+  /// 2026-08: 护眼纸质 — the "easy-on-eyes" paper palette, used when
+  /// [AppSettings.readingPaperTheme] is on. The classic reader has had
+  /// this since it was ported from YsWords, but it stopped at the
+  /// BibleReadingPane's content subtree: every workbench chrome surface
+  /// (menu bar, status bar, panes, the parallel Browse window) read
+  /// [WbColors.of] directly and stayed on the neutral desktop palette,
+  /// so a reader who turned paper on got a cream square floating in a
+  /// grey workspace. This variant is what the WHOLE workbench swaps to
+  /// under paper mode — same hues as the reader's [_PaperTheme], kept
+  /// warm regardless of ThemeMode (the point of "paper" is paper, not a
+  /// tinted dark mode — see bible_reading_pane.dart).
+  static const paper = WbColors(
+    paneBg: Color(0xFFF7F1E0),
+    paneAltBg: Color(0xFFEFE5C9),
+    chromeBg: Color(0xFFE6D9B5),
+    border: Color(0xFFDED0A8),
+    text: Color(0xFF4A3826),
+    mutedText: Color(0xFF7A6A50),
+    // Hyperlink blue is the one BibleWorks colour readers already know;
+    // a gold link on cream is harder to read, not easier.
+    link: Color(0xFF27395A),
+    selectionBg: Color(0xFFE3D19D),
+    hoverBg: Color(0xFFEFE5C9),
+    strongsLexical: Color(0xFF1E7A3C),
+    strongsGrammar: Color(0xFF1B57C4),
+  );
+
   @override
   WbColors copyWith({
     Color? paneBg,
@@ -193,6 +220,43 @@ class WbColors extends ThemeExtension<WbColors> {
       strongsGrammar: Color.lerp(strongsGrammar, other.strongsGrammar, t)!,
     );
   }
+
+  /// 2026-08: value equality so tests can assert against the const
+  /// `WbColors.light` / `.dark` / `.paper` instances even after Flutter
+  /// rebuilds a ThemeData (which can lerp extensions into a fresh
+  /// instance during Material 3 normalisation). The default identity
+  /// equality made those assertions flaky for no good reason — two
+  /// palettes with the same colours ARE the same palette.
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is WbColors &&
+          other.paneBg == paneBg &&
+          other.paneAltBg == paneAltBg &&
+          other.chromeBg == chromeBg &&
+          other.border == border &&
+          other.text == text &&
+          other.mutedText == mutedText &&
+          other.link == link &&
+          other.selectionBg == selectionBg &&
+          other.hoverBg == hoverBg &&
+          other.strongsLexical == strongsLexical &&
+          other.strongsGrammar == strongsGrammar);
+
+  @override
+  int get hashCode => Object.hash(
+        paneBg,
+        paneAltBg,
+        chromeBg,
+        border,
+        text,
+        mutedText,
+        link,
+        selectionBg,
+        hoverBg,
+        strongsLexical,
+        strongsGrammar,
+      );
 
   static WbColors of(BuildContext context) =>
       Theme.of(context).extension<WbColors>() ?? light;
@@ -249,9 +313,14 @@ Color versionTagColor(String code) {
 /// bundled CJK subset and the platform faces that actually have those
 /// scripts live in the parent's fallback list, not in any font this
 /// file names.
-ThemeData workbenchTheme(ThemeData parent) {
+ThemeData workbenchTheme(ThemeData parent, {bool paper = false}) {
   final brightness = parent.brightness;
-  final wb = brightness == Brightness.dark ? WbColors.dark : WbColors.light;
+  // Paper wins over light/dark — see [WbColors.paper]. A reader who
+  // turned paper on wants paper everywhere in the workbench, including
+  // in dark mode (warm cream is the whole point).
+  final wb = paper
+      ? WbColors.paper
+      : (brightness == Brightness.dark ? WbColors.dark : WbColors.light);
   final base = brightness == Brightness.dark
       ? ThemeData.dark(useMaterial3: true)
       : ThemeData.light(useMaterial3: true);
