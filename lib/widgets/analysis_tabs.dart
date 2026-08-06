@@ -20,6 +20,7 @@ import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/models/original_word.dart';
 import 'package:seeksparks/models/verse.dart';
 import 'package:seeksparks/services/concordance_service.dart';
+import 'package:seeksparks/utils/scripture_markup.dart';
 import 'package:seeksparks/services/cross_reference_service.dart';
 import 'package:seeksparks/services/strongs_service.dart';
 import 'package:seeksparks/utils/reference_parser.dart' show BibleReference;
@@ -245,7 +246,11 @@ class _CrossRefsPaneState extends State<CrossRefsPane> {
                     if (hit != null) ...[
                       const SizedBox(height: 4),
                       Text(
-                        hit.text,
+                        // Cross-refs print the verse itself, so it
+                        // needs the same cleanup the reader gets —
+                        // otherwise a NASB ¶ or an LEB <note:…>
+                        // shows up here instead.
+                        scriptureReadingText(hit.text),
                         maxLines: 3,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(

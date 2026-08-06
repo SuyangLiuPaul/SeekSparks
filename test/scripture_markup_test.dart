@@ -104,6 +104,8 @@ void main() {
     });
   });
 
+  _noiseTests();
+
   group('cleanLexiconText', () {
     test('turns module reference syntax into a plain reference', () {
       expect(cleanLexiconText('雅完的儿子 (# 創 10:4|)'), '雅完的儿子 (創 10:4)');
@@ -132,6 +134,39 @@ void main() {
 
     test('empty in, empty out', () {
       expect(cleanLexiconText(''), '');
+    });
+  });
+}
+
+// Appended 2026-08-06: display noise, and the characters that must
+// survive a cleanup pass.
+void _noiseTests() {
+  group('display noise', () {
+    test('the NASB pilcrow is stripped, with its trailing space', () {
+      expect(scriptureReadingText('¶“Reuben, you are my firstborn,'),
+          '“Reuben, you are my firstborn,');
+      expect(scriptureReadingText('¶ Simeon and Levi'), 'Simeon and Levi');
+    });
+
+    test('the Chinese appositive dash SURVIVES', () {
+      // 利未记 4:22. Stripping this maims the apposition.
+      const v = '官长若行了雅伟─他神所吩咐不可行的什么事';
+      expect(scriptureReadingText(v), v);
+    });
+
+    test('rare but real CJK characters SURVIVE', () {
+      // 民数记 15:38 — 䍁子, tassels. Not mojibake.
+      const v = '在衣服边上做䍁子';
+      expect(scriptureReadingText(v), v);
+    });
+
+    test('the thin space between nested quotes SURVIVES', () {
+      const v = 'or you will die.’ ”';
+      expect(scriptureReadingText(v), v);
+    });
+
+    test('a pilcrow mid-verse goes too', () {
+      expect(scriptureReadingText('a ¶b'), 'a b');
     });
   });
 }

@@ -60,6 +60,27 @@ final RegExp _noteRe = RegExp(r'<note:\s*([^>]*)>');
 // insertions stay two spans.
 final RegExp _suppliedRe = RegExp(r'\[([^\]]*)\]');
 
+/// Display noise: marks that belong to a printed page, not to a
+/// verse-per-line reader.
+///
+/// Only the pilcrow. NASB uses `¶` to mark where a paragraph starts —
+/// 965 verses carry one — which means nothing in a reader that already
+/// begins each verse on its own line, and shows up as a stray symbol
+/// before the first word.
+///
+/// Deliberately NOT stripped, having checked what they actually are:
+///   * `─` (1,456× in 和合本雅伟版) is the Chinese appositive dash —
+///     雅伟─他神. It is content; removing it would maim the apposition
+///     in every verse that uses one.
+///   * `䍁` (9×) is a real character: 䍁子, the tassels of 民数记 15:38.
+///   * `\u2009` (608× in NASB) is a thin space holding nested quote
+///     marks apart so `.’ ”` does not collide.
+///
+/// A blunt "strip odd characters" pass would have deleted all three.
+final RegExp _displayNoiseRe = RegExp(r'¶\s*');
+
+String _stripNoise(String s) => s.replaceAll(_displayNoiseRe, '');
+
 /// Split verse text into typed spans.
 ///
 /// Notes are returned in place so a caller that wants a marker knows
@@ -68,7 +89,8 @@ List<ScriptureSpan> parseScripture(String raw) {
   if (raw.isEmpty) return const [];
   final out = <ScriptureSpan>[];
 
-  void addPlain(String s) {
+  void addPlain(String raw) {
+    final s = _stripNoise(raw);
     if (s.isEmpty) return;
     // Merge with a preceding plain span so callers never see the text
     // arbitrarily chopped where a note happened to sit.
