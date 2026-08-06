@@ -4368,6 +4368,44 @@ const uiStrings = {
     'zh-Hant': '清除結果',
     'en': 'Clear results',
   },
+  // The Browse window's inline-Strong's switch. 「原文编号」 is the term
+  // yahwehdehua.net uses for these numbers, so a reader who knows that
+  // site recognises the control here.
+  'analysisLemma': {
+    'zh-Hans': '原文',
+    'zh-Hant': '原文',
+    'en': 'Lemma',
+  },
+  'analysisUsage': {
+    'zh-Hans': '钦定本译法',
+    'zh-Hant': '欽定本譯法',
+    'en': 'KJV usage',
+  },
+  'analysisSimplifiedOnly': {
+    'zh-Hans': '此词典仅有简体版。',
+    'zh-Hant': '此詞典僅發行簡體版，以下為簡體原文。',
+    'en': 'This lexicon is published in Simplified Chinese only.',
+  },
+  'wbShowStrongs': {
+    'zh-Hans': '显示原文编号',
+    'zh-Hant': '顯示原文編號',
+    'en': "Show Strong's numbers",
+  },
+  'wbHideStrongs': {
+    'zh-Hans': '隐藏原文编号',
+    'zh-Hant': '隱藏原文編號',
+    'en': "Hide Strong's numbers",
+  },
+  'wbShowStrongsShort': {
+    'zh-Hans': '编号',
+    'zh-Hant': '編號',
+    'en': 'G#',
+  },
+  'wbHideStrongsShort': {
+    'zh-Hans': '编号',
+    'zh-Hant': '編號',
+    'en': 'G#',
+  },
   'parallelPickVersions': {
     'zh-Hans': '选择版本…',
     'zh-Hant': '選擇版本…',

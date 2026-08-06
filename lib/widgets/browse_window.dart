@@ -38,6 +38,7 @@ import 'package:seeksparks/services/strongs_service.dart';
 import 'package:seeksparks/services/tagged_text_service.dart';
 import 'package:seeksparks/utils/morphology.dart' show describeMorphology;
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:seeksparks/utils/strongs_inline.dart';
 import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
 import 'package:seeksparks/widgets/workbench_chrome.dart' show WbVersionTag;
 
@@ -90,10 +91,15 @@ class BrowseHover {
     required this.reference,
     required this.verse,
     this.word,
+    this.grammar = const [],
   });
 
   /// Null for a verse-level hover (a translation line).
   final OriginalWord? word;
+
+  /// Grammar / TVM codes on this word, so the Analysis window can
+  /// decode them instead of leaving the blue numbers unexplained.
+  final List<String> grammar;
 
   final String reference;
   final int verse;
@@ -122,7 +128,8 @@ class BrowseWindow extends StatefulWidget {
   /// Verse the workspace cursor is on — highlighted, and scrolled to.
   final int? focusedVerse;
 
-  final void Function(OriginalWord word)? onWordTap;
+  final void Function(OriginalWord word, List<String> grammar)?
+      onWordTap;
 
   /// Null is passed when the pointer leaves a word, so the status bar
   /// can clear.
@@ -403,7 +410,8 @@ class _RowView extends StatelessWidget {
   final _BrowseRow row;
   final bool focused;
   final Map<String, StrongsEntry?> glosses;
-  final void Function(OriginalWord word)? onWordTap;
+  final void Function(OriginalWord word, List<String> grammar)?
+      onWordTap;
   final void Function(BrowseHover? hover)? onWordHover;
   final VoidCallback? onTap;
 
@@ -435,6 +443,7 @@ class _RowView extends StatelessWidget {
                   ? _OriginalsLine(
                       row: row,
                       glosses: glosses,
+                      showNumbers: settings.showStrongsInOriginals,
                       onWordTap: onWordTap,
                       onWordHover: onWordHover,
                     )
@@ -444,6 +453,7 @@ class _RowView extends StatelessWidget {
                       ? _TaggedLine(
                           row: row,
                           glosses: glosses,
+                          showNumbers: settings.showStrongsInOriginals,
                           onWordTap: onWordTap,
                           onWordHover: onWordHover,
                         )
@@ -507,13 +517,16 @@ class _TaggedLine extends StatelessWidget {
   const _TaggedLine({
     required this.row,
     required this.glosses,
+    required this.showNumbers,
     this.onWordTap,
     this.onWordHover,
   });
 
   final _BrowseRow row;
   final Map<String, StrongsEntry?> glosses;
-  final void Function(OriginalWord word)? onWordTap;
+  final bool showNumbers;
+  final void Function(OriginalWord word, List<String> grammar)?
+      onWordTap;
   final void Function(BrowseHover? hover)? onWordHover;
 
   @override
@@ -548,6 +561,8 @@ class _TaggedLine extends StatelessWidget {
                     verse: row.verse,
                     entry: glosses[r.strongs],
                     grammar: r.grammar,
+                    implied: r.implied,
+                    showNumbers: showNumbers,
                     translation: true,
                     onTap: onWordTap,
                     onHover: onWordHover,
@@ -576,13 +591,16 @@ class _OriginalsLine extends StatelessWidget {
   const _OriginalsLine({
     required this.row,
     required this.glosses,
+    required this.showNumbers,
     this.onWordTap,
     this.onWordHover,
   });
 
   final _BrowseRow row;
   final Map<String, StrongsEntry?> glosses;
-  final void Function(OriginalWord word)? onWordTap;
+  final bool showNumbers;
+  final void Function(OriginalWord word, List<String> grammar)?
+      onWordTap;
   final void Function(BrowseHover? hover)? onWordHover;
 
   @override
@@ -620,6 +638,7 @@ class _OriginalsLine extends StatelessWidget {
                     reference: row.reference,
                     verse: row.verse,
                     entry: glosses[w.strongs],
+                    showNumbers: showNumbers,
                     onTap: onWordTap,
                     onHover: onWordHover,
                   ),
@@ -639,6 +658,8 @@ class _HoverWord extends StatefulWidget {
     required this.verse,
     required this.entry,
     this.grammar = const [],
+    this.implied = const [],
+    this.showNumbers = false,
     this.translation = false,
     this.onTap,
     this.onHover,
@@ -656,10 +677,20 @@ class _HoverWord extends StatefulWidget {
   /// Grammar codes carried by a tagged translation run.
   final List<String> grammar;
 
+  /// Numbers the original carries that this word does not render — the
+  /// Hebrew object marker, the Greek article. Printed parenthesised, as
+  /// yahwehdehua.net prints them, so they read as context rather than as
+  /// this word's identity.
+  final List<String> implied;
+
+  /// Print the Strong's numbers inline after the word. Off, the line is
+  /// ordinary prose; on, it is an interlinear you can still read.
+  final bool showNumbers;
+
   /// Translation text renders at body size in the body colour; only the
   /// originals line gets the larger original-script treatment.
   final bool translation;
-  final void Function(OriginalWord word)? onTap;
+  final void Function(OriginalWord word, List<String> grammar)? onTap;
   final void Function(BrowseHover? hover)? onHover;
 
   @override
@@ -711,6 +742,24 @@ class _HoverWordState extends State<_HoverWord> {
     ]);
   }
 
+  bool get _hasNumbers =>
+      widget.word.strongs.isNotEmpty ||
+      widget.grammar.isNotEmpty ||
+      widget.implied.isNotEmpty;
+
+  /// One inline number, set small and raised — a superscript in all but
+  /// name. Flutter has no baseline-shift, so the size drop plus the hue
+  /// is what keeps it from reading as part of the sentence.
+  InlineSpan _num(String text, Color color) => TextSpan(
+        text: ' $text',
+        style: TextStyle(
+          fontSize: WbMetrics.chrome - 2,
+          color: color,
+          fontWeight: FontWeight.w500,
+          decoration: TextDecoration.none,
+        ),
+      );
+
   @override
   Widget build(BuildContext context) {
     final wb = WbColors.of(context);
@@ -742,6 +791,7 @@ class _HoverWordState extends State<_HoverWord> {
             word: widget.word,
             reference: widget.reference,
             verse: widget.verse,
+            grammar: widget.grammar,
           ));
         },
         onExit: (_) {
@@ -749,17 +799,45 @@ class _HoverWordState extends State<_HoverWord> {
           widget.onHover?.call(null);
         },
         child: GestureDetector(
-          onTap:
-              widget.onTap == null ? null : () => widget.onTap!(widget.word),
+          onTap: widget.onTap == null
+              ? null
+              : () => widget.onTap!(widget.word, widget.grammar),
           behavior: HitTestBehavior.opaque,
           child: Container(
             color: _hovering ? wb.selectionBg : null,
-            child: Text(
-              widget.word.text,
+            child: Text.rich(
+              TextSpan(children: [
+                TextSpan(text: widget.word.text),
+                if (widget.showNumbers) ...[
+                  for (final t in inlineStrongsNumbers(
+                    strongs: widget.word.strongs,
+                    grammar: widget.grammar,
+                    implied: widget.implied,
+                  ))
+                    _num(t.text, switch (t.kind) {
+                      StrongsNumberKind.lexical => wb.strongsLexical,
+                      StrongsNumberKind.grammar => wb.strongsGrammar,
+                      StrongsNumberKind.implied =>
+                        wb.strongsLexical.withValues(alpha: 0.6),
+                    }),
+                  // Chinese has no inter-word space, so without this the
+                  // number collides with the next character: 亚伯拉罕G11的.
+                  // The originals line does not need it — its own script
+                  // is already space-separated.
+                  if (widget.translation && _hasNumbers)
+                    const TextSpan(text: ' '),
+                ],
+              ]),
               style: TextStyle(
-                fontSize: WbMetrics.original,
+                // The doc on [translation] promises body size for a
+                // translation run; only the originals line gets the
+                // larger original-script treatment.
+                fontSize: widget.translation
+                    ? WbMetrics.text
+                    : WbMetrics.original,
                 height: WbMetrics.lineHeight,
                 color: wb.text,
+                fontFamilyFallback: kCjkFontFallback,
                 // Underline on hover, so touch users (who get no hover)
                 // and mouse users both see that words are live.
                 decoration:

@@ -31,6 +31,7 @@ import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/original_word.dart';
 import 'package:seeksparks/models/strongs.dart';
+import 'package:seeksparks/services/chinese_lexicon_service.dart';
 import 'package:seeksparks/services/strongs_service.dart';
 import 'package:seeksparks/utils/morphology.dart' show describeMorphology;
 
@@ -41,6 +42,7 @@ class WordAnalysisPane extends StatefulWidget {
     required this.reference,
     required this.locale,
     required this.frozen,
+    this.grammar = const [],
     this.onOpenFullEntry,
   });
 
@@ -54,6 +56,10 @@ class WordAnalysisPane extends StatefulWidget {
   /// the pane stopped following the mouse.
   final bool frozen;
 
+  /// Grammar / TVM codes carried by this word on a tagged line. Decoded
+  /// via the Chinese module, which is the only source that has them.
+  final List<String> grammar;
+
   final VoidCallback? onOpenFullEntry;
 
   @override
@@ -64,6 +70,15 @@ class _WordAnalysisPaneState extends State<WordAnalysisPane> {
   StrongsEntry? _entry;
   String? _loadedFor;
 
+  /// BDB/Thayer in Chinese. Deeper than the CBOL gloss on [_entry], so
+  /// for a Chinese reader it replaces the Meaning/Definition block
+  /// rather than sitting beside it.
+  ChineseLexEntry? _zh;
+
+  /// Decoded grammar codes for this word — the blue numbers on a
+  /// tagged line. Nothing else in the app could explain them.
+  List<ChineseLexEntry> _zhGrammar = const [];
+
   @override
   void initState() {
     super.initState();
@@ -73,7 +88,11 @@ class _WordAnalysisPaneState extends State<WordAnalysisPane> {
   @override
   void didUpdateWidget(covariant WordAnalysisPane old) {
     super.didUpdateWidget(old);
-    if (old.word.strongs != widget.word.strongs) _load();
+    if (old.word.strongs != widget.word.strongs ||
+        old.locale != widget.locale) {
+      _loadedFor = null;
+      _load();
+    }
   }
 
   /// Keeps the previous entry on screen while the next one resolves.
@@ -83,9 +102,20 @@ class _WordAnalysisPaneState extends State<WordAnalysisPane> {
     final number = widget.word.strongs;
     if (number.isEmpty || number == _loadedFor) return;
     final e = await StrongsService.lookup(number);
+    final wantZh = ChineseLexiconService.appliesTo(widget.locale);
+    final zh = wantZh ? await ChineseLexiconService.lookup(number) : null;
+    final grammar = <ChineseLexEntry>[];
+    if (wantZh) {
+      for (final code in widget.grammar) {
+        final g = await ChineseLexiconService.lookup(code);
+        if (g != null && g.isGrammarCode) grammar.add(g);
+      }
+    }
     if (!mounted || widget.word.strongs != number) return;
     setState(() {
       _entry = e;
+      _zh = zh;
+      _zhGrammar = grammar;
       _loadedFor = number;
     });
   }
@@ -95,6 +125,7 @@ class _WordAnalysisPaneState extends State<WordAnalysisPane> {
     final wb = WbColors.of(context);
     final locale = widget.locale;
     final e = _entry;
+    final zh = _zh;
     final parse = describeMorphology(widget.word.morph, locale);
 
     String s(String key, String fallback) =>
@@ -205,12 +236,73 @@ class _WordAnalysisPaneState extends State<WordAnalysisPane> {
             ),
           ],
 
-          if (e != null) ...[
+          // ── Grammar codes, decoded. On a tagged Chinese line these
+          // are the blue numbers; without this they are unreadable.
+          for (final g in _zhGrammar) ...[
+            const SizedBox(height: 6),
+            Container(
+              width: double.infinity,
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+              decoration: BoxDecoration(
+                color: wb.strongsGrammar.withValues(alpha: 0.08),
+                border: Border.all(
+                    color: wb.strongsGrammar.withValues(alpha: 0.30)),
+              ),
+              child: Text.rich(
+                TextSpan(children: [
+                  TextSpan(
+                    text: '${g.number}  ',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: wb.strongsGrammar,
+                    ),
+                  ),
+                  TextSpan(
+                    text: g.parsing.join(' · '),
+                    style: TextStyle(color: wb.strongsGrammar),
+                  ),
+                ]),
+                style: TextStyle(fontSize: WbMetrics.text, height: 1.35),
+              ),
+            ),
+          ],
+
+          // ── The Chinese lexicon, when we have one. It supersedes the
+          // CBOL gloss below rather than duplicating it: same number,
+          // more of the entry.
+          if (zh != null) ...[
+            _field(wb, s('analysisLemma', 'Lemma'),
+                [zh.lemma, if (zh.translit.isNotEmpty) zh.translit]
+                    .where((x) => x.isNotEmpty)
+                    .join('  ')),
+            _field(wb, s('analysisOrigin', 'Origin'), zh.etymology),
+            if (zh.senses.isNotEmpty)
+              _field(wb, s('analysisDefinition', 'Definition'),
+                  zh.senses.join('\n')),
+            _field(wb, s('analysisUsage', 'KJV usage'), zh.usage),
+            if (ChineseLexiconService.isSimplifiedOnly(locale))
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  s('analysisSimplifiedOnly',
+                      'This lexicon is published in Simplified Chinese only.'),
+                  style: TextStyle(
+                    fontSize: WbMetrics.chrome,
+                    fontStyle: FontStyle.italic,
+                    color: wb.mutedText,
+                  ),
+                ),
+              ),
+          ] else if (e != null) ...[
             _field(wb, s('analysisMeaning', 'Meaning'),
                 e.localizedGloss(locale)),
             _field(wb, s('analysisOrigin', 'Origin'), e.derivation ?? ''),
             _field(wb, s('analysisDefinition', 'Definition'),
                 e.localizedDefinition(locale)),
+          ],
+
+          if (e != null || zh != null) ...[
             if (widget.onOpenFullEntry != null) ...[
               const SizedBox(height: 10),
               InkWell(

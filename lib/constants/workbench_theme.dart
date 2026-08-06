@@ -71,6 +71,8 @@ class WbColors extends ThemeExtension<WbColors> {
     required this.link,
     required this.selectionBg,
     required this.hoverBg,
+    required this.strongsLexical,
+    required this.strongsGrammar,
   });
 
   /// Background of a content pane (Browse, Search list, Analysis).
@@ -98,28 +100,48 @@ class WbColors extends ThemeExtension<WbColors> {
   /// used constantly.
   final Color hoverBg;
 
+  /// Inline Strong's number printed after a word. Green for the word's
+  /// own lexical number, blue for a grammar code — the convention
+  /// yahwehdehua.net uses, and the reason a tagged verse stays readable
+  /// with the numbers on: the eye filters by hue instead of parsing.
+  final Color strongsLexical;
+  final Color strongsGrammar;
+
+  /// The mark's gold. The single accent, used sparingly — an active
+  /// toggle, a focused row — the way the icon uses it on the page.
+  Color get accent => const Color(0xFFC9A227);
+
+  // 2026-08-06: the greys were neutral-to-warm and the link blue was
+  // picked before the icon existed. Both now carry a slight bias toward
+  // the mark's ink (#27395A), so the workspace and the icon read as one
+  // family instead of two unrelated palettes.
   static const light = WbColors(
     paneBg: Color(0xFFFFFFFF),
-    paneAltBg: Color(0xFFF7F7F5),
-    chromeBg: Color(0xFFECECEC),
-    border: Color(0xFFBFBFBF),
-    text: Color(0xFF1A1A1A),
-    mutedText: Color(0xFF6B6B6B),
-    link: Color(0xFF0B4FA8),
-    selectionBg: Color(0xFFD9E8FB),
-    hoverBg: Color(0xFFF0F4FA),
+    paneAltBg: Color(0xFFF6F7F9),
+    chromeBg: Color(0xFFE9EBEF),
+    border: Color(0xFFBCC2CC),
+    text: Color(0xFF16202E),
+    mutedText: Color(0xFF66707F),
+    link: Color(0xFF27395A),
+    selectionBg: Color(0xFFDCE5F1),
+    hoverBg: Color(0xFFEFF2F7),
+    strongsLexical: Color(0xFF1E7A3C),
+    strongsGrammar: Color(0xFF1B57C4),
   );
 
   static const dark = WbColors(
-    paneBg: Color(0xFF1C1C1C),
-    paneAltBg: Color(0xFF232323),
-    chromeBg: Color(0xFF2A2A2A),
-    border: Color(0xFF3D3D3D),
-    text: Color(0xFFE4E4E4),
-    mutedText: Color(0xFF9A9A9A),
-    link: Color(0xFF6FA8F0),
-    selectionBg: Color(0xFF23405F),
-    hoverBg: Color(0xFF262E38),
+    // Straight off the icon's ground gradient: #152238 → #060B14.
+    paneBg: Color(0xFF101A2B),
+    paneAltBg: Color(0xFF152238),
+    chromeBg: Color(0xFF1B2942),
+    border: Color(0xFF33415A),
+    text: Color(0xFFDCE5F1),
+    mutedText: Color(0xFF8B9AB3),
+    link: Color(0xFF9FB2CC),
+    selectionBg: Color(0xFF243A5C),
+    hoverBg: Color(0xFF1D2C46),
+    strongsLexical: Color(0xFF5FC183),
+    strongsGrammar: Color(0xFF77A6F0),
   );
 
   @override
@@ -133,6 +155,8 @@ class WbColors extends ThemeExtension<WbColors> {
     Color? link,
     Color? selectionBg,
     Color? hoverBg,
+    Color? strongsLexical,
+    Color? strongsGrammar,
   }) =>
       WbColors(
         paneBg: paneBg ?? this.paneBg,
@@ -144,6 +168,8 @@ class WbColors extends ThemeExtension<WbColors> {
         link: link ?? this.link,
         selectionBg: selectionBg ?? this.selectionBg,
         hoverBg: hoverBg ?? this.hoverBg,
+        strongsLexical: strongsLexical ?? this.strongsLexical,
+        strongsGrammar: strongsGrammar ?? this.strongsGrammar,
       );
 
   @override
@@ -159,6 +185,9 @@ class WbColors extends ThemeExtension<WbColors> {
       link: Color.lerp(link, other.link, t)!,
       selectionBg: Color.lerp(selectionBg, other.selectionBg, t)!,
       hoverBg: Color.lerp(hoverBg, other.hoverBg, t)!,
+      strongsLexical:
+          Color.lerp(strongsLexical, other.strongsLexical, t)!,
+      strongsGrammar: Color.lerp(strongsGrammar, other.strongsGrammar, t)!,
     );
   }
 

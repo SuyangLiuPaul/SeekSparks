@@ -8,6 +8,12 @@
 /// Kept afterwards as the regression guard: the Browse window must
 /// render a chapter across a tagged version, an untagged version and the
 /// originals line without throwing.
+///
+/// SCOPE: these are smoke tests. `FetchVerses.loadVerseList` does not
+/// resolve under `flutter test`, so the window stays on its spinner and
+/// no verse text is ever asserted here — only that the code path throws
+/// nothing. Anything about what a line PRINTS belongs in a unit test of
+/// the pure helper instead; see test/strongs_inline_test.dart.
 library;
 
 import 'package:flutter/material.dart';
@@ -25,6 +31,7 @@ void main() {
     required List<String> versions,
     String book = 'Genesis',
     int chapter = 1,
+    bool showNumbers = true,
   }) async {
     tester.view.devicePixelRatio = 1.0;
     tester.view.physicalSize = const Size(900, 800);
@@ -32,7 +39,12 @@ void main() {
 
     await tester.pumpWidget(
       MultiProvider(
-        providers: [ChangeNotifierProvider(create: (_) => AppSettings())],
+        providers: [
+          ChangeNotifierProvider(
+            create: (_) =>
+                AppSettings()..setShowStrongsInOriginals(showNumbers),
+          )
+        ],
         child: MaterialApp(
           home: Scaffold(
             body: BrowseWindow(

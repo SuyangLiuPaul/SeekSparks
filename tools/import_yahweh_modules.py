@@ -29,6 +29,7 @@ import os
 import re
 import sqlite3
 import sys
+import unicodedata
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -208,7 +209,13 @@ def import_lexicon(db_path, out_dir):
         else:
             # line 0 lemma, 1 transliteration, 2 etymology, 3 usage,
             # rest senses — the shape every entry in this module uses.
-            entry['l'] = lines[0] if len(lines) > 0 else ''
+            # The module stores Greek DECOMPOSED (Ι + combining comma
+            # above), while assets/originals/ is composed. Nothing
+            # compares the two today — lookup is by Strong's number —
+            # but a Greek text search later would silently miss every
+            # accented word. Normalise on the way in so both agree.
+            entry['l'] = unicodedata.normalize(
+                'NFC', lines[0]) if len(lines) > 0 else ''
             entry['t'] = lines[1] if len(lines) > 1 else ''
             if len(lines) > 2:
                 entry['e'] = lines[2]
