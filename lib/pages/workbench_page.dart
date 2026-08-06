@@ -41,6 +41,7 @@ import 'package:seeksparks/widgets/command_pane.dart';
 import 'package:seeksparks/pages/strongs_entry_page.dart';
 import 'package:seeksparks/utils/app_nav.dart';
 import 'package:seeksparks/utils/strongs_inline.dart';
+import 'package:seeksparks/utils/search_highlight.dart';
 import 'package:seeksparks/widgets/analysis_tabs.dart';
 import 'package:seeksparks/widgets/kwic_pane.dart';
 import 'package:seeksparks/widgets/language_switcher_button.dart';
@@ -809,6 +810,10 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
                     chapter: chapter,
                     versionCodes: codes,
                     focusedVerse: verse,
+                    // 2026-08-06: the text marks what the search found.
+                    // A hit list without marked hits is a table of
+                    // contents — you still have to hunt the line.
+                    highlight: highlightsForQuery(_wb.lastQuery),
                     onWordTap: (w, g) => _selectWord(w, g, book, verse),
                     onWordHover: _onWordHover,
                     onVerseTap: (n) =>

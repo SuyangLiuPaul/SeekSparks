@@ -29,6 +29,7 @@ import 'package:seeksparks/constants/bible_versions.dart'
 import 'package:seeksparks/constants/book_names.dart' show bookNameToEnglish;
 import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/utils/scripture_markup.dart';
+import 'package:seeksparks/utils/search_highlight.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/original_word.dart';
 import 'package:seeksparks/models/verse.dart';
@@ -116,6 +117,7 @@ class BrowseWindow extends StatefulWidget {
     this.onWordTap,
     this.onWordHover,
     this.onVerseTap,
+    this.highlight = const SearchHighlight(),
   });
 
   /// Canonical English book name, e.g. "Genesis".
@@ -128,6 +130,10 @@ class BrowseWindow extends StatefulWidget {
 
   /// Verse the workspace cursor is on — highlighted, and scrolled to.
   final int? focusedVerse;
+
+  /// What the active search marks. Empty when nothing is searched, in
+  /// which case every span renders plain and this costs nothing.
+  final SearchHighlight highlight;
 
   final void Function(OriginalWord word, List<String> grammar)?
       onWordTap;
@@ -383,6 +389,7 @@ class _BrowseWindowState extends State<BrowseWindow> {
               itemBuilder: (context, i) => _RowView(
                 row: rows[i],
                 focused: rows[i].verse == widget.focusedVerse,
+                highlight: widget.highlight,
                 glosses: _glosses,
                 onWordTap: widget.onWordTap,
                 onWordHover: widget.onWordHover,
@@ -407,10 +414,12 @@ class _RowView extends StatelessWidget {
     this.onWordTap,
     this.onWordHover,
     this.onTap,
+    this.highlight = const SearchHighlight(),
   });
 
   final _BrowseRow row;
   final bool focused;
+  final SearchHighlight highlight;
   final Map<String, StrongsEntry?> glosses;
   final void Function(OriginalWord word, List<String> grammar)?
       onWordTap;
@@ -454,6 +463,7 @@ class _RowView extends StatelessWidget {
                       // target, exactly like the originals line.
                       ? _TaggedLine(
                           row: row,
+                          highlight: highlight,
                           glosses: glosses,
                           showNumbers: settings.showStrongsInOriginals,
                           onWordTap: onWordTap,
@@ -468,7 +478,10 @@ class _RowView extends StatelessWidget {
                             verse: row.verse,
                           )),
                           child:
-                              _TranslationLine(row: row, settings: settings),
+                              _TranslationLine(
+                                  row: row,
+                                  settings: settings,
+                                  highlight: highlight),
                         ),
             ),
           ],
@@ -479,10 +492,15 @@ class _RowView extends StatelessWidget {
 }
 
 class _TranslationLine extends StatelessWidget {
-  const _TranslationLine({required this.row, required this.settings});
+  const _TranslationLine({
+    required this.row,
+    required this.settings,
+    required this.highlight,
+  });
 
   final _BrowseRow row;
   final AppSettings settings;
+  final SearchHighlight highlight;
 
   @override
   Widget build(BuildContext context) {
@@ -513,8 +531,24 @@ class _TranslationLine extends StatelessWidget {
           ...[
             for (final span in parseScripture(row.text ?? ''))
               switch (span.kind) {
-                ScriptureSpanKind.plain =>
-                  TextSpan(text: span.text, style: TextStyle(color: wb.text)),
+                // A plain span is where a text-query hit can live, so it
+                // is split again on the search terms. Strong's queries
+                // mark the tagged runs instead (see _HoverWord).
+                ScriptureSpanKind.plain => TextSpan(
+                    children: [
+                      for (final h
+                          in splitOnTerms(span.text, highlight.textTerms))
+                        TextSpan(
+                          text: h.text,
+                          style: TextStyle(
+                            color: wb.text,
+                            backgroundColor:
+                                h.isHit ? wb.selectionBg : null,
+                            fontWeight: h.isHit ? FontWeight.w700 : null,
+                          ),
+                        ),
+                    ],
+                  ),
                 ScriptureSpanKind.supplied => TextSpan(
                     text: span.text,
                     style: TextStyle(
@@ -562,9 +596,12 @@ class _TaggedLine extends StatelessWidget {
     required this.row,
     required this.glosses,
     required this.showNumbers,
+    this.highlight = const SearchHighlight(),
     this.onWordTap,
     this.onWordHover,
   });
+
+  final SearchHighlight highlight;
 
   final _BrowseRow row;
   final Map<String, StrongsEntry?> glosses;
@@ -599,6 +636,9 @@ class _TaggedLine extends StatelessWidget {
               for (final r in runs)
                 if (r.isTagged)
                   _HoverWord(
+                    // A Strong's query marks the word carrying the
+                    // number — the tagging already knows which one.
+                    hit: highlight.matchesStrongs(r.strongs),
                     // Reuse the originals hover target: same behaviour,
                     // same popup, only the script differs.
                     word: OriginalWord(text: r.text, strongs: r.strongs),
@@ -715,9 +755,13 @@ class _HoverWord extends StatefulWidget {
     this.implied = const [],
     this.showNumbers = false,
     this.translation = false,
+    this.hit = false,
     this.onTap,
     this.onHover,
   });
+
+  /// True when the active search marks this word.
+  final bool hit;
 
   final OriginalWord word;
   final String reference;
@@ -862,7 +906,11 @@ class _HoverWordState extends State<_HoverWord> {
               : () => widget.onTap!(widget.word, widget.grammar),
           behavior: HitTestBehavior.opaque,
           child: Container(
-            color: _hovering ? wb.selectionBg : null,
+            // Hover wins over a search hit — the pointer is a live
+            // signal, the hit is standing state.
+            color: _hovering
+                ? wb.selectionBg
+                : (widget.hit ? wb.selectionBg.withValues(alpha: 0.55) : null),
             child: Text.rich(
               TextSpan(children: [
                 // 2026-08-06: a tagged run can itself be a supplied
@@ -872,9 +920,12 @@ class _HoverWordState extends State<_HoverWord> {
                 for (final span in parseScripture(widget.word.text))
                   TextSpan(
                     text: span.text,
-                    style: span.kind == ScriptureSpanKind.supplied
-                        ? const TextStyle(fontStyle: FontStyle.italic)
-                        : null,
+                    style: TextStyle(
+                      fontStyle: span.kind == ScriptureSpanKind.supplied
+                          ? FontStyle.italic
+                          : null,
+                      fontWeight: widget.hit ? FontWeight.w700 : null,
+                    ),
                   ),
                 if (widget.showNumbers) ...[
                   for (final t in inlineStrongsNumbers(
