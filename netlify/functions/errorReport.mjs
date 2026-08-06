@@ -1,4 +1,4 @@
-// YsWords error reporter — Netlify Function.
+// SeekSparks error reporter — Netlify Function.
 //
 // Captures runtime errors from any platform (web / iOS / macOS /
 // Android) and forwards them to the developer's inbox via Resend.
@@ -39,7 +39,7 @@
 import { corsHeaders, isAllowedOrigin } from './_cors.mjs';
 
 const TO_DEFAULT = 'lsy95112@gmail.com';
-const FROM_DEFAULT = 'YsWords <onboarding@resend.dev>';
+const FROM_DEFAULT = 'SeekSparks <onboarding@resend.dev>';
 
 // Per-instance rate-limit map. Resets when Netlify recycles the
 // function instance — that's fine; the goal is to stop a runaway
@@ -157,7 +157,7 @@ export default async (req) => {
 	// terminal-style mail clients; HTML mirrors with a <pre> block
 	// for stack readability.
 	const subjectShort = error.split('\n')[0].slice(0, 80);
-	const subject = `[YsWords ${version} ${platform}] ${subjectShort}`;
+	const subject = `[SeekSparks ${version} ${platform}] ${subjectShort}`;
 
 	const text = [
 		`Error:      ${error}`,
@@ -188,7 +188,8 @@ export default async (req) => {
 
 	const html = `
 <!DOCTYPE html>
-<html><body style="font:14px/1.5 -apple-system,'Segoe UI',sans-serif;color:#222;">
+<html><head><meta charset="utf-8"></head>
+<body style="font:14px/1.5 -apple-system,'Segoe UI',sans-serif;color:#222;">
   <h2 style="margin:0 0 12px;font-size:16px;color:#b91c1c;">${escapeHtml(subjectShort)}</h2>
   <table style="border-collapse:collapse;font-size:13px;">
     <tr><td style="padding:2px 12px 2px 0;color:#666;">Source</td><td>${escapeHtml(source)}</td></tr>

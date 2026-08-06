@@ -29,7 +29,15 @@
 //   * a malicious site spamming reads only burns AI quota, doesn't
 //     hit the developer inbox
 
+// 2026-08-06: this file was inherited verbatim from YsWords when
+// SeekSparks was forked, so it allowlisted only yswords.* origins.
+// errorReport.mjs hard-rejects off-allowlist browser POSTs BEFORE it
+// sends, which meant every error SeekSparks ever reported was dropped
+// at the door and no email was ever sent. The yswords entries stay:
+// the two apps share this function source.
 const _ALLOWLIST = [
+	'https://seeksparks.netlify.app',
+	'https://seeksparks-dev.netlify.app',
 	'https://yswords.netlify.app',
 	'https://yswords-cn.netlify.app',
 	'https://yswords-dev.netlify.app',
@@ -72,7 +80,7 @@ export function corsHeaders(req) {
 		console.warn(
 			`[cors] off-allowlist origin rejected: ${origin}`,
 		);
-		allowOrigin = 'https://yswords.netlify.app';
+		allowOrigin = 'https://seeksparks.netlify.app';
 	}
 	return {
 		'Access-Control-Allow-Origin': allowOrigin,
