@@ -28,6 +28,7 @@ import 'package:seeksparks/constants/bible_versions.dart'
     show shortBibleVersionLabel;
 import 'package:seeksparks/constants/book_names.dart' show bookNameToEnglish;
 import 'package:seeksparks/constants/workbench_theme.dart';
+import 'package:seeksparks/utils/scripture_markup.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/original_word.dart';
 import 'package:seeksparks/models/verse.dart';
@@ -485,6 +486,12 @@ class _TranslationLine extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final wb = WbColors.of(context);
+    // 2026-08-06: the Browse pane ignored Settings > Font Size entirely
+    // — every size here was a hardcoded WbMetrics constant, so the
+    // slider moved and nothing happened. The workbench is deliberately
+    // denser than the reader, so it scales RELATIVE to the reader's
+    // setting (20 is the default) rather than adopting it outright.
+    final scale = (settings.fontSize / 20.0).clamp(0.75, 1.6);
     // Reference then text on one line, exactly as BibleWorks prints it —
     // the reference repeated on every version row is what lets you read
     // a single translation straight down the column.
@@ -498,11 +505,46 @@ class _TranslationLine extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
-          TextSpan(text: row.text ?? '', style: TextStyle(color: wb.text)),
+          // 2026-08-06: publisher markup used to print raw here —
+          // `Now<note: Or "And"> the earth … darkness [was] over` in
+          // 48% of LEB. Notes leave the flow for a marker; supplied
+          // words stay, set in italic like a printed Bible.
+          ...[
+            for (final span in parseScripture(row.text ?? ''))
+              switch (span.kind) {
+                ScriptureSpanKind.plain =>
+                  TextSpan(text: span.text, style: TextStyle(color: wb.text)),
+                ScriptureSpanKind.supplied => TextSpan(
+                    text: span.text,
+                    style: TextStyle(
+                      color: wb.text,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ScriptureSpanKind.note => WidgetSpan(
+                    alignment: PlaceholderAlignment.top,
+                    child: Tooltip(
+                      message: span.text,
+                      triggerMode: TooltipTriggerMode.tap,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 1),
+                        child: Text(
+                          'n',
+                          style: TextStyle(
+                            fontSize: WbMetrics.chrome * 0.85 * scale,
+                            fontWeight: FontWeight.w700,
+                            color: wb.link,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              },
+          ],
         ],
       ),
       style: TextStyle(
-        fontSize: WbMetrics.text,
+        fontSize: WbMetrics.text * scale,
         height: WbMetrics.lineHeight,
         fontFamilyFallback: kCjkFontFallback,
       ),
@@ -568,8 +610,16 @@ class _TaggedLine extends StatelessWidget {
                     onHover: onWordHover,
                   )
                 else
-                  Text(
-                    r.text,
+                  Text.rich(
+                    TextSpan(children: [
+                      for (final span in parseScripture(r.text))
+                        TextSpan(
+                          text: span.text,
+                          style: span.kind == ScriptureSpanKind.supplied
+                              ? const TextStyle(fontStyle: FontStyle.italic)
+                              : null,
+                        ),
+                    ]),
                     style: TextStyle(
                       fontSize: WbMetrics.text,
                       height: WbMetrics.lineHeight,
@@ -807,7 +857,17 @@ class _HoverWordState extends State<_HoverWord> {
             color: _hovering ? wb.selectionBg : null,
             child: Text.rich(
               TextSpan(children: [
-                TextSpan(text: widget.word.text),
+                // 2026-08-06: a tagged run can itself be a supplied
+                // word — BSB prints `[was]`, `[He]`. Set those in
+                // italic like a printed Bible instead of leaving the
+                // brackets to read as punctuation.
+                for (final span in parseScripture(widget.word.text))
+                  TextSpan(
+                    text: span.text,
+                    style: span.kind == ScriptureSpanKind.supplied
+                        ? const TextStyle(fontStyle: FontStyle.italic)
+                        : null,
+                  ),
                 if (widget.showNumbers) ...[
                   for (final t in inlineStrongsNumbers(
                     strongs: widget.word.strongs,

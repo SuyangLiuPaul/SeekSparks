@@ -1,3 +1,5 @@
+
+import 'package:seeksparks/utils/scripture_markup.dart';
 /// A Strong's Concordance dictionary entry.
 ///
 /// `number` is the Strong's identifier prefixed by language: "G####" for
@@ -352,20 +354,31 @@ class StrongsEntry {
     return definitionZh ?? '';
   }
 
+  /// 2026-08-06: definitions are cleaned HERE rather than in each pane.
+  ///
+  /// The bundled lexicons came from e-Sword/MySword modules and kept
+  /// that format's reference syntax — `(# 創 10:4|)` — which appears
+  /// ~14k times in each of hebrew.json and greek.json and was being
+  /// printed raw wherever a definition was shown. Cleaning at the parse
+  /// boundary means every consumer (word study, Strong's page, KWIC
+  /// glosses, AI prompts) gets readable text from one change, and the
+  /// asset stays untouched so a re-import can't undo it.
   factory StrongsEntry.fromJson(String number, Map<String, dynamic> json) {
+    String? clean(Object? v) =>
+        v is String ? cleanLexiconText(v) : v as String?;
     return StrongsEntry(
       number: number,
       lemma: (json['lemma'] ?? '') as String,
       translit: (json['translit'] ?? '') as String,
       pronunciation: (json['pron'] ?? '') as String,
       partOfSpeech: json['pos'] as String?,
-      gloss: (json['gloss'] ?? '') as String,
-      definition: (json['def'] ?? '') as String,
-      derivation: json['deriv'] as String?,
-      glossZh: json['glossZh'] as String?,
-      definitionZh: json['defZh'] as String?,
-      glossZhTw: json['glossZhTw'] as String?,
-      definitionZhTw: json['defZhTw'] as String?,
+      gloss: clean(json['gloss']) ?? '',
+      definition: clean(json['def']) ?? '',
+      derivation: clean(json['deriv']),
+      glossZh: clean(json['glossZh']),
+      definitionZh: clean(json['defZh']),
+      glossZhTw: clean(json['glossZhTw']),
+      definitionZhTw: clean(json['defZhTw']),
     );
   }
 }
