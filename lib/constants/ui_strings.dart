@@ -3617,6 +3617,140 @@ const uiStrings = {
     'zh-Hant': '經典閱讀模式',
     'en': 'Classic Reader',
   },
+  // ====== Command-line query language (bwh16) ======
+  'cmdListSeparator': {'zh-Hans': '、', 'zh-Hant': '、', 'en': ', '},
+  'cmdPartSeparator': {'zh-Hans': ' · ', 'zh-Hant': ' · ', 'en': ' · '},
+  'cmdEchoAll': {
+    'zh-Hans': '同时包含：{terms}',
+    'zh-Hant': '同時包含：{terms}',
+    'en': 'All of: {terms}',
+  },
+  'cmdEchoAny': {
+    'zh-Hans': '包含任一：{terms}',
+    'zh-Hant': '包含任一：{terms}',
+    'en': 'Any of: {terms}',
+  },
+  'cmdEchoPhrase': {
+    'zh-Hans': '依次出现：{parts}',
+    'zh-Hant': '依次出現：{parts}',
+    'en': 'In order: {parts}',
+  },
+  'cmdEchoWithout': {
+    'zh-Hans': '不含：{terms}',
+    'zh-Hant': '不含：{terms}',
+    'en': 'without: {terms}',
+  },
+  'cmdEchoContext': {
+    'zh-Hans': '相隔 {n} 节以内',
+    'zh-Hant': '相隔 {n} 節以內',
+    'en': 'within {n} verses',
+  },
+  'cmdEchoGapExact': {
+    'zh-Hans': '任意 {n} 个词',
+    'zh-Hant': '任意 {n} 個詞',
+    'en': 'any {n} words',
+  },
+  'cmdEchoGapUpTo': {
+    'zh-Hans': '至多 {n} 个词',
+    'zh-Hant': '至多 {n} 個詞',
+    'en': 'any {n} or fewer words',
+  },
+  'cmdEchoNotWord': {
+    'zh-Hans': '除 {w} 以外的任意词',
+    'zh-Hant': '除 {w} 以外的任意詞',
+    'en': 'any word but {w}',
+  },
+  'cmdIssueEmpty': {
+    'zh-Hans': '请在运算符后输入要搜索的内容。',
+    'zh-Hant': '請在運算子後輸入要搜尋的內容。',
+    'en': 'Type what to search for after the operator.',
+  },
+  'cmdIssueCompound': {
+    'zh-Hans': '暂不支持 ( ) 复合搜索。',
+    'zh-Hant': '暫不支援 ( ) 複合搜尋。',
+    'en': 'Compound searches with ( ) are not supported yet.',
+  },
+  'cmdIssueRegex': {
+    'zh-Hans': '不支持正则表达式搜索（~）。',
+    'zh-Hant': '不支援正規表達式搜尋（~）。',
+    'en': 'Regular expression searches (~) are not supported.',
+  },
+  'cmdIssueFuzzy': {
+    'zh-Hans': '不支持词根模糊搜索（=）。',
+    'zh-Hant': '不支援詞根模糊搜尋（=）。',
+    'en': 'Fuzzy stemming searches (=) are not supported.',
+  },
+  'cmdIssueStrongsTag': {
+    'zh-Hans': '暂不支持原文编号标记（@），请改用 G25 AND G26。',
+    'zh-Hant': '暫不支援原文編號標記（@），請改用 G25 AND G26。',
+    'en': "Strong's tags (@) are not supported yet — use G25 AND G26.",
+  },
+  'cmdIssuePhraseNot': {
+    'zh-Hans': '短语搜索中的 ! 只能放在单个词之前。',
+    'zh-Hant': '片語搜尋中的 ! 只能放在單個詞之前。',
+    'en': 'In a phrase, ! can only stand in front of a single word.',
+  },
+  'cmdIssueContext': {
+    'zh-Hans': '; 后的节数上限为 {max}。',
+    'zh-Hant': '; 後的節數上限為 {max}。',
+    'en': 'The verse context after ; must be {max} or less.',
+  },
+  'cmdSyntaxTitle': {
+    'zh-Hans': '命令行语法',
+    'zh-Hant': '命令行語法',
+    'en': 'Command line syntax',
+  },
+  'cmdSyntaxAnd': {
+    'zh-Hans': '.爱 神 — 同一节里两个词都出现',
+    'zh-Hant': '.愛 神 — 同一節裡兩個詞都出現',
+    'en': '.love god — both words in one verse',
+  },
+  'cmdSyntaxOr': {
+    'zh-Hans': '/信心 行为 — 出现任意一个',
+    'zh-Hant': '/信心 行為 — 出現任意一個',
+    'en': '/faith works — either word',
+  },
+  'cmdSyntaxPhrase': {
+    'zh-Hans': "'神说要有光 — 按顺序紧挨着出现",
+    'zh-Hant': "'神說要有光 — 按順序緊挨著出現",
+    'en': "'and god said — the words in that order",
+  },
+  'cmdSyntaxNot': {
+    'zh-Hans': '.耶稣 !基督 — 有前者、没有后者',
+    'zh-Hant': '.耶穌 !基督 — 有前者、沒有後者',
+    'en': '.jesus !christ — has the first, not the second',
+  },
+  'cmdSyntaxWild': {
+    'zh-Hans': '.faith* — ✶ 代表任意多个字符，? 代表一个',
+    'zh-Hant': '.faith* — ✶ 代表任意多個字元，? 代表一個',
+    'en': '.faith* — ✶ is any characters, ? is exactly one',
+  },
+  'cmdSyntaxGap': {
+    'zh-Hans': "'信心 *3 基督 — 中间最多隔 3 个词",
+    'zh-Hant': "'信心 *3 基督 — 中間最多隔 3 個詞",
+    'en': "'faith *3 christ — up to 3 words in between",
+  },
+  'cmdSyntaxContext': {
+    'zh-Hans': '.保罗 西拉;10 — 相隔 10 节以内',
+    'zh-Hant': '.保羅 西拉;10 — 相隔 10 節以內',
+    'en': '.paul silas;10 — within 10 verses of each other',
+  },
+  'cmdSyntaxHistory': {
+    'zh-Hans': '↑ ↓ 调出上次输入的命令 · Esc 清空',
+    'zh-Hant': '↑ ↓ 調出上次輸入的命令 · Esc 清空',
+    'en': '↑ ↓ recall earlier commands · Esc clears',
+  },
+  'cmdSyntaxToggle': {
+    'zh-Hans': '语法说明',
+    'zh-Hant': '語法說明',
+    'en': 'Syntax help',
+  },
+  'cmdTryAndHint': {
+    'zh-Hans': '没有整段匹配。试试 “.{q}”，查找同一节里都出现这些词的经文。',
+    'zh-Hant': '沒有整段匹配。試試「.{q}」，尋找同一節裡都出現這些詞的經文。',
+    'en': 'No verse has that exact run of words. '
+        'Try ".{q}" for verses containing all of them.',
+  },
   'commandSearchHint': {
     'zh-Hans': '搜索经文，或原文编号：G25 AND G26',
     'zh-Hant': '搜尋經文，或原文編號：G25 AND G26',

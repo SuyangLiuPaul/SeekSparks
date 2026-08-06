@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import 'package:seeksparks/constants/bible_versions.dart'
@@ -12,6 +13,7 @@ import 'package:seeksparks/providers/workbench_provider.dart';
 import 'package:seeksparks/services/concordance_service.dart';
 import 'package:seeksparks/services/fetch_verses.dart';
 import 'package:seeksparks/utils/clipboard_helper.dart';
+import 'package:seeksparks/utils/command_query.dart';
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 import 'package:seeksparks/utils/jump_to_reference.dart' as jumper;
 import 'package:seeksparks/utils/reference_parser.dart' show parseReference;
@@ -50,9 +52,36 @@ class CommandPane extends StatefulWidget {
 class _CommandPaneState extends State<CommandPane> {
   final TextEditingController _controller = TextEditingController();
 
+  /// Everything submitted this session, oldest first. BibleWorks keeps a
+  /// command history on ↑/↓ (bwh44) and it matters more here than it
+  /// looks: the grammar rewards small edits to a query you already
+  /// typed — widen the context, drop a term, add a wildcard — and
+  /// retyping `.paul silas;10` to change the 10 is the friction that
+  /// stops people exploring.
+  final List<String> _history = [];
+
+  /// Position in [_history] while cycling; `_history.length` means "back
+  /// at the line you were typing".
+  int _historyAt = 0;
+
+  /// Whether the syntax card is open. A grammar whose operators are
+  /// punctuation is undiscoverable — the single most common complaint
+  /// about the BibleWorks command line is that nobody knew it was
+  /// there — so the reference is one keystroke away rather than in a
+  /// manual.
+  bool _showSyntax = false;
+
+  /// Used when the Workbench did not supply one (the pane is embeddable
+  /// on its own). The chips and the shortcuts both need a node they can
+  /// put the caret back into, and reaching into the TextField's private
+  /// one is not an option.
+  final FocusNode _ownFocus = FocusNode();
+  FocusNode get _focus => widget.focusNode ?? _ownFocus;
+
   @override
   void dispose() {
     _controller.dispose();
+    _ownFocus.dispose();
     super.dispose();
   }
 
@@ -70,6 +99,8 @@ class _CommandPaneState extends State<CommandPane> {
   Future<void> _submit() async {
     final raw = _controller.text.trim();
     if (raw.isEmpty) return;
+    if (_history.isEmpty || _history.last != raw) _history.add(raw);
+    _historyAt = _history.length;
 
     // A bare version abbreviation switches the reading version, before
     // anything else is tried. From the manual: "The easiest way to do
@@ -116,6 +147,12 @@ class _CommandPaneState extends State<CommandPane> {
     }
     if (!mounted) return;
     context.read<WorkbenchProvider>().runSearch(raw);
+    // Keep the caret here. `TextInputAction.search` unfocuses the field
+    // by default, which is right for a one-shot search box and wrong for
+    // a command line: after a search you refine it — widen the context,
+    // drop a term — and both ↑ and Esc are dead the moment focus leaves.
+    // Navigation does NOT do this; there your attention moves to the text.
+    _focus.requestFocus();
   }
 
   /// `nas`, `NASB`, `kjv`… → that version's code. Matches the internal
@@ -136,20 +173,62 @@ class _CommandPaneState extends State<CommandPane> {
 
   /// Insert an operator/wildcard token at the caret (used by the
   /// operator chips under the command line).
-  void _insertToken(String token) {
+  ///
+  /// [trailingSpace] is false for `!`, which negates the word it is
+  /// glued to. `!barnabas` excludes Barnabas; `! barnabas` is a stray
+  /// `!` and a term, and the parser would silently drop the `!` and
+  /// return the opposite of what was asked for.
+  void _insertToken(String token, {bool trailingSpace = true}) {
     final text = _controller.text;
     final sel = _controller.selection;
     final start = sel.isValid ? sel.start : text.length;
     final end = sel.isValid ? sel.end : text.length;
     final needsSpace = start > 0 && !text.substring(0, start).endsWith(' ');
-    final insert = '${needsSpace ? ' ' : ''}$token ';
+    final insert = '${needsSpace ? ' ' : ''}$token${trailingSpace ? ' ' : ''}';
     _controller.text = text.replaceRange(start, end, insert);
     _controller.selection =
         TextSelection.collapsed(offset: start + insert.length);
+    _focus.requestFocus();
+    setState(() {});
+  }
+
+  /// Replace the leading control character, or add one.
+  ///
+  /// Not [_insertToken]: a control character is a property of the whole
+  /// line and only means anything in first position, so tapping `/`
+  /// after `.` must SWITCH the search from all-of to any-of rather than
+  /// bury a stray slash mid-query. That also makes the chips a way to
+  /// re-ask the same question a different way, which is the thing a
+  /// reader actually wants after seeing the answer.
+  void _setControl(String control) {
+    var text = _controller.text.trimLeft();
+    if (text.isNotEmpty && kCommandControls.contains(text[0])) {
+      text = text.substring(1);
+    }
+    _controller.text = '$control$text';
+    _controller.selection =
+        TextSelection.collapsed(offset: _controller.text.length);
+    _focus.requestFocus();
+    setState(() {});
+  }
+
+  /// Step through [_history]; -1 is older, +1 is newer.
+  void _recall(int step) {
+    if (_history.isEmpty) return;
+    final next = (_historyAt + step).clamp(0, _history.length);
+    if (next == _historyAt) return;
+    _historyAt = next;
+    // Stepping past the newest entry returns the empty line rather than
+    // sticking on the last command, so ↓ is a way out and not a trap.
+    _controller.text = next == _history.length ? '' : _history[next];
+    _controller.selection =
+        TextSelection.collapsed(offset: _controller.text.length);
+    setState(() {});
   }
 
   void _clear() {
     _controller.clear();
+    _historyAt = _history.length;
     context.read<WorkbenchProvider>().clearResults();
     setState(() {}); // hide the clear button
   }
@@ -234,62 +313,143 @@ class _CommandPaneState extends State<CommandPane> {
         // a single hairline box, not a padded pill.
         Padding(
           padding: const EdgeInsets.fromLTRB(4, 4, 4, 3),
-          child: TextField(
-            controller: _controller,
-            focusNode: widget.focusNode,
-            textInputAction: TextInputAction.search,
-            onSubmitted: (_) => _submit(),
-            onChanged: (_) => setState(() {}), // toggle clear button
-            style: TextStyle(
-                fontSize: t.text, height: t.lineHeight),
-            decoration: InputDecoration(
-              hintText: uiStrings['commandSearchHint']?[locale] ??
-                  "Search text, or Strong's: G25 AND G26",
-              suffixIconConstraints:
-                  const BoxConstraints(minWidth: 20, minHeight: 20),
-              suffixIcon: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (_controller.text.isNotEmpty)
+          // Esc and ↑/↓ belong to the command line, not to the text
+          // field: a single-line field does nothing with them, and
+          // BibleWorks readers reach for them without looking. Bound
+          // here rather than at the app level so they are closer to the
+          // focused field than Flutter's own editing shortcuts and
+          // therefore win the lookup.
+          child: CallbackShortcuts(
+            bindings: <ShortcutActivator, VoidCallback>{
+              const SingleActivator(LogicalKeyboardKey.escape): _clear,
+              const SingleActivator(LogicalKeyboardKey.arrowUp): () =>
+                  _recall(-1),
+              const SingleActivator(LogicalKeyboardKey.arrowDown): () =>
+                  _recall(1),
+            },
+            child: TextField(
+              controller: _controller,
+              focusNode: _focus,
+              textInputAction: TextInputAction.search,
+              onSubmitted: (_) => _submit(),
+              onChanged: (_) => setState(() {}), // toggle clear button
+              style: TextStyle(
+                  fontSize: t.text, height: t.lineHeight),
+              decoration: InputDecoration(
+                hintText: uiStrings['commandSearchHint']?[locale] ??
+                    "Search text, or Strong's: G25 AND G26",
+                suffixIconConstraints:
+                    const BoxConstraints(minWidth: 20, minHeight: 20),
+                suffixIcon: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (_controller.text.isNotEmpty)
+                      _MiniIcon(
+                        icon: Icons.close,
+                        tooltip: uiStrings['clear']?[locale] ?? 'Clear',
+                        onTap: _clear,
+                      ),
                     _MiniIcon(
-                      icon: Icons.close,
-                      tooltip: uiStrings['clear']?[locale] ?? 'Clear',
-                      onTap: _clear,
+                      icon: Icons.search,
+                      tooltip: uiStrings['search']?[locale] ?? 'Search',
+                      onTap: _submit,
+                      color: wbc.link,
                     ),
-                  _MiniIcon(
-                    icon: Icons.search,
-                    tooltip: uiStrings['search']?[locale] ?? 'Search',
-                    onTap: _submit,
-                    color: wbc.link,
-                  ),
-                  const SizedBox(width: 3),
-                ],
+                    const SizedBox(width: 3),
+                  ],
+                ),
               ),
             ),
           ),
         ),
-        // ── Operator buttons (structured Strong's search) ──────────
+        // ── Operator buttons ──────────────────────────────────────
         // Wrap, not Row: the Search window can be dragged down to 240px
         // and a fixed row of five buttons overflowed it.
+        //
+        // The control characters come first because they are the ones
+        // nobody can guess. BibleWorks shipped "Code Insertion Buttons"
+        // for exactly this reason and they are the only part of its
+        // command line that reviewers describe as discoverable.
         Padding(
           padding: const EdgeInsets.fromLTRB(4, 0, 4, 4),
           child: Wrap(
             spacing: 3,
             runSpacing: 3,
             children: [
-              for (final token in const ['AND', 'OR', 'NOT', 'NEAR5', '*'])
+              for (final c in const ['.', '/', "'"])
+                _OperatorButton(label: c, onTap: () => _setControl(c)),
+              _OperatorButton(
+                  label: '!', onTap: () => _insertToken('!', trailingSpace: false)),
+              for (final token in const ['*', 'AND', 'OR', 'NOT', 'NEAR5'])
                 _OperatorButton(
                   label: token,
                   onTap: () => _insertToken(token),
                 ),
+              _OperatorButton(
+                label: '?',
+                tooltip: uiStrings['cmdSyntaxToggle']?[locale] ?? 'Syntax help',
+                selected: _showSyntax,
+                onTap: () => setState(() => _showSyntax = !_showSyntax),
+              ),
             ],
           ),
         ),
+        if (_showSyntax) _syntaxCard(locale),
         const Divider(height: 1),
         // ── Results ───────────────────────────────────────────────
         Expanded(child: _buildResults(context, wb, settings, scheme, locale)),
       ],
     );
+  }
+
+  /// The syntax reference, one line per operator, with a real example
+  /// in the reader's own language rather than a metasyntax.
+  Widget _syntaxCard(String locale) {
+    return Builder(builder: (context) {
+      final wbc = WbColors.of(context);
+      final t = WbType.of(context);
+      const keys = [
+        'cmdSyntaxAnd',
+        'cmdSyntaxOr',
+        'cmdSyntaxPhrase',
+        'cmdSyntaxNot',
+        'cmdSyntaxWild',
+        'cmdSyntaxGap',
+        'cmdSyntaxContext',
+        'cmdSyntaxHistory',
+      ];
+      return Container(
+        width: double.infinity,
+        color: wbc.chromeBg,
+        padding: const EdgeInsets.fromLTRB(8, 6, 8, 7),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              uiStrings['cmdSyntaxTitle']?[locale] ?? 'Command line syntax',
+              style: TextStyle(
+                fontSize: t.chrome,
+                fontWeight: FontWeight.w700,
+                color: wbc.text,
+              ),
+            ),
+            const SizedBox(height: 3),
+            for (final k in keys)
+              Padding(
+                padding: const EdgeInsets.only(top: 1.5),
+                child: Text(
+                  uiStrings[k]?[locale] ?? '',
+                  style: TextStyle(
+                    fontSize: t.chrome,
+                    color: wbc.mutedText,
+                    fontFamilyFallback: kCjkFontFallback,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      );
+    });
   }
 
   Widget _buildResults(BuildContext context, WorkbenchProvider wb,
@@ -371,11 +531,55 @@ class _CommandPaneState extends State<CommandPane> {
         ),
       );
     }
+    final issue = wb.commandIssue;
+    if (issue != null) {
+      // The query was written in the grammar and the grammar refused it.
+      // Naming the part that is unsupported beats returning nothing:
+      // "regular expressions are not supported here" is actionable and
+      // an empty list is not.
+      return _noResults(settings, scheme, locale,
+          message: describeCommandIssue(issue, locale));
+    }
     final strongsRefs = wb.strongsRefs;
     if (strongsRefs != null) {
       return _buildStrongsResults(context, wb, settings, scheme, locale, strongsRefs);
     }
     return _buildTextResults(context, wb, settings, scheme, locale);
+  }
+
+  /// What the header calls the query: the parse read back in words when
+  /// there is one, the raw line otherwise.
+  ///
+  /// This is the part with no equivalent in BibleWorks, Logos or
+  /// Accordance — all three run the query and none says what it
+  /// understood. With punctuation for operators that is where the whole
+  /// day goes: `'!your *5 house` looks like it excludes "your" and does
+  /// not, and there is no way to find that out from a list of verses.
+  String _queryLabel(WorkbenchProvider wb, String locale) {
+    final cq = wb.commandQuery;
+    return cq == null ? wb.lastQuery : describeCommandQuery(cq, locale);
+  }
+
+  /// The nudge shown when a search that looks like several words finds
+  /// nothing, because the plain scan is a substring match and `love god`
+  /// is not a substring of any verse. Names the query that WOULD work.
+  String? _tryAndHint(WorkbenchProvider wb, String locale) {
+    final cq = wb.commandQuery;
+    final String words;
+    if (cq != null) {
+      // A phrase that missed: the same words without the order.
+      if (cq.kind != CommandKind.phrase) return null;
+      words = [for (final t in cq.terms) t.source].join(' ');
+    } else {
+      // A plain multi-word query, which cannot match by construction.
+      if (!wb.lastQuery.contains(' ')) return null;
+      words = wb.lastQuery;
+    }
+    if (words.trim().isEmpty) return null;
+    return (uiStrings['cmdTryAndHint']?[locale] ??
+            'No verse has that exact run of words. '
+                'Try ".{q}" for verses containing all of them.')
+        .replaceAll('{q}', words);
   }
 
   Widget _buildStrongsResults(BuildContext context, WorkbenchProvider wb,
@@ -438,12 +642,13 @@ class _CommandPaneState extends State<CommandPane> {
       AppSettings settings, ColorScheme scheme, String locale) {
     final results = wb.textResults;
     if (results.isEmpty) {
-      return _noResults(settings, scheme, locale);
+      return _noResults(settings, scheme, locale,
+          message: _tryAndHint(wb, locale));
     }
     return Column(
       children: [
         _resultHeader(
-          _summary(wb.lastQuery, results.length, locale),
+          _summary(_queryLabel(wb, locale), results.length, locale),
           () => _copyAllTextResults(settings, results),
           settings,
           locale,
@@ -513,17 +718,36 @@ class _CommandPaneState extends State<CommandPane> {
     });
   }
 
-  Widget _noResults(AppSettings settings, ColorScheme scheme, String locale) {
+  Widget _noResults(AppSettings settings, ColorScheme scheme, String locale,
+      {String? message}) {
     return Builder(builder: (context) {
       final wbc = WbColors.of(context);
     final t = WbType.of(context);
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: Text(
-            uiStrings['noResults']?[locale] ?? 'No results found',
-            style:
-                TextStyle(fontSize: t.text, color: wbc.mutedText),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                uiStrings['noResults']?[locale] ?? 'No results found',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: t.text, color: wbc.mutedText),
+              ),
+              if (message != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: t.text - 1,
+                    height: 1.5,
+                    color: wbc.mutedText,
+                    fontFamilyFallback: kCjkFontFallback,
+                  ),
+                ),
+              ],
+            ],
           ),
         ),
       );
@@ -626,35 +850,44 @@ class _MiniIcon extends StatelessWidget {
   }
 }
 
-/// AND / OR / NOT / NEAR5 / * — small square buttons, not Material
+/// . / ' ! ✶ AND OR NOT NEAR5 ? — small square buttons, not Material
 /// chips, so the operator strip costs one line instead of three.
 class _OperatorButton extends StatelessWidget {
-  const _OperatorButton({required this.label, required this.onTap});
+  const _OperatorButton({
+    required this.label,
+    required this.onTap,
+    this.tooltip,
+    this.selected = false,
+  });
 
   final String label;
   final VoidCallback onTap;
+  final String? tooltip;
+  final bool selected;
 
   @override
   Widget build(BuildContext context) {
     final wbc = WbColors.of(context);
     final t = WbType.of(context);
-    return InkWell(
+    final button = InkWell(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
         decoration: BoxDecoration(
-          color: wbc.chromeBg,
-          border: Border.all(color: wbc.border),
+          color: selected ? wbc.hoverBg : wbc.chromeBg,
+          border: Border.all(color: selected ? wbc.link : wbc.border),
         ),
         child: Text(
           label,
           style: TextStyle(
             fontSize: t.chrome,
             fontWeight: FontWeight.w600,
-            color: wbc.text,
+            color: selected ? wbc.link : wbc.text,
           ),
         ),
       ),
     );
+    final message = tooltip;
+    return message == null ? button : Tooltip(message: message, child: button);
   }
 }

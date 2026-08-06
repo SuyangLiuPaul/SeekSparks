@@ -7,21 +7,33 @@
 /// the line looking for it. Without it a hit list is a table of
 /// contents, not a result.
 ///
-/// Two query shapes, two ways of matching:
+/// Three query shapes, three ways of matching:
 ///
 ///   * Strong's (`G25`, `G25 AND G26`, `G25*`) matches the NUMBER on a
 ///     tagged run. Exact, no guessing — the tagging already says which
 ///     word carries it.
+///   * The command-line grammar (`.love god`, `'in the beginning`) marks
+///     each term's literal core. The alternative — treating the raw text
+///     as a substring — would mark nothing at all, because `.love` does
+///     not occur in any verse. A silently unmarked hit list is exactly
+///     the regression this file exists to prevent.
 ///   * Plain text matches substrings, case-insensitively.
 ///
-/// A NOT term is deliberately not highlighted: `G25 NOT G26` returns
-/// verses that lack G26, so there is nothing there to mark. Highlighting
-/// the excluded number would point at the reason a verse was filtered
-/// OUT, in a list of verses that were kept in.
+/// A NOT term is deliberately not highlighted, in either grammar: `G25
+/// NOT G26` and `.faith !works` both return verses that LACK the second
+/// term, so there is nothing there to mark. Highlighting it would point
+/// at the reason a verse was filtered OUT, in a list of verses that were
+/// kept in.
+///
+/// A wildcard term is marked by its longest plain run, so `.faith*`
+/// marks the "faith" inside "faithfulness" and not the whole word. That
+/// under-marks rather than over-marks, which is the safe direction: the
+/// reader's eye still lands on the right word.
 ///
 /// Pure matching. The widget decides what a highlight looks like.
 library;
 
+import 'package:seeksparks/utils/command_query.dart';
 import 'package:seeksparks/utils/strongs_boolean_search.dart';
 
 /// What an active query marks.
@@ -64,6 +76,16 @@ class SearchHighlight {
 SearchHighlight highlightsForQuery(String rawQuery) {
   final q = rawQuery.trim();
   if (q.isEmpty) return const SearchHighlight();
+
+  final command = parseCommandQuery(q).query;
+  if (command != null) {
+    final terms = <String>[];
+    for (final t in command.positiveTerms) {
+      final core = t.literalCore.toLowerCase();
+      if (core.isNotEmpty) terms.add(core);
+    }
+    return SearchHighlight(textTerms: terms);
+  }
 
   final parsed = parseStrongsBoolean(q);
   if (parsed != null) {

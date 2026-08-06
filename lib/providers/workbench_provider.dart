@@ -4,6 +4,7 @@ import 'package:seeksparks/models/verse.dart';
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/services/concordance_service.dart';
 import 'package:seeksparks/services/search_service.dart';
+import 'package:seeksparks/utils/command_query.dart';
 import 'package:seeksparks/utils/strongs_boolean_search.dart';
 import 'package:seeksparks/utils/verse_list.dart' show applySearchLimit;
 import 'package:seeksparks/utils/version_mapper.dart' show toEnglish;
@@ -45,6 +46,17 @@ class WorkbenchProvider extends ChangeNotifier {
   /// plus refs. Null when the last search was a text scan.
   String? strongsQueryLabel;
   List<ConcordanceRef>? strongsRefs;
+
+  /// The last query, parsed, when it was written in the command-line
+  /// grammar (`.love god`, `'in the beginning`, …). The pane echoes it
+  /// back in words: a grammar whose operators are punctuation is only
+  /// safe if the reader can see what the punctuation was taken to mean.
+  CommandQuery? commandQuery;
+
+  /// Why a command-shaped query was refused. Set exactly when the query
+  /// began with a control character and did not parse — never for
+  /// ordinary text, which is not a failed command but a plain search.
+  CommandIssue? commandIssue;
 
   /// Search limit — restrict results to these
   /// `'EnglishBook-chapter-verse'` keys. Null means unrestricted.
@@ -111,11 +123,20 @@ class WorkbenchProvider extends ChangeNotifier {
 
   // ── Search ────────────────────────────────────────────────────────
 
-  /// Run the command-line query. Three shapes, checked in order:
-  ///  1. Structured Strong's (`G25 AND G26`, `G25 NEAR5 G26`, `G25✶`)
+  /// Run the command-line query. Four shapes, checked in order:
+  ///  1. The BibleWorks command-line grammar (`.love god`, `/faith
+  ///     works`, `'in the beginning`, `;a b;3`) → [runCommandQuery].
+  ///  2. Structured Strong's (`G25 AND G26`, `G25 NEAR5 G26`, `G25✶`)
   ///     → the shared boolean/proximity engine.
-  ///  2. A bare Strong's number (`G25`, `H157`) → its concordance refs.
-  ///  3. Anything else → the plain text scan over the loaded corpus.
+  ///  3. A bare Strong's number (`G25`, `H157`) → its concordance refs.
+  ///  4. Anything else → the plain text scan over the loaded corpus.
+  ///
+  /// The grammar goes first because it is the only shape identified by
+  /// its FIRST character, so it can never steal a query from the three
+  /// below: no reference, version abbreviation or Strong's expression
+  /// begins with `.`, `/`, `'` or `;`. Everything else is unchanged,
+  /// which is the point — a reader who has never heard of a control
+  /// character still has the substring search they had yesterday.
   Future<void> runSearch(String raw) async {
     final query = raw.trim();
     lastQuery = query;
@@ -127,10 +148,22 @@ class WorkbenchProvider extends ChangeNotifier {
     searchPerformed = false;
     strongsQueryLabel = null;
     strongsRefs = null;
+    commandQuery = null;
+    commandIssue = null;
     textResults = const [];
     _notify();
 
     try {
+      final parse = parseCommandQuery(query);
+      if (parse.isCommand) {
+        commandQuery = parse.query;
+        commandIssue = parse.issue;
+        if (parse.query != null) {
+          textResults = _runCommand(parse.query!);
+        }
+        return;
+      }
+
       final bq = parseStrongsBoolean(query);
       if (bq != null) {
         strongsQueryLabel = query.toUpperCase();
@@ -165,6 +198,28 @@ class WorkbenchProvider extends ChangeNotifier {
     }
   }
 
+  /// Run a parsed command query over the loaded corpus.
+  ///
+  /// Synchronous on purpose. The engine prefilters on the cached
+  /// [MainProvider.searchKeys] before it tokenizes anything, so a
+  /// realistic worst case over the whole 31,102-verse KJV measures in
+  /// the low hundreds of milliseconds — cheaper than the isolate hop
+  /// that hiding it behind a Future would cost.
+  List<Verse> _runCommand(CommandQuery query) {
+    final verses = mainProvider.verses;
+    final result = runCommandQuery(
+      query: query,
+      texts: mainProvider.wordKeys,
+      searchKeys: mainProvider.searchKeys,
+      books: [for (final v in verses) v.book],
+    );
+    return applySearchLimit(
+      [for (final i in result.indices) verses[i]],
+      searchLimit,
+      (v) => '${toEnglish(v.book) ?? v.book}-${v.chapter}-${v.verse}',
+    );
+  }
+
   List<ConcordanceRef> _limitRefs(List<ConcordanceRef> refs) => applySearchLimit(
         refs,
         searchLimit,
@@ -176,6 +231,8 @@ class WorkbenchProvider extends ChangeNotifier {
     searchPerformed = false;
     strongsQueryLabel = null;
     strongsRefs = null;
+    commandQuery = null;
+    commandIssue = null;
     textResults = const [];
     _notify();
   }
