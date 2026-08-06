@@ -45,8 +45,14 @@ deploy_sites() {
 }
 
 echo "==> building web bundle"
+# APP_RELEASE_TIME was never passed here, so `kAppReleaseTime` kept
+# falling back to the hardcoded default in app_version.dart — the
+# "last updated" the app showed was whenever that constant was last
+# hand-edited, not when the bundle was actually built.
+APP_RELEASE_TIME="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 "$FLUTTER" build web --release \
-  --dart-define="APP_VERSION=$APP_VERSION"
+  --dart-define="APP_VERSION=$APP_VERSION" \
+  --dart-define="APP_RELEASE_TIME=$APP_RELEASE_TIME"
 
 SITES=(
   "94de1ce4-b58e-4368-84f4-34165e7f6be5:dev"

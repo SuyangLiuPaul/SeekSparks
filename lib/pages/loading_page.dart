@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
+import '../constants/app_version.dart' show kAppVersion;
 import '../models/app_settings.dart';
 import '../models/verse.dart';
 import '../providers/main_provider.dart';
@@ -510,16 +511,14 @@ class _LoadingPageState extends State<LoadingPage> {
         child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // v1.3.75: tint the loading logo with the chosen theme
-                  // colour so it matches the themed app icon + the
-                  // "SeekSparks / 尋光" text below. loading.png is a single-
-                  // hue silhouette (mostly #295E8C with alpha edges), so a
-                  // srcIn tint recolours it cleanly without losing the mark.
-                  ColorFiltered(
-                    colorFilter: ColorFilter.mode(
-                      Theme.of(context).colorScheme.primary,
-                      BlendMode.srcIn,
-                    ),
+                  // 2026-08-06: the srcIn tint that used to live here
+                  // flattened the whole image to one colour. That was
+                  // right for the old single-hue silhouette; the current
+                  // mark is full-colour (ink ground, gold sparks), so
+                  // tinting it produced a solid primary-coloured square
+                  // and looked like the asset had failed to load.
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(logoSize * 0.22),
                     child: Image.asset(
                       'assets/loading.png',
                       width: logoSize,
@@ -544,6 +543,19 @@ class _LoadingPageState extends State<LoadingPage> {
                         style: TextStyle(
                           fontSize: settings.fontSize * 1.0,
                           color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
+                      SizedBox(height: 10 * s),
+                      Text(
+                        'v$kAppVersion',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: settings.fontSize * 0.68,
+                          letterSpacing: 0.3,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withValues(alpha: 0.42),
                         ),
                       ),
                     ],
@@ -714,11 +726,8 @@ class _LoadingPageState extends State<LoadingPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            ColorFiltered(
-              colorFilter: ColorFilter.mode(
-                Theme.of(context).colorScheme.primary,
-                BlendMode.srcIn,
-              ),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(logoSize * 0.22),
               child: Image.asset(
                 'assets/loading.png',
                 width: logoSize,
@@ -744,7 +753,20 @@ class _LoadingPageState extends State<LoadingPage> {
                 color: Theme.of(context).colorScheme.primary,
               ),
             ),
-            SizedBox(height: 40 * s),
+            SizedBox(height: 10 * s),
+            Text(
+              'v$kAppVersion',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: settings.fontSize * 0.68,
+                letterSpacing: 0.3,
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurface
+                    .withValues(alpha: 0.42),
+              ),
+            ),
+            SizedBox(height: 30 * s),
             Text(
               uiStrings['bootLoadingMessage']?[settings.locale] ??
                   'Loading fast…',
