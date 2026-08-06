@@ -49,7 +49,13 @@ import 'package:seeksparks/utils/search_highlight.dart' show HighlightSpan;
 /// CJK Unified (U+4E00–U+9FFF), Extension A (U+3400–U+4DBF), and the
 /// Compatibility block (U+F900–U+FAFF), which is where a handful of
 /// characters used in Chinese Bible editions live.
-bool _isCjk(int c) =>
+///
+/// Public because `phrase_match.dart` tokenizes the same corpus a
+/// different way — words and characters IN SEQUENCE rather than a bag
+/// of overlapping bigrams — and the two must agree about where a script
+/// starts and stops. Two private copies would drift the first time one
+/// of them learned about a block the other did not.
+bool isCjkChar(int c) =>
     (c >= 0x4E00 && c <= 0x9FFF) ||
     (c >= 0x3400 && c <= 0x4DBF) ||
     (c >= 0xF900 && c <= 0xFAFF);
@@ -60,7 +66,9 @@ bool _isCjk(int c) =>
 /// block), Hebrew including its vowel points — a pointed word must not
 /// shred into one token per consonant — plus digits and the two
 /// apostrophes, which are word-internal in "God's" and "don't".
-bool _isWordChar(int c) {
+///
+/// Public for the same reason as [isCjkChar].
+bool isWordChar(int c) {
   if (c >= 0x61 && c <= 0x7A) return true; // a-z
   if (c >= 0x41 && c <= 0x5A) return true; // A-Z
   if (c >= 0x30 && c <= 0x39) return true; // 0-9
@@ -114,9 +122,9 @@ List<_Span> _spans(String text) {
   var i = 0;
   while (i < runes.length) {
     final c = runes[i];
-    if (_isCjk(c)) {
+    if (isCjkChar(c)) {
       var j = i;
-      while (j < runes.length && _isCjk(runes[j])) {
+      while (j < runes.length && isCjkChar(runes[j])) {
         j++;
       }
       final len = j - i;
@@ -138,9 +146,9 @@ List<_Span> _spans(String text) {
       i = j;
       continue;
     }
-    if (_isWordChar(c)) {
+    if (isWordChar(c)) {
       var j = i;
-      while (j < runes.length && _isWordChar(runes[j])) {
+      while (j < runes.length && isWordChar(runes[j])) {
         j++;
       }
       // Apostrophes are word-INTERNAL; a quote mark that happened to
@@ -198,8 +206,8 @@ class _TermMatcher {
     for (final t in terms) {
       if (t.isEmpty) continue;
       final u = t.codeUnits;
-      if (_isCjk(u[0])) {
-        if (u.length == 2 && _isCjk(u[1])) {
+      if (isCjkChar(u[0])) {
+        if (u.length == 2 && isCjkChar(u[1])) {
           _cjkBigrams.add((u[0] << 16) | u[1]);
         } else if (u.length == 1) {
           _cjkSingles.add(u[0]);
@@ -230,12 +238,12 @@ class _TermMatcher {
     var i = 0;
     while (i < n) {
       final c = text.codeUnitAt(i);
-      if (_isCjk(c)) {
+      if (isCjkChar(c)) {
         var prev = c;
         var j = i + 1;
         while (j < n) {
           final d = text.codeUnitAt(j);
-          if (!_isCjk(d)) break;
+          if (!isCjkChar(d)) break;
           if (_cjkBigrams.contains((prev << 16) | d)) {
             sink(text.substring(j - 1, j + 1));
           }
@@ -248,9 +256,9 @@ class _TermMatcher {
         i = j;
         continue;
       }
-      if (_isWordChar(c)) {
+      if (isWordChar(c)) {
         var j = i;
-        while (j < n && _isWordChar(text.codeUnitAt(j))) {
+        while (j < n && isWordChar(text.codeUnitAt(j))) {
           j++;
         }
         var s = i;

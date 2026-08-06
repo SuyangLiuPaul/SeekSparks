@@ -6597,4 +6597,46 @@ const uiStrings = {
     'zh-Hant': '限定：{name}（{count} 處）',
     'en': 'Limited to {name} ({count})',
   },
+
+  // ── Phrase Matching (bwh51) ──────────────────────────────────────
+  'analysisTabPhrases': {
+    'zh-Hans': '短语',
+    'zh-Hant': '短語',
+    'en': 'Phrases',
+  },
+  'phraseUnit': {'zh-Hans': '条短语', 'zh-Hant': '條短語', 'en': 'phrases'},
+  'phraseHint': {
+    'zh-Hans': '点一下取用或弃用某短语。数字是含此短语的经文数。',
+    'zh-Hant': '點一下取用或棄用某短語。數字是含此短語的經文數。',
+    'en': 'Tap a phrase to use it or drop it. The number is how many '
+        'verses contain it.',
+  },
+  'phraseLength': {'zh-Hans': '词数', 'zh-Hant': '詞數', 'en': 'Len'},
+  'phraseGap': {'zh-Hans': '间隔', 'zh-Hant': '間隔', 'en': 'Gap'},
+  'phraseSortMatches': {
+    'zh-Hans': '匹配数',
+    'zh-Hant': '匹配數',
+    'en': 'Matches',
+  },
+  'phraseSortPhrase': {
+    'zh-Hans': '按短语',
+    'zh-Hant': '按短語',
+    'en': 'Phrase',
+  },
+  'phraseScope': {
+    'zh-Hans': '搜索限定',
+    'zh-Hant': '搜尋限定',
+    'en': 'Search limit',
+  },
+  'phraseNoHits': {
+    'zh-Hans': '没有别的经文重复本节的短语。可缩短词数、放宽间隔，或多选几条短语。',
+    'zh-Hant': '沒有別的經文重複本節的短語。可縮短詞數、放寬間隔，或多選幾條短語。',
+    'en': 'No other verse repeats a phrase from this one. Shorten the '
+        'phrase, widen the gap, or check more phrases.',
+  },
+  'phraseTooShort': {
+    'zh-Hans': '本节比设定的词数还短。请调低词数。',
+    'zh-Hant': '本節比設定的詞數還短。請調低詞數。',
+    'en': 'This verse is shorter than the phrase length. Lower it.',
+  },
 };

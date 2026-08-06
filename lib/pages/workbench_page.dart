@@ -47,6 +47,7 @@ import 'package:seeksparks/widgets/verse_list_pane.dart';
 import 'package:seeksparks/utils/verse_list.dart' show VerseRef, verseListKeys;
 import 'package:seeksparks/widgets/kwic_pane.dart';
 import 'package:seeksparks/widgets/related_verses_pane.dart';
+import 'package:seeksparks/widgets/phrase_match_pane.dart';
 import 'package:seeksparks/widgets/language_switcher_button.dart';
 import 'package:seeksparks/widgets/browse_nav_strip.dart';
 import 'package:seeksparks/widgets/browse_window.dart';
@@ -156,6 +157,17 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
   /// after a reload.
   AnalysisTab _analysisTab = AnalysisTab.wordStudy;
   static const _kAnalysisTabKey = 'workbench.analysisTab';
+
+  /// The search limit translated from reference keys into corpus
+  /// indices, for the Phrase Matching pane.
+  ///
+  /// Cached on the identity of the key set it came from, and NOT
+  /// recomputed per build. The pane treats a new `scope` object as a new
+  /// question and rescans the whole Bible; handing it a freshly-built
+  /// set every frame would rescan on every frame.
+  Set<String>? _phraseScopeSource;
+  List<Verse>? _phraseScopeVerses;
+  Set<int>? _phraseScopeCache;
 
   /// What the mouse is over RIGHT NOW. Drives the status bar, which
   /// clears when the pointer leaves the text.
@@ -1228,7 +1240,59 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
               : wb.setSearchLimit(verseListKeys(list),
                   list.name.isEmpty ? null : list.name),
         );
+
+      case AnalysisTab.phrases:
+        final v = _analysisVerse(mp, verses);
+        if (v == null) return _analysisHint(context, locale);
+        final base = mp.indexOfVerse(v);
+        if (base < 0) return _analysisHint(context, locale);
+        return PhraseMatchPane(
+          key: ValueKey<String>('phrases-${v.id}-${mp.currentVersion}'),
+          corpus: mp.wordKeys,
+          verses: mp.verses,
+          baseIndex: base,
+          locale: locale,
+          scope: _phraseScope(mp, wb),
+          scopeLabel: wb.searchLimitLabel,
+          onOpenVerse: (hit) => _onCrossRefTap(
+            BibleReference(
+              englishBook: bookNameToEnglish[hit.book] ?? hit.book,
+              chapter: hit.chapter,
+              verseStart: hit.verse,
+              verseEnd: hit.verse,
+            ),
+          ),
+        );
     }
+  }
+
+  /// The active search limit as corpus indices — bwh51's "use search
+  /// limits from main window".
+  ///
+  /// The limit is stored as `'EnglishBook-chapter-verse'` keys because
+  /// that survives a change of version; the scanner needs positions in
+  /// the loaded corpus. Translating between them costs one map lookup
+  /// per limited verse, so the result is cached until either the limit
+  /// or the corpus changes.
+  Set<int>? _phraseScope(MainProvider mp, WorkbenchProvider wb) {
+    final keys = wb.searchLimit;
+    if (keys == null || keys.isEmpty) return null;
+    if (identical(_phraseScopeSource, keys) &&
+        identical(_phraseScopeVerses, mp.verses)) {
+      return _phraseScopeCache;
+    }
+    final byRef = wb.verseByRef;
+    final out = <int>{};
+    for (final k in keys) {
+      final v = byRef[k];
+      if (v == null) continue;
+      final i = mp.indexOfVerse(v);
+      if (i >= 0) out.add(i);
+    }
+    _phraseScopeSource = keys;
+    _phraseScopeVerses = mp.verses;
+    _phraseScopeCache = out;
+    return out;
   }
 
   /// The command pane's current results as plain refs, so the Verse

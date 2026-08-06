@@ -29,11 +29,20 @@ import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
 /// Which pane the Analysis window is showing.
 /// 2026-08-06: `kwic` joins them — BibleWorks' Key Word In Context
 /// (help topic bwh31), then `related` — the Related Verses Tool
-/// (bwh50), then `verseLists` — the Verse List Manager (bwh27).
+/// (bwh50), then `verseLists` — the Verse List Manager (bwh27), then
+/// `phrases` — the Phrase Matching Tool (bwh51).
 /// Appended rather than inserted because the tab is persisted by
 /// INDEX (`workbench.analysisTab`), so reordering would silently move
 /// every existing reader to a different tab.
-enum AnalysisTab { wordStudy, crossRefs, stats, kwic, related, verseLists }
+enum AnalysisTab {
+  wordStudy,
+  crossRefs,
+  stats,
+  kwic,
+  related,
+  verseLists,
+  phrases,
+}
 
 /// The tab strip itself. Deliberately a plain segmented row rather than
 /// a Material `TabBar`: the pane is narrow (320–560 px) and the strip
@@ -67,6 +76,8 @@ class AnalysisTabStrip extends StatelessWidget {
           'analysisTabRelated', 'Related'),
       (AnalysisTab.verseLists, Icons.playlist_add_check_rounded,
           'analysisTabVerseLists', 'Lists'),
+      (AnalysisTab.phrases, Icons.format_quote_rounded,
+          'analysisTabPhrases', 'Phrases'),
     ];
     return Container(
       padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
