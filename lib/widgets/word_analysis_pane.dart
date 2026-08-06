@@ -123,6 +123,7 @@ class _WordAnalysisPaneState extends State<WordAnalysisPane> {
   @override
   Widget build(BuildContext context) {
     final wb = WbColors.of(context);
+    final t = WbType.of(context);
     final locale = widget.locale;
     final e = _entry;
     final zh = _zh;
@@ -143,7 +144,7 @@ class _WordAnalysisPaneState extends State<WordAnalysisPane> {
                 child: Text(
                   widget.reference,
                   style: TextStyle(
-                    fontSize: WbMetrics.chrome,
+                    fontSize: t.chrome,
                     color: wb.mutedText,
                   ),
                 ),
@@ -156,7 +157,7 @@ class _WordAnalysisPaneState extends State<WordAnalysisPane> {
                   child: Text(
                     s('analysisFrozen', 'FROZEN — Shift'),
                     style: TextStyle(
-                      fontSize: WbMetrics.chrome - 1,
+                      fontSize: t.chrome - 1,
                       fontWeight: FontWeight.w700,
                       color: wb.text,
                     ),
@@ -174,7 +175,7 @@ class _WordAnalysisPaneState extends State<WordAnalysisPane> {
               Text(
                 widget.word.strongs,
                 style: TextStyle(
-                  fontSize: WbMetrics.chrome,
+                  fontSize: t.chrome,
                   fontWeight: FontWeight.w700,
                   color: wb.mutedText,
                 ),
@@ -196,7 +197,7 @@ class _WordAnalysisPaneState extends State<WordAnalysisPane> {
                   child: Text(
                     '(${e!.translit})',
                     style: TextStyle(
-                      fontSize: WbMetrics.text,
+                      fontSize: t.text,
                       fontStyle: FontStyle.italic,
                       color: wb.mutedText,
                     ),
@@ -210,7 +211,7 @@ class _WordAnalysisPaneState extends State<WordAnalysisPane> {
             Text(
               '/${e!.pronunciation}/',
               style: TextStyle(
-                  fontSize: WbMetrics.chrome, color: wb.mutedText),
+                  fontSize: t.chrome, color: wb.mutedText),
             ),
 
           // ── Parsing. The line the whole Analysis window exists for.
@@ -227,7 +228,7 @@ class _WordAnalysisPaneState extends State<WordAnalysisPane> {
               child: Text(
                 parse,
                 style: TextStyle(
-                  fontSize: WbMetrics.text,
+                  fontSize: t.text,
                   fontWeight: FontWeight.w600,
                   color: wb.link,
                   height: 1.35,
@@ -263,7 +264,7 @@ class _WordAnalysisPaneState extends State<WordAnalysisPane> {
                     style: TextStyle(color: wb.strongsGrammar),
                   ),
                 ]),
-                style: TextStyle(fontSize: WbMetrics.text, height: 1.35),
+                style: TextStyle(fontSize: t.text, height: 1.35),
               ),
             ),
           ],
@@ -272,15 +273,15 @@ class _WordAnalysisPaneState extends State<WordAnalysisPane> {
           // CBOL gloss below rather than duplicating it: same number,
           // more of the entry.
           if (zh != null) ...[
-            _field(wb, s('analysisLemma', 'Lemma'),
+            _field(wb, t, s('analysisLemma', 'Lemma'),
                 [zh.lemma, if (zh.translit.isNotEmpty) zh.translit]
                     .where((x) => x.isNotEmpty)
                     .join('  ')),
-            _field(wb, s('analysisOrigin', 'Origin'), zh.etymology),
+            _field(wb, t, s('analysisOrigin', 'Origin'), zh.etymology),
             if (zh.senses.isNotEmpty)
-              _field(wb, s('analysisDefinition', 'Definition'),
+              _field(wb, t, s('analysisDefinition', 'Definition'),
                   zh.senses.join('\n')),
-            _field(wb, s('analysisUsage', 'KJV usage'), zh.usage),
+            _field(wb, t, s('analysisUsage', 'KJV usage'), zh.usage),
             if (ChineseLexiconService.isSimplifiedOnly(locale))
               Padding(
                 padding: const EdgeInsets.only(top: 8),
@@ -288,17 +289,17 @@ class _WordAnalysisPaneState extends State<WordAnalysisPane> {
                   s('analysisSimplifiedOnly',
                       'This lexicon is published in Simplified Chinese only.'),
                   style: TextStyle(
-                    fontSize: WbMetrics.chrome,
+                    fontSize: t.chrome,
                     fontStyle: FontStyle.italic,
                     color: wb.mutedText,
                   ),
                 ),
               ),
           ] else if (e != null) ...[
-            _field(wb, s('analysisMeaning', 'Meaning'),
+            _field(wb, t, s('analysisMeaning', 'Meaning'),
                 e.localizedGloss(locale)),
-            _field(wb, s('analysisOrigin', 'Origin'), e.derivation ?? ''),
-            _field(wb, s('analysisDefinition', 'Definition'),
+            _field(wb, t, s('analysisOrigin', 'Origin'), e.derivation ?? ''),
+            _field(wb, t, s('analysisDefinition', 'Definition'),
                 e.localizedDefinition(locale)),
           ],
 
@@ -313,7 +314,7 @@ class _WordAnalysisPaneState extends State<WordAnalysisPane> {
                     s('analysisFullEntry',
                         'Full entry, word family & concordance →'),
                     style: TextStyle(
-                      fontSize: WbMetrics.chrome,
+                      fontSize: t.chrome,
                       fontWeight: FontWeight.w600,
                       color: wb.link,
                     ),
@@ -327,7 +328,7 @@ class _WordAnalysisPaneState extends State<WordAnalysisPane> {
               child: Text(
                 s('analysisNoEntry', 'No lexicon entry for this number.'),
                 style: TextStyle(
-                    fontSize: WbMetrics.text, color: wb.mutedText),
+                    fontSize: t.text, color: wb.mutedText),
               ),
             ),
         ],
@@ -335,7 +336,7 @@ class _WordAnalysisPaneState extends State<WordAnalysisPane> {
     );
   }
 
-  Widget _field(WbColors wb, String label, String value) {
+  Widget _field(WbColors wb, WbType t, String label, String value) {
     if (value.trim().isEmpty) return const SizedBox.shrink();
     return Padding(
       padding: const EdgeInsets.only(top: 8),
@@ -348,7 +349,7 @@ class _WordAnalysisPaneState extends State<WordAnalysisPane> {
           ),
           TextSpan(text: value, style: TextStyle(color: wb.text)),
         ]),
-        style: TextStyle(fontSize: WbMetrics.text, height: 1.45),
+        style: TextStyle(fontSize: t.text, height: 1.45),
       ),
     );
   }

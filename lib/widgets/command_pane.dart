@@ -226,6 +226,7 @@ class _CommandPaneState extends State<CommandPane> {
     final scheme = Theme.of(context).colorScheme;
 
     final wbc = WbColors.of(context);
+    final t = WbType.of(context);
     return Column(
       children: [
         // ── Command line ──────────────────────────────────────────
@@ -240,7 +241,7 @@ class _CommandPaneState extends State<CommandPane> {
             onSubmitted: (_) => _submit(),
             onChanged: (_) => setState(() {}), // toggle clear button
             style: TextStyle(
-                fontSize: WbMetrics.text, height: WbMetrics.lineHeight),
+                fontSize: t.text, height: t.lineHeight),
             decoration: InputDecoration(
               hintText: uiStrings['commandSearchHint']?[locale] ??
                   "Search text, or Strong's: G25 AND G26",
@@ -418,8 +419,9 @@ class _CommandPaneState extends State<CommandPane> {
       String summary, VoidCallback onCopy, AppSettings settings, String locale) {
     return Builder(builder: (context) {
       final wbc = WbColors.of(context);
+    final t = WbType.of(context);
       return Container(
-        height: WbMetrics.paneTitleHeight,
+        height: t.paneTitleHeight,
         decoration: BoxDecoration(
           color: wbc.chromeBg,
           border: Border(
@@ -437,7 +439,7 @@ class _CommandPaneState extends State<CommandPane> {
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
-                  fontSize: WbMetrics.chrome,
+                  fontSize: t.chrome,
                   color: wbc.text,
                 ),
               ),
@@ -458,13 +460,14 @@ class _CommandPaneState extends State<CommandPane> {
   Widget _noResults(AppSettings settings, ColorScheme scheme, String locale) {
     return Builder(builder: (context) {
       final wbc = WbColors.of(context);
+    final t = WbType.of(context);
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Text(
             uiStrings['noResults']?[locale] ?? 'No results found',
             style:
-                TextStyle(fontSize: WbMetrics.text, color: wbc.mutedText),
+                TextStyle(fontSize: t.text, color: wbc.mutedText),
           ),
         ),
       );
@@ -500,6 +503,7 @@ class _ResultRowState extends State<_ResultRow> {
   @override
   Widget build(BuildContext context) {
     final wbc = WbColors.of(context);
+    final t = WbType.of(context);
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hovering = true),
@@ -525,8 +529,8 @@ class _ResultRowState extends State<_ResultRow> {
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              fontSize: WbMetrics.text,
-              height: WbMetrics.lineHeight,
+              fontSize: t.text,
+              height: t.lineHeight,
               fontFamilyFallback: kCjkFontFallback,
             ),
           ),
@@ -577,6 +581,7 @@ class _OperatorButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final wbc = WbColors.of(context);
+    final t = WbType.of(context);
     return InkWell(
       onTap: onTap,
       child: Container(
@@ -588,7 +593,7 @@ class _OperatorButton extends StatelessWidget {
         child: Text(
           label,
           style: TextStyle(
-            fontSize: WbMetrics.chrome,
+            fontSize: t.chrome,
             fontWeight: FontWeight.w600,
             color: wbc.text,
           ),

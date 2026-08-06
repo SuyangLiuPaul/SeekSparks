@@ -444,7 +444,7 @@ class WbVersionTag extends StatelessWidget {
         style: TextStyle(
           fontSize: t.chrome - 0.5,
           fontWeight: FontWeight.w700,
-          height: WbMetrics.lineHeight,
+          height: t.lineHeight,
           color: versionTagColor(code),
           letterSpacing: 0.2,
         ),

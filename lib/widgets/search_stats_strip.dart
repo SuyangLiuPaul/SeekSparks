@@ -35,6 +35,7 @@ class SearchStatsStrip extends StatelessWidget {
   Widget build(BuildContext context) {
     if (distribution.isEmpty) return const SizedBox.shrink();
     final wb = WbColors.of(context);
+    final t = WbType.of(context);
     final s = uiStrings;
     final top = topBooks(distribution);
 
@@ -72,7 +73,7 @@ class SearchStatsStrip extends StatelessWidget {
                     'OT ${distribution.oldTestament} · '
                     'NT ${distribution.newTestament}',
                     style: TextStyle(
-                        fontSize: WbMetrics.chrome, color: wb.mutedText),
+                        fontSize: t.chrome, color: wb.mutedText),
                   ),
                 ],
               ),
@@ -131,7 +132,7 @@ class SearchStatsStrip extends StatelessWidget {
             '  ·  ${distribution.books.length} '
             '${s['searchStatsBooks']?[locale] ?? 'books'}',
             style:
-                TextStyle(fontSize: WbMetrics.chrome, color: wb.mutedText),
+                TextStyle(fontSize: t.chrome, color: wb.mutedText),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),

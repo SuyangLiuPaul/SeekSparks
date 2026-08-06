@@ -154,6 +154,7 @@ class _Dropdown<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final wb = WbColors.of(context);
+    final t = WbType.of(context);
     final label = items
         .where((e) => e.$1 == value)
         .map((e) => e.$2)
@@ -182,7 +183,7 @@ class _Dropdown<T> extends StatelessWidget {
             child: Text(
               text,
               style: TextStyle(
-                fontSize: WbMetrics.chrome,
+                fontSize: t.chrome,
                 fontWeight: v == value ? FontWeight.w700 : FontWeight.w400,
                 color: wb.text,
               ),
@@ -205,7 +206,7 @@ class _Dropdown<T> extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  fontSize: WbMetrics.chrome,
+                  fontSize: t.chrome,
                   fontWeight: FontWeight.w600,
                   color: wb.text,
                 ),

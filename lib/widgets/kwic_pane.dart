@@ -129,12 +129,14 @@ class _KwicPaneState extends State<KwicPane> {
   @override
   Widget build(BuildContext context) {
     final wb = WbColors.of(context);
+    final t = WbType.of(context);
     String s(String k, String fallback) =>
         uiStrings[k]?[widget.locale] ?? fallback;
 
     if (!TaggedTextService.supports(widget.version)) {
       return _notice(
         wb,
+        t,
         s('kwicUntagged',
             'This translation carries no Strong\'s tagging, so its '
                 'context cannot be aligned. Switch to BSB or 和合本雅伟版.'),
@@ -144,7 +146,7 @@ class _KwicPaneState extends State<KwicPane> {
       return const Center(child: CircularProgressIndicator());
     }
     if (_lines.isEmpty) {
-      return _notice(wb, s('kwicNoHits', 'No occurrences in this version.'));
+      return _notice(wb, t, s('kwicNoHits', 'No occurrences in this version.'));
     }
 
     final sorted = sortKwic(_lines, _sort);
@@ -153,15 +155,15 @@ class _KwicPaneState extends State<KwicPane> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _header(wb, s, collocates),
+        _header(wb, t, s, collocates),
         const Divider(height: 1),
         Expanded(
           child: ListView.builder(
             physics: const BouncingScrollPhysics(),
             itemCount: sorted.length + 1,
             itemBuilder: (context, i) {
-              if (i == sorted.length) return _footer(wb, s);
-              return _line(wb, sorted[i]);
+              if (i == sorted.length) return _footer(wb, t, s);
+              return _line(wb, t, sorted[i]);
             },
           ),
         ),
@@ -169,16 +171,16 @@ class _KwicPaneState extends State<KwicPane> {
     );
   }
 
-  Widget _notice(WbColors wb, String text) => Padding(
+  Widget _notice(WbColors wb, WbType t, String text) => Padding(
         padding: const EdgeInsets.all(24),
         child: Center(
           child: Text(text,
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: WbMetrics.text, color: wb.mutedText)),
+              style: TextStyle(fontSize: t.text, color: wb.mutedText)),
         ),
       );
 
-  Widget _header(WbColors wb, String Function(String, String) s,
+  Widget _header(WbColors wb, WbType t, String Function(String, String) s,
       List<({String word, int count})> collocates) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
@@ -191,7 +193,7 @@ class _KwicPaneState extends State<KwicPane> {
                 '${widget.strongs} · ${_lines.length} '
                 '${s('kwicHits', 'hits')}',
                 style: TextStyle(
-                  fontSize: WbMetrics.text,
+                  fontSize: t.text,
                   fontWeight: FontWeight.w600,
                   color: wb.text,
                 ),
@@ -216,6 +218,7 @@ class _KwicPaneState extends State<KwicPane> {
               ])
                 _chip(
                   wb,
+                  t,
                   s(entry.$2, entry.$3),
                   _sort == entry.$1,
                   () => setState(() => _sort = entry.$1),
@@ -227,7 +230,7 @@ class _KwicPaneState extends State<KwicPane> {
             Text(
               '${s('kwicCollocates', 'Occurs with')}: '
               '${collocates.map((c) => '${c.word} ${c.count}').join(' · ')}',
-              style: TextStyle(fontSize: WbMetrics.chrome, color: wb.mutedText),
+              style: TextStyle(fontSize: t.chrome, color: wb.mutedText),
             ),
           ],
         ],
@@ -235,7 +238,7 @@ class _KwicPaneState extends State<KwicPane> {
     );
   }
 
-  Widget _chip(WbColors wb, String label, bool on, VoidCallback onTap) =>
+  Widget _chip(WbColors wb, WbType t, String label, bool on, VoidCallback onTap) =>
       InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(4),
@@ -249,7 +252,7 @@ class _KwicPaneState extends State<KwicPane> {
           child: Text(
             label,
             style: TextStyle(
-              fontSize: WbMetrics.chrome,
+              fontSize: t.chrome,
               color: on ? wb.strongsLexical : wb.mutedText,
               fontWeight: on ? FontWeight.w600 : FontWeight.w400,
             ),
@@ -260,7 +263,7 @@ class _KwicPaneState extends State<KwicPane> {
   /// One aligned row. The keyword column is centred and fixed-ish so
   /// the eye can run down it; left context is right-aligned into it,
   /// which is the alignment that makes the whole thing legible.
-  Widget _line(WbColors wb, KwicLine l) {
+  Widget _line(WbColors wb, WbType t, KwicLine l) {
     final ref = ConcordanceRef.tryParse(l.reference);
     return InkWell(
       onTap: ref == null || widget.onOpenRef == null
@@ -278,7 +281,7 @@ class _KwicPaneState extends State<KwicPane> {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  fontSize: WbMetrics.chrome,
+                  fontSize: t.chrome,
                   color: wb.link,
                   fontWeight: FontWeight.w600,
                 ),
@@ -293,7 +296,7 @@ class _KwicPaneState extends State<KwicPane> {
                 overflow: TextOverflow.fade,
                 softWrap: false,
                 style: TextStyle(
-                    fontSize: WbMetrics.chrome, color: wb.mutedText),
+                    fontSize: t.chrome, color: wb.mutedText),
               ),
             ),
             Padding(
@@ -301,7 +304,7 @@ class _KwicPaneState extends State<KwicPane> {
               child: Text(
                 l.keyword,
                 style: TextStyle(
-                  fontSize: WbMetrics.chrome,
+                  fontSize: t.chrome,
                   color: wb.strongsLexical,
                   fontWeight: FontWeight.w700,
                 ),
@@ -315,7 +318,7 @@ class _KwicPaneState extends State<KwicPane> {
                 overflow: TextOverflow.fade,
                 softWrap: false,
                 style: TextStyle(
-                    fontSize: WbMetrics.chrome, color: wb.mutedText),
+                    fontSize: t.chrome, color: wb.mutedText),
               ),
             ),
           ],
@@ -324,7 +327,7 @@ class _KwicPaneState extends State<KwicPane> {
     );
   }
 
-  Widget _footer(WbColors wb, String Function(String, String) s) {
+  Widget _footer(WbColors wb, WbType t, String Function(String, String) s) {
     if (_loaded >= _totalRefs && _totalRefs > 0) {
       return Padding(
         padding: const EdgeInsets.all(10),
@@ -332,7 +335,7 @@ class _KwicPaneState extends State<KwicPane> {
           child: Text(
             '${s('kwicAllShown', 'All')} $_totalRefs '
             '${s('kwicRefs', 'references')}',
-            style: TextStyle(fontSize: WbMetrics.chrome, color: wb.mutedText),
+            style: TextStyle(fontSize: t.chrome, color: wb.mutedText),
           ),
         ),
       );
@@ -349,7 +352,7 @@ class _KwicPaneState extends State<KwicPane> {
                 child: Text(
                   '${s('kwicMore', 'Load more')} '
                   '($_loaded / $_totalRefs)',
-                  style: TextStyle(fontSize: WbMetrics.chrome),
+                  style: TextStyle(fontSize: t.chrome),
                 ),
               ),
       ),
