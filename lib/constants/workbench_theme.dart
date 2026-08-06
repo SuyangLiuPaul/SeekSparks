@@ -23,6 +23,9 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import 'package:seeksparks/models/app_settings.dart';
 
 /// Metrics shared by every Workbench surface. Numbers, not opinions —
 /// they exist so panes stay on the same rhythm instead of each picking
@@ -338,4 +341,106 @@ ThemeData workbenchTheme(ThemeData parent) {
     highlightColor: Colors.transparent,
     extensions: <ThemeExtension<dynamic>>[wb],
   );
+}
+
+/// 2026-08-06: the Workbench's type scale, RESOLVED FROM SETTINGS.
+///
+/// [WbMetrics] is a const class, so every size in the workbench was a
+/// compile-time literal and the Settings sliders drove nothing here. An
+/// audit found the workbench honoured 2 of 10 user settings: Font Size
+/// (only after a fix earlier today) and Strong's visibility. Font
+/// family, Menu Size, Line Spacing, the paper theme, paragraph mode —
+/// all ignored, across 82 hardcoded call sites.
+///
+/// This is the missing piece: one resolved scale, read from context, so
+/// a setting reaches the workbench the same way it reaches the reader.
+///
+/// The workbench stays DENSER than the reader on purpose — it is a
+/// three-pane analysis surface, not a reading page. So settings scale
+/// it RELATIVE to their own defaults rather than being adopted
+/// outright: a reader at font size 24 gets a proportionally larger
+/// workbench, not a workbench with 24px body text.
+class WbType {
+  const WbType({
+    required this.text,
+    required this.chrome,
+    required this.original,
+    required this.lineHeight,
+    required this.menuBarHeight,
+    required this.toolbarHeight,
+    required this.statusBarHeight,
+    required this.paneTitleHeight,
+    this.fontFamily,
+  });
+
+  final double text;
+  final double chrome;
+  final double original;
+  final double lineHeight;
+  final double menuBarHeight;
+  final double toolbarHeight;
+  final double statusBarHeight;
+  final double paneTitleHeight;
+
+  /// The reader's chosen font, so the workbench does not silently opt
+  /// out of a preference the rest of the app respects.
+  final String? fontFamily;
+
+  /// Defaults, for tests and any surface built without settings.
+  static const WbType fallback = WbType(
+    text: WbMetrics.text,
+    chrome: WbMetrics.chrome,
+    original: WbMetrics.original,
+    lineHeight: WbMetrics.lineHeight,
+    menuBarHeight: WbMetrics.menuBarHeight,
+    toolbarHeight: WbMetrics.toolbarHeight,
+    statusBarHeight: WbMetrics.statusBarHeight,
+    paneTitleHeight: WbMetrics.paneTitleHeight,
+  );
+
+  /// Resolve from the ambient settings.
+  ///
+  /// `watch` rather than `read`: moving a slider in Settings has to
+  /// repaint the workbench, which is the entire point.
+  static WbType of(BuildContext context) {
+    final s = context.watch<AppSettings>();
+    return resolve(
+      fontSize: s.fontSize,
+      lineSpacing: s.lineSpacing,
+      menuScale: s.menuScale,
+      fontFamily: s.fontFamily,
+    );
+  }
+
+  /// Build the scale from the reader's settings.
+  ///
+  /// Clamps are not timidity: unclamped, font size 40 would push body
+  /// text to 24px in a 320px pane and the three-pane layout stops
+  /// being a layout.
+  static WbType resolve({
+    required double fontSize,
+    required double lineSpacing,
+    required double menuScale,
+    String? fontFamily,
+  }) {
+    // 20 / 1.5 / 1.0 are the app defaults for these three.
+    final textScale = (fontSize / 20.0).clamp(0.75, 1.6);
+    final chromeScale = menuScale.clamp(0.8, 1.4);
+    // Line spacing moves the workbench's own tighter leading in the
+    // same direction the reader asked for, without adopting the
+    // reader's roomier value outright.
+    final leading =
+        (WbMetrics.lineHeight * (lineSpacing / 1.5)).clamp(1.05, 1.9);
+    return WbType(
+      text: WbMetrics.text * textScale,
+      chrome: WbMetrics.chrome * chromeScale,
+      original: WbMetrics.original * textScale,
+      lineHeight: leading.toDouble(),
+      menuBarHeight: WbMetrics.menuBarHeight * chromeScale,
+      toolbarHeight: WbMetrics.toolbarHeight * chromeScale,
+      statusBarHeight: WbMetrics.statusBarHeight * chromeScale,
+      paneTitleHeight: WbMetrics.paneTitleHeight * chromeScale,
+      fontFamily: (fontFamily ?? '').isEmpty ? null : fontFamily,
+    );
+  }
 }

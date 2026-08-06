@@ -329,6 +329,7 @@ class _BrowseWindowState extends State<BrowseWindow> {
   @override
   Widget build(BuildContext context) {
     final wb = WbColors.of(context);
+    final t = WbType.of(context);
     return FutureBuilder<List<_BrowseRow>>(
       future: _future,
       builder: (context, snap) {
@@ -356,7 +357,7 @@ class _BrowseWindowState extends State<BrowseWindow> {
                 'Could not load this chapter.\n${snap.error}',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                    fontSize: WbMetrics.text, color: wb.mutedText),
+                    fontSize: t.text, color: wb.mutedText),
               ),
             ),
           );
@@ -369,7 +370,7 @@ class _BrowseWindowState extends State<BrowseWindow> {
             child: Text(
               'No text for this chapter.',
               style: TextStyle(
-                  fontSize: WbMetrics.text, color: wb.mutedText),
+                  fontSize: t.text, color: wb.mutedText),
             ),
           );
         }
@@ -486,12 +487,12 @@ class _TranslationLine extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final wb = WbColors.of(context);
+    final t = WbType.of(context);
     // 2026-08-06: the Browse pane ignored Settings > Font Size entirely
     // — every size here was a hardcoded WbMetrics constant, so the
     // slider moved and nothing happened. The workbench is deliberately
     // denser than the reader, so it scales RELATIVE to the reader's
     // setting (20 is the default) rather than adopting it outright.
-    final scale = (settings.fontSize / 20.0).clamp(0.75, 1.6);
     // Reference then text on one line, exactly as BibleWorks prints it —
     // the reference repeated on every version row is what lets you read
     // a single translation straight down the column.
@@ -531,7 +532,7 @@ class _TranslationLine extends StatelessWidget {
                         child: Text(
                           'n',
                           style: TextStyle(
-                            fontSize: WbMetrics.chrome * 0.85 * scale,
+                            fontSize: t.chrome * 0.85,
                             fontWeight: FontWeight.w700,
                             color: wb.link,
                           ),
@@ -544,8 +545,9 @@ class _TranslationLine extends StatelessWidget {
         ],
       ),
       style: TextStyle(
-        fontSize: WbMetrics.text * scale,
-        height: WbMetrics.lineHeight,
+        fontSize: t.text,
+        height: t.lineHeight,
+        fontFamily: t.fontFamily,
         fontFamilyFallback: kCjkFontFallback,
       ),
     );
@@ -574,6 +576,7 @@ class _TaggedLine extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final wb = WbColors.of(context);
+    final t = WbType.of(context);
     final runs = row.runs ?? const <TaggedRun>[];
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -583,8 +586,8 @@ class _TaggedLine extends StatelessWidget {
           child: Text(
             row.reference,
             style: TextStyle(
-              fontSize: WbMetrics.text,
-              height: WbMetrics.lineHeight,
+              fontSize: t.text,
+              height: t.lineHeight,
               fontWeight: FontWeight.w600,
               color: wb.link,
             ),
@@ -621,8 +624,8 @@ class _TaggedLine extends StatelessWidget {
                         ),
                     ]),
                     style: TextStyle(
-                      fontSize: WbMetrics.text,
-                      height: WbMetrics.lineHeight,
+                      fontSize: t.text,
+                      height: t.lineHeight,
                       color: wb.text,
                       fontFamilyFallback: kCjkFontFallback,
                     ),
@@ -656,6 +659,7 @@ class _OriginalsLine extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final wb = WbColors.of(context);
+    final t = WbType.of(context);
     final words = row.words ?? const <OriginalWord>[];
     // The reference sits OUTSIDE the RTL scope. Inside it, being the
     // first child put it at the right-hand end of a Hebrew line, so the
@@ -668,8 +672,8 @@ class _OriginalsLine extends StatelessWidget {
           child: Text(
             row.reference,
             style: TextStyle(
-              fontSize: WbMetrics.text,
-              height: WbMetrics.lineHeight,
+              fontSize: t.text,
+              height: t.lineHeight,
               fontWeight: FontWeight.w600,
               color: wb.link,
             ),
@@ -757,13 +761,14 @@ class _HoverWordState extends State<_HoverWord> {
   /// leave the text to find out what a word is.
   InlineSpan _popup(BuildContext context) {
     final wb = WbColors.of(context);
+    final t = WbType.of(context);
     final locale = context.read<AppSettings>().locale;
     final e = widget.entry;
     final gloss = e?.localizedGloss(locale) ?? '';
     final parse = describeMorphology(widget.word.morph, locale);
 
     TextStyle base(Color c, {FontWeight? w, double? size}) => TextStyle(
-          fontSize: size ?? WbMetrics.chrome,
+          fontSize: size ?? t.chrome,
           height: 1.4,
           fontWeight: w,
           color: c,
@@ -778,7 +783,7 @@ class _HoverWordState extends State<_HoverWord> {
         text: widget.word.text,
         // Red, as BibleWorks prints the headword.
         style: base(const Color(0xFFB3261E),
-            w: FontWeight.w600, size: WbMetrics.original),
+            w: FontWeight.w600, size: t.original),
       ),
       if ((e?.translit ?? '').isNotEmpty)
         TextSpan(
@@ -803,7 +808,9 @@ class _HoverWordState extends State<_HoverWord> {
   InlineSpan _num(String text, Color color) => TextSpan(
         text: ' $text',
         style: TextStyle(
-          fontSize: WbMetrics.chrome - 2,
+          // Resolved here rather than passed down: _num is called from
+          // a span builder, not from build().
+          fontSize: WbType.of(context).chrome - 2,
           color: color,
           fontWeight: FontWeight.w500,
           decoration: TextDecoration.none,
@@ -813,6 +820,7 @@ class _HoverWordState extends State<_HoverWord> {
   @override
   Widget build(BuildContext context) {
     final wb = WbColors.of(context);
+    final t = WbType.of(context);
     return Tooltip(
       richMessage: _popup(context),
       // A pale bordered box, not Material's dark rounded bubble.
@@ -893,9 +901,9 @@ class _HoverWordState extends State<_HoverWord> {
                 // translation run; only the originals line gets the
                 // larger original-script treatment.
                 fontSize: widget.translation
-                    ? WbMetrics.text
-                    : WbMetrics.original,
-                height: WbMetrics.lineHeight,
+                    ? t.text
+                    : t.original,
+                height: t.lineHeight,
                 color: wb.text,
                 fontFamilyFallback: kCjkFontFallback,
                 // Underline on hover, so touch users (who get no hover)

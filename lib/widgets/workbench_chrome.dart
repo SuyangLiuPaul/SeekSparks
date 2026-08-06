@@ -63,8 +63,9 @@ class WorkbenchMenuBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final wb = WbColors.of(context);
+    final t = WbType.of(context);
     return Container(
-      height: WbMetrics.menuBarHeight,
+      height: t.menuBarHeight,
       decoration: BoxDecoration(
         color: wb.chromeBg,
         border: Border(bottom: BorderSide(color: wb.border)),
@@ -91,6 +92,7 @@ class _MenuTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final wb = WbColors.of(context);
+    final t = WbType.of(context);
     return PopupMenuButton<VoidCallback>(
       tooltip: '',
       position: PopupMenuPosition.under,
@@ -124,7 +126,7 @@ class _MenuTitle extends StatelessWidget {
                   Text(
                     item.label,
                     style: TextStyle(
-                      fontSize: WbMetrics.chrome,
+                      fontSize: t.chrome,
                       color: item.onSelected == null ? wb.mutedText : wb.text,
                     ),
                   ),
@@ -135,7 +137,7 @@ class _MenuTitle extends StatelessWidget {
                         item.shortcut!,
                         textAlign: TextAlign.right,
                         style: TextStyle(
-                          fontSize: WbMetrics.chrome - 1,
+                          fontSize: t.chrome - 1,
                           color: wb.mutedText,
                         ),
                       ),
@@ -150,7 +152,7 @@ class _MenuTitle extends StatelessWidget {
         child: Center(
           child: Text(
             menu.title,
-            style: TextStyle(fontSize: WbMetrics.chrome, color: wb.text),
+            style: TextStyle(fontSize: t.chrome, color: wb.text),
           ),
         ),
       ),
@@ -193,8 +195,9 @@ class WorkbenchToolbar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final wb = WbColors.of(context);
+    final t = WbType.of(context);
     return Container(
-      height: WbMetrics.toolbarHeight,
+      height: t.toolbarHeight,
       decoration: BoxDecoration(
         color: wb.chromeBg,
         border: Border(bottom: BorderSide(color: wb.border)),
@@ -224,6 +227,7 @@ class _ToolIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final wb = WbColors.of(context);
+    final t = WbType.of(context);
     final enabled = button.onPressed != null;
     return Tooltip(
       message: button.tooltip,
@@ -244,7 +248,7 @@ class _ToolIcon extends StatelessWidget {
               Text(
                 button.label!,
                 style: TextStyle(
-                  fontSize: WbMetrics.chrome,
+                  fontSize: t.chrome,
                   fontWeight:
                       button.active ? FontWeight.w700 : FontWeight.w400,
                   color: enabled ? wb.text : wb.mutedText,
@@ -283,8 +287,9 @@ class WbPaneTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final wb = WbColors.of(context);
+    final t = WbType.of(context);
     return Container(
-      height: WbMetrics.paneTitleHeight,
+      height: t.paneTitleHeight,
       decoration: BoxDecoration(
         color: wb.chromeBg,
         border: Border(bottom: BorderSide(color: wb.border)),
@@ -303,7 +308,7 @@ class WbPaneTitle extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: WbMetrics.chrome,
+                    fontSize: t.chrome,
                     fontWeight: FontWeight.w600,
                     color: wb.text,
                     letterSpacing: 0.2,
@@ -358,8 +363,9 @@ class WorkbenchStatusBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final wb = WbColors.of(context);
+    final t = WbType.of(context);
     return Container(
-      height: WbMetrics.statusBarHeight,
+      height: t.statusBarHeight,
       decoration: BoxDecoration(
         color: wb.chromeBg,
         border: Border(top: BorderSide(color: wb.border)),
@@ -373,7 +379,7 @@ class WorkbenchStatusBar extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                fontSize: WbMetrics.chrome,
+                fontSize: t.chrome,
                 color: message.isEmpty ? wb.mutedText : wb.text,
               ),
             ),
@@ -393,7 +399,7 @@ class WorkbenchStatusBar extends StatelessWidget {
                 child: Text(
                   f.label,
                   style: TextStyle(
-                    fontSize: WbMetrics.chrome,
+                    fontSize: t.chrome,
                     fontWeight:
                         f.enabled ? FontWeight.w600 : FontWeight.w400,
                     color: f.enabled
@@ -428,6 +434,7 @@ class WbVersionTag extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = WbType.of(context);
     return SizedBox(
       width: width,
       child: Text(
@@ -435,7 +442,7 @@ class WbVersionTag extends StatelessWidget {
         maxLines: 1,
         overflow: TextOverflow.clip,
         style: TextStyle(
-          fontSize: WbMetrics.chrome - 0.5,
+          fontSize: t.chrome - 0.5,
           fontWeight: FontWeight.w700,
           height: WbMetrics.lineHeight,
           color: versionTagColor(code),
