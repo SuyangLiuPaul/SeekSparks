@@ -124,14 +124,24 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
   /// The stack a first-time reader gets. BibleWorks ships version sets
   /// per language and this is the same idea: pair the reading version
   /// with the two most useful comparisons in that language.
+  ///
+  /// 2026-08-06: every stack now includes BSB, because it is the only
+  /// English translation here that carries Strong's tagging. Before
+  /// this the English stack was nasb/kjv/leb — none tagged — so adding
+  /// a tagged English version would have changed nothing anyone could
+  /// see. With BSB in the stack the English row does what the 和合本
+  /// row already did: numbers on the words themselves.
+  ///
+  /// Only a default. It seeds `_parallelVersions` on first run and a
+  /// reader's own selection is persisted over it.
   List<String> _defaultParallelVersions(String locale) {
     switch (locale) {
       case 'zh-Hans':
-        return const ['cuvs-yhwh', 'biblexg-v2', 'nasb'];
+        return const ['cuvs-yhwh', 'biblexg-v2', 'bsb'];
       case 'zh-Hant':
-        return const ['cuvs-yhwh-tr', 'biblexg-v2-tr', 'nasb'];
+        return const ['cuvs-yhwh-tr', 'biblexg-v2-tr', 'bsb'];
       default:
-        return const ['nasb', 'kjv', 'leb'];
+        return const ['bsb', 'nasb', 'kjv'];
     }
   }
 

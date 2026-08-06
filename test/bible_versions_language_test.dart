@@ -16,7 +16,7 @@ void main() {
   });
 
   test('language matches the naming convention', () {
-    const english = {'kjv', 'leb', 'nasb'};
+    const english = {'kjv', 'leb', 'nasb', 'bsb'};
     for (final v in bibleVersions) {
       if (english.contains(v.value)) {
         expect(v.language, 'en', reason: '${v.value} should be English');

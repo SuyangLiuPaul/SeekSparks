@@ -9,6 +9,13 @@
 /// cleared it for use here, so the Chinese column can now do exactly
 /// what BibleWorks' English column does.
 ///
+/// 2026-08-06: the Berean Standard Bible joins it. That mattered
+/// because tagging was Chinese-only — an English reader hovering a word
+/// learned nothing the verse number did not already tell them. The BSB
+/// is public domain AND ships word-aligned to the WLC/Nestle base, the
+/// rare pairing that lets an English column be tagged without licensing
+/// anything. Built by `tools/import_bsb.py`.
+///
 /// Assets are built by `tools/import_yahweh_modules.py` into
 /// `assets/tagged/<version>/<book>.json`, one file per book, loaded
 /// lazily — the whole set is ~13 MB, far too much to hold eagerly.
@@ -57,7 +64,7 @@ class TaggedRun {
 class TaggedTextService {
   /// Version codes that have a tagged asset set. Checked before any
   /// load so an untagged version costs nothing.
-  static const Set<String> taggedVersions = {'cuvs-yhwh'};
+  static const Set<String> taggedVersions = {'cuvs-yhwh', 'bsb'};
 
   static final Map<String, Map<String, List<TaggedRun>>> _cache = {};
   static final Map<String, Future<Map<String, List<TaggedRun>>>> _inflight = {};

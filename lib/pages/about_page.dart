@@ -486,6 +486,13 @@ class _ScripturesTable extends StatelessWidget {
         url: 'https://lexhampress.com/product/9461/lexham-english-bible',
       ),
       _AttribRow(
+        name: uiStrings['aboutVerBsb']?[locale] ??
+            'BSB (Berean Standard Bible)',
+        licence: uiStrings['aboutLicenseBsb']?[locale] ??
+            'Dedicated to the public domain by the publisher.',
+        url: 'https://bereanbible.com/',
+      ),
+      _AttribRow(
         name: uiStrings['aboutVerNasb']?[locale] ?? 'NASB 2020',
         licence: uiStrings['aboutLicenseNasb']?[locale] ??
             '© The Lockman Foundation · used under quotation provisions.',

@@ -4189,6 +4189,16 @@ const uiStrings = {
     'zh-Hant': '© Logos Bible Software · 僅限非商業研經使用。',
     'en': '© Logos Bible Software · non-commercial study only.',
   },
+  'aboutVerBsb': {
+    'zh-Hans': 'BSB（Berean 标准译本）',
+    'zh-Hant': 'BSB（Berean 標準譯本）',
+    'en': 'BSB (Berean Standard Bible)',
+  },
+  'aboutLicenseBsb': {
+    'zh-Hans': '出版方已将本译本释出至公有领域。',
+    'zh-Hant': '出版方已將本譯本釋出至公有領域。',
+    'en': 'Dedicated to the public domain by the publisher.',
+  },
   'aboutVerNasb': {
     'zh-Hans': 'NASB 2020 新美国标准译本',
     'zh-Hant': 'NASB 2020 新美國標準譯本',
