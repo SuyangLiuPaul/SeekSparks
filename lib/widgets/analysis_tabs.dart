@@ -14,8 +14,6 @@
 ///     words occur in the whole Bible, from the bundled concordance.
 library;
 
-import 'dart:ui' show FontFeature;
-
 import 'package:flutter/material.dart';
 
 import 'package:seeksparks/constants/ui_strings.dart';
