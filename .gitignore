@@ -55,3 +55,16 @@ netlify/functions/package-lock.json
 .netlify/
 build-wasm/
 tools/src/
+
+# Eagle's View NASB modules (nasb-ev, nsn-plus). The source databases
+# state: "You do not have permission to redistribute, modify, or profit
+# from this text in any way, directly or indirectly. Copyright 2002, all
+# rights reserved by the publisher."
+#
+# They may exist in a local tree for comparison, but they must never be
+# committed or deployed — seeksparks-dev is a public URL, so "dev only"
+# is still publishing. Ignored here so a routine `git add -A` cannot
+# sweep 22 MB of restricted text into a push by accident.
+assets/nasb-ev.json
+assets/nsn-plus.json
+assets/tagged/nsn-plus/
