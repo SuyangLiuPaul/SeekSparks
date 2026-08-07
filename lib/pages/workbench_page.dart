@@ -1247,6 +1247,14 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
             grammar: hovered.grammar,
             onOpenFullEntry: () =>
                 pushPage(StrongsEntryPage(number: hoveredWord.strongs)),
+            onOpenRef: (openBook, chapter, verse) => _onCrossRefTap(
+              BibleReference(
+                englishBook: openBook,
+                chapter: chapter,
+                verseStart: verse,
+                verseEnd: verse,
+              ),
+            ),
           );
         }
         // Verse-level hover: a translation line. Show that verse's

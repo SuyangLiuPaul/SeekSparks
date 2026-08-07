@@ -136,6 +136,10 @@ flutter:
     - assets/concordance/
     - assets/concordance/t/
     - assets/concordance/v/
+    # Forms index (bwh10q), derived from assets/originals. `l/` is 151
+    # shards fetched one at a time; nothing here loads at startup.
+    - assets/forms/
+    - assets/forms/l/
     - assets/sermons/index.json
     - assets/sermons/refs.json
     - assets/family_tree.json

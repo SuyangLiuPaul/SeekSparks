@@ -4826,6 +4826,43 @@ const uiStrings = {
     'zh-Hant': '全聖經出現次數，由少到多。',
     'en': 'Whole-Bible occurrences, rarest first.',
   },
+  // The Forms readout — BibleWorks bwh10q. See
+  // `widgets/word_forms_section.dart`.
+  'formsAmbiguousLemma': {
+    'zh-Hans': '这个字形在别处属于另一个字。',
+    'zh-Hant': '這個字形在別處屬於另一個字。',
+    'en': 'This form is also a different word elsewhere.',
+  },
+  'formsAmbiguousParse': {
+    'zh-Hans': '这个字形在别处有别的解析。',
+    'zh-Hant': '這個字形在別處有別的解析。',
+    'en': 'This form is parsed more than one way elsewhere.',
+  },
+  'formsHeader': {
+    'zh-Hans': '这个字的各种字形（{n} 种，共 {total} 次）',
+    'zh-Hant': '這個字的各種字形（{n} 種，共 {total} 次）',
+    'en': 'Forms of this word ({n}, {total}×)',
+  },
+  'formsSortBy': {
+    'zh-Hans': '排序：',
+    'zh-Hant': '排序：',
+    'en': 'Sort:',
+  },
+  'formsSortFrequency': {
+    'zh-Hans': '次数',
+    'zh-Hant': '次數',
+    'en': 'frequency',
+  },
+  'formsSortCode': {
+    'zh-Hans': '解析',
+    'zh-Hant': '解析',
+    'en': 'parsing',
+  },
+  'formsSortAlpha': {
+    'zh-Hans': '字母',
+    'zh-Hant': '字母',
+    'en': 'a–z',
+  },
   'aboutLexCuvsTagged': {
     'zh-Hans': '和合本【雅伟】简体版＋［附原文编号］',
     'zh-Hant': '和合本【雅偉】簡體版＋［附原文編號］',

@@ -34,6 +34,7 @@ import 'package:seeksparks/models/strongs.dart';
 import 'package:seeksparks/services/chinese_lexicon_service.dart';
 import 'package:seeksparks/services/strongs_service.dart';
 import 'package:seeksparks/utils/morphology.dart' show describeMorphology;
+import 'package:seeksparks/widgets/word_forms_section.dart';
 
 class WordAnalysisPane extends StatefulWidget {
   const WordAnalysisPane({
@@ -44,6 +45,7 @@ class WordAnalysisPane extends StatefulWidget {
     required this.frozen,
     this.grammar = const [],
     this.onOpenFullEntry,
+    this.onOpenRef,
   });
 
   final OriginalWord word;
@@ -61,6 +63,10 @@ class WordAnalysisPane extends StatefulWidget {
   final List<String> grammar;
 
   final VoidCallback? onOpenFullEntry;
+
+  /// Jump to one of the example occurrences printed by the Forms
+  /// section. Optional so the pane still renders outside the workbench.
+  final void Function(String englishBook, int chapter, int verse)? onOpenRef;
 
   @override
   State<WordAnalysisPane> createState() => _WordAnalysisPaneState();
@@ -236,6 +242,16 @@ class _WordAnalysisPaneState extends State<WordAnalysisPane> {
               ),
             ),
           ],
+
+          // ── bwh10q. Directly under the parsing box because its first
+          // job is to say how certain that box is: for 4,756 forms the
+          // corpus parses the same string more than one way, and until
+          // now the pane printed one of them with nothing to say so.
+          WordFormsSection(
+            word: widget.word,
+            locale: locale,
+            onOpenRef: widget.onOpenRef,
+          ),
 
           // ── Grammar codes, decoded. On a tagged Chinese line these
           // are the blue numbers; without this they are unreadable.
