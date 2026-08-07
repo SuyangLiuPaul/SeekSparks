@@ -104,10 +104,23 @@ String siblingStrongs({
 
 /// What the Analysis pane is looking at.
 ///
-/// Two independent facts: which occurrence the pointer is over
-/// ([hoverKey], which keeps tracking even while pinned, so the text
-/// never feels dead under the mouse), and which occurrence the reader
-/// committed to ([pinnedKey]).
+/// Two independent facts: which occurrence is the pane's current
+/// SUBJECT ([hoverKey]), and which occurrence the reader committed to
+/// ([pinnedKey]).
+///
+/// [hoverKey] is read at two levels, and the distinction is what keeps
+/// the marks from flickering. The Browse window threads down the
+/// *latched* subject — the word the pane is describing right now — and
+/// each word widget overrides it with [withHover] only while the
+/// pointer is physically inside that word. So the subject keeps its
+/// mark while the pointer crosses the 5px gap between two words, and a
+/// word under the pointer still lights up even when the subject is
+/// frozen by a pin or by Shift, so the text never feels dead.
+///
+/// Threading the pointer position alone would flash: in the gap no word
+/// is hovered, the latched subject would fall through to
+/// [WordMark.sibling] against its own [litStrongs], and every word the
+/// reader swept past would blink green on the way out.
 class AnalysisFocus {
   const AnalysisFocus({
     this.pinnedKey,
@@ -179,10 +192,15 @@ class AnalysisFocus {
   /// count honest — the number of green words is the number of other
   /// places this same original word landed.
   ///
-  /// When the pointer has left the text entirely the subject falls
-  /// through to [WordMark.sibling] along with its echoes, so the whole
-  /// group lights uniformly. That is the yahwehdehua.net reading: one
-  /// Greek word, seen landing in four translations at once.
+  /// The subject keeps its own mark even after the pointer leaves the
+  /// text, because the Browse window threads the latched subject in as
+  /// [hoverKey] rather than the live pointer position. Letting it fall
+  /// through to [WordMark.sibling] instead would read as "one word in
+  /// four translations", which is the yahwehdehua.net picture and
+  /// tempting — but it costs the reader the one thing colour is for
+  /// here, which is knowing which of the four they are actually being
+  /// told about, and it makes the mark blink every time the pointer
+  /// crosses the gap between two words.
   WordMark markFor(String key, {String strongs = '', bool hit = false}) {
     if (key == pinnedKey) return WordMark.pinned;
     if (key == hoverKey) return WordMark.hover;

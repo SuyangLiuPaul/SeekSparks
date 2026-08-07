@@ -124,7 +124,7 @@ class BrowseWindow extends StatefulWidget {
     this.onWordTap,
     this.onWordHover,
     this.onVerseTap,
-    this.pinnedKey,
+    this.focus = AnalysisFocus.empty,
     this.highlight = const SearchHighlight(),
   });
 
@@ -155,9 +155,16 @@ class BrowseWindow extends StatefulWidget {
   /// can clear.
   final void Function(BrowseHover? hover)? onWordHover;
 
-  /// The occurrence the reader has pinned, or null. Drawn with a gold
-  /// border; see [wordMarkDecoration].
-  final String? pinnedKey;
+  /// What the Analysis pane is looking at: the pinned occurrence, the
+  /// subject occurrence, and the Strong's number whose other printed
+  /// occurrences should light up. Every word in the window is drawn
+  /// against this one value, which is what lets a pointer on the Greek
+  /// line mark the matching word four rows down in Chinese.
+  ///
+  /// It arrives from above rather than being derived here because the
+  /// pane and the text must never disagree about what is under study —
+  /// there is one answer and both read it.
+  final AnalysisFocus focus;
 
   final void Function(int verse)? onVerseTap;
 
@@ -409,7 +416,7 @@ class _BrowseWindowState extends State<BrowseWindow> {
                 highlight: widget.highlight,
                 glosses: _glosses,
                 keyPrefix: browseKeyPrefix(widget.book, widget.chapter),
-                pinnedKey: widget.pinnedKey,
+                focus: widget.focus,
                 onWordTap: widget.onWordTap,
                 onWordHover: widget.onWordHover,
                 onTap: widget.onVerseTap == null
@@ -431,7 +438,7 @@ class _RowView extends StatelessWidget {
     required this.focused,
     required this.glosses,
     required this.keyPrefix,
-    this.pinnedKey,
+    this.focus = AnalysisFocus.empty,
     this.onWordTap,
     this.onWordHover,
     this.onTap,
@@ -446,7 +453,7 @@ class _RowView extends StatelessWidget {
   /// "Genesis|1" — the book and chapter half of every [browseWordKey]
   /// this row hands out.
   final String keyPrefix;
-  final String? pinnedKey;
+  final AnalysisFocus focus;
   final void Function(BrowseHover hover)? onWordTap;
   final void Function(BrowseHover? hover)? onWordHover;
   final VoidCallback? onTap;
@@ -480,7 +487,7 @@ class _RowView extends StatelessWidget {
                       row: row,
                       glosses: glosses,
                       keyPrefix: keyPrefix,
-                      pinnedKey: pinnedKey,
+                      focus: focus,
                       showNumbers: settings.showStrongsInOriginals,
                       onWordTap: onWordTap,
                       onWordHover: onWordHover,
@@ -493,7 +500,7 @@ class _RowView extends StatelessWidget {
                           highlight: highlight,
                           glosses: glosses,
                           keyPrefix: keyPrefix,
-                          pinnedKey: pinnedKey,
+                          focus: focus,
                           showNumbers: settings.showStrongsInOriginals,
                           onWordTap: onWordTap,
                           onWordHover: onWordHover,
@@ -625,7 +632,7 @@ class _TaggedLine extends StatelessWidget {
     required this.row,
     required this.glosses,
     required this.keyPrefix,
-    required this.pinnedKey,
+    required this.focus,
     required this.showNumbers,
     this.highlight = const SearchHighlight(),
     this.onWordTap,
@@ -637,7 +644,7 @@ class _TaggedLine extends StatelessWidget {
   final _BrowseRow row;
   final Map<String, StrongsEntry?> glosses;
   final String keyPrefix;
-  final String? pinnedKey;
+  final AnalysisFocus focus;
   final bool showNumbers;
   final void Function(BrowseHover hover)? onWordTap;
   final void Function(BrowseHover? hover)? onWordHover;
@@ -682,7 +689,7 @@ class _TaggedLine extends StatelessWidget {
                       verse: row.verse,
                       index: i,
                     ),
-                    pinnedKey: pinnedKey,
+                    focus: focus,
                     entry: glosses[r.strongs],
                     grammar: r.grammar,
                     implied: r.implied,
@@ -724,7 +731,7 @@ class _OriginalsLine extends StatelessWidget {
     required this.row,
     required this.glosses,
     required this.keyPrefix,
-    required this.pinnedKey,
+    required this.focus,
     required this.showNumbers,
     this.onWordTap,
     this.onWordHover,
@@ -733,7 +740,7 @@ class _OriginalsLine extends StatelessWidget {
   final _BrowseRow row;
   final Map<String, StrongsEntry?> glosses;
   final String keyPrefix;
-  final String? pinnedKey;
+  final AnalysisFocus focus;
   final bool showNumbers;
   final void Function(BrowseHover hover)? onWordTap;
   final void Function(BrowseHover? hover)? onWordHover;
@@ -779,7 +786,7 @@ class _OriginalsLine extends StatelessWidget {
                       verse: row.verse,
                       index: i,
                     ),
-                    pinnedKey: pinnedKey,
+                    focus: focus,
                     entry: glosses[w.strongs],
                     showNumbers: showNumbers,
                     onTap: onWordTap,
@@ -801,7 +808,7 @@ class _HoverWord extends StatefulWidget {
     required this.verse,
     required this.entry,
     required this.occurrence,
-    required this.pinnedKey,
+    required this.focus,
     this.grammar = const [],
     this.implied = const [],
     this.showNumbers = false,
@@ -821,8 +828,12 @@ class _HoverWord extends StatefulWidget {
   /// This word's stable identity — see [browseWordKey].
   final String occurrence;
 
-  /// The occurrence the reader pinned, anywhere in the window.
-  final String? pinnedKey;
+  /// What the whole window is looking at — the pin, the subject, and the
+  /// Strong's number being echoed. Threaded down rather than held here
+  /// because a word has to know about a pointer that is nowhere near it:
+  /// that is the difference between marking the word you are on and
+  /// marking the same original word in every translation on screen.
+  final AnalysisFocus focus;
 
   /// Prefetched lexicon entry, used to build the hover popup. Null when
   /// the number is missing from the lexicon — the popup then shows just
@@ -930,10 +941,19 @@ class _HoverWordState extends State<_HoverWord> {
   Widget build(BuildContext context) {
     final wb = WbColors.of(context);
     final t = WbType.of(context);
-    final mark = AnalysisFocus(
-      pinnedKey: widget.pinnedKey,
-      hoverKey: _hovering ? widget.occurrence : null,
-    ).markFor(widget.occurrence, hit: widget.hit);
+    // The pointer's own position wins over the threaded subject, so a
+    // word still lights under the mouse while the pane is held by a pin
+    // or by Shift. Everywhere else the threaded subject stands, which is
+    // what stops the mark blinking as the pointer crosses the gap
+    // between two words.
+    final focus = _hovering
+        ? widget.focus.withHover(widget.occurrence)
+        : widget.focus;
+    final mark = focus.markFor(
+      widget.occurrence,
+      strongs: widget.word.strongs,
+      hit: widget.hit,
+    );
     return Tooltip(
       richMessage: _popup(context),
       // A pale bordered box, not Material's dark rounded bubble.
@@ -1021,10 +1041,9 @@ class _HoverWordState extends State<_HoverWord> {
                 // and mouse users both see that words are live. The pin
                 // keeps it: a pinned word is the one the reader is
                 // working on and must not look deader than the one
-                // their pointer happens to be crossing.
-                decoration: mark == WordMark.none || mark == WordMark.hit
-                    ? TextDecoration.none
-                    : TextDecoration.underline,
+                // their pointer happens to be crossing. An echo does
+                // not — see [wordMarkUnderline].
+                decoration: wordMarkUnderline(mark),
                 decorationColor:
                     mark == WordMark.pinned ? wb.pinMark : wb.link,
               ),

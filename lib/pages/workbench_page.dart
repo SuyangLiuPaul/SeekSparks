@@ -896,7 +896,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
                     highlight: highlightsForQuery(_wb.lastQuery),
                     onWordTap: _selectWord,
                     onWordHover: _onWordHover,
-                    pinnedKey: _pinnedKey,
+                    focus: _browseFocus(book, chapter),
                     // Clicking anywhere in the text that is not a word
                     // is the "click empty space" release. It doubles as
                     // moving the cursor, which is fine: both are the
@@ -908,6 +908,27 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
                   ),
           ),
         ],
+      ),
+    );
+  }
+
+  /// What the Browse window draws every word against.
+  ///
+  /// The subject is the LATCHED word rather than the pointer's, because
+  /// `_analysisWord` already resolves "the pinned word if there is one,
+  /// otherwise the last word hovered" — which is precisely what the
+  /// Analysis pane is describing. Deriving the lit set from that single
+  /// value is what makes the green words and the pane incapable of
+  /// disagreeing: there is one answer and both read it.
+  AnalysisFocus _browseFocus(String book, int chapter) {
+    final subject = _analysisWord;
+    return AnalysisFocus(
+      pinnedKey: _pinnedKey,
+      hoverKey: subject?.occurrence,
+      litStrongs: siblingStrongs(
+        subjectKey: subject?.occurrence,
+        subjectStrongs: subject?.word?.strongs ?? '',
+        keyPrefix: browseKeyPrefix(book, chapter),
       ),
     );
   }

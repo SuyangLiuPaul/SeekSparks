@@ -358,6 +358,28 @@ BoxDecoration wordMarkDecoration(WordMark mark, WbColors wb) => BoxDecoration(
       borderRadius: BorderRadius.circular(2),
     );
 
+/// Whether a mark underlines its word.
+///
+/// Only the two marks that name the reader's OWN subject do — the word
+/// under the pointer and the word they pinned. An echo does not: it is
+/// something the app noticed, not something the reader asked for, and a
+/// dozen underlines across four rows would compete with the subject
+/// instead of pointing at it.
+///
+/// This is also the accessibility guarantee, and the reason it is a
+/// function rather than three lines inside a widget. The sibling fill
+/// and the hover fill sit within 1.1:1 of each other in luminance — they
+/// are told apart by HUE, green against blue, which is exactly the
+/// distinction a red-green colour-blind reader cannot make. The
+/// underline is the second, non-colour channel that keeps "the word I am
+/// on" separable from "the same word elsewhere" without relying on the
+/// eye seeing green at all.
+TextDecoration wordMarkUnderline(WordMark mark) => switch (mark) {
+      WordMark.hover || WordMark.pinned => TextDecoration.underline,
+      WordMark.none || WordMark.hit || WordMark.sibling =>
+        TextDecoration.none,
+    };
+
 /// Per-version tag colour. BibleWorks prints a short version code at the
 /// start of every line in a saturated colour, and that single device is
 /// what makes a wall of interleaved parallel text readable — you find
