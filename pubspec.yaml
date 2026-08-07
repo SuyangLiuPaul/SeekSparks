@@ -1,7 +1,7 @@
 name: seeksparks
 description: "SeekSparks — a desktop/tablet-first bilingual Bible exegesis tool with structured original-language search, forked from YsWords."
 publish_to: 'none'
-version: 1.6.39
+version: 1.6.40
 
 environment:
   sdk: '>=3.2.3 <4.0.0'
@@ -124,6 +124,7 @@ flutter:
     - assets/section_titles.json
     - assets/book_introductions.json
     - assets/gospel_synopsis.json
+    - assets/ot_synopsis.json
     - assets/daily_verses.json
     - assets/bible_evidence.json
     - assets/strongs/
