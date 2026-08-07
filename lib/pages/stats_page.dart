@@ -14,11 +14,14 @@ import 'package:seeksparks/services/daily_verse_service.dart';
 import 'package:seeksparks/services/fetch_books.dart' show standardBookOrder;
 import 'package:seeksparks/services/originals_stats_service.dart';
 import 'package:seeksparks/utils/clipboard_helper.dart';
-import 'package:seeksparks/services/concordance_service.dart' show ConcordanceRef;
-import 'package:seeksparks/utils/jump_to_reference.dart' show resolveAndPrepareJump;
+import 'package:seeksparks/services/concordance_service.dart'
+    show ConcordanceRef;
+import 'package:seeksparks/utils/jump_to_reference.dart'
+    show resolveAndPrepareJump;
 import 'package:seeksparks/utils/reference_parser.dart'
     show BibleReference, parseReference;
-import 'package:seeksparks/utils/version_mapper.dart' show toEnglish, localeAwareBookName;
+import 'package:seeksparks/utils/version_mapper.dart'
+    show toEnglish, localeAwareBookName;
 import 'package:seeksparks/widgets/home_icon_button.dart';
 import 'package:seeksparks/widgets/language_switcher_button.dart';
 import 'package:seeksparks/widgets/localized_back_button.dart';
@@ -75,8 +78,7 @@ class StatsPage extends StatelessWidget {
               // 但是在经文里面的释经，里面的全部内容可以搬过来".
               Tab(
                 icon: const Icon(Icons.search_rounded),
-                text:
-                    uiStrings['statsLookup']?[locale] ?? 'Lookup',
+                text: uiStrings['statsLookup']?[locale] ?? 'Lookup',
               ),
               // Round 56 (continued): Word Distribution tab —
               // exposes the WordDistributionTable widget that
@@ -86,8 +88,7 @@ class StatsPage extends StatelessWidget {
               // have another tab for that table from exegesis?"
               Tab(
                 icon: const Icon(Icons.table_chart_outlined),
-                text: uiStrings['statsDistribution']?[locale] ??
-                    'Distribution',
+                text: uiStrings['statsDistribution']?[locale] ?? 'Distribution',
               ),
             ],
           ),
@@ -136,12 +137,10 @@ String _humanNum(int n) {
 class _OriginalsOverviewTab extends StatefulWidget {
   final String locale;
   final AppSettings settings;
-  const _OriginalsOverviewTab(
-      {required this.locale, required this.settings});
+  const _OriginalsOverviewTab({required this.locale, required this.settings});
 
   @override
-  State<_OriginalsOverviewTab> createState() =>
-      _OriginalsOverviewTabState();
+  State<_OriginalsOverviewTab> createState() => _OriginalsOverviewTabState();
 }
 
 class _OriginalsOverviewTabState extends State<_OriginalsOverviewTab>
@@ -224,18 +223,15 @@ class _OriginalsOverviewTabState extends State<_OriginalsOverviewTab>
                     // fills available width via LayoutBuilder
                     // inside _StatGrid + the side-by-side lemma
                     // row.
-                    constraints:
-                        const BoxConstraints(maxWidth: 1200),
+                    constraints: const BoxConstraints(maxWidth: 1200),
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(
-                          16, 16, 16, 24),
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
                       child: _buildBody(
                         view: view,
                         locale: locale,
                         settings: settings,
-                        availableBooks: stats.bookStats
-                            .map((b) => b.englishBook)
-                            .toSet(),
+                        availableBooks:
+                            stats.bookStats.map((b) => b.englishBook).toSet(),
                       ),
                     ),
                   ),
@@ -270,10 +266,8 @@ class _OriginalsOverviewTabState extends State<_OriginalsOverviewTab>
               bookFilter: _bookFilter,
               hideStopwords: _hideStopwords,
               availableBooks: availableBooks,
-              onBookChanged: (v) =>
-                  setState(() => _bookFilter = v),
-              onStopwordChanged: (v) =>
-                  setState(() => _hideStopwords = v),
+              onBookChanged: (v) => setState(() => _bookFilter = v),
+              onStopwordChanged: (v) => setState(() => _hideStopwords = v),
             ),
             const SizedBox(height: 16),
             // Round 56 (continued — languages card): user feedback
@@ -333,21 +327,17 @@ class _OriginalsOverviewTabState extends State<_OriginalsOverviewTab>
               if (view.showHebrew)
                 _TopLemmasCard(
                   title: _topHebrewTitle(view, locale),
-                  lemmas: _applyStopwordFilter(view.topHebrew)
-                      .take(25)
-                      .toList(),
+                  lemmas:
+                      _applyStopwordFilter(view.topHebrew).take(25).toList(),
                   isHebrew: true,
                   settings: settings,
                   locale: locale,
                 ),
-              if (view.showHebrew && view.showGreek)
-                const SizedBox(height: 12),
+              if (view.showHebrew && view.showGreek) const SizedBox(height: 12),
               if (view.showGreek)
                 _TopLemmasCard(
                   title: _topGreekTitle(view, locale),
-                  lemmas: _applyStopwordFilter(view.topGreek)
-                      .take(25)
-                      .toList(),
+                  lemmas: _applyStopwordFilter(view.topGreek).take(25).toList(),
                   isHebrew: false,
                   settings: settings,
                   locale: locale,
@@ -360,19 +350,18 @@ class _OriginalsOverviewTabState extends State<_OriginalsOverviewTab>
   }
 
   String _topHebrewTitle(_OverviewView view, String locale) {
-    final base = uiStrings['statsOriginalsTopHebrew']?[locale] ??
-        'Top Hebrew (OT)';
+    final base =
+        uiStrings['statsOriginalsTopHebrew']?[locale] ?? 'Top Hebrew (OT)';
     if (view.bookFilter == null) return base;
     return '$base · ${localeAwareBookName(view.bookFilter!, locale)}';
   }
 
   String _topGreekTitle(_OverviewView view, String locale) {
-    final base = uiStrings['statsOriginalsTopGreek']?[locale] ??
-        'Top Greek (NT)';
+    final base =
+        uiStrings['statsOriginalsTopGreek']?[locale] ?? 'Top Greek (NT)';
     if (view.bookFilter == null) return base;
     return '$base · ${localeAwareBookName(view.bookFilter!, locale)}';
   }
-
 
   /// Compute the view model for the current filter setting.
   /// When `_bookFilter == 'all'` returns the whole-Bible figures
@@ -550,75 +539,88 @@ class _OverviewFilterBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final wb = WbColors.of(context);
     final t = WbType.of(context);
-    final filterLabel =
-        uiStrings['sermonFilterByPassage']?[locale] ?? 'Filter';
+    final filterLabel = uiStrings['sermonFilterByPassage']?[locale] ?? 'Filter';
+    final scope = Text(
+      bookFilter == 'all'
+          ? (uiStrings['statsOriginalsScopeAll']?[locale] ?? 'Whole Bible')
+          : (uiStrings['statsOriginalsScopeBook']?[locale] ?? 'Showing: {book}')
+              .replaceAll('{book}', localeAwareBookName(bookFilter, locale)),
+      style: TextStyle(
+        fontSize: t.text,
+        height: t.lineHeight,
+        color: wb.mutedText,
+        fontWeight: FontWeight.w600,
+      ),
+    );
+    // Hide-stopwords toggle sits inline as a compact chip button —
+    // frees the vertical space the old card took up.
+    final stopwords = FilterChip(
+      avatar: Icon(
+        hideStopwords ? Icons.filter_alt : Icons.filter_alt_off,
+        size: t.text + 4,
+      ),
+      label: Text(
+        uiStrings['statsOriginalsHideStopwordsTitle']?[locale] ??
+            'Hide common particles',
+        style: TextStyle(fontSize: t.text),
+      ),
+      selected: hideStopwords,
+      onSelected: onStopwordChanged,
+    );
+    final bookButton = OutlinedButton.icon(
+      onPressed: () => _openBookSheet(context),
+      icon: Icon(
+        bookFilter == 'all' ? Icons.filter_list : Icons.filter_list_alt,
+        size: t.text + 5,
+      ),
+      label: Text(filterLabel, style: TextStyle(fontSize: t.text)),
+      style: OutlinedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        // "A filter is active" is a step in VALUE, not a tint —
+        // the same rule WbPanel.alt encodes.
+        backgroundColor: bookFilter == 'all' ? null : wb.selectionBg,
+      ),
+    );
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                bookFilter == 'all'
-                    ? (uiStrings['statsOriginalsScopeAll']?[locale] ??
-                        'Whole Bible')
-                    : (uiStrings['statsOriginalsScopeBook']?[locale] ??
-                            'Showing: {book}')
-                        .replaceAll('{book}',
-                            localeAwareBookName(bookFilter, locale)),
-                style: TextStyle(
-                  fontSize: t.text,
-                  height: t.lineHeight,
-                  color: wb.mutedText,
-                  fontWeight: FontWeight.w600,
+        // A Row hands its unflexed children their intrinsic width first,
+        // and the stopword chip's label is a four-word sentence. At the
+        // 320px pane minimum that left the Expanded scope label about
+        // ten pixels and it printed one character per line. Under the
+        // breakpoint the label takes its own line and the two controls
+        // wrap instead.
+        LayoutBuilder(
+          builder: (context, constraints) => constraints.maxWidth < 460
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    scope,
+                    const SizedBox(height: 6),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: [stopwords, bookButton],
+                    ),
+                  ],
+                )
+              : Row(
+                  children: [
+                    Expanded(child: scope),
+                    stopwords,
+                    const SizedBox(width: 6),
+                    bookButton,
+                  ],
                 ),
-              ),
-            ),
-            // Hide-stopwords toggle moved inline as a compact chip
-            // button — frees vertical space the old card took up.
-            FilterChip(
-              avatar: Icon(
-                hideStopwords
-                    ? Icons.filter_alt
-                    : Icons.filter_alt_off,
-                size: t.text + 4,
-              ),
-              label: Text(
-                uiStrings['statsOriginalsHideStopwordsTitle']
-                        ?[locale] ??
-                    'Hide common particles',
-                style: TextStyle(fontSize: t.text),
-              ),
-              selected: hideStopwords,
-              onSelected: onStopwordChanged,
-            ),
-            const SizedBox(width: 6),
-            OutlinedButton.icon(
-              onPressed: () => _openBookSheet(context),
-              icon: Icon(
-                bookFilter == 'all'
-                    ? Icons.filter_list
-                    : Icons.filter_list_alt,
-                size: t.text + 5,
-              ),
-              label: Text(filterLabel, style: TextStyle(fontSize: t.text)),
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                // "A filter is active" is a step in VALUE, not a tint —
-                // the same rule WbPanel.alt encodes.
-                backgroundColor:
-                    bookFilter == 'all' ? null : wb.selectionBg,
-              ),
-            ),
-          ],
         ),
         if (bookFilter != 'all') ...[
           const SizedBox(height: 8),
           Align(
             alignment: Alignment.centerLeft,
             child: InputChip(
-              avatar: Icon(Icons.bookmark,
-                  size: t.text + 4, color: wb.mutedText),
+              avatar:
+                  Icon(Icons.bookmark, size: t.text + 4, color: wb.mutedText),
               label: Text(localeAwareBookName(bookFilter, locale)),
               onDeleted: () => onBookChanged('all'),
               backgroundColor: wb.selectionBg,
@@ -637,8 +639,7 @@ class _OverviewFilterBar extends StatelessWidget {
         return _OverviewBookFilterSheet(
           locale: locale,
           availableBooks: availableBooks,
-          initialBook:
-              bookFilter == 'all' ? null : bookFilter,
+          initialBook: bookFilter == 'all' ? null : bookFilter,
           onApply: (book) {
             onBookChanged(book ?? 'all');
             Navigator.of(sheetCtx).pop();
@@ -676,8 +677,7 @@ class _OverviewBookFilterSheet extends StatefulWidget {
       _OverviewBookFilterSheetState();
 }
 
-class _OverviewBookFilterSheetState
-    extends State<_OverviewBookFilterSheet> {
+class _OverviewBookFilterSheetState extends State<_OverviewBookFilterSheet> {
   String? _selectedBook;
 
   @override
@@ -711,21 +711,18 @@ class _OverviewBookFilterSheetState
                 if (widget.initialBook != null)
                   TextButton(
                     onPressed: widget.onClear,
-                    child: Text(
-                        uiStrings['clearFilter']?[locale] ?? 'Clear'),
+                    child: Text(uiStrings['clearFilter']?[locale] ?? 'Clear'),
                   ),
                 IconButton(
                   icon: const Icon(Icons.close, size: 20),
-                  onPressed: () =>
-                      Navigator.of(context).maybePop(),
+                  onPressed: () => Navigator.of(context).maybePop(),
                 ),
               ],
             ),
             const SizedBox(height: 8),
             ConstrainedBox(
               constraints: BoxConstraints(
-                maxHeight:
-                    MediaQuery.of(context).size.height * 0.55,
+                maxHeight: MediaQuery.of(context).size.height * 0.55,
               ),
               child: SingleChildScrollView(
                 child: Wrap(
@@ -739,8 +736,7 @@ class _OverviewBookFilterSheetState
                         hasData: widget.availableBooks.contains(b),
                         selected: _selectedBook == b,
                         onTap: () => setState(() {
-                          _selectedBook =
-                              _selectedBook == b ? null : b;
+                          _selectedBook = _selectedBook == b ? null : b;
                         }),
                       ),
                   ],
@@ -750,8 +746,7 @@ class _OverviewBookFilterSheetState
             const SizedBox(height: 14),
             FilledButton(
               onPressed: () => widget.onApply(_selectedBook),
-              child: Text(
-                  uiStrings['apply']?[locale] ?? 'Apply'),
+              child: Text(uiStrings['apply']?[locale] ?? 'Apply'),
             ),
           ],
         ),
@@ -781,9 +776,7 @@ class _OverviewBookChip extends StatelessWidget {
         localized,
         style: TextStyle(
           fontSize: 13,
-          color: hasData
-              ? null
-              : Theme.of(context).disabledColor,
+          color: hasData ? null : Theme.of(context).disabledColor,
         ),
       ),
       selected: selected,
@@ -812,15 +805,12 @@ class _ExegesisLauncher {
   }) {
     final mp = context.read<MainProvider>();
     final matches = mp.verses
-        .where((v) =>
-            v.book == book && v.chapter == chapter && v.verse == verse)
+        .where(
+            (v) => v.book == book && v.chapter == chapter && v.verse == verse)
         .toList();
     if (matches.isEmpty) {
       _resolveAndOpen(context,
-          locale: locale,
-          book: book,
-          chapter: chapter,
-          verse: verse);
+          locale: locale, book: book, chapter: chapter, verse: verse);
       return;
     }
     showModalBottomSheet<void>(
@@ -947,13 +937,17 @@ class _ExegesisLauncher {
 class _AramaicEntry {
   final String englishBook;
   final int chapter;
+
   /// Starting verse — what we open the OriginalsSheet at.
   final int verse;
+
   /// Localised i18n key for the reference label shown to the user
   /// (e.g. 'aramRefDanielSection', 'aramRefMarkAbba').
   final String labelKey;
+
   /// Localised i18n key for the one-line description.
   final String descKey;
+
   /// For NT phrases, the transliterated Aramaic word/phrase.
   /// Null for OT sections (the whole passage is Aramaic, not a
   /// single embedded word).
@@ -1108,8 +1102,7 @@ class _BibleLanguagesCard extends StatelessWidget {
               sectionsKey: 'languageHebrewSections',
               backgroundKey: 'languageHebrewBackground',
               wordCount: view.hebrewWords > 0 ? view.hebrewWords : null,
-              uniqueLemmas:
-                  view.hebrewUnique > 0 ? view.hebrewUnique : null,
+              uniqueLemmas: view.hebrewUnique > 0 ? view.hebrewUnique : null,
               locale: locale,
               settings: settings,
               // Hebrew → standard verse picker. User picks any OT
@@ -1152,8 +1145,7 @@ class _BibleLanguagesCard extends StatelessWidget {
               sectionsKey: 'languageGreekSections',
               backgroundKey: 'languageGreekBackground',
               wordCount: view.greekWords > 0 ? view.greekWords : null,
-              uniqueLemmas:
-                  view.greekUnique > 0 ? view.greekUnique : null,
+              uniqueLemmas: view.greekUnique > 0 ? view.greekUnique : null,
               locale: locale,
               settings: settings,
               // Greek → same standard verse picker as Hebrew.
@@ -1201,8 +1193,7 @@ class _BibleLanguagesCard extends StatelessWidget {
 class _AramaicPassagesSheet extends StatelessWidget {
   final String locale;
   final AppSettings settings;
-  const _AramaicPassagesSheet(
-      {required this.locale, required this.settings});
+  const _AramaicPassagesSheet({required this.locale, required this.settings});
 
   @override
   Widget build(BuildContext context) {
@@ -1251,8 +1242,7 @@ class _AramaicPassagesSheet extends StatelessWidget {
                   ),
                   IconButton(
                     icon: const Icon(Icons.close, size: 20),
-                    onPressed: () =>
-                        Navigator.of(context).maybePop(),
+                    onPressed: () => Navigator.of(context).maybePop(),
                   ),
                 ],
               ),
@@ -1273,9 +1263,8 @@ class _AramaicPassagesSheet extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       _SheetGroupHeader(
-                        text:
-                            uiStrings['aramGroupOt']?[locale] ??
-                                'Old Testament sections',
+                        text: uiStrings['aramGroupOt']?[locale] ??
+                            'Old Testament sections',
                       ),
                       const SizedBox(height: 6),
                       for (final e in otEntries) ...[
@@ -1288,8 +1277,7 @@ class _AramaicPassagesSheet extends StatelessWidget {
                             _ExegesisLauncher.study(
                               context: context,
                               locale: locale,
-                              book: _resolveLocalBook(
-                                  context, e.englishBook),
+                              book: _resolveLocalBook(context, e.englishBook),
                               chapter: e.chapter,
                               verse: e.verse,
                             );
@@ -1299,9 +1287,8 @@ class _AramaicPassagesSheet extends StatelessWidget {
                       ],
                       const SizedBox(height: 8),
                       _SheetGroupHeader(
-                        text:
-                            uiStrings['aramGroupNt']?[locale] ??
-                                'New Testament phrases',
+                        text: uiStrings['aramGroupNt']?[locale] ??
+                            'New Testament phrases',
                       ),
                       const SizedBox(height: 6),
                       for (final e in ntEntries) ...[
@@ -1314,8 +1301,7 @@ class _AramaicPassagesSheet extends StatelessWidget {
                             _ExegesisLauncher.study(
                               context: context,
                               locale: locale,
-                              book: _resolveLocalBook(
-                                  context, e.englishBook),
+                              book: _resolveLocalBook(context, e.englishBook),
                               chapter: e.chapter,
                               verse: e.verse,
                             );
@@ -1370,10 +1356,10 @@ class _AramaicPassagesSheet extends StatelessWidget {
     final title =
         uiStrings['aramSheetTitle']?[locale] ?? 'Aramaic in the Bible';
     final subtitle = uiStrings['aramSheetSubtitle']?[locale] ?? '';
-    final otHeader = uiStrings['aramGroupOt']?[locale] ??
-        'Old Testament sections';
-    final ntHeader = uiStrings['aramGroupNt']?[locale] ??
-        'New Testament phrases';
+    final otHeader =
+        uiStrings['aramGroupOt']?[locale] ?? 'Old Testament sections';
+    final ntHeader =
+        uiStrings['aramGroupNt']?[locale] ?? 'New Testament phrases';
     final buf = StringBuffer();
     buf.writeln(title);
     if (subtitle.isNotEmpty) buf.writeln(subtitle);
@@ -1422,8 +1408,7 @@ class _AramaicPassagesSheet extends StatelessWidget {
 
 class _SheetGroupHeader extends StatelessWidget {
   final String text;
-  const _SheetGroupHeader(
-      {required this.text});
+  const _SheetGroupHeader({required this.text});
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -1475,7 +1460,8 @@ class _AramaicEntryTile extends StatelessWidget {
                 Text(
                   label,
                   style: TextStyle(
-                    fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
+                    fontFamily: settings.fontFamily,
+                    fontFamilyFallback: kCjkFontFallback,
                     fontSize: t.text + 1,
                     height: t.lineHeight,
                     fontWeight: FontWeight.w700,
@@ -1511,7 +1497,8 @@ class _AramaicEntryTile extends StatelessWidget {
                   Text(
                     desc,
                     style: TextStyle(
-                      fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
+                      fontFamily: settings.fontFamily,
+                      fontFamilyFallback: kCjkFontFallback,
                       fontSize: t.text,
                       height: 1.4,
                       color: wb.mutedText,
@@ -1563,6 +1550,7 @@ class _LanguageRow extends StatelessWidget {
   final int? uniqueLemmas;
   final String locale;
   final AppSettings settings;
+
   /// Round 56: tappable affordance — Hebrew/Greek opens the verse
   /// picker, Aramaic opens the curated passages sheet. Each path
   /// ultimately lands on the OriginalsSheet which has Gemini AI
@@ -1676,7 +1664,8 @@ class _LanguageRow extends StatelessWidget {
                     child: Text(
                       name,
                       style: TextStyle(
-                        fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
+                        fontFamily: settings.fontFamily,
+                        fontFamilyFallback: kCjkFontFallback,
                         fontSize: t.text + 2,
                         height: t.lineHeight,
                         fontWeight: FontWeight.w700,
@@ -1689,7 +1678,8 @@ class _LanguageRow extends StatelessWidget {
                     child: Text(
                       role,
                       style: TextStyle(
-                        fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
+                        fontFamily: settings.fontFamily,
+                        fontFamilyFallback: kCjkFontFallback,
                         fontSize: t.chrome,
                         height: t.lineHeight,
                         color: wb.mutedText,
@@ -1701,11 +1691,10 @@ class _LanguageRow extends StatelessWidget {
               ),
               if (wordsLabel != null || lemmasLabel != null)
                 Text(
-                  [wordsLabel, lemmasLabel]
-                      .whereType<String>()
-                      .join(' · '),
+                  [wordsLabel, lemmasLabel].whereType<String>().join(' · '),
                   style: TextStyle(
-                    fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
+                    fontFamily: settings.fontFamily,
+                    fontFamilyFallback: kCjkFontFallback,
                     fontSize: t.chrome,
                     height: t.lineHeight,
                     color: wb.mutedText,
@@ -1717,7 +1706,8 @@ class _LanguageRow extends StatelessWidget {
                 Text(
                   sections,
                   style: TextStyle(
-                    fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
+                    fontFamily: settings.fontFamily,
+                    fontFamilyFallback: kCjkFontFallback,
                     fontSize: t.text,
                     height: 1.5,
                     color: wb.text,
@@ -1728,7 +1718,8 @@ class _LanguageRow extends StatelessWidget {
               Text(
                 background,
                 style: TextStyle(
-                  fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
+                  fontFamily: settings.fontFamily,
+                  fontFamilyFallback: kCjkFontFallback,
                   fontSize: t.text,
                   height: 1.5,
                   color: wb.mutedText,
@@ -1741,7 +1732,6 @@ class _LanguageRow extends StatelessWidget {
     );
   }
 }
-
 
 class _TopLemmasCard extends StatelessWidget {
   final String title;
@@ -1788,7 +1778,12 @@ class _TopLemmasCard extends StatelessWidget {
                 children: [
                   WbTag(text: lemmas[i].strongs, color: tagFg),
                   const SizedBox(width: 8),
+                  // 2:5 because a lemma is three or four letters and a
+                  // gloss is a phrase. Equal flex spent half the row on
+                  // whitespace after `אֱלֹהִים` and ellipsised the gloss
+                  // that was the reason to read the row.
                   Expanded(
+                    flex: 2,
                     child: Text(
                       lemmas[i].lemma,
                       maxLines: 1,
@@ -1802,6 +1797,7 @@ class _TopLemmasCard extends StatelessWidget {
                     ),
                   ),
                   Expanded(
+                    flex: 5,
                     child: Text(
                       lemmas[i].glossFor(locale),
                       maxLines: 1,
@@ -1838,8 +1834,7 @@ class _TopLemmasCard extends StatelessWidget {
 class _OriginalsBooksTab extends StatefulWidget {
   final String locale;
   final AppSettings settings;
-  const _OriginalsBooksTab(
-      {required this.locale, required this.settings});
+  const _OriginalsBooksTab({required this.locale, required this.settings});
 
   @override
   State<_OriginalsBooksTab> createState() => _OriginalsBooksTabState();
@@ -1904,8 +1899,7 @@ class _OriginalsBooksTabState extends State<_OriginalsBooksTab>
               constraints: const BoxConstraints(maxWidth: 1200),
               child: ListView.separated(
                 controller: _scrollCtrl,
-                padding:
-                    const EdgeInsets.fromLTRB(12, 8, 12, 24),
+                padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
                 itemCount: rows.length + 1,
                 // No gap: 66 books with a 4px gutter between each was
                 // 66 floating cards. Zebra fill (see _BookOriginalsRow)
@@ -1915,27 +1909,24 @@ class _OriginalsBooksTabState extends State<_OriginalsBooksTab>
                 itemBuilder: (_, i) {
                   if (i == 0) {
                     return Padding(
-                      padding:
-                          const EdgeInsets.fromLTRB(0, 4, 0, 12),
+                      padding: const EdgeInsets.fromLTRB(0, 4, 0, 12),
                       child: SegmentedButton<String>(
                         segments: [
                           ButtonSegment(
                             value: 'all',
-                            label: Text(
-                                uiStrings['statsOriginalsAll']?[locale] ??
-                                    'All'),
+                            label: Text(uiStrings['statsOriginalsAll']
+                                    ?[locale] ??
+                                'All'),
                           ),
                           ButtonSegment(
                             value: 'ot',
                             label: Text(
-                                uiStrings['statsBooksOT']?[locale] ??
-                                    'OT'),
+                                uiStrings['statsBooksOT']?[locale] ?? 'OT'),
                           ),
                           ButtonSegment(
                             value: 'nt',
                             label: Text(
-                                uiStrings['statsBooksNT']?[locale] ??
-                                    'NT'),
+                                uiStrings['statsBooksNT']?[locale] ?? 'NT'),
                           ),
                         ],
                         selected: {_filter},
@@ -1981,10 +1972,8 @@ class _BookOriginalsRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final wb = WbColors.of(context);
     final t = WbType.of(context);
-    final localizedName =
-        localeAwareBookName(book.englishBook, locale);
-    final tagFg =
-        _scriptHue(wb, book.isOt ? Colors.indigo : Colors.deepPurple);
+    final localizedName = localeAwareBookName(book.englishBook, locale);
+    final tagFg = _scriptHue(wb, book.isOt ? Colors.indigo : Colors.deepPurple);
     final tagLabel = book.isOt
         ? (uiStrings['statsBooksOT']?[locale] ?? 'OT')
         : (uiStrings['statsBooksNT']?[locale] ?? 'NT');
@@ -2003,7 +1992,8 @@ class _BookOriginalsRow extends StatelessWidget {
                 Text(
                   localizedName,
                   style: TextStyle(
-                    fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
+                    fontFamily: settings.fontFamily,
+                    fontFamilyFallback: kCjkFontFallback,
                     fontSize: t.text + 1,
                     height: t.lineHeight,
                     fontWeight: FontWeight.w600,
@@ -2063,8 +2053,7 @@ class _BookOriginalsRow extends StatelessWidget {
 class _StrongsLookupTab extends StatefulWidget {
   final String locale;
   final AppSettings settings;
-  const _StrongsLookupTab(
-      {required this.locale, required this.settings});
+  const _StrongsLookupTab({required this.locale, required this.settings});
 
   @override
   State<_StrongsLookupTab> createState() => _StrongsLookupTabState();
@@ -2102,15 +2091,13 @@ class _StrongsLookupTabState extends State<_StrongsLookupTab>
                   locale: locale,
                   settings: settings,
                   onPickVerse: () => _openVersePicker(context),
-                  onContinueReading: () =>
-                      _continueReading(context),
+                  onContinueReading: () => _continueReading(context),
                 ),
                 const SizedBox(height: 16),
                 _PopularPassagesCard(
                   locale: locale,
                   settings: settings,
-                  onTap: (book, chapter, verse) =>
-                      _openOriginalsSheetFor(
+                  onTap: (book, chapter, verse) => _openOriginalsSheetFor(
                     context,
                     book: book,
                     chapter: chapter,
@@ -2192,12 +2179,11 @@ class _StrongsLookupTabState extends State<_StrongsLookupTab>
   }) {
     final mp = context.read<MainProvider>();
     final matches = mp.verses
-        .where((v) =>
-            v.book == book && v.chapter == chapter && v.verse == verse)
+        .where(
+            (v) => v.book == book && v.chapter == chapter && v.verse == verse)
         .toList();
     if (matches.isEmpty) {
-      _resolveAndOpen(context,
-          book: book, chapter: chapter, verse: verse);
+      _resolveAndOpen(context, book: book, chapter: chapter, verse: verse);
       return;
     }
     showModalBottomSheet<void>(
@@ -2221,8 +2207,7 @@ class _StrongsLookupTabState extends State<_StrongsLookupTab>
   /// points to. Filters MainProvider.verses; if the verse isn't in
   /// the current version, falls through to _resolveAndOpen which
   /// handles cross-version fallback.
-  void _hopToConcordanceRef(
-      BuildContext context, ConcordanceRef ref) {
+  void _hopToConcordanceRef(BuildContext context, ConcordanceRef ref) {
     final mp = context.read<MainProvider>();
     final localBook = mp.verses.isEmpty
         ? null
@@ -2242,9 +2227,7 @@ class _StrongsLookupTabState extends State<_StrongsLookupTab>
   }
 
   Future<void> _resolveAndOpen(BuildContext context,
-      {required String book,
-      required int chapter,
-      required int verse}) async {
+      {required String book, required int chapter, required int verse}) async {
     final mp = context.read<MainProvider>();
     final ref = BibleReference(
       englishBook: toEnglish(book) ?? book,
@@ -2259,13 +2242,15 @@ class _StrongsLookupTabState extends State<_StrongsLookupTab>
           x.chapter == chapter &&
           x.verse == verse &&
           (x.book == book || toEnglish(x.book) == toEnglish(book)),
-      orElse: () => mp.verses.isNotEmpty ? mp.verses.first : Verse(
-        book: book,
-        chapter: chapter,
-        verse: verse,
-        verseLabel: '$verse',
-        text: '',
-      ),
+      orElse: () => mp.verses.isNotEmpty
+          ? mp.verses.first
+          : Verse(
+              book: book,
+              chapter: chapter,
+              verse: verse,
+              verseLabel: '$verse',
+              text: '',
+            ),
     );
     showModalBottomSheet<void>(
       context: context,
@@ -2298,12 +2283,10 @@ class _StrongsLookupTabState extends State<_StrongsLookupTab>
 class _WordDistributionTab extends StatefulWidget {
   final String locale;
   final AppSettings settings;
-  const _WordDistributionTab(
-      {required this.locale, required this.settings});
+  const _WordDistributionTab({required this.locale, required this.settings});
 
   @override
-  State<_WordDistributionTab> createState() =>
-      _WordDistributionTabState();
+  State<_WordDistributionTab> createState() => _WordDistributionTabState();
 }
 
 class _WordDistributionTabState extends State<_WordDistributionTab>
@@ -2345,8 +2328,7 @@ class _WordDistributionTabState extends State<_WordDistributionTab>
                     uiStrings['statsDistributionHint']?[locale] ??
                         'Pick a Strong\'s word to see its distribution across books, plus word-family + synonym comparison.',
                     style: TextStyle(
-                      fontSize: (settings.fontSize - 3)
-                          .clamp(11.0, 14.0),
+                      fontSize: (settings.fontSize - 3).clamp(11.0, 14.0),
                       color: WbColors.of(context).mutedText,
                       fontStyle: FontStyle.italic,
                       height: 1.4,
@@ -2393,8 +2375,7 @@ class _WordDistributionTabState extends State<_WordDistributionTab>
           locale: widget.locale,
           settings: widget.settings,
           initialQuery: '',
-          onPick: (strongs) =>
-              Navigator.of(sheetCtx).pop(strongs),
+          onPick: (strongs) => Navigator.of(sheetCtx).pop(strongs),
         );
       },
     );
@@ -2589,8 +2570,7 @@ class _StrongsPickerSheetState extends State<_StrongsPickerSheet> {
     final wb = WbColors.of(context);
     final t = WbType.of(context);
     final locale = widget.locale;
-    final allLabel =
-        uiStrings['statsOriginalsAll']?[locale] ?? 'All';
+    final allLabel = uiStrings['statsOriginalsAll']?[locale] ?? 'All';
     Iterable<OriginalsLemma> filtered = widget.allLemmas;
     if (_filter == 'hebrew') {
       filtered = filtered.where((e) => e.isHebrew);
@@ -2642,8 +2622,7 @@ class _StrongsPickerSheetState extends State<_StrongsPickerSheet> {
                   const Spacer(),
                   IconButton(
                     icon: Icon(Icons.close, size: t.text + 6),
-                    onPressed: () =>
-                        Navigator.of(context).maybePop(),
+                    onPressed: () => Navigator.of(context).maybePop(),
                   ),
                 ],
               ),
@@ -2664,8 +2643,7 @@ class _StrongsPickerSheetState extends State<_StrongsPickerSheet> {
                   Expanded(
                     child: SegmentedButton<String>(
                       segments: [
-                        ButtonSegment(
-                            value: 'all', label: Text(allLabel)),
+                        ButtonSegment(value: 'all', label: Text(allLabel)),
                         ButtonSegment(
                           value: 'hebrew',
                           label: Text(uiStrings['statsOriginalsHebrew']
@@ -2689,20 +2667,16 @@ class _StrongsPickerSheetState extends State<_StrongsPickerSheet> {
                   const SizedBox(width: 6),
                   FilterChip(
                     avatar: Icon(
-                      _hideStopwords
-                          ? Icons.filter_alt
-                          : Icons.filter_alt_off,
+                      _hideStopwords ? Icons.filter_alt : Icons.filter_alt_off,
                       size: 16,
                     ),
                     label: Text(
-                      uiStrings['statsOriginalsHideStopwordsTitle']
-                              ?[locale] ??
+                      uiStrings['statsOriginalsHideStopwordsTitle']?[locale] ??
                           'Hide common particles',
                       style: const TextStyle(fontSize: 12),
                     ),
                     selected: _hideStopwords,
-                    onSelected: (v) =>
-                        setState(() => _hideStopwords = v),
+                    onSelected: (v) => setState(() => _hideStopwords = v),
                   ),
                 ],
               ),
@@ -2713,16 +2687,16 @@ class _StrongsPickerSheetState extends State<_StrongsPickerSheet> {
                         child: Text(
                           uiStrings['statsLookupEmpty']?[locale] ??
                               'No matching entries.',
-                          style: TextStyle(
-                              fontSize: t.text, color: wb.mutedText),
+                          style:
+                              TextStyle(fontSize: t.text, color: wb.mutedText),
                         ),
                       )
                     : ListView.builder(
                         itemCount: showRows.length,
                         itemBuilder: (_, i) {
                           final e = showRows[i];
-                          final tagFg = _originalScriptHue(wb,
-                              hebrew: e.isHebrew);
+                          final tagFg =
+                              _originalScriptHue(wb, hebrew: e.isHebrew);
                           return Material(
                             color: i.isOdd ? wb.paneAltBg : wb.paneBg,
                             child: InkWell(
@@ -2732,8 +2706,7 @@ class _StrongsPickerSheetState extends State<_StrongsPickerSheet> {
                               highlightColor: Colors.transparent,
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: WbMetrics.rowPadH,
-                                    vertical: 4),
+                                    horizontal: WbMetrics.rowPadH, vertical: 4),
                                 child: Row(
                                   children: [
                                     WbTag(text: e.strongs, color: tagFg),
@@ -2802,15 +2775,14 @@ class _PassageStudyCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final title = uiStrings['statsLookupPassageTitle']?[locale] ??
-        'Study a passage';
+    final title =
+        uiStrings['statsLookupPassageTitle']?[locale] ?? 'Study a passage';
     final desc = uiStrings['statsLookupPassageDesc']?[locale] ??
         'Pick any verse to see its word-by-word original-language breakdown — same view the reader pops when you tap a verse.';
     final pickLabel =
         uiStrings['statsLookupPickVerse']?[locale] ?? 'Pick a verse';
-    final continueLabel =
-        uiStrings['statsLookupContinueReading']?[locale] ??
-            'Continue from reader';
+    final continueLabel = uiStrings['statsLookupContinueReading']?[locale] ??
+        'Continue from reader';
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
       // `alt` rather than the old `primaryContainer` wash: this card is
@@ -2857,6 +2829,7 @@ class _PassageStudyCard extends StatelessWidget {
 class _PopularPassagesCard extends StatefulWidget {
   final String locale;
   final AppSettings settings;
+
   /// (book, chapter, verse) → caller resolves through
   /// MainProvider.verses + opens the sheet.
   final void Function(String book, int chapter, int verse) onTap;
@@ -2868,8 +2841,7 @@ class _PopularPassagesCard extends StatefulWidget {
   });
 
   @override
-  State<_PopularPassagesCard> createState() =>
-      _PopularPassagesCardState();
+  State<_PopularPassagesCard> createState() => _PopularPassagesCardState();
 }
 
 class _PopularPassagesCardState extends State<_PopularPassagesCard> {
@@ -2886,8 +2858,8 @@ class _PopularPassagesCardState extends State<_PopularPassagesCard> {
     final mp = context.read<MainProvider>();
     final locale = widget.locale;
     final settings = widget.settings;
-    final title = uiStrings['lookupPopularTitle']?[locale] ??
-        'Recent daily verses';
+    final title =
+        uiStrings['lookupPopularTitle']?[locale] ?? 'Recent daily verses';
     final desc = uiStrings['lookupPopularDesc']?[locale] ??
         'Each entry is one of the past few days of daily verse — tap to study it.';
     return WbPanel(
@@ -2958,8 +2930,7 @@ class _PopularPassagesCardState extends State<_PopularPassagesCard> {
         ? parsed.englishBook
         : mp.verses
             .firstWhere(
-              (v) =>
-                  (toEnglish(v.book) ?? v.book) == parsed.englishBook,
+              (v) => (toEnglish(v.book) ?? v.book) == parsed.englishBook,
               orElse: () => mp.verses.first,
             )
             .book;
@@ -3033,7 +3004,8 @@ class _DailyVerseChip extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
+              fontFamily: settings.fontFamily,
+              fontFamilyFallback: kCjkFontFallback,
               fontSize: t.chrome,
               height: t.lineHeight,
               color: wb.mutedText,
@@ -3044,7 +3016,8 @@ class _DailyVerseChip extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
+              fontFamily: settings.fontFamily,
+              fontFamilyFallback: kCjkFontFallback,
               fontSize: t.text,
               height: t.lineHeight,
               fontWeight: FontWeight.w700,
@@ -3079,21 +3052,31 @@ class _ExegesisFeaturesCard extends StatelessWidget {
     final title = uiStrings['lookupFeaturesTitle']?[locale] ??
         'Inside the exegesis sheet';
     final features = <(IconData, String)>[
-      (Icons.translate_rounded,
-          uiStrings['lookupFeatureWords']?[locale] ??
-              'Word-by-word original-language breakdown with transliteration and gloss.'),
-      (Icons.touch_app_rounded,
-          uiStrings['lookupFeatureTap']?[locale] ??
-              'Tap any word for the full Strong\'s entry — meaning, derivation, occurrence count.'),
-      (Icons.diversity_3_rounded,
-          uiStrings['lookupFeatureFamily']?[locale] ??
-              'Word family + synonym comparison — see related lemmas at a glance.'),
-      (Icons.format_list_numbered_rounded,
-          uiStrings['lookupFeatureConcordance']?[locale] ??
-              'Tappable concordance — every verse the word appears in, one tap to navigate.'),
-      (Icons.copy_rounded,
-          uiStrings['lookupFeatureCopy']?[locale] ??
-              'Copy the interlinear table to clipboard for sermon prep or notes.'),
+      (
+        Icons.translate_rounded,
+        uiStrings['lookupFeatureWords']?[locale] ??
+            'Word-by-word original-language breakdown with transliteration and gloss.'
+      ),
+      (
+        Icons.touch_app_rounded,
+        uiStrings['lookupFeatureTap']?[locale] ??
+            'Tap any word for the full Strong\'s entry — meaning, derivation, occurrence count.'
+      ),
+      (
+        Icons.diversity_3_rounded,
+        uiStrings['lookupFeatureFamily']?[locale] ??
+            'Word family + synonym comparison — see related lemmas at a glance.'
+      ),
+      (
+        Icons.format_list_numbered_rounded,
+        uiStrings['lookupFeatureConcordance']?[locale] ??
+            'Tappable concordance — every verse the word appears in, one tap to navigate.'
+      ),
+      (
+        Icons.copy_rounded,
+        uiStrings['lookupFeatureCopy']?[locale] ??
+            'Copy the interlinear table to clipboard for sermon prep or notes.'
+      ),
     ];
     return WbPanel(
       icon: Icons.lightbulb_outline,
@@ -3173,9 +3156,7 @@ class _VersePickerSheetState extends State<_VersePickerSheet> {
       final en = toEnglish(v.book) ?? v.book;
       set.add(en);
     }
-    final ordered = standardBookOrder
-        .where((b) => set.contains(b))
-        .toList();
+    final ordered = standardBookOrder.where((b) => set.contains(b)).toList();
     return ordered;
   }
 
@@ -3258,8 +3239,7 @@ class _VersePickerSheetState extends State<_VersePickerSheet> {
               else
                 Expanded(
                   child: _NumberGrid(
-                    label:
-                        '${_displayBook(_book!)} ${_chapter!}',
+                    label: '${_displayBook(_book!)} ${_chapter!}',
                     numbers: _versesFor(_book!, _chapter!),
                     onPick: (v) => Navigator.of(context)
                         .pop(_PickedRef(_book!, _chapter!, v)),
@@ -3298,10 +3278,8 @@ class _PickerHeader extends StatelessWidget {
     final stepText = step == 1
         ? (uiStrings['statsLookupStepBook']?[locale] ?? 'Pick a book')
         : step == 2
-            ? (uiStrings['statsLookupStepChapter']?[locale] ??
-                'Pick a chapter')
-            : (uiStrings['statsLookupStepVerse']?[locale] ??
-                'Pick a verse');
+            ? (uiStrings['statsLookupStepChapter']?[locale] ?? 'Pick a chapter')
+            : (uiStrings['statsLookupStepVerse']?[locale] ?? 'Pick a verse');
     return Row(
       children: [
         if (onBack != null)
@@ -3315,8 +3293,7 @@ class _PickerHeader extends StatelessWidget {
         Expanded(
           child: Text(
             stepText,
-            style: const TextStyle(
-                fontSize: 16, fontWeight: FontWeight.w600),
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
           ),
         ),
         Text(
@@ -3405,8 +3382,7 @@ class _NumberGrid extends StatelessWidget {
                     // longest book Psalms 119 (verse 176).
                     width: 56,
                     child: ChoiceChip(
-                      labelPadding: const EdgeInsets.symmetric(
-                          horizontal: 2),
+                      labelPadding: const EdgeInsets.symmetric(horizontal: 2),
                       label: Center(
                         child: FittedBox(
                           fit: BoxFit.scaleDown,
