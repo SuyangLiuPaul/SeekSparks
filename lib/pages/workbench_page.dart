@@ -622,12 +622,21 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         mp.currentVersion.toUpperCase(),
         onTap: () => _pickParallelVersions(context),
       ),
-      // Names the centre mode, and cycles it on tap. Split is skipped in
-      // the cycle when it does not fit, so the field can never land the
-      // reader on a mode the layout refuses and leave the label lying
-      // about what is on screen.
+      // Names the centre mode, and cycles it on tap.
+      //
+      // Deliberately the EFFECTIVE mode, not the stored preference. A
+      // reader who chose split and then narrowed the window is looking
+      // at one column; labelling that "Split" would make the one field
+      // whose whole job is to say what is on screen the only one that
+      // lies. The preference itself is untouched and comes back when
+      // the room does.
       WbStatusField(
-        switch (_wb.centreMode) {
+        switch (effectiveCentreMode(
+          preferred: _wb.centreMode,
+          centreWidth: _paneWidths(MediaQuery.sizeOf(context).width).centre,
+          threePane: ResponsiveBreakpoints.isDesktopOrWider(
+              MediaQuery.sizeOf(context).width),
+        )) {
           WbCentreMode.browse => s('parallelBrowseShort', 'Browse'),
           WbCentreMode.reader => s('classicReaderShort', 'Reader'),
           WbCentreMode.split => s('splitViewShort', 'Split'),
@@ -740,7 +749,16 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
       WbCentreMode.reader,
       if (splitFitsIn(centre)) WbCentreMode.split,
     ]..removeWhere((m) => m == WbCentreMode.browse && !threePane);
-    final at = order.indexOf(_wb.centreMode);
+    // Cycle from what is on screen, not from what is stored. They differ
+    // exactly when a saved mode does not fit, and starting from the
+    // stored one would step off a mode the reader cannot see — and would
+    // return -1 here, silently restarting the cycle from the top.
+    final showing = effectiveCentreMode(
+      preferred: _wb.centreMode,
+      centreWidth: centre,
+      threePane: threePane,
+    );
+    final at = order.indexOf(showing);
     return order[(at + 1) % order.length];
   }
 

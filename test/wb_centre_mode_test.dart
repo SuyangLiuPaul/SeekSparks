@@ -128,6 +128,34 @@ void main() {
           WbCentreMode.split);
     });
 
+    test('the result is always a mode the same rules would keep', () {
+      // The status bar labels — and the status bar's tap cycle starts
+      // from — whatever this returns. If it could hand back a mode that
+      // does not fit, the one field whose job is to say what is on
+      // screen would be the field that lies about it.
+      for (final preferred in WbCentreMode.values) {
+        for (final centre in const [0.0, 480.0, 975.0, 976.0, 1400.0]) {
+          for (final threePane in const [true, false]) {
+            final got = effectiveCentreMode(
+              preferred: preferred,
+              centreWidth: centre,
+              threePane: threePane,
+            );
+            expect(
+              effectiveCentreMode(
+                preferred: got,
+                centreWidth: centre,
+                threePane: threePane,
+              ),
+              got,
+              reason: '$preferred @ $centre/$threePane resolved to $got, '
+                  'which does not survive its own rules',
+            );
+          }
+        }
+      }
+    });
+
     test('a fallback never rewrites the preference it fell back from', () {
       // The wish survives the narrow window: same preferred value, a
       // wider centre, and split is back without the reader re-picking it.
