@@ -4622,6 +4622,21 @@ const uiStrings = {
     'en': 'Treasury of Scripture Knowledge (TSK) cross-references',
   },
   // ── Workbench: menu bar, toolbar, status bar ──
+  'analysisPinned': {
+    'zh-Hans': '已固定',
+    'zh-Hant': '已固定',
+    'en': 'Pinned',
+  },
+  'analysisUnpin': {
+    'zh-Hans': '取消固定',
+    'zh-Hant': '取消固定',
+    'en': 'Unpin',
+  },
+  'analysisUnpinHint': {
+    'zh-Hans': '取消固定 — 或按 Esc，或再点一次该词',
+    'zh-Hant': '取消固定 — 或按 Esc，或再點一次該詞',
+    'en': 'Release the pin — or press Esc, or click the word again',
+  },
   'analysisFrozen': {
     'zh-Hans': '已冻结 — Shift',
     'zh-Hant': '已凍結 — Shift',

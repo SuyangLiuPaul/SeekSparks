@@ -26,6 +26,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:seeksparks/models/app_settings.dart';
+import 'package:seeksparks/utils/analysis_focus.dart';
 
 /// Metrics shared by every Workbench surface. Numbers, not opinions —
 /// they exist so panes stay on the same rhythm instead of each picking
@@ -76,6 +77,7 @@ class WbColors extends ThemeExtension<WbColors> {
     required this.hoverBg,
     required this.strongsLexical,
     required this.strongsGrammar,
+    required this.pinMark,
   });
 
   /// Background of a content pane (Browse, Search list, Analysis).
@@ -110,6 +112,15 @@ class WbColors extends ThemeExtension<WbColors> {
   final Color strongsLexical;
   final Color strongsGrammar;
 
+  /// The border drawn round a PINNED word. Its own field rather than
+  /// [accent], because a pin has to be legible on all three palettes
+  /// and one gold is not: #C9A227 on paper's tan [selectionBg] measures
+  /// 1.54:1, which is a marker you cannot see. These three are 3.98 /
+  /// 6.67 / 4.13:1 against the fill they sit on — above the 3:1 that
+  /// non-text UI needs — while all still reading as the app's gold, so
+  /// "pinned is gold" holds whichever theme the reader is in.
+  final Color pinMark;
+
   /// The mark's gold. The single accent, used sparingly — an active
   /// toggle, a focused row — the way the icon uses it on the page.
   Color get accent => const Color(0xFFC9A227);
@@ -130,6 +141,7 @@ class WbColors extends ThemeExtension<WbColors> {
     hoverBg: Color(0xFFEFF2F7),
     strongsLexical: Color(0xFF1E7A3C),
     strongsGrammar: Color(0xFF1B57C4),
+    pinMark: Color(0xFF8A6A12),
   );
 
   static const dark = WbColors(
@@ -145,6 +157,7 @@ class WbColors extends ThemeExtension<WbColors> {
     hoverBg: Color(0xFF1D2C46),
     strongsLexical: Color(0xFF5FC183),
     strongsGrammar: Color(0xFF77A6F0),
+    pinMark: Color(0xFFE8C24A),
   );
 
   /// 2026-08: 护眼纸质 — the "easy-on-eyes" paper palette, used when
@@ -172,6 +185,7 @@ class WbColors extends ThemeExtension<WbColors> {
     hoverBg: Color(0xFFEFE5C9),
     strongsLexical: Color(0xFF1E7A3C),
     strongsGrammar: Color(0xFF1B57C4),
+    pinMark: Color(0xFF7A5C0A),
   );
 
   @override
@@ -187,6 +201,7 @@ class WbColors extends ThemeExtension<WbColors> {
     Color? hoverBg,
     Color? strongsLexical,
     Color? strongsGrammar,
+    Color? pinMark,
   }) =>
       WbColors(
         paneBg: paneBg ?? this.paneBg,
@@ -200,6 +215,7 @@ class WbColors extends ThemeExtension<WbColors> {
         hoverBg: hoverBg ?? this.hoverBg,
         strongsLexical: strongsLexical ?? this.strongsLexical,
         strongsGrammar: strongsGrammar ?? this.strongsGrammar,
+        pinMark: pinMark ?? this.pinMark,
       );
 
   @override
@@ -218,6 +234,7 @@ class WbColors extends ThemeExtension<WbColors> {
       strongsLexical:
           Color.lerp(strongsLexical, other.strongsLexical, t)!,
       strongsGrammar: Color.lerp(strongsGrammar, other.strongsGrammar, t)!,
+      pinMark: Color.lerp(pinMark, other.pinMark, t)!,
     );
   }
 
@@ -241,7 +258,8 @@ class WbColors extends ThemeExtension<WbColors> {
           other.selectionBg == selectionBg &&
           other.hoverBg == hoverBg &&
           other.strongsLexical == strongsLexical &&
-          other.strongsGrammar == strongsGrammar);
+          other.strongsGrammar == strongsGrammar &&
+          other.pinMark == pinMark);
 
   @override
   int get hashCode => Object.hash(
@@ -256,11 +274,41 @@ class WbColors extends ThemeExtension<WbColors> {
         hoverBg,
         strongsLexical,
         strongsGrammar,
+        pinMark,
       );
 
   static WbColors of(BuildContext context) =>
       Theme.of(context).extension<WbColors>() ?? light;
 }
+
+/// The box drawn behind one word in the Browse window.
+///
+/// One function owns all four states so they cannot drift apart, which
+/// is the only way "three treatments, no ambiguity" survives the next
+/// person to touch the file. They differ on two axes at once — fill
+/// strength and border — so no pair rests on a single cue:
+///
+///   none    no fill,      no border
+///   hit     fill at 55%,  no border    (+ bold text)
+///   hover   fill at 100%, no border    (+ underline)
+///   pinned  fill at 100%, gold border  (+ underline)
+///
+/// The border is always present and only its colour changes. A border
+/// that appeared on click would widen the word by 3px and reflow the
+/// line under the reader's own pointer, which reads as the text
+/// flinching away from them.
+BoxDecoration wordMarkDecoration(WordMark mark, WbColors wb) => BoxDecoration(
+      color: switch (mark) {
+        WordMark.none => null,
+        WordMark.hit => wb.selectionBg.withValues(alpha: 0.55),
+        WordMark.hover || WordMark.pinned => wb.selectionBg,
+      },
+      border: Border.all(
+        width: 1.5,
+        color: mark == WordMark.pinned ? wb.pinMark : Colors.transparent,
+      ),
+      borderRadius: BorderRadius.circular(2),
+    );
 
 /// Per-version tag colour. BibleWorks prints a short version code at the
 /// start of every line in a saturated colour, and that single device is

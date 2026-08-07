@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show HardwareKeyboard;
+import 'package:flutter/services.dart'
+    show HardwareKeyboard, KeyDownEvent, KeyEvent, LogicalKeyboardKey;
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -39,9 +40,11 @@ import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
 import 'package:seeksparks/widgets/bible_reading_pane.dart';
 import 'package:seeksparks/widgets/command_pane.dart';
 import 'package:seeksparks/pages/strongs_entry_page.dart';
+import 'package:seeksparks/utils/analysis_focus.dart';
 import 'package:seeksparks/utils/app_nav.dart';
 import 'package:seeksparks/utils/strongs_inline.dart';
 import 'package:seeksparks/utils/search_highlight.dart';
+import 'package:seeksparks/widgets/analysis_pin_bar.dart';
 import 'package:seeksparks/widgets/analysis_tabs.dart';
 import 'package:seeksparks/widgets/verse_list_pane.dart';
 import 'package:seeksparks/utils/verse_list.dart' show VerseRef, verseListKeys;
@@ -186,6 +189,23 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
   /// the text, so you can move the mouse onto the pane and read it.
   BrowseHover? _analysisWord;
 
+  /// The occurrence the reader has COMMITTED to, or null.
+  ///
+  /// Hover is a preview and a click is a commitment. Until this was
+  /// here, the Analysis pane's own content was unreachable: it filled
+  /// with statistics about the word under the pointer, and the instant
+  /// the reader moved toward the pane to read them, the pointer crossed
+  /// the rest of the line and replaced the thing they were reaching
+  /// for. The feature destroyed itself in the act of being used.
+  ///
+  /// A pin outlives navigation on purpose. Clicking a reference inside
+  /// the Analysis pane moves the Browse window, and if that dropped the
+  /// pin the pane would reset — the same defect wearing a hat. The key
+  /// carries its book and chapter, so nothing on the new page can be
+  /// mistaken for the pinned word; the pin bar is then the only visible
+  /// trace of it, which is exactly why the bar is not optional.
+  String? _pinnedKey;
+
   /// True while Shift is held. From the manual: "If you hold down the
   /// Shift key as you move the mouse cursor the content of the Word
   /// Analysis Window will not change." It is the brake that makes a
@@ -203,10 +223,31 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
     _wb = WorkbenchProvider(mainProvider: context.read<MainProvider>());
     _wb.onBrowseStateChanged = _persistPrefs;
     _restorePrefs();
+    HardwareKeyboard.instance.addHandler(_onGlobalKey);
+  }
+
+  /// Esc releases the pin.
+  ///
+  /// A global handler rather than a `Shortcuts` wrapper because Flutter
+  /// routes key events from the focused node upward: with nothing
+  /// focused — the normal state of a pane you drive with the mouse —
+  /// an ancestor `Shortcuts` never sees the key at all, so the one
+  /// escape hatch would work only after the reader had clicked into the
+  /// command line. Guarded on the route being current so a pushed page
+  /// or a dialog keeps its own Esc, and it always returns false: this
+  /// observes the key, it does not consume it.
+  bool _onGlobalKey(KeyEvent e) {
+    if (e is! KeyDownEvent) return false;
+    if (e.logicalKey != LogicalKeyboardKey.escape) return false;
+    if (!mounted || _pinnedKey == null) return false;
+    if (ModalRoute.of(context)?.isCurrent != true) return false;
+    _unpin();
+    return false;
   }
 
   @override
   void dispose() {
+    HardwareKeyboard.instance.removeHandler(_onGlobalKey);
     _commandFocus.dispose();
     _wb.dispose();
     super.dispose();
@@ -853,10 +894,17 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
                     // A hit list without marked hits is a table of
                     // contents — you still have to hunt the line.
                     highlight: highlightsForQuery(_wb.lastQuery),
-                    onWordTap: (w, g) => _selectWord(w, g, book, verse),
+                    onWordTap: _selectWord,
                     onWordHover: _onWordHover,
-                    onVerseTap: (n) =>
-                        _moveBrowseCursor(localBook!, chapter, n),
+                    pinnedKey: _pinnedKey,
+                    // Clicking anywhere in the text that is not a word
+                    // is the "click empty space" release. It doubles as
+                    // moving the cursor, which is fine: both are the
+                    // reader deliberately looking somewhere else.
+                    onVerseTap: (n) {
+                      _unpin();
+                      _moveBrowseCursor(localBook!, chapter, n);
+                    },
                   ),
           ),
         ],
@@ -864,25 +912,58 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
     );
   }
 
-  /// A word was tapped. On a pad there is no hover at all, so tap has to
-  /// do hover's whole job: latch the word AND bring the Word Study tab
-  /// forward, since a readout behind an unselected tab looks broken.
-  /// The full lexicon entry stays one click further in, from the pane.
-  void _selectWord(
-      OriginalWord w, List<String> grammar, String? book, int verse) {
-    final locale = context.read<AppSettings>().locale;
-    final label = book == null
-        ? ''
-        : '${localeAwareBookName(book, locale, context.read<MainProvider>().currentVersion)} '
-            '${context.read<MainProvider>().currentChapter}:$verse';
+  /// A word was tapped: pin it, or release it if it was already pinned.
+  ///
+  /// On a pad there is no hover at all, so tap also has to do hover's
+  /// whole job — latch the word and bring a tab forward that shows it,
+  /// since a readout behind an unselected tab looks broken.
+  void _selectWord(BrowseHover h) {
+    final focus = AnalysisFocus(pinnedKey: _pinnedKey);
+    final key = h.occurrence;
+    if (key == null) return;
+
+    // Releasing must ONLY release. Letting the second click also swap
+    // tabs would make unpinning cost the reader the pane they were
+    // reading, which is the defect this whole feature exists to fix.
+    if (focus.tapWouldUnpin(key)) {
+      _unpin();
+      return;
+    }
+
     setState(() {
-      _analysisWord = BrowseHover(
-          word: w, reference: label, verse: verse, grammar: grammar);
+      _pinnedKey = key;
+      _analysisWord = h;
       _analysisFrozen = false;
-      _analysisTab = AnalysisTab.wordStudy;
+      // Only tabs that answer "what is THIS word" get pulled forward,
+      // and only when the reader is not already on one. Clicking is now
+      // the primary gesture, so yanking someone off KWIC or Morphology
+      // every time they pinned a word would be a new defect of exactly
+      // the kind we are removing.
+      if (!_wordDrivenTabs.contains(_analysisTab)) {
+        _analysisTab = AnalysisTab.wordStudy;
+      }
       _rightOpen = true;
     });
     _persistPrefs();
+  }
+
+  /// Analysis tabs whose subject is the word rather than the verse.
+  static const _wordDrivenTabs = {
+    AnalysisTab.wordStudy,
+    AnalysisTab.kwic,
+    AnalysisTab.morphology,
+  };
+
+  /// Release the pin. Reachable four ways — clicking the pinned word
+  /// again, the pin bar's button, Esc, and clicking anywhere else in
+  /// the Browse text — because a reader who cannot find the way out of
+  /// a state stops entering it.
+  ///
+  /// The latched word stays: hover simply resumes, and blanking the
+  /// pane on unpin would punish the reader for letting go.
+  void _unpin() {
+    if (_pinnedKey == null) return;
+    setState(() => _pinnedKey = null);
   }
 
   /// The pointer moved onto (or off) an original-language word.
@@ -892,8 +973,15 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
   /// word. Shift suspends the latch.
   void _onWordHover(BrowseHover? h) {
     final frozen = HardwareKeyboard.instance.isShiftPressed;
-    final next = (h != null && !frozen) ? h : _analysisWord;
+    final focus = AnalysisFocus(pinnedKey: _pinnedKey);
+    final next = (h != null && focus.acceptsHoverUpdate(shiftHeld: frozen))
+        ? h
+        : _analysisWord;
+    // Occurrence is part of identity, not just the Strong's number: a
+    // verse can print the same number twice, and without this the
+    // pointer moving from one to the other is treated as no movement.
     bool same(BrowseHover? a, BrowseHover? b) =>
+        a?.occurrence == b?.occurrence &&
         a?.word?.strongs == b?.word?.strongs &&
         a?.reference == b?.reference &&
         a?.verse == b?.verse;
@@ -1063,6 +1151,16 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
               _persistPrefs();
             },
           ),
+          // Below the tab strip, not above it: the pin governs what
+          // every tab is looking at, so it belongs with the content
+          // rather than with the tab chooser.
+          if (_pinnedKey != null && _analysisWord != null)
+            AnalysisPinBar(
+              word: _analysisWord!.word?.text ?? '',
+              reference: _analysisWord!.reference,
+              locale: locale,
+              onUnpin: _unpin,
+            ),
           const Divider(height: 1),
           Expanded(
             // The hint is for "nothing to analyse yet" — NOT for "no

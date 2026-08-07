@@ -28,6 +28,7 @@ import 'package:seeksparks/constants/bible_versions.dart'
     show shortBibleVersionLabel;
 import 'package:seeksparks/constants/book_names.dart' show bookNameToEnglish;
 import 'package:seeksparks/constants/workbench_theme.dart';
+import 'package:seeksparks/utils/analysis_focus.dart';
 import 'package:seeksparks/utils/scripture_markup.dart';
 import 'package:seeksparks/utils/search_highlight.dart';
 import 'package:seeksparks/models/app_settings.dart';
@@ -94,7 +95,13 @@ class BrowseHover {
     required this.verse,
     this.word,
     this.grammar = const [],
+    this.occurrence,
   });
+
+  /// Which printed occurrence this is — see [browseWordKey]. Null for a
+  /// verse-level hover, which names no single word and so can never be
+  /// pinned.
+  final String? occurrence;
 
   /// Null for a verse-level hover (a translation line).
   final OriginalWord? word;
@@ -117,6 +124,7 @@ class BrowseWindow extends StatefulWidget {
     this.onWordTap,
     this.onWordHover,
     this.onVerseTap,
+    this.pinnedKey,
     this.highlight = const SearchHighlight(),
   });
 
@@ -135,12 +143,21 @@ class BrowseWindow extends StatefulWidget {
   /// which case every span renders plain and this costs nothing.
   final SearchHighlight highlight;
 
-  final void Function(OriginalWord word, List<String> grammar)?
-      onWordTap;
+  /// A word was clicked. Carries the same payload as a hover — notably
+  /// the tapped word's OWN verse, which the old `(word, grammar)`
+  /// signature could not express: the caller had to supply a verse from
+  /// its enclosing scope and supplied the workspace CURSOR verse, so
+  /// clicking a word in v5 while the cursor sat on v3 filed it under v3
+  /// and pointed every verse-keyed Analysis tab at the wrong verse.
+  final void Function(BrowseHover hover)? onWordTap;
 
   /// Null is passed when the pointer leaves a word, so the status bar
   /// can clear.
   final void Function(BrowseHover? hover)? onWordHover;
+
+  /// The occurrence the reader has pinned, or null. Drawn with a gold
+  /// border; see [wordMarkDecoration].
+  final String? pinnedKey;
 
   final void Function(int verse)? onVerseTap;
 
@@ -391,6 +408,8 @@ class _BrowseWindowState extends State<BrowseWindow> {
                 focused: rows[i].verse == widget.focusedVerse,
                 highlight: widget.highlight,
                 glosses: _glosses,
+                keyPrefix: browseKeyPrefix(widget.book, widget.chapter),
+                pinnedKey: widget.pinnedKey,
                 onWordTap: widget.onWordTap,
                 onWordHover: widget.onWordHover,
                 onTap: widget.onVerseTap == null
@@ -411,6 +430,8 @@ class _RowView extends StatelessWidget {
     required this.row,
     required this.focused,
     required this.glosses,
+    required this.keyPrefix,
+    this.pinnedKey,
     this.onWordTap,
     this.onWordHover,
     this.onTap,
@@ -421,8 +442,12 @@ class _RowView extends StatelessWidget {
   final bool focused;
   final SearchHighlight highlight;
   final Map<String, StrongsEntry?> glosses;
-  final void Function(OriginalWord word, List<String> grammar)?
-      onWordTap;
+
+  /// "Genesis|1" — the book and chapter half of every [browseWordKey]
+  /// this row hands out.
+  final String keyPrefix;
+  final String? pinnedKey;
+  final void Function(BrowseHover hover)? onWordTap;
   final void Function(BrowseHover? hover)? onWordHover;
   final VoidCallback? onTap;
 
@@ -454,6 +479,8 @@ class _RowView extends StatelessWidget {
                   ? _OriginalsLine(
                       row: row,
                       glosses: glosses,
+                      keyPrefix: keyPrefix,
+                      pinnedKey: pinnedKey,
                       showNumbers: settings.showStrongsInOriginals,
                       onWordTap: onWordTap,
                       onWordHover: onWordHover,
@@ -465,6 +492,8 @@ class _RowView extends StatelessWidget {
                           row: row,
                           highlight: highlight,
                           glosses: glosses,
+                          keyPrefix: keyPrefix,
+                          pinnedKey: pinnedKey,
                           showNumbers: settings.showStrongsInOriginals,
                           onWordTap: onWordTap,
                           onWordHover: onWordHover,
@@ -595,6 +624,8 @@ class _TaggedLine extends StatelessWidget {
   const _TaggedLine({
     required this.row,
     required this.glosses,
+    required this.keyPrefix,
+    required this.pinnedKey,
     required this.showNumbers,
     this.highlight = const SearchHighlight(),
     this.onWordTap,
@@ -605,9 +636,10 @@ class _TaggedLine extends StatelessWidget {
 
   final _BrowseRow row;
   final Map<String, StrongsEntry?> glosses;
+  final String keyPrefix;
+  final String? pinnedKey;
   final bool showNumbers;
-  final void Function(OriginalWord word, List<String> grammar)?
-      onWordTap;
+  final void Function(BrowseHover hover)? onWordTap;
   final void Function(BrowseHover? hover)? onWordHover;
 
   @override
@@ -633,7 +665,7 @@ class _TaggedLine extends StatelessWidget {
         Expanded(
           child: Wrap(
             children: [
-              for (final r in runs)
+              for (final (i, r) in runs.indexed)
                 if (r.isTagged)
                   _HoverWord(
                     // A Strong's query marks the word carrying the
@@ -644,6 +676,13 @@ class _TaggedLine extends StatelessWidget {
                     word: OriginalWord(text: r.text, strongs: r.strongs),
                     reference: row.reference,
                     verse: row.verse,
+                    occurrence: browseWordKey(
+                      prefix: keyPrefix,
+                      versionCode: row.label,
+                      verse: row.verse,
+                      index: i,
+                    ),
+                    pinnedKey: pinnedKey,
                     entry: glosses[r.strongs],
                     grammar: r.grammar,
                     implied: r.implied,
@@ -684,6 +723,8 @@ class _OriginalsLine extends StatelessWidget {
   const _OriginalsLine({
     required this.row,
     required this.glosses,
+    required this.keyPrefix,
+    required this.pinnedKey,
     required this.showNumbers,
     this.onWordTap,
     this.onWordHover,
@@ -691,9 +732,10 @@ class _OriginalsLine extends StatelessWidget {
 
   final _BrowseRow row;
   final Map<String, StrongsEntry?> glosses;
+  final String keyPrefix;
+  final String? pinnedKey;
   final bool showNumbers;
-  final void Function(OriginalWord word, List<String> grammar)?
-      onWordTap;
+  final void Function(BrowseHover hover)? onWordTap;
   final void Function(BrowseHover? hover)? onWordHover;
 
   @override
@@ -726,11 +768,18 @@ class _OriginalsLine extends StatelessWidget {
               spacing: 5,
               runSpacing: 1,
               children: [
-                for (final w in words)
+                for (final (i, w) in words.indexed)
                   _HoverWord(
                     word: w,
                     reference: row.reference,
                     verse: row.verse,
+                    occurrence: browseWordKey(
+                      prefix: keyPrefix,
+                      versionCode: row.label,
+                      verse: row.verse,
+                      index: i,
+                    ),
+                    pinnedKey: pinnedKey,
                     entry: glosses[w.strongs],
                     showNumbers: showNumbers,
                     onTap: onWordTap,
@@ -751,6 +800,8 @@ class _HoverWord extends StatefulWidget {
     required this.reference,
     required this.verse,
     required this.entry,
+    required this.occurrence,
+    required this.pinnedKey,
     this.grammar = const [],
     this.implied = const [],
     this.showNumbers = false,
@@ -766,6 +817,12 @@ class _HoverWord extends StatefulWidget {
   final OriginalWord word;
   final String reference;
   final int verse;
+
+  /// This word's stable identity — see [browseWordKey].
+  final String occurrence;
+
+  /// The occurrence the reader pinned, anywhere in the window.
+  final String? pinnedKey;
 
   /// Prefetched lexicon entry, used to build the hover popup. Null when
   /// the number is missing from the lexicon — the popup then shows just
@@ -788,7 +845,7 @@ class _HoverWord extends StatefulWidget {
   /// Translation text renders at body size in the body colour; only the
   /// originals line gets the larger original-script treatment.
   final bool translation;
-  final void Function(OriginalWord word, List<String> grammar)? onTap;
+  final void Function(BrowseHover hover)? onTap;
   final void Function(BrowseHover? hover)? onHover;
 
   @override
@@ -797,6 +854,14 @@ class _HoverWord extends StatefulWidget {
 
 class _HoverWordState extends State<_HoverWord> {
   bool _hovering = false;
+
+  BrowseHover _asHover() => BrowseHover(
+        word: widget.word,
+        reference: widget.reference,
+        verse: widget.verse,
+        grammar: widget.grammar,
+        occurrence: widget.occurrence,
+      );
 
   /// The popup BibleWorks shows beside the cursor: Strong's number, the
   /// word itself in the accent colour, its transliteration, then the
@@ -865,6 +930,10 @@ class _HoverWordState extends State<_HoverWord> {
   Widget build(BuildContext context) {
     final wb = WbColors.of(context);
     final t = WbType.of(context);
+    final mark = AnalysisFocus(
+      pinnedKey: widget.pinnedKey,
+      hoverKey: _hovering ? widget.occurrence : null,
+    ).markFor(widget.occurrence, hit: widget.hit);
     return Tooltip(
       richMessage: _popup(context),
       // A pale bordered box, not Material's dark rounded bubble.
@@ -889,12 +958,7 @@ class _HoverWordState extends State<_HoverWord> {
         cursor: SystemMouseCursors.click,
         onEnter: (_) {
           setState(() => _hovering = true);
-          widget.onHover?.call(BrowseHover(
-            word: widget.word,
-            reference: widget.reference,
-            verse: widget.verse,
-            grammar: widget.grammar,
-          ));
+          widget.onHover?.call(_asHover());
         },
         onExit: (_) {
           setState(() => _hovering = false);
@@ -903,14 +967,10 @@ class _HoverWordState extends State<_HoverWord> {
         child: GestureDetector(
           onTap: widget.onTap == null
               ? null
-              : () => widget.onTap!(widget.word, widget.grammar),
+              : () => widget.onTap!(_asHover()),
           behavior: HitTestBehavior.opaque,
           child: Container(
-            // Hover wins over a search hit — the pointer is a live
-            // signal, the hit is standing state.
-            color: _hovering
-                ? wb.selectionBg
-                : (widget.hit ? wb.selectionBg.withValues(alpha: 0.55) : null),
+            decoration: wordMarkDecoration(mark, wb),
             child: Text.rich(
               TextSpan(children: [
                 // 2026-08-06: a tagged run can itself be a supplied
@@ -958,10 +1018,15 @@ class _HoverWordState extends State<_HoverWord> {
                 color: wb.text,
                 fontFamilyFallback: kCjkFontFallback,
                 // Underline on hover, so touch users (who get no hover)
-                // and mouse users both see that words are live.
-                decoration:
-                    _hovering ? TextDecoration.underline : TextDecoration.none,
-                decorationColor: wb.link,
+                // and mouse users both see that words are live. The pin
+                // keeps it: a pinned word is the one the reader is
+                // working on and must not look deader than the one
+                // their pointer happens to be crossing.
+                decoration: mark == WordMark.none || mark == WordMark.hit
+                    ? TextDecoration.none
+                    : TextDecoration.underline,
+                decorationColor:
+                    mark == WordMark.pinned ? wb.pinMark : wb.link,
               ),
             ),
           ),
