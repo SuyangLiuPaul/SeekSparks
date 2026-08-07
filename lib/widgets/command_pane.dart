@@ -7,6 +7,7 @@ import 'package:seeksparks/constants/bible_versions.dart'
 import 'package:seeksparks/constants/text_patterns.dart';
 import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/constants/workbench_theme.dart';
+import 'package:seeksparks/models/wb_centre_mode.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/verse.dart';
 import 'package:seeksparks/providers/workbench_provider.dart';
@@ -224,11 +225,11 @@ class _CommandPaneState extends State<CommandPane> {
         // the app, so it is not part of the parallel list.
         wb.setParallelVersions(
             stack.where((c) => c != mp.currentVersion).toList());
-        wb.setParallelMode(true);
+        wb.setCentreMode(WbCentreMode.browse);
         wb.showVerbNotice(describeDisplayStack(
             [for (final c in stack) shortBibleVersionLabel(c)], locale));
       case CommandVerbKind.browseOn:
-        wb.setParallelMode(true);
+        wb.setCentreMode(WbCentreMode.browse);
         wb.showVerbNotice(
             uiStrings['cmdvBrowseOn']?[locale] ?? 'Browse view.');
       case CommandVerbKind.limitSet:

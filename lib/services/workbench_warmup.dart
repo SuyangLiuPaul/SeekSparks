@@ -9,7 +9,7 @@
 /// * warm HTTP cache — every boot asset, including the 7 MB reading
 ///   version, finished by ~1.0 s; the splash then held until ~4.15 s;
 ///   the Browse pane painted a BLANK centre at 4.16 s and filled at
-///   ~4.6 s. The chapter reader (`parallelMode == false`) had no blank
+///   ~4.6 s. The chapter reader (`WbCentreMode.reader`) had no blank
 ///   frame at all.
 /// * cold cache, 12 Mbps — the workbench appeared at ~11.4 s, and only
 ///   THEN did the Browse pane start fetching `bsb.json` + `kjv.json` +
@@ -40,17 +40,17 @@ library;
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:seeksparks/constants/bible_versions.dart'
+    show kSecondaryVersionKey, resolveSecondaryVersion;
 import 'package:seeksparks/constants/book_names.dart' show bookNameToEnglish;
+import 'package:seeksparks/models/wb_centre_mode.dart';
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/services/originals_service.dart';
 import 'package:seeksparks/services/strongs_service.dart';
 import 'package:seeksparks/services/tagged_text_service.dart';
 
-/// SharedPreferences key for "is the centre pane the Browse stack".
-///
-/// Shared with `WorkbenchPage` rather than duplicated: the warm-up runs
-/// before the page is mounted and has to read the same value the page
-/// will restore, and two copies of a key string drift silently.
+/// The bool that `workbench.centreMode.v1` replaced. Still read once, so
+/// a reader who had chosen the chapter reader keeps it; never written.
 const String kWorkbenchParallelModeKey = 'workbench.browseMode.v2';
 
 /// SharedPreferences key for the comparison editions in the Browse stack.
@@ -84,16 +84,25 @@ List<String> defaultParallelVersions(String locale) {
 /// Returns empty when the centre pane is the chapter reader: that pane
 /// renders from `MainProvider.verses` and needs nothing else.
 List<String> browseWarmupOrder({
-  required bool parallelMode,
+  required WbCentreMode mode,
   required String readingVersion,
   required List<String> parallelVersions,
+  required String splitSecondaryVersion,
   required bool Function(String code) isCached,
 }) {
-  if (!parallelMode) return const [];
+  // What the pane will ask for a second from now, and nothing else. The
+  // Browse stack wants every comparison edition; split wants exactly the
+  // one in its second column; the chapter reader wants none.
+  final wanted = switch (mode) {
+    WbCentreMode.reader => const <String>[],
+    WbCentreMode.browse => parallelVersions,
+    WbCentreMode.split => <String>[splitSecondaryVersion],
+  };
+  if (wanted.isEmpty) return const [];
   final reading = readingVersion.toLowerCase();
   final seen = <String>{reading};
   final out = <String>[];
-  for (final raw in parallelVersions) {
+  for (final raw in wanted) {
     final code = raw.toLowerCase();
     if (code.isEmpty) continue;
     if (!seen.add(code)) continue;
@@ -106,16 +115,19 @@ List<String> browseWarmupOrder({
 /// Read the persisted Browse-stack state. Falls back to the same
 /// defaults `WorkbenchPage._restorePrefs` applies, so the warm-up and
 /// the page agree on a first run.
-Future<({bool parallelMode, List<String> versions})> readBrowsePrefs(
-  String locale,
-) async {
+Future<({WbCentreMode mode, List<String> versions, String? secondary})>
+    readBrowsePrefs(String locale) async {
   final prefs = await SharedPreferences.getInstance();
   final saved = prefs.getStringList(kWorkbenchParallelVersionsKey);
   return (
-    parallelMode: prefs.getBool(kWorkbenchParallelModeKey) ?? true,
+    mode: resolveCentreMode(
+      stored: prefs.getString(kWorkbenchCentreModeKey),
+      legacyParallel: prefs.getBool(kWorkbenchParallelModeKey),
+    ),
     versions: (saved != null && saved.isNotEmpty)
         ? saved
         : defaultParallelVersions(locale),
+    secondary: prefs.getString(kSecondaryVersionKey),
   );
 }
 
@@ -135,9 +147,13 @@ Future<void> warmWorkbenchFirstPaint({
 }) async {
   final prefs = await readBrowsePrefs(locale);
   final order = browseWarmupOrder(
-    parallelMode: prefs.parallelMode,
+    mode: prefs.mode,
     readingVersion: mainProvider.currentVersion,
     parallelVersions: prefs.versions,
+    splitSecondaryVersion: resolveSecondaryVersion(
+      primaryVersion: mainProvider.currentVersion,
+      stored: prefs.secondary,
+    ),
     isCached: mainProvider.hasCachedVersion,
   );
   for (final code in order) {
@@ -164,7 +180,8 @@ Future<void> warmWorkbenchFirstPaint({
 
   final versions = <String>{
     mainProvider.currentVersion.toLowerCase(),
-    if (prefs.parallelMode) ...prefs.versions.map((v) => v.toLowerCase()),
+    if (prefs.mode == WbCentreMode.browse)
+      ...prefs.versions.map((v) => v.toLowerCase()),
   };
   for (final code in versions) {
     if (!TaggedTextService.supports(code)) continue;

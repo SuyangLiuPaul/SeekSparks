@@ -273,3 +273,29 @@ String defaultSecondaryVersion(String primaryVersion) {
 
   return others.first.value;
 }
+
+/// SharedPreferences key holding the edition the second reading column
+/// last showed. Written by the second pane's own `MainProvider`, which
+/// runs under `storagePrefix: 'secondary_'`.
+const String kSecondaryVersionKey = 'secondary_version';
+
+/// Which edition the second reading column should open with.
+///
+/// [stored] is whatever [kSecondaryVersionKey] holds — the reader's own
+/// last pick, which wins over any default. It is validated against the
+/// catalog rather than trusted, because a version can be retired between
+/// releases (`cuv-yhwd` was, above) and a stale code would otherwise
+/// open a column that can never load.
+///
+/// Shared by the split pane and by the boot warm-up rather than
+/// duplicated in each. The warm-up's whole job is to fetch the edition
+/// the pane is about to demand, so the two answering this question
+/// differently would mean warming the wrong Bible — silently, and only
+/// for readers who had ever changed the second column.
+String resolveSecondaryVersion({
+  required String primaryVersion,
+  String? stored,
+}) {
+  final valid = stored != null && availableVersions.any((v) => v.value == stored);
+  return valid ? stored : defaultSecondaryVersion(primaryVersion);
+}

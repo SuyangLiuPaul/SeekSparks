@@ -115,7 +115,6 @@ class BibleReadingPane extends StatefulWidget {
   /// by the Workbench's center pane as a "Classic Reader" menu entry
   /// (the way back to the single-pane reader and its Split View).
   /// Null hides the entry.
-  final VoidCallback? onOpenClassicReader;
 
   /// 2026-08 (SeekSparks): switch the Workbench centre pane to the
   /// BibleWorks-style parallel Browse stack. Null everywhere else.
@@ -131,7 +130,6 @@ class BibleReadingPane extends StatefulWidget {
     this.onClose,
     this.showSearchAndSettings = true,
     this.onOpenWorkbench,
-    this.onOpenClassicReader,
     this.onOpenParallel,
   });
 
@@ -1936,7 +1934,6 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
                       onClose: widget.onClose,
                       showSearchAndSettings: widget.showSearchAndSettings,
                       onOpenWorkbench: widget.onOpenWorkbench,
-                      onOpenClassicReader: widget.onOpenClassicReader,
                       onOpenParallel: widget.onOpenParallel,
                       chapterMaps: _chapterMaps,
                       bookMaps: _bookMaps,
@@ -6685,7 +6682,6 @@ class _FloatingHeader extends StatelessWidget {
   final VoidCallback? onOpenWorkbench;
   /// 2026-08-04 (Workbench): overflow-menu "Classic Reader" entry —
   /// the way back, shown only by the Workbench's center pane.
-  final VoidCallback? onOpenClassicReader;
   final VoidCallback? onOpenParallel;
   final List<BibleMap> chapterMaps;
   final List<BibleMap> bookMaps;
@@ -6730,7 +6726,6 @@ class _FloatingHeader extends StatelessWidget {
     this.onClose,
     this.showSearchAndSettings = true,
     this.onOpenWorkbench,
-    this.onOpenClassicReader,
     this.onOpenParallel,
     this.chapterMaps = const [],
     this.bookMaps = const [],
@@ -7328,18 +7323,6 @@ class _FloatingHeader extends StatelessWidget {
                               icon: Icons.view_agenda_outlined,
                               label: uiStrings['parallelBrowse']?[locale] ??
                                   'Parallel',
-                            ),
-                          ));
-                        }
-                        if (onOpenClassicReader != null) {
-                          items.add(PopupMenuItem(
-                            value: 'classicReader',
-                            onTap: () => onOpenClassicReader?.call(),
-                            child: _menuRow(
-                              context,
-                              icon: Icons.menu_book_outlined,
-                              label: uiStrings['classicReader']?[locale] ??
-                                  'Classic Reader',
                             ),
                           ));
                         }

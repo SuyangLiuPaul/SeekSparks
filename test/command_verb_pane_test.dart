@@ -16,6 +16,7 @@ import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/verse.dart';
 import 'package:seeksparks/providers/main_provider.dart';
+import 'package:seeksparks/models/wb_centre_mode.dart';
 import 'package:seeksparks/providers/workbench_provider.dart';
 import 'package:seeksparks/widgets/command_pane.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -98,7 +99,7 @@ void main() {
       final wb = await pump(tester);
       await submit(tester, 'd bsb');
       expect(wb.parallelVersions, ['bsb']);
-      expect(wb.parallelMode, isTrue);
+      expect(wb.centreMode, WbCentreMode.browse);
       // The stack lands in the centre pane, which is not on screen in
       // this test and is collapsed away on a phone — so the command has
       // to report itself or it looks unimplemented.
@@ -154,9 +155,9 @@ void main() {
 
     testWidgets('bare p just turns Browse on', (tester) async {
       final wb = await pump(tester);
-      wb.setParallelMode(false);
+      wb.setCentreMode(WbCentreMode.reader);
       await submit(tester, 'p');
-      expect(wb.parallelMode, isTrue);
+      expect(wb.centreMode, WbCentreMode.browse);
       expect(find.textContaining('Browse stack'), findsOneWidget);
     });
   });

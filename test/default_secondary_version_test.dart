@@ -53,6 +53,45 @@ void main() {
     });
   });
 
+  group('resolveSecondaryVersion', () {
+    // The split pane and the boot warm-up both call this. If they
+    // disagreed about what a stale preference resolves to, the warm-up
+    // would load one Bible and the pane would then fetch a different one.
+    test('keeps a stored version that still exists', () {
+      expect(
+        resolveSecondaryVersion(primaryVersion: 'nasb', stored: 'leb'),
+        'leb',
+      );
+    });
+
+    test('falls back when nothing is stored', () {
+      expect(
+        resolveSecondaryVersion(primaryVersion: 'nasb'),
+        defaultSecondaryVersion('nasb'),
+      );
+    });
+
+    test('falls back when the stored version was retired', () {
+      expect(
+        resolveSecondaryVersion(
+            primaryVersion: 'nasb', stored: 'some-retired-code'),
+        defaultSecondaryVersion('nasb'),
+      );
+      expect(
+        resolveSecondaryVersion(primaryVersion: 'nasb', stored: ''),
+        defaultSecondaryVersion('nasb'),
+      );
+    });
+
+    test('always resolves to a version in the catalog', () {
+      for (final v in availableVersions) {
+        final secondary =
+            resolveSecondaryVersion(primaryVersion: v.value, stored: null);
+        expect(availableVersions.any((c) => c.value == secondary), isTrue);
+      }
+    });
+  });
+
   group('shouldAutoSplit', () {
     test('does not split a screen too narrow for two readable columns', () {
       // The width from the report: two ~440px columns, 6-7 words a line.

@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'
     show HardwareKeyboard, KeyDownEvent, KeyEvent, LogicalKeyboardKey;
-import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:seeksparks/constants/bible_versions.dart'
-    show bibleVersions, shortBibleVersionLabel;
-import 'package:seeksparks/constants/book_names.dart' show bookNameToEnglish;
+    show
+        bibleVersions,
+        kSecondaryVersionKey,
+        resolveSecondaryVersion,
+        shortBibleVersionLabel;
 import 'package:seeksparks/constants/app_version.dart'
     show kAppVersion, formatReleaseTimeLocal;
 import 'package:seeksparks/constants/ui_strings.dart';
@@ -15,12 +17,12 @@ import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/original_word.dart';
 import 'package:seeksparks/models/verse.dart';
+import 'package:seeksparks/models/wb_centre_mode.dart';
 import 'package:seeksparks/pages/about_page.dart';
 import 'package:seeksparks/pages/bible_timeline_page.dart';
 import 'package:seeksparks/pages/bible_trivia_page.dart';
 import 'package:seeksparks/pages/books_page.dart';
 import 'package:seeksparks/pages/evidence_page.dart';
-import 'package:seeksparks/pages/home_page.dart';
 import 'package:seeksparks/pages/library_page.dart';
 import 'package:seeksparks/pages/phrasing_page.dart';
 import 'package:seeksparks/pages/sermons_page.dart';
@@ -29,6 +31,7 @@ import 'package:seeksparks/pages/word_list_page.dart';
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/providers/workbench_provider.dart';
 import 'package:seeksparks/services/concordance_service.dart';
+import 'package:seeksparks/services/fetch_books.dart';
 import 'package:seeksparks/services/fetch_verses.dart';
 import 'package:seeksparks/services/originals_service.dart';
 import 'package:seeksparks/services/workbench_warmup.dart'
@@ -38,8 +41,6 @@ import 'package:seeksparks/services/workbench_warmup.dart'
         kWorkbenchParallelVersionsKey;
 import 'package:seeksparks/utils/jump_to_reference.dart' as jumper;
 import 'package:seeksparks/utils/reference_parser.dart' show BibleReference;
-import 'package:seeksparks/utils/navigate_to_reader.dart'
-    show kHomePageRouteName;
 import 'package:seeksparks/utils/morphology.dart' show describeMorphology;
 import 'package:seeksparks/utils/responsive.dart';
 import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
@@ -124,6 +125,10 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
   static const double _maxRightWidth = 560;
   static const double _dividerWidth = 16;
 
+  /// Width of the rail shown in place of a collapsed pane. Named because
+  /// the split-mode fit check has to subtract it.
+  static const double _railWidth = 44;
+
   /// Owns the workbench state. Created here (not globally in main.dart)
   /// so its MainProvider listener and search state only live while the
   /// workbench is open.
@@ -151,6 +156,31 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
   // drift without anything failing.
   static const _kParallelKey = kWorkbenchParallelModeKey;
   static const _kParallelVersionsKey = kWorkbenchParallelVersionsKey;
+  static const _kCentreModeKey = kWorkbenchCentreModeKey;
+
+  // ── Split mode: the second reading column ─────────────────────────
+  //
+  // Its own MainProvider, on its own storage prefix, because a second
+  // column is a second *reading position* — its own edition, book,
+  // chapter and scroll offset — and MainProvider is where all four
+  // live. Sharing the primary's would make the two columns the same
+  // column drawn twice.
+  //
+  // Created on entering split and disposed on leaving rather than
+  // living for the page's lifetime: it holds a whole parsed edition
+  // (7 MB for the reading version), and a reader who never opens split
+  // should not carry one. The version cache underneath is shared, so
+  // re-entering is cheap even though the provider is not kept.
+  MainProvider? _secondary;
+
+  /// True between asking for split and the second column being ready.
+  /// The mode switches immediately and the column says it is loading,
+  /// rather than the control appearing dead for the second or two a
+  /// cold edition takes to arrive.
+  bool _secondaryLoading = false;
+
+  /// Fraction of the centre pane given to the first column.
+  double _splitRatio = 0.5;
 
   /// The stack a first-time reader gets. BibleWorks ships version sets
   /// per language and this is the same idea: pair the reading version
@@ -269,6 +299,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
   void dispose() {
     HardwareKeyboard.instance.removeHandler(_onGlobalKey);
     _commandFocus.dispose();
+    _closeSecondColumn(notify: false);
     _wb.dispose();
     super.dispose();
   }
@@ -284,6 +315,8 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
     final settings = context.read<AppSettings>();
     String s(String key, String fallback) =>
         uiStrings[key]?[locale] ?? fallback;
+    final splitFits =
+        splitFitsIn(_paneWidths(MediaQuery.sizeOf(context).width).centre);
 
     return [
       WbMenu(s('menuFile', 'File'), [
@@ -295,12 +328,12 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         const WbMenuItem.separator(),
         WbMenuItem(s('settings', 'Settings…'),
             () => pushPage(const SettingsPage())),
-        const WbMenuItem.separator(),
-        WbMenuItem(s('menuClassicReader', 'Exit to reader'), () => Get.off(
-              () => const HomePage(),
-              routeName: kHomePageRouteName,
-              transition: Transition.leftToRight,
-            )),
+        // "Exit to reader" used to sit here and replace the whole route
+        // with HomePage. There is nothing left to exit to: the reader is
+        // the centre pane in three arrangements (View menu, below), and
+        // leaving meant losing the command line, the search results and
+        // the Analysis pane in order to reach a surface the centre pane
+        // was already showing.
       ]),
       WbMenu(s('menuView', 'View'), [
         WbMenuItem(
@@ -316,19 +349,23 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         const WbMenuItem.separator(),
         WbMenuItem(
           s('parallelBrowse', 'Browse (parallel versions)'),
-          () {
-            _wb.setParallelMode(true);
-            _persistPrefs();
-          },
-          checked: _wb.parallelMode,
+          () => _setCentreMode(WbCentreMode.browse),
+          checked: _wb.centreMode == WbCentreMode.browse,
         ),
         WbMenuItem(
           s('classicReader', 'Chapter reader'),
-          () {
-            _wb.setParallelMode(false);
-            _persistPrefs();
-          },
-          checked: !_wb.parallelMode,
+          () => _setCentreMode(WbCentreMode.reader),
+          checked: _wb.centreMode == WbCentreMode.reader,
+        ),
+        // Greyed rather than hidden when the centre is too narrow, with
+        // the reason in the accelerator column — because the fix is one
+        // the reader can act on (close the Analysis pane), and a control
+        // that vanishes teaches them nothing.
+        WbMenuItem(
+          s('splitView', 'Split (two editions side by side)'),
+          splitFits ? () => _setCentreMode(WbCentreMode.split) : null,
+          checked: _wb.centreMode == WbCentreMode.split,
+          shortcut: splitFits ? null : s('splitNeedsWidth', 'needs more width'),
         ),
         const WbMenuItem.separator(),
         WbMenuItem(s('parallelPickVersions', 'Choose versions…'),
@@ -433,22 +470,28 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
           icon: Icons.view_agenda_outlined,
           label: s('parallelBrowseShort', 'Browse'),
           tooltip: s('parallelBrowse', 'Browse (parallel versions)'),
-          active: _wb.parallelMode,
-          onPressed: () {
-            _wb.setParallelMode(true);
-            _persistPrefs();
-          },
+          active: _wb.centreMode == WbCentreMode.browse,
+          onPressed: () => _setCentreMode(WbCentreMode.browse),
         ),
         WbToolButton(
           icon: Icons.menu_book_outlined,
           label: s('classicReaderShort', 'Reader'),
           tooltip: s('classicReader', 'Chapter reader'),
-          active: !_wb.parallelMode,
-          onPressed: () {
-            _wb.setParallelMode(false);
-            _persistPrefs();
-          },
+          active: _wb.centreMode == WbCentreMode.reader,
+          onPressed: () => _setCentreMode(WbCentreMode.reader),
         ),
+        // Absent rather than greyed on a narrow window, because a third
+        // LABELLED button is what pushes this toolbar past the width it
+        // has on a small screen — and the View menu already carries the
+        // greyed version with the reason attached.
+        if (splitFitsIn(_paneWidths(MediaQuery.sizeOf(context).width).centre))
+          WbToolButton(
+            icon: Icons.vertical_split_outlined,
+            label: s('splitViewShort', 'Split'),
+            tooltip: s('splitView', 'Split (two editions side by side)'),
+            active: _wb.centreMode == WbCentreMode.split,
+            onPressed: () => _setCentreMode(WbCentreMode.split),
+          ),
         WbToolButton(
           icon: Icons.view_column_outlined,
           tooltip: s('parallelPickVersions', 'Choose versions'),
@@ -579,13 +622,17 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         mp.currentVersion.toUpperCase(),
         onTap: () => _pickParallelVersions(context),
       ),
+      // Names the centre mode, and cycles it on tap. Split is skipped in
+      // the cycle when it does not fit, so the field can never land the
+      // reader on a mode the layout refuses and leave the label lying
+      // about what is on screen.
       WbStatusField(
-        s(_wb.parallelMode ? 'parallelBrowseShort' : 'classicReaderShort',
-            _wb.parallelMode ? 'Browse' : 'Reader'),
-        onTap: () {
-          _wb.setParallelMode(!_wb.parallelMode);
-          _persistPrefs();
+        switch (_wb.centreMode) {
+          WbCentreMode.browse => s('parallelBrowseShort', 'Browse'),
+          WbCentreMode.reader => s('classicReaderShort', 'Reader'),
+          WbCentreMode.split => s('splitViewShort', 'Split'),
         },
+        onTap: () => _setCentreMode(_nextCentreMode()),
       ),
       WbStatusField(
         "Strong's",
@@ -622,7 +669,10 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
       _rightOpen = prefs.getBool(_kRightOpenKey) ?? true;
       // Assigned rather than set: the setters call back into
       // _persistPrefs, and restoring is not a change worth writing back.
-      _wb.parallelMode = prefs.getBool(_kParallelKey) ?? true;
+      _wb.centreMode = resolveCentreMode(
+        stored: prefs.getString(_kCentreModeKey),
+        legacyParallel: prefs.getBool(_kParallelKey),
+      );
       final saved = prefs.getStringList(_kParallelVersionsKey);
       _wb.parallelVersions = (saved != null && saved.isNotEmpty)
           ? saved
@@ -632,6 +682,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         _analysisTab = AnalysisTab.values[tab];
       }
     });
+    if (_wb.centreMode == WbCentreMode.split) _openSecondColumn();
   }
 
   Future<void> _persistPrefs() async {
@@ -640,9 +691,168 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
     await prefs.setDouble(_kRightWidthKey, _rightWidth);
     await prefs.setBool(_kLeftOpenKey, _leftOpen);
     await prefs.setBool(_kRightOpenKey, _rightOpen);
-    await prefs.setBool(_kParallelKey, _wb.parallelMode);
+    await prefs.setString(_kCentreModeKey, centreModeToStorage(_wb.centreMode));
     await prefs.setStringList(_kParallelVersionsKey, _wb.parallelVersions);
     await prefs.setInt(_kAnalysisTabKey, _analysisTab.index);
+  }
+
+  // ── Pane geometry ─────────────────────────────────────────────────
+
+  /// How the window's width is divided right now.
+  ///
+  /// One function rather than the same arithmetic in the layout and
+  /// again wherever a control asks "does split fit?". Two copies would
+  /// let the View menu offer a mode the layout then refuses, which is
+  /// the exact failure the small-screen advisory shipped with in
+  /// v1.6.17: a control that promises something the layout will not
+  /// honour is worse than one that is simply absent.
+  ({double left, double right, double centre}) _paneWidths(double width) {
+    final threePane = ResponsiveBreakpoints.isDesktopOrWider(width);
+    final showLeft = _leftOpen && width >= 600;
+    final showRight = _rightOpen && threePane;
+    // Cap side panes at 32% of the total width each so the reader never
+    // gets squeezed to nothing on a just-barely-desktop screen (e.g.
+    // iPad Pro 11" portrait = 1024).
+    final maxSide = width * 0.32;
+    final left =
+        showLeft ? (_leftWidth > maxSide ? maxSide : _leftWidth) : 0.0;
+    final right =
+        showRight ? (_rightWidth > maxSide ? maxSide : _rightWidth) : 0.0;
+    // Everything between the centre and the window edges that is not a
+    // side pane: a divider where a pane is open, a collapsed rail where
+    // one is closed.
+    final gutters =
+        (showLeft ? _dividerWidth : (width >= 600 ? _railWidth : 0.0)) +
+            (showRight ? _dividerWidth : (threePane ? _railWidth : 0.0));
+    return (left: left, right: right, centre: width - left - right - gutters);
+  }
+
+  // ── Centre-pane mode ──────────────────────────────────────────────
+
+  /// The next centre mode in the status-bar cycle, skipping any that
+  /// the current window cannot render.
+  WbCentreMode _nextCentreMode() {
+    final width = MediaQuery.sizeOf(context).width;
+    final threePane = ResponsiveBreakpoints.isDesktopOrWider(width);
+    final centre = _paneWidths(width).centre;
+    final order = [
+      WbCentreMode.browse,
+      WbCentreMode.reader,
+      if (splitFitsIn(centre)) WbCentreMode.split,
+    ]..removeWhere((m) => m == WbCentreMode.browse && !threePane);
+    final at = order.indexOf(_wb.centreMode);
+    return order[(at + 1) % order.length];
+  }
+
+  /// Switch what the centre pane shows, and bring the second reading
+  /// column into or out of existence with it.
+  void _setCentreMode(WbCentreMode mode) {
+    if (_wb.centreMode == mode) return;
+    final wasSplit = _wb.centreMode == WbCentreMode.split;
+    _wb.setCentreMode(mode); // notifies; _persistPrefs runs off the callback
+    if (mode == WbCentreMode.split) {
+      _openSecondColumn();
+    } else if (wasSplit) {
+      _closeSecondColumn();
+    }
+  }
+
+  /// Bring up the second reading column: its own provider, seeded with
+  /// a DIFFERENT edition and pointed at the passage the first column is
+  /// already showing.
+  Future<void> _openSecondColumn() async {
+    if (_secondary != null || _secondaryLoading) return;
+    final primary = _wb.mainProvider;
+    setState(() => _secondaryLoading = true);
+
+    final sp = MainProvider(storagePrefix: 'secondary_');
+    final prefs = await SharedPreferences.getInstance();
+    sp.currentVersion = resolveSecondaryVersion(
+      primaryVersion: primary.currentVersion,
+      stored: prefs.getString(kSecondaryVersionKey),
+    );
+    await FetchVerses.execute(mainProvider: sp);
+    await FetchBooks.execute(mainProvider: sp);
+    await sp.reloadHighlights();
+
+    // Left split while it was loading — the column is no longer wanted,
+    // and a provider nobody will mount has to be disposed here or it
+    // leaks its listener along with the edition it just parsed.
+    if (!mounted || _wb.centreMode != WbCentreMode.split) {
+      sp.dispose();
+      if (mounted) setState(() => _secondaryLoading = false);
+      return;
+    }
+
+    // A highlight is a note about a VERSE, not about an edition, so
+    // marking one in either column has to show in the other — otherwise
+    // the same verse is highlighted on the left and plain on the right.
+    primary.onHighlightsMutated = () => _secondary?.syncHighlights(primary.highlights);
+    sp.onHighlightsMutated = () => primary.syncHighlights(sp.highlights);
+
+    setState(() {
+      _secondary = sp;
+      _secondaryLoading = false;
+    });
+    _followPrimary();
+    primary.addListener(_followPrimary);
+  }
+
+  /// Tear the second column down. [notify] is false from `dispose`,
+  /// where a `setState` would run against a State on its way out.
+  void _closeSecondColumn({bool notify = true}) {
+    final sp = _secondary;
+    if (sp == null) return;
+    _secondary = null;
+    _wb.mainProvider.removeListener(_followPrimary);
+    _wb.mainProvider.onHighlightsMutated = null;
+    sp.dispose();
+    if (notify) setState(() {});
+  }
+
+  /// Keep the second column on the same passage as the first.
+  ///
+  /// BibleWorks' Parallel Versions Window moves its columns "in unison"
+  /// (bwh38) and the Workbench has a stronger reason to: the command
+  /// line, the search results and every cross-reference all address ONE
+  /// reference, and a second column that ignored them would show the
+  /// wrong chapter the moment the reader typed anything.
+  ///
+  /// Chapter granularity on purpose. Scroll stays independent inside the
+  /// chapter, which is the whole point of columns over interleaved rows
+  /// — where the two editions disagree about verse boundaries, the
+  /// reader aligns them by eye and a scroll-linked column would fight
+  /// them for it.
+  void _followPrimary() {
+    final sp = _secondary;
+    if (sp == null) return;
+    final primary = _wb.mainProvider;
+    final localBook = primary.currentBook;
+    final chapter = primary.currentChapter;
+    if (localBook == null || chapter == null) return;
+
+    // Matched in English, never on the raw strings. `Verse.book` carries
+    // the name the EDITION uses — 创世记 in a Chinese text, Genesis in an
+    // English one (v1.6.47) — so comparing them directly across two
+    // columns matches nothing whenever the columns are in different
+    // languages, which is the normal case: `defaultSecondaryVersion`
+    // exists precisely to make the two columns differ.
+    final book = bookNameToEnglish[localBook] ?? localBook;
+    if ((bookNameToEnglish[sp.currentBook] ?? sp.currentBook) == book &&
+        sp.currentChapter == chapter) {
+      return;
+    }
+    final match = sp.verses
+        .where((v) =>
+            (bookNameToEnglish[v.book] ?? v.book) == book &&
+            v.chapter == chapter)
+        .toList();
+    // The editions can disagree about what exists — a chapter one of
+    // them numbers differently, or a book it does not carry. Leaving the
+    // column where it was beats blanking it.
+    if (match.isEmpty) return;
+    sp.setCurrentChapter(book: match.first.book, chapter: chapter);
+    sp.updateCurrentVerse(verse: match.first);
   }
 
   // ── Pane open/collapse ────────────────────────────────────────────
@@ -796,16 +1006,9 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
           final threePane = ResponsiveBreakpoints.isDesktopOrWider(width);
           final showLeft = _leftOpen && width >= 600;
           final showRight = _rightOpen && threePane;
-          // Cap side panes at 32% of the total width each so the
-          // reader never gets squeezed to nothing on a just-barely-
-          // desktop screen (e.g. iPad Pro 11" portrait = 1024).
-          final maxSide = width * 0.32;
-          final leftW = showLeft
-              ? (_leftWidth > maxSide ? maxSide : _leftWidth)
-              : 0.0;
-          final rightW = showRight
-              ? (_rightWidth > maxSide ? maxSide : _rightWidth)
-              : 0.0;
+          final panes = _paneWidths(width);
+          final leftW = panes.left;
+          final rightW = panes.right;
 
           return ColoredBox(
             color: WbColors.of(context).chromeBg,
@@ -824,40 +1027,25 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
                         isLeft: true),
                   ],
                   Expanded(
-                    // Browse only makes sense with room for it: three
-                    // translations plus an originals line on a phone is
-                    // unreadable, so below the three-pane breakpoint the
-                    // centre is always the chapter reader regardless of
-                    // the persisted preference.
-                    child: (context.watch<WorkbenchProvider>().parallelMode &&
-                            threePane)
-                        ? _buildParallelFrame(context)
-                        : BibleReadingPane(
-                      key: const ValueKey('workbench-reader'),
-                      showSidebarToggle: false,
-                      sidebarOpen: false,
-                      onToggleSidebar: null,
-                      // Split View is superseded by the workbench
-                      // itself; the menu entry is hidden (null).
-                      onToggleSplitView: null,
-                      splitViewActive: false,
-                      onClose: null,
-                      showSearchAndSettings: true,
-                      // 2026-08-04: the overflow menu's way back to
-                      // the classic single-pane reader (and its Split
-                      // View, which the workbench supersedes).
-                      // 2026-08 (SeekSparks): switch this pane to the
-                      // BibleWorks-style parallel Browse stack.
-                      onOpenParallel: () {
-                        _wb.setParallelMode(true);
-                      },
-                      onOpenClassicReader: () => Get.off(
-                        () => const HomePage(),
-                        routeName: kHomePageRouteName,
-                        transition: Transition.leftToRight,
-                      ),
-                    ),
-                        ),
+                    // A persisted mode is a wish, not an instruction:
+                    // Browse needs the three-pane width before three
+                    // editions of a verse stop reading as fragments,
+                    // split needs two reading columns, and where neither
+                    // holds the chapter reader always does. The
+                    // preference is kept for the next screen that can
+                    // honour it — see `effectiveCentreMode`.
+                    child: switch (effectiveCentreMode(
+                      preferred:
+                          context.watch<WorkbenchProvider>().centreMode,
+                      centreWidth: panes.centre,
+                      threePane: threePane,
+                    )) {
+                      WbCentreMode.browse => _buildParallelFrame(context),
+                      WbCentreMode.split => _buildSplitFrame(context),
+                      WbCentreMode.reader => _buildReaderFrame(context,
+                          splitAvailable: splitFitsIn(panes.centre)),
+                    },
+                  ),
                   if (showRight) ...[
                     _buildDivider(context,
                         key: const ValueKey('workbench-divider-right'),
@@ -875,6 +1063,146 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
           );
         },
       );
+  }
+
+  // ── Centre: the chapter reader ────────────────────────────────────
+
+  /// One edition, the whole chapter, running continuously — BibleWorks'
+  /// Single Version Browse Mode (bwh11), and the only centre mode that
+  /// fits at every width.
+  ///
+  /// [splitAvailable] hides rather than greys the pane's own split
+  /// entry. This popup has no room to say *why* something is
+  /// unavailable, and an item that does nothing when tapped is worse
+  /// than one that is not there; the View menu and the toolbar, which
+  /// can carry a reason, show it greyed with one.
+  Widget _buildReaderFrame(BuildContext context,
+          {required bool splitAvailable}) =>
+      BibleReadingPane(
+        key: const ValueKey('workbench-reader'),
+        showSidebarToggle: false,
+        sidebarOpen: false,
+        onToggleSidebar: null,
+        onToggleSplitView:
+            splitAvailable ? () => _setCentreMode(WbCentreMode.split) : null,
+        splitViewActive: false,
+        onClose: null,
+        showSearchAndSettings: true,
+        onOpenParallel: () => _setCentreMode(WbCentreMode.browse),
+      );
+
+  // ── Centre: two editions side by side ─────────────────────────────
+
+  /// Two reading columns, each running continuously, each scrolling on
+  /// its own — BibleWorks' Parallel Versions Window (bwh38), which it
+  /// ships as a separate floating window because the columns need room
+  /// its centre pane does not have.
+  ///
+  /// This is NOT the Browse stack in a different arrangement. Browse
+  /// interleaves, and interleaving assumes the editions agree about
+  /// where verses begin; bwh11 says plainly that they do not. Where they
+  /// diverge — a Hebrew psalm superscription carrying a verse number the
+  /// English folds into a heading, so the whole psalm sits one verse out
+  /// — interleaved rows line the wrong text up against itself, and two
+  /// columns simply do not have the problem.
+  Widget _buildSplitFrame(BuildContext context) {
+    final sp = _secondary;
+    if (sp == null) return _buildSplitLoading(context);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final available = constraints.maxWidth - kSplitDividerWidth;
+        final firstW = (available * _splitRatio)
+            .clamp(available * 0.25, available * 0.75)
+            .toDouble();
+        return Row(
+          children: [
+            SizedBox(
+              width: firstW,
+              child: BibleReadingPane(
+                key: const ValueKey('workbench-split-first'),
+                showSidebarToggle: false,
+                sidebarOpen: false,
+                onToggleSidebar: null,
+                // Reuses the pane's existing split affordance, so the
+                // way out reads "Close split view" in every locale it
+                // already spoke.
+                onToggleSplitView: () => _setCentreMode(WbCentreMode.reader),
+                splitViewActive: true,
+                onClose: null,
+                showSearchAndSettings: true,
+                onOpenParallel: () => _setCentreMode(WbCentreMode.browse),
+              ),
+            ),
+            _buildSplitDivider(context, available),
+            SizedBox(
+              width: available - firstW,
+              child: ChangeNotifierProvider<MainProvider>.value(
+                value: sp,
+                child: BibleReadingPane(
+                  key: const ValueKey('workbench-split-second'),
+                  showSidebarToggle: false,
+                  sidebarOpen: false,
+                  onToggleSidebar: null,
+                  onToggleSplitView: null,
+                  splitViewActive: true,
+                  onClose: () => _setCentreMode(WbCentreMode.reader),
+                  // Deliberately no search or settings in the second
+                  // column: both act on the workspace rather than on a
+                  // column, and two of each would invite the reader to
+                  // believe otherwise.
+                  showSearchAndSettings: false,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildSplitLoading(BuildContext context) {
+    final locale = context.read<AppSettings>().locale;
+    return Center(
+      child: Text(
+        uiStrings['splitLoading']?[locale] ?? 'Opening the second column…',
+        style: TextStyle(
+          fontSize: WbMetrics.text,
+          color: Theme.of(context).colorScheme.outline,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSplitDivider(BuildContext context, double available) {
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return MouseRegion(
+      cursor: SystemMouseCursors.resizeColumn,
+      child: GestureDetector(
+        key: const ValueKey('workbench-split-divider'),
+        behavior: HitTestBehavior.translucent,
+        onHorizontalDragUpdate: (d) => setState(() {
+          _splitRatio =
+              (_splitRatio + d.delta.dx / available).clamp(0.25, 0.75);
+        }),
+        onDoubleTap: () => setState(() => _splitRatio = 0.5),
+        child: Container(
+          width: kSplitDividerWidth,
+          height: double.infinity,
+          color: scheme.outlineVariant.withValues(alpha: isDark ? 0.2 : 0.15),
+          child: Center(
+            // Square, per workbench_theme's "no rounded corners" — the
+            // grab marks on the pane dividers were rounded and are now
+            // the same shape as this one.
+            child: Container(
+              width: 2,
+              height: 40,
+              color: scheme.outline.withValues(alpha: 0.4),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   // ── Centre: BibleWorks-style parallel Browse ──────────────────────
@@ -950,9 +1278,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
                 icon: Icons.menu_book_outlined,
                 label: uiStrings['classicReaderShort']?[locale] ?? 'Reader',
                 tooltip: uiStrings['classicReader']?[locale] ?? 'Chapter reader',
-                onPressed: () {
-                  _wb.setParallelMode(false);
-                },
+                onPressed: () => _setCentreMode(WbCentreMode.reader),
               ),
             ],
           ),
@@ -1756,12 +2082,9 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
           color: scheme.outlineVariant.withValues(alpha: isDark ? 0.2 : 0.15),
           child: Center(
             child: Container(
-              width: 4,
+              width: 2,
               height: 40,
-              decoration: BoxDecoration(
-                color: scheme.outline.withValues(alpha: 0.4),
-                borderRadius: BorderRadius.circular(2),
-              ),
+              color: scheme.outline.withValues(alpha: 0.4),
             ),
           ),
         ),
@@ -1777,7 +2100,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
     final locale = context.read<AppSettings>().locale;
     return SizedBox(
       key: key,
-      width: 44,
+      width: _railWidth,
       height: double.infinity,
       child: Material(
         color: scheme.surfaceContainerHighest.withValues(alpha: 0.4),

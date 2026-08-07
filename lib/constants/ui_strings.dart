@@ -3632,6 +3632,27 @@ const uiStrings = {
     'zh-Hant': '經典閱讀模式',
     'en': 'Classic Reader',
   },
+  // ====== Centre pane: split view (bwh38) ======
+  'splitView': {
+    'zh-Hans': '双栏对读（两个译本并列）',
+    'zh-Hant': '雙欄對讀（兩個譯本並列）',
+    'en': 'Split (two editions side by side)',
+  },
+  'splitViewShort': {
+    'zh-Hans': '双栏',
+    'zh-Hant': '雙欄',
+    'en': 'Split',
+  },
+  'splitNeedsWidth': {
+    'zh-Hans': '需更宽的中栏',
+    'zh-Hant': '需更寬的中欄',
+    'en': 'needs a wider centre',
+  },
+  'splitLoading': {
+    'zh-Hans': '正在打开第二栏…',
+    'zh-Hant': '正在打開第二欄…',
+    'en': 'Opening the second column…',
+  },
   // ====== Command-line query language (bwh16) ======
   'cmdListSeparator': {'zh-Hans': '、', 'zh-Hant': '、', 'en': ', '},
   'cmdPartSeparator': {'zh-Hans': ' · ', 'zh-Hant': ' · ', 'en': ' · '},

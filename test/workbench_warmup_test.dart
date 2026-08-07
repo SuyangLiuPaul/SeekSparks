@@ -9,19 +9,22 @@
 library;
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:seeksparks/models/wb_centre_mode.dart';
 import 'package:seeksparks/services/workbench_warmup.dart';
 
 void main() {
   List<String> order({
-    bool parallelMode = true,
+    WbCentreMode mode = WbCentreMode.browse,
     String reading = 'nasb',
     List<String> parallel = const ['bsb', 'nasb', 'kjv'],
+    String secondary = 'kjv',
     Set<String> cached = const {},
   }) =>
       browseWarmupOrder(
-        parallelMode: parallelMode,
+        mode: mode,
         readingVersion: reading,
         parallelVersions: parallel,
+        splitSecondaryVersion: secondary,
         isCached: cached.contains,
       );
 
@@ -57,7 +60,7 @@ void main() {
       // That pane renders from MainProvider.verses. Warming comparison
       // editions for it would be exactly the speculative mobile-data
       // cost that v1.3.61 disabled eager preloading to avoid.
-      expect(order(parallelMode: false), isEmpty);
+      expect(order(mode: WbCentreMode.reader), isEmpty);
     });
 
     test('asks for each edition once even when listed twice', () {
@@ -70,6 +73,31 @@ void main() {
 
     test('an empty stack asks for nothing', () {
       expect(order(parallel: const []), isEmpty);
+    });
+
+    test('split warms only its second column, not the Browse stack', () {
+      // Split shows two editions. Warming the three-edition Browse stack
+      // for it would download two whole Bibles nothing is going to draw.
+      expect(
+        order(
+          mode: WbCentreMode.split,
+          reading: 'nasb',
+          parallel: const ['bsb', 'nasb', 'kjv'],
+          secondary: 'leb',
+        ),
+        ['leb'],
+      );
+    });
+
+    test('split warms nothing when both columns share the reading version',
+        () {
+      // defaultSecondaryVersion never returns the primary, but a stale
+      // saved preference can, and re-parsing a 7 MB corpus already in
+      // memory is the exact cost #274 existed to remove.
+      expect(
+        order(mode: WbCentreMode.split, reading: 'nasb', secondary: 'NASB'),
+        isEmpty,
+      );
     });
   });
 

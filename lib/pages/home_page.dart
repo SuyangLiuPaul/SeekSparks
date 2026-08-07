@@ -1,3 +1,21 @@
+/// The standalone reader route.
+///
+/// As of #276 this page holds no capability the Workbench lacks. Split
+/// View — the one thing that used to live only here — is now
+/// `WbCentreMode.split` in the Workbench's own centre pane, and the two
+/// `Get.off(() => const HomePage())` escapes from `WorkbenchPage` are
+/// gone: leaving the route destroyed the command line, the search
+/// results and the Analysis pane, which is a steep price for a layout
+/// change.
+///
+/// It is deliberately still here. It remains the destination of a dozen
+/// `pushPage(const HomePage())` calls from the library, search,
+/// highlights, evidence, trivia and timeline pages, and of the boot
+/// route in `loading_page.dart`. Retiring it is a product decision about
+/// whether the app has one reading surface or two — not cleanup — so it
+/// is left for that decision rather than folded into this change.
+library;
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:seeksparks/constants/bible_versions.dart';

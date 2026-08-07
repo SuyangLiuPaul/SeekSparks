@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import 'package:seeksparks/models/verse.dart';
+import 'package:seeksparks/models/wb_centre_mode.dart';
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/services/concordance_service.dart';
 import 'package:seeksparks/services/search_service.dart';
@@ -112,9 +113,15 @@ class WorkbenchProvider extends ChangeNotifier {
 
   // ── Browse stack (centre pane) ────────────────────────────────────
 
-  /// Whether the centre pane is the Browse stack (several editions of
-  /// the same verse) rather than the chapter reader.
-  bool parallelMode = true;
+  /// What the centre pane is showing — the chapter reader, the Browse
+  /// stack, or two editions side by side. See [WbCentreMode].
+  ///
+  /// This was a `bool parallelMode` while there were two answers. It is
+  /// deliberately NOT kept as a derived `parallelMode` getter alongside
+  /// the enum: with three modes, `!parallelMode` no longer means "the
+  /// chapter reader", and every call site that still read it that way
+  /// would have been wrong in split mode without failing to compile.
+  WbCentreMode centreMode = WbCentreMode.browse;
 
   /// The comparison editions in the Browse stack, in display order.
   ///
@@ -124,7 +131,7 @@ class WorkbenchProvider extends ChangeNotifier {
   /// and calls back through [onBrowseStateChanged].
   List<String> parallelVersions = const [];
 
-  /// Called after the command line changes [parallelMode] or
+  /// Called after the command line changes [centreMode] or
   /// [parallelVersions], so the page can persist them.
   VoidCallback? onBrowseStateChanged;
 
@@ -143,9 +150,9 @@ class WorkbenchProvider extends ChangeNotifier {
         ...parallelVersions.where((c) => c != mainProvider.currentVersion),
       ];
 
-  void setParallelMode(bool on) {
-    if (parallelMode == on) return;
-    parallelMode = on;
+  void setCentreMode(WbCentreMode mode) {
+    if (centreMode == mode) return;
+    centreMode = mode;
     _notify();
     onBrowseStateChanged?.call();
   }
