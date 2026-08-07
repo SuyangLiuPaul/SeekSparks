@@ -15,6 +15,7 @@ library;
 
 import 'package:flutter/material.dart';
 
+import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 import 'package:seeksparks/constants/workbench_theme.dart';
 
 // ── Menu bar ────────────────────────────────────────────────────────
@@ -425,11 +426,21 @@ class WorkbenchStatusBar extends StatelessWidget {
 /// colour, without reading. Rendered inline (not as a chip on its own
 /// row) so it costs no vertical space.
 class WbVersionTag extends StatelessWidget {
-  const WbVersionTag({super.key, required this.code, this.width = 52});
+  const WbVersionTag({super.key, required this.code, this.width = 68});
 
   final String code;
 
   /// Fixed width so the text of every version starts on the same column.
+  /// That alignment is the point of the gutter — it is what lets the eye
+  /// run down one translation in a wall of interleaved rows — so this
+  /// stays fixed rather than sizing to content.
+  ///
+  /// 2026-08-07: 52 -> 68. At 52 the longest labels were cut INSIDE the
+  /// parenthesis — "CUVS(简)" rendered "CUVS(" and "CUV+S(简)" rendered
+  /// "CUV+S(" — which reads as a broken string rather than an
+  /// abbreviation. Note LJK(简) fit and rendered fine, which is what
+  /// rules out the font: this was always width, never glyph coverage.
+  /// 68 clears "CUV+S(简)", the widest label in the catalog.
   final double width;
 
   @override
@@ -440,13 +451,17 @@ class WbVersionTag extends StatelessWidget {
       child: Text(
         code.toUpperCase(),
         maxLines: 1,
-        overflow: TextOverflow.clip,
+        // Ellipsis, not clip. If a future label outgrows the gutter
+        // again, "CUV+S…" is honest about being shortened; "CUV+S("
+        // looks like the string itself is damaged.
+        overflow: TextOverflow.ellipsis,
         style: TextStyle(
           fontSize: t.chrome - 0.5,
           fontWeight: FontWeight.w700,
           height: t.lineHeight,
           color: versionTagColor(code),
           letterSpacing: 0.2,
+          fontFamilyFallback: kCjkFontFallback,
         ),
       ),
     );
