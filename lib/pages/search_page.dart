@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:seeksparks/utils/atomic_text_edit.dart';
 import 'package:seeksparks/utils/app_nav.dart';
 import 'package:seeksparks/models/strongs.dart';
 import 'package:seeksparks/models/verse.dart';
@@ -595,11 +596,7 @@ class _SearchPageState extends State<SearchPage> {
               createdAt: entry.createdAt,
               locale: locale,
               onTap: () async {
-                _textEditingController.text = entry.query;
-                _textEditingController.selection =
-                    TextSelection.fromPosition(
-                  TextPosition(offset: entry.query.length),
-                );
+                _textEditingController.setTextAtomic(entry.query);
                 await RecentSearchesService.add(entry.query);
                 await _loadRecents();
                 await search();

@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:seeksparks/utils/atomic_text_edit.dart';
 import 'package:seeksparks/utils/app_nav.dart';
 import 'package:provider/provider.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
@@ -4938,16 +4939,10 @@ void showNoteEditor({
                     if (sel.isValid && sel.start >= 0 && sel.end <= cur.length) {
                       final before = cur.substring(0, sel.start);
                       final after = cur.substring(sel.end);
-                      final next =
-                          '$before$inserted$after';
-                      controller.value = TextEditingValue(
-                        text: next,
-                        selection: TextSelection.collapsed(
-                          offset: (before + inserted).length,
-                        ),
-                      );
+                      controller.setTextAtomic('$before$inserted$after',
+                          caret: before.length + inserted.length);
                     } else {
-                      controller.text = cur + inserted;
+                      controller.setTextAtomic(cur + inserted);
                     }
                   },
                   icon: Icon(Icons.add_link_rounded, color: scheme.primary),

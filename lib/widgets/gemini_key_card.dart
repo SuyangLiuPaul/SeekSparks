@@ -11,6 +11,7 @@ import 'package:seeksparks/services/ai_bible_search_service.dart';
 import 'package:seeksparks/services/api_base.dart';
 import 'package:seeksparks/services/cloud_auth_service.dart';
 import 'package:seeksparks/services/link_opener.dart';
+import 'package:seeksparks/utils/atomic_text_edit.dart';
 import 'package:seeksparks/utils/theme_color_helpers.dart';
 
 /// Settings → AI → "Use my own Gemini API key" (BYOK) card.
@@ -106,7 +107,7 @@ class GeminiKeyCardState extends State<GeminiKeyCard> {
     // Genuine cloud-driven update (paste / clear on another
     // device). Mirror it into the text field — including the
     // clear case where `remote` is empty.
-    _ctrl.text = remote;
+    _ctrl.setTextAtomic(remote);
     _lastSyncedKey = remote;
     // _resetTestStatus fires automatically via the controller
     // listener; keep the panel clean.

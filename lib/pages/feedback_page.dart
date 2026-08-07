@@ -8,6 +8,7 @@ import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/services/cloud_auth_service.dart';
 import 'package:seeksparks/services/feedback_service.dart';
 import 'package:seeksparks/services/link_opener.dart';
+import 'package:seeksparks/utils/atomic_text_edit.dart';
 import 'package:seeksparks/utils/clipboard_helper.dart';
 import 'package:seeksparks/widgets/home_icon_button.dart';
 import 'package:seeksparks/widgets/language_switcher_button.dart';
@@ -69,7 +70,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
     final user = CloudAuthService.instance.currentUser;
     final email = user?.email;
     if (email != null && email.isNotEmpty) {
-      _replyToController.text = email;
+      _replyToController.setTextAtomic(email);
     }
   }
 

@@ -12,6 +12,7 @@ import 'package:seeksparks/models/verse.dart';
 import 'package:seeksparks/providers/workbench_provider.dart';
 import 'package:seeksparks/services/concordance_service.dart';
 import 'package:seeksparks/services/fetch_verses.dart';
+import 'package:seeksparks/utils/atomic_text_edit.dart';
 import 'package:seeksparks/utils/clipboard_helper.dart';
 import 'package:seeksparks/utils/command_query.dart';
 import 'package:seeksparks/utils/command_verb.dart';
@@ -298,9 +299,8 @@ class _CommandPaneState extends State<CommandPane> {
     final end = sel.isValid ? sel.end : text.length;
     final needsSpace = start > 0 && !text.substring(0, start).endsWith(' ');
     final insert = '${needsSpace ? ' ' : ''}$token${trailingSpace ? ' ' : ''}';
-    _controller.text = text.replaceRange(start, end, insert);
-    _controller.selection =
-        TextSelection.collapsed(offset: start + insert.length);
+    _controller.setTextAtomic(text.replaceRange(start, end, insert),
+        caret: start + insert.length);
     _focus.requestFocus();
     setState(() {});
   }
@@ -318,9 +318,7 @@ class _CommandPaneState extends State<CommandPane> {
     if (text.isNotEmpty && kCommandControls.contains(text[0])) {
       text = text.substring(1);
     }
-    _controller.text = '$control$text';
-    _controller.selection =
-        TextSelection.collapsed(offset: _controller.text.length);
+    _controller.setTextAtomic('$control$text');
     _focus.requestFocus();
     setState(() {});
   }
@@ -333,9 +331,7 @@ class _CommandPaneState extends State<CommandPane> {
     _historyAt = next;
     // Stepping past the newest entry returns the empty line rather than
     // sticking on the last command, so ↓ is a way out and not a trap.
-    _controller.text = next == _history.length ? '' : _history[next];
-    _controller.selection =
-        TextSelection.collapsed(offset: _controller.text.length);
+    _controller.setTextAtomic(next == _history.length ? '' : _history[next]);
     setState(() {});
   }
 

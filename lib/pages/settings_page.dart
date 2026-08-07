@@ -1,6 +1,7 @@
 // 2026-05-20 (v1.2.67): `dart:js_interop` was here. See
 // `lib/utils/clear_cache_helper.dart` for the conditional-import
 // pattern that replaced it.
+import 'package:seeksparks/utils/atomic_text_edit.dart';
 import 'package:seeksparks/utils/clear_cache_helper.dart';
 import 'package:seeksparks/utils/clipboard_helper.dart';
 
@@ -4174,7 +4175,7 @@ class _ImportDialogState extends State<_ImportDialog> {
       final data = await Clipboard.getData(Clipboard.kTextPlain);
       final text = data?.text;
       if (text != null && text.isNotEmpty) {
-        _controller.text = text;
+        _controller.setTextAtomic(text);
         _onTextChanged(text);
       }
     } catch (_) {
