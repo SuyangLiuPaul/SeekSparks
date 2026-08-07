@@ -23,6 +23,13 @@
 /// Anything unrecognised degrades to the raw code rather than throwing
 /// or silently vanishing: an unfamiliar tag is still information, and a
 /// wrong parse would be worse than none.
+///
+/// 2026-08-07: the positional logic moved into [parseMorphology], one
+/// parser shared by this file's reader-facing labels AND by
+/// `utils/morph_query.dart`'s matcher. Where a slot sits in a code is
+/// part-of-speech dependent in both schemes, and writing that switch
+/// twice is how a search comes to disagree with the parse line printed
+/// directly above it.
 library;
 
 /// Human-readable parse of a morphology code, or null when [code] is
@@ -31,26 +38,225 @@ String? describeMorphology(String? code, String locale) {
   if (code == null) return null;
   final c = code.trim();
   if (c.isEmpty) return null;
-  return _isGreek(c) ? _greek(c, locale) : _hebrew(c, locale);
+  final parsed = parseMorphology(c);
+  if (parsed == null) return c;
+  return parsed.scheme == MorphScheme.greek
+      ? _greek(parsed, locale)
+      : _semitic(parsed, locale);
 }
 
 /// The two schemes overlap on one letter: `A` opens every Aramaic code
-/// AND is Greek's adjective part of speech (`A-----NSM-`). Length
-/// settles it — every MorphGNT code is exactly 10 characters (2-char
-/// part of speech + 8 dash-padded parse slots), while Open Scriptures
-/// codes are variable-length and contain no dashes.
+/// AND is Greek's adjective part of speech (`A-----NSM-`). Length alone
+/// does NOT settle it — 4,889 Open Scriptures codes are also exactly 10
+/// characters (`HTd/Vhrmsa`, `HR/R/Sp3mp`). What settles it is the
+/// second clause: no Semitic code's first two characters (`HT`, `HR`,
+/// `HV`, `AC`, …) are keys in [_gkPos]. Do not "simplify" this test to
+/// the length check.
 bool _isGreek(String c) =>
     c.length == 10 && _gkPos.containsKey(c.substring(0, 2));
 
 /// Short one-word part of speech (for a compact chip next to the word).
 String? morphologyPartOfSpeech(String? code, String locale) {
+  final parsed = parseMorphology(code);
+  final head = parsed?.morphemes.isNotEmpty == true
+      ? parsed!.morphemes.first
+      : null;
+  if (head == null) return null;
+  return morphSlotLabel(parsed!.scheme, head.pos, MorphSlot.pos, head.pos,
+      locale, aramaic: parsed.aramaic);
+}
+
+// ── The shared parser ───────────────────────────────────────────────
+
+/// Which coding scheme a word is written in. Aramaic shares the Semitic
+/// scheme's shape but not all of its labels — see [MorphWord.aramaic].
+enum MorphScheme { greek, semitic }
+
+/// One grammatical feature a code can carry. Greek and Semitic overlap
+/// on [pos], [person], [gender], [number]; the rest belong to one
+/// scheme or the other.
+enum MorphSlot {
+  pos,
+  // Greek
+  tense,
+  voice,
+  mood,
+  grammaticalCase,
+  degree,
+  // Semitic
+  subtype,
+  stem,
+  conjugation,
+  state,
+  // Shared
+  person,
+  gender,
+  number,
+}
+
+/// One morpheme of a word. Greek words have exactly one; a Semitic word
+/// is a stack (conjunction + article + preposition + stem + suffix) that
+/// Open Scriptures writes `/`-separated, and 32% of the Hebrew Bible has
+/// more than one.
+class MorphMorpheme {
+  const MorphMorpheme({
+    required this.raw,
+    required this.pos,
+    required this.slots,
+  });
+
+  /// The morpheme's own substring of the code (`Ncfsa`, `V-3AAI-S--`).
+  final String raw;
+
+  /// `N`/`V`/… for Semitic, `N-`/`RA`/… for Greek.
+  final String pos;
+
+  /// Feature → raw code character. A slot the morpheme does not carry is
+  /// absent rather than present-and-empty, so "no gender" and "gender we
+  /// could not read" are the same thing to a matcher: not a match.
+  ///
+  /// Open Scriptures writes `x` for "unknown or unnecessary" (the spec's
+  /// own words) — `Pdxms`, `ANxxxa`. Those are dropped here for the same
+  /// reason a `-` is dropped in Greek: they are the absence of a value,
+  /// not a value, and 2,684 words in the shipped corpus carry one.
+  final Map<MorphSlot, String> slots;
+}
+
+/// A fully parsed morphology code.
+class MorphWord {
+  const MorphWord({
+    required this.raw,
+    required this.scheme,
+    required this.aramaic,
+    required this.morphemes,
+  });
+
+  final String raw;
+  final MorphScheme scheme;
+
+  /// Aramaic uses the same code SHAPE as Hebrew but a different stem
+  /// vocabulary — `q` is Qal in Hebrew and Peal in Aramaic, `t` is
+  /// Hithpael in Hebrew and Hishtaphel in Aramaic. 1,068 verbs in the
+  /// shipped corpus depend on this flag reaching the label lookup.
+  final bool aramaic;
+
+  final List<MorphMorpheme> morphemes;
+
+  /// Which morpheme the word is "about" — the last one that is not a
+  /// pronominal/paragogic suffix, since Semitic prefixes (conjunction,
+  /// article, preposition) precede the head and suffixes follow it.
+  /// Verified against all 123 morpheme sequences in the corpus.
+  int get headIndex {
+    for (var i = morphemes.length - 1; i >= 0; i--) {
+      if (morphemes[i].pos != 'S') return i;
+    }
+    return morphemes.isEmpty ? 0 : morphemes.length - 1;
+  }
+}
+
+/// Parse [code] into its morphemes and their feature slots, or null when
+/// there is nothing to parse. Unrecognised parts yield a morpheme with
+/// an empty slot map rather than being dropped, so callers can still see
+/// that something was there.
+MorphWord? parseMorphology(String? code) {
   if (code == null) return null;
   final c = code.trim();
   if (c.isEmpty) return null;
-  if (_isGreek(c)) return _pick(_gkPos[c.substring(0, 2)], locale);
-  final first = c.length > 1 ? c.substring(1).split('/').first : '';
-  if (first.isEmpty) return null;
-  return _pick(_hebPos[first[0]], locale);
+
+  if (_isGreek(c)) {
+    return MorphWord(
+      raw: c,
+      scheme: MorphScheme.greek,
+      aramaic: false,
+      morphemes: [_parseGreek(c)],
+    );
+  }
+
+  final aramaic = c.startsWith('A');
+  final body = c.length > 1 ? c.substring(1) : '';
+  final morphemes = <MorphMorpheme>[
+    for (final part in body.split('/'))
+      if (part.isNotEmpty) _parseSemitic(part),
+  ];
+  if (morphemes.isEmpty) return null;
+  return MorphWord(
+    raw: c,
+    scheme: MorphScheme.semitic,
+    aramaic: aramaic,
+    morphemes: morphemes,
+  );
+}
+
+/// A slot value that is present in the code but means "no value".
+bool _blank(String ch) => ch == '-' || ch == 'x' || ch.isEmpty;
+
+MorphMorpheme _parseGreek(String c) {
+  String at(int i) => i < c.length ? c[i] : '-';
+  final slots = <MorphSlot, String>{};
+  void put(MorphSlot slot, int index) {
+    final ch = at(index);
+    if (!_blank(ch)) slots[slot] = ch;
+  }
+
+  final pos = c.substring(0, 2);
+  slots[MorphSlot.pos] = pos;
+  put(MorphSlot.person, 2);
+  put(MorphSlot.tense, 3);
+  put(MorphSlot.voice, 4);
+  put(MorphSlot.mood, 5);
+  put(MorphSlot.grammaticalCase, 6);
+  put(MorphSlot.number, 7);
+  put(MorphSlot.gender, 8);
+  put(MorphSlot.degree, 9);
+  return MorphMorpheme(raw: c, pos: pos, slots: slots);
+}
+
+MorphMorpheme _parseSemitic(String m) {
+  final pos = m[0];
+  final slots = <MorphSlot, String>{MorphSlot.pos: pos};
+  String at(int i) => i < m.length ? m[i] : '';
+  void put(MorphSlot slot, int index) {
+    final ch = at(index);
+    if (!_blank(ch)) slots[slot] = ch;
+  }
+
+  switch (pos) {
+    case 'V':
+      put(MorphSlot.stem, 1);
+      put(MorphSlot.conjugation, 2);
+      // Participles decline (gender number state); every other finite
+      // form conjugates (person gender number); infinitives — `Vqa`,
+      // `Vqc`, 7,489 words — stop after the conjugation and so pick up
+      // neither set, which the length guard in `at` already gives us.
+      final conj = at(2);
+      if (conj == 'r' || conj == 's') {
+        put(MorphSlot.gender, 3);
+        put(MorphSlot.number, 4);
+        put(MorphSlot.state, 5);
+      } else {
+        put(MorphSlot.person, 3);
+        put(MorphSlot.gender, 4);
+        put(MorphSlot.number, 5);
+      }
+    case 'N':
+    case 'A':
+      put(MorphSlot.subtype, 1);
+      put(MorphSlot.gender, 2);
+      put(MorphSlot.number, 3);
+      put(MorphSlot.state, 4);
+    case 'P':
+    case 'S':
+      put(MorphSlot.subtype, 1);
+      put(MorphSlot.person, 2);
+      put(MorphSlot.gender, 3);
+      put(MorphSlot.number, 4);
+    case 'T':
+    case 'R':
+      put(MorphSlot.subtype, 1);
+    default:
+      break;
+  }
+  return MorphMorpheme(raw: m, pos: pos, slots: slots);
 }
 
 // ── Localisation helper ─────────────────────────────────────────────
@@ -145,24 +351,24 @@ const _gkDegree = <String, List<String>>{
 };
 
 /// `V-3AAI-S--` → "verb · aorist active indicative · 3rd person singular".
-String _greek(String code, String locale) {
-  final pos = _pick(_gkPos[code.substring(0, 2)], locale);
-  // The 8 parse slots are fixed-width and dash-padded; a short code just
-  // means trailing slots were dropped, so read defensively.
-  String slot(int i) {
-    final idx = 2 + i;
-    if (idx >= code.length) return '-';
-    return code[idx];
+String _greek(MorphWord word, String locale) {
+  final m = word.morphemes.first;
+  String? label(MorphSlot slot) {
+    final code = m.slots[slot];
+    if (code == null) return null;
+    return morphSlotLabel(word.scheme, m.pos, slot, code, locale,
+        aramaic: word.aramaic);
   }
 
-  final person = _pick(_gkPerson[slot(0)], locale);
-  final tense = _pick(_gkTense[slot(1)], locale);
-  final voice = _pick(_gkVoice[slot(2)], locale);
-  final mood = _pick(_gkMood[slot(3)], locale);
-  final kase = _pick(_gkCase[slot(4)], locale);
-  final number = _pick(_gkNumber[slot(5)], locale);
-  final gender = _pick(_gkGender[slot(6)], locale);
-  final degree = _pick(_gkDegree[slot(7)], locale);
+  final pos = label(MorphSlot.pos);
+  final person = label(MorphSlot.person);
+  final tense = label(MorphSlot.tense);
+  final voice = label(MorphSlot.voice);
+  final mood = label(MorphSlot.mood);
+  final kase = label(MorphSlot.grammaticalCase);
+  final number = label(MorphSlot.number);
+  final gender = label(MorphSlot.gender);
+  final degree = label(MorphSlot.degree);
 
   // Verb parse reads tense-voice-mood, the order every Greek grammar —
   // and BibleWorks itself — uses.
@@ -196,7 +402,7 @@ String _greek(String code, String locale) {
     if (nominal.isNotEmpty) _join(nominal, locale),
     if (degree != null) degree,
   ];
-  if (groups.isEmpty) return code;
+  if (groups.isEmpty) return word.raw;
   return groups.join(' · ');
 }
 
@@ -254,7 +460,18 @@ const _hebSuffixType = <String, List<String>>{
   'p': ['pronominal', '代词后缀', '代詞後綴'],
 };
 
-/// Hebrew binyanim + the Aramaic stems that share the slot.
+/// The preposition subtype slot has exactly one value in the whole
+/// corpus: a preposition that has swallowed the article.
+const _hebPrepType = <String, List<String>>{
+  'd': ['definite article', '定冠词', '定冠詞'],
+};
+
+/// Hebrew binyanim.
+///
+/// These letters are NOT shared with Aramaic — see [_arStem]. Open
+/// Scriptures reuses the same slot with a different vocabulary, so `q`
+/// is Qal here and Peal there, and `t` is Hithpael here and Hishtaphel
+/// there.
 const _hebStem = <String, List<String>>{
   'q': ['Qal', 'Qal 简单主动', 'Qal 簡單主動'],
   'N': ['Niphal', 'Niphal 简单被动', 'Niphal 簡單被動'],
@@ -283,6 +500,44 @@ const _hebStem = <String, List<String>>{
   'w': ['Nithpalel', 'Nithpalel', 'Nithpalel'],
   'y': ['Nithpoel', 'Nithpoel', 'Nithpoel'],
   'z': ['Hithpoel', 'Hithpoel', 'Hithpoel'],
+};
+
+/// Aramaic verb stems, from the Open Scriptures morphology spec
+/// (`hb.openscriptures.org/parsing/HebrewMorphologyCodes.html`).
+///
+/// 2026-08-07: until now Aramaic verbs were labelled from [_hebStem],
+/// which shares the slot but not the vocabulary. Every one of the 1,068
+/// Aramaic verbs in the shipped corpus was therefore given a Hebrew
+/// binyan's name: 634 Peals read "Qal", 144 Haphels read "Hiphil", 50
+/// Hithpeels read "Hothpaal", and the 39 Aphel/Shaphel/Saphel forms —
+/// stems Hebrew does not have at all — lost their stem entirely.
+const _arStem = <String, List<String>>{
+  'q': ['Peal', 'Peal 简单主动', 'Peal 簡單主動'],
+  'Q': ['Peil', 'Peil 简单被动', 'Peil 簡單被動'],
+  'u': ['Hithpeel', 'Hithpeel 反身', 'Hithpeel 反身'],
+  'i': ['Ithpeel', 'Ithpeel 反身', 'Ithpeel 反身'],
+  'p': ['Pael', 'Pael 加强主动', 'Pael 加強主動'],
+  'P': ['Ithpaal', 'Ithpaal', 'Ithpaal'],
+  'M': ['Hithpaal', 'Hithpaal', 'Hithpaal'],
+  'a': ['Aphel', 'Aphel 使役主动', 'Aphel 使役主動'],
+  'h': ['Haphel', 'Haphel 使役主动', 'Haphel 使役主動'],
+  's': ['Saphel', 'Saphel', 'Saphel'],
+  'e': ['Shaphel', 'Shaphel', 'Shaphel'],
+  'H': ['Hophal', 'Hophal 使役被动', 'Hophal 使役被動'],
+  't': ['Hishtaphel', 'Hishtaphel', 'Hishtaphel'],
+  'v': ['Ishtaphel', 'Ishtaphel', 'Ishtaphel'],
+  'w': ['Hithaphel', 'Hithaphel', 'Hithaphel'],
+  'o': ['Polel', 'Polel', 'Polel'],
+  'z': ['Ithpoel', 'Ithpoel', 'Ithpoel'],
+  'r': ['Hithpolel', 'Hithpolel', 'Hithpolel'],
+  'f': ['Hithpalpel', 'Hithpalpel', 'Hithpalpel'],
+  'b': ['Hephal', 'Hephal', 'Hephal'],
+  'c': ['Tiphel', 'Tiphel', 'Tiphel'],
+  'm': ['Poel', 'Poel', 'Poel'],
+  'l': ['Palpel', 'Palpel', 'Palpel'],
+  'L': ['Ithpalpel', 'Ithpalpel', 'Ithpalpel'],
+  'O': ['Ithpolel', 'Ithpolel', 'Ithpolel'],
+  'G': ['Ittaphal', 'Ittaphal', 'Ittaphal'],
 };
 
 const _hebConj = <String, List<String>>{
@@ -330,124 +585,268 @@ const _hebState = <String, List<String>>{
 /// preposition + stem + suffix), which OSHB writes `/`-separated. The
 /// whole stack is shown, joined with `+`, because that IS the parse —
 /// dropping the prefixes would misrepresent the word.
-String _hebrew(String code, String locale) {
-  final isAramaic = code.startsWith('A');
-  final body = code.substring(1);
-  if (body.isEmpty) return code;
-  final parts = body
-      .split('/')
-      .where((p) => p.isNotEmpty)
-      .map((p) => _hebMorpheme(p, locale))
-      .where((p) => p.isNotEmpty)
-      .toList();
-  if (parts.isEmpty) return code;
+List<String> _some(List<String?> parts) =>
+    [for (final p in parts) if (p != null) p];
+
+String _semitic(MorphWord word, String locale) {
+  final parts = <String>[];
+  for (final m in word.morphemes) {
+    final text = _semiticMorpheme(word, m, locale);
+    if (text.isNotEmpty) parts.add(text);
+  }
+  if (parts.isEmpty) return word.raw;
   final text = parts.join(' + ');
-  if (!isAramaic) return text;
+  if (!word.aramaic) return text;
   final tag = _pick(const ['Aramaic', '亚兰文', '亞蘭文'], locale)!;
   return '$tag · $text';
 }
 
-String _hebMorpheme(String m, String locale) {
-  final pos = m[0];
-  String at(int i) => i < m.length ? m[i] : '';
+String _semiticMorpheme(MorphWord word, MorphMorpheme m, String locale) {
+  String? at(MorphSlot slot) {
+    final code = m.slots[slot];
+    if (code == null) return null;
+    return morphSlotLabel(word.scheme, m.pos, slot, code, locale,
+        aramaic: word.aramaic);
+  }
 
-  switch (pos) {
+  final subtype = at(MorphSlot.subtype);
+  final person = at(MorphSlot.person);
+  final gender = at(MorphSlot.gender);
+  final number = at(MorphSlot.number);
+  final state = at(MorphSlot.state);
+  final posLabel = _pick(_hebPos[m.pos], locale);
+
+  switch (m.pos) {
     case 'V':
-      // V + stem + conjugation + (person gender number | gender number state)
-      final stem = _pick(_hebStem[at(1)], locale);
-      final conj = at(2);
-      final conjLabel = _pick(_hebConj[conj], locale);
-      final bits = <String>[
-        if (stem != null) stem,
-        if (conjLabel != null) conjLabel,
-      ];
-      // Participles and infinitives inflect for gender/number/state;
-      // finite forms inflect for person/gender/number.
-      if (conj == 'r' || conj == 's') {
-        final g = _pick(_hebGender[at(3)], locale);
-        final n = _pick(_hebNumber[at(4)], locale);
-        final s = _pick(_hebState[at(5)], locale);
-        bits.addAll([if (g != null) g, if (n != null) n, if (s != null) s]);
-      } else {
-        final p = _pick(_hebPerson[at(3)], locale);
-        final g = _pick(_hebGender[at(4)], locale);
-        final n = _pick(_hebNumber[at(5)], locale);
-        bits.addAll([if (p != null) p, if (g != null) g, if (n != null) n]);
-      }
+      // Slot MEANING is settled by the parser; this only orders the
+      // labels. Participles come out gender-number-state and finite
+      // forms person-gender-number because that is how the parser filled
+      // them, not because of a second copy of the rule.
+      final bits = _some([
+        at(MorphSlot.stem),
+        at(MorphSlot.conjugation),
+        person,
+        gender,
+        number,
+        state,
+      ]);
       return bits.isEmpty ? '' : _join(bits, locale);
 
     case 'N':
-      final type = _pick(_hebNounType[at(1)], locale);
-      final g = _pick(_hebGender[at(2)], locale);
-      final n = _pick(_hebNumber[at(3)], locale);
-      final s = _pick(_hebState[at(4)], locale);
-      final noun = _pick(_hebPos['N'], locale)!;
-      return _join([
-        noun,
-        if (type != null) type,
-        if (g != null) g,
-        if (n != null) n,
-        if (s != null) s,
-      ], locale);
+      return _join(
+          _some([posLabel, subtype, gender, number, state]), locale);
 
     case 'A':
-      final type = _pick(_hebAdjType[at(1)], locale);
-      final g = _pick(_hebGender[at(2)], locale);
-      final n = _pick(_hebNumber[at(3)], locale);
-      final s = _pick(_hebState[at(4)], locale);
-      return _join([
-        if (type != null) type else _pick(_hebPos['A'], locale)!,
-        if (g != null) g,
-        if (n != null) n,
-        if (s != null) s,
-      ], locale);
+      return _join(
+          _some([subtype ?? posLabel, gender, number, state]), locale);
 
     case 'P':
-      final type = _pick(_hebPronType[at(1)], locale);
-      final p = _pick(_hebPerson[at(2)], locale);
-      final g = _pick(_hebGender[at(3)], locale);
-      final n = _pick(_hebNumber[at(4)], locale);
-      return _join([
-        if (type != null) type,
-        _pick(_hebPos['P'], locale)!,
-        if (p != null) p,
-        if (g != null) g,
-        if (n != null) n,
-      ], locale);
+      // The type qualifies the noun ("demonstrative pronoun"), so it
+      // leads rather than trails.
+      return _join(
+          _some([subtype, posLabel, person, gender, number]), locale);
 
     case 'S':
-      final type = _pick(_hebSuffixType[at(1)], locale);
-      final p = _pick(_hebPerson[at(2)], locale);
-      final g = _pick(_hebGender[at(3)], locale);
-      final n = _pick(_hebNumber[at(4)], locale);
-      return _join([
-        if (type != null) type else _pick(_hebPos['S'], locale)!,
-        if (p != null) p,
-        if (g != null) g,
-        if (n != null) n,
-      ], locale);
+      return _join(
+          _some([subtype ?? posLabel, person, gender, number]), locale);
 
     case 'T':
-      final type = _pick(_hebPartType[at(1)], locale);
-      return type ?? _pick(_hebPos['T'], locale)!;
+      return subtype ?? posLabel!;
 
     case 'R':
       // `Rd` is a preposition that has swallowed the article.
-      if (at(1) == 'd') {
-        return _join([
-          _pick(_hebPos['R'], locale)!,
-          _pick(_hebPartType['d'], locale)!,
-        ], locale);
-      }
-      return _pick(_hebPos['R'], locale)!;
-
-    case 'C':
-    case 'D':
-      return _pick(_hebPos[pos], locale)!;
+      return _join(_some([posLabel, subtype]), locale);
 
     default:
       // Empty, not the raw morpheme — an undecodable part is dropped so
-      // `_hebrew` can fall back to showing the whole original code.
-      return _pick(_hebPos[pos], locale) ?? '';
+      // `_semitic` can fall back to showing the whole original code.
+      return posLabel ?? '';
   }
 }
+
+// ── Slot catalogue ──────────────────────────────────────────────────
+//
+// The query surface in `utils/morph_query.dart` is built from these,
+// which is why they are exposed as functions over the private tables
+// rather than by making the tables public: the labels a chip shows and
+// the labels the parse line shows come from one lookup, so they cannot
+// drift.
+
+/// Which table a (scheme, part of speech, slot) triple reads from.
+///
+/// [pos] matters because the Semitic subtype slot is a different
+/// vocabulary for every part of speech, and [aramaic] matters because the
+/// stem slot is.
+Map<String, List<String>>? _tableFor(
+  MorphScheme scheme,
+  String pos,
+  MorphSlot slot, {
+  required bool aramaic,
+}) {
+  if (scheme == MorphScheme.greek) {
+    return switch (slot) {
+      MorphSlot.pos => _gkPos,
+      MorphSlot.person => _gkPerson,
+      MorphSlot.tense => _gkTense,
+      MorphSlot.voice => _gkVoice,
+      MorphSlot.mood => _gkMood,
+      MorphSlot.grammaticalCase => _gkCase,
+      MorphSlot.number => _gkNumber,
+      MorphSlot.gender => _gkGender,
+      MorphSlot.degree => _gkDegree,
+      _ => null,
+    };
+  }
+  return switch (slot) {
+    MorphSlot.pos => _hebPos,
+    MorphSlot.stem => aramaic ? _arStem : _hebStem,
+    MorphSlot.conjugation => _hebConj,
+    MorphSlot.person => _hebPerson,
+    MorphSlot.gender => _hebGender,
+    MorphSlot.number => _hebNumber,
+    MorphSlot.state => _hebState,
+    MorphSlot.subtype => switch (pos) {
+        'N' => _hebNounType,
+        'A' => _hebAdjType,
+        'P' => _hebPronType,
+        'T' => _hebPartType,
+        'S' => _hebSuffixType,
+        'R' => _hebPrepType,
+        _ => null,
+      },
+    _ => null,
+  };
+}
+
+/// The localised label for one slot value, or null when the corpus
+/// carries a code no published table names. Callers show the raw code in
+/// that case — an unnamed tag is still a real distinction in the data.
+String? morphSlotLabel(
+  MorphScheme scheme,
+  String pos,
+  MorphSlot slot,
+  String code,
+  String locale, {
+  bool aramaic = false,
+}) =>
+    _pick(_tableFor(scheme, pos, slot, aramaic: aramaic)?[code], locale);
+
+/// Every value [slot] can take for a word of this scheme and part of
+/// speech, in grammatical rather than alphabetical order (present,
+/// imperfect, future, aorist… — the order the tables are written in,
+/// which is the order a grammar teaches them).
+///
+/// Returns the empty list for a slot that does not apply.
+List<String> morphSlotOptions(
+  MorphScheme scheme,
+  String pos,
+  MorphSlot slot, {
+  bool aramaic = false,
+}) {
+  if (slot != MorphSlot.pos && !morphSlotsFor(scheme, pos).contains(slot)) {
+    return const <String>[];
+  }
+  return _tableFor(scheme, pos, slot, aramaic: aramaic)
+          ?.keys
+          .toList(growable: false) ??
+      const <String>[];
+}
+
+/// The slots a word of this part of speech can carry, in the order a
+/// grammar presents them.
+///
+/// Measured against the whole bundled corpus rather than copied from the
+/// spec: MorphGNT, for one, leaves person blank on personal pronouns even
+/// though the slot exists, so offering it would be offering a filter that
+/// can never match.
+/// Every part of speech a scheme codes, in the order its table lists it.
+List<String> morphPartsOfSpeech(MorphScheme scheme) =>
+    (scheme == MorphScheme.greek ? _gkPos : _hebPos)
+        .keys
+        .toList(growable: false);
+
+List<MorphSlot> morphSlotsFor(MorphScheme scheme, String pos) =>
+    (scheme == MorphScheme.greek ? _gkSlots : _semSlots)[pos] ??
+    const <MorphSlot>[];
+
+const _gkSlots = <String, List<MorphSlot>>{
+  'V-': [
+    MorphSlot.tense,
+    MorphSlot.voice,
+    MorphSlot.mood,
+    MorphSlot.person,
+    MorphSlot.grammaticalCase,
+    MorphSlot.number,
+    MorphSlot.gender,
+  ],
+  'N-': [MorphSlot.grammaticalCase, MorphSlot.number, MorphSlot.gender],
+  'A-': [
+    MorphSlot.grammaticalCase,
+    MorphSlot.number,
+    MorphSlot.gender,
+    MorphSlot.degree,
+  ],
+  'RA': [MorphSlot.grammaticalCase, MorphSlot.number, MorphSlot.gender],
+  'RD': [MorphSlot.grammaticalCase, MorphSlot.number, MorphSlot.gender],
+  'RI': [MorphSlot.grammaticalCase, MorphSlot.number, MorphSlot.gender],
+  'RP': [MorphSlot.grammaticalCase, MorphSlot.number, MorphSlot.gender],
+  'RR': [MorphSlot.grammaticalCase, MorphSlot.number, MorphSlot.gender],
+  'D-': [MorphSlot.degree],
+};
+
+const _semSlots = <String, List<MorphSlot>>{
+  'V': [
+    MorphSlot.stem,
+    MorphSlot.conjugation,
+    MorphSlot.person,
+    MorphSlot.gender,
+    MorphSlot.number,
+    MorphSlot.state,
+  ],
+  'N': [
+    MorphSlot.subtype,
+    MorphSlot.gender,
+    MorphSlot.number,
+    MorphSlot.state,
+  ],
+  'A': [
+    MorphSlot.subtype,
+    MorphSlot.gender,
+    MorphSlot.number,
+    MorphSlot.state,
+  ],
+  'P': [
+    MorphSlot.subtype,
+    MorphSlot.person,
+    MorphSlot.gender,
+    MorphSlot.number,
+  ],
+  'S': [
+    MorphSlot.subtype,
+    MorphSlot.person,
+    MorphSlot.gender,
+    MorphSlot.number,
+  ],
+  'T': [MorphSlot.subtype],
+  'R': [MorphSlot.subtype],
+};
+
+/// A localised name for the slot itself ("Tense", "Stem", "State").
+String morphSlotName(MorphSlot slot, String locale) =>
+    _pick(_slotNames[slot], locale) ?? slot.name;
+
+const _slotNames = <MorphSlot, List<String>>{
+  MorphSlot.pos: ['Part of speech', '词类', '詞類'],
+  MorphSlot.tense: ['Tense', '时态', '時態'],
+  MorphSlot.voice: ['Voice', '语态', '語態'],
+  MorphSlot.mood: ['Mood', '语气', '語氣'],
+  MorphSlot.grammaticalCase: ['Case', '格', '格'],
+  MorphSlot.degree: ['Degree', '级', '級'],
+  MorphSlot.subtype: ['Type', '类别', '類別'],
+  MorphSlot.stem: ['Stem', '语干', '語幹'],
+  MorphSlot.conjugation: ['Conjugation', '动词形式', '動詞形式'],
+  MorphSlot.state: ['State', '状态', '狀態'],
+  MorphSlot.person: ['Person', '人称', '人稱'],
+  MorphSlot.gender: ['Gender', '性', '性'],
+  MorphSlot.number: ['Number', '数', '數'],
+};

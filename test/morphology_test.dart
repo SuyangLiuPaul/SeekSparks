@@ -98,6 +98,30 @@ void main() {
           'Aramaic · noun common masculine singular absolute');
     });
 
+    test('Aramaic verbs use Aramaic binyan names, not Hebrew ones', () {
+      // The stem letters overlap with Hebrew but name different conjugations;
+      // 1068 words in Daniel/Ezra were previously mislabelled.
+      expect(describeMorphology('AVqp3ms', 'en'),
+          'Aramaic · Peal perfect 3rd person masculine singular');
+      expect(describeMorphology('AVhp3ms', 'en'),
+          'Aramaic · Haphel perfect 3rd person masculine singular');
+      expect(describeMorphology('AVup3ms', 'en'),
+          'Aramaic · Hithpeel perfect 3rd person masculine singular');
+      // Aphel has no Hebrew counterpart at all — it used to vanish.
+      expect(describeMorphology('AVai3ms', 'en'),
+          'Aramaic · Aphel imperfect 3rd person masculine singular');
+      // Hebrew is untouched.
+      expect(describeMorphology('HVqp3ms', 'en'),
+          'Qal perfect 3rd person masculine singular');
+    });
+
+    test('x placeholders are treated as an absent slot', () {
+      // OSHB writes x for "unknown or unnecessary"; it is not a value.
+      expect(describeMorphology('HPdxms', 'en'),
+          'demonstrative pronoun masculine singular');
+      expect(describeMorphology('ANxxxa', 'en'), 'Aramaic · noun absolute');
+    });
+
     test('Chinese Hebrew labels', () {
       expect(describeMorphology('HNcmpa', 'zh-Hant'), '名詞普通陽性複數獨立式');
     });
@@ -109,6 +133,53 @@ void main() {
       expect(morphologyPartOfSpeech('HVqp3ms', 'en'), 'verb');
       expect(morphologyPartOfSpeech('HR/Ncfsa', 'en'), 'preposition');
       expect(morphologyPartOfSpeech('RA----NSM-', 'en'), 'article');
+    });
+  });
+
+  group('parser exposed to the matcher', () {
+    test('Greek is one morpheme, Semitic splits on the slash', () {
+      expect(parseMorphology('V-3AAI-S--')!.morphemes, hasLength(1));
+      expect(parseMorphology('HR/Ncfsa')!.morphemes.map((m) => m.pos),
+          ['R', 'N']);
+    });
+
+    test('slots carry the raw letters, not labels', () {
+      final v = parseMorphology('HVqp3ms')!.morphemes.single;
+      expect(v.slots[MorphSlot.stem], 'q');
+      expect(v.slots[MorphSlot.conjugation], 'p');
+      expect(v.slots[MorphSlot.person], '3');
+      expect(v.slots[MorphSlot.grammaticalCase], isNull);
+    });
+
+    test('the head is the last non-suffix morpheme', () {
+      // Prefixes come first, pronominal suffixes last; the head is between.
+      expect(parseMorphology('HR/Ncfsa')!.headIndex, 1);
+      expect(parseMorphology('HC/Vqw3ms/Sp3fs')!.headIndex, 1);
+      expect(parseMorphology('HNcmsc')!.headIndex, 0);
+    });
+
+    test('Greek participles keep both the verbal and the nominal slots', () {
+      final p = parseMorphology('V--PAPNSM-')!.morphemes.single;
+      expect(p.slots[MorphSlot.tense], 'P');
+      expect(p.slots[MorphSlot.mood], 'P');
+      expect(p.slots[MorphSlot.grammaticalCase], 'N');
+      expect(p.slots[MorphSlot.person], isNull);
+    });
+
+    test('option lists are offered per part of speech', () {
+      const sem = MorphScheme.semitic;
+      expect(morphSlotOptions(sem, 'V', MorphSlot.stem), contains('q'));
+      // A noun has no stem, so the query must not offer one.
+      expect(morphSlotOptions(sem, 'N', MorphSlot.stem), isEmpty);
+      expect(morphSlotOptions(sem, 'V', MorphSlot.stem, aramaic: true),
+          contains('a'));
+      expect(morphSlotOptions(sem, 'V', MorphSlot.stem), isNot(contains('a')));
+      // MorphGNT never fills person on a personal pronoun, so offering it
+      // would offer a filter that can never match.
+      expect(morphSlotsFor(MorphScheme.greek, 'RP'),
+          isNot(contains(MorphSlot.person)));
+      expect(morphSlotsFor(MorphScheme.greek, 'V-'),
+          contains(MorphSlot.person));
     });
   });
 
