@@ -181,9 +181,9 @@ void main() {
             locale: 'en',
           ),
         ]),
-        // A labelled tab needs 66 px and there are now nine of them,
-        // so the threshold is 594 — it moves every time a tab is added.
-        width: 620,
+        // A labelled tab needs 66 px and there are now ten of them, so
+        // the threshold is 660 — it moves every time a tab is added.
+        width: 700,
       ));
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);

@@ -133,6 +133,9 @@ flutter:
     - assets/tagged/kjvs/
     - assets/tagged/cuvs-plus/
     - assets/tagged/lxxwh/
+    - assets/concordance/
+    - assets/concordance/t/
+    - assets/concordance/v/
     - assets/sermons/index.json
     - assets/sermons/refs.json
     - assets/family_tree.json

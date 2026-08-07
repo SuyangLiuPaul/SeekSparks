@@ -72,7 +72,10 @@ void main() {
       expect(AnalysisTab.values.indexOf(AnalysisTab.morphology), 8);
       expect(AnalysisTab.values.indexOf(AnalysisTab.wordStudy), 0);
       expect(AnalysisTab.values.indexOf(AnalysisTab.vocabulary), 7);
-      expect(AnalysisTab.values, hasLength(9));
+      // `topics` was appended after `morphology` for the same reason —
+      // every index before it has to keep its meaning.
+      expect(AnalysisTab.values.indexOf(AnalysisTab.topics), 9);
+      expect(AnalysisTab.values, hasLength(10));
     });
   });
 

@@ -14,12 +14,16 @@
 ///     words occur in the whole Bible, from the bundled concordance.
 library;
 
+import 'dart:ui' show FontFeature;
+
 import 'package:flutter/material.dart';
 
 import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/models/original_word.dart';
 import 'package:seeksparks/models/verse.dart';
 import 'package:seeksparks/services/concordance_service.dart';
+import 'package:seeksparks/services/modern_concordance_service.dart';
+import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 import 'package:seeksparks/utils/scripture_markup.dart';
 import 'package:seeksparks/services/cross_reference_service.dart';
 import 'package:seeksparks/services/strongs_service.dart';
@@ -49,6 +53,10 @@ enum AnalysisTab {
   /// under `workbench.analysisTab`, so reordering this enum would move
   /// every reader who had a tab open to a different one.
   morphology,
+
+  /// 2026-08-07: Eagle's View's Modern Concordance, keyed to the focused
+  /// verse. Appended for the same reason as `morphology`.
+  topics,
 }
 
 /// The tab strip itself. Deliberately a plain segmented row rather than
@@ -89,6 +97,8 @@ class AnalysisTabStrip extends StatelessWidget {
           'Vocab'),
       (AnalysisTab.morphology, Icons.account_tree_outlined,
           'analysisTabMorphology', 'Forms'),
+      (AnalysisTab.topics, Icons.topic_outlined, 'analysisTabTopics',
+          'Topics'),
     ];
     return Container(
       padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
@@ -515,6 +525,403 @@ class _EmptyPane extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// **Topics** — Eagle's View's Modern Concordance, entered from the verse
+/// the reader is already on.
+///
+/// The concordance is a browsable scheme of 341 topics, and it would have
+/// been simpler to ship it as its own page. That would also have made it a
+/// place you go rather than something the workspace knows: the reader
+/// sitting on Matthew 24:15 wants to be told that this verse is where the
+/// concordance files "Abomination", not to go and look it up.
+///
+/// So the pane leads with the topics that cite the focused verse, each
+/// expandable into the Greek word behind it, that word's other
+/// occurrences, and the corpus statistics that make this a *statistical*
+/// concordance — the NT total, split across Gospels & Acts, Paul, John,
+/// and the other authors.
+///
+/// New Testament only, and silent about it: the source is a NT Greek
+/// concordance, so an Old Testament verse yields nothing and that is the
+/// correct answer, not a gap to apologise for.
+class ConcordanceTopicsPane extends StatefulWidget {
+  const ConcordanceTopicsPane({
+    super.key,
+    required this.englishBook,
+    required this.chapter,
+    required this.verse,
+    required this.locale,
+    required this.onOpenRef,
+  });
+
+  final String englishBook;
+  final int chapter;
+  final int verse;
+  final String locale;
+  final void Function(BibleReference ref) onOpenRef;
+
+  @override
+  State<ConcordanceTopicsPane> createState() => _ConcordanceTopicsPaneState();
+}
+
+class _ConcordanceTopicsPaneState extends State<ConcordanceTopicsPane> {
+  late Future<List<ConcordanceCitation>> _future;
+  int? _openTopic;
+
+  @override
+  void initState() {
+    super.initState();
+    _future = _load();
+  }
+
+  @override
+  void didUpdateWidget(covariant ConcordanceTopicsPane old) {
+    super.didUpdateWidget(old);
+    if (old.englishBook != widget.englishBook ||
+        old.chapter != widget.chapter ||
+        old.verse != widget.verse) {
+      _openTopic = null;
+      _future = _load();
+    }
+  }
+
+  Future<List<ConcordanceCitation>> _load() =>
+      ModernConcordanceService.forVerse(
+        englishBook: widget.englishBook,
+        chapter: widget.chapter,
+        verse: widget.verse,
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    final locale = widget.locale;
+    return FutureBuilder<List<ConcordanceCitation>>(
+      future: _future,
+      builder: (context, snap) {
+        if (snap.connectionState != ConnectionState.done) {
+          return const Center(
+            child: SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          );
+        }
+        final hits = snap.data ?? const <ConcordanceCitation>[];
+        if (hits.isEmpty) {
+          return _EmptyPane(
+            icon: Icons.topic_outlined,
+            message: uiStrings['concordanceNoEntries']?[locale] ??
+                'The Modern Concordance covers the New Testament; '
+                    'this verse has no entry.',
+          );
+        }
+        return ListView.builder(
+          padding: const EdgeInsets.fromLTRB(10, 6, 10, 14),
+          physics: const BouncingScrollPhysics(),
+          // +1 for the attribution that closes the list. The permission
+          // this data ships under is conditional on naming its source, so
+          // the credit travels with the pane, not with a settings page
+          // nobody opens.
+          itemCount: hits.length + 1,
+          itemBuilder: (context, i) {
+            if (i == hits.length) return _attribution(context);
+            final hit = hits[i];
+            return _TopicTile(
+              citation: hit,
+              locale: locale,
+              expanded: _openTopic == hit.topicId,
+              onToggle: () => setState(
+                  () => _openTopic = _openTopic == hit.topicId ? null : hit.topicId),
+              onOpenRef: widget.onOpenRef,
+              here: (widget.englishBook, widget.chapter, widget.verse),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _attribution(BuildContext context) {
+    final theme = Theme.of(context);
+    final text = ModernConcordanceService.attribution;
+    if (text.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: 14),
+      child: Text(
+        text,
+        style: theme.textTheme.bodySmall?.copyWith(
+          fontSize: 10.5,
+          height: 1.35,
+          color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+        ),
+      ),
+    );
+  }
+}
+
+class _TopicTile extends StatelessWidget {
+  const _TopicTile({
+    required this.citation,
+    required this.locale,
+    required this.expanded,
+    required this.onToggle,
+    required this.onOpenRef,
+    required this.here,
+  });
+
+  final ConcordanceCitation citation;
+  final String locale;
+  final bool expanded;
+  final VoidCallback onToggle;
+  final void Function(BibleReference ref) onOpenRef;
+  final (String, int, int) here;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 6),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest.withValues(alpha: 0.35),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          InkWell(
+            borderRadius: BorderRadius.circular(8),
+            onTap: onToggle,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(10, 8, 8, 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      citation.topic.label(locale),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        fontFamilyFallback: kCjkFontFallback,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: scheme.primary.withValues(alpha: 0.10),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      citation.strongs,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: scheme.primary,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                  ),
+                  Icon(
+                    expanded ? Icons.expand_less : Icons.expand_more,
+                    size: 18,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (expanded)
+            _TopicDetail(
+              topicId: citation.topicId,
+              strongs: citation.strongs,
+              locale: locale,
+              onOpenRef: onOpenRef,
+              here: here,
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The Greek word behind one topic citation: its gloss, where else it
+/// occurs, and its corpus statistics.
+class _TopicDetail extends StatefulWidget {
+  const _TopicDetail({
+    required this.topicId,
+    required this.strongs,
+    required this.locale,
+    required this.onOpenRef,
+    required this.here,
+  });
+
+  final int topicId;
+  final String strongs;
+  final String locale;
+  final void Function(BibleReference ref) onOpenRef;
+  final (String, int, int) here;
+
+  @override
+  State<_TopicDetail> createState() => _TopicDetailState();
+}
+
+class _TopicDetailState extends State<_TopicDetail> {
+  late Future<(List<ConcordanceSection>, String?)> _future;
+
+  @override
+  void initState() {
+    super.initState();
+    _future = _load();
+  }
+
+  Future<(List<ConcordanceSection>, String?)> _load() async => (
+        await ModernConcordanceService.sections(widget.topicId),
+        await ModernConcordanceService.transliteration(widget.strongs),
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return FutureBuilder<(List<ConcordanceSection>, String?)>(
+      future: _future,
+      builder: (context, snap) {
+        if (!snap.hasData) {
+          return const Padding(
+            padding: EdgeInsets.all(10),
+            child: SizedBox(
+              height: 14,
+              width: 14,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          );
+        }
+        final (sections, translit) = snap.data!;
+        // Only the entries for the Greek word that brought us here. A
+        // topic can run to dozens of words; showing all of them would
+        // bury the one the reader's verse actually uses.
+        final entries = [
+          for (final s in sections)
+            for (final e in s.entries)
+              if (e.strongs == widget.strongs) (s, e),
+        ];
+        if (entries.isEmpty) return const SizedBox.shrink();
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (translit != null && translit.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: Text(
+                    translit,
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: scheme.primary,
+                      letterSpacing: 0.4,
+                    ),
+                  ),
+                ),
+              for (final (_, e) in entries) ...[
+                Text(
+                  e.label(widget.locale),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    height: 1.4,
+                    fontFamilyFallback: kCjkFontFallback,
+                  ),
+                ),
+                if (e.totals.isNotEmpty) _stats(context, e),
+                if (e.refs.isNotEmpty) _refs(context, e),
+                const SizedBox(height: 6),
+              ],
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _stats(BuildContext context, ConcordanceEntry e) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    const labels = {
+      'nt': 'NT',
+      'gospelsActs': 'Gospels+Acts',
+      'paul': 'Paul',
+      'john': 'John',
+      'otherAuthors': 'Other',
+    };
+    return Padding(
+      padding: const EdgeInsets.only(top: 6),
+      child: Wrap(
+        spacing: 6,
+        runSpacing: 4,
+        children: [
+          for (final key in labels.keys)
+            if (e.totals[key] != null)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: key == 'nt'
+                      ? scheme.primary.withValues(alpha: 0.12)
+                      : scheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  '${labels[key]} ${e.totals[key]}',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    fontSize: 10,
+                    color: key == 'nt' ? scheme.primary : scheme.onSurfaceVariant,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ),
+        ],
+      ),
+    );
+  }
+
+  Widget _refs(BuildContext context, ConcordanceEntry e) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(top: 6),
+      child: Wrap(
+        spacing: 6,
+        runSpacing: 2,
+        children: [
+          for (final (book, ch, vs) in e.refs)
+            Builder(builder: (context) {
+              // The verse we came from is in this list. Marking it rather
+              // than hiding it keeps the count honest against the NT
+              // total shown just above.
+              final isHere = book == widget.here.$1 &&
+                  ch == widget.here.$2 &&
+                  vs == widget.here.$3;
+              return InkWell(
+                onTap: () => widget.onOpenRef(BibleReference(
+                  englishBook: book,
+                  chapter: ch,
+                  verseStart: vs,
+                  verseEnd: vs,
+                )),
+                child: Text(
+                  '${localeAwareBookName(book, widget.locale)} $ch:$vs',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    fontSize: 10.5,
+                    color: isHere ? scheme.primary : scheme.onSurfaceVariant,
+                    fontWeight: isHere ? FontWeight.w700 : null,
+                    decoration: isHere ? TextDecoration.underline : null,
+                    fontFamilyFallback: kCjkFontFallback,
+                  ),
+                ),
+              );
+            }),
+        ],
       ),
     );
   }

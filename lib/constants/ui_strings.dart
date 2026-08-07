@@ -7029,6 +7029,21 @@ const uiStrings = {
     'zh-Hant': '詞形',
     'en': 'Forms',
   },
+  // 2026-08-07: Eagle's View's Modern Concordance. 主题 rather than
+  // 汇编/索引 — the tab answers "what subject does the concordance file
+  // this verse under", and 主题 is the word a Chinese reader would use
+  // for that, where 索引 would suggest a bare reference list.
+  'analysisTabTopics': {
+    'zh-Hans': '主题',
+    'zh-Hant': '主題',
+    'en': 'Topics',
+  },
+  'concordanceNoEntries': {
+    'zh-Hans': '现代汇编只收录新约；本节没有条目。',
+    'zh-Hant': '現代彙編只收錄新約；本節沒有條目。',
+    'en': 'The Modern Concordance covers the New Testament; '
+        'this verse has no entry.',
+  },
   'morphSeed': {'zh-Hans': '此词词形', 'zh-Hant': '此詞詞形', 'en': 'This word'},
   'morphClear': {'zh-Hans': '清除', 'zh-Hant': '清除', 'en': 'Clear'},
   'morphAnyForm': {
