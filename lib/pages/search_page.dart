@@ -2118,14 +2118,8 @@ class _SearchPageState extends State<SearchPage> {
         final ref = refs[index];
         final displayBook = localeAwareBookName(
             ref.englishBook, settings.locale, mainProv.currentVersion);
-        final preview =
-            verseIndex['${ref.englishBook}-${ref.chapter}-${ref.verse}']
-                ?.replaceAll('\n', ' ')
-                .replaceAll(notePattern, '')
-                .replaceAllMapped(bracePattern, (m) => m.group(1) ?? '')
-                .replaceAllMapped(squarePattern, (m) => m.group(1) ?? '')
-                .replaceAll(_kMultiSpaceRe, ' ')
-                .trim();
+        final preview = versePreviewText(
+            verseIndex['${ref.englishBook}-${ref.chapter}-${ref.verse}']);
         return DecoratedBox(
           decoration: BoxDecoration(
             border: Border(
@@ -2363,13 +2357,8 @@ class _SearchPageState extends State<SearchPage> {
         // the version's actual verse data.
         final displayBook = localeAwareBookName(
             ref.englishBook, settings.locale, mainProv.currentVersion);
-        final preview = verseIndex['${ref.englishBook}-${ref.chapter}-${ref.verse}']
-            ?.replaceAll('\n', ' ')
-            .replaceAll(notePattern, '')
-            .replaceAllMapped(bracePattern, (m) => m.group(1) ?? '')
-            .replaceAllMapped(squarePattern, (m) => m.group(1) ?? '')
-            .replaceAll(_kMultiSpaceRe, ' ')
-            .trim();
+        final preview = versePreviewText(
+            verseIndex['${ref.englishBook}-${ref.chapter}-${ref.verse}']);
         return DecoratedBox(
           decoration: BoxDecoration(
             border: Border(

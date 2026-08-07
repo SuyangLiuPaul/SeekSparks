@@ -640,6 +640,16 @@ String copyVerseText(String raw, CopyOptions o) {
         buf.write(s.text);
       case ScriptureSpanKind.supplied:
         buf.write(o.keepSuppliedBrackets ? '[${s.text}]' : s.text);
+      case ScriptureSpanKind.divineName:
+      case ScriptureSpanKind.gloss:
+        // NOT governed by [keepSuppliedBrackets], and this is the one
+        // place the distinction has consequences outside the app. That
+        // option asks "do you want the translator's insertions marked?"
+        // — a reader who says no is not asking for `主[雅伟]` to be
+        // pasted into their sermon as `主雅伟`, a divine title Matthew
+        // never wrote. Dropping these brackets does not unmark an
+        // insertion, it fabricates a reading, so they always stay.
+        buf.write('[${s.text}]');
       case ScriptureSpanKind.note:
         // The leading space matters: a note attaches to the word it
         // annotates with no space in the source (`Now<note: Or "And">`),

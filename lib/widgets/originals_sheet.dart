@@ -6,7 +6,7 @@ import 'package:seeksparks/utils/app_nav.dart';
 import 'package:provider/provider.dart';
 
 import 'package:seeksparks/constants/text_patterns.dart'
-    show sanitizeForSearch, notePattern, bracePattern, squarePattern;
+    show sanitizeForSearch, versePreviewText;
 import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/original_word.dart';
@@ -2665,13 +2665,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
   String? _lookupVerseText(ConcordanceRef r) {
     final raw = _verseIndex['${r.englishBook}-${r.chapter}-${r.verse}'];
     if (raw == null) return null;
-    return raw
-        .replaceAll('\n', ' ')
-        .replaceAll(notePattern, '')
-        .replaceAllMapped(bracePattern, (m) => m.group(1) ?? '')
-        .replaceAllMapped(squarePattern, (m) => m.group(1) ?? '')
-        .replaceAll(_kOriginalsMultiSpace, ' ')
-        .trim();
+    return versePreviewText(raw);
   }
 
   Widget _refRow(ConcordanceRef r, ColorScheme scheme) {
@@ -2763,10 +2757,7 @@ class _AiChunk {
 // into `lib/utils/ai_markdown.dart::parseAiMarkdown` so other AI
 // surfaces (search_page, evidence_page, settings_page tier panel)
 // can render `**bold**` / `*italic*` properly instead of showing
-// literal asterisks. The remaining hoisted regex below is just
-// the multi-space collapse used by `_lookupVerseText` — kept here
-// because it's specific to this widget's concordance preview.
-final RegExp _kOriginalsMultiSpace = RegExp(r' {2,}');
+// literal asterisks.
 
 /// Round 56 (continued — Aramaic highlight): when the user taps into
 /// an Aramaic passage from the Bible Tools page, the OriginalsSheet

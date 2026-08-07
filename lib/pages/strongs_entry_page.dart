@@ -4,7 +4,7 @@ import 'package:seeksparks/utils/app_nav.dart';
 import 'package:provider/provider.dart';
 
 import 'package:seeksparks/constants/text_patterns.dart'
-    show notePattern, bracePattern, squarePattern;
+    show versePreviewText;
 import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/strongs.dart';
@@ -21,10 +21,6 @@ import 'package:seeksparks/widgets/home_icon_button.dart';
 import 'package:seeksparks/widgets/language_switcher_button.dart';
 import 'package:seeksparks/widgets/localized_back_button.dart';
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
-
-/// Collapses runs of 2+ spaces left after stripping inline annotations
-/// from a verse-text preview. Module-level so it compiles once.
-final RegExp _kMultiSpaceRe = RegExp(r' {2,}');
 
 /// Standalone page for viewing a single Strong's lexicon entry by its
 /// number (e.g. "G25" / "H430"). Reachable from the search bar when
@@ -351,13 +347,8 @@ class _StrongsEntryPageState extends State<StrongsEntryPage> {
             Builder(builder: (context) {
               final displayBook = localeAwareBookName(
                   r.englishBook, locale, mainProv.currentVersion);
-              final preview = verseIndex['${r.englishBook}-${r.chapter}-${r.verse}']
-                  ?.replaceAll('\n', ' ')
-                  .replaceAll(notePattern, '')
-                  .replaceAllMapped(bracePattern, (m) => m.group(1) ?? '')
-                  .replaceAllMapped(squarePattern, (m) => m.group(1) ?? '')
-                  .replaceAll(_kMultiSpaceRe, ' ')
-                  .trim();
+              final preview = versePreviewText(
+                  verseIndex['${r.englishBook}-${r.chapter}-${r.verse}']);
               return ListTile(
                 dense: true,
                 leading: Icon(Icons.menu_book_outlined,

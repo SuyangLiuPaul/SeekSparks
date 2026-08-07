@@ -27,10 +27,6 @@ import 'package:seeksparks/constants/book_groups.dart'
 import 'package:seeksparks/utils/search_stats.dart';
 import 'package:seeksparks/widgets/search_stats_strip.dart';
 
-// Hoisted regex — same rationale as search_page.dart's `_kMultiSpaceRe`:
-// built once, reused for every preview row during scroll.
-final RegExp _kMultiSpaceRe = RegExp(r' {2,}');
-
 /// The Workbench's left pane: a BibleWorks-style command line (text, a
 /// bare Strong's number, or a structured `G25 AND G26` / `NEAR5` query)
 /// with its results verse list below.
@@ -342,13 +338,7 @@ class _CommandPaneState extends State<CommandPane> {
     setState(() {}); // hide the clear button
   }
 
-  String _cleanPreview(String raw) => raw
-      .replaceAll('\n', ' ')
-      .replaceAll(notePattern, '')
-      .replaceAllMapped(bracePattern, (m) => m.group(1) ?? '')
-      .replaceAllMapped(squarePattern, (m) => m.group(1) ?? '')
-      .replaceAll(_kMultiSpaceRe, ' ')
-      .trim();
+  String _cleanPreview(String raw) => versePreviewText(raw) ?? '';
 
   String _summary(String queryLabel, int count, String locale) =>
       (uiStrings['booleanSearchHeader']?[locale] ?? '{query} — {count} verses')

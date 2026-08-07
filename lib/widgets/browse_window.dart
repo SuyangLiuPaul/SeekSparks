@@ -592,6 +592,9 @@ class _TranslationLine extends StatelessWidget {
                       fontStyle: FontStyle.italic,
                     ),
                   ),
+                ScriptureSpanKind.divineName ||
+                ScriptureSpanKind.gloss =>
+                  glossSpan(span, wb),
                 ScriptureSpanKind.note => WidgetSpan(
                     alignment: PlaceholderAlignment.top,
                     child: Tooltip(
@@ -702,12 +705,16 @@ class _TaggedLine extends StatelessWidget {
                   Text.rich(
                     TextSpan(children: [
                       for (final span in parseScripture(r.text))
-                        TextSpan(
-                          text: span.text,
-                          style: span.kind == ScriptureSpanKind.supplied
-                              ? const TextStyle(fontStyle: FontStyle.italic)
-                              : null,
-                        ),
+                        if (span.kind == ScriptureSpanKind.divineName ||
+                            span.kind == ScriptureSpanKind.gloss)
+                          glossSpan(span, wb)
+                        else
+                          TextSpan(
+                            text: span.text,
+                            style: span.kind == ScriptureSpanKind.supplied
+                                ? const TextStyle(fontStyle: FontStyle.italic)
+                                : null,
+                          ),
                     ]),
                     style: TextStyle(
                       fontSize: t.text,
@@ -997,16 +1004,30 @@ class _HoverWordState extends State<_HoverWord> {
                 // word — BSB prints `[was]`, `[He]`. Set those in
                 // italic like a printed Bible instead of leaving the
                 // brackets to read as punctuation.
+                // 2026-08-07: and it can be a referent gloss instead —
+                // `主[雅伟]` is ONE tagged run once the halves are put
+                // back together, and it is κύριος, so this is the word
+                // a Strong's search on G2962 marks as its hit.
                 for (final span in parseScripture(widget.word.text))
-                  TextSpan(
-                    text: span.text,
-                    style: TextStyle(
-                      fontStyle: span.kind == ScriptureSpanKind.supplied
-                          ? FontStyle.italic
-                          : null,
-                      fontWeight: widget.hit ? FontWeight.w700 : null,
+                  if (span.kind == ScriptureSpanKind.divineName ||
+                      span.kind == ScriptureSpanKind.gloss)
+                    glossSpan(
+                      span,
+                      wb,
+                      style: TextStyle(
+                        fontWeight: widget.hit ? FontWeight.w700 : null,
+                      ),
+                    )
+                  else
+                    TextSpan(
+                      text: span.text,
+                      style: TextStyle(
+                        fontStyle: span.kind == ScriptureSpanKind.supplied
+                            ? FontStyle.italic
+                            : null,
+                        fontWeight: widget.hit ? FontWeight.w700 : null,
+                      ),
                     ),
-                  ),
                 if (widget.showNumbers) ...[
                   for (final t in inlineStrongsNumbers(
                     strongs: widget.word.strongs,

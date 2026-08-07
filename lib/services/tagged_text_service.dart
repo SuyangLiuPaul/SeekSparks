@@ -26,6 +26,8 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
+import '../utils/scripture_markup.dart' show isReferentGloss;
+
 /// One run of translation text and the original-language word behind it.
 @immutable
 class TaggedRun {
@@ -114,9 +116,9 @@ class TaggedTextService {
       final decoded = json.decode(raw) as Map<String, dynamic>;
       final out = <String, List<TaggedRun>>{
         for (final e in decoded.entries)
-          e.key: (e.value as List)
+          e.key: reuniteGlossRuns((e.value as List)
               .map((r) => TaggedRun.fromJson(r as Map<String, dynamic>))
-              .toList(growable: false),
+              .toList(growable: false)),
       };
       _cache[key] = out;
       return out;
@@ -126,6 +128,130 @@ class TaggedTextService {
       _cache[key] = const {};
       return const {};
     }
+  }
+
+  /// Put a referent gloss back together.
+  ///
+  /// The 和合本雅伟版 tagger walked the text word by word and treated
+  /// `主[雅伟]` as if the bracket were ordinary prose, so in 193 verses
+  /// the gloss straddles a run boundary: `主 [` carries G2962 (κύριος)
+  /// and the run that follows opens `雅伟] 的使者` carrying G32
+  /// (ἄγγελος). Two failures, one cause.
+  ///
+  ///   * On screen the halves are laid out as separate words, so the
+  ///     bracket prints with a gap inside it — the `主 [ 雅伟]` a
+  ///     reader sees in the KWIC pane, where the keyword column can
+  ///     end up holding nothing but an orphan `[`.
+  ///   * The closing half is TAGGED, and tagged with the wrong number.
+  ///     Hovering 雅伟 in Matthew 2:13 answers "angel", because the
+  ///     gloss inherited the Strong's of whatever followed it. 雅伟
+  ///     renders no Greek word at all — the word it names is the one
+  ///     printed IN FRONT of it — so a number of its own is an answer
+  ///     to a question the text does not ask.
+  ///
+  /// Which word that is varies, and the fix does not assume: usually
+  /// 主/κύριος, but δεσπότης at Jude 1:4, θεός at Acts 16:32, and at
+  /// Romans 4:17 a preposition phrase that swallowed the 主. The rule
+  /// is positional, not lexical.
+  ///
+  /// The gloss therefore belongs to the run that OPENED it. Restricted
+  /// to the closed token set (see `bracketSpanKind`), which is why this
+  /// cannot touch the brackets that legitimately span several runs:
+  /// LXX/WH marks doubtful text as `[το αυτο]` and the NASB brackets
+  /// whole disputed verses, and there every word inside is a real word
+  /// with a real number of its own. Measured over the shipped assets
+  /// this rewrites cuvs-yhwh alone — 198 verses — and leaves bsb,
+  /// kjvs, lxxwh, cuvs-plus and nsn-plus byte-identical.
+  @visibleForTesting
+  static List<TaggedRun> reuniteGlossRuns(List<TaggedRun> runs) {
+    var seen = false;
+    for (final r in runs) {
+      if (r.text.contains('[')) {
+        seen = true;
+        break;
+      }
+    }
+    if (!seen) return runs;
+
+    final texts = <String>[];
+    // Text already pulled forward out of the run about to be read.
+    String? carried;
+    for (var i = 0; i < runs.length; i++) {
+      var text = carried == null
+          ? runs[i].text
+          : runs[i].text.substring(carried.length);
+      carried = null;
+      final open = text.lastIndexOf('[');
+      if (open >= 0 && !text.substring(open).contains(']') &&
+          i + 1 < runs.length) {
+        final next = runs[i + 1].text;
+        final close = next.indexOf(']');
+        if (close >= 0) {
+          final body = text.substring(open + 1) + next.substring(0, close);
+          if (isReferentGloss(body)) {
+            carried = next.substring(0, close + 1);
+            text += carried;
+          }
+        }
+      }
+      texts.add(_tightenGloss(text));
+    }
+
+    // The importer also spaced the bracket off from the Chinese around
+    // it (`主 [雅伟] 的道`), and after reuniting the trailing half of
+    // that spacing sits at the head of the NEXT run where no
+    // within-string pass can see it.
+    for (var i = 0; i < texts.length - 1; i++) {
+      if (!_endsWithGloss(texts[i])) continue;
+      final head = texts[i + 1].trimLeft();
+      if (head.isEmpty || !_cjk.hasMatch(head[0])) continue;
+      texts[i] = texts[i].trimRight();
+      texts[i + 1] = head;
+    }
+
+    final out = <TaggedRun>[];
+    for (var i = 0; i < runs.length; i++) {
+      // A run whose text was entirely gloss has no printed word left to
+      // carry a number. None exist in the shipped assets; dropping is
+      // the honest answer if one ever does.
+      if (texts[i].isEmpty && runs[i].text.isNotEmpty) continue;
+      out.add(TaggedRun(
+        text: texts[i],
+        strongs: runs[i].strongs,
+        implied: runs[i].implied,
+        grammar: runs[i].grammar,
+      ));
+    }
+    return List.unmodifiable(out);
+  }
+
+  static final RegExp _cjk = RegExp(r'[　-〿一-鿿＀-￯]');
+  static final RegExp _bracket = RegExp(r'\[([^\[\]]*)\]');
+  static final RegExp _glossAtEnd = RegExp(r'\[([^\[\]]*)\]$');
+
+  /// Close the gap the importer left on either side of a gloss, but
+  /// only where the neighbour is CJK — English spacing around a
+  /// bracket is correct and must survive.
+  static String _tightenGloss(String s) {
+    if (!s.contains('[')) return s;
+    return s
+        .replaceAllMapped(
+          RegExp('(${_cjk.pattern})[ \\t]+(${_bracket.pattern})'),
+          (m) => isReferentGloss(m.group(3) ?? '')
+              ? '${m.group(1)}${m.group(2)}'
+              : m.group(0)!,
+        )
+        .replaceAllMapped(
+          RegExp('(${_bracket.pattern})[ \\t]+(${_cjk.pattern})'),
+          (m) => isReferentGloss(m.group(2) ?? '')
+              ? '${m.group(1)}${m.group(3)}'
+              : m.group(0)!,
+        );
+  }
+
+  static bool _endsWithGloss(String s) {
+    final m = _glossAtEnd.firstMatch(s.trimRight());
+    return m != null && isReferentGloss(m.group(1) ?? '');
   }
 
   /// "1 Corinthians" → "1_corinthians", matching the importer's output

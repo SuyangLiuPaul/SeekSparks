@@ -27,6 +27,7 @@ import 'package:provider/provider.dart';
 
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/utils/analysis_focus.dart';
+import 'package:seeksparks/utils/scripture_markup.dart' show ScriptureSpan;
 
 /// Metrics shared by every Workbench surface. Numbers, not opinions —
 /// they exist so panes stay on the same rhythm instead of each picking
@@ -356,6 +357,37 @@ BoxDecoration wordMarkDecoration(WordMark mark, WbColors wb) => BoxDecoration(
         color: mark == WordMark.pinned ? wb.pinMark : Colors.transparent,
       ),
       borderRadius: BorderRadius.circular(2),
+    );
+
+/// A referent gloss — `主[雅伟]`, `主[基督]` — as it should print.
+///
+/// The brackets are kept and the body is left at full text weight and
+/// colour, upright. Every part of that is a correction of something.
+///
+/// Upright, because italic is the printed convention for a word the
+/// TRANSLATOR SUPPLIED, and the gloss says the opposite: the source had
+/// the Name and the translation dropped it. Setting 雅伟 in the italic
+/// reserved for insertions tells the reader the edition invented the
+/// one word it exists to restore.
+///
+/// Brackets kept, because without them `主[雅伟]` prints as `主雅伟` —
+/// a divine title Matthew never wrote, with nothing on screen to show
+/// where the text stops and the edition's claim begins. Weight alone
+/// cannot carry that boundary at workbench sizes in CJK.
+///
+/// Brackets muted, because they are apparatus and the Name is text.
+/// That is also why the two kinds print identically: the edition sets
+/// them the same, and giving the divine name extra weight HERE would
+/// make the 212 glossed occurrences louder than the thousands where
+/// 雅伟 simply stands in the text unbracketed.
+TextSpan glossSpan(ScriptureSpan span, WbColors wb, {TextStyle? style}) =>
+    TextSpan(
+      style: style,
+      children: [
+        TextSpan(text: '[', style: TextStyle(color: wb.mutedText)),
+        TextSpan(text: span.text, style: TextStyle(color: wb.text)),
+        TextSpan(text: ']', style: TextStyle(color: wb.mutedText)),
+      ],
     );
 
 /// Whether a mark underlines its word.

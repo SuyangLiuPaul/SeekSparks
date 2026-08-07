@@ -2,6 +2,8 @@
 // Used across loading_page, home_page, search_page, verse_widget, and
 // fetch_verses to ensure consistent text processing.
 
+import 'package:seeksparks/utils/scripture_markup.dart' show isReferentGloss;
+
 /// Matches `<note:...>` tags embedded in verse text.
 final notePattern = RegExp(r'<note:([^>]+)>');
 
@@ -165,6 +167,39 @@ String _collapsePostStripDuplicates(String text) {
 String displayCleanup(String chunk) {
   return _normalizeDivineNames(
       chunk.replaceAll(_pilcrowPattern, ''));
+}
+
+final _previewMultiSpace = RegExp(r'\s{2,}');
+
+/// A verse squeezed onto one line for a result list.
+///
+/// 2026-08-07: this existed five times — search_page twice, command_pane,
+/// originals_sheet, strongs_entry_page — as the same four chained
+/// replaces copy-pasted, which is why all five made the same mistake
+/// about brackets and why fixing one would not have fixed the others.
+///
+/// Notes go (a preview has no room for apparatus) and `{clarification}`
+/// braces resolve to their content, both unchanged. Square brackets no
+/// longer resolve unconditionally: a supplied word still loses its
+/// brackets, because unbracketed it reads as the sentence it was
+/// written to complete, but a referent gloss keeps them. `主[雅伟]`
+/// flattened to `主雅伟` is a preview that quotes a divine title the
+/// verse does not contain, and a result list is exactly where a reader
+/// scans without checking.
+String? versePreviewText(String? raw) {
+  if (raw == null) return null;
+  return raw
+      .replaceAll('\n', ' ')
+      .replaceAll(notePattern, '')
+      .replaceAllMapped(bracePattern, (m) => m.group(1) ?? '')
+      .replaceAllMapped(
+        squarePattern,
+        (m) => isReferentGloss(m.group(1) ?? '')
+            ? m.group(0)!
+            : (m.group(1) ?? ''),
+      )
+      .replaceAll(_previewMultiSpace, ' ')
+      .trim();
 }
 
 /// 2026-05-07: collapse stray ASCII spaces that sit between an

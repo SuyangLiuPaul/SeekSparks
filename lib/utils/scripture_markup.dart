@@ -20,6 +20,23 @@
 ///     printed Bibles have marked it for centuries. It stays, set apart
 ///     visually rather than deleted.
 ///
+/// 2026-08-07: a square bracket is not always a supplied word, and in
+/// 和合本雅伟版 it is almost never one. `主[雅伟]` does not mean the
+/// editor ADDED 雅伟; it means the 主 printed here is Yahweh — the
+/// received text had the Name and the CUV translated it away, and this
+/// edition exists to say so. The arrow points the opposite way from a
+/// supplied word: supplied = the target has more than the source, gloss
+/// = the source had something the target lost. Rendering the Name in
+/// the italic reserved for a translator's insertion states the reverse
+/// of what the edition is claiming.
+///
+/// The convention is closed and was counted, not guessed: across
+/// `cuvs-yhwh` and `cuvs-yhwh-tr` every bracket in the whole Bible is
+/// one of two tokens — 212 × `[雅伟]`/`[雅偉]` and 17 × `[基督]`. The
+/// second is the same device pointing at the Messiah rather than the
+/// Name (Matthew 22:44 carries both in one verse, which is why they
+/// cannot be told apart by styling one of them as an insertion).
+///
 /// Pure parsing. The widget decides what italic and muted look like.
 library;
 
@@ -33,7 +50,57 @@ enum ScriptureSpanKind {
 
   /// A translator's footnote, lifted out of the flow.
   note,
+
+  /// The divine name, restored where the translation rendered it away.
+  /// `主[雅伟]` — the 主 printed here is Yahweh.
+  divineName,
+
+  /// The same editorial device naming a different referent: `主[基督]`,
+  /// this κύριος is the Messiah.
+  gloss,
 }
+
+/// Divine-name tokens, in every form the bundled assets use.
+///
+/// `耶和华`/`耶和華` are here because a bracket carrying them is the
+/// same claim in a non-restored edition, even though no shipped asset
+/// currently writes one.
+const Set<String> _divineNameTokens = {
+  '雅伟',
+  '雅偉',
+  '雅威',
+  'Yahweh',
+  'YHWH',
+  'YHVH',
+  '耶和华',
+  '耶和華',
+};
+
+/// Referent glosses that are not the divine name.
+const Set<String> _referentTokens = {
+  '基督',
+  'Christ',
+  'Messiah',
+  '弥赛亚',
+  '彌賽亞',
+};
+
+/// What a bracketed body IS.
+///
+/// Anything outside the two closed sets is a supplied word, which is
+/// the right default: BSB alone brackets 18,744 runs and every one of
+/// them is a genuine insertion.
+ScriptureSpanKind bracketSpanKind(String body) {
+  final b = body.trim();
+  if (_divineNameTokens.contains(b)) return ScriptureSpanKind.divineName;
+  if (_referentTokens.contains(b)) return ScriptureSpanKind.gloss;
+  return ScriptureSpanKind.supplied;
+}
+
+/// Whether a bracketed body is an editorial referent gloss rather than
+/// a supplied word — the two kinds that keep their brackets.
+bool isReferentGloss(String body) =>
+    bracketSpanKind(body) != ScriptureSpanKind.supplied;
 
 class ScriptureSpan {
   const ScriptureSpan(this.text, this.kind);
@@ -124,7 +191,7 @@ List<ScriptureSpan> parseScripture(String raw) {
       addPlain(rest.substring(0, sup!.start));
       final body = sup.group(1) ?? '';
       if (body.isNotEmpty) {
-        out.add(ScriptureSpan(body, ScriptureSpanKind.supplied));
+        out.add(ScriptureSpan(body, bracketSpanKind(body)));
       }
       rest = rest.substring(sup.end);
     }
@@ -133,15 +200,30 @@ List<ScriptureSpan> parseScripture(String raw) {
 }
 
 /// The verse as it should READ — notes gone, supplied words kept
-/// without their brackets.
+/// without their brackets, referent glosses kept WITH theirs.
+///
+/// The asymmetry is the point. A supplied word reads as part of the
+/// sentence, so unbracketing it yields the sentence. A gloss does not:
+/// unbracketing `主[雅伟]` yields `主雅伟`, a divine title the verse
+/// does not contain, and the reader has no way to tell it was never
+/// there. The bracket is the only thing separating the edition's claim
+/// from the text it is a claim about.
 ///
 /// This is what search, copy-to-clipboard and text-to-anything should
 /// use. A reader copying John 1:1 wants the verse, not the apparatus.
 String scriptureReadingText(String raw) {
   final buf = StringBuffer();
   for (final s in parseScripture(raw)) {
-    if (s.kind == ScriptureSpanKind.note) continue;
-    buf.write(s.text);
+    switch (s.kind) {
+      case ScriptureSpanKind.note:
+        continue;
+      case ScriptureSpanKind.divineName:
+      case ScriptureSpanKind.gloss:
+        buf.write('[${s.text}]');
+      case ScriptureSpanKind.plain:
+      case ScriptureSpanKind.supplied:
+        buf.write(s.text);
+    }
   }
   // Lifting a note out can leave a doubled space or a space before
   // punctuation; neither is visible in the source but both are in the
