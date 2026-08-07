@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:seeksparks/utils/app_nav.dart';
 import 'package:provider/provider.dart';
 
 import 'package:seeksparks/constants/text_patterns.dart' show sanitizeForSearch;
 import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/verse.dart';
-import 'package:seeksparks/pages/home_page.dart';
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/utils/clipboard_helper.dart';
 import 'package:seeksparks/utils/jump_to_reference.dart';
@@ -14,6 +12,7 @@ import 'package:seeksparks/widgets/home_icon_button.dart';
 import 'package:seeksparks/widgets/language_switcher_button.dart';
 import 'package:seeksparks/widgets/localized_back_button.dart';
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:seeksparks/utils/navigate_to_reader.dart';
 
 /// Standalone highlights browser. Filters by color (or "All") and a
 /// free-text search box; tap a row to jump to the verse in the
@@ -194,7 +193,7 @@ class _HighlightsPageState extends State<HighlightsPage> {
     // 300 ms `Future.delayed` that often missed cold-start and slow
     // devices, leaving the user stranded at the top of the chapter.
     prepareJumpToVerse(v, mp);
-    pushPage(const HomePage());
+    navigateToReader(context);
   }
 
   Future<void> _copyAll(

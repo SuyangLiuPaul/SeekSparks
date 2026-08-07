@@ -9,7 +9,6 @@ import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/utils/theme_color_helpers.dart';
 import 'package:seeksparks/models/bible_evidence.dart';
 import 'package:seeksparks/pages/evidence_detail_page.dart';
-import 'package:seeksparks/pages/home_page.dart';
 import 'package:seeksparks/pages/settings_page.dart';
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/constants/workbench_theme.dart';
@@ -25,6 +24,7 @@ import 'package:seeksparks/widgets/home_icon_button.dart';
 import 'package:seeksparks/widgets/language_switcher_button.dart';
 import 'package:seeksparks/widgets/localized_back_button.dart';
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:seeksparks/utils/navigate_to_reader.dart';
 
 /// Browse the Biblical Evidence Archive — 225 archaeological,
 /// manuscript, scientific, and historical findings that intersect
@@ -703,7 +703,7 @@ class _EvidenceCard extends StatelessWidget {
     if (!context.mounted) return;
     final ok = await showJumpResultSnackBar(context, result);
     if (!ok || !context.mounted) return;
-    pushPage(const HomePage());
+    navigateToReader(context);
   }
 }
 

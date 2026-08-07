@@ -11,7 +11,6 @@ import 'package:seeksparks/models/bible_evidence.dart';
 import 'package:seeksparks/pages/evidence_detail_page.dart';
 import 'package:seeksparks/pages/evidence_page.dart';
 import 'package:seeksparks/pages/family_tree_page.dart';
-import 'package:seeksparks/pages/feedback_page.dart';
 import 'package:seeksparks/pages/highlights_page.dart';
 import 'package:seeksparks/pages/profile_edit_page.dart';
 import 'package:seeksparks/pages/profiles_page.dart';
@@ -24,8 +23,8 @@ import 'package:seeksparks/widgets/onboarding_dialog.dart';
 
 /// 2026-06-12 (v1.3.66 audit): responsive overflow smoke tests for the
 /// remaining top-level pages not already covered by
-/// responsive_overflow_smoke_test.dart (About/Settings/Library/
-/// Dashboard). Pumps each at the four widths bracketing supported
+/// responsive_overflow_smoke_test.dart (About/Settings/Library).
+/// Pumps each at the four widths bracketing supported
 /// devices — iPhone SE (320), iPhone 14/15 (390), iPad portrait (768),
 /// desktop (1280) — and asserts the layout pass throws nothing. A
 /// RenderFlex "OVERFLOWED BY N PIXELS" surfaces as a test exception,
@@ -76,7 +75,6 @@ void main() {
     'EvidenceDetailPage': () =>
         const EvidenceDetailPage(evidence: _wideEvidence),
     'SermonsPage': () => const SermonsPage(),
-    'FeedbackPage': () => const FeedbackPage(),
     'HighlightsPage': () => const HighlightsPage(),
     'ProfilesPage': () => const ProfilesPage(),
     'ProfileEditPage': () => const ProfileEditPage(),

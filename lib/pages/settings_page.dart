@@ -17,7 +17,6 @@ import 'package:seeksparks/constants/workbench_theme.dart' show WbMetrics;
 import 'package:provider/provider.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/app_style_preset.dart';
-import 'package:seeksparks/models/dashboard_section.dart';
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/services/app_icon_service.dart';
 import 'package:seeksparks/utils/app_nav.dart';
@@ -101,7 +100,6 @@ enum SettingsSection {
   display,
   reading,
   account,
-  dashboardLayout,
   notifications,
   // 2026-05-08 (v1.1.10): when an AI feature hits "quota exhausted"
   // (HTTP 429) the error UI now shows a button that deep-links here
@@ -160,7 +158,6 @@ class _SettingsPageBodyState extends State<_SettingsPageBody> {
   final _displayKey = GlobalKey();
   final _readingKey = GlobalKey();
   final _accountKey = GlobalKey();
-  final _dashboardKey = GlobalKey();
   final _notificationsKey = GlobalKey();
   final _aiKey = GlobalKey();
   final _aboutKey = GlobalKey();
@@ -173,8 +170,6 @@ class _SettingsPageBodyState extends State<_SettingsPageBody> {
         return _readingKey;
       case SettingsSection.account:
         return _accountKey;
-      case SettingsSection.dashboardLayout:
-        return _dashboardKey;
       case SettingsSection.notifications:
         return _notificationsKey;
       case SettingsSection.ai:
@@ -1042,14 +1037,6 @@ class _SettingsPageBodyState extends State<_SettingsPageBody> {
               // still come right after.
               // 2026-05-21 (v1.2.69): "Reading plans" section removed
               // along with the rest of the feature.
-              SizedBox(height: 16 * s),
-              KeyedSubtree(
-                key: _dashboardKey,
-                child: _SectionHeader(
-                    uiStrings['settingsSectionDashboard']?[settings.locale] ??
-                        'Dashboard sections'),
-              ),
-              _DashboardSectionsCard(settings: settings, s: s),
               // Round 56 day-3 (2026-05-06): the BYOK card was
               // briefly here at the top level, but the user wanted
               // "the app configures everything as long as I get
@@ -1639,244 +1626,8 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
-/// Card with full dashboard layout controls (round 55):
-///   • Drag-handle reorder: every dashboard block is re-arrangeable
-///   • Per-row Switch: visibility on/off, persisted independently
-///   • "Reset to default" button: restore canonical order +
-///     all-on visibility
-///
-/// Replaces the earlier 3-switch card (Today's Headlines /
-/// Today's Evidence / Today's Reading). Those flags are still
-/// honoured at the AppSettings layer (legacy `setShowDailyNews`
-/// etc. mirror into the new map), so Round 54 users keep their
-/// existing toggles after upgrading.
-class _DashboardSectionsCard extends StatelessWidget {
-  final AppSettings settings;
-  final double s;
-  const _DashboardSectionsCard({required this.settings, required this.s});
-
-  IconData _iconFor(DashboardSection section) {
-    switch (section) {
-      case DashboardSection.readBible:
-        return Icons.menu_book_rounded;
-      case DashboardSection.resumeSermon:
-        return Icons.headset_mic_rounded;
-      case DashboardSection.dailyVerse:
-        return Icons.format_quote_rounded;
-      case DashboardSection.counts:
-        return Icons.dashboard_outlined;
-      case DashboardSection.recentBookmarks:
-        return Icons.bookmark_outline_rounded;
-      case DashboardSection.todayEvidence:
-        return Icons.museum_outlined;
-      case DashboardSection.quickLinks:
-        return Icons.apps_rounded;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final locale = settings.locale;
-    final scheme = Theme.of(context).colorScheme;
-    final order = settings.dashboardSectionOrder;
-    return Card(
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(8 * s, 4 * s, 8 * s, 8 * s),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Helper line above the reorder list — explains the
-            // grip handle + switch idiom.
-            Padding(
-              padding: EdgeInsets.fromLTRB(12 * s, 8 * s, 12 * s, 4 * s),
-              child: Text(
-                uiStrings['dashboardLayoutHint']?[locale] ??
-                    'Drag the handle to reorder. Toggle a row off to hide that block.',
-                style: TextStyle(
-                  fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                  fontSize: (14 * s).clamp(11.0, 14.0),
-                  color: scheme.onSurface.withValues(alpha: 0.65),
-                ),
-              ),
-            ),
-            // ReorderableListView is the standard drag-handle list
-            // widget. shrinkWrap + NeverScrollableScrollPhysics so it
-            // sits inside the parent ListView without nested scrolls.
-            ReorderableListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              buildDefaultDragHandles: false,
-              itemCount: order.length,
-              // v1.3.95 (Flutter 3.44): onReorder → onReorderItem, which
-              // already adjusts newIndex for the removed item, so the manual
-              // `if (newIndex > oldIndex) newIndex -= 1` is no longer needed.
-              onReorderItem: (oldIndex, newIndex) {
-                final reordered = List<DashboardSection>.from(order);
-                final moved = reordered.removeAt(oldIndex);
-                reordered.insert(newIndex, moved);
-                settings.setDashboardSectionOrder(reordered);
-              },
-              itemBuilder: (ctx, i) {
-                final section = order[i];
-                final visible = settings.isDashboardSectionVisible(section);
-                // Read Bible is the app's primary entry point — it
-                // stays mandatory so a user who hides every other
-                // block can still open the Bible. Switch is rendered
-                // disabled with a small "always on" caption beneath
-                // the description.
-                final isMandatory =
-                    section == DashboardSection.readBible;
-                return Padding(
-                  // Each tile gets a unique key — required by
-                  // ReorderableListView so the framework can match
-                  // children across reorder rebuilds.
-                  key: ValueKey('dash-section-${section.name}'),
-                  padding:
-                      EdgeInsets.symmetric(horizontal: 4 * s, vertical: 2 * s),
-                  child: Row(
-                    children: [
-                      // Drag handle. Wrapping in ReorderableDragStartListener
-                      // gives us a touch-friendly grip area without making
-                      // the whole row draggable (which would conflict with
-                      // the switch).
-                      ReorderableDragStartListener(
-                        index: i,
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(
-                              horizontal: 6 * s, vertical: 8 * s),
-                          child: Icon(
-                            Icons.drag_indicator_rounded,
-                            size: 22,
-                            color: scheme.onSurface.withValues(alpha: 0.45),
-                          ),
-                        ),
-                      ),
-                      Icon(
-                        _iconFor(section),
-                        size: 20,
-                        color: scheme.primary.withValues(
-                          alpha: visible ? 1.0 : 0.35,
-                        ),
-                      ),
-                      SizedBox(width: 12 * s),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Row(
-                              children: [
-                                Flexible(
-                                  child: Text(
-                                    section.label(locale),
-                                    style: TextStyle(
-                                      fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                                      fontSize: (15 * s).clamp(13.0, 16.0),
-                                      fontWeight: FontWeight.w600,
-                                      color: scheme.onSurface.withValues(
-                                        alpha: visible ? 1.0 : 0.55,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                if (isMandatory) ...[
-                                  SizedBox(width: 6 * s),
-                                  Icon(
-                                    Icons.lock_outline_rounded,
-                                    size: 14,
-                                    color: scheme.onSurface
-                                        .withValues(alpha: 0.45),
-                                  ),
-                                ],
-                              ],
-                            ),
-                            SizedBox(height: 2 * s),
-                            Text(
-                              isMandatory
-                                  ? (uiStrings['dashboardSection_readBible_locked']
-                                          ?[locale] ??
-                                      'Always visible — primary entry point.')
-                                  : section.description(locale),
-                              style: TextStyle(
-                                fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                                fontSize: (12.5 * s).clamp(10.5, 13.0),
-                                color:
-                                    scheme.onSurface.withValues(alpha: 0.6),
-                                height: 1.3,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Switch.adaptive(
-                        value: visible,
-                        // Disabled (null onChanged) for mandatory
-                        // sections so the user gets a clear "you
-                        // can't turn this off" affordance.
-                        onChanged: isMandatory
-                            ? null
-                            : (v) => settings.setDashboardSectionVisible(
-                                section, v),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-            // Reset row — full-width OutlinedButton so it visually
-            // reads as a destructive secondary action (not a primary
-            // CTA). Confirms with a dialog because reset is one-tap
-            // away from "I just lost my custom layout".
-            Padding(
-              padding: EdgeInsets.fromLTRB(8 * s, 8 * s, 8 * s, 4 * s),
-              child: OutlinedButton.icon(
-                onPressed: () => _confirmReset(context, locale),
-                icon: const Icon(Icons.restart_alt_rounded, size: 18),
-                label: Text(
-                  uiStrings['resetToDefault']?[locale] ?? 'Reset to default',
-                  style: TextStyle(
-                    fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                    fontSize: (14 * s).clamp(12.0, 15.0),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _confirmReset(BuildContext context, String locale) async {
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (dialogCtx) => AlertDialog(
-        title: Text(uiStrings['resetToDefault']?[locale] ?? 'Reset to default'),
-        content: Text(
-          uiStrings['dashboardLayoutResetConfirm']?[locale] ??
-              'Restore the original section order and turn every block back on?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogCtx).pop(false),
-            child: Text(uiStrings['cancel']?[locale] ?? 'Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(dialogCtx).pop(true),
-            child: Text(uiStrings['confirm']?[locale] ?? 'Reset'),
-          ),
-        ],
-      ),
-    );
-    if (ok == true) {
-      await settings.resetDashboardLayout();
-    }
-  }
-}
-
-/// Single switch row used by [_DashboardSectionsCard] and
-/// [_NotificationsCard]. Keeps font scaling consistent with the rest
-/// of the settings page.
+/// Single switch row used by [_NotificationsCard]. Keeps font scaling
+/// consistent with the rest of the settings page.
 class _SettingsSwitch extends StatelessWidget {
   final IconData icon;
   final String label;

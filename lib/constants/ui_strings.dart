@@ -1721,26 +1721,6 @@ const uiStrings = {
     'zh-Hant': '帳號',
     'en': 'Account',
   },
-  'settingsSectionDashboard': {
-    // Renamed in Round 55: this section now controls reorder + per-
-    // section visibility (the old single "show/hide" switches still
-    // work via legacy keys; the new card adds drag-handles and
-    // covers every block, not just the three discoverable ones).
-    'zh-Hans': '主页布局',
-    'zh-Hant': '主頁佈局',
-    'en': 'Dashboard layout',
-  },
-  'dashboardLayoutHint': {
-    'zh-Hans': '拖动手柄调整顺序；关闭开关即可隐藏该板块。',
-    'zh-Hant': '拖動手柄調整順序；關閉開關即可隱藏該板塊。',
-    'en': 'Drag the handle to reorder. Toggle a row off to hide that block.',
-  },
-  'dashboardLayoutResetConfirm': {
-    'zh-Hans': '是否恢复默认顺序，并重新打开所有板块？',
-    'zh-Hant': '是否恢復預設順序，並重新打開所有板塊？',
-    'en':
-        'Restore the original section order and turn every block back on?',
-  },
   'resetToDefault': {
     'zh-Hans': '恢复默认',
     'zh-Hant': '恢復預設',
@@ -3138,92 +3118,6 @@ const uiStrings = {
     'zh-Hans': '确认',
     'zh-Hant': '確認',
     'en': 'Confirm',
-  },
-  // Per-section labels + descriptions for the dashboard reorder list.
-  // Looked up by `DashboardSection.label(locale)` /
-  // `DashboardSection.description(locale)` in
-  // `lib/models/dashboard_section.dart`. Adding a new section: add a
-  // pair of `dashboardSection_<name>_label` and
-  // `dashboardSection_<name>_description` entries here.
-  'dashboardSection_readBible_label': {
-    'zh-Hans': '读经',
-    'zh-Hant': '讀經',
-    'en': 'Read Bible',
-  },
-  'dashboardSection_readBible_description': {
-    'zh-Hans': '主操作 — 跳回上次读经位置。',
-    'zh-Hant': '主操作 — 跳回上次讀經位置。',
-    'en': 'Primary CTA — jump back to your last reading position.',
-  },
-  // Shown beneath the Read Bible row in Settings → Dashboard layout
-  // when the user tries to hide it (the Switch is disabled). Round 55
-  // user feedback: "if all invisible then can't use the app" — so
-  // Read Bible is locked on as the primary entry point.
-  'dashboardSection_readBible_locked': {
-    'zh-Hans': '常驻显示 — 应用主入口。',
-    'zh-Hant': '常駐顯示 — 應用主入口。',
-    'en': 'Always visible — primary entry point.',
-  },
-  'dashboardSection_resumeSermon_label': {
-    'zh-Hans': '继续讲道',
-    'zh-Hant': '繼續講道',
-    'en': 'Resume sermon',
-  },
-  'dashboardSection_resumeSermon_description': {
-    'zh-Hans': '从上次离开的讲道继续。',
-    'zh-Hant': '從上次離開的講道繼續。',
-    'en': 'Pick up where you left off in the last sermon you opened.',
-  },
-  'dashboardSection_dailyVerse_label': {
-    'zh-Hans': '每日金句',
-    'zh-Hant': '每日金句',
-    'en': 'Verse of the Day',
-  },
-  'dashboardSection_dailyVerse_description': {
-    'zh-Hans': '每天精选一节经文，所有设备同步。',
-    'zh-Hant': '每天精選一節經文，所有設備同步。',
-    'en': 'One curated verse per day, the same on every device.',
-  },
-  'dashboardSection_counts_label': {
-    'zh-Hans': '收藏 / 笔记 / 高亮',
-    'zh-Hant': '收藏 / 筆記 / 高亮',
-    'en': 'Bookmarks / Notes / Highlights',
-  },
-  'dashboardSection_counts_description': {
-    'zh-Hans': '一目了然的统计数字。',
-    'zh-Hant': '一目了然的統計數字。',
-    'en': 'Counts of bookmarks, notes, and highlights.',
-  },
-  'dashboardSection_recentBookmarks_label': {
-    'zh-Hans': '最近收藏',
-    'zh-Hant': '最近收藏',
-    'en': 'Recent bookmarks',
-  },
-  'dashboardSection_recentBookmarks_description': {
-    'zh-Hans': '最新收藏的五节经文。',
-    'zh-Hant': '最新收藏的五節經文。',
-    'en': 'Your five most recently bookmarked verses.',
-  },
-  'dashboardSection_todayEvidence_label': {
-    'zh-Hans': '今日证据',
-    'zh-Hant': '今日證據',
-    'en': "Today's Evidence",
-  },
-  'dashboardSection_todayEvidence_description': {
-    'zh-Hans': '每日轮换的考古、抄本、科学或历史发现。',
-    'zh-Hant': '每日輪換的考古、抄本、科學或歷史發現。',
-    'en':
-        'One archaeology / manuscript / science / history entry per day.',
-  },
-  'dashboardSection_quickLinks_label': {
-    'zh-Hans': '快捷入口',
-    'zh-Hant': '快捷入口',
-    'en': 'Quick links',
-  },
-  'dashboardSection_quickLinks_description': {
-    'zh-Hans': '资料库、统计、讲道、家谱等的入口磁贴。',
-    'zh-Hant': '資料庫、統計、講道、家譜等的入口磁貼。',
-    'en': 'Tiles linking to Library, Statistics, Sermons, and more.',
   },
   'settingsSectionNotifications': {
     'zh-Hans': '通知',

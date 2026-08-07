@@ -11,11 +11,11 @@ import 'package:seeksparks/utils/jump_to_reference.dart' as jumper;
 import 'package:seeksparks/utils/reference_parser.dart';
 import 'package:seeksparks/utils/responsive.dart';
 import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
-import 'package:seeksparks/pages/home_page.dart';
 import 'package:seeksparks/widgets/home_icon_button.dart';
 import 'package:seeksparks/widgets/language_switcher_button.dart';
 import 'package:seeksparks/widgets/localized_back_button.dart';
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:seeksparks/utils/navigate_to_reader.dart';
 
 /// Curated catalogue of "Bible trivia" / 冷知识 — patterns and
 /// hidden structures most readers don't notice unless someone
@@ -813,10 +813,7 @@ class _TriviaTileState extends State<_TriviaTile> {
     if (!context.mounted) return;
     final ok = await jumper.showJumpResultSnackBar(context, result);
     if (!ok || !context.mounted) return;
-    // 2026-05-24 (v1.3.6): explicit routeName — see main.dart for
-    // the duplicate-HomePage-detection rationale.
-    pushPage(const HomePage(),
-        routeName: '/HomePage');
+    navigateToReader(context);
   }
 
   // 2026-08 (ported from YsWords v1.4.5): passive press-scale; the

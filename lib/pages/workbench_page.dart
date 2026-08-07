@@ -25,6 +25,7 @@ import 'package:seeksparks/pages/bible_timeline_page.dart';
 import 'package:seeksparks/pages/bible_trivia_page.dart';
 import 'package:seeksparks/pages/books_page.dart';
 import 'package:seeksparks/pages/evidence_page.dart';
+import 'package:seeksparks/pages/family_tree_page.dart';
 import 'package:seeksparks/pages/library_page.dart';
 import 'package:seeksparks/pages/phrasing_page.dart';
 import 'package:seeksparks/pages/sermons_page.dart';
@@ -451,6 +452,13 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
       WbMenu(s('menuResources', 'Resources'), [
         WbMenuItem(s('sermons', 'Sermons'),
             () => pushPage(const SermonsPage())),
+        // Resources, not Tools: bwh07 splits the two on whether the
+        // item OPERATES on the current text (Word List, KWIC, Phrase
+        // Matching) or is a reference database you CONSULT (maps,
+        // dictionaries, commentaries, the Bible Views picture set).
+        // `assets/family_tree.json` is the second kind.
+        WbMenuItem(s('familyTree', 'Family Tree'),
+            () => pushPage(const FamilyTreePage())),
         WbMenuItem(s('library', 'Notes & highlights'),
             () => pushPage(const LibraryPage())),
         WbMenuItem(

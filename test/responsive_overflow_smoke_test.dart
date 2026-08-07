@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/pages/about_page.dart';
-import 'package:seeksparks/pages/dashboard_page.dart';
 import 'package:seeksparks/pages/library_page.dart';
 import 'package:seeksparks/pages/settings_page.dart';
 import 'package:seeksparks/providers/main_provider.dart';
@@ -18,7 +17,7 @@ import 'package:seeksparks/providers/main_provider.dart';
 /// "RIGHT OVERFLOWED BY N PIXELS" regression on these pages fails CI
 /// instead of shipping.
 ///
-/// Pages covered: About, Settings, Library, Dashboard. The reading
+/// Pages covered: About, Settings, Library. The reading
 /// pane needs loaded bible data and is covered by the on-device
 /// flows. Each page is pumped with fresh providers and empty
 /// SharedPreferences (the cold-install state, which is also the state
@@ -37,7 +36,6 @@ void main() {
     'AboutPage': () => const AboutPage(),
     'SettingsPage': () => const SettingsPage(),
     'LibraryPage': () => const LibraryPage(),
-    'DashboardPage': () => const DashboardPage(),
   };
 
   Future<void> pumpAt(

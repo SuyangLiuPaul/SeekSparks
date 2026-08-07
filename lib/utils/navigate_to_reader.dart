@@ -18,10 +18,10 @@
 //   2. If an existing HomePage is found, pendingJump (set by the
 //      caller via jumper.prepareJumpToVerse / resolveAndPrepareJump
 //      etc.) fires on it during the next build.
-//   3. If no HomePage is in the stack at all, popUntil stops at
-//      root (Dashboard) and a fresh HomePage is Get.to'd on top.
+//   3. If no reader is in the stack at all, popUntil stops at the
+//      root and a fresh HomePage is Get.to'd on top.
 //
-// Either way the stack ends with EXACTLY ONE HomePage.
+// Either way the stack ends with EXACTLY ONE reader.
 
 import 'package:flutter/material.dart';
 import 'package:seeksparks/utils/app_nav.dart';
@@ -41,6 +41,30 @@ const String kHomePageRouteName = '/HomePage';
 /// the stack would pop the Workbench away.
 const String kWorkbenchRouteName = '/Workbench';
 
+/// True when a route already shows the Bible text, so "go to the reader"
+/// means popping back to it rather than pushing a second one.
+///
+/// [isFirst] is part of the answer, not a fallback. `main.dart` sets
+/// `home: _RootRouter(...)`, which resolves to
+/// `SmallScreenGate(child: WorkbenchPage())` at every width — so the
+/// bottom of the stack IS a reader. But a widget handed to `home:` gets
+/// [Navigator.defaultRouteName] (`'/'`), which matches none of the
+/// explicit names above, so the old predicate walked past the root,
+/// concluded no reader existed and pushed the CLASSIC single-pane
+/// HomePage on top of the Workbench — ejecting the reader out of the
+/// workspace that task #276 had just folded the reader into.
+///
+/// `lib/main.dart` no longer having a reader at its root is what would
+/// make this wrong; `test/root_is_the_reader_test.dart` pins that.
+bool routeIsReader(String? routeName, {required bool isFirst}) {
+  if (isFirst) return true;
+  final name = routeName ?? '';
+  return name == kHomePageRouteName ||
+      name == kWorkbenchRouteName ||
+      name.endsWith('HomePage') ||
+      name.endsWith('WorkbenchPage');
+}
+
 /// Navigate to the Bible Reader, re-using an existing reader route if
 /// one is already in the navigator stack — that means HomePage OR, on
 /// wide screens, the three-pane Workbench (which IS a reader: same
@@ -54,26 +78,15 @@ const String kWorkbenchRouteName = '/Workbench';
 /// target verse on its next frame.
 void navigateToReader(BuildContext context) {
   final navigator = Navigator.of(context, rootNavigator: true);
-  bool foundExistingHome = false;
+  bool foundExistingReader = false;
   navigator.popUntil((route) {
-    final name = route.settings.name ?? '';
-    // Match the canonical reader route names (classic reader AND the
-    // wide-screen Workbench) AND any future variant ending in
-    // "HomePage"/"WorkbenchPage" (defensive — if some future push site
-    // forgets the explicit routeName and Get happens to produce
-    // something ending in either, we still detect it).
-    if (name == kHomePageRouteName ||
-        name == kWorkbenchRouteName ||
-        name.endsWith('HomePage') ||
-        name.endsWith('WorkbenchPage')) {
-      foundExistingHome = true;
+    if (routeIsReader(route.settings.name, isFirst: route.isFirst)) {
+      foundExistingReader = true;
       return true;
     }
-    if (route.isFirst) return true; // root (Dashboard) reached
     return false;
   });
-  if (!foundExistingHome) {
-    pushPage(const HomePage(),
-        routeName: kHomePageRouteName);
+  if (!foundExistingReader) {
+    pushPage(const HomePage(), routeName: kHomePageRouteName);
   }
 }

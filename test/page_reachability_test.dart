@@ -8,6 +8,12 @@
 // went dark and the suite stayed green, because every test that touches
 // those pages constructs them directly.
 //
+// The user settled it on 2026-08-08: there is no home screen, the
+// Workbench is the app, and everything else is a Resource opened from
+// it. Dashboard and Feedback were deleted; the Family Tree moved to the
+// Resources menu. [_knownOrphans] is now EMPTY, which is the point of
+// the list — it was a review queue, not a permanent allowance.
+//
 // This test walks the import graph from `lib/main.dart` and asserts that
 // the set of unreachable pages is exactly [_knownOrphans]. Import edges
 // over-approximate reachability (a file can be imported without its page
@@ -26,17 +32,11 @@ import 'package:flutter_test/flutter_test.dart';
 
 /// Pages that are currently unreachable from `main.dart`, and why.
 ///
-/// Every entry is a pending product decision, not an accident. See
-/// docs/DELETION-REVIEW.md for the full write-up of each.
-const Map<String, String> _knownOrphans = {
-  'lib/pages/dashboard_page.dart':
-      'The Workbench replaced it as the app root. Keeping or cutting the '
-          'home screen is a product decision (task #281).',
-  'lib/pages/family_tree_page.dart':
-      'Reachable only from the Dashboard. Falls with it.',
-  'lib/pages/feedback_page.dart':
-      'Reachable only from the Dashboard. Falls with it.',
-};
+/// Empty, and it should stay that way. An entry here is a page that
+/// ships in the bundle and that no reader can open — a pending product
+/// decision, never an accident. Adding one means writing it up in
+/// docs/DELETION-REVIEW.md at the same time.
+const Map<String, String> _knownOrphans = <String, String>{};
 
 /// Matches a plain import and both halves of a conditional one:
 ///

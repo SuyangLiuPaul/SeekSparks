@@ -14,49 +14,51 @@ was proven — so a reviewer can check the work rather than trust it.
 
 ---
 
-## 1. The Dashboard cluster — three unreachable pages, one decision
+## 1. The Dashboard cluster — RESOLVED 2026-08-08, cluster deleted
 
-**What.** `lib/pages/dashboard_page.dart` (1,420 lines) and the two pages
-reachable only through it, `family_tree_page.dart` (2,620) and
-`feedback_page.dart` (468). Plus what hangs off them:
-`lib/services/family_tree_service.dart`, `lib/services/feedback_service.dart`,
-`lib/models/biblical_person.dart`, `lib/utils/biblical_role.dart`,
-`lib/widgets/person_detail_sheet.dart`, `lib/widgets/liquid_glass.dart`
-(764 lines, imported only by `feedback_page`), `lib/models/dashboard_section.dart`,
-`assets/family_tree.json`, the `_DashboardSectionsCard` section of
-`settings_page.dart`, and the dashboard order/visibility fields on
-`AppSettings`. Roughly **6,000 lines**.
+**Decision (user, 2026-08-08).** *There is no home screen. The Workbench
+is the app, and everything else is a Resource opened from it — the
+BibleWorks shape, one workspace whose Resources/Tools menus open
+standalone windows.*
 
-**Why it looks unnecessary.** `main.dart` makes
-`SmallScreenGate(WorkbenchPage)` the app root — deliberately; its own
-comment says *"SeekSparks is a Bible STUDY tool, not a devotional…"*.
-Nothing points at `DashboardPage` any more. It cannot be opened.
+**Deleted**, ~2,800 lines: `lib/pages/dashboard_page.dart` (1,420),
+`lib/pages/feedback_page.dart` (468), `lib/services/feedback_service.dart`
+(171) and its two platform halves `browser_info_stub.dart` /
+`browser_info_web.dart`, `lib/widgets/liquid_glass.dart` (764, imported
+only by the two pages above), `lib/models/dashboard_section.dart`, the
+`_DashboardSectionsCard` section of `settings_page.dart` (235 lines) with
+its `SettingsSection.dashboardLayout` deep-link target, the dashboard
+order/visibility fields and the `resetDashboardLayout()` /
+`setDashboardSectionOrder()` / `setDashboardSectionVisible()` API on
+`AppSettings`, the now-unread `showBibleEvidence` flag behind it, and 18
+`ui_strings` keys. `resetSettings()` still *purges* the SharedPreferences
+keys by literal name, so an install from before this change does not
+carry dead data forever — the same treatment `'offlineMode'` already got.
 
-**Proof.** Import-graph walk from `lib/main.dart` over all 255 files in
-`lib/`: 221 reached, and these three pages are not among them. Direct
-grep agrees — `grep -rn "DashboardPage" lib/` matches only its own
-declaration. Now enforced by `test/page_reachability_test.dart`.
+**Kept, and given a door.** The family tree survives whole —
+`family_tree_page.dart`, `family_tree_service.dart`, `biblical_person`,
+`biblical_role`, `person_detail_sheet`, `assets/family_tree.json`. It is
+now a **Resource**, reached from the Workbench's Resources menu.
 
-**What breaks if it goes.** Nothing a user can currently see. No user
-data is stored by these pages — the Dashboard *displayed* bookmarks and
-reading position owned by `MainProvider`; the family tree renders a
-bundled asset; feedback posts to a service and keeps nothing. Three real
-costs: the family-tree content is good and genuinely has no other door;
-`about_page` would become the only contact route (it already has one);
-and `liquid_glass.dart`'s glass/blur widgets disappear, which is aligned
-with `workbench_theme.dart:16` anyway ("*no shadows, no cards*").
+That placement is not arbitrary. `bwh07` splits Tools from Resources on
+whether the item **operates on the current text** (Word List Manager,
+KWIC, Phrase Matching, Related Verses) or is a **reference database you
+consult** (maps, commentaries, grammars, Bible dictionaries, the Bible
+Views picture set). `assets/family_tree.json` is the second kind.
 
-**Recommendation.** Decide the question, not the files: *does SeekSparks
-have a home screen?* If no, delete the cluster in one commit. If yes, the
-Dashboard needs an entry point and a reason to exist beside the
-Workbench. **Either answer is better than the current state**, where the
-code is maintained, compiled, shipped in the bundle, and unreachable.
-If the family tree is the part worth saving, it round-trips to verses
-via `person_detail_sheet.dart:529` and would work as a Workbench menu
-item without the Dashboard.
+**One thing the review missed, found while wiring it up.** The audit's
+own test for whether a screen earns its place is *does it round-trip to
+the text?* — and no Resource did. `person_detail_sheet.dart` and six
+other pages each carried their own copy of "prepare the jump, then
+`pushPage(const HomePage())`", which since the Workbench became the app
+root landed the **classic single-pane reader on top of the workspace**
+instead of returning to it. All seven now go through
+`navigateToReader()`, whose route predicate had to learn that the root
+route counts as a reader even though `MaterialApp.home:` gives it no
+name. See `test/reader_round_trip_test.dart`.
 
-*Do not run #279's chrome pass on any of these three pages until this is
-answered.*
+**#279's chrome pass is unblocked** for `family_tree_page` (it stays) and
+moot for the other two (they are gone).
 
 ---
 
@@ -79,6 +81,14 @@ taken or recommended by an unattended run.** Either obtain a licence from
 the Lockman Foundation or replace the slot with an openly-licensed
 formal-equivalence English text; the LEB and BSB already bundled are the
 obvious candidates. Flagging only.
+
+**Decision (user, 2026-08-08): NASB stays blocked, and stays bundled.**
+A supplied "Lockman Foundation certification" image was rejected as not
+credible — the NASB seal reads "STAWNARD", the stamp reads "VERIFIEB",
+Lockman does not issue per-person certifications, and the named
+president is wrong. `assets/nasb.json` is left exactly as-is pending a
+real permission from lockman.org, and is **not** to be removed either
+without asking.
 
 Related and *not* the same issue: `assets/nasb-ev.json` and
 `assets/nsn-plus.json` (Eagle's View, all rights reserved) sit on disk
@@ -106,6 +116,16 @@ is carried over. Reachable from the Reader mode and from the Dashboard.
 rather than after, so the scope model is built once. Whichever survives
 must keep AI mode and recent searches.
 
+**Decision (user, 2026-08-08): one search.** Keep the workbench /
+command-pane search, absorb whatever is worth keeping from the
+standalone `search_page`, and remove the duplicate — improve the
+survivor rather than maintain two. #280's scope filter folds into it.
+Note for whoever takes it: `workbench_provider.dart` already carries
+`Set<String>? searchLimit` + `searchLimitLabel`, so this is surfacing
+and extending, not building from zero, and `bwh29` wants search limits
+saveable **by name for later recall** — give the scope model a name
+field up front.
+
 ---
 
 ## 4. Two map surfaces
@@ -119,6 +139,13 @@ the Reader, versus the Places tab shipped in #277 (v1.6.51).
 
 **Recommendation.** Hold. The Places tab is one release old; decide after
 it has been used in anger. Low cost to wait, real cost to guess.
+
+**Decision (user, 2026-08-08): one map surface, in Resources.** The map
+is reached from the Resources menu, the same shape the family tree took
+in §1 — which `bwh07` agrees with, since BibleWorks files Maps under
+Resources too. #277's gazetteer feeds it. The verse-linked question
+("which places does this passage mention") stays in the Analysis pane;
+only the MAP moves.
 
 ---
 

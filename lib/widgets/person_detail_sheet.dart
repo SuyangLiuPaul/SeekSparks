@@ -2,12 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:seeksparks/utils/clipboard_helper.dart';
-import 'package:seeksparks/utils/app_nav.dart';
 import 'package:provider/provider.dart';
 
 import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/models/biblical_person.dart';
-import 'package:seeksparks/pages/home_page.dart';
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/services/family_tree_service.dart';
 import 'package:seeksparks/utils/theme_color_helpers.dart';
@@ -15,6 +13,7 @@ import 'package:seeksparks/utils/biblical_role.dart' show localizedRole;
 import 'package:seeksparks/utils/jump_to_reference.dart' as jumper;
 import 'package:seeksparks/utils/reference_parser.dart';
 import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
+import 'package:seeksparks/utils/navigate_to_reader.dart';
 
 /// Bottom sheet showing the full record for one [BiblicalPerson].
 /// Sections (in render order):
@@ -530,8 +529,7 @@ class PersonDetailSheet extends StatelessWidget {
     if (!context.mounted) return;
     final ok = await jumper.showJumpResultSnackBar(context, result);
     if (!ok || !context.mounted) return;
-    Navigator.of(context).maybePop();
-    pushPage(const HomePage());
+    navigateToReader(context);
   }
 }
 

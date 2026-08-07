@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:seeksparks/utils/app_nav.dart';
 import 'package:provider/provider.dart';
 
 import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/bible_evidence.dart';
-import 'package:seeksparks/pages/home_page.dart';
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/utils/clipboard_helper.dart';
@@ -19,6 +17,7 @@ import 'package:seeksparks/widgets/language_switcher_button.dart';
 import 'package:seeksparks/widgets/localized_back_button.dart';
 import 'package:seeksparks/widgets/wb_surfaces.dart';
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:seeksparks/utils/navigate_to_reader.dart';
 
 /// Full-page view of one [BibleEvidence] entry.
 ///
@@ -509,7 +508,7 @@ class _EvidenceDetailPageState extends State<EvidenceDetailPage> {
     if (!context.mounted) return;
     final ok = await showJumpResultSnackBar(context, result);
     if (!ok || !context.mounted) return;
-    pushPage(const HomePage());
+    navigateToReader(context);
   }
 }
 

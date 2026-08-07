@@ -8,12 +8,16 @@
 /// results and the Analysis pane, which is a steep price for a layout
 /// change.
 ///
-/// It is deliberately still here. It remains the destination of a dozen
-/// `pushPage(const HomePage())` calls from the library, search,
-/// highlights, evidence, trivia and timeline pages, and of the boot
-/// route in `loading_page.dart`. Retiring it is a product decision about
-/// whether the app has one reading surface or two — not cleanup — so it
-/// is left for that decision rather than folded into this change.
+/// It is deliberately still here, but its callers have thinned. The
+/// library, highlights, evidence, trivia, timeline, family-tree and
+/// lexicon pages used to push it directly; every one of them now goes
+/// through `navigateToReader`, which returns to the Workbench instead
+/// — pushing this page landed the classic single-pane reader ON TOP of
+/// the workspace. What remains is the deep-link entry in
+/// `open_reader.dart`, the boot route in `loading_page.dart`, and
+/// `navigateToReader`'s own fallback for a root that is not a reader.
+/// Retiring it is a product decision about whether the app has one
+/// reading surface or two — not cleanup.
 library;
 
 import 'package:flutter/material.dart';

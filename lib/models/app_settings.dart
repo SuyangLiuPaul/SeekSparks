@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:seeksparks/models/app_style_preset.dart' show CardMaterial;
-import 'package:seeksparks/models/dashboard_section.dart';
 import 'package:seeksparks/models/notification_category.dart';
 import 'package:seeksparks/services/app_icon_service.dart';
 import 'package:seeksparks/services/notification_scheduler.dart'
@@ -40,7 +39,6 @@ const _kBooksViewMode = 'booksViewMode';
 const _kBoldVerseText = 'boldVerseText';
 const _kShowStrongsInOriginals = 'showStrongsInOriginals';
 const _kAutoExpandFirstRef = 'autoExpandFirstRef';
-const _kShowBibleEvidence = 'showBibleEvidence';
 const _kNotificationsEnabled = 'notificationsEnabled';
 // 2026-05-24 (v1.3.0): per-category notification prefs. Stored as a
 // JSON string mapping category id → NotificationCategoryPrefs JSON.
@@ -88,12 +86,6 @@ const _kNotesSortMode = 'notesSortMode';
 const Set<String> _kNotesSortAllowed = {'canonical', 'recent', 'oldest'};
 const String _kNotesSortDefault = 'canonical';
 
-// Dashboard layout (Round 55). Every section has its own
-// `dashboard_section_visible_<name>` flag plus a single
-// `dashboard_section_order` list that drives the render order.
-const _kDashboardSectionOrder = 'dashboard_section_order';
-String _kDashboardVisible(DashboardSection s) =>
-    'dashboard_section_visible_${s.name}';
 
 class AppSettings extends ChangeNotifier {
   /// User's selected font key — what gets persisted in
@@ -145,7 +137,6 @@ class AppSettings extends ChangeNotifier {
 
   /// Show the Today's Evidence card + Bible Evidence quick-link tile +
   /// the Bible Evidence page entry. Default ON.
-  bool _showBibleEvidence = true;
 
   /// Whether the user has opted into notifications. When true, the
   /// app requests browser Notification permission on next launch and
@@ -176,24 +167,6 @@ class AppSettings extends ChangeNotifier {
   /// when an intro is authored for that book. Default ON. Toggle in
   /// Settings → Reading.
   bool _showBookIntro = true;
-
-  // ── Dashboard layout (Round 55) ─────────────────────────────────
-  // The dashboard now ships with reorder + per-section visibility
-  // controls (Settings → Dashboard layout). The user's order is
-  // stored as a list of [DashboardSection.name] strings; each
-  // section also has its own visibility bool. We seed both from
-  // [defaultDashboardOrder] / [defaultVisibility] and migrate the
-  // legacy `showBibleEvidence` / `showReadingPlan` flags into the new
-  // map on first load (see [loadSettings]).
-
-  /// Current render order of dashboard sections.
-  List<DashboardSection> _dashboardSectionOrder =
-      List.of(defaultDashboardOrder);
-
-  /// Per-section visibility. Always contains an entry for every
-  /// [DashboardSection] value (filled in by [loadSettings]).
-  final Map<DashboardSection, bool> _dashboardVisibility =
-      Map.of(defaultVisibility);
 
   /// The resolved family for TextStyle.fontFamily. Existing call
   /// sites (`fontFamily: settings.fontFamily`) automatically get the
@@ -397,25 +370,6 @@ class AppSettings extends ChangeNotifier {
       await _pullGeminiKeyFromCloudIfEmpty();
     }
     _subscribeToGeminiKeyChanges();
-  }
-
-  /// The current dashboard render order. Returns a defensive copy so
-  /// callers can't mutate internal state directly.
-  List<DashboardSection> get dashboardSectionOrder =>
-      List.unmodifiable(_dashboardSectionOrder);
-
-  /// Whether [section] should render on the dashboard. Combines the
-  /// user's stored preference with [defaultVisibility] when no entry
-  /// has been written yet.
-  ///
-  /// Special case: [DashboardSection.readBible] is *always* visible.
-  /// It's the primary entry point into the app — if the user hides
-  /// every other section AND this one, they'd have no way to open
-  /// the Bible. So we lock its visibility on at the model layer
-  /// (Settings UI also disables the Switch for it).
-  bool isDashboardSectionVisible(DashboardSection section) {
-    if (section == DashboardSection.readBible) return true;
-    return _dashboardVisibility[section] ?? defaultVisibility[section] ?? true;
   }
 
   /// [selection] is a catalogue key like `'EB Garamond'` (see
@@ -623,75 +577,11 @@ class AppSettings extends ChangeNotifier {
     await prefs.setDouble(_kMenuScale, clamped);
   }
 
-  /// Persist a new dashboard render order. Caller is responsible for
-  /// passing a complete list (containing every [DashboardSection]
-  /// value exactly once) — typically the result of a
-  /// [ReorderableListView] drag in the Settings page. The list is
-  /// re-normalized here as a defensive measure.
-  Future<void> setDashboardSectionOrder(
-      List<DashboardSection> order) async {
-    final normalized = normalizeDashboardOrder(
-      order.map((s) => s.name).toList(),
-    );
-    // Cheap equality check — bail when nothing changed so we don't
-    // notify listeners on a no-op reorder (e.g. drag-and-drop back
-    // to the same slot).
-    final unchanged =
-        normalized.length == _dashboardSectionOrder.length &&
-            List.generate(normalized.length, (i) => i)
-                .every((i) => normalized[i] == _dashboardSectionOrder[i]);
-    if (unchanged) return;
-    _dashboardSectionOrder = normalized;
-    notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(
-      _kDashboardSectionOrder,
-      normalized.map((s) => s.name).toList(),
-    );
-  }
-
-  /// Toggle visibility of one dashboard section. Mirrors the legacy
-  /// `setShowBibleEvidence` / `setShowReadingPlan` / etc. for any new
-  /// section; the legacy setters remain available and stay in sync.
-  ///
-  /// No-op for [DashboardSection.readBible] — it's the app's primary
-  /// entry point and stays mandatory regardless of what the caller
-  /// passes in.
-  Future<void> setDashboardSectionVisible(
-      DashboardSection section, bool visible) async {
-    if (section == DashboardSection.readBible) return;
-    final current = isDashboardSectionVisible(section);
-    if (current == visible) return;
-    _dashboardVisibility[section] = visible;
-    // Mirror into the legacy bools where they exist so any code path
-    // still reading the old field gets the same answer.
-    switch (section) {
-      case DashboardSection.todayEvidence:
-        _showBibleEvidence = visible;
-        break;
-      default:
-        break;
-    }
-    notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_kDashboardVisible(section), visible);
-    // Mirror legacy key so a downgrade still picks up the user's
-    // intent (the only one that pre-dated round 55).
-    switch (section) {
-      case DashboardSection.todayEvidence:
-        await prefs.setBool(_kShowBibleEvidence, visible);
-        break;
-      default:
-        break;
-    }
-  }
-
   /// Restore every visual / preference setting to its factory default
   /// (round 55 "Reset settings" button). Resets fonts, theme, primary
   /// color, copy format, theme mode, paragraph mode, menu scale,
-  /// books view mode, the show-* flags, dashboard order +
-  /// visibility, AND the onboarding-seen flag (so the user can re-
-  /// walk the tour after resetting).
+  /// books view mode, the show-* flags, AND the onboarding-seen flag
+  /// (so the user can re-walk the tour after resetting).
   ///
   /// Deliberately preserves:
   ///   • [_locale] — wiping it would yank the user back to the system
@@ -725,14 +615,9 @@ class AppSettings extends ChangeNotifier {
     _boldVerseText = false;
     _showStrongsInOriginals = true;
     _autoExpandFirstRef = false;
-    _showBibleEvidence = true;
     _notificationsEnabled = false;
     _showSectionTitles = true;
     _showBookIntro = true;
-    _dashboardSectionOrder = List.of(defaultDashboardOrder);
-    _dashboardVisibility
-      ..clear()
-      ..addAll(defaultVisibility);
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     // Wipe every preference key we've ever written. Loop is the
@@ -756,12 +641,22 @@ class AppSettings extends ChangeNotifier {
       _kBoldVerseText,
       _kShowStrongsInOriginals,
       _kAutoExpandFirstRef,
-      _kShowBibleEvidence,
       _kNotificationsEnabled,
       _kShowSectionTitles,
       _kShowBookIntro,
-      _kDashboardSectionOrder,
-      for (final s in DashboardSection.values) _kDashboardVisible(s),
+      // The dashboard was deleted when the Workbench became the app
+      // (no home screen), but installs from before then still carry
+      // its keys. Same treatment as 'offlineMode' above: the constants
+      // are gone, the purge stays, so a reset clears the dead data.
+      'showBibleEvidence',
+      'dashboard_section_order',
+      'dashboard_section_visible_readBible',
+      'dashboard_section_visible_resumeSermon',
+      'dashboard_section_visible_dailyVerse',
+      'dashboard_section_visible_counts',
+      'dashboard_section_visible_recentBookmarks',
+      'dashboard_section_visible_todayEvidence',
+      'dashboard_section_visible_quickLinks',
       // Re-show the onboarding tour after a reset so the user can
       // re-discover any features they hid by accident. Clear all
       // historical keys — `v3` is the active one (since v1.2.9), but
@@ -775,29 +670,6 @@ class AppSettings extends ChangeNotifier {
     for (final k in managedKeys) {
       await prefs.remove(k);
     }
-  }
-
-  /// Restore the canonical default order + visibility (every section
-  /// on, in [defaultDashboardOrder] order). Used by the Settings
-  /// "Reset to default" button.
-  Future<void> resetDashboardLayout() async {
-    _dashboardSectionOrder = List.of(defaultDashboardOrder);
-    _dashboardVisibility
-      ..clear()
-      ..addAll(defaultVisibility);
-    _showBibleEvidence =
-        defaultVisibility[DashboardSection.todayEvidence] ?? true;
-    notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(
-      _kDashboardSectionOrder,
-      _dashboardSectionOrder.map((s) => s.name).toList(),
-    );
-    for (final s in DashboardSection.values) {
-      await prefs.setBool(
-          _kDashboardVisible(s), defaultVisibility[s] ?? true);
-    }
-    await prefs.setBool(_kShowBibleEvidence, _showBibleEvidence);
   }
 
   Future<void> loadSettings() async {
@@ -904,7 +776,6 @@ class AppSettings extends ChangeNotifier {
     _showStrongsInOriginals =
         prefs.getBool(_kShowStrongsInOriginals) ?? true;
     _autoExpandFirstRef = prefs.getBool(_kAutoExpandFirstRef) ?? false;
-    _showBibleEvidence = prefs.getBool(_kShowBibleEvidence) ?? true;
     _notificationsEnabled = prefs.getBool(_kNotificationsEnabled) ?? false;
     // 2026-05-24 (v1.3.0): load per-category notification prefs.
     // Stored as one JSON object keyed by category id. Missing keys
@@ -949,26 +820,6 @@ class AppSettings extends ChangeNotifier {
             _kNotesSortAllowed.contains(storedNotesSort))
         ? storedNotesSort
         : _kNotesSortDefault;
-
-    // Dashboard layout (Round 55): load order list + per-section
-    // visibility. Missing entries fall back to defaults; the legacy
-    // showBibleEvidence / showReadingPlan flags win over the new keys
-    // when both are set so a user upgrading from Round 54 keeps their
-    // existing toggles.
-    final storedOrder = prefs.getStringList(_kDashboardSectionOrder) ?? const [];
-    _dashboardSectionOrder = normalizeDashboardOrder(storedOrder);
-    _dashboardVisibility.clear();
-    for (final s in DashboardSection.values) {
-      // Prefer the new key; fall back to the legacy key for the
-      // section that pre-dated round 55; final fall-back to
-      // defaultVisibility.
-      bool? v = prefs.getBool(_kDashboardVisible(s));
-      v ??= switch (s) {
-        DashboardSection.todayEvidence => prefs.getBool(_kShowBibleEvidence),
-        _ => null,
-      };
-      _dashboardVisibility[s] = v ?? defaultVisibility[s] ?? true;
-    }
 
     // 2026-05-25 (v1.3.41): if a synced userPrefs JSON blob exists
     // (written by another device + downloaded via
@@ -1090,11 +941,6 @@ class AppSettings extends ChangeNotifier {
         'showBookIntro': _showBookIntro,
         'aiModel': _aiModel,
         'notesSortMode': _notesSortMode,
-        'dashboardSectionOrder':
-            _dashboardSectionOrder.map((s) => s.name).toList(),
-        'dashboardVisibility': {
-          for (final e in _dashboardVisibility.entries) e.key.name: e.value,
-        },
       };
 
   Future<void> _writeUserPrefsBlob() async {
@@ -1188,19 +1034,6 @@ class AppSettings extends ChangeNotifier {
         final raw = m['notesSortMode'] as String;
         _notesSortMode =
             _kNotesSortAllowed.contains(raw) ? raw : _kNotesSortDefault;
-      }
-      if (m['dashboardSectionOrder'] is List) {
-        final names = (m['dashboardSectionOrder'] as List)
-            .map((e) => e.toString())
-            .toList();
-        _dashboardSectionOrder = normalizeDashboardOrder(names);
-      }
-      if (m['dashboardVisibility'] is Map) {
-        final viz = m['dashboardVisibility'] as Map;
-        for (final s in DashboardSection.values) {
-          final v = viz[s.name];
-          if (v is bool) _dashboardVisibility[s] = v;
-        }
       }
     } finally {
       _suppressUserPrefsWrite = false;

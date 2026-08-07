@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:seeksparks/utils/app_nav.dart';
 import 'package:provider/provider.dart';
 
@@ -8,7 +7,6 @@ import 'package:seeksparks/constants/text_patterns.dart'
 import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/strongs.dart';
-import 'package:seeksparks/pages/home_page.dart';
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/services/concordance_service.dart';
 import 'package:seeksparks/services/strongs_service.dart';
@@ -21,6 +19,7 @@ import 'package:seeksparks/widgets/home_icon_button.dart';
 import 'package:seeksparks/widgets/language_switcher_button.dart';
 import 'package:seeksparks/widgets/localized_back_button.dart';
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:seeksparks/utils/navigate_to_reader.dart';
 
 /// Standalone page for viewing a single Strong's lexicon entry by its
 /// number (e.g. "G25" / "H430"). Reachable from the search bar when
@@ -118,9 +117,7 @@ class _StrongsEntryPageState extends State<StrongsEntryPage> {
       return;
     }
     prepareJumpToVerse(match.first, mp);
-    // Replace this page with HomePage so the pendingJump lands the user
-    // on the verse regardless of how the lexicon was reached.
-    Get.off(() => const HomePage(), transition: Transition.rightToLeft);
+    navigateToReader(context);
   }
 
   @override
