@@ -28,7 +28,14 @@ const List<String> _passed = <String>[
   'lib/pages/settings_page.dart',
   'lib/pages/evidence_page.dart',
   'lib/pages/evidence_detail_page.dart',
+  'lib/pages/family_tree_page.dart',
   'lib/widgets/wb_surfaces.dart',
+  // The family tree is not one file. `person_detail_sheet` is where the
+  // tree round-trips to a verse, and `floating_toast` is the feedback it
+  // shows on the way — a converted page behind an unconverted sheet is a
+  // page that still has a rounded card in it.
+  'lib/widgets/person_detail_sheet.dart',
+  'lib/utils/floating_toast.dart',
 ];
 
 /// Strips `//` and `/* */` comments so prose about the rule — including

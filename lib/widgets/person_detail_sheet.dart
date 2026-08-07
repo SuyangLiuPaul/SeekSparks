@@ -5,14 +5,16 @@ import 'package:seeksparks/utils/clipboard_helper.dart';
 import 'package:provider/provider.dart';
 
 import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/biblical_person.dart';
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/services/family_tree_service.dart';
-import 'package:seeksparks/utils/theme_color_helpers.dart';
 import 'package:seeksparks/utils/biblical_role.dart' show localizedRole;
+import 'package:seeksparks/utils/floating_toast.dart';
 import 'package:seeksparks/utils/jump_to_reference.dart' as jumper;
 import 'package:seeksparks/utils/reference_parser.dart';
-import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
+import 'package:seeksparks/utils/version_mapper.dart'
+    show localizedReferenceLabel;
 import 'package:seeksparks/utils/navigate_to_reader.dart';
 
 /// Bottom sheet showing the full record for one [BiblicalPerson].
@@ -44,7 +46,7 @@ class PersonDetailSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final wb = WbColors.of(context);
     final svc = FamilyTreeService.instance;
     final father = person.fatherId == null ? null : svc.byId(person.fatherId!);
     final mother = person.motherId == null ? null : svc.byId(person.motherId!);
@@ -70,16 +72,15 @@ class PersonDetailSheet extends StatelessWidget {
       controller: scrollController,
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
       children: [
-        // Drag handle
+        // Drag handle. Square, like everything else — a 2px-rounded
+        // 4px-tall bar is a rounded corner nobody can see, so the
+        // radius buys nothing and costs the rule.
         Center(
           child: Container(
             width: 40,
             height: 4,
             margin: const EdgeInsets.only(bottom: 12),
-            decoration: BoxDecoration(
-              color: scheme.outlineVariant,
-              borderRadius: BorderRadius.circular(2),
-            ),
+            color: wb.border,
           ),
         ),
         Row(
@@ -103,7 +104,7 @@ class PersonDetailSheet extends StatelessWidget {
                       years,
                       style: TextStyle(
                         fontSize: 13,
-                        color: scheme.onSurfaceVariant,
+                        color: wb.mutedText,
                         fontFeatures: const [
                           FontFeature.tabularFigures(),
                         ],
@@ -121,7 +122,6 @@ class PersonDetailSheet extends StatelessWidget {
             // modal sheet's surface.
             _CopyAllButton(
               locale: locale,
-              scheme: scheme,
               onCopy: () => _copyAll(
                 context: context,
                 father: father,
@@ -139,72 +139,71 @@ class PersonDetailSheet extends StatelessWidget {
           person.localizedSummary(locale),
           style: TextStyle(
             fontSize: 14,
-            color: scheme.onSurface,
+            color: wb.text,
             height: 1.55,
           ),
         ),
         const SizedBox(height: 16),
         if (father != null || mother != null)
           _section(
-            scheme: scheme,
+            wb: wb,
             label: uiStrings['familyTreeParents']?[locale] ?? 'Parents',
             children: [
               if (father != null)
-                _personChip(context, father, scheme, prefix:
-                    uiStrings['familyTreeFather']?[locale] ?? 'Father'),
+                _personChip(context, father, wb,
+                    prefix: uiStrings['familyTreeFather']?[locale] ?? 'Father'),
               if (mother != null)
-                _personChip(context, mother, scheme, prefix:
-                    uiStrings['familyTreeMother']?[locale] ?? 'Mother'),
+                _personChip(context, mother, wb,
+                    prefix: uiStrings['familyTreeMother']?[locale] ?? 'Mother'),
             ],
           ),
         if (spouses.isNotEmpty)
           _section(
-            scheme: scheme,
+            wb: wb,
             label: spouses.length == 1
                 ? (uiStrings['familyTreeSpouse']?[locale] ?? 'Spouse')
                 : (uiStrings['familyTreeSpouses']?[locale] ?? 'Spouses'),
             children: [
-              for (final s in spouses) _personChip(context, s, scheme),
+              for (final s in spouses) _personChip(context, s, wb),
             ],
           ),
         if (children.isNotEmpty)
           _section(
-            scheme: scheme,
+            wb: wb,
             label: uiStrings['familyTreeChildren']?[locale] ?? 'Children',
             children: [
-              for (final c in children) _personChip(context, c, scheme),
+              for (final c in children) _personChip(context, c, wb),
             ],
           ),
         if (siblings.isNotEmpty)
           _section(
-            scheme: scheme,
+            wb: wb,
             label: uiStrings['familyTreeSiblings']?[locale] ?? 'Siblings',
             children: [
-              for (final s in siblings) _personChip(context, s, scheme),
+              for (final s in siblings) _personChip(context, s, wb),
             ],
           ),
         if (tribeAncestor != null)
           _section(
-            scheme: scheme,
+            wb: wb,
             label: uiStrings['familyTreeTribeLine']?[locale] ?? 'Tribe / line',
             children: [
-              _personChip(context, tribeAncestor, scheme),
+              _personChip(context, tribeAncestor, wb),
             ],
           ),
         if (person.refs.isNotEmpty) ...[
           const SizedBox(height: 4),
           _section(
-            scheme: scheme,
+            wb: wb,
             label: uiStrings['familyTreeReferences']?[locale] ??
                 'Verse references',
             children: [
-              for (final ref in person.refs)
-                _refChip(context, ref, scheme),
+              for (final ref in person.refs) _refChip(context, ref, wb),
             ],
           ),
         ],
         const SizedBox(height: 16),
-        _AncestryTrail(person: person, locale: locale, scheme: scheme),
+        _AncestryTrail(person: person, locale: locale),
       ],
     );
   }
@@ -224,6 +223,10 @@ class PersonDetailSheet extends StatelessWidget {
   }) async {
     String namesOf(List<BiblicalPerson> xs) =>
         xs.map((p) => p.localizedName(locale)).join(', ');
+
+    // Read before the first await — after it the element may be gone.
+    final version = context.read<MainProvider>().currentVersion;
+    final wb = WbColors.of(context);
 
     // Patrilineal trail Adam → … → person, awaited up-front.
     final svc = FamilyTreeService.instance;
@@ -290,7 +293,7 @@ class PersonDetailSheet extends StatelessWidget {
       buf.writeln(
           '${uiStrings['familyTreeReferences']?[locale] ?? 'Verse references'}:');
       for (final r in person.refs) {
-        buf.writeln('  • ${_localizedRef(r)}');
+        buf.writeln('  • ${_localizedRef(r, version)}');
       }
     }
 
@@ -298,7 +301,7 @@ class PersonDetailSheet extends StatelessWidget {
     final copied = await ClipboardHelper.copyText(payload);
     if (!copied) {
       if (!context.mounted) return false;
-      _showFloatingToast(
+      showFloatingToast(
         context,
         message: uiStrings['familyTreeCopyFailedToast']?[locale] ??
             'Copy failed — clipboard not available',
@@ -308,91 +311,19 @@ class PersonDetailSheet extends StatelessWidget {
       return false;
     }
     if (!context.mounted) return true;
-    _showFloatingToast(
+    showFloatingToast(
       context,
-      message: uiStrings['familyTreeCopiedToast']?[locale] ??
-          'Copied to clipboard',
+      message:
+          uiStrings['familyTreeCopiedToast']?[locale] ?? 'Copied to clipboard',
       icon: Icons.check_circle_rounded,
-      background: Theme.of(context).colorScheme.primary,
+      background: wb.strongsLexical,
     );
     return true;
   }
 
-  /// Shows a transient toast in the **root overlay** so it appears
-  /// ABOVE the modal bottom sheet (the default
-  /// ScaffoldMessenger.showSnackBar renders at the Scaffold level
-  /// which the modal sheet covers — that's why the user wasn't
-  /// seeing the "copied" confirmation).
-  void _showFloatingToast(
-    BuildContext context, {
-    required String message,
-    required IconData icon,
-    required Color background,
-  }) {
-    final overlay = Overlay.maybeOf(context, rootOverlay: true);
-    if (overlay == null) return;
-    final OverlayEntry entry;
-    entry = OverlayEntry(
-      builder: (ctx) {
-        final media = MediaQuery.of(ctx);
-        return Positioned(
-          left: 0,
-          right: 0,
-          top: media.padding.top + 24,
-          child: IgnorePointer(
-            child: Center(
-              child: Material(
-                color: Colors.transparent,
-                child: Container(
-                  constraints: const BoxConstraints(maxWidth: 360),
-                  margin: const EdgeInsets.symmetric(horizontal: 24),
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 18, vertical: 14),
-                  decoration: BoxDecoration(
-                    color: background,
-                    borderRadius: BorderRadius.circular(28),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.25),
-                        blurRadius: 16,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(icon, color: Colors.white, size: 20),
-                      const SizedBox(width: 10),
-                      Flexible(
-                        child: Text(
-                          message,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-    );
-    overlay.insert(entry);
-    Future.delayed(const Duration(milliseconds: 2000), () {
-      entry.remove();
-    });
-  }
-
   /// People with the same father OR mother as [p], excluding [p].
   /// Walks both parents' childIds + dedupes; preserves ordering.
-  List<BiblicalPerson> _siblingsOf(
-      BiblicalPerson p, FamilyTreeService svc) {
+  List<BiblicalPerson> _siblingsOf(BiblicalPerson p, FamilyTreeService svc) {
     final out = <BiblicalPerson>[];
     final seen = <String>{p.id};
     void addSiblingsFrom(String? parentId) {
@@ -406,6 +337,7 @@ class PersonDetailSheet extends StatelessWidget {
         }
       }
     }
+
     addSiblingsFrom(p.fatherId);
     addSiblingsFrom(p.motherId);
     return out;
@@ -432,8 +364,14 @@ class PersonDetailSheet extends StatelessWidget {
     return null;
   }
 
+  /// A labelled group of chips.
+  ///
+  /// The label is muted, not [WbColors.link]: in this workspace the link
+  /// hue means "this jumps somewhere", and "Parents" does not. Spending
+  /// it on every section heading is what made the one thing here that
+  /// IS a link — a verse reference — indistinguishable from furniture.
   Widget _section({
-    required ColorScheme scheme,
+    required WbColors wb,
     required String label,
     required List<Widget> children,
   }) {
@@ -448,7 +386,7 @@ class PersonDetailSheet extends StatelessWidget {
               fontSize: 12,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.4,
-              color: scheme.primary,
+              color: wb.mutedText,
             ),
           ),
           const SizedBox(height: 6),
@@ -462,15 +400,21 @@ class PersonDetailSheet extends StatelessWidget {
     );
   }
 
+  /// A person you can hop to.
+  ///
+  /// The `backgroundColor`/`side` overrides are gone: `workbenchTheme`'s
+  /// `chipTheme` is already `paneBg` behind a square [WbColors.border]
+  /// hairline, and the old `surfaceContainerHighest.withValues(alpha:
+  /// 0.6)` was a translucent fill over a sheet — it read as a card.
   Widget _personChip(
     BuildContext context,
     BiblicalPerson p,
-    ColorScheme scheme, {
+    WbColors wb, {
     String? prefix,
   }) {
     final years = p.displayYears(locale);
     return ActionChip(
-      avatar: Icon(Icons.person_outline, size: 14, color: scheme.primary),
+      avatar: Icon(Icons.person_outline, size: 14, color: wb.mutedText),
       label: Text(
         prefix == null
             ? '${p.localizedName(locale)}${years.isEmpty ? '' : '  ($years)'}'
@@ -479,36 +423,46 @@ class PersonDetailSheet extends StatelessWidget {
       ),
       onPressed: () => onPersonTap?.call(p),
       visualDensity: VisualDensity.compact,
-      backgroundColor: scheme.surfaceContainerHighest.withValues(alpha: 0.6),
-      side: BorderSide(color: scheme.outlineVariant),
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
     );
   }
 
-  Widget _refChip(BuildContext context, String ref, ColorScheme scheme) {
+  /// A verse reference that jumps the reader.
+  ///
+  /// This is the one chip on the sheet that leaves the family tree, so
+  /// it is the one that gets [WbColors.link] — on the INK, label and
+  /// glyph both. The old version put a `primaryContainer` wash behind it
+  /// instead, which is a seed pastel the workbench theme does not
+  /// override and which vanishes on the paper palette.
+  Widget _refChip(BuildContext context, String ref, WbColors wb) {
+    final version = context.read<MainProvider>().currentVersion;
     return ActionChip(
-      avatar: Icon(Icons.menu_book_outlined, size: 14, color: scheme.primary),
-      label: Text(_localizedRef(ref),
-          style: const TextStyle(fontSize: 12)),
+      avatar: Icon(Icons.menu_book_outlined, size: 14, color: wb.link),
+      label: Text(
+        _localizedRef(ref, version),
+        style: TextStyle(fontSize: 12, color: wb.link),
+      ),
       onPressed: () => _jumpToRef(context, ref),
       visualDensity: VisualDensity.compact,
-      backgroundColor: scheme.primaryContainer.withValues(alpha: 0.18),
-      side: BorderSide(color: scheme.primary.withValues(alpha: 0.3)),
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
     );
   }
 
-  /// Translate the ref's English book name into the user's UI
-  /// locale's name. Original is passed through unchanged when
-  /// parsing fails.  e.g. "Genesis 1:26-27" → "创世记 1:26-27" /
-  /// "創世記 1:26-27".
-  String _localizedRef(String raw) {
-    final parsed = parseReference(raw);
-    if (parsed == null) return raw;
-    final book = localeAwareBookName(parsed.englishBook, locale);
-    final tail = parsed.toString().replaceFirst(parsed.englishBook, '');
-    return '$book$tail';
-  }
+  /// Render the ref's book name the way the reader will show it.
+  ///
+  /// [version] is the reading version, and it is not optional detail
+  /// (#283): a reference printed 创世记 that opens a page headed 創世記
+  /// is the same book spelled two ways in one round-trip. The book name
+  /// follows the TEXT, falling back to the UI locale only where the
+  /// version has no opinion.
+  ///
+  /// This delegates rather than re-deriving. The hand-rolled version it
+  /// replaces rebuilt the tail with
+  /// `parsed.toString().replaceFirst(englishBook, '')`, which is the
+  /// same formatting logic spelled a second, more fragile way — it also
+  /// dropped everything after the first `;` in a multi-book ref.
+  String _localizedRef(String raw, String? version) =>
+      localizedReferenceLabel(raw, locale, version);
 
   Future<void> _jumpToRef(BuildContext context, String raw) async {
     // Take only the first segment of `;`-separated chains so the
@@ -539,11 +493,9 @@ class PersonDetailSheet extends StatelessWidget {
 /// SnackBar being on top of the bottom sheet.
 class _CopyAllButton extends StatefulWidget {
   final String locale;
-  final ColorScheme scheme;
   final Future<bool> Function() onCopy;
   const _CopyAllButton({
     required this.locale,
-    required this.scheme,
     required this.onCopy,
   });
 
@@ -573,12 +525,11 @@ class _CopyAllButtonState extends State<_CopyAllButton> {
 
   @override
   Widget build(BuildContext context) {
+    final wb = WbColors.of(context);
     return IconButton(
       tooltip: _justCopied
-          ? (uiStrings['familyTreeCopiedToast']?[widget.locale] ??
-              'Copied')
-          : (uiStrings['familyTreeCopyAll']?[widget.locale] ??
-              'Copy all info'),
+          ? (uiStrings['familyTreeCopiedToast']?[widget.locale] ?? 'Copied')
+          : (uiStrings['familyTreeCopyAll']?[widget.locale] ?? 'Copy all info'),
       onPressed: _justCopied ? null : _handleTap,
       icon: AnimatedSwitcher(
         duration: const Duration(milliseconds: 200),
@@ -589,14 +540,16 @@ class _CopyAllButtonState extends State<_CopyAllButton> {
                 Icons.check_circle_rounded,
                 key: const ValueKey('check'),
                 size: 22,
-                // Theme-aware green for visibility in both modes.
-                color: paletteAccent(context, Colors.green),
+                // The workbench's green, which is already tuned for all
+                // three palettes — including paper, where a raw
+                // Colors.green on cream is the one that goes muddy.
+                color: wb.strongsLexical,
               )
             : Icon(
                 Icons.copy_rounded,
                 key: const ValueKey('copy'),
                 size: 20,
-                color: widget.scheme.primary,
+                color: wb.link,
               ),
       ),
       style: IconButton.styleFrom(
@@ -613,11 +566,9 @@ class _CopyAllButtonState extends State<_CopyAllButton> {
 class _AncestryTrail extends StatefulWidget {
   final BiblicalPerson person;
   final String locale;
-  final ColorScheme scheme;
   const _AncestryTrail({
     required this.person,
     required this.locale,
-    required this.scheme,
   });
 
   @override
@@ -638,6 +589,7 @@ class _AncestryTrailState extends State<_AncestryTrail> {
 
   @override
   Widget build(BuildContext context) {
+    final wb = WbColors.of(context);
     final trail = _trail;
     if (trail == null || trail.isEmpty) return const SizedBox.shrink();
     return Padding(
@@ -654,7 +606,7 @@ class _AncestryTrailState extends State<_AncestryTrail> {
                   Icon(
                     _expanded ? Icons.expand_more : Icons.chevron_right,
                     size: 18,
-                    color: widget.scheme.primary,
+                    color: wb.mutedText,
                   ),
                   const SizedBox(width: 4),
                   Text(
@@ -664,7 +616,7 @@ class _AncestryTrailState extends State<_AncestryTrail> {
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 0.4,
-                      color: widget.scheme.primary,
+                      color: wb.mutedText,
                     ),
                   ),
                 ],
@@ -681,7 +633,7 @@ class _AncestryTrailState extends State<_AncestryTrail> {
               ].join(' → '),
               style: TextStyle(
                 fontSize: 13,
-                color: widget.scheme.onSurface.withValues(alpha: 0.85),
+                color: wb.text,
                 height: 1.5,
               ),
             ),

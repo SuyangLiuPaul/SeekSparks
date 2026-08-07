@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 
-/// Show a transient pill-shaped toast in the **root** Overlay so it
-/// renders ABOVE any modal bottom sheet / dialog / route on the
-/// stack. Default `ScaffoldMessenger.showSnackBar` renders at the
-/// Scaffold level which a modal sheet can cover — that's why this
-/// exists.
+/// Show a transient toast in the **root** Overlay so it renders ABOVE
+/// any modal bottom sheet / dialog / route on the stack. Default
+/// `ScaffoldMessenger.showSnackBar` renders at the Scaffold level which
+/// a modal sheet can cover — that's why this exists.
+///
+/// Square and shadowless (task #279), which is the same call the theme
+/// already made for `snackBarTheme`: transient feedback in this app is
+/// flat. The hairline that replaces the shadow is derived from [fg]
+/// rather than from `WbColors.border`, because a toast sits on a
+/// saturated fill of the caller's choosing and a neutral grey line
+/// disappears on half of them.
 ///
 /// Auto-dismisses after [duration] (default 2 s).
 void showFloatingToast(
@@ -39,21 +45,10 @@ void showFloatingToast(
             child: Container(
               constraints: const BoxConstraints(maxWidth: 360),
               margin: const EdgeInsets.symmetric(horizontal: 24),
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 18, vertical: 14),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
               decoration: BoxDecoration(
                 color: background,
-                borderRadius: BorderRadius.circular(28),
-                boxShadow: [
-                  BoxShadow(
-                    // Shadow is intentionally always dark — a
-                    // light shadow would be invisible against
-                    // any reasonable scrim.
-                    color: Colors.black.withValues(alpha: 0.25),
-                    blurRadius: 16,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
+                border: Border.all(color: fg.withValues(alpha: 0.35)),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,

@@ -9,15 +9,17 @@ import 'package:provider/provider.dart';
 
 import 'package:seeksparks/constants/text_patterns.dart' show sanitizeForSearch;
 import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/biblical_person.dart';
 import 'package:seeksparks/services/family_tree_service.dart';
 import 'package:seeksparks/utils/biblical_role.dart' show localizedRole;
-import 'package:seeksparks/utils/theme_color_helpers.dart';
+import 'package:seeksparks/utils/floating_toast.dart';
 import 'package:seeksparks/widgets/home_icon_button.dart';
 import 'package:seeksparks/widgets/language_switcher_button.dart';
 import 'package:seeksparks/widgets/localized_back_button.dart';
 import 'package:seeksparks/widgets/person_detail_sheet.dart';
+import 'package:seeksparks/widgets/wb_surfaces.dart';
 
 /// Browseable Bible family tree, modelled on the structure of the
 /// Wikipedia article *"Genealogies in the Bible"*:
@@ -38,21 +40,57 @@ import 'package:seeksparks/widgets/person_detail_sheet.dart';
 ///     phones.
 ///   * **Search**: filter-as-you-type. Sections that contain
 ///     matches auto-uncollapse; ancestor rows auto-expand;
-///     matches get a tertiary tint.
+///     matches get the workbench's `hit` fill.
 ///   * **Tap behaviour**: chevron toggles children, row body tap
 ///     opens the detail sheet. Conventional, least-surprise.
 ///
 /// Per-row info (kept across iterations): role pill, year span,
 /// spouse chips inline, verse-ref count badge, accent stripe
 /// (priestly red, royal blue, messianic gold, prophetic purple).
-class FamilyTreePage extends StatefulWidget {
+///
+/// 2026-08-08 (task #279): this is a workbench Resource now, not a
+/// standalone consumer screen, so it wears the workbench's chrome —
+/// square, hairline, no shadows — and honours 护眼纸质 by re-applying
+/// [workbenchTheme] the way `workbench_page` does.
+///
+/// The one thing the pass did NOT flatten is era colour. The workbench
+/// spends saturation on exactly two things, the version tag and the
+/// link, and both put the hue on INK; era hue is DATA (see
+/// `era_palette.dart`), so it survives here on ink too — a title, a 2px
+/// left rule, a tag's text — and dies wherever it was only a wash.
+class FamilyTreePage extends StatelessWidget {
   const FamilyTreePage({super.key});
 
   @override
-  State<FamilyTreePage> createState() => _FamilyTreePageState();
+  Widget build(BuildContext context) {
+    // Re-applying the theme is what carries 护眼纸质 in here. Without it
+    // a reader in paper mode opens this Resource from a cream workbench
+    // and lands on a grey page — the inversion `workbench_page` fixed
+    // for itself the same way.
+    //
+    // It wraps the STATE rather than sitting inside its `build`, because
+    // `_showDetail` opens the person sheet from `State.context`. A Theme
+    // applied inside `build` would be below that context, so the sheet
+    // would come up in the app's palette while the page behind it was
+    // cream.
+    return Theme(
+      data: workbenchTheme(
+        Theme.of(context),
+        paper: context.watch<AppSettings>().readingPaperTheme,
+      ),
+      child: const _FamilyTreeBody(),
+    );
+  }
 }
 
-class _FamilyTreePageState extends State<FamilyTreePage> {
+class _FamilyTreeBody extends StatefulWidget {
+  const _FamilyTreeBody();
+
+  @override
+  State<_FamilyTreeBody> createState() => _FamilyTreePageState();
+}
+
+class _FamilyTreePageState extends State<_FamilyTreeBody> {
   Future<_TreeData>? _future;
   String _query = '';
   late final TextEditingController _searchController;
@@ -126,7 +164,10 @@ class _FamilyTreePageState extends State<FamilyTreePage> {
   static const List<(String, List<String>)> _comparisonColumns = [
     ('familyTreeColGen5', ['Genesis 5']),
     ('familyTreeColGen11', ['Genesis 11']),
-    ('familyTreeColChron1', ['1 Chronicles 1', '1 Chronicles 2', '1 Chronicles 3']),
+    (
+      'familyTreeColChron1',
+      ['1 Chronicles 1', '1 Chronicles 2', '1 Chronicles 3']
+    ),
     ('familyTreeColRuth4', ['Ruth 4']),
     ('familyTreeColMatt1', ['Matthew 1']),
     ('familyTreeColLuke3', ['Luke 3']),
@@ -188,8 +229,7 @@ class _FamilyTreePageState extends State<FamilyTreePage> {
   ///
   /// Within a tier, results are sorted by canonical era order so
   /// the user sees the chronological flow (Adam first, NT last).
-  List<BiblicalPerson> _filtered(
-      List<BiblicalPerson> all, String query) {
+  List<BiblicalPerson> _filtered(List<BiblicalPerson> all, String query) {
     final q = sanitizeForSearch(query).toLowerCase();
     if (q.isEmpty) return const [];
 
@@ -270,9 +310,8 @@ class _FamilyTreePageState extends State<FamilyTreePage> {
 
   @override
   Widget build(BuildContext context) {
-    final settings = context.watch<AppSettings>();
-    final locale = settings.locale;
-    final scheme = Theme.of(context).colorScheme;
+    final locale = context.watch<AppSettings>().locale;
+    final wb = WbColors.of(context);
     return Scaffold(
       appBar: AppBar(
         leading: const LocalizedBackButton(),
@@ -295,15 +334,14 @@ class _FamilyTreePageState extends State<FamilyTreePage> {
                 // the raw error suffixed for diagnostics.
                 child: Text(
                   '${uiStrings['loadErrorTitle']?[locale] ?? 'Failed to load'}: ${snap.error}',
-                  style: TextStyle(color: scheme.error),
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
                 ),
               ),
             );
           }
           final data = snap.data!;
-          final filtered = _query.trim().isEmpty
-              ? null
-              : _filtered(data.all, _query.trim());
+          final filtered =
+              _query.trim().isEmpty ? null : _filtered(data.all, _query.trim());
 
           // Compute match + ancestor sets so sections auto-expand
           // around matches.
@@ -344,7 +382,7 @@ class _FamilyTreePageState extends State<FamilyTreePage> {
                     data: data,
                     filtered: filtered,
                     locale: locale,
-                    scheme: scheme,
+                    wb: wb,
                   ),
                   Expanded(
                     // Search-active: show a clean flat search-results
@@ -362,14 +400,12 @@ class _FamilyTreePageState extends State<FamilyTreePage> {
                             matchIds: matchIds,
                             ancestorIds: ancestorIds,
                             locale: locale,
-                            scheme: scheme,
                           )
                         : filtered.isEmpty
-                            ? _buildNoMatches(locale, scheme)
+                            ? _buildNoMatches(locale, wb)
                             : _buildSearchResults(
                                 matches: filtered,
                                 locale: locale,
-                                scheme: scheme,
                               ),
                   ),
                 ],
@@ -381,16 +417,14 @@ class _FamilyTreePageState extends State<FamilyTreePage> {
     );
   }
 
-  Widget _buildNoMatches(String locale, ColorScheme scheme) {
+  Widget _buildNoMatches(String locale, WbColors wb) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Text(
           uiStrings['familyTreeNoMatches']?[locale] ??
               'No one matches that search.',
-          style: TextStyle(
-            color: scheme.onSurface.withValues(alpha: 0.6),
-          ),
+          style: TextStyle(color: wb.mutedText),
         ),
       ),
     );
@@ -418,9 +452,9 @@ class _FamilyTreePageState extends State<FamilyTreePage> {
                 ),
           hintText: uiStrings['familyTreeSearchHint']?[locale] ??
               'Search by name or biography…',
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
+          // No `border:` — `workbenchTheme`'s inputDecorationTheme is
+          // already a square hairline. The radius-10 override this
+          // replaces was the page arguing with the theme.
         ),
         onChanged: (v) => setState(() => _query = v),
       ),
@@ -431,15 +465,14 @@ class _FamilyTreePageState extends State<FamilyTreePage> {
     required _TreeData data,
     required List<BiblicalPerson>? filtered,
     required String locale,
-    required ColorScheme scheme,
+    required WbColors wb,
   }) {
     final s = filtered != null
         ? (uiStrings['familyTreeFilterCount']?[locale] ??
                 '{count} of {total} people')
             .replaceAll('{count}', filtered.length.toString())
             .replaceAll('{total}', data.all.length.toString())
-        : (uiStrings['familyTreeTotalCount']?[locale] ??
-                '{total} people')
+        : (uiStrings['familyTreeTotalCount']?[locale] ?? '{total} people')
             .replaceAll('{total}', data.all.length.toString());
 
     // "Are most sections collapsed?" → if so the toggle button
@@ -459,10 +492,7 @@ class _FamilyTreePageState extends State<FamilyTreePage> {
           Expanded(
             child: Text(
               s,
-              style: TextStyle(
-                fontSize: 12,
-                color: scheme.onSurface.withValues(alpha: 0.6),
-              ),
+              style: TextStyle(fontSize: 12, color: wb.mutedText),
             ),
           ),
           // Power-user lever — flip every section open / closed at
@@ -490,11 +520,10 @@ class _FamilyTreePageState extends State<FamilyTreePage> {
               style: const TextStyle(fontSize: 12),
             ),
             style: TextButton.styleFrom(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               minimumSize: Size.zero,
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              foregroundColor: scheme.primary,
+              foregroundColor: wb.link,
             ),
           ),
         ],
@@ -512,7 +541,6 @@ class _FamilyTreePageState extends State<FamilyTreePage> {
   Widget _buildSearchResults({
     required List<BiblicalPerson> matches,
     required String locale,
-    required ColorScheme scheme,
   }) {
     return ListView.builder(
       padding: const EdgeInsets.fromLTRB(8, 4, 8, 24),
@@ -520,7 +548,6 @@ class _FamilyTreePageState extends State<FamilyTreePage> {
       itemBuilder: (_, i) => _SearchResultTile(
         person: matches[i],
         locale: locale,
-        scheme: scheme,
         onTap: () {
           final p = matches[i];
           // Clear the query so the article body comes back, then
@@ -549,14 +576,12 @@ class _FamilyTreePageState extends State<FamilyTreePage> {
     required Set<String> matchIds,
     required Set<String> ancestorIds,
     required String locale,
-    required ColorScheme scheme,
   }) {
     final sections = <Widget>[];
     for (final era in _eraOrder) {
       final eraPeople = byEra[era] ?? const <BiblicalPerson>[];
       if (eraPeople.isEmpty) continue;
-      final hasMatch = matchIds.any((id) =>
-          eraPeople.any((p) => p.id == id));
+      final hasMatch = matchIds.any((id) => eraPeople.any((p) => p.id == id));
       // Auto-uncollapse any section that contains a match.
       final isCollapsed = _collapsedEras.contains(era) && !hasMatch;
       // Resolve bridge people to objects for the "continues with"
@@ -575,7 +600,6 @@ class _FamilyTreePageState extends State<FamilyTreePage> {
           people: eraPeople,
           svc: data.svc,
           locale: locale,
-          scheme: scheme,
           isCollapsed: isCollapsed,
           onToggle: () => setState(() {
             if (_collapsedEras.contains(era)) {
@@ -623,7 +647,6 @@ class _FamilyTreePageState extends State<FamilyTreePage> {
         _ComparisonTable(
           spine: spine,
           locale: locale,
-          scheme: scheme,
           matchIds: matchIds,
           comparisonColumns: _comparisonColumns,
           onTapPerson: _showDetail,
@@ -640,8 +663,7 @@ class _FamilyTreePageState extends State<FamilyTreePage> {
   /// NT-era person we can reach.
   List<BiblicalPerson> _computeAdamToJesus(_TreeData data) {
     final svc = data.svc;
-    final start =
-        svc.byId('jesus') ?? svc.byId('joseph_father_of_jesus');
+    final start = svc.byId('jesus') ?? svc.byId('joseph_father_of_jesus');
     if (start == null) return const [];
     final out = <BiblicalPerson>[start];
     var cur = start;
@@ -684,10 +706,6 @@ class _FamilyTreePageState extends State<FamilyTreePage> {
       });
     }
 
-    // The diagnostic SnackBar that fires post-scroll covers both
-    // "tap reached us" and "scroll succeeded" feedback in one
-    // message, so we don't need a separate immediate one here.
-
     // Aggressive deferral chain: postFrame → postFrame → 250 ms.
     // Layout for a 40-row Lukan Lineage body completes well
     // within this on phones, so the destination row's RenderBox
@@ -723,14 +741,12 @@ class _FamilyTreePageState extends State<FamilyTreePage> {
     }
     ctx ??= _eraKeys[era]?.currentContext;
     if (ctx == null) {
-      // Diagnostic SnackBar so the user knows the tap fired but
-      // the destination context wasn't ready.
-      _showJumpDebug('no context for $era / $personId');
+      debugPrint('familyTree: no context for $era / $personId');
       return;
     }
     final box = ctx.findRenderObject();
     if (box is! RenderBox) {
-      _showJumpDebug('no RenderBox for $era / $personId');
+      debugPrint('familyTree: no RenderBox for $era / $personId');
       return;
     }
     final viewport = RenderAbstractViewport.of(box);
@@ -741,25 +757,11 @@ class _FamilyTreePageState extends State<FamilyTreePage> {
       position.minScrollExtent,
       position.maxScrollExtent,
     );
-    final wasAt = position.pixels;
     _scrollController.jumpTo(clamped);
-    _showJumpDebug(
-        'jumped: was=${wasAt.toInt()} → ${clamped.toInt()} (raw=${raw.toInt()})');
-  }
-
-  /// Show a debug SnackBar describing what the jump did. Helps
-  /// pinpoint whether the issue is missing context, missing render
-  /// box, wrong offset, or no scrolling at all.
-  void _showJumpDebug(String message) {
-    if (!mounted) return;
-    final messenger = ScaffoldMessenger.maybeOf(context);
-    if (messenger == null) return;
-    messenger.hideCurrentSnackBar();
-    messenger.showSnackBar(SnackBar(
-      content: Text(message, style: const TextStyle(fontSize: 11)),
-      duration: const Duration(milliseconds: 2400),
-      behavior: SnackBarBehavior.floating,
-    ));
+    // The landing is announced by the destination row's `pinned` mark,
+    // not by a SnackBar. What used to fire here was an untranslated
+    // developer diagnostic ("jumped: was=1240 → 3180") shown to users.
+    debugPrint('familyTree: jumped to ${clamped.toInt()} (raw ${raw.toInt()})');
   }
 
   // ── Detail sheet ───────────────────────────────────────────────
@@ -769,11 +771,9 @@ class _FamilyTreePageState extends State<FamilyTreePage> {
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Theme.of(context).colorScheme.surface,
       constraints: const BoxConstraints(maxWidth: 720),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
+      // No `shape:` / `backgroundColor:` — `workbenchTheme`'s
+      // bottomSheetTheme is already square and already `paneBg`.
       builder: (sheetCtx) => DraggableScrollableSheet(
         initialChildSize: 0.65,
         minChildSize: 0.35,
@@ -800,7 +800,6 @@ class _EraSection extends StatelessWidget {
   final List<BiblicalPerson> people;
   final FamilyTreeService svc;
   final String locale;
-  final ColorScheme scheme;
   final bool isCollapsed;
   final VoidCallback onToggle;
   final Set<String> expanded;
@@ -819,7 +818,6 @@ class _EraSection extends StatelessWidget {
     required this.people,
     required this.svc,
     required this.locale,
-    required this.scheme,
     required this.isCollapsed,
     required this.onToggle,
     required this.expanded,
@@ -836,12 +834,11 @@ class _EraSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = _eraColor(era);
-    // 2026-05-10 (v1.2.36): brightness-aware era foreground used
-    // for the era title text + the chevron / history_edu icons +
-    // the people-count badge. Backgrounds (gradient + alpha-15
-    // badge fill + alpha-30 border) keep the raw deep era hue.
-    final fg = _eraColorOn(Theme.of(context).brightness, era);
+    // One colour now, not two. The old pair — a raw deep hue for the
+    // gradient fill plus a lifted one for the ink on top of it — existed
+    // only because there WAS a fill. With the hue on ink alone, the
+    // palette-aware value is the only one there is.
+    final accent = eraColorFor(context, era);
     // Section roots = people in this era whose parent is NOT in
     // this era (or has no parent). Spouses-in (no parent) are
     // shown inline as chips on their husband's row, so we exclude
@@ -887,134 +884,52 @@ class _EraSection extends StatelessWidget {
       return !hasParentInEra && !isInlineSpouse(p);
     }).toList();
 
-    return Container(
-      margin: const EdgeInsets.fromLTRB(8, 8, 8, 4),
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: color.withValues(alpha: 0.3),
-          width: 0.8,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Section header — collapse/expand the whole era.
-          InkWell(
-            onTap: onToggle,
-            borderRadius: BorderRadius.circular(8),
-            child: Container(
-              padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    color.withValues(alpha: 0.18),
-                    color.withValues(alpha: 0.04),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 8, 8, 4),
+      child: WbPanel(
+        // The chevron is the only glyph left. The `history_edu` book
+        // that used to sit beside it was identical on all nine
+        // sections, so it distinguished nothing.
+        icon: isCollapsed ? Icons.chevron_right : Icons.expand_more,
+        title: _eraLabel(era, locale),
+        subtitle: _eraSubtitle(era, locale),
+        accent: accent,
+        onTap: onToggle,
+        trailing: WbTag(text: '${people.length}', color: accent),
+        padding: EdgeInsets.zero,
+        child: isCollapsed
+            ? const SizedBox.shrink()
+            : Padding(
+                padding: const EdgeInsets.only(top: 2, bottom: 6),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    for (final root in roots)
+                      _buildSubtree(
+                        root,
+                        depth: 0,
+                        eraIds: eraIds,
+                        seen: <String>{},
+                      ),
+                    if (bridges.isNotEmpty)
+                      _BridgeFooter(
+                        bridges: bridges,
+                        locale: locale,
+                        eraAccent: accent,
+                        onTapBridge: (target) {
+                          // Tap = jump only. Pass the person id so
+                          // the destination row gets a flash highlight
+                          // and the scroll lands on the row, not just
+                          // the section header.
+                          final targetEra = target.era;
+                          if (targetEra != null) {
+                            onJumpToEra(targetEra, personId: target.id);
+                          }
+                        },
+                      ),
                   ],
                 ),
-                borderRadius: BorderRadius.vertical(
-                  top: const Radius.circular(8),
-                  bottom: isCollapsed
-                      ? const Radius.circular(8)
-                      : Radius.zero,
-                ),
               ),
-              child: Row(
-                children: [
-                  Icon(
-                    isCollapsed
-                        ? Icons.chevron_right
-                        : Icons.expand_more,
-                    size: 22,
-                    color: fg,
-                  ),
-                  const SizedBox(width: 6),
-                  Icon(Icons.history_edu, size: 16, color: fg),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          _eraLabel(era, locale),
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 0.4,
-                            color: fg,
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(top: 2),
-                          child: Text(
-                            _eraSubtitle(era, locale),
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: scheme.onSurface
-                                  .withValues(alpha: 0.6),
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: color.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      '${people.length}',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: fg,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          if (!isCollapsed)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 6),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  for (final root in roots)
-                    _buildSubtree(
-                      root,
-                      depth: 0,
-                      eraIds: eraIds,
-                      seen: <String>{},
-                    ),
-                  if (bridges.isNotEmpty)
-                    _BridgeFooter(
-                      bridges: bridges,
-                      locale: locale,
-                      scheme: scheme,
-                      eraColor: color,
-                      onTapBridge: (target) {
-                        // Tap = jump only. Pass the person id so
-                        // the destination row gets a flash highlight
-                        // and the scroll lands on the row, not just
-                        // the section header.
-                        final targetEra = target.era;
-                        if (targetEra != null) {
-                          onJumpToEra(targetEra, personId: target.id);
-                        }
-                      },
-                    ),
-                ],
-              ),
-            ),
-        ],
       ),
     );
   }
@@ -1047,8 +962,7 @@ class _EraSection extends StatelessWidget {
         crossEraKids.add(c);
       }
     }
-    final hasAnyKids =
-        inEraKids.isNotEmpty || crossEraKids.isNotEmpty;
+    final hasAnyKids = inEraKids.isNotEmpty || crossEraKids.isNotEmpty;
     final isExpanded = !hasAnyKids
         ? false
         : (expanded.contains(p.id) || ancestorIds.contains(p.id));
@@ -1065,21 +979,18 @@ class _EraSection extends StatelessWidget {
             person: p,
             depth: depth,
             locale: locale,
-            scheme: scheme,
             svc: svc,
             showExpander: hasAnyKids,
             isExpanded: isExpanded,
             isMatch: matchIds.contains(p.id),
             isRecentlyJumped: recentlyJumpedTo == p.id,
-            onToggleExpand:
-                hasAnyKids ? () => onTogglePerson(p.id) : null,
+            onToggleExpand: hasAnyKids ? () => onTogglePerson(p.id) : null,
             // Tap row body = expand/collapse children when this
             // person has any. For leaf nodes (no kids) tap falls
             // back to opening the detail sheet so the action isn't
             // a no-op.
-            onTap: hasAnyKids
-                ? () => onTogglePerson(p.id)
-                : () => onTapPerson(p),
+            onTap:
+                hasAnyKids ? () => onTogglePerson(p.id) : () => onTapPerson(p),
             onOpenDetail: () => onTapPerson(p),
             onTapSpouse: onTapPerson,
             onJumpToSpouse: onJumpToSpouse,
@@ -1098,7 +1009,6 @@ class _EraSection extends StatelessWidget {
               person: c,
               depth: depth + 1,
               locale: locale,
-              scheme: scheme,
               svc: svc,
               onTapPerson: onTapPerson,
               onJumpToEra: onJumpToEra,
@@ -1119,59 +1029,50 @@ class _EraSection extends StatelessWidget {
 class _BridgeFooter extends StatelessWidget {
   final List<BiblicalPerson> bridges;
   final String locale;
-  final ColorScheme scheme;
-  final Color eraColor;
+
+  /// The era's colour, already lifted for the palette by the section.
+  final Color eraAccent;
   final void Function(BiblicalPerson) onTapBridge;
 
   const _BridgeFooter({
     required this.bridges,
     required this.locale,
-    required this.scheme,
-    required this.eraColor,
+    required this.eraAccent,
     required this.onTapBridge,
   });
 
   @override
   Widget build(BuildContext context) {
-    // 2026-05-10 (v1.2.36): brightness-aware foreground for the
-    // "Continues with" icon + label so it stays readable on the
-    // dark theme. The translucent backdrop + border keeps the raw
-    // era hue.
-    final fg = _readableEraFg(context, eraColor);
+    final wb = WbColors.of(context);
     return Container(
       margin: const EdgeInsets.only(top: 8, left: 8, right: 8, bottom: 4),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color: eraColor.withValues(alpha: 0.07),
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(
-          color: eraColor.withValues(alpha: 0.3),
-          width: 0.7,
-        ),
+        color: wb.paneAltBg,
+        border: Border.all(color: wb.border, width: WbMetrics.hairline),
       ),
       child: Wrap(
         crossAxisAlignment: WrapCrossAlignment.center,
         spacing: 6,
         runSpacing: 4,
         children: [
-          Icon(Icons.east_rounded, size: 14, color: fg),
+          Icon(Icons.east_rounded, size: 14, color: eraAccent),
           const SizedBox(width: 2),
           Text(
-            uiStrings['familyTreeContinuesWith']?[locale] ??
-                'Continues with',
+            uiStrings['familyTreeContinuesWith']?[locale] ?? 'Continues with',
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.4,
-              color: fg,
+              color: eraAccent,
             ),
           ),
           for (final p in bridges)
-            _BridgeChip(
-              person: p,
-              locale: locale,
-              scheme: scheme,
-              eraColor: eraColor,
+            WbTag(
+              text: p.localizedName(locale),
+              icon: Icons.person_pin_rounded,
+              color: eraAccent,
+              dense: false,
               onTap: () => onTapBridge(p),
             ),
         ],
@@ -1180,81 +1081,39 @@ class _BridgeFooter extends StatelessWidget {
   }
 }
 
-/// 2026-05-10 (v1.2.36): brightness-aware foreground colour for
-/// era-tinted text/icons. The widgets that receive `eraColor` as a
-/// constructor parameter (rather than the era key) call this helper
-/// to derive a readable variant for the current theme. Mirrors
-/// `_eraColorOn(brightness, era)` but operates on a pre-resolved
-/// `Color`.
-Color _readableEraFg(BuildContext context, Color eraColor) {
-  if (Theme.of(context).brightness == Brightness.dark) {
-    return Color.lerp(eraColor, Colors.white, 0.45) ?? eraColor;
-  }
-  return eraColor;
-}
+// ── Person row ────────────────────────────────────────────────
 
-class _BridgeChip extends StatelessWidget {
-  final BiblicalPerson person;
-  final String locale;
-  final ColorScheme scheme;
-  final Color eraColor;
-  final VoidCallback onTap;
-
-  const _BridgeChip({
-    required this.person,
-    required this.locale,
-    required this.scheme,
-    required this.eraColor,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final fg = _readableEraFg(context, eraColor);
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(4),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-          decoration: BoxDecoration(
-            color: eraColor.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(4),
-            border: Border.all(
-              color: eraColor.withValues(alpha: 0.5),
-              width: 0.7,
-            ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.person_pin_rounded,
-                  size: 11, color: fg),
-              const SizedBox(width: 3),
-              Text(
-                person.localizedName(locale),
-                style: TextStyle(
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w700,
-                  color: fg,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+/// The fill and border behind a tree row, in the workbench's own
+/// highlight vocabulary rather than a second one.
+///
+/// A search match is a `hit` — [WbColors.selectionBg] at 55%, exactly
+/// what `wordMarkDecoration` prints behind a word the search found. A
+/// jumped-to row is `pinned` — the full selection fill plus the gold
+/// [WbColors.pinMark] rule, exactly what marks the word under study.
+/// Both questions are the same question the Browse window already
+/// answers ("did I ask for this, or did I land on it?"), so reusing the
+/// answer means a reader learns the code once.
+BoxDecoration? _rowMark(
+  WbColors wb, {
+  required bool isMatch,
+  required bool isJumped,
+}) {
+  if (isJumped) {
+    return BoxDecoration(
+      color: wb.selectionBg,
+      border: Border.all(color: wb.pinMark, width: 1.5),
     );
   }
+  if (isMatch) {
+    return BoxDecoration(color: wb.selectionBg.withValues(alpha: 0.55));
+  }
+  return null;
 }
-
-// ── Person row ────────────────────────────────────────────────
 
 class _PersonRow extends StatelessWidget {
   final BiblicalPerson person;
   final int depth;
   final String locale;
-  final ColorScheme scheme;
   final FamilyTreeService svc;
   final bool showExpander;
   final bool isExpanded;
@@ -1270,7 +1129,6 @@ class _PersonRow extends StatelessWidget {
     required this.person,
     required this.depth,
     required this.locale,
-    required this.scheme,
     required this.svc,
     required this.showExpander,
     required this.isExpanded,
@@ -1285,12 +1143,15 @@ class _PersonRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final wb = WbColors.of(context);
     // Indent caps at depth 6; deeper rows stop sliding right.
     final clampedDepth = depth > 6 ? 6 : depth;
     final indent = clampedDepth * 14.0;
     final years = person.displayYears(locale);
     final accent = _accentTheme(person.accent);
-    final accentLine = accent?.line ?? scheme.outline;
+    final accentLine = accent == null
+        ? null
+        : liftForDarkGround(accent.line, isDark: wb.isDark);
     final spouses = [for (final id in person.spouseIds) svc.byId(id)]
         .whereType<BiblicalPerson>()
         .toList();
@@ -1304,265 +1165,201 @@ class _PersonRow extends StatelessWidget {
       // Switching to a static Container keeps the highlight
       // visible (just no fade-in) and the layout deterministic.
       child: Container(
-        decoration: BoxDecoration(
-          color: isRecentlyJumped
-              ? scheme.primaryContainer.withValues(alpha: 0.7)
-              : isMatch
-                  ? scheme.tertiaryContainer.withValues(alpha: 0.45)
-                  : Colors.transparent,
-          border: isRecentlyJumped
-              ? Border.all(
-                  color: scheme.primary.withValues(alpha: 0.6),
-                  width: 1.5,
-                )
-              : null,
-          borderRadius: BorderRadius.circular(6),
+        decoration: _rowMark(
+          wb,
+          isMatch: isMatch,
+          isJumped: isRecentlyJumped,
         ),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
             onTap: onTap,
+            hoverColor: wb.hoverBg,
             child: Container(
               decoration: BoxDecoration(
-              border: Border(
-                left: BorderSide(
-                  color: accent != null
-                      ? accentLine.withValues(alpha: 0.6)
-                      : scheme.outlineVariant.withValues(alpha: 0.5),
-                  width: accent != null ? 3 : 1.5,
-                ),
-              ),
-            ),
-            padding: const EdgeInsets.symmetric(
-                horizontal: 6, vertical: 6),
-            child: Row(
-              children: [
-                SizedBox(
-                  width: 30,
-                  child: showExpander
-                      ? IconButton(
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(
-                              minWidth: 30, minHeight: 30),
-                          iconSize: 20,
-                          icon: Icon(isExpanded
-                              ? Icons.expand_more
-                              : Icons.chevron_right),
-                          onPressed: onToggleExpand,
-                        )
-                      : const SizedBox.shrink(),
-                ),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Wrap(
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        spacing: 6,
-                        runSpacing: 4,
-                        children: [
-                          Text(
-                            person.localizedName(locale),
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
-                              color: scheme.onSurface,
-                            ),
-                          ),
-                          for (final s in spouses)
-                            _SpouseChip(
-                              spouse: s,
-                              locale: locale,
-                              scheme: scheme,
-                              // Tap a spouse chip → jump to that
-                              // person's row in their own era
-                              // section (so e.g. Mary on Joseph's
-                              // row jumps to Mary in NT section).
-                              // Falls back to detail sheet if the
-                              // spouse has no era to jump to.
-                              onTap: () => onJumpToSpouse(s),
-                            ),
-                          if ((person.role ?? '').isNotEmpty)
-                            _RolePill(
-                              label: person.role!,
-                              accent: accent,
-                              scheme: scheme,
-                              locale: locale,
-                            ),
-                          if (person.refs.isNotEmpty)
-                            _RefBadge(
-                              count: person.refs.length,
-                              scheme: scheme,
-                            ),
-                        ],
-                      ),
-                      if (years.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 2),
-                          child: Text(
-                            years,
-                            style: TextStyle(
-                              fontSize: 11.5,
-                              color: scheme.onSurface
-                                  .withValues(alpha: 0.62),
-                              fontFeatures: const [
-                                FontFeature.tabularFigures(),
-                              ],
-                            ),
-                          ),
-                        ),
-                    ],
+                border: Border(
+                  left: BorderSide(
+                    // The lineage accent (priestly red, royal blue,
+                    // messianic gold, prophetic purple) is data, so it
+                    // stays — at full strength, because a 3px rule at 60%
+                    // opacity over a `pinned` fill was already reading as
+                    // a different colour on the jumped-to row.
+                    color: accentLine ?? wb.border,
+                    width: accentLine != null ? 3 : WbMetrics.hairline,
                   ),
                 ),
-                // Info button — explicit, discoverable path to the
-                // detail sheet. Tap row body = expand/collapse.
-                // Tap this little box = open popup. Matches the
-                // human-natural pattern the user asked for.
-                _RowInfoButton(
-                  scheme: scheme,
-                  onPressed: onOpenDetail,
-                  locale: locale,
-                ),
-              ],
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 30,
+                    child: showExpander
+                        ? IconButton(
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(
+                                minWidth: 30, minHeight: 30),
+                            iconSize: 20,
+                            icon: Icon(isExpanded
+                                ? Icons.expand_more
+                                : Icons.chevron_right),
+                            onPressed: onToggleExpand,
+                          )
+                        : const SizedBox.shrink(),
+                  ),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Wrap(
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          spacing: 6,
+                          runSpacing: 4,
+                          children: [
+                            Text(
+                              person.localizedName(locale),
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                                color: wb.text,
+                              ),
+                            ),
+                            for (final s in spouses)
+                              // Tap a spouse chip → jump to that
+                              // person's row in their own era section
+                              // (so e.g. Mary on Joseph's row jumps to
+                              // Mary in the NT section). Falls back to
+                              // the detail sheet if the spouse has no
+                              // era to jump to.
+                              _spouseTag(s, locale, wb,
+                                  onTap: () => onJumpToSpouse(s)),
+                            if ((person.role ?? '').isNotEmpty)
+                              WbTag(
+                                text: localizedRole(person.role!, locale),
+                                color: accentLine ?? wb.mutedText,
+                              ),
+                            if (person.refs.isNotEmpty)
+                              _refTag(person.refs.length, wb),
+                          ],
+                        ),
+                        if (years.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 2),
+                            child: Text(
+                              years,
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                color: wb.mutedText,
+                                fontFeatures: const [
+                                  FontFeature.tabularFigures(),
+                                ],
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  // Info button — explicit, discoverable path to the
+                  // detail sheet. Tap row body = expand/collapse.
+                  // Tap this little box = open popup. Matches the
+                  // human-natural pattern the user asked for.
+                  _RowInfoButton(
+                    onPressed: onOpenDetail,
+                    locale: locale,
+                  ),
+                ],
+              ),
             ),
           ),
         ),
       ),
-      ),
     );
   }
-
 }
 
 class _SearchResultTile extends StatelessWidget {
   final BiblicalPerson person;
   final String locale;
-  final ColorScheme scheme;
   final VoidCallback onTap;
 
   const _SearchResultTile({
     required this.person,
     required this.locale,
-    required this.scheme,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final wb = WbColors.of(context);
     final accent = _accentTheme(person.accent);
-    final accentColor = accent?.line ?? scheme.primary;
+    final accentColor = accent == null
+        ? wb.border
+        : liftForDarkGround(accent.line, isDark: wb.isDark);
     final years = person.displayYears(locale);
     final era = person.era ?? '';
-    final eraColor = _eraColor(era);
-    return Container(
-      margin: const EdgeInsets.only(bottom: 6),
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.5),
-        ),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(8),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(10, 12, 10, 12),
-            child: Row(
-              children: [
-                Container(
-                  width: 4,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: accentColor,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: WbTile(
+        onTap: onTap,
+        alt: false,
+        padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
+        child: Row(
+          children: [
+            // The lineage accent, as a square rule rather than a
+            // rounded pill. It is the same 4px bar; only its ends
+            // changed.
+            Container(width: 4, height: 40, color: accentColor),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Wrap(
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 6,
+                    runSpacing: 4,
                     children: [
-                      Wrap(
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        spacing: 6,
-                        runSpacing: 4,
-                        children: [
-                          Text(
-                            person.localizedName(locale),
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              color: scheme.onSurface,
-                            ),
-                          ),
-                          // Era pill in the era's colour.
-                          if (era.isNotEmpty)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 6, vertical: 1.5),
-                              decoration: BoxDecoration(
-                                color:
-                                    eraColor.withValues(alpha: 0.13),
-                                borderRadius:
-                                    BorderRadius.circular(4),
-                                border: Border.all(
-                                  color:
-                                      eraColor.withValues(alpha: 0.4),
-                                  width: 0.7,
-                                ),
-                              ),
-                              child: Text(
-                                _eraLabelShort(era, locale),
-                                style: TextStyle(
-                                  fontSize: 9.5,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 0.5,
-                                  // v1.2.36: brightness-aware fg
-                                  color: _readableEraFg(
-                                      context, eraColor),
-                                ),
-                              ),
-                            ),
-                          if ((person.role ?? '').isNotEmpty)
-                            _RolePill(
-                              label: person.role!,
-                              accent: accent,
-                              scheme: scheme,
-                              locale: locale,
-                            ),
-                          if (person.refs.isNotEmpty)
-                            _RefBadge(
-                              count: person.refs.length,
-                              scheme: scheme,
-                            ),
-                        ],
-                      ),
-                      if (years.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 4),
-                          child: Text(
-                            years,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: scheme.onSurface
-                                  .withValues(alpha: 0.62),
-                              fontFeatures: const [
-                                FontFeature.tabularFigures(),
-                              ],
-                            ),
-                          ),
+                      Text(
+                        person.localizedName(locale),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: wb.text,
                         ),
+                      ),
+                      if (era.isNotEmpty)
+                        WbTag(
+                          text: _eraLabelShort(era, locale),
+                          color: eraColorFor(context, era),
+                        ),
+                      if ((person.role ?? '').isNotEmpty)
+                        WbTag(
+                          text: localizedRole(person.role!, locale),
+                          color: accent == null ? wb.mutedText : accentColor,
+                        ),
+                      if (person.refs.isNotEmpty)
+                        _refTag(person.refs.length, wb),
                     ],
                   ),
-                ),
-                Icon(Icons.east_rounded,
-                    size: 18, color: scheme.primary),
-              ],
+                  if (years.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        years,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: wb.mutedText,
+                          fontFeatures: const [
+                            FontFeature.tabularFigures(),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ),
-          ),
+            Icon(Icons.east_rounded, size: 18, color: wb.link),
+          ],
         ),
       ),
     );
@@ -1570,29 +1367,30 @@ class _SearchResultTile extends StatelessWidget {
 }
 
 class _RowInfoButton extends StatelessWidget {
-  final ColorScheme scheme;
   final VoidCallback onPressed;
   final String locale;
   const _RowInfoButton({
-    required this.scheme,
     required this.onPressed,
     required this.locale,
   });
 
   @override
   Widget build(BuildContext context) {
+    final wb = WbColors.of(context);
     return Tooltip(
       message: uiStrings['familyTreeOpenDetails']?[locale] ?? 'Details',
       child: InkResponse(
         onTap: onPressed,
         radius: 18,
+        hoverColor: wb.hoverBg,
         child: Padding(
           padding: const EdgeInsets.all(4),
-          child: Icon(
-            Icons.info_outline_rounded,
-            size: 18,
-            color: scheme.primary.withValues(alpha: 0.7),
-          ),
+          // Muted, not link blue. The whole row is already clickable
+          // and this workspace signals that by hovering; spending the
+          // link hue on a second control in the same row would say
+          // "reference" where there is none.
+          child:
+              Icon(Icons.info_outline_rounded, size: 18, color: wb.mutedText),
         ),
       ),
     );
@@ -1610,7 +1408,6 @@ class _BridgeLeafRow extends StatelessWidget {
   final BiblicalPerson person;
   final int depth;
   final String locale;
-  final ColorScheme scheme;
   final FamilyTreeService svc;
   final void Function(BiblicalPerson) onTapPerson;
   final void Function(String era, {String? personId}) onJumpToEra;
@@ -1620,7 +1417,6 @@ class _BridgeLeafRow extends StatelessWidget {
     required this.person,
     required this.depth,
     required this.locale,
-    required this.scheme,
     required this.svc,
     required this.onTapPerson,
     required this.onJumpToEra,
@@ -1629,170 +1425,130 @@ class _BridgeLeafRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final wb = WbColors.of(context);
     final clampedDepth = depth > 6 ? 6 : depth;
     final indent = clampedDepth * 14.0;
     final years = person.displayYears(locale);
     final accent = _accentTheme(person.accent);
-    final accentLine = accent?.line ?? scheme.outline;
+    final accentLine = accent == null
+        ? null
+        : liftForDarkGround(accent.line, isDark: wb.isDark);
     final spouses = [for (final id in person.spouseIds) svc.byId(id)]
         .whereType<BiblicalPerson>()
         .toList();
     final targetEra = person.era ?? '';
-    final targetEraColor = _eraColor(targetEra);
+    final targetEraColor = eraColorFor(context, targetEra);
 
     return Padding(
       padding: EdgeInsets.only(left: indent),
-      child: Material(
-        color: targetEraColor.withValues(alpha: 0.04),
-        child: InkWell(
-          // Tap = jump only. Opening the detail sheet here would
-          // cover the scroll animation and make the jump feel like
-          // it didn't fire. The trailing ⓘ button opens the
-          // detail sheet without jumping.
-          onTap: () {
-            if (targetEra.isNotEmpty) {
-              onJumpToEra(targetEra, personId: person.id);
-            }
-          },
-          onLongPress: () => onTapPerson(person),
-          child: Container(
-            decoration: BoxDecoration(
-              border: Border(
-                left: BorderSide(
-                  color: accent != null
-                      ? accentLine.withValues(alpha: 0.55)
-                      : targetEraColor.withValues(alpha: 0.55),
-                  width: accent != null ? 3 : 2,
+      child: Container(
+        // Zebra fill, not an era wash. A bridge leaf is "a row that
+        // belongs to the next section", which is a structural fact and
+        // so gets the structural shade; the era it belongs to is said
+        // once, in the trailing tag, in words.
+        decoration: _rowMark(wb, isMatch: false, isJumped: isRecentlyJumped) ??
+            BoxDecoration(color: wb.paneAltBg),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            // Tap = jump only. Opening the detail sheet here would
+            // cover the scroll animation and make the jump feel like
+            // it didn't fire. The trailing ⓘ button opens the
+            // detail sheet without jumping.
+            onTap: () {
+              if (targetEra.isNotEmpty) {
+                onJumpToEra(targetEra, personId: person.id);
+              }
+            },
+            onLongPress: () => onTapPerson(person),
+            hoverColor: wb.hoverBg,
+            child: Container(
+              decoration: BoxDecoration(
+                border: Border(
+                  left: BorderSide(
+                    color: accentLine ?? targetEraColor,
+                    width: accentLine != null ? 3 : 2,
+                  ),
                 ),
               ),
-            ),
-            padding:
-                const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
-            child: Row(
-              children: [
-                // Same width as the chevron column on a regular row,
-                // for vertical alignment with siblings.
-                SizedBox(
-                  width: 30,
-                  child: Center(
-                    child: Icon(
-                      Icons.subdirectory_arrow_right_rounded,
-                      size: 16,
-                      color:
-                          scheme.onSurface.withValues(alpha: 0.45),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+              child: Row(
+                children: [
+                  // Same width as the chevron column on a regular row,
+                  // for vertical alignment with siblings.
+                  SizedBox(
+                    width: 30,
+                    child: Center(
+                      child: Icon(
+                        Icons.subdirectory_arrow_right_rounded,
+                        size: 16,
+                        color: wb.mutedText,
+                      ),
                     ),
                   ),
-                ),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Wrap(
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        spacing: 6,
-                        runSpacing: 4,
-                        children: [
-                          Text(
-                            person.localizedName(locale),
-                            style: TextStyle(
-                              fontSize: 14.5,
-                              fontWeight: FontWeight.w700,
-                              color: scheme.onSurface,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Wrap(
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          spacing: 6,
+                          runSpacing: 4,
+                          children: [
+                            Text(
+                              person.localizedName(locale),
+                              style: TextStyle(
+                                fontSize: 14.5,
+                                fontWeight: FontWeight.w700,
+                                color: wb.text,
+                              ),
                             ),
-                          ),
-                          for (final s in spouses)
-                            _SpouseChip(
-                              spouse: s,
-                              locale: locale,
-                              scheme: scheme,
-                              onTap: () => onTapPerson(s),
+                            for (final s in spouses)
+                              _spouseTag(s, locale, wb,
+                                  onTap: () => onTapPerson(s)),
+                            if ((person.role ?? '').isNotEmpty)
+                              WbTag(
+                                text: localizedRole(person.role!, locale),
+                                color: accentLine ?? wb.mutedText,
+                              ),
+                            // The trailing "→ {next era}" tag. This
+                            // is the visual cue that the lineage
+                            // continues in another section.
+                            WbTag(
+                              text: '→ ${_eraLabelShort(targetEra, locale)}',
+                              color: targetEraColor,
                             ),
-                          if ((person.role ?? '').isNotEmpty)
-                            _RolePill(
-                              label: person.role!,
-                              accent: accent,
-                              scheme: scheme,
-                              locale: locale,
-                            ),
-                          // The trailing "→ {next era}" tag. This
-                          // is the visual cue that the lineage
-                          // continues in another section.
-                          _NextEraTag(
-                            targetEra: targetEra,
-                            targetEraColor: targetEraColor,
-                            locale: locale,
-                          ),
-                        ],
-                      ),
-                      if (years.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 2),
-                          child: Text(
-                            years,
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: scheme.onSurface
-                                  .withValues(alpha: 0.55),
-                              fontFeatures: const [
-                                FontFeature.tabularFigures(),
-                              ],
-                            ),
-                          ),
+                          ],
                         ),
-                    ],
+                        if (years.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 2),
+                            child: Text(
+                              years,
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: wb.mutedText,
+                                fontFeatures: const [
+                                  FontFeature.tabularFigures(),
+                                ],
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
-                ),
-                Icon(Icons.east_rounded,
-                    size: 16,
-                    // v1.2.36: brightness-aware fg
-                    color: _readableEraFg(context, targetEraColor)),
-                // Info button — opens detail without jumping. Tap
-                // row body = jump to next era; this little box =
-                // peek at details first.
-                _RowInfoButton(
-                  scheme: scheme,
-                  onPressed: () => onTapPerson(person),
-                  locale: locale,
-                ),
-              ],
+                  Icon(Icons.east_rounded, size: 16, color: targetEraColor),
+                  // Info button — opens detail without jumping. Tap
+                  // row body = jump to next era; this little box =
+                  // peek at details first.
+                  _RowInfoButton(
+                    onPressed: () => onTapPerson(person),
+                    locale: locale,
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _NextEraTag extends StatelessWidget {
-  final String targetEra;
-  final Color targetEraColor;
-  final String locale;
-  const _NextEraTag({
-    required this.targetEra,
-    required this.targetEraColor,
-    required this.locale,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final fg = _readableEraFg(context, targetEraColor);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
-      decoration: BoxDecoration(
-        color: targetEraColor.withValues(alpha: 0.13),
-        borderRadius: BorderRadius.circular(4),
-        border: Border.all(
-          color: targetEraColor.withValues(alpha: 0.5),
-          width: 0.7,
-        ),
-      ),
-      child: Text(
-        '→ ${_eraLabelShort(targetEra, locale)}',
-        style: TextStyle(
-          fontSize: 9,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0.4,
-          color: fg,
         ),
       ),
     );
@@ -1804,11 +1560,19 @@ class _NextEraTag extends StatelessWidget {
 /// label when no short form is registered.
 String _eraLabelShort(String era, String locale) {
   const labels = {
-    'antediluvian': {'en': 'Antediluvian', 'zh-Hans': '洪水之前', 'zh-Hant': '洪水之前'},
+    'antediluvian': {
+      'en': 'Antediluvian',
+      'zh-Hans': '洪水之前',
+      'zh-Hant': '洪水之前'
+    },
     'post_flood': {'en': 'Post-Flood', 'zh-Hans': '洪水之后', 'zh-Hant': '洪水之後'},
     'patriarchs': {'en': 'Patriarchs', 'zh-Hans': '列祖', 'zh-Hant': '列祖'},
     'mosaic': {'en': 'Mosaic', 'zh-Hans': '摩西时代', 'zh-Hant': '摩西時代'},
-    'davidic_line': {'en': 'Davidic Line', 'zh-Hans': '大卫世系', 'zh-Hant': '大衛世系'},
+    'davidic_line': {
+      'en': 'Davidic Line',
+      'zh-Hans': '大卫世系',
+      'zh-Hant': '大衛世系'
+    },
     'kings': {'en': 'Kings', 'zh-Hans': '列王', 'zh-Hant': '列王'},
     'exile': {'en': 'Exile', 'zh-Hans': '被掳', 'zh-Hant': '被擄'},
     'lukan_lineage': {'en': 'Lukan', 'zh-Hans': '路加家谱', 'zh-Hant': '路加家譜'},
@@ -1822,7 +1586,6 @@ String _eraLabelShort(String era, String locale) {
 class _ComparisonTable extends StatefulWidget {
   final List<BiblicalPerson> spine;
   final String locale;
-  final ColorScheme scheme;
   final Set<String> matchIds;
   final List<(String, List<String>)> comparisonColumns;
   final void Function(BiblicalPerson) onTapPerson;
@@ -1830,7 +1593,6 @@ class _ComparisonTable extends StatefulWidget {
   const _ComparisonTable({
     required this.spine,
     required this.locale,
-    required this.scheme,
     required this.matchIds,
     required this.comparisonColumns,
     required this.onTapPerson,
@@ -1848,9 +1610,9 @@ class _ComparisonTableState extends State<_ComparisonTable> {
 
   @override
   Widget build(BuildContext context) {
+    final wb = WbColors.of(context);
     final spine = widget.spine;
     final locale = widget.locale;
-    final scheme = widget.scheme;
     final matchIds = widget.matchIds;
     final comparisonColumns = widget.comparisonColumns;
     final onTapPerson = widget.onTapPerson;
@@ -1861,24 +1623,19 @@ class _ComparisonTableState extends State<_ComparisonTable> {
       fontSize: 10,
       fontWeight: FontWeight.w800,
       letterSpacing: 0.5,
-      color: scheme.onSurface.withValues(alpha: 0.85),
+      color: wb.text,
     );
-    final cellStyle = TextStyle(
-      fontSize: 12,
-      color: scheme.onSurface,
-    );
+    final cellStyle = TextStyle(fontSize: 12, color: wb.text);
 
     Widget headerCell(String text, {double width = 70}) => Container(
           width: width,
-          padding: const EdgeInsets.symmetric(
-              horizontal: 6, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: scheme.primaryContainer.withValues(alpha: 0.4),
+            color: wb.paneAltBg,
             border: Border(
-              right: BorderSide(
-                  color: scheme.outlineVariant
-                      .withValues(alpha: 0.6)),
+              right: BorderSide(color: wb.border, width: WbMetrics.hairline),
+              bottom: BorderSide(color: wb.border, width: WbMetrics.hairline),
             ),
           ),
           child: Text(
@@ -1896,18 +1653,13 @@ class _ComparisonTableState extends State<_ComparisonTable> {
     }) {
       final cell = Container(
         width: width,
-        padding: const EdgeInsets.symmetric(
-            horizontal: 6, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: isMatch
-              ? scheme.tertiaryContainer.withValues(alpha: 0.45)
-              : null,
+          color: isMatch ? wb.selectionBg.withValues(alpha: 0.55) : null,
           border: Border(
-            right: BorderSide(
-                color: scheme.outlineVariant.withValues(alpha: 0.5)),
-            bottom: BorderSide(
-                color: scheme.outlineVariant.withValues(alpha: 0.5)),
+            right: BorderSide(color: wb.border, width: WbMetrics.hairline),
+            bottom: BorderSide(color: wb.border, width: WbMetrics.hairline),
           ),
         ),
         child: child,
@@ -1915,7 +1667,7 @@ class _ComparisonTableState extends State<_ComparisonTable> {
       if (onTap == null) return cell;
       return Material(
         color: Colors.transparent,
-        child: InkWell(onTap: onTap, child: cell),
+        child: InkWell(onTap: onTap, hoverColor: wb.hoverBg, child: cell),
       );
     }
 
@@ -1934,105 +1686,36 @@ class _ComparisonTableState extends State<_ComparisonTable> {
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(8, 16, 8, 8),
-      child: Container(
-        decoration: BoxDecoration(
-          color: scheme.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-              color: scheme.outlineVariant.withValues(alpha: 0.6)),
+      child: WbPanel(
+        // Same header shape as an era section, because it is the same
+        // kind of thing: a collapsible block of the article. The
+        // `table_view` glyph it used to carry alongside the chevron is
+        // gone for the reason the sections' book glyph is.
+        icon: _collapsed ? Icons.chevron_right : Icons.expand_more,
+        title: uiStrings['familyTreeComparisonTitle']?[locale] ??
+            'Comparison of genealogies',
+        subtitle: uiStrings['familyTreeComparisonSubtitle']?[locale] ??
+            'Adam → Jesus by canonical Bible source',
+        onTap: () => setState(() => _collapsed = !_collapsed),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Copy-table button: copies the entire comparison table as
+            // a tab-separated payload that pastes cleanly into Excel /
+            // Sheets / Numbers / Notion.
+            _ComparisonCopyButton(
+              spine: spine,
+              comparisonColumns: comparisonColumns,
+              locale: locale,
+            ),
+            const SizedBox(width: 4),
+            WbTag(text: '${spine.length}'),
+          ],
         ),
-        clipBehavior: Clip.hardEdge,
+        padding: EdgeInsets.zero,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Tappable header — toggles the table body open/closed.
-            // Header text stays visible when collapsed so the
-            // feature is discoverable but not dominant.
-            InkWell(
-              onTap: () => setState(() => _collapsed = !_collapsed),
-              child: Padding(
-                padding:
-                    const EdgeInsets.fromLTRB(12, 10, 12, 10),
-                child: Row(
-                  children: [
-                    Icon(
-                      _collapsed
-                          ? Icons.chevron_right
-                          : Icons.expand_more,
-                      size: 22,
-                      color: scheme.primary,
-                    ),
-                    const SizedBox(width: 6),
-                    Icon(Icons.table_view_rounded,
-                        size: 16, color: scheme.primary),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment:
-                            CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            uiStrings['familyTreeComparisonTitle']
-                                    ?[locale] ??
-                                'Comparison of genealogies',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 0.5,
-                              color: scheme.primary,
-                            ),
-                          ),
-                          Padding(
-                            padding:
-                                const EdgeInsets.only(top: 2),
-                            child: Text(
-                              uiStrings['familyTreeComparisonSubtitle']
-                                      ?[locale] ??
-                                  'Adam → Jesus by canonical Bible source',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: scheme.onSurface
-                                    .withValues(alpha: 0.6),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    // Copy-table button: copies the entire
-                    // comparison table as a tab-separated text
-                    // payload that pastes cleanly into Excel /
-                    // Sheets / Numbers / Notion. Tap stops
-                    // bubbling so the header's expand/collapse
-                    // toggle isn't fired at the same time.
-                    _ComparisonCopyButton(
-                      spine: spine,
-                      comparisonColumns: comparisonColumns,
-                      locale: locale,
-                      scheme: scheme,
-                    ),
-                    const SizedBox(width: 4),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color:
-                            scheme.primary.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text(
-                        '${spine.length}',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          color: scheme.primary,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
             if (_collapsed) const SizedBox.shrink(),
             if (!_collapsed)
               // Width-adaptive: on phones (< baseTotal px) we
@@ -2040,123 +1723,111 @@ class _ComparisonTableState extends State<_ComparisonTable> {
               // every column proportionally so the table fills its
               // container instead of leaving whitespace.
               LayoutBuilder(builder: (ctx, c) {
-              final scale = c.maxWidth > baseTotal
-                  ? c.maxWidth / baseTotal
-                  : 1.0;
-              final genW = baseGenW * scale;
-              final nameW = baseNameW * scale;
-              final yearW = baseYearW * scale;
-              final sourceW = baseSourceW * scale;
+                final scale =
+                    c.maxWidth > baseTotal ? c.maxWidth / baseTotal : 1.0;
+                final genW = baseGenW * scale;
+                final nameW = baseNameW * scale;
+                final yearW = baseYearW * scale;
+                final sourceW = baseSourceW * scale;
 
-              final headerRow = Row(
-                children: [
-                  headerCell(
-                      uiStrings['familyTreeColGen']?[locale] ?? 'Gen',
-                      width: genW),
-                  headerCell(
-                      uiStrings['familyTreeColName']?[locale] ?? 'Name',
-                      width: nameW),
-                  headerCell(
-                      uiStrings['familyTreeColYears']?[locale] ?? 'Years',
-                      width: yearW),
-                  for (final col in comparisonColumns)
-                    headerCell(
-                        uiStrings[col.$1]?[locale] ?? col.$1,
-                        width: sourceW),
-                ],
-              );
-
-              final rows = <Widget>[];
-              for (var i = 0; i < spine.length; i++) {
-                final p = spine[i];
-                final isMatch = matchIds.contains(p.id);
-                final years = p.displayYears(locale);
-                rows.add(Row(
+                final headerRow = Row(
                   children: [
-                    bodyCell(
-                      child: Text('${i + 1}',
-                          style: cellStyle.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: scheme.onSurface
-                                .withValues(alpha: 0.55),
-                            fontFeatures: const [
-                              FontFeature.tabularFigures()
-                            ],
-                          )),
-                      width: genW,
-                      isMatch: isMatch,
-                    ),
-                    bodyCell(
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          p.localizedName(locale),
-                          style: cellStyle.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: scheme.primary,
-                            decoration: TextDecoration.underline,
-                            decorationColor: scheme.primary
-                                .withValues(alpha: 0.3),
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      width: nameW,
-                      isMatch: isMatch,
-                      onTap: () => onTapPerson(p),
-                    ),
-                    bodyCell(
-                      child: Text(
-                        years,
-                        style: cellStyle.copyWith(
-                          fontSize: 10.5,
-                          fontFeatures: const [
-                            FontFeature.tabularFigures()
-                          ],
-                          color: scheme.onSurface
-                              .withValues(alpha: 0.7),
-                        ),
-                        textAlign: TextAlign.center,
-                        maxLines: 2,
-                      ),
-                      width: yearW,
-                      isMatch: isMatch,
-                    ),
+                    headerCell(uiStrings['familyTreeColGen']?[locale] ?? 'Gen',
+                        width: genW),
+                    headerCell(
+                        uiStrings['familyTreeColName']?[locale] ?? 'Name',
+                        width: nameW),
+                    headerCell(
+                        uiStrings['familyTreeColYears']?[locale] ?? 'Years',
+                        width: yearW),
                     for (final col in comparisonColumns)
+                      headerCell(uiStrings[col.$1]?[locale] ?? col.$1,
+                          width: sourceW),
+                  ],
+                );
+
+                final rows = <Widget>[];
+                for (var i = 0; i < spine.length; i++) {
+                  final p = spine[i];
+                  final isMatch = matchIds.contains(p.id);
+                  final years = p.displayYears(locale);
+                  rows.add(Row(
+                    children: [
                       bodyCell(
-                        child: _hasSourceRef(p, col.$2)
-                            ? Icon(Icons.check,
-                                size: 16,
-                                color: scheme.primary
-                                    .withValues(alpha: 0.85))
-                            : Text(
-                                '·',
-                                style: TextStyle(
-                                  color: scheme.onSurface
-                                      .withValues(alpha: 0.25),
-                                ),
-                              ),
-                        width: sourceW,
+                        child: Text('${i + 1}',
+                            style: cellStyle.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: wb.mutedText,
+                              fontFeatures: const [
+                                FontFeature.tabularFigures()
+                              ],
+                            )),
+                        width: genW,
                         isMatch: isMatch,
                       ),
-                  ],
-                ));
-              }
+                      bodyCell(
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            p.localizedName(locale),
+                            // Link blue and underlined, because this
+                            // cell IS a link — it opens the person.
+                            style: cellStyle.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: wb.link,
+                              decoration: TextDecoration.underline,
+                              decorationColor: wb.link,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        width: nameW,
+                        isMatch: isMatch,
+                        onTap: () => onTapPerson(p),
+                      ),
+                      bodyCell(
+                        child: Text(
+                          years,
+                          style: cellStyle.copyWith(
+                            fontSize: 10.5,
+                            fontFeatures: const [FontFeature.tabularFigures()],
+                            color: wb.mutedText,
+                          ),
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                        ),
+                        width: yearW,
+                        isMatch: isMatch,
+                      ),
+                      for (final col in comparisonColumns)
+                        bodyCell(
+                          // A ✓ is not a link, so it is not blue. It is
+                          // the presence of data, which is text.
+                          child: _hasSourceRef(p, col.$2)
+                              ? Icon(Icons.check, size: 16, color: wb.text)
+                              : Text('·',
+                                  style: TextStyle(color: wb.mutedText)),
+                          width: sourceW,
+                          isMatch: isMatch,
+                        ),
+                    ],
+                  ));
+                }
 
-              final body = Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [headerRow, ...rows],
-              );
+                final body = Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [headerRow, ...rows],
+                );
 
-              if (scale > 1.0) {
-                return body;
-              }
-              return SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: body,
-              );
-            }),
+                if (scale > 1.0) {
+                  return body;
+                }
+                return SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: body,
+                );
+              }),
           ],
         ),
       ),
@@ -2243,41 +1914,28 @@ String _eraLabel(String era, String locale) {
   return labels[era]?[locale] ?? era;
 }
 
-Color _eraColor(String era) => eraColor(era);
+// 2026-08-08 (task #279): the three brightness-keyed era helpers this
+// file used to carry — `_eraColor`, `_eraColorOn` and `_readableEraFg` —
+// are gone. `eraColorFor(context, era)` in `era_palette.dart` does the
+// job for every caller, and does it by asking the PALETTE whether it is
+// dark rather than the ThemeMode: under 护眼纸质 the mode can be dark
+// while every surface is cream, which is exactly the case that made the
+// old helpers wash era titles out to near-white on paper.
 
-/// 2026-05-10 (v1.2.36): brightness-aware variant of `_eraColor`.
-/// Mirror of the helper added in `bible_timeline_page.dart` for the
-/// same reason — the palette above is tuned for light surfaces and
-/// fades into the dark theme's `#121212`-ish surface, making era
-/// titles ("Patriarchs / Mosaic / …") hard to read in dark mode.
-/// `Color.lerp(c, Colors.white, 0.45)` keeps the era's hue (so
-/// colour-coding still works) while pushing the value high enough
-/// to clear contrast against a dark surface.
-Color _eraColorOn(Brightness brightness, String era) {
-  final base = _eraColor(era);
-  if (brightness == Brightness.dark) {
-    return Color.lerp(base, Colors.white, 0.45) ?? base;
-  }
-  return base;
-}
-
-// ── Comparison-table copy button + floating toast ────────────────
+// ── Comparison-table copy button ─────────────────────────────────
 
 class _ComparisonCopyButton extends StatefulWidget {
   final List<BiblicalPerson> spine;
   final List<(String, List<String>)> comparisonColumns;
   final String locale;
-  final ColorScheme scheme;
   const _ComparisonCopyButton({
     required this.spine,
     required this.comparisonColumns,
     required this.locale,
-    required this.scheme,
   });
 
   @override
-  State<_ComparisonCopyButton> createState() =>
-      _ComparisonCopyButtonState();
+  State<_ComparisonCopyButton> createState() => _ComparisonCopyButtonState();
 }
 
 class _ComparisonCopyButtonState extends State<_ComparisonCopyButton> {
@@ -2330,7 +1988,7 @@ class _ComparisonCopyButtonState extends State<_ComparisonCopyButton> {
     final ok = await ClipboardHelper.copyText(tsv);
     if (!mounted) return;
     if (!ok) {
-      _showFloatingToast(
+      showFloatingToast(
         context,
         message: uiStrings['familyTreeCopyFailedToast']?[widget.locale] ??
             'Copy failed — clipboard not available',
@@ -2339,11 +1997,10 @@ class _ComparisonCopyButtonState extends State<_ComparisonCopyButton> {
       );
       return;
     }
-    _showFloatingToast(
+    showFloatingToast(
       context,
-      message:
-          uiStrings['familyTreeCopiedToast']?[widget.locale] ??
-              'Copied to clipboard',
+      message: uiStrings['familyTreeCopiedToast']?[widget.locale] ??
+          'Copied to clipboard',
       icon: Icons.check_circle_rounded,
       background: Theme.of(context).colorScheme.primary,
     );
@@ -2356,29 +2013,26 @@ class _ComparisonCopyButtonState extends State<_ComparisonCopyButton> {
 
   @override
   Widget build(BuildContext context) {
+    final wb = WbColors.of(context);
     return IconButton(
       tooltip: _justCopied
-          ? (uiStrings['familyTreeCopiedToast']?[widget.locale] ??
-              'Copied')
-          : (uiStrings['familyTreeCopyAll']?[widget.locale] ??
-              'Copy table'),
+          ? (uiStrings['familyTreeCopiedToast']?[widget.locale] ?? 'Copied')
+          : (uiStrings['familyTreeCopyAll']?[widget.locale] ?? 'Copy table'),
       onPressed: _justCopied ? null : _handleTap,
       icon: AnimatedSwitcher(
         duration: const Duration(milliseconds: 200),
-        transitionBuilder: (c, a) =>
-            ScaleTransition(scale: a, child: c),
+        transitionBuilder: (c, a) => ScaleTransition(scale: a, child: c),
         child: _justCopied
             ? Icon(Icons.check_circle_rounded,
                 key: const ValueKey('chk'),
                 size: 22,
-                // Theme-aware green so the "copied" indicator stays
-                // vivid in dark mode (was using fixed shade600 which
-                // is too dim against dark surfaces).
-                color: paletteAccent(context, Colors.green))
+                // The palette's own green, which is tuned for all three
+                // grounds. `paletteAccent(context, Colors.green)` keyed
+                // off ThemeMode, so in dark-mode-plus-paper it lightened
+                // a green that was already sitting on cream.
+                color: wb.strongsLexical)
             : Icon(Icons.copy_rounded,
-                key: const ValueKey('cp'),
-                size: 18,
-                color: widget.scheme.primary),
+                key: const ValueKey('cp'), size: 18, color: wb.link),
       ),
       visualDensity: VisualDensity.compact,
       padding: EdgeInsets.zero,
@@ -2387,231 +2041,57 @@ class _ComparisonCopyButtonState extends State<_ComparisonCopyButton> {
   }
 }
 
-/// Floating toast pinned to the root overlay so it appears above
-/// any modal sheet / dialog. Used by the comparison-table copy
-/// button (the detail-sheet uses its own copy of this in
-/// person_detail_sheet.dart — same shape).
-void _showFloatingToast(
-  BuildContext context, {
-  required String message,
-  required IconData icon,
-  required Color background,
-}) {
-  final overlay = Overlay.maybeOf(context, rootOverlay: true);
-  if (overlay == null) return;
-  final OverlayEntry entry;
-  entry = OverlayEntry(builder: (ctx) {
-    final media = MediaQuery.of(ctx);
-    return Positioned(
-      left: 0,
-      right: 0,
-      top: media.padding.top + 24,
-      child: IgnorePointer(
-        child: Center(
-          child: Material(
-            color: Colors.transparent,
-            child: Container(
-              constraints: const BoxConstraints(maxWidth: 360),
-              margin: const EdgeInsets.symmetric(horizontal: 24),
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 18, vertical: 14),
-              decoration: BoxDecoration(
-                color: background,
-                borderRadius: BorderRadius.circular(28),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.25),
-                    blurRadius: 16,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(icon, color: Colors.white, size: 20),
-                  const SizedBox(width: 10),
-                  Flexible(
-                    child: Text(
-                      message,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  });
-  overlay.insert(entry);
-  Future.delayed(const Duration(milliseconds: 2000), () {
-    entry.remove();
-  });
-}
-
 // ── Accent palette / pills / badges ──────────────────────────────
 
+/// A lineage's accent line — priestly red, royal blue, messianic gold,
+/// prophetic purple.
+///
+/// The pale `tint` companion each of these used to carry is gone: it was
+/// never read anywhere, and its whole job (a wash behind the row) is the
+/// kind of decoration this pass removes. Tuned for a light ground, so
+/// run [liftForDarkGround] before painting.
 class _AccentTheme {
-  final Color tint;
   final Color line;
-  const _AccentTheme(this.tint, this.line);
+  const _AccentTheme(this.line);
 }
 
 _AccentTheme? _accentTheme(String? accent) {
   switch (accent) {
     case 'priestly':
-      return const _AccentTheme(Color(0xFFF8D7D7), Color(0xFFB42E2E));
+      return const _AccentTheme(Color(0xFFB42E2E));
     case 'royal':
-      return const _AccentTheme(Color(0xFFD8E4F8), Color(0xFF2A4FB0));
+      return const _AccentTheme(Color(0xFF2A4FB0));
     case 'messianic':
-      return const _AccentTheme(Color(0xFFFAE6B0), Color(0xFFB8860B));
+      return const _AccentTheme(Color(0xFFB8860B));
     case 'prophetic':
-      return const _AccentTheme(Color(0xFFE5D7F4), Color(0xFF6B3FA0));
+      return const _AccentTheme(Color(0xFF6B3FA0));
   }
   return null;
 }
 
-class _RolePill extends StatelessWidget {
-  final String label;
-  final _AccentTheme? accent;
-  final ColorScheme scheme;
-  final String locale;
-  const _RolePill({
-    required this.label,
-    required this.accent,
-    required this.scheme,
-    required this.locale,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final fg = accent?.line ?? scheme.primary;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
-      decoration: BoxDecoration(
-        color: fg.withValues(alpha: 0.13),
-        borderRadius: BorderRadius.circular(4),
-        border: Border.all(
-          color: fg.withValues(alpha: 0.4),
-          width: 0.7,
-        ),
-      ),
-      child: Text(
-        localizedRole(label, locale),
-        style: TextStyle(
-          fontSize: 9,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0.6,
-          color: fg,
-        ),
-      ),
+/// `═ Sarah` — a marriage, in the notation genealogies already use.
+///
+/// The `═` stays in the TEXT rather than becoming a [WbTag] icon,
+/// because it is a genealogical operator, not a glyph decorating a
+/// label: it says how the two names relate.
+Widget _spouseTag(
+  BiblicalPerson spouse,
+  String locale,
+  WbColors wb, {
+  required VoidCallback onTap,
+}) =>
+    WbTag(
+      text: '═ ${spouse.localizedName(locale)}',
+      color: wb.mutedText,
+      onTap: onTap,
     );
-  }
-}
 
-// localizedRole imported from utils/biblical_role.dart
-
-class _SpouseChip extends StatelessWidget {
-  final BiblicalPerson spouse;
-  final String locale;
-  final ColorScheme scheme;
-  final VoidCallback onTap;
-  const _SpouseChip({
-    required this.spouse,
-    required this.locale,
-    required this.scheme,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final c = scheme.secondary;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(4),
-        child: Container(
-          padding:
-              const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
-          decoration: BoxDecoration(
-            color: c.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(4),
-            border: Border.all(
-              color: c.withValues(alpha: 0.4),
-              width: 0.7,
-            ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                '═',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  color: c,
-                ),
-              ),
-              const SizedBox(width: 3),
-              Text(
-                spouse.localizedName(locale),
-                style: TextStyle(
-                  fontSize: 10.5,
-                  fontWeight: FontWeight.w600,
-                  color: c,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+/// How many verses mention this person.
+Widget _refTag(int count, WbColors wb) => WbTag(
+      text: '$count',
+      icon: Icons.menu_book_rounded,
+      color: wb.mutedText,
     );
-  }
-}
-
-class _RefBadge extends StatelessWidget {
-  final int count;
-  final ColorScheme scheme;
-  const _RefBadge({required this.count, required this.scheme});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
-      decoration: BoxDecoration(
-        color: scheme.tertiary.withValues(alpha: 0.13),
-        borderRadius: BorderRadius.circular(4),
-        border: Border.all(
-          color: scheme.tertiary.withValues(alpha: 0.35),
-          width: 0.7,
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.menu_book_rounded,
-              size: 10, color: scheme.tertiary),
-          const SizedBox(width: 3),
-          Text(
-            '$count',
-            style: TextStyle(
-              fontSize: 9.5,
-              fontWeight: FontWeight.w700,
-              color: scheme.tertiary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class _TreeData {
   final List<BiblicalPerson> all;

@@ -22,6 +22,8 @@ library;
 
 import 'package:flutter/material.dart';
 
+import 'package:seeksparks/constants/workbench_theme.dart';
+
 /// Era key → colour. Covers both vocabularies; a key absent from one
 /// view simply never gets looked up there.
 const Map<String, Color> kEraColors = {
@@ -47,12 +49,25 @@ const Color kEraFallbackColor = Color(0xFF555555);
 
 Color eraColor(String era) => kEraColors[era] ?? kEraFallbackColor;
 
-/// Brightness-aware form. The palette was picked against a light
-/// surface; on the app's dark ink ground these read as mud, so they get
-/// lifted toward white. Lifting rather than swapping keeps the hue
-/// association intact — gold is still gold, just legible.
-Color eraColorFor(BuildContext context, String era) {
-  final base = eraColor(era);
-  if (Theme.of(context).brightness != Brightness.dark) return base;
-  return Color.lerp(base, Colors.white, 0.45) ?? base;
-}
+/// Lift a light-tuned data colour so it stays legible on a dark ground.
+///
+/// Lifting rather than swapping keeps the hue association intact — gold
+/// is still gold, just legible. Public because the era colours are not
+/// the only literal palette in this class: the family tree's accent
+/// lines (priestly red, royal blue, messianic gold, prophetic purple)
+/// were toned against the same light surface and need the same lift.
+Color liftForDarkGround(Color base, {required bool isDark}) =>
+    isDark ? (Color.lerp(base, Colors.white, 0.45) ?? base) : base;
+
+/// Palette-aware form of [eraColor].
+///
+/// Asks the palette in force whether it is dark, NOT
+/// `Theme.of(context).brightness`. Those are different questions: under
+/// 护眼纸质 the ThemeMode can still be dark while every surface on
+/// screen is cream, so a brightness-keyed lift washes these out to
+/// near-white on a light ground — the exact inversion
+/// [WbColors.isDark] exists to prevent.
+Color eraColorFor(BuildContext context, String era) => liftForDarkGround(
+      eraColor(era),
+      isDark: WbColors.of(context).isDark,
+    );
