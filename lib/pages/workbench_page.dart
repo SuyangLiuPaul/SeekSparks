@@ -57,6 +57,7 @@ import 'package:seeksparks/widgets/related_verses_pane.dart';
 import 'package:seeksparks/widgets/phrase_match_pane.dart';
 import 'package:seeksparks/widgets/vocabulary_pane.dart';
 import 'package:seeksparks/widgets/morph_search_pane.dart';
+import 'package:seeksparks/widgets/context_pane.dart';
 import 'package:seeksparks/widgets/language_switcher_button.dart';
 import 'package:seeksparks/widgets/browse_nav_strip.dart';
 import 'package:seeksparks/widgets/browse_window.dart';
@@ -1560,6 +1561,31 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
           onOpenRef: (openBook, chapter, verse) => _onCrossRefTap(
             BibleReference(
               englishBook: openBook,
+              chapter: chapter,
+              verseStart: verse,
+              verseEnd: verse,
+            ),
+          ),
+        );
+
+      case AnalysisTab.context:
+        final v = _analysisVerse(mp, verses);
+        if (v == null) return _analysisHint(context, locale);
+        final book = bookNameToEnglish[v.book] ?? v.book;
+        // Keyed on the BOOK, not the verse: the pane's own state (scope,
+        // sort, which row is expanded) is the reader's work, and the
+        // pericope follows the verse through `didUpdateWidget` without
+        // throwing that away.
+        return ContextPane(
+          key: ValueKey<String>('context-$book'),
+          englishBook: book,
+          chapter: v.chapter,
+          verse: v.verse,
+          locale: locale,
+          version: mp.currentVersion,
+          onOpenVerse: (chapter, verse) => _onCrossRefTap(
+            BibleReference(
+              englishBook: book,
               chapter: chapter,
               verseStart: verse,
               verseEnd: verse,

@@ -7075,6 +7075,71 @@ const uiStrings = {
     'zh-Hant': '主題',
     'en': 'Topics',
   },
+
+  // ====== Context tab (BibleWorks bwh10h) ======
+  // 语境 rather than 上下文: the tab is about the vocabulary of the
+  // surrounding passage, which is what 语境 names, where 上下文 would
+  // suggest the neighbouring verses themselves.
+  'analysisTabContext': {
+    'zh-Hans': '语境',
+    'zh-Hant': '語境',
+    'en': 'Context',
+  },
+  'contextScopePericope': {
+    'zh-Hans': '段落',
+    'zh-Hant': '段落',
+    'en': 'Pericope',
+  },
+  'contextScopeChapter': {
+    'zh-Hans': '本章',
+    'zh-Hant': '本章',
+    'en': 'Chapter',
+  },
+  'contextScopeBook': {
+    'zh-Hans': '全卷',
+    'zh-Hant': '全卷',
+    'en': 'Book',
+  },
+  'contextSortDistinctive': {
+    'zh-Hans': '本段特有',
+    'zh-Hant': '本段特有',
+    'en': 'Distinctive',
+  },
+  'contextSortFrequency': {
+    'zh-Hans': '最常见',
+    'zh-Hant': '最常見',
+    'en': 'Frequent',
+  },
+  'contextSortRarity': {
+    'zh-Hans': '最罕见',
+    'zh-Hant': '最罕見',
+    'en': 'Rare',
+  },
+  'contextCounts': {
+    'zh-Hans': '{verses} 节 · {words} 词 · {distinct} 个不同词',
+    'zh-Hant': '{verses} 節 · {words} 詞 · {distinct} 個不同詞',
+    'en': '{verses} verses · {words} words · {distinct} distinct',
+  },
+  'contextIncludeFunction': {
+    'zh-Hans': '同时显示虚词（冠词、介词、连词）',
+    'zh-Hant': '同時顯示虛詞（冠詞、介詞、連詞）',
+    'en': 'Include grammar words (articles, prepositions, conjunctions)',
+  },
+  'contextOnlyHere': {
+    'zh-Hans': '仅此处',
+    'zh-Hant': '僅此處',
+    'en': 'only here',
+  },
+  'contextOpenLexicon': {
+    'zh-Hans': '原文词条',
+    'zh-Hant': '原文詞條',
+    'en': 'Lexicon entry',
+  },
+  'contextNone': {
+    'zh-Hans': '本段没有随附的原文经文。',
+    'zh-Hant': '本段沒有隨附的原文經文。',
+    'en': 'No original-language text is bundled for this passage.',
+  },
   'concordanceNoEntries': {
     'zh-Hans': '现代汇编只收录新约；本节没有条目。',
     'zh-Hant': '現代彙編只收錄新約；本節沒有條目。',

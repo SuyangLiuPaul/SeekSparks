@@ -56,7 +56,16 @@ enum AnalysisTab {
   /// 2026-08-07: Eagle's View's Modern Concordance, keyed to the focused
   /// verse. Appended for the same reason as `morphology`.
   topics,
+
+  /// 2026-08-07: BibleWorks' Context tab (bwh10h) — the vocabulary of
+  /// the pericope, chapter and book around the focused verse. Appended
+  /// for the same reason as `morphology`.
+  context,
 }
+
+/// The narrowest a tab can be drawn without clipping: a 17 px icon, the
+/// button's 4 px padding either side, and the 2 px gap to its neighbour.
+const double _kMinTabWidth = 30;
 
 /// The tab strip itself. Deliberately a plain segmented row rather than
 /// a Material `TabBar`: the pane is narrow (320–560 px) and the strip
@@ -98,6 +107,8 @@ class AnalysisTabStrip extends StatelessWidget {
           'analysisTabMorphology', 'Forms'),
       (AnalysisTab.topics, Icons.topic_outlined, 'analysisTabTopics',
           'Topics'),
+      (AnalysisTab.context, Icons.segment_rounded, 'analysisTabContext',
+          'Context'),
     ];
     return Container(
       padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
@@ -108,20 +119,44 @@ class AnalysisTabStrip extends StatelessWidget {
           // narrow as 320. Below that the label is what goes — an
           // ellipsised "Wor…/X-R…/Sta…" identifies nothing, whereas the
           // icons already differ from one another at a glance.
-          final showLabels = box.maxWidth / items.length >= 66;
-          return Row(
+          final width = box.maxWidth;
+          final showLabels = width / items.length >= 66;
+          // Past ten tabs even bare icons stop fitting on one row at
+          // 320 px, so the strip wraps instead of clipping them. Rows
+          // are balanced (6+5 rather than 10+1) and the short row is
+          // padded with blanks, so every tab keeps the same width.
+          final fit = width.isFinite
+              ? (width / _kMinTabWidth).floor().clamp(1, items.length)
+              : items.length;
+          final rowCount = (items.length / fit).ceil();
+          final perRow = (items.length / rowCount).ceil();
+          return Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              for (final (tab, icon, key, fallback) in items)
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 2),
-                    child: _TabButton(
-                      icon: icon,
-                      label: uiStrings[key]?[locale] ?? fallback,
-                      showLabel: showLabels,
-                      selected: tab == current,
-                      onTap: () => onChanged(tab),
-                    ),
+              for (var start = 0; start < items.length; start += perRow)
+                Padding(
+                  padding: EdgeInsets.only(top: start == 0 ? 0 : 4),
+                  child: Row(
+                    children: [
+                      for (var i = start; i < start + perRow; i++)
+                        if (i >= items.length)
+                          const Expanded(child: SizedBox.shrink())
+                        else
+                          Expanded(
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 2),
+                              child: _TabButton(
+                                icon: items[i].$2,
+                                label: uiStrings[items[i].$3]?[locale] ??
+                                    items[i].$4,
+                                showLabel: showLabels,
+                                selected: items[i].$1 == current,
+                                onTap: () => onChanged(items[i].$1),
+                              ),
+                            ),
+                          ),
+                    ],
                   ),
                 ),
             ],

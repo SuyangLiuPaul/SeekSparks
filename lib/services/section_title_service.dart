@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 import 'package:seeksparks/constants/section_title_map.dart';
+import 'package:seeksparks/utils/pericope.dart' show BookHeading;
 
 /// One row from `assets/section_titles.json` — title + optional
 /// `context` (a short paragraph of historical / theological
@@ -115,6 +116,57 @@ class SectionTitleService {
         chapter: chapter,
         verse: verse,
       )?.title;
+
+  /// Every outline heading in one book, sorted, for the Context tab's
+  /// pericope scope (BibleWorks `bwh10h`).
+  ///
+  /// Returns empty before [ensureLoaded] completes or when the set has
+  /// no entries for the book.
+  static List<BookHeading> headingsInBook({
+    required String setId,
+    required String englishBook,
+  }) {
+    final flat = _cache?[setId];
+    if (flat == null) return const [];
+    final prefix = '$englishBook/';
+    final out = <BookHeading>[];
+    for (final entry in flat.entries) {
+      if (!entry.key.startsWith(prefix)) continue;
+      final parts = entry.key.split('/');
+      if (parts.length != 3) continue;
+      final chapter = int.tryParse(parts[1]);
+      final verse = int.tryParse(parts[2]);
+      if (chapter == null || verse == null) continue;
+      out.add(BookHeading(
+        chapter: chapter,
+        verse: verse,
+        title: entry.value.title,
+      ));
+    }
+    out.sort(BookHeading.compare);
+    return out;
+  }
+
+  /// Which title set to read pericope headings from.
+  ///
+  /// The reading pane maps only the versions it prints headings above
+  /// (`sectionTitleSetFor`), so a tagged version like `cuvs-plus` or
+  /// `bsb` resolves to nothing. The Context tab still needs an outline
+  /// for those, and can safely borrow one: all three sets sit on
+  /// **identical verse boundaries** (verified — 1443 headings each, same
+  /// keys), so the choice changes the title TEXT and never the range.
+  /// Falling back on the reader's own locale therefore costs nothing and
+  /// gives them a heading they can read.
+  static String contextSetFor({
+    required String version,
+    required String locale,
+  }) {
+    final primary = sectionTitleSetFor(version);
+    if (primary.isNotEmpty) return primary;
+    if (locale == 'zh-Hant') return 'cuv-tr';
+    if (locale.startsWith('zh')) return 'cuv';
+    return 'english-classic';
+  }
 
   /// Test-only — clears the cache so a hot-restart picks up edits to
   /// the asset.

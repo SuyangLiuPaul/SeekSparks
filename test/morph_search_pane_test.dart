@@ -75,7 +75,9 @@ void main() {
       // `topics` was appended after `morphology` for the same reason —
       // every index before it has to keep its meaning.
       expect(AnalysisTab.values.indexOf(AnalysisTab.topics), 9);
-      expect(AnalysisTab.values, hasLength(10));
+      // ...and `context` after `topics`.
+      expect(AnalysisTab.values.indexOf(AnalysisTab.context), 10);
+      expect(AnalysisTab.values, hasLength(11));
     });
   });
 

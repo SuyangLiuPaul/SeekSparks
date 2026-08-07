@@ -181,9 +181,10 @@ void main() {
             locale: 'en',
           ),
         ]),
-        // A labelled tab needs 66 px and there are now ten of them, so
-        // the threshold is 660 — it moves every time a tab is added.
-        width: 700,
+        // A labelled tab needs 66 px, plus the strip's own 8 px of
+        // padding either side. Derived rather than hard-coded: the
+        // threshold moves every time a tab is added.
+        width: 66.0 * AnalysisTab.values.length + 16 + 40,
       ));
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
