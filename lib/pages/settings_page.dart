@@ -13,6 +13,7 @@ import 'package:seeksparks/constants/app_version.dart';
 import 'package:seeksparks/constants/build_flags.dart';
 import 'package:seeksparks/constants/text_patterns.dart' show sanitizeForCopy;
 import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/constants/workbench_theme.dart' show WbMetrics;
 import 'package:provider/provider.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/app_style_preset.dart';
@@ -636,7 +637,6 @@ class _SettingsPageBodyState extends State<_SettingsPageBody> {
                             final avatarRadius =
                                 (settings.fontSize * 0.8).clamp(20.0, 28.0);
                             return InkWell(
-                              borderRadius: BorderRadius.circular(40),
                               onTap: () => settings.setPrimaryColor(c),
                               child: Padding(
                                 // Padding pushes the actual hit-test
@@ -644,9 +644,24 @@ class _SettingsPageBodyState extends State<_SettingsPageBody> {
                                 // class without changing the visual
                                 // size of the swatch.
                                 padding: const EdgeInsets.all(4),
-                                child: CircleAvatar(
-                                  backgroundColor: c,
-                                  radius: avatarRadius,
+                                child: Container(
+                                  width: avatarRadius * 2,
+                                  height: avatarRadius * 2,
+                                  alignment: Alignment.center,
+                                  decoration: BoxDecoration(
+                                    color: c,
+                                    border: Border.all(
+                                      color: isSelected
+                                          ? Theme.of(context)
+                                              .colorScheme
+                                              .onSurface
+                                          : Theme.of(context)
+                                              .colorScheme
+                                              .outlineVariant,
+                                      width:
+                                          isSelected ? 2 : WbMetrics.hairline,
+                                    ),
+                                  ),
                                   child: isSelected
                                       ? Icon(Icons.check,
                                           color:
@@ -757,7 +772,7 @@ class _SettingsPageBodyState extends State<_SettingsPageBody> {
                             isSelected: [!settings.paragraphMode, settings.paragraphMode],
                             onPressed: (index) =>
                                 settings.setParagraphMode(index == 1),
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.zero,
                             constraints: BoxConstraints(
                               minHeight: 36,
                               minWidth: (toggleConstraints.maxWidth - 8) / 2,
@@ -1220,7 +1235,10 @@ class _AccountSectionState extends State<_AccountSection> {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: fg.withValues(alpha: 0.45),
+          width: WbMetrics.hairline,
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -1377,8 +1395,11 @@ class _AccountSectionState extends State<_AccountSection> {
                     foregroundColor: const Color(0xFF1F1F1F),
                     side: const BorderSide(
                         color: Color(0xFFDADCE0), width: 1),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                    // Google's branding guidelines fix the wordmark, the
+                    // logo and the white/#DADCE0 pair; corner radius is
+                    // not among them, so it takes the workbench's.
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.zero,
                     ),
                     padding: const EdgeInsets.symmetric(
                         horizontal: 16, vertical: 12),
@@ -1438,9 +1459,9 @@ class _AccountSectionState extends State<_AccountSection> {
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: scheme.errorContainer.withValues(alpha: 0.4),
-                  borderRadius: BorderRadius.circular(8),
                   border: Border.all(
                     color: scheme.error.withValues(alpha: 0.4),
+                    width: WbMetrics.hairline,
                   ),
                 ),
                 child: Column(
@@ -1476,7 +1497,9 @@ class _AccountSectionState extends State<_AccountSection> {
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
                           color: scheme.surfaceContainerHighest,
-                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                              color: scheme.outlineVariant,
+                              width: WbMetrics.hairline),
                         ),
                         child: SelectableText(
                           auth.initError!,
@@ -2180,7 +2203,7 @@ class _SyncStatusRowState extends State<_SyncStatusRow> {
                   key: const ValueKey('progress'),
                   padding: const EdgeInsets.only(top: 8),
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(2),
+                    borderRadius: BorderRadius.zero,
                     child: LinearProgressIndicator(
                       minHeight: 3,
                       backgroundColor:
@@ -2729,7 +2752,8 @@ class _AiModelDetailPanel extends StatelessWidget {
       padding: EdgeInsets.symmetric(horizontal: 12 * s, vertical: 10 * s),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHighest.withValues(alpha: 0.45),
-        borderRadius: BorderRadius.circular(8),
+        border:
+            Border.all(color: scheme.outlineVariant, width: WbMetrics.hairline),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -3090,9 +3114,9 @@ class _StylePresetCard extends StatelessWidget {
                   color: selected
                       ? scheme.primaryContainer.withValues(alpha: 0.55)
                       : scheme.surfaceContainerLow,
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.zero,
                   child: InkWell(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.zero,
                     onTap: () => preset.apply(settings),
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
@@ -3105,7 +3129,6 @@ class _StylePresetCard extends StatelessWidget {
                               color: selected
                                   ? scheme.primary
                                   : scheme.surfaceContainerHighest,
-                              borderRadius: BorderRadius.circular(10),
                             ),
                             child: Icon(
                               preset.icon,
@@ -3429,9 +3452,9 @@ class _OfflinePackCardState extends State<_OfflinePackCard> {
     return Container(
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHigh.withValues(alpha: 0.45),
-        borderRadius: BorderRadius.circular(10),
         border: Border.all(
           color: scheme.outlineVariant.withValues(alpha: 0.5),
+          width: WbMetrics.hairline,
         ),
       ),
       padding: EdgeInsets.fromLTRB(12 * s, 10 * s, 12 * s, 10 * s),
@@ -3510,7 +3533,7 @@ class _OfflinePackCardState extends State<_OfflinePackCard> {
           if (svc.downloading) ...[
             SizedBox(height: 8 * s),
             ClipRRect(
-              borderRadius: BorderRadius.circular(2),
+              borderRadius: BorderRadius.zero,
               child: LinearProgressIndicator(
                 value: svc.progress,
                 minHeight: 4,
@@ -3652,7 +3675,8 @@ class _OfflinePackCardState extends State<_OfflinePackCard> {
             padding: EdgeInsets.symmetric(horizontal: 10 * s, vertical: 8 * s),
             decoration: BoxDecoration(
               color: scheme.tertiaryContainer.withValues(alpha: 0.35),
-              borderRadius: BorderRadius.circular(6),
+              border: Border.all(
+                  color: scheme.outlineVariant, width: WbMetrics.hairline),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -3986,9 +4010,9 @@ class _ExportDialogState extends State<_ExportDialog> {
               decoration: BoxDecoration(
                 color: scheme.surfaceContainerHighest
                     .withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                    color: scheme.outlineVariant.withValues(alpha: 0.6)),
+                    color: scheme.outlineVariant.withValues(alpha: 0.6),
+                    width: WbMetrics.hairline),
               ),
               padding: const EdgeInsets.all(8),
               child: Scrollbar(
@@ -4212,9 +4236,9 @@ class _ImportDialogState extends State<_ImportDialog> {
               constraints: const BoxConstraints(maxHeight: 280, minHeight: 140),
               decoration: BoxDecoration(
                 color: scheme.surfaceContainerHighest.withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                    color: scheme.outlineVariant.withValues(alpha: 0.6)),
+                    color: scheme.outlineVariant.withValues(alpha: 0.6),
+                    width: WbMetrics.hairline),
               ),
               padding: const EdgeInsets.all(8),
               child: TextField(
