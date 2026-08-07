@@ -133,6 +133,8 @@ flutter:
     - assets/tagged/kjvs/
     - assets/tagged/cuvs-plus/
     - assets/tagged/lxxwh/
+    - assets/greek_stats/
+    - assets/greek_stats/w/
     - assets/concordance/
     - assets/concordance/t/
     - assets/concordance/v/

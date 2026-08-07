@@ -20,6 +20,7 @@ import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/models/original_word.dart';
 import 'package:seeksparks/models/verse.dart';
 import 'package:seeksparks/services/concordance_service.dart';
+import 'package:seeksparks/services/greek_stats_service.dart';
 import 'package:seeksparks/services/modern_concordance_service.dart';
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 import 'package:seeksparks/utils/scripture_markup.dart';
@@ -372,6 +373,7 @@ class _WordStatsPaneState extends State<WordStatsPane> {
         word: w,
         total: result?.total ?? 0,
         gloss: entry?.localizedGloss(widget.locale) ?? '',
+        greek: await GreekStatsService.lookup(w.strongs),
       ));
     }
     // Rarest first — that is the interesting end of the list.
@@ -462,6 +464,7 @@ class _WordStatsPaneState extends State<WordStatsPane> {
                         )),
                       ),
                     ),
+                    if (r.greek != null) _distribution(context, r.greek!),
                     if (r.gloss.isNotEmpty) ...[
                       const SizedBox(height: 3),
                       Text(
@@ -485,16 +488,104 @@ class _WordStatsPaneState extends State<WordStatsPane> {
   }
 }
 
+/// Where a Greek word actually lives in the New Testament.
+///
+/// The bar above this says how often the word occurs. That single number
+/// hides the fact worth knowing: βδέλυγμα occurs 6 times, but three of
+/// them are in Revelation and the rest are one apiece in the Synoptics.
+/// So this strip spends its space on the shape rather than repeating the
+/// total — the books the word is commonest in, with its rank inside each,
+/// and the author split when the word is spread widely enough for that
+/// to say anything.
+Widget _distribution(BuildContext context, GreekWordStats g) {
+  final theme = Theme.of(context);
+  final scheme = theme.colorScheme;
+  final top = g.byFrequency.take(4).toList();
+  if (top.isEmpty) return const SizedBox.shrink();
+
+  // Author groupings are only informative when the word crosses them.
+  // A word confined to Paul does not need to be told it is 100% Paul.
+  const groups = {
+    'gospelsActs': 'G+A',
+    'paul': 'Paul',
+    'john': 'John',
+    'otherAuthors': 'Other',
+  };
+  final present = groups.keys.where((k) => (g.totals[k] ?? 0) > 0).toList();
+
+  return Padding(
+    padding: const EdgeInsets.only(top: 4),
+    child: Wrap(
+      spacing: 5,
+      runSpacing: 3,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        for (final e in top)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+            decoration: BoxDecoration(
+              color: scheme.primary.withValues(alpha: 0.09),
+              borderRadius: BorderRadius.circular(3),
+            ),
+            child: Text(
+              // "Rev 3" — and "Rev 3 ·#6" when the source knows the
+              // word's rank inside that book, which is the number
+              // BibleWorks cannot give you.
+              e.value.$2 == null
+                  ? '${_abbr(e.key)} ${e.value.$1}'
+                  : '${_abbr(e.key)} ${e.value.$1} ·#${e.value.$2}',
+              style: theme.textTheme.labelSmall?.copyWith(
+                fontSize: 9.5,
+                color: scheme.primary,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+          ),
+        if (g.books.length > top.length)
+          Text(
+            '+${g.books.length - top.length}',
+            style: theme.textTheme.labelSmall
+                ?.copyWith(fontSize: 9.5, color: scheme.outline),
+          ),
+        if (present.length > 1)
+          Text(
+            present.map((k) => '${groups[k]} ${g.totals[k]}').join(' / '),
+            style: theme.textTheme.labelSmall?.copyWith(
+              fontSize: 9.5,
+              color: scheme.onSurfaceVariant,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
+      ],
+    ),
+  );
+}
+
+/// "1 Corinthians" -> "1Co". The pane is 320-560 px wide and these sit
+/// four to a row, so the full name is not an option.
+String _abbr(String book) {
+  final parts = book.split(' ');
+  return parts.length == 1
+      ? book.substring(0, book.length < 3 ? book.length : 3)
+      : '${parts[0]}${parts[1].substring(0, 2)}';
+}
+
 class _StatRow {
   const _StatRow({
     required this.word,
     required this.total,
     required this.gloss,
+    this.greek,
   });
 
   final OriginalWord word;
   final int total;
   final String gloss;
+
+  /// Eagle's View's distribution for this word, when it has one. Null
+  /// for Hebrew and for Greek words outside the Westcott-Hort profile —
+  /// the row still renders, just without the strip.
+  final GreekWordStats? greek;
 }
 
 // ── Shared empty state ──────────────────────────────────────────────
