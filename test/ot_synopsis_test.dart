@@ -7,7 +7,6 @@
 /// 15 exactly the way a reader in Matthew 5 is told about Luke 6.
 library;
 
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seeksparks/services/synopsis_service.dart';
 
