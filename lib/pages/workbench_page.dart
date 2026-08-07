@@ -12,6 +12,8 @@ import 'package:seeksparks/constants/bible_versions.dart'
         shortBibleVersionLabel;
 import 'package:seeksparks/constants/app_version.dart'
     show kAppVersion, formatReleaseTimeLocal;
+import 'package:seeksparks/constants/book_name_mapping.dart'
+    show bookScriptFor, bookNameInScript;
 import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/app_settings.dart';
@@ -64,6 +66,11 @@ import 'package:seeksparks/widgets/phrase_match_pane.dart';
 import 'package:seeksparks/widgets/vocabulary_pane.dart';
 import 'package:seeksparks/widgets/morph_search_pane.dart';
 import 'package:seeksparks/widgets/context_pane.dart';
+import 'package:seeksparks/widgets/places_pane.dart';
+import 'package:seeksparks/widgets/place_map.dart';
+import 'package:seeksparks/services/places_service.dart';
+import 'package:seeksparks/models/bible_place.dart';
+import 'package:seeksparks/utils/place_geo.dart' show BaseMap;
 import 'package:seeksparks/widgets/language_switcher_button.dart';
 import 'package:seeksparks/widgets/browse_nav_strip.dart';
 import 'package:seeksparks/widgets/browse_window.dart';
@@ -203,6 +210,26 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
   /// after a reload.
   AnalysisTab _analysisTab = AnalysisTab.wordStudy;
   static const _kAnalysisTabKey = 'workbench.analysisTab';
+
+  /// The map lens over the centre pane. Deliberately NOT persisted, and
+  /// deliberately not a [WbCentreMode]: a reader who opens a map to
+  /// settle where Joppa is should not find the app reopening onto a
+  /// coastline tomorrow instead of onto scripture.
+  bool _mapOpen = false;
+  String? _mapPlaceId;
+  BaseMap _baseMap = BaseMap.empty();
+
+  void _openMap(String? id) {
+    setState(() {
+      _mapOpen = true;
+      _mapPlaceId = id;
+    });
+    if (_baseMap.isEmpty) {
+      PlacesService.baseMap().then((m) {
+        if (mounted) setState(() => _baseMap = m);
+      });
+    }
+  }
 
   /// The search limit translated from reference keys into corpus
   /// indices, for the Phrase Matching pane.
@@ -631,17 +658,28 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
       // lies. The preference itself is untouched and comes back when
       // the room does.
       WbStatusField(
-        switch (effectiveCentreMode(
-          preferred: _wb.centreMode,
-          centreWidth: _paneWidths(MediaQuery.sizeOf(context).width).centre,
-          threePane: ResponsiveBreakpoints.isDesktopOrWider(
-              MediaQuery.sizeOf(context).width),
-        )) {
-          WbCentreMode.browse => s('parallelBrowseShort', 'Browse'),
-          WbCentreMode.reader => s('classicReaderShort', 'Reader'),
-          WbCentreMode.split => s('splitViewShort', 'Split'),
-        },
-        onTap: () => _setCentreMode(_nextCentreMode()),
+        // The map lens is what is on screen when it is up, so the field
+        // says so — same rule as the effective-mode one below it. Tapping
+        // it then means "put the lens down", not "cycle past it".
+        _mapOpen
+            ? s('placesMapShort', 'Map')
+            : switch (effectiveCentreMode(
+                preferred: _wb.centreMode,
+                centreWidth:
+                    _paneWidths(MediaQuery.sizeOf(context).width).centre,
+                threePane: ResponsiveBreakpoints.isDesktopOrWider(
+                    MediaQuery.sizeOf(context).width),
+              )) {
+                WbCentreMode.browse => s('parallelBrowseShort', 'Browse'),
+                WbCentreMode.reader => s('classicReaderShort', 'Reader'),
+                WbCentreMode.split => s('splitViewShort', 'Split'),
+              },
+        onTap: () => _mapOpen
+            ? setState(() {
+                _mapOpen = false;
+                _mapPlaceId = null;
+              })
+            : _setCentreMode(_nextCentreMode()),
       ),
       WbStatusField(
         "Strong's",
@@ -765,6 +803,15 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
   /// Switch what the centre pane shows, and bring the second reading
   /// column into or out of existence with it.
   void _setCentreMode(WbCentreMode mode) {
+    // Asking for a text mode is asking to see text. Without this, picking
+    // "Reader" while the map lens is up appears to do nothing, because the
+    // lens sits in front of whichever mode is underneath.
+    if (_mapOpen) {
+      setState(() {
+        _mapOpen = false;
+        _mapPlaceId = null;
+      });
+    }
     if (_wb.centreMode == mode) return;
     final wasSplit = _wb.centreMode == WbCentreMode.split;
     _wb.setCentreMode(mode); // notifies; _persistPrefs runs off the callback
@@ -1052,17 +1099,19 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
                     // holds the chapter reader always does. The
                     // preference is kept for the next screen that can
                     // honour it — see `effectiveCentreMode`.
-                    child: switch (effectiveCentreMode(
-                      preferred:
-                          context.watch<WorkbenchProvider>().centreMode,
-                      centreWidth: panes.centre,
-                      threePane: threePane,
-                    )) {
-                      WbCentreMode.browse => _buildParallelFrame(context),
-                      WbCentreMode.split => _buildSplitFrame(context),
-                      WbCentreMode.reader => _buildReaderFrame(context,
-                          splitAvailable: splitFitsIn(panes.centre)),
-                    },
+                    child: _mapOpen
+                        ? _buildMapFrame(context)
+                        : switch (effectiveCentreMode(
+                            preferred:
+                                context.watch<WorkbenchProvider>().centreMode,
+                            centreWidth: panes.centre,
+                            threePane: threePane,
+                          )) {
+                            WbCentreMode.browse => _buildParallelFrame(context),
+                            WbCentreMode.split => _buildSplitFrame(context),
+                            WbCentreMode.reader => _buildReaderFrame(context,
+                                splitAvailable: splitFitsIn(panes.centre)),
+                          },
                   ),
                   if (showRight) ...[
                     _buildDivider(context,
@@ -1108,6 +1157,62 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         showSearchAndSettings: true,
         onOpenParallel: () => _setCentreMode(WbCentreMode.browse),
       );
+
+  // ── Centre: the map lens ──────────────────────────────────────────
+
+  /// The map over the centre pane, of whatever verse the Analysis panes
+  /// are already looking at. It reads the same focus the Places tab
+  /// reads, so opening the map never silently changes the subject.
+  Widget _buildMapFrame(BuildContext context) {
+    final wb = context.watch<WorkbenchProvider>();
+    final settings = context.watch<AppSettings>();
+    final locale = settings.locale;
+    final script = bookScriptFor(locale, wb.mainProvider.currentVersion);
+    final v = _analysisVerse(wb.mainProvider, wb.analysisVerses);
+    final book = v == null ? null : (bookNameToEnglish[v.book] ?? v.book);
+
+    void close() => setState(() {
+          _mapOpen = false;
+          _mapPlaceId = null;
+        });
+
+    if (book == null || v == null) {
+      // No verse in focus is a reason to go back to the text, not a
+      // reason to show an empty coastline.
+      return PlaceMapView(
+        title: '',
+        inVerse: const <BiblePlace>[],
+        inChapter: const <BiblePlace>[],
+        baseMap: _baseMap,
+        script: script,
+        locale: locale,
+        selectedId: null,
+        onSelect: (_) {},
+        onClose: close,
+        attribution: PlacesService.attribution,
+      );
+    }
+
+    return FutureBuilder<PassagePlaces>(
+      future: PlacesService.forPassage(book, v.chapter, v.verse),
+      builder: (context, snap) {
+        final data = snap.data;
+        return PlaceMapView(
+          key: ValueKey<String>('map-$book-${v.chapter}-${v.verse}'),
+          title: '${bookNameInScript(book, script)} ${v.chapter}:${v.verse}',
+          inVerse: data?.verse ?? const <BiblePlace>[],
+          inChapter: data?.chapter ?? const <BiblePlace>[],
+          baseMap: _baseMap,
+          script: script,
+          locale: locale,
+          selectedId: _mapPlaceId,
+          onSelect: (id) => setState(() => _mapPlaceId = id),
+          onClose: close,
+          attribution: PlacesService.attribution,
+        );
+      },
+    );
+  }
 
   // ── Centre: two editions side by side ─────────────────────────────
 
@@ -1939,6 +2044,20 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
               verseEnd: verse,
             ),
           ),
+        );
+
+      case AnalysisTab.places:
+        final v = _analysisVerse(mp, verses);
+        if (v == null) return _analysisHint(context, locale);
+        final book = bookNameToEnglish[v.book] ?? v.book;
+        return PlacesPane(
+          englishBook: book,
+          chapter: v.chapter,
+          verse: v.verse,
+          locale: locale,
+          script: bookScriptFor(locale, mp.currentVersion),
+          selectedId: _mapOpen ? _mapPlaceId : null,
+          onOpenMap: _openMap,
         );
     }
   }

@@ -132,6 +132,12 @@ flutter:
     # bundle and neither could be read at runtime.
     - assets/thayer.json
     - assets/bible_names.json
+    # The gazetteer, and the base map drawn under it. Same story as the
+    # two above: `bible_places.json` shipped in the repo and never in
+    # the bundle, so nothing could read it. `bible_geo.json` is Natural
+    # Earth coastlines, lakes and rivers — public domain.
+    - assets/bible_places.json
+    - assets/bible_geo.json
     - assets/strongs/
     - assets/originals/
     - assets/tagged/cuvs-yhwh/

@@ -7530,4 +7530,79 @@ const uiStrings = {
     'zh-Hant': '附上版權說明',
     'en': 'Append the copyright line',
   },
+
+  // ── Places (task #277) ────────────────────────────────────────────
+  'analysisTabPlaces': {
+    'zh-Hans': '地名',
+    'zh-Hant': '地名',
+    'en': 'Places',
+  },
+  'placesInThisVerse': {
+    'zh-Hans': '本节地名',
+    'zh-Hant': '本節地名',
+    'en': 'Named in this verse',
+  },
+  'placesInThisChapter': {
+    'zh-Hans': '本章其他地名',
+    'zh-Hant': '本章其他地名',
+    'en': 'Elsewhere in this chapter',
+  },
+  'placesNone': {
+    'zh-Hans': '这一章没有提到地名录收录的地名。',
+    'zh-Hant': '這一章沒有提到地名錄收錄的地名。',
+    'en': 'This chapter names no place in the gazetteer.',
+  },
+  'placesUnlocated': {
+    'zh-Hans': '位置不详',
+    'zh-Hant': '位置不詳',
+    'en': 'location unknown',
+  },
+  'placesOccurrences': {
+    'zh-Hans': '处',
+    'zh-Hant': '處',
+    'en': 'refs',
+  },
+  'placesShowMap': {
+    'zh-Hans': '在地图上查看',
+    'zh-Hant': '在地圖上檢視',
+    'en': 'Show on map',
+  },
+  'placesMapTitle': {
+    'zh-Hans': '地图',
+    'zh-Hant': '地圖',
+    'en': 'Map',
+  },
+  'placesMapClose': {
+    'zh-Hans': '关闭地图',
+    'zh-Hant': '關閉地圖',
+    'en': 'Close map',
+  },
+  'placesMapFit': {
+    'zh-Hans': '复位',
+    'zh-Hant': '復位',
+    'en': 'Fit',
+  },
+  'placesMapUnlocatedCount': {
+    // {n} is substituted. These places are unlocated because nobody
+    // knows where they are — Eden, Nod, the Pishon — so the map says so
+    // rather than quietly dropping them.
+    'zh-Hans': '另有 {n} 个地名位置不详，无法标示',
+    'zh-Hant': '另有 {n} 個地名位置不詳，無法標示',
+    'en': '{n} more named here have no known location',
+  },
+  'placesMapDays': {
+    'zh-Hans': '约 {n} 天脚程',
+    'zh-Hant': '約 {n} 天腳程',
+    'en': 'about {n} days on foot',
+  },
+  'placesMapHint': {
+    'zh-Hans': '滚轮缩放，拖动平移，点选地名量距。',
+    'zh-Hant': '滾輪縮放，拖曳平移，點選地名量距。',
+    'en': 'Scroll to zoom, drag to pan, tap a place to measure.',
+  },
+  'placesMapShort': {
+    'zh-Hans': '地图',
+    'zh-Hant': '地圖',
+    'en': 'Map',
+  },
 };

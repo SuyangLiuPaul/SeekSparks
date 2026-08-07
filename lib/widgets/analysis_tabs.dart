@@ -61,11 +61,54 @@ enum AnalysisTab {
   /// the pericope, chapter and book around the focused verse. Appended
   /// for the same reason as `morphology`.
   context,
+
+  /// 2026-08-08: the gazetteer, read verse-first. Appended for the same
+  /// reason as `morphology`.
+  places,
 }
 
 /// The narrowest a tab can be drawn without clipping: a 17 px icon, the
 /// button's 4 px padding either side, and the 2 px gap to its neighbour.
 const double _kMinTabWidth = 30;
+
+/// The narrowest a tab can be and still carry its label: the icon, the
+/// 5 px gap, about six characters of 11.5 px text, and the padding.
+/// Below this the label ellipsises to "Wor…/X-R…", which identifies
+/// nothing the icon did not already.
+const double _kMinLabelledTabWidth = 66;
+
+/// How many rows the strip will spend to keep the labels. Past two it
+/// starts consuming the pane it is labelling.
+const int _kMaxLabelledRows = 2;
+
+/// How many tabs go on a row, and whether they keep their labels.
+///
+/// A labelled tab needs ~66 px, a bare icon 30. The strip WRAPS, so what
+/// each tab actually gets is `width / perRow` — not `width / count`.
+/// Measuring against the total was why the labels vanished for good
+/// somewhere around the ninth tab: at 420 px and 12 tabs that reads 35 px
+/// and gives up, while the same strip in two rows of six has 70 px a tab
+/// and could have carried every label.
+///
+/// So rows are chosen for legibility first: the fewest rows that let the
+/// labels fit, up to two. Two rows of named tabs beat one row of twelve
+/// unexplained icons, and past two the strip starts eating the pane it
+/// labels. Failing that it falls back to icons in BALANCED rows (6+6
+/// rather than 11+1) so every tab keeps the same width.
+({int perRow, bool showLabels}) analysisStripLayout(double width, int count) {
+  if (count <= 0) return (perRow: 1, showLabels: false);
+  if (!width.isFinite || width <= 0) {
+    return (perRow: count, showLabels: false);
+  }
+  for (var rows = 1; rows <= _kMaxLabelledRows; rows++) {
+    final n = (count / rows).ceil();
+    if (width / n >= _kMinLabelledTabWidth) {
+      return (perRow: n, showLabels: true);
+    }
+  }
+  final fit = (width / _kMinTabWidth).floor().clamp(1, count);
+  return (perRow: (count / (count / fit).ceil()).ceil(), showLabels: false);
+}
 
 /// The tab strip itself. Deliberately a plain segmented row rather than
 /// a Material `TabBar`: the pane is narrow (320–560 px) and the strip
@@ -109,27 +152,17 @@ class AnalysisTabStrip extends StatelessWidget {
           'Topics'),
       (AnalysisTab.context, Icons.segment_rounded, 'analysisTabContext',
           'Context'),
+      (AnalysisTab.places, Icons.place_outlined, 'analysisTabPlaces',
+          'Places'),
     ];
     return Container(
       padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
       color: scheme.surface,
       child: LayoutBuilder(
         builder: (context, box) {
-          // A labelled tab needs ~66 px; the Analysis pane can be as
-          // narrow as 320. Below that the label is what goes — an
-          // ellipsised "Wor…/X-R…/Sta…" identifies nothing, whereas the
-          // icons already differ from one another at a glance.
-          final width = box.maxWidth;
-          final showLabels = width / items.length >= 66;
-          // Past ten tabs even bare icons stop fitting on one row at
-          // 320 px, so the strip wraps instead of clipping them. Rows
-          // are balanced (6+5 rather than 10+1) and the short row is
-          // padded with blanks, so every tab keeps the same width.
-          final fit = width.isFinite
-              ? (width / _kMinTabWidth).floor().clamp(1, items.length)
-              : items.length;
-          final rowCount = (items.length / fit).ceil();
-          final perRow = (items.length / rowCount).ceil();
+          final layout = analysisStripLayout(box.maxWidth, items.length);
+          final perRow = layout.perRow;
+          final showLabels = layout.showLabels;
           return Column(
             mainAxisSize: MainAxisSize.min,
             children: [

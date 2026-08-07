@@ -470,7 +470,7 @@ void main() {
   // The eleventh tab is what forced this: eleven bare icons no longer
   // fit across a 320 px Analysis pane, and the strip used to answer
   // that by clipping them. It now wraps to a second row.
-  group('AnalysisTabStrip at eleven tabs', () {
+  group('AnalysisTabStrip at a full strip', () {
     Widget host(double width) => MaterialApp(
           home: Scaffold(
             body: SizedBox(
@@ -507,6 +507,13 @@ void main() {
     });
 
     testWidgets('stays on one row when there is room for one', (tester) async {
+      // The default 800 px test surface would clamp the SizedBox and
+      // silently test a 784 px strip — which is 8 px short of twelve
+      // labelled tabs, so the assertion would be about the wrong width.
+      tester.view.physicalSize = const Size(1400, 800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
       await tester.pumpWidget(host(1200));
       await tester.pumpAndSettle();
 
