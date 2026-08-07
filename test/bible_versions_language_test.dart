@@ -56,7 +56,7 @@ void main() {
     expect(versionsForLanguage('en').map((v) => v.value),
         containsAll(<String>['kjv', 'leb', 'nasb']));
     expect(versionsForLanguage('zh-Hans').map((v) => v.value),
-        containsAll(<String>['cuvs-yhwh', 'biblexg-v2', 'cuv-yhwd']));
+        containsAll(<String>['cuvs-yhwh', 'biblexg-v2', 'cuvs-plus']));
     expect(versionsForLanguage('zh-Hant').map((v) => v.value),
         containsAll(<String>['cuvs-yhwh-tr', 'biblexg-v2-tr']));
   });

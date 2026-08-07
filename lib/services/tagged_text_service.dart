@@ -75,7 +75,9 @@ class TaggedTextService {
     'kjvs',
     'lxxwh',
     'cuvs-plus',
-    'cuv-yhwd',
+    // 'cuv-yhwd' was here. Removed with its catalog row — it duplicated
+    // cuvs-yhwh's text AND its tagging, only coarser. See the note at the
+    // end of lib/constants/bible_versions.dart.
   };
 
   static final Map<String, Map<String, List<TaggedRun>>> _cache = {};

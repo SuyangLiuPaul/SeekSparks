@@ -133,13 +133,31 @@ const bibleVersions = <BibleVersionInfo>[
     language: 'zh-Hans',
     editionYear: '1919 / 和合本原文',
   ),
-  BibleVersionInfo(
-    value: 'cuv-yhwd',
-    shortLabel: 'CUV+S(雅伟)',
-    menuLabel: "和合本雅伟版+Strong's (yahwehdehua.net)",
-    language: 'zh-Hans',
-    editionYear: '1919 和合本 / 雅伟版标注',
-  ),
+  // `cuv-yhwd` (yahwehdehua.net, imported 2026-08-07) was listed here and
+  // has been REMOVED. Do not re-import it without reading this first.
+  //
+  // The import itself succeeded — all 31,102 verses, all 66 books. The
+  // problem is that the text is `cuvs-yhwh`, which this catalog already
+  // carries. Not "similar to": the two share all 31,102 references, and
+  // every one of the 1,678 verses that differ differs only in how the
+  // translator's notes are marked (〔或作："成"〕 against <note: 或作：成>).
+  //
+  // Its tagging looked like the reason to keep it — 100% of runs carrying
+  // a Strong's number, against 98.2% for cuvs-yhwh. That reading was
+  // backwards. The runs are otherwise identical; the extra 1.8% is
+  // Chinese sentence-final particles absorbed into the preceding word:
+  //
+  //   cuvs-yhwh  Rom 6:1   '显多' G4121   '吗？' (untagged)
+  //   cuv-yhwd   Rom 6:1   '显多吗？' G4121
+  //
+  // 吗 is an interrogative particle with no Greek behind it, so leaving it
+  // untagged is right and 98.2% is the honest number. 呢/吗/了/的 account
+  // for 96% of cuvs-yhwh's "untagged" runs. Shipping cuv-yhwd would have
+  // put two indistinguishable rows in the picker, made Split View compare
+  // a text against itself, and cost 22 MB to do it.
+  //
+  // tools/import_yahwehdehua_export.py is kept, and its two decoding bugs
+  // are fixed, so the set can be rebuilt if the source ever diverges.
 ];
 
 /// Versions hidden from the picker (currently none). CUV, CNV, and LJK1

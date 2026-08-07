@@ -82,6 +82,16 @@ BOOKS_EN = [
 WS = re.compile(r'\s+')
 PAREN = re.compile(r'^\((.+)\)$')
 
+# Punctuation that closes a clause rather than opening one. The export
+# emits it at the HEAD of the next text segment — Genesis 1:1 arrives as
+# `起初 H7225 ，神 H430`, so a naive split yields a run literally spelled
+# 「，神」. That is wrong twice over: the comma terminates 起初, and a
+# reader hovering 神 sees a word that starts with punctuation. 20.6% of
+# runs were built that way before this fix (71,714 of 347,540), against
+# 0.16% in the cuvs-yhwh set built from the official modules — so the
+# convention to match is unambiguous.
+LEAD_PUNCT = '，。；：、！？」』）〕,.;:!?'
+
 
 def runs_from_segments(segments, strongs):
     """segments -> TaggedRun dicts {w, s, i, g}.
@@ -120,6 +130,16 @@ def runs_from_segments(segments, strongs):
     def flush(sid):
         text = WS.sub('', ''.join(buf))
         buf.clear()
+        # Punctuation at the head of this text belongs to the word just
+        # closed. Migrate it before the emptiness check — a segment that
+        # is ONLY punctuation must not become a run of its own.
+        if runs:
+            i = 0
+            while i < len(text) and text[i] in LEAD_PUNCT:
+                i += 1
+            if i:
+                runs[-1]['w'] += text[:i]
+                text = text[i:]
         if not text:
             # Two real strongs with nothing between: a second number for
             # the word already emitted.
@@ -141,6 +161,13 @@ def runs_from_segments(segments, strongs):
         elif kind == 'morph':
             # Belongs to the word just closed, not the one coming.
             code = (seg.get('text') or '').strip()
+            # A parenthesised morph code — "(H8804)" — is the same code
+            # the export brackets elsewhere for implied words. Stored raw
+            # it matches nothing in the grammar lexicon, so the parsing
+            # line silently comes up empty for 2,591 runs. Unwrap it.
+            m = PAREN.match(code)
+            if m:
+                code = m.group(1).strip()
             if code and runs:
                 runs[-1]['g'].append(code)
         elif kind == 'strong':
