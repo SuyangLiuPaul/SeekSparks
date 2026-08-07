@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/services/link_opener.dart';
+import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 import 'package:seeksparks/utils/workbench_fit.dart';
 
 /// The sibling app. SeekSparks was forked from it; on a phone it is
@@ -310,6 +311,11 @@ class _LocaleSwitch extends StatelessWidget {
               child: Text(
                 e.value,
                 style: TextStyle(
+                  // 简 / 繁 rendered as tofu boxes in v1.6.23: a bare
+                  // TextStyle falls back to Roboto, which has no CJK
+                  // glyphs, so the two buttons a Chinese reader needs
+                  // were the only unreadable things on the screen.
+                  fontFamilyFallback: kCjkFontFallback,
                   fontSize: 14,
                   fontWeight:
                       locale == e.key ? FontWeight.w700 : FontWeight.w400,
