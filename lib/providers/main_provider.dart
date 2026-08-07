@@ -176,6 +176,13 @@ class MainProvider extends ChangeNotifier {
   bool hasCachedVersion(String version) =>
       _versesCache.containsKey(version);
 
+  /// Read a cached parsed list WITHOUT making it the live one, for
+  /// surfaces that need another edition's text while the reader stays
+  /// where they are (Copy Center). Deliberately does not LRU-touch:
+  /// peeking at a version is not the same as reading in it, and letting
+  /// it do so would let a background reader evict the one on screen.
+  List<Verse>? peekCachedVersion(String version) => _versesCache[version];
+
   /// 2026-05-24 (v1.3.23): test-only seeder. Skips the asset I/O
   /// that `preloadVersion()` does so unit tests can build a known
   /// LRU state in microseconds. NEVER call this from production

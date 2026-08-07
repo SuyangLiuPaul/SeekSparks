@@ -7215,4 +7215,168 @@ const uiStrings = {
     'zh-Hant': '關係子句',
     'en': 'relative',
   },
+
+  // ── Copy Center (BibleWorks bwh28 / bwh29) ────────────────────────
+  'copyCenterTitle': {
+    'zh-Hans': '复制中心',
+    'zh-Hant': '複製中心',
+    'en': 'Copy Center',
+  },
+  'copyCenterMenu': {'zh-Hans': '复制…', 'zh-Hant': '複製…', 'en': 'Copy…'},
+  'copyCenterCopy': {'zh-Hans': '复制', 'zh-Hant': '複製', 'en': 'Copy'},
+  'copyCenterPreview': {
+    'zh-Hans': '输出预览',
+    'zh-Hant': '輸出預覽',
+    'en': 'Sample output',
+  },
+  'copyCenterEmpty': {
+    'zh-Hans': '没有可复制的内容。',
+    'zh-Hant': '沒有可複製的內容。',
+    'en': 'Nothing to copy.',
+  },
+  'copyCenterCount': {
+    'zh-Hans': '共 {n} 节',
+    'zh-Hant': '共 {n} 節',
+    'en': '{n} verses',
+  },
+  'copyCenterLimited': {
+    'zh-Hans': '将复制 {total} 节中的前 {n} 节——受版权译本的引用节数上限所限。',
+    'zh-Hant': '將複製 {total} 節中的前 {n} 節——受版權譯本的引用節數上限所限。',
+    'en': 'Copying {n} of {total} verses — publisher quotation limit '
+        'for a licensed translation.',
+  },
+  'copyCenterScope': {
+    'zh-Hans': '复制范围',
+    'zh-Hant': '複製範圍',
+    'en': 'What to copy',
+  },
+  'copyScopeSelection': {
+    'zh-Hans': '已选经节',
+    'zh-Hant': '已選經節',
+    'en': 'Selected verses',
+  },
+  'copyScopeVerse': {
+    'zh-Hans': '当前经节',
+    'zh-Hant': '當前經節',
+    'en': 'Current verse',
+  },
+  'copyScopeChapter': {'zh-Hans': '本章', 'zh-Hant': '本章', 'en': 'This chapter'},
+  'copyScopeResults': {
+    'zh-Hans': '搜索结果',
+    'zh-Hant': '搜尋結果',
+    'en': 'Search results',
+  },
+  'copyCenterPreset': {'zh-Hans': '格式', 'zh-Hant': '格式', 'en': 'Format'},
+  'copyPresetSermon': {'zh-Hans': '讲义', 'zh-Hant': '講義', 'en': 'Handout'},
+  'copyPresetCitation': {'zh-Hans': '引注', 'zh-Hant': '引註', 'en': 'Citation'},
+  'copyPresetRefList': {
+    'zh-Hans': '仅经文出处',
+    'zh-Hant': '僅經文出處',
+    'en': 'References only',
+  },
+  'copyPresetPlain': {'zh-Hans': '纯文字', 'zh-Hant': '純文字', 'en': 'Plain text'},
+  'copyPresetCustom': {'zh-Hans': '自定', 'zh-Hant': '自訂', 'en': 'Custom'},
+  'copyCenterVersions': {'zh-Hans': '译本', 'zh-Hant': '譯本', 'en': 'Versions'},
+  'copyCenterIncludeText': {
+    'zh-Hans': '包含经文内容',
+    'zh-Hant': '包含經文內容',
+    'en': 'Include the verse text',
+  },
+  'copyCenterReference': {
+    'zh-Hans': '经文出处',
+    'zh-Hant': '經文出處',
+    'en': 'Reference',
+  },
+  'copyRefPassage': {
+    'zh-Hans': '整段只写一次',
+    'zh-Hant': '整段只寫一次',
+    'en': 'Once, for the whole passage',
+  },
+  'copyRefPerVerse': {
+    'zh-Hans': '每节都写',
+    'zh-Hant': '每節都寫',
+    'en': 'On every verse',
+  },
+  'copyRefNone': {
+    'zh-Hans': '不写出处',
+    'zh-Hant': '不寫出處',
+    'en': 'No reference',
+  },
+  'copyRefBefore': {
+    'zh-Hans': '放在经文前',
+    'zh-Hant': '放在經文前',
+    'en': 'Before the text',
+  },
+  'copyRefAfter': {
+    'zh-Hans': '放在经文后',
+    'zh-Hant': '放在經文後',
+    'en': 'After the text',
+  },
+  'copyBookFull': {
+    'zh-Hans': '书卷全名',
+    'zh-Hant': '書卷全名',
+    'en': 'Full book name',
+  },
+  'copyBookShort': {'zh-Hans': '书卷简称', 'zh-Hant': '書卷簡稱', 'en': 'Abbreviated'},
+  'copyCenterTemplate': {
+    'zh-Hans': '出处格式',
+    'zh-Hant': '出處格式',
+    'en': 'Reference format',
+  },
+  'copyCenterTemplateHelp': {
+    'zh-Hans': '可用标记：<ref> <book> <chapter> <verse> <version>',
+    'zh-Hant': '可用標記：<ref> <book> <chapter> <verse> <version>',
+    'en': 'Tags: <ref> <book> <chapter> <verse> <version>',
+  },
+  'copyCenterText': {'zh-Hans': '经文', 'zh-Hant': '經文', 'en': 'Text'},
+  'copyCenterVerseNumbers': {
+    'zh-Hans': '经文中保留节号',
+    'zh-Hant': '經文中保留節號',
+    'en': 'Verse numbers in the text',
+  },
+  'copyCenterOnePerLine': {
+    'zh-Hans': '每节另起一行',
+    'zh-Hant': '每節另起一行',
+    'en': 'One verse per line',
+  },
+  'copyCenterQuote': {
+    'zh-Hans': '加上引号',
+    'zh-Hant': '加上引號',
+    'en': 'Wrap in quotation marks',
+  },
+  'copyCenterBrackets': {
+    'zh-Hans': '保留［补字］的方括号',
+    'zh-Hant': '保留［補字］的方括號',
+    'en': 'Keep [supplied words] in brackets',
+  },
+  'copyCenterNotes': {
+    'zh-Hans': '包含译者注',
+    'zh-Hant': '包含譯者註',
+    'en': "Include translators' notes",
+  },
+  'copyCenterInterleave': {
+    'zh-Hans': '按经节分组，而非按译本',
+    'zh-Hant': '按經節分組，而非按譯本',
+    'en': 'Group by verse, not by version',
+  },
+  'copyCenterRefList': {
+    'zh-Hans': '出处清单',
+    'zh-Hant': '出處清單',
+    'en': 'Reference list',
+  },
+  'copyCenterMerge': {
+    'zh-Hans': '连续的节合并为范围',
+    'zh-Hant': '連續的節合併為範圍',
+    'en': 'Merge consecutive verses into ranges',
+  },
+  'copyCenterRefPerLine': {
+    'zh-Hans': '每处出处另起一行',
+    'zh-Hant': '每處出處另起一行',
+    'en': 'One reference per line',
+  },
+  'copyCenterAttribution': {
+    'zh-Hans': '附上版权说明',
+    'zh-Hant': '附上版權說明',
+    'en': 'Append the copyright line',
+  },
 };

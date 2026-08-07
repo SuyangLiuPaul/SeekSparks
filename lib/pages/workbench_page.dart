@@ -40,6 +40,9 @@ import 'package:seeksparks/utils/responsive.dart';
 import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
 import 'package:seeksparks/widgets/bible_reading_pane.dart';
 import 'package:seeksparks/widgets/command_pane.dart';
+import 'package:seeksparks/widgets/copy_center_sheet.dart'
+    show CopyScope, showCopyCenter;
+import 'package:seeksparks/utils/clipboard_helper.dart';
 import 'package:seeksparks/pages/strongs_entry_page.dart';
 import 'package:seeksparks/utils/analysis_focus.dart';
 import 'package:seeksparks/utils/app_nav.dart';
@@ -227,7 +230,12 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
     HardwareKeyboard.instance.addHandler(_onGlobalKey);
   }
 
-  /// Esc releases the pin.
+  /// Esc releases the pin; Ctrl/Cmd+Shift+C opens the Copy Center.
+  ///
+  /// Shift is what keeps the Copy Center off plain Ctrl+C. The browser's
+  /// own copy is the right tool for a selection the reader has already
+  /// made with the mouse, and taking that key away would break it
+  /// everywhere in the page for the sake of one dialog.
   ///
   /// A global handler rather than a `Shortcuts` wrapper because Flutter
   /// routes key events from the focused node upward: with nothing
@@ -239,9 +247,19 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
   /// observes the key, it does not consume it.
   bool _onGlobalKey(KeyEvent e) {
     if (e is! KeyDownEvent) return false;
-    if (e.logicalKey != LogicalKeyboardKey.escape) return false;
-    if (!mounted || _pinnedKey == null) return false;
+    if (!mounted) return false;
     if (ModalRoute.of(context)?.isCurrent != true) return false;
+
+    final keys = HardwareKeyboard.instance;
+    if (e.logicalKey == LogicalKeyboardKey.keyC &&
+        keys.isShiftPressed &&
+        (keys.isControlPressed || keys.isMetaPressed)) {
+      _openCopyCenter();
+      return true;
+    }
+
+    if (e.logicalKey != LogicalKeyboardKey.escape) return false;
+    if (_pinnedKey == null) return false;
     _unpin();
     return false;
   }
@@ -268,6 +286,12 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
 
     return [
       WbMenu(s('menuFile', 'File'), [
+        WbMenuItem(
+          s('copyCenterMenu', 'Copy…'),
+          _copyScopes(locale).isEmpty ? null : _openCopyCenter,
+          shortcut: 'Ctrl+Shift+C',
+        ),
+        const WbMenuItem.separator(),
         WbMenuItem(s('settings', 'Settings…'),
             () => pushPage(const SettingsPage())),
         const WbMenuItem.separator(),
@@ -440,12 +464,79 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
           },
         ),
         WbToolButton(
+          icon: Icons.copy_all_outlined,
+          tooltip: s('copyCenterTitle', 'Copy Center'),
+          onPressed: _openCopyCenter,
+        ),
+        WbToolButton(
           icon: Icons.settings_outlined,
           tooltip: s('settings', 'Settings'),
           onPressed: () => pushPage(const SettingsPage()),
         ),
       ],
     ];
+  }
+
+  // ── Copy Center ───────────────────────────────────────────────────
+
+  /// What "copy this" could reasonably mean right now, narrowest first.
+  ///
+  /// Built fresh on every menu build so the File menu can grey the entry
+  /// when the answer is "nothing" — a reader who has not opened a
+  /// chapter yet should be told there is nothing to copy by the menu,
+  /// not by an empty dialog.
+  List<CopyScope> _copyScopes(String locale) {
+    final mp = context.read<MainProvider>();
+    String s(String key, String fallback) =>
+        uiStrings[key]?[locale] ?? fallback;
+    VerseRef refOf(Verse v) =>
+        VerseRef(bookNameToEnglish[v.book] ?? v.book, v.chapter, v.verse);
+
+    final scopes = <CopyScope>[];
+    final selected = mp.selectedVerses;
+    if (selected.isNotEmpty) {
+      scopes.add(CopyScope(
+        label: s('copyScopeSelection', 'Selected verses'),
+        refs: [for (final v in selected) refOf(v)],
+      ));
+    } else if (mp.currentVerse != null) {
+      scopes.add(CopyScope(
+        label: s('copyScopeVerse', 'Current verse'),
+        refs: [refOf(mp.currentVerse!)],
+      ));
+    }
+    final book = mp.currentBook;
+    final chapter = mp.currentChapter;
+    if (book != null && chapter != null) {
+      final inChapter = mp.versesInChapter(book, chapter);
+      if (inChapter.isNotEmpty) {
+        scopes.add(CopyScope(
+          label: s('copyScopeChapter', 'This chapter'),
+          refs: [for (final v in inChapter) refOf(v)],
+        ));
+      }
+    }
+    final results = _searchResultRefs(_wb);
+    if (results.isNotEmpty) {
+      scopes.add(CopyScope(
+        label: s('copyScopeResults', 'Search results'),
+        refs: results,
+      ));
+    }
+    return scopes;
+  }
+
+  Future<void> _openCopyCenter() async {
+    final locale = context.read<AppSettings>().locale;
+    final scopes = _copyScopes(locale);
+    if (scopes.isEmpty) return;
+    final text = await showCopyCenter(
+      context,
+      scopes: scopes,
+      primaryVersion: context.read<MainProvider>().currentVersion,
+    );
+    if (text == null || !mounted) return;
+    await ClipboardHelper.copyWithFeedback(context, text);
   }
 
   /// The status bar's left-hand readout: whatever the mouse is over.
