@@ -78,15 +78,10 @@ dependencies:
   # the analyzer's `depend_on_referenced_packages` lint stops
   # complaining about a direct import without a direct dep.
   web: ^1.0.0
-  # 2026-05-24 (v1.3.19): path_provider + crypto were originally
-  # added for the TTS audio cache (now removed). Keeping them around
-  # — path_provider has other potential uses (offline asset cache,
-  # debug log writes) and the binary footprint is negligible.
-  # crypto is the same. Drop in a future cleanup if neither gets a
-  # second consumer.
-  path_provider: ^2.1.4
-  crypto: ^3.0.5
   # 2026-05-24 (v1.3.19): flutter_tts removed with the 朗读 feature.
+  # path_provider + crypto were part of its audio cache and were kept on
+  # the theory that a second consumer would turn up; task #281 found none
+  # in lib/ or test/ fifteen months on, so they went too.
 
 dev_dependencies:
   flutter_test:

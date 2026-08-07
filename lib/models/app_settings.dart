@@ -47,7 +47,6 @@ const _kNotificationsEnabled = 'notificationsEnabled';
 const _kNotificationCategories = 'notificationCategories';
 const _kShowSectionTitles = 'showSectionTitles';
 const _kShowBookIntro = 'showBookIntro';
-const _kPickVerseAfterChapter = 'pickVerseAfterChapter';
 // User-supplied Gemini API key (BYOK). When non-empty, AI calls are
 // routed through the user's own AI Studio key — gives them their own
 // quota (15 RPM / 1500 RPD on the free tier) and keeps the app
@@ -178,14 +177,6 @@ class AppSettings extends ChangeNotifier {
   /// Settings → Reading.
   bool _showBookIntro = true;
 
-  /// When ON, picking a chapter from the book/chapter sidebar shows
-  /// a second-step verse-number grid so the user can land directly
-  /// on a specific verse instead of the chapter header. Default
-  /// OFF (chapter-level navigation is the established UX). Round
-  /// 56 user request: "should have a toggle whether can click verse
-  /// after clicking book chapter".
-  bool _pickVerseAfterChapter = false;
-
   // ── Dashboard layout (Round 55) ─────────────────────────────────
   // The dashboard now ships with reorder + per-section visibility
   // controls (Settings → Dashboard layout). The user's order is
@@ -225,13 +216,7 @@ class AppSettings extends ChangeNotifier {
   bool get boldVerseText => _boldVerseText;
   bool get showStrongsInOriginals => _showStrongsInOriginals;
   bool get autoExpandFirstRef => _autoExpandFirstRef;
-  bool get showBibleEvidence => _showBibleEvidence;
   bool get notificationsEnabled => _notificationsEnabled;
-  /// Snapshot map of per-category preferences. Missing entries fall
-  /// back to defaults — use [notificationCategory] for safe lookup.
-  Map<String, NotificationCategoryPrefs> get notificationCategories =>
-      Map.unmodifiable(_notificationCategories);
-
   /// Safe per-category lookup. Returns the stored prefs if present,
   /// or the shipped default if the user hasn't touched this category.
   NotificationCategoryPrefs notificationCategory(String categoryId) =>
@@ -239,7 +224,6 @@ class AppSettings extends ChangeNotifier {
       NotificationCategoryPrefs.defaultFor(categoryId);
   bool get showSectionTitles => _showSectionTitles;
   bool get showBookIntro => _showBookIntro;
-  bool get pickVerseAfterChapter => _pickVerseAfterChapter;
 
   /// User-supplied Gemini API key. Empty string when the user is on
   /// the developer-shared key. Caller services (AiWordService /
@@ -569,14 +553,6 @@ class AppSettings extends ChangeNotifier {
     await prefs.setBool(_kAutoExpandFirstRef, enabled);
   }
 
-  Future<void> setShowBibleEvidence(bool enabled) async {
-    if (_showBibleEvidence == enabled) return;
-    _showBibleEvidence = enabled;
-    notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_kShowBibleEvidence, enabled);
-  }
-
   Future<void> setNotificationsEnabled(bool enabled) async {
     if (_notificationsEnabled == enabled) return;
     _notificationsEnabled = enabled;
@@ -637,14 +613,6 @@ class AppSettings extends ChangeNotifier {
     await prefs.setBool(_kShowBookIntro, enabled);
   }
 
-
-  Future<void> setPickVerseAfterChapter(bool enabled) async {
-    if (_pickVerseAfterChapter == enabled) return;
-    _pickVerseAfterChapter = enabled;
-    notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_kPickVerseAfterChapter, enabled);
-  }
 
   Future<void> setMenuScale(double scale) async {
     final clamped = scale.clamp(0.7, 1.5);
@@ -761,7 +729,6 @@ class AppSettings extends ChangeNotifier {
     _notificationsEnabled = false;
     _showSectionTitles = true;
     _showBookIntro = true;
-    _pickVerseAfterChapter = false;
     _dashboardSectionOrder = List.of(defaultDashboardOrder);
     _dashboardVisibility
       ..clear()
@@ -793,7 +760,6 @@ class AppSettings extends ChangeNotifier {
       _kNotificationsEnabled,
       _kShowSectionTitles,
       _kShowBookIntro,
-      _kPickVerseAfterChapter,
       _kDashboardSectionOrder,
       for (final s in DashboardSection.values) _kDashboardVisible(s),
       // Re-show the onboarding tour after a reset so the user can
@@ -963,8 +929,6 @@ class AppSettings extends ChangeNotifier {
     }
     _showSectionTitles = prefs.getBool(_kShowSectionTitles) ?? true;
     _showBookIntro = prefs.getBool(_kShowBookIntro) ?? true;
-    _pickVerseAfterChapter =
-        prefs.getBool(_kPickVerseAfterChapter) ?? false;
     _geminiApiKey = prefs.getString(_kGeminiApiKey) ?? '';
     // 2026-05-10 (v1.2.26): restore aiModel from prefs. Allowlist
     // -clamp so a corrupt entry doesn't drive the server to an
@@ -1124,7 +1088,6 @@ class AppSettings extends ChangeNotifier {
         'notificationsEnabled': _notificationsEnabled,
         'showSectionTitles': _showSectionTitles,
         'showBookIntro': _showBookIntro,
-        'pickVerseAfterChapter': _pickVerseAfterChapter,
         'aiModel': _aiModel,
         'notesSortMode': _notesSortMode,
         'dashboardSectionOrder':
@@ -1215,9 +1178,6 @@ class AppSettings extends ChangeNotifier {
       }
       if (m['showBookIntro'] is bool) {
         _showBookIntro = m['showBookIntro'] as bool;
-      }
-      if (m['pickVerseAfterChapter'] is bool) {
-        _pickVerseAfterChapter = m['pickVerseAfterChapter'] as bool;
       }
       if (m['aiModel'] is String) {
         final raw = m['aiModel'] as String;

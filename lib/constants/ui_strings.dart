@@ -1525,103 +1525,6 @@ const uiStrings = {
     'zh-Hant': '最早建立',
     'en': 'Oldest first',
   },
-  // ── Reading plans (Round 26) ─────────────────────────────────────
-  'tabPlan': {'zh-Hans': '读经计划', 'zh-Hant': '讀經計劃', 'en': 'Plan'},
-  'readingPlans': {
-    'zh-Hans': '读经计划',
-    'zh-Hant': '讀經計劃',
-    'en': 'Reading Plans',
-  },
-  'todayReading': {
-    'zh-Hans': '今日读经',
-    'zh-Hant': '今日讀經',
-    'en': 'Today\'s Reading',
-  },
-  'planDayLabel': {
-    'zh-Hans': '第 {day} 天 / 共 {total} 天',
-    'zh-Hant': '第 {day} 天 / 共 {total} 天',
-    'en': 'Day {day} of {total}',
-  },
-  'planChooseActive': {
-    'zh-Hans': '选择读经计划',
-    'zh-Hant': '選擇讀經計劃',
-    'en': 'Choose Reading Plan',
-  },
-  'planNoActive': {
-    'zh-Hans': '尚未选择读经计划。',
-    'zh-Hant': '尚未選擇讀經計劃。',
-    'en': 'No reading plan selected.',
-  },
-  'planActive': {
-    'zh-Hans': '当前计划',
-    'zh-Hant': '當前計劃',
-    'en': 'Active plan',
-  },
-  'planStartDate': {
-    'zh-Hans': '起始日期',
-    'zh-Hant': '起始日期',
-    'en': 'Start date',
-  },
-  'planUseCalendarDate': {
-    'zh-Hans': '按日历日期推算',
-    'zh-Hant': '按日曆日期推算',
-    'en': 'Use calendar date',
-  },
-  'planUseCalendarDateSub': {
-    'zh-Hans': '关闭则按一年中的第几天计算（每年 1 月 1 日重置）。',
-    'zh-Hant': '關閉則按一年中的第幾天計算（每年 1 月 1 日重置）。',
-    'en': 'When off, day-of-plan follows the day of year (resets every Jan 1).',
-  },
-  'planResetProgress': {
-    'zh-Hans': '重置进度',
-    'zh-Hant': '重置進度',
-    'en': 'Reset Progress',
-  },
-  'planResetProgressConfirm': {
-    'zh-Hans': '确定要清除所有已完成标记吗？',
-    'zh-Hant': '確定要清除所有已完成標記嗎？',
-    'en': 'Clear all completion marks for this plan?',
-  },
-  'planMarkDone': {
-    'zh-Hans': '标记为已读',
-    'zh-Hant': '標記為已讀',
-    'en': 'Mark as done',
-  },
-  'planMarkUndone': {
-    'zh-Hans': '取消已读',
-    'zh-Hant': '取消已讀',
-    'en': 'Mark as unread',
-  },
-  'planJumpToToday': {
-    'zh-Hans': '跳到今天',
-    'zh-Hant': '跳到今天',
-    'en': 'Jump to today',
-  },
-  'planProgress': {
-    'zh-Hans': '进度: {done} / {total} ({percent}%)',
-    'zh-Hant': '進度: {done} / {total} ({percent}%)',
-    'en': 'Progress: {done} / {total} ({percent}%)',
-  },
-  'planNone': {
-    'zh-Hans': '不使用读经计划',
-    'zh-Hant': '不使用讀經計劃',
-    'en': 'No plan',
-  },
-  'planLibraryEmpty': {
-    'zh-Hans': '尚未选择读经计划。前往「设置」中挑选一份。',
-    'zh-Hant': '尚未選擇讀經計劃。前往「設定」中挑選一份。',
-    'en': 'No reading plan selected. Pick one from Settings.',
-  },
-  'planHomeHint': {
-    'zh-Hans': '选择一份读经计划，每日内容会显示在此。',
-    'zh-Hant': '選擇一份讀經計劃，每日內容會顯示在此。',
-    'en': 'Choose a reading plan to see today\'s passages here.',
-  },
-  'planHomeHintSub': {
-    'zh-Hans': '点击进入设置。',
-    'zh-Hant': '點擊進入設定。',
-    'en': 'Tap to open Settings.',
-  },
   'home': {
     'zh-Hans': '主页',
     'zh-Hant': '主頁',
@@ -1775,17 +1678,6 @@ const uiStrings = {
   // Legacy v1 onboarding strings — kept for backward compatibility
   // with any external translation file that still references these
   // keys. The active tour uses the v2 keys above.
-  'onboardPlansTitle': {
-    'zh-Hans': '读经计划',
-    'zh-Hant': '讀經計劃',
-    'en': 'Reading plans',
-  },
-  'onboardPlansBody': {
-    'zh-Hans': '在「设置」中选择一年、按历史顺序或麦琴计划——今日内容会自动显示在主页。',
-    'zh-Hant': '在「設定」中選擇一年、按歷史順序或麥琴計劃——今日內容會自動顯示在主頁。',
-    'en':
-        'Pick a one-year, chronological, or McCheyne plan in Settings — today\'s readings show on this Home page automatically.',
-  },
   'onboardLibraryTitle': {
     'zh-Hans': '笔记与书签',
     'zh-Hant': '筆記與書籤',
@@ -1828,11 +1720,6 @@ const uiStrings = {
     'zh-Hans': '账号',
     'zh-Hant': '帳號',
     'en': 'Account',
-  },
-  'settingsSectionPlan': {
-    'zh-Hans': '读经计划',
-    'zh-Hant': '讀經計劃',
-    'en': 'Reading plans',
   },
   'settingsSectionDashboard': {
     // Renamed in Round 55: this section now controls reorder + per-
@@ -2838,17 +2725,6 @@ const uiStrings = {
     'zh-Hant': '本章開頭',
     'en': 'Top',
   },
-  'settingsPickVerseAfterChapter': {
-    'zh-Hans': '选完章再选节',
-    'zh-Hant': '選完章再選節',
-    'en': 'Pick verse after chapter',
-  },
-  'settingsPickVerseAfterChapterHint': {
-    'zh-Hans': '选完章节后弹出经节列表，可直接定位到具体一节。默认关闭。',
-    'zh-Hant': '選完章節後彈出經節列表，可直接定位到具體一節。預設關閉。',
-    'en':
-        'After picking a chapter, show a verse-number grid so you can land on a specific verse. Off by default.',
-  },
   // ── Bible Trivia (冷知识) — Round 56 ────────────────────────────
   'bibleTrivia': {
     'zh-Hans': '冷知识',
@@ -3308,16 +3184,6 @@ const uiStrings = {
     'zh-Hant': '每天精選一節經文，所有設備同步。',
     'en': 'One curated verse per day, the same on every device.',
   },
-  'dashboardSection_todayReading_label': {
-    'zh-Hans': '今日读经',
-    'zh-Hant': '今日讀經',
-    'en': "Today's Reading",
-  },
-  'dashboardSection_todayReading_description': {
-    'zh-Hans': '当前读经计划的今日段落。',
-    'zh-Hant': '目前讀經計劃的今日段落。',
-    'en': "Today's passage from your active reading plan.",
-  },
   'dashboardSection_counts_label': {
     'zh-Hans': '收藏 / 笔记 / 高亮',
     'zh-Hant': '收藏 / 筆記 / 高亮',
@@ -3368,11 +3234,6 @@ const uiStrings = {
     'zh-Hans': '主页"今日证据"卡片与快捷入口。',
     'zh-Hant': '主頁「今日證據」卡片與快捷入口。',
     'en': "Show Today's Evidence card and quick-link tile.",
-  },
-  'settingsShowPlanHint': {
-    'zh-Hans': '主页显示当前读经计划。',
-    'zh-Hant': '主頁顯示當前讀經計劃。',
-    'en': 'Show the active reading plan on the dashboard.',
   },
   'notificationsToggle': {
     'zh-Hans': '启用通知',
