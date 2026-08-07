@@ -426,7 +426,7 @@ class WorkbenchStatusBar extends StatelessWidget {
 /// colour, without reading. Rendered inline (not as a chip on its own
 /// row) so it costs no vertical space.
 class WbVersionTag extends StatelessWidget {
-  const WbVersionTag({super.key, required this.code, this.width = 68});
+  const WbVersionTag({super.key, required this.code, this.width = 92});
 
   final String code;
 
@@ -435,12 +435,23 @@ class WbVersionTag extends StatelessWidget {
   /// run down one translation in a wall of interleaved rows — so this
   /// stays fixed rather than sizing to content.
   ///
-  /// 2026-08-07: 52 -> 68. At 52 the longest labels were cut INSIDE the
-  /// parenthesis — "CUVS(简)" rendered "CUVS(" and "CUV+S(简)" rendered
-  /// "CUV+S(" — which reads as a broken string rather than an
-  /// abbreviation. Note LJK(简) fit and rendered fine, which is what
-  /// rules out the font: this was always width, never glyph coverage.
-  /// 68 clears "CUV+S(简)", the widest label in the catalog.
+  /// 2026-08-07: 52 -> 68 -> 92. Twice too narrow, because twice I sized
+  /// it against the longest label I happened to be looking at instead of
+  /// the longest label that EXISTS. 52 cut "CUVS(简)" to "CUVS("; 68
+  /// still ellipsised "CUV+S(雅伟)", which is 5 Latin characters plus two
+  /// FULL-WIDTH CJK glyphs and a bracket pair — roughly 85pt at this
+  /// size, not 68.
+  ///
+  /// 92 clears it with room for one more CJK character. If a longer
+  /// label is ever added, widen this deliberately rather than trusting
+  /// the ellipsis to look intentional — the gutter is chrome, and chrome
+  /// that truncates its own labels reads as a bug however honestly it
+  /// does it.
+  ///
+  /// The font was never the problem: LJK(简) always rendered its 简
+  /// perfectly in this same gutter. A missing glyph and a too-narrow box
+  /// look identical on screen, and that counter-example was sitting in
+  /// the reporter's own screenshot the whole time.
   final double width;
 
   @override
