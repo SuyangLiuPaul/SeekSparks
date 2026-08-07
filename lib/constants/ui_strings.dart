@@ -7053,4 +7053,114 @@ const uiStrings = {
     'zh-Hant': '本卷沒有原文標註，無法按詞形搜尋。',
     'en': 'This book has no tagged original text to search.',
   },
+  // ── Phrasing (lib/utils/phrasing.dart, lib/pages/phrasing_page.dart) ──
+  'phrasingTitle': {'zh-Hans': '语法分行', 'zh-Hant': '語法分行', 'en': 'Phrasing'},
+  'phrasingCopied': {'zh-Hans': '已复制', 'zh-Hant': '已複製', 'en': 'Copied'},
+  'phrasingReset': {
+    'zh-Hans': '重新开始',
+    'zh-Hant': '重新開始',
+    'en': 'Start over',
+  },
+  'phrasingRange': {'zh-Hans': '经节', 'zh-Hant': '經節', 'en': 'Verses'},
+  'phrasingNone': {
+    'zh-Hans': '本章没有附带原文经文，无法进行分行。',
+    'zh-Hant': '本章沒有附帶原文經文，無法進行分行。',
+    'en': 'No original-language text is bundled for this chapter, so there '
+        'is nothing to phrase.',
+  },
+  'phrasingEmptyWindow': {
+    'zh-Hans': '此范围内没有经节。',
+    'zh-Hant': '此範圍內沒有經節。',
+    'en': 'No verses in this range.',
+  },
+  'phrasingHint': {
+    'zh-Hans': '点按一个词，可在它前面另起一行；点按一行的第一个词，可把它并回上一行。'
+        '用 ◀ ▶ 调整缩进——缩进的行从属于上面那一行。',
+    'zh-Hant': '點按一個詞，可在它前面另起一行；點按一行的第一個詞，可把它併回上一行。'
+        '用 ◀ ▶ 調整縮排——縮排的行從屬於上面那一行。',
+    'en': 'Tap a word to start a new line before it; tap the first word of a '
+        'line to join it back up. Use ◀ ▶ to indent — an indented line is '
+        'subordinate to the line above it.',
+  },
+  'phrasingRelNone': {'zh-Hans': '不标注', 'zh-Hant': '不標註', 'en': 'No label'},
+  'phrasingSuggested': {
+    'zh-Hans': '语法建议',
+    'zh-Hant': '語法建議',
+    'en': 'Suggested by the grammar',
+  },
+  'phrasingFooterIdle': {
+    'zh-Hans': '指向一个词即可解析。',
+    'zh-Hant': '指向一個詞即可解析。',
+    'en': 'Point at a word to parse it.',
+  },
+  'phrasingLevelVerses': {'zh-Hans': '按节', 'zh-Hant': '按節', 'en': 'Verses'},
+  'phrasingLevelClauses': {
+    'zh-Hans': '按子句',
+    'zh-Hant': '按子句',
+    'en': 'Clauses',
+  },
+  'phrasingLevelVerbals': {
+    'zh-Hans': '＋分词不定词',
+    'zh-Hant': '＋分詞不定詞',
+    'en': '+ Verbals',
+  },
+  'phrasingLevelPhrases': {
+    'zh-Hans': '＋介词短语',
+    'zh-Hant': '＋介詞片語',
+    'en': '+ Phrases',
+  },
+  // The eighteen relation labels. `phrasingRelationLabel` derives each
+  // key as phrasingRel + the enum name capitalised, so renaming an enum
+  // value silently drops that label back to English — keep the two
+  // lists in step. `phrasing_test.dart` asserts the coverage.
+  'phrasingRelSeries': {'zh-Hans': '并列', 'zh-Hant': '並列', 'en': 'series'},
+  'phrasingRelProgression': {
+    'zh-Hans': '递进',
+    'zh-Hant': '遞進',
+    'en': 'progression',
+  },
+  'phrasingRelContrast': {'zh-Hans': '对比', 'zh-Hant': '對比', 'en': 'contrast'},
+  'phrasingRelAlternative': {
+    'zh-Hans': '选择',
+    'zh-Hant': '選擇',
+    'en': 'alternative',
+  },
+  'phrasingRelComparison': {
+    'zh-Hans': '比较',
+    'zh-Hant': '比較',
+    'en': 'comparison',
+  },
+  'phrasingRelPurpose': {'zh-Hans': '目的', 'zh-Hant': '目的', 'en': 'purpose'},
+  'phrasingRelResult': {'zh-Hans': '结果', 'zh-Hant': '結果', 'en': 'result'},
+  'phrasingRelGround': {'zh-Hans': '根据', 'zh-Hant': '根據', 'en': 'ground'},
+  'phrasingRelInference': {
+    'zh-Hans': '推论',
+    'zh-Hant': '推論',
+    'en': 'inference',
+  },
+  'phrasingRelMeans': {'zh-Hans': '手段', 'zh-Hant': '手段', 'en': 'means'},
+  'phrasingRelManner': {'zh-Hans': '方式', 'zh-Hant': '方式', 'en': 'manner'},
+  'phrasingRelCondition': {
+    'zh-Hans': '条件',
+    'zh-Hant': '條件',
+    'en': 'condition',
+  },
+  'phrasingRelConcession': {
+    'zh-Hans': '让步',
+    'zh-Hant': '讓步',
+    'en': 'concession',
+  },
+  'phrasingRelTemporal': {'zh-Hans': '时间', 'zh-Hant': '時間', 'en': 'time'},
+  'phrasingRelPlace': {'zh-Hans': '地点', 'zh-Hant': '地點', 'en': 'place'},
+  'phrasingRelContent': {'zh-Hans': '内容', 'zh-Hant': '內容', 'en': 'content'},
+  'phrasingRelApposition': {
+    'zh-Hans': '同位',
+    'zh-Hant': '同位',
+    'en': 'apposition',
+  },
+  'phrasingRelRelative': {
+    'zh-Hans': '关系子句',
+    'zh-Hant': '關係子句',
+    'en': 'relative',
+  },
 };

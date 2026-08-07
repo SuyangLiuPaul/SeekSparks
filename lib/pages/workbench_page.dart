@@ -22,6 +22,7 @@ import 'package:seeksparks/pages/books_page.dart';
 import 'package:seeksparks/pages/evidence_page.dart';
 import 'package:seeksparks/pages/home_page.dart';
 import 'package:seeksparks/pages/library_page.dart';
+import 'package:seeksparks/pages/phrasing_page.dart';
 import 'package:seeksparks/pages/sermons_page.dart';
 import 'package:seeksparks/pages/settings_page.dart';
 import 'package:seeksparks/pages/word_list_page.dart';
@@ -337,6 +338,16 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
           () => pushPage(WordListPage(
             book: mp.currentBook ?? '',
             chapter: mp.currentChapter ?? 1,
+            locale: locale,
+            version: mp.currentVersion,
+          )),
+        ),
+        WbMenuItem(
+          s('phrasingTitle', 'Phrasing'),
+          () => pushPage(PhrasingPage(
+            book: mp.currentBook ?? '',
+            chapter: mp.currentChapter ?? 1,
+            verse: mp.currentVerse?.verse ?? 1,
             locale: locale,
             version: mp.currentVersion,
           )),
