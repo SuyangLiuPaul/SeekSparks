@@ -24,6 +24,7 @@ import 'package:seeksparks/services/fetch_verses.dart';
 import 'package:seeksparks/services/originals_service.dart';
 import 'package:seeksparks/services/section_title_service.dart';
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:seeksparks/utils/version_colors.dart';
 import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
 
 /// One row of the stack: a translation, or the original-language line.
@@ -397,20 +398,33 @@ class _ParallelVerseViewState extends State<ParallelVerseView> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                 decoration: BoxDecoration(
-                  color: isOriginal
-                      ? scheme.tertiaryContainer.withValues(alpha: 0.55)
-                      : scheme.secondary.withValues(alpha: 0.13),
+                  // OPAQUE on purpose. These were translucent
+                  // (alpha 0.13 / 0.55), which composites against
+                  // whatever is behind — and a selected verse has a
+                  // tinted background. The same version therefore
+                  // rendered as two different colours depending on
+                  // whether its row happened to be selected, so the
+                  // colour carried no information and actively misled.
+                  color: versionPillColor(r.code, scheme,
+                      isOriginal: isOriginal),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
                   r.label,
+                  // Labels are Chinese — "CUVS(简)", "CUV+S(简)". A bare
+                  // TextStyle resolves to Roboto, which has no CJK
+                  // glyphs, so 简 and 繁 vanished and the pill read
+                  // "CUVS(" — looking like a truncation bug rather than
+                  // a missing font. Same root cause as the tofu in the
+                  // small-screen language switch; this widget needed it
+                  // too.
                   style: TextStyle(
+                    fontFamilyFallback: kCjkFontFallback,
                     fontSize: 9.5,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 0.5,
-                    color: isOriginal
-                        ? scheme.onTertiaryContainer
-                        : scheme.secondary,
+                    color: versionPillTextColor(r.code, scheme,
+                        isOriginal: isOriginal),
                   ),
                 ),
               ),
