@@ -63,7 +63,12 @@ class KwicLine {
   final int hitIndex;
 
   /// The whole line as plain text, for copying out.
-  String get plain => '$reference\t$left\t$keyword\t$right';
+  String get plain => plainWith(reference);
+
+  /// As [plain], but with the reference rendered for the reader —
+  /// [reference] itself stays canonical English (see `ConcordanceRef`).
+  String plainWith(String reference) =>
+      '$reference\t$left\t$keyword\t$right';
 }
 
 /// Normalize a run's text for display in a fixed-width context column.

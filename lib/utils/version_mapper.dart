@@ -1,4 +1,5 @@
-import 'package:seeksparks/constants/book_name_mapping.dart' show zhToEn, toLocale;
+import 'package:seeksparks/constants/book_name_mapping.dart'
+    show zhToEn, toLocale, bookNameInScript, bookScriptFor;
 import 'package:seeksparks/utils/reference_parser.dart' show BibleReference, parseReference;
 
 String translateBookName(String? book, String version) {
@@ -21,15 +22,8 @@ String translateBookName(String? book, String version) {
 /// Falls back to locale-driven naming when no version is provided.
 String localeAwareBookName(
     String englishBook, String locale, [String? currentVersion]) {
-  if (currentVersion != null && currentVersion.isNotEmpty) {
-    return translateBookName(englishBook, currentVersion);
-  }
-  if (locale == 'zh-Hant') {
-    return toLocale(englishBook, 'cuvs-tr');
-  } else if (locale.startsWith('zh')) {
-    return toLocale(englishBook, 'cuvs-yhwh');
-  }
-  return englishBook;
+  final en = zhToEn(englishBook) ?? englishBook;
+  return bookNameInScript(en, bookScriptFor(locale, currentVersion));
 }
 
 /// Formats a single parsed [BibleReference] as `book chapter[:verse]`

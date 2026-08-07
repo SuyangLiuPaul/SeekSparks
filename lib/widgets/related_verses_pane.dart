@@ -34,6 +34,7 @@ class RelatedVersesPane extends StatefulWidget {
     required this.verses,
     required this.baseIndex,
     required this.locale,
+    required this.version,
     this.onOpenVerse,
   });
 
@@ -48,6 +49,10 @@ class RelatedVersesPane extends StatefulWidget {
   final int baseIndex;
 
   final String locale;
+
+  /// The reading version, so the abbreviated references are in the same
+  /// language as the verses they label.
+  final String version;
 
   /// Jump the reader to a hit.
   final void Function(Verse verse)? onOpenVerse;
@@ -164,7 +169,8 @@ class _RelatedVersesPaneState extends State<RelatedVersesPane> {
       );
 
   String _label(Verse v) =>
-      '${shortBookName(v.book, widget.locale)} ${v.chapter}:${v.verseLabel}';
+      '${shortBookName(v.book, widget.locale, widget.version)} '
+      '${v.chapter}:${v.verseLabel}';
 
   void _copy(List<RelatedVerseHit> hits) {
     final text = [

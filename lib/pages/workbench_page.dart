@@ -1335,6 +1335,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
             word: hoveredWord,
             reference: hovered.reference,
             locale: locale,
+            version: mp.currentVersion,
             frozen: _analysisFrozen,
             grammar: hovered.grammar,
             onOpenFullEntry: () =>
@@ -1464,6 +1465,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
           verses: mp.verses,
           baseIndex: base,
           locale: locale,
+          version: mp.currentVersion,
           onOpenVerse: (hit) => _onCrossRefTap(
             BibleReference(
               englishBook: bookNameToEnglish[hit.book] ?? hit.book,
@@ -1511,6 +1513,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
           verses: mp.verses,
           baseIndex: base,
           locale: locale,
+          version: mp.currentVersion,
           scope: _phraseScope(mp, wb),
           scopeLabel: wb.searchLimitLabel,
           onOpenVerse: (hit) => _onCrossRefTap(
@@ -1557,6 +1560,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
           englishBook: book,
           chapter: v.chapter,
           locale: locale,
+          version: mp.currentVersion,
           seedCode: _analysisWord?.word?.morph,
           onOpenRef: (openBook, chapter, verse) => _onCrossRefTap(
             BibleReference(

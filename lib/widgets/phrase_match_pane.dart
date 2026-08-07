@@ -35,6 +35,7 @@ class PhraseMatchPane extends StatefulWidget {
     required this.verses,
     required this.baseIndex,
     required this.locale,
+    required this.version,
     this.scope,
     this.scopeLabel,
     this.onOpenVerse,
@@ -51,6 +52,10 @@ class PhraseMatchPane extends StatefulWidget {
   final int baseIndex;
 
   final String locale;
+
+  /// The reading version, so the abbreviated references are in the same
+  /// language as the verses they label.
+  final String version;
 
   /// bwh51's "use search limits from main window". Null means the whole
   /// Bible; a set restricts the scan to those corpus indices.
@@ -156,7 +161,8 @@ class _PhraseMatchPaneState extends State<PhraseMatchPane> {
   }
 
   String _label(Verse v) =>
-      '${shortBookName(v.book, widget.locale)} ${v.chapter}:${v.verseLabel}';
+      '${shortBookName(v.book, widget.locale, widget.version)} '
+      '${v.chapter}:${v.verseLabel}';
 
   void _copy(List<PhraseVerseGroup> groups) {
     final text = [

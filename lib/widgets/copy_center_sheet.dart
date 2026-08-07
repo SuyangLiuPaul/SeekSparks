@@ -190,7 +190,7 @@ class _CopyCenterDialogState extends State<_CopyCenterDialog> {
       bookName: (english, style) {
         final label = _bookLabels[english] ?? english;
         return style == CopyBookStyle.abbreviated
-            ? shortBookName(label, locale)
+            ? shortBookName(label, locale, widget.primaryVersion)
             : label;
       },
       versionName: (code) => bibleVersions

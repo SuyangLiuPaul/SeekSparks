@@ -1534,7 +1534,7 @@ Future<void> showBibleTriviaSheet({
                               ),
                             ),
                             Text(
-                              '$englishBook  $chapter',
+                              '${localeAwareBookName(englishBook, locale)}  $chapter',
                               style: TextStyle(
                                 fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
                                 fontSize: 12,

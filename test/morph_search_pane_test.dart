@@ -88,6 +88,7 @@ void main() {
         englishBook: '3 John',
         chapter: 1,
         locale: 'en',
+        version: 'kjv',
       )));
       await settle(tester);
       expect(tester.takeException(), isNull);
@@ -109,6 +110,7 @@ void main() {
         englishBook: 'Obadiah',
         chapter: 1,
         locale: 'en',
+        version: 'kjv',
       )));
       await settle(tester);
       expect(tester.takeException(), isNull);
@@ -123,6 +125,7 @@ void main() {
         englishBook: 'Nonexistent Book',
         chapter: 1,
         locale: 'en',
+        version: 'kjv',
       )));
       await settle(tester);
       expect(tester.takeException(), isNull);
@@ -137,6 +140,7 @@ void main() {
         englishBook: '3 John',
         chapter: 1,
         locale: 'en',
+        version: 'kjv',
       )));
       await settle(tester);
 
@@ -165,6 +169,7 @@ void main() {
         englishBook: 'Jude',
         chapter: 1,
         locale: 'en',
+        version: 'kjv',
       )));
       await settle(tester);
       expect(find.text('Clear'), findsNothing);
@@ -193,6 +198,7 @@ void main() {
         englishBook: '3 John',
         chapter: 1,
         locale: 'en',
+        version: 'kjv',
       )));
       await settle(tester);
       // 3 John has no interjection; showing a dead chip is the failure
@@ -206,6 +212,7 @@ void main() {
         englishBook: '3 John',
         chapter: 1,
         locale: 'en',
+        version: 'kjv',
         seedCode: 'V-3AAI-S--',
       )));
       await settle(tester);
@@ -225,6 +232,7 @@ void main() {
         englishBook: '3 John',
         chapter: 1,
         locale: 'en',
+        version: 'kjv',
         seedCode: 'HVqp3ms',
       )));
       await settle(tester);
@@ -239,6 +247,7 @@ void main() {
         englishBook: '3 John',
         chapter: 1,
         locale: 'en',
+        version: 'kjv',
         onOpenRef: (b, c, v) => opened = '$b $c:$v',
       )));
       await settle(tester);
@@ -255,6 +264,7 @@ void main() {
         englishBook: '3 John',
         chapter: 1,
         locale: 'zh-Hans',
+        version: 'cuvs-yhwh',
       )));
       await settle(tester);
       expect(tester.takeException(), isNull);

@@ -257,14 +257,47 @@ const _englishVersionCodes = <String>{
   'lxxwh',
 };
 
-String toLocale(String englishKey, String version) {
-  // Normalize before classifying so stored versions like " NASB" or
-  // "Nasb" still resolve correctly. Anything outside the English set
-  // falls through to the Chinese mapping (Simplified by default,
-  // Traditional when the version code ends with "-tr").
-  final v = version.trim().toLowerCase();
-  if (_englishVersionCodes.contains(v)) return englishKey;
-  return v.endsWith('-tr')
-      ? englishToChineseTraditional[englishKey] ?? englishKey
-      : englishToChinese[englishKey] ?? englishKey;
+/// Which of the three book-name spellings a surface should print.
+enum BookScript { english, simplified, traditional }
+
+/// The single rule for choosing that spelling.
+///
+/// The READING VERSION decides, not the UI locale: someone reading
+/// CUVS with the app in English wants 民数记, and someone reading BSB
+/// with the app in Chinese wants Numbers, because the name has to match
+/// the text on screen. [locale] is only the fallback for surfaces that
+/// genuinely have no version in hand (a book chip in a global
+/// statistic, say).
+///
+/// Every book-name renderer goes through this — `toLocale` for the
+/// formal name and `shortBookName` for the abbreviation — so the two
+/// forms cannot disagree about which language they are in.
+BookScript bookScriptFor(String locale, [String? version]) {
+  if (version != null && version.trim().isNotEmpty) {
+    // Normalize before classifying so stored versions like " NASB" or
+    // "Nasb" still resolve correctly. Anything outside the English set
+    // is Chinese (Simplified by default, Traditional when the version
+    // code ends with "-tr").
+    final v = version.trim().toLowerCase();
+    if (_englishVersionCodes.contains(v)) return BookScript.english;
+    return v.endsWith('-tr') ? BookScript.traditional : BookScript.simplified;
+  }
+  if (locale == 'zh-Hant') return BookScript.traditional;
+  if (locale.startsWith('zh')) return BookScript.simplified;
+  return BookScript.english;
 }
+
+/// The formal book name in [script]. Unknown keys pass through.
+String bookNameInScript(String englishKey, BookScript script) =>
+    switch (script) {
+      BookScript.english => englishKey,
+      BookScript.traditional =>
+        englishToChineseTraditional[englishKey] ?? englishKey,
+      BookScript.simplified => englishToChinese[englishKey] ?? englishKey,
+    };
+
+/// The formal name for a specific [version]. An empty version falls back
+/// to Simplified rather than English — long-standing behaviour that
+/// several callers pass `mp.currentVersion` into before it is loaded.
+String toLocale(String englishKey, String version) =>
+    bookNameInScript(englishKey, bookScriptFor('zh-Hans', version));

@@ -1168,7 +1168,9 @@ class _ContinueReadingHero extends StatelessWidget {
       versionLabel = useShort ? info.shortLabel : info.menuLabel;
     }
     final displayBook =
-        (book != null && useShort) ? shortBookName(book!, locale) : book;
+        (book != null && useShort)
+            ? shortBookName(book!, locale, currentVersion)
+            : book;
     final positionLine = hasPosition
         ? '$displayBook $chapter${versionLabel != null ? "  ·  $versionLabel" : ""}'
         : (uiStrings['continueReadingHint']?[locale] ??

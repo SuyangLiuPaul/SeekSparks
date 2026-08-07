@@ -33,6 +33,7 @@ class MorphSearchPane extends StatefulWidget {
     required this.englishBook,
     required this.chapter,
     required this.locale,
+    required this.version,
     this.seedCode,
     this.onOpenRef,
   });
@@ -40,6 +41,11 @@ class MorphSearchPane extends StatefulWidget {
   final String englishBook;
   final int chapter;
   final String locale;
+
+  /// The reading version — decides the language of the hit references.
+  /// `MorphHit.book` is canonical English because the morphology corpus
+  /// is, whatever translation the reader has open.
+  final String version;
 
   /// The morphology code of the word the reader is pointing at, if any.
   /// Offered as a starting point rather than applied automatically —
@@ -408,7 +414,7 @@ class _MorphSearchPaneState extends State<MorphSearchPane> {
               textBaseline: TextBaseline.alphabetic,
               children: [
                 Text(
-                  '${shortBookName(hit.book, widget.locale)} '
+                  '${shortBookName(hit.book, widget.locale, widget.version)} '
                   '${hit.chapter}:${hit.verse}',
                   style: TextStyle(fontSize: t.chrome, color: wb.link),
                 ),

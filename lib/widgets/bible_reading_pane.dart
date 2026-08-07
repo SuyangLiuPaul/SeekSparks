@@ -6897,7 +6897,7 @@ class _FloatingHeader extends StatelessWidget {
                                 final useShort = screenW < 390;
                                 return Text(
                                   useShort
-                                      ? '${shortBookName(book, locale)} $chapter'
+                                      ? '${shortBookName(book, locale, version)} $chapter'
                                       : '$book $chapter',
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,

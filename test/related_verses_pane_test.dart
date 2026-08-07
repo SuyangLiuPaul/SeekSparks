@@ -64,6 +64,7 @@ void main() {
         verses: verses,
         baseIndex: 0,
         locale: 'en',
+        version: 'kjv',
       )));
       await tester.pumpAndSettle();
 
@@ -82,6 +83,7 @@ void main() {
         verses: verses,
         baseIndex: 0,
         locale: 'en',
+        version: 'kjv',
       )));
       await tester.pumpAndSettle();
 
@@ -107,6 +109,7 @@ void main() {
         verses: verses,
         baseIndex: 0,
         locale: 'en',
+        version: 'kjv',
         onOpenVerse: (v) => opened = v,
       )));
       await tester.pumpAndSettle();
@@ -130,6 +133,7 @@ void main() {
             verses: verses,
             baseIndex: 0,
             locale: 'en',
+            version: 'kjv',
           ),
           width: w,
         ));
@@ -148,6 +152,7 @@ void main() {
         verses: verses,
         baseIndex: 0,
         locale: 'en',
+        version: 'kjv',
       )));
       await tester.pumpAndSettle();
       expect(find.textContaining('no words to match'), findsOneWidget);

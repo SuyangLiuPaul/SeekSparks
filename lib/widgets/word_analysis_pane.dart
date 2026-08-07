@@ -45,6 +45,7 @@ class WordAnalysisPane extends StatefulWidget {
     required this.word,
     required this.reference,
     required this.locale,
+    required this.version,
     required this.frozen,
     this.grammar = const [],
     this.onOpenFullEntry,
@@ -56,6 +57,10 @@ class WordAnalysisPane extends StatefulWidget {
   /// "Genesis 1:1" — printed in the header the way BibleWorks does.
   final String reference;
   final String locale;
+
+  /// The reading version, so references sourced from the English-keyed
+  /// original-language corpus print in the language on screen.
+  final String version;
 
   /// True while Shift is held. Shown as a badge so the reader knows why
   /// the pane stopped following the mouse.
@@ -288,6 +293,7 @@ class _WordAnalysisPaneState extends State<WordAnalysisPane> {
           WordFormsSection(
             word: widget.word,
             locale: locale,
+            version: widget.version,
             onOpenRef: widget.onOpenRef,
           ),
 

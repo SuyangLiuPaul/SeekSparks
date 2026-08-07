@@ -1,6 +1,8 @@
 // ignore: depend_on_referenced_packages
 import 'package:characters/characters.dart';
 
+import 'package:seeksparks/constants/book_name_mapping.dart'
+    show BookScript, bookNameInScript, bookScriptFor;
 import 'package:seeksparks/utils/version_mapper.dart' show toEnglish;
 
 /// Standard 1-character (or 2-3 char for paired) Chinese-Bible
@@ -15,29 +17,37 @@ import 'package:seeksparks/utils/version_mapper.dart' show toEnglish;
 /// to the localized last character if no abbreviation exists.
 
 /// Get a compact book name suitable for narrow surfaces (≤360px
-/// AppBar titles, chip labels, etc.). 2026-05-07: added because the
-/// AppBar on iPhone 12 mini was truncating "帖撒罗尼迦前书" to "帖..."
-/// which is unhelpful — the abbreviation "帖前" reads cleanly in the
-/// same width.
-String shortBookName(String localizedBook, String locale) {
+/// AppBar titles, chip labels, KWIC reference columns). 2026-05-07:
+/// added because the AppBar on iPhone 12 mini was truncating
+/// "帖撒罗尼迦前书" to "帖..." which is unhelpful — the abbreviation
+/// "帖前" reads cleanly in the same width.
+///
+/// [version] is the READING version, and it decides the language of the
+/// abbreviation exactly as it decides the language of the formal name
+/// (see [bookScriptFor]). Without it the abbreviation follows the UI
+/// locale, which puts "民" beside a verse that reads "Numbers" — the
+/// defect this parameter was added to close. Omit it only where no
+/// version is meaningfully in scope.
+String shortBookName(String localizedBook, String locale, [String? version]) {
   if (localizedBook.isEmpty) return localizedBook;
   // Reverse-map to canonical English, then look up the abbreviation
-  // map for the user's locale. If the input was already English,
+  // map for the resolved script. If the input was already English,
   // toEnglish returns it unchanged.
   final englishBook = toEnglish(localizedBook) ?? localizedBook;
-  if (locale.startsWith('zh')) {
-    final hant = locale == 'zh-Hant';
-    final m = hant ? _shortBooksHant : _shortBooksHans;
+  final script = bookScriptFor(locale, version);
+  if (script != BookScript.english) {
+    final m = script == BookScript.traditional ? _shortBooksHant : _shortBooksHans;
     final v = m[englishBook];
     if (v != null) return v;
-    // Fallback: last character of the localized name. For
-    // "腓利门书" (Philemon, no entry in the map) → "书" — not great
-    // but stable.
-    return localizedBook.isEmpty
-        ? englishBook
-        : localizedBook.characters.last;
+    // Fallback: last character of the formal name in the SAME script.
+    // Using the caller's spelling here would abbreviate 約書亞記 with a
+    // Simplified tail (or vice versa) whenever the two disagree. For
+    // "腓利门书" (Philemon, no entry in the map) → "书" — not great but
+    // stable.
+    final formal = bookNameInScript(englishBook, script);
+    return formal.isEmpty ? englishBook : formal.characters.last;
   }
-  // English / other locales — 3-letter abbreviation.
+  // English — 3-letter abbreviation.
   final v = _shortBooksEn[englishBook];
   return v ??
       (englishBook.length >= 3 ? englishBook.substring(0, 3) : englishBook);

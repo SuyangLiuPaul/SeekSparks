@@ -1,6 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
 
+import 'package:seeksparks/utils/short_book_name.dart' show shortBookName;
+import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
+
 /// Result of a concordance lookup for one Strong's number.
 ///
 /// `total` is the absolute occurrence count across the entire Bible
@@ -32,6 +35,25 @@ class ConcordanceRef {
     required this.verse,
     required this.label,
   });
+
+  /// The reference as a reader should SEE it.
+  ///
+  /// [label] is canonical English because `concordance.json` is keyed in
+  /// English, and it stays that way — navigation and sorting both read
+  /// it. Anything that puts a reference on SCREEN or on the CLIPBOARD
+  /// goes through here instead, so the book name matches the [version]
+  /// being read rather than the corpus the index happens to be built on.
+  ///
+  /// [short] gives the abbreviated form (民 32:18) for narrow columns.
+  /// That is the same call BibleWorks makes for its own reference
+  /// columns (help topic bwh42): the formal name does not fit, and a
+  /// truncated formal name is worse than an abbreviation.
+  String display(String locale, String? version, {bool short = false}) {
+    final book = short
+        ? shortBookName(englishBook, locale, version)
+        : localeAwareBookName(englishBook, locale, version);
+    return '$book $chapter:$verse';
+  }
 
   static ConcordanceRef? tryParse(String label) {
     final m = RegExp(r'^(.+?)\s+(\d+):(\d+)$').firstMatch(label);

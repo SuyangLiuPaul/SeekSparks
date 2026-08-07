@@ -67,6 +67,7 @@ PhraseMatchPane _pane(
       verses: verses,
       baseIndex: 0,
       locale: 'en',
+      version: 'kjv',
       scope: scope,
       scopeLabel: scopeLabel,
       onOpenVerse: onOpenVerse,
@@ -242,6 +243,7 @@ void main() {
         verses: verses,
         baseIndex: 0,
         locale: 'en',
+        version: 'kjv',
       )));
       await tester.pumpAndSettle();
       expect(find.textContaining('shorter than the phrase length'),

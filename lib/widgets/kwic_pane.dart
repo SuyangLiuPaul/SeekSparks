@@ -117,8 +117,21 @@ class _KwicPaneState extends State<KwicPane> {
     }
   }
 
+  /// The reference for one line, in the reading version's language.
+  ///
+  /// `KwicLine.reference` is the concordance's canonical English string;
+  /// it is data, not display. [short] for the 84px column, formal for
+  /// the clipboard — a pasted reference leaves the app and has to stand
+  /// on its own.
+  String _ref(KwicLine l, {required bool short}) =>
+      ConcordanceRef.tryParse(l.reference)
+          ?.display(widget.locale, widget.version, short: short) ??
+      l.reference;
+
   void _copyAll() {
-    final text = sortKwic(_lines, _sort).map((l) => l.plain).join('\n');
+    final text = sortKwic(_lines, _sort)
+        .map((l) => l.plainWith(_ref(l, short: false)))
+        .join('\n');
     Clipboard.setData(ClipboardData(text: text));
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(uiStrings['kwicCopied']?[widget.locale] ?? 'Copied'),
@@ -277,7 +290,7 @@ class _KwicPaneState extends State<KwicPane> {
             SizedBox(
               width: 84,
               child: Text(
-                l.reference,
+                _ref(l, short: true),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(

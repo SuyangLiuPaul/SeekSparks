@@ -30,6 +30,7 @@ import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/original_word.dart';
 import 'package:seeksparks/services/word_forms_service.dart';
 import 'package:seeksparks/utils/morphology.dart' show describeMorphology;
+import 'package:seeksparks/utils/short_book_name.dart' show shortBookName;
 import 'package:seeksparks/utils/word_forms.dart';
 
 class WordFormsSection extends StatefulWidget {
@@ -37,11 +38,18 @@ class WordFormsSection extends StatefulWidget {
     super.key,
     required this.word,
     required this.locale,
+    required this.version,
     this.onOpenRef,
   });
 
   final OriginalWord word;
   final String locale;
+
+  /// The reading version — decides the language of the example
+  /// references below each form. `FormRef.englishBook` comes from the
+  /// original-language corpus, which is keyed in English whatever the
+  /// reader has open.
+  final String version;
 
   /// Navigate to one of the example occurrences. When null the refs are
   /// still printed — they locate the form — but are not interactive.
@@ -348,7 +356,8 @@ class _WordFormsSectionState extends State<WordFormsSection> {
                           : () => widget.onOpenRef!(
                               r.englishBook, r.chapter, r.verse),
                       child: Text(
-                        '${r.englishBook} ${r.chapter}:${r.verse}',
+                        '${shortBookName(r.englishBook, widget.locale, widget.version)} '
+                        '${r.chapter}:${r.verse}',
                         style: TextStyle(
                           fontSize: t.chrome - 1,
                           color: widget.onOpenRef == null
