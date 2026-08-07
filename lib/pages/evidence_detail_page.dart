@@ -597,14 +597,24 @@ class _Meta extends StatelessWidget {
         children: [
           Icon(icon, size: 14, color: scheme.onSurfaceVariant),
           const SizedBox(width: 6),
-          Text(
-            label,
-            style: TextStyle(
-              fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-              fontSize:
-                  (settings.fontSize - 3).clamp(11.0, 15.0).toDouble(),
-              color: scheme.onSurfaceVariant,
-              fontWeight: FontWeight.w500,
+          // 2026-08-08 (#279): unbounded, this ran off the right edge
+          // at 320px — the location chip is a museum's full postal
+          // name. It always did; a soft tinted pill just faded off
+          // screen, where a hairline box that crosses the edge reads
+          // as broken. Making the chrome honest made the layout bug
+          // visible, so it gets fixed in the same pass.
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
+                fontSize:
+                    (settings.fontSize - 3).clamp(11.0, 15.0).toDouble(),
+                color: scheme.onSurfaceVariant,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
         ],

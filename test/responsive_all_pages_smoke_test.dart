@@ -7,6 +7,8 @@ import 'package:seeksparks/models/verse.dart';
 import 'package:seeksparks/pages/bible_timeline_page.dart';
 import 'package:seeksparks/pages/bible_trivia_page.dart';
 import 'package:seeksparks/pages/books_page.dart';
+import 'package:seeksparks/models/bible_evidence.dart';
+import 'package:seeksparks/pages/evidence_detail_page.dart';
 import 'package:seeksparks/pages/evidence_page.dart';
 import 'package:seeksparks/pages/family_tree_page.dart';
 import 'package:seeksparks/pages/feedback_page.dart';
@@ -29,6 +31,29 @@ import 'package:seeksparks/widgets/onboarding_dialog.dart';
 /// RenderFlex "OVERFLOWED BY N PIXELS" surfaces as a test exception,
 /// so any responsive regression on these pages fails CI instead of
 /// shipping.
+/// The detail page's metadata chips sit in a `Wrap`, so one chip wider
+/// than the viewport overflows rather than wrapping. Real entries carry
+/// a museum's full postal name in `location` — long enough to do it at
+/// 320px — so the fixture uses one, and `images` stays empty to keep
+/// `Image.network` out of the test.
+const BibleEvidence _wideEvidence = BibleEvidence(
+  id: 'test-wide',
+  category: 'Manuscripts',
+  bibleBooks: <String>['Isaiah'],
+  timeline: '3rd Century BCE - 1st Century CE',
+  discoveryDate: '1946-1956',
+  location: 'Shrine of the Book, Israel Museum, Jerusalem',
+  scriptureReference: 'Isaiah 40:8',
+  images: <String>[],
+  academicSources: <String>['Tov, Textual Criticism of the Hebrew Bible'],
+  confidenceLevel: 'Definitive',
+  icon: 'x',
+  title: <String, String>{'en': 'Dead Sea Scrolls'},
+  summary: <String, String>{'en': 'summary'},
+  description: <String, String>{'en': 'description'},
+  scripturalCorrelation: <String, String>{'en': 'correlation'},
+);
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -48,6 +73,8 @@ void main() {
     'FamilyTreePage': () => const FamilyTreePage(),
     'BibleTriviaPage': () => const BibleTriviaPage(),
     'EvidencePage': () => const EvidencePage(),
+    'EvidenceDetailPage': () =>
+        const EvidenceDetailPage(evidence: _wideEvidence),
     'SermonsPage': () => const SermonsPage(),
     'FeedbackPage': () => const FeedbackPage(),
     'HighlightsPage': () => const HighlightsPage(),
