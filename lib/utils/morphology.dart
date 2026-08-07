@@ -759,6 +759,20 @@ List<String> morphSlotOptions(
 /// spec: MorphGNT, for one, leaves person blank on personal pronouns even
 /// though the slot exists, so offering it would be offering a filter that
 /// can never match.
+/// The parse of ONE morpheme of an already-parsed word.
+///
+/// A search result has to say which part of `HC/Vqv2mp/Sp3fs` answered
+/// the query; printing the whole word's parse and letting the reader
+/// guess is how "feminine verb" comes to look like a wrong hit when it
+/// is a right one.
+String? describeMorphologyAt(MorphWord word, int index, String locale) {
+  if (index < 0 || index >= word.morphemes.length) return null;
+  final text = word.scheme == MorphScheme.greek
+      ? _greek(word, locale)
+      : _semiticMorpheme(word, word.morphemes[index], locale);
+  return text.isEmpty ? null : text;
+}
+
 /// Every part of speech a scheme codes, in the order its table lists it.
 List<String> morphPartsOfSpeech(MorphScheme scheme) =>
     (scheme == MorphScheme.greek ? _gkPos : _hebPos)

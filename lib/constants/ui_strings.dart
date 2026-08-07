@@ -7007,4 +7007,35 @@ const uiStrings = {
     'zh-Hant': '此提示只會出現這一次。',
     'en': 'This only appears once.',
   },
+
+  // Morphological search (bwh17 / the Graphical Search Engine).
+  'analysisTabMorphology': {
+    'zh-Hans': '词形',
+    'zh-Hant': '詞形',
+    'en': 'Forms',
+  },
+  'morphSeed': {'zh-Hans': '此词词形', 'zh-Hant': '此詞詞形', 'en': 'This word'},
+  'morphClear': {'zh-Hans': '清除', 'zh-Hant': '清除', 'en': 'Clear'},
+  'morphAnyForm': {
+    'zh-Hans': '未限定词形 — 选择下方任一条件',
+    'zh-Hant': '未限定詞形 — 選擇下方任一條件',
+    'en': 'Any form — pick a feature below',
+  },
+  'morphScopeOt': {'zh-Hans': '旧约', 'zh-Hant': '舊約', 'en': 'OT'},
+  'morphScopeNt': {'zh-Hans': '新约', 'zh-Hant': '新約', 'en': 'NT'},
+  'morphNoHits': {
+    'zh-Hans': '此范围内没有这种词形的词。',
+    'zh-Hant': '此範圍內沒有這種詞形的詞。',
+    'en': 'No word in this range has that form.',
+  },
+  'morphMore': {
+    'zh-Hans': '仅显示前 {n} 个。',
+    'zh-Hant': '僅顯示前 {n} 個。',
+    'en': 'Showing the first {n}.',
+  },
+  'morphNoOriginals': {
+    'zh-Hans': '本卷没有原文标注，无法按词形搜索。',
+    'zh-Hant': '本卷沒有原文標註，無法按詞形搜尋。',
+    'en': 'This book has no tagged original text to search.',
+  },
 };

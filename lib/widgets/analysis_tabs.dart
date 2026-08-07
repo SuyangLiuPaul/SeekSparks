@@ -44,6 +44,11 @@ enum AnalysisTab {
   verseLists,
   phrases,
   vocabulary,
+
+  /// Appended, not inserted: the selected tab is persisted by INDEX
+  /// under `workbench.analysisTab`, so reordering this enum would move
+  /// every reader who had a tab open to a different one.
+  morphology,
 }
 
 /// The tab strip itself. Deliberately a plain segmented row rather than
@@ -82,6 +87,8 @@ class AnalysisTabStrip extends StatelessWidget {
           'analysisTabPhrases', 'Phrases'),
       (AnalysisTab.vocabulary, Icons.style_outlined, 'analysisTabVocabulary',
           'Vocab'),
+      (AnalysisTab.morphology, Icons.account_tree_outlined,
+          'analysisTabMorphology', 'Forms'),
     ];
     return Container(
       padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),

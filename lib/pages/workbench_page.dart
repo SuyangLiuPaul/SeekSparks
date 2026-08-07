@@ -49,6 +49,7 @@ import 'package:seeksparks/widgets/kwic_pane.dart';
 import 'package:seeksparks/widgets/related_verses_pane.dart';
 import 'package:seeksparks/widgets/phrase_match_pane.dart';
 import 'package:seeksparks/widgets/vocabulary_pane.dart';
+import 'package:seeksparks/widgets/morph_search_pane.dart';
 import 'package:seeksparks/widgets/language_switcher_button.dart';
 import 'package:seeksparks/widgets/browse_nav_strip.dart';
 import 'package:seeksparks/widgets/browse_window.dart';
@@ -1295,6 +1296,29 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
           onOpenVerse: (chapter, verse) => _onCrossRefTap(
             BibleReference(
               englishBook: book,
+              chapter: chapter,
+              verseStart: verse,
+              verseEnd: verse,
+            ),
+          ),
+        );
+
+      case AnalysisTab.morphology:
+        final v = _analysisVerse(mp, verses);
+        if (v == null) return _analysisHint(context, locale);
+        final book = bookNameToEnglish[v.book] ?? v.book;
+        // Keyed on the BOOK rather than the verse: the query is the
+        // reader's work, and rebuilding the pane every time the pointer
+        // crosses a word would throw it away.
+        return MorphSearchPane(
+          key: ValueKey<String>('morphology-$book'),
+          englishBook: book,
+          chapter: v.chapter,
+          locale: locale,
+          seedCode: _analysisWord?.word?.morph,
+          onOpenRef: (openBook, chapter, verse) => _onCrossRefTap(
+            BibleReference(
+              englishBook: openBook,
               chapter: chapter,
               verseStart: verse,
               verseEnd: verse,
