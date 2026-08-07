@@ -14,12 +14,18 @@
 /// is supposed to supply. A reader in Chinese gets nothing from it, since
 /// the maps database is indexed in English.
 ///
+/// bwh33 also ships "66 maps depicting the sites mentioned in each book
+/// of the Bible" — so the question *is* answered, once per book, by a
+/// static file the reader opens by hand from File | Open in a separate
+/// module. A book is not a passage; Genesis' map is a map of the ancient
+/// world.
+///
 /// So the gap is not cartography, which BibleWorks does far better than
-/// this app ever will. The gap is that nothing anywhere answers **"what
-/// places does the passage in front of me name?"** That question needs no
-/// overlays and no satellite imagery — it needs the gazetteer turned
-/// inside out, from place→verses into verse→places. This file is that
-/// inversion.
+/// this app ever will. The gap is that nothing follows the verse the
+/// reader is actually on and answers **"what places does the passage in
+/// front of me name?"** That question needs no overlays and no satellite
+/// imagery — it needs the gazetteer turned inside out, from place→verses
+/// into verse→places. This file is that inversion.
 ///
 /// **The data needed repair before it could be indexed.** See
 /// `utils/place_geo.dart`: a global case-replace of the substring `eph`

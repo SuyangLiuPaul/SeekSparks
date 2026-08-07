@@ -377,10 +377,11 @@ BaseMap parseBaseMap(Map<String, dynamic> doc) => BaseMap(
 /// "about seven weeks' walk in the wrong direction" means a great deal.
 ///
 /// 32 km/day is the conventional figure for a party travelling on foot
-/// over the terrain of the Levant, and it is what BibleWorks' own
-/// defaults sit around. Returned as a range would be more honest still,
-/// but a single rounded figure captioned "about" is what fits beside a
-/// scale bar, and the caption does the hedging.
+/// over the terrain of the Levant. BibleWorks computes a min/max pair
+/// instead — distance ÷ speed ÷ hours-per-day at both ends of two
+/// reader-set ranges — which is more honest and needs a settings window
+/// this does not have. A single rounded figure captioned "about" is
+/// what fits beside a scale bar, and the caption does the hedging.
 int daysOnFootFor(double km) => (km / 32.0).ceil().clamp(1, 100000);
 
 /// The largest round number of kilometres that fits in [targetPx].
