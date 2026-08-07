@@ -149,6 +149,21 @@ class WbColors extends ThemeExtension<WbColors> {
   /// toggle, a focused row — the way the icon uses it on the page.
   Color get accent => const Color(0xFFC9A227);
 
+  /// Is the palette in force a dark one?
+  ///
+  /// For the few places that legitimately need a HUE rather than a role
+  /// — a Hebrew-vs-Greek tag, a script badge — because one fixed hue
+  /// cannot be legible on both #FFFFFF and #101A2B. Everything else
+  /// should name a field above and never ask this.
+  ///
+  /// Derived from [paneBg] rather than from `Theme.of(context)
+  /// .brightness`, which is the bug it exists to prevent: under the
+  /// paper palette the ThemeMode may still be dark while every surface
+  /// on screen is cream, so brightness-keyed hues come out inverted.
+  /// Ask the palette what colour it is, not the theme.
+  bool get isDark =>
+      ThemeData.estimateBrightnessForColor(paneBg) == Brightness.dark;
+
   // 2026-08-06: the greys were neutral-to-warm and the link blue was
   // picked before the icon existed. Both now carry a slight bias toward
   // the mark's ink (#27395A), so the workspace and the icon read as one
@@ -580,6 +595,190 @@ ThemeData workbenchTheme(ThemeData parent, {bool paper = false}) {
         borderSide: BorderSide(color: wb.link, width: 1.4),
       ),
       hintStyle: body(WbMetrics.text, c: wb.mutedText),
+    ),
+    // ---- Component chrome (2026-08-08, task #279) ------------------
+    //
+    // Everything below is the SAME rule as `cardTheme` above — square
+    // corners, a 1px hairline, no elevation — applied to the Material
+    // components the app actually uses. It is here rather than in the
+    // pages because of how this function is built: `base` is a FRESH
+    // `ThemeData.light/dark`, so the caller's per-widget themes are
+    // discarded, and only three components (card, input, tooltip) were
+    // ever overridden. Every other component therefore rendered on the
+    // stock Material 3 defaults, which are STADIUM-shaped — that is
+    // where the app's pills come from, not from the pages.
+    //
+    // #279 measured "67 rounded/elevated sites across 13 pages". A
+    // large share of them are not sites at all: no page ever asked for
+    // a pill, it asked for a `FilterChip`. Fixing the shape here is one
+    // change instead of sixty-seven, and it cannot drift.
+    //
+    // Deliberately NOT flattened, because these are affordances rather
+    // than chrome: Switch (a switch that is not a pill stops reading as
+    // a switch), Slider, and the M3 Checkbox's 2px radius.
+    //
+    // Padding and heights are left at the Material defaults throughout.
+    // The spec is about corners, borders, shadows and palette — the
+    // brief is explicit that DENSITY is not what has to match, and a
+    // touch target shrunk to workbench scale would be a different and
+    // much riskier change.
+
+    // Pills, all four families. M3 gives every button a StadiumBorder.
+    filledButtonTheme: FilledButtonThemeData(
+      style: FilledButton.styleFrom(
+        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+        elevation: 0,
+      ),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+        side: BorderSide(color: wb.border),
+        foregroundColor: wb.text,
+      ),
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+        elevation: 0,
+        backgroundColor: wb.paneBg,
+        foregroundColor: wb.text,
+        side: BorderSide(color: wb.border),
+      ),
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(
+        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+        foregroundColor: wb.link,
+      ),
+    ),
+    segmentedButtonTheme: SegmentedButtonThemeData(
+      style: SegmentedButton.styleFrom(
+        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+        side: BorderSide(color: wb.border),
+        selectedBackgroundColor: wb.selectionBg,
+        selectedForegroundColor: wb.text,
+        foregroundColor: wb.mutedText,
+      ),
+    ),
+    toggleButtonsTheme: ToggleButtonsThemeData(
+      borderRadius: BorderRadius.zero,
+      borderColor: wb.border,
+      selectedBorderColor: wb.link,
+      fillColor: wb.selectionBg,
+      selectedColor: wb.text,
+      color: wb.mutedText,
+    ),
+    // The checkmark stays. Selected-ness is carried by fill AND by the
+    // tick, and dropping the tick would leave a colour-only cue — the
+    // same mistake `wordMarkUnderline` exists to avoid.
+    chipTheme: ChipThemeData(
+      backgroundColor: wb.paneBg,
+      selectedColor: wb.selectionBg,
+      checkmarkColor: wb.text,
+      side: BorderSide(color: wb.border),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+      labelStyle: body(WbMetrics.text),
+      secondaryLabelStyle: body(WbMetrics.text, c: wb.mutedText),
+      elevation: 0,
+      pressElevation: 0,
+      showCheckmark: true,
+    ),
+    // Sheets and dialogs keep a hairline so a flat surface still has an
+    // edge against the pane behind it. A call site that passes its own
+    // `shape:` still wins — those are converted one page at a time.
+    bottomSheetTheme: BottomSheetThemeData(
+      backgroundColor: wb.paneBg,
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      modalElevation: 0,
+      showDragHandle: false,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.zero,
+        side: BorderSide(color: wb.border),
+      ),
+    ),
+    dialogTheme: DialogThemeData(
+      backgroundColor: wb.paneBg,
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.zero,
+        side: BorderSide(color: wb.border),
+      ),
+    ),
+    popupMenuTheme: PopupMenuThemeData(
+      color: wb.paneBg,
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.zero,
+        side: BorderSide(color: wb.border),
+      ),
+      textStyle: body(WbMetrics.text),
+    ),
+    menuTheme: MenuThemeData(
+      style: MenuStyle(
+        backgroundColor: WidgetStatePropertyAll(wb.paneBg),
+        surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
+        elevation: const WidgetStatePropertyAll(0),
+        shape: WidgetStatePropertyAll(
+          RoundedRectangleBorder(
+            borderRadius: BorderRadius.zero,
+            side: BorderSide(color: wb.border),
+          ),
+        ),
+      ),
+    ),
+    snackBarTheme: const SnackBarThemeData(
+      // `behavior` is left alone: floating vs fixed is layout, and a
+      // fixed SnackBar ignores `shape` anyway.
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+      elevation: 0,
+    ),
+    // The page's own title strip. Flat, neutral, hairline underneath —
+    // the full-page equivalent of `WbPaneTitle`. Previously this fell
+    // through to the M3 default, which tints and elevates on scroll.
+    appBarTheme: AppBarTheme(
+      backgroundColor: wb.chromeBg,
+      foregroundColor: wb.text,
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      shape: Border(bottom: BorderSide(color: wb.border)),
+      iconTheme: IconThemeData(color: wb.text, size: 20),
+      actionsIconTheme: IconThemeData(color: wb.mutedText, size: 20),
+    ),
+    tabBarTheme: TabBarThemeData(
+      labelColor: wb.text,
+      unselectedLabelColor: wb.mutedText,
+      indicatorColor: wb.link,
+      dividerColor: wb.border,
+      overlayColor: WidgetStatePropertyAll(wb.hoverBg),
+    ),
+    listTileTheme: ListTileThemeData(
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+      selectedTileColor: wb.selectionBg,
+      selectedColor: wb.text,
+      iconColor: wb.mutedText,
+      textColor: wb.text,
+    ),
+    expansionTileTheme: ExpansionTileThemeData(
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+      collapsedShape:
+          const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+      iconColor: wb.mutedText,
+      collapsedIconColor: wb.mutedText,
+      textColor: wb.text,
+      collapsedTextColor: wb.text,
+    ),
+    // M3 gave the linear indicator rounded caps and a gap; a progress
+    // bar in this window is a measurement, so it gets square ends.
+    progressIndicatorTheme: ProgressIndicatorThemeData(
+      color: wb.link,
+      linearTrackColor: wb.paneAltBg,
+      circularTrackColor: wb.paneAltBg,
+      borderRadius: BorderRadius.zero,
     ),
     // Kill the ripple. A desktop tool highlights on hover, it doesn't
     // splash on click.

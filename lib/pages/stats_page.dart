@@ -5,6 +5,8 @@ import 'package:seeksparks/widgets/originals_sheet.dart';
 import 'package:seeksparks/widgets/word_distribution_table.dart';
 
 import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/constants/workbench_theme.dart';
+import 'package:seeksparks/widgets/wb_surfaces.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/verse.dart';
 import 'package:seeksparks/providers/main_provider.dart';
@@ -12,7 +14,6 @@ import 'package:seeksparks/services/daily_verse_service.dart';
 import 'package:seeksparks/services/fetch_books.dart' show standardBookOrder;
 import 'package:seeksparks/services/originals_stats_service.dart';
 import 'package:seeksparks/utils/clipboard_helper.dart';
-import 'package:seeksparks/utils/theme_color_helpers.dart';
 import 'package:seeksparks/services/concordance_service.dart' show ConcordanceRef;
 import 'package:seeksparks/utils/jump_to_reference.dart' show resolveAndPrepareJump;
 import 'package:seeksparks/utils/reference_parser.dart'
@@ -183,7 +184,6 @@ class _OriginalsOverviewTabState extends State<_OriginalsOverviewTab>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    final scheme = Theme.of(context).colorScheme;
     final locale = widget.locale;
     final settings = widget.settings;
     return FutureBuilder<OriginalsAggregateStats>(
@@ -203,7 +203,7 @@ class _OriginalsOverviewTabState extends State<_OriginalsOverviewTab>
                 child: Text(
                   uiStrings['statsOriginalsEmpty']?[locale] ??
                       'Original-language data not loaded.',
-                  style: TextStyle(color: scheme.onSurfaceVariant),
+                  style: TextStyle(color: WbColors.of(context).mutedText),
                 ),
               );
             }
@@ -233,7 +233,6 @@ class _OriginalsOverviewTabState extends State<_OriginalsOverviewTab>
                         view: view,
                         locale: locale,
                         settings: settings,
-                        scheme: scheme,
                         availableBooks: stats.bookStats
                             .map((b) => b.englishBook)
                             .toSet(),
@@ -253,7 +252,6 @@ class _OriginalsOverviewTabState extends State<_OriginalsOverviewTab>
     required _OverviewView view,
     required String locale,
     required AppSettings settings,
-    required ColorScheme scheme,
     required Set<String> availableBooks,
   }) {
     return LayoutBuilder(
@@ -269,7 +267,6 @@ class _OriginalsOverviewTabState extends State<_OriginalsOverviewTab>
             _OverviewFilterBar(
               locale: locale,
               settings: settings,
-              scheme: scheme,
               bookFilter: _bookFilter,
               hideStopwords: _hideStopwords,
               availableBooks: availableBooks,
@@ -296,7 +293,6 @@ class _OriginalsOverviewTabState extends State<_OriginalsOverviewTab>
               view: view,
               locale: locale,
               settings: settings,
-              scheme: scheme,
             ),
             const SizedBox(height: 20),
             if (wide)
@@ -312,10 +308,8 @@ class _OriginalsOverviewTabState extends State<_OriginalsOverviewTab>
                               .take(25)
                               .toList(),
                           isHebrew: true,
-                          scheme: scheme,
                           settings: settings,
                           locale: locale,
-                          countContext: view.bookFilter,
                         ),
                       ),
                     if (view.showHebrew && view.showGreek)
@@ -328,10 +322,8 @@ class _OriginalsOverviewTabState extends State<_OriginalsOverviewTab>
                               .take(25)
                               .toList(),
                           isHebrew: false,
-                          scheme: scheme,
                           settings: settings,
                           locale: locale,
-                          countContext: view.bookFilter,
                         ),
                       ),
                   ],
@@ -345,10 +337,8 @@ class _OriginalsOverviewTabState extends State<_OriginalsOverviewTab>
                       .take(25)
                       .toList(),
                   isHebrew: true,
-                  scheme: scheme,
                   settings: settings,
                   locale: locale,
-                  countContext: view.bookFilter,
                 ),
               if (view.showHebrew && view.showGreek)
                 const SizedBox(height: 12),
@@ -359,10 +349,8 @@ class _OriginalsOverviewTabState extends State<_OriginalsOverviewTab>
                       .take(25)
                       .toList(),
                   isHebrew: false,
-                  scheme: scheme,
                   settings: settings,
                   locale: locale,
-                  countContext: view.bookFilter,
                 ),
             ],
           ],
@@ -385,69 +373,6 @@ class _OriginalsOverviewTabState extends State<_OriginalsOverviewTab>
     return '$base · ${localeAwareBookName(view.bookFilter!, locale)}';
   }
 
-  // ignore: unused_element
-  List<_StatTile> _statTilesFor(
-      _OverviewView view, String locale, ColorScheme scheme) {
-    final tiles = <_StatTile>[];
-    if (view.showHebrew) {
-      tiles.add(_StatTile(
-        label: uiStrings['statsOriginalsHebrewTotal']?[locale] ??
-            'Hebrew words',
-        value: _humanNum(view.hebrewWords),
-        scheme: scheme,
-      ));
-      tiles.add(_StatTile(
-        label: uiStrings['statsOriginalsHebrewUnique']?[locale] ??
-            'Hebrew lemmas',
-        value: _humanNum(view.hebrewUnique),
-        scheme: scheme,
-      ));
-    }
-    if (view.showGreek) {
-      tiles.add(_StatTile(
-        label: uiStrings['statsOriginalsGreekTotal']?[locale] ??
-            'Greek words',
-        value: _humanNum(view.greekWords),
-        scheme: scheme,
-      ));
-      tiles.add(_StatTile(
-        label: uiStrings['statsOriginalsGreekUnique']?[locale] ??
-            'Greek lemmas',
-        value: _humanNum(view.greekUnique),
-        scheme: scheme,
-      ));
-    }
-    if (view.bookFilter == null) {
-      tiles.add(_StatTile(
-        label: uiStrings['statsOriginalsHapax']?[locale] ??
-            'Hapax legomena',
-        value: '${view.hebrewHapax} + ${view.greekHapax}',
-        scheme: scheme,
-      ));
-      tiles.add(_StatTile(
-        label: uiStrings['statsOriginalsBooksCount']?[locale] ??
-            'Books covered',
-        value: '${view.booksCovered}',
-        scheme: scheme,
-      ));
-    } else {
-      // Per-book tile: total words across both languages (only one
-      // will be non-zero for any single OT or NT book).
-      tiles.add(_StatTile(
-        label: uiStrings['statsOriginalsBookTotalWords']?[locale] ??
-            'Total words in book',
-        value: _humanNum(view.hebrewWords + view.greekWords),
-        scheme: scheme,
-      ));
-      tiles.add(_StatTile(
-        label: uiStrings['statsOriginalsBookUniqueLemmas']?[locale] ??
-            'Unique lemmas in book',
-        value: _humanNum(view.hebrewUnique + view.greekUnique),
-        scheme: scheme,
-      ));
-    }
-    return tiles;
-  }
 
   /// Compute the view model for the current filter setting.
   /// When `_bookFilter == 'all'` returns the whole-Bible figures
@@ -605,7 +530,6 @@ class _BookHit {
 class _OverviewFilterBar extends StatelessWidget {
   final String locale;
   final AppSettings settings;
-  final ColorScheme scheme;
   final String bookFilter;
   final bool hideStopwords;
   final Set<String> availableBooks;
@@ -615,7 +539,6 @@ class _OverviewFilterBar extends StatelessWidget {
   const _OverviewFilterBar({
     required this.locale,
     required this.settings,
-    required this.scheme,
     required this.bookFilter,
     required this.hideStopwords,
     required this.availableBooks,
@@ -625,6 +548,8 @@ class _OverviewFilterBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final wb = WbColors.of(context);
+    final t = WbType.of(context);
     final filterLabel =
         uiStrings['sermonFilterByPassage']?[locale] ?? 'Filter';
     return Column(
@@ -642,8 +567,9 @@ class _OverviewFilterBar extends StatelessWidget {
                         .replaceAll('{book}',
                             localeAwareBookName(bookFilter, locale)),
                 style: TextStyle(
-                  fontSize: 13,
-                  color: scheme.onSurface.withValues(alpha: 0.65),
+                  fontSize: t.text,
+                  height: t.lineHeight,
+                  color: wb.mutedText,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -655,13 +581,13 @@ class _OverviewFilterBar extends StatelessWidget {
                 hideStopwords
                     ? Icons.filter_alt
                     : Icons.filter_alt_off,
-                size: 16,
+                size: t.text + 4,
               ),
               label: Text(
                 uiStrings['statsOriginalsHideStopwordsTitle']
                         ?[locale] ??
                     'Hide common particles',
-                style: const TextStyle(fontSize: 12),
+                style: TextStyle(fontSize: t.text),
               ),
               selected: hideStopwords,
               onSelected: onStopwordChanged,
@@ -673,17 +599,15 @@ class _OverviewFilterBar extends StatelessWidget {
                 bookFilter == 'all'
                     ? Icons.filter_list
                     : Icons.filter_list_alt,
-                size: 18,
+                size: t.text + 5,
               ),
-              label: Text(filterLabel,
-                  style: const TextStyle(fontSize: 13)),
+              label: Text(filterLabel, style: TextStyle(fontSize: t.text)),
               style: OutlinedButton.styleFrom(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12),
-                backgroundColor: bookFilter == 'all'
-                    ? null
-                    : scheme.primaryContainer
-                        .withValues(alpha: 0.4),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                // "A filter is active" is a step in VALUE, not a tint —
+                // the same rule WbPanel.alt encodes.
+                backgroundColor:
+                    bookFilter == 'all' ? null : wb.selectionBg,
               ),
             ),
           ],
@@ -694,12 +618,10 @@ class _OverviewFilterBar extends StatelessWidget {
             alignment: Alignment.centerLeft,
             child: InputChip(
               avatar: Icon(Icons.bookmark,
-                  size: 16, color: scheme.primary),
-              label: Text(
-                  localeAwareBookName(bookFilter, locale)),
+                  size: t.text + 4, color: wb.mutedText),
+              label: Text(localeAwareBookName(bookFilter, locale)),
               onDeleted: () => onBookChanged('all'),
-              backgroundColor:
-                  scheme.primaryContainer.withValues(alpha: 0.5),
+              backgroundColor: wb.selectionBg,
             ),
           ),
         ],
@@ -711,11 +633,6 @@ class _OverviewFilterBar extends StatelessWidget {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius:
-            BorderRadius.vertical(top: Radius.circular(16)),
-      ),
       builder: (sheetCtx) {
         return _OverviewBookFilterSheet(
           locale: locale,
@@ -771,7 +688,6 @@ class _OverviewBookFilterSheetState
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final locale = widget.locale;
     return SafeArea(
       child: Padding(
@@ -783,7 +699,7 @@ class _OverviewBookFilterSheetState
             Row(
               children: [
                 Icon(Icons.bookmark,
-                    size: 18, color: scheme.primary),
+                    size: 18, color: WbColors.of(context).mutedText),
                 const SizedBox(width: 8),
                 Text(
                   uiStrings['sermonFilterByPassage']?[locale] ??
@@ -910,11 +826,7 @@ class _ExegesisLauncher {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Theme.of(context).colorScheme.surface,
       constraints: const BoxConstraints(maxWidth: 1100),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
       builder: (sheetCtx) => OriginalsSheet(
         verses: matches,
         allVerses: mp.verses,
@@ -940,10 +852,6 @@ class _ExegesisLauncher {
     final picked = await showModalBottomSheet<_PickedRef>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
       builder: (sheetCtx) => _VersePickerSheet(
         mp: mp,
         locale: locale,
@@ -992,11 +900,7 @@ class _ExegesisLauncher {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Theme.of(context).colorScheme.surface,
       constraints: const BoxConstraints(maxWidth: 1100),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
       builder: (sheetCtx) => OriginalsSheet(
         verses: [v],
         allVerses: mp.verses,
@@ -1175,13 +1079,11 @@ class _BibleLanguagesCard extends StatelessWidget {
   final _OverviewView view;
   final String locale;
   final AppSettings settings;
-  final ColorScheme scheme;
 
   const _BibleLanguagesCard({
     required this.view,
     required this.locale,
     required this.settings,
-    required this.scheme,
   });
 
   @override
@@ -1190,46 +1092,13 @@ class _BibleLanguagesCard extends StatelessWidget {
         'Original languages of the Bible';
     final subtitle = uiStrings['languagesCardSubtitle']?[locale] ??
         'The three source languages and where each appears in the canon.';
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-            color: scheme.outlineVariant.withValues(alpha: 0.5)),
-      ),
+    return WbPanel(
+      icon: Icons.translate_rounded,
+      title: title,
+      subtitle: subtitle,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(Icons.translate_rounded,
-                  color: scheme.primary, size: 20),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  title,
-                  style: TextStyle(
-                    fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: scheme.onSurface,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            subtitle,
-            style: TextStyle(
-              fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-              fontSize: 12,
-              height: 1.45,
-              color: scheme.onSurface.withValues(alpha: 0.65),
-            ),
-          ),
-          const SizedBox(height: 14),
           Builder(builder: (rowCtx) {
             return _LanguageRow(
               scriptColor: Colors.indigo,
@@ -1243,7 +1112,6 @@ class _BibleLanguagesCard extends StatelessWidget {
                   view.hebrewUnique > 0 ? view.hebrewUnique : null,
               locale: locale,
               settings: settings,
-              scheme: scheme,
               // Hebrew → standard verse picker. User picks any OT
               // verse and the OriginalsSheet shows word-by-word
               // breakdown (with Gemini AI explain).
@@ -1269,7 +1137,6 @@ class _BibleLanguagesCard extends StatelessWidget {
               uniqueLemmas: null,
               locale: locale,
               settings: settings,
-              scheme: scheme,
               // Aramaic → curated full passage list. Small enough
               // to enumerate fully (5 OT sections + 6 NT phrases).
               onTap: () => _openAramaicSheet(rowCtx, locale, settings),
@@ -1289,7 +1156,6 @@ class _BibleLanguagesCard extends StatelessWidget {
                   view.greekUnique > 0 ? view.greekUnique : null,
               locale: locale,
               settings: settings,
-              scheme: scheme,
               // Greek → same standard verse picker as Hebrew.
               onTap: () => _ExegesisLauncher.pickAndStudy(
                 context: rowCtx,
@@ -1311,10 +1177,6 @@ class _BibleLanguagesCard extends StatelessWidget {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
       builder: (sheetCtx) => _AramaicPassagesSheet(
         locale: locale,
         settings: settings,
@@ -1344,7 +1206,6 @@ class _AramaicPassagesSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     // Split into OT (5 entries) and NT (6 entries) for visual
     // grouping; the canonical order matches the order entries are
     // declared in `_aramaicPassages`.
@@ -1367,7 +1228,7 @@ class _AramaicPassagesSheet extends StatelessWidget {
               Row(
                 children: [
                   Icon(Icons.translate_rounded,
-                      size: 20, color: scheme.primary),
+                      size: 20, color: WbColors.of(context).mutedText),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -1401,7 +1262,7 @@ class _AramaicPassagesSheet extends StatelessWidget {
                     'Tap any entry to open the verse with word-by-word breakdown and Gemini AI explanation.',
                 style: TextStyle(
                   fontSize: 12,
-                  color: scheme.onSurface.withValues(alpha: 0.65),
+                  color: WbColors.of(context).mutedText,
                   height: 1.4,
                 ),
               ),
@@ -1415,7 +1276,6 @@ class _AramaicPassagesSheet extends StatelessWidget {
                         text:
                             uiStrings['aramGroupOt']?[locale] ??
                                 'Old Testament sections',
-                        scheme: scheme,
                       ),
                       const SizedBox(height: 6),
                       for (final e in otEntries) ...[
@@ -1423,7 +1283,6 @@ class _AramaicPassagesSheet extends StatelessWidget {
                           entry: e,
                           locale: locale,
                           settings: settings,
-                          scheme: scheme,
                           onTap: () {
                             Navigator.of(context).maybePop();
                             _ExegesisLauncher.study(
@@ -1443,7 +1302,6 @@ class _AramaicPassagesSheet extends StatelessWidget {
                         text:
                             uiStrings['aramGroupNt']?[locale] ??
                                 'New Testament phrases',
-                        scheme: scheme,
                       ),
                       const SizedBox(height: 6),
                       for (final e in ntEntries) ...[
@@ -1451,7 +1309,6 @@ class _AramaicPassagesSheet extends StatelessWidget {
                           entry: e,
                           locale: locale,
                           settings: settings,
-                          scheme: scheme,
                           onTap: () {
                             Navigator.of(context).maybePop();
                             _ExegesisLauncher.study(
@@ -1565,9 +1422,8 @@ class _AramaicPassagesSheet extends StatelessWidget {
 
 class _SheetGroupHeader extends StatelessWidget {
   final String text;
-  final ColorScheme scheme;
   const _SheetGroupHeader(
-      {required this.text, required this.scheme});
+      {required this.text});
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -1577,7 +1433,7 @@ class _SheetGroupHeader extends StatelessWidget {
         style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w800,
-          color: scheme.primary,
+          color: WbColors.of(context).mutedText,
           letterSpacing: 0.6,
         ),
       ),
@@ -1589,13 +1445,11 @@ class _AramaicEntryTile extends StatelessWidget {
   final _AramaicEntry entry;
   final String locale;
   final AppSettings settings;
-  final ColorScheme scheme;
   final VoidCallback onTap;
   const _AramaicEntryTile({
     required this.entry,
     required this.locale,
     required this.settings,
-    required this.scheme,
     required this.onTap,
   });
 
@@ -1606,84 +1460,90 @@ class _AramaicEntryTile extends StatelessWidget {
     final desc = uiStrings[entry.descKey]?[locale] ?? '';
     final ref =
         '${localeAwareBookName(entry.englishBook, locale)} ${entry.chapter}:${entry.verse}';
-    return Material(
-      color: scheme.surfaceContainerHigh,
-      borderRadius: BorderRadius.circular(10),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(10),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      label,
-                      style: TextStyle(
-                        fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: scheme.onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      ref,
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: scheme.primary,
-                        fontFeatures: const [
-                          FontFeature.tabularFigures()
-                        ],
-                      ),
-                    ),
-                    if (entry.transliteration != null) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        entry.transliteration!,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          // Theme-aware: shade900 in light, shade200
-                          // in dark — keeps the transliteration vivid
-                          // against either scheme without the dark-
-                          // shade-on-dark-bg invisibility problem.
-                          color: paletteFg(context, Colors.teal),
-                        ),
-                      ),
-                    ],
-                    if (desc.isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        desc,
-                        style: TextStyle(
-                          fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                          fontSize: 12,
-                          height: 1.4,
-                          color:
-                              scheme.onSurface.withValues(alpha: 0.75),
-                        ),
-                      ),
-                    ],
-                  ],
+    final wb = WbColors.of(context);
+    final t = WbType.of(context);
+    return WbTile(
+      onTap: onTap,
+      padding: const EdgeInsets.fromLTRB(10, 8, 8, 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
+                    fontSize: t.text + 1,
+                    height: t.lineHeight,
+                    fontWeight: FontWeight.w700,
+                    color: wb.text,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Icon(Icons.chevron_right_rounded,
-                  size: 20,
-                  color:
-                      scheme.onSurface.withValues(alpha: 0.45)),
-            ],
+                Text(
+                  ref,
+                  style: TextStyle(
+                    fontSize: t.chrome,
+                    height: t.lineHeight,
+                    color: wb.link,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+                if (entry.transliteration != null) ...[
+                  const SizedBox(height: 3),
+                  Text(
+                    entry.transliteration!,
+                    style: TextStyle(
+                      fontSize: t.text,
+                      height: t.lineHeight,
+                      fontWeight: FontWeight.w700,
+                      // The workbench already has a colour for "this is
+                      // the original-language form": the same green it
+                      // prints a lexical Strong's number in.
+                      color: wb.strongsLexical,
+                    ),
+                  ),
+                ],
+                if (desc.isNotEmpty) ...[
+                  const SizedBox(height: 3),
+                  Text(
+                    desc,
+                    style: TextStyle(
+                      fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
+                      fontSize: t.text,
+                      height: 1.4,
+                      color: wb.mutedText,
+                    ),
+                  ),
+                ],
+              ],
+            ),
           ),
-        ),
+          const SizedBox(width: 8),
+          Icon(Icons.chevron_right, size: t.text + 5, color: wb.mutedText),
+        ],
       ),
     );
   }
 }
+
+/// The ink for an original-language marker — a script badge, a Strong's
+/// tag — in a hue that stays legible on all three workbench palettes.
+///
+/// This replaces `paletteFg`/`paletteBg` in this file. Those key off
+/// `Theme.of(context).brightness`, which is wrong under 护眼纸质: the
+/// ThemeMode can be dark while every surface on screen is cream, so a
+/// light-mode shade got picked for a dark background and vice versa.
+/// [WbColors.isDark] asks the palette instead.
+Color _scriptHue(WbColors wb, MaterialColor hue) =>
+    wb.isDark ? hue.shade200 : hue.shade800;
+
+/// As [_scriptHue], for the two testament languages, which are named by
+/// a bool rather than by a colour everywhere they are printed.
+Color _originalScriptHue(WbColors wb, {required bool hebrew}) =>
+    _scriptHue(wb, hebrew ? Colors.red : Colors.purple);
 
 /// Row inside _BibleLanguagesCard. Two columns: a script-glyph
 /// badge on the left (אבג / ܐܒܓ / αβγ) so the language is visually
@@ -1703,7 +1563,6 @@ class _LanguageRow extends StatelessWidget {
   final int? uniqueLemmas;
   final String locale;
   final AppSettings settings;
-  final ColorScheme scheme;
   /// Round 56: tappable affordance — Hebrew/Greek opens the verse
   /// picker, Aramaic opens the curated passages sheet. Each path
   /// ultimately lands on the OriginalsSheet which has Gemini AI
@@ -1721,7 +1580,6 @@ class _LanguageRow extends StatelessWidget {
     required this.uniqueLemmas,
     required this.locale,
     required this.settings,
-    required this.scheme,
     this.onTap,
   });
 
@@ -1747,14 +1605,23 @@ class _LanguageRow extends StatelessWidget {
         background: background,
         wordsLabel: wordsLabel,
         lemmasLabel: lemmasLabel);
-    if (onTap == null) return body;
-    // Wrap the row in an InkWell so the whole row is a target —
-    // taps anywhere on the row trigger the language's flow.
+    if (onTap == null) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: body,
+      );
+    }
+    // The whole row is the target — taps anywhere trigger the
+    // language's flow — but it is not boxed, because these rows sit
+    // inside a WbPanel that is already a box and a box in a box is how
+    // the classic design got its stacked cards.
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
+        hoverColor: WbColors.of(context).hoverBg,
+        splashColor: Colors.transparent,
+        highlightColor: Colors.transparent,
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 4),
           child: body,
@@ -1772,31 +1639,30 @@ class _LanguageRow extends StatelessWidget {
     required String? wordsLabel,
     required String? lemmasLabel,
   }) {
+    final wb = WbColors.of(context);
+    final t = WbType.of(context);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          width: 56,
-          height: 56,
+          width: 52,
+          height: 52,
           decoration: BoxDecoration(
-            // Theme-aware language-script badge — paletteBg adapts
-            // to dark mode so the indigo/teal/deepOrange tile stays
-            // visible without being washed out or eye-searing.
-            color: paletteBg(context, scriptColor),
-            borderRadius: BorderRadius.circular(10),
+            color: wb.paneAltBg,
+            border: Border.all(color: wb.border, width: WbMetrics.hairline),
           ),
           alignment: Alignment.center,
           child: Text(
             scriptLabel,
             style: TextStyle(
-              fontSize: 22,
+              fontSize: t.original + 5,
               fontWeight: FontWeight.w700,
-              color: paletteFg(context, scriptColor),
+              color: _scriptHue(wb, scriptColor),
               height: 1.0,
             ),
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 10),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1811,9 +1677,10 @@ class _LanguageRow extends StatelessWidget {
                       name,
                       style: TextStyle(
                         fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                        fontSize: 15,
+                        fontSize: t.text + 2,
+                        height: t.lineHeight,
                         fontWeight: FontWeight.w700,
-                        color: scheme.onSurface,
+                        color: wb.text,
                       ),
                     ),
                   ),
@@ -1823,48 +1690,48 @@ class _LanguageRow extends StatelessWidget {
                       role,
                       style: TextStyle(
                         fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                        fontSize: 11,
-                        color: scheme.primary,
+                        fontSize: t.chrome,
+                        height: t.lineHeight,
+                        color: wb.mutedText,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
                 ],
               ),
-              if (wordsLabel != null || lemmasLabel != null) ...[
-                const SizedBox(height: 2),
+              if (wordsLabel != null || lemmasLabel != null)
                 Text(
                   [wordsLabel, lemmasLabel]
                       .whereType<String>()
                       .join(' · '),
                   style: TextStyle(
                     fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                    fontSize: 11,
-                    color: scheme.onSurface.withValues(alpha: 0.55),
+                    fontSize: t.chrome,
+                    height: t.lineHeight,
+                    color: wb.mutedText,
                     fontFeatures: const [FontFeature.tabularFigures()],
                   ),
                 ),
-              ],
-              const SizedBox(height: 6),
+              const SizedBox(height: 5),
               if (sections.isNotEmpty) ...[
                 Text(
                   sections,
                   style: TextStyle(
                     fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                    fontSize: 12,
+                    fontSize: t.text,
                     height: 1.5,
-                    color: scheme.onSurface.withValues(alpha: 0.85),
+                    color: wb.text,
                   ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 5),
               ],
               Text(
                 background,
                 style: TextStyle(
                   fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                  fontSize: 12,
+                  fontSize: t.text,
                   height: 1.5,
-                  color: scheme.onSurface.withValues(alpha: 0.7),
+                  color: wb.mutedText,
                 ),
               ),
             ],
@@ -1875,206 +1742,92 @@ class _LanguageRow extends StatelessWidget {
   }
 }
 
-// ignore: unused_element
-class _StatGrid extends StatelessWidget {
-  final AppSettings settings;
-  final ColorScheme scheme;
-  final List<_StatTile> tiles;
-  const _StatGrid({
-    required this.settings,
-    required this.scheme,
-    required this.tiles,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (ctx, c) {
-        // Round 56 (continued — wide-screen redesign): scale the
-        // column count with available width so tiles stay roughly
-        // 200-240 px wide on every device class, instead of getting
-        // stretched into wide rectangles on iPad / desktop.
-        //   <  380 → 2 cols  (compact phone)
-        //   < 600  → 3       (phone landscape / small tablet)
-        //   < 900  → 4       (iPad portrait)
-        //   < 1200 → 5       (iPad landscape)
-        //   ≥ 1200 → 6       (desktop / 4K capped at 1200 by parent)
-        final w = c.maxWidth;
-        final int cols = w < 380
-            ? 2
-            : w < 600
-                ? 3
-                : w < 900
-                    ? 4
-                    : w < 1200
-                        ? 5
-                        : 6;
-        return GridView.count(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: cols,
-          childAspectRatio: 1.6,
-          crossAxisSpacing: 8,
-          mainAxisSpacing: 8,
-          children: tiles,
-        );
-      },
-    );
-  }
-}
-
-class _StatTile extends StatelessWidget {
-  final String label;
-  final String value;
-  final ColorScheme scheme;
-  const _StatTile({
-    required this.label,
-    required this.value,
-    required this.scheme,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w800,
-              color: scheme.primary,
-              fontFeatures: const [FontFeature.tabularFigures()],
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 12,
-              color: scheme.onSurface.withValues(alpha: 0.7),
-              height: 1.3,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 
 class _TopLemmasCard extends StatelessWidget {
   final String title;
   final List<OriginalsLemma> lemmas;
   final bool isHebrew;
-  final ColorScheme scheme;
   final AppSettings settings;
   final String locale;
-  /// When set, shown as a small caption under the title — e.g.
-  /// 'Genesis' so the user knows the count column reflects in-book
-  /// frequency, not global. Null = whole-Bible scope.
-  final String? countContext;
   const _TopLemmasCard({
     required this.title,
     required this.lemmas,
     required this.isHebrew,
-    required this.scheme,
     required this.settings,
     required this.locale,
-    this.countContext,
   });
 
   @override
   Widget build(BuildContext context) {
-    // Theme-aware Hebrew (indigo) / Greek (deepPurple) tag colors
-    // so the lemma chips stay vivid in dark mode (shade900 background
-    // with alpha + shade200 text) instead of shade100 bg + shade900
-    // text which becomes near-invisible on the dark scaffold.
-    final palette = isHebrew ? Colors.indigo : Colors.deepPurple;
-    final tagColor = paletteBg(context, palette);
-    final tagFg = paletteFg(context, palette);
-    return Container(
-      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(10),
-      ),
+    final wb = WbColors.of(context);
+    final t = WbType.of(context);
+    // Hebrew and Greek keep separate hues because the distinction is
+    // information, not decoration — but the hue moved to the tag's
+    // TEXT (see [WbTag]), and both are drawn from the original-language
+    // family `kVersionTagColors` already uses for `wtt` / `bgt`.
+    final tagFg = _originalScriptHue(wb, hebrew: isHebrew);
+    return WbPanel(
+      title: title,
+      padding: EdgeInsets.zero,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: scheme.primary,
-            ),
-          ),
-          const SizedBox(height: 8),
-          for (var i = 0; i < lemmas.length; i++) ...[
-            if (i > 0) const Divider(height: 12),
-            Row(
-              children: [
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: tagColor,
-                    borderRadius: BorderRadius.circular(5),
+          // Zebra rather than a rule between every row. A 25-row
+          // frequency table with 24 dividers is a grid; alternating
+          // fill is what the Browse window already uses to let the eye
+          // find a row boundary without adding ink.
+          for (var i = 0; i < lemmas.length; i++)
+            Container(
+              color: i.isOdd ? wb.paneAltBg : null,
+              padding: const EdgeInsets.symmetric(
+                horizontal: WbMetrics.rowPadH,
+                vertical: 3,
+              ),
+              child: Row(
+                children: [
+                  WbTag(text: lemmas[i].strongs, color: tagFg),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      lemmas[i].lemma,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: t.original,
+                        height: t.lineHeight,
+                        fontWeight: FontWeight.w700,
+                        color: wb.text,
+                      ),
+                    ),
                   ),
-                  child: Text(
-                    lemmas[i].strongs,
+                  Expanded(
+                    child: Text(
+                      lemmas[i].glossFor(locale),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: t.fontFamily,
+                        fontSize: t.text,
+                        height: t.lineHeight,
+                        color: wb.mutedText,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    '${lemmas[i].count}',
                     style: TextStyle(
-                      fontSize: 10,
+                      fontSize: t.text,
+                      height: t.lineHeight,
                       fontWeight: FontWeight.w700,
-                      color: tagFg,
+                      color: wb.text,
+                      fontFeatures: const [FontFeature.tabularFigures()],
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    lemmas[i].lemma,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      color: scheme.onSurface,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: Text(
-                    lemmas[i].glossFor(locale),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: scheme.onSurface.withValues(alpha: 0.75),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  '${lemmas[i].count}',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: scheme.primary,
-                    fontFeatures: const [FontFeature.tabularFigures()],
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ],
         ],
       ),
     );
@@ -2116,7 +1869,6 @@ class _OriginalsBooksTabState extends State<_OriginalsBooksTab>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    final scheme = Theme.of(context).colorScheme;
     final locale = widget.locale;
     final settings = widget.settings;
     return FutureBuilder<OriginalsAggregateStats>(
@@ -2131,7 +1883,7 @@ class _OriginalsBooksTabState extends State<_OriginalsBooksTab>
             child: Text(
               uiStrings['statsOriginalsEmpty']?[locale] ??
                   'Original-language data not loaded.',
-              style: TextStyle(color: scheme.onSurfaceVariant),
+              style: TextStyle(color: WbColors.of(context).mutedText),
             ),
           );
         }
@@ -2155,8 +1907,11 @@ class _OriginalsBooksTabState extends State<_OriginalsBooksTab>
                 padding:
                     const EdgeInsets.fromLTRB(12, 8, 12, 24),
                 itemCount: rows.length + 1,
-                separatorBuilder: (_, __) =>
-                    const SizedBox(height: 4),
+                // No gap: 66 books with a 4px gutter between each was
+                // 66 floating cards. Zebra fill (see _BookOriginalsRow)
+                // is what makes a long list scannable — it is what the
+                // Browse window does with verses.
+                separatorBuilder: (_, __) => const SizedBox.shrink(),
                 itemBuilder: (_, i) {
                   if (i == 0) {
                     return Padding(
@@ -2194,7 +1949,7 @@ class _OriginalsBooksTabState extends State<_OriginalsBooksTab>
                   final book = rows[i - 1];
                   return _BookOriginalsRow(
                     book: book,
-                    scheme: scheme,
+                    alt: (i - 1).isOdd,
                     settings: settings,
                     locale: locale,
                   );
@@ -2210,101 +1965,87 @@ class _OriginalsBooksTabState extends State<_OriginalsBooksTab>
 
 class _BookOriginalsRow extends StatelessWidget {
   final OriginalsBookStat book;
-  final ColorScheme scheme;
+
+  /// Zebra: every other row carries [WbColors.paneAltBg].
+  final bool alt;
   final AppSettings settings;
   final String locale;
   const _BookOriginalsRow({
     required this.book,
-    required this.scheme,
+    required this.alt,
     required this.settings,
     required this.locale,
   });
 
   @override
   Widget build(BuildContext context) {
+    final wb = WbColors.of(context);
+    final t = WbType.of(context);
     final localizedName =
         localeAwareBookName(book.englishBook, locale);
-    // Theme-aware OT (indigo) / NT (deepPurple) badge so the chip
-    // stays vivid in dark mode instead of the shade100 + shade900
-    // pair that washes out against the dark scaffold.
-    final palette = book.isOt ? Colors.indigo : Colors.deepPurple;
-    final tagColor = paletteBg(context, palette);
-    final tagFg = paletteFg(context, palette);
+    final tagFg =
+        _scriptHue(wb, book.isOt ? Colors.indigo : Colors.deepPurple);
     final tagLabel = book.isOt
         ? (uiStrings['statsBooksOT']?[locale] ?? 'OT')
         : (uiStrings['statsBooksNT']?[locale] ?? 'NT');
-    return Material(
-      color: scheme.surfaceContainerLow,
-      borderRadius: BorderRadius.circular(10),
-      elevation: 0,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: tagColor,
-                borderRadius: BorderRadius.circular(5),
-              ),
-              child: Text(
-                tagLabel,
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  color: tagFg,
-                ),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    localizedName,
-                    style: TextStyle(
-                      fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                      fontSize: settings.fontSize,
-                      fontWeight: FontWeight.w600,
-                      color: scheme.onSurface,
-                    ),
-                  ),
-                  Text(
-                    book.englishBook,
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: scheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
+    return Container(
+      color: alt ? wb.paneAltBg : null,
+      padding: const EdgeInsets.symmetric(
+          horizontal: WbMetrics.rowPadH, vertical: 4),
+      child: Row(
+        children: [
+          WbTag(text: tagLabel, color: tagFg),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '${_humanNum(book.totalWords)} ${uiStrings['statsOriginalsWordsShort']?[locale] ?? 'words'}',
+                  localizedName,
                   style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: scheme.primary,
-                    fontFeatures: const [FontFeature.tabularFigures()],
+                    fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
+                    fontSize: t.text + 1,
+                    height: t.lineHeight,
+                    fontWeight: FontWeight.w600,
+                    color: wb.text,
                   ),
                 ),
                 Text(
-                  '${book.uniqueLemmas} ${uiStrings['statsOriginalsLemmasShort']?[locale] ?? 'lemmas'}',
+                  book.englishBook,
                   style: TextStyle(
-                    fontSize: 11,
-                    color: scheme.onSurfaceVariant,
-                    fontFeatures: const [FontFeature.tabularFigures()],
+                    fontSize: t.chrome,
+                    height: t.lineHeight,
+                    color: wb.mutedText,
                   ),
                 ),
               ],
             ),
-          ],
-        ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '${_humanNum(book.totalWords)} ${uiStrings['statsOriginalsWordsShort']?[locale] ?? 'words'}',
+                style: TextStyle(
+                  fontSize: t.text,
+                  height: t.lineHeight,
+                  fontWeight: FontWeight.w700,
+                  color: wb.text,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+              Text(
+                '${book.uniqueLemmas} ${uiStrings['statsOriginalsLemmasShort']?[locale] ?? 'lemmas'}',
+                style: TextStyle(
+                  fontSize: t.chrome,
+                  height: t.lineHeight,
+                  color: wb.mutedText,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -2337,7 +2078,6 @@ class _StrongsLookupTabState extends State<_StrongsLookupTab>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    final scheme = Theme.of(context).colorScheme;
     final locale = widget.locale;
     final settings = widget.settings;
     // Round 56 (continued — Lookup tab redesign): the previous
@@ -2361,7 +2101,6 @@ class _StrongsLookupTabState extends State<_StrongsLookupTab>
                 _PassageStudyCard(
                   locale: locale,
                   settings: settings,
-                  scheme: scheme,
                   onPickVerse: () => _openVersePicker(context),
                   onContinueReading: () =>
                       _continueReading(context),
@@ -2370,7 +2109,6 @@ class _StrongsLookupTabState extends State<_StrongsLookupTab>
                 _PopularPassagesCard(
                   locale: locale,
                   settings: settings,
-                  scheme: scheme,
                   onTap: (book, chapter, verse) =>
                       _openOriginalsSheetFor(
                     context,
@@ -2383,7 +2121,6 @@ class _StrongsLookupTabState extends State<_StrongsLookupTab>
                 _ExegesisFeaturesCard(
                   locale: locale,
                   settings: settings,
-                  scheme: scheme,
                 ),
               ],
             ),
@@ -2402,10 +2139,6 @@ class _StrongsLookupTabState extends State<_StrongsLookupTab>
     final picked = await showModalBottomSheet<_PickedRef>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
       builder: (sheetCtx) => _VersePickerSheet(
         mp: mp,
         locale: widget.locale,
@@ -2470,11 +2203,7 @@ class _StrongsLookupTabState extends State<_StrongsLookupTab>
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Theme.of(context).colorScheme.surface,
       constraints: const BoxConstraints(maxWidth: 1100),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
       builder: (sheetCtx) => OriginalsSheet(
         verses: matches,
         allVerses: mp.verses,
@@ -2541,11 +2270,7 @@ class _StrongsLookupTabState extends State<_StrongsLookupTab>
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Theme.of(context).colorScheme.surface,
       constraints: const BoxConstraints(maxWidth: 1100),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
       builder: (sheetCtx) => OriginalsSheet(
         verses: [v],
         allVerses: mp.verses,
@@ -2601,7 +2326,6 @@ class _WordDistributionTabState extends State<_WordDistributionTab>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    final scheme = Theme.of(context).colorScheme;
     final locale = widget.locale;
     final settings = widget.settings;
     return Center(
@@ -2623,7 +2347,7 @@ class _WordDistributionTabState extends State<_WordDistributionTab>
                     style: TextStyle(
                       fontSize: (settings.fontSize - 3)
                           .clamp(11.0, 14.0),
-                      color: scheme.onSurface.withValues(alpha: 0.65),
+                      color: WbColors.of(context).mutedText,
                       fontStyle: FontStyle.italic,
                       height: 1.4,
                     ),
@@ -2633,7 +2357,6 @@ class _WordDistributionTabState extends State<_WordDistributionTab>
                     strongs: _strongs,
                     locale: locale,
                     settings: settings,
-                    scheme: scheme,
                     onChange: () => _openPicker(context),
                   ),
                 ],
@@ -2664,10 +2387,6 @@ class _WordDistributionTabState extends State<_WordDistributionTab>
     final picked = await showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
       builder: (sheetCtx) {
         return _StrongsPickerSheet(
           allLemmas: all ?? const [],
@@ -2692,13 +2411,11 @@ class _CurrentWordBar extends StatefulWidget {
   final String strongs;
   final String locale;
   final AppSettings settings;
-  final ColorScheme scheme;
   final VoidCallback onChange;
   const _CurrentWordBar({
     required this.strongs,
     required this.locale,
     required this.settings,
-    required this.scheme,
     required this.onChange,
   });
 
@@ -2733,117 +2450,101 @@ class _CurrentWordBarState extends State<_CurrentWordBar> {
 
   @override
   Widget build(BuildContext context) {
+    final wb = WbColors.of(context);
+    final t = WbType.of(context);
     final isHebrew = widget.strongs.startsWith('H');
-    // Same theme-aware pattern as other Hebrew/Greek tag chips —
-    // adapts shade100/900 pair to dark mode legible variants.
-    final palette = isHebrew ? Colors.indigo : Colors.deepPurple;
-    final tagColor = paletteBg(context, palette);
-    final tagFg = paletteFg(context, palette);
-    return Material(
-      color: widget.scheme.surfaceContainerLow,
-      borderRadius: BorderRadius.circular(10),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 8, 8, 8),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: tagColor,
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                widget.strongs,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: tagFg,
-                  fontFeatures: const [FontFeature.tabularFigures()],
-                ),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: FutureBuilder<OriginalsLemma?>(
-                future: _future,
-                builder: (ctx, snap) {
-                  final lemma = snap.data;
-                  if (lemma == null) {
-                    return Text(
-                      widget.strongs,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: widget.scheme.onSurface,
-                      ),
-                    );
-                  }
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.baseline,
-                        textBaseline: TextBaseline.alphabetic,
-                        children: [
+    final tagFg = _originalScriptHue(wb, hebrew: isHebrew);
+    return Container(
+      decoration: BoxDecoration(
+        color: wb.paneAltBg,
+        border: Border.all(color: wb.border, width: WbMetrics.hairline),
+      ),
+      padding: const EdgeInsets.fromLTRB(10, 6, 6, 6),
+      child: Row(
+        children: [
+          WbTag(text: widget.strongs, color: tagFg, dense: false),
+          const SizedBox(width: 10),
+          Expanded(
+            child: FutureBuilder<OriginalsLemma?>(
+              future: _future,
+              builder: (ctx, snap) {
+                final lemma = snap.data;
+                if (lemma == null) {
+                  return Text(
+                    widget.strongs,
+                    style: TextStyle(
+                      fontSize: t.original,
+                      height: t.lineHeight,
+                      fontWeight: FontWeight.w700,
+                      color: wb.text,
+                    ),
+                  );
+                }
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            lemma.lemma,
+                            style: TextStyle(
+                              fontFamily: widget.settings.fontFamily,
+                              fontSize: t.original + 2,
+                              height: t.lineHeight,
+                              fontWeight: FontWeight.w700,
+                              color: wb.text,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (lemma.translit.isNotEmpty) ...[
+                          const SizedBox(width: 8),
                           Flexible(
                             child: Text(
-                              lemma.lemma,
+                              lemma.translit,
                               style: TextStyle(
-                                fontFamily: widget.settings.fontFamily,
-                                fontSize: 18,
-                                fontWeight: FontWeight.w700,
-                                color: widget.scheme.onSurface,
+                                fontSize: t.text,
+                                height: t.lineHeight,
+                                fontStyle: FontStyle.italic,
+                                color: wb.mutedText,
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          if (lemma.translit.isNotEmpty) ...[
-                            const SizedBox(width: 8),
-                            Flexible(
-                              child: Text(
-                                lemma.translit,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontStyle: FontStyle.italic,
-                                  color: widget.scheme.onSurface
-                                      .withValues(alpha: 0.6),
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
                         ],
+                      ],
+                    ),
+                    Text(
+                      lemma.glossFor(widget.locale),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: widget.settings.fontFamily,
+                        fontSize: t.text,
+                        height: t.lineHeight,
+                        color: wb.mutedText,
                       ),
-                      Text(
-                        lemma.glossFor(widget.locale),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontFamily: widget.settings.fontFamily,
-                          fontSize: 12,
-                          color: widget.scheme.onSurface
-                              .withValues(alpha: 0.7),
-                        ),
-                      ),
-                    ],
-                  );
-                },
-              ),
+                    ),
+                  ],
+                );
+              },
             ),
-            const SizedBox(width: 8),
-            TextButton.icon(
-              onPressed: widget.onChange,
-              icon: const Icon(Icons.swap_horiz, size: 18),
-              label: Text(
-                uiStrings['statsDistributionPicker']?[widget.locale] ??
-                    'Change word',
-                style: const TextStyle(fontSize: 13),
-              ),
+          ),
+          const SizedBox(width: 8),
+          TextButton.icon(
+            onPressed: widget.onChange,
+            icon: Icon(Icons.swap_horiz, size: t.text + 5),
+            label: Text(
+              uiStrings['statsDistributionPicker']?[widget.locale] ??
+                  'Change word',
+              style: TextStyle(fontSize: t.text),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -2885,7 +2586,8 @@ class _StrongsPickerSheetState extends State<_StrongsPickerSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final wb = WbColors.of(context);
+    final t = WbType.of(context);
     final locale = widget.locale;
     final allLabel =
         uiStrings['statsOriginalsAll']?[locale] ?? 'All';
@@ -2925,18 +2627,21 @@ class _StrongsPickerSheetState extends State<_StrongsPickerSheet> {
             children: [
               Row(
                 children: [
-                  Icon(Icons.swap_horiz,
-                      size: 18, color: scheme.primary),
+                  Icon(Icons.swap_horiz, size: t.text + 5, color: wb.mutedText),
                   const SizedBox(width: 8),
                   Text(
                     uiStrings['statsDistributionPicker']?[locale] ??
                         'Change word',
-                    style: const TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                      fontSize: t.text + 2,
+                      height: t.lineHeight,
+                      fontWeight: FontWeight.w700,
+                      color: wb.text,
+                    ),
                   ),
                   const Spacer(),
                   IconButton(
-                    icon: const Icon(Icons.close, size: 20),
+                    icon: Icon(Icons.close, size: t.text + 6),
                     onPressed: () =>
                         Navigator.of(context).maybePop(),
                   ),
@@ -2949,10 +2654,7 @@ class _StrongsPickerSheetState extends State<_StrongsPickerSheet> {
                   hintText: uiStrings['statsLookupHint']?[locale] ??
                       'Search by Strong\'s, lemma, transliteration, or gloss',
                   isDense: true,
-                  prefixIcon: const Icon(Icons.search, size: 20),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
+                  prefixIcon: Icon(Icons.search, size: t.text + 6),
                 ),
                 onChanged: (v) => setState(() => _query = v),
               ),
@@ -3012,69 +2714,59 @@ class _StrongsPickerSheetState extends State<_StrongsPickerSheet> {
                           uiStrings['statsLookupEmpty']?[locale] ??
                               'No matching entries.',
                           style: TextStyle(
-                              color: scheme.onSurfaceVariant),
+                              fontSize: t.text, color: wb.mutedText),
                         ),
                       )
-                    : ListView.separated(
+                    : ListView.builder(
                         itemCount: showRows.length,
-                        separatorBuilder: (_, __) =>
-                            const SizedBox(height: 4),
                         itemBuilder: (_, i) {
                           final e = showRows[i];
-                          final palette = e.isHebrew
-                              ? Colors.indigo
-                              : Colors.deepPurple;
-                          final tagColor = paletteBg(context, palette);
-                          final tagFg = paletteFg(context, palette);
-                          return InkWell(
-                            onTap: () => widget.onPick(e.strongs),
-                            borderRadius: BorderRadius.circular(8),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 8),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 6, vertical: 2),
-                                    decoration: BoxDecoration(
-                                      color: tagColor,
-                                      borderRadius:
-                                          BorderRadius.circular(5),
+                          final tagFg = _originalScriptHue(wb,
+                              hebrew: e.isHebrew);
+                          return Material(
+                            color: i.isOdd ? wb.paneAltBg : wb.paneBg,
+                            child: InkWell(
+                              onTap: () => widget.onPick(e.strongs),
+                              hoverColor: wb.hoverBg,
+                              splashColor: Colors.transparent,
+                              highlightColor: Colors.transparent,
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: WbMetrics.rowPadH,
+                                    vertical: 4),
+                                child: Row(
+                                  children: [
+                                    WbTag(text: e.strongs, color: tagFg),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        '${e.lemma}  ·  ${e.glossFor(locale)}',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontFamily:
+                                              widget.settings.fontFamily,
+                                          fontSize: t.text + 1,
+                                          height: t.lineHeight,
+                                          color: wb.text,
+                                        ),
+                                      ),
                                     ),
-                                    child: Text(
-                                      e.strongs,
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      '${e.count}',
                                       style: TextStyle(
-                                        fontSize: 10,
+                                        fontSize: t.text,
+                                        height: t.lineHeight,
                                         fontWeight: FontWeight.w700,
-                                        color: tagFg,
+                                        color: wb.mutedText,
+                                        fontFeatures: const [
+                                          FontFeature.tabularFigures()
+                                        ],
                                       ),
                                     ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(
-                                      '${e.lemma}  ·  ${e.glossFor(locale)}',
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(
-                                        fontFamily:
-                                            widget.settings.fontFamily,
-                                        fontSize: 14,
-                                        color: scheme.onSurface,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    '${e.count}',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w700,
-                                      color: scheme.primary,
-                                    ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
                           );
@@ -3098,14 +2790,12 @@ class _StrongsPickerSheetState extends State<_StrongsPickerSheet> {
 class _PassageStudyCard extends StatelessWidget {
   final String locale;
   final AppSettings settings;
-  final ColorScheme scheme;
   final VoidCallback onPickVerse;
   final VoidCallback onContinueReading;
 
   const _PassageStudyCard({
     required this.locale,
     required this.settings,
-    required this.scheme,
     required this.onPickVerse,
     required this.onContinueReading,
   });
@@ -3123,62 +2813,27 @@ class _PassageStudyCard extends StatelessWidget {
             'Continue from reader';
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
-        decoration: BoxDecoration(
-          color: scheme.primaryContainer.withValues(alpha: 0.35),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-              color: scheme.primary.withValues(alpha: 0.3)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      // `alt` rather than the old `primaryContainer` wash: this card is
+      // the tab's primary action, and in a neutral window that is a
+      // step in value, not a tint of the seed colour.
+      child: WbPanel(
+        icon: Icons.menu_book_rounded,
+        title: title,
+        subtitle: desc,
+        alt: true,
+        child: Wrap(
+          spacing: 8,
+          runSpacing: 8,
           children: [
-            Row(
-              children: [
-                Icon(Icons.menu_book_rounded,
-                    color: scheme.primary, size: 22),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    title,
-                    style: TextStyle(
-                      fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: scheme.onPrimaryContainer,
-                    ),
-                  ),
-                ),
-              ],
+            FilledButton.icon(
+              onPressed: onPickVerse,
+              icon: const Icon(Icons.bookmark_outline, size: 18),
+              label: Text(pickLabel),
             ),
-            const SizedBox(height: 6),
-            Text(
-              desc,
-              style: TextStyle(
-                fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                fontSize: 12,
-                height: 1.45,
-                color: scheme.onSurface.withValues(alpha: 0.75),
-              ),
-            ),
-            const SizedBox(height: 10),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                FilledButton.icon(
-                  onPressed: onPickVerse,
-                  icon: const Icon(Icons.bookmark_outline, size: 18),
-                  label: Text(pickLabel),
-                ),
-                OutlinedButton.icon(
-                  onPressed: onContinueReading,
-                  icon: const Icon(Icons.history_edu_rounded,
-                      size: 18),
-                  label: Text(continueLabel),
-                ),
-              ],
+            OutlinedButton.icon(
+              onPressed: onContinueReading,
+              icon: const Icon(Icons.history_edu_rounded, size: 18),
+              label: Text(continueLabel),
             ),
           ],
         ),
@@ -3202,7 +2857,6 @@ class _PassageStudyCard extends StatelessWidget {
 class _PopularPassagesCard extends StatefulWidget {
   final String locale;
   final AppSettings settings;
-  final ColorScheme scheme;
   /// (book, chapter, verse) → caller resolves through
   /// MainProvider.verses + opens the sheet.
   final void Function(String book, int chapter, int verse) onTap;
@@ -3210,7 +2864,6 @@ class _PopularPassagesCard extends StatefulWidget {
   const _PopularPassagesCard({
     required this.locale,
     required this.settings,
-    required this.scheme,
     required this.onTap,
   });
 
@@ -3233,51 +2886,17 @@ class _PopularPassagesCardState extends State<_PopularPassagesCard> {
     final mp = context.read<MainProvider>();
     final locale = widget.locale;
     final settings = widget.settings;
-    final scheme = widget.scheme;
     final title = uiStrings['lookupPopularTitle']?[locale] ??
         'Recent daily verses';
     final desc = uiStrings['lookupPopularDesc']?[locale] ??
         'Each entry is one of the past few days of daily verse — tap to study it.';
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-            color: scheme.outlineVariant.withValues(alpha: 0.5)),
-      ),
+    return WbPanel(
+      icon: Icons.auto_awesome_rounded,
+      title: title,
+      subtitle: desc,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(Icons.auto_awesome_rounded,
-                  color: scheme.primary, size: 20),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  title,
-                  style: TextStyle(
-                    fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: scheme.onSurface,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            desc,
-            style: TextStyle(
-              fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-              fontSize: 12,
-              color: scheme.onSurface.withValues(alpha: 0.65),
-              height: 1.4,
-            ),
-          ),
-          const SizedBox(height: 12),
           FutureBuilder<List<DailyVerseEntry>>(
             future: _future,
             builder: (ctx, snap) {
@@ -3298,7 +2917,7 @@ class _PopularPassagesCardState extends State<_PopularPassagesCard> {
                       'No daily verses available yet.',
                   style: TextStyle(
                     fontSize: 12,
-                    color: scheme.onSurface.withValues(alpha: 0.6),
+                    color: WbColors.of(context).mutedText,
                   ),
                 );
               }
@@ -3315,7 +2934,6 @@ class _PopularPassagesCardState extends State<_PopularPassagesCard> {
                           entry: e,
                           locale: locale,
                           settings: settings,
-                          scheme: scheme,
                           onTap: () => _onTap(mp, e.ref),
                         ),
                       ),
@@ -3362,13 +2980,11 @@ class _DailyVerseChip extends StatelessWidget {
   final DailyVerseEntry entry;
   final String locale;
   final AppSettings settings;
-  final ColorScheme scheme;
   final VoidCallback onTap;
   const _DailyVerseChip({
     required this.entry,
     required this.locale,
     required this.settings,
-    required this.scheme,
     required this.onTap,
   });
 
@@ -3404,45 +3020,42 @@ class _DailyVerseChip extends StatelessWidget {
     // themeKeyFor() in daily_verse_service.dart instead of the
     // relative-date label that used to live there.
     final parts = _displayParts();
-    return Material(
-      color: scheme.primaryContainer.withValues(alpha: 0.30),
-      borderRadius: BorderRadius.circular(10),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(10),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(10, 9, 10, 9),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                parts.theme,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                  fontSize: 11,
-                  color: scheme.onSurface.withValues(alpha: 0.65),
-                  letterSpacing: 0.2,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                parts.ref,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: scheme.primary,
-                  fontFeatures: const [FontFeature.tabularFigures()],
-                ),
-              ),
-            ],
+    final wb = WbColors.of(context);
+    final t = WbType.of(context);
+    return WbTile(
+      onTap: onTap,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            parts.theme,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
+              fontSize: t.chrome,
+              height: t.lineHeight,
+              color: wb.mutedText,
+            ),
           ),
-        ),
+          Text(
+            parts.ref,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
+              fontSize: t.text,
+              height: t.lineHeight,
+              fontWeight: FontWeight.w700,
+              // The reference is the clickable thing in this tile, and
+              // `wb.link` is the same blue the workbench prints every
+              // other jump-to-verse reference in.
+              color: wb.link,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -3455,15 +3068,14 @@ class _DailyVerseChip extends StatelessWidget {
 class _ExegesisFeaturesCard extends StatelessWidget {
   final String locale;
   final AppSettings settings;
-  final ColorScheme scheme;
   const _ExegesisFeaturesCard({
     required this.locale,
     required this.settings,
-    required this.scheme,
   });
 
   @override
   Widget build(BuildContext context) {
+    final wb = WbColors.of(context);
     final title = uiStrings['lookupFeaturesTitle']?[locale] ??
         'Inside the exegesis sheet';
     final features = <(IconData, String)>[
@@ -3483,54 +3095,28 @@ class _ExegesisFeaturesCard extends StatelessWidget {
           uiStrings['lookupFeatureCopy']?[locale] ??
               'Copy the interlinear table to clipboard for sermon prep or notes.'),
     ];
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-            color: scheme.outlineVariant.withValues(alpha: 0.5)),
-      ),
+    return WbPanel(
+      icon: Icons.lightbulb_outline,
+      title: title,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(Icons.lightbulb_outline,
-                  color: scheme.primary, size: 20),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  title,
-                  style: TextStyle(
-                    fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: scheme.onSurface,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
           for (var i = 0; i < features.length; i++) ...[
-            if (i > 0) const SizedBox(height: 10),
+            if (i > 0) const SizedBox(height: 8),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(features[i].$1,
-                    size: 18,
-                    color:
-                        scheme.primary.withValues(alpha: 0.85)),
+                Icon(features[i].$1, size: 16, color: wb.mutedText),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     features[i].$2,
                     style: TextStyle(
-                      fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
+                      fontFamily: settings.fontFamily,
+                      fontFamilyFallback: kCjkFontFallback,
                       fontSize: 12,
                       height: 1.45,
-                      color: scheme.onSurface.withValues(alpha: 0.8),
+                      color: wb.text,
                     ),
                   ),
                 ),
@@ -3624,7 +3210,6 @@ class _VersePickerSheetState extends State<_VersePickerSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final locale = widget.locale;
     return SafeArea(
       child: ConstrainedBox(
@@ -3687,7 +3272,7 @@ class _VersePickerSheetState extends State<_VersePickerSheet> {
                       'Open a passage in the reader first to continue here.',
                   style: TextStyle(
                     fontSize: 12,
-                    color: scheme.onSurfaceVariant,
+                    color: WbColors.of(context).mutedText,
                     fontStyle: FontStyle.italic,
                   ),
                 ),
@@ -3710,7 +3295,6 @@ class _PickerHeader extends StatelessWidget {
   });
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final stepText = step == 1
         ? (uiStrings['statsLookupStepBook']?[locale] ?? 'Pick a book')
         : step == 2
@@ -3726,7 +3310,7 @@ class _PickerHeader extends StatelessWidget {
             onPressed: onBack,
           ),
         Icon(Icons.bookmark_outline,
-            size: 18, color: scheme.primary),
+            size: 18, color: WbColors.of(context).mutedText),
         const SizedBox(width: 8),
         Expanded(
           child: Text(
@@ -3739,7 +3323,7 @@ class _PickerHeader extends StatelessWidget {
           '$step / 3',
           style: TextStyle(
             fontSize: 12,
-            color: scheme.onSurfaceVariant,
+            color: WbColors.of(context).mutedText,
             fontFeatures: const [FontFeature.tabularFigures()],
           ),
         ),
@@ -3792,7 +3376,6 @@ class _NumberGrid extends StatelessWidget {
   });
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -3803,7 +3386,7 @@ class _NumberGrid extends StatelessWidget {
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: scheme.primary,
+              color: WbColors.of(context).mutedText,
             ),
           ),
         ),
