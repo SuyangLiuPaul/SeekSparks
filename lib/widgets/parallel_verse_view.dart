@@ -20,7 +20,7 @@ import 'package:seeksparks/constants/book_names.dart' show bookNameToEnglish;
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/original_word.dart';
 import 'package:seeksparks/models/verse.dart';
-import 'package:seeksparks/services/fetch_verses.dart';
+import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/services/originals_service.dart';
 import 'package:seeksparks/services/section_title_service.dart';
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
@@ -88,11 +88,6 @@ class ParallelVerseView extends StatefulWidget {
 }
 
 class _ParallelVerseViewState extends State<ParallelVerseView> {
-  // Whole-version verse lists are expensive to parse, so keep them for
-  // the life of the process — the same handful of versions is stacked
-  // over and over as the user walks through a chapter.
-  static final Map<String, List<Verse>> _versionCache = {};
-  static final Map<String, Future<List<Verse>?>> _inflight = {};
 
   late Future<List<_Row>> _future;
 
@@ -117,19 +112,25 @@ class _ParallelVerseViewState extends State<ParallelVerseView> {
       a.length == b.length &&
       List.generate(a.length, (i) => a[i] == b[i]).every((e) => e);
 
-  static Future<List<Verse>?> _versionVerses(String code) async {
-    final cached = _versionCache[code];
+  /// 2026-08-08 (#274): was a third private copy of the whole-version
+  /// cache (BrowseWindow had one too). `MainProvider`'s LRU is the one
+  /// the reading version is already in, and the only one memory
+  /// pressure can reclaim.
+  static Future<List<Verse>?> _versionVerses(
+      String code, MainProvider mp) async {
+    final cached = mp.peekCachedVersion(code);
     if (cached != null) return cached;
-    final list = await (_inflight[code] ??= FetchVerses.loadVerseList(code));
-    if (list != null) _versionCache[code] = list;
-    return list;
+    await mp.preloadVersion(code);
+    return mp.peekCachedVersion(code);
   }
 
   Future<List<_Row>> _load() async {
     final rows = <_Row>[];
+    // Read before the first await, while `context` is still safe.
+    final mp = context.read<MainProvider>();
 
     for (final code in widget.versionCodes) {
-      final verses = await _versionVerses(code);
+      final verses = await _versionVerses(code, mp);
       if (verses == null) continue;
       // Verse.book may be localized depending on the bundle; compare on
       // the canonical English name the caller passed in.

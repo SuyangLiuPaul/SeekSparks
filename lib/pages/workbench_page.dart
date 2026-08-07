@@ -31,6 +31,11 @@ import 'package:seeksparks/providers/workbench_provider.dart';
 import 'package:seeksparks/services/concordance_service.dart';
 import 'package:seeksparks/services/fetch_verses.dart';
 import 'package:seeksparks/services/originals_service.dart';
+import 'package:seeksparks/services/workbench_warmup.dart'
+    show
+        defaultParallelVersions,
+        kWorkbenchParallelModeKey,
+        kWorkbenchParallelVersionsKey;
 import 'package:seeksparks/utils/jump_to_reference.dart' as jumper;
 import 'package:seeksparks/utils/reference_parser.dart' show BibleReference;
 import 'package:seeksparks/utils/navigate_to_reader.dart'
@@ -141,8 +146,11 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
   // value on any pane interaction, so every existing install had `false`
   // stored and never saw the Browse window even after it became the
   // default. Renaming re-applies the new default exactly once.
-  static const _kParallelKey = 'workbench.browseMode.v2';
-  static const _kParallelVersionsKey = 'workbench.parallelVersions';
+  // The key STRINGS live in workbench_warmup.dart: the boot warm-up has
+  // to read the same values this page restores, and two copies of a key
+  // drift without anything failing.
+  static const _kParallelKey = kWorkbenchParallelModeKey;
+  static const _kParallelVersionsKey = kWorkbenchParallelVersionsKey;
 
   /// The stack a first-time reader gets. BibleWorks ships version sets
   /// per language and this is the same idea: pair the reading version
@@ -157,16 +165,8 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
   ///
   /// Only a default. It seeds the stack on first run and a
   /// reader's own selection is persisted over it.
-  List<String> _defaultParallelVersions(String locale) {
-    switch (locale) {
-      case 'zh-Hans':
-        return const ['cuvs-yhwh', 'biblexg-v2', 'bsb'];
-      case 'zh-Hant':
-        return const ['cuvs-yhwh-tr', 'biblexg-v2-tr', 'bsb'];
-      default:
-        return const ['bsb', 'nasb', 'kjv'];
-    }
-  }
+  List<String> _defaultParallelVersions(String locale) =>
+      defaultParallelVersions(locale);
 
   /// Which Analysis tab the right pane is showing. Persisted, because
   /// a reader who works in cross-references expects to still be there

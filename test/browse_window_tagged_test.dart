@@ -21,6 +21,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
 import 'package:seeksparks/models/app_settings.dart';
+import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/widgets/browse_window.dart';
 
 void main() {
@@ -43,7 +44,11 @@ void main() {
           ChangeNotifierProvider(
             create: (_) =>
                 AppSettings()..setShowStrongsInOriginals(showNumbers),
-          )
+          ),
+          // 2026-08-08 (#274): the window reads whole-version corpora
+          // from MainProvider's LRU now instead of a private static
+          // cache of its own, so it needs one in scope.
+          ChangeNotifierProvider(create: (_) => MainProvider()),
         ],
         child: MaterialApp(
           home: Scaffold(

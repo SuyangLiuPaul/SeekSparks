@@ -3612,6 +3612,21 @@ const uiStrings = {
     'zh-Hant': '開啟一章經文，即可並排比較多個譯本與原文。',
     'en': 'Open a chapter to compare versions side by side.',
   },
+  // #274: the Browse pane's wait used to be a 16 px dot in the middle of
+  // a 670 px column, which reads as "empty", not as "working". It now
+  // names the editions it is still fetching — on a cold cache those are
+  // multi-megabyte downloads, and a reader who knows what the pause is
+  // for waits differently from one looking at a blank column.
+  'wbBrowseLoadingVersions': {
+    'zh-Hans': '正在载入译本',
+    'zh-Hant': '正在載入譯本',
+    'en': 'Loading editions',
+  },
+  'wbBrowseLoadingChapter': {
+    'zh-Hans': '正在准备本章',
+    'zh-Hant': '正在準備本章',
+    'en': 'Preparing this chapter',
+  },
   'classicReader': {
     'zh-Hans': '经典阅读模式',
     'zh-Hant': '經典閱讀模式',

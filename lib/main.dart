@@ -31,6 +31,8 @@ import 'package:seeksparks/services/profile_service.dart';
 import 'package:seeksparks/services/book_intro_service.dart';
 import 'package:seeksparks/services/section_title_service.dart';
 import 'package:seeksparks/services/url_sync_service.dart';
+import 'package:seeksparks/services/workbench_warmup.dart'
+    show warmWorkbenchFirstPaint;
 import 'package:provider/provider.dart';
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 import 'package:seeksparks/widgets/small_screen_advisory.dart'
@@ -356,6 +358,21 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
           (Object e, StackTrace st) =>
               debugPrint('background version preload failed: $e'));
     }
+
+    // 2026-08-08 (#274): warm the centre pane while the splash is idle.
+    // Measured on the deployed dev build: every boot asset settles by
+    // ~1 s, the splash then holds for its fixed 3 s, and only after it
+    // dismisses does the Browse stack begin fetching the comparison
+    // editions — ~4.3 MB on a cold cache, downloaded while the reader
+    // is already staring at an empty column. This does that work in the
+    // three seconds nobody was using. Fire-and-forget: boot never waits
+    // on it, and anything it misses the pane still loads itself.
+    // ignore: unawaited_futures
+    warmWorkbenchFirstPaint(
+      mainProvider: mainProvider,
+      locale: appSettings.locale,
+    ).catchError((Object e, StackTrace st) =>
+        debugPrint('workbench warm-up failed: $e\n$st'));
 
     // 2026-05-24 (v1.3.2): eager-preload the daily-verses pool so
     // the splash's todayRef() lookup is synchronous-fast and

@@ -219,13 +219,38 @@ class MainProvider extends ChangeNotifier {
 
   /// 2026-05-10 (v1.2.15): background pre-load — parse `version`
   /// silently and stash it in the LRU cache without touching
-  /// `currentVersion` / `verses` / listeners. No-op if already
-  /// cached or if the version is the one currently displayed.
+  /// `currentVersion` / `verses` / listeners. No-op if already cached.
   /// Called from main.dart after bootstrap settles, for each common
   /// alternative version, so a future user switch is a cache hit.
+  ///
+  /// 2026-08-08 (#274): de-duplicated. Two callers asking for the same
+  /// version concurrently used to run two `json.decode`s of the same
+  /// multi-megabyte string and throw one away — which is exactly what
+  /// the boot warm-up racing a freshly-mounted Browse window does. The
+  /// in-flight map is cleared in `finally` so a failed load is retried
+  /// rather than remembered as pending forever.
+  ///
+  /// The old `version == currentVersion` early-return is gone: it was a
+  /// shorthand for "already cached", but only true because `setVerses`
+  /// files the active version in the LRU. When the boot load FAILED
+  /// that shorthand refused to ever load it, so the guard is now the
+  /// cache itself, which is what it was standing in for.
   Future<void> preloadVersion(String version) async {
-    if (version == currentVersion) return;
     if (_versesCache.containsKey(version)) return;
+    final pending = _preloading[version];
+    if (pending != null) return pending;
+    final future = _preloadVersionInner(version);
+    _preloading[version] = future;
+    try {
+      await future;
+    } finally {
+      _preloading.remove(version);
+    }
+  }
+
+  final Map<String, Future<void>> _preloading = {};
+
+  Future<void> _preloadVersionInner(String version) async {
     final list = await FetchVerses.loadVerseList(version);
     if (list == null) return;
     _cacheVerses(version, list);

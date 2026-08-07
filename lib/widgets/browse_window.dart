@@ -27,6 +27,7 @@ import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:seeksparks/constants/bible_versions.dart'
     show shortBibleVersionLabel;
 import 'package:seeksparks/constants/book_names.dart' show bookNameToEnglish;
+import 'package:seeksparks/constants/ui_strings.dart' show uiStrings;
 import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/utils/analysis_focus.dart';
 import 'package:seeksparks/utils/scripture_markup.dart';
@@ -34,7 +35,7 @@ import 'package:seeksparks/utils/search_highlight.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/original_word.dart';
 import 'package:seeksparks/models/verse.dart';
-import 'package:seeksparks/services/fetch_verses.dart';
+import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/models/strongs.dart';
 import 'package:seeksparks/services/originals_service.dart';
 import 'package:seeksparks/services/strongs_service.dart';
@@ -173,12 +174,6 @@ class BrowseWindow extends StatefulWidget {
 }
 
 class _BrowseWindowState extends State<BrowseWindow> {
-  /// Whole-version verse lists are expensive to parse, so they live for
-  /// the life of the process — the same handful of versions is printed
-  /// over and over as the reader walks through a book.
-  static final Map<String, List<Verse>> _versionCache = {};
-  static final Map<String, Future<List<Verse>?>> _inflight = {};
-
   late Future<List<_BrowseRow>> _future;
 
   /// A positioned list, not a plain ListView: picking a verse from the
@@ -259,23 +254,36 @@ class _BrowseWindowState extends State<BrowseWindow> {
       a.length == b.length &&
       List.generate(a.length, (i) => a[i] == b[i]).every((e) => e);
 
-  static Future<List<Verse>?> _versionVerses(String code) async {
-    final cached = _versionCache[code];
+  /// One whole-version verse list, from the app's ONE cache.
+  ///
+  /// 2026-08-08 (#274): this pane used to keep its own static
+  /// `_versionCache`, which meant the version the reader is already
+  /// READING — parsed at boot and sitting in `MainProvider`'s LRU — was
+  /// downloaded and `json.decode`d a second time just to print it here,
+  /// on the workbench's very first paint. It also made the pane immune
+  /// to `dropCachesOnMemoryPressure`, so iOS could ask for memory back
+  /// and get none. `MainProvider` owns the cache; this asks it.
+  static Future<List<Verse>?> _versionVerses(
+      String code, MainProvider mp) async {
+    final cached = mp.peekCachedVersion(code);
     if (cached != null) return cached;
-    final list = await (_inflight[code] ??= FetchVerses.loadVerseList(code));
-    if (list != null) _versionCache[code] = list;
-    return list;
+    await mp.preloadVersion(code);
+    return mp.peekCachedVersion(code);
   }
 
   Future<List<_BrowseRow>> _load() async {
     final locale = context.read<AppSettings>().locale;
+    // Read before the first await: `context` is not safe to touch once
+    // this has yielded.
+    final mp = context.read<MainProvider>();
 
     // Fetch every version AT ONCE. Awaiting them one at a time meant a
     // cold Browse window parsed three whole-Bible JSONs in series and
     // took ~30s to first paint; in parallel it costs roughly the slowest
     // one. (They are cached process-wide afterwards, so this only bites
     // on the first chapter of a session.)
-    final loaded = await Future.wait(widget.versionCodes.map(_versionVerses));
+    final loaded =
+        await Future.wait(widget.versionCodes.map((c) => _versionVerses(c, mp)));
 
     // version code -> {verse number: text}, plus the chapter's extent.
     final byVersion = <String, Map<int, String>>{};
@@ -356,6 +364,29 @@ class _BrowseWindowState extends State<BrowseWindow> {
     return rows;
   }
 
+  /// What the pane is actually waiting for, named.
+  ///
+  /// The editions still absent from the corpus cache are the honest
+  /// answer while any are missing — on a cold cache that is several
+  /// megabytes each and the reason the column is empty. Once they are
+  /// all in, the remaining wait is the chapter's tagging and originals,
+  /// which is a different (and much shorter) sentence.
+  String _loadingLabel(BuildContext context) {
+    final locale = context.read<AppSettings>().locale;
+    final mp = context.read<MainProvider>();
+    final missing = widget.versionCodes
+        .where((c) => mp.peekCachedVersion(c) == null)
+        .map(shortBibleVersionLabel)
+        .toList();
+    if (missing.isEmpty) {
+      return uiStrings['wbBrowseLoadingChapter']?[locale] ??
+          'Preparing this chapter';
+    }
+    final lead = uiStrings['wbBrowseLoadingVersions']?[locale] ??
+        'Loading editions';
+    return '$lead · ${missing.join(" · ")}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final wb = WbColors.of(context);
@@ -367,10 +398,23 @@ class _BrowseWindowState extends State<BrowseWindow> {
           return Container(
             color: wb.paneBg,
             alignment: Alignment.center,
-            child: const SizedBox(
-              width: 16,
-              height: 16,
-              child: CircularProgressIndicator(strokeWidth: 2),
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  _loadingLabel(context),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                      fontSize: WbMetrics.text, color: wb.mutedText),
+                ),
+              ],
             ),
           );
         }
