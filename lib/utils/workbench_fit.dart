@@ -35,18 +35,26 @@ enum WorkbenchAdvice {
 
 class WorkbenchFit {
   /// Minimum widths of the three columns, from `workbench_page.dart`.
-  static const double searchPaneMin = 240;
+  ///
+  /// 2026-08-07: search 240->224 and analysis 320->288, trimming 48 px so
+  /// the three-column minimum lands on 1024 — the width of a landscape
+  /// 1024x768 iPad, which the three-column gate had otherwise excluded by
+  /// 48 px. Reading stays at 480 deliberately: it carries the verse text
+  /// and is the column a narrower setting would actually hurt. Search
+  /// holds a query field and a hit list, analysis holds lemma, parsing
+  /// and glosses; both take the cut better than running text does.
+  static const double searchPaneMin = 224;
   static const double readingPaneMin = 480;
-  static const double analysisPaneMin = 320;
+  static const double analysisPaneMin = 288;
 
   /// Each draggable divider between panes.
   static const double dividerWidth = 16;
 
   static const double twoPaneMinWidth =
-      searchPaneMin + dividerWidth + readingPaneMin; // 736
+      searchPaneMin + dividerWidth + readingPaneMin; // 720
 
   static const double threePaneMinWidth =
-      twoPaneMinWidth + dividerWidth + analysisPaneMin; // 1072
+      twoPaneMinWidth + dividerWidth + analysisPaneMin; // 1024
 
   /// Three panes at their *default* widths (320 search, 420 analysis)
   /// rather than their minimums — the width at which the workbench

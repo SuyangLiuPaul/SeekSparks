@@ -9,15 +9,15 @@ void main() {
 
   group('pane arithmetic matches the layout it is quoting', () {
     test('the constants are the sum of the panes, not round numbers', () {
-      expect(WorkbenchFit.twoPaneMinWidth, 736);
-      expect(WorkbenchFit.threePaneMinWidth, 1072);
+      expect(WorkbenchFit.twoPaneMinWidth, 720);
+      expect(WorkbenchFit.threePaneMinWidth, 1024);
     });
 
     test('paneCountFor steps exactly at the two thresholds', () {
-      expect(WorkbenchFit.paneCountFor(735), 1);
-      expect(WorkbenchFit.paneCountFor(736), 2);
-      expect(WorkbenchFit.paneCountFor(1071), 2);
-      expect(WorkbenchFit.paneCountFor(1072), 3);
+      expect(WorkbenchFit.paneCountFor(719), 1);
+      expect(WorkbenchFit.paneCountFor(720), 2);
+      expect(WorkbenchFit.paneCountFor(1023), 2);
+      expect(WorkbenchFit.paneCountFor(1024), 3);
     });
   });
 
@@ -45,10 +45,10 @@ void main() {
     });
 
     test('the boundary is the THREE-pane minimum, in either orientation', () {
-      expect(advice(1071, 800), WorkbenchAdvice.largerDisplay);
-      expect(advice(1072, 800), WorkbenchAdvice.none);
-      expect(advice(800, 1071), WorkbenchAdvice.largerDisplay);
-      expect(advice(800, 1072), WorkbenchAdvice.rotate);
+      expect(advice(1023, 800), WorkbenchAdvice.largerDisplay);
+      expect(advice(1024, 800), WorkbenchAdvice.none);
+      expect(advice(800, 1023), WorkbenchAdvice.largerDisplay);
+      expect(advice(800, 1024), WorkbenchAdvice.rotate);
     });
 
     test('a tall narrow window is judged on its width, not its short edge',
@@ -73,8 +73,8 @@ void main() {
     });
 
     test('the long edge threshold is the three-pane minimum', () {
-      expect(advice(400, 1071), WorkbenchAdvice.largerDisplay);
-      expect(advice(400, 1072), WorkbenchAdvice.rotate);
+      expect(advice(400, 1023), WorkbenchAdvice.largerDisplay);
+      expect(advice(400, 1024), WorkbenchAdvice.rotate);
     });
 
     test('a landscape screen is never told to rotate', () {
@@ -101,15 +101,14 @@ void main() {
       expect(WorkbenchFit.paneCountFor(1194), 3);
     });
 
-    test('the classic 1024x768 iPad no longer qualifies', () {
-      // 1024 is 48px short of the 1072 three-column minimum, so this
-      // iPad is now sent to YsWords in both orientations. Deliberate
-      // consequence of the three-column bar, not an oversight: closing
-      // that 48px gap means trimming the pane minimums, which is a
-      // separate decision about how narrow a column may get.
-      expect(WorkbenchFit.paneCountFor(1024), 2);
-      expect(advice(1024, 768), WorkbenchAdvice.largerDisplay);
-      expect(advice(768, 1024), WorkbenchAdvice.largerDisplay);
+    test('the classic 1024x768 iPad qualifies again after the trim', () {
+      // The 48px gap was closed by trimming search (240->224) and
+      // analysis (320->288); reading stayed at 480. Landscape now carries
+      // all three columns exactly; portrait (768) still does not, so it
+      // is told to rotate rather than blocked.
+      expect(WorkbenchFit.paneCountFor(1024), 3);
+      expect(advice(1024, 768), WorkbenchAdvice.none);
+      expect(advice(768, 1024), WorkbenchAdvice.rotate);
     });
 
     test('1280x800 laptop is comfortable', () {

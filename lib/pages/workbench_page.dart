@@ -98,9 +98,15 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
 
   static const double _defaultLeftWidth = 320;
   static const double _defaultRightWidth = 420;
-  static const double _minLeftWidth = 240;
+  // 2026-08-07: 240 -> 224 and 320 -> 288 (right), in lockstep with
+  // WorkbenchFit's pane minimums. These two files MUST agree: the gate
+  // decides whether three columns fit and this decides how they are laid
+  // out, so a divergence would admit a viewport the layout then
+  // overflows. Trimmed 48 px total so the three-column minimum lands on
+  // 1024 and a landscape iPad qualifies.
+  static const double _minLeftWidth = 224;
   static const double _maxLeftWidth = 480;
-  static const double _minRightWidth = 320;
+  static const double _minRightWidth = 288;
   static const double _maxRightWidth = 560;
   static const double _dividerWidth = 16;
 
