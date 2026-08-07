@@ -75,6 +75,7 @@ class TaggedTextService {
     'kjvs',
     'lxxwh',
     'cuvs-plus',
+    'cuv-yhwd',
   };
 
   static final Map<String, Map<String, List<TaggedRun>>> _cache = {};

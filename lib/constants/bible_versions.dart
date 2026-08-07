@@ -133,6 +133,13 @@ const bibleVersions = <BibleVersionInfo>[
     language: 'zh-Hans',
     editionYear: '1919 / 和合本原文',
   ),
+  BibleVersionInfo(
+    value: 'cuv-yhwd',
+    shortLabel: 'CUV+S(雅伟)',
+    menuLabel: "和合本雅伟版+Strong's (yahwehdehua.net)",
+    language: 'zh-Hans',
+    editionYear: '1919 和合本 / 雅伟版标注',
+  ),
 ];
 
 /// Versions hidden from the picker (currently none). CUV, CNV, and LJK1
