@@ -7,13 +7,17 @@ import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/bible_evidence.dart';
 import 'package:seeksparks/pages/home_page.dart';
 import 'package:seeksparks/providers/main_provider.dart';
+import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/utils/clipboard_helper.dart';
 import 'package:seeksparks/utils/jump_to_reference.dart';
 import 'package:seeksparks/utils/reference_parser.dart';
+import 'package:seeksparks/utils/version_mapper.dart'
+    show localizedReferenceLabel;
 import 'package:seeksparks/widgets/confidence_badge.dart';
 import 'package:seeksparks/widgets/home_icon_button.dart';
 import 'package:seeksparks/widgets/language_switcher_button.dart';
 import 'package:seeksparks/widgets/localized_back_button.dart';
+import 'package:seeksparks/widgets/wb_surfaces.dart';
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 
 /// Full-page view of one [BibleEvidence] entry.
@@ -60,6 +64,7 @@ class _EvidenceDetailPageState extends State<EvidenceDetailPage> {
   Widget build(BuildContext context) {
     final settings = context.watch<AppSettings>();
     final scheme = Theme.of(context).colorScheme;
+    final wb = WbColors.of(context);
     final locale = settings.locale;
     final fs = settings.fontSize;
     final images = evidence.images;
@@ -103,8 +108,16 @@ class _EvidenceDetailPageState extends State<EvidenceDetailPage> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
+                    // 2026-08-08 (#279): was a 12px ClipRRect. The
+                    // photograph is the artefact, so rounding it crops
+                    // the evidence — it now sits flush in a hairline
+                    // frame, which is how BibleWorks presents a
+                    // manuscript image (bwh10 Mss tab).
+                    DecoratedBox(
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                            color: wb.border, width: WbMetrics.hairline),
+                      ),
                       child: Stack(
                         children: [
                           SizedBox(
@@ -149,11 +162,10 @@ class _EvidenceDetailPageState extends State<EvidenceDetailPage> {
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 10, vertical: 5),
-                                decoration: BoxDecoration(
-                                  color: Colors.black.withValues(alpha: 0.55),
-                                  borderRadius:
-                                      BorderRadius.circular(99),
-                                ),
+                                // Square, not a stadium pill. It reads
+                                // as a plate number on the frame rather
+                                // than as a badge floating over it.
+                                color: Colors.black.withValues(alpha: 0.55),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
@@ -233,18 +245,18 @@ class _EvidenceDetailPageState extends State<EvidenceDetailPage> {
                                 duration: const Duration(milliseconds: 220),
                                 curve: Curves.easeOutCubic,
                               ),
-                              borderRadius: BorderRadius.circular(8),
                               child: Container(
                                 width: 72,
                                 height: 56,
                                 clipBehavior: Clip.antiAlias,
                                 decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(8),
+                                  // Hairline for the rest, 2px for the
+                                  // one you are looking at — the same
+                                  // way the workbench says "this one"
+                                  // everywhere else.
                                   border: Border.all(
-                                    color: active
-                                        ? scheme.primary
-                                        : Colors.transparent,
-                                    width: 2,
+                                    color: active ? scheme.primary : wb.border,
+                                    width: active ? 2 : WbMetrics.hairline,
                                   ),
                                 ),
                                 child: Image.network(
@@ -312,7 +324,13 @@ class _EvidenceDetailPageState extends State<EvidenceDetailPage> {
                   if (evidence.category.isNotEmpty)
                     _Meta(
                       icon: Icons.category_outlined,
-                      label: evidence.category,
+                      // The category is stored in English and the list
+                      // page has always translated it through this key;
+                      // the detail page printed the raw value, so one
+                      // screen said 考古 and the next said Archaeology.
+                      label: uiStrings['category${evidence.category}']
+                              ?[locale] ??
+                          evidence.category,
                     ),
                   if (evidence.timeline.isNotEmpty)
                     _Meta(
@@ -421,10 +439,20 @@ class _EvidenceDetailPageState extends State<EvidenceDetailPage> {
   }
 
   Future<void> _share(BuildContext context, String locale) async {
+    // Everything on screen is localised, so the text the reader pastes
+    // out has to be too — otherwise a Chinese entry copies as
+    // `— Strong | Archaeology | Genesis 1:1`.
+    final version = context.read<MainProvider>().currentVersion;
+    final category =
+        uiStrings['category${evidence.category}']?[locale] ?? evidence.category;
+    final confidence =
+        uiStrings['confidence${evidence.confidenceLevel}']?[locale] ??
+            evidence.confidenceLevel;
+    final reference =
+        localizedReferenceLabel(evidence.scriptureReference, locale, version);
     final body = StringBuffer()
       ..writeln(evidence.localizedTitle(locale))
-      ..writeln('— ${evidence.confidenceLevel} | '
-          '${evidence.category} | ${evidence.scriptureReference}')
+      ..writeln('— $confidence | $category | $reference')
       ..writeln()
       ..writeln(evidence.localizedSummary(locale))
       ..writeln()
@@ -485,11 +513,11 @@ class _EvidenceDetailPageState extends State<EvidenceDetailPage> {
   }
 }
 
-/// Floating navigation chip overlaid on the hero gallery for the
-/// Bible Evidence detail page. Black-on-white circular button — the
-/// user can tap-to-advance one image without having to swipe, which
-/// is the standard discoverability pattern for image galleries on
-/// the web (Instagram + Wikipedia commons viewer both use it).
+/// Navigation control overlaid on the hero gallery. The user can
+/// tap-to-advance one image without having to swipe, which is the
+/// standard discoverability pattern for image galleries on the web
+/// (Instagram + Wikimedia Commons viewer both use it). Square, because
+/// it sits ON the specimen plate and so belongs to its frame.
 class _ArrowChip extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
@@ -499,10 +527,9 @@ class _ArrowChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: Colors.black.withValues(alpha: 0.42),
-      shape: const CircleBorder(),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
       child: InkWell(
         onTap: onTap,
-        customBorder: const CircleBorder(),
         child: Padding(
           padding: const EdgeInsets.all(6),
           child: Icon(icon, size: 22, color: Colors.white),
@@ -512,11 +539,12 @@ class _ArrowChip extends StatelessWidget {
   }
 }
 
-/// Category-tinted gradient shown while the detail hero image loads
-/// OR when there's no image / it errors out. Used in BOTH cases so
+/// The empty plate at hero size — shown while the detail image loads
+/// OR when there is no image / it errors out. Used in BOTH cases so
 /// the user never sees the 80-px emoji that older builds emitted.
-/// Same visual language as evidence_page.dart's `_ShimmerPlaceholder`
-/// to keep grid + detail consistent.
+/// Same treatment as evidence_page.dart's `_ShimmerPlaceholder`, for
+/// the same reason: a tinted gradient competes with the photographs,
+/// which are the information on this page.
 class _HeroShimmer extends StatelessWidget {
   final String category;
   final bool showCategoryIcon;
@@ -527,32 +555,15 @@ class _HeroShimmer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final (accent, icon) = switch (category) {
-      'Manuscripts' => (scheme.tertiary, Icons.menu_book_outlined),
-      'Archaeology' => (scheme.primary, Icons.terrain_outlined),
-      'History'     => (scheme.secondary, Icons.account_balance_outlined),
-      'Science'     => (scheme.tertiary, Icons.science_outlined),
-      _             => (scheme.primary, Icons.image_outlined),
-    };
+    final wb = WbColors.of(context);
     return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            accent.withValues(alpha: 0.22),
-            accent.withValues(alpha: 0.08),
-            scheme.surfaceContainerHighest.withValues(alpha: 0.42),
-          ],
-        ),
-      ),
+      color: wb.paneAltBg,
       child: showCategoryIcon
           ? Center(
               child: Icon(
-                icon,
+                evidenceCategoryIcon(category),
                 size: 64,
-                color: accent.withValues(alpha: 0.55),
+                color: wb.mutedText,
               ),
             )
           : null,
@@ -573,12 +584,13 @@ class _Meta extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final wb = WbColors.of(context);
     final settings = context.watch<AppSettings>();
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(6),
+        color: wb.paneAltBg,
+        border: Border.all(color: wb.border, width: WbMetrics.hairline),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -601,44 +613,27 @@ class _Meta extends StatelessWidget {
   }
 }
 
+/// A titled block — Description, Scriptural correlation, Academic
+/// sources.
+///
+/// 2026-08-08 (#279): this was a 10px rounded box on
+/// `surfaceContainerLow` with an uppercase letter-spaced label in
+/// `scheme.primary`. It is now [WbPanel], the same primitive the rest
+/// of the pass uses, which puts the label in a hairline-ruled header
+/// strip instead of colouring it.
+///
+/// The label shrinks to the panel's chrome size and the body does NOT:
+/// that is the split this pass is built on. A section heading is
+/// chrome; the description under it is what the reader came for and
+/// keeps `settings.fontSize`.
 class _Section extends StatelessWidget {
   final String label;
   final Widget child;
   const _Section({required this.label, required this.child});
 
   @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final settings = context.watch<AppSettings>();
-    return Container(
-      padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.5),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label.toUpperCase(),
-            style: TextStyle(
-              fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-              fontSize:
-                  (settings.fontSize - 3).clamp(11.0, 15.0).toDouble(),
-              fontWeight: FontWeight.w700,
-              color: scheme.primary,
-              letterSpacing: 0.6,
-            ),
-          ),
-          const SizedBox(height: 6),
-          child,
-        ],
-      ),
-    );
-  }
+  Widget build(BuildContext context) =>
+      WbPanel(title: label, child: child);
 }
 
 class _ReferenceChip extends StatelessWidget {
@@ -655,13 +650,19 @@ class _ReferenceChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final wb = WbColors.of(context);
     final settings = context.watch<AppSettings>();
+    final currentVersion =
+        context.select<MainProvider, String>((m) => m.currentVersion);
     return Material(
-      color: scheme.primary.withValues(alpha: 0.10),
-      borderRadius: BorderRadius.circular(8),
+      color: wb.paneAltBg,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.zero,
+        side: BorderSide(color: wb.border, width: WbMetrics.hairline),
+      ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(8),
         onTap: onTap,
+        hoverColor: wb.hoverBg,
         child: Padding(
           padding:
               const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -672,7 +673,12 @@ class _ReferenceChip extends StatelessWidget {
                   size: 16, color: scheme.primary),
               const SizedBox(width: 6),
               Text(
-                reference,
+                // This widget has taken a `locale` since it was
+                // written and never used it: the single most important
+                // control on the page — the one that takes you back to
+                // the text — printed `Genesis 1:1` to a reader on a
+                // Chinese version. Same defect class as #283.
+                localizedReferenceLabel(reference, locale, currentVersion),
                 style: TextStyle(
                   fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
                   fontSize: settings.fontSize,

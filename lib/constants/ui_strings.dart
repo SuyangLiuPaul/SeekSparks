@@ -4016,9 +4016,9 @@ const uiStrings = {
         'Archaeological, manuscript, scientific & historical evidence intersecting with the Bible.',
   },
   'evidenceForBook': {
-    'zh-Hans': '经文实证 — ',
-    'zh-Hant': '經文實證 — ',
-    'en': 'Evidence — ',
+    'zh-Hans': '经文实证 — {book}',
+    'zh-Hant': '經文實證 — {book}',
+    'en': 'Evidence — {book}',
   },
   'todayEvidence': {
     'zh-Hans': '今日实证',

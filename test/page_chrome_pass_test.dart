@@ -26,6 +26,8 @@ import 'package:flutter_test/flutter_test.dart';
 const List<String> _passed = <String>[
   'lib/pages/stats_page.dart',
   'lib/pages/settings_page.dart',
+  'lib/pages/evidence_page.dart',
+  'lib/pages/evidence_detail_page.dart',
   'lib/widgets/wb_surfaces.dart',
 ];
 

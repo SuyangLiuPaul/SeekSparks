@@ -80,6 +80,8 @@ class BibleEvidence {
     }
   }
 
+  IconData get categoryIcon => evidenceCategoryIcon(category);
+
   factory BibleEvidence.fromJson(Map<String, dynamic> j) {
     // Some entries in the upstream dataset (e.g. "hazor_destruction")
     // store long-form `description` and `scripturalCorrelation` as
@@ -126,3 +128,17 @@ class BibleEvidence {
     );
   }
 }
+
+/// The Material icon that stands for an evidence category.
+///
+/// One definition, because the grid placeholder, the search-result
+/// thumbnail and the detail hero each used to carry their own copy of
+/// this switch, and the copies had already drifted on which colour
+/// went with which category.
+IconData evidenceCategoryIcon(String category) => switch (category) {
+      'Manuscripts' => Icons.menu_book_outlined,
+      'Archaeology' => Icons.terrain_outlined,
+      'History' => Icons.account_balance_outlined,
+      'Science' => Icons.science_outlined,
+      _ => Icons.image_outlined,
+    };

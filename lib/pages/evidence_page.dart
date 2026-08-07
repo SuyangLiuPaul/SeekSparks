@@ -12,8 +12,9 @@ import 'package:seeksparks/pages/evidence_detail_page.dart';
 import 'package:seeksparks/pages/home_page.dart';
 import 'package:seeksparks/pages/settings_page.dart';
 import 'package:seeksparks/providers/main_provider.dart';
+import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/utils/version_mapper.dart'
-    show localizedReferenceLabel;
+    show localeAwareBookName, localizedReferenceLabel;
 import 'package:seeksparks/services/ai_search_service.dart';
 import 'package:seeksparks/services/bible_evidence_service.dart';
 import 'package:seeksparks/utils/ai_markdown.dart' show parseAiMarkdown;
@@ -184,6 +185,15 @@ class _EvidencePageState extends State<EvidencePage> {
     final settings = context.watch<AppSettings>();
     final scheme = Theme.of(context).colorScheme;
     final locale = settings.locale;
+    // `filterBook` arrives as the canonical ENGLISH book name, because
+    // that is what the evidence data is keyed on. Every surface that
+    // PRINTS it has to go back through the version-aware mapper first
+    // — the reading version decides the script, not the UI locale.
+    final currentVersion =
+        context.select<MainProvider, String>((m) => m.currentVersion);
+    final localizedBook = widget.filterBook == null
+        ? null
+        : localeAwareBookName(widget.filterBook!, locale, currentVersion);
     final isWide = MediaQuery.of(context).size.width >= 720;
     final maxW = isWide ? 1100.0 : double.infinity;
     final crossAxisCount = isWide ? 2 : 1;
@@ -196,10 +206,9 @@ class _EvidencePageState extends State<EvidencePage> {
       appBar: AppBar(
         leading: const LocalizedBackButton(),
         title: Text(
-          widget.filterBook != null
-              ? (uiStrings['evidenceForBook']?[locale] ?? 'Evidence — ')
-                      .replaceAll('{book}', widget.filterBook!) +
-                  widget.filterBook!
+          localizedBook != null
+              ? (uiStrings['evidenceForBook']?[locale] ?? 'Evidence — {book}')
+                  .replaceAll('{book}', localizedBook)
               : (uiStrings['bibleEvidence']?[locale] ?? 'Bible Evidence'),
         ),
         actions: [
@@ -228,7 +237,7 @@ class _EvidencePageState extends State<EvidencePage> {
                       _ScopeBanner(
                         scope: _scope,
                         wasFallback: _scopeWasFallback,
-                        book: widget.filterBook,
+                        book: localizedBook,
                         chapter: widget.filterChapter,
                         locale: locale,
                         count: _all.length,
@@ -249,9 +258,9 @@ class _EvidencePageState extends State<EvidencePage> {
                           hintText:
                               uiStrings['search']?[locale] ?? 'Search',
                           isDense: true,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
+                          // No `border:` — the theme's is already the
+                          // square hairline this page wants, and naming
+                          // one here only overrode the rule.
                           suffixIcon: _query.isEmpty
                               ? null
                               : IconButton(
@@ -453,6 +462,7 @@ class _EvidenceCard extends StatelessWidget {
 
   Widget _buildCard(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final wb = WbColors.of(context);
     // PERF: scoped select instead of full watch<AppSettings>() — this
     // card is instantiated per evidence entry (225 entries) inside a
     // ListView.builder; an unrelated settings change would otherwise
@@ -469,31 +479,42 @@ class _EvidenceCard extends StatelessWidget {
         evidence.images.isNotEmpty ? evidence.images.first : null;
 
     return Material(
-      color: scheme.surface,
-      borderRadius: BorderRadius.circular(12),
+      color: wb.paneBg,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.zero,
+        side: BorderSide(color: wb.border, width: WbMetrics.hairline),
+      ),
       child: Ink(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-              color: scheme.outlineVariant.withValues(alpha: 0.6)),
-        ),
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
+          hoverColor: wb.hoverBg,
+          splashColor: Colors.transparent,
+          highlightColor: Colors.transparent,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // Hero image / icon fallback.
-              SizedBox(
+              //
+              // 2026-08-08 (#279): the top corners used to be clipped to
+              // a 12px radius. On this page that is not a style choice —
+              // the photograph IS the evidence, and rounding it crops
+              // the artefact. BibleWorks' own image surface (bwh10 Mss
+              // tab) is a flush plate in a frame, and its whole help
+              // topic is about examining the image, not framing it.
+              Container(
                 height: 100,
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(
+                        color: wb.border, width: WbMetrics.hairline),
+                  ),
+                ),
                 child: imgUrl != null
-                    ? ClipRRect(
-                        borderRadius: const BorderRadius.vertical(
-                            top: Radius.circular(12)),
+                    ?
                         // 2026-05-07: prefer <img> tag over canvaskit
                         // XHR fetch — external evidence-image CDNs
                         // generally lack CORS headers.
-                        child: Image.network(
+                        Image.network(
                           imgUrl,
                           fit: BoxFit.cover,
                           webHtmlElementStrategy:
@@ -525,8 +546,7 @@ class _EvidenceCard extends StatelessWidget {
                               category: evidence.category,
                             );
                           },
-                        ),
-                      )
+                        )
                     : _ShimmerPlaceholder(
                         category: evidence.category,
                         showCategoryIcon: true,
@@ -597,7 +617,6 @@ class _EvidenceCard extends StatelessWidget {
                     InkWell(
                       onTap: () =>
                           _openReferenceFromCard(context, evidence),
-                      borderRadius: BorderRadius.circular(6),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 4, vertical: 4),
@@ -692,12 +711,21 @@ class _EvidenceCard extends StatelessWidget {
 // load failure; replaced by `_ShimmerPlaceholder(showCategoryIcon: true)`
 // which uses a Material category icon over the gradient — no emoji.
 
-/// Category-tinted gradient placeholder. Used in two cases:
+/// The empty plate — what a specimen frame holds when there is no
+/// photograph. Used in two cases:
 ///   • While the hero Image.network is still loading (no icon)
-///   • On hard image-load error (with a subtle Material category icon)
-/// In both cases this replaces the previous emoji-only fallback —
-/// users no longer see a wall of emoji-faces in the grid when images
-/// are slow or Wikimedia rate-limits a batch of requests.
+///   • On hard image-load error (with a Material category icon)
+/// In both cases this replaces the earlier emoji-only fallback — users
+/// no longer see a wall of emoji-faces in the grid when images are slow
+/// or Wikimedia rate-limits a batch of requests.
+///
+/// 2026-08-08 (#279): the fill was a three-stop category-tinted
+/// gradient off `scheme.primary`/`secondary`/`tertiary`. Those roles
+/// are seed-derived and untouched by `workbenchTheme`, so a grid with
+/// several missing images was the most colourful thing on screen —
+/// competing with the actual photographs, which are the information.
+/// Flat `paneAltBg` with the category icon says "no image" without
+/// asking for attention.
 class _ShimmerPlaceholder extends StatelessWidget {
   final String category;
   final bool showCategoryIcon;
@@ -708,36 +736,15 @@ class _ShimmerPlaceholder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    // Map each evidence category to a colour + Material icon. Subtle —
-    // desaturated enough that real photos remain the dominant visual
-    // once they land, and the placeholder doesn't visually shout when
-    // a load fails.
-    final (accent, icon) = switch (category) {
-      'Manuscripts' => (scheme.tertiary, Icons.menu_book_outlined),
-      'Archaeology' => (scheme.primary, Icons.terrain_outlined),
-      'History'     => (scheme.secondary, Icons.account_balance_outlined),
-      'Science'     => (scheme.tertiary, Icons.science_outlined),
-      _             => (scheme.primary, Icons.image_outlined),
-    };
+    final wb = WbColors.of(context);
     return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            accent.withValues(alpha: 0.20),
-            accent.withValues(alpha: 0.06),
-            scheme.surfaceContainerHighest.withValues(alpha: 0.40),
-          ],
-        ),
-      ),
+      color: wb.paneAltBg,
       child: showCategoryIcon
           ? Center(
               child: Icon(
-                icon,
+                evidenceCategoryIcon(category),
                 size: 32,
-                color: accent.withValues(alpha: 0.55),
+                color: wb.mutedText,
               ),
             )
           : null,
@@ -1001,6 +1008,7 @@ class _AiSearchDialogState extends State<_AiSearchDialog> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final wb = WbColors.of(context);
     final settings = context.watch<AppSettings>();
     final locale = widget.locale;
 
@@ -1061,12 +1069,7 @@ class _AiSearchDialogState extends State<_AiSearchDialog> {
                     fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
                     fontSize: settings.fontSize,
                   ),
-                  decoration: InputDecoration(
-                    hintText: _hintText,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
+                  decoration: InputDecoration(hintText: _hintText),
                   onSubmitted: (_) => _ask(),
                 ),
               ),
@@ -1084,12 +1087,9 @@ class _AiSearchDialogState extends State<_AiSearchDialog> {
                 margin: const EdgeInsets.only(bottom: 8),
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: scheme.surfaceContainerHighest
-                      .withValues(alpha: 0.6),
-                  borderRadius: BorderRadius.circular(8),
+                  color: wb.paneAltBg,
                   border: Border.all(
-                      color: scheme.outlineVariant
-                          .withValues(alpha: 0.4)),
+                      color: wb.border, width: WbMetrics.hairline),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1205,6 +1205,7 @@ class _AiSearchDialogState extends State<_AiSearchDialog> {
               for (final c in _result!.citations)
                 _CitationTile(
                   citation: c,
+                  locale: locale,
                   onTap: () {
                     final ev = _resolve(c.id);
                     if (ev != null) widget.onCitationTap(ev);
@@ -1262,9 +1263,12 @@ class _LocalMatchTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final wb = WbColors.of(context);
     // PERF: scoped select — see _EvidenceCard for the rationale.
     context.select<AppSettings, String>((s) => s.fontFamily);
     final settings = context.read<AppSettings>();
+    final currentVersion =
+        context.select<MainProvider, String>((m) => m.currentVersion);
     // 2026-05-22 (v1.2.78): replaced the 18-px emoji thumbnail with
     // a 32×32 rounded image thumbnail (falls back to a Material
     // category icon on load error). Search-result rows used to be
@@ -1272,27 +1276,14 @@ class _LocalMatchTile extends StatelessWidget {
     // preview, matching what users tap through to.
     final firstImage =
         evidence.images.isNotEmpty ? evidence.images.first : null;
-    final accent = switch (evidence.category) {
-      'Manuscripts' => scheme.tertiary,
-      'Archaeology' => scheme.primary,
-      'History'     => scheme.secondary,
-      'Science'     => scheme.tertiary,
-      _             => scheme.primary,
-    };
-    final categoryIcon = switch (evidence.category) {
-      'Manuscripts' => Icons.menu_book_outlined,
-      'Archaeology' => Icons.terrain_outlined,
-      'History'     => Icons.account_balance_outlined,
-      'Science'     => Icons.science_outlined,
-      _             => Icons.image_outlined,
-    };
+    final categoryIcon = evidenceCategoryIcon(evidence.category);
     final thumb = Container(
       width: 32,
       height: 32,
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: accent.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(6),
+        color: wb.paneAltBg,
+        border: Border.all(color: wb.border, width: WbMetrics.hairline),
       ),
       child: firstImage != null
           ? Image.network(
@@ -1304,7 +1295,7 @@ class _LocalMatchTile extends StatelessWidget {
               errorBuilder: (_, __, ___) => Icon(
                 categoryIcon,
                 size: 18,
-                color: accent.withValues(alpha: 0.7),
+                color: wb.mutedText,
               ),
               loadingBuilder: (_, child, p) {
                 if (p == null) return child;
@@ -1312,7 +1303,7 @@ class _LocalMatchTile extends StatelessWidget {
                   child: Icon(
                     categoryIcon,
                     size: 18,
-                    color: accent.withValues(alpha: 0.55),
+                    color: wb.mutedText,
                   ),
                 );
               },
@@ -1320,12 +1311,12 @@ class _LocalMatchTile extends StatelessWidget {
           : Icon(
               categoryIcon,
               size: 18,
-              color: accent.withValues(alpha: 0.7),
+              color: wb.mutedText,
             ),
     );
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
+      hoverColor: wb.hoverBg,
       child: Padding(
         padding:
             const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
@@ -1349,7 +1340,8 @@ class _LocalMatchTile extends StatelessWidget {
                   ),
                   if (evidence.scriptureReference.isNotEmpty)
                     Text(
-                      evidence.scriptureReference,
+                      localizedReferenceLabel(
+                          evidence.scriptureReference, locale, currentVersion),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
@@ -1372,15 +1364,23 @@ class _LocalMatchTile extends StatelessWidget {
 
 class _CitationTile extends StatelessWidget {
   final AiCitation citation;
+  final String locale;
   final VoidCallback onTap;
-  const _CitationTile({required this.citation, required this.onTap});
+  const _CitationTile({
+    required this.citation,
+    required this.locale,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final wb = WbColors.of(context);
+    final currentVersion =
+        context.select<MainProvider, String>((m) => m.currentVersion);
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
+      hoverColor: wb.hoverBg,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
         child: Row(
@@ -1403,7 +1403,8 @@ class _CitationTile extends StatelessWidget {
                   ),
                   if (citation.scriptureReference.isNotEmpty)
                     Text(
-                      citation.scriptureReference,
+                      localizedReferenceLabel(
+                          citation.scriptureReference, locale, currentVersion),
                       style: TextStyle(
                         fontSize: 12,
                         color: scheme.primary,
@@ -1424,6 +1425,10 @@ class _CitationTile extends StatelessWidget {
 class _ScopeBanner extends StatelessWidget {
   final _EvidenceScope scope;
   final bool wasFallback;
+
+  /// Already localised by the caller. The English name it came from
+  /// stays in `widget.filterBook`, which is what the service filters
+  /// on; only the displayed one is translated.
   final String? book;
   final int? chapter;
   final String locale;
@@ -1442,11 +1447,16 @@ class _ScopeBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final tone = wasFallback
-        ? scheme.surfaceContainerHighest
-        : scheme.primaryContainer.withValues(alpha: 0.45);
-    final onTone = wasFallback ? scheme.onSurface : scheme.onPrimaryContainer;
+    final wb = WbColors.of(context);
+    // Both states used to be colour: a `primaryContainer` wash for the
+    // normal one, `surfaceContainerHighest` for the fallback. Neither
+    // role is remapped by `workbenchTheme`, so the normal state came
+    // out as a seed-derived lilac — the one thing a neutral window
+    // reserves for real information. The states are told apart by the
+    // ICON and the words instead, which is what was carrying the
+    // meaning anyway.
+    final tone = wasFallback ? wb.paneAltBg : wb.chromeBg;
+    final onTone = wb.text;
 
     String fmt(String key, String fallback) {
       final raw = uiStrings[key]?[locale] ?? fallback;
@@ -1484,7 +1494,7 @@ class _ScopeBanner extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: tone,
-        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: wb.border, width: WbMetrics.hairline),
       ),
       child: Row(
         children: [
