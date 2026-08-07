@@ -127,6 +127,11 @@ flutter:
     - assets/ot_synopsis.json
     - assets/daily_verses.json
     - assets/bible_evidence.json
+    # Thayer's (1889) in English + Hitchcock's names (1869). Both were
+    # committed months before this line existed, so neither was in the
+    # bundle and neither could be read at runtime.
+    - assets/thayer.json
+    - assets/bible_names.json
     - assets/strongs/
     - assets/originals/
     - assets/tagged/cuvs-yhwh/

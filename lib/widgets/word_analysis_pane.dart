@@ -31,9 +31,12 @@ import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/original_word.dart';
 import 'package:seeksparks/models/strongs.dart';
+import 'package:seeksparks/services/bible_names_service.dart';
 import 'package:seeksparks/services/chinese_lexicon_service.dart';
 import 'package:seeksparks/services/strongs_service.dart';
+import 'package:seeksparks/services/thayer_service.dart';
 import 'package:seeksparks/utils/morphology.dart' show describeMorphology;
+import 'package:seeksparks/utils/thayer_parse.dart';
 import 'package:seeksparks/widgets/word_forms_section.dart';
 
 class WordAnalysisPane extends StatefulWidget {
@@ -85,6 +88,20 @@ class _WordAnalysisPaneState extends State<WordAnalysisPane> {
   /// tagged line. Nothing else in the app could explain them.
   List<ChineseLexEntry> _zhGrammar = const [];
 
+  /// Thayer's (1889) in English. The Chinese reader has had this article
+  /// since the module import; the English reader had only Strong's
+  /// one-line gloss. Loaded for non-Chinese locales only, since a
+  /// Chinese reader is better served by [_zh].
+  ThayerEntry? _thayer;
+
+  /// The same, for the parsing codes G5627–G5798.
+  List<ThayerEntry> _enGrammar = const [];
+
+  /// Hitchcock's reading of the name, when this word is one. Printed
+  /// beside Thayer's rather than instead of it — the two disagree often
+  /// enough that picking a winner would be editorialising.
+  String? _hitchcock;
+
   @override
   void initState() {
     super.initState();
@@ -117,11 +134,31 @@ class _WordAnalysisPaneState extends State<WordAnalysisPane> {
         if (g != null && g.isGrammarCode) grammar.add(g);
       }
     }
+    ThayerEntry? thayer;
+    var enGrammar = const <ThayerEntry>[];
+    String? hitchcock;
+    if (!wantZh) {
+      thayer = await ThayerService.lookup(number);
+      final codes = <ThayerEntry>[];
+      for (final code in widget.grammar) {
+        final g = await ThayerService.lookup(code);
+        if (g != null && g.isGrammarCode) codes.add(g);
+      }
+      enGrammar = codes;
+      // Hebrew names never reach Thayer's, so Hitchcock is the only
+      // source for the whole Old Testament.
+      if (e != null && e.isProperNoun) {
+        hitchcock = await BibleNamesService.lookupFromGloss(e.gloss);
+      }
+    }
     if (!mounted || widget.word.strongs != number) return;
     setState(() {
       _entry = e;
       _zh = zh;
       _zhGrammar = grammar;
+      _thayer = thayer;
+      _enGrammar = enGrammar;
+      _hitchcock = hitchcock;
       _loadedFor = number;
     });
   }
@@ -133,6 +170,7 @@ class _WordAnalysisPaneState extends State<WordAnalysisPane> {
     final locale = widget.locale;
     final e = _entry;
     final zh = _zh;
+    final th = _thayer;
     final parse = describeMorphology(widget.word.morph, locale);
 
     String s(String key, String fallback) =>
@@ -253,36 +291,20 @@ class _WordAnalysisPaneState extends State<WordAnalysisPane> {
             onOpenRef: widget.onOpenRef,
           ),
 
-          // ── Grammar codes, decoded. On a tagged Chinese line these
-          // are the blue numbers; without this they are unreadable.
+          // ── Grammar codes, decoded. On a tagged line these are the
+          // blue numbers; without this they are unreadable.
+          for (final g in _enGrammar) ...[
+            const SizedBox(height: 6),
+            _codeBox(
+              wb,
+              t,
+              g.number,
+              g.grammarLines.join(' · '),
+            ),
+          ],
           for (final g in _zhGrammar) ...[
             const SizedBox(height: 6),
-            Container(
-              width: double.infinity,
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
-              decoration: BoxDecoration(
-                color: wb.strongsGrammar.withValues(alpha: 0.08),
-                border: Border.all(
-                    color: wb.strongsGrammar.withValues(alpha: 0.30)),
-              ),
-              child: Text.rich(
-                TextSpan(children: [
-                  TextSpan(
-                    text: '${g.number}  ',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      color: wb.strongsGrammar,
-                    ),
-                  ),
-                  TextSpan(
-                    text: g.parsing.join(' · '),
-                    style: TextStyle(color: wb.strongsGrammar),
-                  ),
-                ]),
-                style: TextStyle(fontSize: t.text, height: 1.35),
-              ),
-            ),
+            _codeBox(wb, t, g.number, g.parsing.join(' · ')),
           ],
 
           // ── The Chinese lexicon, when we have one. It supersedes the
@@ -314,10 +336,19 @@ class _WordAnalysisPaneState extends State<WordAnalysisPane> {
           ] else if (e != null) ...[
             _field(wb, t, s('analysisMeaning', 'Meaning'),
                 e.localizedGloss(locale)),
-            _field(wb, t, s('analysisOrigin', 'Origin'), e.derivation ?? ''),
-            _field(wb, t, s('analysisDefinition', 'Definition'),
-                e.localizedDefinition(locale)),
+            _nameMeanings(wb, t, s),
+            _field(wb, t, s('analysisOrigin', 'Origin'),
+                th?.etymology.isNotEmpty == true
+                    ? th!.etymology
+                    : (e.derivation ?? '')),
+            // Thayer's numbered senses supersede Strong's one-paragraph
+            // definition — same word, an article instead of a line.
+            if (th == null || th.senses.isEmpty)
+              _field(wb, t, s('analysisDefinition', 'Definition'),
+                  e.localizedDefinition(locale)),
           ],
+
+          if (th != null) ..._thayerBlock(wb, t, s, th),
 
           if (e != null || zh != null) ...[
             if (widget.onOpenFullEntry != null) ...[
@@ -347,7 +378,160 @@ class _WordAnalysisPaneState extends State<WordAnalysisPane> {
                     fontSize: t.text, color: wb.mutedText),
               ),
             ),
+
+          _attribution(wb, t),
         ],
+      ),
+    );
+  }
+
+  /// The tinted box used for a decoded grammar code, in either language.
+  Widget _codeBox(WbColors wb, WbType t, String number, String body) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+      decoration: BoxDecoration(
+        color: wb.strongsGrammar.withValues(alpha: 0.08),
+        border:
+            Border.all(color: wb.strongsGrammar.withValues(alpha: 0.30)),
+      ),
+      child: Text.rich(
+        TextSpan(children: [
+          TextSpan(
+            text: '$number  ',
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              color: wb.strongsGrammar,
+            ),
+          ),
+          TextSpan(text: body, style: TextStyle(color: wb.strongsGrammar)),
+        ]),
+        style: TextStyle(fontSize: t.text, height: 1.35),
+      ),
+    );
+  }
+
+  /// Thayer's and Hitchcock's readings of a proper name, side by side.
+  /// They disagree constantly — Aaron is "light-bringer" to Thayer and
+  /// "a teacher; lofty; mountain of strength" to Hitchcock — so both are
+  /// printed with their source, and neither is presented as the answer.
+  Widget _nameMeanings(
+      WbColors wb, WbType t, String Function(String, String) s) {
+    final thayer = _thayer?.nameMeaning ?? '';
+    final hitchcock = _hitchcock ?? '';
+    if (thayer.isEmpty && hitchcock.isEmpty) return const SizedBox.shrink();
+    final parts = <String>[
+      if (thayer.isNotEmpty)
+        '${s('analysisSourceThayer', "Thayer's")}: $thayer',
+      if (hitchcock.isNotEmpty)
+        '${s('analysisSourceHitchcock', 'Hitchcock')}: $hitchcock',
+    ];
+    return _field(
+        wb, t, s('analysisNameMeaning', 'Name means'), parts.join('\n'));
+  }
+
+  /// Everything Thayer's carries that Strong's does not: the KJV
+  /// rendering counts, the numbered sense outline, the commentary
+  /// paragraphs, and the synonym cross-references.
+  List<Widget> _thayerBlock(WbColors wb, WbType t,
+      String Function(String, String) s, ThayerEntry th) {
+    if (th.isGrammarCode) return const [];
+    if (th.isNotUsed) {
+      return [
+        Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: Text(
+            s('analysisNotUsed', "Not treated in Thayer's."),
+            style: TextStyle(fontSize: t.chrome, color: wb.mutedText),
+          ),
+        ),
+      ];
+    }
+
+    final pos = decodePartOfSpeech(th.partOfSpeech);
+    final chips = <String>[
+      if (pos != null) pos,
+      if (th.tdnt.isNotEmpty)
+        '${s('analysisTdnt', 'TDNT (Kittel)')} ${th.tdnt}',
+    ];
+
+    return [
+      if (chips.isNotEmpty)
+        Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: Text(
+            chips.join('  ·  '),
+            style: TextStyle(fontSize: t.chrome, color: wb.mutedText),
+          ),
+        ),
+      if (th.avCounts.isNotEmpty)
+        _field(
+          wb,
+          t,
+          th.avTotal > 0
+              ? '${s('analysisAvUsage', 'KJV renderings')} '
+                  '(${th.avTotal})'
+              : s('analysisAvUsage', 'KJV renderings'),
+          th.avCounts
+              .map((a) => a.count > 0 ? '${a.rendering} ${a.count}' : a.rendering)
+              .join(', '),
+        ),
+      if (th.senses.isNotEmpty) ...[
+        const SizedBox(height: 8),
+        Text(
+          s('analysisSenses', "Senses (Thayer's)"),
+          style: TextStyle(
+            fontSize: t.text,
+            fontWeight: FontWeight.w700,
+            color: wb.text,
+          ),
+        ),
+        for (final sense in th.senses)
+          Padding(
+            // The outline nests four deep; the indent is what makes
+            // "1b2a" legible as a sub-sense rather than a flat list.
+            padding: EdgeInsets.only(left: (sense.level - 1) * 12.0, top: 3),
+            child: Text.rich(
+              TextSpan(children: [
+                TextSpan(
+                  text: '${sense.marker})  ',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    color: wb.mutedText,
+                  ),
+                ),
+                TextSpan(text: sense.text),
+              ]),
+              style: TextStyle(
+                  fontSize: t.text, height: 1.4, color: wb.text),
+            ),
+          ),
+      ],
+      for (final note in th.notes) _field(wb, t, s('analysisNotes', 'Notes'), note),
+      if (th.synonymRefs.isNotEmpty)
+        _field(wb, t, s('analysisSynonyms', 'Synonyms — see entry'),
+            th.synonymRefs.join(', ')),
+    ];
+  }
+
+  /// Both sources ask to be credited, and a reader is entitled to know
+  /// which edition of a 19th-century lexicon they are reading.
+  Widget _attribution(WbColors wb, WbType t) {
+    final lines = <String>[
+      if (_thayer != null) ThayerService.attribution,
+      if ((_hitchcock ?? '').isNotEmpty) BibleNamesService.attribution,
+    ].where((a) => a.isNotEmpty).toList();
+    if (lines.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: Text(
+        lines.join('\n'),
+        style: TextStyle(
+          fontSize: t.chrome - 1,
+          fontStyle: FontStyle.italic,
+          color: wb.mutedText,
+          height: 1.35,
+        ),
       ),
     );
   }

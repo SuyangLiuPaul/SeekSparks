@@ -4667,6 +4667,56 @@ const uiStrings = {
     'zh-Hant': '此編號沒有詞典條目。',
     'en': 'No lexicon entry for this number.',
   },
+  'analysisAvUsage': {
+    'zh-Hans': '钦定本译法',
+    'zh-Hant': '欽定本譯法',
+    'en': 'KJV renderings',
+  },
+  'analysisAvTotal': {
+    'zh-Hans': '共 %d 次',
+    'zh-Hant': '共 %d 次',
+    'en': '%d occurrences',
+  },
+  'analysisSenses': {
+    'zh-Hans': '词义（Thayer）',
+    'zh-Hant': '詞義（Thayer）',
+    'en': "Senses (Thayer's)",
+  },
+  'analysisNotes': {
+    'zh-Hans': '按语',
+    'zh-Hant': '按語',
+    'en': 'Notes',
+  },
+  'analysisSynonyms': {
+    'zh-Hans': '同义词条',
+    'zh-Hant': '同義詞條',
+    'en': 'Synonyms — see entry',
+  },
+  'analysisNameMeaning': {
+    'zh-Hans': '名字含义',
+    'zh-Hant': '名字含義',
+    'en': 'Name means',
+  },
+  'analysisSourceThayer': {
+    'zh-Hans': 'Thayer',
+    'zh-Hant': 'Thayer',
+    'en': "Thayer's",
+  },
+  'analysisSourceHitchcock': {
+    'zh-Hans': 'Hitchcock',
+    'zh-Hant': 'Hitchcock',
+    'en': 'Hitchcock',
+  },
+  'analysisTdnt': {
+    'zh-Hans': 'TDNT（基特尔）',
+    'zh-Hant': 'TDNT（基特爾）',
+    'en': 'TDNT (Kittel)',
+  },
+  'analysisNotUsed': {
+    'zh-Hans': 'Thayer 未收录此编号。',
+    'zh-Hant': 'Thayer 未收錄此編號。',
+    'en': "Not treated in Thayer's.",
+  },
   'parallelBrowseShort': {
     'zh-Hans': '对照',
     'zh-Hant': '對照',
