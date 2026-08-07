@@ -82,6 +82,7 @@ class _SmallScreenGateState extends State<SmallScreenGate> {
       size: size,
       locale: context.watch<AppSettings>().locale,
       onContinue: _dismiss,
+      onLocale: (code) => context.read<AppSettings>().setLocale(code),
     );
   }
 }
@@ -95,12 +96,20 @@ class SmallScreenAdvisory extends StatelessWidget {
     required this.size,
     required this.locale,
     required this.onContinue,
+    required this.onLocale,
   });
 
   final WorkbenchAdvice advice;
   final Size size;
   final String locale;
   final VoidCallback onContinue;
+
+  /// Changing the interface language from HERE is not a convenience —
+  /// it is the only way. The gate is a hard block, so Settings is
+  /// unreachable behind it: a reader whose device is set to English but
+  /// who reads Chinese would otherwise be stopped by a wall they cannot
+  /// even read, with no way to change it.
+  final ValueChanged<String> onLocale;
 
   @override
   Widget build(BuildContext context) {
@@ -131,7 +140,13 @@ class SmallScreenAdvisory extends StatelessWidget {
     return Scaffold(
       backgroundColor: cs.surface,
       body: SafeArea(
-        child: Center(
+        // The switcher is LAST in this Stack, not first. Stack paints in
+        // child order, so with it first the centred content sat on top
+        // and swallowed the taps — the control was visible and dead. A
+        // widget test caught it; nothing about the layout looked wrong.
+        child: Stack(
+          children: [
+            Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(24, 32, 24, 32),
             child: ConstrainedBox(
@@ -231,7 +246,81 @@ class SmallScreenAdvisory extends StatelessWidget {
             ),
           ),
         ),
+            Positioned(
+              top: 8,
+              right: 12,
+              child: _LocaleSwitch(
+                locale: locale,
+                onLocale: onLocale,
+                color: cs.onSurface,
+                accent: cs.primary,
+              ),
+            ),
+          ],
+        ),
       ),
+    );
+  }
+}
+
+/// EN / 简 / 繁, as three flat text buttons. Deliberately not a dropdown:
+/// a reader who cannot read the wall cannot be asked to open a menu
+/// labelled in the language they do not read. All three labels are
+/// written in their own script, so each is legible to the person who
+/// needs it.
+class _LocaleSwitch extends StatelessWidget {
+  const _LocaleSwitch({
+    required this.locale,
+    required this.onLocale,
+    required this.color,
+    required this.accent,
+  });
+
+  final String locale;
+  final ValueChanged<String> onLocale;
+  final Color color;
+  final Color accent;
+
+  static const _options = <String, String>{
+    'en': 'EN',
+    'zh-Hans': '简',
+    'zh-Hant': '繁',
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (final e in _options.entries)
+          Padding(
+            padding: const EdgeInsets.only(left: 2),
+            child: TextButton(
+              onPressed: locale == e.key ? null : () => onLocale(e.key),
+              style: TextButton.styleFrom(
+                minimumSize: const Size(40, 36),
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                // The current language stays legible rather than being
+                // greyed out as "disabled" — it is the answer, not an
+                // unavailable option.
+                foregroundColor: accent,
+                disabledForegroundColor: accent,
+              ),
+              child: Text(
+                e.value,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight:
+                      locale == e.key ? FontWeight.w700 : FontWeight.w400,
+                  color: locale == e.key
+                      ? accent
+                      : color.withValues(alpha: 0.55),
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

@@ -66,6 +66,7 @@ void main() {
           ),
           size: size,
           locale: locale,
+          onLocale: (_) {},
           onContinue: () {},
         ),
       ),
@@ -166,6 +167,51 @@ void main() {
       await pumpGate(tester, const Size(844, 390));
       expect(find.byType(SmallScreenAdvisory), findsNothing);
       expect(find.byKey(workbenchMarker), findsOneWidget);
+    });
+  });
+
+  group('the language switch is the only way out of the wrong language', () {
+    testWidgets('all three languages are offered, in their own script',
+        (tester) async {
+      addTearDown(tester.view.reset);
+      await pumpAdvisory(tester, const Size(390, 844), locale: 'en');
+      expect(find.text('EN'), findsOneWidget);
+      expect(find.text('简'), findsOneWidget);
+      expect(find.text('繁'), findsOneWidget);
+    });
+
+    testWidgets('tapping one reports the code the app settings expect',
+        (tester) async {
+      addTearDown(tester.view.reset);
+      String? picked;
+      tester.view.devicePixelRatio = 1.0;
+      tester.view.physicalSize = const Size(390, 844);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: SmallScreenAdvisory(
+            advice: WorkbenchAdvice.rotate,
+            size: const Size(390, 844),
+            locale: 'en',
+            onContinue: () {},
+            onLocale: (c) => picked = c,
+          ),
+        ),
+      );
+      await tester.tap(find.text('简'));
+      expect(picked, 'zh-Hans');
+    });
+
+    testWidgets('the language already showing is not offered as a change',
+        (tester) async {
+      addTearDown(tester.view.reset);
+      await pumpAdvisory(tester, const Size(390, 844), locale: 'zh-Hans');
+      final current = tester.widget<TextButton>(
+        find.ancestor(
+          of: find.text('简'),
+          matching: find.byType(TextButton),
+        ),
+      );
+      expect(current.onPressed, isNull);
     });
   });
 
