@@ -122,10 +122,9 @@ class SmallScreenAdvisory extends StatelessWidget {
     final muted = cs.onSurface.withValues(alpha: 0.68);
 
     final needs = s('fitNeeds',
-            'Three columns need about {three} px of width, two need about '
-            '{two}. This screen is {w} × {h}.')
+            'Three columns need about {three} px of width. '
+            'This screen is {w} × {h}.')
         .replaceAll('{three}', WorkbenchFit.threePaneMinWidth.round().toString())
-        .replaceAll('{two}', WorkbenchFit.twoPaneMinWidth.round().toString())
         .replaceAll('{w}', size.width.round().toString())
         .replaceAll('{h}', size.height.round().toString());
 

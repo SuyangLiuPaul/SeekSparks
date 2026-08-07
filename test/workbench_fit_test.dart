@@ -30,54 +30,57 @@ void main() {
   // spec did. What is asserted now is the promise the UI actually makes.
   group('the gate is the current width, because that is what the panes use',
       () {
-    test('phone portrait is advised — 390 carries one column', () {
-      expect(advice(390, 844), WorkbenchAdvice.rotate);
+    test('phone portrait is advised — and rotating will not save it', () {
+      expect(advice(390, 844), WorkbenchAdvice.largerDisplay);
     });
 
-    test('the SAME phone rotated is fine — 844 carries two', () {
-      // The bug in one line: this returned largerDisplay, so turning the
-      // phone changed nothing and the advice contradicted itself.
+    test('a phone sideways is STILL not enough — two columns is not the app',
+        () {
+      // 844 carries two columns, not three. Owner's call: two is a
+      // different, worse product, so the phone is sent to YsWords in
+      // both orientations.
       expect(WorkbenchFit.paneCountFor(844), 2);
-      expect(advice(844, 390), WorkbenchAdvice.none);
+      expect(advice(844, 390), WorkbenchAdvice.largerDisplay);
+      expect(advice(390, 844), WorkbenchAdvice.largerDisplay);
     });
 
-    test('the boundary is the two-pane minimum, in either orientation', () {
-      expect(advice(735, 400), WorkbenchAdvice.largerDisplay);
-      expect(advice(736, 400), WorkbenchAdvice.none);
-      expect(advice(400, 735), WorkbenchAdvice.largerDisplay);
-      expect(advice(400, 736), WorkbenchAdvice.rotate);
+    test('the boundary is the THREE-pane minimum, in either orientation', () {
+      expect(advice(1071, 800), WorkbenchAdvice.largerDisplay);
+      expect(advice(1072, 800), WorkbenchAdvice.none);
+      expect(advice(800, 1071), WorkbenchAdvice.largerDisplay);
+      expect(advice(800, 1072), WorkbenchAdvice.rotate);
     });
 
     test('a tall narrow window is judged on its width, not its short edge',
         () {
-      expect(advice(479, 900), WorkbenchAdvice.rotate);
-      expect(advice(900, 479), WorkbenchAdvice.none);
+      expect(advice(479, 1200), WorkbenchAdvice.rotate);
+      expect(advice(1200, 479), WorkbenchAdvice.none);
     });
   });
 
   group('rotation is only offered when it actually buys a column', () {
-    test('390x844 rotates into two panes', () {
-      expect(WorkbenchFit.paneCountFor(844), 2);
-      expect(advice(390, 844), WorkbenchAdvice.rotate);
+    test('a tablet that rotates into three panes is told so', () {
+      // iPad Pro 11 portrait: 834 wide carries one, but 1194 carries all
+      // three, so rotating is a promise the layout can keep.
+      expect(WorkbenchFit.paneCountFor(1194), 3);
+      expect(advice(834, 1194), WorkbenchAdvice.rotate);
     });
 
-    test('360x640 does not — 640 wide leaves the reader under 480', () {
+    test('a phone does not, in any orientation', () {
       expect(WorkbenchFit.paneCountFor(640), 1);
       expect(advice(360, 640), WorkbenchAdvice.largerDisplay);
+      expect(advice(390, 844), WorkbenchAdvice.largerDisplay);
     });
 
-    test('the long edge threshold is the two-pane minimum', () {
-      expect(advice(400, 735), WorkbenchAdvice.largerDisplay);
-      expect(advice(400, 736), WorkbenchAdvice.rotate);
+    test('the long edge threshold is the three-pane minimum', () {
+      expect(advice(400, 1071), WorkbenchAdvice.largerDisplay);
+      expect(advice(400, 1072), WorkbenchAdvice.rotate);
     });
 
     test('a landscape screen is never told to rotate', () {
-      // Wide enough already — nothing to advise.
-      expect(advice(844, 390), WorkbenchAdvice.none);
-      expect(advice(1000, 400), WorkbenchAdvice.none);
-      // Too narrow even sideways — say so, do not offer a rotation that
-      // would not help.
-      expect(advice(700, 400), WorkbenchAdvice.largerDisplay);
+      expect(advice(1200, 700), WorkbenchAdvice.none);
+      expect(advice(844, 390), WorkbenchAdvice.largerDisplay);
+      expect(advice(1000, 400), WorkbenchAdvice.largerDisplay);
     });
 
     test('square counts as landscape — there is nothing to turn', () {
@@ -86,8 +89,10 @@ void main() {
   });
 
   group('real devices', () {
-    test('iPad mini clears the gate in both orientations', () {
-      expect(advice(744, 1133), WorkbenchAdvice.none);
+    test('iPad mini: portrait is asked to rotate, landscape carries three',
+        () {
+      // 744 wide carries one column; 1133 carries all three.
+      expect(advice(744, 1133), WorkbenchAdvice.rotate);
       expect(advice(1133, 744), WorkbenchAdvice.none);
     });
 
@@ -96,9 +101,15 @@ void main() {
       expect(WorkbenchFit.paneCountFor(1194), 3);
     });
 
-    test('1024x768 iPad falls to two panes but is not advised', () {
-      expect(advice(1024, 768), WorkbenchAdvice.none);
+    test('the classic 1024x768 iPad no longer qualifies', () {
+      // 1024 is 48px short of the 1072 three-column minimum, so this
+      // iPad is now sent to YsWords in both orientations. Deliberate
+      // consequence of the three-column bar, not an oversight: closing
+      // that 48px gap means trimming the pane minimums, which is a
+      // separate decision about how narrow a column may get.
       expect(WorkbenchFit.paneCountFor(1024), 2);
+      expect(advice(1024, 768), WorkbenchAdvice.largerDisplay);
+      expect(advice(768, 1024), WorkbenchAdvice.largerDisplay);
     });
 
     test('1280x800 laptop is comfortable', () {

@@ -87,9 +87,15 @@ class WorkbenchFit {
     // printing "two need about 736. This screen is 844 x 390". 844 > 736.
     // It argued against itself using its own numbers.
     //
-    // What matters is whether the columns fit RIGHT NOW. If they do, the
-    // workbench works and there is nothing to advise about.
-    if (paneCountFor(width) >= 2) return WorkbenchAdvice.none;
+    // 2026-08-07, second pass — the bar is all THREE columns, not two.
+    // Owner's call: 「手机不能打开三个栅栏，而我们的App是有三个Column…
+    // 不能打开三个的，全部都把它显示让他用我的另外一个软件」. Two columns
+    // is not a lighter version of the workbench, it is a different and
+    // worse product — search beside the text with no word analysis is
+    // just a reader with a search box, which is what YsWords already is
+    // and does better. Anything that cannot carry all three is sent
+    // there rather than shown a half-tool.
+    if (paneCountFor(width) >= 3) return WorkbenchAdvice.none;
 
     // One column at this width. Offer rotation only when rotating would
     // genuinely cross the two-pane threshold — on a 360x640 phone the
@@ -97,7 +103,7 @@ class WorkbenchFit {
     // promise the layout cannot keep. Square counts as landscape: there
     // is nothing for a rotation to change.
     final portrait = height > width;
-    if (portrait && paneCountFor(height) >= 2) return WorkbenchAdvice.rotate;
+    if (portrait && paneCountFor(height) >= 3) return WorkbenchAdvice.rotate;
 
     return WorkbenchAdvice.largerDisplay;
   }

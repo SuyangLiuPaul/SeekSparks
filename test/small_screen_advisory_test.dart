@@ -83,17 +83,12 @@ void main() {
       expect(find.byKey(workbenchMarker), findsNothing);
     });
 
-    testWidgets('the same phone rotated goes straight to the workbench',
+    testWidgets('a phone gets it in BOTH orientations — two columns is not it',
         (tester) async {
-      // 2026-08-07: this asserted the OPPOSITE — that a landscape phone
-      // still gets the advisory — which is what made rotating change
-      // nothing on screen while the portrait copy promised it would.
-      // 844 clears the 736 two-pane minimum, so the workbench is exactly
-      // what the reader was told they would get.
       addTearDown(tester.view.reset);
       await pumpGate(tester, const Size(844, 390));
-      expect(find.byType(SmallScreenAdvisory), findsNothing);
-      expect(find.byKey(workbenchMarker), findsOneWidget);
+      expect(find.byType(SmallScreenAdvisory), findsOneWidget);
+      expect(find.byKey(workbenchMarker), findsNothing);
     });
 
     testWidgets('a screen too narrow even sideways still gets it',
@@ -103,12 +98,12 @@ void main() {
       expect(find.byType(SmallScreenAdvisory), findsOneWidget);
     });
 
-    testWidgets('iPad mini portrait goes straight to the workbench',
+    testWidgets('iPad mini portrait is one column, so it is advised',
         (tester) async {
+      // 744 wide carries one column. Landscape (1133) carries three.
       addTearDown(tester.view.reset);
       await pumpGate(tester, const Size(744, 1133));
-      expect(find.byType(SmallScreenAdvisory), findsNothing);
-      expect(find.byKey(workbenchMarker), findsOneWidget);
+      expect(find.byType(SmallScreenAdvisory), findsOneWidget);
     });
 
     testWidgets('a desktop never pays a frame for it', (tester) async {
@@ -161,10 +156,10 @@ void main() {
       expect(find.byKey(workbenchMarker), findsNothing);
     });
 
-    testWidgets('rotating into two columns is the only way through',
+    testWidgets('a display that carries all three columns goes straight in',
         (tester) async {
       addTearDown(tester.view.reset);
-      await pumpGate(tester, const Size(844, 390));
+      await pumpGate(tester, const Size(1280, 800));
       expect(find.byType(SmallScreenAdvisory), findsNothing);
       expect(find.byKey(workbenchMarker), findsOneWidget);
     });
@@ -218,7 +213,7 @@ void main() {
   group('what it says', () {
     testWidgets('portrait is told to rotate', (tester) async {
       addTearDown(tester.view.reset);
-      await pumpAdvisory(tester, const Size(390, 844));
+      await pumpAdvisory(tester, const Size(834, 1194));
       expect(find.text(s('fitRotate', 'en')), findsOneWidget);
       expect(find.text(s('fitLarger', 'en')), findsNothing);
     });
@@ -234,29 +229,30 @@ void main() {
     testWidgets('quotes the real viewport and the real pane minimums',
         (tester) async {
       addTearDown(tester.view.reset);
-      await pumpAdvisory(tester, const Size(390, 844));
-      final needs = find.textContaining('390 × 844');
+      await pumpAdvisory(tester, const Size(834, 1194));
+      final needs = find.textContaining('834 × 1194');
       expect(needs, findsOneWidget);
       expect(
         tester.widget<Text>(needs).data!,
-        allOf(
-          contains(WorkbenchFit.threePaneMinWidth.round().toString()),
-          contains(WorkbenchFit.twoPaneMinWidth.round().toString()),
-        ),
+        // Only the THREE-pane figure is quoted now. The two-pane number
+        // was dropped from the copy with the gate: mentioning a
+        // threshold the app no longer honours just invites the reader to
+        // aim for it.
+        contains(WorkbenchFit.threePaneMinWidth.round().toString()),
       );
     });
 
     testWidgets('points at YsWords rather than pretending to be it',
         (tester) async {
       addTearDown(tester.view.reset);
-      await pumpAdvisory(tester, const Size(390, 844));
+      await pumpAdvisory(tester, const Size(834, 1194));
       expect(find.text(s('fitYsWords', 'en')), findsOneWidget);
     });
 
     testWidgets('is information, not an error — no error iconography',
         (tester) async {
       addTearDown(tester.view.reset);
-      await pumpAdvisory(tester, const Size(390, 844));
+      await pumpAdvisory(tester, const Size(834, 1194));
       for (final icon in [
         Icons.error,
         Icons.error_outline,
@@ -271,7 +267,7 @@ void main() {
     testWidgets('renders in Chinese without falling back to English',
         (tester) async {
       addTearDown(tester.view.reset);
-      await pumpAdvisory(tester, const Size(390, 844), locale: 'zh-Hant');
+      await pumpAdvisory(tester, const Size(834, 1194), locale: 'zh-Hant');
       expect(find.text(s('fitTitle', 'zh-Hant')), findsOneWidget);
       expect(find.text(s('fitRotate', 'zh-Hant')), findsOneWidget);
       expect(find.text(s('fitTitle', 'en')), findsNothing);

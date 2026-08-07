@@ -6968,26 +6968,23 @@ const uiStrings = {
         'decoration; squeezed to one column it is just a reader.',
   },
   'fitNeeds': {
-    'zh-Hans': '三栏约需 {three} 像素宽，两栏约需 {two}。当前屏幕为 {w} × {h}。',
-    'zh-Hant': '三欄約需 {three} 像素寬，兩欄約需 {two}。目前螢幕為 {w} × {h}。',
-    'en': 'Three columns need about {three} px of width, two need about '
-        '{two}. This screen is {w} × {h}.',
+    'zh-Hans': '三栏需要约 {three} px 宽度。这块屏幕是 {w} × {h}。',
+    'zh-Hant': '三欄需要約 {three} px 寬度。這塊螢幕是 {w} × {h}。',
+    'en': 'Three columns need about {three} px of width. '
+        'This screen is {w} × {h}.',
   },
   'fitRotate': {
-    'zh-Hans': '把手机横过来就能得到两栏：搜索与经文并排。三栏则需要平板或笔记本电脑。',
-    'zh-Hant': '把手機橫過來就能得到兩欄：搜尋與經文並排。三欄則需要平板或筆記型電腦。',
-    'en': 'Turning the phone sideways gets you two: search beside the text. '
-        'All three needs a tablet or a laptop.',
+    'zh-Hans': '把设备横过来即可显示三栏。手机横放也不够宽，请改用平板或电脑。',
+    'zh-Hant': '把裝置橫過來即可顯示三欄。手機橫放也不夠寬，請改用平板或電腦。',
+    'en': 'Turning the device sideways fits all three columns.',
   },
   'fitLarger': {
-    'zh-Hans': '这块屏幕横竖都到不了两栏。平板或笔记本电脑（大致 4:3 至 16:10）'
-        '才是这套版面的设计目标。手机横屏时，工具栏之下只剩约八行经文。',
-    'zh-Hant': '這塊螢幕橫豎都到不了兩欄。平板或筆記型電腦（大致 4:3 至 16:10）'
-        '才是這套版面的設計目標。手機橫向時，工具列之下只剩約八行經文。',
-    'en': 'This screen does not reach two columns in either direction. A '
-        'tablet or a laptop — roughly 4:3 to 16:10 — is what this layout '
-        'was drawn for. A phone held sideways leaves about eight lines of '
-        'text under the toolbars.',
+    'zh-Hans': '这块屏幕在任何方向都放不下三栏。SeekSparks 需要平板或电脑；'
+        '手机请使用 YsWords。',
+    'zh-Hant': '這塊螢幕在任何方向都放不下三欄。SeekSparks 需要平板或電腦；'
+        '手機請使用 YsWords。',
+    'en': 'This screen does not fit three columns in either direction. '
+        'SeekSparks needs a tablet or a laptop.',
   },
   'fitYsWords': {
     'zh-Hans': '若只是在手机上读经，YsWords 正是为此而生——同一家族，手机优先。',
