@@ -93,6 +93,22 @@ class MorphQuery {
     return -1;
   }
 
+  /// Every morpheme satisfying the query, in order.
+  ///
+  /// [match] returns the first, which is all a single-word search needs.
+  /// A construction search needs them all: the morpheme that answers the
+  /// query is also the morpheme whose gender and number an agreement test
+  /// reads, and on a stacked Semitic word the first satisfying morpheme
+  /// is not always the one that lets the construction agree.
+  List<int> matchAll(MorphWord word) {
+    if (word.scheme != scheme) return const <int>[];
+    final out = <int>[];
+    for (var i = 0; i < word.morphemes.length; i++) {
+      if (_satisfies(word.morphemes[i])) out.add(i);
+    }
+    return out;
+  }
+
   bool _satisfies(MorphMorpheme m) {
     for (final e in constraints.entries) {
       if (e.value.isEmpty) continue;

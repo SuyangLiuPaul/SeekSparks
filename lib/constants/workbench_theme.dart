@@ -78,6 +78,7 @@ class WbColors extends ThemeExtension<WbColors> {
     required this.strongsLexical,
     required this.strongsGrammar,
     required this.pinMark,
+    required this.siblingBg,
   });
 
   /// Background of a content pane (Browse, Search list, Analysis).
@@ -121,6 +122,28 @@ class WbColors extends ThemeExtension<WbColors> {
   /// "pinned is gold" holds whichever theme the reader is in.
   final Color pinMark;
 
+  /// The fill behind every OTHER printed occurrence of the word under
+  /// study — the same Greek or Hebrew word landing in the other
+  /// translations on screen.
+  ///
+  /// Green, in all three palettes, because green already means "lexical
+  /// Strong's number" here: it is the hue [strongsLexical] prints the
+  /// number in after each word. The highlight is exactly "the words
+  /// sharing that number", so it borrows the convention instead of
+  /// inventing a fourth one.
+  ///
+  /// It could not be yellow, which is what yahwehdehua.net uses. Paper's
+  /// [selectionBg] is already tan, so a yellow echo would be
+  /// indistinguishable from the hover fill for anyone reading in
+  /// 护眼纸质 — the same trap [pinMark] fell into. Green clears the blue
+  /// selection of light and dark AND paper's tan.
+  ///
+  /// Opaque, never translucent. A translucent fill composites against
+  /// whatever is behind it, so the same mark would render as two
+  /// different colours depending on whether its row happened to be the
+  /// selected one — the defect that made the version pill meaningless.
+  final Color siblingBg;
+
   /// The mark's gold. The single accent, used sparingly — an active
   /// toggle, a focused row — the way the icon uses it on the page.
   Color get accent => const Color(0xFFC9A227);
@@ -142,6 +165,7 @@ class WbColors extends ThemeExtension<WbColors> {
     strongsLexical: Color(0xFF1E7A3C),
     strongsGrammar: Color(0xFF1B57C4),
     pinMark: Color(0xFF8A6A12),
+    siblingBg: Color(0xFFC2E9CE),
   );
 
   static const dark = WbColors(
@@ -158,6 +182,7 @@ class WbColors extends ThemeExtension<WbColors> {
     strongsLexical: Color(0xFF5FC183),
     strongsGrammar: Color(0xFF77A6F0),
     pinMark: Color(0xFFE8C24A),
+    siblingBg: Color(0xFF1E4433),
   );
 
   /// 2026-08: 护眼纸质 — the "easy-on-eyes" paper palette, used when
@@ -186,6 +211,7 @@ class WbColors extends ThemeExtension<WbColors> {
     strongsLexical: Color(0xFF1E7A3C),
     strongsGrammar: Color(0xFF1B57C4),
     pinMark: Color(0xFF7A5C0A),
+    siblingBg: Color(0xFFC4E2BF),
   );
 
   @override
@@ -202,6 +228,7 @@ class WbColors extends ThemeExtension<WbColors> {
     Color? strongsLexical,
     Color? strongsGrammar,
     Color? pinMark,
+    Color? siblingBg,
   }) =>
       WbColors(
         paneBg: paneBg ?? this.paneBg,
@@ -216,6 +243,7 @@ class WbColors extends ThemeExtension<WbColors> {
         strongsLexical: strongsLexical ?? this.strongsLexical,
         strongsGrammar: strongsGrammar ?? this.strongsGrammar,
         pinMark: pinMark ?? this.pinMark,
+        siblingBg: siblingBg ?? this.siblingBg,
       );
 
   @override
@@ -235,6 +263,7 @@ class WbColors extends ThemeExtension<WbColors> {
           Color.lerp(strongsLexical, other.strongsLexical, t)!,
       strongsGrammar: Color.lerp(strongsGrammar, other.strongsGrammar, t)!,
       pinMark: Color.lerp(pinMark, other.pinMark, t)!,
+      siblingBg: Color.lerp(siblingBg, other.siblingBg, t)!,
     );
   }
 
@@ -259,7 +288,8 @@ class WbColors extends ThemeExtension<WbColors> {
           other.hoverBg == hoverBg &&
           other.strongsLexical == strongsLexical &&
           other.strongsGrammar == strongsGrammar &&
-          other.pinMark == pinMark);
+          other.pinMark == pinMark &&
+          other.siblingBg == siblingBg);
 
   @override
   int get hashCode => Object.hash(
@@ -275,6 +305,7 @@ class WbColors extends ThemeExtension<WbColors> {
         strongsLexical,
         strongsGrammar,
         pinMark,
+        siblingBg,
       );
 
   static WbColors of(BuildContext context) =>
@@ -283,15 +314,31 @@ class WbColors extends ThemeExtension<WbColors> {
 
 /// The box drawn behind one word in the Browse window.
 ///
-/// One function owns all four states so they cannot drift apart, which
-/// is the only way "three treatments, no ambiguity" survives the next
-/// person to touch the file. They differ on two axes at once — fill
-/// strength and border — so no pair rests on a single cue:
+/// One function owns all five states so they cannot drift apart, which
+/// is the only way "no ambiguity" survives the next person to touch the
+/// file. They differ on two axes at once — fill HUE and border — so no
+/// pair rests on a single cue:
 ///
-///   none    no fill,      no border
-///   hit     fill at 55%,  no border    (+ bold text)
-///   hover   fill at 100%, no border    (+ underline)
-///   pinned  fill at 100%, gold border  (+ underline)
+///   none     no fill,                    no border
+///   hit      selection hue at 55%,       no border    (+ bold text)
+///   sibling  SIBLING hue at 100%,        no border
+///   hover    selection hue at 100%,      no border    (+ underline)
+///   pinned   selection hue at 100%,      gold border  (+ underline)
+///
+/// `sibling` is the echo: the same lexical Strong's number printed
+/// somewhere else on screen, usually in another translation. It is
+/// deliberately a DIFFERENT HUE rather than a weaker selection tint,
+/// because it answers a different question. Hover and pinned say "this
+/// is the word you are asking about"; sibling says "and here it is
+/// again". Rendering the echo as a paler version of the subject would
+/// make the two read as one gradient of the same thing and lose the
+/// distinction that makes a parallel view worth having — you want to
+/// see one Greek word land in four translations at once, and know at a
+/// glance which one your pointer is actually on.
+///
+/// It carries no border and no underline: with a dozen echoes lit
+/// across four rows, a border on each would turn the passage into a
+/// grid of boxes and bury the one word that has the gold one.
 ///
 /// The border is always present and only its colour changes. A border
 /// that appeared on click would widen the word by 3px and reflow the
@@ -301,6 +348,7 @@ BoxDecoration wordMarkDecoration(WordMark mark, WbColors wb) => BoxDecoration(
       color: switch (mark) {
         WordMark.none => null,
         WordMark.hit => wb.selectionBg.withValues(alpha: 0.55),
+        WordMark.sibling => wb.siblingBg,
         WordMark.hover || WordMark.pinned => wb.selectionBg,
       },
       border: Border.all(

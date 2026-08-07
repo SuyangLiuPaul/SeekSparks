@@ -47,13 +47,21 @@ String browseWordKey({
 /// alone rather than being re-spelled at each of the two line builders.
 String browseKeyPrefix(String book, int chapter) => '$book|$chapter';
 
-/// How one word should be drawn. Four states, and every pair of them has
+/// How one word should be drawn. Five states, and every pair of them has
 /// to be told apart at a glance or the reader will not trust any of them.
+///
+/// Listed in increasing precedence, which is also the order [markFor]
+/// tests them in.
 enum WordMark {
   none,
 
   /// The active search matches this word.
   hit,
+
+  /// Another printed occurrence of the same lexical Strong's number as
+  /// the word under study — the same Greek or Hebrew word, landing
+  /// somewhere else on screen, usually in another translation.
+  sibling,
 
   /// The pointer is on it right now.
   hover,
@@ -62,6 +70,38 @@ enum WordMark {
   pinned,
 }
 
+/// The lexical Strong's number whose other printed occurrences should
+/// light up, or `''` for none.
+///
+/// The subject is whichever word the Analysis pane is currently
+/// describing — pinned if there is a pin, otherwise the last one hovered.
+/// Deriving the lit set from that one value rather than re-deciding it
+/// here is what keeps the green words and the pane in agreement: they
+/// cannot disagree because there is only one answer. It also means the
+/// echoes stay lit while the reader moves off the text to read the pane,
+/// which is the entire point of the pin.
+///
+/// [keyPrefix] is the `book|chapter` of the text on screen NOW, and the
+/// gate matters: a pin outlives navigation, so without it, pinning
+/// γίνομαι in John 1 and turning the page would light up every γίνομαι
+/// in John 2 — with no pinned word visible anywhere to explain the
+/// colour, because the pin's own key names a chapter that is no longer
+/// printed.
+///
+/// The trailing separator in the comparison is load-bearing: `John|1` is
+/// a prefix of `John|11`, so testing the bare prefix would leak chapter
+/// 1's pin into chapters 10 through 19.
+String siblingStrongs({
+  required String? subjectKey,
+  required String subjectStrongs,
+  required String keyPrefix,
+}) =>
+    (subjectKey != null &&
+            subjectKey.startsWith('$keyPrefix|') &&
+            subjectStrongs.isNotEmpty)
+        ? subjectStrongs
+        : '';
+
 /// What the Analysis pane is looking at.
 ///
 /// Two independent facts: which occurrence the pointer is over
@@ -69,12 +109,21 @@ enum WordMark {
 /// never feels dead under the mouse), and which occurrence the reader
 /// committed to ([pinnedKey]).
 class AnalysisFocus {
-  const AnalysisFocus({this.pinnedKey, this.hoverKey});
+  const AnalysisFocus({
+    this.pinnedKey,
+    this.hoverKey,
+    this.litStrongs = '',
+  });
 
   static const empty = AnalysisFocus();
 
   final String? pinnedKey;
   final String? hoverKey;
+
+  /// The lexical Strong's number being studied — see [siblingStrongs].
+  /// Every OTHER word carrying it is drawn as a [WordMark.sibling].
+  /// Empty when nothing is under study.
+  final String litStrongs;
 
   bool get isPinned => pinnedKey != null;
 
@@ -87,8 +136,10 @@ class AnalysisFocus {
       !isPinned && !shiftHeld;
 
   /// The pointer moved. [key] is null when it left the text entirely.
-  AnalysisFocus withHover(String? key) =>
-      key == hoverKey ? this : AnalysisFocus(pinnedKey: pinnedKey, hoverKey: key);
+  AnalysisFocus withHover(String? key) => key == hoverKey
+      ? this
+      : AnalysisFocus(
+          pinnedKey: pinnedKey, hoverKey: key, litStrongs: litStrongs);
 
   /// A word was clicked.
   ///
@@ -101,11 +152,13 @@ class AnalysisFocus {
   AnalysisFocus withTap(String key) => AnalysisFocus(
         pinnedKey: pinnedKey == key ? null : key,
         hoverKey: hoverKey,
+        litStrongs: litStrongs,
       );
 
   /// Esc, the pane's Unpin button, or a click on empty space.
-  AnalysisFocus unpinned() =>
-      isPinned ? AnalysisFocus(hoverKey: hoverKey) : this;
+  AnalysisFocus unpinned() => isPinned
+      ? AnalysisFocus(hoverKey: hoverKey, litStrongs: litStrongs)
+      : this;
 
   /// True when [withTap] on [key] would release rather than move the
   /// pin. Callers need this *before* applying the tap, because
@@ -114,13 +167,28 @@ class AnalysisFocus {
 
   /// How to draw the word identified by [key].
   ///
-  /// Precedence is pinned > hover > hit, and it is deliberate. Hovering
-  /// the pinned word must not blink its marker off — the pin is the
-  /// stronger claim and the reader is checking that it is still there.
-  /// A hit is standing state and loses to both live signals.
-  WordMark markFor(String key, {bool hit = false}) {
+  /// Precedence is pinned > hover > sibling > hit, and it is deliberate.
+  /// Hovering the pinned word must not blink its marker off — the pin is
+  /// the stronger claim and the reader is checking that it is still
+  /// there. A hit is standing state and loses to every live signal.
+  ///
+  /// [strongs] is this word's own lexical number. The word under study
+  /// is drawn as pinned or hovered rather than as a sibling of itself:
+  /// the pointer is already on it, so what the reader needs colour for
+  /// is the occurrences they are NOT looking at. That also makes the
+  /// count honest — the number of green words is the number of other
+  /// places this same original word landed.
+  ///
+  /// When the pointer has left the text entirely the subject falls
+  /// through to [WordMark.sibling] along with its echoes, so the whole
+  /// group lights uniformly. That is the yahwehdehua.net reading: one
+  /// Greek word, seen landing in four translations at once.
+  WordMark markFor(String key, {String strongs = '', bool hit = false}) {
     if (key == pinnedKey) return WordMark.pinned;
     if (key == hoverKey) return WordMark.hover;
+    if (litStrongs.isNotEmpty && strongs == litStrongs) {
+      return WordMark.sibling;
+    }
     return hit ? WordMark.hit : WordMark.none;
   }
 
@@ -129,12 +197,13 @@ class AnalysisFocus {
       identical(this, other) ||
       (other is AnalysisFocus &&
           other.pinnedKey == pinnedKey &&
-          other.hoverKey == hoverKey);
+          other.hoverKey == hoverKey &&
+          other.litStrongs == litStrongs);
 
   @override
-  int get hashCode => Object.hash(pinnedKey, hoverKey);
+  int get hashCode => Object.hash(pinnedKey, hoverKey, litStrongs);
 
   @override
   String toString() =>
-      'AnalysisFocus(pinned: $pinnedKey, hover: $hoverKey)';
+      'AnalysisFocus(pinned: $pinnedKey, hover: $hoverKey, lit: $litStrongs)';
 }
