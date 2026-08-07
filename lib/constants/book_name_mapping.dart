@@ -239,6 +239,22 @@ const _englishVersionCodes = <String>{
   'leb',
   'nasb',
   // 'niv' removed 2026-05 (see bible_versions.dart for licence rationale).
+  //
+  // 2026-08-07: bsb / kjvs / lxxwh added — LATE, and the delay cost a
+  // production outage. They entered the catalog with the Berean and
+  // Eagle's View imports but not this set, so `toLocale` classified them
+  // as Chinese exactly as the warning above predicts. The reading pane
+  // filters verses by book NAME, so a Chinese name against an English
+  // corpus matched nothing and the pane rendered BLANK — no error, no
+  // empty state, toolbar and pickers still showing the right reference.
+  // It took the verse-driven Analysis column down with it.
+  //
+  // `lxxwh` is Greek rather than English, but belongs here for the same
+  // reason: its corpus keys books in English. This set is really
+  // "versions that do NOT use Chinese book names".
+  'bsb',
+  'kjvs',
+  'lxxwh',
 };
 
 String toLocale(String englishKey, String version) {

@@ -7,6 +7,7 @@ import 'package:seeksparks/models/verse.dart';
 import 'package:seeksparks/models/book.dart';
 import 'package:seeksparks/services/error_reporter.dart';
 import 'package:seeksparks/services/fetch_books.dart' show bookNameToEnglish;
+import 'package:seeksparks/utils/version_mapper.dart' show translateBookName;
 import 'package:seeksparks/services/fetch_verses.dart' show FetchVerses;
 import 'package:seeksparks/services/realtime_db_sync_service.dart';
 import 'package:seeksparks/services/profile_service.dart';
@@ -689,8 +690,33 @@ class MainProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Re-express [currentBook] in the book-name language [version] uses.
+  ///
+  /// Each corpus stores book names in its OWN language — cuvs-plus and
+  /// cuvs-yhwh key on 创世纪, bsb and kjv on "Genesis". The reading pane
+  /// filters verses by `currentBook`, so carrying a Chinese name into an
+  /// English version (or the reverse) matches nothing and the pane goes
+  /// BLANK — no error, no empty state, just an empty column, with the
+  /// toolbar and pickers still showing the right reference.
+  ///
+  /// That shipped: it was reproducible on prod v1.6.33 by switching
+  /// between a Chinese and an English version, and it took the whole
+  /// Analysis column down with it, since those panes are verse-driven.
+  ///
+  /// Round-trips through English because that is the only name every
+  /// mapping agrees on; `translateBookName` then renders it the way the
+  /// target corpus spells it.
+  void _realignBookTo(String version) {
+    final book = currentBook;
+    if (book == null || book.isEmpty) return;
+    final english = bookNameToEnglish[book] ?? book;
+    final renamed = translateBookName(english, version);
+    if (renamed.isNotEmpty) currentBook = renamed;
+  }
+
   void setVersion(String version) {
     currentVersion = version;
+    _realignBookTo(version);
     if (isPrimary) saveCurrentState();
     notifyListeners();
   }
@@ -1518,6 +1544,7 @@ class MainProvider extends ChangeNotifier {
         await prefs.setBool('migrated_locale_default_v1346', true);
       }
       currentVersion = v;
+      _realignBookTo(v);
     } else {
       // 2026-05-25 (v1.3.40): no saved version yet → fresh install.
       // Pick a sensible default based on the user's locale. The
