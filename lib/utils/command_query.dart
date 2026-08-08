@@ -402,6 +402,33 @@ class CommandQuery {
 /// disagree about what counts as one.
 const String kCommandControls = "./';";
 
+/// True when [raw] carries no control character but uses `*`, so the
+/// plain substring scan can only return nothing.
+///
+/// 2026-08-09 (#295): the operator strip's own tooltip advertises the
+/// wildcard as `faith✶` — no leading dot — and tapping `✶` after typing
+/// `faith` produced exactly that. Submitted, it found nothing, because
+/// the fallback path is a literal substring search and no Bible text
+/// contains an asterisk. Promoting the line to `.faith*` costs nothing:
+/// the only queries this catches are ones that were already guaranteed
+/// empty.
+///
+/// `?` is deliberately NOT promoted even though it is BibleWorks'
+/// single-character wildcard. Scripture is full of question marks, so
+/// `who is this?` is a substring search a reader may well have meant,
+/// and silently turning it into a wildcard AND-search would break a
+/// case that works today to fix one that never did.
+bool needsWildcardPromotion(String raw) {
+  final trimmed = raw.trim();
+  if (trimmed.isEmpty) return false;
+  if (kCommandControls.contains(trimmed[0])) return false;
+  if (!trimmed.contains('*')) return false;
+  // All-asterisk lines are not a search anyone meant; let them fall
+  // through to the text scan and its empty result rather than promote
+  // them into a wildcard slot matching the whole Bible.
+  return trimmed.replaceAll('*', '').trim().isNotEmpty;
+}
+
 /// Parse a command line into a runnable query.
 ///
 /// Returns [CommandIssue.notACommand] for anything that does not start

@@ -2723,6 +2723,19 @@ const uiStrings = {
     'zh-Hant': '{query} — 共 {count} 節',
     'en': '{query} — {count} verses',
   },
+  // #295: a Strong's result reports BOTH counts, as BibleWorks' status
+  // line does — verses and hits differ (G25 is 143 hits in 110 verses) —
+  // and says so when the bundled verse list stopped at the 500 cap.
+  'strongsHeaderWithHits': {
+    'zh-Hans': '{query} — 共 {count} 节 · {hits} 处',
+    'zh-Hant': '{query} — 共 {count} 節 · {hits} 處',
+    'en': '{query} — {count} verses · {hits} occurrences',
+  },
+  'strongsHeaderTruncated': {
+    'zh-Hans': '{query} — 全书共 {hits} 处，仅列出前 {count} 节',
+    'zh-Hant': '{query} — 全書共 {hits} 處，僅列出前 {count} 節',
+    'en': '{query} — {hits} occurrences; first {count} verses listed',
+  },
   'searchOpAndTip': {
     'zh-Hans': '同时含两者',
     'zh-Hant': '同時含兩者',

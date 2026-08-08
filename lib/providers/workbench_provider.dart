@@ -13,6 +13,7 @@ import 'package:seeksparks/utils/command_query.dart';
 import 'package:seeksparks/utils/command_verb.dart' show LimitSpec;
 import 'package:seeksparks/utils/search_scope.dart' show limitSpecForBooks;
 import 'package:seeksparks/utils/strongs_boolean_search.dart';
+import 'package:seeksparks/utils/strongs_result_counts.dart';
 import 'package:seeksparks/utils/verse_list.dart' show applySearchLimit;
 import 'package:seeksparks/utils/version_mapper.dart' show toEnglish;
 
@@ -53,6 +54,12 @@ class WorkbenchProvider extends ChangeNotifier {
   /// plus refs. Null when the last search was a text scan.
   String? strongsQueryLabel;
   List<ConcordanceRef>? strongsRefs;
+
+  /// What the header may claim about [strongsRefs] — see
+  /// `strongs_result_counts.dart`. Carries the uncapped occurrence total
+  /// and whether the bundled verse list stopped at the pipeline cap, so
+  /// H3068 stops reporting "500 verses" against 6,521 occurrences.
+  StrongsResultCounts? strongsCounts;
 
   /// The last query, parsed, when it was written in the command-line
   /// grammar (`.love god`, `'in the beginning`, …). The pane echoes it
@@ -323,6 +330,7 @@ class WorkbenchProvider extends ChangeNotifier {
     searchPerformed = false;
     strongsQueryLabel = null;
     strongsRefs = null;
+    strongsCounts = null;
     commandQuery = null;
     commandIssue = null;
     verbNotice = null;
@@ -344,15 +352,41 @@ class WorkbenchProvider extends ChangeNotifier {
       final bq = parseStrongsBoolean(query);
       if (bq != null) {
         strongsQueryLabel = query.toUpperCase();
-        strongsRefs = _limitRefs(await SearchService.runStrongsBoolean(bq));
+        final refs = _limitRefs(await SearchService.runStrongsBoolean(bq));
+        strongsRefs = refs;
+        // No uncapped total exists for a composed expression: it is a
+        // set operation over several already-capped lists.
+        strongsCounts = StrongsResultCounts(verses: refs.length);
       } else if (_singleStrongsRe.hasMatch(query)) {
         final number = query.toUpperCase();
         final result = await ConcordanceService.lookup(number);
         strongsQueryLabel = number;
         // The bundled concordance already lists refs in canonical
         // order (Genesis … Revelation), so no re-sort here.
-        strongsRefs = _limitRefs(result?.refs ?? const []);
+        final listed = result?.refs ?? const <ConcordanceRef>[];
+        final refs = _limitRefs(listed);
+        strongsRefs = refs;
+        strongsCounts = strongsResultCounts(
+          listedRefs: listed.length,
+          versesShown: refs.length,
+          occurrences: result?.total,
+          scoped: hasSearchLimit,
+        );
       } else {
+        // A bare `faith*` reaches here only because it is not a command
+        // and not Strong's, and the scan below is literal — so it would
+        // find nothing, which is what the `✶` chip's own example did
+        // (#295). Run it as `.faith*` instead. Only when that parses:
+        // otherwise the reader would be shown a command error for a line
+        // they never wrote as a command.
+        final promoted = needsWildcardPromotion(query)
+            ? parseCommandQuery('.$query')
+            : null;
+        if (promoted?.query != null) {
+          commandQuery = promoted!.query;
+          textResults = _runCommand(promoted.query!);
+          return;
+        }
         final scan = SearchService.scanText(
           verses: mainProvider.verses,
           searchKeys: mainProvider.searchKeys,
@@ -410,6 +444,7 @@ class WorkbenchProvider extends ChangeNotifier {
     searchPerformed = false;
     strongsQueryLabel = null;
     strongsRefs = null;
+    strongsCounts = null;
     commandQuery = null;
     commandIssue = null;
     verbNotice = null;
@@ -454,6 +489,7 @@ class WorkbenchProvider extends ChangeNotifier {
     // the bug that makes a results pane untrustworthy.
     strongsQueryLabel = null;
     strongsRefs = null;
+    strongsCounts = null;
     commandQuery = null;
     commandIssue = null;
     verbNotice = null;

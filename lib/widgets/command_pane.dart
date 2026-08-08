@@ -36,6 +36,8 @@ import 'package:seeksparks/constants/book_groups.dart'
     show oldTestamentBooks, canonicalOtBooks, canonicalNtBooks;
 import 'package:seeksparks/utils/search_scope.dart' show scopeDisplayName;
 import 'package:seeksparks/utils/search_stats.dart';
+import 'package:seeksparks/utils/strongs_result_counts.dart';
+import 'package:seeksparks/utils/version_abbreviation.dart';
 import 'package:seeksparks/widgets/search_stats_strip.dart';
 
 /// The Workbench's left pane: a BibleWorks-style command line (text, a
@@ -408,21 +410,14 @@ class _CommandPaneState extends State<CommandPane> {
     _focus.requestFocus();
   }
 
-  /// `nas`, `NASB`, `kjv`… → that version's code. Matches the internal
-  /// code and the short label, case-insensitively; returns null for
-  /// anything else so the token falls through to reference-parsing and
-  /// then to search.
-  String? _matchVersion(String raw) {
-    final q = raw.trim().toLowerCase();
-    if (q.isEmpty || q.contains(' ')) return null;
-    for (final v in bibleVersions) {
-      if (v.value.toLowerCase() == q ||
-          v.shortLabel.toLowerCase() == q) {
-        return v.value;
-      }
-    }
-    return null;
-  }
+  /// `nas`, `NASB`, `kjv`… → that version's code. Exact code or short
+  /// label first, then an unambiguous 3-character-or-longer prefix; null
+  /// for anything else, so the token falls through to reference-parsing
+  /// and then to search.
+  String? _matchVersion(String raw) => matchVersionAbbreviation(
+        raw,
+        {for (final v in bibleVersions) v.value: v.shortLabel},
+      );
 
   /// Insert an operator/wildcard token at the caret (used by the
   /// operator chips under the command line).
@@ -531,6 +526,26 @@ class _CommandPaneState extends State<CommandPane> {
       (uiStrings['booleanSearchHeader']?[locale] ?? '{query} — {count} verses')
           .replaceAll('{query}', queryLabel)
           .replaceAll('{count}', count.toString());
+
+  /// The Strong's header. Reports verses AND occurrences when both are
+  /// known, and says outright when the bundled verse list stopped at the
+  /// pipeline cap — see `strongs_result_counts.dart` for why silence
+  /// there was a lie (H3068 read "500 verses" against 6,521 hits).
+  String _strongsSummary(
+      String queryLabel, StrongsResultCounts counts, String locale) {
+    final hits = counts.occurrences;
+    if (hits == null) return _summary(queryLabel, counts.verses, locale);
+    final key = counts.truncated
+        ? 'strongsHeaderTruncated'
+        : 'strongsHeaderWithHits';
+    final fallback = counts.truncated
+        ? '{query} — {hits} occurrences, first {count} verses shown'
+        : '{query} — {count} verses · {hits} occurrences';
+    return (uiStrings[key]?[locale] ?? fallback)
+        .replaceAll('{query}', queryLabel)
+        .replaceAll('{count}', groupThousands(counts.verses))
+        .replaceAll('{hits}', groupThousands(hits));
+  }
 
   /// Tap a result: scroll the center reader to the verse (pendingJump
   /// handshake, drained by the reader's next frame) and focus it in
@@ -1379,7 +1394,11 @@ class _CommandPaneState extends State<CommandPane> {
     return Column(
       children: [
         _resultHeader(
-          _summary(wb.strongsQueryLabel ?? wb.lastQuery, refs.length, locale),
+          _strongsSummary(
+            wb.strongsQueryLabel ?? wb.lastQuery,
+            wb.strongsCounts ?? StrongsResultCounts(verses: refs.length),
+            locale,
+          ),
           () => _copyAllStrongsRefs(wb, settings, refs),
           settings,
           locale,
