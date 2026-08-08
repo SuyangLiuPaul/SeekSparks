@@ -96,11 +96,10 @@ class ErrorReporter {
     // Returning `true` here marks the error as handled so the
     // platform doesn't separately re-throw it.
     PlatformDispatcher.instance.onError = (error, stack) {
-      _send(
-        error: error.toString(),
-        stack: stack.toString(),
-        source: 'PlatformDispatcher',
-      );
+      // Routed through `report` for the same reason the Zone handler is:
+      // these parameters are typed non-nullable and arrive null on the
+      // web anyway. See the note on `report`.
+      report(error, stack, source: 'PlatformDispatcher');
       return true;
     };
   }
@@ -143,15 +142,52 @@ class ErrorReporter {
   /// non-fatal error is meaningful but the surrounding code can
   /// recover. Example: AI request retry exhausted, JSON parse of
   /// a malformed asset.
+  /// 2026-08-08: the parameters are NULLABLE, and that is not defensive
+  /// pedantry — it is the fix for a live prod crash.
+  ///
+  /// Two reports came in from v1.6.65 on the same day, one from an
+  /// iPhone on iOS Safari and one from a Mac on Chrome, both
+  /// `source: Zone`, both "Null check operator used on a null value",
+  /// and the second carried the JS underneath it:
+  /// `TypeError: Cannot read properties of null (reading 'toString')`.
+  ///
+  /// `runZonedGuarded`'s handler is typed `(Object, StackTrace)`, so
+  /// Dart says neither can be null. On the web dart2js elides that check
+  /// in release, and a stack trace really can arrive null — so
+  /// `stack.toString()` reached `.toString()` on JS `null` and threw.
+  ///
+  /// The consequence was worse than one bad report: this threw INSIDE
+  /// the error reporter, so the ORIGINAL error was destroyed and
+  /// replaced by the reporter's own. Every Zone error with a null stack
+  /// has been arriving as this same meaningless message. `_send` wraps
+  /// its work in try/catch — the file's own comment promises the
+  /// reporter "never raises" — but these `toString()` calls happen out
+  /// here, before any of that runs, which is exactly how the promise
+  /// was broken.
   static void report(
-    Object error,
-    StackTrace stack, {
+    Object? error,
+    StackTrace? stack, {
     String source = 'manual',
     String? extra,
   }) {
+    // Even toString() can throw: it is user code on an arbitrary object,
+    // and an object whose toString() fails is exactly the kind of thing
+    // that lands here in the first place.
+    String describe(Object? o, String fallback) {
+      if (o == null) return fallback;
+      try {
+        return o.toString();
+      } catch (_) {
+        return fallback;
+      }
+    }
+
     _send(
-      error: error.toString(),
-      stack: stack.toString(),
+      // A null error is itself the finding, so name it rather than
+      // sending an empty string that reads as "no error".
+      error: describe(error, '<null error>'),
+      // A missing stack is ordinary, not an anomaly — empty is right.
+      stack: describe(stack, ''),
       source: source,
       library: extra,
     );

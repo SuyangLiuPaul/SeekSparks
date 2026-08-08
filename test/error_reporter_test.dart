@@ -212,4 +212,51 @@ void main() {
       );
     });
   });
+
+  // 2026-08-08: two prod reports from v1.6.65 the same day — an iPhone on
+  // iOS Safari and a Mac on Chrome — both `source: Zone`, both "Null check
+  // operator used on a null value", the second carrying the JS beneath it:
+  // `TypeError: Cannot read properties of null (reading 'toString')`.
+  //
+  // `runZonedGuarded`'s handler is typed `(Object, StackTrace)`, so Dart
+  // says neither can be null; dart2js elides that check in release and a
+  // null stack reached `.toString()`. The reporter then threw WHILE
+  // reporting, which destroyed the original error and replaced it with its
+  // own — so every Zone error carrying a null stack arrived as the same
+  // meaningless message.
+  //
+  // These cannot fail on the VM the way they failed on the web, because
+  // the VM enforces the types. What they pin is that the signature STAYS
+  // nullable and that nothing here throws: tightening `report` back to
+  // non-nullable parameters would not compile against them.
+  group('report() survives what the web actually hands it', () {
+    test('a null stack does not throw', () {
+      expect(
+          () => ErrorReporter.report(Exception('boom'), null), returnsNormally);
+    });
+
+    test('a null error does not throw', () {
+      expect(() => ErrorReporter.report(null, StackTrace.current),
+          returnsNormally);
+    });
+
+    test('both null does not throw', () {
+      expect(
+          () => ErrorReporter.report(null, null, source: 'Zone'),
+          returnsNormally);
+    });
+
+    test('an object whose toString() throws does not take the reporter with it',
+        () {
+      expect(() => ErrorReporter.report(_HostileToString(), null),
+          returnsNormally);
+    });
+  });
+}
+
+/// The reporter receives arbitrary thrown objects, and one whose own
+/// `toString()` fails is exactly the kind that ends up there.
+class _HostileToString {
+  @override
+  String toString() => throw StateError('toString() itself throws');
 }
