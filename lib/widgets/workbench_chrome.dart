@@ -216,7 +216,7 @@ class WorkbenchToolbar extends StatelessWidget {
                 margin: const EdgeInsets.symmetric(horizontal: 4),
                 color: wb.border,
               ),
-            for (final b in groups[g]) _ToolIcon(button: b),
+            for (final b in groups[g]) WbToolIcon(button: b),
           ],
         ],
       ),
@@ -224,8 +224,15 @@ class WorkbenchToolbar extends StatelessWidget {
   }
 }
 
-class _ToolIcon extends StatelessWidget {
-  const _ToolIcon({required this.button});
+/// One small square icon button, as drawn in the toolbar and at the
+/// right end of a pane title.
+///
+/// Public since 2026-08-09 (task #284): a pane that carries its own
+/// action — the Word Study tab's "copy word table" — has to draw the
+/// same button, and re-deriving 15px/`mutedText`/square-hover by hand is
+/// how a second chrome dialect starts.
+class WbToolIcon extends StatelessWidget {
+  const WbToolIcon({super.key, required this.button});
   final WbToolButton button;
 
   @override
@@ -321,7 +328,7 @@ class WbPaneTitle extends StatelessWidget {
               ),
             ),
           ),
-          for (final b in trailing) _ToolIcon(button: b),
+          for (final b in trailing) WbToolIcon(button: b),
         ],
       ),
     );

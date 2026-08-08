@@ -25,6 +25,7 @@ import 'package:seeksparks/widgets/bible_reading_pane.dart';
 import 'package:seeksparks/widgets/browse_window.dart';
 import 'package:seeksparks/widgets/command_pane.dart';
 import 'package:seeksparks/widgets/originals_sheet.dart';
+import 'package:seeksparks/widgets/workbench_chrome.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -199,8 +200,8 @@ void main() {
   });
 
   testWidgets(
-      'selecting a verse embeds OriginalsSheet with a collapse button '
-      '(no close button)', (tester) async {
+      'selecting a verse embeds OriginalsSheet with no chrome of its own',
+      (tester) async {
     addTearDown(tester.view.reset);
     final mp = await pumpWorkbench(tester, const Size(1366, 900));
 
@@ -211,14 +212,25 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(find.byType(OriginalsSheet), findsOneWidget);
     final sheet = find.byType(OriginalsSheet);
-    // Embedded mode: collapse chevron replaces the sheet/route close
-    // button (Navigator.maybePop would pop a route it doesn't own).
+    // No route close button: Navigator.maybePop would pop a route the
+    // embedded sheet does not own.
     expect(find.descendant(of: sheet, matching: find.byIcon(Icons.close)),
         findsNothing);
+    // 2026-08-09 (#284): nor a collapse chevron. It used to draw its own
+    // header carrying one, which meant the pane's title strip appeared
+    // and vanished as the pointer moved between a word and a verse.
+    // Collapse belongs to the pane's WbPaneTitle, above the tab strip,
+    // and stays put whichever body the Word Study tab is showing.
     expect(
         find.descendant(
             of: sheet, matching: find.byIcon(Icons.chevron_right_rounded)),
-        findsOneWidget);
+        findsNothing);
+    expect(find.byType(WbPaneTitle), findsWidgets);
+    expect(
+        find.descendant(
+            of: find.byType(WbPaneTitle),
+            matching: find.byIcon(Icons.chevron_right)),
+        findsWidgets);
   });
 
   // 2026-08: 护眼纸质 reaches the workbench. Before this, the paper

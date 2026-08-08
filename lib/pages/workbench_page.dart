@@ -1903,26 +1903,24 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
     final scheme = Theme.of(context).colorScheme;
     final verses = wb.analysisVerses;
 
-    // The word-study tab keeps OriginalsSheet's own header (it carries
-    // the collapse chevron, and when embedded there is no `_paneHeader`
-    // above it). The other two tabs are plain panes, so they get one.
-    final needsHeader = _analysisTab != AnalysisTab.wordStudy;
-
     return ColoredBox(
       color: scheme.surface,
       child: Column(
         children: [
-          if (needsHeader)
-            WbPaneTitle(
-              title: uiStrings['analysisTitle']?[locale] ?? 'Analysis',
-              trailing: [
-                WbToolButton(
-                  icon: Icons.chevron_right,
-                  tooltip: uiStrings['collapse']?[locale] ?? 'Collapse',
-                  onPressed: () => _setRightOpen(false),
-                ),
-              ],
-            ),
+          // Unconditional since 2026-08-09 (#284). It used to be skipped
+          // for the word-study tab, which drew its own sheet header —
+          // so the pane's title and collapse chevron appeared and
+          // vanished as the pointer moved between a word and a verse.
+          WbPaneTitle(
+            title: uiStrings['analysisTitle']?[locale] ?? 'Analysis',
+            trailing: [
+              WbToolButton(
+                icon: Icons.chevron_right,
+                tooltip: uiStrings['collapse']?[locale] ?? 'Collapse',
+                onPressed: () => _setRightOpen(false),
+              ),
+            ],
+          ),
           AnalysisTabStrip(
             current: _analysisTab,
             locale: locale,
@@ -2019,7 +2017,6 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
               locale: locale,
               currentVersion: mp.currentVersion,
               embedded: true,
-              onCollapse: () => _setRightOpen(false),
               onNavigateRef: _onAnalysisNavigateRef,
             );
           }
@@ -2035,7 +2032,6 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
           locale: locale,
           currentVersion: mp.currentVersion,
           embedded: true,
-          onCollapse: () => _setRightOpen(false),
           onNavigateRef: _onAnalysisNavigateRef,
         );
 

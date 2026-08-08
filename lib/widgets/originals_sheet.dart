@@ -8,12 +8,16 @@ import 'package:provider/provider.dart';
 import 'package:seeksparks/constants/text_patterns.dart'
     show sanitizeForSearch, versePreviewText;
 import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/constants/word_study_style.dart';
+import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/original_word.dart';
 import 'package:seeksparks/models/strongs.dart';
 import 'package:seeksparks/models/verse.dart';
 import 'package:seeksparks/pages/settings_page.dart';
 import 'package:seeksparks/widgets/collapsible_english_ref.dart';
+import 'package:seeksparks/widgets/workbench_chrome.dart'
+    show WbToolButton, WbToolIcon;
 import 'package:seeksparks/widgets/left_accent_card.dart';
 import 'package:seeksparks/services/ai_word_service.dart';
 import 'package:seeksparks/services/concordance_service.dart';
@@ -50,14 +54,11 @@ class OriginalsSheet extends StatefulWidget {
 
   /// 2026-08-04 (Workbench): when true the sheet renders as a
   /// persistent embedded panel (the Workbench's right-hand analysis
-  /// pane) instead of a modal sheet/route. The close button — which
-  /// calls `Navigator.maybePop()` and would pop a route it doesn't
-  /// own — is replaced by a collapse button wired to [onCollapse].
+  /// pane) instead of a modal sheet/route. It then draws no header of
+  /// its own — the pane owns its title strip and its collapse button,
+  /// which is the only way those stay put as the pointer moves between
+  /// a word and its verse (task #284).
   final bool embedded;
-
-  /// Invoked by the collapse button shown in place of the close
-  /// button when [embedded] is true. May be null (button disabled).
-  final VoidCallback? onCollapse;
 
   const OriginalsSheet({
     super.key,
@@ -67,7 +68,6 @@ class OriginalsSheet extends StatefulWidget {
     this.currentVersion,
     this.onNavigateRef,
     this.embedded = false,
-    this.onCollapse,
   });
 
   @override
@@ -544,11 +544,24 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
     });
   }
 
+  /// Resolved once per build and read by every `_build*` helper below.
+  ///
+  /// A field rather than a parameter threaded through fifteen methods,
+  /// and safe because it is assigned at the top of [build] and every
+  /// helper is reached from that build's subtree.
+  late WordStudyStyle _st;
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final locale = widget.locale;
     final title = uiStrings['originalText']?[locale] ?? 'Original Text';
+    _st = WordStudyStyle.resolve(
+      embedded: widget.embedded,
+      scheme: scheme,
+      wb: WbColors.of(context),
+      type: WbType.of(context),
+    );
 
     // 2026-08 (SeekSparks): DraggableScrollableSheet is a bottom-sheet
     // affordance. Inside the docked Workbench pane it rendered this panel
@@ -591,90 +604,90 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                 height: 4,
                 decoration: BoxDecoration(
                   color: scheme.outlineVariant,
-                  borderRadius: BorderRadius.circular(2),
+                  borderRadius: _st.r(2),
                 ),
               ),
-            Padding(
-              padding: widget.embedded
-                  ? const EdgeInsets.fromLTRB(12, 4, 8, 0)
-                  : const EdgeInsets.fromLTRB(20, 12, 20, 8),
-              child: Row(
-                children: [
-                  Icon(
-                    // Same icon the Workbench pane header uses, so the
-                    // panel keeps its identity between the empty and
-                    // populated states (was auto_stories vs translate).
-                    widget.embedded
-                        ? Icons.translate_rounded
-                        : Icons.auto_stories,
-                    color: scheme.primary,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          // 2026-08 (SeekSparks): when this sheet is the
-                          // Workbench's right pane it IS the pane header,
-                          // so it uses the same "Word Study" label as the
-                          // empty state — previously it read "Exegesis",
-                          // which named a YsWords feature this panel isn't.
-                          widget.embedded
-                              ? (uiStrings['wordStudyTitle']?[locale] ??
-                                  'Word Study')
-                              : title,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: scheme.onSurface,
+            // 2026-08-09 (task #284): the docked pane draws NO header
+            // here. It used to draw its own — a 16px title, a copy
+            // button and a collapse chevron — and `workbench_page`
+            // suppressed the real `WbPaneTitle` to make room for it.
+            // That was only half the tab: hovering a WORD renders
+            // `WordAnalysisPane` instead, which has no header at all, so
+            // the pane's title and its collapse control appeared and
+            // vanished as the pointer crossed between a word and its
+            // verse. The pane owns them now; this is content.
+            if (!widget.embedded) ...[
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
+                child: Row(
+                  children: [
+                    Icon(Icons.auto_stories, color: scheme.primary, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            title,
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: scheme.onSurface,
+                            ),
                           ),
-                        ),
-                        // Subtitle is helpful when the sheet opens
-                        // standalone; in the narrow docked pane it is
-                        // one more line of chrome above the actual data.
-                        if (!widget.embedded)
                           Text(
                             uiStrings['interlinearHint']?[locale] ??
                                 'Original · Strong\'s gloss',
                             style: TextStyle(
-                              fontSize: 11,
+                              fontSize: _st.gloss,
                               color: scheme.onSurfaceVariant,
                             ),
                           ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  if (_verseOriginals != null)
-                    IconButton(
-                      icon: const Icon(Icons.copy_outlined),
-                      iconSize: 20,
-                      tooltip: uiStrings['copyTable']?[locale] ?? 'Copy word table',
-                      onPressed: () => _copyInterlinearTable(context),
-                    ),
-                  // Embedded (Workbench analysis pane): there is no
-                  // route to pop — offer a collapse button instead.
-                  // Sheet/route presentation: close pops, as before.
-                  if (widget.embedded)
-                    IconButton(
-                      icon: const Icon(Icons.chevron_right_rounded),
-                      iconSize: 20,
-                      tooltip: uiStrings['collapsePanel']?[locale] ??
-                          'Collapse panel',
-                      onPressed: widget.onCollapse,
-                    )
-                  else
+                    if (_verseOriginals != null)
+                      IconButton(
+                        icon: const Icon(Icons.copy_outlined),
+                        iconSize: 20,
+                        tooltip:
+                            uiStrings['copyTable']?[locale] ?? 'Copy word table',
+                        onPressed: () => _copyInterlinearTable(context),
+                      ),
                     IconButton(
                       icon: const Icon(Icons.close),
                       iconSize: 20,
                       onPressed: () => Navigator.of(context).maybePop(),
                     ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            const Divider(height: 1),
+              const Divider(height: 1),
+            ]
+            // Copy is the one control that was genuinely this widget's
+            // own — it copies the word table it built — so it stays,
+            // right-aligned at chrome scale. bwh10q puts the Forms tab's
+            // Options button in the body for the same reason.
+            else if (_verseOriginals != null) ...[
+              SizedBox(
+                height: WbType.of(context).paneTitleHeight,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    WbToolIcon(
+                      button: WbToolButton(
+                        icon: Icons.copy_outlined,
+                        tooltip: uiStrings['copyTable']?[locale] ??
+                            'Copy word table',
+                        onPressed: () => _copyInterlinearTable(context),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+            ],
             Expanded(
               child: FutureBuilder<List<_VerseOriginals>>(
                 future: _future,
@@ -685,7 +698,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                   final data = snap.data ?? const [];
                   return ListView(
                     controller: scrollController,
-                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+                    padding: _st.listPadding,
                     children: [
                       for (final vo in data) _buildVerseBlock(vo, scheme),
                       if (_selectedWord != null) ...[
@@ -720,21 +733,21 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
     final verseText = sanitizeForSearch(vo.verse.text);
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+      padding: EdgeInsets.only(bottom: _st.dense ? 10 : 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             ref,
             style: TextStyle(
-              fontSize: 12,
+              fontSize: _st.ref,
               fontWeight: FontWeight.w600,
               color: scheme.onSurfaceVariant,
               letterSpacing: 0.4,
             ),
           ),
           if (verseText.isNotEmpty) ...[
-            const SizedBox(height: 6),
+            SizedBox(height: _st.dense ? 3 : 6),
             // Show the verse as it appears in the user's current
             // version above the original-language line so the reader
             // can compare their translation to the Hebrew/Greek and
@@ -743,28 +756,31 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
               // v1.3.x: was Container(BoxDecoration(border:
               // Border(left:...), borderRadius:...)) — non-uniform
               // border + radius throws in Border.paint.
-              padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-              background: scheme.surfaceContainerHighest.withValues(alpha: 0.4),
-              borderRadius: BorderRadius.circular(8),
-              accentColor: scheme.primary,
+              padding: _st.blockPadding,
+              background: _st.blockFill,
+              borderRadius: _st.r(8),
+              accentColor: _st.accent,
+              // The accent rule is the one thing that survives at
+              // workbench density unchanged: it is what says "this line
+              // is the translation, the row under it is the original".
               accentWidth: 3,
               child: Text(
                 verseText,
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: _st.body,
                   color: scheme.onSurface,
-                  height: 1.5,
+                  height: _st.dense ? WbMetrics.lineHeight : 1.5,
                 ),
               ),
             ),
           ],
-          const SizedBox(height: 10),
+          SizedBox(height: _st.dense ? 6 : 10),
           if (words == null || words.isEmpty)
             Text(
               uiStrings['originalNotAvailable']?[widget.locale] ??
                   'Original-language data not available for this verse yet.',
               style: TextStyle(
-                fontSize: 13,
+                fontSize: _st.dense ? _st.body : 13,
                 color: scheme.onSurfaceVariant,
                 fontStyle: FontStyle.italic,
               ),
@@ -825,31 +841,41 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
     final Color bgColor;
     final Color borderColor;
     if (isSelected) {
-      bgColor = scheme.primaryContainer;
-      borderColor = scheme.primary;
+      bgColor = _st.selectedFill;
+      borderColor = _st.selectedBorder;
     } else if (isAramaic) {
       // Theme-aware teal so the chip stays readable + vivid in dark
       // mode. paletteBg = teal.shade100 (light) / teal.shade900 with
       // alpha (dark); paletteBorder uses a brighter teal in dark
       // mode so the border is still visible.
-      bgColor = paletteBg(context, Colors.teal);
+      //
+      // Dense: the border alone carries it. Filling every Aramaic chip
+      // in a pane that is mostly Aramaic (Daniel 2–7, Ezra 4–7) turns
+      // the distinction into a background, and the badge above the
+      // lemma already states it in words.
+      bgColor = _st.dense ? _st.chipFill : paletteBg(context, Colors.teal);
       borderColor = paletteBorder(context, Colors.teal);
     } else {
-      bgColor = scheme.surfaceContainerHighest.withValues(alpha: 0.5);
-      borderColor = Colors.transparent;
+      bgColor = _st.chipFill;
+      borderColor = _st.chipBorder;
     }
     return InkWell(
       onTap: () => _onWordTap(w),
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: _st.r(8),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-        constraints: const BoxConstraints(minWidth: 56, maxWidth: 118),
+        padding: _st.dense
+            ? const EdgeInsets.symmetric(horizontal: 5, vertical: 4)
+            : const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        constraints: BoxConstraints(
+          minWidth: _st.dense ? 44 : 56,
+          maxWidth: _st.chipMaxWidth,
+        ),
         decoration: BoxDecoration(
           color: bgColor,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: _st.r(8),
           border: Border.all(
             color: borderColor,
-            width: 1.5,
+            width: _st.borderWidth,
           ),
         ),
         child: Column(
@@ -867,7 +893,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                       horizontal: 5, vertical: 1),
                   decoration: BoxDecoration(
                     color: paletteBg(context, Colors.teal),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: _st.r(8),
                   ),
                   child: Text(
                     uiStrings['aramaicWordBadge']?[widget.locale] ??
@@ -887,7 +913,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
               w.text,
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 18,
+                fontSize: _st.original,
                 fontWeight: FontWeight.w600,
                 color: scheme.onSurface,
               ),
@@ -897,7 +923,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                 w.translit!,
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 10,
+                  fontSize: _st.translit,
                   color: scheme.onSurfaceVariant,
                 ),
               ),
@@ -911,18 +937,19 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
               Directionality(
                 textDirection: TextDirection.ltr,
                 child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                  padding: _st.dense
+                      ? EdgeInsets.zero
+                      : const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                   decoration: BoxDecoration(
-                    color: scheme.secondary.withValues(alpha: 0.13),
-                    borderRadius: BorderRadius.circular(3),
+                    color: _st.strongsFill,
+                    borderRadius: _st.r(3),
                   ),
                   child: Text(
                     w.strongs,
                     style: TextStyle(
-                      fontSize: 9,
+                      fontSize: _st.micro,
                       fontWeight: FontWeight.w700,
-                      color: scheme.secondary,
+                      color: _st.strongs,
                       letterSpacing: 0.3,
                     ),
                   ),
@@ -943,9 +970,9 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: 11,
+                    fontSize: _st.gloss,
                     fontWeight: FontWeight.w500,
-                    color: scheme.primary.withValues(alpha: 0.85),
+                    color: _st.accent.withValues(alpha: 0.85),
                     height: 1.2,
                   ),
                 ),
@@ -964,7 +991,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: 9,
+                    fontSize: _st.micro,
                     fontStyle: FontStyle.italic,
                     color: scheme.onSurfaceVariant.withValues(alpha: 0.8),
                     height: 1.2,
@@ -991,14 +1018,20 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
     final parse = describeMorphology(w.morph, locale);
     if (parse == null || parse.isEmpty) return const SizedBox.shrink();
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: EdgeInsets.only(bottom: _st.dense ? 5 : 8),
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        padding: _st.dense
+            ? const EdgeInsets.symmetric(horizontal: 5, vertical: 3)
+            : const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: scheme.primary.withValues(alpha: 0.07),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: scheme.primary.withValues(alpha: 0.18)),
+          color: _st.accentFill,
+          borderRadius: _st.r(8),
+          border: Border.all(
+            color: _st.dense
+                ? _st.blockBorder
+                : _st.accent.withValues(alpha: 0.18),
+          ),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1006,16 +1039,16 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
             Padding(
               padding: const EdgeInsets.only(top: 1, right: 6),
               child: Icon(Icons.account_tree_outlined,
-                  size: 13, color: scheme.primary.withValues(alpha: 0.75)),
+                  size: 13, color: _st.accent.withValues(alpha: 0.75)),
             ),
             Expanded(
               child: Text(
                 parse,
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: _st.body,
                   height: 1.35,
                   fontWeight: FontWeight.w600,
-                  color: scheme.primary,
+                  color: _st.accent,
                 ),
               ),
             ),
@@ -1104,11 +1137,12 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
     }
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(_st.dense ? 7 : 16),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withValues(alpha: 0.4),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: scheme.outlineVariant),
+        color: _st.blockFill,
+        borderRadius: _st.r(12),
+        border: Border.all(
+            color: _st.dense ? _st.blockBorder : scheme.outlineVariant),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1118,7 +1152,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
               if (isBrowsingRoot) ...[
                 InkWell(
                   onTap: _clearRoot,
-                  borderRadius: BorderRadius.circular(6),
+                  borderRadius: _st.r(6),
                   child: Padding(
                     padding: const EdgeInsets.only(right: 8),
                     child: Icon(Icons.arrow_back,
@@ -1127,18 +1161,21 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                 ),
               ],
               Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 8, vertical: 2),
+                padding: _st.dense
+                    ? EdgeInsets.zero
+                    : const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: scheme.primary.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(6),
+                  color: _st.dense
+                      ? Colors.transparent
+                      : _st.accent.withValues(alpha: 0.12),
+                  borderRadius: _st.r(6),
                 ),
                 child: Text(
                   displayNumber,
                   style: TextStyle(
-                    fontSize: 11,
+                    fontSize: _st.ref,
                     fontWeight: FontWeight.w700,
-                    color: scheme.primary,
+                    color: _st.dense ? _st.strongs : _st.accent,
                     letterSpacing: 0.5,
                   ),
                 ),
@@ -1149,8 +1186,10 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                   padding: const EdgeInsets.symmetric(
                       horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
-                    color: paletteBg(context, Colors.teal),
-                    borderRadius: BorderRadius.circular(6),
+                    color: _st.dense
+                        ? Colors.transparent
+                        : paletteBg(context, Colors.teal),
+                    borderRadius: _st.r(6),
                     border: Border.all(
                       color: paletteBorder(context, Colors.teal),
                       width: 0.8,
@@ -1172,7 +1211,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                 child: Text(
                   entry?.lemma ?? w.text,
                   style: TextStyle(
-                    fontSize: 22,
+                    fontSize: _st.lemma,
                     fontWeight: FontWeight.w700,
                     color: scheme.onSurface,
                   ),
@@ -1246,8 +1285,13 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
-                      color: scheme.tertiaryContainer.withValues(alpha: 0.55),
-                      borderRadius: BorderRadius.circular(4),
+                      color: _st.dense
+                          ? Colors.transparent
+                          : scheme.tertiaryContainer.withValues(alpha: 0.55),
+                      borderRadius: _st.r(4),
+                      border: _st.dense
+                          ? Border.all(color: _st.blockBorder)
+                          : null,
                     ),
                     child: Text(
                       uiStrings['exegesisProperNounBadge']?[locale] ??
@@ -1349,10 +1393,14 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
               Container(
                 padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
                 decoration: BoxDecoration(
-                  color: scheme.tertiaryContainer.withValues(alpha: 0.25),
-                  borderRadius: BorderRadius.circular(6),
+                  color: _st.dense
+                      ? Colors.transparent
+                      : scheme.tertiaryContainer.withValues(alpha: 0.25),
+                  borderRadius: _st.r(6),
                   border: Border.all(
-                    color: scheme.tertiary.withValues(alpha: 0.25),
+                    color: _st.dense
+                        ? _st.blockBorder
+                        : scheme.tertiary.withValues(alpha: 0.25),
                     width: 0.6,
                   ),
                 ),
@@ -1410,7 +1458,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                       ? '中文釋義來源:CBOL · bible.fhl.net (CC-BY-NC-SA 4.0)'
                       : '中文释义来源:CBOL · bible.fhl.net (CC-BY-NC-SA 4.0)',
                   style: TextStyle(
-                    fontSize: 10,
+                    fontSize: _st.translit,
                     color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
                     fontStyle: FontStyle.italic,
                   ),
@@ -1549,10 +1597,14 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
 
     return Container(
       decoration: BoxDecoration(
-        color: scheme.primaryContainer.withValues(alpha: 0.18),
-        borderRadius: BorderRadius.circular(10),
+        color: _st.dense
+            ? Colors.transparent
+            : scheme.primaryContainer.withValues(alpha: 0.18),
+        borderRadius: _st.r(10),
         border: Border.all(
-          color: scheme.primary.withValues(alpha: 0.18),
+          color: _st.dense
+              ? _st.blockBorder
+              : scheme.primary.withValues(alpha: 0.18),
           width: 1,
         ),
       ),
@@ -2048,16 +2100,19 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
     }
     if (cr.refs.isEmpty) {
       return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        padding: _st.dense
+            ? const EdgeInsets.symmetric(horizontal: 6, vertical: 5)
+            : const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: scheme.surfaceContainerHighest.withValues(alpha: 0.4),
-          borderRadius: BorderRadius.circular(8),
+          color: _st.dense ? Colors.transparent : _st.blockFill,
+          borderRadius: _st.r(8),
+          border: _st.dense ? Border.all(color: _st.blockBorder) : null,
         ),
         child: Text(
           uiStrings['concordanceNoResults']?[locale] ??
               'No verse references for this entry.',
           style: TextStyle(
-              fontSize: 12,
+              fontSize: _st.body,
               color: scheme.onSurfaceVariant,
               fontStyle: FontStyle.italic),
         ),
@@ -2070,13 +2125,19 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
         uiStrings['concordanceUsed']?[locale] ?? 'Used {count} times';
     final usedLabel = usedTemplate.replaceAll('{count}', cr.total.toString());
     return Container(
-      padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+      padding: _st.dense
+          ? const EdgeInsets.fromLTRB(6, 5, 6, 5)
+          : const EdgeInsets.fromLTRB(12, 8, 12, 8),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withValues(alpha: 0.45),
-        borderRadius: BorderRadius.circular(10),
+        color: _st.dense
+            ? Colors.transparent
+            : scheme.surfaceContainerHighest.withValues(alpha: 0.45),
+        borderRadius: _st.r(10),
         border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.5),
-          width: 0.5,
+          color: _st.dense
+              ? _st.blockBorder
+              : scheme.outlineVariant.withValues(alpha: 0.5),
+          width: _st.dense ? WbMetrics.hairline : 0.5,
         ),
       ),
       child: Column(
@@ -2085,18 +2146,21 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
           Row(
             children: [
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                padding: _st.dense
+                    ? EdgeInsets.zero
+                    : const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
                 decoration: BoxDecoration(
-                  color: scheme.primary.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(4),
+                  color: _st.dense
+                      ? Colors.transparent
+                      : _st.accent.withValues(alpha: 0.12),
+                  borderRadius: _st.r(4),
                 ),
                 child: Text(
                   e.number,
                   style: TextStyle(
-                    fontSize: 9,
+                    fontSize: _st.micro,
                     fontWeight: FontWeight.w700,
-                    color: scheme.primary,
+                    color: _st.dense ? _st.strongs : _st.accent,
                   ),
                 ),
               ),
@@ -2124,7 +2188,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                     final currentNumber = (_rootEntry ?? _selectedEntry)?.number;
                     _loadRootEntry(e.number, pivotFromNumber: currentNumber);
                   },
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: _st.r(4),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 4, vertical: 2),
@@ -2163,7 +2227,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
             // user switches to a new word.
             InkWell(
               onTap: () => setState(() => _refsShowAll.add(e.number)),
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: _st.r(4),
               child: Padding(
                 padding: const EdgeInsets.symmetric(
                     horizontal: 4, vertical: 4),
@@ -2190,7 +2254,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
             const SizedBox(height: 4),
             InkWell(
               onTap: () => setState(() => _refsShowAll.remove(e.number)),
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: _st.r(4),
               child: Padding(
                 padding: const EdgeInsets.symmetric(
                     horizontal: 4, vertical: 4),
@@ -2229,18 +2293,25 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
       onTap: () => setState(() {
         _expandedRelatedNumber = isExpanded ? null : e.number;
       }),
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: _st.r(8),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-        constraints: const BoxConstraints(maxWidth: 200),
+        padding: EdgeInsets.symmetric(
+          horizontal: _st.dense ? 5 : 8,
+          vertical: _st.dense ? 4 : 5,
+        ),
+        constraints: BoxConstraints(maxWidth: _st.dense ? 180 : 200),
         decoration: BoxDecoration(
           color: isExpanded
-              ? scheme.primaryContainer
-              : scheme.secondaryContainer.withValues(alpha: 0.55),
-          borderRadius: BorderRadius.circular(8),
+              ? _st.selectedFill
+              : (_st.dense
+                    ? _st.chipFill
+                    : scheme.secondaryContainer.withValues(alpha: 0.55)),
+          borderRadius: _st.r(8),
           border: Border.all(
-            color: isExpanded ? scheme.primary : scheme.outlineVariant,
-            width: isExpanded ? 1.5 : 1,
+            color: isExpanded
+                ? _st.selectedBorder
+                : (_st.dense ? _st.chipBorder : scheme.outlineVariant),
+            width: _st.dense ? _st.borderWidth : (isExpanded ? 1.5 : 1),
           ),
         ),
         child: Column(
@@ -2251,18 +2322,19 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                  padding: _st.dense
+                      ? EdgeInsets.zero
+                      : const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                   decoration: BoxDecoration(
-                    color: scheme.secondary.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(4),
+                    color: _st.strongsFill,
+                    borderRadius: _st.r(4),
                   ),
                   child: Text(
                     e.number,
                     style: TextStyle(
-                      fontSize: 9,
+                      fontSize: _st.micro,
                       fontWeight: FontWeight.w700,
-                      color: scheme.secondary,
+                      color: _st.strongs,
                       letterSpacing: 0.4,
                     ),
                   ),
@@ -2272,7 +2344,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                   child: Text(
                     e.lemma,
                     style: TextStyle(
-                      fontSize: 15,
+                      fontSize: _st.dense ? _st.original : 15,
                       fontWeight: FontWeight.w600,
                       color: scheme.onSurface,
                     ),
@@ -2285,7 +2357,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
             Text(
               e.localizedGloss(locale),
               style: TextStyle(
-                fontSize: 11,
+                fontSize: _st.gloss,
                 color: scheme.onSurfaceVariant,
               ),
               maxLines: 1,
@@ -2448,6 +2520,8 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
               height: 4,
               decoration: BoxDecoration(
                 color: scheme.outlineVariant,
+                // modal-only: the distribution table is always a bottom
+                // sheet, never the docked pane, so it keeps its handle.
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -2594,7 +2668,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
             onTap: () => setState(() {
               _expandedConcordanceBook = isExpanded ? null : englishBook;
             }),
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: _st.r(6),
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 8),
               child: Row(
@@ -2712,22 +2786,27 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
 
   Widget _buildHint(ColorScheme scheme, String locale) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: _st.dense ? _st.blockPadding : const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(12),
+        color: _st.dense
+            ? Colors.transparent
+            : scheme.surfaceContainerHighest.withValues(alpha: 0.3),
+        borderRadius: _st.r(12),
+        border: _st.dense
+            ? Border.all(color: _st.blockBorder, width: _st.borderWidth)
+            : null,
       ),
       child: Row(
         children: [
           Icon(Icons.touch_app_outlined,
-              color: scheme.onSurfaceVariant, size: 18),
+              color: scheme.onSurfaceVariant, size: _st.dense ? 14 : 18),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               uiStrings['originalHint']?[locale] ??
                   'Tap a word to see its Strong\'s entry.',
               style: TextStyle(
-                fontSize: 13,
+                fontSize: _st.dense ? _st.ref : 13,
                 color: scheme.onSurfaceVariant,
               ),
             ),
