@@ -10,14 +10,24 @@ void main() {
   group('pane arithmetic matches the layout it is quoting', () {
     test('the constants are the sum of the panes, not round numbers', () {
       expect(WorkbenchFit.twoPaneMinWidth, 720);
-      expect(WorkbenchFit.threePaneMinWidth, 1024);
+      expect(WorkbenchFit.threePaneMinWidth, 992);
     });
 
     test('paneCountFor steps exactly at the two thresholds', () {
       expect(WorkbenchFit.paneCountFor(719), 1);
       expect(WorkbenchFit.paneCountFor(720), 2);
-      expect(WorkbenchFit.paneCountFor(1023), 2);
-      expect(WorkbenchFit.paneCountFor(1024), 3);
+      expect(WorkbenchFit.paneCountFor(991), 2);
+      expect(WorkbenchFit.paneCountFor(992), 3);
+    });
+
+    // The gate must stay clear of Chrome for Android's "Request desktop
+    // site" viewport, which is a flat 980 CSS px on every device. A
+    // threshold at or below it would be defeated by one menu item on any
+    // phone, and the three columns would render at a scale nobody can
+    // read. This is the reason 992 rather than a rounder 960.
+    test('the threshold clears the 980px desktop-site viewport', () {
+      expect(WorkbenchFit.paneCountFor(980), 2);
+      expect(WorkbenchFit.threePaneMinWidth, greaterThan(980));
     });
   });
 
@@ -45,10 +55,10 @@ void main() {
     });
 
     test('the boundary is the THREE-pane minimum, in either orientation', () {
-      expect(advice(1023, 800), WorkbenchAdvice.largerDisplay);
-      expect(advice(1024, 800), WorkbenchAdvice.none);
-      expect(advice(800, 1023), WorkbenchAdvice.largerDisplay);
-      expect(advice(800, 1024), WorkbenchAdvice.rotate);
+      expect(advice(991, 800), WorkbenchAdvice.largerDisplay);
+      expect(advice(992, 800), WorkbenchAdvice.none);
+      expect(advice(800, 991), WorkbenchAdvice.largerDisplay);
+      expect(advice(800, 992), WorkbenchAdvice.rotate);
     });
 
     test('a tall narrow window is judged on its width, not its short edge',
@@ -73,14 +83,14 @@ void main() {
     });
 
     test('the long edge threshold is the three-pane minimum', () {
-      expect(advice(400, 1023), WorkbenchAdvice.largerDisplay);
-      expect(advice(400, 1024), WorkbenchAdvice.rotate);
+      expect(advice(400, 991), WorkbenchAdvice.largerDisplay);
+      expect(advice(400, 992), WorkbenchAdvice.rotate);
     });
 
     test('a landscape screen is never told to rotate', () {
       expect(advice(1200, 700), WorkbenchAdvice.none);
       expect(advice(844, 390), WorkbenchAdvice.largerDisplay);
-      expect(advice(1000, 400), WorkbenchAdvice.largerDisplay);
+      expect(advice(960, 400), WorkbenchAdvice.largerDisplay);
     });
 
     test('square counts as landscape — there is nothing to turn', () {
@@ -101,14 +111,28 @@ void main() {
       expect(WorkbenchFit.paneCountFor(1194), 3);
     });
 
-    test('the classic 1024x768 iPad qualifies again after the trim', () {
-      // The 48px gap was closed by trimming search (240->224) and
-      // analysis (320->288); reading stayed at 480. Landscape now carries
-      // all three columns exactly; portrait (768) still does not, so it
-      // is told to rotate rather than blocked.
+    test('the classic 1024x768 iPad qualifies with room to spare', () {
+      // It used to qualify by exactly zero — 1024 against a 1024
+      // threshold, passing only because the comparison is inclusive.
+      // Analysis 288->256 bought 32pt of slack, so Split View, a zoomed
+      // display setting or a browser scrollbar no longer drops it out.
       expect(WorkbenchFit.paneCountFor(1024), 3);
+      expect(1024 - WorkbenchFit.threePaneMinWidth, 32);
       expect(advice(1024, 768), WorkbenchAdvice.none);
       expect(advice(768, 1024), WorkbenchAdvice.rotate);
+    });
+
+    test('foldables are blocked on purpose, not by an off-by-a-little', () {
+      // Pixel 10 Pro Fold, unfolded, in Chrome: 852 x 720 CSS px. It is
+      // the widest phone-class viewport that exists and it is still 140px
+      // short of three columns at their minimums. Owner's call
+      // 2026-08-08: reaching it would mean cutting reading below 480,
+      // which is the one column the workbench cannot afford to squeeze —
+      // so the Fold goes to YsWords like every other phone.
+      expect(WorkbenchFit.paneCountFor(852), 2);
+      expect(advice(852, 720), WorkbenchAdvice.largerDisplay);
+      // Folded (outer display) is unambiguous phone territory.
+      expect(advice(412, 950), WorkbenchAdvice.largerDisplay);
     });
 
     test('1280x800 laptop is comfortable', () {

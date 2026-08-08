@@ -45,7 +45,7 @@ import 'package:seeksparks/services/workbench_warmup.dart'
 import 'package:seeksparks/utils/jump_to_reference.dart' as jumper;
 import 'package:seeksparks/utils/reference_parser.dart' show BibleReference;
 import 'package:seeksparks/utils/morphology.dart' show describeMorphology;
-import 'package:seeksparks/utils/responsive.dart';
+import 'package:seeksparks/utils/workbench_fit.dart';
 import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
 import 'package:seeksparks/widgets/bible_reading_pane.dart';
 import 'package:seeksparks/widgets/command_pane.dart';
@@ -127,15 +127,35 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
   // out, so a divergence would admit a viewport the layout then
   // overflows. Trimmed 48 px total so the three-column minimum lands on
   // 1024 and a landscape iPad qualifies.
+  //
+  // 2026-08-08: right 288 -> 256, again in lockstep — see the reasoning
+  // on `WorkbenchFit.analysisPaneMin`. The gate is now 992, which gives a
+  // 1024 pt iPad 32 pt of slack instead of qualifying by exactly zero.
   static const double _minLeftWidth = 224;
   static const double _maxLeftWidth = 480;
-  static const double _minRightWidth = 288;
+  static const double _minRightWidth = 256;
   static const double _maxRightWidth = 560;
   static const double _dividerWidth = 16;
 
   /// Width of the rail shown in place of a collapsed pane. Named because
   /// the split-mode fit check has to subtract it.
   static const double _railWidth = 44;
+
+  /// Does this width carry all three panes?
+  ///
+  /// 2026-08-08: this used to be `ResponsiveBreakpoints.isDesktopOrWider`,
+  /// a hardcoded `w >= 1024` living in a THIRD file. That was fine only
+  /// while the gate happened to be 1024 too. Moving the gate to 992
+  /// exposed it: `SmallScreenGate` would have admitted a 992–1023 px
+  /// viewport and this method would then have laid out two panes — the
+  /// exact half-product the gate exists to keep off the screen, and a
+  /// silent failure at that, since neither number is wrong on its own.
+  ///
+  /// So the workbench now asks `WorkbenchFit`, which owns the arithmetic.
+  /// `ResponsiveBreakpoints.isDesktopOrWider` stays where it is for the
+  /// reader and `open_reader`, where 1024 means something else.
+  static bool _isThreePane(double width) =>
+      width >= WorkbenchFit.threePaneMinWidth;
 
   /// Owns the workbench state. Created here (not globally in main.dart)
   /// so its MainProvider listener and search state only live while the
@@ -673,7 +693,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
                 preferred: _wb.centreMode,
                 centreWidth:
                     _paneWidths(MediaQuery.sizeOf(context).width).centre,
-                threePane: ResponsiveBreakpoints.isDesktopOrWider(
+                threePane: _isThreePane(
                     MediaQuery.sizeOf(context).width),
               )) {
                 WbCentreMode.browse => s('parallelBrowseShort', 'Browse'),
@@ -760,7 +780,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
   /// v1.6.17: a control that promises something the layout will not
   /// honour is worse than one that is simply absent.
   ({double left, double right, double centre}) _paneWidths(double width) {
-    final threePane = ResponsiveBreakpoints.isDesktopOrWider(width);
+    final threePane = _isThreePane(width);
     final showLeft = _leftOpen && width >= 600;
     final showRight = _rightOpen && threePane;
     // Cap side panes at 32% of the total width each so the reader never
@@ -786,7 +806,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
   /// the current window cannot render.
   WbCentreMode _nextCentreMode() {
     final width = MediaQuery.sizeOf(context).width;
-    final threePane = ResponsiveBreakpoints.isDesktopOrWider(width);
+    final threePane = _isThreePane(width);
     final centre = _paneWidths(width).centre;
     final order = [
       WbCentreMode.browse,
@@ -1032,7 +1052,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
     // `compact` trims what goes IN the bars rather than removing them:
     // the full six-field status line and the whole menu row do not fit
     // in 390px, and an overflowing bar is worse than a shorter one.
-    final compact = !ResponsiveBreakpoints.isDesktopOrWider(width);
+    final compact = !_isThreePane(width);
 
     return Scaffold(
       backgroundColor: wb.chromeBg,
@@ -1090,7 +1110,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
     return Builder(
       builder: (context) {
           final width = MediaQuery.sizeOf(context).width;
-          final threePane = ResponsiveBreakpoints.isDesktopOrWider(width);
+          final threePane = _isThreePane(width);
           final showLeft = _leftOpen && width >= 600;
           final showRight = _rightOpen && threePane;
           final panes = _paneWidths(width);

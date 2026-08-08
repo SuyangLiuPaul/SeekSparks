@@ -43,9 +43,27 @@ class WorkbenchFit {
   /// and is the column a narrower setting would actually hurt. Search
   /// holds a query field and a hit list, analysis holds lemma, parsing
   /// and glosses; both take the cut better than running text does.
+  ///
+  /// 2026-08-08: analysis 288->256, so the threshold is 992 rather than
+  /// 1024. Landing the gate *exactly* on the classic iPad's 1024 pt meant
+  /// it qualified only because the comparison is inclusive — Split View, a
+  /// zoomed display setting or a browser scrollbar shaves a point and the
+  /// device is blocked. 32 pt of slack, taken from analysis again for the
+  /// same reason as before.
+  ///
+  /// 992 is also deliberately ABOVE 980, the layout viewport Chrome for
+  /// Android uses in "Request desktop site" mode. Any threshold at or
+  /// below 980 would let a 6" phone through the gate by toggling one
+  /// menu item, and it would render three columns at an unreadable scale.
+  ///
+  /// Do NOT go below 256 without a device to judge on. Owner's call
+  /// 2026-08-08 on foldables: an unfolded Pixel 10 Pro Fold reports
+  /// 852 x 720, and reaching that would mean cutting a further 140 px out
+  /// of three columns that are already at their minimums. Foldables are
+  /// blocked on purpose, not by oversight.
   static const double searchPaneMin = 224;
   static const double readingPaneMin = 480;
-  static const double analysisPaneMin = 288;
+  static const double analysisPaneMin = 256;
 
   /// Each draggable divider between panes.
   static const double dividerWidth = 16;
@@ -54,7 +72,7 @@ class WorkbenchFit {
       searchPaneMin + dividerWidth + readingPaneMin; // 720
 
   static const double threePaneMinWidth =
-      twoPaneMinWidth + dividerWidth + analysisPaneMin; // 1024
+      twoPaneMinWidth + dividerWidth + analysisPaneMin; // 992
 
   /// Three panes at their *default* widths (320 search, 420 analysis)
   /// rather than their minimums — the width at which the workbench

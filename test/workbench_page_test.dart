@@ -1,6 +1,6 @@
 /// 2026-08-04 (Workbench): widget tests for `WorkbenchPage` — the
 /// three-pane BibleWorks-style pad workspace. Covers the responsive
-/// pane rules (3 panes ≥1024, 2 panes 600–1023, reader-only <600),
+/// pane rules (3 panes ≥992, 2 panes 600–991, reader-only <600),
 /// divider drag-resize, collapse/reopen rails, and the selection→
 /// analysis wiring that embeds OriginalsSheet (with its close button
 /// swapped for a collapse button in embedded mode).
@@ -20,6 +20,7 @@ import 'package:seeksparks/models/verse.dart';
 import 'package:seeksparks/pages/command_search_page.dart';
 import 'package:seeksparks/pages/workbench_page.dart';
 import 'package:seeksparks/providers/main_provider.dart';
+import 'package:seeksparks/utils/workbench_fit.dart';
 import 'package:seeksparks/widgets/bible_reading_pane.dart';
 import 'package:seeksparks/widgets/browse_window.dart';
 import 'package:seeksparks/widgets/command_pane.dart';
@@ -68,6 +69,25 @@ void main() {
     expect(find.byType(BibleReadingPane), findsNothing);
     // No selection yet → analysis empty-state hint, no embedded sheet.
     expect(find.byType(OriginalsSheet), findsNothing);
+    expect(find.byKey(const ValueKey('workbench-divider-left')), findsOneWidget);
+    expect(find.byKey(const ValueKey('workbench-divider-right')),
+        findsOneWidget);
+  });
+
+  // The gate admits anything ≥ WorkbenchFit.threePaneMinWidth, so the
+  // narrowest three-pane layout that can ever ship is exactly that width.
+  // Pump it, because that is the one width where every column is sitting
+  // on its minimum simultaneously and nothing has slack to give.
+  testWidgets('at the three-pane minimum (992) all three still fit',
+      (tester) async {
+    addTearDown(tester.view.reset);
+    await pumpWorkbench(
+        tester, Size(WorkbenchFit.threePaneMinWidth, 744));
+    expect(tester.takeException(), isNull,
+        reason: 'a RenderFlex overflow here means the gate admits a '
+            'viewport the layout cannot actually carry');
+    expect(find.byType(CommandPane), findsOneWidget);
+    expect(find.byType(BrowseWindow), findsOneWidget);
     expect(find.byKey(const ValueKey('workbench-divider-left')), findsOneWidget);
     expect(find.byKey(const ValueKey('workbench-divider-right')),
         findsOneWidget);
