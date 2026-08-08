@@ -122,10 +122,57 @@ class _CommandPaneState extends State<CommandPane> {
   /// Session state, not a setting: it belongs to the query being built.
   int _nearDistance = 5;
 
+  /// The line the last button wrote, held until the platform stops
+  /// arguing about where the caret is. See [_undoSelectAllEcho].
+  String? _caretGuardText;
+  int _caretGuardOffset = 0;
+
   @override
   void initState() {
     super.initState();
+    _controller.addListener(_undoSelectAllEcho);
     _loadRecents();
+  }
+
+  /// Put [text] on the command line as if the reader had typed it.
+  ///
+  /// Every button on the strip goes through here, because the caret is
+  /// the whole difficulty. Tapping a chip blurs the browser's hidden
+  /// `<input>`; putting the focus back makes the browser SELECT ALL of
+  /// it, and that select-all is echoed into the framework as the new
+  /// editing state. The reader then types the second half of the query
+  /// the button just helped them start and it replaces the first half:
+  /// `G25` → tap `NEAR5` → type `G26` → the line reads `G26`. Pressing
+  /// Enter on that gets a lexicon entry, not a proximity search, which
+  /// is precisely "I clicked on it and nothing happens".
+  void _writeLine(String text, {int? caret}) {
+    final offset = (caret ?? text.length).clamp(0, text.length);
+    _controller.setTextAtomic(text, caret: offset);
+    _caretGuardText = text;
+    _caretGuardOffset = offset;
+    _focus.requestFocus();
+    setState(() {});
+  }
+
+  /// Undo exactly the echo described in [_writeLine] and nothing else:
+  /// the same text we just wrote, wholly selected, once. A selection the
+  /// reader made themselves does not match, because by then either the
+  /// text has changed or the guard is spent.
+  void _undoSelectAllEcho() {
+    final written = _caretGuardText;
+    if (written == null) return;
+    if (_controller.text != written) {
+      _caretGuardText = null;
+      return;
+    }
+    final sel = _controller.selection;
+    if (written.isEmpty ||
+        sel.baseOffset != 0 ||
+        sel.extentOffset != written.length) {
+      return;
+    }
+    _caretGuardText = null;
+    _controller.selection = TextSelection.collapsed(offset: _caretGuardOffset);
   }
 
   Future<void> _loadRecents() async {
@@ -391,10 +438,8 @@ class _CommandPaneState extends State<CommandPane> {
     final end = sel.isValid ? sel.end : text.length;
     final needsSpace = start > 0 && !text.substring(0, start).endsWith(' ');
     final insert = '${needsSpace ? ' ' : ''}$token${trailingSpace ? ' ' : ''}';
-    _controller.setTextAtomic(text.replaceRange(start, end, insert),
+    _writeLine(text.replaceRange(start, end, insert),
         caret: start + insert.length);
-    _focus.requestFocus();
-    setState(() {});
   }
 
   /// `✶` glues to the word in front of the caret when there is one, and
@@ -419,10 +464,7 @@ class _CommandPaneState extends State<CommandPane> {
       _insertToken('*');
       return;
     }
-    _controller.setTextAtomic(text.replaceRange(start, end, '*'),
-        caret: start + 1);
-    _focus.requestFocus();
-    setState(() {});
+    _writeLine(text.replaceRange(start, end, '*'), caret: start + 1);
   }
 
   /// Insert the NEAR operator at the strip's current distance.
@@ -440,11 +482,13 @@ class _CommandPaneState extends State<CommandPane> {
     final near = analyseCommandDraft(text).near;
     final next = ((near?.distance ?? _nearDistance) + delta)
         .clamp(kMinNearDistance, kMaxNearDistance);
+    _nearDistance = next;
     if (near != null) {
-      _controller.setTextAtomic(withNearDistance(text, near, next));
+      _writeLine(withNearDistance(text, near, next));
+    } else {
+      setState(() {});
+      _focus.requestFocus();
     }
-    setState(() => _nearDistance = next);
-    _focus.requestFocus();
   }
 
   /// Replace the leading control character, or add one.
@@ -460,9 +504,7 @@ class _CommandPaneState extends State<CommandPane> {
     if (text.isNotEmpty && kCommandControls.contains(text[0])) {
       text = text.substring(1);
     }
-    _controller.setTextAtomic('$control$text');
-    _focus.requestFocus();
-    setState(() {});
+    _writeLine('$control$text');
   }
 
   /// Step through [_history]; -1 is older, +1 is newer.
@@ -473,8 +515,7 @@ class _CommandPaneState extends State<CommandPane> {
     _historyAt = next;
     // Stepping past the newest entry returns the empty line rather than
     // sticking on the last command, so ↓ is a way out and not a trap.
-    _controller.setTextAtomic(next == _history.length ? '' : _history[next]);
-    setState(() {});
+    _writeLine(next == _history.length ? '' : _history[next]);
   }
 
   void _clear() {

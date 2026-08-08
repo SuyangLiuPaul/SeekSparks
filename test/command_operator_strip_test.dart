@@ -198,6 +198,53 @@ void main() {
       expect(lineOf(tester), 'G25 NEAR5 ');
     });
 
+    testWidgets('the second number does not eat the first', (tester) async {
+      // The real "nothing happens", found by driving the deployed build
+      // over CDP: tapping a chip blurs the browser's hidden <input>, and
+      // putting the focus back makes the browser select ALL of it. The
+      // DOM reported selection (0, 10) over "G25 NEAR5 " — so the next
+      // character the reader types replaces the whole query and Enter
+      // runs a plain `G26` lexicon lookup. Invisible to a widget test
+      // unless the echo is replayed through the platform channel, which
+      // is what updateEditingValue does here.
+      await pump(tester);
+      await tester.enterText(find.byType(TextField), 'G25');
+      await tester.pump();
+      await tester.tap(find.text('NEAR5'));
+      await tester.pump();
+      tester.testTextInput.updateEditingValue(const TextEditingValue(
+        text: 'G25 NEAR5 ',
+        selection: TextSelection(baseOffset: 0, extentOffset: 10),
+      ));
+      await tester.pump();
+      final sel = tester
+          .widget<TextField>(find.byType(TextField))
+          .controller!
+          .selection;
+      expect(sel.isCollapsed, isTrue);
+      expect(sel.baseOffset, 10);
+    });
+
+    testWidgets('a selection the reader made is left alone', (tester) async {
+      // The guard is spent after one echo and only ever matches the exact
+      // line a button wrote, so an ordinary select-all still works.
+      await pump(tester);
+      await tester.enterText(find.byType(TextField), 'G25 NEAR5 G26');
+      await tester.pump();
+      tester.testTextInput.updateEditingValue(const TextEditingValue(
+        text: 'G25 NEAR5 G26',
+        selection: TextSelection(baseOffset: 0, extentOffset: 13),
+      ));
+      await tester.pump();
+      expect(
+          tester
+              .widget<TextField>(find.byType(TextField))
+              .controller!
+              .selection
+              .isCollapsed,
+          isFalse);
+    });
+
     testWidgets('tapping it with nothing to combine explains itself',
         (tester) async {
       await pump(tester);
