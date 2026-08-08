@@ -242,6 +242,7 @@ void main() {
       'assets/cuvs-yhwh.json',
       'assets/bible_names.json',
       'assets/family_tree.json',
+      'assets/hebrew_kings.json',
     ]) {
       seen.addAll(utf8.decode(File(f).readAsBytesSync()).runes);
     }
