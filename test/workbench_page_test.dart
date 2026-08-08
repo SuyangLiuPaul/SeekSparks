@@ -17,6 +17,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/verse.dart';
+import 'package:seeksparks/pages/command_search_page.dart';
 import 'package:seeksparks/pages/workbench_page.dart';
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/widgets/bible_reading_pane.dart';
@@ -91,6 +92,51 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(find.byType(CommandPane), findsNothing);
     expect(find.byType(BibleReadingPane), findsOneWidget);
+  });
+
+  testWidgets('the reader\'s search button focuses the command line here',
+      (tester) async {
+    // The reader's search used to push a full-screen search route. In
+    // the workbench that stacks a second, throwaway search on top of
+    // the one already beside the text — the exact duplication this
+    // workspace exists to end.
+    addTearDown(tester.view.reset);
+    await pumpWorkbench(tester, const Size(768, 1024));
+    expect(find.byType(BibleReadingPane), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.search_rounded));
+    await tester.pump(const Duration(milliseconds: 100));
+
+    expect(find.byType(CommandSearchPage), findsNothing);
+    expect(find.byType(CommandPane), findsOneWidget);
+    expect(find.byType(BibleReadingPane), findsOneWidget,
+        reason: 'the text stays on screen; only the caret moved');
+    final field = tester.widget<TextField>(
+        find.descendant(of: find.byType(CommandPane),
+            matching: find.byType(TextField)));
+    expect(field.focusNode?.hasFocus, isTrue);
+  });
+
+  testWidgets('collapsed, the same button reopens the pane and focuses it',
+      (tester) async {
+    addTearDown(tester.view.reset);
+    await pumpWorkbench(tester, const Size(768, 1024));
+    // The Search strip's chevron is the only left-pointing one.
+    await tester.tap(find.byIcon(Icons.chevron_left));
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.byType(CommandPane), findsNothing);
+
+    await tester.tap(find.byIcon(Icons.search_rounded));
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump(const Duration(milliseconds: 100));
+
+    expect(find.byType(CommandPane), findsOneWidget);
+    final field = tester.widget<TextField>(
+        find.descendant(of: find.byType(CommandPane),
+            matching: find.byType(TextField)));
+    expect(field.focusNode?.hasFocus, isTrue,
+        reason: 'focus must wait for the frame that mounts the pane');
   });
 
   testWidgets('dragging the left divider resizes the command pane',

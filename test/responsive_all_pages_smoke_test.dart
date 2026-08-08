@@ -14,7 +14,7 @@ import 'package:seeksparks/pages/family_tree_page.dart';
 import 'package:seeksparks/pages/highlights_page.dart';
 import 'package:seeksparks/pages/profile_edit_page.dart';
 import 'package:seeksparks/pages/profiles_page.dart';
-import 'package:seeksparks/pages/search_page.dart';
+import 'package:seeksparks/pages/command_search_page.dart';
 import 'package:seeksparks/pages/sermons_page.dart';
 import 'package:seeksparks/pages/stats_page.dart';
 import 'package:seeksparks/pages/strongs_entry_page.dart';
@@ -68,7 +68,7 @@ void main() {
   // placeholder layouts that overflow).
   final pages = <String, Widget Function()>{
     'StatsPage': () => const StatsPage(),
-    'SearchPage': () => const SearchPage(),
+    'CommandSearchPage': () => const CommandSearchPage(),
     'FamilyTreePage': () => const FamilyTreePage(),
     'BibleTriviaPage': () => const BibleTriviaPage(),
     'EvidencePage': () => const EvidencePage(),
@@ -96,8 +96,7 @@ void main() {
           ChangeNotifierProvider(create: (_) {
             final mp = MainProvider();
             // Seed a couple verses so pages that gate on a loaded
-            // corpus (e.g. SearchPage kicks off _ensureVersesLoaded
-            // when verses are empty) render their populated layout
+            // corpus render their populated layout
             // instead of starting an async load — both more realistic
             // for overflow and free of an init-time pending fetch.
             mp.setVerses(const [
@@ -135,8 +134,7 @@ void main() {
 
         // Dispose so initState timers/listeners are cancelled before
         // the test ends, then drain any final in-flight Future.delayed
-        // (e.g. SearchPage's verse-load poll tick, which now stops on
-        // dispose via `&& mounted`).
+        // (e.g. a page's poll tick that stops on dispose).
         await tester.pumpWidget(const SizedBox.shrink());
         await tester.pump(const Duration(milliseconds: 250));
       });

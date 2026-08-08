@@ -24,6 +24,7 @@
 ///     l             lift the limit
 ///     3:16          chapter 3 verse 16 OF THE CURRENT BOOK
 ///     17            verse 17 OF THE CURRENT CHAPTER
+///     ai <question> ask for passages by describing them
 ///
 /// ## What a naive reading of "add a command verb" would miss
 ///
@@ -239,6 +240,16 @@ enum CommandVerbKind {
 
   /// `3:16` / `17` — a reference completed from where the reader is.
   goToReference,
+
+  /// `ai 关于焦虑的经文` — describe the passages you want.
+  ///
+  /// The only verb here with no BibleWorks equivalent, and the only one
+  /// whose answer does not come out of the loaded corpus. It sits on the
+  /// command line rather than behind a button because the line is
+  /// already where the other nine ways of asking a question live, and
+  /// because the reader who reaches for it has usually just watched a
+  /// literal search return the wrong verses.
+  askAi,
 }
 
 class CommandVerb {
@@ -247,6 +258,7 @@ class CommandVerb {
     this.versions = const [],
     this.limit,
     this.reference,
+    this.aiQuery,
   });
 
   final CommandVerbKind kind;
@@ -256,6 +268,10 @@ class CommandVerb {
 
   final LimitSpec? limit;
   final BibleReference? reference;
+
+  /// Everything after `ai `, verbatim — it is a question in the
+  /// reader's own words, so nothing here parses or normalises it.
+  final String? aiQuery;
 }
 
 /// Why a verb-shaped line was refused.
@@ -377,6 +393,15 @@ final RegExp _listSeparatorRe = RegExp(r'[,，、]');
 
 final RegExp _whitespaceRe = RegExp(r'\s+');
 
+/// `ai <question>`. The argument is mandatory, and that is not a
+/// formality: **Ai is a Canaanite city** (Joshua 7–8, Ezra 2:28), so a
+/// bare `ai` has to keep reaching the text search or the verb would
+/// make a real place unfindable. `ai men of ai` is still taken as a
+/// question — the collision is not fully removable while the verb is a
+/// word, and this is the shape of it: visible, one Esc from undone, and
+/// costing nothing to the far commoner bare lookup.
+final RegExp _aiVerbRe = RegExp(r'^ai\s+(.+)$', caseSensitive: false);
+
 // ── Parse ───────────────────────────────────────────────────────────
 
 /// Read [input] as a workbench command verb.
@@ -390,6 +415,12 @@ final RegExp _whitespaceRe = RegExp(r'\s+');
 CommandVerbParse parseCommandVerb(String input, VerbContext ctx) {
   final raw = input.trim();
   if (raw.isEmpty) return const CommandVerbParse.none();
+
+  final ai = _aiVerbRe.firstMatch(raw);
+  if (ai != null) {
+    return CommandVerbParse.run(
+        CommandVerb(CommandVerbKind.askAi, aiQuery: ai.group(1)!.trim()));
+  }
 
   final head = raw.substring(0, 1).toLowerCase();
   // A verb letter must stand alone: `d nas` is a verb, `dog` is a word.
@@ -727,6 +758,7 @@ List<String> applyDisplayVerb(
     case CommandVerbKind.limitSet:
     case CommandVerbKind.limitClear:
     case CommandVerbKind.goToReference:
+    case CommandVerbKind.askAi:
       add(current);
   }
   return next;

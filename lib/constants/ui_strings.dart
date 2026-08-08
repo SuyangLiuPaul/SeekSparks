@@ -3032,6 +3032,15 @@ const uiStrings = {
     'en': 'd kjv / d -kjv / d c stack editions · p kjv bsb restack · '
         'l gen scope the search · 17 verse 17 of this chapter',
   },
+  // 2026-08-08: the `ai` verb gets its own line rather than joining the
+  // list above — it is the only command that leaves the device, and the
+  // reader should be able to see that before typing it.
+  'cmdSyntaxAi': {
+    'zh-Hans': 'ai 关于焦虑的经文 — 描述你想找什么，AI 给出经文出处（仅供参考）',
+    'zh-Hant': 'ai 關於焦慮的經文 — 描述你想找什麼，AI 給出經文出處（僅供參考）',
+    'en': 'ai verses about anxiety — describe what you want; '
+        'AI answers with references (reference only)',
+  },
   'cmdTryAndHint': {
     'zh-Hans': '没有整段匹配。试试 “.{q}”，查找同一节里都出现这些词的经文。',
     'zh-Hant': '沒有整段匹配。試試「.{q}」，尋找同一節裡都出現這些詞的經文。',

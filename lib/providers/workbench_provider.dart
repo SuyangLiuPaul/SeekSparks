@@ -3,8 +3,10 @@ import 'package:flutter/foundation.dart';
 import 'package:seeksparks/models/verse.dart';
 import 'package:seeksparks/models/wb_centre_mode.dart';
 import 'package:seeksparks/providers/main_provider.dart';
+import 'package:seeksparks/services/ai_bible_search_service.dart';
 import 'package:seeksparks/services/concordance_service.dart';
 import 'package:seeksparks/services/search_service.dart';
+import 'package:seeksparks/utils/ai_ref_resolution.dart';
 import 'package:seeksparks/utils/command_query.dart';
 import 'package:seeksparks/utils/command_verb.dart' show LimitSpec;
 import 'package:seeksparks/utils/strongs_boolean_search.dart';
@@ -59,6 +61,33 @@ class WorkbenchProvider extends ChangeNotifier {
   /// began with a control character and did not parse — never for
   /// ordinary text, which is not a failed command but a plain search.
   CommandIssue? commandIssue;
+
+  // ── AI passage search ─────────────────────────────────────────────
+  //
+  // A fourth result shape beside text, Strong's and command queries,
+  // and the only one whose answer does not come out of the corpus.
+  // Kept as its own state rather than folded into [textResults]
+  // because the reader has to be able to tell the difference: these
+  // are suggestions from a model, they carry a stated reason, and some
+  // of them will not be in the loaded edition at all.
+
+  bool aiBusy = false;
+
+  /// The question, as asked. Null when the last search was not an AI one.
+  String? aiQuery;
+
+  /// Every reference the AI returned that survived the search limit, in
+  /// its order — including the ones that resolved to nothing.
+  List<AiBibleRef>? aiRefs;
+
+  /// `AiBibleRef.display` of the references with no verse behind them.
+  Set<String> aiUnresolved = const {};
+
+  /// Why some of the answer is missing, or why there is no answer.
+  /// Model-authored prose in the reader's locale, or a service error.
+  String? aiNotice;
+
+  bool get hasAiResults => aiRefs != null;
 
   /// Search limit — restrict results to these
   /// `'EnglishBook-chapter-verse'` keys. Null means unrestricted.
@@ -244,6 +273,7 @@ class WorkbenchProvider extends ChangeNotifier {
     commandIssue = null;
     verbNotice = null;
     textResults = const [];
+    _clearAi();
     _notify();
 
     try {
@@ -274,8 +304,10 @@ class WorkbenchProvider extends ChangeNotifier {
           searchKeys: mainProvider.searchKeys,
           query: query,
           bookOrder: mainProvider.bookOrder,
-          // The workbench command line always scans the whole Bible —
-          // book scoping lives in the standalone SearchPage.
+          // The command line always scans the whole Bible; scoping is
+          // the `l` verb's job (a verse-key search limit), applied
+          // below, so a limit can be a chapter range and not just a
+          // book.
           searchAll: true,
         );
         textResults = applySearchLimit(
@@ -328,7 +360,110 @@ class WorkbenchProvider extends ChangeNotifier {
     commandIssue = null;
     verbNotice = null;
     textResults = const [];
+    _clearAi();
     _notify();
+  }
+
+  void _clearAi() {
+    aiBusy = false;
+    aiQuery = null;
+    aiRefs = null;
+    aiUnresolved = const {};
+    aiNotice = null;
+  }
+
+  /// The AI call itself, injectable so everything around it — clearing
+  /// the other result shapes, the busy flag, the scope closure, the
+  /// mirror into [textResults] — can be tested without a network.
+  /// Production never sets this.
+  @visibleForTesting
+  Future<AiBibleSearchResult> Function(String query)? aiAsk;
+
+  /// Ask the model for passages matching [question], then join its
+  /// answer to the loaded edition.
+  ///
+  /// Takes the AI settings as arguments rather than reading them: this
+  /// provider is constructed with a [MainProvider] and nothing else,
+  /// and reaching for `AppSettings` here would make every test that
+  /// touches the workbench need one.
+  Future<void> runAiSearch({
+    required String question,
+    required String locale,
+    String? userApiKey,
+    String? aiModel,
+  }) async {
+    final query = question.trim();
+    if (query.isEmpty) return;
+
+    // The AI answer replaces whatever was on screen, exactly as a new
+    // text search would. Leaving the old hits under a new header is
+    // the bug that makes a results pane untrustworthy.
+    strongsQueryLabel = null;
+    strongsRefs = null;
+    commandQuery = null;
+    commandIssue = null;
+    verbNotice = null;
+    textResults = const [];
+    lastQuery = query;
+    _clearAi();
+
+    aiBusy = true;
+    aiQuery = query;
+    searchPerformed = false;
+    _notify();
+
+    try {
+      final result = await (aiAsk?.call(query) ??
+          AiBibleSearchService.ask(
+            query: query,
+            locale: locale,
+            userApiKey:
+                (userApiKey == null || userApiKey.isEmpty) ? null : userApiKey,
+            aiModel: aiModel,
+          ));
+
+      if (result.unavailable) {
+        aiRefs = const [];
+        aiNotice = result.unavailableReason;
+        return;
+      }
+
+      final limit = searchLimit;
+      final resolution = resolveAiRefs(
+        refs: result.refs,
+        verses: mainProvider.verses,
+        inScope: limit == null
+            ? null
+            : (ref) {
+                for (var v = ref.verseStart; v <= ref.verseEnd; v++) {
+                  if (limit.contains('${ref.book}-${ref.chapter}-$v')) {
+                    return true;
+                  }
+                }
+                return false;
+              },
+      );
+
+      aiRefs = resolution.kept;
+      aiUnresolved = resolution.unresolvedDisplays;
+      // The resolved verses also become the ordinary result set, so
+      // everything downstream that consumes a hit list — the Verse
+      // List Manager, "limit to these results", the copy paths —
+      // works on an AI answer without knowing where it came from.
+      textResults = resolution.verses;
+      aiNotice = describeAiGaps(
+        locale: locale,
+        outOfScope: resolution.outOfScope,
+        unresolved: resolution.unresolvedDisplays.length,
+        empty: resolution.kept.isEmpty,
+      );
+    } finally {
+      // Unconditional: an exception escaping the service would
+      // otherwise leave the pane spinning with no way back.
+      aiBusy = false;
+      searchPerformed = true;
+      _notify();
+    }
   }
 
   // ── Ref → Verse lookup (shared by command pane + analysis pane) ──

@@ -10,9 +10,16 @@ import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/wb_centre_mode.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/verse.dart';
+import 'package:seeksparks/pages/settings_page.dart'
+    show SettingsPage, SettingsSection;
 import 'package:seeksparks/providers/workbench_provider.dart';
+import 'package:seeksparks/services/ai_bible_search_service.dart'
+    show AiBibleRef;
 import 'package:seeksparks/services/concordance_service.dart';
 import 'package:seeksparks/services/fetch_verses.dart';
+import 'package:seeksparks/services/recent_searches_service.dart';
+import 'package:seeksparks/utils/ai_markdown.dart' show parseAiMarkdown;
+import 'package:seeksparks/utils/app_nav.dart' show pushPage;
 import 'package:seeksparks/utils/atomic_text_edit.dart';
 import 'package:seeksparks/utils/clipboard_helper.dart';
 import 'package:seeksparks/utils/command_query.dart';
@@ -20,6 +27,7 @@ import 'package:seeksparks/utils/command_verb.dart';
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 import 'package:seeksparks/utils/jump_to_reference.dart' as jumper;
 import 'package:seeksparks/utils/reference_parser.dart' show parseReference;
+import 'package:seeksparks/utils/relative_time.dart' show relativeTime;
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/utils/version_mapper.dart'
     show localeAwareBookName, toEnglish;
@@ -38,12 +46,19 @@ import 'package:seeksparks/widgets/search_stats_strip.dart';
 /// navigation, the reader is right beside us) and focuses it in the
 /// analysis pane.
 class CommandPane extends StatefulWidget {
-  const CommandPane({super.key, this.focusNode});
+  const CommandPane({super.key, this.focusNode, this.onVerseOpened});
 
   /// Supplied by the Workbench so View ▸ Command line and the toolbar's
   /// search button can put the caret here — a desktop tool's command
   /// line is always one keystroke away.
   final FocusNode? focusNode;
+
+  /// Called after a result has been opened. The Workbench leaves this
+  /// null: the reader is the pane next door and the jump is already
+  /// visible. `CommandSearchPage` passes a pop, because there the
+  /// reader is the route underneath and a tap that changed nothing on
+  /// screen reads as a dead list.
+  final VoidCallback? onVerseOpened;
 
   @override
   State<CommandPane> createState() => _CommandPaneState();
@@ -77,6 +92,37 @@ class _CommandPaneState extends State<CommandPane> {
   /// one is not an option.
   final FocusNode _ownFocus = FocusNode();
   FocusNode get _focus => widget.focusNode ?? _ownFocus;
+
+  /// Persisted successful queries, newest first, shown in place of the
+  /// empty state.
+  ///
+  /// Deliberately NOT the same thing as [_history]. bwh09 keeps two
+  /// lists and the difference is the point: "Entries are not added to
+  /// this list until they are executed without any error messages",
+  /// while "the UP and DOWN arrows cycle through previous Command Line
+  /// entries regardless of whether or not they were successful". So ↑
+  /// is for fixing the typo you just made, and this list is for
+  /// re-asking a question that worked — a week ago, on another device.
+  List<RecentSearchEntry> _recents = const [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRecents();
+  }
+
+  Future<void> _loadRecents() async {
+    final entries = await RecentSearchesService.listWithTimestamps();
+    if (!mounted) return;
+    setState(() => _recents = entries);
+  }
+
+  /// Record a command line that ran cleanly. See [_recents] for why
+  /// this is gated on success and ↑/↓ is not.
+  Future<void> _commitRecent(String raw) async {
+    await RecentSearchesService.add(raw);
+    await _loadRecents();
+  }
 
   @override
   void dispose() {
@@ -157,13 +203,20 @@ class _CommandPaneState extends State<CommandPane> {
       // fallback). Fall through to search rather than failing silently.
     }
     if (!mounted) return;
-    context.read<WorkbenchProvider>().runSearch(raw);
+    final wb = context.read<WorkbenchProvider>();
+    final running = wb.runSearch(raw);
     // Keep the caret here. `TextInputAction.search` unfocuses the field
     // by default, which is right for a one-shot search box and wrong for
     // a command line: after a search you refine it — widen the context,
     // drop a term — and both ↑ and Esc are dead the moment focus leaves.
     // Navigation does NOT do this; there your attention moves to the text.
     _focus.requestFocus();
+    await running;
+    if (!mounted) return;
+    // A query the grammar refused never reaches the history. Zero hits
+    // does: "no verse says that" is an answer, and it is one you come
+    // back to widen.
+    if (wb.commandIssue == null) await _commitRecent(raw);
   }
 
   /// Everything the verb grammar needs to know about where the reader
@@ -194,7 +247,8 @@ class _CommandPaneState extends State<CommandPane> {
   /// and below the three-pane breakpoint some of those are not even on
   /// screen.
   Future<void> _runVerb(CommandVerbParse parse) async {
-    final locale = context.read<AppSettings>().locale;
+    final settings = context.read<AppSettings>();
+    final locale = settings.locale;
     final wb = context.read<WorkbenchProvider>();
 
     if (parse.issue != null) {
@@ -228,6 +282,27 @@ class _CommandPaneState extends State<CommandPane> {
         wb.setCentreMode(WbCentreMode.browse);
         wb.showVerbNotice(describeDisplayStack(
             [for (final c in stack) shortBibleVersionLabel(c)], locale));
+      case CommandVerbKind.askAi:
+        // Clear before awaiting, not after: the request takes seconds
+        // and every other verb empties the line the instant it runs.
+        // Leaving the question sitting there under a spinner reads as
+        // a field that stopped accepting input.
+        final raw = _controller.text.trim();
+        _controller.clear();
+        setState(() {});
+        _focus.requestFocus();
+        await wb.runAiSearch(
+          question: verb.aiQuery!,
+          locale: locale,
+          userApiKey:
+              settings.geminiApiKey.isEmpty ? null : settings.geminiApiKey,
+          aiModel: settings.aiModel,
+        );
+        if (!mounted) return;
+        // The whole line, `ai ` and all, so tapping the recent re-asks
+        // the model rather than text-searching the question.
+        if (wb.aiRefs?.isNotEmpty ?? false) await _commitRecent(raw);
+        return;
       case CommandVerbKind.browseOn:
         wb.setCentreMode(WbCentreMode.browse);
         wb.showVerbNotice(
@@ -353,6 +428,7 @@ class _CommandPaneState extends State<CommandPane> {
     final wb = context.read<WorkbenchProvider>();
     jumper.prepareJumpToVerse(verse, wb.mainProvider);
     wb.focusVerse(verse);
+    widget.onVerseOpened?.call();
   }
 
   Future<void> _copyAllStrongsRefs(
@@ -517,6 +593,7 @@ class _CommandPaneState extends State<CommandPane> {
         'cmdSyntaxGap',
         'cmdSyntaxContext',
         'cmdSyntaxVerbs',
+        'cmdSyntaxAi',
         'cmdSyntaxHistory',
       ];
       return Container(
@@ -649,26 +726,36 @@ class _CommandPaneState extends State<CommandPane> {
 
   Widget _buildResultsBody(BuildContext context, WorkbenchProvider wb,
       AppSettings settings, ColorScheme scheme, String locale) {
+    if (wb.aiBusy) {
+      // Named, unlike the plain search spinner: an AI round-trip takes
+      // seconds, not milliseconds, and an unlabelled spinner that long
+      // reads as a hang.
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(strokeWidth: 2.2)),
+            const SizedBox(height: 10),
+            Text(
+              uiStrings['aiSearching']?[locale] ?? 'SeekSparks AI searching…',
+              style: TextStyle(
+                fontSize: settings.fontSize - 2,
+                color: scheme.outline,
+                fontFamilyFallback: kCjkFontFallback,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
     if (wb.searching) {
       return const Center(child: CircularProgressIndicator());
     }
     if (!wb.searchPerformed) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Text(
-            uiStrings['commandEmptyState']?[locale] ??
-                'Search the text, or combine Strong\'s numbers:\n'
-                    'G25 AND G26 · G25 NEAR5 G26 · G25✶',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: settings.fontSize - 1,
-              color: scheme.outline,
-              height: 1.6,
-            ),
-          ),
-        ),
-      );
+      return _emptyState(settings, scheme, locale);
     }
     final issue = wb.commandIssue;
     if (issue != null) {
@@ -678,6 +765,10 @@ class _CommandPaneState extends State<CommandPane> {
       // an empty list is not.
       return _noResults(settings, scheme, locale,
           message: describeCommandIssue(issue, locale));
+    }
+    final aiRefs = wb.aiRefs;
+    if (aiRefs != null) {
+      return _buildAiResults(context, wb, settings, scheme, locale, aiRefs);
     }
     final strongsRefs = wb.strongsRefs;
     if (strongsRefs != null) {
@@ -719,6 +810,282 @@ class _CommandPaneState extends State<CommandPane> {
             'No verse has that exact run of words. '
                 'Try ".{q}" for verses containing all of them.')
         .replaceAll('{q}', words);
+  }
+
+  /// Before the first search: the queries that worked, or — for a
+  /// reader with no history — what the box can do.
+  ///
+  /// The recents list is the one thing the standalone search page had
+  /// that the command line did not, and it is not decoration: a
+  /// punctuation grammar means the query you got right last Tuesday is
+  /// worth more than the one you can retype from memory.
+  Widget _emptyState(AppSettings settings, ColorScheme scheme, String locale) {
+    if (_recents.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Text(
+            uiStrings['commandEmptyState']?[locale] ??
+                'Search the text, or combine Strong\'s numbers:\n'
+                    'G25 AND G26 · G25 NEAR5 G26 · G25✶',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: settings.fontSize - 1,
+              color: scheme.outline,
+              height: 1.6,
+            ),
+          ),
+        ),
+      );
+    }
+    return Builder(builder: (context) {
+      final wbc = WbColors.of(context);
+      final t = WbType.of(context);
+      return Column(
+        children: [
+          Container(
+            height: t.paneTitleHeight,
+            decoration: BoxDecoration(
+              color: wbc.chromeBg,
+              border: Border(
+                top: BorderSide(color: wbc.border),
+                bottom: BorderSide(color: wbc.border),
+              ),
+            ),
+            padding: const EdgeInsets.only(left: 6),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    uiStrings['recentSearches']?[locale] ?? 'Recent',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: t.chrome,
+                      color: wbc.text,
+                    ),
+                  ),
+                ),
+                _MiniIcon(
+                  icon: Icons.delete_sweep_outlined,
+                  tooltip: uiStrings['clearAllRecent']?[locale] ?? 'Clear all',
+                  onTap: () async {
+                    await RecentSearchesService.clear();
+                    await _loadRecents();
+                  },
+                ),
+                const SizedBox(width: 4),
+              ],
+            ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: _recents.length,
+              itemBuilder: (context, index) {
+                final entry = _recents[index];
+                return _RecentRow(
+                  query: entry.query,
+                  when: relativeTime(entry.createdAt, locale),
+                  removeTooltip: uiStrings['clear']?[locale] ?? 'Clear',
+                  onTap: () {
+                    _controller.setTextAtomic(entry.query);
+                    _submit();
+                  },
+                  onDelete: () async {
+                    await RecentSearchesService.remove(entry.query);
+                    await _loadRecents();
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      );
+    });
+  }
+
+  /// Hand the current line to the model. Used by the button that
+  /// appears when a literal search finds nothing — the moment the
+  /// feature is actually for.
+  Future<void> _askAi(String question) async {
+    final settings = context.read<AppSettings>();
+    final wb = context.read<WorkbenchProvider>();
+    await wb.runAiSearch(
+      question: question,
+      locale: settings.locale,
+      userApiKey: settings.geminiApiKey.isEmpty ? null : settings.geminiApiKey,
+      aiModel: settings.aiModel,
+    );
+    if (!mounted) return;
+    if (wb.aiRefs?.isNotEmpty ?? false) await _commitRecent('ai $question');
+  }
+
+  /// Whether the failure the model reported is one the reader can fix
+  /// by supplying their own key. Matched on the message because that is
+  /// all the service returns; the alternative — offering the key setup
+  /// after every failure — teaches readers to ignore it.
+  bool _shouldOfferByok(String? notice) {
+    if (notice == null) return false;
+    final lower = notice.toLowerCase();
+    const triggers = [
+      'quota',
+      'exhausted',
+      'rate-limit',
+      'rate limit',
+      'not configured',
+      'gemini_api_key',
+      '配额',
+      '用完',
+      '没有配置',
+    ];
+    for (final t in triggers) {
+      if (lower.contains(t)) return true;
+    }
+    return false;
+  }
+
+  /// The model's answer: references and the sentence that justifies
+  /// each one.
+  ///
+  /// A different list from the other three because the unit is
+  /// different — a reference and an argument, not a verse and its
+  /// text — and because a reference the loaded edition does not carry
+  /// still has to appear. See `resolveAiRefs`.
+  Widget _buildAiResults(
+      BuildContext context,
+      WorkbenchProvider wb,
+      AppSettings settings,
+      ColorScheme scheme,
+      String locale,
+      List<AiBibleRef> refs) {
+    if (refs.isEmpty) {
+      return _noResults(settings, scheme, locale,
+          message: wb.aiNotice, byokNotice: wb.aiNotice);
+    }
+    final wbc = WbColors.of(context);
+    final t = WbType.of(context);
+    final header = (uiStrings['aiBibleSearchHeader']?[locale] ??
+            'SeekSparks AI found {count} passages for "{query}" '
+                '(reference only)')
+        .replaceAll('{query}', wb.aiQuery ?? '')
+        .replaceAll('{count}', '${refs.length}');
+    final notice = wb.aiNotice;
+    return Column(
+      children: [
+        _resultHeader(header, () => _copyAllAiRefs(wb, settings, refs),
+            settings, locale),
+        // The caveat rides above the list, not under it: it qualifies
+        // every row and a footer on a scrolling list is unread.
+        Container(
+          width: double.infinity,
+          color: wbc.chromeBg,
+          padding: const EdgeInsets.fromLTRB(8, 5, 8, 6),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                uiStrings['aiReferenceOnly']?[locale] ??
+                    'AI is only an aid — verify against Scripture.',
+                style: TextStyle(
+                  fontSize: t.chrome,
+                  color: wbc.mutedText,
+                  fontStyle: FontStyle.italic,
+                  fontFamilyFallback: kCjkFontFallback,
+                ),
+              ),
+              if (notice != null) ...[
+                const SizedBox(height: 3),
+                Text.rich(
+                  TextSpan(
+                    children: parseAiMarkdown(
+                      notice,
+                      base: TextStyle(
+                        fontSize: t.chrome,
+                        color: wbc.mutedText,
+                        height: 1.4,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        Expanded(
+          child: ListView.builder(
+            itemCount: refs.length,
+            itemBuilder: (context, index) {
+              final ref = refs[index];
+              final unresolved = wb.aiUnresolved.contains(ref.display);
+              final displayBook = localeAwareBookName(
+                  ref.book, locale, wb.mainProvider.currentVersion);
+              final label = ref.verseStart == ref.verseEnd
+                  ? '$displayBook ${ref.chapter}:${ref.verseStart}'
+                  : '$displayBook ${ref.chapter}:'
+                      '${ref.verseStart}-${ref.verseEnd}';
+              return _AiRefRow(
+                reference: label,
+                reason: ref.reason,
+                unresolved: unresolved,
+                unresolvedTag:
+                    uiStrings['aiRefOnlyTag']?[locale] ?? 'reference only',
+                onTap: () {
+                  if (unresolved) {
+                    ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(
+                      content: Text(uiStrings['aiRefNotInVersion']?[locale] ??
+                          "This passage isn't in your current Bible version."),
+                      duration: const Duration(seconds: 3),
+                    ));
+                    return;
+                  }
+                  final verse = _firstVerseOf(wb, ref);
+                  if (verse != null) _openVerse(verse);
+                },
+                onLongPress: () => ClipboardHelper.copyWithFeedback(
+                    context, '$label  ${ref.reason}'.trim()),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// The first verse of [ref] the loaded edition actually has. Not
+  /// necessarily `verseStart`: a versification difference can leave a
+  /// range starting one verse late.
+  Verse? _firstVerseOf(WorkbenchProvider wb, AiBibleRef ref) {
+    for (var v = ref.verseStart; v <= ref.verseEnd; v++) {
+      final hit = wb.verseByRef['${ref.book}-${ref.chapter}-$v'];
+      if (hit != null) return hit;
+    }
+    return null;
+  }
+
+  /// Copies the answer, reasons included — the reasons are the part a
+  /// reader pastes into a study document.
+  Future<void> _copyAllAiRefs(
+      WorkbenchProvider wb, AppSettings settings, List<AiBibleRef> refs) async {
+    final locale = settings.locale;
+    final lines = <String>[wb.aiQuery ?? '', ''];
+    for (final ref in refs) {
+      final displayBook = localeAwareBookName(
+          ref.book, locale, wb.mainProvider.currentVersion);
+      final label = ref.verseStart == ref.verseEnd
+          ? '$displayBook ${ref.chapter}:${ref.verseStart}'
+          : '$displayBook ${ref.chapter}:${ref.verseStart}-${ref.verseEnd}';
+      lines.add('$label  ${ref.reason}'.trim());
+    }
+    lines
+      ..add('')
+      ..add(uiStrings['aiReferenceOnly']?[locale] ??
+          'AI is only an aid — verify against Scripture.');
+    await ClipboardHelper.copyWithFeedback(
+      context,
+      lines.join('\n'),
+      messageOverride: (uiStrings['copyAllResultsToast']?[locale] ??
+              'Copied {n} matches')
+          .replaceAll('{n}', refs.length.toString()),
+    );
   }
 
   Widget _buildStrongsResults(BuildContext context, WorkbenchProvider wb,
@@ -781,8 +1148,11 @@ class _CommandPaneState extends State<CommandPane> {
       AppSettings settings, ColorScheme scheme, String locale) {
     final results = wb.textResults;
     if (results.isEmpty) {
+      // The one place the model earns its keep: the literal scan has
+      // said the words are not there, so "describe what you mean
+      // instead" is the next thing to try rather than a competing mode.
       return _noResults(settings, scheme, locale,
-          message: _tryAndHint(wb, locale));
+          message: _tryAndHint(wb, locale), aiQuery: wb.lastQuery);
     }
     return Column(
       children: [
@@ -857,8 +1227,13 @@ class _CommandPaneState extends State<CommandPane> {
     });
   }
 
+  /// [aiQuery] offers to hand the line to the model; [byokNotice] is
+  /// the failure text to test before offering the reader their own API
+  /// key. Both are absent for the grammar's own errors — a query the
+  /// parser refused is a typo, not a question too hard for a literal
+  /// search.
   Widget _noResults(AppSettings settings, ColorScheme scheme, String locale,
-      {String? message}) {
+      {String? message, String? aiQuery, String? byokNotice}) {
     return Builder(builder: (context) {
       final wbc = WbColors.of(context);
     final t = WbType.of(context);
@@ -875,15 +1250,59 @@ class _CommandPaneState extends State<CommandPane> {
               ),
               if (message != null) ...[
                 const SizedBox(height: 8),
-                Text(
-                  message,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: t.text - 1,
-                    height: 1.5,
-                    color: wbc.mutedText,
-                    fontFamilyFallback: kCjkFontFallback,
+                Text.rich(
+                  TextSpan(
+                    children: parseAiMarkdown(
+                      message,
+                      base: TextStyle(
+                        fontSize: t.text - 1,
+                        height: 1.5,
+                        color: wbc.mutedText,
+                        fontFamilyFallback: kCjkFontFallback,
+                      ),
+                    ),
                   ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+              if (aiQuery != null && aiQuery.trim().length >= 2) ...[
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  icon: const Icon(Icons.auto_awesome, size: 14),
+                  label: Text(
+                    uiStrings['askAiForVerses']?[locale] ??
+                        'Search with SeekSparks AI (reference only)',
+                    style: TextStyle(
+                        fontSize: t.chrome,
+                        fontFamilyFallback: kCjkFontFallback),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    shape: const RoundedRectangleBorder(),
+                    side: BorderSide(color: wbc.border),
+                    foregroundColor: wbc.link,
+                  ),
+                  onPressed: () => _askAi(aiQuery),
+                ),
+              ],
+              if (_shouldOfferByok(byokNotice) &&
+                  !settings.hasUserGeminiKey) ...[
+                const SizedBox(height: 10),
+                OutlinedButton.icon(
+                  icon: const Icon(Icons.key_rounded, size: 14),
+                  label: Text(
+                    uiStrings['aiOpenByokSettings']?[locale] ??
+                        'Set up your own Gemini API key',
+                    style: TextStyle(
+                        fontSize: t.chrome,
+                        fontFamilyFallback: kCjkFontFallback),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    shape: const RoundedRectangleBorder(),
+                    side: BorderSide(color: wbc.border),
+                    foregroundColor: wbc.text,
+                  ),
+                  onPressed: () => pushPage(
+                      const SettingsPage(initialSection: SettingsSection.ai)),
                 ),
               ],
             ],
@@ -891,6 +1310,197 @@ class _CommandPaneState extends State<CommandPane> {
         ),
       );
     });
+  }
+}
+
+/// One remembered query. Same one-line density as [_ResultRow] — the
+/// recents list sits exactly where the results list will, and a taller
+/// row here would make the pane jump when the first search lands.
+class _RecentRow extends StatefulWidget {
+  const _RecentRow({
+    required this.query,
+    required this.when,
+    required this.removeTooltip,
+    required this.onTap,
+    required this.onDelete,
+  });
+
+  final String query;
+  final String when;
+  final String removeTooltip;
+  final VoidCallback onTap;
+  final VoidCallback onDelete;
+
+  @override
+  State<_RecentRow> createState() => _RecentRowState();
+}
+
+class _RecentRowState extends State<_RecentRow> {
+  bool _hovering = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final wbc = WbColors.of(context);
+    final t = WbType.of(context);
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hovering = true),
+      onExit: (_) => setState(() => _hovering = false),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          color: _hovering ? wbc.hoverBg : null,
+          padding: const EdgeInsets.only(
+              left: WbMetrics.rowPadH, right: 2, top: 2, bottom: 2),
+          child: Row(
+            children: [
+              Icon(Icons.history, size: 12, color: wbc.mutedText),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  widget.query,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: t.text,
+                    height: t.lineHeight,
+                    color: wbc.text,
+                    fontFamilyFallback: kCjkFontFallback,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                widget.when,
+                style: TextStyle(fontSize: t.chrome, color: wbc.mutedText),
+              ),
+              // Only on hover: a × on every row turns a history list
+              // into a row of delete buttons.
+              SizedBox(
+                width: 20,
+                child: _hovering
+                    ? _MiniIcon(
+                        icon: Icons.close,
+                        tooltip: widget.removeTooltip,
+                        onTap: widget.onDelete,
+                      )
+                    : null,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// One AI suggestion: the reference, then the model's reason for it.
+///
+/// Two lines rather than [_ResultRow]'s one because the reason IS the
+/// result here — a bare list of references from a model is indistinguishable
+/// from a list of references from a concordance, and the reader has no
+/// way to judge which ones to trust.
+class _AiRefRow extends StatefulWidget {
+  const _AiRefRow({
+    required this.reference,
+    required this.reason,
+    required this.unresolved,
+    required this.unresolvedTag,
+    required this.onTap,
+    required this.onLongPress,
+  });
+
+  final String reference;
+  final String reason;
+  final bool unresolved;
+  final String unresolvedTag;
+  final VoidCallback onTap;
+  final VoidCallback onLongPress;
+
+  @override
+  State<_AiRefRow> createState() => _AiRefRowState();
+}
+
+class _AiRefRowState extends State<_AiRefRow> {
+  bool _hovering = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final wbc = WbColors.of(context);
+    final t = WbType.of(context);
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hovering = true),
+      onExit: (_) => setState(() => _hovering = false),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        onLongPress: widget.onLongPress,
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          decoration: BoxDecoration(
+            color: _hovering ? wbc.hoverBg : null,
+            border: Border(bottom: BorderSide(color: wbc.border)),
+          ),
+          padding: const EdgeInsets.symmetric(
+              horizontal: WbMetrics.rowPadH, vertical: 4),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Flexible(
+                    child: Text(
+                      widget.reference,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: t.text,
+                        height: t.lineHeight,
+                        fontWeight: FontWeight.w600,
+                        color: widget.unresolved ? wbc.mutedText : wbc.link,
+                        fontFamilyFallback: kCjkFontFallback,
+                      ),
+                    ),
+                  ),
+                  if (widget.unresolved) ...[
+                    const SizedBox(width: 6),
+                    Container(
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                      decoration: BoxDecoration(border: Border.all(color: wbc.border)),
+                      child: Text(
+                        widget.unresolvedTag,
+                        style: TextStyle(
+                            fontSize: t.chrome - 1, color: wbc.mutedText),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+              if (widget.reason.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 1),
+                  child: Text.rich(
+                    TextSpan(
+                      children: parseAiMarkdown(
+                        widget.reason,
+                        base: TextStyle(
+                          fontSize: t.chrome,
+                          height: 1.35,
+                          color: wbc.mutedText,
+                        ),
+                      ),
+                    ),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 

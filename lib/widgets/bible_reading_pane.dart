@@ -22,7 +22,7 @@ import 'package:seeksparks/pages/evidence_page.dart';
 import 'package:seeksparks/pages/highlights_page.dart';
 import 'package:seeksparks/pages/library_page.dart';
 import 'package:seeksparks/pages/map_viewer_page.dart';
-import 'package:seeksparks/pages/search_page.dart';
+import 'package:seeksparks/pages/command_search_page.dart';
 import 'package:seeksparks/pages/settings_page.dart';
 import 'package:seeksparks/pages/stats_page.dart';
 import 'package:seeksparks/providers/main_provider.dart';
@@ -120,6 +120,13 @@ class BibleReadingPane extends StatefulWidget {
   /// BibleWorks-style parallel Browse stack. Null everywhere else.
   final VoidCallback? onOpenParallel;
 
+  /// What "search" means to whoever mounted this reader. The Workbench
+  /// already has the command line on screen, so there it opens the left
+  /// pane and puts the caret in it; a reader with no command pane beside
+  /// it falls back to [CommandSearchPage], the same pane full screen.
+  /// Either way there is one search, never a second one stacked over it.
+  final VoidCallback? onSearchRequested;
+
   const BibleReadingPane({
     super.key,
     this.showSidebarToggle = false,
@@ -131,6 +138,7 @@ class BibleReadingPane extends StatefulWidget {
     this.showSearchAndSettings = true,
     this.onOpenWorkbench,
     this.onOpenParallel,
+    this.onSearchRequested,
   });
 
   @override
@@ -514,6 +522,20 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
       if (!mounted) return;
       setState(fn);
     });
+  }
+
+  /// Search, wherever this reader happens to be mounted. In the
+  /// Workbench the command pane is already beside the text, so pushing
+  /// a full-screen search over it would put a second, throwaway search
+  /// on top of the real one; the host passes a callback that focuses
+  /// the pane instead.
+  void _openSearch() {
+    final requested = widget.onSearchRequested;
+    if (requested != null) {
+      requested();
+      return;
+    }
+    pushPage(const CommandSearchPage());
   }
 
   /// 2026-05-22 (v1.2.71): NotificationListener handler — catches every
@@ -1552,9 +1574,7 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
                     const SingleActivator(LogicalKeyboardKey.bracketRight):
                         _goToNextChapter,
                     const SingleActivator(LogicalKeyboardKey.slash): () {
-                      if (widget.showSearchAndSettings) {
-                        pushPage(SearchPage());
-                      }
+                      if (widget.showSearchAndSettings) _openSearch();
                     },
                     // v1.3.19: Shift+T (toggle TTS) removed with the
                     // rest of the 朗读 feature.
@@ -1577,9 +1597,7 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
                     // ⌘F → search. The universal Mac/web convention.
                     const SingleActivator(LogicalKeyboardKey.keyF,
                         meta: true): () {
-                      if (widget.showSearchAndSettings) {
-                        pushPage(SearchPage());
-                      }
+                      if (widget.showSearchAndSettings) _openSearch();
                     },
                     // ⌘, → settings. Standard Mac "open Preferences"
                     // gesture for any well-behaved app.
@@ -2127,7 +2145,7 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
                       },
                       onSearch: () {
                         mainProvider.clearSelectedVerses();
-                        pushPage(SearchPage());
+                        _openSearch();
                       },
                       onSettings: () {
                         mainProvider.clearSelectedVerses();

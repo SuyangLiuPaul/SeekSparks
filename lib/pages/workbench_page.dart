@@ -100,8 +100,8 @@ import 'package:seeksparks/widgets/originals_sheet.dart';
 ///  * ≥1024 px (iPad landscape / desktop): all three panes.
 ///  * 600–1023 px (iPad portrait): command + reader; analysis falls
 ///    back to the reader's existing sheet/docked presentation.
-///  * <600 px: reader alone (the standalone SearchPage still covers
-///    phones).
+///  * <600 px: reader alone. Search there is the SAME command pane,
+///    full screen — see `CommandSearchPage`.
 ///
 /// Both side panes resize via their draggable divider (double-tap or
 /// fling collapses), and widths/open-state persist in
@@ -409,8 +409,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         ),
       ]),
       WbMenu(s('search', 'Search'), [
-        WbMenuItem(s('menuFocusCommandLine', 'Command line'),
-            () => _commandFocus.requestFocus(),
+        WbMenuItem(s('menuFocusCommandLine', 'Command line'), _focusCommandLine,
             shortcut: 'Ctrl+L'),
         const WbMenuItem.separator(),
         // Greyed until there is something to clear — the menu reports
@@ -539,10 +538,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         WbToolButton(
           icon: Icons.search,
           tooltip: s('menuFocusCommandLine', 'Command line'),
-          onPressed: () {
-            if (!_leftOpen) _setLeftOpen(true);
-            _commandFocus.requestFocus();
-          },
+          onPressed: _focusCommandLine,
         ),
         WbToolButton(
           icon: Icons.copy_all_outlined,
@@ -937,6 +933,22 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
     _persistPrefs();
   }
 
+  /// Every "search" affordance in the workspace lands here — the
+  /// toolbar button, the Search menu, and `/` or ⌘F inside the centre
+  /// reader. There is one command line and this puts the caret in it.
+  /// A collapsed left pane has no [CommandPane] mounted yet, so the
+  /// focus request waits for the frame that builds it.
+  void _focusCommandLine() {
+    if (_leftOpen) {
+      _commandFocus.requestFocus();
+      return;
+    }
+    _setLeftOpen(true);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _commandFocus.requestFocus();
+    });
+  }
+
   void _setRightOpen(bool open) {
     setState(() => _rightOpen = open);
     _persistPrefs();
@@ -1165,6 +1177,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         splitViewActive: false,
         onClose: null,
         showSearchAndSettings: true,
+        onSearchRequested: _focusCommandLine,
         onOpenParallel: () => _setCentreMode(WbCentreMode.browse),
       );
 
@@ -1263,6 +1276,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
                 splitViewActive: true,
                 onClose: null,
                 showSearchAndSettings: true,
+                onSearchRequested: _focusCommandLine,
                 onOpenParallel: () => _setCentreMode(WbCentreMode.browse),
               ),
             ),

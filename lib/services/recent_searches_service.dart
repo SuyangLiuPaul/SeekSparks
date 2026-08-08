@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:seeksparks/services/profile_service.dart';
 
@@ -33,6 +34,13 @@ class RecentSearchesService {
   /// delete on an existing row — can interleave and drop an entry.
   /// All writes funnel through this single-slot serialised queue.
   static Future<void> _writeLock = Future<void>.value();
+
+  /// Test-only: drop the mutex. A `Future` created inside one
+  /// `testWidgets` zone delivers its completion through that zone, so
+  /// once the zone is torn down the lock can never be acquired again
+  /// and every write in every later test in the file hangs silently.
+  @visibleForTesting
+  static void resetWriteLock() => _writeLock = Future<void>.value();
 
   /// Read the list (most-recent first). Empty list when no history.
   static Future<List<String>> list() async {

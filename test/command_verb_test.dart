@@ -184,6 +184,30 @@ void main() {
     });
   });
 
+  group('ai — describe the passages you want', () {
+    test('ai takes everything after it as the question, verbatim', () {
+      final verb = _p('ai 关于焦虑的经文').verb!;
+      expect(verb.kind, CommandVerbKind.askAi);
+      expect(verb.aiQuery, '关于焦虑的经文');
+    });
+
+    test('the question keeps its own punctuation and casing', () {
+      expect(_p('AI  What does Paul say about grace?').verb!.aiQuery,
+          'What does Paul say about grace?');
+    });
+
+    test('a bare ai is NOT a verb — Ai is a city in Joshua', () {
+      // It has to fall through to the text search, or Joshua 7:2
+      // becomes unreachable from the command line.
+      expect(_p('ai').isVerb, isFalse);
+      expect(_p('AI').isVerb, isFalse);
+    });
+
+    test('a word merely starting with "ai" is not the verb', () {
+      expect(_p('airplane').isVerb, isFalse);
+    });
+  });
+
   group('l — search scope at book and chapter granularity', () {
     test('bare l lifts the limit', () {
       expect(_p('l').verb!.kind, CommandVerbKind.limitClear);
