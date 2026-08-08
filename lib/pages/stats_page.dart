@@ -1118,10 +1118,17 @@ class _BibleLanguagesCard extends StatelessWidget {
           const SizedBox(height: 14),
           Builder(builder: (rowCtx) {
             return _LanguageRow(
-              // Aramaic shares its consonantal script with Hebrew;
-              // the glyphs differ in style only.
+              // Biblical Aramaic is written in the Hebrew square
+              // script — Daniel 2:4-7:28 and Ezra 4:8-6:18 sit inside
+              // Hebrew books and change language without changing
+              // letters. So the badge repeats אבג deliberately, in a
+              // different hue: two rows, one alphabet, which is the
+              // fact the row exists to teach. It read ܐܒܓ until
+              // v1.6.73, which is Syriac — a later and different
+              // script, and the only glyph left in the UI that still
+              // made the engine fetch a font from fonts.gstatic.com.
               scriptColor: Colors.teal,
-              scriptLabel: 'ܐܒܓ',
+              scriptLabel: 'אבג',
               nameKey: 'languageAramaicName',
               roleKey: 'languageAramaicRole',
               sectionsKey: 'languageAramaicSections',
@@ -1533,7 +1540,7 @@ Color _originalScriptHue(WbColors wb, {required bool hebrew}) =>
     _scriptHue(wb, hebrew ? Colors.red : Colors.purple);
 
 /// Row inside _BibleLanguagesCard. Two columns: a script-glyph
-/// badge on the left (אבג / ܐܒܓ / αβγ) so the language is visually
+/// badge on the left (אבג / αβγ) so the language is visually
 /// recognisable before the user reads the text, and the localised
 /// name + role + sections + background paragraph on the right.
 /// Stats for languages we have counts for fold into the role line.

@@ -171,10 +171,17 @@ flutter:
     # goes missing the failure is silent and total: CanvasKit renders
     # nothing rather than tofu, so Chinese verses come up BLANK.
     #
-    # The subset is built from `assets/*.json` + `lib/**/*.dart` +
-    # `assets/sermons/*.txt` and gives ~1.88 MB OTF (down from the
-    # 16 MB full Noto Sans CJK SC). Regenerate with:
-    #   tools/build_cjk_font_subset.sh
+    # The subset is scanned out of `assets/**` + `lib/**` and gives a
+    # ~2.8 MB OTF (down from the 16 MB full Noto Sans CJK SC).
+    # Regenerate with `python3 tools/build_font_subsets.py`, which
+    # builds this file and the three below in one pass.
+    #
+    # 2026-08-08 (v1.6.73): this file grew by 423 code points. The
+    # previous generator (tools/build_cjk_font_subset.sh, removed)
+    # scanned /Users/pliu0036/Documents/yswords — the fork PARENT — so
+    # the Chinese lexicon glosses that are this app's differentiator
+    # (assets/strongs/thayer_zh.json, bdb_zh.json, the zh-TW sermons)
+    # had never been in the bundle at all.
     #
     # The family name is `NotoSansSC-Sub` — registered first in
     # `kCjkFontFallback` so CanvasKit consults it before falling
@@ -184,6 +191,51 @@ flutter:
     - family: NotoSansSC-Sub
       fonts:
         - asset: assets/fonts/NotoSansSC-Sub.otf
+
+    # 2026-08-08 (v1.6.73 — the last Google dependency). Same failure
+    # mode as the CJK face above, but reached by a different road: when
+    # a code point is covered by NO registered font, the Flutter ENGINE
+    # (not this app's Dart) downloads a Noto face from
+    # `fontFallbackBaseUrl`, which defaults to fonts.gstatic.com. That
+    # host is unreachable from mainland China, and CanvasKit draws a
+    # missing font as ABSENT TEXT, not tofu — so a Hebrew word study
+    # came up silently blank there. Removing google_fonts in v1.6.62
+    # did not touch this, because it is below the framework.
+    #
+    # Measured on dev v1.6.62: one Hebrew word study pulled
+    # notosanshebrew, notosans, notosanssymbols and notosanssymbols2.
+    # Bundled Roboto has 922 code points — Latin, Cyrillic and
+    # *monotonic* Greek only — so the gaps were the whole Hebrew block,
+    # the whole of Greek Extended (every accented word in the Greek NT
+    # and the LXX), the Semitic transliteration diacritics, and a
+    # handful of load-bearing UI symbols.
+    #
+    # These three are subset BY RANGE, not by the characters today's
+    # assets happen to contain, because Hebrew and Greek are also
+    # INPUT: a reader can type ἀγάπη or אהב into the command line.
+    # NotoSansExt-Sub carries only what Roboto lacks, so chain order
+    # cannot change how any Latin or monotonic Greek renders today.
+    #
+    # All three go AFTER the OS font names in `kCjkFontFallback` and in
+    # main.dart's global `fontFamilyFallback`: on native the system
+    # faces still win and nothing changes, and only CanvasKit — where
+    # those CSS names are unresolvable — reaches these.
+    - family: NotoSansHebrew-Sub
+      fonts:
+        - asset: assets/fonts/NotoSansHebrew-Sub.ttf
+    - family: NotoSansExt-Sub
+      fonts:
+        - asset: assets/fonts/NotoSansExt-Sub.ttf
+    # Text-presentation glyphs that carry meaning and that no other
+    # bundled face has: □ stands in for a character lost from Judges
+    # 13:7 in assets/cuvs-plus.json, ✶ is how the command line's help
+    # draws the wildcard, ▶ ◀ are the phrasing pane's indent
+    # instructions, ✓ is the family tree's source column. Decorative
+    # emoji are deliberately NOT bundled — a monochrome symbol face
+    # would replace the colour glyphs iOS and macOS already draw.
+    - family: NotoSansSymbols2-Sub
+      fonts:
+        - asset: assets/fonts/NotoSansSymbols2-Sub.ttf
 
     # Microsoft YaHei was previously bundled here. It is a proprietary
     # Microsoft font (licence forbids redistribution), so we removed it

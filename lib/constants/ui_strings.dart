@@ -4502,6 +4502,11 @@ const uiStrings = {
     'zh-Hant': 'SIL OFL · 隨應用打包，無需連網下載。',
     'en': 'SIL OFL · shipped with the app, not downloaded.',
   },
+  'aboutFontsScripts': {
+    'zh-Hans': '内置字体：Noto Sans Hebrew / Noto Sans / Noto Sans Symbols 2（子集）',
+    'zh-Hant': '內置字體：Noto Sans Hebrew / Noto Sans / Noto Sans Symbols 2（子集）',
+    'en': 'Bundled fonts: Noto Sans Hebrew / Noto Sans / Noto Sans Symbols 2 (subsets)',
+  },
   'aboutAi': {
     'zh-Hans': 'SeekSparks AI 经文释义（仅供参考）',
     'zh-Hant': 'SeekSparks AI 經文釋義（僅供參考）',

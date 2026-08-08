@@ -551,6 +551,14 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
               // which has the same entry. Cheap to list twice — the
               // engine just walks until it finds a glyph.
               'NotoSansSC-Sub',
+              // 2026-08-08 (v1.6.73): the same argument for Hebrew,
+              // polytonic Greek and transliteration diacritics. Without
+              // a registered face the engine fetches one from
+              // fonts.gstatic.com, and CanvasKit draws a font it could
+              // not fetch as nothing at all.
+              'NotoSansHebrew-Sub',
+              'NotoSansExt-Sub',
+              'NotoSansSymbols2-Sub',
               'Microsoft YaHei',
               '微软雅黑',
               'Source Han Sans SC',
@@ -641,6 +649,9 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
               'Cantarell',
               'Noto Sans',
               'NotoSansSC-Sub',
+              'NotoSansHebrew-Sub',
+              'NotoSansExt-Sub',
+              'NotoSansSymbols2-Sub',
               'Microsoft YaHei',
               '微软雅黑',
               'Source Han Sans SC',

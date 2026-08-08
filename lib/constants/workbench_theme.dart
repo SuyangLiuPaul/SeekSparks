@@ -528,9 +528,13 @@ ThemeData workbenchTheme(ThemeData parent, {bool paper = false}) {
         fontWeight: w,
         color: c ?? wb.text,
         // fontFamily deliberately NOT pinned: naming a family restricts
-        // CanvasKit to that face plus the explicit fallback list, and
-        // none of those carry Hebrew. Leaving it unset lets the engine
-        // reach its own broader fallback for non-Latin scripts.
+        // CanvasKit to that face plus the explicit fallback list. Until
+        // v1.6.73 that list had no Hebrew at all, so the only thing
+        // rendering it was the engine's own fallback — i.e. a download
+        // from fonts.gstatic.com, unreachable from mainland China. The
+        // chain now carries the bundled Hebrew and polytonic Greek
+        // subsets, so leaving this unset is no longer load-bearing; it
+        // is just one fewer restriction.
         fontFamilyFallback: fallback,
       );
 

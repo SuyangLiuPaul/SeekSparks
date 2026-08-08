@@ -86,8 +86,19 @@ const List<String> kCjkFontFallback = [
   'Arial',
   // FIRST CJK: the bundled subset — the only CJK fallback that CanvasKit
   // can resolve on Flutter web. See `pubspec.yaml` for the bundle
-  // declaration + the build script `tools/build_cjk_font_subset.sh`.
+  // declaration + the build script `tools/build_font_subsets.py`.
   'NotoSansSC-Sub',
+  // 2026-08-08 (v1.6.73): Hebrew, polytonic Greek and the Semitic
+  // transliteration diacritics. Same reason as the line above — on
+  // CanvasKit a code point covered by no REGISTERED font makes the
+  // engine download a Noto face from fonts.gstatic.com, which is
+  // unreachable from mainland China, and a missing font there renders
+  // as absent text rather than tofu. Placed after the OS faces so
+  // native rendering is unchanged; NotoSansExt-Sub carries only what
+  // Roboto lacks, so it cannot displace any glyph already drawn.
+  'NotoSansHebrew-Sub',
+  'NotoSansExt-Sub',
+  'NotoSansSymbols2-Sub',
   // After: native-platform / browser-CSS fallbacks. These work on
   // iOS / macOS / Android where Flutter can access OS-installed fonts,
   // and on the HTML renderer (not CanvasKit) where the browser

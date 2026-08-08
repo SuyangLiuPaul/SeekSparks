@@ -644,6 +644,13 @@ class _OtherAttributions extends StatelessWidget {
             'SIL OFL · shipped with the app, not downloaded.',
       ),
       _AttribRow(
+        name: uiStrings['aboutFontsScripts']?[locale] ??
+            'Bundled fonts: Noto Sans Hebrew / Noto Sans / '
+                'Noto Sans Symbols 2 (subsets)',
+        licence: uiStrings['aboutLicenseOfl']?[locale] ??
+            'SIL OFL · shipped with the app, not downloaded.',
+      ),
+      _AttribRow(
         name: uiStrings['aboutAi']?[locale] ?? 'AI explanations',
         licence: uiStrings['aboutLicenseAi']?[locale] ??
             'Google Gemini API · output redistribution permitted under API terms.',
