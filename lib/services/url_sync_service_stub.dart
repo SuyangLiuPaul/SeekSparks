@@ -18,6 +18,9 @@ Future<void> urlSyncInit({
 /// Native targets: no URL bar, nothing to capture.
 void captureBootHash() {}
 
+/// Native targets: no browser history, nothing to repair.
+void repairBootHistoryState() {}
+
 /// Native targets: boot deep links don't exist; never fires.
 void setBootDeepLinkCallback(void Function() cb) {}
 

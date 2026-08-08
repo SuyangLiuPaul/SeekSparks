@@ -45,6 +45,7 @@ import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/services/fetch_books.dart';
 import 'package:seeksparks/services/fetch_verses.dart';
+import 'package:seeksparks/utils/history_state_repair.dart';
 import 'package:seeksparks/utils/version_mapper.dart' show translateBookName;
 
 // ── JS interop bindings ─────────────────────────────────────────
@@ -68,6 +69,7 @@ class _Location {}
 
 extension on _Location {
   external String get hash;
+  external String get href;
 }
 
 @JS()
@@ -75,7 +77,9 @@ extension on _Location {
 class _History {}
 
 extension on _History {
+  external JSAny? get state;
   external void pushState(JSAny? state, String unused, String url);
+  external void replaceState(JSAny? state, String unused, String url);
 }
 
 // ── Module-level state ──────────────────────────────────────────
@@ -95,6 +99,30 @@ void captureBootHash() {
     _bootHash = _window.location.hash;
   } catch (e) {
     debugPrint('[UrlSync] captureBootHash failed: $e');
+  }
+}
+
+/// Clear a `serialCount` inherited from a previous document, before the
+/// engine reads it. See `repairedBootHistoryState` for why.
+///
+/// Must run in `main()` alongside [captureBootHash]: the engine builds
+/// its history object lazily on the first navigation message, which the
+/// root navigator sends during the first frame.
+void repairBootHistoryState() {
+  try {
+    final JSAny? raw = _window.history.state;
+    if (raw == null) return;
+    final Map<Object?, Object?>? repaired =
+        repairedBootHistoryState(raw.dartify());
+    if (repaired == null) return;
+    _window.history.replaceState(
+      repaired.jsify(),
+      '',
+      _window.location.href,
+    );
+    debugPrint('[UrlSync] cleared an inherited history serialCount');
+  } catch (e) {
+    debugPrint('[UrlSync] repairBootHistoryState failed: $e');
   }
 }
 
@@ -230,7 +258,9 @@ void _writeStateToUrl() {
   final newHash = '#$hashPath?v=${mp.currentVersion}';
   if (newHash == _lastWrittenUrl) return;
   try {
-    _window.history.pushState(null, '', newHash);
+    // Not `null`: the engine dereferences the state of whatever entry
+    // its teardown lands on. See `kAppHistoryEntryState`.
+    _window.history.pushState(kAppHistoryEntryState.jsify(), '', newHash);
     _lastWrittenUrl = newHash;
   } catch (e) {
     debugPrint('[UrlSync] pushState threw: $e');

@@ -13,16 +13,32 @@
 /// in the app was checking.
 library;
 
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:seeksparks/constants/bible_versions.dart';
+import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/providers/workbench_provider.dart';
 import 'package:seeksparks/services/fetch_verses.dart'
     show VerseAssetNotJsonException, assertJsonPayload;
 import 'package:seeksparks/services/workbench_warmup.dart'
     show defaultParallelVersions, sanitiseParallelVersions;
+import 'package:seeksparks/widgets/retired_version_notice.dart';
+
+Widget _harness(MainProvider mp, AppSettings settings) => MultiProvider(
+      providers: [
+        ChangeNotifierProvider<MainProvider>.value(value: mp),
+        ChangeNotifierProvider<AppSettings>.value(value: settings),
+      ],
+      child: MaterialApp(
+        home: RetiredVersionNotice(
+          child: const Scaffold(body: Text('reader')),
+        ),
+      ),
+    );
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -304,6 +320,75 @@ void main() {
             reason: 'the $locale default stack names an edition that is '
                 'not in the catalog');
       }
+    });
+  });
+
+  group('the notice widget', () {
+    setUp(() => SharedPreferences.setMockInitialValues({}));
+
+    testWidgets('names the substituted edition the reader is now reading',
+        (tester) async {
+      final mp = MainProvider()
+        ..retiredVersionNotice =
+            (requested: 'cuv-yhwd', substituted: 'cuvs-yhwh');
+
+      await tester.pumpWidget(_harness(mp, AppSettings()));
+      await tester.pumpAndSettle();
+
+      final label = bibleVersions
+          .firstWhere((v) => v.value == 'cuvs-yhwh')
+          .menuLabel;
+      expect(find.textContaining('cuv-yhwd'), findsOneWidget);
+      expect(find.textContaining(label), findsOneWidget);
+
+      await tester.pump(const Duration(seconds: 9));
+    });
+
+    testWidgets('survives a successor that has itself been retired',
+        (tester) async {
+      // The crash this replaced: `firstWhere` with no `orElse` throws a
+      // StateError, so a notice about one missing edition would take the
+      // whole first frame down. The catalog row is the nice-to-have; the
+      // code is the fact the reader actually needs.
+      final mp = MainProvider()
+        ..retiredVersionNotice =
+            (requested: 'cuv-yhwd', substituted: 'gone-too');
+
+      await tester.pumpWidget(_harness(mp, AppSettings()));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.textContaining('gone-too'), findsOneWidget,
+          reason: 'with no catalog row the bare code is all there is to '
+              'show, and it beats a blank screen');
+      expect(find.text('reader'), findsOneWidget);
+
+      await tester.pump(const Duration(seconds: 9));
+    });
+
+    testWidgets('is said once — the provider is cleared', (tester) async {
+      final mp = MainProvider()
+        ..retiredVersionNotice =
+            (requested: 'cuv-yhwd', substituted: 'cuvs-yhwh');
+
+      await tester.pumpWidget(_harness(mp, AppSettings()));
+      await tester.pumpAndSettle();
+
+      expect(mp.retiredVersionNotice, isNull,
+          reason: 'a substitution is news exactly once');
+
+      await tester.pump(const Duration(seconds: 9));
+      await tester.pumpAndSettle();
+      expect(find.byType(SnackBar), findsNothing);
+    });
+
+    testWidgets('renders the child untouched when there is nothing to say',
+        (tester) async {
+      await tester.pumpWidget(_harness(MainProvider(), AppSettings()));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SnackBar), findsNothing);
+      expect(find.text('reader'), findsOneWidget);
     });
   });
 }

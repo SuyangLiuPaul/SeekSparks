@@ -43,6 +43,15 @@ class UrlSyncService {
   /// `main()`; native targets no-op.
   static void captureBootHash() => impl.captureBootHash();
 
+  /// 2026-08-08 (task #296): drop a `serialCount` the browser restored
+  /// from a previous document into `history.state`. The web engine reads
+  /// it as "this many history entries are mine", rewinds that far during
+  /// teardown, then dereferences the state of an entry it never wrote —
+  /// which reached a reader on prod as "Null check operator used on a
+  /// null value". Must be called synchronously in `main()`, before the
+  /// first frame builds the root navigator. Native targets no-op.
+  static void repairBootHistoryState() => impl.repairBootHistoryState();
+
   /// 2026-06-12 (v1.3.62 UX): register a callback fired exactly once
   /// when a BOOT deep link (a reader hash present at cold open) has
   /// been successfully applied to MainProvider. main.dart uses it to

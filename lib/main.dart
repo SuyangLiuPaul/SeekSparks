@@ -57,6 +57,12 @@ void main() {
   // gets to read it. Native targets no-op.
   UrlSyncService.captureBootHash();
 
+  // 2026-08-08 (task #296): and clear any history bookkeeping the
+  // browser restored from a previous document, before the engine can
+  // act on it. Same deadline as the hash snapshot — the engine builds
+  // its history object during the first frame.
+  UrlSyncService.repairBootHistoryState();
+
   // 2026-05-24 (v1.3.21): wrap the whole entrypoint in
   // runZonedGuarded so uncaught zone errors (async work that
   // bubbles past PlatformDispatcher) still reach the reporter.

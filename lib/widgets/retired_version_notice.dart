@@ -41,12 +41,17 @@ class _RetiredVersionNoticeState extends State<RetiredVersionNotice> {
     final messenger = ScaffoldMessenger.maybeOf(context);
     if (messenger == null) return;
 
-    // The substituted edition always has a catalog row — `isKnownVersion`
-    // is what let it through — so this lookup cannot fail. The requested
-    // one has none, which is the whole point, so its code is printed raw.
-    final name = bibleVersions
-        .firstWhere((v) => v.value == notice.substituted)
-        .menuLabel;
+    // The substituted edition should always have a catalog row —
+    // `isKnownVersion` is what let it through. Should, not does: this
+    // widget exists precisely because version codes outlive the versions
+    // they name, so a fallback that itself gets retired would turn a
+    // notice about a missing edition into a StateError. Print the code
+    // instead. The requested one has no row by definition, which is the
+    // whole point, so it is always printed raw.
+    final matches =
+        bibleVersions.where((v) => v.value == notice.substituted);
+    final name =
+        matches.isEmpty ? notice.substituted : matches.first.menuLabel;
     final template = uiStrings['retiredVersionNotice']?[locale] ??
         'The edition “{code}” is no longer available. '
             'Showing {version} instead.';
