@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
 
+import 'package:seeksparks/constants/bible_versions.dart'
+    show loadableVersions;
 import 'package:seeksparks/models/verse.dart';
 import 'package:seeksparks/models/wb_centre_mode.dart';
 import 'package:seeksparks/providers/main_provider.dart';
@@ -152,13 +154,36 @@ class WorkbenchProvider extends ChangeNotifier {
   /// would have been wrong in split mode without failing to compile.
   WbCentreMode centreMode = WbCentreMode.browse;
 
+  List<String> _parallelVersions = const [];
+
   /// The comparison editions in the Browse stack, in display order.
   ///
   /// Lives here rather than in `_WorkbenchPageState` because the command
   /// line addresses it (`d nas`, `p a b c`, bwh44) and the command line
   /// is a sibling widget, not a child. The page still owns persistence
   /// and calls back through [onBrowseStateChanged].
-  List<String> parallelVersions = const [];
+  List<String> get parallelVersions => _parallelVersions;
+
+  /// 2026-08-08: assignment runs through [loadableVersions], so a code
+  /// this build cannot load can never enter the stack.
+  ///
+  /// A setter rather than a filter at the restore site, because the
+  /// stack is written from three directions — the page restoring
+  /// SharedPreferences, the command line's `p` / `d` verbs, and the
+  /// version picker — and read from four more. Guarding each of those
+  /// separately is precisely how the reading version came to be
+  /// validated on some paths and not others, which is the bug this
+  /// exists to close: a retired code reached `FetchVerses`, the missing
+  /// asset came back as the host's SPA fallback, and boot died inside
+  /// `json.decode` on a message naming neither the version nor the file.
+  ///
+  /// Silent on purpose. The comparison stack is scenery around the
+  /// reader's real choice and one substituted column does not warrant an
+  /// interruption; a retired PRIMARY reading version does, and says so
+  /// through `MainProvider.retiredVersionNotice`.
+  set parallelVersions(List<String> codes) {
+    _parallelVersions = List.unmodifiable(loadableVersions(codes));
+  }
 
   /// Called after the command line changes [centreMode] or
   /// [parallelVersions], so the page can persist them.
@@ -187,7 +212,7 @@ class WorkbenchProvider extends ChangeNotifier {
   }
 
   void setParallelVersions(List<String> codes) {
-    parallelVersions = List.unmodifiable(codes);
+    parallelVersions = codes;
     _notify();
     onBrowseStateChanged?.call();
   }

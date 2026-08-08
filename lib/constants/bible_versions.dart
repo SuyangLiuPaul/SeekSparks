@@ -307,6 +307,151 @@ String defaultSecondaryVersion(String primaryVersion) {
   return others.first.value;
 }
 
+/// Editions this build can no longer load, and the surviving edition a
+/// reader who asked for each one should land on.
+///
+/// A version code outlives the version. It is written into
+/// SharedPreferences on every chapter change, into every share link as
+/// `?v=`, and into the persisted Browse stack — so retiring an edition
+/// strands every bookmark, every synced device and every reader who
+/// simply had it open when they last closed the tab.
+///
+/// That is not hypothetical. Between 2026-08-07 and 2026-08-08 the
+/// codes below were removed with their assets, and the app went on
+/// requesting `assets/<code>.json` for them. On the web that request
+/// does not 404 into an exception: Netlify answers an unknown path with
+/// the SPA fallback, so `rootBundle.loadString` returns `<!DOCTYPE
+/// html>…` with a 200 and `json.decode` throws
+/// `FormatException: Unexpected token '<'`. Boot died there, on a
+/// message that named neither the version nor the file.
+///
+/// Every mapping preserves LANGUAGE and SCRIPT, because that is the
+/// substitution a reader is least likely to be hurt by: a 繁體 reader
+/// must not be handed 简体. Where the retirement was a supersession the
+/// successor is the edition that replaced it; where the text has no
+/// survivor (`cnv`, 新译本) it is the nearest edition in the same script,
+/// and the reader is told rather than silently moved — see
+/// `MainProvider.retiredVersionNotice`.
+///
+/// A code that is NOT listed here is not a failure: it falls through to
+/// the locale default, which is still a Bible the reader can read. The
+/// table only buys a *better* landing, so an omission degrades quietly
+/// instead of breaking.
+const Map<String, String> retiredVersionSuccessors = <String, String>{
+  // 和合本 → 和合本雅伟版. Same base text; the successor restores the
+  // divine name in the 4,857 places the received text had it.
+  'cuv': 'cuvs-yhwh',
+  'cuv-tr': 'cuvs-yhwh-tr',
+  // 新译本 has no successor in the catalog. Nearest same-script Chinese
+  // Bible, and the notice says so.
+  'cnv': 'cuvs-yhwh',
+  'cnv-tr': 'cuvs-yhwh-tr',
+  // yahwehdehua.net's export, imported and removed the next day: it was
+  // `cuvs-yhwh`, sharing all 31,102 references. See the catalog comment
+  // above — this successor is the same text, not an approximation.
+  'cuv-yhwd': 'cuvs-yhwh',
+  // 梁家铿译本 LJK1 → LJK2.
+  'biblexg': 'biblexg-v2',
+  'biblexg-tr': 'biblexg-v2-tr',
+  // Removed 2026-05 for licensing (Biblica / Zondervan). KJV is the
+  // closest English text that is unambiguously public domain.
+  'niv': 'kjv',
+};
+
+/// Whether [code] names an edition this build can actually load.
+///
+/// Checked against [availableVersions], not [bibleVersions], so a
+/// version hidden through [disabledVersions] is treated as unloadable
+/// too. Those two lists are the same today only because nothing is
+/// hidden; keying on the wrong one would go wrong the first time
+/// something is.
+bool isKnownVersion(String? code) {
+  if (code == null || code.isEmpty) return false;
+  final c = code.toLowerCase();
+  return availableVersions.any((v) => v.value == c);
+}
+
+/// The edition a fresh install opens with, by UI locale.
+///
+/// Lifted out of `MainProvider.restoreState` so the no-saved-version
+/// branch and the retired-code fallback answer this question with the
+/// same code rather than two copies that drift.
+String localeDefaultVersion(String locale) {
+  switch (locale) {
+    case 'en':
+      return 'nasb';
+    case 'zh-Hant':
+      return 'cuvs-yhwh-tr';
+    case 'zh-Hans':
+    default:
+      // Mandarin is the app's primary audience, so anything
+      // unrecognised lands here rather than on English.
+      return 'cuvs-yhwh';
+  }
+}
+
+/// What a persisted or linked reading-version code should resolve to.
+///
+/// [stored] is whatever was found in SharedPreferences, in a `?v=`
+/// parameter, or in a synced `lastRead` blob — none of which this build
+/// controls the vintage of. It is validated rather than trusted, which
+/// is the whole point: an unloadable code must land the reader on a
+/// Bible, never on a boot that throws.
+///
+/// [fallback] is what to open when [stored] is empty or names an
+/// edition with no surviving successor. It is a parameter rather than a
+/// locale lookup because the right answer differs by caller and only
+/// the caller knows it: boot wants the locale default, while a deep
+/// link wants the edition already on screen — moving a reader to NASB
+/// because someone sent them a stale link would be a worse outcome than
+/// ignoring the link. Callers must pass a loadable code; it is returned
+/// unexamined, since validating it would only push the question one
+/// level out.
+///
+/// Returns the code to open. Compare it against [stored] to find out
+/// whether a substitution happened and the reader is owed a notice.
+String resolveReadingVersion({
+  required String? stored,
+  required String fallback,
+}) {
+  final code = stored?.trim().toLowerCase() ?? '';
+  if (code.isEmpty) return fallback;
+  if (isKnownVersion(code)) return code;
+  final successor = retiredVersionSuccessors[code];
+  // Guard the successor too. A mapping can rot when its target is
+  // itself retired later, and a table that points at a missing asset
+  // would reintroduce exactly the crash it exists to prevent.
+  if (isKnownVersion(successor)) return successor!;
+  return fallback;
+}
+
+/// Reduce a list of version codes to the ones this build can load, in
+/// order, without duplicates.
+///
+/// The Browse stack is persisted as a list of codes, so it ages the same
+/// way a single saved reading version does — and a stack is worse when
+/// it rots, because one bad entry breaks a column of a comparison the
+/// reader assembled deliberately.
+///
+/// Retired codes are mapped to their successors rather than dropped, so
+/// a reader who arranged four columns still has four. Duplicates created
+/// by that mapping collapse: `cuv` and `cuv-yhwd` both resolve to
+/// `cuvs-yhwh`, and a Browse stack comparing a text against itself is
+/// the one outcome worse than a missing column.
+List<String> loadableVersions(Iterable<String> codes) {
+  final out = <String>[];
+  final seen = <String>{};
+  for (final raw in codes) {
+    final code = raw.trim().toLowerCase();
+    if (code.isEmpty) continue;
+    final resolved =
+        isKnownVersion(code) ? code : retiredVersionSuccessors[code];
+    if (!isKnownVersion(resolved)) continue;
+    if (seen.add(resolved!)) out.add(resolved);
+  }
+  return out;
+}
+
 /// SharedPreferences key holding the edition the second reading column
 /// last showed. Written by the second pane's own `MainProvider`, which
 /// runs under `storagePrefix: 'secondary_'`.
@@ -329,6 +474,15 @@ String resolveSecondaryVersion({
   required String primaryVersion,
   String? stored,
 }) {
-  final valid = stored != null && availableVersions.any((v) => v.value == stored);
-  return valid ? stored : defaultSecondaryVersion(primaryVersion);
+  if (isKnownVersion(stored)) return stored!.toLowerCase();
+  // A retired pick keeps its successor where there is one, so a reader
+  // who had 梁家铿译本 in the second column gets 梁家铿译本 back rather
+  // than whatever the generic default happens to be — unless the
+  // successor collapses onto the primary, which would leave Split View
+  // comparing a text against itself.
+  final successor = retiredVersionSuccessors[stored?.trim().toLowerCase()];
+  if (isKnownVersion(successor) && successor != primaryVersion) {
+    return successor!;
+  }
+  return defaultSecondaryVersion(primaryVersion);
 }

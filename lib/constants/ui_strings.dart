@@ -5051,6 +5051,18 @@ const uiStrings = {
     'zh-Hant': '載入失敗',
     'en': 'Failed to load',
   },
+  // 2026-08-08: shown once when boot opened a DIFFERENT edition from the
+  // one asked for, because the requested one has been retired from the
+  // catalog. The raw code is quoted rather than a friendly name on
+  // purpose — there is no catalog row left to take a name from, and the
+  // code is the part the reader can actually see, in their own bookmark
+  // or shared link.
+  'retiredVersionNotice': {
+    'zh-Hans': '所请求的版本（{code}）已不再提供，现显示《{version}》。',
+    'zh-Hant': '所請求的版本（{code}）已不再提供，現顯示《{version}》。',
+    'en': 'The edition “{code}” is no longer available. '
+        'Showing {version} instead.',
+  },
   // 2026-05-10 (v1.2.29): localised label for the close-pane
   // IconButton tooltip in `bible_reading_pane.dart` (sibling
   // `back` tooltip was already localised; `close` was not).

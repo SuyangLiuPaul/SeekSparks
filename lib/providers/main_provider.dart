@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:collection' show LinkedHashMap;
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:seeksparks/constants/bible_versions.dart'
+    show localeDefaultVersion, resolveReadingVersion;
 import 'package:seeksparks/constants/text_patterns.dart' show sanitizeForSearch;
 import 'package:seeksparks/models/verse.dart';
 import 'package:seeksparks/models/book.dart';
@@ -636,6 +638,24 @@ class MainProvider extends ChangeNotifier {
   // Error surfaced from the initial load (e.g. asset read/decode failure).
   // When non-null, the loading screen shows a retry UI.
   String? loadError;
+
+  /// Set when boot opened a DIFFERENT edition from the one that was
+  /// asked for, because the requested one has been retired from the
+  /// catalog. Read once by the workbench and cleared — a substitution
+  /// is news exactly once, and a notice that reappears on every launch
+  /// is a nag about a decision the reader cannot change.
+  ///
+  /// Distinct from [loadError] on purpose: nothing failed. The reader
+  /// has a Bible on screen and can carry on; they are simply owed the
+  /// truth about which one, because a silent swap would look like the
+  /// app forgot their choice.
+  ({String requested, String substituted})? retiredVersionNotice;
+
+  void clearRetiredVersionNotice() {
+    if (retiredVersionNotice == null) return;
+    retiredVersionNotice = null;
+    notifyListeners();
+  }
 
   void setLoadError(String? error) {
     if (loadError == error) return;
@@ -1528,12 +1548,30 @@ class MainProvider extends ChangeNotifier {
     savedChapter ??= prefs.getInt('${_storagePrefix}chapter');
 
     if (savedVersion != null) {
-      var v = savedVersion.toLowerCase();
-      // Migration 2026-05: NIV asset was removed for licensing reasons.
-      // Existing users whose saved version is 'niv' would get an empty
-      // verse list, so route them to KJV (closest English fallback that
-      // is unambiguously public domain).
-      if (v == 'niv') v = 'kjv';
+      // 2026-08-08: validate against the catalog BEFORE anything reads
+      // it. This assignment is what took production down. A saved code
+      // is only ever as current as the build that wrote it, and this
+      // one is written on every chapter change and restored from a
+      // synced blob — so a reader who had `cuv-yhwd` open when it was
+      // retired came back to `FetchVerses` requesting an asset that no
+      // longer exists, Netlify answering with `index.html`, and
+      // `json.decode` throwing `Unexpected token '<'` before the first
+      // verse painted. The old `niv → kjv` line was the same idea
+      // handled one code at a time; `retiredVersionSuccessors` is that
+      // line generalised, so retiring the NEXT edition cannot repeat it.
+      final localeForResolve = prefs.getString('locale') ?? '';
+      var v = resolveReadingVersion(
+        stored: savedVersion,
+        fallback: localeDefaultVersion(localeForResolve),
+      );
+      if (isPrimary && v != savedVersion.toLowerCase()) {
+        // Only the primary pane speaks: the split column raising its own
+        // notice would tell the reader the same thing twice.
+        retiredVersionNotice = (
+          requested: savedVersion.toLowerCase(),
+          substituted: v,
+        );
+      }
       // 2026-05-26 (v1.3.46): one-time migration for English-locale
       // users whose saved version is the v1.3.40-era class-level
       // default `cuvs-yhwh`. v1.3.40 introduced locale-aware fresh-
@@ -1551,8 +1589,7 @@ class MainProvider extends ChangeNotifier {
       if (isPrimary && v == 'cuvs-yhwh') {
         final migrated =
             prefs.getBool('migrated_locale_default_v1346') ?? false;
-        final localeForMigration = prefs.getString('locale') ?? '';
-        if (!migrated && localeForMigration == 'en') {
+        if (!migrated && localeForResolve == 'en') {
           v = 'nasb';
           // ignore: avoid_print
           print('[v1.3.46] migrated default from cuvs-yhwh→nasb '
@@ -1580,19 +1617,11 @@ class MainProvider extends ChangeNotifier {
       // Anything else falls through to CUVS-YHWH (Mandarin is the
       // app's primary audience; the China-mode build is gated by a
       // build flag, not locale).
-      final locale = prefs.getString('locale') ?? '';
-      switch (locale) {
-        case 'en':
-          currentVersion = 'nasb';
-          break;
-        case 'zh-Hant':
-          currentVersion = 'cuvs-yhwh-tr';
-          break;
-        case 'zh-Hans':
-        default:
-          currentVersion = 'cuvs-yhwh';
-          break;
-      }
+      //
+      // The table itself now lives in `localeDefaultVersion`, because
+      // the retired-code path above needs the same answer and two
+      // copies of "what does a zh-Hant reader open with" would drift.
+      currentVersion = localeDefaultVersion(prefs.getString('locale') ?? '');
     }
     if (savedBook != null) currentBook = savedBook;
     if (savedChapter != null) currentChapter = savedChapter;

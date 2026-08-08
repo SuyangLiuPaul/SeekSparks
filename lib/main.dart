@@ -32,6 +32,8 @@ import 'package:seeksparks/services/workbench_warmup.dart'
     show warmWorkbenchFirstPaint;
 import 'package:provider/provider.dart';
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:seeksparks/widgets/retired_version_notice.dart'
+    show RetiredVersionNotice;
 import 'package:seeksparks/widgets/small_screen_advisory.dart'
     show SmallScreenGate;
 import 'package:seeksparks/utils/theme_accent.dart'
@@ -775,17 +777,23 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
           // known on the first frame and depends on nothing the boot
           // produces, so it is answered on the first frame.
           home: SmallScreenGate(
-            child: _loading
-                ? const Scaffold(
-                    body: Center(
-                      child: CircularProgressIndicator(),
+            // Above the router and below the gate: boot may have
+            // substituted a retired reading version, and the reader is
+            // owed that fact wherever they land. Renders its child
+            // untouched until there is something to say.
+            child: RetiredVersionNotice(
+              child: _loading
+                  ? const Scaffold(
+                      body: Center(
+                        child: CircularProgressIndicator(),
+                      ),
+                    )
+                  : _RootRouter(
+                      initialVerses: Provider.of<MainProvider>(context,
+                              listen: false)
+                          .verses,
                     ),
-                  )
-                : _RootRouter(
-                    initialVerses: Provider.of<MainProvider>(context,
-                            listen: false)
-                        .verses,
-                  ),
+            ),
           ),
         );
       },

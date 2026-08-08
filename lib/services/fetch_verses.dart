@@ -17,6 +17,45 @@ class _ParaInfo {
   const _ParaInfo(this.isParagraphStart, this.paragraphType);
 }
 
+/// Thrown when a verse asset came back as a web page rather than JSON.
+///
+/// This exists because the failure it names spent a day looking like a
+/// parser bug. On the web a missing asset does not 404 into an
+/// exception: Netlify (and any SPA host) answers an unknown path with
+/// `index.html` and a 200, `rootBundle.loadString` hands that back
+/// happily, and `json.decode` reports
+/// `FormatException: Unexpected token '<', "<!DOCTYPE "...` — a message
+/// that names neither the asset nor the version, and reads like the
+/// JSON is corrupt when in fact it was never served.
+class VerseAssetNotJsonException implements Exception {
+  final String path;
+  const VerseAssetNotJsonException(this.path);
+
+  @override
+  String toString() =>
+      'VerseAssetNotJsonException: $path returned an HTML page, not JSON. '
+      'The asset is almost certainly missing from this build and the '
+      'server answered with the SPA fallback.';
+}
+
+/// Guard a bundle payload before it reaches `json.decode`.
+///
+/// Pure so the decision can be tested without an asset bundle or a
+/// server — which matters, because the only way to hit this in
+/// production is to deploy a build that is missing a file.
+///
+/// Deliberately narrow: it rejects a leading `<` and nothing else. A
+/// cleverer sniffer would have to guess at truncated or partially
+/// downloaded JSON, and misjudging that would turn a recoverable retry
+/// into a hard error. Every real instance of this bug starts `<!DOCTYPE`
+/// or `<html`.
+void assertJsonPayload(String body, String path) {
+  final head = body.trimLeft();
+  if (head.startsWith('<')) {
+    throw VerseAssetNotJsonException(path);
+  }
+}
+
 class FetchVerses {
   /// LJK2 supplies NT paragraph metadata. WEB USFM supplies derived OT starts.
   /// Both are replayed onto every version so readers get consistent paragraph
@@ -51,6 +90,7 @@ class FetchVerses {
   ) async {
     try {
       final jsonString = await rootBundle.loadString(path);
+      assertJsonPayload(jsonString, path);
       final dynamic decoded = json.decode(jsonString);
       if (decoded is List) {
         for (final entry in decoded) {
@@ -215,6 +255,17 @@ class FetchVerses {
           'FetchVerses attempt $attempt/$maxAttempts failed for $path: '
           '$e\n$st',
         );
+        // A missing asset is not a flake. The retry ladder exists for
+        // slow and half-open connections, where a second attempt
+        // genuinely helps; a file that is not in the build will not
+        // appear on the third try, and grinding through the escalating
+        // 20/40/60 s timeouts spends a minute of the reader's boot to
+        // reach the same answer. Report and rethrow now.
+        if (e is VerseAssetNotJsonException) {
+          ErrorReporter.report(e, st,
+              source: 'FetchVerses', extra: 'path=$path asset-missing');
+          rethrow;
+        }
         // v1.3.22: only report after the FINAL attempt fails — earlier
         // attempts often recover on retry, so reporting per-attempt
         // would email about transient flakes that the retry then
@@ -275,6 +326,7 @@ class FetchVerses {
     Map<String, Map<String, _ParaInfo>> paraMap,
   ) async {
     final jsonString = await rootBundle.loadString(path);
+    assertJsonPayload(jsonString, path);
     final dynamic decoded = json.decode(jsonString);
 
     List<Map<String, dynamic>> rawList;

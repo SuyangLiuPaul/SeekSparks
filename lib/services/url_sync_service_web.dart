@@ -38,7 +38,8 @@ import 'dart:js_interop';
 
 import 'package:flutter/foundation.dart';
 
-import 'package:seeksparks/constants/bible_versions.dart' show bibleVersions;
+import 'package:seeksparks/constants/bible_versions.dart'
+    show resolveReadingVersion;
 import 'package:seeksparks/constants/book_slugs.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/providers/main_provider.dart';
@@ -256,18 +257,42 @@ Future<void> _applyHashToState(String rawHash, {bool isBoot = false}) async {
     // `setCurrentChapter(book: 'Revelation')` found no verses — a
     // shared link like `#/revelation/17:1?v=biblexg-v2` cold-opened
     // to the "End of Bible" empty state on a chapter that exists.
-    if (parsed.version != null &&
-        parsed.version != mp.currentVersion &&
-        bibleVersions.any((v) => v.value == parsed.version)) {
-      mp.setVersion(parsed.version!);
-      await FetchVerses.execute(mainProvider: mp);
-      // v1.3.61: the chapter pager + book picker resolve book names
-      // against `mp.books`, which boot built from the DEFAULT version.
-      // The canonical in-app switch (reading pane version menu) runs
-      // FetchBooks after FetchVerses — without it, a Chinese-named
-      // currentBook can't be found in an English book list and every
-      // reader page renders the "End of Bible" empty state.
-      await FetchBooks.execute(mainProvider: mp);
+    //
+    // 2026-08-08: a link's version is RESOLVED rather than merely
+    // checked. The old test was `bibleVersions.any(...)`, which quietly
+    // dropped anything it did not recognise — so a shared link written
+    // against a since-retired edition (`?v=cuv-yhwd`) opened the
+    // reader's own version with no hint that the link had asked for
+    // another. Worse, it keyed on `bibleVersions` rather than
+    // `availableVersions`, so a version hidden through
+    // `disabledVersions` would have passed the guard and then failed to
+    // load. `resolveReadingVersion` answers both: retired codes land on
+    // their successor — which for `cuv-yhwd` is the identical text —
+    // and the reader is told through `retiredVersionNotice`.
+    // The fallback is the reader's CURRENT version, not a locale
+    // default: a stale link is a reason to ignore the link, never a
+    // reason to move someone off the Bible they were reading.
+    final linkVersion = parsed.version?.trim().toLowerCase();
+    if (linkVersion != null && linkVersion.isNotEmpty) {
+      final resolved = resolveReadingVersion(
+        stored: linkVersion,
+        fallback: mp.currentVersion,
+      );
+      if (resolved != linkVersion) {
+        mp.retiredVersionNotice =
+            (requested: linkVersion, substituted: resolved);
+      }
+      if (resolved != mp.currentVersion) {
+        mp.setVersion(resolved);
+        await FetchVerses.execute(mainProvider: mp);
+        // v1.3.61: the chapter pager + book picker resolve book names
+        // against `mp.books`, which boot built from the DEFAULT version.
+        // The canonical in-app switch (reading pane version menu) runs
+        // FetchBooks after FetchVerses — without it, a Chinese-named
+        // currentBook can't be found in an English book list and every
+        // reader page renders the "End of Bible" empty state.
+        await FetchBooks.execute(mainProvider: mp);
+      }
     }
 
     // Now translate + verify against the version that is actually

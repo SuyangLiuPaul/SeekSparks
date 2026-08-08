@@ -41,7 +41,7 @@ library;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:seeksparks/constants/bible_versions.dart'
-    show kSecondaryVersionKey, resolveSecondaryVersion;
+    show kSecondaryVersionKey, loadableVersions, resolveSecondaryVersion;
 import 'package:seeksparks/constants/book_names.dart' show bookNameToEnglish;
 import 'package:seeksparks/models/wb_centre_mode.dart';
 import 'package:seeksparks/providers/main_provider.dart';
@@ -70,6 +70,26 @@ List<String> defaultParallelVersions(String locale) {
     default:
       return const ['bsb', 'nasb', 'kjv'];
   }
+}
+
+/// Bring a persisted Browse stack up to date with the current catalog.
+///
+/// The stack is a list of version codes written to SharedPreferences,
+/// so it ages exactly the way a single saved reading version does — and
+/// it is restored in two places (`WorkbenchPage._restorePrefs` and
+/// [readBrowsePrefs]), which is why the cleanup lives here rather than
+/// in either of them.
+///
+/// Retired codes are mapped to their successors rather than dropped, so
+/// a reader who had four columns still has four. Duplicates that the
+/// mapping creates are collapsed — `cuv` and `cuv-yhwd` both resolve to
+/// `cuvs-yhwh`, and a Browse stack comparing a text against itself is
+/// the one outcome worse than a missing column. An empty result falls
+/// back to the locale defaults, never to nothing.
+List<String> sanitiseParallelVersions(List<String>? saved, String locale) {
+  if (saved == null || saved.isEmpty) return defaultParallelVersions(locale);
+  final kept = loadableVersions(saved);
+  return kept.isEmpty ? defaultParallelVersions(locale) : kept;
 }
 
 /// Which whole-version corpora the Browse stack will need and does not
@@ -124,9 +144,7 @@ Future<({WbCentreMode mode, List<String> versions, String? secondary})>
       stored: prefs.getString(kWorkbenchCentreModeKey),
       legacyParallel: prefs.getBool(kWorkbenchParallelModeKey),
     ),
-    versions: (saved != null && saved.isNotEmpty)
-        ? saved
-        : defaultParallelVersions(locale),
+    versions: sanitiseParallelVersions(saved, locale),
     secondary: prefs.getString(kSecondaryVersionKey),
   );
 }
