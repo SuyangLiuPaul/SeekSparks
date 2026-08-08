@@ -2711,26 +2711,7 @@ const uiStrings = {
         'Strong\'s number: type "G2316" / "H7200" to open the lexicon '
             'entry plus every verse that uses that word.',
   },
-  // v1.3.91: combined / boolean Strong's search help + operator tooltips.
-  // SeekSparks addition: NOT + NEARn (word-proximity) operators.
-  'searchHelpAdvBoolean': {
-    'zh-Hans':
-        '组合检索：用 AND / OR / NOT / NEAR / ✶ 按钮（输入编号后自动出现）组合多个原文编号。'
-            '「G25 AND G26」=同时含两者的经文；「G25 OR G26」=含其一；'
-            '「G25 NOT G26」=含 G25 但不含 G26；「G25 NEAR5 G26」=两者在同一节内相距 5 个字以内；'
-            '「G25✶」=所有以 G25 开头的编号。',
-    'zh-Hant':
-        '組合檢索：用 AND / OR / NOT / NEAR / ✶ 按鈕（輸入編號後自動出現）組合多個原文編號。'
-            '「G25 AND G26」=同時含兩者的經文；「G25 OR G26」=含其一；'
-            '「G25 NOT G26」=含 G25 但不含 G26；「G25 NEAR5 G26」=兩者在同一節內相距 5 個字以內；'
-            '「G25✶」=所有以 G25 開頭的編號。',
-    'en':
-        'Combine Strong\'s numbers with the AND / OR / NOT / NEAR / ✶ '
-            'buttons (they appear once you type a number): "G25 AND G26" → '
-            'verses with BOTH; "G25 OR G26" → EITHER; "G25 NOT G26" → G25 '
-            'without G26; "G25 NEAR5 G26" → within 5 words of each other in '
-            'the same verse; "G25✶" → every number starting with G25.',
-  },
+  // v1.3.91: operator tooltips, reused by the command-line strip (#294).
   'booleanSearchHeader': {
     'zh-Hans': '{query} — 共 {count} 节',
     'zh-Hant': '{query} — 共 {count} 節',
@@ -2751,10 +2732,13 @@ const uiStrings = {
     'zh-Hant': '含第一個但不含第二個',
     'en': 'Verses with the first but not the second',
   },
+  // {n} rather than a hard 5: the distance is adjustable from the hint
+  // row, and a tooltip that keeps saying 5 while the button says NEAR7 is
+  // worse than no tooltip.
   'searchOpNearTip': {
-    'zh-Hans': '两者相距 5 个字以内（可编辑数字）',
-    'zh-Hant': '兩者相距 5 個字以內（可編輯數字）',
-    'en': 'Within 5 words of each other (edit the number)',
+    'zh-Hans': '两者相距 {n} 个词以内，不分先后',
+    'zh-Hant': '兩者相距 {n} 個詞以內，不分先後',
+    'en': 'Within {n} words of each other, either order',
   },
   'searchOpStarTip': {
     'zh-Hans': '前缀通配符（如 G25✶）',
@@ -2949,6 +2933,102 @@ const uiStrings = {
     'zh-Hans': '语法说明',
     'zh-Hant': '語法說明',
     'en': 'Syntax help',
+  },
+  // ── Task #294 ─────────────────────────────────────────────────────
+  // The strip carries two grammars and the card documented only one of
+  // them: a reader who saw a NEAR5 button, pressed `?` and read ten lines
+  // about `.love god` had no way left to find out what NEAR5 was. Section
+  // headings, because the fact that there ARE two grammars is the thing
+  // that was missing, not one more undifferentiated line.
+  'cmdSyntaxSectionText': {
+    'zh-Hans': '文字',
+    'zh-Hant': '文字',
+    'en': 'Text',
+  },
+  'cmdSyntaxSectionStrongs': {
+    'zh-Hans': '原文编号',
+    'zh-Hant': '原文編號',
+    'en': "Strong's numbers",
+  },
+  'cmdSyntaxSectionCommands': {
+    'zh-Hans': '命令',
+    'zh-Hant': '命令',
+    'en': 'Commands',
+  },
+  'cmdSyntaxStrongsBool': {
+    'zh-Hans': 'G25 AND G26 — 两个编号都出现 · OR 任一 · NOT 有前者没后者',
+    'zh-Hant': 'G25 AND G26 — 兩個編號都出現 · OR 任一 · NOT 有前者沒後者',
+    'en': 'G25 AND G26 — both numbers · OR either · NOT the first not the second',
+  },
+  // The number is a word DISTANCE, not a gap: NEAR5 admits four words in
+  // between, so it is BibleWorks' `*4` and not its `*5`. Saying so here is
+  // cheaper than a reader discovering it from a hit count.
+  'cmdSyntaxStrongsNear': {
+    'zh-Hans': 'G25 NEAR5 G26 — 相距 5 个词以内，不分先后（中间最多 4 个词）',
+    'zh-Hant': 'G25 NEAR5 G26 — 相距 5 個詞以內，不分先後（中間最多 4 個詞）',
+    'en': 'G25 NEAR5 G26 — within 5 words, either order (up to 4 words between)',
+  },
+  'cmdSyntaxStrongsWild': {
+    'zh-Hans': 'G25✶ — 所有以 G25 开头的编号 · G25 !G26 与 NOT 相同',
+    'zh-Hant': 'G25✶ — 所有以 G25 開頭的編號 · G25 !G26 與 NOT 相同',
+    'en': "G25✶ — every number starting G25 · G25 !G26 is the same as NOT",
+  },
+  // Operator-button tooltips. The strip had none at all, which is how a
+  // word-shaped token like NEAR5 could sit there unexplained.
+  'cmdOpTipAll': {
+    'zh-Hans': '. 同一节里每个词都出现',
+    'zh-Hant': '. 同一節裡每個詞都出現',
+    'en': '. every word, one verse',
+  },
+  'cmdOpTipAny': {
+    'zh-Hans': '/ 出现任意一个词',
+    'zh-Hant': '/ 出現任意一個詞',
+    'en': '/ any of the words',
+  },
+  'cmdOpTipPhrase': {
+    'zh-Hans': "' 按顺序紧挨着出现",
+    'zh-Hant': "' 按順序緊挨著出現",
+    'en': "' the words in that order",
+  },
+  'cmdOpTipNot': {
+    'zh-Hans': '! 排除紧跟其后的词（原文编号亦可：G25 !G26）',
+    'zh-Hant': '! 排除緊跟其後的詞（原文編號亦可：G25 !G26）',
+    'en': "! excludes the word it is glued to (also G25 !G26)",
+  },
+  'cmdOpTipStar': {
+    'zh-Hans': '✶ 接在词后是通配符（faith✶、G25✶）；单独一个是词距',
+    'zh-Hant': '✶ 接在詞後是萬用字元（faith✶、G25✶）；單獨一個是詞距',
+    'en': '✶ after a word it is a wildcard (faith✶, G25✶); alone it is a word gap',
+  },
+  // Live hints under the strip — the reported failure ("clicked NEAR5,
+  // nothing happens") occurs BEFORE there is a query to read back, so the
+  // pane's finished-query echo could never have caught it.
+  'cmdDraftNeedsSecond': {
+    'zh-Hans': '{op} 后面还需要一个原文编号，例如 G26。',
+    'zh-Hant': '{op} 後面還需要一個原文編號，例如 G26。',
+    'en': "{op} needs a second Strong's number after it, e.g. G26.",
+  },
+  'cmdDraftNeedsPair': {
+    'zh-Hans': '{op} 用来连接两个原文编号：「G25 {op} G26」。请先输入一个编号。',
+    'zh-Hant': '{op} 用來連接兩個原文編號：「G25 {op} G26」。請先輸入一個編號。',
+    'en': "{op} joins two Strong's numbers — \"G25 {op} G26\". "
+        'Type a number first.',
+  },
+  'cmdDraftNearWindow': {
+    'zh-Hans': '相距 {n} 个词以内，不分先后（中间最多 {gap} 个词）。',
+    'zh-Hant': '相距 {n} 個詞以內，不分先後（中間最多 {gap} 個詞）。',
+    'en': 'Within {n} words of each other, in either order '
+        '(up to {gap} words in between).',
+  },
+  'cmdDraftNearFewer': {
+    'zh-Hans': '缩小词距',
+    'zh-Hant': '縮小詞距',
+    'en': 'Narrower window',
+  },
+  'cmdDraftNearWider': {
+    'zh-Hans': '扩大词距',
+    'zh-Hant': '擴大詞距',
+    'en': 'Wider window',
   },
   // ── Command verbs (bwh44) ─────────────────────────────────────────
   'cmdvNeedsArgument': {
@@ -3245,47 +3325,6 @@ const uiStrings = {
     'zh-Hans': '展开面板',
     'zh-Hant': '展開面板',
     'en': 'Expand panel',
-  },
-  // v1.3.91: focused help dialog opened from the ? beside the operator bar.
-  // SeekSparks addition: NOT + NEARn.
-  'operatorHelpTitle': {
-    'zh-Hans': '组合检索（AND / OR / NOT / NEAR / ✶）',
-    'zh-Hant': '組合檢索（AND / OR / NOT / NEAR / ✶）',
-    'en': 'Combined search (AND / OR / NOT / NEAR / ✶)',
-  },
-  'operatorHelpAnd': {
-    'zh-Hans': 'AND —「G25 AND G26」：同时含两个编号的经文。',
-    'zh-Hant': 'AND —「G25 AND G26」：同時含兩個編號的經文。',
-    'en': 'AND — "G25 AND G26": verses that contain BOTH numbers.',
-  },
-  'operatorHelpOr': {
-    'zh-Hans': 'OR —「G25 OR G26」：含其中任一编号的经文。',
-    'zh-Hant': 'OR —「G25 OR G26」：含其中任一編號的經文。',
-    'en': 'OR — "G25 OR G26": verses that contain EITHER number.',
-  },
-  'operatorHelpNot': {
-    'zh-Hans': 'NOT —「G25 NOT G26」：含 G25，但不含 G26。',
-    'zh-Hant': 'NOT —「G25 NOT G26」：含 G25，但不含 G26。',
-    'en': 'NOT — "G25 NOT G26": has G25, WITHOUT G26.',
-  },
-  'operatorHelpNear': {
-    'zh-Hans': 'NEARn —「G25 NEAR5 G26」：两者在同一节经文中相距 5 个字以内。',
-    'zh-Hant': 'NEARn —「G25 NEAR5 G26」：兩者在同一節經文中相距 5 個字以內。',
-    'en':
-        'NEARn — "G25 NEAR5 G26": within 5 words of each other in the '
-            'same verse.',
-  },
-  'operatorHelpStar': {
-    'zh-Hans': '✶ —「G25✶」：所有以 G25 开头的 Strong\'s 编号。',
-    'zh-Hant': '✶ —「G25✶」：所有以 G25 開頭的 Strong\'s 編號。',
-    'en': '✶ — "G25✶": every Strong\'s number that starts with G25.',
-  },
-  'operatorHelpTip': {
-    'zh-Hans': '先输入一个编号（如 G25），再点按钮加入 AND / OR / NOT / NEAR / ✶。',
-    'zh-Hant': '先輸入一個編號（如 G25），再點按鈕加入 AND / OR / NOT / NEAR / ✶。',
-    'en':
-        'Type a Strong\'s number (e.g. G25), then tap a button to add '
-            'AND / OR / NOT / NEAR / ✶.',
   },
   'searchHelpAdvLemma': {
     'zh-Hans': '直接输入希腊文（ἀγάπη）或希伯来文（אהבה）原文词，匹配后会打开对应的词典条目。',

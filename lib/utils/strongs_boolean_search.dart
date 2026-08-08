@@ -6,6 +6,7 @@
 //   G25 AND G26     → verses that contain BOTH Strong's numbers
 //   G25 OR G26      → verses that contain EITHER
 //   G25 NOT G26     → verses with G25 but WITHOUT G26
+//   G25 !G26        → the same; `!` is the NOT alias, spaced or glued
 //   G25 NEAR5 G26   → verses where G25 and G26 occur within 5 words of
 //                     each other (proximity is resolved separately — see
 //                     `nearPairs` and `lib/utils/strongs_proximity.dart` —
@@ -93,7 +94,19 @@ StrongsBooleanQuery? parseStrongsBoolean(String input) {
   // (adjacent terms imply AND). Anything that isn't a term or a known
   // operator aborts the whole parse (→ null → fall back to text search).
   var expectingTerm = true;
-  for (final tok in tokens) {
+  for (var tok in tokens) {
+    // `G25 !G26` — the `!` button glues, because in a TEXT search `! word`
+    // is a stray character the phrase parser drops. Split it back off here
+    // so the same keystrokes mean NOT in both grammars; without this the
+    // whole parse returned null and the query fell through to a text
+    // search for the literal string "G25 !G26", which finds nothing and
+    // looks exactly like a button that does not work.
+    if (!expectingTerm && tok.length > 1 && tok.startsWith('!')) {
+      ops.add(StrongsOp.not);
+      nearDistance.add(null);
+      expectingTerm = true;
+      tok = tok.substring(1);
+    }
     final upper = tok.toUpperCase();
     if (!expectingTerm && (upper == 'AND' || upper == '&' || upper == '+')) {
       ops.add(StrongsOp.and);

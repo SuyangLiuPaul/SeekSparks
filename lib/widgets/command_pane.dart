@@ -22,6 +22,7 @@ import 'package:seeksparks/utils/ai_markdown.dart' show parseAiMarkdown;
 import 'package:seeksparks/utils/app_nav.dart' show pushPage;
 import 'package:seeksparks/utils/atomic_text_edit.dart';
 import 'package:seeksparks/utils/clipboard_helper.dart';
+import 'package:seeksparks/utils/command_draft.dart';
 import 'package:seeksparks/utils/command_query.dart';
 import 'package:seeksparks/utils/command_verb.dart';
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
@@ -113,6 +114,13 @@ class _CommandPaneState extends State<CommandPane> {
   /// is for fixing the typo you just made, and this list is for
   /// re-asking a question that worked — a week ago, on another device.
   List<RecentSearchEntry> _recents = const [];
+
+  /// The word distance the NEAR button inserts, and the number it shows.
+  ///
+  /// The parser has always taken any `NEAR<n>`; only the button was
+  /// pinned to 5, so the one adjustable thing on the strip looked fixed.
+  /// Session state, not a setting: it belongs to the query being built.
+  int _nearDistance = 5;
 
   @override
   void initState() {
@@ -389,6 +397,56 @@ class _CommandPaneState extends State<CommandPane> {
     setState(() {});
   }
 
+  /// `✶` glues to the word in front of the caret when there is one, and
+  /// stands alone when there is not.
+  ///
+  /// One rule, three documented meanings, all of them right:
+  ///   `G25`   + ✶ → `G25*`     prefix wildcard over Strong's numbers
+  ///   `.faith`+ ✶ → `.faith*`  character wildcard
+  ///   `'信心 ` + ✶ → `'信心 * ` a word gap inside a phrase
+  ///
+  /// Before this the button always produced the third form, so the very
+  /// query the help documents — `G25✶` — was the one it could not make.
+  /// `G25 * ` does not parse as a Strong's expression at all; it fell
+  /// through to a text search for the literal string and found nothing.
+  void _insertWildcard() {
+    final text = _controller.text;
+    final sel = _controller.selection;
+    final start = sel.isValid ? sel.start : text.length;
+    final end = sel.isValid ? sel.end : text.length;
+    final glued = start > 0 && !text.substring(0, start).endsWith(' ');
+    if (!glued) {
+      _insertToken('*');
+      return;
+    }
+    _controller.setTextAtomic(text.replaceRange(start, end, '*'),
+        caret: start + 1);
+    _focus.requestFocus();
+    setState(() {});
+  }
+
+  /// Insert the NEAR operator at the strip's current distance.
+  void _insertNear() => _insertToken('NEAR$_nearDistance');
+
+  /// Widen or narrow the word distance, rewriting the token already on
+  /// the line so the number in the query and the number on the button
+  /// never disagree.
+  ///
+  /// A delta read off the LIVE line, not an absolute read off the last
+  /// build: two quick taps on `−` must step twice, and a handler that
+  /// closes over the distance it was built with steps once.
+  void _stepNearDistance(int delta) {
+    final text = _controller.text;
+    final near = analyseCommandDraft(text).near;
+    final next = ((near?.distance ?? _nearDistance) + delta)
+        .clamp(kMinNearDistance, kMaxNearDistance);
+    if (near != null) {
+      _controller.setTextAtomic(withNearDistance(text, near, next));
+    }
+    setState(() => _nearDistance = next);
+    _focus.requestFocus();
+  }
+
   /// Replace the leading control character, or add one.
   ///
   /// Not [_insertToken]: a control character is a property of the whole
@@ -558,21 +616,90 @@ class _CommandPaneState extends State<CommandPane> {
         // nobody can guess. BibleWorks shipped "Code Insertion Buttons"
         // for exactly this reason and they are the only part of its
         // command line that reviewers describe as discoverable.
+        _operatorStrip(locale),
+        if (_showSyntax) _syntaxCard(locale),
+        const Divider(height: 1),
+        // ── Results ───────────────────────────────────────────────
+        Expanded(child: _buildResults(context, wb, settings, scheme, locale)),
+      ],
+    );
+  }
+
+  /// The operator strip, and under it one line of plain language about
+  /// what the line still needs.
+  ///
+  /// The strip carries two grammars — `. / ' ! ✶` build a TEXT search,
+  /// `AND OR NOT NEARn` combine STRONG'S NUMBERS — and nothing said so.
+  /// The combining four are therefore dimmed until the line actually
+  /// holds a number, but stay tappable: a button that disappears as you
+  /// type cannot be learned from, and tapping a dim one is answered by
+  /// the hint row rather than by silence.
+  Widget _operatorStrip(String locale) {
+    final draft = analyseCommandDraft(_controller.text);
+    final dim = !draft.combinersApply;
+    String tip(String key, String fallback) =>
+        (uiStrings[key]?[locale] ?? fallback)
+            .replaceAll('{n}', '$_nearDistance');
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(4, 0, 4, 4),
           child: Wrap(
             spacing: 3,
             runSpacing: 3,
             children: [
-              for (final c in const ['.', '/', "'"])
-                _OperatorButton(label: c, onTap: () => _setControl(c)),
               _OperatorButton(
-                  label: '!', onTap: () => _insertToken('!', trailingSpace: false)),
-              for (final token in const ['*', 'AND', 'OR', 'NOT', 'NEAR5'])
-                _OperatorButton(
-                  label: token,
-                  onTap: () => _insertToken(token),
-                ),
+                  label: '.',
+                  tooltip: tip('cmdOpTipAll', '. every word, one verse'),
+                  onTap: () => _setControl('.')),
+              _OperatorButton(
+                  label: '/',
+                  tooltip: tip('cmdOpTipAny', '/ any of the words'),
+                  onTap: () => _setControl('/')),
+              _OperatorButton(
+                  label: "'",
+                  tooltip:
+                      tip('cmdOpTipPhrase', "' the words in that order"),
+                  onTap: () => _setControl("'")),
+              _OperatorButton(
+                label: '!',
+                tooltip: tip('cmdOpTipNot',
+                    '! excludes the word it is glued to (also G25 !G26)'),
+                onTap: () => _insertToken('!', trailingSpace: false),
+              ),
+              _OperatorButton(
+                label: '*',
+                tooltip: tip('cmdOpTipStar',
+                    '✶ after a word it is a wildcard; alone it is a word gap'),
+                onTap: _insertWildcard,
+              ),
+              _OperatorButton(
+                label: 'AND',
+                dimmed: dim,
+                tooltip: tip('searchOpAndTip', 'Verses with BOTH'),
+                onTap: () => _insertToken('AND'),
+              ),
+              _OperatorButton(
+                label: 'OR',
+                dimmed: dim,
+                tooltip: tip('searchOpOrTip', 'Verses with EITHER'),
+                onTap: () => _insertToken('OR'),
+              ),
+              _OperatorButton(
+                label: 'NOT',
+                dimmed: dim,
+                tooltip: tip(
+                    'searchOpNotTip', 'Verses with the first but not the second'),
+                onTap: () => _insertToken('NOT'),
+              ),
+              _OperatorButton(
+                label: 'NEAR$_nearDistance',
+                dimmed: dim,
+                tooltip: tip('searchOpNearTip',
+                    'Within {n} words of each other, either order'),
+                onTap: _insertNear,
+              ),
               _OperatorButton(
                 label: '?',
                 tooltip: uiStrings['cmdSyntaxToggle']?[locale] ?? 'Syntax help',
@@ -582,12 +709,56 @@ class _CommandPaneState extends State<CommandPane> {
             ],
           ),
         ),
-        if (_showSyntax) _syntaxCard(locale),
-        const Divider(height: 1),
-        // ── Results ───────────────────────────────────────────────
-        Expanded(child: _buildResults(context, wb, settings, scheme, locale)),
+        if (draft.showsHint) _draftHint(draft, locale),
       ],
     );
+  }
+
+  /// What the half-typed line still needs, plus — when it holds a
+  /// `NEARn` — the one control that makes the distance adjustable.
+  ///
+  /// The pane already reads a FINISHED query back in words. This is that
+  /// idea moved earlier: "tapped NEAR5, pressed Enter, nothing happened"
+  /// is a failure that completes before there is a query to echo.
+  Widget _draftHint(CommandDraft draft, String locale) {
+    return Builder(builder: (context) {
+      final wbc = WbColors.of(context);
+      final t = WbType.of(context);
+      final near = draft.near;
+      return Container(
+        width: double.infinity,
+        color: wbc.chromeBg,
+        padding: const EdgeInsets.fromLTRB(6, 3, 4, 4),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                describeCommandDraft(draft, locale) ?? '',
+                style: TextStyle(
+                  fontSize: t.chrome,
+                  color: wbc.mutedText,
+                  fontFamilyFallback: kCjkFontFallback,
+                ),
+              ),
+            ),
+            if (near != null) ...[
+              _MiniIcon(
+                icon: Icons.remove,
+                tooltip: uiStrings['cmdDraftNearFewer']?[locale] ??
+                    'Narrower window',
+                onTap: () => _stepNearDistance(-1),
+              ),
+              _MiniIcon(
+                icon: Icons.add,
+                tooltip: uiStrings['cmdDraftNearWider']?[locale] ??
+                    'Wider window',
+                onTap: () => _stepNearDistance(1),
+              ),
+            ],
+          ],
+        ),
+      );
+    });
   }
 
   /// The syntax reference, one line per operator, with a real example
@@ -596,17 +767,35 @@ class _CommandPaneState extends State<CommandPane> {
     return Builder(builder: (context) {
       final wbc = WbColors.of(context);
       final t = WbType.of(context);
-      const keys = [
-        'cmdSyntaxAnd',
-        'cmdSyntaxOr',
-        'cmdSyntaxPhrase',
-        'cmdSyntaxNot',
-        'cmdSyntaxWild',
-        'cmdSyntaxGap',
-        'cmdSyntaxContext',
-        'cmdSyntaxVerbs',
-        'cmdSyntaxAi',
-        'cmdSyntaxHistory',
+      // Grouped, because the strip's own grammar split is the fact the
+      // card was missing. Before task #294 it listed only the TEXT rules,
+      // so pressing `?` to ask what the NEAR5 button was returned ten
+      // lines about `.love god` and no mention of NEAR at all.
+      const sections = <(String, List<String>)>[
+        (
+          'cmdSyntaxSectionText',
+          [
+            'cmdSyntaxAnd',
+            'cmdSyntaxOr',
+            'cmdSyntaxPhrase',
+            'cmdSyntaxNot',
+            'cmdSyntaxWild',
+            'cmdSyntaxGap',
+            'cmdSyntaxContext',
+          ]
+        ),
+        (
+          'cmdSyntaxSectionStrongs',
+          [
+            'cmdSyntaxStrongsBool',
+            'cmdSyntaxStrongsNear',
+            'cmdSyntaxStrongsWild',
+          ]
+        ),
+        (
+          'cmdSyntaxSectionCommands',
+          ['cmdSyntaxVerbs', 'cmdSyntaxAi', 'cmdSyntaxHistory']
+        ),
       ];
       return Container(
         width: double.infinity,
@@ -623,19 +812,32 @@ class _CommandPaneState extends State<CommandPane> {
                 color: wbc.text,
               ),
             ),
-            const SizedBox(height: 3),
-            for (final k in keys)
+            for (final (heading, keys) in sections) ...[
               Padding(
-                padding: const EdgeInsets.only(top: 1.5),
+                padding: const EdgeInsets.only(top: 5, bottom: 1),
                 child: Text(
-                  uiStrings[k]?[locale] ?? '',
+                  uiStrings[heading]?[locale] ?? '',
                   style: TextStyle(
                     fontSize: t.chrome,
-                    color: wbc.mutedText,
+                    fontWeight: FontWeight.w700,
+                    color: wbc.link,
                     fontFamilyFallback: kCjkFontFallback,
                   ),
                 ),
               ),
+              for (final k in keys)
+                Padding(
+                  padding: const EdgeInsets.only(top: 1.5),
+                  child: Text(
+                    uiStrings[k]?[locale] ?? '',
+                    style: TextStyle(
+                      fontSize: t.chrome,
+                      color: wbc.mutedText,
+                      fontFamilyFallback: kCjkFontFallback,
+                    ),
+                  ),
+                ),
+            ],
           ],
         ),
       );
@@ -1629,7 +1831,7 @@ class _MiniIcon extends StatelessWidget {
   }
 }
 
-/// . / ' ! ✶ AND OR NOT NEAR5 ? — small square buttons, not Material
+/// . / ' ! ✶ AND OR NOT NEARn ? — small square buttons, not Material
 /// chips, so the operator strip costs one line instead of three.
 class _OperatorButton extends StatelessWidget {
   const _OperatorButton({
@@ -1637,12 +1839,17 @@ class _OperatorButton extends StatelessWidget {
     required this.onTap,
     this.tooltip,
     this.selected = false,
+    this.dimmed = false,
   });
 
   final String label;
   final VoidCallback onTap;
   final String? tooltip;
   final bool selected;
+
+  /// The operator cannot do anything with the line as it stands. Drawn
+  /// back rather than disabled — see [_CommandPaneState._operatorStrip].
+  final bool dimmed;
 
   @override
   Widget build(BuildContext context) {
@@ -1654,14 +1861,23 @@ class _OperatorButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
         decoration: BoxDecoration(
           color: selected ? wbc.hoverBg : wbc.chromeBg,
-          border: Border.all(color: selected ? wbc.link : wbc.border),
+          border: Border.all(
+              color: selected
+                  ? wbc.link
+                  : dimmed
+                      ? wbc.border.withValues(alpha: 0.45)
+                      : wbc.border),
         ),
         child: Text(
           label,
           style: TextStyle(
             fontSize: t.chrome,
             fontWeight: FontWeight.w600,
-            color: selected ? wbc.link : wbc.text,
+            color: selected
+                ? wbc.link
+                : dimmed
+                    ? wbc.mutedText.withValues(alpha: 0.55)
+                    : wbc.text,
           ),
         ),
       ),
