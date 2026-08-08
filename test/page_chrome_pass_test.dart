@@ -61,6 +61,13 @@ const List<String> _passed = <String>[
   // anything (the chapter text, the auto-hide header, the auto-hide
   // bottom bar) plus every sheet the reader can open from them.
   'lib/widgets/bible_reading_pane.dart',
+  // 2026-08-09: book → chapter → verse navigation, and after the centre
+  // pane the heaviest file left (18 sites). Two entries because the
+  // picker has two hosts and only one of them is a page: it themes its
+  // own subtree, and `books_page` themes the AppBar and the ground the
+  // centred column sits on.
+  'lib/widgets/book_chapter_picker.dart',
+  'lib/pages/books_page.dart',
 ];
 
 /// Files that still carry unconverted chrome, and how much. This is the
@@ -77,7 +84,6 @@ const List<String> _passed = <String>[
 ///     to separate it; bwh11 describes a bordered popup, not a shadowed
 ///     one, so the hairline is probably enough.
 const Map<String, int> _remaining = <String, int>{
-  'lib/widgets/book_chapter_picker.dart': 18,
   'lib/widgets/analysis_tabs.dart': 11,
   'lib/widgets/related_verses_pane.dart': 8,
   'lib/pages/map_viewer_page.dart': 7,

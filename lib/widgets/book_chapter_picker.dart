@@ -1,4 +1,42 @@
-import 'dart:ui';
+/// Book → chapter → verse navigation.
+///
+/// 2026-08-09 (task #279): this is the surface BibleWorks puts in the
+/// Browse Window Header — the version/book/chapter/verse list boxes that
+/// let you *"lookup various Bible references without doing any typing"*
+/// (bwh11). Ours is a pushed page rather than an inline header, and that
+/// stays: where the picker LIVES is layout, and this pass changes chrome.
+///
+/// What it does change is that the picker was the app's densest surviving
+/// piece of YsWords — eighteen rounded/elevated sites, the most of any
+/// file left in `lib/`. Three things came out of it:
+///
+///   * `BooksGlassSurface`, an 18px-radius panel over an
+///     `ImageFilter.blur(18)` backdrop, filled at ~0.78 alpha and lifted
+///     on a 24px shadow. The blur and the shadow were doing ONE job
+///     between them — keeping the bar legible while the book list scrolled
+///     under it — and the workbench allows neither, so the fill is opaque
+///     and the separation is the hairline it sits on. That also retires a
+///     `BackdropFilter` that was re-blurring on every scroll frame.
+///   * Three implementations of "a number in a box": `_chapterTile` (a
+///     `Card` at elevation 1), `_gridChapterTile` (a `Material` that rose
+///     to 1.5 when selected) and `_VersePickerChip` (a `primaryContainer`
+///     pill). They rendered the same thing three ways, which is how a
+///     picker starts feeling like three pickers. Now one [_NumberTile] —
+///     and it carries the tabular figures none of them had, which is what
+///     a grid of 1 / 11 / 111 actually needs.
+///   * Saturated fills for "this is the one you are on". Psalm 119 drew
+///     176 `primaryContainer` chips; the workbench spends saturation on
+///     exactly two things, the version tag and the link. Current book and
+///     current chapter now read as [WbColors.selectionBg] under a
+///     link-coloured hairline — the same "selected row" the Browse window
+///     uses.
+///
+/// It re-applies [workbenchTheme] to its own subtree rather than trusting
+/// its host, because it has two live ones: [BooksPage] (pushed from the
+/// workbench menu and the reading pane) and the classic reader's
+/// `SidebarPanel` at sub-desktop widths. Only one of those could have
+/// been wrapped from outside, and 护眼纸质 has to reach both.
+library;
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -10,10 +48,12 @@ import 'package:scroll_to_index/scroll_to_index.dart';
 import 'package:seeksparks/constants/book_groups.dart'
     show oldTestamentBooks, newTestamentBooks;
 import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/utils/responsive.dart';
 import 'package:seeksparks/utils/version_mapper.dart' show toEnglish;
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:seeksparks/widgets/wb_surfaces.dart' show WbTag;
 
 class BookChapterPicker extends StatefulWidget {
   final String currentBook;
@@ -240,6 +280,25 @@ class _BookChapterPickerState extends State<BookChapterPicker> {
   Widget build(BuildContext context) {
     final settings = Provider.of<AppSettings>(context);
 
+    // The theme is re-applied here rather than by a host: see the library
+    // comment. `ColoredBox` under it because the book list paints no
+    // ground of its own, so without one the host's Material 3 surface
+    // shows between the rows — a white list under a workbench header.
+    return Theme(
+      data: workbenchTheme(
+        Theme.of(context),
+        paper: settings.readingPaperTheme,
+      ),
+      child: Builder(
+        builder: (themedContext) => ColoredBox(
+          color: WbColors.of(themedContext).paneBg,
+          child: _buildBody(themedContext, settings),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBody(BuildContext context, AppSettings settings) {
     return Consumer<MainProvider>(
       builder: (context, mainProvider, child) {
         // 2026-06-28: keep the testament toggle in sync with the CURRENT
@@ -285,14 +344,11 @@ class _BookChapterPickerState extends State<BookChapterPicker> {
               : !_isOldTestament(book.title);
         }).toList();
 
+        final wb = WbColors.of(context);
+
         return Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 8, 12, 6),
-              child: BooksGlassSurface(
-                child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            _PickerBar(
                   child: LayoutBuilder(
                     builder: (context, barConstraints) {
                       final isNarrow = barConstraints.maxWidth < 300;
@@ -316,7 +372,15 @@ class _BookChapterPickerState extends State<BookChapterPicker> {
                             }
                           });
                         },
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.zero,
+                        borderColor: wb.border,
+                        selectedBorderColor: wb.link,
+                        borderWidth: WbMetrics.hairline,
+                        color: wb.mutedText,
+                        selectedColor: wb.text,
+                        fillColor: wb.selectionBg,
+                        hoverColor: wb.hoverBg,
+                        splashColor: Colors.transparent,
                         constraints: BoxConstraints(
                             minWidth: 42 * settings.menuScale, minHeight: 36 * settings.menuScale),
                         children: [
@@ -438,8 +502,6 @@ class _BookChapterPickerState extends State<BookChapterPicker> {
                       );
                     },
                   ),
-                ),
-              ),
             ),
             Expanded(
               child: settings.booksViewMode == 'grid'
@@ -504,7 +566,7 @@ class _BookChapterPickerState extends State<BookChapterPicker> {
     required MainProvider mainProvider,
     required AppSettings settings,
   }) {
-    final scheme = Theme.of(context).colorScheme;
+    final wb = WbColors.of(context);
     final locale = settings.locale;
     final book = _verseStepBook!;
     final chapter = _verseStepChapter!;
@@ -514,12 +576,7 @@ class _BookChapterPickerState extends State<BookChapterPicker> {
       ..sort((a, b) => a.verse.compareTo(b.verse));
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(12, 8, 12, 6),
-          child: BooksGlassSurface(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 8, vertical: 6),
+        _PickerBar(
               child: Row(
                 children: [
                   IconButton(
@@ -536,29 +593,26 @@ class _BookChapterPickerState extends State<BookChapterPicker> {
                         fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
                         fontSize: settings.fontSize,
                         fontWeight: FontWeight.w700,
-                        color: scheme.onSurface,
+                        color: wb.text,
                       ),
+                    ),
+                  ),
+                  // Which chapter's verses these are. It was a separate
+                  // line under the bar; on the strip it sits where the
+                  // Browse window puts its reference, and the grid gets
+                  // that row of vertical space back.
+                  Text(
+                    '$book $chapter',
+                    style: TextStyle(
+                      fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
+                      fontSize: (settings.fontSize - 2).clamp(12.0, 16.0),
+                      color: wb.mutedText,
                     ),
                   ),
                 ],
               ),
-            ),
-          ),
         ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              '$book  $chapter',
-              style: TextStyle(
-                fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                fontSize: (settings.fontSize - 2).clamp(12.0, 16.0),
-                color: scheme.onSurfaceVariant,
-              ),
-            ),
-          ),
-        ),
+        const SizedBox(height: 8),
         Expanded(
           child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
@@ -582,21 +636,21 @@ class _BookChapterPickerState extends State<BookChapterPicker> {
                   children: [
                     SizedBox(
                       width: tileW * 2 + gap,
-                      child: _VersePickerChip(
+                      child: _NumberTile(
                         label: uiStrings['versePickerTop']?[locale] ??
                             'Top',
-                        color: scheme.surfaceContainerHigh,
-                        fg: scheme.onSurface,
+                        selected: false,
+                        fontSize: 13,
                         onTap: () => _onVersePicked(mainProvider, 0),
                       ),
                     ),
                     for (final v in verses)
                       SizedBox(
                         width: tileW,
-                        child: _VersePickerChip(
+                        child: _NumberTile(
                           label: '${v.verse}',
-                          color: scheme.primaryContainer,
-                          fg: scheme.onPrimaryContainer,
+                          selected: false,
+                          fontSize: 13,
                           onTap: () =>
                               _onVersePicked(mainProvider, v.verse),
                         ),
@@ -618,20 +672,21 @@ class _BookChapterPickerState extends State<BookChapterPicker> {
     required String label,
     required VoidCallback onPressed,
   }) {
-    final scheme = Theme.of(context).colorScheme;
+    final wb = WbColors.of(context);
+    // Three cues, not one: the fill steps in VALUE, the hairline picks up
+    // the link colour, the ink goes from muted to full. A single saturated
+    // fill would have been the fourth saturated thing in a window that
+    // allows two, and value steps are what the workbench reads as state.
     return TextButton(
       onPressed: onPressed,
       style: TextButton.styleFrom(
-        backgroundColor: selected
-            ? scheme.primary.withValues(alpha: 0.92)
-            : scheme.surfaceContainerHighest.withValues(alpha: 0.52),
-        foregroundColor: selected ? scheme.onPrimary : scheme.onSurface,
+        backgroundColor: selected ? wb.selectionBg : wb.paneAltBg,
+        foregroundColor: selected ? wb.text : wb.mutedText,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.zero,
           side: BorderSide(
-            color: selected
-                ? scheme.primary
-                : scheme.outlineVariant.withValues(alpha: 0.45),
+            color: selected ? wb.link : wb.border,
+            width: WbMetrics.hairline,
           ),
         ),
         padding: EdgeInsets.symmetric(
@@ -652,7 +707,7 @@ class _BookChapterPickerState extends State<BookChapterPicker> {
         style: TextStyle(
           fontSize: settings.fontSize.clamp(13.0, 17.0).toDouble(),
           fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-          fontWeight: FontWeight.w700,
+          fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
         ),
       ),
       ),
@@ -681,7 +736,7 @@ class _BookChapterPickerState extends State<BookChapterPicker> {
 
   Widget _buildListView(BuildContext context, MainProvider mainProvider,
       AppSettings settings, List<Book> filteredBooks) {
-    final scheme = Theme.of(context).colorScheme;
+    final wb = WbColors.of(context);
     return ListView.builder(
       itemCount: filteredBooks.length,
       physics: const BouncingScrollPhysics(),
@@ -698,8 +753,11 @@ class _BookChapterPickerState extends State<BookChapterPicker> {
                 : BoxDecoration(
                     border: Border(
                       bottom: BorderSide(
-                        color: Theme.of(context).dividerColor,
-                        width: 0.3,
+                        color: wb.border,
+                        // Was 0.3 — a third of a hairline, which on a
+                        // 1.0 devicePixelRatio display is a grey wash
+                        // rather than a rule.
+                        width: WbMetrics.hairline,
                       ),
                     ),
                   ),
@@ -708,17 +766,20 @@ class _BookChapterPickerState extends State<BookChapterPicker> {
                 expansionTileTheme: const ExpansionTileThemeData(),
               ),
               child: ExpansionTile(
-                textColor: scheme.primary,
-                iconColor: scheme.primary,
+                textColor: wb.link,
+                iconColor: wb.link,
                 title: Text(
                   book.title,
                   style: TextStyle(
                       fontSize: settings.fontSize,
                       fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
                       decoration: TextDecoration.none,
+                      fontWeight: expandStatus[book.title] == true
+                          ? FontWeight.w700
+                          : FontWeight.w400,
                       color: expandStatus[book.title] == true
-                          ? scheme.primary
-                          : scheme.onSurface),
+                          ? wb.link
+                          : wb.text),
                 ),
                 initiallyExpanded: expandStatus[book.title] ?? false,
                 maintainState: true,
@@ -740,7 +801,7 @@ class _BookChapterPickerState extends State<BookChapterPicker> {
 
   Widget _buildGridView(BuildContext context, MainProvider mainProvider,
       AppSettings settings, List<Book> filteredBooks) {
-    final scheme = Theme.of(context).colorScheme;
+    final wb = WbColors.of(context);
 
     if (_gridSelectedBook != null) {
       final book =
@@ -748,20 +809,13 @@ class _BookChapterPickerState extends State<BookChapterPicker> {
       if (book != null) {
         return Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
-              child: BooksGlassSurface(
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(18),
+            _PickerBar(
                   onTap: () => setState(() => _gridSelectedBook = null),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 12),
                     child: Row(
                       children: [
                         Icon(Icons.arrow_back_rounded,
                             size: settings.fontSize * 1.1,
-                            color: scheme.onSurface),
+                            color: wb.text),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
@@ -770,33 +824,17 @@ class _BookChapterPickerState extends State<BookChapterPicker> {
                               fontSize: settings.fontSize * 1.1,
                               fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
                               fontWeight: FontWeight.w600,
-                              color: scheme.onSurface,
+                              color: wb.text,
                             ),
                           ),
                         ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: scheme.primaryContainer,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            '${book.chapters.length} '
-                            '${uiStrings['chapters']?[settings.locale] ?? 'ch'}',
-                            style: TextStyle(
-                              fontSize: settings.fontSize * 0.75,
-                              fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                              color: scheme.onPrimaryContainer,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
+                        WbTag(
+                          text: '${book.chapters.length} '
+                              '${uiStrings['chapters']?[settings.locale] ?? 'ch'}',
+                          dense: false,
                         ),
                       ],
                     ),
-                  ),
-                ),
-              ),
             ),
             Expanded(
               child: LayoutBuilder(builder: (context, constraints) {
@@ -818,7 +856,7 @@ class _BookChapterPickerState extends State<BookChapterPicker> {
                         chapter.title == widget.currentChapter &&
                             widget.currentBook == book.title;
                     return _gridChapterTile(context, mainProvider, settings,
-                        book, chapter, selected, scheme);
+                        book, chapter, selected);
                   },
                 );
               }),
@@ -843,38 +881,37 @@ class _BookChapterPickerState extends State<BookChapterPicker> {
         itemBuilder: (context, index) {
           final book = filteredBooks[index];
           final isCurrent = widget.currentBook == book.title;
-          return _bookTile(context, settings, book, isCurrent, scheme);
+          return _bookTile(context, settings, book, isCurrent, wb);
         },
       );
     });
   }
 
   Widget _bookTile(BuildContext context, AppSettings settings, Book book,
-      bool isCurrent, ColorScheme scheme) {
-    final bgColor = isCurrent
-        ? scheme.primary.withValues(alpha: 0.92)
-        : scheme.surfaceContainerHighest.withValues(alpha: 0.62);
-    final fgColor = isCurrent ? scheme.onPrimary : scheme.onSurface;
+      bool isCurrent, WbColors wb) {
+    // The fill and the border used to be declared twice — once on the
+    // `Material`, once on an inner `Container` — so the hairline was drawn
+    // INSIDE a rounded fill and read as two edges. One `shape` on the
+    // Material is both, once.
+    final fgColor = wb.text;
     final shortName = _shortBookTitle(book.title);
     return Tooltip(
       message: book.title,
       child: Material(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(8),
-        elevation: 0,
+        color: isCurrent ? wb.selectionBg : wb.paneAltBg,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.zero,
+          side: BorderSide(
+            color: isCurrent ? wb.link : wb.border,
+            width: WbMetrics.hairline,
+          ),
+        ),
         child: InkWell(
-          borderRadius: BorderRadius.circular(8),
           onTap: () => setState(() => _gridSelectedBook = book.title),
+          hoverColor: wb.hoverBg,
+          splashColor: Colors.transparent,
+          highlightColor: Colors.transparent,
           child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: isCurrent
-                    ? scheme.primary
-                    : scheme.outlineVariant.withValues(alpha: 0.35),
-                width: 1,
-              ),
-            ),
             alignment: Alignment.center,
             // 2026-06-30: even padding so the glyph is centred with
             // consistent breathing room on all four sides.
@@ -989,44 +1026,19 @@ class _BookChapterPickerState extends State<BookChapterPicker> {
     return abbr[title] ?? title;
   }
 
+  /// A chapter number in the grid view. Sized by the `GridView` cell.
   Widget _gridChapterTile(
       BuildContext context,
       MainProvider mainProvider,
       AppSettings settings,
       Book book,
       Chapter chapter,
-      bool selected,
-      ColorScheme scheme) {
-    return Material(
-      color: selected ? scheme.primary : scheme.surfaceContainerHighest,
-      borderRadius: BorderRadius.circular(10),
-      elevation: selected ? 1.5 : 0,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(10),
-        onTap: () => _selectChapter(
-            mainProvider, book.title, chapter.title),
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: selected
-                  ? scheme.primary
-                  : scheme.outlineVariant.withValues(alpha: 0.4),
-              width: 1,
-            ),
-          ),
-          alignment: Alignment.center,
-          child: Text(
-            chapter.title.toString(),
-            style: TextStyle(
-              fontSize: settings.fontSize * 0.95,
-              fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-              color: selected ? scheme.onPrimary : scheme.onSurface,
-            ),
-          ),
-        ),
-      ),
+      bool selected) {
+    return _NumberTile(
+      label: chapter.title.toString(),
+      selected: selected,
+      fontSize: settings.fontSize * 0.95,
+      onTap: () => _selectChapter(mainProvider, book.title, chapter.title),
     );
   }
 
@@ -1039,21 +1051,23 @@ class _BookChapterPickerState extends State<BookChapterPicker> {
         final selected =
             chapter.title == widget.currentChapter &&
                 widget.currentBook == book.title;
-        final scheme = Theme.of(context).colorScheme;
         return _chapterTile(
-            context, mainProvider, settings, book, chapter, selected, scheme);
+            context, mainProvider, settings, book, chapter, selected);
       }),
     );
   }
 
+  /// The same chapter number under an expanded book in the LIST view.
+  /// Only the sizing differs — a fixed square from the breakpoint table
+  /// rather than a grid cell — which is why the two share [_NumberTile]
+  /// but not a call site.
   Widget _chapterTile(
       BuildContext context,
       MainProvider mainProvider,
       AppSettings settings,
       Book book,
       Chapter chapter,
-      bool selected,
-      ColorScheme scheme) {
+      bool selected) {
     final dc = ResponsiveBreakpoints.classOf(
         MediaQuery.of(context).size.width);
     final tileSize = ResponsiveBreakpoints.chapterTileSize(dc);
@@ -1062,27 +1076,11 @@ class _BookChapterPickerState extends State<BookChapterPicker> {
       child: SizedBox(
         height: tileSize,
         width: tileSize,
-        child: Card(
-          color: selected ? scheme.primary : null,
-          elevation: 1,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(10),
-            onTap: () => _selectChapter(
-                mainProvider, book.title, chapter.title),
-            child: Center(
-              child: Text(
-                chapter.title.toString(),
-                style: TextStyle(
-                  fontSize: settings.fontSize * 0.9,
-                  fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                  color: selected ? scheme.onPrimary : scheme.onSurface,
-                ),
-              ),
-            ),
-          ),
+        child: _NumberTile(
+          label: chapter.title.toString(),
+          selected: selected,
+          fontSize: settings.fontSize * 0.9,
+          onTap: () => _selectChapter(mainProvider, book.title, chapter.title),
         ),
       ),
     );
@@ -1094,77 +1092,112 @@ class _BookChapterPickerState extends State<BookChapterPicker> {
   }
 }
 
-class BooksGlassSurface extends StatelessWidget {
+/// The picker's header strip — testament + view toggle, the verse-step
+/// title, the "back to books" row in grid mode.
+///
+/// Replaces `BooksGlassSurface`; the library comment says what that was
+/// and why the blur went with the shadow rather than after it. It bleeds
+/// to both edges now instead of floating inside a 12px inset, because a
+/// hairline that stops short of the edge reads as a box that failed to
+/// close — the same shape `WbPaneTitle` gives a pane.
+class _PickerBar extends StatelessWidget {
+  const _PickerBar({required this.child, this.onTap});
+
   final Widget child;
 
-  const BooksGlassSurface({super.key, required this.child});
+  /// Makes the whole strip a control (the "back to books" row). It hovers
+  /// rather than ripples, like every other clickable thing here.
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(18),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: scheme.surface.withValues(alpha: isDark ? 0.72 : 0.78),
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(
-              color:
-                  scheme.outlineVariant.withValues(alpha: isDark ? 0.35 : 0.6),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: scheme.shadow.withValues(alpha: isDark ? 0.22 : 0.12),
-                blurRadius: 24,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
-          child: child,
+    final wb = WbColors.of(context);
+    final body = Container(
+      padding: const EdgeInsets.fromLTRB(10, 6, 10, 6),
+      decoration: BoxDecoration(
+        // Opaque, not the old 0.78. The translucency only worked because
+        // a 24px shadow separated the strip from the list scrolling under
+        // it; with the shadow gone a hairline cannot also hide bleed.
+        color: onTap == null ? wb.chromeBg : null,
+        border: Border(
+          bottom: BorderSide(color: wb.border, width: WbMetrics.hairline),
         ),
+      ),
+      child: child,
+    );
+    if (onTap == null) return body;
+    return Material(
+      color: wb.chromeBg,
+      child: InkWell(
+        onTap: onTap,
+        hoverColor: wb.hoverBg,
+        splashColor: Colors.transparent,
+        highlightColor: Colors.transparent,
+        child: body,
       ),
     );
   }
 }
 
-/// Small tappable verse-number chip used in the verse picker
-/// modal. Mirrors the styling of the chapter chips so users
-/// can transfer their muscle memory.
-class _VersePickerChip extends StatelessWidget {
-  final String label;
-  final Color color;
-  final Color fg;
-  final VoidCallback onTap;
-  const _VersePickerChip({
+/// One number in a grid — a chapter, or a verse.
+///
+/// The single implementation behind what were three (see the library
+/// comment). Selected means "the chapter you are reading": a step in
+/// VALUE to [WbColors.selectionBg] under a link-coloured hairline, which
+/// is what the Browse window's current row already looks like, rather
+/// than the saturated fill each of the three used to reach for.
+///
+/// [FontFeature.tabularFigures] is the part none of them had and a grid
+/// of numbers most needs: without it `1`, `11` and `111` set at
+/// proportional widths and the column of centred digits wanders.
+class _NumberTile extends StatelessWidget {
+  const _NumberTile({
     required this.label,
-    required this.color,
-    required this.fg,
+    required this.selected,
+    required this.fontSize,
     required this.onTap,
   });
 
+  final String label;
+  final bool selected;
+  final double fontSize;
+  final VoidCallback onTap;
+
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        constraints: const BoxConstraints(minWidth: 38, minHeight: 36),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(8),
+    final wb = WbColors.of(context);
+    return Material(
+      color: selected ? wb.selectionBg : wb.paneAltBg,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.zero,
+        side: BorderSide(
+          color: selected ? wb.link : wb.border,
+          width: WbMetrics.hairline,
         ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w700,
-            color: fg,
-            fontFeatures: const [FontFeature.tabularFigures()],
+      ),
+      child: InkWell(
+        onTap: onTap,
+        hoverColor: wb.hoverBg,
+        splashColor: Colors.transparent,
+        highlightColor: Colors.transparent,
+        child: Container(
+          constraints: const BoxConstraints(minWidth: 38, minHeight: 36),
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+          alignment: Alignment.center,
+          child: Text(
+            label,
+            maxLines: 1,
+            // No `fontFamily`: naming one would restrict CanvasKit to that
+            // face plus its explicit fallbacks, and this tile also carries
+            // the localised "Top" label. Inheriting the theme's chain keeps
+            // the CJK and Hebrew faces reachable.
+            style: TextStyle(
+              fontSize: fontSize,
+              height: 1.0,
+              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+              color: wb.text,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
           ),
         ),
       ),

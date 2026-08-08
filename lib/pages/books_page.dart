@@ -8,8 +8,16 @@ import 'package:seeksparks/widgets/home_icon_button.dart';
 import 'package:seeksparks/widgets/language_switcher_button.dart';
 import 'package:seeksparks/widgets/localized_back_button.dart';
 import 'package:seeksparks/widgets/book_chapter_picker.dart';
+import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/utils/responsive.dart';
 
+/// 2026-08-09 (task #279): the page shell around [BookChapterPicker].
+///
+/// The picker themes its own subtree — it has a second host — but the
+/// AppBar and the ground the centred column sits on are this page's, so
+/// the theme is applied here too. Re-applying is idempotent: it reads
+/// brightness off the parent and the paper flag off settings, both
+/// unchanged by the inner call.
 class BooksPage extends StatelessWidget {
   final int chapterIdx;
   final String bookIdx;
@@ -38,6 +46,24 @@ class BooksPage extends StatelessWidget {
   Widget _buildContent(BuildContext context, MainProvider mainProvider) {
     final settings = Provider.of<AppSettings>(context);
 
+    return Theme(
+      data: workbenchTheme(
+        Theme.of(context),
+        paper: settings.readingPaperTheme,
+      ),
+      child: Builder(
+        builder: (context) =>
+            _buildScaffold(context, mainProvider, settings),
+      ),
+    );
+  }
+
+  Widget _buildScaffold(
+      BuildContext context, MainProvider mainProvider, AppSettings settings) {
+    final wb = WbColors.of(context);
+    final wide = ResponsiveBreakpoints.isTabletOrWider(
+        MediaQuery.of(context).size.width);
+
     return GestureDetector(
       onHorizontalDragEnd: (details) {
         final velocity = details.primaryVelocity ?? 0;
@@ -53,13 +79,22 @@ class BooksPage extends StatelessWidget {
           actions: const [LanguageSwitcherButton(), HomeIconButton()],
         ),
         body: Center(
-          child: ConstrainedBox(
+          child: Container(
             constraints: BoxConstraints(
-              maxWidth: ResponsiveBreakpoints.isTabletOrWider(
-                      MediaQuery.of(context).size.width)
-                  ? 800
-                  : double.infinity,
+              maxWidth: wide ? 800 : double.infinity,
             ),
+            // The 800px cap has always been here; until the ground went
+            // neutral there was nothing to see it against. Hairline sides
+            // turn the gutters into a margin around a panel instead of two
+            // unexplained empty strips.
+            decoration: wide
+                ? BoxDecoration(
+                    border: Border.symmetric(
+                      vertical: BorderSide(
+                          color: wb.border, width: WbMetrics.hairline),
+                    ),
+                  )
+                : null,
             child: BookChapterPicker(
               currentBook: bookIdx,
               currentChapter: chapterIdx,
