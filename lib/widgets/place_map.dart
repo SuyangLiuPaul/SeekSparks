@@ -1,4 +1,4 @@
-/// 2026-08-08 (SeekSparks): the passage map.
+/// 2026-08-08 (SeekSparks): the map canvas.
 ///
 /// This is the half of the Places feature that a 320 px column cannot
 /// do. The Analysis tab answers *which* places a passage names; a list
@@ -7,12 +7,21 @@
 /// the known world is the entire narrative premise of Jonah, and no list
 /// of two names will ever say it.
 ///
-/// So the map takes the centre pane, where there is room for it, and it
-/// is deliberately **not** a fourth `WbCentreMode`. The three centre
-/// modes are persisted, and a persisted map mode would mean an app that
-/// reopens onto a coastline instead of onto scripture. This is a lens
-/// the reader holds up and puts down: opened from the Places tab, closed
-/// back to whatever text mode was underneath.
+/// 2026-08-09: it shipped as a lens over the workbench's centre pane and
+/// now has exactly one host, `AtlasPage` — the user's decision on
+/// DELETION-REVIEW §4 is that there is **one** map surface and it opens
+/// from Resources, the shape `bwh07` files maps under too. So the two
+/// place lists are named for what they do to the drawing rather than for
+/// where a passage put them: [emphasised] is whatever the reader is
+/// asking about (a passage's places, or a search's hits), [muted] is the
+/// geography around it.
+///
+/// The view is driven by two tokens rather than by comparing the lists
+/// it was handed. A host that rebuilds — and this one rebuilds on every
+/// keystroke — hands over fresh list instances every time, so an identity
+/// check would re-fit the map out from under a reader mid-pan. The host
+/// says when to re-fit ([fitToken]) and when to recentre ([focusToken]),
+/// and says nothing the rest of the time.
 library;
 
 import 'package:flutter/gestures.dart' show PointerScrollEvent;
@@ -22,42 +31,65 @@ import 'package:seeksparks/constants/book_name_mapping.dart' show BookScript;
 import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/bible_place.dart';
+import 'package:seeksparks/utils/atlas_index.dart' show labelPriority;
+import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 import 'package:seeksparks/utils/place_geo.dart';
 
-/// The passage map: base geography, the places the passage names, and a
-/// ruler between them.
+/// Base geography, the places asked about, and a ruler between them.
 class PlaceMapView extends StatefulWidget {
   const PlaceMapView({
     super.key,
     required this.title,
-    required this.inVerse,
-    required this.inChapter,
+    required this.emphasised,
+    required this.muted,
     required this.baseMap,
     required this.script,
     required this.locale,
     required this.selectedId,
     required this.onSelect,
-    required this.onClose,
+    this.onClose,
+    this.fitToken = 0,
+    this.focusToken = 0,
     this.attribution = '',
   });
 
-  /// The reference this map is of — printed in the header so a map
-  /// detached from the text still says what it is a map of.
+  /// What this map is of — printed in the header so a map detached from
+  /// the text still says what it is showing.
   final String title;
 
-  /// Places named in the focused verse. Drawn emphasised.
-  final List<BiblePlace> inVerse;
+  /// What the reader asked about: the passage's places, or a search's
+  /// hits. Drawn larger, labelled first, and what the map fits itself to.
+  final List<BiblePlace> emphasised;
 
-  /// Places named elsewhere in the chapter. Drawn muted, because they
-  /// are context rather than the subject.
-  final List<BiblePlace> inChapter;
+  /// The geography around it. Drawn small, labelled with whatever room
+  /// is left over.
+  final List<BiblePlace> muted;
 
   final BaseMap baseMap;
   final BookScript script;
   final String locale;
   final String? selectedId;
   final ValueChanged<String?> onSelect;
-  final VoidCallback onClose;
+
+  /// Absent when the map is the surface rather than a lens over one.
+  final VoidCallback? onClose;
+
+  /// Bump to re-fit the view to [emphasised] (or to [muted] when nothing
+  /// is emphasised). The host bumps it when the *question* changes — a
+  /// new search, a new scope — and not when the answer is merely
+  /// re-rendered.
+  final int fitToken;
+
+  /// Bump to bring [selectedId] into view without otherwise disturbing
+  /// the reader's pan and zoom.
+  ///
+  /// Separate from the selection itself because the two directions are
+  /// not symmetric: picking a name out of the index means "show me where
+  /// this is", while tapping a dot on the map means "tell me about the
+  /// thing already under my finger" — and recentring on the second would
+  /// snatch the map away from the point that was just clicked.
+  final int focusToken;
+
   final String attribution;
 
   @override
@@ -82,34 +114,73 @@ class _PlaceMapViewState extends State<PlaceMapView> {
   double? _panStartLon;
 
   List<BiblePlace> get _located => <BiblePlace>[
-        for (final p in widget.inVerse)
+        for (final p in widget.emphasised)
           if (p.located) p,
-        for (final p in widget.inChapter)
+        for (final p in widget.muted)
           if (p.located) p,
       ];
 
   int get _unlocatedCount =>
-      widget.inVerse.where((p) => !p.located).length +
-      widget.inChapter.where((p) => !p.located).length;
+      widget.emphasised.where((p) => !p.located).length +
+      widget.muted.where((p) => !p.located).length;
 
   @override
   void didUpdateWidget(PlaceMapView old) {
     super.didUpdateWidget(old);
-    if (old.inVerse != widget.inVerse || old.inChapter != widget.inChapter) {
+    if (old.fitToken != widget.fitToken) {
       _touched = false;
       _proj = null;
+    } else if (old.focusToken != widget.focusToken) {
+      _focusOnSelection();
     }
   }
 
-  /// Fit the passage, or fall back to the Levant.
+  /// Bring the selected place into view at a scale where "where is it"
+  /// has an answer.
   ///
-  /// The fallback matters: a chapter can name only unlocated places, and
-  /// an empty bounding box would otherwise project at infinite zoom and
-  /// paint a blank pane that looks like a crash.
+  /// Zoom is raised to a regional view but never lowered: a reader who
+  /// has zoomed into the Shephelah and then picks a name out of the index
+  /// wants that name, not their work undone.
+  void _focusOnSelection() {
+    final p = _proj;
+    final sel = _selected;
+    if (p == null || sel == null) return;
+    setState(() {
+      _touched = true;
+      _proj = p.copyWith(
+        centreLat: sel.lat!,
+        centreLon: sel.lon!,
+        pixelsPerDegreeLat:
+            p.pixelsPerDegreeLat < _regionalPpd ? _regionalPpd : null,
+      );
+    });
+  }
+
+  /// Pixels per degree of latitude for "a region, not a continent" —
+  /// about 15° across in a 600 px pane, which is Galilee-to-Sinai.
+  static const double _regionalPpd = 40.0;
+
+  /// Fit what the reader asked about, or the geography around it, or
+  /// fall back to the Levant.
+  ///
+  /// [PlaceMapView.emphasised] wins when it has anything located in it,
+  /// and that ordering is the feature: searching `Antioch` should frame
+  /// both Antiochs, not the whole gazetteer they sit in.
+  ///
+  /// The final fallback matters: a chapter can name only unlocated
+  /// places, and an empty bounding box would otherwise project at
+  /// infinite zoom and paint a blank pane that looks like a crash.
   MapProjection _fitted(Size size) {
-    final pts = <(double, double)>[
-      for (final p in _located) (p.lat!, p.lon!),
+    final subject = <(double, double)>[
+      for (final p in widget.emphasised)
+        if (p.located) (p.lat!, p.lon!),
     ];
+    final pts = subject.isNotEmpty
+        ? subject
+        : <(double, double)>[
+            for (final p in widget.muted)
+              if (p.located) (p.lat!, p.lon!),
+          ];
     final bounds = boundsOf(pts)?.padded() ??
         const GeoBounds(29.0, 32.0, 35.0, 39.0);
     return MapProjection.fit(bounds, size);
@@ -240,8 +311,8 @@ class _PlaceMapViewState extends State<PlaceMapView> {
                       size: size,
                       painter: _MapPainter(
                         base: widget.baseMap,
-                        inVerse: widget.inVerse,
-                        inChapter: widget.inChapter,
+                        emphasised: widget.emphasised,
+                        muted: widget.muted,
                         selectedId: widget.selectedId,
                         projection: proj,
                         script: widget.script,
@@ -303,13 +374,14 @@ class _PlaceMapViewState extends State<PlaceMapView> {
             ),
             const SizedBox(width: 4),
           ],
-          _flatButton(
-            context,
-            c,
-            t,
-            s('placesMapClose', 'Close map'),
-            widget.onClose,
-          ),
+          if (widget.onClose != null)
+            _flatButton(
+              context,
+              c,
+              t,
+              s('placesMapClose', 'Close map'),
+              widget.onClose!,
+            ),
         ],
       ),
     );
@@ -441,22 +513,36 @@ class _PlaceMapViewState extends State<PlaceMapView> {
       uiStrings[key]?[widget.locale] ?? fallback;
 }
 
-/// Draws the base geography and the passage's markers.
+/// Draws the base geography and the markers over it.
 class _MapPainter extends CustomPainter {
   _MapPainter({
     required this.base,
-    required this.inVerse,
-    required this.inChapter,
+    required this.emphasised,
+    required this.muted,
     required this.selectedId,
     required this.projection,
     required this.script,
     required this.colors,
     required this.labelSize,
-  });
+  }) : _labelOrder = labelPriority(emphasised, muted, selectedId: selectedId);
 
   final BaseMap base;
-  final List<BiblePlace> inVerse;
-  final List<BiblePlace> inChapter;
+  final List<BiblePlace> emphasised;
+  final List<BiblePlace> muted;
+
+  /// Who gets a label first. See [labelPriority].
+  final List<BiblePlace> _labelOrder;
+
+  /// How many labels the painter will *attempt* per frame.
+  ///
+  /// The cap counts attempts rather than labels drawn, and that is the
+  /// load-bearing detail: `TextPainter.layout` runs before the collision
+  /// test can reject a label, so counting only survivors would still lay
+  /// out all 1,228 names on a world view where nearly every one of them
+  /// collides. 220 attempts costs well under a frame and yields more
+  /// surviving labels than a map this size can legibly carry.
+  static const int _labelAttempts = 220;
+
   final String? selectedId;
   final MapProjection projection;
   final BookScript script;
@@ -502,10 +588,15 @@ class _MapPainter extends CustomPainter {
       canvas.drawPath(_path(run), river);
     }
 
-    // Chapter context first, so the verse's own places are never
-    // painted over by their background.
-    _markers(canvas, size, inChapter, emphasised: false);
-    _markers(canvas, size, inVerse, emphasised: true);
+    // Context first, so the subject is never painted over by its own
+    // background. Dots and labels are separate passes because which
+    // labels a crowded map keeps has to be decided across the whole set:
+    // drawing each layer complete meant the context layer claimed its
+    // label rectangles first and could take the name off the very place
+    // the reader was asking about.
+    _dots(canvas, size, muted, strong: false);
+    _dots(canvas, size, emphasised, strong: true);
+    _labels(canvas, size, <String>{for (final p in emphasised) p.id});
   }
 
   Path _path(List<double> run, {bool close = false}) {
@@ -528,44 +619,65 @@ class _MapPainter extends CustomPainter {
   /// Label rectangles already claimed, so labels do not overprint.
   final List<Rect> _claimed = <Rect>[];
 
-  void _markers(Canvas canvas, Size size, List<BiblePlace> places,
-      {required bool emphasised}) {
+  /// True when the marker would land outside the pane. Generous by 40 px
+  /// so a label anchored just past the edge still resolves.
+  bool _offPane(Offset o, Size size) =>
+      o.dx < -40 || o.dy < -40 || o.dx > size.width + 40 ||
+      o.dy > size.height + 40;
+
+  double _radiusFor(BiblePlace p, bool strong) =>
+      p.id == selectedId ? 5.0 : (strong ? 3.5 : 2.5);
+
+  void _dots(Canvas canvas, Size size, List<BiblePlace> places,
+      {required bool strong}) {
     for (final p in places) {
       if (!p.located) continue;
       final o = projection.project(p.lat!, p.lon!);
-      if (o.dx < -40 || o.dy < -40 || o.dx > size.width + 40 ||
-          o.dy > size.height + 40) {
-        continue;
-      }
+      if (_offPane(o, size)) continue;
       final isSel = p.id == selectedId;
-      final r = isSel ? 5.0 : (emphasised ? 3.5 : 2.5);
+      final r = _radiusFor(p, strong);
       final fill = Paint()
         ..style = PaintingStyle.fill
-        ..color = isSel
-            ? colors.link
-            : (emphasised ? colors.text : colors.mutedText);
+        ..color =
+            isSel ? colors.link : (strong ? colors.text : colors.mutedText);
 
       // A ring under the dot lifts it off a busy coastline without
       // needing a shadow, which the workbench does not use.
       canvas.drawCircle(
           o, r + 1.6, Paint()..color = colors.paneBg.withValues(alpha: 0.9));
       canvas.drawCircle(o, r, fill);
+    }
+  }
 
+  void _labels(Canvas canvas, Size size, Set<String> emphasisedIds) {
+    var attempts = 0;
+    for (final p in _labelOrder) {
+      if (attempts >= _labelAttempts) break;
+      if (!p.located) continue;
+      final o = projection.project(p.lat!, p.lon!);
+      if (_offPane(o, size)) continue;
       final label = p.displayName(script);
       if (label.isEmpty) continue;
+
+      final isSel = p.id == selectedId;
+      final strong = isSel || emphasisedIds.contains(p.id);
+      attempts++;
+
       final tp = TextPainter(
         text: TextSpan(
           text: p.ordinal == null ? label : '$label ${p.ordinal}',
           style: TextStyle(
-            fontSize: emphasised || isSel ? labelSize : labelSize - 1,
+            fontSize: strong ? labelSize : labelSize - 1,
             fontWeight: isSel ? FontWeight.w700 : FontWeight.w500,
             color: isSel ? colors.link : colors.text,
+            fontFamilyFallback: kCjkFontFallback,
           ),
         ),
         textDirection: TextDirection.ltr,
         maxLines: 1,
       )..layout();
 
+      final r = _radiusFor(p, strong);
       final at = Offset(o.dx + r + 3, o.dy - tp.height / 2);
       final rect = Rect.fromLTWH(at.dx - 1, at.dy, tp.width + 2, tp.height);
       // Unlabelled beats overprinted: two names stacked on each other
@@ -586,7 +698,7 @@ class _MapPainter extends CustomPainter {
       old.projection.pixelsPerDegreeLat != projection.pixelsPerDegreeLat ||
       old.projection.size != projection.size ||
       old.selectedId != selectedId ||
-      old.inVerse != inVerse ||
-      old.inChapter != inChapter ||
+      old.emphasised != emphasised ||
+      old.muted != muted ||
       old.script != script;
 }

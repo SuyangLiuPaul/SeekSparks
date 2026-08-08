@@ -40,6 +40,13 @@ const List<String> _passed = <String>[
   // (`showBibleTriviaSheet`) and book-filter sheet in the same file, so
   // one entry covers all three surfaces.
   'lib/pages/bible_trivia_page.dart',
+  // The Atlas is one page over three surfaces: the index column, the map
+  // canvas it drives, and the place detail — which is a column above
+  // 1180 px and a sheet below it. All three are listed, because the
+  // sheet is the one a rounded corner would creep back into.
+  'lib/pages/atlas_page.dart',
+  'lib/widgets/place_map.dart',
+  'lib/widgets/places_pane.dart',
 ];
 
 /// Strips `//` and `/* */` comments so prose about the rule — including

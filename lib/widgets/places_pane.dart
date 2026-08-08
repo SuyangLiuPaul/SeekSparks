@@ -32,8 +32,7 @@ class PlacesPane extends StatefulWidget {
     required this.verse,
     required this.locale,
     required this.script,
-    required this.selectedId,
-    required this.onOpenMap,
+    required this.onOpenAtlas,
   });
 
   final String englishBook;
@@ -46,10 +45,15 @@ class PlacesPane extends StatefulWidget {
   /// 耶路撒冷 beside 耶路撒冷 in the text, not "Jerusalem".
   final BookScript script;
 
-  final String? selectedId;
-
-  /// Opens the centre-pane map, focused on [id] when one is given.
-  final void Function(String? id) onOpenMap;
+  /// Opens the Atlas on this passage, focused on `id` when a row rather
+  /// than the header button was tapped.
+  ///
+  /// The pane hands over the places it has ALREADY loaded rather than a
+  /// reference for the Atlas to look up again. That is not an
+  /// optimisation: it is what keeps the map showing the same set the
+  /// list showed, even if the reader moves the verse underneath while
+  /// the Atlas is open.
+  final void Function(List<BiblePlace> places, String? id) onOpenAtlas;
 
   @override
   State<PlacesPane> createState() => _PlacesPaneState();
@@ -120,16 +124,18 @@ class _PlacesPaneState extends State<PlacesPane> {
           padding: const EdgeInsets.fromLTRB(8, 6, 8, 16),
           physics: const BouncingScrollPhysics(),
           children: [
-            _mapButton(c, t),
+            _mapButton(c, t, data),
             if (data.verse.isNotEmpty) ...[
               _sectionTitle(
                   c, t, _s('placesInThisVerse', 'Named in this verse')),
-              for (final p in data.verse) _row(c, t, p, emphasised: true),
+              for (final p in data.verse)
+                _row(c, t, p, data, emphasised: true),
             ],
             if (data.chapter.isNotEmpty) ...[
               _sectionTitle(c, t,
                   _s('placesInThisChapter', 'Elsewhere in this chapter')),
-              for (final p in data.chapter) _row(c, t, p, emphasised: false),
+              for (final p in data.chapter)
+                _row(c, t, p, data, emphasised: false),
             ],
             if (PlacesService.attribution.isNotEmpty)
               Padding(
@@ -150,10 +156,10 @@ class _PlacesPaneState extends State<PlacesPane> {
     );
   }
 
-  Widget _mapButton(WbColors c, WbType t) => Padding(
+  Widget _mapButton(WbColors c, WbType t, PassagePlaces data) => Padding(
         padding: const EdgeInsets.only(bottom: 8),
         child: InkWell(
-          onTap: () => widget.onOpenMap(null),
+          onTap: () => widget.onOpenAtlas(data.all, null),
           child: Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
@@ -194,8 +200,8 @@ class _PlacesPaneState extends State<PlacesPane> {
         ),
       );
 
-  Widget _row(WbColors c, WbType t, BiblePlace p, {required bool emphasised}) {
-    final selected = p.id == widget.selectedId;
+  Widget _row(WbColors c, WbType t, BiblePlace p, PassagePlaces data,
+      {required bool emphasised}) {
     final display = p.displayName(widget.script);
     // The English name is kept beside a Chinese one rather than
     // replaced by it: the gazetteer, every atlas and every commentary
@@ -204,11 +210,10 @@ class _PlacesPaneState extends State<PlacesPane> {
     final showEnglish = display != p.name;
 
     return InkWell(
-      onTap: () => widget.onOpenMap(p.id),
+      onTap: () => widget.onOpenAtlas(data.all, p.id),
       child: Container(
         margin: const EdgeInsets.only(bottom: 2),
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-        color: selected ? c.selectionBg : null,
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

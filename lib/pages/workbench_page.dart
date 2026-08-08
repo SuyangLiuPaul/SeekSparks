@@ -20,6 +20,7 @@ import 'package:seeksparks/models/original_word.dart';
 import 'package:seeksparks/models/verse.dart';
 import 'package:seeksparks/models/wb_centre_mode.dart';
 import 'package:seeksparks/pages/about_page.dart';
+import 'package:seeksparks/pages/atlas_page.dart';
 import 'package:seeksparks/pages/bible_timeline_page.dart';
 import 'package:seeksparks/pages/bible_trivia_page.dart';
 import 'package:seeksparks/pages/books_page.dart';
@@ -68,7 +69,6 @@ import 'package:seeksparks/widgets/vocabulary_pane.dart';
 import 'package:seeksparks/widgets/morph_search_pane.dart';
 import 'package:seeksparks/widgets/context_pane.dart';
 import 'package:seeksparks/widgets/places_pane.dart';
-import 'package:seeksparks/widgets/place_map.dart';
 import 'package:seeksparks/widgets/word_chart_view.dart';
 import 'package:seeksparks/constants/book_groups.dart' show oldTestamentBooks;
 import 'package:seeksparks/services/greek_stats_service.dart';
@@ -76,9 +76,7 @@ import 'package:seeksparks/services/strongs_service.dart';
 import 'package:seeksparks/utils/search_scope.dart' show kScopeAllBooks;
 import 'package:seeksparks/utils/search_stats.dart'
     show SearchDistribution, buildDistributionFromCounts;
-import 'package:seeksparks/services/places_service.dart';
 import 'package:seeksparks/models/bible_place.dart';
-import 'package:seeksparks/utils/place_geo.dart' show BaseMap;
 import 'package:seeksparks/widgets/language_switcher_button.dart';
 import 'package:seeksparks/widgets/browse_nav_strip.dart';
 import 'package:seeksparks/widgets/browse_window.dart';
@@ -245,14 +243,6 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
   AnalysisTab _analysisTab = AnalysisTab.wordStudy;
   static const _kAnalysisTabKey = 'workbench.analysisTab';
 
-  /// The map lens over the centre pane. Deliberately NOT persisted, and
-  /// deliberately not a [WbCentreMode]: a reader who opens a map to
-  /// settle where Joppa is should not find the app reopening onto a
-  /// coastline tomorrow instead of onto scripture.
-  bool _mapOpen = false;
-  String? _mapPlaceId;
-  BaseMap _baseMap = BaseMap.empty();
-
   /// The Strong's number the distribution chart is drawn for, or null
   /// when the chart is not up. A second lens over the centre pane, on
   /// the same terms as the map: deliberately NOT persisted, because a
@@ -267,28 +257,25 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
 
   void _openChart(String strongs) {
     if (strongs.isEmpty) return;
-    setState(() {
-      _chartStrongs = strongs;
-      // One lens at a time. Both draw over the centre pane, so leaving
-      // the map flag set would put the chart behind it.
-      _mapOpen = false;
-      _mapPlaceId = null;
-    });
+    setState(() => _chartStrongs = strongs);
   }
 
   void _closeChart() => setState(() => _chartStrongs = null);
 
-  void _openMap(String? id) {
-    setState(() {
-      _mapOpen = true;
-      _mapPlaceId = id;
-      _chartStrongs = null;
-    });
-    if (_baseMap.isEmpty) {
-      PlacesService.baseMap().then((m) {
-        if (mounted) setState(() => _baseMap = m);
-      });
-    }
+  /// Hand the passage's places to the Atlas.
+  ///
+  /// The map used to be a lens over this pane. It is a Resources window
+  /// now (DELETION-REVIEW §4): the verse-linked *list* stays here, where
+  /// it costs the reader nothing, and the map opens as its own surface
+  /// where it has the width to be a map. The places already loaded by
+  /// the Places tab travel with the call, so the Atlas opens framed on
+  /// the passage rather than on the whole ancient world.
+  void _openAtlas(List<BiblePlace> places, String? focusId, String label) {
+    pushPage(AtlasPage(
+      subjectPlaces: places,
+      subjectLabel: label.isEmpty ? null : label,
+      initialPlaceId: focusId,
+    ));
   }
 
   /// The search limit translated from reference keys into corpus
@@ -523,7 +510,11 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         // item OPERATES on the current text (Word List, KWIC, Phrase
         // Matching) or is a reference database you CONSULT (maps,
         // dictionaries, commentaries, the Bible Views picture set).
-        // `assets/family_tree.json` is the second kind.
+        // `assets/family_tree.json` is the second kind, and bwh07 files
+        // the map module here too — which is the whole argument for the
+        // Atlas being a window rather than a lens over the reader.
+        WbMenuItem(s('atlasTitle', 'Bible Atlas'),
+            () => pushPage(const AtlasPage())),
         WbMenuItem(s('familyTree', 'Family Tree'),
             () => pushPage(const FamilyTreePage())),
         // Separate from Family Tree on purpose: the tree is Judah's line
@@ -736,28 +727,16 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
       // lies. The preference itself is untouched and comes back when
       // the room does.
       WbStatusField(
-        // The map lens is what is on screen when it is up, so the field
-        // says so — same rule as the effective-mode one below it. Tapping
-        // it then means "put the lens down", not "cycle past it".
-        _mapOpen
-            ? s('placesMapShort', 'Map')
-            : switch (effectiveCentreMode(
-                preferred: _wb.centreMode,
-                centreWidth:
-                    _paneWidths(MediaQuery.sizeOf(context).width).centre,
-                threePane: _isThreePane(
-                    MediaQuery.sizeOf(context).width),
-              )) {
-                WbCentreMode.browse => s('parallelBrowseShort', 'Browse'),
-                WbCentreMode.reader => s('classicReaderShort', 'Reader'),
-                WbCentreMode.split => s('splitViewShort', 'Split'),
-              },
-        onTap: () => _mapOpen
-            ? setState(() {
-                _mapOpen = false;
-                _mapPlaceId = null;
-              })
-            : _setCentreMode(_nextCentreMode()),
+        switch (effectiveCentreMode(
+          preferred: _wb.centreMode,
+          centreWidth: _paneWidths(MediaQuery.sizeOf(context).width).centre,
+          threePane: _isThreePane(MediaQuery.sizeOf(context).width),
+        )) {
+          WbCentreMode.browse => s('parallelBrowseShort', 'Browse'),
+          WbCentreMode.reader => s('classicReaderShort', 'Reader'),
+          WbCentreMode.split => s('splitViewShort', 'Split'),
+        },
+        onTap: () => _setCentreMode(_nextCentreMode()),
       ),
       // bwh12's Limits field, including the reason it exists: "you may
       // have forgotten that you have search limits set." Greyed when
@@ -900,14 +879,10 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
   /// column into or out of existence with it.
   void _setCentreMode(WbCentreMode mode) {
     // Asking for a text mode is asking to see text. Without this, picking
-    // "Reader" while the map lens is up appears to do nothing, because the
-    // lens sits in front of whichever mode is underneath.
-    if (_mapOpen || _chartStrongs != null) {
-      setState(() {
-        _mapOpen = false;
-        _mapPlaceId = null;
-        _chartStrongs = null;
-      });
+    // "Reader" while the chart lens is up appears to do nothing, because
+    // the lens sits in front of whichever mode is underneath.
+    if (_chartStrongs != null) {
+      setState(() => _chartStrongs = null);
     }
     if (_wb.centreMode == mode) return;
     final wasSplit = _wb.centreMode == WbCentreMode.split;
@@ -1212,9 +1187,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
                     // holds the chapter reader always does. The
                     // preference is kept for the next screen that can
                     // honour it — see `effectiveCentreMode`.
-                    child: _mapOpen
-                        ? _buildMapFrame(context)
-                        : _chartStrongs != null
+                    child: _chartStrongs != null
                         ? _buildChartFrame(context, _chartStrongs!)
                         : switch (effectiveCentreMode(
                             preferred:
@@ -1273,62 +1246,6 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         onSearchRequested: _focusCommandLine,
         onOpenParallel: () => _setCentreMode(WbCentreMode.browse),
       );
-
-  // ── Centre: the map lens ──────────────────────────────────────────
-
-  /// The map over the centre pane, of whatever verse the Analysis panes
-  /// are already looking at. It reads the same focus the Places tab
-  /// reads, so opening the map never silently changes the subject.
-  Widget _buildMapFrame(BuildContext context) {
-    final wb = context.watch<WorkbenchProvider>();
-    final settings = context.watch<AppSettings>();
-    final locale = settings.locale;
-    final script = bookScriptFor(locale, wb.mainProvider.currentVersion);
-    final v = _analysisVerse(wb.mainProvider, wb.analysisVerses);
-    final book = v == null ? null : (bookNameToEnglish[v.book] ?? v.book);
-
-    void close() => setState(() {
-          _mapOpen = false;
-          _mapPlaceId = null;
-        });
-
-    if (book == null || v == null) {
-      // No verse in focus is a reason to go back to the text, not a
-      // reason to show an empty coastline.
-      return PlaceMapView(
-        title: '',
-        inVerse: const <BiblePlace>[],
-        inChapter: const <BiblePlace>[],
-        baseMap: _baseMap,
-        script: script,
-        locale: locale,
-        selectedId: null,
-        onSelect: (_) {},
-        onClose: close,
-        attribution: PlacesService.attribution,
-      );
-    }
-
-    return FutureBuilder<PassagePlaces>(
-      future: PlacesService.forPassage(book, v.chapter, v.verse),
-      builder: (context, snap) {
-        final data = snap.data;
-        return PlaceMapView(
-          key: ValueKey<String>('map-$book-${v.chapter}-${v.verse}'),
-          title: '${bookNameInScript(book, script)} ${v.chapter}:${v.verse}',
-          inVerse: data?.verse ?? const <BiblePlace>[],
-          inChapter: data?.chapter ?? const <BiblePlace>[],
-          baseMap: _baseMap,
-          script: script,
-          locale: locale,
-          selectedId: _mapPlaceId,
-          onSelect: (id) => setState(() => _mapPlaceId = id),
-          onClose: close,
-          attribution: PlacesService.attribution,
-        );
-      },
-    );
-  }
 
   // ── Centre: the word-distribution chart ───────────────────────────
 
@@ -2262,14 +2179,18 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         final v = _analysisVerse(mp, verses);
         if (v == null) return _analysisHint(context, locale);
         final book = bookNameToEnglish[v.book] ?? v.book;
+        final script = bookScriptFor(locale, mp.currentVersion);
         return PlacesPane(
           englishBook: book,
           chapter: v.chapter,
           verse: v.verse,
           locale: locale,
-          script: bookScriptFor(locale, mp.currentVersion),
-          selectedId: _mapOpen ? _mapPlaceId : null,
-          onOpenMap: _openMap,
+          script: script,
+          onOpenAtlas: (places, id) => _openAtlas(
+            places,
+            id,
+            '${bookNameInScript(book, script)} ${v.chapter}:${v.verse}',
+          ),
         );
     }
   }

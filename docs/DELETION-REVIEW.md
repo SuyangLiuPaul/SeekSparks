@@ -147,6 +147,25 @@ Resources too. #277's gazetteer feeds it. The verse-linked question
 ("which places does this passage mention") stays in the Analysis pane;
 only the MAP moves.
 
+**Resolved 2026-08-09 (v1.6.79).** `lib/pages/atlas_page.dart` is the one
+map surface, in Resources. The Places tab no longer names a lens over the
+centre pane; it hands the places it has already loaded to the Atlas, which
+opens filtered to that passage with a chip the reader can dismiss to get
+the whole gazetteer back. `_buildMapFrame` and the `_mapOpen` /
+`_mapPlaceId` / `_baseMap` fields are gone from the workbench.
+
+**`map_viewer_page.dart` STAYS, and the premise of this section was
+wrong.** It reads `assets/maps_index.json`, which holds 1,192 entries of
+which only **55** are bundled map images (`source: asset`); the other
+1,136 are CDN illustrations tagged `scene`, `parable` or `teaching`. It
+is an illustration viewer with 55 maps in it, not a second atlas — which
+is also why its ui_strings key is `maps` = 插图 / Illustrations. Deleting
+it to satisfy "one map surface" would have taken 1,136 pictures with it.
+The two surfaces do not overlap: the Atlas draws the gazetteer's 1,271
+named places from coordinates, the viewer shows pictures. Conservative
+call, taken without a human in the loop, and recorded here so it is not
+re-litigated from the name alone.
+
 ---
 
 ## 5. Repo weight that is not shipped

@@ -1,10 +1,15 @@
-/// The Places tab and the map lens, mounted against the REAL gazetteer.
+/// The Places tab and the map canvas, mounted against the REAL gazetteer.
 ///
 /// `places_service_test.dart` pins the inversion and `place_geo_test.dart`
 /// pins the projection. Neither mounts anything, and the two ways this
 /// feature breaks in practice are both layout: the list overflowing the
 /// 320 px Analysis pane, and the map painting nothing because the
 /// projection was never built.
+///
+/// 2026-08-09: the map moved out of the centre pane and into `AtlasPage`
+/// (DELETION-REVIEW §4), so the pane now hands its loaded places to the
+/// caller instead of naming a lens, and the canvas is driven by tokens
+/// rather than by whether its lists changed identity.
 library;
 
 import 'package:flutter/material.dart';
@@ -58,8 +63,7 @@ void main() {
           verse: 3,
           locale: locale,
           script: script,
-          selectedId: null,
-          onOpenMap: (_) {},
+          onOpenAtlas: (_, __) {},
         );
 
     for (final width in const [320.0, 560.0]) {
@@ -95,9 +99,10 @@ void main() {
       expect(find.text('本节地名'), findsOneWidget);
     });
 
-    testWidgets('tapping a place asks for the map, with that place',
-        (tester) async {
+    testWidgets('tapping a place asks for the Atlas, with that place and '
+        'the passage it came from', (tester) async {
       String? asked;
+      List<BiblePlace>? handed;
       var calls = 0;
       await tester.pumpWidget(host(PlacesPane(
         englishBook: 'Jonah',
@@ -105,9 +110,9 @@ void main() {
         verse: 3,
         locale: 'en',
         script: BookScript.english,
-        selectedId: null,
-        onOpenMap: (id) {
+        onOpenAtlas: (places, id) {
           asked = id;
+          handed = places;
           calls++;
         },
       )));
@@ -118,8 +123,12 @@ void main() {
       expect(calls, 1);
       expect(asked, isNotNull);
       expect(asked, contains('Joppa'));
+      // The pane hands over what it already loaded, so the Atlas opens
+      // framed on the passage rather than on the whole ancient world.
+      expect(handed, isNotNull);
+      expect(handed!.map((p) => p.name), contains('Tarshish'));
 
-      // The header button opens the map without preselecting anything.
+      // The header button opens the Atlas without preselecting anything.
       await tester.tap(find.text('Show on map'));
       await settle(tester);
       expect(calls, 2);
@@ -134,8 +143,7 @@ void main() {
         verse: 1,
         locale: 'en',
         script: BookScript.english,
-        selectedId: null,
-        onOpenMap: _ignore,
+        onOpenAtlas: _ignore,
       )));
       await settle(tester);
 
@@ -145,17 +153,25 @@ void main() {
   });
 
   group('PlaceMapView', () {
-    Widget map({String? selectedId, ValueChanged<String?>? onSelect}) =>
+    Widget map({
+      String? selectedId,
+      ValueChanged<String?>? onSelect,
+      VoidCallback? onClose,
+      int fitToken = 0,
+      int focusToken = 0,
+    }) =>
         PlaceMapView(
           title: 'Jonah 1:3',
-          inVerse: jonah1.where((p) => p.name == 'Joppa').toList(),
-          inChapter: jonah1.where((p) => p.name != 'Joppa').toList(),
+          emphasised: jonah1.where((p) => p.name == 'Joppa').toList(),
+          muted: jonah1.where((p) => p.name != 'Joppa').toList(),
           baseMap: baseMap,
           script: BookScript.english,
           locale: 'en',
           selectedId: selectedId,
           onSelect: onSelect ?? (_) {},
-          onClose: () {},
+          onClose: onClose ?? () {},
+          fitToken: fitToken,
+          focusToken: focusToken,
           attribution: PlacesService.attribution,
         );
 
@@ -189,8 +205,8 @@ void main() {
       await tester.pumpWidget(host(
         PlaceMapView(
           title: 'Philemon 1:1',
-          inVerse: const <BiblePlace>[],
-          inChapter: const <BiblePlace>[],
+          emphasised: const <BiblePlace>[],
+          muted: const <BiblePlace>[],
           baseMap: baseMap,
           script: BookScript.english,
           locale: 'en',
@@ -212,7 +228,71 @@ void main() {
       await settle(tester);
       expect(tester.takeException(), isNull);
     });
+
+    testWidgets('no close button when the map IS the surface',
+        (tester) async {
+      await tester.pumpWidget(host(
+        PlaceMapView(
+          title: 'Atlas',
+          emphasised: jonah1,
+          muted: const <BiblePlace>[],
+          baseMap: baseMap,
+          script: BookScript.english,
+          locale: 'en',
+          selectedId: null,
+          onSelect: (_) {},
+        ),
+        width: 900,
+        height: 600,
+      ));
+      await settle(tester);
+
+      expect(tester.takeException(), isNull);
+      // A "Close map" that pops the page the reader is standing on is
+      // the back button with a worse name.
+      expect(find.text('Close map'), findsNothing);
+      expect(find.text('Atlas'), findsOneWidget);
+    });
+
+    // The two tokens are the whole reason the view stopped comparing its
+    // own lists: the Atlas rebuilds on every keystroke and hands over
+    // fresh list instances, so an identity check re-fitted the map out
+    // from under a reader mid-pan.
+    testWidgets('the focus token moves the view and the fit token '
+        'restores it', (tester) async {
+      final joppa = jonah1.firstWhere((p) => p.name == 'Joppa');
+
+      await tester.pumpWidget(
+          host(map(selectedId: joppa.id), width: 900, height: 600));
+      await settle(tester);
+      // "Fit" only exists once the view has been moved off its default,
+      // which makes it the observable proxy for "the map was touched".
+      expect(find.text('Fit'), findsNothing);
+
+      await tester.pumpWidget(host(
+          map(selectedId: joppa.id, focusToken: 1),
+          width: 900,
+          height: 600));
+      await settle(tester);
+      expect(find.text('Fit'), findsOneWidget);
+
+      // A merely-rebuilt widget must NOT re-frame the map.
+      await tester.pumpWidget(host(
+          map(selectedId: joppa.id, focusToken: 1),
+          width: 900,
+          height: 600));
+      await settle(tester);
+      expect(find.text('Fit'), findsOneWidget);
+
+      await tester.pumpWidget(host(
+          map(selectedId: joppa.id, focusToken: 1, fitToken: 1),
+          width: 900,
+          height: 600));
+      await settle(tester);
+      expect(find.text('Fit'), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
   });
 }
 
-void _ignore(String? id) {}
+void _ignore(List<BiblePlace> places, String? id) {}

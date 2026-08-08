@@ -7168,4 +7168,67 @@ const uiStrings = {
     'zh-Hant': '地圖',
     'en': 'Map',
   },
+
+  // ── The Atlas (task #279 / DELETION-REVIEW §4) ────────────────────
+  // Deliberately NOT the existing 'maps' key, which is this app's word
+  // for the illustration set (插图) and would collide.
+  'atlasTitle': {
+    'zh-Hans': '圣经地图集',
+    'zh-Hant': '聖經地圖集',
+    'en': 'Bible Atlas',
+  },
+  'atlasSearchHint': {
+    // Says "or Chinese" because it is not obvious that an English-only
+    // gazetteer can be searched in Chinese, and it can.
+    'zh-Hans': '搜索地名（中英文皆可）',
+    'zh-Hant': '搜尋地名（中英文皆可）',
+    'en': 'Search a place name',
+  },
+  'atlasSortRefs': {
+    'zh-Hans': '按次数',
+    'zh-Hant': '按次數',
+    'en': 'Refs',
+  },
+  'atlasSortName': {
+    // Sorted on the ENGLISH name in every locale: sorting Han characters
+    // by code point produces an order no reader recognises.
+    'zh-Hans': '按字母',
+    'zh-Hant': '按字母',
+    'en': 'A–Z',
+  },
+  'atlasCount': {
+    'zh-Hans': '{n} 个地名',
+    'zh-Hant': '{n} 個地名',
+    'en': '{n} places',
+  },
+  'atlasNoMatch': {
+    'zh-Hans': '地名录中没有匹配的地名。',
+    'zh-Hant': '地名錄中沒有匹配的地名。',
+    'en': 'No place in the gazetteer matches.',
+  },
+  'atlasSubjectFilter': {
+    'zh-Hans': '只看 {name}',
+    'zh-Hant': '只看 {name}',
+    'en': 'Showing {name}',
+  },
+  'atlasSubjectClear': {
+    'zh-Hans': '显示全部地名',
+    'zh-Hant': '顯示全部地名',
+    'en': 'Show every place',
+  },
+  'atlasRefsHeader': {
+    'zh-Hans': '经文出处 {n} 处',
+    'zh-Hant': '經文出處 {n} 處',
+    'en': '{n} references',
+  },
+  'atlasNoRefsInScope': {
+    'zh-Hans': '在当前检索范围内没有出处。',
+    'zh-Hant': '在目前檢索範圍內沒有出處。',
+    'en': 'Not named inside the current scope.',
+  },
+  'atlasUnlocatedNote': {
+    'zh-Hans': '圣经提到这个地方，但今址不详。',
+    'zh-Hant': '聖經提到這個地方，但今址不詳。',
+    'en': 'Scripture names this place but its site is unidentified.',
+  },
 };
