@@ -440,12 +440,9 @@ class _ContextPaneState extends State<ContextPane> {
                   width: 3,
                   height: 30,
                   margin: const EdgeInsets.only(right: 8, top: 2),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(2),
-                    color: strength <= 0
-                        ? Colors.transparent
-                        : scheme.primary.withValues(alpha: 0.25 + strength * 0.6),
-                  ),
+                  color: strength <= 0
+                      ? Colors.transparent
+                      : scheme.primary.withValues(alpha: 0.25 + strength * 0.6),
                 ),
                 Expanded(
                   child: Column(

@@ -26,6 +26,7 @@ import 'package:seeksparks/services/morph_search_service.dart';
 import 'package:seeksparks/utils/morph_query.dart';
 import 'package:seeksparks/utils/morphology.dart';
 import 'package:seeksparks/utils/short_book_name.dart';
+import 'package:seeksparks/widgets/wb_pane_bits.dart';
 
 class MorphSearchPane extends StatefulWidget {
   const MorphSearchPane({
@@ -361,35 +362,15 @@ class _MorphSearchPaneState extends State<MorphSearchPane> {
           aramaic: _query.aramaic,
         ) ??
         value;
-    return InkWell(
+    // The accent is [WbColors.strongsGrammar], not the lexical green the
+    // other panes use: these chips ARE grammar, and the workbench prints
+    // a morphology code in that colour everywhere else.
+    return WbPaneChip(
+      label: label,
+      on: on,
       onTap: () => _apply(_query.toggled(slot, value)),
-      borderRadius: BorderRadius.circular(4),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-        decoration: BoxDecoration(
-          color: on ? wb.selectionBg : Colors.transparent,
-          border: Border.all(color: on ? wb.strongsGrammar : wb.border),
-          borderRadius: BorderRadius.circular(4),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: t.chrome,
-                color: on ? wb.strongsGrammar : wb.text,
-                fontWeight: on ? FontWeight.w600 : FontWeight.w400,
-              ),
-            ),
-            const SizedBox(width: 4),
-            Text(
-              '$count',
-              style: TextStyle(fontSize: t.chrome, color: wb.mutedText),
-            ),
-          ],
-        ),
-      ),
+      foreground: on ? wb.strongsGrammar : wb.text,
+      trailing: '$count',
     );
   }
 
@@ -466,26 +447,5 @@ class _MorphSearchPaneState extends State<MorphSearchPane> {
 
   Widget _chip(
           WbColors wb, WbType t, String label, bool on, VoidCallback onTap) =>
-      InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(4),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-          decoration: BoxDecoration(
-            color: on ? wb.selectionBg : Colors.transparent,
-            border: Border.all(color: on ? wb.strongsLexical : wb.border),
-            borderRadius: BorderRadius.circular(4),
-          ),
-          child: Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: t.chrome,
-              color: on ? wb.strongsLexical : wb.mutedText,
-              fontWeight: on ? FontWeight.w600 : FontWeight.w400,
-            ),
-          ),
-        ),
-      );
+      WbPaneChip(label: label, on: on, onTap: onTap);
 }

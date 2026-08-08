@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/utils/version_mapper.dart'
     show localeAwareBookName;
+import 'package:seeksparks/widgets/wb_pane_bits.dart';
 
 /// EaglesView-style "Word Study" distribution panel. Given a per-book
 /// count map for a single Strong's number, renders horizontal bar groups
@@ -240,27 +241,12 @@ class WordDistribution extends StatelessWidget {
           ),
           const SizedBox(width: 6),
           Expanded(
-            child: Stack(
-              children: [
-                Container(
-                  height: 14,
-                  decoration: BoxDecoration(
-                    color: scheme.surfaceContainerHighest
-                        .withValues(alpha: 0.45),
-                    borderRadius: BorderRadius.circular(3),
-                  ),
-                ),
-                FractionallySizedBox(
-                  widthFactor: fraction,
-                  child: Container(
-                    height: 14,
-                    decoration: BoxDecoration(
-                      color: fillColor,
-                      borderRadius: BorderRadius.circular(3),
-                    ),
-                  ),
-                ),
-              ],
+            child: WbMeterBar(
+              fraction: fraction,
+              color: fillColor,
+              height: 14,
+              trackColor:
+                  scheme.surfaceContainerHighest.withValues(alpha: 0.45),
             ),
           ),
           const SizedBox(width: 8),
@@ -283,11 +269,15 @@ class WordDistribution extends StatelessWidget {
 
   Widget _bookChip(String englishBook, int count, ColorScheme scheme) {
     final localBook = localeAwareBookName(englishBook, locale, currentVersion);
+    // Square with a hairline rather than a tinted pill: `outlineVariant`
+    // and `surfaceContainerHighest` are both roles `workbenchTheme`
+    // remaps onto the palette, so this reads correctly in all three
+    // themes without the file having to reach for `WbColors`.
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHighest.withValues(alpha: 0.55),
-        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: scheme.outlineVariant),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

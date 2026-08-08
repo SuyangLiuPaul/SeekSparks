@@ -26,6 +26,7 @@ import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/verse.dart';
 import 'package:seeksparks/utils/related_verses.dart';
 import 'package:seeksparks/utils/short_book_name.dart';
+import 'package:seeksparks/widgets/wb_pane_bits.dart';
 
 class RelatedVersesPane extends StatefulWidget {
   const RelatedVersesPane({
@@ -314,43 +315,19 @@ class _RelatedVersesPaneState extends State<RelatedVersesPane> {
         : on
             ? wb.strongsLexical
             : wb.mutedText;
-    return InkWell(
+    return WbPaneChip(
+      label: term.term,
+      on: on,
       onTap: () => _toggle(term.term),
       onLongPress: () => _toggleEmphasis(term.term),
-      borderRadius: BorderRadius.circular(4),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-        decoration: BoxDecoration(
-          color: on ? wb.selectionBg : Colors.transparent,
-          border: Border.all(color: on ? fg : wb.border),
-          borderRadius: BorderRadius.circular(4),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              term.term,
-              style: TextStyle(
-                fontSize: t.chrome,
-                color: fg,
-                fontWeight: on ? FontWeight.w600 : FontWeight.w400,
-                decoration: on ? null : TextDecoration.lineThrough,
-              ),
-            ),
-            const SizedBox(width: 4),
-            // How much of the Bible has this word. The number is most of
-            // what tells a reader whether checking it is worth anything.
-            Text(
-              weighted ? '×3' : '${term.documentFrequency}',
-              style: TextStyle(
-                fontSize: t.chrome - 1.5,
-                color: weighted ? wb.strongsGrammar : wb.mutedText,
-                fontWeight: weighted ? FontWeight.w700 : FontWeight.w400,
-              ),
-            ),
-          ],
-        ),
-      ),
+      foreground: fg,
+      strikeWhenOff: true,
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      // How much of the Bible has this word. The number is most of what
+      // tells a reader whether checking it is worth anything.
+      trailing: weighted ? '×3' : '${term.documentFrequency}',
+      trailingColor: weighted ? wb.strongsGrammar : wb.mutedText,
+      trailingBold: weighted,
     );
   }
 
@@ -366,14 +343,9 @@ class _RelatedVersesPaneState extends State<RelatedVersesPane> {
           contentPadding: const EdgeInsets.symmetric(horizontal: 8),
           hintText: s('relatedAddWord', 'Add a word not in the verse…'),
           hintStyle: TextStyle(fontSize: t.chrome, color: wb.mutedText),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(4),
-            borderSide: BorderSide(color: wb.border),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(4),
-            borderSide: BorderSide(color: wb.border),
-          ),
+          // No border override: `workbenchTheme`'s `inputDecorationTheme`
+          // is already this box, square, in `wb.border` — the rounded
+          // version here was arguing with it.
         ),
       ),
     );
@@ -440,37 +412,11 @@ class _RelatedVersesPaneState extends State<RelatedVersesPane> {
 
   Widget _stepper(WbColors wb, WbType t, IconData icon, bool on,
           VoidCallback onTap) =>
-      InkWell(
-        onTap: on ? onTap : null,
-        borderRadius: BorderRadius.circular(3),
-        child: Padding(
-          padding: const EdgeInsets.all(2),
-          child: Icon(icon, size: 14, color: on ? wb.link : wb.border),
-        ),
-      );
+      WbIconTap(icon: icon, onTap: on ? onTap : null);
 
   Widget _chip(
           WbColors wb, WbType t, String label, bool on, VoidCallback onTap) =>
-      InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(4),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-          decoration: BoxDecoration(
-            color: on ? wb.selectionBg : Colors.transparent,
-            border: Border.all(color: on ? wb.strongsLexical : wb.border),
-            borderRadius: BorderRadius.circular(4),
-          ),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: t.chrome,
-              color: on ? wb.strongsLexical : wb.mutedText,
-              fontWeight: on ? FontWeight.w600 : FontWeight.w400,
-            ),
-          ),
-        ),
-      );
+      WbPaneChip(label: label, on: on, onTap: onTap);
 
   // ── The hits ───────────────────────────────────────────────────────
 
@@ -530,14 +476,11 @@ class _RelatedVersesPaneState extends State<RelatedVersesPane> {
                   ),
                 ),
                 if (widget.onOpenVerse != null)
-                  InkWell(
+                  WbIconTap(
+                    icon: Icons.arrow_forward,
+                    size: 13,
+                    color: wb.mutedText,
                     onTap: () => widget.onOpenVerse!(v),
-                    borderRadius: BorderRadius.circular(3),
-                    child: Padding(
-                      padding: const EdgeInsets.all(2),
-                      child: Icon(Icons.arrow_forward,
-                          size: 13, color: wb.mutedText),
-                    ),
                   ),
               ],
             ),

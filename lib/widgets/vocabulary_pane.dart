@@ -39,6 +39,7 @@ import 'package:seeksparks/services/originals_service.dart';
 import 'package:seeksparks/services/vocabulary_service.dart';
 import 'package:seeksparks/services/vocabulary_store.dart';
 import 'package:seeksparks/utils/vocabulary.dart';
+import 'package:seeksparks/widgets/wb_pane_bits.dart';
 
 enum VocabMode { list, drill, read }
 
@@ -390,14 +391,8 @@ class _VocabularyPaneState extends State<VocabularyPane> {
               prefixIcon: Icon(Icons.search, size: 14, color: wb.mutedText),
               prefixIconConstraints:
                   const BoxConstraints(minWidth: 26, minHeight: 20),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(4),
-                borderSide: BorderSide(color: wb.border),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(4),
-                borderSide: BorderSide(color: wb.border),
-              ),
+              // No border override: `workbenchTheme`'s
+              // `inputDecorationTheme` is already this box, square.
             ),
             onChanged: (v) {
               _query = v;
@@ -494,17 +489,12 @@ class _VocabularyPaneState extends State<VocabularyPane> {
                     ),
                   ),
                 ),
-                InkWell(
+                WbIconTap(
+                  icon: learned ? Icons.check_circle : Icons.circle_outlined,
+                  size: 14,
+                  color: learned ? wb.link : wb.border,
+                  padding: const EdgeInsets.all(3),
                   onTap: () => _toggleLearned(w.strongs),
-                  borderRadius: BorderRadius.circular(3),
-                  child: Padding(
-                    padding: const EdgeInsets.all(3),
-                    child: Icon(
-                      learned ? Icons.check_circle : Icons.circle_outlined,
-                      size: 14,
-                      color: learned ? wb.link : wb.border,
-                    ),
-                  ),
                 ),
               ],
             ),
@@ -842,37 +832,9 @@ class _VocabularyPaneState extends State<VocabularyPane> {
   }
 
   Widget _stepper(WbColors wb, IconData icon, bool on, VoidCallback onTap) =>
-      InkWell(
-        onTap: on ? onTap : null,
-        borderRadius: BorderRadius.circular(3),
-        child: Padding(
-          padding: const EdgeInsets.all(2),
-          child: Icon(icon, size: 14, color: on ? wb.link : wb.border),
-        ),
-      );
+      WbIconTap(icon: icon, onTap: on ? onTap : null);
 
   Widget _chip(
           WbColors wb, WbType t, String label, bool on, VoidCallback onTap) =>
-      InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(4),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-          decoration: BoxDecoration(
-            color: on ? wb.selectionBg : Colors.transparent,
-            border: Border.all(color: on ? wb.strongsLexical : wb.border),
-            borderRadius: BorderRadius.circular(4),
-          ),
-          child: Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: t.chrome,
-              color: on ? wb.strongsLexical : wb.mutedText,
-              fontWeight: on ? FontWeight.w600 : FontWeight.w400,
-            ),
-          ),
-        ),
-      );
+      WbPaneChip(label: label, on: on, onTap: onTap);
 }

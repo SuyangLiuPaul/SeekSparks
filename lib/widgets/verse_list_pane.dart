@@ -27,6 +27,8 @@ import 'package:seeksparks/utils/clipboard_helper.dart';
 import 'package:seeksparks/utils/scripture_markup.dart';
 import 'package:seeksparks/utils/verse_list.dart';
 import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
+import 'package:seeksparks/constants/workbench_theme.dart';
+import 'package:seeksparks/widgets/wb_pane_bits.dart';
 
 /// Which VLM menu an item belongs to — one enum per popup so the
 /// callbacks stay flat.
@@ -735,51 +737,22 @@ class _ListChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Material(
-      color: active ? scheme.primaryContainer : Colors.transparent,
-      borderRadius: BorderRadius.circular(8),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: active ? Colors.transparent : scheme.outlineVariant,
-            ),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Flexible(
-                child: Text(
-                  name.isEmpty ? label : name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-                    color: active
-                        ? scheme.onPrimaryContainer
-                        : scheme.onSurfaceVariant,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 5),
-              Text(
-                '$count',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: active ? scheme.onPrimaryContainer : scheme.outline,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+    final wb = WbColors.of(context);
+    // The active state was `primaryContainer`, one of the tonal roles
+    // `workbenchTheme` does NOT remap — so it was a Material pastel from
+    // `ColorScheme.fromSeed`, and on the paper palette a lavender wash
+    // on cream. `selectionBg` plus the accent hairline is what the
+    // workbench's own toolbar uses for an active button.
+    return WbPaneChip(
+      label: name.isEmpty ? label : name,
+      on: active,
+      onTap: onTap,
+      foreground: active ? wb.link : wb.mutedText,
+      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+      alignment: MainAxisAlignment.center,
+      trailing: '$count',
+      trailingColor: active ? wb.link : wb.mutedText,
+      trailingBold: true,
     );
   }
 }

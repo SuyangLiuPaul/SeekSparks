@@ -27,6 +27,7 @@ import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/verse.dart';
 import 'package:seeksparks/utils/phrase_match.dart';
 import 'package:seeksparks/utils/short_book_name.dart';
+import 'package:seeksparks/widgets/wb_pane_bits.dart';
 
 class PhraseMatchPane extends StatefulWidget {
   const PhraseMatchPane({
@@ -241,17 +242,11 @@ class _PhraseMatchPaneState extends State<PhraseMatchPane> {
                 ),
               ),
               if (_index.phrases.isNotEmpty)
-                InkWell(
+                WbIconTap(
+                  icon: _showPhrases ? Icons.expand_less : Icons.expand_more,
+                  size: 16,
+                  color: wb.mutedText,
                   onTap: () => setState(() => _showPhrases = !_showPhrases),
-                  borderRadius: BorderRadius.circular(3),
-                  child: Padding(
-                    padding: const EdgeInsets.all(2),
-                    child: Icon(
-                      _showPhrases ? Icons.expand_less : Icons.expand_more,
-                      size: 16,
-                      color: wb.mutedText,
-                    ),
-                  ),
                 ),
               if (_busy)
                 const Padding(
@@ -312,39 +307,14 @@ class _PhraseMatchPaneState extends State<PhraseMatchPane> {
         : on
             ? wb.strongsLexical
             : wb.mutedText;
-    return InkWell(
+    return WbPaneChip(
+      label: phrase.display,
+      on: on,
       onTap: dead ? null : () => _togglePhrase(i),
-      borderRadius: BorderRadius.circular(4),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-        decoration: BoxDecoration(
-          color: on ? wb.selectionBg : Colors.transparent,
-          border: Border.all(color: on ? fg : wb.border),
-          borderRadius: BorderRadius.circular(4),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              phrase.display,
-              style: TextStyle(
-                fontSize: t.chrome,
-                color: fg,
-                fontWeight: on ? FontWeight.w600 : FontWeight.w400,
-                decoration: on ? null : TextDecoration.lineThrough,
-              ),
-            ),
-            const SizedBox(width: 4),
-            Text(
-              '${phrase.verseCount}',
-              style: TextStyle(
-                fontSize: t.chrome - 1.5,
-                color: wb.mutedText,
-              ),
-            ),
-          ],
-        ),
-      ),
+      foreground: fg,
+      strikeWhenOff: true,
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      trailing: '${phrase.verseCount}',
     );
   }
 
@@ -445,39 +415,11 @@ class _PhraseMatchPaneState extends State<PhraseMatchPane> {
   }
 
   Widget _stepper(WbColors wb, IconData icon, bool on, VoidCallback onTap) =>
-      InkWell(
-        onTap: on ? onTap : null,
-        borderRadius: BorderRadius.circular(3),
-        child: Padding(
-          padding: const EdgeInsets.all(2),
-          child: Icon(icon, size: 14, color: on ? wb.link : wb.border),
-        ),
-      );
+      WbIconTap(icon: icon, onTap: on ? onTap : null);
 
   Widget _chip(
           WbColors wb, WbType t, String label, bool on, VoidCallback onTap) =>
-      InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(4),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-          decoration: BoxDecoration(
-            color: on ? wb.selectionBg : Colors.transparent,
-            border: Border.all(color: on ? wb.strongsLexical : wb.border),
-            borderRadius: BorderRadius.circular(4),
-          ),
-          child: Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: t.chrome,
-              color: on ? wb.strongsLexical : wb.mutedText,
-              fontWeight: on ? FontWeight.w600 : FontWeight.w400,
-            ),
-          ),
-        ),
-      );
+      WbPaneChip(label: label, on: on, onTap: onTap);
 
   // ── The results ────────────────────────────────────────────────────
 
@@ -600,14 +542,11 @@ class _PhraseMatchPaneState extends State<PhraseMatchPane> {
                   ),
                 ),
                 if (widget.onOpenVerse != null)
-                  InkWell(
+                  WbIconTap(
+                    icon: Icons.arrow_forward,
+                    size: 13,
+                    color: wb.mutedText,
                     onTap: () => widget.onOpenVerse!(v),
-                    borderRadius: BorderRadius.circular(3),
-                    child: Padding(
-                      padding: const EdgeInsets.all(2),
-                      child: Icon(Icons.arrow_forward,
-                          size: 13, color: wb.mutedText),
-                    ),
                   ),
               ],
             ),

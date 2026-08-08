@@ -23,6 +23,7 @@ import 'package:seeksparks/services/tagged_text_service.dart';
 import 'package:seeksparks/utils/kwic.dart';
 import 'package:seeksparks/utils/search_scope.dart' show scopedCountLabel;
 import 'package:seeksparks/utils/verse_list.dart' show applySearchLimit;
+import 'package:seeksparks/widgets/wb_pane_bits.dart';
 
 class KwicPane extends StatefulWidget {
   const KwicPane({
@@ -307,25 +308,11 @@ class _KwicPaneState extends State<KwicPane> {
 
   Widget _chip(
           WbColors wb, WbType t, String label, bool on, VoidCallback onTap) =>
-      InkWell(
+      WbPaneChip(
+        label: label,
+        on: on,
         onTap: onTap,
-        borderRadius: BorderRadius.circular(4),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-          decoration: BoxDecoration(
-            color: on ? wb.selectionBg : Colors.transparent,
-            border: Border.all(color: on ? wb.strongsLexical : wb.border),
-            borderRadius: BorderRadius.circular(4),
-          ),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: t.chrome,
-              color: on ? wb.strongsLexical : wb.mutedText,
-              fontWeight: on ? FontWeight.w600 : FontWeight.w400,
-            ),
-          ),
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       );
 
   /// One aligned row. The keyword column is centred and fixed-ish so

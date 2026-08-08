@@ -68,6 +68,25 @@ const List<String> _passed = <String>[
   // centred column sits on.
   'lib/widgets/book_chapter_picker.dart',
   'lib/pages/books_page.dart',
+  // 2026-08-09: the Analysis pane — all thirteen tabs, 45 sites, the
+  // largest single block left in the inventory. Listed as ten files
+  // because a tab body is a file; but the conversion was not ten
+  // repaints. The pane had been built by copying a neighbour — one
+  // toggle chip written five times, one icon button seven, one
+  // magnitude bar three — so the chrome lives in `wb_pane_bits.dart`
+  // now and the tab bodies call it. That file is the eleventh entry,
+  // and the one that matters: a rounded corner can only come back
+  // there once, not in five places independently.
+  'lib/widgets/wb_pane_bits.dart',
+  'lib/widgets/analysis_tabs.dart',
+  'lib/widgets/related_verses_pane.dart',
+  'lib/widgets/phrase_match_pane.dart',
+  'lib/widgets/vocabulary_pane.dart',
+  'lib/widgets/morph_search_pane.dart',
+  'lib/widgets/verse_list_pane.dart',
+  'lib/widgets/word_distribution.dart',
+  'lib/widgets/kwic_pane.dart',
+  'lib/widgets/context_pane.dart',
 ];
 
 /// Files that still carry unconverted chrome, and how much. This is the
@@ -84,25 +103,17 @@ const List<String> _passed = <String>[
 ///     to separate it; bwh11 describes a bordered popup, not a shadowed
 ///     one, so the hairline is probably enough.
 const Map<String, int> _remaining = <String, int>{
-  'lib/widgets/analysis_tabs.dart': 11,
-  'lib/widgets/related_verses_pane.dart': 8,
   'lib/pages/map_viewer_page.dart': 7,
-  'lib/widgets/phrase_match_pane.dart': 7,
-  'lib/widgets/vocabulary_pane.dart': 6,
   'lib/pages/bible_timeline_page.dart': 5,
   'lib/main.dart': 4,
   'lib/pages/highlights_page.dart': 4,
   'lib/pages/sermons_page.dart': 4,
   'lib/pages/strongs_entry_page.dart': 4,
-  'lib/widgets/morph_search_pane.dart': 4,
   'lib/pages/loading_page.dart': 3,
   'lib/pages/phrasing_page.dart': 3,
   'lib/widgets/highlights_sheet.dart': 3,
-  'lib/widgets/verse_list_pane.dart': 3,
-  'lib/widgets/word_distribution.dart': 3,
   'lib/pages/home_page.dart': 2,
   'lib/pages/sermon_detail_page.dart': 2,
-  'lib/widgets/kwic_pane.dart': 2,
   'lib/widgets/onboarding_dialog.dart': 2,
   'lib/widgets/search_stats_strip.dart': 2,
   'lib/widgets/small_screen_advisory.dart': 2,
@@ -118,7 +129,6 @@ const Map<String, int> _remaining = <String, int>{
   'lib/widgets/browse_window.dart': 1,
   'lib/widgets/confidence_badge.dart': 1,
   'lib/widgets/contact_line.dart': 1,
-  'lib/widgets/context_pane.dart': 1,
   'lib/widgets/copy_center_sheet.dart': 1,
   'lib/widgets/docked_panel.dart': 1,
   'lib/widgets/note_reference_picker_sheet.dart': 1,

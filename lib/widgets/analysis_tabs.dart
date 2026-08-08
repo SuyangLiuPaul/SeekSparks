@@ -35,6 +35,9 @@ import 'package:seeksparks/utils/search_stats.dart';
 import 'package:seeksparks/utils/verse_list.dart' show applySearchLimit;
 import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
 import 'package:seeksparks/widgets/word_distribution_strip.dart';
+import 'package:seeksparks/constants/workbench_theme.dart';
+import 'package:seeksparks/widgets/wb_pane_bits.dart';
+import 'package:seeksparks/widgets/wb_surfaces.dart';
 
 /// Which pane the Analysis window is showing.
 /// 2026-08-06: `kwic` joins them — BibleWorks' Key Word In Context
@@ -257,16 +260,24 @@ class _TabButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final fg = selected ? scheme.onPrimaryContainer : scheme.onSurfaceVariant;
+    final wb = WbColors.of(context);
+    // `primaryContainer`/`onPrimaryContainer` are tonal roles that
+    // `workbenchTheme` does NOT remap — `ColorScheme.fromSeed` fills
+    // them with a Material pastel derived from the link colour, so the
+    // selected tab in the app's most-seen 30 px was a lavender pill the
+    // palette had never defined, and on 護眼紙質 a lavender pill on
+    // cream. `selectionBg` under an accent label is what the workbench's
+    // own toolbar already uses for an active button.
+    final fg = selected ? wb.link : wb.mutedText;
     return Tooltip(
       message: label,
       child: Material(
-        color: selected ? scheme.primaryContainer : Colors.transparent,
-        borderRadius: BorderRadius.circular(8),
+        color: selected ? wb.selectionBg : Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(8),
+          hoverColor: wb.hoverBg,
+          splashColor: Colors.transparent,
+          highlightColor: Colors.transparent,
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 4),
             child: Row(
@@ -388,12 +399,10 @@ class _CrossRefsPaneState extends State<CrossRefsPane> {
                 '${r.chapter}:$start';
             return InkWell(
               onTap: () => widget.onOpenRef(r),
-              borderRadius: BorderRadius.circular(10),
               child: Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: scheme.surfaceContainerHighest.withValues(alpha: 0.35),
-                  borderRadius: BorderRadius.circular(10),
                   border: Border.all(color: scheme.outlineVariant),
                 ),
                 child: Column(
@@ -579,7 +588,6 @@ class _WordStatsPaneState extends State<WordStatsPane> {
             final r = rows[i - 1];
             return InkWell(
               onTap: () => widget.onOpenStrongs(r.word.strongs),
-              borderRadius: BorderRadius.circular(8),
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
                 child: Column(
@@ -612,18 +620,15 @@ class _WordStatsPaneState extends State<WordStatsPane> {
                       ],
                     ),
                     const SizedBox(height: 3),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(3),
-                      child: LinearProgressIndicator(
-                        value: (r.inScope / max).clamp(0.02, 1.0),
-                        minHeight: 4,
-                        backgroundColor:
-                            scheme.outlineVariant.withValues(alpha: 0.5),
-                        valueColor:
-                            AlwaysStoppedAnimation(scheme.primary.withValues(
-                          alpha: 0.65,
-                        )),
-                      ),
+                    // The `ClipRRect` this replaces was arguing with the
+                    // theme twice over: `progressIndicatorTheme` already
+                    // sets `BorderRadius.zero`, so the clip existed only
+                    // to round a bar the workbench had squared.
+                    WbMeterBar(
+                      fraction: (r.inScope / max).clamp(0.02, 1.0),
+                      color: scheme.primary.withValues(alpha: 0.65),
+                      trackColor:
+                          scheme.outlineVariant.withValues(alpha: 0.5),
                     ),
                     // The shape of the word across the canon. Above it,
                     // the bar says how MANY; this says WHERE, which is
@@ -702,7 +707,9 @@ Widget _distribution(BuildContext context, GreekWordStats g) {
             padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
             decoration: BoxDecoration(
               color: scheme.primary.withValues(alpha: 0.09),
-              borderRadius: BorderRadius.circular(3),
+              border: Border.all(
+                color: scheme.primary.withValues(alpha: 0.28),
+              ),
             ),
             child: Text(
               // "Rev 3" — and "Rev 3 ·#6" when the source knows the
@@ -970,13 +977,12 @@ class _TopicTile extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 6),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHighest.withValues(alpha: 0.35),
-        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: scheme.outlineVariant),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           InkWell(
-            borderRadius: BorderRadius.circular(8),
             onTap: onToggle,
             child: Padding(
               padding: const EdgeInsets.fromLTRB(10, 8, 8, 8),
@@ -991,20 +997,15 @@ class _TopicTile extends StatelessWidget {
                       ),
                     ),
                   ),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: scheme.primary.withValues(alpha: 0.10),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      citation.strongs,
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: scheme.primary,
-                        fontFeatures: const [FontFeature.tabularFigures()],
-                      ),
-                    ),
+                  // `WbTag` is the workbench's existing answer to "a
+                  // short code printed next to something", and it puts
+                  // the hue on the TEXT rather than in a tinted fill —
+                  // which is how a Strong's number is already printed
+                  // after a word everywhere else in the app.
+                  WbTag(
+                    text: citation.strongs,
+                    color: WbColors.of(context).strongsLexical,
+                    dense: false,
                   ),
                   Icon(
                     expanded ? Icons.expand_less : Icons.expand_more,
@@ -1127,8 +1128,7 @@ class _TopicDetailState extends State<_TopicDetail> {
   }
 
   Widget _stats(BuildContext context, ConcordanceEntry e) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
+    final wb = WbColors.of(context);
     const labels = {
       'nt': 'NT',
       'gospelsActs': 'Gospels+Acts',
@@ -1142,25 +1142,15 @@ class _TopicDetailState extends State<_TopicDetail> {
         spacing: 6,
         runSpacing: 4,
         children: [
+          // `WbTag`'s own doc names this case — "a short code printed
+          // next to something: H3068, OT, NT" — and it is what carries
+          // the NT emphasis on the text instead of in a tinted fill.
           for (final key in labels.keys)
             if (e.totals[key] != null)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: key == 'nt'
-                      ? scheme.primary.withValues(alpha: 0.12)
-                      : scheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  '${labels[key]} ${e.totals[key]}',
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    fontSize: 10,
-                    color:
-                        key == 'nt' ? scheme.primary : scheme.onSurfaceVariant,
-                    fontFeatures: const [FontFeature.tabularFigures()],
-                  ),
-                ),
+              WbTag(
+                text: '${labels[key]} ${e.totals[key]}',
+                color: key == 'nt' ? wb.link : wb.mutedText,
+                dense: false,
               ),
         ],
       ),
