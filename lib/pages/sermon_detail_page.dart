@@ -6,6 +6,7 @@ import 'package:seeksparks/utils/clipboard_helper.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:seeksparks/constants/sermon_credit.dart';
 import 'package:seeksparks/constants/sermon_topics.dart';
 import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/models/app_settings.dart';
@@ -406,7 +407,22 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
                 height: 1.25,
               ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 4),
+            // The byline. A reader can arrive here straight from a
+            // `?sermon=` deep link without ever passing the library, so
+            // this is the only place some readers will ever learn whose
+            // preaching they are reading. Deliberately a line and not a
+            // _MetaChip: the id, date, passage and topic are facts about
+            // this sermon among 289, the preacher is the author of all of
+            // them, and chip weight would put those on a level.
+            Text(
+              preacherName(settings.locale),
+              style: TextStyle(
+                fontSize: 13,
+                color: scheme.onSurface.withValues(alpha: 0.7),
+              ),
+            ),
+            const SizedBox(height: 8),
             Wrap(
               spacing: 8,
               runSpacing: 4,
@@ -493,6 +509,12 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
         'From SeekSparks';
     final buf = StringBuffer();
     buf.writeln(title);
+    // The byline travels with the text. Without it this payload — forty
+    // paragraphs of someone else's preaching — arrived in a document
+    // credited to the app and to nobody else, because the only
+    // attribution line was the "From SeekSparks" footer. That footer
+    // says where the file came from; this line says who said it.
+    buf.writeln(preacherName(locale));
     final metaParts = <String>[];
     if (s.displayDate.isNotEmpty && s.displayDate != '—') {
       metaParts.add(s.displayDate);

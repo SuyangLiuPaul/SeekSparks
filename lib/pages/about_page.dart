@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:seeksparks/constants/app_version.dart';
+import 'package:seeksparks/constants/sermon_credit.dart';
 import 'package:seeksparks/widgets/update_check_tile.dart';
 import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/models/app_settings.dart';
@@ -623,8 +624,10 @@ class _OtherAttributions extends StatelessWidget {
             'Public domain / Creative Commons archives.',
       ),
       _AttribRow(
-        name: uiStrings['aboutSermons']?[locale] ??
-            'Sermons (`assets/sermons/`)',
+        name: withPreacher(
+            uiStrings['aboutSermons']?[locale] ??
+                'Sermons by {name} (assets/sermons/)',
+            locale),
         licence: uiStrings['aboutLicenseSermons']?[locale] ??
             '© Liang Jia-keng · used with permission.',
       ),

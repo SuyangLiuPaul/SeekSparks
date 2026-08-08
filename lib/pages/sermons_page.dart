@@ -5,6 +5,7 @@ import 'package:seeksparks/utils/app_nav.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:seeksparks/constants/sermon_credit.dart';
 import 'package:seeksparks/constants/sermon_topics.dart';
 import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/models/app_settings.dart';
@@ -176,9 +177,37 @@ class _SermonsPageState extends State<SermonsPage> {
     return Scaffold(
       appBar: AppBar(
         leading: const LocalizedBackButton(),
-        title: Text(
-          uiStrings['sermons']?[locale] ?? 'Sermons',
-          style: const TextStyle(fontWeight: FontWeight.w600),
+        // The title answers "what is this list"; the line under it
+        // answers "whose sermons are these", which nothing on this page
+        // used to answer at all. It sits in the AppBar rather than beside
+        // the result count because the count changes with every filter
+        // and the preacher does not.
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              uiStrings['sermons']?[locale] ?? 'Sermons',
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+            Text(
+              sermonLibraryCredit(locale),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w400,
+                // Faded AppBar foreground, not faded onSurface: the
+                // classic theme paints this bar `primary` and the
+                // workbench theme paints it `chromeBg`, so onSurface is
+                // legible on one of them and nearly invisible on the
+                // other.
+                color: (Theme.of(context).appBarTheme.foregroundColor ??
+                        scheme.onSurface)
+                    .withValues(alpha: 0.72),
+              ),
+            ),
+          ],
         ),
         actions: const [LanguageSwitcherButton(), HomeIconButton()],
       ),

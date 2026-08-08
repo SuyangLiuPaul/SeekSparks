@@ -25,7 +25,9 @@ enum OfflinePackCategory {
   /// All 13 Bible translations (~70 MB after NIV removal).
   bibles,
 
-  /// 587 sermons × up to 3 languages = ~867 files (~26 MB).
+  /// 289 sermons × up to 3 languages = 867 files (~26 MB). The comment
+  /// used to say 587, which never squared with its own 867 — that is the
+  /// number of `parts` in the index (589), not of sermons.
   sermons,
 
   /// Family tree / timeline / evidence / cross-refs / section

@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show Clipboard;
 import 'package:seeksparks/constants/app_version.dart';
 import 'package:seeksparks/constants/text_patterns.dart' show sanitizeForCopy;
+import 'package:seeksparks/constants/sermon_credit.dart';
 import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/constants/workbench_theme.dart' show WbMetrics;
 import 'package:provider/provider.dart';
@@ -2366,7 +2367,10 @@ class _OfflinePackCardState extends State<_OfflinePackCard> {
       case OfflinePackCategory.bibles:
         return uiStrings['offlinePackBibles']?[locale] ?? 'Bibles';
       case OfflinePackCategory.sermons:
-        return uiStrings['offlinePackSermons']?[locale] ?? 'Sermons';
+        return withPreacher(
+            uiStrings['offlinePackSermons']?[locale] ??
+                'Sermons by {name} (289 × 3 languages)',
+            locale);
       case OfflinePackCategory.tools:
         return uiStrings['offlinePackTools']?[locale] ?? 'Tools & references';
       case OfflinePackCategory.originals:

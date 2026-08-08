@@ -1751,10 +1751,16 @@ const uiStrings = {
     'zh-Hant': '聖經譯本（共 13 部）',
     'en': 'Bibles (13 translations)',
   },
+  // `{name}` is substituted by `withPreacher` from sermon_credit.dart.
+  // The count was 587, which is neither the number of sermons nor the
+  // number of files: `assets/sermons/index.json` holds 289 records whose
+  // `parts` fields sum to 589, and each record ships in up to 3
+  // languages for 867 body files. 587 looks like a mis-transcribed part
+  // count. 289 is what a reader is choosing to download.
   'offlinePackSermons': {
-    'zh-Hans': '张熙和牧师讲道（587 篇 ×3 语）',
-    'zh-Hant': '張熙和牧師講道（587 篇 ×3 語）',
-    'en': "Pastor Eric's sermons (587 × 3 langs)",
+    'zh-Hans': '{name}讲道（289 篇 ×3 语）',
+    'zh-Hant': '{name}講道（289 篇 ×3 語）',
+    'en': 'Sermons by {name} (289 × 3 languages)',
   },
   'offlinePackTools': {
     'zh-Hans': '研经工具（家谱 / 时间轴 / 证据 / 互参 / 读经计划等）',
@@ -4452,11 +4458,25 @@ const uiStrings = {
     'zh-Hant': '來源於公有領域 / Creative Commons 資源庫。',
     'en': 'Public domain / Creative Commons archives.',
   },
+  // `{name}` is substituted by `withPreacher` from sermon_credit.dart —
+  // the preacher is spelled in exactly one file, never in this one.
   'aboutSermons': {
-    'zh-Hans': '讲道文本（assets/sermons/）',
-    'zh-Hant': '講道文本（assets/sermons/）',
-    'en': 'Sermons (assets/sermons/)',
+    'zh-Hans': '{name}讲道（assets/sermons/）',
+    'zh-Hant': '{name}講道（assets/sermons/）',
+    'en': 'Sermons by {name} (assets/sermons/)',
   },
+  // WHO PREACHED and WHO HOLDS THE RIGHTS are two different facts, and
+  // only the first is settled. The sermons are Pastor Eric H.H. Chang's —
+  // `scripts/ingest_sermons.py` built the corpus from his sermon tree and
+  // every body file is his preaching. This © line names 梁家铿, who is the
+  // translator of the biblexg edition, and it has been here since the
+  // initial commit with no note explaining the connection. He may well be
+  // the publisher who granted permission, which would make both lines
+  // correct — but nothing in the repo establishes that. Left as-is rather
+  // than rewritten: deleting a rights claim on a guess is worse than
+  // carrying an unverified one, and the byline above now states the
+  // authorship fact that was missing either way. Needs a human to confirm
+  // with the corpus owner.
   'aboutLicenseSermons': {
     'zh-Hans': '© 梁家铿 · 经授权使用。',
     'zh-Hant': '© 梁家鏗 · 經授權使用。',
@@ -5484,11 +5504,11 @@ const uiStrings = {
     'zh-Hant': '講道',
     'en': 'Sermon',
   },
-  'sermonsTagline': {
-    'zh-Hans': '张熙和牧师讲道集',
-    'zh-Hant': '張熙和牧師講道集',
-    'en': "Pastor Eric Chang's sermon library",
-  },
+  // 'sermonsTagline' was removed here. It was the collection byline, it
+  // spelled the name a third way ("Pastor Eric Chang"), and grep found no
+  // widget that ever rendered it — the library header it was written for
+  // showed only "讲道". `sermonLibraryCredit` in sermon_credit.dart is
+  // what the header renders now.
   'sermonSearchHint': {
     'zh-Hans': '按标题、经文或编号搜索讲道…',
     'zh-Hant': '按標題、經文或編號搜尋講道…',
