@@ -1,11 +1,6 @@
 plugins {
     id("com.android.application")
     id("kotlin-android")
-    // 2026-05-21 (v1.2.68): apply Google services plugin so the
-    // build picks up android/app/google-services.json and wires
-    // Firebase auto-init at app startup. Plugin declared in
-    // android/settings.gradle.kts.
-    id("com.google.gms.google-services")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
@@ -89,23 +84,3 @@ dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }
 
-// 2026-05-24 (v1.3.38): skip the Google Services plugin for the cn
-// flavor. The plugin validates the applicationId against the
-// `client_info.package_name` array in google-services.json — our
-// JSON only registers com.example.yswords (the international flavor),
-// so build fails with "No matching client found for package name
-// com.example.yswords.cn" on every cn-flavor build.
-//
-// The China build runs `kChinaMode == true` and `CloudAuthService`
-// short-circuits before any Firebase API is touched (see
-// build_flags.dart for the contract), so we don't actually need
-// the plugin's bookkeeping at all for cn. Disabling the plugin
-// tasks lets the build proceed without re-registering the .cn
-// package in Firebase Console.
-afterEvaluate {
-    listOf("processCnDebugGoogleServices",
-           "processCnProfileGoogleServices",
-           "processCnReleaseGoogleServices").forEach { taskName ->
-        tasks.findByName(taskName)?.enabled = false
-    }
-}

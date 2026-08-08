@@ -3,7 +3,6 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:seeksparks/services/profile_service.dart';
-import 'package:seeksparks/services/realtime_db_sync_service.dart';
 
 /// Per-profile recent-search history. Surfaced as tappable rows
 /// above the search results list when the query box is empty so
@@ -138,7 +137,6 @@ class RecentSearchesService {
         final liveKeys = cur.map((e) => e.toLowerCase()).toSet();
         map.removeWhere((k, _) => !liveKeys.contains(k));
       });
-      RealtimeDbSyncService.instance.requestUpload();
     } finally {
       completer.complete();
     }
@@ -155,7 +153,6 @@ class RecentSearchesService {
       await prefs.remove(ProfileService.instance.scopedKey(_baseKey));
       await prefs
           .remove(ProfileService.instance.scopedKey(_timestampsBaseKey));
-      RealtimeDbSyncService.instance.requestUpload();
     } finally {
       completer.complete();
     }
@@ -188,7 +185,6 @@ class RecentSearchesService {
           map.remove(q.toLowerCase());
         });
       }
-      RealtimeDbSyncService.instance.requestUpload();
     } finally {
       completer.complete();
     }

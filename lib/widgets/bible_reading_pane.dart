@@ -31,7 +31,6 @@ import 'package:seeksparks/services/ai_word_service.dart';
 import 'package:seeksparks/utils/ai_text_cleaner.dart';
 import 'package:seeksparks/utils/chapter_scroll_progress.dart';
 import 'package:seeksparks/services/concordance_service.dart';
-import 'package:seeksparks/services/cloud_auth_service.dart';
 import 'package:seeksparks/constants/sermon_topics.dart';
 import 'package:seeksparks/models/sermon.dart';
 import 'package:seeksparks/pages/sermon_detail_page.dart';
@@ -63,7 +62,6 @@ import 'package:seeksparks/widgets/verse_popup_sheet.dart' show showVersePopup;
 import 'package:seeksparks/utils/responsive.dart';
 import 'package:seeksparks/widgets/docked_panel.dart';
 import 'package:seeksparks/utils/short_book_name.dart';
-import 'package:seeksparks/widgets/google_g_logo.dart';
 import 'package:seeksparks/widgets/illustration_image.dart';
 import 'package:seeksparks/utils/floating_toast.dart' show showFloatingToast;
 import 'package:seeksparks/utils/missing_chapter_message.dart'
@@ -7048,51 +7046,6 @@ class _FloatingHeader extends StatelessWidget {
                       // first split-view tap feel like it was lost.
                       itemBuilder: (context) {
                         final items = <PopupMenuEntry<String>>[];
-                        // Top-level "Sign in" — only when Firebase
-                        // is configured and the user isn't signed
-                        // in. Tapping triggers Google popup
-                        // directly, no detour through Settings.
-                        if (CloudAuthService.instance.isConfigured &&
-                            !CloudAuthService.instance.isSignedIn) {
-                          items.add(PopupMenuItem(
-                            value: 'cloudSignIn',
-                            onTap: () async {
-                              final messenger =
-                                  ScaffoldMessenger.of(context);
-                              final result = await CloudAuthService
-                                  .instance
-                                  .signInWithGoogleAndAdoptProfile();
-                              if (!context.mounted) return;
-                              if (!result.isOk) {
-                                messenger.showSnackBar(SnackBar(
-                                  content: Text(
-                                    result.errorMessage ??
-                                        'Sign-in failed.',
-                                  ),
-                                  duration:
-                                      const Duration(seconds: 3),
-                                ));
-                              }
-                            },
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const GoogleGLogo(size: 16),
-                                const SizedBox(width: 12),
-                                Text(
-                                  uiStrings['cloudSignInGoogle']
-                                          ?[locale] ??
-                                      'Sign in with Google',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: scheme.onSurface,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ));
-                          items.add(const PopupMenuDivider());
-                        }
                         if (highlightCount > 0) {
                           items.add(PopupMenuItem(
                             value: 'highlights',

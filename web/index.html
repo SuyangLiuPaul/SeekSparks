@@ -35,11 +35,13 @@
        Keep the plain, weeks-stable value. -->
   <meta name="viewport"
         content="width=device-width, initial-scale=1.0">
-  <!-- 2026-06-12 (v1.3.62 perf): pre-open the TLS connection to the
-       CDN that serves CanvasKit (~1.5 MB, on the boot critical path).
-       Saves a DNS + TCP + TLS round trip before the engine download
-       can even start. -->
-  <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+  <!-- 2026-08-08 (v1.6.62 — one worldwide build): the preconnect to
+       www.gstatic.com is gone because the build no longer fetches
+       CanvasKit from there. tools/release_web.sh passes
+       `--no-web-resources-cdn`, so the ~1.5 MB engine is served from
+       this origin, alongside main.dart.js — already warm, nothing to
+       pre-open, and reachable from mainland China. If a boot-time
+       request to a Google host ever reappears, that flag was dropped. -->
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="SeekSparks — a bilingual Bible exegesis tool for bigger screens, with structured original-language search.">
 

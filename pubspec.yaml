@@ -15,26 +15,19 @@ dependencies:
   scrollable_positioned_list: ^0.3.8
   shared_preferences: ^2.5.3
   cupertino_icons: ^1.0.2
-  # Cloud sync (optional — see lib/firebase_options.dart for setup).
+  # 2026-08-08 (v1.6.62 — one worldwide build): firebase_core,
+  # firebase_auth, cloud_firestore, firebase_database and
+  # google_sign_in were removed with cross-device sync. They are the
+  # reason boot had to await a `*.googleapis.com` round trip, which is
+  # unreachable from mainland China, which is why a separate
+  # CHINA_MODE build existed at all. One build now serves everyone and
+  # the export/import card in Settings is the migration path.
   #
-  # IMPORTANT: keep firebase_core / _auth / cloud_firestore on the
-  # SAME major-version family. firebase_core 3.x + 4.x had a known
-  # transitive resolution bug where pub picked
-  # firebase_core_platform_interface 6.x (Pigeon-based) alongside
-  # firebase_core_web 2.x (no Pigeon handler) → every initializeApp
-  # call threw `PlatformException(channel-error, ...
-  # FirebaseCoreHostApi.initializeCore)`. firebase_core ^4.0.0 pulls
-  # in firebase_core_web 3.x which implements the Pigeon receiver,
-  # fixing the channel-error. Bump these together.
-  firebase_core: ^4.0.0
-  firebase_auth: ^6.0.0
-  cloud_firestore: ^6.0.0
-  # 2026-05-06: Realtime Database replaces the previous Drive sync.
-  # Different transport from Firestore (WebSocket vs WebChannel) and
-  # generally more reliable on web; doesn't require any extra OAuth
-  # scope at sign-in (Firebase Auth + email/profile scopes is enough).
-  firebase_database: ^12.0.0
-  # Used by AiSearchService to call the Cloud Functions Gemini proxy.
+  # Do not re-add a Firebase package to get one small feature back:
+  # `Firebase.initializeApp()` is a network call on every boot for
+  # every reader, not just the ones using the feature.
+  #
+  # Used by AiSearchService and ErrorReporter.
   http: ^1.2.2
   # 2026-05-21 (v1.2.69): native notifications on iOS / Android /
   # macOS. Web continues to use the browser Notification API via
@@ -42,22 +35,13 @@ dependencies:
   # permission flow on Apple platforms and POST_NOTIFICATIONS on
   # Android 13+.
   flutter_local_notifications: ^19.0.0
-  # 2026-05-22 (v1.2.71): native Google sign-in on macOS. The
-  # firebase_auth `signInWithProvider` is hard-coded to return null
-  # on macOS (FLTFirebaseAuthPlugin.m line 1701 explicitly:
-  # `signInWithProvider is not supported on the MacOS platform`).
-  # google_sign_in produces an ID token natively via GIDSignIn, which
-  # we then exchange for a Firebase credential via signInWithCredential.
-  # Only used on macOS — iOS / Android keep using signInWithProvider,
-  # web keeps signInWithPopup. Mobile/web also have working flows.
-  google_sign_in: ^6.2.1
-  # Round 56: dynamically loads Google Fonts at runtime so the
-  # font picker's English serif / sans-serif options actually
-  # render. Without this, only the two bundled fonts (Roboto +
-  # Microsoft YaHei) work — picking "EB Garamond", "Lora",
-  # "Merriweather" etc. silently fell back to Roboto on web
-  # (CanvasKit can't pull from system fonts).
-  google_fonts: ^6.2.1
+  # 2026-08-08 (v1.6.62): google_fonts removed. It fetched every
+  # non-bundled face from fonts.gstatic.com on first use, so the font
+  # picker offered a dozen options that were dead for exactly the
+  # readers this release is for. The catalogue in
+  # lib/utils/font_catalog.dart is now the bundled faces plus the
+  # system stack, and `migrateLegacyFontKey` retires a saved key.
+  # Adding a face means adding an asset under `fonts:` below.
   # 2026-05-24 (v1.3.19): audioplayers removed with the 朗读 feature.
   # 2026-05-24 (v1.3.0): notification scheduler. flutter_local_notifications
   # requires `tz.TZDateTime` for `zonedSchedule`. flutter_timezone gets the
@@ -181,10 +165,11 @@ flutter:
     # fonts are physically loaded. Without a bundled CJK font, rare
     # characters like `赒` (Acts 10:2 in CUVS-YHWH), `䍁`, and the
     # Ext-B char `𨱔` rendered as "X" tofu glyphs because the bundled
-    # Roboto has no CJK coverage. The google_fonts package downloads
-    # Noto Sans SC at runtime if the user picks it as their primary
-    # font, but did NOT cover the fallback case where the user kept
-    # an English primary font + the verse contained CJK.
+    # Roboto has no CJK coverage. This bundled subset is now the ONLY
+    # CJK face the web build can resolve — v1.6.62 removed
+    # google_fonts, so nothing is downloaded at runtime. If this asset
+    # goes missing the failure is silent and total: CanvasKit renders
+    # nothing rather than tofu, so Chinese verses come up BLANK.
     #
     # The subset is built from `assets/*.json` + `lib/**/*.dart` +
     # `assets/sermons/*.txt` and gives ~1.88 MB OTF (down from the
@@ -202,9 +187,8 @@ flutter:
 
     # Microsoft YaHei was previously bundled here. It is a proprietary
     # Microsoft font (licence forbids redistribution), so we removed it
-    # in 2026-05 — Chinese readers now fall back to Google Fonts'
-    # Noto Sans SC / Noto Serif SC (SIL OFL, freely distributable) and
-    # the system installed PingFang SC / SimSun.
+    # in 2026-05. Chinese readers get NotoSansSC-Sub above on web, and
+    # the OS-installed PingFang SC / SimSun on native.
 
 # Note:
 # For Flutter Web, the browser tab icon (favicon) is located at:

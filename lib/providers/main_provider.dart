@@ -9,7 +9,6 @@ import 'package:seeksparks/services/error_reporter.dart';
 import 'package:seeksparks/services/fetch_books.dart' show bookNameToEnglish;
 import 'package:seeksparks/utils/version_mapper.dart' show translateBookName;
 import 'package:seeksparks/services/fetch_verses.dart' show FetchVerses;
-import 'package:seeksparks/services/realtime_db_sync_service.dart';
 import 'package:seeksparks/services/profile_service.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -874,7 +873,6 @@ class MainProvider extends ChangeNotifier {
       await prefs.setString(
           ProfileService.instance.scopedKey('highlights'),
           jsonEncode(_highlights));
-      RealtimeDbSyncService.instance.requestUpload();
     } catch (e, st) {
       debugPrint('MainProvider._saveHighlights failed: $e\n$st');
       // v1.3.22: silent debugPrint went nowhere in prod. Highlight
@@ -1093,7 +1091,6 @@ class MainProvider extends ChangeNotifier {
             ProfileService.instance.scopedKey('verseNoteTitles'),
             jsonEncode(_verseNoteTitles));
       }
-      RealtimeDbSyncService.instance.requestUpload();
     } catch (e, st) {
       debugPrint('MainProvider._saveNotes failed: $e\n$st');
       // v1.3.22: same rationale as saveHighlights — note loss is
@@ -1212,7 +1209,6 @@ class MainProvider extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setStringList(ProfileService.instance.scopedKey('bookmarks'),
           _bookmarks.toList());
-      RealtimeDbSyncService.instance.requestUpload();
     } catch (e, st) {
       debugPrint('MainProvider._saveBookmarks failed: $e\n$st');
       // v1.3.22: bookmark loss is user-data loss.
@@ -1447,11 +1443,9 @@ class MainProvider extends ChangeNotifier {
     prefs.setString('${_storagePrefix}version', currentVersion);
     // 2026-05-25 (v1.3.41): also persist the last-read state as a
     // single JSON blob under the ProfileService-scoped 'lastRead'
-    // key. RealtimeDbSyncService picks this up + a paired
-    // 'lastReadTimestamp' int so reading position follows the
-    // user across devices (newest-write-wins). The legacy
+    // key, paired with a 'lastReadTimestamp' int. The legacy
     // per-key triple above (book / chapter / version) stays as
-    // a fallback for older clients that don't speak lastRead.
+    // a fallback for clients that don't speak lastRead.
     if (isPrimary) {
       // Only the primary pane drives the sync. The secondary
       // split-pane has its own _storagePrefix and shouldn't
@@ -1488,21 +1482,16 @@ class MainProvider extends ChangeNotifier {
         await prefs.setInt(
             ProfileService.instance.scopedKey('lastReadTimestamp'),
             DateTime.now().millisecondsSinceEpoch);
-        RealtimeDbSyncService.instance.requestUpload();
       }
     }
   }
 
   Future<void> restoreState() async {
     final prefs = await SharedPreferences.getInstance();
-    // 2026-05-25 (v1.3.41): prefer the synced JSON blob over the
-    // legacy per-key triple. The blob is the one written by
-    // saveCurrentState and synced by RealtimeDbSyncService — when
-    // RTDB applies a newer remote write, the blob updates first,
-    // then ProfileService notifies, and the next time the user
-    // re-enters the reader, restoreState picks up the synced
-    // position. Falls through to the legacy keys if no blob
-    // exists yet (existing users upgrading from <v1.3.41).
+    // 2026-05-25 (v1.3.41): prefer the JSON blob over the legacy
+    // per-key triple. The blob is the one written by
+    // saveCurrentState. Falls through to the legacy keys if no
+    // blob exists yet (existing users upgrading from <v1.3.41).
     String? savedVersion;
     String? savedBook;
     int? savedChapter;

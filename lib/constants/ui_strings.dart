@@ -1644,36 +1644,19 @@ const uiStrings = {
         'Bible Timeline (97 events), Family Tree (277 people), and Bible Evidence (225 archaeology / manuscript / science finds) — all reachable from Home.',
   },
   'onboardCustomizeTitle': {
-    'zh-Hans': '自定义与同步',
-    'zh-Hant': '自訂與同步',
-    'en': 'Customize & sync',
+    'zh-Hans': '你的数据',
+    'zh-Hant': '你的資料',
+    'en': 'Your data',
   },
   'onboardCustomizeBody': {
-    'zh-Hans': '在「设置 → 主页布局」中拖动排序或隐藏任意板块；选择读经计划；用 Google 登录即可在所有设备同步书签、笔记和高亮。',
-    'zh-Hant': '在「設定 → 主頁佈局」中拖動排序或隱藏任意板塊；選擇讀經計劃；用 Google 登入即可在所有裝置同步書籤、筆記和高亮。',
-    'en':
-        'Drag-reorder or hide any block under Settings → Dashboard layout. Pick a reading plan. Sign in with Google to sync bookmarks, notes, and highlights across devices.',
+    'zh-Hans': '高亮、笔记、书签都保存在这台设备上——不需要账号，也不上传服务器。要换设备，用「设置 → 导出我的数据」。',
+    'zh-Hant': '螢光標記、筆記、書籤都儲存在這台裝置上——不需要帳號，也不上傳伺服器。要換裝置，用「設定 → 匯出我的資料」。',
+    'en': 'Highlights, notes and bookmarks are saved on this device — no account, no server. Settings → Export my data moves them to another device.',
   },
-  // 2026-05-10 (v1.2.11): the Customize slide above explicitly
-  // pitches Google sign-in for cross-device sync — but the China
-  // build skips Firebase entirely (see main.dart line ~109's
-  // `if (!kChinaMode)`), so cloud sync is not on the table.
-  // Promising it in the tour confused early China-build users
-  // who then went looking for the Sign-in button (which v1.2.1
-  // had already hidden). The China-only variants below replace
-  // the Google-sync sentence with the local-only reality:
-  // highlights, notes, bookmarks live on this device.
-  'onboardCustomizeTitleChina': {
-    'zh-Hans': '自定义',
-    'zh-Hant': '自訂',
-    'en': 'Customize',
-  },
-  'onboardCustomizeBodyChina': {
-    'zh-Hans': '在「设置 → 主页布局」中拖动排序或隐藏任意板块。选择读经计划。中国版的所有标记、笔记和收藏都保存在本设备。',
-    'zh-Hant': '在「設定 → 主頁佈局」中拖動排序或隱藏任意板塊。選擇讀經計劃。中國版的所有標記、筆記和收藏都保存在本裝置。',
-    'en':
-        'Drag-reorder or hide any block under Settings → Dashboard layout. Pick a reading plan. In the China build, highlights, notes, and bookmarks all stay on this device.',
-  },
+  // 2026-08-08 (v1.6.62): the slide above used to pitch Google
+  // sign-in for cross-device sync, with China-only variants that
+  // told the truth instead. Sync is gone for everyone, so there is
+  // one honest version and no variants.
 
   // Legacy v1 onboarding strings — kept for backward compatibility
   // with any external translation file that still references these
@@ -1688,17 +1671,6 @@ const uiStrings = {
     'zh-Hant': '長按經文可添加筆記、書籤或彩色高亮，可在「我的收藏」和「高亮」中查找。',
     'en':
         'Long-press a verse to add a note, bookmark, or color highlight. Find them all in Library and Highlights.',
-  },
-  'onboardCloudTitle': {
-    'zh-Hans': '同步与账号',
-    'zh-Hant': '同步與帳號',
-    'en': 'Sync & profiles',
-  },
-  'onboardCloudBody': {
-    'zh-Hans': '使用 Google 登录可在所有设备同步；也可使用本地账号仅保存于此设备。',
-    'zh-Hant': '使用 Google 登入可在所有裝置同步；也可使用本地帳號僅保存於此裝置。',
-    'en':
-        'Sign in with Google to sync everything across devices, or use a local profile to keep things on this device only.',
   },
   // ── Settings section headers (Round 34) ─────────────────────────
   'settingsSectionDisplay': {
@@ -1811,464 +1783,6 @@ const uiStrings = {
     'zh-Hans': 'SeekSparks AI（高级 · 可选）',
     'zh-Hant': 'SeekSparks AI（進階 · 可選）',
     'en': 'SeekSparks AI (advanced · optional)',
-  },
-  'cloudDiagSection': {
-    'zh-Hans': '云端配置自检（开发者 / 诊断用）',
-    'zh-Hant': '雲端配置自檢（開發者 / 診斷用）',
-    'en': 'Cloud setup status (developer / diagnostic)',
-  },
-  'cloudDiagTitle': {
-    'zh-Hans': '云端配置自检',
-    'zh-Hant': '雲端配置自檢',
-    'en': 'Cloud setup diagnostic',
-  },
-  'cloudDiagBody': {
-    'zh-Hans': '自动检测 Firebase Auth、Google Drive 同步、Gemini AI 是否正常。'
-        '一般用户无需启用任何 API——只有应用作者需要在 Google Cloud Console 启用一次。'
-        '若有问题，应用仍能在降级模式下使用（同步退化为本地保存，AI 显示"不可用"）。',
-    'zh-Hant': '自動檢測 Firebase Auth、Google Drive 同步、Gemini AI 是否正常。'
-        '一般使用者無需啟用任何 API——只有應用作者需要在 Google Cloud Console 啟用一次。'
-        '若有問題，應用仍能在降級模式下使用（同步退化為本地保存，AI 顯示「不可用」）。',
-    'en':
-        'Probes Firebase Auth, Drive sync, and the AI proxy. End '
-            'users never need to enable anything — these are '
-            'developer-side checks for the SeekSparks project. The app '
-            'keeps working in degraded mode either way (sync goes '
-            'local-only, AI shows "not available").',
-  },
-  'cloudDiagRun': {
-    'zh-Hans': '运行检查',
-    'zh-Hant': '執行檢查',
-    'en': 'Run check',
-  },
-  'cloudDiagRerun': {
-    'zh-Hans': '重新检查',
-    'zh-Hant': '重新檢查',
-    'en': 'Re-run',
-  },
-  // Localised "Open …" labels reused by the diagnostic's fix-link
-  // buttons so they match the wording on the setup walkthrough.
-  'setupStep1OpenLabel': {
-    'zh-Hans': '启用 Drive API',
-    'zh-Hant': '啟用 Drive API',
-    'en': 'Enable Drive API',
-  },
-  'setupStep3OpenLabel': {
-    'zh-Hans': '打开 OAuth 同意屏幕',
-    'zh-Hant': '打開 OAuth 同意畫面',
-    'en': 'Open OAuth consent screen',
-  },
-  'setupStep5OpenLabel': {
-    'zh-Hans': '打开 Netlify 环境变量',
-    'zh-Hant': '打開 Netlify 環境變數',
-    'en': 'Open Netlify env vars',
-  },
-  // ── Setup walkthrough — info popups (2026-05-06) ──────────────
-  'setupDetailTooltip': {
-    'zh-Hans': '为什么要做这一步？',
-    'zh-Hant': '為什麼要做這一步？',
-    'en': 'Why this step?',
-  },
-  'setupDetailDialogClose': {
-    'zh-Hans': '我明白了',
-    'zh-Hant': '我明白了',
-    'en': 'Got it',
-  },
-  'setupStep1Detail': {
-    'zh-Hans': '【作用】在 Firebase Console 中启用 Realtime Database。\n\n'
-        '【为什么需要】同步功能（高亮、书签、笔记、读经计划）将每个用户的数据'
-        '存放在 RTDB 的 users/{uid}/sync 路径下。RTDB 是 Firebase 的"实时云数据库"——'
-        '与 Firestore 是不同的产品，使用 WebSocket 传输（更可靠地穿透防火墙），'
-        '而且不需要任何额外的 OAuth 范围。\n\n'
-        '【不启用会怎样】用户登录后同步会失败，错误码 database-disabled。\n\n'
-        '【是否影响最终用户】不影响。一次性的项目级别设置。'
-        '点击 "Create Database" 然后选择 "United States (us-central1)" 区域和 "Start in locked mode"。'
-        '步骤 3 设置安全规则后才能真正读写。',
-    'zh-Hant': '【作用】在 Firebase Console 中啟用 Realtime Database。\n\n'
-        '【為什麼需要】同步功能（標亮、書籤、筆記、讀經計劃）將每個使用者的資料'
-        '存放在 RTDB 的 users/{uid}/sync 路徑下。RTDB 是 Firebase 的「即時雲資料庫」——'
-        '與 Firestore 是不同的產品，使用 WebSocket 傳輸（更可靠地穿透防火牆），'
-        '而且不需要任何額外的 OAuth 範圍。\n\n'
-        '【不啟用會怎樣】使用者登入後同步會失敗，錯誤碼 database-disabled。\n\n'
-        '【是否影響最終使用者】不影響。一次性的專案級別設定。'
-        '點擊「Create Database」然後選擇「United States (us-central1)」區域和「Start in locked mode」。'
-        '步驟 3 設定安全規則後才能真正讀寫。',
-    'en':
-        'WHAT: Enables Firebase Realtime Database in the project. '
-            'It\'s a separate product from Firestore — uses '
-            'WebSocket transport (works through more firewalls) and '
-            'doesn\'t need any extra OAuth scope at sign-in.\n\n'
-            "WHY: Sync (highlights / bookmarks / notes / reading-plan "
-            "progress) stores each user's data at "
-            "users/{uid}/sync.\n\n"
-            "WHAT BREAKS WITHOUT IT: Sign-in works but sync fails "
-            "with code `database-disabled`. AI features still work.\n\n"
-            "DOES IT AFFECT END USERS: No — one-time project-level "
-            'setting. Click "Create Database" → pick a region (US '
-            'is fine) → "Start in locked mode" (Step 3 opens up '
-            'rules afterwards).',
-  },
-  'setupStep2Detail': {
-    'zh-Hans': '【作用】在 ysword 项目里启用 Generative Language API（即 Gemini API）。\n\n'
-        '【为什么需要】Netlify 函数（aiExplainWord、aiSearch）通过 Gemini 提供 AI 释义和 AI 搜索。'
-        '即使你已经有了 GEMINI_API_KEY 环境变量，如果该 API 在密钥所属项目中没启用，调用就会失败。\n\n'
-        '【不启用会怎样】AI 解释和 AI 搜索功能会显示"暂时不可用"消息。其他功能不受影响。\n\n'
-        '【是否影响最终用户】不影响。这是项目级别的设置。',
-    'zh-Hant': '【作用】在 ysword 專案裡啟用 Generative Language API（即 Gemini API）。\n\n'
-        '【為什麼需要】Netlify 函數（aiExplainWord、aiSearch）透過 Gemini 提供 AI 釋義和 AI 搜尋。'
-        '即使你已經有了 GEMINI_API_KEY 環境變數，如果該 API 在金鑰所屬專案中沒啟用，呼叫就會失敗。\n\n'
-        '【不啟用會怎樣】AI 釋義和 AI 搜尋功能會顯示「暫時不可用」訊息。其他功能不受影響。\n\n'
-        '【是否影響最終使用者】不影響。這是專案級別的設定。',
-    'en':
-        'WHAT: Enables the Generative Language API (the Gemini API) '
-            'in the project.\n\n'
-            "WHY: The Netlify functions (aiExplainWord, aiSearch) "
-            "call Gemini for AI word explanations + AI search. Even "
-            "if GEMINI_API_KEY is set in env vars, the call fails "
-            "if the API isn't enabled in the project that owns the "
-            'key.\n\n'
-            "WHAT BREAKS WITHOUT IT: AI explanation and AI search "
-            'show "not available right now" messages. Other '
-            'features unaffected.\n\n'
-            "DOES IT AFFECT END USERS: No. Project-level setting.",
-  },
-  'setupStep3Detail': {
-    'zh-Hans': '【作用】配置 Realtime Database 的安全规则，允许已登录用户读写自己的数据。\n\n'
-        '【为什么需要】Firebase 启用 RTDB 后默认规则是 ".read": false / ".write": false——'
-        '完全锁死。必须开放给已登录用户才能同步。\n\n'
-        '【推荐规则】只允许用户读写自己 uid 下的路径：\n'
-        '{\n'
-        '  "rules": {\n'
-        '    "users": {\n'
-        '      "\$uid": {\n'
-        '        ".read": "auth != null && auth.uid == \$uid",\n'
-        '        ".write": "auth != null && auth.uid == \$uid"\n'
-        '      }\n'
-        '    }\n'
-        '  }\n'
-        '}\n\n'
-        '【不设置会怎样】所有同步操作返回 permission_denied 错误。\n\n'
-        '【是否影响最终用户】不影响。一次性的服务端设置。',
-    'zh-Hant': '【作用】配置 Realtime Database 的安全規則，允許已登入使用者讀寫自己的資料。\n\n'
-        '【為什麼需要】Firebase 啟用 RTDB 後預設規則是 ".read": false / ".write": false——'
-        '完全鎖死。必須開放給已登入使用者才能同步。\n\n'
-        '【推薦規則】只允許使用者讀寫自己 uid 下的路徑：\n'
-        '{\n'
-        '  "rules": {\n'
-        '    "users": {\n'
-        '      "\$uid": {\n'
-        '        ".read": "auth != null && auth.uid == \$uid",\n'
-        '        ".write": "auth != null && auth.uid == \$uid"\n'
-        '      }\n'
-        '    }\n'
-        '  }\n'
-        '}\n\n'
-        '【不設定會怎樣】所有同步操作回傳 permission_denied 錯誤。\n\n'
-        '【是否影響最終使用者】不影響。一次性的伺服器端設定。',
-    'en':
-        'WHAT: Configures Realtime Database security rules so '
-            'authenticated users can read & write their own data.\n\n'
-            "WHY: Firebase ships RTDB with default rules denying "
-            "everything (.read: false / .write: false). Sync needs "
-            "the path users/<uid>/* opened up to that user only.\n\n"
-            'RECOMMENDED RULES (paste into the Rules tab):\n'
-            '{\n'
-            '  "rules": {\n'
-            '    "users": {\n'
-            '      "\$uid": {\n'
-            '        ".read": "auth != null && auth.uid == \$uid",\n'
-            '        ".write": "auth != null && auth.uid == \$uid"\n'
-            '      }\n'
-            '    }\n'
-            '  }\n'
-            '}\n\n'
-            "WHAT BREAKS WITHOUT IT: Every sync operation returns "
-            '`permission_denied`. The diagnostic surfaces this with '
-            "an 'Open RTDB rules' fix-link.\n\n"
-            "DOES IT AFFECT END USERS: No — one-time server-side "
-            'setting.',
-  },
-  'setupStep4Detail': {
-    'zh-Hans': '【作用】把 yswords.netlify.app 加到 Firebase Auth 的"已授权域名"列表。\n\n'
-        '【为什么需要】Firebase Auth 出于安全考虑，会拒绝任何不在白名单中的来源发起的登录请求。\n\n'
-        '【不启用会怎样】登录请求会失败，错误码 auth/unauthorized-domain。\n\n'
-        '【是否影响最终用户】不影响。这是 Firebase 项目级别的设置。'
-        '如果将来部署到新域名（比如自定义域名 yswords.com），也要把那个域名加进来。',
-    'zh-Hant': '【作用】把 yswords.netlify.app 加到 Firebase Auth 的「已授權網域」清單。\n\n'
-        '【為什麼需要】Firebase Auth 出於安全考量，會拒絕任何不在白名單中的來源發起的登入請求。\n\n'
-        '【不啟用會怎樣】登入請求會失敗，錯誤碼 auth/unauthorized-domain。\n\n'
-        '【是否影響最終使用者】不影響。這是 Firebase 專案級別的設定。'
-        '如果將來部署到新網域（比如自訂網域 yswords.com），也要把那個網域加進來。',
-    'en':
-        'WHAT: Adds yswords.netlify.app to the Firebase Auth '
-            '"Authorized domains" allow-list.\n\n'
-            'WHY: Firebase Auth rejects any sign-in attempt from a '
-            "domain not on this list, as a security measure.\n\n"
-            "WHAT BREAKS WITHOUT IT: Sign-in fails with code "
-            "`auth/unauthorized-domain`.\n\n"
-            "DOES IT AFFECT END USERS: No. Firebase-project-level "
-            'setting. If you ever deploy to a new domain (custom '
-            "domain like yswords.com), add that domain here too.",
-  },
-  'setupStep5Detail': {
-    'zh-Hans': '【作用】在 Netlify 仪表盘的环境变量中设置 GEMINI_API_KEY。\n\n'
-        '【为什么需要】Netlify 函数（aiExplainWord、aiSearch）需要这个密钥来认证 Gemini API 调用。'
-        '密钥从 https://aistudio.google.com/apikey 免费获取。\n\n'
-        '【可选】可以最多设置 9 个备用密钥（GEMINI_API_KEY_BACKUP_2..9）'
-        '形成密钥链，主密钥额度耗尽时自动切换到备用密钥，提高可用性。\n\n'
-        '【不设置会怎样】AI 功能调用时函数会返回 503 错误，提示密钥未配置。\n\n'
-        '【注意】这是 Netlify 环境变量，不是 Google Cloud 设置。修改后需要重新部署生效。',
-    'zh-Hant': '【作用】在 Netlify 儀表板的環境變數中設置 GEMINI_API_KEY。\n\n'
-        '【為什麼需要】Netlify 函數（aiExplainWord、aiSearch）需要這個金鑰來認證 Gemini API 呼叫。'
-        '金鑰從 https://aistudio.google.com/apikey 免費取得。\n\n'
-        '【可選】可以最多設置 9 個備用金鑰（GEMINI_API_KEY_BACKUP_2..9）'
-        '形成金鑰鏈，主金鑰額度耗盡時自動切換到備用金鑰，提高可用性。\n\n'
-        '【不設置會怎樣】AI 功能呼叫時函數會回傳 503 錯誤，提示金鑰未配置。\n\n'
-        '【注意】這是 Netlify 環境變數，不是 Google Cloud 設定。修改後需要重新部署生效。',
-    'en':
-        'WHAT: Sets the GEMINI_API_KEY environment variable in '
-            'the Netlify dashboard.\n\n'
-            "WHY: The Netlify functions (aiExplainWord, aiSearch) "
-            "need this credential to authenticate Gemini API calls. "
-            "Generate one for free at https://aistudio.google.com/apikey.\n\n"
-            "OPTIONAL: Set up to 9 backup keys "
-            "(GEMINI_API_KEY_BACKUP_2..9) to form a fallback chain — "
-            "when the primary key's quota is exhausted, the function "
-            "automatically tries the next one. Improves reliability.\n\n"
-            "WHAT BREAKS WITHOUT IT: AI features fail with 503 'GEMINI_"
-            "API_KEY is not configured'.\n\n"
-            "NOTE: This is a Netlify env var, not a Google Cloud "
-            "setting. Changes require a redeploy to take effect.",
-  },
-  // ── Diagnostic probe result strings (localised) ───────────────
-  'cloudDiagFirebaseAuthTitle': {
-    'zh-Hans': 'Firebase Auth',
-    'zh-Hant': 'Firebase Auth',
-    'en': 'Firebase Auth',
-  },
-  'cloudDiagFirebaseAuthOk': {
-    'zh-Hans': '已配置。',
-    'zh-Hant': '已配置。',
-    'en': 'Configured.',
-  },
-  'cloudDiagFirebaseAuthPlaceholder': {
-    'zh-Hans': 'firebase_options.dart 中仍是占位值。云同步和登录已禁用（仅本地模式）。',
-    'zh-Hant': 'firebase_options.dart 中仍是佔位值。雲同步和登入已停用（僅本地模式）。',
-    'en':
-        'firebase_options.dart still has placeholder values. Cloud '
-            'sync + sign-in are disabled (local-only mode).',
-  },
-  'cloudDiagFirebaseAuthFailed': {
-    'zh-Hans': 'Firebase 初始化失败。请在浏览器控制台中查找 [CloudAuthService] 日志。',
-    'zh-Hant': 'Firebase 初始化失敗。請在瀏覽器控制台中查找 [CloudAuthService] 日誌。',
-    'en': 'Firebase init failed. Check console for [CloudAuthService] log.',
-  },
-  'cloudDiagSignedInTitle': {
-    'zh-Hans': '已登录',
-    'zh-Hant': '已登入',
-    'en': 'Signed in',
-  },
-  'cloudDiagSignedInSkip': {
-    'zh-Hans': '未配置 Auth。',
-    'zh-Hant': '未配置 Auth。',
-    'en': 'Auth not configured.',
-  },
-  'cloudDiagSignedInWarning': {
-    'zh-Hans': '尚未登录。在 设置 → 账户 中登录后，云端同步才会启用。',
-    'zh-Hant': '尚未登入。在 設定 → 帳號 中登入後，雲端同步才會啟用。',
-    'en':
-        'Not signed in. Cloud sync stays disabled until the user '
-            'signs in via Settings → Account.',
-  },
-  'cloudDiagSignedInOk': {
-    'zh-Hans': '账号：{email}',
-    'zh-Hant': '帳號：{email}',
-    'en': 'as {email}',
-  },
-  'cloudDiagDriveScopeTitle': {
-    'zh-Hans': 'Drive 权限范围',
-    'zh-Hant': 'Drive 權限範圍',
-    'en': 'Drive scope',
-  },
-  'cloudDiagDriveScopeSkip': {
-    'zh-Hans': '未登录。',
-    'zh-Hant': '未登入。',
-    'en': 'Not signed in.',
-  },
-  'cloudDiagDriveScopeWarning': {
-    'zh-Hans': '未捕获 Drive OAuth 访问令牌。可能是用户在添加 drive.file 范围之前登录的——'
-        '请在 设置 → 账户 → 同步 中点击"重新连接 Google Drive"。',
-    'zh-Hant': '未捕獲 Drive OAuth 存取權杖。可能是使用者在加入 drive.file 範圍之前登入的——'
-        '請在 設定 → 帳號 → 同步 中點擊「重新連接 Google Drive」。',
-    'en':
-        'No Drive OAuth access token captured. User may have signed '
-            'in before the drive.file scope was added — they need to '
-            'click Reconnect Drive in Settings → Account → Sync.',
-  },
-  'cloudDiagDriveScopeOk': {
-    'zh-Hans': 'OAuth 访问令牌已捕获。',
-    'zh-Hant': 'OAuth 存取權杖已捕獲。',
-    'en': 'OAuth access token captured.',
-  },
-  'cloudDiagDriveApiTitle': {
-    'zh-Hans': 'Drive REST API',
-    'zh-Hant': 'Drive REST API',
-    'en': 'Drive REST API',
-  },
-  'cloudDiagDriveApiSkip': {
-    'zh-Hans': '没有访问令牌。',
-    'zh-Hant': '沒有存取權杖。',
-    'en': 'No access token.',
-  },
-  'cloudDiagDriveApiOkEmpty': {
-    'zh-Hans': 'API 可达；SeekSparks.json 还不存在（首次同步时会创建）。',
-    'zh-Hant': 'API 可達；SeekSparks.json 還不存在（首次同步時會建立）。',
-    'en':
-        'API reachable; no SeekSparks.json yet (will be created on first sync).',
-  },
-  'cloudDiagDriveApiOkExists': {
-    'zh-Hans': 'API 可达；SeekSparks.json 已存在。',
-    'zh-Hant': 'API 可達；SeekSparks.json 已存在。',
-    'en': 'API reachable; SeekSparks.json exists.',
-  },
-  'cloudDiagDriveApi401': {
-    'zh-Hans': '401 未授权——访问令牌已过期。下次同步会自动静默刷新。',
-    'zh-Hant': '401 未授權——存取權杖已過期。下次同步會自動靜默刷新。',
-    'en':
-        '401 unauthorized — access token expired. The next sync '
-            'will silently refresh it.',
-  },
-  'cloudDiagDriveApiNotEnabled': {
-    'zh-Hans': 'ysword 项目中未启用 Drive API。点击下方"打开 Cloud Console"一键启用。',
-    'zh-Hant': 'ysword 專案中未啟用 Drive API。點擊下方「打開 Cloud Console」一鍵啟用。',
-    'en':
-        'Drive API is NOT enabled in the ysword project. Click '
-            '"Open Cloud Console" to enable it (one click).',
-  },
-  'cloudDiagDriveApi403Other': {
-    'zh-Hans': '403——可能是 OAuth 同意屏幕缺少 drive.file 范围，或者你的账号被 Workspace 管理员禁用了第三方应用。服务器返回：{body}',
-    'zh-Hant': '403——可能是 OAuth 同意畫面缺少 drive.file 範圍，或者你的帳號被 Workspace 管理員停用了第三方應用。伺服器回傳：{body}',
-    'en':
-        '403 — likely the OAuth consent screen is missing the '
-            'drive.file scope, or your account is on a Workspace '
-            'admin that blocks third-party apps. Server said: {body}',
-  },
-  'cloudDiagAiProxyTitle': {
-    'zh-Hans': 'AI 代理（Netlify）',
-    'zh-Hant': 'AI 代理（Netlify）',
-    'en': 'AI proxy (Netlify)',
-  },
-  'cloudDiagAiProxyOk': {
-    'zh-Hans': '函数可达。AI 调用按需访问 Gemini；如有失败请查看 Netlify 控制台中 /api/aiSearch 的日志。',
-    'zh-Hant': '函數可達。AI 呼叫按需存取 Gemini；如有失敗請查看 Netlify 控制台中 /api/aiSearch 的日誌。',
-    'en':
-        'Function reachable. Real AI calls go to Gemini on demand; '
-            'if they fail, see /api/aiSearch logs in Netlify '
-            'dashboard.',
-  },
-  'cloudDiagAiProxy503': {
-    'zh-Hans': '函数报告：GEMINI_API_KEY 未配置。请在 Netlify 仪表盘中设置。',
-    'zh-Hant': '函數報告：GEMINI_API_KEY 未配置。請在 Netlify 儀表板中設置。',
-    'en':
-        'Function says GEMINI_API_KEY is not configured. Set it in '
-            'the Netlify dashboard.',
-  },
-  'cloudDiagAiProxy404': {
-    'zh-Hans': '函数返回 404——未部署，或 netlify.toml 重定向配置错误。',
-    'zh-Hant': '函數回傳 404——未部署，或 netlify.toml 重定向配置錯誤。',
-    'en':
-        'Function returns 404 — not deployed, or netlify.toml '
-            'redirects are misconfigured.',
-  },
-  'cloudDiagTimeout': {
-    'zh-Hans': '8 秒后超时。',
-    'zh-Hant': '8 秒後逾時。',
-    'en': 'Timed out after 8s.',
-  },
-  'cloudDiagUnknownEmail': {
-    'zh-Hans': '（未知邮箱）',
-    'zh-Hant': '（未知信箱）',
-    'en': '(unknown email)',
-  },
-  // ── RTDB diagnostic probe (replaces Drive scope + Drive REST) ──
-  'cloudDiagRtdbTitle': {
-    'zh-Hans': '实时数据库（Realtime Database）',
-    'zh-Hant': '即時資料庫（Realtime Database）',
-    'en': 'Realtime Database',
-  },
-  'cloudDiagRtdbSkip': {
-    'zh-Hans': '未登录。',
-    'zh-Hant': '未登入。',
-    'en': 'Not signed in.',
-  },
-  'cloudDiagRtdbSkipNoUid': {
-    'zh-Hans': '没有 uid。',
-    'zh-Hant': '沒有 uid。',
-    'en': 'No uid.',
-  },
-  'cloudDiagRtdbOk': {
-    'zh-Hans': '读写测试通过。同步数据存放在 users/{uid}/sync 下。',
-    'zh-Hant': '讀寫測試通過。同步資料存放在 users/{uid}/sync 下。',
-    'en':
-        'Read + write OK. Sync data lives at users/{uid}/sync.',
-  },
-  'cloudDiagRtdbOkWithUrl': {
-    'zh-Hans': '读写测试通过 · {url}。同步数据存放在 users/{uid}/sync 下。',
-    'zh-Hant': '讀寫測試通過 · {url}。同步資料存放在 users/{uid}/sync 下。',
-    'en':
-        'Read + write OK at {url}. Sync data lives at users/{uid}/sync.',
-  },
-  'cloudDiagRtdbTimeoutDetail': {
-    'zh-Hans': '连接 {url} 超时（8 秒）。最可能的原因是 Firebase 控制台中尚未'
-        '创建数据库——打开 RTDB 标签页点击 "Create Database" 即可。'
-        '其他可能：URL 的区域和数据库所在的区域不匹配，或者网络封锁了 firebaseio.com。',
-    'zh-Hant': '連接 {url} 逾時（8 秒）。最可能的原因是 Firebase 控制台中尚未'
-        '建立資料庫——打開 RTDB 標籤頁點擊「Create Database」即可。'
-        '其他可能：URL 的區域和資料庫所在的區域不匹配，或者網路封鎖了 firebaseio.com。',
-    'en':
-        'Timed out after 8s connecting to {url}. The most likely '
-            "cause is that the database hasn't been created yet in "
-            'the Firebase Console — open the RTDB tab and click '
-            '"Create Database". Other possibilities: the URL\'s '
-            'region doesn\'t match where your database lives, or '
-            'your network is blocking firebaseio.com.',
-  },
-  'cloudDiagRtdbReadback': {
-    'zh-Hans': '探针写入成功，但读回的值不一致。可能是监听器过期或规则禁止读取。',
-    'zh-Hant': '探針寫入成功，但讀回的值不一致。可能是監聽器過期或規則禁止讀取。',
-    'en':
-        'Wrote a probe value but readback returned a different value. '
-            'Could be a stale listener or rules denying read.',
-  },
-  'cloudDiagRtdbPermissionDenied': {
-    'zh-Hans': '权限被拒。打开 Firebase 控制台 → Realtime Database → Rules，'
-        '允许已登录用户读写自己的 users/{uid}/* 路径。',
-    'zh-Hant': '權限被拒。打開 Firebase 控制台 → Realtime Database → Rules，'
-        '允許已登入使用者讀寫自己的 users/{uid}/* 路徑。',
-    'en':
-        'Permission denied. Open Firebase Console → Realtime '
-            'Database → Rules and ensure authenticated users can '
-            'read/write their own users/<uid>/* path.',
-  },
-  'cloudDiagRtdbNotEnabled': {
-    'zh-Hans': '该项目尚未启用 Realtime Database。请在 Firebase 控制台的 '
-        'Realtime Database 标签页中点击 "Create Database"。',
-    'zh-Hant': '該專案尚未啟用 Realtime Database。請在 Firebase 控制台的 '
-        'Realtime Database 標籤頁中點擊「Create Database」。',
-    'en':
-        "Realtime Database isn't enabled yet for this project. "
-            'Open Firebase Console and click "Create Database" on '
-            'the Realtime Database tab.',
-  },
-  'cloudDiagRtdbOpenRules': {
-    'zh-Hans': '打开 RTDB 规则',
-    'zh-Hant': '打開 RTDB 規則',
-    'en': 'Open RTDB rules',
-  },
-  'cloudDiagRtdbOpenConsole': {
-    'zh-Hans': '打开 RTDB 控制台',
-    'zh-Hant': '打開 RTDB 控制台',
-    'en': 'Open RTDB console',
   },
   // ── Exegesis sheet — proper-noun complementary glosses ────────
   // 2026-05-07: for proper nouns (people, places, deities) the
@@ -2392,26 +1906,6 @@ const uiStrings = {
     'en':
         'SeekSparks AI is not configured. The developer needs to set GEMINI_API_KEY in Netlify env.',
   },
-  // 2026-05-09 (v1.2.0): tag appended to the AboutPage footer when
-  // the build was compiled with `--dart-define=CHINA_MODE=true`.
-  // Lets users + support requests instantly tell which deploy
-  // they're on (international vs China-tuned).
-  'chinaBuildTag': {
-    'zh-Hans': '中国版',
-    'zh-Hant': '中國版',
-    'en': 'China build',
-  },
-  // 2026-05-09 (v1.2.1): privacy / data-locality note shown on the
-  // Profiles tab in China mode in place of the Sign-in button.
-  // Replaces the previous Google sign-in CTA which can never succeed
-  // behind the GFW. Same message slot is used by the Profiles "cloud
-  // privacy" footnote when `kChinaMode` is true.
-  'chinaCloudUnavailable': {
-    'zh-Hans': '中国版不支持云同步 · 数据保存在本机',
-    'zh-Hant': '中國版不支持雲同步 · 資料保存在本機',
-    'en':
-        "Cloud sync isn't available in the China build. Highlights, notes, and bookmarks stay on this device.",
-  },
   'aiBibleSearchSomeMissing': {
     'zh-Hans': 'SeekSparks AI 还找到 {n} 处经文，但您当前圣经版本中没有匹配（仅供参考）。',
     'zh-Hant': 'SeekSparks AI 還找到 {n} 處經文，但您當前聖經版本中沒有匹配（僅供參考）。',
@@ -2440,20 +1934,6 @@ const uiStrings = {
     'en':
         'AI is only an aid — verify against Scripture and let the Spirit guide you.',
   },
-  // Friendly fallback when sync errors are clearly setup-related
-  // (RTDB not enabled / permission denied). Replaces the raw
-  // Firebase exception message in user-facing UI.
-  'syncNotConfigured': {
-    'zh-Hans': '云端同步尚未配置完成。本地高亮 / 书签 / 笔记仍可正常使用。'
-        '若您是开发者，请在 设置 → 关于 → 底部 查看云端配置状态。',
-    'zh-Hant': '雲端同步尚未配置完成。本地標亮 / 書籤 / 筆記仍可正常使用。'
-        '若您是開發者，請在 設定 → 關於 → 底部 查看雲端配置狀態。',
-    'en':
-        "Cloud sync isn't fully set up for this app yet. Local "
-            'highlights / bookmarks / notes still work as normal. '
-            'If you\'re the developer, see Settings → About → '
-            'bottom for the setup walkthrough.',
-  },
   'aiByokTitle': {
     'zh-Hans': '使用我自己的 Gemini API 密钥',
     'zh-Hant': '使用我自己的 Gemini API 金鑰',
@@ -2478,19 +1958,6 @@ const uiStrings = {
             '(word explanations, AI search) use your own quota (15 RPM / '
             '1500 RPD) instead of the shared developer pool. The key '
             'lives on this device.',
-  },
-  // 2026-05-10 (v1.2.17): cloud-sync disclosure shown only when the
-  // user is signed in (intl build, Firebase available) and has a
-  // key set. Sits in the BYOK card below the buttons. Tells the
-  // user the key is synced to their OWN Firebase project under
-  // `users/{uid}/account/geminiApiKey` — visible only to them per
-  // Firebase rules — so it shows up on every other device they
-  // sign in on.
-  'aiByokSyncedNote': {
-    'zh-Hans': '已登录 — 密钥会实时同步到您账号下的其他已登录设备（无需重启）。',
-    'zh-Hant': '已登入 — 密鑰會即時同步到您帳號下的其他已登入裝置（無須重啟）。',
-    'en':
-        'Signed in — the key syncs in real time to your other signed-in devices (no restart needed).',
   },
   'aiByokGetKey': {
     'zh-Hans': '获取免费密钥',
@@ -2613,22 +2080,6 @@ const uiStrings = {
   'hide': {'zh-Hans': '隐藏', 'zh-Hant': '隱藏', 'en': 'Hide'},
   // 'save' and 'clear' already exist elsewhere in this map; reuse them.
   'saved': {'zh-Hans': '已保存', 'zh-Hant': '已儲存', 'en': 'Saved'},
-  // Drive sync — appears in the Account / Sync card.
-  'driveSyncReconnect': {
-    'zh-Hans': '重新连接 Google Drive',
-    'zh-Hant': '重新連接 Google Drive',
-    'en': 'Reconnect Google Drive',
-  },
-  'driveSyncReconnectBody': {
-    'zh-Hans': 'Google Drive 授权已过期。点击下方按钮重新授权以恢复同步——'
-        '您的高亮 / 笔记 / 书签存放在您自己的 Drive 隐藏应用文件夹（appDataFolder）中。',
-    'zh-Hant': 'Google Drive 授權已過期。點擊下方按鈕重新授權以恢復同步——'
-        '您的標亮 / 筆記 / 書籤存放在您自己的 Drive 隱藏應用資料夾（appDataFolder）中。',
-    'en':
-        'Google Drive authorization expired. Click below to reconnect '
-            'and resume sync — your highlights / notes / bookmarks live '
-            'in your own Drive AppData folder (hidden, app-private).',
-  },
   // 2026-05-07: improved progress + post-download UX:
   // - "{total} files" makes the unit explicit (was just a bare number)
   // - "{eta}" inserts a localized "~30 sec left" suffix once we have
@@ -3077,12 +2528,12 @@ const uiStrings = {
     'en': 'Paper',
   },
   'stylePreset_paper_description': {
-    'zh-Hans': '温暖米色纸张质感，发丝边框，无阴影，Garamond 衬线字体 —— '
+    'zh-Hans': '温暖米色纸张质感，发丝边框，无阴影，宽松行距 —— '
         '像在读一本印刷的圣经。',
-    'zh-Hant': '溫暖米色紙張質感，髮絲邊框，無陰影，Garamond 襯線字體 —— '
+    'zh-Hant': '溫暖米色紙張質感，髮絲邊框，無陰影，寬鬆行距 —— '
         '像在讀一本印刷的聖經。',
     'en':
-        'Warm cream paper feel — hairline borders, no shadows, EB Garamond serif. Reads like a printed Bible.',
+        'Warm cream paper feel — hairline borders, no shadows, generous line spacing. Reads like a printed Bible.',
   },
   'stylePreset_carbon_label': {
     'zh-Hans': '碳黑',
@@ -3090,29 +2541,27 @@ const uiStrings = {
     'en': 'Carbon',
   },
   'stylePreset_carbon_description': {
-    'zh-Hans': '高对比深色界面，锐利的硬阴影，紧凑布局，Inter 字体 —— '
+    'zh-Hans': '高对比深色界面，锐利的硬阴影，紧凑布局 —— '
         '面向工具型重度用户。',
-    'zh-Hant': '高對比深色界面，銳利的硬陰影，緊湊佈局，Inter 字體 —— '
+    'zh-Hant': '高對比深色界面，銳利的硬陰影，緊湊佈局 —— '
         '面向工具型重度使用者。',
     'en':
-        'High-contrast dark surfaces with sharp drop-shadows, compact density, Inter sans — for power-user vibes.',
+        'High-contrast dark surfaces with sharp drop-shadows, compact density — for power-user vibes.',
   },
-  // 2026-05-08 (v1.1.3): rewritten to reflect v1.1.2 reality —
-  // "System default" is now the recommended top option (resolves
-  // through the OS native font stack), Microsoft YaHei is no longer
-  // bundled (removed in v1.0 for licence reasons), and Google
-  // Fonts options download on first use.
+  // 2026-08-08 (v1.6.62 — one worldwide build): every option in the
+  // picker now ships with the app. The old copy promised a dozen
+  // Google Fonts "downloaded on first use", which was a promise the
+  // app could not keep for a reader behind the GFW — that is the
+  // whole reason the download path is gone.
   'fontFamilyHint': {
-    'zh-Hans': '推荐选「系统默认」—— macOS / iOS 用 SF Pro，Windows 用雅黑，'
-        'Android 用 Roboto，跟随您设备的系统字体。Roboto 是应用内置的备用'
-        '字体，永远可用。其他选项（EB Garamond / Lora / Inter 等）首次使用'
-        '时从 Google Fonts 下载并缓存。',
-    'zh-Hant': '推薦選「系統預設」—— macOS / iOS 用 SF Pro，Windows 用雅黑，'
-        'Android 用 Roboto，跟隨您裝置的系統字體。Roboto 是應用內建的備用'
-        '字體，永遠可用。其他選項（EB Garamond / Lora / Inter 等）首次使用'
-        '時從 Google Fonts 下載並快取。',
+    'zh-Hans': '所有字体都随应用打包，无需联网下载，离线也能用。'
+        '推荐选「系统默认」—— macOS / iOS 用 SF Pro，Windows 用雅黑，'
+        'Android 用 Roboto，跟随您设备的系统字体。',
+    'zh-Hant': '所有字體都隨應用打包，無需連網下載，離線也能用。'
+        '推薦選「系統預設」—— macOS / iOS 用 SF Pro，Windows 用雅黑，'
+        'Android 用 Roboto，跟隨您裝置的系統字體。',
     'en':
-        'Pick "System default" — macOS / iOS uses SF Pro, Windows uses Segoe UI, Android uses Roboto, following your device. Roboto is bundled with the app and always available. Other options (EB Garamond / Lora / Inter / …) download from Google Fonts on first use and are cached afterwards.',
+        'Every font here ships with the app — nothing is downloaded, so the picker works offline. "System default" follows your device: SF Pro on macOS / iOS, Segoe UI on Windows, Roboto on Android.',
   },
   'confirm': {
     'zh-Hans': '确认',
@@ -3186,41 +2635,6 @@ const uiStrings = {
     'zh-Hans': '从头开始阅读圣经。',
     'zh-Hant': '從頭開始閱讀聖經。',
     'en': 'Open the Bible from the beginning.',
-  },
-  'syncNow': {
-    'zh-Hans': '立即同步',
-    'zh-Hant': '立即同步',
-    'en': 'Sync now',
-  },
-  'syncingNow': {
-    'zh-Hans': '正在同步…',
-    'zh-Hant': '正在同步…',
-    'en': 'Syncing now…',
-  },
-  'syncingNowShort': {
-    'zh-Hans': '同步中…',
-    'zh-Hant': '同步中…',
-    'en': 'Syncing…',
-  },
-  'lastSyncedAt': {
-    'zh-Hans': '上次同步于{when}',
-    'zh-Hant': '上次同步於{when}',
-    'en': 'Last synced {when}',
-  },
-  'syncNotYet': {
-    'zh-Hans': '此设备尚未同步。',
-    'zh-Hant': '此裝置尚未同步。',
-    'en': 'Not synced yet on this device.',
-  },
-  'syncSuccess': {
-    'zh-Hans': '同步成功。',
-    'zh-Hant': '同步成功。',
-    'en': 'Synced.',
-  },
-  'syncFailed': {
-    'zh-Hans': '同步失败，请检查网络后重试。',
-    'zh-Hant': '同步失敗，請檢查網路後重試。',
-    'en': 'Sync failed. Check your connection and try again.',
   },
   'loading': {
     'zh-Hans': '加载中…',
@@ -4788,16 +4202,15 @@ const uiStrings = {
     'zh-Hant': 'Apache 2.0 · Google。',
     'en': 'Apache 2.0 · Google.',
   },
-  'aboutFontsGoogle': {
-    'zh-Hans': '运行时字体：EB Garamond / Lora / Inter / Noto Serif SC 等',
-    'zh-Hant': '執行時字體：EB Garamond / Lora / Inter / Noto Serif SC 等',
-    'en':
-        'Runtime fonts: EB Garamond / Lora / Inter / Noto Serif SC / …',
+  'aboutFontsCjk': {
+    'zh-Hans': '内置字体：Noto Sans SC（子集）',
+    'zh-Hant': '內置字體：Noto Sans SC（子集）',
+    'en': 'Bundled font: Noto Sans SC (subset)',
   },
   'aboutLicenseOfl': {
-    'zh-Hans': 'SIL OFL · 通过 google_fonts 包按需加载。',
-    'zh-Hant': 'SIL OFL · 透過 google_fonts 套件按需載入。',
-    'en': 'SIL OFL · loaded via google_fonts.',
+    'zh-Hans': 'SIL OFL · 随应用打包，无需联网下载。',
+    'zh-Hant': 'SIL OFL · 隨應用打包，無需連網下載。',
+    'en': 'SIL OFL · shipped with the app, not downloaded.',
   },
   'aboutAi': {
     'zh-Hans': 'SeekSparks AI 经文释义（仅供参考）',
@@ -4929,6 +4342,18 @@ const uiStrings = {
     'en': 'Keyboard shortcuts',
   },
   // ── Profiles / sign-in (Round 28) ──────────────────────────────
+  // 2026-08-08 (v1.6.62 — one worldwide build): replaces the old
+  // three-way cloud notice. There is no sign-in and no server, so
+  // the only honest thing to say is where the data is and how to
+  // move it. Naming the export card matters — an "it's local"
+  // notice that stops there reads as a dead end.
+  'localOnlyDataNotice': {
+    'zh-Hans': '高亮、笔记、书签都只保存在这台设备上。要换设备，请用下方的「导出我的数据」。',
+    'zh-Hant': '螢光標記、筆記、書籤都只儲存在這台裝置上。要換裝置，請用下方的「匯出我的資料」。',
+    'en':
+        'Highlights, notes and bookmarks stay on this device. '
+            'Use "Export my data" below to move them to another one.',
+  },
   'welcomeLocalOnlyNotice': {
     'zh-Hans': '账号仅保存在本设备，不需要密码、不上传服务器。',
     'zh-Hant': '帳號僅保存在本裝置，不需要密碼、不上傳伺服器。',
@@ -4996,47 +4421,10 @@ const uiStrings = {
     'zh-Hant': '取消',
     'en': 'Cancel',
   },
-  // ── Cloud auth (rounds 29-30) ───────────────────────────────────
-  'cloudSignInGoogle': {
-    'zh-Hans': '使用 Google 登录（多设备同步）',
-    'zh-Hant': '使用 Google 登入（多裝置同步）',
-    'en': 'Sign in with Google',
-  },
   'cloudSignIn': {
     'zh-Hans': '登录以在多设备同步',
     'zh-Hant': '登入以在多裝置同步',
     'en': 'Sign in to sync across devices',
-  },
-  'cloudSignOut': {
-    'zh-Hans': '退出',
-    'zh-Hant': '登出',
-    'en': 'Sign out',
-  },
-  'cloudSignedInAs': {
-    'zh-Hans': '已登录为 {email}',
-    'zh-Hant': '已登入為 {email}',
-    'en': 'Cloud-synced as {email}',
-  },
-  'cloudInitFailedTitle': {
-    'zh-Hans': '云端登录暂时不可用',
-    'zh-Hant': '雲端登入暫時無法使用',
-    'en': 'Cloud sign-in temporarily unavailable',
-  },
-  // 2026-05-09 (v1.2.2): localized fallback message for the Settings
-  // sign-in flow. Used when the sign-in popup itself errors and the
-  // underlying platform message isn't human-friendly. Previously this
-  // was a hardcoded English string ("Sign-in failed.") — a
-  // non-English-locale user would see English text on a transient
-  // network blip.
-  'signInFailed': {
-    'zh-Hans': '登录失败。',
-    'zh-Hant': '登入失敗。',
-    'en': 'Sign-in failed.',
-  },
-  'cloudInitOk': {
-    'zh-Hans': '云端登录已恢复。',
-    'zh-Hant': '雲端登入已恢復。',
-    'en': 'Cloud sign-in restored.',
   },
   'clearCache': {
     'zh-Hans': '清除缓存并重新加载',
@@ -5133,37 +4521,6 @@ const uiStrings = {
     'zh-Hans': '关键经文',
     'zh-Hant': '關鍵經文',
     'en': 'Key passage',
-  },
-  'cloudSyncing': {
-    'zh-Hans': '同步中…',
-    'zh-Hant': '同步中…',
-    'en': 'Syncing…',
-  },
-  'cloudSynced': {
-    'zh-Hans': '已同步',
-    'zh-Hant': '已同步',
-    'en': 'Synced',
-  },
-  'cloudError': {
-    'zh-Hans': '同步出错',
-    'zh-Hant': '同步出錯',
-    'en': 'Sync error',
-  },
-  'cloudNotConfigured': {
-    'zh-Hans': '仅本地',
-    'zh-Hant': '僅本地',
-    'en': 'Local only',
-  },
-  'cloudNotSignedIn': {
-    'zh-Hans': '未登录',
-    'zh-Hant': '未登入',
-    'en': 'Not signed in',
-  },
-  'cloudPrivacyNotice': {
-    'zh-Hans': '云端同步使用您自己的 Firebase 项目。每个用户只能读写自己的数据。',
-    'zh-Hant': '雲端同步使用您自己的 Firebase 專案。每個用戶只能讀寫自己的資料。',
-    'en':
-        'Cloud sync uses your own Firebase project. Each user can only read their own data.',
   },
   'crossRefsNone': {
     'zh-Hans': '此节经文暂无人工整理的相互参照。',

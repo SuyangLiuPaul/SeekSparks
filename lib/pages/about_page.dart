@@ -3,16 +3,13 @@ import 'package:provider/provider.dart';
 
 import 'package:seeksparks/constants/app_version.dart';
 import 'package:seeksparks/widgets/update_check_tile.dart';
-import 'package:seeksparks/constants/build_flags.dart';
 import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/services/link_opener.dart';
 import 'package:seeksparks/utils/clipboard_helper.dart';
 import 'package:seeksparks/utils/responsive.dart';
-import 'package:seeksparks/widgets/cloud_setup_diagnostic.dart';
 import 'package:seeksparks/widgets/home_icon_button.dart';
 import 'package:seeksparks/widgets/language_switcher_button.dart';
-import 'package:seeksparks/widgets/setup_instructions_card.dart';
 import 'package:seeksparks/widgets/localized_back_button.dart';
 
 /// Settings → About → "About / 关于" — full attributions + licensing
@@ -117,28 +114,6 @@ class AboutPage extends StatelessWidget {
               // issues. User feedback: "开发者说明不用" — developer
               // setup info shouldn't be in the user-facing Settings
               // flow.
-              // 2026-05-09 (v1.2.1): the cloud-diagnostic + setup-
-              // instructions cards are dev-facing and only useful
-              // when Firebase is reachable. In the China build
-              // (`kChinaMode`) Firebase init is skipped at boot, so
-              // the diagnostic would just show "init pending"
-              // forever and the setup instructions have no
-              // actionable path (the URLs they link to are blocked
-              // anyway). Hidden entirely in China mode.
-              if (!kChinaMode) ...[
-                _SectionTitle(
-                    text: uiStrings['cloudDiagSection']?[locale] ??
-                        'Cloud setup status (developer)',
-                    scheme: scheme),
-                const SizedBox(height: 6),
-                CloudSetupDiagnostic(locale: locale),
-                const SizedBox(height: 8),
-                SetupInstructionsCard(
-                  scheme: scheme,
-                  locale: locale,
-                ),
-                const SizedBox(height: 24),
-              ],
               Center(
                 // 2026-05-07 (v17): also show the running app version
                 // here. The "Check for Updates" tile in Settings used
@@ -146,11 +121,6 @@ class AboutPage extends StatelessWidget {
                 // removed (it was theatre — see settings_page.dart).
                 // This footer is now the canonical version display.
                 //
-                // 2026-05-09 (v1.2.0 — China mode): the China build
-                // appends a "中国版 / China build" tag so support
-                // requests aren't ambiguous about which deploy the
-                // user is on. Compile-time flag — no runtime cost
-                // in the international build.
                 child: Text(
                   // 2026-05-10 (v1.2.20): footer interpolates with
                   // kAppReleaseDate (was hardcoded date that drifted).
@@ -171,8 +141,7 @@ class AboutPage extends StatelessWidget {
                   // across iOS/web/Android. Never blank — empty input
                   // falls back to an em dash.
                   '${(uiStrings['aboutFooterNote']?[locale] ?? 'Last updated {time}.').replaceFirst('{time}', formatReleaseTimeLocal())}'
-                      ' · v$kAppVersion'
-                      '${kChinaMode ? ' · ${uiStrings['chinaBuildTag']?[locale] ?? 'China build'}' : ''}',
+                      ' · v$kAppVersion',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 11,
@@ -666,11 +635,10 @@ class _OtherAttributions extends StatelessWidget {
             'Apache 2.0 · Google.',
       ),
       _AttribRow(
-        name: uiStrings['aboutFontsGoogle']?[locale] ??
-            'Runtime fonts: EB Garamond / Lora / Inter / Noto Serif SC / …',
+        name: uiStrings['aboutFontsCjk']?[locale] ??
+            'Bundled font: Noto Sans SC (subset)',
         licence: uiStrings['aboutLicenseOfl']?[locale] ??
-            'SIL OFL · loaded via google_fonts.',
-        url: 'https://fonts.google.com/',
+            'SIL OFL · shipped with the app, not downloaded.',
       ),
       _AttribRow(
         name: uiStrings['aboutAi']?[locale] ?? 'AI explanations',

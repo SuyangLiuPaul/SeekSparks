@@ -5,7 +5,6 @@ import 'package:get/get.dart';
 import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/utils/app_nav.dart';
 import 'package:seeksparks/utils/app_scroll_behavior.dart';
-import 'package:seeksparks/constants/build_flags.dart';
 import 'package:seeksparks/models/sermon.dart';
 import 'package:seeksparks/pages/workbench_page.dart';
 import 'package:seeksparks/pages/loading_page.dart';
@@ -17,13 +16,11 @@ import 'package:seeksparks/services/sermon_service.dart';
 import 'package:seeksparks/utils/jump_to_reference.dart' as jumper;
 import 'package:seeksparks/utils/open_reader.dart';
 import 'package:seeksparks/utils/reference_parser.dart' show BibleReference;
-import 'package:seeksparks/services/cloud_auth_service.dart';
 import 'package:seeksparks/services/daily_verse_service.dart';
 import 'package:seeksparks/services/error_reporter.dart';
 import 'package:seeksparks/utils/breadcrumb_observer.dart';
 import 'package:seeksparks/services/notification_scheduler.dart'
     as notif_scheduler;
-import 'package:seeksparks/services/realtime_db_sync_service.dart';
 import 'package:seeksparks/services/offline_pack_service.dart';
 import 'package:seeksparks/services/fetch_books.dart';
 import 'package:seeksparks/services/fetch_verses.dart';
@@ -173,60 +170,19 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
       // the active profile's namespace. Same goes for ReadingPlanService
       // calls that fire while the home page builds.
       await ProfileService.instance.init();
-      // Firebase auth is best-effort — falls through gracefully if
-      // the user hasn't filled in lib/firebase_options.dart yet.
-      // After auth init we wire up CloudSyncService so any future
-      // local changes mirror to Firestore (when signed in).
+      // 2026-08-08 (v1.6.62 — one worldwide build): boot reaches no
+      // Google host, by construction. Firebase Auth + Realtime
+      // Database sync used to be awaited here behind an 8 s cap,
+      // because `Firebase.initializeApp()` and
+      // `auth.getRedirectResult()` both talk to `*.googleapis.com` —
+      // unreachable from mainland China, so a reader there paid the
+      // whole timeout before a single verse was parsed. The old
+      // answer was a second CHINA_MODE build that skipped this
+      // branch; the new answer is that the branch is gone.
       //
-      // 2026-05-09 (v1.2.0 — China mode): in the China build, skip
-      // Firebase init entirely. `*.googleapis.com` /
-      // `*.firebaseio.com` / `accounts.google.com` are all blocked
-      // by the Great Firewall, so the call sits there for the full
-      // 4 s watchdog window before the splash gives up. Skipping
-      // makes the boot instant. RealtimeDbSyncService and Drive
-      // sync are also no-ops in this mode — they only do anything
-      // once a Firebase user signs in, and that's impossible without
-      // Firebase Auth working.
-      if (!kChinaMode) {
-        // 2026-07-21: bounded. `CloudAuthService.instance.init()`
-        // makes multiple awaited network calls to Google's own
-        // servers (`Firebase.initializeApp()`, then
-        // `auth.getRedirectResult()`) — both blocked or heavily
-        // throttled on networks that can't reach Google (mainland
-        // China's Great Firewall being the most common case; the
-        // China-flavor build sidesteps this entirely by skipping
-        // Firebase, see the comment above, but nothing stopped an
-        // INTERNATIONAL-flavor user from being on such a network).
-        // Without a bound, a blocked/degraded path here could stall
-        // the ENTIRE boot sequence — including FetchVerses, which
-        // runs after this — for as long as the browser's own TCP/TLS
-        // timeout takes, far longer than any reasonable splash wait.
-        // User report: "in china very slow then loaded, aus faster" —
-        // this is why. Firebase auth was never required to read the
-        // Bible, so cap it generously and let boot proceed without
-        // cloud auth if it doesn't settle in time; CloudAuthService
-        // keeps trying on its own ChangeNotifier timeline and
-        // Settings' sign-in becomes available once (if) it resolves.
-        try {
-          await CloudAuthService.instance.init().timeout(
-                const Duration(seconds: 8),
-              );
-        } catch (e, st) {
-          debugPrint('CloudAuthService.init timed out or failed: $e\n$st');
-        }
-        // Round 56 day-3 (2026-05-06): switched cloud sync from
-        // Firestore (CloudSyncService) to Google Drive AppData
-        // (DriveSyncService). User reported the Firestore path was
-        // not actually syncing across devices reliably — likely
-        // because Flutter web's Firestore WebChannel transport is
-        // blocked on some networks and the IndexedDB cross-tab sync
-        // is fragile. Drive AppData is plain HTTPS to drive.googleapis
-        // .com, lives in the user's own Drive (no Firebase costs),
-        // and needs zero setup ("appDataFolder" is automatic — no
-        // folder picker). CloudSyncService is left in place as a
-        // legacy migration source but no longer init'd.
-        RealtimeDbSyncService.instance.init();
-      }
+      // INVARIANT: nothing between here and the first painted verse
+      // may touch the network. Anything added below must be
+      // bundled-asset work or explicitly unawaited.
       // 2026-05-07 (v18 audit): the three pre-warm calls below are
       // intentionally unawaited (best-effort hydration that should
       // not block the splash → home transition). But silently

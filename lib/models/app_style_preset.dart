@@ -139,13 +139,23 @@ const Map<AppStylePreset, AppStylePresetDef> presetDefinitions = {
     paragraphMode: true,
     cardMaterial: CardMaterial.classic,
   ),
-  // Round 56 (continued): preset font keys must come from the new
-  // [availableFontOptions] catalogue in lib/utils/font_catalog.dart.
-  // The previous keys (`system-ui`, `Garamond`, `Georgia`) were
-  // CSS-only system fonts that CanvasKit can't load — picking
-  // those presets silently rendered everything in Roboto.
+  // Preset font keys must come from the [availableFontOptions]
+  // catalogue in lib/utils/font_catalog.dart. A key outside it is not
+  // an error anywhere — CanvasKit just resolves nothing and renders
+  // its default — so a wrong key here is invisible until someone
+  // compares two presets side by side.
+  //
+  // 2026-08-08 (v1.6.62 — one worldwide build): `Inter`,
+  // `EB Garamond` and `Merriweather` were `google_fonts` downloads
+  // and left with that package, so these presets now use the same
+  // `system` key that [migrateLegacyFontKey] gives a reader who had
+  // chosen one of them. The catalogue has no serif left, so
+  // `reverent`, `reader` and `paper` are carried by their size,
+  // spacing and paper card material alone. Restoring their voice
+  // means bundling an OFL serif as an asset, not reinstating a
+  // runtime download.
   AppStylePreset.modern: AppStylePresetDef(
-    fontFamily: 'Inter',
+    fontFamily: 'system',
     fontSize: 19.0,
     lineSpacing: 1.45,
     menuScale: 0.95,
@@ -153,7 +163,7 @@ const Map<AppStylePreset, AppStylePresetDef> presetDefinitions = {
     cardMaterial: CardMaterial.classic,
   ),
   AppStylePreset.reverent: AppStylePresetDef(
-    fontFamily: 'EB Garamond',
+    fontFamily: 'system',
     fontSize: 21.0,
     lineSpacing: 1.7,
     menuScale: 1.0,
@@ -169,7 +179,7 @@ const Map<AppStylePreset, AppStylePresetDef> presetDefinitions = {
     cardMaterial: CardMaterial.classic,
   ),
   AppStylePreset.reader: AppStylePresetDef(
-    fontFamily: 'Merriweather',
+    fontFamily: 'system',
     fontSize: 22.0,
     lineSpacing: 1.6,
     menuScale: 1.0,
@@ -177,11 +187,7 @@ const Map<AppStylePreset, AppStylePresetDef> presetDefinitions = {
     cardMaterial: CardMaterial.paper,
   ),
   AppStylePreset.liquidGlass: AppStylePresetDef(
-    // SF system fonts can't be loaded by CanvasKit, but the user's
-    // OS picks them up via the fontFamilyFallback chain configured
-    // in main.dart. Use Inter as the explicit fallback so non-Apple
-    // devices still get a clean modern sans.
-    fontFamily: 'Inter',
+    fontFamily: 'system',
     fontSize: 20.0,
     lineSpacing: 1.5,
     menuScale: 1.0,
@@ -189,7 +195,7 @@ const Map<AppStylePreset, AppStylePresetDef> presetDefinitions = {
     cardMaterial: CardMaterial.liquidGlass,
   ),
   AppStylePreset.paper: AppStylePresetDef(
-    fontFamily: 'EB Garamond',
+    fontFamily: 'system',
     fontSize: 20.0,
     lineSpacing: 1.55,
     menuScale: 1.0,
@@ -197,7 +203,7 @@ const Map<AppStylePreset, AppStylePresetDef> presetDefinitions = {
     cardMaterial: CardMaterial.paper,
   ),
   AppStylePreset.carbon: AppStylePresetDef(
-    fontFamily: 'Inter',
+    fontFamily: 'system',
     fontSize: 19.0,
     lineSpacing: 1.4,
     menuScale: 0.95,

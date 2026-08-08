@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:seeksparks/constants/build_flags.dart';
 import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:provider/provider.dart';
@@ -271,23 +270,14 @@ class _OnboardingDialogState extends State<OnboardingDialog> {
           body: uiStrings['onboardDiscoverBody']?[locale] ??
               'Bible Timeline (97 events), Family Tree (277 people), and Bible Evidence (225 archaeology / manuscript / science finds) — all reachable from Home.',
         ),
-        // 2026-05-10 (v1.2.11): China build (`kChinaMode`) skips
-        // Firebase init at boot, so the Google-sign-in line in the
-        // default body would just confuse — the user goes looking
-        // for a button v1.2.1 deliberately hid. Swap to the China-
-        // specific copy that names the local-only reality.
         _Slide(
           icon: Icons.tune_rounded,
-          title: kChinaMode
-              ? (uiStrings['onboardCustomizeTitleChina']?[locale] ??
-                  'Customize')
-              : (uiStrings['onboardCustomizeTitle']?[locale] ??
-                  'Customize & sync'),
-          body: kChinaMode
-              ? (uiStrings['onboardCustomizeBodyChina']?[locale] ??
-                  'Drag-reorder or hide any block under Settings → Dashboard layout. Pick a reading plan. In the China build, highlights, notes, and bookmarks all stay on this device.')
-              : (uiStrings['onboardCustomizeBody']?[locale] ??
-                  'Drag-reorder or hide any block under Settings → Dashboard layout. Pick a reading plan. Sign in with Google to sync bookmarks, notes, and highlights across devices.'),
+          title: uiStrings['onboardCustomizeTitle']?[locale] ??
+              'Your data',
+          body: uiStrings['onboardCustomizeBody']?[locale] ??
+              'Highlights, notes and bookmarks are saved on this '
+                  'device — no account, no server. Settings → '
+                  'Export my data moves them to another device.',
         ),
       ];
 }

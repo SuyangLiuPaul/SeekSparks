@@ -4,12 +4,10 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
-import 'package:seeksparks/constants/build_flags.dart';
 import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/services/ai_bible_search_service.dart';
 import 'package:seeksparks/services/api_base.dart';
-import 'package:seeksparks/services/cloud_auth_service.dart';
 import 'package:seeksparks/services/link_opener.dart';
 import 'package:seeksparks/utils/atomic_text_edit.dart';
 import 'package:seeksparks/utils/theme_color_helpers.dart';
@@ -339,41 +337,6 @@ class GeminiKeyCardState extends State<GeminiKeyCard> {
                     .clamp(12.0, 14.0),
               ),
             ),
-            // 2026-05-10 (v1.2.17): cloud-sync disclosure. Only
-            // shows when (a) we're not in the China build (Firebase
-            // skipped there), (b) the user is signed in, and (c)
-            // they have a key set — so the line is informative,
-            // not aspirational. Auth-state changes trigger a
-            // rebuild via the AppSettings listener already wired in
-            // initState.
-            if (!kChinaMode &&
-                CloudAuthService.instance.isSignedIn &&
-                hasKey) ...[
-              SizedBox(height: 6 * s),
-              Row(
-                children: [
-                  Icon(
-                    Icons.cloud_done_outlined,
-                    size: 14,
-                    color: paletteAccent(context, Colors.blue),
-                  ),
-                  SizedBox(width: 6 * s),
-                  Expanded(
-                    child: Text(
-                      uiStrings['aiByokSyncedNote']?[locale] ??
-                          'Signed in — the key will auto-sync to your other signed-in devices.',
-                      style: TextStyle(
-                        fontFamily: widget.settings.fontFamily,
-                        fontSize: (widget.settings.fontSize - 5)
-                            .clamp(10.0, 12.0),
-                        color: paletteAccent(context, Colors.blue),
-                        height: 1.4,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
             SizedBox(height: 8 * s),
             Wrap(
               spacing: 8 * s,

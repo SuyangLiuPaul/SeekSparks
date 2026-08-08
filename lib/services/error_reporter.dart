@@ -207,24 +207,16 @@ class ErrorReporter {
   /// the throw is caught by our Zone/PlatformDispatcher handler and is
   /// not something we can act on. (v1.3.49 web reports.)
   ///
-  /// Also: `google_fonts` runtime font fetches from
-  /// fonts.gstatic.com. `font_catalog.dart`'s `resolveFontFamily` /
-  /// `previewTextStyle` already catch the synchronous call and fall
-  /// back to a system font, so the UI never breaks — but the actual
-  /// HTTP fetch happens in an unawaited Future deep inside the
-  /// package (`loadFontIfNecessary`, no `.catchError` attached), so a
-  /// network failure there is unhandled and reaches this reporter
-  /// regardless. Reported from a Huawei ELS-AN00 (zh-Hans) — devices
-  /// without Google connectivity will hit this on every cold font
-  /// load and there's nothing actionable on our end. (v1.3.114.)
+  /// The second entry used to be `google_fonts` fetches from
+  /// fonts.gstatic.com, which a reader without Google connectivity hit
+  /// on every cold font load. v1.6.62 removed the package, so no code
+  /// path can raise it any more and the patterns went with it.
   static bool _isIgnorableNoise(String error, String stack) {
     final haystack = '$error\n$stack';
     const benign = <String>[
       'getParameter is not a function',
       'MakeWebGLContext',
       'Failed to create WebGL context',
-      'Failed to load font with url',
-      '_httpFetchFontAndSaveToDevice',
     ];
     for (final p in benign) {
       if (haystack.contains(p)) return true;

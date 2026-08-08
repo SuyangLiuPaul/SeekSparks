@@ -10,7 +10,6 @@ import 'package:flutter/foundation.dart'
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show Clipboard;
 import 'package:seeksparks/constants/app_version.dart';
-import 'package:seeksparks/constants/build_flags.dart';
 import 'package:seeksparks/constants/text_patterns.dart' show sanitizeForCopy;
 import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/constants/workbench_theme.dart' show WbMetrics;
@@ -24,13 +23,7 @@ import 'package:seeksparks/pages/about_page.dart';
 import 'package:seeksparks/utils/ai_markdown.dart' show parseAiMarkdown;
 import 'package:seeksparks/utils/theme_color_helpers.dart';
 import 'package:seeksparks/pages/profiles_page.dart';
-import 'package:seeksparks/services/cloud_auth_service.dart';
 import 'package:seeksparks/widgets/gemini_key_card.dart';
-import 'package:seeksparks/widgets/google_g_logo.dart';
-import 'dart:async' show Timer;
-
-import "package:seeksparks/services/cloud_sync_service.dart" show CloudSyncStatus;
-import "package:seeksparks/services/realtime_db_sync_service.dart";
 import 'package:seeksparks/models/notification_category.dart';
 import 'package:seeksparks/services/notification_service.dart';
 import 'package:seeksparks/widgets/contact_line.dart';
@@ -557,15 +550,13 @@ class _SettingsPageBodyState extends State<_SettingsPageBody> {
                         onChanged: (val) {
                           if (val != null) settings.setFontFamily(val);
                         },
-                        // Round 56 (continued): each row physically
-                        // renders in its own font via
-                        // [previewTextStyle], so the user can
-                        // visually compare options before picking.
-                        // Bundled fonts always work; Google Fonts
-                        // are downloaded on demand by the
-                        // `google_fonts` package; system-only
-                        // entries fall back to the engine default
-                        // when not installed locally.
+                        // Each row physically renders in its own
+                        // font via [previewTextStyle], so the user
+                        // can compare options before picking. Every
+                        // option is either a bundled asset or a
+                        // system family that degrades to the engine
+                        // default when not installed — nothing here
+                        // is fetched at runtime.
                         items: [
                           for (final f in availableFontOptions())
                             DropdownMenuItem(
@@ -1146,121 +1137,16 @@ class _AccountSectionState extends State<_AccountSection> {
   void initState() {
     super.initState();
     ProfileService.instance.addListener(_onChanged);
-    CloudAuthService.instance.addListener(_onChanged);
-    RealtimeDbSyncService.instance.addListener(_onChanged);
   }
 
   @override
   void dispose() {
     ProfileService.instance.removeListener(_onChanged);
-    CloudAuthService.instance.removeListener(_onChanged);
-    RealtimeDbSyncService.instance.removeListener(_onChanged);
     super.dispose();
   }
 
   void _onChanged() {
     if (mounted) setState(() {});
-  }
-
-  /// Map sync status to a colored chip with an icon + label, so the
-  /// user can see "Synced" / "Syncing..." / "Error" / "Local-only"
-  /// at a glance.
-  Widget _syncBadge(BuildContext context, String locale) {
-    final auth = CloudAuthService.instance;
-    final sync = RealtimeDbSyncService.instance;
-    final scheme = Theme.of(context).colorScheme;
-    if (!auth.isConfigured) {
-      return _badge(
-        scheme.surfaceContainerHighest,
-        scheme.onSurfaceVariant,
-        Icons.cloud_off_outlined,
-        uiStrings['cloudNotConfigured']?[locale] ?? 'Local only',
-      );
-    }
-    if (!auth.isSignedIn) {
-      return _badge(
-        scheme.surfaceContainerHighest,
-        scheme.onSurfaceVariant,
-        Icons.cloud_outlined,
-        uiStrings['cloudNotSignedIn']?[locale] ?? 'Not signed in',
-      );
-    }
-    switch (sync.status) {
-      case CloudSyncStatus.disabled:
-        return _badge(
-          scheme.surfaceContainerHighest,
-          scheme.onSurfaceVariant,
-          Icons.cloud_outlined,
-          uiStrings['cloudNotSignedIn']?[locale] ?? 'Not signed in',
-        );
-      case CloudSyncStatus.syncing:
-        return _badge(
-          scheme.tertiaryContainer,
-          scheme.onTertiaryContainer,
-          Icons.cloud_sync_outlined,
-          uiStrings['cloudSyncing']?[locale] ?? 'Syncing…',
-        );
-      case CloudSyncStatus.synced:
-        return _badge(
-          scheme.primaryContainer,
-          scheme.onPrimaryContainer,
-          Icons.cloud_done_outlined,
-          uiStrings['cloudSynced']?[locale] ?? 'Synced',
-        );
-      case CloudSyncStatus.error:
-        return _badge(
-          scheme.errorContainer,
-          scheme.error,
-          Icons.cloud_off_outlined,
-          uiStrings['cloudError']?[locale] ?? 'Sync error',
-        );
-    }
-  }
-
-  Widget _badge(Color bg, Color fg, IconData icon, String text) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: bg,
-        border: Border.all(
-          color: fg.withValues(alpha: 0.45),
-          width: WbMetrics.hairline,
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 13, color: fg),
-          const SizedBox(width: 4),
-          Text(
-            text,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: fg,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// When signed in, prefer Google displayName / email-prefix over
-  /// the local profile name (which can still be "guest" if the
-  /// credential was silently restored at boot without going through
-  /// signInWithGoogleAndAdoptProfile).
-  String _displayNameFor(CloudAuthService auth, dynamic profile) {
-    if (auth.isSignedIn) {
-      final u = auth.currentUser;
-      final dn = u?.displayName?.trim();
-      if (dn != null && dn.isNotEmpty) return dn;
-      final email = u?.email;
-      if (email != null && email.isNotEmpty) {
-        final at = email.indexOf('@');
-        return at > 0 ? email.substring(0, at) : email;
-      }
-    }
-    return profile.name as String;
   }
 
   @override
@@ -1270,7 +1156,6 @@ class _AccountSectionState extends State<_AccountSection> {
     final scheme = Theme.of(context).colorScheme;
     final locale = settings.locale;
     final p = ProfileService.instance.current;
-    final auth = CloudAuthService.instance;
     return Card(
       child: Padding(
         padding: EdgeInsets.all(16 * s),
@@ -1289,26 +1174,19 @@ class _AccountSectionState extends State<_AccountSection> {
                     ),
                   ),
                 ),
-                _syncBadge(context, locale),
               ],
             ),
             SizedBox(height: 8 * s),
             ListTile(
               contentPadding: EdgeInsets.zero,
-              // Resolution priority matches the Dashboard greeting:
-              // signed-in Google photo first, then locally-uploaded
-              // photo, then color tile + initial. Keeps the avatar
-              // visually consistent across the app.
               leading: ProfileAvatar(
-                photoUrl: auth.currentUser?.photoURL ?? p.photoDataUrl,
-                // When signed in, prefer the Google display name so
-                // the avatar's initial matches the title row below.
-                name: _displayNameFor(auth, p),
+                photoUrl: p.photoDataUrl,
+                name: p.name,
                 avatarColor: p.avatarColorArgb,
                 radius: 22,
               ),
               title: Text(
-                _displayNameFor(auth, p),
+                p.name,
                 style: TextStyle(
                   fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
                   fontSize: settings.fontSize,
@@ -1316,10 +1194,7 @@ class _AccountSectionState extends State<_AccountSection> {
                 ),
               ),
               subtitle: Text(
-                auth.isSignedIn
-                    ? '${uiStrings["profileCurrent"]?[locale] ?? "Active profile"} • ${auth.currentUser?.email ?? ""}'
-                    : (uiStrings["profileCurrent"]?[locale] ??
-                        "Active profile"),
+                uiStrings["profileCurrent"]?[locale] ?? "Active profile",
                 style: TextStyle(
                   fontSize: settings.fontSize - 2,
                   color: scheme.onSurfaceVariant,
@@ -1328,253 +1203,13 @@ class _AccountSectionState extends State<_AccountSection> {
               trailing: const Icon(Icons.chevron_right),
               onTap: () => pushPage(const ProfilesPage()),
             ),
-            // Cloud-sync row — Sign in / Sign out depending on state.
-            //
-            // We split into two paths:
-            //   • init succeeded (auth.isConfigured == true) → render
-            //     the live Sign in / Sign out flow as before.
-            //   • init failed but credentials are present
-            //     (hasFirebaseCredentials && !isConfigured) → still
-            //     show the button so the user can SEE the surface,
-            //     but disable it and surface the error + a Retry
-            //     button. Without this, a transient Firebase init
-            //     failure (revoked key, network blip) silently hides
-            //     the entire account section.
-            //
-            // 2026-05-09 (v1.2.1 China-mode UX cleanup): in the
-            // China build (`kChinaMode`) Firebase init was skipped
-            // entirely (see main.dart bootstrap), so neither the
-            // sign-in surface nor the disabled-with-Retry surface
-            // are reachable. Both are hidden; a small note replaces
-            // them ("中国版不支持云同步" / "Cloud sync isn't
-            // available in the China build…"). The local-only
-            // profile flow above this block still works exactly as
-            // it does on the international build.
-            if (!kChinaMode && auth.isConfigured) ...[
-              const Divider(height: 24),
-              if (!auth.isSignedIn)
-                OutlinedButton(
-                  onPressed: () async {
-                    final messenger = ScaffoldMessenger.of(context);
-                    final result = await CloudAuthService.instance
-                        .signInWithGoogleAndAdoptProfile();
-                    if (!context.mounted) return;
-                    if (!result.isOk) {
-                      // 2026-05-09 (v1.2.6 audit): localised fallback
-                      // via the `signInFailed` ui-string key added in
-                      // v1.2.2. Previously a non-English user on a
-                      // network blip would see English even though the
-                      // string is already translated.
-                      messenger.showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            result.errorMessage ??
-                                (uiStrings['signInFailed']?[locale] ??
-                                    'Sign-in failed.'),
-                          ),
-                          duration: const Duration(seconds: 3),
-                        ),
-                      );
-                    }
-                  },
-                  style: OutlinedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: const Color(0xFF1F1F1F),
-                    side: const BorderSide(
-                        color: Color(0xFFDADCE0), width: 1),
-                    // Google's branding guidelines fix the wordmark, the
-                    // logo and the white/#DADCE0 pair; corner radius is
-                    // not among them, so it takes the workbench's.
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.zero,
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 12),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const GoogleGLogo(size: 18),
-                      const SizedBox(width: 12),
-                      Text(
-                        uiStrings['cloudSignInGoogle']?[locale] ??
-                            'Sign in with Google',
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                )
-              else
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        (uiStrings['cloudSignedInAs']?[locale] ??
-                                'Cloud-synced as {email}')
-                            .replaceAll(
-                                '{email}', auth.currentUser?.email ?? ''),
-                        style: TextStyle(
-                          fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                          fontSize: (settings.fontSize - 6)
-                              .clamp(12.0, 15.0).toDouble(),
-                          color: scheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ),
-                    TextButton.icon(
-                      onPressed: () => CloudAuthService.instance.signOut(),
-                      icon: const Icon(Icons.logout, size: 16),
-                      label: Text(
-                        uiStrings['cloudSignOut']?[locale] ?? 'Sign out',
-                      ),
-                    ),
-                  ],
-                ),
-              if (auth.isSignedIn) ...[
-                SizedBox(height: 6 * s),
-                _SyncStatusRow(settings: settings),
-              ],
-            ] else if (!kChinaMode && auth.hasFirebaseCredentials) ...[
-              // Init failed — show a disabled-looking sign-in button
-              // plus the error + a Retry button. Better than silently
-              // hiding everything cloud-related.
-              const Divider(height: 24),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: scheme.errorContainer.withValues(alpha: 0.4),
-                  border: Border.all(
-                    color: scheme.error.withValues(alpha: 0.4),
-                    width: WbMetrics.hairline,
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(Icons.cloud_off_outlined,
-                            size: 18, color: scheme.error),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            uiStrings['cloudInitFailedTitle']?[locale] ??
-                                'Cloud sign-in temporarily unavailable',
-                            style: TextStyle(
-                              fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                              fontSize: (settings.fontSize - 4)
-                                  .clamp(13.0, 16.0).toDouble(),
-                              fontWeight: FontWeight.w600,
-                              color: scheme.error,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    if (auth.initError != null) ...[
-                      const SizedBox(height: 6),
-                      // Selectable so the user can copy + paste the
-                      // exact error message back to the maintainer
-                      // when filing a bug. Monospace + boxed so it
-                      // looks like a code block.
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: scheme.surfaceContainerHighest,
-                          border: Border.all(
-                              color: scheme.outlineVariant,
-                              width: WbMetrics.hairline),
-                        ),
-                        child: SelectableText(
-                          auth.initError!,
-                          style: TextStyle(
-                            fontFamily: 'monospace',
-                            fontSize: (settings.fontSize - 6)
-                                .clamp(11.0, 14.0).toDouble(),
-                            color: scheme.onSurface,
-                          ),
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        OutlinedButton.icon(
-                          icon: const Icon(Icons.refresh, size: 16),
-                          label: Text(
-                            uiStrings['retry']?[locale] ?? 'Retry',
-                          ),
-                          onPressed: () async {
-                            final messenger = ScaffoldMessenger.of(context);
-                            await CloudAuthService.instance.retryInit();
-                            if (!context.mounted) return;
-                            if (CloudAuthService.instance.isConfigured) {
-                              messenger.showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    uiStrings['cloudInitOk']?[locale] ??
-                                        'Cloud sign-in restored.',
-                                  ),
-                                  duration: const Duration(seconds: 2),
-                                ),
-                              );
-                            }
-                          },
-                        ),
-                        if (auth.initError != null) ...[
-                          const SizedBox(width: 8),
-                          OutlinedButton.icon(
-                            icon: const Icon(Icons.copy_outlined, size: 16),
-                            label: Text(
-                              uiStrings['copy']?[locale] ?? 'Copy error',
-                            ),
-                            onPressed: () async {
-                              final messenger = ScaffoldMessenger.of(context);
-                              final ok = await ClipboardHelper.copyText(
-                                auth.initError!,
-                              );
-                              if (!ok || !context.mounted) return;
-                              messenger.showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    uiStrings['copied']?[locale] ?? 'Copied',
-                                  ),
-                                  duration: const Duration(seconds: 1),
-                                ),
-                              );
-                            },
-                          ),
-                        ],
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
             Padding(
               padding: const EdgeInsets.only(top: 4),
-              // 2026-05-09 (v1.2.1): three-way notice. China build
-              // gets its own message because Google sign-in and
-              // Firebase RTDB are both blocked, so the standard
-              // "Profiles are stored only on this device" wording
-              // (which is true on the international build only when
-              // the user opted out of Google sign-in) becomes the
-              // permanent state — and we should explain why
-              // explicitly.
               child: Text(
-                kChinaMode
-                    ? (uiStrings['chinaCloudUnavailable']?[locale] ??
-                        'Cloud sync isn\'t available in the China build. '
-                            'Highlights, notes, and bookmarks stay on '
-                            'this device.')
-                    : (auth.isConfigured
-                        ? (uiStrings['cloudPrivacyNotice']?[locale] ??
-                            'Cloud sync uses your own Firebase project. Each user can only read their own data.')
-                        : (uiStrings["welcomeLocalOnlyNotice"]?[locale] ??
-                            "Profiles are stored only on this device. No password, no server.")),
+                uiStrings['localOnlyDataNotice']?[locale] ??
+                    'Highlights, notes and bookmarks stay on this '
+                        'device. Use "Export my data" below to move '
+                        'them to another one.',
                 style: TextStyle(
                   fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
                   fontSize: (settings.fontSize - 7)
@@ -1671,302 +1306,6 @@ class _SettingsSwitch extends StatelessWidget {
             ),
       value: value,
       onChanged: onChanged,
-    );
-  }
-}
-
-/// "Last synced 3 minutes ago" + "Sync now" row. Shown inside the
-/// Account card whenever the user is signed in. Listens to
-/// `CloudSyncService` so the timestamp updates live (e.g. after a
-/// background push completes the user sees "Synced just now" without
-/// reopening Settings).
-class _SyncStatusRow extends StatefulWidget {
-  final AppSettings settings;
-  const _SyncStatusRow({required this.settings});
-
-  @override
-  State<_SyncStatusRow> createState() => _SyncStatusRowState();
-}
-
-class _SyncStatusRowState extends State<_SyncStatusRow> {
-  bool _busy = false;
-  Timer? _ticker;
-
-  @override
-  void initState() {
-    super.initState();
-    RealtimeDbSyncService.instance.addListener(_onSyncChange);
-    // Refresh the relative-time label every 30s so "5 minutes ago"
-    // doesn't go stale while the user stares at the Settings page.
-    _ticker = Timer.periodic(const Duration(seconds: 30), (_) {
-      if (mounted) setState(() {});
-    });
-  }
-
-  @override
-  void dispose() {
-    RealtimeDbSyncService.instance.removeListener(_onSyncChange);
-    _ticker?.cancel();
-    super.dispose();
-  }
-
-  void _onSyncChange() {
-    if (mounted) setState(() {});
-  }
-
-  Future<void> _trigger() async {
-    if (_busy) return;
-    setState(() => _busy = true);
-    final messenger = ScaffoldMessenger.maybeOf(context);
-    final ok = await RealtimeDbSyncService.instance.syncNow();
-    if (!mounted) return;
-    setState(() => _busy = false);
-    if (messenger != null) {
-      final locale = widget.settings.locale;
-      final scheme = Theme.of(context).colorScheme;
-      messenger.hideCurrentSnackBar();
-      if (ok) {
-        // Success — short, no fuss, dismissible.
-        // 2026-05-10 (v1.2.22): swapped hardcoded
-        // Colors.green.shade700 / Colors.white → theme-aware
-        // colours. The hardcoded green broke in dark mode
-        // (white text on a too-light surface) and clashed with
-        // the user's chosen primary palette.
-        final accent = paletteAccent(context, Colors.green);
-        final onAccent = ThemeData.estimateBrightnessForColor(accent) ==
-                Brightness.dark
-            ? Colors.white
-            : Colors.black;
-        messenger.showSnackBar(SnackBar(
-          content: Row(
-            children: [
-              Icon(Icons.check_circle_outline,
-                  color: onAccent, size: 18),
-              const SizedBox(width: 8),
-              Text(
-                uiStrings['syncSuccess']?[locale] ?? 'Synced.',
-                style: TextStyle(
-                    fontFamily: widget.settings.fontFamily,
-                    color: onAccent),
-              ),
-            ],
-          ),
-          backgroundColor: accent,
-          duration: const Duration(milliseconds: 2200),
-          behavior: SnackBarBehavior.floating,
-        ));
-      } else {
-        // Failure — error color, longer (5s), dismissible, includes
-        // the actual error message from CloudSyncService so the user
-        // knows WHY (timeout vs not-signed-in vs Firestore rule
-        // denial vs network blip).
-        final actual = RealtimeDbSyncService.instance.lastError;
-        final fallback = uiStrings['syncFailed']?[locale] ??
-            'Sync failed. Check your connection and try again.';
-        messenger.showSnackBar(SnackBar(
-          content: Row(
-            children: [
-              Icon(Icons.error_outline,
-                  color: scheme.onError, size: 18),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  actual != null && actual.isNotEmpty ? actual : fallback,
-                  style: TextStyle(
-                    fontFamily: widget.settings.fontFamily,
-                    color: scheme.onError,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          backgroundColor: scheme.error,
-          duration: const Duration(seconds: 5),
-          behavior: SnackBarBehavior.floating,
-          action: SnackBarAction(
-            label: uiStrings['retry']?[locale] ?? 'Retry',
-            textColor: scheme.onError,
-            onPressed: _trigger,
-          ),
-        ));
-      }
-    }
-  }
-
-  String _relative(DateTime utc, String locale) {
-    final now = DateTime.now().toUtc();
-    final diff = now.difference(utc);
-    final isZh = locale.startsWith('zh');
-    if (diff.inSeconds < 30) return isZh ? '刚刚' : 'just now';
-    if (diff.inMinutes < 1) {
-      return isZh ? '不到一分钟前' : 'less than a minute ago';
-    }
-    if (diff.inMinutes < 60) {
-      return isZh
-          ? '${diff.inMinutes} 分钟前'
-          : '${diff.inMinutes} minute${diff.inMinutes == 1 ? "" : "s"} ago';
-    }
-    if (diff.inHours < 24) {
-      return isZh
-          ? '${diff.inHours} 小时前'
-          : '${diff.inHours} hour${diff.inHours == 1 ? "" : "s"} ago';
-    }
-    return isZh
-        ? '${diff.inDays} 天前'
-        : '${diff.inDays} day${diff.inDays == 1 ? "" : "s"} ago';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final settings = widget.settings;
-    final locale = settings.locale;
-    final sync = RealtimeDbSyncService.instance;
-    final last = sync.lastSyncedAt;
-    final status = sync.status;
-
-    // 2026-05-07: when sync is in a "setup not done" state (RTDB
-    // not enabled / region mismatch / network blocking firebaseio.
-    // com / regional firewall), HIDE the entire sync row from the
-    // user-facing UI. They get a clean Account section that just
-    // shows "signed in as X" and the sign-out button — no scary
-    // error text, no broken "Sync now" button. The full technical
-    // error remains visible to the developer in
-    // Settings → About → Run check.
-    final actual = sync.lastError ?? '';
-    final lower = actual.toLowerCase();
-    final isSyncSetupError = status == CloudSyncStatus.error &&
-        (lower.contains('database') ||
-            lower.contains('permission') ||
-            lower.contains('set error') ||
-            lower.contains('-disabled') ||
-            lower.contains('unavailable') ||
-            lower.contains('timeout') ||
-            lower.contains('timed out') ||
-            lower.contains('channel'));
-    if (isSyncSetupError && !_busy) {
-      // Render nothing — sync silently disabled, app keeps working
-      // local-only.
-      return const SizedBox.shrink();
-    }
-
-    String stamp;
-    if (status == CloudSyncStatus.syncing || _busy) {
-      stamp = uiStrings['syncingNow']?[locale] ?? 'Syncing now…';
-    } else if (status == CloudSyncStatus.error) {
-      // Non-setup error (genuine transient failure). Show a friendly
-      // one-liner with retry. Developers see full detail via About.
-      stamp = uiStrings['syncFailed']?[locale] ??
-          'Sync paused — tap "Sync now" to try again.';
-    } else if (last != null) {
-      stamp = (uiStrings['lastSyncedAt']?[locale] ?? 'Last synced {when}')
-          .replaceAll('{when}', _relative(last, locale));
-    } else {
-      stamp =
-          uiStrings['syncNotYet']?[locale] ?? 'Not synced yet on this device.';
-    }
-
-    final isSyncing = status == CloudSyncStatus.syncing || _busy;
-    final color = status == CloudSyncStatus.error
-        ? scheme.error
-        : scheme.onSurfaceVariant;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          children: [
-            // Status icon. While syncing we show a real
-            // CircularProgressIndicator here (not just a static
-            // cloud-sync icon) so the user immediately knows
-            // something is happening even before the row text changes.
-            SizedBox(
-              width: 18,
-              height: 18,
-              child: isSyncing
-                  ? CircularProgressIndicator(
-                      strokeWidth: 2.4,
-                      color: scheme.primary,
-                    )
-                  : Icon(
-                      status == CloudSyncStatus.error
-                          ? Icons.cloud_off_outlined
-                          : Icons.cloud_done_outlined,
-                      size: 16,
-                      color: color,
-                    ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                stamp,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                  fontSize: (settings.fontSize - 3).clamp(11.0, 14.0),
-                  color: color,
-                  fontWeight: isSyncing
-                      ? FontWeight.w600
-                      : FontWeight.w400,
-                ),
-              ),
-            ),
-            // Round 56 day-3 fix (2026-05): when Drive sync needs the
-            // 2026-05-06: Reconnect-Drive button removed when sync
-            // moved from Drive to Firebase Realtime Database. RTDB
-            // uses Firebase Auth tokens which auto-refresh — no
-            // separate OAuth scope to re-grant, so the button has
-            // nothing to do.
-            FilledButton.tonalIcon(
-                onPressed: isSyncing ? null : _trigger,
-                icon: isSyncing
-                    ? SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.2,
-                          color: scheme.onSurfaceVariant,
-                        ),
-                      )
-                    : const Icon(Icons.sync, size: 16),
-                label: Text(
-                  isSyncing
-                      ? (uiStrings['syncingNowShort']?[locale] ?? 'Syncing…')
-                      : (uiStrings['syncNow']?[locale] ?? 'Sync now'),
-                  style: TextStyle(
-                    fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                    fontSize: (settings.fontSize - 3).clamp(11.0, 14.0),
-                  ),
-                ),
-              ),
-          ],
-        ),
-        // Full-width progress bar appears below the row whenever the
-        // sync is actually in flight. Indeterminate (no known total),
-        // shaped like a typical "loading" affordance so non-technical
-        // users immediately understand work is happening — much more
-        // visible than the previous tiny in-button spinner.
-        AnimatedSwitcher(
-          duration: const Duration(milliseconds: 200),
-          child: isSyncing
-              ? Padding(
-                  key: const ValueKey('progress'),
-                  padding: const EdgeInsets.only(top: 8),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.zero,
-                    child: LinearProgressIndicator(
-                      minHeight: 3,
-                      backgroundColor:
-                          scheme.primary.withValues(alpha: 0.12),
-                      valueColor:
-                          AlwaysStoppedAnimation<Color>(scheme.primary),
-                    ),
-                  ),
-                )
-              : const SizedBox.shrink(key: ValueKey('idle')),
-        ),
-      ],
     );
   }
 }
@@ -2592,8 +1931,7 @@ class _AboutCard extends StatelessWidget {
             // "version number not showing" on the Mi Pad. kAppVersion is
             // guarded against a blank dart-define, so this never renders empty.
             Text(
-              'v$kAppVersion'
-              '${kChinaMode ? ' · ${uiStrings['chinaBuildTag']?[locale] ?? 'China build'}' : ''}',
+              'v$kAppVersion',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontFamily: settings.fontFamily,
@@ -2937,96 +2275,6 @@ class _StylePresetCard extends StatelessWidget {
       ),
     );
   }
-}
-
-/// One row in the Settings → Display font dropdown.
-// Round 56 (continued): the dropdown options now live in
-// `lib/utils/font_catalog.dart` (FontOption, availableFontOptions,
-// previewTextStyle, resolveFontFamily). The legacy `_FontOption`
-// + `_availableFonts(locale)` defined here used CSS-style family
-// names that CanvasKit can't actually load — Times New Roman /
-// Georgia / Arial silently fell back to Roboto on web. The new
-// catalogue swaps them for Google Fonts equivalents pulled at
-// runtime by the `google_fonts` package, which works on every
-// Flutter target.
-//
-// Kept the legacy helper below behind `// ignore: unused_element`
-// for one release in case Settings rollback is needed; remove it
-// once the new catalogue has been validated.
-class _FontOption {
-  final String value;
-  final String label;
-  const _FontOption({required this.value, required this.label});
-}
-
-// ignore: unused_element
-List<_FontOption> _availableFonts(String locale) {
-  final isZh = locale.startsWith('zh');
-  return [
-    // ── Bundled (works everywhere) ────────────────────────────
-    _FontOption(
-      value: 'Roboto',
-      label: isZh ? 'Roboto（默认）' : 'Roboto (default)',
-    ),
-    _FontOption(
-      value: 'Microsoft YaHei',
-      label: isZh ? '微软雅黑（中文）' : 'Microsoft YaHei (Chinese)',
-    ),
-    // ── System Chinese fonts ──────────────────────────────────
-    _FontOption(
-      value: 'PingFang SC',
-      label: isZh ? '苹方（Apple 设备）' : 'PingFang SC (Apple devices)',
-    ),
-    _FontOption(
-      value: 'Source Han Sans CN',
-      label: isZh ? '思源黑体（Adobe）' : 'Source Han Sans CN',
-    ),
-    _FontOption(
-      value: 'Heiti SC',
-      label: isZh ? '黑体' : 'Heiti SC',
-    ),
-    _FontOption(
-      value: 'SimSun',
-      label: isZh ? '宋体（Windows 经典）' : 'SimSun (Windows classic)',
-    ),
-    _FontOption(
-      value: 'KaiTi',
-      label: isZh ? '楷体（书法风）' : 'KaiTi (calligraphic)',
-    ),
-    // ── System English / Latin fonts ──────────────────────────
-    _FontOption(
-      value: 'Times New Roman',
-      label: isZh ? 'Times New Roman（衬线 / 经典）' : 'Times New Roman (serif / classic)',
-    ),
-    _FontOption(
-      value: 'Georgia',
-      label: isZh ? 'Georgia（衬线 / 友好）' : 'Georgia (serif / friendly)',
-    ),
-    _FontOption(
-      value: 'Garamond',
-      label: isZh ? 'Garamond（衬线 / 优雅）' : 'Garamond (serif / elegant)',
-    ),
-    _FontOption(
-      value: 'Arial',
-      label: isZh ? 'Arial（无衬线 / 通用）' : 'Arial (sans-serif / universal)',
-    ),
-    _FontOption(
-      value: 'Helvetica',
-      label: isZh ? 'Helvetica（无衬线 / 极简）' : 'Helvetica (sans-serif / minimal)',
-    ),
-    _FontOption(
-      value: 'Verdana',
-      label: isZh ? 'Verdana（无衬线 / 易读）' : 'Verdana (sans-serif / readable)',
-    ),
-    _FontOption(
-      value: 'Palatino',
-      label: isZh ? 'Palatino（衬线 / 书本风）' : 'Palatino (serif / book)',
-    ),
-    _FontOption(
-      value: 'system-ui',
-      label: isZh ? '系统默认' : 'System default',
-    ),
-  ];
 }
 
 /// Settings → About → "Offline Pack" card. Bulk pre-fetches the

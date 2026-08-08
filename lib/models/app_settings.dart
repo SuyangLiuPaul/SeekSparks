@@ -9,9 +9,7 @@ import 'package:seeksparks/models/notification_category.dart';
 import 'package:seeksparks/services/app_icon_service.dart';
 import 'package:seeksparks/services/notification_scheduler.dart'
     as scheduler;
-import 'package:seeksparks/services/cloud_auth_service.dart';
 import 'package:seeksparks/services/profile_service.dart';
-import 'package:seeksparks/services/realtime_db_sync_service.dart';
 import 'package:seeksparks/utils/font_catalog.dart';
 
 const _kFontFamily = 'fontFamily';
@@ -247,129 +245,6 @@ class AppSettings extends ChangeNotifier {
     } else {
       await prefs.setString(_kGeminiApiKey, trimmed);
     }
-    // 2026-05-10 (v1.2.17): also push to RTDB so the key is
-    // available on every device the user signs in on. Silent no-op
-    // when not signed in / China build / Firebase unconfigured —
-    // see RealtimeDbSyncService.pushGeminiKey for guards. Fire-and-
-    // forget — local SharedPreferences is the source of truth for
-    // the *current* device, the cloud copy is just a convenience
-    // for other devices.
-    // ignore: unawaited_futures
-    RealtimeDbSyncService.instance.pushGeminiKey(trimmed);
-  }
-
-  /// 2026-05-10 (v1.2.17): pull the Gemini key from RTDB and apply
-  /// to local if (and only if) local is currently empty. Called
-  /// from `loadSettings()` on boot after SharedPrefs has populated
-  /// the local copy, and from a CloudAuthService listener on sign-
-  /// in success. Local-empty-only policy avoids clobbering a key
-  /// the user just pasted on this device but hasn't pushed yet
-  /// (signed out → paste → sign in → would otherwise lose it).
-  Future<void> _pullGeminiKeyFromCloudIfEmpty() async {
-    if (_geminiApiKey.trim().isNotEmpty) return;
-    final remote = await RealtimeDbSyncService.instance.pullGeminiKey();
-    if (remote == null) return; // no info / not signed in
-    if (remote.trim().isEmpty) return; // cloud explicitly empty
-    _geminiApiKey = remote.trim();
-    notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_kGeminiApiKey, remote.trim());
-  }
-
-  /// 2026-05-17 (v1.2.47): real-time BYOK sync — subscribes to
-  /// RTDB `onValue` and applies remote changes live.
-  ///
-  /// 2026-05-17 (v1.2.51): semantic change — the first-emission
-  /// preservation policy (keep local if non-empty) actively
-  /// surprised users in the most common pattern:
-  ///
-  ///   • Device A: user updates key X → Z (cloud now has Z).
-  ///   • Device B: was offline; reopens app with local key = X.
-  ///     The stream's first emission is Z. v1.2.47 saw local = X
-  ///     (non-empty) and SKIPPED — Device B remained stuck on X.
-  ///
-  /// User report: "why some api for gemini not synced".
-  ///
-  /// New policy: cloud is the source of truth — every emission
-  /// (including the first one) is applied. To preserve the "paste
-  /// on Device B while signed out → sign in" flow, the sign-in
-  /// path (`_doByokSync`) PUSHES local to cloud BEFORE subscribing
-  /// so the stream's first emission is the local value, which
-  /// matches local → no-op, no clobber.
-  ///
-  ///   • Echo emissions (cloud value matches local already): no-op,
-  ///     guarded by an equality check so we don't fire a redundant
-  ///     `notifyListeners()` on every push round-trip.
-  ///
-  /// Subscription lifecycle:
-  ///   • Started from `loadSettings()` (if already signed in) and
-  ///     from `_onAuthChangedForByokSync` (on every sign-in).
-  ///   • Cancelled in `_onAuthChangedForByokSync` on sign-out so
-  ///     the stream doesn't leak past the auth session.
-  StreamSubscription<String?>? _geminiKeySub;
-
-  void _subscribeToGeminiKeyChanges() {
-    // Idempotent — avoid stacking subscriptions.
-    if (_geminiKeySub != null) {
-      debugPrint('[SeekSparks BYOK] subscribe: already subscribed, skip');
-      return;
-    }
-    final stream = RealtimeDbSyncService.instance.watchGeminiKey();
-    if (stream == null) {
-      debugPrint('[SeekSparks BYOK] subscribe: stream is null '
-          '(not signed in / not configured)');
-      return;
-    }
-    debugPrint('[SeekSparks BYOK] subscribing to RTDB stream');
-    _geminiKeySub = stream.listen(_handleRemoteGeminiKey);
-  }
-
-  Future<void> _unsubscribeFromGeminiKeyChanges() async {
-    debugPrint('[SeekSparks BYOK] unsubscribing from RTDB stream');
-    await _geminiKeySub?.cancel();
-    _geminiKeySub = null;
-  }
-
-  Future<void> _handleRemoteGeminiKey(String? remote) async {
-    if (remote == null) {
-      debugPrint('[SeekSparks BYOK] stream emit: null (skip)');
-      return;
-    }
-    final trimmed = remote.trim();
-    debugPrint('[SeekSparks BYOK] stream emit: '
-        '${trimmed.isEmpty ? "<empty>" : "${trimmed.substring(0, trimmed.length.clamp(0, 6))}…"} '
-        '(local: '
-        '${_geminiApiKey.isEmpty ? "<empty>" : "${_geminiApiKey.substring(0, _geminiApiKey.length.clamp(0, 6))}…"})');
-    if (trimmed == _geminiApiKey) {
-      debugPrint('[SeekSparks BYOK] echo, no-op');
-      return;
-    }
-    _geminiApiKey = trimmed;
-    notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    if (trimmed.isEmpty) {
-      await prefs.remove(_kGeminiApiKey);
-    } else {
-      await prefs.setString(_kGeminiApiKey, trimmed);
-    }
-    debugPrint('[SeekSparks BYOK] applied remote → local updated');
-  }
-
-  /// 2026-05-17 (v1.2.51): on sign-in, push local to cloud BEFORE
-  /// subscribing so the first emission matches local — preserves
-  /// the "paste while signed out → sign in" case without the
-  /// first-emission special-case logic. On sign-in with empty
-  /// local, fall back to the existing pull-if-empty so a fresh
-  /// device picks up the cloud's key.
-  Future<void> _doByokSync() async {
-    if (_geminiApiKey.trim().isNotEmpty) {
-      debugPrint('[SeekSparks BYOK] sign-in: pushing local key to cloud first');
-      await RealtimeDbSyncService.instance.pushGeminiKey(_geminiApiKey.trim());
-    } else {
-      debugPrint('[SeekSparks BYOK] sign-in: local empty, pulling from cloud');
-      await _pullGeminiKeyFromCloudIfEmpty();
-    }
-    _subscribeToGeminiKeyChanges();
   }
 
   /// [selection] is a catalogue key like `'EB Garamond'` (see
@@ -821,16 +696,12 @@ class AppSettings extends ChangeNotifier {
         ? storedNotesSort
         : _kNotesSortDefault;
 
-    // 2026-05-25 (v1.3.41): if a synced userPrefs JSON blob exists
-    // (written by another device + downloaded via
-    // RealtimeDbSyncService), apply it OVER the legacy individual-
-    // key reads above. The blob is the source of truth when present
-    // — it carries the most-recent device's full settings snapshot
-    // (newest `userPrefsTimestamp` wins via the merge in
-    // RealtimeDbSyncService._mergeSnapshots). Fields the blob
-    // doesn't contain fall through to the legacy values we just
-    // loaded (forward-compatible: an older device that doesn't
-    // know a future field can still overwrite the rest).
+    // 2026-05-25 (v1.3.41): if a userPrefs JSON blob exists, apply
+    // it OVER the legacy individual-key reads above — it carries the
+    // full settings snapshot and is the source of truth when
+    // present. Fields the blob doesn't contain fall through to the
+    // legacy values we just loaded, which keeps a blob written by an
+    // older build forward-compatible with new fields.
     final userPrefsBlob = prefs.getString(
         ProfileService.instance.scopedKey('userPrefs'));
     if (userPrefsBlob != null && userPrefsBlob.isNotEmpty) {
@@ -841,34 +712,7 @@ class AppSettings extends ChangeNotifier {
 
     notifyListeners();
 
-    // 2026-05-10 (v1.2.17): now that the local key is settled (or
-    // confirmed empty), give the cloud copy a chance to fill in
-    // when local is blank but the user is signed in on another
-    // device that has set one. Fire-and-forget — no point blocking
-    // boot on a network round-trip for a non-essential convenience.
-    // Local-empty-only policy means a freshly-pasted local key
-    // (signed-out → paste → sign-in flow) survives intact; the
-    // pull only fills a vacuum.
-    // 2026-05-17 (v1.2.47 + v1.2.51): bootstrap BYOK sync — push
-    // local first if non-empty so cloud reflects this device,
-    // pull otherwise so a fresh device picks up the cloud key.
-    // Then subscribe to live changes so subsequent updates on
-    // other devices arrive in real time. All branches fire-and-
-    // forget; `_doByokSync` itself awaits in order.
-    // ignore: unawaited_futures
-    _doByokSync();
-
-    // Also re-pull whenever the user signs in on this device. The
-    // CloudAuthService notifier fires on every auth-state change;
-    // we narrow to "now signed in AND key is currently empty" via
-    // the same idempotent helper.
-    if (!_authListenerWired) {
-      _authListenerWired = true;
-      CloudAuthService.instance.addListener(_onAuthChangedForByokSync);
-    }
   }
-
-  bool _authListenerWired = false;
 
   // 2026-05-25 (v1.3.41): debounce timer for the comprehensive
   // userPrefs blob writer. Every change to AppSettings fields
@@ -904,17 +748,13 @@ class AppSettings extends ChangeNotifier {
     });
   }
 
-  /// Serialize all sync-eligible settings into a single JSON blob +
-  /// write it to the ProfileService-scoped `userPrefs` key in
-  /// SharedPreferences + bump the paired `userPrefsTimestamp` int.
-  /// `RealtimeDbSyncService.requestUpload` is then asked to push;
-  /// the existing dedupe + debounce in the sync service coalesces
-  /// rapid back-to-back uploads.
+  /// Serialize all settings into a single JSON blob + write it to
+  /// the ProfileService-scoped `userPrefs` key in SharedPreferences
+  /// + bump the paired `userPrefsTimestamp` int.
   ///
-  /// `geminiApiKey` is deliberately excluded — it has its own sync
-  /// path (`users/{uid}/account/geminiApiKey`, bidirectional stream)
-  /// for the credential-security reasons documented near the
-  /// `_kGeminiApiKey` declaration.
+  /// `geminiApiKey` is deliberately excluded — a credential does not
+  /// belong in the general settings blob, for the reasons documented
+  /// near the `_kGeminiApiKey` declaration.
   /// Single source of truth for the sync-eligible settings snapshot.
   /// Used by both the writer and the content-guard primer so the two
   /// can never drift (a drift would defeat the guard and re-open the
@@ -959,11 +799,9 @@ class AppSettings extends ChangeNotifier {
       await prefs.setInt(
           ProfileService.instance.scopedKey('userPrefsTimestamp'),
           DateTime.now().millisecondsSinceEpoch);
-      RealtimeDbSyncService.instance.requestUpload();
     } catch (e) {
       // Non-fatal — the legacy per-key writes already persisted the
-      // change locally. The sync just won't carry until the next
-      // successful blob write.
+      // change locally.
       debugPrint('AppSettings._writeUserPrefsBlob failed: $e');
     }
   }
@@ -1042,23 +880,6 @@ class AppSettings extends ChangeNotifier {
       // identical content and skips the redundant seed-upload.
       _lastWrittenUserPrefsBlob = jsonEncode(_userPrefsSnapshot());
     }
-  }
-
-  void _onAuthChangedForByokSync() {
-    if (!CloudAuthService.instance.isSignedIn) {
-      // Signed out — tear down the live listener; it will be
-      // re-established on next sign-in. Fire-and-forget; cancel()
-      // returns a Future but there's nothing to await here.
-      // ignore: unawaited_futures
-      _unsubscribeFromGeminiKeyChanges();
-      return;
-    }
-    // 2026-05-17 (v1.2.51): push-then-subscribe (or pull-then-
-    // subscribe) so the stream's first emission matches local —
-    // avoids the v1.2.47 surprise where local was preserved even
-    // when cloud had a more recent key from another device.
-    // ignore: unawaited_futures
-    _doByokSync();
   }
 
   static ThemeMode _parseThemeMode(String? raw) {

@@ -50,7 +50,22 @@ echo "==> building web bundle"
 # "last updated" the app showed was whenever that constant was last
 # hand-edited, not when the bundle was actually built.
 APP_RELEASE_TIME="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+#
+# --no-web-resources-cdn is LOAD-BEARING, not an optimisation.
+#
+# Flutter's default bootstrap fetches CanvasKit (~1.5 MB, and the app
+# cannot paint a single pixel without it) from
+# https://www.gstatic.com/flutter-canvaskit/<engine-rev>/. That host is
+# not reachable from mainland China, so the default build hangs on a
+# blank page there no matter what the Dart code does. `flutter build
+# web` already emits the same files into build/web/canvaskit/; this
+# flag just makes the bootstrap use them, off our own origin.
+#
+# v1.6.62 removed Firebase and google_fonts to get Google off the boot
+# path. Leaving this flag off would have left the single largest
+# Google dependency in place and made that work cosmetic.
 "$FLUTTER" build web --release \
+  --no-web-resources-cdn \
   --dart-define="APP_VERSION=$APP_VERSION" \
   --dart-define="APP_RELEASE_TIME=$APP_RELEASE_TIME"
 
