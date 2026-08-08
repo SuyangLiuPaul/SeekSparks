@@ -116,6 +116,10 @@ class _LoadingPageState extends State<LoadingPage> {
   // eager pre-load (which fires notifyListeners 12 times).
   // Reset to false in `_retry` so the manual retry path can
   // schedule a fresh advance.
+  //
+  // 2026-08-08: it means "the Timer is ARMED", not "we tried once".
+  // Only `_scheduleAdvanceIfReady` sets it, and only on the path that
+  // arms the Timer — see that method's note.
   bool _advanceScheduledOnce = false;
 
   @override
@@ -277,12 +281,28 @@ class _LoadingPageState extends State<LoadingPage> {
     _splashVerseLocked = true;
   }
 
-  void _scheduleAdvanceIfReady() {
+  /// Arms the 3 s hand-off to the app, if there is anything to hand off
+  /// to yet.
+  ///
+  /// Owns [_advanceScheduledOnce] rather than letting the caller set it.
+  /// 2026-08-08: build() used to set the flag and *then* call this, so a
+  /// call that bailed out here still burned the one shot. On any boot
+  /// where the 4 s watchdog beat the active version's fetch — a cold
+  /// cache or a slow connection, i.e. exactly a phone — LoadingPage's
+  /// first build ran with `verses` still empty, the flag was spent, and
+  /// when the verses did arrive nothing re-armed the timer. The splash
+  /// then sat forever, and `_autoHardReload` could not save it either:
+  /// its `stillStuck` test asks whether the boot is *unfinished*, and by
+  /// then the boot had finished perfectly.
+  bool _scheduleAdvanceIfReady() {
+    if (_advanceScheduledOnce) return true;
     final mainProvider = context.read<MainProvider>();
     if (mainProvider.loadError != null || mainProvider.verses.isEmpty) {
-      // Stay on the splash with the error UI; do not auto-advance.
-      return;
+      // Nothing to advance to. Stay on the splash and say so to the
+      // caller, so it keeps asking on later builds.
+      return false;
     }
+    _advanceScheduledOnce = true;
     _autoAdvance?.cancel();
     _autoAdvance = Timer(const Duration(seconds: 3), () {
       if (!mounted) return;
@@ -295,6 +315,7 @@ class _LoadingPageState extends State<LoadingPage> {
         );
       }
     });
+    return true;
   }
 
   /// Schedule one auto-retry with linear backoff (2 s, 4 s, 6 s) while
@@ -433,14 +454,18 @@ class _LoadingPageState extends State<LoadingPage> {
     // eager pre-load runs to 12/12), no one re-arms it — the user
     // sees the splash stuck on "Loading versions: 12/12".
     //
-    // Fix: the first time we observe a non-error build (verses
-    // populated, no loadError), schedule the advance via a post-
-    // frame callback so it runs AFTER the current build completes.
-    // The `_advanceScheduledOnce` flag prevents the eager pre-load's
-    // 12 notifyListeners callbacks from cancelling-and-rearming the
-    // Timer on every rebuild (which would never let it fire).
+    // Fix: keep asking on every non-error build, via a post-frame
+    // callback so it runs AFTER the current build completes.
+    //
+    // 2026-08-08: the flag is set by `_scheduleAdvanceIfReady` and only
+    // when it actually arms the Timer. Setting it here — which is what
+    // v1.2.28 did — meant a build that arrived before the verses spent
+    // the one shot and left the splash permanently un-advanced, which is
+    // the bug this comment block describes, reintroduced by its own fix.
+    // The flag still does its original job of keeping the eager
+    // pre-load's 12 `notifyListeners` from cancelling and re-arming the
+    // Timer forever, because the guard now lives inside the callee.
     if (!_advanceScheduledOnce) {
-      _advanceScheduledOnce = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _scheduleAdvanceIfReady();
       });

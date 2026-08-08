@@ -808,16 +808,29 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
           // every push/pop so error reports include the navigation
           // trail leading up to the crash.
           navigatorObservers: [BreadcrumbObserver(), _UrlRestoreObserver()],
-          home: _loading
-              ? const Scaffold(
-                  body: Center(
-                    child: CircularProgressIndicator(),
+          // 2026-08-08: the gate sits ABOVE the splash, not below it.
+          // It used to wrap only WorkbenchPage, three screens deep —
+          // past the boot watchdog, past LoadingPage's 3 s auto-advance
+          // — so a phone reader watched the full cold boot (every
+          // bundled Bible parsed) before being told SeekSparks needs a
+          // tablet, and any boot that failed to advance meant they were
+          // never told at all. That is the v1.6.56 "stuck on the splash"
+          // report. Whether this viewport can carry the workbench is
+          // known on the first frame and depends on nothing the boot
+          // produces, so it is answered on the first frame.
+          home: SmallScreenGate(
+            child: _loading
+                ? const Scaffold(
+                    body: Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                  )
+                : _RootRouter(
+                    initialVerses: Provider.of<MainProvider>(context,
+                            listen: false)
+                        .verses,
                   ),
-                )
-              : _RootRouter(
-                  initialVerses:
-                      Provider.of<MainProvider>(context, listen: false).verses,
-                ),
+          ),
         );
       },
     );
@@ -848,7 +861,15 @@ class _RootRouter extends StatefulWidget {
 }
 
 class _RootRouterState extends State<_RootRouter> {
-  bool _showHome = false;
+  /// The splash is a cold-start affordance, and as of 2026-08-08 this
+  /// router can be torn down mid-session: SmallScreenGate wraps `home:`,
+  /// so dragging a desktop window below the workbench's width and back
+  /// unmounts and remounts this subtree. Replaying the splash on the way
+  /// back would be a regression introduced by that move, so "the splash
+  /// has been shown" is session state rather than widget state.
+  static bool _splashDone = false;
+
+  bool _showHome = _splashDone;
   bool _deepLinkHandled = false;
 
   /// v1.3.62 UX: set (via the UrlSyncService callback) when a boot
@@ -870,6 +891,7 @@ class _RootRouterState extends State<_RootRouter> {
 
   void _advance() {
     if (!mounted || _showHome) return;
+    _splashDone = true;
     setState(() => _showHome = true);
     _handleDeepLink();
   }
@@ -972,10 +994,11 @@ class _RootRouterState extends State<_RootRouter> {
     // 2026-08-07: routing phones here made the app visually consistent
     // and thereby made a real problem worse — consistency with a
     // workbench you cannot show is a menu bar over one column, which
-    // is YsWords with extra steps. SmallScreenGate says so once, on
-    // phone-sized viewports only, and then never again.
+    // is YsWords with extra steps. SmallScreenGate says so instead, and
+    // as of 2026-08-08 it wraps `home:` rather than this line, so a
+    // viewport that cannot carry the workbench never reaches the splash.
     return _showHome
-        ? const SmallScreenGate(child: WorkbenchPage())
+        ? const WorkbenchPage()
         : LoadingPage(
             verses: widget.initialVerses,
             onAdvance: _advance,

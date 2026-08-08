@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/models/app_settings.dart';
@@ -12,46 +11,26 @@ import 'package:seeksparks/utils/workbench_fit.dart';
 /// the honest recommendation, not a competitor.
 const String kYsWordsUrl = 'https://yswords.netlify.app';
 
-const String kSmallScreenDismissedKey = 'workbench_fit_advisory_dismissed';
-
-/// Wraps the workbench and, on a phone-sized viewport, shows the
-/// advisory in front of it exactly once.
+/// Shows the advisory instead of the app on a viewport that cannot
+/// carry the workbench.
 ///
-/// The gate is deliberately an advisory and not a lockout: `Continue
-/// anyway` hands over the workbench and writes a flag that is never
-/// unwritten, so a reader who has said no is never asked again.
-class SmallScreenGate extends StatefulWidget {
+/// **Synchronous on purpose, and mounted ABOVE the splash on purpose.**
+/// The decision has exactly one input — the viewport — and that is known
+/// on the very first frame, so nothing here may wait on disk, on the
+/// network, or on the boot.
+///
+/// Sequencing it behind any of those is what stranded phones in v1.6.56.
+/// The gate used to sit *inside* the post-splash router and to hold on a
+/// blank `Scaffold` while a persisted flag loaded, which meant a phone
+/// reader sat through the entire cold boot — every bundled Bible parsed —
+/// before being told the app was not for them, and a boot that stalled
+/// meant they were never told at all. The flag it waited for could not
+/// change the answer either: `Continue anyway` was removed in v1.6.20,
+/// so the gate has passed `dismissed: false` unconditionally ever since.
+class SmallScreenGate extends StatelessWidget {
   const SmallScreenGate({super.key, required this.child});
 
   final Widget child;
-
-  @override
-  State<SmallScreenGate> createState() => _SmallScreenGateState();
-}
-
-class _SmallScreenGateState extends State<SmallScreenGate> {
-  /// null = not read from disk yet. Treated as "may still need the
-  /// advisory", so the workbench is never shown and then yanked away.
-  bool? _dismissed;
-
-  @override
-  void initState() {
-    super.initState();
-    _restore();
-  }
-
-  Future<void> _restore() async {
-    final prefs = await SharedPreferences.getInstance();
-    if (!mounted) return;
-    setState(
-        () => _dismissed = prefs.getBool(kSmallScreenDismissedKey) ?? false);
-  }
-
-  Future<void> _dismiss() async {
-    setState(() => _dismissed = true);
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(kSmallScreenDismissedKey, true);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -60,50 +39,42 @@ class _SmallScreenGateState extends State<SmallScreenGate> {
     final advice = WorkbenchFit.adviceFor(
       width: size.width,
       height: size.height,
-      // 2026-08-07: always false. The gate is now a hard block, so a
-      // dismissal persisted by v1.6.20 or earlier must not keep letting
-      // that reader through — the stale bit would quietly exempt exactly
-      // the people who had already seen the broken advisory.
-      // `adviceFor` keeps the parameter; only this caller stops using it.
+      // The gate is a hard block — there is no dismissal to honour.
+      // `adviceFor` keeps the parameter for its own unit tests.
       dismissed: false,
     );
 
-    // Big screens answer `none` regardless of the flag, so they never
-    // wait on the disk read — no placeholder frame, no rebuild.
-    if (advice == WorkbenchAdvice.none) return widget.child;
-
-    // Small screen, answer not back yet. Hold on the background rather
-    // than showing the workbench and yanking it away a frame later.
-    if (_dismissed == null) {
-      return Scaffold(backgroundColor: Theme.of(context).colorScheme.surface);
-    }
+    if (advice == WorkbenchAdvice.none) return child;
 
     return SmallScreenAdvisory(
       advice: advice,
       size: size,
       locale: context.watch<AppSettings>().locale,
-      onContinue: _dismiss,
       onLocale: (code) => context.read<AppSettings>().setLocale(code),
     );
   }
 }
 
 /// The advisory itself, separated from the gate so it can be laid out
-/// and read without SharedPreferences in the way.
+/// and read without a viewport decision in the way.
 class SmallScreenAdvisory extends StatelessWidget {
   const SmallScreenAdvisory({
     super.key,
     required this.advice,
     required this.size,
     required this.locale,
-    required this.onContinue,
+    this.onContinue,
     required this.onLocale,
   });
 
   final WorkbenchAdvice advice;
   final Size size;
   final String locale;
-  final VoidCallback onContinue;
+
+  /// Unwired: `Continue anyway` was removed in v1.6.20 (see the note by
+  /// the YsWords button below). Left on the API because it is still the
+  /// hook a future setting or a QA build would use.
+  final VoidCallback? onContinue;
 
   /// Changing the interface language from HERE is not a convenience —
   /// it is the only way. The gate is a hard block, so Settings is

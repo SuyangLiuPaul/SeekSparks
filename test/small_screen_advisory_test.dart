@@ -4,16 +4,15 @@
 /// one was forked from).
 ///
 /// Two halves, deliberately: `SmallScreenGate` decides *whether* to
-/// show it and owns the persisted "no", and is tested with a stand-in
-/// child rather than the real WorkbenchPage. `SmallScreenAdvisory`
-/// only renders copy, takes its locale as a parameter like every other
-/// pane here, and so needs no providers at all.
+/// show it and is tested with a stand-in child rather than the real
+/// WorkbenchPage. `SmallScreenAdvisory` only renders copy, takes its
+/// locale as a parameter like every other pane here, and so needs no
+/// providers at all.
 library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/models/app_settings.dart';
@@ -27,14 +26,13 @@ void main() {
 
   String s(String key, String locale) => uiStrings[key]![locale]!;
 
-  Future<void> pumpGate(
-    WidgetTester tester,
-    Size size, {
-    Map<String, Object> prefs = const <String, Object>{},
-  }) async {
+  /// Builds the gate and pumps EXACTLY ONE frame. Every assertion below
+  /// therefore also asserts that the answer needed no second frame — no
+  /// disk read, no timer, no boot. See the "answered on the first frame"
+  /// group for why that is the point rather than a convenience.
+  Future<void> pumpGate(WidgetTester tester, Size size) async {
     tester.view.devicePixelRatio = 1.0;
     tester.view.physicalSize = size;
-    SharedPreferences.setMockInitialValues(prefs);
     await tester.pumpWidget(
       ChangeNotifierProvider<AppSettings>(
         create: (_) => AppSettings(),
@@ -45,8 +43,6 @@ void main() {
         ),
       ),
     );
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 50));
   }
 
   Future<void> pumpAdvisory(
@@ -108,22 +104,48 @@ void main() {
 
     testWidgets('a desktop never pays a frame for it', (tester) async {
       addTearDown(tester.view.reset);
-      tester.view.devicePixelRatio = 1.0;
-      tester.view.physicalSize = const Size(1400, 900);
-      SharedPreferences.setMockInitialValues(<String, Object>{});
-      await tester.pumpWidget(
-        ChangeNotifierProvider<AppSettings>(
-          create: (_) => AppSettings(),
-          child: const MaterialApp(
-            home: SmallScreenGate(
-              child: Scaffold(body: SizedBox.shrink(key: workbenchMarker)),
-            ),
-          ),
-        ),
-      );
-      // First frame, before any SharedPreferences read could complete.
+      await pumpGate(tester, const Size(1400, 900));
       expect(find.byKey(workbenchMarker), findsOneWidget);
-      await tester.pump(const Duration(milliseconds: 50));
+    });
+  });
+
+  group('answered on the first frame — nothing may be waited on', () {
+    // 2026-08-08, the v1.6.56 prod bug: phones sat on the splash. The
+    // gate used to be mounted INSIDE the post-splash router and to hold
+    // on a blank Scaffold while SharedPreferences loaded, so the answer
+    // arrived only after the whole cold boot — every bundled Bible
+    // parsed — and a boot that never advanced meant it never arrived at
+    // all. The viewport is the only input the decision has, and it is
+    // known immediately, so these tests pump ONE frame and no timers.
+
+    testWidgets('the advisory is painted on the very first frame',
+        (tester) async {
+      addTearDown(tester.view.reset);
+      await pumpGate(tester, const Size(375, 812));
+      expect(find.byType(SmallScreenAdvisory), findsOneWidget);
+    });
+
+    testWidgets('no blank frame stands between the reader and the answer',
+        (tester) async {
+      // The old gate returned a bare `Scaffold` with no children while
+      // it waited. Whatever this widget shows on frame one, it must be
+      // the advisory or the app — never an empty holding screen.
+      addTearDown(tester.view.reset);
+      await pumpGate(tester, const Size(375, 812));
+      expect(find.byKey(workbenchMarker), findsNothing);
+      expect(find.byType(SmallScreenAdvisory), findsOneWidget);
+    });
+
+    testWidgets('the gate settles with no pending timers or async work',
+        (tester) async {
+      // `pumpAndSettle` throws if the frame scheduler never goes quiet,
+      // and a pending SharedPreferences round-trip would leave work
+      // behind. Nothing to settle is exactly the property wanted.
+      addTearDown(tester.view.reset);
+      await pumpGate(tester, const Size(375, 812));
+      await tester.pumpAndSettle();
+      expect(find.byType(SmallScreenAdvisory), findsOneWidget);
+      expect(tester.takeException(), isNull);
     });
   });
 
@@ -140,18 +162,19 @@ void main() {
       expect(find.byKey(workbenchMarker), findsNothing);
     });
 
-    testWidgets('a dismissal saved by an older build no longer exempts anyone',
+    testWidgets('a dismissal saved by an older build cannot exempt anyone',
         (tester) async {
       // Readers who tapped "Continue anyway" in v1.6.20 are exactly the
-      // ones who saw the self-contradicting advisory. Honouring that
+      // ones who saw the self-contradicting advisory, so honouring that
       // stale bit would leave them permanently past a gate that is now
-      // meant to hold.
+      // meant to hold. v1.6.60 made that unreachable by construction:
+      // the gate reads no persisted state at all. This test runs with no
+      // SharedPreferences mock configured — a gate that still tried to
+      // read one would throw a MissingPluginException here.
       addTearDown(tester.view.reset);
-      await pumpGate(
-        tester,
-        const Size(390, 844),
-        prefs: const {kSmallScreenDismissedKey: true},
-      );
+      await pumpGate(tester, const Size(390, 844));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
       expect(find.byType(SmallScreenAdvisory), findsOneWidget);
       expect(find.byKey(workbenchMarker), findsNothing);
     });
