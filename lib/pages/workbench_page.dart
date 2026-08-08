@@ -76,6 +76,11 @@ import 'package:seeksparks/widgets/language_switcher_button.dart';
 import 'package:seeksparks/widgets/browse_nav_strip.dart';
 import 'package:seeksparks/widgets/browse_window.dart';
 import 'package:seeksparks/widgets/word_analysis_pane.dart';
+import 'package:seeksparks/utils/command_verb.dart'
+    show CommandVerbIssue, describeVerbIssue;
+import 'package:seeksparks/utils/search_scope.dart'
+    show limitSpecForBooks, scopeDisplayName;
+import 'package:seeksparks/widgets/search_scope_sheet.dart';
 import 'package:seeksparks/widgets/workbench_chrome.dart';
 import 'package:seeksparks/widgets/originals_sheet.dart';
 
@@ -431,6 +436,15 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
       WbMenu(s('search', 'Search'), [
         WbMenuItem(s('menuFocusCommandLine', 'Command line'), _focusCommandLine,
             shortcut: 'Ctrl+L'),
+        // bwh29 reaches the limits window from the Search menu, the
+        // command line and the status bar. Until now this app had only
+        // the command line, so the scope was a documented feature with
+        // no way in.
+        WbMenuItem(
+          s('scopeMenu', 'Search scope…'),
+          () => _openScopeSheet(),
+          checked: _wb.hasSearchLimit,
+        ),
         const WbMenuItem.separator(),
         // Greyed until there is something to clear — the menu reports
         // state rather than silently doing nothing.
@@ -706,6 +720,24 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
                 _mapPlaceId = null;
               })
             : _setCentreMode(_nextCentreMode()),
+      ),
+      // bwh12's Limits field, including the reason it exists: "you may
+      // have forgotten that you have search limits set." Greyed when
+      // nothing is limiting, and it names the scope when something is,
+      // so a narrowed result set can never be a silent one.
+      WbStatusField(
+        _wb.hasSearchLimit
+            ? '${s('scopeStatusField', 'Limits')}: '
+                '${scopeDisplayName(
+                spec: _wb.searchLimitSpec,
+                fallbackLabel: _wb.searchLimitLabel,
+                locale: locale,
+                version: mp.currentVersion,
+                maxNames: 1,
+              )}'
+            : s('scopeStatusField', 'Limits'),
+        enabled: _wb.hasSearchLimit,
+        onTap: _openScopeSheet,
       ),
       WbStatusField(
         "Strong's",
@@ -1654,6 +1686,50 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
     }
   }
 
+  /// What the active limit is called, or null when nothing is limiting.
+  /// Result panes take the null as "print a plain count".
+  String? _activeScopeName(MainProvider mp, String locale) =>
+      !_wb.hasSearchLimit
+          ? null
+          : scopeDisplayName(
+              spec: _wb.searchLimitSpec,
+              fallbackLabel: _wb.searchLimitLabel,
+              locale: locale,
+              version: mp.currentVersion,
+              maxNames: 2,
+            );
+
+  /// The one place the scope sheet is opened from, whichever of the
+  /// three entry points fired.
+  Future<void> _openScopeSheet() async {
+    final mp = context.read<MainProvider>();
+    final locale = context.read<AppSettings>().locale;
+    final books = await showSearchScopeSheet(
+      context: context,
+      locale: locale,
+      version: mp.currentVersion,
+      activeSpec: _wb.searchLimitSpec,
+      activeFallbackLabel: _wb.searchLimitLabel,
+    );
+    if (books == null || !mounted) return;
+    // False means the selection covers no verse the loaded edition
+    // carries — the provider refuses rather than installing a limit
+    // that makes every later search silently return nothing. Same
+    // refusal, same message, as `l revelation 30` from the command line.
+    final applied = await _wb.setSearchLimitFromBooks(books);
+    if (!mounted) return;
+    _wb.showVerbNotice(applied
+        ? null
+        : describeVerbIssue(
+            CommandVerbIssue.emptyScope,
+            scopeDisplayName(
+              spec: limitSpecForBooks(books),
+              locale: locale,
+              version: mp.currentVersion,
+            ),
+            locale));
+  }
+
   /// Lets the reader choose which translations sit in the parallel stack.
   Future<void> _pickParallelVersions(BuildContext context) async {
     final scheme = Theme.of(context).colorScheme;
@@ -1724,7 +1800,12 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
               ),
             ],
           ),
-          Expanded(child: CommandPane(focusNode: _commandFocus)),
+          Expanded(
+            child: CommandPane(
+              focusNode: _commandFocus,
+              onEditScope: _openScopeSheet,
+            ),
+          ),
         ],
       ),
     );
@@ -1919,6 +2000,8 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
               words: snap.data ?? const <OriginalWord>[],
               locale: locale,
               onOpenStrongs: (n) => pushPage(StrongsEntryPage(number: n)),
+              scope: _wb.searchLimit,
+              scopeName: _activeScopeName(mp, locale),
             );
           },
         );
@@ -1937,6 +2020,8 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
           strongs: number,
           version: mp.currentVersion,
           locale: locale,
+          scope: _wb.searchLimit,
+          scopeName: _activeScopeName(mp, locale),
           onOpenRef: (book, chapter, verse) => _onCrossRefTap(
             BibleReference(
               englishBook: book,

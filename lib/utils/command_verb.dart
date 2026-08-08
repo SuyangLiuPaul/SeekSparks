@@ -203,9 +203,10 @@ class LimitSpec {
   /// English and are re-localised where they are displayed.
   final String label;
 
-  /// A `uiStrings` key, set only for the two whole-testament
-  /// shorthands, so the banner can say 旧约 rather than "Old Testament".
-  /// They are the only limits whose name is not simply a book name.
+  /// A `uiStrings` key, set when the scope has a NAME of its own — the
+  /// two corpus shorthands from the command line, and the traditional
+  /// groupings the scope picker offers (`search_scope.dart`). Everything
+  /// else is simply a list of book names.
   final String? labelKey;
 
   bool covers(String englishBook, int chapter) =>
@@ -365,12 +366,20 @@ const Map<String, String> _languageAliases = {
   '希臘文': 'grc',
 };
 
+/// What may be TYPED for a whole corpus, which is a wider set than what
+/// is ever PRINTED. This project names the two corpora 希伯来圣经 /
+/// 希腊圣经 rather than 旧约 / 新约 (#280), but a reader reaching for a
+/// shorthand types the one they already know, and refusing `l 旧约` to
+/// make a terminological point would be the command line lecturing its
+/// user. The label comes back in the project's own terms either way.
 const Set<String> _otAliases = {
-  'ot', 'o.t.', 'old', 'oldtestament', '旧约', '舊約', '旧約',
+  'ot', 'o.t.', 'old', 'oldtestament', 'hb', 'hebrewbible',
+  '旧约', '舊約', '旧約', '希伯来圣经', '希伯來聖經', '希伯来', '希伯來',
 };
 
 const Set<String> _ntAliases = {
-  'nt', 'n.t.', 'new', 'newtestament', '新约', '新約',
+  'nt', 'n.t.', 'new', 'newtestament', 'gb', 'greekbible',
+  '新约', '新約', '希腊圣经', '希臘聖經', '希腊', '希臘',
 };
 
 /// `<book> <chapter>` / `<book> <c1>-<c2>`. The book part is lazy and
@@ -549,13 +558,13 @@ CommandVerbParse _parseLimit(String rest, VerbContext ctx) {
     if (_otAliases.contains(normalized)) {
       ranges.addAll([for (final b in canonicalOtBooks) LimitRange(b)]);
       labels.add('Old Testament');
-      groupKey = 'cmdvScopeOt';
+      groupKey = 'oldTestament';
       continue;
     }
     if (_ntAliases.contains(normalized)) {
       ranges.addAll([for (final b in canonicalNtBooks) LimitRange(b)]);
       labels.add('New Testament');
-      groupKey = 'cmdvScopeNt';
+      groupKey = 'newTestament';
       continue;
     }
 

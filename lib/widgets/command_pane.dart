@@ -33,6 +33,7 @@ import 'package:seeksparks/utils/version_mapper.dart'
     show localeAwareBookName, toEnglish;
 import 'package:seeksparks/constants/book_groups.dart'
     show oldTestamentBooks, canonicalOtBooks, canonicalNtBooks;
+import 'package:seeksparks/utils/search_scope.dart' show scopeDisplayName;
 import 'package:seeksparks/utils/search_stats.dart';
 import 'package:seeksparks/widgets/search_stats_strip.dart';
 
@@ -46,7 +47,8 @@ import 'package:seeksparks/widgets/search_stats_strip.dart';
 /// navigation, the reader is right beside us) and focuses it in the
 /// analysis pane.
 class CommandPane extends StatefulWidget {
-  const CommandPane({super.key, this.focusNode, this.onVerseOpened});
+  const CommandPane(
+      {super.key, this.focusNode, this.onVerseOpened, this.onEditScope});
 
   /// Supplied by the Workbench so View ▸ Command line and the toolbar's
   /// search button can put the caret here — a desktop tool's command
@@ -59,6 +61,13 @@ class CommandPane extends StatefulWidget {
   /// reader is the route underneath and a tap that changed nothing on
   /// screen reads as a dead list.
   final VoidCallback? onVerseOpened;
+
+  /// Opens the scope picker. Owned by the Workbench because the same
+  /// sheet is reached from the Search menu and the status bar, and
+  /// three copies of "open the limits window" is how two of them end up
+  /// behaving differently. Null leaves the limit banner a readout with
+  /// a clear button, which is what it was.
+  final VoidCallback? onEditScope;
 
   @override
   State<CommandPane> createState() => _CommandPaneState();
@@ -309,9 +318,12 @@ class _CommandPaneState extends State<CommandPane> {
             uiStrings['cmdvBrowseOn']?[locale] ?? 'Browse view.');
       case CommandVerbKind.limitSet:
         final spec = verb.limit!;
-        final key = spec.labelKey;
-        final label =
-            key == null ? spec.label : (uiStrings[key]?[locale] ?? spec.label);
+        final label = scopeDisplayName(
+          spec: spec,
+          locale: locale,
+          version: context.read<MainProvider>().currentVersion,
+          maxNames: 3,
+        );
         final applied = await wb.setSearchLimitFromSpec(spec, label);
         if (!mounted) return;
         wb.showVerbNotice(applied
@@ -641,7 +653,7 @@ class _CommandPaneState extends State<CommandPane> {
       return Column(
         children: [
           if (notice != null) _verbNoticeStrip(wb, scheme, notice),
-          if (wb.hasSearchLimit) _limitBanner(wb, scheme, locale),
+          if (wb.hasSearchLimit) _limitBanner(context, wb, scheme, locale),
           Expanded(child: _buildResultsBody(context, wb, settings, scheme, locale)),
         ],
       );
@@ -685,9 +697,22 @@ class _CommandPaneState extends State<CommandPane> {
     );
   }
 
-  Widget _limitBanner(
-      WorkbenchProvider wb, ColorScheme scheme, String locale) {
-    final name = wb.searchLimitLabel ?? '';
+  /// The active scope, above the hits it removed.
+  ///
+  /// Tapping the strip now OPENS the picker rather than clearing the
+  /// limit, and the × clears — bwh12's convention (double-click the
+  /// Limits status area to open the window) and the safer default: a
+  /// reader who means to narrow further should not lose the scope they
+  /// have by aiming at the wrong pixel.
+  Widget _limitBanner(BuildContext context, WorkbenchProvider wb,
+      ColorScheme scheme, String locale) {
+    final name = scopeDisplayName(
+      spec: wb.searchLimitSpec,
+      fallbackLabel: wb.searchLimitLabel,
+      locale: locale,
+      version: context.read<MainProvider>().currentVersion,
+      maxNames: 3,
+    );
     final label = (uiStrings['vlmLimitBanner']?[locale] ??
             'Limited to {name} ({count})')
         .replaceAll('{name}',
@@ -696,7 +721,7 @@ class _CommandPaneState extends State<CommandPane> {
     return Material(
       color: scheme.tertiaryContainer,
       child: InkWell(
-        onTap: () => wb.setSearchLimit(null, null),
+        onTap: widget.onEditScope,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           child: Row(
@@ -712,11 +737,16 @@ class _CommandPaneState extends State<CommandPane> {
                     fontSize: 11.5,
                     fontWeight: FontWeight.w600,
                     color: scheme.onTertiaryContainer,
+                    fontFamilyFallback: kCjkFontFallback,
                   ),
                 ),
               ),
-              Icon(Icons.close_rounded,
-                  size: 14, color: scheme.onTertiaryContainer),
+              _MiniIcon(
+                icon: Icons.close_rounded,
+                tooltip: uiStrings['clear']?[locale] ?? 'Clear',
+                onTap: () => wb.setSearchLimit(null, null),
+                color: scheme.onTertiaryContainer,
+              ),
             ],
           ),
         ),

@@ -12,6 +12,7 @@
 /// that fetches 1200 book files before painting anything is not a tool.
 library;
 
+import 'package:flutter/foundation.dart' show setEquals;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -20,6 +21,8 @@ import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/services/concordance_service.dart';
 import 'package:seeksparks/services/tagged_text_service.dart';
 import 'package:seeksparks/utils/kwic.dart';
+import 'package:seeksparks/utils/search_scope.dart' show scopedCountLabel;
+import 'package:seeksparks/utils/verse_list.dart' show applySearchLimit;
 
 class KwicPane extends StatefulWidget {
   const KwicPane({
@@ -27,6 +30,8 @@ class KwicPane extends StatefulWidget {
     required this.strongs,
     required this.version,
     required this.locale,
+    this.scope,
+    this.scopeName,
     this.onOpenRef,
   });
 
@@ -39,6 +44,15 @@ class KwicPane extends StatefulWidget {
   final String version;
 
   final String locale;
+
+  /// The active search limit, as verse keys, or null for no limit
+  /// (#280). A concordance is a result list over the corpus, so it
+  /// honours the scope — bwh10l draws the line at word lists that
+  /// DESCRIBE a corpus, which keep their own range.
+  final Set<String>? scope;
+
+  /// What to call [scope] on screen. Null when nothing is limiting.
+  final String? scopeName;
 
   /// Tapping a line jumps the reader there.
   final void Function(String englishBook, int chapter, int verse)? onOpenRef;
@@ -54,7 +68,12 @@ class _KwicPaneState extends State<KwicPane> {
 
   KwicSort _sort = KwicSort.reference;
   List<KwicLine> _lines = const [];
+
+  /// References inside the scope, and — bwh23's denominator — how many
+  /// there are in the whole version. Printing the first without the
+  /// second is what makes "64 hits" unreadable under a limit.
   int _totalRefs = 0;
+  int _wholeRefs = 0;
   int _loaded = 0;
   bool _busy = false;
 
@@ -67,7 +86,9 @@ class _KwicPaneState extends State<KwicPane> {
   @override
   void didUpdateWidget(covariant KwicPane old) {
     super.didUpdateWidget(old);
-    if (old.strongs != widget.strongs || old.version != widget.version) {
+    if (old.strongs != widget.strongs ||
+        old.version != widget.version ||
+        !setEquals(old.scope, widget.scope)) {
       _reload();
     }
   }
@@ -77,6 +98,7 @@ class _KwicPaneState extends State<KwicPane> {
       _lines = const [];
       _loaded = 0;
       _totalRefs = 0;
+      _wholeRefs = 0;
     });
     await _loadMore();
   }
@@ -86,7 +108,9 @@ class _KwicPaneState extends State<KwicPane> {
     setState(() => _busy = true);
     try {
       final result = await ConcordanceService.lookup(widget.strongs);
-      final refs = result?.refs ?? const [];
+      final whole = result?.refs ?? const <ConcordanceRef>[];
+      final refs = applySearchLimit(whole, widget.scope,
+          (r) => '${r.englishBook}-${r.chapter}-${r.verse}');
       final from = _loaded;
       final to = (from + _batch) > refs.length ? refs.length : from + _batch;
 
@@ -109,6 +133,7 @@ class _KwicPaneState extends State<KwicPane> {
       if (!mounted) return;
       setState(() {
         _totalRefs = refs.length;
+        _wholeRefs = whole.length;
         _loaded = to;
         _lines = [..._lines, ...added];
       });
@@ -150,7 +175,8 @@ class _KwicPaneState extends State<KwicPane> {
       return _notice(
         wb,
         t,
-        s('kwicUntagged',
+        s(
+            'kwicUntagged',
             'This translation carries no Strong\'s tagging, so its '
                 'context cannot be aligned. Switch to BSB or 和合本雅伟版.'),
       );
@@ -159,7 +185,22 @@ class _KwicPaneState extends State<KwicPane> {
       return const Center(child: CircularProgressIndicator());
     }
     if (_lines.isEmpty) {
-      return _notice(wb, t, s('kwicNoHits', 'No occurrences in this version.'));
+      // Under a limit, "no occurrences" is a claim about the scope, not
+      // about the version — and the reader needs the whole-Bible count
+      // to know whether widening would help.
+      final name = widget.scopeName;
+      return _notice(
+        wb,
+        t,
+        name == null || _wholeRefs == 0
+            ? s('kwicNoHits', 'No occurrences in this version.')
+            : s(
+                    'scopeEmptyHere',
+                    'Nothing inside the scope ({name}). {total} in the '
+                        'whole Bible.')
+                .replaceAll('{name}', name)
+                .replaceAll('{total}', '$_wholeRefs'),
+      );
     }
 
     final sorted = sortKwic(_lines, _sort);
@@ -202,16 +243,20 @@ class _KwicPaneState extends State<KwicPane> {
         children: [
           Row(
             children: [
-              Text(
-                '${widget.strongs} · ${_lines.length} '
-                '${s('kwicHits', 'hits')}',
-                style: TextStyle(
-                  fontSize: t.text,
-                  fontWeight: FontWeight.w600,
-                  color: wb.text,
+              Expanded(
+                child: Text(
+                  '${widget.strongs} · '
+                  '${scopedCountLabel(_totalRefs, _wholeRefs)} '
+                  '${s('kwicHits', 'hits')}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: t.text,
+                    fontWeight: FontWeight.w600,
+                    color: wb.text,
+                  ),
                 ),
               ),
-              const Spacer(),
               IconButton(
                 tooltip: s('kwicCopy', 'Copy all'),
                 icon: const Icon(Icons.copy_all_outlined, size: 16),
@@ -220,6 +265,15 @@ class _KwicPaneState extends State<KwicPane> {
               ),
             ],
           ),
+          if (widget.scopeName != null)
+            Text(
+              s('scopeOfWhole', '{total} in all — limited to {name}')
+                  .replaceAll('{total}', '$_wholeRefs')
+                  .replaceAll('{name}', widget.scopeName!),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: t.chrome, color: wb.mutedText),
+            ),
           const SizedBox(height: 4),
           Wrap(
             spacing: 6,
@@ -251,7 +305,8 @@ class _KwicPaneState extends State<KwicPane> {
     );
   }
 
-  Widget _chip(WbColors wb, WbType t, String label, bool on, VoidCallback onTap) =>
+  Widget _chip(
+          WbColors wb, WbType t, String label, bool on, VoidCallback onTap) =>
       InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(4),
@@ -308,8 +363,7 @@ class _KwicPaneState extends State<KwicPane> {
                 maxLines: 2,
                 overflow: TextOverflow.fade,
                 softWrap: false,
-                style: TextStyle(
-                    fontSize: t.chrome, color: wb.mutedText),
+                style: TextStyle(fontSize: t.chrome, color: wb.mutedText),
               ),
             ),
             Padding(
@@ -330,8 +384,7 @@ class _KwicPaneState extends State<KwicPane> {
                 maxLines: 2,
                 overflow: TextOverflow.fade,
                 softWrap: false,
-                style: TextStyle(
-                    fontSize: t.chrome, color: wb.mutedText),
+                style: TextStyle(fontSize: t.chrome, color: wb.mutedText),
               ),
             ),
           ],
@@ -358,7 +411,8 @@ class _KwicPaneState extends State<KwicPane> {
       child: Center(
         child: _busy
             ? const SizedBox(
-                width: 16, height: 16,
+                width: 16,
+                height: 16,
                 child: CircularProgressIndicator(strokeWidth: 2))
             : TextButton(
                 onPressed: _loadMore,

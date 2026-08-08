@@ -258,18 +258,28 @@ void main() {
       expect(ot.covers('Genesis', 1), isTrue);
       expect(ot.covers('Malachi', 4), isTrue);
       expect(ot.covers('Matthew', 1), isFalse);
-      expect(ot.labelKey, 'cmdvScopeOt');
+      // #280: the scope names itself with the app's own terminology
+      // (希伯来圣经 / 希腊圣经), not with the retired 旧约/新约 keys.
+      expect(ot.labelKey, 'oldTestament');
 
       final nt = _p('l nt').verb!.limit!;
       expect(nt.covers('Matthew', 1), isTrue);
       expect(nt.covers('Revelation', 22), isTrue);
       expect(nt.covers('Genesis', 1), isFalse);
-      expect(nt.labelKey, 'cmdvScopeNt');
+      expect(nt.labelKey, 'newTestament');
     });
 
-    test('Chinese testament names', () {
-      expect(_p('l 旧约').verb!.limit!.covers('Genesis', 1), isTrue);
-      expect(_p('l 新約').verb!.limit!.covers('Matthew', 1), isTrue);
+    test('Chinese testament names, old and new terminology', () {
+      // What may be TYPED stays wide: a reader reaching for a shorthand
+      // types the one they already know.
+      for (final input in const ['l 旧约', 'l 舊約', 'l 希伯来圣经', 'l 希伯來聖經']) {
+        expect(_p(input).verb!.limit!.covers('Genesis', 1), isTrue,
+            reason: input);
+      }
+      for (final input in const ['l 新約', 'l 新约', 'l 希腊圣经', 'l 希臘聖經']) {
+        expect(_p(input).verb!.limit!.covers('Matthew', 1), isTrue,
+            reason: input);
+      }
     });
 
     test('comma-separated scopes union, ASCII or CJK comma', () {

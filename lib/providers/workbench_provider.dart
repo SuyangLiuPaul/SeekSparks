@@ -11,6 +11,7 @@ import 'package:seeksparks/services/search_service.dart';
 import 'package:seeksparks/utils/ai_ref_resolution.dart';
 import 'package:seeksparks/utils/command_query.dart';
 import 'package:seeksparks/utils/command_verb.dart' show LimitSpec;
+import 'package:seeksparks/utils/search_scope.dart' show limitSpecForBooks;
 import 'package:seeksparks/utils/strongs_boolean_search.dart';
 import 'package:seeksparks/utils/verse_list.dart' show applySearchLimit;
 import 'package:seeksparks/utils/version_mapper.dart' show toEnglish;
@@ -102,18 +103,46 @@ class WorkbenchProvider extends ChangeNotifier {
 
   /// What to call the active limit in the UI (the list's name). Null
   /// exactly when [searchLimit] is null.
+  ///
+  /// Only the description of last resort. When [searchLimitSpec] is
+  /// present it is what the UI should name the scope from, because it
+  /// can be re-localised and this cannot.
   String? searchLimitLabel;
+
+  /// The book/chapter description that produced [searchLimit], when one
+  /// did — the `l` verb's spec, or the scope picker's book set.
+  ///
+  /// Null when the limit is a Verse List Manager list, which is an
+  /// arbitrary set of verses with no range description to recover.
+  /// Holding it matters for two things the key set cannot do: the
+  /// picker reads back which books are ticked, and the banner prints
+  /// 创世记 rather than "Genesis" (the same defect class as #283 — a
+  /// display surface printing the canonical English name).
+  LimitSpec? searchLimitSpec;
 
   bool get hasSearchLimit => searchLimit != null;
 
   /// Point subsequent searches at [keys], labelled [label], and re-run
   /// the last query so the results on screen match the limit that is
   /// now displayed. Passing null clears the limit.
-  Future<void> setSearchLimit(Set<String>? keys, String? label) async {
+  Future<void> setSearchLimit(Set<String>? keys, String? label,
+      {LimitSpec? spec}) async {
     searchLimit = keys;
     searchLimitLabel = keys == null ? null : (label ?? '');
+    searchLimitSpec = keys == null ? null : spec;
     _notify();
     if (lastQuery.isNotEmpty) await runSearch(lastQuery);
+  }
+
+  /// Install the scope picker's book selection. An empty set clears the
+  /// limit, which is the sheet's "whole Bible" option.
+  Future<bool> setSearchLimitFromBooks(Set<String> books) async {
+    if (books.isEmpty) {
+      await setSearchLimit(null, null);
+      return true;
+    }
+    final spec = limitSpecForBooks(books);
+    return setSearchLimitFromSpec(spec, spec.label);
   }
 
   /// Install the `l gen` / `l nt` style limit described by [spec].
@@ -138,7 +167,7 @@ class WorkbenchProvider extends ChangeNotifier {
       if (spec.covers(book, v.chapter)) keys.add('$book-${v.chapter}-${v.verse}');
     }
     if (keys.isEmpty) return false;
-    await setSearchLimit(keys, label);
+    await setSearchLimit(keys, label, spec: spec);
     return true;
   }
 

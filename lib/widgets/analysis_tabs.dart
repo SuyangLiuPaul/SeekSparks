@@ -14,6 +14,7 @@
 ///     words occur in the whole Bible, from the bundled concordance.
 library;
 
+import 'package:flutter/foundation.dart' show setEquals;
 import 'package:flutter/material.dart';
 
 import 'package:seeksparks/constants/ui_strings.dart';
@@ -27,6 +28,8 @@ import 'package:seeksparks/utils/scripture_markup.dart';
 import 'package:seeksparks/services/cross_reference_service.dart';
 import 'package:seeksparks/services/strongs_service.dart';
 import 'package:seeksparks/utils/reference_parser.dart' show BibleReference;
+import 'package:seeksparks/utils/search_scope.dart' show scopedCountLabel;
+import 'package:seeksparks/utils/verse_list.dart' show applySearchLimit;
 import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
 
 /// Which pane the Analysis window is showing.
@@ -130,30 +133,63 @@ class AnalysisTabStrip extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     const items = <(AnalysisTab, IconData, String, String)>[
-      (AnalysisTab.wordStudy, Icons.translate_rounded, 'wordStudyTitle',
-          'Word Study'),
-      (AnalysisTab.crossRefs, Icons.hub_outlined, 'analysisTabCrossRefs',
-          'X-Refs'),
-      (AnalysisTab.stats, Icons.bar_chart_rounded, 'analysisTabStats',
-          'Stats'),
-      (AnalysisTab.kwic, Icons.format_align_center_rounded,
-          'analysisTabKwic', 'KWIC'),
-      (AnalysisTab.related, Icons.linear_scale_rounded,
-          'analysisTabRelated', 'Related'),
-      (AnalysisTab.verseLists, Icons.playlist_add_check_rounded,
-          'analysisTabVerseLists', 'Lists'),
-      (AnalysisTab.phrases, Icons.format_quote_rounded,
-          'analysisTabPhrases', 'Phrases'),
-      (AnalysisTab.vocabulary, Icons.style_outlined, 'analysisTabVocabulary',
-          'Vocab'),
-      (AnalysisTab.morphology, Icons.account_tree_outlined,
-          'analysisTabMorphology', 'Forms'),
-      (AnalysisTab.topics, Icons.topic_outlined, 'analysisTabTopics',
-          'Topics'),
-      (AnalysisTab.context, Icons.segment_rounded, 'analysisTabContext',
-          'Context'),
-      (AnalysisTab.places, Icons.place_outlined, 'analysisTabPlaces',
-          'Places'),
+      (
+        AnalysisTab.wordStudy,
+        Icons.translate_rounded,
+        'wordStudyTitle',
+        'Word Study'
+      ),
+      (
+        AnalysisTab.crossRefs,
+        Icons.hub_outlined,
+        'analysisTabCrossRefs',
+        'X-Refs'
+      ),
+      (AnalysisTab.stats, Icons.bar_chart_rounded, 'analysisTabStats', 'Stats'),
+      (
+        AnalysisTab.kwic,
+        Icons.format_align_center_rounded,
+        'analysisTabKwic',
+        'KWIC'
+      ),
+      (
+        AnalysisTab.related,
+        Icons.linear_scale_rounded,
+        'analysisTabRelated',
+        'Related'
+      ),
+      (
+        AnalysisTab.verseLists,
+        Icons.playlist_add_check_rounded,
+        'analysisTabVerseLists',
+        'Lists'
+      ),
+      (
+        AnalysisTab.phrases,
+        Icons.format_quote_rounded,
+        'analysisTabPhrases',
+        'Phrases'
+      ),
+      (
+        AnalysisTab.vocabulary,
+        Icons.style_outlined,
+        'analysisTabVocabulary',
+        'Vocab'
+      ),
+      (
+        AnalysisTab.morphology,
+        Icons.account_tree_outlined,
+        'analysisTabMorphology',
+        'Forms'
+      ),
+      (AnalysisTab.topics, Icons.topic_outlined, 'analysisTabTopics', 'Topics'),
+      (
+        AnalysisTab.context,
+        Icons.segment_rounded,
+        'analysisTabContext',
+        'Context'
+      ),
+      (AnalysisTab.places, Icons.place_outlined, 'analysisTabPlaces', 'Places'),
     ];
     return Container(
       padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
@@ -343,7 +379,8 @@ class _CrossRefsPaneState extends State<CrossRefsPane> {
             final r = refs[i];
             final start = r.verseStart ?? 1;
             final hit = index['${r.englishBook}-${r.chapter}-$start'];
-            final label = '${localeAwareBookName(r.englishBook, widget.locale, widget.version)} '
+            final label =
+                '${localeAwareBookName(r.englishBook, widget.locale, widget.version)} '
                 '${r.chapter}:$start';
             return InkWell(
               onTap: () => widget.onOpenRef(r),
@@ -405,11 +442,19 @@ class WordStatsPane extends StatefulWidget {
     required this.words,
     required this.locale,
     required this.onOpenStrongs,
+    this.scope,
+    this.scopeName,
   });
 
   final List<OriginalWord> words;
   final String locale;
   final ValueChanged<String> onOpenStrongs;
+
+  /// The active search limit as verse keys, and what to call it. This
+  /// is a count OVER the corpus, so it honours the scope and says so —
+  /// "is this word rare?" has a different answer inside Ruth.
+  final Set<String>? scope;
+  final String? scopeName;
 
   @override
   State<WordStatsPane> createState() => _WordStatsPaneState();
@@ -427,25 +472,34 @@ class _WordStatsPaneState extends State<WordStatsPane> {
   @override
   void didUpdateWidget(WordStatsPane old) {
     super.didUpdateWidget(old);
-    if (old.words != widget.words) _future = _load();
+    if (old.words != widget.words || !setEquals(old.scope, widget.scope)) {
+      _future = _load();
+    }
   }
 
   Future<List<_StatRow>> _load() async {
     final rows = <_StatRow>[];
     final seen = <String>{};
+    final scope = widget.scope;
     for (final w in widget.words) {
       if (w.strongs.isEmpty || !seen.add(w.strongs)) continue;
       final result = await ConcordanceService.lookup(w.strongs);
       final entry = await StrongsService.lookup(w.strongs);
+      final total = result?.total ?? 0;
       rows.add(_StatRow(
         word: w,
-        total: result?.total ?? 0,
+        total: total,
+        inScope: scope == null
+            ? total
+            : applySearchLimit(result?.refs ?? const <ConcordanceRef>[], scope,
+                (r) => '${r.englishBook}-${r.chapter}-${r.verse}').length,
         gloss: entry?.localizedGloss(widget.locale) ?? '',
         greek: await GreekStatsService.lookup(w.strongs),
       ));
     }
-    // Rarest first — that is the interesting end of the list.
-    rows.sort((a, b) => a.total.compareTo(b.total));
+    // Rarest first — that is the interesting end of the list, and under
+    // a limit the rarity that matters is the one inside it.
+    rows.sort((a, b) => a.inScope.compareTo(b.inScope));
     return rows;
   }
 
@@ -466,7 +520,7 @@ class _WordStatsPaneState extends State<WordStatsPane> {
                 'No original-language data for this verse.',
           );
         }
-        final max = rows.fold<int>(1, (m, r) => r.total > m ? r.total : m);
+        final max = rows.fold<int>(1, (m, r) => r.inScope > m ? r.inScope : m);
         return ListView.separated(
           padding: const EdgeInsets.fromLTRB(12, 8, 12, 20),
           physics: const BouncingScrollPhysics(),
@@ -474,11 +528,23 @@ class _WordStatsPaneState extends State<WordStatsPane> {
           separatorBuilder: (_, __) => const SizedBox(height: 6),
           itemBuilder: (context, i) {
             if (i == 0) {
+              // The old hint said "Whole-Bible occurrences", which a
+              // limit makes false. Under one, the hint names the scope
+              // and explains the pair of numbers instead.
+              final name = widget.scopeName;
+              final String hint;
+              if (name == null) {
+                hint = uiStrings['analysisStatsHint']?[widget.locale] ??
+                    'Whole-Bible occurrences, rarest first.';
+              } else {
+                final template = uiStrings['scopeStatsHint']?[widget.locale] ??
+                    'In scope / in all, rarest first — limited to {name}.';
+                hint = template.replaceAll('{name}', name);
+              }
               return Padding(
                 padding: const EdgeInsets.only(bottom: 2),
                 child: Text(
-                  uiStrings['analysisStatsHint']?[widget.locale] ??
-                      'Whole-Bible occurrences, rarest first.',
+                  hint,
                   style: TextStyle(fontSize: 11, color: scheme.outline),
                 ),
               );
@@ -508,7 +574,7 @@ class _WordStatsPaneState extends State<WordStatsPane> {
                         ),
                         const SizedBox(width: 6),
                         Text(
-                          '${r.total}',
+                          scopedCountLabel(r.inScope, r.total),
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
@@ -522,7 +588,7 @@ class _WordStatsPaneState extends State<WordStatsPane> {
                     ClipRRect(
                       borderRadius: BorderRadius.circular(3),
                       child: LinearProgressIndicator(
-                        value: (r.total / max).clamp(0.02, 1.0),
+                        value: (r.inScope / max).clamp(0.02, 1.0),
                         minHeight: 4,
                         backgroundColor:
                             scheme.outlineVariant.withValues(alpha: 0.5),
@@ -642,12 +708,19 @@ class _StatRow {
   const _StatRow({
     required this.word,
     required this.total,
+    required this.inScope,
     required this.gloss,
     this.greek,
   });
 
   final OriginalWord word;
+
+  /// Occurrences in the whole version, and inside the active search
+  /// limit. Equal when nothing is limiting — the row prints one number
+  /// then, because `12 / 12` says nothing (#280).
   final int total;
+  final int inScope;
+
   final String gloss;
 
   /// Eagle's View's distribution for this word, when it has one. Null
@@ -792,8 +865,8 @@ class _ConcordanceTopicsPaneState extends State<ConcordanceTopicsPane> {
               citation: hit,
               locale: locale,
               expanded: _openTopic == hit.topicId,
-              onToggle: () => setState(
-                  () => _openTopic = _openTopic == hit.topicId ? null : hit.topicId),
+              onToggle: () => setState(() =>
+                  _openTopic = _openTopic == hit.topicId ? null : hit.topicId),
               onOpenRef: widget.onOpenRef,
               here: (widget.englishBook, widget.chapter, widget.verse),
             );
@@ -1032,7 +1105,8 @@ class _TopicDetailState extends State<_TopicDetail> {
                   '${labels[key]} ${e.totals[key]}',
                   style: theme.textTheme.labelSmall?.copyWith(
                     fontSize: 10,
-                    color: key == 'nt' ? scheme.primary : scheme.onSurfaceVariant,
+                    color:
+                        key == 'nt' ? scheme.primary : scheme.onSurfaceVariant,
                     fontFeatures: const [FontFeature.tabularFigures()],
                   ),
                 ),

@@ -178,10 +178,12 @@ void main() {
       expect(wb.searchLimit, {'Genesis-2-1'});
     });
 
-    testWidgets('a testament is a scope too', (tester) async {
+    testWidgets('a corpus is a scope too', (tester) async {
       final wb = await pump(tester);
       await submit(tester, 'l nt');
-      expect(wb.searchLimitLabel, 'New Testament');
+      // #280: `nt` is still what you TYPE, but the scope names itself
+      // with the terminology the rest of the app uses.
+      expect(wb.searchLimitLabel, 'Greek Bible');
       expect(wb.searchLimit, hasLength(2));
     });
 

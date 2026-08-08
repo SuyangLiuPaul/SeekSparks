@@ -3017,8 +3017,119 @@ const uiStrings = {
     'zh-Hant': '對照欄：{list}',
     'en': 'Browse stack: {list}',
   },
-  'cmdvScopeOt': {'zh-Hans': '旧约', 'zh-Hant': '舊約', 'en': 'Old Testament'},
-  'cmdvScopeNt': {'zh-Hans': '新约', 'zh-Hant': '新約', 'en': 'New Testament'},
+
+  // ── Search scope (#280) ───────────────────────────────────────────
+  // The two corpora are named by `oldTestament` / `newTestament`
+  // (希伯来圣经 / 希腊圣经). Nothing on this path prints 旧约 / 新约.
+  'scopePentateuch': {
+    'zh-Hans': '摩西五经',
+    'zh-Hant': '摩西五經',
+    'en': 'Pentateuch',
+  },
+  'scopeHistory': {
+    'zh-Hans': '历史书',
+    'zh-Hant': '歷史書',
+    'en': 'Historical books',
+  },
+  'scopeWisdom': {
+    'zh-Hans': '诗歌智慧书',
+    'zh-Hant': '詩歌智慧書',
+    'en': 'Poetry & Wisdom',
+  },
+  'scopeProphets': {
+    'zh-Hans': '先知书',
+    'zh-Hant': '先知書',
+    'en': 'Prophets',
+  },
+  'scopeGospels': {
+    'zh-Hans': '福音书与使徒行传',
+    'zh-Hant': '福音書與使徒行傳',
+    'en': 'Gospels & Acts',
+  },
+  'scopePauline': {
+    'zh-Hans': '保罗书信',
+    'zh-Hant': '保羅書信',
+    'en': 'Pauline epistles',
+  },
+  'scopeGeneralEpistles': {
+    'zh-Hans': '普通书信',
+    'zh-Hant': '普通書信',
+    'en': 'General epistles',
+  },
+  'scopeTitle': {
+    'zh-Hans': '检索范围',
+    'zh-Hant': '檢索範圍',
+    'en': 'Search scope',
+  },
+  'scopeMenu': {
+    'zh-Hans': '检索范围…',
+    'zh-Hant': '檢索範圍…',
+    'en': 'Search scope…',
+  },
+  'scopeStatusField': {
+    'zh-Hans': '限定',
+    'zh-Hant': '限定',
+    'en': 'Limits',
+  },
+  'scopeWholeBible': {
+    'zh-Hans': '全书',
+    'zh-Hant': '全書',
+    'en': 'Whole Bible',
+  },
+  'scopeGroupsLabel': {
+    'zh-Hans': '常用范围',
+    'zh-Hant': '常用範圍',
+    'en': 'Common ranges',
+  },
+  'scopeSelected': {
+    'zh-Hans': '已选 {count} 卷',
+    'zh-Hant': '已選 {count} 卷',
+    'en': '{count} books selected',
+  },
+  'scopeNoneSelected': {
+    'zh-Hans': '未限定 · 检索全书',
+    'zh-Hant': '未限定 · 檢索全書',
+    'en': 'No limit — the whole Bible',
+  },
+  'scopeApply': {
+    'zh-Hans': '应用',
+    'zh-Hant': '套用',
+    'en': 'Apply',
+  },
+  'scopeClearAll': {
+    'zh-Hans': '全部清除',
+    'zh-Hant': '全部清除',
+    'en': 'Clear all',
+  },
+  // Shown when the active limit came from the `l` verb with chapters,
+  // or from a Verse List. The picker deals in whole books, so it says
+  // what it cannot represent rather than quietly widening it.
+  'scopeNotBookShaped': {
+    'zh-Hans': '当前限定（{name}）不是按卷设定的。在此选择书卷会取代它。',
+    'zh-Hant': '目前限定（{name}）不是按卷設定的。在此選擇書卷會取代它。',
+    'en': 'The active limit ({name}) is not a whole-book selection. '
+        'Choosing books here replaces it.',
+  },
+  // bwh23: a narrowed statistic is printed beside what it would have
+  // been over the whole version, because the narrowing is exactly what
+  // makes the bare number unreadable.
+  'scopeOfWhole': {
+    'zh-Hans': '全书 {total} 处 · 限定 {name}',
+    'zh-Hant': '全書 {total} 處 · 限定 {name}',
+    'en': '{total} in all — limited to {name}',
+  },
+  'scopeEmptyHere': {
+    'zh-Hans': '限定范围（{name}）内没有结果。全书共 {total} 处。',
+    'zh-Hant': '限定範圍（{name}）內沒有結果。全書共 {total} 處。',
+    'en': 'Nothing inside the scope ({name}). {total} in the whole Bible.',
+  },
+  // Replaces analysisStatsHint's "Whole-Bible occurrences" whenever a
+  // limit is set, since under one that sentence is simply untrue.
+  'scopeStatsHint': {
+    'zh-Hans': '范围内 / 全书 出现次数，最罕见在前 · 限定 {name}',
+    'zh-Hant': '範圍內 / 全書 出現次數，最罕見在前 · 限定 {name}',
+    'en': 'In scope / in all, rarest first — limited to {name}.',
+  },
   'cmdvBrowseOn': {
     'zh-Hans': '中栏已切换到对照阅读。',
     'zh-Hant': '中欄已切換到對照閱讀。',
