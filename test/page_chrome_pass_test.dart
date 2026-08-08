@@ -36,6 +36,10 @@ const List<String> _passed = <String>[
   // page that still has a rounded card in it.
   'lib/widgets/person_detail_sheet.dart',
   'lib/utils/floating_toast.dart',
+  // The trivia page carries its own reader-side sheet
+  // (`showBibleTriviaSheet`) and book-filter sheet in the same file, so
+  // one entry covers all three surfaces.
+  'lib/pages/bible_trivia_page.dart',
 ];
 
 /// Strips `//` and `/* */` comments so prose about the rule — including

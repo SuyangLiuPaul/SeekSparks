@@ -1928,12 +1928,14 @@ class _OriginalsBooksTabState extends State<_OriginalsBooksTab>
                           ButtonSegment(
                             value: 'ot',
                             label: Text(
-                                uiStrings['statsBooksOT']?[locale] ?? 'OT'),
+                                uiStrings['oldTestamentShort']?[locale] ??
+                                    'Hebrew'),
                           ),
                           ButtonSegment(
                             value: 'nt',
                             label: Text(
-                                uiStrings['statsBooksNT']?[locale] ?? 'NT'),
+                                uiStrings['newTestamentShort']?[locale] ??
+                                    'Greek'),
                           ),
                         ],
                         selected: {_filter},
@@ -1981,9 +1983,11 @@ class _BookOriginalsRow extends StatelessWidget {
     final t = WbType.of(context);
     final localizedName = localeAwareBookName(book.englishBook, locale);
     final tagFg = _scriptHue(wb, book.isOt ? Colors.indigo : Colors.deepPurple);
+    // 2026-08-09 (#280): 希伯来 / 希腊, never 旧约 / 新约. These were the
+    // last two places in the UI still using the old wording.
     final tagLabel = book.isOt
-        ? (uiStrings['statsBooksOT']?[locale] ?? 'OT')
-        : (uiStrings['statsBooksNT']?[locale] ?? 'NT');
+        ? (uiStrings['oldTestamentShort']?[locale] ?? 'Hebrew')
+        : (uiStrings['newTestamentShort']?[locale] ?? 'Greek');
     return Container(
       color: alt ? wb.paneAltBg : null,
       padding: const EdgeInsets.symmetric(

@@ -2413,16 +2413,10 @@ const uiStrings = {
     'zh-Hant': '詞條',
     'en': 'lemmas',
   },
-  'statsBooksOT': {
-    'zh-Hans': '旧约',
-    'zh-Hant': '舊約',
-    'en': 'OT',
-  },
-  'statsBooksNT': {
-    'zh-Hans': '新约',
-    'zh-Hant': '新約',
-    'en': 'NT',
-  },
+  // `statsBooksOT` / `statsBooksNT` (旧约 / 新约) removed 2026-08-09:
+  // #280 ruled the app names the two corpora 希伯来 / 希腊, and the stats
+  // page now shares `oldTestamentShort` / `newTestamentShort` with
+  // every other testament toggle.
   // ── Style presets (Round 56) ──────────────────────────────────
   'stylePresetTitle': {
     'zh-Hans': '风格预设',

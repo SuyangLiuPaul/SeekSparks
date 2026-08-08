@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:seeksparks/utils/app_nav.dart';
-import 'package:seeksparks/widgets/press_scale.dart';
 import 'package:provider/provider.dart';
 
 import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/services/fetch_books.dart' show standardBookOrder;
 import 'package:seeksparks/utils/jump_to_reference.dart' as jumper;
 import 'package:seeksparks/utils/reference_parser.dart';
 import 'package:seeksparks/utils/responsive.dart';
-import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
+import 'package:seeksparks/utils/version_mapper.dart'
+    show localeAwareBookName, localizedReferenceLabel;
+import 'package:seeksparks/widgets/wb_surfaces.dart';
 import 'package:seeksparks/widgets/home_icon_button.dart';
 import 'package:seeksparks/widgets/language_switcher_button.dart';
 import 'package:seeksparks/widgets/localized_back_button.dart';
@@ -111,7 +113,6 @@ class _BibleTriviaPageState extends State<BibleTriviaPage> {
   Widget build(BuildContext context) {
     final settings = context.watch<AppSettings>();
     final locale = settings.locale;
-    final scheme = Theme.of(context).colorScheme;
     final dc = ResponsiveBreakpoints.classOf(
         MediaQuery.of(context).size.width);
     final maxW = ResponsiveBreakpoints.settingsMaxWidth(dc);
@@ -137,13 +138,12 @@ class _BibleTriviaPageState extends State<BibleTriviaPage> {
               separatorBuilder: (_, __) => const SizedBox(height: 12),
               itemBuilder: (_, i) {
                 if (i == 0) {
-                  return _IntroCard(settings: settings, scheme: scheme);
+                  return _IntroCard(settings: settings);
                 }
                 if (i == 1) {
                   return _TriviaFilterBar(
                     locale: locale,
                     settings: settings,
-                    scheme: scheme,
                     availableTags: _availableTags,
                     availableBooks: _availableBooks,
                     tagFilter: _tagFilter,
@@ -173,7 +173,6 @@ class _BibleTriviaPageState extends State<BibleTriviaPage> {
                 return _TriviaTile(
                   entry: entries[i - 2],
                   settings: settings,
-                  scheme: scheme,
                 );
               },
             ),
@@ -383,7 +382,6 @@ bool _isOtBook(String englishBook) => _otBookSet.contains(englishBook);
 class _TriviaFilterBar extends StatelessWidget {
   final String locale;
   final AppSettings settings;
-  final ColorScheme scheme;
   final List<String> availableTags;
   final List<String> availableBooks;
   final String tagFilter;
@@ -400,7 +398,6 @@ class _TriviaFilterBar extends StatelessWidget {
   const _TriviaFilterBar({
     required this.locale,
     required this.settings,
-    required this.scheme,
     required this.availableTags,
     required this.availableBooks,
     required this.tagFilter,
@@ -417,12 +414,20 @@ class _TriviaFilterBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final wb = WbColors.of(context);
     final searchHint =
         uiStrings['bibleTriviaSearchHint']?[locale] ??
             'Search trivia…';
     final allLabel = uiStrings['statsOriginalsAll']?[locale] ?? 'All';
-    final otLabel = uiStrings['statsBooksOT']?[locale] ?? 'OT';
-    final ntLabel = uiStrings['statsBooksNT']?[locale] ?? 'NT';
+    // 2026-08-09 (#279 + #280): the two corpora are named by the same
+    // short forms the search-statistics strip and the distribution
+    // chart use — 希伯来 / 希腊, never 旧约 / 新约. The user's ruling on
+    // #280 was terminological, not per-screen: "Old Testament" carries
+    // a supersessionist implication this project does not intend, and a
+    // toggle that still says 旧约 next to a search pane that says
+    // 希伯来圣经 is the inconsistency that ruling exists to end.
+    final otLabel = uiStrings['oldTestamentShort']?[locale] ?? 'Hebrew';
+    final ntLabel = uiStrings['newTestamentShort']?[locale] ?? 'Greek';
     final filterLabel =
         uiStrings['sermonFilterByPassage']?[locale] ?? 'Filter';
     return Column(
@@ -441,11 +446,12 @@ class _TriviaFilterBar extends StatelessWidget {
               child: TextField(
                 decoration: InputDecoration(
                   hintText: searchHint,
-                  prefixIcon: const Icon(Icons.search),
+                  prefixIcon: const Icon(Icons.search, size: 20),
                   isDense: true,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
+                  // No `border:` — `workbenchTheme`'s
+                  // inputDecorationTheme is already a square hairline.
+                  // The radius-10 override this replaces was the page
+                  // arguing with the theme.
                 ),
                 onChanged: onQueryChanged,
                 style: TextStyle(
@@ -469,9 +475,6 @@ class _TriviaFilterBar extends StatelessWidget {
               ),
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
-                backgroundColor: bookFilter == 'all'
-                    ? null
-                    : scheme.primaryContainer.withValues(alpha: 0.4),
               ),
             ),
           ],
@@ -480,13 +483,14 @@ class _TriviaFilterBar extends StatelessWidget {
           const SizedBox(height: 8),
           Align(
             alignment: Alignment.centerLeft,
+            // The active book is stated, not tinted: the chip theme's
+            // `selectedColor` is the workbench's selection fill, and a
+            // `primaryContainer` wash on top of it was the page
+            // repainting a state the theme already draws.
             child: InputChip(
-              avatar:
-                  Icon(Icons.bookmark, size: 16, color: scheme.primary),
+              avatar: Icon(Icons.bookmark, size: 16, color: wb.mutedText),
               label: Text(localeAwareBookName(bookFilter, locale)),
               onDeleted: () => onBookChanged('all'),
-              backgroundColor:
-                  scheme.primaryContainer.withValues(alpha: 0.5),
             ),
           ),
         ],
@@ -512,14 +516,12 @@ class _TriviaFilterBar extends StatelessWidget {
                 label: allLabel,
                 selected: tagFilter == 'all',
                 onTap: () => onTagChanged('all'),
-                scheme: scheme,
               ),
               for (final t in availableTags)
                 _TagChip(
                   label: _localizedTagLabel(t, locale),
                   selected: tagFilter == t,
                   onTap: () => onTagChanged(t),
-                  scheme: scheme,
                 ),
             ],
           ),
@@ -528,8 +530,8 @@ class _TriviaFilterBar extends StatelessWidget {
         Text(
           '$matchCount / $totalCount',
           style: TextStyle(
-            fontSize: 11,
-            color: scheme.onSurfaceVariant,
+            fontSize: WbMetrics.chrome,
+            color: wb.mutedText,
             fontFeatures: const [FontFeature.tabularFigures()],
           ),
         ),
@@ -547,10 +549,10 @@ class _TriviaFilterBar extends StatelessWidget {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
+      // No `shape:`/`backgroundColor:` overrides — `workbench_theme`'s
+      // `bottomSheetTheme` already squares the corners, draws the
+      // hairline and sets elevation 0. An override here would only ever
+      // be a way to disagree with it.
       builder: (sheetCtx) {
         return _TriviaBookFilterSheet(
           locale: locale,
@@ -608,7 +610,7 @@ class _TriviaBookFilterSheetState extends State<_TriviaBookFilterSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final wb = WbColors.of(context);
     final locale = widget.locale;
     return SafeArea(
       child: Padding(
@@ -619,13 +621,16 @@ class _TriviaBookFilterSheetState extends State<_TriviaBookFilterSheet> {
           children: [
             Row(
               children: [
-                Icon(Icons.bookmark, size: 18, color: scheme.primary),
+                Icon(Icons.bookmark, size: 16, color: wb.mutedText),
                 const SizedBox(width: 8),
                 Text(
                   uiStrings['sermonFilterByPassage']?[locale] ??
                       'Filter by passage',
-                  style: const TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: wb.text,
+                  ),
                 ),
                 const Spacer(),
                 if (widget.initialBook != null)
@@ -644,8 +649,7 @@ class _TriviaBookFilterSheetState extends State<_TriviaBookFilterSheet> {
             Text(
               uiStrings['sermonFilterBookLabel']?[locale] ?? 'Book',
               style: TextStyle(
-                  fontSize: 12,
-                  color: scheme.onSurface.withValues(alpha: 0.65)),
+                  fontSize: WbMetrics.chrome, color: wb.mutedText),
             ),
             const SizedBox(height: 6),
             ConstrainedBox(
@@ -720,12 +724,10 @@ class _TagChip extends StatelessWidget {
   final String label;
   final bool selected;
   final VoidCallback onTap;
-  final ColorScheme scheme;
   const _TagChip({
     required this.label,
     required this.selected,
     required this.onTap,
-    required this.scheme,
   });
   @override
   Widget build(BuildContext context) {
@@ -740,44 +742,35 @@ class _TagChip extends StatelessWidget {
   }
 }
 
+/// The one-paragraph note that says what the catalogue is.
+///
+/// Was a `primaryContainer` wash with a sparkle glyph. Both went: the
+/// tint because the workbench states "more important than its
+/// neighbours" as a step in VALUE ([WbPanel.alt]), and the glyph because
+/// a note that appears once has nothing to disambiguate itself from.
 class _IntroCard extends StatelessWidget {
   final AppSettings settings;
-  final ColorScheme scheme;
-  const _IntroCard({required this.settings, required this.scheme});
+  const _IntroCard({required this.settings});
 
   @override
   Widget build(BuildContext context) {
     final locale = settings.locale;
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-      decoration: BoxDecoration(
-        color: scheme.primaryContainer.withValues(alpha: 0.4),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: scheme.primary.withValues(alpha: 0.3),
-          width: 0.6,
+    final wb = WbColors.of(context);
+    return WbPanel(
+      alt: true,
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+      child: Text(
+        uiStrings['bibleTriviaIntro']?[locale] ??
+            'Hidden patterns, acrostics, and numerical structures '
+                'most readers miss. Tap any entry to read the '
+                'related passage in the reader.',
+        style: TextStyle(
+          fontFamily: settings.fontFamily,
+          fontFamilyFallback: kCjkFontFallback,
+          fontSize: (settings.fontSize - 2).clamp(12.0, 16.0),
+          color: wb.mutedText,
+          height: 1.45,
         ),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(Icons.auto_awesome_rounded, color: scheme.primary, size: 22),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              uiStrings['bibleTriviaIntro']?[locale] ??
-                  'Hidden patterns, acrostics, and numerical structures '
-                      'most readers miss. Tap any entry to read the '
-                      'related passage in the reader.',
-              style: TextStyle(
-                fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                fontSize: (settings.fontSize - 2).clamp(12.0, 16.0),
-                color: scheme.onSurface.withValues(alpha: 0.85),
-                height: 1.45,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -786,11 +779,9 @@ class _IntroCard extends StatelessWidget {
 class _TriviaTile extends StatefulWidget {
   final BibleTriviaEntry entry;
   final AppSettings settings;
-  final ColorScheme scheme;
   const _TriviaTile({
     required this.entry,
     required this.settings,
-    required this.scheme,
   });
 
   @override
@@ -816,85 +807,77 @@ class _TriviaTileState extends State<_TriviaTile> {
     navigateToReader(context);
   }
 
-  // 2026-08 (ported from YsWords v1.4.5): passive press-scale; the
-  // InkWell still owns the tap.
+  // The press-scale went with the card. It was a YsWords affordance —
+  // a surface that gives under the finger only reads as physical if it
+  // is a card, and this is now a row. What says "clickable" in this
+  // workspace is the hover fill [WbTile] draws, the same one the Browse
+  // window uses.
   @override
-  Widget build(BuildContext context) => PressScale(child: _buildCard(context));
-
-  Widget _buildCard(BuildContext context) {
+  Widget build(BuildContext context) {
     final locale = widget.settings.locale;
     final entry = widget.entry;
-    final scheme = widget.scheme;
+    final wb = WbColors.of(context);
     final settings = widget.settings;
     final title = entry.title[locale] ?? entry.title['en'] ?? '';
     final body = entry.body[locale] ?? entry.body['en'] ?? '';
     final tag = entry.tag[locale] ?? entry.tag['en'] ?? '';
-    return Material(
-      color: scheme.surfaceContainerLow,
-      borderRadius: BorderRadius.circular(12),
-      elevation: 0,
-      child: InkWell(
-        onTap: () => setState(() => _expanded = !_expanded),
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    return WbTile(
+      onTap: () => setState(() => _expanded = !_expanded),
+      alt: false,
+      padding: const EdgeInsets.fromLTRB(12, 10, 8, 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: scheme.primary.withValues(alpha: 0.13),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      tag,
-                      style: TextStyle(
-                        fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                        fontSize:
-                            (settings.fontSize - 5).clamp(10.0, 12.0),
-                        fontWeight: FontWeight.w700,
-                        color: scheme.primary,
-                        letterSpacing: 0.4,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  if (entry.reference != null)
-                    Text(
-                      entry.reference!,
-                      style: TextStyle(
-                        fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                        fontSize:
-                            (settings.fontSize - 5).clamp(10.0, 12.0),
-                        color: scheme.onSurfaceVariant,
-                        fontFeatures: const [FontFeature.tabularFigures()],
-                      ),
-                    ),
-                  const Spacer(),
-                  AnimatedRotation(
-                    turns: _expanded ? 0.5 : 0,
-                    duration: const Duration(milliseconds: 220),
-                    child: Icon(
-                      Icons.expand_more_rounded,
-                      color: scheme.onSurface.withValues(alpha: 0.55),
+              WbTag(text: tag, dense: false),
+              const SizedBox(width: 8),
+              if (entry.reference != null)
+                Expanded(
+                  child: Text(
+                    // 2026-08-09 (#283): was `entry.reference!` — the
+                    // raw catalogue string, always English, printed
+                    // verbatim under a Chinese UI reading a Chinese
+                    // version. Every reference the catalogue carries is
+                    // book + chapter(:verse), so the same helper the
+                    // evidence cards and the verse popup use resolves
+                    // all 68.
+                    localizedReferenceLabel(entry.reference!, locale),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: settings.fontFamily,
+                      fontFamilyFallback: kCjkFontFallback,
+                      fontSize: (settings.fontSize - 5).clamp(10.0, 12.0),
+                      color: wb.mutedText,
+                      fontFeatures: const [FontFeature.tabularFigures()],
                     ),
                   ),
-                ],
-              ),
-              const SizedBox(height: 6),
-              Text(
-                title,
-                style: TextStyle(
-                  fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                  fontSize: (settings.fontSize + 1).clamp(14.0, 19.0),
-                  fontWeight: FontWeight.w700,
-                  color: scheme.onSurface,
+                )
+              else
+                const Spacer(),
+              AnimatedRotation(
+                turns: _expanded ? 0.5 : 0,
+                duration: const Duration(milliseconds: 220),
+                child: Icon(
+                  Icons.expand_more,
+                  size: 18,
+                  color: wb.mutedText,
                 ),
               ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            title,
+            style: TextStyle(
+              fontFamily: settings.fontFamily,
+              fontFamilyFallback: kCjkFontFallback,
+              fontSize: (settings.fontSize + 1).clamp(14.0, 19.0),
+              fontWeight: FontWeight.w700,
+              color: wb.text,
+            ),
+          ),
               AnimatedCrossFade(
                 duration: const Duration(milliseconds: 220),
                 firstChild: const SizedBox.shrink(),
@@ -927,21 +910,20 @@ class _TriviaTileState extends State<_TriviaTile> {
                           children: _parseInlineMarkdown(
                             body,
                             base: TextStyle(
-                              fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
+                              fontFamily: settings.fontFamily,
+                              fontFamilyFallback: kCjkFontFallback,
                               fontSize: (settings.fontSize - 1)
                                   .clamp(12.0, 17.0),
-                              color: scheme.onSurface
-                                  .withValues(alpha: 0.85),
+                              color: wb.text,
                               height: 1.55,
                             ),
-                            scheme: scheme,
                           ),
                         ),
                       ),
                       if (entry.reference != null) ...[
                         const SizedBox(height: 12),
                         OutlinedButton.icon(
-                          icon: const Icon(Icons.menu_book_rounded, size: 18),
+                          icon: const Icon(Icons.menu_book_outlined, size: 16),
                           label: Text(
                             uiStrings['bibleTriviaOpenRef']?[locale] ??
                                 'Read in Bible',
@@ -956,9 +938,7 @@ class _TriviaTileState extends State<_TriviaTile> {
                     ? CrossFadeState.showSecond
                     : CrossFadeState.showFirst,
               ),
-            ],
-          ),
-        ),
+        ],
       ),
     );
   }
@@ -976,15 +956,13 @@ class _TriviaTileState extends State<_TriviaTile> {
 List<TextSpan> _parseInlineMarkdown(
   String input, {
   required TextStyle base,
-  required ColorScheme scheme,
 }) {
   final spans = <TextSpan>[];
-  final boldStyle = base.copyWith(
-    fontWeight: FontWeight.w800,
-    color: base.color != null
-        ? base.color!.withValues(alpha: 1.0)
-        : scheme.onSurface,
-  );
+  // Emphasis is carried by WEIGHT alone now. It used to also lift the
+  // body's 85%-alpha colour to full, which only read as emphasis
+  // because the body was dimmed; the workbench prints body text at
+  // full strength, so the alpha step had nothing left to say.
+  final boldStyle = base.copyWith(fontWeight: FontWeight.w800);
   final pattern = RegExp(r'\*\*([^*]+)\*\*');
   int idx = 0;
   for (final m in pattern.allMatches(input)) {
@@ -1015,35 +993,37 @@ class _TriviaDiagramView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final wb = WbColors.of(context);
     final d = diagram;
     if (d is HebrewAlphabetDiagram) {
-      return _buildHebrewAlphabet(d, scheme);
+      return _buildHebrewAlphabet(d, wb);
     }
     if (d is ChapterVerseCountsDiagram) {
-      return _buildChapterCounts(d, scheme);
+      // The one colour on this page that is DATA rather than chrome,
+      // and it stays: `triviaChapterCountsCaption` says "red = acrostic
+      // broken" in all three locales, so the hue is part of the
+      // sentence. Squaring the bars is the whole of the change here.
+      return _buildChapterCounts(
+          d, wb, Theme.of(context).colorScheme.error);
     }
     if (d is SequenceDiagram) {
-      return _buildSequence(d, scheme);
+      return _buildSequence(d, wb);
     }
     if (d is NumberedWordsDiagram) {
-      return _buildNumberedWords(d, scheme);
+      return _buildNumberedWords(d, wb);
     }
     return const SizedBox.shrink();
   }
 
-  Widget _wrapper(ColorScheme scheme, Widget child, {String? caption}) {
-    return Container(
+  Widget _wrapper(WbColors wb, Widget child, {String? caption}) {
+    // `double.infinity` rather than letting the panel shrink-wrap: the
+    // alphabet grid centres its rows and the chapter chart divides the
+    // width between `Expanded` bars, and both need the box to be as
+    // wide as the tile rather than as wide as their content.
+    return SizedBox(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerHigh.withValues(alpha: 0.55),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.5),
-          width: 0.8,
-        ),
-      ),
+      child: WbPanel(
+      alt: true,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -1054,20 +1034,20 @@ class _TriviaDiagramView extends StatelessWidget {
               caption,
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 11,
-                color: scheme.onSurfaceVariant,
+                fontSize: WbMetrics.chrome,
+                color: wb.mutedText,
                 height: 1.35,
                 letterSpacing: 0.2,
               ),
             ),
           ],
         ],
+        ),
       ),
     );
   }
 
-  Widget _buildHebrewAlphabet(
-      HebrewAlphabetDiagram d, ColorScheme scheme) {
+  Widget _buildHebrewAlphabet(HebrewAlphabetDiagram d, WbColors wb) {
     // Hebrew alphabet — 22 consonants. Letter glyph + romanised name.
     const letters = <List<String>>[
       ['א', 'Aleph'], ['ב', 'Beth'], ['ג', 'Gimel'], ['ד', 'Daleth'],
@@ -1077,18 +1057,18 @@ class _TriviaDiagramView extends StatelessWidget {
       ['פ', 'Pe'], ['צ', 'Tsade'], ['ק', 'Qoph'], ['ר', 'Resh'],
       ['ש', 'Shin'], ['ת', 'Tav'],
     ];
+    // 22 cells of the same weight — a table of the alphabet, not 22
+    // buttons. The tinted fill went; what separates one letter from the
+    // next is the hairline, which is also what separates one cell from
+    // the next everywhere else in this app.
     final children = [
       for (final pair in letters)
         Container(
           width: 44,
           padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
           decoration: BoxDecoration(
-            color: scheme.primaryContainer.withValues(alpha: 0.45),
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(
-              color: scheme.primary.withValues(alpha: 0.35),
-              width: 0.8,
-            ),
+            color: wb.paneBg,
+            border: Border.all(color: wb.border, width: WbMetrics.hairline),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -1098,7 +1078,7 @@ class _TriviaDiagramView extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
-                  color: scheme.onPrimaryContainer,
+                  color: wb.text,
                   height: 1.0,
                 ),
               ),
@@ -1108,7 +1088,7 @@ class _TriviaDiagramView extends StatelessWidget {
                   pair[1],
                   style: TextStyle(
                     fontSize: 8,
-                    color: scheme.onSurfaceVariant,
+                    color: wb.mutedText,
                     letterSpacing: 0.2,
                   ),
                 ),
@@ -1122,7 +1102,7 @@ class _TriviaDiagramView extends StatelessWidget {
         ? '$caption · ${d.versesPerLetter} × 22 = ${d.versesPerLetter * 22}'
         : caption;
     return _wrapper(
-      scheme,
+      wb,
       Wrap(
         spacing: 6,
         runSpacing: 6,
@@ -1134,7 +1114,7 @@ class _TriviaDiagramView extends StatelessWidget {
   }
 
   Widget _buildChapterCounts(
-      ChapterVerseCountsDiagram d, ColorScheme scheme) {
+      ChapterVerseCountsDiagram d, WbColors wb, Color brokenColor) {
     final maxCount = d.chapters.fold<int>(0, (m, c) => c > m ? c : m);
     const barAreaHeight = 96.0;
     final bars = <Widget>[];
@@ -1151,31 +1131,25 @@ class _TriviaDiagramView extends StatelessWidget {
               Text(
                 '$count',
                 style: TextStyle(
-                  fontSize: 11,
+                  fontSize: WbMetrics.chrome,
                   fontWeight: FontWeight.w700,
-                  color: isBroken
-                      ? scheme.error
-                      : scheme.onSurfaceVariant,
+                  color: isBroken ? brokenColor : wb.mutedText,
+                  fontFeatures: const [FontFeature.tabularFigures()],
                 ),
               ),
               const SizedBox(height: 4),
               Container(
                 height: barH,
-                decoration: BoxDecoration(
-                  color: isBroken
-                      ? scheme.error.withValues(alpha: 0.55)
-                      : scheme.primary.withValues(alpha: 0.65),
-                  borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(4)),
-                ),
+                color: isBroken ? brokenColor : wb.link,
               ),
               const SizedBox(height: 4),
               Text(
                 '${i + 1}',
                 style: TextStyle(
                   fontSize: 10,
-                  color: scheme.onSurfaceVariant,
+                  color: wb.mutedText,
                   fontWeight: FontWeight.w600,
+                  fontFeatures: const [FontFeature.tabularFigures()],
                 ),
               ),
             ],
@@ -1185,7 +1159,7 @@ class _TriviaDiagramView extends StatelessWidget {
     }
     final caption = uiStrings['triviaChapterCountsCaption']?[locale] ?? '';
     return _wrapper(
-      scheme,
+      wb,
       SizedBox(
         height: barAreaHeight + 36,
         child: Row(
@@ -1197,7 +1171,7 @@ class _TriviaDiagramView extends StatelessWidget {
     );
   }
 
-  Widget _buildSequence(SequenceDiagram d, ColorScheme scheme) {
+  Widget _buildSequence(SequenceDiagram d, WbColors wb) {
     final cells = <Widget>[];
     for (int i = 0; i < d.segments.length; i++) {
       final s = d.segments[i];
@@ -1207,12 +1181,8 @@ class _TriviaDiagramView extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
           decoration: BoxDecoration(
-            color: scheme.primaryContainer.withValues(alpha: 0.45),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: scheme.primary.withValues(alpha: 0.35),
-              width: 0.8,
-            ),
+            color: wb.paneBg,
+            border: Border.all(color: wb.border, width: WbMetrics.hairline),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -1221,9 +1191,9 @@ class _TriviaDiagramView extends StatelessWidget {
                 label,
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 11,
+                  fontSize: WbMetrics.chrome,
                   fontWeight: FontWeight.w700,
-                  color: scheme.onPrimaryContainer,
+                  color: wb.text,
                   height: 1.3,
                 ),
               ),
@@ -1233,7 +1203,7 @@ class _TriviaDiagramView extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 10,
-                  color: scheme.onSurfaceVariant,
+                  color: wb.mutedText,
                   height: 1.3,
                 ),
               ),
@@ -1244,19 +1214,17 @@ class _TriviaDiagramView extends StatelessWidget {
       if (i < d.segments.length - 1) {
         cells.add(Padding(
           padding: const EdgeInsets.symmetric(horizontal: 4),
-          child: Icon(Icons.arrow_forward_rounded,
-              size: 16, color: scheme.onSurfaceVariant),
+          child: Icon(Icons.arrow_forward, size: 14, color: wb.mutedText),
         ));
       }
     }
     return _wrapper(
-      scheme,
+      wb,
       Row(crossAxisAlignment: CrossAxisAlignment.center, children: cells),
     );
   }
 
-  Widget _buildNumberedWords(
-      NumberedWordsDiagram d, ColorScheme scheme) {
+  Widget _buildNumberedWords(NumberedWordsDiagram d, WbColors wb) {
     final rows = <Widget>[];
     for (int i = 0; i < d.words.length; i++) {
       final w = d.words[i];
@@ -1265,20 +1233,20 @@ class _TriviaDiagramView extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 3),
         child: Row(
           children: [
-            Container(
-              width: 22,
-              height: 22,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: scheme.primary.withValues(alpha: 0.18),
-                shape: BoxShape.circle,
-              ),
+            // A numbered list in a reference work reads as "1." — a
+            // filled circle would be the only round thing on the page,
+            // and the tabular figures keep the glyphs left-aligned with
+            // each other however many words there are.
+            SizedBox(
+              width: 18,
               child: Text(
-                '${i + 1}',
+                '${i + 1}.',
+                textAlign: TextAlign.right,
                 style: TextStyle(
-                  fontSize: 11,
+                  fontSize: WbMetrics.chrome,
                   fontWeight: FontWeight.w700,
-                  color: scheme.primary,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                  color: wb.mutedText,
                 ),
               ),
             ),
@@ -1292,7 +1260,7 @@ class _TriviaDiagramView extends StatelessWidget {
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
-                color: scheme.onSurface,
+                color: wb.text,
               ),
             ),
             const SizedBox(width: 8),
@@ -1300,8 +1268,8 @@ class _TriviaDiagramView extends StatelessWidget {
               child: Text(
                 '${w.translit} · $gloss',
                 style: TextStyle(
-                  fontSize: 12,
-                  color: scheme.onSurfaceVariant,
+                  fontSize: WbMetrics.text,
+                  color: wb.mutedText,
                   height: 1.35,
                 ),
               ),
@@ -1311,7 +1279,7 @@ class _TriviaDiagramView extends StatelessWidget {
       ));
     }
     return _wrapper(
-      scheme,
+      wb,
       Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: rows,
@@ -1479,14 +1447,14 @@ Future<void> showBibleTriviaSheet({
 }) {
   final entries =
       triviaForChapter(englishBook: englishBook, chapter: chapter);
-  final scheme = Theme.of(context).colorScheme;
+  final wb = WbColors.of(context);
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
-    backgroundColor: scheme.surface,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-    ),
+    // Square corners, hairline and elevation 0 all come from
+    // `workbench_theme`'s `bottomSheetTheme`; overriding them here is
+    // how the reader-side sheet drifted from the page in the first
+    // place.
     builder: (sheetCtx) {
       return SafeArea(
         child: ConstrainedBox(
@@ -1498,23 +1466,16 @@ Future<void> showBibleTriviaSheet({
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Center(
-                  child: Container(
-                    width: 40,
-                    height: 4,
-                    margin: const EdgeInsets.only(bottom: 12),
-                    decoration: BoxDecoration(
-                      color: scheme.outlineVariant,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
+                // The rounded pill drag handle is gone rather than
+                // squared: `workbench_theme` turns handles off for
+                // every sheet in the app (`showDragHandle: false`), and
+                // the header below already carries a close button.
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 12, 8),
+                  padding: const EdgeInsets.fromLTRB(16, 0, 8, 8),
                   child: Row(
                     children: [
-                      Icon(Icons.auto_awesome_rounded,
-                          color: scheme.primary, size: 22),
+                      Icon(Icons.auto_awesome_outlined,
+                          color: wb.mutedText, size: 16),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Column(
@@ -1525,17 +1486,17 @@ Future<void> showBibleTriviaSheet({
                                   'Bible Trivia',
                               style: TextStyle(
                                 fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                                fontSize: 16,
+                                fontSize: 14,
                                 fontWeight: FontWeight.w700,
-                                color: scheme.onSurface,
+                                color: wb.text,
                               ),
                             ),
                             Text(
                               '${localeAwareBookName(englishBook, locale)}  $chapter',
                               style: TextStyle(
                                 fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                                fontSize: 12,
-                                color: scheme.onSurfaceVariant,
+                                fontSize: WbMetrics.chrome,
+                                color: wb.mutedText,
                                 fontFeatures: const [
                                   FontFeature.tabularFigures()
                                 ],
@@ -1545,14 +1506,14 @@ Future<void> showBibleTriviaSheet({
                         ),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.close_rounded),
+                        icon: const Icon(Icons.close, size: 18),
                         onPressed: () =>
                             Navigator.of(sheetCtx).maybePop(),
                       ),
                     ],
                   ),
                 ),
-                const Divider(height: 1),
+                Divider(height: WbMetrics.hairline, color: wb.border),
                 Flexible(
                   child: entries.isEmpty
                       ? Padding(
@@ -1561,10 +1522,9 @@ Future<void> showBibleTriviaSheet({
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(
-                                Icons.search_off_rounded,
-                                size: 36,
-                                color: scheme.onSurface
-                                    .withValues(alpha: 0.4),
+                                Icons.search_off,
+                                size: 28,
+                                color: wb.mutedText,
                               ),
                               const SizedBox(height: 8),
                               Text(
@@ -1574,16 +1534,15 @@ Future<void> showBibleTriviaSheet({
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                                  fontSize: 13,
-                                  color: scheme.onSurface
-                                      .withValues(alpha: 0.6),
+                                  fontSize: WbMetrics.text,
+                                  color: wb.mutedText,
                                 ),
                               ),
                               const SizedBox(height: 12),
                               TextButton.icon(
                                 icon: const Icon(
-                                    Icons.auto_awesome_rounded,
-                                    size: 18),
+                                    Icons.auto_awesome_outlined,
+                                    size: 16),
                                 label: Text(
                                   uiStrings['bibleTriviaViewAll']
                                           ?[locale] ??
@@ -1610,8 +1569,8 @@ Future<void> showBibleTriviaSheet({
                                 child: Center(
                                   child: TextButton.icon(
                                     icon: const Icon(
-                                        Icons.auto_awesome_rounded,
-                                        size: 18),
+                                        Icons.auto_awesome_outlined,
+                                        size: 16),
                                     label: Text(
                                       uiStrings['bibleTriviaViewAll']
                                               ?[locale] ??
@@ -1629,7 +1588,6 @@ Future<void> showBibleTriviaSheet({
                             return _TriviaTile(
                               entry: entries[i],
                               settings: settings,
-                              scheme: scheme,
                             );
                           },
                         ),
@@ -3051,7 +3009,11 @@ const List<BibleTriviaEntry> bibleTriviaEntries = [
               '「不再是奴僕，乃比奴僕更勝」——對這個制度是毀滅性的。這封小書信的種子'
               '在 1800 年後開花結果，長成廢奴運動。',
     },
-    reference: 'Philemon 16',
+    // 2026-08-09: was `Philemon 16`. Philemon has one chapter, so the
+    // parser read 16 as the CHAPTER and the jump landed nowhere.
+    // `trivia_catalogue_test.dart` now checks every reference resolves
+    // to a verse that exists in `assets/kjv.json`.
+    reference: 'Philemon 1:16',
   ),
   BibleTriviaEntry(
     tag: {'en': 'STRUCTURE', 'zh-Hans': '主题数据', 'zh-Hant': '主題數據'},
