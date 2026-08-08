@@ -9,6 +9,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:seeksparks/utils/command_query.dart'
     show needsWildcardPromotion, parseCommandQuery, CommandKind;
+import 'package:seeksparks/utils/command_verb.dart';
 import 'package:seeksparks/utils/strongs_result_counts.dart';
 import 'package:seeksparks/utils/version_abbreviation.dart';
 
@@ -152,6 +153,42 @@ void main() {
     test('matching on the short label, not just the code', () {
       expect(matchVersionAbbreviation('lxx+wh', versions), 'lxxwh');
       expect(matchVersionAbbreviation('雅简+', versions), 'cuvs');
+    });
+  });
+
+  group('the d verb resolves abbreviations too', () {
+    // The audit's `d nas` went through VerbContext, not the command
+    // pane's own matcher — two copies of the same exact-only comparison,
+    // and fixing one left the live defect standing.
+    const registry = [
+      VerbVersion(code: 'kjv', label: 'KJV', language: 'en'),
+      VerbVersion(code: 'nasb', label: 'NASB', language: 'en'),
+      VerbVersion(code: 'bsb', label: 'BSB', language: 'en'),
+      VerbVersion(code: 'lxxwh', label: 'LXX/WH', language: 'grc'),
+    ];
+    final ctx = VerbContext(
+      versions: registry,
+      searchVersion: 'kjv',
+      displayVersions: const ['kjv'],
+      currentEnglishBook: 'John',
+      currentChapter: 3,
+    );
+
+    test('nas resolves to NASB', () {
+      expect(ctx.resolveVersion('nas'), 'nasb');
+      expect(parseCommandVerb('d nas', ctx).verb?.kind,
+          CommandVerbKind.displayAdd);
+    });
+
+    test('an unknown edition is still refused', () {
+      expect(ctx.resolveVersion('niv'), isNull);
+      expect(parseCommandVerb('d niv', ctx).issue,
+          CommandVerbIssue.unknownVersion);
+    });
+
+    test('exact still wins and short prefixes are left alone', () {
+      expect(ctx.resolveVersion('kjv'), 'kjv');
+      expect(ctx.resolveVersion('b'), isNull);
     });
   });
 }

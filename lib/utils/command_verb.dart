@@ -87,6 +87,8 @@ import 'package:seeksparks/constants/book_groups.dart'
 import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/utils/reference_parser.dart'
     show BibleReference, resolveBookName;
+import 'package:seeksparks/utils/version_abbreviation.dart'
+    show matchVersionAbbreviation;
 
 // ── Context ─────────────────────────────────────────────────────────
 
@@ -139,16 +141,14 @@ class VerbContext {
   final int? currentChapter;
 
   /// `nas`, `NASB`, `kjv` → that edition's code, else null.
-  String? resolveVersion(String token) {
-    final q = token.trim().toLowerCase();
-    if (q.isEmpty) return null;
-    for (final v in versions) {
-      if (v.code.toLowerCase() == q || v.label.toLowerCase() == q) {
-        return v.code;
-      }
-    }
-    return null;
-  }
+  ///
+  /// Exact code or label first, then an unambiguous prefix — `nas` is
+  /// BibleWorks' own abbreviation and was this comment's first example
+  /// long before it resolved to anything (#295).
+  String? resolveVersion(String token) => matchVersionAbbreviation(
+        token,
+        {for (final v in versions) v.code: v.label},
+      );
 
   /// Every edition in a language group, in registry order.
   List<String> versionsInLanguage(String language) =>
