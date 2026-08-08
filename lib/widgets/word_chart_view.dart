@@ -154,18 +154,31 @@ class _WordChartViewState extends State<WordChartView> {
         children: [
           Icon(Icons.bar_chart, size: t.chrome + 2, color: c.mutedText),
           const SizedBox(width: 6),
-          Flexible(
-            child: Text(
-              widget.word.isEmpty
-                  ? widget.strongs
-                  : '${widget.word}  ${widget.strongs}',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: t.chrome,
-                fontWeight: FontWeight.w700,
-                color: c.text,
+          // The word may be truncated; the Strong's number may not. It
+          // is what names the quantity, and the chart outlives the tap
+          // that opened it — so it sits outside the Flexible, where the
+          // ellipsis cannot reach it.
+          if (widget.word.isNotEmpty) ...[
+            Flexible(
+              child: Text(
+                widget.word,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: t.chrome,
+                  fontWeight: FontWeight.w700,
+                  color: c.text,
+                ),
               ),
+            ),
+            const SizedBox(width: 6),
+          ],
+          Text(
+            widget.strongs,
+            style: TextStyle(
+              fontSize: t.chrome,
+              fontWeight: FontWeight.w700,
+              color: c.text,
             ),
           ),
           const SizedBox(width: 8),
