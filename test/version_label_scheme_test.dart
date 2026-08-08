@@ -17,6 +17,8 @@
 ///     scale while the reader can scale the type by 1.75×.
 library;
 
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -289,6 +291,35 @@ void main() {
       final parse = parseCommandVerb('d 雅简+', ctx());
       expect(parse.issue, isNull);
       expect(parse.verb?.versions, contains('cuvs-yhwh'));
+    });
+  });
+
+  // The audit that produced #285 looked for call sites of the label
+  // helper, so it could not see the surfaces that never called it. The
+  // status bar and the Help menu both shipped `currentVersion
+  // .toUpperCase()`, which prints the internal code `CUVS-YHWH` at the
+  // reader. Renaming the catalog did nothing for them, and no widget
+  // test noticed, because an uppercased code looks like a badge.
+  //
+  // So the rule is asserted about the SOURCE, the same species of
+  // invariant as `page_chrome_pass_test.dart`: uppercasing a version
+  // code is never how a badge gets made. `shortBibleVersionLabel` is.
+  group('no surface builds a badge by uppercasing a code', () {
+    test('lib/ never calls .toUpperCase() on a version code', () {
+      final pattern = RegExp(r'\b\w*[Vv]ersion\s*\.\s*toUpperCase\s*\(\s*\)');
+      final offenders = <String>[];
+      for (final f in Directory('lib').listSync(recursive: true)) {
+        if (f is! File || !f.path.endsWith('.dart')) continue;
+        final lines = f.readAsLinesSync();
+        for (var i = 0; i < lines.length; i++) {
+          if (pattern.hasMatch(lines[i])) {
+            offenders.add('${f.path}:${i + 1}: ${lines[i].trim()}');
+          }
+        }
+      }
+      expect(offenders, isEmpty,
+          reason: 'Use shortBibleVersionLabel(code) — an uppercased code is '
+              'an internal identifier, not a badge the reader knows.');
     });
   });
 }

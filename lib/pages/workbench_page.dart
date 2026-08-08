@@ -473,7 +473,9 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         WbMenuItem(s('about', 'About & data sources'),
             () => pushPage(const AboutPage())),
         const WbMenuItem.separator(),
-        WbMenuItem('${mp.currentVersion.toUpperCase()} · v$kAppVersion', null),
+        WbMenuItem(
+            '${shortBibleVersionLabel(mp.currentVersion)} · v$kAppVersion',
+            null),
       ]),
     ];
   }
@@ -654,7 +656,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
               pushPage(BooksPage(bookIdx: book, chapterIdx: chapter)),
         ),
       WbStatusField(
-        mp.currentVersion.toUpperCase(),
+        shortBibleVersionLabel(mp.currentVersion),
         onTap: () => _pickParallelVersions(context),
       ),
       // Names the centre mode, and cycles it on tap.
