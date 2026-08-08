@@ -11,6 +11,7 @@ import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 import 'package:seeksparks/constants/bible_versions.dart';
 import 'package:seeksparks/constants/text_patterns.dart';
+import 'package:seeksparks/constants/workbench_theme.dart' show WbMetrics;
 import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/widgets/note_reference_picker_sheet.dart';
 import 'package:seeksparks/models/app_settings.dart';
@@ -351,7 +352,6 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
                           horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
                         color: scheme.surfaceContainerHighest,
-                        borderRadius: BorderRadius.circular(4),
                         border: Border.all(
                           color: scheme.outline.withValues(alpha: 0.4),
                         ),
@@ -2519,7 +2519,6 @@ class _VerticalProgressIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final fontSize = (10.0 * menuScale).clamp(9.0, 13.0).toDouble();
 
     return LayoutBuilder(builder: (ctx, constraints) {
@@ -2546,7 +2545,6 @@ class _VerticalProgressIndicator extends StatelessWidget {
                 width: 2,
                 decoration: BoxDecoration(
                   color: scheme.outlineVariant.withValues(alpha: 0.35),
-                  borderRadius: BorderRadius.circular(1),
                 ),
               ),
             ),
@@ -2559,7 +2557,6 @@ class _VerticalProgressIndicator extends StatelessWidget {
                 height: pillTop + pillHeight / 2,
                 decoration: BoxDecoration(
                   color: scheme.primary.withValues(alpha: 0.55),
-                  borderRadius: BorderRadius.circular(1),
                 ),
               ),
             ),
@@ -2573,21 +2570,16 @@ class _VerticalProgressIndicator extends StatelessWidget {
                     const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: scheme.surface
-                      .withValues(alpha: isDark ? 0.86 : 0.92),
-                  borderRadius: BorderRadius.circular(pillHeight / 2),
+                  // 2026-08-09 (#279): opaque, not 0.86/0.92. The drop
+                  // shadow was what lifted this off the verses scrolling
+                  // behind it; with the shadow gone a translucent fill
+                  // would let the text bleed through the one hairline
+                  // that now has to do that job alone.
+                  color: scheme.surface,
                   border: Border.all(
                     color: scheme.primary.withValues(alpha: 0.45),
-                    width: 1,
+                    width: WbMetrics.hairline,
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black
-                          .withValues(alpha: isDark ? 0.32 : 0.12),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
                 ),
                 child: Text.rich(
                   TextSpan(
@@ -2623,26 +2615,34 @@ class _VerticalProgressIndicator extends StatelessWidget {
   }
 }
 
+/// An opaque chrome bar anchored to one edge of the reading pane.
+///
+/// 2026-08-09 (task #279): this was a rounded, blurred, drop-shadowed
+/// "glass" surface. Three things about that were wrong here, and only
+/// the first is cosmetic:
+///
+///  * `workbench_theme.dart` — *square corners and 1px hairline borders,
+///    no shadows, no cards* — and this widget draws the two bars a
+///    reader of the centre pane sees at all times.
+///  * The blur never ran. Every call site passed `opaque: true`, which
+///    took the branch that skips [BackdropFilter] entirely, so the
+///    "glass" was a name for an opaque fill. That dead branch is gone
+///    rather than kept as an option nothing selects.
+///  * **Squaring the corners is what makes the correct border legal.**
+///    A bar flush against an edge wants a hairline on the ONE side
+///    facing the text — not a box drawn round all four, whose bottom
+///    edge doubled up with the pane divider beneath it. The rounded
+///    version could not do that: a non-uniform [Border] alongside a
+///    `borderRadius` throws in `Border.paint`, which is why v1.3.x
+///    settled for the uniform outline. With no radius the constraint
+///    disappears.
 class _GlassSurface extends StatelessWidget {
   final Widget child;
-  final double radius;
 
-  /// 2026-05-21 (v1.2.70): when true, render a fully-opaque surface
-  /// (no blur, alpha 1.0) so the bar visually COVERS the content
-  /// behind it instead of letting verses bleed through.
-  final bool opaque;
-
-  /// 2026-05-21 (v1.2.70): when true, only the top corners are
-  /// rounded — the bottom is flush. Used by the auto-hide bottom bar
-  /// so its surface meets the screen edge cleanly (no rounded curve
-  /// + gap between the bar and the home indicator).
-  final bool topRoundedOnly;
-
-  /// 2026-05-22 (v1.2.71): mirror of [topRoundedOnly] for the top
-  /// auto-hide chrome. Only the BOTTOM corners are rounded — the top
-  /// is flush, so the surface meets the very top edge of the screen
-  /// (covering the status-bar / notch area) with no visible gap.
-  final bool bottomRoundedOnly;
+  /// Which edge of the pane the bar sits against. A bottom-anchored bar
+  /// carries its hairline on top; a top-anchored one carries it below.
+  /// Either way the line lands between the bar and the verses.
+  final bool anchoredToBottom;
 
   /// 2026-08 (ported from YsWords v1.3.156): when true, render with the
   /// warm 护眼/paper palette instead of the app's blue-tinted Material
@@ -2652,10 +2652,7 @@ class _GlassSurface extends StatelessWidget {
 
   const _GlassSurface({
     required this.child,
-    this.radius = 20,
-    this.opaque = false,
-    this.topRoundedOnly = false,
-    this.bottomRoundedOnly = false,
+    required this.anchoredToBottom,
     this.paperTheme = false,
   });
 
@@ -2663,84 +2660,26 @@ class _GlassSurface extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final fillAlpha =
-        opaque ? 1.0 : (isDark ? 0.72 : 0.78);
-    // 2026-05-22 (v1.2.71): when opaque, use surfaceContainerHighest
-    // (Material 3's deepest-tinted variant) so the chrome bar reads
-    // as a clear visual layer — most distinct from the scaffold
-    // background while still feeling like part of the surface family.
-    final fillColor = paperTheme
-        ? _PaperTheme.surface
-        : opaque
-            ? scheme.surfaceContainerHighest
-            : scheme.surface.withValues(alpha: fillAlpha);
-    final br = topRoundedOnly
-        ? BorderRadius.only(
-            topLeft: Radius.circular(radius),
-            topRight: Radius.circular(radius),
-          )
-        : bottomRoundedOnly
-            ? BorderRadius.only(
-                bottomLeft: Radius.circular(radius),
-                bottomRight: Radius.circular(radius),
-              )
-            : BorderRadius.circular(radius);
-    final outlineColor = paperTheme
-        ? _PaperTheme.border
-        : scheme.outlineVariant.withValues(alpha: isDark ? 0.35 : 0.6);
-    // 2026-05-22 (v1.2.71): bolder hairline on the chrome bars so they
-    // read as distinct strips against the body. Half-rounded variants
-    // (topRoundedOnly / bottomRoundedOnly) are the chrome bars; full-
-    // rounded (selection bar) keeps the subtle outline.
-    final chromeHairlineColor =
-        scheme.outline.withValues(alpha: isDark ? 0.45 : 0.55);
-    final box = DecoratedBox(
+    // 2026-05-22 (v1.2.71): surfaceContainerHighest (Material 3's
+    // deepest-tinted variant) so the chrome bar reads as a clear visual
+    // layer — most distinct from the scaffold background while still
+    // feeling like part of the surface family.
+    final fillColor =
+        paperTheme ? _PaperTheme.surface : scheme.surfaceContainerHighest;
+    final hairline = BorderSide(
+      color: paperTheme
+          ? _PaperTheme.border
+          : scheme.outline.withValues(alpha: isDark ? 0.45 : 0.55),
+      width: WbMetrics.hairline,
+    );
+    return DecoratedBox(
       decoration: BoxDecoration(
         color: fillColor,
-        borderRadius: br,
-        // v1.3.x: half-rounded chrome bars previously used a single
-        // directional Border side (top / bottom). A non-uniform border
-        // combined with `borderRadius: br` throws "A borderRadius can
-        // only be given on borders with uniform colors" in Border.paint
-        // (the InkDecoration.paintFeature crash family). Use a uniform
-        // thin outline — visually near-identical on a bar that's flush
-        // to a screen edge, and legal alongside a borderRadius.
-        border: (topRoundedOnly || bottomRoundedOnly)
-            ? Border.all(color: chromeHairlineColor, width: 0.6)
-            : Border.all(color: outlineColor),
-        boxShadow: [
-          BoxShadow(
-            color:
-                scheme.shadow.withValues(alpha: isDark ? 0.22 : 0.12),
-            blurRadius: 24,
-            offset: topRoundedOnly
-                // Cast the shadow UPWARDS for a bottom-anchored bar so
-                // it visually lifts off the verses behind it.
-                ? const Offset(0, -6)
-                : bottomRoundedOnly
-                    // Cast the shadow DOWNWARDS for a top-anchored bar.
-                    ? const Offset(0, 6)
-                    : const Offset(0, 10),
-          ),
-        ],
+        border: anchoredToBottom
+            ? Border(top: hairline)
+            : Border(bottom: hairline),
       ),
       child: child,
-    );
-    if (opaque) {
-      // Skip the BackdropFilter when fully opaque — the blur would be
-      // wasted work and on web it can cause noticeable text shimmer
-      // on the verses scrolling behind.
-      return ClipRRect(
-        borderRadius: br,
-        child: box,
-      );
-    }
-    return ClipRRect(
-      borderRadius: br,
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-        child: box,
-      ),
     );
   }
 }
@@ -2990,18 +2929,16 @@ class _SelectionActionBar extends StatelessWidget {
       color: scheme.primary,
     );
 
-    // 2026-05-24 (v1.2.91): bottom-menu style — edge-to-edge, only
-    // top corners rounded, opaque. Was a floating Card-like bar
-    // with horizontal margins + bottom padding (v1.2.70 design).
-    // User feedback: "when clicking verse the floating should like
-    // bottom menu as well not floating" — i.e. align with the same
-    // shape as the always-visible bottom chrome bar.
+    // 2026-05-24 (v1.2.91): bottom-menu style — edge-to-edge and
+    // opaque. Was a floating Card-like bar with horizontal margins +
+    // bottom padding (v1.2.70 design). User feedback: "when clicking
+    // verse the floating should like bottom menu as well not floating"
+    // — i.e. align with the same shape as the always-visible bottom
+    // chrome bar.
     // The `inset` value is unused now (was driving the horizontal
     // padding before) — left in place for potential future tweaks.
     return _GlassSurface(
-      radius: 22,
-      opaque: true,
-      topRoundedOnly: true,
+      anchoredToBottom: true,
       child: SafeArea(
         top: false,
         // Inner padding keeps the icons above the home indicator
@@ -3682,9 +3619,7 @@ class _AiExplainSheetState extends State<_AiExplainSheet> {
         filled ? scheme.primary : scheme.primary.withValues(alpha: 0.10);
     return Material(
       color: onTap == null ? bg.withValues(alpha: 0.4) : bg,
-      borderRadius: BorderRadius.circular(20),
       child: InkWell(
-        borderRadius: BorderRadius.circular(20),
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -3775,15 +3710,15 @@ class _AiExplainSheetState extends State<_AiExplainSheet> {
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.zero,
               borderSide: BorderSide.none,
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.zero,
               borderSide: BorderSide.none,
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.zero,
               borderSide: BorderSide(color: scheme.primary, width: 1.5),
             ),
           ),
@@ -4666,7 +4601,6 @@ void showNoteEditor({
                   height: 5,
                   decoration: BoxDecoration(
                     color: scheme.outlineVariant,
-                    borderRadius: BorderRadius.circular(3),
                   ),
                 ),
               ),
@@ -4813,7 +4747,7 @@ void showNoteEditor({
                     hintText: uiStrings['noteHint']?[locale] ??
                         'Type your note for this verse…',
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.zero,
                     ),
                     contentPadding: const EdgeInsets.all(12),
                   ),
@@ -5148,7 +5082,7 @@ Widget _buildNoteRefChip({
     ),
     backgroundColor: bgColor,
     side: BorderSide(color: borderColor, width: 0.7),
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+    shape: RoundedRectangleBorder(),
     visualDensity: VisualDensity.compact,
     materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
     // Tooltip explains the swap-horiz icon: tapping will load
@@ -5372,7 +5306,6 @@ class _MapPickerSheetState extends State<_MapPickerSheet>
                 height: 4,
                 decoration: BoxDecoration(
                   color: scheme.outlineVariant.withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(2),
                 ),
               ),
             ),
@@ -5625,7 +5558,7 @@ class _AllIllustrationsByBookState extends State<_AllIllustrationsByBook> {
               hintText: uiStrings['search']?[widget.locale] ?? 'Search',
               isDense: true,
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.zero,
               ),
               suffixIcon: q.isEmpty
                   ? null
@@ -5753,8 +5686,7 @@ class _MapTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return ListTile(
-      leading: ClipRRect(
-        borderRadius: BorderRadius.circular(6),
+      leading: ClipRect(
         child: Container(
           width: 44,
           height: 44,
@@ -6524,12 +6456,10 @@ class _BibleReaderBottomBar extends StatelessWidget {
           duration: const Duration(milliseconds: 320),
           curve: Curves.easeInOutCubic,
           child: _GlassSurface(
-            // Top-rounded only + opaque so the surface fills all the
-            // way down to the screen edge (including the home-indicator
+            // Opaque and edge-to-edge so the surface fills all the way
+            // down to the screen edge (including the home-indicator
             // safe area), eliminating the previous background-gap.
-            radius: 22,
-            opaque: true,
-            topRoundedOnly: true,
+            anchoredToBottom: true,
             paperTheme: settings.readingPaperTheme,
             child: SafeArea(
               top: false,
@@ -6806,15 +6736,12 @@ class _FloatingHeader extends StatelessWidget {
           curve: Curves.easeInOutCubic,
           // 2026-05-22 (v1.2.71): single edge-to-edge surface that
           // matches the bottom bar's pattern — opaque background,
-          // ONLY the bottom corners rounded, surface flush to screen
-          // top (covers status-bar / notch area). The previous "inner
-          // rounded card with border" inside a Material backdrop made
-          // the header read as a floating pill; now it's a single
-          // solid bar like the bottom toolbar.
+          // surface flush to screen top (covers status-bar / notch
+          // area). The previous "inner rounded card with border" inside
+          // a Material backdrop made the header read as a floating
+          // pill; now it's a single solid bar like the bottom toolbar.
           child: _GlassSurface(
-            radius: 22,
-            opaque: true,
-            bottomRoundedOnly: true,
+            anchoredToBottom: false,
             paperTheme: settings.readingPaperTheme,
             child: SafeArea(
             bottom: false,
@@ -6893,7 +6820,6 @@ class _FloatingHeader extends StatelessWidget {
                         Flexible(
                           flex: 3,
                           child: InkWell(
-                            borderRadius: BorderRadius.circular(8),
                             onTap: onBookTap,
                             child: Padding(
                               padding: const EdgeInsets.symmetric(
@@ -6957,7 +6883,6 @@ class _FloatingHeader extends StatelessWidget {
                                       ?[settings.locale] ??
                                   'Change Version',
                               child: InkWell(
-                                borderRadius: BorderRadius.circular(8),
                                 onTap: () async {
                                   final box = chipCtx.findRenderObject()
                                       as RenderBox?;
@@ -7397,7 +7322,6 @@ class _FloatingHeader extends StatelessWidget {
             decoration: BoxDecoration(
               color:
                   scheme.surfaceContainerHighest.withValues(alpha: 0.7),
-              borderRadius: BorderRadius.circular(10),
             ),
             child: Text(
               trailing,
@@ -7480,7 +7404,6 @@ class _CrossRefsSheetBodyState extends State<_CrossRefsSheetBody> {
           height: 4,
           decoration: BoxDecoration(
             color: scheme.outlineVariant,
-            borderRadius: BorderRadius.circular(2),
           ),
         ),
         Padding(
@@ -7709,7 +7632,6 @@ class _SynopsisSheetBodyState extends State<_SynopsisSheetBody> {
           height: 4,
           decoration: BoxDecoration(
             color: scheme.outline.withValues(alpha: 0.4),
-            borderRadius: BorderRadius.circular(2),
           ),
         ),
         Padding(
@@ -7908,9 +7830,7 @@ class _RefChip extends StatelessWidget {
     final fg = isCurrentGospel ? scheme.primary : scheme.onSurface;
     return Material(
       color: bg,
-      borderRadius: BorderRadius.circular(8),
       child: InkWell(
-        borderRadius: BorderRadius.circular(8),
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
@@ -7982,7 +7902,6 @@ class _SectionHeadingState extends State<_SectionHeading> {
                 margin: const EdgeInsets.only(right: 8),
                 decoration: BoxDecoration(
                   color: scheme.primary,
-                  borderRadius: BorderRadius.circular(2),
                 ),
               ),
               Expanded(
@@ -8043,7 +7962,6 @@ class _SectionHeadingState extends State<_SectionHeading> {
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
                         color: scheme.surfaceContainerHigh,
-                        borderRadius: BorderRadius.circular(8),
                         border: Border.all(
                             color: scheme.outlineVariant
                                 .withValues(alpha: 0.6)),
@@ -8152,14 +8070,13 @@ class _BookIntroCardState extends State<_BookIntroCard> {
     // the metadata.
     return InkWell(
       onTap: () => setState(() => _expanded = !_expanded),
-      borderRadius: BorderRadius.circular(14),
       child: Container(
         margin: const EdgeInsets.fromLTRB(12, 8, 12, 16),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: scheme.surfaceContainerHigh,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: scheme.outlineVariant),
+          border: Border.all(
+              color: scheme.outlineVariant, width: WbMetrics.hairline),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -8244,8 +8161,6 @@ class _BookIntroCardState extends State<_BookIntroCard> {
                                         decoration: BoxDecoration(
                                           color: scheme.primary
                                               .withValues(alpha: 0.10),
-                                          borderRadius:
-                                              BorderRadius.circular(99),
                                         ),
                                         child: Text(
                                           t,
