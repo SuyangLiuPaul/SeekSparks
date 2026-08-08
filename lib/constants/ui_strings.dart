@@ -3101,6 +3101,62 @@ const uiStrings = {
     'zh-Hant': '全部清除',
     'en': 'Clear all',
   },
+  // ── Version stack picker (task #288) ──────────────────────────────
+  // Which editions the Browse pane shows, and in what order. The order
+  // is the half that had no pointer-driven control at all: the command
+  // line could say `p bsb kjvs`, the checkbox list could not.
+  'versionStackTitle': {
+    'zh-Hans': '对照版本',
+    'zh-Hant': '對照版本',
+    'en': 'Versions displayed',
+  },
+  'versionStackShown': {
+    'zh-Hans': '按显示顺序',
+    'zh-Hant': '按顯示順序',
+    'en': 'In display order',
+  },
+  'versionStackAvailable': {
+    'zh-Hans': '可加入',
+    'zh-Hant': '可加入',
+    'en': 'Available',
+  },
+  // Marks the row that cannot be moved or removed — it is the edition
+  // being read, and it is the first column by definition.
+  'versionStackReading': {
+    'zh-Hans': '正在阅读',
+    'zh-Hant': '正在閱讀',
+    'en': 'reading',
+  },
+  'versionStackReorderHint': {
+    'zh-Hans': '拖动排序',
+    'zh-Hant': '拖動排序',
+    'en': 'Drag to reorder',
+  },
+  'versionStackCount': {
+    'zh-Hans': '共 {count} 个版本',
+    'zh-Hant': '共 {count} 個版本',
+    'en': '{count} versions displayed',
+  },
+  'versionStackOnlyReading': {
+    'zh-Hans': '仅显示正在阅读的版本',
+    'zh-Hant': '僅顯示正在閱讀的版本',
+    'en': 'Only the edition you are reading',
+  },
+  'versionStackClear': {
+    'zh-Hans': '移除全部对照',
+    'zh-Hant': '移除全部對照',
+    'en': 'Remove all',
+  },
+  'versionStackAdd': {
+    'zh-Hans': '加入',
+    'zh-Hant': '加入',
+    'en': 'Add',
+  },
+  'versionStackRemove': {
+    'zh-Hans': '移除',
+    'zh-Hant': '移除',
+    'en': 'Remove',
+  },
   // Shown when the active limit came from the `l` verb with chapters,
   // or from a Verse List. The picker deals in whole books, so it says
   // what it cannot represent rather than quietly widening it.

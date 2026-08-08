@@ -248,6 +248,17 @@ String shortBibleVersionLabel(String version) {
       .shortLabel;
 }
 
+/// The edition's full name — "和合本雅伟版(简体)", "Berean Standard
+/// Bible" — as opposed to the gutter badge [shortBibleVersionLabel]
+/// prints. Falls back to the raw code so an unknown one is visible
+/// rather than blank.
+String menuBibleVersionLabel(String version) {
+  for (final v in bibleVersions) {
+    if (v.value == version) return v.menuLabel;
+  }
+  return version;
+}
+
 /// Some bundled versions only ship one Testament — most notably the
 /// LJK1 / LJK2 (梁家铿译本) editions are NT-only because the
 /// translator's OT work isn't published yet.  When the daily-verse

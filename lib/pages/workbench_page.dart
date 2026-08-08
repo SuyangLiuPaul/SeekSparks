@@ -6,7 +6,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:seeksparks/constants/bible_versions.dart'
     show
-        bibleVersions,
         kSecondaryVersionKey,
         resolveSecondaryVersion,
         shortBibleVersionLabel;
@@ -81,6 +80,7 @@ import 'package:seeksparks/utils/command_verb.dart'
 import 'package:seeksparks/utils/search_scope.dart'
     show limitSpecForBooks, scopeDisplayName;
 import 'package:seeksparks/widgets/search_scope_sheet.dart';
+import 'package:seeksparks/widgets/version_stack_sheet.dart';
 import 'package:seeksparks/widgets/workbench_chrome.dart';
 import 'package:seeksparks/widgets/originals_sheet.dart';
 
@@ -1730,54 +1730,25 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
             locale));
   }
 
-  /// Lets the reader choose which translations sit in the parallel stack.
+  /// Lets the reader choose which translations sit in the parallel stack
+  /// — and, since #288, what ORDER they sit in.
+  ///
+  /// The sheet is staged: null means the reader dismissed it and the
+  /// stack is untouched. The old checkbox list applied on dismiss and
+  /// had no other way to apply, so there was no way to back out of a
+  /// change; there is now, which matters much more once a stray drag can
+  /// rearrange the columns.
   Future<void> _pickParallelVersions(BuildContext context) async {
-    final scheme = Theme.of(context).colorScheme;
-    final current = _wb.parallelVersions.toSet();
-    await showModalBottomSheet<void>(
+    final mp = context.read<MainProvider>();
+    final locale = context.read<AppSettings>().locale;
+    final next = await showVersionStackSheet(
       context: context,
-      showDragHandle: true,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setSheet) => SafeArea(
-          child: ListView(
-            shrinkWrap: true,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
-                child: Text(
-                  'Versions in the parallel stack',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: scheme.onSurface,
-                  ),
-                ),
-              ),
-              for (final v in bibleVersions)
-                CheckboxListTile(
-                  dense: true,
-                  value: current.contains(v.value),
-                  title: Text(v.menuLabel),
-                  subtitle: Text(v.shortLabel),
-                  onChanged: (on) => setSheet(() {
-                    if (on == true) {
-                      current.add(v.value);
-                    } else {
-                      current.remove(v.value);
-                    }
-                  }),
-                ),
-            ],
-          ),
-        ),
-      ),
+      locale: locale,
+      reading: mp.currentVersion,
+      comparisons: _wb.parallelVersions,
     );
-    if (!mounted) return;
-    // Registry order, because a checkbox list cannot express an order.
-    // The command line can (`p bsb nas kjv`), which is the one place the
-    // keyboard is strictly more expressive than the dialog it shadows.
-    _wb.setParallelVersions(
-        bibleVersions.map((v) => v.value).where(current.contains).toList());
+    if (next == null || !mounted) return;
+    _wb.setParallelVersions(next);
   }
 
   // ── Left: command pane ────────────────────────────────────────────
