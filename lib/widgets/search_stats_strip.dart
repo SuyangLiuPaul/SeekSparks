@@ -69,9 +69,15 @@ class SearchStatsStrip extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 3),
+                  // Was a hardcoded "OT … · NT …", which put English in
+                  // a Chinese UI (#283's defect class) and named the
+                  // corpora in terms #280 settled against: this project
+                  // says 希伯来圣经 / 希腊圣经, not 旧约 / 新约.
                   Text(
-                    'OT ${distribution.oldTestament} · '
-                    'NT ${distribution.newTestament}',
+                    '${s['oldTestamentShort']?[locale] ?? 'Hebrew'} '
+                    '${distribution.oldTestament} · '
+                    '${s['newTestamentShort']?[locale] ?? 'Greek'} '
+                    '${distribution.newTestament}',
                     style: TextStyle(
                         fontSize: t.chrome, color: wb.mutedText),
                   ),

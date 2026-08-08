@@ -68,6 +68,13 @@ import 'package:seeksparks/widgets/morph_search_pane.dart';
 import 'package:seeksparks/widgets/context_pane.dart';
 import 'package:seeksparks/widgets/places_pane.dart';
 import 'package:seeksparks/widgets/place_map.dart';
+import 'package:seeksparks/widgets/word_chart_view.dart';
+import 'package:seeksparks/constants/book_groups.dart' show oldTestamentBooks;
+import 'package:seeksparks/services/greek_stats_service.dart';
+import 'package:seeksparks/services/strongs_service.dart';
+import 'package:seeksparks/utils/search_scope.dart' show kScopeAllBooks;
+import 'package:seeksparks/utils/search_stats.dart'
+    show SearchDistribution, buildDistributionFromCounts;
 import 'package:seeksparks/services/places_service.dart';
 import 'package:seeksparks/models/bible_place.dart';
 import 'package:seeksparks/utils/place_geo.dart' show BaseMap;
@@ -245,10 +252,36 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
   String? _mapPlaceId;
   BaseMap _baseMap = BaseMap.empty();
 
+  /// The Strong's number the distribution chart is drawn for, or null
+  /// when the chart is not up. A second lens over the centre pane, on
+  /// the same terms as the map: deliberately NOT persisted, because a
+  /// reader who glanced at where λόγος falls should reopen tomorrow onto
+  /// scripture rather than onto a bar chart.
+  ///
+  /// Held as the NUMBER rather than as the row that was tapped, so the
+  /// chart survives the reader moving the verse underneath it — that is
+  /// the whole reason #290 puts it here instead of leaving it in the
+  /// 256 px pane it was opened from.
+  String? _chartStrongs;
+
+  void _openChart(String strongs) {
+    if (strongs.isEmpty) return;
+    setState(() {
+      _chartStrongs = strongs;
+      // One lens at a time. Both draw over the centre pane, so leaving
+      // the map flag set would put the chart behind it.
+      _mapOpen = false;
+      _mapPlaceId = null;
+    });
+  }
+
+  void _closeChart() => setState(() => _chartStrongs = null);
+
   void _openMap(String? id) {
     setState(() {
       _mapOpen = true;
       _mapPlaceId = id;
+      _chartStrongs = null;
     });
     if (_baseMap.isEmpty) {
       PlacesService.baseMap().then((m) {
@@ -864,10 +897,11 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
     // Asking for a text mode is asking to see text. Without this, picking
     // "Reader" while the map lens is up appears to do nothing, because the
     // lens sits in front of whichever mode is underneath.
-    if (_mapOpen) {
+    if (_mapOpen || _chartStrongs != null) {
       setState(() {
         _mapOpen = false;
         _mapPlaceId = null;
+        _chartStrongs = null;
       });
     }
     if (_wb.centreMode == mode) return;
@@ -1175,6 +1209,8 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
                     // honour it — see `effectiveCentreMode`.
                     child: _mapOpen
                         ? _buildMapFrame(context)
+                        : _chartStrongs != null
+                        ? _buildChartFrame(context, _chartStrongs!)
                         : switch (effectiveCentreMode(
                             preferred:
                                 context.watch<WorkbenchProvider>().centreMode,
@@ -1285,6 +1321,76 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
           onClose: close,
           attribution: PlacesService.attribution,
         );
+      },
+    );
+  }
+
+  // ── Centre: the word-distribution chart ───────────────────────────
+
+  /// Where one Strong's number falls across the canon, drawn at a size
+  /// that can carry 66 book names — task #290, BibleWorks bwh23.
+  ///
+  /// The counts come from the concordance index, not from the Eagle's
+  /// View Greek profile, and that is the load-bearing choice: the
+  /// profile covers the Westcott-Hort New Testament only, so sourcing
+  /// from it would have meant no chart at all for any Hebrew word. The
+  /// index carries both testaments, and its per-book map is absolute —
+  /// it sums exactly to the entry's total, where the reference list
+  /// beside it is capped at 500.
+  Widget _buildChartFrame(BuildContext context, String strongs) {
+    final wb = context.watch<WorkbenchProvider>();
+    final settings = context.watch<AppSettings>();
+    final locale = settings.locale;
+    final mp = wb.mainProvider;
+    final version = mp.currentVersion;
+    final v = _analysisVerse(mp, wb.analysisVerses);
+    final currentBook =
+        v == null ? null : (bookNameToEnglish[v.book] ?? v.book);
+
+    return FutureBuilder<_ChartData>(
+      key: ValueKey<String>('chart-$strongs'),
+      future: _chartDataFor(strongs, locale),
+      builder: (context, snap) {
+        final data = snap.data;
+        return WordChartView(
+          strongs: strongs,
+          word: data?.lemma ?? '',
+          gloss: data?.gloss ?? '',
+          distribution: data?.distribution ??
+              buildDistributionFromCounts(
+                counts: const <String, int>{},
+                bookOrder: kScopeAllBooks,
+                oldTestamentBooks: oldTestamentBooks,
+              ),
+          ranks: data?.ranks ?? const <String, int>{},
+          locale: locale,
+          version: version,
+          currentBook: currentBook,
+          scopeName: _activeScopeName(mp, locale),
+          onClose: _closeChart,
+        );
+      },
+    );
+  }
+
+  Future<_ChartData> _chartDataFor(String strongs, String locale) async {
+    final result = await ConcordanceService.lookup(strongs);
+    final entry = await StrongsService.lookup(strongs);
+    final greek = await GreekStatsService.lookup(strongs);
+    return _ChartData(
+      lemma: entry?.lemma ?? '',
+      gloss: entry?.localizedGloss(locale) ?? '',
+      // Empty books dropped: this rendering has labels, so their absence
+      // is better stated as "in 24 of 66 books" than drawn as 42 blank
+      // rows. bwh23 hides them by default for the same reason.
+      distribution: buildDistributionFromCounts(
+        counts: result?.byBook ?? const <String, int>{},
+        bookOrder: kScopeAllBooks,
+        oldTestamentBooks: oldTestamentBooks,
+      ),
+      ranks: <String, int>{
+        for (final e in greek?.books.entries ?? const <String, (int, int?)>{}.entries)
+          if (e.value.$2 != null) e.key: e.value.$2!,
       },
     );
   }
@@ -1967,12 +2073,17 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
             if (snap.connectionState != ConnectionState.done) {
               return const Center(child: CircularProgressIndicator());
             }
+            final v = _analysisVerse(mp, _wb.analysisVerses);
             return WordStatsPane(
               words: snap.data ?? const <OriginalWord>[],
               locale: locale,
               onOpenStrongs: (n) => pushPage(StrongsEntryPage(number: n)),
               scope: _wb.searchLimit,
               scopeName: _activeScopeName(mp, locale),
+              version: mp.currentVersion,
+              currentBook:
+                  v == null ? null : (bookNameToEnglish[v.book] ?? v.book),
+              onOpenChart: _openChart,
             );
           },
         );
@@ -2365,4 +2476,23 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
       ),
     );
   }
+}
+
+/// Everything the distribution chart needs, gathered in one await so the
+/// frame does not rebuild three times as three services land.
+class _ChartData {
+  const _ChartData({
+    required this.lemma,
+    required this.gloss,
+    required this.distribution,
+    required this.ranks,
+  });
+
+  final String lemma;
+  final String gloss;
+  final SearchDistribution distribution;
+
+  /// Book name → this word's rank among that book's words. Empty for
+  /// Hebrew, which no bundled profile ranks.
+  final Map<String, int> ranks;
 }

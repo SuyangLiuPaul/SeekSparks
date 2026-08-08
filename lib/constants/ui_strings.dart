@@ -3878,6 +3878,61 @@ const uiStrings = {
   },
   'searchStatsTop': {'zh-Hans': '最多出现于', 'zh-Hant': '最多出現於', 'en': 'Most in'},
   'searchStatsBooks': {'zh-Hans': '卷书', 'zh-Hant': '卷書', 'en': 'books'},
+  // ── The word-distribution chart (bwh23, task #290) ──────────────────
+  // Opened from the strip under each word in the Stats tab.
+  'wordChartOpen': {
+    'zh-Hans': '查看完整分布图',
+    'zh-Hant': '檢視完整分佈圖',
+    'en': 'Open the full distribution chart',
+  },
+  // bwh23 plots seven different quantities and names each one, because
+  // "64" means nothing until you know what was counted. Ours is
+  // occurrences; BibleWorks' default is verses-containing-a-hit. The two
+  // differ whenever a verse carries the word twice, so the chart says
+  // which it is rather than borrowing their wording.
+  'wordChartUnit': {
+    'zh-Hans': '按出现次数统计，非节数——同一节可能出现多次。',
+    'zh-Hant': '按出現次數統計，非節數——同一節可能出現多次。',
+    'en': 'Counted by occurrence, not by verse — one verse may carry the '
+        'word more than once.',
+  },
+  'wordChartInBooks': {
+    'zh-Hans': '分布于 {total} 卷中的 {n} 卷',
+    'zh-Hant': '分佈於 {total} 卷中的 {n} 卷',
+    'en': 'In {n} of {total} books',
+  },
+  'wordChartSortCanonical': {
+    'zh-Hans': '正典顺序',
+    'zh-Hant': '正典順序',
+    'en': 'Canonical',
+  },
+  'wordChartSortMost': {
+    'zh-Hans': '由多到少',
+    'zh-Hant': '由多到少',
+    'en': 'Most first',
+  },
+  // The per-book map in the concordance index is whole-Bible and cannot
+  // be narrowed, so under a limit the chart says plainly that it is not
+  // showing the limited figure — bwh23's parenthesised denominator, in
+  // reverse.
+  'wordChartWholeBible': {
+    'zh-Hans': '全圣经统计，不受当前范围（{name}）限制',
+    'zh-Hant': '全聖經統計，不受目前範圍（{name}）限制',
+    'en': 'Whole Bible — not narrowed by the active limit ({name})',
+  },
+  'wordChartCurrentBook': {
+    'zh-Hans': '当前阅读',
+    'zh-Hant': '目前閱讀',
+    'en': 'Currently reading',
+  },
+  // The rank of this word among the words of that one book — a figure
+  // the Eagle's View profile carries and BibleWorks has no equivalent
+  // for. Greek only, so the row simply omits it elsewhere.
+  'wordChartRankInBook': {
+    'zh-Hans': '在该卷中排第 {n} 位',
+    'zh-Hant': '在該卷中排第 {n} 位',
+    'en': 'Ranked #{n} in that book',
+  },
   'analysisTabKwic': {
     'zh-Hans': '上下文',
     'zh-Hant': '上下文',

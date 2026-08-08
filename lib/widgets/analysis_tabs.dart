@@ -28,9 +28,13 @@ import 'package:seeksparks/utils/scripture_markup.dart';
 import 'package:seeksparks/services/cross_reference_service.dart';
 import 'package:seeksparks/services/strongs_service.dart';
 import 'package:seeksparks/utils/reference_parser.dart' show BibleReference;
-import 'package:seeksparks/utils/search_scope.dart' show scopedCountLabel;
+import 'package:seeksparks/constants/book_groups.dart' show oldTestamentBooks;
+import 'package:seeksparks/utils/search_scope.dart'
+    show kScopeAllBooks, scopedCountLabel;
+import 'package:seeksparks/utils/search_stats.dart';
 import 'package:seeksparks/utils/verse_list.dart' show applySearchLimit;
 import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
+import 'package:seeksparks/widgets/word_distribution_strip.dart';
 
 /// Which pane the Analysis window is showing.
 /// 2026-08-06: `kwic` joins them — BibleWorks' Key Word In Context
@@ -444,11 +448,26 @@ class WordStatsPane extends StatefulWidget {
     required this.onOpenStrongs,
     this.scope,
     this.scopeName,
+    this.version,
+    this.currentBook,
+    this.onOpenChart,
   });
 
   final List<OriginalWord> words;
   final String locale;
   final ValueChanged<String> onOpenStrongs;
+
+  /// The reading version, so the strip's tooltip and the chart it opens
+  /// name books the way the text being read names them (#283).
+  final String? version;
+
+  /// Canonical English name of the book in focus, marked on the strip.
+  final String? currentBook;
+
+  /// Open the labelled chart for this Strong's number in the centre
+  /// pane. Null where there is no centre pane to open it into, in which
+  /// case the strip is drawn but not tappable.
+  final ValueChanged<String>? onOpenChart;
 
   /// The active search limit as verse keys, and what to call it. This
   /// is a count OVER the corpus, so it honours the scope and says so —
@@ -495,6 +514,14 @@ class _WordStatsPaneState extends State<WordStatsPane> {
                 (r) => '${r.englishBook}-${r.chapter}-${r.verse}').length,
         gloss: entry?.localizedGloss(widget.locale) ?? '',
         greek: await GreekStatsService.lookup(w.strongs),
+        // Every book kept, including the ones at zero: the strip has no
+        // labels, so a book's POSITION is the only thing naming it.
+        distribution: buildDistributionFromCounts(
+          counts: result?.byBook ?? const <String, int>{},
+          bookOrder: kScopeAllBooks,
+          oldTestamentBooks: oldTestamentBooks,
+          includeEmpty: true,
+        ),
       ));
     }
     // Rarest first — that is the interesting end of the list, and under
@@ -598,6 +625,22 @@ class _WordStatsPaneState extends State<WordStatsPane> {
                         )),
                       ),
                     ),
+                    // The shape of the word across the canon. Above it,
+                    // the bar says how MANY; this says WHERE, which is
+                    // the observation the total hides.
+                    if (!r.distribution.isEmpty) ...[
+                      const SizedBox(height: 3),
+                      WordDistributionStrip(
+                        distribution: r.distribution,
+                        currentBook: widget.currentBook,
+                        semanticsLabel: uiStrings['wordChartOpen']
+                                ?[widget.locale] ??
+                            'Open the full distribution chart',
+                        onTap: widget.onOpenChart == null
+                            ? null
+                            : () => widget.onOpenChart!(r.word.strongs),
+                      ),
+                    ],
                     if (r.greek != null) _distribution(context, r.greek!),
                     if (r.gloss.isNotEmpty) ...[
                       const SizedBox(height: 3),
@@ -710,8 +753,16 @@ class _StatRow {
     required this.total,
     required this.inScope,
     required this.gloss,
+    required this.distribution,
     this.greek,
   });
+
+  /// Per-book occurrences over the whole Bible, empty books included.
+  ///
+  /// Sourced from the concordance index rather than the Eagle's View
+  /// Greek profile, which is what makes the strip appear for HEBREW
+  /// words too — `greek` below is null for every one of them.
+  final SearchDistribution distribution;
 
   final OriginalWord word;
 
