@@ -432,55 +432,45 @@ TextDecoration wordMarkUnderline(WordMark mark) => switch (mark) {
 /// what makes a wall of interleaved parallel text readable — you find
 /// the version you want by colour, not by reading.
 ///
-/// Codes are grouped so related versions sit near each other in hue:
-/// English literal = blue, English traditional = green, Chinese = amber,
-/// original languages = red/purple (they are the ones you scan for).
+/// Keys are version CODES — `bibleVersions[].value`, plus the two
+/// pseudo-codes the originals row uses. A hand-picked hue for every one,
+/// grouped so related editions stay near each other while remaining
+/// separable:
+///   red = original languages   blue/green = English
+///   amber = 和合本 family        purple     = 梁家铿
+///
+/// 2026-08-07 this map was half keyed on codes and half on LABELS,
+/// because `WbVersionTag` was being handed a label. That made the
+/// catalog's own colours dependent on display text, so renaming a
+/// version silently dropped it to the HSL hash below — and a hash gives
+/// a stable colour but guarantees no SEPARATION: two versions can land
+/// a few degrees apart and stop carrying information.
+///
+/// 2026-08-08 (task #285) the label keys are gone and `WbVersionTag`
+/// takes a code, so the rename that was about to trip this could not.
+/// `test/version_label_scheme_test.dart` asserts every catalog code has
+/// a row here and that no two share a colour; the hash stays only so a
+/// brand-new code is never invisible.
 const Map<String, Color> kVersionTagColors = {
   // Original languages — the highest-value lines, so the strongest hue.
+  // `wtt` / `bgt` are not catalog editions: they are the labels the
+  // Browse window prints on its Hebrew and Greek rows, after BibleWorks.
   'wtt': Color(0xFF9C1F1F), // Hebrew OT
   'bgt': Color(0xFF9C1F1F), // Greek NT
   'original': Color(0xFF9C1F1F),
+  'lxxwh': Color(0xFFB03030), // LXX+WH — Greek, so the red family
   // English
   'nasb': Color(0xFF1B4F9C),
-  'esv': Color(0xFF1B4F9C),
   'leb': Color(0xFF2A6BAF),
   'kjv': Color(0xFF1F7A3D),
-  'asv': Color(0xFF1F7A3D),
-  'web': Color(0xFF2A8A4A),
-  // Chinese
-  'cuvs': Color(0xFF9A6212),
-  'cuvt': Color(0xFF9A6212),
-  'cuvs-yhwh': Color(0xFFB0721A),
-  'cuvt-yhwh': Color(0xFFB0721A),
-  'ljk1': Color(0xFF7A3FA0),
-  'ljk2': Color(0xFF7A3FA0),
-
-  // 2026-08-07: the keys above are version CODES, but WbVersionTag is
-  // handed a LABEL ("CUV+S(简)"), so almost none of them ever matched and
-  // most versions fell through to the HSL hash below. A hash gives a
-  // stable colour per string, but it does not guarantee SEPARATION: two
-  // versions can land a few degrees apart and become indistinguishable,
-  // which is how a colour that is supposed to identify a version stops
-  // carrying information.
-  //
-  // Every label the catalog can currently print is listed here with a
-  // hand-picked hue, grouped so related editions stay near each other
-  // while remaining separable:
-  //   red    = original languages   blue/green = English
-  //   amber  = 和合本 family          purple     = 梁家铿
-  // Add a row here whenever a version is added; the hash stays only as
-  // a last resort so a new code is never invisible.
-  'nasb-ev': Color(0xFF3E63B8),
-  'nsn+': Color(0xFF5A7FD4),
+  'kjvs': Color(0xFF2F9E57),
   'bsb': Color(0xFF14806B),
-  'kjv+s': Color(0xFF2F9E57),
-  'lxx+wh': Color(0xFFB03030),
-  'cuvs(简)': Color(0xFFB0721A),
-  'cuvs(繁)': Color(0xFFC98A2E),
-  'cuv+s(简)': Color(0xFF8A5A10),
-  'cuv+s(雅伟)': Color(0xFF6E4A14),
-  'ljk(简)': Color(0xFF7A3FA0),
-  'ljk(繁)': Color(0xFF9B62BE),
+  // Chinese — 和合本 family in amber, 梁家铿译本 in purple.
+  'cuvs-yhwh': Color(0xFFB0721A), // 雅简+
+  'cuvs-yhwh-tr': Color(0xFFC98A2E), // 雅繁+
+  'cuvs-plus': Color(0xFF8A5A10), // 和简+
+  'biblexg-v2': Color(0xFF7A3FA0), // 梁简
+  'biblexg-v2-tr': Color(0xFF9B62BE), // 梁繁
 };
 
 /// Fallback for a version with no assigned colour — derived from the

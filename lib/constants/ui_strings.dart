@@ -179,9 +179,9 @@ const uiStrings = {
     'en': 'LXX+WH (Septuagint + Westcott-Hort)',
   },
   'aboutVerCuvsPlus': {
-    'zh-Hans': "CUV+S 和合本+Strong's（简体）",
-    'zh-Hant': "CUV+S 和合本+Strong's（簡體）",
-    'en': "CUV+S (Chinese Union Version with Strong's, Simplified)",
+    'zh-Hans': "和简+ 和合本+Strong's（简体）",
+    'zh-Hant': "和简+ 和合本+Strong's（簡體）",
+    'en': "和简+ (Chinese Union Version with Strong's, Simplified)",
   },
   'aboutLicenseEaglesView': {
     'zh-Hans': '经文属公有领域 · 电子版本及编号对照来自 Eagle\'s View。',
@@ -4341,9 +4341,9 @@ const uiStrings = {
         '© The Lockman Foundation · used under quotation provisions.',
   },
   'aboutVerCuvsYhwh': {
-    'zh-Hans': 'CUVS-YHWH 和合本雅伟版（简 / 繁）',
-    'zh-Hant': 'CUVS-YHWH 和合本雅偉版（簡 / 繁）',
-    'en': 'CUVS-YHWH (和合本雅伟版, simplified / traditional)',
+    'zh-Hans': '雅简+ / 雅繁+ 和合本雅伟版（简 / 繁）',
+    'zh-Hant': '雅简+ / 雅繁+ 和合本雅偉版（簡 / 繁）',
+    'en': '雅简+ / 雅繁+ (和合本雅伟版, simplified / traditional)',
   },
   'aboutLicenseCuvsYhwh': {
     'zh-Hans': '© 雅伟的话事工 · 经授权使用。',
@@ -4352,9 +4352,9 @@ const uiStrings = {
         '© Yahweh De Hua Ministry · used with permission.',
   },
   'aboutVerLjk': {
-    'zh-Hans': 'LJK1 / LJK2 梁家铿译本（2025年 · 第二版，简 / 繁）',
-    'zh-Hant': 'LJK1 / LJK2 梁家鏗譯本（2025年 · 第二版，簡 / 繁）',
-    'en': 'LJK1 / LJK2 — Liang Jiakeng translation (2025, 2nd ed., simplified / traditional)',
+    'zh-Hans': '梁简 / 梁繁 梁家铿译本（2025年 · 第二版，简 / 繁）',
+    'zh-Hant': '梁简 / 梁繁 梁家鏗譯本（2025年 · 第二版，簡 / 繁）',
+    'en': '梁简 / 梁繁 — Liang Jiakeng translation (2025, 2nd ed., simplified / traditional)',
   },
   'aboutLicenseLjk': {
     'zh-Hans': '© 圣经释经事工 · 经授权使用。',
@@ -5647,6 +5647,38 @@ const uiStrings = {
     'zh-Hans': '当前版本没有这一章。',
     'zh-Hant': '目前版本沒有這一章。',
     'en': 'This chapter is not available in the current version.',
+  },
+  // The same message with the chapter NAMED. The reader arrived here by
+  // navigating somewhere specific, so which reference the current
+  // edition is missing is the whole content of the screen. `{book}` is
+  // filled by `localeAwareBookName`, so it follows the READING VERSION's
+  // script rather than the UI locale (task #283).
+  'chapterUnavailableAt': {
+    'zh-Hans': '当前版本没有{book} {n} 章。',
+    'zh-Hant': '目前版本沒有{book} {n} 章。',
+    'en': '{book} {n} is not available in the current version.',
+  },
+  // Names the edition to switch to by the badge the app actually prints
+  // in the gutter (`雅简+`), never by an internal code. Used only when
+  // the catalog can prove a same-language full-canon sibling exists;
+  // otherwise `chapterSwitchAny` claims nothing it cannot back up.
+  'chapterSwitchTo': {
+    'zh-Hans': '请切换到 {version}。',
+    'zh-Hant': '請切換到 {version}。',
+    'en': 'Switch to {version}.',
+  },
+  'chapterSwitchAny': {
+    'zh-Hans': '请切换到包含此章节的版本。',
+    'zh-Hant': '請切換到包含此章節的版本。',
+    'en': 'Switch to a version that includes it.',
+  },
+  // Referenced by the reading pane since v1.3.12 but never defined, so
+  // the lookup returned null every time and the hardcoded fallback ran
+  // — which showed a Traditional reader Simplified text.
+  'endOfBible': {
+    'zh-Hans': '已到尽头',
+    'zh-Hant': '已到盡頭',
+    'en': 'End of Bible',
   },
   'loadErrorTitle': {
     'zh-Hans': '加载失败',

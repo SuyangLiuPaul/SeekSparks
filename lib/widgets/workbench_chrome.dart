@@ -15,7 +15,10 @@ library;
 
 import 'package:flutter/material.dart';
 
+import 'package:seeksparks/constants/bible_versions.dart'
+    show shortBibleVersionLabel;
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:seeksparks/utils/version_gutter.dart';
 import 'package:seeksparks/constants/workbench_theme.dart';
 
 // ── Menu bar ────────────────────────────────────────────────────────
@@ -426,8 +429,15 @@ class WorkbenchStatusBar extends StatelessWidget {
 /// colour, without reading. Rendered inline (not as a chip on its own
 /// row) so it costs no vertical space.
 class WbVersionTag extends StatelessWidget {
-  const WbVersionTag({super.key, required this.code, this.width = 92});
+  const WbVersionTag({super.key, required this.code, this.width});
 
+  /// A version CODE (`cuvs-yhwh`, `kjv`), or one of the Browse window's
+  /// two original-language pseudo-codes (`wtt` / `bgt`).
+  ///
+  /// NOT a label — it used to be, and that is what made the per-version
+  /// colour map key on display text, so renaming an edition detached it
+  /// from its hue. Looking both the text and the colour up from one key
+  /// removes that whole class of bug.
   final String code;
 
   /// Fixed width so the text of every version starts on the same column.
@@ -435,39 +445,32 @@ class WbVersionTag extends StatelessWidget {
   /// run down one translation in a wall of interleaved rows — so this
   /// stays fixed rather than sizing to content.
   ///
-  /// 2026-08-07: 52 -> 68 -> 92. Twice too narrow, because twice I sized
-  /// it against the longest label I happened to be looking at instead of
-  /// the longest label that EXISTS. 52 cut "CUVS(简)" to "CUVS("; 68
-  /// still ellipsised "CUV+S(雅伟)", which is 5 Latin characters plus two
-  /// FULL-WIDTH CJK glyphs and a bracket pair — roughly 85pt at this
-  /// size, not 68.
+  /// Null means "wide enough for this one label". A caller rendering a
+  /// STACK of editions passes a single [versionGutterWidth] computed
+  /// over the whole stack instead, so they share one column.
   ///
-  /// 92 clears it with room for one more CJK character. If a longer
-  /// label is ever added, widen this deliberately rather than trusting
-  /// the ellipsis to look intentional — the gutter is chrome, and chrome
-  /// that truncates its own labels reads as a bug however honestly it
-  /// does it.
-  ///
-  /// The font was never the problem: LJK(简) always rendered its 简
-  /// perfectly in this same gutter. A missing glyph and a too-narrow box
-  /// look identical on screen, and that counter-example was sitting in
-  /// the reporter's own screenshot the whole time.
-  final double width;
+  /// This was a hard-coded 92 and was wrong three times (52 → 68 → 92);
+  /// `lib/utils/version_gutter.dart` documents both reasons, the second
+  /// of which — the reader's `menuScale` multiplies the type size but
+  /// not the box — was still live at 92.
+  final double? width;
 
   @override
   Widget build(BuildContext context) {
     final t = WbType.of(context);
+    final fontSize = t.chrome - 0.5;
+    final label = shortBibleVersionLabel(code).toUpperCase();
     return SizedBox(
-      width: width,
+      width: width ?? versionGutterWidthForLabels([label], fontSize),
       child: Text(
-        code.toUpperCase(),
+        label,
         maxLines: 1,
         // Ellipsis, not clip. If a future label outgrows the gutter
         // again, "CUV+S…" is honest about being shortened; "CUV+S("
         // looks like the string itself is damaged.
         overflow: TextOverflow.ellipsis,
         style: TextStyle(
-          fontSize: t.chrome - 0.5,
+          fontSize: fontSize,
           fontWeight: FontWeight.w700,
           height: t.lineHeight,
           color: versionTagColor(code),

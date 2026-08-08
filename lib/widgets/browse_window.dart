@@ -43,6 +43,7 @@ import 'package:seeksparks/services/tagged_text_service.dart';
 import 'package:seeksparks/utils/morphology.dart' show describeMorphology;
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 import 'package:seeksparks/utils/strongs_inline.dart';
+import 'package:seeksparks/utils/version_gutter.dart' show versionGutterWidth;
 import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
 import 'package:seeksparks/widgets/workbench_chrome.dart' show WbVersionTag;
 
@@ -50,7 +51,7 @@ import 'package:seeksparks/widgets/workbench_chrome.dart' show WbVersionTag;
 class _BrowseRow {
   const _BrowseRow({
     required this.verse,
-    required this.label,
+    required this.code,
     required this.reference,
     required this.firstOfVerse,
     this.text,
@@ -61,8 +62,15 @@ class _BrowseRow {
 
   final int verse;
 
-  /// Short version code shown in the gutter (NAS / KJV / WTT / BGT).
-  final String label;
+  /// The edition this line came from — a catalog code (`kjv`,
+  /// `cuvs-yhwh`), or `wtt` / `bgt` for the original-language rows,
+  /// which are assembled here rather than loaded from the catalog.
+  ///
+  /// The gutter resolves its own display label from this. The row used
+  /// to store the label instead, which meant the word-identity keys it
+  /// hands out were built from display text — so renaming an edition
+  /// would have silently invalidated every pinned word.
+  final String code;
 
   /// Localised "Genesis 1:1", printed after the tag like BibleWorks.
   final String reference;
@@ -333,7 +341,7 @@ class _BrowseWindowState extends State<BrowseWindow> {
         }
         rows.add(_BrowseRow(
           verse: n,
-          label: shortBibleVersionLabel(code),
+          code: code,
           reference: reference,
           firstOfVerse: first,
           text: text,
@@ -353,7 +361,7 @@ class _BrowseWindowState extends State<BrowseWindow> {
         final isHebrew = words.first.strongs.startsWith('H');
         rows.add(_BrowseRow(
           verse: n,
-          label: isHebrew ? 'WTT' : 'BGT',
+          code: isHebrew ? 'wtt' : 'bgt',
           reference: reference,
           firstOfVerse: first,
           words: words,
@@ -448,6 +456,15 @@ class _BrowseWindowState extends State<BrowseWindow> {
             ),
           );
         }
+        // One gutter for the chapter, sized to the editions on screen —
+        // not to the catalog, and not to whatever this row happens to
+        // print. Cheap enough to recompute per build (a handful of short
+        // strings) and it has to be, because `t.chrome` follows the
+        // reader's font-size slider.
+        final gutterWidth = versionGutterWidth(
+          {for (final r in rows) r.code},
+          t.chrome - 0.5,
+        );
         return Container(
           color: wb.paneBg,
           child: ScrollablePositionedList.builder(
@@ -456,6 +473,7 @@ class _BrowseWindowState extends State<BrowseWindow> {
               itemCount: rows.length,
               itemBuilder: (context, i) => _RowView(
                 row: rows[i],
+                gutterWidth: gutterWidth,
                 focused: rows[i].verse == widget.focusedVerse,
                 highlight: widget.highlight,
                 glosses: _glosses,
@@ -482,6 +500,7 @@ class _RowView extends StatelessWidget {
     required this.focused,
     required this.glosses,
     required this.keyPrefix,
+    required this.gutterWidth,
     this.focus = AnalysisFocus.empty,
     this.onWordTap,
     this.onWordHover,
@@ -493,6 +512,12 @@ class _RowView extends StatelessWidget {
   final bool focused;
   final SearchHighlight highlight;
   final Map<String, StrongsEntry?> glosses;
+
+  /// One width shared by every row in the chapter, so the verse text of
+  /// all editions starts on the same x. Computed once from the editions
+  /// actually on screen — a reader comparing four Chinese texts gets a
+  /// two-character gutter and does not pay for `LXX+WH` existing.
+  final double gutterWidth;
 
   /// "Genesis|1" — the book and chapter half of every [browseWordKey]
   /// this row hands out.
@@ -524,7 +549,7 @@ class _RowView extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            WbVersionTag(code: row.label),
+            WbVersionTag(code: row.code, width: gutterWidth),
             Expanded(
               child: row.words != null
                   ? _OriginalsLine(
@@ -732,7 +757,7 @@ class _TaggedLine extends StatelessWidget {
                     verse: row.verse,
                     occurrence: browseWordKey(
                       prefix: keyPrefix,
-                      versionCode: row.label,
+                      versionCode: row.code,
                       verse: row.verse,
                       index: i,
                     ),
@@ -833,7 +858,7 @@ class _OriginalsLine extends StatelessWidget {
                     verse: row.verse,
                     occurrence: browseWordKey(
                       prefix: keyPrefix,
-                      versionCode: row.label,
+                      versionCode: row.code,
                       verse: row.verse,
                       index: i,
                     ),

@@ -1,5 +1,29 @@
 class BibleVersionInfo {
   final String value;
+
+  /// The badge printed in the parallel gutter, the reading-pane chip,
+  /// the Browse header and the Copy Center — and, because the command
+  /// line accepts it as a token, also a typed handle for the edition.
+  ///
+  /// 2026-08-08 (task #285): the Chinese editions no longer carry Latin
+  /// abbreviations. A Chinese reader had to decode `CUVS` and `LJK` to
+  /// pick a Chinese text, which is the wrong way round.
+  ///
+  /// The scheme, confirmed by the owner:
+  ///   1st character = WHICH TEXT   雅 = 和合本雅伟版, 和 = 和合本, 梁 = 梁家铿
+  ///   2nd character = WHICH SCRIPT 简 = 简体, 繁 = 繁體
+  ///   trailing `+`  = carries Strong's tagging
+  ///
+  /// That is the same information architecture BibleWorks uses for its
+  /// own Chinese rows — `bwh42` lists `CUS` and `CU5` under the section
+  /// headings *ChineseGB* and *ChineseB5*, one identifier per (text,
+  /// script) pair, with the machine-readable layer marked by a suffix
+  /// (`BNT`/`BNM`). Only the alphabet differs.
+  ///
+  /// The English and Greek rows keep their Latin abbreviations on
+  /// purpose: KJV, LEB, NASB, BSB, KJV+S and LXX+WH are the names those
+  /// texts are actually known by, and sinicising them would invent
+  /// abbreviations no reader has ever seen.
   final String shortLabel;
   final String menuLabel;
 
@@ -91,7 +115,7 @@ const bibleVersions = <BibleVersionInfo>[
   // `assets/niv.json` was also removed in the same change.
   BibleVersionInfo(
     value: 'cuvs-yhwh',
-    shortLabel: 'CUVS(简)',
+    shortLabel: '雅简+',
     menuLabel: '和合本雅伟版(简体)',
     language: 'zh-Hans',
     // 2026-08 (ported from YsWords v1.4.6): the edition-year sub-line was
@@ -101,21 +125,30 @@ const bibleVersions = <BibleVersionInfo>[
     // to '' and is only rendered by version_picker_sheet.dart behind an
     // isNotEmpty guard, so omitting it simply hides the line.
   ),
+  // ⚠️ `雅繁+` claims Strong's that this row does not ship TODAY:
+  // `TaggedTextService.taggedVersions` holds `cuvs-yhwh` but not
+  // `cuvs-yhwh-tr`, because `assets/tagged/` has no traditional set.
+  // The label is the one the owner wrote out in the confirmed scheme
+  // and it is kept verbatim — naming is their call — but the gap is
+  // real and `test/version_label_scheme_test.dart` pins it as a named
+  // exception so it cannot quietly become the norm. Closing it means
+  // serving the simplified tagging through a 简→繁 conversion, which
+  // the app has no converter for.
   BibleVersionInfo(
     value: 'cuvs-yhwh-tr',
-    shortLabel: 'CUVS(繁)',
+    shortLabel: '雅繁+',
     menuLabel: '和合本雅伟版(繁體)',
     language: 'zh-Hant',
   ),
   BibleVersionInfo(
     value: 'biblexg-v2',
-    shortLabel: 'LJK(简)',
+    shortLabel: '梁简',
     menuLabel: '梁家铿译本(简体)',
     language: 'zh-Hans',
   ),
   BibleVersionInfo(
     value: 'biblexg-v2-tr',
-    shortLabel: 'LJK(繁)',
+    shortLabel: '梁繁',
     menuLabel: '梁家铿譯本(繁體)',
     language: 'zh-Hant',
   ),
@@ -128,7 +161,7 @@ const bibleVersions = <BibleVersionInfo>[
   // is a genuinely different translation, so it keeps the default.
   BibleVersionInfo(
     value: 'cuvs-plus',
-    shortLabel: 'CUV+S(简)',
+    shortLabel: '和简+',
     menuLabel: "和合本+Strong's(简体)",
     language: 'zh-Hans',
     editionYear: '1919 / 和合本原文',

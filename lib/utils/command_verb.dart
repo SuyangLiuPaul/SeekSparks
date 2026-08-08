@@ -100,7 +100,9 @@ class VerbVersion {
   /// Internal code (`kjv`, `cuvs-yhwh`).
   final String code;
 
-  /// Short display label (`KJV`, `CUVS(简)`) — also accepted as input.
+  /// Short display label (`KJV`, `雅简+`) — also accepted as input.
+  /// Tokens split on whitespace only, so the `+` that a Chinese label
+  /// ends in survives the tokeniser and `d 雅简+` resolves.
   final String label;
 
   /// Language group (`en`, `zh-Hans`, `zh-Hant`, `grc`).

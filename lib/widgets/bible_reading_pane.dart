@@ -66,6 +66,8 @@ import 'package:seeksparks/utils/short_book_name.dart';
 import 'package:seeksparks/widgets/google_g_logo.dart';
 import 'package:seeksparks/widgets/illustration_image.dart';
 import 'package:seeksparks/utils/floating_toast.dart' show showFloatingToast;
+import 'package:seeksparks/utils/missing_chapter_message.dart'
+    show missingChapterMessage;
 import 'package:seeksparks/utils/version_mapper.dart'
     show translateBookName, toEnglish, localeAwareBookName;
 import 'package:seeksparks/widgets/highlights_sheet.dart';
@@ -6025,9 +6027,12 @@ class _ChapterPreview extends StatelessWidget {
       final msg = isEdge
           ? (uiStrings['endOfBible']?[settings.locale] ??
               (isZh ? '已到尽头' : 'End of Bible'))
-          : (isZh
-              ? '当前版本没有 $book $chapter 章。\n请切换到包含此章节的版本（如 CUVS-YHWH / CNV）。'
-              : '$book $chapter not available in the current version.\nSwitch to a full-canon version (e.g. CUVS-YHWH / CNV / KJV).');
+          : missingChapterMessage(
+              book: book,
+              chapter: chapter,
+              locale: settings.locale,
+              currentVersion: mainProvider.currentVersion,
+            );
       return ColoredBox(
         color: scheme.surface,
         child: Center(
