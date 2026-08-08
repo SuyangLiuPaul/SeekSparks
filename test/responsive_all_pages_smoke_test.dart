@@ -11,6 +11,7 @@ import 'package:seeksparks/models/bible_evidence.dart';
 import 'package:seeksparks/pages/evidence_detail_page.dart';
 import 'package:seeksparks/pages/evidence_page.dart';
 import 'package:seeksparks/pages/family_tree_page.dart';
+import 'package:seeksparks/pages/hebrew_kings_page.dart';
 import 'package:seeksparks/pages/highlights_page.dart';
 import 'package:seeksparks/pages/profile_edit_page.dart';
 import 'package:seeksparks/pages/profiles_page.dart';
@@ -70,6 +71,7 @@ void main() {
     'StatsPage': () => const StatsPage(),
     'CommandSearchPage': () => const CommandSearchPage(),
     'FamilyTreePage': () => const FamilyTreePage(),
+    'HebrewKingsPage': () => const HebrewKingsPage(),
     'BibleTriviaPage': () => const BibleTriviaPage(),
     'EvidencePage': () => const EvidencePage(),
     'EvidenceDetailPage': () =>

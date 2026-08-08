@@ -25,6 +25,7 @@ import 'package:seeksparks/pages/bible_trivia_page.dart';
 import 'package:seeksparks/pages/books_page.dart';
 import 'package:seeksparks/pages/evidence_page.dart';
 import 'package:seeksparks/pages/family_tree_page.dart';
+import 'package:seeksparks/pages/hebrew_kings_page.dart';
 import 'package:seeksparks/pages/library_page.dart';
 import 'package:seeksparks/pages/phrasing_page.dart';
 import 'package:seeksparks/pages/sermons_page.dart';
@@ -525,6 +526,10 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         // `assets/family_tree.json` is the second kind.
         WbMenuItem(s('familyTree', 'Family Tree'),
             () => pushPage(const FamilyTreePage())),
+        // Separate from Family Tree on purpose: the tree is Judah's line
+        // of descent, this is both thrones on one time axis.
+        WbMenuItem(s('hebrewKings', 'Kings of Judah & Israel'),
+            () => pushPage(const HebrewKingsPage())),
         WbMenuItem(s('library', 'Notes & highlights'),
             () => pushPage(const LibraryPage())),
         WbMenuItem(

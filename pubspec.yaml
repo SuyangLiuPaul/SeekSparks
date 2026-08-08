@@ -137,6 +137,7 @@ flutter:
     - assets/sermons/refs.json
     - assets/family_tree.json
     - assets/bible_timeline.json
+    - assets/hebrew_kings.json
     - assets/sermons/en/
     - assets/sermons/zh-CN/
     - assets/sermons/zh-TW/

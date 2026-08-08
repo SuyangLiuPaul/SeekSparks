@@ -1,0 +1,468 @@
+// Guards for the kings-of-Judah-and-Israel resource (#292).
+//
+// Two things are worth testing here and they are different in kind.
+//
+// The DATA is a claim about history, and a JSON file of ancient dates is
+// indistinguishable by inspection from a file of invented ones. So the
+// asset is re-checked against the same invariants
+// `scripts/build_hebrew_kings.py` asserts at build time: the throne is
+// never vacant between the division and the fall, reigns hand over at a
+// single shared year, no two sole reigns overlap. If someone hand-edits
+// the asset instead of the generator, these fail.
+//
+// The LAYOUT is pure geometry with one genuinely hard case — reign
+// lengths span four orders of magnitude, from Manasseh's 55 years to
+// Zimri's seven days — so the label placer is tested directly rather
+// than through a widget.
+
+import 'dart:convert';
+
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter_test/flutter_test.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/models/app_settings.dart';
+import 'package:seeksparks/models/hebrew_king.dart';
+import 'package:seeksparks/pages/hebrew_kings_page.dart';
+import 'package:seeksparks/providers/main_provider.dart';
+import 'package:seeksparks/services/hebrew_kings_service.dart';
+import 'package:seeksparks/utils/kings_chart_layout.dart';
+import 'package:seeksparks/utils/reference_parser.dart';
+
+HebrewKing _king({
+  required String id,
+  required int start,
+  required int end,
+  Kingdom kingdom = Kingdom.judah,
+}) =>
+    HebrewKing(
+      id: id,
+      kingdom: kingdom,
+      house: 'david',
+      names: {'en': id},
+      spans: [ReignSpan(kind: SpanKind.sole, start: start, end: end)],
+      reignStart: start,
+      reignEnd: end,
+    );
+
+void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  group('reignsOverlap', () {
+    test('touching reigns count as contemporaries', () {
+      // Ahaziah of Judah reigned only in 841 BC; Jehu came to Israel's
+      // throne in 841 BC and killed him. A half-open test would report
+      // the two men who met that year as never having overlapped.
+      final ahaziah = _king(id: 'ahaziah_judah', start: -841, end: -841);
+      final jehu = _king(
+        id: 'jehu',
+        start: -841,
+        end: -814,
+        kingdom: Kingdom.israel,
+      );
+      expect(reignsOverlap(ahaziah, jehu), isTrue);
+      expect(reignsOverlap(jehu, ahaziah), isTrue);
+    });
+
+    test('a zero-length reign still overlaps the reign containing it', () {
+      // Zimri held Tirzah seven days, which rounds to a single year.
+      final zimri = _king(
+        id: 'zimri',
+        start: -885,
+        end: -885,
+        kingdom: Kingdom.israel,
+      );
+      final asa = _king(id: 'asa', start: -911, end: -870);
+      expect(reignsOverlap(zimri, asa), isTrue);
+    });
+
+    test('separated reigns do not overlap', () {
+      final earlier = _king(id: 'a', start: -931, end: -913);
+      final later = _king(id: 'b', start: -912, end: -900);
+      expect(reignsOverlap(earlier, later), isFalse);
+    });
+  });
+
+  group('placeLabels', () {
+    test('keeps a minimum gap between neighbours', () {
+      final out = placeLabels([10, 12, 13, 60], 20, 400);
+      for (var i = 1; i < out.length; i++) {
+        expect(out[i] - out[i - 1], greaterThanOrEqualTo(20 - 1e-9));
+      }
+    });
+
+    test('stays inside the chart when the tail would overflow', () {
+      final out = placeLabels([90, 92, 94, 96], 20, 100);
+      expect(out.first, greaterThanOrEqualTo(-1e-9));
+      expect(out.last + 20, lessThanOrEqualTo(100 + 1e-9));
+      for (var i = 1; i < out.length; i++) {
+        expect(out[i] - out[i - 1], greaterThanOrEqualTo(20 - 1e-9));
+      }
+    });
+
+    test('leaves already-spaced labels where they are', () {
+      final out = placeLabels([0, 40, 80], 20, 200);
+      expect(out, [0, 40, 80]);
+    });
+
+    test('distributes evenly rather than piling up when they cannot fit', () {
+      // Ten labels needing 20px each in 100px: an even overlap is
+      // legible, a pile at one end is not.
+      final out = placeLabels(List.generate(10, (i) => 0), 20, 100);
+      expect(out.length, 10);
+      expect(out.first, 0);
+      expect(out.last, closeTo(90, 1e-9));
+      for (var i = 1; i < out.length; i++) {
+        expect(out[i], greaterThan(out[i - 1]));
+      }
+    });
+
+    test('empty and degenerate inputs are safe', () {
+      expect(placeLabels(const [], 20, 100), isEmpty);
+      expect(placeLabels([5, 5], 0, 100), [5, 5]);
+    });
+  });
+
+  group('yForYear', () {
+    test('maps the axis ends to the pixel ends', () {
+      expect(yForYear(-931, -931, -586, 345), 0);
+      expect(yForYear(-586, -931, -586, 345), 345);
+      expect(yForYear(-758, -931, -586, 345), closeTo(173, 1));
+    });
+
+    test('clamps out-of-range years and degenerate axes', () {
+      expect(yForYear(-1000, -931, -586, 345), 0);
+      expect(yForYear(-100, -931, -586, 345), 345);
+      expect(yForYear(-900, -931, -931, 345), 0);
+      expect(yForYear(-900, -931, -586, 0), 0);
+    });
+  });
+
+  group('assets/hebrew_kings.json', () {
+    late HebrewKingsData data;
+    late Map<String, dynamic> raw;
+
+    setUpAll(() async {
+      final text = await rootBundle.loadString('assets/hebrew_kings.json');
+      raw = json.decode(text) as Map<String, dynamic>;
+      data = HebrewKingsData.fromJson(raw);
+    });
+
+    test('declares the chronology it uses, by name and as a field', () {
+      expect(raw['system'], 'thiele');
+      expect(data.systemNameFor('en'), 'Thiele');
+      expect(data.systemNameFor('zh-Hans'), isNotEmpty);
+      expect(data.systemNameFor('zh-Hant'), isNotEmpty);
+      expect(data.sources, isNotEmpty);
+    });
+
+    test('carries every king of both kingdoms plus the united monarchy', () {
+      expect(data.kings.length, 42);
+      expect(data.ofKingdom(Kingdom.judah).length, 20);
+      expect(data.ofKingdom(Kingdom.israel).length, 20);
+      expect(data.ofKingdom(Kingdom.united).length, 2);
+      expect(data.kings.map((k) => k.id).toSet().length, data.kings.length);
+    });
+
+    test('every king is named in all three locales', () {
+      for (final k in data.kings) {
+        for (final locale in ['en', 'zh-Hans', 'zh-Hant']) {
+          expect(k.names[locale], isNotNull, reason: '${k.id}/$locale');
+          expect(k.names[locale], isNotEmpty, reason: '${k.id}/$locale');
+        }
+      }
+    });
+
+    test('spans are well formed and hand over at a shared year', () {
+      for (final k in data.kings) {
+        expect(k.spans, isNotEmpty, reason: k.id);
+        expect(
+          k.spans.where((s) => s.kind == SpanKind.sole).length,
+          lessThanOrEqualTo(1),
+          reason: '${k.id} cannot reign alone twice',
+        );
+        for (final s in k.spans) {
+          expect(s.end, greaterThanOrEqualTo(s.start), reason: k.id);
+          expect(s.start, greaterThan(-1100), reason: k.id);
+          expect(s.end, lessThan(-500), reason: k.id);
+        }
+        for (var i = 1; i < k.spans.length; i++) {
+          expect(k.spans[i].start, k.spans[i - 1].end, reason: k.id);
+        }
+        expect(k.reignStart, k.spans.first.start, reason: k.id);
+        expect(k.reignEnd, k.spans.last.end, reason: k.id);
+      }
+    });
+
+    test('the throne is never vacant from the division to the fall', () {
+      // Not "sole reigns tile the axis": between 885 and 880 Israel had
+      // no single recognised king, Tibni and Omri each claiming it. So
+      // the union of sole AND rival spans is what must be unbroken.
+      for (final (kingdom, lastYear) in [
+        (Kingdom.judah, -586),
+        (Kingdom.israel, -722),
+      ]) {
+        final held = <(int, int, String)>[];
+        for (final k in data.ofKingdom(kingdom)) {
+          for (final s in k.spans) {
+            if (s.kind != SpanKind.coregency) {
+              held.add((s.start, s.end, k.id));
+            }
+          }
+        }
+        held.sort((a, b) => a.$1.compareTo(b.$1));
+        expect(held.first.$1, -931, reason: '$kingdom');
+        var reach = held.first.$2;
+        for (final (start, end, id) in held.skip(1)) {
+          expect(start, lessThanOrEqualTo(reach),
+              reason: '$kingdom: throne vacant before $id');
+          if (end > reach) reach = end;
+        }
+        expect(reach, lastYear, reason: '$kingdom');
+      }
+    });
+
+    test('no two kings of one kingdom reign alone at the same time', () {
+      for (final kingdom in [Kingdom.judah, Kingdom.israel]) {
+        final sole = data
+            .ofKingdom(kingdom)
+            .map((k) => (k, k.soleReign))
+            .where((e) => e.$2 != null)
+            .toList();
+        for (var i = 0; i < sole.length; i++) {
+          for (var j = i + 1; j < sole.length; j++) {
+            final a = sole[i].$2!;
+            final b = sole[j].$2!;
+            final overlap = a.start < b.end && b.start < a.end;
+            expect(overlap, isFalse,
+                reason: '${sole[i].$1.id} and ${sole[j].$1.id}');
+          }
+        }
+      }
+    });
+
+    test('co-regencies and rival claims are modelled, not flattened', () {
+      final coregents = data.kings
+          .where((k) => k.spans.any((s) => s.kind == SpanKind.coregency))
+          .map((k) => k.id)
+          .toSet();
+      // Thiele's six Judean co-regencies plus Jeroboam II in Israel.
+      expect(
+        coregents,
+        containsAll([
+          'jehoshaphat',
+          'jehoram_judah',
+          'uzziah',
+          'jotham',
+          'ahaz',
+          'manasseh',
+          'jeroboam_ii',
+        ]),
+      );
+
+      final tibni = data.byId('tibni');
+      expect(tibni, isNotNull);
+      // Tibni never reigned alone, which is exactly why a reign has to
+      // be a list of spans rather than one bar.
+      expect(tibni!.isRival, isTrue);
+      expect(tibni.soleReign, isNull);
+      expect(data.byId('pekah')!.spans.first.kind, SpanKind.rival);
+    });
+
+    test('Asa overlaps the northern kings the synchronisms require', () {
+      final asa = data.byId('asa')!;
+      expect(
+        data.contemporariesOf(asa).map((k) => k.id).toList(),
+        ['jeroboam_i', 'nadab', 'baasha', 'elah', 'zimri', 'tibni', 'omri',
+            'ahab'],
+      );
+    });
+
+    test('contemporaries are symmetric and cross the border', () {
+      for (final k in data.kings.where((e) => e.kingdom != Kingdom.united)) {
+        for (final c in data.contemporariesOf(k)) {
+          expect(c.kingdom, isNot(k.kingdom), reason: '${k.id}/${c.id}');
+          expect(data.contemporariesOf(c).map((e) => e.id), contains(k.id));
+        }
+      }
+      // The united monarchy predates the split, so it has none.
+      expect(data.contemporariesOf(data.byId('solomon')!), isEmpty);
+    });
+
+    test('Chronicles is cited for Judah only, and Kings for everyone', () {
+      for (final k in data.ofKingdom(Kingdom.israel)) {
+        expect(k.chroniclesRef, isNull, reason: k.id);
+      }
+      for (final k in data.ofKingdom(Kingdom.judah)) {
+        expect(k.chroniclesRef, isNotNull, reason: k.id);
+      }
+      for (final k in data.kings) {
+        expect(k.kingsRef, isNotNull, reason: k.id);
+      }
+    });
+
+    test('every cited reference round-trips through the app parser', () {
+      for (final k in data.kings) {
+        for (final ref in [k.kingsRef, k.chroniclesRef, k.accessionRef]) {
+          if (ref == null) continue;
+          expect(parseReference(ref), isNotNull, reason: '${k.id}: $ref');
+        }
+      }
+      for (final e in data.epochs) {
+        if (e.ref != null) {
+          expect(parseReference(e.ref!), isNotNull, reason: e.id);
+        }
+      }
+    });
+
+    test('the epochs the chart marks are present and dated', () {
+      final byId = {for (final e in data.epochs) e.id: e};
+      expect(byId['division']!.year, -931);
+      expect(byId['samaria']!.year, -722);
+      expect(byId['jerusalem']!.year, -586);
+      for (final e in data.epochs) {
+        for (final locale in ['en', 'zh-Hans', 'zh-Hant']) {
+          expect(e.names[locale], isNotEmpty, reason: '${e.id}/$locale');
+        }
+      }
+    });
+
+    test('the axis extent spans David to the exile', () {
+      final (lo, hi) = data.extent;
+      expect(lo, -1010);
+      expect(hi, -586);
+    });
+  });
+
+  // The page's whole reason for existing is that selecting a king shows
+  // who stood on the other throne. Rendered at desktop width so the
+  // detail panel is present rather than behind a sheet.
+  group('HebrewKingsPage', () {
+    // Rendered in the app's default zh-Hans: AppSettings only reads the
+    // persisted locale from loadSettings(), which nothing calls here, and
+    // setLocale() leaves a notification-rescheduling timer pending that
+    // fails the widget-tree teardown. Testing the shipped default is
+    // worth more than testing English anyway — the ui_strings coverage
+    // check below is what guards the other two locales.
+    Future<void> pump(WidgetTester tester, Size size) async {
+      SharedPreferences.setMockInitialValues(<String, Object>{});
+      addTearDown(tester.view.reset);
+      tester.view.devicePixelRatio = 1.0;
+      tester.view.physicalSize = size;
+      // Reading the asset is real I/O, which fake-time pumps do not
+      // advance; warming the service cache first makes the FutureBuilder
+      // resolve within the pumps below instead of intermittently.
+      await tester.runAsync(HebrewKingsService.instance.load);
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider(create: (_) => MainProvider()),
+            ChangeNotifierProvider(create: (_) => AppSettings()),
+          ],
+          child: const MaterialApp(home: HebrewKingsPage()),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.pump(const Duration(milliseconds: 400));
+    }
+
+    testWidgets('tapping Asa names the northern kings of his day',
+        (tester) async {
+      await pump(tester, const Size(1440, 1000));
+      expect(tester.takeException(), isNull);
+
+      // Before selection the panel only invites one.
+      expect(find.textContaining('同期在另一国的君王'), findsNothing);
+
+      final asa = find.text('亚撒');
+      expect(asa, findsWidgets);
+      await tester.tapAt(tester.getCenter(asa.first));
+      await tester.pump();
+
+      expect(find.textContaining('同期在另一国的君王 · 以色列 · 8'),
+          findsOneWidget);
+      // Zimri reigned seven days and is still on the chart and in the
+      // list; a scale-only layout would have lost him.
+      expect(find.text('心利'), findsWidgets);
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump(const Duration(milliseconds: 50));
+    });
+
+    testWidgets('every king is labelled, including the shortest reigns',
+        (tester) async {
+      await pump(tester, const Size(1440, 1000));
+      // Zimri (seven days), Shallum (one month), Jehoahaz and Jehoiachin
+      // (three months each) are sub-pixel at any honest scale.
+      for (final name in ['心利', '沙龙', '约哈斯', '约雅斤']) {
+        expect(find.text(name), findsWidgets, reason: name);
+      }
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump(const Duration(milliseconds: 50));
+    });
+
+    testWidgets('names the chronology it is drawn on', (tester) async {
+      await pump(tester, const Size(1440, 1000));
+      expect(find.textContaining('锡尔'), findsWidgets);
+      expect(find.textContaining('尼散月'), findsOneWidget);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump(const Duration(milliseconds: 50));
+    });
+
+    testWidgets('a phone-width chart scrolls sideways instead of squeezing',
+        (tester) async {
+      await pump(tester, const Size(320, 568));
+      expect(tester.takeException(), isNull);
+      expect(
+        find.byWidgetPredicate((w) =>
+            w is SingleChildScrollView && w.scrollDirection == Axis.horizontal),
+        findsWidgets,
+      );
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump(const Duration(milliseconds: 50));
+    });
+  });
+
+  test('every string the page shows exists in all three locales', () {
+    // The page falls back to inline English when a key is missing, so a
+    // forgotten translation ships silently rather than crashing.
+    const keys = [
+      'hebrewKings',
+      'kingsJudah',
+      'kingsIsrael',
+      'kingsUnited',
+      'kingsSole',
+      'kingsCoregency',
+      'kingsRival',
+      'kingsChronology',
+      'kingsSystemsDiffer',
+      'kingsSelectHint',
+      'kingsSources',
+      'kingsReign',
+      'kingsPassages',
+      'kingsAccession',
+      'kingsInKings',
+      'kingsInChronicles',
+      'kingsNoChronicles',
+      'kingsContemporaries',
+      'kingsNoContemporaries',
+      'kingsHouseOf',
+    ];
+    for (final key in keys) {
+      final entry = uiStrings[key];
+      expect(entry, isNotNull, reason: key);
+      for (final locale in ['en', 'zh-Hans', 'zh-Hant']) {
+        expect(entry![locale], isNotNull, reason: '$key/$locale');
+        expect(entry[locale], isNotEmpty, reason: '$key/$locale');
+      }
+    }
+    // The house line is built by substitution, so the placeholder has to
+    // survive into every locale or "House of Omri" loses the name.
+    for (final locale in ['en', 'zh-Hans', 'zh-Hant']) {
+      expect(uiStrings['kingsHouseOf']![locale], contains('{name}'));
+    }
+  });
+}

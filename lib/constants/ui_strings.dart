@@ -5750,6 +5750,111 @@ const uiStrings = {
     'zh-Hant': '聖經家譜',
     'en': 'Family Tree',
   },
+  'hebrewKings': {
+    'zh-Hans': '犹大与以色列列王',
+    'zh-Hant': '猶大與以色列列王',
+    'en': 'Kings of Judah & Israel',
+  },
+  'kingsJudah': {
+    'zh-Hans': '犹大',
+    'zh-Hant': '猶大',
+    'en': 'Judah',
+  },
+  'kingsIsrael': {
+    'zh-Hans': '以色列',
+    'zh-Hant': '以色列',
+    'en': 'Israel',
+  },
+  'kingsUnited': {
+    'zh-Hans': '统一王国',
+    'zh-Hant': '統一王國',
+    'en': 'United monarchy',
+  },
+  'kingsSole': {
+    'zh-Hans': '单独执政',
+    'zh-Hant': '單獨執政',
+    'en': 'Sole reign',
+  },
+  'kingsCoregency': {
+    'zh-Hans': '共同摄政',
+    'zh-Hant': '共同攝政',
+    'en': 'Co-regency',
+  },
+  'kingsRival': {
+    'zh-Hans': '争位并立',
+    'zh-Hant': '爭位並立',
+    'en': 'Rival reign',
+  },
+  'kingsChronology': {
+    'zh-Hans': '年代系统',
+    'zh-Hant': '年代系統',
+    'en': 'Chronology',
+  },
+  'kingsSystemsDiffer': {
+    'zh-Hans': '各年代系统在以尼散月或提斯利月为岁首、登基年的算法、共同摄政以及与亚述、巴比伦的同步年代上有分歧；采用奥尔布赖特或加利尔系统的注释书会给出不同的年份。',
+    'zh-Hant': '各年代系統在以尼散月或提斯利月為歲首、登基年的算法、共同攝政以及與亞述、巴比倫的同步年代上有分歧；採用奧爾布賴特或加利爾系統的註釋書會給出不同的年份。',
+    'en': 'Chronologies differ over the Nisan or Tishri new year, '
+        'accession-year reckoning, co-regencies and the Assyrian and '
+        'Babylonian synchronisms; a commentary following Albright or Galil '
+        'will give other dates.',
+  },
+  'kingsSelectHint': {
+    'zh-Hans': '选择一位君王，即可看见他在位时另一国的君王，以及《列王纪》与《历代志》中记载他的经文。',
+    'zh-Hant': '選擇一位君王，即可看見他在位時另一國的君王，以及《列王紀》與《歷代志》中記載他的經文。',
+    'en': 'Select a king to see who held the other throne while he reigned, '
+        'and where his reign is told in Kings and in Chronicles.',
+  },
+  'kingsSources': {
+    'zh-Hans': '资料来源',
+    'zh-Hant': '資料來源',
+    'en': 'Sources',
+  },
+  'kingsReign': {
+    'zh-Hans': '在位',
+    'zh-Hant': '在位',
+    'en': 'Reign',
+  },
+  'kingsPassages': {
+    'zh-Hans': '记载出处',
+    'zh-Hant': '記載出處',
+    'en': 'Where it is told',
+  },
+  'kingsAccession': {
+    'zh-Hans': '登基同步经文',
+    'zh-Hant': '登基同步經文',
+    'en': 'Accession synchronism',
+  },
+  'kingsInKings': {
+    'zh-Hans': '列王纪',
+    'zh-Hant': '列王紀',
+    'en': 'In Kings',
+  },
+  'kingsInChronicles': {
+    'zh-Hans': '历代志',
+    'zh-Hant': '歷代志',
+    'en': 'In Chronicles',
+  },
+  'kingsNoChronicles': {
+    'zh-Hans': '《历代志》只追述大卫的家系，没有为北国诸王另作平行的记载。',
+    'zh-Hant': '《歷代志》只追述大衛的家系，沒有為北國諸王另作平行的記載。',
+    'en': 'Chronicles follows the line of David and gives the northern kings '
+        'no parallel account.',
+  },
+  'kingsContemporaries': {
+    'zh-Hans': '同期在另一国的君王',
+    'zh-Hant': '同期在另一國的君王',
+    'en': 'On the other throne',
+  },
+  'kingsNoContemporaries': {
+    'zh-Hans': '没有在位时间重叠的君王。',
+    'zh-Hant': '沒有在位時間重疊的君王。',
+    'en': 'No overlapping reign.',
+  },
+  'kingsHouseOf': {
+    'zh-Hans': '{name}家',
+    'zh-Hant': '{name}家',
+    'en': 'House of {name}',
+  },
   'familyTreeSearchHint': {
     'zh-Hans': '按姓名或简介搜索…',
     'zh-Hant': '按姓名或簡介搜尋…',
