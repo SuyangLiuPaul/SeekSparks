@@ -131,6 +131,35 @@ class StrongsService {
     }
   }
 
+  /// Entries for many numbers at once, loading each lexicon once.
+  ///
+  /// A word list is one row per lemma and a book scope runs to several
+  /// thousand rows; awaiting [lookup] per row is that many microtask
+  /// hops for what is a map read after the first. Numbers with no entry
+  /// are simply absent from the result — callers must not substitute
+  /// anything for them, because the only other transliteration in
+  /// reach describes a single occurrence rather than the lemma.
+  static Future<Map<String, StrongsEntry>> lookupAll(
+      Iterable<String> numbers) async {
+    final wanted = <String>{
+      for (final n in numbers)
+        if (n.isNotEmpty) n.trim().toUpperCase()
+    }..removeWhere((n) => !n.startsWith('G') && !n.startsWith('H'));
+    if (wanted.isEmpty) return const {};
+    final out = <String, StrongsEntry>{};
+    for (final prefix in const ['G', 'H']) {
+      if (!wanted.any((n) => n.startsWith(prefix))) continue;
+      await lookup('${prefix}1');
+      final lex = (prefix == 'G' ? _greek : _hebrew) ?? const {};
+      for (final n in wanted) {
+        if (!n.startsWith(prefix)) continue;
+        final hit = lex[n];
+        if (hit != null) out[n] = hit;
+      }
+    }
+    return out;
+  }
+
   /// 2026-05-07: search the lexicon by lemma OR transliteration —
   /// the user types Greek/Hebrew text directly (e.g. "ἀγάπη",
   /// "אהבה") OR a romanised form (e.g. "agape", "ahavah") and we

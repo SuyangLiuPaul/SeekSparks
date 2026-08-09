@@ -16,6 +16,7 @@ import 'package:seeksparks/constants/book_names.dart' show bookNameToEnglish;
 import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/pages/strongs_entry_page.dart';
 import 'package:seeksparks/services/originals_service.dart';
+import 'package:seeksparks/services/strongs_service.dart';
 import 'package:seeksparks/utils/app_nav.dart';
 import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
 import 'package:seeksparks/utils/word_list.dart';
@@ -61,9 +62,14 @@ class _WordListPageState extends State<WordListPage> {
     final words = _scope == _Scope.chapter
         ? await OriginalsService.forChapter(_englishBook, widget.chapter)
         : await OriginalsService.forBook(_englishBook);
+    // Every row is a lemma, so every row needs the lexicon headword —
+    // the corpus only carries a romanisation per OCCURRENCE, and the
+    // Hebrew Bible carries none at all.
+    final lexicon =
+        await StrongsService.lookupAll(words.map((w) => w.strongs));
     if (!mounted) return;
     setState(() {
-      _entries = buildWordList(words, sort: _sort);
+      _entries = buildWordList(words, sort: _sort, lexicon: lexicon);
       _loading = false;
     });
   }
@@ -228,10 +234,18 @@ class _WordListPageState extends State<WordListPage> {
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // The headline is the form the reader will meet on the page;
+          // this line says what that form IS. Both the lemma and its
+          // romanisation come from the lexicon, so they always describe
+          // the same word — the form's own romanisation would not.
           Text(
-            e.translit == null || e.translit!.isEmpty
-                ? e.strongs
-                : '${e.strongs} · ${e.translit}',
+            [
+              e.strongs,
+              if (e.lemma != null && e.lemma != e.form) e.lemma!,
+              if (e.lemmaTranslit != null) e.lemmaTranslit!,
+            ].join(' · '),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(fontSize: 12, color: scheme.outline),
           ),
           const SizedBox(height: 4),

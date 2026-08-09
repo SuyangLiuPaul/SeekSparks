@@ -2390,7 +2390,11 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
           w.text,
           w.strongs,
           entry?.lemma ?? '',
-          entry?.translit ?? w.translit ?? '',
+          // The lemma's romanisation, or nothing. The occurrence's own
+          // used to fill this in when the lexicon had no entry, which
+          // put two different things in one column of a table a reader
+          // pastes into a spreadsheet and sorts.
+          entry?.translit ?? '',
           entry?.pronunciation ?? '',
           entry?.localizedGloss(locale) ?? '',
         ].map((s) => s.replaceAll('\t', ' ')).join('\t'));

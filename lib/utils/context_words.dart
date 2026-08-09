@@ -66,7 +66,6 @@ class ContextWordEntry {
     required this.pos,
     required this.count,
     required this.bookCount,
-    this.translit,
     this.keyness,
   });
 
@@ -79,7 +78,6 @@ class ContextWordEntry {
   /// recognises on the page.
   final String form;
 
-  final String? translit;
   final WordPos pos;
 
   /// Occurrences within the scope.
@@ -180,7 +178,6 @@ ContextWordList buildContextWordList({
   final scopeCounts = <String, int>{};
   final forms = <String, Map<String, int>>{};
   final firstSeen = <String, int>{};
-  final translits = <String, String?>{};
   final posByKey = <String, WordPos>{};
   var scopeTokens = 0;
 
@@ -198,7 +195,6 @@ ContextWordList buildContextWordList({
       byForm[text] = (byForm[text] ?? 0) + 1;
     }
     firstSeen.putIfAbsent(key, () => i);
-    translits.putIfAbsent(key, () => w.translit);
     // The part of speech is a property of the OCCURRENCE, but the row
     // is a lemma. Take the first occurrence's tag: a lemma's tag is
     // stable in practice, and re-deciding it per row would need a vote
@@ -236,7 +232,6 @@ ContextWordList buildContextWordList({
     out.add(ContextWordEntry(
       strongs: e.key,
       form: best.isEmpty ? e.key : best,
-      translit: translits[e.key],
       pos: pos,
       count: e.value,
       bookCount: bookCount,

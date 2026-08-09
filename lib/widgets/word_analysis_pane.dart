@@ -80,6 +80,30 @@ class WordAnalysisPane extends StatefulWidget {
   State<WordAnalysisPane> createState() => _WordAnalysisPaneState();
 }
 
+/// The line printed under the word: what lemma this occurrence is an
+/// inflection of, and how that LEMMA is romanised and pronounced.
+///
+/// The lexicon is keyed by Strong's number, so every value it returns
+/// answers for the lemma and for no particular occurrence. [form] is
+/// passed only so the lemma glyph can be dropped when it would repeat
+/// the word already printed above; nothing about the form is romanised
+/// here, because the corpus carries a per-occurrence romanisation for
+/// the Greek NT only and none at all for the Hebrew Bible.
+String buildLemmaLine({
+  required String form,
+  String? lemma,
+  String? translit,
+  String? pronunciation,
+}) {
+  final parts = <String>[
+    if ((lemma ?? '').isNotEmpty && lemma != form) lemma!,
+    if ((translit ?? '').isNotEmpty) translit!,
+  ];
+  final head = parts.join(' · ');
+  if ((pronunciation ?? '').isEmpty) return head;
+  return head.isEmpty ? '/$pronunciation/' : '$head  /$pronunciation/';
+}
+
 class _WordAnalysisPaneState extends State<WordAnalysisPane> {
   StrongsEntry? _entry;
   String? _loadedFor;
@@ -177,6 +201,12 @@ class _WordAnalysisPaneState extends State<WordAnalysisPane> {
     final zh = _zh;
     final th = _thayer;
     final parse = describeMorphology(widget.word.morph, locale);
+    final lemmaLine = buildLemmaLine(
+      form: widget.word.text,
+      lemma: e?.lemma,
+      translit: e?.translit,
+      pronunciation: e?.pronunciation,
+    );
 
     String s(String key, String fallback) =>
         uiStrings[key]?[locale] ?? fallback;
@@ -240,27 +270,23 @@ class _WordAnalysisPaneState extends State<WordAnalysisPane> {
                   ),
                 ),
               ),
-              if ((e?.translit ?? '').isNotEmpty) ...[
-                const SizedBox(width: 7),
-                Flexible(
-                  child: Text(
-                    '(${e!.translit})',
-                    style: TextStyle(
-                      fontSize: t.text,
-                      fontStyle: FontStyle.italic,
-                      color: wb.mutedText,
-                    ),
-                  ),
-                ),
-              ],
             ],
           ),
 
-          if ((e?.pronunciation ?? '').isNotEmpty)
+          // ── The lemma, and the romanisation + pronunciation that
+          // belong to IT. Until v1.6.88 the transliteration sat in
+          // brackets beside the word above, which said that ἦλθεν is
+          // pronounced *érchomai*; it is not, that is ἔρχομαι. The
+          // lexicon is keyed by Strong's number and so answers for the
+          // lemma only — printing the lemma is what makes it true.
+          if (lemmaLine.isNotEmpty)
             Text(
-              '/${e!.pronunciation}/',
+              lemmaLine,
               style: TextStyle(
-                  fontSize: t.chrome, color: wb.mutedText),
+                fontSize: t.chrome,
+                fontStyle: FontStyle.italic,
+                color: wb.mutedText,
+              ),
             ),
 
           // ── Parsing. The line the whole Analysis window exists for.

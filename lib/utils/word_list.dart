@@ -16,6 +16,7 @@
 library;
 
 import 'package:seeksparks/models/original_word.dart';
+import 'package:seeksparks/models/strongs.dart';
 
 /// How a word list is ordered.
 enum WordListSort {
@@ -41,7 +42,8 @@ class WordListEntry {
     required this.strongs,
     required this.form,
     required this.count,
-    this.translit,
+    this.lemma,
+    this.lemmaTranslit,
   });
 
   /// e.g. `G25`.
@@ -54,7 +56,19 @@ class WordListEntry {
   /// Occurrences within the scope counted.
   final int count;
 
-  final String? translit;
+  /// The lexicon headword this row counts, e.g. `ἀγαπάω`. Null for the
+  /// 76 extended MorphGNT numbers (G6000+) that have no Strong's entry.
+  final String? lemma;
+
+  /// The LEMMA's transliteration, from the lexicon.
+  ///
+  /// Never an occurrence's own transliteration. The row is a lemma, so
+  /// a romanisation printed on it must describe the lemma: until
+  /// v1.6.88 this carried the first occurrence's, which for G2064 in
+  /// John meant the row read `ἔρχεται … ēlthen` — a form and the
+  /// romanisation of a different form. That was wrong on 8,030 of the
+  /// corpus's 58,447 rows, and merely *unverifiable* on the rest.
+  final String? lemmaTranslit;
 
   bool get isHapax => count == 1;
 }
@@ -64,16 +78,21 @@ class WordListEntry {
 /// Words with no Strong's number are skipped: they are punctuation and
 /// unmatched fragments, and a "word" with no lexical identity cannot be
 /// looked up, which is the only thing this list is for.
+///
+/// [lexicon] supplies the lemma and its transliteration per Strong's
+/// number — see [WordListEntry.lemmaTranslit] for why they cannot be
+/// taken from the occurrences. Pass an empty map and the rows carry
+/// their counts and forms only; nothing is invented to fill the gap.
 List<WordListEntry> buildWordList(
   Iterable<OriginalWord> words, {
   WordListSort sort = WordListSort.frequency,
   int minCount = 1,
+  Map<String, StrongsEntry> lexicon = const {},
 }) {
-  // strongs → (total, form → count, firstSeen, translit)
+  // strongs → (total, form → count, firstSeen)
   final totals = <String, int>{};
   final forms = <String, Map<String, int>>{};
   final order = <String, int>{};
-  final translits = <String, String?>{};
 
   var i = 0;
   for (final w in words) {
@@ -84,7 +103,6 @@ List<WordListEntry> buildWordList(
     final text = w.text.trim();
     if (text.isNotEmpty) byForm[text] = (byForm[text] ?? 0) + 1;
     order.putIfAbsent(key, () => i);
-    translits.putIfAbsent(key, () => w.translit);
     i++;
   }
 
@@ -100,11 +118,13 @@ List<WordListEntry> buildWordList(
         bestCount = f.value;
       }
     }
+    final lex = lexicon[e.key];
     out.add(WordListEntry(
       strongs: e.key,
       form: best.isEmpty ? e.key : best,
       count: e.value,
-      translit: translits[e.key],
+      lemma: (lex?.lemma.isNotEmpty ?? false) ? lex!.lemma : null,
+      lemmaTranslit: (lex?.translit.isNotEmpty ?? false) ? lex!.translit : null,
     ));
   }
 

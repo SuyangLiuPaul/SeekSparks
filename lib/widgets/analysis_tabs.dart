@@ -189,8 +189,12 @@ const double _kLabelFontSize = 11.5;
 /// locale or the reader's text scale does.
 final Map<String, double> _minLabelledCache = {};
 
+// Separators are written as escapes, never as literal control bytes: a
+// raw NUL in the source makes grep and ripgrep classify the whole file
+// as binary and skip it, so every later search of this file returns
+// nothing and reads like a clean result.
 double _cachedMinLabelledWidth(List<String> labels, TextScaler textScaler) {
-  final key = '${textScaler.scale(_kLabelFontSize)} ${labels.join('')}';
+  final key = '${textScaler.scale(_kLabelFontSize)}\u0000${labels.join('\u0001')}';
   return _minLabelledCache[key] ??=
       analysisStripMinLabelledWidth(labels, textScaler: textScaler);
 }
