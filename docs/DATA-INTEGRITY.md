@@ -57,6 +57,10 @@ believe it is fine" and "we looked".
 | 7b | bible_names.json verse links | 2,622 names | n/a | unverifiable by construction |
 | 8 | Dates carry a recorded source | 196 records | 1 file | **open** |
 | 9 | Reader references resolve to the right original verse | 31,102 references | 1,823 wrong + 152 empty → **1** | **fixed**, was the worst finding |
+| 10 | Character repertoire of the shipped text | 45,877,885 chars | 129 → **0** | **fixed**, now a test |
+| 11 | Invisible format/control characters | 45,877,885 chars | 3 → **0** | **fixed**, now a test |
+| 12 | 和合本 merge markers present in all three editions | 213 slots | 71 → **0** | **fixed**, now a test |
+| 13 | The two 圣经新译本 editions cover the same references | 15,843 refs | 8 | **open**, frozen by a test |
 
 ---
 
@@ -147,7 +151,7 @@ NT-only edition is not "missing" the Hebrew Bible.
 |---|---:|---:|---:|---:|---|
 | kjv, kjvs | 31,102 | 66 | 0 | 0 | reference |
 | cuvs-yhwh, cuvs-yhwh-tr | 31,102 | 66 | 0 | 0 | clean after fix 3 |
-| cuvs-plus | 31,043 | 66 | 60 | 1 | clean after fix 1; 60 real omissions remain |
+| cuvs-plus | 31,043 → **31,103** | 66 | 60 → **0** | 1 | the 60 were 和合本's merged verses; **fixed v1.6.93** |
 | bsb | 31,086 | 66 | 16 | 0 | modern critical text |
 | nasb | 31,090 | 66 | 13 | 1 | modern critical text |
 | leb | 31,199 | 66 | 21 | 2 | 64 books and 32 gaps before the v1.6.91 repair |
@@ -174,10 +178,19 @@ omissions (Matthew 17:21, 18:11, 23:14; Mark 7:16, 9:44, 9:46, 11:26,
 28:29; Romans 16:25-27; 2 Corinthians 13:14; Nehemiah 7:68) — checked
 one by one, nothing left over.
 
-`assets/cuvs-plus.json`'s remaining 60 gaps (Numbers 16, Deuteronomy 7,
-Psalms 4, Job 3, Jeremiah 3 …) are the same shape as the LEB's was and
-need the same treatment: check them against 和合本 before assuming
-either way.
+**`assets/cuvs-plus.json`'s 60 gaps were not omissions at all — and
+checking them is what found eight other things.** This entry previously
+said "60 real omissions remain". That was wrong, and the way it was
+wrong is worth keeping: the gaps were counted against KJV versification,
+which is the right frame for an English edition and the wrong one for
+和合本, whose printed text **merges 71 verses into a neighbour** and sets
+見上節 in the verse-number column. cuvs-yhwh and cuvs-yhwh-tr ship that
+marker at all 71. cuvs-plus shipped it at **none**: 60 references were
+simply absent from the file and the other 11 held ad-hoc junk in six
+phrasings — three of them the bare letter `a`, two of them mojibake. So
+a 和简+ reader on 民数记 1:21 got a blank, and on 诗篇 105:6 got
+`5-6½ÚºÏ²¢`. **Zero words of scripture were ever missing.**
+See "The 和合本 editions had eight defect classes" below.
 
 **Check 9 — `assets/originals` is numbered in Hebrew versification and
 every display surface asks it in English. This was the worst thing the
@@ -431,6 +444,118 @@ prints a bordered line naming the corpus it was measured against
 (SBLGNT for Greek, Open Scriptures/WLC for Hebrew). A blank that
 explains itself is information; a blank that does not is a bug report.
 
+### The 和合本 editions had eight defect classes — FIXED in v1.6.93
+
+The assigned item was "check cuvs-plus's 60 gaps against 和合本". The
+premise turned out to be false in the reader's favour — nothing was
+missing — and chasing it anyway surfaced **eight** corruption classes
+across four Chinese editions. All eight are repaired reproducibly by
+`tools/repair_chinese_text_defects.py`, which is idempotent, refuses any
+site a witness does not corroborate, and prints what it skipped.
+
+Every repair is gated on a witness **already in this repository**, and
+the repaired string must match that witness exactly, not approximately:
+
+- `assets/cuvs-plus.json` — 和合本+Strong's, the same base text as
+  cuvs-yhwh but imported separately.
+- `assets/tagged/cuvs-yhwh/` — a **second copy of cuvs-yhwh's own text**,
+  carried alongside the Strong's tags. Where the two copies of one
+  edition disagree, one of them is wrong, and this is what localises the
+  error rather than merely detecting it.
+- `assets/originals/` — the Hebrew, for the one verse-boundary question.
+
+| # | Where | Defect | Repaired to |
+|---|---|---|---|
+| R1 | cuvs-plus 申命记 28:52 | a **whole verse** of Deuteronomy as GBK bytes decoded as Latin-1: 「他们必将你困在你各³ÇÀï£¬Ö±µ½」. The tagged layer carried the identical corruption. | 「…你各城里，直到…」 |
+| R1 | cuvs-plus 诗篇 105:6, 116:19 | two merge markers corrupt the same way (`5-6½ÚºÏ²¢`) | 见上节 |
+| R2 | cuvs-plus 士师记 13:7, 18:10 | a stray U+25A1 `□` **inside** the single token carrying H430 | 神 |
+| R3 | cuvs-yhwh + -tr 士师记 8:15 | `ㄤ萑` — a Bopomofo letter and a second character where one belongs | 现 / 現 |
+| R4 | cuvs-yhwh + -tr 撒母耳记下 2:23 | `𨱔` (U+28C54, plane 2) | 鐏 |
+| R5 | cuvs-plus, 71 sites | 60 merge markers absent, 11 replaced by junk | the marker cuvs-yhwh already ships, copied verbatim |
+| R6 | cuvs-plus 申命记 4:32–33 | 和合本's merged block split **at the wrong point** | merged, matching cuvs-yhwh |
+| R7 | cuvs-yhwh + -tr, 8 verses | `䍁` (U+4341) for `繸` — Numbers 15:38's tassels and the hem of Jesus' cloak | 繸 |
+| R8 | biblexg-v2, 3 verses | invisible U+00AD SOFT HYPHENs inside the text | removed |
+
+Three of these deserve their reasoning stated, because the evidence, not
+the reading, is what decided them:
+
+**R6 is the only verse-BOUNDARY defect, and the Strong's tags proved it.**
+和合本 merges Deuteronomy 4:32–33 because the Chinese inverts the two
+clauses of the Hebrew. cuvs-yhwh does that. cuvs-plus split the block by
+**position** instead, which lands the clauses under the wrong numbers:
+its 4:33 是「这样的大事何曾有、何曾听见呢？」, the *tail* of Hebrew 4:32,
+while Hebrew 4:33 sits inside its 4:32. cuvs-plus 4:32 scores Dice
+**0.615** against Hebrew 4:33 and **0.513** against Hebrew 4:32. A
+cross-reference to Deuteronomy 4:33 landed on the wrong clause, and Word
+Study offered Hebrew that did not match the Chinese beside it. The repair
+is gated on cuvs-plus 4:32+4:33 concatenated being character-identical to
+cuvs-yhwh 4:32.
+
+**That the TRADITIONAL edition carries R3, R4 and R7 too is the tell.**
+A traditional text does not simplify a character. Both files inherited
+one corrupt source, so the corruption is not an orthographic choice and
+the traditional repair may be gated on its simplified sibling's having
+been proved — which is stated in the code rather than implied.
+
+**R7 was found by a sweep, not by reading.** `䍁` was the only CJK
+Extension A character in the entire Chinese corpus. That is the general
+lesson of this pass:
+
+> **The character-repertoire check is the one that works.** A wrong
+> character throws nothing, breaks no key, and **renders** — CanvasKit
+> only drops a glyph it has no font for, and the bundled subsets were
+> measured at **0 missing code points** across the shipped Chinese
+> scripture. So 申命记 28:52 drew its garbage perfectly legibly. A
+> tagged-vs-plain text comparison was tried first and abandoned: it
+> returns 22,817 raw disagreements on bsb alone, all of them markup
+> convention, and it would not have caught the mojibake anyway because
+> **both copies were identically corrupt**.
+
+Both new checks are now permanent, in `tools/audit_data_integrity.py` and in
+`test/data_integrity_test.dart`:
+
+| Check | Examined | Before | After |
+|---|---:|---:|---:|
+| Character repertoire (every edition, every tagged layer, originals) | 45,877,885 chars | 129 | **0** |
+| Invisible format/control characters, whole corpus | 45,877,885 chars | 3 | **0** |
+| 和合本 merge markers present in all three editions | 213 slots | 71 | **0** |
+
+Counts after the repair, all measured rather than assumed: cuvs-plus
+31,103 verses / cuvs-yhwh 31,102 / cuvs-yhwh-tr 31,102; the only
+reference cuvs-plus holds that cuvs-yhwh does not is 3 John 1:15, and
+there are none the other way.
+
+**Left alone, deliberately: the merge marker's presentation.** The app
+has no awareness of 见上节 — grep of `lib/` finds nothing — so it renders
+as ordinary verse text. Giving it a distinct treatment reaches the
+reader, Browse, search and clipboard, and is a presentation slice, not an
+accuracy one. As text it is at least *true*, which `a` and `5-6½ÚºÏ²¢`
+were not.
+
+### The 圣经新译本 pair disagrees on 8 verses — measured, NOT repaired
+
+Found by the same sweep. `biblexg-v2.json` and `biblexg-v2-tr.json` are
+one NT-only edition converted script-for-script, so they should agree on
+every reference. Eight do not, **in both directions**:
+
+- Absent from the **simplified** file: 马可福音 6:8, 6:9, 6:10, 6:11 —
+  the instructions to the Twelve. The text is not merged into 6:7; it is
+  gone.
+- Absent from the **traditional** file: 马太福音 16:13 (gone outright —
+  the Caesarea Philippi question), 以弗所书 3:16 (merged into 3:15) and
+  彼得前书 3:11–12 (merged into 3:10, which still carries the literal
+  digits `11` and `12` inline where the boundaries were).
+
+Not repaired, and the reason is the same discipline that governs
+everything above: filling either gap requires a 简/繁 script conversion
+this repository cannot perform without **inventing characters**, and the
+two files' wording differs in more than orthography at the merge sites
+(the traditional 以弗所书 3:15 reads 榮耀的豐富 where the simplified 3:16
+reads 丰硕的荣耀), so the split points cannot be recovered by containment
+either. Taking the conservative option: the defect is frozen at its
+measured size by a test that names all eight, so it cannot grow while a
+witness is sought.
+
 ### Clean, and worth saying so
 
 - **Every one of 4,037 distinct morphology codes decodes** to a human
@@ -465,10 +590,13 @@ can be verified from within the repo.
 
 ## Not checked yet
 
-- Verse **text** itself. Every check above is structural — references,
-  counts, labels. Nothing compares a shipped verse against an external
-  witness. `test/cuvs_yhwh_integrity_test.dart` does this for two verses;
-  there is no general method that does not require an external source.
+- Verse **text** itself, against an *external* witness. Checks 10–12 now
+  reach inside the text, but only for defects visible from within the
+  repo: a character that cannot belong, or a copy of the same edition
+  that disagrees. A verse that is wrong *and* well-formed *and* agrees
+  with our own second copy is still unchecked.
+  `test/cuvs_yhwh_integrity_test.dart` does this for two verses; there is
+  no general method that does not require an external source.
 - `section_titles.json`, `book_introductions.json`, `bible_evidence.json`,
   `maps_index.json` (see #300 for its provenance gap), `family_tree.json`
   relationships, `ot_synopsis.json` alignments.
@@ -479,17 +607,26 @@ can be verified from within the repo.
 
 ## Next, in order
 
-1. `assets/cuvs-plus.json`'s remaining 60 gaps, checked against 和合本.
-   The LEB repair is the worked example: find a second witness, prove it
-   is the same edition before trusting a word of it, and repair by
-   containment.
-2. The four verses that print both the Ketiv and the Qere. Probably a
+1. The 8 references the two 圣经新译本 editions disagree about, above
+   all 马可福音 6:8–11 and 马太福音 16:13. Needs a witness that is the
+   same edition in the missing script; a 简/繁 conversion table derived
+   from the 7,645 length-equal verse pairs the two files already share
+   would be one, and would be witnessed by the corpus rather than
+   invented — but it must be derived and checked before a character of
+   it is trusted.
+2. A merge-marker presentation for 见上节, so the reader is told the
+   verse is printed above rather than reading the words "see previous
+   verse" as if they were scripture. Reaches the reader, Browse, search
+   and clipboard.
+3. The four verses that print both the Ketiv and the Qere. Probably a
    reader-side marker, not a data deletion.
-3. Per-record date sourcing (#292 owns `hebrew_kings.json`).
-4. The LEB's `{…}` idiom braces in the 660 imported verses, if a witness
+4. Per-record date sourcing (#292 owns `hebrew_kings.json`).
+5. The LEB's `{…}` idiom braces in the 660 imported verses, if a witness
    that preserves them can be found.
 
 *(Check 9, the Hebrew/English versification mismatch, was first here and
 is now fixed. `assets/leb.json`'s missing books were second and are now
 fixed. The 2,203 words with no morphology code were third and are now
-869 — see above.)*
+869. cuvs-plus's "60 gaps" were fourth, and turned out not to be gaps at
+all — see check 4 — but chasing them found eight other classes that
+were.)*

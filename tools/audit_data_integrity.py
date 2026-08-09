@@ -20,10 +20,12 @@ Exit code is always 0; this reports, it does not gate. The cheap
 invariants that MUST hold are Dart tests.
 """
 
+import glob
 import json
 import os
 import re
 import sys
+import unicodedata
 from collections import Counter, defaultdict
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -580,6 +582,143 @@ def load_originals():
     return out
 
 
+# --------------------------------------------------------------------
+# 9. The character repertoire of the shipped text.
+#
+#    This is the check that would have caught every single-character
+#    corruption #304 found, and none of the others would have. A wrong
+#    character throws nothing, breaks no key, and renders — CanvasKit
+#    only omits a glyph it has no font for, and the bundled subsets cover
+#    every code point in the corpus, so 他们必将你困在你各³ÇÀï drew
+#    perfectly legibly on screen as garbage.
+#
+#    Two rules, both derived from the corpus rather than imagined:
+#      * NO format or control characters anywhere. Three U+00AD soft
+#        hyphens in biblexg-v2 were the only ones; they are invisible, so
+#        the verses carrying them failed exact-phrase search silently.
+#      * Chinese scripture is written in a NARROW repertoire. Anything
+#        from Bopomofo, Geometric Shapes, CJK Extension A/B or the
+#        Latin-1 range is either mojibake or a substituted character.
+# --------------------------------------------------------------------
+
+SUSPECT_BLOCKS = [
+    (0x0080, 0x00FF, 'Latin-1 Supplement (GBK read as Latin-1)'),
+    (0x2500, 0x257F, 'Box Drawing'),
+    (0x25A0, 0x25FF, 'Geometric Shapes'),
+    (0x3100, 0x312F, 'Bopomofo'),
+    (0x3400, 0x4DBF, 'CJK Extension A'),
+    (0x20000, 0x2FFFF, 'CJK Extension B and beyond'),
+    (0xE000, 0xF8FF, 'Private Use'),
+    (0xFFFD, 0xFFFD, 'REPLACEMENT CHARACTER'),
+]
+
+# The two exceptions the editions genuinely use: 和合本 sets its long dash
+# with U+2500, and 圣经新译本 separates transliterated names with U+00B7
+# (本丢·彼拉多). Both were confirmed against the printed editions.
+REPERTOIRE_EXCEPTIONS = {'─', '·'}
+
+
+def _suspect_block(cp):
+    for lo, hi, name in SUSPECT_BLOCKS:
+        if lo <= cp <= hi:
+            return name
+    return None
+
+
+def _all_shipped_text():
+    """Yields (source, reference, text) over every shipped asset that
+    holds scripture — the flat editions, the tagged layers and the
+    originals — so the sweep cannot miss a copy."""
+    for path in sorted(glob.glob(asset('*.json'))):
+        code = os.path.basename(path)[:-5]
+        if code in EXCLUDED_VERSIONS:
+            continue
+        data = load(f'{code}.json')
+        if not isinstance(data, list) or not data or 'verse' not in data[0]:
+            continue
+        for v in data:
+            yield code, f"{v['book']} {v['chapter']}:{v['verse']}", v['text']
+    for d in sorted(glob.glob(asset('tagged', '*'))):
+        edition = os.path.basename(d)
+        if edition in EXCLUDED_VERSIONS:
+            continue
+        for path in sorted(glob.glob(os.path.join(d, '*.json'))):
+            book = os.path.basename(path)[:-5]
+            with open(path, encoding='utf-8') as f:
+                for ref, words in json.load(f).items():
+                    text = ''.join(w.get('w', '') for w in (words or []))
+                    yield f'tagged/{edition}', f'{book} {ref}', text
+    for path in sorted(glob.glob(asset('originals', '*.json'))):
+        book = os.path.basename(path)[:-5]
+        with open(path, encoding='utf-8') as f:
+            for ref, words in json.load(f).items():
+                text = ''.join(w.get('w', '') for w in words)
+                yield 'originals', f'{book} {ref}', text
+
+
+def check_character_repertoire():
+    examined = 0
+    bad = []
+    for source, ref, text in _all_shipped_text():
+        examined += len(text)
+        chinese = any('一' <= c <= '鿿' for c in text)
+        for ch in text:
+            if ch in REPERTOIRE_EXCEPTIONS or ch in '\n\t':
+                continue
+            if unicodedata.category(ch) in ('Cc', 'Cf', 'Co', 'Cs', 'Cn'):
+                bad.append((source, ref, ch, 'format or control character'))
+                continue
+            if not chinese:
+                continue
+            block = _suspect_block(ord(ch))
+            if block:
+                bad.append((source, ref, ch, block))
+    note = ('every character of every shipped edition, tagged layer and '
+            'the originals corpus')
+    for source, ref, ch, why in bad[:12]:
+        note += f'\n  {source} {ref}: U+{ord(ch):04X} — {why}'
+    record('character repertoire', examined, len(bad), note)
+
+
+# --------------------------------------------------------------------
+# 10. The 和合本 merge markers agree across all three editions.
+#
+#     和合本 combines 71 verses into a neighbour and prints 見上節 in the
+#     verse-number column. An edition that drops the marker instead
+#     leaves the reference EMPTY, and the reader cannot tell "this verse
+#     is printed above" from "this app is broken". cuvs-plus shipped
+#     zero of the 71 until v1.6.93.
+# --------------------------------------------------------------------
+
+MERGE_MARKER_RE = re.compile(
+    r'^(?:<note:\s*)?[〔\[（(]?\s*(?:见上节|見上節|见下节|見下節)\s*[〕\]）)]?>?$')
+
+
+def check_merge_markers():
+    editions = {}
+    for code in ('cuvs-yhwh', 'cuvs-yhwh-tr', 'cuvs-plus'):
+        editions[code] = {
+            (zh_to_en(v['book']) or v['book'], int(v['chapter']),
+             int(v['verse'])): v['text']
+            for v in load(f'{code}.json')
+        }
+    sites = sorted(k for k, t in editions['cuvs-yhwh'].items()
+                   if MERGE_MARKER_RE.match(t.strip()))
+    bad = []
+    for code, verses in editions.items():
+        for k in sites:
+            text = verses.get(k)
+            if text is None:
+                bad.append(f'{code} {k[0]} {k[1]}:{k[2]}: reference absent')
+            elif not MERGE_MARKER_RE.match(text.strip()):
+                bad.append(f'{code} {k[0]} {k[1]}:{k[2]}: {text.strip()[:24]!r}')
+    note = (f'{len(sites)} merged verses x 3 和合本 editions; every one must '
+            'carry the 見上節/見下節 marker')
+    for line in bad[:12]:
+        note += f'\n  {line}'
+    record('和合本 merge markers', len(sites) * 3, len(bad), note)
+
+
 def main():
     os.makedirs(os.path.join(ROOT, 'build'), exist_ok=True)
     print('Data-integrity audit (#304)\n' + '=' * 60 + '\n')
@@ -594,6 +733,8 @@ def main():
     check_places()
     check_dates()
     check_tagged_layers(originals)
+    check_character_repertoire()
+    check_merge_markers()
 
     failed = [r for r in results if r['disagreements']]
     print('=' * 60)

@@ -47,6 +47,57 @@ const _knownBeyondCanon = <String>{
   'Acts 8:41',
 };
 
+/// Code points that must not appear in scripture because they render as
+/// nothing: C0/C1 controls and the invisible formatting characters. A
+/// verse carrying one looks correct and fails an exact-phrase search
+/// that should match it, which is the hardest defect class to notice.
+bool _isInvisible(int cp) =>
+    (cp < 0x09) ||
+    (cp > 0x0A && cp < 0x20) ||
+    (cp >= 0x7F && cp <= 0xA0) ||
+    cp == 0xAD ||
+    (cp >= 0x200B && cp <= 0x200F) ||
+    (cp >= 0x202A && cp <= 0x202E) ||
+    (cp >= 0x2060 && cp <= 0x2064) ||
+    cp == 0xFEFF ||
+    (cp >= 0xE000 && cp <= 0xF8FF) ||
+    cp == 0xFFFD;
+
+/// Unicode blocks that cannot occur in a correctly encoded Chinese Bible.
+/// Each one is a defect class #304 actually found, not a hypothesis.
+const _suspectBlocks = <List<int>>[
+  [0x00A1, 0x00FF], // GBK bytes decoded as Latin-1 — whole-verse mojibake
+  [0x2500, 0x257F], // Box Drawing
+  [0x25A0, 0x25FF], // Geometric Shapes — the stray □ inside 神
+  [0x3100, 0x312F], // Bopomofo — ㄤ standing in for 现
+  [0x3400, 0x4DBF], // CJK Extension A — 䍁 standing in for 繸
+  [0x20000, 0x2FFFF], // CJK Extension B — 𨱔 standing in for 鐏
+];
+
+/// The two characters from those blocks the editions genuinely print:
+/// 和合本 sets its long dash with U+2500 and 圣经新译本 separates
+/// transliterated names with U+00B7 (本丢·彼拉多).
+const _repertoireExceptions = <int>{0x2500, 0x00B7};
+
+const _chineseVersions = <String>[
+  'cuvs-yhwh',
+  'cuvs-yhwh-tr',
+  'cuvs-plus',
+  'biblexg-v2',
+  'biblexg-v2-tr',
+];
+
+final _mergeMarker = RegExp(
+    r'^(?:<note:\s*)?[〔\[（(]?\s*(?:见上节|見上節|见下节|見下節)\s*[〕\]）)]?>?$');
+
+List<Map<dynamic, dynamic>> _edition(String code) =>
+    (jsonDecode(File('assets/$code.json').readAsStringSync()) as List)
+        .cast<Map<dynamic, dynamic>>();
+
+String _ref(Map<dynamic, dynamic> v) =>
+    '${bookNameToEnglish[v['book']] ?? v['book']} '
+    '${v['chapter']}:${v['verse']}';
+
 void main() {
   test('no edition numbers a verse past the end of its chapter', () {
     // 2026-08-10 (#304): assets/cuvs-plus.json filed 1 Chronicles 22:1
@@ -193,6 +244,116 @@ void main() {
     expect(byRef['1 Peter 5:14']?.trim(), endsWith('who are in Christ.'));
     // R5: three records were filed under the book label "The".
     expect(counts.containsKey('The'), isFalse);
+  });
+
+  test('no shipped verse carries an invisible character', () {
+    // 2026-08-10 (#304): three U+00AD SOFT HYPHENs sat inside
+    // `assets/biblexg-v2.json` — 启示录 20:2 read 「他捉住龙<AD>，」. It
+    // renders as nothing and cannot be typed, so the verse silently
+    // failed an exact-phrase search for text it plainly contains. These
+    // were the only ones in the whole corpus, which makes zero the
+    // honest bound: any new one is an import defect.
+    final failures = <String>[];
+    for (final code in _versions) {
+      for (final v in _edition(code)) {
+        for (final cp in (v['text'] as String).runes) {
+          if (_isInvisible(cp)) {
+            failures.add('$code ${_ref(v)}: '
+                'U+${cp.toRadixString(16).toUpperCase().padLeft(4, '0')}');
+          }
+        }
+      }
+    }
+    expect(failures, isEmpty, reason: failures.take(20).join('\n'));
+  });
+
+  test('Chinese scripture stays inside its character repertoire', () {
+    // 2026-08-10 (#304): the check that would have caught every
+    // single-character corruption in the corpus, and the only one that
+    // would. A wrong character throws nothing and breaks no key — and
+    // it RENDERS, because CanvasKit only drops a glyph it has no font
+    // for and the bundled subsets cover every code point we ship. So
+    // 申命记 28:52 drew "他们必将你困在你各³ÇÀï£¬Ö±µ½" perfectly
+    // legibly, a whole verse of Deuteronomy replaced by GBK bytes that
+    // had been decoded as Latin-1. Four more classes hid the same way:
+    // □ inside 神, ㄤ for 现, 𨱔 for 鐏, 䍁 for 繸.
+    final failures = <String>[];
+    for (final code in _chineseVersions) {
+      for (final v in _edition(code)) {
+        for (final cp in (v['text'] as String).runes) {
+          if (_repertoireExceptions.contains(cp)) continue;
+          for (final b in _suspectBlocks) {
+            if (cp >= b[0] && cp <= b[1]) {
+              failures.add('$code ${_ref(v)}: '
+                  'U+${cp.toRadixString(16).toUpperCase().padLeft(4, '0')} '
+                  '${String.fromCharCode(cp)}');
+              break;
+            }
+          }
+        }
+      }
+    }
+    expect(failures, isEmpty, reason: failures.take(20).join('\n'));
+  });
+
+  test('all three 和合本 editions carry every merged-verse marker', () {
+    // 和合本 combines 71 verses into a neighbour and prints 見上節 in the
+    // verse-number column. cuvs-yhwh and cuvs-yhwh-tr ship that marker
+    // at all 71; before v1.6.93 cuvs-plus shipped it at NONE. 60 of the
+    // references simply did not exist in the file and the other 11 held
+    // junk in six phrasings — three of them the bare letter "a", two of
+    // them mojibake. A 和简+ reader on 民数记 1:21 got a blank where the
+    // printed edition says "see the previous verse", and cannot tell
+    // that from the app having failed to load.
+    final byCode = {
+      for (final code in ['cuvs-yhwh', 'cuvs-yhwh-tr', 'cuvs-plus'])
+        code: {for (final v in _edition(code)) _ref(v): v['text'] as String}
+    };
+    final sites = byCode['cuvs-yhwh']!.entries
+        .where((e) => _mergeMarker.hasMatch(e.value.trim()))
+        .map((e) => e.key)
+        .toList();
+    expect(sites.length, 71);
+
+    final failures = <String>[];
+    byCode.forEach((code, verses) {
+      for (final ref in sites) {
+        final text = verses[ref];
+        if (text == null) {
+          failures.add('$code $ref: reference absent');
+        } else if (!_mergeMarker.hasMatch(text.trim())) {
+          failures.add('$code $ref: "${text.trim()}"');
+        }
+      }
+    });
+    expect(failures, isEmpty, reason: failures.take(20).join('\n'));
+  });
+
+  test('the two 圣经新译本 editions cover the same references', () {
+    // NOT YET REPAIRED, and named here so it cannot grow. The simplified
+    // and traditional files are one edition converted script-for-script,
+    // so they should agree on every reference. Eight do not, in both
+    // directions: 马可福音 6:8-11 are absent from the SIMPLIFIED file,
+    // and 马太福音 16:13, 以弗所书 3:16, 彼得前书 3:11-12 are absent from
+    // the TRADITIONAL one. Repairing them needs a script conversion this
+    // repo cannot perform without inventing characters, so the defect is
+    // frozen at its measured size instead. See docs/DATA-INTEGRITY.md.
+    const knownSimplifiedOnly = {
+      'Matthew 16:13',
+      'Ephesians 3:16',
+      '1 Peter 3:11',
+      '1 Peter 3:12',
+    };
+    const knownTraditionalOnly = {
+      'Mark 6:8',
+      'Mark 6:9',
+      'Mark 6:10',
+      'Mark 6:11',
+    };
+    final simplified = {for (final v in _edition('biblexg-v2')) _ref(v)};
+    final traditional = {for (final v in _edition('biblexg-v2-tr')) _ref(v)};
+    expect(simplified.difference(traditional), knownSimplifiedOnly);
+    expect(traditional.difference(simplified), knownTraditionalOnly);
   });
 
   test('concordance per-book counts sum to the stated total', () {
