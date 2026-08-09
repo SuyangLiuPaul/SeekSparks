@@ -6,7 +6,7 @@
 ///     Now<note: Or "And"> the earth was formless … darkness [was] over
 ///
 /// which is not a reading experience. It is not rare either: `<note:…>`
-/// appears in 14,515 of LEB's 30,552 verses — 48% of the translation —
+/// appears in 14,914 of LEB's 31,199 verses — 48% of the translation —
 /// plus 1,247 verses of 和合本雅伟版 and 999 of 梁家铿译本.
 ///
 /// Two different things are tangled together and they deserve opposite

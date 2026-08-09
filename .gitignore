@@ -13,6 +13,7 @@ build-cn/
 *.iml
 .DS_Store
 *.log
+__pycache__/
 # 2026-05-09: pubspec.lock IS committed (Flutter app, not a package
 # — apps need reproducible installs across local + CI). Keep .lock
 # wildcard ignore for everything else though (e.g. package-lock,

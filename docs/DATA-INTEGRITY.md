@@ -143,7 +143,7 @@ NT-only edition is not "missing" the Hebrew Bible.
 | cuvs-plus | 31,043 | 66 | 60 | 1 | clean after fix 1; 60 real omissions remain |
 | bsb | 31,086 | 66 | 16 | 0 | modern critical text |
 | nasb | 31,090 | 66 | 13 | 1 | modern critical text |
-| leb | 30,552 | **64** | 32 | 2 | **Judges and Obadiah absent entirely** |
+| leb | 31,199 | 66 | 21 | 2 | 64 books and 32 gaps before the v1.6.91 repair |
 | lxxwh | 30,798 | 66 | 304 | 0 | LXX/WH versification differs by design |
 | biblexg-v2(-tr) | 7,920 / 7,923 | 27 | 40 | 3 | NT only, by design |
 
@@ -157,13 +157,18 @@ the critical text omits (Matthew 17:21, Mark 9:44, Acts 8:37 and
 company). lxxwh's 304 are the LXX's own arrangement, Jeremiah above all.
 None of these is a defect.
 
-*Not legitimate, and unfixable here.* **`assets/leb.json` is missing
-Judges (618 verses) and Obadiah (21) outright** — an import gap, not a
-versification choice. A reader on LEB cannot reach either book. This is
-not repaired because repairing it means obtaining the Lexham text, and
-**scripture is never invented to close a gap**. Filed as a task, not a
-fix. `assets/cuvs-plus.json`'s remaining 60 gaps (Numbers 16,
-Deuteronomy 7, Psalms 4, Job 3, Jeremiah 3 …) are the same shape and
+*Not legitimate.* **`assets/leb.json` was missing Judges (618 verses)
+and Obadiah (21) outright** — an import gap, not a versification choice.
+**FIXED in v1.6.91**; see "The LEB was a bad scrape" below, which also
+covers four further defect classes the same investigation turned up.
+After the repair, LEB's 21 remaining gaps are *all* known critical-text
+omissions (Matthew 17:21, 18:11, 23:14; Mark 7:16, 9:44, 9:46, 11:26,
+15:28; Luke 17:36, 23:17; John 5:4; Acts 8:37, 15:34, 19:41, 24:7,
+28:29; Romans 16:25-27; 2 Corinthians 13:14; Nehemiah 7:68) — checked
+one by one, nothing left over.
+
+`assets/cuvs-plus.json`'s remaining 60 gaps (Numbers 16, Deuteronomy 7,
+Psalms 4, Job 3, Jeremiah 3 …) are the same shape as the LEB's was and
 need the same treatment: check them against 和合本 before assuming
 either way.
 
@@ -292,6 +297,75 @@ checkable by a reader — see #292 and #300, which already own it.
 
 ---
 
+### The LEB was a bad scrape — FIXED in v1.6.91
+
+The missing Judges and Obadiah were the visible symptom of one cause:
+`assets/leb.json` arrived at `6f13365 Initial commit`, inherited from
+YsWords, and had never been checked. Chasing the two absent books turned
+up **five** defect classes, all with the same signature — a scrape that
+lost page boundaries. `tools/repair_leb.py` fixes all five reproducibly;
+run it with no flags to re-verify, `--write` to apply.
+
+| | Defect | Records |
+|---|---|---:|
+| R1 | Judges and Obadiah absent entirely | 639 restored |
+| R2 | Two verses merged into one record, so the second reference did not exist | 11 split |
+| R3 | A clause of the verse simply gone | 12 restored |
+| R4 | The **next book's title** glued onto a book's last verse | 8 trimmed |
+| R5 | Records filed under the book label `"The"` | 3 refiled |
+
+R2 and R4 are the ones that matter most, because they read as scripture
+and are not. `Hebrews 1:10` did not exist — 1:9 held both verses — so
+every cross-reference to it resolved to nothing or to the wrong verse.
+`Romans 16:24` ended "…Amen. Corinthians" and `1 Peter 5:14` ended
+"…in Christ. Peter": a reader quoting the verse quotes a word no edition
+of the Bible contains.
+
+**The witness, and why it can be trusted.** The repair takes its text
+from an independently obtained copy of the same edition
+(`~/Documents/New project/yahwehdehua_bible/output/`, whose
+`manifest.json` records site-owner authorization; 31,102 LEB records).
+Nothing was invented. Two measurements were made *before* trusting it
+for a single word:
+
+1. **It is the same edition.** Over the 30,431 verses both copies hold,
+   they agree on **30,276 (99.491%)** once whitespace is ignored.
+2. **The markup transform is faithful.** Converting the witness's HTML
+   conventions into this repo's house style (`<note: …>`, `[supplied]`,
+   `--`) reproduces our own text **exactly** in 30,151 of those 30,431
+   (**99.080%**). The residue is 125 Psalms structural differences and
+   ~155 verses where *our* copy is itself inconsistent about the space
+   before a note marker. That 99.08% is the honest error bar on the
+   imported material.
+
+Every repair is additionally a **containment** check, not a replacement:
+R3 asserts our text is a prefix of the witness's and appends only the
+tail; R4 asserts the trailing token equals the next book's name *and*
+that what remains ends in sentence-final punctuation; R2 asserts our
+record opens with the witness's first half and that what we hold is a
+suffix of the second. A repair can only add text it has proven missing.
+
+**Two hypotheses this investigation killed**, recorded so they are not
+re-run:
+
+- *"The witness truncates block quotations, so importing poetic Judges 5
+  would corrupt it."* Disproved by calibration: the 11 suspect verses
+  score 0.89–1.25 on a word-count ratio against BSB (median over 30,169
+  verses: 1.062), and Judges/Obadiah score a median 1.050. The witness
+  is the correct copy; **ours** is the side that merges verses.
+- *"Romans 16:25-27, 2 Corinthians 13:14 and Acts 19:41 are missing."*
+  They are not defects. The LEB carries the Romans doxology **inside**
+  `<note: Some manuscripts include vv. 25-27, …>` on 16:24, so those
+  verses genuinely do not exist in this edition.
+
+**Known residue, stated plainly.** The witness drops the LEB's `{…}`
+idiom braces entirely (0 of 31,102 records), whereas our 64 original
+books carry them in 8,041 verses (26%). So **Judges, Obadiah and the 11
+R2 second halves ship without that notation.** This is under-coverage of
+a marker, not a false statement about the text — the same category as
+the Revelation 12:18 mapping limit above. Recovering it needs a witness
+that preserves the braces.
+
 ### Clean, and worth saying so
 
 - **Every one of 4,037 distinct morphology codes decodes** to a human
@@ -340,10 +414,15 @@ can be verified from within the repo.
 
 ## Next, in order
 
-1. `assets/leb.json`'s missing Judges and Obadiah.
-2. The 2,203 words with no morphology code.
+1. The 2,203 words with no morphology code.
+2. `assets/cuvs-plus.json`'s remaining 60 gaps, checked against 和合本.
+   The LEB repair is the worked example: find a second witness, prove it
+   is the same edition before trusting a word of it, and repair by
+   containment.
 3. Per-record date sourcing (#292 owns `hebrew_kings.json`).
-4. `assets/cuvs-plus.json`'s remaining 60 gaps, checked against 和合本.
+4. The LEB's `{…}` idiom braces in the 660 imported verses, if a witness
+   that preserves them can be found.
 
 *(Check 9, the Hebrew/English versification mismatch, was first here and
-is now fixed — see above.)*
+is now fixed. `assets/leb.json`'s missing books were second and are now
+fixed — see above.)*

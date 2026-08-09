@@ -114,6 +114,87 @@ void main() {
     expect(failures, isEmpty, reason: failures.join('\n'));
   });
 
+  test('every edition carries every book of the canon it covers', () {
+    // 2026-08-10: `assets/leb.json` shipped from the initial commit with
+    // Judges and Obadiah ABSENT — 64 books, 30,552 verses. Nothing threw:
+    // the book list is built from the verses present, so the two books
+    // simply were not offered, and a reader comparing Judges 5 across
+    // editions saw LEB silently drop out of the comparison. Repaired in
+    // v1.6.91 from an independently authorized copy of the same edition.
+    final failures = <String>[];
+    for (final code in _versions) {
+      final present = <String>{};
+      for (final m in _bookField
+          .allMatches(File('assets/$code.json').readAsStringSync())) {
+        final en = bookNameToEnglish[m.group(1)!];
+        if (en != null) present.add(en);
+      }
+      // The two 圣经新译本 editions are New Testament only by design.
+      final expected = present.contains('Genesis')
+          ? standardBookOrder
+          : standardBookOrder.sublist(standardBookOrder.indexOf('Matthew'));
+      final missing = expected.where((b) => !present.contains(b));
+      if (missing.isNotEmpty) failures.add('$code: missing ${missing.join(', ')}');
+    }
+    expect(failures, isEmpty, reason: failures.join('\n'));
+  });
+
+  test('no book ends with the name of the book that follows it', () {
+    // 2026-08-10: eight of LEB's books ended with the NEXT book's title
+    // glued to their last verse — Romans 16:24 closed "...Amen. Corinthians",
+    // 1 Peter 5:14 closed "...in Christ. Peter". A scrape had swallowed the
+    // heading of the following page. This reads as scripture and is not,
+    // which is the worst failure mode the corpus has: a reader quoting the
+    // verse quotes a word that no edition contains.
+    final leadingNumeral = RegExp(r'^\d+\s*');
+    final failures = <String>[];
+    for (final code in _versions) {
+      final order = <String>[];
+      final last = <String, Map>{};
+      for (final v
+          in jsonDecode(File('assets/$code.json').readAsStringSync()) as List) {
+        final m = v as Map;
+        final b = m['book'] as String;
+        if (!last.containsKey(b)) order.add(b);
+        last[b] = m;
+      }
+      for (var i = 0; i < order.length - 1; i++) {
+        final next = order[i + 1].replaceFirst(leadingNumeral, '');
+        final text = (last[order[i]]!['text'] as String)
+            .trim()
+            .replaceAll(RegExp(r'[.。!?"”]+$'), '');
+        if (text.endsWith(next)) {
+          failures.add('$code: ${order[i]} ends with "$next"');
+        }
+      }
+    }
+    expect(failures, isEmpty, reason: failures.join('\n'));
+  });
+
+  test('the LEB repair of v1.6.91 stays repaired', () {
+    // Spot checks on the five defect classes `tools/repair_leb.py` fixed,
+    // one verse each, so a re-scrape or a revert cannot quietly undo them.
+    final byRef = <String, String>{};
+    final counts = <String, int>{};
+    for (final v in jsonDecode(File('assets/leb.json').readAsStringSync())
+        as List) {
+      final m = v as Map;
+      counts[m['book'] as String] = (counts[m['book'] as String] ?? 0) + 1;
+      byRef['${m['book']} ${m['chapter']}:${m['verse']}'] = m['text'] as String;
+    }
+    expect(counts['Judges'], 618); // R1: restored book
+    expect(counts['Obadiah'], 21); // R1: restored book
+    // R2: Hebrews 1:9-10 were one record, so 1:10 did not exist and every
+    // reference to it resolved to the wrong verse or to nothing.
+    expect(byRef['Hebrews 1:10'], startsWith('And, "You, Lord'));
+    // R3: a clause was lost, not misplaced — no other verse held it.
+    expect(byRef['Mark 6:6']?.trim(), endsWith('villages teaching.'));
+    // R4: the glued next-book name.
+    expect(byRef['1 Peter 5:14']?.trim(), endsWith('who are in Christ.'));
+    // R5: three records were filed under the book label "The".
+    expect(counts.containsKey('The'), isFalse);
+  });
+
   test('concordance per-book counts sum to the stated total', () {
     // The Analysis pane prints one number ("G2962 · 64 处") and the
     // per-book breakdown prints another set; if they disagree the
