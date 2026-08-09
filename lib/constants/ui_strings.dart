@@ -4164,6 +4164,20 @@ const uiStrings = {
     'zh-Hant': '此編號沒有詞典條目。',
     'en': 'No lexicon entry for this number.',
   },
+  'analysisNoParseGreek': {
+    'zh-Hans': '无词形分析。希腊文词形取自 SBLGNT，本处经文的部分读法'
+        '不见于该底本，故无可依据的分析。',
+    'zh-Hant': '無詞形分析。希臘文詞形取自 SBLGNT，本處經文的部分讀法'
+        '不見於該底本，故無可依據的分析。',
+    'en': 'No parsing. Greek parsing comes from SBLGNT, which does not '
+        'carry every reading of the text shown here.',
+  },
+  'analysisNoParseHebrew': {
+    'zh-Hans': '无词形分析。希伯来文词形取自 Open Scriptures（WLC）。',
+    'zh-Hant': '無詞形分析。希伯來文詞形取自 Open Scriptures（WLC）。',
+    'en': 'No parsing. Hebrew parsing comes from the Open Scriptures '
+        'Hebrew Bible (WLC).',
+  },
   'analysisAvUsage': {
     'zh-Hans': '钦定本译法',
     'zh-Hant': '欽定本譯法',

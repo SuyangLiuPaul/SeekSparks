@@ -11,6 +11,31 @@ accent-stripped forms rather than by position. Only words the alignment
 proves equal get an `m` code; everything else is left untagged, which the
 UI renders as "no parsing available" instead of a wrong parse.
 
+Two orthographic differences are NOT textual differences and are matched
+anyway, because leaving them blank puts an inexplicable gap under an
+ordinary word:
+
+  * Hebrew Ketiv/Qere. OSHB writes the Ketiv as the verse's direct <w>
+    and hangs the Qere off a following <note><rdg type="x-qere">, which
+    a direct-children read never sees. The shipped originals carry the
+    Qere, so the two disagree on 1,244 slots — and on 653 of them the
+    Qere's own parse differs from the Ketiv's, so borrowing the Ketiv's
+    code would have printed a wrong parse, not merely a different one.
+    Both readings are tried, Qere first.
+
+  * Greek movable nu. ἀπέχουσι/ἀπέχουσιν is one word with one parse.
+    The environment test in `movable_nu_equal` is load-bearing rather
+    than decorative: Luke 23:42's τῇ/τὴν and βασιλείᾳ/βασιλείαν also
+    differ by a final nu and are a real dative/accusative variant.
+
+What is left untagged after that is genuine divergence between editions —
+the shipped Greek is a received-text edition and SBLGNT is a critical
+one, so its αὐτῷ at Matthew 3:16 has no counterpart to take a parse
+from. Do NOT close that gap by reusing the same surface form found
+elsewhere in the verse: SBLGNT's only τοῦ at Matthew 3:16 is the neuter
+of ἀπὸ τοῦ ὕδατος, and the received text's second τοῦ is the masculine
+of τοῦ Θεοῦ. That fallback is plausible and prints the wrong gender.
+
 The morph CODE is stored verbatim (e.g. `V-3AAI-S--`, `HVqp3ms`) and
 decoded for display in lib/utils/morphology.dart, so the assets stay
 small and the labels stay localisable.
@@ -73,16 +98,48 @@ def norm_hebrew(s):
     return ''.join(c for c in s if not unicodedata.combining(c))
 
 
-def align(asset_words, src_words, normalize):
-    """Return {asset index -> source index} for provably equal words."""
+_MOVABLE_NU_ENVIRONMENTS = ('σι', 'ε', 'τι')
+
+
+def movable_nu_equal(short, long_, code):
+    """True when two accent-stripped Greek forms are one word spelled with
+    and without the euphonic nu.
+
+    Both tests are needed. The environment test rejects τῇ/τὴν, a real
+    dative/accusative variant that happens to differ by a final nu. The
+    part-of-speech test rejects οὐδέ/οὐδέν, which passes the environment
+    test and is two different words: the nu on -ε is the 3rd singular
+    verb ending, and on -σι it is the 3rd plural or a dative plural.
+    """
+    if long_ != short + 'ν' or not short.endswith(_MOVABLE_NU_ENVIRONMENTS):
+        return False
+    if code.startswith('V-'):
+        return True
+    # MorphGNT parse slots: case at index 6, number at index 7.
+    return (short.endswith('σι') and len(code) > 7
+            and code[6] == 'D' and code[7] == 'P')
+
+
+def align(asset_words, src_words, normalize, variant_equal=None):
+    """Return {asset index -> source index} for provably equal words.
+
+    [variant_equal] salvages same-length `replace` runs whose members are
+    the same word spelled two ways. It is only consulted position-wise
+    inside such a run, so it can never pair words the sequence alignment
+    did not already put opposite one another.
+    """
     a = [normalize(w) for w in asset_words]
     b = [normalize(w) for w in src_words]
     out = {}
     for tag, i1, i2, j1, j2 in SequenceMatcher(None, a, b, autojunk=False).get_opcodes():
-        if tag != 'equal':
-            continue
-        for k in range(i2 - i1):
-            out[i1 + k] = j1 + k
+        if tag == 'equal':
+            for k in range(i2 - i1):
+                out[i1 + k] = j1 + k
+        elif (tag == 'replace' and variant_equal is not None
+                and (i2 - i1) == (j2 - j1)):
+            for k in range(i2 - i1):
+                if variant_equal(a[i1 + k], b[j1 + k], j1 + k):
+                    out[i1 + k] = j1 + k
     return out
 
 
@@ -102,12 +159,36 @@ def load_gnt(path):
     return verses
 
 
-def load_hb(path):
-    """{(chapter, verse): [(word, morphcode)]} from an OSHB WLC book file."""
-    ns = {'o': 'http://www.bibletechnologies.net/2003/OSIS/namespace'}
+_OSIS = '{http://www.bibletechnologies.net/2003/OSIS/namespace}'
+
+
+def _qere_for(siblings, i):
+    """The Qere words replacing the Ketiv at [i], or None if there is no
+    Qere. A Qere of zero words is "written but not read" and returns []."""
+    nxt = siblings[i + 1] if i + 1 < len(siblings) else None
+    if nxt is None or nxt.tag != _OSIS + 'note':
+        return None
+    for rdg in nxt.findall(_OSIS + 'rdg'):
+        if rdg.get('type') != 'x-qere':
+            continue
+        return [(''.join(w.itertext()).strip(), w.get('morph') or '')
+                for w in rdg.findall(_OSIS + 'w')]
+    return None
+
+
+def load_hb(path, reading='qere'):
+    """{(chapter, verse): [(word, morphcode)]} from an OSHB WLC book file.
+
+    [reading] picks which side of a Ketiv/Qere slot is emitted, and under
+    'qere' also inserts the ten Qere-without-Ketiv words — read by the
+    Masoretes but absent from the consonantal text, so they appear in the
+    shipped edition with no <w> of their own to align against. The other
+    editorial notes are BHS commentary and accent variants, never
+    alternative words, so they are ignored.
+    """
     verses = {}
     tree = ET.parse(path)
-    for v in tree.iter('{http://www.bibletechnologies.net/2003/OSIS/namespace}verse'):
+    for v in tree.iter(_OSIS + 'verse'):
         osis = v.get('osisID')
         if not osis:
             continue
@@ -119,16 +200,37 @@ def load_hb(path):
         except ValueError:
             continue
         words = []
-        for w in v.findall('o:w', ns):
-            text = ''.join(w.itertext())
-            morph = w.get('morph') or ''
-            if text.strip():
-                words.append((text.strip(), morph))
+        children = list(v)
+        for i, el in enumerate(children):
+            prev = children[i - 1] if i else None
+            after_ketiv = (prev is not None and prev.tag == _OSIS + 'w'
+                           and prev.get('type') == 'x-ketiv')
+            if el.tag == _OSIS + 'note':
+                if reading != 'qere' or after_ketiv:
+                    continue
+                slot = _qere_for(children, i - 1) or []
+            elif el.tag == _OSIS + 'w':
+                slot = [(''.join(el.itertext()).strip(), el.get('morph') or '')]
+                if reading == 'qere' and el.get('type') == 'x-ketiv':
+                    qere = _qere_for(children, i)
+                    if qere is not None:
+                        slot = qere
+            else:
+                continue
+            words.extend((t, m) for t, m in slot if t)
         verses[key] = words
     return verses
 
 
-def merge(asset_name, src_verses, normalize, stats):
+def merge(asset_name, readings, normalize, stats, variant_equal=None):
+    """Tag one book from [readings], an ordered list of source verse maps.
+
+    The first reading is authoritative; later ones only fill words it
+    could not prove. A code that disagrees with one already in the asset
+    is reported rather than written silently — that is the signal that a
+    change to this script moved an existing parse, which matters far more
+    than the count of new ones.
+    """
     path = os.path.join(ASSETS, asset_name + '.json')
     if not os.path.exists(path):
         print('  ! missing asset', asset_name)
@@ -136,29 +238,46 @@ def merge(asset_name, src_verses, normalize, stats):
     with open(path, encoding='utf-8') as fh:
         data = json.load(fh)
 
-    tagged = total = 0
+    tagged = total = added = changed = 0
     for ref, words in data.items():
         try:
             ch, vs = (int(x) for x in ref.split(':'))
         except ValueError:
             continue
         total += len(words)
-        src = src_verses.get((ch, vs))
-        if not src:
-            continue
-        mapping = align([w.get('w', '') for w in words],
-                        [s[0] for s in src], normalize)
-        for ai, si in mapping.items():
-            code = src[si][1]
-            if code:
+        for rank, src_verses in enumerate(readings):
+            src = src_verses.get((ch, vs))
+            if not src:
+                continue
+            eq = None
+            if variant_equal is not None:
+                eq = lambda x, y, j, s=src: variant_equal(x, y, s[j][1])
+            mapping = align([w.get('w', '') for w in words],
+                            [s[0] for s in src], normalize, eq)
+            for ai, si in mapping.items():
+                code = src[si][1]
+                old = words[ai].get('m')
+                if not code or old == code:
+                    continue
+                if old is not None:
+                    if rank:
+                        continue
+                    changed += 1
+                    print('    ~ %s %s word %d: %s -> %s'
+                          % (asset_name, ref, ai, old, code))
+                else:
+                    added += 1
                 words[ai]['m'] = code
-                tagged += 1
+
+    for words in data.values():
+        tagged += sum(1 for w in words if w.get('m'))
 
     with open(path, 'w', encoding='utf-8') as fh:
         json.dump(data, fh, ensure_ascii=False, separators=(',', ':'))
     pct = (100.0 * tagged / total) if total else 0
-    stats.append((asset_name, tagged, total, pct))
-    print('  %-18s %6d / %6d words tagged (%.1f%%)' % (asset_name, tagged, total, pct))
+    stats.append((asset_name, tagged, total, pct, added, changed))
+    print('  %-18s %6d / %6d words tagged (%.1f%%)  +%d new'
+          % (asset_name, tagged, total, pct, added))
 
 
 def main():
@@ -169,7 +288,9 @@ def main():
         if not os.path.exists(p):
             print('  ! missing source', src)
             continue
-        merge(asset, load_gnt(p), norm_greek, stats)
+        merge(asset, [load_gnt(p)], norm_greek, stats,
+              variant_equal=lambda x, y, code: movable_nu_equal(
+                  *sorted((x, y), key=len), code))
 
     print('\nHebrew OT (Open Scriptures Hebrew Bible, CC BY 4.0)')
     for src, asset in HB_BOOKS:
@@ -177,12 +298,15 @@ def main():
         if not os.path.exists(p):
             print('  ! missing source', src)
             continue
-        merge(asset, load_hb(p), norm_hebrew, stats)
+        merge(asset, [load_hb(p, 'qere'), load_hb(p, 'ketiv')],
+              norm_hebrew, stats)
 
     t = sum(s[1] for s in stats)
     n = sum(s[2] for s in stats)
     print('\nTOTAL %d / %d words tagged (%.1f%%) across %d books'
           % (t, n, 100.0 * t / n if n else 0, len(stats)))
+    print('%d newly tagged, %d existing parses changed, %d still untagged'
+          % (sum(s[4] for s in stats), sum(s[5] for s in stats), n - t))
     worst = sorted(stats, key=lambda s: s[3])[:8]
     print('Lowest coverage:', ', '.join('%s %.0f%%' % (w[0], w[3]) for w in worst))
 

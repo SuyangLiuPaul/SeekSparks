@@ -252,6 +252,81 @@ void main() {
               '${undecodable.take(20).join(', ')}');
     });
 
+    test('the parsing gap is only the received text\'s own readings', () {
+      // Before v1.6.92 this was 2,203 words, and the reason was an
+      // artefact: OSHB hangs the Qere off a <note> that the merge never
+      // read, so every Ketiv/Qere slot went blank. Closing that took the
+      // Hebrew Bible to zero, which makes zero the only honest floor —
+      // any Hebrew word without a parse now means the merge broke.
+      //
+      // What remains is Greek and is NOT an artefact: the shipped text
+      // is a received-text edition, SBLGNT is a critical one, and a
+      // reading SBLGNT does not carry has no parse to borrow. If that
+      // count falls, lower the bound; if it rises, something regressed.
+      const nt = {
+        'matthew', 'mark', 'luke', 'john', 'acts', 'romans',
+        '1_corinthians', '2_corinthians', 'galatians', 'ephesians',
+        'philippians', 'colossians', '1_thessalonians', '2_thessalonians',
+        '1_timothy', '2_timothy', 'titus', 'philemon', 'hebrews', 'james',
+        '1_peter', '2_peter', '1_john', '2_john', '3_john', 'jude',
+        'revelation',
+      };
+      final hebrew = <String>[];
+      var greek = 0;
+      for (final f in Directory('assets/originals')
+          .listSync()
+          .whereType<File>()
+          .where((f) => f.path.endsWith('.json'))) {
+        final book = f.uri.pathSegments.last.replaceAll('.json', '');
+        (jsonDecode(f.readAsStringSync()) as Map).forEach((ref, words) {
+          for (final w in words as List) {
+            final code = (w as Map)['m'] as String?;
+            if (code != null && code.trim().isNotEmpty) continue;
+            if (nt.contains(book)) {
+              greek++;
+            } else {
+              hebrew.add('$book $ref ${w['w']}');
+            }
+          }
+        });
+      }
+      // The one survivor is not a merge failure: 2 Samuel 18:20 prints
+      // the unpointed Ketiv and the pointed Qere as two consecutive
+      // words, so the Hebrew reads "כי על על כן" and only one of the pair
+      // has a counterpart to align with. Three more verses double a word
+      // the same way — see docs/DATA-INTEGRITY.md.
+      expect(hebrew, ['2_samuel 18:20 עַל'],
+          reason: 'a Hebrew word lost its parse — check that '
+              'tools/merge_morphology.py still reads the Qere');
+      expect(greek, lessThanOrEqualTo(868));
+    });
+
+    test('only the two bracketed passages are wholly unparsed', () {
+      // SBLGNT prints neither John 7:53-8:11 nor the Romans doxology, so
+      // those verses have no parse at all. Naming them is what keeps a
+      // whole chapter from going quietly blank and reading as normal.
+      final blank = <String>[];
+      for (final f in Directory('assets/originals')
+          .listSync()
+          .whereType<File>()
+          .where((f) => f.path.endsWith('.json'))) {
+        final book = f.uri.pathSegments.last.replaceAll('.json', '');
+        (jsonDecode(f.readAsStringSync()) as Map).forEach((ref, words) {
+          final w = words as List;
+          if (w.isNotEmpty &&
+              w.every((x) =>
+                  ((x as Map)['m'] as String?)?.trim().isNotEmpty != true)) {
+            blank.add('$book $ref');
+          }
+        });
+      }
+      expect(blank.toSet(), {
+        'john 7:53',
+        for (var v = 1; v <= 11; v++) 'john 8:$v',
+        'romans 16:25', 'romans 16:26', 'romans 16:27',
+      });
+    });
+
     test('every Strong\'s number resolves to a lexicon entry', () {
       // 76 numbers legitimately have none: extended-MorphGNT numbers
       // above the Strong's range (G6000+), covering 86 words. They are

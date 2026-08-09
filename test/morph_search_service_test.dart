@@ -45,7 +45,7 @@ void main() {
       expect(r.hits.first.verse, 8);
     });
 
-    test('the per-morpheme rule changes the answer by 887 words',
+    test('the per-morpheme rule changes the answer by 892 words',
         () async {
       // "feminine verb". A word like HC/Vqv2mp/Sp3fs is a MASCULINE
       // imperative with a feminine object suffix; treating the code as
@@ -61,8 +61,12 @@ void main() {
         books: MorphSearchService.booksFor(MorphScope.testament, '', _sem),
         limit: 1,
       );
-      expect(r.total, 6129);
-      expect(r.scanned, 299556);
+      // Both figures rose in v1.6.92, when reading the Qere gave 1,334
+      // more words a parse: 6,129 -> 6,192 hits over 299,556 -> 300,807
+      // parsed words. They are measurements of the shipped corpus, so
+      // they move whenever its coverage does.
+      expect(r.total, 6192);
+      expect(r.scanned, 300807);
 
       var naive = 0;
       for (final code in ['HC/Vqv2mp/Sp3fs', 'HR/Vqc/Sp3fs']) {

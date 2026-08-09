@@ -310,6 +310,35 @@ class _WordAnalysisPaneState extends State<WordAnalysisPane> {
                 ),
               ),
             ),
+          ] else ...[
+            // A word with no code is not a bug to hide. 868 of the 869
+            // untagged words are received-text readings SBLGNT does not
+            // carry, so the blank is information about the text — but
+            // only if the pane says whose text it is measuring against.
+            const SizedBox(height: 6),
+            Container(
+              width: double.infinity,
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+              decoration: BoxDecoration(
+                border: Border.all(color: wb.border),
+              ),
+              child: Text(
+                widget.word.strongs.toUpperCase().startsWith('H')
+                    ? s('analysisNoParseHebrew',
+                        'No parsing. Hebrew parsing comes from the Open '
+                        'Scriptures Hebrew Bible (WLC).')
+                    : s('analysisNoParseGreek',
+                        'No parsing. Greek parsing comes from SBLGNT, '
+                        'which does not carry every reading of the text '
+                        'shown here.'),
+                style: TextStyle(
+                  fontSize: t.chrome,
+                  color: wb.mutedText,
+                  height: 1.35,
+                ),
+              ),
+            ),
           ],
 
           // ── bwh10q. Directly under the parsing box because its first
