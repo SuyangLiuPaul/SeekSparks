@@ -81,44 +81,155 @@ enum AnalysisTab {
 /// button's 4 px padding either side, and the 2 px gap to its neighbour.
 const double _kMinTabWidth = 30;
 
-/// The narrowest a tab can be and still carry its label: the icon, the
-/// 5 px gap, about six characters of 11.5 px text, and the padding.
-/// Below this the label ellipsises to "Wor…/X-R…", which identifies
-/// nothing the icon did not already.
+/// Everything a labelled tab spends that is not the label itself: the
+/// 15 px icon, the 5 px gap to the text, the button's 4 px padding
+/// either side and the 2 px margin either side. Add the widest label's
+/// measured width to this and you have the narrowest tab that can carry
+/// it without cutting a word in half.
+const double _kLabelChrome = 32;
+
+/// Fallback for callers that cannot measure (the pure function's unit
+/// tests, mostly). A Latin guess — six characters of 11.5 px text plus
+/// [_kLabelChrome] — and the reason this file shipped a CJK defect:
+/// 原文研读 is four FULL-WIDTH glyphs, ~46 px of text before any chrome,
+/// so 66 said "the labels fit" and Flutter then ellipsised them to
+/// 原文…. English never showed it; Chinese always did. Real callers pass
+/// [analysisStripMinLabelledWidth] instead of trusting this.
 const double _kMinLabelledTabWidth = 66;
 
-/// How many rows the strip will spend to keep the labels. Past two it
-/// starts consuming the pane it is labelling.
+/// How many rows the strip will spend to keep the labels on its own
+/// initiative. Past two it starts consuming the pane it is labelling.
 const int _kMaxLabelledRows = 2;
 
 /// How many tabs go on a row, and whether they keep their labels.
 ///
-/// A labelled tab needs ~66 px, a bare icon 30. The strip WRAPS, so what
-/// each tab actually gets is `width / perRow` — not `width / count`.
+/// A bare icon needs 30 px; a labelled tab needs [minLabelledTabWidth],
+/// which is a MEASUREMENT of the current locale's widest label, not a
+/// constant — see [analysisStripMinLabelledWidth]. The strip WRAPS, so
+/// what each tab actually gets is `width / perRow` — not `width / count`.
 /// Measuring against the total was why the labels vanished for good
 /// somewhere around the ninth tab: at 420 px and 12 tabs that reads 35 px
 /// and gives up, while the same strip in two rows of six has 70 px a tab
 /// and could have carried every label.
 ///
 /// So rows are chosen for legibility first: the fewest rows that let the
-/// labels fit, up to two. Two rows of named tabs beat one row of twelve
-/// unexplained icons, and past two the strip starts eating the pane it
-/// labels. Failing that it falls back to icons in BALANCED rows (6+6
-/// rather than 11+1) so every tab keeps the same width.
-({int perRow, bool showLabels}) analysisStripLayout(double width, int count) {
+/// labels fit. Two rows of named tabs beat one row of twelve unexplained
+/// icons, and past two the strip starts eating the pane it labels —
+/// hence the two-row ceiling when the strip is deciding for itself.
+/// Failing that it falls back to icons in BALANCED rows (6+6 rather than
+/// 11+1) so every tab keeps the same width.
+///
+/// [preferLabels] is the reader having asked for names (task #297). Then
+/// the ceiling comes off and the strip spends as many rows as the labels
+/// need, down to one tab a row. That is deliberate: an ellipsised label
+/// "identifies nothing the icon did not already", and a toggle that
+/// silently declines to do the one thing it advertises is worse than a
+/// tall strip the reader can turn off again. At any pane width this app
+/// can actually reach (256 px and up) one tab a row is far wider than
+/// any label, so the icon fallback below is unreachable when
+/// [preferLabels] is set — the request is always honoured.
+({int perRow, bool showLabels}) analysisStripLayout(
+  double width,
+  int count, {
+  double minLabelledTabWidth = _kMinLabelledTabWidth,
+  bool preferLabels = false,
+}) {
   if (count <= 0) return (perRow: 1, showLabels: false);
   if (!width.isFinite || width <= 0) {
     return (perRow: count, showLabels: false);
   }
-  for (var rows = 1; rows <= _kMaxLabelledRows; rows++) {
+  final maxRows = preferLabels ? count : _kMaxLabelledRows;
+  for (var rows = 1; rows <= maxRows; rows++) {
     final n = (count / rows).ceil();
-    if (width / n >= _kMinLabelledTabWidth) {
+    if (width / n >= minLabelledTabWidth) {
       return (perRow: n, showLabels: true);
     }
   }
   final fit = (width / _kMinTabWidth).floor().clamp(1, count);
   return (perRow: (count / (count / fit).ceil()).ceil(), showLabels: false);
 }
+
+/// The narrowest tab that can carry the widest of [labels] whole.
+///
+/// Laid out with the SELECTED tab's weight (w700), which is the widest
+/// the label ever draws — measuring the unselected w500 would let the
+/// selected tab, the one the reader is looking at, be the only one that
+/// ellipsises.
+double analysisStripMinLabelledWidth(
+  Iterable<String> labels, {
+  TextScaler textScaler = TextScaler.noScaling,
+}) {
+  var widest = 0.0;
+  for (final label in labels) {
+    final painter = TextPainter(
+      text: TextSpan(
+        text: label,
+        style: const TextStyle(
+          fontSize: _kLabelFontSize,
+          fontWeight: FontWeight.w700,
+          fontFamilyFallback: kCjkFontFallback,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+      textScaler: textScaler,
+      maxLines: 1,
+    )..layout();
+    if (painter.width > widest) widest = painter.width;
+    painter.dispose();
+  }
+  return widest + _kLabelChrome;
+}
+
+/// The label's type size, shared by the measurement and the widget so
+/// the two cannot drift.
+const double _kLabelFontSize = 11.5;
+
+/// Measurements are cached because the strip rebuilds on every hover
+/// that changes the analysed word, and the answer only moves when the
+/// locale or the reader's text scale does.
+final Map<String, double> _minLabelledCache = {};
+
+double _cachedMinLabelledWidth(List<String> labels, TextScaler textScaler) {
+  final key = '${textScaler.scale(_kLabelFontSize)} ${labels.join('')}';
+  return _minLabelledCache[key] ??=
+      analysisStripMinLabelledWidth(labels, textScaler: textScaler);
+}
+
+/// The tabs, in strip order: which pane, its glyph, its `uiStrings`
+/// key, and the English fallback for a locale that key does not cover.
+const _kTabs = <(AnalysisTab, IconData, String, String)>[
+  (AnalysisTab.wordStudy, Icons.translate_rounded, 'wordStudyTitle',
+      'Word Study'),
+  (AnalysisTab.crossRefs, Icons.hub_outlined, 'analysisTabCrossRefs',
+      'X-Refs'),
+  (AnalysisTab.stats, Icons.bar_chart_rounded, 'analysisTabStats', 'Stats'),
+  (AnalysisTab.kwic, Icons.format_align_center_rounded, 'analysisTabKwic',
+      'KWIC'),
+  (AnalysisTab.related, Icons.linear_scale_rounded, 'analysisTabRelated',
+      'Related'),
+  (AnalysisTab.verseLists, Icons.playlist_add_check_rounded,
+      'analysisTabVerseLists', 'Lists'),
+  (AnalysisTab.phrases, Icons.format_quote_rounded, 'analysisTabPhrases',
+      'Phrases'),
+  (AnalysisTab.vocabulary, Icons.style_outlined, 'analysisTabVocabulary',
+      'Vocab'),
+  (AnalysisTab.morphology, Icons.account_tree_outlined,
+      'analysisTabMorphology', 'Forms'),
+  (AnalysisTab.topics, Icons.topic_outlined, 'analysisTabTopics', 'Topics'),
+  (AnalysisTab.context, Icons.segment_rounded, 'analysisTabContext',
+      'Context'),
+  (AnalysisTab.places, Icons.place_outlined, 'analysisTabPlaces', 'Places'),
+];
+
+/// The tab names as they will be drawn in [locale], in strip order.
+///
+/// Public because the width a labelled tab needs is a measurement of
+/// exactly these strings — a caller that wants to know whether the
+/// strip can carry labels must measure what the strip will draw, not a
+/// copy of it that can drift.
+List<String> analysisTabLabels(String locale) => [
+      for (final tab in _kTabs) uiStrings[tab.$3]?[locale] ?? tab.$4,
+    ];
 
 /// The tab strip itself. Deliberately a plain segmented row rather than
 /// a Material `TabBar`: the pane is narrow (320–560 px) and the strip
@@ -130,80 +241,37 @@ class AnalysisTabStrip extends StatelessWidget {
     required this.current,
     required this.onChanged,
     required this.locale,
+    this.preferLabels = false,
   });
 
   final AnalysisTab current;
   final ValueChanged<AnalysisTab> onChanged;
   final String locale;
 
+  /// The reader has asked for tab names rather than letting the strip
+  /// decide (task #297). Costs rows, never letters.
+  final bool preferLabels;
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    const items = <(AnalysisTab, IconData, String, String)>[
-      (
-        AnalysisTab.wordStudy,
-        Icons.translate_rounded,
-        'wordStudyTitle',
-        'Word Study'
-      ),
-      (
-        AnalysisTab.crossRefs,
-        Icons.hub_outlined,
-        'analysisTabCrossRefs',
-        'X-Refs'
-      ),
-      (AnalysisTab.stats, Icons.bar_chart_rounded, 'analysisTabStats', 'Stats'),
-      (
-        AnalysisTab.kwic,
-        Icons.format_align_center_rounded,
-        'analysisTabKwic',
-        'KWIC'
-      ),
-      (
-        AnalysisTab.related,
-        Icons.linear_scale_rounded,
-        'analysisTabRelated',
-        'Related'
-      ),
-      (
-        AnalysisTab.verseLists,
-        Icons.playlist_add_check_rounded,
-        'analysisTabVerseLists',
-        'Lists'
-      ),
-      (
-        AnalysisTab.phrases,
-        Icons.format_quote_rounded,
-        'analysisTabPhrases',
-        'Phrases'
-      ),
-      (
-        AnalysisTab.vocabulary,
-        Icons.style_outlined,
-        'analysisTabVocabulary',
-        'Vocab'
-      ),
-      (
-        AnalysisTab.morphology,
-        Icons.account_tree_outlined,
-        'analysisTabMorphology',
-        'Forms'
-      ),
-      (AnalysisTab.topics, Icons.topic_outlined, 'analysisTabTopics', 'Topics'),
-      (
-        AnalysisTab.context,
-        Icons.segment_rounded,
-        'analysisTabContext',
-        'Context'
-      ),
-      (AnalysisTab.places, Icons.place_outlined, 'analysisTabPlaces', 'Places'),
-    ];
+    const items = _kTabs;
+    final labels = analysisTabLabels(locale);
+    final minLabelled = _cachedMinLabelledWidth(
+      labels,
+      MediaQuery.textScalerOf(context),
+    );
     return Container(
       padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
       color: scheme.surface,
       child: LayoutBuilder(
         builder: (context, box) {
-          final layout = analysisStripLayout(box.maxWidth, items.length);
+          final layout = analysisStripLayout(
+            box.maxWidth,
+            items.length,
+            minLabelledTabWidth: minLabelled,
+            preferLabels: preferLabels,
+          );
           final perRow = layout.perRow;
           final showLabels = layout.showLabels;
           return Column(
@@ -224,8 +292,7 @@ class AnalysisTabStrip extends StatelessWidget {
                                   const EdgeInsets.symmetric(horizontal: 2),
                               child: _TabButton(
                                 icon: items[i].$2,
-                                label: uiStrings[items[i].$3]?[locale] ??
-                                    items[i].$4,
+                                label: labels[i],
                                 showLabel: showLabels,
                                 selected: items[i].$1 == current,
                                 onTap: () => onChanged(items[i].$1),
@@ -290,9 +357,15 @@ class _TabButton extends StatelessWidget {
                     child: Text(
                       label,
                       maxLines: 1,
+                      // Kept as a backstop only. What actually prevents
+                      // a cut label is that the strip measured THIS
+                      // style before deciding to show one — the two must
+                      // stay in step, hence the shared font size and the
+                      // fallback list the measurement also uses.
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontSize: 11.5,
+                        fontSize: _kLabelFontSize,
+                        fontFamilyFallback: kCjkFontFallback,
                         fontWeight:
                             selected ? FontWeight.w700 : FontWeight.w500,
                         color: fg,

@@ -7131,6 +7131,20 @@ const uiStrings = {
     'zh-Hant': '地名',
     'en': 'Places',
   },
+
+  // ── The Analysis strip's names/icons toggle (task #297) ───────────
+  // The tooltip names what the tap will DO, so the two states read as
+  // one control rather than as a label of the state you are in.
+  'analysisTabNamesShow': {
+    'zh-Hans': '显示标签名称',
+    'zh-Hant': '顯示標籤名稱',
+    'en': 'Show tab names',
+  },
+  'analysisTabNamesAuto': {
+    'zh-Hans': '标签名称：自动',
+    'zh-Hant': '標籤名稱：自動',
+    'en': 'Tab names: automatic',
+  },
   'placesInThisVerse': {
     'zh-Hans': '本节地名',
     'zh-Hant': '本節地名',

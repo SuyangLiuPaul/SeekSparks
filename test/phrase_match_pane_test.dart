@@ -283,6 +283,16 @@ void main() {
     });
 
     testWidgets('labels come back when there is room', (tester) async {
+      final wide = analysisStripMinLabelledWidth(analysisTabLabels('en')) *
+              AnalysisTab.values.length +
+          16 +
+          40;
+      // Otherwise the test surface clamps the host and the assertion is
+      // about a narrower strip than the one it asked for.
+      tester.view.physicalSize = Size(wide + 200, 800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
       await tester.pumpWidget(_host(
         Column(children: [
           AnalysisTabStrip(
@@ -291,10 +301,11 @@ void main() {
             locale: 'en',
           ),
         ]),
-        // A labelled tab needs 66 px, plus the strip's own 8 px of
-        // padding either side. Derived rather than hard-coded: the
-        // threshold moves every time a tab is added.
-        width: 66.0 * AnalysisTab.values.length + 16 + 40,
+        // Derived from the same measurement the strip itself makes,
+        // not from a constant: what a labelled tab needs depends on the
+        // locale's widest label and on the font actually in use, and
+        // the test font is not the shipping one (task #297).
+        width: wide,
       ));
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);

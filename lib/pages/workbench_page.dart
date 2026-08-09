@@ -244,6 +244,14 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
   AnalysisTab _analysisTab = AnalysisTab.wordStudy;
   static const _kAnalysisTabKey = 'workbench.analysisTab';
 
+  /// Whether the reader has asked the Analysis strip for tab NAMES
+  /// rather than letting it decide (task #297). Default off: twelve
+  /// icons on one row is what the strip picks at the default pane width
+  /// in every locale, and it is what the reader who asked for this
+  /// toggle said they were happy with.
+  bool _analysisTabLabels = false;
+  static const _kAnalysisTabLabelsKey = 'workbench.analysisTabLabels';
+
   /// The Strong's number the distribution chart is drawn for, or null
   /// when the chart is not up. A second lens over the centre pane, on
   /// the same terms as the map: deliberately NOT persisted, because a
@@ -809,6 +817,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
       if (tab != null && tab >= 0 && tab < AnalysisTab.values.length) {
         _analysisTab = AnalysisTab.values[tab];
       }
+      _analysisTabLabels = prefs.getBool(_kAnalysisTabLabelsKey) ?? false;
     });
     if (_wb.centreMode == WbCentreMode.split) _openSecondColumn();
   }
@@ -822,6 +831,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
     await prefs.setString(_kCentreModeKey, centreModeToStorage(_wb.centreMode));
     await prefs.setStringList(_kParallelVersionsKey, _wb.parallelVersions);
     await prefs.setInt(_kAnalysisTabKey, _analysisTab.index);
+    await prefs.setBool(_kAnalysisTabLabelsKey, _analysisTabLabels);
   }
 
   // ── Pane geometry ─────────────────────────────────────────────────
@@ -1837,6 +1847,24 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
           WbPaneTitle(
             title: uiStrings['analysisTitle']?[locale] ?? 'Analysis',
             trailing: [
+              // Next to the pane's own menu, which is where the reader
+              // who asked for this pointed (task #297). Two states, not
+              // three: the strip already decides well on its own, so the
+              // only question worth a control is "decide for me" versus
+              // "I want the names", and that is one tap either way.
+              WbToolButton(
+                icon: Icons.label_outline,
+                tooltip: _analysisTabLabels
+                    ? (uiStrings['analysisTabNamesAuto']?[locale] ??
+                        'Tab names: automatic')
+                    : (uiStrings['analysisTabNamesShow']?[locale] ??
+                        'Show tab names'),
+                active: _analysisTabLabels,
+                onPressed: () {
+                  setState(() => _analysisTabLabels = !_analysisTabLabels);
+                  _persistPrefs();
+                },
+              ),
               WbToolButton(
                 icon: Icons.chevron_right,
                 tooltip: uiStrings['collapse']?[locale] ?? 'Collapse',
@@ -1847,6 +1875,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
           AnalysisTabStrip(
             current: _analysisTab,
             locale: locale,
+            preferLabels: _analysisTabLabels,
             onChanged: (t) {
               setState(() => _analysisTab = t);
               _persistPrefs();

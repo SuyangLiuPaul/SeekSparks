@@ -507,14 +507,22 @@ void main() {
     });
 
     testWidgets('stays on one row when there is room for one', (tester) async {
-      // The default 800 px test surface would clamp the SizedBox and
-      // silently test a 784 px strip — which is 8 px short of twelve
-      // labelled tabs, so the assertion would be about the wrong width.
-      tester.view.physicalSize = const Size(1400, 800);
+      // Room for one row is a MEASUREMENT, not a constant: it depends
+      // on the locale's widest label and on the font in use, and the
+      // test font is not the shipping one (task #297). A hard-coded
+      // width here silently tested a strip too narrow for its own
+      // labels and asserted about the wrong thing.
+      final wide = analysisStripMinLabelledWidth(analysisTabLabels('en')) *
+              AnalysisTab.values.length +
+          16 +
+          8;
+      // The test surface would otherwise clamp the SizedBox and the
+      // assertion would again be about a width nobody asked for.
+      tester.view.physicalSize = Size(wide + 200, 800);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.reset);
 
-      await tester.pumpWidget(host(1200));
+      await tester.pumpWidget(host(wide));
       await tester.pumpAndSettle();
 
       expect(tester.takeException(), isNull);
