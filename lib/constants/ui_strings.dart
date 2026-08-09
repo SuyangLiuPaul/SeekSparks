@@ -5331,13 +5331,15 @@ const uiStrings = {
     'zh-Hant': '請切換到包含此章節的版本。',
     'en': 'Switch to a version that includes it.',
   },
-  // Referenced by the reading pane since v1.3.12 but never defined, so
-  // the lookup returned null every time and the hardcoded fallback ran
-  // — which showed a Traditional reader Simplified text.
-  'endOfBible': {
-    'zh-Hans': '已到尽头',
-    'zh-Hant': '已到盡頭',
-    'en': 'End of Bible',
+  // 2026-08-09 (#298): replaces 'endOfBible'. The chapter pager cannot
+  // scroll past its own last page, so the placeholder it printed
+  // "End of Bible" into was never a canon edge — it was the reader's
+  // book list and its verse list disagreeing, and calling that the end
+  // of the Bible on Genesis 1 is what kept a dead pane looking normal.
+  'chapterTextNotLoaded': {
+    'zh-Hans': '本章经文未能载入。请重新载入页面再试。',
+    'zh-Hant': '本章經文未能載入。請重新載入頁面再試。',
+    'en': 'This chapter’s text did not load. Reload the page and try again.',
   },
   'loadErrorTitle': {
     'zh-Hans': '加载失败',

@@ -5756,38 +5756,51 @@ class _ChapterPreview extends StatelessWidget {
       // doesn't include this book/chapter (e.g. LJK V2 NT-only +
       // a stored Psalms note from a previous full-canon version).
       //
-      // Distinguish two cases:
-      //   1. Canon edge: PageView's first/last page, chapter list
-      //      really does end here. Show the genuine "End of Bible".
-      //   2. Mid-canon hole: chapter exists in the full canon but
-      //      not the current version's books list. Show specific
-      //      "current version doesn't have this chapter" + button
-      //      to switch to a version that does.
+      // 2026-08-09 (#298): there are two cases, and neither of them
+      // is "you have reached the end of the Bible".
       //
-      // Detection: if `mainProvider.findChapterIndex(book, chapter)`
-      // resolves AND it's not the first/last in chapterList, this
-      // is case 1 (canon edge). Otherwise case 2 (version-specific
-      // gap).
-      // chapterIdx == null means the chapter is NOT in the current
-      // version's chapterList (version doesn't ship this book) —
-      // that's case 2 (version-specific gap), NOT a canon edge.
-      // Genuine canon edges are chapterList[0] (Gen 1) and
-      // chapterList[length-1] (last book's last chapter).
-      final chapterIdx =
-          mainProvider.findChapterIndex(book, chapter);
-      final isEdge = chapterIdx != null &&
-          (chapterIdx == 0 ||
-              chapterIdx == mainProvider.chapterList.length - 1);
+      // The old rule called chapterList[0] and chapterList[last]
+      // canon EDGES and printed "End of Bible" for both. That was
+      // wrong twice over. It told a reader sitting on GENESIS 1 they
+      // had reached the end — and worse, it dressed a data failure
+      // as ordinary behaviour, which is why the reading pane could
+      // be dead for months and read as normal. The pager cannot
+      // overscroll (`itemCount == chapterList.length`), so no page
+      // is ever past the end; every chapter chapterList names is a
+      // chapter this version ships. An empty one is always a fault.
+      //
+      //   1. chapterIdx == null — the chapter is not in this
+      //      version's book list at all (a stored Psalms position on
+      //      an NT-only edition). Legitimate, and the v1.3.12 gap UI
+      //      names the versions that do have it.
+      //   2. chapterIdx != null — the book list SAYS this chapter
+      //      exists and the verses disagree, i.e. `books` and
+      //      `verses` are out of step. Repair it rather than
+      //      narrate it: `resyncBooksWithVerses` re-derives the
+      //      projection, notifies only if something actually moved,
+      //      and so cannot loop. The message below is what the
+      //      reader sees for the one frame before the repair lands,
+      //      or for good if the verses genuinely never loaded.
+      final chapterIdx = mainProvider.findChapterIndex(book, chapter);
       final isZh = settings.locale.startsWith('zh');
-      final msg = isEdge
-          ? (uiStrings['endOfBible']?[settings.locale] ??
-              (isZh ? '已到尽头' : 'End of Bible'))
-          : missingChapterMessage(
-              book: book,
-              chapter: chapter,
-              locale: settings.locale,
-              currentVersion: mainProvider.currentVersion,
-            );
+      final String msg;
+      if (chapterIdx == null) {
+        msg = missingChapterMessage(
+          book: book,
+          chapter: chapter,
+          locale: settings.locale,
+          currentVersion: mainProvider.currentVersion,
+        );
+      } else {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          mainProvider.resyncBooksWithVerses();
+        });
+        msg = uiStrings['chapterTextNotLoaded']?[settings.locale] ??
+            (isZh
+                ? '本章经文未能载入。请重新载入页面再试。'
+                : 'This chapter’s text did not load. Reload the page and '
+                    'try again.');
+      }
       return ColoredBox(
         color: scheme.surface,
         child: Center(

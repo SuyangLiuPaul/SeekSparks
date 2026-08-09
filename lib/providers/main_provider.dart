@@ -9,6 +9,8 @@ import 'package:seeksparks/models/verse.dart';
 import 'package:seeksparks/models/book.dart';
 import 'package:seeksparks/services/error_reporter.dart';
 import 'package:seeksparks/services/fetch_books.dart' show bookNameToEnglish;
+import 'package:seeksparks/utils/build_books_from_verses.dart'
+    show booksMatchVerses, buildBooksFromVerses;
 import 'package:seeksparks/utils/version_mapper.dart' show translateBookName;
 import 'package:seeksparks/services/fetch_verses.dart' show FetchVerses;
 import 'package:seeksparks/services/profile_service.dart';
@@ -129,6 +131,21 @@ class MainProvider extends ChangeNotifier {
     // block fix. Invalidate this here so the next access rebuilds
     // it for the new verses list.
     _versesByChapterKey = null;
+    // 2026-08-09 (#298): `books` is a PROJECTION of `verses` — the
+    // chapter pager's page identities come from it — so moving one
+    // without the other leaves the pager addressing chapters by the
+    // OLD edition's book names. `versesInChapter('Genesis', 1)` then
+    // returns nothing against verses filed under '创世纪', every page
+    // of the reader renders the empty-chapter placeholder, and page
+    // zero renders it as "End of Bible" on Genesis 1. Three of the
+    // five version-switch sites did exactly that. Projecting here
+    // means no caller can perform half the swap.
+    //
+    // An EMPTY list is a failed load, not an empty Bible — the same
+    // reason `_cacheVerses` skips it below — so leave the previous
+    // projection standing for the revert-to-previous-version path
+    // to find.
+    if (list.isNotEmpty) _assignBooks(buildBooksFromVerses(list));
     // 2026-05-10 (v1.2.14): populate the per-version verse cache so
     // a future switch back to this version is truly instant
     // ("一瞬间", in the user's words). Skip empty lists — they
@@ -342,11 +359,23 @@ class MainProvider extends ChangeNotifier {
     // path (line 116); this matches that behavior for the warm-
     // cache path.
     _versesByChapterKey = null;
+    // 2026-08-09 (#298): and the book projection with it. The warm
+    // path is the one that feels instant, so it is also the one most
+    // likely to be reached by a caller that skips FetchBooks.
+    _assignBooks(buildBooksFromVerses(cached));
     notifyListeners();
     return true;
   }
 
   void setBooks(List<Book> list) {
+    _assignBooks(list);
+    notifyListeners();
+  }
+
+  /// [setBooks] without the notify, so the two paths that assign
+  /// `verses` can re-project `books` inside the notify they already
+  /// send. Split out 2026-08-09 (#298).
+  void _assignBooks(List<Book> list) {
     // Deduplicate by title while preserving first occurrence
     final seen = <String>{};
     books = list.where((b) => seen.add(b.title)).toList();
@@ -354,7 +383,23 @@ class MainProvider extends ChangeNotifier {
     // index are stale.
     _bookOrderCache = null;
     _chapterList = null;
+  }
+
+  /// Re-derives `books` from `verses` and reports whether anything
+  /// moved. Returns false — and notifies nobody — when the two were
+  /// already in step, which is what makes it safe to call from a
+  /// build: it can repair the tree at most once, never oscillate.
+  ///
+  /// 2026-08-09 (#298): with the projection applied on assignment
+  /// this should never find work to do. It exists because when it
+  /// did find work, the symptom was a permanently dead reading pane,
+  /// and a screen that heals itself beats one that explains itself.
+  bool resyncBooksWithVerses() {
+    if (verses.isEmpty) return false;
+    if (booksMatchVerses(books, verses)) return false;
+    _assignBooks(buildBooksFromVerses(verses));
     notifyListeners();
+    return true;
   }
 
   // ── Search-key cache (v1.0.1 perf) ────────────────────────────────

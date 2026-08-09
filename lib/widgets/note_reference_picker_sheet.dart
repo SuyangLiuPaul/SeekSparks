@@ -8,7 +8,6 @@ import 'package:seeksparks/models/verse.dart';
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/utils/note_reference_parser.dart'
     show formatCompactReference;
-import 'package:seeksparks/services/fetch_books.dart' show standardBookOrder;
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 
 /// 2026-05-19 (v1.2.59): book → chapter → verse picker for the
