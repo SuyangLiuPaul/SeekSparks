@@ -90,6 +90,20 @@ class BibleMap {
   /// Bundled asset path. Only valid when source == 'asset'.
   String get assetPath => 'assets/maps/$file';
 
+  /// 420px-wide JPEG of [assetPath], for thumbnail grids and strips.
+  ///
+  /// The 55 bundled plates are survey maps at up to 1920×3288 — 29 MB
+  /// and 95 megapixels for the set. A grid showing ~28 of them decodes
+  /// ~48 MP at once, which on a software rasteriser never produces a
+  /// frame; `cacheWidth` does not prevent the decode. The whole set of
+  /// thumbnails is 2.4 MB. Full resolution is still what the viewer
+  /// loads, because that one is zoomed to 5×.
+  String get thumbAssetPath {
+    final dot = file.lastIndexOf('.');
+    final stem = dot < 0 ? file : file.substring(0, dot);
+    return 'assets/maps/thumbs/$stem.jpg';
+  }
+
   bool matchesBookChapter(String englishBook, int chapter) {
     final range = books[englishBook];
     if (range == null || range.isEmpty) return false;

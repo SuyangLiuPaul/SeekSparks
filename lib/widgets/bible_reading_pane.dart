@@ -21,6 +21,7 @@ import 'package:seeksparks/pages/bible_trivia_page.dart' as trivia;
 import 'package:seeksparks/pages/books_page.dart';
 import 'package:seeksparks/pages/evidence_page.dart';
 import 'package:seeksparks/pages/highlights_page.dart';
+import 'package:seeksparks/pages/illustrations_page.dart';
 import 'package:seeksparks/pages/library_page.dart';
 import 'package:seeksparks/pages/map_viewer_page.dart';
 import 'package:seeksparks/pages/command_search_page.dart';
@@ -44,7 +45,6 @@ import 'package:seeksparks/services/sermon_service.dart';
 import 'package:seeksparks/services/synopsis_service.dart';
 import 'package:seeksparks/utils/clipboard_helper.dart';
 import 'package:seeksparks/utils/haptics.dart';
-import 'package:seeksparks/utils/illustration_grouping.dart';
 // 2026-05-10 (v1.2.13): the `as jumper` import was only needed by
 // the `_captureChapterRelativeVerseNum` / `_scrollToVerseInChapter`
 // thin wrappers that v1.2.13 removed alongside the version-switch
@@ -3067,9 +3067,8 @@ void _showOriginalsSheet({
     // wide desktop/iPad screens. Allow up to 1100px so the panel
     // breathes on web while still feeling sheet-like on phones.
     constraints: const BoxConstraints(maxWidth: 1100),
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-    ),
+    // Square: a sheet is a window edge here, not a card.
+    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
     builder: buildSheet,
   );
 }
@@ -3111,9 +3110,8 @@ void _showAiExplainSheet({
     isScrollControlled: true,
     backgroundColor: Theme.of(context).colorScheme.surface,
     constraints: const BoxConstraints(maxWidth: 1100),
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-    ),
+    // Square: a sheet is a window edge here, not a card.
+    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
     builder: (sheetCtx) => _AiExplainSheet(
       englishBook: englishBook,
       chapter: first.chapter,
@@ -3452,8 +3450,6 @@ class _AiExplainSheetState extends State<_AiExplainSheet> {
       padding: const EdgeInsets.fromLTRB(14, 10, 12, 12),
       decoration: BoxDecoration(
         color: scheme.primary.withValues(alpha: 0.06),
-        borderRadius:
-            const BorderRadius.horizontal(right: Radius.circular(10)),
         border: Border(left: BorderSide(color: scheme.primary, width: 3)),
       ),
       child: Column(
@@ -3816,9 +3812,8 @@ void _showCrossRefsSheet({
     isScrollControlled: true,
     backgroundColor: Theme.of(context).colorScheme.surface,
     constraints: const BoxConstraints(maxWidth: 900),
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-    ),
+    // Square: a sheet is a window edge here, not a card.
+    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
     builder: (sheetCtx) => DraggableScrollableSheet(
       initialChildSize: 0.7,
       minChildSize: 0.35,
@@ -3878,9 +3873,8 @@ void _showChapterSermonsSheet({
     isScrollControlled: true,
     backgroundColor: Theme.of(context).colorScheme.surface,
     constraints: const BoxConstraints(maxWidth: 800),
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-    ),
+    // Square: a sheet is a window edge here, not a card.
+    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
     builder: (sheetCtx) => DraggableScrollableSheet(
       initialChildSize: 0.55,
       minChildSize: 0.3,
@@ -4025,9 +4019,8 @@ void _showRelatedSermonsSheet({
     isScrollControlled: true,
     backgroundColor: Theme.of(context).colorScheme.surface,
     constraints: const BoxConstraints(maxWidth: 800),
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-    ),
+    // Square: a sheet is a window edge here, not a card.
+    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
     builder: (sheetCtx) => DraggableScrollableSheet(
       initialChildSize: 0.55,
       minChildSize: 0.3,
@@ -4513,9 +4506,8 @@ void showNoteEditor({
     enableDrag: true,
     backgroundColor: Theme.of(context).colorScheme.surface,
     constraints: const BoxConstraints(maxWidth: 720),
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-    ),
+    // Square: a sheet is a window edge here, not a card.
+    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
     builder: (sheetCtx) {
       // 2026-05-20 (v1.2.63): viewInsets watcher closed over by the
       // StatefulBuilder so we can fire restoreScroll on EVERY
@@ -5123,9 +5115,8 @@ void _showHighlightsSheet({
     context: context,
     isScrollControlled: true,
     backgroundColor: Theme.of(context).colorScheme.surface,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-    ),
+    // Square: a sheet is a window edge here, not a card.
+    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
     builder: (sheetCtx) => HighlightsSheet(
       highlights: highlights,
       locale: locale,
@@ -5176,8 +5167,17 @@ void _navigateToConcordanceRef({
 ///   - "For this book" — additional maps that mention this book.
 ///     Auto-selected when no chapter match exists, with a small note
 ///     explaining that nothing matches the exact chapter.
-///   - "All maps" — the full library, always available so users can
-///     browse even on chapters with zero matches (Judges, Job, etc.).
+///
+/// 2026-08-09: it used to carry a third tab holding the WHOLE 1,192-plate
+/// library as a 66-book accordion of 44px thumbnails. That is a browse
+/// surface, and browsing a picture archive by reading a list of its
+/// captions is the wrong shape for it — so it moved out to the
+/// Illustrations window under Resources, where it is a grid with a
+/// search, kind filters and the #280 book scope. What stays here is the
+/// half that operates on the open chapter, which is bwh07's own test for
+/// what belongs in the reading column. The footer is the door: the
+/// `mapsBrowseLibrary` string it uses has been sitting unused in
+/// `ui_strings` since the archive shipped.
 void _showMapPicker(
   BuildContext context, {
   required List<BibleMap> chapterMaps,
@@ -5195,9 +5195,8 @@ void _showMapPicker(
   showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-    ),
+    // Square: a sheet is a window edge here, not a card.
+    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
     builder: (sheetCtx) {
       return _MapPickerSheet(
         chapterMaps: chapterMaps,
@@ -5228,8 +5227,6 @@ class _MapPickerSheet extends StatefulWidget {
 class _MapPickerSheetState extends State<_MapPickerSheet>
     with SingleTickerProviderStateMixin {
   late TabController _tab;
-  List<BibleMap> _allMaps = const [];
-  bool _allLoading = true;
 
   // Tab indices that are visible in the current configuration.
   // The "Chapter" tab is hidden when there are no chapter matches —
@@ -5252,22 +5249,12 @@ class _MapPickerSheetState extends State<_MapPickerSheet>
       vsync: this,
       initialIndex: initial.clamp(0, _tabs.length - 1),
     );
-    _loadAll();
   }
 
   @override
   void dispose() {
     _tab.dispose();
     super.dispose();
-  }
-
-  Future<void> _loadAll() async {
-    final all = await MapService.loadMaps();
-    if (!mounted) return;
-    setState(() {
-      _allMaps = all;
-      _allLoading = false;
-    });
   }
 
   List<_MapTab> _buildTabs() {
@@ -5281,8 +5268,16 @@ class _MapPickerSheetState extends State<_MapPickerSheet>
       tabs.add(_MapTab(_MapTabKind.book,
           uiStrings['mapsForThisBook']?[widget.locale] ?? 'For this book'));
     }
-    tabs.add(_MapTab(
-        _MapTabKind.all, uiStrings['mapsAll']?[widget.locale] ?? 'All maps'));
+    // The departed "All maps" tab was what guaranteed this list was
+    // never empty. The overflow menu still offers the picker on a
+    // chapter that matches nothing (Judges, Job), and a zero-length
+    // TabController/TabBarView asserts — so keep the chapter tab, whose
+    // empty state says so in words, and let the footer be the way out.
+    if (tabs.isEmpty) {
+      tabs.add(_MapTab(_MapTabKind.chapter,
+          uiStrings['mapsForThisChapter']?[widget.locale] ??
+              'For this chapter'));
+    }
     return tabs;
   }
 
@@ -5360,6 +5355,31 @@ class _MapPickerSheetState extends State<_MapPickerSheet>
                 ],
               ),
             ),
+            const Divider(height: 1),
+            // The door to the archive. This sheet answers "what pictures
+            // go with what I am reading"; the whole 1,192-plate library is
+            // a Resource with its own window, and the reader needs to be
+            // told it exists — especially on a chapter with no matches,
+            // where everything above this row is an empty state.
+            SizedBox(
+              width: double.infinity,
+              child: TextButton.icon(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  pushPage(const IllustrationsPage());
+                },
+                icon: const Icon(Icons.grid_view_outlined, size: 16),
+                label: Text(
+                  uiStrings['mapsBrowseLibrary']?[widget.locale] ??
+                      'Browse all illustrations',
+                ),
+                style: TextButton.styleFrom(
+                  shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.zero),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -5381,20 +5401,6 @@ class _MapPickerSheetState extends State<_MapPickerSheet>
               ),
             Expanded(child: _mapList(widget.bookMaps)),
           ],
-        );
-      case _MapTabKind.all:
-        if (_allLoading) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        // Group by canonical book and render collapsible sections
-        // — pre-fix this dumped 200+ tiles in a single flat list
-        // which "had too many when opened" per user feedback.
-        return _AllIllustrationsByBook(
-          all: _allMaps,
-          locale: widget.locale,
-          version: widget.version,
-          related: [...widget.chapterMaps, ...widget.bookMaps],
-          onCloseSheet: () => Navigator.of(context).pop(),
         );
     }
   }
@@ -5430,7 +5436,7 @@ class _MapPickerSheetState extends State<_MapPickerSheet>
   }
 }
 
-enum _MapTabKind { chapter, book, all }
+enum _MapTabKind { chapter, book }
 
 class _MapTab {
   final _MapTabKind kind;
@@ -5465,205 +5471,6 @@ class _FallbackNote extends StatelessWidget {
               ),
             ),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Groups all illustrations by canonical book and renders each group
-/// as a collapsible section with "{Book} ({n})" header. Supports a
-/// quick search field that filters by book name OR illustration title.
-class _AllIllustrationsByBook extends StatefulWidget {
-  final List<BibleMap> all;
-  final String locale;
-  final String version;
-  final List<BibleMap> related;
-  final VoidCallback onCloseSheet;
-  const _AllIllustrationsByBook({
-    required this.all,
-    required this.locale,
-    required this.version,
-    required this.related,
-    required this.onCloseSheet,
-  });
-
-  @override
-  State<_AllIllustrationsByBook> createState() =>
-      _AllIllustrationsByBookState();
-}
-
-class _AllIllustrationsByBookState extends State<_AllIllustrationsByBook> {
-  final _query = TextEditingController();
-
-  @override
-  void dispose() {
-    _query.dispose();
-    super.dispose();
-  }
-
-  /// Build [book → maps] map preserving canonical OT/NT order.
-  /// 2026-06-30 (v1.3.118): de-duplicated the catalogue — wide survey
-  /// maps used to repeat group after group (1192 illustrations → 1940
-  /// tiles). 2026-07-07: the primary-book-only version of that de-dup
-  /// EMPTIED 13 NT books whose every illustration also touched an
-  /// earlier book (e.g. Ephesians lost "Paul leaves Ephesus" to Acts).
-  /// Now delegates to [groupIllustrationsByBook]: small spans (≤4
-  /// books) list under each tagged book, wide survey maps under their
-  /// first book only, and any still-empty book gets its referencing
-  /// illustrations back. Per-book relevance is unaffected: the "For
-  /// this book / chapter" tabs filter `widget.all` directly.
-  Map<String, List<BibleMap>> _groupByBook() =>
-      groupIllustrationsByBook(widget.all, standardBookOrder);
-
-  bool _bookMatches(String book, String q) {
-    if (q.isEmpty) return true;
-    final qLower = q.toLowerCase();
-    if (book.toLowerCase().contains(qLower)) return true;
-    // Match the name the user actually SEES (reading-version localized) …
-    if (translateBookName(book, widget.version).toLowerCase().contains(qLower)) {
-      return true;
-    }
-    // … plus the Simplified name so a Chinese query always works regardless
-    // of the reading version.
-    if (translateBookName(book, 'zh-Hans').toLowerCase().contains(qLower)) {
-      return true;
-    }
-    return false;
-  }
-
-  bool _illustrationMatches(BibleMap m, String q) {
-    if (q.isEmpty) return true;
-    final qLower = q.toLowerCase();
-    final title = (m.title[widget.locale] ?? m.title['en'] ?? '').toLowerCase();
-    return title.contains(qLower);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final q = _query.text.trim();
-    final groups = _groupByBook();
-
-    return Column(
-      children: [
-        // Search field — filters by book name OR illustration title.
-        Padding(
-          padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
-          child: TextField(
-            controller: _query,
-            onChanged: (_) => setState(() {}),
-            decoration: InputDecoration(
-              prefixIcon: const Icon(Icons.search, size: 18),
-              hintText: uiStrings['search']?[widget.locale] ?? 'Search',
-              isDense: true,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.zero,
-              ),
-              suffixIcon: q.isEmpty
-                  ? null
-                  : IconButton(
-                      icon: const Icon(Icons.clear, size: 16),
-                      onPressed: () {
-                        _query.clear();
-                        setState(() {});
-                      },
-                    ),
-            ),
-          ),
-        ),
-        Expanded(
-          child: ListView(
-            children: [
-              for (final entry in groups.entries)
-                if (entry.value.isNotEmpty &&
-                    (_bookMatches(entry.key, q) ||
-                        entry.value.any((m) => _illustrationMatches(m, q))))
-                  _BookIllustrationGroup(
-                    book: entry.key,
-                    locale: widget.locale,
-                    version: widget.version,
-                    maps: q.isEmpty
-                        ? entry.value
-                        : entry.value
-                            .where((m) =>
-                                _bookMatches(entry.key, q) ||
-                                _illustrationMatches(m, q))
-                            .toList(),
-                    related: widget.related,
-                    onCloseSheet: widget.onCloseSheet,
-                    initiallyExpanded: q.isNotEmpty,
-                    accentColor: scheme.primary,
-                  ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-/// Single book's ExpansionTile in the All-illustrations list.
-/// Header shows "{LocalizedBook} ({count})" with the count tinted
-/// in the primary color; body is the per-illustration list.
-class _BookIllustrationGroup extends StatelessWidget {
-  final String book;
-  final String locale;
-  final String version;
-  final List<BibleMap> maps;
-  final List<BibleMap> related;
-  final VoidCallback onCloseSheet;
-  final bool initiallyExpanded;
-  final Color accentColor;
-  const _BookIllustrationGroup({
-    required this.book,
-    required this.locale,
-    required this.version,
-    required this.maps,
-    required this.related,
-    required this.onCloseSheet,
-    required this.initiallyExpanded,
-    required this.accentColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    // Follow the reading VERSION, not the UI locale: `book` is the English
-    // canonical key, so translateBookName(book, version) yields "Genesis"
-    // for NASB/KJV, "创世记" for CUVS, "創世記" for the -tr variants.
-    final localizedBook = translateBookName(book, version);
-    final headerTpl = uiStrings['illustrationsBookCount']?[locale] ??
-        '{book} ({n})';
-    final headerText = headerTpl
-        .replaceAll('{book}', localizedBook)
-        .replaceAll('{n}', maps.length.toString());
-    return Theme(
-      // Strip the default ExpansionTile divider; we have our own.
-      data: Theme.of(context).copyWith(
-        dividerColor: Colors.transparent,
-      ),
-      child: ExpansionTile(
-        initiallyExpanded: initiallyExpanded,
-        tilePadding: const EdgeInsets.symmetric(horizontal: 16),
-        childrenPadding: EdgeInsets.zero,
-        title: Text(
-          headerText,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: scheme.onSurface,
-          ),
-        ),
-        children: [
-          for (final m in maps)
-            _MapTile(
-              map: m,
-              locale: locale,
-              related: related,
-              onClose: onCloseSheet,
-            ),
-          const Divider(height: 1, indent: 16, endIndent: 16),
         ],
       ),
     );
@@ -7548,9 +7355,8 @@ void _showSynopsisSheet({
     isScrollControlled: true,
     backgroundColor: Theme.of(context).colorScheme.surface,
     constraints: const BoxConstraints(maxWidth: 900),
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-    ),
+    // Square: a sheet is a window edge here, not a card.
+    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
     builder: (sheetCtx) => DraggableScrollableSheet(
       initialChildSize: 0.7,
       minChildSize: 0.35,

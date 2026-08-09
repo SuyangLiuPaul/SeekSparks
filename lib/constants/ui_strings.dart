@@ -6325,6 +6325,35 @@ const uiStrings = {
     'zh-Hant': '{book}（{n} 張）',
     'en': '{book} ({n})',
   },
+  // 2026-08-09: the Illustrations window under Resources. bwh07 files a
+  // picture database there ("Bible Views") and gives it a paragraph of
+  // its own; until now this corpus of 1,192 plates could only be reached
+  // from a chapter that happened to match one.
+  'illustrationsSearchHint': {
+    'zh-Hans': '搜索插图标题或说明',
+    'zh-Hant': '搜尋插畫標題或說明',
+    'en': 'Search titles and captions',
+  },
+  // {n} carries its denominator when a filter is narrowing — bwh23.
+  'illustrationsCount': {
+    'zh-Hans': '{n} 张插图',
+    'zh-Hant': '{n} 張插畫',
+    'en': '{n} illustrations',
+  },
+  'illustrationsNoMatch': {
+    'zh-Hans': '没有符合条件的插图。',
+    'zh-Hant': '沒有符合條件的插畫。',
+    'en': 'No illustration matches.',
+  },
+  'illustrationUnavailable': {
+    'zh-Hans': '插图无法载入',
+    'zh-Hant': '插畫無法載入',
+    'en': 'Illustration unavailable',
+  },
+  'illusKindMap': {'zh-Hans': '地图', 'zh-Hant': '地圖', 'en': 'Maps'},
+  'illusKindScene': {'zh-Hans': '场景', 'zh-Hant': '場景', 'en': 'Scenes'},
+  'illusKindParable': {'zh-Hans': '比喻', 'zh-Hant': '比喻', 'en': 'Parables'},
+  'illusKindTeaching': {'zh-Hans': '教导', 'zh-Hant': '教導', 'en': 'Teaching'},
   'openSplitView': {
     'zh-Hans': '打开分屏阅读',
     'zh-Hant': '打開分屏閱讀',

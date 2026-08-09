@@ -27,6 +27,7 @@ import 'package:seeksparks/pages/books_page.dart';
 import 'package:seeksparks/pages/evidence_page.dart';
 import 'package:seeksparks/pages/family_tree_page.dart';
 import 'package:seeksparks/pages/hebrew_kings_page.dart';
+import 'package:seeksparks/pages/illustrations_page.dart';
 import 'package:seeksparks/pages/library_page.dart';
 import 'package:seeksparks/pages/phrasing_page.dart';
 import 'package:seeksparks/pages/sermons_page.dart';
@@ -515,6 +516,11 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         // Atlas being a window rather than a lens over the reader.
         WbMenuItem(s('atlasTitle', 'Bible Atlas'),
             () => pushPage(const AtlasPage())),
+        // The "Bible Views picture set" named above is the one entry
+        // bwh07 stops to describe, and ours had no door: 1,192 plates
+        // reachable only by already reading a chapter that matched one.
+        WbMenuItem(s('maps', 'Illustrations'),
+            () => pushPage(const IllustrationsPage())),
         WbMenuItem(s('familyTree', 'Family Tree'),
             () => pushPage(const FamilyTreePage())),
         // Separate from Family Tree on purpose: the tree is Judah's line

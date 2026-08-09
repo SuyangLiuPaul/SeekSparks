@@ -87,6 +87,15 @@ const List<String> _passed = <String>[
   'lib/widgets/word_distribution.dart',
   'lib/widgets/kwic_pane.dart',
   'lib/widgets/context_pane.dart',
+  // 2026-08-09: the illustration viewer, and the archive window that had
+  // to be built before the viewer could be converted honestly. The two
+  // floating blurred capsules the viewer drew became a title bar and a
+  // filmstrip; the filmstrip then had to be told what list it is showing,
+  // because it used to append the whole 1,192-plate library under a
+  // header reading "Related illustrations". `illustrations_page` is the
+  // door that made that removal possible, and is square by construction.
+  'lib/pages/map_viewer_page.dart',
+  'lib/pages/illustrations_page.dart',
 ];
 
 /// Files that still carry unconverted chrome, and how much. This is the
@@ -102,12 +111,16 @@ const List<String> _passed = <String>[
 ///     tooltip floats over arbitrary content and has only its hairline
 ///     to separate it; bwh11 describes a bordered popup, not a shadowed
 ///     one, so the hairline is probably enough.
+///
+/// 2026-08-09: several numbers here went UP without a line of chrome
+/// being added — see [_countOffences]. The old figures were of a
+/// narrower check, so they were never comparable to these; a ceiling
+/// raised by re-measurement is annotated, and only those.
 const Map<String, int> _remaining = <String, int>{
-  'lib/pages/map_viewer_page.dart': 7,
   'lib/pages/bible_timeline_page.dart': 5,
   'lib/main.dart': 4,
   'lib/pages/highlights_page.dart': 4,
-  'lib/pages/sermons_page.dart': 4,
+  'lib/pages/sermons_page.dart': 5, // re-measured
   'lib/pages/strongs_entry_page.dart': 4,
   'lib/pages/loading_page.dart': 3,
   'lib/pages/phrasing_page.dart': 3,
@@ -117,7 +130,7 @@ const Map<String, int> _remaining = <String, int>{
   'lib/widgets/onboarding_dialog.dart': 2,
   'lib/widgets/search_stats_strip.dart': 2,
   'lib/widgets/small_screen_advisory.dart': 2,
-  'lib/widgets/verse_popup_sheet.dart': 2,
+  'lib/widgets/verse_popup_sheet.dart': 3, // re-measured
   'lib/widgets/version_picker_sheet.dart': 2,
   'lib/constants/word_study_style.dart': 1,
   'lib/constants/workbench_theme.dart': 1,
@@ -125,22 +138,35 @@ const Map<String, int> _remaining = <String, int>{
   'lib/pages/word_list_page.dart': 1,
   'lib/utils/build_verse_content_spans.dart': 1,
   'lib/utils/clipboard_helper.dart': 1,
+  // Newly VISIBLE, not newly written: both draw a sheet corner with
+  // `BorderRadius.vertical(top: Radius.circular(…))`, which the old
+  // check could not see.
+  'lib/widgets/block_note_card.dart': 2,
+  'lib/widgets/left_accent_card.dart': 1,
   'lib/widgets/browse_nav_strip.dart': 1,
   'lib/widgets/browse_window.dart': 1,
   'lib/widgets/confidence_badge.dart': 1,
   'lib/widgets/contact_line.dart': 1,
   'lib/widgets/copy_center_sheet.dart': 1,
   'lib/widgets/docked_panel.dart': 1,
-  'lib/widgets/note_reference_picker_sheet.dart': 1,
-  'lib/widgets/originals_sheet.dart': 1,
+  'lib/widgets/note_reference_picker_sheet.dart': 2, // re-measured
+  'lib/widgets/originals_sheet.dart': 2, // re-measured
   'lib/widgets/workbench_chrome.dart': 1,
 };
 
 /// Counts rule violations in already-comment-stripped source.
+///
+/// 2026-08-09: the corner check used to look for `BorderRadius.circular(`
+/// and therefore could not see `BorderRadius.vertical(top:
+/// Radius.circular(16))` — the exact form every bottom sheet in the app
+/// used. `bible_reading_pane.dart` was declared PASSED in v1.6.80 while
+/// still carrying ten of them. Matching the inner `Radius.circular(`
+/// subsumes both spellings, and the numbers below moved the day it did:
+/// a ratchet that measures the wrong thing ratchets nothing.
 int _countOffences(String stripped) {
   var n = 0;
   for (final line in stripped.split('\n')) {
-    if (line.contains('BorderRadius.circular(')) n++;
+    if (line.contains('Radius.circular(')) n++;
     if (line.contains('BoxShadow(')) n++;
     // `elevation: 0` is the rule being stated, not broken.
     final elev = RegExp(r'elevation:\s*([0-9.]+)').firstMatch(line);
@@ -185,7 +211,7 @@ void main() {
         for (var i = 0; i < lines.length; i++) {
           final line = lines[i];
           final where = '$path:${i + 1}';
-          if (line.contains('BorderRadius.circular(')) {
+          if (line.contains('Radius.circular(')) {
             offences.add('$where — rounded corner');
           }
           if (line.contains('BoxShadow(')) {

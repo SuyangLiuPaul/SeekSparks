@@ -98,6 +98,9 @@ flutter:
     - assets/loading.png
     - assets/fonts/
     - assets/maps/
+    # 420px copies of the 55 plates above, for grids and filmstrips.
+    # Regenerate after adding a plate: tools/gen_map_thumbs.sh
+    - assets/maps/thumbs/
     - assets/maps_index.json
     - assets/cross_references.json
     - assets/section_titles.json

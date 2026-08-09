@@ -22,6 +22,15 @@ class IllustrationImage extends StatelessWidget {
   final WidgetBuilder? errorBuilder;
   final WidgetBuilder? loadingBuilder;
 
+  /// Load the small bundled copy instead of the full plate.
+  ///
+  /// Only affects `source == 'asset'`; the CDN images are already
+  /// modest and go through the browser as `<img>`. Set this anywhere
+  /// several plates share a screen — a grid or a filmstrip. Leave it
+  /// off for anything zoomable. See [BibleMap.thumbAssetPath] for what
+  /// happens when it is off in a grid.
+  final bool thumb;
+
   const IllustrationImage({
     super.key,
     required this.map,
@@ -30,6 +39,7 @@ class IllustrationImage extends StatelessWidget {
     this.cacheHeight,
     this.errorBuilder,
     this.loadingBuilder,
+    this.thumb = false,
   });
 
   @override
@@ -40,12 +50,24 @@ class IllustrationImage extends StatelessWidget {
     final loading = loadingBuilder;
 
     if (map.source == 'asset') {
+      // A missing thumbnail falls back to the full plate rather than to
+      // the broken-image icon: the thumbnails are generated from the
+      // same directory, so the only way one is absent is that a plate
+      // was added without re-running the generator.
       return Image.asset(
-        map.assetPath,
+        thumb ? map.thumbAssetPath : map.assetPath,
         fit: fit,
         cacheWidth: cacheWidth,
         cacheHeight: cacheHeight,
-        errorBuilder: (c, _, __) => fallback(c),
+        errorBuilder: (c, _, __) => thumb
+            ? Image.asset(
+                map.assetPath,
+                fit: fit,
+                cacheWidth: cacheWidth,
+                cacheHeight: cacheHeight,
+                errorBuilder: (c2, _, __) => fallback(c2),
+              )
+            : fallback(c),
       );
     }
 
