@@ -715,6 +715,16 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
     );
   }
 
+  /// Verse 1 of the chapter the reader is currently on, or null when the
+  /// loaded edition does not carry it.
+  Verse? _firstVerseOfCurrentChapter(MainProvider mp) {
+    final book = mp.currentBook;
+    final chapter = mp.currentChapter;
+    if (book == null || chapter == null) return null;
+    final inChapter = mp.versesInChapter(book, chapter);
+    return inChapter.isEmpty ? null : inChapter.first;
+  }
+
   void _updateMapsForBookChapter(String book, int chapter) {
     final key = '$book:$chapter';
     if (key == _lastBookChapter) return;
@@ -1510,7 +1520,14 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
           });
         }
 
+        // 2026-08-09 (#298): the header and the paragraph maps read this.
+        // On a deep link the cursor has not been set yet, and falling
+        // straight to `verses.first` made the header announce Genesis 1
+        // over a body rendering Revelation 22. The chapter the pager
+        // actually opened on is the honest answer; the corpus's first
+        // verse is only a last resort for a canon that lacks it.
         final currentVerse = mainProvider.currentVerse ??
+            _firstVerseOfCurrentChapter(mainProvider) ??
             (verses.isNotEmpty ? verses.first : null);
         if (currentVerse != null) {
           _updateMapsForBookChapter(currentVerse.book, currentVerse.chapter);
