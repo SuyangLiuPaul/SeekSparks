@@ -143,6 +143,32 @@ void main() {
       expect(mp.versesInChapter(mp.chapterList.first.book, 1), hasLength(31));
     });
 
+    test('the workspace cursor moves to the new edition too', () {
+      final mp = MainProvider();
+      final english = _chapter('Genesis', 1, 31);
+      mp.setVerses(english);
+      mp.updateCurrentVerse(verse: english[4]);
+
+      mp.setVersion('cuvs-yhwh');
+      mp.setVerses(_chapter('创世纪', 1, 31));
+
+      // The reader header prints currentVerse.book; before #298 it
+      // still said 'Genesis' while the body rendered 创世纪.
+      expect(mp.currentVerse!.book, '创世纪');
+      expect(mp.currentVerse!.verse, 5);
+    });
+
+    test('a reference the new edition lacks leaves the cursor alone', () {
+      final mp = MainProvider();
+      final english = _chapter('Genesis', 1, 31);
+      mp.setVerses(english);
+      mp.updateCurrentVerse(verse: english.first);
+
+      mp.setVerses(_chapter('Matthew', 1, 25));
+
+      expect(mp.currentVerse!.book, 'Genesis');
+    });
+
     test('resync is a no-op when already in step, so it cannot loop', () {
       final mp = MainProvider();
       mp.setVerses(_chapter('创世纪', 1, 31));

@@ -145,7 +145,10 @@ class MainProvider extends ChangeNotifier {
     // reason `_cacheVerses` skips it below — so leave the previous
     // projection standing for the revert-to-previous-version path
     // to find.
-    if (list.isNotEmpty) _assignBooks(buildBooksFromVerses(list));
+    if (list.isNotEmpty) {
+      _assignBooks(buildBooksFromVerses(list));
+      _realignCursorTo(list);
+    }
     // 2026-05-10 (v1.2.14): populate the per-version verse cache so
     // a future switch back to this version is truly instant
     // ("一瞬间", in the user's words). Skip empty lists — they
@@ -363,6 +366,7 @@ class MainProvider extends ChangeNotifier {
     // path is the one that feels instant, so it is also the one most
     // likely to be reached by a caller that skips FetchBooks.
     _assignBooks(buildBooksFromVerses(cached));
+    _realignCursorTo(cached);
     notifyListeners();
     return true;
   }
@@ -808,6 +812,34 @@ class MainProvider extends ChangeNotifier {
     final english = bookNameToEnglish[book] ?? book;
     final renamed = translateBookName(english, version);
     if (renamed.isNotEmpty) currentBook = renamed;
+  }
+
+  /// Re-point `currentVerse` at the same reference inside [list].
+  ///
+  /// 2026-08-09 (#298): `currentVerse` is the workspace cursor — the
+  /// reader header prints `currentVerse.book`, `_updateMapsForBookChapter`
+  /// builds the paragraph maps from it, and the Analysis column reads its
+  /// text. It holds a `Verse` OBJECT, so after a version switch it still
+  /// pointed into the previous edition's corpus: the reader header read
+  /// 'Genesis 1' beside 雅简+ while the body rendered 创世纪. Same class
+  /// of bug as the book projection above — half a version swap — so it is
+  /// fixed in the same two places.
+  ///
+  /// A reference the new edition does not carry (a partial canon) leaves
+  /// the cursor alone rather than clearing it: callers treat a null
+  /// cursor as "nothing open yet", which is a bigger lie than a stale one.
+  void _realignCursorTo(List<Verse> list) {
+    final cur = currentVerse;
+    if (cur == null) return;
+    final english = bookNameToEnglish[cur.book] ?? cur.book;
+    for (final v in list) {
+      if (v.verse == cur.verse &&
+          v.chapter == cur.chapter &&
+          (bookNameToEnglish[v.book] ?? v.book) == english) {
+        currentVerse = v;
+        return;
+      }
+    }
   }
 
   void setVersion(String version) {
