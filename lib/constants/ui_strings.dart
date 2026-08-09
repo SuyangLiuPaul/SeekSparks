@@ -266,6 +266,15 @@ const uiStrings = {
     'zh-Hant': '此節經文暫未提供原文資料。',
     'en': 'Original-language data not available for this verse yet.',
   },
+  // Not a gap in our data: the verse is absent from the manuscripts the
+  // original-language text is edited from. Saying so is the difference
+  // between "we are missing something" and "there is nothing to miss".
+  'originalOmitsVerse': {
+    'zh-Hans': '此节不见于原文校勘本，故无原文可显示。',
+    'zh-Hant': '此節不見於原文校勘本，故無原文可顯示。',
+    'en': 'This verse is not in the critical edition of the original, '
+        'so there is no original text to show.',
+  },
   'strongsNotFound': {
     'zh-Hans': '未找到该 Strong\'s 词条。',
     'zh-Hant': '未找到該 Strong\'s 詞條。',

@@ -481,13 +481,29 @@ def count_dates(node, dated=0, sourced=0):
 
 def check_tagged_layers(originals):
     """Do the per-version tagged layers ask assets/originals questions it
-    can answer? They are joined at read time by `"chapter:verse"`
-    (originals_service.dart:49), so a key in one and not the other means
-    the reader is shown either nothing or another verse's Hebrew."""
+    can answer?
+
+    The two are numbered in different traditions — originals in the
+    Masoretic / critical text, every layer in the English — so they are
+    joined through `assets/versification.json`, not directly. What this
+    measures is the RESIDUAL: a reference the map still cannot resolve,
+    or an original verse no reference reaches. Comparing the key sets
+    raw, as this check did before the map existed, reported 152/204 and
+    understated the defect by an order of magnitude — walking every
+    reference found 1,823 resolving to another verse. See
+    docs/DATA-INTEGRITY.md check 9."""
     root = asset('tagged')
+    with open(asset('versification.json'), encoding='utf-8') as f:
+        v11n = json.load(f)
+    v_map = v11n.get('map', {})
+    v_absent = v11n.get('absent', {})
+
     orig_keys = {}
+    book_of = {}
     for book, verses in originals.items():
-        orig_keys[slug(book) + '.json'] = set(verses)
+        name = slug(book) + '.json'
+        orig_keys[name] = set(verses)
+        book_of[name] = book
 
     lines = []
     total = 0
@@ -496,29 +512,54 @@ def check_tagged_layers(originals):
         d = os.path.join(root, version)
         if not os.path.isdir(d) or version in EXCLUDED_VERSIONS:
             continue
-        extra = Counter()
-        absent = Counter()
+        unresolved = Counter()
         for name in sorted(os.listdir(d)):
             if name not in orig_keys:
                 continue
+            rows = v_map.get(book_of[name], {})
+            omitted = set(v_absent.get(book_of[name], ()))
             with open(os.path.join(d, name), encoding='utf-8') as f:
                 keys = set(json.load(f))
             examined += len(keys)
-            e = keys - orig_keys[name]
-            a = orig_keys[name] - keys
-            if e:
-                extra[name[:-5]] = len(e)
-            if a:
-                absent[name[:-5]] = len(a)
-        total += sum(extra.values()) + sum(absent.values())
+            missing = 0
+            for key in keys:
+                if key in omitted:
+                    continue
+                targets = rows.get(key, [key])
+                if not all(t in orig_keys[name] for t in targets):
+                    missing += 1
+            if missing:
+                unresolved[name[:-5]] = missing
+        total += sum(unresolved.values())
         lines.append(
-            f'{version:12s} {sum(extra.values()):4d} keys absent from '
-            f'originals, {sum(absent.values()):4d} originals keys absent '
-            f'from the layer; worst: '
-            + ', '.join(f'{b} {n}' for b, n in extra.most_common(5)))
+            f'{version:12s} {sum(unresolved.values()):4d} references the '
+            f'map cannot resolve'
+            + (('; ' + ', '.join(f'{b} {n}'
+                                 for b, n in unresolved.most_common(5)))
+               if unresolved else ''))
+
+    # Reachability is a property of the MAP, so measure it against the
+    # complete English reference set rather than any one layer. A layer
+    # that simply lacks verses (cuvs-plus's 60, lxxwh's LXX arrangement)
+    # would otherwise be charged here for what check 4 already reports.
+    canon_keys = defaultdict(set)
+    for b, c, n in CANON:
+        canon_keys[b].add(f'{c}:{n}')
+    orphans = []
+    for name, keys in orig_keys.items():
+        book = book_of[name]
+        rows = v_map.get(book, {})
+        reached = set()
+        for reader_key in canon_keys[book]:
+            reached.update(rows.get(reader_key, [reader_key]))
+        orphans += [f'{book} {k}' for k in sorted(keys - reached)]
+    total += len(orphans)
     lines.append(
-        'Identical counts across every layer means one systematic '
-        'Hebrew-vs-English versification difference, not five import bugs. '
+        f'{"the map":12s} {len(orphans):4d} original verses no English '
+        f'reference reaches' + (': ' + ', '.join(orphans) if orphans else ''))
+    lines.append(
+        'Revelation 12:18 is expected and cannot be fixed: KJV renders it '
+        'inside 13:1 and BSB inside 12:17, so no single map serves both. '
         'See docs/DATA-INTEGRITY.md check 9.')
     record('9. Tagged layers agree with assets/originals on versification',
            examined, total, '\n'.join(lines))

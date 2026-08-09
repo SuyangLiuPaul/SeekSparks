@@ -56,7 +56,7 @@ believe it is fine" and "we looked".
 | 7a | bible_places.json verse links resolve | 9,856 links | **0** | clean |
 | 7b | bible_names.json verse links | 2,622 names | n/a | unverifiable by construction |
 | 8 | Dates carry a recorded source | 196 records | 1 file | **open** |
-| 9 | Tagged layers agree with `assets/originals` | 5 layers × 66 books | 152 keys / 204+ verses each | **open, worst finding** |
+| 9 | Reader references resolve to the right original verse | 31,102 references | 1,823 wrong + 152 empty → **1** | **fixed**, was the worst finding |
 
 ---
 
@@ -168,8 +168,8 @@ need the same treatment: check them against 和合本 before assuming
 either way.
 
 **Check 9 — `assets/originals` is numbered in Hebrew versification and
-every display surface asks it in English. This is the worst thing the
-audit found, and it is not fixed.**
+every display surface asks it in English. This was the worst thing the
+audit found. FIXED in v1.6.90 by a derived mapping table.**
 
 Found by asking the fix-1 question of the whole corpus instead of one
 book: does each tagged layer's key set match `assets/originals`? All
@@ -199,12 +199,80 @@ Joel, verified end to end:
   **2:28**. The reader is shown authoritative-looking Hebrew for a verse
   they are not reading.
 
-Not repaired here, deliberately. The fix is a Hebrew↔English
-versification mapping for the affected books, taken from a citable
-source and recorded in the asset — the same sourcing rule #292 applies
-to dates. Deriving it by arithmetic from the verse counts would be
-guessing at scripture, which is the one thing this document exists to
-prevent. It is the next slice, and it is larger than one book.
+**The full extent, measured before fixing.** The 152/204 figures above
+are an undercount: they compare *key sets*, so they see only verses that
+exist on one side and not the other. Walking every reader reference
+against the original it would be handed shows **1,823 references
+resolving to a different verse's original text and 152 to none** —
+across **36 books**, not the five the key-set comparison named. Worst:
+Psalms 979, 1 Chronicles 103, Deuteronomy 65, Daniel 62, Nehemiah 60,
+Exodus 58, Hosea 46, 2 Samuel 43, 1 Samuel 38, Genesis 32.
+
+**The fix: `assets/versification.json`, derived rather than asserted.**
+`tools/derive_versification.py` reproduces it from the shipped data
+alone. Arithmetic on verse counts would be guessing at scripture, so
+instead the table is read out of the text: for each book, the original
+is aligned against three independent Strong's-tagged translations
+(KJV+S, 和合本雅伟版, BSB) by a banded monotone alignment over verses —
+beads (1,1), (1,2), (2,1), (1,3), (1,0), (0,1), scored by Dice
+similarity on each verse's set of Strong's numbers. A row ships only
+where **all three layers agree**; 110 rows failed unanimity and were
+dropped. Runs the layers left unresolved are filled by carrying the
+offset between the nearest resolved anchors on either side, and only
+when every target exists and none is already claimed.
+
+Three independent confirmations that the result is true, not merely
+self-consistent:
+
+1. **It reproduces the documented Masoretic table it was never given.**
+   Genesis 31:55→32:1, Leviticus 6:1→5:20, Numbers 16:36→17:1,
+   1 Kings 4:21→5:1, 1 Chronicles 6:1→5:27, Job 41:1→40:25,
+   Joel 2:28→3:1, Malachi 4:1→3:19, and every psalm superscription
+   including the four two-line ones (51, 52, 54, 60).
+2. **The `absent` list came out of the data as exactly the sixteen
+   Received-Text verses** — Matthew 17:21/18:11/23:14, Mark
+   7:16/9:44/9:46/11:26/15:28, Luke 17:36/23:17, John 5:4, Acts
+   8:37/15:34/24:7/28:29, Romans 16:24 — and no others. Nothing in the
+   pipeline knows that list; it falls out of KJV-vs-BSB disagreement.
+   The Hebrew Bible adds exactly one, also unprompted: **Nehemiah
+   7:68**, the horses and mules, which BHS does not carry (its 7:68 is
+   the camels and donkeys the reader numbers 7:69). Before this, a
+   reader on Nehemiah 7:68 was shown the Hebrew for camels.
+3. **A text-support gate on every changed row.** Each row must resemble
+   the reader's own tagged verse at least as well as the identity
+   mapping it replaces, by Dice over Strong's numbers. Result over the
+   1,991 rows: **1,971 improved, 19 equal, 0 degraded**. A deletion
+   cannot be scored that way — "we now show nothing" scores zero against
+   everything — so it is gated differently: the reader verse must be
+   giving up an original number that a *rival* reference resembles more
+   closely. Re-proved from the shipped assets in
+   `test/versification_test.dart`, so a regression in the data fails the
+   suite.
+
+Consumers are fixed at one join point. `OriginalsService` now translates
+the reference before the lookup, so all fifteen callers are corrected
+together. Two directions are deliberately distinct: `originalKeys` is
+**coverage** (a reference returns every original verse it renders, so a
+merged psalm heading displays in full), while `rekeyBook` is a
+**partition** (each original verse lands under exactly one reference, so
+statistics and search cannot double-count). Verified across the whole
+corpus: **438,821 original words before the re-key and 438,821 after**.
+
+*Known residue, stated rather than papered over.* Exactly one original
+verse remains unreachable: **Revelation 12:18** (7 words), and it is
+genuinely translation-dependent. KJV+S renders it inside reader 13:1
+("And I stood upon the sand of the sea" — Dice 0.973 against that verse
+versus 0.914 for identity) while BSB renders it inside 12:17 (1.000
+versus 0.927). No single table can serve both editions, so identity is
+kept and the verse is simply not displayed. That is under-coverage, not
+a false statement, which is the trade this document prefers.
+
+Ten reader verses stayed at identity because the layers did not reach
+unanimity — Psalms 135:1–2, Zephaniah 2:1–2, John 7:53–8:1, Revelation
+12:17 and 13:1, Luke 1:1–2. Each was checked afterwards and identity is
+right in every case: it scores 0.86–1.00 against the original on at
+least two of the three layers. The disagreements are gaps in the Chinese
+tagging, not numbering differences.
 
 Fix 1 (cuvs-plus 1 Chronicles) is a *different* defect and stays fixed:
 there, cuvs-plus disagreed with every other **English-versification**
@@ -272,9 +340,10 @@ can be verified from within the repo.
 
 ## Next, in order
 
-1. **Check 9** — the Hebrew/English versification mismatch. Wrong Hebrew
-   is shown today, in Joel above all.
-2. `assets/leb.json`'s missing Judges and Obadiah.
-3. The 2,203 words with no morphology code.
-4. Per-record date sourcing (#292 owns `hebrew_kings.json`).
-5. `assets/cuvs-plus.json`'s remaining 60 gaps, checked against 和合本.
+1. `assets/leb.json`'s missing Judges and Obadiah.
+2. The 2,203 words with no morphology code.
+3. Per-record date sourcing (#292 owns `hebrew_kings.json`).
+4. `assets/cuvs-plus.json`'s remaining 60 gaps, checked against 和合本.
+
+*(Check 9, the Hebrew/English versification mismatch, was first here and
+is now fixed — see above.)*

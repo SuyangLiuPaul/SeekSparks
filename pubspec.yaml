@@ -120,6 +120,11 @@ flutter:
     # Earth coastlines, lakes and rivers — public domain.
     - assets/bible_places.json
     - assets/bible_geo.json
+    # Reader-to-original verse map. assets/originals is numbered in the
+    # Masoretic / critical-text tradition and every edition we ship is
+    # numbered in the English one, so joining them on the reader's own
+    # key handed 1,823 references another verse's Hebrew.
+    - assets/versification.json
     - assets/strongs/
     - assets/originals/
     - assets/tagged/cuvs-yhwh/

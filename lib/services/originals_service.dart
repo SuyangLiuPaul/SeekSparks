@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:seeksparks/models/original_word.dart';
+import 'package:seeksparks/services/versification.dart';
 
 /// Lazy loader for the tagged original-language Bible text.
 ///
@@ -12,6 +13,7 @@ class OriginalsService {
   static final Map<String, Map<String, List<OriginalWord>>> _byBook = {};
   static final Map<String, Future<Map<String, List<OriginalWord>>>>
       _loading = {};
+  static final Map<String, Map<String, List<OriginalWord>>> _byReaderKey = {};
 
   static String _slug(String englishBook) {
     return englishBook
@@ -37,19 +39,39 @@ class OriginalsService {
     }
   }
 
+  /// The original-language words of the verse the reader is looking at.
+  ///
+  /// The reader's reference is translated into the original's own
+  /// numbering first (see [Versification]). Before that, English Psalm
+  /// 3:1 returned the psalm's *heading* rather than its first line, and
+  /// English Joel 2:28 returned nothing — 1,823 references across the
+  /// corpus resolved to another verse. A merge returns both halves,
+  /// which is what the English verse actually renders.
   static Future<List<OriginalWord>?> forVerse(
     String englishBook,
     int chapter,
     int verse,
   ) async {
-    if (!_byBook.containsKey(englishBook)) {
-      _byBook[englishBook] =
-          await (_loading[englishBook] ??= _load(englishBook));
+    final book = await _bookMap(englishBook);
+    final v11n = await Versification.load();
+    final words = <OriginalWord>[];
+    for (final key in v11n.originalKeys(englishBook, chapter, verse)) {
+      words.addAll(book[key] ?? const []);
     }
-    final words = _byBook[englishBook]?['$chapter:$verse'];
-    if (words == null || words.isEmpty) return null;
+    if (words.isEmpty) return null;
     return words;
   }
+
+  /// Whether the reader's verse is one the original text does not carry
+  /// at all — the sixteen Received-Text verses the critical text omits.
+  /// Distinguishes "we have no data" from "there is nothing to have".
+  static Future<bool> isAbsentFromOriginal(
+    String englishBook,
+    int chapter,
+    int verse,
+  ) async =>
+      (await Versification.load())
+          .isAbsentFromOriginal(englishBook, chapter, verse);
 
   /// Every original-language word in one chapter, in verse order.
   ///
@@ -61,7 +83,7 @@ class OriginalsService {
     String englishBook,
     int chapter,
   ) async {
-    final book = await _bookMap(englishBook);
+    final book = await _readerMap(englishBook);
     final out = <OriginalWord>[];
     // Verse keys are "c:v" strings; walk them numerically so the list
     // is in reading order rather than "10" before "2".
@@ -104,10 +126,27 @@ class OriginalsService {
   /// Finder reports which verses you can read, so it cannot use
   /// [forBook]'s single reading-order list.
   ///
+  /// Keys are the READER's references, not the original's, so a caller
+  /// that reports a hit names a verse the reader can navigate to. The
+  /// re-keying is a partition — every original verse lands under exactly
+  /// one reference — so counts taken from it cannot double-count.
+  ///
   /// Returns the shared cache; treat it as read-only.
   static Future<Map<String, List<OriginalWord>>> versesOfBook(
           String englishBook) =>
-      _bookMap(englishBook);
+      _readerMap(englishBook);
+
+  /// The book's verses re-keyed from the original's numbering into the
+  /// reader's. Cached separately from the raw asset so both remain
+  /// available and neither is rebuilt per call.
+  static Future<Map<String, List<OriginalWord>>> _readerMap(
+      String englishBook) async {
+    final cached = _byReaderKey[englishBook];
+    if (cached != null) return cached;
+    final raw = await _bookMap(englishBook);
+    final v11n = await Versification.load();
+    return _byReaderKey[englishBook] = v11n.rekeyBook(englishBook, raw);
+  }
 
   static Future<Map<String, List<OriginalWord>>> _bookMap(
       String englishBook) async {

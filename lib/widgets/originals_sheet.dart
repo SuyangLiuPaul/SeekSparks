@@ -218,7 +218,13 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
     for (final v in widget.verses) {
       final english = toEnglish(v.book) ?? v.book;
       final words = await OriginalsService.forVerse(english, v.chapter, v.verse);
-      results.add(_VerseOriginals(verse: v, words: words));
+      results.add(_VerseOriginals(
+        verse: v,
+        words: words,
+        omitted: words == null &&
+            await OriginalsService.isAbsentFromOriginal(
+                english, v.chapter, v.verse),
+      ));
     }
     // Prefetch Strong's entries for every unique number across all
     // verses so the interlinear gloss row under each chip can render
@@ -777,8 +783,13 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
           SizedBox(height: _st.dense ? 6 : 10),
           if (words == null || words.isEmpty)
             Text(
-              uiStrings['originalNotAvailable']?[widget.locale] ??
-                  'Original-language data not available for this verse yet.',
+              vo.omitted
+                  ? (uiStrings['originalOmitsVerse']?[widget.locale] ??
+                      'This verse is not in the critical edition of the '
+                          'original, so there is no original text to show.')
+                  : (uiStrings['originalNotAvailable']?[widget.locale] ??
+                      'Original-language data not available for this verse '
+                          'yet.'),
               style: TextStyle(
                 fontSize: _st.dense ? _st.body : 13,
                 color: scheme.onSurfaceVariant,
@@ -2824,7 +2835,13 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
 class _VerseOriginals {
   final Verse verse;
   final List<OriginalWord>? words;
-  _VerseOriginals({required this.verse, required this.words});
+
+  /// The original omits this verse entirely — one of the sixteen
+  /// Received-Text verses, or Nehemiah 7:68. Distinguishes "we have no
+  /// data" from "there is nothing to have".
+  final bool omitted;
+  _VerseOriginals(
+      {required this.verse, required this.words, this.omitted = false});
 }
 
 /// One labeled segment in the AI explanation transcript. Multiple
