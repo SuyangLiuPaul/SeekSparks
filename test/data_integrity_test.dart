@@ -16,6 +16,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seeksparks/constants/book_names.dart';
 import 'package:seeksparks/utils/morphology.dart';
+import 'package:seeksparks/utils/verse_text_absence.dart';
 
 /// Editions bundled in `pubspec.yaml` as flat verse lists. The two
 /// Eagle's View NASB derivatives are deliberately absent: they are
@@ -524,6 +525,98 @@ void main() {
       expect(missing.length, 76,
           reason: 'the count of lexicon-less numbers changed: '
               '${missing.length} (was 76)');
+    });
+  });
+
+  // ── Check 14 ────────────────────────────────────────────────────
+  // Check 12 proves the merge markers are PRESENT in all three 和合本
+  // editions. These prove the app RECOGNISES every one of them, plus
+  // lxxwh's OMIT and the one empty record — because a marker the
+  // recogniser misses is rendered to the reader in scripture type,
+  // which is the defect v1.6.93 exists to fix.
+  group('references that carry no scripture', () {
+    test('the corpus census is exactly what v1.6.93 measured', () {
+      final census = <String, int>{};
+      var records = 0;
+      for (final code in _versions) {
+        for (final v in _edition(code)) {
+          records++;
+          final kind = verseAbsenceOf(v['text'] as String? ?? '');
+          if (kind != null) census['$code/${kind.name}'] = (census['$code/${kind.name}'] ?? 0) + 1;
+        }
+      }
+      expect(records, 295527);
+      expect(census, {
+        'cuvs-yhwh/merged': 71,
+        'cuvs-yhwh/mergedNext': 1,
+        'cuvs-yhwh-tr/merged': 71,
+        'cuvs-yhwh-tr/mergedNext': 1,
+        'cuvs-plus/merged': 71,
+        'cuvs-plus/mergedNext': 1,
+        'lxxwh/omitted': 16,
+        'biblexg-v2-tr/blank': 1,
+      });
+    });
+
+    test('no near-miss phrasing slips past the recogniser', () {
+      // The census above would still pass if an edition started storing
+      // a marker in a NEW phrasing — the count would move and someone
+      // would update the number. This catches it as what it is instead:
+      // any short verse that talks about the verse above or below, or
+      // says OMIT, and is not classified. Deliberately wider than
+      // `kVerseAbsenceMarkers` so drift shows up as a failure rather
+      // than as scripture on the reader's screen.
+      final suspicious = RegExp(r'上[节節]|下[节節]|并入|並入|OMIT');
+      final failures = <String>[];
+      for (final code in _versions) {
+        for (final v in _edition(code)) {
+          final text = v['text'] as String? ?? '';
+          if (verseAbsenceOf(text) != null) continue;
+          final t = text.trim();
+          if (t.length <= 24 && suspicious.hasMatch(t)) {
+            failures.add('$code ${_ref(v)}: "$t"');
+          }
+        }
+      }
+      expect(failures, isEmpty, reason: failures.take(20).join('\n'));
+    });
+
+    test('every merged reference resolves to a verse that has words', () {
+      // The rendering says "Printed with verse N". If N were itself a
+      // marker the reader would be sent from one placeholder to another,
+      // and if it were unresolvable they would get the vaguer sentence.
+      // Neither happens in the shipped corpus, and 詩篇 8:8 is why this
+      // is not obvious: 8:7 is ALSO a marker, so the chain has to be
+      // walked. Asserted rather than assumed — the code comment in
+      // verse_text_absence.dart claims it.
+      var resolved = 0;
+      final failures = <String>[];
+      for (final code in ['cuvs-yhwh', 'cuvs-yhwh-tr', 'cuvs-plus']) {
+        final chapters = <String, Map<int, String>>{};
+        for (final v in _edition(code)) {
+          final key = '${v['book']} ${v['chapter']}';
+          final n = int.tryParse('${v['verse']}');
+          if (n == null) continue;
+          (chapters[key] ??= {})[n] = v['text'] as String? ?? '';
+        }
+        chapters.forEach((key, verses) {
+          final heads = mergedVerseHeads(verses);
+          for (final entry in verses.entries) {
+            if (verseAbsenceOf(entry.value) != VerseAbsence.merged) continue;
+            final head = heads[entry.key];
+            if (head == null) {
+              failures.add('$code $key:${entry.key}: no head resolved');
+            } else if (verseAbsenceOf(verses[head] ?? '') != null) {
+              failures.add('$code $key:${entry.key}: head $head is itself '
+                  'a placeholder');
+            } else {
+              resolved++;
+            }
+          }
+        });
+      }
+      expect(failures, isEmpty, reason: failures.take(20).join('\n'));
+      expect(resolved, 213);
     });
   });
 }

@@ -6,6 +6,7 @@ import 'package:seeksparks/utils/clipboard_helper.dart';
 import 'package:seeksparks/constants/text_patterns.dart';
 import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:seeksparks/utils/verse_text_absence.dart';
 
 /// Builds InlineSpan list for a single verse (number + text with annotations).
 /// Shared by VerseWidget and ParagraphGroupWidget.
@@ -79,6 +80,17 @@ List<InlineSpan> buildVerseContentSpans({
           onTextTap();
           return;
         }
+        // Nothing goes on the clipboard for a reference with no
+        // scripture of its own — pasting 見上節 into a sermon is the
+        // defect this whole path exists to stop. Say why instead.
+        final noScripture = verse.absence;
+        if (noScripture != null) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(verseAbsenceNote(noScripture, locale,
+                mergedWith: verse.mergedWith)),
+          ));
+          return;
+        }
         final toCopy = '${verse.verseLabel} ${sanitizeVerseText(verse.text)}';
         final ok = await ClipboardHelper.copyText(toCopy);
         if (!context.mounted) return;
@@ -113,6 +125,33 @@ List<InlineSpan> buildVerseContentSpans({
       ),
     ),
   ));
+
+  // A reference that carries no scripture of its own says so, in the
+  // reader's own language, instead of rendering the edition's
+  // typographic instruction (見上節 / OMIT) in scripture type. Returns
+  // early: there is no markup to parse and nothing else belongs on the
+  // line. See lib/utils/verse_text_absence.dart.
+  final absence = verse.absence;
+  if (absence != null) {
+    spans.add(TextSpan(
+      text: verseAbsenceNote(absence, locale, mergedWith: verse.mergedWith),
+      recognizer: onTextTap != null
+          ? (TapGestureRecognizer()..onTap = onTextTap)
+          : null,
+      style: TextStyle(
+        fontSize: settings.fontSize * 0.85,
+        height: settings.lineSpacing,
+        fontFamily: settings.fontFamily,
+        fontFamilyFallback: kCjkFontFallback,
+        fontStyle: FontStyle.italic,
+        color: isSelected
+            ? Theme.of(context).colorScheme.onPrimaryContainer
+            : Theme.of(context).colorScheme.onSurfaceVariant,
+        backgroundColor: spanBgColor,
+      ),
+    ));
+    return spans;
+  }
 
   // Build text and badge spans
   String? lastPart;

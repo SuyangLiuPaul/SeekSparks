@@ -7,6 +7,7 @@ import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/services/error_reporter.dart';
 import 'package:seeksparks/services/fetch_books.dart'
     show bookNameToEnglish, standardBookOrder;
+import 'package:seeksparks/utils/verse_text_absence.dart';
 
 /// Lightweight record of paragraph metadata for one verse, used when applying
 /// shared structure across all Bible versions so paragraph mode reads
@@ -395,6 +396,51 @@ class FetchVerses {
       return c != 0 ? c : a.verse.compareTo(b.verse);
     });
 
-    return enriched;
+    return _annotateMergedReferences(enriched);
+  }
+
+  /// Resolve each 見上節 reference to the verse that actually carries
+  /// its text, once per edition load.
+  ///
+  /// This lives at the loader rather than at the twenty-odd surfaces
+  /// that render a verse because the answer needs the whole chapter: a
+  /// 和合本 merge chains (詩篇 8:7 and 8:8 are both marked, so 8:8's
+  /// "verse above" is itself a placeholder) and none of those surfaces
+  /// is handed its neighbours. Runs on the canonically sorted list, so
+  /// a chapter is always a contiguous slice.
+  static List<Verse> _annotateMergedReferences(List<Verse> verses) {
+    if (verses.isEmpty) return verses;
+    List<Verse>? out;
+    var start = 0;
+    for (var i = 1; i <= verses.length; i++) {
+      final sameChapter = i < verses.length &&
+          verses[i].chapter == verses[start].chapter &&
+          verses[i].book == verses[start].book;
+      if (sameChapter) continue;
+
+      // [start, i) is one chapter. Almost none contain a marker, so
+      // the map is built only for the ~70 that do.
+      var hasMarker = false;
+      for (var j = start; j < i; j++) {
+        if (verses[j].absence == VerseAbsence.merged) {
+          hasMarker = true;
+          break;
+        }
+      }
+      if (hasMarker) {
+        final heads = mergedVerseHeads({
+          for (var j = start; j < i; j++) verses[j].verse: verses[j].text,
+        });
+        if (heads.isNotEmpty) {
+          out ??= List<Verse>.of(verses);
+          for (var j = start; j < i; j++) {
+            final head = heads[verses[j].verse];
+            if (head != null) out[j] = verses[j].copyWith(mergedWith: head);
+          }
+        }
+      }
+      start = i;
+    }
+    return out ?? verses;
   }
 }

@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 // `MainProvider` → `cloud_sync_service` → `dart:js_interop` and
 // blocks any test that touches Verse from compiling on the VM).
 import 'package:seeksparks/constants/book_names.dart';
+import 'package:seeksparks/utils/verse_text_absence.dart';
 
 @immutable
 class Verse {
@@ -24,6 +25,16 @@ class Verse {
   /// LJK2 / biblexg-v2).
   final List<String> blockNotes;
 
+  /// For a reference the edition prints under an earlier verse's number
+  /// (the 和合本's 見上節), the verse number that actually carries the
+  /// text. Null everywhere else, including on a merged reference whose
+  /// head could not be resolved.
+  ///
+  /// Resolved once per edition by `FetchVerses`, because the answer
+  /// needs the whole chapter — the merge chains, so it is not always
+  /// `verse - 1` — and no rendering surface has that context.
+  final int? mergedWith;
+
   const Verse({
     required this.book,
     required this.chapter,
@@ -33,7 +44,12 @@ class Verse {
     this.isParagraphStart = false,
     this.paragraphType = 'inline',
     this.blockNotes = const [],
+    this.mergedWith,
   }) : verseLabel = verseLabel ?? '$verse';
+
+  /// Why this reference carries no scripture, or null when [text] is
+  /// scripture. See `lib/utils/verse_text_absence.dart`.
+  VerseAbsence? get absence => verseAbsenceOf(text);
 
   // Always use the English book name so the ID is the same regardless of
   // which translation is loaded — enables cross-version highlight persistence.
@@ -53,6 +69,7 @@ class Verse {
     bool? isParagraphStart,
     String? paragraphType,
     List<String>? blockNotes,
+    int? mergedWith,
   }) {
     return Verse(
       book: book ?? this.book,
@@ -63,6 +80,7 @@ class Verse {
       isParagraphStart: isParagraphStart ?? this.isParagraphStart,
       paragraphType: paragraphType ?? this.paragraphType,
       blockNotes: blockNotes ?? this.blockNotes,
+      mergedWith: mergedWith ?? this.mergedWith,
     );
   }
 

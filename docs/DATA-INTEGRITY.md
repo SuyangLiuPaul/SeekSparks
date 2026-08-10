@@ -61,6 +61,7 @@ believe it is fine" and "we looked".
 | 11 | Invisible format/control characters | 45,877,885 chars | 3 → **0** | **fixed**, now a test |
 | 12 | 和合本 merge markers present in all three editions | 213 slots | 71 → **0** | **fixed**, now a test |
 | 13 | The two 圣经新译本 editions cover the same references | 15,843 refs | 8 | **open**, frozen by a test |
+| 14 | References carrying a typographic instruction instead of scripture | 295,527 records | 233 shown as scripture → **0** | **fixed**, now a test |
 
 ---
 
@@ -525,12 +526,61 @@ Counts after the repair, all measured rather than assumed: cuvs-plus
 reference cuvs-plus holds that cuvs-yhwh does not is 3 John 1:15, and
 there are none the other way.
 
-**Left alone, deliberately: the merge marker's presentation.** The app
-has no awareness of 见上节 — grep of `lib/` finds nothing — so it renders
-as ordinary verse text. Giving it a distinct treatment reaches the
-reader, Browse, search and clipboard, and is a presentation slice, not an
-accuracy one. As text it is at least *true*, which `a` and `5-6½ÚºÏ²¢`
-were not.
+**The merge marker's presentation — deferred here, FIXED as check 14
+below.** This entry previously read "left alone, deliberately", on the
+grounds that 见上节 is at least *true* where `a` and `5-6½ÚºÏ²¢` were
+not, and that presentation is not accuracy. The second half of that was
+wrong. A sentence the app sets in scripture type **is** a claim about
+what the verse says, and "见上节" is not what 詩篇 8:8 says.
+
+### Check 14 — 233 references printed the edition's instruction as scripture. FIXED in v1.6.93
+
+Found by asking check 12's question the other way round. Check 12 proved
+the marker is *present* in all three 和合本 editions; it says nothing
+about what the app then *does* with it. It rendered it as the verse.
+
+Swept across all 11 shipped editions, **295,527 records**, and the whole
+set is **233** — small, bounded, and entirely placeholders:
+
+| Kind | Count | Where |
+|------|------:|-------|
+| `merged` — printed under an earlier verse | 213 | 见上节/見上節 ×210 in the three 和合本 editions, plus 詩篇 63:6's 合和譯本並入上一節 ×3 |
+| `mergedNext` — printed with the verse that follows | 3 | 約翰福音 7:53, whose words open a pericope the edition sets from 8:1 |
+| `omitted` — not in this edition's base text | 16 | `assets/lxxwh.json`, the literal string `OMIT` |
+| `blank` — no text at all | 1 | `biblexg-v2-tr` 馬太福音 16:1 |
+
+Three things decided the shape of the fix, and each is a test rather
+than an assertion:
+
+- **The marker is matched WHOLE, never as a substring.** A `contains`
+  rule on 上节 would blank real scripture — the corpus holds verses like
+  除酵节，又名逾越节，近了。 A wider regex over every short verse that
+  mentions the verse above or below finds **0** the recogniser misses,
+  so the whole-match rule loses nothing.
+- **The merge CHAINS, so the head is not `verse - 1`.** 詩篇 8:7 *and*
+  8:8 are both markers; 8:8's "verse above" is itself a placeholder and
+  both resolve to **8:6**. Resolution therefore happens once per edition
+  in `FetchVerses`, where the whole chapter is in hand, rather than at
+  the twenty-odd surfaces that render a verse and are handed one. All
+  **213** resolve to a verse that has words; **0** are unresolvable.
+- **An unresolvable head would be left unnamed, not guessed.** The
+  reader would get "printed with an earlier verse" rather than a wrong
+  verse number. The shipped corpus needs it nowhere, which is itself
+  asserted.
+
+The instruction stays in the assets. It is what the printed page says,
+and the honest presentation is to *explain* the edition's convention —
+「与第 6 节合并印行」 in the reader's own UI language — not to hide it.
+`assets/lxxwh.json`'s sixteen `OMIT`s matter most: that is the Greek
+column, the one a reader cannot check against anything except us. That
+those sixteen are exactly the set check 9 derived independently in
+v1.6.90, from KJV-vs-BSB disagreement and knowing nothing about this
+file, is two unrelated sources agreeing.
+
+Reaches the reader, Browse, the sermon-citation popup, search and the
+clipboard: a placeholder is now excluded from both search-key caches
+(so a search for 上节 cannot report hits that are not scripture) and
+dropped from copied output entirely.
 
 ### The 圣经新译本 pair disagrees on 8 verses — measured, NOT repaired
 
@@ -614,17 +664,19 @@ can be verified from within the repo.
    would be one, and would be witnessed by the corpus rather than
    invented — but it must be derived and checked before a character of
    it is trusted.
-2. A merge-marker presentation for 见上节, so the reader is told the
-   verse is printed above rather than reading the words "see previous
-   verse" as if they were scripture. Reaches the reader, Browse, search
-   and clipboard.
-3. The four verses that print both the Ketiv and the Qere. Probably a
+2. The four verses that print both the Ketiv and the Qere. Probably a
    reader-side marker, not a data deletion.
-4. Per-record date sourcing (#292 owns `hebrew_kings.json`).
-5. The LEB's `{…}` idiom braces in the 660 imported verses, if a witness
+3. Per-record date sourcing (#292 owns `hebrew_kings.json`).
+4. The LEB's `{…}` idiom braces in the 660 imported verses, if a witness
    that preserves them can be found.
+5. The remaining verse-rendering surfaces, audited but not exhaustively:
+   check 14 covers the reader, Browse, the sermon-citation popup, the
+   two search-key caches and the clipboard. Strong's-driven surfaces
+   (KWIC, concordance) read the tagged layer, which a placeholder has no
+   entry in, so they cannot show one — reasoned, not measured.
 
-*(Check 9, the Hebrew/English versification mismatch, was first here and
+*(The merge-marker presentation was second here and is now check 14.
+Check 9, the Hebrew/English versification mismatch, was first here and
 is now fixed. `assets/leb.json`'s missing books were second and are now
 fixed. The 2,203 words with no morphology code were third and are now
 869. cuvs-plus's "60 gaps" were fourth, and turned out not to be gaps at

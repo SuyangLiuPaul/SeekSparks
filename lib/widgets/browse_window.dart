@@ -43,6 +43,7 @@ import 'package:seeksparks/services/tagged_text_service.dart';
 import 'package:seeksparks/utils/morphology.dart' show describeMorphology;
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 import 'package:seeksparks/utils/strongs_inline.dart';
+import 'package:seeksparks/utils/verse_text_absence.dart';
 import 'package:seeksparks/utils/version_gutter.dart' show versionGutterWidth;
 import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
 import 'package:seeksparks/widgets/workbench_chrome.dart' show WbVersionTag;
@@ -58,6 +59,8 @@ class _BrowseRow {
     this.words,
     this.runs,
     this.rtl = false,
+    this.absence,
+    this.mergedWith,
   });
 
   final int verse;
@@ -87,6 +90,15 @@ class _BrowseRow {
   final List<TaggedRun>? runs;
 
   final bool rtl;
+
+  /// Set when [text] is the edition's typographic instruction rather than
+  /// scripture — the 和合本's 見上節, an `OMIT`, an empty record. The row
+  /// then prints why, not the instruction.
+  final VerseAbsence? absence;
+
+  /// For [VerseAbsence.merged], the verse whose text this one is printed
+  /// under. Resolved per version because the merges differ by edition.
+  final int? mergedWith;
 }
 
 /// What the mouse is currently over, reported to the status bar and the
@@ -310,6 +322,13 @@ class _BrowseWindowState extends State<BrowseWindow> {
     }
     if (lastVerse == 0) return const [];
 
+    // Which of this chapter's references are printed under an earlier
+    // verse's number, per edition — the merges differ between editions,
+    // and resolving the head needs the whole chapter (they chain).
+    final mergedHeads = <String, Map<int, int>>{
+      for (final e in byVersion.entries) e.key: mergedVerseHeads(e.value),
+    };
+
     // One call warms the whole book's originals; the per-verse lookups
     // below then hit the cache instead of re-reading the asset.
     await OriginalsService.forVerse(widget.book, widget.chapter, 1);
@@ -326,12 +345,18 @@ class _BrowseWindowState extends State<BrowseWindow> {
       for (final code in widget.versionCodes) {
         final text = byVersion[code]?[n];
         if (text == null) continue;
-        final runs = await TaggedTextService.forVerse(
-          version: code,
-          englishBook: widget.book,
-          chapter: widget.chapter,
-          verse: n,
-        );
+        final absence = verseAbsenceOf(text);
+        // A reference with no scripture has nothing to tag, so skip the
+        // tagged/gloss lookup entirely rather than render the marker as
+        // a word run.
+        final runs = absence != null
+            ? null
+            : await TaggedTextService.forVerse(
+                version: code,
+                englishBook: widget.book,
+                chapter: widget.chapter,
+                verse: n,
+              );
         if (runs != null) {
           for (final r in runs) {
             if (r.strongs.isNotEmpty && !_glosses.containsKey(r.strongs)) {
@@ -346,6 +371,8 @@ class _BrowseWindowState extends State<BrowseWindow> {
           firstOfVerse: first,
           text: text,
           runs: runs,
+          absence: absence,
+          mergedWith: mergedHeads[code]?[n],
         ));
         first = false;
       }
@@ -633,7 +660,17 @@ class _TranslationLine extends StatelessWidget {
           // `Now<note: Or "And"> the earth … darkness [was] over` in
           // 48% of LEB. Notes leave the flow for a marker; supplied
           // words stay, set in italic like a printed Bible.
-          ...[
+          if (row.absence != null)
+            TextSpan(
+              text: verseAbsenceNote(row.absence!, settings.locale,
+                  mergedWith: row.mergedWith),
+              style: TextStyle(
+                color: wb.mutedText,
+                fontStyle: FontStyle.italic,
+              ),
+            )
+          else
+            ...[
             for (final span in parseScripture(row.text ?? ''))
               switch (span.kind) {
                 // A plain span is where a text-query hit can live, so it

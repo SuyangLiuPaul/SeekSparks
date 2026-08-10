@@ -4178,6 +4178,30 @@ const uiStrings = {
     'en': 'No parsing. Hebrew parsing comes from the Open Scriptures '
         'Hebrew Bible (WLC).',
   },
+  // ── References that carry no scripture of their own ──────────────
+  // See lib/utils/verse_text_absence.dart. Shown in place of the verse
+  // text, in the UI language — the sentence is the app explaining the
+  // edition's convention, not the edition speaking.
+  'verseMergedWith': {
+    'zh-Hans': '与第 {v} 节合并印行',
+    'zh-Hant': '與第 {v} 節合併印行',
+    'en': 'Printed with verse {v}',
+  },
+  'verseMergedWithEarlier': {
+    'zh-Hans': '与前面的经文合并印行',
+    'zh-Hant': '與前面的經文合併印行',
+    'en': 'Printed with an earlier verse',
+  },
+  'verseOmittedFromBaseText': {
+    'zh-Hans': '此底本不收录本节',
+    'zh-Hant': '此底本不收錄本節',
+    'en': "Not in this edition's base text",
+  },
+  'verseTextMissing': {
+    'zh-Hans': '本版本此处没有经文',
+    'zh-Hant': '本版本此處沒有經文',
+    'en': 'This edition has no text here',
+  },
   'analysisAvUsage': {
     'zh-Hans': '钦定本译法',
     'zh-Hant': '欽定本譯法',

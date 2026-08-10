@@ -427,6 +427,10 @@ class MainProvider extends ChangeNotifier {
     }
     final out = List<String>.filled(verses.length, '', growable: false);
     for (int i = 0; i < verses.length; i++) {
+      // A reference whose stored text is the edition's typographic
+      // instruction (見上節, OMIT) gets an empty key, so a search for
+      // 上節 cannot report 227 hits that are not scripture.
+      if (verses[i].absence != null) continue;
       out[i] = sanitizeForSearch(verses[i].text)
           .replaceAll(' ', '')
           .toLowerCase();
@@ -457,6 +461,7 @@ class MainProvider extends ChangeNotifier {
     }
     final out = List<String>.filled(verses.length, '', growable: false);
     for (int i = 0; i < verses.length; i++) {
+      if (verses[i].absence != null) continue;
       out[i] = sanitizeForSearch(verses[i].text);
     }
     _wordKeysCache = out;

@@ -20,6 +20,7 @@ import 'package:seeksparks/utils/navigate_to_reader.dart';
 import 'package:seeksparks/utils/reference_parser.dart';
 import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:seeksparks/utils/verse_text_absence.dart';
 
 /// Modal bottom sheet that previews a Bible reference in-place
 /// without navigating away. Used by the sermon detail page so
@@ -192,6 +193,11 @@ class _VersePopupSheetState extends State<VersePopupSheet> {
     final buf = StringBuffer();
     buf.writeln('${_refLabel(locale)}\n');
     for (final v in verses) {
+      // A reference printed under a neighbour's number contributes no
+      // words. Copying 見上節 into a sermon would quote the edition's
+      // typesetting instruction as scripture, so the line is dropped —
+      // the same rule `copyVerseText` applies in the reader.
+      if (v.absence != null) continue;
       buf.writeln('${v.verse}. ${sanitizeVerseText(v.text)}');
     }
     final scheme = Theme.of(context).colorScheme;
@@ -423,11 +429,27 @@ class _VersePopupSheetState extends State<VersePopupSheet> {
                   fontFeatures: const [FontFeature.tabularFigures()],
                 ),
               ),
-              // Sanitize annotation markup so the popup shows clean
-              // readable prose. The reading pane has rich rendering
-              // for `<note:...>` / `{...}` / `[...]`; the popup is
-              // a peek surface and renders plain text only.
-              TextSpan(text: sanitizeVerseText(v.text)),
+              // A reference the edition prints under a neighbour's
+              // number says so, in the reader's own language. Without
+              // this the peek surface renders 見上節 in scripture type —
+              // the same defect the reader and Browse were fixed for,
+              // and this one is reached from a sermon citation, where a
+              // reader is least able to tell.
+              if (v.absence != null)
+                TextSpan(
+                  text: verseAbsenceNote(v.absence!, settings.locale,
+                      mergedWith: v.mergedWith),
+                  style: TextStyle(
+                    fontStyle: FontStyle.italic,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                )
+              else
+                // Sanitize annotation markup so the popup shows clean
+                // readable prose. The reading pane has rich rendering
+                // for `<note:...>` / `{...}` / `[...]`; the popup is
+                // a peek surface and renders plain text only.
+                TextSpan(text: sanitizeVerseText(v.text)),
             ],
           ),
         ),

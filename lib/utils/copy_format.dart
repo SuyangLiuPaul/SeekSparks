@@ -59,6 +59,7 @@
 library;
 
 import 'package:seeksparks/utils/scripture_markup.dart';
+import 'package:seeksparks/utils/verse_text_absence.dart';
 import 'package:seeksparks/utils/verse_list.dart'
     show VerseRef, canonicalBookIndex;
 
@@ -633,6 +634,11 @@ String renderTemplate(
 /// that helper hard-codes one answer (notes gone, brackets gone) and
 /// the whole point here is that the answer belongs to the destination.
 String copyVerseText(String raw, CopyOptions o) {
+  // 見上節 / OMIT are the edition telling the typesetter where the words
+  // are, not the words. Pasting them into a sermon would quote the
+  // apparatus as scripture, so the reference drops out of the output
+  // entirely (`formatCopy`'s `line()` discards an empty text).
+  if (verseAbsenceOf(raw) != null) return '';
   final buf = StringBuffer();
   for (final s in parseScripture(raw)) {
     switch (s.kind) {
