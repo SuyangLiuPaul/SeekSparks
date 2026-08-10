@@ -72,6 +72,9 @@ believe it is fine" and "we looked".
 | 22a | Source alignment codes printed as scripture (cuvs-yhwh) | 533,914 codes | 329 stray chars in 169 verses → **0** | **fixed**, now a test |
 | 22b | Table markup and non-word placeholders printed as scripture (bsb) | 386,063 runs | 726 tags + 25,357 placeholders → **0** | **fixed**, now a test |
 | 22c | Do a word's Strong's digits survive the import (bsb) | 386,063 runs | **311,267 truncated** → **0** | **fixed**, now a test |
+| 23a | Does any other tagged layer carry a bsb-style corruption | 10 layer pairs / 31,102 verses | **0** | clean, deficits are coverage |
+| 23b | Does a word's Strong's number name that word (lxxwh Septuagint) | 479,989 runs | **12,099 name a different word** → **0** | **fixed**, now a test |
+| 23c | Runs answering nothing where the edition already knows the answer | 49,614 empty runs | 8,295 → **0** | **fixed**, 41,032 honestly unanswerable |
 
 ---
 
@@ -1232,6 +1235,137 @@ implied list means.
 
 ---
 
+## 23. The other five tagged layers, and the Septuagint's own two halves
+
+Check 22 found a corruption in `assets/tagged/bsb/` that every internal
+test had passed, and it found it by asking a second layer to agree. The
+obvious next question is whether the same class of defect is sitting in
+any of the other layers. It is not. The less obvious question — whether
+the Septuagint, which the previous edition of this document listed under
+"Not checked yet" because it has no same-language witness for the Old
+Testament, really has none — turned out to be answerable, and the answer
+was 12,099 wrong Strong's numbers.
+
+### The negative result first, because it is a result
+
+Per-verse Jaccard over the Strong's sets of every pair of tagged layers,
+across the verses both cover:
+
+| | cuvs-yhwh | kjvs | cuvs-plus | nsn-plus |
+|---|---|---|---|---|
+| **bsb** | 92.79% | 76.86% | 79.61% | 72.61% |
+| **cuvs-yhwh** | — | 80.09% | 84.43% | 71.44% |
+| **kjvs** | | — | 92.48% | 70.58% |
+| **cuvs-plus** | | | — | 70.62% |
+
+Read alone, the 70s look alarming. They are not, and the measure that
+settles it is **containment** rather than overlap — of the numbers layer
+A gives a verse, how many does layer B also give? Across all ten pairs,
+in both directions, the answer never falls below **87.36%**, and for the
+smaller layer against a larger one it runs **94–98%**. nsn-plus sits at
+**97.82%** inside bsb while bsb sits at only **73.81%** inside nsn-plus.
+
+That asymmetry is the whole explanation. The layers are not disagreeing
+about what a word is; the smaller ones are **saying less**. bsb and
+cuvs-yhwh tag 369,042 and 369,529 numbers per verse summed; kjvs 313,477
+and cuvs-plus 327,661, both of which leave untranslated Hebrew function
+words alone; nsn-plus 282,053, roughly two words in three. The two pairs
+that score above 92% are exactly the two pairs with matching coverage.
+
+A corruption of the BSB kind cannot hide behind that. While bsb's numbers
+were truncated to their first digit its containment collapsed in *both*
+directions, because a layer that says H7 where another says H7225 is not
+saying less, it is saying something else. **No layer here does that.**
+0 defects found, 5 layers checked, 10 pairs measured.
+
+### The Septuagint half of `assets/tagged/lxxwh/`
+
+The pivot this document said did not exist was inside the file. `lxxwh`
+carries two alignments in one asset — the Greek Old Testament and the
+Westcott-Hort New Testament — produced by two different processes. They
+are the **same language**, so a word common to both is tagged twice, and
+each half witnesses the other.
+
+Asked to agree, they did not, on **4.23%** of the shared vocabulary. The
+Septuagint half's numbers had been assigned by a lookup blind to accent,
+breathing and vowel length:
+
+| form | means | should be | was tagged |
+|---|---|---|---|
+| γῆ | earth | G1093 | G1065 γέ "indeed" |
+| μή | not | G3361 | G3165 μέ "me" |
+| ὡς | as | G5613 | G3739 ὅς "who" |
+| εἷς | one | G1520 | G1519 εἰς "into" |
+| ὧδε | here | G5602 | G3592 ὅδε "this" |
+| νῶτος | the back | G3577 | G3558 νότος "the south" |
+
+Fold η to ε and ω to ο, drop the breathings, and each wrong entry is what
+is left. The same lookup took the adjective for the adverb (καλός for
+καλῶς) and the verb for the noun (οἰκέω for οἰκουμένη).
+
+**A reader tapping 「γην」 in Genesis 1:1 — the earth, in the verse that
+names it — was told the word means "indeed, at least".** Nothing looked
+broken. G1065 is a real number with a real entry, which is check 22's
+lesson arriving a second time: *a plausible wrong value is invisible from
+inside the data.*
+
+### The rule, and what it refused
+
+`tools/fix_lxx_strongs.py`. A number moves only when the New Testament
+half tags the same form (accents stripped, final sigma folded, **vowel
+length kept**) with one number and no other, at least 3 times, **and**
+`assets/originals/` — MorphGNT, made by other people from another source
+— names that same number, **and** the run's own part of speech agrees
+with the witness's. Two independent witnesses, or nothing moves.
+
+A second pass fills runs that carry no number at all, on the edition's
+own unanimous testimony: `ειπεν` was tagged G3004 in 612 places and left
+empty in 2,550 others, same word, same edition, same parse. Pass 1
+finishes and the corpus is **re-surveyed** before pass 2 begins, which is
+load-bearing twice: correcting νωτοι's three runs lets the fourth fill
+with G3577 rather than propagating G3558, and μη only becomes unanimous
+once its 2,263 Septuagint runs stop reading G3165.
+
+What it refused is the part worth keeping:
+
+- **234 runs held** where both witnesses agree and the answer is still
+  wrong. Leviticus's ἁφή "a plague-spot" is a noun, G860, spelled exactly
+  like ἀφῇ from ἀφίημι, which the New Testament tags G863 unanimously.
+  The run's own parse is what saves it. Every one of the 234 is a
+  word-class disagreement, not a tagset naming difference.
+- **ἰδού keeps G2400 across 1,018 runs.** The New Testament half
+  lemmatises it under ὁράω G3708 and does so unanimously — but
+  `assets/originals` does not confirm that, so the second witness is
+  missing and the Septuagint's own reading stands.
+- **εὐθύς keeps G2117**, a legitimate entry in its own right; the New
+  Testament's preference for εὐθέως G2112 is house style, not a
+  correction.
+- **308 runs refused on parse** in pass 2. An unaccented text loses the
+  difference between ἐρεῖς "you will say" and ἔρεις "strifes", so a form
+  can look unanimous only because one of its two words is never tagged.
+- **41,032 runs left empty.** Some 41,000 are words the New Testament
+  never uses — Σαλωμων, Μωαβ and Ιωαβ are spelled as the Septuagint
+  spells them, not as Matthew does — so no Strong's number exists to give
+  and inventing one would be a guess. Under-attribution is recoverable; a
+  wrong number is not, because it reads as a fact about the text.
+
+Verified: **12,099** runs corrected and **8,295** filled, over 479,989
+Old Testament runs; **0** New Testament runs touched, since that half is
+the witness and is already checked against `assets/originals`; **0**
+numbers cleared, so no run stopped answering; verse text, run counts,
+morphology and implied lists **byte-identical** before and after; all
+4,672 `<vs:…>` markers still carry no number (check 21). Agreement with
+the unanimous half of the witness went from **95.77% to 99.36%**, and the
+share of Old Testament runs that answer nothing from **10.34% to 8.61%**.
+The tool is idempotent — a second run writes the same bytes — and
+`test/lxx_tagged_layer_test.dart` holds all of it down; it fails on the
+pre-repair asset in four of its seven tests.
+
+`assets/strongs/concordance.json` is built from `assets/originals/`, not
+from the tagged layers, so no concordance count moves.
+
+---
+
 ## Not checked yet
 
 - Verse **text** itself, against an *external* witness. Checks 10–12 now
@@ -1244,11 +1378,16 @@ implied list means.
 - `section_titles.json`, `book_introductions.json`, `bible_evidence.json`,
   `maps_index.json` (see #300 for its provenance gap), `family_tree.json`
   relationships, `ot_synopsis.json` alignments.
-- The **Septuagint half of `assets/lxxwh.json`**, which check 20 leaves
-  unexamined: it is the only edition in the repo with no same-language
-  witness for the Old Testament, and its G-numbers do not pivot against
-  the other layers' H-numbers. Its New Testament *is* checked, against
-  `assets/originals`.
+- The Septuagint's **verse text**, as opposed to its Strong's numbers.
+  Check 23 measured the numbers and repaired them; nothing has asked
+  whether the Greek itself is complete. Nehemiah 10 is known to be
+  missing 15 of its 39 verses from the tagged import (check 21), and that
+  gap has never been chased across the other books.
+- The **41,032 Septuagint runs that still answer nothing** (check 23).
+  Most cannot be answered — they are words the New Testament never uses —
+  but nobody has separated "no Strong's number exists" from "a number
+  exists and this edition does not know it". An LXX-specific lexicon
+  would settle it; the repo has none.
 
 ## Next, in order
 
@@ -1274,7 +1413,10 @@ implied list means.
    (KWIC, concordance) read the tagged layer, which a placeholder has no
    entry in, so they cannot show one — reasoned, not measured.
 
-*(Check 20, "does any other book carry a cuvs-plus-style shift", was the
+*(The Septuagint half of `lxxwh` was the third bullet under "Not checked
+yet", on the grounds that it had no same-language witness. It had one —
+its own New Testament half — and check 23 is what that witness said.
+Check 20, "does any other book carry a cuvs-plus-style shift", was the
 first bullet under "Not checked yet" and is now measured: no, and four
 references of a narrower defect were found and fixed on the way. Check
 15, the concordance's 500-entry verse cap, was fifth here and is
