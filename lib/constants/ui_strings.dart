@@ -6997,6 +6997,15 @@ const uiStrings = {
     'zh-Hant': '原文',
     'en': 'Original',
   },
+  'phrasingNoTags': {
+    'zh-Hans': '此版本没有语法解析，也没有编号，只能按节断行——分行由你决定。'
+        '若要语法建议，请改用原文。',
+    'zh-Hant': '此版本沒有語法解析，也沒有編號，只能按節斷行——分行由你決定。'
+        '若要語法建議，請改用原文。',
+    'en': 'This edition carries no grammar and no Strong’s numbers, so only '
+        'verse breaks are proposed — the lines are yours to draw. Switch to '
+        'the original for a grammatical proposal.',
+  },
   'phrasingNoParse': {
     'zh-Hans': '此版本没有语法解析，只能依据编号建议断行。若要分出分词和不定式，请改用原文。',
     'zh-Hant': '此版本沒有語法解析，只能依據編號建議斷行。若要分出分詞和不定式，請改用原文。',

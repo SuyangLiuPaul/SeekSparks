@@ -399,12 +399,27 @@ class _PhrasingPageState extends State<PhrasingPage> {
           if (!levels.contains(PhrasingLevel.verbals)) ...[
             const SizedBox(height: 6),
             Text(
-              _s(
-                'phrasingNoParse',
-                'This edition carries no grammatical parse, so only the '
-                    'joints a Strong’s number can name are proposed. '
-                    'Switch to the original for participles and infinitives.',
-              ),
+              // Two different facts, and saying the wrong one is a claim
+              // about the reader's edition that is not true. A TAGGED
+              // translation proposes the joints its Strong's numbers can
+              // name; an untagged one proposes nothing at all, and
+              // telling that reader what "is proposed" would have them
+              // looking for lines the pane never drew.
+              levels.contains(PhrasingLevel.clauses)
+                  ? _s(
+                      'phrasingNoParse',
+                      'This edition carries no grammatical parse, so only '
+                          'the joints a Strong’s number can name are '
+                          'proposed. Switch to the original for participles '
+                          'and infinitives.',
+                    )
+                  : _s(
+                      'phrasingNoTags',
+                      'This edition carries no grammar and no Strong’s '
+                          'numbers, so only verse breaks are proposed — the '
+                          'lines are yours to draw. Switch to the original '
+                          'for a grammatical proposal.',
+                    ),
               style: TextStyle(fontSize: 12, color: scheme.outline),
             ),
           ],

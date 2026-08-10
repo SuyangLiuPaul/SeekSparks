@@ -759,6 +759,7 @@ void main() {
         'phrasingSourceVersion',
         'phrasingSourceOriginals',
         'phrasingNoParse',
+        'phrasingNoTags',
       ];
       for (final key in keys) {
         final entry = uiStrings[key];
