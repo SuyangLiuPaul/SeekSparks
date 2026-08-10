@@ -51,12 +51,51 @@ RENAME = {'Psalm': 'Psalms'}
 # The tables use a middle dot for "no value in this cell".
 EMPTY = {'', '·'}
 
+# Three ways the BSB column says "this original word has no English of its
+# own". `-` is an original with no rendering at all (the direct-object
+# marker, some articles); `. . .` and `vvv` mark an original folded into a
+# neighbouring English phrase — עֲשָׂה־אֵל is two rows and one name. None of
+# them is text: the printed Bible contains no `vvv` and no spaced ellipsis.
+PLACEHOLDERS = {'-', '. . .', 'vvv'}
+PLACEHOLDER_RE = re.compile(r'^(?P<pre>[(\[“‘]*)\s*(?P<core>\. \. \.|vvv|-)'
+                            r'\s*(?P<post>[^\w]*)$')
+
+# The verse-number anchor and the paragraph/list markup ride in the same
+# cells as the quotation marks. They are the source's typesetting, not the
+# translation, and the app draws its own verse numbers.
+HTML_RE = re.compile(r'<[^<>]{0,200}>')
+
+# BSB sets the em dash tight against the words on both sides.
+TIGHT_AFTER = ('—', '–')
+
+# The tables mark words with no counterpart in the original two ways:
+# `[were]` (18,689 cells) and `{will}` (1,270, almost all auxiliaries and
+# negation — `{do} not`, `{has} not yet`). Both are the same claim about
+# the text and the app has one convention for it, so the rarer form is
+# folded into the commoner rather than printed raw. `12,000 {}` carries an
+# empty pair; it marks nothing and goes.
+BRACES_RE = re.compile(r'\{\s*(.*?)\s*\}')
+
+# A closing quote in the trailing columns can be bracketed — `[’’]` — and
+# the printed Bible does not carry it. Quotation marks are the editor's,
+# not the original's, and bsb.txt is the authority for what is printed.
+SUPPLIED_RE = re.compile(r'\[[^\]]*\]')
+
+# Fourteen cells put a placeholder next to real text (`vvv him`,
+# `. . . 40,500`) instead of alone in the cell.
+LOOSE_PLACEHOLDER_RE = re.compile(r'(?:\. \. \.|(?<![\w])vvv(?![\w]))')
+
 
 def cell(row, i):
     """A cell as a clean string, with the table's null marker removed."""
     if i >= len(row) or row[i] is None:
         return ''
-    v = str(row[i]).strip()
+    raw = row[i]
+    # A count like 74,600 is stored as a number in some rows and as text in
+    # others. str() on the number drops the separator the Bible prints.
+    if isinstance(raw, int) and not isinstance(raw, bool) and abs(raw) >= 1000:
+        return f'{raw:,}'
+    v = str(raw).strip()
     return '' if v in EMPTY else v
 
 
@@ -99,6 +138,12 @@ def runs_for_verse(rows):
     So: walk the original order to decide attachment, emit in BSB order.
     This reproduces what the cuvs-yhwh data does, where H853 rides on 天
     rather than on whatever word English happened to put next.
+
+    A row that renders no English still carries printed text. Its quotation
+    mark, its comma, its closing bracket all belong to the verse, and the
+    row they sit on is an accident of which Hebrew word the punctuation
+    followed. Drop the row and its punctuation goes with it: that is how
+    `1 Chronicles 1:12` lost the `)` of "(from whom the Philistines came)".
     """
     ordered = []
     for i, r in enumerate(rows):
@@ -112,10 +157,28 @@ def runs_for_verse(rows):
             digits = re.match(r'\d+', num)
             if digits:
                 strongs = ('H' if lang == 'Hebrew' else 'G') + digits.group(0)
-        word = cell(r, 18)
-        # "-" is how the tables print an original with no English
-        # rendering at all (the direct-object marker, some articles).
-        rendered = bool(word) and word != '-'
+        raw = BRACES_RE.sub(lambda m: f'[{m.group(1)}]' if m.group(1) else '',
+                            cell(r, 18)).strip()
+        lead = HTML_RE.sub('', cell(r, 17))
+        # pnc, endQ and End text are three columns of trailing printed
+        # characters. Reading only the first is what left 1,986 verses
+        # short of their closing quotation mark or bracket.
+        trail = (cell(r, 19)
+                 + SUPPLIED_RE.sub('', cell(r, 20))
+                 + SUPPLIED_RE.sub('', HTML_RE.sub('', cell(r, 22))))
+        word = raw
+        rendered = bool(raw)
+        if rendered:
+            m = PLACEHOLDER_RE.match(raw)
+            if m:
+                rendered = False
+                word = ''
+                lead += m.group('pre')
+                trail = m.group('post') + trail
+            else:
+                word = LOOSE_PLACEHOLDER_RE.sub(' ', raw)
+                word = re.sub(r'\s+', ' ', word).strip()
+                rendered = bool(word)
         sort_raw = cell(r, 0) if lang == 'Hebrew' else cell(r, 1)
         try:
             sort_key = int(sort_raw)
@@ -126,8 +189,8 @@ def runs_for_verse(rows):
             'sort': sort_key,
             'strongs': strongs,
             'word': word,
-            'begq': cell(r, 17),
-            'pnc': cell(r, 19),
+            'lead': lead,
+            'trail': trail,
             'rendered': rendered,
         })
 
@@ -149,21 +212,43 @@ def runs_for_verse(rows):
             implied.setdefault(last[-1]['bsb_i'], []).extend(pending)
 
     runs = []
+    carried = ''
     for item in ordered:
         if not item['rendered']:
+            carried += item['lead']
+            if item['trail']:
+                if runs:
+                    runs[-1]['tail'] += item['trail']
+                else:
+                    carried += item['trail']
             continue
+        runs.append({
+            'lead': carried + item['lead'],
+            'word': item['word'],
+            'tail': item['trail'],
+            'strongs': item['strongs'],
+            'bsb_i': item['bsb_i'],
+        })
+        carried = ''
+    if carried and runs:
+        runs[-1]['tail'] += carried
+
+    out = []
+    for run in runs:
         # A trailing space is part of the run: browse_window lays runs
         # out in a Wrap with no separator between children, which is
         # right for Chinese and would glue English words together.
-        text = f"{item['begq']}{item['word']}{item['pnc']} "
-        run = {'w': text, 's': item['strongs']}
-        got = implied.get(item['bsb_i'])
+        text = f"{run['lead']}{run['word']}{run['tail']}"
+        if not text.endswith(TIGHT_AFTER):
+            text += ' '
+        got = implied.get(run['bsb_i'])
+        emitted = {'w': text, 's': run['strongs']}
         if got:
-            run['i'] = got
-        runs.append(run)
-    if runs:
-        runs[-1]['w'] = runs[-1]['w'].rstrip()
-    return runs
+            emitted['i'] = got
+        out.append(emitted)
+    if out:
+        out[-1]['w'] = out[-1]['w'].rstrip()
+    return out
 
 
 def build_tagged(xlsx_path, out_dir):
