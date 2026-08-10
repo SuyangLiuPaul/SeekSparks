@@ -2727,17 +2727,20 @@ const uiStrings = {
     'en': '{query} — {count} verses',
   },
   // #295: a Strong's result reports BOTH counts, as BibleWorks' status
-  // line does — verses and hits differ (G25 is 143 hits in 110 verses) —
-  // and says so when the bundled verse list stopped at the 500 cap.
+  // line does — verses and hits differ (G25 is 143 hits in 110 verses).
   'strongsHeaderWithHits': {
     'zh-Hans': '{query} — 共 {count} 节 · {hits} 处',
     'zh-Hant': '{query} — 共 {count} 節 · {hits} 處',
     'en': '{query} — {count} verses · {hits} occurrences',
   },
-  'strongsHeaderTruncated': {
-    'zh-Hans': '{query} — 全书共 {hits} 处，仅列出前 {count} 节',
-    'zh-Hant': '{query} — 全書共 {hits} 處，僅列出前 {count} 節',
-    'en': '{query} — {hits} occurrences; first {count} verses listed',
+  // v1.6.96: a wildcard matched more Strong's numbers than the expansion
+  // searches, so the verse count is a floor. This string used to describe
+  // the per-entry 500-verse cap, which no longer exists.
+  'strongsHeaderPartial': {
+    'zh-Hans': '{query} — 至少 {count} 节；通配符匹配的词条超出检索上限',
+    'zh-Hant': '{query} — 至少 {count} 節；通配符匹配的詞條超出檢索上限',
+    'en': '{query} — at least {count} verses; the wildcard matched more '
+        'numbers than were searched',
   },
   'searchOpAndTip': {
     'zh-Hans': '同时含两者',
@@ -3925,15 +3928,16 @@ const uiStrings = {
     'zh-Hant': '最多出現於（{unit}）',
     'en': 'Most in ({unit})',
   },
-  // A distribution tallied from a list that stopped at the cap traces the
-  // cap, not the word: H3068's listed verses end in Leviticus, so the bars
-  // would put the divine name in 3 books peaking in Exodus where it is in
-  // 36 peaking in Jeremiah. Say that instead of drawing it.
+  // A distribution drawn from a term that stands for less than it names
+  // traces the limit, not the words. Until v1.6.96 the cause was the
+  // concordance's own 500-verse cap; now it is only a wildcard whose
+  // expansion was stopped, which drops whole words out of the query.
   'searchStatsTruncated': {
-    'zh-Hans': '未显示分布图：本次结果在 500 节处被截断，图形只会显示截断的位置，而非这个词的实际分布。',
-    'zh-Hant': '未顯示分佈圖：本次結果在 500 節處被截斷，圖形只會顯示截斷的位置，而非這個詞的實際分佈。',
-    'en': 'No distribution: this result was cut at the 500-verse list '
-        'limit, so a chart of it would show the limit rather than the word.',
+    'zh-Hans': '未显示分布图：通配符匹配的词条超出检索上限，图形只会显示上限的位置，而非这些词的实际分布。',
+    'zh-Hant': '未顯示分佈圖：通配符匹配的詞條超出檢索上限，圖形只會顯示上限的位置，而非這些詞的實際分佈。',
+    'en': 'No distribution: the wildcard matched more numbers than were '
+        'searched, so a chart of this result would show the limit rather '
+        'than the words.',
   },
   // ── The word-distribution chart (bwh23, task #290) ──────────────────
   // Opened from the strip under each word in the Stats tab.

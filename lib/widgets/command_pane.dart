@@ -533,15 +533,20 @@ class _CommandPaneState extends State<CommandPane> {
   /// there was a lie (H3068 read "500 verses" against 6,521 hits).
   String _strongsSummary(
       String queryLabel, StrongsResultCounts counts, String locale) {
+    // Incompleteness is checked before the counts, because the one thing
+    // that still causes it — a cut wildcard expansion — arrives on the
+    // boolean path, which never has an occurrence total to print.
+    if (counts.truncated) {
+      return (uiStrings['strongsHeaderPartial']?[locale] ??
+              '{query} — at least {count} verses; the wildcard matched '
+                  'more numbers than were searched')
+          .replaceAll('{query}', queryLabel)
+          .replaceAll('{count}', groupThousands(counts.verses));
+    }
     final hits = counts.occurrences;
     if (hits == null) return _summary(queryLabel, counts.verses, locale);
-    final key = counts.truncated
-        ? 'strongsHeaderTruncated'
-        : 'strongsHeaderWithHits';
-    final fallback = counts.truncated
-        ? '{query} — {hits} occurrences, first {count} verses shown'
-        : '{query} — {count} verses · {hits} occurrences';
-    return (uiStrings[key]?[locale] ?? fallback)
+    return (uiStrings['strongsHeaderWithHits']?[locale] ??
+            '{query} — {count} verses · {hits} occurrences')
         .replaceAll('{query}', queryLabel)
         .replaceAll('{count}', groupThousands(counts.verses))
         .replaceAll('{hits}', groupThousands(hits));
@@ -1389,8 +1394,9 @@ class _CommandPaneState extends State<CommandPane> {
     //
     // 2026-08-10 (#308): which UNIT it draws is decided by
     // `strongsDistribution`, not by which list happened to be at hand.
-    // Tallying the refs is right until the bundled list stops at 500,
-    // and then it draws the cap instead of the word.
+    // Tallying the refs is right for every number since v1.6.96 — until
+    // then the bundled list stopped at 500 and the tally drew the cap
+    // rather than the word.
     final distribution = strongsDistribution(
       listedBooks: refs.map((r) => r.englishBook),
       occurrencesByBook: wb.strongsByBook,

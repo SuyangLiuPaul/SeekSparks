@@ -487,13 +487,19 @@ def build_greek_nt() -> None:
 
 # ── Concordance (inverted index over the bundled originals) ────────────
 
-# Cap on how many references we keep per Strong's number. Common words
-# like the Greek definite article G3588 appear ~20k times; storing every
-# occurrence would balloon the bundle and overwhelm the UI. The total
-# count is preserved separately so the UI can show "Used N times" even
-# when only the first MAX_REFS are listed. 500 covers ~99% of Strong's
-# words completely; only ~50 ultra-common particles/articles are capped.
-MAX_REFS_PER_STRONGS = 500
+# There used to be a 500-reference cap here, on the reasoning that the
+# common words would balloon the bundle and that the absolute count was
+# preserved separately anyway. Both were true and the conclusion was
+# still wrong: `r` is in canonical order, so a capped entry is not a
+# sample of the word, it is a PREFIX OF THE CANON. H3068's 500 verses
+# stopped inside Leviticus, and every consumer that filters or intersects
+# `r` — the `l` search limit, the AND/OR/NEAR set algebra — read that
+# prefix as the whole. `l jer` then answered H3068 with zero verses in a
+# book that carries the divine name 712 times, and said so confidently.
+#
+# 123 of 14,039 entries reached the cap. Removing it costs 1.75 MB raw /
+# 307 KB gzipped and makes the index a census, which is what every
+# consumer already assumed it was.
 
 # Canonical book ordering used to sort references within a Strong's
 # entry. Matches lib/services/fetch_books.dart `standardBookOrder`.
@@ -522,12 +528,13 @@ def build_concordance() -> None:
     shaped as:
         { "G2316": {
             "n": 1320,                       # absolute count
-            "r": ["Matt 1:23", ...],         # capped reference list
-            "b": {"Matthew": 51, ... }       # per-book counts (uncapped)
+            "r": ["Matt 1:23", ...],         # every verse, canonical order
+            "b": {"Matthew": 51, ... }       # per-book counts
           }, ... }
 
-    `n` is the absolute count; `r` is the canonical-order list capped at
-    MAX_REFS_PER_STRONGS. `b` lets the runtime render statistical
+    `n` counts OCCURRENCES and `r` lists VERSES, so they differ whenever a
+    word recurs inside one verse (G25: 143 occurrences in 110 verses).
+    Both are complete. `b` lets the runtime render statistical
     distribution panels (Pauline / Johannine / per-book) without having
     to parse every ref string.
     """
@@ -581,10 +588,9 @@ def build_concordance() -> None:
     out: dict[str, dict] = {}
     for s, occurrences in refs.items():
         occurrences.sort()
-        capped = [r[3] for r in occurrences[:MAX_REFS_PER_STRONGS]]
         out[s] = {
             'n': counts[s],
-            'r': capped,
+            'r': [r[3] for r in occurrences],
             'b': by_book.get(s, {}),
         }
 
@@ -594,7 +600,7 @@ def build_concordance() -> None:
         json.dump(out, f, ensure_ascii=False, separators=(',', ':'))
     total_refs = sum(len(v['r']) for v in out.values())
     print(f'  wrote {len(out)} Strong\'s with {total_refs} verse refs '
-          f'(capped at {MAX_REFS_PER_STRONGS} per entry) + per-book counts')
+          f'(complete, no per-entry cap) + per-book counts')
 
 
 # ── CLI ────────────────────────────────────────────────────────────────

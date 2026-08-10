@@ -32,8 +32,6 @@ import 'package:seeksparks/constants/book_groups.dart' show oldTestamentBooks;
 import 'package:seeksparks/utils/search_scope.dart'
     show kScopeAllBooks, scopedCountLabel;
 import 'package:seeksparks/utils/search_stats.dart';
-import 'package:seeksparks/utils/strongs_result_counts.dart'
-    show kConcordanceRefCap;
 import 'package:seeksparks/utils/verse_list.dart' show applySearchLimit;
 import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
 import 'package:seeksparks/widgets/word_distribution_strip.dart';
@@ -612,12 +610,13 @@ class _WordStatsPaneState extends State<WordStatsPane> {
 
       // Unscoped and whole-book-scoped rows both count OCCURRENCES, so
       // the pair prints as a ratio. A chapter-level limit can only be
-      // answered from the verse list, which counts something else and
-      // stops at 500 — so that row states a lower bound and no
-      // denominator rather than an exact-looking mixture (#308).
+      // answered from the verse list, which counts something else — so
+      // that row prints no denominator rather than an exact-looking
+      // mixture of the two units (#308). It used to print a `≥` as well,
+      // because the verse list stopped at 500; since v1.6.96 it is
+      // complete and the scoped figure is exact.
       final int inScope;
       final int? denominator;
-      var atLeast = false;
       if (scope == null) {
         inScope = total;
         denominator = null;
@@ -633,14 +632,12 @@ class _WordStatsPaneState extends State<WordStatsPane> {
         inScope = applySearchLimit(listed, scope,
             (r) => '${r.englishBook}-${r.chapter}-${r.verse}').length;
         denominator = null;
-        atLeast = listed.length >= kConcordanceRefCap && total > listed.length;
       }
 
       rows.add(_StatRow(
         word: w,
         inScope: inScope,
         denominator: denominator,
-        atLeast: atLeast,
         gloss: entry?.localizedGloss(widget.locale) ?? '',
         greek: await GreekStatsService.lookup(w.strongs),
         // Every book kept, including the ones at zero: the strip has no
@@ -740,8 +737,7 @@ class _WordStatsPaneState extends State<WordStatsPane> {
                         ),
                         const SizedBox(width: 6),
                         Text(
-                          '${r.atLeast ? '≥' : ''}'
-                          '${scopedCountLabel(r.inScope, r.denominator)}',
+                          scopedCountLabel(r.inScope, r.denominator),
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
@@ -916,7 +912,6 @@ class _StatRow {
     required this.gloss,
     required this.distribution,
     this.denominator,
-    this.atLeast = false,
     this.greek,
   });
 
@@ -938,13 +933,6 @@ class _StatRow {
   /// against IN THE SAME UNIT, which is the unlimited case (`12 / 12`
   /// says nothing, #280) and the chapter-level limit (#308).
   final int? denominator;
-
-  /// [inScope] is a floor, not a count.
-  ///
-  /// Set only where the figure came from the concordance's verse list
-  /// and that list stopped at its cap, so verses beyond the cut cannot
-  /// be seen. `≥12` is true; `12` would not be.
-  final bool atLeast;
 
   final String gloss;
 

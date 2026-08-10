@@ -1,28 +1,20 @@
 // 2026-08-09 (#295): what a Strong's result header is allowed to claim.
 //
-// The bundled concordance stores two different numbers per entry and the
-// UI had been showing neither of them honestly:
+// The bundled concordance stores two different numbers per entry:
 //
-//   n  — occurrences across the whole Bible, counted before any cap
-//        (H3068 = 6,521). Equal to the sum of the per-book map `b`.
-//   r  — the verse list, TRUNCATED by the build pipeline at 500.
+//   n  — occurrences across the whole Bible (H3068 = 6,521). Equal to
+//        the sum of the per-book map `b`.
+//   r  — the verses that contain at least one (H3068 = 5,522).
 //
-// The header printed `refs.length`, so H3068 — the divine name — read
-// "共 500 節" and there was nothing on screen to say the list stopped
-// early. 123 of the 14,039 entries sit on that cap, hiding 160,564
-// occurrences between them; the worst is G3588 at 19,859.
+// The header printed `refs.length` and called it the total, so the two
+// units were being conflated. Reporting both is also what BibleWorks
+// does (help topic bwh16: its status line gives verses AND hits), and
+// the distinction is real: G25 occurs 143 times in 110 verses.
 //
-// Two counts is also what BibleWorks reports (help topic bwh16: its
-// status line gives verses AND hits), and the distinction is real: G25
-// occurs 143 times in 110 verses.
-
-/// The pipeline's per-entry verse-list limit.
-///
-/// Nothing in `assets/strongs/concordance.json` marks an entry as
-/// truncated, so list length hitting the cap is the only signal there
-/// is. Verified against the asset: the longest `r` is exactly 500 and
-/// 123 entries reach it.
-const int kConcordanceRefCap = 500;
+// 2026-08-10 (v1.6.96): `r` used to stop at 500, and this file inferred
+// truncation from a list that reached it. That inference is gone with
+// the cap — both counts are now complete, and a header that still said
+// "first 500 verses listed" would have been the new untruth.
 
 /// What the header may state about one Strong's result.
 class StrongsResultCounts {
@@ -32,8 +24,9 @@ class StrongsResultCounts {
   /// Bible-wide occurrences, or null when it must not be shown.
   final int? occurrences;
 
-  /// The verse list stopped at the cap, so more verses exist than are
-  /// listed and the header has to say so.
+  /// The result stands for less than the query named, so [verses] is a
+  /// floor rather than a count. The one surviving cause is a wildcard
+  /// whose expansion was stopped at its limit.
   final bool truncated;
 
   const StrongsResultCounts({
@@ -60,34 +53,28 @@ class StrongsResultCounts {
 
 /// Decide what the header may claim.
 ///
-/// [listedRefs] is the entry's verse list as bundled; [versesShown] is
-/// what survived the `l` search limit. [occurrences] is the entry's `n`,
-/// or null when the query was not a single number (a boolean expression
-/// composes several entries, and no uncapped total exists for the
-/// combination).
+/// [versesShown] is what survived the `l` search limit. [occurrences] is
+/// the entry's `n`, or null when the query was not a single number: a
+/// boolean expression composes several entries and no occurrence total
+/// exists for the combination. [incomplete] is passed by the boolean
+/// path when a wildcard expansion was stopped short.
 ///
-/// Two deliberate refusals:
-///
-/// * Under a search limit the occurrence count is suppressed. It counts
-///   the whole Bible, and printing it beside a list narrowed to Genesis
-///   would read as the scope's own total.
-/// * `occurrences <= cap` never counts as truncation even at a full 500
-///   verses, because verses can never outnumber occurrences — such an
-///   entry is exactly one hit per verse and is complete.
+/// One deliberate refusal: under a search limit the occurrence count is
+/// suppressed. It counts the whole Bible, and printing it beside a list
+/// narrowed to Genesis would read as the scope's own total.
 StrongsResultCounts strongsResultCounts({
-  required int listedRefs,
   required int versesShown,
   int? occurrences,
   bool scoped = false,
+  bool incomplete = false,
 }) {
-  if (scoped) return StrongsResultCounts(verses: versesShown);
-  final truncated = listedRefs >= kConcordanceRefCap &&
-      occurrences != null &&
-      occurrences > kConcordanceRefCap;
+  if (scoped) {
+    return StrongsResultCounts(verses: versesShown, truncated: incomplete);
+  }
   return StrongsResultCounts(
     verses: versesShown,
     occurrences: occurrences,
-    truncated: truncated,
+    truncated: incomplete,
   );
 }
 

@@ -56,9 +56,9 @@ class WorkbenchProvider extends ChangeNotifier {
   List<ConcordanceRef>? strongsRefs;
 
   /// What the header may claim about [strongsRefs] — see
-  /// `strongs_result_counts.dart`. Carries the uncapped occurrence total
-  /// and whether the bundled verse list stopped at the pipeline cap, so
-  /// H3068 stops reporting "500 verses" against 6,521 occurrences.
+  /// `strongs_result_counts.dart`. Carries the occurrence total beside
+  /// the verse count, so H3068 reports 5,522 verses AND 6,521
+  /// occurrences rather than picking one and leaving the unit implied.
   StrongsResultCounts? strongsCounts;
 
   /// Uncapped occurrences per canonical English book, for a query that
@@ -71,14 +71,17 @@ class WorkbenchProvider extends ChangeNotifier {
   /// set operation over several entries.
   Map<String, int> strongsByBook = const <String, int>{};
 
-  /// Whether the bundled verse list this result was built from stopped
-  /// at the pipeline cap.
+  /// Whether this result stands for less than the query named.
+  ///
+  /// Since v1.6.96 that can only mean a WILDCARD whose expansion was cut
+  /// at its own limit, dropping whole numbers out of the query — the
+  /// per-entry verse cap that used to cause it is gone.
   ///
   /// Deliberately NOT read off [strongsCounts]: that object answers what
   /// the HEADER may claim, and it suppresses truncation under a search
-  /// limit on purpose. The distribution needs the raw fact — a scoped
-  /// tally of a capped entry can be missing whole books, and a scope
-  /// does not make it whole again.
+  /// limit on purpose. The distribution needs the raw fact — a scope
+  /// narrows which verses are shown, it does not restore the terms that
+  /// were never searched.
   bool strongsListTruncated = false;
 
   /// The last query, parsed, when it was written in the command-line
@@ -377,9 +380,13 @@ class WorkbenchProvider extends ChangeNotifier {
         final composed = await SearchService.runStrongsBoolean(bq);
         final refs = _limitRefs(composed.refs);
         strongsRefs = refs;
-        // No uncapped total exists for a composed expression: it is a
-        // set operation over several already-capped lists.
-        strongsCounts = StrongsResultCounts(verses: refs.length);
+        // No occurrence total exists for a composed expression: it is a
+        // set operation over verse lists, and one verse can carry
+        // several hits of each term.
+        strongsCounts = strongsResultCounts(
+          versesShown: refs.length,
+          incomplete: composed.truncatedTerms,
+        );
         strongsListTruncated = composed.truncatedTerms;
       } else if (_singleStrongsRe.hasMatch(query)) {
         final number = query.toUpperCase();
@@ -391,10 +398,11 @@ class WorkbenchProvider extends ChangeNotifier {
         final refs = _limitRefs(listed);
         strongsRefs = refs;
         strongsByBook = result?.byBook ?? const <String, int>{};
-        strongsListTruncated = listed.length >= kConcordanceRefCap &&
-            (result?.total ?? 0) > kConcordanceRefCap;
+        // A single number's verse list is complete since v1.6.96, so the
+        // scoped count below is exact and the distribution can be drawn
+        // from the verses the reader is actually holding.
+        strongsListTruncated = false;
         strongsCounts = strongsResultCounts(
-          listedRefs: listed.length,
           versesShown: refs.length,
           occurrences: result?.total,
           scoped: hasSearchLimit,

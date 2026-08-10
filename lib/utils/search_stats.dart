@@ -216,27 +216,25 @@ SearchDistribution buildDistributionFromCounts({
 
 /// The distribution a Strong's result can draw HONESTLY.
 ///
-/// `concordance.json` describes the same word twice over and the two
-/// differ in both unit and completeness:
+/// `concordance.json` describes the same word twice over, in two units:
 ///
-///   * `b`, a per-book map of OCCURRENCES. Uncapped, and it sums exactly
-///     to the entry's total.
-///   * `r`, the VERSE list. Stopped at `kConcordanceRefCap` by the build
-///     pipeline, in canonical order.
+///   * `b`, a per-book map of OCCURRENCES, summing exactly to the
+///     entry's total.
+///   * `r`, the VERSE list, in canonical order.
 ///
-/// Tallying `r` per book is the obvious move — it is the list the reader
-/// is scrolling, and it is bwh23's default plot. For 13,916 of 14,039
-/// numbers it is also correct. For the other 123 it draws the cap
-/// instead of the word: H3068's listed verses stop inside Leviticus, so
-/// the divine name appears to occur in 3 books and to peak in Exodus,
-/// where it occurs in 36 and peaks in Jeremiah. 58 of those 123 name the
-/// wrong heaviest book.
+/// Both are complete since v1.6.96, so tallying `r` per book — the list
+/// the reader is scrolling, and bwh23's default plot — is now correct
+/// for all 14,039 numbers. It was not: `r` used to stop at 500, and
+/// because the list is in canonical order a capped entry drew the cap
+/// rather than the word. H3068's listed verses ended inside Leviticus,
+/// putting the divine name in 3 books and peaking it in Exodus where it
+/// is in 36 and peaks in Jeremiah; 58 of the 123 capped entries named
+/// the wrong heaviest book.
 ///
-/// So the unit is not a matter of taste. Draw whichever one is a CENSUS:
-/// verses while the list is whole, occurrences once it is not. And under
-/// a search limit draw neither as a census — the listed verses were
-/// filtered from an already-capped list, so a scoped tally of a capped
-/// entry can be missing whole books.
+/// [listTruncated] survives for the one incompleteness the data cannot
+/// answer — a wildcard expansion stopped at its own limit, which drops
+/// whole words out of a composed query. Nothing drawn from such a term
+/// is a census.
 SearchDistribution strongsDistribution({
   required Iterable<String> listedBooks,
   required List<String> bookOrder,

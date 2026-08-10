@@ -3,8 +3,6 @@ import 'package:seeksparks/services/concordance_service.dart';
 import 'package:seeksparks/services/fetch_books.dart' show standardBookOrder;
 import 'package:seeksparks/services/originals_service.dart';
 import 'package:seeksparks/utils/strongs_boolean_search.dart';
-import 'package:seeksparks/utils/strongs_result_counts.dart'
-    show kConcordanceRefCap;
 import 'package:seeksparks/utils/strongs_proximity.dart';
 
 /// Immutable result of a plain-text corpus scan — see
@@ -101,28 +99,28 @@ class SearchService {
     // Resolve each term to its occurrence label-set (expanding wildcards),
     // then apply the AND/OR set algebra.
     final termRefs = <StrongsTerm, Set<String>>{};
-    // Whether any term's bundled verse list stopped at the cap. The set
-    // algebra below then ran over a PREFIX of that term, so the answer
-    // may be missing verses and any distribution drawn from it is a
-    // sample — see [StrongsBooleanResult.truncatedTerms].
+    // Whether any term stands for less than it names. Since v1.6.96 the
+    // per-entry verse lists are complete, so the one way this can still
+    // happen is a wildcard whose expansion was stopped — `G1✶` matches
+    // 1,067 numbers and only the first 300 are unioned. The set algebra
+    // below then ran over part of the term, so the answer may be missing
+    // verses — see [StrongsBooleanResult.truncatedTerms].
     var truncated = false;
     for (final t in query.terms) {
       if (termRefs.containsKey(t)) continue;
       final labels = <String>{};
       if (t.wildcard) {
-        final nums = await ConcordanceService.numbersMatchingPrefix(t.number);
-        for (final n in nums) {
+        final expansion =
+            await ConcordanceService.numbersMatchingPrefix(t.number);
+        if (expansion.cut) truncated = true;
+        for (final n in expansion.numbers) {
           final r = await ConcordanceService.lookup(n);
           if (r == null) continue;
           labels.addAll(r.refs.map((e) => e.label));
-          if (_entryTruncated(r)) truncated = true;
         }
       } else {
         final r = await ConcordanceService.lookup(t.number);
-        if (r != null) {
-          labels.addAll(r.refs.map((e) => e.label));
-          if (_entryTruncated(r)) truncated = true;
-        }
+        if (r != null) labels.addAll(r.refs.map((e) => e.label));
       }
       termRefs[t] = labels;
     }
@@ -169,24 +167,18 @@ class SearchService {
     });
     return StrongsBooleanResult(refs: refs, truncatedTerms: truncated);
   }
-
-  /// Whether [r]'s bundled verse list stopped at the cap.
-  ///
-  /// A full 500 is not truncation on its own: an entry with 500
-  /// occurrences in 500 verses is complete at exactly one hit per verse.
-  /// The same test [strongsResultCounts] makes for the header.
-  static bool _entryTruncated(ConcordanceResult r) =>
-      r.refs.length >= kConcordanceRefCap && r.total > kConcordanceRefCap;
 }
 
 /// A composed Strong's expression's verses, and whether they are all of
 /// them.
 ///
-/// The set algebra runs over each term's BUNDLED verse list, which stops
-/// at [kConcordanceRefCap]. `G3588 AND G2532` therefore intersects two
-/// prefixes that both end inside Matthew, and returns a confident answer
-/// about the whole New Testament from data that never left one Gospel.
-/// The flag is what lets a caller refuse to draw that.
+/// Until v1.6.96 this was answered by the concordance's own 500-verse
+/// cap: `G3588 AND G2532` intersected two prefixes that both ended
+/// inside Matthew and returned a confident answer about the whole New
+/// Testament from data that never left one Gospel. The verse lists are
+/// complete now, so the only remaining source is a wildcard expansion
+/// stopped at its own limit. The flag is what lets a caller refuse to
+/// draw a distribution from a term that stands for less than it names.
 class StrongsBooleanResult {
   const StrongsBooleanResult({required this.refs, this.truncatedTerms = false});
 

@@ -20,12 +20,15 @@ import 'package:seeksparks/utils/search_scope.dart'
     show kScopeAllBooks, wholeBookScope;
 import 'package:seeksparks/utils/search_stats.dart';
 
-/// H3068 (יהוה) as `concordance.json` actually holds it, abridged to the
-/// books that matter for the assertions below.
+/// H3068 (יהוה) as `concordance.json` holds it, abridged to the books
+/// that matter for the assertions below. The full map has 36 books and
+/// sums to 6,521.
 ///
-/// The full map has 36 books and sums to 6,521; the listed verse array
-/// stops inside Leviticus. Both facts are what make this the worst case
-/// in the corpus.
+/// The paired [_yhwhListedBooks] is the entry as it was BEFORE v1.6.96,
+/// when the verse list stopped inside Leviticus. That cap is gone from
+/// the data, but it remains the sharpest available fixture for what a
+/// tally of an incomplete list does, which is what these tests are
+/// about: the two answers differ by 33 books and name different peaks.
 const _yhwhByBook = {
   'Genesis': 163,
   'Exodus': 397,
@@ -101,7 +104,12 @@ void main() {
       expect(d.books.first.secondary, 37);
     });
 
-    test('a capped list is charted by occurrence instead', () {
+    test('an incomplete list is charted by occurrence instead', () {
+      // No caller reaches this since v1.6.96: the only remaining cause
+      // of truncation is a cut wildcard, and a wildcard spans many
+      // numbers so no single per-book map exists for it. The branch is
+      // kept because it is the honest answer to the inputs, and the
+      // function's contract is to answer all four combinations.
       final d = strongsDistribution(
         listedBooks: _yhwhListedBooks(),
         occurrencesByBook: _yhwhByBook,

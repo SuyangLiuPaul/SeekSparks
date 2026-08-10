@@ -77,20 +77,18 @@ class SearchStatsStrip extends StatelessWidget {
     final s = uiStrings;
     final top = topBooks(distribution);
 
-    // Drawn from a sample, so not drawn. The listed verses stop at the
-    // pipeline cap in canonical order, which means the bars would trace
-    // where the list was cut rather than where the word lives — H3068
-    // would show three books peaking in Exodus against a real 36 books
-    // peaking in Jeremiah. Say why instead.
+    // Drawn from a sample, so not drawn: a wildcard whose expansion was
+    // stopped stands for fewer words than the reader named, so the bars
+    // would trace the limit rather than the words. Say why instead.
     if (distribution.partial) {
       return Padding(
         padding: const EdgeInsets.fromLTRB(8, 6, 8, 8),
         child: Text(
           _s(
               'searchStatsTruncated',
-              'No distribution: this result was cut at the '
-                  '500-verse list limit, so a chart of it would show the '
-                  'limit rather than the word.'),
+              'No distribution: the wildcard matched more numbers than '
+                  'were searched, so a chart of this result would show the '
+                  'limit rather than the words.'),
           style: TextStyle(fontSize: t.chrome, color: wb.mutedText),
         ),
       );

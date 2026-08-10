@@ -702,7 +702,7 @@ can be verified from within the repo.
 
 ---
 
-### Check 15 — the concordance's verse list is a 500-entry PREFIX, and a scoped search reads it as the whole. OPEN
+### Check 15 — the concordance's verse list was a 500-entry PREFIX, and a scoped search read it as the whole. FIXED v1.6.96
 
 Found while fixing #308. `assets/strongs/concordance.json` describes each
 Strong's number twice, and the two are not the same kind of fact:
@@ -744,17 +744,40 @@ corpus and comparing (2026-08-10):
 | H3068 | 6,521 | 6,521 | yes | 5,522 | 500, a strict **prefix** of them |
 | G3588 | 19,859 | 19,859 | yes | 6,977 | 500, a strict **prefix** of them |
 
-So the source is sound and the generator is faithful — the cap is a
-size decision, not a data limitation, and the uncapped list is
-recoverable exactly. That also gives the budget question its real shape:
-the missing verses are not a rounding error (H3068 alone is 5,022 of
-them), which is why this is recorded here as its own item rather than
-bundled into #308.
+So the source is sound and the generator is faithful — the cap was a
+size decision, not a data limitation, and the uncapped list was
+recoverable exactly.
 
-**Until it is repaired, the honest statement is the one the surfaces now
-make:** the header says the list was cut, the chart refuses to draw from
-it, and the Stats tab prints `≥N` rather than `N` for any figure derived
-from a cut list. None of that makes a scoped *result* correct.
+**Repaired 2026-08-10 (v1.6.96).** The size decision was settled by
+measuring it rather than deferring it: removing the cap costs **1.75 MB
+raw / 307 KB gzipped**, which is what a correct answer to `l jer` +
+`H3068` costs. The regenerated asset was proved a pure superset before
+shipping — 13,916 entries byte-identical, 123 strict extensions, zero
+regressions, and `n` and `b` untouched everywhere — so the fix cannot
+have changed any answer that was already right.
+
+The alternative, a compact ordinal or delta re-encoding of `r`, was
+rejected as the *less* conservative option: it would have introduced a
+canon-ordinal table between the generator and every consumer, and this
+repo has already been bitten once by a versification assumption
+(check 9).
+
+Uncapping also made #308's truncation apparatus a liability rather than
+a safeguard. It inferred "the list was cut" from a list that reached the
+cap, so left in place it would have fired on all 123 formerly capped
+entries and said *"first 500 verses listed"* about a complete list — the
+fix manufacturing its own untruth. The signal is repointed at the one
+incompleteness that survives: a **wildcard expansion** stopped at its
+300-number limit (`G1✶` matches 1,067 numbers). Measured: exactly 13
+prefixes exceed it, all single-digit. The Stats tab's `≥N` prefix is
+gone, because nothing it drew from is a sample any more.
+
+Frozen by five tests in `test/data_integrity_test.dart` — including two
+that need no named number and would have caught the cap the day it
+landed: **every entry must list a verse in every book `b` counts a hit
+in** (121 entries fail under the cap), and **no long list length may be
+shared by more than 20 entries**, since a cap looks exactly like 123
+words that coincidentally appear 500 times.
 
 ---
 
@@ -789,19 +812,16 @@ from a cut list. None of that makes a scoped *result* correct.
 3. Per-record date sourcing (#292 owns `hebrew_kings.json`).
 4. The LEB's `{…}` idiom braces in the 660 imported verses, if a witness
    that preserves them can be found.
-5. **Check 15** — regenerate `concordance.json`'s `r` without the
-   500-entry cap, so a scoped search over a common word stops returning
-   zero. Blocked on an asset-size decision, not on data: the tagged
-   corpus reproduces the capped entries exactly.
-6. The remaining verse-rendering surfaces, audited but not exhaustively:
+5. The remaining verse-rendering surfaces, audited but not exhaustively:
    check 14 covers the reader, Browse, the sermon-citation popup, the
    two search-key caches and the clipboard. Strong's-driven surfaces
    (KWIC, concordance) read the tagged layer, which a placeholder has no
    entry in, so they cannot show one — reasoned, not measured.
 
-*(The merge-marker presentation was second here and is now check 14.
-Check 9, the Hebrew/English versification mismatch, was first here and
-is now fixed. `assets/leb.json`'s missing books were second and are now
+*(Check 15, the concordance's 500-entry verse cap, was fifth here and is
+now fixed. The merge-marker presentation was second here and is now
+check 14. Check 9, the Hebrew/English versification mismatch, was first
+here and is now fixed. `assets/leb.json`'s missing books were second and are now
 fixed. The 2,203 words with no morphology code were third and are now
 869. cuvs-plus's "60 gaps" were fourth, and turned out not to be gaps at
 all — see check 4 — but chasing them found eight other classes that

@@ -16,6 +16,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seeksparks/constants/book_names.dart';
 import 'package:seeksparks/utils/morphology.dart';
+import 'package:seeksparks/utils/verse_list.dart' show applySearchLimit;
 import 'package:seeksparks/utils/verse_text_absence.dart';
 
 /// Editions bundled in `pubspec.yaml` as flat verse lists. The two
@@ -371,6 +372,131 @@ void main() {
       }
     });
     expect(bad, isEmpty, reason: bad.take(10).join('\n'));
+  });
+
+  group('the concordance verse list is a census, not a prefix', () {
+    // Until v1.6.96 `r` stopped at 500 entries. Because it is in canonical
+    // order a capped entry was not a sample of the word but a PREFIX OF
+    // THE CANON: H3068's 500 listed verses ended inside Leviticus, so `l
+    // jer` then `H3068` answered zero in a book that carries the divine
+    // name 712 times. Every consumer that filters or intersects `r` — the
+    // search limit, the AND/OR/NEAR set algebra, the book distribution —
+    // read that prefix as the whole and said so confidently.
+    late Map<dynamic, dynamic> conc;
+
+    setUpAll(() {
+      conc = jsonDecode(
+          File('assets/strongs/concordance.json').readAsStringSync()) as Map;
+    });
+
+    String bookOf(String ref) => ref.substring(0, ref.lastIndexOf(' '));
+
+    test('every entry lists a verse in every book it claims a hit in', () {
+      // The general ratchet, and the one that would have caught the cap
+      // the day it landed: `b` is uncapped, `r` was not, so the two
+      // disagreed about 123 words without either being self-inconsistent.
+      // Set equality in both directions — a book in `r` but not `b` means
+      // the tally is wrong, a book in `b` but not `r` means the list is
+      // short.
+      final bad = <String>[];
+      conc.forEach((key, value) {
+        final e = value as Map;
+        final listed = {for (final r in e['r'] as List) bookOf(r as String)};
+        final tallied = (e['b'] as Map).keys.cast<String>().toSet();
+        final missing = tallied.difference(listed);
+        final extra = listed.difference(tallied);
+        if (missing.isNotEmpty) {
+          bad.add('$key: counted in ${missing.length} books it lists no '
+              'verse in (${missing.take(3).join(', ')})');
+        }
+        if (extra.isNotEmpty) {
+          bad.add('$key: lists verses in ${extra.take(3).join(', ')} but '
+              'counts none there');
+        }
+      });
+      expect(bad, isEmpty, reason: bad.take(10).join('\n'));
+    });
+
+    test('a word is listed in no more verses than it has occurrences', () {
+      // The two units are not interchangeable and neither is redundant:
+      // G25 is 143 occurrences in 110 verses. But a verse cannot carry
+      // fewer than one hit, so verses > occurrences is arithmetically
+      // impossible and means the units got crossed somewhere upstream.
+      final bad = <String>[];
+      conc.forEach((key, value) {
+        final e = value as Map;
+        final verses = (e['r'] as List).length;
+        final occurrences = (e['n'] as num).toInt();
+        if (verses > occurrences) {
+          bad.add('$key: $verses verses but only $occurrences occurrences');
+        }
+      });
+      expect(bad, isEmpty, reason: bad.take(10).join('\n'));
+    });
+
+    test('no entry stops at a round number', () {
+      // A cap does not announce itself; it looks like a word that happens
+      // to appear exactly 500 times. What gives it away is that many
+      // words do. Under the old cap 123 entries shared the length 500.
+      final lengths = <int, int>{};
+      conc.forEach((_, value) {
+        final n = ((value as Map)['r'] as List).length;
+        lengths[n] = (lengths[n] ?? 0) + 1;
+      });
+      final suspicious = [
+        for (final e in lengths.entries)
+          if (e.key >= 200 && e.value > 20) '${e.value} entries of ${e.key}'
+      ];
+      expect(suspicious, isEmpty,
+          reason: 'a shared long list length is a cap, not a coincidence: '
+              '${suspicious.join('; ')}');
+    });
+
+    test('the two words that reached the cap now run to the last book', () {
+      // Named because they are the ones the audit measured. H3068's list
+      // used to end at Leviticus 2:14 and G3588's inside Matthew.
+      final divineName = conc['H3068'] as Map;
+      expect((divineName['r'] as List).length, 5522);
+      expect(divineName['n'], 6521);
+      expect((divineName['r'] as List).last, startsWith('Malachi '));
+
+      final article = conc['G3588'] as Map;
+      expect((article['r'] as List).length, 6977);
+      expect(article['n'], 19859);
+      expect((article['r'] as List).last, startsWith('Revelation '));
+    });
+
+    test('a search limited to Jeremiah finds the divine name there', () {
+      // The reported defect, run the way the search runs it: `l jer`
+      // snapshots a key per verse of Jeremiah and `applySearchLimit`
+      // keeps the refs falling inside. The answer used to be zero,
+      // stated without qualification, because the list stopped 27 books
+      // earlier — in a book carrying the divine name 712 times.
+      //
+      // The limit is built from the book's extent rather than from `r`,
+      // so a list that shrinks again cannot drag the expectation with it.
+      final limit = {
+        for (var c = 1; c <= 52; c++)
+          for (var v = 1; v <= 64; v++) 'Jeremiah-$c-$v'
+      };
+      final refs = [
+        for (final r in ((conc['H3068'] as Map)['r'] as List).cast<String>())
+          (
+            book: bookOf(r),
+            chapter: int.parse(r.split(' ').last.split(':').first),
+            verse: int.parse(r.split(':').last),
+          )
+      ];
+      final inJeremiah = applySearchLimit(
+        refs,
+        limit,
+        (r) => '${r.book}-${r.chapter}-${r.verse}',
+      );
+      expect(inJeremiah.length, 614);
+      // Fewer verses than occurrences, because a verse can say it twice.
+      expect(inJeremiah.length,
+          lessThan((conc['H3068'] as Map)['b']['Jeremiah'] as int));
+    });
   });
 
   group('assets/originals corpus', () {

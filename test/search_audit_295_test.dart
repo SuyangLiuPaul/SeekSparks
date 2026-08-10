@@ -14,52 +14,48 @@ import 'package:seeksparks/utils/strongs_result_counts.dart';
 import 'package:seeksparks/utils/version_abbreviation.dart';
 
 void main() {
-  group('capped concordance lists must admit their true size', () {
-    test('H3068 (יהוה): 500 verses listed, 6,521 occurrences', () {
-      final c = strongsResultCounts(
-        listedRefs: 500,
-        versesShown: 500,
-        occurrences: 6521,
-      );
-      expect(c.truncated, isTrue);
+  group('a Strong\'s header reports both units and claims neither falsely',
+      () {
+    test('H3068 (יהוה): 5,522 verses, 6,521 occurrences, both complete', () {
+      // The verse list stopped at 500 until v1.6.96, and the header
+      // inferred truncation from a list that reached the cap. With the
+      // cap gone that inference would fire on all 123 formerly capped
+      // entries and say "first 500 verses listed" about a complete list.
+      final c = strongsResultCounts(versesShown: 5522, occurrences: 6521);
+      expect(c.truncated, isFalse);
       expect(c.occurrences, 6521);
-      expect(c.verses, 500);
+      expect(c.verses, 5522);
     });
 
-    test('an uncapped entry is not truncated even though hits exceed verses',
-        () {
+    test('hits exceeding verses is normal, not a sign of truncation', () {
       // G25 really does occur 143 times in 110 verses.
-      final c = strongsResultCounts(
-        listedRefs: 110,
-        versesShown: 110,
-        occurrences: 143,
-      );
+      final c = strongsResultCounts(versesShown: 110, occurrences: 143);
       expect(c.truncated, isFalse);
       expect(c.occurrences, 143);
     });
 
-    test('a full 500 with 500 occurrences is complete, not truncated', () {
-      // Verses can never outnumber occurrences, so this entry is exactly
-      // one hit per verse and nothing is missing.
-      final c = strongsResultCounts(
-        listedRefs: 500,
-        versesShown: 500,
-        occurrences: 500,
-      );
+    test('a composed expression has verses but no occurrence total', () {
+      // A set operation over verse lists: one verse can carry several
+      // hits of each term, so the two totals cannot be added.
+      final c = strongsResultCounts(versesShown: 335);
+      expect(c.verses, 335);
+      expect(c.occurrences, isNull);
       expect(c.truncated, isFalse);
     });
 
-    test('an unknown total never claims truncation', () {
-      final c = strongsResultCounts(listedRefs: 500, versesShown: 500);
-      expect(c.truncated, isFalse);
-      expect(c.occurrences, isNull);
+    test('a cut wildcard expansion makes the verse count a floor', () {
+      // The one incompleteness that survives the uncapping: `G1✶` matches
+      // 1,067 numbers and only the first 300 are unioned, so the result
+      // stands for less than the query named.
+      final c = strongsResultCounts(versesShown: 4210, incomplete: true);
+      expect(c.truncated, isTrue);
+      expect(c.verses, 4210);
     });
 
     test('under a search limit the Bible-wide total is withheld', () {
       // Printing 6,521 next to a list narrowed to Genesis would read as
       // the scope's own total.
       final c = strongsResultCounts(
-        listedRefs: 500,
         versesShown: 12,
         occurrences: 6521,
         scoped: true,
@@ -67,6 +63,17 @@ void main() {
       expect(c.verses, 12);
       expect(c.occurrences, isNull);
       expect(c.truncated, isFalse);
+    });
+
+    test('a scoped result still admits a cut wildcard', () {
+      final c = strongsResultCounts(
+        versesShown: 12,
+        occurrences: 6521,
+        scoped: true,
+        incomplete: true,
+      );
+      expect(c.occurrences, isNull);
+      expect(c.truncated, isTrue);
     });
 
     test('thousands grouping', () {
