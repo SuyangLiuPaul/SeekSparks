@@ -670,7 +670,9 @@ void main() {
       }
       // +7 over v1.6.93: tools/repair_biblexg.py split seven merged verse
       // boundaries back apart (4 traditional, 3 shared by both files).
-      expect(records, 295534);
+      // −2 in v1.6.98: 腓立比書 1:1 was printed as two blocks and the
+      // second was numbered 2, in both biblexg files. See check 20.
+      expect(records, 295532);
       expect(census, {
         'cuvs-yhwh/merged': 71,
         'cuvs-yhwh/mergedNext': 1,
@@ -678,6 +680,11 @@ void main() {
         'cuvs-yhwh-tr/mergedNext': 1,
         'cuvs-plus/merged': 71,
         'cuvs-plus/mergedNext': 1,
+        // 馬可福音 9:44 and 9:46, emptied in v1.6.98 when the halves of
+        // 9:43 and 9:45 they were holding went back to those verses. The
+        // note the sibling editions print there is theirs, in their house
+        // style, so it was not copied across — see check 20.
+        'cuvs-plus/blank': 2,
         // The one biblexg-v2-tr blank record is gone: it was the husk left
         // where the converter cut 馬太福音 16:13's number into 16:1 + 16:3.
         'lxxwh/omitted': 16,

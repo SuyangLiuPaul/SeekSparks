@@ -16,7 +16,9 @@ script's file: the two editions were independently revised (Acts 15:17 is
 為了人類中餘下的人 in traditional against 为了人类其他成员 in simplified),
 so the sibling file is a witness to *structure* only, never to wording.
 
-Seven repairs, in descending order of what a reader loses.
+Eight repairs, in descending order of what a reader loses. B8 was added
+after the first seven shipped; it is the same class found by a different
+instrument.
 
   T1  馬太福音 16:13 is filed as 16:3, where it collides with the real
       16:3. A reader asking for Matthew 16:3 gets the weather-signs
@@ -50,6 +52,19 @@ Seven repairs, in descending order of what a reader loses.
       「路加福音 23:34」 with 「然後，他們抓鬮分了耶穌的衣袍。」 and never
       with 「父親啊，赦免他們」. Move the marked clause into verse 34.
 
+  B8  腓立比書 1:1 is printed as two blocks — the senders, then the
+      people addressed — and the second block is numbered 2. It is not
+      verse 2. Philippians names its readers inside verse 1 (「致在腓立
+      比⋯各位監督及執事：」), and this edition's real verse 2, the grace,
+      is nowhere in the book. So the file answers 腓立比書 1:2 with the
+      address and never with 「願恩惠平安⋯」. Five other letters open with
+      the same em-dash typography — 羅馬書, 哥林多前書, 歌羅西書, 提摩太
+      前書, 提摩太後書 — and in every one of those the second block really
+      is verse 2, which is why the shape alone was not the giveaway.
+      Merge the two blocks into 1:1 and leave 1:2 absent, the same way
+      加拉太書 1:1 already carries 1-2 and has no 1:2 record. Found by
+      tools/audit_verse_alignment.py; in BOTH files.
+
 B5-B7 are the passages NA28/UBS5 double-bracket, and the same converter
 demonstrably loses verse numbers into adjacent markup (T3) and cuts them
 in half (T1), so the inline placement is read here as the same failure
@@ -64,8 +79,11 @@ conversion — the one place the original reading still holds. Twenty-seven
 further references are absent from BOTH files because the publisher
 printed them merged into the verse before (路加福音 1:2-4 inside 1:1,
 羅馬書 15:19 inside 15:18, and 24 more); those carry no marker, so
-splitting them would mean inventing a boundary. Both sets are frozen at
-their measured size by test/biblexg_verse_boundary_test.dart.
+splitting them would mean inventing a boundary. 腓立比書 1:2 joins that
+second set once B8 has run: its words are in neither file, and writing
+「願恩惠平安從我們的神天父⋯」 out of another edition would be putting a
+sentence in this translator's mouth. Both sets are frozen at their
+measured size by test/biblexg_verse_boundary_test.dart.
 
 Every repair guards on the text it expects to find and skips if the file
 already carries the result, so re-running finds nothing to do.
@@ -277,6 +295,55 @@ def repair_luke_34a(verses, log):
     return 1
 
 
+# --- B8 ------------------------------------------------------------------
+
+# The two blocks, verbatim per file. Kept separate rather than read from
+# the sibling: the two editions were independently revised, so each file
+# is the only witness to its own wording.
+PHILIPPIANS = {
+    SIMPLIFIED: (
+        '腓立比书',
+        '保罗和提摩太，基督耶稣的奴仆——',
+        '致在腓立比在基督耶稣里的全体圣徒、各位监督及执事：',
+    ),
+    TRADITIONAL: (
+        '腓立比書',
+        '保羅和提摩太，基督耶穌的奴僕——',
+        '致在腓立比在基督耶穌裡的全體聖徒、各位監督及執事：',
+    ),
+}
+
+
+def repair_philippians(filename):
+    book, senders, addressees = PHILIPPIANS[filename]
+    whole = senders + addressees
+
+    def repair(verses, log):
+        at = find(verses, book, '1', '1')
+        if len(at) != 1:
+            raise Skipped('%s 1:1 is %d records, expected 1' % (book, len(at)))
+        head = at[0]
+        stray = find(verses, book, '1', '2')
+        if not stray:
+            if verses[head]['text'] != whole:
+                raise Skipped('%s has no 1:2 and 1:1 is not the whole verse'
+                              % book)
+            return 0
+        if len(stray) != 1 or stray[0] != head + 1:
+            raise Skipped('%s 1:2 is not the single record after 1:1' % book)
+        if verses[head]['text'] != senders:
+            raise Skipped('%s 1:1 is not the senders block' % book)
+        if verses[stray[0]]['text'] != addressees:
+            raise Skipped('%s 1:2 is not the addressees block' % book)
+        verses[head] = dict(verses[head], text=whole)
+        del verses[stray[0]]
+        log('  %s 1:1/1:2 merged into 1:1; 1:2 left absent (its words, the '
+            'grace, are in neither file)' % book)
+        return 1
+
+    return repair
+
+
 # --- driver --------------------------------------------------------------
 
 def repairs_for(filename):
@@ -297,6 +364,8 @@ def repairs_for(filename):
              lambda v, log: split_inline(v, '路加福音', '23', '16',
                                          [17], log)),
             ('B7 路加福音 23:34a inline in 23:33', repair_luke_34a),
+            ('B8 腓立比書 1:1 split across 1:1/1:2',
+             repair_philippians(TRADITIONAL)),
         ]
     return [
         ('B5 路加福音 22:43-44 inline in 22:42',
@@ -304,6 +373,8 @@ def repairs_for(filename):
         ('B6 路加福音 23:17 inline in 23:16',
          lambda v, log: split_inline(v, '路加福音', '23', '16', [17], log)),
         ('B7 路加福音 23:34a inline in 23:33', repair_luke_34a),
+        ('B8 腓立比书 1:1 split across 1:1/1:2',
+         repair_philippians(SIMPLIFIED)),
     ]
 
 

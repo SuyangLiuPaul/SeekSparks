@@ -67,6 +67,7 @@ believe it is fine" and "we looked".
 | 17 | Range labels (`1-4`) that overlap a verse with its own row | 42 range labels | 4 | **open**, frozen by a test |
 | 18 | Traditional sermon bodies shorter than the Simplified they convert | 289 pairs | 3 → **0** | **fixed**, now a test |
 | 19 | Chinese sermon bodies that are a summary, not a translation | 289 sermons | **10** | **not repairable**, marked and disclosed, now a test |
+| 20 | Does a reference hold the right verse, or its neighbour's | 399,256 comparisons | 4 refs in 2 places → **0** | **fixed**, now a test |
 
 ---
 
@@ -554,6 +555,12 @@ set is **233** — small, bounded, and entirely placeholders:
 | `omitted` — not in this edition's base text | 16 | `assets/lxxwh.json`, the literal string `OMIT` |
 | `blank` — no text at all | 1 | `biblexg-v2-tr` 馬太福音 16:1 |
 
+Both later checks moved the last row and nothing else. Check 13 deleted
+that 馬太福音 16:1 husk, and check 20 emptied 和简+ 馬可福音 9:44 and 9:46,
+so the corpus is **295,532 records** and **234** placeholders today —
+`blank` 2, the rest unchanged. `test/data_integrity_test.dart` carries
+the live census; this table is what v1.6.93 measured.
+
 Three things decided the shape of the fix, and each is a test rather
 than an assertion:
 
@@ -920,6 +927,159 @@ inside the Chinese bodies is intentional.
 
 ---
 
+### Check 20 — four references held the verse next door. FIXED v1.6.98
+
+Every check up to here asks whether a reference **exists**. Check 4
+counts them, check 9 compares key sets, check 13 pairs the two 梁家鏗譯本
+files, check 15 asks that each appears once. An edition can pass all
+four while printing verse 43's second half under 44: nothing is missing,
+nothing is duplicated, no count moves. The reader is simply told that a
+sentence sits somewhere it does not, and — this is the part that makes
+it worse than a gap — the app says it fluently, so it will be believed
+and quoted.
+
+That is not hypothetical. It is the shape of the worst finding in this
+document: cuvs-plus numbered all of 1 Chronicles 22 one verse low
+(check 9's "Fixed in this pass"), and the only reason that one was
+catchable by a key set is that the shift ran off the end of the chapter.
+A shift of one verse in the *middle* of a chapter leaves the key set
+perfect.
+
+**The instrument** is `tools/audit_verse_alignment.py`. It scores every
+reference against its own text in other editions and against its two
+canonical neighbours, and flags a reference that resembles a neighbour
+better than itself. Similarity is the Dice coefficient over token sets —
+lowercased words for English, Han **bigrams** for Chinese (the rule
+`phrase_match.dart` already uses, lifted one order up), NFD-folded
+Greek. Neighbours are stepped through the canonical KJV sequence rather
+than by verse number, so a flag can cross a chapter boundary. The 234
+placeholder references from check 14 are excluded — comparing 见上节
+against anything is comparing nothing.
+
+Three passes, because each covers what the last cannot:
+
+- **Pass A, within-family.** Two files that are *the same text* — KJV
+  and KJV+S, the three 和合本, the two 梁家鏗譯本 scripts (compared
+  through opencc, which is used here only to make two texts comparable
+  and never to generate a shipped word). A disagreement here is decisive
+  rather than statistical.
+- **Pass B, pool consensus.** Each edition against the median of its
+  language pool: 5 English, 5 Chinese, and lxxwh's New Testament against
+  `assets/originals`. Catches an edition that is alone in being wrong.
+- **Pass C, cross-language, on Strong's numbers.** A number is the same
+  token in three languages, so KJV+S, BSB, 和简+, 雅简+ and LXX/WH can be
+  asked one question about one reference. Same pivot `Versification`
+  uses (v1.6.90). Catches a shift that a whole language pool shares.
+
+| Pass | Compared | Runs of 2+ | Isolated |
+|------|---------:|-----------:|---------:|
+| A — kjv/kjvs | 30,649 | — | **0** |
+| A — cuvs-yhwh/cuvs-plus | 30,983 | — | 2 → **0** |
+| A — cuvs-yhwh/cuvs-yhwh-tr | 30,985 | — | **0** |
+| A — biblexg-v2/-tr | 7,916 | — | **0** |
+| B — English pool | 152,440 | **0** | 22 |
+| B — Chinese pool | 108,754 | **0** | 12 → **8** |
+| B — Greek NT | 7,910 | **0** | 3 |
+| C — cross-language | 130,152 | **0** | 25 |
+
+**399,256 comparisons, and every systematic finding is zero.** No run of
+two or more consecutive verses anywhere prefers the same neighbour — the
+1 Chronicles 22 class does not exist a second time. Loosening the margin
+from 0.12 to 0.05 raises the English flags from 22 to 103 and the
+Chinese from 12 to 51 and still produces only two runs in the whole
+corpus: KJV/KJV+S Philippians 1:16–17, which is Textus Receptus verse
+*order* against the critical text, and biblexg 2 Corinthians 13:12–13,
+which is the NA28 merge. Both are textual traditions, not defects.
+
+**The four defects were all isolated flags** — which is what a one-verse
+error looks like, so the isolated list is now printed and written to
+`build/verse_alignment.json` rather than only counted.
+
+**1. 和简+ 馬可福音 9:43 and 9:45 each stopped at the semicolon.** The
+half that follows — 「你缺了肢体进入永生，强如有两只手落到地狱，入那不灭
+的火里去。」 — was filed as 9:44. Pass A found it twice over (9:43 scored
+0.54 against itself and 0.78 against 9:44) and pass B flagged 9:44 and
+9:46 from the other direction. It is one verse: the KJV reads "if thy
+hand offend thee, cut it off: it is better for thee to enter into life
+maimed, than having two hands to go into hell," and both sibling 和合本
+editions hold the whole sentence at 9:43.
+
+What makes this worse than a misplaced clause is *which* references it
+filled. 9:44 and 9:46 are two of the sixteen verses the critical text
+does not contain — check 14's `OMIT` set, derived independently in
+v1.6.90. Every other edition we ship answers them with a note, an
+`OMIT`, or nothing. 和简+ was the one edition answering them with
+scripture, and `assets/tagged/cuvs-plus/mark.json` carried the same
+split, so Word Study, search, KWIC and the concordance all agreed with
+it.
+
+**2. 梁家鏗譯本 腓立比書 1:1 was printed as two blocks** — the senders,
+then the people addressed — and the second was numbered 2. It is not
+verse 2: Philippians names its readers *inside* verse 1, and this
+edition's real verse 2, the grace, is in neither file. So both files
+answered 腓立比書 1:2 with 「致在腓立比⋯各位監督及執事：」 and never with
+「願恩惠平安⋯」. Pass A could not see it — the two files share the defect,
+which is exactly what pass B exists for; it flagged 1:2 in both at
+self=0.10 against prev=0.46.
+
+Five other letters open with the identical em-dash typography — 羅馬書,
+哥林多前書, 歌羅西書, 提摩太前書, 提摩太後書 — and in every one of them the
+second block really *is* verse 2. The shape was never the signal, which
+is why this needed a measurement and not a reading.
+
+**Both repairs are conservative, and one of them deliberately leaves a
+reference emptier than it could be.** `tools/repair_cuvs_plus_mark.py`
+rejoins the Mark halves and empties 9:44 and 9:46. It does **not** copy
+the note the sibling editions print there: that note is their wording in
+their house style (和简+ writes 「（有古卷无此节）」 where 雅简+ writes
+`<note: 有古卷无此节>`), and putting one edition's sentence in another's
+mouth is the defect this check exists to catch, pointed the other way.
+The emptied references fall to `VerseAbsence.blank`, which renders
+「本版本此处没有经文」 — true, and all we actually know. Same reasoning in
+`tools/repair_biblexg.py` B8: the two blocks are merged into 1:1 and 1:2
+is left absent, joining the 40 gaps the edition already has, because the
+grace's words are in neither file and writing them in from another
+edition would be inventing this translator's wording. Under-coverage,
+not a false statement.
+
+**Adjudicated as not defects**, each for a stated reason: the eight
+remaining Chinese flags are the publisher's own merges (1 Corinthians
+15:51, 2 Corinthians 13:13, 2 Thessalonians 1:11, Luke 9:30 — the merged
+verse's words are present, only the second reference is absent, among
+the documented 40); 3 John 1:14/15 is a real versification split, the
+documented "beyond canon 1"; KJV/KJV+S Philippians 1:16–17 is TR verse
+order; and the fifteen note-only Old Testament verses have words and are
+left alone on purpose.
+
+One flag was **my instrument's fault and not the data's**: 歷代志上 6:10,
+a genealogy where every verse reads 「X生Y」, scored higher against verse
+9 than itself because `<note: …>` was stripped and full-width （…）was
+not — so one edition's translators' note was compared against the
+other's silence. The stripper now takes all four wrappers in every
+language, and the flag is gone. Worth recording because the failure mode
+is general: **an asymmetric normaliser invents disagreements**, and on a
+repetitive text it invents them convincingly.
+
+**What this check cannot see**, stated so nobody reads its zeros as
+wider than they are:
+
+- lxxwh's Septuagint half has no same-language witness in the repo. Its
+  New Testament is checked against `assets/originals`; its Old Testament
+  is not checked here at all.
+- A shift shared by *every* edition in a pool and by the Strong's layers
+  too. Pass C narrows this to a shift shared across three languages,
+  which would be an upstream versification convention rather than our
+  error, but it is not zero.
+- A verse that is wrong without being a neighbour's verse. Nothing in
+  this repo can see that; it needs an external witness, which is still
+  the first item under "Not checked yet".
+
+Frozen by `test/verse_alignment_test.dart` — on the asset bytes, because
+the suite stayed green through both defects for the project's whole
+life. Seven of its nine tests fail against the pre-repair assets.
+
+---
+
 ## Not checked yet
 
 - Verse **text** itself, against an *external* witness. Checks 10–12 now
@@ -932,15 +1092,16 @@ inside the Chinese bodies is intentional.
 - `section_titles.json`, `book_introductions.json`, `bible_evidence.json`,
   `maps_index.json` (see #300 for its provenance gap), `family_tree.json`
   relationships, `ot_synopsis.json` alignments.
-- Whether any book **other** than the ones named in check 9 carries a
-  cuvs-plus-style shift. Check 9 compares key sets, so it catches a book
-  where the *count* moves; it would not catch an edition that renumbered
-  a chapter while keeping the same total.
+- The **Septuagint half of `assets/lxxwh.json`**, which check 20 leaves
+  unexamined: it is the only edition in the repo with no same-language
+  witness for the Old Testament, and its G-numbers do not pivot against
+  the other layers' H-numbers. Its New Testament *is* checked, against
+  `assets/originals`.
 
 ## Next, in order
 
-1. The 8 references the two 圣经新译本 editions disagree about, above
-   all 马可福音 6:8–11 and 马太福音 16:13. Needs a witness that is the
+1. The 4 references the two 梁家鏗譯本 editions still disagree about —
+   马可福音 6:8–11, all that is left of the original 8. Needs a witness that is the
    same edition in the missing script; a 简/繁 conversion table derived
    from the 7,645 length-equal verse pairs the two files already share
    would be one, and would be witnessed by the corpus rather than
@@ -961,7 +1122,10 @@ inside the Chinese bodies is intentional.
    (KWIC, concordance) read the tagged layer, which a placeholder has no
    entry in, so they cannot show one — reasoned, not measured.
 
-*(Check 15, the concordance's 500-entry verse cap, was fifth here and is
+*(Check 20, "does any other book carry a cuvs-plus-style shift", was the
+first bullet under "Not checked yet" and is now measured: no, and four
+references of a narrower defect were found and fixed on the way. Check
+15, the concordance's 500-entry verse cap, was fifth here and is
 now fixed. The merge-marker presentation was second here and is now
 check 14. Check 9, the Hebrew/English versification mismatch, was first
 here and is now fixed. `assets/leb.json`'s missing books were second and are now

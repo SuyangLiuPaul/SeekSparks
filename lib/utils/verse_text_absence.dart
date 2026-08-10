@@ -28,8 +28,14 @@ import 'package:seeksparks/constants/ui_strings.dart';
 ///   are exactly the set `Versification` derived independently in
 ///   v1.6.90 (from KJV-vs-BSB disagreement, knowing nothing about this
 ///   file) is two unrelated sources agreeing.
-/// * One reference ships with an empty string, which renders as a blank
-///   line and reads as a layout bug rather than as information.
+/// * Two references ship with an empty string, which renders as a blank
+///   line and reads as a layout bug rather than as information. They are
+///   cuvs-plus 馬可福音 9:44 and 9:46, emptied in v1.6.98: the edition
+///   was storing the second half of 9:43 and 9:45 there, so 和简+ alone
+///   answered a verse the critical text omits with scripture. Its two
+///   siblings print an editorial note in those slots, but that note is
+///   *their* wording in *their* house style, so it was not copied
+///   across.
 ///
 /// The instruction is kept in the assets rather than deleted — it is
 /// what the printed page says, and the honest presentation is to
@@ -58,8 +64,8 @@ enum VerseAbsence {
 /// verse would silently blank real scripture, and the corpus contains
 /// verses like 除酵节，又名逾越节，近了。 that a loose rule would eat.
 ///
-/// Measured over all 11 shipped edition assets (295,527 records),
-/// exactly 233 match — 210 + 3 merged, 3 mergedNext, 16 omitted, 1
+/// Measured over all 11 shipped edition assets (295,532 records),
+/// exactly 234 match — 210 + 3 merged, 3 mergedNext, 16 omitted, 2
 /// blank — and every one is a placeholder. See `docs/DATA-INTEGRITY.md`
 /// check 14.
 const Map<String, VerseAbsence> kVerseAbsenceMarkers = {

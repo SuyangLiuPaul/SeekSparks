@@ -1,6 +1,6 @@
 // Guards for the references that carry no scripture of their own —
 // the 和合本's 見上節, 詩篇 63:6's 合和譯本並入上一節, 約翰福音 7:53's
-// 見下節, lxxwh's OMIT, and the one empty record.
+// 見下節, lxxwh's OMIT, and the empty records.
 //
 // Until v1.6.93 all 233 of them rendered in scripture type: a reader on
 // 詩篇 8:8 was shown "见上节" as if it were the verse, could copy it into
