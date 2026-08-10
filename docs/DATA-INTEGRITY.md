@@ -65,6 +65,8 @@ believe it is fine" and "we looked".
 | 15 | Every reference appears exactly once, and no verse is empty | 15,850 records | 3 duplicated + 1 empty → **0** | **fixed**, now a test |
 | 16 | Verse numbers left inline, printing as scripture | 15,850 records | 6 in 5 verses → **0** | **fixed**, now a test |
 | 17 | Range labels (`1-4`) that overlap a verse with its own row | 42 range labels | 4 | **open**, frozen by a test |
+| 18 | Traditional sermon bodies shorter than the Simplified they convert | 289 pairs | 3 → **0** | **fixed**, now a test |
+| 19 | Chinese sermon bodies that are a summary, not a translation | 289 sermons | **10** | **not repairable**, marked and disclosed, now a test |
 
 ---
 
@@ -781,6 +783,143 @@ words that coincidentally appear 500 times.
 
 ---
 
+### Check 18 — three Traditional sermon bodies stopped mid-sermon. FIXED v1.6.97
+
+The audit that produced checks 1–17 never looked at `assets/sermons/`.
+It holds 289 sermons with a Chinese body and 286 with all three
+languages — about 45 MB of preaching that the app presents exactly as it
+presents scripture, with no marking to say it is anything less than the
+whole.
+
+Measured over all 289 pairs: Han characters in the Traditional body
+divided by Han characters in the Simplified it came from. **Median
+1.000, maximum 1.0058** — Traditional is a character-for-character
+conversion, so the ratio should be 1 and essentially always is. Three
+were not:
+
+| id | zh-CN Han | zh-TW Han | ratio | paragraphs kept |
+|---|---:|---:|---:|---|
+| 100 | 15,433 | 5,453 | **0.353** | 35 of 66 |
+| 369 | 12,184 | 5,178 | **0.425** | 38 of 62 |
+| 370 | 15,904 | 11,712 | **0.736** | 65 of 87 |
+
+In all three the Traditional text tracks the Simplified for two
+paragraphs and then goes its own way — it is not a tail truncation, it
+is a condensation running the whole length of the file.
+
+The fourth-lowest ratio is **0.9949**. There is no gradient between the three
+and the rest, which is what makes them a defect and not a translation
+style.
+
+They do not read as broken. Each stops at a paragraph boundary, mid
+exposition, with no marker — sermon 100 ends its Traditional text while
+still setting up the parable it is named for. A reader in Traditional
+Chinese got a third of a sermon and no way to know it.
+
+**Where the defect is.** Not in the app's ingest. In the source corpus
+every `<id>.zh-TW.txt` is byte-identical to `<id>.zh-proofread.txt`, so
+the pipeline is en → zh-CN → proofread-and-convert → zh-TW, and for
+these three the proofreading step condensed instead of proofread. Sermon
+370 is the proof: it is two parts, and part **a** is abridged (8,427
+Han against 22,507) while part **b** is intact (30,807 against 30,695).
+That is exactly why 370 kept 73% and not a third.
+
+**The conversion was derived, not assumed.** Regenerating with the wrong
+OpenCC config would have silently rewritten three files into a variant
+system the other 286 do not use. So it was settled by counting what the
+shipped Traditional corpus actually contains:
+
+| form | s2t | s2tw / s2twp | corpus uses |
+|---|---|---|---:|
+| 爲 / 為 | 爲 | 為 | **爲 23,701** vs 為 635 |
+| 裏 / 裡 | 裏 | 裡 | **裏 10,262** vs 裡 311 |
+| 着 / 著 | 着 | 著 | **着 6,915** vs 著 375 |
+| 喫 / 吃 | 喫 | 吃 | **喫 728** vs 吃 11 |
+
+The corpus is raw **`opencc -c s2t`**: byte-exact on 192 of the 286
+healthy pairs and agreeing to **99.866%** of characters overall
+(2,852,268 of 2,856,103). The 0.134% residue is human proofreading, and
+it includes genuine content edits (`'access'` → 「進入的途徑」,
+`' precede 它的'` → 「先兆」) that a regeneration must not invent and does
+not have to: the reverse direction, `t2s(zh-TW) == zh-CN`, holds for only
+100 of 286, so the Traditional files are downstream of the Simplified and
+regenerating them forward is the faithful move.
+
+An earlier reading of the same evidence — a positional character diff —
+produced a "substitution table" that looked like a second conversion
+stage. It was an artefact: one insertion misaligns every character after
+it. Re-run through `difflib.SequenceMatcher`, the table dissolved into
+the proofreading edits above. **The first conclusion was wrong and was
+overturned by measurement before anything was written.**
+
+**Repaired 2026-08-10 by `tools/repair_sermon_corpus.py`** (dry-run by
+default). Post-repair the minimum ratio across all 289 is **0.9949** (sermon 372, a
+proofread variant) and
+the divergence list is **empty**. The index's `titles` were deliberately
+left untouched: `titles['zh-TW']` is s2t of `titles['zh-CN']` in 285 of
+289 records, all four exceptions are benign proofread touches (「vs.」 set
+as 「對比」, 爲 as 為) that still name the right sermon, and the body's H1
+agrees with the index in only 153 — so re-deriving titles from bodies
+would have churned correct data on worse evidence.
+
+Frozen by a test that fails if any Traditional body falls below **85%**
+of its Simplified. The threshold is not a guess: everything healthy is
+≥ 0.9949 and everything defective was ≤ 0.736. Proven to fail by
+restoring the pre-repair `zh-TW/100.txt`.
+
+---
+
+### Check 19 — ten Chinese sermon bodies are summaries, not translations. MARKED, not repairable
+
+Check 18's rule — "how many more of these are there?" — applied to the
+other axis. Han characters in the Simplified body per English word of the
+same sermon, over all 289:
+
+**Median 1.403. Ten files sit at 0.097–0.194. Then nothing at all
+until 0.933.** A clean empty band, four-fifths of the range wide.
+
+Reading them confirms what the number says. They are not truncated and
+not broken; they are competent summary prose, roughly a tenth of the
+length, in ordinary paragraphs, ending with a proper closing line.
+Sermon 126 is **51,480 bytes** of English against **3,342** of Chinese,
+and the Chinese opens 「讓我們先回顧這個診斷性比喻的核心信息」 — a
+recap, written *about* the sermon. Their Traditional bodies are faithful
+conversions **of the summary**, so both Chinese locales are affected.
+
+The ten: **117, 125, 126, 133, 134, 135, 156, 157, 158, 901.** Nine are
+from the topic "The Parables of Jesus" — one failed batch, not ten
+independent accidents.
+
+**This one cannot be repaired here, and pretending otherwise would be
+the defect.** No full Chinese text exists anywhere in the sources — the
+per-part files upstream are the same summaries. Repair means translating
+~85,000 words of English, which is generating content, not fixing data,
+and is the owner's decision to make.
+
+So the conservative option was taken and is named as such: **the corpus
+is marked and the app says what the text is.** `index.json` carries
+`"condensed": ["zh-CN","zh-TW"]` on exactly those ten records; the
+sermon page shows a hairline notice above the body naming it a summary
+and pointing at the language that holds the whole sermon; and **the
+notice is prepended to the clipboard copy**, because a summary pasted
+into someone's notes without it is indistinguishable from the preaching
+and will be quoted as the preaching.
+
+Frozen by a test that re-measures the ratio and requires the marked set
+and the measured set to be **identical** — so a future mark that is not
+earned fails just as loudly as an unmarked summary. Proven to fail by
+removing sermon 126's marker. Eight further tests cover the notice
+itself, including that it follows the **UI** locale rather than the body
+language, and that it does not promise a full text when every language
+is condensed.
+
+*Noted and deliberately not "fixed":* `zh-CN/421.txt` carries a stray
+English word (`precede`) inside a Chinese sentence — a proofreading
+miss in one word, not a data defect. Latin and transliterated Greek
+inside the Chinese bodies is intentional.
+
+---
+
 ## Not checked yet
 
 - Verse **text** itself, against an *external* witness. Checks 10–12 now
@@ -812,7 +951,11 @@ words that coincidentally appear 500 times.
 3. Per-record date sourcing (#292 owns `hebrew_kings.json`).
 4. The LEB's `{…}` idiom braces in the 660 imported verses, if a witness
    that preserves them can be found.
-5. The remaining verse-rendering surfaces, audited but not exhaustively:
+5. The ten summarised Chinese sermons (check 19). Not an engineering
+   task — ~85,000 English words need translating, and whether that
+   happens, and by whom, is the owner's call. Until it does, the marking
+   is the honest state.
+6. The remaining verse-rendering surfaces, audited but not exhaustively:
    check 14 covers the reader, Browse, the sermon-citation popup, the
    two search-key caches and the clipboard. Strong's-driven surfaces
    (KWIC, concordance) read the tagged layer, which a placeholder has no

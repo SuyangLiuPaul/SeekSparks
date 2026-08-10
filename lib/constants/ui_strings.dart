@@ -6296,6 +6296,36 @@ const uiStrings = {
     'zh-Hans': '来自 SeekSparks 雅伟之言 — 双语圣经应用',
     'zh-Hant': '來自 SeekSparks 雅偉之言 — 雙語聖經應用',
   },
+  // Shown above the body when the text on screen is a condensed summary
+  // rather than a transcript. Ten sermons were translated into Chinese at
+  // roughly a tenth of their English length and read as ordinary prose, so
+  // without this line a reader has no way to know they are not reading the
+  // sermon.
+  'sermonCondensedNotice': {
+    'en': 'This text is a condensed summary, not the full sermon.',
+    'zh-Hans': '本篇为内容摘要，并非讲道全文。',
+    'zh-Hant': '本篇為內容摘要，並非講道全文。',
+  },
+  'sermonCondensedFullIn': {
+    'en': 'The full text is available in {lang}.',
+    'zh-Hans': '完整讲道见{lang}。',
+    'zh-Hant': '完整講道見{lang}。',
+  },
+  'sermonLangEn': {
+    'en': 'English',
+    'zh-Hans': '英文',
+    'zh-Hant': '英文',
+  },
+  'sermonLangZhCn': {
+    'en': 'Simplified Chinese',
+    'zh-Hans': '简体中文',
+    'zh-Hant': '簡體中文',
+  },
+  'sermonLangZhTw': {
+    'en': 'Traditional Chinese',
+    'zh-Hans': '繁体中文',
+    'zh-Hant': '繁體中文',
+  },
   // Verse popup sheet
   'versePopupExpand': {
     'en': 'Show full chapter',

@@ -745,4 +745,81 @@ void main() {
       expect(resolved, 213);
     });
   });
+
+  // Two ingest steps summarised where they were meant to convert and to
+  // translate, and in both cases the output ends with a proper closing
+  // line — so nothing looked broken and nobody noticed. The relative
+  // sizes are the only witness, so the sizes are what gets frozen.
+  // `tools/repair_sermon_corpus.py` is the wide version of these.
+  group('the sermon corpus says as much in Chinese as it does in English',
+      () {
+    final sermons = (json.decode(
+      File('assets/sermons/index.json').readAsStringSync(),
+    ) as List)
+        .cast<Map<String, dynamic>>();
+
+    int han(String s) =>
+        s.runes.where((r) => r >= 0x4E00 && r <= 0x9FFF).length;
+
+    test('no Traditional body is shorter than the Simplified it came from',
+        () {
+      // zh-TW is a script conversion of zh-CN, so a faithful pair is 1:1
+      // in Han characters. Three scored 0.35 / 0.43 / 0.74 because the
+      // proofreading step rewrote the sermon short. Every other pair
+      // scores >= 0.995 and the band between is empty, so 0.85 cannot
+      // fire on a legitimate file.
+      final failures = <String>[];
+      for (final s in sermons) {
+        final id = s['id'] as String;
+        final cn = File('assets/sermons/zh-CN/$id.txt');
+        final tw = File('assets/sermons/zh-TW/$id.txt');
+        if (!cn.existsSync() || !tw.existsSync()) continue;
+        final c = han(cn.readAsStringSync());
+        if (c == 0) continue;
+        final ratio = han(tw.readAsStringSync()) / c;
+        if (ratio < 0.85) {
+          failures.add(
+              '$id: zh-TW holds ${(ratio * 100).toStringAsFixed(1)}% of zh-CN');
+        }
+      }
+      expect(failures, isEmpty, reason: failures.join('\n'));
+    });
+
+    test('every summarised Chinese body is marked, and only those', () {
+      // Ten sermons were translated at ~0.1 Han characters per English
+      // word against a corpus median of 1.40 — a summary wearing the
+      // sermon's title. They cannot be repaired without re-translating,
+      // so the app tells the reader instead; this asserts the marking
+      // still matches the measurement in BOTH directions, so neither a
+      // new summary nor a repaired one can drift out of sync with it.
+      final measured = <String>{};
+      for (final s in sermons) {
+        final id = s['id'] as String;
+        final cn = File('assets/sermons/zh-CN/$id.txt');
+        final en = File('assets/sermons/en/$id.txt');
+        if (!cn.existsSync() || !en.existsSync()) continue;
+        final words = en
+            .readAsStringSync()
+            .split(RegExp(r'\s+'))
+            .where((w) => w.contains(RegExp(r'[A-Za-z]')))
+            .length;
+        if (words < 100) continue;
+        if (han(cn.readAsStringSync()) / words < 0.5) measured.add(id);
+      }
+      final marked = {
+        for (final s in sermons)
+          if ((s['condensed'] as List? ?? const []).isNotEmpty)
+            s['id'] as String,
+      };
+      expect(measured, marked);
+      expect(measured, hasLength(10));
+      for (final s in sermons) {
+        if (!marked.contains(s['id'])) continue;
+        // zh-TW is derived from zh-CN, so a summarised Simplified body
+        // makes a summarised Traditional one too. Marking only one would
+        // leave 繁體 readers unwarned.
+        expect(s['condensed'], ['zh-CN', 'zh-TW'], reason: '${s['id']}');
+      }
+    });
+  });
 }

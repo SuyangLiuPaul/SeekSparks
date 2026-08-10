@@ -22,6 +22,38 @@ import 'package:seeksparks/widgets/home_icon_button.dart';
 import 'package:seeksparks/widgets/language_switcher_button.dart';
 import 'package:seeksparks/widgets/localized_back_button.dart';
 
+/// The warning to print above a body that is a condensed summary rather
+/// than a transcript of the preaching — null when the body on screen is
+/// the whole sermon, which is the case for 279 of the 289.
+///
+/// [bodyLang] is the body-language code being displayed (`'en'`,
+/// `'zh-CN'`, `'zh-TW'`); [locale] is the UI locale. The two differ
+/// often — reading the Chinese body with an English interface is a
+/// normal thing to do — so the sentence describes *the text on screen*
+/// and never assumes which language the reader chose the app in.
+String? sermonCondensedNotice(Sermon sermon, String? bodyLang, String locale) {
+  if (bodyLang == null || !sermon.condensed.contains(bodyLang)) return null;
+  final notice = uiStrings['sermonCondensedNotice']?[locale] ??
+      'This text is a condensed summary, not the full sermon.';
+  final full = sermon.fullBodyLanguages;
+  if (full.isEmpty) return notice;
+  final template = uiStrings['sermonCondensedFullIn']?[locale] ??
+      'The full text is available in {lang}.';
+  final names = full.map((l) => sermonLanguageName(l, locale)).join(' / ');
+  return '$notice ${template.replaceFirst('{lang}', names)}';
+}
+
+/// Reader-facing name of a body language, in the UI's own locale — a
+/// Chinese sentence should not end in the word "English".
+String sermonLanguageName(String bodyLang, String locale) {
+  final key = switch (bodyLang) {
+    'zh-CN' => 'sermonLangZhCn',
+    'zh-TW' => 'sermonLangZhTw',
+    _ => 'sermonLangEn',
+  };
+  return uiStrings[key]?[locale] ?? uiStrings[key]?['en'] ?? bodyLang;
+}
+
 /// Reads one sermon body in the user's preferred language with a
 /// language-toggle (EN / 简 / 繁) at the top.
 ///
@@ -464,6 +496,11 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
               onSelect: _switchTo,
             ),
             const SizedBox(height: 16),
+            if (sermonCondensedNotice(s, _lang, settings.locale)
+                case final notice?) ...[
+              _CondensedNotice(text: notice),
+              const SizedBox(height: 16),
+            ],
             if (_loading)
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 32),
@@ -521,6 +558,11 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
     }
     if (s.passage.isNotEmpty) metaParts.add(s.passage);
     if (metaParts.isNotEmpty) buf.writeln(metaParts.join(' · '));
+    // The notice travels with the text. A summary pasted into someone's
+    // notes without it is indistinguishable from the preaching, and will
+    // be quoted as the preaching.
+    final notice = sermonCondensedNotice(s, _lang, locale);
+    if (notice != null) buf.writeln(notice);
     buf.writeln();
     buf.writeln(body.trim());
     buf.writeln();
@@ -727,6 +769,48 @@ class _LanguageToggle extends StatelessWidget {
             ),
           ),
       ],
+    );
+  }
+}
+
+/// Square corners and a 1px hairline, per `workbench_theme.dart`. Not an
+/// error — the summary is real material and worth reading — so it takes
+/// the surface palette rather than the error one, and sits above the body
+/// where it cannot be scrolled past unread.
+class _CondensedNotice extends StatelessWidget {
+  final String text;
+  const _CondensedNotice({required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest.withValues(alpha: 0.5),
+        border: Border.all(color: scheme.outlineVariant),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            Icons.info_outline_rounded,
+            size: 18,
+            color: scheme.onSurface.withValues(alpha: 0.7),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(
+                fontSize: 13,
+                height: 1.45,
+                color: scheme.onSurface.withValues(alpha: 0.85),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

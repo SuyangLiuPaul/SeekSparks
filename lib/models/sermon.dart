@@ -48,6 +48,14 @@ class Sermon {
   final bool hasZhCn;
   final bool hasZhTw;
 
+  /// Body-language codes whose text is a condensed summary of the sermon
+  /// rather than a transcript of it. Ten sermons were translated into
+  /// Chinese as ~a tenth of their English length — summary prose, ending
+  /// with a proper closing line, so nothing reads as broken. The reader
+  /// has to be told, or they will quote a summary as the preaching.
+  /// Measured and written by `tools/repair_sermon_corpus.py`.
+  final Set<String> condensed;
+
   const Sermon({
     required this.id,
     required this.topic,
@@ -60,6 +68,7 @@ class Sermon {
     required this.hasEn,
     required this.hasZhCn,
     required this.hasZhTw,
+    this.condensed = const {},
   });
 
   factory Sermon.fromJson(Map<String, dynamic> j) {
@@ -79,6 +88,9 @@ class Sermon {
       hasEn: j['hasEn'] as bool? ?? false,
       hasZhCn: j['hasZhCn'] as bool? ?? false,
       hasZhTw: j['hasZhTw'] as bool? ?? false,
+      condensed: {
+        for (final l in (j['condensed'] as List? ?? const [])) l.toString(),
+      },
     );
   }
 
@@ -104,6 +116,14 @@ class Sermon {
     }
     return title.isNotEmpty ? title : '#$id';
   }
+
+  /// Body-language codes that carry the whole sermon — where to send a
+  /// reader who has landed on a condensed one.
+  List<String> get fullBodyLanguages => [
+        if (hasEn && !condensed.contains('en')) 'en',
+        if (hasZhCn && !condensed.contains('zh-CN')) 'zh-CN',
+        if (hasZhTw && !condensed.contains('zh-TW')) 'zh-TW',
+      ];
 
   /// True when the sermon has at least one body file in some language.
   /// (Always true post-ingest; we filter empties out at write time.)
