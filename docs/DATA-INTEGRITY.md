@@ -1080,6 +1080,82 @@ life. Seven of its nine tests fail against the pre-repair assets.
 
 ---
 
+### Check 21 — the Septuagint's own verse numbers were shipping as scripture. FIXED v1.6.100
+
+`assets/lxxwh.json` carried **4,687 markers of the form `(102:12)` in
+4,541 verses** — one verse in seven of the Greek Old Testament. They are
+not scripture and not a footnote: they are the edition's own
+chapter-and-verse for the words that follow, printed because the Greek
+Psalter numbers Psalm 103 as 102 and Jeremiah barely agrees with the
+Hebrew at all. Rendered raw, they read as text.
+
+**The tagged layer was worse.** The marker was glued onto the first word
+of the run, so `(102:12) καθ ` carried καθ's Strong's number and parse:
+**4,400 of the 4,672** markers answered a lexicon lookup with the entry
+for the word *after* them. Tapping `(5:27)` in 1 Chronicles 6:1 returned
+G5207 υἱοί, a masculine plural noun. That is the app stating something
+untrue about the text, which is why this went ahead of the rest of the
+queue.
+
+Both layers now carry `<vs:REF>`, and the marker has its own run with no
+Strong's and no grammar. It is typed as its own `ScriptureSpanKind` for
+the same reason `[雅伟]` is — a reference is not a footnote and not a
+supplied word, and typing it as either states something the edition does
+not say. It renders muted and smaller in the reader and in Browse,
+leaves the search index and the reading text entirely, and travels with
+the apparatus on paste rather than with the verse.
+
+**The detection was exact rather than heuristic.** An unaccented Greek
+text writes its numerals as letters, so no digit in the edition can be
+scripture; a strict scan and a loose scan for *any* parenthesised run
+both returned the same 4,687. `test/lxx_versification_test.dart` holds
+that property down, so the next import cannot quietly need a different
+method.
+
+Repaired by `tools/fix_lxx_versification.py`, which is idempotent.
+
+**Two things found on the way, neither repaired here:**
+
+- `assets/tagged/lxxwh/nehemiah.json` is **missing 15 of Nehemiah 10's
+  39 verses** (10:3, 4, 5, 11, 12, 15, 16, 18, 19, 20, 21, 22, 24, 25,
+  27). This is a pre-existing coverage gap in the tagged import, not a
+  loss from this repair, and it is the whole of the 4,687 vs 4,672
+  difference between the two layers. Under-coverage, not a false
+  statement.
+- The same defect class, in two other editions — see check 22.
+
+### Check 22 — two more tagged layers print their source's markup as scripture. FOUND, not yet fixed
+
+Found by asking check 21's question of every edition rather than only
+the one that raised it. The **text** layers are all clean: outside
+lxxwh's new `<vs:>` tokens, the only angle-bracket token anywhere in
+`assets/*.json` is the legitimate `<note: …>`. The **tagged** layers are
+not:
+
+- **`assets/tagged/bsb/*.json` — 726 raw HTML tags across 145 verses in
+  8 books.** Mostly the source's verse-number anchor,
+  `<span class=|reftext|><a href=|#|><b>1</b></a></span>`, 116 of them,
+  plus 4 `<p class=|indent2|>`-style paragraph tags and some unmatched
+  `</span>` closers. **All 145 affected runs carry a Strong's number**,
+  so this is check 21's defect exactly: the markup renders as scripture
+  *and* answers a lexicon tap with the following word's entry. Confirmed
+  on screen, not just in the file — BSB Psalms 103:1 draws the span
+  literally in the Browse pane. The `|` where a `"` belongs says the
+  quoting was lost somewhere upstream of us.
+- **`assets/tagged/cuvs-yhwh/*.json` — 133 leaked alignment codes across
+  126 verses in 27 books**, of the form `<WH1288s>`, `<H518>`,
+  `<V3808>`, `<WG2064s>`. 128 of the runs carry a Strong's. These render
+  literally: 「他便叫`<WH1288s>`骆驼」.
+
+Both are smaller than check 21 by two orders of magnitude, and neither
+is in the reading text, so a reader who never opens Browse or the word
+study will not meet them. They are recorded here rather than fixed in
+the same pass because a repair needs the same treatment check 21 got —
+measure the shapes, decide what each token *is*, and type it — and that
+is its own iteration.
+
+---
+
 ## Not checked yet
 
 - Verse **text** itself, against an *external* witness. Checks 10–12 now
