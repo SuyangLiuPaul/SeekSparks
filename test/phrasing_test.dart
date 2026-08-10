@@ -241,10 +241,16 @@ void main() {
       expect(lines.map((l) => l.depth), [0, 1, 2]);
     });
 
-    test('the first line is always depth 0', () {
+    test('the first line is bounded by maxPhrasingDepth, not by zero', () {
+      // Until v1.6.98 line one was pinned at 0. It has no predecessor to
+      // clamp against, so it gets a stop of its own instead.
       final words = plain(4);
       final p = bare(words).copyWith(depths: {0: 4});
-      expect(layoutPhrasing(p, words).first.depth, 0);
+      expect(layoutPhrasing(p, words).first.depth, 4);
+      expect(
+        layoutPhrasing(p.copyWith(depths: {0: 99}), words).first.depth,
+        maxPhrasingDepth,
+      );
     });
 
     test('outdenting a parent is non-destructive — children spring back', () {
@@ -503,6 +509,222 @@ void main() {
     });
   });
 
+  group('phrasingTokens — a translation split into breakable units', () {
+    test('joining the tokens reproduces the verse exactly', () {
+      const inputs = [
+        'Grace to you, and peace from God our Father.',
+        '「我实实在在地告诉你们，」他说。',
+        'Paul, an apostle — not from men —',
+      ];
+      for (final s in inputs) {
+        expect(phrasingTokens(s).join(), s,
+            reason: 'a line that has lost its punctuation is not the text');
+      }
+    });
+
+    test('one token per Han character, punctuation carried on the left', () {
+      expect(phrasingTokens('神爱世人，'), ['神', '爱', '世', '人，']);
+    });
+
+    test('one token per alphabetic run, the space carried after the word', () {
+      expect(phrasingTokens('in the beginning'), ['in ', 'the ', 'beginning']);
+    });
+
+    test('leading punctuation attaches to the first word, never stands '
+        'alone', () {
+      // An opening quotation mark that can be broken away from the word
+      // it opens is a line the reader cannot repair.
+      expect(phrasingTokens('“And God said'), ['“And ', 'God ', 'said']);
+    });
+
+    test('text with no word characters at all is kept as one token', () {
+      expect(phrasingTokens('— ?'), ['— ?']);
+      expect(phrasingTokens('   '), isEmpty);
+      expect(phrasingTokens(''), isEmpty);
+    });
+  });
+
+  group('availablePhrasingLevels', () {
+    test('a bare text offers only verses', () {
+      expect(availablePhrasingLevels(plain(3)), {PhrasingLevel.verses});
+      expect(availablePhrasingLevels(const []), {PhrasingLevel.verses});
+    });
+
+    test('a tagged translation offers everything except verbals', () {
+      // Mood is not recoverable from a Strong's number, so offering
+      // `+ Verbals` here would be a control that does nothing.
+      final tagged = [
+        PhrasingWord(text: 'For ', strongs: 'G1063', verse: 1),
+        PhrasingWord(text: 'God ', strongs: 'G2316', verse: 1),
+      ];
+      expect(availablePhrasingLevels(tagged), {
+        PhrasingLevel.verses,
+        PhrasingLevel.clauses,
+        PhrasingLevel.phrases,
+      });
+    });
+
+    test('a parsed original offers all four', () {
+      expect(availablePhrasingLevels([g('θεός', 'N-----NSM-')]),
+          PhrasingLevel.values.toSet());
+    });
+
+    test('an empty morph field does not count as a parse', () {
+      final blank = [
+        PhrasingWord(text: 'x', strongs: '', verse: 1, morph: ''),
+        PhrasingWord(text: 'y', strongs: '', verse: 1, morph: '  '),
+      ];
+      expect(availablePhrasingLevels(blank), {PhrasingLevel.verses});
+    });
+  });
+
+  group('breaks from a Strong\'s number alone — the translation proposal', () {
+    /// An English run out of `assets/tagged/bsb/*.json`: a number, no
+    /// morph code.
+    PhrasingWord t(String text, String strongs, {int verse = 1}) =>
+        PhrasingWord(text: text, strongs: strongs, verse: verse);
+
+    test('a conjunction breaks a clause even with no parse', () {
+      final words = [
+        t('I ', 'G1473'),
+        t('write ', 'G1125'),
+        t('that ', 'G2443'), //  ἵνα
+        t('you ', 'G4771'),
+      ];
+      expect(autoBreakPoints(words, PhrasingLevel.clauses), {0, 2});
+    });
+
+    test('a preposition waits for the phrases level, as with a parse', () {
+      final words = [
+        t('grace ', 'G5485'),
+        t('in ', 'G1722'), // ἐν
+        t('Christ', 'G5547'),
+      ];
+      expect(autoBreakPoints(words, PhrasingLevel.clauses), {0});
+      expect(autoBreakPoints(words, PhrasingLevel.verbals), {0});
+      expect(autoBreakPoints(words, PhrasingLevel.phrases), {0, 1});
+    });
+
+    test('a relative pronoun breaks, and an ordinary word does not', () {
+      final words = [
+        t('the ', 'G3588'),
+        t('who ', 'G3739'), // ὅς
+        t('God', 'G2316'),
+      ];
+      expect(autoBreakPoints(words, PhrasingLevel.clauses), {0, 1});
+    });
+
+    test('a Chinese OT run carries its HOST word\'s number, so the waw is '
+        'invisible', () {
+      // Not a defect to be fixed by guessing: the prefixed conjunction
+      // has no Strong's of its own. A smaller proposal, not a wrong one.
+      final words = [
+        t('耶和华', 'H3068'),
+        t('说', 'H559'), // וַיֹּאמֶר — the waw is inside this word
+      ];
+      expect(autoBreakPoints(words, PhrasingLevel.phrases), {0});
+    });
+
+    test('a parse still wins where there is one', () {
+      // The Strong's fallback must not displace the morphology: this
+      // participle has no conjunction number and still breaks.
+      final words = [g('θεός', 'N-----NSM-'), g('λέγων', 'V--PAPNSM-')];
+      expect(autoBreakPoints(words, PhrasingLevel.verbals), {0, 1});
+    });
+  });
+
+  group('the first line indents too', () {
+    test('line one takes a depth instead of being pinned at zero', () {
+      final words = plain(4);
+      final p = bare(words, level: PhrasingLevel.verses);
+      expect(layoutPhrasing(p, words).first.depth, 0);
+      final indented = indentPhrasingLine(p, words, 0);
+      expect(layoutPhrasing(indented, words).first.depth, 1);
+    });
+
+    test('line one stops at maxPhrasingDepth — held down, it cannot push '
+        'the text off screen', () {
+      final words = plain(4);
+      var p = bare(words, level: PhrasingLevel.verses);
+      for (var i = 0; i < maxPhrasingDepth + 5; i++) {
+        p = indentPhrasingLine(p, words, 0);
+      }
+      expect(layoutPhrasing(p, words).first.depth, maxPhrasingDepth);
+    });
+
+    test('an indented first line still bounds the second', () {
+      // Every other line is clamped to prevDepth + 1, and line one being
+      // deep must not let line two jump past it.
+      final words = [
+        PhrasingWord(text: 'a', strongs: '', verse: 1),
+        PhrasingWord(text: 'b', strongs: '', verse: 2),
+      ];
+      final p = bare(words, level: PhrasingLevel.verses)
+          .copyWith(depths: {0: 3, 1: 9});
+      final lines = layoutPhrasing(p, words);
+      expect(lines.map((l) => l.depth), [3, 4]);
+    });
+
+    test('the indent survives export', () {
+      final words = [
+        PhrasingWord(text: 'In', strongs: '', verse: 1),
+        PhrasingWord(text: 'was', strongs: '', verse: 2),
+      ];
+      final p = bare(words, level: PhrasingLevel.verses).copyWith(
+        depths: {0: 1},
+      );
+      final out =
+          exportPhrasing(p, words, label: (r) => r.name, indentUnit: '  ');
+      expect(out, '  (1) In\n(2) was\n');
+    });
+  });
+
+  group('phrasingIsRtl — decided by the script, not the Strong\'s prefix', () {
+    test('Hebrew text is right to left', () {
+      expect(phrasingIsRtl([h('בְּרֵאשִׁית', 'HNcfsa')]), isTrue);
+    });
+
+    test('a CHINESE verse tagged with H-numbers is not', () {
+      // The bug this replaced: keying on strongs.startsWith('H') mirrored
+      // the whole diagram for anyone phrasing Genesis in a translation.
+      final words = [
+        PhrasingWord(text: '起初', strongs: 'H7225', verse: 1),
+        PhrasingWord(text: '神', strongs: 'H430', verse: 1),
+      ];
+      expect(phrasingIsRtl(words), isFalse);
+    });
+
+    test('Greek and empty passages are left to right', () {
+      expect(phrasingIsRtl([g('ἀρχῇ', 'N-----DSF-')]), isFalse);
+      expect(phrasingIsRtl(const []), isFalse);
+    });
+  });
+
+  group('phrasingIsCjk — Chinese is drawn without word gaps', () {
+    List<PhrasingWord> of(List<String> texts) => [
+          for (final t in texts) PhrasingWord(text: t, strongs: '', verse: 1),
+        ];
+
+    test('a per-character Chinese chapter is CJK', () {
+      expect(phrasingIsCjk(of(['神', '爱', '世', '人'])), isTrue);
+    });
+
+    test('a tagged Chinese chapter, cut into multi-character runs, is too', () {
+      expect(phrasingIsCjk(of(['起初', '神', '创造', '天', '地'])), isTrue);
+    });
+
+    test('English, Greek and Hebrew keep their gaps', () {
+      expect(phrasingIsCjk(of(['In', 'the', 'beginning'])), isFalse);
+      expect(phrasingIsCjk([g('ἀρχῇ', 'N-----DSF-')]), isFalse);
+      expect(phrasingIsCjk([h('בְּרֵאשִׁית', 'HNcfsa')]), isFalse);
+      expect(phrasingIsCjk(const []), isFalse);
+    });
+
+    test('a mostly-English verse with a stray Chinese note is not CJK', () {
+      expect(phrasingIsCjk(of(['In', 'the', '和', 'beginning'])), isFalse);
+    });
+  });
+
   group('localisation coverage', () {
     test('every relation has a label in all three locales', () {
       for (final r in PhrasingRelation.values) {
@@ -534,6 +756,9 @@ void main() {
         'phrasingLevelClauses',
         'phrasingLevelVerbals',
         'phrasingLevelPhrases',
+        'phrasingSourceVersion',
+        'phrasingSourceOriginals',
+        'phrasingNoParse',
       ];
       for (final key in keys) {
         final entry = uiStrings[key];

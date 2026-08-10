@@ -37,10 +37,28 @@
 /// joints are **proposed from the morphology already bundled** rather
 /// than found by hand. See [autoBreakPoints] and [suggestRelations].
 ///
+/// 2026-08-11 (v1.6.98): **phrasing is no longer Greek-only.** The limit
+/// was accidental — the model never needed an original language, only
+/// the page's loader did — and bwh25 itself is explicit that "the user
+/// can access any Bible version in BibleWorks as a source of text to be
+/// diagrammed". Confining ours to the originals narrowed it to the
+/// smallest possible audience for a discipline that Biblearc, the
+/// tradition this follows, is practised in mostly on English.
+///
+/// A translation carries less than the corpus does, and the levels say
+/// so rather than proposing nothing and looking broken — see
+/// [availablePhrasingLevels]. What a Strong's-tagged translation DOES
+/// carry is the number of the original word behind each run, and a
+/// conjunction is identifiable from that number alone, so the clause
+/// joints survive the move into English or Chinese. Only the levels
+/// that need a parse (participles, infinitives) are genuinely lost.
+///
 /// This file is Flutter-free on purpose so the whole model is testable.
 library;
 
 import 'package:seeksparks/utils/morphology.dart';
+import 'package:seeksparks/utils/related_verses.dart'
+    show isCjkChar, isWordChar;
 
 /// One word of the passage under study, flattened across verses.
 ///
@@ -72,6 +90,96 @@ class PhrasingWord {
   final String? morph;
 
   final String? translit;
+}
+
+/// Split a verse of a translation into the units a line can break at.
+///
+/// The house rule is `phrase_match.dart`'s — **one token per Han
+/// character, one per alphabetic run** — deliberately reused rather than
+/// reinvented, because two tokenizers for "where do the words of a
+/// Chinese verse begin" would drift apart and there is no third opinion
+/// to settle them.
+///
+/// It differs from `phraseTokens` in the one way display demands:
+/// **punctuation is carried, not discarded.** Every token runs to the
+/// start of the next, so `tokens.join()` reproduces the verse exactly,
+/// commas and all. A phrasing whose lines have lost their punctuation is
+/// not the text the reader is studying — `Grace to you and peace` and
+/// `Grace to you, and peace` are different claims about where the joint
+/// falls, which is the whole subject of the exercise.
+///
+/// Leading punctuation attaches to the first token rather than becoming
+/// a token of its own, so an opening quotation mark cannot be broken
+/// away from the word it opens.
+List<String> phrasingTokens(String text) {
+  final starts = <int>[];
+  final n = text.length;
+  var i = 0;
+  while (i < n) {
+    final c = text.codeUnitAt(i);
+    if (isCjkChar(c)) {
+      starts.add(i);
+      i++;
+      continue;
+    }
+    if (isWordChar(c)) {
+      starts.add(i);
+      while (i < n && isWordChar(text.codeUnitAt(i))) {
+        i++;
+      }
+      continue;
+    }
+    i++;
+  }
+  if (starts.isEmpty) {
+    final only = text.trim();
+    return only.isEmpty ? const [] : [only];
+  }
+  final out = <String>[];
+  for (var k = 0; k < starts.length; k++) {
+    final from = k == 0 ? 0 : starts[k];
+    final to = k + 1 < starts.length ? starts[k + 1] : n;
+    out.add(text.substring(from, to));
+  }
+  return out;
+}
+
+/// True when the passage is written in a right-to-left script.
+///
+/// Decided from the **text**, not from the Strong's prefix. A tagged
+/// Chinese or English Old Testament verse carries H-numbers and reads
+/// left to right; keying on the prefix would mirror the whole diagram
+/// for every reader who phrased Genesis in 和简+.
+bool phrasingIsRtl(List<PhrasingWord> words) {
+  for (final w in words) {
+    for (var i = 0; i < w.text.length; i++) {
+      final c = w.text.codeUnitAt(i);
+      // Hebrew block, then Hebrew presentation forms.
+      if ((c >= 0x0590 && c <= 0x05FF) || (c >= 0xFB1D && c <= 0xFB4F)) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+/// True when the passage is Chinese and should be drawn without the gap
+/// between words that an alphabetic script needs.
+///
+/// Chinese has no word spaces. A chapter cut one character at a time and
+/// then drawn with the spacing Greek requires reads as s p a c e d  o u t
+/// text rather than as the verse the reader knows, and the diagram stops
+/// looking like Scripture. The words stay individually tappable either
+/// way; only the gap changes.
+///
+/// Measured from the words, not from the interface locale — a reader
+/// with a Chinese interface may be phrasing the BSB.
+bool phrasingIsCjk(List<PhrasingWord> words) {
+  var cjk = 0;
+  for (final w in words) {
+    if (w.text.isNotEmpty && isCjkChar(w.text.codeUnitAt(0))) cjk++;
+  }
+  return cjk * 2 > words.length;
 }
 
 /// How aggressively [autoBreakPoints] cuts the passage.
@@ -278,6 +386,11 @@ class Phrasing {
   }
 }
 
+/// How far the first line may be indented. Every other line is bounded
+/// by its predecessor; the first has no predecessor, so it needs a stop
+/// of its own or a held-down button pushes the text out of view.
+const int maxPhrasingDepth = 8;
+
 /// One rendered line: the words `[start, end)`, at a *clamped* depth.
 class PhrasingLine {
   const PhrasingLine({
@@ -349,7 +462,16 @@ List<PhrasingLine> layoutPhrasing(Phrasing p, List<PhrasingWord> words) {
     final start = starts[i];
     final end = i + 1 < starts.length ? starts[i + 1] : words.length;
     final raw = p.depths[start] ?? 0;
-    final depth = i == 0 ? 0 : raw.clamp(0, prevDepth + 1);
+    // The first line may be indented too. It was pinned to the margin
+    // because it has no predecessor to be subordinate TO, but that
+    // conflated two things: depth as a grammatical claim, and depth as
+    // the margin the whole block hangs from. Readers set the second one
+    // by hand on paper all the time, and the reader who asked for this
+    // had done exactly that in Word. With no parent above it there is
+    // nothing to clamp against, so the only bound is [maxPhrasingDepth],
+    // which stops a repeated tap walking the text off the right edge.
+    final depth =
+        i == 0 ? raw.clamp(0, maxPhrasingDepth) : raw.clamp(0, prevDepth + 1);
     final chosen = p.relations[start];
     out.add(PhrasingLine(
       start: start,
@@ -474,6 +596,12 @@ Phrasing _setDepth(
   if (line == null) return p;
   final next = f(line.depth);
   if (next < 0) return p;
+  // The first line's stored depth is capped rather than left to run
+  // ahead of what is drawn. Everywhere else an over-deep stored value is
+  // deliberate — it springs back when an outdented parent is indented
+  // again — but line one has no parent, so a stored 9 against a drawn 8
+  // would only buy the reader a tap that does nothing.
+  if (start == 0 && next > maxPhrasingDepth) return p;
   final depths = {...p.depths}..[start] = next;
   return p.copyWith(depths: depths);
 }
@@ -575,11 +703,102 @@ Set<int> autoBreakPoints(List<PhrasingWord> words, PhrasingLevel level) {
 
 bool _breaksAt(PhrasingWord w, PhrasingLevel level) {
   final parsed = parseMorphology(w.morph);
-  if (parsed == null) return false;
+  if (parsed == null) return _strongsBreaks(w, level);
   return parsed.scheme == MorphScheme.greek
       ? _greekBreaks(parsed, level)
       : _semiticBreaks(parsed, level);
 }
+
+/// The joints a Strong's number alone can find, for a tagged
+/// translation, which carries no parse.
+///
+/// A conjunction is the one part of speech whose Strong's number IS its
+/// identity: G2532 is καί wherever it stands, so a run of English or
+/// Chinese tagged G2532 marks where the Greek joins two things, and the
+/// clause level survives translation intact. The relative pronouns and
+/// prepositions below were derived the same way the conjunction tables
+/// were — by counting the bundled corpus, not by copying a paradigm —
+/// and a number is listed only where the corpus parses it that way in
+/// the MAJORITY of its occurrences. That test is what keeps ὡς G5613 out
+/// of the prepositions: it is tagged `P-` four times against 504 as a
+/// conjunction or adverb, so listing it would have cut a line before
+/// every "as" in the New Testament.
+///
+/// **The Hebrew half is honestly weaker and the reason is structural.**
+/// A Semitic conjunction is usually a PREFIX — the waw — with no
+/// Strong's number of its own, so a tagged Old Testament run carries the
+/// number of its host word and the joint is invisible from here. Only
+/// standalone conjunctions (כִּי H3588, אִם H518 …) are found. That is a
+/// smaller proposal, not a wrong one, and the reader still has the
+/// verse level and their own hands.
+bool _strongsBreaks(PhrasingWord w, PhrasingLevel level) {
+  final s = w.strongs;
+  if (s.isEmpty) return false;
+  if (_greekConjunctions.containsKey(s) ||
+      _semiticConjunctions.containsKey(s) ||
+      _greekRelatives.contains(s)) {
+    return true;
+  }
+  // Verbals are skipped deliberately: mood is not recoverable from a
+  // Strong's number, and guessing which of a verb's occurrences are
+  // participles would put breaks in places the grammar does not.
+  if (level.index >= PhrasingLevel.phrases.index &&
+      _greekPrepositions.contains(s)) {
+    return true;
+  }
+  return false;
+}
+
+/// Which levels the loaded passage can actually propose, best-effort
+/// first.
+///
+/// Offering a level that has nothing to say is the failure this exists
+/// to prevent: a reader who taps `+ Verbals` on an English translation
+/// and sees the diagram not change learns that the tool is broken, when
+/// the truth is that their text does not carry a parse. The page greys
+/// the rest and says why.
+///
+/// [PhrasingLevel.verses] is always in the set — a passage can always be
+/// cut at its verse boundaries, and that is the honest starting point
+/// for a reader doing the whole analysis themselves.
+Set<PhrasingLevel> availablePhrasingLevels(List<PhrasingWord> words) {
+  var hasMorph = false;
+  var hasStrongs = false;
+  for (final w in words) {
+    if (!hasMorph && parseMorphology(w.morph) != null) hasMorph = true;
+    if (!hasStrongs && w.strongs.isNotEmpty) hasStrongs = true;
+    if (hasMorph && hasStrongs) break;
+  }
+  return {
+    PhrasingLevel.verses,
+    if (hasMorph || hasStrongs) PhrasingLevel.clauses,
+    if (hasMorph) PhrasingLevel.verbals,
+    if (hasMorph || hasStrongs) PhrasingLevel.phrases,
+  };
+}
+
+/// Greek relative pronouns by Strong's number.
+///
+/// Four numbers cover 1,671 of the corpus's 1,672 `RR` words. The fifth,
+/// ὁποῖος G3697, occurs once as a relative against five times otherwise
+/// and fails the majority test.
+const Set<String> _greekRelatives = {
+  'G3739', // ὅς 1403
+  'G3748', // ὅστις 144
+  'G3745', // ὅσος 110
+  'G3634', // οἷος 14
+};
+
+/// Greek prepositions by Strong's number: 43 numbers covering 10,790 of
+/// the corpus's 10,852 `P-` words.
+const Set<String> _greekPrepositions = {
+  'G1722', 'G1519', 'G1537', 'G1909', 'G4314', 'G1223', 'G575', 'G2596',
+  'G3326', 'G4012', 'G5259', 'G3844', 'G5228', 'G4862', 'G2193', 'G1799',
+  'G4253', 'G1715', 'G891', 'G5565', 'G1752', 'G3694', 'G473', 'G1883',
+  'G3360', 'G4008', 'G5270', 'G5484', 'G3342', 'G2713', 'G1726', 'G561',
+  'G2714', 'G5231', 'G427', 'G1725', 'G817', 'G2943', 'G3924', 'G495',
+  'G1900', 'G481', 'G5238',
+};
 
 bool _greekBreaks(MorphWord w, PhrasingLevel level) {
   final m = w.morphemes.first;
@@ -639,7 +858,19 @@ bool _semiticBreaks(MorphWord w, PhrasingLevel level) {
 /// rest first in the picker.
 List<PhrasingRelation> suggestRelations(PhrasingWord word) {
   final parsed = parseMorphology(word.morph);
-  if (parsed == null) return const [];
+  if (parsed == null) {
+    // A tagged translation. The conjunction tables are keyed by Strong's
+    // already, so they answer here unchanged; what is lost is the check
+    // that the parser had called the word a conjunction, and with it the
+    // safety that note guaranteed for ἕως G2193. Left in anyway: ἕως is
+    // temporal in both its roles, so the suggestion is right either way.
+    if (_greekRelatives.contains(word.strongs)) {
+      return const [PhrasingRelation.relative];
+    }
+    return _greekConjunctions[word.strongs] ??
+        _semiticConjunctions[word.strongs] ??
+        const [];
+  }
   if (parsed.scheme == MorphScheme.greek) {
     final pos = parsed.morphemes.first.pos;
     if (pos == 'RR') return const [PhrasingRelation.relative];

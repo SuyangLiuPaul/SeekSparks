@@ -6982,10 +6982,27 @@ const uiStrings = {
   },
   'phrasingRange': {'zh-Hans': '经节', 'zh-Hant': '經節', 'en': 'Verses'},
   'phrasingNone': {
-    'zh-Hans': '本章没有附带原文经文，无法进行分行。',
-    'zh-Hant': '本章沒有附帶原文經文，無法進行分行。',
-    'en': 'No original-language text is bundled for this chapter, so there '
-        'is nothing to phrase.',
+    'zh-Hans': '本章没有可供分行的经文。若已选「原文」，可改选「译本」。',
+    'zh-Hant': '本章沒有可供分行的經文。若已選「原文」，可改選「譯本」。',
+    'en': 'No text is available for this chapter. If you chose the original, '
+        'try the translation instead.',
+  },
+  'phrasingSourceVersion': {
+    'zh-Hans': '译本',
+    'zh-Hant': '譯本',
+    'en': 'Translation',
+  },
+  'phrasingSourceOriginals': {
+    'zh-Hans': '原文',
+    'zh-Hant': '原文',
+    'en': 'Original',
+  },
+  'phrasingNoParse': {
+    'zh-Hans': '此版本没有语法解析，只能依据编号建议断行。若要分出分词和不定式，请改用原文。',
+    'zh-Hant': '此版本沒有語法解析，只能依據編號建議斷行。若要分出分詞和不定式，請改用原文。',
+    'en': 'This edition carries no grammatical parse, so only the joints a '
+        'Strong’s number can name are proposed. Switch to the original for '
+        'participles and infinitives.',
   },
   'phrasingEmptyWindow': {
     'zh-Hans': '此范围内没有经节。',

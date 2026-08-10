@@ -14,10 +14,13 @@ import 'package:flutter/services.dart';
 
 import 'package:seeksparks/constants/book_names.dart' show bookNameToEnglish;
 import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/services/fetch_verses.dart';
 import 'package:seeksparks/services/originals_service.dart';
 import 'package:seeksparks/services/phrasing_store.dart';
+import 'package:seeksparks/services/tagged_text_service.dart';
 import 'package:seeksparks/utils/morphology.dart';
 import 'package:seeksparks/utils/phrasing.dart';
+import 'package:seeksparks/utils/scripture_markup.dart' show scriptureReadingText;
 import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
 
 /// Reader-facing label for a relation, in [locale].
@@ -69,13 +72,43 @@ class PhrasingPage extends StatefulWidget {
   State<PhrasingPage> createState() => _PhrasingPageState();
 }
 
+/// Where the words being phrased come from.
+///
+/// Two, not a version list: the reader has already chosen an edition in
+/// the workbench, and a second version picker here would ask them to
+/// choose again for no reason. The real question is only whether they
+/// are phrasing *their* text or *the* text.
+enum PhrasingSource {
+  /// The edition open in the workbench. The default, because it is what
+  /// the reader is looking at, and because a tool only usable on Greek
+  /// is a tool for almost nobody.
+  translation,
+
+  /// The bundled Hebrew/Greek corpus. Still the more precise exercise,
+  /// and the only source that carries a full parse.
+  originals,
+}
+
 class _PhrasingPageState extends State<PhrasingPage> {
   List<PhrasingWord> _words = const [];
   Phrasing? _p;
   bool _loading = true;
   int? _hover;
+  PhrasingSource _source = PhrasingSource.translation;
 
   String get _englishBook => bookNameToEnglish[widget.book] ?? widget.book;
+
+  /// The key a phrasing is stored under.
+  ///
+  /// The originals keep the bare version code they have always used, so
+  /// work saved before this screen could read a translation still loads
+  /// against the words it was made from. Breaks, depths and relations
+  /// are all word INDICES, so a key collision between two different
+  /// tokenizations would not fail loudly — it would silently reattach a
+  /// reader's analysis to the wrong words.
+  String get _storeKey => _source == PhrasingSource.originals
+      ? widget.version
+      : '${widget.version}.txt';
 
   /// Every verse number present in the chapter, ascending. Drives the
   /// window steppers, so a chapter with a gap in the tagged corpus
@@ -95,17 +128,56 @@ class _PhrasingPageState extends State<PhrasingPage> {
   }
 
   Future<void> _load() async {
-    final words = <PhrasingWord>[];
     // The word list is the WHOLE chapter, always — see
     // [visiblePhrasingLines] for why the window must not affect indices.
-    var verse = 0;
-    final byVerse =
-        await OriginalsService.versesOfBook(_englishBook);
+    final words = _source == PhrasingSource.originals
+        ? await _originalWords()
+        : await _translationWords();
+    final stored =
+        await PhrasingStore.load(_storeKey, _englishBook, widget.chapter);
+    if (!mounted) return;
+    final present = {for (final w in words) w.verse}.toList()..sort();
+    final levels = availablePhrasingLevels(words);
+    var p = stored ??
+        Phrasing(
+          version: _storeKey,
+          book: _englishBook,
+          chapter: widget.chapter,
+          startVerse: present.contains(widget.verse)
+              ? widget.verse
+              : (present.isEmpty ? 1 : present.first),
+          endVerse: present.contains(widget.verse)
+              ? widget.verse
+              : (present.isEmpty ? 1 : present.first),
+        );
+    // A level the source cannot support would propose nothing and read
+    // as a dead control. Fall back to the finest one it CAN support
+    // rather than to `verses`, so switching to a translation keeps as
+    // much of the reader's chosen granularity as the text allows.
+    if (!levels.contains(p.level)) {
+      final usable = [
+        for (final l in PhrasingLevel.values)
+          if (levels.contains(l) && l.index <= p.level.index) l,
+      ];
+      p = p.copyWith(
+          level: usable.isEmpty ? PhrasingLevel.verses : usable.last);
+    }
+    setState(() {
+      _words = words;
+      _p = p;
+      _loading = false;
+    });
+  }
+
+  Future<List<PhrasingWord>> _originalWords() async {
+    final words = <PhrasingWord>[];
+    final byVerse = await OriginalsService.versesOfBook(_englishBook);
     final keys = byVerse.keys
         .where((k) => k.split(':').first == '${widget.chapter}')
         .toList()
       ..sort((a, b) => (int.tryParse(a.split(':').last) ?? 0)
           .compareTo(int.tryParse(b.split(':').last) ?? 0));
+    var verse = 0;
     for (final k in keys) {
       verse = int.tryParse(k.split(':').last) ?? verse;
       for (final w in byVerse[k] ?? const []) {
@@ -118,26 +190,73 @@ class _PhrasingPageState extends State<PhrasingPage> {
         ));
       }
     }
-    final stored = await PhrasingStore.load(
-        widget.version, _englishBook, widget.chapter);
-    if (!mounted) return;
-    final present = {for (final w in words) w.verse}.toList()..sort();
+    return words;
+  }
+
+  /// The chapter as the reader's own edition prints it.
+  ///
+  /// Two roads, and which one is taken decides how much the pane can
+  /// propose. A **tagged** edition (雅简+, 和简+, BSB, KJV+S, LXX+WH) is
+  /// already cut into runs aligned to the original, so its own word
+  /// boundaries are used and every run arrives carrying the Strong's
+  /// number of the word behind it — which is what lets the clause level
+  /// keep working in English or Chinese. An **untagged** edition is cut
+  /// by [phrasingTokens] and carries no numbers, so it gets verse
+  /// breaks and the reader's own hands.
+  Future<List<PhrasingWord>> _translationWords() async {
+    final verses = await FetchVerses.loadVerseList(widget.version) ?? const [];
+    final inChapter = [
+      for (final v in verses)
+        if (v.chapter == widget.chapter &&
+            (bookNameToEnglish[v.book] ?? v.book) == _englishBook)
+          v,
+    ]..sort((a, b) => a.verse.compareTo(b.verse));
+    if (inChapter.isEmpty) return const [];
+
+    final tagged = TaggedTextService.supports(widget.version);
+    final words = <PhrasingWord>[];
+    for (final v in inChapter) {
+      if (tagged) {
+        final runs = await TaggedTextService.forVerse(
+          version: widget.version,
+          englishBook: _englishBook,
+          chapter: widget.chapter,
+          verse: v.verse,
+        );
+        if (runs != null && runs.isNotEmpty) {
+          for (final r in runs) {
+            final text = r.text.trim();
+            if (text.isEmpty) continue;
+            words.add(PhrasingWord(
+              text: text,
+              strongs: r.strongs,
+              verse: v.verse,
+            ));
+          }
+          continue;
+        }
+        // Falls through: a tagged edition can still be missing a verse,
+        // and a hole in the middle of the chapter would shift every
+        // index after it.
+      }
+      for (final t in phrasingTokens(scriptureReadingText(v.text))) {
+        final text = t.trim();
+        if (text.isEmpty) continue;
+        words.add(PhrasingWord(text: text, strongs: '', verse: v.verse));
+      }
+    }
+    return words;
+  }
+
+  Future<void> _setSource(PhrasingSource source) async {
+    if (source == _source) return;
     setState(() {
-      _words = words;
-      _p = stored ??
-          Phrasing(
-            version: widget.version,
-            book: _englishBook,
-            chapter: widget.chapter,
-            startVerse: present.contains(widget.verse)
-                ? widget.verse
-                : (present.isEmpty ? 1 : present.first),
-            endVerse: present.contains(widget.verse)
-                ? widget.verse
-                : (present.isEmpty ? 1 : present.first),
-          );
-      _loading = false;
+      _source = source;
+      _loading = true;
+      _hover = null;
+      _words = const [];
     });
+    await _load();
   }
 
   void _update(Phrasing next) {
@@ -148,7 +267,9 @@ class _PhrasingPageState extends State<PhrasingPage> {
   String _s(String k, String fallback) =>
       uiStrings[k]?[widget.locale] ?? fallback;
 
-  bool get _rtl => _words.any((w) => w.strongs.startsWith('H'));
+  bool get _rtl => phrasingIsRtl(_words);
+
+  bool get _cjk => phrasingIsCjk(_words);
 
   void _copy() {
     final p = _p;
@@ -223,11 +344,35 @@ class _PhrasingPageState extends State<PhrasingPage> {
 
   Widget _controls(Phrasing p, ColorScheme scheme) {
     final verses = _verseNumbers;
+    final levels = availablePhrasingLevels(_words);
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              for (final e in [
+                (
+                  PhrasingSource.translation,
+                  _s('phrasingSourceVersion', 'Translation'),
+                ),
+                (
+                  PhrasingSource.originals,
+                  _s('phrasingSourceOriginals', 'Original'),
+                ),
+              ])
+                ChoiceChip(
+                  label: Text(e.$2),
+                  selected: _source == e.$1,
+                  onSelected: (_) => _setSource(e.$1),
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
           Wrap(
             spacing: 8,
             runSpacing: 8,
@@ -242,10 +387,27 @@ class _PhrasingPageState extends State<PhrasingPage> {
                 ChoiceChip(
                   label: Text(_s(e.$2, e.$3)),
                   selected: p.level == e.$1,
-                  onSelected: (_) => _update(setPhrasingLevel(p, e.$1)),
+                  // A level this text cannot support is disabled rather
+                  // than left tappable and inert — see
+                  // [availablePhrasingLevels].
+                  onSelected: levels.contains(e.$1)
+                      ? (_) => _update(setPhrasingLevel(p, e.$1))
+                      : null,
                 ),
             ],
           ),
+          if (!levels.contains(PhrasingLevel.verbals)) ...[
+            const SizedBox(height: 6),
+            Text(
+              _s(
+                'phrasingNoParse',
+                'This edition carries no grammatical parse, so only the '
+                    'joints a Strong’s number can name are proposed. '
+                    'Switch to the original for participles and infinitives.',
+              ),
+              style: TextStyle(fontSize: 12, color: scheme.outline),
+            ),
+          ],
           const SizedBox(height: 8),
           Row(
             children: [
@@ -492,7 +654,7 @@ class _PhrasingPageState extends State<PhrasingPage> {
       spans.add(_word(i, w, i == line.start, scheme));
     }
     return Wrap(
-      spacing: 5,
+      spacing: _cjk ? 0 : 5,
       runSpacing: 2,
       crossAxisAlignment: WrapCrossAlignment.center,
       children: spans,
@@ -511,7 +673,7 @@ class _PhrasingPageState extends State<PhrasingPage> {
           if (p != null) _update(togglePhrasingBreak(p, _words, i));
         },
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 1),
+          padding: EdgeInsets.symmetric(horizontal: _cjk ? 1 : 2, vertical: 1),
           decoration: BoxDecoration(
             color: hovered ? scheme.surfaceContainerHighest : null,
             borderRadius: BorderRadius.circular(3),
