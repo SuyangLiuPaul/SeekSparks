@@ -348,9 +348,17 @@ class _WordChartViewState extends State<WordChartView> {
       if (d.oldTestament > 0 && d.newTestament > 0)
         '${_s('oldTestamentShort', 'Hebrew')} ${d.oldTestament}'
             ' · ${_s('newTestamentShort', 'Greek')} ${d.newTestament}',
-      _s('wordChartUnit',
-          'Counted by occurrence, not by verse — one verse may carry the '
-          'word more than once.'),
+      // Read off the distribution rather than asserted, so this chart and
+      // the command pane's strip can never claim different units for the
+      // same arithmetic — the drift #308 exists to stop.
+      if (d.unit == HitUnit.occurrences)
+        _s('wordChartUnit',
+            'Counted by occurrence, not by verse — one verse may carry the '
+            'word more than once.')
+      else
+        _s('wordChartUnitVerses',
+            'Counted by verse, not by occurrence — a verse carrying the '
+            'word twice counts once.'),
       if (scope != null && scope.isNotEmpty)
         _s('wordChartWholeBible',
                 'Whole Bible — not narrowed by the active limit ({name})')

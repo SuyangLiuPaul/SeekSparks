@@ -7,7 +7,30 @@
 ///
 /// Counts by book, in canonical order, with the shares each testament
 /// takes. Pure arithmetic over references; the widget draws the bars.
+///
+/// 2026-08-10 (#308): a count here has a UNIT, and it is now declared
+/// rather than assumed. bwh23's "What to Plot" dropdown separates
+/// *"Number of verses in the book containing a hit"* from *"Number of
+/// hits in the book"* as two menu entries, and the two differ by a
+/// third on a common word — G25 is 27 verses but 37 occurrences in
+/// John. Every builder here therefore names its [HitUnit], and every
+/// surface that draws one prints it.
 library;
+
+/// What one unit of a distribution counts.
+///
+/// The distinction is bwh23's and it is not pedantry: a reader arriving
+/// from software that plots occurrences reads "John 27" as a frequency
+/// and is wrong by ten.
+enum HitUnit {
+  /// Verses carrying at least one hit — bwh23's "Number of verses in
+  /// the book containing a hit", and what a result LIST holds.
+  verses,
+
+  /// Individual hits — bwh23's "Number of hits in the book". A verse
+  /// carrying the word twice counts twice.
+  occurrences,
+}
 
 /// Hits in one book.
 class BookHits {
@@ -15,11 +38,24 @@ class BookHits {
     required this.englishBook,
     required this.count,
     required this.isOldTestament,
+    this.secondary,
   });
 
   final String englishBook;
+
+  /// The book's count in the distribution's [SearchDistribution.unit].
   final int count;
+
   final bool isOldTestament;
+
+  /// The same book counted in the OTHER unit, when both are known.
+  ///
+  /// Null is the ordinary case: a text search knows its verses and
+  /// nothing about occurrences, and a truncated verse list knows its
+  /// occurrences and cannot know its verses. Where both exist the
+  /// surfaces print both, because that settles the question permanently
+  /// instead of teaching the reader one vocabulary at a time.
+  final int? secondary;
 }
 
 /// The whole distribution.
@@ -30,6 +66,8 @@ class SearchDistribution {
     required this.oldTestament,
     required this.newTestament,
     required this.peak,
+    required this.unit,
+    this.partial = false,
   });
 
   /// The books this distribution draws, in canonical order.
@@ -56,6 +94,29 @@ class SearchDistribution {
   /// there is at least one hit, so callers can divide by it safely.
   final int peak;
 
+  /// What [total] and every [BookHits.count] count.
+  final HitUnit unit;
+
+  /// True when [books] was tallied from a SAMPLE rather than a census —
+  /// the source list stopped at a cap before every hit was seen.
+  ///
+  /// This is not a footnote. `concordance.json`'s verse list stops at
+  /// 500, in canonical order, so a partial tally of a common word is not
+  /// a rough distribution: it is a picture of the cap. Tallying H3068's
+  /// listed verses puts the divine name in 3 books peaking in Exodus,
+  /// where it is in 36 peaking in Jeremiah. A surface handed a partial
+  /// distribution must say so and must NOT draw the bars — a wrong shape
+  /// drawn confidently is worse than no shape, because a reader has
+  /// nothing to check it against.
+  final bool partial;
+
+  /// The unit [BookHits.secondary] is counted in.
+  HitUnit get secondaryUnit =>
+      unit == HitUnit.verses ? HitUnit.occurrences : HitUnit.verses;
+
+  /// Whether any book carries a second count worth printing.
+  bool get hasSecondary => books.any((b) => b.secondary != null);
+
   bool get isEmpty => total == 0;
 
   /// How many books actually carry a hit.
@@ -80,6 +141,9 @@ SearchDistribution buildDistribution({
   required Iterable<String> hitBooks,
   required List<String> bookOrder,
   required Set<String> oldTestamentBooks,
+  required HitUnit unit,
+  Map<String, int>? secondaryCounts,
+  bool partial = false,
 }) {
   final known = bookOrder.toSet();
   final counts = <String, int>{};
@@ -91,6 +155,9 @@ SearchDistribution buildDistribution({
     counts: counts,
     bookOrder: bookOrder,
     oldTestamentBooks: oldTestamentBooks,
+    unit: unit,
+    secondaryCounts: secondaryCounts,
+    partial: partial,
   );
 }
 
@@ -109,7 +176,10 @@ SearchDistribution buildDistributionFromCounts({
   required Map<String, int> counts,
   required List<String> bookOrder,
   required Set<String> oldTestamentBooks,
+  required HitUnit unit,
+  Map<String, int>? secondaryCounts,
   bool includeEmpty = false,
+  bool partial = false,
 }) {
   final books = <BookHits>[];
   var total = 0;
@@ -122,7 +192,12 @@ SearchDistribution buildDistributionFromCounts({
     final safe = c > 0 ? c : 0;
     if (safe == 0 && !includeEmpty) continue;
     final isOt = oldTestamentBooks.contains(name);
-    books.add(BookHits(englishBook: name, count: safe, isOldTestament: isOt));
+    books.add(BookHits(
+      englishBook: name,
+      count: safe,
+      isOldTestament: isOt,
+      secondary: secondaryCounts?[name],
+    ));
     total += safe;
     if (isOt) ot += safe;
     if (safe > peak) peak = safe;
@@ -134,6 +209,84 @@ SearchDistribution buildDistributionFromCounts({
     oldTestament: ot,
     newTestament: total - ot,
     peak: peak,
+    unit: unit,
+    partial: partial,
+  );
+}
+
+/// The distribution a Strong's result can draw HONESTLY.
+///
+/// `concordance.json` describes the same word twice over and the two
+/// differ in both unit and completeness:
+///
+///   * `b`, a per-book map of OCCURRENCES. Uncapped, and it sums exactly
+///     to the entry's total.
+///   * `r`, the VERSE list. Stopped at `kConcordanceRefCap` by the build
+///     pipeline, in canonical order.
+///
+/// Tallying `r` per book is the obvious move — it is the list the reader
+/// is scrolling, and it is bwh23's default plot. For 13,916 of 14,039
+/// numbers it is also correct. For the other 123 it draws the cap
+/// instead of the word: H3068's listed verses stop inside Leviticus, so
+/// the divine name appears to occur in 3 books and to peak in Exodus,
+/// where it occurs in 36 and peaks in Jeremiah. 58 of those 123 name the
+/// wrong heaviest book.
+///
+/// So the unit is not a matter of taste. Draw whichever one is a CENSUS:
+/// verses while the list is whole, occurrences once it is not. And under
+/// a search limit draw neither as a census — the listed verses were
+/// filtered from an already-capped list, so a scoped tally of a capped
+/// entry can be missing whole books.
+SearchDistribution strongsDistribution({
+  required Iterable<String> listedBooks,
+  required List<String> bookOrder,
+  required Set<String> oldTestamentBooks,
+  Map<String, int> occurrencesByBook = const <String, int>{},
+  bool listTruncated = false,
+  bool scoped = false,
+}) {
+  // Scoped: the whole-Bible occurrence map describes a different corpus
+  // than the listed verses do, so it can be neither the primary count
+  // nor the secondary one. Printing it beside a scoped verse tally is
+  // exactly the unit mixing this function exists to stop.
+  if (scoped) {
+    return buildDistribution(
+      hitBooks: listedBooks,
+      bookOrder: bookOrder,
+      oldTestamentBooks: oldTestamentBooks,
+      unit: HitUnit.verses,
+      partial: listTruncated,
+    );
+  }
+
+  if (listTruncated) {
+    if (occurrencesByBook.isEmpty) {
+      // A composed expression: a set operation over lists that were
+      // already cut short, with no uncapped total anywhere to fall back
+      // on. Nothing here is a census.
+      return buildDistribution(
+        hitBooks: listedBooks,
+        bookOrder: bookOrder,
+        oldTestamentBooks: oldTestamentBooks,
+        unit: HitUnit.verses,
+        partial: true,
+      );
+    }
+    return buildDistributionFromCounts(
+      counts: occurrencesByBook,
+      bookOrder: bookOrder,
+      oldTestamentBooks: oldTestamentBooks,
+      unit: HitUnit.occurrences,
+    );
+  }
+
+  return buildDistribution(
+    hitBooks: listedBooks,
+    bookOrder: bookOrder,
+    oldTestamentBooks: oldTestamentBooks,
+    unit: HitUnit.verses,
+    secondaryCounts:
+        occurrencesByBook.isEmpty ? null : occurrencesByBook,
   );
 }
 

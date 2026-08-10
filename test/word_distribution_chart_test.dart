@@ -25,6 +25,7 @@ void main() {
         counts: const {'Revelation': 3, 'Genesis': 1, 'John': 2},
         bookOrder: kScopeAllBooks,
         oldTestamentBooks: oldTestamentBooks,
+        unit: HitUnit.occurrences,
       );
       expect(
         d.books.map((b) => b.englishBook),
@@ -37,6 +38,7 @@ void main() {
         counts: const {'John': 2},
         bookOrder: kScopeAllBooks,
         oldTestamentBooks: oldTestamentBooks,
+        unit: HitUnit.occurrences,
         includeEmpty: true,
       );
       // The strip's whole legibility depends on this: 66 slots, always,
@@ -56,12 +58,14 @@ void main() {
         counts: counts,
         bookOrder: kScopeAllBooks,
         oldTestamentBooks: oldTestamentBooks,
+        unit: HitUnit.occurrences,
         includeEmpty: true,
       );
       final without = buildDistributionFromCounts(
         counts: counts,
         bookOrder: kScopeAllBooks,
         oldTestamentBooks: oldTestamentBooks,
+        unit: HitUnit.occurrences,
       );
       // "In 2 of 66 books" has to read the same under both renderings —
       // that is why bookCount is counted rather than taken from length.
@@ -81,6 +85,7 @@ void main() {
         counts: const {'Genesis': 165, 'Psalms': 695, 'Isaiah': 450},
         bookOrder: kScopeAllBooks,
         oldTestamentBooks: oldTestamentBooks,
+        unit: HitUnit.occurrences,
       );
       expect(d.total, 1310);
       expect(d.oldTestament, 1310);
@@ -94,6 +99,7 @@ void main() {
         counts: const {'Genesis': 2, 'John': 5},
         bookOrder: kScopeAllBooks,
         oldTestamentBooks: oldTestamentBooks,
+        unit: HitUnit.occurrences,
       );
       expect(d.oldTestament, 2);
       expect(d.newTestament, 5);
@@ -108,6 +114,7 @@ void main() {
         counts: const {'Genesis': 1, 'Sirach': 9, '': 4},
         bookOrder: kScopeAllBooks,
         oldTestamentBooks: oldTestamentBooks,
+        unit: HitUnit.occurrences,
       );
       expect(d.books.map((b) => b.englishBook), ['Genesis']);
       expect(d.total, 1);
@@ -118,6 +125,7 @@ void main() {
         counts: const {'Genesis': -5, 'John': 3},
         bookOrder: kScopeAllBooks,
         oldTestamentBooks: oldTestamentBooks,
+        unit: HitUnit.occurrences,
       );
       expect(d.total, 3);
       expect(d.bookCount, 1);
@@ -128,6 +136,7 @@ void main() {
         counts: const {},
         bookOrder: kScopeAllBooks,
         oldTestamentBooks: oldTestamentBooks,
+        unit: HitUnit.occurrences,
         includeEmpty: true,
       );
       expect(d.isEmpty, isTrue);
@@ -144,6 +153,7 @@ void main() {
         counts: const {'Genesis': 4, 'John': 40, 'Acts': 65},
         bookOrder: kScopeAllBooks,
         oldTestamentBooks: oldTestamentBooks,
+        unit: HitUnit.occurrences,
         includeEmpty: true,
       );
       expect(
@@ -157,6 +167,7 @@ void main() {
         counts: const {'Mark': 7, 'Matthew': 7, 'Luke': 7},
         bookOrder: kScopeAllBooks,
         oldTestamentBooks: oldTestamentBooks,
+        unit: HitUnit.occurrences,
       );
       expect(
         booksByCount(d).map((b) => b.englishBook),
@@ -171,11 +182,13 @@ void main() {
         hitBooks: const ['John', 'John', 'Genesis'],
         bookOrder: kScopeAllBooks,
         oldTestamentBooks: oldTestamentBooks,
+        unit: HitUnit.occurrences,
       );
       final fromCounts = buildDistributionFromCounts(
         counts: const {'John': 2, 'Genesis': 1},
         bookOrder: kScopeAllBooks,
         oldTestamentBooks: oldTestamentBooks,
+        unit: HitUnit.occurrences,
       );
       expect(fromHits.total, fromCounts.total);
       expect(fromHits.peak, fromCounts.peak);

@@ -183,3 +183,21 @@ String scopedCountLabel(int inScope, int? total) {
   if (total == null || total <= inScope) return '$inScope';
   return '$inScope / $total';
 }
+
+/// [spec] as a plain set of whole books, or null if it is not one.
+///
+/// The concordance carries a per-book OCCURRENCE map that is uncapped and
+/// exact, and it is addressable only by whole book. So a limit made of
+/// whole books can be answered from it — in the same unit as the
+/// whole-Bible total, with no reference cap in the way — while a limit
+/// that names chapters cannot be, and must fall back to counting listed
+/// verses. Returning null is what tells a caller which of those two it
+/// is holding (#308).
+///
+/// Null for a Verse List Manager limit too, which arrives as keys with
+/// no spec at all.
+Set<String>? wholeBookScope(LimitSpec? spec) {
+  if (spec == null || spec.ranges.isEmpty) return null;
+  if (spec.ranges.any((r) => r.firstChapter != null)) return null;
+  return {for (final r in spec.ranges) r.englishBook};
+}

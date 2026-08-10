@@ -32,6 +32,8 @@ import 'package:seeksparks/constants/book_groups.dart' show oldTestamentBooks;
 import 'package:seeksparks/utils/search_scope.dart'
     show kScopeAllBooks, scopedCountLabel;
 import 'package:seeksparks/utils/search_stats.dart';
+import 'package:seeksparks/utils/strongs_result_counts.dart'
+    show kConcordanceRefCap;
 import 'package:seeksparks/utils/verse_list.dart' show applySearchLimit;
 import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
 import 'package:seeksparks/widgets/word_distribution_strip.dart';
@@ -534,6 +536,7 @@ class WordStatsPane extends StatefulWidget {
     required this.onOpenStrongs,
     this.scope,
     this.scopeName,
+    this.scopeBooks,
     this.version,
     this.currentBook,
     this.onOpenChart,
@@ -561,6 +564,17 @@ class WordStatsPane extends StatefulWidget {
   final Set<String>? scope;
   final String? scopeName;
 
+  /// The same limit as whole BOOKS, when it is expressible that way.
+  ///
+  /// #308: the row prints `inScope / total`, and [total] is the
+  /// concordance's uncapped OCCURRENCE count. Filtering the reference
+  /// list by [scope] answers in VERSES, and from a list that stops at
+  /// 500 — so `12 / 6521` was two different units, the smaller one
+  /// capped. Summing the per-book occurrence map over these books is the
+  /// same unit as the denominator and has no cap at all. Null when the
+  /// limit names chapters or verses, which that map cannot resolve.
+  final Set<String>? scopeBooks;
+
   @override
   State<WordStatsPane> createState() => _WordStatsPaneState();
 }
@@ -577,7 +591,9 @@ class _WordStatsPaneState extends State<WordStatsPane> {
   @override
   void didUpdateWidget(WordStatsPane old) {
     super.didUpdateWidget(old);
-    if (old.words != widget.words || !setEquals(old.scope, widget.scope)) {
+    if (old.words != widget.words ||
+        !setEquals(old.scope, widget.scope) ||
+        !setEquals(old.scopeBooks, widget.scopeBooks)) {
       _future = _load();
     }
   }
@@ -586,27 +602,55 @@ class _WordStatsPaneState extends State<WordStatsPane> {
     final rows = <_StatRow>[];
     final seen = <String>{};
     final scope = widget.scope;
+    final scopeBooks = widget.scopeBooks;
     for (final w in widget.words) {
       if (w.strongs.isEmpty || !seen.add(w.strongs)) continue;
       final result = await ConcordanceService.lookup(w.strongs);
       final entry = await StrongsService.lookup(w.strongs);
       final total = result?.total ?? 0;
+      final byBook = result?.byBook ?? const <String, int>{};
+
+      // Unscoped and whole-book-scoped rows both count OCCURRENCES, so
+      // the pair prints as a ratio. A chapter-level limit can only be
+      // answered from the verse list, which counts something else and
+      // stops at 500 — so that row states a lower bound and no
+      // denominator rather than an exact-looking mixture (#308).
+      final int inScope;
+      final int? denominator;
+      var atLeast = false;
+      if (scope == null) {
+        inScope = total;
+        denominator = null;
+      } else if (scopeBooks != null) {
+        var sum = 0;
+        for (final b in scopeBooks) {
+          sum += byBook[b] ?? 0;
+        }
+        inScope = sum;
+        denominator = total;
+      } else {
+        final listed = result?.refs ?? const <ConcordanceRef>[];
+        inScope = applySearchLimit(listed, scope,
+            (r) => '${r.englishBook}-${r.chapter}-${r.verse}').length;
+        denominator = null;
+        atLeast = listed.length >= kConcordanceRefCap && total > listed.length;
+      }
+
       rows.add(_StatRow(
         word: w,
-        total: total,
-        inScope: scope == null
-            ? total
-            : applySearchLimit(result?.refs ?? const <ConcordanceRef>[], scope,
-                (r) => '${r.englishBook}-${r.chapter}-${r.verse}').length,
+        inScope: inScope,
+        denominator: denominator,
+        atLeast: atLeast,
         gloss: entry?.localizedGloss(widget.locale) ?? '',
         greek: await GreekStatsService.lookup(w.strongs),
         // Every book kept, including the ones at zero: the strip has no
         // labels, so a book's POSITION is the only thing naming it.
         distribution: buildDistributionFromCounts(
-          counts: result?.byBook ?? const <String, int>{},
+          counts: byBook,
           bookOrder: kScopeAllBooks,
           oldTestamentBooks: oldTestamentBooks,
           includeEmpty: true,
+          unit: HitUnit.occurrences,
         ),
       ));
     }
@@ -650,8 +694,18 @@ class _WordStatsPaneState extends State<WordStatsPane> {
                 hint = uiStrings['analysisStatsHint']?[widget.locale] ??
                     'Whole-Bible occurrences, rarest first.';
               } else {
-                final template = uiStrings['scopeStatsHint']?[widget.locale] ??
-                    'In scope / in all, rarest first — limited to {name}.';
+                // A chapter-level limit is answered in verses, with no
+                // denominator — so it gets its own sentence rather than
+                // one that promises a ratio of occurrences (#308).
+                final key = widget.scopeBooks == null
+                    ? 'scopeStatsHintVerses'
+                    : 'scopeStatsHint';
+                final template = uiStrings[key]?[widget.locale] ??
+                    (widget.scopeBooks == null
+                        ? 'Verses in {name} carrying the word, rarest '
+                            'first — not occurrences.'
+                        : 'In scope / in all, rarest first — limited to '
+                            '{name}.');
                 hint = template.replaceAll('{name}', name);
               }
               return Padding(
@@ -686,7 +740,8 @@ class _WordStatsPaneState extends State<WordStatsPane> {
                         ),
                         const SizedBox(width: 6),
                         Text(
-                          scopedCountLabel(r.inScope, r.total),
+                          '${r.atLeast ? '≥' : ''}'
+                          '${scopedCountLabel(r.inScope, r.denominator)}',
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
@@ -715,9 +770,12 @@ class _WordStatsPaneState extends State<WordStatsPane> {
                       WordDistributionStrip(
                         distribution: r.distribution,
                         currentBook: widget.currentBook,
-                        semanticsLabel: uiStrings['wordChartOpen']
-                                ?[widget.locale] ??
-                            'Open the full distribution chart',
+                        // The strip has no labels and no tooltip, so a
+                        // screen reader — and a tablet, which has no
+                        // hover at all — got the shape of the word and
+                        // no idea what the bars counted. Name it (#308).
+                        semanticsLabel: _stripSemantics(
+                            r.distribution, widget.locale, widget.version),
                         onTap: widget.onOpenChart == null
                             ? null
                             : () => widget.onOpenChart!(r.word.strongs),
@@ -822,6 +880,26 @@ Widget _distribution(BuildContext context, GreekWordStats g) {
   );
 }
 
+/// What the label-less strip would say if it could speak: the heaviest
+/// books, in the unit [d] is counted in, and how to open the full chart.
+String _stripSemantics(SearchDistribution d, String locale, String? version) {
+  final open = uiStrings['wordChartOpen']?[locale] ??
+      'Open the full distribution chart';
+  final unit = uiStrings[
+              d.unit == HitUnit.verses
+                  ? 'hitUnitVerses'
+                  : 'hitUnitOccurrences']?[locale] ??
+          (d.unit == HitUnit.verses ? 'verses' : 'occurrences');
+  final top = topBooks(d);
+  if (top.isEmpty) return open;
+  final label = uiStrings['searchStatsTopIn']?[locale] ?? 'Most in ({unit})';
+  final heads = [
+    for (final b in top)
+      '${localeAwareBookName(b.englishBook, locale, version)} ${b.count}'
+  ].join(' · ');
+  return '${label.replaceAll('{unit}', unit)}: $heads · $open';
+}
+
 /// "1 Corinthians" -> "1Co". The pane is 320-560 px wide and these sit
 /// four to a row, so the full name is not an option.
 String _abbr(String book) {
@@ -834,10 +912,11 @@ String _abbr(String book) {
 class _StatRow {
   const _StatRow({
     required this.word,
-    required this.total,
     required this.inScope,
     required this.gloss,
     required this.distribution,
+    this.denominator,
+    this.atLeast = false,
     this.greek,
   });
 
@@ -850,11 +929,22 @@ class _StatRow {
 
   final OriginalWord word;
 
-  /// Occurrences in the whole version, and inside the active search
-  /// limit. Equal when nothing is limiting — the row prints one number
-  /// then, because `12 / 12` says nothing (#280).
-  final int total;
+  /// The number this row is about: occurrences over the whole Bible, or
+  /// inside the active limit when there is one.
   final int inScope;
+
+  /// What [inScope] is a part of, printed beside it — bwh23's
+  /// parenthesised statistic. Null when there is nothing to compare
+  /// against IN THE SAME UNIT, which is the unlimited case (`12 / 12`
+  /// says nothing, #280) and the chapter-level limit (#308).
+  final int? denominator;
+
+  /// [inScope] is a floor, not a count.
+  ///
+  /// Set only where the figure came from the concordance's verse list
+  /// and that list stopped at its cap, so verses beyond the cut cannot
+  /// be seen. `≥12` is true; `12` would not be.
+  final bool atLeast;
 
   final String gloss;
 

@@ -114,6 +114,7 @@ void main() {
         hitBooks: ['John', 'Genesis', 'John', '1 John'],
         bookOrder: order,
         oldTestamentBooks: ot,
+        unit: HitUnit.verses,
       );
       expect(d.books.map((b) => b.englishBook), ['Genesis', 'John', '1 John']);
       expect(d.total, 4);
@@ -125,6 +126,7 @@ void main() {
         hitBooks: ['John'],
         bookOrder: order,
         oldTestamentBooks: ot,
+        unit: HitUnit.verses,
       );
       expect(d.books, hasLength(1));
     });
@@ -134,6 +136,7 @@ void main() {
         hitBooks: ['Genesis', 'Genesis', 'John'],
         bookOrder: order,
         oldTestamentBooks: ot,
+        unit: HitUnit.verses,
       );
       expect(d.oldTestament, 2);
       expect(d.newTestament, 1);
@@ -146,6 +149,7 @@ void main() {
         hitBooks: ['Bel and the Dragon', 'John'],
         bookOrder: order,
         oldTestamentBooks: ot,
+        unit: HitUnit.verses,
       );
       expect(d.books.map((b) => b.englishBook), ['John']);
       expect(d.total, 1);
@@ -156,6 +160,7 @@ void main() {
         hitBooks: const [],
         bookOrder: order,
         oldTestamentBooks: ot,
+        unit: HitUnit.verses,
       );
       expect(d.isEmpty, isTrue);
       expect(d.peak, 0);
@@ -167,6 +172,7 @@ void main() {
         hitBooks: ['Genesis', 'John', 'Matthew', 'Matthew'],
         bookOrder: order,
         oldTestamentBooks: ot,
+        unit: HitUnit.verses,
       );
       final top = topBooks(d, limit: 3);
       expect(top.first.englishBook, 'Matthew');

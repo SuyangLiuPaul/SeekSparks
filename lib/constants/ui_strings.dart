@@ -3288,6 +3288,15 @@ const uiStrings = {
     'zh-Hant': '範圍內 / 全書 出現次數，最罕見在前 · 限定 {name}',
     'en': 'In scope / in all, rarest first — limited to {name}.',
   },
+  // …and that one in turn promises a ratio of occurrences, which a
+  // chapter-level limit cannot supply: only the verse list can be cut at
+  // a chapter, and it counts verses. Say which (#308).
+  'scopeStatsHintVerses': {
+    'zh-Hans': '范围内含此词的节数（非出现次数），最罕见在前 · 限定 {name}',
+    'zh-Hant': '範圍內含此詞的節數（非出現次數），最罕見在前 · 限定 {name}',
+    'en': 'Verses in {name} carrying the word, rarest first — not '
+        'occurrences.',
+  },
   'cmdvBrowseOn': {
     'zh-Hans': '中栏已切换到对照阅读。',
     'zh-Hant': '中欄已切換到對照閱讀。',
@@ -3900,6 +3909,32 @@ const uiStrings = {
   },
   'searchStatsTop': {'zh-Hans': '最多出现于', 'zh-Hant': '最多出現於', 'en': 'Most in'},
   'searchStatsBooks': {'zh-Hans': '卷书', 'zh-Hant': '卷書', 'en': 'books'},
+  // ── What a search-stats number COUNTS (bwh23, task #308) ─────────────
+  // bwh23's "What to Plot" dropdown lists verses-with-a-hit and hits as
+  // separate entries, and on a common word they differ by a third. So the
+  // unit is printed, never implied.
+  'hitUnitVerses': {'zh-Hans': '按节', 'zh-Hant': '按節', 'en': 'verses'},
+  'hitUnitOccurrences': {
+    'zh-Hans': '按出现次数',
+    'zh-Hant': '按出現次數',
+    'en': 'occurrences',
+  },
+  'hitUnitTimesSuffix': {'zh-Hans': '×', 'zh-Hant': '×', 'en': '×'},
+  'searchStatsTopIn': {
+    'zh-Hans': '最多出现于（{unit}）',
+    'zh-Hant': '最多出現於（{unit}）',
+    'en': 'Most in ({unit})',
+  },
+  // A distribution tallied from a list that stopped at the cap traces the
+  // cap, not the word: H3068's listed verses end in Leviticus, so the bars
+  // would put the divine name in 3 books peaking in Exodus where it is in
+  // 36 peaking in Jeremiah. Say that instead of drawing it.
+  'searchStatsTruncated': {
+    'zh-Hans': '未显示分布图：本次结果在 500 节处被截断，图形只会显示截断的位置，而非这个词的实际分布。',
+    'zh-Hant': '未顯示分佈圖：本次結果在 500 節處被截斷，圖形只會顯示截斷的位置，而非這個詞的實際分佈。',
+    'en': 'No distribution: this result was cut at the 500-verse list '
+        'limit, so a chart of it would show the limit rather than the word.',
+  },
   // ── The word-distribution chart (bwh23, task #290) ──────────────────
   // Opened from the strip under each word in the Stats tab.
   'wordChartOpen': {
@@ -3917,6 +3952,12 @@ const uiStrings = {
     'zh-Hant': '按出現次數統計，非節數——同一節可能出現多次。',
     'en': 'Counted by occurrence, not by verse — one verse may carry the '
         'word more than once.',
+  },
+  'wordChartUnitVerses': {
+    'zh-Hans': '按节数统计，非出现次数——同一节出现多次只算一次。',
+    'zh-Hant': '按節數統計，非出現次數——同一節出現多次只算一次。',
+    'en': 'Counted by verse, not by occurrence — a verse carrying the word '
+        'twice counts once.',
   },
   'wordChartInBooks': {
     'zh-Hans': '分布于 {total} 卷中的 {n} 卷',

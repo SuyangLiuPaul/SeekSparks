@@ -1386,8 +1386,16 @@ class _CommandPaneState extends State<CommandPane> {
     // search statistics in their own window, which on a pad would mean
     // a second surface for something you want to read alongside the
     // hits, not instead of them.
-    final distribution = buildDistribution(
-      hitBooks: refs.map((r) => r.englishBook),
+    //
+    // 2026-08-10 (#308): which UNIT it draws is decided by
+    // `strongsDistribution`, not by which list happened to be at hand.
+    // Tallying the refs is right until the bundled list stops at 500,
+    // and then it draws the cap instead of the word.
+    final distribution = strongsDistribution(
+      listedBooks: refs.map((r) => r.englishBook),
+      occurrencesByBook: wb.strongsByBook,
+      listTruncated: wb.strongsListTruncated,
+      scoped: wb.hasSearchLimit,
       bookOrder: const [...canonicalOtBooks, ...canonicalNtBooks],
       oldTestamentBooks: oldTestamentBooks,
     );

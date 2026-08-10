@@ -61,6 +61,26 @@ class WorkbenchProvider extends ChangeNotifier {
   /// H3068 stops reporting "500 verses" against 6,521 occurrences.
   StrongsResultCounts? strongsCounts;
 
+  /// Uncapped occurrences per canonical English book, for a query that
+  /// named exactly ONE Strong's number. Empty for everything else.
+  ///
+  /// The concordance's per-book map is the only whole-Bible per-book
+  /// count in the repo, and it is what lets the results distribution
+  /// draw a common word at all — see `strongsDistribution`. A composed
+  /// expression has no such map, because no uncapped total exists for a
+  /// set operation over several entries.
+  Map<String, int> strongsByBook = const <String, int>{};
+
+  /// Whether the bundled verse list this result was built from stopped
+  /// at the pipeline cap.
+  ///
+  /// Deliberately NOT read off [strongsCounts]: that object answers what
+  /// the HEADER may claim, and it suppresses truncation under a search
+  /// limit on purpose. The distribution needs the raw fact — a scoped
+  /// tally of a capped entry can be missing whole books, and a scope
+  /// does not make it whole again.
+  bool strongsListTruncated = false;
+
   /// The last query, parsed, when it was written in the command-line
   /// grammar (`.love god`, `'in the beginning`, …). The pane echoes it
   /// back in words: a grammar whose operators are punctuation is only
@@ -331,6 +351,8 @@ class WorkbenchProvider extends ChangeNotifier {
     strongsQueryLabel = null;
     strongsRefs = null;
     strongsCounts = null;
+    strongsByBook = const <String, int>{};
+    strongsListTruncated = false;
     commandQuery = null;
     commandIssue = null;
     verbNotice = null;
@@ -352,11 +374,13 @@ class WorkbenchProvider extends ChangeNotifier {
       final bq = parseStrongsBoolean(query);
       if (bq != null) {
         strongsQueryLabel = query.toUpperCase();
-        final refs = _limitRefs(await SearchService.runStrongsBoolean(bq));
+        final composed = await SearchService.runStrongsBoolean(bq);
+        final refs = _limitRefs(composed.refs);
         strongsRefs = refs;
         // No uncapped total exists for a composed expression: it is a
         // set operation over several already-capped lists.
         strongsCounts = StrongsResultCounts(verses: refs.length);
+        strongsListTruncated = composed.truncatedTerms;
       } else if (_singleStrongsRe.hasMatch(query)) {
         final number = query.toUpperCase();
         final result = await ConcordanceService.lookup(number);
@@ -366,6 +390,9 @@ class WorkbenchProvider extends ChangeNotifier {
         final listed = result?.refs ?? const <ConcordanceRef>[];
         final refs = _limitRefs(listed);
         strongsRefs = refs;
+        strongsByBook = result?.byBook ?? const <String, int>{};
+        strongsListTruncated = listed.length >= kConcordanceRefCap &&
+            (result?.total ?? 0) > kConcordanceRefCap;
         strongsCounts = strongsResultCounts(
           listedRefs: listed.length,
           versesShown: refs.length,
@@ -445,6 +472,8 @@ class WorkbenchProvider extends ChangeNotifier {
     strongsQueryLabel = null;
     strongsRefs = null;
     strongsCounts = null;
+    strongsByBook = const <String, int>{};
+    strongsListTruncated = false;
     commandQuery = null;
     commandIssue = null;
     verbNotice = null;
@@ -490,6 +519,8 @@ class WorkbenchProvider extends ChangeNotifier {
     strongsQueryLabel = null;
     strongsRefs = null;
     strongsCounts = null;
+    strongsByBook = const <String, int>{};
+    strongsListTruncated = false;
     commandQuery = null;
     commandIssue = null;
     verbNotice = null;

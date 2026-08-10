@@ -76,7 +76,7 @@ import 'package:seeksparks/services/greek_stats_service.dart';
 import 'package:seeksparks/services/strongs_service.dart';
 import 'package:seeksparks/utils/search_scope.dart' show kScopeAllBooks;
 import 'package:seeksparks/utils/search_stats.dart'
-    show SearchDistribution, buildDistributionFromCounts;
+    show HitUnit, SearchDistribution, buildDistributionFromCounts;
 import 'package:seeksparks/models/bible_place.dart';
 import 'package:seeksparks/widgets/language_switcher_button.dart';
 import 'package:seeksparks/widgets/browse_nav_strip.dart';
@@ -85,7 +85,7 @@ import 'package:seeksparks/widgets/word_analysis_pane.dart';
 import 'package:seeksparks/utils/command_verb.dart'
     show CommandVerbIssue, describeVerbIssue;
 import 'package:seeksparks/utils/search_scope.dart'
-    show limitSpecForBooks, scopeDisplayName;
+    show limitSpecForBooks, scopeDisplayName, wholeBookScope;
 import 'package:seeksparks/widgets/search_scope_sheet.dart';
 import 'package:seeksparks/widgets/version_stack_sheet.dart';
 import 'package:seeksparks/widgets/workbench_chrome.dart';
@@ -1299,6 +1299,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
                 counts: const <String, int>{},
                 bookOrder: kScopeAllBooks,
                 oldTestamentBooks: oldTestamentBooks,
+                unit: HitUnit.occurrences,
               ),
           ranks: data?.ranks ?? const <String, int>{},
           locale: locale,
@@ -1325,6 +1326,9 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         counts: result?.byBook ?? const <String, int>{},
         bookOrder: kScopeAllBooks,
         oldTestamentBooks: oldTestamentBooks,
+        // `byBook` is the uncapped OCCURRENCE map, not the 500-capped
+        // verse list beside it. Naming that is the whole of #308.
+        unit: HitUnit.occurrences,
       ),
       ranks: <String, int>{
         for (final e in greek?.books.entries ?? const <String, (int, int?)>{}.entries)
@@ -2033,6 +2037,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
               onOpenStrongs: (n) => pushPage(StrongsEntryPage(number: n)),
               scope: _wb.searchLimit,
               scopeName: _activeScopeName(mp, locale),
+              scopeBooks: wholeBookScope(_wb.searchLimitSpec),
               version: mp.currentVersion,
               currentBook:
                   v == null ? null : (bookNameToEnglish[v.book] ?? v.book),
