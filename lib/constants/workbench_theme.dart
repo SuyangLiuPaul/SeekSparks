@@ -405,6 +405,30 @@ TextSpan glossSpan(ScriptureSpan span, WbColors wb, {TextStyle? style}) =>
       ],
     );
 
+/// The edition's own chapter-and-verse, where it differs from the
+/// numbering the reader navigated by.
+///
+/// Muted and small, because it is apparatus and must not be mistaken
+/// for the verse — it was mistaken for the verse for as long as it
+/// shipped inside the text. Parenthesised, because that is how the
+/// edition prints it and a bare `102:12` beside Greek reads as a
+/// footnote number.
+///
+/// Not a tap target. A footnote hides its body and needs opening; this
+/// body is four characters and is already on screen, so a marker the
+/// reader has to press would hide what it is there to say.
+TextSpan versificationSpan(ScriptureSpan span, WbColors wb,
+        {double? fontSize}) =>
+    TextSpan(
+      text: '(${span.text}) ',
+      style: TextStyle(
+        color: wb.mutedText,
+        fontSize: fontSize,
+        fontStyle: FontStyle.normal,
+        fontFeatures: const [FontFeature.tabularFigures()],
+      ),
+    );
+
 /// Whether a mark underlines its word.
 ///
 /// Only the two marks that name the reader's OWN subject do — the word

@@ -701,6 +701,8 @@ class _TranslationLine extends StatelessWidget {
                 ScriptureSpanKind.divineName ||
                 ScriptureSpanKind.gloss =>
                   glossSpan(span, wb),
+                ScriptureSpanKind.versification =>
+                  versificationSpan(span, wb, fontSize: t.text * 0.8),
                 ScriptureSpanKind.note => WidgetSpan(
                     alignment: PlaceholderAlignment.top,
                     child: Tooltip(
@@ -814,6 +816,10 @@ class _TaggedLine extends StatelessWidget {
                         if (span.kind == ScriptureSpanKind.divineName ||
                             span.kind == ScriptureSpanKind.gloss)
                           glossSpan(span, wb)
+                        else if (span.kind ==
+                            ScriptureSpanKind.versification)
+                          versificationSpan(span, wb,
+                              fontSize: t.text * 0.8)
                         else
                           TextSpan(
                             text: span.text,

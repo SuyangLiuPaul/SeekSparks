@@ -37,6 +37,20 @@
 /// Name (Matthew 22:44 carries both in one verse, which is why they
 /// cannot be told apart by styling one of them as an insertion).
 ///
+/// 2026-08-11: a third thing was hiding in `lxxwh` — 4,687 markers of
+/// the form `(102:12)`, one in every seventh verse of the Septuagint.
+/// They are not scripture and not a footnote: they are the EDITION'S
+/// OWN chapter-and-verse for the words that follow, printed because the
+/// Greek Psalter numbers Psalm 103 as 102 and Jeremiah barely agrees
+/// with the Hebrew at all. Rendered raw they read as text, and in the
+/// tagged layer the marker was glued to the next word, so 4,400 of them
+/// inherited that word's Strong's number: tapping `(5:27)` in
+/// 1 Chronicles 6:1 answered G5207 υἱοί, a masculine plural noun.
+///
+/// It is its own kind for the same reason `[雅伟]` is: a reference is
+/// not a footnote and not an insertion, and typing it as either states
+/// something the edition does not say.
+///
 /// Pure parsing. The widget decides what italic and muted look like.
 library;
 
@@ -58,6 +72,13 @@ enum ScriptureSpanKind {
   /// The same editorial device naming a different referent: `主[基督]`,
   /// this κύριος is the Messiah.
   gloss,
+
+  /// The edition's own chapter-and-verse for the words that follow,
+  /// where it differs from the numbering the record is keyed on.
+  /// `<vs:102:12>` on Psalms 103:12 — this is Psalm 102:12 in the
+  /// Septuagint. The body is the bare reference; the widget supplies
+  /// the parentheses.
+  versification,
 }
 
 /// Divine-name tokens, in every form the bundled assets use.
@@ -119,9 +140,12 @@ class ScriptureSpan {
   int get hashCode => Object.hash(text, kind);
 }
 
-// `<note: Or "And">` — the body may contain quotes and punctuation but
-// never a closing angle bracket, so a non-greedy scan to `>` is exact.
-final RegExp _noteRe = RegExp(r'<note:\s*([^>]*)>');
+// `<note: Or "And">` and `<vs:102:12>`. The body may contain quotes and
+// punctuation but never a closing angle bracket, so a non-greedy scan
+// to `>` is exact. Both are matched by one expression so the scan below
+// stays a two-way race against the square bracket rather than a
+// three-way one; group 1 says which token was found.
+final RegExp _angleRe = RegExp(r'<(note|vs):\s*([^>]*)>');
 
 // `[was]`. Deliberately does NOT match across `]` so two adjacent
 // insertions stay two spans.
@@ -172,21 +196,26 @@ List<ScriptureSpan> parseScripture(String raw) {
   // One pass over whichever marker comes first.
   var rest = raw;
   while (rest.isNotEmpty) {
-    final note = _noteRe.firstMatch(rest);
+    final angle = _angleRe.firstMatch(rest);
     final sup = _suppliedRe.firstMatch(rest);
-    if (note == null && sup == null) {
+    if (angle == null && sup == null) {
       addPlain(rest);
       break;
     }
-    final noteAt = note?.start ?? 1 << 30;
+    final angleAt = angle?.start ?? 1 << 30;
     final supAt = sup?.start ?? 1 << 30;
-    if (noteAt <= supAt) {
-      addPlain(rest.substring(0, note!.start));
-      final body = (note.group(1) ?? '').trim();
+    if (angleAt <= supAt) {
+      addPlain(rest.substring(0, angle!.start));
+      final body = (angle.group(2) ?? '').trim();
       if (body.isNotEmpty) {
-        out.add(ScriptureSpan(body, ScriptureSpanKind.note));
+        out.add(ScriptureSpan(
+          body,
+          angle.group(1) == 'vs'
+              ? ScriptureSpanKind.versification
+              : ScriptureSpanKind.note,
+        ));
       }
-      rest = rest.substring(note.end);
+      rest = rest.substring(angle.end);
     } else {
       addPlain(rest.substring(0, sup!.start));
       final body = sup.group(1) ?? '';
@@ -216,6 +245,10 @@ String scriptureReadingText(String raw) {
   for (final s in parseScripture(raw)) {
     switch (s.kind) {
       case ScriptureSpanKind.note:
+      // The Septuagint's own verse number is a reference, not a word of
+      // the verse. Leaving it in would put `102:12` into the search
+      // index and into every clipboard paste of Psalm 103:12.
+      case ScriptureSpanKind.versification:
         continue;
       case ScriptureSpanKind.divineName:
       case ScriptureSpanKind.gloss:
@@ -243,10 +276,16 @@ List<String> scriptureNotes(String raw) => [
         if (s.kind == ScriptureSpanKind.note) s.text,
     ];
 
+/// Every reference the edition prints for itself, in order.
+List<String> scriptureVersificationRefs(String raw) => [
+      for (final s in parseScripture(raw))
+        if (s.kind == ScriptureSpanKind.versification) s.text,
+    ];
+
 /// Whether a verse carries any apparatus at all — lets a caller skip
 /// span rendering entirely for the ~half of verses that are plain.
 bool hasScriptureMarkup(String raw) =>
-    raw.contains('<note:') || raw.contains('[');
+    raw.contains('<note:') || raw.contains('<vs:') || raw.contains('[');
 
 // ── Lexicon entries ──────────────────────────────────────────────────
 

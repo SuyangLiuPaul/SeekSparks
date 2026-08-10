@@ -656,6 +656,13 @@ String copyVerseText(String raw, CopyOptions o) {
         // never wrote. Dropping these brackets does not unmark an
         // insertion, it fabricates a reading, so they always stay.
         buf.write('[${s.text}]');
+      case ScriptureSpanKind.versification:
+        // The Septuagint's own number is a reference, not a word, so it
+        // travels with the apparatus rather than with the verse. A
+        // reader pasting Psalm 103:12 into a sermon wants the Greek; a
+        // reader who asked for notes is doing textual work and wants to
+        // know this is LXX 102:12.
+        if (o.includeNotes) buf.write('(${s.text}) ');
       case ScriptureSpanKind.note:
         // The leading space matters: a note attaches to the word it
         // annotates with no space in the source (`Now<note: Or "And">`),

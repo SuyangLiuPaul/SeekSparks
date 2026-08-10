@@ -165,6 +165,28 @@ List<InlineSpan> buildVerseContentSpans({
       lastPart = part;
       continue;
     }
+    // `<vs:102:12>` — the edition's own chapter-and-verse for what
+    // follows. Muted and smaller, and deliberately not a tap target:
+    // the whole body is already on screen, so a marker that had to be
+    // opened would hide what it exists to say.
+    if (versificationPattern.hasMatch(part)) {
+      final ref = versificationPattern.firstMatch(part)!.group(1)!;
+      spans.add(TextSpan(
+        text: '($ref) ',
+        style: TextStyle(
+          fontSize: settings.fontSize * 0.8,
+          fontFamily: settings.fontFamily,
+          fontFamilyFallback: kCjkFontFallback,
+          height: settings.lineSpacing,
+          color: isSelected
+              ? Theme.of(context).colorScheme.onPrimaryContainer
+              : Theme.of(context).colorScheme.onSurfaceVariant,
+          backgroundColor: spanBgColor,
+        ),
+      ));
+      lastPart = part;
+      continue;
+    }
     if (bracePattern.hasMatch(part)) {
       final annotation = bracePattern.firstMatch(part)!.group(1)!;
       // 2026-05-19 (v1.2.55): theme-aware border + bg for the

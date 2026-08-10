@@ -7,14 +7,21 @@ import 'package:seeksparks/utils/scripture_markup.dart' show isReferentGloss;
 /// Matches `<note:...>` tags embedded in verse text.
 final notePattern = RegExp(r'<note:([^>]+)>');
 
+/// Matches `<vs:...>` — the edition's own chapter-and-verse for the
+/// words that follow, where it differs from the numbering the record is
+/// keyed on. Only `lxxwh` carries them, in 4,541 verses. See
+/// `ScriptureSpanKind.versification`.
+final versificationPattern = RegExp(r'<vs:([^>]+)>');
+
 /// Matches `{...}` curly-brace annotations (cross-references, commentary).
 final bracePattern = RegExp(r'\{([^}]+)\}');
 
 /// Matches `[...]` square-bracket annotations (emphasis, alternative readings).
 final squarePattern = RegExp(r'\[([^\]]+)\]');
 
-/// Matches any annotation token: braces, brackets, or note tags.
-final combinedPattern = RegExp(r'(\{[^}]+\}|\[[^\]]+\]|<note:[^>]+>)');
+/// Matches any annotation token: braces, brackets, note or reference tags.
+final combinedPattern =
+    RegExp(r'(\{[^}]+\}|\[[^\]]+\]|<note:[^>]+>|<vs:[^>]+>)');
 
 /// Round 56: pilcrow (¶) and the very-similar paragraph mark unicode
 /// characters appear in some Bible versions (KJV-style asset files
@@ -90,6 +97,7 @@ String sanitizeVerseText(String text) {
   return _collapsePostStripDuplicates(_normalizeDivineNames(text
           .replaceAll('\n', '')
           .replaceAll(notePattern, '')
+          .replaceAll(versificationPattern, '')
           .replaceAllMapped(bracePattern, (m) => m.group(1) ?? '')
           .replaceAll(_pilcrowPattern, ''))
       .trim());
@@ -101,6 +109,7 @@ String sanitizeVerseText(String text) {
 String sanitizeForSearch(String text) {
   return _collapsePostStripDuplicates(_normalizeDivineNames(text
           .replaceAll(notePattern, '')
+          .replaceAll(versificationPattern, '')
           .replaceAllMapped(bracePattern, (m) => m.group(1) ?? '')
           .replaceAll(_pilcrowPattern, ''))
       .trim());
