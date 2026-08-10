@@ -702,6 +702,62 @@ can be verified from within the repo.
 
 ---
 
+### Check 15 — the concordance's verse list is a 500-entry PREFIX, and a scoped search reads it as the whole. OPEN
+
+Found while fixing #308. `assets/strongs/concordance.json` describes each
+Strong's number twice, and the two are not the same kind of fact:
+
+* **`b`** — occurrences per book. Uncapped, and it sums exactly to `n`
+  for all 14,039 entries (there is already a test for that).
+* **`r`** — the verse list. The build pipeline stops it at **500 entries,
+  in canonical order**, and nothing in the file marks where the cut fell.
+
+**123 entries reach the cap.** For those, `r` is not a sample of the
+word — it is a prefix of the canon. H3068 (יהוה, 6,521 occurrences in 36
+books) has an `r` that ends at Leviticus 2:14: Genesis 141 verses,
+Exodus 341, Leviticus 18, and then nothing. Jeremiah, where the name
+actually peaks at 712, is not in the list at all.
+
+#308 fixed what this did to the **chart** — the distribution is now
+tallied from `b` whenever `r` is capped, and refused outright where
+neither source is a census. It did **not** fix what it does to
+**results**, because that cannot be fixed from the reader side:
+
+> A search limit filters `r`. So `l jer` followed by `H3068` returns
+> **zero verses**, in a book that contains the divine name 712 times.
+> The pane says "no results in this scope" and it is wrong.
+
+The same applies to any of the 123 under any limit that falls outside
+the prefix, and to every composed expression over them: `G3588 AND
+G2532` intersects two prefixes that both end inside Matthew, so its 335
+results are *all* in Matthew and it presents that as an answer about the
+New Testament.
+
+**The repair is to regenerate `r` without a cap, from
+`assets/originals/`**, which carries the per-verse Strong's tagging the
+concordance was built from. Rebuilding three entries from the tagged
+corpus and comparing (2026-08-10):
+
+| | corpus occurrences | asset `n` | `b` matches | corpus verses | asset `r` |
+|---|---|---|---|---|---|
+| G25 | 143 | 143 | yes | 110 | 110, and the verse sets are **identical** |
+| H3068 | 6,521 | 6,521 | yes | 5,522 | 500, a strict **prefix** of them |
+| G3588 | 19,859 | 19,859 | yes | 6,977 | 500, a strict **prefix** of them |
+
+So the source is sound and the generator is faithful — the cap is a
+size decision, not a data limitation, and the uncapped list is
+recoverable exactly. That also gives the budget question its real shape:
+the missing verses are not a rounding error (H3068 alone is 5,022 of
+them), which is why this is recorded here as its own item rather than
+bundled into #308.
+
+**Until it is repaired, the honest statement is the one the surfaces now
+make:** the header says the list was cut, the chart refuses to draw from
+it, and the Stats tab prints `≥N` rather than `N` for any figure derived
+from a cut list. None of that makes a scoped *result* correct.
+
+---
+
 ## Not checked yet
 
 - Verse **text** itself, against an *external* witness. Checks 10–12 now
@@ -733,7 +789,11 @@ can be verified from within the repo.
 3. Per-record date sourcing (#292 owns `hebrew_kings.json`).
 4. The LEB's `{…}` idiom braces in the 660 imported verses, if a witness
    that preserves them can be found.
-5. The remaining verse-rendering surfaces, audited but not exhaustively:
+5. **Check 15** — regenerate `concordance.json`'s `r` without the
+   500-entry cap, so a scoped search over a common word stops returning
+   zero. Blocked on an asset-size decision, not on data: the tagged
+   corpus reproduces the capped entries exactly.
+6. The remaining verse-rendering surfaces, audited but not exhaustively:
    check 14 covers the reader, Browse, the sermon-citation popup, the
    two search-key caches and the clipboard. Strong's-driven surfaces
    (KWIC, concordance) read the tagged layer, which a placeholder has no
