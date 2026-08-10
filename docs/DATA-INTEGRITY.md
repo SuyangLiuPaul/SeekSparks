@@ -68,6 +68,10 @@ believe it is fine" and "we looked".
 | 18 | Traditional sermon bodies shorter than the Simplified they convert | 289 pairs | 3 → **0** | **fixed**, now a test |
 | 19 | Chinese sermon bodies that are a summary, not a translation | 289 sermons | **10** | **not repairable**, marked and disclosed, now a test |
 | 20 | Does a reference hold the right verse, or its neighbour's | 399,256 comparisons | 4 refs in 2 places → **0** | **fixed**, now a test |
+| 21 | An edition's own verse markers printed as scripture (lxxwh) | 31,102 verses | 4,687 markers in 4,541 verses → **0** | **fixed**, now a test |
+| 22a | Source alignment codes printed as scripture (cuvs-yhwh) | 533,914 codes | 329 stray chars in 169 verses → **0** | **fixed**, now a test |
+| 22b | Table markup and non-word placeholders printed as scripture (bsb) | 386,063 runs | 726 tags + 25,357 placeholders → **0** | **fixed**, now a test |
+| 22c | Do a word's Strong's digits survive the import (bsb) | 386,063 runs | **311,267 truncated** → **0** | **fixed**, now a test |
 
 ---
 
@@ -1124,35 +1128,107 @@ Repaired by `tools/fix_lxx_versification.py`, which is idempotent.
   statement.
 - The same defect class, in two other editions — see check 22.
 
-### Check 22 — two more tagged layers print their source's markup as scripture. FOUND, not yet fixed
+### Check 22 — two more tagged layers print their source's markup as scripture. FIXED in v1.6.101
 
 Found by asking check 21's question of every edition rather than only
 the one that raised it. The **text** layers are all clean: outside
 lxxwh's new `<vs:>` tokens, the only angle-bracket token anywhere in
-`assets/*.json` is the legitimate `<note: …>`. The **tagged** layers are
-not:
+`assets/*.json` is the legitimate `<note: …>`. Two **tagged** layers
+were not, and chasing the second one down turned up a far larger defect
+that the markup question would never have asked about.
 
-- **`assets/tagged/bsb/*.json` — 726 raw HTML tags across 145 verses in
-  8 books.** Mostly the source's verse-number anchor,
-  `<span class=|reftext|><a href=|#|><b>1</b></a></span>`, 116 of them,
-  plus 4 `<p class=|indent2|>`-style paragraph tags and some unmatched
-  `</span>` closers. **All 145 affected runs carry a Strong's number**,
-  so this is check 21's defect exactly: the markup renders as scripture
-  *and* answers a lexicon tap with the following word's entry. Confirmed
-  on screen, not just in the file — BSB Psalms 103:1 draws the span
-  literally in the Browse pane. The `|` where a `"` belongs says the
-  quoting was lost somewhere upstream of us.
-- **`assets/tagged/cuvs-yhwh/*.json` — 133 leaked alignment codes across
-  126 verses in 27 books**, of the form `<WH1288s>`, `<H518>`,
-  `<V3808>`, `<WG2064s>`. 128 of the runs carry a Strong's. These render
-  literally: 「他便叫`<WH1288s>`骆驼」.
+**22a — `assets/tagged/cuvs-yhwh/*.json`, the leaked alignment codes.**
+The importer's `TAG_RE` recognised only the well-formed shape
+`<W([HG])(\d+)(x?)>`. The MySword module it reads is hand-edited, and
+**133 of its 533,914 codes are damaged** — a dropped bracket, a doubled
+`W`, a character typed into the middle of the code. Unrecognised, they
+were treated as TEXT, which did two things: it drew them on screen
+(「他若`<H518>`行恶」) and, because a code that is text does not split the
+run, it left 他若 carrying **H4672 — the number of a word further on**.
+The stray-character count is **329 across 169 verses in 29 books**, not
+the 133/126/27 first reported here; that first figure came from a
+paired-token regex and could not see a fragment like `<WH3808怜恤` or
+`以色列>人` whose partner bracket was gone.
 
-Both are smaller than check 21 by two orders of magnitude, and neither
-is in the reading text, so a reader who never opens Browse or the word
-study will not meet them. They are recorded here rather than fixed in
-the same pass because a repair needs the same treatment check 21 got —
-measure the shapes, decide what each token *is*, and type it — and that
-is its own iteration.
+Repaired by widening the tokenizer to recognise every damaged shape, and
+then deciding, per shape, whether the *number* survives:
+
+- **Kept** where pure normalisation recovers it — case, `X`→`x`, a
+  doubled or missing `W`, bare digits taking their language from the
+  testament.
+- **Dropped, deliberately**, where the digits are in doubt: `3WH808`,
+  `WH85x3`, `WH448x0`, `WG358x8`, and any prefix that is not W/H/G
+  (`V3808`, `WJ3808`, `MWH8802`). The run still prints; it simply
+  answers nothing. **Under-attribution is recoverable, a wrong Strong's
+  is not.**
+- Five codes with a Chinese character inside them were decided one at a
+  time against the printed edition and written into a documented
+  `DAMAGED` table, because each is a different question: in `<你们WH935>`
+   你们 is scripture (Nu 15:18 「我所领你们进去的那地」), in `<WH的8687>`
+  the 的 is not (1Ch 21:17). **Two characters are dropped on purpose**,
+  both checked against the printed text, both absent from it.
+- The `s` suffix (`<WH1288s>`) was not guessed. A corpus-witness script
+  asked how the same Chinese word is tagged everywhere the tags are well
+  formed — 厚待/H3190, H3318 出来, H7925 清早, H2421 救 — and it reads as
+  a plain lexical tag.
+
+Verified: stray angle characters **329 → 0**, Latin letters **→ 0**,
+agreement with the printed edition **27,448 → 27,592 verses (88.71%)**,
+**2** Chinese characters dropped and both accounted for above, the two
+Chinese lexicons regenerated **byte-identical**.
+
+**22b — `assets/tagged/bsb/*.json`, the markup, and then the numbers.**
+The markup half was as described: **726 raw HTML tags across 145 verses
+in 8 books**, mostly the verse-number anchor
+`<span class=|reftext|><a href=|#|><b>1</b></a></span>`, plus **25,357
+runs that are not words at all** — 20,508 `. . .` and 4,849 `vvv`, the
+tables' two ways of writing "this original is folded into a neighbouring
+English phrase". **24,586 of those carried a Strong's number**, so a tap
+on a spaced ellipsis answered with a lexicon entry for a word that was
+never printed.
+
+Fixing that meant re-reading the tables, and the re-read is what exposed
+the real defect. **311,267 of the BSB tagged layer's 386,063 runs —
+80.6% — carried a Strong's number that was the first digit of the right
+one.** H7225 בְּרֵאשִׁית "in the beginning" shipped as **H7**; H6870
+Zeruiah as **H6**; H8352 Seth as **H8**. The cause is one helper doing
+two jobs: `cell()` groups thousands, correctly, because the tables store
+a count like 74,600 as a number in some rows and as text in others and
+the Bible prints the comma. Fed the Strong's column it turned 7225 into
+`"7,225"`, and `re.match(r'\d+', …)` stopped at the comma. The same
+helper fed the column that orders the original words, where the grouped
+string failed `int()` and fell back to `0` — so **970,285 rows shared
+one sort key**, and the walk that decides which untranslated original
+attaches to which English word was running on nothing. Both columns now
+go through a `code()` reader that never groups; the sort key is a float,
+because 72 rows carry a fractional one to place a split word between two
+whole-numbered originals.
+
+**Why nothing caught it, which is the part worth keeping.** A truncated
+Strong's number is still a real Strong's number. All **432,859** of them
+resolved against `assets/strongs/` before the fix as well as after — H7
+has an entry, and it is a plausible-looking one. Every internal test
+that could be written about the shape of the data passed. What catches
+it is the **second witness**: `assets/tagged/cuvs-yhwh/` is an
+independent alignment of the same originals, made by different people
+from the other side of the language, and the two agreed on **13.36%** of
+each verse's numbers. They now agree on **92.79%** across the 30,746
+verses both cover, and that ratio is the regression test. The residue is
+genuine alignment difference — the two editions disagree about which
+word an article or a particle rides on.
+
+Verified: **31,086 of 31,086** verses tagged; **30,838** reconstruct the
+printed text of `assets/bsb.json` exactly (was 8,269), the remaining 248
+bounded by test; **0** runs carry markup or a placeholder; **0** runs
+lost or gained a number, so the repair only ever corrected a value; the
+distinct lexicon entries the layer can reach went from **1,861 to
+13,115**.
+
+**Left alone, named as such.** In cuvs-yhwh a run's primary number also
+appears in its own implied list in **858 of 367,650** runs (844 before
+this pass). That is pre-existing, it is a duplicate rather than a false
+statement, and untangling it is a separate question about what the
+implied list means.
 
 ---
 

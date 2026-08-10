@@ -51,7 +51,51 @@ BOOKS = [
 ]
 
 # `<WH7225>` lexical, `<WH8804>` grammar, `<WH853x>` implied-word marker.
-TAG_RE = re.compile(r'<W([HG])(\d+)(x?)>')
+#
+# 133 of the module's 533,914 codes are damaged — it is hand-edited, and a
+# dropped bracket or a doubled prefix is invisible to the editor. A regex
+# that only knows the well-formed shape does not skip them, it treats them
+# as TEXT: `他若<H518>行恶` printed the code as scripture, and the Chinese
+# on either side was glued into one run, so the word's own Strong's number
+# described only part of it. Every shape is enumerated in
+# docs/DATA-INTEGRITY.md, check 22.
+#
+# Four alternatives, in order: well delimited (whatever is inside);
+# opening bracket present, closing one lost or mistyped as `)` or `"`;
+# opening bracket lost; BOTH brackets lost. Matching the damage is what
+# stops it printing — whether the number is trustworthy is a separate
+# question, below.
+#
+# The last alternative is the only one that could touch undamaged text, so
+# it demands the full `WH`/`WG` prefix, which no Chinese verse and none of
+# the 〔…〕 notes contain — the notes carry cross-references like 创10:3,
+# digits but never Latin. Jeremiah 34:8 is the one verse that needs it:
+# `的仆人WH853x<WH5650>` printed the object marker in the middle of a word.
+TAG_RE = re.compile(
+    r'<[A-Za-z0-9]*>'
+    r'|<[A-Za-z]{0,4}\d+[A-Za-z]?[)"]?'
+    r'|[A-Za-z]{1,4}\d+[A-Za-z]?>'
+    r'|[Ww][HhGg]\d+[A-Za-z]?')
+
+# A recoverable code: an optional W/H/G prefix, the digits, an optional
+# one-letter suffix. `WWH853x`, `wh5921`, `H518` and a bare `3605` all
+# normalise to a certain reading. `3WH808`, `WH85x3` and `WG358x8` do not
+# — the digits themselves are in doubt — and neither do `V3808`, `WJ3808`
+# and `MWH8802`, whose prefix is not a letter this module uses. Those are
+# recognised as tags so they stop printing, and their number is DROPPED.
+# Under-attribution is recoverable; a wrong Strong's on a word is not.
+CODE_RE = re.compile(r'^([WHGwhg]*)(\d+)([A-Za-z]?)$')
+
+# Five codes have a character typed inside them, so no rule can say whether
+# it is scripture or a slip. Each is decided against assets/cuvs-yhwh.json,
+# the same text without the tagging, and quoted here so the call is auditable.
+DAMAGED = {
+    '<你们WH935>': '你们<WH935>',  # Nu 15:18 「我所领你们进去的那地」 — 你们 is text
+    '<人WH3478>': '人<WH3478>',    # 2Sa 24:1 「又向以色列人发怒」 — 人 is text
+    '<W“H4100>': '<WH4100>',       # 2Sa 15:19 「为什么与我们同去呢」 — no 「 there
+    '<WH的8687>': '<WH8687>',      # 1Ch 21:17 「行了恶，但这群羊」 — no 的 there
+    '<WH873我7>': '',              # Jer 4:22 「愚昧无知的儿女」 — no 我, and 873/7 is unrecoverable
+}
 # Everything outside a tag that is punctuation-only should not become its
 # own hover target — it belongs to the run before it.
 PUNCT_ONLY = re.compile(r'^[\s，。；：、？！「」“”‘’（）《》…—·\-,.;:?!\'"()\[\]]+$')
@@ -63,7 +107,7 @@ PUNCT_ONLY = re.compile(r'^[\s，。；：、？！「」“”‘’（）《�
 LEXICAL_MAX = {'H': 8674, 'G': 5624}
 
 
-def parse_tagged(scripture):
+def parse_tagged(scripture, default_kind='H'):
     """`起初<WH7225>，神<WH430>…` → [{'w','s','g','i'}] runs.
 
     The text is authored as alternating chunks: some Chinese, then the
@@ -79,17 +123,44 @@ def parse_tagged(scripture):
     So: the primary number is the first NON-implied lexical tag;
     implied ones go to `i`, and grammar codes (Hebrew stems/aspects,
     Greek tense-voice-mood, numbered above the lexical range) to `g`.
+
+    Only `x` marks an implied word. 45 damaged codes end in `s` instead,
+    and `s` is not the same claim: `厚待<WH3190s>亚伯兰` sits on H3190
+    יָטַב, "treat well", which is exactly what 厚待 renders, and where the
+    corpus can witness the pairing elsewhere (H3318 出来, H7925 清早,
+    H2421 救) it agrees. So `s` is read as a plain lexical tag on the word
+    before it, not as an implied one — the reading the evidence supports
+    and the one that leaves a visible word tagged rather than bare.
     """
+    for bad, good in DAMAGED.items():
+        scripture = scripture.replace(bad, good)
+
     # Split into [text, tag, text, tag, …] preserving order.
     parts = []
     pos = 0
+
+    def text(s):
+        # A bracket whose partner was consumed by the tag beside it. The
+        # Chinese text never contains one, so anything left is damage.
+        s = s.replace('<', '').replace('>', '')
+        if s:
+            parts.append(('t', s))
+
     for m in TAG_RE.finditer(scripture):
         if m.start() > pos:
-            parts.append(('t', scripture[pos:m.start()]))
-        parts.append(('w', (m.group(1), int(m.group(2)), m.group(3) == 'x')))
+            text(scripture[pos:m.start()])
         pos = m.end()
+        code = CODE_RE.match(m.group(0).strip('<>)"'))
+        if not code:
+            continue  # recognised as a tag, so it cannot print; number dropped
+        prefix, digits, suffix = code.group(1).upper(), code.group(2), code.group(3)
+        # The prefix names the language where it is present. Where it was
+        # lost with the bracket, the testament decides: this module tags the
+        # Hebrew Bible with H and the Greek with G, and never mixes them.
+        kind = 'H' if 'H' in prefix else 'G' if 'G' in prefix else default_kind
+        parts.append(('w', (kind, int(digits), suffix.lower() == 'x')))
     if pos < len(scripture):
-        parts.append(('t', scripture[pos:]))
+        text(scripture[pos:])
 
     runs = []
     pending = ''
@@ -164,7 +235,8 @@ def import_bible(db_path, out_dir):
             'select Book, Chapter, Verse, Scripture from bible'):
         if not (1 <= book <= 66):
             continue
-        by_book.setdefault(book, {})[f'{ch}:{vs}'] = parse_tagged(text or '')
+        by_book.setdefault(book, {})[f'{ch}:{vs}'] = parse_tagged(
+            text or '', 'H' if book <= 39 else 'G')
     con.close()
 
     os.makedirs(out_dir, exist_ok=True)

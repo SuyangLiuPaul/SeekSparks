@@ -63,10 +63,26 @@ PLACEHOLDER_RE = re.compile(r'^(?P<pre>[(\[“‘]*)\s*(?P<core>\. \. \.|vvv|-)'
 # The verse-number anchor and the paragraph/list markup ride in the same
 # cells as the quotation marks. They are the source's typesetting, not the
 # translation, and the app draws its own verse numbers.
+#
+# The anchor must go with its contents. Stripping only the tags leaves the
+# number behind, and it lands on the front of the next word: `1O LORD, `
+# carrying H3, in the 115 psalms whose superscription pushes verse 1's
+# first word off the head of the verse.
+ANCHOR_RE = re.compile(r'<span class=\|reftext\|>.{0,200}?</span>')
 HTML_RE = re.compile(r'<[^<>]{0,200}>')
+
+
+def unmarkup(s):
+    return HTML_RE.sub('', ANCHOR_RE.sub('', s))
 
 # BSB sets the em dash tight against the words on both sides.
 TIGHT_AFTER = ('—', '–')
+
+# A cell can carry the table's own spacing rather than the Bible's:
+# `Likewise , every`, `( [whom]`, `and he — Jerubbaal`. The printed text is
+# the authority and sets all three tight, so the space goes. Proved against
+# bsb.txt rather than assumed: the rule repairs 96 verses and breaks none.
+TYPESET_RE = re.compile(r'\s+([,.;:?!”’)\]])|([(\[“‘])\s+|\s*([—–])\s*')
 
 # The tables mark words with no counterpart in the original two ways:
 # `[were]` (18,689 cells) and `{will}` (1,270, almost all auxiliaries and
@@ -87,15 +103,27 @@ LOOSE_PLACEHOLDER_RE = re.compile(r'(?:\. \. \.|(?<![\w])vvv(?![\w]))')
 
 
 def cell(row, i):
-    """A cell as a clean string, with the table's null marker removed."""
+    """A printed-text cell as a clean string, with the null marker removed.
+
+    A count like 74,600 is stored as a number in some rows and as text in
+    others; str() on the number drops the separator the Bible prints. That
+    grouping is right for text and wrong for data, so the Strong's columns
+    are read by `code` instead.
+    """
     if i >= len(row) or row[i] is None:
         return ''
     raw = row[i]
-    # A count like 74,600 is stored as a number in some rows and as text in
-    # others. str() on the number drops the separator the Bible prints.
     if isinstance(raw, int) and not isinstance(raw, bool) and abs(raw) >= 1000:
         return f'{raw:,}'
     v = str(raw).strip()
+    return '' if v in EMPTY else v
+
+
+def code(row, i):
+    """A Strong's cell as a bare string — never grouped into thousands."""
+    if i >= len(row) or row[i] is None:
+        return ''
+    v = str(row[i]).strip()
     return '' if v in EMPTY else v
 
 
@@ -148,7 +176,7 @@ def runs_for_verse(rows):
     ordered = []
     for i, r in enumerate(rows):
         lang = cell(r, 4)
-        num = cell(r, 10) if lang == 'Hebrew' else cell(r, 11)
+        num = code(r, 10) if lang == 'Hebrew' else code(r, 11)
         strongs = ''
         if num:
             # Some cells carry a trailing letter (e.g. 1254a) marking a
@@ -158,14 +186,14 @@ def runs_for_verse(rows):
             if digits:
                 strongs = ('H' if lang == 'Hebrew' else 'G') + digits.group(0)
         raw = BRACES_RE.sub(lambda m: f'[{m.group(1)}]' if m.group(1) else '',
-                            cell(r, 18)).strip()
-        lead = HTML_RE.sub('', cell(r, 17))
+                            unmarkup(cell(r, 18))).strip()
+        lead = unmarkup(cell(r, 17))
         # pnc, endQ and End text are three columns of trailing printed
         # characters. Reading only the first is what left 1,986 verses
         # short of their closing quotation mark or bracket.
-        trail = (cell(r, 19)
-                 + SUPPLIED_RE.sub('', cell(r, 20))
-                 + SUPPLIED_RE.sub('', HTML_RE.sub('', cell(r, 22))))
+        trail = (unmarkup(cell(r, 19))
+                 + SUPPLIED_RE.sub('', unmarkup(cell(r, 20)))
+                 + SUPPLIED_RE.sub('', unmarkup(cell(r, 22))))
         word = raw
         rendered = bool(raw)
         if rendered:
@@ -179,11 +207,20 @@ def runs_for_verse(rows):
                 word = LOOSE_PLACEHOLDER_RE.sub(' ', raw)
                 word = re.sub(r'\s+', ' ', word).strip()
                 rendered = bool(word)
-        sort_raw = cell(r, 0) if lang == 'Hebrew' else cell(r, 1)
+            if rendered and not re.search(r'\w', word):
+                # A cell holding only a comma or a closing quote is that
+                # punctuation, not a word: given a run of its own it
+                # prints as "Nevertheless , David".
+                rendered = False
+                trail = word + trail
+                word = ''
+        # Not an int: 72 rows carry a fractional key, placing a split word
+        # between two whole-numbered originals.
+        sort_raw = code(r, 0) if lang == 'Hebrew' else code(r, 1)
         try:
-            sort_key = int(sort_raw)
+            sort_key = float(sort_raw)
         except ValueError:
-            sort_key = 0
+            sort_key = 0.0
         ordered.append({
             'bsb_i': i,
             'sort': sort_key,
@@ -238,7 +275,8 @@ def runs_for_verse(rows):
         # A trailing space is part of the run: browse_window lays runs
         # out in a Wrap with no separator between children, which is
         # right for Chinese and would glue English words together.
-        text = f"{run['lead']}{run['word']}{run['tail']}"
+        text = TYPESET_RE.sub(lambda m: m.group(1) or m.group(2) or m.group(3),
+                              f"{run['lead']}{run['word']}{run['tail']}")
         if not text.endswith(TIGHT_AFTER):
             text += ' '
         got = implied.get(run['bsb_i'])
