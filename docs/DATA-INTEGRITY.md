@@ -75,6 +75,10 @@ believe it is fine" and "we looked".
 | 23a | Does any other tagged layer carry a bsb-style corruption | 10 layer pairs / 31,102 verses | **0** | clean, deficits are coverage |
 | 23b | Does a word's Strong's number name that word (lxxwh Septuagint) | 479,989 runs | **12,099 name a different word** → **0** | **fixed**, now a test |
 | 23c | Runs answering nothing where the edition already knows the answer | 49,614 empty runs | 8,295 → **0** | **fixed**, 41,032 honestly unanswerable |
+| 24a | Morphology codes vs MorphGNT + OSHB (first *external* witness) | 436,630 words | **0** | clean, and the reason 24c is findable |
+| 24b | Hebrew Strong's numbers vs OSHB | 299,567 words | **0** | clean |
+| 24c | Does a Greek word's Strong's number name that word | 137,062 words | **15 name a different word** → **0** | **fixed**, now a test |
+| 24d | Does `assets/forms/` carry the parse the corpus carries | 136,067 form triples | **1,243 blank where the corpus has one** → **0** | **fixed**, now a test |
 
 ---
 
@@ -1366,15 +1370,196 @@ from the tagged layers, so no concordance count moves.
 
 ---
 
+## 24. The first outside witness: does a code describe the word it sits on
+
+Every check up to here has been **internal**. Check 1 proved a Strong's
+number resolves to a lexicon entry. Check 2b proved a morphology code
+decodes to a parse. Check 3b proved the concordance agrees with the text
+it indexes. Not one of them could catch a row that is **well-formed and
+wrong** — a real number and a real code sitting on a word they do not
+describe. Nothing inside the file can tell you that. It needs a source
+outside the app, and until now this corpus had never been shown one.
+
+`assets/originals` is the largest thing the app ships and the most
+load-bearing: 438,821 words, each carrying a Strong's number the Word
+List and the concordance are built from and a morphology code the
+analysis pane prints as a parse. It is also the column set nobody had
+ever checked for **truth**.
+
+### The witnesses
+
+Both were already in the repo, cached beside the merge tool that built
+this corpus, and both are separately licensed and credited:
+
+- **MorphGNT / SBLGNT** (CC BY-SA 3.0), `tools/src/gnt/*-morphgnt.txt`.
+  Carries a morph code and a lemma, and **no Strong's numbers at all**.
+  Its lemma is therefore a genuinely independent opinion about what word
+  this is.
+- **Open Scriptures Hebrew Bible** (CC BY 4.0), `tools/src/hb/*.xml`.
+  Carries morph and Strong's directly in the `lemma` attribute.
+
+The instrument is `tools/audit_originals_witness.py`, and it deliberately
+**does not reuse** `merge_morphology.load_hb` — that function is half of
+what is being audited, and a witness that shares the accused's parsing
+cannot see the accused's parsing errors.
+
+### What it found
+
+| | Examined | Disagreements |
+|---|---:|---:|
+| Greek morphology vs MorphGNT | 137,062 of 138,013 words (99.31%) | **0** |
+| Hebrew morphology vs OSHB | 299,568 of 300,808 words (99.59%) | **0** |
+| Hebrew Strong's vs OSHB | 299,567 words | **0** |
+| Greek Strong's | 137,062 words | **15 wrong** |
+
+The morphology column is **exact**. Not "close" — 436,630 words compared
+against two independent editions and zero disagreements. That result is
+worth stating plainly because it is what makes the fourth row findable:
+a morph code that reproduces MorphGNT exactly is **independent of the
+Strong's number sitting next to it**, so a row where the two contradict
+each other is a row where one of them is wrong.
+
+### The 15 Greek words, and why each one is a fault
+
+All are repaired by `tools/repair_originals_strongs.py`, which is
+idempotent and carries the argument for each change inline. Several
+**reverse the meaning** of a well-known verse:
+
+- **Luke 4:17, Luke 23:53, Romans 9:26** — οὗ "where" tagged G3756 οὐ
+  "not". A reader tapping the word in "the place **where** it was
+  written" was told the passage says "not". Luke 23:53 holds both words
+  in one clause, οὗ οὐκ ἦν, and tagged them identically.
+- **Acts 5:28** — and the same confusion pointing the other way, Οὐ
+  "did we **not** charge you" tagged G3757 "where", which is why the
+  three above are a fault and not a house convention.
+- **2 Corinthians 11:1** — ἀνείχεσθέ "**bear with** me" tagged G337
+  ἀναιρέω, "**kill**". The same verse tags ἀνέχεσθε correctly two words
+  later.
+- **Acts 8:2** — Στέφανον, in the verse that buries him, tagged G4735
+  "a **crown**" instead of G4736 **Stephen**. Acts spells the name six
+  times and got the other five right.
+- **Matthew 5:32, Luke 16:18** — ἀπολελυμένην "a **divorced** woman"
+  tagged G620 ἀπολείπω "left behind". Both verses tag ἀπολύων correctly
+  a few words earlier, so one sentence carried two numbers for one verb.
+- **James 1:25** — ποιήσει tagged G4160, a **verb**, where the row's own
+  morph column reads `N-----DSF-`, a feminine dative **noun**. G4162
+  ποίησις occurs once in the New Testament and this is it.
+- **John 6:23** — ἀλλὰ "**but**" tagged G243 ἄλλος "**other**". The same
+  form with the same parse is G235 in 389 other places.
+- **John 16:15** — ἐμοῦ "what is **mine**" tagged G1473 ἐγώ "**I**".
+- **Acts 18:23** — στηρίζων tagged G1991 ἐπιστηρίζω, the compound the
+  Received Text reads here and our edition does not.
+- **Mark 1:5** — Ἰουδαία in "all the **Judean** country" tagged G2449
+  the province instead of G2453 the adjective. The corpus follows
+  exactly this rule everywhere else: morph `A` → G2453, morph `N` → G2449.
+- **Galatians 6:15, Titus 1:6** — the weakest pair, and worth naming as
+  such. τί/τίς are spelled identically for the interrogative G5101 and
+  the enclitic indefinite G5100, and an enclitic takes an acute when
+  another enclitic follows — exactly the environment in both verses. So
+  the accent does not decide and the corpus is mute. This rests on
+  MorphGNT's lemma plus sense: "neither is circumcision **what?**" and
+  "if **who** is blameless" are not Greek.
+
+### What was deliberately NOT changed
+
+A check that only reports what it changed is not reportable.
+
+- **John 6:17** ἤρχοντο — MorphGNT lemmatises ἄρχω; the verse is "they
+  were **going** across the sea". Ours is right and the witness is wrong.
+- **1 Timothy 5:4** πρῶτον, adverbial, where Strong's has G4412 — but
+  this corpus uses G4412 **nowhere**, so changing one of 61 occurrences
+  would create an inconsistency rather than remove one.
+- **Ephesians 2:13** οἵ — we accent a relative pronoun, SBLGNT an
+  article. Both nominative plural masculine; only the category label
+  differs. Two editors disagreeing, not our error.
+- **Luke 1:38, 1:48, Acts 2:18** — the feminine δούλη under G1401
+  δοῦλος. The corpus does this every time and never uses G1399, so it is
+  this tagging's convention.
+- **Romans 8:24** τις — the one surviving hit of the self-contradiction
+  check, and a **base-text** question rather than a tagging one. SBLGNT
+  prints ⸀τίς at that variant point and lemmatises it as the
+  interrogative, so both our columns agree with the witness and with
+  each other; only our surface accent follows a different edition. It is
+  not settled by editing a tag, so it is recorded and left.
+- **3,779 places (2.76%)** where MorphGNT's lemma differs from the lemma
+  of our Strong's number. These are overwhelmingly Strong's 1890
+  orthography against a modern critical text — ἔπω/λέγω, εἴδω/ὁράω,
+  Δαβίδ/Δαυίδ, Καπερναούμ/Καφαρναούμ. Lexicographic conventions;
+  changing them would be inventing a third one.
+- **951 Greek and 1,240 Hebrew words (0.69% / 0.41%) that do not align
+  at all**, and so were never examined. Our base text and the WLC differ
+  in places — 1 Chronicles 9:4 carries an unpointed בנימן the WLC does
+  not have. This is reported because "0 disagreements" means nothing
+  without knowing how much went unlooked-at.
+
+### Two instrument errors, recorded because they nearly became findings
+
+- Comparing Hebrew **by position** invented **883 Strong's and 1,082
+  morph disagreements out of nothing**. The editions differ on Ketiv/Qere
+  and maqqef, so 5,471 verses have different word counts and every word
+  after the first difference compares against its neighbour. Re-run with
+  `difflib` over consonant-only forms: 1,965 findings → **0**. An earlier
+  draft of this section reported a disagreement at 1 Chronicles 9:4 that
+  does not exist.
+- The Hebrew POS extractor took the **last** `/`-segment, which is the
+  pronominal suffix rather than the head, and treated legitimate verb-stem
+  variation (Vq/VN/Vp/Vh/VH/Vt) as outliers: **586 false positives**.
+
+Both had the same signature — findings clustered inside single verses,
+and a plausible-looking count. It is the failure mode named at the top of
+this document, and it is why every number here carries its denominator.
+
+### A second finding, from rebuilding the indexes rather than from the audit
+
+Repairing 15 Greek words obliges a rebuild of the two derived indexes, or
+the Word List and the concordance would disagree with the text they
+index. The rebuild changed **749** entries in `assets/forms/` — far more
+than 15 words can explain.
+
+Rebuilding `assets/forms/` from **HEAD's own, unrepaired** originals
+changed **729** entries, which settles it: the shipped index was already
+stale, and had been since before this run. The difference is always the
+same and always in one direction — **1,243 form entries carried an empty
+morphology code where the corpus has one, and 0 lost a code**. The index
+was built before check 2a filled 2,203 words' missing morphology and was
+never rebuilt afterwards, so the Word List has been showing those 1,243
+word-forms with **no parse at all** while the parse sat in
+`assets/originals` the whole time.
+
+This is check 3b — "does the concordance agree with the text it indexes"
+— asked of the *other* derived index, where it had never been asked. It
+is now `test/originals_witness_test.dart`, which fails against the
+shipped index and passes against the rebuilt one.
+
+The general lesson is the one this document keeps relearning: **a derived
+asset is a claim about a source, and nothing checks it unless something
+is written to check it.** Both indexes are now covered.
+
+### Frozen
+
+`test/originals_witness_test.dart` holds the 15 words on the asset bytes
+and re-implements the two source-free checks in Dart. It fails on the
+pre-repair data in all three tests, and the Dart implementation
+independently reproduces the Python instrument's exact findings
+(`ephesians 2:13 οἵ`, `τις|RI----NSM-`), which is the only reason to
+trust a transcription. `assets/strongs/concordance.json` and
+`assets/forms/` were both rebuilt: G4162 goes 0 → 1 use, G1991 4 → 3,
+G4736 6 → 7, and the token total stays 438,821 because only `s` changed.
+
+---
+
 ## Not checked yet
 
-- Verse **text** itself, against an *external* witness. Checks 10–12 now
-  reach inside the text, but only for defects visible from within the
-  repo: a character that cannot belong, or a copy of the same edition
-  that disagrees. A verse that is wrong *and* well-formed *and* agrees
-  with our own second copy is still unchecked.
-  `test/cuvs_yhwh_integrity_test.dart` does this for two verses; there is
-  no general method that does not require an external source.
+- Verse **text** itself, against an *external* witness — for the
+  **translations**. Check 24 closed this for the original languages
+  almost by accident: aligning against MorphGNT and OSHB matched 99.31%
+  of Greek and 99.59% of Hebrew words *by surface form*, which is an
+  external witness to the text and not only to its codes. The 951 + 1,240
+  words that did not align are the honest residue and are listed there.
+  For the English and Chinese editions this remains open: a verse that is
+  wrong *and* well-formed *and* agrees with our own second copy is still
+  unchecked. `test/cuvs_yhwh_integrity_test.dart` does this for two
+  verses; there is no general method without an external source.
 - `section_titles.json`, `book_introductions.json`, `bible_evidence.json`,
   `maps_index.json` (see #300 for its provenance gap), `family_tree.json`
   relationships, `ot_synopsis.json` alignments.
@@ -1413,8 +1598,14 @@ from the tagged layers, so no concordance count moves.
    (KWIC, concordance) read the tagged layer, which a placeholder has no
    entry in, so they cannot show one — reasoned, not measured.
 
-*(The Septuagint half of `lxxwh` was the third bullet under "Not checked
-yet", on the grounds that it had no same-language witness. It had one —
+*(Check 24 was not on this list at all. It came from re-reading the
+standing rule "a wrong parsing code jumps ahead of every feature" against
+the results table and noticing that check 2b proved codes **decode** and
+never that they are **true** — the largest column in the app, never
+checked for truth. The lesson generalises: this list is made of questions
+already asked, and the most valuable check may be one nobody has phrased
+yet. The Septuagint half of `lxxwh` was the third bullet under "Not
+checked yet", on the grounds that it had no same-language witness. It had one —
 its own New Testament half — and check 23 is what that witness said.
 Check 20, "does any other book carry a cuvs-plus-style shift", was the
 first bullet under "Not checked yet" and is now measured: no, and four
