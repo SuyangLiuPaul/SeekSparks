@@ -1,0 +1,365 @@
+#!/usr/bin/env python3
+"""Restore the verse boundaries the 梁家鏗譯本 converter lost.
+
+`assets/biblexg-v2.json` (simplified) and `assets/biblexg-v2-tr.json`
+(traditional) are one NT-only edition. `docs/DATA-INTEGRITY.md` check 13
+measured eight references the two files disagree about and left them
+unrepaired, on the reading that filling either gap needed a 简/繁 script
+conversion this repository cannot perform without inventing characters.
+
+That reading was wrong about seven of the eight. Re-reading the files in
+record order rather than by key set shows the text is *present* in every
+case but one — filed under the wrong number, merged into its neighbour,
+or split across two rows. Nothing below creates a character that the file
+did not already contain, and nothing below reads text out of the other
+script's file: the two editions were independently revised (Acts 15:17 is
+為了人類中餘下的人 in traditional against 为了人类其他成员 in simplified),
+so the sibling file is a witness to *structure* only, never to wording.
+
+Seven repairs, in descending order of what a reader loses.
+
+  T1  馬太福音 16:13 is filed as 16:3, where it collides with the real
+      16:3. A reader asking for Matthew 16:3 gets the weather-signs
+      saying or the Caesarea Philippi question depending on which record
+      the index happens to keep. The source read `13`; the converter cut
+      it into an empty verse `1` and a verse `3` carrying the text.
+      Drop the empty record, renumber the other to 13.
+
+  T2  使徒行傳 15:16 is two records with the same reference — the prose
+      「如經上所記：」 and the Amos quotation it introduces, which the
+      converter promoted to its own block. Lookup keeps one, so the
+      reader loses half a verse. The simplified file holds both halves in
+      a single record, which is the structure to follow.
+
+  T3  以弗所書 3:16 is merged into 3:15 and its verse number was swallowed
+      by the preceding footnote, which reads `參4.6、16`. The trailing
+      separator is house style (`參2.18註，加4.6註，` ends the same way and
+      loses nothing), and the simplified file carries `参4.6，` with no 16
+      while holding 3:16 separately, so the `16` is the verse marker and
+      not a second cross-reference.
+
+  T4  彼得前書 3:11 and 3:12 are merged into 3:10 with their numbers left
+      inline, so 3:10 prints 「⋯不沾詭詐。11還要避惡行善⋯」 — a verse
+      number rendered as scripture, and two references that resolve to
+      nothing.
+
+  B5  路加福音 22:43 and 22:44 are inline inside 22:42, in BOTH files.
+  B6  路加福音 23:17 is inline inside 23:16, in BOTH files.
+  B7  路加福音 23:34a is inline at the end of 23:33 while the record
+      numbered 34 holds only 34b, in BOTH files. So this edition answers
+      「路加福音 23:34」 with 「然後，他們抓鬮分了耶穌的衣袍。」 and never
+      with 「父親啊，赦免他們」. Move the marked clause into verse 34.
+
+B5-B7 are the passages NA28/UBS5 double-bracket, and the same converter
+demonstrably loses verse numbers into adjacent markup (T3) and cuts them
+in half (T1), so the inline placement is read here as the same failure
+rather than as deliberate critical-text marking: the digits carry no
+bracket, no footnote and no other signal a reader could act on. Flagged
+in docs/DATA-INTEGRITY.md because it is the one judgement call here.
+
+NOT repaired, and deliberately: 馬可福音 6:8-11 are absent from the
+simplified file, whose 6:7 also stops mid-clause at 「並授予他們權能」.
+Only the traditional file has them, so restoring them needs a 繁→简
+conversion — the one place the original reading still holds. Twenty-seven
+further references are absent from BOTH files because the publisher
+printed them merged into the verse before (路加福音 1:2-4 inside 1:1,
+羅馬書 15:19 inside 15:18, and 24 more); those carry no marker, so
+splitting them would mean inventing a boundary. Both sets are frozen at
+their measured size by test/biblexg_verse_boundary_test.dart.
+
+Every repair guards on the text it expects to find and skips if the file
+already carries the result, so re-running finds nothing to do.
+
+Usage: tools/repair_biblexg.py [--write]
+"""
+import json
+import os
+import sys
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+SIMPLIFIED = 'biblexg-v2.json'
+TRADITIONAL = 'biblexg-v2-tr.json'
+
+
+def write_like(path, original, data):
+    """Re-serialises [data] in whatever layout [original] used.
+
+    Both biblexg files are minified; guessing wrong would reflow two
+    megabytes and bury a seven-verse correction in a diff nobody can read.
+    """
+    indented = original.startswith('[\n') or original.startswith('{\n')
+    if indented:
+        text = json.dumps(data, ensure_ascii=False, indent=2)
+    else:
+        text = json.dumps(data, ensure_ascii=False, separators=(',', ':'))
+    if original.endswith('\n'):
+        text += '\n'
+    with open(path, 'w', encoding='utf-8') as f:
+        f.write(text)
+
+
+def find(verses, book, chapter, verse):
+    """Every index in file order whose reference matches."""
+    return [
+        i for i, r in enumerate(verses)
+        if r['book'] == book
+        and str(r['chapter']) == str(chapter)
+        and str(r['verse']) == str(verse)
+    ]
+
+
+def has(verses, book, chapter, verse):
+    return bool(find(verses, book, chapter, verse))
+
+
+def renumber(record, verse):
+    """A copy of [record] carrying verse number [verse], id kept in step."""
+    out = dict(record)
+    out['verse'] = str(verse)
+    out['verseLabel'] = str(verse)
+    out['id'] = record['id'][:5] + '%03d' % int(verse)
+    return out
+
+
+class Skipped(Exception):
+    """The file does not hold what this repair expects — leave it alone."""
+
+
+def split_inline(verses, book, chapter, verse, markers, log):
+    """Cut one record into several at the verse numbers left inside it.
+
+    [markers] is the ordered list of numbers that appear literally in the
+    text. Each becomes its own record carrying the text that follows it.
+    No character moves except the marker itself.
+    """
+    tail = [str(m) for m in markers]
+    if all(has(verses, book, chapter, m) for m in tail):
+        return 0
+    hits = find(verses, book, chapter, verse)
+    if len(hits) != 1:
+        raise Skipped('%s %s:%s is %d records, expected 1'
+                      % (book, chapter, verse, len(hits)))
+    at = hits[0]
+    record = verses[at]
+    text = record['text']
+
+    pieces = []
+    for m in tail:
+        head, sep, text = text.partition(m)
+        if not sep:
+            raise Skipped('%s %s:%s carries no inline %s'
+                          % (book, chapter, verse, m))
+        if not head.strip():
+            raise Skipped('%s %s:%s has nothing before marker %s'
+                          % (book, chapter, verse, m))
+        pieces.append(head)
+    pieces.append(text)
+
+    rejoined = pieces[0]
+    for number, piece in zip(tail, pieces[1:]):
+        rejoined += number + piece
+    if rejoined != record['text']:
+        raise Skipped('%s %s:%s split is not lossless' % (book, chapter, verse))
+    for piece, number in zip(pieces[1:], tail):
+        if not piece.strip():
+            raise Skipped('%s %s:%s marker %s introduces nothing'
+                          % (book, chapter, verse, number))
+
+    rebuilt = [dict(record, text=pieces[0])]
+    for number, piece in zip(tail, pieces[1:]):
+        made = renumber(record, number)
+        made['text'] = piece
+        made['isParagraphStart'] = False
+        rebuilt.append(made)
+    verses[at:at + 1] = rebuilt
+    log('  %s %s:%s split into %s'
+        % (book, chapter, verse, '/'.join([str(verse)] + tail)))
+    return len(tail)
+
+
+# --- T1 ------------------------------------------------------------------
+
+MT_16_13_OPENING = '耶穌來到該撒利亞腓立比境內'
+
+
+def repair_misfiled_matthew(verses, log):
+    if has(verses, '馬太福音', '16', '13'):
+        return 0
+    hits = find(verses, '馬太福音', '16', '3')
+    if len(hits) != 2:
+        raise Skipped('馬太福音 16:3 is %d records, expected 2' % len(hits))
+    stray = hits[1]
+    if not verses[stray]['text'].startswith(MT_16_13_OPENING):
+        raise Skipped('馬太福音 16:3 second record is not 16:13')
+    blanks = [i for i in find(verses, '馬太福音', '16', '1')
+              if not verses[i]['text'].strip()]
+    if len(blanks) != 1:
+        raise Skipped('馬太福音 16:1 has %d empty records, expected 1'
+                      % len(blanks))
+    if blanks[0] + 1 != stray:
+        raise Skipped('the empty 馬太福音 16:1 does not precede the stray 16:3')
+    verses[stray] = renumber(verses[stray], 13)
+    del verses[blanks[0]]
+    log('  馬太福音 16:3 (second record) renumbered to 16:13; '
+        'empty 16:1 removed')
+    return 1
+
+
+# --- T2 ------------------------------------------------------------------
+
+def repair_split_acts(verses, log):
+    hits = find(verses, '使徒行傳', '15', '16')
+    if len(hits) == 1:
+        return 0
+    if len(hits) != 2 or hits[1] != hits[0] + 1:
+        raise Skipped('使徒行傳 15:16 is %d records, expected 2 adjacent'
+                      % len(hits))
+    head, tailrec = verses[hits[0]], verses[hits[1]]
+    if not head['text'].strip() or not tailrec['text'].strip():
+        raise Skipped('使徒行傳 15:16 has an empty half')
+    merged = dict(head)
+    merged['text'] = head['text'] + '\n' + tailrec['text']
+    verses[hits[0]:hits[1] + 1] = [merged]
+    log('  使徒行傳 15:16 merged from two records into one')
+    return 1
+
+
+# --- T3 ------------------------------------------------------------------
+
+EPH_NOTE_WITH_MARKER = '<note:參4.6、16>'
+EPH_NOTE_REPAIRED = '<note:參4.6、>'
+
+
+def repair_swallowed_ephesians(verses, log):
+    if has(verses, '以弗所書', '3', '16'):
+        return 0
+    hits = find(verses, '以弗所書', '3', '15')
+    if len(hits) != 1:
+        raise Skipped('以弗所書 3:15 is %d records, expected 1' % len(hits))
+    at = hits[0]
+    record = verses[at]
+    head, sep, tail = record['text'].partition(EPH_NOTE_WITH_MARKER)
+    if not sep or not tail.strip():
+        raise Skipped('以弗所書 3:15 does not carry the swallowed marker')
+    fifteen = dict(record, text=head + EPH_NOTE_REPAIRED)
+    sixteen = renumber(record, 16)
+    sixteen['text'] = tail
+    sixteen['isParagraphStart'] = False
+    verses[at:at + 1] = [fifteen, sixteen]
+    log('  以弗所書 3:15 split into 3:15/3:16; footnote 參4.6、16 → 參4.6、')
+    return 1
+
+
+# --- B7 ------------------------------------------------------------------
+
+LUKE_34A = '34a'
+
+
+def repair_luke_34a(verses, log):
+    hits = find(verses, '路加福音', '23', '33')
+    if len(hits) != 1:
+        raise Skipped('路加福音 23:33 is %d records, expected 1' % len(hits))
+    at = hits[0]
+    record = verses[at]
+    head, sep, tail = record['text'].partition(LUKE_34A)
+    if not sep:
+        return 0
+    if not head.strip() or not tail.strip():
+        raise Skipped('路加福音 23:33 marker 34a bounds nothing')
+    after = find(verses, '路加福音', '23', '34')
+    if len(after) != 1 or after[0] != at + 1:
+        raise Skipped('路加福音 23:34 is not the single record after 23:33')
+    target = verses[after[0]]
+    verses[at] = dict(record, text=head)
+    verses[after[0]] = dict(target, text=tail + target['text'])
+    log('  路加福音 23:33 marker 34a: clause moved into 23:34')
+    return 1
+
+
+# --- driver --------------------------------------------------------------
+
+def repairs_for(filename):
+    """(name, callable) in the order they are applied."""
+    if filename == TRADITIONAL:
+        return [
+            ('T1 馬太福音 16:13 misfiled as 16:3', repair_misfiled_matthew),
+            ('T2 使徒行傳 15:16 split across two records', repair_split_acts),
+            ('T3 以弗所書 3:16 swallowed by a footnote',
+             repair_swallowed_ephesians),
+            ('T4 彼得前書 3:11-12 inline in 3:10',
+             lambda v, log: split_inline(v, '彼得前書', '3', '10',
+                                         [11, 12], log)),
+            ('B5 路加福音 22:43-44 inline in 22:42',
+             lambda v, log: split_inline(v, '路加福音', '22', '42',
+                                         [43, 44], log)),
+            ('B6 路加福音 23:17 inline in 23:16',
+             lambda v, log: split_inline(v, '路加福音', '23', '16',
+                                         [17], log)),
+            ('B7 路加福音 23:34a inline in 23:33', repair_luke_34a),
+        ]
+    return [
+        ('B5 路加福音 22:43-44 inline in 22:42',
+         lambda v, log: split_inline(v, '路加福音', '22', '42', [43, 44], log)),
+        ('B6 路加福音 23:17 inline in 23:16',
+         lambda v, log: split_inline(v, '路加福音', '23', '16', [17], log)),
+        ('B7 路加福音 23:34a inline in 23:33', repair_luke_34a),
+    ]
+
+
+def run(filename, write):
+    path = os.path.join(ROOT, 'assets', filename)
+    with open(path, encoding='utf-8') as f:
+        original = f.read()
+    verses = json.loads(original)
+    before = len(verses)
+
+    print('%s (%d records)' % (filename, before))
+    lines = []
+    skipped = 0
+    for name, fn in repairs_for(filename):
+        try:
+            made = fn(verses, lines.append)
+        except Skipped as why:
+            print('  SKIP %s — %s' % (name, why))
+            skipped += 1
+            continue
+        if made == 0:
+            print('  ok   %s — already applied' % name)
+    for line in lines:
+        print(line)
+
+    keys = [(r['book'], str(r['chapter']), str(r['verse'])) for r in verses]
+    duplicated = sorted({k for k in keys if keys.count(k) > 1})
+    if duplicated:
+        print('  REFUSING TO WRITE — duplicate references remain: %s'
+              % duplicated)
+        return 1
+    blank = [k for k, r in zip(keys, verses) if not r['text'].strip()]
+    if blank:
+        print('  REFUSING TO WRITE — empty verses remain: %s' % blank)
+        return 1
+
+    print('  %d records → %d' % (before, len(verses)))
+    changed = verses != json.loads(original)
+    if write and changed:
+        write_like(path, original, verses)
+        print('  written')
+    elif write:
+        print('  unchanged, not written')
+    return 1 if skipped else 0
+
+
+def main():
+    write = '--write' in sys.argv
+    if not write:
+        print('dry run — pass --write to save\n')
+    bad = 0
+    for filename in (TRADITIONAL, SIMPLIFIED):
+        bad += run(filename, write)
+        print()
+    return bad
+
+
+if __name__ == '__main__':
+    sys.exit(main())

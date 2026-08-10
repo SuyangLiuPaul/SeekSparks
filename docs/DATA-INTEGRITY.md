@@ -60,8 +60,11 @@ believe it is fine" and "we looked".
 | 10 | Character repertoire of the shipped text | 45,877,885 chars | 129 → **0** | **fixed**, now a test |
 | 11 | Invisible format/control characters | 45,877,885 chars | 3 → **0** | **fixed**, now a test |
 | 12 | 和合本 merge markers present in all three editions | 213 slots | 71 → **0** | **fixed**, now a test |
-| 13 | The two 圣经新译本 editions cover the same references | 15,843 refs | 8 | **open**, frozen by a test |
+| 13 | The two 梁家鏗譯本 editions cover the same references | 15,843 refs | 8 → **4** | **fixed but for 馬可福音 6:8-11**, now a test |
 | 14 | References carrying a typographic instruction instead of scripture | 295,527 records | 233 shown as scripture → **0** | **fixed**, now a test |
+| 15 | Every reference appears exactly once, and no verse is empty | 15,850 records | 3 duplicated + 1 empty → **0** | **fixed**, now a test |
+| 16 | Verse numbers left inline, printing as scripture | 15,850 records | 6 in 5 verses → **0** | **fixed**, now a test |
+| 17 | Range labels (`1-4`) that overlap a verse with its own row | 42 range labels | 4 | **open**, frozen by a test |
 
 ---
 
@@ -582,29 +585,90 @@ clipboard: a placeholder is now excluded from both search-key caches
 (so a search for 上节 cannot report hits that are not scripture) and
 dropped from copied output entirely.
 
-### The 圣经新译本 pair disagrees on 8 verses — measured, NOT repaired
+### The 梁家鏗譯本 verse boundaries — 7 of 8 repaired, and 3 more found
 
-Found by the same sweep. `biblexg-v2.json` and `biblexg-v2-tr.json` are
-one NT-only edition converted script-for-script, so they should agree on
-every reference. Eight do not, **in both directions**:
+**The earlier verdict on this was wrong, and the way it was wrong is
+worth recording.** Checks 13 and 15–17 compared the two files *by key
+set* and concluded that filling either gap needed a 简/繁 conversion this
+repository cannot perform without inventing characters. Re-reading the
+same two files **in record order** shows the text is present in every
+case but one — filed under the wrong number, merged into its neighbour,
+or split across two rows. A key-set comparison cannot see any of that,
+because a misfiled verse still occupies a key.
 
-- Absent from the **simplified** file: 马可福音 6:8, 6:9, 6:10, 6:11 —
-  the instructions to the Twelve. The text is not merged into 6:7; it is
-  gone.
-- Absent from the **traditional** file: 马太福音 16:13 (gone outright —
-  the Caesarea Philippi question), 以弗所书 3:16 (merged into 3:15) and
-  彼得前书 3:11–12 (merged into 3:10, which still carries the literal
-  digits `11` and `12` inline where the boundaries were).
+Repaired reproducibly by `tools/repair_biblexg.py`, which is idempotent
+and guards every cut on the text it expects to find. No repair creates a
+character the file did not already contain, and none reads text out of
+the other script's file: the two editions were **independently revised**,
+not merely transliterated — 使徒行傳 15:17 is 為了人類中餘下的人 in
+traditional against 为了人类其他成员 in simplified — so the sibling file
+is a witness to **structure only**, never to wording. That is a
+correction to the earlier note as well, which treated them as one text in
+two scripts.
 
-Not repaired, and the reason is the same discipline that governs
-everything above: filling either gap requires a 简/繁 script conversion
-this repository cannot perform without **inventing characters**, and the
-two files' wording differs in more than orthography at the merge sites
-(the traditional 以弗所书 3:15 reads 榮耀的豐富 where the simplified 3:16
-reads 丰硕的荣耀), so the split points cannot be recovered by containment
-either. Taking the conservative option: the defect is frozen at its
-measured size by a test that names all eight, so it cannot grow while a
-witness is sought.
+Traditional file only, in descending order of what a reader lost:
+
+- **馬太福音 16:13 was filed as 16:3**, colliding with the real 16:3. Not
+  "gone outright". The source read `13` and the converter cut it into an
+  empty verse `1` and a verse `3` carrying the text, so the edition
+  answered 馬太福音 16:3 with either the weather-signs saying or the
+  Caesarea Philippi question depending on which row the index kept. This
+  is the worst kind of defect in the file: plausible, wrong, and
+  unfalsifiable by a reader.
+- **使徒行傳 15:16 was two rows** with the same reference — the prose
+  「如經上所記：」 and the Amos quotation it introduces, which the
+  converter promoted to its own block. Lookup kept one, so the reader
+  lost half a verse. The simplified file holds both halves in one row,
+  which is the structure followed.
+- **以弗所書 3:16's verse number was swallowed by the preceding
+  footnote**, which read `參4.6、16`. A trailing separator is house style
+  (`參2.18註，加4.6註，` ends the same way and loses nothing) and the
+  simplified file carries `参4.6，` with no 16 while holding 3:16
+  separately, so the `16` was the verse marker rather than a second
+  cross-reference.
+- **彼得前書 3:11 and 3:12 were merged into 3:10** with their numbers
+  left inline, so 3:10 printed 「⋯不沾詭詐。11還要避惡行善⋯」.
+
+Both files, and these were **not previously known** — a key-set
+comparison cannot find a defect the two files share:
+
+- **路加福音 22:43-44** sat inline inside 22:42, **23:17** inside 23:16,
+  and **23:34a** at the end of 23:33 while the row numbered 34 held only
+  34b. So this edition answered 路加福音 23:34 with 「然後，他們抓鬮分了
+  耶穌的衣袍。」 and never with 「父親啊，赦免他們」 — one of the most
+  quoted verses in the Gospels, unreachable at its own reference.
+
+**The one judgement call**, flagged because it is the only inference
+here. Those three are the passages NA28/UBS5 double-bracket, so their
+inline placement could be deliberate critical-text marking rather than a
+converter failure. Read as a failure, because the same converter
+demonstrably loses verse numbers into adjacent markup (以弗所書 3:16) and
+cuts them in half (馬太福音 16:13), and because the digits carry no
+bracket, no footnote and no other signal a reader could act on — this
+edition annotates such things explicitly when it means to, as 羅馬書 16:24
+shows with 「按 NA28 及 UBS5，在此羅馬書完」. Splitting them makes the
+verses findable and stops a bare number reading as scripture; it does
+flatten the publisher's 34a/34b distinction, which the schema has no way
+to express. Reversible from `tools/repair_biblexg.py` if a human decides
+otherwise.
+
+**Not repaired**, and the original reasoning still holds for it:
+馬可福音 6:8-11 are absent from the simplified file, whose 6:7 also stops
+mid-clause at 「并授予他们权能」. Only the traditional file has them, so
+restoring them needs a 繁→简 conversion. Frozen by name in
+`test/biblexg_verse_boundary_test.dart`.
+
+**Also measured, not repaired.** Twenty-one records in each file carry a
+range label — `1-4`, `18-19`, `74-75` — because the publisher printed
+those verses merged. That is honest labelling and not a defect; a reader
+sees 「1-4」 and knows. But two of the forty-two ranges name a verse that
+**also exists as its own row**: 以弗所書 2:20 labelled `20-21` and 3:10
+labelled `10-11`. 2:20 is defensible, since it genuinely pulls 2:21's
+「在主內的一座聖所」 forward; 3:10 carries nothing of verse 11 and looks
+like a stray label. Left alone rather than corrected, because changing a
+publisher's label on a reading of the Greek is exactly the kind of guess
+this document exists to prevent, and the cost to a reader is a wrong
+number beside a verse rather than wrong text. Frozen at 2 per file.
 
 ### Clean, and worth saying so
 

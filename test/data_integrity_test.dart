@@ -331,20 +331,17 @@ void main() {
   });
 
   test('the two 圣经新译本 editions cover the same references', () {
-    // NOT YET REPAIRED, and named here so it cannot grow. The simplified
-    // and traditional files are one edition converted script-for-script,
-    // so they should agree on every reference. Eight do not, in both
-    // directions: 马可福音 6:8-11 are absent from the SIMPLIFIED file,
-    // and 马太福音 16:13, 以弗所书 3:16, 彼得前书 3:11-12 are absent from
-    // the TRADITIONAL one. Repairing them needs a script conversion this
-    // repo cannot perform without inventing characters, so the defect is
-    // frozen at its measured size instead. See docs/DATA-INTEGRITY.md.
-    const knownSimplifiedOnly = {
-      'Matthew 16:13',
-      'Ephesians 3:16',
-      '1 Peter 3:11',
-      '1 Peter 3:12',
-    };
+    // The simplified and traditional files are one edition, so they should
+    // agree on every reference. Four of the eight that once disagreed were
+    // never missing text at all — the traditional file had 马太福音 16:13
+    // filed under 16:3, 以弗所书 3:16's number swallowed into a footnote,
+    // and 彼得前书 3:11-12 merged into 3:10 — so `tools/repair_biblexg.py`
+    // put them back and this side is now empty. 马可福音 6:8-11 really are
+    // absent from the simplified file and stay frozen below: restoring them
+    // needs a 繁→简 conversion this repo will not invent. Verse boundaries
+    // are held by test/biblexg_verse_boundary_test.dart; see
+    // docs/DATA-INTEGRITY.md.
+    const knownSimplifiedOnly = <String>{};
     const knownTraditionalOnly = {
       'Mark 6:8',
       'Mark 6:9',
@@ -545,7 +542,9 @@ void main() {
           if (kind != null) census['$code/${kind.name}'] = (census['$code/${kind.name}'] ?? 0) + 1;
         }
       }
-      expect(records, 295527);
+      // +7 over v1.6.93: tools/repair_biblexg.py split seven merged verse
+      // boundaries back apart (4 traditional, 3 shared by both files).
+      expect(records, 295534);
       expect(census, {
         'cuvs-yhwh/merged': 71,
         'cuvs-yhwh/mergedNext': 1,
@@ -553,8 +552,9 @@ void main() {
         'cuvs-yhwh-tr/mergedNext': 1,
         'cuvs-plus/merged': 71,
         'cuvs-plus/mergedNext': 1,
+        // The one biblexg-v2-tr blank record is gone: it was the husk left
+        // where the converter cut 馬太福音 16:13's number into 16:1 + 16:3.
         'lxxwh/omitted': 16,
-        'biblexg-v2-tr/blank': 1,
       });
     });
 
