@@ -19,6 +19,7 @@ import 'package:flutter/material.dart';
 
 import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/models/original_word.dart';
+import 'package:seeksparks/models/reader_analysis_request.dart';
 import 'package:seeksparks/models/verse.dart';
 import 'package:seeksparks/services/concordance_service.dart';
 import 'package:seeksparks/services/greek_stats_service.dart';
@@ -76,6 +77,46 @@ enum AnalysisTab {
   /// reason as `morphology`.
   places,
 }
+
+/// 2026-08-11 (#313): the docked tab that answers [request], or null
+/// when nothing docked answers it and a sheet is the honest surface.
+///
+/// This is the whole of the reader-to-pane contract, kept pure so it can
+/// be read in one screen and tested without a widget: the reader hands
+/// over a subject, the workbench looks it up here, and a null means the
+/// reader keeps the presentation it already had.
+///
+/// [ReaderAnalysisRequest.sermons] returns null for a reason worth
+/// stating, since a later run should change it: the sermon list is
+/// verse-keyed content and BibleWorks docks exactly this (the Resource
+/// Summary tab, bwh10), so it belongs in a tab. Its body is still a
+/// private class inside `bible_reading_pane.dart`, and a thirteenth tab
+/// has to be re-measured against #297's strip arithmetic — neither is a
+/// reason to leave it a sheet forever, only a reason it is not one yet.
+///
+/// [ReaderAnalysisRequest.aiExplain] returns null as a decision, not a
+/// deferral: see the enum.
+AnalysisTab? analysisTabForRequest(ReaderAnalysisRequest request) =>
+    switch (request) {
+      ReaderAnalysisRequest.originals => AnalysisTab.wordStudy,
+      ReaderAnalysisRequest.crossRefs => AnalysisTab.crossRefs,
+      ReaderAnalysisRequest.sermons => null,
+      ReaderAnalysisRequest.aiExplain => null,
+    };
+
+/// The inverse: which reader-side action the pane is currently
+/// answering, so the button that sent it there can show as active.
+///
+/// Without this the tap is acknowledged only at the far edge of a
+/// 1400 px screen, in the reader's peripheral vision — the #294 lesson
+/// that a live control with no local feedback reads as a dead one.
+/// Tabs no reader action can reach return null, which is most of them.
+ReaderAnalysisRequest? requestForAnalysisTab(AnalysisTab tab) =>
+    switch (tab) {
+      AnalysisTab.wordStudy => ReaderAnalysisRequest.originals,
+      AnalysisTab.crossRefs => ReaderAnalysisRequest.crossRefs,
+      _ => null,
+    };
 
 /// The narrowest a tab can be drawn without clipping: a 17 px icon, the
 /// button's 4 px padding either side, and the 2 px gap to its neighbour.

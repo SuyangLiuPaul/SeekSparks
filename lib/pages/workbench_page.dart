@@ -17,6 +17,7 @@ import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/original_word.dart';
+import 'package:seeksparks/models/reader_analysis_request.dart';
 import 'package:seeksparks/models/verse.dart';
 import 'package:seeksparks/models/wb_centre_mode.dart';
 import 'package:seeksparks/pages/about_page.dart';
@@ -1214,7 +1215,8 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
                             WbCentreMode.browse => _buildParallelFrame(context),
                             WbCentreMode.split => _buildSplitFrame(context),
                             WbCentreMode.reader => _buildReaderFrame(context,
-                                splitAvailable: splitFitsIn(panes.centre)),
+                                splitAvailable: splitFitsIn(panes.centre),
+                                analysisAvailable: threePane),
                           },
                   ),
                   if (showRight) ...[
@@ -1248,7 +1250,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
   /// than one that is not there; the View menu and the toolbar, which
   /// can carry a reason, show it greyed with one.
   Widget _buildReaderFrame(BuildContext context,
-          {required bool splitAvailable}) =>
+          {required bool splitAvailable, required bool analysisAvailable}) =>
       BibleReadingPane(
         key: const ValueKey('workbench-reader'),
         showSidebarToggle: false,
@@ -1261,7 +1263,45 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         showSearchAndSettings: true,
         onSearchRequested: _focusCommandLine,
         onOpenParallel: () => _setCentreMode(WbCentreMode.browse),
+        onAnalysisRequest: (request) =>
+            _takeReaderRequest(request, paneAvailable: analysisAvailable),
+        activeAnalysisRequest: analysisAvailable && _rightOpen
+            ? requestForAnalysisTab(_analysisTab)
+            : null,
       );
+
+  /// A reader-side action asked for content. Answer it in the Analysis
+  /// pane when there is one, and say so — returning false sends the
+  /// reader back to the bottom sheet it has always used.
+  ///
+  /// Width decides, not habit. Below [WorkbenchFit.threePaneMinWidth]
+  /// there is no Analysis pane to send anything to, and a sheet is then
+  /// the only surface the content has; at or above it, covering the
+  /// verse to describe the verse is the defect (#313).
+  bool _takeReaderRequest(
+    ReaderAnalysisRequest request, {
+    required bool paneAvailable,
+  }) {
+    final tab = analysisTabForRequest(request);
+    if (!paneAvailable || tab == null) return false;
+    setState(() {
+      _analysisTab = tab;
+      // A pane the reader cannot see is not an answer. Collapsed is a
+      // preference about the resting workspace, not a refusal of
+      // something explicitly asked for — the same call `_selectWord`
+      // makes when a word is pinned in Browse.
+      _rightOpen = true;
+      // The subject is the SELECTION. Any word still latched from a
+      // pointer that passed over the Browse text would otherwise win in
+      // `_buildAnalysisBody`, and the reader would be shown a word they
+      // did not ask about in the tab they did.
+      _pinnedKey = null;
+      _analysisWord = null;
+      _analysisFrozen = false;
+    });
+    _persistPrefs();
+    return true;
+  }
 
   // ── Centre: the word-distribution chart ───────────────────────────
 

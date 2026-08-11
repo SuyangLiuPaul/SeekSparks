@@ -16,6 +16,7 @@ import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/widgets/note_reference_picker_sheet.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/bible_map.dart';
+import 'package:seeksparks/models/reader_analysis_request.dart';
 import 'package:seeksparks/models/verse.dart';
 import 'package:seeksparks/pages/bible_trivia_page.dart' as trivia;
 import 'package:seeksparks/pages/books_page.dart';
@@ -128,6 +129,23 @@ class BibleReadingPane extends StatefulWidget {
   /// Either way there is one search, never a second one stacked over it.
   final VoidCallback? onSearchRequested;
 
+  /// 2026-08-11 (#313): offer a selection-bar action to the host before
+  /// opening a sheet for it. Return **true** and the reader stands down
+  /// — the host answered it in a docked pane. Return false, or leave
+  /// this null, and the reader opens the sheet it always did.
+  ///
+  /// The host decides, not the reader, because the answer is about
+  /// available width and only the host knows it. On a three-pane screen
+  /// a sheet for content the Analysis pane already holds **covers the
+  /// verse being studied in order to describe it**; below that width
+  /// there is no pane and the sheet is the only surface there is.
+  final bool Function(ReaderAnalysisRequest request)? onAnalysisRequest;
+
+  /// Which request the host's docked pane is showing right now, so the
+  /// button that sent it there can read as active. Null when nothing is
+  /// docked — a standalone reader, or a screen too narrow for the pane.
+  final ReaderAnalysisRequest? activeAnalysisRequest;
+
   const BibleReadingPane({
     super.key,
     this.showSidebarToggle = false,
@@ -140,6 +158,8 @@ class BibleReadingPane extends StatefulWidget {
     this.onOpenWorkbench,
     this.onOpenParallel,
     this.onSearchRequested,
+    this.onAnalysisRequest,
+    this.activeAnalysisRequest,
   });
 
   @override
@@ -536,6 +556,20 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
       return;
     }
     pushPage(const CommandSearchPage());
+  }
+
+  /// Ask the host to show [request] in a docked pane; fall back to
+  /// [asSheet] when it will not, or cannot.
+  ///
+  /// Same shape as [_openSearch] one method up, and for the same reason:
+  /// this reader is mounted both as a page of its own and as the centre
+  /// of a three-pane workspace, and what a request should DO differs
+  /// between them. Keeping the fallback here — rather than making the
+  /// host pass a sheet-opening callback — means the standalone reader
+  /// needs no configuration at all to keep working.
+  void _requestAnalysis(ReaderAnalysisRequest request, VoidCallback asSheet) {
+    if (widget.onAnalysisRequest?.call(request) ?? false) return;
+    asSheet();
   }
 
   /// 2026-05-22 (v1.2.71): NotificationListener handler — catches every
@@ -2338,28 +2372,47 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
                                 );
                                 mainProvider.clearSelectedVerses();
                               },
-                              onOriginal: () => _showOriginalsSheet(
-                                context: context,
-                                verses: mainProvider.selectedVerses,
-                                locale: settings.locale,
+                              // Every one of these four is offered to the
+                              // host first. Two have a docked pane and
+                              // two do not, and routing all four through
+                              // the same door is what makes that a
+                              // recorded decision rather than an
+                              // accident — see `analysisTabForRequest`.
+                              activeRequest: widget.activeAnalysisRequest,
+                              onOriginal: () => _requestAnalysis(
+                                ReaderAnalysisRequest.originals,
+                                () => _showOriginalsSheet(
+                                  context: context,
+                                  verses: mainProvider.selectedVerses,
+                                  locale: settings.locale,
+                                ),
                               ),
-                              onCrossRefs: () => _showCrossRefsSheet(
-                                context: context,
-                                verses: mainProvider.selectedVerses,
-                                locale: settings.locale,
-                                mainProvider: mainProvider,
+                              onCrossRefs: () => _requestAnalysis(
+                                ReaderAnalysisRequest.crossRefs,
+                                () => _showCrossRefsSheet(
+                                  context: context,
+                                  verses: mainProvider.selectedVerses,
+                                  locale: settings.locale,
+                                  mainProvider: mainProvider,
+                                ),
                               ),
-                              onSermons: () => _showRelatedSermonsSheet(
-                                context: context,
-                                verses: mainProvider.selectedVerses,
-                                locale: settings.locale,
-                                currentVersion: mainProvider.currentVersion,
+                              onSermons: () => _requestAnalysis(
+                                ReaderAnalysisRequest.sermons,
+                                () => _showRelatedSermonsSheet(
+                                  context: context,
+                                  verses: mainProvider.selectedVerses,
+                                  locale: settings.locale,
+                                  currentVersion: mainProvider.currentVersion,
+                                ),
                               ),
-                              onAiExplain: () => _showAiExplainSheet(
-                                context: context,
-                                verses: mainProvider.selectedVerses,
-                                settings: settings,
-                                mainProvider: mainProvider,
+                              onAiExplain: () => _requestAnalysis(
+                                ReaderAnalysisRequest.aiExplain,
+                                () => _showAiExplainSheet(
+                                  context: context,
+                                  verses: mainProvider.selectedVerses,
+                                  settings: settings,
+                                  mainProvider: mainProvider,
+                                ),
                               ),
                               anyNoted: mainProvider.selectedVerses
                                   .any(mainProvider.isVerseNoted),
@@ -2725,6 +2778,12 @@ class _SelectionActionBar extends StatelessWidget {
   final bool anyNoted;
   final DeviceClass deviceClass;
 
+  /// 2026-08-11 (#313): which action the host's docked pane is already
+  /// answering. Null when there is no docked pane, which is every
+  /// standalone reader and every screen below the three-pane width — so
+  /// on a phone this bar looks and behaves exactly as it did.
+  final ReaderAnalysisRequest? activeRequest;
+
   const _SelectionActionBar({
     required this.selectedCount,
     required this.anyHighlighted,
@@ -2742,6 +2801,7 @@ class _SelectionActionBar extends StatelessWidget {
     required this.anyBookmarked,
     required this.anyNoted,
     required this.deviceClass,
+    this.activeRequest,
   });
 
   static const _highlightColors = <int>[
@@ -2830,6 +2890,16 @@ class _SelectionActionBar extends StatelessWidget {
             .toDouble();
     final inset = ResponsiveBreakpoints.headerInset(deviceClass);
 
+    // 2026-08-11 (#313): when the host answers one of these in a docked
+    // pane, nothing happens near the finger — the change lands at the
+    // far edge of a 1400 px screen. So the button that sent it there
+    // fills in and takes the accent, the same way the note and bookmark
+    // buttons three rows down already say "this verse has one". Colour
+    // is this bar's existing vocabulary for state, and it is reachable
+    // on a touch screen, which a tooltip is not.
+    final originalsActive = activeRequest == ReaderAnalysisRequest.originals;
+    final crossRefsActive = activeRequest == ReaderAnalysisRequest.crossRefs;
+
     // Pre-build the secondary action icons. Each is a small
     // IconButton with the same compact density. Order: Original →
     // Cross-refs → Note → Bookmark → Highlight.
@@ -2838,7 +2908,10 @@ class _SelectionActionBar extends StatelessWidget {
         tooltip:
             uiStrings['originalText']?[settings.locale] ?? 'Original',
         onPressed: onOriginal,
-        icon: const Icon(Icons.auto_stories),
+        icon: Icon(originalsActive
+            ? Icons.auto_stories
+            : Icons.auto_stories_outlined),
+        color: originalsActive ? scheme.primary : null,
         // 2026-05-24 (v1.2.94): was VisualDensity.compact (~40 px)
         // which violates Apple HIG's 44 pt minimum. Standard density
         // keeps the bar a touch taller but every icon is reliably
@@ -2849,7 +2922,8 @@ class _SelectionActionBar extends StatelessWidget {
         tooltip: uiStrings['crossRefs']?[settings.locale] ??
             'Cross-references',
         onPressed: onCrossRefs,
-        icon: const Icon(Icons.hub_outlined),
+        icon: Icon(crossRefsActive ? Icons.hub : Icons.hub_outlined),
+        color: crossRefsActive ? scheme.primary : null,
         // 2026-05-24 (v1.2.94): was VisualDensity.compact (~40 px)
         // which violates Apple HIG's 44 pt minimum. Standard density
         // keeps the bar a touch taller but every icon is reliably
