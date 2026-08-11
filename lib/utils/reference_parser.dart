@@ -480,15 +480,34 @@ const Map<String, String> _chineseShortAliases = {
   '约一': '1 John', '约二': '2 John', '约三': '3 John',
   '1约': '1 John', '2约': '2 John', '3约': '3 John',
   '犹': 'Jude', '启': 'Revelation',
-  // Traditional Chinese variants
+  // Traditional Chinese variants.
+  //
+  // 2026-08-12 (check 28): this half of the table used to stop at the
+  // twelve abbreviations that happen to be short. The eight that were
+  // missing — 創 傳 約 林後 帖後 提後 彼後 啓 — are not exotic; they are
+  // Genesis, Ecclesiastes and John. A 繁體 reader typing 約 3:16 got
+  // nothing, and 2,304 of the 44,221 book tokens the bundled Chinese
+  // lexicon writes (5.2%) named a book this table could not resolve.
+  '創': 'Genesis',
   '書': 'Joshua', '師': 'Judges',
   '撒上記': '1 Samuel', '撒下記': '2 Samuel',
   '王上記': '1 Kings', '王下記': '2 Kings',
   '詩': 'Psalms', '詩篇': 'Psalms',
+  '傳': 'Ecclesiastes',
   '賽': 'Isaiah', '結': 'Ezekiel',
   '彌': 'Micah', '鴻': 'Nahum', '該': 'Haggai',
   '亞': 'Zechariah', '瑪': 'Malachi',
+  '約': 'John',
   '羅': 'Romans',
+  '林後': '2 Corinthians', '帖後': '2 Thessalonians',
+  '提後': '2 Timothy', '彼後': '2 Peter',
   '門': 'Philemon', '來': 'Hebrews', '雅各': 'James',
-  '猶': 'Jude', '啟': 'Revelation',
+  '猶': 'Jude', '啟': 'Revelation', '啓': 'Revelation',
+  // 壹/貳/參 are the formal numerals CBOL uses for the Johannine
+  // letters; 約一/約二/約三 are the same books in the plain numerals.
+  '约壹': '1 John', '约贰': '2 John', '约参': '3 John',
+  '約壹': '1 John', '約貳': '2 John', '約參': '3 John',
+  '約一': '1 John', '約二': '2 John', '約三': '3 John',
+  // 约伯 must beat 约: "约伯 10:22" is Job, not John.
+  '约伯': 'Job', '約伯': 'Job',
 };

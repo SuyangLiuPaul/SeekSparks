@@ -25,6 +25,7 @@
 /// to the pane itself and read it.
 library;
 
+import 'package:flutter/gestures.dart' show TapGestureRecognizer;
 import 'package:flutter/material.dart';
 
 import 'package:seeksparks/constants/ui_strings.dart';
@@ -35,6 +36,7 @@ import 'package:seeksparks/services/bible_names_service.dart';
 import 'package:seeksparks/services/chinese_lexicon_service.dart';
 import 'package:seeksparks/services/strongs_service.dart';
 import 'package:seeksparks/services/thayer_service.dart';
+import 'package:seeksparks/utils/cbol_references.dart';
 import 'package:seeksparks/utils/morphology.dart' show describeMorphology;
 import 'package:seeksparks/utils/thayer_parse.dart';
 import 'package:seeksparks/widgets/word_forms_section.dart';
@@ -194,6 +196,7 @@ class _WordAnalysisPaneState extends State<WordAnalysisPane> {
 
   @override
   Widget build(BuildContext context) {
+    _releaseRecognizers();
     final wb = WbColors.of(context);
     final t = WbType.of(context);
     final locale = widget.locale;
@@ -597,8 +600,21 @@ class _WordAnalysisPaneState extends State<WordAnalysisPane> {
     );
   }
 
+  /// One recognizer per rendered citation, released on the next build.
+  /// The pane re-renders on every mouse move over the text, so leaving
+  /// them behind would leak one per word hovered.
+  final List<TapGestureRecognizer> _recognizers = [];
+
+  void _releaseRecognizers() {
+    for (final r in _recognizers) {
+      r.dispose();
+    }
+    _recognizers.clear();
+  }
+
   Widget _field(WbColors wb, WbType t, String label, String value) {
     if (value.trim().isEmpty) return const SizedBox.shrink();
+    final base = TextStyle(color: wb.text);
     return Padding(
       padding: const EdgeInsets.only(top: 8),
       child: Text.rich(
@@ -608,10 +624,28 @@ class _WordAnalysisPaneState extends State<WordAnalysisPane> {
             style: TextStyle(
                 fontWeight: FontWeight.w700, color: wb.text),
           ),
-          TextSpan(text: value, style: TextStyle(color: wb.text)),
+          // The Chinese lexicon cites scripture inline. BibleWorks makes
+          // a reference inside a resource a live target; so does this.
+          ...buildCbolSpans(
+            source: value,
+            baseStyle: base,
+            refColor: wb.accent,
+            onRefTap: widget.onOpenRef == null ? null : _openCitation,
+            recognizers: _recognizers,
+          ),
         ]),
         style: TextStyle(fontSize: t.text, height: 1.45),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _releaseRecognizers();
+    super.dispose();
+  }
+
+  void _openCitation(CbolRun run) {
+    widget.onOpenRef?.call(run.englishBook!, run.chapter!, run.verse ?? 1);
   }
 }

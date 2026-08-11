@@ -89,6 +89,10 @@ believe it is fine" and "we looked".
 | 27b | `kjv.json` verse text vs three *external* KJV witnesses | 31,102 verses | 851 → **749** | **101 fixed**, residue is this edition's orthography |
 | 27c | Typographic damage in the English editions | 62,204 verses + 66 tagged books | **42,510 in 3 classes**, and 11,409 again in the tagged layer → **0** | **fixed**, now a test |
 | 27d | Verses truncated by a length cap | 62,204 verses | **1** → **0** | **fixed**, now a test |
+| 28a | The Chinese lexicon's scripture citations parse | 39,749 markup sites | **46,052 citations read**, 60 sites unreadable | grammar shipped, residue listed |
+| 28b | Citations name a book the app can resolve | 44,221 book tokens | **2,304 unresolvable** → **9** | **fixed** (Traditional table completed), 9 ambiguous |
+| 28c | Delimiters reaching the reader | 39,749 `#`/orphan-`\|` sites | **all of them** → **0 readable ones** | **fixed**, now a test |
+| 28d | Mojibake in the Chinese lexicon | 14,696 entries | **3** | surfaced, not repaired — see below |
 
 ---
 
@@ -2052,6 +2056,213 @@ three deletion sites and the Esther 8:9 append re-matched themselves on
 a second run, and the append would have doubled the restored clause.
 Running the tool twice is the only reason that was caught, which is the
 argument for the tool being a tool rather than a one-off script.
+
+---
+
+## Check 28 — the references the Chinese lexicon makes
+
+Every check so far has asked whether the app's *own* claims are true.
+This one asks about a column the app merely relays: the scripture
+citations inside the bundled Chinese lexicon. A Chinese reader leans on
+that column harder than an English reader leans on Strong's, because it
+is the deeper of the two — and cannot check it, because the references
+were not readable.
+
+Four assets carry it:
+
+| asset | entries | entries citing scripture |
+|---|---:|---:|
+| `assets/strongs/greek.json` (CBOL `glossZh`/`defZh` + the Traditional pair) | 5,523 | 3,744 |
+| `assets/strongs/hebrew.json` (same) | 8,674 | 4,853 |
+| `assets/strongs/bdb_zh.json` (BDB in Chinese, behind `ChineseLexiconService`) | 8,853 | 2,450 |
+| `assets/strongs/thayer_zh.json` (Thayer in Chinese, same service) | 5,843 | 290 |
+
+**39,106 `#` sites, and 643 more that had lost their `#`** — 39,749
+citation blocks in 11,337 of 28,893 entries. Every one of them printed
+its delimiters verbatim. The median Greek `glossZh` was **62% markup by
+character** (Hebrew 53%); the worst, H1791, was one character of meaning
+behind 44 of notation. G1615 reached the reader as
+`结束, 完成 (#路 14:19-30|)`.
+
+### The grammar, derived rather than assumed
+
+CBOL writes `(#<citations>|<optional note>)`, but the corpus uses six
+variants of it and only the first is documented anywhere:
+
+| shape | example | where |
+|---|---|---|
+| parenthesised, closed | `(#路 14:19-30\|)` | greek/hebrew |
+| bare, closed | `1) 犹大境内地方 #代上 2:51 \|` | bdb_zh |
+| parenthesised, unclosed | `(#书19:27)` | bdb_zh |
+| inside prose, twice | `#可 5:2 \| 和 #路 8:27 \| 则用…` | thayer_zh |
+| with a note after the pipe | `(#代上 3:5\|译作 拔书亚)` | greek/hebrew, 140 blocks |
+| **opener lost in import** | `持有人 (徒 4:34\|)` | 643 sites, 627 entries |
+
+Three properties matter for correctness and none of them is guessable
+from the notation:
+
+- **The book token is inherited.** `(#提后 1:16-18; 4:19|)` cites
+  2 Timothy twice, not 2 Timothy and then an unnamed book. A block that
+  opens with no book at all is malformed, not inheriting from the
+  previous block.
+- **A hyphen is a passage span, not a verse pair.** Established over the
+  156 hyphen blocks: `路 14:19-30` is one parable. A link therefore
+  opens the span's **first verse** and is never expanded into a list —
+  the opposite choice would have manufactured 30 citations where CBOL
+  made one.
+- **A comma stays inside the chapter; a semicolon starts a citation.**
+  `太 1:13, 14` is one reference; `徒 25:15; 帖后 1:9` is two. A verse
+  list may itself change chapter — `伯 8:12,9:11` — which a naive
+  verse-list regex splits into `8:12,9` and a stray `:11`. That is the
+  first instrument error recorded below.
+
+### 28b — 2,304 citations named a book the app could not resolve
+
+The finding that would not have been visible without cross-checking the
+data against the *code*: `_chineseShortAliases` in
+`lib/utils/reference_parser.dart` had a Traditional half that stopped at
+the twelve abbreviations which happen to be short. Missing were
+**創 傳 約 林後 帖後 提後 彼後 啓** and the 約壹/約貳/約參 numerals —
+Genesis, Ecclesiastes and John among them.
+
+Measured over the corpus's 44,221 explicit book tokens: **2,304 (5.2%)
+named a book the parser returned null for**, 2,281 of them because of
+that gap. The same gap meant a 繁體 reader typing `約 3:16` into the jump
+box got nothing, which is a user-facing defect that had nothing to do
+with the lexicon.
+
+Completing the table leaves **9 unresolvable tokens, and they are left
+that way on purpose**: `代` (8 sites) is either 1 or 2 Chronicles and
+`撒` (1 site) either book of Samuel. Every one of the nine cites a
+chapter that exists in both candidates, so nothing in the data decides
+it. Content makes 1 Chronicles overwhelmingly likely for all eight, but
+"overwhelmingly likely" is how a fabricated fact gets shipped. They stay
+unlinked and unrepaired.
+
+### 28a — what the parser refuses to read
+
+`lib/utils/cbol_references.dart` reads **46,052 citations**. **60 `#`
+sites do not parse** — 36 distinct defects, the rest the same defect
+repeated in the Traditional column. Every one is passed through as plain
+text, `#` and all: an unreadable reference must *look* unreadable rather
+than vanish or link somewhere plausible.
+
+| class | count | example |
+|---|---:|---|
+| no book token at all | 12 | `1b3) 认同, 赞同 (#119:128\|)` |
+| `:` where the chapter should be | 6 | `(#结:26:9\|)`, `(#赛:19)`, `(#诗:13\|)` |
+| ambiguous abbreviation (`代`, `撒`) | 12 | `9) 暗利的父亲或先祖 (#代 27:18\|)` |
+| a book with no numbers | 4 | `1) 年岁, 一生的时间 (#路 )`, `(#雅)` |
+| prose behind the hash | 8 | `1) 重担, 担负 (#喻意用法)`, `(#)` |
+| doubled book token | 2 | `#徒 徒 12:23; 启 12:23, 19:1` |
+| pipe inside the citation | 1 | `1a) (Niphal) 使留在其上 (#哀\|41:1)` |
+| mojibake (28d) | 1 | `4) 广熔(c8fe)(95f8)腔彶陓(c8cb) (#广(c8fe)1)` |
+| lost `#` *and* prose | 14 | `#; 参 '基苏律' 03694 #书 19:12\|` |
+
+Most look repairable — `赛:19` is plainly `赛 19` and `结:26:9` plainly
+`结 26:9`. They are **not** repaired here, and the reason is check 27's
+lesson stated the other way round: repairing licensed third-party data
+in place is a claim about what the source *meant*, and 36 sites is not
+worth making 36 such claims for. They are listed so the claim can be
+made deliberately later, entry by entry, by someone willing to sign it.
+
+### 28c — nothing readable still wears its delimiters
+
+Two defect classes had to be handled before the delimiters could go:
+
+- **643 blocks lost their opening `#` but kept the closing `|`** —
+  `持有人 (徒 4:34|)`, in 627 entries. The parser restores the opener,
+  but only when the parenthesis contains a citation list and **nothing
+  else**, so a note that happens to sit beside a pipe is never promoted
+  to a reference.
+- Four one-off malformations that each account for exactly one entry: a
+  doubled closer (`西 3:13||`), a closer outside its parenthesis
+  (`(#箴6:28)|`), a closer between two citations (`(#罗 9:20|; 提前
+  2:13|)`), and a half-verse letter separated from its number
+  (`创 16:13 a`).
+
+After all of it, **0 readable citations reach the reader carrying a `#`
+or a `|`**, down from 39,749 sites.
+
+### What the reader gets instead
+
+- **A one-line gloss drops its citations entirely.** Safe because it is
+  measurably lossless: every citation in a `glossZh` also appears in the
+  same entry's `defZh` (Greek 3,542/3,542; Hebrew 3,440/3,441). G1615
+  now reads `结束, 完成`.
+- **A definition keeps its citations** — they are the evidence for the
+  sense — and loses only the delimiters.
+- **In the Word Analysis pane the citation is a link.** This is the
+  BibleWorks rule for references inside a resource (help topics bwh46,
+  bwh10a: hovering previews, clicking moves the browse window), applied
+  to the deepest resource the app bundles for a Chinese reader and the
+  only one whose references were inert punctuation. A span links to its
+  **first** verse.
+
+### 28d — three entries of mojibake, surfaced and left
+
+`thayer_zh` **G1050** (Γάϊος), **G1389** (δολόω) and **G1926**
+(ἐπιδέχομαι) are not Chinese. They are a Big5/GB mis-decode:
+`埭赻岭间恅; 篣俶(8ca3)衄靡啅` where the etymology should read `源自…`.
+The hex-in-parentheses artefact (`(c8fe)`, `(84d3)`) is the signature of
+the failed conversion.
+
+Measured across all four assets: a naive `\([0-9a-f]{4}\)` search flags
+10 entries, and **7 of those are false positives** — `(668b)` is a TWOT
+number, `(a) little 7` is the KJV usage line, `(destroy, lea…` is
+English prose. Recording that here because it is exactly the kind of
+count that becomes a "finding" if the instrument is not checked first.
+The true figure is **3 entries of 14,696**.
+
+They are not repaired. The correct fix is to re-decode from the module's
+original bytes, which the repo does not have; inventing three Chinese
+lexicon entries would be worse than leaving three visibly broken ones.
+
+### Two instrument errors, recorded because they nearly became findings
+
+- **The verse-list regex.** An early pass reported residues like `':11'`
+  across the corpus. They were not in the data: the regex swallowed
+  `12,9` in `伯 8:12,9:11` and left the rest behind. A `c:v` item inside
+  a verse list is legal CBOL.
+- **The alias map, twice.** The first measurement reported 630
+  unparseable Greek blocks and 503 + 342 damaged Traditional ones. Both
+  were the measuring script's own incomplete Traditional book table.
+  Proving the data innocent took a block-by-block comparison of the
+  Simplified and Traditional digit/punctuation skeletons — **zero
+  mismatches**. The irony is that the same gap turned out to be real in
+  the *app's* table (28b); an instrument error and a genuine finding
+  wearing the same face.
+
+Also recorded: an earlier off-by-one probe — "does a Strong's number
+adjacent to this one occur at the cited verse" — flagged 98 of 620
+sampled citations. It is **not evidence of misfiling** and is not
+reported as a finding, because cognates cluster: G907/G908/G909 co-occur
+naturally, so the probe cannot separate a misfiled citation from a
+correctly filed one near its relatives.
+
+### What was deliberately NOT changed
+
+- The four lexicon assets are untouched. Every repair in this check is
+  in the reader, not in the data, so a re-import cannot silently undo it
+  and no claim is made about what CBOL meant.
+- The 9 ambiguous book tokens and the 36 distinct malformed sites stay
+  as they are, listed above.
+- The three mojibake entries stay as they are.
+- `stripCbolReferences` is applied to one-line glosses only. Running it
+  over a definition would delete the evidence for the sense.
+
+### Frozen
+
+`test/cbol_lexicon_data_test.dart` walks all four assets and pins the
+three numbers: **46,052 citations parse**, **60 sites do not**, in
+**32 entries** — and asserts that no string the parser *can* read still
+carries a delimiter. A re-import that widens the hole trips it; one that
+narrows it should be pinned to its new value.
+
+`test/cbol_references_test.dart` covers the grammar itself. Every input
+in it is copied verbatim from the assets, including the malformed ones,
+so the tests describe what CBOL wrote rather than what its notation
+looks like it ought to be.
 
 ---
 

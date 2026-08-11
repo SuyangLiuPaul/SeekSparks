@@ -1,4 +1,5 @@
 
+import 'package:seeksparks/utils/cbol_references.dart';
 import 'package:seeksparks/utils/scripture_markup.dart';
 /// A Strong's Concordance dictionary entry.
 ///
@@ -77,6 +78,12 @@ class StrongsEntry {
       if ((definitionZh ?? '').isNotEmpty) rawDef = definitionZh;
     }
     raw ??= gloss;
+    // 2026-08-12 (check 28): a one-line gloss is the wrong place for a
+    // citation list — `结束, 完成 (#路 14:19-30|)` spends more characters
+    // on markup than on meaning. Dropping it here is lossless: every
+    // citation in a glossZh also appears in that entry's defZh.
+    raw = stripCbolReferences(raw);
+    if (rawDef != null) rawDef = stripCbolReferences(rawDef);
     if (raw.isNotEmpty && _isStubGloss(raw) && rawDef != null) {
       final extracted = _extractFirstPhrase(rawDef);
       if (extracted.isNotEmpty) {
@@ -239,6 +246,14 @@ class StrongsEntry {
       kept.add(line);
     }
     var out = kept.join('\n').replaceAll(RegExp(r'\n{3,}'), '\n\n').trim();
+    // 2026-08-12 (check 28): the definition KEEPS its citations — they
+    // are the evidence for the sense — but sheds the `#`/`|` delimiters
+    // that carried them. Surfaces that can render them as links use
+    // [parseCbolRuns] instead of this.
+    out = out
+        .split('\n')
+        .map((l) => l.contains('#') ? cbolPlainText(l) : l)
+        .join('\n');
     return out.isEmpty ? def : out;
   }
 
