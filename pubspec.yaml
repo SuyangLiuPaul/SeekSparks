@@ -102,6 +102,9 @@ flutter:
     # Regenerate after adding a plate: tools/gen_map_thumbs.sh
     - assets/maps/thumbs/
     - assets/maps_index.json
+    # Where the plates came from, as against where their bytes load
+    # (task #300). Regenerate with tools/annotate_map_provenance.py.
+    - assets/maps_provenance.json
     - assets/cross_references.json
     - assets/section_titles.json
     - assets/book_introductions.json

@@ -1,0 +1,167 @@
+{
+  "collections": [
+    {
+      "id": "tissot",
+      "name": {
+        "en": "James Tissot — Bible watercolours",
+        "zh-Hans": "詹姆斯·迪索 — 圣经水彩",
+        "zh-Hant": "詹姆斯·迪索 — 聖經水彩"
+      },
+      "artist": "James Jacques Joseph Tissot (1836–1902)",
+      "work": "The Life of Our Saviour Jesus Christ; The Old Testament",
+      "years": "1886–1902",
+      "holder": "Brooklyn Museum",
+      "license": "public-domain",
+      "licenseBasis": "author-death",
+      "licenseNote": "Tissot died in 1902; the watercolours have been public domain worldwide for over a century.",
+      "attributionRequired": false,
+      "credit": "James Tissot (1836–1902), Brooklyn Museum.",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/Category:Bible_illustrations_by_Jean-James_Tissot"
+    },
+    {
+      "id": "schnorr",
+      "name": {
+        "en": "Julius Schnorr von Carolsfeld — Die Bibel in Bildern",
+        "zh-Hans": "施诺尔·冯·卡罗尔斯费尔德 — 图画圣经",
+        "zh-Hant": "施諾爾·馮·卡羅爾斯費爾德 — 圖畫聖經"
+      },
+      "artist": "Julius Schnorr von Carolsfeld (1794–1872)",
+      "work": "Die Bibel in Bildern",
+      "years": "1860",
+      "holder": null,
+      "license": "public-domain",
+      "licenseBasis": "author-death",
+      "licenseNote": "Published 1860; the artist died in 1872.",
+      "attributionRequired": false,
+      "credit": "Julius Schnorr von Carolsfeld, Die Bibel in Bildern (1860).",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/Category:Die_Bibel_in_Bildern"
+    },
+    {
+      "id": "dore",
+      "name": {
+        "en": "Gustave Doré — Bible engravings",
+        "zh-Hans": "古斯塔夫·多雷 — 圣经版画",
+        "zh-Hant": "古斯塔夫·多雷 — 聖經版畫"
+      },
+      "artist": "Gustave Doré (1832–1883)",
+      "work": "La Grande Bible de Tours",
+      "years": "1866",
+      "holder": null,
+      "license": "public-domain",
+      "licenseBasis": "author-death",
+      "licenseNote": "Published 1866; the artist died in 1883.",
+      "attributionRequired": false,
+      "credit": "Gustave Doré, La Grande Bible de Tours (1866).",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/Category:Gustave_Dor%C3%A9"
+    },
+    {
+      "id": "rembrandt",
+      "name": {
+        "en": "Rembrandt van Rijn",
+        "zh-Hans": "伦勃朗·凡·莱因",
+        "zh-Hant": "林布蘭·凡·萊因"
+      },
+      "artist": "Rembrandt Harmenszoon van Rijn (1606–1669)",
+      "work": null,
+      "years": "1626–1669",
+      "holder": null,
+      "license": "public-domain",
+      "licenseBasis": "author-death",
+      "licenseNote": "The artist died in 1669.",
+      "attributionRequired": false,
+      "credit": "Rembrandt van Rijn (1606–1669).",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/Category:Paintings_by_Rembrandt"
+    },
+    {
+      "id": "sweet",
+      "name": {
+        "en": "Sweet Publishing / Distant Shores Media",
+        "zh-Hans": "Sweet Publishing / Distant Shores Media",
+        "zh-Hant": "Sweet Publishing / Distant Shores Media"
+      },
+      "artist": "Jim Padgett",
+      "work": "Bible illustrations by Sweet Media",
+      "years": "1984",
+      "holder": "Sweet Publishing, Ft. Worth, TX / Gospel Light, Ventura, CA",
+      "license": "cc-by-sa-3.0",
+      "licenseBasis": "upstream-declared",
+      "licenseNote": "Wikimedia Commons reports AttributionRequired = true. The credit line below is the wording the upstream release specifies and is a condition of shipping these 40 plates.",
+      "attributionRequired": true,
+      "credit": "Biblical illustrations by Jim Padgett, courtesy of Sweet Publishing, Ft. Worth, TX, and Gospel Light, Ventura, CA. Copyright 1984. Released under CC BY-SA 3.0.",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+      "sourceUrl": "https://www.dsmedia.org/resources/illustrations/sweet-publishing"
+    },
+    {
+      "id": "masters",
+      "name": {
+        "en": "European masters (assorted)",
+        "zh-Hans": "欧洲古典名画（杂项）",
+        "zh-Hant": "歐洲古典名畫（雜項）"
+      },
+      "artist": null,
+      "work": null,
+      "years": null,
+      "holder": null,
+      "license": "public-domain",
+      "licenseBasis": "entry-description",
+      "licenseNote": "Each entry's own description declares the work public domain. Four name the artist (Bruegel, Rembrandt, Doré); five do not, and those were not re-verified against an upstream file page.",
+      "attributionRequired": false,
+      "credit": "Public-domain artwork; individual artists as titled.",
+      "sourceUrl": null
+    },
+    {
+      "id": "scene-topups",
+      "name": {
+        "en": "Gospel scenes, parables and teachings",
+        "zh-Hans": "福音场景、比喻与教导",
+        "zh-Hant": "福音場景、比喻與教導"
+      },
+      "artist": null,
+      "work": null,
+      "years": null,
+      "holder": null,
+      "license": "unknown",
+      "licenseBasis": "not-recorded",
+      "licenseNote": "No artist recorded in the archive, and the hosted files carry no embedded provenance metadata (checked 2026-08-11). Origin needs to come from whoever assembled the collection.",
+      "attributionRequired": null,
+      "credit": null,
+      "sourceUrl": null
+    },
+    {
+      "id": "bundled-maps",
+      "name": {
+        "en": "Bible-history maps (bundled)",
+        "zh-Hans": "圣经历史地图（内置）",
+        "zh-Hant": "聖經歷史地圖（內置）"
+      },
+      "artist": null,
+      "work": null,
+      "years": null,
+      "holder": null,
+      "license": "unknown",
+      "licenseBasis": "not-recorded",
+      "licenseNote": "Cleared for use by the app's owner from their own collection (2026-08-09). Where the images were originally obtained was not recorded at import, so no licence can be asserted.",
+      "attributionRequired": null,
+      "credit": null,
+      "sourceUrl": null
+    },
+    {
+      "id": "unrecorded",
+      "name": {
+        "en": "Origin not recorded",
+        "zh-Hans": "来源未记录",
+        "zh-Hant": "來源未記錄"
+      },
+      "artist": null,
+      "work": null,
+      "years": null,
+      "holder": null,
+      "license": "unknown",
+      "licenseBasis": "not-recorded",
+      "licenseNote": "This plate names no collection. Treat its licence as unknown.",
+      "attributionRequired": null,
+      "credit": null,
+      "sourceUrl": null
+    }
+  ]
+}

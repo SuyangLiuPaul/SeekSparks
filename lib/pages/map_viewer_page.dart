@@ -24,6 +24,8 @@ import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/bible_map.dart';
+import 'package:seeksparks/models/map_provenance.dart';
+import 'package:seeksparks/services/map_service.dart';
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 import 'package:seeksparks/widgets/illustration_image.dart';
 
@@ -68,6 +70,13 @@ class _MapViewerPageState extends State<MapViewerPage> {
     super.initState();
     _current = widget.map;
     WidgetsBinding.instance.addPostFrameCallback((_) => _revealCurrent());
+    // Task #300. The credit bar draws nothing until this resolves rather
+    // than drawing "Source not recorded" and then correcting itself — a
+    // wrong attribution shown for two frames is still a wrong
+    // attribution, and this is the surface where that matters most.
+    MapService.loadProvenance().then((_) {
+      if (mounted) setState(() {});
+    });
   }
 
   @override
@@ -157,11 +166,79 @@ class _MapViewerPageState extends State<MapViewerPage> {
                     ),
                   ),
                 ),
+                _creditBar(c, t, locale),
                 if (maps.length > 1) _filmstrip(c, t, locale, maps),
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  /// Who made this picture, under the picture (task #300).
+  ///
+  /// BibleWorks puts the same thing in the same relationship: bwh47 says
+  /// each resource carries its own copyright file, shown in the Analysis
+  /// Window beside the resource, and that **that** display — not the
+  /// manual's collected chapter — "is the place to look for definitive
+  /// copyright information". So the credit belongs on the plate. The
+  /// About page's collected list stays, but it is the index, not the
+  /// record.
+  ///
+  /// It is drawn for EVERY plate, including the 151 nobody recorded a
+  /// source for. Printing nothing for those would make them look exactly
+  /// like a public-domain plate that needs no credit, which is the
+  /// opposite of what is true about them.
+  Widget _creditBar(WbColors c, WbType t, String locale) {
+    if (!MapService.provenanceLoaded) return const SizedBox.shrink();
+    final p = MapService.provenanceOf(_current);
+    final line = mapCreditLine(
+      p,
+      locale,
+      unknownLabel: uiStrings['mapCreditUnknown']?[locale] ??
+          'Source not recorded',
+    );
+    final heading =
+        uiStrings['mapCreditHeading']?[locale] ?? 'Image source';
+    return Container(
+      decoration: BoxDecoration(
+        color: c.chromeBg,
+        border: Border(
+          top: BorderSide(color: c.border, width: WbMetrics.hairline),
+        ),
+      ),
+      padding: const EdgeInsets.fromLTRB(10, 5, 10, 5),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '$heading · ',
+            style: TextStyle(
+              fontSize: t.chrome,
+              color: c.mutedText,
+              fontWeight: FontWeight.w700,
+              fontFamilyFallback: kCjkFontFallback,
+            ),
+          ),
+          Expanded(
+            child: Text(
+              line,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: t.chrome,
+                // A required credit is a condition of shipping the
+                // plate, so it gets the readable colour; a courtesy
+                // credit is muted. The reader sees which is which
+                // without being told.
+                color: p.mustCredit ? c.text : c.mutedText,
+                height: 1.35,
+                fontFamilyFallback: kCjkFontFallback,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

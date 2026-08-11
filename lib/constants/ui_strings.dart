@@ -4604,6 +4604,48 @@ const uiStrings = {
     'zh-Hant': 'CC BY 4.0 · Open Scriptures。',
     'en': 'CC BY 4.0 · Open Scriptures.',
   },
+  // Task #300. The plate viewer prints one of these under every
+  // illustration. `mapCreditUnknown` is not a fallback for a lookup that
+  // failed — it is the recorded answer for 151 plates whose origin was
+  // never written down, and saying nothing there would read exactly like
+  // a public-domain plate that needs no credit.
+  'mapCreditUnknown': {
+    'zh-Hans': '来源未记录',
+    'zh-Hant': '來源未記錄',
+    'en': 'Source not recorded',
+  },
+  'mapCreditHeading': {
+    'zh-Hans': '图片来源',
+    'zh-Hant': '圖片來源',
+    'en': 'Image source',
+  },
+  'aboutIllustrations': {
+    'zh-Hans': '插图与地图（1,192 幅）',
+    'zh-Hant': '插圖與地圖（1,192 幅）',
+    'en': 'Illustrations and maps (1,192 plates)',
+  },
+  'aboutIllustrationsPd': {
+    'zh-Hans': '公有领域 · 迪索、施诺尔、多雷、伦勃朗等（作者逝世逾百年）。',
+    'zh-Hant': '公有領域 · 迪索、施諾爾、多雷、林布蘭等（作者逝世逾百年）。',
+    'en': 'Public domain · Tissot, Schnorr, Doré, Rembrandt and others '
+        '(artists dead over a century).',
+  },
+  'aboutIllustrationsSweet': {
+    'zh-Hans': 'Sweet Publishing 插图（40 幅）',
+    'zh-Hant': 'Sweet Publishing 插圖（40 幅）',
+    'en': 'Sweet Publishing illustrations (40 plates)',
+  },
+  'aboutIllustrationsUnknown': {
+    'zh-Hans': '来源未记录（151 幅）',
+    'zh-Hant': '來源未記錄（151 幅）',
+    'en': 'Source not recorded (151 plates)',
+  },
+  'aboutIllustrationsUnknownNote': {
+    'zh-Hans': '经应用拥有者授权使用；原始出处未在收录时记录，因此不能声明其授权条款。',
+    'zh-Hant': '經應用擁有者授權使用；原始出處未在收錄時記錄，因此不能聲明其授權條款。',
+    'en': 'Used by permission of the app\'s owner; where they were '
+        'originally obtained was not recorded, so no licence is claimed.',
+  },
   'aboutLicenseTsk': {
     'zh-Hans': '公有领域（R.A. Torrey, 1834）· 与 OpenBible.info 社群投票数据合并（CC-BY）。'
         '共 29,319 条经文索引。',
@@ -4615,16 +4657,11 @@ const uiStrings = {
             'verses indexed.',
   },
   // Other resources.
-  'aboutMaps': {
-    'zh-Hans': '圣经历史地图（assets/maps/）',
-    'zh-Hant': '聖經歷史地圖（assets/maps/）',
-    'en': 'Bible-history maps (assets/maps/)',
-  },
-  'aboutLicenseMaps': {
-    'zh-Hans': '来源于公有领域 / Creative Commons 资源库。',
-    'zh-Hant': '來源於公有領域 / Creative Commons 資源庫。',
-    'en': 'Public domain / Creative Commons archives.',
-  },
+  // `aboutMaps` / `aboutLicenseMaps` were removed by #300. The second
+  // read "Public domain / Creative Commons archives", which covered
+  // three different legal situations — including 40 plates under a
+  // licence that requires the author be named — with one reassuring
+  // sentence. See the `aboutIllustrations*` keys above.
   // `{name}` is substituted by `withPreacher` from sermon_credit.dart —
   // the preacher is spelled in exactly one file, never in this one.
   'aboutSermons': {

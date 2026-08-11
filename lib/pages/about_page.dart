@@ -6,6 +6,7 @@ import 'package:seeksparks/constants/sermon_credit.dart';
 import 'package:seeksparks/widgets/update_check_tile.dart';
 import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/models/app_settings.dart';
+import 'package:seeksparks/models/map_provenance.dart';
 import 'package:seeksparks/services/link_opener.dart';
 import 'package:seeksparks/utils/clipboard_helper.dart';
 import 'package:seeksparks/utils/responsive.dart';
@@ -618,10 +619,36 @@ class _OtherAttributions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final r = <_AttribRow>[
+      // Task #300. This was one row reading "Public domain / Creative
+      // Commons archives", which is not true of the archive: 151 plates
+      // have no recorded origin at all, and 40 carry a licence that
+      // REQUIRES the author be named. One reassuring sentence covering
+      // three different legal situations is the thing the audit was
+      // for. The middle row is not a courtesy — CC BY-SA 3.0 sets
+      // `AttributionRequired`, so it is a condition of shipping those
+      // 40 plates, the same standing as the MorphGNT and OSHB rows.
       _AttribRow(
-        name: uiStrings['aboutMaps']?[locale] ?? 'Bible-history maps',
-        licence: uiStrings['aboutLicenseMaps']?[locale] ??
-            'Public domain / Creative Commons archives.',
+        name: uiStrings['aboutIllustrations']?[locale] ??
+            'Illustrations and maps (1,192 plates)',
+        licence: uiStrings['aboutIllustrationsPd']?[locale] ??
+            'Public domain · Tissot, Schnorr, Doré, Rembrandt and others '
+                '(artists dead over a century).',
+      ),
+      _AttribRow(
+        name: uiStrings['aboutIllustrationsSweet']?[locale] ??
+            'Sweet Publishing illustrations (40 plates)',
+        // Not translated, and not a paraphrase: this is the wording the
+        // upstream release asks for. Same string the viewer prints.
+        licence: kSweetCredit,
+        url: 'https://creativecommons.org/licenses/by-sa/3.0/',
+      ),
+      _AttribRow(
+        name: uiStrings['aboutIllustrationsUnknown']?[locale] ??
+            'Source not recorded (151 plates)',
+        licence: uiStrings['aboutIllustrationsUnknownNote']?[locale] ??
+            "Used by permission of the app's owner; where they were "
+                'originally obtained was not recorded, so no licence is '
+                'claimed.',
       ),
       _AttribRow(
         name: withPreacher(

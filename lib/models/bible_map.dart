@@ -29,6 +29,19 @@ class BibleMap {
   /// thumbnail strip's _MapThumb falls back to the broken-image icon.
   final String source;
 
+  /// 2026-08-11 (task #300): which `assets/maps_provenance.json` record
+  /// says where this image CAME FROM. [source] only ever answered where
+  /// its bytes load, and the two are different questions — a licence
+  /// turns on the second one. Defaults to `unrecorded`, which is an
+  /// answer the viewer prints rather than a gap it hides.
+  final String collection;
+
+  /// The upstream file page, for plates whose origin is known exactly
+  /// and not merely by collection. Carried by the 40 Sweet Publishing
+  /// plates, whose licence requires attribution and therefore deserves
+  /// a link a reader can check for themselves.
+  final String? sourceUrl;
+
   const BibleMap({
     required this.id,
     required this.title,
@@ -37,6 +50,8 @@ class BibleMap {
     required this.file,
     this.kind = 'map',
     this.source = 'asset',
+    this.collection = 'unrecorded',
+    this.sourceUrl,
   });
 
   factory BibleMap.fromJson(Map<String, dynamic> json) {
@@ -67,6 +82,8 @@ class BibleMap {
       file: file,
       kind: json['kind'] as String? ?? 'map',
       source: inferredSource,
+      collection: json['collection'] as String? ?? 'unrecorded',
+      sourceUrl: json['sourceUrl'] as String?,
     );
   }
 
