@@ -760,6 +760,12 @@ void main() {
         'phrasingSourceOriginals',
         'phrasingNoParse',
         'phrasingNoTags',
+        'phrasingUnpin',
+        'phrasingGlossShow',
+        'phrasingGlossHide',
+        'phrasingGlossFrom',
+        'phrasingGlossLexicon',
+        'phrasingGlossItalic',
       ];
       for (final key in keys) {
         final entry = uiStrings[key];

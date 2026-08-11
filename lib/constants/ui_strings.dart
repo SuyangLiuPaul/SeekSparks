@@ -7088,12 +7088,13 @@ const uiStrings = {
   },
   'phrasingHint': {
     'zh-Hans': '点按一个词，可在它前面另起一行；点按一行的第一个词，可把它并回上一行。'
-        '用 ◀ ▶ 调整缩进——缩进的行从属于上面那一行。',
+        '用 ◀ ▶ 调整缩进——缩进的行从属于上面那一行。长按一个词可查看它的词法解析。',
     'zh-Hant': '點按一個詞，可在它前面另起一行；點按一行的第一個詞，可把它併回上一行。'
-        '用 ◀ ▶ 調整縮排——縮排的行從屬於上面那一行。',
+        '用 ◀ ▶ 調整縮排——縮排的行從屬於上面那一行。長按一個詞可檢視它的詞法解析。',
     'en': 'Tap a word to start a new line before it; tap the first word of a '
         'line to join it back up. Use ◀ ▶ to indent — an indented line is '
-        'subordinate to the line above it.',
+        'subordinate to the line above it. Long-press a word for its full '
+        'parse.',
   },
   'phrasingRelNone': {'zh-Hans': '不标注', 'zh-Hant': '不標註', 'en': 'No label'},
   'phrasingSuggested': {
@@ -7102,9 +7103,35 @@ const uiStrings = {
     'en': 'Suggested by the grammar',
   },
   'phrasingFooterIdle': {
-    'zh-Hans': '指向一个词即可解析。',
-    'zh-Hant': '指向一個詞即可解析。',
-    'en': 'Point at a word to parse it.',
+    'zh-Hans': '长按一个词查看词法解析（也可将鼠标指向它）。',
+    'zh-Hant': '長按一個詞檢視詞法解析（也可將滑鼠指向它）。',
+    'en': 'Long-press a word for its parse — or point at it with a mouse.',
+  },
+  'phrasingUnpin': {'zh-Hans': '取消', 'zh-Hant': '取消', 'en': 'Release'},
+  'phrasingGlossShow': {
+    'zh-Hans': '显示对照行',
+    'zh-Hant': '顯示對照行',
+    'en': 'Show the gloss line',
+  },
+  'phrasingGlossHide': {
+    'zh-Hans': '隐藏对照行',
+    'zh-Hant': '隱藏對照行',
+    'en': 'Hide the gloss line',
+  },
+  'phrasingGlossFrom': {
+    'zh-Hans': '对照行：%s',
+    'zh-Hant': '對照行：%s',
+    'en': 'Gloss line: %s',
+  },
+  'phrasingGlossLexicon': {
+    'zh-Hans': '词典中该词条的释义',
+    'zh-Hant': '詞典中該詞條的釋義',
+    'en': 'the lexicon’s sense for the lemma',
+  },
+  'phrasingGlossItalic': {
+    'zh-Hans': '斜体为%s',
+    'zh-Hant': '斜體為%s',
+    'en': 'italic is %s',
   },
   'phrasingLevelVerses': {'zh-Hans': '按节', 'zh-Hant': '按節', 'en': 'Verses'},
   'phrasingLevelClauses': {

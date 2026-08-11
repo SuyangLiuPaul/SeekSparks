@@ -11,12 +11,18 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 
+import 'package:seeksparks/constants/bible_versions.dart'
+    show shortBibleVersionLabel;
 import 'package:seeksparks/constants/book_names.dart' show bookNameToEnglish;
 import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/constants/workbench_theme.dart' show WbMetrics;
+import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/services/fetch_verses.dart';
 import 'package:seeksparks/services/originals_service.dart';
 import 'package:seeksparks/services/phrasing_store.dart';
+import 'package:seeksparks/services/strongs_service.dart';
 import 'package:seeksparks/services/tagged_text_service.dart';
 import 'package:seeksparks/utils/morphology.dart';
 import 'package:seeksparks/utils/phrasing.dart';
@@ -89,11 +95,86 @@ enum PhrasingSource {
   originals,
 }
 
+/// The one thing this screen cannot be read without.
+///
+/// Phrasing is an act of interpretation — the reader decides where a
+/// clause ends and what is subordinate to what — and that judgement is
+/// impossible without the meaning of the words in front of them. Until
+/// v1.6.106 the meaning was reachable only by HOVERING one word at a
+/// time, which on a tablet is not reachable at all.
+enum _GlossMode {
+  /// The counterpart word printed under each word, always visible.
+  on,
+
+  /// Off, for a reader who knows the language and wants the bare text.
+  off,
+}
+
+/// Every type size on this page, derived from the reader's own font
+/// setting rather than written down.
+///
+/// Nothing here used to move: the words were `fontSize: 17` and the rest
+/// were 10–13, so the Settings slider did not reach this screen at all
+/// (#315). Pointed Hebrew and accented Greek are the worst case for
+/// that, because their diacritics carry meaning and are the first thing
+/// to disappear as size falls.
+class _PhrasingType {
+  const _PhrasingType({
+    required this.word,
+    required this.gloss,
+    required this.chrome,
+    required this.indent,
+  });
+
+  /// The original languages are given the same head start over Latin
+  /// that the workbench already grants them, expressed as the ratio
+  /// between the two constants so the two cannot drift apart.
+  static const double _originalBoost = WbMetrics.original / WbMetrics.text;
+
+  /// Below this, the pointing under a Hebrew consonant stops being
+  /// separable — measured on screen at 1 Kings 21:1 rather than chosen
+  /// as a round number. A reader who sets 12 pt is asking the rest of
+  /// the app to be dense; they are not asking for an unreadable qamats.
+  static const double _originalFloor = 19.0;
+
+  factory _PhrasingType.of(double fontSize, PhrasingSource source) {
+    final word = source == PhrasingSource.originals
+        ? (fontSize * _originalBoost).clamp(_originalFloor, double.infinity)
+        : fontSize;
+    return _PhrasingType(
+      word: word.toDouble(),
+      gloss: (fontSize * 0.62).clamp(11.0, double.infinity).toDouble(),
+      chrome: (fontSize * 0.6).clamp(11.0, double.infinity).toDouble(),
+      // One indent step is a little over one word-width, which is what
+      // makes a subordinate line read as subordinate at any size.
+      indent: word.toDouble() * 1.4,
+    );
+  }
+
+  final double word;
+  final double gloss;
+  final double chrome;
+  final double indent;
+}
+
 class _PhrasingPageState extends State<PhrasingPage> {
   List<PhrasingWord> _words = const [];
   Phrasing? _p;
   bool _loading = true;
   int? _hover;
+
+  /// The word whose parse the footer is holding. Set by a long press,
+  /// which is the only route a touch device has — `_hover` never fires
+  /// there, and this app is tablet-first.
+  int? _pinned;
+  _GlossMode _gloss = _GlossMode.on;
+
+  /// What the gloss line is quoting: the reader's own edition, the
+  /// original corpus, or nothing. Drives the legend, because "this is
+  /// how 雅简+ renders the word" and "this is what the lexicon says the
+  /// lemma means" are different claims.
+  String? _glossSource;
+  bool _glossHasLexicon = false;
   PhrasingSource _source = PhrasingSource.translation;
 
   String get _englishBook => bookNameToEnglish[widget.book] ?? widget.book;
@@ -130,9 +211,10 @@ class _PhrasingPageState extends State<PhrasingPage> {
   Future<void> _load() async {
     // The word list is the WHOLE chapter, always — see
     // [visiblePhrasingLines] for why the window must not affect indices.
-    final words = _source == PhrasingSource.originals
+    final bare = _source == PhrasingSource.originals
         ? await _originalWords()
         : await _translationWords();
+    final words = await _withGlosses(bare);
     final stored =
         await PhrasingStore.load(_storeKey, _englishBook, widget.chapter);
     if (!mounted) return;
@@ -248,6 +330,116 @@ class _PhrasingPageState extends State<PhrasingPage> {
     return words;
   }
 
+  /// Print the other side of the text under every word.
+  ///
+  /// **This is the pairing the screen used to forbid.** The source
+  /// switch made Original and Translation exclusive, so a reader
+  /// phrasing the Hebrew saw no meaning anywhere — which is precisely
+  /// the judgement phrasing requires. The alignment needed for it was
+  /// already in the file: a tagged edition's runs each carry the
+  /// Strong's number of the word behind them, so pairing the two
+  /// renderings is [alignByStrongs] and nothing more.
+  ///
+  /// The lexicon is a FALLBACK, never the first answer. What 雅简+
+  /// actually wrote at 1 Kings 21:1 is a fact about this verse; what
+  /// the lexicon says H1961 means is a fact about the lemma. The second
+  /// is worth showing when the first is unavailable, but the reader is
+  /// told which they are looking at — the gloss is drawn in italic and
+  /// the legend says so.
+  Future<List<PhrasingWord>> _withGlosses(List<PhrasingWord> words) async {
+    _glossSource = null;
+    _glossHasLexicon = false;
+    if (words.isEmpty || words.every((w) => w.strongs.isEmpty)) return words;
+
+    final verses = {for (final w in words) w.verse};
+    final counterpart = await _counterpartByVerse(verses);
+    final out = List<PhrasingWord>.of(words);
+
+    // Align verse by verse: a counterpart from the wrong verse would be
+    // a confident, well-formed lie about the text.
+    var i = 0;
+    while (i < out.length) {
+      final verse = out[i].verse;
+      var end = i;
+      while (end < out.length && out[end].verse == verse) {
+        end++;
+      }
+      final source = counterpart[verse];
+      if (source != null && source.isNotEmpty) {
+        final paired = alignByStrongs(
+          [for (var k = i; k < end; k++) out[k].strongs],
+          source,
+        );
+        for (var k = i; k < end; k++) {
+          out[k] = out[k].withGloss(paired[k - i]);
+        }
+      }
+      i = end;
+    }
+
+    // Whatever the counterpart could not answer, the lexicon may.
+    final unanswered = <String>{
+      for (final w in out)
+        if (w.gloss == null && w.strongs.isNotEmpty) w.strongs,
+    };
+    if (unanswered.isNotEmpty) {
+      final lex = await StrongsService.lookupAll(unanswered);
+      if (lex.isNotEmpty) {
+        for (var k = 0; k < out.length; k++) {
+          if (out[k].gloss != null) continue;
+          final entry = lex[out[k].strongs.trim().toUpperCase()];
+          if (entry == null) continue;
+          // Which side of the pairing the reader is on decides what the
+          // lexicon is asked for: a reader phrasing Hebrew wants the
+          // sense, a reader phrasing their own edition wants the word.
+          final text = _source == PhrasingSource.originals
+              ? entry.localizedGloss(widget.locale)
+              : entry.lemma;
+          if (text.trim().isEmpty) continue;
+          _glossHasLexicon = true;
+          out[k] = out[k].withGloss(text.trim(), fromLexicon: true);
+        }
+      }
+    }
+    if (out.every((w) => w.gloss == null)) _glossSource = null;
+    return out;
+  }
+
+  /// The other rendering of each verse, as `(strongs, text)` pairs.
+  Future<Map<int, List<({String strongs, String text})>>> _counterpartByVerse(
+      Set<int> verses) async {
+    final out = <int, List<({String strongs, String text})>>{};
+    if (_source == PhrasingSource.originals) {
+      if (!TaggedTextService.supports(widget.version)) return out;
+      for (final v in verses) {
+        final runs = await TaggedTextService.forVerse(
+          version: widget.version,
+          englishBook: _englishBook,
+          chapter: widget.chapter,
+          verse: v,
+        );
+        if (runs == null || runs.isEmpty) continue;
+        out[v] = [
+          for (final r in runs) (strongs: r.strongs, text: r.text.trim()),
+        ];
+      }
+      if (out.isNotEmpty) {
+        _glossSource = shortBibleVersionLabel(widget.version);
+      }
+      return out;
+    }
+    final byKey = await OriginalsService.versesOfBook(_englishBook);
+    for (final v in verses) {
+      final ws = byKey['${widget.chapter}:$v'];
+      if (ws == null || ws.isEmpty) continue;
+      out[v] = [for (final w in ws) (strongs: w.strongs, text: w.text)];
+    }
+    if (out.isNotEmpty) {
+      _glossSource = _s('phrasingSourceOriginals', 'Original');
+    }
+    return out;
+  }
+
   Future<void> _setSource(PhrasingSource source) async {
     if (source == _source) return;
     setState(() {
@@ -293,11 +485,26 @@ class _PhrasingPageState extends State<PhrasingPage> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final p = _p;
+    // `watch`, so dragging the Settings slider repaints this screen —
+    // the point of routing the sizes through the setting at all.
+    final t = _PhrasingType.of(context.watch<AppSettings>().fontSize, _source);
 
     return Scaffold(
       appBar: AppBar(
         title: Text(_s('phrasingTitle', 'Phrasing')),
         actions: [
+          if (_words.any((w) => w.gloss != null))
+            IconButton(
+              tooltip: _gloss == _GlossMode.on
+                  ? _s('phrasingGlossHide', 'Hide the gloss line')
+                  : _s('phrasingGlossShow', 'Show the gloss line'),
+              icon: Icon(_gloss == _GlossMode.on
+                  ? Icons.subtitles_outlined
+                  : Icons.subtitles_off_outlined),
+              onPressed: () => setState(() => _gloss = _gloss == _GlossMode.on
+                  ? _GlossMode.off
+                  : _GlossMode.on),
+            ),
           IconButton(
             tooltip: _s('phrasingReset', 'Start over'),
             icon: const Icon(Icons.restart_alt),
@@ -317,11 +524,11 @@ class _PhrasingPageState extends State<PhrasingPage> {
               ? _empty(scheme)
               : Column(
                   children: [
-                    _controls(p, scheme),
+                    _controls(p, scheme, t),
                     const Divider(height: 1),
-                    Expanded(child: _diagram(p, scheme)),
+                    Expanded(child: _diagram(p, scheme, t)),
                     const Divider(height: 1),
-                    _footer(scheme),
+                    _footer(scheme, t),
                   ],
                 ),
     );
@@ -342,7 +549,7 @@ class _PhrasingPageState extends State<PhrasingPage> {
 
   // ── Controls ──────────────────────────────────────────────────────
 
-  Widget _controls(Phrasing p, ColorScheme scheme) {
+  Widget _controls(Phrasing p, ColorScheme scheme, _PhrasingType t) {
     final verses = _verseNumbers;
     final levels = availablePhrasingLevels(_words);
     return Padding(
@@ -366,7 +573,7 @@ class _PhrasingPageState extends State<PhrasingPage> {
                 ),
               ])
                 ChoiceChip(
-                  label: Text(e.$2),
+                  label: Text(e.$2, style: TextStyle(fontSize: t.chrome)),
                   selected: _source == e.$1,
                   onSelected: (_) => _setSource(e.$1),
                 ),
@@ -385,7 +592,8 @@ class _PhrasingPageState extends State<PhrasingPage> {
                 (PhrasingLevel.phrases, 'phrasingLevelPhrases', '+ Phrases'),
               ])
                 ChoiceChip(
-                  label: Text(_s(e.$2, e.$3)),
+                  label:
+                      Text(_s(e.$2, e.$3), style: TextStyle(fontSize: t.chrome)),
                   selected: p.level == e.$1,
                   // A level this text cannot support is disabled rather
                   // than left tappable and inert — see
@@ -420,14 +628,16 @@ class _PhrasingPageState extends State<PhrasingPage> {
                           'lines are yours to draw. Switch to the original '
                           'for a grammatical proposal.',
                     ),
-              style: TextStyle(fontSize: 12, color: scheme.outline),
+              style: TextStyle(fontSize: t.chrome, color: scheme.outline),
             ),
           ],
+          _glossLegend(scheme, t),
           const SizedBox(height: 8),
           Row(
             children: [
               Text(_s('phrasingRange', 'Verses'),
-                  style: TextStyle(fontSize: 13, color: scheme.outline)),
+                  style:
+                      TextStyle(fontSize: t.chrome, color: scheme.outline)),
               const SizedBox(width: 8),
               _verseDrop(verses, p.startVerse, (v) {
                 _update(p.copyWith(
@@ -450,11 +660,39 @@ class _PhrasingPageState extends State<PhrasingPage> {
               'phrasingHint',
               'Tap a word to start a new line before it; tap the first word '
                   'of a line to join it back up. Use ◀ ▶ to indent — an '
-                  'indented line is subordinate to the line above it.',
+                  'indented line is subordinate to the line above it. '
+                  'Long-press a word for its full parse.',
             ),
-            style: TextStyle(fontSize: 12, color: scheme.outline),
+            style: TextStyle(fontSize: t.chrome, color: scheme.outline),
           ),
         ],
+      ),
+    );
+  }
+
+  /// Name where the gloss line comes from.
+  ///
+  /// Without this the reader cannot tell an edition's actual rendering
+  /// of *this verse* from a dictionary sense of the *lemma*, and those
+  /// are different claims about the text. The italic marks each case on
+  /// the word; this says what the two markings mean.
+  Widget _glossLegend(ColorScheme scheme, _PhrasingType t) {
+    if (_gloss == _GlossMode.off) return const SizedBox.shrink();
+    final source = _glossSource;
+    if (source == null && !_glossHasLexicon) return const SizedBox.shrink();
+    final lexicon =
+        _s('phrasingGlossLexicon', 'the lexicon’s sense for the lemma');
+    final text = source == null
+        ? _s('phrasingGlossFrom', 'Gloss line: %s').replaceFirst('%s', lexicon)
+        : _s('phrasingGlossFrom', 'Gloss line: %s').replaceFirst('%s', source) +
+            (_glossHasLexicon
+                ? ' · ${_s('phrasingGlossItalic', 'italic is %s').replaceFirst('%s', lexicon)}'
+                : '');
+    return Padding(
+      padding: const EdgeInsets.only(top: 6),
+      child: Text(
+        text,
+        style: TextStyle(fontSize: t.chrome, color: scheme.outline),
       ),
     );
   }
@@ -475,7 +713,7 @@ class _PhrasingPageState extends State<PhrasingPage> {
 
   // ── The diagram ───────────────────────────────────────────────────
 
-  Widget _diagram(Phrasing p, ColorScheme scheme) {
+  Widget _diagram(Phrasing p, ColorScheme scheme, _PhrasingType t) {
     final all = layoutPhrasing(p, _words);
     final lines =
         visiblePhrasingLines(all, _words, p.startVerse, p.endVerse);
@@ -489,28 +727,29 @@ class _PhrasingPageState extends State<PhrasingPage> {
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(8, 8, 16, 24),
       itemCount: lines.length,
-      itemBuilder: (context, i) => _lineRow(p, lines[i], scheme),
+      itemBuilder: (context, i) => _lineRow(p, lines[i], scheme, t),
     );
   }
 
-  Widget _lineRow(Phrasing p, PhrasingLine line, ColorScheme scheme) {
+  Widget _lineRow(
+      Phrasing p, PhrasingLine line, ColorScheme scheme, _PhrasingType t) {
     final row = Padding(
       padding: EdgeInsetsDirectional.only(
-        start: 8.0 + line.depth * 28.0,
-        top: 3,
-        bottom: 3,
+        start: 8.0 + line.depth * t.indent,
+        top: t.word * 0.22,
+        bottom: t.word * 0.22,
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _depthButton(Icons.chevron_left, line.depth == 0,
+          _depthButton(Icons.chevron_left, line.depth == 0, t,
               () => _update(outdentPhrasingLine(p, _words, line.start))),
-          _depthButton(Icons.chevron_right, false,
+          _depthButton(Icons.chevron_right, false, t,
               () => _update(indentPhrasingLine(p, _words, line.start))),
           const SizedBox(width: 4),
-          _relationChip(p, line, scheme),
+          _relationChip(p, line, scheme, t),
           const SizedBox(width: 6),
-          Expanded(child: _words_(line, scheme)),
+          Expanded(child: _words_(line, scheme, t)),
         ],
       ),
     );
@@ -522,20 +761,22 @@ class _PhrasingPageState extends State<PhrasingPage> {
         : row;
   }
 
-  Widget _depthButton(IconData icon, bool disabled, VoidCallback onTap) =>
+  Widget _depthButton(
+          IconData icon, bool disabled, _PhrasingType t, VoidCallback onTap) =>
       SizedBox(
-        width: 24,
-        height: 24,
+        width: t.chrome * 2.2,
+        height: t.chrome * 2.2,
         child: IconButton(
           padding: EdgeInsets.zero,
-          iconSize: 16,
+          iconSize: t.chrome * 1.45,
           visualDensity: VisualDensity.compact,
           icon: Icon(icon),
           onPressed: disabled ? null : onTap,
         ),
       );
 
-  Widget _relationChip(Phrasing p, PhrasingLine line, ColorScheme scheme) {
+  Widget _relationChip(
+      Phrasing p, PhrasingLine line, ColorScheme scheme, _PhrasingType t) {
     final chosen = line.relation;
     final suggested = line.suggested;
     if (chosen == null && suggested == null) {
@@ -559,7 +800,7 @@ class _PhrasingPageState extends State<PhrasingPage> {
       child: Text(
         label,
         style: TextStyle(
-          fontSize: 11,
+          fontSize: t.chrome,
           fontStyle: chosen != null ? FontStyle.normal : FontStyle.italic,
           color: chosen != null
               ? scheme.onPrimaryContainer
@@ -650,34 +891,39 @@ class _PhrasingPageState extends State<PhrasingPage> {
     ));
   }
 
-  Widget _words_(PhrasingLine line, ColorScheme scheme) {
+  Widget _words_(PhrasingLine line, ColorScheme scheme, _PhrasingType t) {
     final spans = <Widget>[];
     var lastVerse = line.start > 0 ? _words[line.start - 1].verse : -1;
     for (var i = line.start; i < line.end && i < _words.length; i++) {
       final w = _words[i];
       if (w.verse != lastVerse) {
         spans.add(Padding(
-          padding: const EdgeInsetsDirectional.only(end: 3),
+          padding: EdgeInsetsDirectional.only(end: 3, top: t.word * 0.14),
           child: Text('${w.verse}',
               style: TextStyle(
-                  fontSize: 10,
+                  fontSize: t.chrome * 0.9,
                   fontWeight: FontWeight.w600,
                   color: scheme.primary)),
         ));
         lastVerse = w.verse;
       }
-      spans.add(_word(i, w, i == line.start, scheme));
+      spans.add(_word(i, w, i == line.start, scheme, t));
     }
     return Wrap(
       spacing: _cjk ? 0 : 5,
       runSpacing: 2,
-      crossAxisAlignment: WrapCrossAlignment.center,
+      // Top, not centre: the words of the line must share a baseline
+      // even though only some of them carry a gloss underneath.
+      crossAxisAlignment: WrapCrossAlignment.start,
       children: spans,
     );
   }
 
-  Widget _word(int i, PhrasingWord w, bool isLineStart, ColorScheme scheme) {
+  Widget _word(int i, PhrasingWord w, bool isLineStart, ColorScheme scheme,
+      _PhrasingType t) {
     final hovered = _hover == i;
+    final pinned = _pinned == i;
+    final gloss = _gloss == _GlossMode.on ? w.gloss : null;
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hover = i),
@@ -687,10 +933,17 @@ class _PhrasingPageState extends State<PhrasingPage> {
           final p = _p;
           if (p != null) _update(togglePhrasingBreak(p, _words, i));
         },
+        // The parse used to be reachable only by hovering, which a
+        // tablet cannot do at all. A long press is the touch idiom for
+        // "tell me about this without acting on it", and it leaves the
+        // tap free for the break, which is the primary action here.
+        onLongPress: () => setState(() => _pinned = pinned ? null : i),
         child: Container(
           padding: EdgeInsets.symmetric(horizontal: _cjk ? 1 : 2, vertical: 1),
           decoration: BoxDecoration(
-            color: hovered ? scheme.surfaceContainerHighest : null,
+            color: pinned
+                ? scheme.secondaryContainer
+                : (hovered ? scheme.surfaceContainerHighest : null),
             borderRadius: BorderRadius.circular(3),
             // The first word of a line carries the break it stands on,
             // so the reader can see what their next tap would undo.
@@ -700,7 +953,34 @@ class _PhrasingPageState extends State<PhrasingPage> {
                   : BorderSide.none,
             ),
           ),
-          child: Text(w.text, style: const TextStyle(fontSize: 17)),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(w.text, style: TextStyle(fontSize: t.word)),
+              if (gloss != null)
+                // Always upright and left-to-right: a Chinese gloss
+                // under a Hebrew word must not be mirrored by the
+                // ambient RTL direction the diagram runs in.
+                Directionality(
+                  textDirection: TextDirection.ltr,
+                  child: Text(
+                    gloss,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: t.gloss,
+                      height: 1.1,
+                      color: scheme.onSurfaceVariant,
+                      // Italic marks the lexicon's sense for the LEMMA,
+                      // as against what this verse actually says.
+                      fontStyle: w.glossFromLexicon
+                          ? FontStyle.italic
+                          : FontStyle.normal,
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -708,28 +988,54 @@ class _PhrasingPageState extends State<PhrasingPage> {
 
   // ── Footer: the parse of whatever the pointer is on ───────────────
 
-  Widget _footer(ColorScheme scheme) {
-    final i = _hover;
+  Widget _footer(ColorScheme scheme, _PhrasingType t) {
+    // A pinned word outranks the pointer, so reaching for the footer
+    // does not empty it — the same reason the Browse window pins.
+    final i = _pinned ?? _hover;
     final w = (i != null && i < _words.length) ? _words[i] : null;
     final parse = w == null ? null : describeMorphology(w.morph, widget.locale);
     return Container(
       width: double.infinity,
-      height: 30,
+      constraints: BoxConstraints(minHeight: t.chrome * 2.5),
       alignment: AlignmentDirectional.centerStart,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      color: scheme.surfaceContainerHighest,
-      child: Text(
-        w == null
-            ? _s('phrasingFooterIdle', 'Point at a word to parse it.')
-            : [
-                w.text,
-                if (w.translit != null && w.translit!.isNotEmpty) w.translit!,
-                if (w.strongs.isNotEmpty) w.strongs,
-                if (parse != null) parse,
-              ].join('  ·  '),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: t.chrome * 0.35),
+      color: _pinned != null
+          ? scheme.secondaryContainer
+          : scheme.surfaceContainerHighest,
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              w == null
+                  ? _s('phrasingFooterIdle',
+                      'Long-press a word for its parse.')
+                  : [
+                      w.text,
+                      if (w.translit != null && w.translit!.isNotEmpty)
+                        w.translit!,
+                      if (w.gloss != null) w.gloss!,
+                      if (w.strongs.isNotEmpty) w.strongs,
+                      if (parse != null) parse,
+                    ].join('  ·  '),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                  fontSize: t.chrome, color: scheme.onSurfaceVariant),
+            ),
+          ),
+          if (_pinned != null)
+            SizedBox(
+              width: t.chrome * 2.2,
+              height: t.chrome * 2.2,
+              child: IconButton(
+                tooltip: _s('phrasingUnpin', 'Release'),
+                padding: EdgeInsets.zero,
+                iconSize: t.chrome * 1.3,
+                icon: const Icon(Icons.close),
+                onPressed: () => setState(() => _pinned = null),
+              ),
+            ),
+        ],
       ),
     );
   }

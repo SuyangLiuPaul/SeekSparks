@@ -75,6 +75,8 @@ class PhrasingWord {
     required this.verse,
     this.morph,
     this.translit,
+    this.gloss,
+    this.glossFromLexicon = false,
   });
 
   /// Surface form, pointed/accented as the corpus has it.
@@ -90,6 +92,73 @@ class PhrasingWord {
   final String? morph;
 
   final String? translit;
+
+  /// The counterpart word, printed under this one: the reader's own
+  /// edition under an original, the original under a translation run.
+  final String? gloss;
+
+  /// True when [gloss] is the LEXICON's sense for the lemma rather than
+  /// what this verse actually says. The two are different claims and a
+  /// reader deciding where a clause ends is entitled to know which one
+  /// they are looking at — see `#303`, where a per-lemma value printed
+  /// beside a per-occurrence one was wrong 8,030 times.
+  final bool glossFromLexicon;
+
+  PhrasingWord withGloss(String? gloss, {bool fromLexicon = false}) =>
+      PhrasingWord(
+        text: text,
+        strongs: strongs,
+        verse: verse,
+        morph: morph,
+        translit: translit,
+        gloss: gloss,
+        glossFromLexicon: gloss == null ? false : fromLexicon,
+      );
+}
+
+/// Pair one rendering of a verse against another, word by word, using
+/// the Strong's numbers both carry.
+///
+/// Returns one entry per [targetStrongs], holding the [source] text that
+/// stands behind it, or null when nothing does.
+///
+/// **Order of occurrence inside the number, not order in the verse.**
+/// A translation reorders words freely — 和合本 puts 这事以后 where the
+/// Hebrew has הַדְּבָרִים הָאֵלֶּה — so positional matching across the whole
+/// verse would pair the wrong words. Matching the *k*-th target word
+/// carrying `H1961` to the *k*-th source word carrying `H1961` is
+/// order-independent and cannot pair two different lemmas.
+///
+/// **A surplus on either side is left unpaired rather than guessed.**
+/// 1 Kings 21:1 has H1961 twice in Hebrew (וַיְהִי, הָיָה) and once in
+/// 雅简+ (有); the second Hebrew word gets no counterpart, and saying
+/// nothing there is the honest answer. The caller may fall back to the
+/// lexicon, which is a different and clearly-marked claim.
+List<String?> alignByStrongs(
+  List<String> targetStrongs,
+  List<({String strongs, String text})> source,
+) {
+  final queues = <String, List<String>>{};
+  for (final s in source) {
+    final key = s.strongs.trim().toUpperCase();
+    final text = s.text.trim();
+    if (key.isEmpty || text.isEmpty) continue;
+    (queues[key] ??= <String>[]).add(text);
+  }
+  final taken = <String, int>{};
+  final out = <String?>[];
+  for (final raw in targetStrongs) {
+    final key = raw.trim().toUpperCase();
+    final queue = key.isEmpty ? null : queues[key];
+    final at = taken[key] ?? 0;
+    if (queue == null || at >= queue.length) {
+      out.add(null);
+      continue;
+    }
+    taken[key] = at + 1;
+    out.add(queue[at]);
+  }
+  return out;
 }
 
 /// Split a verse of a translation into the units a line can break at.
