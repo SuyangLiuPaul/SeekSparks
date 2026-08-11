@@ -1,0 +1,607 @@
+# PARITY-BACKLOG
+
+What SeekSparks still owes each of the four sources it draws on, and what
+it has decided *not* to owe them.
+
+This document exists because the priority queue in the loop prompt is
+nearly empty, and when it empties the prompt says "resume ordinary
+BibleWorks-parity work" — i.e. an iteration starts choosing its own
+subject. For a week that is fine. Over a year it drifts, and drift is
+expensive here because **every iteration ships**. This is the thing to
+read instead of guessing.
+
+Created 2026-08-12 (#302). Written from the code and the data, not from
+memory; where a claim could not be verified it says so.
+
+---
+
+## 1. How to use this
+
+**Pick one entry. Finish it. Ship it.** The entries are sized so that a
+`PARTIAL` is usually one iteration and an `ABSENT` is usually two or
+three, split at the seams the entry names.
+
+**Before starting anything here, grep the code for it.** This document
+will rot; the code will not. Twice already an item has been worked that
+was silently already done (`#275` and `#287` were both complete with zero
+HANDOFF mentions), and this run found a third and fourth — see §5, where
+an item budgeted at "several iterations" turned out to be finished.
+Budget one minute for the grep. It has saved whole iterations.
+
+**Accuracy outranks everything in here.** The owner has said it twice:
+「accuracy is the most critical and important thing」. If while working an
+entry you find the app *stating something untrue about the text* — a
+wrong transliteration, lemma, count, reference, date or parsing code —
+that jumps the queue, no matter which entry you were on. Then ask "how
+many more of these are there?" and measure it across the corpus before
+reporting. `#303` looked like one bad row and was 8,030 of them.
+`docs/DATA-INTEGRITY.md` is the register for that class and has its own
+ranked list; it takes precedence over this file.
+
+**When you finish an entry, edit it here** — change the verdict, and say
+what is now true. An entry that says `ABSENT` about something that ships
+is worse than no entry.
+
+---
+
+## 2. Verdict vocabulary
+
+| Verdict | Means |
+|---|---|
+| **HAVE** | Ships, reachable from the UI, does the job the source does. |
+| **PARTIAL** | A usable slice ships. The entry names exactly what is missing. |
+| **ABSENT** | Nothing ships. |
+| **REJECTED** | Deliberately not built. The reason is recorded. Re-open only with *new information*, not with a fresh opinion. |
+| **BLOCKED** | Needs a human decision or an input we do not have. Never pick one of these as an iteration's item. |
+
+`REJECTED` carries as much weight as the rest. The Graphical Search
+Engine may genuinely not be worth rebuilding, and saying so once beats
+re-litigating it every run.
+
+---
+
+## 3. Source 1 — BibleWorks 10
+
+The help is extracted at
+`~/Library/Application Support/seeksparks-loop/bibleworks-help/`
+(583 files). **Do not mount the ISO.** `bwh00_Contents.htm` is the
+feature inventory this section was walked from; grep the directory for
+the topic before building anything, because guessing a feature from its
+name is how you build the wrong one — `NEAR5` vs BibleWorks' directional
+`*n` (bwh17) is the standing example.
+
+Windows-implementation topics in that contents list are out of scope by
+construction and are not enumerated below: font remapping, DDE/OLE
+automation, keyboard driver installation, network installation, the
+Configuration Manager, Cyrillic/Eastern-European font support.
+
+### 3.1 Command line and search
+
+The parser is `lib/utils/command_query.dart` (queries),
+`lib/utils/command_verb.dart` (verbs, enum at :218),
+`lib/utils/strongs_boolean_search.dart`, `lib/utils/phrase_match.dart`.
+`command_verb.dart:55-79` already documents what it deliberately does not
+implement and why — that comment block is the model for how this whole
+file should read.
+
+- **AND / OR / phrase / linear phrase (`.` `/` `'` `;`)** — **HAVE.**
+  bwh16. All four control characters parse, including the Chinese
+  one-token-per-Han-character rule.
+- **Wildcards `*` `?`, bracket sets `[abc]` `{abc}`** — **HAVE.** bwh16.
+- **Word gaps inside phrases (`*`, `*3`)** — **HAVE**, and note this is
+  *our* spelling of BibleWorks' proximity. See NEAR below.
+- **NOT (`!`)** — **PARTIAL.** Works in AND/OR. bwh16 also documents
+  "Using the NOT Operator with Phrase Searches"; ours does not accept it
+  inside a phrase. *Done:* `'!the god` slot exclusion parses and is
+  covered by a test.
+- **Verse context limits for AND (`;10`)** — **HAVE.** bwh16.
+- **Proximity** — **PARTIAL, and divergent by choice.** We spell it
+  `G25 NEAR5 G26`, unordered. BibleWorks writes `*n` *between* the words
+  and it is **directional** — "followed within 9 words"
+  (bwh17, bwh20 `('faith *4 love)`). #294 landed the teaching pass
+  (operators dim until the line holds a number, hint row, tooltips).
+  *Done:* decide deliberately whether to accept `*n` as a parity alias —
+  which collides with our wildcard `*` and needs resolving — or to keep
+  `NEARn` and **say in the help that we differ**. Directionality is the
+  substantive gap, not the spelling: an unordered answer to a directional
+  question is a different result set.
+- **Regular expressions (`~`)** — **REJECTED**, reason at
+  `command_query.dart:67`: user-supplied regex over 31k verses is a
+  denial-of-service waiting to happen, and BibleWorks itself calls the
+  feature expert-only. The parser detects and *names* it rather than
+  failing silently (`:446`). Do not re-open without a plan for the
+  runaway-backtrack case.
+- **Compound searches with parentheses** — **ABSENT.** bwh16 "Doing
+  Compound Searches". This is the one missing piece of search *algebra*:
+  today `G25 AND G26 OR G27` cannot be grouped. *Done:* parenthesised
+  grouping in `strongs_boolean_search.dart` with precedence documented
+  and tested, and the `?` help card gaining a runnable example (#299 made
+  those examples tappable, so the mechanism already exists).
+- **Cross-version searches** — **ABSENT.** bwh16. "Find verses where the
+  KJV says X and the LXX says Y." We have every version loaded and a
+  parallel view; nothing can query across two at once. *Done:* one
+  operator that takes a version tag per term, results listed once per
+  verse with both hits shown.
+- **Morphological searches (Greek/Hebrew)** — **PARTIAL.**
+  `lib/services/morph_search_service.dart` + `lib/widgets/morph_search_pane.dart`
+  exist and the Forms tab surfaces them. bwh17 goes considerably further:
+  **morphological agreement**, **lemma agreement**, and **context
+  dependency** — "an adjective agreeing in case, number and gender with
+  the noun two words back" is the class of query BibleWorks is famous for
+  and we cannot express it at all. *Done:* an agreement operator, or an
+  explicit `REJECTED` saying the GSE-class query is out of scope (see
+  3.2) — but decide it, do not leave it accidental.
+- **Accents and vowel points in search** — **PARTIAL.** Hebrew points are
+  stripped when the query contains Hebrew; Greek accents are not
+  stripped. bwh17 makes both a **setting** ("Including Vowel Points in
+  Hebrew Searches and Accents in Greek"). Ours is a hardcoded asymmetry.
+  *Done:* one setting, honestly labelled, applied to both languages.
+- **Qere / Kethib** — **ABSENT.** bwh17 has Qere/Kethib search codes and
+  the status bar carries a Qere/Kethib display setting. Grepping `lib/`
+  for `Qere|Kethib|Ketiv` returns **nothing**. We do hold the data —
+  v1.6.92 recovered 1,235 Hebrew words from the OSHB Qere nesting — so
+  this is a surfacing job, not a data job. `docs/DATA-INTEGRITY.md`'s
+  open item 2 (four verses printing both forms) is the same seam.
+  *Done:* a reader-side setting for which form is shown, and the pair
+  visible on demand.
+- **Search limits (`l gen`)** — **HAVE**, extended past bwh16 by #280's
+  scope model (books, groups, 希伯来圣经/希腊圣经). `l` stops at chapter
+  granularity on purpose (`command_verb.dart:71-79`): verse-granular
+  scoping is the Verse List Manager's job.
+- **Command Line Assistant / Morphology Assistant** — **PARTIAL.** bwh16
+  and bwh17 both ship a guided builder that constructs a query for a
+  reader who does not know the syntax. #294 and #299 gave us the
+  operator strip, per-button tooltips, a context-sensitive hint row and
+  a tappable example card — which is most of the *teaching* but none of
+  the *building*. *Done:* a picker that assembles a morphology query from
+  parts of speech and features without the reader typing a code.
+- **Semantic domains (Louw-Nida)** — **ABSENT.** bwh26 loads them in both
+  the GSE and the Word List Manager. Grep returns nothing.
+  **Licence-gated:** Louw-Nida is UBS copyright. Do not import. Record as
+  `REJECTED` unless an openly-licensed domain set turns up.
+
+### 3.2 The Graphical Search Engine — REJECTED, provisionally
+
+bwh18/19/21/22 — four whole help chapters, a visual query builder with
+word boxes, merge boxes, ordering/proximity boxes and five kinds of
+agreement window. It is BibleWorks' deepest feature and its most-cited
+one in reviews.
+
+**Rejected for now, and the reason is honest:** the GSE is a UI for
+expressing queries the *engine underneath* can answer. Our engine cannot
+answer agreement or context-dependency queries at all (3.1), so building
+the GSE first would be building a steering wheel for an engine that does
+not turn. The order is engine, then builder.
+
+Re-open when 3.1's agreement work lands. If it never lands, this stays
+rejected and that is a defensible product position — most Logos and
+Accordance users never touch their equivalents either.
+
+### 3.3 Browse window and version display
+
+- **Parallel versions** — **HAVE.** Browse mode, `d`/`p` verbs, per-line
+  version tags.
+- **Version display order** — **HAVE** (#288 shipped reorder + confirm).
+- **Parallel Versions favourites** — **REJECTED**, reason at
+  `command_verb.dart:56-62`: there is no UI to create a named set, and a
+  verb that can only fail is worse than no verb; it also removes the
+  `d c` ambiguity. Re-open only alongside a favourites UI.
+- **Browse modes** — **HAVE.** Browse / reader / split
+  (`lib/models/wb_centre_mode.dart`).
+- **Multiple synchronised browse windows** — **ABSENT.** bwh12. Two
+  independent chapters open side by side, optionally synchronised. Our
+  split mode is two *versions* of the **same** chapter. This is a real
+  exegetical need (compare Kings with Chronicles) and we hold the data
+  for it: `assets/ot_synopsis.json` and `gospel_synopsis.json` already
+  align the parallels. *Done:* split mode gains an "independent
+  reference" toggle, and the synopsis assets feed a "jump the other pane
+  to the parallel" action.
+- **Comparing Bible versions (difference highlighting)** — **ABSENT.**
+  bwh37 "Comparing Bible Versions" colour-codes where translations
+  differ. Grep finds no diff/compare code. With 11 versions loaded and a
+  parallel view already rendering them, this is high value for low cost
+  and is the single most obviously missing thing in the Browse pane.
+  *Done:* word-level difference shading across the displayed stack, with
+  a legend, holding `workbench_theme.dart:16`.
+- **External Links Manager** — **ABSENT**, low priority. bwh12.
+
+### 3.4 The Analysis window
+
+Twelve tabs today (`lib/widgets/analysis_tabs.dart:52-79`, enum order is
+load-bearing — it is persisted **by index**, so append, never insert):
+Word Study · X-Refs · Stats · KWIC · Related · Lists · Phrases ·
+Vocabulary · Forms · Topics · Context · Places.
+
+Mapped against BibleWorks' own tab set (bwh10):
+
+| BibleWorks tab | Ours | Verdict |
+|---|---|---|
+| Word Analysis | Word Study | **HAVE** |
+| Search Statistics (bwh23) | Stats | **HAVE** (#290, #308) |
+| Words / wordlist | Word List tool + Vocab | **PARTIAL** — see 3.5 |
+| Context (bwh10h) | Context | **HAVE** |
+| X-Refs | X-Refs | **HAVE** |
+| Resource Summary | — | **PARTIAL** — see below |
+| User Notes | — | **ABSENT** — see below |
+| Version Info | — | **ABSENT**, small |
+| Browse / Verse | centre pane | **HAVE** by another shape |
+| Editor | — | **REJECTED** |
+| Mss (manuscripts, CNTTS) | — | **REJECTED**, licensed |
+| Use / EPUB / AGNT / User Lexicon | — | **REJECTED** |
+| Forms | Forms | **HAVE** |
+| Leningradensis | — | see §5 |
+
+- **Resource Summary tab** — **PARTIAL.** bwh10's docked list of every
+  resource that says something about the focused verse. We answer it in
+  pieces (X-Refs, Topics, Places, sermons) but nothing collects them.
+  `reader_analysis_request.dart` already records that the verse-keyed
+  **sermon list** belongs in a tab for exactly this reason and does not
+  have one (`analysis_tabs.dart:89-92`). *Done:* sermons get a tab, and
+  consider one "everything about this verse" summary above the
+  specialised tabs.
+- **User Notes tab** — **ABSENT, and this is the biggest single gap in
+  the Analysis pane.** bwh10 gives BibleWorks a per-verse and
+  per-chapter note database that is **autoloaded beside the text** and
+  **searchable**. We have notes and highlights
+  (`lib/pages/library_page.dart`, `highlights_page.dart`, reachable from
+  Resources → Notes & highlights) but they live in a separate screen, so
+  a reader studying a verse cannot see or write their note without
+  leaving it. This is precisely the pattern #313 was raised about — the
+  workbench's own rule is that content with a pane goes to the pane.
+  *Done:* a Notes tab bound to the focused verse, writing to the existing
+  store (no new data model), plus note search. **This is the strongest
+  candidate in §3 and it touches user data, so it must not lose a
+  keystroke — read the existing store before designing.**
+- **Editor tab** — **REJECTED.** A word processor inside a Bible program
+  was a 1990s answer to "how do I get this into my paper". The modern
+  answer is the clipboard, and #312 is already making phrasing export
+  rich text. Keep the export, refuse the editor.
+- **Mss tab / CNTTS apparatus / manuscript images** — **REJECTED**,
+  permanently. Licensed data. `HARD CONSTRAINTS` in the loop prompt
+  forbids copying BibleWorks' databases, and the manuscript images are
+  the clearest case.
+
+### 3.5 The study tools
+
+- **Word List Manager (bwh26)** — **PARTIAL.**
+  `lib/pages/word_list_page.dart` builds a list for the passage in view
+  (Tools → Word List, `workbench_page.dart:491`). bwh26 additionally
+  compiles from **a whole version**, **a command-line or GSE query**, and
+  can **compare two word lists** — the comparison being the point
+  (what vocabulary does Jude share with 2 Peter?). Grep finds no compare.
+  *Done:* list-from-query, and a two-list comparison view.
+- **Verse List Manager (bwh27)** — **PARTIAL.** The Lists tab and
+  `verse_list_store.dart` hold and scope lists. bwh27 also **compares two
+  verse lists** and offers a book sort order. *Done:* set operations over
+  two saved lists (in both, in either, in one only).
+- **Related Verses Tool (bwh50)** — **HAVE.** Related tab.
+- **Phrase Matching Tool (bwh51)** — **HAVE.** `phrase_match.dart`,
+  Phrases tab.
+- **KWIC (bwh31)** — **HAVE.**
+- **Diagramming module (bwh25)** — **PARTIAL, and diverging on purpose.**
+  BibleWorks' Diagrammer is a symbol canvas — you drag connectors and
+  boxes. Ours is `lib/pages/phrasing_page.dart`, line-based Biblearc-style
+  phrasing, which #307 and #312 have been deepening at the request of a
+  real outside user (Pastor Raymond HK). **That is the right divergence**
+  — phrasing is practised far more widely than symbol diagramming, and it
+  has an actual user asking for it. Track the remaining #312 items
+  (default range = the sentence, richer export, controls that teach)
+  rather than BibleWorks' symbol set. Note bwh25 ships **pre-made Greek
+  New Testament diagrams**; we have no equivalent corpus and should not
+  invent one.
+- **Parallel-Aligned Hebrew/LXX (bwh30, Tov-Polak)** — **ABSENT.** A
+  word-level alignment of the Hebrew Bible against the Septuagint, with
+  the Tov-Polak analysis columns. We have both texts (`assets/originals/`,
+  `assets/lxxwh.json`) and a 7 KB `assets/strongs/lxx_hebrew_to_greek.json`
+  — a Strong's-to-Strong's mapping, **not** a verse-level alignment. The
+  Tov-Polak database itself is licensed and must not be copied.
+  *Done, conservatively:* a Hebrew↔Greek pane driven by the Strong's
+  correspondence we already own, labelled honestly as a lexical
+  correspondence and **not** as a scholarly alignment. Do not imply
+  Tov-Polak.
+- **Vocabulary flashcards (bwh40)** — **PARTIAL.** Vocab tab +
+  `vocabulary_store.dart`. bwh40 adds learned/not-learned marking,
+  filtering, timed sessions, printing and an **Example Verse Finder**.
+  *Done:* pick the two that matter for retention (learned marking,
+  example verse) and reject the rest — printing flashcards is a paper-era
+  feature.
+- **Lexicon Browser (bwh35)** — **PARTIAL.**
+  `lib/pages/strongs_entry_page.dart` shows one entry, reached from a
+  word. bwh35 lets you **browse the lexicon itself** and **search its
+  text** — "which entries mention 'covenant'". We hold four lexicons
+  (`greek.json`, `hebrew.json`, `thayer.json`, and the Chinese
+  `bdb_zh.json` / `thayer_zh.json`). *Done:* a lexicon window with
+  alphabetic browse and full-text search over the definitions.
+- **Maps (bwh33)** — **HAVE.** Atlas + 1,192 plates + gazetteer, with
+  provenance (#300). bwh33's route/travel-speed tooling is **REJECTED**;
+  it is a cartography editor, not a study feature.
+- **Timeline (bwh39)** — **HAVE.**
+- **Synopsis window (bwh43)** — **PARTIAL.** We hold both synopsis assets
+  and a service, surfaced inside the reader. bwh43 gives it a window with
+  an editable synopsis list. See 3.3's independent-pane item — same fix.
+- **TSK / Nave's / Bible Outline (bwh34)** — **PARTIAL.** TSK is in
+  `cross_references.json`. **Nave's Topical Bible is ABSENT** (Eagle's
+  View's Modern Concordance in the Topics tab is a *different* work, and
+  it is NT-only). Nave's is public domain and openly available — a real,
+  cheap gap. Bible Outline ≈ our `book_introductions.json` +
+  `section_titles.json`, **PARTIAL**.
+- **Read Text module (bwh41)** — **REJECTED.** Audio reading of the
+  biblical text. TTS was built and removed at v1.3.19
+  (`ui_strings.dart:4833`, `app_settings.dart:86`). Do not resurrect it
+  without the owner asking. Distinct from #293 sermon audio, which is a
+  different ask and is BLOCKED on hosting.
+- **Bagster's Daily Light (bwh36)** — **REJECTED.** Devotional. Wrong
+  product; that is YsWords' job.
+- **External Resources Manager / Ermie (bwh32)** — **ABSENT**, low
+  priority.
+- **Report Generator (bwh28)** — **ABSENT.** Generates a formatted study
+  report for a passage: text, lexicon entries for each word, filtered by
+  morphology and frequency. This is a genuinely good idea we have all the
+  parts for (word list, lexicons, morphology, frequency) and no assembly.
+  *Done:* "Report for this passage" producing rich text or HTML that
+  survives pasting — coordinate with #312's export work so there is one
+  export path, not two.
+
+### 3.6 Notes, copying, export
+
+- **Copy / Copy Center (bwh27b)** — **HAVE**, `copy_center_sheet.dart`.
+- **Export options, verse ranges, format choice** — **PARTIAL.** bwh28.
+  *Done:* fold into the Report Generator entry above.
+- **User notes database** — **ABSENT as a docked surface.** See 3.4.
+
+### 3.7 Configuration, extensibility, input
+
+- **Options / settings** — **HAVE**, and then some (`settings_page.dart`,
+  3,313 lines; #281 flagged the size, #311/#315 fixed the type controls).
+- **Book name abbreviations, version abbreviations** — **HAVE.**
+- **Changing book order** — **ABSENT**, low value.
+- **Compiling your own version database (bwh47)** — **ABSENT.**
+  BibleWorks lets a user compile and install their own Bible text. Ours
+  are baked into the bundle. This is how a user brings a translation we
+  cannot ship for licence reasons — which makes it the honest answer to
+  several licence-blocked items (#278 NASB). *Done:* an import path for a
+  user-supplied version file, stored locally, never uploaded. **Sizeable;
+  needs a real design pass, and must not become a piracy convenience —
+  local only, no sharing.**
+- **Custom modules (bwh48)** — **ABSENT.** Same shape as above, for
+  reference works rather than Bibles. Lower priority.
+- **Greek and Hebrew keyboard layouts (bwh45)** — **ABSENT.** BibleWorks
+  ships keyboards so you can *type* Greek and Hebrew into the command
+  line. Grep finds no input-method support. We partly dodge this:
+  `strongs_service.dart` accepts a romanised gloss, so "love" finds G25.
+  But a reader who knows the language cannot type ἀγάπη. *Done:* accept
+  transliterated input for Greek and Hebrew search terms — the same trick
+  the lexicon lookup already uses — rather than building a soft keyboard.
+  Cheaper, and better on a tablet, which is the target device.
+- **Keyboard shortcuts (bwh44)** — **PARTIAL.** Ctrl+L, Ctrl+Shift+C,
+  Esc. bwh44 has a full function-key set. *Done:* a shortcut sheet and
+  the handful worth having, plus a discoverable list — a shortcut nobody
+  can find is not a feature.
+
+### 3.8 What we will never copy
+
+Stated once so nobody re-derives it: BibleWorks' **Bible texts,
+lexicons, morphology databases, manuscript images and apparatus** are
+licensed. Studying the interface and reading the help is fine. Shipping
+the content is not. Everything bundled here must be public domain or
+openly licensed, and the specific exclusions already recorded elsewhere
+stand: `assets/nasb-ev.json`, `assets/nsn-plus.json` and
+`assets/tagged/nsn-plus/` are Eagle's View NASB, all rights reserved,
+and are excluded by `.gitignore:69-71` **deliberately** — they are on
+disk, untracked, and undeclared in `pubspec.yaml` **by design**. That is
+not a wiring bug, and an audit that reports it as one is wrong.
+
+---
+
+## 4. Source 2 — Eagle's View
+
+**Verdict: fully landed. Nothing is sitting unwired.**
+
+Audited 2026-08-12, three ways (present on disk / declared in
+`pubspec.yaml` / referenced from `lib/`). Every asset produced by the six
+`tools/import_eaglesview*.py` scripts is declared and reachable:
+
+| Import | Asset | Reached by |
+|---|---|---|
+| `import_eaglesview.py` | `kjvs.json`, `lxxwh.json`, `cuvs-plus.json` + `assets/tagged/` | `FetchVersesService`, `TaggedTextService` |
+| `..._greek_stats.py` | `assets/greek_stats/` | `GreekStatsService` |
+| `..._lexicons.py` | `thayer.json`, `bible_names.json` | `ThayerService`, `BibleNamesService` |
+| `..._ot_synopsis.py` | `ot_synopsis.json` | `SynopsisService` |
+| `..._places.py` | `bible_places.json` | `PlacesService` |
+| `..._modern_concordance.py` | writes to `build/restricted/` | Topics tab |
+
+Two things worth carrying forward rather than re-deriving:
+
+- The **Modern Concordance importer writes outside the bundle by
+  default** and needs an explicit rights acknowledgement flag. That is
+  intentional. Do not "fix" it by pointing it at `assets/`.
+- The `nsn-plus` mention in `tagged_text_service.dart:164` is a **stale
+  comment** listing a version that was never imported. Harmless, but it
+  is what made an automated audit call the gitignored files a live bug.
+  Worth deleting the next time that file is open.
+
+The historical failure this axis existed to catch — `bible_names.json`
+and `thayer.json` committed but absent from `pubspec.yaml`, so
+unreachable — is closed and has not recurred.
+
+---
+
+## 5. Source 3 — Yahwehdehua (#301)
+
+**Verdict: effectively CLOSED. This is the headline finding of this
+document, and it retires an item budgeted at "several iterations".**
+
+The export is at `~/Documents/New project/yahwehdehua_bible/output/`
+(834 MB; `bible.sqlite`, `manifest.json`, `official_modules/`). #301
+listed five layers as new and unimported. Measured against the repo on
+2026-08-12, **four are already shipping and the fifth is unavailable**:
+
+1. **BDB + Thayer Chinese lexicon (`bdbthayer.dct`, 14,696 entries)** —
+   **ALREADY IMPORTED**, 2026-08-11, by `tools/import_yahweh_modules.py`
+   → `assets/strongs/bdb_zh.json` (**8,853** Hebrew entries) and
+   `thayer_zh.json` (5,843 Greek). Wired at
+   `chinese_lexicon_service.dart:101`, reached from
+   `word_analysis_pane.dart:157`. Verified by reading H430, H1254 and
+   H7965 out of the shipped asset.
+   **Correction to the brief for the record:** it is **not** scholarly
+   BDB. It is the widely-circulated abridged/Strong's-tagged BDB in
+   Chinese translation — median Hebrew entry 111 characters, longest
+   2,695, with KJV gloss-frequency tables and numbered senses. Real
+   unabridged BDB runs thousands of words per major entry with cognate
+   languages. It is much better than a one-line gloss and it is not BDB
+   proper; **do not label it "BDB" in the UI without that qualification.**
+   Keys are unpadded (`H430`, not `H0430`) — a trap for anything that
+   normalises Strong's numbers.
+2. **Strong's + morphology on the Chinese text** — **ALREADY SHIPPING.**
+   `assets/tagged/cuvs-yhwh/`, `cuvs-plus/`, `kjvs/`, `lxxwh/` all carry
+   a `g` field, and it holds exactly the export's TVM codes — Genesis 1:1
+   「创造」 is `{"s":"H1254","g":["H8804"]}` (Qal perfect), 46 distinct
+   codes in Genesis alone, top ones H8799/H8804/H8800 matching the
+   export's distribution. They are decoded for display by the same
+   Chinese lexicon module (the H8675+ TVM pseudo-entries).
+   *(`assets/tagged/bsb/` carries no `g` — the only tagged edition
+   without grammar codes. Minor, and worth a line in DATA-INTEGRITY
+   rather than an entry here.)*
+3. **LC — identified: the Leningrad Codex, Hebrew Old Testament**, 23,145
+   verses (31,102 − 7,957 WH, i.e. LC and WH partition the canon). The
+   site's own metadata says so verbatim: `LC: Leningrad Codex
+   希伯来文旧约圣经`. Fully pointed and accented, morpheme-divided.
+   **Not worth importing as a text** — we already ship a WLC-family
+   Hebrew Bible in `assets/originals/` with **real** morphology, whereas
+   every LC morphology code in the export is the null placeholder
+   `H9999`. Its one genuine use is as an **independent witness** for
+   `docs/DATA-INTEGRITY.md`-style checks on the Hebrew consonantal text
+   and its Strong's tagging. That is a cheap, high-value check and is the
+   only part of #301 still worth doing.
+4. **WH (Westcott-Hort Greek NT, 7,957 verses)** — duplicate. We ship it
+   in `lxxwh.json`, accented; the export's copy is lowercase and
+   unaccented, i.e. strictly worse.
+5. **LEB translator notes (24,245) and supplied-word marks (29,650)** —
+   **ALREADY SHIPPING, and the export is not needed.** Measured: those
+   layers exist in the export on the **LEB reading only** (all other
+   versions hold `[]`), and our `assets/leb.json` already carries the
+   same notes inline — `<note: Or "expanse">` at Genesis 1:6, 11,365
+   occurrences of "Literally" against the export's 11,189. They came with
+   the LEB text itself.
+   **And the export is *not* the missing witness DATA-INTEGRITY has been
+   waiting for.** Open item 4 there wants a source that preserves the
+   LEB's `{…}` idiom braces for 660 imported verses. Checked directly:
+   the export's LEB has **0** verses containing an idiom brace in
+   `text_clean` (its `{` are `{Note: …}` delimiters), and its Genesis 1:6
+   reads "and let it cause a separation between the waters" where ours
+   reads "{let it cause a separation between the waters}". **Negative
+   result, measured — record it so nobody checks twice.**
+
+**What remains of #301:** run the LC text as a second witness against our
+Hebrew (one iteration, accuracy-class work, belongs in DATA-INTEGRITY),
+and nothing else. The standing exclusions still hold — do **not** import
+吕振中 (香港聖經公會) or HCSB (Holman); site-owner approval cannot cover
+third-party texts they do not own.
+
+---
+
+## 6. Source 4 — YsWords
+
+**Method limitation, stated up front:** the YsWords Flutter source is
+**not on this machine**. `~/Documents/CodingProject/yswords-apps` is a
+static website and `yswords-data` is a data/CDN repo; neither contains a
+`pubspec.yaml`. The comparison below is therefore drawn from **this
+repo's own history** — SeekSparks' initial commit is the YsWords tree at
+v1.3.144, and `655002a` (2026-08-05) ported v1.3.145–v1.4.6. Anything
+YsWords has shipped since then is **unknown here**. To do this axis
+properly, clone `github.com/SuyangLiuPaul/YsWords` first; if it is
+unreachable, say so and skip, exactly as #309 instructs for the CDC site.
+
+**The rule, written down once so it is not re-litigated:** *the workbench
+is the app.* YsWords is a phone-first devotional reader and remains an
+actively developed sibling, not a competitor and not an archive. A
+feature's presence in YsWords is not an argument for its presence here.
+Absences that are deliberate:
+
+| Gone from SeekSparks | Why |
+|---|---|
+| `dashboard_page`, home screen | There is no home screen. The workbench is the entry point. |
+| `feedback_page`, `feedback_service` | Removed with the dashboard. |
+| Firebase: auth, Firestore, Realtime DB, Google sign-in | #286, one worldwide build. Cross-device sync was traded for reachability in China; the highlights/notes export is the honest migration path and must keep working. |
+| `search_page` | Merged into the command pane (#B). One search, not two. |
+| `cuv`, `cnv`, `biblexg` v1 | Superseded duplicates. Note the removal caused the prod `FormatException` crash — unknown version codes must fall back, never throw. |
+| TTS / 朗读 | Removed v1.3.19. |
+
+**Where YsWords may still be ahead, and worth a look when the source is
+available:** anything touching notes and highlights. That subsystem holds
+**user data**, YsWords is phone-first where note-taking is common, and
+§3.4 above wants a Notes tab anyway. If YsWords has evolved the note
+model since v1.4.6, we want to know before we build a second one.
+
+Everything original-language — Strong's, concordance, originals,
+cross-references, LXX — was already ported and has since been developed
+much further here. No study capability is known to have been lost in the
+fork.
+
+---
+
+## 7. The fifth axis — UI/UX and detail fine-checks
+
+The owner named this explicitly, and it never appears in a feature
+inventory. **It is a standing section, not a list that empties.** Two of
+the worst defects found so far were invisible in English and invisible to
+a green test suite: #297's CJK label ellipsis (a Latin width constant
+applied to full-width glyphs, so Chinese *always* truncated and English
+*never* did) and the version-pill glyph collision.
+
+**The standing sweep.** For any surface you touch:
+
+- **Widths:** 1400 (comfortable), 992 (the three-pane gate), and the
+  **pane minimum** (256 analysis / 240 search). Overflow hides at the
+  minimum.
+- **Locales:** EN, 简, **繁** — traditional forms run wider than
+  simplified, so 繁 is the one that breaks.
+- **Themes:** light and dark.
+- **Type:** 12 / 20 / 40 pt and menu scale 0.7 / 1.0 / 1.5, after #311
+  and #315 made the controls real. Original-language text has a higher
+  floor than Latin — pointed Hebrew loses its diacritics before Latin
+  loses legibility, and those diacritics carry meaning.
+- **Touch:** the target device is a tablet. **There is no hover.** Any
+  teaching that lives only in a `Tooltip` is invisible in practice
+  (#299). Any content that lives only in a hover preview is unreachable
+  (#312).
+- **RTL:** Hebrew flows the other way, and indentation is a flow
+  direction.
+
+**Chrome consistency (#279, still open).** The live inventory is the
+`_remaining` map in `test/page_chrome_pass_test.dart` — read that, not
+any prose count. Spec is `workbench_theme.dart:16`: *square corners, 1 px
+hairline borders, no shadows, no cards.* Do not flatten blindly: reading
+surfaces may keep generous spacing and larger type. It is the **chrome**
+that must match, not the density.
+
+**The rule that produced most of these findings, worth repeating:** *a
+screenshot is the verification.* The suite has stayed green through every
+visual defect this project has shipped. A widget test that asserts a
+`TextStyle` passes happily while the page is illegible.
+
+---
+
+## 8. Picking the next item
+
+In rough order of value, if nothing else is pressing:
+
+1. **Anything in `docs/DATA-INTEGRITY.md`'s ranked list.** Accuracy
+   outranks everything here.
+2. **A User Notes tab** (§3.4) — the largest gap in the Analysis pane,
+   and the one #313's own rule already argues for.
+3. **Version difference highlighting** (§3.3) — high value, low cost, all
+   the data is already on screen.
+4. **Nave's Topical Bible** (§3.5) — public domain, closes a named
+   BibleWorks resource, small.
+5. **Word list / verse list comparison** (§3.5) — the comparison is the
+   feature; we have both halves and neither compares.
+6. **Compound (parenthesised) search** (§3.1) — the last missing piece of
+   search algebra.
+7. **Transliterated Greek/Hebrew search input** (§3.7) — cheap, and it
+   unlocks the corpus for readers who know the languages.
+
+Do not pick a `BLOCKED` entry. The current ones: **#278** (NASB licence),
+**#293** (sermon-audio hosting cost), **#296** (production deploy
+approval), **#309** (the CDC site is unreachable from this machine), and
+the LEB-notes rights question if it is ever re-opened.
