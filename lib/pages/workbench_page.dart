@@ -1801,6 +1801,21 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
 
   // ── Left: command pane ────────────────────────────────────────────
 
+  /// The same Word List the Tools menu opens, for the passage in view.
+  ///
+  /// Reached from the command pane's syntax card and from the hint that
+  /// says a Strong's number is missing — the two places that raise the
+  /// question "where would I get one".
+  void _openWordList() {
+    final mp = context.read<MainProvider>();
+    pushPage(WordListPage(
+      book: mp.currentBook ?? '',
+      chapter: mp.currentChapter ?? 1,
+      locale: context.read<AppSettings>().locale,
+      version: mp.currentVersion,
+    ));
+  }
+
   Widget _buildCommandFrame(BuildContext context) {
     final settings = context.watch<AppSettings>();
     final locale = settings.locale;
@@ -1823,6 +1838,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
             child: CommandPane(
               focusNode: _commandFocus,
               onEditScope: _openScopeSheet,
+              onOpenWordList: _openWordList,
             ),
           ),
         ],

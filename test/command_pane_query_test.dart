@@ -224,7 +224,15 @@ void main() {
       await tester.tap(find.text('?'));
       await tester.pump();
       expect(find.textContaining('Command line syntax'), findsOneWidget);
-      expect(find.textContaining('.paul silas;10'), findsOneWidget);
+      // The EXPLANATION follows the interface, which here is English.
+      // The example beside it does not: this harness reads the default
+      // Chinese edition, and since task #299 the card's examples are
+      // written in the language of the text being searched, because
+      // tapping `.paul silas;10` while reading 和合本 fills the line with
+      // a query that cannot match. See command_operator_strip_test.dart.
+      expect(find.textContaining('within 10 verses of each other'),
+          findsOneWidget);
+      expect(find.textContaining('.保罗 西拉;10'), findsOneWidget);
     });
 
     testWidgets('a control chip replaces the control, it does not stack',

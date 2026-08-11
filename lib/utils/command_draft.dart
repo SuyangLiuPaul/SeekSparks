@@ -23,7 +23,8 @@
 
 import 'package:seeksparks/constants/ui_strings.dart';
 
-import 'command_query.dart' show kCommandControls;
+import 'command_query.dart' show kCommandControls, kMaxWordGap;
+import 'strongs_boolean_search.dart' show parseStrongsBoolean;
 
 /// Which grammar the line is currently in.
 enum CommandDraftMode {
@@ -51,6 +52,23 @@ enum CommandDraftHint {
   /// A complete `G25 NEAR5 G26` — say what the window actually means,
   /// because the number is a word DISTANCE and reads like a word GAP.
   nearWindow,
+
+  /// `yahweh NEAR5 god` — a combining operator standing between ordinary
+  /// WORDS. Nothing in the app parses that: it is not a command (no
+  /// leading control character) and not a Strong's expression (no
+  /// number), so the WHOLE LINE reaches `SearchService.scanText`, which
+  /// matches the literal substring "yahwehnear5god" and finds nothing.
+  /// The reader is told "no results" about a query that was never run.
+  combinerOnWords,
+
+  /// `G25 NEAR G26` — the keyword with no distance after it. The parser
+  /// requires digits, so this too falls through to the literal scan.
+  nearWithoutDistance,
+
+  /// `G25 AND god` — a number is present, so the line is plainly meant as
+  /// a Strong's expression, but some token is not one and the parser
+  /// refuses the whole thing.
+  notAStrongsExpression,
 }
 
 /// A `NEAR5` / `WITHIN5` token located in the line, so the distance can be
@@ -95,6 +113,8 @@ class CommandDraft {
     this.near,
     this.hint,
     this.combiner,
+    this.suggestion,
+    this.offender,
   });
 
   final CommandDraftMode mode;
@@ -111,6 +131,16 @@ class CommandDraft {
   /// The combining operator the hint is about, as typed (`AND`, `NEAR5`).
   final String? combiner;
 
+  /// A query that does what this line was reaching for, in a grammar the
+  /// app actually runs — offered for one tap rather than described in
+  /// prose. Null when the line is ambiguous enough that any rewrite would
+  /// be a guess at what the reader meant.
+  final String? suggestion;
+
+  /// The token that stopped the parse (`god` in `G25 AND god`), when one
+  /// token is identifiably at fault.
+  final String? offender;
+
   /// Whether AND / OR / NOT / NEARn can do anything with this line. The
   /// strip dims them when they cannot, rather than hiding them: a button
   /// that vanishes as you type cannot be learned from.
@@ -118,6 +148,19 @@ class CommandDraft {
 
   /// Whether the strip should show its explanation row at all.
   bool get showsHint => hint != null;
+
+  /// The line names a combining operator but will not run as one — it
+  /// reaches `SearchService.scanText` and is matched as one literal
+  /// string, so it answers "no results" to a question nobody asked.
+  ///
+  /// Recents exists to be re-run (bwh09: "Entries are not added to this
+  /// list until they are executed without any error messages"), so a
+  /// line in this state must not join it. ↑/↓ history still carries it,
+  /// which is the list for fixing the thing you just mistyped.
+  bool get willNotRunAsWritten =>
+      hint == CommandDraftHint.combinerOnWords ||
+      hint == CommandDraftHint.nearWithoutDistance ||
+      hint == CommandDraftHint.notAStrongsExpression;
 }
 
 /// The parser's own bounds, so the strip lights up on exactly the numbers
@@ -142,8 +185,27 @@ bool _isStrongsTerm(String token) {
 bool _isCombiner(String token) =>
     _wordCombinerRe.hasMatch(token.toUpperCase()) || _nearRe.hasMatch(token);
 
+/// A combining operator spelled the way the strip's buttons write it and
+/// the help card prints it: UPPERCASE, exactly.
+///
+/// Case matters here and nowhere else in this file. `near`, `and` and
+/// `not` are ordinary English words — "abide near god", "faith and
+/// works" — and reading a lowercase one as a broken operator would put an
+/// error under a perfectly good text search. Reading an UPPERCASE one as
+/// prose costs the reader nothing but a missed suggestion, so that is the
+/// side to err on.
+final RegExp _typedCombinerRe =
+    RegExp(r'^(AND|OR|NOT|NEAR\d*|WITHIN\d*)$');
+
+/// `NEAR` / `WITHIN` with the distance missing.
+final RegExp _bareNearRe = RegExp(r'^(NEAR|WITHIN)$', caseSensitive: false);
+
 /// Read [text] as a draft query. Cheap enough to call on every keystroke.
-CommandDraft analyseCommandDraft(String text) {
+///
+/// [nearDistance] is the distance the strip's NEAR button currently
+/// carries, used only to fill in a suggested rewrite for a line that
+/// named NEAR without one.
+CommandDraft analyseCommandDraft(String text, {int nearDistance = 5}) {
   final raw = text.trim();
   if (raw.isEmpty) {
     return const CommandDraft(
@@ -160,6 +222,21 @@ CommandDraft analyseCommandDraft(String text) {
   final allCombiners = !startsWithControl && tokens.every(_isCombiner);
 
   if (mode == CommandDraftMode.text && !allCombiners) {
+    // `yahweh NEAR5 god`: an operator between words. Round one of #294
+    // dimmed the buttons until a number was present but said nothing
+    // about a line that already carries one of them, so this shape kept
+    // running as a literal text scan and reporting no results.
+    final opAt =
+        startsWithControl ? -1 : tokens.indexWhere(_typedCombinerRe.hasMatch);
+    if (opAt >= 0) {
+      return CommandDraft(
+        mode: mode,
+        hasStrongsTerm: false,
+        hint: CommandDraftHint.combinerOnWords,
+        combiner: tokens[opAt],
+        suggestion: suggestTextEquivalent(tokens, nearDistance: nearDistance),
+      );
+    }
     return CommandDraft(mode: mode, hasStrongsTerm: false);
   }
 
@@ -184,6 +261,53 @@ CommandDraft analyseCommandDraft(String text) {
       combiner: tokens.first,
     );
   }
+
+  // The line holds a number, so it is plainly meant as a Strong's
+  // expression. Ask the SHARED PARSER whether it will actually run —
+  // rather than enumerating the shapes that fail, which is how
+  // `G25 NEAR G26` and `G25 AND god` were both missed. Anything it
+  // refuses reaches `SearchService.scanText` as one literal string.
+  //
+  // A single token is exempt: a bare `G25` is refused on purpose, because
+  // it belongs to the lexicon path.
+  if (mode == CommandDraftMode.strongs &&
+      tokens.length > 1 &&
+      parseStrongsBoolean(raw) == null) {
+    final bareAt = tokens.indexWhere(_bareNearRe.hasMatch);
+    if (bareAt >= 0) {
+      final filled = [...tokens];
+      filled[bareAt] = '${tokens[bareAt]}$nearDistance';
+      return CommandDraft(
+        mode: mode,
+        hasStrongsTerm: true,
+        hint: CommandDraftHint.nearWithoutDistance,
+        combiner: tokens[bareAt],
+        suggestion: filled.join(' '),
+      );
+    }
+    String? offender;
+    String? namedCombiner;
+    for (final t in tokens) {
+      if (_isCombiner(t)) {
+        namedCombiner ??= t;
+        continue;
+      }
+      if (_isStrongsTerm(t)) continue;
+      // `!G26` is the glued NOT alias and a legitimate term, so it is
+      // never the reason a parse failed.
+      if (t.startsWith('!') && _isStrongsTerm(t.substring(1))) continue;
+      offender ??= t;
+    }
+    return CommandDraft(
+      mode: mode,
+      hasStrongsTerm: true,
+      near: near,
+      hint: CommandDraftHint.notAStrongsExpression,
+      combiner: namedCombiner,
+      offender: offender,
+    );
+  }
+
   return CommandDraft(
     mode: mode,
     hasStrongsTerm: true,
@@ -191,6 +315,69 @@ CommandDraft analyseCommandDraft(String text) {
     hint: near == null ? null : CommandDraftHint.nearWindow,
     combiner: near == null ? null : '${near.keyword}${near.distance}',
   );
+}
+
+/// The text-grammar query that means what `word OPERATOR word` was
+/// reaching for, or null when translating it would be a guess.
+///
+/// The four operators do have text equivalents, and refusing without
+/// naming them teaches nothing:
+///
+///   yahweh AND god    →  .yahweh god
+///   yahweh OR god     →  /yahweh god
+///   yahweh NOT god    →  .yahweh !god
+///   yahweh NEAR5 god  →  'yahweh *4 god
+///
+/// The NEAR case is the one worth reading twice. `NEARn` is a word
+/// DISTANCE and admits `n - 1` words in between (`strongs_proximity.dart`
+/// tests `(a - b).abs() <= n`), while `*n` inside a phrase is the number
+/// of words in between (`GapElement(0, n)`) — so the distance drops by
+/// one on the way across. It is also only HALF the operator: a phrase is
+/// ordered and NEAR is not. Callers say so; the rewrite cannot.
+///
+/// Mixed operators return null. `a AND b OR c` has a precedence the text
+/// grammar does not express, and inventing one would silently answer a
+/// different question.
+String? suggestTextEquivalent(List<String> tokens, {int nearDistance = 5}) {
+  final kinds = <String>{};
+  var nearAt = -1;
+  var distance = nearDistance;
+  final words = <String>[];
+  final notFrom = <int>[];
+  for (var i = 0; i < tokens.length; i++) {
+    final t = tokens[i];
+    if (!_typedCombinerRe.hasMatch(t)) {
+      words.add(t);
+      continue;
+    }
+    if (t.startsWith('NEAR') || t.startsWith('WITHIN')) {
+      kinds.add('NEAR');
+      nearAt = words.length;
+      final digits = RegExp(r'\d+$').firstMatch(t)?.group(0);
+      if (digits != null) distance = int.parse(digits);
+    } else {
+      kinds.add(t);
+      if (t == 'NOT') notFrom.add(words.length);
+    }
+  }
+  if (kinds.length != 1 || words.length < 2) return null;
+  switch (kinds.first) {
+    case 'AND':
+      return '.${words.join(' ')}';
+    case 'OR':
+      return '/${words.join(' ')}';
+    case 'NOT':
+      final out = [
+        for (var i = 0; i < words.length; i++)
+          notFrom.any((at) => i >= at) ? '!${words[i]}' : words[i]
+      ];
+      return '.${out.join(' ')}';
+    case 'NEAR':
+      final gap = (distance - 1).clamp(0, kMaxWordGap);
+      final out = [...words]..insert(nearAt, '*$gap');
+      return "'${out.join(' ')}";
+  }
+  return null;
 }
 
 NearToken? _lastNear(String text) {
@@ -248,5 +435,34 @@ String? describeCommandDraft(CommandDraft draft, String locale) {
                   '(up to {gap} words in between).')
           .replaceAll('{n}', '$n')
           .replaceAll('{gap}', '${n - 1}');
+    case CommandDraftHint.combinerOnWords:
+      // Two strings, because a rewrite we cannot offer must not be
+      // described as though it were on screen.
+      final key = draft.suggestion == null
+          ? 'cmdDraftWordsNoFix'
+          : (op.startsWith('NEAR') || op.startsWith('WITHIN')
+              ? 'cmdDraftWordsNearFix'
+              : 'cmdDraftWordsFix');
+      return (uiStrings[key]?[locale] ??
+              (draft.suggestion == null
+                  ? '{op} joins two Strong\'s numbers, not words.'
+                  : '{op} joins two Strong\'s numbers, not words. '
+                      'For words:'))
+          .replaceAll('{op}', op);
+    case CommandDraftHint.nearWithoutDistance:
+      return (uiStrings['cmdDraftNearNoDistance']?[locale] ??
+              '{op} needs a distance — how many words apart:')
+          .replaceAll('{op}', op);
+    case CommandDraftHint.notAStrongsExpression:
+      final bad = draft.offender;
+      if (bad == null) {
+        return uiStrings['cmdDraftNotStrongsShape']?[locale] ??
+            "This will not run as a Strong's search. The shape is "
+                'G25 AND G26.';
+      }
+      return (uiStrings['cmdDraftNotStrongsToken']?[locale] ??
+              '"{token}" is not a Strong\'s number, so this runs as a '
+                  'plain text search. Numbers look like G25 or H430.')
+          .replaceAll('{token}', bad);
   }
 }

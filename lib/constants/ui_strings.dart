@@ -2998,6 +2998,36 @@ const uiStrings = {
     'zh-Hant': 'G25✶ — 所有以 G25 開頭的編號 · G25 !G26 與 NOT 相同',
     'en': "G25✶ — every number starting G25 · G25 !G26 is the same as NOT",
   },
+  // ── Task #299 ─────────────────────────────────────────────────────
+  // The card printed `G25 AND G26` without ever saying where a reader is
+  // supposed to get a G25. The Word List for the passage in view is the
+  // answer, and it is one tap away — so this line is the link, not a
+  // description of one.
+  'cmdSyntaxFindNumber': {
+    'zh-Hans': '编号从哪来？打开本章的原文词表 →',
+    'zh-Hant': '編號從哪來？開啟本章的原文詞表 →',
+    'en': "Where do the numbers come from? Open this chapter's Word List →",
+  },
+  // The card's examples are runnable queries, and until #299 the only way
+  // to use one was to retype it. Tapping puts it on the line WITHOUT
+  // running it: `ai …` leaves the device, and every text example is a
+  // guess at what the reader wants that they should get to edit first.
+  'cmdSyntaxTapHint': {
+    'zh-Hans': '点任意一行，即可把该例子填入命令行。',
+    'zh-Hant': '點任一行，即可把該例子填入命令行。',
+    'en': 'Tap any line to put that example on the command line.',
+  },
+  // The one-tap rewrite offered under a line that will not run.
+  'cmdDraftUseInstead': {
+    'zh-Hans': '改用这个',
+    'zh-Hant': '改用這個',
+    'en': 'Use this instead',
+  },
+  'cmdDraftFindNumber': {
+    'zh-Hans': '查编号',
+    'zh-Hant': '查編號',
+    'en': 'Find a number',
+  },
   // Operator-button tooltips. The strip had none at all, which is how a
   // word-shaped token like NEAR5 could sit there unexplained.
   'cmdOpTipAll': {
@@ -3044,6 +3074,44 @@ const uiStrings = {
     'zh-Hant': '相距 {n} 個詞以內，不分先後（中間最多 {gap} 個詞）。',
     'en': 'Within {n} words of each other, in either order '
         '(up to {gap} words in between).',
+  },
+  // A combining operator typed between ordinary WORDS. Without these the
+  // whole line reached the literal text scan and returned nothing, silently.
+  'cmdDraftWordsFix': {
+    'zh-Hans': '{op} 只连接原文编号，不连接词。同样意思的词语写法：',
+    'zh-Hant': '{op} 只連接原文編號，不連接詞。同樣意思的詞語寫法：',
+    'en': "{op} joins two Strong's numbers, not words. "
+        'The same search in words:',
+  },
+  'cmdDraftWordsNearFix': {
+    'zh-Hans': '{op} 只连接原文编号，不连接词。词语最接近的写法是按顺序的：',
+    'zh-Hant': '{op} 只連接原文編號，不連接詞。詞語最接近的寫法是按順序的：',
+    'en': "{op} joins two Strong's numbers, not words. "
+        'The closest word form keeps them in order:',
+  },
+  'cmdDraftWordsNoFix': {
+    'zh-Hans': '{op} 只连接原文编号，不连接词。这一行会被当成一整串文字去查。',
+    'zh-Hant': '{op} 只連接原文編號，不連接詞。這一行會被當成一整串文字去查。',
+    'en': "{op} joins two Strong's numbers, not words. "
+        'This line will be searched as one literal string.',
+  },
+  'cmdDraftNearNoDistance': {
+    'zh-Hans': '{op} 后面要写距离，例如 {op}5。相距几个词以内：',
+    'zh-Hant': '{op} 後面要寫距離，例如 {op}5。相距幾個詞以內：',
+    'en': '{op} needs a distance after it, e.g. {op}5. How many words apart:',
+  },
+  'cmdDraftNotStrongsShape': {
+    'zh-Hans': '这一行不会当作原文编号检索来跑。写法是「G25 AND G26」。',
+    'zh-Hant': '這一行不會當作原文編號檢索來跑。寫法是「G25 AND G26」。',
+    'en': "This will not run as a Strong's search. The shape is G25 AND G26.",
+  },
+  'cmdDraftNotStrongsToken': {
+    'zh-Hans': '「{token}」不是原文编号，所以整行会被当成文字去查。'
+        '编号的样子是 G25 或 H430。',
+    'zh-Hant': '「{token}」不是原文編號，所以整行會被當成文字去查。'
+        '編號的樣子是 G25 或 H430。',
+    'en': '"{token}" is not a Strong\'s number, so this runs as a plain '
+        'text search. Numbers look like G25 or H430.',
   },
   'cmdDraftNearFewer': {
     'zh-Hans': '缩小词距',

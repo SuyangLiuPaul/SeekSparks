@@ -8,6 +8,7 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:seeksparks/constants/workbench_theme.dart';
@@ -183,6 +184,28 @@ void main() {
       await pump(tester);
       await submit(tester, '.');
       expect(await RecentSearchesService.list(), isEmpty);
+    });
+
+    testWidgets('nor is one that ran as something else entirely',
+        (tester) async {
+      // 2026-08-11 (task #299). This is where `yahweh NEAR5` was
+      // reported from. It raises no `commandIssue` at all: it is not a
+      // command and not a Strong's expression, so it reaches
+      // `SearchService` and is matched as the literal string
+      // "yahwehnear5god" — nothing found, nothing said, and then filed
+      // as a search that worked. Recents is a list you re-run, so the
+      // gate has to be "will this do what it says", not "did anything
+      // complain".
+      await pump(tester);
+      await submit(tester, 'yahweh NEAR5 god');
+      expect(await RecentSearchesService.list(), isEmpty);
+      // The ↑ history still has it — that is the list for fixing what
+      // you just mistyped.
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowUp);
+      await tester.pump();
+      expect(
+          tester.widget<TextField>(find.byType(TextField)).controller!.text,
+          'yahweh NEAR5 god');
     });
 
     testWidgets('a stored history greets the reader before any search',

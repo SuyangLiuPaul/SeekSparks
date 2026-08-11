@@ -26,6 +26,8 @@ import 'package:seeksparks/models/verse.dart';
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/providers/workbench_provider.dart';
 import 'package:seeksparks/utils/command_draft.dart';
+import 'package:seeksparks/utils/command_examples.dart';
+import 'package:seeksparks/utils/command_query.dart' show parseCommandQuery;
 import 'package:seeksparks/utils/strongs_boolean_search.dart';
 import 'package:seeksparks/widgets/command_pane.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -129,6 +131,199 @@ void main() {
     });
   });
 
+  // 2026-08-11 (task #299): the lines that RAN but ran as something else.
+  //
+  // Round one dimmed the combining buttons until a Strong's number was
+  // present and explained a dangling operator. It said nothing about a
+  // line that already carries one, and there is a whole family of those:
+  // `yahweh NEAR5 god` was reported from the Recent list, where it had
+  // been filed as a successful search. It is not one. It parses as
+  // nothing at all, so `runSearch` falls through to `SearchService`,
+  // which strips the whitespace and looks for the literal substring
+  // "yahwehnear5god". Zero hits, no error, and an invitation in Recents
+  // to run it again tomorrow.
+  //
+  // The fix does not enumerate the failing shapes — that is how
+  // `G25 NEAR G26` and `G25 AND god` were both missed the first time.
+  // It asks the SHARED PARSER whether the line will run, and every case
+  // below is a line the parser refuses.
+  group('lines that silently become a literal text scan', () {
+    test('an operator between WORDS is caught, not run', () {
+      final d = analyseCommandDraft('yahweh NEAR5 god');
+      expect(d.hint, CommandDraftHint.combinerOnWords);
+      expect(d.combiner, 'NEAR5');
+      expect(d.willNotRunAsWritten, isTrue);
+      // The parser really does refuse it, which is why it reached the
+      // literal scan.
+      expect(parseStrongsBoolean('yahweh NEAR5 god'), isNull);
+    });
+
+    test('…and is offered the word grammar that means the same thing', () {
+      // NEAR5 is a word DISTANCE and admits four words in between
+      // (`strongs_proximity.dart` tests `(a - b).abs() <= n`), while `*n`
+      // in a phrase is the number of words BETWEEN (`GapElement(0, n)`).
+      // So the number drops by one on the way across. The brief asked
+      // for `*5`; `*5` would be a wider search than the reader asked for.
+      expect(analyseCommandDraft('yahweh NEAR5 god').suggestion,
+          "'yahweh *4 god");
+      expect(analyseCommandDraft('yahweh AND god').suggestion, '.yahweh god');
+      expect(analyseCommandDraft('faith OR works').suggestion, '/faith works');
+      expect(analyseCommandDraft('jesus NOT christ').suggestion,
+          '.jesus !christ');
+    });
+
+    test('the offered rewrite is a query the app can actually run', () {
+      for (final line in [
+        'yahweh NEAR5 god',
+        'yahweh AND god',
+        'faith OR works',
+        'jesus NOT christ',
+      ]) {
+        final fix = analyseCommandDraft(line).suggestion!;
+        expect(parseCommandQuery(fix), isNotNull, reason: '$line → $fix');
+      }
+    });
+
+    test('a bare NEAR takes the distance from the strip', () {
+      final d = analyseCommandDraft('yahweh NEAR god', nearDistance: 3);
+      expect(d.hint, CommandDraftHint.combinerOnWords);
+      expect(d.suggestion, "'yahweh *2 god");
+    });
+
+    test('mixed operators are refused rather than guessed at', () {
+      // `a AND b OR c` has a precedence the text grammar does not
+      // express. Inventing one would answer a different question and say
+      // nothing about having done so.
+      final d = analyseCommandDraft('a AND b OR c');
+      expect(d.hint, CommandDraftHint.combinerOnWords);
+      expect(d.suggestion, isNull);
+      expect(describeCommandDraft(d, 'en'), contains('literal'));
+    });
+
+    test('lowercase operators stay ordinary English', () {
+      // "abide near god" and "faith and works" are searches, not broken
+      // queries, and putting an error under them would be worse than the
+      // bug being fixed. Only the spelling the BUTTONS write — uppercase,
+      // exactly — is read as operator intent.
+      for (final line in ['abide near god', 'faith and works', 'life or death']) {
+        expect(analyseCommandDraft(line).hint, isNull, reason: line);
+      }
+    });
+
+    test('NEAR with no distance is filled in, not just refused', () {
+      final d = analyseCommandDraft('G25 NEAR G26', nearDistance: 7);
+      expect(d.hint, CommandDraftHint.nearWithoutDistance);
+      expect(d.suggestion, 'G25 NEAR7 G26');
+      expect(parseStrongsBoolean(d.suggestion!), isNotNull);
+      expect(describeCommandDraft(d, 'en'), contains('NEAR'));
+    });
+
+    test('a non-number in a Strong\'s expression is named', () {
+      final d = analyseCommandDraft('G25 AND god');
+      expect(d.hint, CommandDraftHint.notAStrongsExpression);
+      expect(d.offender, 'god');
+      expect(describeCommandDraft(d, 'en'), contains('"god"'));
+      expect(describeCommandDraft(d, 'zh-Hans'), contains('god'));
+    });
+
+    test('the shapes that already worked are left alone', () {
+      // The parser-as-oracle test fires on ANY line it refuses, so the
+      // things it accepts have to stay silent — including the glued `!`
+      // alias and the wildcard, both of which task #294 had to repair.
+      for (final line in [
+        'G25 AND G26',
+        'G25 NEAR5 G26',
+        'G25 !G26',
+        'G25* OR G26',
+        'G25',
+        '.love god',
+        "'and god said",
+      ]) {
+        expect(analyseCommandDraft(line).willNotRunAsWritten, isFalse,
+            reason: line);
+      }
+    });
+
+    test('a bare number is not treated as a broken expression', () {
+      // `parseStrongsBoolean` refuses `G25` on purpose — a single number
+      // belongs to the lexicon path — so a one-token line must be exempt
+      // from the oracle or every lexicon lookup grows an error.
+      expect(parseStrongsBoolean('G25'), isNull);
+      expect(analyseCommandDraft('G25').hint, isNull);
+    });
+  });
+
+  group('the syntax card as queries', () {
+    test('an example is separated from its explanation', () {
+      final line = splitSyntaxLine(uiStrings['cmdSyntaxAnd']!['en']!);
+      expect(line.example, '.love god');
+      expect(line.prose, 'both words in one verse');
+    });
+
+    test('the printing glyph is turned back into the operator', () {
+      // The card prints `G25✶` because a bare asterisk is nearly
+      // invisible at chrome size, and it goes on printing it. The parser
+      // wants `*`, and prefilling the glyph would put an unrunnable query
+      // on the line — the exact failure this task is about — so the
+      // substitution happens between the card and the command line.
+      final line = splitSyntaxLine(uiStrings['cmdSyntaxStrongsWild']!['en']!);
+      expect(line.example, 'G25✶', reason: 'what the card shows');
+      expect(line.runnable, 'G25*', reason: 'what a tap types');
+      expect(parseStrongsBoolean(line.runnable!), isNotNull);
+    });
+
+    test('every tappable example on the card actually runs', () {
+      const runnable = [
+        'cmdSyntaxAnd',
+        'cmdSyntaxOr',
+        'cmdSyntaxPhrase',
+        'cmdSyntaxNot',
+        'cmdSyntaxWild',
+        'cmdSyntaxGap',
+        'cmdSyntaxContext',
+      ];
+      for (final locale in ['en', 'zh-Hans', 'zh-Hant']) {
+        for (final k in runnable) {
+          final ex = splitSyntaxLine(uiStrings[k]![locale]!).runnable!;
+          expect(parseCommandQuery(ex), isNotNull, reason: '$k/$locale: $ex');
+        }
+        for (final k in [
+          'cmdSyntaxStrongsBool',
+          'cmdSyntaxStrongsNear',
+          'cmdSyntaxStrongsWild',
+        ]) {
+          final ex = splitSyntaxLine(uiStrings[k]![locale]!).runnable!;
+          expect(parseStrongsBoolean(ex), isNotNull, reason: '$k/$locale: $ex');
+        }
+      }
+    });
+
+    test('a line that is several commands at once offers no prefill', () {
+      // The verb summary and the ↑/↓ line are `·`-separated lists. There
+      // is nothing single to fill in, so they stay prose.
+      for (final k in ['cmdSyntaxVerbs', 'cmdSyntaxHistory']) {
+        expect(splitSyntaxLine(uiStrings[k]!['en']!).example, isNull,
+            reason: k);
+      }
+    });
+
+    test('the example follows the text, the explanation follows the reader',
+        () {
+      // A Chinese interface over the BSB that offers `.爱 神` teaches that
+      // the card is broken: the query is well-formed and cannot match.
+      expect(
+          exampleLocaleFor(versionLanguage: 'en', uiLocale: 'zh-Hans'), 'en');
+      expect(exampleLocaleFor(versionLanguage: 'zh-Hant', uiLocale: 'en'),
+          'zh-Hant');
+      // Greek has no vernacular examples on the card at all, so it keeps
+      // the reader's own — the Strong's lines, which are the ones that
+      // apply to the LXX, read the same in every locale.
+      expect(
+          exampleLocaleFor(versionLanguage: 'grc', uiLocale: 'zh-Hans'),
+          'zh-Hans');
+    });
+  });
+
   group('the queries the buttons emit actually parse', () {
     test('a glued ! is the NOT it looks like', () {
       // The `!` button glues deliberately (in a TEXT search `! word` is a
@@ -154,12 +349,20 @@ void main() {
   });
 
   group('the strip on screen', () {
-    Future<AppSettings> pump(WidgetTester tester, {String locale = 'en'}) async {
+    Future<AppSettings> pump(
+      WidgetTester tester, {
+      String locale = 'en',
+      double width = 500,
+      String version = 'bsb',
+      VoidCallback? onOpenWordList,
+    }) async {
       tester.view.devicePixelRatio = 1.0;
-      tester.view.physicalSize = const Size(500, 1100);
+      tester.view.physicalSize = Size(width, 1100);
       addTearDown(tester.view.reset);
       SharedPreferences.setMockInitialValues(<String, Object>{});
-      final mp = MainProvider()..setVerses(_seed);
+      final mp = MainProvider()
+        ..currentVersion = version
+        ..setVerses(_seed);
       final wb = WorkbenchProvider(mainProvider: mp);
       addTearDown(wb.dispose);
       final settings = AppSettings();
@@ -174,7 +377,8 @@ void main() {
           child: Builder(
             builder: (context) => MaterialApp(
               theme: workbenchTheme(Theme.of(context)),
-              home: const Scaffold(body: CommandPane()),
+              home: Scaffold(
+                  body: CommandPane(onOpenWordList: onOpenWordList)),
             ),
           ),
         ),
@@ -332,6 +536,120 @@ void main() {
       await tester.enterText(find.byType(TextField), 'G25 NEAR5 G26');
       await tester.pump();
       expect(find.textContaining('不分先後'), findsOneWidget);
+    });
+
+    // ── Task #299 ──────────────────────────────────────────────────
+    testWidgets('a card example is a query, not a picture of one',
+        (tester) async {
+      await pump(tester);
+      await tester.tap(find.text('?'));
+      await tester.pump();
+      await tester.tap(find.textContaining('.love god —'));
+      await tester.pump();
+      expect(lineOf(tester), '.love god');
+    });
+
+    testWidgets('the glyph on the card becomes the operator on the line',
+        (tester) async {
+      // Tapping `G25✶ — …` must not type `G25✶`, which parses as nothing
+      // and would land the reader in the very failure this task removes.
+      await pump(tester);
+      await tester.tap(find.text('?'));
+      await tester.pump();
+      await tester.tap(find.textContaining('G25✶ —'));
+      await tester.pump();
+      expect(lineOf(tester), 'G25*');
+      expect(parseStrongsBoolean(lineOf(tester)), isNotNull);
+    });
+
+    testWidgets('tapping fills the line and does not run it', (tester) async {
+      // `ai …` is the only command that leaves the device, and nobody
+      // should send it by reading the help. The whole card therefore
+      // prefills rather than runs — one rule, no exceptions to remember.
+      await pump(tester);
+      await tester.tap(find.text('?'));
+      await tester.pump();
+      await tester.tap(find.textContaining('.love god —'));
+      await tester.pump();
+      final wb = tester
+          .element(find.byType(CommandPane))
+          .read<WorkbenchProvider>();
+      expect(wb.lastQuery, isEmpty, reason: 'nothing was submitted');
+      expect(wb.searching, isFalse);
+    });
+
+    testWidgets('tapping an operator says what it did, without a hover',
+        (tester) async {
+      // The reports come from a tablet. Task #294's tooltips are a hover
+      // affordance, so on the device where the strip is most confusing
+      // they were unreachable. The tap itself now answers the question.
+      await pump(tester);
+      await tester.tap(find.text('/'));
+      await tester.pump();
+      expect(find.text(uiStrings['cmdOpTipAny']!['en']!), findsWidgets);
+      // …and it is about the token just inserted, so it expires when the
+      // line stops being that.
+      await tester.enterText(find.byType(TextField), '/faith works');
+      await tester.pump();
+      expect(find.text(uiStrings['cmdOpTipAny']!['en']!), findsNothing);
+    });
+
+    testWidgets('an operator between words is caught before it runs',
+        (tester) async {
+      await pump(tester);
+      await tester.enterText(find.byType(TextField), 'yahweh NEAR5 god');
+      await tester.pump();
+      expect(find.textContaining('not words'), findsOneWidget);
+      // The rewrite is offered as something to tap, not as prose to
+      // retype.
+      await tester.tap(find.text("'yahweh *4 god"));
+      await tester.pump();
+      expect(lineOf(tester), "'yahweh *4 god");
+    });
+
+    testWidgets('the hint says where a Strong\'s number comes from',
+        (tester) async {
+      var opened = 0;
+      await pump(tester, onOpenWordList: () => opened++);
+      await tester.enterText(find.byType(TextField), 'G25 AND ');
+      await tester.pump();
+      await tester.tap(find.text(uiStrings['cmdDraftFindNumber']!['en']!));
+      await tester.pump();
+      expect(opened, 1);
+    });
+
+    testWidgets('…and so does the card', (tester) async {
+      var opened = 0;
+      await pump(tester, onOpenWordList: () => opened++);
+      await tester.tap(find.text('?'));
+      await tester.pump();
+      await tester.tap(find.text(uiStrings['cmdSyntaxFindNumber']!['en']!));
+      await tester.pump();
+      expect(opened, 1);
+    });
+
+    testWidgets('the example follows the text being searched', (tester) async {
+      // An English interface over a Chinese edition. The explanation is
+      // the reader's; the query has to be the text's, or tapping it
+      // returns zero hits and teaches that the card is broken.
+      await pump(tester, version: 'cuvs-yhwh');
+      await tester.tap(find.text('?'));
+      await tester.pump();
+      expect(find.textContaining('.爱 神 — both words'), findsOneWidget);
+      await tester.tap(find.textContaining('.爱 神 —'));
+      await tester.pump();
+      expect(lineOf(tester), '.爱 神');
+    });
+
+    testWidgets('the card fits the narrowest the pane is allowed to be',
+        (tester) async {
+      // The Workbench's left pane bottoms out at 256px and the card is
+      // long. In Chinese every line is longer still, and a tappable row
+      // that overflows is a target you cannot see the end of.
+      await pump(tester, locale: 'zh-Hans', width: 256);
+      await tester.tap(find.text('?'));
+      await tester.pump();
+      expect(tester.takeException(), isNull);
     });
   });
 }

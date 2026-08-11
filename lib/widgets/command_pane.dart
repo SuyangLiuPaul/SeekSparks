@@ -23,6 +23,7 @@ import 'package:seeksparks/utils/app_nav.dart' show pushPage;
 import 'package:seeksparks/utils/atomic_text_edit.dart';
 import 'package:seeksparks/utils/clipboard_helper.dart';
 import 'package:seeksparks/utils/command_draft.dart';
+import 'package:seeksparks/utils/command_examples.dart';
 import 'package:seeksparks/utils/command_query.dart';
 import 'package:seeksparks/utils/command_verb.dart';
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
@@ -50,8 +51,13 @@ import 'package:seeksparks/widgets/search_stats_strip.dart';
 /// navigation, the reader is right beside us) and focuses it in the
 /// analysis pane.
 class CommandPane extends StatefulWidget {
-  const CommandPane(
-      {super.key, this.focusNode, this.onVerseOpened, this.onEditScope});
+  const CommandPane({
+    super.key,
+    this.focusNode,
+    this.onVerseOpened,
+    this.onEditScope,
+    this.onOpenWordList,
+  });
 
   /// Supplied by the Workbench so View ▸ Command line and the toolbar's
   /// search button can put the caret here — a desktop tool's command
@@ -71,6 +77,16 @@ class CommandPane extends StatefulWidget {
   /// behaving differently. Null leaves the limit banner a readout with
   /// a clear button, which is what it was.
   final VoidCallback? onEditScope;
+
+  /// Opens the Word List for the passage in view.
+  ///
+  /// The `?` card documents `G25 AND G26` and the strip has four buttons
+  /// that only work on numbers, but nothing anywhere said where a reader
+  /// gets a G25 in the first place. The Word List is the answer and it
+  /// already exists under Tools; this hands it to the two places that
+  /// raise the question. Null (the standalone `CommandSearchPage`) drops
+  /// the link rather than showing one that goes nowhere.
+  final VoidCallback? onOpenWordList;
 
   @override
   State<CommandPane> createState() => _CommandPaneState();
@@ -129,11 +145,54 @@ class _CommandPaneState extends State<CommandPane> {
   String? _caretGuardText;
   int _caretGuardOffset = 0;
 
+  /// What the operator button the reader last TAPPED does, shown in the
+  /// hint row until they type again.
+  ///
+  /// Task #294 gave every button a `Tooltip`, and a tooltip is a hover
+  /// affordance. This app is tablet-first and the reports come from a
+  /// tablet: there is no hover, so on the device where the strip is most
+  /// confusing the explanations were unreachable. Long-press does open
+  /// them, but nothing on screen suggests long-pressing a button you
+  /// have already learned to tap.
+  ///
+  /// So the tap itself answers the question. The button still inserts —
+  /// that behaviour is pinned by a test and was never broken — and the
+  /// row underneath says what it just inserted, which is the reading a
+  /// hovering mouse would have got for free.
+  String? _tappedOpTip;
+
+  /// The line as it stood when [_tappedOpTip] was set. The explanation is
+  /// about the token that was just inserted, so it expires the moment the
+  /// line stops being that.
+  String? _tipLineText;
+
   @override
   void initState() {
     super.initState();
     _controller.addListener(_undoSelectAllEcho);
+    _controller.addListener(_clearOpTipOnEdit);
     _loadRecents();
+  }
+
+  void _clearOpTipOnEdit() {
+    if (_tappedOpTip == null) return;
+    if (_controller.text == _tipLineText) return;
+    setState(() {
+      _tappedOpTip = null;
+      _tipLineText = null;
+    });
+  }
+
+  /// Run an operator button's insertion, then say what it did.
+  ///
+  /// Order matters: the insertion changes the line, which is exactly the
+  /// signal [_clearOpTipOnEdit] watches for.
+  void _tapOperator(String tip, VoidCallback insert) {
+    insert();
+    setState(() {
+      _tappedOpTip = tip;
+      _tipLineText = _controller.text;
+    });
   }
 
   /// Put [text] on the command line as if the reader had typed it.
@@ -282,7 +341,16 @@ class _CommandPaneState extends State<CommandPane> {
     // A query the grammar refused never reaches the history. Zero hits
     // does: "no verse says that" is an answer, and it is one you come
     // back to widen.
-    if (wb.commandIssue == null) await _commitRecent(raw);
+    //
+    // `wb.commandIssue` is not enough on its own. A line like
+    // `yahweh NEAR5 god` raises no issue at all — it is not a command
+    // and not a Strong's expression, so it falls through to a literal
+    // text scan for "yahwehnear5god", finds nothing, and gets filed as a
+    // search that worked. It then sits in Recents inviting the reader to
+    // run it again forever.
+    final refused =
+        analyseCommandDraft(raw, nearDistance: _nearDistance).willNotRunAsWritten;
+    if (wb.commandIssue == null && !refused) await _commitRecent(raw);
   }
 
   /// Everything the verb grammar needs to know about where the reader
@@ -696,11 +764,24 @@ class _CommandPaneState extends State<CommandPane> {
   /// type cannot be learned from, and tapping a dim one is answered by
   /// the hint row rather than by silence.
   Widget _operatorStrip(String locale) {
-    final draft = analyseCommandDraft(_controller.text);
+    final draft =
+        analyseCommandDraft(_controller.text, nearDistance: _nearDistance);
     final dim = !draft.combinersApply;
     String tip(String key, String fallback) =>
         (uiStrings[key]?[locale] ?? fallback)
             .replaceAll('{n}', '$_nearDistance');
+    // Each button carries its explanation twice over: as the hover
+    // tooltip a mouse gets, and — through [_tapOperator] — as a line in
+    // the hint row, which is the only one of the two a touch device can
+    // reach. Same string, so they cannot drift apart.
+    Widget op(String label, String tipText, VoidCallback insert,
+            {bool dimmed = false}) =>
+        _OperatorButton(
+          label: label,
+          tooltip: tipText,
+          dimmed: dimmed,
+          onTap: () => _tapOperator(tipText, insert),
+        );
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -710,57 +791,40 @@ class _CommandPaneState extends State<CommandPane> {
             spacing: 3,
             runSpacing: 3,
             children: [
-              _OperatorButton(
-                  label: '.',
-                  tooltip: tip('cmdOpTipAll', '. every word, one verse'),
-                  onTap: () => _setControl('.')),
-              _OperatorButton(
-                  label: '/',
-                  tooltip: tip('cmdOpTipAny', '/ any of the words'),
-                  onTap: () => _setControl('/')),
-              _OperatorButton(
-                  label: "'",
-                  tooltip:
-                      tip('cmdOpTipPhrase', "' the words in that order"),
-                  onTap: () => _setControl("'")),
-              _OperatorButton(
-                label: '!',
-                tooltip: tip('cmdOpTipNot',
-                    '! excludes the word it is glued to (also G25 !G26)'),
-                onTap: () => _insertToken('!', trailingSpace: false),
-              ),
-              _OperatorButton(
-                label: '*',
-                tooltip: tip('cmdOpTipStar',
-                    '✶ after a word it is a wildcard; alone it is a word gap'),
-                onTap: _insertWildcard,
-              ),
-              _OperatorButton(
-                label: 'AND',
-                dimmed: dim,
-                tooltip: tip('searchOpAndTip', 'Verses with BOTH'),
-                onTap: () => _insertToken('AND'),
-              ),
-              _OperatorButton(
-                label: 'OR',
-                dimmed: dim,
-                tooltip: tip('searchOpOrTip', 'Verses with EITHER'),
-                onTap: () => _insertToken('OR'),
-              ),
-              _OperatorButton(
-                label: 'NOT',
-                dimmed: dim,
-                tooltip: tip(
-                    'searchOpNotTip', 'Verses with the first but not the second'),
-                onTap: () => _insertToken('NOT'),
-              ),
-              _OperatorButton(
-                label: 'NEAR$_nearDistance',
-                dimmed: dim,
-                tooltip: tip('searchOpNearTip',
-                    'Within {n} words of each other, either order'),
-                onTap: _insertNear,
-              ),
+              op('.', tip('cmdOpTipAll', '. every word, one verse'),
+                  () => _setControl('.')),
+              op('/', tip('cmdOpTipAny', '/ any of the words'),
+                  () => _setControl('/')),
+              op("'", tip('cmdOpTipPhrase', "' the words in that order"),
+                  () => _setControl("'")),
+              op(
+                  '!',
+                  tip('cmdOpTipNot',
+                      '! excludes the word it is glued to (also G25 !G26)'),
+                  () => _insertToken('!', trailingSpace: false)),
+              op(
+                  '*',
+                  tip('cmdOpTipStar',
+                      '✶ after a word it is a wildcard; alone it is a word gap'),
+                  _insertWildcard),
+              op('AND', tip('searchOpAndTip', 'Verses with BOTH'),
+                  () => _insertToken('AND'),
+                  dimmed: dim),
+              op('OR', tip('searchOpOrTip', 'Verses with EITHER'),
+                  () => _insertToken('OR'),
+                  dimmed: dim),
+              op(
+                  'NOT',
+                  tip('searchOpNotTip',
+                      'Verses with the first but not the second'),
+                  () => _insertToken('NOT'),
+                  dimmed: dim),
+              op(
+                  'NEAR$_nearDistance',
+                  tip('searchOpNearTip',
+                      'Within {n} words of each other, either order'),
+                  _insertNear,
+                  dimmed: dim),
               _OperatorButton(
                 label: '?',
                 tooltip: uiStrings['cmdSyntaxToggle']?[locale] ?? 'Syntax help',
@@ -770,7 +834,7 @@ class _CommandPaneState extends State<CommandPane> {
             ],
           ),
         ),
-        if (draft.showsHint) _draftHint(draft, locale),
+        if (draft.showsHint || _tappedOpTip != null) _draftHint(draft, locale),
       ],
     );
   }
@@ -786,36 +850,85 @@ class _CommandPaneState extends State<CommandPane> {
       final wbc = WbColors.of(context);
       final t = WbType.of(context);
       final near = draft.near;
+      final said = describeCommandDraft(draft, locale);
+      final fix = draft.suggestion;
+      // The reader is being told a number is needed; the Word List is
+      // where numbers come from. Offering it only here, where the
+      // question has actually been raised, keeps the row from turning
+      // into a second toolbar.
+      final needsNumber = draft.hint == CommandDraftHint.needsSecondNumber ||
+          draft.hint == CommandDraftHint.combinerWithoutNumber ||
+          draft.hint == CommandDraftHint.notAStrongsExpression;
+      final tip = _tappedOpTip;
       return Container(
         width: double.infinity,
         color: wbc.chromeBg,
         padding: const EdgeInsets.fromLTRB(6, 3, 4, 4),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: Text(
-                describeCommandDraft(draft, locale) ?? '',
+            if (tip != null)
+              Text(
+                tip,
                 style: TextStyle(
                   fontSize: t.chrome,
-                  color: wbc.mutedText,
+                  color: wbc.text,
                   fontFamilyFallback: kCjkFontFallback,
                 ),
               ),
-            ),
-            if (near != null) ...[
-              _MiniIcon(
-                icon: Icons.remove,
-                tooltip: uiStrings['cmdDraftNearFewer']?[locale] ??
-                    'Narrower window',
-                onTap: () => _stepNearDistance(-1),
+            if (said != null)
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      said,
+                      style: TextStyle(
+                        fontSize: t.chrome,
+                        color: wbc.mutedText,
+                        fontFamilyFallback: kCjkFontFallback,
+                      ),
+                    ),
+                  ),
+                  if (near != null) ...[
+                    _MiniIcon(
+                      icon: Icons.remove,
+                      tooltip: uiStrings['cmdDraftNearFewer']?[locale] ??
+                          'Narrower window',
+                      onTap: () => _stepNearDistance(-1),
+                    ),
+                    _MiniIcon(
+                      icon: Icons.add,
+                      tooltip: uiStrings['cmdDraftNearWider']?[locale] ??
+                          'Wider window',
+                      onTap: () => _stepNearDistance(1),
+                    ),
+                  ],
+                ],
               ),
-              _MiniIcon(
-                icon: Icons.add,
-                tooltip: uiStrings['cmdDraftNearWider']?[locale] ??
-                    'Wider window',
-                onTap: () => _stepNearDistance(1),
+            // A rewrite the reader can run, rather than a description of
+            // one they would have to retype. Prefill, never auto-run:
+            // the phrase form of NEAR is ORDERED where NEAR is not, so
+            // this is a near-miss offered for inspection, not an answer.
+            if (fix != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 3),
+                child: _HintAction(
+                  label: fix,
+                  tooltip:
+                      uiStrings['cmdDraftUseInstead']?[locale] ?? 'Use this',
+                  onTap: () => _writeLine(fix),
+                ),
               ),
-            ],
+            if (needsNumber && widget.onOpenWordList != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 3),
+                child: _HintAction(
+                  label: uiStrings['cmdDraftFindNumber']?[locale] ??
+                      'Find a number',
+                  icon: Icons.list_alt,
+                  onTap: widget.onOpenWordList!,
+                ),
+              ),
           ],
         ),
       );
@@ -823,11 +936,33 @@ class _CommandPaneState extends State<CommandPane> {
   }
 
   /// The syntax reference, one line per operator, with a real example
-  /// in the reader's own language rather than a metasyntax.
+  /// in the reader's own language rather than a metasyntax — and, since
+  /// task #299, an example you can RUN.
+  ///
+  /// Every line on this card was already a working query, printed as
+  /// dead text two centimetres above the field it belongs in. The reader
+  /// had to read it, remember it and retype it, which on a tablet is the
+  /// difference between a reference and a feature. Now the whole row is
+  /// the target and tapping it fills the command line.
+  ///
+  /// It fills but does not RUN. Three reasons, in order of weight: `ai
+  /// verses about anxiety` is the only command that leaves the device
+  /// and must never be sent because someone was reading the help;
+  /// `.love god` is a stand-in for the reader's own words, so a run
+  /// would answer a question they did not ask; and prefilling leaves the
+  /// caret on a line they can edit, which is how the grammar is learned.
   Widget _syntaxCard(String locale) {
     return Builder(builder: (context) {
       final wbc = WbColors.of(context);
       final t = WbType.of(context);
+      // Examples follow the TEXT BEING SEARCHED, prose follows the
+      // reader. A Chinese interface over the BSB that offers `.爱 神`
+      // teaches that the card is broken: the query is well-formed, it
+      // just cannot match an English text.
+      final exampleLocale = exampleLocaleFor(
+        versionLanguage: _searchVersionLanguage(),
+        uiLocale: locale,
+      );
       // Grouped, because the strip's own grammar split is the fact the
       // card was missing. Before task #294 it listed only the TEXT rules,
       // so pressing `?` to ask what the NEAR5 button was returned ten
@@ -886,23 +1021,96 @@ class _CommandPaneState extends State<CommandPane> {
                   ),
                 ),
               ),
-              for (final k in keys)
+              for (final k in keys) _syntaxRow(k, locale, exampleLocale),
+              // The `?` card names Strong's numbers eleven times without
+              // ever saying where one comes from, and the strip has four
+              // buttons that do nothing without one. The Word List for
+              // the chapter in view is the answer.
+              if (heading == 'cmdSyntaxSectionStrongs' &&
+                  widget.onOpenWordList != null)
                 Padding(
-                  padding: const EdgeInsets.only(top: 1.5),
-                  child: Text(
-                    uiStrings[k]?[locale] ?? '',
-                    style: TextStyle(
-                      fontSize: t.chrome,
-                      color: wbc.mutedText,
-                      fontFamilyFallback: kCjkFontFallback,
-                    ),
+                  padding: const EdgeInsets.only(top: 3),
+                  child: _HintAction(
+                    label: uiStrings['cmdSyntaxFindNumber']?[locale] ??
+                        "Where do the numbers come from? "
+                            "Open this chapter's Word List →",
+                    icon: Icons.list_alt,
+                    onTap: widget.onOpenWordList!,
                   ),
                 ),
             ],
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: Text(
+                uiStrings['cmdSyntaxTapHint']?[locale] ??
+                    'Tap any line to put that example on the command line.',
+                style: TextStyle(
+                  fontSize: t.chrome - 1,
+                  color: wbc.mutedText,
+                  fontStyle: FontStyle.italic,
+                  fontFamilyFallback: kCjkFontFallback,
+                ),
+              ),
+            ),
           ],
         ),
       );
     });
+  }
+
+  /// One line of the syntax card.
+  ///
+  /// The example is read from [exampleLocale] and the explanation from
+  /// [locale] — see [_syntaxCard]. A line with no example (the verb
+  /// summary, the ↑/↓ line) is several commands at once, so there is
+  /// nothing single to prefill and it stays untappable rather than
+  /// picking one of them arbitrarily.
+  Widget _syntaxRow(String key, String locale, String exampleLocale) {
+    return Builder(builder: (context) {
+      final wbc = WbColors.of(context);
+      final t = WbType.of(context);
+      final strings = uiStrings[key];
+      final prose = splitSyntaxLine(strings?[locale] ?? '');
+      final shown = splitSyntaxLine(strings?[exampleLocale] ?? '');
+      final example = shown.example ?? prose.example;
+      final runnable = shown.runnable ?? prose.runnable;
+      final line = example == null
+          ? prose.prose
+          : '$example$kSyntaxExampleSeparator${prose.prose}';
+      final text = Text(
+        line,
+        style: TextStyle(
+          fontSize: t.chrome,
+          color: wbc.mutedText,
+          fontFamilyFallback: kCjkFontFallback,
+        ),
+      );
+      if (runnable == null) {
+        return Padding(
+          padding: const EdgeInsets.only(top: 1.5),
+          child: text,
+        );
+      }
+      return InkWell(
+        onTap: () => _writeLine(runnable),
+        // Whole-row target. On a tablet the example alone is a 12px run
+        // of text, which is not something a finger can hit.
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 2.5),
+          child: text,
+        ),
+      );
+    });
+  }
+
+  /// The language of the edition being SEARCHED, which is the language
+  /// the card's examples have to be written in.
+  String _searchVersionLanguage() {
+    final code = context.read<MainProvider>().currentVersion;
+    for (final v in bibleVersions) {
+      if (v.value == code) return v.language;
+    }
+    return 'en';
   }
 
   Widget _buildResults(BuildContext context, WorkbenchProvider wb,
@@ -1899,6 +2107,86 @@ class _MiniIcon extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(3),
           child: Icon(icon, size: 14, color: color ?? wbc.mutedText),
+        ),
+      ),
+    );
+  }
+}
+
+/// One tappable thing in the hint row: the rewrite being offered, or the
+/// way out of the question the hint just raised.
+///
+/// A full-width target rather than a text link. The reports come from a
+/// tablet, and a 12px run of text is not a touch target — the whole row
+/// is, and it wraps instead of overflowing when the pane is at its 256px
+/// minimum and the label is a Chinese sentence.
+class _HintAction extends StatelessWidget {
+  const _HintAction({
+    required this.label,
+    required this.onTap,
+    this.tooltip,
+    this.icon,
+  });
+
+  final String label;
+  final VoidCallback onTap;
+  final String? tooltip;
+  final IconData? icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final wbc = WbColors.of(context);
+    final t = WbType.of(context);
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        constraints: const BoxConstraints(minHeight: 26),
+        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 4),
+        decoration: BoxDecoration(
+          color: wbc.paneBg,
+          border: Border.all(color: wbc.link.withValues(alpha: 0.55)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // The caption sits ABOVE rather than beside the query: in
+            // Chinese both are long, and side by side they either
+            // overflow or ellipsise the query — which is the one part of
+            // the row the reader has to be able to read before tapping.
+            if (tooltip != null)
+              Text(
+                tooltip!,
+                style: TextStyle(
+                  fontSize: t.chrome - 1,
+                  color: wbc.mutedText,
+                  fontFamilyFallback: kCjkFontFallback,
+                ),
+              ),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(top: 1),
+                  child: Icon(icon ?? Icons.subdirectory_arrow_left,
+                      size: 13, color: wbc.link),
+                ),
+                const SizedBox(width: 5),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: t.chrome,
+                      color: wbc.link,
+                      fontWeight: FontWeight.w600,
+                      fontFamilyFallback: kCjkFontFallback,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
