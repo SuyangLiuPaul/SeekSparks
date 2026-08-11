@@ -20,7 +20,74 @@ void main() {
 
   test('Font Size moves body and original text', () {
     expect(at(font: 30).text, greaterThan(at(font: 20).text));
-    expect(at(font: 12).original, lessThan(at(font: 20).original));
+    expect(at(font: 30).original, greaterThan(at(font: 20).original));
+  });
+
+  // 2026-08-11 (#315). Until now `original` scaled all the way down with
+  // Font Size, and 12 pt gave it 9 px. Pointed Hebrew and accented Greek
+  // are not Latin: at 9 px a qamats and a patach are the same grey mark,
+  // and tsere's two dots and segol's three are uncountable — so the app
+  // was stating a different word than the text has, silently. Density is
+  // a legitimate request; an unreadable diacritic is not what it asks
+  // for.
+  group('the originals floor', () {
+    test('it holds at every stop the Font Size slider offers', () {
+      for (double f = kFontSizeMin; f <= kFontSizeMax; f += 1) {
+        expect(
+            at(font: f).original, greaterThanOrEqualTo(WbMetrics.originalFloor),
+            reason: 'pointed Hebrew fell to ${at(font: f).original} px '
+                'at $f pt');
+      }
+    });
+
+    test('it does not cap the reader who wants BIGGER originals', () {
+      expect(
+          at(font: kFontSizeMax).original, greaterThan(at(font: 20).original));
+      expect(at(font: 20).original, WbMetrics.original);
+    });
+
+    test('it is above the Latin size at the same setting, not below', () {
+      // The whole point is that the two scripts need different floors.
+      for (double f = kFontSizeMin; f <= kFontSizeMax; f += 1) {
+        expect(at(font: f).original, greaterThan(at(font: f).text),
+            reason: 'originals lost their boost at $f pt');
+      }
+    });
+
+    test('scaledOriginal floors a call site the same way', () {
+      final dense = at(font: kFontSizeMin);
+      expect(dense.scaledOriginal(17),
+          greaterThanOrEqualTo(WbMetrics.originalFloor));
+      expect(at(font: kFontSizeMax).scaledOriginal(17),
+          closeTo(17 * kFontSizeMax / 20, 1e-9));
+    });
+
+    test('scaled and scaledChrome answer the two scales they are named for',
+        () {
+      expect(at(font: 40).scaled(10), closeTo(20, 1e-9));
+      expect(at(font: 40).scaledChrome(10), closeTo(10, 1e-9));
+      expect(at(menu: kMenuScaleMax).scaledChrome(10),
+          closeTo(10 * kMenuScaleMax, 1e-9));
+      expect(at(menu: kMenuScaleMax).scaled(10), closeTo(10, 1e-9));
+    });
+
+    test('every Font Size stop moves a scaled() call site', () {
+      final sizes = <double>[
+        for (double f = kFontSizeMin; f <= kFontSizeMax; f += 1)
+          at(font: f).scaled(13),
+      ];
+      expect(sizes.length, 29);
+      expect(sizes.toSet().length, sizes.length, reason: 'an inert stop');
+    });
+
+    test('every Menu Size stop moves a scaledChrome() call site', () {
+      final sizes = <double>[
+        for (var i = 0; i <= 8; i++)
+          at(menu: kMenuScaleMin + i * 0.1).scaledChrome(11.5),
+      ];
+      expect(sizes.length, 9);
+      expect(sizes.toSet().length, sizes.length, reason: 'an inert stop');
+    });
   });
 
   test('Font Size does NOT move the chrome', () {
@@ -100,9 +167,18 @@ void main() {
 
   test('an empty font family resolves to null, not an empty string', () {
     // '' would make Flutter look up a font literally named "".
-    expect(WbType.resolve(fontSize: 20, lineSpacing: 1.5, menuScale: 1,
-        fontFamily: '').fontFamily, isNull);
-    expect(WbType.resolve(fontSize: 20, lineSpacing: 1.5, menuScale: 1,
-        fontFamily: 'Noto Serif').fontFamily, 'Noto Serif');
+    expect(
+        WbType.resolve(
+                fontSize: 20, lineSpacing: 1.5, menuScale: 1, fontFamily: '')
+            .fontFamily,
+        isNull);
+    expect(
+        WbType.resolve(
+                fontSize: 20,
+                lineSpacing: 1.5,
+                menuScale: 1,
+                fontFamily: 'Noto Serif')
+            .fontFamily,
+        'Noto Serif');
   });
 }

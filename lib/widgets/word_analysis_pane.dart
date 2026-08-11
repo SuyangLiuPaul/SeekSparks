@@ -263,8 +263,8 @@ class _WordAnalysisPaneState extends State<WordAnalysisPane> {
               Flexible(
                 child: Text(
                   widget.word.text,
-                  style: const TextStyle(
-                    fontSize: 21,
+                  style: TextStyle(
+                    fontSize: t.scaledOriginal(21),
                     fontWeight: FontWeight.w600,
                     color: Color(0xFFB3261E),
                   ),

@@ -31,6 +31,7 @@ import 'package:seeksparks/services/originals_service.dart';
 import 'package:seeksparks/services/section_title_service.dart';
 import 'package:seeksparks/services/strongs_service.dart';
 import 'package:seeksparks/utils/app_nav.dart';
+import 'package:seeksparks/constants/workbench_theme.dart' show WbType;
 import 'package:seeksparks/utils/context_words.dart';
 import 'package:seeksparks/utils/pericope.dart';
 import 'package:seeksparks/utils/word_pos.dart';
@@ -239,9 +240,15 @@ class _ContextPaneState extends State<ContextPane> {
     return out;
   }
 
+  /// Resolved once per build; the `_controls`/`_row` helpers take a
+  /// [ColorScheme] and no context, so the scale rides along as a field
+  /// rather than a tenth parameter.
+  late WbType _ty;
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    _ty = WbType.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -302,18 +309,18 @@ class _ContextPaneState extends State<ContextPane> {
               ButtonSegment(
                 value: ContextScope.pericope,
                 label: Text(_s('contextScopePericope', 'Pericope'),
-                    style: const TextStyle(fontSize: 11)),
+                    style: TextStyle(fontSize: _ty.scaled(11))),
                 enabled: _pericope != null,
               ),
               ButtonSegment(
                 value: ContextScope.chapter,
                 label: Text(_s('contextScopeChapter', 'Chapter'),
-                    style: const TextStyle(fontSize: 11)),
+                    style: TextStyle(fontSize: _ty.scaled(11))),
               ),
               ButtonSegment(
                 value: ContextScope.book,
                 label: Text(_s('contextScopeBook', 'Book'),
-                    style: const TextStyle(fontSize: 11)),
+                    style: TextStyle(fontSize: _ty.scaled(11))),
               ),
             ],
             selected: {_scope},
@@ -331,7 +338,7 @@ class _ContextPaneState extends State<ContextPane> {
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              fontSize: 12.5,
+              fontSize: _ty.scaled(12.5),
               fontWeight: FontWeight.w600,
               color: scheme.onSurface,
             ),
@@ -344,7 +351,7 @@ class _ContextPaneState extends State<ContextPane> {
                 .replaceAll('{verses}', '$_scopeVerses')
                 .replaceAll('{words}', '${_list.scopeTokens}')
                 .replaceAll('{distinct}', '${_list.scopeDistinct}'),
-            style: TextStyle(fontSize: 11, color: scheme.outline),
+            style: TextStyle(fontSize: _ty.scaled(11), color: scheme.outline),
           ),
           const SizedBox(height: 6),
           Row(
@@ -370,7 +377,7 @@ class _ContextPaneState extends State<ContextPane> {
                             visualDensity: VisualDensity.compact,
                             materialTapTargetSize:
                                 MaterialTapTargetSize.shrinkWrap,
-                            labelStyle: const TextStyle(fontSize: 11),
+                            labelStyle: TextStyle(fontSize: _ty.scaled(11)),
                             label: Text(_s(key, fallback)),
                             selected: _sortFor(_scope) == sort,
                             onSelected: sort == ContextSort.distinctive &&
@@ -452,7 +459,7 @@ class _ContextPaneState extends State<ContextPane> {
                         headword,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 16, height: 1.3),
+                        style: TextStyle(fontSize: _ty.scaledOriginal(16), height: 1.3),
                       ),
                       if (gloss.isNotEmpty)
                         Text(
@@ -460,7 +467,7 @@ class _ContextPaneState extends State<ContextPane> {
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            fontSize: 11.5,
+                            fontSize: _ty.scaled(11.5),
                             height: 1.35,
                             color: scheme.onSurfaceVariant,
                           ),
@@ -475,7 +482,7 @@ class _ContextPaneState extends State<ContextPane> {
                     Text(
                       '${e.count}',
                       style: TextStyle(
-                        fontSize: 14,
+                        fontSize: _ty.scaled(14),
                         fontWeight: FontWeight.w700,
                         color: scheme.onSurface,
                       ),
@@ -486,7 +493,7 @@ class _ContextPaneState extends State<ContextPane> {
                             ? _s('contextOnlyHere', 'only here')
                             : '/ ${e.bookCount}',
                         style: TextStyle(
-                          fontSize: 10,
+                          fontSize: _ty.scaled(10),
                           color: e.isExclusive
                               ? scheme.primary
                               : scheme.outline,
@@ -506,7 +513,7 @@ class _ContextPaneState extends State<ContextPane> {
                     ActionChip(
                       visualDensity: VisualDensity.compact,
                       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      labelStyle: const TextStyle(fontSize: 11),
+                      labelStyle: TextStyle(fontSize: _ty.scaled(11)),
                       label: Text('${o.chapter}:${o.verse}'),
                       onPressed: () => widget.onOpenVerse(o.chapter, o.verse),
                     ),
@@ -519,7 +526,7 @@ class _ContextPaneState extends State<ContextPane> {
                   style: TextButton.styleFrom(
                     visualDensity: VisualDensity.compact,
                     padding: const EdgeInsets.symmetric(horizontal: 8),
-                    textStyle: const TextStyle(fontSize: 11),
+                    textStyle: TextStyle(fontSize: _ty.scaled(11)),
                   ),
                   icon: const Icon(Icons.menu_book_outlined, size: 14),
                   label: Text('${e.strongs} · '

@@ -1121,9 +1121,10 @@ class _CommandPaneState extends State<CommandPane> {
     // it lifts the limit.
     final notice = wb.verbNotice;
     if (wb.hasSearchLimit || notice != null) {
+      final t = WbType.of(context);
       return Column(
         children: [
-          if (notice != null) _verbNoticeStrip(wb, scheme, notice),
+          if (notice != null) _verbNoticeStrip(wb, scheme, notice, t),
           if (wb.hasSearchLimit) _limitBanner(context, wb, scheme, locale),
           Expanded(child: _buildResultsBody(context, wb, settings, scheme, locale)),
         ],
@@ -1135,8 +1136,8 @@ class _CommandPaneState extends State<CommandPane> {
   /// What the last verb did, above the results rather than instead of
   /// them: `d nas` must not throw away a hit list you spent three
   /// commands building.
-  Widget _verbNoticeStrip(
-      WorkbenchProvider wb, ColorScheme scheme, String notice) {
+  Widget _verbNoticeStrip(WorkbenchProvider wb, ColorScheme scheme,
+      String notice, WbType t) {
     return Material(
       color: scheme.secondaryContainer,
       child: InkWell(
@@ -1152,7 +1153,7 @@ class _CommandPaneState extends State<CommandPane> {
                 child: Text(
                   notice,
                   style: TextStyle(
-                    fontSize: 11.5,
+                    fontSize: t.scaled(11.5),
                     fontWeight: FontWeight.w600,
                     color: scheme.onSecondaryContainer,
                     fontFamilyFallback: kCjkFontFallback,
@@ -1177,6 +1178,7 @@ class _CommandPaneState extends State<CommandPane> {
   /// have by aiming at the wrong pixel.
   Widget _limitBanner(BuildContext context, WorkbenchProvider wb,
       ColorScheme scheme, String locale) {
+    final t = WbType.of(context);
     final name = scopeDisplayName(
       spec: wb.searchLimitSpec,
       fallbackLabel: wb.searchLimitLabel,
@@ -1205,7 +1207,7 @@ class _CommandPaneState extends State<CommandPane> {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: 11.5,
+                    fontSize: t.scaled(11.5),
                     fontWeight: FontWeight.w600,
                     color: scheme.onTertiaryContainer,
                     fontFamilyFallback: kCjkFontFallback,

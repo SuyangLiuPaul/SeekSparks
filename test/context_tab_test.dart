@@ -11,7 +11,10 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/original_word.dart';
 import 'package:seeksparks/widgets/analysis_tabs.dart';
 import 'package:seeksparks/widgets/context_pane.dart';
@@ -20,6 +23,18 @@ import 'package:seeksparks/utils/pericope.dart';
 import 'package:seeksparks/utils/word_pos.dart';
 
 void _ignoreVerse(int chapter, int verse) {}
+
+/// Both panes below size their type from the reader's Font Size setting
+/// (#315), so both need the settings they read. Not a test convenience:
+/// `WbType.of` deliberately has no no-provider fallback, because a
+/// fallback is how a pane silently goes back to fixed sizes.
+Widget _settingsHost(Widget child) {
+  SharedPreferences.setMockInitialValues(<String, Object>{});
+  return ChangeNotifierProvider<AppSettings>.value(
+    value: AppSettings(),
+    child: child,
+  );
+}
 
 OriginalWord w(String text, String strongs, [String? morph]) =>
     OriginalWord(text: text, strongs: strongs, morph: morph);
@@ -390,8 +405,7 @@ void main() {
       );
     });
 
-    test('unmeasurable rows sink under distinctive, they do not sort as 0',
-        () {
+    test('unmeasurable rows sink under distinctive, they do not sort as 0', () {
       final entries = [
         const ContextWordEntry(
           strongs: 'G1',
@@ -420,7 +434,7 @@ void main() {
   // three-way SegmentedButton, three sort chips and a filter switch, and
   // 320 px is where that either wraps or overflows.
   group('ContextPane renders at the pane widths', () {
-    Widget host(double width) => MaterialApp(
+    Widget host(double width) => _settingsHost(MaterialApp(
           home: Scaffold(
             body: SizedBox(
               width: width,
@@ -434,7 +448,7 @@ void main() {
               ),
             ),
           ),
-        );
+        ));
 
     for (final width in const [320.0, 560.0]) {
       testWidgets('no overflow at ${width.toInt()} px', (tester) async {
@@ -471,7 +485,7 @@ void main() {
   // fit across a 320 px Analysis pane, and the strip used to answer
   // that by clipping them. It now wraps to a second row.
   group('AnalysisTabStrip at a full strip', () {
-    Widget host(double width) => MaterialApp(
+    Widget host(double width) => _settingsHost(MaterialApp(
           home: Scaffold(
             body: SizedBox(
               width: width,
@@ -486,9 +500,10 @@ void main() {
               ),
             ),
           ),
-        );
+        ));
 
-    testWidgets('wraps rather than clipping at 320 px, and every tab is '
+    testWidgets(
+        'wraps rather than clipping at 320 px, and every tab is '
         'still reachable', (tester) async {
       await tester.pumpWidget(host(320));
       await tester.pumpAndSettle();

@@ -4,6 +4,7 @@ import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/utils/version_mapper.dart'
     show localeAwareBookName;
 import 'package:seeksparks/widgets/wb_pane_bits.dart';
+import 'package:seeksparks/constants/workbench_theme.dart' show WbType;
 
 /// EaglesView-style "Word Study" distribution panel. Given a per-book
 /// count map for a single Strong's number, renders horizontal bar groups
@@ -92,6 +93,7 @@ class WordDistribution extends StatelessWidget {
   Widget build(BuildContext context) {
     if (byBook.isEmpty) return const SizedBox.shrink();
     final scheme = Theme.of(context).colorScheme;
+    final t = WbType.of(context);
 
     // Compute section counts — only show sections with at least 1 hit.
     final otSections = <MapEntry<String, int>>[];
@@ -133,7 +135,7 @@ class WordDistribution extends StatelessWidget {
             Text(
               uiStrings['wordDistribution']?[locale] ?? 'Distribution',
               style: TextStyle(
-                fontSize: 13,
+                fontSize: t.scaled(13),
                 fontWeight: FontWeight.w700,
                 color: scheme.onSurface,
                 letterSpacing: 0.3,
@@ -147,10 +149,11 @@ class WordDistribution extends StatelessWidget {
             uiStrings['oldTestament']?[locale] ?? 'Old Testament',
             otTotal,
             scheme,
+            t,
           ),
           const SizedBox(height: 6),
           for (final s in otSections)
-            _bar(s.key, s.value, scaleMax, scheme, isOT: true),
+            _bar(s.key, s.value, scaleMax, scheme, t, isOT: true),
         ],
         if (hasOT && hasNT) const SizedBox(height: 10),
         if (hasNT) ...[
@@ -158,17 +161,18 @@ class WordDistribution extends StatelessWidget {
             uiStrings['newTestament']?[locale] ?? 'New Testament',
             ntTotal,
             scheme,
+            t,
           ),
           const SizedBox(height: 6),
           for (final s in ntSections)
-            _bar(s.key, s.value, scaleMax, scheme, isOT: false),
+            _bar(s.key, s.value, scaleMax, scheme, t, isOT: false),
         ],
         if (topN.isNotEmpty) ...[
           const SizedBox(height: 12),
           Text(
             uiStrings['topBooks']?[locale] ?? 'Top books',
             style: TextStyle(
-              fontSize: 11,
+              fontSize: t.scaled(11),
               fontWeight: FontWeight.w600,
               color: scheme.onSurfaceVariant,
               letterSpacing: 0.4,
@@ -180,7 +184,7 @@ class WordDistribution extends StatelessWidget {
             runSpacing: 6,
             children: [
               for (final b in topN)
-                _bookChip(b.key, b.value, scheme),
+                _bookChip(b.key, b.value, scheme, t),
             ],
           ),
         ],
@@ -188,13 +192,14 @@ class WordDistribution extends StatelessWidget {
     );
   }
 
-  Widget _testamentLabel(String label, int count, ColorScheme scheme) {
+  Widget _testamentLabel(
+      String label, int count, ColorScheme scheme, WbType t) {
     return Row(
       children: [
         Text(
           label,
           style: TextStyle(
-            fontSize: 11,
+            fontSize: t.scaled(11),
             fontWeight: FontWeight.w700,
             color: scheme.onSurfaceVariant,
             letterSpacing: 0.5,
@@ -204,7 +209,7 @@ class WordDistribution extends StatelessWidget {
         Text(
           '· $count',
           style: TextStyle(
-            fontSize: 11,
+            fontSize: t.scaled(11),
             color: scheme.onSurfaceVariant,
           ),
         ),
@@ -216,7 +221,8 @@ class WordDistribution extends StatelessWidget {
     String sectionKey,
     int value,
     double scaleMax,
-    ColorScheme scheme, {
+    ColorScheme scheme,
+    WbType t, {
     required bool isOT,
   }) {
     final fraction = scaleMax > 0 ? (value / scaleMax).clamp(0.0, 1.0) : 0.0;
@@ -232,7 +238,7 @@ class WordDistribution extends StatelessWidget {
             child: Text(
               _label(sectionKey),
               style: TextStyle(
-                fontSize: 11,
+                fontSize: t.scaled(11),
                 color: scheme.onSurface,
               ),
               maxLines: 1,
@@ -256,7 +262,7 @@ class WordDistribution extends StatelessWidget {
               value.toString(),
               textAlign: TextAlign.right,
               style: TextStyle(
-                fontSize: 11,
+                fontSize: t.scaled(11),
                 fontWeight: FontWeight.w600,
                 color: scheme.onSurface,
               ),
@@ -267,7 +273,8 @@ class WordDistribution extends StatelessWidget {
     );
   }
 
-  Widget _bookChip(String englishBook, int count, ColorScheme scheme) {
+  Widget _bookChip(
+      String englishBook, int count, ColorScheme scheme, WbType t) {
     final localBook = localeAwareBookName(englishBook, locale, currentVersion);
     // Square with a hairline rather than a tinted pill: `outlineVariant`
     // and `surfaceContainerHighest` are both roles `workbenchTheme`
@@ -285,7 +292,7 @@ class WordDistribution extends StatelessWidget {
           Text(
             localBook,
             style: TextStyle(
-              fontSize: 11,
+              fontSize: t.scaled(11),
               fontWeight: FontWeight.w500,
               color: scheme.onSurface,
             ),
@@ -294,7 +301,7 @@ class WordDistribution extends StatelessWidget {
           Text(
             count.toString(),
             style: TextStyle(
-              fontSize: 11,
+              fontSize: t.scaled(11),
               fontWeight: FontWeight.w700,
               color: scheme.primary,
             ),

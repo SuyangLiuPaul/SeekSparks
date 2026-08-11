@@ -12,10 +12,15 @@
 //      size must come from `WbType` rather than a literal, because the
 //      workbench has a font-size setting this pane used to ignore.
 //
-//   2. The MODAL column must NOT move. #284 asked for a workbench
-//      restyle; every literal below is what the phone reader shipped
-//      with before `WordStudyStyle` existed, and a change here is a
-//      change to a surface nobody asked us to touch.
+//   2. The MODAL column's PROPORTIONS must not move. #284 asked for a
+//      workbench restyle; every number below is what the phone reader
+//      shipped with before `WordStudyStyle` existed, and a change to
+//      their ratios is a change to a surface nobody asked us to touch.
+//
+//      Read each as "n px at the default 20 pt", not as n px. #315 made
+//      the column scale with Font Size — the modal was reading the
+//      reader's own text-size setting and discarding it — while leaving
+//      Menu Size, which is workbench chrome, out of it.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -116,10 +121,8 @@ void main() {
 
     test('two chips plus gutters fit the 256px pane floor', () {
       final st = _dense();
-      final used = st.chipMaxWidth * 2 +
-          6 +
-          st.listPadding.left +
-          st.listPadding.right;
+      final used =
+          st.chipMaxWidth * 2 + 6 + st.listPadding.left + st.listPadding.right;
       expect(used, lessThanOrEqualTo(256));
     });
 
@@ -131,7 +134,7 @@ void main() {
   });
 
   group('the phone modal is untouched by #284', () {
-    test('the type scale is the one that shipped', () {
+    test('at the default setting the type scale is the one that shipped', () {
       final st = _modal();
       expect(st.body, 14);
       expect(st.ref, 12);
@@ -153,8 +156,10 @@ void main() {
       final st = _modal();
       expect(st.blockBorder, Colors.transparent);
       expect(st.chipBorder, Colors.transparent);
-      expect(st.blockFill, _scheme.surfaceContainerHighest.withValues(alpha: 0.4));
-      expect(st.chipFill, _scheme.surfaceContainerHighest.withValues(alpha: 0.5));
+      expect(
+          st.blockFill, _scheme.surfaceContainerHighest.withValues(alpha: 0.4));
+      expect(
+          st.chipFill, _scheme.surfaceContainerHighest.withValues(alpha: 0.5));
       expect(st.selectedFill, _scheme.primaryContainer);
       expect(st.selectedBorder, _scheme.primary);
       expect(st.accent, _scheme.primary);
@@ -169,10 +174,48 @@ void main() {
       expect(st.chipMaxWidth, 118);
     });
 
-    test('the modal ignores the workbench font-size setting', () {
-      // It is not in the workbench subtree, so scaling it would be a
-      // phone regression caused by a desktop preference.
-      expect(_modal(type: _type(fontSize: 30, menuScale: 1.4)).body, 14);
+    // 2026-08-11 (#315). This test used to assert the opposite — "the
+    // modal ignores the workbench font-size setting" — on the argument
+    // that the modal is not in the workbench subtree, so a desktop
+    // preference must not reach it.
+    //
+    // The first half of that is right and is kept below. The second half
+    // conflated the two sliders. **Menu Size** is workbench chrome and
+    // has no business on a phone. **Font Size** is not a workbench
+    // preference at all: it is the reader's text size, the same 12–40 pt
+    // that sets the verse text on every reader page. The modal was the
+    // one surface that read the setting and then ignored it, so a reader
+    // who moved the slider to either end saw this sheet at 14 px
+    // regardless — which is the reported defect, on a phone.
+    test('the modal follows Font Size, because that is the reader\'s own', () {
+      final big = _modal(type: _type(fontSize: 40));
+      final small = _modal(type: _type(fontSize: 12));
+      expect(big.body, greaterThan(_modal().body));
+      expect(small.body, lessThan(_modal().body));
+      expect(big.body, closeTo(14 * 2, 1e-9));
+      // The chip has to grow with the word it contains, or a 36 px
+      // Hebrew glyph is clipped by a box sized for an 18 px one.
+      expect(big.chipMaxWidth, greaterThan(_modal().chipMaxWidth));
+    });
+
+    test('the modal does NOT follow Menu Size', () {
+      // Frame furniture for a three-pane desktop is not a phone's
+      // business, and this sheet has no frame.
+      final st = _modal(type: _type(menuScale: 1.4));
+      expect(st.body, 14);
+      expect(st.original, 18);
+      expect(st.lemma, 22);
+    });
+
+    test('the modal\'s originals obey the same floor as the workbench\'s', () {
+      // 18 and 22 px of pointed Hebrew at 12 pt would be 10.8 and 13.2 —
+      // below the size at which a tsere and a segol can be told apart.
+      final small = _modal(type: _type(fontSize: 12));
+      expect(small.original, greaterThanOrEqualTo(WbMetrics.originalFloor));
+      expect(small.lemma, greaterThanOrEqualTo(WbMetrics.originalFloor));
+      // …and the Latin around them is free to shrink. The floor is for
+      // the scripts whose diacritics carry meaning, not a global minimum.
+      expect(small.body, lessThan(WbMetrics.originalFloor));
     });
   });
 }

@@ -400,7 +400,7 @@ class _VerseListPaneState extends State<VerseListPane> {
                       '${entry.value.length} · ${entry.value.description}',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 11.5),
+                      style: TextStyle(fontSize: _ty.scaled(11.5)),
                     ),
                   ],
                 ),
@@ -440,12 +440,16 @@ class _VerseListPaneState extends State<VerseListPane> {
 
   // ── Build ─────────────────────────────────────────────────────────
 
+  /// Resolved once per build for the helpers that take no context.
+  late WbType _ty;
+
   @override
   Widget build(BuildContext context) {
     if (!_restored) {
       return const Center(child: CircularProgressIndicator());
     }
     final scheme = Theme.of(context).colorScheme;
+    _ty = WbType.of(context);
     return Column(
       children: [
         _header(scheme),
@@ -595,7 +599,7 @@ class _VerseListPaneState extends State<VerseListPane> {
   PopupMenuItem<T> _item<T>(T value, String label) => PopupMenuItem<T>(
         value: value,
         height: 38,
-        child: Text(label, style: const TextStyle(fontSize: 13)),
+        child: Text(label, style: TextStyle(fontSize: _ty.scaled(13))),
       );
 
   Widget _rows(ColorScheme scheme) {
@@ -657,7 +661,7 @@ class _VerseListPaneState extends State<VerseListPane> {
                       Text(
                         label,
                         style: TextStyle(
-                          fontSize: 12,
+                          fontSize: _ty.scaled(12),
                           fontWeight: FontWeight.w700,
                           color: scheme.primary,
                         ),
@@ -668,7 +672,7 @@ class _VerseListPaneState extends State<VerseListPane> {
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: _ty.scaled(12),
                             height: 1.4,
                             color: scheme.onSurfaceVariant,
                           ),
@@ -695,11 +699,11 @@ class _VerseListPaneState extends State<VerseListPane> {
               child: TextField(
                 controller: _addCtrl,
                 onSubmitted: (_) => _addTyped(),
-                style: const TextStyle(fontSize: 12.5),
+                style: TextStyle(fontSize: _ty.scaled(12.5)),
                 decoration: InputDecoration(
                   isDense: true,
                   hintText: _t('vlmAddHint', 'Add a verse, e.g. Eph 2:8-10'),
-                  hintStyle: const TextStyle(fontSize: 12),
+                  hintStyle: TextStyle(fontSize: _ty.scaled(12)),
                   border: const OutlineInputBorder(),
                   contentPadding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 8),

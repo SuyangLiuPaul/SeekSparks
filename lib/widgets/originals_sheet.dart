@@ -557,16 +557,27 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
   /// helper is reached from that build's subtree.
   late WordStudyStyle _st;
 
+  /// The same, for the sizes [WordStudyStyle] does not name.
+  ///
+  /// [WordStudyStyle] covers the seven sizes the word study's *content*
+  /// uses. Around them sit forty section headings, badges, chip labels
+  /// and disclaimers, and every one of those was a literal — so the pane
+  /// obeyed the font-size setting in its verse text and ignored it
+  /// everywhere else (#315). `_ty.scaled(n)` reads "n px at the default
+  /// 20 pt".
+  late WbType _ty;
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final locale = widget.locale;
     final title = uiStrings['originalText']?[locale] ?? 'Original Text';
+    _ty = WbType.of(context);
     _st = WordStudyStyle.resolve(
       embedded: widget.embedded,
       scheme: scheme,
       wb: WbColors.of(context),
-      type: WbType.of(context),
+      type: _ty,
     );
 
     // 2026-08 (SeekSparks): DraggableScrollableSheet is a bottom-sheet
@@ -637,7 +648,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                           Text(
                             title,
                             style: TextStyle(
-                              fontSize: 16,
+                              fontSize: _ty.scaled(16),
                               fontWeight: FontWeight.w700,
                               color: scheme.onSurface,
                             ),
@@ -910,7 +921,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                     uiStrings['aramaicWordBadge']?[widget.locale] ??
                         'Aramaic',
                     style: TextStyle(
-                      fontSize: 8,
+                      fontSize: _ty.scaled(8),
                       fontWeight: FontWeight.w700,
                       color: paletteFg(context, Colors.teal),
                       letterSpacing: 0.3,
@@ -1087,7 +1098,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
           child: Text(
             label,
             style: TextStyle(
-              fontSize: 11,
+              fontSize: _ty.scaled(11),
               color: scheme.onSurfaceVariant,
               fontStyle: FontStyle.italic,
               letterSpacing: 0.3,
@@ -1209,7 +1220,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                   child: Text(
                     uiStrings['aramaicWordBadge']?[locale] ?? 'Aramaic',
                     style: TextStyle(
-                      fontSize: 10,
+                      fontSize: _ty.scaled(10),
                       fontWeight: FontWeight.w700,
                       color: paletteFg(context, Colors.teal),
                       letterSpacing: 0.4,
@@ -1268,7 +1279,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                   if (entry.pronunciation.isNotEmpty) '/${entry.pronunciation}/',
                 ].join('  '),
                 style: TextStyle(
-                  fontSize: 13,
+                  fontSize: _ty.scaled(13),
                   color: scheme.onSurfaceVariant,
                   fontStyle: FontStyle.italic,
                 ),
@@ -1308,7 +1319,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                       uiStrings['exegesisProperNounBadge']?[locale] ??
                           'Proper noun',
                       style: TextStyle(
-                        fontSize: 10,
+                        fontSize: _ty.scaled(10),
                         fontWeight: FontWeight.w700,
                         color: scheme.onTertiaryContainer,
                         letterSpacing: 0.4,
@@ -1321,7 +1332,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                       uiStrings['exegesisProperNounNote']?[locale] ??
                           'Etymology + identification (both correct).',
                       style: TextStyle(
-                        fontSize: 10.5,
+                        fontSize: _ty.scaled(10.5),
                         color: scheme.onSurfaceVariant,
                         fontStyle: FontStyle.italic,
                       ),
@@ -1360,7 +1371,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
               Text(
                 entry.localizedGloss(locale),
                 style: TextStyle(
-                  fontSize: 15,
+                  fontSize: _ty.scaled(15),
                   fontWeight: FontWeight.w600,
                   color: scheme.onSurface,
                 ),
@@ -1372,7 +1383,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
               Text(
                 entry.partOfSpeech!,
                 style: TextStyle(
-                  fontSize: 11,
+                  fontSize: _ty.scaled(11),
                   color: scheme.onSurfaceVariant,
                   letterSpacing: 0.4,
                 ),
@@ -1395,7 +1406,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                 Text(
                   entry.localizedDefinition(locale),
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: _ty.scaled(14),
                     color: scheme.onSurface,
                     height: 1.45,
                   ),
@@ -1427,7 +1438,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                                   ?[locale] ??
                               'Chinese CBOL definition'),
                       style: TextStyle(
-                        fontSize: 10.5,
+                        fontSize: _ty.scaled(10.5),
                         fontWeight: FontWeight.w700,
                         color: scheme.onTertiaryContainer,
                         letterSpacing: 0.4,
@@ -1437,7 +1448,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                     Text(
                       entry.complementaryDefinition(locale),
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: _ty.scaled(13),
                         color: scheme.onSurface.withValues(alpha: 0.85),
                         height: 1.45,
                       ),
@@ -1453,7 +1464,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                 // into the collapsible "英文参考" section below.
                 entry.cleanChineseDefinition(locale),
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: _ty.scaled(14),
                   color: scheme.onSurface,
                   height: 1.45,
                 ),
@@ -1538,7 +1549,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
               uiStrings['strongsNotFound']?[locale] ??
                   'Lexicon entry not found for $displayNumber.',
               style: TextStyle(
-                fontSize: 13,
+                fontSize: _ty.scaled(13),
                 color: scheme.onSurfaceVariant,
                 fontStyle: FontStyle.italic,
               ),
@@ -1632,7 +1643,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                 child: Text(
                   '${uiStrings['aiExplainHeader']?[locale] ?? 'AI explanation'} · $ref',
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: _ty.scaled(12),
                     fontWeight: FontWeight.w600,
                     color: scheme.primary,
                   ),
@@ -1656,7 +1667,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                       )
                     : const Icon(Icons.auto_awesome, size: 16),
                 label: Text(initialLabel,
-                    style: const TextStyle(fontSize: 13)),
+                    style: TextStyle(fontSize: _ty.scaled(13))),
                 style: TextButton.styleFrom(
                   visualDensity: VisualDensity.compact,
                   padding: const EdgeInsets.symmetric(
@@ -1668,7 +1679,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
             Text(
               _aiError ?? '',
               style: TextStyle(
-                fontSize: 12.5,
+                fontSize: _ty.scaled(12.5),
                 color: scheme.error,
                 height: 1.4,
               ),
@@ -1690,7 +1701,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                   icon: const Icon(Icons.refresh, size: 16),
                   label: Text(
                     uiStrings['aiExplainTryAgain']?[locale] ?? 'Try again',
-                    style: const TextStyle(fontSize: 13),
+                    style: TextStyle(fontSize: _ty.scaled(13)),
                   ),
                   style: TextButton.styleFrom(
                     visualDensity: VisualDensity.compact,
@@ -1709,7 +1720,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                     label: Text(
                       uiStrings['aiOpenByokSettings']?[locale] ??
                           'Set up your own Gemini API key',
-                      style: const TextStyle(fontSize: 13),
+                      style: TextStyle(fontSize: _ty.scaled(13)),
                     ),
                     style: TextButton.styleFrom(
                       visualDensity: VisualDensity.compact,
@@ -1750,7 +1761,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                           child: Text(
                             _aiChunks[i].label,
                             style: TextStyle(
-                              fontSize: 11,
+                              fontSize: _ty.scaled(11),
                               fontWeight: FontWeight.w700,
                               color: scheme.primary,
                               letterSpacing: 0.3,
@@ -1772,7 +1783,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                             children: parseAiMarkdown(
                               _aiChunks[i].text,
                               base: TextStyle(
-                                fontSize: 14,
+                                fontSize: _ty.scaled(14),
                                 color: scheme.onSurface,
                                 height: 1.55,
                               ),
@@ -1794,7 +1805,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                               uiStrings['aiExplainAsking']?[locale] ??
                                   'Asking Gemini…',
                               style: TextStyle(
-                                fontSize: 12,
+                                fontSize: _ty.scaled(12),
                                 color:
                                     scheme.onSurfaceVariant,
                                 fontStyle: FontStyle.italic,
@@ -1824,7 +1835,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                         'AI-generated. Verify with primary sources for '
                         'study or teaching use.',
                     style: TextStyle(
-                      fontSize: 10,
+                      fontSize: _ty.scaled(10),
                       color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
                       fontStyle: FontStyle.italic,
                     ),
@@ -1835,7 +1846,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                   icon: const Icon(Icons.copy_all_outlined, size: 14),
                   label: Text(
                     uiStrings['aiExplainCopy']?[locale] ?? 'Copy',
-                    style: const TextStyle(fontSize: 12),
+                    style: TextStyle(fontSize: _ty.scaled(12)),
                   ),
                   style: TextButton.styleFrom(
                     visualDensity: VisualDensity.compact,
@@ -1862,7 +1873,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
         avatar: primary
             ? Icon(Icons.auto_awesome, size: 14, color: scheme.primary)
             : null,
-        label: Text(label, style: const TextStyle(fontSize: 12)),
+        label: Text(label, style: TextStyle(fontSize: _ty.scaled(12))),
         onPressed: disabled ? null : onTap,
         visualDensity: VisualDensity.compact,
         backgroundColor: primary
@@ -1889,7 +1900,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
               child: Text(
                 uiStrings['aiLengthLabel']?[locale] ?? 'Length',
                 style: TextStyle(
-                  fontSize: 11,
+                  fontSize: _ty.scaled(11),
                   color: scheme.onSurfaceVariant,
                   fontWeight: FontWeight.w600,
                 ),
@@ -1916,7 +1927,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
               child: Text(
                 uiStrings['aiScopeLabel']?[locale] ?? 'Scope',
                 style: TextStyle(
-                  fontSize: 11,
+                  fontSize: _ty.scaled(11),
                   color: scheme.onSurfaceVariant,
                   fontWeight: FontWeight.w600,
                 ),
@@ -2028,7 +2039,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
     return RichText(
       text: TextSpan(
         style: TextStyle(
-          fontSize: 12,
+          fontSize: _ty.scaled(12),
           color: scheme.onSurfaceVariant,
           fontStyle: FontStyle.italic,
           height: 1.45,
@@ -2062,7 +2073,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
         Text(
           label,
           style: TextStyle(
-            fontSize: 11,
+            fontSize: _ty.scaled(11),
             fontWeight: FontWeight.w600,
             color: scheme.onSurfaceVariant,
             letterSpacing: 0.5,
@@ -2182,7 +2193,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                       ? '${e.lemma} ← $overrideHeaderLemma · $usedLabel'
                       : '${e.lemma} · $usedLabel',
                   style: TextStyle(
-                    fontSize: 11,
+                    fontSize: _ty.scaled(11),
                     color: scheme.onSurfaceVariant,
                   ),
                   overflow: TextOverflow.ellipsis,
@@ -2209,7 +2220,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                         Text(
                           uiStrings['fullStudy']?[locale] ?? 'Full study',
                           style: TextStyle(
-                            fontSize: 10,
+                            fontSize: _ty.scaled(10),
                             fontWeight: FontWeight.w600,
                             color: scheme.primary,
                           ),
@@ -2248,7 +2259,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                     Text(
                       '+ $remaining ${uiStrings['moreRefs']?[locale] ?? 'more'}',
                       style: TextStyle(
-                        fontSize: 11,
+                        fontSize: _ty.scaled(11),
                         fontWeight: FontWeight.w600,
                         color: scheme.primary,
                       ),
@@ -2275,7 +2286,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                     Text(
                       uiStrings['collapse']?[locale] ?? 'Collapse',
                       style: TextStyle(
-                        fontSize: 11,
+                        fontSize: _ty.scaled(11),
                         fontWeight: FontWeight.w600,
                         color: scheme.primary,
                       ),
@@ -2552,7 +2563,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                       uiStrings['distributionTable']?[locale] ??
                           'Distribution Table',
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: _ty.scaled(16),
                         fontWeight: FontWeight.w700,
                         color: scheme.onSurface,
                       ),
@@ -2614,7 +2625,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
               child: Text(
                 usedLabel,
                 style: TextStyle(
-                  fontSize: 13,
+                  fontSize: _ty.scaled(13),
                   fontWeight: FontWeight.w700,
                   color: scheme.onSurface,
                   letterSpacing: 0.3,
@@ -2628,7 +2639,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
           Text(
             showingFirst,
             style: TextStyle(
-              fontSize: 11,
+              fontSize: _ty.scaled(11),
               color: scheme.onSurfaceVariant,
               fontStyle: FontStyle.italic,
             ),
@@ -2703,7 +2714,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                         Text(
                           localBook,
                           style: TextStyle(
-                            fontSize: 13,
+                            fontSize: _ty.scaled(13),
                             fontWeight: FontWeight.w600,
                             color: scheme.onSurface,
                           ),
@@ -2711,7 +2722,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                         Text(
                           countLabel,
                           style: TextStyle(
-                            fontSize: 11,
+                            fontSize: _ty.scaled(11),
                             color: scheme.onSurfaceVariant,
                           ),
                         ),
@@ -2773,7 +2784,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
               Text(
                 label,
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: _ty.scaled(12),
                   fontWeight: FontWeight.w600,
                   color:
                       canNavigate ? scheme.primary : scheme.onSurfaceVariant,
@@ -2784,7 +2795,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                 Text(
                   preview,
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: _ty.scaled(12),
                     color: scheme.onSurfaceVariant,
                     height: 1.4,
                   ),

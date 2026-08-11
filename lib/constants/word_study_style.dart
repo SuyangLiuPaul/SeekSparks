@@ -150,19 +150,24 @@ class WordStudyStyle {
     required WbType type,
   }) {
     if (!embedded) {
-      // The modal, unchanged. These are the literals that were spread
-      // through the widget before this class existed; changing any of
-      // them here changes the phone reader, which task #284 did not ask
-      // for and `workbench_theme.dart` explicitly does not want.
+      // The modal's PROPORTIONS are unchanged — these are the literals
+      // that were spread through the widget before this class existed,
+      // and their ratios are the phone reader's design.
+      //
+      // What changed (#315) is that they are no longer absolute. They
+      // were the reason a reader who set 12 pt or 40 pt saw the modal
+      // word study at exactly one size either way: `workbenchTheme`'s
+      // scale reached the docked branch below and stopped here. Read
+      // each as "n px at the default 20 pt".
       return WordStudyStyle(
         dense: false,
-        body: 14,
-        ref: 12,
-        gloss: 11,
-        translit: 10,
-        micro: 9,
-        original: 18,
-        lemma: 22,
+        body: type.scaled(14),
+        ref: type.scaled(12),
+        gloss: type.scaled(11),
+        translit: type.scaled(10),
+        micro: type.scaled(9),
+        original: type.scaledOriginal(18),
+        lemma: type.scaledOriginal(22),
         blockFill: scheme.surfaceContainerHighest.withValues(alpha: 0.4),
         blockBorder: Colors.transparent,
         chipFill: scheme.surfaceContainerHighest.withValues(alpha: 0.5),
@@ -175,7 +180,9 @@ class WordStudyStyle {
         accentFill: scheme.primary.withValues(alpha: 0.07),
         listPadding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
         blockPadding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-        chipMaxWidth: 118,
+        // Scaled with the type it has to contain: a chip whose Hebrew
+        // grew to 36 px inside a fixed 118 px box clips the word.
+        chipMaxWidth: type.scaled(118),
       );
     }
     return WordStudyStyle(
@@ -221,7 +228,7 @@ class WordStudyStyle {
       // the pointer moves between a word and its verse.
       listPadding: const EdgeInsets.fromLTRB(8, 6, 8, 16),
       blockPadding: const EdgeInsets.fromLTRB(6, 5, 6, 5),
-      chipMaxWidth: 112,
+      chipMaxWidth: type.scaled(112),
     );
   }
 }

@@ -17,6 +17,10 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/widgets/analysis_tabs.dart';
 
 void main() {
@@ -66,8 +70,7 @@ void main() {
   ];
 
   group('analysisStripMinLabelledWidth', () {
-    test('a four-glyph CJK label needs more than the old 66 px constant',
-        () {
+    test('a four-glyph CJK label needs more than the old 66 px constant', () {
       // The measurement is what the constant guessed at. If this ever
       // drops back under 66 the guess would have been safe and this
       // whole change is unnecessary — so assert the premise, not just
@@ -76,8 +79,7 @@ void main() {
       expect(analysisStripMinLabelledWidth(zhHant), greaterThan(66));
     });
 
-    test('it answers for the WIDEST label, not the first or the average',
-        () {
+    test('it answers for the WIDEST label, not the first or the average', () {
       final widest = analysisStripMinLabelledWidth(zhHans);
       for (final one in zhHans) {
         expect(analysisStripMinLabelledWidth([one]),
@@ -136,7 +138,8 @@ void main() {
       }
     });
 
-    test('the reader asking for names is always honoured at any width '
+    test(
+        'the reader asking for names is always honoured at any width '
         'the app can reach', () {
       // The pane floor is 256 px (task #287). Above it, spending rows
       // always beats refusing: one tab a row is far wider than any
@@ -144,17 +147,15 @@ void main() {
       for (final labels in [zhHans, zhHant, en]) {
         final min = analysisStripMinLabelledWidth(labels);
         for (var w = 256.0; w <= 1400.0; w += 8) {
-          final l =
-              analysisStripLayout(w, 12, minLabelledTabWidth: min,
-                  preferLabels: true);
+          final l = analysisStripLayout(w, 12,
+              minLabelledTabWidth: min, preferLabels: true);
           expect(l.showLabels, isTrue,
               reason: 'names refused at ${w}px for ${labels.first}');
         }
       }
     });
 
-    test('deciding for itself, the strip never spends more than two rows',
-        () {
+    test('deciding for itself, the strip never spends more than two rows', () {
       for (final labels in [zhHans, zhHant, en]) {
         final min = analysisStripMinLabelledWidth(labels);
         for (var w = 60.0; w <= 1400.0; w += 3) {
@@ -175,23 +176,46 @@ void main() {
       required String locale,
       required double width,
       bool preferLabels = false,
+      double menuScale = 1.0,
     }) async {
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: SizedBox(
-            width: width,
-            child: AnalysisTabStrip(
-              current: AnalysisTab.wordStudy,
-              locale: locale,
-              preferLabels: preferLabels,
-              onChanged: (_) {},
+      // `setMenuScale` notifies, and every notify schedules a 600 ms
+      // debounced write of the prefs blob. Without a backing store the
+      // write throws; without draining the timer the test fails with a
+      // pending timer instead of an answer about labels.
+      SharedPreferences.setMockInitialValues(<String, Object>{});
+      final settings = AppSettings();
+      settings.setMenuScale(menuScale);
+      await tester.pumpWidget(ChangeNotifierProvider<AppSettings>.value(
+        value: settings,
+        child: MaterialApp(
+          home: Scaffold(
+            // Unbounded height on purpose. This group asserts one thing —
+            // that no label is ellipsised — and at Menu Size 1.6 with
+            // names forced on, twelve rows of tabs are taller than a
+            // 600 px test viewport. That IS worth knowing (the strip is a
+            // plain child of the pane's Column in `workbench_page.dart`,
+            // so it can crowd out the pane it labels), but it is #297's
+            // "a tall strip the reader can turn off again" decision, not
+            // this test's subject.
+            body: SingleChildScrollView(
+              child: SizedBox(
+                width: width,
+                child: AnalysisTabStrip(
+                  current: AnalysisTab.wordStudy,
+                  locale: locale,
+                  preferLabels: preferLabels,
+                  onChanged: (_) {},
+                ),
+              ),
             ),
           ),
         ),
       ));
+      await tester.pump(const Duration(milliseconds: 700));
     }
 
-    testWidgets('at the default pane width a Chinese strip shows icons, '
+    testWidgets(
+        'at the default pane width a Chinese strip shows icons, '
         'not cut words', (tester) async {
       await pumpStrip(tester, locale: 'zh-Hans', width: 420);
       expect(find.text('原文研读'), findsNothing);
@@ -207,7 +231,8 @@ void main() {
       }
     });
 
-    testWidgets('asking for names gets whole names in Traditional too, '
+    testWidgets(
+        'asking for names gets whole names in Traditional too, '
         'at the 256 px pane floor', (tester) async {
       await pumpStrip(tester,
           locale: 'zh-Hant', width: 256, preferLabels: true);
@@ -216,29 +241,39 @@ void main() {
       }
     });
 
-    testWidgets('no label is ever laid out wider than its tab',
-        (tester) async {
+    testWidgets('no label is ever laid out wider than its tab', (tester) async {
       // The ellipsis in `_TabButton` is a backstop; this asserts it is
       // never reached, which `find.text` alone cannot show — an
       // ellipsised label is still findable by its full text.
-      for (final locale in ['zh-Hans', 'zh-Hant', 'en']) {
-        for (final width in [256.0, 420.0, 1200.0]) {
-          await pumpStrip(tester,
-              locale: locale, width: width, preferLabels: true);
-          for (final element in find.byType(Text).evaluate()) {
-            final box = element.renderObject as RenderBox;
-            final text = (element.widget as Text).data ?? '';
-            final painter = TextPainter(
-              text: TextSpan(
-                text: text,
-                style: (element.widget as Text).style,
-              ),
-              textDirection: TextDirection.ltr,
-              maxLines: 1,
-            )..layout();
-            expect(painter.width, lessThanOrEqualTo(box.size.width + 0.5),
-                reason: '"$text" is cut at $locale/${width}px');
-            painter.dispose();
+      //
+      // 2026-08-11 (#315): and now at every Menu Size stop. The label
+      // used to be a hardcoded 11.5 px, so this test only ever proved
+      // the strip at one scale. The moment the size started moving, the
+      // MEASUREMENT had to move with it — measure at 11.5 and draw at
+      // 18.4 and every label is cut, which is #297 again.
+      for (final menu in [kMenuScaleMin, 1.0, kMenuScaleMax]) {
+        for (final locale in ['zh-Hans', 'zh-Hant', 'en']) {
+          for (final width in [256.0, 420.0, 1200.0]) {
+            await pumpStrip(tester,
+                locale: locale,
+                width: width,
+                preferLabels: true,
+                menuScale: menu);
+            for (final element in find.byType(Text).evaluate()) {
+              final box = element.renderObject as RenderBox;
+              final text = (element.widget as Text).data ?? '';
+              final painter = TextPainter(
+                text: TextSpan(
+                  text: text,
+                  style: (element.widget as Text).style,
+                ),
+                textDirection: TextDirection.ltr,
+                maxLines: 1,
+              )..layout();
+              expect(painter.width, lessThanOrEqualTo(box.size.width + 0.5),
+                  reason: '"$text" is cut at $locale/${width}px, menu $menu');
+              painter.dispose();
+            }
           }
         }
       }

@@ -9,6 +9,7 @@ import 'package:seeksparks/services/lxx_service.dart';
 import 'package:seeksparks/services/strongs_service.dart';
 import 'package:seeksparks/utils/clipboard_helper.dart';
 import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
+import 'package:seeksparks/constants/workbench_theme.dart' show WbType;
 
 /// Holistic per-book / per-corpus distribution table for a set of
 /// Strong's entries (typically the current word + its word family +
@@ -122,10 +123,15 @@ class _WordDistributionTableState extends State<WordDistributionTable> {
     return rows;
   }
 
+  /// Resolved once per build for the `_build*` helpers, which take a
+  /// [ColorScheme] and no context.
+  late WbType _ty;
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final locale = widget.locale;
+    _ty = WbType.of(context);
     return FutureBuilder<List<_Row>>(
       future: _future,
       builder: (context, snap) {
@@ -295,7 +301,7 @@ class _WordDistributionTableState extends State<WordDistributionTable> {
           Text(
             '${(_zoom * 100).round()}%',
             style: TextStyle(
-              fontSize: 11,
+              fontSize: _ty.scaled(11),
               fontWeight: FontWeight.w600,
               color: scheme.onSurfaceVariant,
             ),
@@ -436,7 +442,7 @@ class _WordDistributionTableState extends State<WordDistributionTable> {
           Text(
             uiStrings['summary']?[locale] ?? 'Summary',
             style: TextStyle(
-              fontSize: 11,
+              fontSize: _ty.scaled(11),
               fontWeight: FontWeight.w700,
               color: scheme.onSurfaceVariant,
               letterSpacing: 0.6,
@@ -486,14 +492,14 @@ class _WordDistributionTableState extends State<WordDistributionTable> {
           TextSpan(
             text: '$label: ',
             style: TextStyle(
-              fontSize: 11,
+              fontSize: _ty.scaled(11),
               color: scheme.onSurfaceVariant,
             ),
           ),
           TextSpan(
             text: value,
             style: TextStyle(
-              fontSize: 12,
+              fontSize: _ty.scaled(12),
               fontWeight: FontWeight.w700,
               color: scheme.onSurface,
             ),

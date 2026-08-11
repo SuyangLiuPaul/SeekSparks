@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:seeksparks/constants/sermon_credit.dart';
 import 'package:seeksparks/constants/sermon_topics.dart';
 import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/constants/workbench_theme.dart' show WbType;
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/sermon.dart';
 import 'package:seeksparks/providers/main_provider.dart';
@@ -174,6 +175,7 @@ class _SermonsPageState extends State<SermonsPage> {
     final settings = context.watch<AppSettings>();
     final locale = settings.locale;
     final scheme = Theme.of(context).colorScheme;
+    final t = WbType.of(context);
     return Scaffold(
       appBar: AppBar(
         leading: const LocalizedBackButton(),
@@ -195,7 +197,7 @@ class _SermonsPageState extends State<SermonsPage> {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                fontSize: 11,
+                fontSize: t.scaled(11),
                 fontWeight: FontWeight.w400,
                 // Faded AppBar foreground, not faded onSurface: the
                 // classic theme paints this bar `primary` and the
@@ -267,7 +269,7 @@ class _SermonsPageState extends State<SermonsPage> {
                       label: Text(
                         uiStrings['sermonFilterByPassage']?[locale] ??
                             'Filter',
-                        style: const TextStyle(fontSize: 13),
+                        style: TextStyle(fontSize: t.scaled(13)),
                       ),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -305,7 +307,7 @@ class _SermonsPageState extends State<SermonsPage> {
                     Text(
                       _summaryLine(groups, locale),
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: t.scaled(12),
                         color: scheme.onSurface.withValues(alpha: 0.6),
                       ),
                     ),
@@ -511,6 +513,7 @@ class _PassageFilterSheetState extends State<_PassageFilterSheet> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final locale = widget.locale;
+    final t = WbType.of(context);
     final chapters = _selectedBook == null
         ? <int>[]
         : (widget.chaptersByBook[_selectedBook!]?.toList() ?? <int>[])
@@ -529,8 +532,8 @@ class _PassageFilterSheetState extends State<_PassageFilterSheet> {
                 Text(
                   uiStrings['sermonFilterByPassage']?[locale] ??
                       'Filter by passage',
-                  style: const TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                      fontSize: t.scaled(16), fontWeight: FontWeight.w600),
                 ),
                 const Spacer(),
                 if (widget.initialBook != null)
@@ -549,7 +552,7 @@ class _PassageFilterSheetState extends State<_PassageFilterSheet> {
             Text(
               uiStrings['sermonFilterBookLabel']?[locale] ?? 'Book',
               style: TextStyle(
-                  fontSize: 12,
+                  fontSize: t.scaled(12),
                   color: scheme.onSurface.withValues(alpha: 0.65)),
             ),
             const SizedBox(height: 6),
@@ -588,7 +591,7 @@ class _PassageFilterSheetState extends State<_PassageFilterSheet> {
               Text(
                 uiStrings['sermonFilterChapterLabel']?[locale] ?? 'Chapter',
                 style: TextStyle(
-                    fontSize: 12,
+                    fontSize: t.scaled(12),
                     color: scheme.onSurface.withValues(alpha: 0.65)),
               ),
               const SizedBox(height: 6),
@@ -653,10 +656,11 @@ class _BookChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final localized = localeAwareBookName(book, locale, '');
+    final t = WbType.of(context);
     return ChoiceChip(
       label: Text(localized,
           style: TextStyle(
-            fontSize: 13,
+            fontSize: t.scaled(13),
             color: hasSermons ? null : Theme.of(context).disabledColor,
           )),
       selected: selected,
@@ -688,6 +692,7 @@ class _TopicGroup extends StatelessWidget {
   Widget _buildCard(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final locale = context.watch<AppSettings>().locale;
+    final t = WbType.of(context);
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 4),
       elevation: 0,
@@ -707,7 +712,7 @@ class _TopicGroup extends StatelessWidget {
         subtitle: Text(
           _subtitle(sermons.length, locale),
           style: TextStyle(
-            fontSize: 12,
+            fontSize: t.scaled(12),
             color: scheme.onSurface.withValues(alpha: 0.6),
           ),
         ),
@@ -769,6 +774,7 @@ class _SermonRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final t = WbType.of(context);
     final showFlash = isLastRead && flashActive;
     return AnimatedContainer(
       duration: const Duration(milliseconds: 320),
@@ -813,7 +819,7 @@ class _SermonRow extends StatelessWidget {
                 Text(
                   '#${sermon.id}',
                   style: TextStyle(
-                    fontSize: 11,
+                    fontSize: t.scaled(11),
                     color: scheme.onSurface.withValues(alpha: 0.55),
                     fontFeatures: const [FontFeature.tabularFigures()],
                   ),
@@ -822,7 +828,7 @@ class _SermonRow extends StatelessWidget {
                   Text(
                     sermon.displayDate,
                     style: TextStyle(
-                      fontSize: 11,
+                      fontSize: t.scaled(11),
                       color: scheme.onSurface.withValues(alpha: 0.55),
                     ),
                   ),
@@ -840,7 +846,7 @@ class _SermonRow extends StatelessWidget {
                     child: Text(
                       localizePassage(seg, locale),
                       style: TextStyle(
-                        fontSize: 11,
+                        fontSize: t.scaled(11),
                         fontWeight: FontWeight.w500,
                         color: scheme.onPrimaryContainer,
                       ),

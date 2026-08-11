@@ -22,6 +22,8 @@
 ///     again, at 11px.
 library;
 
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -42,6 +44,31 @@ abstract final class WbMetrics {
   /// Original-language text needs a little more size to stay legible
   /// with pointing/accents, even in a dense layout.
   static const double original = 15.0;
+
+  /// The size below which pointed Hebrew and accented Greek stop being
+  /// readable — MEASURED, not chosen.
+  ///
+  /// Rendered the app's own bundled NotoSansHebrew at 1 device pixel per
+  /// logical pixel (the worst case, and real on a 1× display) and looked
+  /// for two contrasts that change the word: qamats (ָ) vs patach (ַ),
+  /// and tsere (two dots) vs segol (three dots). Below 12 px both pairs
+  /// are a single grey smudge. At 12 px only the first pair separates.
+  /// At 13 px the second is marginal. **At 14 px two dots and three dots
+  /// become countable**, and 15 px is the first comfortable size.
+  /// BibleWorks recommends 12–14 pt for its Unicode Hebrew fonts — about
+  /// 16–18 px at 96 dpi — which points the same way.
+  ///
+  /// The floor is [original] (15) rather than the bare 14 px threshold
+  /// because [PhrasingPage] had already adopted that number for exactly
+  /// this reason, and one shared floor is worth more than a pixel of
+  /// density.
+  ///
+  /// Latin gets no floor and should not: a diacritic is not decoration.
+  /// English at 8 px is unpleasant but still the same word; a qamats at
+  /// 8 px is *absent*, and the app is then showing a vowel it is not
+  /// showing. Under-dense is recoverable by the reader; a vowel they
+  /// cannot see is not.
+  static const double originalFloor = original;
 
   static const double lineHeight = 1.32;
 
@@ -833,6 +860,8 @@ class WbType {
     required this.toolbarHeight,
     required this.statusBarHeight,
     required this.paneTitleHeight,
+    this.textScale = 1.0,
+    this.chromeScale = 1.0,
     this.fontFamily,
   });
 
@@ -845,9 +874,50 @@ class WbType {
   final double statusBarHeight;
   final double paneTitleHeight;
 
+  /// The two scales, exposed rather than kept as locals in [resolve].
+  ///
+  /// [text], [chrome] and [original] cover the three sizes the workbench
+  /// agreed on, but a pane legitimately needs others: a pane's own
+  /// heading, a superscript verse number, a badge. Before these were
+  /// fields the only way to write such a size was a literal, and 263 of
+  /// them accumulated — every one a place a slider moved nothing. A
+  /// surface that needs its own size can now derive it instead of
+  /// inventing it.
+  final double textScale;
+  final double chromeScale;
+
   /// The reader's chosen font, so the workbench does not silently opt
   /// out of a preference the rest of the app respects.
   final String? fontFamily;
+
+  /// A size of the caller's own choosing, on the body-text scale.
+  ///
+  /// `t.scaled(9.5)` means "9.5 px when the reader is at the default
+  /// 20 pt, and proportionally larger or smaller otherwise" — which is
+  /// what every hardcoded literal in the workbench was silently
+  /// claiming to be.
+  double scaled(double atDefault) => atDefault * textScale;
+
+  /// The same, on the chrome scale, for anything the Menu Size slider
+  /// owns: bar heights, icons, tab labels, badges.
+  double scaledChrome(double atDefault) => atDefault * chromeScale;
+
+  /// The same, floored so pointing and accents survive.
+  ///
+  /// Use this for anything rendering Hebrew or Greek. It is the only
+  /// place in the app where a setting is deliberately overruled, and the
+  /// reason is in [WbMetrics.originalFloor]: below the floor the app is
+  /// no longer showing the text, it is showing a smudge.
+  ///
+  /// [atDefault] must not itself be below the floor — a surface that
+  /// renders pointed text at 12 px even at the default setting has the
+  /// same defect and should be raised, not clamped, or the floor would
+  /// silently make it *bigger* than its own design size.
+  double scaledOriginal(double atDefault) {
+    assert(atDefault >= WbMetrics.originalFloor,
+        'original text at $atDefault px is below the ${WbMetrics.originalFloor} px floor even at the default setting');
+    return math.max(atDefault * textScale, WbMetrics.originalFloor);
+  }
 
   /// Defaults, for tests and any surface built without settings.
   static const WbType fallback = WbType(
@@ -922,12 +992,18 @@ class WbType {
     return WbType(
       text: WbMetrics.text * textScale,
       chrome: WbMetrics.chrome * chromeScale,
-      original: WbMetrics.original * textScale,
+      // Floored: see [WbMetrics.originalFloor]. A reader who sets 12 pt
+      // is asking the rest of the app to be dense; they are not asking
+      // for an unreadable qamats.
+      original: math.max(WbMetrics.original * textScale,
+          WbMetrics.originalFloor),
       lineHeight: leading.toDouble(),
       menuBarHeight: WbMetrics.menuBarHeight * chromeScale,
       toolbarHeight: WbMetrics.toolbarHeight * chromeScale,
       statusBarHeight: WbMetrics.statusBarHeight * chromeScale,
       paneTitleHeight: WbMetrics.paneTitleHeight * chromeScale,
+      textScale: textScale.toDouble(),
+      chromeScale: chromeScale.toDouble(),
       fontFamily: (fontFamily ?? '').isEmpty ? null : fontFamily,
     );
   }

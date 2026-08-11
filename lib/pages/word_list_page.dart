@@ -14,6 +14,7 @@ import 'package:flutter/services.dart';
 
 import 'package:seeksparks/constants/book_names.dart' show bookNameToEnglish;
 import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/constants/workbench_theme.dart' show WbType;
 import 'package:seeksparks/pages/strongs_entry_page.dart';
 import 'package:seeksparks/services/originals_service.dart';
 import 'package:seeksparks/services/strongs_service.dart';
@@ -110,6 +111,7 @@ class _WordListPageState extends State<WordListPage> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final t = WbType.of(context);
     final summary = wordListSummary(_entries);
 
     return Scaffold(
@@ -155,7 +157,8 @@ class _WordListPageState extends State<WordListPage> {
                   '${_s('wordListDistinct', 'distinct')} / ${summary.total} '
                   '${_s('wordListTotal', 'words')} · ${summary.hapax} '
                   '${_s('wordListHapax', 'used once')}',
-                  style: TextStyle(fontSize: 13, color: scheme.outline),
+                  style: TextStyle(fontSize: t.scaled(13),
+                      color: scheme.outline),
                 ),
                 const SizedBox(height: 8),
                 Wrap(
@@ -199,7 +202,7 @@ class _WordListPageState extends State<WordListPage> {
                         itemCount: _entries.length,
                         separatorBuilder: (_, __) => const Divider(height: 1),
                         itemBuilder: (context, i) =>
-                            _row(_entries[i], summary.total, scheme),
+                            _row(_entries[i], summary.total, scheme, t),
                       ),
           ),
         ],
@@ -207,7 +210,7 @@ class _WordListPageState extends State<WordListPage> {
     );
   }
 
-  Widget _row(WordListEntry e, int total, ColorScheme scheme) {
+  Widget _row(WordListEntry e, int total, ColorScheme scheme, WbType t) {
     // A bar relative to the commonest word would make everything after
     // the top few invisible; relative to the total makes the long tail
     // legible, which is where the interesting words are.
@@ -219,13 +222,13 @@ class _WordListPageState extends State<WordListPage> {
         children: [
           Expanded(
             child: Text(e.form,
-                style: const TextStyle(fontSize: 17),
+                style: TextStyle(fontSize: t.scaledOriginal(17)),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis),
           ),
           Text('${e.count}',
               style: TextStyle(
-                fontSize: 14,
+                fontSize: t.scaled(14),
                 fontWeight: FontWeight.w600,
                 color: e.isHapax ? scheme.primary : scheme.onSurface,
               )),
@@ -238,15 +241,26 @@ class _WordListPageState extends State<WordListPage> {
           // this line says what that form IS. Both the lemma and its
           // romanisation come from the lexicon, so they always describe
           // the same word — the form's own romanisation would not.
-          Text(
-            [
-              e.strongs,
-              if (e.lemma != null && e.lemma != e.form) e.lemma!,
-              if (e.lemmaTranslit != null) e.lemmaTranslit!,
-            ].join(' · '),
+          // The lemma carries its own size: it is pointed Hebrew or
+          // accented Greek sitting in a line of Latin metadata, and at
+          // this line's size the points would be a smudge. See
+          // WbMetrics.originalFloor.
+          Text.rich(
+            TextSpan(
+              style: TextStyle(fontSize: t.scaled(12), color: scheme.outline),
+              children: [
+                TextSpan(text: e.strongs),
+                if (e.lemma != null && e.lemma != e.form)
+                  TextSpan(
+                    text: ' · ${e.lemma!}',
+                    style: TextStyle(fontSize: t.scaledOriginal(15)),
+                  ),
+                if (e.lemmaTranslit != null)
+                  TextSpan(text: ' · ${e.lemmaTranslit!}'),
+              ],
+            ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: 12, color: scheme.outline),
           ),
           const SizedBox(height: 4),
           ClipRRect(

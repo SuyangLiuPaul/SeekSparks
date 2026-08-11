@@ -173,6 +173,7 @@ const int _kMaxLabelledRows = 2;
   double width,
   int count, {
   double minLabelledTabWidth = _kMinLabelledTabWidth,
+  double minTabWidth = _kMinTabWidth,
   bool preferLabels = false,
 }) {
   if (count <= 0) return (perRow: 1, showLabels: false);
@@ -186,7 +187,7 @@ const int _kMaxLabelledRows = 2;
       return (perRow: n, showLabels: true);
     }
   }
-  final fit = (width / _kMinTabWidth).floor().clamp(1, count);
+  final fit = (width / minTabWidth).floor().clamp(1, count);
   return (perRow: (count / (count / fit).ceil()).ceil(), showLabels: false);
 }
 
@@ -199,14 +200,16 @@ const int _kMaxLabelledRows = 2;
 double analysisStripMinLabelledWidth(
   Iterable<String> labels, {
   TextScaler textScaler = TextScaler.noScaling,
+  double fontSize = _kLabelFontSize,
+  double chrome = _kLabelChrome,
 }) {
   var widest = 0.0;
   for (final label in labels) {
     final painter = TextPainter(
       text: TextSpan(
         text: label,
-        style: const TextStyle(
-          fontSize: _kLabelFontSize,
+        style: TextStyle(
+          fontSize: fontSize,
           fontWeight: FontWeight.w700,
           fontFamilyFallback: kCjkFontFallback,
         ),
@@ -218,11 +221,19 @@ double analysisStripMinLabelledWidth(
     if (painter.width > widest) widest = painter.width;
     painter.dispose();
   }
-  return widest + _kLabelChrome;
+  return widest + chrome;
 }
 
-/// The label's type size, shared by the measurement and the widget so
-/// the two cannot drift.
+/// The label's type size AT THE DEFAULT Menu Size, shared by the
+/// measurement and the widget so the two cannot drift.
+///
+/// It is the default rather than the size, because the strip is chrome
+/// and the Menu Size slider moves it — `t.scaledChrome(_kLabelFontSize)`.
+/// The literal stayed a literal through #311's arithmetic fix, so the
+/// most-seen 30 px of the app was the one thing the slider could not
+/// touch (#315). Everything the label sits in — icon, gap, padding,
+/// margin, i.e. [_kLabelChrome] — has to move by the SAME factor, or
+/// the measurement and the drawing disagree and #297's ellipsis is back.
 const double _kLabelFontSize = 11.5;
 
 /// Measurements are cached because the strip rebuilds on every hover
@@ -234,10 +245,19 @@ final Map<String, double> _minLabelledCache = {};
 // raw NUL in the source makes grep and ripgrep classify the whole file
 // as binary and skip it, so every later search of this file returns
 // nothing and reads like a clean result.
-double _cachedMinLabelledWidth(List<String> labels, TextScaler textScaler) {
-  final key = '${textScaler.scale(_kLabelFontSize)}\u0000${labels.join('\u0001')}';
-  return _minLabelledCache[key] ??=
-      analysisStripMinLabelledWidth(labels, textScaler: textScaler);
+double _cachedMinLabelledWidth(
+  List<String> labels,
+  TextScaler textScaler,
+  double fontSize,
+  double chrome,
+) {
+  final key = '$chrome:${textScaler.scale(fontSize)}\u0000${labels.join('\u0001')}';
+  return _minLabelledCache[key] ??= analysisStripMinLabelledWidth(
+    labels,
+    textScaler: textScaler,
+    fontSize: fontSize,
+    chrome: chrome,
+  );
 }
 
 /// The tabs, in strip order: which pane, its glyph, its `uiStrings`
@@ -300,14 +320,24 @@ class AnalysisTabStrip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final t = WbType.of(context);
     const items = _kTabs;
     final labels = analysisTabLabels(locale);
+    // One factor for the label, the icon, the gaps and the paddings.
+    // Measuring at one size and drawing at another is exactly how #297
+    // ellipsised every label, so these four lines are the whole
+    // contract: what the strip measures is what _TabButton draws.
+    final labelSize = t.scaledChrome(_kLabelFontSize);
+    final labelChrome = t.scaledChrome(_kLabelChrome);
     final minLabelled = _cachedMinLabelledWidth(
       labels,
       MediaQuery.textScalerOf(context),
+      labelSize,
+      labelChrome,
     );
     return Container(
-      padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
+      padding: EdgeInsets.symmetric(
+          horizontal: t.scaledChrome(8), vertical: t.scaledChrome(6)),
       color: scheme.surface,
       child: LayoutBuilder(
         builder: (context, box) {
@@ -315,6 +345,7 @@ class AnalysisTabStrip extends StatelessWidget {
             box.maxWidth,
             items.length,
             minLabelledTabWidth: minLabelled,
+            minTabWidth: t.scaledChrome(_kMinTabWidth),
             preferLabels: preferLabels,
           );
           final perRow = layout.perRow;
@@ -324,7 +355,8 @@ class AnalysisTabStrip extends StatelessWidget {
             children: [
               for (var start = 0; start < items.length; start += perRow)
                 Padding(
-                  padding: EdgeInsets.only(top: start == 0 ? 0 : 4),
+                  padding: EdgeInsets.only(
+                      top: start == 0 ? 0 : t.scaledChrome(4)),
                   child: Row(
                     children: [
                       for (var i = start; i < start + perRow; i++)
@@ -333,14 +365,15 @@ class AnalysisTabStrip extends StatelessWidget {
                         else
                           Expanded(
                             child: Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 2),
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: t.scaledChrome(2)),
                               child: _TabButton(
                                 icon: items[i].$2,
                                 label: labels[i],
                                 showLabel: showLabels,
                                 selected: items[i].$1 == current,
                                 onTap: () => onChanged(items[i].$1),
+                                type: t,
                               ),
                             ),
                           ),
@@ -361,6 +394,7 @@ class _TabButton extends StatelessWidget {
     required this.label,
     required this.selected,
     required this.onTap,
+    required this.type,
     this.showLabel = true,
   });
 
@@ -369,6 +403,10 @@ class _TabButton extends StatelessWidget {
   final bool selected;
   final bool showLabel;
   final VoidCallback onTap;
+
+  /// Passed down rather than resolved here: the strip MEASURED with this
+  /// exact scale before deciding to show labels at all.
+  final WbType type;
 
   @override
   Widget build(BuildContext context) {
@@ -391,13 +429,16 @@ class _TabButton extends StatelessWidget {
           splashColor: Colors.transparent,
           highlightColor: Colors.transparent,
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 4),
+            padding: EdgeInsets.symmetric(
+                vertical: type.scaledChrome(7),
+                horizontal: type.scaledChrome(4)),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(icon, size: showLabel ? 15 : 17, color: fg),
+                Icon(icon,
+                    size: type.scaledChrome(showLabel ? 15 : 17), color: fg),
                 if (showLabel) ...[
-                  const SizedBox(width: 5),
+                  SizedBox(width: type.scaledChrome(5)),
                   Flexible(
                     child: Text(
                       label,
@@ -409,7 +450,7 @@ class _TabButton extends StatelessWidget {
                       // fallback list the measurement also uses.
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontSize: _kLabelFontSize,
+                        fontSize: type.scaledChrome(_kLabelFontSize),
                         fontFamilyFallback: kCjkFontFallback,
                         fontWeight:
                             selected ? FontWeight.w700 : FontWeight.w500,
@@ -488,6 +529,7 @@ class _CrossRefsPaneState extends State<CrossRefsPane> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final t = WbType.of(context);
     return FutureBuilder<List<BibleReference>>(
       future: _future,
       builder: (context, snap) {
@@ -529,7 +571,7 @@ class _CrossRefsPaneState extends State<CrossRefsPane> {
                     Text(
                       label,
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: t.scaled(12),
                         fontWeight: FontWeight.w700,
                         color: scheme.primary,
                       ),
@@ -545,7 +587,7 @@ class _CrossRefsPaneState extends State<CrossRefsPane> {
                         maxLines: 3,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          fontSize: 12.5,
+                          fontSize: t.scaled(12.5),
                           height: 1.45,
                           color: scheme.onSurface,
                         ),
@@ -701,6 +743,7 @@ class _WordStatsPaneState extends State<WordStatsPane> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final t = WbType.of(context);
     return FutureBuilder<List<_StatRow>>(
       future: _future,
       builder: (context, snap) {
@@ -750,7 +793,8 @@ class _WordStatsPaneState extends State<WordStatsPane> {
                 padding: const EdgeInsets.only(bottom: 2),
                 child: Text(
                   hint,
-                  style: TextStyle(fontSize: 11, color: scheme.outline),
+                  style: TextStyle(
+                      fontSize: t.scaled(11), color: scheme.outline),
                 ),
               );
             }
@@ -770,7 +814,7 @@ class _WordStatsPaneState extends State<WordStatsPane> {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
-                              fontSize: 15,
+                              fontSize: t.scaledOriginal(15),
                               fontWeight: FontWeight.w600,
                               color: scheme.onSurface,
                             ),
@@ -780,7 +824,7 @@ class _WordStatsPaneState extends State<WordStatsPane> {
                         Text(
                           scopedCountLabel(r.inScope, r.denominator),
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: t.scaled(12),
                             fontWeight: FontWeight.w700,
                             fontFeatures: const [FontFeature.tabularFigures()],
                             color: scheme.primary,
@@ -826,7 +870,7 @@ class _WordStatsPaneState extends State<WordStatsPane> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          fontSize: 11.5,
+                          fontSize: t.scaled(11.5),
                           color: scheme.onSurfaceVariant,
                         ),
                       ),
@@ -853,6 +897,7 @@ class _WordStatsPaneState extends State<WordStatsPane> {
 /// to say anything.
 Widget _distribution(BuildContext context, GreekWordStats g) {
   final theme = Theme.of(context);
+  final t = WbType.of(context);
   final scheme = theme.colorScheme;
   final top = g.byFrequency.take(4).toList();
   if (top.isEmpty) return const SizedBox.shrink();
@@ -891,7 +936,7 @@ Widget _distribution(BuildContext context, GreekWordStats g) {
                   ? '${_abbr(e.key)} ${e.value.$1}'
                   : '${_abbr(e.key)} ${e.value.$1} ·#${e.value.$2}',
               style: theme.textTheme.labelSmall?.copyWith(
-                fontSize: 9.5,
+                fontSize: t.scaled(9.5),
                 color: scheme.primary,
                 fontFeatures: const [FontFeature.tabularFigures()],
               ),
@@ -901,13 +946,13 @@ Widget _distribution(BuildContext context, GreekWordStats g) {
           Text(
             '+${g.books.length - top.length}',
             style: theme.textTheme.labelSmall
-                ?.copyWith(fontSize: 9.5, color: scheme.outline),
+                ?.copyWith(fontSize: t.scaled(9.5), color: scheme.outline),
           ),
         if (present.length > 1)
           Text(
             present.map((k) => '${groups[k]} ${g.totals[k]}').join(' / '),
             style: theme.textTheme.labelSmall?.copyWith(
-              fontSize: 9.5,
+              fontSize: t.scaled(9.5),
               color: scheme.onSurfaceVariant,
               fontFeatures: const [FontFeature.tabularFigures()],
             ),
@@ -1132,6 +1177,7 @@ class _ConcordanceTopicsPaneState extends State<ConcordanceTopicsPane> {
 
   Widget _attribution(BuildContext context) {
     final theme = Theme.of(context);
+    final t = WbType.of(context);
     final text = ModernConcordanceService.attribution;
     if (text.isEmpty) return const SizedBox.shrink();
     return Padding(
@@ -1139,7 +1185,7 @@ class _ConcordanceTopicsPaneState extends State<ConcordanceTopicsPane> {
       child: Text(
         text,
         style: theme.textTheme.bodySmall?.copyWith(
-          fontSize: 10.5,
+          fontSize: t.scaled(10.5),
           height: 1.35,
           color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
         ),
@@ -1356,6 +1402,7 @@ class _TopicDetailState extends State<_TopicDetail> {
   Widget _refs(BuildContext context, ConcordanceEntry e) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final t = WbType.of(context);
     return Padding(
       padding: const EdgeInsets.only(top: 6),
       child: Wrap(
@@ -1380,7 +1427,7 @@ class _TopicDetailState extends State<_TopicDetail> {
                 child: Text(
                   '${localeAwareBookName(book, widget.locale)} $ch:$vs',
                   style: theme.textTheme.labelSmall?.copyWith(
-                    fontSize: 10.5,
+                    fontSize: t.scaled(10.5),
                     color: isHere ? scheme.primary : scheme.onSurfaceVariant,
                     fontWeight: isHere ? FontWeight.w700 : null,
                     decoration: isHere ? TextDecoration.underline : null,

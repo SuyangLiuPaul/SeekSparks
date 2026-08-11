@@ -26,7 +26,8 @@ import 'package:seeksparks/services/strongs_service.dart';
 import 'package:seeksparks/services/tagged_text_service.dart';
 import 'package:seeksparks/utils/morphology.dart';
 import 'package:seeksparks/utils/phrasing.dart';
-import 'package:seeksparks/utils/scripture_markup.dart' show scriptureReadingText;
+import 'package:seeksparks/utils/scripture_markup.dart'
+    show scriptureReadingText;
 import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
 
 /// Reader-facing label for a relation, in [locale].
@@ -152,8 +153,8 @@ class _PhrasingType {
     // faint gloss but an absent one.
     final gloss = original
         ? (fontSize * 0.62).clamp(11.0, double.infinity)
-        : (fontSize * 0.62 * _originalBoost).clamp(
-            _pointedFloor, double.infinity);
+        : (fontSize * 0.62 * _originalBoost)
+            .clamp(_pointedFloor, double.infinity);
     return _PhrasingType(
       word: word.toDouble(),
       gloss: gloss.toDouble(),
@@ -485,7 +486,8 @@ class _PhrasingPageState extends State<PhrasingPage> {
       label: (r) => phrasingRelationLabel(r, widget.locale),
       verseMark: (v) => '$v',
     );
-    final head = '${localeAwareBookName(widget.book, widget.locale, widget.version)} '
+    final head =
+        '${localeAwareBookName(widget.book, widget.locale, widget.version)} '
         '${widget.chapter}:${p.startVerse}-${p.endVerse}';
     Clipboard.setData(ClipboardData(text: '$head\n$text'));
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -514,15 +516,15 @@ class _PhrasingPageState extends State<PhrasingPage> {
               icon: Icon(_gloss == _GlossMode.on
                   ? Icons.subtitles_outlined
                   : Icons.subtitles_off_outlined),
-              onPressed: () => setState(() => _gloss = _gloss == _GlossMode.on
-                  ? _GlossMode.off
-                  : _GlossMode.on),
+              onPressed: () => setState(() => _gloss =
+                  _gloss == _GlossMode.on ? _GlossMode.off : _GlossMode.on),
             ),
           IconButton(
             tooltip: _s('phrasingReset', 'Start over'),
             icon: const Icon(Icons.restart_alt),
-            onPressed:
-                p == null || !p.isTouched ? null : () => _update(resetPhrasing(p)),
+            onPressed: p == null || !p.isTouched
+                ? null
+                : () => _update(resetPhrasing(p)),
           ),
           IconButton(
             tooltip: _s('kwicCopy', 'Copy all'),
@@ -551,7 +553,8 @@ class _PhrasingPageState extends State<PhrasingPage> {
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Text(
-            _s('phrasingNone',
+            _s(
+                'phrasingNone',
                 'No original-language text is bundled for this chapter, so '
                     'there is nothing to phrase.'),
             textAlign: TextAlign.center,
@@ -605,8 +608,8 @@ class _PhrasingPageState extends State<PhrasingPage> {
                 (PhrasingLevel.phrases, 'phrasingLevelPhrases', '+ Phrases'),
               ])
                 ChoiceChip(
-                  label:
-                      Text(_s(e.$2, e.$3), style: TextStyle(fontSize: t.chrome)),
+                  label: Text(_s(e.$2, e.$3),
+                      style: TextStyle(fontSize: t.chrome)),
                   selected: p.level == e.$1,
                   // A level this text cannot support is disabled rather
                   // than left tappable and inert — see
@@ -649,8 +652,7 @@ class _PhrasingPageState extends State<PhrasingPage> {
           Row(
             children: [
               Text(_s('phrasingRange', 'Verses'),
-                  style:
-                      TextStyle(fontSize: t.chrome, color: scheme.outline)),
+                  style: TextStyle(fontSize: t.chrome, color: scheme.outline)),
               const SizedBox(width: 8),
               _verseDrop(verses, p.startVerse, (v) {
                 _update(p.copyWith(
@@ -712,7 +714,9 @@ class _PhrasingPageState extends State<PhrasingPage> {
 
   Widget _verseDrop(List<int> verses, int value, ValueChanged<int> onChanged) =>
       DropdownButton<int>(
-        value: verses.contains(value) ? value : (verses.isEmpty ? null : verses.first),
+        value: verses.contains(value)
+            ? value
+            : (verses.isEmpty ? null : verses.first),
         isDense: true,
         underline: const SizedBox.shrink(),
         items: [
@@ -728,8 +732,7 @@ class _PhrasingPageState extends State<PhrasingPage> {
 
   Widget _diagram(Phrasing p, ColorScheme scheme, _PhrasingType t) {
     final all = layoutPhrasing(p, _words);
-    final lines =
-        visiblePhrasingLines(all, _words, p.startVerse, p.endVerse);
+    final lines = visiblePhrasingLines(all, _words, p.startVerse, p.endVerse);
     if (lines.isEmpty) {
       return Center(
         child: Text(_s('phrasingEmptyWindow', 'No verses in this range.'),
@@ -815,9 +818,7 @@ class _PhrasingPageState extends State<PhrasingPage> {
         style: TextStyle(
           fontSize: t.chrome,
           fontStyle: chosen != null ? FontStyle.normal : FontStyle.italic,
-          color: chosen != null
-              ? scheme.onPrimaryContainer
-              : scheme.outline,
+          color: chosen != null ? scheme.onPrimaryContainer : scheme.outline,
         ),
       ),
     );
@@ -852,6 +853,7 @@ class _PhrasingPageState extends State<PhrasingPage> {
       for (final r in PhrasingRelation.values)
         if (!suggestions.contains(r)) r,
     ];
+    final t = _PhrasingType.of(context.read<AppSettings>().fontSize, _source);
     final picked = await showModalBottomSheet<Object>(
       context: context,
       builder: (context) => SafeArea(
@@ -873,7 +875,7 @@ class _PhrasingPageState extends State<PhrasingPage> {
                     alignment: AlignmentDirectional.centerStart,
                     child: Text(
                       _s('phrasingSuggested', 'Suggested by the grammar'),
-                      style: const TextStyle(fontSize: 11),
+                      style: TextStyle(fontSize: t.chrome),
                     ),
                   ),
                 ),
@@ -977,9 +979,8 @@ class _PhrasingPageState extends State<PhrasingPage> {
                 // Hebrew diagram must not mirror a Chinese gloss, and an
                 // LTR diagram must not straighten a Hebrew one.
                 Directionality(
-                  textDirection: isRtlText(gloss)
-                      ? TextDirection.rtl
-                      : TextDirection.ltr,
+                  textDirection:
+                      isRtlText(gloss) ? TextDirection.rtl : TextDirection.ltr,
                   child: ConstrainedBox(
                     // A tagged run can be a whole clause — 雅简+ puts
                     // 又有一事。耶斯列人 on one Strong's number. Left
@@ -1033,8 +1034,7 @@ class _PhrasingPageState extends State<PhrasingPage> {
           Expanded(
             child: Text(
               w == null
-                  ? _s('phrasingFooterIdle',
-                      'Long-press a word for its parse.')
+                  ? _s('phrasingFooterIdle', 'Long-press a word for its parse.')
                   : [
                       w.text,
                       if (w.translit != null && w.translit!.isNotEmpty)
@@ -1045,8 +1045,8 @@ class _PhrasingPageState extends State<PhrasingPage> {
                     ].join('  ·  '),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                  fontSize: t.chrome, color: scheme.onSurfaceVariant),
+              style:
+                  TextStyle(fontSize: t.chrome, color: scheme.onSurfaceVariant),
             ),
           ),
           if (_pinned != null)
