@@ -85,6 +85,10 @@ believe it is fine" and "we looked".
 | 26a | Characters that render but cannot be read (和合本, 5 files) | 5,295,770 chars | **206 in 6 classes** → **0** | **fixed**, now a test |
 | 26b | Verse ids well-formed and unique within an edition | 93,307 records | **1,764 malformed / 562 collisions** → **0** | **fixed**, now a test |
 | 26c | 和合本 verse text vs an *external* witness | 31,102 verses | 392 → **383** | measured; residue is variants, listed |
+| 27a | `bsb.json` verse text vs bereanbible.com | 31,086 verses | **0** | clean, 100.0000% |
+| 27b | `kjv.json` verse text vs three *external* KJV witnesses | 31,102 verses | 851 → **749** | **101 fixed**, residue is this edition's orthography |
+| 27c | Typographic damage in the English editions | 62,204 verses + 66 tagged books | **42,510 in 3 classes**, and 11,409 again in the tagged layer → **0** | **fixed**, now a test |
+| 27d | Verses truncated by a length cap | 62,204 verses | **1** → **0** | **fixed**, now a test |
 
 ---
 
@@ -1841,6 +1845,216 @@ writing either one the other way buries a 69-character repair in a
 
 ---
 
+## Check 27 — the English editions against an external witness
+
+This was item 0 of "Next, in order", and that entry said the obstacle
+was the witness, not the method: *"nothing outside this repository has
+yet been found that holds BSB or KJV under terms we can use."*
+
+That was wrong, and it had never been tested. Four public-domain texts
+answered on the first attempt:
+
+  * `bereanbible.com/bsb.txt` — the BSB, dedicated to the public domain
+    by its publisher, in a two-column reference/text file
+  * `api.getbible.net/v2/kjv` — the CrossWire/Blayney 1769 line
+  * `openbible.com`'s Pure Cambridge Edition, which brackets the words
+    the translators supplied
+  * scrollmapper's `bible_databases` export
+
+A false blocker in a document is worse than a blank, because it stops
+the next reader from trying. The cost of disproving it was one command.
+
+### The witnesses check each other first
+
+The three KJV texts agree with each other in **30,058 of 31,102**
+verses. Where they do not, they are not used: every repair below is
+gated on all three reading the same thing. This is check 26's lesson
+applied in advance — there the external witness carried 44 of the same
+丶 we did, and a majority vote would have entrenched three defects. A
+witness that is corrupt at the same site must abstain, and the cheapest
+way to make it abstain is to require unanimity.
+
+Comparison is on a reduced stream: NFKC, curly quotes folded to
+straight, everything outside `[a-z0-9 ]` dropped, whitespace collapsed.
+So `Beth–aven` and `Bethaven`, `LORD` and `Lord`, `[is]` and `is` all
+compare equal, and the residue is words rather than typography. Book
+names needed aliasing in both directions (Psalm↔Psalms, Song of
+Songs↔Song of Solomon, I/II/III↔1/2/3, Revelation of John↔Revelation);
+before that was done scrollmapper appeared to be missing 6,532 verses,
+which is what a naming mismatch looks like when you do not check it.
+
+### BSB: clean, and the count is the result
+
+**31,086 verses, 100.0000% agreement.** No formatting artifacts. The 16
+references present upstream and absent here are empty rows upstream —
+the verses the BSB's textual basis omits (Matthew 17:21, 18:11, 23:14,
+Mark 7:16 and the rest). They are absent, not wrong, and whether the
+reader should be *told* they are absent is a product question, not a
+data one. It is recorded here and owned by nobody yet.
+
+A clean result on 31,086 verses is not a wasted check. It is the control
+that makes the KJV finding legible: the same instrument, the same
+reduction, the same witness terms, and one file came back at 100% and
+the other did not.
+
+### `assets/kjv.json` is not the King James Version
+
+851 verses depart from all three witnesses. The first question was
+whether the file is a KJV at all, and it is not — it is an
+**Americanised, modernised revision**: shew→show (66), neighbour→neighbor
+(57), honour→honor, carcase→carcass, jubile→jubilee, musick→music,
+brasen→brazen, aul→awl, rie→rye, ringstraked→ring-streaked,
+intreat→entreat, firstborn→first born, plus some forty proper-name
+respellings (Malchi-shua→Melchishua, Adoni-zedek→Adonizedec,
+Ezion-geber→Eziongaber). It also drops the Psalm superscriptions and
+the Psalm 119 acrostic letters that `kjvs.json` keeps.
+
+It is not a named revision either: 34.1% agreement with the AKJV and
+39.0% with Webster rule out the two obvious candidates. **The label
+"KJV" is therefore a provenance claim the file does not support, and
+naming it is the owner's call (#285), not this audit's.** Flagged, not
+changed.
+
+### A systematic difference is an edition; a one-off difference is an error
+
+That is the rule this check ran on, and it is the reason the 851 could
+be split without guessing. The modernisation is inconsistent — `show`
+appears 68 times and `shew` survives 160 — so "the witness's word never
+appears in our file" is too crude a test and was discarded after it
+misfiled `intreat`. What separates the two classes is whether the pair
+is a *spelling of the same word* or a *different word*, and 257 distinct
+difference shapes is few enough to adjudicate by hand rather than by
+heuristic.
+
+**748 departures are the edition, and are left exactly as they are.**
+Revising them back would invent a fourth edition of a text three
+witnesses already agree on.
+
+**101 are errors**, repaired by `tools/repair_kjv_defects.py`. The
+instructive thing about them is how few a reader could ever have caught:
+
+| Reading | Should be | Where |
+|---|---|---|
+| `Three items in the year` | `Three times` | Exodus 23:17 |
+| `And Bezaleel the son Uri` | `the son of Uri` | Exodus 38:22 |
+| `left of the door of the poor of the land` | `left of the poor` | 2 Kings 25:12 |
+| `who spoken good for the king` | `who had spoken good` | Esther 7:9 |
+| `he that c\|alleth for the waters` | `calleth` | Amos 9:6 |
+| `So they look up Jonah` | `took up` | Jonah 1:15 |
+| `there was certain of the scribes` | `there were certain` | Mark 2:6 |
+| `Thou are righteous` | `Thou art` | Proverbs 24:24 |
+| **`Cushy`** ×8 | **`Cushi`**, the messenger | 2 Samuel 18:21–32 |
+| `in the land of their enemies` | `in the hand` | Nehemiah 9:28 |
+| `unto the tribes of Levi` | `the tribe` — Levi is one | Joshua 13:14 |
+| `in the candlesticks shall be four bowls` | `the candlestick` | Exodus 25:34 |
+| `And Pilate asked him … said unto them` | `unto him` | Mark 15:2 |
+
+The top half of that table is visibly broken. The bottom half is not:
+"Cushy" is a legible English word, "the land of their enemies" reads
+without a stumble, and "the tribes of Levi" is wrong about a fact while
+being perfect English. **Nothing below the midpoint would ever have been
+found by reading the app**, which is the whole argument for holding a
+text against something outside itself.
+
+The full 101 are listed site by site in `tools/repair_kjv_defects.py`,
+each as an exact old→new substring so the diff can be argued with.
+
+### Typographic damage: 42,510 verses in three classes
+
+  * **31,101 of 31,102 verses in `kjv.json` end in a trailing `" \n"`.**
+    Invisible in the reader — and inside the string the app searches,
+    copies to the clipboard, and hands to the concordance.
+  * **11,409 verses in `kjvs.json` print a space before their
+    punctuation**: *"and was sick : and he sent"*. 11,084 of those are
+    before a colon, which the KJV uses more than any other edition we
+    ship. This one the reader can see, and it is the largest purely
+    cosmetic defect ever measured in this repository.
+  * **10 verses in `kjv.json` carry a stray `|`** left by a conversion.
+    Six sit harmlessly at a verse end, two at a verse start, and two
+    land inside a word: `he that c|alleth`, `hide nothing from m|e`.
+
+None of these three would fail a schema check, a repertoire check, or a
+coverage check. The file is well-formed JSON with the right number of
+verses throughout.
+
+**And the spacing defect is in the tagged layer too.** `assets/tagged/kjvs/`
+holds the same verse split into runs, and the loader renders runs where
+the search pane reads plain text — so repairing one and not the other
+makes the same verse look different in two panes. Repairing the plain
+file alone is what surfaced it: `eaglesview_versions_test.dart` failed on
+John 21:18 while comparing 50 verses of one book. All 66 books carried
+it, in the same 11,409 verses, and nothing else — the tagged layer and
+the plain text agreed on every other character of all 31,102 verses,
+which is how the repair could be trusted rather than guessed.
+
+The tagged repair is a **character mask** rather than a rewrite. Every
+repair in this class is a deletion, so the mask that fixes the plain
+string can be sliced across the runs — which matters, because a space can
+sit in one run with the colon it precedes in the next, and a per-run
+regex would miss exactly those. It also means the two paths cannot drift:
+`normalise()` is defined as the mask applied to a string.
+
+### One verse truncated, and why exactly one
+
+**Esther 8:9** is the longest verse in the Bible. `kjvs.json` carries it
+at 528 characters; `kjv.json` stopped at **499**, mid-clause, dropping
+*"according to their language."*
+
+The interesting part is the bound. The next-longest verse in the file is
+2 Kings 16:15 at 443 characters, and it is the only other verse over
+430 — so a 500-character cap upstream could only ever have shown itself
+in one verse of the whole Bible, and did. That is why "how many more are
+there?" has to be asked as a measurement rather than a worry: the honest
+answer here is one, and it is provable rather than hopeful.
+
+`kjvs.json` having the verse whole is what made the loss demonstrable
+at all. Two imports of the same text, damaged differently, witness each
+other.
+
+### What was deliberately NOT changed
+
+  * **The edition's orthography** — all 748 systematic departures, listed
+    above. Including the proper-name spellings, which are the most
+    tempting: `Shimrom` for `Shimron` (1 Chronicles 7:1), `Gaba` for
+    `Geba`, `Pharah` for `Parah`, `Mizpar` for `Mispar`. Each *looks*
+    like a one-off error, and each belongs to a class of some forty
+    name respellings that runs through the whole file. A class is an
+    edition even when its members are individually suspicious.
+  * **The archaic possessives** `your's`, `their's`, `our's`, `her's`,
+    which our file keeps and all three witnesses modernise. We are less
+    modernised than the witnesses there, which is evidence the
+    modernisation was applied by hand and unevenly — and no reason to
+    touch it.
+  * **`wit's end`** for `wits' end` (Psalm 107:27). Apostrophe
+    convention, not a word.
+  * **The 16 BSB omissions.** Absent upstream, and disclosing them is a
+    product decision.
+  * **The file's name and label.** See above; #285 owns it.
+
+### Frozen
+
+`test/kjv_integrity_test.dart` asserts that no English edition carries a
+conversion pipe, a padded verse, or a space before its punctuation
+— across `kjv.json`, `kjvs.json` and `bsb.json`, so a re-import of any
+of the three trips it — and pins nine repaired verses to the readings
+the three witnesses gave, including the whole of Esther 8:9 and the
+absence of "Cushy". It also reassembles **all 31,102 verses** of
+`assets/tagged/kjvs/` and requires each to equal its plain verse
+character for character; the existing Eagle's View test compared 50
+verses of John, which was enough to catch this defect but only because
+John 21:18 happened to be inside the window.
+
+`tools/repair_kjv_defects.py` verifies by default and applies with
+`--write`; it is idempotent and exits 0 when there is nothing left to
+repair, and it preserves each file's on-disk formatting (kjv is indent-2,
+kjvs is a single compact line). Its first draft was *not* idempotent —
+three deletion sites and the Esther 8:9 append re-matched themselves on
+a second run, and the append would have doubled the restored clause.
+Running the tool twice is the only reason that was caught, which is the
+argument for the tool being a tool rather than a one-off script.
+
+---
+
 ## Not checked yet
 
 - Verse **text** itself, against an *external* witness — for the
@@ -1852,10 +2066,15 @@ writing either one the other way buries a 69-character repair in a
   Check 26 closes the **Chinese** half: `assets/cuvs-yhwh.json` is now
   measured against the yahwehdehua export verse by verse (98.77% of
   31,102 agree on the Han stream), six unreadable classes were repaired
-  and the 383-verse residue is listed there. **The English editions
-  remain unchecked** — LEB has an external witness (check 24) but BSB,
-  KJV and the rest have none, and a verse that is wrong and well-formed
-  and agrees with our own second copy would still not be found.
+  and the 383-verse residue is listed there. Check 27 closes the
+  **English** half for the two editions that had a public-domain witness:
+  BSB is clean at 100.0000% and `kjv.json` is measured against three
+  independent KJV texts, 101 errors repaired and 748 orthographic
+  departures documented as this edition's own. **What remains unchecked
+  is the English editions with no external witness** — chiefly the
+  remaining modern translations, where a verse that is wrong and
+  well-formed and agrees with our own second copy would still not be
+  found.
 - `section_titles.json`, `book_introductions.json`, `bible_evidence.json`,
   `maps_index.json` (see #300 for its provenance gap), `family_tree.json`
   relationships, `ot_synopsis.json` alignments.
@@ -1872,31 +2091,38 @@ writing either one the other way buries a 69-character repair in a
 
 ## Next, in order
 
-0. **The English editions against an external witness**, the way check 26
-   did the Chinese. This is now the largest unchecked surface in the
-   repository and the only remaining bullet of the original "verse text
-   against an outside source" question. The obstacle is the witness, not
-   the method: check 26's machinery — align on the reduced character
-   stream, classify the residue, repair only what cannot be read —
-   transfers directly, but nothing outside this repository has yet been
-   found that holds BSB or KJV under terms we can use.
-1. The 4 references the two 梁家鏗譯本 editions still disagree about —
+0. **What `assets/kjv.json` actually is.** Check 27 established that it
+   is not the King James Version but an unidentified Americanised
+   revision of it — not the AKJV (34.1%) and not Webster (39.0%). The
+   app labels it "KJV", which is a provenance claim the file does not
+   support. This is a naming decision (#285), so it is stated and left.
+   Either relabel it, or replace it with a text that is what the label
+   says; both are the owner's call and neither should be taken
+   unattended.
+1. **The remaining English editions against an external witness.** Check
+   27 did BSB and KJV because those two have public-domain witnesses.
+   The method now exists as a working instrument, and the question for
+   each remaining edition is only whether a witness can be had under
+   terms we can use — which is worth *testing* rather than assuming, as
+   this entry's previous wording proves: it asserted no witness existed
+   for BSB or KJV, and four were found on the first attempt.
+2. The 4 references the two 梁家鏗譯本 editions still disagree about —
    马可福音 6:8–11, all that is left of the original 8. Needs a witness that is the
    same edition in the missing script; a 简/繁 conversion table derived
    from the 7,645 length-equal verse pairs the two files already share
    would be one, and would be witnessed by the corpus rather than
    invented — but it must be derived and checked before a character of
    it is trusted.
-2. The four verses that print both the Ketiv and the Qere. Probably a
+3. The four verses that print both the Ketiv and the Qere. Probably a
    reader-side marker, not a data deletion.
-3. Per-record date sourcing (#292 owns `hebrew_kings.json`).
-4. The LEB's `{…}` idiom braces in the 660 imported verses, if a witness
+4. Per-record date sourcing (#292 owns `hebrew_kings.json`).
+5. The LEB's `{…}` idiom braces in the 660 imported verses, if a witness
    that preserves them can be found.
-5. The ten summarised Chinese sermons (check 19). Not an engineering
+6. The ten summarised Chinese sermons (check 19). Not an engineering
    task — ~85,000 English words need translating, and whether that
    happens, and by whom, is the owner's call. Until it does, the marking
    is the honest state.
-6. The remaining verse-rendering surfaces, audited but not exhaustively:
+7. The remaining verse-rendering surfaces, audited but not exhaustively:
    check 14 covers the reader, Browse, the sermon-citation popup, the
    two search-key caches and the clipboard. Strong's-driven surfaces
    (KWIC, concordance) read the tagged layer, which a placeholder has no
