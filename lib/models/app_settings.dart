@@ -12,6 +12,25 @@ import 'package:seeksparks/services/notification_scheduler.dart'
 import 'package:seeksparks/services/profile_service.dart';
 import 'package:seeksparks/utils/font_catalog.dart';
 
+/// The range the Font Size slider offers, in points, and the value that
+/// counts as "unscaled".
+///
+/// Canonical. `settings_page` builds the slider from these and
+/// `WbType.resolve` derives the workbench's type scale from the same
+/// three numbers, so a stop the slider offers is a stop the workbench
+/// can express. They were independent literals until 2026-08-11 and had
+/// drifted apart: the slider ran 12–40 while the scale was clamped to
+/// 0.75–1.6, i.e. 15–32 pt, so **11 of the slider's 29 stops moved
+/// nothing at all**.
+const double kFontSizeMin = 12.0;
+const double kFontSizeMax = 40.0;
+const double kFontSizeDefault = 20.0;
+
+/// The range the Menu Size slider offers. Same contract as above; the
+/// narrower 0.8–1.4 clamp ate 2 of its 9 stops.
+const double kMenuScaleMin = 0.7;
+const double kMenuScaleMax = 1.5;
+
 const _kFontFamily = 'fontFamily';
 const _kFontSize = 'fontSize';
 const _kLineSpacing = 'lineSpacing';

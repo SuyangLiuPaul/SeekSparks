@@ -877,18 +877,43 @@ class WbType {
 
   /// Build the scale from the reader's settings.
   ///
-  /// Clamps are not timidity: unclamped, font size 40 would push body
-  /// text to 24px in a 320px pane and the three-pane layout stops
-  /// being a layout.
+  /// The clamps are a GUARD, not a design bound: they admit exactly the
+  /// range Settings offers and nothing else. Neither `setFontSize`, nor
+  /// `restoreState`, nor the settings-import path bounds `fontSize`, so
+  /// a legacy or hand-edited value can arrive outside 12–40.
+  ///
+  /// They used to be narrower than the sliders (0.75–1.6 and 0.8–1.4),
+  /// which silently ate **11 of the font slider's 29 stops and 2 of the
+  /// menu slider's 9**: dragging to 40 pt showed "40 pt" and moved
+  /// nothing from 32 pt on. A control must not advertise travel it does
+  /// not have. Widening also un-compresses the live band — the slider
+  /// spans 12–40 (3.33×) and the workbench now spans the same 3.33×
+  /// rather than 2.13×.
+  ///
+  /// The wider ends were measured, not assumed: 40 pt / 1.5× and
+  /// 12 pt / 0.7× were screenshot at 1456 px and at 1000 px, in 繁體,
+  /// light and dark. Nothing overflows or overlaps and the three panes
+  /// survive both corners. Two things degrade at 1000 px / 40 pt /
+  /// 1.5×, and both degrade gracefully: the search pane's operator
+  /// strip wraps to a second row, and the Browse pane's title
+  /// ellipsises to `Gene… NA…`. Truncating a title is the correct
+  /// answer to "I asked for 40 pt in a 200 px pane" — shrinking it back
+  /// would be the app overruling the setting again, which is the very
+  /// defect this fixes.
   static WbType resolve({
     required double fontSize,
     required double lineSpacing,
     required double menuScale,
     String? fontFamily,
   }) {
-    // 20 / 1.5 / 1.0 are the app defaults for these three.
-    final textScale = (fontSize / 20.0).clamp(0.75, 1.6);
-    final chromeScale = menuScale.clamp(0.8, 1.4);
+    // 20 / 1.5 / 1.0 are the app defaults for these three. Expressing
+    // the bounds as the slider's own ends divided by the default is what
+    // makes the two impossible to drift apart again.
+    final textScale = (fontSize / kFontSizeDefault).clamp(
+      kFontSizeMin / kFontSizeDefault,
+      kFontSizeMax / kFontSizeDefault,
+    );
+    final chromeScale = menuScale.clamp(kMenuScaleMin, kMenuScaleMax);
     // Line spacing moves the workbench's own tighter leading in the
     // same direction the reader asked for, without adopting the
     // reader's roomier value outright.

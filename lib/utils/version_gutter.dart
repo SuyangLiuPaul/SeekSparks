@@ -14,8 +14,9 @@ import 'package:seeksparks/constants/bible_versions.dart'
 ///   * it was sized against the longest label the author happened to be
 ///     looking at rather than the longest label that EXISTS; and
 ///   * it was sized at the DEFAULT type scale, while `WbType.chrome`
-///     is multiplied by the reader's `menuScale` over the range
-///     0.8 – 1.4. At 1.4 the 92px box clipped `CUV+S(雅伟)` again — a
+///     is multiplied by the reader's `menuScale` — over 0.8 – 1.4 when
+///     this was written, over the slider's full 0.7 – 1.5 since
+///     2026-08-11. At 1.4 the 92px box clipped `CUV+S(雅伟)` again — a
 ///     latent defect nobody had reported yet, because the font-size
 ///     slider and the version gutter are not obviously related.
 ///

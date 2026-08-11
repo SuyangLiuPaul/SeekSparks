@@ -1,5 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seeksparks/constants/workbench_theme.dart';
+import 'package:seeksparks/models/app_settings.dart'
+    show kFontSizeMax, kFontSizeMin, kMenuScaleMax, kMenuScaleMin;
 
 /// The workbench used to hardcode every size, so Settings drove nothing
 /// there. These pin the mapping: a setting must MOVE the workbench, and
@@ -48,11 +50,52 @@ void main() {
     expect(at(line: 1.9).lineHeight, lessThan(1.9));
   });
 
-  test('extreme settings are clamped so the layout survives', () {
-    expect(at(font: 60).text, lessThanOrEqualTo(WbMetrics.text * 1.6));
-    expect(at(font: 4).text, greaterThanOrEqualTo(WbMetrics.text * 0.75));
-    expect(at(menu: 9).chrome, lessThanOrEqualTo(WbMetrics.chrome * 1.4));
+  test('out-of-range settings are clamped to the slider\'s own ends', () {
+    // The clamp is a guard against a hand-edited or imported value, not
+    // a design bound — so it lands exactly on what Settings offers.
+    expect(at(font: 60).text, at(font: kFontSizeMax).text);
+    expect(at(font: 4).text, at(font: kFontSizeMin).text);
+    expect(at(menu: 9).chrome, at(menu: kMenuScaleMax).chrome);
+    expect(at(menu: 0.1).chrome, at(menu: kMenuScaleMin).chrome);
     expect(at(line: 9).lineHeight, lessThanOrEqualTo(1.9));
+  });
+
+  // The defect this pins (#311, 2026-08-11): the clamps were NARROWER
+  // than the sliders, so dragging Font Size from 32 to 40 pt changed the
+  // label and nothing else — 11 of 29 stops, and 2 of the menu
+  // slider's 9, were inert. Every earlier test here passed throughout,
+  // because they all asked "does SOME change move it" and none asked
+  // "does EVERY stop the reader is offered move it".
+  test('every stop the Font Size slider offers moves the workbench', () {
+    final sizes = <double>[
+      for (double f = kFontSizeMin; f <= kFontSizeMax; f += 1) at(font: f).text,
+    ];
+    expect(sizes.length, 29);
+    expect(sizes.toSet().length, sizes.length, reason: 'a stop that is inert');
+    for (var i = 1; i < sizes.length; i++) {
+      expect(sizes[i], greaterThan(sizes[i - 1]));
+    }
+  });
+
+  test('every stop the Menu Size slider offers moves the chrome', () {
+    final steps = <double>[
+      for (var i = 0; i <= 8; i++) kMenuScaleMin + i * 0.1,
+    ];
+    final heights = [for (final m in steps) at(menu: m).menuBarHeight];
+    expect(steps.last, closeTo(kMenuScaleMax, 1e-9));
+    expect(heights.toSet().length, heights.length);
+    for (var i = 1; i < heights.length; i++) {
+      expect(heights[i], greaterThan(heights[i - 1]));
+    }
+  });
+
+  test('the workbench spans the same ratio the slider advertises', () {
+    // 12 -> 40 pt is 3.33x. The workbench used to move only 2.13x across
+    // that drag, which is what "跳动很小" was describing.
+    expect(
+      at(font: kFontSizeMax).text / at(font: kFontSizeMin).text,
+      closeTo(kFontSizeMax / kFontSizeMin, 1e-9),
+    );
   });
 
   test('an empty font family resolves to null, not an empty string', () {
