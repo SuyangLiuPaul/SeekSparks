@@ -230,3 +230,117 @@ executable, and shrinking it to empty is the goal.
    #280 is waiting on the answer (§4).
 3. **The bundled NASB licence** — task #278, in `DELETION-REVIEW.md`.
    Unchanged and still shipping; a human decision, not a cleanup.
+
+---
+
+## 7. The modal sweep (#313, item 6) — a verdict per call site
+
+The user's instruction was 「很多你帮我翻一翻都是的」 — the reader's modal
+sheets are a *pattern*, not three bugs. This section is that sweep: every
+`showModalBottomSheet`, `showDialog` and `pushPage` under `lib/`,
+classified by the rule v1.6.108 wrote into
+`lib/models/reader_analysis_request.dart`:
+
+> **In the workbench a modal is for a DECISION** — pick a colour, name a
+> list, confirm a delete. **Content that has a pane goes to the pane.**
+> Content with no pane is a deliberate choice either way, and the choice
+> must be written down.
+
+Counted 2026-08-11 at `71931bb`: **46 sheets/dialogs and 43 `pushPage`
+calls.** The headline is that the sweep found **far fewer offenders than
+the brief assumed**, and the two it did find are not the ones named.
+
+### 7.1 The brief's own two examples do not survive contact
+
+**`verse_list_pane.dart`'s 3 dialogs are not duplicates.** The brief
+lists them as "↔ Analysis 经文列表". They *are* the Analysis 经文列表 —
+`workbench_page.dart:2139` mounts `VerseListPane` as
+`AnalysisTab.verseLists`. The three dialogs are `_promptImportText`
+(paste references), `_promptSaveAs` (name a list) and `_pickSavedName`
+(choose which list to open). Every one is a DECISION with a typed return
+(`bool`, `String?`). **Verdict: keep, all three, unchanged.** They were
+filed as duplicates because a count was read as a diagnosis.
+
+**`stats_page.dart`'s 9 sheets are the wrong unit of analysis.** They
+break down as 4 pickers returning a value (`pickAndStudy`,
+`_openVersePicker`, `_openPicker`, and the book filter) — decisions — and
+5 content sheets (`_openBookSheet`, `_openAramaicSheet`,
+`_openOriginalsSheetFor`, and two `_resolveAndOpen` results). Rewriting
+those 5 would be wasted work, because **the page itself is the
+duplicate**: `grep` finds exactly one construction site for `StatsPage`
+in the whole app — `bible_reading_pane.dart:6970`, the reader's own
+overflow menu — while the workbench answers the same question in
+`AnalysisTab.stats`. **Verdict: the duplication is at page level. Retire
+the entry point, not the sheets.** Deferred deliberately: `stats_page` is
+4,529 lines and is still the only surface for the Aramaic sheet and the
+lemma picker, so deleting the entry point before those have a home would
+remove working features. Recorded here rather than done blind.
+
+### 7.2 Decisions — correct as modals, no work needed (32 sites)
+
+`settings_page` ×5 (tour, reset, clear cache, export, import) ·
+`profiles_page` ×3 (rename ×2, delete confirm) · `verse_list_pane` ×3
+(above) · `version_picker_sheet`, `version_stack_sheet` ×2,
+`search_scope_sheet`, `note_reference_picker_sheet`, `copy_center_sheet`,
+`update_check_tile` · reader `_showFontSizeSheet`, `_showColorPicker`,
+`showNoteEditor`, `_showMapPicker` · `stats_page` ×4 pickers ·
+`bible_trivia_page` ×2 · `phrasing_page` (source picker) ·
+`highlights_page` `_showActions` · `build_verse_content_spans` ×2.
+Each returns a value or edits one; none of them shows content a pane
+holds.
+
+### 7.3 Content with a pane — the real offenders (2 sites, both in the reader)
+
+Both already have the wire built; neither is connected to it.
+
+| Site | Duplicates | Verdict |
+|---|---|---|
+| `bible_reading_pane.dart:7450` `_showSynopsisSheet` | nothing exactly — the OT/NT synopsis has no tab, but `AnalysisTab.crossRefs` and `.related` are its neighbours | needs a decision, see 7.4 |
+| `bible_reading_pane.dart:3955` `_showChapterSermonsSheet` | `_showRelatedSermonsSheet`, which v1.6.108 routed through `ReaderAnalysisRequest.sermons` | **route it the same way** — it is the chapter-scoped sibling of a request that already exists |
+
+`_showOriginalsSheet` and `_showCrossRefsSheet` were the other two and
+are **already routed** (v1.6.108); they now open a sheet only when no
+host claims the request, which on web is only below the 992 px gate.
+
+### 7.4 Content with no pane — decided, and written down
+
+* **`_showHighlightsSheet` (5199)** — the reader's highlights browser.
+  Stays a sheet. It is a *navigator*: you open it to jump somewhere, and
+  it closes when you do. A docked pane promises to follow the selection,
+  and this does the opposite — it changes the selection.
+* **`_showSynopsisSheet` (7450)** — stays a sheet **for now**, and the
+  reason is #292: the Kings/Chronicles parallel is about to acquire a
+  Resource of its own, and giving it a 13th Analysis tab first would
+  build the wrong home. Re-decide when #292 lands.
+* **`originals_sheet.dart:2513` `_showDistributionTable`** — a sheet
+  opened *from* a sheet. It draws #290's word distribution, which the
+  Stats tab also draws. Not double-counted here as an offender because
+  `originals_sheet` is itself the narrow-width fallback; but if #313's
+  step 2 ever retires that sheet outright, this goes with it.
+* **`verse_popup_sheet`, `atlas_page`, `family_tree_page`,
+  `hebrew_kings_page`, `sermons_page` detail sheets** — all inside
+  standalone Resources that own their whole window. There is no pane
+  beside them to lose, so a sheet is the correct surface, not an
+  inherited one.
+
+### 7.5 `pushPage` — 43 sites, and only one class matters
+
+21 are in `workbench_page` itself (shell navigation: Settings, About,
+each Resource). Those are correct by construction — opening a Resource
+from the workbench **is** the BibleWorks shape. 13 are in the reader,
+and those are the ones to watch: they are how a phone-first reader
+reaches a full page for something the workbench would dock. The
+`StatsPage` push at 6970 is the clearest example and is recorded in 7.1.
+The rest (`strongs_entry_page` ×3, `evidence_page` ×3, `open_reader` ×2,
+`command_pane` ×2, and seven singletons) open a *different subject*, not
+a bigger view of the same one, so they are navigation and not
+duplication.
+
+### 7.6 What this sweep changes
+
+Small, and that is the finding. One routing fix (7.3), one entry point to
+retire once its orphans have a home (7.1), and **32 modals confirmed
+correct** — which is worth as much as a fix, because it means the next
+iteration does not re-open them. The inherited-phone-app problem is real
+but it is concentrated in `bible_reading_pane.dart` and `stats_page.dart`,
+not spread across the app.

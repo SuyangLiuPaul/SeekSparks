@@ -1125,31 +1125,15 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
             ...[
               WorkbenchMenuBar(
                 menus: _buildMenus(context, locale),
-                // The version label is the first thing to go when the
-                // menu titles need the room.
-                // Language first, then the build. The switcher stays even
-                // on a narrow window — changing interface language must
-                // not require hunting through Settings — while the build
-                // label is what drops when the menu titles need the room.
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (width >= 1200)
-                      Padding(
-                        padding: const EdgeInsets.only(right: 10),
-                        child: Text(
-                          'SeekSparks $kAppVersion · '
-                          '${formatReleaseTimeLocal()}',
-                          style: TextStyle(
-                              fontSize: WbMetrics.chrome,
-                              color: wb.mutedText),
-                        ),
-                      ),
-                    const SizedBox(
-                      height: 26,
-                      child: LanguageSwitcherButton(dense: true),
-                    ),
-                  ],
+                // The language switcher only. The build label used to sit
+                // here too, above 1200 px, and printed the same version
+                // the status bar prints at every width (#314). The status
+                // bar keeps it because it is TAPPABLE — it opens About —
+                // where this was inert text; and the menu titles get the
+                // width back.
+                trailing: const SizedBox(
+                  height: 26,
+                  child: LanguageSwitcherButton(dense: true),
                 ),
               ),
               WorkbenchToolbar(groups: _buildToolbar(context)),
