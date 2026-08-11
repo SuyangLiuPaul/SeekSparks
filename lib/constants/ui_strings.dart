@@ -7080,6 +7080,31 @@ const uiStrings = {
   // ── Phrasing (lib/utils/phrasing.dart, lib/pages/phrasing_page.dart) ──
   'phrasingTitle': {'zh-Hans': '语法分行', 'zh-Hant': '語法分行', 'en': 'Phrasing'},
   'phrasingCopied': {'zh-Hans': '已复制', 'zh-Hant': '已複製', 'en': 'Copied'},
+  'phrasingCopiedRich': {
+    'zh-Hans': '已复制，格式一并带上',
+    'zh-Hant': '已複製，格式一併帶上',
+    'en': 'Copied with its formatting',
+  },
+  'phrasingCopiedPlain': {
+    'zh-Hans': '已复制为纯文本 — 缩进与下划线未能保留',
+    'zh-Hant': '已複製為純文字 — 縮排與底線未能保留',
+    'en': 'Copied as plain text — the indentation was lost',
+  },
+  'phrasingMember': {
+    'zh-Hans': '平行成分 (a) (b)',
+    'zh-Hant': '平行成分 (a) (b)',
+    'en': 'Parallel member (a) (b)',
+  },
+  'phrasingMemberHint': {
+    'zh-Hans': '同一缩进层上连续的成分按顺序编号。',
+    'zh-Hant': '同一縮排層上連續的成分按順序編號。',
+    'en': 'Letters run in order down each run of members at the same indent.',
+  },
+  'phrasingEmphasis': {
+    'zh-Hans': '为这一行加下划线',
+    'zh-Hant': '為這一行加底線',
+    'en': 'Underline this line',
+  },
   'phrasingReset': {
     'zh-Hans': '重新开始',
     'zh-Hant': '重新開始',
@@ -7125,13 +7150,16 @@ const uiStrings = {
   },
   'phrasingHint': {
     'zh-Hans': '点按一个词，可在它前面另起一行；点按一行的第一个词，可把它并回上一行。'
-        '用 ◀ ▶ 调整缩进——缩进的行从属于上面那一行。长按一个词可查看它的词法解析。',
+        '用 ◀ ▶ 调整缩进——缩进的行从属于上面那一行。点按行首的标记按钮，可标注关系、'
+        '把这一行标为平行成分，或为它加下划线。长按一个词可查看它的词法解析。',
     'zh-Hant': '點按一個詞，可在它前面另起一行；點按一行的第一個詞，可把它併回上一行。'
-        '用 ◀ ▶ 調整縮排——縮排的行從屬於上面那一行。長按一個詞可檢視它的詞法解析。',
+        '用 ◀ ▶ 調整縮排——縮排的行從屬於上面那一行。點按行首的標註按鈕，可標註關係、'
+        '把這一行標為平行成分，或為它加底線。長按一個詞可檢視它的詞法解析。',
     'en': 'Tap a word to start a new line before it; tap the first word of a '
         'line to join it back up. Use ◀ ▶ to indent — an indented line is '
-        'subordinate to the line above it. Long-press a word for its full '
-        'parse.',
+        'subordinate to the line above it. The label button on a line names '
+        'its relation, marks it as a parallel member, or underlines it. '
+        'Long-press a word for its full parse.',
   },
   'phrasingRelNone': {'zh-Hans': '不标注', 'zh-Hant': '不標註', 'en': 'No label'},
   'phrasingSuggested': {

@@ -725,6 +725,272 @@ void main() {
     });
   });
 
+  group('phrasingMemberLetter — the alphabet has to run out somewhere', () {
+    test('the first twenty-six are single letters', () {
+      expect(phrasingMemberLetter(0), 'a');
+      expect(phrasingMemberLetter(1), 'b');
+      expect(phrasingMemberLetter(25), 'z');
+    });
+
+    test('the twenty-seventh is aa, not a crash and not a wrap to a', () {
+      // A wrap would print TWO members called (a) in one run, which is a
+      // lie about the structure rather than a cosmetic overflow.
+      expect(phrasingMemberLetter(26), 'aa');
+      expect(phrasingMemberLetter(27), 'ab');
+      expect(phrasingMemberLetter(51), 'az');
+      expect(phrasingMemberLetter(52), 'ba');
+      expect(phrasingMemberLetter(701), 'zz');
+      expect(phrasingMemberLetter(702), 'aaa');
+    });
+  });
+
+  group('phrasingMemberLabels — lettering is derived, never stored', () {
+    List<String?> label(List<int> depths, List<bool> marked) =>
+        phrasingMemberLabels(depths, marked);
+
+    test('a run at one depth letters in order', () {
+      expect(label([0, 0, 0], [true, true, true]), ['a', 'b', 'c']);
+    });
+
+    test('an unmarked line at the same depth ENDS the run, and the next '
+        'mark starts a new one', () {
+      // Two lists of parallels in one passage are two lists; continuing
+      // the letters through the gap would join them.
+      expect(
+        label([0, 0, 0, 0], [true, true, false, true]),
+        ['a', 'b', null, 'a'],
+      );
+    });
+
+    test('a deeper line does not interrupt the run it is nested inside', () {
+      expect(label([0, 1, 0], [true, false, true]), ['a', null, 'b']);
+    });
+
+    test('members inside a member letter separately, and the outer run '
+        'resumes where it left off', () {
+      expect(
+        label([0, 1, 1, 0], [true, true, true, true]),
+        ['a', 'a', 'b', 'b'],
+      );
+    });
+
+    test('an unmarked line closes every run at or below its depth', () {
+      expect(
+        label([0, 1, 1, 0], [false, true, true, false]),
+        [null, 'a', 'b', null],
+      );
+    });
+
+    test('no marks means no letters at all', () {
+      expect(label([0, 1, 2], [false, false, false]), [null, null, null]);
+      expect(label(const [], const []), isEmpty);
+    });
+  });
+
+  group('member marks and emphasis reach the laid-out lines', () {
+    test('the letters and the underline land on the right lines', () {
+      final words = plain(6, perVerse: 6);
+      final p = bare(words, level: PhrasingLevel.verses).copyWith(
+        added: {2, 4},
+        members: {2, 4},
+        emphasis: {4},
+      );
+      final lines = layoutPhrasing(p, words);
+      expect(lines.map((l) => l.start), [0, 2, 4]);
+      expect(lines.map((l) => l.memberLabel), [null, 'a', 'b']);
+      expect(lines.map((l) => l.emphasised), [false, false, true]);
+    });
+
+    test('the first line can be a member — index 0 is a line start', () {
+      final words = plain(4, perVerse: 4);
+      final p = bare(words, level: PhrasingLevel.verses)
+          .copyWith(added: {2}, members: {0, 2}, emphasis: {0});
+      final lines = layoutPhrasing(p, words);
+      expect(lines.map((l) => l.memberLabel), ['a', 'b']);
+      expect(lines.first.emphasised, isTrue);
+    });
+
+    test('both marks toggle, and each is its own inverse', () {
+      final words = plain(4);
+      final p = bare(words);
+      final marked = togglePhrasingMember(p, 0);
+      expect(marked.members, {0});
+      expect(togglePhrasingMember(marked, 0).members, isEmpty);
+      final under = togglePhrasingEmphasis(p, 2);
+      expect(under.emphasis, {2});
+      expect(togglePhrasingEmphasis(under, 2).emphasis, isEmpty);
+    });
+
+    test('either mark alone counts as a touched phrasing, and reset '
+        'clears both', () {
+      final words = plain(4);
+      final p = bare(words);
+      expect(togglePhrasingMember(p, 0).isTouched, isTrue);
+      expect(togglePhrasingEmphasis(p, 0).isTouched, isTrue);
+      final clean = resetPhrasing(togglePhrasingMember(
+        togglePhrasingEmphasis(p, 0),
+        2,
+      ));
+      expect(clean.members, isEmpty);
+      expect(clean.emphasis, isEmpty);
+    });
+
+    test('both survive toJson/fromJson, INCLUDING the first line', () {
+      // Word 0 is filtered out of added/removed because it can never be
+      // toggled as a break; reusing that filter here would silently drop
+      // a mark the reader can plainly see on screen.
+      final p = bare(plain(6)).copyWith(members: {0, 3}, emphasis: {0});
+      final back = Phrasing.fromJson(p.toJson())!;
+      expect(back.members, {0, 3});
+      expect(back.emphasis, {0});
+    });
+
+    test('unreadable marks are dropped, not thrown', () {
+      final back = Phrasing.fromJson({
+        'book': 'John',
+        'chapter': 1,
+        'members': [0, 'x', -2, 4],
+        'emphasis': 'not a list',
+      })!;
+      expect(back.members, {0, 4});
+      expect(back.emphasis, isEmpty);
+    });
+  });
+
+  group('export honours the verse window and the script', () {
+    List<PhrasingWord> chapter() => [
+          PhrasingWord(text: 'a', strongs: '', verse: 1),
+          PhrasingWord(text: 'b', strongs: '', verse: 2),
+          PhrasingWord(text: 'c', strongs: '', verse: 3),
+        ];
+
+    test('only the verses named in the heading are exported', () {
+      // The heading said 1:1-2 while the body printed the whole chapter.
+      final words = chapter();
+      final p = bare(words, level: PhrasingLevel.verses)
+          .copyWith(startVerse: 1, endVerse: 2);
+      expect(
+        exportPhrasing(p, words, label: (r) => r.name, verseMark: (v) => '$v'),
+        '1 a\n2 b\n',
+      );
+      expect(
+        exportPhrasingHtml(p, words,
+            label: (r) => r.name, heading: '', verseMark: (v) => '$v'),
+        isNot(contains('>c<')),
+      );
+    });
+
+    test('Chinese exports without word gaps', () {
+      final words = [
+        PhrasingWord(text: '神', strongs: '', verse: 1),
+        PhrasingWord(text: '爱', strongs: '', verse: 1),
+        PhrasingWord(text: '世', strongs: '', verse: 1),
+        PhrasingWord(text: '人', strongs: '', verse: 1),
+      ];
+      final out = exportPhrasing(bare(words), words,
+          label: (r) => r.name, verseMark: (v) => '$v');
+      expect(out, '1 神爱世人\n');
+    });
+
+    test('a member letter is printed before the relation', () {
+      final words = plain(4, perVerse: 4);
+      final p = bare(words, level: PhrasingLevel.verses).copyWith(
+        added: {2},
+        members: {2},
+        relations: {2: PhrasingRelation.ground},
+      );
+      final out = exportPhrasing(p, words,
+          label: (r) => r.name, verseMark: (v) => '', indentUnit: '  ');
+      expect(out, contains('(a) [ground] '));
+    });
+  });
+
+  group('exportPhrasingHtml — the artifact that leaves the app', () {
+    List<PhrasingWord> words() => [
+          PhrasingWord(text: 'In', strongs: '', verse: 1),
+          PhrasingWord(text: 'beginning', strongs: '', verse: 1),
+          PhrasingWord(text: 'was', strongs: '', verse: 2),
+          PhrasingWord(text: 'Word', strongs: '', verse: 2),
+        ];
+
+    String render({
+      Set<int> members = const {},
+      Set<int> emphasis = const {},
+      Map<int, int> depths = const {},
+      Map<int, PhrasingRelation> relations = const {},
+      String heading = 'John 1:1-2',
+      bool rtl = false,
+    }) {
+      final w = words();
+      final p = bare(w, level: PhrasingLevel.verses).copyWith(
+        depths: depths,
+        relations: relations,
+        members: members,
+        emphasis: emphasis,
+      );
+      return exportPhrasingHtml(p, w,
+          label: (r) => r.name, heading: heading, rtl: rtl);
+    }
+
+    test('indent is in points, because Word thinks in points', () {
+      final out = render(depths: {2: 1});
+      expect(out, contains('margin:0pt 0 0 0pt'));
+      expect(out, contains('0 0 24pt'));
+    });
+
+    test('a verse break is vertical lead, not a new block — a line is '
+        'allowed to straddle the versification', () {
+      expect(render(), contains('margin:8pt 0 0 0pt'));
+    });
+
+    test('the heading is bold, and an empty heading is omitted', () {
+      expect(render(), contains('<b>John 1:1-2</b>'));
+      expect(render(heading: ''), isNot(contains('<b>')));
+    });
+
+    test('emphasis is an underline around the words only', () {
+      final out = render(emphasis: {2}, relations: {2: PhrasingRelation.ground});
+      expect(out, contains('</span> <u><sup>2</sup> was Word</u>'));
+    });
+
+    test('a member letter is printed, and the relation is greyed', () {
+      final out = render(members: {0, 2}, relations: {2: PhrasingRelation.ground});
+      expect(out, contains('(a) <sup>1</sup>'));
+      expect(out, contains('(b) <span style="color:#777">[ground]</span> '));
+    });
+
+    test('every hostile character is escaped, in the text and the '
+        'heading alike', () {
+      final w = [
+        PhrasingWord(text: '<b>&"x"', strongs: '', verse: 1),
+      ];
+      final out = exportPhrasingHtml(
+        bare(w, level: PhrasingLevel.verses),
+        w,
+        label: (r) => r.name,
+        heading: 'A & B <script>',
+      );
+      expect(out, contains('&lt;b&gt;&amp;&quot;x&quot;'));
+      expect(out, contains('A &amp; B &lt;script&gt;'));
+      expect(out, isNot(contains('<script>')));
+    });
+
+    test('the direction is carried on the wrapper, so Hebrew pastes '
+        'right to left', () {
+      expect(render(rtl: true), startsWith('<div dir="rtl"'));
+      expect(render(), startsWith('<div dir="ltr"'));
+    });
+
+    test('the fragment is balanced', () {
+      final out = render(members: {2}, emphasis: {2});
+      expect(out, endsWith('</div>'));
+      expect('<div>'.allMatches(out).length + 1,
+          '</div>'.allMatches(out).length);
+      expect('<p '.allMatches(out).length, '</p>'.allMatches(out).length);
+      expect('<u>'.allMatches(out).length, '</u>'.allMatches(out).length);
+    });
+  });
+
   group('localisation coverage', () {
     test('every relation has a label in all three locales', () {
       for (final r in PhrasingRelation.values) {
@@ -766,6 +1032,11 @@ void main() {
         'phrasingGlossFrom',
         'phrasingGlossLexicon',
         'phrasingGlossItalic',
+        'phrasingCopiedRich',
+        'phrasingCopiedPlain',
+        'phrasingMember',
+        'phrasingMemberHint',
+        'phrasingEmphasis',
       ];
       for (final key in keys) {
         final entry = uiStrings[key];

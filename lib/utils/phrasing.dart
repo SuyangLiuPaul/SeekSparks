@@ -382,6 +382,8 @@ class Phrasing {
     this.removed = const <int>{},
     this.depths = const <int, int>{},
     this.relations = const <int, PhrasingRelation>{},
+    this.members = const <int>{},
+    this.emphasis = const <int>{},
   });
 
   /// Provenance only. A phrasing is of a *text*, and the same passage
@@ -408,12 +410,38 @@ class Phrasing {
 
   final Map<int, PhrasingRelation> relations;
 
+  /// Line starts the reader has marked as PARALLEL MEMBERS — the lines
+  /// that get `(a)`, `(b)` in front of them.
+  ///
+  /// This is not the same claim as [relations], and the difference is
+  /// the reason it needs its own field. A relation names how a line
+  /// stands to the line above it; a member mark says *these lines are
+  /// the same kind of thing*, which is a fact about a SET. Indentation
+  /// cannot say it — two lines at one depth may be a series or may
+  /// simply be sequential — and the first member of a series carries no
+  /// relation at all, so the set would be invisible in the very place a
+  /// reader wants to point at it. The letters are also a handle: a
+  /// teacher can say "look at (b)".
+  ///
+  /// The reader marks members; the letters are DERIVED — see
+  /// [phrasingMemberLabels]. There is no stored group id, because a
+  /// group is already implied by the marks and the depths, and a stored
+  /// id could disagree with the picture.
+  final Set<int> members;
+
+  /// Line starts the reader has underlined. One weight, deliberately:
+  /// emphasis answers "look here", and a palette of colours turns that
+  /// into a second notation the diagram would then have to explain.
+  final Set<int> emphasis;
+
   Phrasing copyWith({
     PhrasingLevel? level,
     Set<int>? added,
     Set<int>? removed,
     Map<int, int>? depths,
     Map<int, PhrasingRelation>? relations,
+    Set<int>? members,
+    Set<int>? emphasis,
     int? startVerse,
     int? endVerse,
   }) =>
@@ -428,6 +456,8 @@ class Phrasing {
         removed: removed ?? this.removed,
         depths: depths ?? this.depths,
         relations: relations ?? this.relations,
+        members: members ?? this.members,
+        emphasis: emphasis ?? this.emphasis,
       );
 
   /// True when the reader has done anything at all. Drives whether the
@@ -436,7 +466,9 @@ class Phrasing {
       added.isNotEmpty ||
       removed.isNotEmpty ||
       depths.isNotEmpty ||
-      relations.isNotEmpty;
+      relations.isNotEmpty ||
+      members.isNotEmpty ||
+      emphasis.isNotEmpty;
 
   Map<String, dynamic> toJson() => {
         'version': version,
@@ -451,6 +483,8 @@ class Phrasing {
         'relations': {
           for (final e in relations.entries) '${e.key}': e.value.id,
         },
+        'members': members.toList()..sort(),
+        'emphasis': emphasis.toList()..sort(),
       };
 
   /// Tolerant of anything: a blob written by a future build, a
@@ -463,6 +497,13 @@ class Phrasing {
     if (book is! String || book.isEmpty || chapter is! int) return null;
     Set<int> ints(Object? v) => v is List
         ? {for (final e in v) if (e is int && e > 0) e}
+        : const <int>{};
+    // Word 0 is excluded from [added]/[removed] because it is always a
+    // break and can never be toggled — but it IS a line start, so it
+    // can be a member or be emphasised. Reusing the stricter parser
+    // here would silently drop the reader's mark on the first line.
+    Set<int> lineStarts(Object? v) => v is List
+        ? {for (final e in v) if (e is int && e >= 0) e}
         : const <int>{};
     final depths = <int, int>{};
     final rawDepths = json['depths'];
@@ -496,6 +537,8 @@ class Phrasing {
       removed: ints(json['removed']),
       depths: depths,
       relations: relations,
+      members: lineStarts(json['members']),
+      emphasis: lineStarts(json['emphasis']),
     );
   }
 }
@@ -513,6 +556,8 @@ class PhrasingLine {
     required this.depth,
     this.relation,
     this.suggested,
+    this.memberLabel,
+    this.emphasised = false,
   });
 
   final int start;
@@ -532,7 +577,74 @@ class PhrasingLine {
   /// tell which of their labels are their own.
   final PhrasingRelation? suggested;
 
+  /// `a`, `b`, … when this line is a marked parallel member, else null.
+  /// Derived by [phrasingMemberLabels]; never stored.
+  final String? memberLabel;
+
+  final bool emphasised;
+
   int get length => end - start;
+}
+
+/// The letter for the [index]-th member of a group: a…z, then aa, ab.
+///
+/// Bijective base-26, so no group runs out of names. Real groups are
+/// two to five members; the overflow exists so that a reader who marks
+/// thirty lines gets `ad` rather than a wrong or repeated letter.
+String phrasingMemberLetter(int index) {
+  var n = index;
+  final rev = <int>[];
+  while (true) {
+    rev.add(97 + n % 26);
+    n = n ~/ 26 - 1;
+    if (n < 0) break;
+  }
+  return String.fromCharCodes(rev.reversed);
+}
+
+/// Letter every marked line, grouping by the structure already on
+/// screen. Returns one entry per line, null where the line is not a
+/// member.
+///
+/// **A group is the run of marked lines at one depth**, and it survives
+/// anything *deeper* in between — a member with a subordinate clause
+/// under it is still a member. It ends when an UNMARKED line appears at
+/// the group's own depth (the series is over) or when the text comes
+/// back out shallower than the group (its head has been left behind).
+/// Groups therefore nest, which is why this keeps a stack rather than a
+/// single open depth: a pair of parallel members inside member (a) must
+/// letter itself a…b without stealing (b) from the outer group.
+///
+/// This is derived rather than stored on purpose. The rule is exactly
+/// what indentation already means, so the letters cannot contradict the
+/// picture; a stored group id could.
+///
+/// Computed over the WHOLE chapter, never over the verse window. The
+/// window is a viewport, and letters that changed when the reader
+/// scrolled would be describing the viewport instead of the text.
+List<String?> phrasingMemberLabels(List<int> depths, List<bool> marked) {
+  final out = List<String?>.filled(depths.length, null);
+  // (depth, members so far) for each open group, outermost first.
+  final stack = <List<int>>[];
+  for (var i = 0; i < depths.length; i++) {
+    final d = depths[i];
+    while (stack.isNotEmpty && stack.last[0] > d) {
+      stack.removeLast();
+    }
+    final open = stack.isNotEmpty && stack.last[0] == d ? stack.last : null;
+    if (marked[i]) {
+      if (open != null) {
+        open[1]++;
+        out[i] = phrasingMemberLetter(open[1]);
+      } else {
+        stack.add([d, 0]);
+        out[i] = phrasingMemberLetter(0);
+      }
+    } else if (open != null) {
+      stack.removeLast();
+    }
+  }
+  return out;
 }
 
 /// The break set actually in force: the proposal for [p.level], plus
@@ -570,33 +682,44 @@ Set<int> effectiveBreaks(Phrasing p, List<PhrasingWord> words) {
 List<PhrasingLine> layoutPhrasing(Phrasing p, List<PhrasingWord> words) {
   if (words.isEmpty) return const [];
   final starts = effectiveBreaks(p, words).toList()..sort();
+  // The first line may be indented too. It was pinned to the margin
+  // because it has no predecessor to be subordinate TO, but that
+  // conflated two things: depth as a grammatical claim, and depth as the
+  // margin the whole block hangs from. Readers set the second one by
+  // hand on paper all the time, and the reader who asked for this had
+  // done exactly that in Word. With no parent above it there is nothing
+  // to clamp against, so the only bound is [maxPhrasingDepth], which
+  // stops a repeated tap walking the text off the right edge.
+  final depths = <int>[];
+  var prev = 0;
+  for (var i = 0; i < starts.length; i++) {
+    final raw = p.depths[starts[i]] ?? 0;
+    final d = i == 0 ? raw.clamp(0, maxPhrasingDepth) : raw.clamp(0, prev + 1);
+    depths.add(d);
+    prev = d;
+  }
+  // Lettering needs every depth on the page before it can group them,
+  // so it cannot be folded into the loop below.
+  final labels = phrasingMemberLabels(
+    depths,
+    [for (final s in starts) p.members.contains(s)],
+  );
   final out = <PhrasingLine>[];
-  var prevDepth = 0;
   for (var i = 0; i < starts.length; i++) {
     final start = starts[i];
     final end = i + 1 < starts.length ? starts[i + 1] : words.length;
-    final raw = p.depths[start] ?? 0;
-    // The first line may be indented too. It was pinned to the margin
-    // because it has no predecessor to be subordinate TO, but that
-    // conflated two things: depth as a grammatical claim, and depth as
-    // the margin the whole block hangs from. Readers set the second one
-    // by hand on paper all the time, and the reader who asked for this
-    // had done exactly that in Word. With no parent above it there is
-    // nothing to clamp against, so the only bound is [maxPhrasingDepth],
-    // which stops a repeated tap walking the text off the right edge.
-    final depth =
-        i == 0 ? raw.clamp(0, maxPhrasingDepth) : raw.clamp(0, prevDepth + 1);
     final chosen = p.relations[start];
     out.add(PhrasingLine(
       start: start,
       end: end,
-      depth: depth,
+      depth: depths[i],
       relation: chosen,
       suggested: chosen == null && i > 0
           ? suggestRelations(words[start]).firstOrNull
           : null,
+      memberLabel: labels[i],
+      emphasised: p.emphasis.contains(start),
     ));
-    prevDepth = depth;
   }
   return out;
 }
@@ -741,6 +864,22 @@ Phrasing setPhrasingRelation(
 Phrasing setPhrasingLevel(Phrasing p, PhrasingLevel level) =>
     p.copyWith(level: level);
 
+/// Mark or unmark the line starting at [start] as a parallel member.
+/// The letter it ends up with is not stored and not chosen here — see
+/// [phrasingMemberLabels].
+Phrasing togglePhrasingMember(Phrasing p, int start) {
+  final next = {...p.members};
+  if (!next.remove(start)) next.add(start);
+  return p.copyWith(members: next);
+}
+
+/// Underline the line starting at [start], or take the underline off.
+Phrasing togglePhrasingEmphasis(Phrasing p, int start) {
+  final next = {...p.emphasis};
+  if (!next.remove(start)) next.add(start);
+  return p.copyWith(emphasis: next);
+}
+
 /// Throw away every manual edit, back to the bare proposal.
 Phrasing resetPhrasing(Phrasing p) => Phrasing(
       version: p.version,
@@ -753,12 +892,35 @@ Phrasing resetPhrasing(Phrasing p) => Phrasing(
 
 // ── Export ───────────────────────────────────────────────────────────
 
+/// What an export contains: the reader's verse WINDOW, the same lines
+/// the screen is showing.
+///
+/// It used to be the whole chapter under a heading naming the window,
+/// so a reader who set 1–3 and copied got fifty verses labelled
+/// `1:1-3`. Windowing here is also what makes the lettering right:
+/// [phrasingMemberLabels] runs over the chapter, so a group straddling
+/// the edge of the window keeps the letters it has on screen instead of
+/// being re-lettered from `a` by the act of copying.
+List<PhrasingLine> _linesToExport(Phrasing p, List<PhrasingWord> words) =>
+    visiblePhrasingLines(
+      layoutPhrasing(p, words),
+      words,
+      p.startVerse,
+      p.endVerse,
+    );
+
 /// Render the phrasing as indented plain text, for a paper, a sermon
 /// manuscript, or an email.
 ///
 /// [label] turns a relation into the reader's language; the core has no
 /// locale, so the caller supplies it. [verseMark] is called for the
 /// first word of each verse.
+///
+/// Only a relation the reader CHOSE is written out. The grammar's
+/// suggestion is drawn on screen in italic to say it is a guess, and an
+/// exported file has no italic to say it with — a guess pasted into a
+/// handout as `[purpose]` becomes the reader's own claim the moment it
+/// leaves this app.
 String exportPhrasing(
   Phrasing p,
   List<PhrasingWord> words, {
@@ -766,10 +928,18 @@ String exportPhrasing(
   String Function(int verse)? verseMark,
   String indentUnit = '    ',
 }) {
-  final lines = layoutPhrasing(p, words);
+  final lines = _linesToExport(p, words);
+  // A Chinese text arrives one Han character per token, so joining with
+  // spaces prints s p a c e d  o u t scripture. The screen already
+  // measures this from the words themselves; deriving it here too means
+  // no caller can get the export's spacing wrong.
+  final gap = phrasingIsCjk(words) ? '' : ' ';
   final buf = StringBuffer();
   for (final line in lines) {
     buf.write(indentUnit * line.depth);
+    if (line.memberLabel != null) {
+      buf.write('(${line.memberLabel}) ');
+    }
     if (line.relation != null) {
       buf.write('[${label(line.relation!)}] ');
     }
@@ -781,10 +951,93 @@ String exportPhrasing(
         lastVerse = w.verse;
       }
       buf.write(w.text);
-      if (i < line.end - 1) buf.write(' ');
+      if (i < line.end - 1) buf.write(gap);
     }
     buf.writeln();
   }
+  return buf.toString();
+}
+
+/// Escape for an HTML text node or a double-quoted attribute.
+String _esc(String s) => s
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;');
+
+/// Render the phrasing as an HTML fragment, so the diagram survives
+/// leaving the app.
+///
+/// **The artifact is the point.** The team that asked for this works in
+/// Word because they teach from the result, print it and hand it out —
+/// and a plain-text copy loses everything a phrasing says with
+/// typography: an underline has no plain-text spelling at all, and
+/// leading spaces in a proportional font are not an indent, they are a
+/// ragged edge. This exists so that the notation the reader builds on
+/// screen is the notation that lands in the document.
+///
+/// Units are POINTS, not pixels or ems, because a word processor is the
+/// destination and points are the unit it already thinks in; 24pt a
+/// level is the tab stop Word ships with.
+///
+/// Only inline styles are emitted — a pasted `<style>` block is
+/// discarded by every editor worth pasting into.
+String exportPhrasingHtml(
+  Phrasing p,
+  List<PhrasingWord> words, {
+  required String Function(PhrasingRelation) label,
+  required String heading,
+  String Function(int verse)? verseMark,
+  bool rtl = false,
+  double indentPt = 24,
+}) {
+  final lines = _linesToExport(p, words);
+  final gap = phrasingIsCjk(words) ? '' : ' ';
+  final dir = rtl ? 'rtl' : 'ltr';
+  final buf = StringBuffer()
+    ..write('<div dir="$dir" style="font-family:Georgia,serif;'
+        'line-height:1.5">');
+  if (heading.isNotEmpty) {
+    buf.write('<p style="margin:0 0 8pt 0"><b>${_esc(heading)}</b></p>');
+  }
+  var prevVerse = -1;
+  for (final line in lines) {
+    final firstVerse =
+        line.start < words.length ? words[line.start].verse : prevVerse;
+    // A blank line between verses, which is how the request's own
+    // document is set. It is spacing rather than a break because a line
+    // is allowed to STRADDLE a verse boundary here — seeing a clause run
+    // across the versification is half of what phrasing is for — so the
+    // verse cannot become the block.
+    final lead = prevVerse >= 0 && firstVerse != prevVerse ? 8 : 0;
+    buf.write('<p style="margin:${lead}pt 0 0 '
+        '${(line.depth * indentPt).toStringAsFixed(0)}pt">');
+    if (line.memberLabel != null) {
+      buf.write('(${_esc(line.memberLabel!)}) ');
+    }
+    if (line.relation != null) {
+      buf.write('<span style="color:#777">[${_esc(label(line.relation!))}]'
+          '</span> ');
+    }
+    if (line.emphasised) buf.write('<u>');
+    var lastVerse = line.start > 0 ? words[line.start - 1].verse : -1;
+    for (var i = line.start; i < line.end && i < words.length; i++) {
+      final w = words[i];
+      if (w.verse != lastVerse) {
+        buf.write('<sup>${_esc(verseMark?.call(w.verse) ?? '${w.verse}')}'
+            '</sup>$gap');
+        lastVerse = w.verse;
+      }
+      buf.write(_esc(w.text));
+      if (i < line.end - 1) buf.write(gap);
+    }
+    if (line.emphasised) buf.write('</u>');
+    buf.write('</p>');
+    prevVerse = line.end - 1 < words.length && line.end > line.start
+        ? words[line.end - 1].verse
+        : firstVerse;
+  }
+  buf.write('</div>');
   return buf.toString();
 }
 

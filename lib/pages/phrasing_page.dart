@@ -10,7 +10,6 @@
 library;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import 'package:seeksparks/constants/bible_versions.dart'
@@ -24,6 +23,7 @@ import 'package:seeksparks/services/originals_service.dart';
 import 'package:seeksparks/services/phrasing_store.dart';
 import 'package:seeksparks/services/strongs_service.dart';
 import 'package:seeksparks/services/tagged_text_service.dart';
+import 'package:seeksparks/utils/clipboard_helper.dart';
 import 'package:seeksparks/utils/morphology.dart';
 import 'package:seeksparks/utils/phrasing.dart';
 import 'package:seeksparks/utils/scripture_markup.dart'
@@ -477,21 +477,40 @@ class _PhrasingPageState extends State<PhrasingPage> {
 
   bool get _cjk => phrasingIsCjk(_words);
 
-  void _copy() {
+  Future<void> _copy() async {
     final p = _p;
     if (p == null) return;
+    final head =
+        '${localeAwareBookName(widget.book, widget.locale, widget.version)} '
+        '${widget.chapter}:${p.startVerse}-${p.endVerse}';
     final text = exportPhrasing(
       p,
       _words,
       label: (r) => phrasingRelationLabel(r, widget.locale),
       verseMark: (v) => '$v',
     );
-    final head =
-        '${localeAwareBookName(widget.book, widget.locale, widget.version)} '
-        '${widget.chapter}:${p.startVerse}-${p.endVerse}';
-    Clipboard.setData(ClipboardData(text: '$head\n$text'));
+    final html = exportPhrasingHtml(
+      p,
+      _words,
+      label: (r) => phrasingRelationLabel(r, widget.locale),
+      heading: head,
+      verseMark: (v) => '$v',
+      rtl: _rtl,
+    );
+    final r = await ClipboardHelper.copyRich(html, '$head\n$text');
+    if (!mounted) return;
+    // Three outcomes, three sentences: a phrasing that pasted as plain
+    // text has lost its indentation and its underlines, which is most of
+    // what the reader built, so saying only "Copied" would be a small lie
+    // they discover in the document.
+    final message = !r.copied
+        ? _s('shareLinkFailed', 'Copy failed — clipboard unavailable')
+        : r.formatted
+            ? _s('phrasingCopiedRich', 'Copied with its formatting')
+            : _s('phrasingCopiedPlain',
+                'Copied as plain text — the indentation was lost');
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(_s('phrasingCopied', 'Copied')),
+      content: Text(message),
       duration: const Duration(seconds: 2),
     ));
   }
@@ -765,6 +784,22 @@ class _PhrasingPageState extends State<PhrasingPage> {
           const SizedBox(width: 4),
           _relationChip(p, line, scheme, t),
           const SizedBox(width: 6),
+          // The letter sits before the member at the member's own
+          // indent, which is where the request's document puts it —
+          // near enough to the words to read as belonging to them, and
+          // outside the text so it is never mistaken for scripture.
+          if (line.memberLabel != null)
+            Padding(
+              padding: EdgeInsetsDirectional.only(end: 4, top: t.word * 0.12),
+              child: Text(
+                '(${line.memberLabel})',
+                style: TextStyle(
+                  fontSize: t.chrome,
+                  fontWeight: FontWeight.w600,
+                  color: scheme.primary,
+                ),
+              ),
+            ),
           Expanded(child: _words_(line, scheme, t)),
         ],
       ),
@@ -854,6 +889,9 @@ class _PhrasingPageState extends State<PhrasingPage> {
         if (!suggestions.contains(r)) r,
     ];
     final t = _PhrasingType.of(context.read<AppSettings>().fontSize, _source);
+    // A sheet, and correctly so: this is a DECISION about one line, not
+    // content that a docked pane could hold — the distinction #313
+    // settled for the workbench.
     final picked = await showModalBottomSheet<Object>(
       context: context,
       builder: (context) => SafeArea(
@@ -861,6 +899,34 @@ class _PhrasingPageState extends State<PhrasingPage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // The line's two MARKS, above its relation. They belong on
+              // the same sheet because they are all answers to "what is
+              // this line", and giving each its own control in the row
+              // would put three buttons in front of every line of
+              // scripture on the page.
+              SwitchListTile(
+                dense: true,
+                secondary: const Icon(Icons.format_list_bulleted, size: 18),
+                title: Text(_s('phrasingMember', 'Parallel member (a) (b)')),
+                subtitle: Text(
+                  _s(
+                    'phrasingMemberHint',
+                    'Letters run in order down each run of members at the '
+                        'same indent.',
+                  ),
+                  style: TextStyle(fontSize: t.chrome),
+                ),
+                value: p.members.contains(line.start),
+                onChanged: (_) => Navigator.pop(context, 'member'),
+              ),
+              SwitchListTile(
+                dense: true,
+                secondary: const Icon(Icons.format_underlined, size: 18),
+                title: Text(_s('phrasingEmphasis', 'Underline this line')),
+                value: p.emphasis.contains(line.start),
+                onChanged: (_) => Navigator.pop(context, 'emphasis'),
+              ),
+              const Divider(height: 1),
               ListTile(
                 dense: true,
                 leading: const Icon(Icons.clear, size: 18),
@@ -899,6 +965,14 @@ class _PhrasingPageState extends State<PhrasingPage> {
       ),
     );
     if (picked == null) return;
+    if (picked == 'member') {
+      _update(togglePhrasingMember(p, line.start));
+      return;
+    }
+    if (picked == 'emphasis') {
+      _update(togglePhrasingEmphasis(p, line.start));
+      return;
+    }
     _update(setPhrasingRelation(
       p,
       line.start,
@@ -922,7 +996,7 @@ class _PhrasingPageState extends State<PhrasingPage> {
         ));
         lastVerse = w.verse;
       }
-      spans.add(_word(i, w, i == line.start, scheme, t));
+      spans.add(_word(i, w, i == line.start, line.emphasised, scheme, t));
     }
     return Wrap(
       spacing: _cjk ? 0 : 5,
@@ -934,8 +1008,8 @@ class _PhrasingPageState extends State<PhrasingPage> {
     );
   }
 
-  Widget _word(int i, PhrasingWord w, bool isLineStart, ColorScheme scheme,
-      _PhrasingType t) {
+  Widget _word(int i, PhrasingWord w, bool isLineStart, bool emphasised,
+      ColorScheme scheme, _PhrasingType t) {
     final hovered = _hover == i;
     final pinned = _pinned == i;
     final gloss = _gloss == _GlossMode.on ? w.gloss : null;
@@ -972,7 +1046,19 @@ class _PhrasingPageState extends State<PhrasingPage> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text(w.text, style: TextStyle(fontSize: t.word)),
+              // The underline is the reader's emphasis on the LINE, so
+              // it goes on the scripture and never on the gloss — the
+              // gloss is this app's annotation, and underlining it
+              // would put the reader's mark on words they did not
+              // choose.
+              Text(
+                w.text,
+                style: TextStyle(
+                  fontSize: t.word,
+                  decoration: emphasised ? TextDecoration.underline : null,
+                  decorationThickness: 1.5,
+                ),
+              ),
               if (gloss != null)
                 // The gloss carries the other script, so it gets its own
                 // direction from its own text — the ambient RTL of a

@@ -1,3 +1,5 @@
+import 'dart:js_interop';
+
 import 'package:web/web.dart' as web;
 
 /// Legacy `document.execCommand('copy')` fallback for browsers where
@@ -45,6 +47,50 @@ bool legacyClipboardCopy(String text) {
     ta.blur();
     ta.remove();
     return ok;
+  } catch (_) {
+    return false;
+  }
+}
+
+/// Put BOTH `text/html` and `text/plain` on the clipboard, so a paste
+/// into Word, Pages or Google Docs arrives with its indentation and its
+/// underlining, and a paste into a plain field still arrives as words.
+///
+/// Deliberately built on the `copy` EVENT rather than on
+/// `navigator.clipboard.write` + `ClipboardItem`. The async API is the
+/// modern one and is the wrong choice here for two reasons that matter
+/// to this app specifically: it needs the clipboard-write permission
+/// and an unexpired user-activation window, which is the exact
+/// combination that produced the iOS Safari `copy_fail` crash this file
+/// was written for; and this workbench is tablet-first, so iOS Safari
+/// is a first-class target rather than an edge. Overriding the copy
+/// event is synchronous, needs no permission, and is honoured by every
+/// engine that can paste rich text at all.
+///
+/// Mechanics: listen for `copy`, run the same off-screen-textarea
+/// selection [legacyClipboardCopy] uses to make the browser fire one,
+/// and replace the payload from inside the handler. Returns false if
+/// the handler never ran, so the caller can say plainly that the
+/// formatting was lost rather than claiming a copy it did not make.
+bool richClipboardCopy(String html, String text) {
+  try {
+    final doc = web.document;
+    if (doc.body == null) return false;
+    var wrote = false;
+    void onCopy(web.ClipboardEvent event) {
+      final data = event.clipboardData;
+      if (data == null) return;
+      data.setData('text/html', html);
+      data.setData('text/plain', text);
+      event.preventDefault();
+      wrote = true;
+    }
+
+    final listener = onCopy.toJS;
+    doc.addEventListener('copy', listener);
+    final ok = legacyClipboardCopy(text);
+    doc.removeEventListener('copy', listener);
+    return ok && wrote;
   } catch (_) {
     return false;
   }

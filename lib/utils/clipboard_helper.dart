@@ -30,6 +30,25 @@ abstract class ClipboardHelper {
     }
   }
 
+  /// Copy [html] as formatted text, falling back to [text] where the
+  /// platform cannot carry formatting.
+  ///
+  /// Reports the two outcomes separately because they need different
+  /// things said about them. `formatted: false` still means the words
+  /// arrived — but a phrasing pasted as plain text has lost its
+  /// indentation and its underlines, which is most of what the reader
+  /// built, and calling that "Copied" is a small lie they only discover
+  /// in the document.
+  static Future<({bool copied, bool formatted})> copyRich(
+    String html,
+    String text,
+  ) async {
+    if (richClipboardCopy(html, text)) {
+      return (copied: true, formatted: true);
+    }
+    return (copied: await copyText(text), formatted: false);
+  }
+
   /// Copy [text] AND show a clear floating snackbar — a check-icon
   /// "Copied!" on success, an error-styled "Copy failed — clipboard
   /// unavailable" on failure. Use this instead of [copyText] + manual
