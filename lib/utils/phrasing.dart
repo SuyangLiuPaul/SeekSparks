@@ -161,6 +161,46 @@ List<String?> alignByStrongs(
   return out;
 }
 
+/// Reduce a lexicon entry to something that can stand under one word.
+///
+/// A Strong's gloss is prose, not a gloss: H1961 is
+/// 「是，變爲，發生，存在，有了，產生」 and H5022 is a clause naming who
+/// Naboth was and what happened to him. Set under every word of a verse
+/// these turn each column into a paragraph, and a diagram whose columns
+/// are paragraphs cannot be read as a diagram — which is what shipping
+/// v1.6.106 to dev showed on 1 Kings 21:1.
+///
+/// So: the leading sense only, and never more than [_briefMax]. This is
+/// a deliberate loss of information, tolerable only because the gloss is
+/// already marked as the lexicon's claim rather than the verse's, and
+/// because the reader can reach the entry itself from the word study.
+String briefGloss(String raw) {
+  var s = raw.trim();
+  if (s.isEmpty) return s;
+  // Everything after the first sense boundary is a further sense.
+  for (final sep in const [';', '；', '，', ',', '、', '/']) {
+    final i = s.indexOf(sep);
+    if (i > 0) s = s.substring(0, i);
+  }
+  // Parenthetical elaboration is detail, not definition.
+  for (final open in const ['(', '（', '[']) {
+    final i = s.indexOf(open);
+    if (i > 0) s = s.substring(0, i);
+  }
+  s = s.trim().replaceAll(RegExp(r'[\s.。、：:]+$'), '').trim();
+  if (s.length > _briefMax) {
+    // Break on a word boundary if there is one; CJK has none, so the
+    // ellipsis is the only honest signal that something was dropped.
+    final cut = s.lastIndexOf(' ', _briefMax);
+    s = '${s.substring(0, cut > 6 ? cut : _briefMax).trimRight()}…';
+  }
+  return s;
+}
+
+/// Long enough for 「所羅門的殿」 and for "burnt offering", short enough
+/// that a column stays a column.
+const int _briefMax = 14;
+
 /// Split a verse of a translation into the units a line can break at.
 ///
 /// The house rule is `phrase_match.dart`'s — **one token per Han
@@ -219,14 +259,19 @@ List<String> phrasingTokens(String text) {
 /// Chinese or English Old Testament verse carries H-numbers and reads
 /// left to right; keying on the prefix would mirror the whole diagram
 /// for every reader who phrased Genesis in 和简+.
-bool phrasingIsRtl(List<PhrasingWord> words) {
-  for (final w in words) {
-    for (var i = 0; i < w.text.length; i++) {
-      final c = w.text.codeUnitAt(i);
-      // Hebrew block, then Hebrew presentation forms.
-      if ((c >= 0x0590 && c <= 0x05FF) || (c >= 0xFB1D && c <= 0xFB4F)) {
-        return true;
-      }
+bool phrasingIsRtl(List<PhrasingWord> words) =>
+    words.any((w) => isRtlText(w.text));
+
+/// True when [s] contains Hebrew. Direction is decided by the script of
+/// the text and never by the `H`/`G` prefix of a Strong's number: the
+/// gloss line under a Hebrew word may itself be Chinese, and the gloss
+/// under a Chinese word may itself be Hebrew.
+bool isRtlText(String s) {
+  for (var i = 0; i < s.length; i++) {
+    final c = s.codeUnitAt(i);
+    // Hebrew block, then Hebrew presentation forms.
+    if ((c >= 0x0590 && c <= 0x05FF) || (c >= 0xFB1D && c <= 0xFB4F)) {
+      return true;
     }
   }
   return false;

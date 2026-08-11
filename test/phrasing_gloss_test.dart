@@ -133,6 +133,52 @@ void main() {
     });
   });
 
+  group('briefGloss', () {
+    test('keeps the leading sense of a real lexicon entry', () {
+      // H1961, as `assets/strongs` has it — six senses, which set under
+      // every word of a verse turns each column into a paragraph.
+      expect(briefGloss('是，變爲，發生，存在，有了，產生'), '是');
+      expect(briefGloss('to be, become, come to pass, exist'), 'to be');
+    });
+
+    test('drops the parenthetical, which is detail and not definition',
+        () {
+      expect(briefGloss('a desolation (of surface)'), 'a desolation');
+      expect(briefGloss('葡萄園（尤指山坡上的）'), '葡萄園');
+    });
+
+    test('a clause that names a person is cut, not printed whole', () {
+      // H5022 — the entry is biography, and nothing of it fits under a
+      // word. An ellipsis says so; 40 characters of it would not.
+      final got = briefGloss(
+          '耶斯列葡萄園的園主，遭亞哈及耶洗別陰謀陷害而奪走其葡萄園');
+      expect(got.length, lessThanOrEqualTo(15));
+      expect(got, '耶斯列葡萄園的園主');
+    });
+
+    test('a long single sense breaks on a space rather than mid-word', () {
+      // The cap falls inside "offering", so the cut retreats to the
+      // space before it rather than printing "a burnt offeri…".
+      expect(briefGloss('a burnt offering ascending in smoke'), 'a burnt…');
+    });
+
+    test('nothing to shorten is returned unchanged', () {
+      expect(briefGloss('king'), 'king');
+      expect(briefGloss('   '), '');
+    });
+  });
+
+  group('isRtlText', () {
+    test('decides on the script of the text, not on a Strong\'s prefix',
+        () {
+      expect(isRtlText('וַיְהִי'), isTrue);
+      // A Hebrew word's gloss is Chinese, and must not be mirrored.
+      expect(isRtlText('这事以后'), isFalse);
+      expect(isRtlText('In the beginning'), isFalse);
+      expect(isRtlText(''), isFalse);
+    });
+  });
+
   group('PhrasingWord.withGloss', () {
     test('keeps everything else and records where the gloss came from', () {
       const w = PhrasingWord(

@@ -131,19 +131,32 @@ class _PhrasingType {
   /// between the two constants so the two cannot drift apart.
   static const double _originalBoost = WbMetrics.original / WbMetrics.text;
 
-  /// Below this, the pointing under a Hebrew consonant stops being
-  /// separable — measured on screen at 1 Kings 21:1 rather than chosen
-  /// as a round number. A reader who sets 12 pt is asking the rest of
-  /// the app to be dense; they are not asking for an unreadable qamats.
-  static const double _originalFloor = 19.0;
+  /// [WbMetrics.original] is the size at which the workbench already
+  /// accepts pointing and accents as separable, in a layout far denser
+  /// than this one, so nothing on this page may fall below it while it
+  /// is carrying Hebrew or Greek. A reader who sets 12 pt is asking the
+  /// rest of the app to be dense; they are not asking for an
+  /// unreadable qamats.
+  ///
+  /// The word line reaches it on its own — the smallest setting the
+  /// slider offers, times the boost, is exactly [WbMetrics.original] —
+  /// so only the gloss line needs the floor stated.
+  static const double _pointedFloor = WbMetrics.original;
 
   factory _PhrasingType.of(double fontSize, PhrasingSource source) {
-    final word = source == PhrasingSource.originals
-        ? (fontSize * _originalBoost).clamp(_originalFloor, double.infinity)
-        : fontSize;
+    final original = source == PhrasingSource.originals;
+    final word = original ? fontSize * _originalBoost : fontSize;
+    // The gloss line always carries the OTHER script, so which of the
+    // two is the pointed one flips with the source. Shrinking Hebrew to
+    // 0.62 of a 12 pt setting puts a qamats at 7 px, which is not a
+    // faint gloss but an absent one.
+    final gloss = original
+        ? (fontSize * 0.62).clamp(11.0, double.infinity)
+        : (fontSize * 0.62 * _originalBoost).clamp(
+            _pointedFloor, double.infinity);
     return _PhrasingType(
       word: word.toDouble(),
-      gloss: (fontSize * 0.62).clamp(11.0, double.infinity).toDouble(),
+      gloss: gloss.toDouble(),
       chrome: (fontSize * 0.6).clamp(11.0, double.infinity).toDouble(),
       // One indent step is a little over one word-width, which is what
       // makes a subordinate line read as subordinate at any size.
@@ -393,9 +406,9 @@ class _PhrasingPageState extends State<PhrasingPage> {
           // lexicon is asked for: a reader phrasing Hebrew wants the
           // sense, a reader phrasing their own edition wants the word.
           final text = _source == PhrasingSource.originals
-              ? entry.localizedGloss(widget.locale)
-              : entry.lemma;
-          if (text.trim().isEmpty) continue;
+              ? briefGloss(entry.localizedGloss(widget.locale))
+              : entry.lemma.trim();
+          if (text.isEmpty) continue;
           _glossHasLexicon = true;
           out[k] = out[k].withGloss(text.trim(), fromLexicon: true);
         }
@@ -959,23 +972,36 @@ class _PhrasingPageState extends State<PhrasingPage> {
             children: [
               Text(w.text, style: TextStyle(fontSize: t.word)),
               if (gloss != null)
-                // Always upright and left-to-right: a Chinese gloss
-                // under a Hebrew word must not be mirrored by the
-                // ambient RTL direction the diagram runs in.
+                // The gloss carries the other script, so it gets its own
+                // direction from its own text — the ambient RTL of a
+                // Hebrew diagram must not mirror a Chinese gloss, and an
+                // LTR diagram must not straighten a Hebrew one.
                 Directionality(
-                  textDirection: TextDirection.ltr,
-                  child: Text(
-                    gloss,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: t.gloss,
-                      height: 1.1,
-                      color: scheme.onSurfaceVariant,
-                      // Italic marks the lexicon's sense for the LEMMA,
-                      // as against what this verse actually says.
-                      fontStyle: w.glossFromLexicon
-                          ? FontStyle.italic
-                          : FontStyle.normal,
+                  textDirection: isRtlText(gloss)
+                      ? TextDirection.rtl
+                      : TextDirection.ltr,
+                  child: ConstrainedBox(
+                    // A tagged run can be a whole clause — 雅简+ puts
+                    // 又有一事。耶斯列人 on one Strong's number. Left
+                    // unbounded it stretches its column until the
+                    // diagram is one word per line and the indentation,
+                    // which is the entire point, stops being visible.
+                    constraints: BoxConstraints(maxWidth: t.gloss * 7),
+                    child: Text(
+                      gloss,
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: t.gloss,
+                        height: 1.1,
+                        color: scheme.onSurfaceVariant,
+                        // Italic marks the lexicon's sense for the LEMMA,
+                        // as against what this verse actually says.
+                        fontStyle: w.glossFromLexicon
+                            ? FontStyle.italic
+                            : FontStyle.normal,
+                      ),
                     ),
                   ),
                 ),
