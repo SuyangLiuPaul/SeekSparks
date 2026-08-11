@@ -113,6 +113,51 @@ void main() {
     expect(joined('numbers', '15:18'), contains('我所领你们进去的那地'));
   });
 
+  // 2026-08-12 (check 26). The bracket and Latin tests catch markup that
+  // leaked in. These catch the opposite: characters that look like
+  // scripture and are not. 丶 U+4E36 is the dot *stroke*, the character
+  // naming a piece of a glyph — it cannot occur in prose, and it stood
+  // where the enumeration comma 、 belongs. The rest are ordinary
+  // ideographs standing where a different ordinary ideograph belongs, so
+  // nothing about their shape gives them away; only reading them does.
+  test('no run carries a character that cannot be read here', () {
+    const unreadable = <String, String>{
+      '丶': 'U+4E36 dot stroke for the enumeration comma 、',
+      '恉': '恉 (purport) for 腮 (jaw)',
+      '逿': '逿 for 趟 (to wade)',
+      '承巡': '承巡 for 承受',
+      '扔菏': '扔菏 for 凶淫',
+      '暇疵': '暇疵 for 瑕疵',
+    };
+    // A run is a word, so a two-character defect can straddle two runs;
+    // the whole verse is what must be searched.
+    final offenders = <String>[];
+    tagged.forEach((book, verses) {
+      verses.forEach((ref, runs) {
+        final text = runs
+            .cast<Map<String, dynamic>>()
+            .map((r) => r['w'] as String)
+            .join();
+        unreadable.forEach((bad, why) {
+          if (text.contains(bad)) offenders.add('$book $ref: $why');
+        });
+      });
+    });
+    expect(offenders, isEmpty, reason: offenders.join('; '));
+  });
+
+  test('the repaired verses read what the witnesses read', () {
+    // The plain and tagged copies of Jeremiah 12:14 were corrupt to
+    // DIFFERENT depths — plain read 承巡菇业, tagged read 承巡产业 — which
+    // is why the two layers witnessing each other was not enough on its
+    // own, and why cuvs-plus and the yahwehdehua export were consulted.
+    expect(joined('jeremiah', '12:14'), contains('以色列所承受产业的'));
+    expect(joined('judges', '15:16'), contains('我用驴腮骨杀人成堆'));
+    expect(joined('2_samuel', '19:17'), contains('都趟过约但河迎接王'));
+    expect(joined('2_samuel', '14:25'), contains('从脚底到头顶，毫无瑕疵'));
+    expect(joined('psalms', '146:6'), contains('雅伟造天、地、海'));
+  });
+
   test('a damaged code stops stealing its neighbour\'s number', () {
     // 「他若<H518>行恶」: the code was text, so it never split the run, and
     // 他若 was left carrying H4672 — the number of a word further on.

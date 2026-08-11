@@ -82,6 +82,9 @@ believe it is fine" and "we looked".
 | 25b | Does the reader ever reach them | 139 OT groups | **0 reachable** → **139** | **fixed** |
 | 25c | Passages dropped by a book-keyed map | 313 passages | **37 never rendered** → **0** | **fixed**, now a test |
 | 24d | Does `assets/forms/` carry the parse the corpus carries | 136,067 form triples | **1,243 blank where the corpus has one** → **0** | **fixed**, now a test |
+| 26a | Characters that render but cannot be read (和合本, 5 files) | 5,295,770 chars | **206 in 6 classes** → **0** | **fixed**, now a test |
+| 26b | Verse ids well-formed and unique within an edition | 93,307 records | **1,764 malformed / 562 collisions** → **0** | **fixed**, now a test |
+| 26c | 和合本 verse text vs an *external* witness | 31,102 verses | 392 → **383** | measured; residue is variants, listed |
 
 ---
 
@@ -1678,6 +1681,166 @@ Geography, which is prose rather than a citation.
 
 ---
 
+## 26. Characters that render perfectly and cannot be read
+
+This is the first comparison of this repository's **Chinese scripture**
+against a witness obtained outside it, and it is the check the "Not
+checked yet" list has carried since the beginning: *a verse that is wrong
+and well-formed and agrees with our own second copy.*
+
+The defect class is the dangerous one. A wrong character throws nothing,
+breaks no key and renders perfectly — CanvasKit only drops a glyph it has
+no font for, and every character repaired here is an ordinary CJK Unified
+Ideograph. Check 10 asked which Unicode **blocks** the shipped text uses
+and found 129 offenders; it could never have found these, because they
+sit in the same block as the words around them. Nothing is missing,
+nothing is malformed, and the sentence is simply not the sentence.
+
+### The six classes, and why each one cannot be read
+
+| Reading | Should be | Sites | Where |
+|---|---|---:|---|
+| 丶 U+4E36 | 、 U+3001 | 150 | cuvs-yhwh 53, -tr 53, tagged/cuvs-yhwh 44 |
+| 恉 zhǐ "purport" | 腮 sāi "jaw" | 8 | all three plain files, tagged/cuvs-plus |
+| 逿 dàng | 趟 tāng "to wade" | 36 | all three plain files, tagged/cuvs-plus |
+| 承巡菇业 / 承巡产业 | 承受产业 | 5 | 耶利米書 12:14 |
+| 扔菏丑恶 | 凶淫丑恶 | 4 | 士師記 20:6 |
+| 毫无暇疵 | 毫无瑕疵 | 3 | 撒母耳記下 14:25 |
+
+**丶 is the one that matters most**, at 150 of the 206 sites. U+4E36 is
+the *dot stroke* — the character used to NAME a piece of a glyph, as one
+would name a radical. It is not punctuation, it cannot occur in running
+prose, and it is visually identical to the enumeration comma 、 that
+belongs at every one of these sites. 詩篇 146:6 shipped as
+`雅伟造天丶地丶海`.
+
+恉 and 逿 are ordinary words in the wrong place. 逿 differs from 趟 only
+in the radical — 辶 against 走 beneath a shared 尚 — and every site is
+someone wading through water, which 逿 cannot mean. 士師記 15:16 is the
+neatest case: it uses 恉 and 腮 in the same sentence, so the verse
+witnesses against itself.
+
+暇 is "leisure"; 毫无暇疵 is not a word, and 毫无瑕疵 "without blemish" is
+the idiom Absalom's description ends on.
+
+### Four witnesses, none of them sufficient alone
+
+- `assets/cuvs-plus.json` and `assets/tagged/cuvs-plus/` — 和合本+Strong's,
+  the same base text imported separately. Clean of 丶.
+- `assets/tagged/cuvs-yhwh/` — **our own tagged layer**, which reads 腮,
+  趟 and 凶淫 correctly at every site where the plain layer does not.
+- the yahwehdehua export (`~/Documents/New project/yahwehdehua_bible`),
+  whose `manifest.json` records site-owner authorization, and which the
+  LEB repair (check 24) already trusted.
+
+The reason all four were needed is that each is corrupt where another is
+clean. cuvs-plus carries 恉 and 逿. The tagged layer carries 丶. **The
+external witness carries 44 丶 of its own across 25 verses**, and reads
+毫无暇疵 and 承巡产业 exactly as we did. So no single comparison would
+have found all six classes, and a majority vote would have entrenched
+three of them.
+
+Jeremiah 12:14 is the sharpest illustration: the plain layer read
+承巡**菇**业 and the tagged layer read 承巡**产**业 — the same verse,
+corrupt to *different depths* in two copies that ship together. Neither
+is 承受产业, and neither could be derived from the other.
+
+### The rule, stated so a later reader can disagree with it
+
+Repair only where our reading is **semantically impossible in context**
+AND a witness reads a sensible alternative. A witness that is corrupt at
+the same site **abstains**; it does not veto. That asymmetry is
+deliberate and is the load-bearing decision in `tools/repair_cuvs_defects.py`:
+the witness is not voting on whether the site is broken — the character
+settles that by being unreadable — it is supplying the reading.
+
+Every substitution is gated at the **site**, not merely on a witness
+existing: the witness must read the replacement between the same two Han
+words, with the divine name normalised (cuvs-plus prints 耶和华 where this
+edition prints 雅伟) and punctuation ignored (the editions punctuate
+differently). A failed gate skips that site and reports it; it never
+falls back to applying the edit. The traditional file is never matched
+against a simplified witness directly — it is chained off its own
+simplified sibling, with which it is aligned character for character at
+all 42 defect records, and every traditional character introduced must
+already be attested elsewhere in the traditional file. That check is what
+puts 兇 and 產 into 兇淫醜惡 and 承受產業 rather than the simplified 凶 and
+产, which the file contains **zero** of.
+
+### What was deliberately NOT changed
+
+383 verses still disagree with the external witness, and they are left
+alone. The largest classes are 阿/啊 ×43 (two spellings of the same
+interjection), the pronouns 他/她/它 ×44 (an editorial choice about
+gender and animacy, not a reading), 繸/䍁 ×7, 做/作 ×4, 吗/么 ×3.
+Elsewhere the two texts differ in length (194 verses), almost always
+because this edition carries an inline note the witness does not.
+
+None of these is repaired, because *"a witness spells it differently"* is
+a weaker claim than *"this cannot be read"* — and only the second one
+licenses editing scripture. 辊/滚, 幌/晃, 锨/杴 and the proper name
+犰多/朵多 were examined individually and left for the same reason.
+
+### The measurement, and an instrument error inside it
+
+Agreement between `assets/cuvs-yhwh.json` and the external witness on the
+Han-character stream: **30,710 of 31,102 verses (98.7396%) before the
+repair, 30,719 (98.7686%) after.**
+
+The first time this was measured it appeared to go **down**, from 30,706
+to 30,696. That was the measuring script, not the data: 丶 lives in the
+Han block, so a reduction that keeps "all Han characters" keeps 丶 too.
+Removing ours while the witness kept its own 44 shifted the two streams
+by one character and turned 24 verses into total mismatches. Recorded
+here because it is the third instrument error in this document
+(check 24 has two) and because it very nearly became a finding — the
+number was real, reproducible, and completely wrong.
+
+A fourth, from the same session and also not a finding: a character
+census reported 203 Private Use Area characters (`U+E000`) in
+`assets/cuvs-yhwh.json`. Direct inspection found **zero** — none in the
+raw bytes, none across any field of any record, and an isolated re-run
+found none. An artifact of the sweep, not of the file.
+
+### Verse ids: 562 collisions nobody would have seen
+
+Separately, every 歷代志上/下 record in `assets/cuvs-yhwh-tr.json` carried
+id `000CCCVVV` — 1,764 records colliding with 創世記 and with each other,
+562 collisions in all. The simplified file has 013 and 014 at the same
+two positions in the same book order.
+
+This was **latent, not live**, and the distinction is worth stating
+plainly rather than quietly fixing: `Verse.fromJson` never reads the
+asset's `id` field, and `Verse.id` is computed from the book name and
+verse label. So nothing a reader has ever seen was wrong. It is repaired
+because the field is the join key any future cross-edition work would
+reach for, and a silently duplicated key is exactly the kind of defect
+that surfaces only once something depends on it — which is how check 25c
+happened.
+
+The repair takes each ordinal from the sibling file at the same position
+in the same book order, and refuses any id the simplified file does not
+actually hold.
+
+### Frozen
+
+`test/cuvs_yhwh_integrity_test.dart` asserts that none of the six
+unreadable readings appears in any of the three plain editions, and that
+every id is a well-formed, unique BBBCCCVVV.
+`test/cuvs_yhwh_tagged_layer_test.dart` does the same across both tagged
+layers — searching the reconstructed verse rather than the individual
+runs, because a two-character defect can straddle a word boundary — and
+pins the five repaired verses to the readings the witnesses gave.
+
+`tools/repair_cuvs_defects.py` verifies by default and applies with
+`--write`; it is idempotent and exits 0 when there is nothing left to
+repair. It preserves each file's on-disk formatting, which is not a
+detail: cuvs-yhwh is indent-2 and cuvs-plus is a single compact line, and
+writing either one the other way buries a 69-character repair in a
+217,000-line diff.
+
+---
+
 ## Not checked yet
 
 - Verse **text** itself, against an *external* witness — for the
@@ -1686,10 +1849,13 @@ Geography, which is prose rather than a citation.
   of Greek and 99.59% of Hebrew words *by surface form*, which is an
   external witness to the text and not only to its codes. The 951 + 1,240
   words that did not align are the honest residue and are listed there.
-  For the English and Chinese editions this remains open: a verse that is
-  wrong *and* well-formed *and* agrees with our own second copy is still
-  unchecked. `test/cuvs_yhwh_integrity_test.dart` does this for two
-  verses; there is no general method without an external source.
+  Check 26 closes the **Chinese** half: `assets/cuvs-yhwh.json` is now
+  measured against the yahwehdehua export verse by verse (98.77% of
+  31,102 agree on the Han stream), six unreadable classes were repaired
+  and the 383-verse residue is listed there. **The English editions
+  remain unchecked** — LEB has an external witness (check 24) but BSB,
+  KJV and the rest have none, and a verse that is wrong and well-formed
+  and agrees with our own second copy would still not be found.
 - `section_titles.json`, `book_introductions.json`, `bible_evidence.json`,
   `maps_index.json` (see #300 for its provenance gap), `family_tree.json`
   relationships, `ot_synopsis.json` alignments.
@@ -1706,6 +1872,14 @@ Geography, which is prose rather than a citation.
 
 ## Next, in order
 
+0. **The English editions against an external witness**, the way check 26
+   did the Chinese. This is now the largest unchecked surface in the
+   repository and the only remaining bullet of the original "verse text
+   against an outside source" question. The obstacle is the witness, not
+   the method: check 26's machinery — align on the reduced character
+   stream, classify the residue, repair only what cannot be read —
+   transfers directly, but nothing outside this repository has yet been
+   found that holds BSB or KJV under terms we can use.
 1. The 4 references the two 梁家鏗譯本 editions still disagree about —
    马可福音 6:8–11, all that is left of the original 8. Needs a witness that is the
    same edition in the missing script; a 简/繁 conversion table derived
@@ -1727,6 +1901,15 @@ Geography, which is prose rather than a citation.
    two search-key caches and the clipboard. Strong's-driven surfaces
    (KWIC, concordance) read the tagged layer, which a placeholder has no
    entry in, so they cannot show one — reasoned, not measured.
+
+*(Check 26 came off the "Not checked yet" list rather than this one, and
+it is the clearest case yet for the rule that a witness must come from
+outside: 恉 and 逿 are in every plain Chinese file we ship, and only the
+tagged layer and an external export read them correctly. Its own lesson
+is narrower and sharper — the witness carried 44 of the same 丶 we did,
+so "both copies agree" and "the reading is right" are different claims,
+and a majority vote across four texts would have entrenched three of the
+six defects.)*
 
 *(Check 24 was not on this list at all. It came from re-reading the
 standing rule "a wrong parsing code jumps ahead of every feature" against

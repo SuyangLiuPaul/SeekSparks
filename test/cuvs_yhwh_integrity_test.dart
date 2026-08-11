@@ -91,4 +91,77 @@ void main() {
       }
     });
   }
+
+  // 2026-08-12 (check 26): lookalike characters. Unlike □ these render
+  // perfectly and sit in the same Unicode block as the text around them,
+  // so neither a glyph-coverage check nor a repertoire check can see them
+  // — only reading the words can. Repaired by
+  // `tools/repair_cuvs_defects.py` against three witnesses; see
+  // docs/DATA-INTEGRITY.md.
+  const chineseAssets = <String>[
+    'assets/cuvs-yhwh.json',
+    'assets/cuvs-yhwh-tr.json',
+    'assets/cuvs-plus.json',
+  ];
+
+  // Each entry is a reading that cannot be read in Chinese. 丶 U+4E36 is
+  // the dot *stroke*, the character that names a piece of a glyph; it is
+  // not punctuation and cannot occur in prose, and it stood where the
+  // enumeration comma 、 U+3001 belongs.
+  const unreadable = <String, String>{
+    '丶': 'U+4E36 dot stroke standing in for the enumeration comma 、',
+    '恉': '恉 (purport) standing in for 腮 (jaw) — 士師記 15:16',
+    '逿': '逿 standing in for 趟 (to wade) — it differs only in the radical',
+    '承巡': '承巡 standing in for 承受 — 耶利米書 12:14',
+    '扔菏': '扔菏 standing in for 凶淫 — 士師記 20:6',
+    '暇疵': '暇疵 (leisure-flaw) standing in for 瑕疵 — 撒母耳記下 14:25',
+  };
+
+  for (final asset in chineseAssets) {
+    group('$asset lookalike characters', () {
+      late List<dynamic> verses;
+
+      setUpAll(() async {
+        verses = json.decode(await rootBundle.loadString(asset)) as List<dynamic>;
+      });
+
+      unreadable.forEach((bad, why) {
+        test('carries no $bad', () {
+          final offenders = verses
+              .whereType<Map<String, dynamic>>()
+              .where((v) => (v['text'] as String? ?? '').contains(bad))
+              .map((v) => v['id'])
+              .toList();
+          expect(offenders, isEmpty, reason: '$why; offenders: $offenders');
+        });
+      });
+
+      // 2026-08-12: every 歷代志上/下 record in the traditional file
+      // carried id `000CCCVVV`, colliding with 創世記 and with each other
+      // — 562 collisions over 1,764 records. Nothing rendered wrong,
+      // because `Verse.fromJson` never reads this field and `Verse.id` is
+      // computed from the book name. It is guarded because the field is
+      // the join key any future cross-edition work would reach for, and a
+      // silently duplicated key is the kind of defect that only surfaces
+      // once something depends on it.
+      test('every id is a well-formed, unique BBBCCCVVV', () {
+        final seen = <String>{};
+        final malformed = <String>[];
+        final duplicated = <String>[];
+        for (final v in verses.whereType<Map<String, dynamic>>()) {
+          final id = v['id'] as String? ?? '';
+          if (id.length != 9 ||
+              int.tryParse(id) == null ||
+              id.substring(0, 3) == '000') {
+            malformed.add('$id (${v['book']} ${v['chapter']}:${v['verse']})');
+          }
+          if (!seen.add(id)) duplicated.add(id);
+        }
+        expect(malformed, isEmpty,
+            reason: 'a zero or non-numeric book ordinal is not a verse key');
+        expect(duplicated, isEmpty,
+            reason: 'two verses cannot share one key');
+      });
+    });
+  }
 }
