@@ -316,16 +316,29 @@ Mapped against BibleWorks' own tab set (bwh10):
   provenance (#300). bwh33's route/travel-speed tooling is **REJECTED**;
   it is a cartography editor, not a study feature.
 - **Timeline (bwh39)** — **HAVE.**
-- **Synopsis window (bwh43)** — **PARTIAL.** We hold both synopsis assets
-  and a service, surfaced inside the reader. bwh43 gives it a window with
-  an editable synopsis list. See 3.3's independent-pane item — same fix.
+- **Synopsis window (bwh38)** — **PARTIAL.** We hold both synopsis
+  assets — 71 gospel events and 139 Old Testament groups — and both are
+  now reachable from the reader menu on every book they cover. What
+  bwh38 has and we do not is the **display**: an editable SDF verse list
+  on top, and below it the parallel passages laid out **side by side,
+  one Browse column per passage**, with a "Remove Blanks" toggle. Ours
+  is a sheet of tappable chips, so a reader compares two passages by
+  jumping between them instead of reading them beside each other, which
+  is the whole point of a synopsis. See 3.3's independent-pane item —
+  same fix, and `docs/PRODUCT-AUDIT.md` §7.4 says the sheet stays until
+  #292 lands.
+  *(2026-08-12: this entry previously cited bwh43, which is the
+  morphology code tables, and claimed the assets were "surfaced inside
+  the reader" — true of the gospel half only. The 139 OT groups had no
+  reachable entry point at all. Fixed; see `docs/DATA-INTEGRITY.md`
+  check 25.)*
 - **TSK / Nave's / Bible Outline (bwh34)** — **PARTIAL.** TSK is in
   `cross_references.json`. **Nave's Topical Bible is ABSENT** (Eagle's
   View's Modern Concordance in the Topics tab is a *different* work, and
   it is NT-only). Nave's is public domain and openly available — a real,
   cheap gap. Bible Outline ≈ our `book_introductions.json` +
   `section_titles.json`, **PARTIAL**.
-- **Read Text module (bwh41)** — **REJECTED.** Audio reading of the
+- **Read Text module (bwh53)** — **REJECTED.** Audio reading of the
   biblical text. TTS was built and removed at v1.3.19
   (`ui_strings.dart:4833`, `app_settings.dart:86`). Do not resurrect it
   without the owner asking. Distinct from #293 sermon audio, which is a

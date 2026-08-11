@@ -27,13 +27,44 @@ class BibleReference {
   /// Always sorted + deduplicated when set.
   final List<int> verses;
 
+  /// 2026-08-12: the far end of a range that crosses a chapter
+  /// boundary ("Mark 8:31-9:1" → 9 and 1). Null for every other shape.
+  ///
+  /// [chapter], [verseStart] and [verseEnd] keep describing the START
+  /// chapter alone, exactly as before, so navigation lands where it
+  /// always did. Only a caller that needs the extent of the passage —
+  /// deciding whether a verse falls inside it — reads these two.
+  /// Before they existed the end was simply discarded, which indexed
+  /// the 30-verse trial before Pilate as the single verse John 18:28.
+  final int? endChapter;
+  final int? endVerse;
+
   const BibleReference({
     required this.englishBook,
     required this.chapter,
     this.verseStart,
     this.verseEnd,
     this.verses = const [],
+    this.endChapter,
+    this.endVerse,
   });
+
+  /// True when this reference runs past the end of [chapter].
+  bool get spansChapters => endChapter != null && endChapter! > chapter;
+
+  /// Whether [c]:[v] falls inside this reference. A whole-chapter
+  /// reference contains every verse of its chapter.
+  bool contains(int c, int v) {
+    final lastChapter = endChapter ?? chapter;
+    if (c < chapter || c > lastChapter) return false;
+    if (c > chapter && c < lastChapter) return true;
+    if (c == chapter && verseStart != null && v < verseStart!) return false;
+    if (c == lastChapter) {
+      final last = c == chapter ? verseEnd : endVerse;
+      if (last != null && v > last) return false;
+    }
+    return true;
+  }
 
   /// Convenience for "this is the whole chapter" — true when only
   /// chapter was typed (no `:verse` part).
@@ -120,6 +151,8 @@ BibleReference? parseReference(String input) {
       int.tryParse(xc.group(2)!) ?? 0,
       int.tryParse(xc.group(3)!),
       null,
+      endChapter: int.tryParse(xc.group(4)!),
+      endVerse: int.tryParse(xc.group(5)!),
     );
     if (ref != null) return ref;
   }
@@ -181,7 +214,7 @@ const _singleChapterBooks = {
 
 BibleReference? _buildRef(
     String bookPart, int chapter, int? verseStart, int? verseEnd,
-    {int? chapterRangeEnd}) {
+    {int? chapterRangeEnd, int? endChapter, int? endVerse}) {
   if (chapter <= 0) return null;
 
   // Empty book part is invalid — "3:16" alone needs a book.
@@ -209,6 +242,9 @@ BibleReference? _buildRef(
     verseEnd: (verseEnd != null && verseStart != null && verseEnd >= verseStart)
         ? verseEnd
         : verseStart,
+    // An end chapter that does not run forwards is not a span.
+    endChapter: (endChapter != null && endChapter > chapter) ? endChapter : null,
+    endVerse: (endChapter != null && endChapter > chapter) ? endVerse : null,
   );
 }
 

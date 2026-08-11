@@ -4786,6 +4786,11 @@ const uiStrings = {
     'zh-Hant': '福音書對觀',
     'en': 'Gospel Synopsis',
   },
+  'synopsisOt': {
+    'zh-Hans': '平行经文',
+    'zh-Hant': '平行經文',
+    'en': 'Parallel Passages',
+  },
   'synopsisChapterTitle': {
     'zh-Hans': '本章对观条目',
     'zh-Hant': '本章對觀條目',

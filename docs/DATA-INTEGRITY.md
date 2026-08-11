@@ -78,6 +78,9 @@ believe it is fine" and "we looked".
 | 24a | Morphology codes vs MorphGNT + OSHB (first *external* witness) | 436,630 words | **0** | clean, and the reason 24c is findable |
 | 24b | Hebrew Strong's numbers vs OSHB | 299,567 words | **0** | clean |
 | 24c | Does a Greek word's Strong's number name that word | 137,062 words | **15 name a different word** → **0** | **fixed**, now a test |
+| 25a | Do the references the app *shows* resolve | 5,933 refs / 7 assets | 14 in ot_synopsis → **0** | **fixed**, now a test |
+| 25b | Does the reader ever reach them | 139 OT groups | **0 reachable** → **139** | **fixed** |
+| 25c | Passages dropped by a book-keyed map | 313 passages | **37 never rendered** → **0** | **fixed**, now a test |
 | 24d | Does `assets/forms/` carry the parse the corpus carries | 136,067 form triples | **1,243 blank where the corpus has one** → **0** | **fixed**, now a test |
 
 ---
@@ -1545,6 +1548,133 @@ independently reproduces the Python instrument's exact findings
 trust a transcription. `assets/strongs/concordance.json` and
 `assets/forms/` were both rebuilt: G4162 goes 0 → 1 use, G1991 4 → 3,
 G4736 6 → 7, and the token total stays 438,821 because only `s` changed.
+
+---
+
+## 25. The references the app writes itself
+
+Checks 1–24 all asked about the corpus the app *reads*: the verse text,
+the tagged layers, the lexicon, the concordance. None of them asked
+about the references the app *writes* — the strings in its own curated
+reference data. The synopsis tables, the section headings, the family
+tree, the timeline, the archaeology gallery, the king list all print
+scripture references a reader taps. A reference naming a verse that does
+not exist is the same class of defect as a wrong parsing code: it states
+something untrue about the text, and the reader cannot check it.
+
+`tools/audit_reference_assets.py` is the sweep. Canon frame is KJV
+versification, the frame check 4 used.
+
+| asset | references | broken |
+|-------|-----------:|-------:|
+| section_titles.json | 4,329 | 0 |
+| family_tree.json | 665 | 0 |
+| ot_synopsis.json | 313 | **14** |
+| bible_evidence.json | 225 | 0 |
+| gospel_synopsis.json | 174 | 0 |
+| bible_timeline.json | 123 | 0 |
+| hebrew_kings.json | 104 | 0 |
+| **total** | **5,933** | **14** |
+
+Six of the seven assets are clean, and that is a result worth recording:
+4,329 hand-written section headings anchor to a verse that exists.
+
+### 25a. Fourteen references, and why twelve of them looked healthy
+
+Every one of the fourteen is in `assets/ot_synopsis.json`, imported from
+Eagle's View on 2026-08-07. The importer read a reference with
+`(\d+):(\d+)(?:-(\d+))?`, which **cannot express a range that crosses a
+chapter boundary**. The source has sixteen such ranges; twelve are in
+groups we keep, and each was silently truncated:
+
+| source | imported as | what happened |
+|--------|-------------|---------------|
+| `2Ki 23:35-24:7` | 2 Kings 23:35-24 | end verse precedes start |
+| `2Ch 29:1-31:21` | 2 Chronicles 29:1-31 | Hezekiah's three chapters → 31 verses |
+| `1Ch 21:1-22:1` | 1 Chronicles 21:1-22 | David's census → 22 verses |
+
+Seven of the twelve named a verse that cannot exist and are the visible
+half. **The other five resolve and are simply wrong** — a plausible
+range that quietly claims a fraction of the passage. Those five are the
+reason the count is fourteen and not seven: a check that only asks "does
+it resolve" finds seven, and a reader would never learn that the other
+five had lost four fifths of their text.
+
+The remaining two are upstream errors, corrected here rather than
+copied, each with its reason recorded in the asset's own `corrections`
+block so a reader of the data can see where we differ from the source:
+
+- **Group 30** reads `2Ch 1:32-33`. 2 Chronicles 1 ends at verse 17, so
+  the reference cannot be read at all. 1 Chronicles 1:32-33 is the
+  passage meant: it names Keturah, Zimran, Jokshan, Medan, Midian,
+  Ishbak and Shuah, which is the group's other passage (Genesis 25:1-4)
+  almost word for word. Checked against `assets/kjv.json`, not assumed.
+- **Group 207** reads `Psa 18:0-50`. Verse 0 is the superscription,
+  which the Hebrew numbers as verse 1 and which every edition we ship
+  folds into the heading. Starting at 1 under-claims by a line rather
+  than printing a verse number no edition has.
+
+The schema now carries `endChapter`, emitted only when a range actually
+crosses a chapter, so a reader of the JSON can see at a glance which
+twelve passages span. `assets/ot_synopsis.json` is schema 2.
+
+The same blindness was in the app's own parser: `parseReference` matched
+the cross-chapter shape and then **discarded the end**, so
+`John 18:28-19:16` — the thirty-verse trial before Pilate — was indexed
+as the single verse John 18:28. Two gospel entries were affected.
+`BibleReference` now carries `endChapter`/`endVerse`; `chapter`,
+`verseStart` and `verseEnd` are unchanged, so navigation lands exactly
+where it did and only callers that need the extent read the new fields.
+
+### 25b. Nobody could have seen any of it
+
+Measuring the data was the smaller half. The 139 groups had been
+shipping for five days and **not one of them was reachable**. The reader
+menu gated the Synopsis item on `isGospel`, so no Old Testament book
+ever offered it. `hasSynopsis`, written for exactly this, had no
+callers. The menu is built synchronously, which is why the gate is now
+`hasSynopsisSync` with a 27 KB preload when the reader mounts.
+
+This is the more useful finding of the two. A defect in data that
+nothing displays is invisible to every test that exercises the app, and
+the suite stayed green through all of it.
+
+### 25c. A map keyed by book is a silent de-duplicator
+
+The service turned each group's passages into a `Map` keyed by lowercase
+book name. Any group naming the same book twice kept only the last one.
+**35 of 139 groups did**, and **37 of 313 passages were dropped** —
+"Benjamin's Descendants" is 1 Chronicles 8:1-9:1 *and* 9:34-44, and only
+the second survived. Passages are now an ordered list, which is also
+what lets the row render an OT group at all: it built its chips by
+looking up `['Matthew','Mark','Luke','John']`, so an OT group yielded
+zero chips.
+
+This is the same shape as the lesson in
+`feedback_capped_ordered_data.md`: a container that silently discards
+what does not fit is a `WHERE` clause nobody wrote.
+
+### The tests
+
+`test/data_integrity_test.dart` walks all 5,933 references on every
+commit. It deliberately does **not** trust `parseReference` to judge a
+range: the parser clamps an end that precedes its start, because a
+reader still has to be sent somewhere, and an audit that inherited that
+clamp would have reported `2Ki 23:35-24` as healthy — which is precisely
+how the defect survived its first pass. The test checks the raw shape
+first, then resolves.
+
+Verified by perturbation, not by assumption: injecting a too-large verse,
+a backwards range and a nonexistent chapter makes the test fail with all
+three named.
+
+### Two references that name no book we ship
+
+Reported separately because neither states anything untrue:
+`bible_evidence.json` cites `Ecclesiasticus (Sirach) 39:1` for the Cairo
+Genizah, which is genuinely what was found there and is outside the
+canon of every edition we ship, and `Various NT references` for Strabo's
+Geography, which is prose rather than a citation.
 
 ---
 

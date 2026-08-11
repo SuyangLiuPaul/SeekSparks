@@ -319,6 +319,12 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
         0;
     _pageController = PageController(
         initialPage: initialChapterIdx, viewportFraction: 1.0);
+    // The reader menu asks `hasSynopsisSync` while it builds, so the
+    // Old Testament index has to be in memory before the first long
+    // press. 27 KB, read once per process.
+    SynopsisService.preload().then((_) {
+      if (mounted) setState(() {});
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final mainProvider = context.read<MainProvider>();
@@ -6998,27 +7004,32 @@ class _FloatingHeader extends StatelessWidget {
                                 'Bible Evidence',
                           ),
                         ));
-                        // Gospel Synopsis — only shown when the
-                        // current chapter belongs to one of the four
-                        // Gospels. The data is curated from public-
-                        // domain harmony tables so non-Gospel books
-                        // never have anything to show.
+                        // Synopsis — the four Gospels, plus any Old
+                        // Testament book Eagle's View files a parallel
+                        // for. Books with nothing to show do not get
+                        // the item.
                         // 2026-05-24 (v1.3.19): "Listen to chapter"
                         // menu item removed with the 朗读 feature.
-                        if (SynopsisService.isGospel(toEnglish(book) ?? '')) {
+                        final synopsisBook = toEnglish(book) ?? book;
+                        if (SynopsisService.hasSynopsisSync(synopsisBook)) {
+                          final isGospel =
+                              SynopsisService.isGospel(synopsisBook);
                           items.add(PopupMenuItem(
                             value: 'synopsis',
                             onTap: () => _showSynopsisSheet(
                               context: context,
-                              englishBook: toEnglish(book) ?? book,
+                              englishBook: synopsisBook,
                               chapter: chapter,
                               locale: locale,
                             ),
                             child: _menuRow(
                               context,
                               icon: Icons.compare_arrows_rounded,
-                              label: uiStrings['synopsis']?[locale] ??
-                                  'Gospel Synopsis',
+                              label: isGospel
+                                  ? (uiStrings['synopsis']?[locale] ??
+                                      'Gospel Synopsis')
+                                  : (uiStrings['synopsisOt']?[locale] ??
+                                      'Parallel Passages'),
                             ),
                           ));
                         }
@@ -7556,8 +7567,11 @@ class _SynopsisSheetBodyState extends State<_SynopsisSheetBody> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      uiStrings['synopsis']?[widget.locale] ??
-                          'Gospel Synopsis',
+                      SynopsisService.isGospel(widget.englishBook)
+                          ? (uiStrings['synopsis']?[widget.locale] ??
+                              'Gospel Synopsis')
+                          : (uiStrings['synopsisOt']?[widget.locale] ??
+                              'Parallel Passages'),
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
@@ -7637,11 +7651,11 @@ class _SynopsisRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final gospels = ['Matthew', 'Mark', 'Luke', 'John'];
-    final present = gospels
-        .where((g) => event.refs.containsKey(g.toLowerCase()))
-        .toList();
-    final isUnique = present.length == 1;
+    // Every passage, in source order. An Old Testament group names any
+    // books it likes and may name one of them twice, so this cannot be
+    // a lookup by Gospel name the way it was.
+    final present = event.passages;
+    final isUnique = event.isGospelHarmony && present.length == 1;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
@@ -7662,12 +7676,12 @@ class _SynopsisRow extends StatelessWidget {
             spacing: 6,
             runSpacing: 4,
             children: [
-              for (final g in present)
+              for (final p in present)
                 _RefChip(
-                  label: _shortLabel(g, event.rawRef(g.toLowerCase()) ?? ''),
-                  isCurrentGospel: g == currentBook,
+                  label: _shortLabel(p.book, p.raw),
+                  isCurrentGospel: p.book == currentBook,
                   onTap: () {
-                    final ref = event.referenceFor(g);
+                    final ref = p.reference;
                     if (ref != null) onNavigate(ref);
                   },
                 ),
@@ -7691,32 +7705,18 @@ class _SynopsisRow extends StatelessWidget {
     );
   }
 
-  /// Compact chip label like "Mt 5:1-12" (English) or
-  /// "马太 5:1-12" (Chinese). Strips the full English name from the raw
-  /// "Matthew 5:1-12" and replaces with the localized abbreviation.
-  String _shortLabel(String englishGospel, String raw) {
-    // raw looks like "Matthew 5:1-12" — take everything after the first
-    // space and prepend a localized short name.
-    final spaceIdx = raw.indexOf(' ');
-    final tail = spaceIdx > 0 ? raw.substring(spaceIdx + 1) : raw;
-    final shortBook = locale.startsWith('zh')
-        ? localeAwareBookName(englishGospel, locale, version)
-        : _enShortGospel(englishGospel);
-    return '$shortBook $tail';
-  }
-
-  String _enShortGospel(String g) {
-    switch (g) {
-      case 'Matthew':
-        return 'Matt';
-      case 'Mark':
-        return 'Mark';
-      case 'Luke':
-        return 'Luke';
-      case 'John':
-        return 'John';
-    }
-    return g;
+  /// Compact chip label like "Mat 5:1-12" or "太 5:1-12". Strips the
+  /// English book name off the raw reference and prepends the
+  /// abbreviation for the reading version's script.
+  ///
+  /// Splitting at the first space, which is what this did, turned
+  /// "2 Chronicles 26:3-15" into "Chronicles 26:3-15" — harmless while
+  /// only the four Gospels reached here, wrong for the thirteen
+  /// numbered books the OT groups name.
+  String _shortLabel(String englishBook, String raw) {
+    if (!raw.startsWith(englishBook)) return raw;
+    final tail = raw.substring(englishBook.length).trim();
+    return '${shortBookName(englishBook, locale, version)} $tail';
   }
 }
 

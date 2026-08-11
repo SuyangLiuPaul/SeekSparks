@@ -16,6 +16,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seeksparks/constants/book_names.dart';
 import 'package:seeksparks/utils/morphology.dart';
+import 'package:seeksparks/utils/reference_parser.dart';
 import 'package:seeksparks/utils/verse_list.dart' show applySearchLimit;
 import 'package:seeksparks/utils/verse_text_absence.dart';
 
@@ -829,4 +830,205 @@ void main() {
       }
     });
   });
+
+  test('every reference the app shows resolves to a verse that exists',
+      _checkReferenceCorpus);
+}
+
+// ── Check 25: every reference the app SHOWS resolves ────────────────
+//
+// The tests above check the references the TEXT is keyed by. These
+// check the ones the app puts in front of a reader as a tappable
+// string: the two synopsis tables, the section headings, the family
+// tree, the timeline, the archaeology gallery, the king list. A string
+// naming a verse that does not exist is the same class of defect as a
+// wrong transliteration — it states something untrue about the text,
+// and the reader has no way to check it.
+//
+// Canon frame is KJV versification, the frame check 4 used. The wide
+// sweep with per-asset counts lives in
+// `tools/audit_reference_assets.py`; this is the part cheap enough to
+// run on every commit.
+
+/// English book -> chapter -> last verse, from the KJV.
+Map<String, Map<int, int>> _canon() {
+  final canon = <String, Map<int, int>>{};
+  for (final v in jsonDecode(File('assets/kjv.json').readAsStringSync())
+      as List) {
+    final m = v as Map;
+    final book = m['book'] as String;
+    final c = int.parse(m['chapter'].toString());
+    final n = int.parse(m['verse'].toString());
+    final chapters = canon.putIfAbsent(book, () => <int, int>{});
+    if (n > (chapters[c] ?? 0)) chapters[c] = n;
+  }
+  return canon;
+}
+
+/// Why a reference fails, or null when every verse it names exists.
+String? _resolve(Map<String, Map<int, int>> canon, String book, int c1,
+    int? v1, int c2, int? v2) {
+  final chapters = canon[book];
+  if (chapters == null) return 'no such book: $book';
+  if (!chapters.containsKey(c1)) return '$book has no chapter $c1';
+  if (!chapters.containsKey(c2)) return '$book has no chapter $c2';
+  if (c2 < c1) return 'end chapter $c2 precedes start chapter $c1';
+  if (v1 != null && (v1 < 1 || v1 > chapters[c1]!)) {
+    return '$book $c1 has ${chapters[c1]} verses, not $v1';
+  }
+  if (v2 != null && (v2 < 1 || v2 > chapters[c2]!)) {
+    return '$book $c2 has ${chapters[c2]} verses, not $v2';
+  }
+  if (c1 == c2 && v1 != null && v2 != null && v2 < v1) {
+    return 'end verse $v2 precedes start verse $v1';
+  }
+  return null;
+}
+
+/// A range whose end precedes its start, spotted BEFORE parsing.
+///
+/// `parseReference` clamps such a range to its start verse, because a
+/// reader still has to be sent somewhere. That clamp is right for
+/// navigation and fatal for an audit: it is why `2Ki 23:35-24`, a
+/// cross-chapter range truncated at import, read as healthy for five
+/// days. Matches "12:5-3" but not "12:5-13:3".
+final _backwards = RegExp(r'(\d+)\s*:\s*(\d+)\s*[-–—]\s*(\d+)\s*$');
+
+String? _backwardsRange(String segment) {
+  final m = _backwards.firstMatch(segment.trim());
+  if (m == null) return null;
+  final start = int.parse(m.group(2)!);
+  final end = int.parse(m.group(3)!);
+  return end < start ? 'end verse $end precedes start verse $start' : null;
+}
+
+/// References the corpus states as prose rather than as a citation.
+/// Each is listed with the reason it is not a defect.
+const _notCitations = <String, String>{
+  // The Cairo Genizah's find is Ben Sira, which is outside the canon
+  // every edition we ship uses. Naming it is honest.
+  'Ecclesiasticus (Sirach) 39:1': 'deuterocanonical, not a shipped book',
+  // Strabo's Geography corroborates NT geography generally; the entry
+  // does not claim a specific verse.
+  'Various NT references': 'prose, not a citation',
+};
+
+void _checkReferenceCorpus() {
+  final canon = _canon();
+  final failures = <String>[];
+
+  /// Split "Isaiah 53; Psalm 22" and "John 18:31-33, 37-38" into parts,
+  /// carrying the book (and, for a bare "37-38", the chapter) forward.
+  /// Production navigates to the first part only; a reader reads all of
+  /// them, so all of them are checked.
+  void check(String asset, String where, String? rawOrNull) {
+    final raw = rawOrNull?.trim();
+    if (raw == null || raw.isEmpty) return;
+    BibleReference? carry;
+    for (final chunk in raw.split(';')) {
+      for (final piece in chunk.split(',')) {
+        final segment = piece.trim();
+        if (segment.isEmpty) continue;
+        if (_notCitations.containsKey(segment)) continue;
+
+        final backwards = _backwardsRange(segment);
+        if (backwards != null) {
+          failures.add('$asset  $where  "$raw" — $backwards');
+          continue;
+        }
+
+        // A part with no book of its own inherits the previous one.
+        // "Numbers only" rather than "does not begin with a letter",
+        // because thirteen books begin with a digit.
+        var text = segment;
+        if (carry != null && RegExp(r'^[\d:\s–—-]+$').hasMatch(segment)) {
+          text = segment.contains(':')
+              ? '${carry.englishBook} $segment'
+              : '${carry.englishBook} ${carry.chapter}:$segment';
+        }
+
+        final ref = parseReference(text);
+        if (ref == null) {
+          failures.add('$asset  $where  "$raw" — cannot parse "$segment"');
+          continue;
+        }
+        carry = ref;
+        final why = _resolve(canon, ref.englishBook, ref.chapter,
+            ref.verseStart, ref.endChapter ?? ref.chapter,
+            ref.endVerse ?? ref.verseEnd);
+        if (why != null) failures.add('$asset  $where  "$raw" — $why');
+      }
+    }
+  }
+
+  Map<String, dynamic> load(String name) =>
+      jsonDecode(File('assets/$name').readAsStringSync())
+          as Map<String, dynamic>;
+
+  // ot_synopsis — structured, so checked field by field rather than
+  // through a formatted string that could hide a lost end chapter.
+  for (final g in load('ot_synopsis.json')['groups'] as List) {
+    final group = g as Map<String, dynamic>;
+    for (final r in group['refs'] as List) {
+      final m = r as Map<String, dynamic>;
+      final chapter = m['chapter'] as int;
+      final endChapter = (m['endChapter'] as int?) ?? chapter;
+      final why = _resolve(canon, m['book'] as String, chapter,
+          m['start'] as int, endChapter, m['end'] as int);
+      if (why != null) {
+        failures.add('ot_synopsis.json  group ${group['id']} '
+            '${group['en']} — $why');
+      }
+    }
+  }
+
+  for (final e in load('gospel_synopsis.json')['events'] as List) {
+    final m = e as Map<String, dynamic>;
+    (m['refs'] as Map).forEach((gospel, raw) =>
+        check('gospel_synopsis.json', '${m['id']} / $gospel', raw as String?));
+  }
+
+  for (final p in load('family_tree.json')['people'] as List) {
+    final m = p as Map<String, dynamic>;
+    for (final raw in (m['refs'] as List? ?? const [])) {
+      check('family_tree.json', m['id'] as String, raw as String?);
+    }
+  }
+
+  for (final e in load('bible_timeline.json')['events'] as List) {
+    final m = e as Map<String, dynamic>;
+    for (final raw in (m['refs'] as List? ?? const [])) {
+      check('bible_timeline.json', m['id'] as String, raw as String?);
+    }
+  }
+
+  for (final e in load('bible_evidence.json')['evidences'] as List) {
+    final m = e as Map<String, dynamic>;
+    check('bible_evidence.json', m['id'] as String,
+        m['scriptureReference'] as String?);
+  }
+
+  for (final k in load('hebrew_kings.json')['kings'] as List) {
+    final m = k as Map<String, dynamic>;
+    for (final field in ['kingsRef', 'chroniclesRef', 'accessionRef']) {
+      check('hebrew_kings.json', '${m['id']} / $field',
+          m[field] as String?);
+    }
+  }
+
+  (load('section_titles.json')['sets'] as Map).forEach((set, books) {
+    (books as Map).forEach((book, chapters) {
+      (chapters as Map).forEach((chapter, titles) {
+        for (final t in titles as List) {
+          final m = t as Map<String, dynamic>;
+          check('section_titles.json', '$set / ${m['title']}',
+              '$book $chapter:${m['verse']}');
+        }
+      });
+    });
+  });
+
+  expect(failures, isEmpty,
+      reason: '${failures.length} reference(s) name a verse that does '
+          'not exist:\n${failures.join('\n')}');
 }

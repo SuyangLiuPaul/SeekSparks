@@ -56,4 +56,75 @@ void main() {
     await SynopsisService.byChapter('2 Chronicles', 26);
     expect(SynopsisService.otAttribution, contains("Eagle's View"));
   });
+
+  test('a group naming one book twice keeps both passages', () async {
+    // "Benjamin's Descendants" is 1 Chronicles 8:1-9:1 AND 9:34-44.
+    // Keying passages by book kept only the second, which is how 37 of
+    // the 313 passages went missing.
+    final events = await SynopsisService.byChapter('1 Chronicles', 8);
+    final benjamin = events.firstWhere(
+        (e) => e.localizedTitle('en').toLowerCase().contains('benjamin'));
+    final inChronicles = benjamin.passages
+        .where((p) => p.book == '1 Chronicles')
+        .toList();
+    expect(inChronicles.length, 2,
+        reason: 'both 1 Chronicles passages must survive, not just the '
+            'last one read');
+    expect(inChronicles.map((p) => p.raw),
+        containsAll(['1 Chronicles 8:1-9:1', '1 Chronicles 9:34-44']));
+  });
+
+  test('a group is listed once even when two of its passages match',
+      () async {
+    // Chapter 9 falls inside 8:1-9:1 and inside 9:34-44. The reader
+    // should see the group once.
+    final events = await SynopsisService.byChapter('1 Chronicles', 9);
+    final ids = events.map((e) => e.id).toList();
+    expect(ids.length, ids.toSet().length, reason: 'duplicate entries');
+  });
+
+  test('a passage that crosses a chapter covers the far chapter',
+      () async {
+    // Zedekiah's reign is 2 Kings 24:18-25:30. Before endChapter
+    // existed this was stored as 24:18-30 and a reader in chapter 25
+    // was told nothing.
+    final ch25 = await SynopsisService.byChapter('2 Kings', 25);
+    expect(ch25.map((e) => e.localizedTitle('en')).join(' | ').toLowerCase(),
+        contains('zedekiah'));
+    final v = await SynopsisService.byVerse('2 Kings', 25, 30);
+    expect(v.map((e) => e.localizedTitle('en')).join(' | ').toLowerCase(),
+        contains('zedekiah'));
+  });
+
+  test('a span does not swallow verses before it starts', () async {
+    // 2 Kings 24:18-25:30 starts at verse 18; verse 17 is outside it.
+    final inside = await SynopsisService.byVerse('2 Kings', 24, 18);
+    final before = await SynopsisService.byVerse('2 Kings', 24, 17);
+    bool zedekiah(List<SynopsisEvent> l) => l
+        .any((e) => e.localizedTitle('en').toLowerCase().contains('zedekiah'));
+    expect(zedekiah(inside), isTrue);
+    expect(zedekiah(before), isFalse);
+  });
+
+  test('the gospel harmony spans chapters too', () async {
+    // "John 18:28-19:16" — the trial before Pilate. Indexed as the
+    // single verse John 18:28 until endChapter existed.
+    final events = await SynopsisService.byVerse('John', 19, 16);
+    expect(events, isNotEmpty,
+        reason: 'John 19:16 is the last verse of the trial before '
+            'Pilate and must find the entry that covers it');
+  });
+
+  test('every OT passage carries the book it names', () async {
+    // The chip label strips the book name off the front of `raw`; a
+    // passage whose raw does not start with its book would render as
+    // the untouched string.
+    final events = await SynopsisService.byChapter('2 Chronicles', 26);
+    for (final e in events) {
+      for (final p in e.passages) {
+        expect(p.raw, startsWith(p.book));
+        expect(p.reference?.englishBook, p.book);
+      }
+    }
+  });
 }
