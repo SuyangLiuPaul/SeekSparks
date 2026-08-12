@@ -22,30 +22,6 @@ List<InlineSpan> buildVerseContentSpans({
 }) {
   final isReferenceLine = verse.paragraphType == 'reference';
 
-  // 2026-05-07: pre-process the raw text to drop stray spaces sitting
-  // between a [/{/<note: annotation and adjacent CJK characters.
-  // Several CUVS-Yahweh verses ship with English-style spacing
-  // around bracketed alternatives (e.g. `主[雅伟] 的道`) which leaves
-  // a visible gap between the annotation and the following Chinese
-  // character. `collapseAnnotationSpacing` is CJK-aware so it does
-  // not affect English contexts like `the [LORD] God`.
-  //
-  // 2026-05-19 (v1.2.57): keep INTERNAL `\n` characters so OT-quote
-  // poetry (LJK2 / biblexg-v2 verses with `paragraphType: 'reference'`)
-  // renders with the line breaks the upstream data marked — e.g.
-  // Matt 2:6 quoting Micah 5:2 now lays out as 5 stanzas instead of
-  // one run-on line. Only TRAILING whitespace (including the LEB-
-  // style `…earth--\n` trailing newline) is stripped via `trimRight`.
-  final original =
-      collapseAnnotationSpacing(verse.text.trimRight());
-  final raw = original;
-  final parts = raw
-      .splitMapJoin(
-        combinedPattern,
-        onMatch: (m) => '||${m[0]}||',
-        onNonMatch: (n) => n,
-      )
-      .split('||');
   final spans = <InlineSpan>[];
   // Verse number span — uses the theme primary color in both modes
   // so the user's chosen color tints all reading-surface chrome
@@ -91,7 +67,10 @@ List<InlineSpan> buildVerseContentSpans({
           ));
           return;
         }
-        final toCopy = '${verse.verseLabel} ${sanitizeVerseText(verse.text)}';
+        final body = verse.superscription.isEmpty
+            ? verse.text
+            : '${verse.superscription} ${verse.text}';
+        final toCopy = '${verse.verseLabel} ${sanitizeVerseText(body)}';
         final ok = await ClipboardHelper.copyText(toCopy);
         if (!context.mounted) return;
         final msg = ok
@@ -153,7 +132,64 @@ List<InlineSpan> buildVerseContentSpans({
     return spans;
   }
 
-  // Build text and badge spans
+  spans.addAll(buildAnnotatedSpans(
+    raw: verse.text,
+    context: context,
+    settings: settings,
+    locale: locale,
+    isSelected: isSelected,
+    italic: isReferenceLine,
+    onTextTap: onTextTap,
+    spanBgColor: spanBgColor,
+  ));
+
+  return spans;
+}
+
+/// The annotation-aware half of [buildVerseContentSpans]: turns one raw
+/// scripture string — with its `{clarification}`, `[supplied]`,
+/// `<note: …>` and `<vs: …>` markup — into spans, knowing nothing about
+/// verses or verse numbers.
+///
+/// 2026-08-12 (docs/DATA-INTEGRITY.md check 31): extracted so a psalm
+/// superscription can render through exactly this path. A
+/// superscription is scripture carrying the same markup — the LEB's
+/// 116 all end in `<note: The Hebrew Bible counts the superscription as
+/// the first verse of the psalm…>` — but it is printed above a verse
+/// number rather than after one, so it cannot go through the verse
+/// wrapper.
+List<InlineSpan> buildAnnotatedSpans({
+  required String raw,
+  required BuildContext context,
+  required AppSettings settings,
+  required String locale,
+  required bool isSelected,
+  bool italic = false,
+  double? fontSize,
+  VoidCallback? onTextTap,
+  Color? spanBgColor,
+}) {
+  final fs = fontSize ?? settings.fontSize;
+  // 2026-05-07: drop stray spaces between a `[`/`{`/`<note:` annotation
+  // and an adjacent CJK character — several CUVS-Yahweh verses ship
+  // English-style spacing (`主[雅伟] 的道`) which leaves a visible gap.
+  // `collapseAnnotationSpacing` is CJK-aware, so English contexts like
+  // `the [LORD] God` are untouched.
+  //
+  // 2026-05-19 (v1.2.57): INTERNAL `\n` survives, so OT-quote poetry
+  // (LJK2 / biblexg-v2 `paragraphType: 'reference'`) keeps the line
+  // breaks the upstream data marked — Matt 2:6 quoting Micah 5:2 lays
+  // out as 5 stanzas, not one run-on line. Only TRAILING whitespace
+  // (including the LEB-style `…earth--\n`) goes.
+  final src = collapseAnnotationSpacing(raw.trimRight());
+  final parts = src
+      .splitMapJoin(
+        combinedPattern,
+        onMatch: (m) => '||${m[0]}||',
+        onNonMatch: (n) => n,
+      )
+      .split('||');
+  final spans = <InlineSpan>[];
   String? lastPart;
   for (var part in parts) {
     final isNoteOnly =
@@ -174,7 +210,7 @@ List<InlineSpan> buildVerseContentSpans({
       spans.add(TextSpan(
         text: '($ref) ',
         style: TextStyle(
-          fontSize: settings.fontSize * 0.8,
+          fontSize: fs * 0.8,
           fontFamily: settings.fontFamily,
           fontFamilyFallback: kCjkFontFallback,
           height: settings.lineSpacing,
@@ -203,7 +239,7 @@ List<InlineSpan> buildVerseContentSpans({
         alignment: PlaceholderAlignment.middle,
         child: GestureDetector(
           onTap: () {
-            final verseText = verse.text.replaceAll('\n', '');
+            final verseText = src.replaceAll('\n', '');
             final braceFull = '{$annotation}';
             final braceIndex = verseText.indexOf(braceFull);
             String? extractedNote;
@@ -235,7 +271,7 @@ List<InlineSpan> buildVerseContentSpans({
                     child: Text(
                       uiStrings['ok']?[locale] ?? 'OK',
                       style: TextStyle(
-                        fontSize: settings.fontSize,
+                        fontSize: settings.fontSize, // dialog chrome
                         fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
                       ),
                     ),
@@ -280,7 +316,7 @@ List<InlineSpan> buildVerseContentSpans({
                       badgeSpans.add(TextSpan(
                         text: annotation.substring(lastEnd, match.start),
                         style: TextStyle(
-                          fontSize: settings.fontSize,
+                          fontSize: fs,
                           fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
                           height: settings.lineSpacing,
                           color: bodyColor,
@@ -291,7 +327,7 @@ List<InlineSpan> buildVerseContentSpans({
                     badgeSpans.add(TextSpan(
                       text: text,
                       style: TextStyle(
-                        fontSize: settings.fontSize,
+                        fontSize: fs,
                         fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
                         height: settings.lineSpacing,
                         decoration: TextDecoration.underline,
@@ -315,7 +351,7 @@ List<InlineSpan> buildVerseContentSpans({
                     badgeSpans.add(TextSpan(
                       text: annotation.substring(lastEnd),
                       style: TextStyle(
-                        fontSize: settings.fontSize,
+                        fontSize: fs,
                         fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
                         height: settings.lineSpacing,
                         color: bodyColor,
@@ -328,7 +364,7 @@ List<InlineSpan> buildVerseContentSpans({
                   return Text(
                     annotation,
                     style: TextStyle(
-                      fontSize: settings.fontSize,
+                      fontSize: fs,
                       fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
                       height: settings.lineSpacing,
                       color: bodyColor,
@@ -363,7 +399,7 @@ List<InlineSpan> buildVerseContentSpans({
             ? (TapGestureRecognizer()..onTap = onTextTap)
             : null,
         style: TextStyle(
-          fontSize: settings.fontSize,
+          fontSize: fs,
           fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
           height: settings.lineSpacing,
           decoration: TextDecoration.underline,
@@ -410,7 +446,7 @@ List<InlineSpan> buildVerseContentSpans({
                     child: Text(
                       uiStrings['ok']?[locale] ?? 'OK',
                       style: TextStyle(
-                        fontSize: settings.fontSize,
+                        fontSize: settings.fontSize, // dialog chrome
                         fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
                       ),
                     ),
@@ -431,7 +467,7 @@ List<InlineSpan> buildVerseContentSpans({
               // the prose flow. biblexg-v2 (~1,133 notes across NT)
               // and LEB (~23k) both render this way.
               Icons.notes_rounded,
-              size: settings.fontSize * 0.9,
+              size: fs * 0.9,
               // 2026-06-30: accent colour (was a faint onSurfaceVariant grey)
               // so the footnote marker reads clearly as a tappable notation,
               // matching the coloured [...] insertions above.
@@ -459,13 +495,13 @@ List<InlineSpan> buildVerseContentSpans({
             ? (TapGestureRecognizer()..onTap = onTextTap)
             : null,
         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              fontSize: settings.fontSize,
+              fontSize: fs,
               height: settings.lineSpacing,
               color: isSelected
                   ? Theme.of(context).colorScheme.onPrimaryContainer
                   : Theme.of(context).textTheme.bodyLarge?.color,
               fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-              fontStyle: isReferenceLine ? FontStyle.italic : FontStyle.normal,
+              fontStyle: italic ? FontStyle.italic : FontStyle.normal,
               backgroundColor: spanBgColor,
             ),
       ));

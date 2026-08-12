@@ -7,6 +7,7 @@ import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/services/error_reporter.dart';
 import 'package:seeksparks/services/fetch_books.dart'
     show bookNameToEnglish, standardBookOrder;
+import 'package:seeksparks/utils/psalm_superscription.dart';
 import 'package:seeksparks/utils/verse_text_absence.dart';
 
 /// Lightweight record of paragraph metadata for one verse, used when applying
@@ -348,6 +349,17 @@ class FetchVerses {
     } else {
       throw Exception('Unsupported verse JSON format');
     }
+
+    // 2026-08-12 (docs/DATA-INTEGRITY.md check 31): before the filter
+    // below throws away everything non-numeric, lift out the records
+    // that are non-numeric on purpose. `assets/leb.json` numbers its
+    // 116 psalm superscriptions `title` — they are the only non-integer
+    // verse numbers in the repository, and this filter had silently
+    // discarded every one of them since the LEB was imported, so no
+    // reader has ever seen "A prayer of Moses, the man of God." above
+    // Psalm 90. They ride on verse 1; see
+    // `lib/utils/psalm_superscription.dart` for why not as a verse.
+    rawList = foldSuperscriptions(rawList).records;
 
     // Filter out entries where verse is non-numeric
     rawList = rawList

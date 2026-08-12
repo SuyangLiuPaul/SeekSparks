@@ -62,6 +62,7 @@ class _BrowseRow {
     this.rtl = false,
     this.absence,
     this.mergedWith,
+    this.superscription = '',
   });
 
   final int verse;
@@ -100,6 +101,12 @@ class _BrowseRow {
   /// For [VerseAbsence.merged], the verse whose text this one is printed
   /// under. Resolved per version because the merges differ by edition.
   final int? mergedWith;
+
+  /// The psalm title this edition prints above the verse, where it ships
+  /// one as its own record. Only `leb` does; the other editions that
+  /// carry a superscription have it merged into verse 1's text, and it
+  /// renders as part of the verse. docs/DATA-INTEGRITY.md check 31.
+  final String superscription;
 }
 
 /// What the mouse is currently over, reported to the status bar and the
@@ -312,22 +319,27 @@ class _BrowseWindowState extends State<BrowseWindow> {
     // which is `1-4` where two or more verses share a block. Kept
     // separate from the text because it answers a different question.
     final labels = <String, Map<int, String>>{};
+    // version code -> {verse number: the psalm title printed above it}.
+    final supers = <String, Map<int, String>>{};
     var lastVerse = 0;
     for (var i = 0; i < widget.versionCodes.length; i++) {
       final verses = loaded[i];
       if (verses == null) continue;
       final map = <int, String>{};
       final label = <int, String>{};
+      final title = <int, String>{};
       for (final v in verses) {
         if (v.chapter != widget.chapter) continue;
         if ((bookNameToEnglish[v.book] ?? v.book) != widget.book) continue;
         map[v.verse] = v.text;
         label[v.verse] = v.verseLabel;
+        if (v.superscription.isNotEmpty) title[v.verse] = v.superscription;
         if (v.verse > lastVerse) lastVerse = v.verse;
       }
       if (map.isNotEmpty) {
         byVersion[widget.versionCodes[i]] = map;
         labels[widget.versionCodes[i]] = label;
+        supers[widget.versionCodes[i]] = title;
       }
     }
     if (lastVerse == 0) return const [];
@@ -450,6 +462,7 @@ class _BrowseWindowState extends State<BrowseWindow> {
           runs: runs,
           absence: absence,
           mergedWith: absentHead ?? mergedHeads[code]?[n],
+          superscription: supers[code]?[n] ?? '',
         ));
         first = false;
       }
@@ -655,7 +668,15 @@ class _RowView extends StatelessWidget {
           children: [
             WbVersionTag(code: row.code, width: gutterWidth),
             Expanded(
-              child: row.words != null
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Above the line, in this edition's column only — the
+                  // other editions print their title inside verse 1.
+                  if (row.superscription.isNotEmpty)
+                    _SuperscriptionLine(
+                        text: row.superscription, settings: settings),
+                  row.words != null
                   ? _OriginalsLine(
                       row: row,
                       glosses: glosses,
@@ -692,6 +713,8 @@ class _RowView extends StatelessWidget {
                                   settings: settings,
                                   highlight: highlight),
                         ),
+                ],
+              ),
             ),
           ],
         ),
@@ -807,6 +830,66 @@ class _TranslationLine extends StatelessWidget {
         height: t.lineHeight,
         fontFamily: t.fontFamily,
         fontFamilyFallback: kCjkFontFallback,
+      ),
+    );
+  }
+}
+
+/// 2026-08-12 (docs/DATA-INTEGRITY.md check 31): the psalm title an
+/// edition prints above verse 1. Its own line above the verse rather
+/// than a row of its own: no other edition has a reference there, so a
+/// row would print "this edition does not carry this verse" in every
+/// other column for something three of them do carry, merged into
+/// their verse 1.
+class _SuperscriptionLine extends StatelessWidget {
+  const _SuperscriptionLine({required this.text, required this.settings});
+
+  final String text;
+  final AppSettings settings;
+
+  @override
+  Widget build(BuildContext context) {
+    final wb = WbColors.of(context);
+    final t = WbType.of(context);
+    return Text.rich(
+      TextSpan(
+        children: [
+          for (final span in parseScripture(text))
+            switch (span.kind) {
+              ScriptureSpanKind.note => WidgetSpan(
+                  alignment: PlaceholderAlignment.top,
+                  child: Tooltip(
+                    message: span.text,
+                    triggerMode: TooltipTriggerMode.tap,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 1),
+                      child: Text(
+                        'n',
+                        style: TextStyle(
+                          fontSize: t.chrome * 0.85,
+                          fontWeight: FontWeight.w700,
+                          color: wb.link,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ScriptureSpanKind.divineName ||
+              ScriptureSpanKind.gloss =>
+                glossSpan(span, wb),
+              ScriptureSpanKind.versification =>
+                versificationSpan(span, wb, fontSize: t.text * 0.8),
+              _ => TextSpan(text: span.text),
+            },
+        ],
+      ),
+      style: TextStyle(
+        fontSize: t.text * 0.92,
+        height: t.lineHeight,
+        fontFamily: t.fontFamily,
+        fontFamilyFallback: kCjkFontFallback,
+        fontStyle: FontStyle.italic,
+        color: wb.mutedText,
       ),
     );
   }

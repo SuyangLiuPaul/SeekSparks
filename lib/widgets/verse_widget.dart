@@ -9,6 +9,7 @@ import 'package:seeksparks/utils/haptics.dart';
 import 'package:seeksparks/utils/responsive.dart';
 import 'package:seeksparks/widgets/bible_reading_pane.dart' show showNoteEditor;
 import 'package:seeksparks/widgets/block_note_card.dart';
+import 'package:seeksparks/widgets/superscription_line.dart';
 
 /// Renders a single verse. Used by:
 ///   - Verse-by-verse mode for every verse
@@ -202,6 +203,16 @@ class VerseWidget extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 if (topGap > 0) SizedBox(height: topGap),
+                // 2026-08-12 (check 31): the psalm title, above the
+                // verse it is printed above. Outside the Stack, so the
+                // selection tint below covers verse 1 and not the
+                // title — they are different verses in the Hebrew.
+                if (verse.superscription.isNotEmpty)
+                  SuperscriptionLine(
+                    text: verse.superscription,
+                    settings: settings,
+                    leftIndent: leftIndent,
+                  ),
                 Stack(
                   children: [
                     Container(

@@ -10,6 +10,7 @@ import 'package:seeksparks/utils/build_verse_content_spans.dart';
 import 'package:seeksparks/utils/responsive.dart';
 import 'package:seeksparks/widgets/bible_reading_pane.dart' show showNoteEditor;
 import 'package:seeksparks/widgets/block_note_card.dart';
+import 'package:seeksparks/widgets/superscription_line.dart';
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 
 /// Renders a group of consecutive verses as one flowing paragraph (RichText).
@@ -300,6 +301,15 @@ class ParagraphGroupWidget extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 if (topGap > 0) SizedBox(height: topGap),
+                // 2026-08-12 (check 31): the psalm title. Verse 1 always
+                // opens a paragraph, so the title can only ever belong
+                // to the verse this block starts with.
+                if (group.first.superscription.isNotEmpty)
+                  SuperscriptionLine(
+                    text: group.first.superscription,
+                    settings: settings,
+                    leftIndent: blockPadding.left,
+                  ),
                 Container(
                   width: double.infinity,
                   padding: blockPadding,

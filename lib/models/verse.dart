@@ -25,6 +25,15 @@ class Verse {
   /// LJK2 / biblexg-v2).
   final List<String> blockNotes;
 
+  /// The psalm title printed above this verse, where the edition ships
+  /// one as its own record — *"A prayer of Moses, the man of God."* It
+  /// is scripture, not a heading: the Masoretic text numbers it as the
+  /// psalm's first verse, which is why the English numbering runs one
+  /// or two behind the Hebrew for 116 psalms. Empty on every verse of
+  /// every other edition. See `lib/utils/psalm_superscription.dart` for
+  /// why it rides on verse 1 rather than becoming a verse of its own.
+  final String superscription;
+
   /// For a reference the edition prints under an earlier verse's number
   /// (the 和合本's 見上節), the verse number that actually carries the
   /// text. Null everywhere else, including on a merged reference whose
@@ -44,6 +53,7 @@ class Verse {
     this.isParagraphStart = false,
     this.paragraphType = 'inline',
     this.blockNotes = const [],
+    this.superscription = '',
     this.mergedWith,
   }) : verseLabel = verseLabel ?? '$verse';
 
@@ -69,6 +79,7 @@ class Verse {
     bool? isParagraphStart,
     String? paragraphType,
     List<String>? blockNotes,
+    String? superscription,
     int? mergedWith,
   }) {
     return Verse(
@@ -80,6 +91,7 @@ class Verse {
       isParagraphStart: isParagraphStart ?? this.isParagraphStart,
       paragraphType: paragraphType ?? this.paragraphType,
       blockNotes: blockNotes ?? this.blockNotes,
+      superscription: superscription ?? this.superscription,
       mergedWith: mergedWith ?? this.mergedWith,
     );
   }
@@ -115,6 +127,7 @@ class Verse {
       isParagraphStart: json['isParagraphStart'] as bool? ?? false,
       paragraphType: (json['paragraphType'] as String?) ?? 'inline',
       blockNotes: blockNotes,
+      superscription: (json['superscription'] as String?) ?? '',
     );
   }
 }

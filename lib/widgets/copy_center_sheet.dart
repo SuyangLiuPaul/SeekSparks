@@ -159,7 +159,14 @@ class _CopyCenterDialogState extends State<_CopyCenterDialog> {
       final english = bookNameToEnglish[v.book] ?? v.book;
       _bookLabels.putIfAbsent(english, () => v.book);
       final key = '$english-${v.chapter}-${v.verse}';
-      if (keys.contains(key)) out[key] = v.text;
+      // The psalm title goes on the clipboard as part of verse 1. The
+      // app keeps it typed so it can be SET apart; a pasted handout has
+      // no type system, and running it into the verse is what the
+      // publishers of the other three editions that carry one did.
+      if (keys.contains(key)) {
+        out[key] =
+            v.superscription.isEmpty ? v.text : '${v.superscription} ${v.text}';
+      }
     }
     return out;
   }

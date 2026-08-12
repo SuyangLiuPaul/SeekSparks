@@ -96,6 +96,9 @@ believe it is fine" and "we looked".
 | 29a | References an edition does not carry, and what the reader saw there | 295,418 records / 31,102 refs | **426 rendered as nothing** → **0** | **fixed**, now a test |
 | 29b | Are the Septuagint's absences its own text, or our loss | 304 absences vs an *external* LXX | **2 were our loss** → **0** | **fixed** by `tools/repair_lxx_transposed_verses.py` |
 | 29c | Every absence sits in a chapter the edition otherwise carries | 424 absences / 11 editions | **0** | clean, now a test — the display rule depends on it |
+| 31a | `assets/kjvs.json` against three external KJV witnesses | 30,708 unanimous verses | **0 departures** | clean — and it sharpens check 27's finding about `kjv.json` |
+| 31b | Verse records the loader silently discards | 357,738 records / 13 editions | **116 psalm titles, unreachable since import** → **0** | **fixed**, now a test |
+| 31c | Verse text padded with whitespace | 357,738 records / 13 editions | **31,199, all of them `leb`** → **0** | **fixed** by `tools/repair_verse_whitespace.py`, now a test |
 
 ---
 
@@ -2612,6 +2615,210 @@ not in the file to move.
 
 ---
 
+## Check 31 — the last English editions, and what the loader was throwing away
+
+2026-08-12, against v1.6.118. "Next, in order" item 1: the English
+editions check 27 could not reach, because it had witnesses for BSB and
+`kjv.json` and stopped there. `assets/kjvs.json` — the edition the app
+labels **KJV+S** — had never been held against anything outside this
+repository.
+
+The witnesses were already cached from check 27 and cost nothing to
+reuse: `api.getbible.net/v2/kjv` (CrossWire, Blayney 1769),
+openbible.com's Pure Cambridge Edition, and scrollmapper's
+`bible_databases`. Same normalisation as check 27 — NFKC, curly quotes
+folded, lowercased, everything outside `[a-z0-9 ]` dropped, whitespace
+collapsed — so the comparison is about words, not typography.
+
+### 31a — `kjvs.json` is the King James Version, and that is the finding
+
+Of 31,102 comparable verses the three witnesses are **unanimous on
+30,708**. On those:
+
+| edition | departures from the unanimous reading |
+|---|---:|
+| `assets/kjvs.json` | **0** |
+| `assets/kjv.json` | 699 |
+
+Zero is the whole result. There is nothing to repair and nothing to
+freeze beyond what check 27 already froze — but a negative result here
+answers a question the previous check left standing, because the two
+files disagree with **each other** in **894 verses**, and now we know
+which one is departing:
+
+| class | verses | examples |
+|---|---:|---|
+| orthography | 757 | show/shew ×67, showed/shewed ×57, cherubim/cherubims ×41, neighbor/neighbour ×40, savor/savour ×40, valor/valour ×36, honor/honour ×34, carcass/carcase ×32, brazen/brasen ×23, jubilee/jubile ×22, inquired/enquired ×21 — 185 distinct shapes |
+| psalm superscriptions | 117 | `kjv.json` has no *"To the chief Musician, A Psalm of David"* anywhere |
+| Psalm 119 acrostic letters | 20 | `kjv.json` has no *ALEPH*, *BETH*, *CAPH*… |
+
+Every one of the 757 is Americanised spelling, which check 27 already
+ruled to be this edition's own and left alone. The other 137 are not
+spelling: they are **words the edition does not have**, and the three
+witnesses all have them.
+
+So the app ships two editions labelled from the King James tradition,
+and the one labelled **KJV+S** is the King James Version while the one
+labelled **KJV** is the revision. That is not a new decision — it is
+item 0 of "Next, in order" (#285), the owner's call, and stated here
+only because this check makes it sharper than check 27 could: the
+correct text is *already in the repository*, under the other name.
+
+**Deliberately not done:** the superscriptions and acrostic letters were
+not restored to `kjv.json`. A systematic absence is an edition; 117 of
+150 psalms is systematic. Restoring them would produce a fourth text
+that is neither the file we imported nor the KJV.
+
+### 31b — 116 psalm titles nobody has ever seen
+
+Asking a different question of the same corpus — *what does the loader
+refuse to load?* — found the defect.
+
+`assets/leb.json` ships **116 records whose `verse` field is the string
+`title`**:
+
+```json
+{ "book": "Psalms", "chapter": "3", "verse": "title",
+  "text": "A psalm of David at his fleeing from the presence of Absalom,
+           his son.<note: The Hebrew Bible counts the superscription as
+           the first verse of the psalm; the English verse number is
+           reduced by one>" }
+```
+
+They are the **only** non-integer verse numbers anywhere in the
+repository — measured, across all 13 editions and 357,738 records, not
+assumed — and `FetchVerses` discarded every one of them at load:
+
+```dart
+// Filter out entries where verse is non-numeric
+rawList = rawList.where((m) => int.tryParse(...) != null)
+```
+
+So **no reader has ever seen one**. This is the same shape as check 25b,
+where 139 Old-Testament synopsis groups existed in the assets and
+nothing in the app could open them: the data is present, correct and
+complete, and unreachable.
+
+That it is complete is checkable without trusting the import. 116 titled
+psalms leaves 34 untitled, and the 34 are **exactly** the traditional
+list of psalms that carry no Hebrew superscription — 1, 2, 10, 33, 43,
+71, 91, 93–97, 99, 104–107, 111–119, 135–137, 146–150. A dropped title
+would appear there as an extra number, so the outside witness costs
+nothing and the import passes it.
+
+There is a second thing in those records. The footnote each one carries
+— *"The Hebrew Bible counts the superscription as the first verse of the
+psalm; the English verse number is reduced by one"* — is the fact
+`assets/versification.json` had to be **derived** for check 9, the check
+that found the reader's verse number is not the original's. The LEB says
+it plainly, inside data we were discarding.
+
+**Why it attaches to verse 1 rather than becoming a verse.** The obvious
+alternative is to number the record 0 and let it flow through as an
+ordinary verse. Browse makes that wrong visible: no other edition has a
+reference there, so every other column would print 116 rows of *"this
+edition does not carry this verse"* — and `kjvs`, `bsb` and `lxxwh` all
+**do** carry the superscription, merged into their verse 1 (that is what
+31a's 117 are). Inventing a reference to hold it would make the app
+state something untrue about three editions in order to render one
+correctly.
+
+The other alternative — prepending it to `text` — makes it reachable
+everywhere at once and is what those three editions' publishers did. It
+was rejected for the reader and Browse and **taken for the clipboard**,
+which is the distinction worth recording: in the app the title is a
+typed field, set apart the way a printed Bible sets it; on the
+clipboard, a plain-text artifact with no type system, it runs into verse
+1 exactly as `kjvs` prints it. `scripture_markup.dart` argues at length
+that the answer to "two different things in one string" is a type rather
+than a flattening; a flattening is still the right answer at the one
+boundary where types cannot survive.
+
+`foldSuperscriptions` is deliberately narrow: anything non-numeric that
+is *not* a superscription is left for the loader's own filter to reject,
+so the fold cannot quietly widen what the app accepts. The test asserts
+that too.
+
+### 31c — 31,199 verses padded with whitespace
+
+`assets/leb.json` is the only edition whose verses end in whitespace,
+and it is not a few of them — **all 31,199** close with a newline
+(`"…the heavens and the earth--\n"`). Every other edition: **0**. Check
+27c already ruled this class a defect rather than an editorial choice;
+the reason it survived is that `test/kjv_integrity_test.dart` asserted it
+over three of the eleven bundled editions, because check 27 was a KJV
+investigation.
+
+The reader never showed it — `buildAnnotatedSpans` calls `trimRight()`
+and every sanitiser in `text_patterns.dart` ends in `.trim()`. **Browse
+did.** It hands the raw string to `parseScripture`, which strips markup
+and nothing else, so every LEB row in the compare pane stood a blank
+line taller than the editions beside it.
+
+Repaired by `tools/repair_verse_whitespace.py` — verify by default,
+`--write` to apply, idempotent, and re-serialising to the byte-identical
+`json.dumps(indent=2, ensure_ascii=False)` shape the file already had, so
+the 31,199-line diff contains nothing but the repair. Proved before
+committing: every record's non-`text` fields are unchanged and every
+changed `text` differs from its original by exactly `strip()`.
+
+Internal newlines are untouched. LJK2 and biblexg-v2 mark OT-quote
+poetry with them and `build_verse_content_spans.dart` documents that
+they must survive.
+
+### Two verses that look like the same defect and are not
+
+Running check 27's "a space before its punctuation" pattern over the
+whole corpus rather than three files finds exactly two more, and neither
+is check 27's defect. Both are recorded in the test by id rather than
+repaired, which is what stops a third from arriving unnoticed:
+
+- **LEB Judges 14:6** — `( he was bare-handed )`, padding inside the
+  publisher's own parenthesis. Typography, not wording; and this
+  repository holds no external LEB witness to check a repair against.
+- **NASB Jeremiah 29:28** — `’ ?” ’ ”`. Those are U+2009 THIN SPACEs
+  holding four nested closing quotes apart, which is correct
+  typesetting. `scripture_markup.dart` already documents the same 608
+  thin spaces as deliberate, and a blunt repair would have deleted them.
+
+### What was deliberately NOT changed
+
+- **`kjv.json`'s missing superscriptions and acrostic letters.** See 31a.
+- **`kjv.json`'s label.** Item 0 of "Next, in order", #285, the owner's
+  call, and not a thing to decide unattended.
+- **`assets/nasb.json` against a witness.** No public-domain NASB exists
+  and the Eagle's View edition is licensed. Item 1 closes for every
+  edition that *can* be witnessed; NASB is not one of them, and saying so
+  is the honest state rather than a gap.
+- **Search.** The superscription renders, and it is **not indexed** —
+  `MainProvider.searchKeys` and `wordKeys` still read `verse.text` alone,
+  so a reader searching *"Nathan the prophet"* finds 2 Samuel and not
+  Psalm 51's title. This is a gap and it was left open on purpose: a hit
+  reported against a verse whose visible words do not contain the query
+  reads as a bug, and doing it properly means teaching the result rows
+  and the KWIC snippet where the extra text lives. Recorded in "Next, in
+  order".
+- **LEB Judges 14:6's parenthesis.** See above.
+
+### Frozen
+
+- `test/psalm_superscription_test.dart` — `foldSuperscriptions` at the
+  unit level (attach, no cross-chapter attach, orphan counted rather than
+  guessed at, identity passthrough when an edition has no titles,
+  duplicate titles kept in order); and against the asset: 116 titles all
+  in Psalms, the 34 untitled psalms as an exact list, all 116 attaching
+  with 0 orphans, nothing non-numeric surviving the fold, Psalm 51's
+  title naming Nathan, and **no other edition writing a non-numeric verse
+  number** — so a second edition's convention cannot start attaching
+  silently.
+- `test/edition_text_integrity_test.dart` — no padded verse, no
+  conversion pipe, over **every** committed edition rather than three;
+  and the space-before-punctuation pattern over the whole corpus with the
+  two verses above named.
+- `tools/repair_verse_whitespace.py` — the repair, re-runnable.
+
+---
+
 ## Not checked yet
 
 - Verse **text** itself, against an *external* witness — for the
@@ -2627,11 +2834,13 @@ not in the file to move.
   **English** half for the two editions that had a public-domain witness:
   BSB is clean at 100.0000% and `kjv.json` is measured against three
   independent KJV texts, 101 errors repaired and 748 orthographic
-  departures documented as this edition's own. **What remains unchecked
-  is the English editions with no external witness** — chiefly the
-  remaining modern translations, where a verse that is wrong and
-  well-formed and agrees with our own second copy would still not be
-  found.
+  departures documented as this edition's own. Check 31 closes it for the
+  last English edition that could be witnessed: `kjvs.json` departs from
+  the three unanimous KJV witnesses in **0 of 30,708** verses. **What
+  remains unchecked is `assets/nasb.json`**, and it is not a gap that
+  effort closes — no public-domain NASB exists and the Eagle's View
+  edition is licensed. A verse there that is wrong and well-formed and
+  agrees with our own second copy would still not be found.
 - `section_titles.json`, `book_introductions.json`, `bible_evidence.json`,
   `maps_index.json` (see #300 for its provenance gap), `family_tree.json`
   relationships, `ot_synopsis.json` alignments.
@@ -2663,13 +2872,21 @@ not in the file to move.
    Either relabel it, or replace it with a text that is what the label
    says; both are the owner's call and neither should be taken
    unattended.
-1. **The remaining English editions against an external witness.** Check
-   27 did BSB and KJV because those two have public-domain witnesses.
-   The method now exists as a working instrument, and the question for
-   each remaining edition is only whether a witness can be had under
-   terms we can use — which is worth *testing* rather than assuming, as
-   this entry's previous wording proves: it asserted no witness existed
-   for BSB or KJV, and four were found on the first attempt.
+1. **The psalm superscriptions are not searchable.** Check 31b made 116
+   psalm titles visible in the reader, in Browse and on the clipboard,
+   and stopped at search: `MainProvider.searchKeys` and `wordKeys` read
+   `verse.text` alone, so *"Nathan the prophet"* does not find Psalm 51.
+   Including them in the key is one line and is **not** the work — a hit
+   whose words the result row cannot show reads as a bug, so the result
+   rows, the KWIC snippet and the jump-to-verse highlight all have to
+   learn where the extra text lives. Left open deliberately rather than
+   half-done.
+
+   *(This list's previous item 1, "the remaining English editions against
+   an external witness", is closed by check 31a for every edition that
+   can be witnessed. `assets/nasb.json` cannot be — no public-domain NASB
+   exists — so it moved to "Not checked yet" as a standing limitation
+   rather than a task.)*
 2. **Matthew 12:47**, the one New-Testament absence in `lxxwh` and all
    that is left of check 29's item 2 — the 梁家鏗譯本 editions' 38 and
    34 are classified in check 30, which found and repaired two live
