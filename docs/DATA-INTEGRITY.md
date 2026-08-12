@@ -3159,6 +3159,15 @@ key is a character on screen.
   verse that prints those words adjacent — but it is the one place where
   key and display diverge on purpose, and it is recorded here rather
   than left to be rediscovered.
+- **A supplied word is never highlighted, even when it is part of the
+  hit.** Browse splits only `ScriptureSpanKind.plain` on the search
+  terms; `supplied` renders whole. So `music director` now *finds* the
+  55 psalms and marks only `director`. Verified on screen at v1.6.121
+  and left alone: it is **pre-existing** — the old key held
+  `the[music]director`, so a one-word `music` query already matched and
+  already went unmarked — and closing it changes verse rendering for
+  all 17,932 bracket-bearing verses, which is a wider blast radius than
+  a cosmetic gap earns in the same pass as the correctness fix.
 
 ### Frozen
 
