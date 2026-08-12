@@ -88,6 +88,24 @@ CORRECTIONS = {
     },
 }
 
+# 2026-08-12 (check 35). Seven English titles the source misspells,
+# each contradicted by the passage the group itself points at. See
+# tools/repair_ot_synopsis_titles.py, which holds the evidence for each
+# and applies the same seven to the shipped asset; they are duplicated
+# here so a re-import from the source does not undo the repair.
+# `Bezalel` (group 17) is a modern-spelling convention against the KJV's
+# `Bezaleel` and is deliberately left alone.
+TITLE_CORRECTIONS = {
+    '17': ('Bezalel and Oholiah', 'Bezalel and Oholiab'),
+    '27': ("Jepheth's Descendants", "Japheth's Descendants"),
+    '57': ("Settler's in Jerusalem after Exile",
+           'Settlers in Jerusalem after Exile'),
+    '157': ("Athaliah's Assasination", "Athaliah's Assassination"),
+    '165': ("Johoash's Death", "Jehoash's Death"),
+    '186': ("Hezekiah's Illneess", "Hezekiah's Illness"),
+    '188': ("Manesseh's Reign", "Manasseh's Reign"),
+}
+
 def export(db, table):
     out = subprocess.run(['mdb-export', str(db), table],
                          capture_output=True, text=True, check=True).stdout
@@ -146,9 +164,15 @@ def main():
             dropped += 1
             continue
         s = sc.get(gid, {})
+        en_title = (e.get('Desc') or '').strip()
+        fix = TITLE_CORRECTIONS.get(gid)
+        if fix and en_title == fix[0]:
+            applied.append({'group': int(gid), 'field': 'en', 'from': fix[0],
+                            'why': 'see tools/repair_ot_synopsis_titles.py'})
+            en_title = fix[1]
         groups.append({
             'id': int(gid),
-            'en': (e.get('Desc') or '').strip(),
+            'en': en_title,
             'zh': (s.get('Desc') or '').strip(),
             'refs': parsed,
         })

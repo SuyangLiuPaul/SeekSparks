@@ -3392,7 +3392,8 @@ all 30,800 records are byte-identical before and after.
 - **A tagged run with a Strong's number and no word.** Matthew 26:61's
   tagged layer carries `{"w": " ", "s": "G3004"}` where ειπαν should be
   — noticed while reading 34c's records and **not** measured across the
-  corpus. It is a different defect class and belongs to its own check.
+  corpus. *Measured by check 35: 18 shipped runs, and Matthew 26:61 is a
+  double count rather than a missing word. See check 35's "Still open".*
 
 ### Frozen
 
@@ -3405,6 +3406,219 @@ no marker anywhere in Proverbs may name a chapter above 31.
 `test/lxx_tagged_layer_test.dart`'s OT run total moves 479,989 →
 479,851, which is the 138 dropped Proverbs runs and confirms the repair
 reached the tagged layer identically.
+
+---
+
+## Check 35 — 139 claims that two passages tell the same thing
+
+`assets/ot_synopsis.json` holds 139 groups of 2–4 Old Testament
+passages imported from Eagle's View, reachable from the reader since
+v1.6.113. Every group is two claims at once: *these passages are
+parallel*, and *this title names them*. Check 25 proved the 313
+references resolve to verses that exist. It never asked either
+question — a reference can be perfectly well-formed and point at the
+wrong chapter, and a title can be printed over a passage that
+contradicts it.
+
+`tools/audit_ot_synopsis.py` asks both.
+
+### The instrument for the alignments, and why raw overlap will not do
+
+Two accounts of Uzziah's reign share their Hebrew vocabulary whatever
+translation renders them, so a passage reduces to the multiset of
+Strong's numbers behind it. `assets/tagged/kjvs/` and
+`assets/tagged/cuvs-yhwh/` tag an English and a Chinese translation with
+the same Hebrew numbers over the same 23,145 verses, so a pair judged
+dissimilar by both is dissimilar in the **Hebrew** and not in one
+translator's word choice.
+
+Raw overlap measures nothing: every Old Testament passage shares H853,
+H3605, H1961 and H559 with every other. Each number is weighted by
+inverse verse frequency over the whole tagged Old Testament and
+passages are compared by cosine, so a shared H4428 ("king", ~2,500
+verses) is worth almost nothing and a shared H5818 ("Uzziah", 24) a
+great deal.
+
+**A score means nothing without a null.** 3,994 random contiguous
+passage pairs are drawn matched on the length distribution of the real
+pairs, from the same books, same-chapter pairs discarded:
+
+| layer | median | p90 | p98 | p99.5 | max |
+|---|---|---|---|---|---|
+| kjvs | 0.037 | 0.101 | 0.157 | 0.218 | 0.438 |
+| cuvs-yhwh | 0.052 | 0.126 | 0.188 | 0.250 | 0.472 |
+
+### The scoring rule that had to be corrected before it was believed
+
+The first version scored a group by its **worst** pair, and group 41
+"David's Children" came out at 0.000 in the English layer — a group
+that is obviously right. Reading it showed why: 1 Chronicles 3:1-9 and
+2 Samuel 3:2-5 are the sons born in Hebron, 2 Samuel 5:14-15 and
+1 Chronicles 14:4-7 the sons born in Jerusalem. Two disjoint name
+lists, one subject, and the group is correct.
+
+So a group of four may legitimately hold two passages unlike each
+other. What cannot happen is a passage that resembles **nothing else in
+its group**. Each passage is therefore scored by its best sibling match
+and the group by its loneliest passage. Flags fell 15 → 11 and group 41
+left the list, which is the instrument being calibrated against a case
+whose answer was already known.
+
+### 35a — the alignments: 11 flagged, 10 read as correct
+
+11 of 139 groups sit below the 98th percentile of the null in either
+layer. Every one was read. **Ten are Eagle's View doing something on
+purpose that the instrument cannot see**: including a one-verse
+synchronism next to a long narrative. Isaiah 6:1 ("In the year that
+king Uzziah died") is one verse against two 2-verse death notices;
+Isaiah 1:1 names Uzziah's reign; Isaiah 20:1 dates Sennacherib;
+Jeremiah 1:1-3 dates Josiah's eighth year; 1 Kings 2:46 is the half
+verse that says the kingdom was established in Solomon's hand;
+Psalm 132:8-10 is quoted at the end of Solomon's prayer. A single verse
+carries almost no vocabulary, so it scores low **because it is short**,
+not because it is wrong. That is an instrument limit and it is recorded
+as one.
+
+**The eleventh is reported and deliberately not repaired.** Group 4
+"Hebrew Servants" is Leviticus 25:8-38 | Deuteronomy 15:1-11, and the
+Hebrew-servant law begins one verse *after* both ranges end —
+Leviticus 25:39-55 and Deuteronomy 15:12-18 — while Exodus 21:1-11, the
+primary passage, is absent. Both ranges are instead the sabbatical-year
+and jubilee release, which is a real parallel under a different title.
+Whether Eagle's View meant the release or the servant law is a question
+about their source, which this repository does not have; re-scoping the
+group would be inventing an editor's intent. Stated, not changed.
+
+### 35b — the titles: 7 of 139 misspelled, every one self-witnessed
+
+The passage a title labels is the witness for the title. A title word
+of five letters or more that is **absent** from its own passages while
+a word **in** those passages sits within two edits of it is the shape
+of a misspelling, and the corpus answers it without a dictionary:
+
+| group | title, as imported | as repaired | the witness |
+|---|---|---|---|
+| 27 | Jepheth's Descendants | **Japheth**'s Descendants | 1 Chronicles 1:4 "Shem, Ham, and Japheth"; CUV 雅弗 |
+| 165 | Johoash's Death | **Jehoash**'s Death | 2 Kings 14:15-16, the group's own two verses, twice; CUV 约阿施 |
+| 188 | Manesseh's Reign | **Manasseh**'s Reign | 2 Chronicles 33:1, 2 Kings 21:1; CUV 玛拿西 |
+| 17 | Bezalel and Oholiah | Bezalel and **Oholiab** | Exodus 31:6, 35:34 "Aholiab"; CUV 亚何利亚伯, a final *b* |
+| 157 | Athaliah's Assasination | Athaliah's **Assassination** | plain English |
+| 186 | Hezekiah's Illneess | Hezekiah's **Illness** | plain English |
+| 57 | Settler's in Jerusalem after Exile | **Settlers** in Jerusalem after Exile | a possessive apostrophe followed by a preposition |
+
+Four of the seven are proper names, and in each the correct spelling is
+carried by the group's own verses in **two** translations. Nothing
+outside this repository was consulted and nothing was guessed. `Oholiah`
+is not a name in any tradition; both witnesses give the final consonant
+independently.
+
+**`Bezalel` is deliberately not repaired.** The KJV spells him
+`Bezaleel` and the audit flags the one-edit difference, but Bezalel is
+the spelling every modern version uses. It is a translation convention,
+not an error, and repairing it would be the instrument overruling the
+editor. The same reasoning protects `Oholiab` after repair.
+
+### 35c — the same question asked of every other title in the corpus
+
+A defect found in one asset is worth nothing until it is measured
+everywhere it could occur. The same instrument was run over every other
+shipped title that labels a passage:
+
+| asset | titles checked | real defects |
+|---|---|---|
+| `ot_synopsis.json` | 139 | **7** |
+| `section_titles.json` (`english-classic`) | 1,443 | 0 |
+| `gospel_synopsis.json` | 70 of 71 resolved | 0 |
+
+The 1,513 other titles produced 23 raw hits and **all 23 are
+artifacts**: modern spellings against the KJV (Malta/Melita,
+Melchizedek/Melchisedec, Pergamum/Pergamos, Hagar/Agar,
+Arameans/Syrians), British inflections `/usr/share/dict/words` does not
+carry (Baptised, Sympathises, Returnees), and possessive tokens
+(`Jesus'`, `Cyrus'`). The defect is confined to the Eagle's View import.
+
+### 35d — the Chinese titles, and how hard the check looked
+
+The Chinese half cannot be done the English way. Chinese has no spaces
+to segment a name on, and over a long passage every 2-gram of a title
+sits one character from something: the naive form of this test returned
+**334 findings of which none was an error** (会幕 vs 帐幕 and 麻风 vs
+麻疯 are word choice and orthography, not mistakes). It was discarded
+rather than tuned.
+
+The Strong's numbers are the way across. A name the English title gets
+right resolves, in the group's own verses, to a Hebrew number; the same
+number in the Chinese layer over the same verses gives the CUV's own
+spelling; and the Chinese title is then asked for that exact string.
+**50 title names carried through, and the Chinese title uses all 50.**
+
+A check that finds nothing has to say how hard it looked. Corrupting
+one character at a time inside each of the resolved names: **137 of 143
+single-character corruptions caught, 95.8%**, over the 42 of 139 titles
+that carry a resolvable name. Across *all* 904 title characters the
+rate is 15.2%, which is the honest number for "would this catch any
+error in a Chinese title" — it would not. It catches errors in names,
+and there are no errors in names.
+
+### What shipped
+
+`tools/audit_ot_synopsis.py` — the instrument, structure + vocabulary +
+titles, with `--all` and `--titles`.
+`tools/repair_ot_synopsis_titles.py` — the seven titles, idempotent,
+each with its evidence in the source.
+`assets/ot_synopsis.json` — 7 `en` titles repaired, each recorded in the
+asset's own `corrections` block with `field: "en"` and a reason, which
+is the mechanism the two schema-2 reference corrections already used.
+The groups are re-sorted by title because the importer sorts by title
+and two first letters changed; the app indexes by book, so file order is
+not read.
+`tools/import_eaglesview_ot_synopsis.py` — `TITLE_CORRECTIONS`, so a
+re-import from the Eagle's View source does not undo the repair.
+
+### Negative results, which are results
+
+- **0 structural problems** beyond one duplicate: 2 Chronicles 1:14-17
+  appears in both group 94 ("Solomon's Wealth") and group 108
+  ("Solomon's Riches"). Read, and legitimate — 2 Chronicles 1:14-17 is a
+  genuine doublet of 2 Chronicles 9:25-28, so the same passage is
+  correctly parallel to two different things. No group has a missing
+  title, an empty expansion, or two passages that overlap each other.
+- **0 of 1,513 titles outside this asset** carry the defect (35c).
+- **0 of 50 checkable Chinese names** disagree with the CUV (35d).
+- 128 of 139 groups sit above the 98th percentile of the null in both
+  layers, and 10 of the remaining 11 read as correct.
+
+### Still open
+
+- **Group 4 "Hebrew Servants"** — reported above, not repaired. Needs
+  the Eagle's View source, which this repository does not carry.
+- **97 of 139 Chinese titles carry no name the instrument can resolve**,
+  and are therefore unchecked. A Chinese-language witness for the titles
+  themselves would be needed, and the source ships none.
+- **The alignments are checked only for vocabulary.** A group whose two
+  passages share a great deal of vocabulary but are not the same event
+  would pass. Nothing in the repository distinguishes those.
+- **`lxxwh`'s blank tagged runs**, carried over from check 34's list and
+  now measured rather than guessed: **18 shipped runs** carry a Strong's
+  number with no word. Matthew 26:61's `{"w": " ", "s": "G3004"}` is not
+  a missing word — the import split one word around the `<vs:26:61>`
+  marker into two runs *both* carrying G3004, so it is a **double count**
+  in the concordance, not a loss of text. 3,981 more are in the unshipped
+  `nsn-plus`. The adjacent class — 7,039 shipped runs whose word is
+  punctuation only — is largely *legitimate*: a Strong's number for an
+  original word the translation does not render, attached to the
+  punctuation at that point (CUV `"，"` = H3027 "hand", which the CUV
+  genuinely omits at 1 Chronicles 4:10). 18 runs is too thin to be a
+  check of its own and too easy to "fix" wrongly; the numbers are here so
+  the next reader does not have to measure them again.
+
+### Frozen
+
+`test/ot_synopsis_titles_test.dart` — the seven repaired titles by exact
+value; the asset's `corrections` block must record all seven; and the
+standing rule of 35b, which needs no dictionary and no external witness.
+Against the pre-repair asset all three tests fail and the third names
+exactly Oholiah, Jepheth, Johoash and Manesseh.
 
 ---
 
@@ -3430,9 +3644,16 @@ reached the tagged layer identically.
   effort closes — no public-domain NASB exists and the Eagle's View
   edition is licensed. A verse there that is wrong and well-formed and
   agrees with our own second copy would still not be found.
-- `section_titles.json`, `book_introductions.json`, `bible_evidence.json`,
-  `maps_index.json` (see #300 for its provenance gap), `family_tree.json`
-  relationships, `ot_synopsis.json` alignments.
+- `book_introductions.json`, `bible_evidence.json`, `maps_index.json`
+  (see #300 for its provenance gap), `family_tree.json` relationships.
+  Check 35 closes `ot_synopsis.json`'s **alignments** — 139 groups
+  against a 3,994-pair null in two independent tagged layers, 11 flagged
+  and read, 10 correct and the eleventh reported — and closes the
+  **titles** of `section_titles.json` and `gospel_synopsis.json` at the
+  same time, 1,513 of them, 0 defects. What remains unchecked in
+  `section_titles.json` is whether a heading is in the *right place*, as
+  opposed to spelled right: nothing here has asked whether "创造人类" at
+  Genesis 1:26 divides the chapter where an editor would.
 - The Septuagint's **verse text**, as opposed to its Strong's numbers.
   Check 23 measured the numbers and repaired them. Check 29 has now
   asked whether the Greek is **complete** and answered it against an
