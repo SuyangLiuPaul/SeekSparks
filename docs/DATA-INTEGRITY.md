@@ -93,6 +93,9 @@ believe it is fine" and "we looked".
 | 28b | Citations name a book the app can resolve | 44,221 book tokens | **2,304 unresolvable** → **9** | **fixed** (Traditional table completed), 9 ambiguous |
 | 28c | Delimiters reaching the reader | 39,749 `#`/orphan-`\|` sites | **all of them** → **0 readable ones** | **fixed**, now a test |
 | 28d | Mojibake in the Chinese lexicon | 14,696 entries | **3** | surfaced, not repaired — see below |
+| 29a | References an edition does not carry, and what the reader saw there | 295,418 records / 31,102 refs | **426 rendered as nothing** → **0** | **fixed**, now a test |
+| 29b | Are the Septuagint's absences its own text, or our loss | 304 absences vs an *external* LXX | **2 were our loss** → **0** | **fixed** by `tools/repair_lxx_transposed_verses.py` |
+| 29c | Every absence sits in a chapter the edition otherwise carries | 424 absences / 11 editions | **0** | clean, now a test — the display rule depends on it |
 
 ---
 
@@ -2266,6 +2269,179 @@ looks like it ought to be.
 
 ---
 
+## Check 29 — the verses an edition does not have
+
+Every check before this one asks whether what the app *shows* is true.
+This one asks about the references where it showed **nothing at all**.
+
+`browse_window.dart` built its rows by walking the chapter's verse
+numbers and, for each edition, looking the verse up. A reference the
+edition did not carry produced `null`, and the loop did what looked
+obviously correct: `continue`. No row. So a reader with the Septuagint
+and the KJV side by side at Jeremiah 33 saw the Greek column simply stop
+after verse 13, with nothing to say whether that is what the Septuagint
+does or what our importer did. **426 references across six editions were
+in that state**, and the two are not the same thing — as this check
+found out the hard way.
+
+BibleWorks was asked first, as always. `bwh29_Setup.htm`, on
+recompiling a version: *"If missing verses are found, a blank verse will
+be inserted… Normally you should leave this setting on."* Twenty years
+of use settled on **the row must exist**. We can do better than blank,
+because `verse_text_absence.dart` already argued — about a different
+defect, in v1.6.98 — that an empty line "reads as a layout bug rather
+than as information".
+
+### 29a — where the 426 are, and the property that makes a row safe
+
+| edition | absent | biggest books |
+|---|---:|---|
+| `lxxwh` | 304 → **302** | Jeremiah 68, 1 Kings 58, Exodus 56, 1 Samuel 39, Proverbs 21 |
+| `biblexg-v2` | 38 | Luke 6, Mark 6, Acts 5 |
+| `biblexg-v2-tr` | 34 | Luke 6, Acts 5, 2 Corinthians 3 |
+| `leb` | 21 | Mark 5, Acts 5, Romans 3 |
+| `bsb` | 16 | Mark 5, Acts 4, Matthew 3 |
+| `nasb` | 13 | Mark 4, Acts 4, Matthew 3 |
+
+An edition is only measured against the books it claims to carry, the
+same scoping check 4 uses: a New-Testament-only edition is not "missing"
+the Hebrew Bible.
+
+The number that decides the design is a different one. **All 426 sit
+inside a chapter the edition otherwise carries — none at all in a
+chapter it has none of.** That is what makes "this edition has no verse
+here" the right sentence: the edition is demonstrably present and
+working in that chapter, so a gap in it is information about the
+edition. Had even one absence been a whole missing chapter, the rule
+would have had to distinguish the two cases, because "no verse here" and
+"this edition does not include this book" are different facts with
+different remedies. `test/data_integrity_test.dart` freezes the zero, so
+the day an import creates the other kind, the test fails instead of the
+reader being misled.
+
+### 29b — and then: is the Septuagint's silence its own, or ours?
+
+Making a gap visible is only worth doing if the gap is honest. A row
+saying "this edition has no verse here" over a verse the edition *does*
+have, which our importer lost, would be a confident lie — worse than the
+blank it replaced. So the 304 Septuagint absences were classified
+against an **external witness**: the Göttingen-tradition LXX published
+at `api.getbible.net/v2/lxx`, 39 Old-Testament books, downloaded whole
+and compared after NFD-stripping accents, lowercasing, folding final
+sigma and keeping only `[α-ω ]`.
+
+Reference-to-reference comparison is not enough and knowing why is the
+whole method. The witness numbers verses in the **Septuagint's own**
+versification — Psalms runs to 151 chapters, LXX Jeremiah 33 is MT
+Jeremiah 26, LXX Exodus 36 is MT Exodus 39 — while `lxxwh.json` is keyed
+by the **English** reference and carries the Greek's own number inline as
+`<vs:c:v>`. Comparing the two by reference produces confident nonsense.
+Three passes were needed:
+
+1. **Reference agreement.** 229 of the 304 are references the witness
+   also lacks. Confirmed minus — the Septuagint does not have the verse.
+2. **Content alignment.** 74 the witness has at that reference; 72 of
+   them proved *verbatim* to be a verse we carry somewhere else (the
+   witness's Exodus 36:10 is our Exodus 39:3). Numbering, not loss.
+3. **Global containment**, because pass 2 proves a numbering offset and
+   not the absence itself. For each book: does the witness hold any
+   Greek with no counterpart anywhere in our file? **33 of 39 books
+   returned zero** — including Jeremiah, where 68 references are absent,
+   and 1 Samuel, Nehemiah, Isaiah, Ezekiel, Job, 1 Chronicles and
+   Lamentations. The 1,116-verse residue is Judges 614 and Daniel 397
+   (the A/B and OG/Theodotion recensions — an instrument limit, not a
+   finding), Joshua 93, Esther 5 (the Greek Additions), 1 Kings 4 (the
+   miscellanies), Exodus 2, Proverbs 1. Then the decisive intersection:
+   **residue verses sitting at one of our 304 absences: 0.**
+
+An instrument error nearly became a finding on the way and is recorded
+because this document has a habit of recording them: the witness names
+the book *Song of Songs* where our canon says *Song of Solomon*, which
+reported the whole book as a 117-verse gap until a name remap was added.
+Nothing was concluded from it, but nothing in the method would have
+stopped it either.
+
+**Verdict: 301 of the 303 Old-Testament absences are the Septuagint's
+own text. Two were ours**, and both had the same three-part shape:
+
+```
+Numbers 10                        Deuteronomy 23
+10:34  absent                     23:24  absent
+10:35  = LXX 10:34 + 10:35        23:23  = LXX 23:24 + 23:25
+10:36  = the cloud verse          23:25  = the vineyard verse
+       (which is English 10:34)          (which is English 23:24)
+```
+
+Both books transpose a pair of verses relative to the Hebrew — the
+Septuagint prints Numbers' cloud verse *after* "Rise up, O Lord" instead
+of before it, and Deuteronomy's standing-corn law *before* the vineyard
+law instead of after. Whoever keyed the file followed the Greek's order
+instead of translating it into the English one, glued together the pair
+that straddled the seam, and left a hole where the displaced verse
+belonged.
+
+The hole is the visible half. The **neighbour holding the wrong verse**
+is the serious one: real Septuagint text under an English reference that
+means something else, in the Greek column — the one a reader cannot
+check against anything except us. A reader at Numbers 10:36 was shown
+the cloud, which is verse 34.
+
+`tools/repair_lxx_transposed_verses.py` splits and reassigns all six
+references in both the flat asset and the tagged layer, and it is
+idempotent. Three witnesses fix the answer and none of them is the file
+being repaired: `assets/kjv.json` for what each English reference means,
+the external LXX for what each Greek verse number means, and — the
+reason the split point is not a guess — **the file's own `<vs:c:v>`
+markers**, which agree with the witness exactly, so the edition itself
+marks where one Greek verse ends and the next begins. Afterwards the two
+layers still rejoin to identical text, and `lxxwh.json` holds 30,800
+records where it held 30,798.
+
+### 29c — what was measured and left open
+
+- **Merges, as opposed to minuses.** Some absences are references the
+  *English* tradition creates by dividing a verse the Greek does not:
+  English Psalm 13:6's Greek is present in our file, inside 13:5, and
+  Psalm 116:14's inside 116:13. Nothing is lost and nothing is wrong,
+  but the honest sentence for those would be the stronger "printed with
+  verse 5" rather than "no verse here". Separating this class from a
+  true minus needs content alignment against an English text, which is a
+  bounded piece of work and was not done. **Found by example, not
+  measured** — two known, count unknown. The shipped row makes the
+  weakest true claim, which is correct for both classes.
+- **`biblexg-v2` and `-tr`, 38 and 34 absences, unclassified.** These
+  are mixed and need their own check: Luke 1:1 demonstrably contains the
+  whole 1:1-4 prologue, which is a *merge*, while Philippians 1:1 ends
+  in a colon and 1:2 is genuinely gone, which is a *loss*. No witness in
+  the same edition has been looked for yet.
+- **`nasb`'s 13 and `leb`'s 21** are the classic critical-text
+  omissions by reference, and LEB witnesses itself in two places —
+  Romans 16:24 carries the note "Some manuscripts include vv. 25-27",
+  and Nehemiah 7:69 carries "Nehemiah 7:69-73 in the English Bible is
+  7:68-72 in the Hebrew Bible". `bsb`'s 16 were confirmed absent
+  upstream by check 27. None of the three was re-verified here.
+- **Matthew 12:47**, the one New-Testament absence in `lxxwh`, is
+  outside the Septuagint witness's scope. The Westcott-Hort text is
+  available from the same source and would settle it in one pass.
+
+### What the reader sees now
+
+The row exists, in the version's own gutter column, with the reference
+printed as on every other row and the explanation set in the muted
+italic already used for the four *present-but-placeholder* kinds. The
+sentence is localised to the **UI** language, not the edition's script,
+on the same reasoning as v1.6.93: it is the app speaking, not the
+edition.
+
+`VerseAbsence.absent` deliberately does **not** say "not in this
+edition's base text", which is what the evidence above would mostly
+support. 301 of 303 is not 303 of 303, and the two that were not the
+base text were our own defect — precisely the case where the stronger
+sentence would have been a confident lie. The row says what it can
+prove: our file has no verse here.
+
+---
+
 ## Not checked yet
 
 - Verse **text** itself, against an *external* witness — for the
@@ -2290,10 +2466,17 @@ looks like it ought to be.
   `maps_index.json` (see #300 for its provenance gap), `family_tree.json`
   relationships, `ot_synopsis.json` alignments.
 - The Septuagint's **verse text**, as opposed to its Strong's numbers.
-  Check 23 measured the numbers and repaired them; nothing has asked
-  whether the Greek itself is complete. Nehemiah 10 is known to be
-  missing 15 of its 39 verses from the tagged import (check 21), and that
-  gap has never been chased across the other books.
+  Check 23 measured the numbers and repaired them. Check 29 has now
+  asked whether the Greek is **complete** and answered it against an
+  external LXX: 301 of the 303 Old-Testament absences are the
+  Septuagint's own text, 2 were our defect and are fixed, and 33 of 39
+  books hold every verse the witness has. What that check did *not* ask
+  is whether the Greek we do carry is the **right words** — it compared
+  what is present against what is present, and a wrong-but-well-formed
+  verse would survive it. Nehemiah 10 is still known to be missing 15 of
+  its 39 verses from the *tagged* import (check 21), which is a coverage
+  gap in the tagging rather than in the text, and has never been chased
+  across the other books.
 - The **41,032 Septuagint runs that still answer nothing** (check 23).
   Most cannot be answered — they are words the New Testament never uses —
   but nobody has separated "no Strong's number exists" from "a number
@@ -2317,23 +2500,29 @@ looks like it ought to be.
    terms we can use — which is worth *testing* rather than assuming, as
    this entry's previous wording proves: it asserted no witness existed
    for BSB or KJV, and four were found on the first attempt.
-2. The 4 references the two 梁家鏗譯本 editions still disagree about —
+2. **The 72 absences check 29 left unclassified**, in priority order:
+   the two 梁家鏗譯本 editions' 38 and 34, which are known to mix a
+   *merge* (Luke 1:1 holds the whole prologue) with a *loss*
+   (Philippians 1:2), so the two must be separated before either can be
+   described; then Matthew 12:47, which the Westcott-Hort text from the
+   same source as check 29's witness would settle in one pass.
+3. The 4 references the two 梁家鏗譯本 editions still disagree about —
    马可福音 6:8–11, all that is left of the original 8. Needs a witness that is the
    same edition in the missing script; a 简/繁 conversion table derived
    from the 7,645 length-equal verse pairs the two files already share
    would be one, and would be witnessed by the corpus rather than
    invented — but it must be derived and checked before a character of
    it is trusted.
-3. The four verses that print both the Ketiv and the Qere. Probably a
+4. The four verses that print both the Ketiv and the Qere. Probably a
    reader-side marker, not a data deletion.
-4. Per-record date sourcing (#292 owns `hebrew_kings.json`).
-5. The LEB's `{…}` idiom braces in the 660 imported verses, if a witness
+5. Per-record date sourcing (#292 owns `hebrew_kings.json`).
+6. The LEB's `{…}` idiom braces in the 660 imported verses, if a witness
    that preserves them can be found.
-6. The ten summarised Chinese sermons (check 19). Not an engineering
+7. The ten summarised Chinese sermons (check 19). Not an engineering
    task — ~85,000 English words need translating, and whether that
    happens, and by whom, is the owner's call. Until it does, the marking
    is the honest state.
-7. The remaining verse-rendering surfaces, audited but not exhaustively:
+8. The remaining verse-rendering surfaces, audited but not exhaustively:
    check 14 covers the reader, Browse, the sermon-citation popup, the
    two search-key caches and the clipboard. Strong's-driven surfaces
    (KWIC, concordance) read the tagged layer, which a placeholder has no

@@ -174,6 +174,37 @@ void main() {
       }
     });
 
+    group('verses the edition does not have at all', () {
+      test('a hole inside the chapter is reported', () {
+        expect(absentVerseNumbers({1: 'a', 2: 'b', 4: 'd'}, 4), {3});
+      });
+
+      test('the extent comes from the other columns, not this one', () {
+        // The Septuagint stops at Jeremiah 33:13 where the English
+        // tradition runs to 26. Those thirteen are absences, not the
+        // end of the chapter, and they are only visible because another
+        // edition on screen has them.
+        expect(absentVerseNumbers({1: 'a', 2: 'b'}, 5), {3, 4, 5});
+      });
+
+      test('an edition with none of the chapter reports nothing', () {
+        // Otherwise a New-Testament-only edition would be told it is
+        // "missing" all 1,533 verses of Genesis, one row each.
+        expect(absentVerseNumbers({}, 31), isEmpty);
+      });
+
+      test('a complete chapter reports nothing', () {
+        expect(absentVerseNumbers({1: 'a', 2: 'b', 3: 'c'}, 3), isEmpty);
+      });
+
+      test('a placeholder still counts as carried', () {
+        // 見上節 and OMIT are records that exist. They already have
+        // their own, more specific sentence; this rule must not claim
+        // the reference is missing as well.
+        expect(absentVerseNumbers({1: 'a', 2: '見上節', 3: 'OMIT'}, 3), isEmpty);
+      });
+    });
+
     test('the two Chinese locales differ in script', () {
       // A traditional-script reader must not be handed simplified text.
       // 与/與 is the discriminating character in this string pair.

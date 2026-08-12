@@ -329,6 +329,14 @@ class _BrowseWindowState extends State<BrowseWindow> {
       for (final e in byVersion.entries) e.key: mergedVerseHeads(e.value),
     };
 
+    // Which of this chapter's references each edition does not have at
+    // all. Only editions that carry some of the chapter appear here, so
+    // an edition that stops before this book keeps its column silent.
+    final absentVerses = <String, Set<int>>{
+      for (final e in byVersion.entries)
+        e.key: absentVerseNumbers(e.value, lastVerse),
+    };
+
     // One call warms the whole book's originals; the per-verse lookups
     // below then hit the cache instead of re-reading the asset.
     await OriginalsService.forVerse(widget.book, widget.chapter, 1);
@@ -344,8 +352,18 @@ class _BrowseWindowState extends State<BrowseWindow> {
 
       for (final code in widget.versionCodes) {
         final text = byVersion[code]?[n];
-        if (text == null) continue;
-        final absence = verseAbsenceOf(text);
+        // 2026-08-12: a reference the edition does not have used to
+        // render as NOTHING — the row was simply not emitted, so the
+        // Septuagint's 68 missing verses in Jeremiah, the BSB's sixteen
+        // Received-Text verses, 426 references in all, looked like a
+        // column that happened to be short. BibleWorks inserts a blank
+        // verse for exactly this and says to leave that setting on; we
+        // can do better than blank and say why the row is empty.
+        // docs/DATA-INTEGRITY.md check 29.
+        final isAbsent = absentVerses[code]?.contains(n) ?? false;
+        if (text == null && !isAbsent) continue;
+        final absence =
+            isAbsent ? VerseAbsence.absent : verseAbsenceOf(text!);
         // A reference with no scripture has nothing to tag, so skip the
         // tagged/gloss lookup entirely rather than render the marker as
         // a word run.

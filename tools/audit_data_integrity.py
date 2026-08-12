@@ -719,6 +719,68 @@ def check_merge_markers():
     record('和合本 merge markers', len(sites) * 3, len(bad), note)
 
 
+# --------------------------------------------------------------------
+# 29. Every reference an edition does not carry is one the app can
+#     still say something true about.
+#
+#     Check 4 counts the gaps. This one asks what the reader SEES at a
+#     gap, because until v1.6.117 the answer was nothing at all: the
+#     Browse window emitted no row for a reference the edition lacked,
+#     so the Septuagint's 68 missing verses in Jeremiah and the BSB's
+#     sixteen Received-Text verses looked like a column that happened
+#     to be short. BibleWorks inserts a blank verse for exactly this
+#     ("Normally you should leave this setting on", bwh29_Setup.htm).
+#
+#     The row is only safe because of the property measured here: every
+#     absent reference sits inside a chapter the edition otherwise
+#     carries. An absence in a chapter the edition has NONE of is a
+#     different fact with a different sentence, and if one ever appears
+#     the display rule needs revisiting before the row can be trusted.
+# --------------------------------------------------------------------
+
+def check_absent_references():
+    files = sorted(f for f in os.listdir(asset()) if f.endswith('.json'))
+    lines = []
+    examined = 0
+    orphans = 0
+    for f in files:
+        code = f[:-5]
+        if code in EXCLUDED_VERSIONS:
+            continue
+        try:
+            data = load(f)
+        except Exception:
+            continue
+        if not (isinstance(data, list) and data and isinstance(data[0], dict)
+                and 'book' in data[0] and 'verse' in data[0]):
+            continue
+        refs = set()
+        for v in data:
+            try:
+                refs.add((zh_to_en(v['book']), int(v['chapter']), int(v['verse'])))
+            except (ValueError, TypeError):
+                continue
+        books = {b for b, _, _ in refs}
+        chapters = {(b, c) for b, c, _ in refs}
+        missing = {r for r in CANON if r[0] in books} - refs
+        examined += len(refs)
+        if not missing:
+            continue
+        # The invariant the absence row rests on.
+        outside = sorted(r for r in missing if (r[0], r[1]) not in chapters)
+        orphans += len(outside)
+        by_book = Counter(b for b, _, _ in missing)
+        lines.append(
+            f'{code:16s} absent={len(missing):4d} '
+            f'in a chapter it carries={len(missing) - len(outside):4d} '
+            f'in a chapter it does not={len(outside):3d}  ' +
+            ', '.join(f'{b} {c}' for b, c in by_book.most_common(5)))
+        for b, c, v in outside[:6]:
+            lines.append(f'    NO CHAPTER TO HANG IT ON: {b} {c}:{v}')
+    record('29. References an edition does not carry',
+           examined, orphans, '\n'.join(lines))
+
+
 def main():
     os.makedirs(os.path.join(ROOT, 'build'), exist_ok=True)
     print('Data-integrity audit (#304)\n' + '=' * 60 + '\n')
@@ -735,6 +797,7 @@ def main():
     check_tagged_layers(originals)
     check_character_repertoire()
     check_merge_markers()
+    check_absent_references()
 
     failed = [r for r in results if r['disagreements']]
     print('=' * 60)

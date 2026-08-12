@@ -114,7 +114,12 @@ void main() {
         () async {
       final rows = (json.decode(await rootBundle.loadString(
           'assets/lxxwh.json')) as List).cast<Map<String, dynamic>>();
-      expect(rows, hasLength(30798));
+      // +2 in v1.6.117: Numbers 10:34 and Deuteronomy 23:24 were holes,
+      // each beside a record holding two Greek verses at once. Splitting
+      // them moves no marker in or out of the file — the token count is
+      // unchanged at 4,687 — but two more verses now carry one each.
+      // See docs/DATA-INTEGRITY.md check 29.
+      expect(rows, hasLength(30800));
 
       final bare = <String>[];
       var tokens = 0;
@@ -137,7 +142,7 @@ void main() {
       }
       expect(bare, isEmpty);
       expect(tokens, 4687);
-      expect(verses, 4541);
+      expect(verses, 4543);
 
       // An unaccented Greek text writes its numerals as letters, so a
       // digit outside a marker cannot be scripture. This is what made

@@ -4315,6 +4315,11 @@ const uiStrings = {
     'zh-Hant': '本版本此處沒有經文',
     'en': 'This edition has no text here',
   },
+  'verseNotInEdition': {
+    'zh-Hans': '本版本没有这一节',
+    'zh-Hant': '本版本沒有這一節',
+    'en': 'This edition has no verse here',
+  },
   'analysisAvUsage': {
     'zh-Hans': '钦定本译法',
     'zh-Hant': '欽定本譯法',

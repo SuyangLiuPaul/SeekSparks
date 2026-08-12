@@ -55,6 +55,26 @@ enum VerseAbsence {
 
   /// The reference is in the file with no text at all.
   blank,
+
+  /// The reference is not in the edition's file at all.
+  ///
+  /// Unlike the four above this is not read off a stored string — there
+  /// is no record to read. It is inferred by the caller from the shape of
+  /// the chapter: the edition carries this chapter and does not carry
+  /// this verse of it. 426 canonical references across six editions are
+  /// in this state, and every one of them sits inside a chapter the
+  /// edition otherwise has, so the inference never fires on an edition
+  /// that simply stops (a NT-only edition is not "missing" Genesis).
+  ///
+  /// The note deliberately makes the *weakest true claim* — that our
+  /// file has no verse here — rather than [omitted]'s claim about the
+  /// edition's base text. Most of them are the base text: 301 of the
+  /// Septuagint's 303 Old-Testament absences were confirmed against an
+  /// independent LXX witness (docs/DATA-INTEGRITY.md check 29). But
+  /// "confirmed for most" is not "true for this one", and the two that
+  /// were *not* the base text were our own defect. So the row says what
+  /// it can prove and stops.
+  absent,
 }
 
 /// The exact strings an edition uses in place of verse text.
@@ -136,6 +156,33 @@ Map<int, int> mergedVerseHeads(Map<int, String> chapterTexts) {
   return out;
 }
 
+/// The verse numbers an edition does not carry, in a chapter it does.
+///
+/// [chapterTexts] is one edition's verses for the chapter; [lastVerse] is
+/// the chapter's extent across every edition currently on screen, which
+/// is what makes the gap visible at all — a verse is only known to be
+/// missing from one column because another column has it.
+///
+/// Returns empty when the edition carries none of the chapter. That is a
+/// different fact with a different sentence ("this edition does not
+/// include this book/chapter", see `missing_chapter_message.dart`), and
+/// answering it here would fill Genesis with 1,533 absence rows for every
+/// New-Testament-only edition on screen.
+///
+/// The extent is taken from the editions rather than from a canon table
+/// on purpose. Where an edition versifies a chapter longer than the
+/// English tradition — 3 John 1:15, where some editions split verse 14 —
+/// the shorter edition genuinely has no verse at that reference, and
+/// saying so is both true and what BibleWorks prints.
+Set<int> absentVerseNumbers(Map<int, String> chapterTexts, int lastVerse) {
+  if (chapterTexts.isEmpty) return const {};
+  final out = <int>{};
+  for (var n = 1; n <= lastVerse; n++) {
+    if (!chapterTexts.containsKey(n)) out.add(n);
+  }
+  return out;
+}
+
 /// The line shown in place of the verse text, in the reader's UI
 /// language.
 ///
@@ -166,5 +213,8 @@ String verseAbsenceNote(
     case VerseAbsence.blank:
       return uiStrings['verseTextMissing']?[locale] ??
           'This edition has no text here';
+    case VerseAbsence.absent:
+      return uiStrings['verseNotInEdition']?[locale] ??
+          'This edition has no verse here';
   }
 }

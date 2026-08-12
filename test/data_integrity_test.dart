@@ -673,7 +673,10 @@ void main() {
       // boundaries back apart (4 traditional, 3 shared by both files).
       // −2 in v1.6.98: 腓立比書 1:1 was printed as two blocks and the
       // second was numbered 2, in both biblexg files. See check 20.
-      expect(records, 295532);
+      // +2 in v1.6.117: Numbers 10:34 and Deuteronomy 23:24 were holes
+      // in assets/lxxwh.json, each beside a record holding two Greek
+      // verses at once. See check 29.
+      expect(records, 295534);
       expect(census, {
         'cuvs-yhwh/merged': 71,
         'cuvs-yhwh/mergedNext': 1,
@@ -751,6 +754,96 @@ void main() {
       }
       expect(failures, isEmpty, reason: failures.take(20).join('\n'));
       expect(resolved, 213);
+    });
+
+    test('every reference an edition lacks sits in a chapter it has', () {
+      // What the Browse window's absence row rests on. It prints "this
+      // edition has no verse here" for a reference the edition does not
+      // carry, and that is only the right sentence when the edition is
+      // otherwise present in the chapter — an edition that stops before
+      // a whole book is not "missing" its verses one at a time, and a
+      // rule that thought so would print the sentence 1,533 times down
+      // Genesis for every New-Testament-only edition on screen.
+      //
+      // 424 absences across six editions, and all 424 are interior. The
+      // day one is not, this fails rather than the reader being told
+      // something misleading. See check 29.
+      final canon = <String>{};
+      final canonChapters = <String>{};
+      for (final v in _edition('kjv')) {
+        canon.add(_ref(v));
+        canonChapters.add('${v['book']} ${v['chapter']}');
+      }
+      final absentByEdition = <String, int>{};
+      final outside = <String>[];
+      for (final code in _versions) {
+        final refs = <String>{};
+        final books = <String>{};
+        final chapters = <String>{};
+        for (final v in _edition(code)) {
+          final book = bookNameToEnglish[v['book']] ?? v['book'];
+          refs.add(_ref(v));
+          books.add('$book');
+          chapters.add('$book ${v['chapter']}');
+        }
+        var absent = 0;
+        for (final ref in canon) {
+          if (refs.contains(ref)) continue;
+          final chapter = ref.substring(0, ref.lastIndexOf(':'));
+          if (!books.contains(chapter.substring(0, chapter.lastIndexOf(' ')))) {
+            continue; // a book this edition does not claim to carry
+          }
+          absent++;
+          if (!chapters.contains(chapter)) outside.add('$code $ref');
+        }
+        if (absent > 0) absentByEdition[code] = absent;
+      }
+      expect(outside, isEmpty, reason: outside.take(20).join('\n'));
+      expect(absentByEdition, {
+        'bsb': 16,
+        'leb': 21,
+        'nasb': 13,
+        'lxxwh': 302,
+        'biblexg-v2': 38,
+        'biblexg-v2-tr': 34,
+      });
+      // Unused otherwise, but it is the count the docs quote.
+      expect(absentByEdition.values.reduce((a, b) => a + b), 424);
+    });
+
+    test('the two transposed Septuagint passages stay repaired', () {
+      // Both had the same three-part shape: a hole, a record holding
+      // two Greek verses at once, and a neighbour holding the wrong
+      // verse. The last is the one that matters — real Septuagint text
+      // under an English reference that means something else, in the
+      // column a reader cannot check against anything but us.
+      final lxx = <String, String>{
+        for (final v in _edition('lxxwh')) _ref(v): v['text'] as String,
+      };
+      // The cloud, "Rise up", "Return" — in the English order, each
+      // carrying the Septuagint's own number for itself.
+      expect(lxx['Numbers 10:34'], startsWith('<vs:10:36>'));
+      expect(lxx['Numbers 10:35'], startsWith('<vs:10:34>'));
+      expect(lxx['Numbers 10:36'], startsWith('<vs:10:35>'));
+      expect(lxx['Numbers 10:34'], contains('νεφελη'));
+      expect(lxx['Numbers 10:35'], contains('εξεγερθητι'));
+      expect(lxx['Numbers 10:36'], contains('επιστρεφε'));
+      // The vineyard at 23:24 and the standing corn at 23:25, which is
+      // the English order and the reverse of the Greek one.
+      expect(lxx['Deuteronomy 23:23'], startsWith('<vs:23:24>'));
+      expect(lxx['Deuteronomy 23:24'], startsWith('<vs:23:26>'));
+      expect(lxx['Deuteronomy 23:24'], contains('αμπελωνα'));
+      expect(lxx['Deuteronomy 23:25'], contains('αμητον'));
+      // No record in either chapter holds two Greek verses any more.
+      final marker = RegExp(r'<vs:\d+:\d+>');
+      for (final ref in ['Numbers 10', 'Deuteronomy 23']) {
+        for (var n = 1; n <= 36; n++) {
+          final text = lxx['$ref:$n'];
+          if (text == null) continue;
+          expect(marker.allMatches(text).length, lessThan(2),
+              reason: '$ref:$n holds more than one Greek verse');
+        }
+      }
     });
   });
 
