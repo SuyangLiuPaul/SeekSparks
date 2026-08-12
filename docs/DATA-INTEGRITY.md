@@ -106,6 +106,13 @@ believe it is fine" and "we looked".
 | 32e | Each date asset's claim about its own source | 3 assets | **3 wrong or absent** → **0** | **fixed**, now a test |
 | 33a | Psalm titles the reader displays and the search corpus lacked | 116 titles / 3 editions | **116 unsearchable, 11 words findable in no other verse** → **0** | **fixed**, witnessed by `bsb` + `kjvs`, now a test |
 | 33b | Verses unfindable by the phrase they print (`[supplied]` brackets in the key) | 295,416 verses / 6 editions | **17,932**, of them **16,975 in `leb`** (54.6%) → **0** | **fixed**, now a test |
+| 36a | The family tree's graph: reciprocal edges, live ids, no cycles | 312 edges / 26 marriages | **0** | clean, now a test |
+| 36b | Years against each other and against the tree | 290 comparable edges | **8** (4 impossible gaps, 1 parent died first, 3 cross the am/bc seam) | reported, not repaired — every replacement year would be invented |
+| 36c1 | Each printed name against the passages that record cites | 277 English + 277 Chinese | **3 English in no shipped edition** → **0**; **10 Chinese absent from the CUV** | English **fixed**, now a test; Chinese reported |
+| 36c2 | Each parent-child and marriage claim against a passage that states it | 338 claims / 5 editions | **9 stated by no passage** → **5** | 4 were the name defect; the 5 are inferred links, reported |
+
+*(Checks 34 and 35 have full sections below but were never given rows
+here; the omission is noted rather than guessed at.)*
 
 ---
 
@@ -3622,6 +3629,325 @@ exactly Oholiah, Jepheth, Johoash and Manesseh.
 
 ---
 
+## Check 36 — 277 people, and whether the text says what the tree draws
+
+`assets/family_tree.json` is the one curated asset this document has
+listed as unchecked since the list was written. It states **312
+parent-child links, 26 marriages and 277 lives**, and it draws the same
+solid line for "Adam begat Seth", which Genesis 5:3 states in as many
+words, and for "Heli was the father of Mary", which no verse states at
+all.
+
+Check 25 proved the file's **665 references resolve**. That is a
+strictly weaker claim than the one the tree makes on screen, and it is
+the same gap check 35 found in `ot_synopsis.json`: a label can point at
+a real passage and still be contradicted by it. So the question here is
+check 35's question asked of a different asset — **is the passage a
+record cites a witness to what the record says?**
+
+Nothing outside this repository is consulted. Five English editions
+(`bsb`, `kjv`, `kjvs`, `nasb`, `leb`) and the CUV are the witnesses, and
+the instrument is `tools/audit_family_tree.py`.
+
+### The instrument, and the alias problem that had to be solved first
+
+A name the KJV spells `Methusael` and the NASB spells `Methushael` must
+not be scored as a missing person. But a supplied list of spelling
+variants would be a second unaudited asset, so the variants are
+**derived from each person's own cited verses**: a capitalised token
+standing in a verse the record itself points at, within one edit for a
+short name or two for a long one, is that edition's spelling.
+
+The first version of that rule was far too permissive — it offered `Lot`
+the aliases *But, For, God, LORD, Let, Look, Lord, Now* — and 136 of 277
+people carried something. Four rules, all derived from the corpus rather
+than from a dictionary, cut it to **67 people with 76 aliases, every one
+readable as a genuine variant** (Booz/Boaz, Sem/Shem, Zabulon/Zebulun,
+Naasson/Nahshon, Coniah/Jechoniah/Jechonias):
+
+1. **A proper name is a token the corpus never lowercases.** This is
+   what separates `Job` from `God`, `Lord` and `Let`, with no word list.
+2. **Another person in the tree is a different man, not a spelling.**
+   Athaliah is not a variant of Ahaziah.
+3. **Edit distance scaled to length** — one edit for five letters or
+   fewer, two above.
+4. **Two spellings of one name do not share a verse.** If both tokens
+   stand in the same verse of the same edition they are two people.
+
+### 36a — the graph itself: 0 issues, which is a result
+
+Every one of the 312 parent-child edges is reciprocal — the parent lists
+the child and the child names the parent. All 26 marriages are recorded
+on both sides. No id points at a person who is not in the file, no id is
+duplicated, nobody is their own parent, and no chain of `fatherId`
+closes into a cycle. **0 of 277 people and 0 of 338 relationship
+records carry a structural fault.** The file is internally sound; every
+finding below is about what the *text* says, not about the graph.
+
+### 36b — the years: 8 findings in 290 comparable edges
+
+Reported second because the first run of it produced **325 findings and
+every one was an artifact**, described under instrument errors below.
+
+Of the 312 edges, **290 are comparable**: 19 are skipped because one end
+is a `reign` record, whose `birthYear` is an accession year and not a
+birth (check 32c established this and `_meta.dating.kinds` says so), and
+3 are skipped because the two ends use different year systems. No record
+is missing a year — all 277 carry one.
+
+- **3 edges cross the seam between the two year systems**, all of them
+  Terah's: Terah is dated `am 1878` and his sons Abraham, Haran and
+  Nahor are dated `bc`. Both systems are documented in `_meta.yearLegend`
+  and neither is wrong, but a reader looking at the tree sees a father
+  numbered 1878 above sons numbered 2166, 2200 and 2180, with nothing on
+  screen saying the numbers are on different axes. Converting one to the
+  other requires fixing a year for the creation, which this repository
+  deliberately does not do — Ussher's 4004 BC is **not** this repo's
+  chronology — so nothing is converted. Recorded, not repaired.
+- **4 parent-child gaps are biologically impossible**, out of 290:
+  Eliphaz → Amalek **0 years**, Heli → Mary 5, Hagar → Ishmael 10, and
+  Nathan → Mattatha 10. All four are `approximate`/`conventional` at
+  both ends, meaning both years are reconstructions the app already
+  hedges with "c.".
+- **1 parent died before the child was born**: Levi `d = 1716 BC`,
+  Jochebed `b = 1550 BC`, a gap of 166 years — and Numbers 26:59, which
+  Jochebed's own record cites, states that she was born to Levi. This is
+  the file contradicting a verse it points at, and it is the classic
+  compression problem in the Egyptian genealogies rather than a typo.
+
+The distribution is the reason none of this is repaired. The 290 gaps
+cluster hard at 20, 25, 26, 30, 35, 40 and 90, with genuine Genesis 5
+and 11 gaps running to 500. Only **4 fall below 15**. This is a small
+set of outliers in a reconstruction, not a broken generator, and any
+replacement year would be invented — which is the one thing this
+document has never done.
+
+### 36c1 — three names that appear in no Bible we ship
+
+The first real defect. Of 277 printed English names, **274 stood in a
+passage the record itself cited**. Three did not, and the reason is not
+a spelling variant:
+
+| Printed | `bsb` | `nasb` | `leb` | `kjv` | `kjv+s` | Occurrences of the printed form in all five |
+| --- | --- | --- | --- | --- | --- | --- |
+| `Melki` | Melchi | Melchi | Melchi | Melchi | Melchi | **0** |
+| `Josek` | Josech | Josech | Josech | Joseph | Joseph | **0** |
+| `Joshua / Jose` | Joshua | Joshua | Joshua | Jose | Jose | **0** |
+
+`Joshua / Jose` is not a misspelling at all — it is **two editions'
+spellings of one man joined by a slash**, an editorial note left in a
+field the app prints verbatim.
+
+Which spelling to keep was measured, not chosen. Of the **39 people in
+the Lukan chain, 11 carry a name only `bsb`/`nasb`/`leb` print and
+exactly 1 carries a name only the `kjv` prints**. The file's English is
+the modern critical text, 11 to 1, so `Melchi`, `Josech` and `Joshua`
+follow the file's own convention rather than this reader's taste.
+
+`Melki` had a second witness inside the file. The other man of that name
+is already called **`Melchi (II)`** — so the record being repaired is
+the `(I)` that convention was written for, and an English reader
+previously could not see that the two entries were the same name. The
+Chinese had it right all along: 麦基 and 麦基（二）.
+
+`Janna` is the one KJV-only name, and it is **deliberately not touched**.
+The `kjv` and `kjv+s` do read "Janna" at Luke 3:24, so the name is
+witnessed by a Bible the app ships. Changing it would be a consistency
+preference, not an accuracy repair, and the standing rule is about what
+is true.
+
+### 36c1, the Chinese half — 10 absences, reported and not repaired
+
+The app prints two names for every person and its readers are Chinese,
+so checking only the English would be checking the smaller half. The
+witness is the CUV, joined to the English editions on the numeric `id`
+every shipped record carries — a join proved before it was believed:
+**31,086 of 31,086** `bsb` verses join, and John 3:16, Luke 3:24 and
+Genesis 5:3 land exactly.
+
+**Exact containment only.** An edit-distance test over two- and
+three-character names is known in this repository to produce
+overwhelming noise; either the characters are in the verse or they are
+not. **267 of 277** Chinese names stand in a verse their own record
+cites. The 10 that do not:
+
+| Person | Tree | CUV at the cited verse |
+| --- | --- | --- |
+| Reuben | 吕便 | 流便 (Genesis 29:32 and 84 more; 吕便 occurs **0** times) |
+| Hezron (Reuben's son) | 希斯仑 | 希斯伦 (Genesis 46:9) |
+| Ziphion | 洗非芬 | 洗非 (Genesis 46:16) |
+| Muppim | 姆平 | 母平 (Genesis 46:21) |
+| Semein | 西美音 | 西美 (Luke 3:26) |
+| Josech | 约瑟克 | 约瑟 (Luke 3:26) |
+| Joda | 约大 | 犹大 (Luke 3:26) |
+| Elmadam | 以摩太 | 以摩当 (Luke 3:28) |
+| Eliezer (Lukan) | 以列以谢 | 以利以谢 (Luke 3:29, and 13 more) |
+| Menna | 米拿 | 买南 (Luke 3:31) |
+
+**None of these is repaired**, and the reason is that eight of them are
+an editorial *policy* rather than an error. The CUV follows the Textus
+Receptus through Luke 3 and therefore reads a **different name** at
+those verses, not a different spelling of the same one; the tree
+transliterates the modern critical name instead, which is exactly what
+its English does. Telling those apart from the two that look like slips
+is a translation judgement, and two were taken as far as they can be
+taken without one:
+
+- **Reuben 吕便.** 吕便 occurs **0 times** in the CUV and 流便 occurs
+  **85**. But 吕便 is a real rendering in other Chinese versions, and it
+  is the file's own majority — 6 occurrences against 2. The 2 are the
+  sharp part: `hezron_reuben` is named 希斯仑（**流**便之子） while its own
+  summary reads 吕便的儿子. **One record says both.** Whichever way that
+  is settled, it is a translation-tradition call and the highest-value
+  minute a human could spend on this file.
+- **Eliezer (Lukan) 以列以谢.** 0 occurrences in the CUV, against 14 for
+  以利以谢 — which is the standard rendering, is what Luke 3:29 (this
+  man's only reference) actually reads, and is already carried by the
+  file's other Eliezer. It looks like a one-character slip, 列 for 利.
+  It was left alone anyway, because the file does **not** disambiguate
+  duplicate Chinese names elsewhere (玛拿西 and 以利亚撒 each appear twice,
+  identical), so "it must be a deliberate coinage" cannot be ruled out
+  from inside the file.
+
+### 36c2 — 338 relationship claims, graded by what states them
+
+Each parent-child and marriage claim was scored by the strongest passage
+that supports it, across all five editions:
+
+| Tier | Rule | Before repair | After |
+| --- | --- | --- | --- |
+| 1 | one verse names both people **and** carries a kinship word | 298 | **302** |
+| 2 | same chapter, both named within 4 verses, kinship word in the span | 31 | **31** |
+| 3 | no passage in five editions states it | 9 | **5** |
+
+The four that moved were **predicted before the repair was applied**:
+they were the `Melki`/`Josek` edges, invisible to the instrument only
+because the name it was searching for existed nowhere. Repairing the
+names witnessed them. That the count moved by exactly four, and by those
+four, is the check on the instrument rather than a separate finding.
+
+The 5 that remain are **not** a list of errors. They are the tree's
+inferred links, and they are the most interesting thing in this check:
+
+- **Heli → Mary.** The record's own summary already says "the
+  traditional reading where Heli is the father-in-law of Joseph and
+  biological father of Mary". Luke 3:23 does not say it.
+- **Eve → Seth.** Genesis 4:25 says Adam knew "his wife" and she bore
+  Seth. It does not name her in that verse.
+- **Ahinoam → Ish-bosheth**, **Maacah → Tamar** — inferred from
+  "sister", "his son", and the surrounding lists.
+- **Bathsheba → Shammua** is a different thing and belongs under
+  instrument limits: 2 Samuel 5:14 and 1 Chronicles 3:5 spell the same
+  son **Shammua** and **Shimea**, and no single verse names mother and
+  son together in either spelling.
+
+**The finding is not the five links. It is that the data model has no
+way to mark a link as inferred.** `mary.fatherId = "heli"` renders as a
+solid line indistinguishable from Adam → Seth, and the qualification
+that exists lives in a prose summary the tree view does not show. This
+is a product decision — a new field, and a way to draw it — and it is
+reported rather than taken.
+
+### Instrument errors, recorded because they nearly became findings
+
+1. **The sign convention, which produced 325 false findings.** `bc`
+   years are stored **negative** and AD positive (Jesus is `b = -4,
+   d = 30`), so both year systems run in the same direction and a
+   lifespan is `death - birth` under both. The first chronology run used
+   `birth - death` for `bc` and inverted every comparison, reporting **35
+   lifespan or death-before-birth issues, 218 parent/child order issues
+   and 72 parent-died-first issues**. All 325 were artifacts. Nothing
+   from that run reached this document; the real numbers are the 8 above.
+2. **A throwaway probe used `rstrip("'s")`**, which strips any trailing
+   apostrophe or `s` rather than the suffix, and reported that "Judas"
+   appears in no edition. The tool's own `norm_token` was correct; only
+   the probe was wrong. The probe was not the instrument, which is the
+   only reason it did no damage.
+3. **Multi-word names could never match a token.** `Ahinoam of Jezreel`
+   and `Joshua / Jose` are descriptions, not words a verse prints, and
+   made 5 people look unnamed. Dropping trailing `of …` / `the …`
+   phrases and splitting on the slash took the unnamed count from 5 to 3
+   — and the slash, which the fix was written to tolerate, turned out to
+   be one of the defects.
+4. **The first version read 2 editions and required one verse**, which
+   produced **48 tier-3 claims**. Calibrating against Genesis 4:18,
+   4:20-21 and 4:25 showed the misses were a genealogy naming the father
+   once and listing his children over the following verses, so the
+   instrument was widened to five editions and a ±4-verse same-chapter
+   window. Tier 3 fell from 48 to 9.
+5. **Exact containment can match inside a longer name.** 米拿 occurs 25
+   times in the CUV, but as a substring of 亚米拿达 (Amminadab), not as a
+   name. So **267 of 277 is an upper bound** on the Chinese names
+   witnessed, not an exact count. The 10 absences are exact; the 267 is
+   not.
+
+### The instrument limit that matters most
+
+The check surfaces only claims that **no passage states within the
+window**. An inferred link whose two people happen to be named a few
+verses apart in a chapter with a kinship word in it scores tier 2 and is
+invisible here. **A complete census of the tree's inferred links is
+therefore not possible with this instrument**, and the 5 above are a
+lower bound, not the total. Anyone acting on the "mark inferred links"
+finding should treat the tier-2 set of 31 as unreviewed.
+
+### What was deliberately NOT changed
+
+- **Every year.** The 4 impossible gaps, the Levi/Jochebed
+  contradiction and the 3 seam edges are all reported and none is
+  repaired, because every replacement value would be invented.
+- **Every Chinese name**, for the reason given in 36c1 above.
+- **`Janna`**, which a shipped edition witnesses.
+- **The five inferred links**, which are the model's gap and not the
+  data's error.
+- **`_meta.description`'s coverage claim** — "the canonical Adam → Jesus
+  line per Matthew 1 + Luke 3" — was read and not tested. The Lukan
+  chain's 39 names were read against Luke 3:23-31 in all five editions
+  and are in the right order; Matthew 1 was not put through the same
+  programmatic comparison and should not be assumed.
+
+### Frozen
+
+`test/family_tree_names_test.dart` — six tests. The three repaired names
+by exact value; the asset's `corrections` block must record all three;
+no displayed name may contain a slash; every record's references must
+still resolve to at least one verse; **every English name must appear as
+a whole word in some shipped edition of some verse the record itself
+cites**; and the set of 10 Chinese names absent from the CUV is frozen
+by id, so the debt can shrink but cannot grow or move.
+
+The English rule is the one with a future — it fails on a name nobody
+has thought of yet — and it is enforced with no help at all: no spelling
+aliases, no near-miss allowance, and no credit from a verse the record
+does not point at. **276 of 277 pass it.** The single exemption is
+`Jude`, whose only two references (Matthew 13:55, Mark 6:3) list the
+brothers of Jesus and spell him "Judas" or "Juda"; every English Bible
+calls the epistle's author Jude, and renaming him Judas would put him
+next to Iscariot.
+
+The references are resolved with the app's own `parseReference`, not a
+reimplementation of it, so the test asks the question the app asks. That
+also made it an independent second instrument: it reproduced the Python
+tool's counts exactly, including all 10 Chinese absences.
+
+Against the pre-repair asset three of the six tests fail, and the
+general rule names `Melki` and `Joshua / Jose` without being told to.
+
+### Still open
+
+- **The tree has no way to say "inferred".** Reported above; a product
+  decision.
+- **The 31 tier-2 claims are unreviewed**, and the inferred links among
+  them cannot be separated by this instrument.
+- **The 10 Chinese names**, of which Reuben's 吕便/流便 split — present in
+  a single record — is the one worth a human minute.
+- **Matthew 1's chain** has not been compared programmatically the way
+  Luke 3's was.
+- **The 4 impossible gaps and the Levi/Jochebed contradiction**, which
+  need a chronology decision rather than a repair.
+
+---
+
 ## Not checked yet
 
 - Verse **text** itself, against an *external* witness — for the
@@ -3645,7 +3971,15 @@ exactly Oholiah, Jepheth, Johoash and Manesseh.
   edition is licensed. A verse there that is wrong and well-formed and
   agrees with our own second copy would still not be found.
 - `book_introductions.json`, `bible_evidence.json`, `maps_index.json`
-  (see #300 for its provenance gap), `family_tree.json` relationships.
+  (see #300 for its provenance gap). Check 36 closes
+  **`family_tree.json`'s relationships**: the graph is sound in all 312
+  edges, 3 printed names existed in no Bible the app ships and are
+  fixed, and 333 of 338 relationship claims are stated by a passage the
+  record itself cites. What it does **not** close is the tree's inferred
+  links — 5 are named, but an inferred link whose two people happen to
+  be named a few verses apart is invisible to that instrument, so the 31
+  tier-2 claims are unreviewed and the model still has no way to draw a
+  link as inferred. Its years are measured and reported, not repaired.
   Check 35 closes `ot_synopsis.json`'s **alignments** — 139 groups
   against a 3,994-pair null in two independent tagged layers, 11 flagged
   and read, 10 correct and the eleventh reported — and closes the
@@ -3722,13 +4056,24 @@ exactly Oholiah, Jepheth, Johoash and Manesseh.
 4. The four verses that print both the Ketiv and the Qere. Probably a
    reader-side marker, not a data deletion.
 5. Per-record date sourcing (#292 owns `hebrew_kings.json`).
-6. The LEB's `{…}` idiom braces in the 660 imported verses, if a witness
+6. **The family tree's two decisions, from check 36.** Neither is an
+   engineering task and neither should be taken unattended. *(a)* The
+   tree draws an inferred link — Heli → Mary, Eve → Seth — with the same
+   solid line as Genesis 5:3, because the model has no field for it;
+   adding one, and deciding how to draw it, is a product call, and the
+   5 named links are a lower bound because the instrument cannot see an
+   inferred link whose two people are named a few verses apart. *(b)*
+   Reuben is 吕便 in six places in the file and 流便 in two, one of them
+   inside a record whose own summary says the other; the CUV the app
+   ships reads 流便 85 times and 吕便 never. One minute of a Chinese
+   reader's judgement settles it and nothing else can.
+7. The LEB's `{…}` idiom braces in the 660 imported verses, if a witness
    that preserves them can be found.
-7. The ten summarised Chinese sermons (check 19). Not an engineering
+8. The ten summarised Chinese sermons (check 19). Not an engineering
    task — ~85,000 English words need translating, and whether that
    happens, and by whom, is the owner's call. Until it does, the marking
    is the honest state.
-8. The remaining verse-rendering surfaces, audited but not exhaustively:
+9. The remaining verse-rendering surfaces, audited but not exhaustively:
    check 14 covers the reader, Browse, the sermon-citation popup, the
    two search-key caches and the clipboard. Strong's-driven surfaces
    (KWIC, concordance) read the tagged layer, which a placeholder has no

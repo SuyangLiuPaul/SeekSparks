@@ -7235,7 +7235,7 @@
     },
     {
       "id": "melki_nt",
-      "name": "Melki",
+      "name": "Melchi",
       "nameZhHans": "麦基",
       "nameZhHant": "麥基",
       "fatherId": "janna",
@@ -7271,7 +7271,7 @@
       ],
       "yearSystem": "bc",
       "birthYear": -128,
-      "summary": "Father of Melki; listed in Mary's Lukan ancestry.",
+      "summary": "Father of Melchi; listed in Mary's Lukan ancestry.",
       "summaryZhHans": "麦基之父；列于马利亚的路加家谱。",
       "summaryZhHant": "麥基之父；列於馬利亞的路加家譜。",
       "refs": [
@@ -7521,7 +7521,7 @@
     },
     {
       "id": "josek_lk_26",
-      "name": "Josek",
+      "name": "Josech",
       "nameZhHans": "约瑟克",
       "nameZhHant": "約瑟克",
       "fatherId": "joda_lk_26",
@@ -7833,7 +7833,7 @@
     },
     {
       "id": "joshua_lk_29",
-      "name": "Joshua / Jose",
+      "name": "Joshua",
       "nameZhHans": "约细",
       "nameZhHant": "約細",
       "fatherId": "eliezer_lk_29",
@@ -8168,6 +8168,32 @@
         "basis": "conventional",
         "refs": []
       }
+    }
+  ],
+  "corrections": [
+    {
+      "id": "janna",
+      "field": "summary",
+      "from": "Father of Melki; listed in Mary's Lukan ancestry.",
+      "why": "follows the repair of melki_nt"
+    },
+    {
+      "id": "josek_lk_26",
+      "field": "name",
+      "from": "Josek",
+      "why": "Luke 3:26, the record's only reference, reads \"Josech\" in bsb, nasb and leb and \"Joseph\" in kjv and kjv+s; \"Josek\" appears in none of the five"
+    },
+    {
+      "id": "joshua_lk_29",
+      "field": "name",
+      "from": "Joshua / Jose",
+      "why": "two editions' spellings joined by a slash in a field the app prints verbatim; Luke 3:29 reads \"Joshua\" in bsb, nasb and leb and \"Jose\" in kjv and kjv+s"
+    },
+    {
+      "id": "melki_nt",
+      "field": "name",
+      "from": "Melki",
+      "why": "Luke 3:24, the record's only reference, reads \"Melchi\" in bsb, kjv, kjv+s, nasb and leb; \"Melki\" appears in none of the five. The file already names the other man \"Melchi (II)\""
     }
   ]
 }
