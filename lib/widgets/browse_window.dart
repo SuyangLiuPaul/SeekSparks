@@ -40,6 +40,7 @@ import 'package:seeksparks/models/strongs.dart';
 import 'package:seeksparks/services/originals_service.dart';
 import 'package:seeksparks/services/strongs_service.dart';
 import 'package:seeksparks/services/tagged_text_service.dart';
+import 'package:seeksparks/services/versification.dart';
 import 'package:seeksparks/utils/morphology.dart' show describeMorphology;
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 import 'package:seeksparks/utils/strongs_inline.dart';
@@ -307,18 +308,27 @@ class _BrowseWindowState extends State<BrowseWindow> {
 
     // version code -> {verse number: text}, plus the chapter's extent.
     final byVersion = <String, Map<int, String>>{};
+    // version code -> {verse number: the number the publisher PRINTS},
+    // which is `1-4` where two or more verses share a block. Kept
+    // separate from the text because it answers a different question.
+    final labels = <String, Map<int, String>>{};
     var lastVerse = 0;
     for (var i = 0; i < widget.versionCodes.length; i++) {
       final verses = loaded[i];
       if (verses == null) continue;
       final map = <int, String>{};
+      final label = <int, String>{};
       for (final v in verses) {
         if (v.chapter != widget.chapter) continue;
         if ((bookNameToEnglish[v.book] ?? v.book) != widget.book) continue;
         map[v.verse] = v.text;
+        label[v.verse] = v.verseLabel;
         if (v.verse > lastVerse) lastVerse = v.verse;
       }
-      if (map.isNotEmpty) byVersion[widget.versionCodes[i]] = map;
+      if (map.isNotEmpty) {
+        byVersion[widget.versionCodes[i]] = map;
+        labels[widget.versionCodes[i]] = label;
+      }
     }
     if (lastVerse == 0) return const [];
 
@@ -335,6 +345,42 @@ class _BrowseWindowState extends State<BrowseWindow> {
     final absentVerses = <String, Set<int>>{
       for (final e in byVersion.entries)
         e.key: absentVerseNumbers(e.value, lastVerse),
+    };
+
+    // Three things an absent reference can be, beyond "we have no
+    // verse", each read off evidence already in the repository rather
+    // than a list written by hand.
+    //
+    // The publisher's own range label answers the first: 路加福音 1:1
+    // is marked `1-4`, so 1:2-1:4 are printed, under a number the
+    // reader can see. The critical-text table answers the second: the
+    // seventeen references no original-language file has words for. The
+    // same table answers the third from its other half — where two
+    // reader verses render ONE original verse, an edition following the
+    // original prints them together. Between them they account for 113
+    // of the corpus's 424 absences. docs/DATA-INTEGRITY.md check 30.
+    final rangeHeads = <String, Map<int, int>>{
+      for (final e in labels.entries) e.key: rangeLabelHeads(e.value),
+    };
+    final versification = await Versification.load();
+    List<String> originalKeysOf(int verse) =>
+        versification.originalKeys(widget.book, widget.chapter, verse);
+    final sharedHeads = <String, Map<int, int>>{
+      for (final e in absentVerses.entries)
+        e.key: sharedOriginalHeads(
+          e.value
+              .where((n) => !versification.isAbsentFromOriginal(
+                  widget.book, widget.chapter, n))
+              .toSet(),
+          // Only a verse that carries WORDS can be named as the place
+          // another verse is printed — the same rule mergedVerseHeads
+          // follows. A 見上節 or an OMIT is a record, not a text.
+          {
+            for (final v in byVersion[e.key]!.entries)
+              if (verseAbsenceOf(v.value) == null) v.key,
+          },
+          originalKeysOf,
+        ),
     };
 
     // One call warms the whole book's originals; the per-verse lookups
@@ -362,8 +408,21 @@ class _BrowseWindowState extends State<BrowseWindow> {
         // docs/DATA-INTEGRITY.md check 29.
         final isAbsent = absentVerses[code]?.contains(n) ?? false;
         if (text == null && !isAbsent) continue;
-        final absence =
-            isAbsent ? VerseAbsence.absent : verseAbsenceOf(text!);
+        int? absentHead;
+        if (isAbsent) {
+          absentHead = rangeHeads[code]?[n] ?? sharedHeads[code]?[n];
+        }
+        final VerseAbsence? absence;
+        if (!isAbsent) {
+          absence = verseAbsenceOf(text!);
+        } else if (absentHead != null) {
+          absence = VerseAbsence.merged;
+        } else if (versification.isAbsentFromOriginal(
+            widget.book, widget.chapter, n)) {
+          absence = VerseAbsence.notInCriticalText;
+        } else {
+          absence = VerseAbsence.absent;
+        }
         // A reference with no scripture has nothing to tag, so skip the
         // tagged/gloss lookup entirely rather than render the marker as
         // a word run.
@@ -390,7 +449,7 @@ class _BrowseWindowState extends State<BrowseWindow> {
           text: text,
           runs: runs,
           absence: absence,
-          mergedWith: mergedHeads[code]?[n],
+          mergedWith: absentHead ?? mergedHeads[code]?[n],
         ));
         first = false;
       }

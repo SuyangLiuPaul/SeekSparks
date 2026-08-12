@@ -15,6 +15,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seeksparks/constants/book_names.dart';
+import 'package:seeksparks/services/versification.dart';
 import 'package:seeksparks/utils/morphology.dart';
 import 'package:seeksparks/utils/reference_parser.dart';
 import 'package:seeksparks/utils/verse_list.dart' show applySearchLimit;
@@ -42,12 +43,21 @@ final _bookField = RegExp(r'"book":\s*"([^"]+)"');
 /// Verses numbered past the end of a KJV chapter that are a real
 /// versification decision rather than a defect, each checked by hand:
 /// modern editions split 3 John 14 into 14-15 and restore Revelation
-/// 12:18, and biblexg-v2's own block note on Acts 8:40 says it splits
-/// that verse "遵从最新希腊文新约底本 NA28、UBS5".
+/// 12:18.
+///
+/// 使徒行傳 8:41 was here too, on the belief that the edition split 8:40
+/// the way it splits others "遵从最新希腊文新约底本 NA28、UBS5". It did
+/// not. No versification tradition gives Acts 8 more than forty verses,
+/// the whole chapter carries no NA28 note, and the row numbered 40
+/// stopped mid-clause at 「腓利卻出現在亞鎖城，」 with the rest of the
+/// verse under 41 — a converter's off-by-one, repaired in v1.6.118 by
+/// `tools/repair_verse_numbering.py`. That is exactly the reason this
+/// set is written by hand and kept short: a reference the canon does
+/// not have is compared against nothing, so a defect can sit in it
+/// wearing a plausible explanation.
 const _knownBeyondCanon = <String>{
   '3 John 1:15',
   'Revelation 12:18',
-  'Acts 8:41',
 };
 
 /// Code points that must not appear in scripture because they render as
@@ -676,7 +686,10 @@ void main() {
       // +2 in v1.6.117: Numbers 10:34 and Deuteronomy 23:24 were holes
       // in assets/lxxwh.json, each beside a record holding two Greek
       // verses at once. See check 29.
-      expect(records, 295534);
+      // −2 in v1.6.118: 使徒行傳 8:40 was cut across two rows in both
+      // biblexg files, the second numbered 8:41, a reference no
+      // versification tradition has. See check 30.
+      expect(records, 295532);
       expect(census, {
         'cuvs-yhwh/merged': 71,
         'cuvs-yhwh/mergedNext': 1,
@@ -843,6 +856,235 @@ void main() {
           expect(marker.allMatches(text).length, lessThan(2),
               reason: '$ref:$n holds more than one Greek verse');
         }
+      }
+    });
+  });
+
+  // ── Check 30: why each absent reference is absent ─────────────────
+  //
+  // Check 29 counted the absences and proved each sits in a chapter its
+  // edition otherwise carries. It could not say WHY any of them is
+  // absent, so all 424 got the same weakest-true sentence — "this
+  // edition has no verse here" — including the ones the app can prove
+  // are on the page a line higher.
+  //
+  // Three derivations answer it, none of them a list: the publisher's
+  // own `verseLabel` range, the reader keys the original has no words
+  // for, and the pairs of reader keys that render ONE original verse.
+  // What no derivation reaches is the residue, and the residue is the
+  // number that must not grow — every one of those is either a known
+  // loss or something nobody has looked at yet.
+  group('every absent reference is classified', () {
+    // Editions in the English versification frame. lxxwh is excluded on
+    // purpose: its 302 absences are a different canon in a different
+    // base text, answered by check 29 against an independent LXX
+    // witness, and an English-tradition rule over them would report 302
+    // defects that are not defects.
+    const classified = <String>[
+      'bsb',
+      'leb',
+      'nasb',
+      'biblexg-v2',
+      'biblexg-v2-tr',
+    ];
+
+    late final Versification versification = Versification.fromJson(
+      jsonDecode(File('assets/versification.json').readAsStringSync())
+          as Map<String, dynamic>,
+    );
+
+    /// The references [code] does not carry, in books it does, split
+    /// into the three explained classes and the residue.
+    Map<String, List<String>> classify(String code) {
+      final canon = _canon();
+      final present = <String, Map<int, Set<int>>>{};
+      final labels = <String, Map<int, Map<int, String>>>{};
+      for (final v in _edition(code)) {
+        final book = bookNameToEnglish[v['book']] ?? v['book'] as String;
+        final c = int.tryParse(v['chapter'].toString());
+        final n = int.tryParse(v['verse'].toString());
+        if (c == null || n == null) continue;
+        (present.putIfAbsent(book, () => {}).putIfAbsent(c, () => {})).add(n);
+        labels.putIfAbsent(book, () => {}).putIfAbsent(c, () => {})[n] =
+            v['verseLabel']?.toString() ?? '';
+      }
+      final out = {
+        'range': <String>[],
+        'notInOriginal': <String>[],
+        'sharedOriginal': <String>[],
+        'unexplained': <String>[],
+      };
+      for (final book in present.keys) {
+        final chapters = canon[book];
+        if (chapters == null) continue;
+        for (final entry in chapters.entries) {
+          final c = entry.key;
+          final have = present[book]?[c] ?? const <int>{};
+          if (have.isEmpty) continue;
+          final absent = <int>{
+            for (var n = 1; n <= entry.value; n++)
+              if (!have.contains(n)) n,
+          };
+          if (absent.isEmpty) continue;
+          final ranged = rangeLabelHeads(labels[book]![c]!);
+          final rest = absent.where((n) => !ranged.containsKey(n)).toSet();
+          final missing = rest
+              .where((n) => !versification.isAbsentFromOriginal(book, c, n))
+              .toSet();
+          final shared = sharedOriginalHeads(missing, have,
+              (n) => versification.originalKeys(book, c, n));
+          for (final n in absent) {
+            final where = !rest.contains(n)
+                ? 'range'
+                : !missing.contains(n)
+                    ? 'notInOriginal'
+                    : shared.containsKey(n)
+                        ? 'sharedOriginal'
+                        : 'unexplained';
+            out[where]!.add('$book $c:$n');
+          }
+        }
+      }
+      for (final list in out.values) {
+        list.sort();
+      }
+      return out;
+    }
+
+    test('the counts are the ones check 30 measured', () {
+      final totals = <String, Map<String, int>>{};
+      for (final code in classified) {
+        totals[code] = {
+          for (final e in classify(code).entries) e.key: e.value.length,
+        };
+      }
+      expect(totals, {
+        // Both BSB and NASB are absences ONLY where the original has no
+        // words. Two editions arriving at that independently is why the
+        // row is allowed to say why it is empty.
+        'bsb': {
+          'range': 0,
+          'notInOriginal': 16,
+          'sharedOriginal': 0,
+          'unexplained': 0,
+        },
+        'nasb': {
+          'range': 0,
+          'notInOriginal': 13,
+          'sharedOriginal': 0,
+          'unexplained': 0,
+        },
+        // LEB's two merges are 2 Corinthians 13:13 and Acts 19:41, both
+        // of which its own notes also declare. The three unexplained
+        // are Romans 16:25-27: the doxology is in the edition, inside
+        // the note at 16:24, but nothing in the data says so in a form
+        // this repository can derive, so it stays unexplained rather
+        // than assumed.
+        'leb': {
+          'range': 0,
+          'notInOriginal': 16,
+          'sharedOriginal': 2,
+          'unexplained': 3,
+        },
+        // 21 of the 梁家鏗譯本 absences are the publisher's own printed
+        // ranges — the largest single class in the corpus and the only
+        // one where the edition itself supplies the evidence.
+        'biblexg-v2': {
+          'range': 21,
+          'notInOriginal': 11,
+          'sharedOriginal': 1,
+          'unexplained': 5,
+        },
+        'biblexg-v2-tr': {
+          'range': 21,
+          'notInOriginal': 11,
+          'sharedOriginal': 1,
+          'unexplained': 1,
+        },
+      });
+    });
+
+    test('the residue is only the losses already named', () {
+      final residue = <String>{};
+      for (final code in classified) {
+        residue.addAll(classify(code)['unexplained']!);
+      }
+      expect(residue.toList()..sort(), [
+        // Simplified only, needing a 繁→简 conversion this repository
+        // will not invent. Already frozen in
+        // test/biblexg_verse_boundary_test.dart.
+        'Mark 6:10',
+        'Mark 6:11',
+        'Mark 6:8',
+        'Mark 6:9',
+        // Both 梁家鏗譯本 files: 1:1 ends on a dangling 「：」 and the
+        // grace-and-peace greeting is nowhere. A real loss, and the only
+        // one this classification found that was not already known.
+        'Philippians 1:2',
+        // LEB prints the doxology inside its note at 16:24.
+        'Romans 16:25',
+        'Romans 16:26',
+        'Romans 16:27',
+      ]);
+    });
+  });
+
+  // ── Check 30's two repairs ────────────────────────────────────────
+  //
+  // Both were found while classifying the absences above, and both are
+  // the one defect class that outranks everything: a reference that
+  // answers with a DIFFERENT verse. A reader comparing columns cannot
+  // detect either, because both look like ordinary text.
+  group('a reference holds its own verse, not its neighbour\'s', () {
+    test('the grace benediction is at 2 Corinthians 13:14', () {
+      // The critical text prints the chapter in thirteen verses, joining
+      // what the English tradition numbers 12 and 13, so the grace is
+      // its verse 13. Three editions follow that numbering and the app
+      // keys every edition by the English reference — so until v1.6.118
+      // their 13:13 answered with 13:14's words, beside a KJV column
+      // reading "All the saints salute you" and nothing to say the two
+      // were different verses. 13:12 is untouched and needs no repair:
+      // it holds canonical 12 AND 13, which is a superset, not a
+      // displacement, and `sharedOriginalHeads` is what tells the reader
+      // 13:13 is up there.
+      const grace = <String, List<String>>{
+        'leb': ['grace', 'love of God', 'fellowship'],
+        'biblexg-v2': ['恩', '爱', '圣灵'],
+        'biblexg-v2-tr': ['恩', '愛', '聖靈'],
+      };
+      const salute = <String, List<String>>{
+        'leb': ['holy kiss', 'saints greet you'],
+        'biblexg-v2': ['亲吻', '全体圣徒'],
+        'biblexg-v2-tr': ['親吻', '全體聖徒'],
+      };
+      for (final code in grace.keys) {
+        final byRef = {
+          for (final v in _edition(code)) _ref(v): v['text'] as String,
+        };
+        expect(byRef['2 Corinthians 13:13'], isNull, reason: code);
+        for (final token in grace[code]!) {
+          expect(byRef['2 Corinthians 13:14'], contains(token), reason: code);
+        }
+        for (final token in salute[code]!) {
+          expect(byRef['2 Corinthians 13:12'], contains(token), reason: code);
+        }
+      }
+    });
+
+    test('使徒行傳 8:40 is one whole verse', () {
+      // The row stopped at a comma — 「腓利卻出現在亞鎖城，」 — with the
+      // rest under a reference no versification tradition has, so a
+      // reader saw Philip appear at Azotus and the sentence end there.
+      // The join added no character; the comma was already the clause
+      // separator.
+      const tails = {'biblexg-v2': '凯撒利亚', 'biblexg-v2-tr': '凱撒利亞'};
+      for (final code in tails.keys) {
+        final byRef = {
+          for (final v in _edition(code)) _ref(v): v['text'] as String,
+        };
+        expect(byRef['Acts 8:41'], isNull, reason: code);
+        expect(byRef['Acts 8:40'], contains(tails[code]!), reason: code);
+        expect(byRef['Acts 8:40'], isNot(endsWith('，')), reason: code);
       }
     });
   });

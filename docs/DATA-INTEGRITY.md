@@ -2442,6 +2442,176 @@ prove: our file has no verse here.
 
 ---
 
+## Check 30 — *why* each of those verses is absent
+
+Check 29 gave every absent reference a row and one sentence: *this
+edition has no verse here*. True of all 426, and the weakest thing that
+is true of any of them. It is the right sentence for a reference nobody
+can account for. It is a poor one for 路加福音 1:2, whose words are on
+the page one line higher under a number the reader can see, and it is
+actively misleading for 2 Corinthians 13:13, where three editions have
+the verse and the app was telling the reader they did not.
+
+That check named its own gap: *"`biblexg-v2` and `-tr`, 38 and 34
+absences, unclassified. These are mixed and need their own check."*
+This is that check. It classifies the 122 absences of the five editions
+in the English versification frame, using three kinds of evidence
+already in the repository, and finds **two live defects** on the way.
+
+`lxxwh`'s 302 are deliberately out of scope: a different canon in a
+different base text, already answered by check 29 against an independent
+LXX witness. Running an English-tradition rule over them would report
+302 defects that are not defects.
+
+### 30a — three derivations, no table
+
+The rule this check set itself is that a classification asserted by hand
+is a **second copy of a fact**, and a second copy rots. Each of the
+three is read off something the repository already has, at display time:
+
+| evidence | what it proves | reach |
+|---|---|---:|
+| the edition's own `verseLabel` | the publisher printed these verses as one block | 42 |
+| `versification.json`'s `absent` set | no original-language file has words at this reference | 67 |
+| `versification.json`'s `map`, read for overlap | the *original* numbers two reader verses as one | 4 |
+
+**The label.** 梁家鏗譯本 files a merged block under its first number and
+prints the range: 路加福音 1:1 carries `verseLabel: "1-4"` and the whole
+prologue. So 1:2, 1:3 and 1:4 have no record and are not lost. 21 such
+references per file, 42 in all — the largest single class in the corpus,
+and the only one where the **edition itself** is the witness. Eighteen
+of the twenty-one come from two-verse blocks; the Luke prologue supplies
+the other three and is the only run longer than a pair.
+
+**The `absent` set.** The seventeen reader keys `derive_versification.py`
+found no original-language words for, aligned in v1.6.90 from three
+independent tagged translations and knowing nothing about which edition
+carries what. Every absence of BSB (16 of 16) and NASB (13 of 13) is in
+it, 16 of LEB's 21, and 11 of the 13 the 梁家鏗譯本 labels do not
+explain — Matthew 17:21, 18:11, 23:14; Mark 11:26, 15:28; Luke 17:36;
+John 5:4; Acts 8:37, 15:34, 24:7, 28:29. Four editions and a table
+derived for an unrelated purpose agreeing on the same set is the
+strongest agreement in this document that was not designed for.
+
+**The `map`, read the other way.** The half of that table nobody had
+used for this: where two reader keys resolve to the *same* original key,
+the original has one verse there. 2 Corinthians 13:13 and 13:12 both
+resolve to original 13:12, so an edition following the original's
+numbering prints them together — and if it carries 13:12 and has no
+13:13, 13:13's words are in that record. The claim is safe because an
+unmapped key resolves to itself: two unmapped references can never
+appear to share, so the sentence is only ever spoken where the table
+says something.
+
+Reach: **113 of the 122**, and so 113 of the corpus's 424 absence rows
+now say *why* they are empty instead of only *that* they are. 46 of them
+name the verse the words are in.
+
+### 30b — 2 Corinthians 13:13 answered with 13:14's words
+
+Found by the third derivation before it was written, while reading why
+2 Cor 13:14 was absent from three editions and 13:13 was not.
+
+The critical text prints the chapter in **thirteen** verses: what the
+English tradition numbers 12 and 13 — 「Greet one another with a holy
+kiss」 and 「All the saints salute you」 — are one verse there, so the
+grace benediction the English tradition calls 13:14 is its verse 13.
+`leb`, `biblexg-v2` and `biblexg-v2-tr` follow that numbering. The app
+keys every edition by the English reference. So all three answered
+**2 Corinthians 13:13 with the grace benediction**, beside a KJV column
+reading "All the saints salute you", with nothing to say the two are
+different verses.
+
+This is the defect class that outranks everything in this document:
+plausible, wrong, and unfalsifiable by a reader. Repaired by
+`tools/repair_verse_numbering.py`, which moves the record to 13:14 and
+rewrites `verse`, `verseLabel` and the last three digits of `id`.
+
+The verse **before** it is untouched and needs no repair. 13:12 holds
+canonical 12 and 13 together, which is a *superset*, not a displacement:
+a reader sees all the words, in order, in that column. The third
+derivation is what now tells them so.
+
+### 30c — 使徒行傳 8:40 stopped at a comma
+
+The absence sweep runs one direction; the same pass run the other way
+asks which references exist **beyond** the canon, because a reference
+the canon does not have is compared against nothing, and that is where a
+converter's off-by-one hides.
+
+Three distinct references turned up across the corpus. Two are real:
+`3 John 1:15` (four editions) and `Revelation 12:18` (three) are NA28
+splits, confirmed by content. The third was not. Both 梁家鏗譯本
+files had 使徒行傳 **8:41**, a reference no versification tradition
+gives — and the row numbered 40 stopped mid-clause at 「腓利卻出現在亞鎖
+城，」 with the rest of the verse underneath it. Same failure as
+使徒行傳 15:16, which `repair_biblexg.py` found as two rows under one
+number; here the converter gave the second row the *next* number instead
+of repeating it, which is why a key-set comparison reported an extra
+verse rather than a lost one, and why check 29 never saw it.
+
+`test/data_integrity_test.dart` had been carrying `Acts 8:41` in its
+`_knownBeyondCanon` set since #304, on the stated belief that the
+edition's own block note declared an NA28 split there. **It does not.**
+The chapter contains no NA28 note at all; the only note in verse 40 is
+the geographical gloss 「即向北沿海，」. A hand-written exception had
+grown an explanation nobody had checked, which is the argument for
+keeping such sets as short as this one now is.
+
+Repaired by joining the rows. The join **adds no character**: the first
+row already ended in the comma that separates the clauses.
+
+### What was deliberately NOT changed
+
+- **The 42 range merges.** The publisher's labelling is honest and the
+  words are all on the page. Nothing is rewritten; the label is *read*.
+- **`leb` Acts 19:41 and Romans 16:25-27.** The edition declares both in
+  its own notes. 19:41 is now explained by the third derivation; the
+  Romans doxology is **left unexplained** — it is in the edition, inside
+  the note at 16:24, but no derivation reaches it and inventing one to
+  cover three references would be the hand-written table this check
+  exists to avoid.
+- **`3 John 1:15` and `Revelation 12:18`.** Legitimate NA28 splits,
+  confirmed by content, carried by several editions.
+- **馬可福音 6:8-11.** Simplified file only; restoring them needs a
+  繁→简 conversion this repository will not invent. Already frozen in
+  `test/biblexg_verse_boundary_test.dart` and unchanged by this check.
+- **A merge table for the four displaced references.** Considered and
+  rejected: the third derivation covers all four from data already
+  shipped, and a table would have been a second place for the same fact
+  to rot.
+
+### The residue: 9
+
+What no derivation reaches, and the number that must not grow.
+
+| reference | editions | what it is |
+|---|---|---|
+| Philippians 1:2 | both 梁家鏗譯本 | a real loss — 1:1 ends on a dangling 「：」 and the grace-and-peace greeting is nowhere |
+| 馬可福音 6:8-11 | simplified only | the known 繁→简 gap |
+| Romans 16:25-27 | `leb` | in the edition, inside the note at 16:24 |
+
+Philippians 1:2 is the only thing this check found that was not already
+known, and it is a loss, not a defect of ours to repair: the words are
+not in the file to move.
+
+### Frozen
+
+- `test/data_integrity_test.dart` — the four-way classification counts
+  for all five editions, computed by the *shipped* `rangeLabelHeads`,
+  `sharedOriginalHeads` and `Versification` rather than by a copy, so
+  the test fails if the display rule drifts from the measurement; the
+  residue as an exact list; the grace benediction at 13:14 with 13:12
+  still holding the saints' greeting; and 使徒行傳 8:40 whole and not
+  ending in a comma.
+- `test/verse_text_absence_test.dart` — `rangeLabelHeads` and
+  `sharedOriginalHeads` at the unit level, including the two 以弗所書
+  labels that name a verse which also holds its own row.
+- `tools/audit_data_integrity.py` check 30 — the wide sweep, in Python,
+  reaching the same counts by a different route.
+
+---
+
 ## Not checked yet
 
 - Verse **text** itself, against an *external* witness — for the
@@ -2500,25 +2670,31 @@ prove: our file has no verse here.
    terms we can use — which is worth *testing* rather than assuming, as
    this entry's previous wording proves: it asserted no witness existed
    for BSB or KJV, and four were found on the first attempt.
-2. **The 72 absences check 29 left unclassified**, in priority order:
-   the two 梁家鏗譯本 editions' 38 and 34, which are known to mix a
-   *merge* (Luke 1:1 holds the whole prologue) with a *loss*
-   (Philippians 1:2), so the two must be separated before either can be
-   described; then Matthew 12:47, which the Westcott-Hort text from the
-   same source as check 29's witness would settle in one pass.
-3. The 4 references the two 梁家鏗譯本 editions still disagree about —
+2. **Matthew 12:47**, the one New-Testament absence in `lxxwh` and all
+   that is left of check 29's item 2 — the 梁家鏗譯本 editions' 38 and
+   34 are classified in check 30, which found and repaired two live
+   defects doing it. The Westcott-Hort text from the same source as
+   check 29's witness would settle 12:47 in one pass.
+3. **The English tradition's merges, in the Septuagint's 302.** Check
+   29c found these by example and never measured them: English Psalm
+   13:6's Greek is present, inside 13:5. Check 30's third derivation is
+   exactly the instrument for it — `versification.json`'s `map` read for
+   overlap — but the Septuagint is numbered in its *own* frame, not the
+   original's, so the table does not apply unmodified and the work is
+   deriving the equivalent, not reusing it.
+4. The 4 references the two 梁家鏗譯本 editions still disagree about —
    马可福音 6:8–11, all that is left of the original 8. Needs a witness that is the
    same edition in the missing script; a 简/繁 conversion table derived
    from the 7,645 length-equal verse pairs the two files already share
    would be one, and would be witnessed by the corpus rather than
    invented — but it must be derived and checked before a character of
    it is trusted.
-4. The four verses that print both the Ketiv and the Qere. Probably a
+5. The four verses that print both the Ketiv and the Qere. Probably a
    reader-side marker, not a data deletion.
-5. Per-record date sourcing (#292 owns `hebrew_kings.json`).
-6. The LEB's `{…}` idiom braces in the 660 imported verses, if a witness
+6. Per-record date sourcing (#292 owns `hebrew_kings.json`).
+7. The LEB's `{…}` idiom braces in the 660 imported verses, if a witness
    that preserves them can be found.
-7. The ten summarised Chinese sermons (check 19). Not an engineering
+8. The ten summarised Chinese sermons (check 19). Not an engineering
    task — ~85,000 English words need translating, and whether that
    happens, and by whom, is the owner's call. Until it does, the marking
    is the honest state.

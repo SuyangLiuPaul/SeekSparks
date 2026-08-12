@@ -4315,6 +4315,11 @@ const uiStrings = {
     'zh-Hant': '本版本此處沒有經文',
     'en': 'This edition has no text here',
   },
+  'verseNotInCriticalText': {
+    'zh-Hans': '不在多数现代译本依据的校勘本中',
+    'zh-Hant': '不在多數現代譯本依據的校勘本中',
+    'en': 'Not in the critical text most modern editions follow',
+  },
   'verseNotInEdition': {
     'zh-Hans': '本版本没有这一节',
     'zh-Hant': '本版本沒有這一節',

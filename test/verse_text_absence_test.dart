@@ -139,6 +139,58 @@ void main() {
     });
   });
 
+  group('rangeLabelHeads', () {
+    test('reads the publisher\'s own range label', () {
+      // 路加福音 1, verbatim from assets/biblexg-v2.json: the record
+      // numbered 1 is labelled `1-4` because the publisher printed the
+      // prologue as one block. 2, 3 and 4 have no record, and are not
+      // lost — they are on the page under a number the reader can see.
+      expect(rangeLabelHeads({1: '1-4', 5: '5'}), {2: 1, 3: 1, 4: 1});
+    });
+
+    test('maps a range that does not start at its own number', () {
+      // 使徒行傳 1:18-19 is filed under 18 in one file and the label
+      // still spans both, so only 19 is explained.
+      expect(rangeLabelHeads({18: '18-19'}), {19: 18});
+    });
+
+    test('names the head even when the label is filed elsewhere', () {
+      // Nothing in the data guarantees the record holding a `20-21`
+      // label is itself numbered 20. The head is the record's number,
+      // because that is where the words actually are.
+      expect(rangeLabelHeads({20: '20-21'}), {21: 20});
+      expect(rangeLabelHeads({21: '20-21'}), {20: 21});
+    });
+
+    test('a plain number explains nothing', () {
+      expect(rangeLabelHeads({1: '1', 2: '2', 3: ''}), isEmpty);
+      expect(rangeLabelHeads(const {}), isEmpty);
+    });
+
+    test('ignores a label that is not a forward range', () {
+      // Neither a descending pair nor a single-verse "range" says any
+      // other reference was printed here.
+      expect(rangeLabelHeads({5: '5-5'}), isEmpty);
+      expect(rangeLabelHeads({5: '7-5'}), isEmpty);
+      expect(rangeLabelHeads({5: '5a'}), isEmpty);
+      expect(rangeLabelHeads({5: '5-'}), isEmpty);
+      expect(rangeLabelHeads({5: '見上節'}), isEmpty);
+    });
+
+    test('never claims a verse that carries its own row', () {
+      // 以弗所書 2:20 is labelled `20-21` while 2:21 also exists as its
+      // own record — the one contradiction frozen in
+      // test/biblexg_verse_boundary_test.dart. This function still
+      // reports 21, and it is the CALLER that intersects with the
+      // references actually absent. That division matters: if this
+      // function suppressed the pair, a future asset where the row
+      // really did vanish would go unexplained; if the caller did not
+      // intersect, real scripture would be hidden behind a note.
+      final heads = rangeLabelHeads({20: '20-21', 21: '21'});
+      expect(heads, {21: 20});
+    });
+  });
+
   group('verseAbsenceNote', () {
     const locales = ['en', 'zh-Hans', 'zh-Hant'];
 
@@ -203,6 +255,32 @@ void main() {
         // the reference is missing as well.
         expect(absentVerseNumbers({1: 'a', 2: '見上節', 3: 'OMIT'}, 3), isEmpty);
       });
+    });
+
+    test('an absence the critical text explains says more than one it does '
+        'not', () {
+      // The two kinds render in the same slot and differ only in what
+      // they claim. `absent` makes the weakest true claim — our file has
+      // no verse here. `notInCriticalText` adds the reason, and is only
+      // reached when an independently derived table says the original
+      // has no words at that reference. If the two sentences ever
+      // collapse into one string the distinction is decorative.
+      for (final locale in locales) {
+        final vague = verseAbsenceNote(VerseAbsence.absent, locale);
+        final explained =
+            verseAbsenceNote(VerseAbsence.notInCriticalText, locale);
+        expect(explained, isNot(equals(vague)), reason: locale);
+        expect(explained.trim(), isNotEmpty, reason: locale);
+      }
+    });
+
+    test('the critical-text sentence differs in script between the two '
+        'Chinese locales', () {
+      expect(
+        verseAbsenceNote(VerseAbsence.notInCriticalText, 'zh-Hans'),
+        isNot(equals(
+            verseAbsenceNote(VerseAbsence.notInCriticalText, 'zh-Hant'))),
+      );
     });
 
     test('the two Chinese locales differ in script', () {

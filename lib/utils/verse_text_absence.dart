@@ -56,6 +56,31 @@ enum VerseAbsence {
   /// The reference is in the file with no text at all.
   blank,
 
+  /// The reference is absent, and the critical text has no words there.
+  ///
+  /// Also inferred rather than read off a string, and from a table this
+  /// repository derived for an unrelated purpose: `assets/versification
+  /// .json`'s `absent` set is the reader keys with no counterpart in any
+  /// original-language file, aligned in v1.6.90 from three independent
+  /// tagged translations and knowing nothing about which editions carry
+  /// what. Seventeen references are in it.
+  ///
+  /// Four editions' absences land on that set and on almost nothing
+  /// else — BSB 16 of 16, NASB 13 of 13, LEB 16 of 21, both 梁家鏗譯本
+  /// 11 of the 13 their publisher's own range labels do not explain
+  /// (docs/DATA-INTEGRITY.md check 30). Four editions agreeing about
+  /// which references the critical text lacks is why the row can say
+  /// *why* it is empty rather than only that it is — and why the KJV
+  /// column beside it, which does have the verse, stops looking like
+  /// the one that is right.
+  ///
+  /// The claim is about the CRITICAL TEXT, not about the publisher's
+  /// intent: the table proves the original has no words here, and
+  /// cannot prove this edition left the verse out deliberately rather
+  /// than losing it. [omitted] makes that stronger claim and is used
+  /// only where the edition says so in its own words.
+  notInCriticalText,
+
   /// The reference is not in the edition's file at all.
   ///
   /// Unlike the four above this is not read off a stored string — there
@@ -156,6 +181,86 @@ Map<int, int> mergedVerseHeads(Map<int, String> chapterTexts) {
   return out;
 }
 
+/// Maps each reference an edition prints inside a RANGE to the verse
+/// number that range is filed under, read from the publisher's own
+/// label.
+///
+/// [chapterLabels] is one edition's `verseLabel` per verse number. A
+/// label of `1-4` on the record numbered 1 says the publisher printed
+/// Luke 1:1-4 as one block, so 1:2, 1:3 and 1:4 have no record of their
+/// own and are not lost — they are on the page, under a number the
+/// reader can see. 42 of the 72 references the two 梁家鏗譯本 editions
+/// do not carry are this, which is the single largest class among them
+/// and the only one where the *edition itself* supplies the evidence.
+///
+/// Derived at read time rather than tabulated, because the label is
+/// already in the asset and a table would be a second copy of it. The
+/// caller intersects the result with the references actually absent,
+/// which is what keeps the two labels that name a verse *also* holding
+/// its own row — 以弗所書 2:20 marked `20-21` and 3:10 marked `10-11`,
+/// both frozen in `test/biblexg_verse_boundary_test.dart` — from
+/// hiding scripture behind a note.
+Map<int, int> rangeLabelHeads(Map<int, String> chapterLabels) {
+  final out = <int, int>{};
+  for (final entry in chapterLabels.entries) {
+    final match = RegExp(r'^(\d+)\s*-\s*(\d+)$').firstMatch(entry.value.trim());
+    if (match == null) continue;
+    final from = int.parse(match.group(1)!);
+    final to = int.parse(match.group(2)!);
+    if (to <= from) continue;
+    for (var n = from; n <= to; n++) {
+      if (n != entry.key) out[n] = entry.key;
+    }
+  }
+  return out;
+}
+
+/// Maps each absent reference to the earlier reference holding its
+/// words, where the ORIGINAL text numbers the two as one verse.
+///
+/// The third and last of the three ways an absence gets explained, and
+/// the one that catches the cases a reader is most likely to misread.
+/// The critical text prints 2 Corinthians 13 in thirteen verses, joining
+/// what the English tradition numbers 12 and 13; three editions follow
+/// it, so their 13:12 holds both and they have no 13:13 at all. Beside a
+/// KJV column reading "All the saints salute you" that looked like a
+/// column that had lost a verse.
+///
+/// [originalKeysOf] is `Versification.originalKeys` for this book and
+/// chapter — a table this repository derived in v1.6.90 by aligning
+/// Strong's streams, for an unrelated purpose, knowing nothing about
+/// which edition carries what. Two reader verses whose words come from
+/// the same original verse are one verse in the original; if the edition
+/// carries the earlier one and not the later, the later's words are in
+/// that record.
+///
+/// Only the nearest preceding reference the edition actually carries is
+/// considered, and only a genuine overlap counts. An unmapped verse
+/// resolves to itself, so two unmapped references can never appear to
+/// share — the claim is only ever made where the table says something.
+///
+/// Callers must rule out [VerseAbsence.notInCriticalText] first: a verse
+/// the original has no words for is unmapped, resolves to itself, and is
+/// a different fact.
+Map<int, int> sharedOriginalHeads(
+  Set<int> absent,
+  Set<int> present,
+  List<String> Function(int verse) originalKeysOf,
+) {
+  final out = <int, int>{};
+  for (final n in absent) {
+    for (var p = n - 1; p >= 1; p--) {
+      if (!present.contains(p)) continue;
+      final mine = originalKeysOf(n).toSet();
+      if (mine.intersection(originalKeysOf(p).toSet()).isNotEmpty) {
+        out[n] = p;
+      }
+      break;
+    }
+  }
+  return out;
+}
+
 /// The verse numbers an edition does not carry, in a chapter it does.
 ///
 /// [chapterTexts] is one edition's verses for the chapter; [lastVerse] is
@@ -210,6 +315,9 @@ String verseAbsenceNote(
     case VerseAbsence.omitted:
       return uiStrings['verseOmittedFromBaseText']?[locale] ??
           "Not in this edition's base text";
+    case VerseAbsence.notInCriticalText:
+      return uiStrings['verseNotInCriticalText']?[locale] ??
+          'Not in the critical text most modern editions follow';
     case VerseAbsence.blank:
       return uiStrings['verseTextMissing']?[locale] ??
           'This edition has no text here';

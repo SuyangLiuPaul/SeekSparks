@@ -781,6 +781,172 @@ def check_absent_references():
            examined, orphans, '\n'.join(lines))
 
 
+# --------------------------------------------------------------------
+# 30. Every absent reference is classified, and the classification is
+#     derived rather than tabulated.
+#
+#     Check 29 counted the 426 absences and confirmed each one sits in a
+#     chapter its edition otherwise carries. It could not say WHY any of
+#     them is absent, and left the two 梁家鏗譯本 editions' 72 explicitly
+#     unclassified because they mix a merge with a loss.
+#
+#     Three independent kinds of evidence separate them, and none is a
+#     list written by hand:
+#
+#       * the edition's own `verseLabel`. A record labelled `1-4` says
+#         the publisher printed Luke 1:1-4 as one block; 1:2-4 are on the
+#         page, under a number the reader can see.
+#       * `assets/versification.json`'s `absent` set — the reader keys no
+#         original-language file has words for, aligned in v1.6.90 from
+#         three tagged translations and knowing nothing about which
+#         edition carries what.
+#       * the same table's `map`, read for overlap. Where two reader
+#         verses render ONE original verse, an edition following the
+#         original prints them together: 2 Corinthians 13:13 and 13:12
+#         both resolve to original 13:12, so the three editions with no
+#         13:13 have its words in their 13:12.
+#
+#     What remains after all three is the residue: absences this
+#     repository cannot explain, which is the number that must not grow.
+#     It is 9 — Philippians 1:2 in both 梁家鏗譯本 files (1:1 ends on a
+#     dangling colon and the greeting is nowhere), 馬可福音 6:8-11 in the
+#     simplified file only, already frozen in
+#     `test/biblexg_verse_boundary_test.dart`, and LEB's Romans 16:25-27,
+#     whose doxology the edition prints inside its note at 16:24.
+#
+#     The Septuagint is not classified here. Its 302 absences are a
+#     different canon in a different base text, answered by check 29
+#     against an independent LXX witness; running an English-tradition
+#     rule over them would report 302 defects that are not defects.
+#
+#     The check also sweeps the other direction, for references BEYOND
+#     the canon, because a reference the canon does not have cannot be
+#     compared against anything and is where a converter's off-by-one
+#     hides. Three are legitimate NA28 splits carried by several
+#     editions; a fourth, 使徒行傳 8:41, was a truncation repaired by
+#     `tools/repair_verse_numbering.py`.
+# --------------------------------------------------------------------
+
+# The NA28/UBS5 splits. Each is a verse the critical text divides where
+# the Received Text does not, so an edition following it genuinely has a
+# reference past the KJV's last verse in that chapter. Listed because
+# each was read and confirmed, not because a rule generated them: a
+# reference the canon does not have cannot be compared against anything,
+# which is where a converter's off-by-one hides. 使徒行傳 8:41 was one,
+# and is repaired.
+KNOWN_BEYOND_CANON = {
+    ('3 John', 1, 15): 'NA28 splits verse 14; four editions carry it',
+    ('Revelation', 12, 18): 'NA28 numbers the dragon on the sand 12:18',
+}
+
+# A different canon in a different base text; check 29 answers it.
+UNCLASSIFIED_VERSIONS = {'lxxwh', 'lxx'}
+
+
+def _versification():
+    """(reader keys absent from the original, reader key -> original keys).
+
+    The second is stored only where it differs from identity, so an
+    unmapped key resolves to itself — which is what makes the overlap
+    test below safe: two unmapped references can never appear to share.
+    """
+    data = load('versification.json')
+    absent = set()
+    for book, refs in data['absent'].items():
+        for ref in refs:
+            c, v = ref.split(':')
+            absent.add((book, int(c), int(v)))
+    mapped = {}
+    for book, rows in data['map'].items():
+        for reader, originals in rows.items():
+            c, v = reader.split(':')
+            mapped[(book, int(c), int(v))] = set(originals)
+    return absent, mapped
+
+
+def check_absence_classification():
+    absent_in_original, mapped = _versification()
+
+    def originals_of(key):
+        return mapped.get(key, {f'{key[1]}:{key[2]}'})
+
+    examined = 0
+    unexplained = 0
+    lines = []
+    beyond = []
+    for f in sorted(os.listdir(asset())):
+        if not f.endswith('.json'):
+            continue
+        code = f[:-5]
+        if code in EXCLUDED_VERSIONS or code in UNCLASSIFIED_VERSIONS:
+            continue
+        try:
+            data = load(f)
+        except Exception:
+            continue
+        if not (isinstance(data, list) and data and isinstance(data[0], dict)
+                and 'book' in data[0] and 'verse' in data[0]):
+            continue
+        refs = set()
+        labels = {}
+        for v in data:
+            try:
+                key = (zh_to_en(v['book']), int(v['chapter']),
+                       int(v['verse']))
+            except (ValueError, TypeError):
+                continue
+            refs.add(key)
+            labels[key] = str(v.get('verseLabel', ''))
+        books = {b for b, _, _ in refs}
+        missing = {r for r in CANON if r[0] in books} - refs
+        for r in sorted(refs - CANON):
+            if r not in KNOWN_BEYOND_CANON:
+                beyond.append(f'{code} {r[0]} {r[1]}:{r[2]}')
+        if not missing:
+            continue
+        # The publisher's own ranges, read off the labels.
+        ranged = set()
+        for (b, c, n), label in labels.items():
+            m = re.match(r'^(\d+)\s*-\s*(\d+)$', label.strip())
+            if not m:
+                continue
+            lo, hi = int(m.group(1)), int(m.group(2))
+            if hi <= lo:
+                continue
+            for k in range(lo, hi + 1):
+                if (b, c, k) in missing:
+                    ranged.add((b, c, k))
+        critical = (missing - ranged) & absent_in_original
+        # One original verse under two reader numbers. Only the nearest
+        # PRESENT predecessor is considered: it is the record the words
+        # would be in, and a claim about any other would be a guess.
+        shared = set()
+        for key in sorted(missing - ranged - critical):
+            b, c, n = key
+            for p in range(n - 1, 0, -1):
+                if (b, c, p) not in refs:
+                    continue
+                if originals_of(key) & originals_of((b, c, p)):
+                    shared.add(key)
+                break
+        rest = missing - ranged - critical - shared
+        examined += len(missing)
+        unexplained += len(rest)
+        lines.append(
+            f'{code:16s} absent={len(missing):4d} '
+            f"publisher's range={len(ranged):3d} "
+            f'not in the original={len(critical):3d} '
+            f"the original's own merge={len(shared):3d} "
+            f'unexplained={len(rest):3d}')
+        for b, c, n in sorted(rest):
+            lines.append(f'    unexplained: {b} {c}:{n}')
+    for line in beyond:
+        lines.append(f'    BEYOND THE CANON, unaccounted: {line}')
+    unexplained += len(beyond)
+    record('30. Why each absent reference is absent', examined, unexplained,
+           '\n'.join(lines))
+
+
 def main():
     os.makedirs(os.path.join(ROOT, 'build'), exist_ok=True)
     print('Data-integrity audit (#304)\n' + '=' * 60 + '\n')
@@ -798,6 +964,7 @@ def main():
     check_character_repertoire()
     check_merge_markers()
     check_absent_references()
+    check_absence_classification()
 
     failed = [r for r in results if r['disagreements']]
     print('=' * 60)
