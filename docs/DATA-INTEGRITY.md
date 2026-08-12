@@ -3182,6 +3182,232 @@ Plus Genesis 1:2 by the phrase it prints.
 
 ---
 
+## Check 34 — the small number in brackets, which nobody had ever read
+
+`assets/lxxwh.json` is keyed by the **English** reference, so a reader
+who types Joshua 8:30 finds the verse an English Bible calls Joshua
+8:30. Where the Septuagint numbers that verse differently the record
+carries the edition's own chapter-and-verse inline as `<vs:c:v>`, and
+since v1.6.117 the app **renders** it — a muted `(9:2)` in front of the
+Greek.
+
+Three checks have now been through this column and none of them read it.
+Check 23 measured its Strong's numbers. Check 29 asked whether the Greek
+is complete. Check 31 gave the marker a type of its own so it would stop
+being set in scripture face. Every one of them treated the marker as a
+token to be *handled*. It is a **claim** — a second fact about the
+verse, stored once, in the one column a reader cannot check against
+anything except us — and 4,687 of them had shipped unread.
+
+`tools/audit_lxx_versification.py` puts every marker to an outside
+witness: `api.getbible.net/v2/lxx` (the same LXX check 29 used) and
+`api.getbible.net/v2/westcotthort`. A marker says "these words are what
+the edition numbers c:v". Look up c:v in the witness and compare.
+
+**4,200 of the 4,247 the witness can resolve are verbatim right**, and
+another 47 are contained in a longer witness verse (the recension cases
+check 29 declared). The residue is three defects, and each is repaired
+in a way that keeps more than it removes.
+
+### 34a — 144 markers in Proverbs, every chapter off by exactly seven
+
+English Proverbs 25:1 claimed `32:1`. 29:27 claimed `36:27`. **The
+Septuagint's Proverbs has 31 chapters**, so 32–36 are not numbers that
+book has, and the claim is false before the words are even consulted.
+
+Every one of the 144 is the record's own chapter **plus seven**, with
+the verse unchanged — not a scattering of errors but one mechanical
+offset applied to a block. And the words say exactly where the block
+belongs: **all 138 records are verbatim the witness at their own English
+number, 138 of 138.**
+
+So the repair is a **subtraction, not a deletion**. Seven comes off the
+chapter. 138 markers then name the record's own number and are dropped
+as saying nothing (see 34c); the **6 that carry a sub-verse letter
+survive** as `25:10a`, `26:11a`, `27:20a`, `27:21a`, `28:17a` — which is
+what the rest of the book already looks like, since Proverbs has 42
+other lettered sub-verses. Deleting the 144 outright was simpler and
+would have thrown those six away.
+
+Where the seven came from is **not recoverable from the file**. Rahlfs
+prints Proverbs out of order — 24:22, then 30:1-14, then 24:23-34,
+30:15-33, 31:1-9, and only then 25–29 — so a count of printed blocks
+rather than of chapter numbers is where an error of this shape would
+come from. That is a guess and is recorded as one.
+
+The reader-facing size: 138 verses of Proverbs printed a chapter number
+that does not exist, in the muted type that means *this is what the
+Greek calls it*.
+
+### 34b — 129 sub-verse letters in the wrong alphabet
+
+Rahlfs letters his sub-verses in **Latin**: Joshua 9:2a-f, 3 Kingdoms
+16:28a-h, the Greek Additions to Esther. Ours were Greek — α β χ δ ε φ
+γ η σ — so the app printed `(9:2χ)` where the page says `9:2c`.
+
+No witness exists for this (the witness numbers verses, not sub-verses)
+and none is needed. **1 Kings 16:28 settles it alone.** It carries eight
+markers in one record, in this order:
+
+> α β χ δ ε φ **γ** η
+
+γ stands **seventh**. In Greek it is third. In Adobe Symbol it is `g`,
+which is seventh in Latin — and every other letter lands where Latin
+puts it too. Ten more records run α β χ δ, which is `a b c d` and is not
+any ordering of the Greek alphabet. The frequencies say the same thing
+independently:
+
+| suffix | α | β | χ | δ | ε | φ | γ | η | σ |
+|---|---|---|---|---|---|---|---|---|---|
+| count | 65 | 23 | 17 | 12 | 6 | 3 | 1 | 1 | 1 |
+| Latin | a | b | c | d | e | f | g | h | s |
+
+A clean descent through `a b c d e f g h`. Read as Greek it is
+unaccountable: γ third-most-common letter of the alphabet, once; χ
+twenty-second, seventeen times.
+
+This is **Adobe Symbol font mojibake** — the source typed `a b c d`, the
+Symbol font drew Greek, and the import read the drawn glyphs as Unicode.
+
+Esther 1:1's lone **σ** is the one case resting on the encoding argument
+alone: it has no run to sit in. σ is Symbol `s`, and Rahlfs letters the
+Additions to Esther past `r`, so `1:1s` is the reading. **Whether Rahlfs
+has a sub-verse there at all is the source's claim and this repository
+cannot check it** — recorded rather than resolved.
+
+### 34c — 6 markers that say nothing, mid-verse
+
+Matthew 26:61, Mark 6:28, Mark 12:15, Acts 13:39, Ephesians 1:11 and
+Ephesians 3:18 each carried a marker naming the record's **own** number,
+placed in the middle of the verse. A reader of Matthew 26:61 saw:
+
+> Later two came forward **(26:61)** and said…
+
+A marker exists to record a **difference** from the reference the record
+is keyed on; one that repeats the key is empty by definition. And there
+is no second verse it could have been introducing: each of the six
+records is the witness's verse at that same number, entire (5 exact, 1
+contained — Acts 13:39, where the witness's own text reads `και και`).
+
+Two other identity markers are **not** touched and must not be:
+Lamentations 1:1 runs `1:0` then `1:1`, and Revelation 13:1 runs `12:18`
+then `13:1`. Those resume the record's own number after a genuinely
+different one, and are doing work.
+
+### 34d — Matthew 12:47, which was item 1 on this list
+
+Item 1 said the Westcott-Hort text "would settle it in one pass". It
+does, and not in the direction the item expected.
+
+**The witness has Matthew 12:47 and brackets it whole** — `[ειπεν δε τις
+αυτω ιδου η μητηρ σου…]` — which is Westcott and Hort's own mark for a
+reading they doubted. That looked like an explanation for our absence,
+so it was measured rather than assumed: **the witness wholly brackets
+exactly 2 NT verses, and we carry the other one** (Matthew 21:44). One
+of two is not a policy. The absence looks like ours.
+
+It is **reported and not repaired**, and the reasons are worth stating
+because the opposite call was available:
+
+* The Greek would have to come from a witness that **inlines UBS4
+  variants as duplicated words** — Matthew 12:46 reads `ιστηκεισαν
+  ειστηκεισαν`, 2 Corinthians 13:14 `χριστου χριστου`. That instrument
+  is fit to answer *which references exist* and unfit to supply *words*.
+* `assets/tagged/lxxwh/matthew.json` has no `12:47` either, so importing
+  the flat verse alone would create a reference the second witness of
+  check 31 cannot see — trading a known absence for an unknown
+  disagreement between our own two layers.
+* The app already makes the **weakest true claim** there.
+  `VerseAbsence.absent` renders "this edition has no verse here", which
+  is true of our file whatever the reason.
+
+Adding a verse to a shipped scripture asset is a decision about what the
+product **contains**. It is left open.
+
+### The two instrument limits, recorded because they nearly produced findings
+
+1. **The `westcotthort` witness is keyed by the ENGLISH reference,
+   exactly as our file is.** So the NT marker column **cannot be tested
+   by it at all**: looking up the marked number fetches a different
+   verse. Run naively this produces 12 confident "disagreements" —
+   Luke 6:17, Acts 3:19, Romans 9:11, 2 Corinthians 13:13–14,
+   1 Thessalonians 2:6 and 2:11, Revelation 2:27 and the rest — every
+   one of which is a **genuine and correct** Westcott-Hort division that
+   the instrument is blind to. The tell is that 12 of the 19 NT marked
+   records are verbatim the witness **at their own number**. The audit
+   reports the two halves separately and draws nothing from the NT one.
+2. **The same witness inlines UBS4 variants as duplicated words**, so it
+   cannot witness NT *wording* either. Two independent reasons, one
+   conclusion: in the New Testament this witness is a reference list and
+   nothing more.
+
+### Negative results, which are results
+
+* **There is no missing-marker class.** The absence of a marker is
+  itself a claim — "the Septuagint numbers this verse the way English
+  does" — made 18,000 times and never tested. **17,295 unmarked Old
+  Testament records are verbatim the witness at their own number**
+  (17,427 after 34a), 1,025 more are contained in a longer witness
+  verse, and exactly **one** differs: Numbers 32:30, a wording variant
+  and not a numbering one.
+* **Joshua 19:47 and 19:48 are not transposed.** They carry each other's
+  numbers (`<vs:19:48>` on 47, `<vs:19:47>` on 48), which is the exact
+  shape check 29 repaired in Numbers 10 and Deuteronomy 23. The witness
+  confirms **both markers are right**: the Septuagint really does print
+  those two verses in the opposite order. A defect this audit had
+  already seen once was the wrong template for it.
+* **The app's own pattern was already correct.** `versificationPattern`
+  is `<vs:([^>]+)>`, so it handled lettered markers before anyone
+  checked that it needed to.
+* **The 1,289 Old-Testament references the witness has and we lack** are
+  check 29's declared territory — the Esther Additions, the 3 Kingdoms
+  miscellanies, the Daniel OG and Judges A/B recensions — not a new
+  finding, and counted here only so the number is not mistaken for one
+  later.
+
+### What shipped
+
+`tools/repair_lxx_versification_markers.py`, idempotent, applied to
+**both layers**: 213 records of `assets/lxxwh.json` and 273 runs across
+15 files of `assets/tagged/lxxwh/`. 144 Proverbs markers un-offset (138
+then dropped as identity), 129 sub-verse letters transliterated, 6
+vacuous markers dropped. Marker count 4,687 → **4,543**, in 4,543 → 
+**4,405** verses.
+
+**No Greek moved.** Verified directly: with every `<vs:…>` stripped,
+all 30,800 records are byte-identical before and after.
+
+### Still open
+
+- **Matthew 12:47** — see 34d. A decision about the product, not about
+  accuracy.
+- **The New Testament's 19 markers are unverified**, and cannot be
+  verified by the witness this repository has. They look right (they
+  name the well-known Westcott-Hort divisions) but "looks right" is what
+  this document exists to refuse. A WH text keyed by **its own**
+  numbering would settle them.
+- **Rahlfs' sub-verse letters are unwitnessed.** 34b establishes what
+  our source *meant*; it does not establish that Rahlfs has a sub-verse
+  at each of those 129 places.
+- **A tagged run with a Strong's number and no word.** Matthew 26:61's
+  tagged layer carries `{"w": " ", "s": "G3004"}` where ειπαν should be
+  — noticed while reading 34c's records and **not** measured across the
+  corpus. It is a different defect class and belongs to its own check.
+
+### Frozen
+
+`test/lxx_versification_test.dart` — the counts (4,543 markers, 4,405
+verses, 4,528 in the tagged layer, still exactly 15 fewer for
+Nehemiah 10's known gap) and **two ratchets that need no witness**: a
+marker's suffix must be Latin, and a marker may not name its own
+reference unless a different one precedes it in the same record. Plus:
+no marker anywhere in Proverbs may name a chapter above 31.
+`test/lxx_tagged_layer_test.dart`'s OT run total moves 479,989 →
+479,851, which is the 138 dropped Proverbs runs and confirms the repair
+reached the tagged layer identically.
+
+---
+
 ## Not checked yet
 
 - Verse **text** itself, against an *external* witness — for the
@@ -3243,11 +3469,21 @@ Plus Genesis 1:2 by the phrase it prints.
    for every edition that can be witnessed. `assets/nasb.json` cannot
    be — no public-domain NASB exists — so it moved to "Not checked yet"
    as a standing limitation rather than a task.)*
-1. **Matthew 12:47**, the one New-Testament absence in `lxxwh` and all
-   that is left of check 29's item 2 — the 梁家鏗譯本 editions' 38 and
-   34 are classified in check 30, which found and repaired two live
-   defects doing it. The Westcott-Hort text from the same source as
-   check 29's witness would settle 12:47 in one pass.
+1. **A Westcott-Hort text keyed by its OWN numbering.** Check 34 tested
+   every one of `lxxwh`'s 4,687 own-verse-number markers against an
+   outside witness and repaired three defects, but the New Testament's
+   19 are still unverified and cannot be verified by the witness this
+   repository has: `api.getbible.net/v2/westcotthort` is keyed by the
+   **English** reference, so the marked number cannot be looked up in
+   it. A source that numbers the verses the way WH does would close
+   this in one pass, the way check 29's LXX closed the Old Testament's
+   4,528.
+   *(Its predecessor as item 1, "Matthew 12:47", is settled by check
+   34d: the WH witness has it and brackets it, but we carry the only
+   other verse it brackets, so the absence is ours and not the
+   edition's. It is reported and deliberately not repaired — importing
+   Greek from a variant-inlining witness into one layer of two is a
+   decision about what the product contains, and is the owner's.)*
 2. **The English tradition's merges, in the Septuagint's 302.** Check
    29c found these by example and never measured them: English Psalm
    13:6's Greek is present, inside 13:5. Check 30's third derivation is

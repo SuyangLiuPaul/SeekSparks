@@ -15,6 +15,29 @@
 // Repaired by `tools/fix_lxx_versification.py`. These tests hold both
 // halves down: the parser must type the token as apparatus rather than
 // text, and neither asset may carry a bare marker again.
+//
+// 2026-08-12 (check 34): having made the marker legible, nobody had
+// asked whether it was TRUE. All 4,687 went to an outside witness —
+// `api.getbible.net/v2/lxx`, the same one check 29 used — and 4,200 of
+// the 4,247 the witness could resolve were verbatim right. Three groups
+// were not, and `tools/repair_lxx_versification_markers.py` fixed them:
+//
+//   * 144 markers in Proverbs 25:1–29:27 named a chapter exactly seven
+//     too high, so the app printed "(32:1)" for a book whose Septuagint
+//     has 31 chapters. All 138 records are verbatim the witness at
+//     their own English number, 138 of 138.
+//   * 129 sub-verse letters were Greek — α β χ δ ε φ γ η σ, which is
+//     the Adobe Symbol font's a b c d e f g h s. 1 Kings 16:28 proves
+//     it alone: eight markers in one record running α β χ δ ε φ γ η,
+//     with γ SEVENTH, where Latin g belongs and Greek γ does not.
+//   * 6 markers repeated their own record's number mid-verse, so a
+//     reader of Matthew 26:61 saw "Later two came forward (26:61) and
+//     said". A marker records a DIFFERENCE; one that repeats the key
+//     says nothing.
+//
+// The two ratchets below are the ones that need no witness: a suffix
+// must be Latin, and a marker may not name its own reference unless a
+// different one precedes it in the same record.
 
 import 'dart:convert';
 
@@ -24,10 +47,14 @@ import 'package:seeksparks/constants/text_patterns.dart';
 import 'package:seeksparks/utils/copy_format.dart';
 import 'package:seeksparks/utils/scripture_markup.dart';
 
-// `(1:1)` or `(30:28α)`, anywhere in a string. What must never come
-// back into the shipped text.
-final _bareMarker = RegExp(r'\(\s*\d+:\d+[α-ω]?\s*\)');
-final _wellFormed = RegExp(r'^<vs:\d+:\d+[α-ω]?>$');
+// `(1:1)` or `(30:28a)`, anywhere in a string. What must never come
+// back into the shipped text. Both alphabets, because the Greek form is
+// what the source shipped and a re-import would bring it back.
+final _bareMarker = RegExp(r'\(\s*\d+:\d+[a-zα-ω]?\s*\)');
+// Rahlfs letters his sub-verses in Latin. Greek here is the Symbol-font
+// mojibake of check 34 and must not return.
+final _wellFormed = RegExp(r'^<vs:\d+:\d+[a-z]?>$');
+final _marker = RegExp(r'<vs:(\d+):(\d+)([a-z]?)>');
 
 const _lxxBooks = <String>[
   'genesis', 'exodus', 'leviticus', 'numbers', 'deuteronomy', 'joshua',
@@ -61,25 +88,25 @@ void main() {
     test('a mid-verse marker splits the verse where the edition does',
         () {
       // 1 Samuel 30:28 holds what the Septuagint numbers 30:28 and
-      // 30:28α, so the marker arrives after the first clause.
+      // 30:28a, so the marker arrives after the first clause.
       final spans =
-          parseScripture('και τοις εν εσθιε <vs:30:28α>και τοις εν γεθ');
+          parseScripture('και τοις εν εσθιε <vs:30:28a>και τοις εν γεθ');
       expect(spans.map((s) => s.kind), [
         ScriptureSpanKind.plain,
         ScriptureSpanKind.versification,
         ScriptureSpanKind.plain,
       ]);
-      expect(spans[1].text, '30:28α');
+      expect(spans[1].text, '30:28a');
     });
 
     test('a sub-verse letter survives, and a footnote is still a footnote',
         () {
-      final spans = parseScripture('a<note: Or "b">c<vs:9:2α>d');
+      final spans = parseScripture('a<note: Or "b">c<vs:9:2a>d');
       expect(spans.map((s) => '${s.kind.name}:${s.text}'), [
         'plain:a',
         'note:Or "b"',
         'plain:c',
-        'versification:9:2α',
+        'versification:9:2a',
         'plain:d',
       ]);
     });
@@ -126,23 +153,56 @@ void main() {
       var verses = 0;
       for (final row in rows) {
         final text = row['text'] as String;
-        if (_bareMarker.hasMatch(text)) {
-          bare.add('${row['book']} ${row['chapter']}:${row['verse']}');
+        final ref = '${row['book']} ${row['chapter']}:${row['verse']}';
+        if (_bareMarker.hasMatch(text)) bare.add(ref);
+        final found = RegExp(r'<vs:[^>]*>').allMatches(text).toList();
+        if (found.isEmpty) continue;
+        tokens += found.length;
+        verses++;
+        for (final m in found) {
+          expect(_wellFormed.hasMatch(m.group(0)!), isTrue,
+              reason: 'malformed marker ${m.group(0)} in $ref');
         }
-        final found = RegExp(r'<vs:[^>]*>').allMatches(text);
-        if (found.isNotEmpty) {
-          tokens += found.length;
-          verses++;
-          for (final m in found) {
-            expect(_wellFormed.hasMatch(m.group(0)!), isTrue,
-                reason: 'malformed marker ${m.group(0)} in '
-                    '${row['book']} ${row['chapter']}:${row['verse']}');
+
+        // A marker records a DIFFERENCE from the reference the record is
+        // keyed on. One that names that same reference says nothing —
+        // unless a different marker came first, in which case it is
+        // resuming. Two records legitimately do that: Lamentations 1:1
+        // runs `1:0` then `1:1`, and Revelation 13:1 runs `12:18` then
+        // `13:1`.
+        var seenDifferent = false;
+        for (final m in _marker.allMatches(text)) {
+          final same = m.group(1) == '${row['chapter']}' &&
+              m.group(2) == '${row['verse']}' &&
+              m.group(3)!.isEmpty;
+          if (!same) {
+            seenDifferent = true;
+          } else {
+            expect(seenDifferent, isTrue,
+                reason: '$ref carries a marker naming its own reference '
+                    'with nothing different before it');
           }
         }
       }
       expect(bare, isEmpty);
-      expect(tokens, 4687);
-      expect(verses, 4543);
+      // 4,687 − 144: the 138 Proverbs markers that became identity
+      // markers once the chapter was corrected, and the 6 that always
+      // were. No marker was invented and no Greek moved.
+      expect(tokens, 4543);
+      expect(verses, 4405);
+
+      // The Septuagint's Proverbs has 31 chapters. Before check 34 this
+      // file claimed 32 through 36 on 138 verses.
+      final overrun = <String>[];
+      for (final row in rows) {
+        if (row['book'] != 'Proverbs') continue;
+        for (final m in _marker.allMatches(row['text'] as String)) {
+          if (int.parse(m.group(1)!) > 31) {
+            overrun.add('${row['chapter']}:${row['verse']} → ${m.group(0)}');
+          }
+        }
+      }
+      expect(overrun, isEmpty);
 
       // An unaccented Greek text writes its numerals as letters, so a
       // digit outside a marker cannot be scripture. This is what made
@@ -188,7 +248,9 @@ void main() {
       // 15 fewer than the text layer: Nehemiah 10 is missing 15 of its
       // 39 verses from the tagged import — a pre-existing coverage gap,
       // recorded in docs/DATA-INTEGRITY.md, not a loss from this repair.
-      expect(markers, 4672);
+      // The gap is still exactly 15 after check 34, which is how the
+      // repair proves it touched both layers identically.
+      expect(markers, 4528);
     });
   });
 }

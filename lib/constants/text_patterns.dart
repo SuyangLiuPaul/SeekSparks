@@ -9,7 +9,10 @@ final notePattern = RegExp(r'<note:([^>]+)>');
 
 /// Matches `<vs:...>` — the edition's own chapter-and-verse for the
 /// words that follow, where it differs from the numbering the record is
-/// keyed on. Only `lxxwh` carries them, in 4,541 verses. See
+/// keyed on. Only `lxxwh` carries them: 4,543 markers in 4,405 verses,
+/// every one of them put to an outside witness in docs/DATA-INTEGRITY.md
+/// check 34. The reference may carry a Rahlfs sub-verse letter (`9:2a`),
+/// which is why this is `[^>]+` and not `\d+:\d+`. See
 /// `ScriptureSpanKind.versification`.
 final versificationPattern = RegExp(r'<vs:([^>]+)>');
 

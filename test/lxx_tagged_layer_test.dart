@@ -131,7 +131,13 @@ void main() {
         }
       }
     }
-    expect(total, 479989);
+    // −138 in v1.6.122: check 34 corrected Proverbs 25:1–29:27's markers
+    // from chapters 32–36 down to their own, which made each of them
+    // repeat the reference it was attached to and say nothing. They were
+    // dropped, and a marker run is a run. No Greek word was touched —
+    // the six other markers the same repair removed are all in the New
+    // Testament and so are not in this count.
+    expect(total, 479851);
     // 10.34% before the fill, 8.61% after. The remainder is honest: some
     // 41,000 runs are words the New Testament never uses, so no Strong's
     // number exists to give and inventing one would be a guess. The bound
