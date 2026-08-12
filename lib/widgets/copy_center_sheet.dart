@@ -164,8 +164,7 @@ class _CopyCenterDialogState extends State<_CopyCenterDialog> {
       // no type system, and running it into the verse is what the
       // publishers of the other three editions that carry one did.
       if (keys.contains(key)) {
-        out[key] =
-            v.superscription.isEmpty ? v.text : '${v.superscription} ${v.text}';
+        out[key] = v.scriptureText;
       }
     }
     return out;

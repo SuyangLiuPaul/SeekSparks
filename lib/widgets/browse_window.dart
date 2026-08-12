@@ -675,7 +675,10 @@ class _RowView extends StatelessWidget {
                   // other editions print their title inside verse 1.
                   if (row.superscription.isNotEmpty)
                     _SuperscriptionLine(
-                        text: row.superscription, settings: settings),
+                      text: row.superscription,
+                      settings: settings,
+                      highlight: highlight,
+                    ),
                   row.words != null
                   ? _OriginalsLine(
                       row: row,
@@ -842,10 +845,20 @@ class _TranslationLine extends StatelessWidget {
 /// other column for something three of them do carry, merged into
 /// their verse 1.
 class _SuperscriptionLine extends StatelessWidget {
-  const _SuperscriptionLine({required this.text, required this.settings});
+  const _SuperscriptionLine({
+    required this.text,
+    required this.settings,
+    this.highlight = const SearchHighlight(),
+  });
 
   final String text;
   final AppSettings settings;
+
+  /// 2026-08-12 (check 33): the title is in the search corpus, so a hit
+  /// can land here. Marking the verse and leaving the line that
+  /// actually matched unmarked would point the reader's eye away from
+  /// the word they searched for.
+  final SearchHighlight highlight;
 
   @override
   Widget build(BuildContext context) {
@@ -879,6 +892,21 @@ class _SuperscriptionLine extends StatelessWidget {
                 glossSpan(span, wb),
               ScriptureSpanKind.versification =>
                 versificationSpan(span, wb, fontSize: t.text * 0.8),
+              ScriptureSpanKind.plain => TextSpan(
+                  children: [
+                    for (final h in splitOnTerms(span.text, highlight.textTerms))
+                      TextSpan(
+                        text: h.text,
+                        style: h.isHit
+                            ? TextStyle(
+                                backgroundColor: wb.selectionBg,
+                                fontWeight: FontWeight.w700,
+                                color: wb.text,
+                              )
+                            : null,
+                      ),
+                  ],
+                ),
               _ => TextSpan(text: span.text),
             },
         ],

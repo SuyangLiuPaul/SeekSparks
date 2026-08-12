@@ -661,7 +661,7 @@ class _CommandPaneState extends State<CommandPane> {
       final displayBook =
           localeAwareBookName(v.book, settings.locale, mp.currentVersion);
       lines.add('$displayBook ${v.chapter}:${v.verseLabel}  '
-          '${sanitizeForSearch(v.text)}'.trim());
+          '${sanitizeForSearch(v.scriptureText)}'.trim());
     }
     await ClipboardHelper.copyWithFeedback(
       context,
@@ -1685,7 +1685,14 @@ class _CommandPaneState extends State<CommandPane> {
               final v = results[index];
               final displayBook = localeAwareBookName(
                   v.book, locale, wb.mainProvider.currentVersion);
-              final clean = sanitizeForSearch(v.text);
+              // The preview shows the string the search RAN against, so
+              // a row can never be a verse whose visible words do not
+              // contain the query. A text scan runs over
+              // `Verse.scriptureText` (check 33), so a hit in a psalm
+              // title is legible here; the Strong's list above uses
+              // `.text`, because the tagged layer holds no title and a
+              // hit there can never be in one.
+              final clean = sanitizeForSearch(v.scriptureText);
               return _ResultRow(
                 reference: '$displayBook ${v.chapter}:${v.verseLabel}',
                 text: clean,

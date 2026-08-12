@@ -67,10 +67,8 @@ List<InlineSpan> buildVerseContentSpans({
           ));
           return;
         }
-        final body = verse.superscription.isEmpty
-            ? verse.text
-            : '${verse.superscription} ${verse.text}';
-        final toCopy = '${verse.verseLabel} ${sanitizeVerseText(body)}';
+        final toCopy =
+            '${verse.verseLabel} ${sanitizeVerseText(verse.scriptureText)}';
         final ok = await ClipboardHelper.copyText(toCopy);
         if (!context.mounted) return;
         final msg = ok

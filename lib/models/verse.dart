@@ -61,6 +61,28 @@ class Verse {
   /// scripture. See `lib/utils/verse_text_absence.dart`.
   VerseAbsence? get absence => verseAbsenceOf(text);
 
+  /// Every word of scripture at this reference, as ONE string —
+  /// the superscription and then the verse, separated by a space.
+  ///
+  /// 2026-08-12 (docs/DATA-INTEGRITY.md check 33): the app keeps the
+  /// title and the verse in separate fields on purpose, because a
+  /// superscription is printed above verse 1 rather than inside it, and
+  /// `psalm_superscription.dart` argues that case at length. But a
+  /// TYPE only survives where there is somewhere to put it. At a
+  /// boundary that takes a single string — the clipboard, a
+  /// one-line result preview, the search corpus — the two have to be
+  /// flattened, and every one of those boundaries must flatten them the
+  /// SAME way or the app searches one string and shows another.
+  ///
+  /// So this is that flattening, defined once. `kjvs`, `bsb` and
+  /// `lxxwh` all merge the title into verse 1's own text, which makes
+  /// this the shape three independent editions already ship.
+  ///
+  /// Not used for rendering, where the distinction is the point, and
+  /// not used for [absence], which is a property of [text] alone.
+  String get scriptureText =>
+      superscription.isEmpty ? text : '$superscription $text';
+
   // Always use the English book name so the ID is the same regardless of
   // which translation is loaded — enables cross-version highlight persistence.
   String get id {

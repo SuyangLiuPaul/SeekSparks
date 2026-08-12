@@ -104,6 +104,8 @@ believe it is fine" and "we looked".
 | 32c | What is actually in `birthYear` for the kings | 16 kings of Judah | **13 were reign starts shown as births** → **0** | **fixed**, now a test |
 | 32d | A birth year no one could hold alone | 242 BC records | **121 share a year with someone else** | hedged with "c.", 44-man cohort disclosed |
 | 32e | Each date asset's claim about its own source | 3 assets | **3 wrong or absent** → **0** | **fixed**, now a test |
+| 33a | Psalm titles the reader displays and the search corpus lacked | 116 titles / 3 editions | **116 unsearchable, 11 words findable in no other verse** → **0** | **fixed**, witnessed by `bsb` + `kjvs`, now a test |
+| 33b | Verses unfindable by the phrase they print (`[supplied]` brackets in the key) | 295,416 verses / 6 editions | **17,932**, of them **16,975 in `leb`** (54.6%) → **0** | **fixed**, now a test |
 
 ---
 
@@ -3018,6 +3020,159 @@ basis puts SeekSparks ahead rather than level.
 
 ---
 
+## Check 33 — the words the app was showing and could not find
+
+Every check before this one asked whether a word we print is the right
+word. This one asks a question that had never been put: **of the words
+the app is already printing, how many can it not find?**
+
+It is the same class of defect. A search that returns nothing is the app
+answering *"this Bible does not contain that phrase"* — a statement
+about the text, made in the only way most readers will ever query it,
+and it was untrue in two independent ways at once.
+
+### 33a — the 116 psalm titles were on screen and outside the corpus
+
+Check 31b gave `assets/leb.json`'s 116 superscriptions a typed home:
+they arrive as records with `verse: "title"`, `foldSuperscriptions`
+attaches each to its psalm's verse 1, and v1.6.119 made them visible in
+the reader, in Browse and on the clipboard. It stopped there.
+`MainProvider`'s two caches — `searchKeys` (whitespace-stripped, for the
+substring scan) and `wordKeys` (spaces intact, for the tokenizers) —
+were built from `Verse.text`, which by construction is the psalm without
+its title.
+
+So the LEB's search corpus was missing 116 lines of scripture that the
+LEB's reader was displaying.
+
+The size of that is not 116 verses; it is every word those lines are the
+*only* home of. Eleven words occur in an LEB title and nowhere in its
+31,083 verses — `director`, `ascents`, `maskil`, `miktam`, `gittith`,
+`shiggaion`, `muth-labben`, `shushan`, `eduth`, `leannoth`, `crazy` (of
+Psalm 34's superscription). For those, "not found" was the app's whole
+answer about the edition.
+
+### 33b — and the answer differed by edition, which is the witness
+
+The three editions carry the same psalm titles by different routes:
+`kjvs` and `bsb` merge them into verse 1's own text, so theirs have
+always been searchable; the LEB types them apart. The two arrangements
+therefore had to disagree, and did:
+
+| query | LEB before | LEB after | BSB | KJV+S |
+|---|---:|---:|---:|---:|
+| Nathan the prophet | 15 | **16** | 16 | 16 |
+| Jeduthun | 11 | **14** | 14 | 14 |
+| Gittith | 0 | **3** | 3 | 3 |
+| Shiggaion | 0 | **1** | 1 | 1 |
+| maskil | 0 | **13** | 13 | 13 *(Maschil)* |
+| miktam | 0 | **6** | 6 | 6 *(Michtam)* |
+| ascents | 0 | **15** | 15 | 15 *(songs of degrees)* |
+| music director | 0 | **55** | — | 55 *(chief Musician)* |
+
+Every row is the same psalms counted three times by three editions
+produced independently of each other and of us. A count that agrees with
+two outside texts is evidence; a count that only agrees with itself is
+not, which is why the fix is measured this way rather than by asserting
+the 116.
+
+The last three rows are the same Hebrew word under three English
+spellings, and the KJV's `maskil` returns **0** — the spelling really is
+the only difference between the editions, so the agreement is not an
+artefact of one text having been derived from another.
+
+### 33c — the larger defect, found one layer down
+
+Asking *why* `music director` still failed after the titles were in the
+corpus found a second defect that has nothing to do with psalms.
+
+`[supplied]` words — the translator's words, which a printed Bible sets
+in italic — are rendered to the reader **without their brackets**
+(`bracketSpanKind` in `lib/utils/scripture_markup.dart`: only divineName
+and gloss keep them). `sanitizeForSearch` does not strip square
+brackets, so the corpus key kept them. LEB Genesis 1:2 prints
+
+> darkness was over the face of the deep
+
+and its search key held `darkness[was]over…`. The verse was
+unreachable by the phrase it displays.
+
+**16,975 of the LEB's 31,083 verses carry at least one bracket** —
+54.6% — and 17,932 across the six shipped editions. Any phrase crossing
+a supplied word failed, silently, in more than half of that edition.
+This is the answer to *"how many more of these are there"*: two orders
+of magnitude more than the thing that surfaced it.
+
+### What shipped
+
+One flattening, defined once, and one sanitiser:
+
+- **`Verse.scriptureText`** — `superscription + ' ' + text`, or `text`
+  alone. Every boundary that must reduce the pair to a single string now
+  goes through it: the search corpus, the verse-number copy handler, the
+  Copy Centre, the command pane's result preview and its "copy all".
+  Four call sites had each written the concatenation themselves; a
+  boundary that flattens differently from the corpus is how an app
+  searches one string and shows another.
+- **`sanitizeForSearchKey`** — `sanitizeForSearch` plus the square
+  brackets removed, contents kept. It is a **new** function rather than
+  a change to `sanitizeForSearch`, because that one also feeds result
+  previews and copy paths, where the brackets still tell a reader which
+  words the translator supplied. A corpus key is the one place with no
+  reader to inform.
+- **Browse highlights the superscription line.** A hit whose words the
+  result row cannot show reads as a bug, so `_SuperscriptionLine` now
+  takes the same `SearchHighlight` the verse body does.
+
+Removing a delimiter cannot invent a hit: every character left in the
+key is a character on screen.
+
+### What was deliberately not changed
+
+- **`sanitizeForSearch` itself.** See above.
+- **KWIC and the concordance.** Both are driven by Strong's numbers
+  through the tagged layer, which holds no superscription, so a hit
+  there can never be in one. The queue item assumed KWIC needed the same
+  work; checked, and it does not.
+- **The Strong's result preview in the command pane** keeps `.text` for
+  the same reason, and now says so.
+- **The reading pane's highlight.** It does not highlight search hits at
+  all — `highlightsForQuery` reaches Browse only. Making it do so is a
+  feature, not this defect.
+- **`related_verses_pane` and `phrase_match_pane`** render the corpus
+  string itself, so they were already self-consistent.
+- **The `absence` guard.** Placeholder verses stay out of the corpus;
+  `absence` is a property of `text` alone and a title cannot make a
+  missing verse present. Measured: the LEB has 0 absence records, so
+  this changes nothing today and states the rule for the editions where
+  it would.
+
+### Still open
+
+- **The other five bracket-bearing editions were fixed by the same
+  line but not separately witnessed.** `lxxwh` (490 verses),
+  `cuvs-yhwh` and its Traditional twin (212 each), `nasb` (13),
+  `cuvs-plus` (2). The change is uniform and the LEB is the hard case;
+  a per-edition witness would be a further check, not this one.
+- **The 和合本's `主[雅伟]` keeps its brackets on screen and loses them
+  in the key.** Deliberate — a reader typing 主雅伟 should reach the
+  verse that prints those words adjacent — but it is the one place where
+  key and display diverge on purpose, and it is recorded here rather
+  than left to be rediscovered.
+
+### Frozen
+
+`test/psalm_superscription_search_test.dart` — the flattening in all
+three of its cases; `sanitizeForSearchKey` against brackets, notes and
+the 和合本 name; a seeded corpus proving the title reaches both caches
+without its footnote; and, against the shipped assets, **every row of
+the table above**, built through the loader's own path
+(`foldSuperscriptions` → drop non-numeric → `Verse.fromJson` →
+`MainProvider.setVerses`) and queried through `SearchService.scanText`.
+Plus Genesis 1:2 by the phrase it prints.
+
+---
+
 ## Not checked yet
 
 - Verse **text** itself, against an *external* witness — for the
@@ -3071,46 +3226,39 @@ basis puts SeekSparks ahead rather than level.
    Either relabel it, or replace it with a text that is what the label
    says; both are the owner's call and neither should be taken
    unattended.
-1. **The psalm superscriptions are not searchable.** Check 31b made 116
-   psalm titles visible in the reader, in Browse and on the clipboard,
-   and stopped at search: `MainProvider.searchKeys` and `wordKeys` read
-   `verse.text` alone, so *"Nathan the prophet"* does not find Psalm 51.
-   Including them in the key is one line and is **not** the work — a hit
-   whose words the result row cannot show reads as a bug, so the result
-   rows, the KWIC snippet and the jump-to-verse highlight all have to
-   learn where the extra text lives. Left open deliberately rather than
-   half-done.
-
-   *(This list's previous item 1, "the remaining English editions against
-   an external witness", is closed by check 31a for every edition that
-   can be witnessed. `assets/nasb.json` cannot be — no public-domain NASB
-   exists — so it moved to "Not checked yet" as a standing limitation
-   rather than a task.)*
-2. **Matthew 12:47**, the one New-Testament absence in `lxxwh` and all
+   *(This list's item 1, "the psalm superscriptions are not searchable",
+   is closed by check 33 — and asking why one of its own queries still
+   failed afterwards found a defect 146× larger, in 16,975 verses that
+   have no superscription. Its predecessor as item 1, "the remaining
+   English editions against an external witness", is closed by check 31a
+   for every edition that can be witnessed. `assets/nasb.json` cannot
+   be — no public-domain NASB exists — so it moved to "Not checked yet"
+   as a standing limitation rather than a task.)*
+1. **Matthew 12:47**, the one New-Testament absence in `lxxwh` and all
    that is left of check 29's item 2 — the 梁家鏗譯本 editions' 38 and
    34 are classified in check 30, which found and repaired two live
    defects doing it. The Westcott-Hort text from the same source as
    check 29's witness would settle 12:47 in one pass.
-3. **The English tradition's merges, in the Septuagint's 302.** Check
+2. **The English tradition's merges, in the Septuagint's 302.** Check
    29c found these by example and never measured them: English Psalm
    13:6's Greek is present, inside 13:5. Check 30's third derivation is
    exactly the instrument for it — `versification.json`'s `map` read for
    overlap — but the Septuagint is numbered in its *own* frame, not the
    original's, so the table does not apply unmodified and the work is
    deriving the equivalent, not reusing it.
-4. The 4 references the two 梁家鏗譯本 editions still disagree about —
+3. The 4 references the two 梁家鏗譯本 editions still disagree about —
    马可福音 6:8–11, all that is left of the original 8. Needs a witness that is the
    same edition in the missing script; a 简/繁 conversion table derived
    from the 7,645 length-equal verse pairs the two files already share
    would be one, and would be witnessed by the corpus rather than
    invented — but it must be derived and checked before a character of
    it is trusted.
-5. The four verses that print both the Ketiv and the Qere. Probably a
+4. The four verses that print both the Ketiv and the Qere. Probably a
    reader-side marker, not a data deletion.
-6. Per-record date sourcing (#292 owns `hebrew_kings.json`).
-7. The LEB's `{…}` idiom braces in the 660 imported verses, if a witness
+5. Per-record date sourcing (#292 owns `hebrew_kings.json`).
+6. The LEB's `{…}` idiom braces in the 660 imported verses, if a witness
    that preserves them can be found.
-8. The ten summarised Chinese sermons (check 19). Not an engineering
+7. The ten summarised Chinese sermons (check 19). Not an engineering
    task — ~85,000 English words need translating, and whether that
    happens, and by whom, is the owner's call. Until it does, the marking
    is the honest state.

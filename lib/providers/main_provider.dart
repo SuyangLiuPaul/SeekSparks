@@ -4,7 +4,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:seeksparks/constants/bible_versions.dart'
     show localeDefaultVersion, resolveReadingVersion;
-import 'package:seeksparks/constants/text_patterns.dart' show sanitizeForSearch;
+import 'package:seeksparks/constants/text_patterns.dart'
+    show sanitizeForSearchKey;
 import 'package:seeksparks/models/verse.dart';
 import 'package:seeksparks/models/book.dart';
 import 'package:seeksparks/services/error_reporter.dart';
@@ -420,6 +421,12 @@ class MainProvider extends ChangeNotifier {
   /// Returns the parallel `List<String>` of normalized, lowercased,
   /// whitespace-stripped verse text — the form a substring search
   /// runs against. Built lazily; reused across keystrokes.
+  ///
+  /// 2026-08-12 (check 33): reads [Verse.scriptureText], not `text`, so
+  /// a psalm superscription is searchable. It reached the reader in
+  /// v1.6.119 and stopped at the corpus, which left the app answering
+  /// *"does this Bible contain the word maskil"* with 13 under BSB and
+  /// 0 under the LEB — from titles the LEB was printing on screen.
   List<String> get searchKeys {
     if (_searchKeysCache != null &&
         _searchKeysCacheLength == verses.length) {
@@ -431,7 +438,7 @@ class MainProvider extends ChangeNotifier {
       // instruction (見上節, OMIT) gets an empty key, so a search for
       // 上節 cannot report 227 hits that are not scripture.
       if (verses[i].absence != null) continue;
-      out[i] = sanitizeForSearch(verses[i].text)
+      out[i] = sanitizeForSearchKey(verses[i].scriptureText)
           .replaceAll(' ', '')
           .toLowerCase();
     }
@@ -462,7 +469,7 @@ class MainProvider extends ChangeNotifier {
     final out = List<String>.filled(verses.length, '', growable: false);
     for (int i = 0; i < verses.length; i++) {
       if (verses[i].absence != null) continue;
-      out[i] = sanitizeForSearch(verses[i].text);
+      out[i] = sanitizeForSearchKey(verses[i].scriptureText);
     }
     _wordKeysCache = out;
     _wordKeysCacheLength = verses.length;

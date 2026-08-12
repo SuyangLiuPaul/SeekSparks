@@ -115,6 +115,41 @@ String sanitizeForSearch(String text) {
       .trim());
 }
 
+/// Every square bracket, kept apart from [sanitizeForSearch] because
+/// only the corpus wants them gone.
+final _squareBracketPattern = RegExp(r'[\[\]]');
+
+/// The form the SEARCH CORPUS takes: [sanitizeForSearch], and then the
+/// square brackets removed with their contents kept.
+///
+/// 2026-08-12 (docs/DATA-INTEGRITY.md check 33). `[supplied]` words are
+/// rendered to the reader *without* their brackets — italic, the way a
+/// printed Bible sets them — so LEB Genesis 1:2 reads *"darkness was
+/// over the face of the deep"* on screen while its search key held
+/// `darkness[was]over`. A reader typing the phrase they can see got
+/// nothing, and **16,975 of the LEB's 31,083 verses carry at least one
+/// bracket** (17,003 once the 116 titles are folded in), so this was not
+/// a corner: any phrase crossing a supplied word failed, silently, in
+/// more than half the edition.
+///
+/// The brackets go rather than the words because the words are the
+/// text — `scripture_markup.dart` says so at length, and the whole
+/// reason they are marked instead of deleted is that they are read.
+/// Removing the delimiter cannot invent a hit: every character left is
+/// a character the reader is looking at.
+///
+/// It takes the 和合本's `主[雅伟]` with it, which KEEPS its brackets on
+/// screen — the search key is not a display surface, and a reader
+/// typing 主雅伟 should reach the verse that prints exactly those two
+/// words next to each other.
+///
+/// `sanitizeForSearch` itself is deliberately unchanged. It also feeds
+/// result-row previews and several copy paths, where the brackets still
+/// say which words the translator supplied; a corpus key is the one
+/// place with no reader to inform.
+String sanitizeForSearchKey(String text) =>
+    sanitizeForSearch(text).replaceAll(_squareBracketPattern, '');
+
 /// 2026-05-19 (v1.2.58): clipboard / preview formatter.
 ///
 /// Builds on `sanitizeForSearch` (keeps `[supplied]` + `{clarification}`
