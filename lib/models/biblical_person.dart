@@ -62,6 +62,35 @@ class BiblicalPerson {
   /// `prophetic` (purple). Anything else falls back to the default.
   final String? accent;
 
+  /// What the year on this record actually is, and what it rests on.
+  /// Written by `tools/audit_dates.py`; `_meta.dating` in
+  /// `assets/family_tree.json` defines the vocabulary.
+  ///
+  /// `birth` — a birth, and derivable from an age the text states.
+  ///           Shown exactly, and [datingRefs] gives the verses.
+  /// `reign` — [birthYear] here is an accession or coregency year, not a
+  ///           birth. Thirteen kings of Judah carried one of these in a
+  ///           field named `birthYear`, so the reader was told Asa was
+  ///           born in 911 BC when 911 is the year he came to the throne.
+  ///           These render as a reign span from [reignStart]/[reignEnd]
+  ///           and the birth year is not shown at all.
+  /// `approximate` — a commonly published reconstruction that nothing we
+  ///           ship fixes. Rendered with "c." so it does not read as a
+  ///           date the text gives.
+  final String datingKind;
+
+  /// `scripture`, `scripture+thiele`, `thiele` or `conventional`.
+  final String datingBasis;
+
+  /// The verses the year is derived from. Empty unless [datingKind] is
+  /// `birth`, since nothing else here rests on a stated figure.
+  final List<String> datingRefs;
+
+  /// Thiele's reign span, copied from `assets/hebrew_kings.json`, which
+  /// cites him. Present for everyone that file carries.
+  final int? reignStart;
+  final int? reignEnd;
+
   /// Optional canonical biblical era this person belongs to.
   /// Stable string id used by the family-tree page to group rows
   /// under section headers and emit per-row era badges. Values:
@@ -90,6 +119,11 @@ class BiblicalPerson {
     this.role,
     this.accent,
     this.era,
+    this.datingKind = 'approximate',
+    this.datingBasis = 'conventional',
+    this.datingRefs = const [],
+    this.reignStart,
+    this.reignEnd,
   });
 
   /// Locale-aware display name. Falls back across languages so we
@@ -118,9 +152,17 @@ class BiblicalPerson {
   /// Render the year range as a human-readable string. AM dates get
   /// "AM" suffix; BC dates get "BC". Lifespan in parens when known.
   /// Returns empty when no birth or death year is set.
+  ///
+  /// [datingKind] governs what is shown. A `reign` record shows the reign
+  /// and never the birth year, because the number it holds is an
+  /// accession year; an `approximate` one is prefixed "c.". Every screen
+  /// that prints a year goes through here, so the rule is stated once.
   String displayYears(String locale) {
     final am = yearSystem == 'am';
     final isZh = locale.startsWith('zh');
+    if (datingKind == 'reign' && reignStart != null) {
+      return _displayReign(locale, isZh);
+    }
     String fmt(int? y) {
       if (y == null) return '';
       if (am) {
@@ -150,6 +192,9 @@ class BiblicalPerson {
     } else {
       return '';
     }
+    if (datingKind == 'approximate') {
+      range = isZh ? '约 $range' : 'c. $range';
+    }
     if (lifespan != null) {
       final yrs = locale == 'zh-Hans'
           ? '$lifespan 岁'
@@ -159,6 +204,19 @@ class BiblicalPerson {
       return '$range  ($yrs)';
     }
     return range;
+  }
+
+  /// A reign, worded as one. Thiele's span, and never a birth year.
+  String _displayReign(String locale, bool isZh) {
+    String year(int y) => y < 0
+        ? (isZh ? '公元前 ${-y} 年' : '${-y} BC')
+        : (isZh ? '公元 $y 年' : 'AD $y');
+    final start = year(reignStart!);
+    if (reignEnd == null) {
+      return isZh ? '$start 即位' : 'acceded $start';
+    }
+    final end = year(reignEnd!);
+    return isZh ? '在位 $start – $end' : 'reigned $start – $end';
   }
 
   factory BiblicalPerson.fromJson(Map<String, dynamic> j) {
@@ -182,6 +240,12 @@ class BiblicalPerson {
       role: j['role'] as String?,
       accent: j['accent'] as String?,
       era: j['era'] as String?,
+      datingKind: (j['dating']?['kind'] as String?) ?? 'approximate',
+      datingBasis: (j['dating']?['basis'] as String?) ?? 'conventional',
+      datingRefs:
+          (j['dating']?['refs'] as List?)?.cast<String>() ?? const [],
+      reignStart: (j['reignStart'] as num?)?.toInt(),
+      reignEnd: (j['reignEnd'] as num?)?.toInt(),
     );
   }
 }

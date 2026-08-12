@@ -55,7 +55,7 @@ believe it is fine" and "we looked".
 | 6 | Book names resolve for every edition | 13 editions | **3 fixed** | now a test |
 | 7a | bible_places.json verse links resolve | 9,856 links | **0** | clean |
 | 7b | bible_names.json verse links | 2,622 names | n/a | unverifiable by construction |
-| 8 | Dates carry a recorded source | 196 records | 1 file | **open** |
+| 8 | Dates carry a recorded source | 196 records | 1 file | **fixed** by check 32 |
 | 9 | Reader references resolve to the right original verse | 31,102 references | 1,823 wrong + 152 empty → **1** | **fixed**, was the worst finding |
 | 10 | Character repertoire of the shipped text | 45,877,885 chars | 129 → **0** | **fixed**, now a test |
 | 11 | Invisible format/control characters | 45,877,885 chars | 3 → **0** | **fixed**, now a test |
@@ -99,6 +99,11 @@ believe it is fine" and "we looked".
 | 31a | `assets/kjvs.json` against three external KJV witnesses | 30,708 unanimous verses | **0 departures** | clean — and it sharpens check 27's finding about `kjv.json` |
 | 31b | Verse records the loader silently discards | 357,738 records / 13 editions | **116 psalm titles, unreachable since import** → **0** | **fixed**, now a test |
 | 31c | Verse text padded with whitespace | 357,738 records / 13 editions | **31,199, all of them `leb`** → **0** | **fixed** by `tools/repair_verse_whitespace.py`, now a test |
+| 32a | The Anno Mundi chain against the text that states it | 19 records | **0** | clean, now a test |
+| 32b | Intervals scripture states, against the years we show | 11 intervals | **1** (creation→flood: text 1656, asset 1652) | disclosed, both ends marked approximate |
+| 32c | What is actually in `birthYear` for the kings | 16 kings of Judah | **13 were reign starts shown as births** → **0** | **fixed**, now a test |
+| 32d | A birth year no one could hold alone | 242 BC records | **121 share a year with someone else** | hedged with "c.", 44-man cohort disclosed |
+| 32e | Each date asset's claim about its own source | 3 assets | **3 wrong or absent** → **0** | **fixed**, now a test |
 
 ---
 
@@ -346,12 +351,12 @@ edition, which no mapping table would excuse.
 not. Consequence: a reader on 3 John 14 does not get those cross-refs.
 Upstream, not ours, and not worth inventing a mapping for one verse.
 
-**Check 8 — no date shown to a reader carries a per-record source.**
-`bible_timeline.json` (98 dated records) and `hebrew_kings.json` (97)
-have file-level provenance; `family_tree.json` has none at all. Per
-#292, `hebrew_kings.json` should name Thiele on the record. This is the
-weakest area in the audit and the one where a wrong number is least
-checkable by a reader — see #292 and #300, which already own it.
+**Check 8 — no date shown to a reader carries a per-record source —
+CLOSED by check 32.** The brief was "add provenance". Measuring first
+found something worse: 13 kings of Judah were showing an *accession*
+year in a field named `birthYear`, so the app told the reader Asa was
+born in 911 BC. Every record now carries a `dating` block naming what
+its year is and what it rests on. See check 32 below.
 
 ---
 
@@ -2816,6 +2821,200 @@ repaired, which is what stops a third from arriving unnoticed:
   and the space-before-punctuation pattern over the whole corpus with the
   two verses above named.
 - `tools/repair_verse_whitespace.py` — the repair, re-runnable.
+
+---
+
+## Check 32 — every date the app shows a reader, and what it rests on
+
+Check 8 asked for provenance on dates. Provenance turned out to be the
+smaller half of the problem.
+
+Three assets put a year in front of a reader: `assets/family_tree.json`
+(277 people), `assets/bible_timeline.json` (98 events) and
+`assets/hebrew_kings.json` (42 kings). Only the third cited anything.
+
+The house method does not need a ruling on which chronology is right,
+which is just as well, because there isn't one. It asks a narrower
+question that has an answer: **for each number we display, can it be
+derived from something we ship and cite?** Two things can be — the ages
+Genesis 5 and 11 state outright, and `hebrew_kings.json`, which follows
+Thiele and cites him. `tools/audit_dates.py` does the derivation, and
+**probes all 20 scriptural figures against the shipped Berean text
+before it is allowed to classify anything**, aborting if one is not
+where it is cited. (It aborted nine times while being written: the
+Berean prints Genesis 25:7 as "175 years" and Deuteronomy 34:7 as "a
+hundred and twenty", so a probe that hard-codes one spelling tests the
+typography and not the figure.)
+
+### 32a — the Anno Mundi chain is exactly right (0 of 19)
+
+Every Genesis 5 and 11 figure in `family_tree.json` matches the ages the
+Masoretic text states, read out of `assets/bsb.json`: **19 records, 0
+disagreements**, births and lifespans both. This is the one part of the
+dataset that was already beyond reproach, and it is worth reporting for
+the same reason a zero is always worth reporting.
+
+One record deserved the scrutiny it got. **Shem** is the only man in the
+line whose birth the text fixes twice and not identically: Genesis 5:32
+has Noah fathering Shem, Ham and Japheth after his 500th year, which
+dates the first of three sons rather than Shem; Genesis 11:10 speaks of
+Shem alone and puts him at 100 two years after the flood. The asset
+follows 11:10 (AM 1558, not 1556) and is right to. The tool reports both
+rather than silently preferring one.
+
+The flood falls in **AM 1656** on this chain. Remember that number.
+
+### 32b — one interval out of eleven disagrees, and it is the famous one
+
+Measuring the timeline's own events against intervals scripture states:
+
+| From → to | Text | Asset |
+|---|---:|---:|
+| creation → flood | 1656 | **1652** |
+| creation → Seth born | 130 | 130 |
+| Abram called → Isaac born | 25 | 25 |
+| Isaac born → Jacob born | 60 | 60 |
+| Jacob born → Egypt | 130 | 130 |
+| Egypt → exodus | 430 | 430 |
+| Moses born → exodus | 80 | 80 |
+| exodus → Moses dies | 40 | 40 |
+| exodus → temple | 480 | 480 |
+| David king → Solomon king | 40 | 40 |
+| Solomon king → temple | 4 | 4 |
+
+**11 intervals tested, 1 disagreement.** Ten exact matches is a strong
+result and says the file was built carefully. The eleventh is a seam
+between two sources: **−4000 is a rounding of Ussher's 4004 BC while
+−2348 is Ussher's flood taken as printed**, so rounding one end and not
+the other lost four years and put the app four years out of step with a
+chain it derives correctly everywhere else. Neither figure is
+scriptural, so both events are now marked `approximate` rather than
+re-dated.
+
+### 32c — 13 kings of Judah were showing an accession year as a birth
+
+This is the defect. `family_tree.json` gives each king a `birthYear`,
+and the UI printed it in the same slot it printed Abraham's, so a reader
+saw **"Asa · 911 BC"** beside **"Abraham · 2166 BC – 1991 BC"** and had
+no way to know the first is the year Asa came to the throne.
+
+Joining on `hebrew_kings.json` and on the accession ages Kings and
+Chronicles state — which witness each other, and are dropped where they
+disagree — classifies all 16 without residue:
+
+| | Count | |
+|---|---:|---|
+| a **reign** start in `birthYear` | **13** | Abijah, Asa, Jehoshaphat, Jehoram, Ahaziah, Joash, Amaziah, Uzziah, Jotham, Ahaz, Manasseh (coregency), Amon, Jehoiakim |
+| a genuine **birth** | 3 | Rehoboam (41 at accession, 1 Kings 14:21), Hezekiah (25, 2 Kings 18:2), Josiah (8, 2 Kings 22:1) |
+| unexplained | **0** | |
+
+Note that **five** of the thirteen — Jehoshaphat, Jehoram, Uzziah,
+Jotham and Ahaz — hold a **sole**-reign start where Thiele's `reignStart`
+is a coregency years earlier. Uzziah's −767 is therefore neither his
+birth nor the start of his reign as the same app's kings chart draws it
+(−792). A number can be wrong in kind in more than one way at once.
+
+A fourteenth record is a reign for a different reason. **Solomon**'s
+`birthYear` is −1010, which is neither a birth any stated age gives nor
+his accession, which Thiele puts at −970: −1010 is *David's* accession,
+shared with ten other people in 32d below. He now shows his reign.
+
+Two id collisions had to be got out of the way first, and both would
+have produced confident nonsense: `family_tree.json`'s `manasseh` is
+**Joseph's son**, not the king (the king is `manasseh_king`), and its
+`nadab` is **Aaron's son**, not Jeroboam's. Joining these files by id
+alone dates Joseph's son to −1880 as a king of Judah. Matching on the
+`era` as well is what stops it.
+
+### 32d — a year 44 people share is not a birth year
+
+Of **242** BC-dated people, **121 — exactly half — share their year with
+someone else**, across 20 collision years; **152 of 242** are round to
+the decade. The largest cohort:
+
+| Year | People |
+|---:|---:|
+| −1690 | **44** |
+| −1990 | 12 |
+| −1010 | 11 |
+| −1030 | 9 |
+| −2030 | 6 |
+
+The −1690 cohort settles what these numbers are. It is Jacob's
+grandsons — Reuben's four sons, Simeon's six, and so on down Genesis 46,
+**the men that chapter names as going down into Egypt with Jacob**. The
+same app's timeline dates that descent to **−1876**. So 44 people are
+dated 186 years after the event they took part in. No chronology is
+needed to see it; the two assets contradict each other.
+
+### 32e — what each asset said about where its numbers came from
+
+- `family_tree.json` credited **"Ussher baseline for patriarchs"**.
+  Ussher puts Abraham's birth at **1996 BC**; the file says **2166**,
+  and 32b's chain *derives* 2166 exactly from 1 Kings 6:1. The file
+  follows the early-date chain and was crediting the wrong man.
+- `bible_timeline.json` declared `"count": 97` over **98** events, and
+  `"source": "SeekSparks curated"`, which names no chronology at all.
+- `hebrew_kings.json` cited 3 sources and named its system. It remains
+  the model the other two are now held to.
+
+### What shipped
+
+Every person carries `dating: {kind, basis, refs}` and, where
+`hebrew_kings.json` has him, `reignStart`/`reignEnd`. `displayYears` in
+`lib/models/biblical_person.dart` is the single join point all eight
+year-rendering call sites already funnelled through, so the rule is
+stated once:
+
+| kind | count | shown as |
+|---|---:|---|
+| `birth` | **27** | exactly, e.g. `2166 BC – 1991 BC`, with the verses it derives from |
+| `reign` | **14** | `reigned 911 BC – 870 BC` — the birth year is **not** shown |
+| `approximate` | **236** | `c. 2030 BC – 1900 BC` / `约 公元前 2030 年` |
+
+The 27 exact births are the 19 of Genesis 5 and 11, plus Abraham, Isaac,
+Jacob, Moses and David derived from the anchor chain, plus the three
+kings whose accession age scripture states.
+
+**What was deliberately not done.** The first design blanked all 240
+underivable years outright. That was rejected: withdrawing a reader's
+only sense of when a man lived, for 87% of the dataset, is a bigger
+claim than the overstatement it fixes, and it is a product decision
+rather than an accuracy one. `c.` withdraws the false precision and
+nothing else, and **every original number stays in the file**, so the
+decision is still open. Re-dating the 44 would have meant inventing 44
+dates, which is worse than either.
+
+### Still open
+
+- **The −1690 cohort contradicts the app's own −1876.** Hedged, not
+  resolved. Resolving it means either re-dating 44 people or dropping
+  their years, and both are calls for a human.
+- **Levi's −1923…−1716 implies 207 years**; Exodus 6:16 states 137.
+- **Moses is −1525 in `family_tree.json` and −1526 in
+  `bible_timeline.json`.** Within the one year of slack the tool allows
+  for regnal reckoning, but the two files should not disagree at all.
+- 236 records still rest on nothing citable. `c.` says so honestly; it
+  does not make them sourced.
+
+### Frozen
+
+`test/person_dating_test.dart` — the formatter for all three kinds in
+English and both Chinese scripts; and against the assets: every record
+has a known kind and basis, every `birth` cites a verse, every `reign`
+carries the span `hebrew_kings.json` cites, **no `birth` sits on a year
+that file calls a reign start**, the legend no longer names Ussher, the
+`_meta` counts match the records, and the timeline's count is honest
+with creation and flood marked approximate while the exodus stays exact.
+
+### A note on the parity target
+
+BibleWorks ships timelines too, and its help file describes them as a
+construction kit — eras, events, jump-to-verse — under a blanket
+`Bible timelines Copyright © 1996-2015 BibleWorks, LLC`. It names no
+chronology and carries no per-event source. This is one of the few
+places where the thing we are chasing has the same gap, so naming the
+basis puts SeekSparks ahead rather than level.
 
 ---
 

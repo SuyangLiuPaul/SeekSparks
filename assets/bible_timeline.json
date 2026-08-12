@@ -1,7 +1,14 @@
 {
   "_meta": {
-    "count": 97,
-    "source": "SeekSparks curated"
+    "count": 98,
+    "generator": "tools/audit_dates.py",
+    "anchor": "Solomon's fourth year, from hebrew_kings.json (Thiele), which 1 Kings 6:1 places 480 years after the exodus.",
+    "basis": {
+      "scripture": "The year follows from an interval the text states, measured from the anchor.",
+      "thiele": "From hebrew_kings.json, which follows Thiele and cites him.",
+      "conventional": "A commonly published reconstruction. The text fixes no year and this one is shown as approximate."
+    },
+    "note": "Chronologies differ. Nothing here is presented as a date the text gives unless the text gives it."
   },
   "events": [
     {
@@ -18,7 +25,9 @@
         "Genesis 1",
         "Genesis 2"
       ],
-      "personIds": []
+      "personIds": [],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "eden",
@@ -36,7 +45,9 @@
       "personIds": [
         "adam",
         "eve"
-      ]
+      ],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "fall",
@@ -55,7 +66,9 @@
       "personIds": [
         "adam",
         "eve"
-      ]
+      ],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "cain_abel",
@@ -73,7 +86,9 @@
       "personIds": [
         "cain",
         "abel"
-      ]
+      ],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "seth_born",
@@ -91,7 +106,9 @@
       ],
       "personIds": [
         "seth"
-      ]
+      ],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "enoch_walks",
@@ -109,7 +126,9 @@
       ],
       "personIds": [
         "enoch"
-      ]
+      ],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "flood",
@@ -126,7 +145,9 @@
       ],
       "personIds": [
         "noah"
-      ]
+      ],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "babel",
@@ -141,7 +162,9 @@
       "refs": [
         "Genesis 11:1-9"
       ],
-      "personIds": []
+      "personIds": [],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "abram_called",
@@ -158,7 +181,9 @@
       ],
       "personIds": [
         "abraham"
-      ]
+      ],
+      "basis": "scripture",
+      "approximate": false
     },
     {
       "id": "lot_separates",
@@ -176,7 +201,9 @@
       "personIds": [
         "abraham",
         "lot"
-      ]
+      ],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "abrahamic_covenant",
@@ -194,7 +221,9 @@
       ],
       "personIds": [
         "abraham"
-      ]
+      ],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "ishmael_born",
@@ -212,7 +241,9 @@
       "personIds": [
         "ishmael",
         "hagar"
-      ]
+      ],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "sodom_destroyed",
@@ -229,7 +260,9 @@
       ],
       "personIds": [
         "lot"
-      ]
+      ],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "isaac_born",
@@ -248,7 +281,9 @@
         "isaac",
         "abraham",
         "sarah"
-      ]
+      ],
+      "basis": "scripture",
+      "approximate": false
     },
     {
       "id": "isaac_offered",
@@ -266,7 +301,9 @@
       "personIds": [
         "abraham",
         "isaac"
-      ]
+      ],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "rebekah_marries",
@@ -284,7 +321,9 @@
       "personIds": [
         "isaac",
         "rebekah"
-      ]
+      ],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "jacob_esau_born",
@@ -302,7 +341,9 @@
       "personIds": [
         "jacob",
         "esau"
-      ]
+      ],
+      "basis": "scripture",
+      "approximate": false
     },
     {
       "id": "job_trial",
@@ -321,7 +362,9 @@
         "Job 42",
         "Ezekiel 14:14"
       ],
-      "personIds": []
+      "personIds": [],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "jacob_blessing",
@@ -339,7 +382,9 @@
       "personIds": [
         "jacob",
         "esau"
-      ]
+      ],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "jacobs_ladder",
@@ -356,7 +401,9 @@
       ],
       "personIds": [
         "jacob"
-      ]
+      ],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "jacob_marries",
@@ -375,7 +422,9 @@
         "jacob",
         "leah",
         "rachel"
-      ]
+      ],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "joseph_sold",
@@ -392,7 +441,9 @@
       ],
       "personIds": [
         "joseph"
-      ]
+      ],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "joseph_rises",
@@ -409,7 +460,9 @@
       ],
       "personIds": [
         "joseph"
-      ]
+      ],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "israel_egypt",
@@ -428,7 +481,9 @@
       "personIds": [
         "jacob",
         "joseph"
-      ]
+      ],
+      "basis": "scripture",
+      "approximate": false
     },
     {
       "id": "israel_oppressed",
@@ -444,7 +499,9 @@
         "Exodus 1",
         "Genesis 15:13"
       ],
-      "personIds": []
+      "personIds": [],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "moses_born",
@@ -463,7 +520,9 @@
         "moses",
         "jochebed",
         "amram"
-      ]
+      ],
+      "basis": "scripture",
+      "approximate": false
     },
     {
       "id": "burning_bush",
@@ -480,7 +539,9 @@
       ],
       "personIds": [
         "moses"
-      ]
+      ],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "plagues",
@@ -498,7 +559,9 @@
       "personIds": [
         "moses",
         "aaron"
-      ]
+      ],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "exodus",
@@ -516,7 +579,9 @@
       "personIds": [
         "moses",
         "aaron"
-      ]
+      ],
+      "basis": "scripture",
+      "approximate": false
     },
     {
       "id": "red_sea",
@@ -533,7 +598,9 @@
       ],
       "personIds": [
         "moses"
-      ]
+      ],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "manna",
@@ -550,7 +617,9 @@
       ],
       "personIds": [
         "moses"
-      ]
+      ],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "sinai",
@@ -568,7 +637,9 @@
       ],
       "personIds": [
         "moses"
-      ]
+      ],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "tabernacle",
@@ -586,7 +657,9 @@
       ],
       "personIds": [
         "moses"
-      ]
+      ],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "wilderness_40",
@@ -606,7 +679,9 @@
         "moses",
         "aaron",
         "miriam"
-      ]
+      ],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "moses_dies",
@@ -623,7 +698,9 @@
       ],
       "personIds": [
         "moses"
-      ]
+      ],
+      "basis": "scripture",
+      "approximate": false
     },
     {
       "id": "jordan_crossed",
@@ -638,7 +715,9 @@
       "refs": [
         "Joshua 3-4"
       ],
-      "personIds": []
+      "personIds": [],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "jericho",
@@ -653,7 +732,9 @@
       "refs": [
         "Joshua 6"
       ],
-      "personIds": []
+      "personIds": [],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "land_divided",
@@ -668,7 +749,9 @@
       "refs": [
         "Joshua 13-22"
       ],
-      "personIds": []
+      "personIds": [],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "judges_period",
@@ -683,7 +766,9 @@
       "refs": [
         "Judges 1-21"
       ],
-      "personIds": []
+      "personIds": [],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "deborah",
@@ -698,7 +783,9 @@
       "refs": [
         "Judges 4-5"
       ],
-      "personIds": []
+      "personIds": [],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "gideon",
@@ -713,7 +800,9 @@
       "refs": [
         "Judges 6-8"
       ],
-      "personIds": []
+      "personIds": [],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "samson",
@@ -728,7 +817,9 @@
       "refs": [
         "Judges 13-16"
       ],
-      "personIds": []
+      "personIds": [],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "ruth",
@@ -746,7 +837,9 @@
       "personIds": [
         "ruth",
         "boaz"
-      ]
+      ],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "samuel_called",
@@ -761,7 +854,9 @@
       "refs": [
         "1 Samuel 3"
       ],
-      "personIds": []
+      "personIds": [],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "saul_anointed",
@@ -778,7 +873,9 @@
       ],
       "personIds": [
         "saul"
-      ]
+      ],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "david_anointed",
@@ -795,7 +892,9 @@
       ],
       "personIds": [
         "david"
-      ]
+      ],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "david_goliath",
@@ -812,7 +911,9 @@
       ],
       "personIds": [
         "david"
-      ]
+      ],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "david_king",
@@ -829,7 +930,9 @@
       ],
       "personIds": [
         "david"
-      ]
+      ],
+      "basis": "thiele",
+      "approximate": false
     },
     {
       "id": "jerusalem_captured",
@@ -846,7 +949,9 @@
       ],
       "personIds": [
         "david"
-      ]
+      ],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "davidic_covenant",
@@ -863,7 +968,9 @@
       ],
       "personIds": [
         "david"
-      ]
+      ],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "solomon_king",
@@ -880,7 +987,9 @@
       ],
       "personIds": [
         "solomon"
-      ]
+      ],
+      "basis": "thiele",
+      "approximate": false
     },
     {
       "id": "temple_built",
@@ -898,7 +1007,9 @@
       ],
       "personIds": [
         "solomon"
-      ]
+      ],
+      "basis": "scripture",
+      "approximate": false
     },
     {
       "id": "kingdom_divided",
@@ -915,7 +1026,9 @@
       ],
       "personIds": [
         "rehoboam"
-      ]
+      ],
+      "basis": "thiele",
+      "approximate": false
     },
     {
       "id": "elijah_carmel",
@@ -930,7 +1043,9 @@
       "refs": [
         "1 Kings 18"
       ],
-      "personIds": []
+      "personIds": [],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "elisha_succeeds",
@@ -945,7 +1060,9 @@
       "refs": [
         "2 Kings 2"
       ],
-      "personIds": []
+      "personIds": [],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "jonah",
@@ -960,7 +1077,9 @@
       "refs": [
         "Jonah 1-4"
       ],
-      "personIds": []
+      "personIds": [],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "israel_falls",
@@ -975,7 +1094,9 @@
       "refs": [
         "2 Kings 17"
       ],
-      "personIds": []
+      "personIds": [],
+      "basis": "thiele",
+      "approximate": false
     },
     {
       "id": "hezekiah_reform",
@@ -993,7 +1114,9 @@
       ],
       "personIds": [
         "hezekiah"
-      ]
+      ],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "isaiah",
@@ -1008,7 +1131,9 @@
       "refs": [
         "Isaiah 1-66"
       ],
-      "personIds": []
+      "personIds": [],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "josiah_reform",
@@ -1025,7 +1150,9 @@
       ],
       "personIds": [
         "josiah"
-      ]
+      ],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "jeremiah",
@@ -1040,7 +1167,9 @@
       "refs": [
         "Jeremiah 1-52"
       ],
-      "personIds": []
+      "personIds": [],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "judah_falls",
@@ -1059,7 +1188,9 @@
       ],
       "personIds": [
         "jeconiah"
-      ]
+      ],
+      "basis": "thiele",
+      "approximate": false
     },
     {
       "id": "daniel_lions",
@@ -1074,7 +1205,9 @@
       "refs": [
         "Daniel 6"
       ],
-      "personIds": []
+      "personIds": [],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "return_zerubbabel",
@@ -1091,7 +1224,9 @@
       ],
       "personIds": [
         "zerubbabel"
-      ]
+      ],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "temple_rebuilt",
@@ -1108,7 +1243,9 @@
       ],
       "personIds": [
         "zerubbabel"
-      ]
+      ],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "esther",
@@ -1123,7 +1260,9 @@
       "refs": [
         "Esther 1-10"
       ],
-      "personIds": []
+      "personIds": [],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "ezra_returns",
@@ -1138,7 +1277,9 @@
       "refs": [
         "Ezra 7-10"
       ],
-      "personIds": []
+      "personIds": [],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "nehemiah_walls",
@@ -1153,7 +1294,9 @@
       "refs": [
         "Nehemiah 1-6"
       ],
-      "personIds": []
+      "personIds": [],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "malachi",
@@ -1168,7 +1311,9 @@
       "refs": [
         "Malachi 1-4"
       ],
-      "personIds": []
+      "personIds": [],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "intertestamental",
@@ -1181,7 +1326,9 @@
       "descZhHans": "玛拉基与施洗约翰之间约四百年没有圣经先知。",
       "descZhHant": "瑪拉基與施洗約翰之間約四百年沒有聖經先知。",
       "refs": [],
-      "personIds": []
+      "personIds": [],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "greek_period",
@@ -1194,7 +1341,9 @@
       "descZhHans": "亚历山大征服波斯帝国，推广希腊文化（希腊化）。",
       "descZhHant": "亞歷山大征服波斯帝國，推廣希臘文化（希臘化）。",
       "refs": [],
-      "personIds": []
+      "personIds": [],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "septuagint",
@@ -1207,7 +1356,9 @@
       "descZhHans": "希伯来圣经在亚历山大被译为希腊文（七十士译本）。",
       "descZhHant": "希伯來聖經在亞歷山大被譯為希臘文（七十士譯本）。",
       "refs": [],
-      "personIds": []
+      "personIds": [],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "maccabees",
@@ -1220,7 +1371,9 @@
       "descZhHans": "犹大·马加比领导反抗希腊塞琉古王朝的起义；重新洁净圣殿。",
       "descZhHant": "猶大·馬加比領導反抗希臘塞琉古王朝的起義；重新潔淨聖殿。",
       "refs": [],
-      "personIds": []
+      "personIds": [],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "rome_judea",
@@ -1233,7 +1386,9 @@
       "descZhHans": "庞培攻陷耶路撒冷；犹太成为罗马行省。",
       "descZhHant": "龐培攻陷耶路撒冷；猶太成為羅馬行省。",
       "refs": [],
-      "personIds": []
+      "personIds": [],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "john_baptist_born",
@@ -1248,7 +1403,9 @@
       "refs": [
         "Luke 1:5-25, 57-80"
       ],
-      "personIds": []
+      "personIds": [],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "jesus_born",
@@ -1268,7 +1425,9 @@
         "jesus",
         "mary",
         "joseph_father_of_jesus"
-      ]
+      ],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "magi",
@@ -1285,7 +1444,9 @@
       ],
       "personIds": [
         "jesus"
-      ]
+      ],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "flight_egypt",
@@ -1304,7 +1465,9 @@
         "joseph_father_of_jesus",
         "mary",
         "jesus"
-      ]
+      ],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "jesus_temple_12",
@@ -1321,7 +1484,9 @@
       ],
       "personIds": [
         "jesus"
-      ]
+      ],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "jesus_baptized",
@@ -1339,7 +1504,9 @@
       ],
       "personIds": [
         "jesus"
-      ]
+      ],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "temptation",
@@ -1357,7 +1524,9 @@
       ],
       "personIds": [
         "jesus"
-      ]
+      ],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "disciples_called",
@@ -1376,7 +1545,9 @@
       ],
       "personIds": [
         "jesus"
-      ]
+      ],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "sermon_mount",
@@ -1393,7 +1564,9 @@
       ],
       "personIds": [
         "jesus"
-      ]
+      ],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "5000_fed",
@@ -1411,7 +1584,9 @@
       ],
       "personIds": [
         "jesus"
-      ]
+      ],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "transfiguration",
@@ -1429,7 +1604,9 @@
       "personIds": [
         "jesus",
         "moses"
-      ]
+      ],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "triumphal_entry",
@@ -1446,7 +1623,9 @@
       ],
       "personIds": [
         "jesus"
-      ]
+      ],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "last_supper",
@@ -1465,7 +1644,9 @@
       ],
       "personIds": [
         "jesus"
-      ]
+      ],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "crucifixion",
@@ -1483,7 +1664,9 @@
       ],
       "personIds": [
         "jesus"
-      ]
+      ],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "resurrection",
@@ -1503,7 +1686,9 @@
       "personIds": [
         "jesus",
         "mary"
-      ]
+      ],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "ascension",
@@ -1520,7 +1705,9 @@
       ],
       "personIds": [
         "jesus"
-      ]
+      ],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "pentecost",
@@ -1535,7 +1722,9 @@
       "refs": [
         "Acts 2"
       ],
-      "personIds": []
+      "personIds": [],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "stephen_martyred",
@@ -1550,7 +1739,9 @@
       "refs": [
         "Acts 6-7"
       ],
-      "personIds": []
+      "personIds": [],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "paul_converted",
@@ -1565,7 +1756,9 @@
       "refs": [
         "Acts 9"
       ],
-      "personIds": []
+      "personIds": [],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "paul_journeys",
@@ -1580,7 +1773,9 @@
       "refs": [
         "Acts 13-14"
       ],
-      "personIds": []
+      "personIds": [],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "jerusalem_council",
@@ -1595,7 +1790,9 @@
       "refs": [
         "Acts 15"
       ],
-      "personIds": []
+      "personIds": [],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "paul_rome",
@@ -1610,7 +1807,9 @@
       "refs": [
         "Acts 28"
       ],
-      "personIds": []
+      "personIds": [],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "temple_destroyed",
@@ -1626,7 +1825,9 @@
         "Matthew 24:1-2",
         "Mark 13:1-2"
       ],
-      "personIds": []
+      "personIds": [],
+      "basis": "conventional",
+      "approximate": true
     },
     {
       "id": "john_patmos",
@@ -1641,7 +1842,9 @@
       "refs": [
         "Revelation 1:9"
       ],
-      "personIds": []
+      "personIds": [],
+      "basis": "conventional",
+      "approximate": true
     }
   ]
 }
