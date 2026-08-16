@@ -1002,9 +1002,6 @@ class _DetailPanel extends StatelessWidget {
     );
   }
 
-  /// `31.78° N, 35.23° E`. Hemisphere letters rather than a minus sign:
-  /// every biblical site is north and east, so a lone `-` would read as
-  /// a typo rather than as a hemisphere.
   /// The plates that name this place (#320), or nothing at all.
   ///
   /// "Naming it" is the whole claim, and the header says so rather than
@@ -1012,11 +1009,18 @@ class _DetailPanel extends StatelessWidget {
   /// gated by chapter, and the gazetteer's ordinal cannot survive it
   /// because 66 of its 80 ordinal groups share one reference list. See
   /// `utils/place_illustrations.dart` for the measurement.
+  ///
+  /// Absent when the join found nothing, because 1,192 of 1,271 places
+  /// have no plate and an apology on each of them is not a feature. But
+  /// a scope that empties the strip prints the header alone reading
+  /// `0 / n`: 56 of the 79 joined places have a book under which every
+  /// plate falls away, and vanishing there would tell the reader "there
+  /// are no pictures of this place" when there are n of them.
   Widget _illustrations(BuildContext context, WbColors c, WbType t) {
     final all = plates;
     if (all == null) return const SizedBox.shrink();
     final found = placeIllustrations(place, all, scopeBooks: scopeBooks);
-    if (found.inScope.isEmpty) return const SizedBox.shrink();
+    if (found.total == 0) return const SizedBox.shrink();
     final title = _s('atlasIllusHeader', '{n} illustrations naming it')
         .replaceAll(
             '{n}', scopedCountLabel(found.inScope.length, found.total));
@@ -1039,16 +1043,18 @@ class _DetailPanel extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(height: 6),
-        SizedBox(
-          height: 74,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: found.inScope.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 6),
-            itemBuilder: (_, i) => _plate(c, found.inScope, i, title),
+        if (found.inScope.isNotEmpty) ...[
+          const SizedBox(height: 6),
+          SizedBox(
+            height: 74,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: found.inScope.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 6),
+              itemBuilder: (_, i) => _plate(c, found.inScope, i, title),
+            ),
           ),
-        ),
+        ],
       ],
     );
   }
@@ -1096,6 +1102,9 @@ class _DetailPanel extends StatelessWidget {
     );
   }
 
+  /// `31.78° N, 35.23° E`. Hemisphere letters rather than a minus sign:
+  /// every biblical site is north and east, so a lone `-` would read as
+  /// a typo rather than as a hemisphere.
   String _coordinates(BiblePlace p) {
     final lat = p.lat!;
     final lon = p.lon!;

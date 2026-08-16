@@ -4231,14 +4231,42 @@ the place.
   and both python numbers were wrong, in the direction that would have
   understated the finding. This is the third check to record the same
   lesson: rules live in the parser, not in the asset.
+- **Counting places by name where the join counts ids.** The scope
+  measurement below first came back **48** and was written down as such;
+  the same measurement keyed on `id` — the unit the 79 uses — is **56**.
+  Nothing was wrong with either count, only with reporting one in the
+  other's denominator. It is the same ordinal collision this check is
+  about: `Ai 1` and `Ai 2` are two entries and one name.
+
+### 38c — a scope could empty the strip in silence
+
+Found on the deployed build while verifying 38b, and fixed in the same
+release. The strip rendered nothing when the join was empty, which is
+right for the 1,192 places that have no plate — but `atlasIndex`'s book
+scope also empties it, and there the same silence says "no picture of
+this place exists" about a place that has several.
+
+The size of it: **292** (place, book) pairs across **56 of the 79**
+joined places have a scope under which every plate falls away. So more
+than two thirds of the feature's surface had a filter that could make it
+lie by omission. `Ai` scoped to Genesis, Ezra, Nehemiah or Jeremiah
+showed nothing while three plates existed; `Asia` scoped to Romans hid
+four.
+
+The panel now prints the header alone, reading `0 / 3`, and drops only
+the thumbnails. That is the #319 rule the file's own doc comment had
+already committed to — *a scope that silently subtracts leaves a reader
+unable to tell "no plate in Obadiah" from "no plate anywhere"* — applied
+to the surface that introduced it.
 
 ### Frozen
 
 `test/place_illustrations_test.dart` holds the join rate (79/218/149),
 the name and chapter halves as separate rules, the Doré boundary, the
-scope partition, and the assertion that `Antioch 1` and `Antioch 2` get
-identical strips — so the day the gazetteer learns to tell them apart,
-that test fails and the prose above gets revisited.
+scope partition, the 292/56 the `0 / n` header exists for, and the
+assertion that `Antioch 1` and `Antioch 2` get identical strips — so the
+day the gazetteer learns to tell them apart, that test fails and the
+prose above gets revisited.
 
 ### Still open
 

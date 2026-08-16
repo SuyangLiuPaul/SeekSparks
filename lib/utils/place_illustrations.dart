@@ -166,7 +166,9 @@ bool illustrationCoversRefs(
 ///
 /// Two numbers for the same reason the reference list above the strip
 /// carries two (#319): a scope that silently subtracts leaves a reader
-/// unable to tell "no plate in Obadiah" from "no plate anywhere".
+/// unable to tell "no plate in Obadiah" from "no plate anywhere". The
+/// gap is not a corner case — 56 of the 79 joined places have at least
+/// one book under which every plate falls away, 292 such pairs in all.
 class PlaceIllustrations {
   const PlaceIllustrations({required this.inScope, required this.total});
 

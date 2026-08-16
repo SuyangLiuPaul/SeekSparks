@@ -123,6 +123,15 @@ void main() {
     test('an empty scope is no limit, not nothing', () {
       expect(placeIllustrations(bethlehem, plates, scopeBooks: {}).total, 2);
     });
+
+    test('a scope can empty the strip while the plates still exist', () {
+      // The case the panel must not render as silence: `total` survives
+      // so the header can say "0 / 2" instead of disappearing and
+      // implying the place has no pictures at all.
+      final r = placeIllustrations(bethlehem, plates, scopeBooks: {'Micah'});
+      expect(r.inScope, isEmpty);
+      expect(r.total, 2);
+    });
   });
 
   test('the strip walks scripture in order', () {
@@ -177,6 +186,29 @@ void main() {
       expect(distinct.length, 149);
       expect(places.length, 1271);
       expect(plates.length, 1192);
+    });
+
+    test('how much of the join a scope can hide', () {
+      // The size of the case the panel prints "0 / n" for. If this went
+      // to zero the header branch would be dead code; while it is 292 a
+      // strip that vanished under a scope would be telling 56 places'
+      // readers that no picture of them exists. Counted by id, the unit
+      // the 79 above uses — by NAME it is 48, because the ordinal groups
+      // share a name and check 38 says nothing can tell them apart.
+      var pairs = 0;
+      final hidden = <String>{};
+      for (final p in places) {
+        if (placeIllustrations(p, plates).total == 0) continue;
+        for (final b in <String>{for (final r in p.refs) r.englishBook}) {
+          final r = placeIllustrations(p, plates, scopeBooks: {b});
+          if (r.inScope.isEmpty && r.total > 0) {
+            pairs++;
+            hidden.add(p.id);
+          }
+        }
+      }
+      expect(pairs, 292);
+      expect(hidden.length, 56);
     });
 
     test('every excluded name is real, and costs nothing today', () {
