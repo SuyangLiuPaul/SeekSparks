@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:seeksparks/models/strongs.dart';
+import 'package:seeksparks/utils/diacritics.dart' show foldDiacritics;
 
 /// Lazy loader for Strong's Greek + Hebrew lexicons. The two files are
 /// loaded independently the first time a number from that language is
@@ -274,26 +275,20 @@ class StrongsService {
     return out;
   }
 
-  /// Lower-case + strip combining diacritics so "Agápē" / "agape" /
-  /// "AGAPÉ" all hash to the same key. Greek ί → ι, ή → η, etc.
-  /// Hebrew vowel points (combining diacritics) stripped so the
-  /// consonantal lemma matches what users typically type.
-  static String _normaliseForLemma(String s) {
-    final lower = s.toLowerCase().trim();
-    // Strip combining marks (NFD-decompose, drop \p{Mn}-equivalents).
-    final out = StringBuffer();
-    for (final r in lower.runes) {
-      // Skip combining diacritical marks (U+0300..036F, Greek/Coptic
-      // diacritics in U+1AB0+, Hebrew points U+0591..05BD/05BF/05C1-5).
-      if (r >= 0x0300 && r <= 0x036F) continue;
-      if (r >= 0x0591 && r <= 0x05BD) continue;
-      if (r == 0x05BF) continue;
-      if (r >= 0x05C1 && r <= 0x05C7) continue;
-      if (r >= 0x1AB0 && r <= 0x1AFF) continue;
-      out.writeCharCode(r);
-    }
-    return out.toString();
-  }
+  /// Lower-case + strip diacritics so "Agápē" / "agape" / "AGAPÉ" all
+  /// hash to the same key. Greek ί → ι, ή → η; Hebrew vowel points
+  /// dropped so the consonantal lemma matches what users type.
+  ///
+  /// 2026-08-16 (#321): this claim used to be false. The old body
+  /// dropped combining marks and nothing else, but not one character in
+  /// this lexicon is a combining mark — all 8,273 accented Greek and
+  /// 13,835 accented Latin characters in it are PRECOMPOSED. So "agape"
+  /// did not reach `agápē` and "αγαπη" did not reach `ἀγάπη`, and every
+  /// one of the 5,517 accented Greek lemmas was unreachable by its own
+  /// spelling. It shares the search fold now, so there is one answer to
+  /// what two words being "the same" means rather than two that drift.
+  static String _normaliseForLemma(String s) =>
+      foldDiacritics(s).toLowerCase().trim();
 
   static void _scanLexicon(
     Map<String, StrongsEntry> lex,

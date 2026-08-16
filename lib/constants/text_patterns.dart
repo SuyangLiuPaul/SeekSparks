@@ -2,6 +2,7 @@
 // Used across loading_page, home_page, search_page, verse_widget, and
 // fetch_verses to ensure consistent text processing.
 
+import 'package:seeksparks/utils/diacritics.dart' show foldDiacritics;
 import 'package:seeksparks/utils/scripture_markup.dart' show isReferentGloss;
 
 /// Matches `<note:...>` tags embedded in verse text.
@@ -152,6 +153,24 @@ final _squareBracketPattern = RegExp(r'[\[\]]');
 /// place with no reader to inform.
 String sanitizeForSearchKey(String text) =>
     sanitizeForSearch(text).replaceAll(_squareBracketPattern, '');
+
+/// The whole corpus-key contract in one place: [sanitizeForSearchKey],
+/// diacritics folded, spaces gone, lower-cased.
+///
+/// 2026-08-16 (#321). The fold cannot go in [sanitizeForSearchKey]
+/// itself, because that also builds `MainProvider.wordKeys`, and the
+/// Phrases and Related panes PRINT `wordKeys` — folding it would put
+/// unaccented Greek and unpointed Hebrew on the reader's screen. This
+/// key is lower-cased with its spaces taken out; it has no reader, and
+/// it is the only corpus in the app that does not.
+///
+/// Named rather than inlined so the tests can build a key the same way
+/// the provider does. The last time a probe re-implemented a sanitiser
+/// instead of calling it, the probe was the thing that was wrong.
+String searchCorpusKey(String scriptureText) =>
+    foldDiacritics(sanitizeForSearchKey(scriptureText))
+        .replaceAll(' ', '')
+        .toLowerCase();
 
 /// 2026-05-19 (v1.2.58): clipboard / preview formatter.
 ///

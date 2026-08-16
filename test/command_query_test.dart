@@ -9,6 +9,7 @@ library;
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seeksparks/utils/command_query.dart';
+import 'package:seeksparks/utils/diacritics.dart';
 
 /// Six verses of English and four of Chinese, arranged so that the verse
 /// context tests have a book boundary to run into.
@@ -37,8 +38,12 @@ const _cjkTexts = <String>[
 ];
 const _cjkBooks = <String>['创世记', '创世记', '创世记', '约翰福音'];
 
-List<String> _keys(List<String> texts) =>
-    [for (final t in texts) t.replaceAll(' ', '').toLowerCase()];
+/// The contract `runCommandQuery` is handed: folded, lower-cased,
+/// whitespace-stripped. Mirrors `MainProvider.searchKeys` — if that
+/// stops folding, these tests stop describing the shipped pipeline.
+List<String> _keys(List<String> texts) => [
+      for (final t in texts) foldDiacritics(t).replaceAll(' ', '').toLowerCase()
+    ];
 
 List<int> _run(String raw,
     {List<String> texts = _texts, List<String> books = _books}) {
@@ -409,13 +414,13 @@ void main() {
     });
   });
 
-  group('Hebrew points drop out of the comparison', () {
+  group('diacritics drop out of the comparison', () {
     // BibleWorks' default too: "vowel point sensitive searching" is a
     // setting you turn on, not one you turn off.
-    test('a pointed query matches unpointed text and vice versa', () {
+    test('a pointed Hebrew query matches unpointed text and vice versa', () {
       const pointed = 'בְּרֵאשִׁית בָּרָא אֱלֹהִים';
       const bare = 'בראשית ברא אלהים';
-      expect(stripHebrewPoints(pointed), bare);
+      expect(foldDiacritics(pointed), bare);
       expect(
           _run('.בְּרֵאשִׁית', texts: const [bare], books: const ['Genesis']), [0]);
       expect(
@@ -423,9 +428,58 @@ void main() {
           [0]);
     });
 
-    test('folding is off unless the query is Hebrew', () {
-      expect(parseCommandQuery('.god').query!.foldHebrewPoints, isFalse);
-      expect(parseCommandQuery('.ברא').query!.foldHebrewPoints, isTrue);
+    // #321. The app's Greek edition is set without accents; every Greek
+    // word the app SHOWS carries them. Typed as displayed, `ὁ θεός` used
+    // to find nothing at all.
+    test('an accented Greek query matches unaccented text', () {
+      const bare = ['εν αρχη εποιησεν ο θεος τον ουρανον και την γην'];
+      const books = ['Genesis'];
+      expect(_run("'ὁ θεός", texts: bare, books: books), [0]);
+      expect(_run('.ἐποίησεν', texts: bare, books: books), [0]);
+      expect(_run('.οὐρανὸν', texts: bare, books: books), [0]);
+    });
+
+    test('an unaccented Greek query still matches accented text', () {
+      const accented = ['Ἐν ἀρχῇ ἐποίησεν ὁ θεὸς τὸν οὐρανὸν καὶ τὴν γῆν'];
+      const books = ['Genesis'];
+      expect(_run("'ο θεος", texts: accented, books: books), [0]);
+      expect(_run("'ὁ θεὸς", texts: accented, books: books), [0]);
+    });
+
+    test('the accented and unaccented queries return the SAME verses', () {
+      // The claim the fix is actually making. Both spellings, both
+      // corpora, one answer.
+      const corpora = <List<String>>[
+        ['εν αρχη εποιησεν ο θεος τον ουρανον', 'και ειπεν ο θεος γενηθητω φως'],
+        ['Ἐν ἀρχῇ ἐποίησεν ὁ θεὸς τὸν οὐρανὸν', 'καὶ εἶπεν ὁ θεός γενηθήτω φῶς'],
+      ];
+      for (final texts in corpora) {
+        final books = [for (final _ in texts) 'Genesis'];
+        expect(_run("'ὁ θεός", texts: texts, books: books),
+            _run("'ο θεος", texts: texts, books: books));
+        expect(_run("'ὁ θεός", texts: texts, books: books), [0, 1]);
+      }
+    });
+
+    test('Latin accents fold too', () {
+      const texts = ['the word is agápē', 'the word is agape'];
+      const books = ['John', 'John'];
+      expect(_run('.agape', texts: texts, books: books), [0, 1]);
+      expect(_run('.agápē', texts: texts, books: books), [0, 1]);
+    });
+
+    test('the echo still quotes the accents the reader typed', () {
+      // The fold lives in the comparison layer. `source` is what the UI
+      // prints back, and it must not lose a breathing.
+      final q = parseCommandQuery("'ὁ θεός").query!;
+      expect(q.terms.map((t) => t.source), ['ὁ', 'θεός']);
+      expect(q.terms.first.elements.length, 1);
+    });
+
+    test('folding cannot invent a hit across a word it does not contain', () {
+      const texts = ['and God created', 'and god saw'];
+      const books = ['Genesis', 'Genesis'];
+      expect(_run('.θεος', texts: texts, books: books), isEmpty);
     });
   });
 

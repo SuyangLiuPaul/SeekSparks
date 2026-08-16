@@ -34,6 +34,7 @@
 library;
 
 import 'package:seeksparks/utils/command_query.dart';
+import 'package:seeksparks/utils/diacritics.dart';
 import 'package:seeksparks/utils/strongs_boolean_search.dart';
 
 /// What an active query marks.
@@ -117,7 +118,10 @@ SearchHighlight highlightsForQuery(String rawQuery) {
   // Plain text. Split on whitespace so "let there be" marks each word —
   // the verse may not contain the exact phrase, and marking nothing when
   // the phrase does not appear verbatim is the unhelpful answer.
-  final terms = q
+  //
+  // Folded to match what the corpus was searched with. `literalCore`
+  // above is already folded, because `TokenMatcher.compile` built it.
+  final terms = foldDiacritics(q)
       .toLowerCase()
       .split(RegExp(r'\s+'))
       .where((t) => t.isNotEmpty)
@@ -147,11 +151,22 @@ class HighlightSpan {
 /// Case-insensitive, and overlapping/adjacent matches are merged so a
 /// query like "the there" does not produce a shredded line of
 /// alternating spans.
+///
+/// [terms] arrive folded (see [highlightsForQuery]), so [text] is folded
+/// to meet them — otherwise a search that matched would mark nothing,
+/// which is the regression this file exists to prevent. The match is
+/// found in folded coordinates and sliced out of the ORIGINAL: the
+/// reader is shown `ἀγάπη`, accents and all, marked.
 List<HighlightSpan> splitOnTerms(String text, List<String> terms) {
   if (text.isEmpty || terms.isEmpty) {
     return text.isEmpty ? const [] : [HighlightSpan(text, false)];
   }
-  final lower = text.toLowerCase();
+  final folded = foldDiacriticsAligned(text);
+  final lower = folded.folded.toLowerCase();
+  // Every character the fold can emit is a base letter or was already
+  // untouched, and none of those lower-case to more than one unit — so
+  // an offset in `lower` is an offset in `folded.folded`.
+  assert(lower.length == folded.folded.length);
 
   // Collect every match range, then merge.
   final ranges = <(int, int)>[];
@@ -181,11 +196,13 @@ List<HighlightSpan> splitOnTerms(String text, List<String> terms) {
   final out = <HighlightSpan>[];
   var cursor = 0;
   for (final (start, end) in merged) {
-    if (start > cursor) {
-      out.add(HighlightSpan(text.substring(cursor, start), false));
+    final from = folded.sourceIndex[start];
+    final to = folded.sourceIndex[end];
+    if (from > cursor) {
+      out.add(HighlightSpan(text.substring(cursor, from), false));
     }
-    out.add(HighlightSpan(text.substring(start, end), true));
-    cursor = end;
+    out.add(HighlightSpan(text.substring(from, to), true));
+    cursor = to;
   }
   if (cursor < text.length) {
     out.add(HighlightSpan(text.substring(cursor), false));

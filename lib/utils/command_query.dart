@@ -95,6 +95,7 @@
 library;
 
 import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/utils/diacritics.dart' show foldDiacritics;
 import 'package:seeksparks/utils/phrase_match.dart' show phraseTokens;
 import 'package:seeksparks/utils/related_verses.dart' show isCjkChar, isWordChar;
 
@@ -158,8 +159,11 @@ class TokenMatcher {
   /// `*` matches zero or more characters, `?` exactly one, and `[abc]` or
   /// `{abc}` any one of the enclosed characters. BibleWorks accepts both
   /// bracket styles because the Hebrew keyboard puts ayin on `[`.
+  /// Diacritics are folded here and nowhere else on the query side, so
+  /// [source] keeps the accents the reader typed and the echo can quote
+  /// the line back to them unchanged (#321).
   factory TokenMatcher.compile(String source) {
-    final lower = source.toLowerCase();
+    final lower = foldDiacritics(source).toLowerCase();
     if (!_hasMeta(lower)) {
       return TokenMatcher._(source, lower, null, lower);
     }
@@ -354,7 +358,6 @@ class CommandQuery {
     required this.outline,
     required this.sequence,
     required this.verseContext,
-    required this.foldHebrewPoints,
   });
 
   final CommandKind kind;
@@ -378,17 +381,6 @@ class CommandQuery {
   /// `;N` — how many verses the terms may be spread across. 0 means one
   /// verse, which is the default and by far the common case.
   final int verseContext;
-
-  /// The query used Hebrew letters, so vowel points and cantillation
-  /// marks are stripped from both sides before comparing.
-  ///
-  /// This is BibleWorks' default too ("vowel point sensitive searching"
-  /// is a setting you turn ON). Greek accents are the same idea but not
-  /// the same fix: Hebrew points are always combining marks and drop out
-  /// with a codepoint filter, whereas accented Greek in these texts is
-  /// precomposed and would need a decomposition table. Not done — see
-  /// the library comment.
-  final bool foldHebrewPoints;
 
   /// Terms the verse must contain (used by the prefilter and the
   /// highlighter); excludes `!` terms, which describe absence.
@@ -488,11 +480,6 @@ CommandParse parseCommandQuery(String raw) {
   final terms = <QueryTerm>[];
   final outline = <QueryPart>[];
   final sequence = <QueryElement>[];
-  // Decided once for the whole query, not per word: a search must
-  // compare like with like, so if any part of it is pointed Hebrew then
-  // both sides get stripped.
-  final foldHebrew = _hasHebrew(body);
-  if (foldHebrew) body = stripHebrewPoints(body);
 
   for (final piece in body.split(RegExp(r'\s+'))) {
     if (piece.isEmpty) continue;
@@ -556,7 +543,6 @@ CommandParse parseCommandQuery(String raw) {
     outline: List.unmodifiable(outline),
     sequence: List.unmodifiable(kind == CommandKind.phrase ? sequence : const []),
     verseContext: verseContext,
-    foldHebrewPoints: foldHebrew,
   ));
 }
 
@@ -639,42 +625,6 @@ bool _isAllMeta(String run) {
   return true;
 }
 
-bool _hasHebrew(String s) {
-  for (var i = 0; i < s.length; i++) {
-    final c = s.codeUnitAt(i);
-    if (c >= 0x05D0 && c <= 0x05EA) return true;
-  }
-  return false;
-}
-
-/// Hebrew vowel points, cantillation marks and the like — combining
-/// characters that a reader typing a search does not type.
-bool _isHebrewPoint(int c) =>
-    (c >= 0x0591 && c <= 0x05BD) ||
-    c == 0x05BF ||
-    c == 0x05C1 ||
-    c == 0x05C2 ||
-    c == 0x05C4 ||
-    c == 0x05C5 ||
-    c == 0x05C7;
-
-String stripHebrewPoints(String s) {
-  var needed = false;
-  for (var i = 0; i < s.length; i++) {
-    if (_isHebrewPoint(s.codeUnitAt(i))) {
-      needed = true;
-      break;
-    }
-  }
-  if (!needed) return s;
-  final buf = StringBuffer();
-  for (var i = 0; i < s.length; i++) {
-    final c = s.codeUnitAt(i);
-    if (!_isHebrewPoint(c)) buf.writeCharCode(c);
-  }
-  return buf.toString();
-}
-
 // ── Matching ────────────────────────────────────────────────────────
 
 /// Whether [sequence] matches [tokens] starting exactly at [start].
@@ -749,25 +699,25 @@ CommandSearchResult runCommandQuery({
   assert(texts.length == books.length);
 
   // The prefilter tests a query literal against a verse key, so both
-  // sides have to be spelled the same way. A pointed query is folded at
-  // parse time, so the keys must be folded too or the literal `בראשית`
-  // would fail `contains` on a pointed verse and the hit would be lost
-  // before it was ever tokenized.
-  final keys = query.foldHebrewPoints
-      ? [for (final k in searchKeys) stripHebrewPoints(k)]
-      : searchKeys;
+  // sides have to be spelled the same way. `searchKeys` arrives folded
+  // (`MainProvider.searchKeys`) and the query literals are folded in
+  // `TokenMatcher.compile`, so the two already agree and this used to be
+  // where a whole extra copy of the corpus was allocated per query.
+  final keys = searchKeys;
 
   final tokenCache = List<List<String>?>.filled(texts.length, null);
   var tokenized = 0;
 
+  // `texts` is `MainProvider.wordKeys`, which is NOT folded — it is
+  // printed on screen by the Phrases and Related panes. Folding happens
+  // on the token, after the split, so nothing the reader sees changes.
   List<String> tokensAt(int i) {
     final cached = tokenCache[i];
     if (cached != null) return cached;
     tokenized++;
-    var built = [for (final t in phraseTokens(texts[i])) t.text];
-    if (query.foldHebrewPoints) {
-      built = [for (final t in built) stripHebrewPoints(t)];
-    }
+    final built = [
+      for (final t in phraseTokens(texts[i])) foldDiacritics(t.text)
+    ];
     tokenCache[i] = built;
     return built;
   }

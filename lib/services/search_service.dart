@@ -2,6 +2,7 @@ import 'package:seeksparks/models/verse.dart';
 import 'package:seeksparks/services/concordance_service.dart';
 import 'package:seeksparks/services/fetch_books.dart' show standardBookOrder;
 import 'package:seeksparks/services/originals_service.dart';
+import 'package:seeksparks/utils/diacritics.dart' show foldDiacritics;
 import 'package:seeksparks/utils/strongs_boolean_search.dart';
 import 'package:seeksparks/utils/strongs_proximity.dart';
 
@@ -52,7 +53,11 @@ class SearchService {
     bool searchAll = false,
     String? currentBook,
   }) {
-    final queryNorm = query.replaceAll(' ', '').toLowerCase();
+    // Both sides folded, or `ὁ θεός` finds nothing in a corpus that
+    // spells it `ο θεος` — #321. `searchKeys` is folded where it is
+    // built; this is the other half of the same comparison.
+    final queryNorm =
+        foldDiacritics(query).replaceAll(' ', '').toLowerCase();
     final matches = <Verse>[];
     final localCounts = <String, int>{};
     final useFilter = filterBook != null;

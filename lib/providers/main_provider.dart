@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:seeksparks/constants/bible_versions.dart'
     show localeDefaultVersion, resolveReadingVersion;
 import 'package:seeksparks/constants/text_patterns.dart'
-    show sanitizeForSearchKey;
+    show sanitizeForSearchKey, searchCorpusKey;
 import 'package:seeksparks/models/verse.dart';
 import 'package:seeksparks/models/book.dart';
 import 'package:seeksparks/services/error_reporter.dart';
@@ -427,6 +427,12 @@ class MainProvider extends ChangeNotifier {
   /// v1.6.119 and stopped at the corpus, which left the app answering
   /// *"does this Bible contain the word maskil"* with 13 under BSB and
   /// 0 under the LEB — from titles the LEB was printing on screen.
+  ///
+  /// 2026-08-16 (#321): diacritics folded, which is why the fold lives
+  /// here and not in `sanitizeForSearchKey`. That function also builds
+  /// [wordKeys], and [wordKeys] is printed on screen by the Phrases and
+  /// Related panes; a key that is lower-cased and has had its spaces
+  /// taken out is the one corpus in this class with no reader.
   List<String> get searchKeys {
     if (_searchKeysCache != null &&
         _searchKeysCacheLength == verses.length) {
@@ -438,9 +444,7 @@ class MainProvider extends ChangeNotifier {
       // instruction (見上節, OMIT) gets an empty key, so a search for
       // 上節 cannot report 227 hits that are not scripture.
       if (verses[i].absence != null) continue;
-      out[i] = sanitizeForSearchKey(verses[i].scriptureText)
-          .replaceAll(' ', '')
-          .toLowerCase();
+      out[i] = searchCorpusKey(verses[i].scriptureText);
     }
     _searchKeysCache = out;
     _searchKeysCacheLength = verses.length;
