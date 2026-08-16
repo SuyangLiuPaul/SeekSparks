@@ -3948,6 +3948,180 @@ general rule names `Melki` and `Joshua / Jose` without being told to.
 
 ---
 
+## Check 37 — the claims the book-intro card makes *above* the text
+
+`assets/book_introductions.json` is the last curated asset this document
+listed as unchecked. It holds **66 records**, and when a book opens at
+chapter 1 the reading pane renders one of them as a collapsible card
+*above the first verse* — subtitle, summary, author, date, audience,
+themes, and a key-passage spotlight, in English, 简体 and 繁體.
+
+That position is the whole problem. Everything else this document has
+checked is a label on a passage; this is a paragraph a reader meets
+**before** the text, in the app's own voice, and most of its sentences
+are not devotional. They are countable: *five acrostics*, *fourteen
+times*, *the shortest book*, *the longest prophetic book*, *the only
+book that never names God*. Each of those is a claim the shipped corpus
+can answer, and a reader has no way to check any of them without leaving
+the card.
+
+Two instruments, both read-only: `tools/audit_book_intros.py` for the
+structural and numeric claims, `tools/audit_book_intro_quotes.py` for the
+quotations. Neither consults anything outside this repository. The first
+reads the app's own `lib/constants/book_name_mapping.dart` for the book
+table, so it cannot disagree with the app about what a book is called.
+
+### 37a–37c — the references: 0 findings in 66 records
+
+Every `keyPassage` **resolves** to a passage that exists; every one names
+**its own book**; no chapter number **overruns** the book. Reported first
+because zero is the result: the spotlight reference is sound in all 66,
+and check 25 had already proved the weaker claim that the string parses.
+
+One flag is raised and is not a finding. Lamentations' spotlight is
+3:22-23, and `lxxwh` has no verse there — its chapter 3 carries 62 of 66,
+missing 22, 23, 24 and 29. That is one of the 302 Septuagint absences
+check 29 catalogued and check 30 classified, and since v1.6.116 the row
+says "this edition has no verse here" rather than rendering as nothing.
+The reference is sound in every edition that has the passage.
+
+### 37d — the quotations, against the passage they are attributed to
+
+59 of the 66 records print a **quotation of scripture** inside
+`keyPassageDescription` and name the `keyPassage` as its source. The card
+renders both, one under the other, so every one of those screens asserts
+*these words are in that passage*.
+
+The test cannot be string equality — the quotations elide with `…` and
+are the author's own rendering, not any one edition. It is a **ranking**:
+score the quotation against every verse of five English editions (`bsb`,
+`kjv`, `kjvs`, `leb`, `nasb`) or the three CUV-family editions, IDF-
+weighted cosine over tokens and bigrams, one token per Han character;
+then ask what the **named** passage scores. Scoring against five editions
+is what makes a low score mean "no edition we ship says this" rather than
+"this edition words it differently".
+
+**137 quotations scored, 0 misattributed.** The weakest reading is 2
+Samuel's "Son of David", which scores 0.000 and is not a defect: it is an
+epithet the card names, not a sentence it quotes.
+
+The rule that had to be corrected before any of this was believed:
+
+> A quotation is **not** suspect merely because some other verse scores
+> higher. Scripture quotes itself. Matthew 21:5 *is* Zechariah 9:9;
+> Romans 1:17 and Hebrews 10:38 both quote Habakkuk 2:4. The only
+> evidence of misattribution is that the **named** passage does not
+> contain the words, in absolute terms. The best-scoring verse elsewhere
+> is context for a human reading a flag, never the trigger.
+
+### 37e — the countable claims: 5 false, all fixed
+
+These are the findings. Each was verified against the shipped corpus
+directly, and each is now pinned by a test that derives the number from
+the text rather than restating the string.
+
+- **Lamentations — "Five Acrostic Dirges".** Chapter 5 is not an
+  acrostic. Its 22 verses open with only **11 distinct letters** (ז נ י
+  מ ע מ א ע ב ע נ ש ב ז ש נ ע ע א ל ה כ), missing 11 of the 22; chapters
+  1–4 each walk the full alphabet. The app **already contradicted
+  itself** — `bible_trivia_page.dart` ships "Five poems, four are
+  alphabetic acrostics" with `brokenChapters: [5]`. Now: "Five Dirges
+  Over Fallen Jerusalem, Four of Them Acrostics".
+- **Philippians — "the word 'joy' appears 14 times".** No edition the app
+  ships prints it more than **7** (bsb 5, kjv 6, kjvs 6, leb 5, nasb 7);
+  Chinese 喜乐/喜樂 is 12. 14 is reachable only in the Greek, and only by
+  counting χαρά (5) and χαίρω (9) while dropping συγχαίρω (2) without
+  saying so. The whole family is **16**, which a reader can confirm in
+  the app's own concordance. Now stated as the Greek, at 16.
+- **Obadiah — "The Bible's Shortest Book".** False on every metric. 2
+  John has 13 verses to Obadiah's 21; 3 John has **218** original-language
+  words to Obadiah's **285**. Obadiah *is* the shortest book of the
+  Hebrew Bible, and the subtitle now says so.
+- **3 John — "The shortest book in the Bible".** Directly contradicted
+  the Obadiah card, so one of the two was wrong on any reading. This one
+  is true, but only by original-language word count, which the card did
+  not state. Now: "Counted in the original languages…".
+- **Isaiah — "the longest and most quoted prophetic book".** Jeremiah is
+  longer on all three measures: **1,364 verses to 1,292**, 39,741 BSB
+  words to 34,089, and **21,580 Hebrew words to 16,672**. Isaiah leads
+  only on chapters (66), which is what the summary now says. *"Most
+  quoted" was checked separately and is true* — in
+  `assets/cross_references.json`, New Testament verses point at Isaiah
+  **2,601** times against Jeremiah's 1,041, and Isaiah is the most-cited
+  prophetic book by a wide margin — so that half is kept.
+
+### The claim that survived, and why it is recorded
+
+**Esther — "the only book in the Bible that never explicitly names
+God".** A subagent reported this false. It is true, and the measurement
+is why the verdict was reversed: across `assets/originals`, counting the
+divine names in the Hebrew itself by Strong's number, **Esther is 0**.
+Song of Songs has exactly **1** — the `יָה` inside שַׁלְהֶבֶתְיָה at
+8:6 — and the next book up is Obadiah at **8**, so the gap between
+Esther and the rest of the Hebrew Bible is not a near miss. The claim
+stands unchanged. Recorded here because the next person to read that
+sentence will doubt it too.
+
+### The regression trap found on the way out
+
+`scripts/build_book_introductions.py` is the declared source of the
+asset, so the five corrections were mirrored into it. Comparing the two
+structurally then showed the generator had **already drifted from the
+shipped asset in 36 fields across 21 books** — 34 occurrences of the
+divine name (`耶和华` where the asset ships `雅伟`) and a partial pronoun
+pass (`祂`→`他`) in 4 fields. Running the generator would have silently
+reverted every one of those house-policy corrections. It was brought back
+into step, verbatim, preserving the asset's own choices rather than
+imposing new ones — including the Colossians summary, which keeps `祂` in
+one clause and not the other. The generator now reproduces all 66 records
+exactly, and a test pins that.
+
+### Instrument limits, stated rather than counted as findings
+
+The tool ends on **48 flags**, and after the repairs above **47 of them
+are one sub-check that cannot discriminate**:
+
+- **The locale number-parity sub-check.** It compares the digits in each
+  locale of a field and raises 47 flags, nearly all English number-
+  *words* ("one", "seven") with no digit in the Chinese. Reported as a
+  limit, not as 47 findings. The 48th is the `lxxwh` absence above.
+- **Five instrument defects were fixed before any result was believed**,
+  and every one had produced confident false findings. A missing 兩 in
+  the Chinese numeral table produced 7; a careless `(\d+)\s+verses?`
+  produced 3 false Lamentations findings; an English possessive of a
+  name ending in *s* (`Jesus'`) opened a quotation span that closed at
+  the next real opening quote, handing the scorer 38 words of the
+  author's own prose to score against Acts 1:8. Two more were found by
+  re-running the tool against the *corrected* asset, which is the only
+  way they could have surfaced:
+  - the word-frequency check counted a claim the card **scopes to the
+    Greek** against the Chinese editions, where the quoted term is a
+    gloss — 「喜乐、欢喜」 for χαρά/χαίρω/συγχαίρω — that no Chinese
+    edition contains as written. It now skips claims scoped to the
+    original language, which `assets/originals` witnesses instead;
+  - the acrostic check flagged any book containing a non-acrostic
+    chapter, so it could not tell "Five Acrostic Dirges" from "Four of
+    Them Acrostics". It now reads the number the card claims and
+    compares it with the number the Hebrew has.
+- **The histogram in the quotation tool double-counted.** Its bins
+  overlapped above 0.5; they are contiguous now and sum to 137.
+
+### Still open
+
+- **1 Peter's "sojourners"** appears in no shipped edition of 1 Peter
+  except the KJV's "sojourning" at 1:17. Defensible about the Greek,
+  unverifiable in the app; left.
+- **Mark's "favorite word is 'immediately'"** ranges 13–40 by edition.
+  Defensible about the Greek εὐθύς; left.
+- **Jeremiah's "forty years"** against its own date field of 627–582
+  BCE. A round number in normal usage, not a false claim; left.
+- **The un-countable claims are unchecked.** "The most detailed prophetic
+  portrait of the suffering Servant" is not the kind of sentence any
+  instrument here can weigh, and roughly half of every summary is that
+  kind of sentence.
+
+---
+
 ## Not checked yet
 
 - Verse **text** itself, against an *external* witness — for the
@@ -3970,8 +4144,14 @@ general rule names `Melki` and `Joshua / Jose` without being told to.
   effort closes — no public-domain NASB exists and the Eagle's View
   edition is licensed. A verse there that is wrong and well-formed and
   agrees with our own second copy would still not be found.
-- `book_introductions.json`, `bible_evidence.json`, `maps_index.json`
-  (see #300 for its provenance gap). Check 36 closes
+- `bible_evidence.json`, `maps_index.json`
+  (see #300 for its provenance gap). Check 37 closes
+  **`book_introductions.json`'s checkable claims**: all 66 key-passage
+  references are sound, 137 quotations are attributed to a passage that
+  contains them, and the 5 countable claims that were false are fixed.
+  What it does **not** close is the other half of every summary — "the
+  most detailed prophetic portrait of the suffering Servant" is not a
+  sentence any instrument in this repository can weigh. Check 36 closes
   **`family_tree.json`'s relationships**: the graph is sound in all 312
   edges, 3 printed names existed in no Bible the app ships and are
   fixed, and 333 of 338 relationship claims are stated by a passage the

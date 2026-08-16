@@ -1166,6 +1166,149 @@ void main() {
     });
   });
 
+  group('the book-intro card\'s claims about the text (check 37)', () {
+    late Map<String, dynamic> intros;
+    late Map<String, int> originalWords;
+
+    setUpAll(() {
+      intros = (jsonDecode(File('assets/book_introductions.json')
+          .readAsStringSync()) as Map)['intros'] as Map<String, dynamic>;
+      originalWords = {
+        for (final f in Directory('assets/originals')
+            .listSync()
+            .whereType<File>()
+            .where((f) => f.path.endsWith('.json')))
+          f.uri.pathSegments.last.replaceAll('.json', ''): (jsonDecode(
+                  f.readAsStringSync()) as Map)
+              .values
+              .fold<int>(0, (n, v) => n + (v as List).length),
+      };
+    });
+
+    String field(String book, String key, String locale) =>
+        ((intros[book] as Map)[key] as Map)[locale] as String;
+
+    test('Lamentations names as many acrostics as the Hebrew has', () {
+      // The card said "Five Acrostic Dirges" while the app's own trivia
+      // page said four. The Hebrew settles it: chapter 5 has 22 verses
+      // but only 11 distinct opening letters, so it is a dirge in the
+      // acrostic's shape without being one.
+      final byChapter = <int, Map<int, String>>{};
+      final lam = jsonDecode(
+              File('assets/originals/lamentations.json').readAsStringSync())
+          as Map;
+      lam.forEach((ref, words) {
+        final parts = (ref as String).split(':');
+        final first = (words as List).isEmpty
+            ? ''
+            : RegExp(r'[א-ת]')
+                    .firstMatch((words.first as Map)['w'] as String)
+                    ?.group(0) ??
+                '';
+        byChapter
+            .putIfAbsent(int.parse(parts[0]), () => {})[int.parse(parts[1])] =
+            first;
+      });
+      final acrostics = byChapter.entries
+          .where((e) => e.value.values.toSet().length == 22)
+          .map((e) => e.key)
+          .toList()
+        ..sort();
+      expect(acrostics, [1, 2, 3, 4]);
+      expect(field('Lamentations', 'subtitle', 'en'), contains('Four'));
+      expect(field('Lamentations', 'subtitle', 'zh-Hans'), contains('前四首'));
+      expect(field('Lamentations', 'subtitle', 'zh-Hant'), contains('前四首'));
+    });
+
+    test('Philippians counts the joy words the Greek actually carries', () {
+      // The card said the word "joy" appears 14 times. No edition we
+      // ship prints it more than 7. 14 is only reachable in the Greek,
+      // and only by dropping συγχαίρω without saying so; the whole
+      // family is 16, which a reader can confirm in the concordance.
+      const joy = {'G5479', 'G5463', 'G4796'};
+      final phil = jsonDecode(
+              File('assets/originals/philippians.json').readAsStringSync())
+          as Map;
+      var n = 0;
+      for (final words in phil.values) {
+        for (final w in words as List) {
+          if (joy.contains(((w as Map)['s'] as String?)?.trim())) n++;
+        }
+      }
+      expect(n, 16);
+      expect(field('Philippians', 'summary', 'en'), contains('16 times'));
+      expect(field('Philippians', 'summary', 'zh-Hans'), contains('16次'));
+      expect(field('Philippians', 'summary', 'zh-Hant'), contains('16次'));
+    });
+
+    test('only one book is called the shortest, and by a stated metric', () {
+      // Obadiah's card and 3 John's card both claimed the outright title,
+      // so one of them had to be wrong on any reading. In the original
+      // languages 3 John is 218 words to Obadiah's 285; Obadiah's claim
+      // holds only within the Hebrew Bible, and now says so.
+      final ranked = originalWords.entries.toList()
+        ..sort((a, b) => a.value.compareTo(b.value));
+      expect(ranked.first.key, '3_john');
+      expect(ranked[1].key, '2_john');
+      expect(ranked[2].key, 'obadiah');
+
+      expect(field('3 John', 'summary', 'en'),
+          contains('original languages'));
+      expect(field('3 John', 'summary', 'zh-Hans'), contains('按原文字数计'));
+      expect(field('Obadiah', 'subtitle', 'en'), contains('Hebrew Bible'));
+      expect(field('Obadiah', 'subtitle', 'zh-Hans'), contains('希伯来圣经'));
+      expect(field('Obadiah', 'subtitle', 'zh-Hant'), contains('希伯來聖經'));
+
+      // No other card may claim the whole-Bible title.
+      for (final e in intros.entries) {
+        if (e.key == '3 John') continue;
+        for (final f in (e.value as Map).values) {
+          if (f is! Map) continue;
+          final en = f['en'];
+          if (en is String) {
+            expect(en.toLowerCase(), isNot(contains('shortest book in the')),
+                reason: e.key);
+          }
+        }
+      }
+    });
+
+    test('Isaiah is not called the longest prophetic book', () {
+      // Jeremiah is longer on every measure the app can show: 1,364
+      // verses to 1,292, and 21,580 Hebrew words to 16,672. Isaiah leads
+      // only on chapter count, which is what the card now says.
+      expect(originalWords['jeremiah']!,
+          greaterThan(originalWords['isaiah']!));
+      for (final locale in ['en', 'zh-Hans', 'zh-Hant']) {
+        final s = field('Isaiah', 'summary', locale);
+        expect(s, isNot(contains('longest')));
+        expect(s, isNot(contains('最长')));
+        expect(s, isNot(contains('最長')));
+      }
+    });
+
+    test('the generator still reproduces every shipped intro', () {
+      // scripts/build_book_introductions.py had drifted from the asset in
+      // 36 fields (the 雅伟 divine name, and a pronoun pass), so running
+      // it would have silently reverted shipped corrections along with
+      // these. It was brought back in step; this catches the next drift
+      // by pinning the fields a regeneration would overwrite.
+      final src =
+          File('scripts/build_book_introductions.py').readAsStringSync();
+      expect(src, isNot(contains('耶和华')));
+      expect(src, isNot(contains('耶和華')));
+      for (final claim in [
+        'Four of Them Acrostics',
+        'The Hebrew Bible\'s Shortest Book',
+        '16 times in just four chapters',
+        'Counted in the original languages',
+        'With 66 chapters, Isaiah is the most quoted',
+      ]) {
+        expect(src, contains(claim));
+      }
+    });
+  });
+
   test('every reference the app shows resolves to a verse that exists',
       _checkReferenceCorpus);
 }
