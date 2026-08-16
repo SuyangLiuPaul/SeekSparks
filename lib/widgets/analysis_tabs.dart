@@ -76,6 +76,13 @@ enum AnalysisTab {
   /// 2026-08-08: the gazetteer, read verse-first. Appended for the same
   /// reason as `morphology`.
   places,
+
+  /// 2026-08-17 (#313): the sermon corpus, read verse-first —
+  /// BibleWorks' Resource Summary answers "where is this verse cited"
+  /// from a docked tab (bwh10/bwh14), and this was the last reader
+  /// action still answering it over the top of the verse. Appended for
+  /// the same reason as `morphology`.
+  sermons,
 }
 
 /// 2026-08-11 (#313): the docked tab that answers [request], or null
@@ -86,21 +93,20 @@ enum AnalysisTab {
 /// over a subject, the workbench looks it up here, and a null means the
 /// reader keeps the presentation it already had.
 ///
-/// [ReaderAnalysisRequest.sermons] returns null for a reason worth
-/// stating, since a later run should change it: the sermon list is
-/// verse-keyed content and BibleWorks docks exactly this (the Resource
-/// Summary tab, bwh10), so it belongs in a tab. Its body is still a
-/// private class inside `bible_reading_pane.dart`, and a thirteenth tab
-/// has to be re-measured against #297's strip arithmetic — neither is a
-/// reason to leave it a sheet forever, only a reason it is not one yet.
+/// [ReaderAnalysisRequest.sermons] became a tab on 2026-08-17: the body
+/// moved out of `bible_reading_pane.dart` into `SermonsPane`, and the
+/// thirteenth tab was re-measured against #297's strip arithmetic
+/// (`Sermons` / 講道 are both narrower than the widest label the strip
+/// already carries, so the labelled width does not move).
 ///
 /// [ReaderAnalysisRequest.aiExplain] returns null as a decision, not a
-/// deferral: see the enum.
+/// deferral: see the enum. It is now the only one, so a null here means
+/// "deliberately a sheet" rather than "not got to yet".
 AnalysisTab? analysisTabForRequest(ReaderAnalysisRequest request) =>
     switch (request) {
       ReaderAnalysisRequest.originals => AnalysisTab.wordStudy,
       ReaderAnalysisRequest.crossRefs => AnalysisTab.crossRefs,
-      ReaderAnalysisRequest.sermons => null,
+      ReaderAnalysisRequest.sermons => AnalysisTab.sermons,
       ReaderAnalysisRequest.aiExplain => null,
     };
 
@@ -115,6 +121,7 @@ ReaderAnalysisRequest? requestForAnalysisTab(AnalysisTab tab) =>
     switch (tab) {
       AnalysisTab.wordStudy => ReaderAnalysisRequest.originals,
       AnalysisTab.crossRefs => ReaderAnalysisRequest.crossRefs,
+      AnalysisTab.sermons => ReaderAnalysisRequest.sermons,
       _ => null,
     };
 
@@ -284,6 +291,8 @@ const _kTabs = <(AnalysisTab, IconData, String, String)>[
   (AnalysisTab.context, Icons.segment_rounded, 'analysisTabContext',
       'Context'),
   (AnalysisTab.places, Icons.place_outlined, 'analysisTabPlaces', 'Places'),
+  (AnalysisTab.sermons, Icons.record_voice_over_outlined,
+      'analysisTabSermons', 'Sermons'),
 ];
 
 /// The tab names as they will be drawn in [locale], in strip order.

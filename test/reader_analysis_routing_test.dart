@@ -36,21 +36,30 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('the reader-to-pane map', () {
-    test('the two subjects with a pane name it', () {
+    test('the subjects with a pane name it', () {
       expect(analysisTabForRequest(ReaderAnalysisRequest.originals),
           AnalysisTab.wordStudy);
       expect(analysisTabForRequest(ReaderAnalysisRequest.crossRefs),
           AnalysisTab.crossRefs);
+      // 2026-08-17: this test's earlier form asserted `sermons` was
+      // null and said in its own comment that a later run should edit
+      // it deliberately. This is that edit.
+      expect(analysisTabForRequest(ReaderAnalysisRequest.sermons),
+          AnalysisTab.sermons);
     });
 
-    // Not "these two are null" but "these two are null ON PURPOSE". A
-    // later run is expected to give sermons a tab (BibleWorks docks the
-    // same thing in its Resource Summary tab); when it does, this test
-    // is the one that should be edited, deliberately, rather than a
-    // silent behaviour change nobody notices.
-    test('the two subjects with no pane keep their sheet', () {
-      expect(analysisTabForRequest(ReaderAnalysisRequest.sermons), isNull);
+    // aiExplain is now the ONLY null, and it is a decision rather than a
+    // deferral: a docked pane promises to follow the selection, and
+    // following it here would spend a network call per verse and give
+    // generated prose the same frame and weight as the corpus. If a
+    // later run wants to change that, this is the test to edit — but it
+    // is a product decision, not a cost one.
+    test('the one subject with no pane keeps its sheet on purpose', () {
       expect(analysisTabForRequest(ReaderAnalysisRequest.aiExplain), isNull);
+      final withoutTab = ReaderAnalysisRequest.values
+          .where((r) => analysisTabForRequest(r) == null)
+          .toList();
+      expect(withoutTab, [ReaderAnalysisRequest.aiExplain]);
     });
 
     // The inverse feeds the active state on the button that sent the

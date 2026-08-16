@@ -2013,6 +2013,20 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
                       chapterMaps: _chapterMaps,
                       bookMaps: _bookMaps,
                       chapterSermons: _chapterSermons,
+                      // The host takes it when it has a docked pane;
+                      // when nobody does, the sheet opens exactly as
+                      // before, which is what keeps the standalone
+                      // reader and every narrow layout unchanged.
+                      onChapterSermons: () => _requestAnalysis(
+                        ReaderAnalysisRequest.sermons,
+                        () => _showChapterSermonsSheet(
+                          context: context,
+                          sermons: _chapterSermons,
+                          locale: settings.locale,
+                          book: currentVerse?.book ?? '',
+                          chapter: currentVerse?.chapter ?? 0,
+                        ),
+                      ),
                       locale: settings.locale,
                       onBookTap: isWideScreen && widget.showSidebarToggle
                           ? () {
@@ -6557,6 +6571,14 @@ class _FloatingHeader extends StatelessWidget {
   /// in the current (book, chapter). Drives the "Related sermons"
   /// menu item — count badge + tap-to-open sheet.
   final List<Sermon> chapterSermons;
+
+  /// 2026-08-17 (#313): what the "Related sermons" menu item does.
+  ///
+  /// The overflow menu is the CHAPTER-scoped entry point, the sibling
+  /// of the selection bar's verse-scoped one, and it was the last of
+  /// the pair still hard-wired to a sheet. Null keeps the sheet, which
+  /// is what the standalone reader and every narrow layout get.
+  final VoidCallback? onChapterSermons;
   final String locale;
   final int highlightCount;
   final VoidCallback? onHighlights;
@@ -6598,6 +6620,7 @@ class _FloatingHeader extends StatelessWidget {
     this.chapterMaps = const [],
     this.bookMaps = const [],
     this.chapterSermons = const [],
+    this.onChapterSermons,
     this.locale = 'en',
     this.highlightCount = 0,
     this.onHighlights,
@@ -7057,14 +7080,20 @@ class _FloatingHeader extends StatelessWidget {
                         ));
                         items.add(PopupMenuItem(
                           value: 'sermons',
-                          onTap: () =>
-                              _showChapterSermonsSheet(
-                                context: context,
-                                sermons: chapterSermons,
-                                locale: locale,
-                                book: book,
-                                chapter: chapter,
-                              ),
+                          onTap: () {
+                            final handled = onChapterSermons;
+                            if (handled != null) {
+                              handled();
+                              return;
+                            }
+                            _showChapterSermonsSheet(
+                              context: context,
+                              sermons: chapterSermons,
+                              locale: locale,
+                              book: book,
+                              chapter: chapter,
+                            );
+                          },
                           child: _menuRow(
                             context,
                             icon: chapterSermons.isNotEmpty

@@ -7493,6 +7493,52 @@ const uiStrings = {
     'zh-Hant': '地名',
     'en': 'Places',
   },
+  'analysisTabSermons': {
+    'zh-Hans': '讲道',
+    'zh-Hant': '講道',
+    'en': 'Sermons',
+  },
+
+  // ── The Related Sermons tab (task #313) ──────────────────────────
+  // The match is chapter-wide and every string here has to SAY so:
+  // measured across the corpus, only 12.3% of the rows this list can
+  // produce cite the verse the reader actually selected. A count with
+  // no unit and no scope is #308 over again.
+  'sermonsOnThisVerse': {
+    'zh-Hans': '讲这一节',
+    'zh-Hant': '講這一節',
+    'en': 'Preaching this verse',
+  },
+  'sermonsInThisChapter': {
+    'zh-Hans': '本章其他经节',
+    'zh-Hant': '本章其他經節',
+    'en': 'Elsewhere in this chapter',
+  },
+  'sermonsCountWithVerse': {
+    'zh-Hans': '{chapter} 共 {total} 篇讲道引用，其中 {onVerse} 篇引用 {ref}。',
+    'zh-Hant': '{chapter} 共 {total} 篇講道引用，其中 {onVerse} 篇引用 {ref}。',
+    'en': '{total} sermons cite {chapter} — {onVerse} of them cite {ref}.',
+  },
+  'sermonsCountChapter': {
+    'zh-Hans': '{chapter} 共 {total} 篇讲道引用。',
+    'zh-Hant': '{chapter} 共 {total} 篇講道引用。',
+    'en': '{total} sermons cite {chapter}.',
+  },
+  'sermonsCites': {
+    'zh-Hans': '引用第 {verses} 节',
+    'zh-Hant': '引用第 {verses} 節',
+    'en': 'cites v{verses}',
+  },
+  'sermonsCitesChapter': {
+    'zh-Hans': '只引用整章',
+    'zh-Hant': '只引用整章',
+    'en': 'cites the chapter, no verse',
+  },
+  'sermonsNone': {
+    'zh-Hans': '讲道集中没有引用 {ref} 的讲道。',
+    'zh-Hant': '講道集中沒有引用 {ref} 的講道。',
+    'en': 'No sermon in the library cites {ref}.',
+  },
 
   // ── The Analysis strip's names/icons toggle (task #297) ───────────
   // The tooltip names what the tap will DO, so the two states read as

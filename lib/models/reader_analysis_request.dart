@@ -22,10 +22,10 @@ enum ReaderAnalysisRequest {
   /// `AnalysisTab.crossRefs`.
   crossRefs,
 
-  /// Sermons from the corpus that treat the focused verse. No tab
-  /// today; BibleWorks answers this with its Resource Summary tab
-  /// (bwh10), so a tab is the right destination and the reason it is
-  /// not one yet is cost, not design — see `analysisTabForRequest`.
+  /// Sermons from the corpus that treat the focused verse —
+  /// `AnalysisTab.sermons` since 2026-08-17. BibleWorks answers the
+  /// same question from a docked tab (Resource Summary, bwh10), which
+  /// is what settled the destination.
   sermons,
 
   /// A model's explanation of the selected verses. Deliberately NOT a

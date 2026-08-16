@@ -3,6 +3,36 @@ import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
 
 import 'package:seeksparks/models/sermon.dart';
+import 'package:seeksparks/utils/passage_sermons.dart';
+
+/// One sermon that treats the focused passage, with the citation that
+/// puts it there — so the surface can say *why* the row is in the list.
+class PassageSermon {
+  const PassageSermon({required this.sermon, required this.citation});
+
+  final Sermon sermon;
+  final SermonCitation citation;
+}
+
+/// Sermons on the focused passage, split by how close the match is.
+///
+/// The same two tiers as `PassagePlaces`, and for the same reason: most
+/// verses are cited by no sermon at all, so a pane showing only exact
+/// hits would sit empty and read as broken, while a pane that silently
+/// mixes the two tiers overstates every row it shows.
+class PassageSermons {
+  const PassageSermons({required this.verse, required this.chapter});
+
+  /// Sermons citing the focused verse itself.
+  final List<PassageSermon> verse;
+
+  /// Sermons citing this chapter, but not the focused verse.
+  final List<PassageSermon> chapter;
+
+  bool get isEmpty => verse.isEmpty && chapter.isEmpty;
+
+  int get total => verse.length + chapter.length;
+}
 
 /// Reverse-index payload loaded from `assets/sermons/refs.json`.
 /// `byVerse` maps a canonical "Book chapter[:verse]" string to the
@@ -146,6 +176,44 @@ class SermonService {
       if (!exactHits.contains(s)) out.add(s);
     }
     return out;
+  }
+
+  /// The same match as [sermonsForVerse], but keeping the distinction
+  /// that method throws away: which sermons cite the focused verse and
+  /// which only cite its chapter.
+  ///
+  /// [sermonsForVerse] sorts exact hits first and returns one flat
+  /// list. Sort order is not a label, so on Romans 8:1 the reader is
+  /// handed 49 sermons with no way to see that only a few are on 8:1
+  /// — see `passage_sermons.dart` for the corpus-wide measurement.
+  /// This is what the docked Related Sermons tab shows; the older
+  /// method stays for the bottom sheets, which have no room to say it.
+  ///
+  /// Pass `verse: 0` for the chapter-scoped entry point.
+  Future<PassageSermons> sermonsForPassage({
+    required String englishBook,
+    required int chapter,
+    required int verse,
+  }) async {
+    final refs = await loadRefs();
+    final all = await loadIndex();
+    final byId = {for (final s in all) s.id: s};
+    final onVerse = <PassageSermon>[];
+    final onChapter = <PassageSermon>[];
+    for (final c in citationsInChapter(
+      byVerse: refs.byVerse,
+      englishBook: englishBook,
+      chapter: chapter,
+      verse: verse,
+    )) {
+      final s = byId[c.sermonId];
+      // A ref pointing at an id the index does not carry is dropped
+      // rather than rendered as a blank row. Measured today: 0 of 282.
+      if (s == null) continue;
+      (c.citesFocusedVerse ? onVerse : onChapter)
+          .add(PassageSermon(sermon: s, citation: c));
+    }
+    return PassageSermons(verse: onVerse, chapter: onChapter);
   }
 
   /// Load the metadata index, parsing the bundled JSON on first call.

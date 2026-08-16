@@ -78,7 +78,10 @@ void main() {
       // ...and `context` after `topics`, and `places` after `context`.
       expect(AnalysisTab.values.indexOf(AnalysisTab.context), 10);
       expect(AnalysisTab.values.indexOf(AnalysisTab.places), 11);
-      expect(AnalysisTab.values, hasLength(12));
+      // ...and `sermons` after `places` (2026-08-17, #313). A reader who
+      // had Places open keeps Places open across the upgrade.
+      expect(AnalysisTab.values.indexOf(AnalysisTab.sermons), 12);
+      expect(AnalysisTab.values, hasLength(13));
     });
   });
 

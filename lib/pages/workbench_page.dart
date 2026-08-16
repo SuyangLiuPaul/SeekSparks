@@ -31,6 +31,7 @@ import 'package:seeksparks/pages/hebrew_kings_page.dart';
 import 'package:seeksparks/pages/illustrations_page.dart';
 import 'package:seeksparks/pages/library_page.dart';
 import 'package:seeksparks/pages/phrasing_page.dart';
+import 'package:seeksparks/pages/sermon_detail_page.dart';
 import 'package:seeksparks/pages/sermons_page.dart';
 import 'package:seeksparks/pages/settings_page.dart';
 import 'package:seeksparks/pages/word_list_page.dart';
@@ -71,6 +72,7 @@ import 'package:seeksparks/widgets/vocabulary_pane.dart';
 import 'package:seeksparks/widgets/morph_search_pane.dart';
 import 'package:seeksparks/widgets/context_pane.dart';
 import 'package:seeksparks/widgets/places_pane.dart';
+import 'package:seeksparks/widgets/sermons_pane.dart';
 import 'package:seeksparks/widgets/word_chart_view.dart';
 import 'package:seeksparks/constants/book_groups.dart' show oldTestamentBooks;
 import 'package:seeksparks/services/greek_stats_service.dart';
@@ -2271,6 +2273,20 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
             id,
             '${bookNameInScript(book, script)} ${v.chapter}:${v.verse}',
           ),
+        );
+
+      case AnalysisTab.sermons:
+        final v = _analysisVerse(mp, verses);
+        if (v == null) return _analysisHint(context, locale);
+        final book = bookNameToEnglish[v.book] ?? v.book;
+        return SermonsPane(
+          key: ValueKey<String>('sermons-${v.id}'),
+          englishBook: book,
+          chapter: v.chapter,
+          verse: v.verse,
+          displayBook: localeAwareBookName(book, locale, mp.currentVersion),
+          locale: locale,
+          onOpenSermon: (s) => pushPage(SermonDetailPage(sermon: s)),
         );
     }
   }
