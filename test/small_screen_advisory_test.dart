@@ -341,6 +341,61 @@ void main() {
     });
   });
 
+  group('the diagram is a picture, not three hairlines', () {
+    Finder bars() => find.descendant(
+          of: find.byKey(const Key('fit-pane-diagram')),
+          matching: find.byType(DecoratedBox),
+        );
+
+    testWidgets('every bar has real height', (tester) async {
+      // Found by screenshot on dev v1.6.131, not by any test. A
+      // childless DecoratedBox takes the smallest size its constraints
+      // allow, and a Row's default `center` cross-axis alignment passes
+      // a LOOSE constraint down — so all three bars were 0 px tall and
+      // the diagram drew as three grey dashes. The SizedBox around them
+      // measured its full 56 px the whole time, which is why asserting
+      // on the widget rather than the paint proved nothing.
+      addTearDown(tester.view.reset);
+      await pumpAdvisory(tester, const Size(949, 1375));
+      expect(bars(), findsNWidgets(3));
+      for (var i = 0; i < 3; i++) {
+        expect(tester.getSize(bars().at(i)).height, 56,
+            reason: 'bar $i collapsed');
+        expect(tester.getSize(bars().at(i)).width, greaterThan(20));
+      }
+    });
+
+    testWidgets('a rotation is drawn as all three columns, not two',
+        (tester) async {
+      // The copy said "three" and the picture said "two" — and the
+      // picture is read first. `rotate` is returned only when the long
+      // edge clears the three-pane threshold, so anything less than
+      // three filled bars here contradicts the branch that selected it.
+      addTearDown(tester.view.reset);
+      await pumpAdvisory(tester, const Size(949, 1375));
+      var filled = 0;
+      for (var i = 0; i < 3; i++) {
+        final d = tester.widget<DecoratedBox>(bars().at(i)).decoration
+            as BoxDecoration;
+        if (d.color != null) filled++;
+      }
+      expect(filled, 3);
+    });
+
+    testWidgets('a display that cannot grow is drawn as one column',
+        (tester) async {
+      addTearDown(tester.view.reset);
+      await pumpAdvisory(tester, const Size(844, 390));
+      var filled = 0;
+      for (var i = 0; i < 3; i++) {
+        final d = tester.widget<DecoratedBox>(bars().at(i)).decoration
+            as BoxDecoration;
+        if (d.color != null) filled++;
+      }
+      expect(filled, 1);
+    });
+  });
+
   group('the three locales must not drift apart again', () {
     // HOW #316 SURVIVED. The copy was written for the two-column rule.
     // When the bar rose to three columns on 2026-08-07 (46bc7e5) only

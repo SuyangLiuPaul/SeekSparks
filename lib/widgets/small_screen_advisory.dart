@@ -441,9 +441,20 @@ class _PaneDiagram extends StatelessWidget {
   Widget build(BuildContext context) {
     const flexes = [3, 5, 4];
     return SizedBox(
+      key: const Key('fit-pane-diagram'),
       height: 56,
       width: 168,
       child: Row(
+        // `stretch`, not the default `center`. A childless DecoratedBox
+        // takes the SMALLEST size its constraints allow, and `center`
+        // hands its children a LOOSE cross-axis constraint — so all
+        // three bars sized themselves to zero height and the diagram
+        // rendered as three grey hairlines. It had been that way since
+        // the advisory was written: the illustration meant to show a
+        // reader the shape of the thing they cannot fit showed nothing
+        // at all, and no test could see it because the SizedBox around
+        // it was the full 56 px throughout.
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           for (var i = 0; i < 3; i++) ...[
             if (i > 0) const SizedBox(width: 6),
