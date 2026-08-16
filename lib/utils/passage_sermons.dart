@@ -146,3 +146,19 @@ String? citedVerseLabel(SermonCitation c) {
   parts.add(start == prev ? '$start' : '$start-$prev');
   return parts.join(', ');
 }
+
+/// Which count-line string the pane should ask for.
+///
+/// English agrees a verb with each of the two numbers in that sentence,
+/// so "1 of them cite Romans 8:1" is wrong and shipped in v1.6.135. The
+/// combination `total == 1 && onVerse == 0` cannot arise here: the
+/// with-verse line is only drawn when a sermon is on the verse, and the
+/// total includes it. Chinese does not inflect for number, so its four
+/// entries are deliberately identical sentences.
+String sermonCountKey({required int total, required int onVerse}) {
+  if (onVerse < 1) {
+    return total == 1 ? 'sermonsCountChapterOne' : 'sermonsCountChapter';
+  }
+  if (total == 1) return 'sermonsCountOnlyOne';
+  return onVerse == 1 ? 'sermonsCountWithVerseOne' : 'sermonsCountWithVerse';
+}

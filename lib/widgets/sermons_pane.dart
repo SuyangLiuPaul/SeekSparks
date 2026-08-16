@@ -181,10 +181,11 @@ class _SermonsPaneState extends State<SermonsPane> {
   /// chapter-wide, and a bare "49" beside a verse reference reads as 49
   /// sermons on that verse. It is not.
   Widget _countLine(WbColors c, WbType t, PassageSermons data) {
-    final template = widget.verse > 0 && data.verse.isNotEmpty
-        ? _s('sermonsCountWithVerse',
-            '{total} sermons cite {chapter} — {onVerse} of them cite {ref}.')
-        : _s('sermonsCountChapter', '{total} sermons cite {chapter}.');
+    // `data.verse` is already empty when no verse was asked about —
+    // nothing can cite a focused verse that does not exist.
+    final template = _s(
+        sermonCountKey(total: data.total, onVerse: data.verse.length),
+        '{total} sermons cite {chapter}.');
     final text = template
         .replaceAll('{total}', '${data.total}')
         .replaceAll('{onVerse}', '${data.verse.length}')

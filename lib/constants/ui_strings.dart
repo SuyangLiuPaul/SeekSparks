@@ -7514,15 +7514,33 @@ const uiStrings = {
     'zh-Hant': '本章其他經節',
     'en': 'Elsewhere in this chapter',
   },
+  // Four shapes of one sentence, because English agrees a verb with each
+  // of its two numbers and Chinese agrees with neither — the zh entries
+  // are identical on purpose, not by oversight. `sermonCountKey` picks.
   'sermonsCountWithVerse': {
     'zh-Hans': '{chapter} 共 {total} 篇讲道引用，其中 {onVerse} 篇引用 {ref}。',
     'zh-Hant': '{chapter} 共 {total} 篇講道引用，其中 {onVerse} 篇引用 {ref}。',
     'en': '{total} sermons cite {chapter} — {onVerse} of them cite {ref}.',
   },
+  'sermonsCountWithVerseOne': {
+    'zh-Hans': '{chapter} 共 {total} 篇讲道引用，其中 {onVerse} 篇引用 {ref}。',
+    'zh-Hant': '{chapter} 共 {total} 篇講道引用，其中 {onVerse} 篇引用 {ref}。',
+    'en': '{total} sermons cite {chapter} — 1 of them cites {ref}.',
+  },
+  'sermonsCountOnlyOne': {
+    'zh-Hans': '{chapter} 共 {total} 篇讲道引用，其中 {onVerse} 篇引用 {ref}。',
+    'zh-Hant': '{chapter} 共 {total} 篇講道引用，其中 {onVerse} 篇引用 {ref}。',
+    'en': 'One sermon cites {chapter}, and it is on {ref}.',
+  },
   'sermonsCountChapter': {
     'zh-Hans': '{chapter} 共 {total} 篇讲道引用。',
     'zh-Hant': '{chapter} 共 {total} 篇講道引用。',
     'en': '{total} sermons cite {chapter}.',
+  },
+  'sermonsCountChapterOne': {
+    'zh-Hans': '{chapter} 共 {total} 篇讲道引用。',
+    'zh-Hant': '{chapter} 共 {total} 篇講道引用。',
+    'en': 'One sermon cites {chapter}.',
   },
   'sermonsCites': {
     'zh-Hans': '引用第 {verses} 节',

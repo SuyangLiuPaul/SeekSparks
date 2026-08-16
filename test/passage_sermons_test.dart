@@ -17,6 +17,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/utils/passage_sermons.dart';
 
 /// A hand-written reverse index in the shape `SermonRefs.byVerse` has:
@@ -138,6 +139,45 @@ void main() {
       // Not the empty string: "cites v" with nothing after it is worse
       // than the chapter-level phrase this null selects.
       expect(citedVerseLabel(cite(const [])), isNull);
+    });
+  });
+
+  group('the count line agrees with its own numbers', () {
+    // v1.6.135 shipped "1 of them cite Romans 8:1" — visible on the very
+    // case the feature was designed for, because one template was doing
+    // duty for two independent verb agreements.
+    test('a single sermon on the verse gets a singular verb', () {
+      expect(sermonCountKey(total: 49, onVerse: 1),
+          'sermonsCountWithVerseOne');
+      expect(sermonCountKey(total: 49, onVerse: 2), 'sermonsCountWithVerse');
+    });
+
+    test('a chapter with one sermon does not say "1 sermons"', () {
+      expect(sermonCountKey(total: 1, onVerse: 0), 'sermonsCountChapterOne');
+      expect(sermonCountKey(total: 5, onVerse: 0), 'sermonsCountChapter');
+    });
+
+    test('the lone sermon that is also on the verse gets its own sentence',
+        () {
+      // "1 sermon cites Romans 8 — 1 of them cites Romans 8:1" is
+      // grammatical and still reads badly; "of them" needs a them.
+      expect(sermonCountKey(total: 1, onVerse: 1), 'sermonsCountOnlyOne');
+    });
+
+    test('every key it can name is a real string in all three locales', () {
+      // The selector returning a key nothing defines would fall through
+      // to the English default silently, in Chinese.
+      for (var total = 0; total <= 3; total++) {
+        for (var onVerse = 0; onVerse <= total; onVerse++) {
+          final key = sermonCountKey(total: total, onVerse: onVerse);
+          final entry = uiStrings[key];
+          expect(entry, isNotNull, reason: '$key ($total/$onVerse) undefined');
+          for (final locale in ['en', 'zh-Hans', 'zh-Hant']) {
+            expect(entry![locale], isNotNull,
+                reason: '$key has no $locale');
+          }
+        }
+      }
     });
   });
 
