@@ -21,15 +21,22 @@ enum WorkbenchAdvice {
   /// said they do not want to be told again.
   none,
 
-  /// Portrait, and the long edge is wide enough that turning the
-  /// device sideways genuinely buys a second column. Only offered
-  /// when it is true: on a 360x640 phone the landscape width is 640,
-  /// which clears the app's 600px side-pane gate but leaves the
-  /// reading column at 384 — under [readingPaneMin] — so rotating
-  /// there is a promise the layout cannot keep.
+  /// Portrait, and the long edge carries ALL THREE columns — so the
+  /// device in the reader's hands is not too small, it is held the
+  /// wrong way round. Only offered when that is true: on a 360x640
+  /// phone the landscape width is 640, far short of
+  /// [threePaneMinWidth], so rotating there is a promise the layout
+  /// cannot keep.
+  ///
+  /// Anything the advisory says on this branch may therefore assume
+  /// the whole workbench is one gesture away, and must not also
+  /// suggest a different device. Both Chinese variants of `fitRotate`
+  /// did exactly that until 2026-08-17 (#316) — the copy was written
+  /// for a two-column rule and only the English was rewritten when
+  /// the bar rose to three.
   rotate,
 
-  /// No orientation of this display reaches two usable columns.
+  /// No orientation of this display reaches all three columns.
   largerDisplay,
 }
 
@@ -124,10 +131,10 @@ class WorkbenchFit {
     if (paneCountFor(width) >= 3) return WorkbenchAdvice.none;
 
     // One column at this width. Offer rotation only when rotating would
-    // genuinely cross the two-pane threshold — on a 360x640 phone the
-    // landscape width is 640, still short of 736, so rotating there is a
-    // promise the layout cannot keep. Square counts as landscape: there
-    // is nothing for a rotation to change.
+    // cross the THREE-pane threshold — on a 360x640 phone the landscape
+    // width is 640, still short of 992, so rotating there is a promise
+    // the layout cannot keep. Square counts as landscape: there is
+    // nothing for a rotation to change.
     final portrait = height > width;
     if (portrait && paneCountFor(height) >= 3) return WorkbenchAdvice.rotate;
 

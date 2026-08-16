@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'package:seeksparks/constants/app_version.dart';
 import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/services/link_opener.dart';
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
@@ -50,6 +52,10 @@ class SmallScreenGate extends StatelessWidget {
       advice: advice,
       size: size,
       locale: context.watch<AppSettings>().locale,
+      // Both subscriptions sit AFTER the early return on purpose: a
+      // display that carries the workbench must not pay a rebuild for
+      // a setting only this screen reads.
+      type: WbType.of(context),
       onLocale: (code) => context.read<AppSettings>().setLocale(code),
     );
   }
@@ -63,6 +69,7 @@ class SmallScreenAdvisory extends StatelessWidget {
     required this.advice,
     required this.size,
     required this.locale,
+    this.type = WbType.fallback,
     this.onContinue,
     required this.onLocale,
   });
@@ -70,6 +77,11 @@ class SmallScreenAdvisory extends StatelessWidget {
   final WorkbenchAdvice advice;
   final Size size;
   final String locale;
+
+  /// The reader's type scale, passed in rather than read from a
+  /// provider — same reason `locale` is. The widget renders copy and
+  /// nothing else, so it stays testable without a provider tree.
+  final WbType type;
 
   /// Unwired: `Continue anyway` was removed in v1.6.20 (see the note by
   /// the YsWords button below). Left on the API because it is still the
@@ -92,21 +104,106 @@ class SmallScreenAdvisory extends StatelessWidget {
     final cs = theme.colorScheme;
     final muted = cs.onSurface.withValues(alpha: 0.68);
 
-    final needs = s('fitNeeds',
-            'Three columns need about {three} px of width. '
-            'This screen is {w} × {h}.')
+    // `rotate` is returned only when the long edge carries all THREE
+    // columns, so on this branch the device in the reader's hands is
+    // not too small — it is held the wrong way round. Everything below
+    // that differs between the two branches follows from that one fact.
+    final isRotate = advice == WorkbenchAdvice.rotate;
+
+    final needs = (isRotate
+            ? s(
+                'fitRotateNeeds',
+                'Three columns need about {three} px of width. This screen '
+                'is {w} × {h} — sideways that is {long} px.',
+              )
+            : s(
+                'fitNeeds',
+                'Three columns need about {three} px of width. '
+                'This screen is {w} × {h}.',
+              ))
         .replaceAll('{three}', WorkbenchFit.threePaneMinWidth.round().toString())
         .replaceAll('{w}', size.width.round().toString())
-        .replaceAll('{h}', size.height.round().toString());
+        .replaceAll('{h}', size.height.round().toString())
+        .replaceAll(
+            '{long}', size.longestSide.round().toString());
 
-    final variant = advice == WorkbenchAdvice.rotate
+    final variant = isRotate
         ? s('fitRotate',
-            'Turning the phone sideways gets you two: search beside the '
-            'text. All three needs a tablet or a laptop.')
+            'Turn the device sideways and the full three-column workbench '
+            'opens.')
         : s('fitLarger',
-            'This screen does not reach two columns in either direction. A '
-            'tablet or a laptop — roughly 4:3 to 16:10 — is what this '
-            'layout was drawn for.');
+            'This screen does not fit three columns in either direction. '
+            'SeekSparks needs a tablet or a laptop.');
+
+    // The instruction, in the box that carries the device's own
+    // numbers. On the rotate branch it is the loudest thing on the
+    // page — it is a one-gesture fix and the reader wants it before
+    // they want the explanation.
+    final callout = Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: cs.primary.withValues(alpha: isRotate ? 0.11 : 0.07),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (isRotate) ...[
+                Icon(
+                  Icons.screen_rotation,
+                  size: type.scaledChrome(22),
+                  color: cs.primary,
+                ),
+                const SizedBox(width: 10),
+              ],
+              Expanded(
+                child: Text(
+                  variant,
+                  style: (isRotate
+                          ? theme.textTheme.titleMedium
+                          : theme.textTheme.bodyMedium)
+                      ?.copyWith(
+                    color: cs.onSurface,
+                    fontWeight: isRotate ? FontWeight.w600 : null,
+                    height: 1.4,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            needs,
+            style:
+                theme.textTheme.bodySmall?.copyWith(color: muted, height: 1.45),
+          ),
+        ],
+      ),
+    );
+
+    // What the app is, and why it wants the room. On the largerDisplay
+    // branch this has to come first: the answer there is "use another
+    // device", which only persuades once the reason is in hand.
+    final explanation = <Widget>[
+      Text(
+        s('fitTitle', 'SeekSparks is a study workbench'),
+        style: theme.textTheme.headlineSmall?.copyWith(
+          fontWeight: FontWeight.w600,
+          color: cs.onSurface,
+        ),
+      ),
+      const SizedBox(height: 14),
+      Text(
+        s('fitLead',
+            'Search, the text, and word analysis sit side by side — three '
+            'columns on one screen.'),
+        style: theme.textTheme.bodyMedium?.copyWith(color: muted, height: 1.5),
+      ),
+    ];
 
     return Scaffold(
       backgroundColor: cs.surface,
@@ -129,74 +226,89 @@ class SmallScreenAdvisory extends StatelessWidget {
                   // Shows the shape being described rather than an
                   // error icon. Nothing has gone wrong here.
                   _PaneDiagram(
-                    highlight: advice == WorkbenchAdvice.rotate ? 2 : 1,
+                    // Three, not two. `rotate` is only ever returned
+                    // when the long edge clears the THREE-pane
+                    // threshold, so the picture showing two columns was
+                    // the same 2026-08-07 drift as the copy — and the
+                    // louder half of it, since the diagram is the first
+                    // thing read.
+                    highlight: isRotate ? 3 : 1,
                     color: cs.primary,
                     muted: cs.onSurface.withValues(alpha: 0.22),
                   ),
                   const SizedBox(height: 24),
-                  Text(
-                    s('fitTitle', 'SeekSparks is a study workbench'),
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: cs.onSurface,
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  Text(
-                    s('fitLead',
-                        'Search, the text, and word analysis sit side by '
-                        'side — three columns on one screen.'),
-                    style: theme.textTheme.bodyMedium
-                        ?.copyWith(color: muted, height: 1.5),
-                  ),
-                  const SizedBox(height: 18),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: cs.primary.withValues(alpha: 0.07),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          variant,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: cs.onSurface,
-                            height: 1.5,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        Text(
-                          needs,
-                          style: theme.textTheme.bodySmall
-                              ?.copyWith(color: muted, height: 1.45),
-                        ),
-                      ],
-                    ),
-                  ),
+                  if (isRotate) ...[
+                    callout,
+                    const SizedBox(height: 22),
+                    ...explanation,
+                  ] else ...[
+                    ...explanation,
+                    const SizedBox(height: 18),
+                    callout,
+                  ],
                   const SizedBox(height: 22),
+                  // Demoted on the rotate branch, where this device is
+                  // not the problem and sending the reader away would
+                  // be answering a question they did not ask.
                   Text(
-                    s('fitYsWords',
-                        'For reading on a phone, YsWords is built for '
-                        'exactly that — same family, phone-first.'),
-                    style: theme.textTheme.bodyMedium
+                    isRotate
+                        ? s('fitYsWordsAside',
+                            'Prefer to read in portrait? YsWords is the '
+                            'phone-first reader in the same family.')
+                        : s('fitYsWords',
+                            'For reading on a phone, YsWords is built for '
+                            'exactly that — same family, phone-first.'),
+                    style: (isRotate
+                            ? theme.textTheme.bodySmall
+                            : theme.textTheme.bodyMedium)
                         ?.copyWith(color: muted, height: 1.5),
                   ),
                   const SizedBox(height: 14),
-                  if (LinkOpener.isAvailable)
-                    FilledButton.icon(
-                      onPressed: () => LinkOpener.open(kYsWordsUrl),
-                      icon: const Icon(Icons.open_in_new, size: 18),
-                      label: Text(s('fitOpenYsWords', 'Open YsWords')),
-                    )
-                  else
+                  if (!LinkOpener.isAvailable)
                     SelectableText(
                       kYsWordsUrl,
                       style: theme.textTheme.bodyMedium
                           ?.copyWith(color: cs.primary),
+                    )
+                  else if (isRotate)
+                    TextButton(
+                      onPressed: () => LinkOpener.open(kYsWordsUrl),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                        minimumSize: const Size(0, 36),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        foregroundColor: muted,
+                      ),
+                      child: Text(s('fitOpenYsWords', 'Open YsWords')),
+                    )
+                  else
+                    FilledButton.icon(
+                      onPressed: () => LinkOpener.open(kYsWordsUrl),
+                      icon: const Icon(Icons.open_in_new, size: 18),
+                      label: Text(s('fitOpenYsWords', 'Open YsWords')),
                     ),
+                  // The build identity, asked for by the owner on
+                  // 2026-08-12. The gate is a HARD BLOCK, so Settings
+                  // and About are both unreachable from here — a reader
+                  // stopped by this screen otherwise has no way at all
+                  // to learn which build they are looking at, which is
+                  // exactly the moment they are being asked "what
+                  // version are you on?". Selectable so it can be
+                  // copied straight into a report.
+                  //
+                  // Same readout as the workbench status bar
+                  // (`workbench_page.dart`), deliberately: #314 settled
+                  // that format as canonical, and a second spelling of
+                  // the same fact is how the two drift.
+                  const SizedBox(height: 28),
+                  SelectableText(
+                    'v$kAppVersion · ${formatReleaseTimeLocal()}',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: cs.onSurface.withValues(alpha: 0.45),
+                      fontSize: type.scaled(11),
+                    ),
+                  ),
                   // 2026-08-07: "Continue anyway" REMOVED at the user's
                   // instruction — 「不要有仍然继续，就一直是block住」. The
                   // earlier reasoning was that a reminder which will not
@@ -225,6 +337,7 @@ class SmallScreenAdvisory extends StatelessWidget {
                 onLocale: onLocale,
                 color: cs.onSurface,
                 accent: cs.primary,
+                fontSize: type.scaledChrome(14),
               ),
             ),
           ],
@@ -245,12 +358,19 @@ class _LocaleSwitch extends StatelessWidget {
     required this.onLocale,
     required this.color,
     required this.accent,
+    required this.fontSize,
   });
 
   final String locale;
   final ValueChanged<String> onLocale;
   final Color color;
   final Color accent;
+
+  /// From the reader's type scale rather than a literal — this was one
+  /// of the 269 hardcoded sizes #315 went after, and it is the one on
+  /// the screen a reader can least afford to be unable to read, since
+  /// it is the only control the gate offers.
+  final double fontSize;
 
   static const _options = <String, String>{
     'en': 'EN',
@@ -286,7 +406,7 @@ class _LocaleSwitch extends StatelessWidget {
                   // glyphs, so the two buttons a Chinese reader needs
                   // were the only unreadable things on the screen.
                   fontFamilyFallback: kCjkFontFallback,
-                  fontSize: 14,
+                  fontSize: fontSize,
                   fontWeight:
                       locale == e.key ? FontWeight.w700 : FontWeight.w400,
                   color: locale == e.key
@@ -302,8 +422,10 @@ class _LocaleSwitch extends StatelessWidget {
 }
 
 /// Three stacked bars standing in for the three columns. [highlight]
-/// is how many this screen can actually carry after the advice is
-/// followed — one today, two after a rotation.
+/// is how many this screen can actually carry AFTER the advice is
+/// followed — one on a display that cannot grow, and all three after a
+/// rotation, because rotation is only ever offered when the long edge
+/// clears the three-pane threshold.
 class _PaneDiagram extends StatelessWidget {
   const _PaneDiagram({
     required this.highlight,

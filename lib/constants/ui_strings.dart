@@ -6947,16 +6947,44 @@ const uiStrings = {
     'en': 'Three columns need about {three} px of width. '
         'This screen is {w} × {h}.',
   },
+  // 2026-08-17 (#316): says ONE thing, and only what the branch that
+  // selects it has already proved.
+  //
+  // `WorkbenchAdvice.rotate` is returned exclusively when
+  // `paneCountFor(height) >= 3` — i.e. the long edge genuinely carries
+  // the whole workbench. It is therefore never right to add "and a
+  // phone is too narrow anyway, use a tablet" here, which is what the
+  // two Chinese strings did until now: rotate and you get three
+  // columns, and also go and find another device. In one sentence.
+  //
+  // It survived because the copy was written for the TWO-column rule
+  // and only the English was rewritten when the bar rose to three on
+  // 2026-08-07 (46bc7e5). A string that exists three times can be wrong
+  // in one language only, and a Mi Pad at 949 × 1375 — a device that
+  // works perfectly the moment it is turned — was told to go away.
   'fitRotate': {
-    'zh-Hans': '把设备横过来即可显示三栏。手机横放也不够宽，请改用平板或电脑。',
-    'zh-Hant': '把裝置橫過來即可顯示三欄。手機橫放也不夠寬，請改用平板或電腦。',
-    'en': 'Turning the device sideways fits all three columns.',
+    'zh-Hans': '把设备横过来，完整的三栏工作台就会打开。',
+    'zh-Hant': '把裝置橫過來，完整的三欄工作檯就會打開。',
+    'en': 'Turn the device sideways and the full three-column workbench '
+        'opens.',
   },
+  // The rotate variant of `fitNeeds`. Same figures, plus the one that
+  // settles it: the long edge, which is what the reader gets by
+  // turning the device. Proving the claim with the device's own
+  // numbers is what the original line does, and the rotate case is
+  // exactly where that proof is most worth having.
+  'fitRotateNeeds': {
+    'zh-Hans': '三栏需要约 {three} px 宽度。这块屏幕是 {w} × {h}，横过来就有 {long} px。',
+    'zh-Hant': '三欄需要約 {three} px 寬度。這塊螢幕是 {w} × {h}，橫過來就有 {long} px。',
+    'en': 'Three columns need about {three} px of width. This screen is '
+        '{w} × {h} — sideways that is {long} px.',
+  },
+  // The YsWords sentence lives in `fitYsWords` below and is rendered
+  // right underneath this line, so repeating it here (as both Chinese
+  // variants did) said it twice and left the English saying it once.
   'fitLarger': {
-    'zh-Hans': '这块屏幕在任何方向都放不下三栏。SeekSparks 需要平板或电脑；'
-        '手机请使用 YsWords。',
-    'zh-Hant': '這塊螢幕在任何方向都放不下三欄。SeekSparks 需要平板或電腦；'
-        '手機請使用 YsWords。',
+    'zh-Hans': '这块屏幕在任何方向都放不下三栏。SeekSparks 需要平板或电脑。',
+    'zh-Hant': '這塊螢幕在任何方向都放不下三欄。SeekSparks 需要平板或電腦。',
     'en': 'This screen does not fit three columns in either direction. '
         'SeekSparks needs a tablet or a laptop.',
   },
@@ -6965,6 +6993,17 @@ const uiStrings = {
     'zh-Hant': '若只是在手機上讀經，YsWords 正是為此而生——同一家族，手機優先。',
     'en': 'For reading on a phone, YsWords is built for exactly that — same '
         'family, phone-first.',
+  },
+  // The same recommendation, demoted, for the rotate case. This device
+  // is not too small; it is merely held the wrong way round, so
+  // "SeekSparks needs a bigger screen than yours" would be false here.
+  // What remains true is that reading in portrait is a real preference,
+  // and that there is a phone-first reader in the family for it.
+  'fitYsWordsAside': {
+    'zh-Hans': '若想竖着读，同一家族的 YsWords 是为此而生的手机读经器。',
+    'zh-Hant': '若想直向閱讀，同一家族的 YsWords 是為此而生的手機讀經器。',
+    'en': 'Prefer to read in portrait? YsWords is the phone-first reader in '
+        'the same family.',
   },
   'fitOpenYsWords': {
     'zh-Hans': '打开 YsWords',

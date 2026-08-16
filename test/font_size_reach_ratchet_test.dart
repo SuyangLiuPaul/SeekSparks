@@ -64,7 +64,6 @@ void main() {
     'utils/floating_toast.dart': 1,
     'widgets/collapsible_english_ref.dart': 1,
     'widgets/note_reference_picker_sheet.dart': 1,
-    'widgets/small_screen_advisory.dart': 1,
   };
 
   /// The surfaces #315 finished. Zero literals, and it stays zero.
@@ -82,6 +81,12 @@ void main() {
     'widgets/command_pane.dart',
     'widgets/context_pane.dart',
     'widgets/originals_sheet.dart',
+    // 2026-08-17 (#316). Paid off while fixing the rotate advisory, and
+    // it belongs on THIS list rather than in the budget: the reader
+    // photographed it, and it is the one screen whose only control is
+    // the language switch — the literal that lived here sized the three
+    // labels a reader stopped by a hard gate has to be able to read.
+    'widgets/small_screen_advisory.dart',
     'widgets/verse_list_pane.dart',
     'widgets/word_analysis_pane.dart',
     'widgets/word_distribution.dart',

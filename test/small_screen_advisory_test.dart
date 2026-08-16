@@ -14,6 +14,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
+import 'package:seeksparks/constants/app_version.dart';
 import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/utils/workbench_fit.dart';
@@ -267,9 +268,34 @@ void main() {
 
     testWidgets('points at YsWords rather than pretending to be it',
         (tester) async {
+      // The full recommendation belongs to the branch where this
+      // display genuinely cannot carry the workbench.
       addTearDown(tester.view.reset);
-      await pumpAdvisory(tester, const Size(834, 1194));
+      await pumpAdvisory(tester, const Size(844, 390));
       expect(find.text(s('fitYsWords', 'en')), findsOneWidget);
+    });
+
+    testWidgets('a device that only needs turning is not sent to YsWords',
+        (tester) async {
+      // #316: on the rotate branch the device in the reader's hands
+      // works — "SeekSparks needs a tablet or a laptop" would be false,
+      // and the big Open YsWords button argued the reader out of a
+      // one-gesture fix. The sibling app stays reachable, quietly.
+      addTearDown(tester.view.reset);
+      await pumpAdvisory(tester, const Size(949, 1375));
+      expect(find.text(s('fitYsWords', 'en')), findsNothing);
+      expect(find.text(s('fitYsWordsAside', 'en')), findsOneWidget);
+      expect(find.byType(FilledButton), findsNothing);
+    });
+
+    testWidgets('the rotate branch proves the claim with the long edge',
+        (tester) async {
+      // 949 × 1375 is the owner's Mi Pad, the device that reported this.
+      addTearDown(tester.view.reset);
+      await pumpAdvisory(tester, const Size(949, 1375));
+      final needs = find.textContaining('949 × 1375');
+      expect(needs, findsOneWidget);
+      expect(tester.widget<Text>(needs).data!, contains('1375 px'));
     });
 
     testWidgets('is information, not an error — no error iconography',
@@ -296,18 +322,78 @@ void main() {
       expect(find.text(s('fitTitle', 'en')), findsNothing);
     });
 
-    testWidgets('every string is translated in all three locales',
+    testWidgets('fits the smallest phone without overflowing', (tester) async {
+      addTearDown(tester.view.reset);
+      await pumpAdvisory(tester, const Size(320, 568));
+      expect(tester.takeException(), isNull);
+      expect(find.byType(SmallScreenAdvisory), findsOneWidget);
+    });
+
+    testWidgets('the build identity is legible from behind the gate',
         (tester) async {
+      // #316, the owner's second ask: the gate is a hard block, so
+      // Settings and About are both unreachable from here. A reader
+      // stopped by this screen is exactly the reader being asked which
+      // build they are on, and until now had no way to find out.
+      addTearDown(tester.view.reset);
+      await pumpAdvisory(tester, const Size(949, 1375));
+      expect(find.textContaining('v$kAppVersion'), findsOneWidget);
+    });
+  });
+
+  group('the three locales must not drift apart again', () {
+    // HOW #316 SURVIVED. The copy was written for the two-column rule.
+    // When the bar rose to three columns on 2026-08-07 (46bc7e5) only
+    // the English was rewritten, so `fitRotate` went on telling a
+    // Chinese reader 「把设备横过来即可显示三栏。手机横放也不够宽，请改用
+    // 平板或电脑。」 — rotate and you get three columns, and also go and
+    // find another device, in one sentence. Every test above passed
+    // throughout: they assert a string is PRESENT in three locales,
+    // never that the three say the same thing.
+    //
+    // Prose cannot be diffed for meaning, but this particular failure
+    // can be named exactly. `rotate` is returned only when the long
+    // edge carries all three columns, so the rotate copy must never
+    // reach for the go-elsewhere vocabulary, in any language.
+
+    const sendAway = [
+      '平板', '电脑', '電腦', 'YsWords', 'tablet', 'laptop',
+    ];
+
+    for (final locale in const ['en', 'zh-Hans', 'zh-Hant']) {
+      test('fitRotate does not send $locale readers away', () {
+        final v = uiStrings['fitRotate']![locale]!;
+        for (final w in sendAway) {
+          expect(v.toLowerCase(), isNot(contains(w.toLowerCase())),
+              reason: 'fitRotate ($locale) offers a rotation and then '
+                  'undercuts it with "$w": $v');
+        }
+      });
+
+      test('fitRotate promises three columns in $locale, not two', () {
+        // The English used to read "gets you two: search beside the
+        // text", which was the old rule surviving verbatim.
+        final v = uiStrings['fitRotate']![locale]!;
+        expect(
+          v.contains('three') || v.contains('三栏') || v.contains('三欄'),
+          isTrue,
+          reason: 'fitRotate ($locale) must name the full three: $v',
+        );
+        expect(v.contains('two columns'), isFalse, reason: v);
+      });
+    }
+
+    test('every advisory string exists in all three locales', () {
       for (final key in const [
         'fitTitle',
         'fitLead',
         'fitNeeds',
+        'fitRotateNeeds',
         'fitRotate',
         'fitLarger',
         'fitYsWords',
+        'fitYsWordsAside',
         'fitOpenYsWords',
-        'fitContinue',
-        'fitContinueNote',
       ]) {
         for (final locale in const ['en', 'zh-Hans', 'zh-Hant']) {
           expect(uiStrings[key]?[locale], isNotNull,
@@ -316,10 +402,41 @@ void main() {
       }
     });
 
-    testWidgets('fits the smallest phone without overflowing', (tester) async {
+    test('every locale of fitRotateNeeds carries all three placeholders', () {
+      for (final locale in const ['en', 'zh-Hans', 'zh-Hant']) {
+        final v = uiStrings['fitRotateNeeds']![locale]!;
+        for (final p in const ['{three}', '{w}', '{h}', '{long}']) {
+          expect(v, contains(p), reason: '$p missing from $locale');
+        }
+      }
+    });
+  });
+
+  group('turning the device clears the gate by itself', () {
+    testWidgets('the same tree switches to the workbench on rotation',
+        (tester) async {
+      // #316(3). The gate reads `MediaQuery.sizeOf`, so it should
+      // dissolve the moment the device is turned, with no relaunch and
+      // no navigation. Asserted rather than assumed: a reader who
+      // follows the instruction and still sees the wall has been told
+      // to do something that does not work.
       addTearDown(tester.view.reset);
-      await pumpAdvisory(tester, const Size(320, 568));
-      expect(tester.takeException(), isNull);
+      await pumpGate(tester, const Size(949, 1375));
+      expect(find.byType(SmallScreenAdvisory), findsOneWidget);
+      // Locale-independent: the gate builds AppSettings with its own
+      // default language, and this icon is drawn on the rotate branch
+      // and nowhere else.
+      expect(find.byIcon(Icons.screen_rotation), findsOneWidget);
+
+      tester.view.physicalSize = const Size(1375, 949);
+      await tester.pump();
+
+      expect(find.byType(SmallScreenAdvisory), findsNothing);
+      expect(find.byKey(workbenchMarker), findsOneWidget);
+
+      // And back again, so the gate is not a one-way door.
+      tester.view.physicalSize = const Size(949, 1375);
+      await tester.pump();
       expect(find.byType(SmallScreenAdvisory), findsOneWidget);
     });
   });
