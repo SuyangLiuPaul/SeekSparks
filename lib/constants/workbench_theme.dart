@@ -599,13 +599,30 @@ ThemeData workbenchTheme(ThemeData parent, {bool paper = false}) {
       thickness: WbMetrics.hairline,
       space: WbMetrics.hairline,
     ),
-    textTheme: base.textTheme.copyWith(
-      bodyLarge: body(WbMetrics.text),
-      bodyMedium: body(WbMetrics.text),
-      bodySmall: body(WbMetrics.chrome, c: wb.mutedText),
-      labelSmall: body(WbMetrics.chrome, c: wb.mutedText),
-      titleSmall: body(WbMetrics.chrome, w: FontWeight.w600),
-    ),
+    // `.apply` FIRST, then the five overrides. The doc comment above has
+    // promised since v1.6.73 that this theme inherits the parent's
+    // fallback chain, and until 2026-08-17 (#316) only the five styles
+    // restated below actually got it — every other style came straight
+    // off `ThemeData.light()`, i.e. Roboto with no fallback at all.
+    // Roboto has no CJK, the engine's own last resort is a download from
+    // fonts.gstatic.com, and `--no-web-resources-cdn` closes that door,
+    // so on web those styles drew Chinese as notdef boxes. That is what
+    // the rotate advisory's title and instruction were: `headlineSmall`
+    // and `titleMedium`. Buttons (`labelLarge`) and AppBar titles
+    // (`titleLarge`) sit on the same hole, which is why call sites all
+    // over `lib/` carry their own `fontFamilyFallback:` — each one is a
+    // separate patch of this single omission.
+    //
+    // A fallback is only consulted for code points the primary face
+    // lacks, so applying it to all fifteen styles changes nothing that
+    // already rendered.
+    textTheme: base.textTheme.apply(fontFamilyFallback: fallback).copyWith(
+          bodyLarge: body(WbMetrics.text),
+          bodyMedium: body(WbMetrics.text),
+          bodySmall: body(WbMetrics.chrome, c: wb.mutedText),
+          labelSmall: body(WbMetrics.chrome, c: wb.mutedText),
+          titleSmall: body(WbMetrics.chrome, w: FontWeight.w600),
+        ),
     iconTheme: IconThemeData(color: wb.mutedText, size: 15),
     // Square, hairline-bordered, no elevation — everywhere.
     cardTheme: CardThemeData(
