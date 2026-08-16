@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:seeksparks/constants/workbench_theme.dart';
+
 /// Show a transient toast in the **root** Overlay so it renders ABOVE
 /// any modal bottom sheet / dialog / route on the stack. Default
 /// `ScaffoldMessenger.showSnackBar` renders at the Scaffold level which
@@ -25,6 +27,11 @@ void showFloatingToast(
   final OverlayEntry entry;
   entry = OverlayEntry(builder: (ctx) {
     final media = MediaQuery.of(ctx);
+    // The root overlay sits below the app's providers, so the toast can
+    // read the reader's scale like any other surface. It has to: at
+    // 40 pt every other word on screen has grown and a 14 px toast
+    // reads as a rendering fault rather than a deliberate size.
+    final t = WbType.of(ctx);
     // 2026-05-10 (v1.2.23): pick foreground colour based on the
     // background's perceived brightness instead of hardcoding
     // Colors.white. Used to assume callers always pass a dark
@@ -60,7 +67,7 @@ void showFloatingToast(
                       message,
                       style: TextStyle(
                         color: fg,
-                        fontSize: 14,
+                        fontSize: t.scaled(14),
                         fontWeight: FontWeight.w600,
                       ),
                     ),

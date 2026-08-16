@@ -47,6 +47,7 @@ class PersonDetailSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final wb = WbColors.of(context);
+    final t = WbType.of(context);
     final svc = FamilyTreeService.instance;
     final father = person.fatherId == null ? null : svc.byId(person.fatherId!);
     final mother = person.motherId == null ? null : svc.byId(person.motherId!);
@@ -92,8 +93,8 @@ class PersonDetailSheet extends StatelessWidget {
                 children: [
                   Text(
                     person.localizedName(locale),
-                    style: const TextStyle(
-                      fontSize: 22,
+                    style: TextStyle(
+                      fontSize: t.scaled(22),
                       fontWeight: FontWeight.w700,
                       height: 1.25,
                     ),
@@ -103,7 +104,7 @@ class PersonDetailSheet extends StatelessWidget {
                     Text(
                       years,
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: t.scaled(13),
                         color: wb.mutedText,
                         fontFeatures: const [
                           FontFeature.tabularFigures(),
@@ -138,7 +139,7 @@ class PersonDetailSheet extends StatelessWidget {
         Text(
           person.localizedSummary(locale),
           style: TextStyle(
-            fontSize: 14,
+            fontSize: t.scaled(14),
             color: wb.text,
             height: 1.55,
           ),
@@ -147,6 +148,7 @@ class PersonDetailSheet extends StatelessWidget {
         if (father != null || mother != null)
           _section(
             wb: wb,
+            t: t,
             label: uiStrings['familyTreeParents']?[locale] ?? 'Parents',
             children: [
               if (father != null)
@@ -160,6 +162,7 @@ class PersonDetailSheet extends StatelessWidget {
         if (spouses.isNotEmpty)
           _section(
             wb: wb,
+            t: t,
             label: spouses.length == 1
                 ? (uiStrings['familyTreeSpouse']?[locale] ?? 'Spouse')
                 : (uiStrings['familyTreeSpouses']?[locale] ?? 'Spouses'),
@@ -170,6 +173,7 @@ class PersonDetailSheet extends StatelessWidget {
         if (children.isNotEmpty)
           _section(
             wb: wb,
+            t: t,
             label: uiStrings['familyTreeChildren']?[locale] ?? 'Children',
             children: [
               for (final c in children) _personChip(context, c, wb),
@@ -178,6 +182,7 @@ class PersonDetailSheet extends StatelessWidget {
         if (siblings.isNotEmpty)
           _section(
             wb: wb,
+            t: t,
             label: uiStrings['familyTreeSiblings']?[locale] ?? 'Siblings',
             children: [
               for (final s in siblings) _personChip(context, s, wb),
@@ -186,6 +191,7 @@ class PersonDetailSheet extends StatelessWidget {
         if (tribeAncestor != null)
           _section(
             wb: wb,
+            t: t,
             label: uiStrings['familyTreeTribeLine']?[locale] ?? 'Tribe / line',
             children: [
               _personChip(context, tribeAncestor, wb),
@@ -195,6 +201,7 @@ class PersonDetailSheet extends StatelessWidget {
           const SizedBox(height: 4),
           _section(
             wb: wb,
+            t: t,
             label: uiStrings['familyTreeReferences']?[locale] ??
                 'Verse references',
             children: [
@@ -372,6 +379,7 @@ class PersonDetailSheet extends StatelessWidget {
   /// IS a link — a verse reference — indistinguishable from furniture.
   Widget _section({
     required WbColors wb,
+    required WbType t,
     required String label,
     required List<Widget> children,
   }) {
@@ -383,7 +391,7 @@ class PersonDetailSheet extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              fontSize: 12,
+              fontSize: t.scaled(12),
               fontWeight: FontWeight.w700,
               letterSpacing: 0.4,
               color: wb.mutedText,
@@ -413,13 +421,14 @@ class PersonDetailSheet extends StatelessWidget {
     String? prefix,
   }) {
     final years = p.displayYears(locale);
+    final t = WbType.of(context);
     return ActionChip(
       avatar: Icon(Icons.person_outline, size: 14, color: wb.mutedText),
       label: Text(
         prefix == null
             ? '${p.localizedName(locale)}${years.isEmpty ? '' : '  ($years)'}'
             : '$prefix: ${p.localizedName(locale)}',
-        style: const TextStyle(fontSize: 12),
+        style: TextStyle(fontSize: t.scaled(12)),
       ),
       onPressed: () => onPersonTap?.call(p),
       visualDensity: VisualDensity.compact,
@@ -436,11 +445,12 @@ class PersonDetailSheet extends StatelessWidget {
   /// override and which vanishes on the paper palette.
   Widget _refChip(BuildContext context, String ref, WbColors wb) {
     final version = context.read<MainProvider>().currentVersion;
+    final t = WbType.of(context);
     return ActionChip(
       avatar: Icon(Icons.menu_book_outlined, size: 14, color: wb.link),
       label: Text(
         _localizedRef(ref, version),
-        style: TextStyle(fontSize: 12, color: wb.link),
+        style: TextStyle(fontSize: t.scaled(12), color: wb.link),
       ),
       onPressed: () => _jumpToRef(context, ref),
       visualDensity: VisualDensity.compact,
@@ -590,6 +600,7 @@ class _AncestryTrailState extends State<_AncestryTrail> {
   @override
   Widget build(BuildContext context) {
     final wb = WbColors.of(context);
+    final t = WbType.of(context);
     final trail = _trail;
     if (trail == null || trail.isEmpty) return const SizedBox.shrink();
     return Padding(
@@ -613,7 +624,7 @@ class _AncestryTrailState extends State<_AncestryTrail> {
                     uiStrings['familyTreeAncestry']?[widget.locale] ??
                         'Patrilineal ancestry',
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: t.scaled(12),
                       fontWeight: FontWeight.w700,
                       letterSpacing: 0.4,
                       color: wb.mutedText,
@@ -632,7 +643,7 @@ class _AncestryTrailState extends State<_AncestryTrail> {
                 widget.person.localizedName(widget.locale),
               ].join(' → '),
               style: TextStyle(
-                fontSize: 13,
+                fontSize: t.scaled(13),
                 color: wb.text,
                 height: 1.5,
               ),

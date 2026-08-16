@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import 'package:seeksparks/constants/text_patterns.dart' show sanitizeForSearch;
 import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/widgets/left_accent_card.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/timeline_event.dart';
@@ -64,6 +65,7 @@ class _BibleTimelinePageState extends State<BibleTimelinePage> {
     final settings = context.watch<AppSettings>();
     final locale = settings.locale;
     final scheme = Theme.of(context).colorScheme;
+    final t = WbType.of(context);
     return Scaffold(
       appBar: AppBar(
         leading: const LocalizedBackButton(),
@@ -136,7 +138,7 @@ class _BibleTimelinePageState extends State<BibleTimelinePage> {
                               .replaceAll(
                                   '{count}', '${filtered.length}'),
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: t.scaled(12),
                             color: scheme.onSurface
                                 .withValues(alpha: 0.6),
                           ),
@@ -280,6 +282,7 @@ class _EraDivider extends StatelessWidget {
     // accents (low alpha + thin border) where the deeper hue is
     // appropriate.
     final color = _eraColor(era);
+    final t = WbType.of(context);
     final fg = _eraColorOn(Theme.of(context).brightness, era);
     return Container(
       margin: const EdgeInsets.only(top: 12),
@@ -300,7 +303,7 @@ class _EraDivider extends StatelessWidget {
           Text(
             _eraLabel(era, locale),
             style: TextStyle(
-              fontSize: 12,
+              fontSize: t.scaled(12),
               fontWeight: FontWeight.w800,
               letterSpacing: 0.6,
               color: fg,
@@ -334,6 +337,7 @@ class _EventTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = _eraColor(event.era);
+    final t = WbType.of(context);
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -352,7 +356,7 @@ class _EventTile extends StatelessWidget {
                     event.displayYear(locale),
                     textAlign: TextAlign.right,
                     style: TextStyle(
-                      fontSize: 11.5,
+                      fontSize: t.scaled(11.5),
                       color: scheme.onSurface.withValues(alpha: 0.65),
                       fontWeight: FontWeight.w600,
                       fontFeatures: const [
@@ -403,8 +407,8 @@ class _EventTile extends StatelessWidget {
                           Expanded(
                             child: Text(
                               event.localizedTitle(locale),
-                              style: const TextStyle(
-                                fontSize: 14.5,
+                              style: TextStyle(
+                                fontSize: t.scaled(14.5),
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
@@ -424,7 +428,7 @@ class _EventTile extends StatelessWidget {
                         Text(
                           event.localizedDesc(locale),
                           style: TextStyle(
-                            fontSize: 13,
+                            fontSize: t.scaled(13),
                             color:
                                 scheme.onSurface.withValues(alpha: 0.85),
                             height: 1.5,
@@ -481,6 +485,7 @@ class _RefChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = WbType.of(context);
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -505,7 +510,7 @@ class _RefChip extends StatelessWidget {
               Text(
                 _localized(),
                 style: TextStyle(
-                  fontSize: 11,
+                  fontSize: t.scaled(11),
                   color: scheme.primary,
                   fontWeight: FontWeight.w600,
                 ),

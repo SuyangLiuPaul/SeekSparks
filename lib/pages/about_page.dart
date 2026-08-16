@@ -5,6 +5,7 @@ import 'package:seeksparks/constants/app_version.dart';
 import 'package:seeksparks/constants/sermon_credit.dart';
 import 'package:seeksparks/widgets/update_check_tile.dart';
 import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/map_provenance.dart';
 import 'package:seeksparks/services/link_opener.dart';
@@ -34,6 +35,7 @@ class AboutPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = WbType.of(context);
     final settings = context.watch<AppSettings>();
     final locale = settings.locale;
     final scheme = Theme.of(context).colorScheme;
@@ -146,7 +148,7 @@ class AboutPage extends StatelessWidget {
                       ' · v$kAppVersion',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 11,
+                    fontSize: t.scaled(11),
                     color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
                     fontStyle: FontStyle.italic,
                   ),
@@ -168,6 +170,7 @@ class _Header extends StatelessWidget {
       {required this.scheme, required this.locale, required this.settings});
   @override
   Widget build(BuildContext context) {
+    final t = WbType.of(context);
     return Card(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
@@ -183,7 +186,7 @@ class _Header extends StatelessWidget {
                   Text(
                     uiStrings['appName']?[locale] ?? 'SeekSparks',
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: t.scaled(18),
                       fontWeight: FontWeight.w700,
                       color: scheme.onSurface,
                     ),
@@ -193,7 +196,7 @@ class _Header extends StatelessWidget {
                     uiStrings['appTagline']?[locale] ??
                         'A bilingual Bible study app.',
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: t.scaled(12),
                       color: scheme.onSurfaceVariant,
                       fontStyle: FontStyle.italic,
                     ),
@@ -214,6 +217,7 @@ class _DisclaimerCard extends StatelessWidget {
   const _DisclaimerCard({required this.scheme, required this.locale});
   @override
   Widget build(BuildContext context) {
+    final t = WbType.of(context);
     return Card(
       color: scheme.tertiaryContainer.withValues(alpha: 0.45),
       child: Padding(
@@ -228,7 +232,7 @@ class _DisclaimerCard extends StatelessWidget {
               child: Text(
                 uiStrings['aboutDisclaimer']?[locale] ?? '',
                 style: TextStyle(
-                  fontSize: 12.5,
+                  fontSize: t.scaled(12.5),
                   color: scheme.onSurface,
                   height: 1.55,
                 ),
@@ -260,6 +264,7 @@ class _ContactCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = WbType.of(context);
     return Card(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
@@ -275,7 +280,7 @@ class _ContactCard extends StatelessWidget {
                   uiStrings['aboutContactTitle']?[locale] ??
                       'Contact / Takedown',
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: t.scaled(13),
                     fontWeight: FontWeight.w700,
                     color: scheme.primary,
                     letterSpacing: 0.4,
@@ -287,7 +292,7 @@ class _ContactCard extends StatelessWidget {
             Text(
               uiStrings['aboutContactBody']?[locale] ?? '',
               style: TextStyle(
-                fontSize: 12.5,
+                fontSize: t.scaled(12.5),
                 color: scheme.onSurface.withValues(alpha: 0.85),
                 height: 1.55,
               ),
@@ -309,7 +314,7 @@ class _ContactCard extends StatelessWidget {
             Text(
               uiStrings['aboutContactSla']?[locale] ?? '',
               style: TextStyle(
-                fontSize: 11,
+                fontSize: t.scaled(11),
                 color: scheme.onSurfaceVariant,
                 fontStyle: FontStyle.italic,
                 height: 1.45,
@@ -328,12 +333,13 @@ class _SectionTitle extends StatelessWidget {
   const _SectionTitle({required this.text, required this.scheme});
   @override
   Widget build(BuildContext context) {
+    final t = WbType.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
       child: Text(
         text,
         style: TextStyle(
-          fontSize: 12,
+          fontSize: t.scaled(12),
           fontWeight: FontWeight.w800,
           color: scheme.primary,
           letterSpacing: 0.6,
@@ -365,6 +371,7 @@ class _AttribRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = WbType.of(context);
     final scheme = Theme.of(context).colorScheme;
     final hasUrl = url != null && url!.isNotEmpty;
     return InkWell(
@@ -389,7 +396,7 @@ class _AttribRow extends StatelessWidget {
               child: Text(
                 name,
                 style: TextStyle(
-                  fontSize: 12.5,
+                  fontSize: t.scaled(12.5),
                   fontWeight: FontWeight.w600,
                   color: scheme.onSurface,
                   height: 1.45,
@@ -402,7 +409,7 @@ class _AttribRow extends StatelessWidget {
               child: Text(
                 licence,
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: t.scaled(12),
                   color: scheme.onSurfaceVariant,
                   height: 1.45,
                 ),
@@ -444,6 +451,7 @@ class _ScripturesTable extends StatelessWidget {
       {required this.scheme, required this.locale});
   @override
   Widget build(BuildContext context) {
+    final t = WbType.of(context);
     final r = <_AttribRow>[
       _AttribRow(
         name: uiStrings['aboutVerKjv']?[locale] ?? 'KJV (1611 / 1769)',
@@ -519,7 +527,7 @@ class _ScripturesTable extends StatelessWidget {
           child: Text(
             uiStrings['aboutNivRemovedNote']?[locale] ?? '',
             style: TextStyle(
-              fontSize: 11,
+              fontSize: t.scaled(11),
               color: scheme.onSurfaceVariant,
               fontStyle: FontStyle.italic,
               height: 1.45,
@@ -706,6 +714,7 @@ class _AppLicenseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = WbType.of(context);
     return Card(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
@@ -716,7 +725,7 @@ class _AppLicenseCard extends StatelessWidget {
               uiStrings['aboutAppLicenseHeading']?[locale] ??
                   'Application code: MIT licence',
               style: TextStyle(
-                fontSize: 13,
+                fontSize: t.scaled(13),
                 fontWeight: FontWeight.w700,
                 color: scheme.onSurface,
               ),
@@ -725,7 +734,7 @@ class _AppLicenseCard extends StatelessWidget {
             Text(
               uiStrings['aboutAppLicenseBody']?[locale] ?? '',
               style: TextStyle(
-                fontSize: 12,
+                fontSize: t.scaled(12),
                 color: scheme.onSurface.withValues(alpha: 0.85),
                 height: 1.55,
               ),

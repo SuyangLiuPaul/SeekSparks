@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/utils/version_mapper.dart'
     show localeAwareBookName;
 
@@ -97,6 +98,7 @@ class HighlightsSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final t = WbType.of(context);
     final title = uiStrings['myHighlights']?[locale] ?? 'My Highlights';
 
     // Parse and group by color, maintaining palette order.
@@ -150,7 +152,7 @@ class HighlightsSheet extends StatelessWidget {
                     child: Text(
                       title,
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: t.scaled(16),
                         fontWeight: FontWeight.w700,
                         color: scheme.onSurface,
                       ),
@@ -192,7 +194,7 @@ class HighlightsSheet extends StatelessWidget {
                               'No highlights yet.\nSelect a verse and tap the highlight button to save.',
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            fontSize: 14,
+                            fontSize: t.scaled(14),
                             color: scheme.onSurfaceVariant,
                             height: 1.6,
                           ),
@@ -236,6 +238,7 @@ class _ColorSectionState extends State<_ColorSection> {
   @override
   Widget build(BuildContext context) {
     final scheme = widget.scheme;
+    final t = WbType.of(context);
     final count = widget.refs.length;
     final countLabel = count.toString();
 
@@ -265,7 +268,7 @@ class _ColorSectionState extends State<_ColorSection> {
                   child: Text(
                     widget.label,
                     style: TextStyle(
-                      fontSize: 13,
+                      fontSize: t.scaled(13),
                       fontWeight: FontWeight.w700,
                       color: scheme.onSurface,
                       letterSpacing: 0.3,
@@ -283,7 +286,7 @@ class _ColorSectionState extends State<_ColorSection> {
                   child: Text(
                     countLabel,
                     style: TextStyle(
-                      fontSize: 11,
+                      fontSize: t.scaled(11),
                       fontWeight: FontWeight.w600,
                       color: scheme.onSurfaceVariant,
                     ),
@@ -337,6 +340,7 @@ class _RefRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final canNav = onNavigate != null;
+    final t = WbType.of(context);
     final displayBook = localeAwareBookName(ref.book, locale, currentVersion);
     final displayLabel = '$displayBook ${ref.chapter}:${ref.verseLabel}';
     return InkWell(
@@ -363,7 +367,7 @@ class _RefRow extends StatelessWidget {
               child: Text(
                 displayLabel,
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: t.scaled(14),
                   color: canNav ? scheme.primary : scheme.onSurface,
                   fontWeight: FontWeight.w500,
                 ),

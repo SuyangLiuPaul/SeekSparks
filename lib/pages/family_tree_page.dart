@@ -312,6 +312,7 @@ class _FamilyTreePageState extends State<_FamilyTreeBody> {
   Widget build(BuildContext context) {
     final locale = context.watch<AppSettings>().locale;
     final wb = WbColors.of(context);
+    final t = WbType.of(context);
     return Scaffold(
       appBar: AppBar(
         leading: const LocalizedBackButton(),
@@ -383,6 +384,7 @@ class _FamilyTreePageState extends State<_FamilyTreeBody> {
                     filtered: filtered,
                     locale: locale,
                     wb: wb,
+                    t: t,
                   ),
                   Expanded(
                     // Search-active: show a clean flat search-results
@@ -466,6 +468,7 @@ class _FamilyTreePageState extends State<_FamilyTreeBody> {
     required List<BiblicalPerson>? filtered,
     required String locale,
     required WbColors wb,
+    required WbType t,
   }) {
     final s = filtered != null
         ? (uiStrings['familyTreeFilterCount']?[locale] ??
@@ -492,7 +495,7 @@ class _FamilyTreePageState extends State<_FamilyTreeBody> {
           Expanded(
             child: Text(
               s,
-              style: TextStyle(fontSize: 12, color: wb.mutedText),
+              style: TextStyle(fontSize: t.scaled(12), color: wb.mutedText),
             ),
           ),
           // Power-user lever — flip every section open / closed at
@@ -517,7 +520,7 @@ class _FamilyTreePageState extends State<_FamilyTreeBody> {
             ),
             label: Text(
               toggleLabel,
-              style: const TextStyle(fontSize: 12),
+              style: TextStyle(fontSize: t.scaled(12)),
             ),
             style: TextButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -1044,6 +1047,7 @@ class _BridgeFooter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final wb = WbColors.of(context);
+    final t = WbType.of(context);
     return Container(
       margin: const EdgeInsets.only(top: 8, left: 8, right: 8, bottom: 4),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
@@ -1061,7 +1065,7 @@ class _BridgeFooter extends StatelessWidget {
           Text(
             uiStrings['familyTreeContinuesWith']?[locale] ?? 'Continues with',
             style: TextStyle(
-              fontSize: 11,
+              fontSize: t.scaled(11),
               fontWeight: FontWeight.w700,
               letterSpacing: 0.4,
               color: eraAccent,
@@ -1144,6 +1148,7 @@ class _PersonRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final wb = WbColors.of(context);
+    final t = WbType.of(context);
     // Indent caps at depth 6; deeper rows stop sliding right.
     final clampedDepth = depth > 6 ? 6 : depth;
     final indent = clampedDepth * 14.0;
@@ -1219,7 +1224,7 @@ class _PersonRow extends StatelessWidget {
                             Text(
                               person.localizedName(locale),
                               style: TextStyle(
-                                fontSize: 15,
+                                fontSize: t.scaled(15),
                                 fontWeight: FontWeight.w700,
                                 color: wb.text,
                               ),
@@ -1248,7 +1253,7 @@ class _PersonRow extends StatelessWidget {
                             child: Text(
                               years,
                               style: TextStyle(
-                                fontSize: 11.5,
+                                fontSize: t.scaled(11.5),
                                 color: wb.mutedText,
                                 fontFeatures: const [
                                   FontFeature.tabularFigures(),
@@ -1291,6 +1296,7 @@ class _SearchResultTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final wb = WbColors.of(context);
+    final t = WbType.of(context);
     final accent = _accentTheme(person.accent);
     final accentColor = accent == null
         ? wb.border
@@ -1322,7 +1328,7 @@ class _SearchResultTile extends StatelessWidget {
                       Text(
                         person.localizedName(locale),
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: t.scaled(16),
                           fontWeight: FontWeight.w700,
                           color: wb.text,
                         ),
@@ -1347,7 +1353,7 @@ class _SearchResultTile extends StatelessWidget {
                       child: Text(
                         years,
                         style: TextStyle(
-                          fontSize: 12,
+                          fontSize: t.scaled(12),
                           color: wb.mutedText,
                           fontFeatures: const [
                             FontFeature.tabularFigures(),
@@ -1426,6 +1432,7 @@ class _BridgeLeafRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final wb = WbColors.of(context);
+    final t = WbType.of(context);
     final clampedDepth = depth > 6 ? 6 : depth;
     final indent = clampedDepth * 14.0;
     final years = person.displayYears(locale);
@@ -1498,7 +1505,7 @@ class _BridgeLeafRow extends StatelessWidget {
                             Text(
                               person.localizedName(locale),
                               style: TextStyle(
-                                fontSize: 14.5,
+                                fontSize: t.scaled(14.5),
                                 fontWeight: FontWeight.w700,
                                 color: wb.text,
                               ),
@@ -1526,7 +1533,7 @@ class _BridgeLeafRow extends StatelessWidget {
                             child: Text(
                               years,
                               style: TextStyle(
-                                fontSize: 11,
+                                fontSize: t.scaled(11),
                                 color: wb.mutedText,
                                 fontFeatures: const [
                                   FontFeature.tabularFigures(),
@@ -1611,6 +1618,7 @@ class _ComparisonTableState extends State<_ComparisonTable> {
   @override
   Widget build(BuildContext context) {
     final wb = WbColors.of(context);
+    final t = WbType.of(context);
     final spine = widget.spine;
     final locale = widget.locale;
     final matchIds = widget.matchIds;
@@ -1620,12 +1628,12 @@ class _ComparisonTableState extends State<_ComparisonTable> {
     if (spine.isEmpty) return const SizedBox.shrink();
 
     final headerStyle = TextStyle(
-      fontSize: 10,
+      fontSize: t.scaled(10),
       fontWeight: FontWeight.w800,
       letterSpacing: 0.5,
       color: wb.text,
     );
-    final cellStyle = TextStyle(fontSize: 12, color: wb.text);
+    final cellStyle = TextStyle(fontSize: t.scaled(12), color: wb.text);
 
     Widget headerCell(String text, {double width = 70}) => Container(
           width: width,
@@ -1790,7 +1798,7 @@ class _ComparisonTableState extends State<_ComparisonTable> {
                         child: Text(
                           years,
                           style: cellStyle.copyWith(
-                            fontSize: 10.5,
+                            fontSize: t.scaled(10.5),
                             fontFeatures: const [FontFeature.tabularFigures()],
                             color: wb.mutedText,
                           ),

@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:seeksparks/constants/bible_versions.dart';
 import 'package:seeksparks/constants/book_names.dart';
 import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/constants/version_attribution.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/verse.dart';
@@ -61,6 +62,13 @@ class _CopyCenterDialog extends StatefulWidget {
 }
 
 class _CopyCenterDialogState extends State<_CopyCenterDialog> {
+  /// The reader's type scale. A getter rather than a `build` local
+  /// because the dialog is assembled by eight small helpers; threading
+  /// one value through eight signatures buys nothing, since they are
+  /// all invoked synchronously from `build` and the dependency lands on
+  /// the same element either way.
+  WbType get _t => WbType.of(context);
+
   CopyOptions _o = const CopyOptions();
   int _scopeIndex = 0;
 
@@ -224,6 +232,7 @@ class _CopyCenterDialogState extends State<_CopyCenterDialog> {
   Widget build(BuildContext context) {
     final locale = context.watch<AppSettings>().locale;
     final scheme = Theme.of(context).colorScheme;
+    final t = _t;
     final text = _render(locale);
     final busy = _loading.isNotEmpty;
 
@@ -251,8 +260,8 @@ class _CopyCenterDialogState extends State<_CopyCenterDialog> {
                   Expanded(
                     child: Text(
                       _s(locale, 'copyCenterTitle', 'Copy Center'),
-                      style: const TextStyle(
-                        fontSize: 16,
+                      style: TextStyle(
+                        fontSize: t.scaled(16),
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -318,7 +327,7 @@ class _CopyCenterDialogState extends State<_CopyCenterDialog> {
     final taken = _effectiveRefs.length;
     final capped = taken < total;
     final style = TextStyle(
-      fontSize: 11,
+      fontSize: _t.scaled(11),
       color: capped ? scheme.error : scheme.outline,
     );
     if (text.isEmpty) {
@@ -364,7 +373,8 @@ class _CopyCenterDialogState extends State<_CopyCenterDialog> {
               children: [
                 Text(
                   _s(locale, 'copyCenterPreview', 'Sample output'),
-                  style: TextStyle(fontSize: 11, color: scheme.outline),
+                  style:
+                      TextStyle(fontSize: _t.scaled(11), color: scheme.outline),
                 ),
                 const Spacer(),
                 if (busy)
@@ -384,7 +394,7 @@ class _CopyCenterDialogState extends State<_CopyCenterDialog> {
                     ? _s(locale, 'copyCenterEmpty', 'Nothing to copy.')
                     : text,
                 style: TextStyle(
-                  fontSize: 12.5,
+                  fontSize: _t.scaled(12.5),
                   height: 1.5,
                   color: text.isEmpty ? scheme.outline : null,
                 ),
@@ -413,7 +423,7 @@ class _CopyCenterDialogState extends State<_CopyCenterDialog> {
               for (var i = 0; i < widget.scopes.length; i++)
                 ChoiceChip(
                   label: Text(widget.scopes[i].label,
-                      style: const TextStyle(fontSize: 12)),
+                      style: TextStyle(fontSize: _t.scaled(12))),
                   selected: _scopeIndex == i,
                   onSelected: (_) => setState(() => _scopeIndex = i),
                 ),
@@ -429,7 +439,7 @@ class _CopyCenterDialogState extends State<_CopyCenterDialog> {
             for (final p in CopyPreset.values)
               ChoiceChip(
                 label: Text(_presetLabel(locale, p),
-                    style: const TextStyle(fontSize: 12)),
+                    style: TextStyle(fontSize: _t.scaled(12))),
                 selected: preset == p,
                 // "Custom" describes the state; it is not something you
                 // can switch INTO, so selecting it would have to mean
@@ -454,7 +464,7 @@ class _CopyCenterDialogState extends State<_CopyCenterDialog> {
             for (final v in availableVersions)
               FilterChip(
                 label: Text(v.shortLabel,
-                    style: const TextStyle(fontSize: 12)),
+                    style: TextStyle(fontSize: _t.scaled(12))),
                 selected: _o.versions.contains(v.value),
                 onSelected: (on) {
                   final next = [..._o.versions];
@@ -516,13 +526,13 @@ class _CopyCenterDialogState extends State<_CopyCenterDialog> {
             const SizedBox(height: 8),
             TextField(
               controller: _template,
-              style: const TextStyle(fontSize: 12),
+              style: TextStyle(fontSize: _t.scaled(12)),
               decoration: InputDecoration(
                 isDense: true,
                 border: const OutlineInputBorder(),
                 labelText: _s(locale, 'copyCenterTemplate', 'Reference format'),
                 helperMaxLines: 2,
-                helperStyle: const TextStyle(fontSize: 10),
+                helperStyle: TextStyle(fontSize: _t.scaled(10)),
                 helperText: _s(locale, 'copyCenterTemplateHelp',
                     r'Tags: <ref> <book> <chapter> <verse> <version>'),
               ),
@@ -632,7 +642,7 @@ class _CopyCenterDialogState extends State<_CopyCenterDialog> {
         child: Text(
           _s(locale, key, fallback),
           style: TextStyle(
-            fontSize: 11,
+            fontSize: _t.scaled(11),
             fontWeight: FontWeight.w600,
             letterSpacing: 0.4,
             color: scheme.primary,
@@ -653,7 +663,7 @@ class _CopyCenterDialogState extends State<_CopyCenterDialog> {
         visualDensity: VisualDensity.compact,
         controlAffinity: ListTileControlAffinity.leading,
         title: Text(_s(locale, key, fallback),
-            style: const TextStyle(fontSize: 12.5)),
+            style: TextStyle(fontSize: _t.scaled(12.5))),
         value: value,
         onChanged: onChanged,
       );
@@ -667,7 +677,7 @@ class _CopyCenterDialogState extends State<_CopyCenterDialog> {
         initialValue: value,
         isDense: true,
         style: TextStyle(
-          fontSize: 12.5,
+          fontSize: _t.scaled(12.5),
           color: Theme.of(context).colorScheme.onSurface,
         ),
         decoration: const InputDecoration(

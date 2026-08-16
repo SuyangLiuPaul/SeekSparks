@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:seeksparks/constants/workbench_theme.dart';
+
 /// A compact, collapsed-by-default disclosure used in the Chinese
 /// exegesis panel to tuck away **English-only** lexicon material
 /// (Strong's etymology / derivation, KJV translation counts) so the
@@ -24,6 +26,7 @@ class CollapsibleEnglishRef extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final t = WbType.of(context);
     return Theme(
       // ExpansionTile draws a divider above + below when expanded;
       // suppress it so this reads as an inline disclosure, not a
@@ -41,7 +44,7 @@ class CollapsibleEnglishRef extends StatelessWidget {
         title: Text(
           title,
           style: TextStyle(
-            fontSize: 12,
+            fontSize: t.scaled(12),
             fontWeight: FontWeight.w600,
             color: scheme.onSurfaceVariant,
             letterSpacing: 0.3,

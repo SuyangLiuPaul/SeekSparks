@@ -26,21 +26,17 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   /// Literal `fontSize:` sites still in the tree, per file, as of #315.
   ///
-  /// Everything absent from this map must be at zero. The residue is
+  /// Everything absent from this map must be at zero. What is left is
   /// the classic reader pages, which #279's chrome pass owns and which
-  /// have their own type story; the workbench, the word study in both
-  /// its presentations, and the two screens in the photographs are the
-  /// slice #315 finished.
+  /// have their own type story, plus a tail of small screens that each
+  /// still scale their main text and write literals only around it.
   const budget = <String, int>{
     // The verse text here already scales; these 41 are the chrome
     // around it (verse numbers, note markers, the version tag), and
     // #279's pass is mid-file. Splitting the file between two tasks is
     // how a merge conflict becomes a silent style regression.
     'widgets/bible_reading_pane.dart': 41,
-    'pages/about_page.dart': 13,
-    'pages/family_tree_page.dart': 12,
     'pages/stats_page.dart': 12,
-    'widgets/copy_center_sheet.dart': 12,
     // NOT text sizes. These nine are `fontSize:` FIELDS of a style
     // preset — the value handed to `settings.setFontSize()` when the
     // reader picks "Compact" or "Large". Routing them through the
@@ -49,20 +45,15 @@ void main() {
     // real, it just is not a defect.
     'models/app_style_preset.dart': 9,
     'pages/bible_trivia_page.dart': 9,
-    'widgets/person_detail_sheet.dart': 8,
     'pages/strongs_entry_page.dart': 7,
-    'pages/bible_timeline_page.dart': 6,
     'pages/sermon_detail_page.dart': 6,
     'pages/evidence_page.dart': 5,
     'pages/settings_page.dart': 5,
-    'widgets/highlights_sheet.dart': 5,
     'widgets/book_chapter_picker.dart': 2,
     'widgets/verse_popup_sheet.dart': 2,
     'widgets/version_picker_sheet.dart': 2,
     'pages/evidence_detail_page.dart': 1,
     'pages/profile_edit_page.dart': 1,
-    'utils/floating_toast.dart': 1,
-    'widgets/collapsible_english_ref.dart': 1,
     'widgets/note_reference_picker_sheet.dart': 1,
   };
 
@@ -91,6 +82,32 @@ void main() {
     'widgets/word_analysis_pane.dart',
     'widgets/word_distribution.dart',
     'widgets/word_distribution_table.dart',
+    // 2026-08-17 (#315). The eight surfaces where the Font Size slider
+    // moved NOTHING AT ALL — not the body text, not the labels. Every
+    // other entry in the budget above scales its main text and writes
+    // literals only around it; on these the setting was inert end to
+    // end, which is a different and worse thing, and it is what the
+    // reader meant by 「还有很多界面都是」.
+    //
+    // They are a promise rather than a debt: all but one are reachable
+    // in a tap or two from a menu or the workbench toolbar, and the
+    // About page additionally carries the MorphGNT / OSHB / Eagle's
+    // View attributions, where legibility is a licence obligation and
+    // not a comfort.
+    'pages/about_page.dart',
+    'pages/bible_timeline_page.dart',
+    'pages/family_tree_page.dart',
+    'utils/floating_toast.dart',
+    'widgets/collapsible_english_ref.dart',
+    'widgets/copy_center_sheet.dart',
+    // The exception, said out loud rather than implied: the modal
+    // sheet's only caller is `_showHighlightsSheet`, which carries
+    // `// ignore: unused_element` — the floating header opens
+    // `HighlightsPage` instead. Converted anyway because the file is
+    // still compiled and still on the list of things a reader could be
+    // shown; NOT screenshot-verified, because there is no way in.
+    'widgets/highlights_sheet.dart',
+    'widgets/person_detail_sheet.dart',
   ];
 
   final literal = RegExp(r'fontSize:\s*(?:const\s*)?[0-9]+(?:\.[0-9]+)?\b');
