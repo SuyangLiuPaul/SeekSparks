@@ -1,11 +1,15 @@
 /// 2026-08-09: the Atlas index, pinned.
 ///
-/// Two of these tests are about REAL gazetteer entries rather than
+/// Some of these tests are about REAL gazetteer entries rather than
 /// fixtures, because the interesting cases are all things the data
 /// actually contains: two cities called Antioch, a name a reader will
-/// type without its hyphen, and Jerusalem's 755 references. A fixture
-/// that invented them would pass while the shipped index failed.
+/// type without its hyphen, Jerusalem's 755 references, and a book code
+/// that reads like Nahum and is Jonah. A fixture that invented them
+/// would pass while the shipped index failed.
 library;
+
+import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
@@ -360,6 +364,44 @@ void main() {
         <BiblePlace>[joppa, jerusalem],
       );
       expect(out.where((p) => p.id == 'Joppa').length, 1);
+    });
+  });
+
+  group('every book, against the shipped gazetteer', () {
+    final places = parseGazetteer(
+      json.decode(File('assets/bible_places.json').readAsStringSync())
+          as Map<String, dynamic>,
+    );
+    final books = <String>{
+      for (final p in places)
+        for (final r in p.refs) r.englishBook,
+    };
+
+    test('no book opens with a place it barely names', () {
+      final wrong = <String>[];
+      for (final b in books) {
+        final scope = <String>{b};
+        final list = atlasIndex(places, scopeBooks: scope);
+        if (list.isEmpty) continue;
+        final best = list
+            .map((p) => refCountInBooks(p, scope))
+            .reduce((a, b) => a > b ? a : b);
+        if (refCountInBooks(list.first, scope) != best) wrong.add(b);
+      }
+      expect(wrong, isEmpty);
+    });
+
+    test('the books the whole-Bible ranking got wrong', () {
+      String top(String book) =>
+          atlasIndex(places, scopeBooks: <String>{book}).first.id;
+      // Ranking on the whole-Bible count these opened with Jerusalem,
+      // Jerusalem, Jerusalem and Tarshish. Jonah is the one worth pinning:
+      // its code in the raw asset is `nah`, which reads like Nahum.
+      expect(top('Esther'), 'Susa');
+      expect(top('Joshua'), 'Jordan');
+      expect(top('Jeremiah'), 'Babylon');
+      expect(top('Jonah'), 'Nineveh');
+      expect(top('Nahum'), 'Nineveh');
     });
   });
 }

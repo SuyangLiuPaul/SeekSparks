@@ -127,12 +127,13 @@ enum AtlasSort {
   ///
   /// It used to rank on the whole-Bible count even under a scope, and
   /// that falsified the sentence above rather than implementing it: 23
-  /// of the 62 books in the gazetteer opened with the wrong place at the
+  /// of the 59 books in the gazetteer opened with the wrong place at the
   /// top. Joshua led with Jerusalem, named 8 times, above the Jordan,
   /// named 58; Esther led with Jerusalem, named ONCE, above Susa, where
-  /// the book is set; Nahum led with Tarshish over Nineveh. The ranking
-  /// was really "the most famous places, among those this book happens
-  /// to name", which is a question nobody asked.
+  /// the book is set; Jeremiah led with Jerusalem, 97, above Babylon,
+  /// 150; Jonah led with Tarshish, 2, above Nineveh, 8. The ranking was
+  /// really "the most famous places, among those this book happens to
+  /// name", which is a question nobody asked.
   references,
 
   /// The English name, A–Z — an atlas index, and the order every
