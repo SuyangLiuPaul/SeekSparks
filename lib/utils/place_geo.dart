@@ -148,7 +148,7 @@ String repairPlaceName(String raw) =>
 /// The trailing numeral is not noise to be stripped. 177 entries carry
 /// one and it is the gazetteer's way of saying "a different place with
 /// the same name" — `Antioch 1` is Syrian Antioch and `Antioch 2` is
-/// Pisidian Antioch, 800 km apart and in different provinces. Losing it
+/// Pisidian Antioch, 500 km apart and in different provinces. Losing it
 /// would silently merge them.
 (String, int?) splitPlaceOrdinal(String name) {
   final m = _ordinalSuffix.firstMatch(name);

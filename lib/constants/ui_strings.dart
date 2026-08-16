@@ -7677,4 +7677,86 @@ const uiStrings = {
     'zh-Hant': '聖經提到這個地方，但今址不詳。',
     'en': 'Scripture names this place but its site is unidentified.',
   },
+  // ── Journey overlays (#317) ─────────────────────────────────────────
+  'journeysHeader': {
+    'zh-Hans': '行程',
+    'zh-Hant': '行程',
+    'en': 'Journeys',
+  },
+  // The standing caution, printed wherever a route is. It is the same
+  // for every route, which is why it lives here and not in the asset:
+  // the asset carries what is particular to one itinerary.
+  'journeysCaution': {
+    'zh-Hans': '线条只是按经文给出的顺序连接各站，并不是他们走过的路。圣经记的是停留的地点，不是两地之间的道路。',
+    'zh-Hant': '線條只是按經文給出的順序連接各站，並不是他們走過的路。聖經記的是停留的地點，不是兩地之間的道路。',
+    'en': 'The line joins the stops in the order the text gives them. '
+        'It is not the road they took — scripture names the stops, not '
+        'the route between them.',
+  },
+  'journeysKey': {
+    'zh-Hans': '实线：陆路。长虚线：水路。短虚线：经文未说明方式。点线：经文没有记他们到过此地。',
+    'zh-Hant': '實線：陸路。長虛線：水路。短虛線：經文未說明方式。點線：經文沒有記他們到過此地。',
+    'en': 'Solid: by land. Long dash: by sea. Short dash: the text does '
+        'not say. Dots: the text does not put them here.',
+  },
+  'journeyShowTip': {
+    'zh-Hans': '在地图上画出这条路线',
+    'zh-Hant': '在地圖上畫出這條路線',
+    'en': 'Draw this route on the map',
+  },
+  'journeyStops': {
+    'zh-Hans': '{n} 站',
+    'zh-Hant': '{n} 站',
+    'en': '{n} stops',
+  },
+  'journeyProvisionalCount': {
+    'zh-Hans': '其中 {n} 站为推定',
+    'zh-Hant': '其中 {n} 站為推定',
+    'en': '{n} provisional',
+  },
+  'journeyProvisionalTag': {
+    'zh-Hans': '推定',
+    'zh-Hant': '推定',
+    'en': 'Provisional',
+  },
+  'journeyBasisHeader': {
+    'zh-Hans': '这份行程的依据',
+    'zh-Hant': '這份行程的依據',
+    'en': 'Where this itinerary comes from',
+  },
+  // Says what the number IS in the same breath as printing it. A total
+  // labelled only "km" would be read as the distance travelled, which is
+  // the one thing a sum of chords is not.
+  'journeyStraightLine': {
+    'zh-Hans': '各站之间直线距离合计 {n} 公里；不是实际行程。',
+    'zh-Hant': '各站之間直線距離合計 {n} 公里；不是實際行程。',
+    'en': '{n} km in straight lines between the stops — not the distance '
+        'travelled.',
+  },
+  'journeyLegLand': {
+    'zh-Hans': '走陆路',
+    'zh-Hant': '走陸路',
+    'en': 'by land',
+  },
+  'journeyLegSea': {
+    'zh-Hans': '走水路',
+    'zh-Hant': '走水路',
+    'en': 'by sea',
+  },
+  'journeyLegUnknown': {
+    'zh-Hans': '经文未说明方式',
+    'zh-Hant': '經文未說明方式',
+    'en': 'manner not given',
+  },
+  'journeyUnresolved': {
+    'zh-Hans': '有 {n} 站在地名录中查不到位置，线在那里断开。',
+    'zh-Hant': '有 {n} 站在地名錄中查不到位置，線在那裡斷開。',
+    'en': '{n} stops have no location in the gazetteer; the line breaks '
+        'there.',
+  },
+  'journeyClose': {
+    'zh-Hans': '关闭行程',
+    'zh-Hant': '關閉行程',
+    'en': 'Close the itinerary',
+  },
 };

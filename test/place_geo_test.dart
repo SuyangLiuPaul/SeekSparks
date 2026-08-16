@@ -73,7 +73,7 @@ void main() {
 
   group('ordinals', () {
     test('a trailing numeral is split, not stripped', () {
-      // Antioch 1 is Syrian, Antioch 2 is Pisidian, 800 km apart.
+      // Antioch 1 is Syrian, Antioch 2 is Pisidian, 500 km apart.
       expect(splitPlaceOrdinal('Antioch 2'), ('Antioch', 2));
       expect(splitPlaceOrdinal('Ai 1'), ('Ai', 1));
     });

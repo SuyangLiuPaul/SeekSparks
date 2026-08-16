@@ -253,7 +253,7 @@ class _PlacesPaneState extends State<PlacesPane> {
                       ),
                       // The disambiguating numeral, kept visible:
                       // Antioch 1 is Syrian and Antioch 2 is Pisidian,
-                      // 800 km apart, and a list that printed both as
+                      // 500 km apart, and a list that printed both as
                       // "Antioch" would be actively misleading.
                       if (p.ordinal != null)
                         Padding(

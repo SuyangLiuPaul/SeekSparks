@@ -123,6 +123,9 @@ flutter:
     # Earth coastlines, lakes and rivers — public domain.
     - assets/bible_places.json
     - assets/bible_geo.json
+    # Journey overlays. Stops only — every coordinate comes from the
+    # gazetteer above, so a route cannot invent a location.
+    - assets/bible_journeys.json
     # Reader-to-original verse map. assets/originals is numbered in the
     # Masoretic / critical-text tradition and every edition we ship is
     # numbered in the English one, so joining them on the reader's own

@@ -21,7 +21,7 @@
 /// than it sounds, in two ways this page fixes.
 ///
 ///   1. It cannot tell Syrian Antioch from Pisidian Antioch. They are
-///      800 km apart and spelled identically, so the search returns both
+///      500 km apart and spelled identically, so the search returns both
 ///      cities' verses under one pin, at one set of coordinates. The
 ///      gazetteer keeps them as two entries with two locations, and this
 ///      page draws both.
@@ -55,18 +55,22 @@ import 'package:provider/provider.dart';
 
 import 'package:seeksparks/constants/book_name_mapping.dart'
     show BookScript, bookScriptFor;
+import 'package:seeksparks/constants/journey_style.dart';
 import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/app_settings.dart';
+import 'package:seeksparks/models/bible_journey.dart' show JourneyLeg;
 import 'package:seeksparks/models/bible_map.dart';
 import 'package:seeksparks/models/bible_place.dart';
 import 'package:seeksparks/pages/map_viewer_page.dart';
 import 'package:seeksparks/providers/main_provider.dart';
+import 'package:seeksparks/services/journeys_service.dart';
 import 'package:seeksparks/services/map_service.dart';
 import 'package:seeksparks/services/places_service.dart';
 import 'package:seeksparks/utils/app_nav.dart';
 import 'package:seeksparks/utils/atlas_index.dart';
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:seeksparks/utils/journey_route.dart';
 import 'package:seeksparks/utils/jump_to_reference.dart' as jumper;
 import 'package:seeksparks/utils/navigate_to_reader.dart';
 import 'package:seeksparks/utils/place_geo.dart' show BaseMap;
@@ -149,6 +153,43 @@ class _AtlasPageState extends State<AtlasPage> {
   int _fitToken = 0;
   int _focusToken = 0;
 
+  /// What the next re-fit should frame, when the layers would get it
+  /// wrong. See [PlaceMapView.fitPoints]. Cleared by every other kind of
+  /// question, so it never outlives the toggle that set it.
+  List<(double, double)>? _fitPoints;
+
+  /// Every journey in the asset. Empty until it lands, so the block
+  /// simply is not there rather than flashing an empty header.
+  List<ResolvedJourney> _journeys = const <ResolvedJourney>[];
+
+  /// The ids switched on, in asset order when drawn.
+  final Set<String> _onRoutes = <String>{};
+
+  /// The one whose itinerary is open in the detail column.
+  String? _readingRouteId;
+
+  /// Which of the two things the detail column is currently about.
+  ///
+  /// Last-picked wins, rather than one silently outranking the other: a
+  /// reader clicking a dot wants the place, and a reader clicking a
+  /// journey wants the itinerary, and both are one click away in the
+  /// index column at all times.
+  bool _detailIsJourney = false;
+
+  List<ResolvedJourney> get _activeRoutes => <ResolvedJourney>[
+        for (final j in _journeys)
+          if (_onRoutes.contains(j.id)) j,
+      ];
+
+  ResolvedJourney? get _readingRoute {
+    final id = _readingRouteId;
+    if (id == null) return null;
+    for (final j in _journeys) {
+      if (j.id == id) return j;
+    }
+    return null;
+  }
+
   /// The picture database (#320). Null until it lands, which is a state
   /// the panel must be able to tell from "this place has no plates" —
   /// hence a nullable list rather than an empty one.
@@ -173,9 +214,14 @@ class _AtlasPageState extends State<AtlasPage> {
         if (!mounted) return;
         setState(() => _base = m);
         if (_selectedId != null) _focusToken++;
-        // Last of the three, for the same reason the base map is second:
-        // `maps_index.json` is 1 MB and nothing on this page needs it
-        // until a place is selected.
+        // 11 KB, and it resolves against the gazetteer that has just
+        // landed, so it cannot be fetched any earlier than this.
+        JourneysService.all().then((js) {
+          if (!mounted) return;
+          setState(() => _journeys = js);
+        });
+        // Last of the four: `maps_index.json` is 1 MB and nothing on
+        // this page needs it until a place is selected.
         MapService.loadMaps().then((plates) {
           if (!mounted) return;
           setState(() => _plates = plates);
@@ -209,15 +255,63 @@ class _AtlasPageState extends State<AtlasPage> {
   /// A new question re-frames the map; a new answer to the same question
   /// does not. Typing, scoping and dropping the subject chip all change
   /// the question.
-  void _questionChanged(VoidCallback change) => setState(() {
+  void _questionChanged(VoidCallback change,
+          {List<(double, double)>? fitTo}) =>
+      setState(() {
         change();
+        // Always assigned, never merely set: a stale route framing left
+        // behind by an earlier toggle would swallow the next search.
+        _fitPoints = fitTo;
         _fitToken++;
       });
+
+  /// Switch a route on or off. Turning one on also opens its itinerary
+  /// and frames it — a checkbox that draws a line somewhere off screen
+  /// has not answered the reader.
+  void _toggleRoute(ResolvedJourney j) {
+    final turningOn = !_onRoutes.contains(j.id);
+    _questionChanged(
+      () {
+        if (turningOn) {
+          _onRoutes.add(j.id);
+          _readingRouteId = j.id;
+          _detailIsJourney = true;
+        } else {
+          _onRoutes.remove(j.id);
+          if (_readingRouteId == j.id) {
+            _readingRouteId = null;
+            _detailIsJourney = false;
+          }
+        }
+      },
+      fitTo: turningOn ? _pointsOf(j) : null,
+    );
+  }
+
+  /// Open a route's itinerary, switching it on if it was off.
+  void _readRoute(ResolvedJourney j, BuildContext context, String locale,
+      BookScript script, double width) {
+    _questionChanged(
+      () {
+        _onRoutes.add(j.id);
+        _readingRouteId = j.id;
+        _detailIsJourney = true;
+      },
+      fitTo: _pointsOf(j),
+    );
+    if (width < _detailColumnMin) _showJourneySheet(context, locale, script);
+  }
+
+  static List<(double, double)> _pointsOf(ResolvedJourney j) =>
+      <(double, double)>[
+        for (final s in j.stops) (s.place.lat!, s.place.lon!),
+      ];
 
   void _selectFromIndex(String id, BuildContext context, String locale,
       BookScript script, double width) {
     setState(() {
       _selectedId = id;
+      _detailIsJourney = false;
       _focusToken++;
     });
     if (width < _detailColumnMin) _showDetailSheet(context, locale, script);
@@ -317,6 +411,37 @@ class _AtlasPageState extends State<AtlasPage> {
     );
   }
 
+  /// The itinerary, where there is no third column to put it in.
+  Future<void> _showJourneySheet(
+      BuildContext context, String locale, BookScript script) async {
+    final j = _readingRoute;
+    if (j == null) return;
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      constraints: const BoxConstraints(maxWidth: 720),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+      builder: (sheetCtx) => DraggableScrollableSheet(
+        initialChildSize: 0.62,
+        minChildSize: 0.35,
+        maxChildSize: 0.95,
+        expand: false,
+        builder: (_, controller) => _JourneyPanel(
+          journey: j,
+          locale: locale,
+          script: script,
+          selectedPlaceId: _selectedId,
+          scrollController: controller,
+          onSelectStop: (id) => setState(() {
+            _selectedId = id;
+            _focusToken++;
+          }),
+          onJump: (ref) => _jump(sheetCtx, ref),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final locale = context.watch<AppSettings>().locale;
@@ -360,8 +485,14 @@ class _AtlasPageState extends State<AtlasPage> {
                   script: script,
                   locale: locale,
                   selectedId: _selectedId,
+                  routes: _activeRoutes,
+                  selectedRouteId: _readingRouteId,
+                  fitPoints: _fitPoints,
                   onSelect: (id) {
-                    setState(() => _selectedId = id);
+                    setState(() {
+                      _selectedId = id;
+                      if (id != null) _detailIsJourney = false;
+                    });
                     // Below the detail column there is nowhere for the
                     // answer to go, and a dot that lights up and says
                     // nothing is the same dead end as the blank panel.
@@ -394,8 +525,40 @@ class _AtlasPageState extends State<AtlasPage> {
                   );
                 }
 
+                final journey = _detailIsJourney ? _readingRoute : null;
+                final detail = journey != null
+                    ? _JourneyPanel(
+                        journey: journey,
+                        locale: locale,
+                        script: script,
+                        selectedPlaceId: _selectedId,
+                        onSelectStop: (id) => setState(() {
+                          _selectedId = id;
+                          _focusToken++;
+                        }),
+                        onJump: (ref) => _jump(context, ref),
+                        onClose: () => setState(() {
+                          _detailIsJourney = false;
+                        }),
+                      )
+                    : selected == null
+                        ? null
+                        : _DetailPanel(
+                            place: selected,
+                            locale: locale,
+                            script: script,
+                            plates: _plates,
+                            scopeBooks: _scopeBooks,
+                            scopeLabel: _scopeLabelFor(locale, version),
+                            onClearScope: _scopeBooks == null
+                                ? null
+                                : () => _questionChanged(
+                                    () => _scopeBooks = null),
+                            onJump: (ref) => _jump(context, ref),
+                          );
+
                 final showDetailColumn =
-                    box.maxWidth >= _detailColumnMin && selected != null;
+                    box.maxWidth >= _detailColumnMin && detail != null;
 
                 return Row(
                   children: [
@@ -406,22 +569,7 @@ class _AtlasPageState extends State<AtlasPage> {
                     if (showDetailColumn) ...[
                       VerticalDivider(
                           width: WbMetrics.hairline, color: c.border),
-                      SizedBox(
-                        width: _detailPanelWidth,
-                        child: _DetailPanel(
-                          place: selected,
-                          locale: locale,
-                          script: script,
-                          plates: _plates,
-                          scopeBooks: _scopeBooks,
-                          scopeLabel: _scopeLabelFor(locale, version),
-                          onClearScope: _scopeBooks == null
-                              ? null
-                              : () => _questionChanged(
-                                  () => _scopeBooks = null),
-                          onJump: (ref) => _jump(context, ref),
-                        ),
-                      ),
+                      SizedBox(width: _detailPanelWidth, child: detail),
                     ],
                   ],
                 );
@@ -480,6 +628,8 @@ class _AtlasPageState extends State<AtlasPage> {
             padding: const EdgeInsets.fromLTRB(8, 0, 8, 6),
             child: _subjectChip(c, t, locale),
           ),
+        if (_journeys.isNotEmpty)
+          _journeysBlock(context, c, t, locale, script, width: width),
         _countHeader(c, t, locale, results.length, total),
         Divider(height: WbMetrics.hairline, color: c.border),
         Expanded(
@@ -677,6 +827,160 @@ class _AtlasPageState extends State<AtlasPage> {
         ),
       );
 
+  /// The overlay switches (#317).
+  ///
+  /// bwh33's Overlays window is the model: a list of transparent sheets,
+  /// each with its own check-box, stacked in whatever combination the
+  /// reader wants. It sits above the place count rather than below the
+  /// list because it does not narrow the list — it is a different layer,
+  /// and putting it inside the index would say otherwise.
+  Widget _journeysBlock(
+    BuildContext context,
+    WbColors c,
+    WbType t,
+    String locale,
+    BookScript script, {
+    required double width,
+  }) {
+    final anyOn = _onRoutes.isNotEmpty;
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        border: Border(
+          top: BorderSide(color: c.border, width: WbMetrics.hairline),
+        ),
+      ),
+      padding: const EdgeInsets.fromLTRB(8, 4, 8, 5),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            _s('journeysHeader', 'Journeys', locale),
+            style: TextStyle(
+              fontSize: t.chrome,
+              fontWeight: FontWeight.w700,
+              color: c.mutedText,
+              fontFamilyFallback: kCjkFontFallback,
+            ),
+          ),
+          const SizedBox(height: 2),
+          for (final j in _journeys)
+            _journeyRow(context, c, t, locale, script, j, width: width),
+          if (anyOn) ...[
+            const SizedBox(height: 4),
+            // The caution is printed whenever a line is on screen, not
+            // tucked inside the itinerary panel: the drawing is what
+            // overclaims, so the correction belongs beside the switch
+            // that produced it.
+            _fineprint(c, t, _s('journeysCaution', '', locale)),
+            const SizedBox(height: 3),
+            _fineprint(c, t, _s('journeysKey', '', locale)),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _fineprint(WbColors c, WbType t, String text) => Text(
+        text,
+        style: TextStyle(
+          fontSize: t.chrome - 1.5,
+          color: c.mutedText,
+          height: 1.35,
+          fontFamilyFallback: kCjkFontFallback,
+        ),
+      );
+
+  Widget _journeyRow(
+    BuildContext context,
+    WbColors c,
+    WbType t,
+    String locale,
+    BookScript script,
+    ResolvedJourney j, {
+    required double width,
+  }) {
+    final on = _onRoutes.contains(j.id);
+    final reading = _readingRouteId == j.id && _detailIsJourney;
+    final style = journeyStyleFor(c, j.journey.style);
+    final subtitle = <String>[
+      j.journey.localizedRange(locale),
+      _s('journeyStops', '{n} stops', locale)
+          .replaceAll('{n}', '${j.journey.stops.length}'),
+      if (j.journey.provisionalCount > 0)
+        _s('journeyProvisionalCount', '{n} provisional', locale)
+            .replaceAll('{n}', '${j.journey.provisionalCount}'),
+    ].where((e) => e.isNotEmpty).join(' · ');
+
+    return InkWell(
+      onTap: () => _readRoute(j, context, locale, script, width),
+      hoverColor: c.hoverBg,
+      child: Container(
+        color: reading ? c.selectionBg : null,
+        padding: const EdgeInsets.symmetric(vertical: 3),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Its own tap target: switching a sheet on and reading its
+            // itinerary are different asks, and a reader comparing two
+            // routes on the map should not have to open one to see it.
+            InkWell(
+              onTap: () => _toggleRoute(j),
+              child: Padding(
+                padding: const EdgeInsets.only(top: 1, right: 5),
+                child: Tooltip(
+                  message: _s('journeyShowTip', 'Draw this route', locale),
+                  child: Icon(
+                    on ? Icons.check_box : Icons.check_box_outline_blank,
+                    size: t.text + 2,
+                    color: on ? style.colour : c.mutedText,
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 6, right: 5),
+              child: Container(
+                width: 14,
+                height: 3,
+                color: on ? style.colour : c.border,
+              ),
+            ),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    j.journey.localizedName(locale),
+                    maxLines: 2,
+                    style: TextStyle(
+                      fontSize: t.text,
+                      fontWeight: on ? FontWeight.w700 : FontWeight.w500,
+                      color: on ? c.text : c.mutedText,
+                      height: 1.25,
+                      fontFamilyFallback: kCjkFontFallback,
+                    ),
+                  ),
+                  if (subtitle.isNotEmpty)
+                    Text(
+                      subtitle,
+                      maxLines: 2,
+                      style: TextStyle(
+                        fontSize: t.chrome - 1,
+                        color: c.mutedText,
+                        height: 1.3,
+                        fontFamilyFallback: kCjkFontFallback,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   /// bwh23's parenthesised denominator: a narrowed count with no total
   /// is the ambiguity the filter itself creates.
   Widget _countHeader(
@@ -770,7 +1074,7 @@ class _AtlasPageState extends State<AtlasPage> {
                         ),
                       ),
                       // Antioch 1 is Syrian and Antioch 2 is Pisidian,
-                      // 800 km apart. A list that printed both as
+                      // 500 km apart. A list that printed both as
                       // "Antioch" would be actively misleading.
                       if (p.ordinal != null)
                         Padding(
@@ -1172,4 +1476,318 @@ class _DetailPanel extends StatelessWidget {
           ],
         ),
       );
+}
+
+/// One itinerary, stop by stop, with the verse that puts each stop on it.
+///
+/// **This panel is the point of the feature, not the line on the map.**
+/// A printed atlas draws Paul's journeys as three coloured arcs and
+/// leaves the reader to take them on trust; bwh33 does the same, and its
+/// route overlays carry no references at all. Here every row names its
+/// verse and every row is a jump into the reader — so a route is a claim
+/// that can be checked, one stop at a time, which is the difference
+/// between an illustration and a study tool.
+class _JourneyPanel extends StatelessWidget {
+  const _JourneyPanel({
+    required this.journey,
+    required this.locale,
+    required this.script,
+    required this.selectedPlaceId,
+    required this.onSelectStop,
+    required this.onJump,
+    this.onClose,
+    this.scrollController,
+  });
+
+  final ResolvedJourney journey;
+  final String locale;
+  final BookScript script;
+
+  /// Lit in the list so the map and the panel agree on where the reader
+  /// is in the itinerary.
+  final String? selectedPlaceId;
+
+  final ValueChanged<String> onSelectStop;
+  final void Function(PlaceRef) onJump;
+
+  /// Returns the column to the selected place. Absent in the sheet, which
+  /// is dismissed instead.
+  final VoidCallback? onClose;
+
+  final ScrollController? scrollController;
+
+  String _s(String key, String fallback) =>
+      uiStrings[key]?[locale] ?? fallback;
+
+  String _legWord(JourneyLeg leg) => switch (leg) {
+        JourneyLeg.sea => _s('journeyLegSea', 'by sea'),
+        JourneyLeg.land => _s('journeyLegLand', 'by land'),
+        JourneyLeg.unknown => _s('journeyLegUnknown', 'manner not given'),
+        JourneyLeg.start => '',
+      };
+
+  @override
+  Widget build(BuildContext context) {
+    final c = WbColors.of(context);
+    final t = WbType.of(context);
+    final style = journeyStyleFor(c, journey.journey.style);
+    final version = context.read<MainProvider>().currentVersion;
+    final basis = journey.journey.localizedBasis(locale);
+    final ordinals = journey.ordinalsByPlace;
+
+    return ColoredBox(
+      color: c.paneBg,
+      child: ListView(
+        controller: scrollController,
+        padding: const EdgeInsets.fromLTRB(10, 10, 10, 20),
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 7, right: 6),
+                child: Container(width: 16, height: 3, color: style.colour),
+              ),
+              Expanded(
+                child: Text(
+                  journey.journey.localizedName(locale),
+                  style: TextStyle(
+                    fontSize: t.text + 2,
+                    fontWeight: FontWeight.w700,
+                    color: c.text,
+                    height: 1.25,
+                    fontFamilyFallback: kCjkFontFallback,
+                  ),
+                ),
+              ),
+              if (onClose != null)
+                IconButton(
+                  icon: Icon(Icons.close, size: t.text + 2, color: c.mutedText),
+                  visualDensity: VisualDensity.compact,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                  tooltip: _s('journeyClose', 'Close the itinerary'),
+                  onPressed: onClose,
+                ),
+            ],
+          ),
+          const SizedBox(height: 3),
+          Text(
+            journey.journey.localizedRange(locale),
+            style: TextStyle(
+              fontSize: t.chrome,
+              color: c.mutedText,
+              fontFamilyFallback: kCjkFontFallback,
+            ),
+          ),
+          const SizedBox(height: 8),
+          // The two cautions the drawing cannot make for itself, and the
+          // per-route provenance underneath them.
+          _note(c, t, _s('journeysCaution', '')),
+          const SizedBox(height: 4),
+          _note(
+            c,
+            t,
+            _s('journeyStraightLine', '{n} km in straight lines')
+                .replaceAll('{n}', '${journey.straightLineKm.round()}'),
+          ),
+          if (journey.unresolved.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            _note(
+              c,
+              t,
+              _s('journeyUnresolved', '{n} stops have no location')
+                  .replaceAll('{n}', '${journey.unresolved.length}'),
+            ),
+          ],
+          if (basis.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            _header(c, t, _s('journeyBasisHeader', 'Basis')),
+            const SizedBox(height: 4),
+            _note(c, t, basis),
+          ],
+          const SizedBox(height: 10),
+          _header(
+            c,
+            t,
+            _s('journeyStops', '{n} stops')
+                .replaceAll('{n}', '${journey.journey.stops.length}'),
+          ),
+          for (final s in journey.stops)
+            _stop(context, c, t, style, version, s, ordinals),
+        ],
+      ),
+    );
+  }
+
+  Widget _header(WbColors c, WbType t, String text) => Container(
+        width: double.infinity,
+        color: c.chromeBg,
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+        child: Text(
+          text,
+          style: TextStyle(
+            fontSize: t.chrome,
+            fontWeight: FontWeight.w700,
+            color: c.mutedText,
+            fontFamilyFallback: kCjkFontFallback,
+          ),
+        ),
+      );
+
+  Widget _note(WbColors c, WbType t, String text) => Text(
+        text,
+        style: TextStyle(
+          fontSize: t.chrome - 0.5,
+          color: c.mutedText,
+          height: 1.4,
+          fontFamilyFallback: kCjkFontFallback,
+        ),
+      );
+
+  Widget _stop(
+    BuildContext context,
+    WbColors c,
+    WbType t,
+    JourneyStyle style,
+    String version,
+    ResolvedStop s,
+    Map<String, List<int>> ordinals,
+  ) {
+    final lit = s.place.id == selectedPlaceId;
+    final display = s.place.displayName(script);
+    final note = s.stop.localizedNote(locale);
+    final leg = _legWord(s.stop.leg);
+    final ref = PlaceRef(s.stop.englishBook, s.stop.chapter, s.stop.verse);
+    final refLabel = '${localeAwareBookName(s.stop.englishBook, locale, version)}'
+        ' ${s.stop.chapter}:${s.stop.verse}';
+
+    return InkWell(
+      onTap: () => onSelectStop(s.place.id),
+      hoverColor: c.hoverBg,
+      child: Container(
+        color: lit ? c.selectionBg : null,
+        padding: const EdgeInsets.fromLTRB(0, 5, 0, 5),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // The same badge the map draws, so a reader can carry a
+            // number from one to the other. Its own ordinal only — the
+            // map's joined `8,10` belongs on a marker that has to stand
+            // for two stops at one coordinate, and this list does not.
+            Container(
+              margin: const EdgeInsets.only(top: 1, right: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+              color: s.stop.attested
+                  ? style.colour
+                  : style.colour.withValues(alpha: 0.45),
+              child: Text(
+                '${s.ordinal}',
+                style: TextStyle(
+                  fontSize: t.chrome - 0.5,
+                  fontWeight: FontWeight.w700,
+                  height: 1.2,
+                  color: style.onColour,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+            ),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                    textBaseline: TextBaseline.alphabetic,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          display,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: t.text,
+                            fontWeight: FontWeight.w600,
+                            color: c.text,
+                            fontFamilyFallback: kCjkFontFallback,
+                          ),
+                        ),
+                      ),
+                      if (leg.isNotEmpty) ...[
+                        const SizedBox(width: 5),
+                        Text(
+                          leg,
+                          style: TextStyle(
+                            fontSize: t.chrome - 1,
+                            color: c.mutedText,
+                            fontFamilyFallback: kCjkFontFallback,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      // The warrant, and a way into it. A stop whose verse
+                      // the reader cannot open is an assertion.
+                      Material(
+                        color: c.paneBg,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.zero,
+                          side: BorderSide(
+                              color: c.border, width: WbMetrics.hairline),
+                        ),
+                        child: InkWell(
+                          onTap: () => onJump(ref),
+                          hoverColor: c.hoverBg,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 5, vertical: 2),
+                            child: Text(
+                              refLabel,
+                              style: TextStyle(
+                                fontSize: t.chrome,
+                                height: 1.0,
+                                color: c.link,
+                                fontFamilyFallback: kCjkFontFallback,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      if (!s.stop.attested) ...[
+                        const SizedBox(width: 4),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 4, vertical: 2),
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                                color: c.mutedText, width: WbMetrics.hairline),
+                          ),
+                          child: Text(
+                            _s('journeyProvisionalTag', 'Provisional'),
+                            style: TextStyle(
+                              fontSize: t.chrome - 1,
+                              height: 1.0,
+                              color: c.mutedText,
+                              fontFamilyFallback: kCjkFontFallback,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  if (note != null && note.isNotEmpty) ...[
+                    const SizedBox(height: 3),
+                    _note(c, t, note),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

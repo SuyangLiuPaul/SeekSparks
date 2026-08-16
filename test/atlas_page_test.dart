@@ -85,7 +85,7 @@ void main() {
     }
     expect(tester.takeException(), isNull);
 
-    // Syrian and Pisidian Antioch are 800 km apart and share a
+    // Syrian and Pisidian Antioch are 500 km apart and share a
     // spelling. bwh33's text search cannot tell them apart; the
     // gazetteer's ordinal can, so BOTH must survive the filter with
     // their numerals showing.
@@ -186,6 +186,61 @@ void main() {
     );
     expect(tester.takeException(), isNull);
     expect(find.textContaining('今址不详'), findsOneWidget);
+
+    await unmount(tester);
+  });
+
+  testWidgets('the journey overlays are switchable and carry their verses',
+      (tester) async {
+    await pump(tester, const Size(1440, 1000));
+    expect(tester.takeException(), isNull);
+
+    // The switches are present before anything is drawn: an overlay the
+    // reader cannot find is not an overlay (bwh33's Overlays window).
+    expect(find.text('行程'), findsOneWidget);
+    expect(find.text('保罗第一次宣教旅程'), findsOneWidget);
+    expect(find.text('保罗第二次宣教旅程'), findsOneWidget);
+
+    // Nothing drawn yet, so the standing caution is not printed either —
+    // a warning about a line that is not there teaches nothing.
+    expect(find.textContaining('不是他们走过的路'), findsNothing);
+
+    await tester.tap(find.text('保罗第一次宣教旅程'));
+    for (var i = 0; i < 4; i++) {
+      await tester.pump(const Duration(milliseconds: 80));
+    }
+    expect(tester.takeException(), isNull);
+
+    // #317's non-negotiables, on screen: the caution that a line is not a
+    // road, the source the itinerary is read out of, and a verse against
+    // every stop.
+    expect(find.textContaining('不是他们走过的路'), findsWidgets);
+    expect(find.text('这份行程的依据'), findsOneWidget);
+    expect(find.textContaining('使徒行传 13:1'), findsWidgets);
+    // The straight-line total is offered as a scale and says what it is.
+    expect(find.textContaining('不是实际行程'), findsOneWidget);
+
+    await unmount(tester);
+  });
+
+  testWidgets('a provisional stop is labelled rather than drawn as fact',
+      (tester) async {
+    await pump(tester, const Size(1440, 1000));
+
+    // The second journey is the one with stops the text does not put the
+    // travellers at — Iconium in 16:2 and Jerusalem in 18:22.
+    await tester.tap(find.text('保罗第二次宣教旅程'));
+    for (var i = 0; i < 6; i++) {
+      await tester.pump(const Duration(milliseconds: 80));
+    }
+    expect(tester.takeException(), isNull);
+
+    // Kept and marked, not dropped: a reader comparing this against a
+    // printed atlas needs to see where the printed atlas got its stop.
+    expect(find.text('推定'), findsWidgets);
+    // And the tag is never bare: the row says what the text does and does
+    // not say, which is the whole reason the stop is kept.
+    expect(find.textContaining('并未说他们到过以哥念'), findsOneWidget);
 
     await unmount(tester);
   });

@@ -14,7 +14,7 @@
 /// That last step is the weak link and it is worth being precise about
 /// why, because it is the thing this file replaces. A text search for
 /// "Antioch" cannot tell Syrian Antioch from Pisidian Antioch — they are
-/// 800 km apart and share a spelling — and it finds only the verses whose
+/// 500 km apart and share a spelling — and it finds only the verses whose
 /// *translation* used that spelling. The gazetteer holds the two as two
 /// sites with two locations, and its reference list is curated rather
 /// than spelled, so the same question is answered in any language the

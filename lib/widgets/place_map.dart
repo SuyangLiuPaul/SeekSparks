@@ -28,11 +28,13 @@ import 'package:flutter/gestures.dart' show PointerScrollEvent;
 import 'package:flutter/material.dart';
 
 import 'package:seeksparks/constants/book_name_mapping.dart' show BookScript;
+import 'package:seeksparks/constants/journey_style.dart';
 import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/bible_place.dart';
 import 'package:seeksparks/utils/atlas_index.dart' show labelPriority;
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
+import 'package:seeksparks/utils/journey_route.dart';
 import 'package:seeksparks/utils/place_geo.dart';
 
 /// Base geography, the places asked about, and a ruler between them.
@@ -50,8 +52,11 @@ class PlaceMapView extends StatefulWidget {
     this.onClose,
     this.showContext = true,
     this.onToggleContext,
+    this.routes = const <ResolvedJourney>[],
+    this.selectedRouteId,
     this.fitToken = 0,
     this.focusToken = 0,
+    this.fitPoints,
     this.attribution = '',
   });
 
@@ -100,7 +105,30 @@ class PlaceMapView extends StatefulWidget {
   /// is emphasised). The host bumps it when the *question* changes — a
   /// new search, a new scope — and not when the answer is merely
   /// re-rendered.
+  /// The journeys currently switched on, in draw order.
+  ///
+  /// An OVERLAY in bwh33's sense — a transparent sheet stacked over the
+  /// map, not a filter on it. So a route draws its own stops whether or
+  /// not the index's filter kept them: #319's rule is that the map must
+  /// not quietly redraw what a filter removed, and a layer the reader
+  /// switched on by name is not quiet.
+  final List<ResolvedJourney> routes;
+
+  /// The one being read. The others are held back rather than hidden, so
+  /// a crossing can still be seen for what it is.
+  final String? selectedRouteId;
+
   final int fitToken;
+
+  /// What the next fit should frame, when the host knows better than the
+  /// layers do — the stops of a journey just switched on, normally.
+  ///
+  /// Null hands the decision back to [emphasised] and [muted]. It has to
+  /// be the host's call because only the host knows which question
+  /// changed: with no search running the Atlas emphasises the entire
+  /// gazetteer, and fitting that would answer a route toggle with a view
+  /// of three continents.
+  final List<(double, double)>? fitPoints;
 
   /// Bump to bring [selectedId] into view without otherwise disturbing
   /// the reader's pan and zoom.
@@ -144,12 +172,35 @@ class _PlaceMapViewState extends State<PlaceMapView> {
   List<BiblePlace> get _context =>
       widget.showContext ? widget.muted : const <BiblePlace>[];
 
-  List<BiblePlace> get _located => <BiblePlace>[
-        for (final p in widget.emphasised)
-          if (p.located) p,
-        for (final p in _context)
-          if (p.located) p,
-      ];
+  /// Every place an active route stops at, first appearance first.
+  ///
+  /// Deduplicated across routes as well as within one: Syrian Antioch
+  /// opens and closes both of the shipped journeys.
+  List<BiblePlace> get _routePlaces {
+    final seen = <String>{};
+    return <BiblePlace>[
+      for (final r in widget.routes)
+        for (final m in r.markers)
+          if (seen.add(m.place.id)) m.place,
+    ];
+  }
+
+  /// Everything drawn and locatable, each place once.
+  ///
+  /// Deduplicated because a route's stops overlap the layers underneath
+  /// it, and a place counted twice would appear twice in the footer's
+  /// ruler as its own nearest neighbour at 0 km.
+  List<BiblePlace> get _located {
+    final seen = <String>{};
+    return <BiblePlace>[
+      for (final p in <BiblePlace>[
+        ...widget.emphasised,
+        ..._context,
+        ..._routePlaces,
+      ])
+        if (p.located && seen.add(p.id)) p,
+    ];
+  }
 
   int get _unlocatedCount =>
       widget.emphasised.where((p) => !p.located).length +
@@ -202,6 +253,9 @@ class _PlaceMapViewState extends State<PlaceMapView> {
   /// places, and an empty bounding box would otherwise project at
   /// infinite zoom and paint a blank pane that looks like a crash.
   MapProjection _fitted(Size size) {
+    final told = widget.fitPoints;
+    final asked = told == null ? null : boundsOf(told);
+    if (asked != null) return MapProjection.fit(asked.padded(), size);
     final subject = <(double, double)>[
       for (final p in widget.emphasised)
         if (p.located) (p.lat!, p.lon!),
@@ -344,6 +398,8 @@ class _PlaceMapViewState extends State<PlaceMapView> {
                         base: widget.baseMap,
                         emphasised: widget.emphasised,
                         muted: _context,
+                        routes: widget.routes,
+                        selectedRouteId: widget.selectedRouteId,
                         selectedId: widget.selectedId,
                         projection: proj,
                         script: widget.script,
@@ -630,19 +686,58 @@ class _MapPainter extends CustomPainter {
     required this.base,
     required this.emphasised,
     required this.muted,
+    required this.routes,
+    required this.selectedRouteId,
     required this.selectedId,
     required this.projection,
     required this.script,
     required this.colors,
     required this.labelSize,
-  }) : _labelOrder = labelPriority(emphasised, muted, selectedId: selectedId);
+  })  : _labelOrder = _orderLabels(emphasised, muted, routes, selectedId),
+        _lanes = corridorLanes(routes),
+        _routeSig = routes.map((r) => r.id).join(',');
 
   final BaseMap base;
   final List<BiblePlace> emphasised;
   final List<BiblePlace> muted;
+  final List<ResolvedJourney> routes;
+  final String? selectedRouteId;
+
+  /// Perpendicular offset per segment. See [corridorLanes].
+  final List<List<double>> _lanes;
+
+  /// Which routes are on, as a value rather than a list identity — the
+  /// host rebuilds this widget on every keystroke and hands over a fresh
+  /// list each time, so an identity check would repaint on nothing.
+  final String _routeSig;
 
   /// Who gets a label first. See [labelPriority].
   final List<BiblePlace> _labelOrder;
+
+  /// Route stops first, then [labelPriority]'s order.
+  ///
+  /// A stop the reader has switched a route on to see must not lose its
+  /// name to a place that merely has more references — which is what
+  /// would happen under the reference ranking alone, since the routes
+  /// pass through a good many small towns.
+  static List<BiblePlace> _orderLabels(
+    List<BiblePlace> emphasised,
+    List<BiblePlace> muted,
+    List<ResolvedJourney> routes,
+    String? selectedId,
+  ) {
+    final out = <BiblePlace>[];
+    final seen = <String>{};
+    for (final r in routes) {
+      for (final m in r.markers) {
+        if (seen.add(m.place.id)) out.add(m.place);
+      }
+    }
+    for (final p in labelPriority(emphasised, muted, selectedId: selectedId)) {
+      if (seen.add(p.id)) out.add(p);
+    }
+    return out;
+  }
 
   /// How many labels the painter will *attempt* per frame.
   ///
@@ -705,9 +800,20 @@ class _MapPainter extends CustomPainter {
     // drawing each layer complete meant the context layer claimed its
     // label rectangles first and could take the name off the very place
     // the reader was asking about.
+    // Lines under the dots, badges over them: a route passes THROUGH a
+    // place, and a line drawn across a marker says it passes over one.
+    _routeLines(canvas, size);
     _dots(canvas, size, muted, strong: false);
     _dots(canvas, size, emphasised, strong: true);
-    _labels(canvas, size, <String>{for (final p in emphasised) p.id});
+    _routeMarkers(canvas, size);
+    _labels(canvas, size, <String>{
+      for (final p in emphasised) p.id,
+      // A stop reads as strongly as anything else the reader asked for.
+      // Its name in context grey beside a full-strength badge would say
+      // the two were different answers.
+      for (final r in routes)
+        for (final m in r.markers) m.place.id,
+    });
   }
 
   Path _path(List<double> run, {bool close = false}) {
@@ -757,6 +863,214 @@ class _MapPainter extends CustomPainter {
       canvas.drawCircle(
           o, r + 1.6, Paint()..color = colors.paneBg.withValues(alpha: 0.9));
       canvas.drawCircle(o, r, fill);
+    }
+  }
+
+  /// Every route's legs, the one being read drawn last so a crossing
+  /// resolves in its favour.
+  void _routeLines(Canvas canvas, Size size) {
+    for (var i = 0; i < routes.length; i++) {
+      if (routes[i].id != selectedRouteId) _legsOf(canvas, size, i);
+    }
+    for (var i = 0; i < routes.length; i++) {
+      if (routes[i].id == selectedRouteId) _legsOf(canvas, size, i);
+    }
+  }
+
+  void _legsOf(Canvas canvas, Size size, int index) {
+    final r = routes[index];
+    final lanes = _lanes[index];
+    final style = journeyStyleFor(colors, r.journey.style);
+    final selected = r.id == selectedRouteId;
+    final dimmed = selectedRouteId != null && !selected;
+
+    for (var i = 0; i < r.segments.length; i++) {
+      final s = r.segments[i];
+      final a0 = projection.project(s.from.place.lat!, s.from.place.lon!);
+      final b0 = projection.project(s.to.place.lat!, s.to.place.lon!);
+      final span = b0 - a0;
+      final length = span.distance;
+      if (length < 0.01) continue;
+      // Shifted off the chord only where the chord is shared. See
+      // [corridorLanes].
+      final lane =
+          Offset(-span.dy / length, span.dx / length) * lanes[i];
+      final a = a0 + lane;
+      final b = b0 + lane;
+
+      final ink = style.colour.withValues(
+          alpha: journeyOpacity(attested: s.attested, dimmed: dimmed));
+      final paint = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.butt
+        ..strokeWidth =
+            journeyStrokeWidth(attested: s.attested, selected: selected)
+        ..color = ink;
+
+      _dashedLine(canvas, size, a, b, paint,
+          journeyDash(s.leg, attested: s.attested));
+      _arrowhead(canvas, size, a, b, ink, selected);
+    }
+  }
+
+  /// One leg, clipped to the pane and then dashed.
+  ///
+  /// Clipping FIRST is not an optimisation detail. At a city-block zoom a
+  /// leg is millions of pixels long, and a dash loop that walked all of
+  /// it would hang the frame; the alternative of drawing long lines solid
+  /// past some threshold is worse than slow, because solid means "the
+  /// text says they went by land" and the drawing would be lying at
+  /// exactly the zoom the reader looks closest at.
+  void _dashedLine(Canvas canvas, Size size, Offset a, Offset b, Paint paint,
+      List<double> pattern) {
+    final total = (b - a).distance;
+    final visible = _visibleRange(a, b, size);
+    if (visible == null) return;
+    final (from, to) = (visible.$1 * total, visible.$2 * total);
+    final dir = (b - a) / total;
+
+    if (pattern.isEmpty) {
+      canvas.drawLine(a + dir * from, a + dir * to, paint);
+      return;
+    }
+    final period = pattern[0] + pattern[1];
+    if (period <= 0) return;
+    // Phase is measured from the leg's own start rather than from the
+    // clip, so the dashes do not crawl along the line as the reader pans.
+    var t = (from / period).floorToDouble() * period;
+    while (t < to) {
+      final on0 = t < from ? from : t;
+      final on1 = t + pattern[0];
+      if (on1 > on0) {
+        canvas.drawLine(
+            a + dir * on0, a + dir * (on1 > to ? to : on1), paint);
+      }
+      t += period;
+    }
+  }
+
+  /// Which stretch of `a`→`b`, as a fraction of its length, is on screen.
+  /// Null when none of it is. Liang–Barsky.
+  (double, double)? _visibleRange(Offset a, Offset b, Size size) {
+    final r = Rect.fromLTWH(-8, -8, size.width + 16, size.height + 16);
+    final dx = b.dx - a.dx;
+    final dy = b.dy - a.dy;
+    var t0 = 0.0;
+    var t1 = 1.0;
+    for (final (p, q) in <(double, double)>[
+      (-dx, a.dx - r.left),
+      (dx, r.right - a.dx),
+      (-dy, a.dy - r.top),
+      (dy, r.bottom - a.dy),
+    ]) {
+      if (p == 0) {
+        if (q < 0) return null;
+        continue;
+      }
+      final t = q / p;
+      if (p < 0) {
+        if (t > t1) return null;
+        if (t > t0) t0 = t;
+      } else {
+        if (t < t0) return null;
+        if (t < t1) t1 = t;
+      }
+    }
+    return (t0, t1);
+  }
+
+  /// A small filled triangle at the midpoint of the visible stretch,
+  /// pointing the way they travelled.
+  ///
+  /// bwh33 offers "Draw arrowhead" on a polyline and it is worth having
+  /// for the same reason: a numbered marker says the ORDER of the stops,
+  /// but only where the numbers are legible, and at a zoom where two of
+  /// them are off screen the arrow is the only thing left saying which
+  /// way the leg runs.
+  void _arrowhead(
+      Canvas canvas, Size size, Offset a, Offset b, Color ink, bool selected) {
+    final total = (b - a).distance;
+    final visible = _visibleRange(a, b, size);
+    if (visible == null) return;
+    final from = visible.$1 * total;
+    final to = visible.$2 * total;
+    // Under about 18 px there is no room for a head that would not
+    // swallow the leg it sits on.
+    if (to - from < 18) return;
+    final dir = (b - a) / total;
+    final at = a + dir * ((from + to) / 2);
+    final n = Offset(-dir.dy, dir.dx);
+    final h = selected ? 5.2 : 4.4;
+    final w = h * 0.6;
+    final tail = at - dir * (h * 0.45);
+    canvas.drawPath(
+      Path()
+        ..moveTo(at.dx + dir.dx * h * 0.55, at.dy + dir.dy * h * 0.55)
+        ..lineTo(tail.dx + n.dx * w, tail.dy + n.dy * w)
+        ..lineTo(tail.dx - n.dx * w, tail.dy - n.dy * w)
+        ..close(),
+      Paint()
+        ..style = PaintingStyle.fill
+        ..color = ink,
+    );
+  }
+
+  /// A dot and a numbered badge at each stop.
+  ///
+  /// The badge carries every ordinal the place holds on that route —
+  /// Lystra reads `8,10` — because two badges at one coordinate overprint
+  /// into a smudge, and because the doubling back is the thing worth
+  /// saying. Badges from different routes stack upwards rather than
+  /// overprint, so a place on both journeys shows both itineraries'
+  /// numbering.
+  void _routeMarkers(Canvas canvas, Size size) {
+    for (var i = 0; i < routes.length; i++) {
+      final r = routes[i];
+      final style = journeyStyleFor(colors, r.journey.style);
+      final faded =
+          selectedRouteId != null && r.id != selectedRouteId ? 0.5 : 1.0;
+      final ordinals = r.ordinalsByPlace;
+
+      for (final m in r.markers) {
+        final o = projection.project(m.place.lat!, m.place.lon!);
+        if (_offPane(o, size)) continue;
+
+        canvas.drawCircle(o, 4.8,
+            Paint()..color = colors.paneBg.withValues(alpha: 0.9 * faded));
+        canvas.drawCircle(
+            o, 3.2, Paint()..color = style.colour.withValues(alpha: faded));
+
+        final tp = TextPainter(
+          text: TextSpan(
+            text: (ordinals[m.place.id] ?? const <int>[]).join(','),
+            style: TextStyle(
+              fontSize: labelSize - 2,
+              fontWeight: FontWeight.w700,
+              color: style.onColour.withValues(alpha: faded),
+              height: 1.0,
+            ),
+          ),
+          textDirection: TextDirection.ltr,
+          maxLines: 1,
+        )..layout();
+
+        final w = tp.width + 6;
+        final h = tp.height + 3;
+        final rect = Rect.fromLTWH(
+          o.dx - w / 2,
+          o.dy - 8 - h - i * (h + 2),
+          w,
+          h,
+        );
+        canvas.drawRect(
+            rect, Paint()..color = style.colour.withValues(alpha: faded));
+        tp.paint(canvas, Offset(rect.left + 3, rect.top + 1.5));
+        // Claimed so a passing name does not print over the numbers. The
+        // stop's own label sits to the RIGHT at the dot's height, clear
+        // of a badge that sits above it, so this never costs the stop its
+        // own name.
+        _claimed.add(rect.inflate(1));
+      }
     }
   }
 
@@ -819,5 +1133,7 @@ class _MapPainter extends CustomPainter {
       old.selectedId != selectedId ||
       old.emphasised != emphasised ||
       old.muted != muted ||
+      old._routeSig != _routeSig ||
+      old.selectedRouteId != selectedRouteId ||
       old.script != script;
 }

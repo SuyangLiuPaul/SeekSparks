@@ -1,0 +1,358 @@
+{
+ "schemaVersion": 1,
+ "note": "Journey overlays for the Bible Atlas. A journey is an ORDERED list of stops, each joined to assets/bible_places.json by its `place` id and each citing the verse that puts it on the itinerary. A place may appear more than once: these itineraries double back. `leg` describes how the travellers reached THIS stop from the previous one and is taken from the verb the text uses - a sailing verb gives `sea`, a verb of going gives `land`, and `unknown` is used where the text will not say. `attested` is false where the text does not place the travellers at the stop at all; such a stop is drawn provisionally and says why. No coordinate is stored here - they all come from the gazetteer, so a route can never invent a location.",
+ "journeys": [
+  {
+   "id": "paul-1",
+   "style": 0,
+   "name": {
+    "en": "Paul's first journey",
+    "zh-Hans": "保罗第一次宣教旅程",
+    "zh-Hant": "保羅第一次宣教旅程"
+   },
+   "range": {
+    "en": "Acts 13:1 – 14:28",
+    "zh-Hans": "使徒行传 13:1 – 14:28",
+    "zh-Hant": "使徒行傳 13:1 – 14:28"
+   },
+   "basis": {
+    "en": "The stops and their order are read out of Acts 13-14, which states the itinerary; every stop cites the verse that puts it there. Coordinates come from the gazetteer, not from this route.",
+    "zh-Hans": "站点及其次序取自使徒行传13-14章的行程记述，每一站都注明出处经文。坐标取自地名录，不由本路线另行提供。",
+    "zh-Hant": "站點及其次序取自使徒行傳13-14章的行程記述，每一站都註明出處經文。座標取自地名錄，不由本路線另行提供。"
+   },
+   "stops": [
+    {
+     "place": "Antioch 1",
+     "book": "Acts",
+     "chapter": 13,
+     "verse": 1,
+     "leg": "start",
+     "note": {
+      "en": "Syrian Antioch, on the Orontes - the church that sent them out.",
+      "zh-Hans": "叙利亚的安提阿，在奥龙特斯河畔，就是差遣他们出去的教会所在。",
+      "zh-Hant": "敘利亞的安提阿，在奧龍特斯河畔，就是差遣他們出去的教會所在。"
+     }
+    },
+    {
+     "place": "Seleucia",
+     "book": "Acts",
+     "chapter": 13,
+     "verse": 4,
+     "leg": "land",
+     "note": {
+      "en": "Antioch's port, about 24 km down the river.",
+      "zh-Hans": "安提阿的港口，顺河而下约24公里。",
+      "zh-Hant": "安提阿的港口，順河而下約24公里。"
+     }
+    },
+    {
+     "place": "Salamis",
+     "book": "Acts",
+     "chapter": 13,
+     "verse": 5,
+     "leg": "sea"
+    },
+    {
+     "place": "Paphos",
+     "book": "Acts",
+     "chapter": 13,
+     "verse": 6,
+     "leg": "land",
+     "note": {
+      "en": "13:6 says they went through the whole island, so the crossing of Cyprus was overland.",
+      "zh-Hans": "13:6说他们经过全岛，可见横越塞浦路斯是走陆路。",
+      "zh-Hant": "13:6說他們經過全島，可見橫越塞浦路斯是走陸路。"
+     }
+    },
+    {
+     "place": "Perga",
+     "book": "Acts",
+     "chapter": 13,
+     "verse": 13,
+     "leg": "sea",
+     "note": {
+      "en": "Perga lies inland on the Cestrus. The text says only that they set sail from Paphos and came to Perga.",
+      "zh-Hans": "别加在凯斯特河的内陆。经文只说他们从帕弗开船，来到别加。",
+      "zh-Hant": "別加在凱斯特河的內陸。經文只說他們從帕弗開船，來到別加。"
+     }
+    },
+    {
+     "place": "Antioch 2",
+     "book": "Acts",
+     "chapter": 13,
+     "verse": 14,
+     "leg": "land",
+     "note": {
+      "en": "Pisidian Antioch, as 13:14 names it - a different city from the Antioch they set out from, about 500 km away.",
+      "zh-Hans": "彼西底的安提阿，13:14如此称呼。与他们出发的安提阿是两座城，相距约500公里。",
+      "zh-Hant": "彼西底的安提阿，13:14如此稱呼。與他們出發的安提阿是兩座城，相距約500公里。"
+     }
+    },
+    {
+     "place": "Iconium",
+     "book": "Acts",
+     "chapter": 13,
+     "verse": 51,
+     "leg": "land"
+    },
+    {
+     "place": "Lystra",
+     "book": "Acts",
+     "chapter": 14,
+     "verse": 6,
+     "leg": "land"
+    },
+    {
+     "place": "Derbe",
+     "book": "Acts",
+     "chapter": 14,
+     "verse": 20,
+     "leg": "land"
+    },
+    {
+     "place": "Lystra",
+     "book": "Acts",
+     "chapter": 14,
+     "verse": 21,
+     "leg": "land",
+     "note": {
+      "en": "The return leg: 14:21, they went back to Lystra, Iconium and Antioch.",
+      "zh-Hans": "回程：14:21，他们回到路司得、以哥念、安提阿。",
+      "zh-Hant": "回程：14:21，他們回到路司得、以哥念、安提阿。"
+     }
+    },
+    {
+     "place": "Iconium",
+     "book": "Acts",
+     "chapter": 14,
+     "verse": 21,
+     "leg": "land"
+    },
+    {
+     "place": "Antioch 2",
+     "book": "Acts",
+     "chapter": 14,
+     "verse": 21,
+     "leg": "land"
+    },
+    {
+     "place": "Perga",
+     "book": "Acts",
+     "chapter": 14,
+     "verse": 25,
+     "leg": "land",
+     "note": {
+      "en": "14:24 - they passed through Pisidia and came to Pamphylia. The text names the regions, not the towns between.",
+      "zh-Hans": "14:24——他们经过彼西底，来到旁非利亚。经文所记的是地区，不是沿途城镇。",
+      "zh-Hant": "14:24——他們經過彼西底，來到旁非利亞。經文所記的是地區，不是沿途城鎮。"
+     }
+    },
+    {
+     "place": "Attalia",
+     "book": "Acts",
+     "chapter": 14,
+     "verse": 25,
+     "leg": "land"
+    },
+    {
+     "place": "Antioch 1",
+     "book": "Acts",
+     "chapter": 14,
+     "verse": 26,
+     "leg": "sea"
+    }
+   ]
+  },
+  {
+   "id": "paul-2",
+   "style": 1,
+   "name": {
+    "en": "Paul's second journey",
+    "zh-Hans": "保罗第二次宣教旅程",
+    "zh-Hant": "保羅第二次宣教旅程"
+   },
+   "range": {
+    "en": "Acts 15:40 – 18:22",
+    "zh-Hans": "使徒行传 15:40 – 18:22",
+    "zh-Hant": "使徒行傳 15:40 – 18:22"
+   },
+   "basis": {
+    "en": "The stops and their order are read out of Acts 15:40-18:22. Two of them are drawn provisionally because the text does not put the travellers there; both say so on their own row.",
+    "zh-Hans": "站点及其次序取自使徒行传15:40-18:22。其中两站是暂定的，因为经文并未说他们到过那里；两站各自都注明了。",
+    "zh-Hant": "站點及其次序取自使徒行傳15:40-18:22。其中兩站是暫定的，因為經文並未說他們到過那裡；兩站各自都註明了。"
+   },
+   "stops": [
+    {
+     "place": "Antioch 1",
+     "book": "Acts",
+     "chapter": 15,
+     "verse": 40,
+     "leg": "start",
+     "note": {
+      "en": "Paul chose Silas and set out. Barnabas and Mark sailed for Cyprus instead (15:39); that parting is not drawn here.",
+      "zh-Hans": "保罗拣选西拉起行。巴拿巴带着马可另行开船往塞浦路斯去（15:39），那一路本图未画。",
+      "zh-Hant": "保羅揀選西拉起行。巴拿巴帶著馬可另行開船往塞浦路斯去（15:39），那一路本圖未畫。"
+     }
+    },
+    {
+     "place": "Derbe",
+     "book": "Acts",
+     "chapter": 16,
+     "verse": 1,
+     "leg": "land",
+     "note": {
+      "en": "15:41 - the road ran through Syria and Cilicia. The text names the provinces, not the towns.",
+      "zh-Hans": "15:41——路经叙利亚、基利家。经文所记的是省份，不是城镇。",
+      "zh-Hant": "15:41——路經敘利亞、基利家。經文所記的是省份，不是城鎮。"
+     }
+    },
+    {
+     "place": "Lystra",
+     "book": "Acts",
+     "chapter": 16,
+     "verse": 1,
+     "leg": "land"
+    },
+    {
+     "place": "Iconium",
+     "book": "Acts",
+     "chapter": 16,
+     "verse": 2,
+     "leg": "land",
+     "attested": false,
+     "note": {
+      "en": "16:2 reports Timothy's standing in Lystra and Iconium; it does not say they travelled there. Drawn provisionally.",
+      "zh-Hans": "16:2记的是提摩太在路司得、以哥念被称赞，并未说他们到过以哥念。此站暂定。",
+      "zh-Hant": "16:2記的是提摩太在路司得、以哥念被稱讚，並未說他們到過以哥念。此站暫定。"
+     }
+    },
+    {
+     "place": "Troas",
+     "book": "Acts",
+     "chapter": 16,
+     "verse": 8,
+     "leg": "land",
+     "note": {
+      "en": "16:6-8 - through Phrygia and Galatia and past Mysia. The text names regions, not stops.",
+      "zh-Hans": "16:6-8——经过弗吕家、加拉太，越过每西亚。经文所记的是地区，不是站点。",
+      "zh-Hant": "16:6-8——經過弗呂家、加拉太，越過每西亞。經文所記的是地區，不是站點。"
+     }
+    },
+    {
+     "place": "Samothrace",
+     "book": "Acts",
+     "chapter": 16,
+     "verse": 11,
+     "leg": "sea"
+    },
+    {
+     "place": "Neapolis",
+     "book": "Acts",
+     "chapter": 16,
+     "verse": 11,
+     "leg": "sea"
+    },
+    {
+     "place": "Philippi",
+     "book": "Acts",
+     "chapter": 16,
+     "verse": 12,
+     "leg": "land"
+    },
+    {
+     "place": "Amphipolis",
+     "book": "Acts",
+     "chapter": 17,
+     "verse": 1,
+     "leg": "land"
+    },
+    {
+     "place": "Apollonia",
+     "book": "Acts",
+     "chapter": 17,
+     "verse": 1,
+     "leg": "land"
+    },
+    {
+     "place": "Thessalonica",
+     "book": "Acts",
+     "chapter": 17,
+     "verse": 1,
+     "leg": "land"
+    },
+    {
+     "place": "Berea",
+     "book": "Acts",
+     "chapter": 17,
+     "verse": 10,
+     "leg": "land"
+    },
+    {
+     "place": "Athens",
+     "book": "Acts",
+     "chapter": 17,
+     "verse": 15,
+     "leg": "unknown",
+     "note": {
+      "en": "17:14 - the brothers sent Paul as far as the sea. Whether he went on by ship or by road is not said.",
+      "zh-Hans": "17:14——弟兄们送保罗直到海边。他此后是坐船还是走陆路，经文没有说。",
+      "zh-Hant": "17:14——弟兄們送保羅直到海邊。他此後是坐船還是走陸路，經文沒有說。"
+     }
+    },
+    {
+     "place": "Corinth",
+     "book": "Acts",
+     "chapter": 18,
+     "verse": 1,
+     "leg": "land"
+    },
+    {
+     "place": "Cenchreae",
+     "book": "Acts",
+     "chapter": 18,
+     "verse": 18,
+     "leg": "land",
+     "note": {
+      "en": "Corinth's eastern port, about 11 km away.",
+      "zh-Hans": "哥林多东面的港口，相距约11公里。",
+      "zh-Hant": "哥林多東面的港口，相距約11公里。"
+     }
+    },
+    {
+     "place": "Ephesus",
+     "book": "Acts",
+     "chapter": 18,
+     "verse": 19,
+     "leg": "sea"
+    },
+    {
+     "place": "Caesarea",
+     "book": "Acts",
+     "chapter": 18,
+     "verse": 22,
+     "leg": "sea"
+    },
+    {
+     "place": "Jerusalem",
+     "book": "Acts",
+     "chapter": 18,
+     "verse": 22,
+     "leg": "land",
+     "attested": false,
+     "note": {
+      "en": "18:22 says only that he went up and greeted the church - the Greek names no city. BSB supplies Jerusalem; KJV and LEB do not.",
+      "zh-Hans": "18:22只说他上去问教会安，希腊原文没有提城名。BSB补上了「耶路撒冷」，KJV与LEB没有。",
+      "zh-Hant": "18:22只說他上去問教會安，希臘原文沒有提城名。BSB補上了「耶路撒冷」，KJV與LEB沒有。"
+     }
+    },
+    {
+     "place": "Antioch 1",
+     "book": "Acts",
+     "chapter": 18,
+     "verse": 22,
+     "leg": "land"
+    }
+   ]
+  }
+ ]
+}
