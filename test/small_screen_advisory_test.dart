@@ -10,11 +10,14 @@
 /// providers at all.
 library;
 
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
 import 'package:seeksparks/constants/app_version.dart';
+import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/utils/workbench_fit.dart';
@@ -495,4 +498,112 @@ void main() {
       expect(find.byType(SmallScreenAdvisory), findsOneWidget);
     });
   });
+
+  group('every word on the wall is legible, in both brightnesses', () {
+    // #316 asks for light AND dark. Light is verified by screenshot on
+    // the deploy; dark is verified here, because Chrome's
+    // `Emulation.setEmulatedMedia` does not reach Flutter's
+    // platformBrightness through the CDP harness — `matchMedia` flips to
+    // dark and the app keeps painting light, so a "dark screenshot" from
+    // that harness would be a light screenshot with a false label.
+    //
+    // `RichText` is the hook rather than `Text`: by the time a Text has
+    // become a RichText its style is FULLY resolved — theme defaults,
+    // DefaultTextStyle and the widget's own copyWith all folded in. That
+    // is the colour the reader actually sees, and it is the only one
+    // worth asserting on. A `Text.style` assertion would have passed
+    // through the whole tofu defect.
+    Future<void> pumpThemed(WidgetTester tester, Brightness b) async {
+      tester.view.devicePixelRatio = 1.0;
+      tester.view.physicalSize = const Size(949, 1375);
+      const size = Size(949, 1375);
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: workbenchTheme(ThemeData(brightness: b)),
+          home: SmallScreenAdvisory(
+            advice: WorkbenchFit.adviceFor(
+              width: size.width,
+              height: size.height,
+              dismissed: false,
+            ),
+            size: size,
+            locale: 'zh-Hans',
+            onLocale: (_) {},
+            onContinue: () {},
+          ),
+        ),
+      );
+      await tester.pump();
+    }
+
+    for (final (label, brightness) in const [
+      ('light', Brightness.light),
+      ('dark', Brightness.dark),
+    ]) {
+      testWidgets('$label: nothing is painted onto its own colour',
+          (tester) async {
+        addTearDown(tester.view.reset);
+        await pumpThemed(tester, brightness);
+
+        final scaffold = tester.widget<Scaffold>(find.byType(Scaffold));
+        final bg = scaffold.backgroundColor!;
+        final faint = <String>[];
+        var judged = 0;
+
+        for (final rt in tester.widgetList<RichText>(find.byType(RichText))) {
+          final span = rt.text as TextSpan;
+          final text = span.toPlainText();
+          if (text.trim().isEmpty) continue;
+          final colour = span.style?.color;
+          if (colour == null) continue;
+          judged++;
+          final ratio = _contrast(_over(colour, bg), bg);
+          // 3:1 — the WCAG floor for large text and for UI components.
+          // Deliberately not 4.5: the muted aside, the inactive language
+          // buttons and the version footer are all meant to recede, and
+          // a rule that forbids that would be a rule about taste. 3:1
+          // still forbids the failure this guards against, which is text
+          // that has effectively vanished.
+          if (ratio < 3.0) {
+            faint.add('"${text.length > 24 ? '${text.substring(0, 24)}…' : text}"'
+                ' at ${ratio.toStringAsFixed(2)}:1');
+          }
+        }
+
+        // Without this the group is a tautology: if the walk ever finds
+        // nothing — a refactor to SelectableText, a colour left to the
+        // theme — `faint` is empty and the test reports success having
+        // looked at nothing. The wall carries the instruction, the
+        // numbers, the title, the lead, the aside, the button, the
+        // version and three language labels.
+        expect(judged, greaterThanOrEqualTo(8),
+            reason: 'the contrast walk found only $judged coloured strings; '
+                'it is no longer reading the screen it claims to check');
+
+        expect(faint, isEmpty,
+            reason: 'this is a HARD GATE — the reader cannot reach Settings '
+                'from here to fix the contrast, so anything they cannot '
+                'read on this screen they cannot read at all:\n'
+                '${faint.join('\n')}');
+      });
+    }
+  });
+}
+
+/// [fg] composited over [bg], so a colour carrying an alpha is judged as
+/// it is seen rather than as it is written.
+Color _over(Color fg, Color bg) {
+  final a = fg.a;
+  return Color.from(
+    alpha: 1.0,
+    red: fg.r * a + bg.r * (1 - a),
+    green: fg.g * a + bg.g * (1 - a),
+    blue: fg.b * a + bg.b * (1 - a),
+  );
+}
+
+double _contrast(Color a, Color b) {
+  final la = a.computeLuminance();
+  final lb = b.computeLuminance();
+  return (math.max(la, lb) + 0.05) / (math.min(la, lb) + 0.05);
 }
