@@ -15,9 +15,16 @@
 /// why, because it is the thing this file replaces. A text search for
 /// "Antioch" cannot tell Syrian Antioch from Pisidian Antioch — they are
 /// 800 km apart and share a spelling — and it finds only the verses whose
-/// *translation* used that spelling. The gazetteer carries a curated
-/// reference list per site, ordinal included, so the same question is
-/// answered exactly and in any language the reader is reading in.
+/// *translation* used that spelling. The gazetteer holds the two as two
+/// sites with two locations, and its reference list is curated rather
+/// than spelled, so the same question is answered in any language the
+/// reader is reading in.
+///
+/// What it does **not** do is divide the verses between them, and this
+/// file used to claim it did. Of the 80 groups that share a name and
+/// carry a disambiguating ordinal, 66 hold byte-identical reference
+/// lists and the other 14 all overlap: not one partitions cleanly.
+/// `docs/DATA-INTEGRITY.md` check 38 has the measurement.
 ///
 /// Everything here is pure: no Flutter, no assets. The parts that are
 /// easy to get quietly wrong — which name matched, what "in scope" means,

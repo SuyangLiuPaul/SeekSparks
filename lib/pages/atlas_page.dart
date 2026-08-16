@@ -22,9 +22,18 @@
 ///
 ///   1. It cannot tell Syrian Antioch from Pisidian Antioch. They are
 ///      800 km apart and spelled identically, so the search returns both
-///      cities' verses under either pin. The gazetteer carries a curated
-///      per-site reference list with the disambiguating ordinal, so
-///      `Antioch 1` and `Antioch 2` answer separately and correctly.
+///      cities' verses under one pin, at one set of coordinates. The
+///      gazetteer keeps them as two entries with two locations, and this
+///      page draws both.
+///
+///      It does NOT divide the verses between them, and this file used
+///      to say it did. Measured: of the gazetteer's 80 ordinal groups,
+///      66 carry byte-identical reference lists — `Antioch 1` and
+///      `Antioch 2` have the same 18 — and all 14 of the rest overlap.
+///      Not one is a clean partition. The ordinal separates the SITES;
+///      the reference list is shared, and saying otherwise was a claim
+///      read off the shape of the data rather than out of it. See
+///      `docs/DATA-INTEGRITY.md` check 38.
 ///   2. It is English-only, because the maps database is indexed in
 ///      English. A reader in CUVS gets nothing. Here the index searches
 ///      English, Simplified and Traditional names at once whatever the
@@ -49,19 +58,25 @@ import 'package:seeksparks/constants/book_name_mapping.dart'
 import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/app_settings.dart';
+import 'package:seeksparks/models/bible_map.dart';
 import 'package:seeksparks/models/bible_place.dart';
+import 'package:seeksparks/pages/map_viewer_page.dart';
 import 'package:seeksparks/providers/main_provider.dart';
+import 'package:seeksparks/services/map_service.dart';
 import 'package:seeksparks/services/places_service.dart';
+import 'package:seeksparks/utils/app_nav.dart';
 import 'package:seeksparks/utils/atlas_index.dart';
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 import 'package:seeksparks/utils/jump_to_reference.dart' as jumper;
 import 'package:seeksparks/utils/navigate_to_reader.dart';
 import 'package:seeksparks/utils/place_geo.dart' show BaseMap;
+import 'package:seeksparks/utils/place_illustrations.dart';
 import 'package:seeksparks/utils/reference_parser.dart' show parseReference;
 import 'package:seeksparks/utils/search_scope.dart'
     show limitSpecForBooks, scopeDisplayName, scopedCountLabel;
 import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
 import 'package:seeksparks/widgets/home_icon_button.dart';
+import 'package:seeksparks/widgets/illustration_image.dart';
 import 'package:seeksparks/widgets/language_switcher_button.dart';
 import 'package:seeksparks/widgets/localized_back_button.dart';
 import 'package:seeksparks/widgets/place_map.dart';
@@ -134,6 +149,11 @@ class _AtlasPageState extends State<AtlasPage> {
   int _fitToken = 0;
   int _focusToken = 0;
 
+  /// The picture database (#320). Null until it lands, which is a state
+  /// the panel must be able to tell from "this place has no plates" —
+  /// hence a nullable list rather than an empty one.
+  List<BibleMap>? _plates;
+
   @override
   void initState() {
     super.initState();
@@ -153,6 +173,13 @@ class _AtlasPageState extends State<AtlasPage> {
         if (!mounted) return;
         setState(() => _base = m);
         if (_selectedId != null) _focusToken++;
+        // Last of the three, for the same reason the base map is second:
+        // `maps_index.json` is 1 MB and nothing on this page needs it
+        // until a place is selected.
+        MapService.loadMaps().then((plates) {
+          if (!mounted) return;
+          setState(() => _plates = plates);
+        });
       });
     });
   }
@@ -273,6 +300,7 @@ class _AtlasPageState extends State<AtlasPage> {
             place: place,
             locale: locale,
             script: script,
+            plates: _plates,
             scopeBooks: _scopeBooks,
             scopeLabel: _scopeLabelFor(locale, version),
             onClearScope: _scopeBooks == null
@@ -384,6 +412,7 @@ class _AtlasPageState extends State<AtlasPage> {
                           place: selected,
                           locale: locale,
                           script: script,
+                          plates: _plates,
                           scopeBooks: _scopeBooks,
                           scopeLabel: _scopeLabelFor(locale, version),
                           onClearScope: _scopeBooks == null
@@ -807,6 +836,7 @@ class _DetailPanel extends StatelessWidget {
     required this.place,
     required this.locale,
     required this.script,
+    required this.plates,
     required this.scopeBooks,
     required this.scopeLabel,
     required this.onClearScope,
@@ -817,6 +847,12 @@ class _DetailPanel extends StatelessWidget {
   final BiblePlace place;
   final String locale;
   final BookScript script;
+
+  /// The picture database, or null while it is still loading. Both draw
+  /// no strip, and neither states anything — the strip's absence is
+  /// silence, not the claim that no plate names this place.
+  final List<BibleMap>? plates;
+
   final Set<String>? scopeBooks;
 
   /// [scopeBooks] as the reader saw it named on the filter button.
@@ -881,6 +917,9 @@ class _DetailPanel extends StatelessWidget {
               fontFamilyFallback: kCjkFontFallback,
             ),
           ),
+          // Above the references, not below: Jerusalem carries 755 of
+          // them, and a strip under that is a strip nobody reaches.
+          _illustrations(context, c, t),
           const SizedBox(height: 10),
           Container(
             color: c.chromeBg,
@@ -966,6 +1005,97 @@ class _DetailPanel extends StatelessWidget {
   /// `31.78° N, 35.23° E`. Hemisphere letters rather than a minus sign:
   /// every biblical site is north and east, so a lone `-` would read as
   /// a typo rather than as a hemisphere.
+  /// The plates that name this place (#320), or nothing at all.
+  ///
+  /// "Naming it" is the whole claim, and the header says so rather than
+  /// calling them pictures OF the place: the join is a caption match
+  /// gated by chapter, and the gazetteer's ordinal cannot survive it
+  /// because 66 of its 80 ordinal groups share one reference list. See
+  /// `utils/place_illustrations.dart` for the measurement.
+  Widget _illustrations(BuildContext context, WbColors c, WbType t) {
+    final all = plates;
+    if (all == null) return const SizedBox.shrink();
+    final found = placeIllustrations(place, all, scopeBooks: scopeBooks);
+    if (found.inScope.isEmpty) return const SizedBox.shrink();
+    final title = _s('atlasIllusHeader', '{n} illustrations naming it')
+        .replaceAll(
+            '{n}', scopedCountLabel(found.inScope.length, found.total));
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const SizedBox(height: 10),
+        Container(
+          color: c.chromeBg,
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+          child: Text(
+            title,
+            style: TextStyle(
+              fontSize: t.chrome,
+              fontWeight: FontWeight.w700,
+              color: c.mutedText,
+              fontFamilyFallback: kCjkFontFallback,
+            ),
+          ),
+        ),
+        const SizedBox(height: 6),
+        SizedBox(
+          height: 74,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: found.inScope.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 6),
+            itemBuilder: (_, i) => _plate(c, found.inScope, i, title),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// One thumbnail. The caption and the #300 credit are in the viewer it
+  /// opens, which is where a plate can be read rather than glanced at.
+  Widget _plate(WbColors c, List<BibleMap> strip, int i, String stripTitle) {
+    final m = strip[i];
+    return Tooltip(
+      message: m.localizedTitle(locale),
+      child: Material(
+        color: c.paneAltBg,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.zero,
+          side: BorderSide(color: c.border, width: WbMetrics.hairline),
+        ),
+        child: InkWell(
+          onTap: () => pushPage(MapViewerPage(
+            map: m,
+            locale: locale,
+            // The arrow keys walk this place's plates, not the whole
+            // corpus, and the viewer's title says which list that is.
+            relatedMaps: strip,
+            stripTitle: stripTitle,
+          )),
+          hoverColor: c.hoverBg,
+          splashColor: Colors.transparent,
+          highlightColor: Colors.transparent,
+          child: SizedBox(
+            width: 98,
+            child: IllustrationImage(
+              map: m,
+              thumb: true,
+              fit: BoxFit.cover,
+              // Same reasoning as the Illustrations grid: the bundled
+              // survey plates are up to 2.4 MB each and several share
+              // this strip.
+              cacheWidth: 220,
+              errorBuilder: (_) => Icon(Icons.image_not_supported_outlined,
+                  size: 18, color: c.mutedText),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   String _coordinates(BiblePlace p) {
     final lat = p.lat!;
     final lon = p.lon!;

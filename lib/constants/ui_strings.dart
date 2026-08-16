@@ -7589,6 +7589,15 @@ const uiStrings = {
     'zh-Hant': '經文出處 {n} 處',
     'en': '{n} references',
   },
+  // #320. "Naming it" and not "of it" is the measured claim: the plates
+  // are joined by a caption match gated on chapter, so what they share
+  // with the place is its NAME. Saying "pictures of Bethlehem" would
+  // promise a curation the corpus does not carry.
+  'atlasIllusHeader': {
+    'zh-Hans': '提及此地的插图 {n} 张',
+    'zh-Hant': '提及此地的插畫 {n} 張',
+    'en': '{n} illustrations naming it',
+  },
   // Names the scope rather than calling it "the current scope": a
   // message about a filter that will not say which filter leaves the
   // reader to guess what it was they set (#280).

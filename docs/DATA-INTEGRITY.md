@@ -4122,6 +4122,137 @@ are one sub-check that cannot discriminate**:
 
 ---
 
+## Check 38 — the ordinal that was said to separate two cities
+
+This one was not on any list. It came out of #320, which asked whether
+the picture database could be joined to the gazetteer, and the join's
+first question — *what exactly is a place record allowed to claim?* —
+turned out to have a false answer already shipped in the app's own source.
+
+Two files said it. `lib/pages/atlas_page.dart` opened by naming the thing
+the Atlas does better than BibleWorks' Find Place window:
+
+> It cannot tell Syrian Antioch from Pisidian Antioch. […] The gazetteer
+> carries a curated per-site reference list with the disambiguating
+> ordinal, so `Antioch 1` and `Antioch 2` answer separately and correctly.
+
+`lib/utils/atlas_index.dart` made the same claim in its own words. Both
+were written from the *shape* of the data — the ordinal exists, each
+entry has its own `refs` array — and neither was ever measured.
+
+### What the gazetteer actually carries
+
+Measured through `parseGazetteer`, so every repair the app applies is
+applied first. **80** groups of entries share a name and carry a
+disambiguating ordinal. Of those:
+
+- **66 groups, 131 entries, carry byte-identical reference lists.** Not
+  similar — identical. `Antioch 1` and `Antioch 2` have **18 references
+  each and they are the same 18**. Bethany 1 and Bethany 2 likewise.
+- **14 groups differ**, and **all 14 still overlap** — every one has at
+  least one reference filed under two of its own members. They are
+  Aphek, Aroer, Beth-shemesh, Debir, Etam, Hazor, Kedesh, Mizpah,
+  Mizpeh, Ramah, Ramoth, Rehob, Rimmon and Tabor.
+
+So **not one of the 80 groups partitions its references cleanly**, and
+the sentence "answer separately and correctly" was false for all of them.
+What the ordinal records is that two *sites* exist. It does not record
+which verse belongs to which, and no amount of reading the asset will
+make it.
+
+### Why nothing was repaired
+
+Deciding that Acts 11:19 means Syrian Antioch and Acts 13:14 means
+Pisidian is real scholarship, and hand-filing 131 entries' worth of it
+would be inventing a source the app does not have. The claim is withdrawn
+instead — see check 27's rule, which this is the fourth instance of.
+`atlas_page.dart` and `atlas_index.dart` now say what is true: the
+gazetteer separates the *sites*, prints both, and leaves the reference
+list shared, which is still strictly more than a text search for the
+spelling can offer.
+
+### 38b — the #320 join, measured before it was promised
+
+The ticket made the feature conditional on the measurement, so: of four
+candidate joins, the one that shipped is *the place's English name as a
+whole word in the plate's English title or description, gated by the
+plate's declared chapter range covering a verse that names the place*. It
+reaches **79 of 1,271 places, 218 pairs, 149 distinct plates** — a join
+rate of **6.2%**, and all 218 pairs were read by hand.
+
+The rejected alternatives are worth the space, because three of them look
+better on paper:
+
+- **Chapter overlap alone** reaches 100% of the gazetteer and 17,177
+  pairs, and is nonsense: it puts four *Valley of Hinnom* plates on
+  **Ziph**, *The Creation of Eve* on the **Tigris**, and *Peter's Vision
+  at Joppa* on **Caesarea**.
+- **Matching the Chinese names** would add 13 places and 80 pairs and
+  cannot be made safe: Han text has no word boundary, 撒冷 (Salem) is
+  inside 耶路撒冷 (Jerusalem), and 埃及 (Egypt) is inside 出埃及记, which
+  is simply the Chinese name of Exodus.
+- **Adjectival forms** (`-n`/`-an`/`-ian`) would catch "a Samaritan
+  woman" and would also turn `Cana` into `Canaan`.
+
+Because the ordinal does not survive the join, the strip's header reads
+"illustrations naming it" and not "pictures of it". That wording is the
+finding above, spent.
+
+### The guard the measurement forced
+
+Running the name rule with the chapter gate **removed** showed how much
+the gate was silently carrying. The gazetteer's **On** — the Egyptian
+city of Genesis 41 — is a whole word in **51** captions, because `on` is
+an English preposition. **Adam** is a town in Joshua 3:16 and a man in 10
+captions; **Ham**, **Esau**, **Laban**, **Rahab**, **Abel** and **Tamar**
+are all towns and all people. Today the gate rejects every one of those
+matches, which means the feature was correct *by luck*, and one new plate
+covering Genesis 41 with the word "on" in its caption would have ended
+that. 21 such names are now refused outright by
+`kAmbiguousPlaceNames`, which costs nothing — the shipped 79/218/149 is
+unchanged — and `test/place_illustrations_test.dart` pins both facts.
+
+Deriving that set from the app's people data was rejected: Midian,
+Ephraim, Canaan and Sheba are each a person in scripture as well as a
+place, and all four are in the verified 218 with plates that plainly mean
+the place.
+
+### Instrument errors, recorded because they nearly became findings
+
+- **The ASCII word boundary.** The first matcher used
+  `(?<![A-Za-z])…(?![A-Za-z])`, under which the town of **Dor** is a
+  whole word inside **Doré** — `é` is not in `[A-Za-z]`. That single slip
+  attached **145** Doré plates to one small town. The rule is now
+  `\p{L}`/`\p{N}` with `unicode: true`.
+- **Python over the raw asset, twice.** A throwaway probe reported 151
+  distinct plates where the Dart says **149**, and reported that 9 of the
+  14 differing ordinal groups overlap where the Dart says **all 14**.
+  Both were run again through `parseGazetteer` and `BibleMap.fromJson`
+  and both python numbers were wrong, in the direction that would have
+  understated the finding. This is the third check to record the same
+  lesson: rules live in the parser, not in the asset.
+
+### Frozen
+
+`test/place_illustrations_test.dart` holds the join rate (79/218/149),
+the name and chapter halves as separate rules, the Doré boundary, the
+scope partition, and the assertion that `Antioch 1` and `Antioch 2` get
+identical strips — so the day the gazetteer learns to tell them apart,
+that test fails and the prose above gets revisited.
+
+### Still open
+
+- **Which Antioch is which** — and the same for 79 other names. Needs a
+  source the repo does not have.
+- **The join's recall is unmeasured.** 6.2% is what the rule *finds*; how
+  many plates genuinely depict a gazetteer place and go unjoined because
+  the caption names a person instead ("The Woman at the Well") is not
+  something any instrument here can count.
+- **Chinese captions are not searched at all**, so a reader in 简体 sees
+  a strip built entirely from English text. Correct, but asymmetric.
+
+---
+
 ## Not checked yet
 
 - Verse **text** itself, against an *external* witness — for the

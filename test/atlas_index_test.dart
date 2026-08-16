@@ -403,5 +403,51 @@ void main() {
       expect(top('Jonah'), 'Nineveh');
       expect(top('Nahum'), 'Nineveh');
     });
+
+    // Check 38. The page used to claim the ordinal made `Antioch 1` and
+    // `Antioch 2` "answer separately and correctly". It does not, and
+    // this pins the measurement the claim was withdrawn on: the day the
+    // gazetteer learns to divide these verses, this fails and the prose
+    // in atlas_page.dart and atlas_index.dart gets revisited.
+    test('no ordinal group partitions its references', () {
+      final groups = <String, List<BiblePlace>>{};
+      for (final p in places) {
+        if (p.ordinal == null) continue;
+        (groups[p.name] ??= <BiblePlace>[]).add(p);
+      }
+      var identical = 0;
+      var overlapping = 0;
+      groups.forEach((_, members) {
+        final sets = [
+          for (final p in members) {for (final r in p.refs) r.key},
+        ];
+        if (sets.every((s) => s.length == sets.first.length &&
+            s.containsAll(sets.first))) {
+          identical++;
+          return;
+        }
+        for (var i = 0; i < sets.length; i++) {
+          for (var j = i + 1; j < sets.length; j++) {
+            if (sets[i].intersection(sets[j]).isNotEmpty) {
+              overlapping++;
+              return;
+            }
+          }
+        }
+      });
+      expect(groups.length, 80);
+      expect(identical, 66);
+      // Every group that is not identical still shares references, so
+      // the two counts account for all 80 and none is a clean split.
+      expect(identical + overlapping, groups.length);
+    });
+
+    test('Antioch 1 and Antioch 2 carry the same 18 references', () {
+      Set<String> refsOf(String id) => {
+            for (final r in places.firstWhere((p) => p.id == id).refs) r.key,
+          };
+      expect(refsOf('Antioch 1').length, 18);
+      expect(refsOf('Antioch 1'), refsOf('Antioch 2'));
+    });
   });
 }
