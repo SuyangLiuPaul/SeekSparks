@@ -48,6 +48,8 @@ class PlaceMapView extends StatefulWidget {
     required this.selectedId,
     required this.onSelect,
     this.onClose,
+    this.showContext = true,
+    this.onToggleContext,
     this.fitToken = 0,
     this.focusToken = 0,
     this.attribution = '',
@@ -61,8 +63,14 @@ class PlaceMapView extends StatefulWidget {
   /// hits. Drawn larger, labelled first, and what the map fits itself to.
   final List<BiblePlace> emphasised;
 
-  /// The geography around it. Drawn small, labelled with whatever room
-  /// is left over.
+  /// Everything the host's current question left out. Drawn small and
+  /// labelled faint, and only when [showContext].
+  ///
+  /// **Not "the geography around it", which is what this used to claim.**
+  /// The Atlas hands over the exact complement of its own filter — the
+  /// index applies no cap — so under a scope of Obadiah this list is the
+  /// 1,259 places Obadiah never names. Drawing them by default is how
+  /// the map came to disagree with the list beside it (#319).
   final List<BiblePlace> muted;
 
   final BaseMap baseMap;
@@ -73,6 +81,20 @@ class PlaceMapView extends StatefulWidget {
 
   /// Absent when the map is the surface rather than a lens over one.
   final VoidCallback? onClose;
+
+  /// Whether [muted] is drawn at all.
+  ///
+  /// bwh33's own model: every layer of a BibleWorks map is an overlay
+  /// with a check-box, and its 66 per-book views draw that book's sites
+  /// rather than the whole database dimmed. A filtered map that quietly
+  /// keeps drawing what the filter removed is not a dimmer version of
+  /// the answer, it is a different answer.
+  final bool showContext;
+
+  /// Flips [showContext]. Null hides the control — as it should be when
+  /// [muted] is empty, because with no filter there is nothing to leave
+  /// out and a toggle that changes nothing is chrome.
+  final VoidCallback? onToggleContext;
 
   /// Bump to re-fit the view to [emphasised] (or to [muted] when nothing
   /// is emphasised). The host bumps it when the *question* changes — a
@@ -113,16 +135,25 @@ class _PlaceMapViewState extends State<PlaceMapView> {
   double? _panStartLat;
   double? _panStartLon;
 
+  /// The context layer as far as the rest of this widget is concerned.
+  ///
+  /// One getter rather than a check at each site on purpose: hiding a
+  /// layer that is still hit-tested gives an invisible dot that answers
+  /// a tap, and a layer that is still counted makes the footer describe
+  /// places the reader cannot see.
+  List<BiblePlace> get _context =>
+      widget.showContext ? widget.muted : const <BiblePlace>[];
+
   List<BiblePlace> get _located => <BiblePlace>[
         for (final p in widget.emphasised)
           if (p.located) p,
-        for (final p in widget.muted)
+        for (final p in _context)
           if (p.located) p,
       ];
 
   int get _unlocatedCount =>
       widget.emphasised.where((p) => !p.located).length +
-      widget.muted.where((p) => !p.located).length;
+      _context.where((p) => !p.located).length;
 
   @override
   void didUpdateWidget(PlaceMapView old) {
@@ -178,7 +209,7 @@ class _PlaceMapViewState extends State<PlaceMapView> {
     final pts = subject.isNotEmpty
         ? subject
         : <(double, double)>[
-            for (final p in widget.muted)
+            for (final p in _context)
               if (p.located) (p.lat!, p.lon!),
           ];
     final bounds = boundsOf(pts)?.padded() ??
@@ -312,7 +343,7 @@ class _PlaceMapViewState extends State<PlaceMapView> {
                       painter: _MapPainter(
                         base: widget.baseMap,
                         emphasised: widget.emphasised,
-                        muted: widget.muted,
+                        muted: _context,
                         selectedId: widget.selectedId,
                         projection: proj,
                         script: widget.script,
@@ -334,55 +365,135 @@ class _PlaceMapViewState extends State<PlaceMapView> {
 
   Widget _header(BuildContext context, WbColors c, WbType t) {
     final s = _mapString;
+    final left = widget.muted.length;
+    final canToggle = left > 0 && widget.onToggleContext != null;
     return Container(
       height: t.paneTitleHeight + 4,
       color: c.chromeBg,
       padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: Row(
-        children: [
-          Icon(Icons.public, size: t.chrome + 2, color: c.mutedText),
-          const SizedBox(width: 6),
-          Text(
-            widget.title,
-            style: TextStyle(
-              fontSize: t.chrome,
-              fontWeight: FontWeight.w700,
-              color: c.text,
+      child: LayoutBuilder(
+        builder: (context, box) {
+          // The pan/zoom hint yields first. It is a courtesy; the layer
+          // control is the line that says what the map is currently
+          // showing, and an ellipsised Chinese label is its own defect
+          // (#297) so the choice is print it whole or not at all.
+          final roomForHint = box.maxWidth >= (canToggle ? 640 : 420);
+          return Row(
+            children: [
+              Icon(Icons.public, size: t.chrome + 2, color: c.mutedText),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  widget.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: t.chrome,
+                    fontWeight: FontWeight.w700,
+                    color: c.text,
+                  ),
+                ),
+              ),
+              const Spacer(),
+              if (roomForHint) ...[
+                Flexible(
+                  child: Text(
+                    s('placesMapHint', 'Scroll to zoom, drag to pan.'),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.right,
+                    style:
+                        TextStyle(fontSize: t.chrome - 1.5, color: c.mutedText),
+                  ),
+                ),
+                const SizedBox(width: 8),
+              ],
+              if (canToggle) ...[
+                _contextToggle(c, t, left),
+                const SizedBox(width: 4),
+              ],
+              if (_touched) ...[
+                _flatButton(
+                  context,
+                  c,
+                  t,
+                  s('placesMapFit', 'Fit'),
+                  () => setState(() {
+                    _touched = false;
+                    _proj = _fitted(_size);
+                  }),
+                ),
+                const SizedBox(width: 4),
+              ],
+              if (widget.onClose != null)
+                _flatButton(
+                  context,
+                  c,
+                  t,
+                  s('placesMapClose', 'Close map'),
+                  widget.onClose!,
+                ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  /// The one control that says out loud what the filter did to the map.
+  ///
+  /// It prints the COUNT rather than an eye icon alone: "1259 others" is
+  /// a fact the reader can check against the index header's own
+  /// `12 / 1271`, and the two numbers adding up is what makes the map and
+  /// the list legibly one filter. A bare icon would teach nothing on a
+  /// tablet, where there is no hover to reveal a tooltip (#299).
+  Widget _contextToggle(WbColors c, WbType t, int n) {
+    final shown = widget.showContext;
+    final label = (shown
+            ? _mapString('atlasContextHide', 'Hide {n} others')
+            : _mapString('atlasContextShow', 'Show {n} others'))
+        .replaceAll('{n}', '$n');
+    return Tooltip(
+      message: _mapString('atlasContextTip',
+              '{n} places the current filter leaves out, drawn faint.')
+          .replaceAll('{n}', '$n'),
+      child: Material(
+        color: shown ? c.selectionBg : c.chromeBg,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.zero,
+          side: BorderSide(
+            color: shown ? c.text : c.border,
+            width: WbMetrics.hairline,
+          ),
+        ),
+        child: InkWell(
+          onTap: widget.onToggleContext,
+          hoverColor: c.hoverBg,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  shown ? Icons.layers : Icons.layers_outlined,
+                  size: t.chrome,
+                  color: shown ? c.text : c.mutedText,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  label,
+                  maxLines: 1,
+                  style: TextStyle(
+                    fontSize: t.chrome - 0.5,
+                    fontWeight: shown ? FontWeight.w700 : FontWeight.w400,
+                    color: shown ? c.text : c.mutedText,
+                    fontFamilyFallback: kCjkFontFallback,
+                  ),
+                ),
+              ],
             ),
           ),
-          const Spacer(),
-          Flexible(
-            child: Text(
-              s('placesMapHint', 'Scroll to zoom, drag to pan.'),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.right,
-              style: TextStyle(fontSize: t.chrome - 1.5, color: c.mutedText),
-            ),
-          ),
-          const SizedBox(width: 8),
-          if (_touched) ...[
-            _flatButton(
-              context,
-              c,
-              t,
-              s('placesMapFit', 'Fit'),
-              () => setState(() {
-                _touched = false;
-                _proj = _fitted(_size);
-              }),
-            ),
-            const SizedBox(width: 4),
-          ],
-          if (widget.onClose != null)
-            _flatButton(
-              context,
-              c,
-              t,
-              s('placesMapClose', 'Close map'),
-              widget.onClose!,
-            ),
-        ],
+        ),
       ),
     );
   }
@@ -669,7 +780,15 @@ class _MapPainter extends CustomPainter {
           style: TextStyle(
             fontSize: strong ? labelSize : labelSize - 1,
             fontWeight: isSel ? FontWeight.w700 : FontWeight.w500,
-            color: isSel ? colors.link : colors.text,
+            // The context layer was drawn in the SAME ink as the answer
+            // and one pixel smaller, which is no distinction at all: a
+            // reader scoped to Obadiah read Capernaum in full black and
+            // concluded the filter had been ignored. bwh33 does the same
+            // thing from the other end — its Auto-dim exists so black
+            // labels can be read over an overlay.
+            color: isSel
+                ? colors.link
+                : (strong ? colors.text : colors.mutedText),
             fontFamilyFallback: kCjkFontFallback,
           ),
         ),

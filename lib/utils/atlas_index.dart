@@ -199,6 +199,66 @@ List<PlaceRefGroup> groupRefsByBook(
   ];
 }
 
+/// One place's references, SPLIT by the scope rather than trimmed to it.
+///
+/// The difference between splitting and trimming is the whole of #319,
+/// and it is not an inconsistency that the same filter does both.
+///
+/// Filtering the **index** means removing rows: "which places does
+/// Obadiah name" has twelve answers and the other 1,259 are not answers.
+/// Filtering **one place's references** means something else, because
+/// the reader has already picked the place and this panel is about that
+/// place. Dropping the three verses in Jeremiah that name Teman does not
+/// narrow an answer — it withholds one, and leaves a reader unable to
+/// tell "not in Obadiah" from "nowhere in scripture", which is the worse
+/// of the two things they could believe.
+///
+/// So the scope REMOVES in [atlasIndex] and PARTITIONS here. Both halves
+/// are counted and both are on screen: a filter that silently subtracts
+/// is the defect #280 and #308 were each about.
+class ScopedRefGroups {
+  const ScopedRefGroups({required this.inScope, required this.elsewhere});
+
+  /// Grouped by book, canonical order — the references the scope keeps.
+  final List<PlaceRefGroup> inScope;
+
+  /// The same, for the references it leaves out. Empty when no scope is
+  /// set, because then nothing is left out.
+  final List<PlaceRefGroup> elsewhere;
+
+  static int _count(List<PlaceRefGroup> groups) =>
+      groups.fold<int>(0, (n, g) => n + g.refs.length);
+
+  int get inScopeCount => _count(inScope);
+  int get elsewhereCount => _count(elsewhere);
+}
+
+/// [refs] grouped by book on both sides of [scopeBooks].
+///
+/// A null or empty scope puts everything in [ScopedRefGroups.inScope] —
+/// the same "no limit rather than nothing" convention as
+/// [placeIsInBooks].
+ScopedRefGroups partitionRefsByScope(
+  List<PlaceRef> refs, {
+  Set<String>? scopeBooks,
+}) {
+  if (scopeBooks == null || scopeBooks.isEmpty) {
+    return ScopedRefGroups(
+      inScope: groupRefsByBook(refs),
+      elsewhere: const <PlaceRefGroup>[],
+    );
+  }
+  final inside = <PlaceRef>[];
+  final outside = <PlaceRef>[];
+  for (final r in refs) {
+    (scopeBooks.contains(r.englishBook) ? inside : outside).add(r);
+  }
+  return ScopedRefGroups(
+    inScope: groupRefsByBook(inside),
+    elsewhere: groupRefsByBook(outside),
+  );
+}
+
 /// The order labels are handed out in on a crowded map.
 ///
 /// A map that draws 1,228 sites cannot label them all, and which ones it

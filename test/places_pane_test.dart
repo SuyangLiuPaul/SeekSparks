@@ -293,6 +293,143 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   });
+
+  // #319: the "muted" list is the exact complement of the host's filter,
+  // so a map that always draws it answers a different question from the
+  // list beside it. Hidden has to mean hidden from the eye, the finger
+  // AND the count — a layer that is invisible but still hit-tested gives
+  // a dot that answers a tap nobody can see they are making.
+  group('PlaceMapView context layer', () {
+    const ashkelon = BiblePlace(
+      id: 'ashkelon-1',
+      name: 'Ashkelon',
+      ordinal: null,
+      simplified: null,
+      traditional: null,
+      lat: 31.67,
+      lon: 34.57,
+      refs: <PlaceRef>[PlaceRef('Judges', 1, 18)],
+    );
+    const tarshish = BiblePlace(
+      id: 'tarshish-1',
+      name: 'Tarshish',
+      ordinal: null,
+      simplified: null,
+      traditional: null,
+      lat: null,
+      lon: null,
+      refs: <PlaceRef>[PlaceRef('Jonah', 1, 3)],
+    );
+
+    Widget ctx({
+      required bool showContext,
+      ValueChanged<String?>? onSelect,
+      VoidCallback? onToggle,
+    }) =>
+        PlaceMapView(
+          title: 'Atlas',
+          emphasised: const <BiblePlace>[],
+          muted: const <BiblePlace>[ashkelon, tarshish],
+          baseMap: baseMap,
+          script: BookScript.english,
+          locale: 'en',
+          selectedId: null,
+          onSelect: onSelect ?? (_) {},
+          showContext: showContext,
+          onToggleContext: onToggle ?? () {},
+        );
+
+    // The map fits itself to the only located place, so its marker lands
+    // on the canvas centre and a tap there is a tap on it.
+    final canvas = find.byWidgetPredicate(
+        (w) => w is GestureDetector && w.onScaleStart != null);
+
+    testWidgets('shown: the context layer answers a tap and is counted',
+        (tester) async {
+      var calls = 0;
+      String? got;
+      await tester.pumpWidget(host(
+          ctx(showContext: true, onSelect: (id) {
+            got = id;
+            calls++;
+          }),
+          width: 900,
+          height: 600));
+      await settle(tester);
+
+      await tester.tapAt(tester.getCenter(canvas));
+      await settle(tester);
+      expect(calls, 1);
+      expect(got, ashkelon.id);
+      expect(find.textContaining('1 more named here'), findsOneWidget);
+    });
+
+    testWidgets('hidden: nothing to tap, and the footer stops describing '
+        'places the reader cannot see', (tester) async {
+      var calls = 0;
+      String? got = 'unset';
+      await tester.pumpWidget(host(
+          ctx(showContext: false, onSelect: (id) {
+            got = id;
+            calls++;
+          }),
+          width: 900,
+          height: 600));
+      await settle(tester);
+
+      await tester.tapAt(tester.getCenter(canvas));
+      await settle(tester);
+      expect(calls, 1);
+      expect(got, isNull);
+      // Tarshish has no coordinates and is now not on this map at all,
+      // so counting it would make the footer a claim about nothing.
+      expect(find.textContaining('more named here'), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('the toggle prints the count, so it can be checked against '
+        'the index', (tester) async {
+      var flips = 0;
+      await tester.pumpWidget(host(ctx(showContext: false, onToggle: () => flips++),
+          width: 900, height: 600));
+      await settle(tester);
+
+      // Not an eye icon alone: on a tablet there is no hover to reveal a
+      // tooltip (#299), and "2 others" is a fact that adds up against the
+      // index header's own "n / total".
+      expect(find.text('Show 2 others'), findsOneWidget);
+      await tester.tap(find.text('Show 2 others'));
+      await settle(tester);
+      expect(flips, 1);
+
+      await tester.pumpWidget(host(ctx(showContext: true), width: 900, height: 600));
+      await settle(tester);
+      expect(find.text('Hide 2 others'), findsOneWidget);
+    });
+
+    testWidgets('no toggle when there is nothing being left out',
+        (tester) async {
+      await tester.pumpWidget(host(
+        PlaceMapView(
+          title: 'Atlas',
+          emphasised: jonah1,
+          muted: const <BiblePlace>[],
+          baseMap: baseMap,
+          script: BookScript.english,
+          locale: 'en',
+          selectedId: null,
+          onSelect: (_) {},
+          onToggleContext: () {},
+        ),
+        width: 900,
+        height: 600,
+      ));
+      await settle(tester);
+
+      // A control that changes nothing is chrome.
+      expect(find.textContaining('others'), findsNothing);
+    });
+  });
 }
 
 void _ignore(List<BiblePlace> places, String? id) {}

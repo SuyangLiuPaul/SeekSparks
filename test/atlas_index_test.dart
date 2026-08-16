@@ -186,6 +186,60 @@ void main() {
     });
   });
 
+  group('partitionRefsByScope', () {
+    final refs = <PlaceRef>[
+      const PlaceRef('Acts', 9, 36),
+      const PlaceRef('Jonah', 1, 3),
+      const PlaceRef('Acts', 10, 5),
+      const PlaceRef('Joshua', 19, 46),
+    ];
+
+    test('no scope puts everything in scope and leaves nothing out', () {
+      for (final scope in <Set<String>?>[null, <String>{}]) {
+        final out = partitionRefsByScope(refs, scopeBooks: scope);
+        expect(out.inScopeCount, refs.length);
+        expect(out.elsewhere, isEmpty);
+        expect(out.elsewhereCount, 0);
+      }
+    });
+
+    test('a scope SPLITS the references instead of discarding half', () {
+      // The whole of #319. Trimming would leave a reader unable to tell
+      // "not in Jonah" from "nowhere in scripture" — the worse of the two
+      // things they could believe.
+      final out = partitionRefsByScope(refs, scopeBooks: {'Jonah'});
+      expect(out.inScopeCount, 1);
+      expect(out.elsewhereCount, 3);
+      expect(out.inScope.single.englishBook, 'Jonah');
+    });
+
+    test('nothing is lost: the two halves always add up', () {
+      for (final scope in <Set<String>>[
+        {'Jonah'},
+        {'Acts', 'Joshua'},
+        {'Genesis'},
+      ]) {
+        final out = partitionRefsByScope(refs, scopeBooks: scope);
+        expect(out.inScopeCount + out.elsewhereCount, refs.length,
+            reason: 'scope $scope');
+      }
+    });
+
+    test('a place the scope never names comes back empty on one side, '
+        'not empty on both', () {
+      final out = partitionRefsByScope(refs, scopeBooks: {'Genesis'});
+      expect(out.inScope, isEmpty);
+      expect(out.elsewhereCount, refs.length);
+    });
+
+    test('both halves are grouped in canonical order', () {
+      final out = partitionRefsByScope(refs, scopeBooks: {'Acts'});
+      expect(out.inScope.map((g) => g.englishBook).toList(), <String>['Acts']);
+      expect(out.elsewhere.map((g) => g.englishBook).toList(),
+          <String>['Joshua', 'Jonah']);
+    });
+  });
+
   group('labelPriority', () {
     final jerusalem = _p('Jerusalem', refs: _refs('Psalms', 755));
     final joppa = _p('Joppa', refs: _refs('Acts', 10));

@@ -120,6 +120,13 @@ class _AtlasPageState extends State<AtlasPage> {
   AtlasSort _sort = AtlasSort.references;
   String? _selectedId;
 
+  /// Whether the map also draws what the filter left out.
+  ///
+  /// Off, so that the map answers the same question the index does. It
+  /// is sticky once turned on — a reader who asked for the surrounding
+  /// names should not have to ask again after every keystroke.
+  bool _showContext = false;
+
   /// The ids of [AtlasPage.subjectPlaces] while the filter is up, null
   /// once it is dismissed or superseded.
   Set<String>? _subjectIds;
@@ -227,11 +234,25 @@ class _AtlasPageState extends State<AtlasPage> {
     return null;
   }
 
+  /// The active scope, named the way the filter button names it — or
+  /// null when there is none. A message about a filter that will not say
+  /// WHICH filter is barely a message (#280).
+  String? _scopeLabelFor(String locale, String version) {
+    final books = _scopeBooks;
+    if (books == null || books.isEmpty) return null;
+    return scopeDisplayName(
+      spec: limitSpecForBooks(books),
+      locale: locale,
+      version: version,
+    );
+  }
+
   Future<void> _showDetailSheet(
       BuildContext context, String locale, BookScript script) async {
     final all = _all;
     final place = all == null ? null : _selected(all);
     if (place == null) return;
+    final version = context.read<MainProvider>().currentVersion;
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -243,13 +264,26 @@ class _AtlasPageState extends State<AtlasPage> {
         minChildSize: 0.35,
         maxChildSize: 0.95,
         expand: false,
-        builder: (sheetCtx, controller) => _DetailPanel(
-          place: place,
-          locale: locale,
-          script: script,
-          scopeBooks: _scopeBooks,
-          scrollController: controller,
-          onJump: (ref) => _jump(sheetCtx, ref),
+        // The sheet is built once by the Navigator, so the page's own
+        // setState cannot reach inside it: without this, clearing the
+        // filter from in here would change the map behind the sheet and
+        // leave the sheet still saying the place is out of scope.
+        builder: (sheetCtx, controller) => StatefulBuilder(
+          builder: (_, setSheetState) => _DetailPanel(
+            place: place,
+            locale: locale,
+            script: script,
+            scopeBooks: _scopeBooks,
+            scopeLabel: _scopeLabelFor(locale, version),
+            onClearScope: _scopeBooks == null
+                ? null
+                : () {
+                    _questionChanged(() => _scopeBooks = null);
+                    setSheetState(() {});
+                  },
+            scrollController: controller,
+            onJump: (ref) => _jump(sheetCtx, ref),
+          ),
         ),
       ),
     );
@@ -281,18 +315,32 @@ class _AtlasPageState extends State<AtlasPage> {
                 final map = PlaceMapView(
                   title: _mapTitle(results, selected, locale, script),
                   emphasised: results,
-                  // Everything the index is NOT currently showing, drawn
-                  // faint. It is what turns a search result into a
-                  // location: two dots on white say where nothing is.
+                  // Exactly what the index left out — `atlasIndex` caps
+                  // nothing, so this is the filter's complement and not
+                  // "the geography around it". Hidden unless the reader
+                  // asks, because a map that draws 1,259 places the list
+                  // beside it has just excluded is answering a question
+                  // nobody asked (#319).
                   muted: <BiblePlace>[
                     for (final p in all)
                       if (!resultIds.contains(p.id)) p,
                   ],
+                  showContext: _showContext,
+                  onToggleContext: () =>
+                      setState(() => _showContext = !_showContext),
                   baseMap: _base,
                   script: script,
                   locale: locale,
                   selectedId: _selectedId,
-                  onSelect: (id) => setState(() => _selectedId = id),
+                  onSelect: (id) {
+                    setState(() => _selectedId = id);
+                    // Below the detail column there is nowhere for the
+                    // answer to go, and a dot that lights up and says
+                    // nothing is the same dead end as the blank panel.
+                    if (id != null && box.maxWidth < _detailColumnMin) {
+                      _showDetailSheet(context, locale, script);
+                    }
+                  },
                   fitToken: _fitToken,
                   focusToken: _focusToken,
                   attribution: _attribution,
@@ -337,6 +385,11 @@ class _AtlasPageState extends State<AtlasPage> {
                           locale: locale,
                           script: script,
                           scopeBooks: _scopeBooks,
+                          scopeLabel: _scopeLabelFor(locale, version),
+                          onClearScope: _scopeBooks == null
+                              ? null
+                              : () => _questionChanged(
+                                  () => _scopeBooks = null),
                           onJump: (ref) => _jump(context, ref),
                         ),
                       ),
@@ -746,6 +799,8 @@ class _DetailPanel extends StatelessWidget {
     required this.locale,
     required this.script,
     required this.scopeBooks,
+    required this.scopeLabel,
+    required this.onClearScope,
     required this.onJump,
     this.scrollController,
   });
@@ -754,6 +809,13 @@ class _DetailPanel extends StatelessWidget {
   final String locale;
   final BookScript script;
   final Set<String>? scopeBooks;
+
+  /// [scopeBooks] as the reader saw it named on the filter button.
+  final String? scopeLabel;
+
+  /// Drops the scope. Null when there is none to drop.
+  final VoidCallback? onClearScope;
+
   final void Function(PlaceRef) onJump;
   final ScrollController? scrollController;
 
@@ -764,9 +826,11 @@ class _DetailPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = WbColors.of(context);
     final t = WbType.of(context);
-    final groups = groupRefsByBook(place.refs, scopeBooks: scopeBooks);
-    final inScope = groups.fold<int>(0, (n, g) => n + g.refs.length);
+    final parts = partitionRefsByScope(place.refs, scopeBooks: scopeBooks);
+    final groups = parts.inScope;
+    final inScope = parts.inScopeCount;
     final display = place.displayName(script);
+    final scope = scopeLabel;
 
     return ColoredBox(
       color: c.paneBg,
@@ -823,20 +887,68 @@ class _DetailPanel extends StatelessWidget {
               ),
             ),
           ),
-          if (groups.isEmpty)
+          if (groups.isEmpty && scope != null)
             Padding(
               padding: const EdgeInsets.only(top: 10),
               child: Text(
-                _s('atlasNoRefsInScope',
-                    'Not named inside the current scope.'),
+                _s('atlasNotNamedInScope', 'Not named in {scope}.')
+                    .replaceAll('{scope}', scope),
                 style: TextStyle(
                   fontSize: t.chrome,
                   color: c.mutedText,
+                  height: 1.4,
                   fontFamilyFallback: kCjkFontFallback,
                 ),
               ),
             ),
           for (final g in groups) _book(context, c, t, g),
+          // The references the scope holds back. Printed rather than
+          // dropped: the reader picked THIS place, and a panel that says
+          // "0 / 1" and then shows nothing has told them the verse
+          // exists and refused to say where — which is how a 320 px
+          // column came to be a blank rectangle.
+          if (parts.elsewhere.isNotEmpty && scope != null) ...[
+            const SizedBox(height: 14),
+            Container(
+              color: c.chromeBg,
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      _s('atlasRefsElsewhere', '{n} more outside {scope}')
+                          .replaceAll('{n}', '${parts.elsewhereCount}')
+                          .replaceAll('{scope}', scope),
+                      style: TextStyle(
+                        fontSize: t.chrome,
+                        fontWeight: FontWeight.w700,
+                        color: c.mutedText,
+                        fontFamilyFallback: kCjkFontFallback,
+                      ),
+                    ),
+                  ),
+                  if (onClearScope != null)
+                    InkWell(
+                      onTap: onClearScope,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 4, vertical: 1),
+                        child: Text(
+                          _s('atlasClearScope', 'Clear the filter'),
+                          style: TextStyle(
+                            fontSize: t.chrome,
+                            color: c.link,
+                            fontFamilyFallback: kCjkFontFallback,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            for (final g in parts.elsewhere)
+              _book(context, c, t, g, subdued: true),
+          ],
         ],
       ),
     );
@@ -854,7 +966,11 @@ class _DetailPanel extends StatelessWidget {
         '${lon.abs().toStringAsFixed(2)}° $ew';
   }
 
-  Widget _book(BuildContext context, WbColors c, WbType t, PlaceRefGroup g) =>
+  /// [subdued] is the out-of-scope half: still legible, still tappable —
+  /// a reference the reader can see and not reach would be worse than
+  /// hiding it — but visibly not the answer to what they asked.
+  Widget _book(BuildContext context, WbColors c, WbType t, PlaceRefGroup g,
+          {bool subdued = false}) =>
       Padding(
         padding: const EdgeInsets.only(top: 8),
         child: Column(
@@ -865,8 +981,8 @@ class _DetailPanel extends StatelessWidget {
                   context.read<MainProvider>().currentVersion),
               style: TextStyle(
                 fontSize: t.chrome,
-                fontWeight: FontWeight.w700,
-                color: c.text,
+                fontWeight: subdued ? FontWeight.w600 : FontWeight.w700,
+                color: subdued ? c.mutedText : c.text,
                 fontFamilyFallback: kCjkFontFallback,
               ),
             ),

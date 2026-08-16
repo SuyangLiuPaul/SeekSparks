@@ -7589,10 +7589,40 @@ const uiStrings = {
     'zh-Hant': '經文出處 {n} 處',
     'en': '{n} references',
   },
-  'atlasNoRefsInScope': {
-    'zh-Hans': '在当前检索范围内没有出处。',
-    'zh-Hant': '在目前檢索範圍內沒有出處。',
-    'en': 'Not named inside the current scope.',
+  // Names the scope rather than calling it "the current scope": a
+  // message about a filter that will not say which filter leaves the
+  // reader to guess what it was they set (#280).
+  'atlasNotNamedInScope': {
+    'zh-Hans': '{scope} 中没有提到这个地名。',
+    'zh-Hant': '{scope} 中沒有提到這個地名。',
+    'en': 'Not named in {scope}.',
+  },
+  'atlasRefsElsewhere': {
+    'zh-Hans': '{scope} 以外另有 {n} 处',
+    'zh-Hant': '{scope} 以外另有 {n} 處',
+    'en': '{n} more outside {scope}',
+  },
+  'atlasClearScope': {
+    'zh-Hans': '清除筛选',
+    'zh-Hant': '清除篩選',
+    'en': 'Clear the filter',
+  },
+  // The map's layer control. Carries the count so it can be read against
+  // the index header's own `12 / 1271` and seen to be the same filter.
+  'atlasContextShow': {
+    'zh-Hans': '显示其余 {n} 处',
+    'zh-Hant': '顯示其餘 {n} 處',
+    'en': 'Show {n} others',
+  },
+  'atlasContextHide': {
+    'zh-Hans': '隐藏其余 {n} 处',
+    'zh-Hant': '隱藏其餘 {n} 處',
+    'en': 'Hide {n} others',
+  },
+  'atlasContextTip': {
+    'zh-Hans': '当前筛选之外的 {n} 个地名，浅色显示。',
+    'zh-Hant': '目前篩選之外的 {n} 個地名，淺色顯示。',
+    'en': '{n} places the current filter leaves out, drawn faint.',
   },
   'atlasUnlocatedNote': {
     'zh-Hans': '圣经提到这个地方，但今址不详。',
