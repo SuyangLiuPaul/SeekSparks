@@ -755,8 +755,17 @@ class _AtlasPageState extends State<AtlasPage> {
                           ),
                         ),
                       const Spacer(),
+                      // Under a scope this is `2 / 755`, not `755`: the
+                      // row sits beneath a header that has just said
+                      // `12 / 1271`, and a bare whole-Bible total there
+                      // reads as the count for the book in the filter.
+                      // Scoped to Esther it claimed 755 for a city the
+                      // book names once (#308's rule, third outing).
                       Text(
-                        '${p.refs.length}',
+                        scopedCountLabel(
+                          refCountInBooks(p, _scopeBooks),
+                          p.refs.length,
+                        ),
                         style: TextStyle(
                           fontSize: t.chrome - 1,
                           color: c.mutedText,

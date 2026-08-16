@@ -186,6 +186,83 @@ void main() {
     });
   });
 
+  group('the reference ranking counts the scope, not the whole Bible', () {
+    // Joshua's own shape, and the clearest of the 23 books the
+    // whole-Bible ranking got wrong: the book is about crossing the
+    // Jordan, and it opened with Jerusalem because Jerusalem is famous
+    // everywhere else.
+    final jordan = _p('Jordan', refs: <PlaceRef>[
+      ..._refs('Joshua', 58),
+      ..._refs('Genesis', 7),
+    ]);
+    final jerusalem = _p('Jerusalem', refs: <PlaceRef>[
+      ..._refs('Joshua', 8),
+      ..._refs('Psalms', 747),
+    ]);
+    final places = <BiblePlace>[jerusalem, jordan];
+
+    test('scoped to Joshua, Joshua leads with the Jordan', () {
+      final out = atlasIndex(places, scopeBooks: {'Joshua'});
+      expect(out.map((p) => p.id).toList(), <String>['Jordan', 'Jerusalem']);
+    });
+
+    test('unscoped, the whole-Bible order is unchanged', () {
+      expect(atlasIndex(places).map((p) => p.id).toList(),
+          <String>['Jerusalem', 'Jordan']);
+    });
+
+    test('a tie inside the scope falls back to the whole-Bible count', () {
+      final zion = _p('Zion', refs: <PlaceRef>[
+        ..._refs('Esther', 1),
+        ..._refs('Psalms', 40),
+      ]);
+      final zoar = _p('Zoar', refs: _refs('Esther', 1));
+      expect(atlasIndex(<BiblePlace>[zoar, zion], scopeBooks: {'Esther'})
+          .map((p) => p.id)
+          .toList(),
+          <String>['Zion', 'Zoar']);
+    });
+
+    test('a typed query still outranks the count', () {
+      expect(atlasIndex(places, query: 'jeru', scopeBooks: {'Joshua'}).first.id,
+          'Jerusalem');
+    });
+  });
+
+  group('refCountInBooks', () {
+    final teman = _p('Teman', refs: const <PlaceRef>[
+      PlaceRef('Obadiah', 1, 9),
+      PlaceRef('Jeremiah', 49, 7),
+      PlaceRef('Jeremiah', 49, 20),
+      PlaceRef('Amos', 1, 12),
+    ]);
+
+    test('counts only the references inside the scope', () {
+      expect(refCountInBooks(teman, {'Obadiah'}), 1);
+      expect(refCountInBooks(teman, {'Jeremiah'}), 2);
+      expect(refCountInBooks(teman, {'Obadiah', 'Amos'}), 2);
+      expect(refCountInBooks(teman, {'Ruth'}), 0);
+    });
+
+    test('no scope counts everything, so an unfiltered row is unchanged', () {
+      for (final scope in <Set<String>?>[null, <String>{}]) {
+        expect(refCountInBooks(teman, scope), teman.refs.length);
+      }
+    });
+
+    test('it agrees with the partition the detail panel prints', () {
+      for (final scope in <Set<String>>[
+        {'Obadiah'},
+        {'Jeremiah'},
+        {'Ruth'},
+      ]) {
+        expect(refCountInBooks(teman, scope),
+            partitionRefsByScope(teman.refs, scopeBooks: scope).inScopeCount,
+            reason: 'scope $scope');
+      }
+    });
+  });
+
   group('partitionRefsByScope', () {
     final refs = <PlaceRef>[
       const PlaceRef('Acts', 9, 36),

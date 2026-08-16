@@ -106,12 +106,33 @@ bool placeIsInBooks(BiblePlace place, Set<String>? books) {
   return false;
 }
 
+/// How many of [place]'s references fall inside [books].
+///
+/// A null or empty scope counts everything, matching [placeIsInBooks].
+int refCountInBooks(BiblePlace place, Set<String>? books) {
+  if (books == null || books.isEmpty) return place.refs.length;
+  var n = 0;
+  for (final r in place.refs) {
+    if (books.contains(r.englishBook)) n++;
+  }
+  return n;
+}
+
 /// How the index list is ordered when nothing is typed.
 enum AtlasSort {
-  /// Most-referenced first. The default, because it is the only order
-  /// that answers a question: scoped to Acts it prints the itinerary of
-  /// Acts, and scoped to nothing it prints the geography scripture is
-  /// mostly about.
+  /// Most-referenced first — most-referenced **within the scope**, which
+  /// is what makes this the only order that answers a question: scoped
+  /// to Acts it prints the itinerary of Acts, and scoped to nothing it
+  /// prints the geography scripture is mostly about.
+  ///
+  /// It used to rank on the whole-Bible count even under a scope, and
+  /// that falsified the sentence above rather than implementing it: 23
+  /// of the 62 books in the gazetteer opened with the wrong place at the
+  /// top. Joshua led with Jerusalem, named 8 times, above the Jordan,
+  /// named 58; Esther led with Jerusalem, named ONCE, above Susa, where
+  /// the book is set; Nahum led with Tarshish over Nineveh. The ranking
+  /// was really "the most famous places, among those this book happens
+  /// to name", which is a question nobody asked.
   references,
 
   /// The English name, A–Z — an atlas index, and the order every
@@ -133,12 +154,15 @@ List<BiblePlace> atlasIndex(
   AtlasSort sort = AtlasSort.references,
 }) {
   final q = normalisePlaceQuery(query);
-  final ranked = <(BiblePlace, int)>[];
+  // (place, query rank, references inside the scope). The third is
+  // counted once here rather than in the comparator, which sees each
+  // place O(log n) times.
+  final ranked = <(BiblePlace, int, int)>[];
   for (final p in places) {
     if (!placeIsInBooks(p, scopeBooks)) continue;
     final rank = placeMatchRank(p, q);
     if (rank == kPlaceMatchNone) continue;
-    ranked.add((p, rank));
+    ranked.add((p, rank, refCountInBooks(p, scopeBooks)));
   }
   ranked.sort((a, b) {
     if (a.$2 != b.$2) return a.$2.compareTo(b.$2);
@@ -146,8 +170,12 @@ List<BiblePlace> atlasIndex(
       final byName = a.$1.name.toLowerCase().compareTo(b.$1.name.toLowerCase());
       if (byName != 0) return byName;
     }
-    final byRefs = b.$1.refs.length.compareTo(a.$1.refs.length);
+    final byRefs = b.$3.compareTo(a.$3);
     if (byRefs != 0) return byRefs;
+    // Ties on the scoped count fall back to the whole-Bible one, so a
+    // book that names Zion and Zoar once each still leads with Zion.
+    final byWhole = b.$1.refs.length.compareTo(a.$1.refs.length);
+    if (byWhole != 0) return byWhole;
     return a.$1.id.compareTo(b.$1.id);
   });
   return [for (final e in ranked) e.$1];
