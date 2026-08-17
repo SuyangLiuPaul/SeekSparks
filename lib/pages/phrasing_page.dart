@@ -191,6 +191,22 @@ class _PhrasingPageState extends State<PhrasingPage> {
   bool _glossHasLexicon = false;
   PhrasingSource _source = PhrasingSource.translation;
 
+  /// The chapter as `(verse, text)`, used for nothing but finding where
+  /// the sentences end. Held rather than recomputed so the ⤢ button can
+  /// answer instantly — and held SEPARATELY from `_words` because the
+  /// two are not always the same text: `assets/originals` prints no
+  /// stops, so a reader phrasing the Hebrew has the bounds read off the
+  /// edition they came from instead.
+  List<({int verse, String text})> _punctuation = const [];
+  PhrasingWindowSource _punctuationSource = PhrasingWindowSource.none;
+
+  /// Whose punctuation drew the window, when it was not the phrased text
+  /// itself. Printed, never assumed: LEB makes Ephesians 1:3-14 one
+  /// sentence, the KJV makes it three and the BSB makes it seven, and a
+  /// pane that showed a range without saying which edition decided it
+  /// would be passing off an editor's judgement as the text's.
+  String? _punctuationEdition;
+
   String get _englishBook => bookNameToEnglish[widget.book] ?? widget.book;
 
   /// The key a phrasing is stored under.
@@ -234,17 +250,22 @@ class _PhrasingPageState extends State<PhrasingPage> {
     if (!mounted) return;
     final present = {for (final w in words) w.verse}.toList()..sort();
     final levels = availablePhrasingLevels(words);
+    final seed = present.contains(widget.verse)
+        ? widget.verse
+        : (present.isEmpty ? 1 : present.first);
+    await _readPunctuation(words);
+    if (!mounted) return;
+    final window = _sentenceWindow(seed);
+    // Only a FRESH phrasing opens on the sentence. A stored one carries
+    // a range the reader chose, and widening it under them would move
+    // the lines they drew out from under their own decision.
     var p = stored ??
         Phrasing(
           version: _storeKey,
           book: _englishBook,
           chapter: widget.chapter,
-          startVerse: present.contains(widget.verse)
-              ? widget.verse
-              : (present.isEmpty ? 1 : present.first),
-          endVerse: present.contains(widget.verse)
-              ? widget.verse
-              : (present.isEmpty ? 1 : present.first),
+          startVerse: window.start,
+          endVerse: window.end,
         );
     // A level the source cannot support would propose nothing and read
     // as a dead control. Fall back to the finest one it CAN support
@@ -264,6 +285,50 @@ class _PhrasingPageState extends State<PhrasingPage> {
       _loading = false;
     });
   }
+
+  /// Find a text for this chapter that punctuates, and remember which.
+  ///
+  /// The phrased words come first, because an edition's own stops are
+  /// the only ones that are a claim about the text being phrased. They
+  /// answer for every translation the app ships — measured, all 1,189
+  /// chapters of KJV, LEB, BSB and 和合本雅伟版 punctuate — and for none
+  /// of the originals: `assets/originals` carries **0 sentence marks in
+  /// 438,821 words**, and `assets/lxxwh.json` carries none either, the
+  /// same editorial decision that left it unaccented.
+  Future<void> _readPunctuation(List<PhrasingWord> words) async {
+    _punctuationEdition = null;
+    final own = [for (final w in words) (verse: w.verse, text: w.text)];
+    if (own.any((t) => phrasingEndsSentence(t.text))) {
+      _punctuation = own;
+      _punctuationSource = PhrasingWindowSource.phrased;
+      return;
+    }
+    // Borrowed, and therefore named. This is the reader's OWN edition —
+    // the one they were reading when they opened the pane — so the
+    // question it answers is "where does my Bible put the full stop",
+    // which is a question they can check.
+    final verses = await FetchVerses.loadVerseList(widget.version) ?? const [];
+    final inChapter = [
+      for (final v in verses)
+        if (v.chapter == widget.chapter &&
+            (bookNameToEnglish[v.book] ?? v.book) == _englishBook)
+          (verse: v.verse, text: scriptureReadingText(v.text)),
+    ]..sort((a, b) => a.verse.compareTo(b.verse));
+    if (inChapter.any((t) => phrasingEndsSentence(t.text))) {
+      _punctuation = inChapter;
+      _punctuationSource = PhrasingWindowSource.edition;
+      _punctuationEdition = shortBibleVersionLabel(widget.version);
+      return;
+    }
+    _punctuation = const [];
+    _punctuationSource = PhrasingWindowSource.none;
+  }
+
+  PhrasingWindow _sentenceWindow(int verse) => phrasingSentenceWindow(
+        _punctuation,
+        verse,
+        source: _punctuationSource,
+      );
 
   Future<List<PhrasingWord>> _originalWords() async {
     final words = <PhrasingWord>[];
@@ -668,26 +733,30 @@ class _PhrasingPageState extends State<PhrasingPage> {
           ],
           _glossLegend(scheme, t),
           const SizedBox(height: 8),
-          Row(
+          Wrap(
+            spacing: 8,
+            runSpacing: 6,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               Text(_s('phrasingRange', 'Verses'),
                   style: TextStyle(fontSize: t.chrome, color: scheme.outline)),
-              const SizedBox(width: 8),
               _verseDrop(verses, p.startVerse, (v) {
                 _update(p.copyWith(
                   startVerse: v,
                   endVerse: v > p.endVerse ? v : p.endVerse,
                 ));
               }),
-              Text(' – ', style: TextStyle(color: scheme.outline)),
+              Text('–', style: TextStyle(color: scheme.outline)),
               _verseDrop(verses, p.endVerse, (v) {
                 _update(p.copyWith(
                   endVerse: v,
                   startVerse: v < p.startVerse ? v : p.startVerse,
                 ));
               }),
+              _sentenceButton(p, scheme, t),
             ],
           ),
+          _sentenceNote(p, scheme, t),
           const SizedBox(height: 6),
           Text(
             _s(
@@ -729,6 +798,110 @@ class _PhrasingPageState extends State<PhrasingPage> {
         style: TextStyle(fontSize: t.chrome, color: scheme.outline),
       ),
     );
+  }
+
+  /// Snap the window to the sentence the start verse is inside.
+  ///
+  /// Present as a control and not only as a default, because a default
+  /// nobody can invoke is a default nobody knows about: the reader who
+  /// narrows the range to one verse to concentrate on it needs the way
+  /// back, and the reader whose stored phrasing predates this button has
+  /// never seen the sentence at all.
+  void _snapToSentence(Phrasing p, {bool whole = false}) {
+    final w = _sentenceWindow(p.startVerse);
+    _update(p.copyWith(
+      startVerse: whole ? w.sentenceStart : w.start,
+      endVerse: whole ? w.sentenceEnd : w.end,
+    ));
+  }
+
+  Widget _sentenceButton(Phrasing p, ColorScheme scheme, _PhrasingType t) {
+    final w = _sentenceWindow(p.startVerse);
+    final dead = w.source == PhrasingWindowSource.none ||
+        (w.start == p.startVerse && w.end == p.endVerse);
+    return ActionChip(
+      avatar: Icon(Icons.unfold_more, size: t.chrome * 1.15),
+      label: Text(_s('phrasingSnapSentence', 'Sentence'),
+          style: TextStyle(fontSize: t.chrome)),
+      tooltip: _s('phrasingSnapSentenceTip',
+          'Widen the window to the whole sentence the first verse is in'),
+      onPressed: dead ? null : () => _snapToSentence(p),
+    );
+  }
+
+  /// One line saying where the window came from — or why there is none.
+  ///
+  /// Everything printed here is an *edition's* claim, so the edition is
+  /// named. The same chapter is punctuated differently by every
+  /// translation we ship, and the pane that hides that is the one that
+  /// makes a reader think the text settled it.
+  Widget _sentenceNote(Phrasing p, ColorScheme scheme, _PhrasingType t) {
+    final w = _sentenceWindow(p.startVerse);
+    final style = TextStyle(fontSize: t.chrome, color: scheme.outline);
+    final label = _punctuationEdition ?? shortBibleVersionLabel(widget.version);
+    Widget line(String s) => Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: Text(s, style: style),
+        );
+
+    if (w.source == PhrasingWindowSource.none) {
+      return line(_s(
+        'phrasingNoStops',
+        'This text prints no sentence punctuation, so the window cannot be '
+            'widened past one verse.',
+      ));
+    }
+    // A cap that is not printed is a silent filter. The sentence is
+    // still named, still measured, and still one tap away.
+    if (w.capped && (p.startVerse != w.sentenceStart ||
+        p.endVerse != w.sentenceEnd)) {
+      final n = w.sentenceEnd - w.sentenceStart + 1;
+      return Padding(
+        padding: const EdgeInsets.only(top: 4),
+        child: Wrap(
+          spacing: 8,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            Text(
+              _s('phrasingSentenceLong',
+                      'Verse {v} is inside a {n}-verse sentence in {e} '
+                          '({a}–{b}) — long enough that it is a list, not a '
+                          'period.')
+                  .replaceAll('{v}', '${p.startVerse}')
+                  .replaceAll('{n}', '$n')
+                  .replaceAll('{e}', label)
+                  .replaceAll('{a}', '${w.sentenceStart}')
+                  .replaceAll('{b}', '${w.sentenceEnd}'),
+              style: style,
+            ),
+            InkWell(
+              onTap: () => _snapToSentence(p, whole: true),
+              child: Text(
+                _s('phrasingSentenceOpenAnyway', 'Open it anyway'),
+                style: style.copyWith(
+                    color: scheme.primary, fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    if (w.start == p.startVerse && w.end == p.endVerse && w.widensVerse) {
+      final key = w.source == PhrasingWindowSource.edition
+          ? 'phrasingSentenceBorrowed'
+          : 'phrasingSentenceOwn';
+      return line(_s(
+        key,
+        w.source == PhrasingWindowSource.edition
+            ? 'Verses {a}–{b} are one sentence in {e}. The original prints '
+                'no stops, so the bounds are that edition’s.'
+            : 'Verses {a}–{b} are one sentence in {e}.',
+      )
+          .replaceAll('{a}', '${w.start}')
+          .replaceAll('{b}', '${w.end}')
+          .replaceAll('{e}', label));
+    }
+    return const SizedBox.shrink();
   }
 
   Widget _verseDrop(List<int> verses, int value, ValueChanged<int> onChanged) =>

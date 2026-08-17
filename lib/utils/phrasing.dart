@@ -548,6 +548,217 @@ class Phrasing {
 /// of its own or a held-down button pushes the text out of view.
 const int maxPhrasingDepth = 8;
 
+// ─── The sentence, and where it ends ────────────────────────────────
+//
+// Phrasing is an argument about a UNIT OF THOUGHT, and the unit is a
+// sentence, not a verse. Opening on the cursor verse alone fights the
+// exercise every time: measured over all 31,102 verses of four shipped
+// editions, **21.5% of BSB, 23.1% of LEB, 26.0% of 和合本雅伟版 and
+// 27.9% of KJV verses sit inside a sentence that does not end where the
+// verse does** — so between a fifth and a third of the time the old
+// default handed the reader half a thought.
+//
+// Those figures are measured THROUGH `scriptureReadingText`, not off the
+// raw JSON, and the difference is the reason to say so: LEB writes its
+// footnotes inline as `<note:…>`, and a survey of the bytes put 141 of
+// its 1,189 chapters in the middle of a sentence at the chapter break
+// and its multi-verse share at 37.5%. Through the pipeline the reader
+// actually sees it is **5 chapters and 23.1%**. A punctuation rule
+// measured on text the app never renders is measuring the markup.
+//
+// Ephesians 1 is the case the request itself names, and it also shows
+// why the answer has to name its source. The chapter's sentences are:
+//     LEB   1-2 · **3-14** · 15-23
+//     KJV   1-2 · 3-6 · 7-12 · 13-14 · 15-23
+//     BSB   1-2 · 3 · 4-6 · 7-8 · 9-10 · 11-12 · 13-14 · 15-17 · …
+// Those are three different editorial judgements about one Greek
+// paragraph, and every one of them is its edition's own claim. So the
+// window is read off the edition the reader is holding and the pane
+// says whose punctuation drew it — never "the sentence is 3-14" as
+// though the text settled it.
+
+/// The characters an edition ends a sentence with.
+///
+/// Deliberately does **not** include `;` or `:`. An English semicolon is
+/// a joint inside a sentence, and the KJV leans on it hard — counting it
+/// cut Ephesians 1:7-12 into three. U+037E is the Greek question mark,
+/// which is a different codepoint from the semicolon precisely so the
+/// two can be told apart; U+05C3 is the Hebrew sof pasuq, which ends the
+/// verse and so ends whatever sentence was still running.
+const Set<String> _sentenceEnders = {
+  '.', '!', '?', //
+  '。', '！', '？', //
+  ';', // ";" GREEK QUESTION MARK
+  '׃', // "׃" HEBREW PUNCTUATION SOF PASUQ
+};
+
+/// Characters that may stand *after* a full stop without cancelling it.
+///
+/// Closing quotes and brackets only. A comma, a semicolon or a colon can
+/// never follow a terminator, so stripping them would be a way of
+/// finding a sentence end that is not there — `he said,` would become
+/// `he said` and then be tested against its last letter, which is at
+/// best wasted work and at worst, after a bracketed gloss, a false
+/// positive. `]` is here because `scriptureReadingText` wraps a divine
+/// name or a supplied word in brackets: 和合本 prints 「...说。[雅伟]」.
+const Set<String> _sentenceClosers = {
+  '"', "'", '”', '’', '»', '›', //
+  ')', ']', '}', '）', '］', '｝', //
+  '」', '』', '》', '〉', '〕', '‧',
+};
+
+/// True when [text] is the end of a sentence as its edition prints it.
+///
+/// Trailing closers are peeled one at a time rather than in a single
+/// pass, because 和合本 ends a quoted question with 「？」」 — two closers
+/// over one terminator — and 「...。』」 with three.
+bool phrasingEndsSentence(String text) {
+  var s = text.trimRight();
+  while (s.isNotEmpty && _sentenceClosers.contains(s[s.length - 1])) {
+    s = s.substring(0, s.length - 1).trimRight();
+  }
+  return s.isNotEmpty && _sentenceEnders.contains(s[s.length - 1]);
+}
+
+/// Beyond this many verses the window is not a sentence any more.
+///
+/// Measured before it was chosen, not rounded to something that looked
+/// sensible. Sentences run past 12 verses for **155 of LEB's, 175 of
+/// 和合本雅伟版's, 182 of KJV's and 218 of BSB's 31,102 verses — 0.50%
+/// to 0.70%** — and the ones past it are all *enumerations* rather than
+/// periods —
+/// Joshua 15:21-62 (42 verses of town names), Ezra 2:3-35 and Nehemiah
+/// 7:8-38 (the registries of the returned), 1 Chronicles 11:26-47 (the
+/// mighty men), Luke 3:23-38 (the genealogy). None of those is a unit of
+/// thought anyone phrases.
+///
+/// 12 rather than 10 because **LEB's Ephesians 1:3-14 is exactly 12**,
+/// and the one passage the request itself is about must not be the first
+/// thing the cap refuses.
+const int maxPhrasingWindowVerses = 12;
+
+/// Where a [PhrasingWindow]'s bounds came from.
+enum PhrasingWindowSource {
+  /// The words being phrased carry the punctuation themselves.
+  phrased,
+
+  /// They do not, so the bounds were read off the reader's edition and
+  /// are ITS claim about where the thought ends. `assets/originals`
+  /// carries **zero** sentence punctuation — 0 stops in 438,821 words,
+  /// because the import kept the pointing and the accents and dropped
+  /// the editors' periods — so this is the only route the Hebrew and
+  /// Greek have.
+  edition,
+
+  /// Nothing in the chapter stops anywhere. Falls back to the verse.
+  none,
+}
+
+/// The verse window to open a phrasing on, and why it is that size.
+class PhrasingWindow {
+  const PhrasingWindow({
+    required this.start,
+    required this.end,
+    required this.sentenceStart,
+    required this.sentenceEnd,
+    required this.source,
+  });
+
+  /// The window to show.
+  final int start;
+  final int end;
+
+  /// The sentence's real span. Equal to [start]/[end] unless the
+  /// sentence was longer than [maxPhrasingWindowVerses], in which case
+  /// the window is the cursor verse alone and this is what it is inside.
+  /// **A cap that is not printed is a silent WHERE clause**, so the pane
+  /// prints this and offers to open it.
+  final int sentenceStart;
+  final int sentenceEnd;
+
+  final PhrasingWindowSource source;
+
+  /// True when the sentence was too long to open and the reader is being
+  /// shown one verse of it.
+  bool get capped => sentenceStart != start || sentenceEnd != end;
+
+  /// True when the window says something the verse alone did not.
+  bool get widensVerse => end > start;
+
+  @override
+  String toString() =>
+      'PhrasingWindow($start-$end of $sentenceStart-$sentenceEnd, ${source.name})';
+}
+
+/// The smallest verse range containing [verse] whole that does not cut a
+/// sentence at either edge.
+///
+/// [text] is the chapter in reading order as `(verse, text)`; the verse
+/// need not be contiguous and repeated verses are joined, so it takes
+/// either the phrased words themselves or an edition's verse list.
+///
+/// **Only a terminator at the END of a verse can close the window**, and
+/// that is a decision rather than an approximation: the window is
+/// verse-granular, so a full stop in the middle of verse 7 gives no
+/// place to cut — the reader would still be shown all of 7. Ignoring it
+/// means the range is always *at least* the sentence, never less.
+PhrasingWindow phrasingSentenceWindow(
+  List<({int verse, String text})> text,
+  int verse, {
+  int maxVerses = maxPhrasingWindowVerses,
+  PhrasingWindowSource source = PhrasingWindowSource.phrased,
+}) {
+  // Last fragment wins: a verse closes only if its final token does.
+  final closes = <int, bool>{};
+  final order = <int>[];
+  for (final t in text) {
+    if (!closes.containsKey(t.verse)) order.add(t.verse);
+    closes[t.verse] = phrasingEndsSentence(t.text);
+  }
+  order.sort();
+  if (order.isEmpty) {
+    return PhrasingWindow(
+      start: verse,
+      end: verse,
+      sentenceStart: verse,
+      sentenceEnd: verse,
+      source: PhrasingWindowSource.none,
+    );
+  }
+  final i = order.indexOf(verse);
+  if (i < 0 || !closes.values.any((c) => c)) {
+    final v = i < 0 ? verse : order[i];
+    return PhrasingWindow(
+      start: v,
+      end: v,
+      sentenceStart: v,
+      sentenceEnd: v,
+      source: PhrasingWindowSource.none,
+    );
+  }
+  var a = i;
+  while (a > 0 && !(closes[order[a - 1]] ?? false)) {
+    a--;
+  }
+  var b = i;
+  while (b < order.length - 1 && !(closes[order[b]] ?? false)) {
+    b++;
+  }
+  final start = order[a];
+  final end = order[b];
+  // Counted as verses PRESENT, not as `end - start + 1`: a chapter with
+  // a gap in the tagged corpus would otherwise be capped for verses it
+  // was never going to draw.
+  final tooLong = b - a + 1 > maxVerses;
+  return PhrasingWindow(
+    start: tooLong ? verse : start,
+    end: tooLong ? verse : end,
+    sentenceStart: start,
+    sentenceEnd: end,
+    source: source,
+  );
+}
+
 /// One rendered line: the words `[start, end)`, at a *clamped* depth.
 class PhrasingLine {
   const PhrasingLine({

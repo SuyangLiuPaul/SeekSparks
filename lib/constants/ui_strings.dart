@@ -7165,6 +7165,48 @@ const uiStrings = {
     'en': 'Start over',
   },
   'phrasingRange': {'zh-Hans': '经节', 'zh-Hant': '經節', 'en': 'Verses'},
+  'phrasingSnapSentence': {
+    'zh-Hans': '整句',
+    'zh-Hant': '整句',
+    'en': 'Sentence',
+  },
+  'phrasingSnapSentenceTip': {
+    'zh-Hans': '把范围扩到起始那一节所在的整个句子',
+    'zh-Hant': '把範圍擴到起始那一節所在的整個句子',
+    'en': 'Widen the window to the whole sentence the first verse is in',
+  },
+  'phrasingNoStops': {
+    'zh-Hans': '这个文本没有句号一类的断句标点，范围无法扩到一节以外。',
+    'zh-Hant': '這個文本沒有句號一類的斷句標點，範圍無法擴到一節以外。',
+    'en': 'This text prints no sentence punctuation, so the window cannot be '
+        'widened past one verse.',
+  },
+  'phrasingSentenceOwn': {
+    'zh-Hans': '第 {a}–{b} 节在 {e} 里是一整句。',
+    'zh-Hant': '第 {a}–{b} 節在 {e} 裡是一整句。',
+    'en': 'Verses {a}–{b} are one sentence in {e}.',
+  },
+  'phrasingSentenceBorrowed': {
+    'zh-Hans': '第 {a}–{b} 节在 {e} 里是一整句。原文没有断句标点，'
+        '这个界线是该译本的判断。',
+    'zh-Hant': '第 {a}–{b} 節在 {e} 裡是一整句。原文沒有斷句標點，'
+        '這個界線是該譯本的判斷。',
+    'en': 'Verses {a}–{b} are one sentence in {e}. The original prints no '
+        'stops, so the bounds are that edition’s.',
+  },
+  'phrasingSentenceLong': {
+    'zh-Hans': '第 {v} 节属于 {e} 里一个长达 {n} 节的句子（{a}–{b}）——'
+        '这么长通常是名单，不是一句话。',
+    'zh-Hant': '第 {v} 節屬於 {e} 裡一個長達 {n} 節的句子（{a}–{b}）——'
+        '這麼長通常是名單，不是一句話。',
+    'en': 'Verse {v} is inside a {n}-verse sentence in {e} ({a}–{b}) — long '
+        'enough that it is a list, not a period.',
+  },
+  'phrasingSentenceOpenAnyway': {
+    'zh-Hans': '仍然打开',
+    'zh-Hant': '仍然開啟',
+    'en': 'Open it anyway',
+  },
   'phrasingNone': {
     'zh-Hans': '本章没有可供分行的经文。若已选「原文」，可改选「译本」。',
     'zh-Hant': '本章沒有可供分行的經文。若已選「原文」，可改選「譯本」。',
