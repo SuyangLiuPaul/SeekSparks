@@ -1293,26 +1293,89 @@ class _CommandPaneState extends State<CommandPane> {
     return cq == null ? wb.lastQuery : describeCommandQuery(cq, locale);
   }
 
-  /// The nudge shown when a search that looks like several words finds
-  /// nothing, because the plain scan is a substring match and `love god`
-  /// is not a substring of any verse. Names the query that WOULD work.
-  String? _tryAndHint(WorkbenchProvider wb, String locale) {
-    final cq = wb.commandQuery;
-    final String words;
-    if (cq != null) {
-      // A phrase that missed: the same words without the order.
-      if (cq.kind != CommandKind.phrase) return null;
-      words = [for (final t in cq.terms) t.source].join(' ');
-    } else {
-      // A plain multi-word query, which cannot match by construction.
-      if (!wb.lastQuery.contains(' ')) return null;
-      words = wb.lastQuery;
+  /// The looser reading of the query, offered with the count it really
+  /// returns — or nothing at all.
+  ///
+  /// This replaced a hint that named `.{words}` without ever running it.
+  /// The distinction is the whole feature: the reader who reported this
+  /// was handed `.ὁ θεός` by that hint, tapped it, and arrived at a
+  /// second empty page. [WorkbenchProvider.broadening] is null unless
+  /// the query behind it was measured and beat the one she ran, so a row
+  /// that appears is a row worth tapping.
+  ///
+  /// It fills AND runs, where the `?` card's examples only fill. An
+  /// example is a stand-in for words the reader has yet to choose; this
+  /// is her own line with one constraint dropped, and its answer is
+  /// already known.
+  Widget? _broadenOffer(WorkbenchProvider wb, String locale,
+      {required CrossAxisAlignment align}) {
+    final b = wb.broadening;
+    if (b == null) return null;
+    return Builder(builder: (context) {
+      final wbc = WbColors.of(context);
+      final t = WbType.of(context);
+      return Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            _controller.setTextAtomic(b.line);
+            _submit();
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            child: Column(
+              crossAxisAlignment: align,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  uiStrings['cmdBroadenLead']?[locale] ??
+                      'The same words in one verse, in any order:',
+                  textAlign: align == CrossAxisAlignment.center
+                      ? TextAlign.center
+                      : TextAlign.start,
+                  style: TextStyle(
+                    fontSize: t.chrome,
+                    color: wbc.mutedText,
+                    fontFamilyFallback: kCjkFontFallback,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  _summary(b.line, b.verses, locale),
+                  textAlign: align == CrossAxisAlignment.center
+                      ? TextAlign.center
+                      : TextAlign.start,
+                  style: TextStyle(
+                    fontSize: t.chrome,
+                    fontWeight: FontWeight.w600,
+                    color: wbc.link,
+                    fontFamilyFallback: kCjkFontFallback,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    });
+  }
+
+  /// Why there are no results, when the answer is a word rather than a
+  /// query. Null unless every word was probed.
+  String? _missingWords(WorkbenchProvider wb, String locale) {
+    final missing = wb.termsMissing;
+    if (missing == null) return null;
+    final listSep = uiStrings['cmdListSeparator']?[locale] ?? ', ';
+    if (missing.absent.isNotEmpty) {
+      return (uiStrings['cmdWordNotFound']?[locale] ??
+              'This search found no verse containing {words}.')
+          .replaceAll('{words}', missing.absent.join(listSep));
     }
-    if (words.trim().isEmpty) return null;
-    return (uiStrings['cmdTryAndHint']?[locale] ??
-            'No verse has that exact run of words. '
-                'Try ".{q}" for verses containing all of them.')
-        .replaceAll('{q}', words);
+    if (missing.allPresentApart) {
+      return uiStrings['cmdWordsNeverTogether']?[locale] ??
+          'Each of these words occurs, but no one verse holds them all.';
+    }
+    return null;
   }
 
   /// Before the first search: the queries that worked, or — for a
@@ -1667,9 +1730,15 @@ class _CommandPaneState extends State<CommandPane> {
       // The one place the model earns its keep: the literal scan has
       // said the words are not there, so "describe what you mean
       // instead" is the next thing to try rather than a competing mode.
+      // Before that, though, two cheaper answers: a looser query that is
+      // known to return verses, or — when there is none — the word that
+      // is the reason there are none.
       return _noResults(settings, scheme, locale,
-          message: _tryAndHint(wb, locale), aiQuery: wb.lastQuery);
+          message: _missingWords(wb, locale),
+          below: _broadenOffer(wb, locale, align: CrossAxisAlignment.center),
+          aiQuery: wb.lastQuery);
     }
+    final offer = _broadenOffer(wb, locale, align: CrossAxisAlignment.start);
     return Column(
       children: [
         _resultHeader(
@@ -1678,6 +1747,21 @@ class _CommandPaneState extends State<CommandPane> {
           settings,
           locale,
         ),
+        // Under the count, not over it: the reader asked for this list
+        // and it is the answer. The offer is the thing to try next, and
+        // it only exists here because the list is short enough to have
+        // left room for it.
+        if (offer != null)
+          Builder(builder: (context) {
+            return Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                border: Border(
+                    bottom: BorderSide(color: WbColors.of(context).border)),
+              ),
+              child: offer,
+            );
+          }),
         Expanded(
           child: ListView.builder(
             itemCount: results.length,
@@ -1755,8 +1839,11 @@ class _CommandPaneState extends State<CommandPane> {
   /// key. Both are absent for the grammar's own errors — a query the
   /// parser refused is a typo, not a question too hard for a literal
   /// search.
+  ///
+  /// [below] sits above both buttons: a looser query that is known to
+  /// return verses outranks handing the line to a model.
   Widget _noResults(AppSettings settings, ColorScheme scheme, String locale,
-      {String? message, String? aiQuery, String? byokNotice}) {
+      {String? message, Widget? below, String? aiQuery, String? byokNotice}) {
     return Builder(builder: (context) {
       final wbc = WbColors.of(context);
     final t = WbType.of(context);
@@ -1787,6 +1874,10 @@ class _CommandPaneState extends State<CommandPane> {
                   ),
                   textAlign: TextAlign.center,
                 ),
+              ],
+              if (below != null) ...[
+                const SizedBox(height: 10),
+                below,
               ],
               if (aiQuery != null && aiQuery.trim().length >= 2) ...[
                 const SizedBox(height: 12),

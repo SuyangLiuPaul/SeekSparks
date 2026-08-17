@@ -11,6 +11,7 @@ import 'package:seeksparks/services/search_service.dart';
 import 'package:seeksparks/utils/ai_ref_resolution.dart';
 import 'package:seeksparks/utils/command_query.dart';
 import 'package:seeksparks/utils/command_verb.dart' show LimitSpec;
+import 'package:seeksparks/utils/search_broadening.dart';
 import 'package:seeksparks/utils/search_scope.dart' show limitSpecForBooks;
 import 'package:seeksparks/utils/strongs_boolean_search.dart';
 import 'package:seeksparks/utils/strongs_result_counts.dart';
@@ -94,6 +95,20 @@ class WorkbenchProvider extends ChangeNotifier {
   /// began with a control character and did not parse — never for
   /// ordinary text, which is not a failed command but a plain search.
   CommandIssue? commandIssue;
+
+  /// The looser reading of the last query, and how many verses it really
+  /// returns. Null whenever it would not help — including, deliberately,
+  /// when it returns no more than the search the reader already ran.
+  ///
+  /// See `search_broadening.dart`: the count here is measured, not
+  /// predicted, and is measured under the same edition and the same
+  /// scope, so tapping it cannot land on a shorter list than the one it
+  /// advertised.
+  SearchBroadening? broadening;
+
+  /// Which of the last query's words the corpus does not contain, when
+  /// the search and its looser reading both returned nothing.
+  TermPresence? termsMissing;
 
   // ── AI passage search ─────────────────────────────────────────────
   //
@@ -357,6 +372,8 @@ class WorkbenchProvider extends ChangeNotifier {
     strongsByBook = const <String, int>{};
     strongsListTruncated = false;
     commandQuery = null;
+    broadening = null;
+    termsMissing = null;
     commandIssue = null;
     verbNotice = null;
     textResults = const [];
@@ -440,10 +457,64 @@ class WorkbenchProvider extends ChangeNotifier {
         );
       }
     } finally {
+      // Only the text shapes have a rung below them. A Strong's number
+      // is not a word order, and a grammar error is not a thin result.
+      if (strongsRefs == null && commandIssue == null) _measureBroadening();
       searching = false;
       searchPerformed = true;
       _notify();
     }
+  }
+
+  /// Run the looser reading of the last query and keep it only if it
+  /// beats the one the reader ran.
+  ///
+  /// Gated on the result count for two reasons at once: above
+  /// [kBroadenBelow] the offer would be noise, and below it the second
+  /// scan is free — the reader is looking at a short list, and the scan
+  /// measures at 14-42 ms over the whole 31,102-verse corpus, which is
+  /// why this is a plain synchronous call and not an isolate.
+  void _measureBroadening() {
+    broadening = null;
+    termsMissing = null;
+    final current = textResults.length;
+    if (current > kBroadenBelow) return;
+
+    CommandQuery? broader;
+    final line = broadenedCommandLine(parsed: commandQuery, raw: lastQuery);
+    if (line != null) {
+      broader = parseCommandQuery(line).query;
+      if (broader != null) {
+        final verses = _runCommand(broader).length;
+        // The whole point: an offer that does not beat what the reader
+        // already has is a second dead end, so it is not made.
+        if (verses > current) {
+          broadening =
+              SearchBroadening(line: line, query: broader, verses: verses);
+        }
+      }
+    }
+
+    if (current > 0 || broadening != null) return;
+    // Nothing found and nothing looser to offer: say which word is the
+    // reason rather than repeating that there are no results.
+    final subject = commandQuery ?? broader;
+    if (subject == null || subject.positiveTerms.length < 2) return;
+    final limit = searchLimit;
+    final verses = mainProvider.verses;
+    termsMissing = termPresence(
+      query: subject,
+      texts: mainProvider.wordKeys,
+      searchKeys: mainProvider.searchKeys,
+      books: [for (final v in verses) v.book],
+      inScope: limit == null
+          ? null
+          : (i) {
+              final v = verses[i];
+              return limit.contains(
+                  '${toEnglish(v.book) ?? v.book}-${v.chapter}-${v.verse}');
+            },
+    );
   }
 
   /// Run a parsed command query over the loaded corpus.
@@ -483,6 +554,8 @@ class WorkbenchProvider extends ChangeNotifier {
     strongsByBook = const <String, int>{};
     strongsListTruncated = false;
     commandQuery = null;
+    broadening = null;
+    termsMissing = null;
     commandIssue = null;
     verbNotice = null;
     textResults = const [];
@@ -530,6 +603,8 @@ class WorkbenchProvider extends ChangeNotifier {
     strongsByBook = const <String, int>{};
     strongsListTruncated = false;
     commandQuery = null;
+    broadening = null;
+    termsMissing = null;
     commandIssue = null;
     verbNotice = null;
     textResults = const [];

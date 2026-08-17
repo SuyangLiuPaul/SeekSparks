@@ -3390,11 +3390,33 @@ const uiStrings = {
     'en': 'ai verses about anxiety — describe what you want; '
         'AI answers with references (reference only)',
   },
-  'cmdTryAndHint': {
-    'zh-Hans': '没有整段匹配。试试 “.{q}”，查找同一节里都出现这些词的经文。',
-    'zh-Hant': '沒有整段匹配。試試「.{q}」，尋找同一節裡都出現這些詞的經文。',
-    'en': 'No verse has that exact run of words. '
-        'Try ".{q}" for verses containing all of them.',
+  // #299/#321. `cmdTryAndHint` lived here until v1.6.144: on an empty
+  // result it printed "try .<your words>" without ever running that
+  // query, so a reader whose words are simply not in the edition was
+  // sent to a second empty page — which is what happened to the reader
+  // who typed `ὁ θεός` against a corpus set without accents. The three
+  // strings below replace it, and the difference is that nothing is
+  // offered until it has been measured.
+  //
+  // The lead-in says what the looser query MEANS; the row under it
+  // carries the query itself, because the operator is the part the
+  // reader has to learn, and its real verse count.
+  'cmdBroadenLead': {
+    'zh-Hans': '同一节里包含全部这些词，不限次序：',
+    'zh-Hant': '同一節裡包含全部這些詞，不限次序：',
+    'en': 'The same words in one verse, in any order:',
+  },
+  // The terminus of the ladder: not "no results" a second time, but
+  // which word is the reason there are none.
+  'cmdWordNotFound': {
+    'zh-Hans': '本次搜索范围内，没有任何一节包含{words}。',
+    'zh-Hant': '本次搜尋範圍內，沒有任何一節包含{words}。',
+    'en': 'This search found no verse containing {words}.',
+  },
+  'cmdWordsNeverTogether': {
+    'zh-Hans': '这些词都出现过，但没有任何一节同时包含全部。',
+    'zh-Hant': '這些詞都出現過，但沒有任何一節同時包含全部。',
+    'en': 'Each of these words occurs, but no one verse holds them all.',
   },
   'commandSearchHint': {
     'zh-Hans': '搜索经文，或原文编号：G25 AND G26',
