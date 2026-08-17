@@ -1,0 +1,811 @@
+{
+ "schemaVersion": 1,
+ "_meta": {
+  "generator": "scripts/build_chronology.py",
+  "unit": "am",
+  "unitNote": "Anno Mundi — years counted from the creation, as the ages in Genesis 5 and 11 accumulate them. The text supplies no absolute date, so no BC year is stated here. Ussher's 4004 BC is one 17th-century reconstruction among several and is not adopted.",
+  "derivedFrom": {
+   "mt": "assets/kjv.json (Authorised Version, public domain), which renders the Masoretic figures.",
+   "lxx": "assets/lxxwh.json (Septuagint), read in Greek."
+  },
+  "checks": {
+   "sumsChecked": 18,
+   "note": "Genesis 5 states the age at begetting, the years lived afterwards, and the total, so the parse of every Genesis 5 figure is checked against the third number the verse itself supplies. Genesis 11 states only the first two, so those lifespans are sums and carry no such check; they are marked checked: false.",
+   "secondWitness": "14 of 14 Anno Mundi birth years agree with assets/family_tree.json, which was built separately.",
+   "disagreements": []
+  },
+  "traditions": "The Masoretic Text and the Septuagint state different ages in Genesis 5 and 11, and both texts ship with this app, so both are charted. The Samaritan Pentateuch states a third set; this repo does not hold that text and it is therefore absent rather than estimated."
+ },
+ "traditions": [
+  {
+   "id": "mt",
+   "name": {
+    "en": "Masoretic",
+    "zh-Hans": "马所拉",
+    "zh-Hant": "馬所拉"
+   },
+   "longName": {
+    "en": "Masoretic Text (via the Authorised Version)",
+    "zh-Hans": "马所拉经文（据英王钦定本）",
+    "zh-Hant": "馬所拉經文（據英王欽定本）"
+   },
+   "floodAm": 1656,
+   "endAm": 2187
+  },
+  {
+   "id": "lxx",
+   "name": {
+    "en": "Septuagint",
+    "zh-Hans": "七十士",
+    "zh-Hant": "七十士"
+   },
+   "longName": {
+    "en": "Septuagint (Greek Old Testament)",
+    "zh-Hans": "七十士译本（希腊文旧约）",
+    "zh-Hant": "七十士譯本（希臘文舊約）"
+   },
+   "floodAm": 2242,
+   "endAm": 3449
+  }
+ ],
+ "epochs": [
+  {
+   "id": "flood",
+   "name": {
+    "en": "The Flood",
+    "zh-Hans": "洪水",
+    "zh-Hant": "洪水"
+   },
+   "ref": "Genesis 7:6",
+   "years": {
+    "mt": 1656,
+    "lxx": 2242
+   },
+   "note": {
+    "en": "Genesis 7:6 puts the flood in Noah's 600th year.",
+    "zh-Hans": "创世记 7:11 记洪水在挪亚600岁那年。",
+    "zh-Hant": "創世記 7:11 記洪水在挪亞600歲那年。"
+   }
+  }
+ ],
+ "notes": [
+  {
+   "id": "methuselah_flood",
+   "tradition": "lxx",
+   "text": {
+    "en": "On these figures Methuselah dies 14 years after the flood. That follows from the ages this text states and is a long-discussed feature of it, not a slip in the arithmetic.",
+    "zh-Hans": "按此经文所记的岁数，玛土撒拉在洪水之后14年才去世。这是该经文自身数字推出的结果，历来多有讨论，并非此处计算有误。",
+    "zh-Hant": "按此經文所記的歲數，瑪土撒拉在洪水之後14年才去世。這是該經文自身數字推出的結果，歷來多有討論，並非此處計算有誤。"
+   }
+  }
+ ],
+ "patriarchs": [
+  {
+   "id": "adam",
+   "name": {
+    "en": "Adam",
+    "zh-Hans": "亚当",
+    "zh-Hant": "亞當"
+   },
+   "line": "seth",
+   "figures": {
+    "mt": {
+     "begatAt": 130,
+     "livedAfter": 800,
+     "lifespan": 930,
+     "checked": true,
+     "refs": {
+      "begatAt": "Genesis 5:3",
+      "livedAfter": "Genesis 5:4",
+      "lifespan": "Genesis 5:5"
+     },
+     "birthAm": 0,
+     "deathAm": 930
+    },
+    "lxx": {
+     "begatAt": 230,
+     "livedAfter": 700,
+     "lifespan": 930,
+     "checked": true,
+     "refs": {
+      "begatAt": "Genesis 5:3",
+      "livedAfter": "Genesis 5:4",
+      "lifespan": "Genesis 5:5"
+     },
+     "birthAm": 0,
+     "deathAm": 930
+    }
+   }
+  },
+  {
+   "id": "seth",
+   "name": {
+    "en": "Seth",
+    "zh-Hans": "塞特",
+    "zh-Hant": "塞特"
+   },
+   "line": "seth",
+   "figures": {
+    "mt": {
+     "begatAt": 105,
+     "livedAfter": 807,
+     "lifespan": 912,
+     "checked": true,
+     "refs": {
+      "begatAt": "Genesis 5:6",
+      "livedAfter": "Genesis 5:7",
+      "lifespan": "Genesis 5:8"
+     },
+     "birthAm": 130,
+     "deathAm": 1042
+    },
+    "lxx": {
+     "begatAt": 205,
+     "livedAfter": 707,
+     "lifespan": 912,
+     "checked": true,
+     "refs": {
+      "begatAt": "Genesis 5:6",
+      "livedAfter": "Genesis 5:7",
+      "lifespan": "Genesis 5:8"
+     },
+     "birthAm": 230,
+     "deathAm": 1142
+    }
+   }
+  },
+  {
+   "id": "enos",
+   "name": {
+    "en": "Enos",
+    "zh-Hans": "以挪士",
+    "zh-Hant": "以挪士"
+   },
+   "line": "seth",
+   "figures": {
+    "mt": {
+     "begatAt": 90,
+     "livedAfter": 815,
+     "lifespan": 905,
+     "checked": true,
+     "refs": {
+      "begatAt": "Genesis 5:9",
+      "livedAfter": "Genesis 5:10",
+      "lifespan": "Genesis 5:11"
+     },
+     "birthAm": 235,
+     "deathAm": 1140
+    },
+    "lxx": {
+     "begatAt": 190,
+     "livedAfter": 715,
+     "lifespan": 905,
+     "checked": true,
+     "refs": {
+      "begatAt": "Genesis 5:9",
+      "livedAfter": "Genesis 5:10",
+      "lifespan": "Genesis 5:11"
+     },
+     "birthAm": 435,
+     "deathAm": 1340
+    }
+   }
+  },
+  {
+   "id": "cainan",
+   "name": {
+    "en": "Cainan",
+    "zh-Hans": "该南",
+    "zh-Hant": "該南"
+   },
+   "line": "seth",
+   "figures": {
+    "mt": {
+     "begatAt": 70,
+     "livedAfter": 840,
+     "lifespan": 910,
+     "checked": true,
+     "refs": {
+      "begatAt": "Genesis 5:12",
+      "livedAfter": "Genesis 5:13",
+      "lifespan": "Genesis 5:14"
+     },
+     "birthAm": 325,
+     "deathAm": 1235
+    },
+    "lxx": {
+     "begatAt": 170,
+     "livedAfter": 740,
+     "lifespan": 910,
+     "checked": true,
+     "refs": {
+      "begatAt": "Genesis 5:12",
+      "livedAfter": "Genesis 5:13",
+      "lifespan": "Genesis 5:14"
+     },
+     "birthAm": 625,
+     "deathAm": 1535
+    }
+   }
+  },
+  {
+   "id": "mahalaleel",
+   "name": {
+    "en": "Mahalaleel",
+    "zh-Hans": "玛勒列",
+    "zh-Hant": "瑪勒列"
+   },
+   "line": "seth",
+   "figures": {
+    "mt": {
+     "begatAt": 65,
+     "livedAfter": 830,
+     "lifespan": 895,
+     "checked": true,
+     "refs": {
+      "begatAt": "Genesis 5:15",
+      "livedAfter": "Genesis 5:16",
+      "lifespan": "Genesis 5:17"
+     },
+     "birthAm": 395,
+     "deathAm": 1290
+    },
+    "lxx": {
+     "begatAt": 165,
+     "livedAfter": 730,
+     "lifespan": 895,
+     "checked": true,
+     "refs": {
+      "begatAt": "Genesis 5:15",
+      "livedAfter": "Genesis 5:16",
+      "lifespan": "Genesis 5:17"
+     },
+     "birthAm": 795,
+     "deathAm": 1690
+    }
+   }
+  },
+  {
+   "id": "jared",
+   "name": {
+    "en": "Jared",
+    "zh-Hans": "雅列",
+    "zh-Hant": "雅列"
+   },
+   "line": "seth",
+   "figures": {
+    "mt": {
+     "begatAt": 162,
+     "livedAfter": 800,
+     "lifespan": 962,
+     "checked": true,
+     "refs": {
+      "begatAt": "Genesis 5:18",
+      "livedAfter": "Genesis 5:19",
+      "lifespan": "Genesis 5:20"
+     },
+     "birthAm": 460,
+     "deathAm": 1422
+    },
+    "lxx": {
+     "begatAt": 162,
+     "livedAfter": 800,
+     "lifespan": 962,
+     "checked": true,
+     "refs": {
+      "begatAt": "Genesis 5:18",
+      "livedAfter": "Genesis 5:19",
+      "lifespan": "Genesis 5:20"
+     },
+     "birthAm": 960,
+     "deathAm": 1922
+    }
+   }
+  },
+  {
+   "id": "enoch",
+   "name": {
+    "en": "Enoch",
+    "zh-Hans": "以诺",
+    "zh-Hant": "以諾"
+   },
+   "line": "seth",
+   "figures": {
+    "mt": {
+     "begatAt": 65,
+     "livedAfter": 300,
+     "lifespan": 365,
+     "checked": true,
+     "refs": {
+      "begatAt": "Genesis 5:21",
+      "livedAfter": "Genesis 5:22",
+      "lifespan": "Genesis 5:23"
+     },
+     "birthAm": 622,
+     "deathAm": 987
+    },
+    "lxx": {
+     "begatAt": 165,
+     "livedAfter": 200,
+     "lifespan": 365,
+     "checked": true,
+     "refs": {
+      "begatAt": "Genesis 5:21",
+      "livedAfter": "Genesis 5:22",
+      "lifespan": "Genesis 5:23"
+     },
+     "birthAm": 1122,
+     "deathAm": 1487
+    }
+   }
+  },
+  {
+   "id": "methuselah",
+   "name": {
+    "en": "Methuselah",
+    "zh-Hans": "玛土撒拉",
+    "zh-Hant": "瑪土撒拉"
+   },
+   "line": "seth",
+   "figures": {
+    "mt": {
+     "begatAt": 187,
+     "livedAfter": 782,
+     "lifespan": 969,
+     "checked": true,
+     "refs": {
+      "begatAt": "Genesis 5:25",
+      "livedAfter": "Genesis 5:26",
+      "lifespan": "Genesis 5:27"
+     },
+     "birthAm": 687,
+     "deathAm": 1656
+    },
+    "lxx": {
+     "begatAt": 167,
+     "livedAfter": 802,
+     "lifespan": 969,
+     "checked": true,
+     "refs": {
+      "begatAt": "Genesis 5:25",
+      "livedAfter": "Genesis 5:26",
+      "lifespan": "Genesis 5:27"
+     },
+     "birthAm": 1287,
+     "deathAm": 2256
+    }
+   }
+  },
+  {
+   "id": "lamech",
+   "name": {
+    "en": "Lamech",
+    "zh-Hans": "拉麦",
+    "zh-Hant": "拉麥"
+   },
+   "line": "seth",
+   "figures": {
+    "mt": {
+     "begatAt": 182,
+     "livedAfter": 595,
+     "lifespan": 777,
+     "checked": true,
+     "refs": {
+      "begatAt": "Genesis 5:28",
+      "livedAfter": "Genesis 5:30",
+      "lifespan": "Genesis 5:31"
+     },
+     "birthAm": 874,
+     "deathAm": 1651
+    },
+    "lxx": {
+     "begatAt": 188,
+     "livedAfter": 565,
+     "lifespan": 753,
+     "checked": true,
+     "refs": {
+      "begatAt": "Genesis 5:28",
+      "livedAfter": "Genesis 5:30",
+      "lifespan": "Genesis 5:31"
+     },
+     "birthAm": 1454,
+     "deathAm": 2207
+    }
+   }
+  },
+  {
+   "id": "noah",
+   "name": {
+    "en": "Noah",
+    "zh-Hans": "挪亚",
+    "zh-Hant": "挪亞"
+   },
+   "line": "seth",
+   "figures": {
+    "mt": {
+     "begatAt": 500,
+     "livedAfter": 450,
+     "lifespan": 950,
+     "checked": false,
+     "refs": {
+      "begatAt": "Genesis 5:32",
+      "livedAfter": null,
+      "lifespan": "Genesis 9:29"
+     },
+     "birthAm": 1056,
+     "deathAm": 2006
+    },
+    "lxx": {
+     "begatAt": 500,
+     "livedAfter": 450,
+     "lifespan": 950,
+     "checked": false,
+     "refs": {
+      "begatAt": "Genesis 5:32",
+      "livedAfter": null,
+      "lifespan": "Genesis 9:29"
+     },
+     "birthAm": 1642,
+     "deathAm": 2592
+    }
+   }
+  },
+  {
+   "id": "shem",
+   "name": {
+    "en": "Shem",
+    "zh-Hans": "闪",
+    "zh-Hant": "閃"
+   },
+   "line": "shem",
+   "figures": {
+    "mt": {
+     "begatAt": 100,
+     "livedAfter": 500,
+     "lifespan": 600,
+     "checked": false,
+     "refs": {
+      "begatAt": "Genesis 11:10",
+      "livedAfter": "Genesis 11:11",
+      "lifespan": null
+     },
+     "birthAm": 1558,
+     "deathAm": 2158
+    },
+    "lxx": {
+     "begatAt": 100,
+     "livedAfter": 500,
+     "lifespan": 600,
+     "checked": false,
+     "refs": {
+      "begatAt": "Genesis 11:10",
+      "livedAfter": "Genesis 11:11",
+      "lifespan": null
+     },
+     "birthAm": 2144,
+     "deathAm": 2744
+    }
+   }
+  },
+  {
+   "id": "arphaxad",
+   "name": {
+    "en": "Arphaxad",
+    "zh-Hans": "亚法撒",
+    "zh-Hant": "亞法撒"
+   },
+   "line": "shem",
+   "figures": {
+    "mt": {
+     "begatAt": 35,
+     "livedAfter": 403,
+     "lifespan": 438,
+     "checked": false,
+     "refs": {
+      "begatAt": "Genesis 11:12",
+      "livedAfter": "Genesis 11:13",
+      "lifespan": null
+     },
+     "birthAm": 1658,
+     "deathAm": 2096
+    },
+    "lxx": {
+     "begatAt": 135,
+     "livedAfter": 430,
+     "lifespan": 565,
+     "checked": false,
+     "refs": {
+      "begatAt": "Genesis 11:12",
+      "livedAfter": "Genesis 11:13",
+      "lifespan": null
+     },
+     "birthAm": 2244,
+     "deathAm": 2809
+    }
+   }
+  },
+  {
+   "id": "kainan2",
+   "name": {
+    "en": "Kainan",
+    "zh-Hans": "该南",
+    "zh-Hant": "該南"
+   },
+   "line": "shem",
+   "figures": {
+    "lxx": {
+     "begatAt": 130,
+     "livedAfter": 330,
+     "lifespan": 460,
+     "checked": false,
+     "refs": {
+      "begatAt": "Genesis 11:13",
+      "livedAfter": "Genesis 11:13",
+      "lifespan": null
+     },
+     "birthAm": 2379,
+     "deathAm": 2839
+    }
+   }
+  },
+  {
+   "id": "salah",
+   "name": {
+    "en": "Salah",
+    "zh-Hans": "沙拉",
+    "zh-Hant": "沙拉"
+   },
+   "line": "shem",
+   "figures": {
+    "mt": {
+     "begatAt": 30,
+     "livedAfter": 403,
+     "lifespan": 433,
+     "checked": false,
+     "refs": {
+      "begatAt": "Genesis 11:14",
+      "livedAfter": "Genesis 11:15",
+      "lifespan": null
+     },
+     "birthAm": 1693,
+     "deathAm": 2126
+    },
+    "lxx": {
+     "begatAt": 130,
+     "livedAfter": 330,
+     "lifespan": 460,
+     "checked": false,
+     "refs": {
+      "begatAt": "Genesis 11:14",
+      "livedAfter": "Genesis 11:15",
+      "lifespan": null
+     },
+     "birthAm": 2509,
+     "deathAm": 2969
+    }
+   }
+  },
+  {
+   "id": "eber",
+   "name": {
+    "en": "Eber",
+    "zh-Hans": "希伯",
+    "zh-Hant": "希伯"
+   },
+   "line": "shem",
+   "figures": {
+    "mt": {
+     "begatAt": 34,
+     "livedAfter": 430,
+     "lifespan": 464,
+     "checked": false,
+     "refs": {
+      "begatAt": "Genesis 11:16",
+      "livedAfter": "Genesis 11:17",
+      "lifespan": null
+     },
+     "birthAm": 1723,
+     "deathAm": 2187
+    },
+    "lxx": {
+     "begatAt": 134,
+     "livedAfter": 370,
+     "lifespan": 504,
+     "checked": false,
+     "refs": {
+      "begatAt": "Genesis 11:16",
+      "livedAfter": "Genesis 11:17",
+      "lifespan": null
+     },
+     "birthAm": 2639,
+     "deathAm": 3143
+    }
+   }
+  },
+  {
+   "id": "peleg",
+   "name": {
+    "en": "Peleg",
+    "zh-Hans": "法勒",
+    "zh-Hant": "法勒"
+   },
+   "line": "shem",
+   "figures": {
+    "mt": {
+     "begatAt": 30,
+     "livedAfter": 209,
+     "lifespan": 239,
+     "checked": false,
+     "refs": {
+      "begatAt": "Genesis 11:18",
+      "livedAfter": "Genesis 11:19",
+      "lifespan": null
+     },
+     "birthAm": 1757,
+     "deathAm": 1996
+    },
+    "lxx": {
+     "begatAt": 130,
+     "livedAfter": 209,
+     "lifespan": 339,
+     "checked": false,
+     "refs": {
+      "begatAt": "Genesis 11:18",
+      "livedAfter": "Genesis 11:19",
+      "lifespan": null
+     },
+     "birthAm": 2773,
+     "deathAm": 3112
+    }
+   }
+  },
+  {
+   "id": "reu",
+   "name": {
+    "en": "Reu",
+    "zh-Hans": "拉吴",
+    "zh-Hant": "拉吳"
+   },
+   "line": "shem",
+   "figures": {
+    "mt": {
+     "begatAt": 32,
+     "livedAfter": 207,
+     "lifespan": 239,
+     "checked": false,
+     "refs": {
+      "begatAt": "Genesis 11:20",
+      "livedAfter": "Genesis 11:21",
+      "lifespan": null
+     },
+     "birthAm": 1787,
+     "deathAm": 2026
+    },
+    "lxx": {
+     "begatAt": 132,
+     "livedAfter": 207,
+     "lifespan": 339,
+     "checked": false,
+     "refs": {
+      "begatAt": "Genesis 11:20",
+      "livedAfter": "Genesis 11:21",
+      "lifespan": null
+     },
+     "birthAm": 2903,
+     "deathAm": 3242
+    }
+   }
+  },
+  {
+   "id": "serug",
+   "name": {
+    "en": "Serug",
+    "zh-Hans": "西鹿",
+    "zh-Hant": "西鹿"
+   },
+   "line": "shem",
+   "figures": {
+    "mt": {
+     "begatAt": 30,
+     "livedAfter": 200,
+     "lifespan": 230,
+     "checked": false,
+     "refs": {
+      "begatAt": "Genesis 11:22",
+      "livedAfter": "Genesis 11:23",
+      "lifespan": null
+     },
+     "birthAm": 1819,
+     "deathAm": 2049
+    },
+    "lxx": {
+     "begatAt": 130,
+     "livedAfter": 200,
+     "lifespan": 330,
+     "checked": false,
+     "refs": {
+      "begatAt": "Genesis 11:22",
+      "livedAfter": "Genesis 11:23",
+      "lifespan": null
+     },
+     "birthAm": 3035,
+     "deathAm": 3365
+    }
+   }
+  },
+  {
+   "id": "nahor",
+   "name": {
+    "en": "Nahor",
+    "zh-Hans": "拿鹤",
+    "zh-Hant": "拿鶴"
+   },
+   "line": "shem",
+   "figures": {
+    "mt": {
+     "begatAt": 29,
+     "livedAfter": 119,
+     "lifespan": 148,
+     "checked": false,
+     "refs": {
+      "begatAt": "Genesis 11:24",
+      "livedAfter": "Genesis 11:25",
+      "lifespan": null
+     },
+     "birthAm": 1849,
+     "deathAm": 1997
+    },
+    "lxx": {
+     "begatAt": 79,
+     "livedAfter": 129,
+     "lifespan": 208,
+     "checked": false,
+     "refs": {
+      "begatAt": "Genesis 11:24",
+      "livedAfter": "Genesis 11:25",
+      "lifespan": null
+     },
+     "birthAm": 3165,
+     "deathAm": 3373
+    }
+   }
+  },
+  {
+   "id": "terah",
+   "name": {
+    "en": "Terah",
+    "zh-Hans": "他拉",
+    "zh-Hant": "他拉"
+   },
+   "line": "shem",
+   "figures": {
+    "mt": {
+     "begatAt": 70,
+     "livedAfter": 135,
+     "lifespan": 205,
+     "checked": false,
+     "refs": {
+      "begatAt": "Genesis 11:26",
+      "livedAfter": null,
+      "lifespan": "Genesis 11:32"
+     },
+     "birthAm": 1878,
+     "deathAm": 2083
+    },
+    "lxx": {
+     "begatAt": 70,
+     "livedAfter": 135,
+     "lifespan": 205,
+     "checked": false,
+     "refs": {
+      "begatAt": "Genesis 11:26",
+      "livedAfter": null,
+      "lifespan": "Genesis 11:32"
+     },
+     "birthAm": 3244,
+     "deathAm": 3449
+    }
+   }
+  }
+ ]
+}

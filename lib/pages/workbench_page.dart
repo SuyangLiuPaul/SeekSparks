@@ -25,6 +25,7 @@ import 'package:seeksparks/pages/atlas_page.dart';
 import 'package:seeksparks/pages/bible_timeline_page.dart';
 import 'package:seeksparks/pages/bible_trivia_page.dart';
 import 'package:seeksparks/pages/books_page.dart';
+import 'package:seeksparks/pages/chronology_page.dart';
 import 'package:seeksparks/pages/evidence_page.dart';
 import 'package:seeksparks/pages/family_tree_page.dart';
 import 'package:seeksparks/pages/hebrew_kings_page.dart';
@@ -538,6 +539,12 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         // of descent, this is both thrones on one time axis.
         WbMenuItem(s('hebrewKings', 'Kings of Judah & Israel'),
             () => pushPage(const HebrewKingsPage())),
+        // Earlier than the kings, and resting on a different kind of
+        // evidence: the kings chart states Thiele's reconstruction and
+        // has to cite him, this one states ages Genesis gives and cites
+        // the verses.
+        WbMenuItem(s('chronology', 'Bible Chronology'),
+            () => pushPage(const ChronologyPage())),
         WbMenuItem(s('library', 'Notes & highlights'),
             () => pushPage(const LibraryPage())),
         WbMenuItem(

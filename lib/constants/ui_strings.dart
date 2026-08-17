@@ -5976,6 +5976,69 @@ const uiStrings = {
     'zh-Hant': '猶大與以色列列王',
     'en': 'Kings of Judah & Israel',
   },
+  // The Genesis 5 and 11 lifespans. "年代" rather than "年表" because a
+  // 年表 is a list of events and this is a chart of durations, which is
+  // the whole difference between it and the Timeline resource.
+  'chronology': {
+    'zh-Hans': '圣经年代（创世记五、十一章）',
+    'zh-Hant': '聖經年代（創世記五、十一章）',
+    'en': 'Bible Chronology',
+  },
+  'chronologyText': {
+    'zh-Hans': '经文传统',
+    'zh-Hant': '經文傳統',
+    'en': 'Text',
+  },
+  // Anno Mundi. Left untranslated as an abbreviation in English and
+  // given its meaning in Chinese, because "AM" tells a Chinese reader
+  // nothing and 创世纪年 tells them exactly what the axis counts.
+  'chronologyAm': {
+    'zh-Hans': '创世纪年',
+    'zh-Hant': '創世紀年',
+    'en': 'AM',
+  },
+  'chronologyYears': {
+    'zh-Hans': '年',
+    'zh-Hant': '年',
+    'en': 'years',
+  },
+  'chronologyBegatAt': {
+    'zh-Hans': '生下一代时的年岁',
+    'zh-Hant': '生下一代時的年歲',
+    'en': 'Fathered the next generation at',
+  },
+  'chronologyLivedAfter': {
+    'zh-Hans': '此后又活了',
+    'zh-Hant': '此後又活了',
+    'en': 'Lived after that',
+  },
+  'chronologyLifespan': {
+    'zh-Hans': '一生年数',
+    'zh-Hant': '一生年數',
+    'en': 'Lifespan',
+  },
+  'chronologyChecked': {
+    'zh-Hans': '经文三个数字都有记载，第三个正好核对前两个。',
+    'zh-Hant': '經文三個數字都有記載，第三個正好核對前兩個。',
+    'en':
+        'The text states all three figures, and the third checks the other two.',
+  },
+  'chronologyDerived': {
+    'zh-Hans': '经文只记载其中两个数字，第三个是两者相加。',
+    'zh-Hant': '經文只記載其中兩個數字，第三個是兩者相加。',
+    'en': 'The text states two of these figures; the third is their sum.',
+  },
+  'chronologyContemporaries': {
+    'zh-Hans': '同时在世的人',
+    'zh-Hant': '同時在世的人',
+    'en': 'Alive at the same time',
+  },
+  'chronologyContemporariesNote': {
+    'zh-Hans': '经文并未如此说；这是把经文所记的岁数相加得出的。',
+    'zh-Hant': '經文並未如此說；這是把經文所記的歲數相加得出的。',
+    'en':
+        'Not stated anywhere in the text — this follows from adding up the ages it gives.',
+  },
   'kingsJudah': {
     'zh-Hans': '犹大',
     'zh-Hant': '猶大',
