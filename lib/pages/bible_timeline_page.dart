@@ -73,10 +73,16 @@ TextStyle _yearStyle(WbType t, ColorScheme scheme) => TextStyle(
 /// `bible_timeline_page_test.dart` tests the app rather than the
 /// harness.
 ///
-/// This runs over the distinct years currently listed, once per page
-/// build. Scrolling does not rebuild the page — `ListView.builder` calls
-/// the item builder, not this — so the cost lands on a keystroke in the
-/// search field and on opening a row.
+/// Pass the WHOLE event list, never the search results. A lane measured
+/// from the filtered set is narrower whenever the filter is, so the rail
+/// and every card on it slide left as the reader types and back as they
+/// delete — the column was a fixed 90 px before this, and jitter would
+/// be a regression introduced by the fix.
+///
+/// This runs over the distinct years, once per page build. Scrolling
+/// does not rebuild the page — `ListView.builder` calls the item
+/// builder, not this — so the cost lands on a keystroke in the search
+/// field and on opening a row.
 ///
 /// [context] must be one the year [Text] itself would resolve against.
 /// A bare `TextPainter` measures the style handed to it and nothing
@@ -194,8 +200,7 @@ class _BibleTimelinePageState extends State<BibleTimelinePage> {
           }
 
           final yearStyle = _yearStyle(t, scheme);
-          final yearLane =
-              _measureYearLane(context, filtered, locale, yearStyle);
+          final yearLane = _measureYearLane(context, all, locale, yearStyle);
 
           return Center(
             child: ConstrainedBox(

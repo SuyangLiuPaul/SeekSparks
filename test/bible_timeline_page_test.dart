@@ -134,6 +134,37 @@ void main() {
     }
   });
 
+  // A lane measured from the search results narrows whenever the search
+  // does, so the rail and every card on it slide left as the reader
+  // types. The column was a fixed 90 px before it was measured, so this
+  // would be a regression introduced by the fix rather than one it
+  // inherited.
+  testWidgets('the lane does not move while the reader searches',
+      (tester) async {
+    await pump(tester);
+
+    double laneOf(String year) => tester
+        .renderObjectList<RenderParagraph>(find.byType(RichText))
+        .firstWhere((p) => p.text.toPlainText() == year)
+        .size
+        .width;
+
+    // Unfiltered, the widest year is on screen, so the lane it is
+    // granted is the whole corpus's lane.
+    final full = laneOf('约 公元前 4000 年');
+
+    // Filter down to the exodus, whose year is the narrowest kind the
+    // page has — unhedged, four digits — and whose match set contains
+    // nothing dated to the creation. Under a filtered measurement the
+    // lane would shrink to fit these matches alone.
+    await tester.enterText(find.byType(TextField), '出埃及');
+    await settle(tester);
+    expect(find.text('约 公元前 4000 年'), findsNothing);
+    expect(laneOf('公元前 1446 年'), full);
+
+    await unmount(tester);
+  });
+
   testWidgets('an open row says what its year rests on', (tester) async {
     await pump(tester);
 
