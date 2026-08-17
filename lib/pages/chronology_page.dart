@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -15,7 +16,7 @@ import 'package:seeksparks/widgets/home_icon_button.dart';
 import 'package:seeksparks/widgets/language_switcher_button.dart';
 import 'package:seeksparks/widgets/localized_back_button.dart';
 
-/// The generations from Adam to Abraham, drawn as lifespans on one axis.
+/// The generations from Adam to Joseph, drawn as lifespans on one axis.
 ///
 /// WHAT THIS IS FOR. Genesis 5 and 11 read as a list of strangers: a
 /// name, a number, "and he died", forty times over. Every printed
@@ -48,6 +49,16 @@ import 'package:seeksparks/widgets/localized_back_button.dart';
 /// it into BC needs an absolute anchor the text never gives, and
 /// Ussher's 4004 BC is one such anchor, not a fact.
 ///
+/// WHERE IT STOPS. At the descent into Egypt, Genesis 47:9, and not at
+/// the exodus — Exodus 12:40 covers different ground in the two texts
+/// (the Hebrew's 430 years are in Egypt, the Greek's are in Egypt *and*
+/// Canaan), so carrying the axis further would mean the chart choosing
+/// between the texts rather than drawing both. The last four rows are
+/// also a different kind of source: Genesis 5 and 11 state their figures
+/// in a formula, Genesis 12-50 scatters them through narrative, and a
+/// row whose `refs` lack a key was derived rather than read. See
+/// `scripts/build_chronology.py`.
+///
 /// Chrome follows workbench_theme.dart: square corners, 1px hairlines,
 /// no shadows, no cards.
 class ChronologyPage extends StatefulWidget {
@@ -68,9 +79,25 @@ class ChronologyPage extends StatefulWidget {
 double _nameLane(WbType t) => t.scaled(132);
 double _rowHeight(WbType t) => t.scaled(30);
 
-/// Chrome scale, not text: the only thing in the axis strip is the tick
-/// labels and the unit, both of which the Menu Size slider owns.
-double _axisHeight(WbType t) => t.scaledChrome(30);
+/// Chrome scale, not text: the only things in the axis strip are the
+/// tick labels, the epoch names and the unit, all of which the Menu Size
+/// slider owns.
+double _axisFont(WbType t) => t.scaledChrome(10);
+
+/// The strip is sized from the line it must hold, measured, rather than
+/// from a pixel count that happens to be right at one setting. A CJK
+/// glyph is in the probe because it is the tallest thing the strip ever
+/// holds and it is what the Chinese epoch names are set in.
+double _axisHeight(WbType t) {
+  final probe = TextPainter(
+    text: TextSpan(
+      text: '年0',
+      style: TextStyle(fontSize: _axisFont(t)),
+    ),
+    textDirection: TextDirection.ltr,
+  )..layout();
+  return axisStripHeight(probe.height);
+}
 double _detailPanelWidth(WbType t) => t.scaled(320);
 
 /// The narrowest strip of bars worth drawing. A chart of 3,449 years in
@@ -89,13 +116,31 @@ const double _minChartWidth = 520;
 double _sideBySideMinWidth(WbType t) =>
     _detailPanelWidth(t) + _nameLane(t) + _minBarsForPanel;
 
-/// Seth's line in Genesis 5, Shem's in Genesis 11. Two hues, far enough
-/// apart to survive the wash used for "contemporary" without either
-/// reading as the other.
+/// Seth's line in Genesis 5, Shem's in Genesis 11, the patriarchs in
+/// Genesis 12-50. Three hues, far enough apart to survive the wash used
+/// for "contemporary" without any of them reading as another.
+///
+/// Colour is the SECOND channel here, not the first: every bar is named
+/// in the lane beside it and the three groups are contiguous down the
+/// chart, so a reader who cannot separate the hues loses nothing they
+/// were relying on. That is why a third could be added at all — the
+/// blue/orange pair was safe for colour-blind readers and a third hue
+/// cannot be.
 const Color _sethHue = Color(0xFF5B87C4);
 const Color _shemHue = Color(0xFFC4885B);
+const Color _abrahamHue = Color(0xFF4F8F6E);
 
-Color _hueFor(String? line) => line == 'shem' ? _shemHue : _sethHue;
+Color _hueFor(String? line) => switch (line) {
+      'shem' => _shemHue,
+      'abraham' => _abrahamHue,
+      _ => _sethHue,
+    };
+
+/// The colour every epoch line is drawn in. One colour, because the
+/// lines are told apart by the name printed above each in the axis
+/// strip; a palette would say the difference twice and the second
+/// saying would be the one a colour-blind reader could not read.
+const Color _epochHue = Color(0xFF3E7CB1);
 
 class _ChronologyPageState extends State<ChronologyPage> {
   Future<ChronologyData>? _future;
@@ -289,9 +334,6 @@ class _Header extends StatelessWidget {
   Widget build(BuildContext context) {
     final wb = WbColors.of(context);
     final t = WbType.of(context);
-    final flood = data.epochs.where((e) => e.id == 'flood').firstOrNull;
-    final floodYear = flood?.years[tradition.id];
-
     return Container(
       decoration: BoxDecoration(
         color: wb.chromeBg,
@@ -316,11 +358,18 @@ class _Header extends StatelessWidget {
                   selected: tr.id == tradition.id,
                   onTap: () => onTradition(tr.id),
                 ),
-              if (floodYear != null)
-                Text(
-                  '${flood!.nameFor(locale)} · ${_s('chronologyAm', 'AM')} $floodYear',
-                  style: TextStyle(fontSize: t.chrome, color: wb.mutedText),
-                ),
+              // Every epoch, with the verse that dates it. The name and
+              // the position are on the chart; what only this line can
+              // give is the exact year and the reference behind it,
+              // which is the claim the whole module rests on.
+              for (final e in data.epochs)
+                if (e.years[tradition.id] != null)
+                  Text(
+                    '${e.nameFor(locale)} · ${_s('chronologyAm', 'AM')} '
+                    '${e.years[tradition.id]}'
+                    '${e.ref == null ? '' : ' · ${e.ref}'}',
+                    style: TextStyle(fontSize: t.chrome, color: wb.mutedText),
+                  ),
             ],
           ),
           const SizedBox(height: 4),
@@ -420,8 +469,12 @@ class _Chart extends StatelessWidget {
     final selected = selectedId == null ? null : data.byId(selectedId!);
     final selectedFigures = selected?.figures[tradition.id];
 
-    final floodYear =
-        data.epochs.where((e) => e.id == 'flood').firstOrNull?.years[tradition.id];
+    final epochs = [
+      for (final e in data.epochs)
+        if (e.years[tradition.id] != null)
+          (e.years[tradition.id]!, e.nameFor(locale)),
+    ];
+    final epochYears = [for (final e in epochs) e.$1];
 
     return Scrollbar(
       child: SingleChildScrollView(
@@ -453,14 +506,23 @@ class _Chart extends StatelessWidget {
                     ),
                     Expanded(
                       child: CustomPaint(
+                        key: const ValueKey('chronologyAxis'),
                         painter: _AxisPainter(
                           ticks: ticks,
+                          epochs: epochs,
                           firstYear: firstYear,
                           lastYear: lastYear,
                           border: wb.border,
                           textColor: wb.mutedText,
-                          fontSize: t.scaledChrome(10),
+                          epochColor: _epochHue,
+                          fontSize: _axisFont(t),
                         ),
+                        // Without a child a CustomPaint takes the
+                        // smallest height its constraints allow, which
+                        // inside a Row is zero — the painter was laying
+                        // its labels out against a canvas of no height
+                        // and drawing them above the strip it was given.
+                        child: const SizedBox.expand(),
                       ),
                     ),
                   ],
@@ -480,7 +542,7 @@ class _Chart extends StatelessWidget {
                           lastYear: lastYear,
                           barsWidth: barsWidth,
                           ticks: ticks,
-                          floodYear: floodYear,
+                          epochYears: epochYears,
                           locale: locale,
                           selected: p.id == selectedId,
                           selectedSpan: selectedFigures == null
@@ -506,18 +568,24 @@ class _Chart extends StatelessWidget {
 class _AxisPainter extends CustomPainter {
   _AxisPainter({
     required this.ticks,
+    required this.epochs,
     required this.firstYear,
     required this.lastYear,
     required this.border,
     required this.textColor,
+    required this.epochColor,
     required this.fontSize,
   });
 
   final List<int> ticks;
+
+  /// Year and name, in the order the asset lists them.
+  final List<(int, String)> epochs;
   final int firstYear;
   final int lastYear;
   final Color border;
   final Color textColor;
+  final Color epochColor;
   final double fontSize;
 
   @override
@@ -525,6 +593,11 @@ class _AxisPainter extends CustomPainter {
     final line = Paint()
       ..color = border
       ..strokeWidth = 1;
+    final tickTop = size.height - 6;
+    // Where the year labels start, so the epoch rules can stop above
+    // them. Taken from the labels themselves rather than from the font
+    // size, which is smaller than the line the glyphs occupy.
+    var yearLabelTop = tickTop;
     for (final year in ticks) {
       final x = xForYear(year, firstYear, lastYear, size.width);
       canvas.drawLine(
@@ -536,16 +609,55 @@ class _AxisPainter extends CustomPainter {
         ),
         textDirection: TextDirection.ltr,
       )..layout();
-      tp.paint(canvas, Offset(x - tp.width / 2, size.height - 6 - tp.height));
+      yearLabelTop = tickTop - tp.height;
+      tp.paint(canvas, Offset(x - tp.width / 2, yearLabelTop));
+    }
+
+    // Every vertical line the chart draws over the bars is named here.
+    // Three unlabelled rules would leave a reader guessing which was the
+    // flood, and a chart that draws an event without naming it is making
+    // a claim it has not stated.
+    //
+    // Labels alternate between two rows and are clamped inside the
+    // strip, so an epoch near either end keeps its whole name rather
+    // than losing half of it off the edge — an epoch name is not
+    // ellipsised, per #297, and would otherwise paint past the canvas.
+    for (var i = 0; i < epochs.length; i++) {
+      final (year, label) = epochs[i];
+      final x = xForYear(year, firstYear, lastYear, size.width);
+      final tp = TextPainter(
+        text: TextSpan(
+          text: label,
+          style: TextStyle(color: epochColor, fontSize: fontSize),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout();
+      final rowTop = i.isEven ? 1.0 : 2 + tp.height;
+      final left = (x - tp.width / 2)
+          .clamp(0.0, (size.width - tp.width).clamp(0.0, double.infinity));
+      tp.paint(canvas, Offset(left, rowTop));
+      // A leader from the label to the year it names. Vertical in the
+      // ordinary case; a label pushed sideways to stay on the canvas
+      // leans back to its own year rather than standing over someone
+      // else's.
+      canvas.drawLine(
+        Offset(left + tp.width / 2, rowTop + tp.height),
+        Offset(x, yearLabelTop - 1),
+        Paint()
+          ..color = epochColor.withValues(alpha: 0.55)
+          ..strokeWidth = 1,
+      );
     }
   }
 
   @override
   bool shouldRepaint(_AxisPainter old) =>
       old.ticks != ticks ||
+      old.epochs != epochs ||
       old.firstYear != firstYear ||
       old.lastYear != lastYear ||
       old.fontSize != fontSize ||
+      old.epochColor != epochColor ||
       old.textColor != textColor;
 }
 
@@ -557,7 +669,7 @@ class _Row extends StatelessWidget {
     required this.lastYear,
     required this.barsWidth,
     required this.ticks,
-    required this.floodYear,
+    required this.epochYears,
     required this.locale,
     required this.selected,
     required this.selectedSpan,
@@ -571,7 +683,7 @@ class _Row extends StatelessWidget {
   final int lastYear;
   final double barsWidth;
   final List<int> ticks;
-  final int? floodYear;
+  final List<int> epochYears;
   final String locale;
   final bool selected;
   final (int, int)? selectedSpan;
@@ -642,11 +754,13 @@ class _Row extends StatelessWidget {
                 painter: _BarPainter(
                   birth: figures.birthAm,
                   death: figures.deathAm,
-                  begat: figures.birthAm + figures.begatAt,
+                  begat: figures.begatAt == null
+                      ? null
+                      : figures.birthAm + figures.begatAt!,
                   firstYear: firstYear,
                   lastYear: lastYear,
                   ticks: ticks,
-                  floodYear: floodYear,
+                  epochYears: epochYears,
                   selectedSpan: selectedSpan,
                   hue: hue,
                   selectedHue: selectedHue,
@@ -672,7 +786,7 @@ class _BarPainter extends CustomPainter {
     required this.firstYear,
     required this.lastYear,
     required this.ticks,
-    required this.floodYear,
+    required this.epochYears,
     required this.selectedSpan,
     required this.hue,
     required this.selectedHue,
@@ -686,12 +800,15 @@ class _BarPainter extends CustomPainter {
 
   /// The year the next man in the line was born. The bar is drawn solid
   /// up to here and pale after it, so the eye can follow the descent
-  /// along the chart without a second lane of marks.
-  final int begat;
+  /// along the chart without a second lane of marks. Null for the last
+  /// man in the chain, whose bar is therefore solid end to end: there is
+  /// no next generation to hand over to, and a pale tail would say there
+  /// was one at an unknown date.
+  final int? begat;
   final int firstYear;
   final int lastYear;
   final List<int> ticks;
-  final int? floodYear;
+  final List<int> epochYears;
   final (int, int)? selectedSpan;
   final Color hue;
 
@@ -730,32 +847,33 @@ class _BarPainter extends CustomPainter {
       );
     }
 
-    if (floodYear != null) {
+    final epochPaint = Paint()
+      ..color = _epochHue
+      ..strokeWidth = 1.5;
+    for (final year in epochYears) {
       canvas.drawLine(
-        Offset(x(floodYear!), 0),
-        Offset(x(floodYear!), size.height),
-        Paint()
-          ..color = const Color(0xFF3E7CB1)
-          ..strokeWidth = 1.5,
-      );
+          Offset(x(year), 0), Offset(x(year), size.height), epochPaint);
     }
 
     final top = size.height / 2 - 6;
     final left = x(birth);
     final right = x(death);
-    final mid = x(begat.clamp(birth, death));
+    final split = begat;
+    final mid = split == null ? right : x(split.clamp(birth, death));
 
     // Square corners, per workbench_theme.dart:16.
     canvas.drawRect(
       Rect.fromLTRB(left, top, mid, top + 12),
       Paint()..color = hue.withValues(alpha: selected || contemporary ? 1 : 0.75),
     );
-    canvas.drawRect(
-      Rect.fromLTRB(mid, top, right, top + 12),
-      Paint()
-        ..color =
-            hue.withValues(alpha: selected || contemporary ? 0.45 : 0.3),
-    );
+    if (mid < right) {
+      canvas.drawRect(
+        Rect.fromLTRB(mid, top, right, top + 12),
+        Paint()
+          ..color =
+              hue.withValues(alpha: selected || contemporary ? 0.45 : 0.3),
+      );
+    }
     if (selected) {
       canvas.drawRect(
         Rect.fromLTRB(left, top, right, top + 12),
@@ -774,7 +892,7 @@ class _BarPainter extends CustomPainter {
       old.begat != begat ||
       old.firstYear != firstYear ||
       old.lastYear != lastYear ||
-      old.floodYear != floodYear ||
+      !listEquals(old.epochYears, epochYears) ||
       old.selectedSpan != selectedSpan ||
       old.selected != selected ||
       old.contemporary != contemporary ||
@@ -805,6 +923,37 @@ class _DetailPanel extends StatelessWidget {
 
   String _s(String key, String fallback) =>
       uiStrings[key]?[locale] ?? fallback;
+
+  /// Which figures on this record the text actually states, read off the
+  /// refs rather than off the chapter. A missing ref means the figure was
+  /// worked out, and `checked` is a separate fact from that: Jacob's
+  /// record is checked — 130 at the descent plus 17 in Egypt is the 147
+  /// the text gives — while two of its three figures are still derived,
+  /// so the two must not be reported by the same sentence.
+  String _trustSentence() {
+    final present = [
+      if (figures.begatAt != null) 'begatAt',
+      if (figures.livedAfter != null) 'livedAfter',
+      'lifespan',
+    ];
+    final derived = present.where((k) => figures.refs[k] == null).length;
+    if (derived == 0) {
+      return figures.checked
+          ? _s('chronologyChecked',
+              'The text states all three figures, and the third checks the other two.')
+          : _s('chronologyAllStated',
+              'Every figure here is stated in the text; none of them was derived.');
+    }
+    if (derived == 1) {
+      return _s('chronologyDerived',
+          'One of these figures is not stated in the text; it follows from the two that are.');
+    }
+    return figures.checked
+        ? _s('chronologyNarrativeChecked',
+            'Only the total is stated for this man; the other figures were worked out from ages given elsewhere in the narrative, and the text states a further figure that checks them.')
+        : _s('chronologyNarrative',
+            'Only the total is stated for this man; the other figures were worked out from ages given elsewhere in the narrative.');
+  }
 
   Future<void> _jump(BuildContext context, String raw) async {
     final ref = parseReference(raw);
@@ -863,20 +1012,24 @@ class _DetailPanel extends StatelessWidget {
             style: TextStyle(fontSize: t.text, color: wb.mutedText),
           ),
           const SizedBox(height: 12),
-          _Fact(
-            label: _s('chronologyBegatAt', 'Fathered the next generation at'),
-            value:
-                '${figures.begatAt} ${_s('chronologyYears', 'years')}',
-            reference: figures.refs['begatAt'],
-            onTap: _jump,
-          ),
-          _Fact(
-            label: _s('chronologyLivedAfter', 'Lived after that'),
-            value:
-                '${figures.livedAfter} ${_s('chronologyYears', 'years')}',
-            reference: figures.refs['livedAfter'],
-            onTap: _jump,
-          ),
+          // Joseph ends the chain, so these two figures do not exist for
+          // him rather than being unknown. An empty row would claim the
+          // text is silent about something it was asked; no row says the
+          // question does not arise.
+          if (figures.begatAt != null)
+            _Fact(
+              label: _s('chronologyBegatAt', 'Fathered the next generation at'),
+              value: '${figures.begatAt} ${_s('chronologyYears', 'years')}',
+              reference: figures.refs['begatAt'],
+              onTap: _jump,
+            ),
+          if (figures.livedAfter != null)
+            _Fact(
+              label: _s('chronologyLivedAfter', 'Lived after that'),
+              value: '${figures.livedAfter} ${_s('chronologyYears', 'years')}',
+              reference: figures.refs['livedAfter'],
+              onTap: _jump,
+            ),
           _Fact(
             label: _s('chronologyLifespan', 'Lifespan'),
             value:
@@ -886,16 +1039,27 @@ class _DetailPanel extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           // Says which figures the text itself checked and which were
-          // added up. Two numbers that look alike are not equally sure,
-          // and the surface that shows them should say so.
+          // worked out. Two numbers that look alike are not equally sure,
+          // and the surface that shows them should say so. Which sentence
+          // applies is read off the record rather than off the chapter:
+          // a figure carrying no verse was derived, whatever section of
+          // Genesis the man belongs to.
           Text(
-            figures.checked
-                ? _s('chronologyChecked',
-                    'The text states all three figures, and the third checks the other two.')
-                : _s('chronologyDerived',
-                    'The text states two of these figures; the third is their sum.'),
+            _trustSentence(),
             style: TextStyle(fontSize: t.chrome, color: wb.mutedText),
           ),
+          // A caveat the generator raised about this man specifically.
+          // Also shown in the header, on purpose: a reader who has
+          // selected nobody still needs to see it, and a reader looking
+          // at this figure should not have to scroll back up for it.
+          for (final n in data.notesForPerson(tradition.id, person.id))
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                n.textFor(locale),
+                style: TextStyle(fontSize: t.chrome, color: wb.text),
+              ),
+            ),
           const SizedBox(height: 16),
           Text(
             '${_s('chronologyContemporaries', 'Alive at the same time')} · ${others.length}',

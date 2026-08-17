@@ -145,6 +145,71 @@ void main() {
     await unmount(tester);
   });
 
+  testWidgets('Joseph shows only the figure the text gives him',
+      (tester) async {
+    await pump(tester, const Size(1440, 900));
+
+    await tester.tap(find.text('约瑟'));
+    await settle(tester);
+    expect(tester.takeException(), isNull);
+
+    expect(find.text('Genesis 50:26'), findsOneWidget);
+    // He ends the chain, so there is no age at begetting and no "lived
+    // after that". An empty row would say the text was asked and stayed
+    // silent; no row says the question does not arise.
+    expect(find.text('生下一代时的年岁'), findsNothing);
+    expect(find.text('此后又活了'), findsNothing);
+
+    await unmount(tester);
+  });
+
+  // A caveat about one man belongs where a reader looking at that man
+  // is, not only in a header he has scrolled past.
+  testWidgets('the Terah/Abram conflict is on Abraham\'s own panel',
+      (tester) async {
+    await pump(tester, const Size(1440, 900));
+
+    await tester.tap(find.text('亚伯拉罕'));
+    await settle(tester);
+    expect(tester.takeException(), isNull);
+
+    final note = data
+        .notesForPerson('mt', 'abraham')
+        .firstWhere((n) => n.id == 'abram_birth')
+        .textFor('zh-Hans');
+    // Twice on purpose: once in the header, once in his panel.
+    expect(find.text(note), findsNWidgets(2));
+
+    await unmount(tester);
+  });
+
+  // The axis strip holds three rows of un-ellipsised text — two of epoch
+  // names and one of years — and it is a CustomPaint, so an overrun
+  // neither throws nor clips visibly in a test. Only the measurement
+  // catches it, and the strip is on the chrome slider, which moves
+  // independently of the font slider measured below.
+  testWidgets('the axis strip holds its three rows at every menu scale',
+      (tester) async {
+    for (final scale in [0.7, 1.0, 1.5]) {
+      final settings = await pump(tester, const Size(1440, 900));
+      await settings.setMenuScale(scale);
+      await settle(tester);
+      expect(tester.takeException(), isNull, reason: '$scale');
+
+      final strip = tester.getSize(find.byKey(const ValueKey('chronologyAxis')));
+      final probe = TextPainter(
+        text: TextSpan(
+          text: '下埃及 2238',
+          style: TextStyle(fontSize: 10 * scale),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout();
+      expect(strip.height, greaterThanOrEqualTo(probe.height * 3),
+          reason: 'menu scale $scale');
+      await unmount(tester);
+    }
+  });
+
   // The regression this file exists for. `_nameLane` used to be a fixed
   // 132 px while the name inside it is drawn at `t.text`, which the font
   // slider scales from 0.6× to 2×. At 40 pt the label outgrew the lane

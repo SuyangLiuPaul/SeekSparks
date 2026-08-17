@@ -1,4 +1,4 @@
-/// The Genesis 5 and Genesis 11 lifespans, in Anno Mundi.
+/// The Genesis lifespans from Adam to Joseph, in Anno Mundi.
 ///
 /// Backing data: `assets/chronology.json`, built by
 /// `scripts/build_chronology.py`, which reads every figure out of
@@ -35,11 +35,13 @@ class ChronologyFigures {
     required this.refs,
   });
 
-  /// His age when the next man in the line was born.
-  final int begatAt;
+  /// His age when the next man in the line was born, or null when there
+  /// is no next man — Joseph ends the chain, so the figure does not
+  /// exist rather than being unknown.
+  final int? begatAt;
 
-  /// Years he lived after that.
-  final int livedAfter;
+  /// Years he lived after that, null for the same reason.
+  final int? livedAfter;
   final int lifespan;
   final int birthAm;
   final int deathAm;
@@ -53,8 +55,8 @@ class ChronologyFigures {
 
   static ChronologyFigures fromJson(Map<String, dynamic> j) =>
       ChronologyFigures(
-        begatAt: (j['begatAt'] as num).toInt(),
-        livedAfter: (j['livedAfter'] as num).toInt(),
+        begatAt: (j['begatAt'] as num?)?.toInt(),
+        livedAfter: (j['livedAfter'] as num?)?.toInt(),
         lifespan: (j['lifespan'] as num).toInt(),
         birthAm: (j['birthAm'] as num).toInt(),
         deathAm: (j['deathAm'] as num).toInt(),
@@ -76,9 +78,12 @@ class Patriarch {
 
   final String id;
 
-  /// `seth` for Genesis 5, `shem` for Genesis 11. The printed
-  /// chronologies have coloured by line of descent since the 17th
-  /// century and it is the one grouping the text itself draws.
+  /// `seth` for Genesis 5, `shem` for Genesis 11, `abraham` for Genesis
+  /// 12-50. The printed chronologies have coloured by line of descent
+  /// since the 17th century and it is the one grouping the text itself
+  /// draws. The third is not a separate descent — the patriarchs are
+  /// Shem's — but the third way Genesis states an age, and the one whose
+  /// figures need deriving; see `scripts/build_chronology.py`.
   final String line;
   final Map<String, String> names;
 
@@ -171,11 +176,19 @@ class ChronologyNote {
   const ChronologyNote({
     required this.id,
     required this.tradition,
+    required this.personId,
     required this.texts,
   });
 
   final String id;
   final String tradition;
+
+  /// The man the caveat is about, when it is about one. A note carrying
+  /// a person is shown twice on purpose: in the header, where a reader
+  /// who has selected nobody still sees why a bar crosses the flood
+  /// line, and again in his detail panel, which is where a reader
+  /// looking at that figure actually is.
+  final String? personId;
   final Map<String, String> texts;
 
   String textFor(String locale) => texts[locale] ?? texts['en'] ?? '';
@@ -183,6 +196,7 @@ class ChronologyNote {
   static ChronologyNote fromJson(Map<String, dynamic> j) => ChronologyNote(
         id: (j['id'] as String?) ?? '',
         tradition: (j['tradition'] as String?) ?? '',
+        personId: j['personId'] as String?,
         texts: _localised(j['text']),
       );
 }
@@ -218,6 +232,11 @@ class ChronologyData {
 
   List<ChronologyNote> notesFor(String traditionId) =>
       notes.where((n) => n.tradition == traditionId).toList();
+
+  List<ChronologyNote> notesForPerson(String traditionId, String personId) =>
+      notes
+          .where((n) => n.tradition == traditionId && n.personId == personId)
+          .toList();
 
   Patriarch? byId(String id) {
     for (final p in patriarchs) {

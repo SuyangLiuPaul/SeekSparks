@@ -6024,9 +6024,27 @@ const uiStrings = {
         'The text states all three figures, and the third checks the other two.',
   },
   'chronologyDerived': {
-    'zh-Hans': '经文只记载其中两个数字，第三个是两者相加。',
-    'zh-Hant': '經文只記載其中兩個數字，第三個是兩者相加。',
-    'en': 'The text states two of these figures; the third is their sum.',
+    'zh-Hans': '其中一个数字经文没有记载，是从有记载的另外两个算出来的。',
+    'zh-Hant': '其中一個數字經文沒有記載，是從有記載的另外兩個算出來的。',
+    'en':
+        'One of these figures is not stated in the text; it follows from the two that are.',
+  },
+  'chronologyAllStated': {
+    'zh-Hans': '这里的数字都出自经文，没有一个是算出来的。',
+    'zh-Hant': '這裡的數字都出自經文，沒有一個是算出來的。',
+    'en': 'Every figure here is stated in the text; none of them was derived.',
+  },
+  'chronologyNarrative': {
+    'zh-Hans': '这人只有一生的总年数出自经文，其余是从记叙中别处的岁数推算出来的。',
+    'zh-Hant': '這人只有一生的總年數出自經文，其餘是從記敘中別處的歲數推算出來的。',
+    'en':
+        'Only the total is stated for this man; the other figures were worked out from ages given elsewhere in the narrative.',
+  },
+  'chronologyNarrativeChecked': {
+    'zh-Hans': '这人只有一生的总年数出自经文，其余是从记叙中别处的岁数推算出来的；经文另有一个数字正好核对。',
+    'zh-Hant': '這人只有一生的總年數出自經文，其餘是從記敘中別處的歲數推算出來的；經文另有一個數字正好核對。',
+    'en':
+        'Only the total is stated for this man; the other figures were worked out from ages given elsewhere in the narrative, and the text states a further figure that checks them.',
   },
   'chronologyContemporaries': {
     'zh-Hans': '同时在世的人',

@@ -9,9 +9,10 @@
    "lxx": "assets/lxxwh.json (Septuagint), read in Greek."
   },
   "checks": {
-   "sumsChecked": 18,
-   "note": "Genesis 5 states the age at begetting, the years lived afterwards, and the total, so the parse of every Genesis 5 figure is checked against the third number the verse itself supplies. Genesis 11 states only the first two, so those lifespans are sums and carry no such check; they are marked checked: false.",
-   "secondWitness": "14 of 14 Anno Mundi birth years agree with assets/family_tree.json, which was built separately.",
+   "sumsChecked": 20,
+   "note": "Genesis 5 states the age at begetting, the years lived afterwards, and the total, so the parse of every Genesis 5 figure is checked against the third number the verse itself supplies. Genesis 11 states only the first two, so those lifespans are sums and carry no such check; they are marked checked: false. In Genesis 12-50 only Jacob has a third figure — 47:9's 130 plus 47:28's 17 years in Egypt against the 147 that same verse states — and it checks the descent year as well as the parse.",
+   "traditionAgreement": "Genesis 5 and 11: the two texts state the same begetting age and lifespan for 4 of 19 men. Genesis 12-50: 4 of 4. The choice of text therefore moves the genealogies and leaves the patriarchs where they are.",
+   "secondWitness": "21 of 21 Anno Mundi birth years agree with assets/family_tree.json, which was built separately.",
    "disagreements": []
   },
   "traditions": "The Masoretic Text and the Septuagint state different ages in Genesis 5 and 11, and both texts ship with this app, so both are charted. The Samaritan Pentateuch states a third set; this repo does not hold that text and it is therefore absent rather than estimated."
@@ -30,7 +31,7 @@
     "zh-Hant": "馬所拉經文（據英王欽定本）"
    },
    "floodAm": 1656,
-   "endAm": 2187
+   "endAm": 2309
   },
   {
    "id": "lxx",
@@ -45,7 +46,7 @@
     "zh-Hant": "七十士譯本（希臘文舊約）"
    },
    "floodAm": 2242,
-   "endAm": 3449
+   "endAm": 3675
   }
  ],
  "epochs": [
@@ -63,8 +64,44 @@
    },
    "note": {
     "en": "Genesis 7:6 puts the flood in Noah's 600th year.",
-    "zh-Hans": "创世记 7:11 记洪水在挪亚600岁那年。",
-    "zh-Hant": "創世記 7:11 記洪水在挪亞600歲那年。"
+    "zh-Hans": "创世记 7:6 记洪水在挪亚600岁那年。",
+    "zh-Hant": "創世記 7:6 記洪水在挪亞600歲那年。"
+   }
+  },
+  {
+   "id": "haran",
+   "name": {
+    "en": "Abram leaves Haran",
+    "zh-Hans": "亚伯兰离开哈兰",
+    "zh-Hant": "亞伯蘭離開哈蘭"
+   },
+   "ref": "Genesis 12:4",
+   "years": {
+    "mt": 2023,
+    "lxx": 3389
+   },
+   "note": {
+    "en": "Genesis 12:4 has Abram 75 years old when he left Haran.",
+    "zh-Hans": "创世记 12:4 记亚伯兰离开哈兰时75岁。",
+    "zh-Hant": "創世記 12:4 記亞伯蘭離開哈蘭時75歲。"
+   }
+  },
+  {
+   "id": "descent",
+   "name": {
+    "en": "Into Egypt",
+    "zh-Hans": "下埃及",
+    "zh-Hant": "下埃及"
+   },
+   "ref": "Genesis 47:9",
+   "years": {
+    "mt": 2238,
+    "lxx": 3604
+   },
+   "note": {
+    "en": "Jacob tells Pharaoh he is 130 (Genesis 47:9); 47:28 adds the 17 years he then lived in Egypt and states the total, so this year is checked against a third figure.",
+    "zh-Hans": "雅各对法老说自己130岁（创世记 47:9）；47:28 记他此后在埃及又活了17年，并记出总岁数，故此年另有第三个数字可核。",
+    "zh-Hant": "雅各對法老說自己130歲（創世記 47:9）；47:28 記他此後在埃及又活了17年，並記出總歲數，故此年另有第三個數字可核。"
    }
   }
  ],
@@ -72,10 +109,51 @@
   {
    "id": "methuselah_flood",
    "tradition": "lxx",
+   "personId": "methuselah",
    "text": {
     "en": "On these figures Methuselah dies 14 years after the flood. That follows from the ages this text states and is a long-discussed feature of it, not a slip in the arithmetic.",
     "zh-Hans": "按此经文所记的岁数，玛土撒拉在洪水之后14年才去世。这是该经文自身数字推出的结果，历来多有讨论，并非此处计算有误。",
     "zh-Hant": "按此經文所記的歲數，瑪土撒拉在洪水之後14年才去世。這是該經文自身數字推出的結果，歷來多有討論，並非此處計算有誤。"
+   }
+  },
+  {
+   "id": "abram_birth",
+   "tradition": "mt",
+   "personId": "abraham",
+   "text": {
+    "en": "Genesis 11:26 has Terah fathering Abram, Nahor and Haran at 70, and this chart takes that as Abram's year. On it Abram leaves Haran at 75 (Genesis 12:4) 60 years before Terah dies at 205 (Genesis 11:32). Acts 7:4 has Abram moving on after his father's death; chronologies that follow it make Abram the youngest of the three and put his birth at AM 2008, moving him and everyone after him 60 years later.",
+    "zh-Hans": "创世记 11:26 记他拉70岁生亚伯兰、拿鹤、哈兰，本图即以此年为亚伯兰的出生年。照此，亚伯兰75岁离开哈兰（创世记 12:4）时，他拉尚有60年才去世（创世记 11:32 记他拉活了205岁）。使徒行传 7:4 说亚伯兰是在父亲死后才迁往迦南；采此读法的年代学把亚伯兰视为三子中最幼的，出生年定在创世纪元 2008 年，他与其后各人都要往后推60年。",
+    "zh-Hant": "創世記 11:26 記他拉70歲生亞伯蘭、拿鶴、哈蘭，本圖即以此年為亞伯蘭的出生年。照此，亞伯蘭75歲離開哈蘭（創世記 12:4）時，他拉尚有60年才去世（創世記 11:32 記他拉活了205歲）。使徒行傳 7:4 說亞伯蘭是在父親死後才遷往迦南；採此讀法的年代學把亞伯蘭視為三子中最幼的，出生年定在創世紀元 2008 年，他與其後各人都要往後推60年。"
+   }
+  },
+  {
+   "id": "abram_birth",
+   "tradition": "lxx",
+   "personId": "abraham",
+   "text": {
+    "en": "Genesis 11:26 has Terah fathering Abram, Nahor and Haran at 70, and this chart takes that as Abram's year. On it Abram leaves Haran at 75 (Genesis 12:4) 60 years before Terah dies at 205 (Genesis 11:32). Acts 7:4 has Abram moving on after his father's death; chronologies that follow it make Abram the youngest of the three and put his birth at AM 3374, moving him and everyone after him 60 years later.",
+    "zh-Hans": "创世记 11:26 记他拉70岁生亚伯兰、拿鹤、哈兰，本图即以此年为亚伯兰的出生年。照此，亚伯兰75岁离开哈兰（创世记 12:4）时，他拉尚有60年才去世（创世记 11:32 记他拉活了205岁）。使徒行传 7:4 说亚伯兰是在父亲死后才迁往迦南；采此读法的年代学把亚伯兰视为三子中最幼的，出生年定在创世纪元 3374 年，他与其后各人都要往后推60年。",
+    "zh-Hant": "創世記 11:26 記他拉70歲生亞伯蘭、拿鶴、哈蘭，本圖即以此年為亞伯蘭的出生年。照此，亞伯蘭75歲離開哈蘭（創世記 12:4）時，他拉尚有60年才去世（創世記 11:32 記他拉活了205歲）。使徒行傳 7:4 說亞伯蘭是在父親死後才遷往迦南；採此讀法的年代學把亞伯蘭視為三子中最幼的，出生年定在創世紀元 3374 年，他與其後各人都要往後推60年。"
+   }
+  },
+  {
+   "id": "sojourn_430",
+   "tradition": "mt",
+   "personId": null,
+   "text": {
+    "en": "The chart stops here. Exodus 12:40 puts 430 years next in both texts, but not over the same ground: the Hebrew counts them in Egypt, the Greek “in the land of Egypt and in the land of Canaan” — which would begin them at Abraham, not at this line. Carrying the axis on to the exodus would mean choosing between them, so it is not carried.",
+    "zh-Hans": "本图到此为止。出埃及记 12:40 在两种经文中都记430年，所指却不是同一段：希伯来文把这些年数算在埃及，希腊文作「在埃及地和迦南地」——那样起点便在亚伯拉罕，而不在这条线上。若把时间轴延到出埃及，就必须在两者之间取舍，故不延。",
+    "zh-Hant": "本圖到此為止。出埃及記 12:40 在兩種經文中都記430年，所指卻不是同一段：希伯來文把這些年數算在埃及，希臘文作「在埃及地和迦南地」——那樣起點便在亞伯拉罕，而不在這條線上。若把時間軸延到出埃及，就必須在兩者之間取捨，故不延。"
+   }
+  },
+  {
+   "id": "sojourn_430",
+   "tradition": "lxx",
+   "personId": null,
+   "text": {
+    "en": "The chart stops here. Exodus 12:40 puts 430 years next in both texts, but not over the same ground: the Hebrew counts them in Egypt, the Greek “in the land of Egypt and in the land of Canaan” — which would begin them at Abraham, not at this line. Carrying the axis on to the exodus would mean choosing between them, so it is not carried.",
+    "zh-Hans": "本图到此为止。出埃及记 12:40 在两种经文中都记430年，所指却不是同一段：希伯来文把这些年数算在埃及，希腊文作「在埃及地和迦南地」——那样起点便在亚伯拉罕，而不在这条线上。若把时间轴延到出埃及，就必须在两者之间取舍，故不延。",
+    "zh-Hant": "本圖到此為止。出埃及記 12:40 在兩種經文中都記430年，所指卻不是同一段：希伯來文把這些年數算在埃及，希臘文作「在埃及地和迦南地」——那樣起點便在亞伯拉罕，而不在這條線上。若把時間軸延到出埃及，就必須在兩者之間取捨，故不延。"
    }
   }
  ],
@@ -804,6 +882,146 @@
      },
      "birthAm": 3244,
      "deathAm": 3449
+    }
+   }
+  },
+  {
+   "id": "abraham",
+   "name": {
+    "en": "Abraham",
+    "zh-Hans": "亚伯拉罕",
+    "zh-Hant": "亞伯拉罕"
+   },
+   "line": "abraham",
+   "figures": {
+    "mt": {
+     "begatAt": 100,
+     "livedAfter": 75,
+     "lifespan": 175,
+     "checked": false,
+     "refs": {
+      "begatAt": "Genesis 21:5",
+      "livedAfter": null,
+      "lifespan": "Genesis 25:7"
+     },
+     "birthAm": 1948,
+     "deathAm": 2123
+    },
+    "lxx": {
+     "begatAt": 100,
+     "livedAfter": 75,
+     "lifespan": 175,
+     "checked": false,
+     "refs": {
+      "begatAt": "Genesis 21:5",
+      "livedAfter": null,
+      "lifespan": "Genesis 25:7"
+     },
+     "birthAm": 3314,
+     "deathAm": 3489
+    }
+   }
+  },
+  {
+   "id": "isaac",
+   "name": {
+    "en": "Isaac",
+    "zh-Hans": "以撒",
+    "zh-Hant": "以撒"
+   },
+   "line": "abraham",
+   "figures": {
+    "mt": {
+     "begatAt": 60,
+     "livedAfter": 120,
+     "lifespan": 180,
+     "checked": false,
+     "refs": {
+      "begatAt": "Genesis 25:26",
+      "livedAfter": null,
+      "lifespan": "Genesis 35:28"
+     },
+     "birthAm": 2048,
+     "deathAm": 2228
+    },
+    "lxx": {
+     "begatAt": 60,
+     "livedAfter": 120,
+     "lifespan": 180,
+     "checked": false,
+     "refs": {
+      "begatAt": "Genesis 25:26",
+      "livedAfter": null,
+      "lifespan": "Genesis 35:28"
+     },
+     "birthAm": 3414,
+     "deathAm": 3594
+    }
+   }
+  },
+  {
+   "id": "jacob",
+   "name": {
+    "en": "Jacob",
+    "zh-Hans": "雅各",
+    "zh-Hant": "雅各"
+   },
+   "line": "abraham",
+   "figures": {
+    "mt": {
+     "begatAt": 91,
+     "livedAfter": 56,
+     "lifespan": 147,
+     "checked": true,
+     "refs": {
+      "lifespan": "Genesis 47:28"
+     },
+     "birthAm": 2108,
+     "deathAm": 2255
+    },
+    "lxx": {
+     "begatAt": 91,
+     "livedAfter": 56,
+     "lifespan": 147,
+     "checked": true,
+     "refs": {
+      "lifespan": "Genesis 47:28"
+     },
+     "birthAm": 3474,
+     "deathAm": 3621
+    }
+   }
+  },
+  {
+   "id": "joseph",
+   "name": {
+    "en": "Joseph",
+    "zh-Hans": "约瑟",
+    "zh-Hant": "約瑟"
+   },
+   "line": "abraham",
+   "figures": {
+    "mt": {
+     "begatAt": null,
+     "livedAfter": null,
+     "lifespan": 110,
+     "checked": false,
+     "refs": {
+      "lifespan": "Genesis 50:26"
+     },
+     "birthAm": 2199,
+     "deathAm": 2309
+    },
+    "lxx": {
+     "begatAt": null,
+     "livedAfter": null,
+     "lifespan": 110,
+     "checked": false,
+     "refs": {
+      "lifespan": "Genesis 50:26"
+     },
+     "birthAm": 3565,
+     "deathAm": 3675
     }
    }
   }

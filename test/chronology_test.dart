@@ -118,17 +118,57 @@ void main() {
       for (final p in data.patriarchs) {
         for (final entry in p.figures.entries) {
           final f = entry.value;
-          expect(f.begatAt + f.livedAfter, f.lifespan,
-              reason: '${p.id} (${entry.key}) does not add up');
           expect(f.deathAm - f.birthAm, f.lifespan,
               reason: '${p.id} (${entry.key}) span disagrees with lifespan');
-          expect(f.begatAt, greaterThan(0), reason: p.id);
+          final begat = f.begatAt;
+          final after = f.livedAfter;
+          // The two halves of a life exist together or not at all: they
+          // are missing only for the last man in the chain, who has no
+          // next generation to divide his life at.
+          expect(begat == null, after == null,
+              reason: '${p.id} (${entry.key}) has half a division');
+          if (begat != null && after != null) {
+            expect(begat + after, f.lifespan,
+                reason: '${p.id} (${entry.key}) does not add up');
+            expect(begat, greaterThan(0), reason: p.id);
+            expect(after, greaterThan(0), reason: p.id);
+          }
         }
       }
     });
 
-    test('every stated figure carries the verse it was read from', () {
+    test('only the last man in each text is undivided', () {
+      for (final t in ['mt', 'lxx']) {
+        final people = data.inTradition(t);
+        final open = [
+          for (final p in people)
+            if (p.figures[t]!.begatAt == null) p.id
+        ];
+        expect(open, [people.last.id], reason: t);
+      }
+    });
+
+    test('every figure carrying a verse carries a real one', () {
+      final ref = RegExp(r'^(Genesis|Exodus) \d+:\d+$');
       for (final p in data.patriarchs) {
+        for (final f in p.figures.values) {
+          for (final e in f.refs.entries) {
+            expect(['begatAt', 'livedAfter', 'lifespan'], contains(e.key),
+                reason: p.id);
+            expect(ref.hasMatch(e.value), isTrue,
+                reason: '${p.id} ${e.key} = ${e.value}');
+          }
+        }
+      }
+    });
+
+    // Genesis 5 and 11 state the begetting age in a formula, so a
+    // missing verse there would mean the parser stopped finding it.
+    // Genesis 12-50 does not, which is why the rule is scoped to the
+    // lines rather than applied to the whole asset.
+    test('the formulaic genealogies cite every begetting age', () {
+      for (final p in data.patriarchs) {
+        if (p.line == 'abraham') continue;
         for (final f in p.figures.values) {
           expect(f.refs['begatAt'], isNotNull, reason: p.id);
           expect(f.refs['begatAt'], startsWith('Genesis '), reason: p.id);
@@ -224,7 +264,8 @@ void main() {
       } else {
         expect(notes.map((n) => n.id), isNot(contains('methuselah_flood')));
       }
-      expect(data.notesFor('mt'), isEmpty);
+      expect(data.notesFor('mt').map((n) => n.id),
+          isNot(contains('methuselah_flood')));
     });
 
     test('every name and note is in all three locales', () {
@@ -270,8 +311,162 @@ void main() {
     });
 
     test('the second witness still agrees', () {
-      expect(data.secondWitness, contains('14 of 14'));
-      expect(data.sumsChecked, 18);
+      expect(data.secondWitness, contains('21 of 21'));
+      expect(data.sumsChecked, 20);
+    });
+
+    test('the chart runs to Joseph in both texts', () {
+      for (final t in ['mt', 'lxx']) {
+        expect(data.inTradition(t).last.id, 'joseph', reason: t);
+      }
+      final joseph = data.byId('joseph')!;
+      for (final f in joseph.figures.values) {
+        expect(f.lifespan, 110);
+        expect(f.refs['lifespan'], 'Genesis 50:26');
+        // The chain ends: these figures do not exist rather than being
+        // unknown, and the panel omits their rows on that basis.
+        expect(f.begatAt, isNull);
+        expect(f.livedAfter, isNull);
+      }
+    });
+
+    // Genesis 12-50 states no begetting ages, so Jacob's is derived from
+    // four verses: Joseph is 30 in 41:46, seven years of plenty pass in
+    // 41:53, five of seven famine years remain in 45:6, and Jacob is 130
+    // at the descent in 47:9. The arithmetic is the module's most
+    // exposed inference, so it is pinned to the year rather than to the
+    // sentence that describes it.
+    test('Jacob was 91 when Joseph was born, and the descent checks it', () {
+      final descent = data.epochs.firstWhere((e) => e.id == 'descent');
+      expect(descent.ref, 'Genesis 47:9');
+      for (final t in ['mt', 'lxx']) {
+        final jacob = data.byId('jacob')!.figures[t]!;
+        final joseph = data.byId('joseph')!.figures[t]!;
+        expect(jacob.begatAt, 91, reason: t);
+        expect(joseph.birthAm - jacob.birthAm, 91, reason: t);
+        // 47:9's 130 and 47:28's 17 years in Egypt against the 147 that
+        // same verse states — the only self-check this section offers.
+        expect(descent.years[t]! - jacob.birthAm, 130, reason: t);
+        expect(jacob.deathAm - descent.years[t]!, 17, reason: t);
+        expect(jacob.lifespan, 147, reason: t);
+        expect(jacob.checked, isTrue, reason: t);
+        expect(jacob.refs['lifespan'], 'Genesis 47:28', reason: t);
+        // Joseph is 39 at the descent on both sets of figures.
+        expect(descent.years[t]! - joseph.birthAm, 39, reason: t);
+      }
+    });
+
+    test('Abram leaves Haran at 75 in both texts', () {
+      final haran = data.epochs.firstWhere((e) => e.id == 'haran');
+      expect(haran.ref, 'Genesis 12:4');
+      for (final t in ['mt', 'lxx']) {
+        final abraham = data.byId('abraham')!.figures[t]!;
+        expect(haran.years[t]! - abraham.birthAm, 75, reason: t);
+      }
+    });
+
+    // The finding the second section was worth drawing for: the choice
+    // of text moves the genealogies and leaves the patriarchs where they
+    // are. Computed here rather than quoted, so the sentence the asset
+    // ships cannot drift away from the numbers.
+    test('the texts differ through Genesis 5 and 11 and agree after it', () {
+      var genSame = 0, genBoth = 0, abrSame = 0, abrBoth = 0;
+      for (final p in data.patriarchs) {
+        final mt = p.figures['mt'];
+        final lxx = p.figures['lxx'];
+        if (mt == null || lxx == null) continue;
+        final same =
+            mt.begatAt == lxx.begatAt && mt.lifespan == lxx.lifespan;
+        if (p.line == 'abraham') {
+          abrBoth++;
+          if (same) abrSame++;
+        } else {
+          genBoth++;
+          if (same) genSame++;
+        }
+      }
+      expect([genSame, genBoth], [4, 19]);
+      expect([abrSame, abrBoth], [4, 4]);
+    });
+
+    // A judgement, and the note is how the reader is told it was made.
+    // Genesis 11:26 gives Terah 70 at the begetting of three sons and
+    // the chart takes that year for Abram; Acts 7:4 implies a later
+    // birth. The note carries the gap and the alternative year, both
+    // computed from 11:26, 11:32 and 12:4, so it cannot state a number
+    // the chart does not.
+    test('the Terah/Abram conflict is disclosed, with its arithmetic', () {
+      for (final t in ['mt', 'lxx']) {
+        final note = data
+            .notesForPerson(t, 'abraham')
+            .firstWhere((n) => n.id == 'abram_birth');
+        final terah = data.byId('terah')!.figures[t]!;
+        final abraham = data.byId('abraham')!.figures[t]!;
+        final haran = data.epochs.firstWhere((e) => e.id == 'haran');
+        final gap = terah.deathAm - haran.years[t]!;
+        final later = abraham.birthAm + gap;
+        for (final locale in ['en', 'zh-Hans', 'zh-Hant']) {
+          final text = note.textFor(locale);
+          expect(text, contains('$gap'), reason: '$t $locale');
+          expect(text, contains('$later'), reason: '$t $locale');
+          expect(text, contains('11:26'), reason: '$t $locale');
+          expect(text, contains('11:32'), reason: '$t $locale');
+          expect(text, contains('12:4'), reason: '$t $locale');
+        }
+      }
+    });
+
+    test('why the chart stops is said on the chart, in both texts', () {
+      for (final t in ['mt', 'lxx']) {
+        final note =
+            data.notesFor(t).firstWhere((n) => n.id == 'sojourn_430');
+        // Not about one man, so it stays in the header only.
+        expect(note.personId, isNull);
+        for (final locale in ['en', 'zh-Hans', 'zh-Hant']) {
+          expect(note.textFor(locale), contains('12:40'), reason: '$t $locale');
+          expect(note.textFor(locale), contains('430'), reason: '$t $locale');
+        }
+      }
+    });
+
+    test('a note about a man is reachable from that man', () {
+      final all = data.notesFor('lxx');
+      final personal = all.where((n) => n.personId != null);
+      expect(personal, isNotEmpty);
+      for (final n in personal) {
+        expect(data.byId(n.personId!), isNotNull, reason: n.id);
+        expect(data.notesForPerson('lxx', n.personId!).map((e) => e.id),
+            contains(n.id));
+      }
+      // And a man with no note gets none.
+      expect(data.notesForPerson('lxx', 'adam'), isEmpty);
+    });
+
+    test('every epoch is named in all three locales and cites a verse', () {
+      expect(data.epochs.map((e) => e.id).toList(),
+          ['flood', 'haran', 'descent']);
+      for (final e in data.epochs) {
+        expect(e.ref, isNotNull, reason: e.id);
+        expect(e.years.keys.toSet(), {'mt', 'lxx'}, reason: e.id);
+        for (final locale in ['en', 'zh-Hans', 'zh-Hant']) {
+          expect(e.names[locale], isNotNull, reason: '${e.id} $locale');
+          expect(e.names[locale], isNotEmpty, reason: '${e.id} $locale');
+        }
+      }
+      // Epochs run in the order the text puts them, in both texts.
+      for (final t in ['mt', 'lxx']) {
+        final years = [for (final e in data.epochs) e.years[t]!];
+        final sorted = [...years]..sort();
+        expect(years, sorted, reason: t);
+      }
+    });
+
+    test('every note is written in all three locales', () {
+      for (final n in data.notes) {
+        for (final locale in ['en', 'zh-Hans', 'zh-Hant']) {
+          expect(n.textFor(locale), isNotEmpty, reason: '${n.id} $locale');
+        }
+      }
     });
   });
 }

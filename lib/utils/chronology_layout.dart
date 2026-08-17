@@ -131,3 +131,15 @@ List<Contemporary> contemporaries(
   });
   return out;
 }
+
+/// How tall the axis strip must be to hold one line of ticks and two
+/// rows of epoch names set in text of [lineHeight].
+///
+/// Derived from the measured line rather than declared as a pixel count,
+/// because everything in the strip is un-ellipsised (#297): a name too
+/// tall for the box is not shortened, it is clipped, and clipping is
+/// silent. Two rows of names because the epochs are not evenly spread —
+/// Abram's leaving Haran and the descent into Egypt fall within a tenth
+/// of the axis of each other and one row would overprint them. The 12 is
+/// the tick marks under the labels plus a hairline of slack.
+double axisStripHeight(double lineHeight) => lineHeight * 3 + 12;
