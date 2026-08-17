@@ -32,7 +32,7 @@ import 'package:seeksparks/utils/navigate_to_reader.dart';
 /// WHY EVERY YEAR SAYS WHAT IT RESTS ON. 85 of the 98 events are
 /// `conventional` — a commonly published reconstruction that nothing
 /// the app ships fixes — and 13 are derived, either from an interval
-/// the text states or from Thiele. Until v1.6.141 the page printed all
+/// the text states or from Thiele. Until v1.6.142 the page printed all
 /// 98 identically, because [TimelineEvent] dropped `basis` and
 /// `approximate` when it parsed the asset. A reader was told "4000 BC"
 /// for the creation in the same voice as "1446 BC" for the exodus,
