@@ -1,7 +1,8 @@
 import 'package:seeksparks/constants/bible_versions.dart'
     show shortBibleVersionLabel;
 
-/// How wide the parallel view's version gutter has to be.
+/// How wide the parallel view's two fixed columns have to be — the
+/// version gutter, and the verse reference beside it.
 ///
 /// The gutter is a FIXED column — that is its whole point, because a
 /// wall of interleaved parallel rows is only readable if the text of
@@ -39,6 +40,41 @@ import 'package:seeksparks/constants/bible_versions.dart'
 /// Em width charged to a non-full-width character.
 const double _latinEm = 0.78;
 
+/// Em widths charged to a character of a VERSE REFERENCE.
+///
+/// The version tag is a short, upper-case, bold abbreviation, so one
+/// flat [_latinEm] over-estimates it by about 10% and nobody notices.
+/// A reference is `2 Chronicles 1:1` — sixteen mixed-case characters —
+/// and the same flat charge over-estimates it by 45%, which at the
+/// default type size is about 70px of a 480px reading pane spent on
+/// nothing. The classes below are measured from the shipped
+/// `Roboto-VariableFont` at `wght=600`, the weight the reference is
+/// actually set in (digits 0.571, space 0.249, colon 0.272, lower-case
+/// mean 0.506, upper-case mean 0.640), then rounded UP so the model
+/// still over-estimates every one of the 66 English book names.
+///
+/// Over-estimating is the safe direction but it is not the only
+/// safeguard: [referenceGutterWidth] is applied as a MINIMUM width, not
+/// a fixed one, so a reader whose chosen font is wider than Roboto gets
+/// a slightly ragged column rather than a clipped reference. A clipped
+/// reference is a lie about which verse this is.
+/// Charging one flat width to every letter is what made the flat model
+/// wrong, so `i j l` (≈0.26 em) and `m w` (≈0.87 em) are charged
+/// separately — they are 2× off the mean in opposite directions and
+/// they are common in book names (Phi**l**ipp**i**ans, 1 Ch**r**on**i**cles).
+/// With them the model runs +4.5% to +15% over the real width across
+/// all 66 English book names; without them it reached +20%.
+const double _refDigitEm = 0.60;
+const double _refSpaceEm = 0.28;
+const double _refColonEm = 0.30;
+const double _refNarrowEm = 0.34;
+const double _refWideEm = 0.92;
+const double _refLowerEm = 0.58;
+const double _refUpperEm = 0.74;
+
+const String _refNarrowChars = 'ijl';
+const String _refWideChars = 'mw';
+
 /// Extra pixels between the tag and the verse text.
 const double versionGutterGap = 8.0;
 
@@ -68,6 +104,67 @@ double versionLabelEms(String label) {
   }
   return ems;
 }
+
+/// Width in ems of one verse reference under the reference model.
+double referenceLabelEms(String reference) {
+  var ems = 0.0;
+  for (final r in reference.runes) {
+    if (_isFullWidth(r)) {
+      ems += 1.0;
+      continue;
+    }
+    final c = String.fromCharCode(r);
+    if (r >= 0x30 && r <= 0x39) {
+      ems += _refDigitEm;
+    } else if (c == ' ') {
+      ems += _refSpaceEm;
+    } else if (c == ':') {
+      ems += _refColonEm;
+    } else if (_refNarrowChars.contains(c)) {
+      ems += _refNarrowEm;
+    } else if (_refWideChars.contains(c)) {
+      ems += _refWideEm;
+    } else if (c.toLowerCase() == c && c.toUpperCase() != c) {
+      ems += _refLowerEm;
+    } else {
+      ems += _refUpperEm;
+    }
+  }
+  return ems;
+}
+
+/// How wide the reference column of the parallel view has to be.
+///
+/// Same argument as the version gutter above, one column to its right,
+/// and it was missing until 2026-08-17: three render paths printed the
+/// reference three different ways — an untagged edition put it INSIDE
+/// the text flow, so its first line began after the reference and every
+/// wrapped line began under it, while the two tagged paths gave it an
+/// intrinsic-width cell that moved with the verse number. On one screen
+/// of five editions the verse text had three different left edges, and
+/// the reason the reference is repeated on every row at all — so a
+/// reader can run their eye down one translation — only works if the
+/// column is straight.
+///
+/// Sized to the [references] actually on screen, which for a chapter is
+/// one book name and a range of verse numbers, so a reader in Obadiah
+/// does not pay for `Song of Solomon` existing.
+double referenceGutterWidth(
+  Iterable<String> references,
+  double fontSize, {
+  double gap = referenceGutterGap,
+}) {
+  var widest = 0.0;
+  for (final r in references) {
+    final w = referenceLabelEms(r) * fontSize;
+    if (w > widest) widest = w;
+  }
+  if (widest == 0) return 0;
+  return widest + gap;
+}
+
+/// Space between the reference and the verse text it labels.
+const double referenceGutterGap = 8.0;
 
 /// The gutter width for a set of already-resolved [labels] rendered at
 /// [fontSize] with [letterSpacing].

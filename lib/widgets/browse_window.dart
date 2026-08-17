@@ -45,9 +45,49 @@ import 'package:seeksparks/utils/morphology.dart' show describeMorphology;
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 import 'package:seeksparks/utils/strongs_inline.dart';
 import 'package:seeksparks/utils/verse_text_absence.dart';
-import 'package:seeksparks/utils/version_gutter.dart' show versionGutterWidth;
+import 'package:seeksparks/utils/version_gutter.dart'
+    show referenceGutterWidth, versionGutterWidth;
 import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
 import 'package:seeksparks/widgets/workbench_chrome.dart' show WbVersionTag;
+
+/// The one word gap in the Browse pane.
+///
+/// Two of the three render paths are `Wrap`s of individual words, and
+/// until 2026-08-17 they disagreed: the originals set `spacing: 5`, the
+/// tagged translation set nothing at all. The gap is named once here,
+/// and it stays applied to the originals ONLY — which looks like the
+/// inconsistency this pass was cleaning up, so here is the measurement
+/// that says it is not.
+///
+/// An originals token is bare: **0 of 438,821** words in
+/// `assets/originals/` carry any whitespace of their own, so without a
+/// gap the Hebrew and the Greek would run together. Every tagged
+/// edition, by contrast, already carries its own spacing IN THE DATA —
+/// but by three different conventions, which is why the tempting
+/// one-line summary ("tagged runs end in a space") is false. Share of
+/// runs carrying a leading or trailing space, whole corpus:
+///
+///   `bsb`       91.57%  — TRAILING          (`"Adam, "`)
+///   `kjvs`      68.53%  — LEADING           (`", Sheth"`)
+///   `lxxwh`     94.28%  — mixed, both
+///   `cuvs-plus`  0.00%  — Chinese does not put spaces between words
+///   `cuvs-yhwh`  0.05%    at all, so a gap would open a hole in the
+///                         middle of 亚当生塞特
+///
+/// So the rule is "add a gap where the text has none of its own", and
+/// the tagged path is the one that must NOT get it: the same 5px would
+/// double-space the BSB, mis-space the KJV, and break Chinese outright.
+/// Do not "harmonise" these two numbers by making them equal.
+const double kBrowseWordGap = 5.0;
+
+/// Wrapped lines take their rhythm from `WbType.lineHeight` alone.
+///
+/// The originals `Wrap` used to add 1px of `runSpacing` on top of it,
+/// so an originals verse that wrapped to three lines stood a little
+/// taller than a translation of the same verse beside it — and the
+/// untagged path, being an ordinary text flow, has no `runSpacing` to
+/// set at all. Nothing but the line height, in all three.
+const double kBrowseRunSpacing = 0.0;
 
 /// One printed line: a translation of a verse, or its originals line.
 class _BrowseRow {
@@ -582,6 +622,15 @@ class _BrowseWindowState extends State<BrowseWindow> {
           {for (final r in rows) r.code},
           t.chrome - 0.5,
         );
+        // And one reference column, on the same terms and for the same
+        // reason. A chapter's references are one book name and a run of
+        // verse numbers, so this is a set of at most ~176 short strings
+        // — and it has to be recomputed per build too, because `t.text`
+        // follows the same font-size slider.
+        final referenceWidth = referenceGutterWidth(
+          {for (final r in rows) r.reference},
+          t.text,
+        );
         return Container(
           color: wb.paneBg,
           child: ScrollablePositionedList.builder(
@@ -591,6 +640,7 @@ class _BrowseWindowState extends State<BrowseWindow> {
               itemBuilder: (context, i) => _RowView(
                 row: rows[i],
                 gutterWidth: gutterWidth,
+                referenceWidth: referenceWidth,
                 focused: rows[i].verse == widget.focusedVerse,
                 highlight: widget.highlight,
                 glosses: _glosses,
@@ -611,6 +661,64 @@ class _BrowseWindowState extends State<BrowseWindow> {
 
 // ── One printed line ────────────────────────────────────────────────
 
+/// The one layout every printed line in the Browse pane goes through.
+///
+/// It exists because there were three. An untagged edition built its
+/// line as a single `Text.rich` with the reference as the first span,
+/// so the reference took part in line-breaking: the verse began after
+/// it and every wrapped line began *under* it, at the far left. The two
+/// tagged paths each built their own `Row` with an intrinsic-width
+/// reference cell, so their text began wherever that row's own verse
+/// number ended — `1:1` and `1:12` starting the text at different x.
+/// Five editions stacked therefore showed the verse text at three
+/// different left edges, which is what the reader reported on
+/// 2026-08-17: 「不要不协调，要 harmony」.
+///
+/// [referenceWidth] is a MINIMUM, deliberately, not a fixed width. The
+/// column is measured by a character model rather than a `TextPainter`
+/// (see `version_gutter.dart` for why), and a model can be beaten by a
+/// font wider than the one it was calibrated on. When that happens the
+/// column goes slightly ragged, which is a blemish; clipping the
+/// reference would instead be a lie about which verse this is.
+class BrowseVerseRow extends StatelessWidget {
+  const BrowseVerseRow({
+    super.key,
+    required this.reference,
+    required this.referenceWidth,
+    required this.referenceStyle,
+    required this.child,
+  });
+
+  /// Printed on every row of every edition on purpose — that repetition
+  /// is what lets a reader run their eye down a single translation.
+  final String reference;
+
+  final double referenceWidth;
+  final TextStyle referenceStyle;
+
+  /// The verse itself: a text flow, or a `Wrap` of tappable words.
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ConstrainedBox(
+          constraints: BoxConstraints(minWidth: referenceWidth),
+          child: Text(
+            reference,
+            style: referenceStyle,
+            maxLines: 1,
+            softWrap: false,
+          ),
+        ),
+        Expanded(child: child),
+      ],
+    );
+  }
+}
+
 class _RowView extends StatelessWidget {
   const _RowView({
     required this.row,
@@ -618,6 +726,7 @@ class _RowView extends StatelessWidget {
     required this.glosses,
     required this.keyPrefix,
     required this.gutterWidth,
+    required this.referenceWidth,
     this.focus = AnalysisFocus.empty,
     this.onWordTap,
     this.onWordHover,
@@ -636,6 +745,11 @@ class _RowView extends StatelessWidget {
   /// two-character gutter and does not pay for `LXX+WH` existing.
   final double gutterWidth;
 
+  /// The second fixed column, one width for the whole chapter, so the
+  /// verse text starts on the same x whether or not this edition is
+  /// tagged. See [BrowseVerseRow].
+  final double referenceWidth;
+
   /// "Genesis|1" — the book and chapter half of every [browseWordKey]
   /// this row hands out.
   final String keyPrefix;
@@ -647,7 +761,20 @@ class _RowView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final wb = WbColors.of(context);
+    final t = WbType.of(context);
     final settings = context.watch<AppSettings>();
+    // One style for the reference, built once here, because the three
+    // paths each used to build their own and they had drifted: the two
+    // tagged ones carried no `fontFamilyFallback`, so a Chinese book
+    // name in their column had only the app font to draw 歷代志下 with.
+    final referenceStyle = TextStyle(
+      fontSize: t.text,
+      height: t.lineHeight,
+      fontWeight: FontWeight.w600,
+      color: wb.link,
+      fontFamily: t.fontFamily,
+      fontFamilyFallback: kCjkFontFallback,
+    );
 
     return GestureDetector(
       onTap: onTap,
@@ -673,49 +800,62 @@ class _RowView extends StatelessWidget {
                 children: [
                   // Above the line, in this edition's column only — the
                   // other editions print their title inside verse 1.
+                  // Indented past the reference column: it is text, and
+                  // the text column has to stay straight.
                   if (row.superscription.isNotEmpty)
-                    _SuperscriptionLine(
-                      text: row.superscription,
-                      settings: settings,
-                      highlight: highlight,
+                    Padding(
+                      padding: EdgeInsets.only(left: referenceWidth),
+                      child: _SuperscriptionLine(
+                        text: row.superscription,
+                        settings: settings,
+                        highlight: highlight,
+                      ),
                     ),
-                  row.words != null
-                  ? _OriginalsLine(
-                      row: row,
-                      glosses: glosses,
-                      keyPrefix: keyPrefix,
-                      focus: focus,
-                      showNumbers: settings.showStrongsInOriginals,
-                      onWordTap: onWordTap,
-                      onWordHover: onWordHover,
-                    )
-                  : row.runs != null
-                      // Tagged translation: every run is its own hover
-                      // target, exactly like the originals line.
-                      ? _TaggedLine(
-                          row: row,
-                          highlight: highlight,
-                          glosses: glosses,
-                          keyPrefix: keyPrefix,
-                          focus: focus,
-                          showNumbers: settings.showStrongsInOriginals,
-                          onWordTap: onWordTap,
-                          onWordHover: onWordHover,
-                        )
-                      // Untagged translation reports the VERSE. Guessing
-                      // which original word an untagged word renders
-                      // would be a heuristic dressed as fact.
-                      : MouseRegion(
-                          onEnter: (_) => onWordHover?.call(BrowseHover(
-                            reference: row.reference,
-                            verse: row.verse,
-                          )),
-                          child:
-                              _TranslationLine(
+                  BrowseVerseRow(
+                    reference: row.reference,
+                    referenceWidth: referenceWidth,
+                    referenceStyle: referenceStyle,
+                    child: row.words != null
+                        ? _OriginalsLine(
+                            row: row,
+                            glosses: glosses,
+                            keyPrefix: keyPrefix,
+                            focus: focus,
+                            showNumbers: settings.showStrongsInOriginals,
+                            onWordTap: onWordTap,
+                            onWordHover: onWordHover,
+                          )
+                        : row.runs != null
+                            // Tagged translation: every run is its own
+                            // hover target, like the originals line.
+                            ? _TaggedLine(
+                                row: row,
+                                highlight: highlight,
+                                glosses: glosses,
+                                keyPrefix: keyPrefix,
+                                focus: focus,
+                                showNumbers:
+                                    settings.showStrongsInOriginals,
+                                onWordTap: onWordTap,
+                                onWordHover: onWordHover,
+                              )
+                            // Untagged translation reports the VERSE.
+                            // Guessing which original word an untagged
+                            // word renders would be a heuristic dressed
+                            // as fact.
+                            : MouseRegion(
+                                onEnter: (_) =>
+                                    onWordHover?.call(BrowseHover(
+                                  reference: row.reference,
+                                  verse: row.verse,
+                                )),
+                                child: _TranslationLine(
                                   row: row,
                                   settings: settings,
-                                  highlight: highlight),
-                        ),
+                                  highlight: highlight,
+                                ),
+                              ),
+                  ),
                 ],
               ),
             ),
@@ -746,19 +886,14 @@ class _TranslationLine extends StatelessWidget {
     // slider moved and nothing happened. The workbench is deliberately
     // denser than the reader, so it scales RELATIVE to the reader's
     // setting (20 is the default) rather than adopting it outright.
-    // Reference then text on one line, exactly as BibleWorks prints it —
-    // the reference repeated on every version row is what lets you read
-    // a single translation straight down the column.
+    //
+    // 2026-08-17: the reference used to be the first span of this very
+    // paragraph, which is why an untagged edition's second line began
+    // underneath it instead of beside it. It is [BrowseVerseRow]'s now,
+    // and this is the verse and nothing else.
     return Text.rich(
       TextSpan(
         children: [
-          TextSpan(
-            text: '${row.reference}  ',
-            style: TextStyle(
-              color: wb.link,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
           // 2026-08-06: publisher markup used to print raw here —
           // `Now<note: Or "And"> the earth … darkness [was] over` in
           // 48% of LEB. Notes leave the flow for a marker; supplied
@@ -953,79 +1088,63 @@ class _TaggedLine extends StatelessWidget {
     final wb = WbColors.of(context);
     final t = WbType.of(context);
     final runs = row.runs ?? const <TaggedRun>[];
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    // No `spacing`: a tagged run carries its own trailing space, so a
+    // gap here would double it. See [kBrowseWordGap].
+    return Wrap(
+      runSpacing: kBrowseRunSpacing,
       children: [
-        Padding(
-          padding: const EdgeInsets.only(right: 6),
-          child: Text(
-            row.reference,
-            style: TextStyle(
-              fontSize: t.text,
-              height: t.lineHeight,
-              fontWeight: FontWeight.w600,
-              color: wb.link,
-            ),
-          ),
-        ),
-        Expanded(
-          child: Wrap(
-            children: [
-              for (final (i, r) in runs.indexed)
-                if (r.isTagged)
-                  _HoverWord(
-                    // A Strong's query marks the word carrying the
-                    // number — the tagging already knows which one.
-                    hit: highlight.matchesStrongs(r.strongs),
-                    // Reuse the originals hover target: same behaviour,
-                    // same popup, only the script differs.
-                    word: OriginalWord(text: r.text, strongs: r.strongs),
-                    reference: row.reference,
-                    verse: row.verse,
-                    occurrence: browseWordKey(
-                      prefix: keyPrefix,
-                      versionCode: row.code,
-                      verse: row.verse,
-                      index: i,
+        for (final (i, r) in runs.indexed)
+          if (r.isTagged)
+            _HoverWord(
+              // A Strong's query marks the word carrying the
+              // number — the tagging already knows which one.
+              hit: highlight.matchesStrongs(r.strongs),
+              // Reuse the originals hover target: same behaviour,
+              // same popup, only the script differs.
+              word: OriginalWord(text: r.text, strongs: r.strongs),
+              reference: row.reference,
+              verse: row.verse,
+              occurrence: browseWordKey(
+                prefix: keyPrefix,
+                versionCode: row.code,
+                verse: row.verse,
+                index: i,
+              ),
+              focus: focus,
+              entry: glosses[r.strongs],
+              grammar: r.grammar,
+              implied: r.implied,
+              showNumbers: showNumbers,
+              translation: true,
+              onTap: onWordTap,
+              onHover: onWordHover,
+            )
+          else
+            Text.rich(
+              TextSpan(children: [
+                for (final span in parseScripture(r.text))
+                  if (span.kind == ScriptureSpanKind.divineName ||
+                      span.kind == ScriptureSpanKind.gloss)
+                    glossSpan(span, wb)
+                  else if (span.kind ==
+                      ScriptureSpanKind.versification)
+                    versificationSpan(span, wb,
+                        fontSize: t.text * 0.8)
+                  else
+                    TextSpan(
+                      text: span.text,
+                      style: span.kind == ScriptureSpanKind.supplied
+                          ? const TextStyle(fontStyle: FontStyle.italic)
+                          : null,
                     ),
-                    focus: focus,
-                    entry: glosses[r.strongs],
-                    grammar: r.grammar,
-                    implied: r.implied,
-                    showNumbers: showNumbers,
-                    translation: true,
-                    onTap: onWordTap,
-                    onHover: onWordHover,
-                  )
-                else
-                  Text.rich(
-                    TextSpan(children: [
-                      for (final span in parseScripture(r.text))
-                        if (span.kind == ScriptureSpanKind.divineName ||
-                            span.kind == ScriptureSpanKind.gloss)
-                          glossSpan(span, wb)
-                        else if (span.kind ==
-                            ScriptureSpanKind.versification)
-                          versificationSpan(span, wb,
-                              fontSize: t.text * 0.8)
-                        else
-                          TextSpan(
-                            text: span.text,
-                            style: span.kind == ScriptureSpanKind.supplied
-                                ? const TextStyle(fontStyle: FontStyle.italic)
-                                : null,
-                          ),
-                    ]),
-                    style: TextStyle(
-                      fontSize: t.text,
-                      height: t.lineHeight,
-                      color: wb.text,
-                      fontFamilyFallback: kCjkFontFallback,
-                    ),
-                  ),
-            ],
+              ]),
+              style: TextStyle(
+                fontSize: t.text,
+                height: t.lineHeight,
+                color: wb.text,
+                fontFamilyFallback: kCjkFontFallback,
+              ),
           ),
-        ),
       ],
     );
   }
@@ -1054,56 +1173,39 @@ class _OriginalsLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final wb = WbColors.of(context);
-    final t = WbType.of(context);
     final words = row.words ?? const <OriginalWord>[];
-    // The reference sits OUTSIDE the RTL scope. Inside it, being the
+    // The reference sits OUTSIDE this RTL scope — [BrowseVerseRow]
+    // holds it, in the pane's own direction. Inside here, being the
     // first child put it at the right-hand end of a Hebrew line, so the
     // column of references no longer lined up down the page.
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(right: 6),
-          child: Text(
-            row.reference,
-            style: TextStyle(
-              fontSize: t.text,
-              height: t.lineHeight,
-              fontWeight: FontWeight.w600,
-              color: wb.link,
+    return Directionality(
+      textDirection: row.rtl ? TextDirection.rtl : TextDirection.ltr,
+      // An originals word is a bare token with no space of its
+      // own, which is the whole reason this path has a gap and
+      // the tagged translation does not.
+      child: Wrap(
+        spacing: kBrowseWordGap,
+        runSpacing: kBrowseRunSpacing,
+        children: [
+          for (final (i, w) in words.indexed)
+            _HoverWord(
+              word: w,
+              reference: row.reference,
+              verse: row.verse,
+              occurrence: browseWordKey(
+                prefix: keyPrefix,
+                versionCode: row.code,
+                verse: row.verse,
+                index: i,
+              ),
+              focus: focus,
+              entry: glosses[w.strongs],
+              showNumbers: showNumbers,
+              onTap: onWordTap,
+              onHover: onWordHover,
             ),
-          ),
-        ),
-        Expanded(
-          child: Directionality(
-            textDirection: row.rtl ? TextDirection.rtl : TextDirection.ltr,
-            child: Wrap(
-              spacing: 5,
-              runSpacing: 1,
-              children: [
-                for (final (i, w) in words.indexed)
-                  _HoverWord(
-                    word: w,
-                    reference: row.reference,
-                    verse: row.verse,
-                    occurrence: browseWordKey(
-                      prefix: keyPrefix,
-                      versionCode: row.code,
-                      verse: row.verse,
-                      index: i,
-                    ),
-                    focus: focus,
-                    entry: glosses[w.strongs],
-                    showNumbers: showNumbers,
-                    onTap: onWordTap,
-                    onHover: onWordHover,
-                  ),
-              ],
-            ),
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
