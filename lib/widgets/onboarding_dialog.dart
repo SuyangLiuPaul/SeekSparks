@@ -268,7 +268,7 @@ class _OnboardingDialogState extends State<OnboardingDialog> {
           icon: Icons.explore_outlined,
           title: uiStrings['onboardDiscoverTitle']?[locale] ?? 'Discover',
           body: uiStrings['onboardDiscoverBody']?[locale] ??
-              'Bible Timeline (97 events), Family Tree (277 people), and Bible Evidence (225 archaeology / manuscript / science finds) — all reachable from Home.',
+              'Bible Timeline (98 events), Family Tree (277 people), and Bible Evidence (225 archaeology / manuscript / science finds) — all reachable from Home.',
         ),
         _Slide(
           icon: Icons.tune_rounded,

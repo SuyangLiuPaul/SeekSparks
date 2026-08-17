@@ -9,6 +9,7 @@ import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/widgets/left_accent_card.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/timeline_event.dart';
+import 'package:seeksparks/pages/chronology_page.dart';
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/services/timeline_service.dart';
 import 'package:seeksparks/utils/jump_to_reference.dart' as jumper;
@@ -19,14 +20,30 @@ import 'package:seeksparks/widgets/language_switcher_button.dart';
 import 'package:seeksparks/widgets/localized_back_button.dart';
 import 'package:seeksparks/utils/navigate_to_reader.dart';
 
-/// Bible timeline — chronological view of ~97 key biblical events
-/// from Creation (~4000 BC) to John on Patmos (~95 AD), modelled
+/// Bible timeline — chronological view of 98 key biblical events
+/// from Creation (c. 4000 BC) to John on Patmos (AD 95), modelled
 /// on BibleHub's timeline structure but localized and visually
 /// nicer.
 ///
 /// Layout (per row):
-///   [Year column 90 px]   ●   [Title + refs chips on tap-expand
-///                              shows description]
+///   [Year column]   ●   [Title + refs chips on tap-expand
+///                        shows description and what the year rests on]
+///
+/// WHY EVERY YEAR SAYS WHAT IT RESTS ON. 85 of the 98 events are
+/// `conventional` — a commonly published reconstruction that nothing
+/// the app ships fixes — and 13 are derived, either from an interval
+/// the text states or from Thiele. Until v1.6.141 the page printed all
+/// 98 identically, because [TimelineEvent] dropped `basis` and
+/// `approximate` when it parsed the asset. A reader was told "4000 BC"
+/// for the creation in the same voice as "1446 BC" for the exodus,
+/// and only one of those is countable from anything.
+///
+/// THE YEAR COLUMN IS MEASURED, NOT CHOSEN. It was 90 px holding a
+/// string the Font Size slider scales 0.6x-2x, and the hedge makes the
+/// string longer still: 「约 公元前 4000 年」 is half again the width of
+/// 「公元前 4000 年」. Nothing here ellipsises, so an overflow would have
+/// wrapped the year onto two lines rather than throwing. See
+/// [_measureYearLane] for why no constant works either.
 ///
 /// Era section dividers (Antediluvian / Patriarchs / Mosaic /
 /// Conquest / Monarchy / Exile / Inter-testamental / NT) reuse the
@@ -34,6 +51,61 @@ import 'package:seeksparks/utils/navigate_to_reader.dart';
 ///
 /// Search at top filters by title / description / id.
 /// Tap a verse-ref chip → jumps to that verse in the reader.
+double _yearFont(WbType t) => t.scaled(11.5);
+
+TextStyle _yearStyle(WbType t, ColorScheme scheme) => TextStyle(
+      fontSize: _yearFont(t),
+      color: scheme.onSurface.withValues(alpha: 0.65),
+      fontWeight: FontWeight.w600,
+      fontFeatures: const [FontFeature.tabularFigures()],
+    );
+
+/// The width of the year column, measured rather than chosen.
+///
+/// A multiple of the font size would have fixed the scaling but not the
+/// font. The widest string is the Simplified hedge on a four-digit BC
+/// year, 「约 公元前 4000 年」 — five CJK glyphs, four digits and three
+/// spaces — which needs about 8 em in a real face and 12.5 em in the
+/// font the widget tests load, because that font advances a digit and a
+/// space by a full em. Any constant is therefore either too tight to
+/// ship or too wide to look at. Measuring asks whichever font is
+/// actually in front of us, so the ratchet in
+/// `bible_timeline_page_test.dart` tests the app rather than the
+/// harness.
+///
+/// This runs over the distinct years currently listed, once per page
+/// build. Scrolling does not rebuild the page — `ListView.builder` calls
+/// the item builder, not this — so the cost lands on a keystroke in the
+/// search field and on opening a row.
+///
+/// [context] must be one the year [Text] itself would resolve against.
+/// A bare `TextPainter` measures the style handed to it and nothing
+/// else, while the widget merges that style onto `DefaultTextStyle` and
+/// then scales it by the ambient `textScaler`. Measuring without the
+/// first of those undercounted the lane by exactly the inherited
+/// `letterSpacing` — 0.25 px a character, three pixels across
+/// 「约 公元前 4000 年」, which is enough to wrap it.
+double _measureYearLane(
+  BuildContext context,
+  Iterable<TimelineEvent> events,
+  String locale,
+  TextStyle style,
+) {
+  final resolved = DefaultTextStyle.of(context).style.merge(style);
+  final scaler = MediaQuery.textScalerOf(context);
+  var widest = 0.0;
+  for (final s in {for (final e in events) e.displayYear(locale)}) {
+    final painter = TextPainter(
+      text: TextSpan(text: s, style: resolved),
+      textDirection: Directionality.of(context),
+      textScaler: scaler,
+      maxLines: 1,
+    )..layout();
+    if (painter.width > widest) widest = painter.width;
+  }
+  return widest;
+}
+
 class BibleTimelinePage extends StatefulWidget {
   const BibleTimelinePage({super.key});
 
@@ -121,6 +193,10 @@ class _BibleTimelinePageState extends State<BibleTimelinePage> {
             items.add(_ListItem.event(e));
           }
 
+          final yearStyle = _yearStyle(t, scheme);
+          final yearLane =
+              _measureYearLane(context, filtered, locale, yearStyle);
+
           return Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 960),
@@ -176,6 +252,8 @@ class _BibleTimelinePageState extends State<BibleTimelinePage> {
                                 event: ev,
                                 locale: locale,
                                 scheme: scheme,
+                                yearLane: yearLane,
+                                yearStyle: yearStyle,
                                 expanded: _expanded.contains(ev.id),
                                 onToggleExpand: () => setState(() {
                                   if (_expanded.contains(ev.id)) {
@@ -296,23 +374,87 @@ class _EraDivider extends StatelessWidget {
         ),
         border: Border(left: BorderSide(color: color, width: 4)),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.history_edu, size: 14, color: fg),
-          const SizedBox(width: 6),
-          Text(
-            _eraLabel(era, locale),
-            style: TextStyle(
-              fontSize: t.scaled(12),
-              fontWeight: FontWeight.w800,
-              letterSpacing: 0.6,
-              color: fg,
-            ),
+          Row(
+            children: [
+              Icon(Icons.history_edu, size: 14, color: fg),
+              const SizedBox(width: 6),
+              Text(
+                _eraLabel(era, locale),
+                style: TextStyle(
+                  fontSize: t.scaled(12),
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.6,
+                  color: fg,
+                ),
+              ),
+            ],
           ),
+          // The seam, said once where it happens rather than eight
+          // times. Everything from Abraham down is counted back from
+          // Solomon's fourth year; the eight events above him are not,
+          // and the two halves are 110 years out of step. Repairing it
+          // means fixing a year for the creation, which this repository
+          // deliberately does not do — so it is disclosed instead, with
+          // a door to the chart that does have the text's own numbers.
+          if (era == 'antediluvian') ...[
+            const SizedBox(height: 6),
+            Text(
+              uiStrings['timelineAntediluvianBasis']?[locale] ??
+                  uiStrings['timelineAntediluvianBasis']?['en'] ??
+                  '',
+              style: TextStyle(
+                fontSize: t.scaled(11),
+                color: scheme.onSurface.withValues(alpha: 0.7),
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: TextButton(
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const ChronologyPage(),
+                  ),
+                ),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  foregroundColor: fg,
+                ),
+                child: Text(
+                  uiStrings['timelineOpenChronology']?[locale] ??
+                      'Open Bible Chronology',
+                  style: TextStyle(
+                    fontSize: t.scaled(11.5),
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
   }
+}
+
+/// One sentence saying what a year rests on, keyed on the asset's own
+/// `basis` vocabulary. An unrecognised value reads as the weakest of
+/// the three rather than as nothing, so a future basis added to the
+/// generator cannot make the app silently confident.
+String _basisText(TimelineEvent e, String locale) {
+  const keys = <String, String>{
+    'scripture': 'timelineBasisScripture',
+    'thiele': 'timelineBasisThiele',
+    'conventional': 'timelineBasisConventional',
+  };
+  final key = keys[e.basis] ?? 'timelineBasisConventional';
+  return uiStrings[key]?[locale] ?? uiStrings[key]?['en'] ?? '';
 }
 
 // ── Event tile ──────────────────────────────────────────────────
@@ -321,6 +463,8 @@ class _EventTile extends StatelessWidget {
   final TimelineEvent event;
   final String locale;
   final ColorScheme scheme;
+  final double yearLane;
+  final TextStyle yearStyle;
   final bool expanded;
   final VoidCallback onToggleExpand;
   final void Function(String raw) onTapRef;
@@ -328,6 +472,8 @@ class _EventTile extends StatelessWidget {
   const _EventTile({
     required this.event,
     required this.locale,
+    required this.yearLane,
+    required this.yearStyle,
     required this.scheme,
     required this.expanded,
     required this.onToggleExpand,
@@ -349,20 +495,13 @@ class _EventTile extends StatelessWidget {
             children: [
               // Year column.
               SizedBox(
-                width: 90,
+                width: yearLane,
                 child: Padding(
                   padding: const EdgeInsets.only(top: 2),
                   child: Text(
                     event.displayYear(locale),
                     textAlign: TextAlign.right,
-                    style: TextStyle(
-                      fontSize: t.scaled(11.5),
-                      color: scheme.onSurface.withValues(alpha: 0.65),
-                      fontWeight: FontWeight.w600,
-                      fontFeatures: const [
-                        FontFeature.tabularFigures(),
-                      ],
-                    ),
+                    style: yearStyle,
                   ),
                 ),
               ),
@@ -432,6 +571,22 @@ class _EventTile extends StatelessWidget {
                             color:
                                 scheme.onSurface.withValues(alpha: 0.85),
                             height: 1.5,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        // What the year rests on. Shown only when the row
+                        // is open, because a reader scanning the column
+                        // wants the shape of the century, and the "c."
+                        // in the year already tells them which years are
+                        // reconstructions.
+                        Text(
+                          _basisText(event, locale),
+                          style: TextStyle(
+                            fontSize: t.scaled(11.5),
+                            fontStyle: FontStyle.italic,
+                            color:
+                                scheme.onSurface.withValues(alpha: 0.6),
+                            height: 1.45,
                           ),
                         ),
                       ],

@@ -22,6 +22,7 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:seeksparks/models/biblical_person.dart';
+import 'package:seeksparks/models/timeline_event.dart';
 
 BiblicalPerson _person({
   required String kind,
@@ -224,6 +225,82 @@ void main() {
       expect(events['exodus']!['basis'], 'scripture');
       expect(events['exodus']!['year'], -1446);
       expect(events['temple_built']!['basis'], 'scripture');
+    });
+  });
+
+  // The half of check 32 that never reached a reader. The asset was
+  // stamped and the asset was tested — by the group above, which passed
+  // for eight months — while `TimelineEvent.fromJson` silently dropped
+  // both fields, so the page printed all 98 years in one voice. An
+  // asset-only guard cannot see that: the file was right the whole time.
+  group('TimelineEvent — the parse carries the basis to the screen', () {
+    TimelineEvent parse(String basis) => TimelineEvent.fromJson({
+          'id': 'x',
+          'year': -4000,
+          'basis': basis,
+          'approximate': basis == 'conventional',
+        });
+
+    test('fromJson reads basis and approximate', () {
+      expect(parse('scripture').basis, 'scripture');
+      expect(parse('scripture').approximate, isFalse);
+      expect(parse('conventional').basis, 'conventional');
+      expect(parse('conventional').approximate, isTrue);
+    });
+
+    // An event with neither field is a reconstruction until something
+    // says otherwise, which is the safe direction to fail in.
+    test('an unstamped event defaults to the weakest claim', () {
+      final e = TimelineEvent.fromJson({'id': 'x', 'year': -4000});
+      expect(e.basis, 'conventional');
+      expect(e.approximate, isTrue);
+      expect(e.displayYear('en'), startsWith('c. '));
+    });
+
+    test('the hedge is worded exactly as the family tree words it', () {
+      // Same generator, same two surfaces, same vocabulary — a reader
+      // moving between them must not have to learn a second one.
+      expect(parse('conventional').displayYear('en'), 'c. 4000 BC');
+      expect(parse('conventional').displayYear('zh-Hans'), '约 公元前 4000 年');
+      expect(parse('conventional').displayYear('zh-Hant'), '约 公元前 4000 年');
+      expect(parse('scripture').displayYear('en'), '4000 BC');
+      expect(parse('scripture').displayYear('zh-Hans'), '公元前 4000 年');
+    });
+
+    test('AD years hedge in the same place as BC years', () {
+      TimelineEvent ad(int y, String basis) => TimelineEvent.fromJson({
+            'id': 'x',
+            'year': y,
+            'basis': basis,
+            'approximate': basis == 'conventional',
+          });
+      expect(ad(95, 'conventional').displayYear('en'), 'c. AD 95');
+      expect(ad(95, 'conventional').displayYear('zh-Hans'), '约 公元 95 年');
+      expect(ad(30, 'scripture').displayYear('en'), 'AD 30');
+    });
+
+    test('every event in the asset renders hedged iff it is a reconstruction',
+        () async {
+      final doc = jsonDecode(await rootBundle.loadString(
+          'assets/bible_timeline.json')) as Map<String, dynamic>;
+      final events = (doc['events'] as List)
+          .cast<Map<String, dynamic>>()
+          .map(TimelineEvent.fromJson)
+          .toList();
+      expect(events, hasLength(98));
+      var hedged = 0;
+      for (final e in events) {
+        final en = e.displayYear('en');
+        final zh = e.displayYear('zh-Hans');
+        expect(en.startsWith('c. '), e.approximate, reason: '${e.id} en');
+        expect(zh.startsWith('约 '), e.approximate, reason: '${e.id} zh');
+        if (e.approximate) hedged++;
+      }
+      // 85 reconstructions, 13 derived. The numbers are pinned rather
+      // than merely counted so that a generator run which quietly
+      // promoted a guess to a derivation has to be argued for here.
+      expect(hedged, 85);
+      expect(events.length - hedged, 13);
     });
   });
 }

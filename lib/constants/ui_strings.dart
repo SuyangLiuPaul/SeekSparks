@@ -1647,10 +1647,10 @@ const uiStrings = {
     'en': 'Discover',
   },
   'onboardDiscoverBody': {
-    'zh-Hans': '圣经时间轴（97 个事件）、家谱（277 位人物）、圣经证据（225 项考古／抄本／科学发现），都可在主页打开。',
-    'zh-Hant': '聖經時間軸（97 個事件）、家譜（277 位人物）、聖經證據（225 項考古／抄本／科學發現），都可在主頁打開。',
+    'zh-Hans': '圣经时间轴（98 个事件）、家谱（277 位人物）、圣经证据（225 项考古／抄本／科学发现），都可在主页打开。',
+    'zh-Hant': '聖經時間軸（98 個事件）、家譜（277 位人物）、聖經證據（225 項考古／抄本／科學發現），都可在主頁打開。',
     'en':
-        'Bible Timeline (97 events), Family Tree (277 people), and Bible Evidence (225 archaeology / manuscript / science finds) — all reachable from Home.',
+        'Bible Timeline (98 events), Family Tree (277 people), and Bible Evidence (225 archaeology / manuscript / science finds) — all reachable from Home.',
   },
   'onboardCustomizeTitle': {
     'zh-Hans': '你的数据',
@@ -5976,12 +5976,16 @@ const uiStrings = {
     'zh-Hant': '猶大與以色列列王',
     'en': 'Kings of Judah & Israel',
   },
-  // The Genesis 5 and 11 lifespans. "年代" rather than "年表" because a
-  // 年表 is a list of events and this is a chart of durations, which is
-  // the whole difference between it and the Timeline resource.
+  // "年代" rather than "年表" because a 年表 is a list of events and this
+  // is a chart of durations, which is the whole difference between it
+  // and the Timeline resource.
+  //
+  // The parenthetical named Genesis 5 and 11 until phase 2 carried the
+  // chart through Genesis 12-50; it now names the two men it runs
+  // between, which stays true whichever chapters supply the figures.
   'chronology': {
-    'zh-Hans': '圣经年代（创世记五、十一章）',
-    'zh-Hant': '聖經年代（創世記五、十一章）',
+    'zh-Hans': '圣经年代（亚当到约瑟）',
+    'zh-Hant': '聖經年代（亞當到約瑟）',
     'en': 'Bible Chronology',
   },
   'chronologyText': {
@@ -6459,6 +6463,50 @@ const uiStrings = {
     'en': 'No events match.',
     'zh-Hans': '未找到符合的事件。',
     'zh-Hant': '未找到符合的事件。',
+  },
+  // What a year on the timeline rests on. One sentence per `basis`
+  // value in assets/bible_timeline.json, which until now existed only
+  // in the file: `TimelineEvent.fromJson` never read the field, so all
+  // 98 dates printed with the confidence of the 13 that are derived.
+  // The name "Thiele" is rendered as the kings chart already renders
+  // it (assets/hebrew_kings.json `systemName`); "Ussher" is left in
+  // Latin because this repository has no settled Chinese form for it
+  // and inventing one would be a claim of its own.
+  'timelineBasisScripture': {
+    'en':
+        'Derived. Counted back from Solomon’s fourth year — which 1 Kings 6:1 dates 480 years after the exodus — along intervals the text itself states.',
+    'zh-Hans': '推算而得。从所罗门第四年往前推算：王上 6:1 记该年在出埃及后 480 年，其余各段皆按经文自述的年数。',
+    'zh-Hant': '推算而得。從所羅門第四年往前推算：王上 6:1 記該年在出埃及後 480 年，其餘各段皆按經文自述的年數。',
+  },
+  'timelineBasisThiele': {
+    'en':
+        'From Thiele’s chronology of the Hebrew kings, which this app follows throughout and cites.',
+    'zh-Hans': '出自锡尔年代系统（希伯来列王年代学），本应用一律采用并注明出处。',
+    'zh-Hant': '出自錫爾年代系統（希伯來列王年代學），本應用一律採用並註明出處。',
+  },
+  'timelineBasisConventional': {
+    'en':
+        'A commonly published reconstruction. The text fixes no year for this, so the year is shown as approximate.',
+    'zh-Hans': '这是常见的一种推想年代。经文并未为此事定年，故此处标为约数。',
+    'zh-Hant': '這是常見的一種推想年代。經文並未為此事定年，故此處標為約數。',
+  },
+  // The seam. Everything from Abraham down is counted back from the
+  // Thiele anchor; the eight events above him are not, and the two
+  // halves are 110 years out of step with each other. Recorded rather
+  // than repaired — fixing it means fixing a year for the creation,
+  // which this repository deliberately does not do.
+  'timelineAntediluvianBasis': {
+    'en':
+        'The text dates nothing before Abraham. These years follow Ussher’s reconstruction, with the creation rounded to 4000, and they do not join the dates below them: Genesis 5 and 7:6 put 1,656 years between the creation and the flood, where these leave 1,652. Genesis’s own arithmetic is charted in Bible Chronology, counted from the creation, because scripture gives no BC year to count from.',
+    'zh-Hans':
+        '亚伯拉罕以前的事，经文一概未记年份。此处各年采用 Ussher 的推算，并将创世之年取整为公元前 4000 年；它们与其下各条并不衔接：按创世记 5 章与 7:6，创世到洪水共 1656 年，而此处只相隔 1652 年。经文自身的年数另绘于「圣经年代」一图，以创世为起点计算——因为经文并未给出可换算的公元前年份。',
+    'zh-Hant':
+        '亞伯拉罕以前的事，經文一概未記年份。此處各年採用 Ussher 的推算，並將創世之年取整為公元前 4000 年；它們與其下各條並不銜接：按創世記 5 章與 7:6，創世到洪水共 1656 年，而此處只相隔 1652 年。經文自身的年數另繪於「聖經年代」一圖，以創世為起點計算——因為經文並未給出可換算的公元前年份。',
+  },
+  'timelineOpenChronology': {
+    'en': 'Open Bible Chronology',
+    'zh-Hans': '打开「圣经年代」',
+    'zh-Hant': '開啟「聖經年代」',
   },
   // Share-link toasts (sermons + bible verses)
   'shareLink': {
