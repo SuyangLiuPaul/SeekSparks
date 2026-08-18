@@ -49,6 +49,7 @@ import 'package:seeksparks/utils/strongs_inline.dart';
 import 'package:seeksparks/utils/verse_text_absence.dart';
 import 'package:seeksparks/utils/version_gutter.dart'
     show referenceGutterWidth, versionGutterWidth;
+import 'package:seeksparks/utils/version_diff.dart';
 import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
 import 'package:seeksparks/widgets/workbench_chrome.dart' show WbVersionTag;
 
@@ -93,7 +94,7 @@ const double kBrowseRunSpacing = 0.0;
 
 /// One printed line: a translation of a verse, or its originals line.
 class _BrowseRow {
-  const _BrowseRow({
+  _BrowseRow({
     required this.verse,
     required this.code,
     required this.reference,
@@ -149,6 +150,106 @@ class _BrowseRow {
   /// carry a superscription have it merged into verse 1's text, and it
   /// renders as part of the verse. docs/DATA-INTEGRITY.md check 31.
   final String superscription;
+
+  /// bwh30 difference highlighting: this row's tokens, and which of them
+  /// are worded differently from the base edition of its language group.
+  ///
+  /// Computed at LOAD, not at paint, and computed whether or not the
+  /// toggle is on. That is what makes the toggle instant — flipping it
+  /// repaints, it does not refetch a chapter — and it is why the pane's
+  /// widget key deliberately does not mention the flag.
+  ///
+  /// Written once, immediately after the verse's rows are built, and
+  /// never again; the fields are mutable only because a row cannot know
+  /// its neighbours until they exist.
+  List<VersionDiffToken> diffTokens = const [];
+  Set<int> diffMarks = const {};
+
+  /// The drawn units holding at least one marked token. The tagged path
+  /// marks whole runs — a run IS a word there — so this is all it needs.
+  Set<int> diffUnits = const {};
+}
+
+/// The strings the diff walks for one row, in the exact order the row
+/// will be DRAWN from.
+///
+/// This is the load-bearing part of the whole feature. The comparison
+/// and the paint traverse the same list in the same order, so a token
+/// index cannot mean one word here and a different word on screen. An
+/// untagged row's unit is a `parseScripture` span; a tagged row's unit
+/// is a run.
+///
+/// Notes and versification markers become EMPTY units rather than being
+/// dropped, so the indices still line up with the renderer's walk. They
+/// are emptied rather than compared because neither is scripture: a
+/// footnote is the publisher talking, and `(102:12)` is the edition's
+/// own numbering. Comparing either would report a difference in
+/// apparatus as a difference in translation.
+///
+/// Supplied words, the divine name and referent glosses ARE compared.
+/// They are printed, the reader reads them, and `主[雅伟]` against a
+/// bare 主 is precisely the difference this feature exists to show.
+List<String> _diffUnitsOf(_BrowseRow row) {
+  if (row.absence != null) return const [];
+  final runs = row.runs;
+  if (runs != null) return [for (final r in runs) _readableText(r.text)];
+  final text = row.text;
+  if (text == null) return const [];
+  return [
+    for (final s in parseScripture(text))
+      if (s.kind == ScriptureSpanKind.note ||
+          s.kind == ScriptureSpanKind.versification)
+        ''
+      else
+        s.text,
+  ];
+}
+
+String _readableText(String raw) {
+  final b = StringBuffer();
+  for (final s in parseScripture(raw)) {
+    if (s.kind == ScriptureSpanKind.note ||
+        s.kind == ScriptureSpanKind.versification) {
+      continue;
+    }
+    b.write(s.text);
+  }
+  return b.toString();
+}
+
+/// Fill in [_BrowseRow.diffMarks] for one verse's translation rows.
+///
+/// [groups] is [comparableVersionGroups]' answer for the whole stack;
+/// each group is compared separately, so Greek is never diffed against
+/// English and 简体 is never diffed against 繁體.
+///
+/// A row the edition does not carry drops out of its group for THIS
+/// verse only. That matters: the Septuagint's absences and the BSB's
+/// sixteen Received-Text verses would otherwise diff a verse against a
+/// row that says "this edition does not have this verse", and every word
+/// of the base would come back marked. Where the drop-out leaves fewer
+/// than two rows there is nothing to compare and nothing is marked.
+void _markDifferences(
+  List<_BrowseRow> verseRows,
+  Map<String, List<String>> groups,
+) {
+  if (groups.isEmpty) return;
+  for (final codes in groups.values) {
+    final members = [
+      for (final r in verseRows)
+        if (codes.contains(r.code) && r.absence == null) r,
+    ];
+    if (members.length < 2) continue;
+    final tokens = [for (final r in members) versionDiffTokens(_diffUnitsOf(r))];
+    final marks = versionDiffMarks([
+      for (final t in tokens) [for (final x in t) x.norm],
+    ]);
+    for (final (i, r) in members.indexed) {
+      r.diffTokens = tokens[i];
+      r.diffMarks = marks[i];
+      r.diffUnits = {for (final j in marks[i]) tokens[i][j].unit};
+    }
+  }
 }
 
 /// What the mouse is currently over, reported to the status bar and the
@@ -197,7 +298,13 @@ class BrowseWindow extends StatefulWidget {
     this.onVerseTap,
     this.focus = AnalysisFocus.empty,
     this.highlight = const SearchHighlight(),
+    this.showDiff = false,
   });
+
+  /// Paint the bwh30 version-difference marks. Only the PAINT: the marks
+  /// themselves are computed with the chapter either way, so this toggles
+  /// in a frame and does not reload anything.
+  final bool showDiff;
 
   /// Canonical English book name, e.g. "Genesis".
   final String book;
@@ -442,9 +549,15 @@ class _BrowseWindowState extends State<BrowseWindow> {
     await OriginalsService.forVerse(widget.book, widget.chapter, 1);
 
     final rows = <_BrowseRow>[];
+    // Which editions on screen can be compared with which, by language.
+    // Empty for a stack of one edition per language, and for the `wtt` /
+    // `bgt` rows, which the catalog does not know — see
+    // [comparableVersionGroups].
+    final diffGroups = comparableVersionGroups(widget.versionCodes);
     _firstRowOfVerse.clear();
     for (var n = 1; n <= lastVerse; n++) {
       var first = true;
+      final verseStart = rows.length;
       _firstRowOfVerse[n] = rows.length;
       final reference =
           '${localeAwareBookName(widget.book, locale, widget.versionCodes.isEmpty ? '' : widget.versionCodes.first)} '
@@ -508,6 +621,10 @@ class _BrowseWindowState extends State<BrowseWindow> {
         ));
         first = false;
       }
+
+      // Before the originals row is appended, because the originals are
+      // not a comparable edition and must not be swept into a group.
+      _markDifferences(rows.sublist(verseStart), diffGroups);
 
       final words =
           await OriginalsService.forVerse(widget.book, widget.chapter, n);
@@ -633,30 +750,106 @@ class _BrowseWindowState extends State<BrowseWindow> {
           {for (final r in rows) r.reference},
           t.text,
         );
+        final groups = comparableVersionGroups(widget.versionCodes);
         return Container(
           color: wb.paneBg,
-          child: ScrollablePositionedList.builder(
-              itemScrollController: _scroll,
-              padding: EdgeInsets.zero,
-              itemCount: rows.length,
-              itemBuilder: (context, i) => _RowView(
-                row: rows[i],
-                gutterWidth: gutterWidth,
-                referenceWidth: referenceWidth,
-                focused: rows[i].verse == widget.focusedVerse,
-                highlight: widget.highlight,
-                glosses: _glosses,
-                keyPrefix: browseKeyPrefix(widget.book, widget.chapter),
-                focus: widget.focus,
-                onWordTap: widget.onWordTap,
-                onWordHover: widget.onWordHover,
-                onTap: widget.onVerseTap == null
-                    ? null
-                    : () => widget.onVerseTap!(rows[i].verse),
+          child: Column(
+            children: [
+              // Above the text, not below it: the legend names the base
+              // edition, and a reader who does not know which row the
+              // marks are measured against cannot read the marks at all.
+              if (widget.showDiff && groups.isNotEmpty)
+                _DiffLegend(bases: [
+                  for (final codes in groups.values) codes.first,
+                ]),
+              Expanded(
+                child: ScrollablePositionedList.builder(
+                    itemScrollController: _scroll,
+                    padding: EdgeInsets.zero,
+                    itemCount: rows.length,
+                    itemBuilder: (context, i) => _RowView(
+                      row: rows[i],
+                      gutterWidth: gutterWidth,
+                      referenceWidth: referenceWidth,
+                      focused: rows[i].verse == widget.focusedVerse,
+                      highlight: widget.highlight,
+                      showDiff: widget.showDiff,
+                      glosses: _glosses,
+                      keyPrefix: browseKeyPrefix(widget.book, widget.chapter),
+                      focus: widget.focus,
+                      onWordTap: widget.onWordTap,
+                      onWordHover: widget.onWordHover,
+                      onTap: widget.onVerseTap == null
+                          ? null
+                          : () => widget.onVerseTap!(rows[i].verse),
+                    ),
+                ),
               ),
+            ],
           ),
         );
       },
+    );
+  }
+}
+
+/// The one sentence that makes the marks readable.
+///
+/// A mark on its own says "this word is special" and nothing more. The
+/// two facts a reader cannot recover from the ink are WHAT the mark
+/// measures against and WHAT IT DOES NOT COMPARE, and both are here:
+/// the base edition of every language group on screen, and the reason
+/// the Greek line carries no marks at all.
+///
+/// Several bases, joined, rather than one: a stack of five English and
+/// three 简体 editions is two independent comparisons, and naming only
+/// the first would misdescribe the Chinese rows.
+class _DiffLegend extends StatelessWidget {
+  const _DiffLegend({required this.bases});
+
+  final List<String> bases;
+
+  @override
+  Widget build(BuildContext context) {
+    final wb = WbColors.of(context);
+    final t = WbType.of(context);
+    final locale = context.watch<AppSettings>().locale;
+    final template = uiStrings['browseDiffLegend']?[locale] ??
+        'Underlined = worded differently from {base}. '
+            'Only editions in the same language are compared.';
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
+      decoration: BoxDecoration(
+        color: wb.paneBg,
+        border: Border(bottom: BorderSide(color: wb.border)),
+      ),
+      child: Text.rich(
+        TextSpan(children: [
+          // The sample is drawn in the mark's own ink and with the
+          // mark's own underline, so the legend is a specimen rather
+          // than a description of one.
+          TextSpan(
+            text: '　',
+            style: TextStyle(
+              decoration: TextDecoration.underline,
+              decorationColor: wb.diffMark,
+              decorationThickness: 2,
+            ),
+          ),
+          TextSpan(
+            text: '  ${template.replaceAll('{base}', bases.map(
+                  shortBibleVersionLabel,
+                ).join(' · '))}',
+          ),
+        ]),
+        style: TextStyle(
+          fontSize: t.chrome,
+          height: 1.3,
+          color: wb.mutedText,
+          fontFamilyFallback: kCjkFontFallback,
+        ),
+      ),
     );
   }
 }
@@ -734,11 +927,13 @@ class _RowView extends StatelessWidget {
     this.onWordHover,
     this.onTap,
     this.highlight = const SearchHighlight(),
+    this.showDiff = false,
   });
 
   final _BrowseRow row;
   final bool focused;
   final SearchHighlight highlight;
+  final bool showDiff;
   final Map<String, StrongsEntry?> glosses;
 
   /// One width shared by every row in the chapter, so the verse text of
@@ -833,6 +1028,7 @@ class _RowView extends StatelessWidget {
                             ? _TaggedLine(
                                 row: row,
                                 highlight: highlight,
+                                showDiff: showDiff,
                                 glosses: glosses,
                                 keyPrefix: keyPrefix,
                                 focus: focus,
@@ -855,6 +1051,7 @@ class _RowView extends StatelessWidget {
                                   row: row,
                                   settings: settings,
                                   highlight: highlight,
+                                  showDiff: showDiff,
                                 ),
                               ),
                   ),
@@ -873,11 +1070,20 @@ class _TranslationLine extends StatelessWidget {
     required this.row,
     required this.settings,
     required this.highlight,
+    this.showDiff = false,
   });
 
   final _BrowseRow row;
   final AppSettings settings;
   final SearchHighlight highlight;
+  final bool showDiff;
+
+  /// The marked stretches of one drawn span, or nothing when the mark is
+  /// switched off. Resolved per span rather than per row because the
+  /// offsets are relative to the span's own string.
+  List<({int start, int end})> _spansOf(int unit) => showDiff
+      ? mergedMarkSpans(row.diffTokens, row.diffMarks, unit)
+      : const [];
 
   @override
   Widget build(BuildContext context) {
@@ -911,15 +1117,19 @@ class _TranslationLine extends StatelessWidget {
             )
           else
             ...[
-            for (final span in parseScripture(row.text ?? ''))
+            for (final (unit, span) in parseScripture(row.text ?? '').indexed)
               switch (span.kind) {
                 // A plain span is where a text-query hit can live, so it
                 // is split again on the search terms. Strong's queries
                 // mark the tagged runs instead (see _HoverWord).
+                //
+                // The difference mark cuts the same string on its own
+                // boundaries, so the two splits are merged: a hit keeps
+                // its fill, a differing word keeps its underline, and a
+                // word that is both keeps both.
                 ScriptureSpanKind.plain => TextSpan(
                     children: [
-                      for (final h
-                          in splitOnTerms(span.text, highlight.textTerms))
+                      for (final h in _hitPieces(span.text, unit))
                         TextSpan(
                           text: h.text,
                           style: TextStyle(
@@ -927,20 +1137,50 @@ class _TranslationLine extends StatelessWidget {
                             backgroundColor:
                                 h.isHit ? wb.selectionBg : null,
                             fontWeight: h.isHit ? FontWeight.w700 : null,
+                            decoration: h.diff ? TextDecoration.underline : null,
+                            decorationColor: h.diff ? wb.diffMark : null,
+                            decorationThickness: h.diff ? 2 : null,
                           ),
                         ),
                     ],
                   ),
                 ScriptureSpanKind.supplied => TextSpan(
-                    text: span.text,
                     style: TextStyle(
                       color: wb.text,
                       fontStyle: FontStyle.italic,
                     ),
+                    children: [
+                      for (final p in sliceByMarks(
+                          0, span.text.length, _spansOf(unit)))
+                        TextSpan(
+                          text: span.text.substring(p.start, p.end),
+                          style: p.marked
+                              ? TextStyle(
+                                  decoration: TextDecoration.underline,
+                                  decorationColor: wb.diffMark,
+                                  decorationThickness: 2,
+                                )
+                              : null,
+                        ),
+                    ],
                   ),
+                // Marked whole or not at all. `主[雅伟]` is one editorial
+                // act and the brackets are apparatus, so underlining the
+                // 雅伟 and leaving the 主 bare would draw a boundary
+                // inside a device that has no inside.
                 ScriptureSpanKind.divineName ||
                 ScriptureSpanKind.gloss =>
-                  glossSpan(span, wb),
+                  glossSpan(
+                    span,
+                    wb,
+                    style: showDiff && row.diffUnits.contains(unit)
+                        ? TextStyle(
+                            decoration: TextDecoration.underline,
+                            decorationColor: wb.diffMark,
+                            decorationThickness: 2,
+                          )
+                        : null,
+                  ),
                 ScriptureSpanKind.versification =>
                   versificationSpan(span, wb, fontSize: t.text * 0.8),
                 ScriptureSpanKind.note => WidgetSpan(
@@ -972,6 +1212,37 @@ class _TranslationLine extends StatelessWidget {
         fontFamilyFallback: kCjkFontFallback,
       ),
     );
+  }
+
+  /// One plain span, cut on the union of the search boundaries and the
+  /// difference boundaries.
+  ///
+  /// `splitOnTerms` reports no offsets — it returns pieces that
+  /// concatenate back to the input — so the position is carried along by
+  /// a cursor. That is exact by construction and stays exact as long as
+  /// the pieces tile the string, which is the contract the highlighter
+  /// already has to keep for the text to render at all.
+  List<({String text, bool isHit, bool diff})> _hitPieces(
+      String text, int unit) {
+    final spans = _spansOf(unit);
+    final out = <({String text, bool isHit, bool diff})>[];
+    var at = 0;
+    for (final h in splitOnTerms(text, highlight.textTerms)) {
+      final end = at + h.text.length;
+      if (spans.isEmpty) {
+        out.add((text: h.text, isHit: h.isHit, diff: false));
+      } else {
+        for (final p in sliceByMarks(at, end, spans)) {
+          out.add((
+            text: text.substring(p.start, p.end),
+            isHit: h.isHit,
+            diff: p.marked,
+          ));
+        }
+      }
+      at = end;
+    }
+    return out;
   }
 }
 
@@ -1071,11 +1342,13 @@ class _TaggedLine extends StatelessWidget {
     required this.focus,
     required this.showNumbers,
     this.highlight = const SearchHighlight(),
+    this.showDiff = false,
     this.onWordTap,
     this.onWordHover,
   });
 
   final SearchHighlight highlight;
+  final bool showDiff;
 
   final _BrowseRow row;
   final Map<String, StrongsEntry?> glosses;
@@ -1101,6 +1374,7 @@ class _TaggedLine extends StatelessWidget {
               // A Strong's query marks the word carrying the
               // number — the tagging already knows which one.
               hit: highlight.matchesStrongs(r.strongs),
+              diff: showDiff && row.diffUnits.contains(i),
               // Reuse the originals hover target: same behaviour,
               // same popup, only the script differs.
               word: OriginalWord(text: r.text, strongs: r.strongs),
@@ -1145,6 +1419,16 @@ class _TaggedLine extends StatelessWidget {
                 height: t.lineHeight,
                 color: wb.text,
                 fontFamilyFallback: kCjkFontFallback,
+                // An untagged run inside a tagged line is what the
+                // tagger could not place — usually a connective or bare
+                // punctuation. It has no hover state to collide with, so
+                // the mark is an ordinary underline here, and it is
+                // all-or-nothing because the run is a word or two.
+                decoration: showDiff && row.diffUnits.contains(i)
+                    ? TextDecoration.underline
+                    : null,
+                decorationColor: wb.diffMark,
+                decorationThickness: 2,
               ),
           ),
       ],
@@ -1225,12 +1509,18 @@ class _HoverWord extends StatefulWidget {
     this.showNumbers = false,
     this.translation = false,
     this.hit = false,
+    this.diff = false,
     this.onTap,
     this.onHover,
   });
 
   /// True when the active search marks this word.
   final bool hit;
+
+  /// True when this word is worded differently from the base edition of
+  /// its language group, and the reader has asked to see that. Drawn as
+  /// the bottom edge of the word's box — see [wordMarkDecoration].
+  final bool diff;
 
   final OriginalWord word;
   final String reference;
@@ -1411,7 +1701,7 @@ class _HoverWordState extends State<_HoverWord> {
               : () => widget.onTap!(_asHover()),
           behavior: HitTestBehavior.opaque,
           child: Container(
-            decoration: wordMarkDecoration(mark, wb),
+            decoration: wordMarkDecoration(mark, wb, diff: widget.diff),
             child: Text.rich(
               TextSpan(children: [
                 // 2026-08-06: a tagged run can itself be a supplied

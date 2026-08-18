@@ -278,6 +278,27 @@ class WorkbenchProvider extends ChangeNotifier {
         ...parallelVersions.where((c) => c != mainProvider.currentVersion),
       ];
 
+  /// Colour the words where the editions on screen disagree — bwh30's
+  /// *Toggle Difference Highlighting*.
+  ///
+  /// Off by default, and BibleWorks agrees: it ships the feature behind
+  /// a settings window and a menu toggle rather than on. A Browse stack
+  /// with the marks always on would be a page of underlines the moment a
+  /// reader added a second English edition, and the reader has to be the
+  /// one who asks the question.
+  ///
+  /// Lives here beside [parallelVersions] rather than in `AppSettings`
+  /// because it is a property of the comparison stack, and it is only
+  /// meaningful while that stack holds two editions of one language.
+  bool browseDiff = false;
+
+  void setBrowseDiff(bool on) {
+    if (browseDiff == on) return;
+    browseDiff = on;
+    _notify();
+    onBrowseStateChanged?.call();
+  }
+
   void setCentreMode(WbCentreMode mode) {
     if (centreMode == mode) return;
     centreMode = mode;

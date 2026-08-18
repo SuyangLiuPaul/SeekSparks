@@ -59,6 +59,8 @@ import 'package:seeksparks/widgets/copy_center_sheet.dart'
 import 'package:seeksparks/utils/clipboard_helper.dart';
 import 'package:seeksparks/pages/strongs_entry_page.dart';
 import 'package:seeksparks/utils/analysis_focus.dart';
+import 'package:seeksparks/utils/version_diff.dart'
+    show comparableVersionGroups;
 import 'package:seeksparks/utils/app_nav.dart';
 import 'package:seeksparks/utils/strongs_inline.dart';
 import 'package:seeksparks/utils/search_highlight.dart';
@@ -203,6 +205,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
   static const _kParallelKey = kWorkbenchParallelModeKey;
   static const _kParallelVersionsKey = kWorkbenchParallelVersionsKey;
   static const _kCentreModeKey = kWorkbenchCentreModeKey;
+  static const _kBrowseDiffKey = 'workbench.browseDiff.v1';
 
   // ── Split mode: the second reading column ─────────────────────────
   //
@@ -406,6 +409,11 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         uiStrings[key]?[locale] ?? fallback;
     final splitFits =
         splitFitsIn(_paneWidths(MediaQuery.sizeOf(context).width).centre);
+    // The stack as the Browse pane will actually draw it — the reading
+    // version first, then the comparisons — which is the same list the
+    // diff partitions by language.
+    final diffFits = _wb.centreMode == WbCentreMode.browse &&
+        comparableVersionGroups(_wb.displayVersions).isNotEmpty;
 
     return [
       WbMenu(s('menuFile', 'File'), [
@@ -459,6 +467,23 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         const WbMenuItem.separator(),
         WbMenuItem(s('parallelPickVersions', 'Choose versions…'),
             () => _pickParallelVersions(context)),
+        // bwh30's "Toggle Difference Highlighting", in the same place
+        // BibleWorks keeps it: the Browse window's own option menu,
+        // beside the version list it operates on.
+        //
+        // Greyed with the reason rather than hidden when the stack holds
+        // no two editions of one language — the same rule Split View
+        // follows two items up, and for the same reason: the fix is one
+        // the reader can act on (add a second English or Chinese
+        // edition), and a control that vanishes teaches them nothing.
+        WbMenuItem(
+          s('browseDiffHighlight', 'Highlight version differences'),
+          diffFits ? () => _wb.setBrowseDiff(!_wb.browseDiff) : null,
+          checked: _wb.browseDiff && diffFits,
+          shortcut: diffFits
+              ? null
+              : s('browseDiffNeedsPair', 'needs two editions in one language'),
+        ),
         const WbMenuItem.separator(),
         WbMenuItem(
           s('menuDarkMode', 'Dark mode'),
@@ -830,6 +855,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         _analysisTab = AnalysisTab.values[tab];
       }
       _analysisTabLabels = prefs.getBool(_kAnalysisTabLabelsKey) ?? false;
+      _wb.browseDiff = prefs.getBool(_kBrowseDiffKey) ?? false;
     });
     if (_wb.centreMode == WbCentreMode.split) _openSecondColumn();
   }
@@ -844,6 +870,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
     await prefs.setStringList(_kParallelVersionsKey, _wb.parallelVersions);
     await prefs.setInt(_kAnalysisTabKey, _analysisTab.index);
     await prefs.setBool(_kAnalysisTabLabelsKey, _analysisTabLabels);
+    await prefs.setBool(_kBrowseDiffKey, _wb.browseDiff);
   }
 
   // ── Pane geometry ─────────────────────────────────────────────────
@@ -1605,6 +1632,10 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
                     // A hit list without marked hits is a table of
                     // contents — you still have to hunt the line.
                     highlight: highlightsForQuery(_wb.lastQuery),
+                    // bwh30. Not in the widget key on purpose: the marks
+                    // ride along with the chapter either way, so this is
+                    // a repaint and not a reload.
+                    showDiff: _wb.browseDiff,
                     onWordTap: _selectWord,
                     onWordHover: _onWordHover,
                     focus: _browseFocus(book, chapter),

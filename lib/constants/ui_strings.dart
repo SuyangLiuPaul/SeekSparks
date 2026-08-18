@@ -2826,6 +2826,25 @@ const uiStrings = {
     'zh-Hant': '需更寬的中欄',
     'en': 'needs a wider centre',
   },
+  // ====== Browse: version difference highlighting (bwh30) ======
+  'browseDiffHighlight': {
+    'zh-Hans': '标示版本差异',
+    'zh-Hant': '標示版本差異',
+    'en': 'Highlight version differences',
+  },
+  'browseDiffNeedsPair': {
+    'zh-Hans': '需同一语言的两个译本',
+    'zh-Hant': '需同一語言的兩個譯本',
+    'en': 'needs two editions in one language',
+  },
+  // The legend under the stack. `{base}` is the edition every other row
+  // is measured against — the reading version, which is the first row.
+  'browseDiffLegend': {
+    'zh-Hans': '下划线＝与 {base} 用词不同；只在同一语言的译本之间比较。',
+    'zh-Hant': '底線＝與 {base} 用詞不同；只在同一語言的譯本之間比較。',
+    'en': 'Underlined = worded differently from {base}. '
+        'Only editions in the same language are compared.',
+  },
   'splitLoading': {
     'zh-Hans': '正在打开第二栏…',
     'zh-Hant': '正在打開第二欄…',

@@ -196,13 +196,33 @@ Accordance users never touch their equivalents either.
   align the parallels. *Done:* split mode gains an "independent
   reference" toggle, and the synopsis assets feed a "jump the other pane
   to the parallel" action.
-- **Comparing Bible versions (difference highlighting)** — **ABSENT.**
-  bwh37 "Comparing Bible Versions" colour-codes where translations
-  differ. Grep finds no diff/compare code. With 11 versions loaded and a
-  parallel view already rendering them, this is high value for low cost
-  and is the single most obviously missing thing in the Browse pane.
-  *Done:* word-level difference shading across the displayed stack, with
-  a legend, holding `workbench_theme.dart:16`.
+- **Comparing Bible versions (difference highlighting)** — **HAVE**
+  (v1.6.147). View ▸ *Highlight version differences*, off by default and
+  greyed with a reason when the stack holds no two editions of one
+  language. Word-level LCS marks, a rose underline, and a legend naming
+  the base of each language group. `lib/utils/version_diff.dart` is a
+  pure core with `test/version_diff_test.dart` on it.
+
+  **This entry's citation was wrong and is corrected here.** It said
+  bwh37 "Comparing Bible Versions"; bwh37 is *Compiling Version
+  Databases* and has nothing to do with colour. The feature is specified
+  in **bwh30 "Using Colors" § Comparing Bible Versions**, and reading
+  the right topic changed the design three ways a guess from the feature
+  NAME would have missed: it is a **same-language** operation (so the
+  stack is partitioned by `BibleVersionInfo.language` and Greek is never
+  diffed against English), the **first version is the base**, and
+  BibleWorks explicitly *cannot* do this for "double-byte languages
+  (Chinese, Arabic, Korean, Japanese, Thai, Vietnamese)" — so the
+  Chinese comparison, which is the one our readers most need, is a place
+  we go past it rather than catch up to it. Measured: `cuvs-plus` vs
+  `cuvs-yhwh` differs in 7,892 of 31,102 verses, and in 71.7% of those
+  the only characters marked are divine-name characters.
+
+  One departure from BibleWorks, deliberate and measured: the base row
+  is marked where it aligns with **no** other row, not where it differs
+  from **any**. On the five-English stack, BibleWorks' union rule paints
+  58.3% of the base row; the intersection rule paints 0.1%. The two
+  rules are identical for two versions. See the library doc.
 - **External Links Manager** — **ABSENT**, low priority. bwh12.
 
 ### 3.4 The Analysis window
@@ -617,12 +637,12 @@ In rough order of value, if nothing else is pressing:
 
 1. **Anything in `docs/DATA-INTEGRITY.md`'s ranked list.** Accuracy
    outranks everything here.
-2. **Version difference highlighting** (§3.3) — high value, low cost, all
-   the data is already on screen.
+2. ~~Version difference highlighting~~ — **DONE v1.6.147**, §3.3.
 3. **Nave's Topical Bible** (§3.5) — public domain, closes a named
    BibleWorks resource, small.
 4. **Word list / verse list comparison** (§3.5) — the comparison is the
-   feature; we have both halves and neither compares.
+   feature; we have both halves and neither compares. `version_diff.dart`
+   now supplies a tested LCS; that is the hard half of this.
 5. **Compound (parenthesised) search** (§3.1) — the last missing piece of
    search algebra.
 6. **Transliterated Greek/Hebrew search input** (§3.7) — cheap, and it

@@ -107,6 +107,7 @@ class WbColors extends ThemeExtension<WbColors> {
     required this.strongsGrammar,
     required this.pinMark,
     required this.siblingBg,
+    required this.diffMark,
   });
 
   /// Background of a content pane (Browse, Search list, Analysis).
@@ -172,6 +173,31 @@ class WbColors extends ThemeExtension<WbColors> {
   /// selected one — the defect that made the version pill meaningless.
   final Color siblingBg;
 
+  /// The rule drawn under a word that this edition does not share with
+  /// the base edition — bwh30's difference highlighting, see
+  /// `lib/utils/version_diff.dart`.
+  ///
+  /// It is an UNDERLINE and not a fill, and that is the whole reason
+  /// this role can exist at all. Every fill on a Browse word is already
+  /// spoken for and each one means something about the *word's
+  /// identity*: [hoverBg] is "the pointer is here", [selectionBg] is
+  /// "your search matched this", [siblingBg] is "this carries the
+  /// Strong's number under study", [pinMark] is "this one is held". A
+  /// difference is a claim about the word's RELATION TO ANOTHER
+  /// EDITION, not about the word, so it takes the one channel nothing
+  /// else uses — the baseline edge — and composes with all four instead
+  /// of competing with them. A hovered, pinned, searched word that also
+  /// differs from the KJV can say all four things at once.
+  ///
+  /// Rose rather than red: red would be the obvious choice and it sits
+  /// opposite [siblingBg]'s green, which is the pairing red-green
+  /// colour blindness collapses. Pulled toward magenta it separates
+  /// from green on the blue axis as well as the red one, and from
+  /// [pinMark]'s gold and [link]'s blue on hue. 5.6 / 8.4 / 6.9:1
+  /// against the three pane backgrounds, above the 3:1 a non-text mark
+  /// needs on all of them.
+  final Color diffMark;
+
   /// The mark's gold. The single accent, used sparingly — an active
   /// toggle, a focused row — the way the icon uses it on the page.
   Color get accent => const Color(0xFFC9A227);
@@ -209,6 +235,7 @@ class WbColors extends ThemeExtension<WbColors> {
     strongsGrammar: Color(0xFF1B57C4),
     pinMark: Color(0xFF8A6A12),
     siblingBg: Color(0xFFC2E9CE),
+    diffMark: Color(0xFFB0246E),
   );
 
   static const dark = WbColors(
@@ -226,6 +253,7 @@ class WbColors extends ThemeExtension<WbColors> {
     strongsGrammar: Color(0xFF77A6F0),
     pinMark: Color(0xFFE8C24A),
     siblingBg: Color(0xFF1E4433),
+    diffMark: Color(0xFFF08CB8),
   );
 
   /// 2026-08: 护眼纸质 — the "easy-on-eyes" paper palette, used when
@@ -255,6 +283,7 @@ class WbColors extends ThemeExtension<WbColors> {
     strongsGrammar: Color(0xFF1B57C4),
     pinMark: Color(0xFF7A5C0A),
     siblingBg: Color(0xFFC4E2BF),
+    diffMark: Color(0xFF9C2050),
   );
 
   @override
@@ -272,6 +301,7 @@ class WbColors extends ThemeExtension<WbColors> {
     Color? strongsGrammar,
     Color? pinMark,
     Color? siblingBg,
+    Color? diffMark,
   }) =>
       WbColors(
         paneBg: paneBg ?? this.paneBg,
@@ -287,6 +317,7 @@ class WbColors extends ThemeExtension<WbColors> {
         strongsGrammar: strongsGrammar ?? this.strongsGrammar,
         pinMark: pinMark ?? this.pinMark,
         siblingBg: siblingBg ?? this.siblingBg,
+        diffMark: diffMark ?? this.diffMark,
       );
 
   @override
@@ -307,6 +338,7 @@ class WbColors extends ThemeExtension<WbColors> {
       strongsGrammar: Color.lerp(strongsGrammar, other.strongsGrammar, t)!,
       pinMark: Color.lerp(pinMark, other.pinMark, t)!,
       siblingBg: Color.lerp(siblingBg, other.siblingBg, t)!,
+      diffMark: Color.lerp(diffMark, other.diffMark, t)!,
     );
   }
 
@@ -387,18 +419,47 @@ class WbColors extends ThemeExtension<WbColors> {
 /// that appeared on click would widen the word by 3px and reflow the
 /// line under the reader's own pointer, which reads as the text
 /// flinching away from them.
-BoxDecoration wordMarkDecoration(WordMark mark, WbColors wb) => BoxDecoration(
+/// [diff] turns the bottom edge into the version-difference mark — see
+/// [WbColors.diffMark]. It is drawn HERE rather than as a text underline
+/// because a tagged word's underline is already spoken for: it says
+/// "this is the word you are on" or "this is the word you pinned", and a
+/// pin is not transient. Painting the difference there would silently
+/// erase it for as long as the reader kept a differing word pinned,
+/// which is a false negative in the one feature whose whole job is to
+/// say that two editions differ. The border is already 1.5px on every
+/// side and always reserved, so switching a side's colour cannot reflow
+/// the line.
+BoxDecoration wordMarkDecoration(WordMark mark, WbColors wb,
+        {bool diff = false}) =>
+    BoxDecoration(
       color: switch (mark) {
         WordMark.none => null,
         WordMark.hit => wb.selectionBg.withValues(alpha: 0.55),
         WordMark.sibling => wb.siblingBg,
         WordMark.hover || WordMark.pinned => wb.selectionBg,
       },
-      border: Border.all(
-        width: 1.5,
-        color: mark == WordMark.pinned ? wb.pinMark : Colors.transparent,
-      ),
-      borderRadius: BorderRadius.circular(2),
+      border: switch (diff) {
+        false => Border.all(
+            width: 1.5,
+            color: mark == WordMark.pinned ? wb.pinMark : Colors.transparent,
+          ),
+        true => Border(
+            top: _wordSide(mark, wb),
+            left: _wordSide(mark, wb),
+            right: _wordSide(mark, wb),
+            bottom: BorderSide(width: 1.5, color: wb.diffMark),
+          ),
+      },
+      // BoxDecoration forbids a radius on a non-uniform border, so the
+      // marked word squares off. At 2px that is imperceptible, and
+      // square is the house rule anyway (see the ratchet at the top of
+      // this file) — the radius is the concession, not this.
+      borderRadius: diff ? null : BorderRadius.circular(2),
+    );
+
+BorderSide _wordSide(WordMark mark, WbColors wb) => BorderSide(
+      width: 1.5,
+      color: mark == WordMark.pinned ? wb.pinMark : Colors.transparent,
     );
 
 /// A referent gloss — `主[雅伟]`, `主[基督]` — as it should print.
