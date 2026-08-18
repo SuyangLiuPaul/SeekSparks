@@ -7747,6 +7747,59 @@ const uiStrings = {
     'en': 'Sermons',
   },
 
+  // ── The User Notes tab (bwh15) ───────────────────────────────────
+  // The tab reuses `noteHint`, `noteTitleHint` and `noteDelete` from
+  // the modal editor rather than writing its own: the two surfaces
+  // write to one store, and giving them two vocabularies for the same
+  // field is the first step to giving them two behaviours.
+  'analysisTabNotes': {
+    'zh-Hans': '笔记',
+    'zh-Hant': '筆記',
+    'en': 'Notes',
+  },
+  'notesWritesToRange': {
+    'zh-Hans': '写入所选的 {count} 节经文',
+    'zh-Hant': '寫入所選的 {count} 節經文',
+    'en': 'Written to all {count} selected verses',
+  },
+  'notesAutosave': {
+    'zh-Hans': '自动保存',
+    'zh-Hant': '自動儲存',
+    'en': 'Saved automatically',
+  },
+  'notesSaving': {
+    'zh-Hans': '保存中…',
+    'zh-Hant': '儲存中…',
+    'en': 'Saving…',
+  },
+  'notesSearchOpen': {
+    'zh-Hans': '搜索笔记',
+    'zh-Hant': '搜尋筆記',
+    'en': 'Search notes',
+  },
+  'notesSearchClose': {
+    'zh-Hans': '返回笔记',
+    'zh-Hant': '返回筆記',
+    'en': 'Back to the note',
+  },
+  'notesSearchHint': {
+    'zh-Hans': '搜索你的笔记…',
+    'zh-Hant': '搜尋你的筆記…',
+    'en': 'Search your notes…',
+  },
+  // Says what is being searched AND how much of it there is: a search
+  // box over an invisible corpus cannot be read as empty-or-broken.
+  'notesSearchScope': {
+    'zh-Hans': '搜索你写过的全部笔记，共 {count} 条。',
+    'zh-Hant': '搜尋你寫過的全部筆記，共 {count} 條。',
+    'en': 'Searches every note you have written — {count} of them.',
+  },
+  'notesSearchCount': {
+    'zh-Hans': '找到 {count} 条',
+    'zh-Hant': '找到 {count} 條',
+    'en': '{count} found',
+  },
+
   // ── The Related Sermons tab (task #313) ──────────────────────────
   // The match is chapter-wide and every string here has to SAY so:
   // measured across the corpus, only 12.3% of the rows this list can

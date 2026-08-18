@@ -207,10 +207,10 @@ Accordance users never touch their equivalents either.
 
 ### 3.4 The Analysis window
 
-Twelve tabs today (`lib/widgets/analysis_tabs.dart:52-79`, enum order is
+Fourteen tabs today (`lib/widgets/analysis_tabs.dart`, enum order is
 load-bearing — it is persisted **by index**, so append, never insert):
 Word Study · X-Refs · Stats · KWIC · Related · Lists · Phrases ·
-Vocabulary · Forms · Topics · Context · Places.
+Vocabulary · Forms · Topics · Context · Places · Sermons · Notes.
 
 Mapped against BibleWorks' own tab set (bwh10):
 
@@ -222,7 +222,7 @@ Mapped against BibleWorks' own tab set (bwh10):
 | Context (bwh10h) | Context | **HAVE** |
 | X-Refs | X-Refs | **HAVE** |
 | Resource Summary | — | **PARTIAL** — see below |
-| User Notes | — | **ABSENT** — see below |
+| User Notes | Notes | **HAVE** (2026-08-18) — see below |
 | Version Info | — | **ABSENT**, small |
 | Browse / Verse | centre pane | **HAVE** by another shape |
 | Editor | — | **REJECTED** |
@@ -239,19 +239,30 @@ Mapped against BibleWorks' own tab set (bwh10):
   have one (`analysis_tabs.dart:89-92`). *Done:* sermons get a tab, and
   consider one "everything about this verse" summary above the
   specialised tabs.
-- **User Notes tab** — **ABSENT, and this is the biggest single gap in
-  the Analysis pane.** bwh10 gives BibleWorks a per-verse and
-  per-chapter note database that is **autoloaded beside the text** and
-  **searchable**. We have notes and highlights
-  (`lib/pages/library_page.dart`, `highlights_page.dart`, reachable from
-  Resources → Notes & highlights) but they live in a separate screen, so
-  a reader studying a verse cannot see or write their note without
-  leaving it. This is precisely the pattern #313 was raised about — the
-  workbench's own rule is that content with a pane goes to the pane.
-  *Done:* a Notes tab bound to the focused verse, writing to the existing
-  store (no new data model), plus note search. **This is the strongest
-  candidate in §3 and it touches user data, so it must not lose a
-  keystroke — read the existing store before designing.**
+- **User Notes tab** — **HAVE**, 2026-08-18. The Notes tab is the
+  fourteenth, `lib/widgets/verse_notes_pane.dart`, over the store the app
+  has had since v1.2.59 — no new data model, and the modal editor and the
+  Library page still read and write the same keys. It keeps what bwh15
+  actually specifies: **autoload** (the note follows the focused verse,
+  no Load button), **no Save button** (a 700 ms debounce, plus a flush
+  when the selection moves and a flush when the pane is torn down),
+  **the destination stated above the editor** — bwh15 prints the notes
+  directory "so you always know where notes go", and the store's
+  equivalent of a filename is the verse key, so the pane prints the
+  reference and says out loud when a passage note will land on more than
+  one verse — and **search**, which the app had none of at any depth
+  (`searchNotes` in `lib/utils/verse_notes.dart`, title + body, results
+  in canonical order, a passage note answering once as its range). The
+  strip's icon carries a dot when the focused verse already has a note.
+  The keystroke rules are pinned by `test/verse_notes_test.dart`, whose
+  widget half exists only to prove the four ways a keystroke can be lost.
+  **Deliberately NOT built: bwh15's chapter notes and its verse/chapter
+  mode switch.** Every note in this store hangs off a verse, so a chapter
+  note means inventing a second shape for data readers have already
+  written — not a call to make without the owner. A chapter note can be
+  written on the chapter's first verse today. If it is ever wanted, the
+  question to answer first is what happens to such a note on export and
+  in the Library list, not how to key it.
 - **Editor tab** — **REJECTED.** A word processor inside a Bible program
   was a 1990s answer to "how do I get this into my paper". The modern
   answer is the clipboard, and #312 is already making phrasing export
@@ -360,7 +371,10 @@ Mapped against BibleWorks' own tab set (bwh10):
 - **Copy / Copy Center (bwh27b)** — **HAVE**, `copy_center_sheet.dart`.
 - **Export options, verse ranges, format choice** — **PARTIAL.** bwh28.
   *Done:* fold into the Report Generator entry above.
-- **User notes database** — **ABSENT as a docked surface.** See 3.4.
+- **User notes database** — **HAVE as a docked surface**, 2026-08-18.
+  See 3.4. Notes are still exportable in both formats
+  (`export_service.dart`), which now reads a verse key through the same
+  parser the tab does.
 
 ### 3.7 Configuration, extensibility, input
 
@@ -542,9 +556,11 @@ Absences that are deliberate:
 
 **Where YsWords may still be ahead, and worth a look when the source is
 available:** anything touching notes and highlights. That subsystem holds
-**user data**, YsWords is phone-first where note-taking is common, and
-§3.4 above wants a Notes tab anyway. If YsWords has evolved the note
-model since v1.4.6, we want to know before we build a second one.
+**user data** and YsWords is phone-first, where note-taking is common. The
+Notes tab (§3.4) was built on 2026-08-18 **without** inventing anything —
+it writes the v1.2.59 keys — so the question is still open and still
+cheap: if YsWords has evolved the note model since v1.4.6, we want to know
+before either side grows a second one.
 
 Everything original-language — Strong's, concordance, originals,
 cross-references, LXX — was already ported and has since been developed
@@ -601,18 +617,19 @@ In rough order of value, if nothing else is pressing:
 
 1. **Anything in `docs/DATA-INTEGRITY.md`'s ranked list.** Accuracy
    outranks everything here.
-2. **A User Notes tab** (§3.4) — the largest gap in the Analysis pane,
-   and the one #313's own rule already argues for.
-3. **Version difference highlighting** (§3.3) — high value, low cost, all
+2. **Version difference highlighting** (§3.3) — high value, low cost, all
    the data is already on screen.
-4. **Nave's Topical Bible** (§3.5) — public domain, closes a named
+3. **Nave's Topical Bible** (§3.5) — public domain, closes a named
    BibleWorks resource, small.
-5. **Word list / verse list comparison** (§3.5) — the comparison is the
+4. **Word list / verse list comparison** (§3.5) — the comparison is the
    feature; we have both halves and neither compares.
-6. **Compound (parenthesised) search** (§3.1) — the last missing piece of
+5. **Compound (parenthesised) search** (§3.1) — the last missing piece of
    search algebra.
-7. **Transliterated Greek/Hebrew search input** (§3.7) — cheap, and it
+6. **Transliterated Greek/Hebrew search input** (§3.7) — cheap, and it
    unlocks the corpus for readers who know the languages.
+
+~~A User Notes tab (§3.4)~~ — **done 2026-08-18.** It was picked from
+this list as the largest gap in the Analysis pane.
 
 Do not pick a `BLOCKED` entry. The current ones: **#278** (NASB licence),
 **#293** (sermon-audio hosting cost), **#296** (production deploy

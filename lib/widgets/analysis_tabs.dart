@@ -83,6 +83,13 @@ enum AnalysisTab {
   /// action still answering it over the top of the verse. Appended for
   /// the same reason as `morphology`.
   sermons,
+
+  /// 2026-08-18: the reader's own notes on the focused verse —
+  /// BibleWorks' User Notes tab (bwh15), which is autoloaded beside the
+  /// text and saved without a Save button. The app had the data and two
+  /// ways to reach it, both of which took the verse off the screen.
+  /// Appended for the same reason as `morphology`.
+  notes,
 }
 
 /// 2026-08-11 (#313): the docked tab that answers [request], or null
@@ -99,6 +106,12 @@ enum AnalysisTab {
 /// (`Sermons` / 講道 are both narrower than the widest label the strip
 /// already carries, so the labelled width does not move).
 ///
+/// [ReaderAnalysisRequest.notes] joined on 2026-08-18, and the
+/// fourteenth tab was re-measured the same way (`Notes` / 笔记 are both
+/// narrower than the widest label the strip already carries, so the
+/// labelled width does not move; 14 also fills the two-row layout
+/// exactly, 7+7, where 13 left a gap).
+///
 /// [ReaderAnalysisRequest.aiExplain] returns null as a decision, not a
 /// deferral: see the enum. It is now the only one, so a null here means
 /// "deliberately a sheet" rather than "not got to yet".
@@ -107,6 +120,7 @@ AnalysisTab? analysisTabForRequest(ReaderAnalysisRequest request) =>
       ReaderAnalysisRequest.originals => AnalysisTab.wordStudy,
       ReaderAnalysisRequest.crossRefs => AnalysisTab.crossRefs,
       ReaderAnalysisRequest.sermons => AnalysisTab.sermons,
+      ReaderAnalysisRequest.notes => AnalysisTab.notes,
       ReaderAnalysisRequest.aiExplain => null,
     };
 
@@ -122,6 +136,7 @@ ReaderAnalysisRequest? requestForAnalysisTab(AnalysisTab tab) =>
       AnalysisTab.wordStudy => ReaderAnalysisRequest.originals,
       AnalysisTab.crossRefs => ReaderAnalysisRequest.crossRefs,
       AnalysisTab.sermons => ReaderAnalysisRequest.sermons,
+      AnalysisTab.notes => ReaderAnalysisRequest.notes,
       _ => null,
     };
 
@@ -293,6 +308,8 @@ const _kTabs = <(AnalysisTab, IconData, String, String)>[
   (AnalysisTab.places, Icons.place_outlined, 'analysisTabPlaces', 'Places'),
   (AnalysisTab.sermons, Icons.record_voice_over_outlined,
       'analysisTabSermons', 'Sermons'),
+  (AnalysisTab.notes, Icons.sticky_note_2_outlined, 'analysisTabNotes',
+      'Notes'),
 ];
 
 /// The tab names as they will be drawn in [locale], in strip order.
@@ -316,11 +333,25 @@ class AnalysisTabStrip extends StatelessWidget {
     required this.onChanged,
     required this.locale,
     this.preferLabels = false,
+    this.marked = const <AnalysisTab>{},
   });
 
   final AnalysisTab current;
   final ValueChanged<AnalysisTab> onChanged;
   final String locale;
+
+  /// Tabs that have something waiting for the focused verse, drawn with
+  /// a dot on the glyph.
+  ///
+  /// bwh15 does this with a letter appended to the tab's title — "This
+  /// enables you to see at a glance what is available even if the Notes
+  /// tab is not the active tab" — which is a promise the label cannot
+  /// keep here, because this strip drops to bare icons in a narrow pane
+  /// and #297 forbids ellipsising a CJK label to make room. A dot is
+  /// the same claim in a channel that survives both modes, and it is
+  /// drawn OVER the glyph so it cannot move the measurement the strip
+  /// just made.
+  final Set<AnalysisTab> marked;
 
   /// The reader has asked for tab names rather than letting the strip
   /// decide (task #297). Costs rows, never letters.
@@ -381,6 +412,7 @@ class AnalysisTabStrip extends StatelessWidget {
                                 label: labels[i],
                                 showLabel: showLabels,
                                 selected: items[i].$1 == current,
+                                marked: marked.contains(items[i].$1),
                                 onTap: () => onChanged(items[i].$1),
                                 type: t,
                               ),
@@ -405,12 +437,14 @@ class _TabButton extends StatelessWidget {
     required this.onTap,
     required this.type,
     this.showLabel = true,
+    this.marked = false,
   });
 
   final IconData icon;
   final String label;
   final bool selected;
   final bool showLabel;
+  final bool marked;
   final VoidCallback onTap;
 
   /// Passed down rather than resolved here: the strip MEASURED with this
@@ -444,8 +478,28 @@ class _TabButton extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(icon,
-                    size: type.scaledChrome(showLabel ? 15 : 17), color: fg),
+                Stack(
+                  // The dot hangs off the glyph's corner. `Clip.none`
+                  // and a zero-size positioned child keep the Stack
+                  // exactly icon-sized, so a marked tab measures the
+                  // same as an unmarked one.
+                  clipBehavior: Clip.none,
+                  children: [
+                    Icon(icon,
+                        size: type.scaledChrome(showLabel ? 15 : 17),
+                        color: fg),
+                    if (marked)
+                      Positioned(
+                        top: -1,
+                        right: -1,
+                        child: Container(
+                          width: type.scaledChrome(5),
+                          height: type.scaledChrome(5),
+                          color: wb.link,
+                        ),
+                      ),
+                  ],
+                ),
                 if (showLabel) ...[
                   SizedBox(width: type.scaledChrome(5)),
                   Flexible(

@@ -60,6 +60,8 @@ import 'package:seeksparks/utils/note_reference_parser.dart'
         spliceComposingUnderline,
         normalizeNoteReferenceBookNames;
 import 'package:seeksparks/utils/reference_parser.dart';
+import 'package:seeksparks/utils/verse_notes.dart'
+    show resolveNotePrefill, verseNoteRangeLabel;
 import 'package:seeksparks/widgets/verse_popup_sheet.dart' show showVersePopup;
 import 'package:seeksparks/utils/responsive.dart';
 import 'package:seeksparks/widgets/docked_panel.dart';
@@ -2392,11 +2394,11 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
                                 );
                                 mainProvider.clearSelectedVerses();
                               },
-                              // Every one of these four is offered to the
-                              // host first. Two have a docked pane and
-                              // two do not, and routing all four through
-                              // the same door is what makes that a
-                              // recorded decision rather than an
+                              // Every one of these five is offered to the
+                              // host first. Four have a docked pane and
+                              // one does not, and routing all five
+                              // through the same door is what makes that
+                              // a recorded decision rather than an
                               // accident — see `analysisTabForRequest`.
                               activeRequest: widget.activeAnalysisRequest,
                               onOriginal: () => _requestAnalysis(
@@ -2445,18 +2447,30 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
                               // whole range — WeDevote-style. Single
                               // selection still works the same way; the
                               // editor handles both cases uniformly.
-                              onNote: () => showNoteEditor(
-                                context: context,
-                                verses:
-                                    mainProvider.selectedVerses.toList()
-                                      ..sort((a, b) {
-                                        if (a.chapter != b.chapter) {
-                                          return a.chapter.compareTo(b.chapter);
-                                        }
-                                        return a.verse.compareTo(b.verse);
-                                      }),
-                                locale: settings.locale,
-                                mainProvider: mainProvider,
+                              // 2026-08-18: offered to the host like the
+                              // four above it. Where there is a docked
+                              // Notes tab (bwh15) the note opens beside
+                              // the verse instead of over it; where
+                              // there is not — a phone, the standalone
+                              // reader — this is the same modal it has
+                              // always been, and the write path is the
+                              // same store either way.
+                              onNote: () => _requestAnalysis(
+                                ReaderAnalysisRequest.notes,
+                                () => showNoteEditor(
+                                  context: context,
+                                  verses:
+                                      mainProvider.selectedVerses.toList()
+                                        ..sort((a, b) {
+                                          if (a.chapter != b.chapter) {
+                                            return a.chapter
+                                                .compareTo(b.chapter);
+                                          }
+                                          return a.verse.compareTo(b.verse);
+                                        }),
+                                  locale: settings.locale,
+                                  mainProvider: mainProvider,
+                                ),
                               ),
                               onBookmark: () {
                                 final selected =
@@ -4405,47 +4419,31 @@ void showNoteEditor({
   if (verses.isEmpty) return;
   final firstVerse = verses.first;
   // Pre-populate from the first verse in the selection that has an
-  // existing non-empty note. If none, start empty.
-  String? prefill;
-  String? prefillTitle;
-  for (final v in verses) {
-    final existing = mainProvider.getVerseNote(v);
-    if (existing != null && existing.isNotEmpty) {
-      prefill = existing;
-      // 2026-05-24 (v1.2.91): pull the title from the same verse
-      // we pulled the body from. For multi-verse passage notes,
-      // all verses share the same title (setVerseNote writes both
-      // to every verse in the selection), so this is consistent.
-      prefillTitle = mainProvider.getVerseNoteTitle(v.id);
-      break;
-    }
-  }
+  // existing non-empty note, with the title from that same verse.
+  // 2026-08-18: the rule moved to `resolveNotePrefill` when the docked
+  // Notes tab became a second editor over this store — two editors each
+  // deciding for themselves which note a selection shows is a drift the
+  // reader would discover as a lost note.
+  final prefilled = resolveNotePrefill(
+    verses,
+    notes: mainProvider.verseNotes,
+    titles: mainProvider.verseNoteTitles,
+  );
+  final String? prefillTitle =
+      prefilled.title.isEmpty ? null : prefilled.title;
   // v1.3.73: fold an optional appended snippet (e.g. an AI answer) into
   // the initial body — after the existing note if there is one.
-  var initialBody = prefill ?? '';
+  var initialBody = prefilled.body;
   final addText = (appendText ?? '').trim();
   if (addText.isNotEmpty) {
     initialBody = initialBody.isEmpty ? addText : '$initialBody\n\n$addText';
   }
   final controller = _RefHighlightingController(text: initialBody);
   final titleController = TextEditingController(text: prefillTitle ?? '');
-  // Reference label: single verse → "Genesis 1:16"; range → "Genesis 1:16-18".
-  String ref;
-  if (verses.length == 1) {
-    ref = '${firstVerse.book} ${firstVerse.chapter}:${firstVerse.verseLabel}';
-  } else {
-    final last = verses.last;
-    final sameChapter = last.book == firstVerse.book && last.chapter == firstVerse.chapter;
-    if (sameChapter) {
-      ref = '${firstVerse.book} ${firstVerse.chapter}:'
-          '${firstVerse.verseLabel}-${last.verseLabel}';
-    } else {
-      // Cross-chapter range (rare but possible if user multi-selected
-      // across a chapter break). Show start + end with full labels.
-      ref = '${firstVerse.book} ${firstVerse.chapter}:${firstVerse.verseLabel} – '
-          '${last.book} ${last.chapter}:${last.verseLabel}';
-    }
-  }
+  // Reference label: single verse → "Genesis 1:16"; range → "Genesis
+  // 1:16-18"; across a chapter break, both ends in full. Shared with the
+  // docked Notes tab for the same reason the prefill is.
+  final String ref = verseNoteRangeLabel(verses);
   // [verse] is used by several downstream operations (scroll
   // restoration, position capture). Keep the variable name but
   // alias it to the first verse for backwards compatibility with

@@ -74,6 +74,8 @@ import 'package:seeksparks/widgets/morph_search_pane.dart';
 import 'package:seeksparks/widgets/context_pane.dart';
 import 'package:seeksparks/widgets/places_pane.dart';
 import 'package:seeksparks/widgets/sermons_pane.dart';
+import 'package:seeksparks/widgets/verse_notes_pane.dart';
+import 'package:seeksparks/utils/verse_notes.dart' show parseVerseId;
 import 'package:seeksparks/widgets/word_chart_view.dart';
 import 'package:seeksparks/constants/book_groups.dart' show oldTestamentBooks;
 import 'package:seeksparks/services/greek_stats_service.dart';
@@ -1929,6 +1931,14 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
             current: _analysisTab,
             locale: locale,
             preferLabels: _analysisTabLabels,
+            // bwh15's "see at a glance what is available even if the
+            // Notes tab is not the active tab". The reader who already
+            // wrote about this verse is the one who most needs telling,
+            // and they are the one least likely to be sitting on the
+            // Notes tab when they arrive.
+            marked: <AnalysisTab>{
+              if (verses.any(mp.isVerseNoted)) AnalysisTab.notes,
+            },
             onChanged: (t) {
               setState(() => _analysisTab = t);
               _persistPrefs();
@@ -2294,6 +2304,49 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
           displayBook: localeAwareBookName(book, locale, mp.currentVersion),
           locale: locale,
           onOpenSermon: (s) => pushPage(SermonDetailPage(sermon: s)),
+        );
+
+      case AnalysisTab.notes:
+        // The only tab the reader WRITES to, so it is the only one whose
+        // key must not change more often than the thing it edits. Keyed
+        // on the selection rather than on `_analysisVerse`, because that
+        // helper prefers the HOVERED verse — an editor that followed the
+        // pointer would move the cursor out from under the reader every
+        // time the mouse crossed the text.
+        //
+        // Deliberately UNKEYED, where every other tab keys on the verse:
+        // a remount would throw away the editor's unsaved buffer and its
+        // search, and this pane already follows the selection through
+        // `didUpdateWidget` — which is also where it writes the outgoing
+        // note back, bwh15's "saved automatically when the verse
+        // changes".
+        if (verses.isEmpty) return _analysisHint(context, locale);
+        return VerseNotesPane(
+          verses: verses,
+          notes: mp.verseNotes,
+          titles: mp.verseNoteTitles,
+          locale: locale,
+          version: mp.currentVersion,
+          onSave: (targets, body, title) {
+            for (final v in targets) {
+              mp.setVerseNote(verse: v, text: body, title: title);
+            }
+          },
+          onDelete: (targets) {
+            for (final v in targets) {
+              mp.clearVerseNote(verse: v);
+            }
+          },
+          onOpenNote: (id) {
+            final ref = parseVerseId(id);
+            final verse = int.tryParse(ref.verseLabel) ?? 1;
+            _onCrossRefTap(BibleReference(
+              englishBook: ref.book,
+              chapter: ref.chapter,
+              verseStart: verse,
+              verseEnd: verse,
+            ));
+          },
         );
     }
   }

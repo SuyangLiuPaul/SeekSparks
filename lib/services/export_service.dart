@@ -26,6 +26,7 @@ import 'dart:convert';
 
 import 'package:seeksparks/constants/app_version.dart';
 import 'package:seeksparks/providers/main_provider.dart';
+import 'package:seeksparks/utils/verse_notes.dart' show parseVerseId;
 
 class ExportService {
   /// Returns a Markdown document with three sections (Highlights,
@@ -156,8 +157,8 @@ class ExportService {
   /// Canonical Bible order — used to sort exported lines. Returns
   /// a positive int when [a] should come AFTER [b].
   static int _verseIdCompare(String a, String b) {
-    final pa = _parseId(a);
-    final pb = _parseId(b);
+    final pa = parseVerseId(a);
+    final pb = parseVerseId(b);
     final bookCmp = _bookOrder(pa.book).compareTo(_bookOrder(pb.book));
     if (bookCmp != 0) return bookCmp;
     if (pa.chapter != pb.chapter) {
@@ -171,24 +172,13 @@ class ExportService {
     return pa.verseLabel.compareTo(pb.verseLabel);
   }
 
-  static ({String book, int chapter, String verseLabel}) _parseId(
-      String id) {
-    // Walk from the right: verseLabel is the last `-`-separated
-    // segment, chapter is the second-to-last, everything before is
-    // the book (which can itself contain `-` for "Song-of-Songs").
-    final lastDash = id.lastIndexOf('-');
-    if (lastDash < 0) return (book: id, chapter: 0, verseLabel: '0');
-    final verseLabel = id.substring(lastDash + 1);
-    final rest = id.substring(0, lastDash);
-    final chapDash = rest.lastIndexOf('-');
-    if (chapDash < 0) return (book: rest, chapter: 0, verseLabel: verseLabel);
-    final chapter = int.tryParse(rest.substring(chapDash + 1)) ?? 0;
-    final book = rest.substring(0, chapDash);
-    return (book: book, chapter: chapter, verseLabel: verseLabel);
-  }
+  // The id parser was a private copy here until 2026-08-18, when the
+  // Notes tab needed the same walk to turn a search hit back into a
+  // reference. Two copies of how a STORAGE KEY is read is the kind of
+  // duplicate that stays correct until one of them is fixed.
 
   static String _formatRef(String id) {
-    final p = _parseId(id);
+    final p = parseVerseId(id);
     return '${p.book} ${p.chapter}:${p.verseLabel}';
   }
 

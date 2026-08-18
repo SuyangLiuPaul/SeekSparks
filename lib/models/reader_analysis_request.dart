@@ -28,6 +28,19 @@ enum ReaderAnalysisRequest {
   /// is what settled the destination.
   sermons,
 
+  /// The reader's own note on the selected verses — `AnalysisTab.notes`
+  /// since 2026-08-18. BibleWorks docks this one too (User Notes,
+  /// bwh15), and it has the strongest claim of the five: the others
+  /// describe the verse, this one is WRITTEN about the verse, and an
+  /// editor that covers the text covers the thing being written about.
+  ///
+  /// The selection bar's note button does not light up when this tab is
+  /// open, though [requestForAnalysisTab] maps back to it. That button's
+  /// fill already means "these verses have a note", which is a claim
+  /// about the text; spending the same pixel on "the pane is showing
+  /// notes" would make it answer two questions at once.
+  notes,
+
   /// A model's explanation of the selected verses. Deliberately NOT a
   /// tab: a docked pane promises to follow the selection, and following
   /// it here would spend a network call per verse and let generated

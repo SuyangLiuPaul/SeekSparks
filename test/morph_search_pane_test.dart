@@ -67,7 +67,7 @@ void main() {
   }
 
   group('the tab is appended, so persisted indices still resolve', () {
-    test('morphology is last and nothing before it moved', () {
+    test('every tab keeps the index it was persisted under', () {
       // `workbench.analysisTab` persists the tab by INDEX.
       expect(AnalysisTab.values.indexOf(AnalysisTab.morphology), 8);
       expect(AnalysisTab.values.indexOf(AnalysisTab.wordStudy), 0);
@@ -81,7 +81,9 @@ void main() {
       // ...and `sermons` after `places` (2026-08-17, #313). A reader who
       // had Places open keeps Places open across the upgrade.
       expect(AnalysisTab.values.indexOf(AnalysisTab.sermons), 12);
-      expect(AnalysisTab.values, hasLength(13));
+      // ...and `notes` after `sermons` (2026-08-18, the User Notes tab).
+      expect(AnalysisTab.values.indexOf(AnalysisTab.notes), 13);
+      expect(AnalysisTab.values, hasLength(14));
     });
   });
 
