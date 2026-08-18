@@ -1037,6 +1037,26 @@ class _MapPainter extends CustomPainter {
 
         canvas.drawCircle(o, 4.8,
             Paint()..color = colors.paneBg.withValues(alpha: 0.9 * faded));
+
+        // A place the travellers never reached is drawn HOLLOW and takes
+        // no badge. Both halves matter: the ring says "not a stop" at the
+        // glance a filled dot would have claimed one, and the missing
+        // number says it again in the channel that carries the order —
+        // Phoenix cannot be given a place in a sequence the ship never
+        // put it in. The label layer still names it, which is the whole
+        // reason it is on the map.
+        if (m.isAside) {
+          canvas.drawCircle(
+            o,
+            3.4,
+            Paint()
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = 1.4
+              ..color = style.colour.withValues(alpha: faded),
+          );
+          continue;
+        }
+
         canvas.drawCircle(
             o, 3.2, Paint()..color = style.colour.withValues(alpha: faded));
 

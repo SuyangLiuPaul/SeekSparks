@@ -27,7 +27,12 @@ BiblePlace _place(String id, double? lat, double? lon) => BiblePlace(
       refs: const <PlaceRef>[],
     );
 
-JourneyStop _stop(String place, JourneyLeg leg, {bool attested = true}) =>
+JourneyStop _stop(
+  String place,
+  JourneyLeg leg, {
+  bool attested = true,
+  JourneyStopKind kind = JourneyStopKind.waypoint,
+}) =>
     JourneyStop(
       placeId: place,
       englishBook: 'Acts',
@@ -35,8 +40,12 @@ JourneyStop _stop(String place, JourneyLeg leg, {bool attested = true}) =>
       verse: 1,
       leg: leg,
       attested: attested,
+      kind: kind,
       note: null,
     );
+
+JourneyStop _aside(String place) =>
+    _stop(place, JourneyLeg.unknown, kind: JourneyStopKind.aside);
 
 /// Where a lane number actually moves a leg — the painter's own step,
 /// taking the perpendicular of the segment's own direction of travel.
@@ -158,6 +167,67 @@ void main() {
         byId.values.toList(),
       );
       expect(out.map((r) => r.id), <String>['k']);
+    });
+
+    test('an aside is passed, not called at', () {
+      final r = resolveJourney(
+        _journey(<JourneyStop>[
+          _stop('A', JourneyLeg.start),
+          _aside('B'),
+          _stop('C', JourneyLeg.sea),
+        ]),
+        byId,
+      );
+      // The wrong answer is two legs through B: it would draw the detour
+      // to Phoenix that the whole of Acts 27 turns on their not making.
+      expect(r.segments.length, 1);
+      expect(r.segments[0].from.place.id, 'A');
+      expect(r.segments[0].to.place.id, 'C');
+      expect(r.stops.length, 3, reason: 'still drawn, just joined to nothing');
+    });
+
+    test('an aside takes no number and does not spend one', () {
+      final r = resolveJourney(
+        _journey(<JourneyStop>[
+          _stop('A', JourneyLeg.start),
+          _aside('B'),
+          _stop('C', JourneyLeg.sea),
+        ]),
+        byId,
+      );
+      expect(r.stops.map((s) => s.ordinal), <int?>[1, null, 2]);
+      expect(r.ordinalsByPlace.containsKey('B'), isFalse,
+          reason: 'no badge at a place they never reached');
+    });
+
+    test('an UNLOCATED aside costs a marker and nothing else', () {
+      final r = resolveJourney(
+        _journey(<JourneyStop>[
+          _stop('A', JourneyLeg.start),
+          _aside('Nowhere'),
+          _stop('C', JourneyLeg.land),
+        ]),
+        byId,
+      );
+      // Contrast the waypoint case above: only a waypoint was holding the
+      // line together, so only a waypoint can break it.
+      expect(r.unresolved, <String>['Nowhere']);
+      expect(r.segments.length, 1);
+    });
+
+    test('a place both aimed at and reached is drawn as reached', () {
+      final r = resolveJourney(
+        _journey(<JourneyStop>[
+          _stop('A', JourneyLeg.start),
+          _aside('C'),
+          _stop('B', JourneyLeg.sea),
+          _stop('C', JourneyLeg.land),
+        ]),
+        byId,
+      );
+      final c = r.markers.firstWhere((m) => m.place.id == 'C');
+      expect(c.isAside, isFalse, reason: 'the file mentioned it first');
+      expect(c.ordinal, 3);
     });
 
     test('the straight-line total is the sum of the chords', () {

@@ -190,6 +190,88 @@ void main() {
       expect(derbe.leg, JourneyLeg.land);
     });
 
+    test('all four Acts itineraries ship', () {
+      expect(journeys.map((j) => j.id),
+          containsAll(<String>['paul-1', 'paul-2', 'paul-3', 'paul-rome']));
+    });
+
+    test('the third journey walks the leg the company sailed', () {
+      // Acts 20:13: the ship went round to Assos and Paul went over land
+      // (πεζεύειν). One leg, two modes, and the line is drawn for the man
+      // the itinerary is about.
+      final assos = route('paul-3')
+          .segments
+          .firstWhere((s) => s.to.place.id == 'Assos');
+      expect(assos.leg, JourneyLeg.land);
+      expect(assos.from.place.id, 'Troas');
+    });
+
+    test('the third journey crosses to Macedonia without saying how', () {
+      // Acts 20:1 says he departed for Macedonia and refuses the manner.
+      // Drawing it solid would put him on a road the text never gave him.
+      final r = route('paul-3');
+      final leg =
+          r.segments.firstWhere((s) => s.from.place.id == 'Ephesus');
+      expect(leg.leg, JourneyLeg.unknown);
+      expect(r.ordinalsByPlace['Macedonia'], <int>[5, 7],
+          reason: 'entered twice — 20:1 and again at 20:3, the plot');
+    });
+
+    test('the voyage to Rome names two places it never reached', () {
+      final r = route('paul-rome');
+      final asides =
+          r.stops.where((s) => s.isAside).map((s) => s.place.id).toList();
+      expect(asides, <String>['Phoenix', 'Syrtis']);
+      expect(r.journey.asideCount, 2);
+      expect(r.journey.waypointCount, r.journey.stops.length - 2);
+    });
+
+    test('no leg is ever drawn to or from an aside', () {
+      for (final r in resolved) {
+        for (final s in r.segments) {
+          expect(s.from.isAside, isFalse, reason: '${r.id} out of an aside');
+          expect(s.to.isAside, isFalse, reason: '${r.id} into an aside');
+        }
+      }
+    });
+
+    test('the storm runs Fair Havens straight to Cauda', () {
+      // Phoenix sits between them in the file because Acts 27:12 puts it
+      // there. If it ever joins the line, the map draws a harbour call
+      // that the next sixteen verses exist to say did not happen.
+      final r = route('paul-rome');
+      final cauda = r.segments.firstWhere((s) => s.to.place.id == 'Cauda');
+      expect(cauda.from.place.id, 'Fair Havens');
+    });
+
+    test('an aside says on its own row what it is', () {
+      for (final j in journeys) {
+        for (final s in j.stops) {
+          if (!s.isAside) continue;
+          expect(s.note, isNotNull,
+              reason: '${j.id}/${s.placeId} is an aside and silent');
+          for (final locale in const <String>['en', 'zh-Hans', 'zh-Hant']) {
+            expect(s.note![locale], isNotNull,
+                reason: '${j.id}/${s.placeId} note $locale');
+          }
+        }
+      }
+    });
+
+    test('the numbers a reader sees are 1..n with no gaps', () {
+      // Asides take no number, so the badges must still run unbroken over
+      // the track alone — a gap at 9 would read as a stop gone missing.
+      for (final r in resolved) {
+        final seen = <int>[
+          for (final s in r.stops)
+            if (s.ordinal != null) s.ordinal!,
+        ];
+        expect(seen, List<int>.generate(seen.length, (i) => i + 1),
+            reason: r.id);
+        expect(seen.length, r.journey.waypointCount, reason: r.id);
+      }
+    });
+
     test('every drawn journey has more than one drawable leg', () {
       for (final r in resolved) {
         expect(r.segments.length, greaterThan(1), reason: r.id);

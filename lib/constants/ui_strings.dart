@@ -8006,10 +8006,13 @@ const uiStrings = {
         'the route between them.',
   },
   'journeysKey': {
-    'zh-Hans': '实线：陆路。长虚线：水路。短虚线：经文未说明方式。点线：经文没有记他们到过此地。',
-    'zh-Hant': '實線：陸路。長虛線：水路。短虛線：經文未說明方式。點線：經文沒有記他們到過此地。',
+    'zh-Hans': '实线：陆路。长虚线：水路。短虚线：经文未说明方式。点线：经文没有记他们到过此地。'
+        '空心圈：经文提到这地方，但他们并没有到（如非尼基港、赛耳底沙洲）。',
+    'zh-Hant': '實線：陸路。長虛線：水路。短虛線：經文未說明方式。點線：經文沒有記他們到過此地。'
+        '空心圈：經文提到這地方，但他們並沒有到（如非尼基港、賽耳底沙洲）。',
     'en': 'Solid: by land. Long dash: by sea. Short dash: the text does '
-        'not say. Dots: the text does not put them here.',
+        'not say. Dots: the text does not put them here. Hollow ring: '
+        'named by the narrative but never reached — no line joins it.',
   },
   'journeyShowTip': {
     'zh-Hans': '在地图上画出这条路线',
@@ -8030,6 +8033,18 @@ const uiStrings = {
     'zh-Hans': '推定',
     'zh-Hant': '推定',
     'en': 'Provisional',
+  },
+  // Deliberately NOT the same word as "provisional". Provisional means we
+  // are unsure they were there; this means the text says they were not.
+  'journeyAsideTag': {
+    'zh-Hans': '提及但未到',
+    'zh-Hant': '提及但未到',
+    'en': 'Named, not reached',
+  },
+  'journeyAsideCount': {
+    'zh-Hans': '另有 {n} 处提及但未到',
+    'zh-Hant': '另有 {n} 處提及但未到',
+    'en': '{n} named, not reached',
   },
   'journeyBasisHeader': {
     'zh-Hans': '这份行程的依据',

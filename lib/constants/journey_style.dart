@@ -11,6 +11,14 @@
 ///   * short dash  — the text names the arrival and refuses the manner
 ///   * fine dots   — provisional: the text does not put them here at all
 ///
+/// A fifth case has no dash because it has no line: a place the narrative
+/// names beside the track — Phoenix, aimed at and missed; Syrtis, feared
+/// and avoided — is a hollow marker joined to nothing. See
+/// [JourneyStopKind.aside]. It is drawn hollow rather than merely faint
+/// for the reason a provisional leg is dotted rather than merely pale: a
+/// solid mark reads as an assertion at a glance, and no amount of
+/// lightening takes that back.
+///
 /// Route identity is carried instead by colour AND by the numbered
 /// markers at each stop, which are the reason this is not a colour-only
 /// scheme: a reader who cannot tell amber from teal can still read `1`
@@ -44,10 +52,21 @@ class JourneyStyle {
   final Color onColour;
 }
 
-/// Two hues that survive both palettes and are far apart for the common
-/// forms of colour blindness — a warm orange against a cold blue, which
+/// Hues that survive both palettes and stay apart under the common forms
+/// of colour blindness — a warm orange against a cold blue, which
 /// deuteranopia and protanopia both preserve, unlike the red/green pair
 /// that is the usual first guess.
+///
+/// **The fourth slot is a green, which looks like exactly the mistake the
+/// paragraph above warns against, and is not.** The pair that collapses
+/// for a deuteranope is a *pure* red against a *pure* green at similar
+/// lightness. Okabe and Ito's set, built for this, carries orange and a
+/// bluish green together for that reason: the green is pulled far towards
+/// cyan and the orange far towards yellow, so the two separate on the
+/// blue–yellow axis that red-green blindness leaves intact. It was
+/// wanted here because Acts holds FOUR Pauline itineraries and three
+/// hues would have wrapped the palette, drawing the voyage to Rome in the
+/// first journey's amber.
 ///
 /// Darkened for the light palette and lightened for the dark one, because
 /// a single hue legible on #FFFFFF is invisible on #101A2B.
@@ -56,11 +75,13 @@ List<JourneyStyle> journeyPalette(WbColors c) => c.isDark
         JourneyStyle(colour: Color(0xFFE8913C), onColour: Color(0xFF1A1206)),
         JourneyStyle(colour: Color(0xFF5FB8DE), onColour: Color(0xFF06161C)),
         JourneyStyle(colour: Color(0xFFB99BE0), onColour: Color(0xFF150C1F)),
+        JourneyStyle(colour: Color(0xFF44C79C), onColour: Color(0xFF04170F)),
       ]
     : const <JourneyStyle>[
         JourneyStyle(colour: Color(0xFFB35309), onColour: Color(0xFFFFFFFF)),
         JourneyStyle(colour: Color(0xFF0A6A8A), onColour: Color(0xFFFFFFFF)),
         JourneyStyle(colour: Color(0xFF5B3E96), onColour: Color(0xFFFFFFFF)),
+        JourneyStyle(colour: Color(0xFF0A6E4E), onColour: Color(0xFFFFFFFF)),
       ];
 
 /// The swatch for [style], wrapping if a future file ships more journeys

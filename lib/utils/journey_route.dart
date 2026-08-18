@@ -24,14 +24,24 @@ class ResolvedStop {
     required this.index,
     required this.stop,
     required this.place,
+    required this.ordinal,
   });
 
-  /// Position in the itinerary, zero-based. Printed one-based.
+  /// Position in the stop LIST, zero-based — narrative order, asides
+  /// included. Not the number shown to a reader.
   final int index;
   final JourneyStop stop;
   final BiblePlace place;
 
-  int get ordinal => index + 1;
+  /// The number the reader sees, one-based over the track only.
+  ///
+  /// Null for an aside. Numbering asides alongside waypoints would make
+  /// Phoenix stop 9 of the voyage to Rome, which says the ship called
+  /// there; it did not, and the whole of Acts 27 turns on its not having
+  /// done so. A null here is a claim, not a gap.
+  final int? ordinal;
+
+  bool get isAside => stop.isAside;
 }
 
 /// One drawable leg, from one resolved stop to the next.
@@ -97,22 +107,40 @@ class ResolvedJourney {
   /// `8,10`. One marker per place rather than per stop: two badges at one
   /// coordinate overprint into an unreadable smudge, and the doubling
   /// back is worth *saying* rather than hiding.
+  ///
+  /// An aside contributes nothing, so a place that is ONLY an aside is
+  /// absent from this map rather than present with an empty list — the
+  /// painter reads a missing key as "draw no badge".
   Map<String, List<int>> get ordinalsByPlace {
     final out = <String, List<int>>{};
     for (final s in stops) {
-      (out[s.place.id] ??= <int>[]).add(s.ordinal);
+      final n = s.ordinal;
+      if (n == null) continue;
+      (out[s.place.id] ??= <int>[]).add(n);
     }
     return out;
   }
 
   /// One entry per place, first appearance order — what the painter walks
   /// to draw markers.
+  ///
+  /// Where a place is both an aside and a waypoint, the waypoint wins
+  /// however the file orders them: a place they DID reach must not be
+  /// drawn as one they only aimed at because the narrative happened to
+  /// mention it first.
   List<ResolvedStop> get markers {
-    final seen = <String>{};
-    return <ResolvedStop>[
-      for (final s in stops)
-        if (seen.add(s.place.id)) s,
-    ];
+    final at = <String, int>{};
+    final out = <ResolvedStop>[];
+    for (final s in stops) {
+      final seen = at[s.place.id];
+      if (seen == null) {
+        at[s.place.id] = out.length;
+        out.add(s);
+      } else if (out[seen].isAside && !s.isAside) {
+        out[seen] = s;
+      }
+    }
+    return out;
   }
 }
 
@@ -127,18 +155,34 @@ ResolvedJourney resolveJourney(
   // rather than bridging the gap.
   ResolvedStop? previous;
   JourneyStop? previousRaw;
+  var ordinal = 0;
 
   for (var i = 0; i < journey.stops.length; i++) {
     final raw = journey.stops[i];
     final place = byId[raw.placeId];
     if (place == null || !place.located) {
       unresolved.add(raw.placeId);
-      previous = null;
-      previousRaw = null;
+      // An aside is beside the track, so losing it costs a marker and
+      // nothing else. Only a missing WAYPOINT breaks the line, because
+      // only a waypoint was holding it together.
+      if (!raw.isAside) {
+        previous = null;
+        previousRaw = null;
+      }
       continue;
     }
-    final here = ResolvedStop(index: i, stop: raw, place: place);
+    final here = ResolvedStop(
+      index: i,
+      stop: raw,
+      place: place,
+      ordinal: raw.isAside ? null : ++ordinal,
+    );
     stops.add(here);
+
+    // An aside joins to nothing and interrupts nothing: the leg that
+    // passes it — Fair Havens to Cauda, straight through the Phoenix
+    // they never made — is drawn from the waypoints on either side.
+    if (raw.isAside) continue;
 
     if (previous != null && previousRaw != null &&
         raw.leg != JourneyLeg.start) {

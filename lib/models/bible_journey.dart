@@ -24,6 +24,24 @@
 ///     and both say why on their own row; they are drawn provisionally
 ///     rather than dropped, because a reader comparing this against a
 ///     printed atlas needs to see where the printed atlas got its stop.
+///   * [JourneyStop.kind] — whether the place is on the track at all.
+///
+/// **`attested: false` and [JourneyStopKind.aside] are different claims,
+/// and conflating them draws a road that was never taken.** Iconium on the
+/// first journey is provisional: the text does not say they went there,
+/// but it sits on the road between two stops that ARE named, so a dotted
+/// line through it is a hedge about a leg that happened. Phoenix in Acts
+/// 27:12 is not that. The ship set out FOR Phoenix and never arrived —
+/// the northeaster took them the other way, to Cauda — so a dotted line
+/// Fair Havens → Phoenix → Cauda would draw a detour nobody has ever
+/// claimed, and would draw it twice. The Syrtis of 27:17 is the same
+/// shape from the other side: a hazard they lowered the gear to AVOID.
+///
+/// So an aside is drawn as a marker and joined to nothing. It keeps its
+/// narrative position in [BibleJourney.stops] — the reader meets Phoenix
+/// where Luke does, between Fair Havens and Cauda — but it takes no
+/// ordinal, because it has no position in an itinerary it was never part
+/// of, and it neither creates a leg nor breaks the one that passes it.
 ///
 /// **A place may appear more than once.** These itineraries double back —
 /// Paul's first journey touches Lystra twice and Syrian Antioch at both
@@ -53,6 +71,21 @@ enum JourneyLeg {
       };
 }
 
+/// Whether a place is on the track or merely named beside it.
+enum JourneyStopKind {
+  /// On the itinerary: the travellers passed this way, and a leg is drawn
+  /// into it from the stop before.
+  waypoint,
+
+  /// Named by the narrative, but not somewhere the travellers went — a
+  /// harbour they aimed at and missed, a shoal they steered clear of.
+  /// Drawn as a marker with no line and no ordinal.
+  aside;
+
+  static JourneyStopKind parse(String? raw) =>
+      raw == 'aside' ? JourneyStopKind.aside : JourneyStopKind.waypoint;
+}
+
 /// One stop on an itinerary.
 class JourneyStop {
   const JourneyStop({
@@ -62,6 +95,7 @@ class JourneyStop {
     required this.verse,
     required this.leg,
     required this.attested,
+    required this.kind,
     required this.note,
   });
 
@@ -78,7 +112,15 @@ class JourneyStop {
 
   /// Whether the text places the travellers HERE. False is a real
   /// verdict, not missing data, and [note] carries the reason.
+  ///
+  /// Only meaningful for a [JourneyStopKind.waypoint]. An aside is a
+  /// place the text says they did NOT reach, so asking whether their
+  /// presence is attested is asking the wrong question of it.
   final bool attested;
+
+  final JourneyStopKind kind;
+
+  bool get isAside => kind == JourneyStopKind.aside;
 
   /// Localised, keyed as `en` / `zh-Hans` / `zh-Hant`. Present only where
   /// there is something to say — an ambiguity, a mode the text refuses to
@@ -125,8 +167,17 @@ class BibleJourney {
   String localizedRange(String locale) => range[locale] ?? range['en'] ?? '';
   String localizedBasis(String locale) => basis[locale] ?? basis['en'] ?? '';
 
-  /// Stops the text does not actually place the travellers at.
-  int get provisionalCount => stops.where((s) => !s.attested).length;
+  /// Waypoints the text does not actually place the travellers at.
+  int get provisionalCount =>
+      stops.where((s) => !s.isAside && !s.attested).length;
+
+  /// Places the narrative names without putting the travellers there.
+  int get asideCount => stops.where((s) => s.isAside).length;
+
+  /// Stops that are actually on the track. The number a reader means by
+  /// "how many stops" — an aside is not one of them, and counting it
+  /// would inflate every itinerary that names a harbour it missed.
+  int get waypointCount => stops.where((s) => !s.isAside).length;
 }
 
 /// Read the journeys document.
@@ -164,6 +215,7 @@ List<BibleJourney> parseJourneys(Map<String, dynamic> doc) {
         // the answer is the surprising one, so the common case cannot be
         // got wrong by omission.
         attested: (s['attested'] as bool?) ?? true,
+        kind: JourneyStopKind.parse(s['kind'] as String?),
         note: _strings(s['note']),
       ));
     }

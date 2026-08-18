@@ -1,6 +1,6 @@
 {
  "schemaVersion": 1,
- "note": "Journey overlays for the Bible Atlas. A journey is an ORDERED list of stops, each joined to assets/bible_places.json by its `place` id and each citing the verse that puts it on the itinerary. A place may appear more than once: these itineraries double back. `leg` describes how the travellers reached THIS stop from the previous one and is taken from the verb the text uses - a sailing verb gives `sea`, a verb of going gives `land`, and `unknown` is used where the text will not say. `attested` is false where the text does not place the travellers at the stop at all; such a stop is drawn provisionally and says why. No coordinate is stored here - they all come from the gazetteer, so a route can never invent a location.",
+ "note": "Journey overlays for the Bible Atlas. A journey is an ORDERED list of stops, each joined to assets/bible_places.json by its `place` id and each citing the verse that puts it on the itinerary. A place may appear more than once: these itineraries double back. `leg` describes how the travellers reached THIS stop from the previous one and is taken from the verb the text uses - a sailing verb gives `sea`, a verb of going gives `land`, and `unknown` is used where the text will not say. `attested` is false where the text does not place the travellers at the stop at all; such a stop is drawn provisionally and says why. `kind` is \"aside\" for a place the narrative NAMES without the travellers ever reaching it - Phoenix, aimed at and missed; the Syrtis, feared and avoided - which is a different claim from `attested: false` and is drawn differently: a hollow marker joined to nothing, taking no ordinal, neither creating a leg nor breaking the one that passes it. No coordinate is stored here - they all come from the gazetteer, so a route can never invent a location.",
  "journeys": [
   {
    "id": "paul-1",
@@ -351,6 +351,472 @@
      "chapter": 18,
      "verse": 22,
      "leg": "land"
+    }
+   ]
+  },
+  {
+   "id": "paul-3",
+   "style": 2,
+   "name": {
+    "en": "Paul's third journey",
+    "zh-Hans": "保罗第三次宣教旅程",
+    "zh-Hant": "保羅第三次宣教旅程"
+   },
+   "range": {
+    "en": "Acts 18:23 – 21:17",
+    "zh-Hans": "使徒行传 18:23 – 21:17",
+    "zh-Hant": "使徒行傳 18:23 – 21:17"
+   },
+   "basis": {
+    "en": "The stops and their order are read out of Acts 18:23-21:17; every stop cites the verse that puts it there. Four of them - Galatia, Phrygia, Macedonia and Greece - are REGIONS rather than towns, because those are the words Luke uses; their markers stand for the region and not for a city. Coordinates come from the gazetteer, not from this route.",
+    "zh-Hans": "站点及其次序取自使徒行传18:23-21:17，每一站都注明出处经文。其中加拉太、弗吕家、马其顿、希腊四处是地区而非城邑，因为路加就是这样称呼的；这几个标记代表整个地区，不代表某一座城。坐标取自地名录，不由本路线另行提供。",
+    "zh-Hant": "站點及其次序取自使徒行傳18:23-21:17，每一站都註明出處經文。其中加拉太、弗呂家、馬其頓、希臘四處是地區而非城邑，因為路加就是這樣稱呼的；這幾個標記代表整個地區，不代表某一座城。座標取自地名錄，不由本路線另行提供。"
+   },
+   "stops": [
+    {
+     "place": "Antioch 1",
+     "book": "Acts",
+     "chapter": 18,
+     "verse": 23,
+     "leg": "start",
+     "note": {
+      "en": "Syrian Antioch, the church that sent out all three journeys. 18:22 brings him down to it; 18:23 sends him out again.",
+      "zh-Hans": "叙利亚的安提阿，三次宣教旅程都是从这教会差遣出去的。18:22说他下到安提阿，18:23又从那里出发。",
+      "zh-Hant": "敘利亞的安提阿，三次宣教旅程都是從這教會差遣出去的。18:22說他下到安提阿，18:23又從那裡出發。"
+     }
+    },
+    {
+     "place": "Galatia",
+     "book": "Acts",
+     "chapter": 18,
+     "verse": 23,
+     "leg": "land",
+     "note": {
+      "en": "A region, not a town. 18:23 says only that he went through the region of Galatia and Phrygia strengthening the disciples, and names no city in either; the marker stands for the region.",
+      "zh-Hans": "这是一个地区，不是城邑。18:23只说他挨次经过加拉太和弗吕家一带地方，坚固众门徒，并没有提到其中任何一座城；这个标记代表整个地区。",
+      "zh-Hant": "這是一個地區，不是城邑。18:23只說他挨次經過加拉太和弗呂家一帶地方，堅固眾門徒，並沒有提到其中任何一座城；這個標記代表整個地區。"
+     }
+    },
+    {
+     "place": "Phrygia",
+     "book": "Acts",
+     "chapter": 18,
+     "verse": 23,
+     "leg": "land",
+     "note": {
+      "en": "Also a region, and named in the same breath as Galatia. The pair is how Luke describes a long overland stretch with no stop worth naming.",
+      "zh-Hans": "同样是地区，与加拉太在同一句里并提。路加用这一对名称来交代一段没有一站可记的漫长陆路。",
+      "zh-Hant": "同樣是地區，與加拉太在同一句裡並提。路加用這一對名稱來交代一段沒有一站可記的漫長陸路。"
+     }
+    },
+    {
+     "place": "Ephesus",
+     "book": "Acts",
+     "chapter": 19,
+     "verse": 1,
+     "leg": "land",
+     "note": {
+      "en": "19:1: he passed through the upper country and came to Ephesus, where he stayed longer than anywhere else in Acts - three months in the synagogue and two years in the hall of Tyrannus (19:8,10).",
+      "zh-Hans": "19:1说他从上边一带地方经过，来到以弗所。他在这里住得比使徒行传中任何一处都久：在会堂三个月，在推喇奴的学房两年（19:8,10）。",
+      "zh-Hant": "19:1說他從上邊一帶地方經過，來到以弗所。他在這裡住得比使徒行傳中任何一處都久：在會堂三個月，在推喇奴的學房兩年（19:8,10）。"
+     }
+    },
+    {
+     "place": "Macedonia",
+     "book": "Acts",
+     "chapter": 20,
+     "verse": 1,
+     "leg": "unknown",
+     "note": {
+      "en": "A region; the marker stands for it. 20:1 says he left for Macedonia and gives no manner - the crossing from Asia is by sea somewhere, but Acts will not say where, so no sea leg is claimed. 2 Corinthians 2:12-13 puts him at Troas on this leg; Acts does not, so Troas is not drawn here.",
+      "zh-Hans": "这是一个地区，标记代表整个地区。20:1只说他往马其顿去，没有说走法——从亚细亚过去总要经过海路，但使徒行传没有交代在哪里上船，所以这一段不标为水路。哥林多后书2:12-13说他这一程曾在特罗亚，使徒行传没有记，所以特罗亚不画在这里。",
+      "zh-Hant": "這是一個地區，標記代表整個地區。20:1只說他往馬其頓去，沒有說走法——從亞細亞過去總要經過海路，但使徒行傳沒有交代在哪裡上船，所以這一段不標為水路。哥林多後書2:12-13說他這一程曾在特羅亞，使徒行傳沒有記，所以特羅亞不畫在這裡。"
+     }
+    },
+    {
+     "place": "Greece",
+     "book": "Acts",
+     "chapter": 20,
+     "verse": 2,
+     "leg": "land",
+     "note": {
+      "en": "20:2-3: he came to Greece and stayed three months. Acts names no town. The letters written about this time are usually placed at Corinth, but that is an inference from the letters and not a statement of Acts, so the marker stands for the region and Corinth is not drawn.",
+      "zh-Hans": "20:2-3说他来到希腊，在那里住了三个月。使徒行传没有提到是哪一座城。一般认为他这时期所写的书信出于哥林多，但那是从书信推出来的，不是使徒行传说的，所以这个标记代表整个地区，不画哥林多。",
+      "zh-Hant": "20:2-3說他來到希臘，在那裡住了三個月。使徒行傳沒有提到是哪一座城。一般認為他這時期所寫的書信出於哥林多，但那是從書信推出來的，不是使徒行傳說的，所以這個標記代表整個地區，不畫哥林多。"
+     }
+    },
+    {
+     "place": "Macedonia",
+     "book": "Acts",
+     "chapter": 20,
+     "verse": 3,
+     "leg": "land",
+     "note": {
+      "en": "He turned back the way he had come. 20:3: a plot was laid against him as he was about to sail for Syria, so he went back through Macedonia by land instead.",
+      "zh-Hans": "他原路折回。20:3说他将要坐船往叙利亚去的时候，犹太人设计要害他，他就定意从马其顿走陆路回去。",
+      "zh-Hant": "他原路折回。20:3說他將要坐船往敘利亞去的時候，猶太人設計要害他，他就定意從馬其頓走陸路回去。"
+     }
+    },
+    {
+     "place": "Philippi",
+     "book": "Acts",
+     "chapter": 20,
+     "verse": 6,
+     "leg": "land",
+     "note": {
+      "en": "20:6 sails FROM Philippi, so he reached it overland from the Macedonian interior. Philippi's own port, Neapolis, is not named on this journey.",
+      "zh-Hans": "20:6说他们从腓立比开船，可见是从马其顿内陆走陆路到这里的。腓立比的港口尼亚波利在这一程中没有提到。",
+      "zh-Hant": "20:6說他們從腓立比開船，可見是從馬其頓內陸走陸路到這裡的。腓立比的港口尼亞波利在這一程中沒有提到。"
+     }
+    },
+    {
+     "place": "Troas",
+     "book": "Acts",
+     "chapter": 20,
+     "verse": 6,
+     "leg": "sea",
+     "note": {
+      "en": "Five days' sailing after the Feast of Unleavened Bread, then seven days there - the week of the upper room, and of Eutychus falling from the third storey (20:7-12).",
+      "zh-Hans": "除酵节后开船，五天到达，在那里住了七天——就是楼上聚会那一周，犹推古从三楼跌下去也在其中（20:7-12）。",
+      "zh-Hant": "除酵節後開船，五天到達，在那裡住了七天——就是樓上聚會那一週，猶推古從三樓跌下去也在其中（20:7-12）。"
+     }
+    },
+    {
+     "place": "Assos",
+     "book": "Acts",
+     "chapter": 20,
+     "verse": 13,
+     "leg": "land",
+     "note": {
+      "en": "The one leg where Acts gives two modes at once: 20:13 has the company go ahead by ship while Paul went over land on foot, having arranged it so. The line is drawn for Paul, whose journey this is.",
+      "zh-Hans": "这是使徒行传唯一同时交代两种走法的一程：20:13说众人先上船开往亚朔，保罗自己却照他所安排的步行前往。这条线画的是保罗，因为这是他的行程。",
+      "zh-Hant": "這是使徒行傳唯一同時交代兩種走法的一程：20:13說眾人先上船開往亞朔，保羅自己卻照他所安排的步行前往。這條線畫的是保羅，因為這是他的行程。"
+     }
+    },
+    {
+     "place": "Mitylene",
+     "book": "Acts",
+     "chapter": 20,
+     "verse": 14,
+     "leg": "sea"
+    },
+    {
+     "place": "Chios",
+     "book": "Acts",
+     "chapter": 20,
+     "verse": 15,
+     "leg": "sea",
+     "note": {
+      "en": "20:15 has them come OPPOSITE Chios. It does not say they landed.",
+      "zh-Hans": "20:15说他们来到基阿的对面，并没有说上岸。",
+      "zh-Hant": "20:15說他們來到基阿的對面，並沒有說上岸。"
+     }
+    },
+    {
+     "place": "Samos",
+     "book": "Acts",
+     "chapter": 20,
+     "verse": 15,
+     "leg": "sea",
+     "note": {
+      "en": "The Received Text adds “and tarried at Trogyllium” here, which the KJV prints; the earliest manuscripts do not carry it, and the gazetteer has no such place, so it is not drawn.",
+      "zh-Hans": "此处公认经文（TR）多出「又停在特罗基利安」一句，钦定本（KJV）照译；最早的抄本没有这句话，地名录中也没有这个地方，所以不画。",
+      "zh-Hant": "此處公認經文（TR）多出「又停在特羅基利安」一句，欽定本（KJV）照譯；最早的抄本沒有這句話，地名錄中也沒有這個地方，所以不畫。"
+     }
+    },
+    {
+     "place": "Miletus",
+     "book": "Acts",
+     "chapter": 20,
+     "verse": 15,
+     "leg": "sea",
+     "note": {
+      "en": "He sailed PAST Ephesus deliberately, to save time on the way to Jerusalem (20:16), and sent to Ephesus for the elders to come to him instead (20:17). So Ephesus is not a stop on this leg, though it is one earlier in the same journey.",
+      "zh-Hans": "他特意越过以弗所，免得在亚细亚耽延，因为赶着上耶路撒冷（20:16），却打发人到以弗所去请教会的长老来见他（20:17）。所以以弗所不算这一程的一站，虽然在同一次旅程前段它是一站。",
+      "zh-Hant": "他特意越過以弗所，免得在亞細亞耽延，因為趕著上耶路撒冷（20:16），卻打發人到以弗所去請教會的長老來見他（20:17）。所以以弗所不算這一程的一站，雖然在同一次旅程前段它是一站。"
+     }
+    },
+    {
+     "place": "Cos",
+     "book": "Acts",
+     "chapter": 21,
+     "verse": 1,
+     "leg": "sea"
+    },
+    {
+     "place": "Rhodes",
+     "book": "Acts",
+     "chapter": 21,
+     "verse": 1,
+     "leg": "sea"
+    },
+    {
+     "place": "Patara",
+     "book": "Acts",
+     "chapter": 21,
+     "verse": 1,
+     "leg": "sea",
+     "note": {
+      "en": "21:2: here they found a ship crossing to Phoenicia and went aboard it.",
+      "zh-Hans": "21:2说他们在这里遇见一只船要往腓尼基去，就上船起行。",
+      "zh-Hant": "21:2說他們在這裡遇見一隻船要往腓尼基去，就上船起行。"
+     }
+    },
+    {
+     "place": "Tyre",
+     "book": "Acts",
+     "chapter": 21,
+     "verse": 3,
+     "leg": "sea",
+     "note": {
+      "en": "21:3 sights Cyprus and leaves it on the left. The island is passed, not called at, so it is not a stop and this line is the chord Patara-Tyre rather than the course they sailed.",
+      "zh-Hans": "21:3说他们望见塞浦路斯，就从南边行过。那岛是路过，不是停靠，所以不算一站；这条线是帕大喇到推罗的直线，不是他们所行的航道。",
+      "zh-Hant": "21:3說他們望見塞浦路斯，就從南邊行過。那島是路過，不是停靠，所以不算一站；這條線是帕大喇到推羅的直線，不是他們所行的航道。"
+     }
+    },
+    {
+     "place": "Ptolemais",
+     "book": "Acts",
+     "chapter": 21,
+     "verse": 7,
+     "leg": "sea",
+     "note": {
+      "en": "21:7 calls this the end of the voyage from Tyre.",
+      "zh-Hans": "21:7说他们从推罗行尽了水路，来到这里。",
+      "zh-Hant": "21:7說他們從推羅行盡了水路，來到這裡。"
+     }
+    },
+    {
+     "place": "Caesarea",
+     "book": "Acts",
+     "chapter": 21,
+     "verse": 8,
+     "leg": "land",
+     "note": {
+      "en": "By land: 21:7 has the voyage finished at Ptolemais, and 21:8 uses a verb of going rather than of sailing.",
+      "zh-Hans": "走陆路：21:7已说水路到多利买为止，21:8用的是行走的字，不是行船的字。",
+      "zh-Hant": "走陸路：21:7已說水路到多利買為止，21:8用的是行走的字，不是行船的字。"
+     }
+    },
+    {
+     "place": "Jerusalem",
+     "book": "Acts",
+     "chapter": 21,
+     "verse": 15,
+     "leg": "land",
+     "note": {
+      "en": "21:15 goes up to Jerusalem and 21:17 arrives. At Caesarea the prophet Agabus had bound his own hands and feet with Paul's belt to say what was waiting there (21:11), and Paul went anyway.",
+      "zh-Hans": "21:15说他们上耶路撒冷去，21:17说到了。在该撒利亚，先知亚迦布曾用保罗的腰带捆自己的手脚，预言那里要发生的事（21:11），保罗仍旧上去。",
+      "zh-Hant": "21:15說他們上耶路撒冷去，21:17說到了。在該撒利亞，先知亞迦布曾用保羅的腰帶捆自己的手腳，預言那裡要發生的事（21:11），保羅仍舊上去。"
+     }
+    }
+   ]
+  },
+  {
+   "id": "paul-rome",
+   "style": 3,
+   "name": {
+    "en": "The voyage to Rome",
+    "zh-Hans": "保罗押解往罗马的航程",
+    "zh-Hant": "保羅押解往羅馬的航程"
+   },
+   "range": {
+    "en": "Acts 27:1 – 28:16",
+    "zh-Hans": "使徒行传 27:1 – 28:16",
+    "zh-Hant": "使徒行傳 27:1 – 28:16"
+   },
+   "basis": {
+    "en": "The stops and their order are read out of Acts 27-28; every stop cites the verse that puts it there. The voyage begins at Caesarea, which 27:1 does not name - Paul had been held there since 23:33 - so the first stop cites the verse that does. Two places are named by the narrative WITHOUT the travellers ever reaching them, and are drawn as hollow markers joined to nothing: Phoenix, the harbour they voted to make for, and the Syrtis, the sandbank they were afraid of. Coordinates come from the gazetteer, not from this route.",
+    "zh-Hans": "站点及其次序取自使徒行传27-28章，每一站都注明出处经文。航程从该撒利亚起行，但27:1并没有提到这个地名——保罗自23:33起就被囚在那里——所以第一站注明的是记载他在那里的那节经文。有两处是经文提到、他们却始终没有到过的，画作空心圈，不与任何线相连：一是他们议定要去过冬的非尼基港，一是他们所惧怕的赛耳底沙洲。坐标取自地名录，不由本路线另行提供。",
+    "zh-Hant": "站點及其次序取自使徒行傳27-28章，每一站都註明出處經文。航程從該撒利亞起行，但27:1並沒有提到這個地名——保羅自23:33起就被囚在那裡——所以第一站註明的是記載他在那裡的那節經文。有兩處是經文提到、他們卻始終沒有到過的，畫作空心圈，不與任何線相連：一是他們議定要去過冬的非尼基港，一是他們所懼怕的賽耳底沙洲。座標取自地名錄，不由本路線另行提供。"
+   },
+   "stops": [
+    {
+     "place": "Caesarea",
+     "book": "Acts",
+     "chapter": 23,
+     "verse": 33,
+     "leg": "start",
+     "note": {
+      "en": "27:1 opens the voyage without naming the port. Paul had been held at Caesarea since 23:33 and was tried there before Felix, Festus and Agrippa; the ship of 27:2 is boarded from there. This stop cites the verse that puts him in the city, not the one that sails him out of it.",
+      "zh-Hans": "27:1只说起航，没有提到是哪个港口。保罗自23:33起就被囚在该撒利亚，在那里先后受审于腓力斯、非斯都和亚基帕；27:2所上的船就是从这里开的。这一站注明的是记载他在城中的那节经文，不是开船的那一节。",
+      "zh-Hant": "27:1只說起航，沒有提到是哪個港口。保羅自23:33起就被囚在該撒利亞，在那裡先後受審於腓力斯、非斯都和亞基帕；27:2所上的船就是從這裡開的。這一站註明的是記載他在城中的那節經文，不是開船的那一節。"
+     }
+    },
+    {
+     "place": "Sidon",
+     "book": "Acts",
+     "chapter": 27,
+     "verse": 3,
+     "leg": "sea",
+     "note": {
+      "en": "The next day. Julius the centurion let Paul go to his friends and be cared for.",
+      "zh-Hans": "第二天到达。百夫长犹流宽待保罗，准他往朋友那里去，受他们的照应。",
+      "zh-Hant": "第二天到達。百夫長猶流寬待保羅，准他往朋友那裡去，受他們的照應。"
+     }
+    },
+    {
+     "place": "Myra",
+     "book": "Acts",
+     "chapter": 27,
+     "verse": 5,
+     "leg": "sea",
+     "note": {
+      "en": "Between Sidon and Myra, 27:4-5 has them sail under the lee of Cyprus because the winds were against them, and then across the open sea off Cilicia and Pamphylia. Cyprus is passed, not called at, so it is not a stop and this line is the chord rather than that course. At Myra the centurion moved them onto an Alexandrian grain ship bound for Italy (27:6).",
+      "zh-Hans": "从西顿到每拉之间，27:4-5说因为逆风，他们贴着塞浦路斯的背风岸行，又渡过基利家、旁非利亚一带的洋面。塞浦路斯是路过，不是停靠，所以不算一站；这条线是直线，不是那段航道。到了每拉，百夫长把他们换上一只往意大利去的亚历山大运粮船（27:6）。",
+      "zh-Hant": "從西頓到每拉之間，27:4-5說因為逆風，他們貼著塞浦路斯的背風岸行，又渡過基利家、旁非利亞一帶的洋面。塞浦路斯是路過，不是停靠，所以不算一站；這條線是直線，不是那段航道。到了每拉，百夫長把他們換上一隻往意大利去的亞歷山大運糧船（27:6）。"
+     }
+    },
+    {
+     "place": "Cnidus",
+     "book": "Acts",
+     "chapter": 27,
+     "verse": 7,
+     "leg": "sea",
+     "note": {
+      "en": "Many days of slow sailing, and then they came only as far as OFF Cnidus - the text puts them opposite it, not in it, and says the wind would not let them go on.",
+      "zh-Hans": "船行多日，甚是迟缓，仅仅来到革尼土的对面——经文说的是在它对面，不是进港，又说风阻挡他们，不容他们前行。",
+      "zh-Hant": "船行多日，甚是遲緩，僅僅來到革尼土的對面——經文說的是在它對面，不是進港，又說風阻擋他們，不容他們前行。"
+     }
+    },
+    {
+     "place": "Salmone",
+     "book": "Acts",
+     "chapter": 27,
+     "verse": 7,
+     "leg": "sea",
+     "note": {
+      "en": "The eastern cape of Crete. Again the text puts them opposite it: they ran under the lee of Crete over against Salmone.",
+      "zh-Hans": "革哩底岛东端的岬角。经文同样说的是在它对面：他们贴着革哩底的背风岸，从撒摩尼对面行过。",
+      "zh-Hant": "革哩底島東端的岬角。經文同樣說的是在它對面：他們貼著革哩底的背風岸，從撒摩尼對面行過。"
+     }
+    },
+    {
+     "place": "Fair Havens",
+     "book": "Acts",
+     "chapter": 27,
+     "verse": 8,
+     "leg": "sea",
+     "note": {
+      "en": "Coasting with difficulty. 27:8 locates the anchorage by the town of Lasea nearby; Lasea itself is not somewhere they went, so it is not drawn. Paul warned them here that going on would cost the ship (27:10), and was overruled.",
+      "zh-Hans": "沿岸缓缓而行，甚是艰难。27:8用附近的拉西亚城来指明这个泊船处；他们并没有到拉西亚，所以不画。保罗在这里警告说再走下去必要损坏船只（27:10），众人却不听。",
+      "zh-Hant": "沿岸緩緩而行，甚是艱難。27:8用附近的拉西亞城來指明這個泊船處；他們並沒有到拉西亞，所以不畫。保羅在這裡警告說再走下去必要損壞船隻（27:10），眾人卻不聽。"
+     }
+    },
+    {
+     "place": "Phoenix",
+     "book": "Acts",
+     "chapter": 27,
+     "verse": 12,
+     "kind": "aside",
+     "note": {
+      "en": "The harbour they voted to make for and never reached. 27:12 says only that the majority decided to sail on, hoping SOMEHOW to reach Phoenix and winter there; the northeaster of 27:14 took them the other way. No line is drawn to it because no one ever sailed one.",
+      "zh-Hans": "他们议定要去、却始终没有到的港口。27:12只说船主和众人的意思是开船离开，指望能到非尼基过冬；27:14的友拉革罗风一起，就把他们刮向相反的方向。这里不画线，因为从来没有人走过这条线。",
+      "zh-Hant": "他們議定要去、卻始終沒有到的港口。27:12只說船主和眾人的意思是開船離開，指望能到非尼基過冬；27:14的友拉革羅風一起，就把他們颳向相反的方向。這裡不畫線，因為從來沒有人走過這條線。"
+     }
+    },
+    {
+     "place": "Cauda",
+     "book": "Acts",
+     "chapter": 27,
+     "verse": 16,
+     "leg": "sea",
+     "note": {
+      "en": "Running under the lee of a small island, where they got the ship's boat aboard with difficulty and undergirded the hull with ropes (27:16-17).",
+      "zh-Hans": "贴着一个小岛的背风岸行，在那里费了很大的力才把救生的小船收上来，又用缆索捆绑船底（27:16-17）。",
+      "zh-Hant": "貼著一個小島的背風岸行，在那裡費了很大的力才把救生的小船收上來，又用纜索捆綁船底（27:16-17）。"
+     }
+    },
+    {
+     "place": "Syrtis",
+     "book": "Acts",
+     "chapter": 27,
+     "verse": 17,
+     "kind": "aside",
+     "note": {
+      "en": "Not a place they went, but the place they were afraid of going. 27:17: fearing they would be driven onto the Syrtis sands, they lowered the gear and let themselves be driven. It is on the map because it is why they did what they did next, and because it says which way the wind was carrying them.",
+      "zh-Hans": "这不是他们到过的地方，而是他们唯恐被刮到的地方。27:17说他们恐怕撞在赛耳底的沙滩上，就落下篷来，任船飘去。把它画出来，是因为这解释了他们接下来为什么那样做，也说明了风把他们往哪个方向刮。",
+      "zh-Hant": "這不是他們到過的地方，而是他們唯恐被颳到的地方。27:17說他們恐怕撞在賽耳底的沙灘上，就落下篷來，任船飄去。把它畫出來，是因為這解釋了他們接下來為什麼那樣做，也說明了風把他們往哪個方向颳。"
+     }
+    },
+    {
+     "place": "Malta",
+     "book": "Acts",
+     "chapter": 28,
+     "verse": 1,
+     "leg": "sea",
+     "note": {
+      "en": "Fourteen nights driven across the Adria with neither sun nor stars showing (27:20,27), and the text names not one point between Cauda and the beach. So this line is the shortest distance between its two ends and is emphatically NOT the track: a ship driven before a northeaster does not travel in a straight line. They learned the island's name only once they were ashore (28:1).",
+      "zh-Hans": "在亚得里亚海上被风飘来飘去共十四夜，太阳和星辰多日不显露（27:20,27），而经文在高大和沙滩之间没有提到任何一个地点。所以这条线只是两端之间最短的距离，绝不是他们所走的航迹：船在友拉革罗风中飘荡，不会走直线。他们上了岸才知道那岛名叫米利大（28:1）。",
+      "zh-Hant": "在亞得里亞海上被風飄來飄去共十四夜，太陽和星辰多日不顯露（27:20,27），而經文在高大和沙灘之間沒有提到任何一個地點。所以這條線只是兩端之間最短的距離，絕不是他們所走的航跡：船在友拉革羅風中飄蕩，不會走直線。他們上了岸才知道那島名叫米利大（28:1）。"
+     }
+    },
+    {
+     "place": "Syracuse",
+     "book": "Acts",
+     "chapter": 28,
+     "verse": 12,
+     "leg": "sea",
+     "note": {
+      "en": "Three months later, in another Alexandrian ship that had wintered at the island (28:11). Three days here.",
+      "zh-Hans": "过了三个月，换乘另一只在那岛过冬的亚历山大船起行（28:11）。在这里停了三天。",
+      "zh-Hant": "過了三個月，換乘另一隻在那島過冬的亞歷山大船起行（28:11）。在這裡停了三天。"
+     }
+    },
+    {
+     "place": "Rhegium",
+     "book": "Acts",
+     "chapter": 28,
+     "verse": 13,
+     "leg": "sea"
+    },
+    {
+     "place": "Puteoli",
+     "book": "Acts",
+     "chapter": 28,
+     "verse": 13,
+     "leg": "sea",
+     "note": {
+      "en": "A south wind sprang up, and they made it on the second day. The sailing ends here; the rest is the Appian Way.",
+      "zh-Hans": "起了南风，第二天就到了。水路到此为止，余下的是亚比乌大道。",
+      "zh-Hant": "起了南風，第二天就到了。水路到此為止，餘下的是亞比烏大道。"
+     }
+    },
+    {
+     "place": "Forum of Appius",
+     "book": "Acts",
+     "chapter": 28,
+     "verse": 15,
+     "leg": "land",
+     "note": {
+      "en": "On the Appian Way. 28:15 describes the ROMAN BROTHERS coming out this far to meet them; that Paul was here follows from the meeting - “whom when Paul saw, he thanked God” - rather than from a sentence saying he arrived. Note also that 28:14's “and so we came to Rome” anticipates the arrival narrated in 28:16, which is why this stop's verse comes after it.",
+      "zh-Hans": "在亚比乌大道上。28:15记的是罗马的弟兄们出来迎接，一直走到这里；保罗在此，是从这场相会推出来的——「保罗见了他们，就感谢神」——而不是经文直说他到了这里。另要留意：28:14的「这样，我们来到罗马」是先说了后面的事，真正到达是28:16所记的，所以这一站的经节反而排在它之后。",
+      "zh-Hant": "在亞比烏大道上。28:15記的是羅馬的弟兄們出來迎接，一直走到這裡；保羅在此，是從這場相會推出來的——「保羅見了他們，就感謝神」——而不是經文直說他到了這裡。另要留意：28:14的「這樣，我們來到羅馬」是先說了後面的事，真正到達是28:16所記的，所以這一站的經節反而排在它之後。"
+     }
+    },
+    {
+     "place": "Three Taverns",
+     "book": "Acts",
+     "chapter": 28,
+     "verse": 15,
+     "leg": "land",
+     "note": {
+      "en": "The nearer of the two places the Roman brothers walked out to, about 50 km from the city.",
+      "zh-Hans": "罗马弟兄们出来迎接的两处地方中较近的一处，离城约50公里。",
+      "zh-Hant": "羅馬弟兄們出來迎接的兩處地方中較近的一處，離城約50公里。"
+     }
+    },
+    {
+     "place": "Rome",
+     "book": "Acts",
+     "chapter": 28,
+     "verse": 16,
+     "leg": "land",
+     "note": {
+      "en": "28:16: he was allowed to stay by himself with the soldier who guarded him. Acts ends two years later with him still there, preaching unhindered (28:30-31).",
+      "zh-Hans": "28:16说保罗蒙准和看守他的兵另住在一处。使徒行传结束时他仍在那里，住了足足两年，放胆传讲，没有人禁止（28:30-31）。",
+      "zh-Hant": "28:16說保羅蒙准和看守他的兵另住在一處。使徒行傳結束時他仍在那裡，住了足足兩年，放膽傳講，沒有人禁止（28:30-31）。"
+     }
     }
    ]
   }

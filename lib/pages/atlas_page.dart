@@ -906,10 +906,13 @@ class _AtlasPageState extends State<AtlasPage> {
     final subtitle = <String>[
       j.journey.localizedRange(locale),
       _s('journeyStops', '{n} stops', locale)
-          .replaceAll('{n}', '${j.journey.stops.length}'),
+          .replaceAll('{n}', '${j.journey.waypointCount}'),
       if (j.journey.provisionalCount > 0)
         _s('journeyProvisionalCount', '{n} provisional', locale)
             .replaceAll('{n}', '${j.journey.provisionalCount}'),
+      if (j.journey.asideCount > 0)
+        _s('journeyAsideCount', '{n} named, not reached', locale)
+            .replaceAll('{n}', '${j.journey.asideCount}'),
     ].where((e) => e.isNotEmpty).join(' · ');
 
     return InkWell(
@@ -1610,8 +1613,17 @@ class _JourneyPanel extends StatelessWidget {
           _header(
             c,
             t,
-            _s('journeyStops', '{n} stops')
-                .replaceAll('{n}', '${journey.journey.stops.length}'),
+            // Counted over the track only, with the asides said out loud
+            // beside it. One number covering both would answer "how many
+            // stops" with a figure that includes a harbour they missed —
+            // the ambiguous-count defect of #308 in a new place.
+            <String>[
+              _s('journeyStops', '{n} stops').replaceAll(
+                  '{n}', '${journey.journey.waypointCount}'),
+              if (journey.journey.asideCount > 0)
+                _s('journeyAsideCount', '{n} named, not reached')
+                    .replaceAll('{n}', '${journey.journey.asideCount}'),
+            ].join(' · '),
           ),
           for (final s in journey.stops)
             _stop(context, c, t, style, version, s, ordinals),
@@ -1655,9 +1667,17 @@ class _JourneyPanel extends StatelessWidget {
     Map<String, List<int>> ordinals,
   ) {
     final lit = s.place.id == selectedPlaceId;
-    final display = s.place.displayName(script);
+    // The gazetteer's disambiguating ordinal, printed exactly as the map
+    // prints it. Without it this list says "Antioch" twice for two cities
+    // 500 km apart and leans on each row's note to tell them apart, while
+    // the map has been separating them structurally all along.
+    final display = s.place.ordinal == null
+        ? s.place.displayName(script)
+        : '${s.place.displayName(script)} ${s.place.ordinal}';
     final note = s.stop.localizedNote(locale);
-    final leg = _legWord(s.stop.leg);
+    // An aside was never travelled TO, so it has no manner of travel and
+    // printing one would answer a question the row does not raise.
+    final leg = s.isAside ? '' : _legWord(s.stop.leg);
     final ref = PlaceRef(s.stop.englishBook, s.stop.chapter, s.stop.verse);
     final refLabel = '${localeAwareBookName(s.stop.englishBook, locale, version)}'
         ' ${s.stop.chapter}:${s.stop.verse}';
@@ -1678,16 +1698,24 @@ class _JourneyPanel extends StatelessWidget {
             Container(
               margin: const EdgeInsets.only(top: 1, right: 6),
               padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-              color: s.stop.attested
-                  ? style.colour
-                  : style.colour.withValues(alpha: 0.45),
+              // Hollow for an aside, matching the hollow ring on the map,
+              // and holding an en dash where the number would be so the
+              // column does not ripple around a blank.
+              decoration: s.isAside
+                  ? BoxDecoration(
+                      border: Border.all(
+                          color: style.colour, width: WbMetrics.hairline))
+                  : BoxDecoration(
+                      color: s.stop.attested
+                          ? style.colour
+                          : style.colour.withValues(alpha: 0.45)),
               child: Text(
-                '${s.ordinal}',
+                s.ordinal == null ? '–' : '${s.ordinal}',
                 style: TextStyle(
                   fontSize: t.chrome - 0.5,
                   fontWeight: FontWeight.w700,
                   height: 1.2,
-                  color: style.onColour,
+                  color: s.isAside ? style.colour : style.onColour,
                   fontFeatures: const [FontFeature.tabularFigures()],
                 ),
               ),
@@ -1756,7 +1784,7 @@ class _JourneyPanel extends StatelessWidget {
                           ),
                         ),
                       ),
-                      if (!s.stop.attested) ...[
+                      if (s.isAside || !s.stop.attested) ...[
                         const SizedBox(width: 4),
                         Container(
                           padding: const EdgeInsets.symmetric(
@@ -1766,7 +1794,9 @@ class _JourneyPanel extends StatelessWidget {
                                 color: c.mutedText, width: WbMetrics.hairline),
                           ),
                           child: Text(
-                            _s('journeyProvisionalTag', 'Provisional'),
+                            s.isAside
+                                ? _s('journeyAsideTag', 'Named, not reached')
+                                : _s('journeyProvisionalTag', 'Provisional'),
                             style: TextStyle(
                               fontSize: t.chrome - 1,
                               height: 1.0,
