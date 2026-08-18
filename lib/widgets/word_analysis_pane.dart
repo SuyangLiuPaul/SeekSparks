@@ -37,6 +37,8 @@ import 'package:seeksparks/services/chinese_lexicon_service.dart';
 import 'package:seeksparks/services/strongs_service.dart';
 import 'package:seeksparks/services/thayer_service.dart';
 import 'package:seeksparks/utils/cbol_references.dart';
+import 'package:seeksparks/utils/ketiv_qere.dart'
+    show ketivQereLabel, ketivQereNote;
 import 'package:seeksparks/utils/morphology.dart' show describeMorphology;
 import 'package:seeksparks/utils/thayer_parse.dart';
 import 'package:seeksparks/widgets/word_forms_section.dart';
@@ -340,6 +342,37 @@ class _WordAnalysisPaneState extends State<WordAnalysisPane> {
                   color: wb.mutedText,
                   height: 1.35,
                 ),
+              ),
+            ),
+          ],
+
+          // ── Ketiv/Qere. Above the forms section because it answers a
+          // question the reader asked before they got here: why the
+          // verse prints two words where the text has one. The pane is
+          // the only place that can answer it in a sentence.
+          if (ketivQereLabel(widget.word.ketivQere, locale)
+              case final kqLabel?) ...[
+            const SizedBox(height: 6),
+            Container(
+              width: double.infinity,
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+              decoration: BoxDecoration(border: Border.all(color: wb.border)),
+              child: Text.rich(
+                TextSpan(children: [
+                  TextSpan(
+                    text: kqLabel,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: wb.text,
+                    ),
+                  ),
+                  TextSpan(
+                    text: '\n${ketivQereNote(widget.word.ketivQere, locale)}',
+                    style: TextStyle(color: wb.mutedText),
+                  ),
+                ]),
+                style: TextStyle(fontSize: t.chrome, height: 1.35),
               ),
             ),
           ],

@@ -183,17 +183,16 @@ are rendering blank in Word Study NOW". That prediction is **false** —
 zero codes are undecodable, and an unrecognised one would fall through
 to the raw string, not to blank. The blanks came from absent codes.
 
-**Four verses print the Ketiv and the Qere as two consecutive words** —
-2 Samuel 18:20, Jeremiah 51:3, Ezekiel 48:16, Proverbs 8:35. A reader of
-2 Samuel 18:20 sees `כי על על כן`, a doubled word. This is a defect of
-the shipped `assets/originals`, found while fixing check 2a, and it is
-**not** the same thing as the 1,257 unpointed Hebrew words corpus-wide —
-those are the ordinary Ketiv-unpointed convention and are correct.
+**~~Four verses print the Ketiv and the Qere as two consecutive words~~
+— it was 1,103. FIXED in v1.6.147; see "The Ketiv and the Qere were
+1,103 verses, not four" below.**
 
-Left open deliberately. Deleting a word from shipped scripture is a
-text-editorial decision, and the right repair is almost certainly a
-Ketiv/Qere marker in the reader rather than a deletion, which is a UI
-slice, not a data one.
+The four named here — 2 Samuel 18:20, Jeremiah 51:3, Ezekiel 48:16,
+Proverbs 8:35 — were the four the *instrument* could see, not the four
+that existed. And this entry's own second sentence was the tell: it
+said the 1,257 unpointed Hebrew words corpus-wide are "the ordinary
+Ketiv-unpointed convention and are correct". They are indeed the Ketiv.
+That is the size of the defect, not evidence against it.
 
 **Check 4 — verse coverage.** Measured per edition against KJV
 versification, and only over the books an edition claims to carry, so a
@@ -489,12 +488,123 @@ originals are a received-text edition and SBLGNT is a critical one, so
 readings SBLGNT does not carry have nothing to take a parse from. 222 of
 them are the 15 verses of John 7:53–8:11 and Romans 16:25–27, which are
 wholly unparsed and are pinned as such by a test. The 1 Hebrew survivor
-is the doubled Qere at 2 Samuel 18:20, listed under "Open" above.
+is the doubled Qere at 2 Samuel 18:20 — the doubling itself is fixed in
+v1.6.147, immediately below.
 
 Word Study now **says so** instead of rendering nothing: a missing parse
 prints a bordered line naming the corpus it was measured against
 (SBLGNT for Greek, Open Scriptures/WLC for Hebrew). A blank that
 explains itself is information; a blank that does not is a bug report.
+
+### The Ketiv and the Qere were 1,103 verses, not four — FIXED in v1.6.147
+
+**The defect.** `tools/build_originals.py` read the WLC with
+`verse.iter(f'{NS_OSIS}w')`. `iter` is a **descendant** walk, and the
+WLC keeps the Qere inside an apparatus note:
+
+```xml
+<w type="x-ketiv" lemma="5921 b" morph="HR">על</w>
+<note type="variant">
+  <catchWord>על</catchWord>
+  <rdg type="x-qere">
+    <w lemma="5921 b" morph="HR">עַל</w>
+    <w lemma="3651 b" morph="HTm">כֵּן</w>
+  </rdg>
+</note>
+```
+
+So the marginal reading was lifted out of the apparatus and printed as
+running text, immediately after the written one, with nothing to say
+where it came from. **1,103 verses and 2,509 words** — 1,260 sites in
+the WLC apparatus, 1,255 of them visible in this corpus. Genesis 30:11
+shipped as `בגד בָּא גָד` — Leah naming Gad, one word written and two
+read, all three printed as if the Hebrew said them. Genesis 24:33 opens
+on `ויישם וַיּוּשַׂם`, which is not even the same verb: H3455 and H7760.
+**206 of the 1,255 sites carry a different set of Strong's numbers on
+the two sides**, so this was not a cosmetic doubling; it put a word in
+the Hebrew Bible that no manuscript reads there.
+
+**Why the recorded scope was four.** The old instrument scanned for a
+word repeated adjacently. That finds a Ketiv/Qere pair only where the
+two readings are spelled the *same* — `על על`, `ידרך ידרך`, `חמש חמש`,
+`מצאי מצאי`. The other ~1,100 are spelled differently, which is the
+whole reason the Masoretes wrote a note, and were invisible to it. A
+defect measured by an instrument that can only see one of its shapes
+will report the size of the instrument, not the size of the defect.
+
+**The join, proved before it was trusted.** The role cannot be read off
+the shipped asset — a Qere is an ordinary pointed word — so it comes
+from the WLC, and a wrong join would mislabel scripture. Replaying the
+importer's own filter (a `<w>` is kept iff `_hebrew_strongs(lemma)` is
+non-empty) reproduces the shipped word sequence in **23,213 of 23,213
+verses**, word for word, 0 mismatches. Two independent counts agree:
+the WLC marks 1,268 Ketiv words and every one is unpointed, and the
+shipped asset holds exactly 1,257 unpointed Hebrew words in 300,808 —
+the 11 missing are Ketiv forms whose lemma carries no Strong's number,
+which this corpus drops for every word, not only these. After the
+repair those two sets coincide exactly: **1,257 words are marked Ketiv
+and 1,257 Hebrew words are unpointed, and they are the same 1,257.**
+
+**Marked, not deleted, and that is the reference behaviour.** Every
+affected word carries a `kq` field; nothing was removed. BibleWorks
+does the same: every WTM morphology code ends in `Rk`, `Rq` or `Rx`,
+and "if you end forms with a wildcard asterisk … all forms will be
+matched, including Qere, Kethib, and neither" (help topic bwh17), with
+two separate settings — "Include qere readings", "Include kethib
+readings" — to drop either from a search (bwh29). So SeekSparks' counts
+include both readings, exactly as BibleWorks' do by default. Deleting a
+word from shipped scripture would have been a text-editorial decision
+and is not one an unattended run may take.
+
+**Four roles, because two would have lied at fourteen sites.** Once the
+apparatus is read properly it says three different things, not one:
+
+| role | meaning | words |
+|---|---|---|
+| `k` | Ketiv, with a Qere directing what to read instead | 1,251 |
+| `q` | that Qere | 1,244 |
+| `kx` | *Ketiv velo Qere* — written, and marked not to be read at all (an **empty** `<rdg type="x-qere"/>`) | 6 |
+| `qx` | *Qere velo Ketiv* — read though the text writes nothing | 8 |
+
+The `kx` six are 2 Kings 5:18, Jeremiah 38:16, 39:12, 51:3, Ezekiel
+48:16, Ruth 3:12. Telling a reader of Ezekiel 48:16 to "read the Qere
+instead" would invent a Qere the Masoretes did not write — the
+direction there is to read nothing. This is why the reader-side note is
+phrased about the **text** and never promises a word "beside it": the
+role is decided on the raw apparatus, before the Strong's-number filter
+drops anything, so it stays true even where the counterpart never
+entered this corpus.
+
+**What is still missing, and why.** The WLC has nine *Qere velo Ketiv*
+sites; eight are here. Jeremiah 50:29's is absent because its lemma
+carries no Strong's number. Likewise ~19 Ketiv words stand with their
+Qere absent — Exodus 21:8's לא/לו crux is the clearest, where the Qere
+לוֹ has lemma `l` and no number. This is the corpus-wide
+Strong's-filter limitation, not a Ketiv/Qere one: those words are
+missing everywhere. *(The v1.6.92 note above says "10 Qere without
+Ketiv"; measured here on site structure it is 9 in the WLC and 8
+shipped. The two were counted by different rules and the discrepancy
+has not been chased.)*
+
+**The generator was fixed too, and proved against the asset.**
+`build_originals.wlc_verse_words` now descends explicitly and assigns
+the role; `tools/repair_originals_qere.py` **imports** that function
+rather than restating it, so the two cannot drift. Replaying the fixed
+generator over the cached WLC reproduces all 39 shipped Hebrew books —
+23,213 verses, every word, every Strong's number, every `kq`, in the
+same key order — with 0 mismatches. The repair is idempotent: a second
+`--check` reports 0 files would change, and Jonah and Malachi (no
+Ketiv) round-trip byte-for-byte identical.
+
+**What the reader now sees.** Both readings, with the Ketiv set in the
+muted ink so the Qere reads as the running text, a `K`/`Q` letter after
+each — printed always, not behind the Strong's-numbers toggle, because
+it is the only thing explaining why two words stand where the text has
+one — and, in the hover popup and in Word Study, the role's name and a
+sentence saying what the Masoretes directed, in English, 简体 and 繁體.
+`test/ketiv_qere_test.dart` freezes the counts, the four named verses,
+both unpaired lists, and the invariant that every Ketiv is unpointed
+and every Qere is pointed.
 
 ### The 和合本 editions had eight defect classes — FIXED in v1.6.93
 
@@ -4470,10 +4580,8 @@ prose above gets revisited.
    would be one, and would be witnessed by the corpus rather than
    invented — but it must be derived and checked before a character of
    it is trusted.
-4. The four verses that print both the Ketiv and the Qere. Probably a
-   reader-side marker, not a data deletion.
-5. Per-record date sourcing (#292 owns `hebrew_kings.json`).
-6. **The family tree's two decisions, from check 36.** Neither is an
+4. Per-record date sourcing (#292 owns `hebrew_kings.json`).
+5. **The family tree's two decisions, from check 36.** Neither is an
    engineering task and neither should be taken unattended. *(a)* The
    tree draws an inferred link — Heli → Mary, Eve → Seth — with the same
    solid line as Genesis 5:3, because the model has no field for it;
@@ -4484,13 +4592,13 @@ prose above gets revisited.
    inside a record whose own summary says the other; the CUV the app
    ships reads 流便 85 times and 吕便 never. One minute of a Chinese
    reader's judgement settles it and nothing else can.
-7. The LEB's `{…}` idiom braces in the 660 imported verses, if a witness
+6. The LEB's `{…}` idiom braces in the 660 imported verses, if a witness
    that preserves them can be found.
-8. The ten summarised Chinese sermons (check 19). Not an engineering
+7. The ten summarised Chinese sermons (check 19). Not an engineering
    task — ~85,000 English words need translating, and whether that
    happens, and by whom, is the owner's call. Until it does, the marking
    is the honest state.
-9. The remaining verse-rendering surfaces, audited but not exhaustively:
+8. The remaining verse-rendering surfaces, audited but not exhaustively:
    check 14 covers the reader, Browse, the sermon-citation popup, the
    two search-key caches and the clipboard. Strong's-driven surfaces
    (KWIC, concordance) read the tagged layer, which a placeholder has no

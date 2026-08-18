@@ -335,6 +335,91 @@ def _hebrew_strongs(s_attr: str) -> str:
     return ''
 
 
+def wlc_verse_words(verse) -> list[dict]:
+    """Every word of one WLC `<verse>`, in document order, each tagged
+    with its Ketiv/Qere role under `kq`.
+
+    An explicit descent, NOT `verse.iter(w)`. `iter` walks descendants,
+    and the WLC hides the Qere inside an apparatus note —
+    `<note type="variant"><rdg type="x-qere"><w>…`. A descendant walk
+    therefore lifted the marginal reading into the running text with
+    nothing to say it came from the margin, and 1,103 verses shipped a
+    word printed twice: 2 Samuel 18:20 as `כי על על כן`, Genesis 30:11
+    as `בגד בא גד`. Both readings are kept — BibleWorks keeps both too,
+    tagging them Rk/Rq/Rx and letting the reader exclude either
+    (help topics bwh17, bwh29) — but each is now labelled.
+
+    Four roles, because two would make the app say something false at
+    fifteen sites:
+
+      k   Ketiv, with a Qere directing what to read instead.
+      q   that Qere.
+      kx  *Ketiv velo Qere* — written, and marked NOT to be read at all
+          (an empty `<rdg type="x-qere"/>`). Six sites: 2 Kings 5:18,
+          Jeremiah 38:16, 39:12, 51:3, Ezekiel 48:16, Ruth 3:12.
+      qx  *Qere velo Ketiv* — read though the text writes nothing.
+          Nine sites, among them 2 Samuel 8:3 and Ruth 3:5, 3:17.
+
+    The role is decided on the RAW apparatus, before the Strong's-number
+    filter below drops a word: whether the Masoretes wrote a counterpart
+    is a fact about the manuscript, not about what this importer keeps.
+    """
+    raw: list[dict] = []
+
+    def walk(el) -> None:
+        for child in el:
+            if child.tag == f'{NS_OSIS}w':
+                raw.append({
+                    'el': child,
+                    'kind': 'k' if child.get('type') == 'x-ketiv' else '',
+                    'site': None,
+                })
+            elif child.tag == f'{NS_OSIS}note' and any(
+                    r.get('type') == 'x-qere'
+                    for r in child.iter(f'{NS_OSIS}rdg')):
+                site = {'k': 0, 'q': 0}
+                # The Ketiv is the contiguous run of x-ketiv words
+                # standing immediately before this note.
+                i = len(raw) - 1
+                while i >= 0 and raw[i]['kind'] == 'k' \
+                        and raw[i]['site'] is None:
+                    raw[i]['site'] = site
+                    site['k'] += 1
+                    i -= 1
+                for rdg in child.iter(f'{NS_OSIS}rdg'):
+                    if rdg.get('type') != 'x-qere':
+                        continue
+                    for w in rdg.iter(f'{NS_OSIS}w'):
+                        raw.append({'el': w, 'kind': 'q', 'site': site})
+                        site['q'] += 1
+            else:
+                walk(child)
+
+    walk(verse)
+
+    words: list[dict] = []
+    for entry in raw:
+        el = entry['el']
+        text = ''.join(el.itertext()).strip()
+        if not text:
+            continue
+        # morphhb encodes prefix/root boundaries with `/` (e.g.
+        # "בְּ/רֵאשִׁית"). Strip them so the surface form matches the
+        # way the word reads in a Hebrew Bible.
+        text = text.replace('/', '')
+        s = _hebrew_strongs(el.get('lemma', ''))
+        if not s:
+            continue
+        word = {'w': text, 's': s}
+        site = entry['site']
+        if entry['kind'] == 'k':
+            word['kq'] = 'k' if site and site['q'] else 'kx'
+        elif entry['kind'] == 'q':
+            word['kq'] = 'q' if site and site['k'] else 'qx'
+        words.append(word)
+    return words
+
+
 def parse_morphhb_book(osis: str) -> dict:
     raw = fetch(MORPHHB_BOOKS_URL.format(osis=osis), f'morphhb-{osis}.xml')
     root = ET.fromstring(raw)
@@ -351,19 +436,7 @@ def parse_morphhb_book(osis: str) -> dict:
         if not m:
             continue
         ch, vs = int(m.group(1)), int(m.group(2))
-        words: list[dict] = []
-        for w in verse.iter(f'{NS_OSIS}w'):
-            text = ''.join(w.itertext()).strip()
-            if not text:
-                continue
-            # morphhb encodes prefix/root boundaries with `/` (e.g.
-            # "בְּ/רֵאשִׁית"). Strip them so the surface form matches
-            # the way the word reads in a Hebrew Bible.
-            text = text.replace('/', '')
-            s = _hebrew_strongs(w.get('lemma', ''))
-            if not s:
-                continue
-            words.append({'w': text, 's': s})
+        words = wlc_verse_words(verse)
         if words:
             out[f'{ch}:{vs}'] = words
     return out

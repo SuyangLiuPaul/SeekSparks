@@ -41,6 +41,8 @@ import 'package:seeksparks/services/originals_service.dart';
 import 'package:seeksparks/services/strongs_service.dart';
 import 'package:seeksparks/services/tagged_text_service.dart';
 import 'package:seeksparks/services/versification.dart';
+import 'package:seeksparks/utils/ketiv_qere.dart'
+    show ketivQereLabel, ketivQereMark, ketivQereNote;
 import 'package:seeksparks/utils/morphology.dart' show describeMorphology;
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 import 'package:seeksparks/utils/strongs_inline.dart';
@@ -1323,6 +1325,16 @@ class _HoverWordState extends State<_HoverWord> {
         TextSpan(text: '\n$gloss', style: base(wb.text, w: FontWeight.w600)),
       if (parse != null && parse.isNotEmpty)
         TextSpan(text: '\n$parse', style: base(wb.mutedText)),
+      // A doubled word is the one thing on this line a reader cannot
+      // work out from the word itself, so it gets a sentence, not just
+      // the letter printed beside the text.
+      if (ketivQereLabel(widget.word.ketivQere, locale) case final label?)
+        TextSpan(
+          text: '\n$label',
+          style: base(wb.link, w: FontWeight.w600),
+        ),
+      if (ketivQereNote(widget.word.ketivQere, locale) case final note?)
+        TextSpan(text: '\n$note', style: base(wb.mutedText)),
     ]);
   }
 
@@ -1449,6 +1461,18 @@ class _HoverWordState extends State<_HoverWord> {
                   if (widget.translation && _hasNumbers)
                     const TextSpan(text: ' '),
                 ],
+                // LAST, and not behind [showNumbers]. A Strong's number
+                // is optional apparatus; this letter is the only thing
+                // saying why two words stand where the text has one, so
+                // it always prints — and it has to touch the word it
+                // marks. Every Latin span after a Hebrew one joins a
+                // single left-to-right run, so span order is reversed on
+                // screen: emitted first, the `K` came out at the far
+                // left of `K H1409 בגד` and a reader scanning right to
+                // left met the number before the mark. Emitted last, it
+                // sits against the word.
+                if (ketivQereMark(widget.word.ketivQere) case final kq?)
+                  _num(kq, wb.mutedText),
               ]),
               style: TextStyle(
                 // The doc on [translation] promises body size for a
@@ -1458,7 +1482,11 @@ class _HoverWordState extends State<_HoverWord> {
                     ? t.text
                     : t.original,
                 height: t.lineHeight,
-                color: wb.text,
+                // The Ketiv is set in the muted ink so the eye takes the
+                // Qere as the running text — which is what the Masoretes
+                // direct. It is still here, still hoverable, still
+                // searchable; nothing is deleted, only de-emphasised.
+                color: widget.word.isKetiv ? wb.mutedText : wb.text,
                 fontFamilyFallback: kCjkFontFallback,
                 // Underline on hover, so touch users (who get no hover)
                 // and mouse users both see that words are live. The pin

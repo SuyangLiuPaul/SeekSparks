@@ -93,6 +93,9 @@ List<WordListEntry> buildWordList(
   final totals = <String, int>{};
   final forms = <String, Map<String, int>>{};
   final order = <String, int>{};
+  // Forms met at least once as something other than a Ketiv, per
+  // Strong's number. See the tie-break below.
+  final read = <String, Set<String>>{};
 
   var i = 0;
   for (final w in words) {
@@ -101,7 +104,12 @@ List<WordListEntry> buildWordList(
     totals[key] = (totals[key] ?? 0) + 1;
     final byForm = forms.putIfAbsent(key, () => <String, int>{});
     final text = w.text.trim();
-    if (text.isNotEmpty) byForm[text] = (byForm[text] ?? 0) + 1;
+    if (text.isNotEmpty) {
+      byForm[text] = (byForm[text] ?? 0) + 1;
+      if (!w.isKetiv) {
+        read.putIfAbsent(key, () => <String>{}).add(text);
+      }
+    }
     order.putIfAbsent(key, () => i);
     i++;
   }
@@ -110,12 +118,26 @@ List<WordListEntry> buildWordList(
   for (final e in totals.entries) {
     if (e.value < minCount) continue;
     final byForm = forms[e.key] ?? const <String, int>{};
+    final readForms = read[e.key] ?? const <String>{};
     var best = '';
     var bestCount = -1;
+    var bestIsKetiv = false;
     for (final f in byForm.entries) {
-      if (f.value > bestCount) {
+      final isKetiv = !readForms.contains(f.key);
+      // Count wins; a tie goes to the form the Masoretes direct be read.
+      // Where a number's only occurrences in scope are one Ketiv and its
+      // Qere — 360 rows at book scope, 747 at chapter scope — both forms
+      // count 1, and the old `>` handed the headline to whichever came
+      // first in the verse. That is always the Ketiv, so the row was
+      // labelled with the unpointed consonantal form the reader is
+      // directed NOT to read: 1 Chronicles 1:11 headed H3866 `לודיים`
+      // rather than `לוּדִ֧ים`. Arbitrary before, principled now; nothing
+      // is dropped and both still count toward [count].
+      if (f.value > bestCount ||
+          (f.value == bestCount && bestIsKetiv && !isKetiv)) {
         best = f.key;
         bestCount = f.value;
+        bestIsKetiv = isKetiv;
       }
     }
     final lex = lexicon[e.key];

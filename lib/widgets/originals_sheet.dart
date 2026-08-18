@@ -26,6 +26,7 @@ import 'package:seeksparks/services/originals_service.dart';
 import 'package:seeksparks/services/strongs_service.dart';
 import 'package:seeksparks/utils/ai_markdown.dart' show parseAiMarkdown;
 import 'package:seeksparks/utils/clipboard_helper.dart';
+import 'package:seeksparks/utils/ketiv_qere.dart';
 import 'package:seeksparks/utils/morphology.dart';
 import 'package:seeksparks/utils/theme_color_helpers.dart';
 import 'package:seeksparks/utils/version_mapper.dart'
@@ -931,13 +932,43 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
               ),
               const SizedBox(height: 2),
             ],
+            // Ketiv/Qere. Outlined, not filled like the Aramaic pill:
+            // Aramaic is what the word IS, this is a claim about which
+            // of two readings to say aloud, and the two should not look
+            // like the same kind of fact.
+            if (ketivQereMark(w.ketivQere) != null) ...[
+              Directionality(
+                textDirection: TextDirection.ltr,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 5, vertical: 1),
+                  decoration: BoxDecoration(
+                    borderRadius: _st.r(8),
+                    border: Border.all(color: _st.chipBorder),
+                  ),
+                  child: Text(
+                    w.isKetiv ? 'Ketiv' : 'Qere',
+                    style: TextStyle(
+                      fontSize: _ty.scaled(8),
+                      fontWeight: FontWeight.w700,
+                      color: scheme.onSurfaceVariant,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 2),
+            ],
             Text(
               w.text,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: _st.original,
                 fontWeight: FontWeight.w600,
-                color: scheme.onSurface,
+                // The Ketiv is dimmed so the Qere beside it reads as the
+                // running text, which is what the Masoretes direct. Both
+                // stay on screen; neither is deleted.
+                color: w.isKetiv ? scheme.onSurfaceVariant : scheme.onSurface,
               ),
             ),
             if (w.translit != null && w.translit!.isNotEmpty)
@@ -1271,6 +1302,22 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
           // below it. Absent for the ~0.5% of words the corpora
           // couldn't align; nothing is shown rather than a guess.
           if (!isBrowsingRoot) _buildParsingLine(w, scheme, locale),
+          // Why two words stand where the text has one. Tied to the
+          // occurrence, like the parsing line above it, so it vanishes
+          // when the reader browses to a root entry.
+          if (!isBrowsingRoot)
+            if (ketivQereLabel(w.ketivQere, locale) case final kqLabel?)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  '$kqLabel — ${ketivQereNote(w.ketivQere, locale)}',
+                  style: TextStyle(
+                    fontSize: _ty.scaled(12),
+                    height: 1.35,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
           if (entry != null) ...[
             if (entry.translit.isNotEmpty || entry.pronunciation.isNotEmpty)
               Text(
