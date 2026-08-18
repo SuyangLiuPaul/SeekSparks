@@ -137,19 +137,25 @@ void main() {
       }
     });
 
-    test('only the last man in each text is undivided', () {
+    // A life is divided at the birth of the next man only where the text
+    // states that age. Joseph ends the Genesis chain, and Moses and
+    // Aaron are dated by their own ages rather than by fathering anyone,
+    // so those three rows are undivided — and no others may be, because
+    // anywhere else a null would mean the parser stopped finding a
+    // figure the formula does state.
+    test('exactly the three men the text leaves undivided are undivided', () {
       for (final t in ['mt', 'lxx']) {
-        final people = data.inTradition(t);
         final open = [
-          for (final p in people)
+          for (final p in data.inTradition(t))
             if (p.figures[t]!.begatAt == null) p.id
         ];
-        expect(open, [people.last.id], reason: t);
+        expect(open, ['joseph', 'aaron', 'moses'], reason: t);
       }
     });
 
     test('every figure carrying a verse carries a real one', () {
-      final ref = RegExp(r'^(Genesis|Exodus) \d+:\d+$');
+      final ref =
+          RegExp(r'^(Genesis|Exodus|Numbers|Deuteronomy) \d+:\d+$');
       for (final p in data.patriarchs) {
         for (final f in p.figures.values) {
           for (final e in f.refs.entries) {
@@ -168,7 +174,7 @@ void main() {
     // lines rather than applied to the whole asset.
     test('the formulaic genealogies cite every begetting age', () {
       for (final p in data.patriarchs) {
-        if (p.line == 'abraham') continue;
+        if (p.line == 'abraham' || p.line == 'levi') continue;
         for (final f in p.figures.values) {
           expect(f.refs['begatAt'], isNotNull, reason: p.id);
           expect(f.refs['begatAt'], startsWith('Genesis '), reason: p.id);
@@ -311,23 +317,75 @@ void main() {
     });
 
     test('the second witness still agrees', () {
-      expect(data.secondWitness, contains('21 of 21'));
-      expect(data.sumsChecked, 20);
+      expect(data.secondWitness, contains('23 of 23'));
+      expect(data.sumsChecked, 24);
     });
 
-    test('the chart runs to Joseph in both texts', () {
+    test('the chart runs to Moses in both texts', () {
       for (final t in ['mt', 'lxx']) {
-        expect(data.inTradition(t).last.id, 'joseph', reason: t);
+        expect(data.inTradition(t).last.id, 'moses', reason: t);
       }
       final joseph = data.byId('joseph')!;
       for (final f in joseph.figures.values) {
         expect(f.lifespan, 110);
         expect(f.refs['lifespan'], 'Genesis 50:26');
-        // The chain ends: these figures do not exist rather than being
-        // unknown, and the panel omits their rows on that basis.
+        // The Genesis chain ends: these figures do not exist rather than
+        // being unknown, and the panel omits their rows on that basis.
         expect(f.begatAt, isNull);
         expect(f.livedAfter, isNull);
       }
+    });
+
+    // The one span on this chart assembled from three books, and the
+    // only one outside Genesis 5 whose parse a third stated number
+    // confirms.
+    // Exodus 7:7 gives the two ages before Pharaoh, Numbers 14:33 the
+    // forty years, and the lifetimes are stated separately in
+    // Deuteronomy 34:7 and Numbers 33:39 — so 80 + 40 == 120 and
+    // 83 + 40 == 123 check the parse of all five figures at once.
+    test('Moses and Aaron span the wilderness, checked across three books',
+        () {
+      final exodus = data.epochs.firstWhere((e) => e.id == 'exodus');
+      final death = data.epochs.firstWhere((e) => e.id == 'moses_death');
+      for (final t in ['mt', 'lxx']) {
+        final moses = data.byId('moses')!.figures[t]!;
+        final aaron = data.byId('aaron')!.figures[t]!;
+        expect(moses.lifespan, 120, reason: t);
+        expect(aaron.lifespan, 123, reason: t);
+        expect(moses.refs['lifespan'], 'Deuteronomy 34:7', reason: t);
+        expect(aaron.refs['lifespan'], 'Numbers 33:39', reason: t);
+        expect(moses.checked, isTrue, reason: t);
+        expect(aaron.checked, isTrue, reason: t);
+        // Both are dated from their age at Exodus 7:7, so the exodus year
+        // must fall 80 and 83 years after their births.
+        expect(exodus.years[t]! - moses.birthAm, 80, reason: t);
+        expect(exodus.years[t]! - aaron.birthAm, 83, reason: t);
+        // And the forty years of Numbers 14:33 close both lives.
+        expect(death.years[t]! - exodus.years[t]!, 40, reason: t);
+        expect(moses.deathAm, death.years[t], reason: t);
+      }
+    });
+
+    // The two texts state the same 430 years over different ground, and
+    // the whole extension past the descent rests on reading each one on
+    // its own terms rather than choosing. Pinned in years, because the
+    // sentence that describes it could drift and the years cannot.
+    test('Exodus 12:40 starts at the descent in the Hebrew and at Haran '
+        'in the Greek', () {
+      final exodus = data.epochs.firstWhere((e) => e.id == 'exodus');
+      final descent = data.epochs.firstWhere((e) => e.id == 'descent');
+      final haran = data.epochs.firstWhere((e) => e.id == 'haran');
+      expect(exodus.ref, 'Exodus 12:40');
+      expect(exodus.years['mt']! - descent.years['mt']!, 430);
+      expect(exodus.years['lxx']! - haran.years['lxx']!, 430);
+      // The Greek's start is the one year on this axis that had to be
+      // supplied rather than read, so its note has to say so.
+      final note =
+          data.notesFor('lxx').firstWhere((n) => n.id == 'sojourn_430');
+      for (final locale in ['en', 'zh-Hans', 'zh-Hant']) {
+        expect(note.textFor(locale), contains('430'), reason: locale);
+      }
+      expect(note.textFor('en'), contains('not stated'));
     });
 
     // Genesis 12-50 states no begetting ages, so Jacob's is derived from
@@ -380,13 +438,22 @@ void main() {
         if (p.line == 'abraham') {
           abrBoth++;
           if (same) abrSame++;
-        } else {
+        } else if (p.line != 'levi') {
           genBoth++;
           if (same) genSame++;
         }
       }
       expect([genSame, genBoth], [4, 19]);
       expect([abrSame, abrBoth], [4, 4]);
+      // Moses and Aaron are outside the comparison because the texts
+      // state identical figures for them: the divergence is a feature of
+      // the two genealogies, and counting agreement where there was
+      // never a difference would flatter it.
+      for (final id in ['moses', 'aaron']) {
+        final p = data.byId(id)!;
+        expect(p.figures['mt']!.lifespan, p.figures['lxx']!.lifespan,
+            reason: id);
+      }
     });
 
     // A judgement, and the note is how the reader is told it was made.
@@ -416,7 +483,7 @@ void main() {
       }
     });
 
-    test('why the chart stops is said on the chart, in both texts', () {
+    test('what the 430 years cover is said on the chart, in both texts', () {
       for (final t in ['mt', 'lxx']) {
         final note =
             data.notesFor(t).firstWhere((n) => n.id == 'sojourn_430');
@@ -429,22 +496,82 @@ void main() {
       }
     });
 
-    test('a note about a man is reachable from that man', () {
-      final all = data.notesFor('lxx');
-      final personal = all.where((n) => n.personId != null);
-      expect(personal, isNotEmpty);
-      for (final n in personal) {
-        expect(data.byId(n.personId!), isNotNull, reason: n.id);
-        expect(data.notesForPerson('lxx', n.personId!).map((e) => e.id),
-            contains(n.id));
+    // Why the chart ends after Moses, said on the chart rather than only
+    // in the source: 1 Kings 6:1 states its year as an ordinal that the
+    // generator's number-reader cannot read in either language. It carries
+    // no person because it is about the chart, not about Moses, and the
+    // header prints exactly the notes that carry no person.
+    test('why the chart stops is said on the chart, in both texts', () {
+      for (final t in ['mt', 'lxx']) {
+        final note = data.notesFor(t).firstWhere((n) => n.id == 'chart_end');
+        expect(note.personId, isNull);
+        for (final locale in ['en', 'zh-Hans', 'zh-Hant']) {
+          expect(note.textFor(locale), contains('6:1'), reason: '$t $locale');
+        }
       }
-      // And a man with no note gets none.
-      expect(data.notesForPerson('lxx', 'adam'), isEmpty);
+    });
+
+    // Exodus 6:18 and 6:20 cap the years between the descent and the
+    // exodus, and which way that cap falls is the substance of the
+    // argument over Exodus 12:40. Recomputed here from the asset's own
+    // years so the note cannot outlive the numbers behind it.
+    test('the Levite generations are measured against the gap, both ways',
+        () {
+      final exodus = data.epochs.firstWhere((e) => e.id == 'exodus');
+      final descent = data.epochs.firstWhere((e) => e.id == 'descent');
+      // The Hebrew puts all 430 after the descent; the Greek 215.
+      expect(exodus.years['mt']! - descent.years['mt']!, 430);
+      expect(exodus.years['lxx']! - descent.years['lxx']!, 215);
+      for (final t in ['mt', 'lxx']) {
+        final note = data
+            .notesForPerson(t, 'moses')
+            .firstWhere((n) => n.id == 'levi_ceiling');
+        final gap = exodus.years[t]! - descent.years[t]!;
+        for (final locale in ['en', 'zh-Hans', 'zh-Hant']) {
+          expect(note.textFor(locale), contains('$gap'),
+              reason: '$t $locale');
+        }
+      }
+      // 133 + 137 + 80 = 350, which is 80 short of 430; 130 + 132 + 80 =
+      // 342, which covers 215 with room. The verdicts are opposite and
+      // the notes must not read the same way.
+      expect(
+          data
+              .notesForPerson('mt', 'moses')
+              .firstWhere((n) => n.id == 'levi_ceiling')
+              .textFor('en'),
+          contains('350'));
+      expect(
+          data
+              .notesForPerson('lxx', 'moses')
+              .firstWhere((n) => n.id == 'levi_ceiling')
+              .textFor('en'),
+          contains('342'));
+    });
+
+    // The header prints the notes that carry no person and only names
+    // the men who carry one, so a note about a man is read by selecting
+    // his bar. If he has no bar in that tradition there is nothing to
+    // select and the caveat is unreachable — which is why this asserts
+    // he is in the tradition, not merely in the file.
+    test('a note about a man is reachable from that man', () {
+      for (final t in ['mt', 'lxx']) {
+        final personal = data.notesFor(t).where((n) => n.personId != null);
+        expect(personal, isNotEmpty, reason: t);
+        final onChart = data.inTradition(t).map((p) => p.id).toSet();
+        for (final n in personal) {
+          expect(onChart, contains(n.personId), reason: '${n.id} in $t');
+          expect(data.notesForPerson(t, n.personId!).map((e) => e.id),
+              contains(n.id));
+        }
+        // And a man with no note gets none.
+        expect(data.notesForPerson(t, 'adam'), isEmpty, reason: t);
+      }
     });
 
     test('every epoch is named in all three locales and cites a verse', () {
       expect(data.epochs.map((e) => e.id).toList(),
-          ['flood', 'haran', 'descent']);
+          ['flood', 'haran', 'descent', 'exodus', 'moses_death']);
       for (final e in data.epochs) {
         expect(e.ref, isNotNull, reason: e.id);
         expect(e.years.keys.toSet(), {'mt', 'lxx'}, reason: e.id);

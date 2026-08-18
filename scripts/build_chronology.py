@@ -44,14 +44,38 @@ Jacob is 130 on reaching Egypt (47:9) and lived 17 years there (47:28),
 and 47:28 states the total 147 — so 130 + 17 == 147 checks both the
 parse and the descent year in each tradition.
 
+EXODUS 12:40 IS NOT A CHOICE THIS CHART HAS TO MAKE
+---------------------------------------------------
+The next span after the descent is Exodus 12:40's 430 years, and the
+two texts state the same number over different ground: the Hebrew has
+Israel dwelling in Egypt, the Greek "in the land of Egypt and in the
+land of Canaan". An earlier version of this script stopped at the
+descent because continuing "would mean choosing between them". That was
+wrong. The chart has never asked a reader to choose between the two
+texts — it reads each on its own terms and draws both — and 12:40 is
+that same thing one rung further on. So the count starts at the descent
+for a text that names only Egypt and at Abram's departure for a text
+that names Canaan too, and which it is, is read off the verse in front
+of the reader rather than decided here.
+
+The Greek's start is nevertheless the weakest link on the axis and is
+shipped saying so. The verse states 430 and names two lands; it does
+NOT state where the Canaan part begins. Putting it at Abram's departure
+is a harmonisation, not a reading, and the fact that the chart's own
+figures then divide the 430 into 215 and 215 is not a check — 430 minus
+215 is subtraction from a number already used, not a third witness. The
+asset marks it as a reading and the note says the words out loud.
+
 WHERE THE CHART STOPS, AND WHY
 ------------------------------
-At the descent into Egypt. The next span the text offers is Exodus
-12:40's 430 years, and the two traditions do not agree on what those
-430 years cover: the Hebrew has Israel dwelling in Egypt, the Greek "in
-the land of Egypt and in the land of Canaan". Continuing past the
-descent would mean choosing, so the chart stops and says so. The script
-verifies that divergence in the shipped text rather than asserting it.
+At the death of Moses, and the boundary is a measured limit rather than
+a taste. The verse that would carry the axis on to Solomon is 1 Kings
+6:1, and this parser cannot read it in either language: the English
+"four hundred and eightieth year" is an ORDINAL and comes back as 400,
+and the Greek reads ἐξ "out of" as the numeral 6. On top of that the
+two texts do not agree there — the Hebrew's 480 is 440 in the Greek. A
+number this script cannot read correctly is a number it must not plot,
+so the chart ends where its last cardinal does.
 
 THE TWO TRADITIONS ARE NOT A SCHOLARLY DISPUTE
 ----------------------------------------------
@@ -251,18 +275,29 @@ class Reader:
             raise SystemExit(f"{self.asset}: missing {cite(chapter, verse, book)}")
         return self.text[key]
 
-    def figure(self, chapter, verse, index=0):
-        """The [index]th number stated in Genesis [chapter]:[verse]."""
-        key = ("Genesis", str(chapter), str(verse))
+    def figure(self, chapter, verse, index=0, book="Genesis"):
+        """The [index]th number stated in [book] [chapter]:[verse].
+
+        A negative index counts from the end, which is not a convenience:
+        Exodus 6:20 states Amram's years last in both texts, but the
+        Greek's εἰς γυναῖκα is read as the numeral 1 ahead of them and
+        the English has nothing there, so the same figure sits at
+        different offsets from the front. Counting from the back names
+        the figure the verse actually ends on in either language.
+        """
+        key = (book, str(chapter), str(verse))
         if key not in self.text:
-            raise SystemExit(f"{self.asset}: missing {cite(chapter, verse)}")
+            raise SystemExit(f"{self.asset}: missing {cite(chapter, verse, book)}")
         found = self.runs(self.text[key])
-        if len(found) <= index:
+        wanted = abs(index) if index < 0 else index + 1
+        if len(found) < wanted:
             raise SystemExit(
-                f"{self.asset}: {cite(chapter, verse)} states {len(found)} "
-                f"numbers, wanted #{index + 1} — {self.text[key][:120]!r}"
+                f"{self.asset}: {cite(chapter, verse, book)} states "
+                f"{len(found)} numbers, wanted "
+                f"{'#' + str(index + 1) if index >= 0 else str(-index) + ' from the end'}"
+                f" — {self.text[key][:120]!r}"
             )
-        return found[index], cite(chapter, verse)
+        return found[index], cite(chapter, verse, book)
 
 
 # ------------------------------------------------------------------ tables
@@ -349,11 +384,20 @@ ABRAHAMIC = [
 # figures scattered through the narrative from chapter 12 on, which are
 # the ones that need derivation and carry the fewest self-checks. That
 # distinction is worth a colour; the reader is told which it is.
+#
+# `levi` is the fourth, and it is a real descent as well: Exodus 6:16-20
+# traces Moses and Aaron to Jacob through Levi, so they are not a new
+# branch of the family but they ARE a new kind of source — the only two
+# men here whose figures come from outside Genesis, read out of Exodus,
+# Numbers and Deuteronomy and checked against each other across all
+# three.
 LINE = {p[0]: "seth" for p in GEN5}
 LINE.update({p[0]: "shem" for p in GEN11_LXX})
 LINE["noah"] = "seth"
 LINE["shem"] = "shem"
 LINE.update({p[0]: "abraham" for p in ABRAHAMIC})
+LINE["moses"] = "levi"
+LINE["aaron"] = "levi"
 
 NAMES = {
     "adam":       ("Adam", "亚当", "亞當"),
@@ -382,6 +426,8 @@ NAMES = {
     "isaac":      ("Isaac", "以撒", "以撒"),
     "jacob":      ("Jacob", "雅各", "雅各"),
     "joseph":     ("Joseph", "约瑟", "約瑟"),
+    "moses":      ("Moses", "摩西", "摩西"),
+    "aaron":      ("Aaron", "亚伦", "亞倫"),
 }
 
 
@@ -496,6 +542,13 @@ def build_tradition(reader, gen11, problems):
     # module docstring for the sixty years that reading may cost.
     epochs = build_abrahamic(reader, rows, order, birth, problems)
 
+    # Exodus to Deuteronomy. The sojourn carries the axis on past the
+    # descent, and where it starts is read off Exodus 12:40 in this
+    # reader's own text; see build_exodus.
+    epochs["exodusEra"] = build_exodus(
+        reader, rows, order, birth,
+        epochs["haran"][0], epochs["descent"][0], problems)
+
     for pid in order:
         rows[pid]["birthAm"] = birth[pid]
         rows[pid]["deathAm"] = birth[pid] + rows[pid]["lifespan"]
@@ -577,6 +630,185 @@ def build_abrahamic(reader, rows, order, birth, problems):
         "descent": (descent, jacob_age_ref, jacob_age),
         "josephAge": (joseph_age, [at_pharaoh_ref, plenty_ref, famine_ref,
                                    remaining_ref]),
+    }
+
+
+# EXODUS TO THE DEATH OF MOSES. Addresses only, as everywhere above.
+#
+# Every figure here is a CARDINAL, and that is a constraint rather than a
+# convenience. The two dates this era is most often given by — Aaron's
+# death "in the fortieth year" (Numbers 33:38) and Moses' last address
+# "in the fortieth year" (Deuteronomy 1:3) — are ORDINALS, which this
+# parser cannot read in either language and must not pretend to: it
+# returns nothing at all from the English and the number 1 from the
+# Greek, which is the day of the month standing next to the ordinal.
+# That is the ἕν/ἐν trap of Genesis 7:11 in a second costume. So the
+# forty years are taken from Numbers 14:33, where the text states them
+# as a plain number, and the two ordinals are left unread.
+EXODUS_SOJOURN = (12, 40, 0, "Exodus")           # the 430 years
+EXODUS_MOSES_AT_PHARAOH = (7, 7, 0, "Exodus")    # Moses 80
+EXODUS_AARON_AT_PHARAOH = (7, 7, 1, "Exodus")    # Aaron 83
+EXODUS_WILDERNESS = (14, 33, 0, "Numbers")       # 40 years
+EXODUS_MOSES_LIFE = (34, 7, 0, "Deuteronomy")    # Moses 120, at his death
+EXODUS_MOSES_SAYS = (31, 2, 0, "Deuteronomy")    # Moses 120, in his own mouth
+EXODUS_AARON_LIFE = (33, 39, 0, "Numbers")       # Aaron 123
+
+# The two lives standing between Jacob's descent and Moses' birth, for
+# the one test this era can be put to from outside itself; see
+# build_exodus. Amram's figure is addressed from the END of the verse
+# because the Greek reads εἰς γυναῖκα as the numeral 1 in front of it
+# and the English has nothing there.
+EXODUS_KOHATH_LIFE = (6, 18, 0, "Exodus")        # Kohath 133 / 130
+EXODUS_AMRAM_LIFE = (6, 20, -1, "Exodus")        # Amram 137 / 132
+
+
+def build_exodus(reader, rows, order, birth, haran, descent, problems):
+    """The sojourn, the exodus, and the two lives that span the forty years.
+
+    WHERE THE 430 YEARS BEGIN IS READ OFF THE VERSE, NOT DECIDED HERE.
+    Exodus 12:40 states the same number in both texts and does not cover
+    the same ground with it: the Hebrew has Israel dwelling in Egypt, the
+    Greek "in the land of Egypt and in the land of Canaan". So the start
+    of the count is taken from whether the verse in front of this reader
+    names Canaan — from the descent when it does not, and from Abram's
+    departure for Canaan when it does.
+
+    An earlier version of this script stopped at the descent and said
+    that carrying the axis further "would mean choosing between them".
+    That was wrong, and the whole chart is the reason: it has never asked
+    a reader to choose between the two texts, it reads each one on its
+    own terms and draws both. Exodus 12:40 is that, one rung further on.
+
+    THE CANAAN READING IS NOT CHECKED AND MUST NOT SAY IT IS. The verse
+    names two lands and states one total; it does not say where the
+    Canaan part starts. Putting the start at Abram's departure is a
+    harmonisation. That the chart's own figures then split the 430 into
+    215 and 215 proves nothing — the second 215 is the first subtracted
+    from a total already in hand, and this script refuses that move
+    everywhere else. So the era reports `startIsRead` and the asset
+    carries the caveat.
+    """
+    sojourn, sojourn_ref = reader.figure(*EXODUS_SOJOURN[:3],
+                                         book=EXODUS_SOJOURN[3])
+    verse = reader.verse(12, 40, book="Exodus").lower()
+    in_canaan_too = "χανααν" in verse or "canaan" in verse
+    start = haran if in_canaan_too else descent
+    exodus = start + sojourn
+
+    # The Canaan reading divides the 430 at the descent, and the first
+    # part is not asserted — it is what this chart already holds, from
+    # Genesis 21:5, 25:26 and 47:9. Reporting both halves is what lets a
+    # reader see that this text's own wording comes out 215 and 215.
+    years_in_canaan = descent - haran
+    years_in_egypt = exodus - descent
+
+    moses_at_pharaoh, moses_ref = reader.figure(*EXODUS_MOSES_AT_PHARAOH[:3],
+                                                book=EXODUS_MOSES_AT_PHARAOH[3])
+    aaron_at_pharaoh, aaron_ref = reader.figure(*EXODUS_AARON_AT_PHARAOH[:3],
+                                                book=EXODUS_AARON_AT_PHARAOH[3])
+    wilderness, wilderness_ref = reader.figure(*EXODUS_WILDERNESS[:3],
+                                               book=EXODUS_WILDERNESS[3])
+    moses_life, moses_life_ref = reader.figure(*EXODUS_MOSES_LIFE[:3],
+                                               book=EXODUS_MOSES_LIFE[3])
+    moses_says, moses_says_ref = reader.figure(*EXODUS_MOSES_SAYS[:3],
+                                               book=EXODUS_MOSES_SAYS[3])
+    aaron_life, aaron_life_ref = reader.figure(*EXODUS_AARON_LIFE[:3],
+                                               book=EXODUS_AARON_LIFE[3])
+
+    # TWO CHECKS ON THE SAME FORTY YEARS, from two men in two books.
+    # Moses is 80 before Pharaoh and dies at 120; Aaron is 83 at the same
+    # moment and dies at 123. Each difference is the forty years Numbers
+    # 14:33 states outright, so a mis-parse of any one of the five
+    # figures cannot pass. This is the Genesis 5 check — a + b == c —
+    # arriving from three separate books instead of one verse.
+    #
+    # Aaron's is corroboration and not a second independent witness: his
+    # 83 comes from the same verse as Moses' 80, so a mis-parse of THAT
+    # verse could in principle move both. What makes the pair worth
+    # running anyway is that the two lifespans come from different books
+    # and the same forty years has to bridge both gaps.
+    for who, age, span, ref_a, ref_b in (
+            ("moses", moses_at_pharaoh, moses_life, moses_ref, moses_life_ref),
+            ("aaron", aaron_at_pharaoh, aaron_life, aaron_ref, aaron_life_ref)):
+        if age + wilderness != span:
+            problems.append(
+                f"{reader.tradition} {who}: {ref_a} states {age} and "
+                f"{wilderness_ref} states {wilderness} years in the "
+                f"wilderness, which is {age + wilderness}, but {ref_b} "
+                f"states a lifetime of {span}")
+
+    # THE SECOND WITNESS TO MOSES' 120, and the reason his lifespan can
+    # be marked checked at all. Deuteronomy 34:7 states it as narration
+    # at his death; 31:2 has him say it himself on a different occasion
+    # in a different chapter. Two statements of one number in two places
+    # is what Genesis 5's third figure is, spread out.
+    if moses_says != moses_life:
+        problems.append(
+            f"{reader.tradition} moses: {moses_says_ref} states "
+            f"{moses_says} but {moses_life_ref} states {moses_life}")
+
+    # THE ONE PLACE THE 430 CAN BE TESTED FROM OUTSIDE ITSELF. Exodus
+    # 6:16-20 runs Levi to Kohath to Amram to Moses, and Genesis 46:11
+    # names Kohath among those who went down into Egypt — so he was
+    # already born at the descent. Read as father to son, the years from
+    # the descent to the exodus cannot exceed what is left of Kohath's
+    # life plus the whole of Amram's plus Moses' age before Pharaoh, and
+    # that ceiling is computed here rather than asserted. Whether it
+    # clears the gap is exactly what the two readings of 12:40 decide,
+    # and the note reports which way this text falls.
+    kohath, kohath_ref = reader.figure(*EXODUS_KOHATH_LIFE[:3],
+                                       book=EXODUS_KOHATH_LIFE[3])
+    amram, amram_ref = reader.figure(*EXODUS_AMRAM_LIFE[:3],
+                                     book=EXODUS_AMRAM_LIFE[3])
+    ceiling = kohath + amram + moses_at_pharaoh
+
+    # THE ONE YEAR THIS ERA ASSUMES, said out loud. Exodus 7:7 gives the
+    # two ages "when they spake unto Pharaoh", and the text states no
+    # interval between that and the departure, so the confrontation is
+    # placed in the exodus year. Everything else here is stated: Moses
+    # dies at the end of the forty years, which is where 120 - 40 puts
+    # his birth from the other direction.
+    #
+    # `checked` here says what it says everywhere else in this file: the
+    # PARSE was confirmed against a further number the text states, not
+    # that the year on the axis is beyond dispute. Moses' 120 is stated
+    # twice and reached a third way (80 + 40); Aaron's 123 is reached the
+    # same way from the verse he shares with Moses. Where they sit on the
+    # axis depends on the sojourn, and that is disclosed separately —
+    # conflating the two would let a firm parse vouch for a soft anchor.
+    #
+    # Aaron first: Exodus 7:7 makes him the elder, and every row above
+    # him is in birth order. Two brothers are not a generation, but the
+    # chart's one ordering rule is the year, and it holds here too.
+    for pid, age, span, life_ref in (
+            ("aaron", aaron_at_pharaoh, aaron_life, aaron_life_ref),
+            ("moses", moses_at_pharaoh, moses_life, moses_life_ref)):
+        birth[pid] = exodus - age
+        rows[pid] = {
+            "begatAt": None,
+            "livedAfter": None,
+            "lifespan": span,
+            "checked": True,
+            "refs": {"lifespan": life_ref},
+        }
+        order.append(pid)
+
+    return {
+        "sojourn": (sojourn, sojourn_ref),
+        "inCanaanToo": in_canaan_too,
+        # True when the start of the 430 had to be supplied rather than
+        # read. See the docstring: this is the one soft joint on the axis.
+        "startIsRead": in_canaan_too,
+        "yearsInCanaan": years_in_canaan,
+        "yearsInEgypt": years_in_egypt,
+        "exodus": (exodus, sojourn_ref),
+        "mosesDeath": (birth["moses"] + moses_life, moses_life_ref),
+        "wilderness": (wilderness, wilderness_ref),
+        "ages": {"moses": moses_at_pharaoh, "aaron": aaron_at_pharaoh},
+        "atPharaohRef": moses_ref,
+        "ceiling": ceiling,
+        "ceilingParts": ((kohath, kohath_ref), (amram, amram_ref)),
+        "mosesSaysRef": moses_says_ref,
     }
 
 
@@ -731,42 +963,218 @@ def main():
             },
         })
 
-    # WHY THE CHART STOPS AT THE DESCENT. Measured in the shipped text,
-    # not quoted from a commentary: the Greek of Exodus 12:40 names
-    # Canaan inside the 430 years and the Authorised Version does not.
-    # The note is emitted only while that is true of the assets, and the
-    # two totals are compared as well, so a difference in the NUMBER
-    # would be reported rather than folded into a difference of scope.
+    # WHAT THE 430 YEARS COVER, per text, measured in the shipped assets
+    # rather than quoted from a commentary: the Greek of Exodus 12:40
+    # names Canaan inside them and the Authorised Version does not. The
+    # pair of notes is emitted only while that is true, and the two
+    # totals are compared as well, so a difference in the NUMBER would be
+    # reported rather than folded into a difference of scope.
     ex_mt = mt.verse(12, 40, book="Exodus")
     ex_lxx = lxx.verse(12, 40, book="Exodus")
     years_mt = en_runs(ex_mt)[0]
     years_lxx = gk_runs(ex_lxx)[0]
     canaan_lxx = "χανααν" in ex_lxx.lower()
     canaan_mt = "canaan" in ex_mt.lower()
-    sojourn = None
+    mt_era = mt_epochs["exodusEra"]
+    lxx_era = lxx_epochs["exodusEra"]
     if years_mt == years_lxx and canaan_lxx and not canaan_mt:
-        sojourn = {
-            "en": (f"The chart stops here. Exodus 12:40 puts {years_mt} years "
-                   f"next in both texts, but not over the same ground: the "
-                   f"Hebrew counts them in Egypt, the Greek “in the land "
-                   f"of Egypt and in the land of Canaan” — which "
-                   f"would begin them at Abraham, not at this line. Carrying "
-                   f"the axis on to the exodus would mean choosing between "
-                   f"them, so it is not carried."),
-            "zh-Hans": (f"本图到此为止。出埃及记 12:40 在两种经文中都记"
-                        f"{years_mt}年，所指却不是同一段：希伯来文把这些年数"
-                        f"算在埃及，希腊文作「在埃及地和迦南地」——那样起点便"
-                        f"在亚伯拉罕，而不在这条线上。若把时间轴延到出埃及，"
-                        f"就必须在两者之间取舍，故不延。"),
-            "zh-Hant": (f"本圖到此為止。出埃及記 12:40 在兩種經文中都記"
-                        f"{years_mt}年，所指卻不是同一段：希伯來文把這些年數"
-                        f"算在埃及，希臘文作「在埃及地和迦南地」——那樣起點便"
-                        f"在亞伯拉罕，而不在這條線上。若把時間軸延到出埃及，"
-                        f"就必須在兩者之間取捨，故不延。"),
-        }
+        n = years_mt
+        notes.append({
+            "id": "sojourn_430",
+            "tradition": "mt",
+            "personId": None,
+            "text": {
+                "en": (f"Exodus 12:40 gives {n} years and this text counts "
+                       f"them in Egypt, so the chart runs them from Jacob's "
+                       f"descent and the exodus falls in AM "
+                       f"{mt_era['exodus'][0]}. The Greek of the same verse "
+                       f"counts them “in the land of Egypt and in the land "
+                       f"of Canaan”, which begins them at Abraham instead; "
+                       f"switch texts above to see where that puts the "
+                       f"exodus."),
+                "zh-Hans": (f"出埃及记 12:40 记{n}年，本经文把这些年数算在埃及，"
+                            f"故本图自雅各下埃及起算，出埃及落在创世纪元 "
+                            f"{mt_era['exodus'][0]} 年。希腊文同一节作「在埃及地"
+                            f"和迦南地」，起点便移到亚伯拉罕；可在上方切换经文"
+                            f"查看。"),
+                "zh-Hant": (f"出埃及記 12:40 記{n}年，本經文把這些年數算在埃及，"
+                            f"故本圖自雅各下埃及起算，出埃及落在創世紀元 "
+                            f"{mt_era['exodus'][0]} 年。希臘文同一節作「在埃及地"
+                            f"和迦南地」，起點便移到亞伯拉罕；可在上方切換經文"
+                            f"查看。"),
+            },
+        })
+        # THE ONE SOFT JOINT ON THIS AXIS, said in full. The verse names
+        # two lands and states one total; it does not say where the
+        # Canaan part starts. That the chart's own figures then divide the
+        # 430 evenly is arithmetic, not corroboration, and the note says
+        # so — the same refusal this script makes everywhere else.
+        can, egy = lxx_era["yearsInCanaan"], lxx_era["yearsInEgypt"]
+        notes.append({
+            "id": "sojourn_430",
+            "tradition": "lxx",
+            "personId": None,
+            "text": {
+                "en": (f"Exodus 12:40 gives {n} years and this text counts "
+                       f"them “in the land of Egypt and in the land of "
+                       f"Canaan”. Where the Canaan part begins is not "
+                       f"stated; this chart starts it at Abram's departure "
+                       f"from Haran, which is a reading and not a figure the "
+                       f"verse supplies — the one place on this axis where a "
+                       f"year had to be supplied rather than read. On it the "
+                       f"{n} divide into {can} years in Canaan and {egy} in "
+                       f"Egypt, but the second is the first taken off the "
+                       f"same total and is not an independent check. "
+                       f"Galatians 3:17 puts {n} years between a promise to "
+                       f"Abraham and the law without saying which promise, "
+                       f"and is cited on both sides of this."),
+                "zh-Hans": (f"出埃及记 12:40 记{n}年，本经文作「在埃及地和迦南"
+                            f"地」。迦南那一段从何时起算，经文并未言明；本图以"
+                            f"亚伯兰离开哈兰为起点，这是一种读法，并非该节所记"
+                            f"的数字——也是本时间轴上唯一需要补入而非读出的年"
+                            f"份。照此，{n}年分为迦南{can}年、埃及{egy}年，但后"
+                            f"者是从同一总数中减出，并非独立的旁证。加拉太书 "
+                            f"3:17 记神应许亚伯拉罕与律法相隔{n}年，却未指明是"
+                            f"哪一次应许，故两种读法皆引之。"),
+                "zh-Hant": (f"出埃及記 12:40 記{n}年，本經文作「在埃及地和迦南"
+                            f"地」。迦南那一段從何時起算，經文並未言明；本圖以"
+                            f"亞伯蘭離開哈蘭為起點，這是一種讀法，並非該節所記"
+                            f"的數字——也是本時間軸上唯一需要補入而非讀出的年"
+                            f"份。照此，{n}年分為迦南{can}年、埃及{egy}年，但後"
+                            f"者是從同一總數中減出，並非獨立的旁證。加拉太書 "
+                            f"3:17 記神應許亞伯拉罕與律法相隔{n}年，卻未指明是"
+                            f"哪一次應許，故兩種讀法皆引之。"),
+            },
+        })
+
+    # THE GENERATIONS AGAINST THE GAP. Exodus 6:18 and 6:20 cap how many
+    # years can separate the descent from the exodus, and which way the
+    # cap falls is the whole substance of the argument over 12:40 — so it
+    # is computed here per text and reported either way, never asserted.
+    for tid, era in (("mt", mt_era), ("lxx", lxx_era)):
+        (kohath, kohath_ref), (amram, amram_ref) = era["ceilingParts"]
+        ceiling, gap = era["ceiling"], era["yearsInEgypt"]
+        pharaoh = era["ages"]["moses"]
+        common_en = (
+            f"{kohath_ref} gives Kohath {kohath} years and {amram_ref} gives "
+            f"Amram {amram}, and Genesis 46:11 has Kohath already born when "
+            f"Jacob went down. Read as father to son, what is left of "
+            f"Kohath's life, the whole of Amram's and Moses' {pharaoh} years "
+            f"before Pharaoh cannot exceed {ceiling} years")
+        common_zhs = (
+            f"{kohath_ref} 记哥辖活了{kohath}岁，{amram_ref} 记暗兰活了"
+            f"{amram}岁，而创世记 46:11 已列哥辖在下埃及之人中。若按父子相承"
+            f"来读，哥辖余下的年岁、暗兰的一生，加上摩西见法老时的{pharaoh}"
+            f"岁，至多不过{ceiling}年")
+        common_zht = (
+            f"{kohath_ref} 記哥轄活了{kohath}歲，{amram_ref} 記暗蘭活了"
+            f"{amram}歲，而創世記 46:11 已列哥轄在下埃及之人中。若按父子相承"
+            f"來讀，哥轄餘下的年歲、暗蘭的一生，加上摩西見法老時的{pharaoh}"
+            f"歲，至多不過{ceiling}年")
+        if ceiling < gap:
+            short = gap - ceiling
+            text = {
+                "en": (f"{common_en} — {short} short of the {gap} this text "
+                       f"puts between the descent and the exodus. It is the "
+                       f"oldest objection to counting all {gap} in Egypt, and "
+                       f"it comes from these same verses rather than from "
+                       f"outside them."),
+                "zh-Hans": (f"{common_zhs}——比本经文所定下埃及至出埃及的{gap}"
+                            f"年还少{short}年。这正是反对把{gap}年全算在埃及的"
+                            f"最古老质疑，且出自这几节经文本身，而非外来之说。"),
+                "zh-Hant": (f"{common_zht}——比本經文所定下埃及至出埃及的{gap}"
+                            f"年還少{short}年。這正是反對把{gap}年全算在埃及的"
+                            f"最古老質疑，且出自這幾節經文本身，而非外來之說。"),
+            }
+        else:
+            spare = ceiling - gap
+            text = {
+                "en": (f"{common_en}, and this text puts {gap} years between "
+                       f"the descent and the exodus — so the generations fit, "
+                       f"with {spare} years to spare. On the other text's "
+                       f"reading of Exodus 12:40 the same three lives fall "
+                       f"short, which is what the argument over that verse "
+                       f"is about."),
+                "zh-Hans": (f"{common_zhs}；而本经文所定下埃及至出埃及为{gap}"
+                            f"年，故三代人足以相接，尚余{spare}年。若照另一经文"
+                            f"对出埃及记 12:40 的读法，这三人的年岁便不够——两"
+                            f"种读法之争正在于此。"),
+                "zh-Hant": (f"{common_zht}；而本經文所定下埃及至出埃及為{gap}"
+                            f"年，故三代人足以相接，尚餘{spare}年。若照另一經文"
+                            f"對出埃及記 12:40 的讀法，這三人的年歲便不夠——兩"
+                            f"種讀法之爭正在於此。"),
+            }
+        notes.append({"id": "levi_ceiling", "tradition": tid,
+                      "personId": "moses", "text": text})
+
+    # WHY TWO BARS END IN THE SAME YEAR. Aaron dies in the fortieth year
+    # after the exodus and Moses at the end of it, so at one-year
+    # resolution both land together. A reader who sees that will suspect
+    # the arithmetic, so it is stated — and only while the years actually
+    # coincide, which is the only guarantee that the sentence still
+    # describes the data.
+    for tid, rows in (("mt", mt_rows), ("lxx", lxx_rows)):
+        if rows["aaron"]["deathAm"] != rows["moses"]["deathAm"]:
+            continue
+        notes.append({
+            "id": "same_year_deaths",
+            "tradition": tid,
+            "personId": "aaron",
+            "text": {
+                "en": ("Aaron's bar and Moses' end in the same year. Numbers "
+                       "33:38 has Aaron die in the fortieth year after the "
+                       "exodus and Moses dies at the close of those forty, so "
+                       "at this chart's resolution of one year the two "
+                       "coincide. Aaron dies first."),
+                "zh-Hans": ("亚伦与摩西的横条结束于同一年。民数记 33:38 记亚伦"
+                            "死于出埃及后第四十年，摩西则死于这四十年之末，按本"
+                            "图以年为最小刻度，二者遂落在同一年。亚伦先死。"),
+                "zh-Hant": ("亞倫與摩西的橫條結束於同一年。民數記 33:38 記亞倫"
+                            "死於出埃及後第四十年，摩西則死於這四十年之末，按本"
+                            "圖以年為最小刻度，二者遂落在同一年。亞倫先死。"),
+            },
+        })
+
+    # WHERE THE CHART STOPS, AND THE MEASUREMENT THAT DECIDED IT. The
+    # verse that would carry the axis on to Solomon is 1 Kings 6:1, and
+    # this note is emitted only while the two parsers disagree about it —
+    # which is the proof that neither can be trusted to cross it. The
+    # English ordinal comes back as 400 and the Greek reads ἐξ, "out of",
+    # as the numeral 6.
+    kings_mt = mt.verse(6, 1, book="1 Kings")
+    kings_lxx = lxx.verse(6, 1, book="1 Kings")
+    if en_runs(kings_mt) != gk_runs(kings_lxx):
         for tid in ("mt", "lxx"):
-            notes.append({"id": "sojourn_430", "tradition": tid,
-                          "personId": None, "text": sojourn})
+            notes.append({
+                "id": "chart_end",
+                "tradition": tid,
+                # About the chart, not about Moses — he is merely the
+                # last man on it — so it belongs in the header, where a
+                # reader who has selected nobody is looking.
+                "personId": None,
+                "text": {
+                    "en": ("The chart ends here. The next span the text "
+                           "offers is 1 Kings 6:1, from the exodus to "
+                           "Solomon's temple, and it is written as an "
+                           "ordinal — “the four hundred and eightieth "
+                           "year” — which the number-reader behind this "
+                           "chart cannot read in either language. The two "
+                           "texts do not even spell the same year there: the "
+                           "Greek reads “the fortieth and four hundredth”. A "
+                           "figure this chart cannot read is one it will not "
+                           "plot."),
+                    "zh-Hans": ("本图到此为止。经文所记的下一段年数是列王纪上 "
+                                "6:1，自出埃及至所罗门建殿，写作序数「第四百八"
+                                "十年」，本图背后的数字解析器在两种语文中都读不"
+                                "出序数。且两种经文在此连年份都不相同：希腊文作"
+                                "「第四十又第四百年」。读不出的数字，本图不画。"),
+                    "zh-Hant": ("本圖到此為止。經文所記的下一段年數是列王紀上 "
+                                "6:1，自出埃及至所羅門建殿，寫作序數「第四百八"
+                                "十年」，本圖背後的數字解析器在兩種語文中都讀不"
+                                "出序數。且兩種經文在此連年份都不相同：希臘文作"
+                                "「第四十又第四百年」。讀不出的數字，本圖不畫。"),
+                },
+            })
 
     patriarchs = []
     for pid in order:
@@ -835,7 +1243,12 @@ def main():
                     "12-50 only Jacob has a third figure — 47:9's 130 plus "
                     "47:28's 17 years in Egypt against the 147 that same "
                     "verse states — and it checks the descent year as well "
-                    "as the parse."),
+                    "as the parse. Moses and Aaron are checked the same way "
+                    "across three books: an age before Pharaoh (Exodus 7:7), "
+                    "the forty years of Numbers 14:33, and a lifetime stated "
+                    "separately in Deuteronomy 34:7 and Numbers 33:39. "
+                    "Checked describes the parse, never the year on the "
+                    "axis; where a year had to be supplied the note says so."),
                 "traditionAgreement": (
                     f"Genesis 5 and 11: the two texts state the same "
                     f"begetting age and lifespan for {gen_same} of "
@@ -927,6 +1340,55 @@ def main():
                                 f"17年，並記出總歲數，故此年另有第三個數字可核。"),
                 },
             },
+            {
+                "id": "exodus",
+                "name": {"en": "The Exodus", "zh-Hans": "出埃及",
+                         "zh-Hant": "出埃及"},
+                "ref": mt_era["exodus"][1],
+                "years": {"mt": mt_era["exodus"][0],
+                          "lxx": lxx_era["exodus"][0]},
+                "note": {
+                    "en": (f"Exodus 12:40's {mt_era['sojourn'][0]} years. "
+                           f"Each text is counted from where its own wording "
+                           f"starts them, which is why this line moves when "
+                           f"the text does; see the note on the sojourn."),
+                    "zh-Hans": (f"出埃及记 12:40 所记的{mt_era['sojourn'][0]}"
+                                f"年。两种经文各按自身措辞的起点起算，故切换经"
+                                f"文时此线会移动；参寄居年数一条的说明。"),
+                    "zh-Hant": (f"出埃及記 12:40 所記的{mt_era['sojourn'][0]}"
+                                f"年。兩種經文各按自身措辭的起點起算，故切換經"
+                                f"文時此線會移動；參寄居年數一條的說明。"),
+                },
+            },
+            {
+                "id": "moses_death",
+                "name": {"en": "Moses dies", "zh-Hans": "摩西去世",
+                         "zh-Hant": "摩西去世"},
+                "ref": mt_era["mosesDeath"][1],
+                "years": {"mt": mt_era["mosesDeath"][0],
+                          "lxx": lxx_era["mosesDeath"][0]},
+                "note": {
+                    "en": (f"Moses is {mt_era['ages']['moses']} before "
+                           f"Pharaoh (Exodus 7:7), the wilderness is "
+                           f"{mt_era['wilderness'][0]} years (Numbers 14:33), "
+                           f"and Deuteronomy 34:7 states the "
+                           f"{mt_rows['moses']['lifespan']} those two add to "
+                           f"— which he also says himself at "
+                           f"{mt_era['mosesSaysRef']}."),
+                    "zh-Hans": (f"摩西见法老时{mt_era['ages']['moses']}岁（出埃"
+                                f"及记 7:7），旷野{mt_era['wilderness'][0]}年"
+                                f"（民数记 14:33），申命记 34:7 所记的"
+                                f"{mt_rows['moses']['lifespan']}岁正是二者之"
+                                f"和；{mt_era['mosesSaysRef']} 他也亲口说出这个"
+                                f"岁数。"),
+                    "zh-Hant": (f"摩西見法老時{mt_era['ages']['moses']}歲（出埃"
+                                f"及記 7:7），曠野{mt_era['wilderness'][0]}年"
+                                f"（民數記 14:33），申命記 34:7 所記的"
+                                f"{mt_rows['moses']['lifespan']}歲正是二者之"
+                                f"和；{mt_era['mosesSaysRef']} 他也親口說出這個"
+                                f"歲數。"),
+                },
+            },
         ],
         "notes": notes,
         "patriarchs": patriarchs,
@@ -942,6 +1404,14 @@ def main():
           f"(difference {lxx_flood - mt_flood})")
     print(f"  into Egypt: MT AM {mt_epochs['descent'][0]} · "
           f"LXX AM {lxx_epochs['descent'][0]}")
+    print(f"  the exodus: MT AM {mt_era['exodus'][0]} · "
+          f"LXX AM {lxx_era['exodus'][0]} (the Greek's start is a reading: "
+          f"{lxx_era['startIsRead']})")
+    print(f"  Moses dies: MT AM {mt_era['mosesDeath'][0]} · "
+          f"LXX AM {lxx_era['mosesDeath'][0]}")
+    print(f"  descent to exodus against Exodus 6:18-20: MT {mt_era['ceiling']} "
+          f"available vs {mt_era['yearsInEgypt']} needed · LXX "
+          f"{lxx_era['ceiling']} vs {lxx_era['yearsInEgypt']}")
     print(f"  Joseph at the descent: {mt_epochs['josephAge'][0]} "
           f"(MT) / {lxx_epochs['josephAge'][0]} (LXX), from "
           f"{', '.join(mt_epochs['josephAge'][1])}")

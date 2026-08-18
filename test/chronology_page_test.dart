@@ -149,6 +149,9 @@ void main() {
       (tester) async {
     await pump(tester, const Size(1440, 900));
 
+    await tester.dragUntilVisible(find.text('约瑟'),
+        find.byType(Scrollable).first, const Offset(0, -80));
+    await settle(tester);
     await tester.tap(find.text('约瑟'));
     await settle(tester);
     expect(tester.takeException(), isNull);
@@ -164,21 +167,49 @@ void main() {
   });
 
   // A caveat about one man belongs where a reader looking at that man
-  // is, not only in a header he has scrolled past.
-  testWidgets('the Terah/Abram conflict is on Abraham\'s own panel',
-      (tester) async {
+  // is. The header is a layout sibling of the chart rather than an
+  // overlay, so printing these there too costs chart height — with the
+  // axis carried to Moses there are six of them, and six paragraphs
+  // would push the bars they are about off the screen. So the header
+  // names the man and his panel carries the words.
+  testWidgets('the Terah/Abram conflict is on Abraham\'s own panel, and the '
+      'header only points at it', (tester) async {
     await pump(tester, const Size(1440, 900));
-
-    await tester.tap(find.text('亚伯拉罕'));
-    await settle(tester);
-    expect(tester.takeException(), isNull);
 
     final note = data
         .notesForPerson('mt', 'abraham')
         .firstWhere((n) => n.id == 'abram_birth')
         .textFor('zh-Hans');
-    // Twice on purpose: once in the header, once in his panel.
-    expect(find.text(note), findsNWidgets(2));
+    // Nobody selected: the words are nowhere, but his name is offered.
+    expect(find.text(note), findsNothing);
+    expect(
+        find.textContaining('亚伯拉罕', findRichText: true), findsWidgets);
+
+    await tester.tap(find.text('亚伯拉罕'));
+    await settle(tester);
+    expect(tester.takeException(), isNull);
+
+    expect(find.text(note), findsOneWidget);
+
+    await unmount(tester);
+  });
+
+  // Moses has no age at begetting and no years after it — the chart ends
+  // on him — so the sentence about "all three figures" would be
+  // describing a record he has not got.
+  testWidgets('Moses is not told he has three figures', (tester) async {
+    await pump(tester, const Size(1440, 900));
+
+    await tester.dragUntilVisible(find.text('摩西'),
+        find.byType(Scrollable).first, const Offset(0, -80));
+    await settle(tester);
+    await tester.tap(find.text('摩西'));
+    await settle(tester);
+    expect(tester.takeException(), isNull);
+
+    expect(find.text('Deuteronomy 34:7'), findsOneWidget);
+    expect(find.text('生下一代时的年岁'), findsNothing);
+    expect(find.textContaining('三个数字'), findsNothing);
 
     await unmount(tester);
   });

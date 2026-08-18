@@ -79,11 +79,13 @@ class Patriarch {
   final String id;
 
   /// `seth` for Genesis 5, `shem` for Genesis 11, `abraham` for Genesis
-  /// 12-50. The printed chronologies have coloured by line of descent
-  /// since the 17th century and it is the one grouping the text itself
-  /// draws. The third is not a separate descent — the patriarchs are
-  /// Shem's — but the third way Genesis states an age, and the one whose
-  /// figures need deriving; see `scripts/build_chronology.py`.
+  /// 12-50, `levi` for Moses and Aaron. The printed chronologies have
+  /// coloured by line of descent since the 17th century and it is the
+  /// one grouping the text itself draws. The last two are not separate
+  /// descents — the patriarchs are Shem's, Moses and Aaron are Jacob's —
+  /// but the other ways an age reaches this chart: scattered through
+  /// narrative from Genesis 12 on, and stated outside Genesis
+  /// altogether. See `scripts/build_chronology.py`.
   final String line;
   final Map<String, String> names;
 
@@ -183,11 +185,13 @@ class ChronologyNote {
   final String id;
   final String tradition;
 
-  /// The man the caveat is about, when it is about one. A note carrying
-  /// a person is shown twice on purpose: in the header, where a reader
-  /// who has selected nobody still sees why a bar crosses the flood
-  /// line, and again in his detail panel, which is where a reader
-  /// looking at that figure actually is.
+  /// The man the caveat is about, when it is about one. This decides
+  /// where the caveat is read: a note with no person is about the whole
+  /// chart and is printed in the header, and a note with one is printed
+  /// in that man's detail panel, with the header naming him so a reader
+  /// who has selected nobody knows there is something to open. The
+  /// header is a layout sibling of the chart, so every line it prints
+  /// is a line the chart loses.
   final String? personId;
   final Map<String, String> texts;
 

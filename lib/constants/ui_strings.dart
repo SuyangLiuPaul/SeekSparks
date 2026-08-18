@@ -6028,6 +6028,14 @@ const uiStrings = {
     'zh-Hant': '年',
     'en': 'years',
   },
+  // The header carries the caveats that are about the chart; the ones
+  // about a particular man are in his panel, and this line names him so
+  // that a reader who has selected nobody still knows they exist.
+  'chronologyMoreOn': {
+    'zh-Hans': '另有说明（点选查看）',
+    'zh-Hant': '另有說明（點選查看）',
+    'en': 'More on (select to read)',
+  },
   'chronologyBegatAt': {
     'zh-Hans': '生下一代时的年岁',
     'zh-Hant': '生下一代時的年歲',
@@ -6048,6 +6056,18 @@ const uiStrings = {
     'zh-Hant': '經文三個數字都有記載，第三個正好核對前兩個。',
     'en':
         'The text states all three figures, and the third checks the other two.',
+  },
+  'chronologyOneChecked': {
+    'zh-Hans': '这人经文只记一个数字——他一生的年数。经文另有一处提到他的岁数，两处相合。',
+    'zh-Hant': '這人經文只記一個數字——他一生的年數。經文另有一處提到他的歲數，兩處相合。',
+    'en':
+        'Only one figure is stated for this man — the years he lived. The text gives his age a second time elsewhere, and the two agree.',
+  },
+  'chronologyOneStated': {
+    'zh-Hans': '这人经文只记一个数字——他一生的年数，照经文所记。',
+    'zh-Hant': '這人經文只記一個數字——他一生的年數，照經文所記。',
+    'en':
+        'Only one figure is stated for this man — the years he lived, as the text gives it.',
   },
   'chronologyDerived': {
     'zh-Hans': '其中一个数字经文没有记载，是从有记载的另外两个算出来的。',

@@ -49,15 +49,20 @@ import 'package:seeksparks/widgets/localized_back_button.dart';
 /// it into BC needs an absolute anchor the text never gives, and
 /// Ussher's 4004 BC is one such anchor, not a fact.
 ///
-/// WHERE IT STOPS. At the descent into Egypt, Genesis 47:9, and not at
-/// the exodus — Exodus 12:40 covers different ground in the two texts
-/// (the Hebrew's 430 years are in Egypt, the Greek's are in Egypt *and*
-/// Canaan), so carrying the axis further would mean the chart choosing
-/// between the texts rather than drawing both. The last four rows are
-/// also a different kind of source: Genesis 5 and 11 state their figures
-/// in a formula, Genesis 12-50 scatters them through narrative, and a
-/// row whose `refs` lack a key was derived rather than read. See
-/// `scripts/build_chronology.py`.
+/// WHERE IT STOPS. At the death of Moses. Exodus 12:40 covers different
+/// ground in the two texts — the Hebrew's 430 years are in Egypt, the
+/// Greek's in Egypt *and* Canaan — and each is counted from where its
+/// own wording starts it, which is the same thing this chart does
+/// everywhere else rather than a choice between them. It stops after
+/// Moses because the verse that would carry it on, 1 Kings 6:1, states
+/// its year as an ordinal that the generator's number-reader cannot read
+/// in either language.
+///
+/// The rows are four kinds of source, and the colour says which: Genesis
+/// 5 and 11 state their figures in a formula, Genesis 12-50 scatters
+/// them through narrative, and Moses and Aaron are read out of Exodus,
+/// Numbers and Deuteronomy. A row whose `refs` lack a key was derived
+/// rather than read. See `scripts/build_chronology.py`.
 ///
 /// Chrome follows workbench_theme.dart: square corners, 1px hairlines,
 /// no shadows, no cards.
@@ -117,22 +122,27 @@ double _sideBySideMinWidth(WbType t) =>
     _detailPanelWidth(t) + _nameLane(t) + _minBarsForPanel;
 
 /// Seth's line in Genesis 5, Shem's in Genesis 11, the patriarchs in
-/// Genesis 12-50. Three hues, far enough apart to survive the wash used
-/// for "contemporary" without any of them reading as another.
+/// Genesis 12-50, and Moses and Aaron from the four books after it. Four
+/// hues, far enough apart to survive the wash used for "contemporary"
+/// without any of them reading as another.
 ///
 /// Colour is the SECOND channel here, not the first: every bar is named
-/// in the lane beside it and the three groups are contiguous down the
+/// in the lane beside it and the four groups are contiguous down the
 /// chart, so a reader who cannot separate the hues loses nothing they
-/// were relying on. That is why a third could be added at all — the
-/// blue/orange pair was safe for colour-blind readers and a third hue
-/// cannot be.
+/// were relying on. That is why a third and now a fourth could be added
+/// at all — the original blue/orange pair was safe for colour-blind
+/// readers and four hues cannot be. The plum is the darkest of the four
+/// so that the pair a red-green reader is likeliest to merge it with
+/// still differs in weight.
 const Color _sethHue = Color(0xFF5B87C4);
 const Color _shemHue = Color(0xFFC4885B);
 const Color _abrahamHue = Color(0xFF4F8F6E);
+const Color _leviHue = Color(0xFF8B6BA8);
 
 Color _hueFor(String? line) => switch (line) {
       'shem' => _shemHue,
       'abraham' => _abrahamHue,
+      'levi' => _leviHue,
       _ => _sethHue,
     };
 
@@ -313,7 +323,7 @@ class _ChronologyPageState extends State<ChronologyPage> {
   }
 }
 
-/// Tradition switch, and the two sentences that keep the chart honest.
+/// Tradition switch, and the sentences that keep the chart honest.
 class _Header extends StatelessWidget {
   const _Header({
     required this.data,
@@ -334,6 +344,7 @@ class _Header extends StatelessWidget {
   Widget build(BuildContext context) {
     final wb = WbColors.of(context);
     final t = WbType.of(context);
+    final notes = data.notesFor(tradition.id);
     return Container(
       decoration: BoxDecoration(
         color: wb.chromeBg,
@@ -379,17 +390,52 @@ class _Header extends StatelessWidget {
             tradition.longNameFor(locale),
             style: TextStyle(fontSize: t.chrome, color: wb.mutedText),
           ),
-          for (final n in data.notesFor(tradition.id))
+          // The caveats about the chart itself, in full. The header is
+          // the chart's sibling rather than something laid over it, so
+          // every line here is a line of chart — which is why the ones
+          // about a particular man are not repeated in it.
+          for (final n in notes)
+            if (n.personId == null)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  n.textFor(locale),
+                  style: TextStyle(fontSize: t.chrome, color: wb.text),
+                ),
+              ),
+          // And the men who carry one, named. While the axis stopped at
+          // Joseph there were two notes and both could be printed here;
+          // carrying it to Moses brought as many as six, and six
+          // paragraphs would have pushed the thing they are about off
+          // the screen. Naming the men instead keeps every caveat one
+          // tap away and tells a reader who has selected nobody that
+          // they are there — which is the whole reason the notes were in
+          // the header to begin with.
+          if (_peopleWithNotes().isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: 4),
               child: Text(
-                n.textFor(locale),
-                style: TextStyle(fontSize: t.chrome, color: wb.text),
+                '${_s('chronologyMoreOn', 'More on (select to read)')} · '
+                '${_peopleWithNotes().join(' · ')}',
+                style: TextStyle(fontSize: t.chrome, color: wb.mutedText),
               ),
             ),
         ],
       ),
     );
+  }
+
+  /// In chart order, and without repeats — a man with two caveats is
+  /// still one name.
+  List<String> _peopleWithNotes() {
+    final ids = <String>{
+      for (final n in data.notesFor(tradition.id))
+        if (n.personId != null) n.personId!,
+    };
+    return [
+      for (final p in data.inTradition(tradition.id))
+        if (ids.contains(p.id)) p.nameFor(locale),
+    ];
   }
 }
 
@@ -622,6 +668,7 @@ class _AxisPainter extends CustomPainter {
     // strip, so an epoch near either end keeps its whole name rather
     // than losing half of it off the edge — an epoch name is not
     // ellipsised, per #297, and would otherwise paint past the canvas.
+    final placed = <(TextPainter, double, double, double)>[];
     for (var i = 0; i < epochs.length; i++) {
       final (year, label) = epochs[i];
       final x = xForYear(year, firstYear, lastYear, size.width);
@@ -635,18 +682,30 @@ class _AxisPainter extends CustomPainter {
       final rowTop = i.isEven ? 1.0 : 2 + tp.height;
       final left = (x - tp.width / 2)
           .clamp(0.0, (size.width - tp.width).clamp(0.0, double.infinity));
-      tp.paint(canvas, Offset(left, rowTop));
-      // A leader from the label to the year it names. Vertical in the
-      // ordinary case; a label pushed sideways to stay on the canvas
-      // leans back to its own year rather than standing over someone
-      // else's.
+      placed.add((tp, left, rowTop, x));
+    }
+    // Leaders first, names second, so where one does cross a name it
+    // passes behind the glyphs rather than through them.
+    final leader = Paint()
+      ..color = epochColor.withValues(alpha: 0.55)
+      ..strokeWidth = 1;
+    for (final (tp, left, rowTop, x) in placed) {
+      // A leader from the top row has to cross the bottom row to reach
+      // the axis, and at the right-hand end of this chart the two rows
+      // are the exodus and the death of Moses — forty years apart on an
+      // axis nearly three thousand years wide, so both names are clamped
+      // to the same edge and one lies directly under the other. Leaving
+      // from the corner nearest the year, rather than from the middle of
+      // the name, keeps that descent along the edge of the name below
+      // instead of straight across it, and costs nothing in the ordinary
+      // case: a label sitting over its own year has that year inside its
+      // width, and the line is vertical exactly as before.
+      final from = x.clamp(left, left + tp.width);
       canvas.drawLine(
-        Offset(left + tp.width / 2, rowTop + tp.height),
-        Offset(x, yearLabelTop - 1),
-        Paint()
-          ..color = epochColor.withValues(alpha: 0.55)
-          ..strokeWidth = 1,
-      );
+          Offset(from, rowTop + tp.height), Offset(x, yearLabelTop - 1), leader);
+    }
+    for (final (tp, left, rowTop, _) in placed) {
+      tp.paint(canvas, Offset(left, rowTop));
     }
   }
 
@@ -937,6 +996,17 @@ class _DetailPanel extends StatelessWidget {
       'lifespan',
     ];
     final derived = present.where((k) => figures.refs[k] == null).length;
+    // A man the line does not continue through has no begetting age and
+    // no years after it — Joseph ends Genesis, Aaron and Moses end the
+    // chart — so there is one figure to speak of and the sentences below
+    // about three of them would be describing a record he has not got.
+    if (present.length == 1 && derived == 0) {
+      return figures.checked
+          ? _s('chronologyOneChecked',
+              'Only one figure is stated for this man — the years he lived. The text gives his age a second time elsewhere, and the two agree.')
+          : _s('chronologyOneStated',
+              'Only one figure is stated for this man — the years he lived, as the text gives it.');
+    }
     if (derived == 0) {
       return figures.checked
           ? _s('chronologyChecked',
