@@ -11,6 +11,7 @@ import 'dart:math' as math;
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seeksparks/constants/journey_style.dart';
+import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/bible_journey.dart';
 import 'package:seeksparks/models/bible_place.dart';
@@ -474,6 +475,52 @@ void main() {
         const JourneyLegHit(0, 0),
         reason: 'a missing lane means the chord, not an exception',
       );
+    });
+  });
+
+  group('what the overlay says, in every locale it says it in', () {
+    // Each `_s(key, fallback)` in the Atlas carries an English default, so
+    // a key that is missing or half-translated does not throw, does not
+    // fail a widget test, and ships an English sentence to a Chinese
+    // reader. The only thing that catches it is counting the table.
+    final keys = uiStrings.keys.where((k) => k.startsWith('journey'));
+
+    test('every journey string exists in all three locales', () {
+      for (final k in keys) {
+        for (final l in const <String>['en', 'zh-Hans', 'zh-Hant']) {
+          expect(uiStrings[k]![l], isNotNull, reason: '$k has no $l');
+          expect(uiStrings[k]![l], isNotEmpty, reason: '$k is blank in $l');
+        }
+      }
+    });
+
+    test('a placeholder kept in one locale is kept in all of them', () {
+      // Worse than a missing translation: "{n} km" becomes a Chinese
+      // sentence with no number in it, and reads as a finished string.
+      for (final k in keys) {
+        final en = uiStrings[k]!['en']!;
+        for (final p in const <String>['{n}', '{p}']) {
+          if (!en.contains(p)) continue;
+          for (final l in const <String>['zh-Hans', 'zh-Hant']) {
+            expect(uiStrings[k]![l], contains(p),
+                reason: '$k drops $p in $l');
+          }
+        }
+      }
+    });
+
+    test('the leg card has a string for every claim it makes', () {
+      // Named one by one rather than counted, so that deleting a key the
+      // card still calls fails here instead of on someone's screen.
+      for (final k in const <String>[
+        'journeyLegHeader',
+        'journeyLegKm',
+        'journeyLegUnattested',
+        'journeyLegAside',
+        'journeyLegWarrant',
+      ]) {
+        expect(uiStrings.containsKey(k), isTrue, reason: '$k is missing');
+      }
     });
   });
 
