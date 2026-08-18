@@ -4903,7 +4903,289 @@ would have shipped a defect:
   exists and this edition does not know it". An LXX-specific lexicon
   would settle it; the repo has none.
 
+## Check 41 — 梁家鏗繁體, judged by its own Simplified twin
+
+Item 9 of "Next, in order" said `biblexg-v2-tr.json` "flags **207
+occurrences across 45 characters**" and that "the true count is unknown
+and is deliberately not written down as a finding." It is now known.
+**30 characters in 28 verses are wrong**, and they are wrong in five
+different ways, only one of which the 207 screen could see.
+
+Repaired by `tools/repair_biblexg_v2_tr.py` (idempotent; converts
+nothing by default, every rule is a verse id plus a context string, and
+a second run early-returns "already repaired" with exit 0). Guarded by
+`test/traditional_forms_test.dart`, which now runs 17 tests over both
+繁體 editions.
+
+### 41a — the instrument: the edition is a witness against itself
+
+Every previous attempt at this file needed an outside authority for
+"what is correct Traditional", and there isn't one that agrees with
+itself. This edition does not need one. **It ships in BOTH scripts** —
+`biblexg-v2.json` (Simplified, 7,921 records) and `biblexg-v2-tr.json`
+(Traditional, 7,925) — so for any character the conversion touched, the
+edition has already voted thousands of times on what it should become.
+Align the two by verse id (**7,651** of the 7,921 shared ids are
+length-equal, so the alignment is positional and needs no diff) and
+count the substitutions. 说 becomes 說 **1,898** times and 説 **4**
+times; the 4 are the defect. Likewise 为→為 1,987 against 为→爲 **1**,
+and 启→啟 116 against 启→啓 **6**.
+
+**The premise has a measured limit, and it has to be stated.** These
+are not two mechanical renderings of one string. `opencc -c t2s` over
+the Traditional file reproduces the shipped Simplified text exactly in
+**6,181 of 7,921 verses — 78.0%**. The other 22% differ *editorially*,
+not by conversion: the Simplified edition prefers 着 over 著 (1,012×),
+什 over 甚 (456×), 借 over 藉 (105×) and 它 over 牠 (24×), and there are
+outright wording differences (但/旦 36, 伸/申 9, 逼/迫 7) and changed
+punctuation. So "every position where they differ is a converter
+decision" would be **false**, and any screen built on that sentence
+would drown in editorial noise. What survives the limit is narrower,
+and is all this check uses: for a *specific* pair like 说/說, where one
+Simplified character maps to two Traditional glyphs of the **same
+word**, the tally is a conversion decision, and 1,898-to-4 is not an
+editorial preference.
+
+This is the same shape as check 40's byte-identity split: a
+**structural** signature, not a semantic one. It required no external
+Traditional corpus, no opencc verdict, and no judgement about house
+style — only the file's own arithmetic.
+
+**Aligning the two editions also found something bigger than the 30,
+and it is in the other file — see 41f.**
+
+Three screens were run, because the first two each have a blind spot
+the third covers:
+
+| screen | asks | blind to |
+|---|---|---|
+| 1. kept vs converted | at this position, did the converter act? | positions it converted *wrongly but consistently* |
+| 2. opencc-mappable but never converted | is a Simplified form still here? | 舊字形 — 説 爲 啓 証 are not Simplified, so `s2t(c) == c` |
+| 3. both forms of one char co-present | group by `t2s(c)`; which form is the house form? | forms that occur only once, in only one shape |
+
+Screen 2 is check 40b's screen and is the one that produced "207". It
+yields 12 of the 30 outright, and flags the characters behind two more
+(里, 斗) inside a crowd of correct ones. **Screen 3 is what a refuter
+added** after pointing
+out that screen 2 structurally cannot see 舊字形, and it independently
+re-derived every finding: 為 2,066 / 爲 1, 說 1,993 / 説 4, 啟 139 /
+啓 6, 證 245 / 証 1, 蒙 142 / 矇 1.
+
+### 41b — the 30, in five classes
+
+| class | n | what happened |
+|---|---:|---|
+| A | 12 | a Simplified character **survived** the conversion |
+| B | 1 | the converter picked the **wrong Traditional word** |
+| C | 4 | the converter went **too far** |
+| D | 12 | 舊字形 stragglers — a **search** defect, not a meaning one |
+| E | 1 | the file had already **settled it one book earlier** |
+
+**Class A** is the class the 207 screen was built to see. The file converts
+稣→穌 1,123×, 话→話 468×, 满→滿 167× — and missed one each. 提多書 2:3
+printed 「上了年纪的婦女」 with 纪 and 婦 in the same clause. One of the
+twelve is inside a `<note:>` payload (啟示錄 1:1, 指耶稣基督), which is
+verse text a reader sees and which a screen over `text` alone would
+have to reach inside deliberately.
+
+**Class B** is 馬可福音 1:23, 「在他們的會堂里有」, which wants 裡. This
+is the one that must not become a sweep: the file's other **45** 里 are
+all correct — 公里 ×8, 里拉琴 ×3, and 34 occurrences of eleven proper
+names (提比里亞,
+克里特, 吉里吉亞, 貝里亞, 亞里達古, 堅革里, 以利里古, 亞里斯多博, 居里,
+希里, 亞里達王). 里 itself is not the problem.
+
+**Class C is a defect class nobody had named, and the "Simplified
+survivor" screen structurally cannot see it** — the output is a real
+Traditional character, so nothing looks wrong. 准 is to permit
+(允准, 批准); 準 is accurate/standard (標準, 準備). **準許 is not a
+word**, in Taiwan's MOE dictionary or in Hong Kong usage, which is why
+this is a defect and not a spelling preference. The count corroborates
+but does not carry it: the Simplified twin writes 准许 **9** times and
+the converter produced 准許 **6** and 準許 **3** from it.
+
+(The character-level count 准→準 49 is *not* the witness: 32 of those
+are 准备→準備 and 2 are 标准→標準, both correct. The word is the unit,
+not the character — the lesson #323 was repaired on.)
+
+**矇住 is the one case in this check the twin alone does not settle.**
+Simplified 蒙住 ×2 became 蒙住 ×1 and 矇住 ×1 — a 1–1 split, no
+majority. It is repaired on two other witnesses: 矇 is for eyes and
+deception where a covered face is 蒙, and `cuvs-yhwh-tr` reads 蒙住 3 /
+矇住 0. Recorded explicitly because it is the only edit here resting on
+something outside the file.
+
+**Class D** is not a meaning error — 説 and 說 are the same character —
+but it is a real defect in *this* app, because search is literal: a
+reader who types 開啟 finds **1** of this file's 4, and 他說過 misses
+馬可福音 14:58.
+
+**Class E** is 使徒行傳 7:32, 「摩西渾身顫斗」. 颤斗 is an upstream typo
+present in **both** editions, so it is not a conversion defect — but
+this same Traditional file already writes 顫抖 at 馬可福音 16:8 from the
+identical Simplified string. The file contradicts itself, so it is
+repaired on its own precedent. **The Simplified edition is not
+touched**: correcting a translator's text is the owner's call, and
+`biblexg-v2.json` still reads 颤斗 at Mk 16:8 and Acts 7:32.
+
+### 41c — what "207" was actually counting
+
+The whole-file screen over all 2,778 distinct Han characters flags
+**694 occurrences across 32 characters**, not 207 across 45. Both
+numbers are right about what they measured and **neither is a defect
+count**. Only **14** of the 694 are defects — classes A, B and E — and
+the rest were read one word at a time:
+
+- **499 are opencc over-reaching.** 吃 234, 群 182, 秘 49, 床 21,
+  唇 6, 岳 4, 熏 3 — opencc maps each to a 舊字形 (喫 羣 祕 牀 脣 嶽 燻)
+  and **this file converts them zero times**. When the file has made
+  the same choice 499 times, the file is the authority and the
+  converter's output is what would be the defect.
+- **The homograph pairs are correct as they stand**: 占星/占卜 ×8
+  (against 佔據), 仆倒 ×6 (against 僕人), 干犯 and 王干大基 — Candace —
+  ×3, 征服 ×3, 興高采烈/風采 ×3, 游泳 ×2 and 魂游象外 ×3,
+  斗篷/三斗麵/在斗下 ×11, 模仿 ×1, plus 巡迴, 跡象, 複數, 嚮導/嚮往,
+  贊同, 希斯侖, 簽字, 御營.
+- **4 are neither**: 游手好閒 ×4 is left unrepaired for want of a
+  witness (41d), so it is not being claimed correct — only unproven.
+  The honest split of the 694 is therefore **14 defects, 676 read and
+  kept, 4 undecided**.
+
+After the repair the same screen reads **21 characters / 683
+occurrences**, and the arithmetic of the difference is a check on the
+work: 内 2, and 别 审 毁 没 温 满 稣 纪 脱 话 one each, all go to zero —
+**12 occurrences across 11 characters**, exactly class A — 里 goes
+46 → 45 (class B), 斗 goes 12 → 11 (class E, 顫斗), and 准 goes **up**,
+14 → 17, because class C put three 準許 back to 准許. Net −12 −1 −1 +3
+= **−11**, and 694 − 683 = 11.
+
+**What is missing from the 32 is the strongest evidence that this
+screen was never enough.** 説, 爲, 啓, 証 and 矇 do not appear in it at
+any count, because they are not Simplified characters — `s2t(說) == 說`,
+so the screen cannot flag what it cannot distinguish. Those account for
+**16 of the 30 defects** — 説 4, 啓 6, 爲 1, 証 1, 矇 1 and 準 3, which
+is classes C and D entire, more than half the check.
+"207" was never a defect count; it was the reach of one instrument.
+
+**The 隻/餘/淨 check that #323 ran on this file is confirmed by a
+stronger test**, though the rule needs its exceptions named rather than
+absorbed into it. Of the 50 隻, **46 directly follow a numeral** (一 37,
+九 3, 百 2, 兩 1, 五 1, 六 1, 十 1) — positionally, the rule that made
+只 tractable in #323. The other 4 are not classifier uses and are
+correct anyway: 船隻 ×3, where 隻 is the second half of a noun compound,
+and 約翰福音 10:3's 「一隻隻」, a classifier reduplication. The test puts
+船 and 隻 in the determiner set, so what it asserts is "every 隻 is
+accounted for", not "every 隻 is a classifier" — recorded so the
+assertion is not read as stronger than it is.
+
+### 41d — reported, not repaired
+
+Standing rule for this check: **repair only what the corpus witnesses.**
+Ten things fail that test and are left alone, deliberately:
+
+- **一台戲 (哥林多前書 4:9).** A refuter killed this edit and was right:
+  the file's *single* 台 **is** the site proposed for change, so its own
+  29 臺 are not independent evidence, and MOE keeps 台 as a classifier
+  (一台機器).
+- **游手好閒 ×4 and 包紥 ×1.** The standard forms 遊手好閒 and 包紮
+  occur **zero** times in this file and **zero** times in
+  `cuvs-yhwh-tr.json`. A refuter wanted both fixed; overridden on the
+  witness rule, and recorded here instead. This is the conservative
+  option and may well be wrong — it is the owner's call.
+- **Both forms attested, so neither is a defect**: 托付 28 / 託付 2,
+  凶惡 2 / 兇惡 1, 一伙 6 / 一夥 3, 了解 13 / 瞭解 1, 污 56 / 汙 1,
+  嘗 15 / 嚐 1.
+
+  **This looks like it contradicts class C and does not, but the
+  distinction is worth stating because a majority argument alone would
+  not survive it.** 一伙 6 / 一夥 3 is the same 2-to-1 split as
+  准許 6 / 準許 3, and 托付 28 / 託付 2 is far more lopsided than
+  either. The difference is not the ratio. 準許 is **not a word**;
+  一夥, 託付, 兇惡, 瞭解, 汙 and 嚐 are all standard Traditional
+  spellings that a dictionary will confirm. A split only identifies a
+  defect once one side is independently known to be wrong — the count
+  says *which* reading the edition prefers, never *whether* the other
+  one is legal. Every class C repair rests on the first test and passes
+  the second; these six fail the first, so the count is not evidence
+  about them at all.
+- **颤斗 ×2 in the Simplified edition** (class E above).
+
+### 41e — the test's negative needles were checked for teeth
+
+Per check 40's lesson, every `isNot(contains(...))` was counted in the
+**unfixed** file first. The test has two kinds of negative and they
+needed different evidence. The **20 repair needles** (the 12 of class A, plus 會堂里, 準許, 矇,
+説, 爲, 啓, 証 and 顫斗) each occur ≥1× before the repair and 0× after
+— those have teeth. The **freeze needles** (佔星 僕倒 幹犯 遊泳
+公裡 喫 羣 祕 …) are 0× in both files by construction: they are
+counterfactual guards against a conversion nobody has run yet, and they
+are honest only because the *positive* half of each pair was measured
+present (占星 7, 仆倒 6, 游泳 2, 公里 8, 吃 234 …). One candidate,
+不相干, was dropped from the freeze list for having no occurrences at
+all. Run against the pre-repair file the five repair-class tests fail
+and the freeze tests pass, which is the split they should have. The asset is
+compact single-line JSON with no trailing newline, so it is rewritten
+with `separators=(",", ":")`: `git diff --stat` reads **1 insertion, 1
+deletion** for 30 real edits, rather than burying them in a reformat.
+
+### 41f — the Simplified edition is missing 馬可福音 6:8-11
+
+**This is a worse defect than the 30 characters, and it was found by
+accident** — in the parenthesis "(Simplified, 7,921 records) and
+(Traditional, 7,925)". Nothing in this check set out to ask why those
+two numbers differ. They differ because `biblexg-v2.json` **has no
+馬可福音 6:8, 6:9, 6:10 or 6:11**. Its ids run `41006007` → `41006012`.
+
+It is not a merge and not a versification choice. The Traditional
+edition carries all four with ordinary single-verse labels, and the
+Simplified 6:7 is **truncated in the middle of a clause**:
+
+| | 6:7 ends | next verse |
+|---|---|---|
+| Traditional | …並授予他們權能**制服不潔的靈。** | 6:8 他叮囑他們說… |
+| Simplified | …并授予他们权能 | 6:12 于是，他们分头出发… |
+
+A reader of the Simplified edition sees a sentence stop dead and four
+verses vanish — the instructions to the Twelve: the staff, the sandals,
+the shaking of dust from the feet.
+
+**Measured across the corpus, this is the only one.** Every Bible asset
+was scanned for verse numbers absent from their own chapter's 1..max
+range. Nearly every hit is a standard critical-text omission that
+modern translations drop by design and that all our editions drop
+together — Mt 17:21, 18:11, 23:14, Mk 7:16, 9:44, 9:46, 11:26, 15:28.
+Comparing the two 梁家鏗 editions *to each other* rather than to a
+versification table isolates the real signal: **Simplified-only gaps =
+Mk 6:8-11; Traditional-only gaps = none.** (路加福音 1's apparent gaps
+at 2-4 and 75 are merged verses, correctly labelled `1-4` and `74-75`
+in *both* editions, and are not defects.)
+
+**Not repaired, deliberately.** The text exists in the Traditional
+twin, so a mechanical `t2s` looks like a free fix, and it is not one.
+`opencc -c t2s` reproduces the shipped Simplified text exactly in only
+**78.0%** of verses (41a), and the missing passage sits squarely on the
+fault line: Traditional 6:8 reads 「其餘甚麼都不帶」, while this
+Simplified edition writes 什么 for 甚麼 456 times and 着 for 著 1,012
+times. Restoring it by conversion would mean **inventing a
+translator's house-style choices inside a translator's own Bible** —
+the same call the sermon corpus was left alone for. It needs the
+upstream source or the owner.
+
 ## Next, in order
+
+**First, and deliberately unnumbered so the citations below stay
+true: `assets/biblexg-v2.json` is missing 馬可福音 6:8-11, and 6:7 is
+truncated mid-clause.** Check 41f. Four verses of a shipped New
+Testament are absent and a fifth stops in the middle of a sentence.
+The corpus has been measured and this is the *only* such gap — every
+other missing verse in every Bible asset is a critical-text omission
+shared by all editions. The text is present in `biblexg-v2-tr.json`,
+but the two editions agree only 78.0% under `t2s`, so recovering it by
+conversion would fabricate house-style spellings. This needs the
+upstream source or an owner's decision and must not be taken
+unattended. **By the accuracy rule it outranks everything below**: a
+missing verse is the strongest form of the app saying something untrue
+about the text.
 
 0. **What `assets/kjv.json` actually is.** Check 27 established that it
    is not the King James Version but an unidentified Americanised
@@ -4982,28 +5264,27 @@ would have shipped a defect:
    two search-key caches and the clipboard. Strong's-driven surfaces
    (KWIC, concordance) read the tagged layer, which a placeholder has no
    entry in, so they cannot show one — reasoned, not measured.
-9. **The 207 Simplified-looking characters in `biblexg-v2-tr.json`.**
-   Check 40f pointed check 40b's screen at the two 繁體 Bible editions.
-   `cuvs-yhwh-tr.json` is clean — all 74 仆 are 仆倒, all 51 后 are
-   王后/太后 — which is what #323's repair predicts. `biblexg-v2-tr.json`
-   flags **207 occurrences across 45 characters**, and the flags are a
-   mixture of three things that must be separated one character at a
-   time before a single byte is changed: *certain defects* (稣 9 against
-   穌 1,456; 爱 2 against 愛 459; 话 3 against 話 529 — 提多書 2:3 prints
-   「上了年纪的婦女」 with 纪 and 婦 in the same clause), *certain false
-   positives* (里 征 干 于 云 are valid Traditional), and *舊字形* — 内
-   啓 着 没 麽 are older orthography, not Simplified, and this edition
-   uses them consistently. **The true count is unknown and is
-   deliberately not written down as a finding.** #323's memory applies
-   in full: this file was declared clean on the 隻/餘/淨 test and is
-   clean *by that test*; a blanket `opencc -c s2t` invents a defect at
-   以賽亞書 29:17, so any repair must be per-context with an explicit
-   rule set witnessed by the corpus.
+9. ~~**The 207 Simplified-looking characters in `biblexg-v2-tr.json`.**~~
+   **Closed by check 41.** The true count was "unknown and deliberately
+   not written down"; it is **30 characters in 28 verses**, in five
+   classes, and only 12 of them were visible to the screen that produced
+   the 207. The instrument was the edition's own Simplified twin — where
+   the converter made the same decision 1,993 times and the opposite one
+   4 times, the 4 are the defect — so no outside Traditional authority
+   was needed. It also named a defect class that screen structurally
+   cannot see: **over**-conversion (準許→准許, 矇住→蒙住), where the
+   wrong output is still a real Traditional character.
 
-   *(This ranks above item 3 by the accuracy rule — it is a wrong
-   character in a printed verse, not a label or a missing pane. The
-   numbers above are left as they are because five closed sections cite
-   them by number, and renumbering would make those citations false.)*
+   What remains open from this item is a **product decision, not a
+   measurement**: 一台戲, 游手好閒 ×4 and 包紥 ×1 are left as they stand
+   because the standard forms occur zero times in either 繁體 edition,
+   and the Simplified `biblexg-v2.json` still prints the upstream typo
+   颤斗 at 馬可福音 16:8 and 使徒行傳 7:32. See 41d.
+
+   *(This ranked above item 3 by the accuracy rule — a wrong character
+   in a printed verse, not a label or a missing pane. The numbers above
+   are left as they are because five closed sections cite them by
+   number, and renumbering would make those citations false.)*
 
 *(Check 26 came off the "Not checked yet" list rather than this one, and
 it is the clearest case yet for the rule that a witness must come from
