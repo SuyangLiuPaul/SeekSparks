@@ -168,6 +168,13 @@ class _AtlasPageState extends State<AtlasPage> {
   /// The one whose itinerary is open in the detail column.
   String? _readingRouteId;
 
+  /// The single leg the reader clicked, if any.
+  ///
+  /// Held here rather than inside the panel because it is a fact about
+  /// the MAP and the panel at once: the halo and the card are two views
+  /// of one selection, and two copies of it would be free to disagree.
+  ({String routeId, int index})? _selectedLeg;
+
   /// Which of the two things the detail column is currently about.
   ///
   /// Last-picked wins, rather than one silently outranking the other: a
@@ -283,6 +290,9 @@ class _AtlasPageState extends State<AtlasPage> {
             _detailIsJourney = false;
           }
         }
+        // A leg of a route that is no longer drawn has nothing to point
+        // at, and a leg of a route just switched on was not chosen.
+        if (_selectedLeg?.routeId == j.id || turningOn) _selectedLeg = null;
       },
       fitTo: turningOn ? _pointsOf(j) : null,
     );
@@ -296,10 +306,54 @@ class _AtlasPageState extends State<AtlasPage> {
         _onRoutes.add(j.id);
         _readingRouteId = j.id;
         _detailIsJourney = true;
+        _selectedLeg = null;
       },
       fitTo: _pointsOf(j),
     );
     if (width < _detailColumnMin) _showJourneySheet(context, locale, script);
+  }
+
+  /// A leg on the map opens its own route's itinerary and points at the
+  /// stretch that was clicked.
+  ///
+  /// **This is the direction that was missing.** The itinerary could
+  /// always be read forwards — pick a route, walk its stops, open a verse
+  /// — but a reader looking at the drawing and asking "what says they
+  /// went THAT way" had no way back into the text except to read both end
+  /// labels and hunt for the second in a list of twenty. bwh33's map
+  /// lines answer nothing at all: BibleWorks lets you click a line only
+  /// in Edit mode, and what it gives you then is curve tension and stroke
+  /// colour. The only route it offers from a map back to scripture is a
+  /// right-click on a SITE that runs a text search for its name.
+  ///
+  /// Clearing the place selection is deliberate. The two are different
+  /// objects and the detail column shows one thing at a time; leaving a
+  /// marker lit while the panel talks about a leg would be the same
+  /// disagreement between two views of one state that #319 was.
+  void _selectLeg(({String routeId, int index}) leg, BuildContext context,
+      String locale, BookScript script, double width) {
+    setState(() {
+      _selectedLeg = leg;
+      _readingRouteId = leg.routeId;
+      _detailIsJourney = true;
+      _selectedId = null;
+    });
+    if (width < _detailColumnMin) _showJourneySheet(context, locale, script);
+  }
+
+  /// The clicked leg, or null when nothing is selected or the selection
+  /// no longer names a leg that exists.
+  ///
+  /// Resolved on every build rather than stored: the segment list is
+  /// rebuilt from the gazetteer, and holding a [RouteSegment] would be
+  /// holding one from a list that has since been replaced.
+  RouteSegment? get _selectedSegment {
+    final leg = _selectedLeg;
+    if (leg == null) return null;
+    final route = _readingRoute;
+    if (route == null || route.id != leg.routeId) return null;
+    if (leg.index < 0 || leg.index >= route.segments.length) return null;
+    return route.segments[leg.index];
   }
 
   static List<(double, double)> _pointsOf(ResolvedJourney j) =>
@@ -312,6 +366,7 @@ class _AtlasPageState extends State<AtlasPage> {
     setState(() {
       _selectedId = id;
       _detailIsJourney = false;
+      _selectedLeg = null;
       _focusToken++;
     });
     if (width < _detailColumnMin) _showDetailSheet(context, locale, script);
@@ -431,9 +486,16 @@ class _AtlasPageState extends State<AtlasPage> {
           locale: locale,
           script: script,
           selectedPlaceId: _selectedId,
+          // The narrow layout has no detail column, so the sheet is
+          // where the clicked leg has to be answered. Read once as the
+          // sheet opens: the sheet does not rebuild with the page, and a
+          // leg selected behind it is not a thing that can happen.
+          selectedLegIndex:
+              _selectedSegment == null ? null : _selectedLeg!.index,
           scrollController: controller,
           onSelectStop: (id) => setState(() {
             _selectedId = id;
+            _selectedLeg = null;
             _focusToken++;
           }),
           onJump: (ref) => _jump(sheetCtx, ref),
@@ -488,10 +550,17 @@ class _AtlasPageState extends State<AtlasPage> {
                   routes: _activeRoutes,
                   selectedRouteId: _readingRouteId,
                   fitPoints: _fitPoints,
+                  selectedLeg: _selectedLeg,
+                  onSelectLeg: (leg) => _selectLeg(
+                      leg, context, locale, script, box.maxWidth),
                   onSelect: (id) {
                     setState(() {
                       _selectedId = id;
                       if (id != null) _detailIsJourney = false;
+                      // Including the null case: a tap on empty water
+                      // means "nothing", and leaving a haloed leg behind
+                      // would make it mean "nothing, except that".
+                      _selectedLeg = null;
                     });
                     // Below the detail column there is nowhere for the
                     // answer to go, and a dot that lights up and says
@@ -532,13 +601,18 @@ class _AtlasPageState extends State<AtlasPage> {
                         locale: locale,
                         script: script,
                         selectedPlaceId: _selectedId,
+                        selectedLegIndex: _selectedSegment == null
+                            ? null
+                            : _selectedLeg!.index,
                         onSelectStop: (id) => setState(() {
                           _selectedId = id;
+                          _selectedLeg = null;
                           _focusToken++;
                         }),
                         onJump: (ref) => _jump(context, ref),
                         onClose: () => setState(() {
                           _detailIsJourney = false;
+                          _selectedLeg = null;
                         }),
                       )
                     : selected == null
@@ -1496,6 +1570,7 @@ class _JourneyPanel extends StatelessWidget {
     required this.locale,
     required this.script,
     required this.selectedPlaceId,
+    required this.selectedLegIndex,
     required this.onSelectStop,
     required this.onJump,
     this.onClose,
@@ -1509,6 +1584,9 @@ class _JourneyPanel extends StatelessWidget {
   /// Lit in the list so the map and the panel agree on where the reader
   /// is in the itinerary.
   final String? selectedPlaceId;
+
+  /// The leg clicked on the map, as an index into [journey]'s segments.
+  final int? selectedLegIndex;
 
   final ValueChanged<String> onSelectStop;
   final void Function(PlaceRef) onJump;
@@ -1529,6 +1607,20 @@ class _JourneyPanel extends StatelessWidget {
         JourneyLeg.start => '',
       };
 
+  /// The gazetteer's disambiguating ordinal included, always. Without it
+  /// a leg reads `Antioch → Antioch` for two cities 500 km apart.
+  String _placeName(ResolvedStop s) => s.place.ordinal == null
+      ? s.place.displayName(script)
+      : '${s.place.displayName(script)} ${s.place.ordinal}';
+
+  /// The leg the reader clicked, or null if nothing is selected or the
+  /// index no longer names one.
+  RouteSegment? get _leg {
+    final i = selectedLegIndex;
+    if (i == null || i < 0 || i >= journey.segments.length) return null;
+    return journey.segments[i];
+  }
+
   @override
   Widget build(BuildContext context) {
     final c = WbColors.of(context);
@@ -1536,7 +1628,13 @@ class _JourneyPanel extends StatelessWidget {
     final style = journeyStyleFor(c, journey.journey.style);
     final version = context.read<MainProvider>().currentVersion;
     final basis = journey.journey.localizedBasis(locale);
-    final ordinals = journey.ordinalsByPlace;
+    // Lit by stop INDEX, not by place id. Lystra is stops 8 and 10 of the
+    // first journey, so lighting by place would light both ends of a leg
+    // that only touches one of them.
+    final leg = _leg;
+    final litIndices = leg == null
+        ? const <int>{}
+        : <int>{leg.from.index, leg.to.index};
 
     return ColoredBox(
       color: c.paneBg,
@@ -1584,6 +1682,14 @@ class _JourneyPanel extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
+          // The answer to the click comes before the route's own
+          // furniture. A reader who pointed at one line and got a page
+          // about the whole journey has been answered with a different
+          // question, which is the shape of defect #319 was.
+          if (leg != null) ...[
+            _legCard(c, t, version, leg),
+            const SizedBox(height: 10),
+          ],
           // The two cautions the drawing cannot make for itself, and the
           // per-route provenance underneath them.
           _note(c, t, _s('journeysCaution', '')),
@@ -1626,7 +1732,7 @@ class _JourneyPanel extends StatelessWidget {
             ].join(' · '),
           ),
           for (final s in journey.stops)
-            _stop(context, c, t, style, version, s, ordinals),
+            _stop(c, t, style, version, s, litIndices),
         ],
       ),
     );
@@ -1657,30 +1763,219 @@ class _JourneyPanel extends StatelessWidget {
         ),
       );
 
+  /// A reference, and a way into it. A stop or a leg whose verse the
+  /// reader cannot open is an assertion.
+  Widget _refChip(WbColors c, WbType t, String version, PlaceRef r) {
+    final label = '${localeAwareBookName(r.englishBook, locale, version)}'
+        ' ${r.chapter}:${r.verse}';
+    return Material(
+      color: c.paneBg,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.zero,
+        side: BorderSide(color: c.border, width: WbMetrics.hairline),
+      ),
+      child: InkWell(
+        onTap: () => onJump(r),
+        hoverColor: c.hoverBg,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: t.chrome,
+              height: 1.0,
+              color: c.link,
+              fontFamilyFallback: kCjkFontFallback,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// A bordered word — "Provisional", "Named, not reached".
+  Widget _tag(WbColors c, WbType t, String text) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+        decoration: BoxDecoration(
+          border: Border.all(color: c.mutedText, width: WbMetrics.hairline),
+        ),
+        child: Text(
+          text,
+          style: TextStyle(
+            fontSize: t.chrome - 1,
+            height: 1.0,
+            color: c.mutedText,
+            fontFamilyFallback: kCjkFontFallback,
+          ),
+        ),
+      );
+
+  /// What one leg of the drawing rests on.
+  ///
+  /// **Everything here is a claim the stop list cannot make.** A row in
+  /// that list is about a PLACE; a leg is about the stretch between two
+  /// of them, and three of its facts belong to the stretch alone:
+  ///
+  ///   * whether the LEG is provisional. [RouteSegment.attested] is true
+  ///     only when the text places the travellers at both ends, so the
+  ///     line out of a provisional stop is provisional even though its
+  ///     destination is named — and no row says so, because no row is
+  ///     about that line.
+  ///   * the chord. The panel gives the route's total; a reader asking
+  ///     why one leg looks so much longer than the rest is asking about
+  ///     this one, and BibleWorks' own Ruler mode (bwh33) exists because
+  ///     that is a question readers of a route map actually have. Named
+  ///     as a straight line, because that is all it is — and unlike
+  ///     BibleWorks this does not go on to compute a travel TIME, which
+  ///     would need a speed nobody can source.
+  ///   * what the narrative names on the stretch without putting them
+  ///     there. See [ResolvedJourney.asidesOn].
+  Widget _legCard(WbColors c, WbType t, String version, RouteSegment leg) {
+    final manner = _legWord(leg.leg);
+    final asides = journey.asidesOn(leg);
+    final note = leg.to.stop.localizedNote(locale);
+
+    // Which end the text will not vouch for. Said as a name rather than
+    // as a bare "provisional", because "they may not have been there" is
+    // only useful once you know WHERE.
+    final unvouched = <String>[
+      if (!leg.from.stop.attested) _placeName(leg.from),
+      if (!leg.to.stop.attested) _placeName(leg.to),
+    ];
+
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: c.border, width: WbMetrics.hairline),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _header(c, t, _s('journeyLegHeader', 'The leg you clicked')),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(6, 6, 6, 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Wrapped, never ellipsised: these are place names, and a
+                // clipped Chinese name is unreadable rather than merely
+                // shortened (#297).
+                Text(
+                  '${_placeName(leg.from)} → ${_placeName(leg.to)}',
+                  style: TextStyle(
+                    fontSize: t.text,
+                    fontWeight: FontWeight.w700,
+                    color: c.text,
+                    height: 1.3,
+                    fontFamilyFallback: kCjkFontFallback,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Wrap(
+                  spacing: 5,
+                  runSpacing: 4,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    if (manner.isNotEmpty)
+                      Text(
+                        manner,
+                        style: TextStyle(
+                          fontSize: t.chrome,
+                          color: c.mutedText,
+                          height: 1.0,
+                          fontFamilyFallback: kCjkFontFallback,
+                        ),
+                      ),
+                    if (!leg.attested)
+                      _tag(c, t, _s('journeyProvisionalTag', 'Provisional')),
+                  ],
+                ),
+                const SizedBox(height: 5),
+                _note(
+                  c,
+                  t,
+                  _s('journeyLegKm', '{n} km in a straight line')
+                      .replaceAll('{n}', '${leg.km.round()}'),
+                ),
+                if (unvouched.isNotEmpty) ...[
+                  const SizedBox(height: 5),
+                  _note(
+                    c,
+                    t,
+                    _s('journeyLegUnattested',
+                            'The text does not place them at {p}, so this '
+                            'leg is drawn provisionally.')
+                        .replaceAll('{p}', unvouched.join(' · ')),
+                  ),
+                ],
+                for (final a in asides) ...[
+                  const SizedBox(height: 5),
+                  _note(
+                    c,
+                    t,
+                    _s('journeyLegAside',
+                            '{p} is named on this stretch and was not '
+                            'reached.')
+                        .replaceAll('{p}', _placeName(a)),
+                  ),
+                  const SizedBox(height: 3),
+                  Wrap(
+                    spacing: 4,
+                    runSpacing: 4,
+                    children: [
+                      _refChip(
+                        c,
+                        t,
+                        version,
+                        PlaceRef(a.stop.englishBook, a.stop.chapter,
+                            a.stop.verse),
+                      ),
+                      _tag(c, t, _s('journeyAsideTag', 'Named, not reached')),
+                    ],
+                  ),
+                ],
+                const SizedBox(height: 7),
+                _note(
+                  c,
+                  t,
+                  _s('journeyLegWarrant',
+                          'What puts {p} on the itinerary')
+                      .replaceAll('{p}', _placeName(leg.to)),
+                ),
+                const SizedBox(height: 3),
+                _refChip(
+                  c,
+                  t,
+                  version,
+                  PlaceRef(leg.to.stop.englishBook, leg.to.stop.chapter,
+                      leg.to.stop.verse),
+                ),
+                if (note != null && note.isNotEmpty) ...[
+                  const SizedBox(height: 5),
+                  _note(c, t, note),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _stop(
-    BuildContext context,
     WbColors c,
     WbType t,
     JourneyStyle style,
     String version,
     ResolvedStop s,
-    Map<String, List<int>> ordinals,
+    Set<int> litIndices,
   ) {
-    final lit = s.place.id == selectedPlaceId;
-    // The gazetteer's disambiguating ordinal, printed exactly as the map
-    // prints it. Without it this list says "Antioch" twice for two cities
-    // 500 km apart and leans on each row's note to tell them apart, while
-    // the map has been separating them structurally all along.
-    final display = s.place.ordinal == null
-        ? s.place.displayName(script)
-        : '${s.place.displayName(script)} ${s.place.ordinal}';
+    final lit = s.place.id == selectedPlaceId || litIndices.contains(s.index);
+    final display = _placeName(s);
     final note = s.stop.localizedNote(locale);
     // An aside was never travelled TO, so it has no manner of travel and
     // printing one would answer a question the row does not raise.
     final leg = s.isAside ? '' : _legWord(s.stop.leg);
     final ref = PlaceRef(s.stop.englishBook, s.stop.chapter, s.stop.verse);
-    final refLabel = '${localeAwareBookName(s.stop.englishBook, locale, version)}'
-        ' ${s.stop.chapter}:${s.stop.verse}';
 
     return InkWell(
       onTap: () => onSelectStop(s.place.id),
@@ -1757,53 +2052,15 @@ class _JourneyPanel extends StatelessWidget {
                   const SizedBox(height: 2),
                   Row(
                     children: [
-                      // The warrant, and a way into it. A stop whose verse
-                      // the reader cannot open is an assertion.
-                      Material(
-                        color: c.paneBg,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.zero,
-                          side: BorderSide(
-                              color: c.border, width: WbMetrics.hairline),
-                        ),
-                        child: InkWell(
-                          onTap: () => onJump(ref),
-                          hoverColor: c.hoverBg,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 5, vertical: 2),
-                            child: Text(
-                              refLabel,
-                              style: TextStyle(
-                                fontSize: t.chrome,
-                                height: 1.0,
-                                color: c.link,
-                                fontFamilyFallback: kCjkFontFallback,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
+                      _refChip(c, t, version, ref),
                       if (s.isAside || !s.stop.attested) ...[
                         const SizedBox(width: 4),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 4, vertical: 2),
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                                color: c.mutedText, width: WbMetrics.hairline),
-                          ),
-                          child: Text(
-                            s.isAside
-                                ? _s('journeyAsideTag', 'Named, not reached')
-                                : _s('journeyProvisionalTag', 'Provisional'),
-                            style: TextStyle(
-                              fontSize: t.chrome - 1,
-                              height: 1.0,
-                              color: c.mutedText,
-                              fontFamilyFallback: kCjkFontFallback,
-                            ),
-                          ),
+                        _tag(
+                          c,
+                          t,
+                          s.isAside
+                              ? _s('journeyAsideTag', 'Named, not reached')
+                              : _s('journeyProvisionalTag', 'Provisional'),
                         ),
                       ],
                     ],

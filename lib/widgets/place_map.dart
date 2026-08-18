@@ -54,6 +54,8 @@ class PlaceMapView extends StatefulWidget {
     this.onToggleContext,
     this.routes = const <ResolvedJourney>[],
     this.selectedRouteId,
+    this.selectedLeg,
+    this.onSelectLeg,
     this.fitToken = 0,
     this.focusToken = 0,
     this.fitPoints,
@@ -117,6 +119,18 @@ class PlaceMapView extends StatefulWidget {
   /// The one being read. The others are held back rather than hidden, so
   /// a crossing can still be seen for what it is.
   final String? selectedRouteId;
+
+  /// The single leg the reader is asking about, as a route id and an index
+  /// into that route's segments. Drawn with a halo and nothing else.
+  final ({String routeId, int index})? selectedLeg;
+
+  /// Called when a tap lands on a leg rather than on a place.
+  ///
+  /// Null leaves the lines inert, which is what every host but the Atlas
+  /// wants: a map embedded as a lens over a passage has nowhere to put an
+  /// itinerary, and a line that lights up with no panel to explain it is
+  /// the dead end #319 was about.
+  final void Function(({String routeId, int index}))? onSelectLeg;
 
   final int fitToken;
 
@@ -313,6 +327,14 @@ class _PlaceMapViewState extends State<PlaceMapView> {
       p.project(p.centreLat, p.centreLon + 1).dx -
       p.project(p.centreLat, p.centreLon).dx;
 
+  /// **Places first, then legs, then nothing.**
+  ///
+  /// The order is not a preference, it is a correctness requirement. Every
+  /// stop's dot sits exactly on the end of the leg that arrives at it and
+  /// the leg that leaves it, so a line-first test would swallow the tap at
+  /// every junction on the route and leave the dots — the smaller, harder
+  /// targets — unreachable. A place has a 22 px radius against a leg's 9,
+  /// which settles the overlap in the same direction.
   void _tapAt(Offset local) {
     final p = _proj;
     if (p == null) return;
@@ -326,9 +348,40 @@ class _PlaceMapViewState extends State<PlaceMapView> {
         best = place;
       }
     }
+    if (best != null) {
+      widget.onSelect(best.id);
+      return;
+    }
+
+    final onLeg = widget.onSelectLeg;
+    if (onLeg != null && widget.routes.isNotEmpty) {
+      final hit = hitJourneyLeg(
+        routes: widget.routes,
+        // Recomputed rather than shared with the painter because the
+        // painter is rebuilt every frame and holding a reference to its
+        // lanes would be holding a reference to a dead one. It is pure
+        // and cheap, and both callers derive it from the same list.
+        lanes: corridorLanes(widget.routes),
+        project: (lat, lon) {
+          final o = p.project(lat, lon);
+          return (o.dx, o.dy);
+        },
+        x: local.dx,
+        y: local.dy,
+        selectedRouteId: widget.selectedRouteId,
+      );
+      if (hit != null) {
+        onLeg((
+          routeId: widget.routes[hit.route].id,
+          index: hit.segment,
+        ));
+        return;
+      }
+    }
+
     // Tapping empty water clears the selection rather than keeping a
     // marker lit that the reader has visibly moved away from.
-    widget.onSelect(best?.id);
+    widget.onSelect(null);
   }
 
   BiblePlace? get _selected {
@@ -400,6 +453,7 @@ class _PlaceMapViewState extends State<PlaceMapView> {
                         muted: _context,
                         routes: widget.routes,
                         selectedRouteId: widget.selectedRouteId,
+                        selectedLeg: widget.selectedLeg,
                         selectedId: widget.selectedId,
                         projection: proj,
                         script: widget.script,
@@ -688,6 +742,7 @@ class _MapPainter extends CustomPainter {
     required this.muted,
     required this.routes,
     required this.selectedRouteId,
+    required this.selectedLeg,
     required this.selectedId,
     required this.projection,
     required this.script,
@@ -702,6 +757,7 @@ class _MapPainter extends CustomPainter {
   final List<BiblePlace> muted;
   final List<ResolvedJourney> routes;
   final String? selectedRouteId;
+  final ({String routeId, int index})? selectedLeg;
 
   /// Perpendicular offset per segment. See [corridorLanes].
   final List<List<double>> _lanes;
@@ -900,15 +956,46 @@ class _MapPainter extends CustomPainter {
 
       final ink = style.colour.withValues(
           alpha: journeyOpacity(attested: s.attested, dimmed: dimmed));
+      final width =
+          journeyStrokeWidth(attested: s.attested, selected: selected);
       final paint = Paint()
         ..style = PaintingStyle.stroke
         ..strokeCap = StrokeCap.butt
-        ..strokeWidth =
-            journeyStrokeWidth(attested: s.attested, selected: selected)
+        ..strokeWidth = width
         ..color = ink;
+      final dash = journeyDash(s.leg, attested: s.attested);
 
-      _dashedLine(canvas, size, a, b, paint,
-          journeyDash(s.leg, attested: s.attested));
+      // The leg the reader asked about, marked without touching a single
+      // channel that means something.
+      //
+      // Colour is route identity, dash is the text's claim and stroke
+      // width already carries provisional-versus-attested; spending any
+      // of the three on "you clicked this" would make the drawing say
+      // something about the itinerary that the itinerary does not. So the
+      // halo is NEUTRAL ink — no route is ever drawn in the foreground
+      // colour, so a grey band cannot be misread as a leg — and it repeats
+      // the leg's OWN dash pattern rather than running solid underneath
+      // it. A solid halo under a dotted provisional leg would put a
+      // continuous band where the text supports nothing, which is the one
+      // thing this whole file is arranged to prevent.
+      if (selectedLeg != null &&
+          selectedLeg!.routeId == r.id &&
+          selectedLeg!.index == i) {
+        _dashedLine(
+          canvas,
+          size,
+          a,
+          b,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeCap = StrokeCap.butt
+            ..strokeWidth = width + 5
+            ..color = colors.text.withValues(alpha: 0.22),
+          dash,
+        );
+      }
+
+      _dashedLine(canvas, size, a, b, paint, dash);
       _arrowhead(canvas, size, a, b, ink, selected);
     }
   }
@@ -1155,5 +1242,6 @@ class _MapPainter extends CustomPainter {
       old.muted != muted ||
       old._routeSig != _routeSig ||
       old.selectedRouteId != selectedRouteId ||
+      old.selectedLeg != selectedLeg ||
       old.script != script;
 }

@@ -320,6 +320,163 @@ void main() {
     });
   });
 
+  group('what a leg passes without calling at', () {
+    final byId = <String, BiblePlace>{
+      'FairHavens': _place('FairHavens', 34.9, 24.8),
+      'Phoenix': _place('Phoenix', 35.2, 24.0),
+      'Cauda': _place('Cauda', 34.8, 24.1),
+      'Malta': _place('Malta', 35.9, 14.4),
+    };
+
+    ResolvedJourney voyage() => resolveJourney(
+          _journey(<JourneyStop>[
+            _stop('FairHavens', JourneyLeg.start),
+            _aside('Phoenix'),
+            _stop('Cauda', JourneyLeg.sea),
+            _stop('Malta', JourneyLeg.sea),
+          ]),
+          byId,
+        );
+
+    test('the aside belongs to the leg that steps over it', () {
+      final r = voyage();
+      // Acts 27:12 — they set out for Phoenix, and this is the leg the
+      // northeaster made of it. A reader who clicks the open-sea line
+      // has no other way to learn that.
+      expect(r.asidesOn(r.segments[0]).map((s) => s.place.id), <String>[
+        'Phoenix',
+      ]);
+    });
+
+    test('a leg the narrative steps over nothing on carries nothing', () {
+      final r = voyage();
+      expect(r.asidesOn(r.segments[1]), isEmpty);
+    });
+
+    test('an aside outside the leg is not borrowed by it', () {
+      final r = resolveJourney(
+        _journey(<JourneyStop>[
+          _stop('FairHavens', JourneyLeg.start),
+          _stop('Cauda', JourneyLeg.sea),
+          _aside('Phoenix'),
+          _stop('Malta', JourneyLeg.sea),
+        ]),
+        byId,
+      );
+      // Same three legs' worth of stops, one place moved. The wrong
+      // answer puts Phoenix on both legs, or on the earlier one.
+      expect(r.asidesOn(r.segments[0]), isEmpty);
+      expect(r.asidesOn(r.segments[1]).map((s) => s.place.id), <String>[
+        'Phoenix',
+      ]);
+    });
+  });
+
+  group('pointing at a leg', () {
+    // A projection with no curvature and no inversion, so the arithmetic
+    // below is readable as pixels: x is longitude, y is latitude.
+    (double, double) project(double lat, double lon) => (lon, lat);
+
+    BiblePlace at(String id, double x, double y) => _place(id, y, x);
+
+    /// A route running from (0,0) to (100,0) in projected pixels.
+    ResolvedJourney line(String id, double y) => resolveJourney(
+          _journey(<JourneyStop>[
+            _stop('$id.a', JourneyLeg.start),
+            _stop('$id.b', JourneyLeg.land),
+          ], id: id),
+          <String, BiblePlace>{
+            '$id.a': at('$id.a', 0, y),
+            '$id.b': at('$id.b', 100, y),
+          },
+        );
+
+    JourneyLegHit? hit(
+      List<ResolvedJourney> routes,
+      double x,
+      double y, {
+      List<List<double>>? lanes,
+      String? selected,
+    }) =>
+        hitJourneyLeg(
+          routes: routes,
+          lanes: lanes ?? <List<double>>[for (final _ in routes) <double>[0.0]],
+          project: project,
+          x: x,
+          y: y,
+          selectedRouteId: selected,
+        );
+
+    test('a tap near the line finds it', () {
+      expect(hit(<ResolvedJourney>[line('j', 0)], 50, 2),
+          const JourneyLegHit(0, 0));
+    });
+
+    test('a tap nowhere near it finds nothing', () {
+      // The whole point of returning null rather than the closest leg:
+      // a tap on open water must be able to mean "deselect".
+      expect(hit(<ResolvedJourney>[line('j', 0)], 50, 40), isNull);
+    });
+
+    test('the tolerance is the feature, not a rounding error', () {
+      // A 2.2px stroke cannot be hit by a fingertip, so the target is
+      // deliberately wider than the ink — but bounded, or every tap in
+      // the Mediterranean lands on the voyage to Rome.
+      final j = <ResolvedJourney>[line('j', 0)];
+      expect(hit(j, 50, 9), isNotNull);
+      expect(hit(j, 50, 9.5), isNull);
+    });
+
+    test('the nearer of two legs wins', () {
+      final routes = <ResolvedJourney>[line('j', 0), line('k', 6)];
+      expect(hit(routes, 50, 5), const JourneyLegHit(1, 0));
+      expect(hit(routes, 50, 1), const JourneyLegHit(0, 0));
+    });
+
+    test('the target moves with the lane the painter drew in', () {
+      // The lanes are passed in rather than recomputed precisely so this
+      // cannot drift from the drawing: a leg shifted 10px off its chord
+      // to clear an out-and-back partner must be hit where it is DRAWN,
+      // not where its coordinates are.
+      final routes = <ResolvedJourney>[line('j', 0)];
+      final lanes = <List<double>>[
+        <double>[10.0]
+      ];
+      expect(hit(routes, 50, 10, lanes: lanes), isNotNull);
+      expect(hit(routes, 50, 0, lanes: lanes), isNull);
+    });
+
+    test('a tap past the end of a leg misses its infinite line', () {
+      // Without the clamp, a tap 100px beyond Cauda would select the leg
+      // that ends at Cauda, because it sits on that leg's projection.
+      expect(hit(<ResolvedJourney>[line('j', 0)], 200, 0), isNull);
+    });
+
+    test('at a crossing the route being read is the one you get', () {
+      // Ties resolve the way the drawing resolves them: the selected
+      // route is painted last, so it is the one on top.
+      final routes = <ResolvedJourney>[line('j', 0), line('k', 0)];
+      expect(hit(routes, 50, 0), const JourneyLegHit(1, 0),
+          reason: 'last painted wins when nothing is selected');
+      expect(hit(routes, 50, 0, selected: 'j'), const JourneyLegHit(0, 0));
+    });
+
+    test('no routes, and short lanes, are not crashes', () {
+      expect(hit(<ResolvedJourney>[], 50, 0), isNull);
+      expect(
+        hitJourneyLeg(
+          routes: <ResolvedJourney>[line('j', 0)],
+          lanes: <List<double>>[<double>[]],
+          project: project,
+          x: 50,
+          y: 0,
+        ),
+        const JourneyLegHit(0, 0),
+        reason: 'a missing lane means the chord, not an exception',
+      );
+    });
+  });
+
   group('the visual grammar', () {
     test('sea, land and unknown are three different dashes', () {
       final sea = journeyDash(JourneyLeg.sea, attested: true);

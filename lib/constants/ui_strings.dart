@@ -8075,6 +8075,35 @@ const uiStrings = {
     'zh-Hant': '經文未說明方式',
     'en': 'manner not given',
   },
+  'journeyLegHeader': {
+    'zh-Hans': '所选路段',
+    'zh-Hant': '所選路段',
+    'en': 'The leg you clicked',
+  },
+  // A chord between two points, not a route. Said as "straight line" in
+  // every language for the same reason the journey total is: nobody
+  // walked it.
+  'journeyLegKm': {
+    'zh-Hans': '直线距离 {n} 公里',
+    'zh-Hant': '直線距離 {n} 公里',
+    'en': '{n} km in a straight line',
+  },
+  'journeyLegUnattested': {
+    'zh-Hans': '经文没有说他们到过{p}，所以这一段是推定的。',
+    'zh-Hant': '經文沒有說他們到過{p}，所以這一段是推定的。',
+    'en': 'The text does not place them at {p}, so this leg is drawn '
+        'provisionally.',
+  },
+  'journeyLegAside': {
+    'zh-Hans': '{p} 在这一段中被提及，但他们并未到达。',
+    'zh-Hant': '{p} 在這一段中被提及，但他們並未到達。',
+    'en': '{p} is named on this stretch and was not reached.',
+  },
+  'journeyLegWarrant': {
+    'zh-Hans': '{p} 列入行程的经文依据',
+    'zh-Hant': '{p} 列入行程的經文依據',
+    'en': 'What puts {p} on the itinerary',
+  },
   'journeyUnresolved': {
     'zh-Hans': '有 {n} 站在地名录中查不到位置，线在那里断开。',
     'zh-Hant': '有 {n} 站在地名錄中查不到位置，線在那裡斷開。',
