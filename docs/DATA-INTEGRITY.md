@@ -111,8 +111,12 @@ believe it is fine" and "we looked".
 | 36c1 | Each printed name against the passages that record cites | 277 English + 277 Chinese | **3 English in no shipped edition** → **0**; **10 Chinese absent from the CUV** | English **fixed**, now a test; Chinese reported |
 | 36c2 | Each parent-child and marriage claim against a passage that states it | 338 claims / 5 editions | **9 stated by no passage** → **5** | 4 were the name defect; the 5 are inferred links, reported |
 
-*(Checks 34 and 35 have full sections below but were never given rows
-here; the omission is noted rather than guessed at.)*
+| 39a | Septuagint absences whose words are in an earlier record (merges) | 302 absences, 55 read | **7** | named, and the row now says so — was "found by example, count unknown" |
+| 39b | Source verses the edition's own `<vs:>` markers name and we do not carry | 30,800 records / 31,004 source refs | **153, at 32 sites** | reported, not repaired — importing Greek is the owner's call |
+| 39c | Check 29c's two worked examples of a merge | 2 | **1 false** | corrected in place |
+
+*(Checks 34, 35, 37 and 38 have full sections below but were never given
+rows here; the omission is noted rather than guessed at.)*
 
 ---
 
@@ -2536,6 +2540,11 @@ records where it held 30,798.
   bounded piece of work and was not done. **Found by example, not
   measured** — two known, count unknown. The shipped row makes the
   weakest true claim, which is correct for both classes.
+  *(**Measured by check 39**: the count is **7** of 302, and the second
+  example above is **false**. English Psalm 116:14's Greek is not inside
+  our 116:13 — the edition's own markers name a Greek 115:5 there that
+  no record in the file carries, which makes it a gap in our copy rather
+  than a merge. The other seven now say "printed with verse …".)*
 - **`biblexg-v2` and `-tr`, 38 and 34 absences, unclassified.** These
   are mixed and need their own check: Luke 1:1 demonstrably contains the
   whole 1:1-4 prologue, which is a *merge*, while Philippians 1:1 ends
@@ -4469,6 +4478,147 @@ prose above gets revisited.
 
 ---
 
+## Check 39 — the Septuagint's 302 absences, and which of them are not absent
+
+This is "Next, in order" item 2. Check 29c had found the class by
+example and said so out loud — *"found by example, not measured — two
+known, count unknown"* — and named two: English Psalm 13:6's Greek
+inside our 13:5, and Psalm 116:14's inside our 116:13. A merge is a
+reference the *English* tradition creates by dividing a verse the Greek
+does not; nothing is lost, and the row saying "this edition has no
+verse here" is pointing a reader away from words that are one line
+higher.
+
+**One of the two named examples is false**, and the file itself says so.
+Our Psalm 116:13 is `<vs:115:4>ποτηριον σωτηριου λημψομαι…` and nothing
+else; 116:15 opens at `<vs:115:6>`. The edition's own numbering names a
+Greek 115:5 between them and **no record in the file carries it**. The
+Septuagint has that verse. Our copy of it does not. That is not a merge
+and not a minus — it is a gap, and it is the one kind of finding the
+markers can establish without any outside text at all.
+
+### The instrument, and the two ways it was wrong first
+
+`assets/lxxwh.json` is keyed in **English** versification and carries
+4,543 `<vs:c:v>` markers giving the edition's own number wherever the
+two disagree. That is an internal witness to the Greek's numbering, and
+the first attempt read it as a witness to the Greek's *content*. It is
+not, and the error was made twice.
+
+1. **The parser dropped implicit numbers.** A record whose text does not
+   *open* with a marker carries its own reader key as its first source
+   verse; a marker later in the text begins a **new** source verse
+   mid-record. Taking only the markers manufactured phantom holes —
+   Acts 3:19, 3 John 1:14, Acts 13:32, Acts 24:2, 1 Thessalonians 2:6
+   and 2:11, 2 Chronicles 27:8. With the implicit key restored the New
+   Testament has exactly **one** hole, Matthew 12:47, which check 34d
+   already knew about. Corpus totals: 30,800 records, **31,004** distinct
+   source references, **11** claimed twice.
+2. **Continuity of numbering does not prove a merge.** 19 absences had
+   the Greek's numbers running straight across them, and reading the
+   Greek refuted **18**. Greek Exodus 36–40 is a shorter, *reordered*
+   tabernacle account: reader 37:3 is `<vs:38:3>`, reader 37:5 is
+   `<vs:38:4>`, and English 37:4 — "he made staves of shittim wood, and
+   overlaid them with gold" — is simply not in the Greek. The same for
+   Exodus 28 and 38, 1 Kings 7 and 9. Contiguous numbering proves *our
+   file lost nothing from the edition*. It says nothing about whether
+   the English verse's words are next door.
+
+So the class cannot be measured from numbering at all, which is exactly
+what check 29c meant by "needs content alignment against an English
+text". No such alignment exists here: the external LXX witness check 29
+used is keyed by the **English** reference, so it shares the collapse
+and cannot see through it, and the tagged layers cannot be joined
+because the Septuagint's Strong's numbers are Greek and the Old
+Testament's English witnesses are tagged in Hebrew.
+
+### What was done instead
+
+Length. A merged record holds two English verses' worth of Greek. For
+each absence, the preceding record it would have to be hiding in was
+measured against what its **own** English verse predicts, at that book's
+Greek:English character ratio, and against what its own verse *plus* the
+absent one predicts. Three independent nets, and their union read one
+at a time against the KJV:
+
+| Net | Fires | |
+|---|---|---|
+| Per-**book** ratio, merged fits better than single | 31 | |
+| Per-**chapter** ratio, same test | 32 | contaminated by the merges themselves, which is why it is a second look and not the primary |
+| Preceding record carries an **interior** `<vs:>` marker | 5 | the record explicitly holds two Greek verses |
+
+**55 references read. 7 are merges.** They are now
+`kEditionMergedHeads` in `lib/utils/verse_text_absence.dart` — a list,
+because a rule that found them would be a rule that guessed:
+
+| Absent | Printed inside | The clause |
+|---|---|---|
+| Exodus 38:5 | Exodus 38:4 | και επεθηκεν αυτω τεσσαρας δακτυλιους εκ των τεσσαρων μερων |
+| Exodus 40:31 | Exodus 40:30 | μωυσης και ααρων και οι υιοι αυτου τας χειρας αυτων και τους ποδας |
+| Exodus 40:32 | Exodus 40:30 | εισπορευομενων αυτων εις την σκηνην του μαρτυριου … καθαπερ συνεταξεν κυριος τω μωυση |
+| 1 Kings 4:28 | 1 Kings 4:27 | και τας κριθας και το αχυρον τοις ιπποις |
+| 1 Kings 9:21 | 1 Kings 9:20 | τα τεκνα αυτων τα υπολελειμμενα μετ αυτους εν τη γη — verbatim |
+| Psalms 13:6 | Psalms 13:5 | ασω τω κυριω τω ευεργετησαντι με |
+| Isaiah 64:1 | Isaiah **63**:19 | εαν ανοιξης τον ουρανον … ορη και τακησονται |
+
+Isaiah 64:1 is the cleanest of the seven and the only one a marker
+attests: our Isaiah 64:2 opens `<vs:64:1>`, so the Greek's chapter 64
+begins one verse later than the English one, and English 64:1 can only
+be the tail of Greek 63:19 — which is where it is. It is also the only
+head in a **different chapter**, so the row says "printed with an
+earlier verse" and refuses to print "19" beside a 64:1 reference.
+
+The bar is the **whole** English verse. Eight more absences have part of
+theirs in the preceding record and are deliberately not claimed —
+Exodus 28:24, 28:25, 37:14, 37:22, 38:7, 39:35, Joshua 20:6 and
+1 Kings 9:19. Greek Exodus 39:14 has the ark of the covenant and its
+staves but not the mercy seat, so "printed with verse 34" is a promise
+the row cannot keep for English 39:35.
+
+### What the instrument cannot see, stated as a number
+
+167 of the 302 have a preceding record **no longer** than its own
+English predicts; a merge cannot hide in those. 135 are longer, and the
+55 where a merge fits the length better than a minus were read. The
+remaining 80 sit in a band where the excess is smaller than the absent
+verse would need — real, but not large enough to be a second verse. A
+merge whose Greek is compressed enough to fall in that band would be
+missed, and nothing here rules one out.
+
+Nothing was repaired. Psalm 115:5 could be *written* — the Septuagint's
+115:5 and 115:9 are the same line, and we carry 115:9 at English 116:18
+— and that is precisely why it was not. Check 34d set the precedent for
+the New Testament's Matthew 12:47: importing Greek into one layer of two
+is a decision about what the product contains, and is the owner's.
+
+### Results
+
+| Question | Measured over | Found | State |
+|---|---|---|---|
+| Absences of `lxxwh` against the KJV extent | 30,800 records | **302** (301 OT + Matthew 12:47) | unchanged since check 29's repair |
+| Merges — the English verse's words are in an earlier record | 302 absences, 55 read | **7** | now named, and the row says so |
+| Partial — some of the verse is there | 302 | **8** | reported, deliberately **not** claimed |
+| Source verses the edition's own markers name and we do not carry | 30,800 records | **153**, at 32 sites | reported, not repaired |
+| Source references claimed by two reader records (a Greek verse split across two English ones) | 31,004 | **11** | correct, the reverse of a merge |
+| Check 29c's second worked example | 1 | **false** | corrected below |
+
+`test/lxx_merged_reference_test.dart` holds all of it down: each entry
+must name a reference we lack and a head we have, each head must still
+contain the clause quoted above, the eight partials and the refuted
+candidates must stay unclaimed, and the corpus must still hold exactly
+302 absences of which 7 are explained.
+
+### Correction to check 29c
+
+Its first example stands: English Psalm 13:6's Greek is in our 13:5. Its
+second does not — English Psalm 116:14's Greek is **not** in our 116:13,
+and the reference is a gap in our file rather than a feature of the
+Greek. Its closing sentence, "the shipped row makes the weakest true
+claim, which is correct for both classes", is now wrong for 7 of the
+302 by design and remains right for the other 295.
+
+---
+
 ## Not checked yet
 
 - Verse **text** itself, against an *external* witness — for the
@@ -4552,8 +4702,9 @@ prose above gets revisited.
    be — no public-domain NASB exists — so it moved to "Not checked yet"
    as a standing limitation rather than a task.)*
 1. **A Westcott-Hort text keyed by its OWN numbering.** Check 34 tested
-   every one of `lxxwh`'s 4,687 own-verse-number markers against an
-   outside witness and repaired three defects, but the New Testament's
+   every one of `lxxwh`'s own-verse-number markers against an outside
+   witness — 4,687 then, **4,543** now that its vacuous ones are
+   dropped — and repaired three defects, but the New Testament's
    19 are still unverified and cannot be verified by the witness this
    repository has: `api.getbible.net/v2/westcotthort` is keyed by the
    **English** reference, so the marked number cannot be looked up in
@@ -4566,13 +4717,21 @@ prose above gets revisited.
    edition's. It is reported and deliberately not repaired — importing
    Greek from a variant-inlining witness into one layer of two is a
    decision about what the product contains, and is the owner's.)*
-2. **The English tradition's merges, in the Septuagint's 302.** Check
-   29c found these by example and never measured them: English Psalm
-   13:6's Greek is present, inside 13:5. Check 30's third derivation is
-   exactly the instrument for it — `versification.json`'s `map` read for
-   overlap — but the Septuagint is numbered in its *own* frame, not the
-   original's, so the table does not apply unmodified and the work is
-   deriving the equivalent, not reusing it.
+2. **The 153 Greek verses our Septuagint names and does not carry.**
+   Check 39 found them with no outside source at all: the edition's own
+   `<vs:>` markers number a verse at 32 sites where the file has no
+   record, English Psalm 116:14 (Greek 115:5) among them. They are
+   reported and deliberately not repaired, on check 34d's precedent —
+   Greek would have to go into the flat asset *and* the tagged layer,
+   and what the product contains is the owner's call. Whoever takes it
+   needs a witness numbered the Greek's way, which is the same thing
+   item 1 needs.
+   *(Its predecessor, "the English tradition's merges in the
+   Septuagint's 302", is closed by check 39: the count is 7, they are
+   named in `kEditionMergedHeads`, and check 29c's second example was
+   false. What that check could **not** rule out is a merge whose Greek
+   is compressed enough to leave the preceding record no longer than its
+   own English predicts — 80 of the 302 sit in that band.)*
 3. The 4 references the two 梁家鏗譯本 editions still disagree about —
    马可福音 6:8–11, all that is left of the original 8. Needs a witness that is the
    same edition in the missing script; a 简/繁 conversion table derived

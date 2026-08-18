@@ -510,7 +510,8 @@ class _BrowseWindowState extends State<BrowseWindow> {
 
     // Three things an absent reference can be, beyond "we have no
     // verse", each read off evidence already in the repository rather
-    // than a list written by hand.
+    // than a list written by hand. A fourth, below, IS a list, because
+    // no evidence in the repository can derive it.
     //
     // The publisher's own range label answers the first: 路加福音 1:1
     // is marked `1-4`, so 1:2-1:4 are printed, under a number the
@@ -576,13 +577,23 @@ class _BrowseWindowState extends State<BrowseWindow> {
         final isAbsent = absentVerses[code]?.contains(n) ?? false;
         if (text == null && !isAbsent) continue;
         int? absentHead;
+        // The fourth explanation, and the only one that is a list: the
+        // Septuagint prints seven English references inside an earlier
+        // Greek record, and nothing in the numbering says so — the
+        // Greek runs in its own frame, which is neither the reader's
+        // nor the original's. docs/DATA-INTEGRITY.md check 39.
+        var editionMerged = false;
         if (isAbsent) {
-          absentHead = rangeHeads[code]?[n] ?? sharedHeads[code]?[n];
+          editionMerged =
+              isEditionMerged(code, widget.book, widget.chapter, n);
+          absentHead = rangeHeads[code]?[n] ??
+              sharedHeads[code]?[n] ??
+              editionMergedHeadVerse(code, widget.book, widget.chapter, n);
         }
         final VerseAbsence? absence;
         if (!isAbsent) {
           absence = verseAbsenceOf(text!);
-        } else if (absentHead != null) {
+        } else if (absentHead != null || editionMerged) {
           absence = VerseAbsence.merged;
         } else if (versification.isAbsentFromOriginal(
             widget.book, widget.chapter, n)) {

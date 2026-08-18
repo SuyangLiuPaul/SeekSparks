@@ -218,8 +218,9 @@ Map<int, int> rangeLabelHeads(Map<int, String> chapterLabels) {
 /// Maps each absent reference to the earlier reference holding its
 /// words, where the ORIGINAL text numbers the two as one verse.
 ///
-/// The third and last of the three ways an absence gets explained, and
-/// the one that catches the cases a reader is most likely to misread.
+/// The third of the four ways an absence gets explained, the last that
+/// is a rule rather than a list, and the one that catches the cases a
+/// reader is most likely to misread.
 /// The critical text prints 2 Corinthians 13 in thirteen verses, joining
 /// what the English tradition numbers 12 and 13; three editions follow
 /// it, so their 13:12 holds both and they have no 13:13 at all. Beside a
@@ -259,6 +260,69 @@ Map<int, int> sharedOriginalHeads(
     }
   }
   return out;
+}
+
+/// Reader references an edition prints inside an EARLIER record of its
+/// own, named one at a time because nothing in the data can derive them.
+///
+/// The fourth way an absence gets explained, and the only one that is a
+/// list rather than a rule. The other three read evidence the assets
+/// already carry — a publisher's range label, `versification.json`'s
+/// `absent` set, the same table's `map` read for overlap. None of them
+/// reaches the Septuagint, because it is numbered in its **own** frame:
+/// `versification.json` aligns reader keys to the *original's* verses,
+/// and the Greek's chapter-and-verse is a third thing again.
+///
+/// What is left is content. English Exodus 40:31's words are in our
+/// Greek Exodus 40:30 and no numbering anywhere says so — only reading
+/// the two does. `docs/DATA-INTEGRITY.md` check 39 narrowed 302
+/// absences to 55 candidates with two independent length instruments
+/// and the edition's own `<vs:>` markers, read all 55 against the KJV,
+/// and found these seven. Seven entries is a table; a rule that found
+/// them would be a rule that guessed.
+///
+/// The bar is the **whole** English verse, not a clause of it. Eight
+/// more absences have part of their verse in the preceding record —
+/// Exodus 28:24, 28:25, 37:14, 37:22, 38:7, 39:35, Joshua 20:6 and
+/// 1 Kings 9:19 — and are deliberately left out. "Printed with verse
+/// 34" would send a reader to a record holding the ark and its staves
+/// and not the mercy seat, which is a promise the row cannot keep.
+const Map<String, String> kEditionMergedHeads = {
+  'lxxwh|Exodus|38:5': '38:4',
+  'lxxwh|Exodus|40:31': '40:30',
+  'lxxwh|Exodus|40:32': '40:30',
+  'lxxwh|1 Kings|4:28': '4:27',
+  'lxxwh|1 Kings|9:21': '9:20',
+  'lxxwh|Psalms|13:6': '13:5',
+  'lxxwh|Isaiah|64:1': '63:19',
+};
+
+String? _editionMergedHeadRef(
+        String version, String englishBook, int chapter, int verse) =>
+    kEditionMergedHeads['$version|$englishBook|$chapter:$verse'];
+
+/// Whether this edition prints this reference under an earlier one.
+bool isEditionMerged(
+        String version, String englishBook, int chapter, int verse) =>
+    _editionMergedHeadRef(version, englishBook, chapter, verse) != null;
+
+/// The head's verse number when the head is in the SAME chapter, and
+/// null when it is not.
+///
+/// Isaiah 64:1 is the one entry whose head is in the chapter before it:
+/// the Greek numbers English 64:2 as its own 64:1, so English 64:1 is
+/// the tail of Greek 63:19, and the edition's marker on 64:2 says so
+/// out loud. Returning null there is deliberate — the caller's sentence
+/// names a verse of the chapter on screen, and a bare "19" beside a
+/// 64:1 row would read as *this* chapter's 19. [verseAbsenceNote]
+/// already has the vaguer wording for exactly this case.
+int? editionMergedHeadVerse(
+    String version, String englishBook, int chapter, int verse) {
+  final ref = _editionMergedHeadRef(version, englishBook, chapter, verse);
+  if (ref == null) return null;
+  final parts = ref.split(':');
+  if (int.parse(parts[0]) != chapter) return null;
+  return int.parse(parts[1]);
 }
 
 /// The verse numbers an edition does not carry, in a chapter it does.
