@@ -2,11 +2,17 @@
   "_meta": {
     "count": 98,
     "generator": "tools/audit_dates.py",
-    "anchor": "Solomon's fourth year, from hebrew_kings.json (Thiele), which 1 Kings 6:1 places 480 years after the exodus.",
+    "anchor": "Solomon's accession, from hebrew_kings.json (Thiele). 1 Kings 6:1 dates the temple to his fourth year and places that 480 years after the exodus; every earlier year is counted back from there along intervals the text states, and `datingRefs` gives the whole chain.",
     "basis": {
-      "scripture": "The year follows from an interval the text states, measured from the anchor.",
+      "scripture+thiele": "The intervals are stated by scripture and the year they are measured from is Thiele's. Scripture states no BC year, so no date here rests on scripture alone.",
       "thiele": "From hebrew_kings.json, which follows Thiele and cites him.",
-      "conventional": "A commonly published reconstruction. The text fixes no year and this one is shown as approximate."
+      "conventional": "No figure we can read fixes this year, so it is shown as a commonly published reconstruction, marked approximate."
+    },
+    "septuagintYear": "Present only where the chain runs through Exodus 12:40. The Hebrew counts its 430 years in Egypt; the Greek counts them in Egypt AND in Canaan, and where the Canaan part begins is not stated. Starting it at Abram's departure — the reading chronology.json plots, and the one place on that axis where a year had to be supplied rather than read — puts the event 215 years later. Both texts ship with this app; neither is corrected to the other.",
+    "counts": {
+      "conventional": 75,
+      "scripture+thiele": 18,
+      "thiele": 5
     },
     "note": "Chronologies differ. Nothing here is presented as a date the text gives unless the text gives it."
   },
@@ -182,8 +188,17 @@
       "personIds": [
         "abraham"
       ],
-      "basis": "scripture",
-      "approximate": false
+      "basis": "scripture+thiele",
+      "approximate": false,
+      "datingRefs": [
+        "Genesis 21:5",
+        "Genesis 12:4",
+        "Genesis 25:26",
+        "Genesis 47:9",
+        "Exodus 12:40",
+        "1 Kings 6:1"
+      ],
+      "septuagintYear": -1876
     },
     {
       "id": "lot_separates",
@@ -242,8 +257,17 @@
         "ishmael",
         "hagar"
       ],
-      "basis": "conventional",
-      "approximate": true
+      "basis": "scripture+thiele",
+      "approximate": false,
+      "datingRefs": [
+        "Genesis 21:5",
+        "Genesis 16:16",
+        "Genesis 25:26",
+        "Genesis 47:9",
+        "Exodus 12:40",
+        "1 Kings 6:1"
+      ],
+      "septuagintYear": -1865
     },
     {
       "id": "sodom_destroyed",
@@ -261,8 +285,18 @@
       "personIds": [
         "lot"
       ],
-      "basis": "conventional",
-      "approximate": true
+      "basis": "scripture+thiele",
+      "approximate": false,
+      "datingRefs": [
+        "Genesis 17:21",
+        "Genesis 18:10",
+        "Genesis 19:1",
+        "Genesis 25:26",
+        "Genesis 47:9",
+        "Exodus 12:40",
+        "1 Kings 6:1"
+      ],
+      "septuagintYear": -1852
     },
     {
       "id": "isaac_born",
@@ -282,8 +316,15 @@
         "abraham",
         "sarah"
       ],
-      "basis": "scripture",
-      "approximate": false
+      "basis": "scripture+thiele",
+      "approximate": false,
+      "datingRefs": [
+        "Genesis 25:26",
+        "Genesis 47:9",
+        "Exodus 12:40",
+        "1 Kings 6:1"
+      ],
+      "septuagintYear": -1851
     },
     {
       "id": "isaac_offered",
@@ -322,8 +363,16 @@
         "isaac",
         "rebekah"
       ],
-      "basis": "conventional",
-      "approximate": true
+      "basis": "scripture+thiele",
+      "approximate": false,
+      "datingRefs": [
+        "Genesis 25:20",
+        "Genesis 25:26",
+        "Genesis 47:9",
+        "Exodus 12:40",
+        "1 Kings 6:1"
+      ],
+      "septuagintYear": -1811
     },
     {
       "id": "jacob_esau_born",
@@ -342,8 +391,14 @@
         "jacob",
         "esau"
       ],
-      "basis": "scripture",
-      "approximate": false
+      "basis": "scripture+thiele",
+      "approximate": false,
+      "datingRefs": [
+        "Genesis 47:9",
+        "Exodus 12:40",
+        "1 Kings 6:1"
+      ],
+      "septuagintYear": -1791
     },
     {
       "id": "job_trial",
@@ -461,8 +516,16 @@
       "personIds": [
         "joseph"
       ],
-      "basis": "conventional",
-      "approximate": true
+      "basis": "scripture+thiele",
+      "approximate": false,
+      "datingRefs": [
+        "Genesis 41:46",
+        "Genesis 41:53",
+        "Genesis 45:6",
+        "Exodus 12:40",
+        "1 Kings 6:1"
+      ],
+      "septuagintYear": -1670
     },
     {
       "id": "israel_egypt",
@@ -482,8 +545,13 @@
         "jacob",
         "joseph"
       ],
-      "basis": "scripture",
-      "approximate": false
+      "basis": "scripture+thiele",
+      "approximate": false,
+      "datingRefs": [
+        "Exodus 12:40",
+        "1 Kings 6:1"
+      ],
+      "septuagintYear": -1661
     },
     {
       "id": "israel_oppressed",
@@ -521,8 +589,12 @@
         "jochebed",
         "amram"
       ],
-      "basis": "scripture",
-      "approximate": false
+      "basis": "scripture+thiele",
+      "approximate": false,
+      "datingRefs": [
+        "Exodus 7:7",
+        "1 Kings 6:1"
+      ]
     },
     {
       "id": "burning_bush",
@@ -580,8 +652,11 @@
         "moses",
         "aaron"
       ],
-      "basis": "scripture",
-      "approximate": false
+      "basis": "scripture+thiele",
+      "approximate": false,
+      "datingRefs": [
+        "1 Kings 6:1"
+      ]
     },
     {
       "id": "red_sea",
@@ -618,8 +693,12 @@
       "personIds": [
         "moses"
       ],
-      "basis": "conventional",
-      "approximate": true
+      "basis": "scripture+thiele",
+      "approximate": false,
+      "datingRefs": [
+        "Exodus 16:1",
+        "1 Kings 6:1"
+      ]
     },
     {
       "id": "sinai",
@@ -638,8 +717,12 @@
       "personIds": [
         "moses"
       ],
-      "basis": "conventional",
-      "approximate": true
+      "basis": "scripture+thiele",
+      "approximate": false,
+      "datingRefs": [
+        "Exodus 19:1",
+        "1 Kings 6:1"
+      ]
     },
     {
       "id": "tabernacle",
@@ -658,8 +741,12 @@
       "personIds": [
         "moses"
       ],
-      "basis": "conventional",
-      "approximate": true
+      "basis": "scripture+thiele",
+      "approximate": false,
+      "datingRefs": [
+        "Exodus 40:17",
+        "1 Kings 6:1"
+      ]
     },
     {
       "id": "wilderness_40",
@@ -680,8 +767,13 @@
         "aaron",
         "miriam"
       ],
-      "basis": "conventional",
-      "approximate": true
+      "basis": "scripture+thiele",
+      "approximate": false,
+      "datingRefs": [
+        "Numbers 32:13",
+        "Joshua 5:6",
+        "1 Kings 6:1"
+      ]
     },
     {
       "id": "moses_dies",
@@ -699,8 +791,13 @@
       "personIds": [
         "moses"
       ],
-      "basis": "scripture",
-      "approximate": false
+      "basis": "scripture+thiele",
+      "approximate": false,
+      "datingRefs": [
+        "Deuteronomy 34:7",
+        "Exodus 7:7",
+        "1 Kings 6:1"
+      ]
     },
     {
       "id": "jordan_crossed",
@@ -716,8 +813,13 @@
         "Joshua 3-4"
       ],
       "personIds": [],
-      "basis": "conventional",
-      "approximate": true
+      "basis": "scripture+thiele",
+      "approximate": false,
+      "datingRefs": [
+        "Deuteronomy 1:3",
+        "Joshua 5:6",
+        "1 Kings 6:1"
+      ]
     },
     {
       "id": "jericho",
@@ -733,8 +835,15 @@
         "Joshua 6"
       ],
       "personIds": [],
-      "basis": "conventional",
-      "approximate": true
+      "basis": "scripture+thiele",
+      "approximate": false,
+      "datingRefs": [
+        "Joshua 4:19",
+        "Joshua 6:15",
+        "Deuteronomy 1:3",
+        "Joshua 5:6",
+        "1 Kings 6:1"
+      ]
     },
     {
       "id": "land_divided",
@@ -932,7 +1041,8 @@
         "david"
       ],
       "basis": "thiele",
-      "approximate": false
+      "approximate": false,
+      "datingRefs": []
     },
     {
       "id": "jerusalem_captured",
@@ -989,7 +1099,8 @@
         "solomon"
       ],
       "basis": "thiele",
-      "approximate": false
+      "approximate": false,
+      "datingRefs": []
     },
     {
       "id": "temple_built",
@@ -1008,8 +1119,11 @@
       "personIds": [
         "solomon"
       ],
-      "basis": "scripture",
-      "approximate": false
+      "basis": "scripture+thiele",
+      "approximate": false,
+      "datingRefs": [
+        "1 Kings 6:1"
+      ]
     },
     {
       "id": "kingdom_divided",
@@ -1028,7 +1142,8 @@
         "rehoboam"
       ],
       "basis": "thiele",
-      "approximate": false
+      "approximate": false,
+      "datingRefs": []
     },
     {
       "id": "elijah_carmel",
@@ -1096,7 +1211,8 @@
       ],
       "personIds": [],
       "basis": "thiele",
-      "approximate": false
+      "approximate": false,
+      "datingRefs": []
     },
     {
       "id": "hezekiah_reform",
@@ -1190,7 +1306,8 @@
         "jeconiah"
       ],
       "basis": "thiele",
-      "approximate": false
+      "approximate": false,
+      "datingRefs": []
     },
     {
       "id": "daniel_lions",

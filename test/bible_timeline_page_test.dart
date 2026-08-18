@@ -81,19 +81,23 @@ void main() {
     expect(find.text('约 公元前 4000 年'), findsNWidgets(2));
     expect(find.text('公元前 4000 年'), findsNothing);
 
-    // Six events sit on -1446 and only the exodus is derived, so the
-    // two voices end up in adjacent rows: 1 Kings 6:1's 480 years
-    // counted back from Solomon's fourth reads 「公元前 1446 年」, while
-    // the burning bush, the plagues, the Red Sea, the manna and Sinai —
-    // placed in that year rather than counted into it — keep the hedge.
+    // Six events sit on -1446 and the two voices end up in adjacent
+    // rows. Three are counted into the year: the exodus by 1 Kings 6:1's
+    // 480 years back from Solomon's fourth, and the manna and Sinai by
+    // Exodus 16:1 and 19:1, which date them by month inside the year of
+    // the departure. The burning bush, the plagues and the Red Sea are
+    // placed in it by narrative order instead, and keep the hedge.
     await tester.dragUntilVisible(
-      find.text('公元前 1446 年'),
+      // The burning bush opens the run of six and is the only row with
+      // that title, so it can be the drag target; 「公元前 1446 年」 now
+      // matches three rows and cannot be.
+      find.text('荆棘焚烧'),
       find.byType(Scrollable).last,
       const Offset(0, -400),
     );
     await settle(tester);
-    expect(find.text('公元前 1446 年'), findsOneWidget);
-    expect(find.text('约 公元前 1446 年'), findsWidgets);
+    expect(find.text('公元前 1446 年'), findsNWidgets(3));
+    expect(find.text('约 公元前 1446 年'), findsNWidgets(3));
 
     await unmount(tester);
   });
@@ -173,7 +177,36 @@ void main() {
 
     // The creation is `conventional`, so the open row must say so in
     // words and not only by the 「约」 in the column.
-    expect(find.textContaining('经文并未为此事定年'), findsOneWidget);
+    expect(find.textContaining('并无一串经文自述的年数可推至此事'), findsOneWidget);
+
+    await unmount(tester);
+  });
+
+  // THE NINE THAT WERE CALLED RECONSTRUCTIONS. Ishmael's birth is one of
+  // them: Genesis 16:16 states Abram's age outright, and until v1.6.146
+  // this row printed 「约 公元前 2080 年」 above a sentence saying the text
+  // fixes no year for it. Both halves of that were false, and only the
+  // page can show that they are fixed now.
+  testWidgets('a promoted event drops the hedge and names its verses',
+      (tester) async {
+    await pump(tester);
+
+    await tester.enterText(find.byType(TextField), '以实玛利');
+    await settle(tester);
+    await tester.tap(find.text('以实玛利出生'));
+    await settle(tester);
+
+    expect(find.text('公元前 2080 年'), findsOneWidget);
+    expect(find.text('约 公元前 2080 年'), findsNothing);
+    expect(find.textContaining('并无一串经文自述的年数可推至此事'), findsNothing);
+
+    // The verses that fix the year, labelled and kept apart from the
+    // chapter the event is narrated in — which states no number.
+    expect(find.text('定年所据'), findsOneWidget);
+    expect(find.textContaining('16:16'), findsOneWidget);
+
+    // And the Greek reading of Exodus 12:40, which moves it 215 years.
+    expect(find.textContaining('公元前 1865 年'), findsOneWidget);
 
     await unmount(tester);
   });

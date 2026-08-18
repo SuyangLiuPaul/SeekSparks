@@ -6501,6 +6501,14 @@ const uiStrings = {
     'zh-Hans': '{count} 项事件',
     'zh-Hant': '{count} 項事件',
   },
+  // English only needs this; the Chinese forms are identical to the
+  // plural and are carried so a locale lookup never falls through to
+  // the English singular.
+  'bibleTimelineCountOne': {
+    'en': '1 event',
+    'zh-Hans': '1 项事件',
+    'zh-Hant': '1 項事件',
+  },
   'bibleTimelineNoMatches': {
     'en': 'No events match.',
     'zh-Hans': '未找到符合的事件。',
@@ -6516,9 +6524,11 @@ const uiStrings = {
   // and inventing one would be a claim of its own.
   'timelineBasisScripture': {
     'en':
-        'Derived. Counted back from Solomon’s fourth year — which 1 Kings 6:1 dates 480 years after the exodus — along intervals the text itself states.',
-    'zh-Hans': '推算而得。从所罗门第四年往前推算：王上 6:1 记该年在出埃及后 480 年，其余各段皆按经文自述的年数。',
-    'zh-Hant': '推算而得。從所羅門第四年往前推算：王上 6:1 記該年在出埃及後 480 年，其餘各段皆按經文自述的年數。',
+        'Derived. The intervals are ones the text states; the year they are measured from is Thiele’s accession for Solomon, which 1 Kings 6:1 places 480 years after the exodus. Scripture states no BC year, so no date here rests on scripture alone.',
+    'zh-Hans':
+        '推算而得。各段年数皆为经文自述，起算之年则取锡尔所定所罗门登基之年——王上 6:1 记该年在出埃及后 480 年。经文本身不记公元前年份，故此处无一日期是单凭经文定下的。',
+    'zh-Hant':
+        '推算而得。各段年數皆為經文自述，起算之年則取錫爾所定所羅門登基之年——王上 6:1 記該年在出埃及後 480 年。經文本身不記公元前年份，故此處無一日期是單憑經文定下的。',
   },
   'timelineBasisThiele': {
     'en':
@@ -6526,11 +6536,36 @@ const uiStrings = {
     'zh-Hans': '出自锡尔年代系统（希伯来列王年代学），本应用一律采用并注明出处。',
     'zh-Hant': '出自錫爾年代系統（希伯來列王年代學），本應用一律採用並註明出處。',
   },
+  // Deliberately weaker than "the text fixes no year for this", which
+  // this string used to say. That was a claim about scripture, and it
+  // was false for events the text bounds without stating an interval
+  // from the anchor — Joseph's sale, the Red Sea. What is true is the
+  // narrower thing: no chain we can count reaches this event.
   'timelineBasisConventional': {
     'en':
-        'A commonly published reconstruction. The text fixes no year for this, so the year is shown as approximate.',
-    'zh-Hans': '这是常见的一种推想年代。经文并未为此事定年，故此处标为约数。',
-    'zh-Hant': '這是常見的一種推想年代。經文並未為此事定年，故此處標為約數。',
+        'A commonly published reconstruction. No chain of stated intervals reaches this event from the anchor, so the year is shown as approximate.',
+    'zh-Hans': '这是常见的一种推想年代。自起算之年起，并无一串经文自述的年数可推至此事，故此处标为约数。',
+    'zh-Hant': '這是常見的一種推想年代。自起算之年起，並無一串經文自述的年數可推至此事，故此處標為約數。',
+  },
+  // The label on the verses that state the intervals — NOT the ones the
+  // event is narrated in. On nine of the eighteen derived events the two
+  // sets do not overlap at all.
+  'timelineDatedBy': {
+    'en': 'Dated by',
+    'zh-Hans': '定年所据',
+    'zh-Hant': '定年所據',
+  },
+  // Shown only where the chain runs through Exodus 12:40, whose two
+  // texts disagree about where the 430 years were spent. The caveat is
+  // the one assets/chronology.json already carries for the same verse:
+  // where the Greek's Canaan portion begins is supplied, not read.
+  'timelineSeptuagintYear': {
+    'en':
+        'On the Septuagint: {year}. Exodus 12:40 there counts its 430 years in Egypt and in Canaan rather than in Egypt alone; where the Canaan part begins is not stated, and this takes it from Abram’s departure, as Bible Chronology does.',
+    'zh-Hans':
+        '按七十士译本：{year}。该本出埃及记 12:40 将 430 年算在埃及与迦南两地，而非单在埃及；迦南那一段自何时起算，经文未言，此处与「圣经年代」一图同，自亚伯兰离哈兰起算。',
+    'zh-Hant':
+        '按七十士譯本：{year}。該本出埃及記 12:40 將 430 年算在埃及與迦南兩地，而非單在埃及；迦南那一段自何時起算，經文未言，此處與「聖經年代」一圖同，自亞伯蘭離哈蘭起算。',
   },
   // The seam. Everything from Abraham down is counted back from the
   // Thiele anchor; the eight events above him are not, and the two

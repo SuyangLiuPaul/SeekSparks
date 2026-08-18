@@ -237,6 +237,37 @@ STATED = [
      r'Aaron was {n} years old when he died'),
     ('wilderness', 40, 'Numbers 14:33',
      r'in the wilderness for {n} years'),
+    ('wilderness_numbers32', 40, 'Numbers 32:13',
+     r'wander in the wilderness {n} years'),
+    ('wilderness_joshua', 40, 'Joshua 5:6',
+     r'wandered in the wilderness {n} years'),
+    ('jordan_crossed_year', 40, 'Deuteronomy 1:3', r'In the {ord} year'),
+    ('abram_at_ishmael', 86, 'Genesis 16:16',
+     r'Abram was {n} years old when Hagar bore Ishmael'),
+    ('isaac_at_rebekah', 40, 'Genesis 25:20',
+     r'Isaac was {n} years old when he married Rebekah'),
+    ('joseph_before_pharaoh', 30, 'Genesis 41:46',
+     r'Joseph was {n} years old when he entered the service of Pharaoh'),
+    ('years_of_plenty', 7, 'Genesis 41:53',
+     r'When the {n} years of abundance'),
+    ('famine_past_at_descent', 2, 'Genesis 45:6',
+     r'the famine has covered the land these {n} years'),
+    ('tabernacle_year', 2, 'Exodus 40:17',
+     r'the first day of the first month of the {ord} year'),
+    ('sinai_month', 3, 'Exodus 19:1', r'In the {ord} month'),
+    ('manna_month', 2, 'Exodus 16:1',
+     r'the fifteenth day of the {ord} month after they had left'),
+    # Not every interval the text states is spelled as a number. These
+    # three phrases are matched literally; the value beside them is the
+    # span in years that the phrase states, and it is 1 or 0.
+    ('isaac_promised_g17', 1, 'Genesis 17:21', r'at this time next year'),
+    ('isaac_promised_g18', 1, 'Genesis 18:10', r'at this time next year'),
+    ('sodom_that_evening', 0, 'Genesis 19:1',
+     r'the two angels arrived at Sodom in the evening'),
+    ('gilgal_camp_day', 0, 'Joshua 4:19',
+     r'the tenth day of the first month the people went up from the Jordan'),
+    ('jericho_march_day', 0, 'Joshua 6:15',
+     r'on the seventh day, they got up at dawn'),
     ('exodus_to_temple', 480, '1 Kings 6:1',
      r'In the {ord} year after the Israelites had come out'),
     ('temple_in_solomon_year', 4, '1 Kings 6:1',
@@ -253,8 +284,13 @@ def probe_stated(bsb):
     ok = {}
     failures = []
     for key, value, ref, template in STATED:
-        probe = template.replace('{n}', numpat(value)).replace(
-            '{ord}', numpat(value, ordinal=True))
+        # Substituted lazily: not every number has an ordinal spelling in
+        # the table, and building one nobody asked for aborts the probe.
+        probe = template
+        if '{n}' in probe:
+            probe = probe.replace('{n}', numpat(value))
+        if '{ord}' in probe:
+            probe = probe.replace('{ord}', numpat(value, ordinal=True))
         book, cv = ref.rsplit(' ', 1)
         chapter, verse = cv.split(':')
         text = bsb.get((book, chapter, verse))
@@ -667,41 +703,234 @@ def annotate(ft_doc, tl_doc, chain, am_year, stated, kings, acc, events):
         encoding='utf-8')
 
     # ---- the timeline ---------------------------------------------------
-    tl_doc['_meta'] = {
-        'count': len(tl_doc['events']),
-        'generator': 'tools/audit_dates.py',
-        'anchor': 'Solomon\'s fourth year, from hebrew_kings.json (Thiele), '
-                  'which 1 Kings 6:1 places 480 years after the exodus.',
-        'basis': {
-            'scripture': 'The year follows from an interval the text '
-                         'states, measured from the anchor.',
-            'thiele': 'From hebrew_kings.json, which follows Thiele and '
-                      'cites him.',
-            'conventional': 'A commonly published reconstruction. The text '
-                            'fixes no year and this one is shown as '
-                            'approximate.',
-        },
-        'note': 'Chronologies differ. Nothing here is presented as a date '
-                'the text gives unless the text gives it.',
-    }
-    anchor_events = {
-        'temple_built': 'scripture', 'exodus': 'scripture',
-        'israel_egypt': 'scripture', 'jacob_esau_born': 'scripture',
-        'isaac_born': 'scripture', 'abram_called': 'scripture',
-        'moses_born': 'scripture', 'moses_dies': 'scripture',
-        'solomon_king': 'thiele', 'david_king': 'thiele',
-        'kingdom_divided': 'thiele', 'israel_falls': 'thiele',
-        'judah_falls': 'thiele',
-    }
-    for e in tl_doc['events']:
-        e['basis'] = anchor_events.get(e['id'], 'conventional')
-        e['approximate'] = e['basis'] == 'conventional'
+    sojourn = annotate_timeline(tl_doc, stated, kings)
     (ASSETS / 'bible_timeline.json').write_text(
         json.dumps(tl_doc, ensure_ascii=False, indent=2) + '\n',
         encoding='utf-8')
 
     print('\nwrote assets/family_tree.json and assets/bible_timeline.json')
     print(f"  family tree: {ft_doc['_meta']['dating']['counts']}")
+    print(f"  timeline   : {tl_doc['_meta']['counts']}, "
+          f"Septuagint shift {sojourn} years")
+
+
+# ------------------------------------------------- the timeline, derived
+#
+# WHAT THIS REPLACES, AND WHY. Until v1.6.146 the basis on all 98 events
+# came from a list of thirteen ids typed into this file. It never looked
+# at a year. So it could not notice that the shipped year for an event it
+# called `scripture` had drifted from what scripture gives — and, worse in
+# practice, it called everything else `conventional`, which the app prints
+# to the reader as "The text fixes no year for this". That sentence was
+# false for nine events. Genesis 16:16 states Abram's age at Ishmael's
+# birth outright, and the reader was told the text is silent about it.
+#
+# Every year below is now COMPUTED from a table of steps, and a step is
+# only allowed to stamp an event when the arithmetic reproduces the year
+# already in the asset. Nothing is re-dated here: a step that disagrees
+# with the shipped year abstains and is reported, because moving a
+# published date is a decision and this tool does not make decisions.
+#
+# Each step names the verse that states its interval. A reader gets the
+# whole chain, not just the last link, because the last link alone
+# ("Genesis 16:16") does not tell them the year rests on Thiele too.
+
+# (event, base event, interval, the verses that state that interval).
+# The interval is signed on the BC axis: negative moves earlier.
+def timeline_steps(stated):
+    """Each step as (event, base, delta, refs). Deltas from the text."""
+    S = {k: v[0] for k, v in stated.items()}
+    return [
+        # Solomon's fourth year is four years LATER than his accession,
+        # and a later BC year is the smaller magnitude, so this step adds.
+        ('temple_built', 'solomon_king', +S['temple_in_solomon_year'],
+         ['1 Kings 6:1']),
+        ('exodus', 'temple_built', -S['exodus_to_temple'], ['1 Kings 6:1']),
+        ('israel_egypt', 'exodus', -S['egypt_sojourn'], ['Exodus 12:40']),
+        ('jacob_esau_born', 'israel_egypt', -S['jacob_at_egypt'],
+         ['Genesis 47:9']),
+        ('isaac_born', 'jacob_esau_born', -S['isaac_at_jacob'],
+         ['Genesis 25:26']),
+        ('abram_called', 'isaac_born',
+         -(S['abraham_at_isaac'] - S['abraham_at_call']),
+         ['Genesis 21:5', 'Genesis 12:4']),
+        ('ishmael_born', 'isaac_born',
+         -(S['abraham_at_isaac'] - S['abram_at_ishmael']),
+         ['Genesis 21:5', 'Genesis 16:16']),
+        ('rebekah_marries', 'isaac_born', +S['isaac_at_rebekah'],
+         ['Genesis 25:20']),
+        # Genesis 17:21 and 18:10 both put Isaac's birth "at this time next
+        # year" from the visit at Mamre, and Genesis 19:1 has the same two
+        # visitors reach Sodom that evening. So this is a stated interval,
+        # not narrative order — the ground on which the plagues and the Red
+        # Sea are still refused below.
+        ('sodom_destroyed', 'isaac_born', -S['isaac_promised_g17'],
+         ['Genesis 17:21', 'Genesis 18:10', 'Genesis 19:1']),
+        # Joseph enters Pharaoh's service at the head of the seven years
+        # of plenty; two of the famine years have passed when Jacob comes
+        # down, so the descent is nine years after he rose.
+        ('joseph_rises', 'israel_egypt',
+         -(S['years_of_plenty'] + S['famine_past_at_descent']),
+         ['Genesis 41:46', 'Genesis 41:53', 'Genesis 45:6']),
+        # NOT DERIVED: joseph_sold. Genesis 37:2's "seventeen years old"
+        # attaches to tending the flock and the bad report; the sale is
+        # 37:28 and the text states no interval between them. Reaching it
+        # would be a narrative-order step, and this table does not take
+        # those. Its year stays where it is, marked as a reconstruction.
+        ('moses_born', 'exodus', -S['moses_at_exodus'], ['Exodus 7:7']),
+        # Exodus 16:1 and 19:1 date the manna and Sinai by month within
+        # the year of the departure, so the text fixes their year exactly
+        # as firmly as it fixes the exodus — the interval is simply zero.
+        ('manna', 'exodus', 0, ['Exodus 16:1']),
+        ('sinai', 'exodus', 0, ['Exodus 19:1']),
+        ('tabernacle', 'exodus', +(S['tabernacle_year'] - 1),
+         ['Exodus 40:17']),
+        # NOT Numbers 14:33. Its forty years run from the spying, which
+        # Numbers 10:11 puts in the second year — so counting them from
+        # the exodus lands two years late. Numbers 32:13 and Joshua 5:6
+        # measure the same forty from the departure, and Deuteronomy 1:3
+        # names the fortieth year outright.
+        ('wilderness_40', 'exodus', +S['wilderness_numbers32'],
+         ['Numbers 32:13', 'Joshua 5:6']),
+        ('jordan_crossed', 'exodus', +S['jordan_crossed_year'],
+         ['Deuteronomy 1:3', 'Joshua 5:6']),
+        # Jericho falls in the year of the crossing: Joshua 4:19 dates the
+        # camp at Gilgal to the first month and Joshua 6:15 puts the city's
+        # fall on the seventh day of the march.
+        ('jericho', 'jordan_crossed', +S['gilgal_camp_day'],
+         ['Joshua 4:19', 'Joshua 6:15']),
+        # 120 at death (Deuteronomy 34:7) less 80 before Pharaoh (Exodus
+        # 7:7). Independent of how the wilderness forty are reckoned.
+        ('moses_dies', 'exodus',
+         +(S['moses_lifespan'] - S['moses_at_exodus']),
+         ['Deuteronomy 34:7', 'Exodus 7:7']),
+    ]
+
+
+# The five whose year is Thiele's outright, with no scriptural interval
+# between them and the anchor.
+THIELE_EVENTS = ['solomon_king', 'david_king', 'kingdom_divided',
+                 'israel_falls', 'judah_falls']
+
+
+def annotate_timeline(tl_doc, stated, kings):
+    """Derive each event's basis and dating verses. Returns the LXX shift."""
+    events = {e['id']: e for e in tl_doc['events']}
+    # THE SEPTUAGINT'S OWN READING, checked rather than asserted. Exodus
+    # 12:40 in the Hebrew counts 430 years in Egypt; the Greek counts them
+    # in Egypt AND in Canaan. Everything the chain reaches THROUGH that
+    # verse therefore sits later on the Greek — by exactly the span from
+    # Abram's call to the descent, which both texts state identically.
+    # That span is taken from the text here and verified against
+    # chronology.json, which build_chronology.py reads out of the Greek.
+    shift = ((stated['abraham_at_isaac'][0] - stated['abraham_at_call'][0])
+             + stated['isaac_at_jacob'][0] + stated['jacob_at_egypt'][0])
+    ch = load('chronology.json')
+    ep = {e['id']: e['years'] for e in ch['epochs']}
+    mt_gap = ep['exodus']['mt'] - ep['descent']['mt']
+    lxx_gap = ep['exodus']['lxx'] - ep['descent']['lxx']
+    if mt_gap != stated['egypt_sojourn'][0] or lxx_gap != mt_gap - shift:
+        sys.exit(f'aborting: chronology.json puts the sojourn at {mt_gap} '
+                 f'(MT) and {lxx_gap} (LXX); this tool expected '
+                 f'{stated["egypt_sojourn"][0]} and '
+                 f'{stated["egypt_sojourn"][0] - shift}')
+
+    anchor = kings['solomon']['reignStart']
+    derived = {'solomon_king': (anchor, [], False)}
+    for eid in THIELE_EVENTS:
+        if eid == 'solomon_king':
+            continue
+        derived[eid] = (events[eid]['year'] if eid in events else None,
+                        [], False)
+
+    print('\n32f — every timeline year, derived from the anchor')
+    refused = []
+    for eid, base, delta, refs in timeline_steps(stated):
+        if base not in derived or eid not in events:
+            refused.append((eid, 'base not derived'))
+            continue
+        base_year, base_refs, base_lxx = derived[base]
+        year = base_year + delta
+        shipped = events[eid]['year']
+        # Everything reached through Exodus 12:40 inherits the tradition
+        # it was reached through; the flag rides down the chain rather
+        # than being listed, so a new step cannot forget to carry it.
+        via_lxx = base_lxx or 'Exodus 12:40' in refs
+        chain = refs + [r for r in base_refs if r not in refs]
+        mark = 'OK ' if year == shipped else 'ABSTAINS'
+        print(f'    {eid:18} {base:16} {delta:+5}  derived {year:>6}  '
+              f'ours {shipped:>6}  {mark}')
+        if year != shipped:
+            refused.append((eid, f'derives {year}, asset holds {shipped}'))
+            continue
+        derived[eid] = (year, chain, via_lxx)
+
+    for e in tl_doc['events']:
+        eid = e['id']
+        if eid in THIELE_EVENTS:
+            e['basis'] = 'thiele'
+            e['datingRefs'] = []
+        elif eid in derived:
+            # Not `scripture`: the intervals are scripture's, the year
+            # they are measured from is Thiele's, and the reader is shown
+            # the year. family_tree.json already calls this shape
+            # scripture+thiele and the two assets must not disagree.
+            e['basis'] = 'scripture+thiele'
+            e['datingRefs'] = derived[eid][1]
+        else:
+            e['basis'] = 'conventional'
+            e.pop('datingRefs', None)
+        e['approximate'] = e['basis'] == 'conventional'
+        if e['basis'] != 'conventional' and derived.get(eid, (0, [], False))[2]:
+            e['septuagintYear'] = e['year'] + shift
+        else:
+            e.pop('septuagintYear', None)
+
+    counts = {}
+    for e in tl_doc['events']:
+        counts[e['basis']] = counts.get(e['basis'], 0) + 1
+    lxx_only = sum(1 for e in tl_doc['events'] if 'septuagintYear' in e)
+    print(f'  derived {counts.get("scripture+thiele", 0)}, '
+          f'Thiele {counts.get("thiele", 0)}, '
+          f'conventional {counts.get("conventional", 0)}; '
+          f'{lxx_only} carry a Septuagint alternative')
+    for eid, why in refused:
+        print(f'    REFUSED {eid}: {why}')
+
+    tl_doc['_meta'] = {
+        'count': len(tl_doc['events']),
+        'generator': 'tools/audit_dates.py',
+        'anchor': 'Solomon\'s accession, from hebrew_kings.json (Thiele). '
+                  '1 Kings 6:1 dates the temple to his fourth year and '
+                  'places that 480 years after the exodus; every earlier '
+                  'year is counted back from there along intervals the '
+                  'text states, and `datingRefs` gives the whole chain.',
+        'basis': {
+            'scripture+thiele': 'The intervals are stated by scripture and '
+                                'the year they are measured from is '
+                                'Thiele\'s. Scripture states no BC year, so '
+                                'no date here rests on scripture alone.',
+            'thiele': 'From hebrew_kings.json, which follows Thiele and '
+                      'cites him.',
+            'conventional': 'No figure we can read fixes this year, so it '
+                            'is shown as a commonly published '
+                            'reconstruction, marked approximate.',
+        },
+        'septuagintYear': 'Present only where the chain runs through '
+                          'Exodus 12:40. The Hebrew counts its 430 years in '
+                          'Egypt; the Greek counts them in Egypt AND in '
+                          'Canaan, and where the Canaan part begins is not '
+                          'stated. Starting it at Abram\'s departure — the '
+                          'reading chronology.json plots, and the one place '
+                          'on that axis where a year had to be supplied '
+                          'rather than read — puts the event '
+                          f'{shift} years later. Both texts ship with this '
+                          'app; neither is corrected to the other.',
+        'counts': counts,
+        'note': 'Chronologies differ. Nothing here is presented as a date '
+                'the text gives unless the text gives it.',
+    }
+    return shift
 
 
 if __name__ == '__main__':

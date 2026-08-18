@@ -3016,6 +3016,84 @@ that file calls a reign start**, the legend no longer names Ussher, the
 `_meta` counts match the records, and the timeline's count is honest
 with creation and flood marked approximate while the exodus stays exact.
 
+### Check 32f (v1.6.146) — the timeline's basis was a list, not a measurement
+
+The `basis` on all 98 events came from **thirteen ids typed into
+`tools/audit_dates.py`**. It never looked at a year. So it could not
+notice a shipped year drifting from what scripture gives, and — the half
+a reader actually saw — it called the other 85 `conventional`, which the
+page printed as *"the text fixes no year for this"*. **That sentence was
+false for nine events.** Genesis 16:16 states Abram's age at Ishmael's
+birth outright.
+
+Every year is now **computed** from a table of steps, each naming the
+verse that states its interval, and **a step may only stamp an event when
+its arithmetic reproduces the year already in the asset**. Nothing is
+re-dated: a step that disagrees abstains and is reported, because moving
+a published date is a decision and this tool does not make decisions.
+
+| basis | before | after |
+|---|---:|---:|
+| derived from the anchor | 8 | **18** |
+| `thiele` | 5 | 5 |
+| `conventional` | 85 | **75** |
+
+**Three things the derivation forced into the open.**
+
+1. **`scripture` was over-claiming, on both surfaces' shared vocabulary.**
+   Scripture states intervals; it never states a BC year. Every derived
+   year here is measured from Thiele's Solomon accession, so the basis is
+   now `scripture+thiele` — what `family_tree.json` already called the
+   same shape. Two assets, one generator, one word for it.
+2. **The narrative refs are not the dating verses.** On nine of the 18
+   the two sets do not overlap at all: the Jordan crossing is narrated in
+   Joshua 3–4, which gives no number, while its year comes from
+   Deuteronomy 1:3 and Joshua 5:6. Events now carry a separate
+   `datingRefs` — the whole chain back to the anchor, not just the last
+   link, because the last link alone does not tell a reader the year
+   rests on Thiele too.
+3. **Eight of the 18 are Masoretic-only.** Their chain runs through
+   Exodus 12:40, whose Greek counts the 430 years in Egypt *and* Canaan.
+   Those events carry a `septuagintYear` **215 years later** — a shift
+   derived from stated figures and cross-checked against
+   `chronology.json`'s Greek-read epochs, which the tool aborts without.
+   It ships with the caveat `chronology.json` already carries for the
+   same verse: **where the Greek's Canaan portion begins is supplied, not
+   read** — the one place on that axis where a year had to be.
+
+**Refused, and why** — the tool derives from *stated intervals* only:
+
+- `joseph_sold`: Genesis 37:2's "seventeen" attaches to tending the
+  flock and the bad report. The sale is 37:28 and no interval is stated
+  between them. A refuter caught this one after it had been promoted.
+- `red_sea`, `jericho`'s neighbours, `plagues`, `burning_bush`: placed by
+  narrative order. The Red Sea's year *is* bracketed by two stated dates
+  (Numbers 33:3, Exodus 16:1), but a bracket is a different argument and
+  this instrument does not make it. The plagues additionally straddle a
+  year boundary on Exodus 12:2's calendar.
+- the three Jacob events: not, as previously recorded, because his age is
+  unstated — `build_chronology.py` derives 91 from the same chain used
+  for Joseph. The real gap is Genesis 30:25/31:41, which do not say
+  Joseph was born at the end of the fourteen years.
+
+**`abrahamic_covenant` is a genuine internal inconsistency, abstained on
+rather than repaired.** It ships at **−2080**, Abram's 86th year — the
+year of Ishmael's birth — while its own refs include Genesis 17, which
+states 99 (**−2067**). Genesis 16:3 caps Genesis 15 at Abram ≤85
+(−2081), so −2080 matches neither ref. Splitting the event or dropping a
+ref is a content call.
+
+Also fixed here: the count line read **「1 events」** on a one-match
+search.
+
+Frozen in `test/person_dating_test.dart` (every derived event carries a
+parseable `datingRefs` chain ending at 1 Kings 6:1; `septuagintYear`
+present exactly where the chain contains Exodus 12:40 and equal to
+`year + 215`; the ten refusals stay `conventional`) and in
+`test/bible_timeline_page_test.dart`, which mounts the page and checks a
+promoted row drops its hedge and shows its dating verses — an asset test
+and a formatter test still do not compose into a claim about the screen.
+
 ### A note on the parity target
 
 BibleWorks ships timelines too, and its help file describes them as a

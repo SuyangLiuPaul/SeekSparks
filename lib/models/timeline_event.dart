@@ -30,10 +30,14 @@ class TimelineEvent {
   final List<String> personIds;
 
   /// What the year rests on. Written by `tools/audit_dates.py`, one of
-  /// `scripture` (an interval the text states, counted from the anchor
-  /// in `_meta.anchor`), `thiele` (from `hebrew_kings.json`), or
-  /// `conventional` (a commonly published reconstruction that nothing
-  /// we ship fixes).
+  /// `scripture+thiele` (intervals the text states, counted from the
+  /// Thiele anchor in `_meta.anchor`), `thiele` (from
+  /// `hebrew_kings.json`), or `conventional` (a reconstruction no such
+  /// chain reaches).
+  ///
+  /// It was plain `scripture` until v1.6.146, which was over-claiming:
+  /// scripture states intervals, never a BC year, so every year here
+  /// rests on Thiele as well. `family_tree.json` already said so.
   ///
   /// WHY THIS IS ON THE MODEL AND NOT ONLY IN THE ASSET. Check 32
   /// (v1.6.120) put a basis on all 277 people *and* all 98 events, and
@@ -41,8 +45,9 @@ class TimelineEvent {
   /// .displayYears] prefixes "c." for a reconstruction and refuses to
   /// print a birth year for a record that holds an accession year. The
   /// events' half stopped at the JSON: `fromJson` did not read this
-  /// field, so 85 of 98 dates printed as flat as the 13 that are
-  /// derived. The asset's own `_meta.note` — "nothing here is presented
+  /// field, so 85 of 98 dates printed as flat as the 13 then thought to
+  /// be derived — a count v1.6.146 found was itself wrong, since the 13
+  /// were an id list nobody had checked against a year. The asset's own `_meta.note` — "nothing here is presented
   /// as a date the text gives unless the text gives it" — was a promise
   /// only the file kept.
   final String basis;
@@ -50,6 +55,23 @@ class TimelineEvent {
   /// True exactly when [basis] is `conventional`; the asset writes both
   /// and `test/person_dating_test.dart` holds them in step.
   final bool approximate;
+
+  /// The verses that state the intervals this year was counted along —
+  /// the whole chain back to the anchor, not just the last link.
+  ///
+  /// These are NOT [refs]. [refs] are where the event is narrated, and on
+  /// nine of the derived events the two sets do not overlap at all: the
+  /// Jordan crossing is narrated in Joshua 3-4, which gives no number,
+  /// while its year comes from Deuteronomy 1:3 and Joshua 5:6. Showing
+  /// only [refs] beside the sentence "counted along intervals the text
+  /// states" invites the reader to tap a chapter that states none.
+  final List<String> datingRefs;
+
+  /// Where the same event falls if Exodus 12:40 is read as the Septuagint
+  /// reads it — 430 years in Egypt *and* Canaan rather than in Egypt
+  /// alone. Null on every event the chain does not reach through that
+  /// verse, and on every event that is not derived at all.
+  final int? septuagintYear;
 
   const TimelineEvent({
     required this.id,
@@ -65,6 +87,8 @@ class TimelineEvent {
     required this.personIds,
     this.basis = 'conventional',
     this.approximate = true,
+    this.datingRefs = const [],
+    this.septuagintYear,
   });
 
   String localizedTitle(String locale) {
@@ -88,12 +112,22 @@ class TimelineEvent {
   /// tree and the timeline must not have to learn a second vocabulary.
   String displayYear(String locale) {
     final isZh = locale.startsWith('zh');
-    final plain = _plainYear(locale, isZh);
+    final plain = _plainYear(year, isZh);
     if (!approximate) return plain;
     return isZh ? '约 $plain' : 'c. $plain';
   }
 
-  String _plainYear(String locale, bool isZh) {
+  /// The Septuagint's year in the same words, or null where there is
+  /// none. Never hedged: the intervals behind it are the same stated
+  /// ones, and the caveat that belongs to it — where the Greek's 430
+  /// years begin — is carried by the sentence beside it, not by a "c."
+  /// that would read as "nobody knows".
+  String? displaySeptuagintYear(String locale) {
+    final y = septuagintYear;
+    return y == null ? null : _plainYear(y, locale.startsWith('zh'));
+  }
+
+  String _plainYear(int year, bool isZh) {
     if (year < 0) {
       if (isZh) return '公元前 ${-year} 年';
       return '${-year} BC';
@@ -121,6 +155,8 @@ class TimelineEvent {
       personIds: (j['personIds'] as List?)?.cast<String>() ?? const [],
       basis: j['basis'] as String? ?? 'conventional',
       approximate: j['approximate'] as bool? ?? true,
+      datingRefs: (j['datingRefs'] as List?)?.cast<String>() ?? const [],
+      septuagintYear: (j['septuagintYear'] as num?)?.toInt(),
     );
   }
 }

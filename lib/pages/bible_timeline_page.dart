@@ -29,14 +29,23 @@ import 'package:seeksparks/utils/navigate_to_reader.dart';
 ///   [Year column]   ●   [Title + refs chips on tap-expand
 ///                        shows description and what the year rests on]
 ///
-/// WHY EVERY YEAR SAYS WHAT IT RESTS ON. 85 of the 98 events are
-/// `conventional` — a commonly published reconstruction that nothing
-/// the app ships fixes — and 13 are derived, either from an interval
-/// the text states or from Thiele. Until v1.6.142 the page printed all
-/// 98 identically, because [TimelineEvent] dropped `basis` and
-/// `approximate` when it parsed the asset. A reader was told "4000 BC"
-/// for the creation in the same voice as "1446 BC" for the exodus,
-/// and only one of those is countable from anything.
+/// WHY EVERY YEAR SAYS WHAT IT RESTS ON. 75 of the 98 events are
+/// `conventional` — a reconstruction no chain of stated intervals
+/// reaches — 5 are Thiele's outright, and 18 are counted from Thiele's
+/// anchor along intervals the text states. Until v1.6.142 the page
+/// printed all 98 identically, because [TimelineEvent] dropped `basis`
+/// and `approximate` when it parsed the asset. A reader was told
+/// "4000 BC" for the creation in the same voice as "1446 BC" for the
+/// exodus, and only one of those is countable from anything.
+///
+/// THE SPLIT WAS 85/13 UNTIL v1.6.146, AND THAT WAS NOT A MEASUREMENT.
+/// It came from thirteen event ids typed into `tools/audit_dates.py`,
+/// which never checked a year. Nine events it called `conventional`
+/// have years the text's own arithmetic fixes exactly — Ishmael's
+/// birth is stated outright at Genesis 16:16, and the page told the
+/// reader the text fixes no year for it. The basis is now derived, and
+/// a step whose arithmetic disagrees with the shipped year abstains
+/// rather than re-dating it.
 ///
 /// THE YEAR COLUMN IS MEASURED, NOT CHOSEN. It was 90 px holding a
 /// string the Font Size slider scales 0.6x-2x, and the hedge makes the
@@ -214,7 +223,9 @@ class _BibleTimelinePageState extends State<BibleTimelinePage> {
                     child: Row(
                       children: [
                         Text(
-                          (uiStrings['bibleTimelineCount']?[locale] ??
+                          (uiStrings[filtered.length == 1
+                                          ? 'bibleTimelineCountOne'
+                                          : 'bibleTimelineCount']?[locale] ??
                                   '{count} events')
                               .replaceAll(
                                   '{count}', '${filtered.length}'),
@@ -454,7 +465,7 @@ class _EraDivider extends StatelessWidget {
 /// generator cannot make the app silently confident.
 String _basisText(TimelineEvent e, String locale) {
   const keys = <String, String>{
-    'scripture': 'timelineBasisScripture',
+    'scripture+thiele': 'timelineBasisScripture',
     'thiele': 'timelineBasisThiele',
     'conventional': 'timelineBasisConventional',
   };
@@ -594,6 +605,59 @@ class _EventTile extends StatelessWidget {
                             height: 1.45,
                           ),
                         ),
+                        if (event.septuagintYear != null) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            (uiStrings['timelineSeptuagintYear']?[locale] ??
+                                    uiStrings['timelineSeptuagintYear']
+                                        ?['en'] ??
+                                    '')
+                                .replaceFirst(
+                              '{year}',
+                              event.displaySeptuagintYear(locale) ?? '',
+                            ),
+                            style: TextStyle(
+                              fontSize: t.scaled(11.5),
+                              fontStyle: FontStyle.italic,
+                              color:
+                                  scheme.onSurface.withValues(alpha: 0.6),
+                              height: 1.45,
+                            ),
+                          ),
+                        ],
+                        // The verses the year was counted along. Kept
+                        // apart from the narrative chips below and
+                        // labelled, because they answer a different
+                        // question and often name different chapters.
+                        if (event.datingRefs.isNotEmpty) ...[
+                          const SizedBox(height: 6),
+                          Wrap(
+                            spacing: 4,
+                            runSpacing: 4,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: [
+                              Text(
+                                uiStrings['timelineDatedBy']?[locale] ??
+                                    uiStrings['timelineDatedBy']?['en'] ??
+                                    '',
+                                style: TextStyle(
+                                  fontSize: t.scaled(11),
+                                  color: scheme.onSurface
+                                      .withValues(alpha: 0.55),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              for (final r in event.datingRefs)
+                                _RefChip(
+                                  raw: r,
+                                  locale: locale,
+                                  scheme: scheme,
+                                  onTap: () => onTapRef(r),
+                                  outlined: true,
+                                ),
+                            ],
+                          ),
+                        ],
                       ],
                       if (event.refs.isNotEmpty) ...[
                         const SizedBox(height: 6),
@@ -628,11 +692,17 @@ class _RefChip extends StatelessWidget {
   final String locale;
   final ColorScheme scheme;
   final VoidCallback onTap;
+
+  /// Dating verses read as an outline, narrative refs as a fill. Two
+  /// chip rows that jump to the same reader would otherwise look like
+  /// one list split by a line break.
+  final bool outlined;
   const _RefChip({
     required this.raw,
     required this.locale,
     required this.scheme,
     required this.onTap,
+    this.outlined = false,
   });
 
   String _localized() {
@@ -654,17 +724,19 @@ class _RefChip extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
           decoration: BoxDecoration(
-            color: scheme.primaryContainer.withValues(alpha: 0.25),
+            color: outlined
+                ? Colors.transparent
+                : scheme.primaryContainer.withValues(alpha: 0.25),
             borderRadius: BorderRadius.circular(4),
             border: Border.all(
-              color: scheme.primary.withValues(alpha: 0.35),
+              color: scheme.primary.withValues(alpha: outlined ? 0.5 : 0.35),
               width: 0.7,
             ),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.menu_book_rounded,
+              Icon(outlined ? Icons.straighten_rounded : Icons.menu_book_rounded,
                   size: 11, color: scheme.primary),
               const SizedBox(width: 3),
               Text(
