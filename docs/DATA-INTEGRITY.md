@@ -114,6 +114,12 @@ believe it is fine" and "we looked".
 | 39a | Septuagint absences whose words are in an earlier record (merges) | 302 absences, 55 read | **7** | named, and the row now says so — was "found by example, count unknown" |
 | 39b | Source verses the edition's own `<vs:>` markers name and we do not carry | 30,800 records / 31,004 source refs | **153, at 32 sites** | reported, not repaired — importing Greek is the owner's call |
 | 39c | Check 29c's two worked examples of a merge | 2 | **1 false** | corrected in place |
+| 40a | Mojibake in the evidence archive (UTF-8 read back as Latin-1) | 225 records / every string | **152 strings in 111 records** → **0** | **fixed**, now a test |
+| 40b | Does the `zh-Hant` slot hold Traditional, or Simplified wearing the label | 900 localized fields | **836 fields in 209 records were Simplified** → **0** | **fixed**, now a test |
+| 40c | `_meta.confidenceCounts` against the records present | 225 records | summed to **209** | **fixed**, now a test |
+| 40d | Does the Chinese title mean what the English title means | 225 title pairs | **2 defects, 8 occurrences** → **0** | **fixed**, now a test; 900 body fields unread |
+| 40e | Image URLs, ids, references, icons | 716 URLs / 225 records | **0** (real bytes at all 206 hosts, 0 SPA fallbacks) | clean |
+| 40f | The same Simplified-in-a-Traditional-slot screen on the two 繁體 Bibles | 2 editions / 62,204 verses | `cuvs-yhwh-tr` **0**; `biblexg-v2-tr` **207 flagged, mixed** | **open** — see "Next, in order" |
 
 *(Checks 34, 35, 37 and 38 have full sections below but were never given
 rows here; the omission is noted rather than guessed at.)*
@@ -4619,6 +4625,210 @@ claim, which is correct for both classes", is now wrong for 7 of the
 
 ---
 
+## Check 40 — the Biblical Evidence Archive's own words
+
+`assets/bible_evidence.json` is 225 archaeological, manuscript,
+scientific and historical entries, migrated from a standalone
+Vite/React/TS project (bible-evidence.netlify.app) and refreshed at
+runtime from yswords-data. It was one of the two assets still named
+under "Not checked yet". Check 25 had already verified that its 225
+scripture references resolve; nothing had ever read what it *says*.
+
+Repaired by `tools/repair_evidence_archive.py` (idempotent; it converts
+nothing by default and asserts a count for every rule it applies), and
+guarded by `test/bible_evidence_language_test.dart`.
+
+### 40a — 152 strings that were UTF-8 read back as Latin-1
+
+The migration wrote UTF-8 bytes and read them back as Latin-1, so every
+non-ASCII character became two or three wrong ones. **152 strings in
+111 of the 225 records**, all in fields the detail page prints as fact:
+
+| field | strings | what a reader saw |
+|---|---:|---|
+| `academicSources` | 93 | `AndrÃ© Parrot`; `IEJ 35 (1985): 22â<80><93>27` |
+| `timeline` | 27 | `9thâ<80><93>8th Century BCE` |
+| `discoveryDate` | 26 | `1868â<80><93>1870` |
+| `location` | 6 | `MusÃ©e du Louvre` |
+
+The largest share is inside `academicSources` — the archive's own
+evidence for its claims, so its scholars' names and page ranges were
+the least readable part of it.
+
+**The gate matters more than the repair.** The damage is deterministic
+and exactly reversible (`s.encode('latin-1').decode('utf-8')`), but a
+blanket attempt would corrupt legitimate text. Decoding is attempted
+only for a signature that cannot occur in real text: a **C1 control**
+(U+0080–U+009F, unassigned in any legitimate string; shown as
+`<80>` above) or `Ã`/`Â`
+followed by a UTF-8 continuation byte. **131** of the 152 carry a C1
+control; the other **21** are the `Ã`-mangled accented Latin with no
+control byte. Every repair is asserted to remove the signature, so
+nothing is double-decoded — measured, **0** strings needed a second
+round and **0** were unfixable.
+
+### 40b — 209 of 225 records served Simplified Chinese as Traditional
+
+Each record carries `{en, zh-Hans, zh-Hant}` for title, summary,
+description and scripturalCorrelation, and `BibleEvidence.localizedTitle`
+serves the locale key straight through. **209 of the 225 records held
+the Simplified string in the `zh-Hant` slot** — 207 of them in all four
+fields, byte for byte. A 繁體 reader was reading 簡體 and being told it
+was their edition. **836 fields** were regenerated.
+
+**The detector is byte identity, not a character test.** If `zh-Hant`
+holds the very same string as `zh-Hans`, no conversion ever ran. That
+splits the corpus exactly — 209 records, and the other 16 (a contiguous
+block, added later) have no identical field at all. A per-character
+detector gets this wrong, because opencc maps 里 to 裡 *by default*
+while 里 is perfectly good Traditional in 公里 and in every
+transliterated name; the same is true of 占 岩 征 托 干 后 准 游 岳. Two
+of the 209 have one field that is not identical, and the difference is
+a single character — 雅偉 for 雅伟, the divine name patched by hand into
+otherwise Simplified prose. They are converted whole, so no record ends
+up half in each script.
+
+The 16 already-Traditional records are **left alone**: they were
+machine-converted too, but where their text differs from what the
+conversion would produce, the existing reading is the better one
+(卷 not 捲, 讚 not 贊, 鏟除 not 剷除).
+
+**Why `s2tw`.** It is the Taiwan character standard *without* vocabulary
+substitution; `s2twp` would also rewrite the author's word choices,
+which is not ours to do. It leaked no 舊字形 into this corpus (麪 裏 説
+喫 衆 爲 all zero), and it matches the app's own 繁體 voice (`ui_strings`
+writes 裡 16 times and 裏 none).
+
+**The instrument that finds opencc's wrong choices.** A round trip
+cannot see them: `t2s(隻有) == 只有`, so a wrong choice round-trips
+perfectly. What does see them is an **override diff** — convert the
+corpus's 2,313 distinct Han characters *one at a time* to get opencc's
+context-free opinion, then diff that against the full-text conversion.
+Every difference is a phrase-dictionary decision, and that is where the
+errors live. It found **792 overrides in ~70 classes**. Each class was
+read with its contexts, and **42 rules** were written, each one refuted
+by the app's own shipped Traditional editions (`cuvs-yhwh-tr.json` +
+`biblexg-v2-tr.json`, 32k verses):
+
+| what opencc wrote | what it has to be | n | the witness |
+|---|---|---:|---|
+| 髮掘 髮明 髮生 髮表 | 發掘 發明 發生 發表 | 11 | only 髮型/頭髮 are hair |
+| 昇天 | 升天 | 11 | 升天 18 / 昇天 0 |
+| 闡明瞭 | 闡明了 | 10 | 了 is the aspect particle |
+| 馬裡 泰勒裡邁 瑪裡卜 …9 names | 馬里 … | 28 | 里 is every transliteration |
+| 曆史 | 歷史 | 6 | 歷史 6 / 曆史 0 (曆法/日曆/回曆 stay) |
+| 併為給 | 並為給 | 5 | Rev 1:9, 1 / 0 |
+| 瞭解 | 了解 | 5 | 了解 54 / 瞭解 1 |
+| 燒燬 焚燬 銷燬 | 燒毀 焚毀 銷毀 | 6 | 燒毀 14 / 燒燬 0 |
+| 倖存 倖免 | 幸存 幸免 | 5 | 幸存 1 / 倖存 0 |
+| 覆活 | 復活 | 3 | 復活 374 / 覆活 0 |
+| 繫住昴 | 系住昴 | 3 | Job 38:31, 1 / 0 |
+| 迴避 迴歸 迴響 | 回避 回歸 回響 | 3 | 回避 2, 回歸 4 / 迴* 0 |
+| 幹河 斐勒幹 | 乾河 斐勒干 | 4 | a wadi is dry; Phlegon is a name |
+| 託房 | 托房 | 2 | Judg 16:29, 1 / 0 |
+| 傢俱 | 家具 | 2 | 家具 8 / 傢俱 0 |
+| 麵向 羊皮捲 綵衣 餬口 情慾生 揹著 藉助 鉅款 一齣會堂 一箇中央 | … | 10 | one each |
+
+The other half of the rule is written down too, because a future
+over-eager pass could undo it: **彷彿** (102 / 0), **饑荒** (108 / 0),
+**細緻**, **簽名**, **岳母**, **鐘乳石**, **沖積** are opencc's phrase
+dictionary getting it *right*, and they are asserted to survive.
+
+### 40c — `_meta.confidenceCounts` described a smaller archive
+
+It said `{Definitive 80, Strong 90, Circumstantial 39}`, which sums to
+**209**. The file holds **225**, and the live counts are
+`{Strong 96, Definitive 90, Circumstantial 39}`. It is not read by the
+app, so no reader saw the wrong number, but it is the kind of stale
+summary that a later feature reads and believes. Recomputed, and the
+test now derives it from the records.
+
+### 40d — the Chinese that says something untrue
+
+225 English/Chinese title pairs were read one at a time. **Two defects,
+8 occurrences, in 3 records** — neither of them a script question:
+
+- **`但以理石碑`** (4 occurrences) for "Tel Dan Stele". 但以理 is Daniel
+  the prophet. Tel Dan is the **city of Dan**, and the stele is
+  9th-century Aramaic with nothing to do with the book of Daniel. The
+  record's own description already says 「以色列北部的但（Dan）遺址」, and
+  **但丘** appears 6 times elsewhere in this same archive — the archive
+  had the right word and the title did not use it. Now **但丘石碑**.
+- **`骨灰罐` / `骨灰盒`** (2 + 6). An ossuary is a stone box for
+  **bones**; 骨灰 is cremated ash, and Second Temple Jews did not
+  cremate. The same records say so themselves —
+  「十二具藏骨罐（石制藏骨匣）」 — and the archive writes 藏骨罐 22 times
+  and 骸骨箱 12 times elsewhere. Only these three records implied a
+  cremation the entries themselves deny.
+
+**A third candidate was withdrawn.** The Magdalen Papyrus is titled
+`馬大拉紙莎草殘片`, and the Magdalen it is named for is Magdalen College,
+Oxford, not Magdala. But the archive renders Magdala as **抹大拉** in all
+18 places and uses 馬大拉 only for the college — so it does not confuse
+them, and 馬大拉學院 is a defensible transliteration, not an error.
+
+**Instrument limit.** Only the 225 **titles** were read against their
+English. The 900 body fields — about 440 KB of Chinese — were not, so
+the body-level translation error rate is unmeasured, and the ossuary
+class was only found because a title led to it.
+
+### 40e — the images, and what was clean
+
+A negative result, recorded because it is one. Netlify's SPA fallback
+answers a missing asset with HTTP 200 and `index.html`, so existence was
+checked by **content**, not status: a range request for the first 64
+bytes of each URL and a magic-number test.
+
+- **716 image URLs, 716 distinct, all 206 with real image bytes**
+  (jpeg 652, png 55, webp 8, gif 1). **0** SPA-fallback HTML.
+  Re-verified on a 15-URL sample after the repair.
+- **0** duplicate ids, **0** records with an empty image list, an empty
+  source list or a blank scripture reference, and every `icon` is a
+  single emoji.
+
+### 40f — the same screen, pointed at the Traditional Bible editions
+
+Cheap to run once the instrument existed, so it was run. The screen: a
+character is suspect when opencc would map it to a *different*
+character that the same file already uses at least 5× more often — the
+file's own house form is the witness.
+
+- **`cuvs-yhwh-tr.json`: 0 defects.** It flags only 仆 (74) and 后 (51),
+  and every one is correct — all 74 仆 are 仆倒 (to fall prostrate) and
+  all 51 后 are 王后/太后. The edition repaired under #323 survives its
+  own screen.
+- **`biblexg-v2-tr.json`: 207 occurrences across 45 characters,
+  unadjudicated.** Some are certainly defects (稣 9 against 穌 1456;
+  爱 2 against 愛 459; 话 3 against 話 529 — 「上了年纪的婦女」 is in the
+  text of 提多書 2:3). Others are certainly false positives (里 87, 征 4,
+  干 3, 于 1, 云 1 are valid Traditional) or 舊字形 variants the edition
+  uses on purpose (内 11, 啓 9, 着 10, 没 12, 麽 2). **The true count is
+  not 207 and is not yet known** — it needs the same one-at-a-time
+  reading this check gave the archive. New open item.
+
+### What the instrument got wrong, recorded so the next run does not
+
+Three of this check's own guesses were refuted by the corpus, and each
+would have shipped a defect:
+
+1. **希伯崙 for Hebron.** Guessed from intuition. Our own Traditional
+   editions have 希伯崙 **0** and 希伯侖 **69**. opencc was right.
+2. **臺 → 台 as an exception**, reasoned from 12 already-converted
+   records that use 台. The corpus refutes it: 金燈臺 **15** / 金燈台
+   **0**, and all 25 臺 sites (平臺 燈臺 臺基 舞臺 天文臺 燭臺 臺階) are
+   legitimate. No exception added.
+3. **A corpus-witnessed auto-override** — take every case where the
+   Bible editions prefer a different character, and apply it. It
+   produced **175 changes**; reading them showed it fixes ~10 real
+   opencc errors and would introduce ~**15 new ones**, because the Bible
+   edition uses 舊字形 (墻 裏 麽 内 説 啓) and because biblical vocabulary
+   is not modern prose — it would have written 復製品, 關系, 恒星, 斗爭,
+   盡管, 采用, 松開, 銀制, 谷物, 征收, 周期. **Demoted from an override to
+   a detector**, and every candidate read one at a time. This is the
+   same discipline check 39 used, and the same reason.
+
+---
+
 ## Not checked yet
 
 - Verse **text** itself, against an *external* witness — for the
@@ -4641,8 +4851,18 @@ claim, which is correct for both classes", is now wrong for 7 of the
   effort closes — no public-domain NASB exists and the Eagle's View
   edition is licensed. A verse there that is wrong and well-formed and
   agrees with our own second copy would still not be found.
-- `bible_evidence.json`, `maps_index.json`
-  (see #300 for its provenance gap). Check 37 closes
+- `maps_index.json`
+  (see #300 for its provenance gap). Check 40 closes
+  **`bible_evidence.json`'s language and bookkeeping**: 152 mojibake
+  strings repaired, 836 fields that served Simplified under a `zh-Hant`
+  key regenerated, a stale `_meta` count corrected and two mistranslated
+  titles fixed. What it does **not** close is the archive's *claims* —
+  225 title pairs were read against their English, but the 900 body
+  fields (~440 KB of summary, description and scriptural correlation)
+  were not, and no instrument here can weigh "the stratum is consistent
+  with a 9th-century destruction". Its 716 images resolve to real bytes;
+  whether an image is *of* what its record says remains unasked.
+  Check 37 closes
   **`book_introductions.json`'s checkable claims**: all 66 key-passage
   references are sound, 137 quotations are attributed to a passage that
   contains them, and the 5 countable claims that were false are fixed.
@@ -4762,6 +4982,28 @@ claim, which is correct for both classes", is now wrong for 7 of the
    two search-key caches and the clipboard. Strong's-driven surfaces
    (KWIC, concordance) read the tagged layer, which a placeholder has no
    entry in, so they cannot show one — reasoned, not measured.
+9. **The 207 Simplified-looking characters in `biblexg-v2-tr.json`.**
+   Check 40f pointed check 40b's screen at the two 繁體 Bible editions.
+   `cuvs-yhwh-tr.json` is clean — all 74 仆 are 仆倒, all 51 后 are
+   王后/太后 — which is what #323's repair predicts. `biblexg-v2-tr.json`
+   flags **207 occurrences across 45 characters**, and the flags are a
+   mixture of three things that must be separated one character at a
+   time before a single byte is changed: *certain defects* (稣 9 against
+   穌 1,456; 爱 2 against 愛 459; 话 3 against 話 529 — 提多書 2:3 prints
+   「上了年纪的婦女」 with 纪 and 婦 in the same clause), *certain false
+   positives* (里 征 干 于 云 are valid Traditional), and *舊字形* — 内
+   啓 着 没 麽 are older orthography, not Simplified, and this edition
+   uses them consistently. **The true count is unknown and is
+   deliberately not written down as a finding.** #323's memory applies
+   in full: this file was declared clean on the 隻/餘/淨 test and is
+   clean *by that test*; a blanket `opencc -c s2t` invents a defect at
+   以賽亞書 29:17, so any repair must be per-context with an explicit
+   rule set witnessed by the corpus.
+
+   *(This ranks above item 3 by the accuracy rule — it is a wrong
+   character in a printed verse, not a label or a missing pane. The
+   numbers above are left as they are because five closed sections cite
+   them by number, and renumbering would make those citations false.)*
 
 *(Check 26 came off the "Not checked yet" list rather than this one, and
 it is the clearest case yet for the rule that a witness must come from
