@@ -112,6 +112,17 @@ const int kMaxVerseContext = 176;
 /// Largest `*N` word gap accepted inside a phrase.
 const int kMaxWordGap = 50;
 
+/// Most groups one compound search may hold (`compound_query.dart`).
+///
+/// Every group is a separate pass over the corpus, and the command line
+/// runs synchronously on the UI thread by design
+/// (`WorkbenchProvider._runCommand`), where one pass measures in the low
+/// tens of milliseconds. Six is where that budget stops being
+/// comfortable; BibleWorks documents no ceiling because its engine is
+/// index-driven and ours scans. Declared here so that
+/// [describeCommandIssue] can quote it without importing back.
+const int kMaxCompoundGroups = 6;
+
 // ── What went wrong, if anything ────────────────────────────────────
 
 /// Why a string is not a runnable command query.
@@ -119,17 +130,25 @@ const int kMaxWordGap = 50;
 /// [notACommand] is the ordinary case — no control character, so the
 /// caller should fall through to its own handling. Every other value is
 /// a real problem the reader should be told about by name; guessing at
-/// what `(.a b)/(.c d)` meant and running half of it would be worse than
-/// saying it is not supported yet.
+/// what `~(a|b)` meant and running half of it would be worse than saying
+/// it is not supported.
+///
+/// The `compound*` values belong to `compound_query.dart` and are
+/// declared here so that one enum covers the whole command line and
+/// `describeCommandIssue` stays the single place a failure is worded.
 enum CommandIssue {
   notACommand,
   emptyBody,
-  compoundUnsupported,
   regexUnsupported,
   fuzzyUnsupported,
   strongsTagUnsupported,
   phraseNotMultiToken,
   contextTooLarge,
+  compoundUnclosed,
+  compoundSeparator,
+  compoundGroupOperator,
+  compoundNested,
+  compoundTooManyGroups,
 }
 
 /// Parse outcome: exactly one of [query] / [issue] is non-null.
@@ -431,9 +450,10 @@ CommandParse parseCommandQuery(String raw) {
   if (trimmed.isEmpty) return const CommandParse.failed(CommandIssue.notACommand);
 
   final control = trimmed[0];
-  if (control == '(') {
-    return const CommandParse.failed(CommandIssue.compoundUnsupported);
-  }
+  // `(` opens a compound search, which is `compound_query.dart`'s
+  // grammar, not this one. Callers try that parser first; by the time a
+  // `(` line reaches here it has already been declined there, so the
+  // honest answer is that this parser has no claim on it.
   if (control == '~') {
     return const CommandParse.failed(CommandIssue.regexUnsupported);
   }
@@ -1064,8 +1084,6 @@ String? describeCommandIssue(CommandIssue issue, String locale) {
     CommandIssue.notACommand => null,
     CommandIssue.emptyBody =>
       s('cmdIssueEmpty', 'Type what to search for after the operator.'),
-    CommandIssue.compoundUnsupported => s('cmdIssueCompound',
-        'Compound searches with ( ) are not supported yet.'),
     CommandIssue.regexUnsupported => s('cmdIssueRegex',
         'Regular expression searches (~) are not supported.'),
     CommandIssue.fuzzyUnsupported => s('cmdIssueFuzzy',
@@ -1077,5 +1095,16 @@ String? describeCommandIssue(CommandIssue issue, String locale) {
     CommandIssue.contextTooLarge => s('cmdIssueContext',
             'The verse context after ; must be {max} or less.')
         .replaceAll('{max}', '$kMaxVerseContext'),
+    CommandIssue.compoundUnclosed => s('cmdIssueCompoundUnclosed',
+        'Every ( in a compound search needs a matching ).'),
+    CommandIssue.compoundSeparator => s('cmdIssueCompoundSeparator',
+        'Join the groups of a compound search with . / or ! — for example (.a b).15(/c d).'),
+    CommandIssue.compoundGroupOperator => s('cmdIssueCompoundGroupOperator',
+        "Every group in a compound search starts with an operator: (.a b), not (a b). Strong's expressions cannot be a group."),
+    CommandIssue.compoundNested => s('cmdIssueCompoundNested',
+        'Compound searches cannot be nested inside each other.'),
+    CommandIssue.compoundTooManyGroups => s('cmdIssueCompoundTooMany',
+            'A compound search can hold at most {max} groups.')
+        .replaceAll('{max}', '$kMaxCompoundGroups'),
   };
 }

@@ -28,6 +28,7 @@ import 'package:seeksparks/providers/workbench_provider.dart';
 import 'package:seeksparks/utils/command_draft.dart';
 import 'package:seeksparks/utils/command_examples.dart';
 import 'package:seeksparks/utils/command_query.dart' show parseCommandQuery;
+import 'package:seeksparks/utils/compound_query.dart' show parseCompoundQuery;
 import 'package:seeksparks/utils/strongs_boolean_search.dart';
 import 'package:seeksparks/widgets/command_pane.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -295,6 +296,12 @@ void main() {
           final ex = splitSyntaxLine(uiStrings[k]![locale]!).runnable!;
           expect(parseStrongsBoolean(ex), isNotNull, reason: '$k/$locale: $ex');
         }
+        // The compound row belongs to a third parser, so it is checked
+        // against that one rather than left out of the sweep.
+        final compound =
+            splitSyntaxLine(uiStrings['cmdSyntaxCompound']![locale]!).runnable!;
+        expect(parseCompoundQuery(compound).query, isNotNull,
+            reason: 'cmdSyntaxCompound/$locale: $compound');
       }
     });
 

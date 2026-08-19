@@ -2893,15 +2893,82 @@ const uiStrings = {
     'zh-Hant': '除 {w} 以外的任意詞',
     'en': 'any word but {w}',
   },
+  // ── Compound searches (bwh16) ─────────────────────────────────────
+  // Each join pattern carries its own leading separator, because English
+  // wants a space in front of "and" and Chinese wants a comma and no
+  // space. Keeping that inside the string is the only way one echo
+  // builder can serve both without a locale test in the code.
+  'cmdEchoGroup': {
+    'zh-Hans': '（{body}）',
+    'zh-Hant': '（{body}）',
+    'en': '({body})',
+  },
+  'cmdEchoJoinAnd': {
+    'zh-Hans': '，并且{group}',
+    'zh-Hant': '，並且{group}',
+    'en': ' and {group}',
+  },
+  'cmdEchoJoinAndNear': {
+    'zh-Hans': '，并且相隔 {n} 节以内有{group}',
+    'zh-Hant': '，並且相隔 {n} 節以內有{group}',
+    'en': ' and within {n} verses of {group}',
+  },
+  'cmdEchoJoinOr': {
+    'zh-Hans': '，或者{group}',
+    'zh-Hant': '，或者{group}',
+    'en': ' or {group}',
+  },
+  'cmdEchoJoinNot': {
+    'zh-Hans': '，但不含{group}',
+    'zh-Hant': '，但不含{group}',
+    'en': ' but not {group}',
+  },
+  'cmdEchoJoinNotNear': {
+    'zh-Hans': '，但相隔 {n} 节以内没有{group}',
+    'zh-Hant': '，但相隔 {n} 節以內沒有{group}',
+    'en': ' but not within {n} verses of {group}',
+  },
+  'cmdEchoCompoundLeftToRight': {
+    'zh-Hans': '按从左到右的顺序依次组合',
+    'zh-Hant': '按從左到右的順序依次組合',
+    'en': 'applied left to right',
+  },
+  'cmdEchoCompoundListing': {
+    'zh-Hans': '列出最后一组的经文',
+    'zh-Hant': '列出最後一組的經文',
+    'en': "listing the last group's verses",
+  },
   'cmdIssueEmpty': {
     'zh-Hans': '请在运算符后输入要搜索的内容。',
     'zh-Hant': '請在運算子後輸入要搜尋的內容。',
     'en': 'Type what to search for after the operator.',
   },
-  'cmdIssueCompound': {
-    'zh-Hans': '暂不支持 ( ) 复合搜索。',
-    'zh-Hant': '暫不支援 ( ) 複合搜尋。',
-    'en': 'Compound searches with ( ) are not supported yet.',
+  'cmdIssueCompoundUnclosed': {
+    'zh-Hans': '复合搜索里每个 ( 都要有对应的 )。',
+    'zh-Hant': '複合搜尋裡每個 ( 都要有對應的 )。',
+    'en': 'Every ( in a compound search needs a matching ).',
+  },
+  'cmdIssueCompoundSeparator': {
+    'zh-Hans': '复合搜索的各组之间用 . / ! 连接，例如 (.爱 神).15(/信心 行为)。',
+    'zh-Hant': '複合搜尋的各組之間用 . / ! 連接，例如 (.愛 神).15(/信心 行為)。',
+    'en':
+        'Join the groups of a compound search with . / or ! — for example (.a b).15(/c d).',
+  },
+  'cmdIssueCompoundGroupOperator': {
+    'zh-Hans': '复合搜索的每一组都要以运算符开头：(.爱 神)，而不是 (爱 神)。原文编号表达式不能作为一组。',
+    'zh-Hant': '複合搜尋的每一組都要以運算子開頭：(.愛 神)，而不是 (愛 神)。原文編號表達式不能作為一組。',
+    'en':
+        "Every group in a compound search starts with an operator: (.a b), not (a b). Strong's expressions cannot be a group.",
+  },
+  'cmdIssueCompoundNested': {
+    'zh-Hans': '复合搜索不能互相嵌套。',
+    'zh-Hant': '複合搜尋不能互相巢狀。',
+    'en': 'Compound searches cannot be nested inside each other.',
+  },
+  'cmdIssueCompoundTooMany': {
+    'zh-Hans': '一次复合搜索最多 {max} 组。',
+    'zh-Hant': '一次複合搜尋最多 {max} 組。',
+    'en': 'A compound search can hold at most {max} groups.',
   },
   'cmdIssueRegex': {
     'zh-Hans': '不支持正则表达式搜索（~）。',
@@ -2967,6 +3034,11 @@ const uiStrings = {
     'zh-Hans': '.保罗 西拉;10 — 相隔 10 节以内',
     'zh-Hant': '.保羅 西拉;10 — 相隔 10 節以內',
     'en': '.paul silas;10 — within 10 verses of each other',
+  },
+  'cmdSyntaxCompound': {
+    'zh-Hans': '(.恩典 行为).15(/耶稣 基督) — 两段搜索，相隔 15 节以内',
+    'zh-Hant': '(.恩典 行為).15(/耶穌 基督) — 兩段搜尋，相隔 15 節以內',
+    'en': '(.grace works).15(/jesus christ) — two searches, 15 verses apart',
   },
   'cmdSyntaxHistory': {
     'zh-Hans': '↑ ↓ 调出上次输入的命令 · Esc 清空',
@@ -3436,6 +3508,17 @@ const uiStrings = {
     'zh-Hans': '这些词都出现过，但没有任何一节同时包含全部。',
     'zh-Hant': '這些詞都出現過，但沒有任何一節同時包含全部。',
     'en': 'Each of these words occurs, but no one verse holds them all.',
+  },
+  'cmdCompoundGroupEmpty': {
+    'zh-Hans': '（{group}）没有匹配到任何一节，因此整个复合搜索没有结果。',
+    'zh-Hant': '（{group}）沒有匹配到任何一節，因此整個複合搜尋沒有結果。',
+    'en': 'No verse matched ({group}), so the whole compound found nothing.',
+  },
+  'cmdCompoundNoOverlap': {
+    'zh-Hans': '每一组都有结果，但没有一处按这行的要求落在一起。',
+    'zh-Hant': '每一組都有結果，但沒有一處按這行的要求落在一起。',
+    'en':
+        'Each group found verses, but none of them fall together as the line asks.',
   },
   'commandSearchHint': {
     'zh-Hans': '搜索经文，或原文编号：G25 AND G26',

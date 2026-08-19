@@ -96,8 +96,59 @@ void main() {
 
     test('an unsupported operator is reported, not half-run', () async {
       final wb = WorkbenchProvider(mainProvider: _mp());
+      await wb.runSearch('~And God said');
+      expect(wb.commandIssue, CommandIssue.regexUnsupported);
+      expect(wb.textResults, isEmpty);
+      wb.dispose();
+    });
+
+    test('a parenthesised line without operators is still plain text',
+        () async {
+      // `(god OR world)` used to be refused as an unsupported compound.
+      // It is not compound-shaped — no group opens with a control
+      // character — so it falls through to the substring search a reader
+      // who typed literal parentheses meant.
+      final wb = WorkbenchProvider(mainProvider: _mp());
       await wb.runSearch('(god OR world)');
-      expect(wb.commandIssue, CommandIssue.compoundUnsupported);
+      expect(wb.commandIssue, isNull);
+      expect(wb.compoundQuery, isNull);
+      wb.dispose();
+    });
+
+    test('a compound search runs, and lists the last group', () async {
+      // Genesis 1:2 holds "earth" and no "beginning"; it is listed
+      // because it sits next to a verse that matched the first group.
+      // That is the whole feature reaching the screen.
+      final wb = WorkbenchProvider(mainProvider: _mp());
+      await wb.runSearch('(.beginning).1(.earth)');
+      expect(wb.compoundQuery, isNotNull);
+      expect(wb.commandQuery, isNull, reason: 'set instead of, never beside');
+      expect(wb.commandIssue, isNull);
+      expect(wb.compoundGroupCounts, [1, 2]);
+      expect([for (final v in wb.textResults) '${v.book} ${v.verse}'],
+          ['Genesis 1', 'Genesis 2']);
+      // A compound has no looser reading to offer.
+      expect(wb.broadening, isNull);
+      wb.dispose();
+    });
+
+    test("a compound's window stops at a book boundary", () async {
+      // Genesis 1:2 and John 3:16 are adjacent in the corpus list and in
+      // different books, so `.1` must not join them.
+      final wb = WorkbenchProvider(mainProvider: _mp());
+      await wb.runSearch('(.void).1(.loved)');
+      expect(wb.compoundQuery, isNotNull);
+      expect(wb.compoundGroupCounts, [1, 1],
+          reason: 'both groups matched; only the join rejects them');
+      expect(wb.textResults, isEmpty);
+      wb.dispose();
+    });
+
+    test('a malformed compound is named, not half-run', () async {
+      final wb = WorkbenchProvider(mainProvider: _mp());
+      await wb.runSearch('(.god)(.world)');
+      expect(wb.commandIssue, CommandIssue.compoundSeparator);
+      expect(wb.compoundQuery, isNull);
       expect(wb.textResults, isEmpty);
       wb.dispose();
     });
@@ -233,6 +284,11 @@ void main() {
       expect(find.textContaining('within 10 verses of each other'),
           findsOneWidget);
       expect(find.textContaining('.保罗 西拉;10'), findsOneWidget);
+      // The compound row, on the same terms: Chinese example, English
+      // explanation. Its absence is how the feature would ship unfindable.
+      expect(find.textContaining('two searches, 15 verses apart'),
+          findsOneWidget);
+      expect(find.textContaining('(.恩典 行为).15(/耶稣 基督)'), findsOneWidget);
     });
 
     testWidgets('a control chip replaces the control, it does not stack',

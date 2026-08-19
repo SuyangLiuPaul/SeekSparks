@@ -87,8 +87,9 @@ void main() {
     });
 
     test('unsupported syntax is named rather than half-run', () {
-      expect(_issue('(.grace work)/(.faith)'),
-          CommandIssue.compoundUnsupported);
+      // `(` belongs to the compound grammar in `compound_query.dart`, so
+      // this parser has no claim on it — the caller tries that one first.
+      expect(_issue('(.grace work)/(.faith)'), CommandIssue.notACommand);
       expect(_issue('~And God said'), CommandIssue.regexUnsupported);
       expect(_issue('=.faith works'), CommandIssue.fuzzyUnsupported);
       expect(_issue('.man@444'), CommandIssue.strongsTagUnsupported);

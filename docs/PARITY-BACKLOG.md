@@ -111,12 +111,26 @@ file should read.
   feature expert-only. The parser detects and *names* it rather than
   failing silently (`:446`). Do not re-open without a plan for the
   runaway-backtrack case.
-- **Compound searches with parentheses** — **ABSENT.** bwh16 "Doing
-  Compound Searches". This is the one missing piece of search *algebra*:
-  today `G25 AND G26 OR G27` cannot be grouped. *Done:* parenthesised
-  grouping in `strongs_boolean_search.dart` with precedence documented
-  and tested, and the `?` help card gaining a runnable example (#299 made
-  those examples tappable, so the mechanism already exists).
+- **Compound searches with parentheses** — **DONE 2026-08-19**,
+  `lib/utils/compound_query.dart`. bwh16 "Doing Compound Searches".
+  **This entry described the wrong feature** and the correction is worth
+  keeping: it read compound search as boolean *grouping* (`G25 AND G26 OR
+  G27`). It is not. Each `( )` is a whole sub-search with its own control
+  character and its own `;N`; the separator (`.` `/` `!`) carries a verse
+  distance of its own, so `.15` is a proximity JOIN between two result
+  sets rather than an intersection; and the LAST group decides which
+  verses are listed. Measured on the KJV, the distance is worth 24 → 159
+  verses and the group order is worth 159 vs 82 — see research-notes
+  2026-08-19. Shipped with the `?` card example, the echo (including an
+  "applied left to right" note, since there is no precedence), and
+  per-group counts so an empty half can be named.
+  *Still open, and genuinely separate:* **grouping inside a Strong's
+  expression** (`G25 AND (G26 OR G27)`) in `strongs_boolean_search.dart`,
+  and **a Strong's expression as a compound group** — the two engines
+  return different types (corpus indices vs concordance refs, one async),
+  so joining them needs a reference→index map and a decision about what a
+  proximity join means across a tagged layer. The compound parser refuses
+  it by name (`CommandIssue.compoundGroupOperator`) rather than guessing.
 - **Cross-version searches** — **ABSENT.** bwh16. "Find verses where the
   KJV says X and the LXX says Y." We have every version loaded and a
   parallel view; nothing can query across two at once. *Done:* one
@@ -643,8 +657,9 @@ In rough order of value, if nothing else is pressing:
 4. **Word list / verse list comparison** (§3.5) — the comparison is the
    feature; we have both halves and neither compares. `version_diff.dart`
    now supplies a tested LCS; that is the hard half of this.
-5. **Compound (parenthesised) search** (§3.1) — the last missing piece of
-   search algebra.
+5. ~~Compound (parenthesised) search~~ — **DONE 2026-08-19**, §3.1. What
+   is left of it is Strong's-side grouping, which is a different engine;
+   see the corrected §3.1 entry before picking it up.
 6. **Transliterated Greek/Hebrew search input** (§3.7) — cheap, and it
    unlocks the corpus for readers who know the languages.
 

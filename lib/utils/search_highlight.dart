@@ -34,6 +34,7 @@
 library;
 
 import 'package:seeksparks/utils/command_query.dart';
+import 'package:seeksparks/utils/compound_query.dart';
 import 'package:seeksparks/utils/diacritics.dart';
 import 'package:seeksparks/utils/strongs_boolean_search.dart';
 
@@ -78,10 +79,15 @@ SearchHighlight highlightsForQuery(String rawQuery) {
   final q = rawQuery.trim();
   if (q.isEmpty) return const SearchHighlight();
 
-  final command = parseCommandQuery(q).query;
-  if (command != null) {
+  // A compound marks every group's positive terms. Nothing spurious can
+  // come of that: a verse listed by a proximity join genuinely holds the
+  // words of one group, and a term only marks where it occurs.
+  final compound = parseCompoundQuery(q).query;
+  final positives =
+      compound?.positiveTerms ?? parseCommandQuery(q).query?.positiveTerms;
+  if (positives != null) {
     final terms = <String>[];
-    for (final t in command.positiveTerms) {
+    for (final t in positives) {
       final core = t.literalCore.toLowerCase();
       if (core.isNotEmpty) terms.add(core);
     }

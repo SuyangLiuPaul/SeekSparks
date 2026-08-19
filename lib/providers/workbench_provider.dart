@@ -11,6 +11,7 @@ import 'package:seeksparks/services/search_service.dart';
 import 'package:seeksparks/utils/ai_ref_resolution.dart';
 import 'package:seeksparks/utils/command_query.dart';
 import 'package:seeksparks/utils/command_verb.dart' show LimitSpec;
+import 'package:seeksparks/utils/compound_query.dart';
 import 'package:seeksparks/utils/search_broadening.dart';
 import 'package:seeksparks/utils/search_scope.dart' show limitSpecForBooks;
 import 'package:seeksparks/utils/strongs_boolean_search.dart';
@@ -95,6 +96,16 @@ class WorkbenchProvider extends ChangeNotifier {
   /// began with a control character and did not parse — never for
   /// ordinary text, which is not a failed command but a plain search.
   CommandIssue? commandIssue;
+
+  /// The last query when it was written as a compound search
+  /// (`(.grac* work*;5).15(/jesus christ)`). Set instead of
+  /// [commandQuery], never alongside it.
+  CompoundQuery? compoundQuery;
+
+  /// How many verses each group of [compoundQuery] matched on its own,
+  /// in the order written. The combined list cannot show which half of a
+  /// compound was the empty one; this can.
+  List<int>? compoundGroupCounts;
 
   /// The looser reading of the last query, and how many verses it really
   /// returns. Null whenever it would not help — including, deliberately,
@@ -393,6 +404,8 @@ class WorkbenchProvider extends ChangeNotifier {
     strongsByBook = const <String, int>{};
     strongsListTruncated = false;
     commandQuery = null;
+    compoundQuery = null;
+    compoundGroupCounts = null;
     broadening = null;
     termsMissing = null;
     commandIssue = null;
@@ -402,6 +415,19 @@ class WorkbenchProvider extends ChangeNotifier {
     _notify();
 
     try {
+      // Compound first: it is the only shape that can open with `(`, and
+      // it declines every line that is not unambiguously compound, so it
+      // cannot take a plain `(hello)` away from the text scan below.
+      final compound = parseCompoundQuery(query);
+      if (compound.isCompound) {
+        compoundQuery = compound.query;
+        commandIssue = compound.issue;
+        if (compound.query != null) {
+          textResults = _runCompound(compound.query!);
+        }
+        return;
+      }
+
       final parse = parseCommandQuery(query);
       if (parse.isCommand) {
         commandQuery = parse.query;
@@ -498,6 +524,11 @@ class WorkbenchProvider extends ChangeNotifier {
   void _measureBroadening() {
     broadening = null;
     termsMissing = null;
+    // A compound line has no looser reading: dropping its operators
+    // would leave `broadenedCommandLine` staring at parentheses it does
+    // not know, and the useful thing to say about an empty compound is
+    // WHICH group was empty, which `compoundGroupCounts` already holds.
+    if (compoundQuery != null) return;
     final current = textResults.length;
     if (current > kBroadenBelow) return;
 
@@ -560,6 +591,23 @@ class WorkbenchProvider extends ChangeNotifier {
     );
   }
 
+  /// Run a parsed compound query, keeping each group's own count.
+  List<Verse> _runCompound(CompoundQuery query) {
+    final verses = mainProvider.verses;
+    final result = runCompoundQuery(
+      query: query,
+      texts: mainProvider.wordKeys,
+      searchKeys: mainProvider.searchKeys,
+      books: [for (final v in verses) v.book],
+    );
+    compoundGroupCounts = result.groupCounts;
+    return applySearchLimit(
+      [for (final i in result.indices) verses[i]],
+      searchLimit,
+      (v) => '${toEnglish(v.book) ?? v.book}-${v.chapter}-${v.verse}',
+    );
+  }
+
   List<ConcordanceRef> _limitRefs(List<ConcordanceRef> refs) => applySearchLimit(
         refs,
         searchLimit,
@@ -575,6 +623,8 @@ class WorkbenchProvider extends ChangeNotifier {
     strongsByBook = const <String, int>{};
     strongsListTruncated = false;
     commandQuery = null;
+    compoundQuery = null;
+    compoundGroupCounts = null;
     broadening = null;
     termsMissing = null;
     commandIssue = null;
@@ -624,6 +674,8 @@ class WorkbenchProvider extends ChangeNotifier {
     strongsByBook = const <String, int>{};
     strongsListTruncated = false;
     commandQuery = null;
+    compoundQuery = null;
+    compoundGroupCounts = null;
     broadening = null;
     termsMissing = null;
     commandIssue = null;

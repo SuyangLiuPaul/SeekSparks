@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seeksparks/constants/text_patterns.dart';
 import 'package:seeksparks/utils/command_query.dart';
+import 'package:seeksparks/utils/compound_query.dart';
 
 /// The command line against the real 31,102-verse KJV.
 ///
@@ -170,6 +171,74 @@ void main() {
           ['Genesis 14:18', 'Psalms 110:4']);
       expect(r.tokenized, lessThan(50),
           reason: 'the whole point of the prefilter');
+    });
+  });
+
+  group('compound searches over the whole KJV (bwh16)', () {
+    // bwh16's own worked example, run against the corpus it was written
+    // about. These numbers are the record: the feature's entire claim is
+    // that a distance between two SEARCHES finds passages that no single
+    // verse could, and only a real corpus can show that it does.
+    List<int> compound(String raw) {
+      final p = parseCompoundQuery(raw);
+      expect(p.query, isNotNull, reason: '"$raw": ${p.issue}');
+      return runCompoundQuery(
+              query: p.query!, texts: texts, searchKeys: keys, books: books)
+          .indices;
+    }
+
+    test('a distance finds far more than the same verse does', () {
+      // 24 verses hold grace-and-works AND jesus-or-christ. 159 lie
+      // within fifteen verses of such a passage. Those extra 135 are the
+      // feature: they share no word with the other group.
+      expect(compound('(.grac* work*;5).(/jesus christ)'), hasLength(24));
+      expect(compound('(.grac* work*;5).15(/jesus christ)'), hasLength(159));
+    });
+
+    test('swapping the groups changes the answer', () {
+      // The fact no list of verses can show, and the reason the echo
+      // says which side it is listing. Same two searches, same distance.
+      expect(compound('(.grac* work*;5).15(/jesus christ)'), hasLength(159));
+      expect(compound('(/jesus christ).15(.grac* work*;5)'), hasLength(82));
+    });
+
+    test('the union is exactly the two groups minus their overlap', () {
+      // An independent check on both set operations at once: if the
+      // union double-counted, or the intersection were approximate, this
+      // identity would not hold to the verse.
+      final left = compound('(.grac* work*;5)/(.nonexistentword)');
+      final right = compound('(/jesus christ)/(.nonexistentword)');
+      final union = compound('(.grac* work*;5)/(/jesus christ)');
+      final both = compound('(.grac* work*;5).(/jesus christ)');
+      expect(left, hasLength(116));
+      expect(right, hasLength(1208));
+      expect(union, hasLength(left.length + right.length - both.length));
+      expect(union, hasLength(1300));
+    });
+
+    test('every group reports its own count, so an empty half is nameable', () {
+      final r = runCompoundQuery(
+        query: parseCompoundQuery('(.grace).(.nonexistentword)').query!,
+        texts: texts,
+        searchKeys: keys,
+        books: books,
+      );
+      // 159 VERSES, not the 170 OCCURRENCES a concordance reports for
+      // "grace" in the KJV. A group count is a verse count, like every
+      // other number the command line prints.
+      expect(r.groupCounts, [159, 0]);
+      expect(r.indices, isEmpty);
+    });
+
+    test('a compound stays interactive', () {
+      // Every group is a separate pass, which is why there is a ceiling
+      // on how many a line may hold. The measured worst case above is
+      // two passes plus a join at ~140ms.
+      final sw = Stopwatch()..start();
+      compound('(.grac* work*;5).15(/jesus christ)');
+      sw.stop();
+      expect(sw.elapsedMilliseconds, lessThan(3000),
+          reason: 'took ${sw.elapsedMilliseconds}ms');
     });
   });
 

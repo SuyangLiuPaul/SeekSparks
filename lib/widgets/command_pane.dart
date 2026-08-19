@@ -25,6 +25,7 @@ import 'package:seeksparks/utils/clipboard_helper.dart';
 import 'package:seeksparks/utils/command_draft.dart';
 import 'package:seeksparks/utils/command_examples.dart';
 import 'package:seeksparks/utils/command_query.dart';
+import 'package:seeksparks/utils/compound_query.dart';
 import 'package:seeksparks/utils/command_verb.dart';
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 import 'package:seeksparks/utils/jump_to_reference.dart' as jumper;
@@ -978,6 +979,7 @@ class _CommandPaneState extends State<CommandPane> {
             'cmdSyntaxWild',
             'cmdSyntaxGap',
             'cmdSyntaxContext',
+            'cmdSyntaxCompound',
           ]
         ),
         (
@@ -1289,6 +1291,8 @@ class _CommandPaneState extends State<CommandPane> {
   /// day goes: `'!your *5 house` looks like it excludes "your" and does
   /// not, and there is no way to find that out from a list of verses.
   String _queryLabel(WorkbenchProvider wb, String locale) {
+    final compound = wb.compoundQuery;
+    if (compound != null) return describeCompoundQuery(compound, locale);
     final cq = wb.commandQuery;
     return cq == null ? wb.lastQuery : describeCommandQuery(cq, locale);
   }
@@ -1363,6 +1367,22 @@ class _CommandPaneState extends State<CommandPane> {
   /// Why there are no results, when the answer is a word rather than a
   /// query. Null unless every word was probed.
   String? _missingWords(WorkbenchProvider wb, String locale) {
+    // A compound has its own answer, and it is a better one: a combined
+    // list of nothing cannot show which of two searches was the empty
+    // half, and re-probing single words would blame the wrong thing.
+    final compound = wb.compoundQuery;
+    final counts = wb.compoundGroupCounts;
+    if (compound != null && counts != null) {
+      final sources = compound.groupSources;
+      for (var i = 0; i < counts.length && i < sources.length; i++) {
+        if (counts[i] > 0) continue;
+        return (uiStrings['cmdCompoundGroupEmpty']?[locale] ??
+                'No verse matched ({group}), so the whole compound found nothing.')
+            .replaceAll('{group}', sources[i]);
+      }
+      return uiStrings['cmdCompoundNoOverlap']?[locale] ??
+          'Each group found verses, but none of them fall together as the line asks.';
+    }
     final missing = wb.termsMissing;
     if (missing == null) return null;
     final listSep = uiStrings['cmdListSeparator']?[locale] ?? ', ';
