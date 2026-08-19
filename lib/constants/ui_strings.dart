@@ -7546,6 +7546,14 @@ const uiStrings = {
     'zh-Hant': '{n} 個主題以此為名',
     'en': '{n} topics named',
   },
+  // English only needs the singular; the Chinese forms are identical to
+  // the plural and are carried so a locale lookup never falls through to
+  // the English one. Same for every `…One` key below.
+  'navesTopicsMatchingOne': {
+    'zh-Hans': '1 个主题以此为名',
+    'zh-Hant': '1 個主題以此為名',
+    'en': '1 topic named',
+  },
   'navesNoTopic': {
     'zh-Hans': '没有名为「{q}」的主题。',
     'zh-Hant': '沒有名為「{q}」的主題。',
@@ -7560,6 +7568,11 @@ const uiStrings = {
     'zh-Hans': '{n} 行条目正文提到它',
     'zh-Hant': '{n} 行條目正文提到它',
     'en': '{n} lines mention it',
+  },
+  'navesTextHitsOne': {
+    'zh-Hans': '1 行条目正文提到它',
+    'zh-Hant': '1 行條目正文提到它',
+    'en': '1 line mentions it',
   },
   'navesTextShowing': {
     'zh-Hans': '显示前 {n} 行',
@@ -7578,10 +7591,28 @@ const uiStrings = {
     'zh-Hant': '僅指引',
     'en': 'cross-reference',
   },
-  'navesTopicCounts': {
-    'zh-Hans': '{l} 行 · {r} 处经文',
-    'zh-Hant': '{l} 行 · {r} 處經文',
-    'en': '{l} lines · {r} references',
+  // The entry header's two halves. Split because they pluralise
+  // independently and 2,413 of the 5,322 topics are exactly one line
+  // long — one template with two slots would need four English forms.
+  'navesLineCount': {
+    'zh-Hans': '{n} 行',
+    'zh-Hant': '{n} 行',
+    'en': '{n} lines',
+  },
+  'navesLineCountOne': {
+    'zh-Hans': '1 行',
+    'zh-Hant': '1 行',
+    'en': '1 line',
+  },
+  'navesRefCount': {
+    'zh-Hans': '{n} 处经文',
+    'zh-Hant': '{n} 處經文',
+    'en': '{n} references',
+  },
+  'navesRefCountOne': {
+    'zh-Hans': '1 处经文',
+    'zh-Hant': '1 處經文',
+    'en': '1 reference',
   },
   'navesAllTopics': {
     'zh-Hans': '全部主题',

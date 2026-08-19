@@ -20,6 +20,7 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/pages/naves_page.dart';
@@ -28,6 +29,12 @@ import 'package:seeksparks/services/naves_service.dart';
 /// JESUS, THE CHRIST — 801 lines, 3,828 references, the largest entry in
 /// the work and the reason the outline collapses at all.
 const int kJesusTopicId = 2779;
+
+/// ABADDON — one line, one reference. The commonest shape in the work:
+/// 2,413 of the 5,322 topics are a single line and 1,153 of those cite a
+/// single verse, so this entry's header is the one an English reader
+/// sees most often.
+const int kAbaddonTopicId = 1;
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -39,6 +46,7 @@ void main() {
   setUpAll(() async {
     await NavesService.heads();
     await NavesService.topic(kJesusTopicId);
+    await NavesService.topic(kAbaddonTopicId);
     await NavesService.lineTexts();
   });
 
@@ -48,6 +56,25 @@ void main() {
           home: NavesPage(initialTopicId: topicId),
         ),
       );
+
+  /// The same page in English. Only worth building for the counts:
+  /// Chinese has no singular, so a zh assertion cannot see a plural
+  /// defect and the shipped build read "1 lines · 1 references".
+  ///
+  /// `setLocale` arms `AppSettings`' 600 ms user-prefs write debounce,
+  /// which outlives `pumpAndSettle` — that only runs the clock while
+  /// frames are scheduled — and then fails the test on a pending timer.
+  Future<void> pumpEnglish(WidgetTester t, {int? topicId}) async {
+    SharedPreferences.setMockInitialValues({});
+    final settings = AppSettings();
+    await settings.setLocale('en');
+    await t.pumpWidget(ChangeNotifierProvider.value(
+      value: settings,
+      child: MaterialApp(home: NavesPage(initialTopicId: topicId)),
+    ));
+    await t.pumpAndSettle();
+    await t.pump(const Duration(milliseconds: 700));
+  }
 
   testWidgets('the index opens on the whole work and names its size',
       (t) async {
@@ -139,5 +166,35 @@ void main() {
     await t.pumpAndSettle();
 
     expect(find.text('Genealogy of'), findsOneWidget);
+  });
+
+  // Found by looking at the deployed page rather than by a number: the
+  // English header read "1 topics named" / "1 lines · 1 references".
+  // Chinese has no singular, so every zh assertion above stayed green
+  // through it.
+  testWidgets('English counts have a singular form', (t) async {
+    await pumpEnglish(t, topicId: kAbaddonTopicId);
+
+    expect(find.text('1 line · 1 reference'), findsOneWidget);
+  });
+
+  testWidgets('a single headword hit is "1 topic", not "1 topics"',
+      (t) async {
+    await pumpEnglish(t);
+
+    // ABADDON is the only headword beginning with these letters.
+    await t.enterText(find.byType(TextField), 'abaddon');
+    await t.pumpAndSettle();
+
+    expect(find.text('1 topic named'), findsOneWidget);
+  });
+
+  testWidgets('a single entry-text hit agrees with its verb', (t) async {
+    await pumpEnglish(t);
+
+    await t.enterText(find.byType(TextField), 'worry');
+    await t.pumpAndSettle();
+
+    expect(find.text('1 line mentions it'), findsOneWidget);
   });
 }

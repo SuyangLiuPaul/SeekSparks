@@ -137,6 +137,15 @@ class _NavesPageState extends State<NavesPage> {
   String _s(String key, String fallback, String locale) =>
       uiStrings[key]?[locale] ?? fallback;
 
+  // English needs a singular; Chinese does not, and carries one anyway so
+  // a lookup never falls through to the English form. Not a nicety: 2,413
+  // of the 5,322 topics are one line long and 1,153 are one line and one
+  // reference, so "1 lines · 1 references" is the commonest header here.
+  String _sn(String key, String many, String one, int n, String locale) =>
+      n == 1
+          ? _s('${key}One', one, locale)
+          : _s(key, many, locale).replaceAll('{n}', '$n');
+
   // ── Navigation ────────────────────────────────────────────────────
 
   void _open(int id, {int? focusLine}) {
@@ -246,8 +255,8 @@ class _NavesPageState extends State<NavesPage> {
           _countHeader(
             c,
             searching
-                ? _s('navesTopicsMatching', '{n} topics named', locale)
-                    .replaceAll('{n}', '${hits.length}')
+                ? _sn('navesTopicsMatching', '{n} topics named',
+                    '1 topic named', hits.length, locale)
                 : _s('navesTopicsAll', '{n} topics', locale)
                     .replaceAll('{n}', '${heads.length}'),
           ),
@@ -454,8 +463,8 @@ class _NavesPageState extends State<NavesPage> {
               t,
               // The total, never the number shown: 200 rows out of 1,400
               // that says "200" is a lie the reader cannot see.
-              _s('navesTextHits', '{n} lines mention it', locale)
-                  .replaceAll('{n}', '${textResult.total}'),
+              _sn('navesTextHits', '{n} lines mention it',
+                  '1 line mentions it', textResult.total, locale),
               note: textResult.truncated
                   ? _s('navesTextShowing', 'first {n} shown', locale)
                       .replaceAll('{n}', '${textResult.hits.length}')
@@ -563,9 +572,12 @@ class _NavesPageState extends State<NavesPage> {
         if (topic != null)
           _countHeader(
             c,
-            _s('navesTopicCounts', '{l} lines · {r} references', locale)
-                .replaceAll('{l}', '${topic.lines.length}')
-                .replaceAll('{r}', '${NavesService.refCountOf(id)}'),
+            // Two independently pluralised counts, so they are two
+            // strings joined rather than one template with two slots —
+            // a single template would need four forms for the 2×2.
+            '${_sn('navesLineCount', '{n} lines', '1 line', topic.lines.length, locale)}'
+            ' · '
+            '${_sn('navesRefCount', '{n} references', '1 reference', NavesService.refCountOf(id), locale)}',
           ),
         Expanded(
           child: _topicLoading || topic == null
