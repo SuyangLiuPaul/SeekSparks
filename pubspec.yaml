@@ -143,6 +143,12 @@ flutter:
     - assets/concordance/
     - assets/concordance/t/
     - assets/concordance/v/
+    # Nave's Topical Bible (1896, public domain). 4.3 MB across 134 topic
+    # shards and 66 per-book reverse indexes; only the 90 KB index and the
+    # one book in view are ever read.
+    - assets/nave/
+    - assets/nave/t/
+    - assets/nave/v/
     # Forms index (bwh10q), derived from assets/originals. `l/` is 151
     # shards fetched one at a time; nothing here loads at startup.
     - assets/forms/
