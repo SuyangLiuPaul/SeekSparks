@@ -7504,11 +7504,30 @@ const uiStrings = {
     'zh-Hant': '本段沒有隨附的原文經文。',
     'en': 'No original-language text is bundled for this passage.',
   },
+  // Once Nave's shares this tab the old wording is wrong: an empty pane no
+  // longer means "the New Testament concordance has nothing", it means
+  // neither work files this verse at all.
   'concordanceNoEntries': {
-    'zh-Hans': '现代汇编只收录新约；本节没有条目。',
-    'zh-Hant': '現代彙編只收錄新約；本節沒有條目。',
-    'en': 'The Modern Concordance covers the New Testament; '
-        'this verse has no entry.',
+    'zh-Hans': '两部主题索引都没有收录本节。',
+    'zh-Hant': '兩部主題索引都沒有收錄本節。',
+    'en': 'Neither topical index files this verse.',
+  },
+  'navesTitle': {
+    'zh-Hans': '内夫圣经主题辞典',
+    'zh-Hant': '內夫聖經主題辭典',
+    'en': "Nave's Topical Bible",
+  },
+  'modernConcordanceTitle': {
+    'zh-Hans': '现代汇编（新约）',
+    'zh-Hant': '現代彙編（新約）',
+    'en': 'Modern Concordance (NT)',
+  },
+  // Nave cited the chapter, not this verse. The distinction is the whole
+  // reason chapter citations are indexed separately, so it is printed.
+  'navesChapterCitation': {
+    'zh-Hans': '整章',
+    'zh-Hant': '整章',
+    'en': 'whole chapter',
   },
   'morphSeed': {'zh-Hans': '此词词形', 'zh-Hant': '此詞詞形', 'en': 'This word'},
   'morphClear': {'zh-Hans': '清除', 'zh-Hant': '清除', 'en': 'Clear'},

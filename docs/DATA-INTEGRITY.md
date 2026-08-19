@@ -5171,6 +5171,135 @@ translator's house-style choices inside a translator's own Bible** —
 the same call the sermon corpus was left alone for. It needs the
 upstream source or the owner.
 
+## Check 42 — Nave's Topical Bible, and the five books its tagger cannot read
+
+`assets/nave/` was imported this round by `tools/import_naves.py` from
+CCEL's ThML edition of Nave's *Topical Bible* (1896, public domain):
+**5,322 topics, 29,379 lines, 77,974 references** — 75,804 of them
+verse-or-range, 2,170 chapter-level — with a per-book reverse index so a
+verse pane reads one 90 KB index plus the one book in view.
+
+None of those numbers were trustworthy when the import first produced
+them. **Two defect classes were found before the feature shipped, both
+upstream, and neither is visible in the shape of the file.** Every
+count above is post-repair. Guarded by `test/naves_test.dart` (18 tests,
+including one that resolves all 77,974 references against
+`assets/kjv.json`) and `test/naves_pane_test.dart` (6).
+
+### 42a — the instrument, and why the obvious witness is not one
+
+CrossWire ships a SWORD module called `Nave`. It is **not** an
+independent witness: its conf names
+`TextSource=https://ccel.org/ccel/n/nave/bible.xml` — the same file we
+imported. Checking our import against it would only prove the two
+converters agree.
+
+The witness that worked is **inside the file**. CCEL's tagger emits both
+a machine reference and the printed text, and where the two disagree the
+printed text is the original and the tag is the derived thing. That
+asymmetry is what both classes below rest on, and it needed no outside
+source.
+
+The screen that found class A was not a search for defects at all. It
+was a **sizing question** — what is the worst-case citation count for
+one verse, so the pane can choose between a lazy list and an eager one.
+The answer was **Jude 1:1 = 115 topics**, which is not a plausible thing
+for a topical index to say about a doxology's opening line.
+
+### 42b — class A: a one-chapter book has no chapter number to parse
+
+Obadiah, Philemon, 2 John, 3 John and Jude are printed without a
+chapter, so Nave writes "Jude 14". The tagger reads the 14 as the
+chapter, fails, and emits the book's first verse — leaving the real
+number stranded in the prose *after* the closing tag:
+
+```
+<scripRef osisRef="Bible:Jude.1.1">Jude 1</scripRef>:14,15
+```
+
+**All 250 sites referring to those five books arrived as `BOOK.1.1`.**
+Jude 1:1 carried 115 unrelated topics; Jude 1:14 — the Enoch prophecy,
+the one verse of Jude every topical index files — carried **none**.
+
+`repair_single_chapter` reads the orphan text. 246 sites resolve
+directly; 2 are re-read as class B ("Obadiah 1 Ki 18:12" — the printed 1
+was not Obadiah's verse, it began the *next* book's reference); 2 have
+no verse to recover ("See the EPISTLES OF JOHN 1Jo 1; 2Jo 1; 3Jo 1") and
+are emitted as **chapter citations**, which the reader sees marked
+"whole chapter" rather than as a false verse claim.
+
+The repair is checkable against the books' own lengths, and it checks
+out. The 250 sites became 298 references, every one inside its book, and
+three of the five reach their **exact last verse**:
+
+| book | sites | distinct verses | highest cited | book ends |
+|---|---:|---:|---:|---:|
+| Jude | 145 | 40 | 25 | 25 |
+| Philemon | 51 | 27 | 25 | 25 |
+| 2 John | 42 | 18 | 13 | 13 |
+| 3 John | 28 | 13 | 14 | 14 |
+| Obadiah | 32 | 18 | 21 | 21 |
+
+Jude 1:1 now carries **6** entries and Jude 1:14 carries **14**,
+including "ANTEDILUVIANS › Enoch prophesies to".
+
+### 42c — class B: the tagger swallows the first digit
+
+A smaller version of the same failure, in ordinary multi-chapter books:
+the tag closes after a partial number and the rest sits in the prose.
+**40 sites**, repaired from the orphan text, **30 of the 40 confirmed by
+reading the KJV text of the repaired target** and checking it against
+the topic line's own wording.
+
+Chasing the *drop* list then found a second defect inside the first
+repair: the class-B fix stopped at the first continuation, so
+"Co 8:16,17" kept the 16 and shipped the 17 against a **Colossians 8 and
+12 that do not exist**. `eat_continuations` follows the comma, under a
+deliberately narrow guard — it consumes a following `scripRef` only if
+it carries the *same wrong* osisRef book and its printed text is bare
+digits — so a genuine Colossians reference standing next to a repair is
+never swallowed. That recovered **4** references and took the
+unresolvable drops from 9 to 5.
+
+### 42d — what was dropped rather than guessed
+
+**12 apocrypha references** (Nave cites Bel, Tobit, Ecclesiasticus; we
+ship 66 books) and **5 unresolvable**: Exodus 3:29, Mark 18:42, Mark
+18:43, 1 Chronicles 22:27, 1 Chronicles 22:30. Each names a chapter or
+verse that does not exist and each has more than one plausible
+correction, so each is dropped. The importer prints them by name every
+run; they are not silent.
+
+**1,047 "see" targets do not resolve** to a topic in the index. That is
+not repaired and not a data defect on our side — Nave cross-references
+headings he did not always write. The verse pane does not render "see"
+links at all, on measurement: only **1 of 22,249** cited lines carries
+one, so the single case is folded into the line's text.
+
+### 42e — the defect our own test found, in our own code
+
+`NaveTopic.ancestorsOf` walked up looking for a line at exactly
+`depth - 1`. Nave skips levels. When the parent was two levels
+shallower, the walk **stepped over it and kept going into the previous
+topic's subtree**, so the pane printed a path the author never wrote —
+"HOSPITALITY › INSTANCES OF › Gaius" for a line Nave filed under
+"HOSPITALITY › REWARDED". Fixed to accept any line shallower than the
+one being sought. Measured before the fix: **63 of 22,249 cited lines**
+carried a false path.
+
+This one is worth recording because it is the only defect here that was
+**ours**, it was invisible on every verse anyone would think to spot-check,
+and it was found by a unit test written for the walk's ordinary case.
+
+### 42f — what is still not checked
+
+The 5,322 headwords and 29,379 line texts are **not** verified against
+anything. This check verifies that every *reference* resolves to a verse
+that exists and that the citations sit where Nave put them; it does not
+verify that Nave was right, and it does not verify that CCEL's
+transcription of his prose is faithful. The second would need a scan of
+the 1896 printing.
+
 ## Next, in order
 
 **First, and deliberately unnumbered so the citations below stay

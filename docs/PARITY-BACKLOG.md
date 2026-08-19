@@ -407,10 +407,18 @@ Mapped against BibleWorks' own tab set (bwh10):
   reachable entry point at all. Fixed; see `docs/DATA-INTEGRITY.md`
   check 25.)*
 - **TSK / Nave's / Bible Outline (bwh34)** — **PARTIAL.** TSK is in
-  `cross_references.json`. **Nave's Topical Bible is ABSENT** (Eagle's
-  View's Modern Concordance in the Topics tab is a *different* work, and
-  it is NT-only). Nave's is public domain and openly available — a real,
-  cheap gap. Bible Outline ≈ our `book_introductions.json` +
+  `cross_references.json`. **Nave's Topical Bible SHIPPED** (2026-08-19,
+  merged undeployed — the release that carries it will bump the version):
+  5,322 topics, 29,379 lines, 77,974 references, entered from the verse
+  in the Topics tab above the Modern Concordance, which is a different
+  work and NT-only. Imported by `tools/import_naves.py` from CCEL's ThML
+  edition; see `docs/DATA-INTEGRITY.md` check 42 for the two upstream
+  defect classes it had to repair before any of it was true.
+  What is still missing is BibleWorks' *browsable* side (bwh36_RWP): the
+  entry list, the lookup box and the history list under `Resources |
+  X-Refs`. The data is already there and tested — `NavesService.search`
+  and `NavesService.topic` — so that is a UI slice, not an import.
+  Bible Outline ≈ our `book_introductions.json` +
   `section_titles.json`, **PARTIAL**.
 - **Read Text module (bwh53)** — **REJECTED.** Audio reading of the
   biblical text. TTS was built and removed at v1.3.19
@@ -699,8 +707,14 @@ In rough order of value, if nothing else is pressing:
 1. **Anything in `docs/DATA-INTEGRITY.md`'s ranked list.** Accuracy
    outranks everything here.
 2. ~~Version difference highlighting~~ — **DONE v1.6.147**, §3.3.
-3. **Nave's Topical Bible** (§3.5) — public domain, closes a named
-   BibleWorks resource, small.
+3. ~~Nave's Topical Bible~~ — the verse-entered half is **DONE
+   2026-08-19**, §3.5. It was not small: the import needed two repair
+   passes before a single count was true (`docs/DATA-INTEGRITY.md` check
+   42), which is the general lesson for the rest of this list — "public
+   domain and openly available" says nothing about whether the data is
+   right. What is left is the **browsable** side (entry list, lookup box,
+   history) under `Resources | X-Refs`; that is a UI slice on a tested
+   service, and it belongs with item 4's kind of work, not with an import.
 4. **Verse list comparison** (§3.5) — the word-list half is **DONE
    2026-08-19** (compare two books, `word_list_compare.dart`); what is
    left is set operations over two saved VERSE lists, which share none of

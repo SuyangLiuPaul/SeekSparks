@@ -24,6 +24,7 @@ import 'package:seeksparks/models/verse.dart';
 import 'package:seeksparks/services/concordance_service.dart';
 import 'package:seeksparks/services/greek_stats_service.dart';
 import 'package:seeksparks/services/modern_concordance_service.dart';
+import 'package:seeksparks/services/naves_service.dart';
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 import 'package:seeksparks/utils/scripture_markup.dart';
 import 'package:seeksparks/services/cross_reference_service.dart';
@@ -1122,26 +1123,35 @@ class _EmptyPane extends StatelessWidget {
   }
 }
 
-/// **Topics** — Eagle's View's Modern Concordance, entered from the verse
-/// the reader is already on.
+/// **Topics** — the two topical indexes, both entered from the verse the
+/// reader is already on.
 ///
-/// The concordance is a browsable scheme of 341 topics, and it would have
-/// been simpler to ship it as its own page. That would also have made it a
-/// place you go rather than something the workspace knows: the reader
-/// sitting on Matthew 24:15 wants to be told that this verse is where the
-/// concordance files "Abomination", not to go and look it up.
+/// Either work would have been simpler to ship as its own browsable page.
+/// That would also have made it a place you go rather than something the
+/// workspace knows: the reader sitting on Matthew 24:15 wants to be told
+/// that this verse is where the concordance files "Abomination", not to
+/// go and look it up.
 ///
-/// So the pane leads with the topics that cite the focused verse, each
-/// expandable into the Greek word behind it, that word's other
-/// occurrences, and the corpus statistics that make this a *statistical*
-/// concordance — the NT total, split across Gospels & Acts, Paul, John,
-/// and the other authors.
+/// **Nave's leads because it is the one that answers.** Nave's covers the
+/// whole Bible and files 22,249 lines against 77,974 references; the
+/// Modern Concordance is a New Testament Greek work, so it is silent for
+/// two thirds of the canon. Ordering them the other way would put the
+/// empty half first on most verses in the app.
 ///
-/// New Testament only, and silent about it: the source is a NT Greek
-/// concordance, so an Old Testament verse yields nothing and that is the
-/// correct answer, not a gap to apologise for.
-class ConcordanceTopicsPane extends StatefulWidget {
-  const ConcordanceTopicsPane({
+/// A Nave's row is a whole assertion and needs all of its parts: the
+/// headword, the lines it hangs beneath, and the line itself. Under
+/// MINISTER a bare ".Paul" means nothing without "–Called of God" above
+/// it, which is why the path is printed and not just the headword.
+/// Expanding a row shows that line's other references — BibleWorks' "list
+/// box of all scripture references in the current topic", narrowed to the
+/// line the reader's verse actually landed on.
+///
+/// A Modern Concordance row expands into the Greek word behind it, that
+/// word's other occurrences, and the corpus statistics that make it a
+/// *statistical* concordance — the NT total, split across Gospels & Acts,
+/// Paul, John, and the other authors.
+class TopicsPane extends StatefulWidget {
+  const TopicsPane({
     super.key,
     required this.englishBook,
     required this.chapter,
@@ -1157,12 +1167,13 @@ class ConcordanceTopicsPane extends StatefulWidget {
   final void Function(BibleReference ref) onOpenRef;
 
   @override
-  State<ConcordanceTopicsPane> createState() => _ConcordanceTopicsPaneState();
+  State<TopicsPane> createState() => _TopicsPaneState();
 }
 
-class _ConcordanceTopicsPaneState extends State<ConcordanceTopicsPane> {
-  late Future<List<ConcordanceCitation>> _future;
+class _TopicsPaneState extends State<TopicsPane> {
+  late Future<(List<NaveCitation>, List<ConcordanceCitation>)> _future;
   int? _openTopic;
+  int? _openNave;
 
   @override
   void initState() {
@@ -1171,27 +1182,34 @@ class _ConcordanceTopicsPaneState extends State<ConcordanceTopicsPane> {
   }
 
   @override
-  void didUpdateWidget(covariant ConcordanceTopicsPane old) {
+  void didUpdateWidget(covariant TopicsPane old) {
     super.didUpdateWidget(old);
     if (old.englishBook != widget.englishBook ||
         old.chapter != widget.chapter ||
         old.verse != widget.verse) {
       _openTopic = null;
+      _openNave = null;
       _future = _load();
     }
   }
 
-  Future<List<ConcordanceCitation>> _load() =>
-      ModernConcordanceService.forVerse(
-        englishBook: widget.englishBook,
-        chapter: widget.chapter,
-        verse: widget.verse,
+  Future<(List<NaveCitation>, List<ConcordanceCitation>)> _load() async => (
+        await NavesService.forVerse(
+          englishBook: widget.englishBook,
+          chapter: widget.chapter,
+          verse: widget.verse,
+        ),
+        await ModernConcordanceService.forVerse(
+          englishBook: widget.englishBook,
+          chapter: widget.chapter,
+          verse: widget.verse,
+        ),
       );
 
   @override
   Widget build(BuildContext context) {
     final locale = widget.locale;
-    return FutureBuilder<List<ConcordanceCitation>>(
+    return FutureBuilder<(List<NaveCitation>, List<ConcordanceCitation>)>(
       future: _future,
       builder: (context, snap) {
         if (snap.connectionState != ConnectionState.done) {
@@ -1203,48 +1221,105 @@ class _ConcordanceTopicsPaneState extends State<ConcordanceTopicsPane> {
             ),
           );
         }
-        final hits = snap.data ?? const <ConcordanceCitation>[];
-        if (hits.isEmpty) {
+        final (nave, modern) = snap.data ??
+            (const <NaveCitation>[], const <ConcordanceCitation>[]);
+        if (nave.isEmpty && modern.isEmpty) {
           return _EmptyPane(
             icon: Icons.topic_outlined,
             message: uiStrings['concordanceNoEntries']?[locale] ??
-                'The Modern Concordance covers the New Testament; '
-                    'this verse has no entry.',
+                'Neither topical index files this verse.',
           );
         }
+        final here = (widget.englishBook, widget.chapter, widget.verse);
+        // The two works are named even when only one has anything: a row
+        // that says MICAH is a different kind of claim depending on which
+        // index made it, and an unlabelled list would hide that.
+        final items = <Widget>[
+          if (nave.isNotEmpty) ...[
+            _SourceHeading(
+              text: uiStrings['navesTitle']?[locale] ?? "Nave's Topical Bible",
+            ),
+            for (var i = 0; i < nave.length; i++)
+              _NaveTile(
+                citation: nave[i],
+                locale: locale,
+                expanded: _openNave == i,
+                onToggle: () =>
+                    setState(() => _openNave = _openNave == i ? null : i),
+                onOpenRef: widget.onOpenRef,
+                here: here,
+              ),
+            _Attribution(text: NavesService.attribution),
+          ],
+          if (modern.isNotEmpty) ...[
+            _SourceHeading(
+              text: uiStrings['modernConcordanceTitle']?[locale] ??
+                  'Modern Concordance (NT)',
+            ),
+            for (final hit in modern)
+              _TopicTile(
+                citation: hit,
+                locale: locale,
+                expanded: _openTopic == hit.topicId,
+                onToggle: () => setState(() => _openTopic =
+                    _openTopic == hit.topicId ? null : hit.topicId),
+                onOpenRef: widget.onOpenRef,
+                here: here,
+              ),
+            _Attribution(text: ModernConcordanceService.attribution),
+          ],
+        ];
         return ListView.builder(
           padding: const EdgeInsets.fromLTRB(10, 6, 10, 14),
           physics: const BouncingScrollPhysics(),
-          // +1 for the attribution that closes the list. The permission
-          // this data ships under is conditional on naming its source, so
-          // the credit travels with the pane, not with a settings page
-          // nobody opens.
-          itemCount: hits.length + 1,
-          itemBuilder: (context, i) {
-            if (i == hits.length) return _attribution(context);
-            final hit = hits[i];
-            return _TopicTile(
-              citation: hit,
-              locale: locale,
-              expanded: _openTopic == hit.topicId,
-              onToggle: () => setState(() =>
-                  _openTopic = _openTopic == hit.topicId ? null : hit.topicId),
-              onOpenRef: widget.onOpenRef,
-              here: (widget.englishBook, widget.chapter, widget.verse),
-            );
-          },
+          itemCount: items.length,
+          itemBuilder: (context, i) => items[i],
         );
       },
     );
   }
+}
 
-  Widget _attribution(BuildContext context) {
+class _SourceHeading extends StatelessWidget {
+  const _SourceHeading({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final t = WbType.of(context);
-    final text = ModernConcordanceService.attribution;
-    if (text.isEmpty) return const SizedBox.shrink();
     return Padding(
-      padding: const EdgeInsets.only(top: 14),
+      padding: const EdgeInsets.only(bottom: 6, top: 2),
+      child: Text(
+        text.toUpperCase(),
+        style: theme.textTheme.labelSmall?.copyWith(
+          fontSize: t.scaled(10.5),
+          letterSpacing: 0.8,
+          fontWeight: FontWeight.w700,
+          color: theme.colorScheme.onSurfaceVariant,
+          fontFamilyFallback: kCjkFontFallback,
+        ),
+      ),
+    );
+  }
+}
+
+/// The permission this data ships under is conditional on naming its
+/// source, so the credit travels with the pane rather than living on a
+/// settings page nobody opens.
+class _Attribution extends StatelessWidget {
+  const _Attribution({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    if (text.isEmpty) return const SizedBox.shrink();
+    final theme = Theme.of(context);
+    final t = WbType.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(top: 6, bottom: 14),
       child: Text(
         text,
         style: theme.textTheme.bodySmall?.copyWith(
@@ -1252,6 +1327,164 @@ class _ConcordanceTopicsPaneState extends State<ConcordanceTopicsPane> {
           height: 1.35,
           color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
         ),
+      ),
+    );
+  }
+}
+
+/// One line of Nave's that cites the focused verse, with the path a
+/// reader needs to read it.
+class _NaveTile extends StatelessWidget {
+  const _NaveTile({
+    required this.citation,
+    required this.locale,
+    required this.expanded,
+    required this.onToggle,
+    required this.onOpenRef,
+    required this.here,
+  });
+
+  final NaveCitation citation;
+  final String locale;
+  final bool expanded;
+  final VoidCallback onToggle;
+  final void Function(BibleReference ref) onOpenRef;
+  final (String, int, int) here;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final t = WbType.of(context);
+    final line = citation.line;
+    // Exactly one cited line in the whole work is a bare "See" (DECALOGUE
+    // → COMMANDMENTS). Folding its target into the text costs a line here
+    // and saves rendering an empty row.
+    final text = line.see.isEmpty
+        ? line.text
+        : [line.text, line.see.map((s) => s.name).join(', ')]
+            .where((s) => s.isNotEmpty)
+            .join(' ');
+    return Container(
+      margin: const EdgeInsets.only(bottom: 6),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest.withValues(alpha: 0.35),
+        border: Border.all(color: scheme.outlineVariant),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          InkWell(
+            onTap: line.refs.isEmpty ? null : onToggle,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(10, 8, 8, 8),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          citation.path,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            fontFamilyFallback: kCjkFontFallback,
+                          ),
+                        ),
+                        if (text.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 2),
+                            child: Text(
+                              text,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                height: 1.35,
+                                color: scheme.onSurfaceVariant,
+                                fontFamilyFallback: kCjkFontFallback,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  // Nave cited the chapter, not this verse. Saying so is
+                  // the whole reason the two are indexed apart.
+                  if (citation.chapterLevel)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 6),
+                      child: WbTag(
+                        text: uiStrings['navesChapterCitation']?[locale] ??
+                            'whole chapter',
+                        color: WbColors.of(context).mutedText,
+                        dense: false,
+                      ),
+                    ),
+                  if (line.refs.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 4, top: 1),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            '${line.refs.length}',
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              fontSize: t.scaled(10.5),
+                              color: scheme.onSurfaceVariant,
+                            ),
+                          ),
+                          Icon(
+                            expanded ? Icons.expand_less : Icons.expand_more,
+                            size: 18,
+                            color: scheme.onSurfaceVariant,
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+          if (expanded) _refs(context),
+        ],
+      ),
+    );
+  }
+
+  Widget _refs(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final t = WbType.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 3,
+        children: [
+          for (final ref in citation.line.refs)
+            Builder(builder: (context) {
+              // The verse we came from is in this list. Marking it rather
+              // than hiding it keeps the count in the header honest.
+              final isHere = ref.covers(here.$1, here.$2, here.$3);
+              return InkWell(
+                onTap: () => onOpenRef(BibleReference(
+                  englishBook: ref.book,
+                  chapter: ref.chapter,
+                  verseStart: ref.verse,
+                  verseEnd: ref.endVerse ?? ref.verse,
+                )),
+                child: Text(
+                  ref.label(locale),
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    fontSize: t.scaled(10.5),
+                    color: isHere ? scheme.primary : scheme.onSurfaceVariant,
+                    fontWeight: isHere ? FontWeight.w700 : null,
+                    decoration: isHere ? TextDecoration.underline : null,
+                    fontFamilyFallback: kCjkFontFallback,
+                  ),
+                ),
+              );
+            }),
+        ],
       ),
     );
   }

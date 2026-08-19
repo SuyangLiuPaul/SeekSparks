@@ -2084,7 +2084,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
       case AnalysisTab.topics:
         final v = _analysisVerse(mp, verses);
         if (v == null) return _analysisHint(context, locale);
-        return ConcordanceTopicsPane(
+        return TopicsPane(
           key: ValueKey<String>('topics-${v.id}'),
           englishBook: bookNameToEnglish[v.book] ?? v.book,
           chapter: v.chapter,
