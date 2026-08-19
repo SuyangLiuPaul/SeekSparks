@@ -330,7 +330,8 @@ class _CommandPaneState extends State<CommandPane> {
     }
     if (!mounted) return;
     final wb = context.read<WorkbenchProvider>();
-    final running = wb.runSearch(raw);
+    final running = wb.runSearch(raw,
+        locale: context.read<AppSettings>().locale);
     // Keep the caret here. `TextInputAction.search` unfocuses the field
     // by default, which is right for a one-shot search box and wrong for
     // a command line: after a search you refine it — widen the context,
@@ -1364,6 +1365,84 @@ class _CommandPaneState extends State<CommandPane> {
     });
   }
 
+  /// The Strong's entries a romanised Greek or Hebrew word reaches, when
+  /// no verse of the translation uses the word.
+  ///
+  /// The rows are separate taps rather than one auto-resolved answer,
+  /// because the romanisation collides: `torah` reaches three entries
+  /// and `ruach` three, and picking silently would put a claim about
+  /// which lemma the reader meant behind a search she thought she wrote.
+  /// Each row's count is measured under her scope, so tapping one lands
+  /// on exactly the number it advertised.
+  Widget? _romanisedOffer(WorkbenchProvider wb, String locale,
+      {required CrossAxisAlignment align}) {
+    final offer = wb.lemmaOffer;
+    if (offer == null) return null;
+    final centred = align == CrossAxisAlignment.center;
+    final beside = wb.textResults.isNotEmpty;
+    return Builder(builder: (context) {
+      final wbc = WbColors.of(context);
+      final t = WbType.of(context);
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        child: Column(
+          crossAxisAlignment: align,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              (beside
+                      ? (uiStrings['cmdRomanisedLeadBeside']?[locale] ??
+                          'Those matches are inside other words — no verse '
+                              'uses “{word}” on its own. The original does:')
+                      : (uiStrings['cmdRomanisedLead']?[locale] ??
+                          'No verse uses the word “{word}”, but the '
+                              'original does:'))
+                  .replaceAll('{word}', offer.query),
+              textAlign: centred ? TextAlign.center : TextAlign.start,
+              style: TextStyle(
+                fontSize: t.chrome,
+                color: wbc.mutedText,
+                fontFamilyFallback: kCjkFontFallback,
+              ),
+            ),
+            for (final hit in offer.hits) ...[
+              const SizedBox(height: 3),
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () {
+                    _controller.setTextAtomic(hit.candidate.strongs);
+                    _submit();
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 2),
+                    child: Text(
+                      (uiStrings['cmdRomanisedHit']?[locale] ??
+                              '{number} · {lemma} {translit} — {gloss} · '
+                                  '{count} verses')
+                          .replaceAll('{number}', hit.candidate.strongs)
+                          .replaceAll('{lemma}', hit.candidate.word.lemma)
+                          .replaceAll('{translit}', hit.candidate.word.translit)
+                          .replaceAll('{gloss}', hit.candidate.word.gloss)
+                          .replaceAll('{count}', hit.verses.toString()),
+                      textAlign: centred ? TextAlign.center : TextAlign.start,
+                      style: TextStyle(
+                        fontSize: t.chrome,
+                        fontWeight: FontWeight.w600,
+                        color: wbc.link,
+                        fontFamilyFallback: kCjkFontFallback,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      );
+    });
+  }
+
   /// Why there are no results, when the answer is a word rather than a
   /// query. Null unless every word was probed.
   String? _missingWords(WorkbenchProvider wb, String locale) {
@@ -1755,10 +1834,18 @@ class _CommandPaneState extends State<CommandPane> {
       // is the reason there are none.
       return _noResults(settings, scheme, locale,
           message: _missingWords(wb, locale),
-          below: _broadenOffer(wb, locale, align: CrossAxisAlignment.center),
+          below: _broadenOffer(wb, locale, align: CrossAxisAlignment.center) ??
+              _romanisedOffer(wb, locale, align: CrossAxisAlignment.center),
           aiQuery: wb.lastQuery);
     }
-    final offer = _broadenOffer(wb, locale, align: CrossAxisAlignment.start);
+    // `??` and not a pair: broadening needs two words to have anything
+    // to loosen, the romanised offer needs exactly one, so at most one
+    // of them is ever non-null. This branch reaches the second only
+    // through the substring artefacts — `shalom` finding Jehovahshalom
+    // — which is precisely when the reader still wants H7965.
+    final offer =
+        _broadenOffer(wb, locale, align: CrossAxisAlignment.start) ??
+            _romanisedOffer(wb, locale, align: CrossAxisAlignment.start);
     return Column(
       children: [
         _resultHeader(
@@ -1789,13 +1876,16 @@ class _CommandPaneState extends State<CommandPane> {
               final v = results[index];
               final displayBook = localeAwareBookName(
                   v.book, locale, wb.mainProvider.currentVersion);
-              // The preview shows the string the search RAN against, so
-              // a row can never be a verse whose visible words do not
-              // contain the query. A text scan runs over
-              // `Verse.scriptureText` (check 33), so a hit in a psalm
-              // title is legible here; the Strong's list above uses
-              // `.text`, because the tagged layer holds no title and a
-              // hit there can never be in one.
+              // The preview shows the string the search RAN against: a
+              // text scan runs over `Verse.scriptureText` (check 33), so
+              // a hit in a psalm title is legible here, where the
+              // Strong's list above uses `.text` because the tagged
+              // layer holds no title.
+              // Not the same as "every row visibly contains the query".
+              // A plain search matches over the space-stripped key, so
+              // `forth` lists the 2,542 verses that say "for the" and
+              // nothing in them is markable. Measured 2026-08-19; see
+              // PARITY-BACKLOG §3.1.
               final clean = sanitizeForSearch(v.scriptureText);
               return _ResultRow(
                 reference: '$displayBook ${v.chapter}:${v.verseLabel}',

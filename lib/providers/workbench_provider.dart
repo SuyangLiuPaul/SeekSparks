@@ -1,3 +1,5 @@
+import 'dart:async' show unawaited;
+
 import 'package:flutter/foundation.dart';
 
 import 'package:seeksparks/constants/bible_versions.dart'
@@ -8,10 +10,12 @@ import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/services/ai_bible_search_service.dart';
 import 'package:seeksparks/services/concordance_service.dart';
 import 'package:seeksparks/services/search_service.dart';
+import 'package:seeksparks/services/vocabulary_service.dart';
 import 'package:seeksparks/utils/ai_ref_resolution.dart';
 import 'package:seeksparks/utils/command_query.dart';
 import 'package:seeksparks/utils/command_verb.dart' show LimitSpec;
 import 'package:seeksparks/utils/compound_query.dart';
+import 'package:seeksparks/utils/romanised_lemma.dart';
 import 'package:seeksparks/utils/search_broadening.dart';
 import 'package:seeksparks/utils/search_scope.dart' show limitSpecForBooks;
 import 'package:seeksparks/utils/strongs_boolean_search.dart';
@@ -46,6 +50,12 @@ class WorkbenchProvider extends ChangeNotifier {
   // ── Command pane (left) ───────────────────────────────────────────
 
   String lastQuery = '';
+
+  /// The locale the last search ran under, so a re-run triggered from
+  /// inside the provider (setting a limit, say) glosses its lemma offer
+  /// the same way the reader's own search did.
+  String _lastLocale = 'en';
+
   bool searching = false;
   bool searchPerformed = false;
 
@@ -121,6 +131,24 @@ class WorkbenchProvider extends ChangeNotifier {
   /// the search and its looser reading both returned nothing.
   TermPresence? termsMissing;
 
+  /// The Strong's entries a romanised Greek or Hebrew word reaches, when
+  /// the edition on screen does not use the word — `agape` → G26,
+  /// `shalom` → H7965. See `romanised_lemma.dart`.
+  ///
+  /// Gated on the word occurring in NO verse of the whole edition — at
+  /// any scope, see [_measureLemmaOffer] — and that gate is the whole
+  /// safety argument. 1,814 of the KJV's 12,546 distinct words fold onto
+  /// some romanised lexicon key — mostly its own transliterated proper
+  /// names, which resolve correctly, but also `bad` → H905 בַּד, `den` →
+  /// H1836 and `dove` → H1679, which next to an English result would be
+  /// false etymological claims. Not one of the 1,814 occurs zero times
+  /// in the KJV. So the gate excludes every word the edition contains,
+  /// and the class cannot arise.
+  ///
+  /// Arrives a beat after the results because building the index costs
+  /// several MB of assets that nothing else on the page needs.
+  LemmaOffer? lemmaOffer;
+
   // ── AI passage search ─────────────────────────────────────────────
   //
   // A fourth result shape beside text, Strong's and command queries,
@@ -187,7 +215,7 @@ class WorkbenchProvider extends ChangeNotifier {
     searchLimitLabel = keys == null ? null : (label ?? '');
     searchLimitSpec = keys == null ? null : spec;
     _notify();
-    if (lastQuery.isNotEmpty) await runSearch(lastQuery);
+    if (lastQuery.isNotEmpty) await runSearch(lastQuery, locale: _lastLocale);
   }
 
   /// Install the scope picker's book selection. An empty set clears the
@@ -389,9 +417,10 @@ class WorkbenchProvider extends ChangeNotifier {
   /// begins with `.`, `/`, `'` or `;`. Everything else is unchanged,
   /// which is the point — a reader who has never heard of a control
   /// character still has the substring search they had yesterday.
-  Future<void> runSearch(String raw) async {
+  Future<void> runSearch(String raw, {String locale = 'en'}) async {
     final query = raw.trim();
     lastQuery = query;
+    _lastLocale = locale;
     if (query.isEmpty) {
       clearResults();
       return;
@@ -408,6 +437,7 @@ class WorkbenchProvider extends ChangeNotifier {
     compoundGroupCounts = null;
     broadening = null;
     termsMissing = null;
+    lemmaOffer = null;
     commandIssue = null;
     verbNotice = null;
     textResults = const [];
@@ -510,7 +540,96 @@ class WorkbenchProvider extends ChangeNotifier {
       searching = false;
       searchPerformed = true;
       _notify();
+      // Deliberately after the page is on screen, and deliberately not
+      // awaited: the romanised index needs the concordance and both
+      // lexicons, several MB the reader has not necessarily paid for
+      // yet, and none of it can change the result that was just shown.
+      unawaited(_measureLemmaOffer(query, locale));
     }
+  }
+
+  /// Which Strong's entries the reader's word reaches, when no verse of
+  /// the edition uses the word.
+  ///
+  /// The last rung of the ladder `search_broadening.dart` starts, and
+  /// the only one that reaches a single-word query: a looser reading of
+  /// one word does not exist (there is no word order to drop), and
+  /// [termPresence] needs two terms before it can name the guilty one.
+  /// So until now a reader who typed `agape` got "No results found" and
+  /// nothing else, over a corpus that contains the word 116 times.
+  ///
+  /// Every guard the other shapes need is already inside [romanisedKey]
+  /// — a digit, a space or any of the grammar's control characters
+  /// fails it — so a Strong's number, a command line and a compound
+  /// cannot reach the index.
+  Future<void> _measureLemmaOffer(String query, String locale) async {
+    if (romanisedKey(query) == null) return;
+    // The gate is the word, not the page. A plain one-word search is a
+    // substring match over space-stripped keys, so in the KJV `theos`
+    // matches "these are", `shalom` matches "Jehovahshalom", `torah`
+    // matches "unto Rahab" and `charis` matches "Issachar is" — and a
+    // gate on the result list being empty would have stayed silent for
+    // exactly the words this exists for. Read as words, all four occur
+    // nowhere.
+    //
+    // And deliberately over the WHOLE corpus, not the reader's scope.
+    // `wen`, `dam`, `owl`, `bat`, `cud`, `homer` are all KJV words that
+    // appear nowhere in Genesis, so a scoped probe would call them
+    // absent and offer `wen` → H1121 bên "a son". An etymological claim
+    // is about the language, not about the passage she is standing in;
+    // if the edition uses the word anywhere, the claim is false
+    // everywhere. 152 of the KJV's 1,814 resolving words leaked through
+    // a Genesis-scoped gate before this line said `verses` directly.
+    final probe = parseCommandQuery('.$query').query;
+    if (probe == null) return;
+    final corpus = mainProvider.verses;
+    final present = runCommandQuery(
+      query: probe,
+      texts: mainProvider.wordKeys,
+      searchKeys: mainProvider.searchKeys,
+      books: [for (final v in corpus) v.book],
+    ).indices.isNotEmpty;
+    if (present) return;
+
+    final index = await _romanisedIndex(locale);
+    if (index == null) return;
+
+    final hits = <LemmaHit>[];
+    for (final candidate in index.resolve(query)) {
+      final result = await ConcordanceService.lookup(candidate.strongs);
+      if (result == null) continue;
+      final verses = _limitRefs(result.refs).length;
+      // Under a search limit a real word can occur nowhere in scope.
+      // The rule this whole ladder exists for: the app does not offer a
+      // query it has not run, and never one it has run to nothing.
+      if (verses == 0) continue;
+      hits.add(LemmaHit(candidate: candidate, verses: verses));
+    }
+    if (hits.isEmpty) return;
+    // The reader may have typed something else, or left the search
+    // behind entirely, while the assets loaded.
+    if (lastQuery != query || !searchPerformed) return;
+    lemmaOffer = LemmaOffer(query: query, hits: hits);
+    _notify();
+  }
+
+  RomanisedLemmaIndex? _romanisedIndexCache;
+  String? _romanisedIndexLocale;
+
+  /// The romanised index for [locale], built once.
+  ///
+  /// Keyed on locale because the gloss shown in the offer is, and built
+  /// from [VocabularyService.corpusVocabulary] rather than from the
+  /// assets directly so there is exactly one join of the concordance to
+  /// the lexicons in the app.
+  Future<RomanisedLemmaIndex?> _romanisedIndex(String locale) async {
+    if (_romanisedIndexCache != null && _romanisedIndexLocale == locale) {
+      return _romanisedIndexCache;
+    }
+    final words = await VocabularyService.corpusVocabulary(locale);
+    if (words.isEmpty) return null;
+    _romanisedIndexLocale = locale;
+    return _romanisedIndexCache = RomanisedLemmaIndex.fromWords(words);
   }
 
   /// Run the looser reading of the last query and keep it only if it
@@ -627,6 +746,7 @@ class WorkbenchProvider extends ChangeNotifier {
     compoundGroupCounts = null;
     broadening = null;
     termsMissing = null;
+    lemmaOffer = null;
     commandIssue = null;
     verbNotice = null;
     textResults = const [];
@@ -678,6 +798,7 @@ class WorkbenchProvider extends ChangeNotifier {
     compoundGroupCounts = null;
     broadening = null;
     termsMissing = null;
+    lemmaOffer = null;
     commandIssue = null;
     verbNotice = null;
     textResults = const [];

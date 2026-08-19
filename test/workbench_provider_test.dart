@@ -151,4 +151,100 @@ void main() {
       wb.dispose();
     });
   });
+
+  group('runSearch — romanised lemma offer (asset-backed)', () {
+    // The offer is measured after the page is on screen and is not
+    // awaited, so the test waits for it the way the reader does.
+    Future<void> settle(WorkbenchProvider wb) async {
+      for (var i = 0; i < 400 && wb.lemmaOffer == null; i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+      }
+    }
+
+    MainProvider mpWith(String text) => MainProvider()
+      ..setVerses([Verse(book: 'Genesis', chapter: 1, verse: 1, text: text)]);
+
+    test('a Greek word the text does not use reaches its Strong’s number',
+        () async {
+      final wb = WorkbenchProvider(mainProvider: makeMp());
+      await wb.runSearch('agape');
+      expect(wb.textResults, isEmpty);
+      await settle(wb);
+      final offer = wb.lemmaOffer;
+      expect(offer, isNotNull);
+      expect(offer!.query, 'agape');
+      expect(offer.hits.first.candidate.strongs, 'G26');
+      // A count the app has actually run, in verses, not the lexicon's
+      // occurrence total: the offer is a query the reader can take.
+      expect(offer.hits.first.verses, greaterThan(0));
+      wb.dispose();
+    });
+
+    test('a word the text DOES use gets no offer, however it resolves',
+        () async {
+      // `dove` folds onto H1679 dôbâh, which has nothing to do with the
+      // bird. Offering it beside an English verse containing the word
+      // would be a false etymology, so the gate is the word.
+      final wb = WorkbenchProvider(mainProvider: mpWith('a dove and a raven'));
+      await wb.runSearch('dove');
+      expect(wb.textResults, hasLength(1));
+      await settle(wb);
+      expect(wb.lemmaOffer, isNull);
+      wb.dispose();
+    });
+
+    test('a substring match is not use — the offer survives it', () async {
+      // The KJV writes Jehovahshalom as one word, so a plain search for
+      // `shalom` returns a verse. No verse USES the word, which is why
+      // the gate reads it as a word rather than trusting the page.
+      final wb =
+          WorkbenchProvider(mainProvider: mpWith('called it Jehovahshalom'));
+      await wb.runSearch('shalom');
+      expect(wb.textResults, hasLength(1));
+      await settle(wb);
+      expect(wb.lemmaOffer?.hits.first.candidate.strongs, 'H7965');
+      wb.dispose();
+    });
+
+    test('a scope does not make a word the edition uses look absent',
+        () async {
+      // The gate reads the whole edition, never the reader's scope.
+      // `wen` is a KJV word (Leviticus 22:22) and folds onto H1121 bên,
+      // "a son"; a Genesis-scoped probe would call it absent and offer
+      // that, which is a false etymology dressed as a finding. 152 of
+      // the KJV's 1,814 resolving words behaved this way under a
+      // Genesis limit before the gate stopped applying the limit.
+      final wb = WorkbenchProvider(
+        mainProvider: MainProvider()
+          ..setVerses(const [
+            Verse(
+                book: 'Genesis',
+                chapter: 1,
+                verse: 1,
+                text: 'In the beginning'),
+            Verse(
+                book: 'Leviticus',
+                chapter: 22,
+                verse: 22,
+                text: 'or scurvy, or scabbed, or hath a wen'),
+          ]),
+      );
+      await wb.setSearchLimit({'Genesis-1-1'}, 'test');
+      await wb.runSearch('wen');
+      expect(wb.textResults, isEmpty, reason: 'the only "wen" is out of scope');
+      await settle(wb);
+      expect(wb.lemmaOffer, isNull);
+      wb.dispose();
+    });
+
+    test('a new search clears the previous offer', () async {
+      final wb = WorkbenchProvider(mainProvider: makeMp());
+      await wb.runSearch('agape');
+      await settle(wb);
+      expect(wb.lemmaOffer, isNotNull);
+      await wb.runSearch('god');
+      expect(wb.lemmaOffer, isNull);
+      wb.dispose();
+    });
+  });
 }

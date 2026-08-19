@@ -3520,6 +3520,36 @@ const uiStrings = {
     'en':
         'Each group found verses, but none of them fall together as the line asks.',
   },
+  // The last rung, and the only one a single word can reach: no verse
+  // uses `agape`, but the Greek behind the verses does. It says "uses
+  // the word" and not "is not in the translation" because the offer is
+  // gated on a WORD-aware count, and a plain search matches inside
+  // words — so `shalom` can show Jehovahshalom and still be offered,
+  // and the line must stay true with those rows on screen. `{word}` is
+  // the reader's own spelling, quoted back so it is obvious this is an
+  // answer to what she typed and not a change of subject.
+  'cmdRomanisedLead': {
+    'zh-Hans': '没有一节经文用「{word}」这个词，但原文里有：',
+    'zh-Hant': '沒有一節經文用「{word}」這個詞，但原文裡有：',
+    'en': 'No verse uses the word “{word}”, but the original does:',
+  },
+  // The same offer with rows above it. Those rows are matches INSIDE
+  // other words — «nabi» lists 26 KJV verses, every one of them "then
+  // Abimelech" — so the lead has to explain them before it can say the
+  // word is unused, or the reader reads a count of 26 and a claim of
+  // none and trusts neither.
+  'cmdRomanisedLeadBeside': {
+    'zh-Hans': '以上都是「{word}」出现在别的词里面；没有一节经文单独用这个词。原文里有：',
+    'zh-Hant': '以上都是「{word}」出現在別的詞裡面；沒有一節經文單獨用這個詞。原文裡有：',
+    'en': 'Those matches are inside other words — no verse uses “{word}” '
+        'on its own. The original does:',
+  },
+  // One candidate row: G26 · ἀγάπη agápē — love · 110 verses.
+  'cmdRomanisedHit': {
+    'zh-Hans': '{number} · {lemma} {translit} — {gloss} · {count} 节',
+    'zh-Hant': '{number} · {lemma} {translit} — {gloss} · {count} 節',
+    'en': '{number} · {lemma} {translit} — {gloss} · {count} verses',
+  },
   'commandSearchHint': {
     'zh-Hans': '搜索经文，或原文编号：G25 AND G26',
     'zh-Hant': '搜尋經文，或原文編號：G25 AND G26',

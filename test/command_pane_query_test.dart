@@ -20,7 +20,9 @@ import 'package:seeksparks/models/verse.dart';
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/providers/workbench_provider.dart';
 import 'package:seeksparks/utils/command_query.dart';
+import 'package:seeksparks/utils/romanised_lemma.dart';
 import 'package:seeksparks/utils/search_highlight.dart';
+import 'package:seeksparks/utils/vocabulary.dart';
 import 'package:seeksparks/widgets/command_pane.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -359,6 +361,69 @@ void main() {
       await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
       await tester.pump();
       expect(line(), isEmpty);
+    });
+
+    /// The romanised offer is measured from assets a beat after the
+    /// search, so these set it directly: what is under test is that the
+    /// pane shows it in BOTH result branches, and that a tap runs the
+    /// number. Whether it is measured correctly is
+    /// `workbench_provider_test.dart` and the two corpus files.
+    LemmaOffer offer(String query, String strongs) => LemmaOffer(
+          query: query,
+          hits: [
+            LemmaHit(
+              candidate: LemmaCandidate(
+                word: VocabWord(
+                  strongs: strongs,
+                  lemma: 'ἀγάπη',
+                  translit: 'agápē',
+                  gloss: 'love',
+                  corpusCount: 116,
+                ),
+                exact: true,
+              ),
+              verses: 110,
+            ),
+          ],
+        );
+
+    testWidgets('a word the text does not use offers the original',
+        (tester) async {
+      final wb = await pump(tester);
+      await submit(tester, 'agape');
+      expect(wb.textResults, isEmpty);
+      wb.lemmaOffer = offer('agape', 'G26');
+      wb.notifyListeners();
+      await tester.pump();
+      expect(find.textContaining('No verse uses the word'), findsOneWidget);
+      // Not just `G26`: the hint line under the field says
+      // "or Strong's: G25 AND G26", and a finder that matched it would
+      // pass with the offer missing.
+      expect(find.textContaining('G26 · ἀγάπη'), findsOneWidget);
+
+      await tester.tap(find.textContaining('G26 · ἀγάπη'));
+      await tester.pump();
+      await tester.pump();
+      expect(wb.lastQuery, 'G26');
+    });
+
+    testWidgets('a substring hit does not hide the offer', (tester) async {
+      // The gate is the word, so a search can put verses on screen AND
+      // be offered the original — `shalom` matching Jehovahshalom is the
+      // real case. The pane used to render the offer only in the empty
+      // branch, which would have silently dropped it.
+      final wb = await pump(tester);
+      await submit(tester, 'god');
+      expect(wb.textResults, isNotEmpty);
+      wb.lemmaOffer = offer('shalom', 'H7965');
+      wb.notifyListeners();
+      await tester.pump();
+      // And the lead is the one written for rows above it: a count of
+      // 3 over "no verse uses the word" reads as a contradiction, so
+      // beside results it explains the rows first.
+      expect(find.textContaining('inside other words'), findsOneWidget);
+      expect(find.textContaining('No verse uses the word'), findsNothing);
+      expect(find.textContaining('H7965'), findsOneWidget);
     });
   });
 }

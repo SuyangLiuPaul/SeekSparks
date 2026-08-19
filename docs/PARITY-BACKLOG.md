@@ -131,6 +131,25 @@ file should read.
   so joining them needs a reference→index map and a decision about what a
   proximity join means across a tagged layer. The compound parser refuses
   it by name (`CommandIssue.compoundGroupOperator`) rather than guessing.
+- **A plain search matches across word boundaries** — **DEFECT, found
+  2026-08-19, not yet fixed.** A query with no control character is a
+  substring match over the *space-stripped* verse key, so in the KJV
+  `forth` lists the **2,542** verses that say "for the", `asa` the
+  **1,094** that say "as a", `end` matches "seven days", `oar` matches
+  "also a righteous", `heirs` matches "their shoulders". Nothing in
+  those rows is markable, so the reader is shown a verse with no visible
+  hit. Measured on a 502-word sample of the KJV's 12,546 distinct words
+  (every 25th, sorted): **89** produce at least one boundary-spanning
+  row. A further 116 are inflated only by matching *inside* one word
+  (`walk` → "walked"), which is a different thing and arguably wanted.
+  Not fixed on discovery because the substring rule is load-bearing for
+  Chinese, which has no spaces to strip — the fix is per-script, not
+  global, and it changes result counts for every existing English query.
+  *Done:* decide it — word-aware plain search for space-separated
+  scripts, or an honest note in the help. Do not "fix" it by stripping
+  spaces differently; that is the same bug with new numbers. This is
+  also why the romanised-input offer (§3.7) gates on the word-aware
+  engine and not on an empty result list.
 - **Cross-version searches** — **ABSENT.** bwh16. "Find verses where the
   KJV says X and the LXX says Y." We have every version loaded and a
   parallel view; nothing can query across two at once. *Done:* one
@@ -436,14 +455,32 @@ Mapped against BibleWorks' own tab set (bwh10):
   local only, no sharing.**
 - **Custom modules (bwh48)** — **ABSENT.** Same shape as above, for
   reference works rather than Bibles. Lower priority.
-- **Greek and Hebrew keyboard layouts (bwh45)** — **ABSENT.** BibleWorks
-  ships keyboards so you can *type* Greek and Hebrew into the command
-  line. Grep finds no input-method support. We partly dodge this:
-  `strongs_service.dart` accepts a romanised gloss, so "love" finds G25.
-  But a reader who knows the language cannot type ἀγάπη. *Done:* accept
-  transliterated input for Greek and Hebrew search terms — the same trick
-  the lexicon lookup already uses — rather than building a soft keyboard.
-  Cheaper, and better on a tablet, which is the target device.
+- **Greek and Hebrew keyboard layouts (bwh45/bwh24)** — **ANSWERED
+  2026-08-19**, by the other road. The entry above used to say
+  BibleWorks "ships keyboards so you can type Greek and Hebrew"; read in
+  full, `bwh24_UsingGreekHebrewFonts.htm` describes a **font keyboard
+  bound to the search version** — the ASCII you type is rendered in
+  `Bwgrkl`/`Bwhebb`, so `avga,ph` *is* ἀγάπη — plus an INS key that
+  inserts a character by code. It is a typing surface, not a lookup, and
+  the key charts in the help are ASCII rendered in a font we do not have,
+  so the mapping is not recoverable from the topic at all.
+  Two things followed. Typing ἀγάπη already works here — the text scan
+  finds it in a Greek edition (#321 fixed the fold that stopped it), so
+  the keyboard would only save keystrokes on a device that has no such
+  keyboard anyway. What did NOT work was the common case: a reader who
+  knows the word `agape` with an English Bible open got "No results
+  found" over a corpus containing it 116 times. **Shipped:** a romanised
+  index over the 13,964 joined lexicon entries (`romanised_lemma.dart`),
+  two-tier so the 1890 spellings (`shâlôwm`, `chêçêd`) are reachable by
+  the modern ones; candidates are shown and never auto-resolved (2,757
+  of 21,147 typable spellings reach more than one entry); and the offer
+  is gated on the word occurring in **no verse of the edition, read as
+  a word, at any scope** —
+  which is what keeps `bad`→H905 and `dove`→H1679 off the screen. See
+  the research note of 2026-08-19 for the measurement, including why the
+  obvious gate (an empty result list) was wrong.
+  *Still absent, deliberately:* a soft keyboard, and romanised terms
+  inside the Strong's boolean grammar.
 - **Keyboard shortcuts (bwh44)** — **PARTIAL.** Ctrl+L, Ctrl+Shift+C,
   Esc. bwh44 has a full function-key set. *Done:* a shortcut sheet and
   the handful worth having, plus a discoverable list — a shortcut nobody
@@ -672,8 +709,10 @@ In rough order of value, if nothing else is pressing:
 5. ~~Compound (parenthesised) search~~ — **DONE 2026-08-19**, §3.1. What
    is left of it is Strong's-side grouping, which is a different engine;
    see the corrected §3.1 entry before picking it up.
-6. **Transliterated Greek/Hebrew search input** (§3.7) — cheap, and it
-   unlocks the corpus for readers who know the languages.
+6. ~~Transliterated Greek/Hebrew search input~~ — **DONE 2026-08-19**,
+   §3.7. It was not cheap, and the help topic it cites describes a font
+   keyboard rather than transliteration; read the corrected §3.7 entry
+   before quoting this list.
 
 ~~A User Notes tab (§3.4)~~ — **done 2026-08-18.** It was picked from
 this list as the largest gap in the Analysis pane.
