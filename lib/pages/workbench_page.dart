@@ -31,6 +31,7 @@ import 'package:seeksparks/pages/family_tree_page.dart';
 import 'package:seeksparks/pages/hebrew_kings_page.dart';
 import 'package:seeksparks/pages/illustrations_page.dart';
 import 'package:seeksparks/pages/library_page.dart';
+import 'package:seeksparks/pages/naves_page.dart';
 import 'package:seeksparks/pages/phrasing_page.dart';
 import 'package:seeksparks/pages/sermon_detail_page.dart';
 import 'package:seeksparks/pages/sermons_page.dart';
@@ -560,6 +561,12 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         // reachable only by already reading a chapter that matched one.
         WbMenuItem(s('maps', 'Illustrations'),
             () => pushPage(const IllustrationsPage())),
+        // Same argument one more time. The Topics tab answers "what is
+        // THIS verse about"; a reader who wants what Nave filed under
+        // REPENTANCE had to guess a verse that might be under it first.
+        // A database you CONSULT needs a door of its own.
+        WbMenuItem(s('navesTitle', "Nave's Topical Bible"),
+            () => pushPage(const NavesPage())),
         WbMenuItem(s('familyTree', 'Family Tree'),
             () => pushPage(const FamilyTreePage())),
         // Separate from Family Tree on purpose: the tree is Judah's line

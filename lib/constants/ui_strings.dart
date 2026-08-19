@@ -7517,6 +7517,87 @@ const uiStrings = {
     'zh-Hant': '內夫聖經主題辭典',
     'en': "Nave's Topical Bible",
   },
+  'navesUnavailable': {
+    'zh-Hans': '本版本未收录内夫圣经主题辞典。',
+    'zh-Hant': '本版本未收錄內夫聖經主題辭典。',
+    'en': "Nave's Topical Bible is not bundled in this build.",
+  },
+  'navesSearchHint': {
+    'zh-Hans': '搜索主题',
+    'zh-Hant': '搜尋主題',
+    'en': 'Search topics',
+  },
+  // The second tier, named for what it searches rather than for how it
+  // works: a reader does not care that it is a separate file.
+  'navesSearchText': {
+    'zh-Hans': '搜索条目正文',
+    'zh-Hant': '搜尋條目正文',
+    'en': 'Search entry text',
+  },
+  'navesTopicsAll': {
+    'zh-Hans': '{n} 个主题',
+    'zh-Hant': '{n} 個主題',
+    'en': '{n} topics',
+  },
+  // Names WHAT it counted, not just how many: this tier matches topic
+  // NAMES and the one below it matches text. #308's rule.
+  'navesTopicsMatching': {
+    'zh-Hans': '{n} 个主题以此为名',
+    'zh-Hant': '{n} 個主題以此為名',
+    'en': '{n} topics named',
+  },
+  'navesNoTopic': {
+    'zh-Hans': '没有名为「{q}」的主题。',
+    'zh-Hant': '沒有名為「{q}」的主題。',
+    'en': 'No topic is named “{q}”.',
+  },
+  'navesLoadingText': {
+    'zh-Hans': '正在读取条目正文…',
+    'zh-Hant': '正在讀取條目正文…',
+    'en': 'Reading the entries…',
+  },
+  'navesTextHits': {
+    'zh-Hans': '{n} 行条目正文提到它',
+    'zh-Hant': '{n} 行條目正文提到它',
+    'en': '{n} lines mention it',
+  },
+  'navesTextShowing': {
+    'zh-Hans': '显示前 {n} 行',
+    'zh-Hant': '顯示前 {n} 行',
+    'en': 'first {n} shown',
+  },
+  'navesNothingAnywhere': {
+    'zh-Hans': '内夫没有以「{q}」立目，条目正文中也没有提到。',
+    'zh-Hant': '內夫沒有以「{q}」立目，條目正文中也沒有提到。',
+    'en': 'Nave files nothing under “{q}”, and no entry mentions it.',
+  },
+  // 649 topics carry no references at all. A bare "0" reads as a broken
+  // entry; these exist only to send the reader somewhere else.
+  'navesCrossRefOnly': {
+    'zh-Hans': '仅指引',
+    'zh-Hant': '僅指引',
+    'en': 'cross-reference',
+  },
+  'navesTopicCounts': {
+    'zh-Hans': '{l} 行 · {r} 处经文',
+    'zh-Hant': '{l} 行 · {r} 處經文',
+    'en': '{l} lines · {r} references',
+  },
+  'navesAllTopics': {
+    'zh-Hans': '全部主题',
+    'zh-Hant': '全部主題',
+    'en': 'All topics',
+  },
+  'navesMoreRefs': {
+    'zh-Hans': '另有 {n} 处',
+    'zh-Hant': '另有 {n} 處',
+    'en': '+{n} more',
+  },
+  'navesSee': {
+    'zh-Hans': '参',
+    'zh-Hant': '參',
+    'en': 'See',
+  },
   'modernConcordanceTitle': {
     'zh-Hans': '现代汇编（新约）',
     'zh-Hant': '現代彙編（新約）',

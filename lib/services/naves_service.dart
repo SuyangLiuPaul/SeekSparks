@@ -48,6 +48,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
 import '../constants/book_names.dart';
+import '../utils/naves_browse.dart' show matchHeadwords;
 import '../utils/version_mapper.dart' show localeAwareBookName;
 
 /// A reference as Nave printed it, at the granularity he printed it.
@@ -224,6 +225,7 @@ class NavesService {
   static List<int> _refCounts = const [];
   static int _perShard = 40;
   static String _attribution = '';
+  static Map<int, List<String>>? _lineTexts;
 
   static final Map<int, Map<int, NaveTopic>> _shardCache = {};
   static final Map<String, Map<String, dynamic>> _verseCache = {};
@@ -344,27 +346,39 @@ class NavesService {
     return out;
   }
 
-  /// Headword search for the topic index.
-  ///
-  /// Prefix matches rank above contained ones, because a reader typing
-  /// "love" wants LOVE before "BROTHERLY LOVE"; both are wanted, so
-  /// neither is dropped.
+  /// Headword search for the topic index. Ranking lives in
+  /// `utils/naves_browse.dart`, where it is testable without a bundle.
   static Future<List<int>> search(String query, {int limit = 60}) async {
     final all = await heads();
-    final q = query.trim().toUpperCase();
-    if (q.isEmpty) return const [];
-    final starts = <int>[];
-    final contains = <int>[];
-    for (var i = 0; i < all.length; i++) {
-      final h = all[i].toUpperCase();
-      if (h.startsWith(q)) {
-        starts.add(i);
-      } else if (h.contains(q)) {
-        contains.add(i);
-      }
-      if (starts.length >= limit) break;
+    return [
+      for (final hit in matchHeadwords(all, query).take(limit)) hit.topicId,
+    ];
+  }
+
+  /// The text of every line in the work, topic id → lines in Nave's
+  /// order, for searching what the entries SAY rather than what they
+  /// are called.
+  ///
+  /// One 790 KB file (270 KB over the wire) rather than the 134 shard
+  /// requests the same query would otherwise cost, and loaded only when
+  /// a reader asks for it — the headword tier answers most questions off
+  /// the 90 KB index and never touches this.
+  static Future<Map<int, List<String>>> lineTexts() async {
+    final cached = _lineTexts;
+    if (cached != null) return cached;
+    try {
+      final j = json.decode(await rootBundle.loadString('$_base/lines.json'))
+          as Map<String, dynamic>;
+      final rows = (j['lines'] as Map<String, dynamic>? ?? const {});
+      return _lineTexts = {
+        for (final e in rows.entries)
+          int.parse(e.key): [
+            for (final t in (e.value as List? ?? const [])) t as String,
+          ],
+      };
+    } catch (_) {
+      return _lineTexts = const {};
     }
-    return [...starts, ...contains].take(limit).toList();
   }
 
   @visibleForTesting
@@ -373,6 +387,7 @@ class NavesService {
     _lineCounts = const [];
     _refCounts = const [];
     _attribution = '';
+    _lineTexts = null;
     _shardCache.clear();
     _verseCache.clear();
   }

@@ -527,6 +527,30 @@ def main():
         with open(path, 'w', encoding='utf-8') as f:
             json.dump(shard, f, ensure_ascii=False, separators=(',', ':'))
 
+    # A fourth artifact, and it exists for one measured reason. Headword
+    # search over index.json answers the 1896 vocabulary well — LOVE,
+    # FAITH, JEALOUSY, ANXIETY all land — but a reader typing a word Nave
+    # did not use as a headword gets nothing: "worry" and "depression" are
+    # both zero headwords. The LINES are a different index — "divorce" is
+    # 2 headwords and 37 lines — and a blank page in front of a reader who
+    # asked a reasonable question is the defect this app has already been
+    # burned by. It is not a cure: "depression" is zero in the lines too,
+    # and the page says so rather than showing an empty list.
+    #
+    # Searching the lines means having them all at once, and they live
+    # scattered across 134 topic shards — 134 requests to answer one
+    # query. So the text alone is emitted once, flat: 790 KB, 270 KB
+    # gzipped, ONE request, and loaded only when a reader actually asks
+    # for it. Positional by line index so a hit is a (topic, line) pair
+    # the shards can resolve without a second key.
+    with open(os.path.join(OUT, 'lines.json'), 'w', encoding='utf-8') as f:
+        json.dump({
+            'schemaVersion': 1,
+            'topicCount': len(topics),
+            'lines': {str(i): [l.get('t', '') for l in t['l']]
+                      for i, t in enumerate(topics)},
+        }, f, ensure_ascii=False, separators=(',', ':'))
+
     for book_idx, chapters_map in rev.items():
         slug = STANDARD_BOOKS[book_idx - 1].lower().replace(' ', '_')
         out = {str(c): {str(v): hits for v, hits in sorted(vs.items())}
