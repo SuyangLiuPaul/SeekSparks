@@ -308,13 +308,23 @@ Mapped against BibleWorks' own tab set (bwh10):
 
 ### 3.5 The study tools
 
-- **Word List Manager (bwh26)** — **PARTIAL.**
+- **Word List Manager (bwh26)** — **PARTIAL**, and the headline is done.
   `lib/pages/word_list_page.dart` builds a list for the passage in view
-  (Tools → Word List, `workbench_page.dart:491`). bwh26 additionally
-  compiles from **a whole version**, **a command-line or GSE query**, and
-  can **compare two word lists** — the comparison being the point
-  (what vocabulary does Jude share with 2 Peter?). Grep finds no compare.
-  *Done:* list-from-query, and a two-list comparison view.
+  (Tools → Word List, `workbench_page.dart:491`), and since 2026-08-19
+  **compares two books** — bwh26's own example, *"find all words that
+  occur in John that do not occur anywhere else in the New Testament"*.
+  Ours answers the stronger question, *nowhere else in the whole Bible*:
+  it adds the two scope counts and compares them with the corpus total in
+  `concordance.json`. That is exact rather than approximate because the
+  concordance's `n` agrees with a tally of `assets/originals` on all
+  14,040 numbers with zero disagreements (DATA-INTEGRITY check 3b), and
+  it is only sound because two whole books cannot overlap — which is why
+  the pickers are books and not verse ranges. Jude against 2 Peter gives
+  exactly three such shared words (συνευωχέω, ὑπέρογκος, ἐμπαίκτης), the
+  three the commentaries cite for the relationship between the letters.
+  Logic in `lib/utils/word_list_compare.dart`.
+  *Still missing:* compiling a list from **a whole version** and from **a
+  command-line or GSE query**, and a morphology filter on the list.
 - **Verse List Manager (bwh27)** — **PARTIAL.** The Lists tab and
   `verse_list_store.dart` hold and scope lists. bwh27 also **compares two
   verse lists** and offers a book sort order. *Done:* set operations over
@@ -654,9 +664,11 @@ In rough order of value, if nothing else is pressing:
 2. ~~Version difference highlighting~~ — **DONE v1.6.147**, §3.3.
 3. **Nave's Topical Bible** (§3.5) — public domain, closes a named
    BibleWorks resource, small.
-4. **Word list / verse list comparison** (§3.5) — the comparison is the
-   feature; we have both halves and neither compares. `version_diff.dart`
-   now supplies a tested LCS; that is the hard half of this.
+4. **Verse list comparison** (§3.5) — the word-list half is **DONE
+   2026-08-19** (compare two books, `word_list_compare.dart`); what is
+   left is set operations over two saved VERSE lists, which share none of
+   that code: a verse list is a set of references a reader assembled, so
+   the interesting output is the three-way split, not a corpus claim.
 5. ~~Compound (parenthesised) search~~ — **DONE 2026-08-19**, §3.1. What
    is left of it is Strong's-side grouping, which is a different engine;
    see the corrected §3.1 entry before picking it up.

@@ -4102,6 +4102,71 @@ const uiStrings = {
     'zh-Hant': '此段沒有原文數據。',
     'en': 'No original-language data for this passage.',
   },
+  // ── Comparing two word lists (bwh26) ─────────────────────────────────
+  // bwh26's own headline for the Word List Manager is the comparison, not
+  // the list. The filter chips name their bucket and carry its count, so
+  // no number on this screen is ambiguous about what it counted (#308).
+  'wlCmpScope': {
+    'zh-Hans': '比较两卷', 'zh-Hant': '比較兩卷', 'en': 'Compare two books',
+  },
+  'wlCmpWith': {'zh-Hans': '与', 'zh-Hant': '與', 'en': 'with'},
+  'wlCmpChoose': {
+    'zh-Hans': '选择一卷书', 'zh-Hant': '選擇一卷書', 'en': 'Choose a book',
+  },
+  'wlCmpIntro': {
+    'zh-Hans': '选两卷书，看它们共用哪些原文词、哪些只属于其中一卷，'
+        '以及哪些词在全本圣经里只出现在这两卷。',
+    'zh-Hant': '選兩卷書，看它們共用哪些原文詞、哪些只屬於其中一卷，'
+        '以及哪些詞在全本聖經裡只出現在這兩卷。',
+    'en': 'Pick two books to see which original-language words they share, '
+        'which belong to only one of them, and which occur nowhere else '
+        'in the Bible.',
+  },
+  'wlCmpAll': {'zh-Hans': '全部', 'zh-Hant': '全部', 'en': 'All'},
+  'wlCmpBoth': {'zh-Hans': '两卷都有', 'zh-Hant': '兩卷都有', 'en': 'In both'},
+  'wlCmpOnly': {'zh-Hans': '只在', 'zh-Hant': '只在', 'en': 'Only in'},
+  'wlCmpNowhere': {
+    'zh-Hans': '别处没有', 'zh-Hant': '別處沒有', 'en': 'Nowhere else',
+  },
+  'wlCmpNowhereHint': {
+    'zh-Hans': '这些词在全本圣经中的每一次出现，都在这两卷之内。',
+    'zh-Hant': '這些詞在全本聖經中的每一次出現，都在這兩卷之內。',
+    'en': 'Every occurrence of these words in the Bible is inside these '
+        'two books.',
+  },
+  'wlCmpSameBook': {
+    'zh-Hans': '两边是同一卷书。请选不同的两卷。',
+    'zh-Hant': '兩邊是同一卷書。請選不同的兩卷。',
+    'en': 'Those are the same book. Choose two different ones.',
+  },
+  // Hebrew numbers and Greek numbers cannot meet, so an empty
+  // intersection here is a property of the numbering and not a result.
+  // Saying "0 words in common" and stopping would be a finding the data
+  // never made.
+  'wlCmpLangs': {
+    'zh-Hans': '这两卷不是同一种原文语言，一卷是希伯来文、一卷是希腊文，'
+        '编号本就不可能重合，所以「两卷都有」必然是空的。'
+        '各卷自己的词表仍然可看。',
+    'zh-Hant': '這兩卷不是同一種原文語言，一卷是希伯來文、一卷是希臘文，'
+        '編號本就不可能重合，所以「兩卷都有」必然是空的。'
+        '各卷自己的詞表仍然可看。',
+    'en': 'These two books are not in the same original language — one is '
+        'Hebrew, the other Greek — so their Strong\'s numbers cannot '
+        'overlap and "In both" is necessarily empty. Each book\'s own '
+        'list is still here.',
+  },
+  'wlCmpBible': {'zh-Hans': '圣经', 'zh-Hant': '聖經', 'en': 'Bible'},
+  'wlCmpSortRare': {
+    'zh-Hans': '圣经中最罕见', 'zh-Hant': '聖經中最罕見',
+    'en': 'Rarest in the Bible',
+  },
+  'wlCmpSortCombined': {
+    'zh-Hans': '两卷合计', 'zh-Hant': '兩卷合計', 'en': 'Combined count',
+  },
+  'wlCmpEmptyBucket': {
+    'zh-Hans': '这一组没有词。', 'zh-Hant': '這一組沒有詞。',
+    'en': 'No words in this group.',
+  },
   'searchStatsTop': {'zh-Hans': '最多出现于', 'zh-Hant': '最多出現於', 'en': 'Most in'},
   'searchStatsBooks': {'zh-Hans': '卷书', 'zh-Hant': '卷書', 'en': 'books'},
   // ── What a search-stats number COUNTS (bwh23, task #308) ─────────────

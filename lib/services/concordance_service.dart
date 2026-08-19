@@ -122,6 +122,25 @@ class ConcordanceService {
     return (numbers: out, cut: cut);
   }
 
+  /// Corpus-wide OCCURRENCE totals for [numbers] — the `n` field alone.
+  ///
+  /// [lookup] would answer this too, but it parses the whole verse list
+  /// on the way (up to 6,977 references for one number, each through a
+  /// regex). A word-list comparison asks about two thousand numbers at
+  /// once and wants none of those references, so it reads `n` directly.
+  ///
+  /// A number the index does not carry is simply absent from the result;
+  /// the caller must treat "no total" as unknown rather than as zero.
+  static Future<Map<String, int>> totalsFor(Iterable<String> numbers) async {
+    _cache ??= await (_loading ??= _load());
+    final out = <String, int>{};
+    for (final n in numbers) {
+      final e = _cache![n];
+      if (e is Map && e['n'] is int) out[n] = e['n'] as int;
+    }
+    return out;
+  }
+
   static Future<ConcordanceResult?> lookup(String strongsNumber) async {
     if (strongsNumber.isEmpty) return null;
     if (_parsed.containsKey(strongsNumber)) return _parsed[strongsNumber];
