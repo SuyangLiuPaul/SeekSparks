@@ -5507,11 +5507,13 @@ and says why in full.
 they differ.** This one would have gone on passing through any repair
 that left the fragment in place.
 
-### 44f — the same cut, in the Strong's asset, NOT repaired here
+### 44f — the same cut, in the Strong's asset (repaired in 44g)
 
-Found by the comparison above and measured, not fixed — it is a
-different asset and a different generator, and one repair per iteration
-is the rule that keeps a conservation proof meaningful.
+Found by the comparison above and measured, not fixed in the same
+iteration — it is a different asset and a different generator, and one
+repair per iteration is the rule that keeps a conservation proof
+meaningful. **Closed by check 44g below**, which also found that the
+scope stated here is 2.1× low.
 
 `tools/build_originals.py:244` builds the Chinese gloss with
 `re.search(r'^\s*1\)\s*(.+?)\s*$', body, re.MULTILINE)` — **the first
@@ -5550,6 +5552,84 @@ renders perfectly and throws nothing. It happened during this check and
 was caught by `git status` showing 15 files nobody meant to touch. The
 warning is now in the importer's own docstring.)*
 
+### 44g — the Strong's Chinese gloss, repaired (closes 44f)
+
+Fixed 2026-08-23, on `main` and undeployed at the time of writing — it
+reaches dev with the next release. `tools/build_originals.py` now has
+`sense_one_gloss`,
+which reads sense 1 across the lines CBOL wrapped it on;
+`tools/repair_zh_gloss_linebreaks.py` **imports that same function** and
+applies it to the shipped assets, so the generator and the asset cannot
+give different answers. No network was needed — `defZh`/`defZhTw` ship
+whole, and `glossZhTw` is parsed out of `defZhTw` rather than converted
+from the repaired `glossZh`, so every Traditional character is one that
+already shipped.
+
+**The scope, measured from `defZh` as 44f demanded: 593 entries have a
+multi-line sense 1**, against the 279 the separator test reported —
+2.1×, the check-43c failure mode again. 488 of those needed rewriting;
+the remaining 105 are the deliberate breaks below.
+
+| | Hebrew | Greek |
+|---|---|---|
+| entries rewritten | 367 of 8,674 | 121 of 5,523 |
+| characters restored | +19,389 | +5,736 |
+| glosses ending on a separator | 386 → 0 | 172 → 0 |
+
+675 scripture citations became reachable from the gloss that were
+previously only in the body (`test/cbol_lexicon_data_test.dart`, 46,052
+→ 46,727 — the *unreadable* count did not move).
+
+**CBOL's newline is not always a wrap, and that is the whole difficulty.**
+The corpus has no single column width: sense-1 line widths run
+continuously from 5 to 99 with no gap to cut at. But within one entry the
+wrap is visible, so a break counts as a wrap only when the line it ends
+could not have held more — it dangles on a separator, or it is
+unterminated and reaches 70% of the widest line in **its own entry**.
+
+The refuting example is G749 ἀρχιερεύς: `祭司长, 大祭司` on a 17-column
+line in a 90-column entry, with a fresh article on the next line. Joining
+them produced `大祭司在祭司中最大的一`, **a reading found in no
+lexicon** — a fabricated gloss is worse than a truncated one. Same class:
+G5330, G5019, G200, G2769, G3567, G4950, G205, G2884, G1537, G1722,
+G1519, G3684.
+
+Three sub-rules, each paid for by a specific entry:
+
+- **A plain bracket is not a terminator; a CBOL citation is.** `|`, alone
+  or inside the bracket that `(#` opened, ends an item. A bare `)` does
+  not: H1374 closes `(今 Anata 亚拿塔)` mid-sentence, and reading that as
+  the end says the village is *at* Anathoth rather than between the
+  ridges of Anathoth and Nob. Also H5683 `别是巴[884]`, H6048
+  `摩洛神(见 [4432])`, H6489, G1359 `与莉达(Leda)`.
+- **A space is not a word boundary in Chinese.** Join directly between
+  two wide characters; H1841 otherwise reads `神所赐 解梦的恩赐`, H3038
+  `他的后 裔`, H6540 `里 海和`. Join tight before punctuation too, or
+  G5330 gets `自豪 , 相对之下`.
+- **CBOL nests four levels deep.** `_ZH_NUMBERED` matched `1a)` but not
+  `1a1)`, so ~3,900 sub-sense markers read as ordinary prose — H7293's
+  sense 1 was continuing into `1a1) 神话中的海怪`. A second defect in the
+  same function, found only because the wrap rule made it visible.
+
+Grammatical part-of-speech lines still end sense 1, by a closed
+vocabulary and **not** by indentation or length: CBOL indents three tags
+(H369, H4616, H8478) and leaves 107 at column zero, while real definition
+text runs as short as `的手上` (H2078) and `地名` is a two-character tag.
+
+The trailing separator is dropped only after joining. Verified safe
+before doing it: every gloss still ending on one is followed by a
+sub-sense (26), the next sense (16) or the end of the body (19), and
+**never** by text the rule declined to take.
+
+Regression tests: `test/cbol_lexicon_data_test.dart` — four worked joins
+(H204, H218, G4102, H1374), three worked refusals (G749, G5208, and
+G1537's stub colon, which `StrongsEntry.localizedGloss` still needs),
+plus two corpus detectors: no gloss ends on a separator, and **all 28,368
+glosses appear verbatim in their own body once line breaks are removed**.
+That last one is what separates reflowing from paraphrasing. The repair
+is idempotent and re-serialises byte-identically outside the two fields
+it touches — confirmed by a structural diff against `HEAD`.
+
 ## Next, in order
 
 **First, and deliberately unnumbered so the citations below stay
@@ -5566,16 +5646,9 @@ unattended. **By the accuracy rule it outranks everything below**: a
 missing verse is the strongest form of the app saying something untrue
 about the text.
 
-0. **The Strong's Chinese gloss, cut at the printed line break.** Check
-   44f. `tools/build_originals.py:244` keeps the first physical line of
-   CBOL's sense 1; at least 279 glosses therefore end mid-clause on a
-   comma, and the row summary in the Lexicon Browser is where the reader
-   meets them. The true scope has not been measured — it must be counted
-   from `defZh`, because a separator test is the same undercounting
-   instrument that reported check 43c as 28 when it was 468. No network
-   is needed: `defZh` ships whole. Fix the generator and the shipped
-   asset in one change, or they drift. **Placed first because it is
-   measured, located, repairable unattended, and on screen today.**
+   *(This list's item 0, "the Strong's Chinese gloss, cut at the printed
+   line break", is closed by check 44g — 488 entries repaired, the real
+   scope 593 against the 279 a separator test reported.)*
 0. **What `assets/kjv.json` actually is.** Check 27 established that it
    is not the King James Version but an unidentified Americanised
    revision of it — not the AKJV (34.1%) and not Webster (39.0%). The

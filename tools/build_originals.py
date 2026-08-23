@@ -28,6 +28,7 @@ import json
 import os
 import re
 import sys
+import unicodedata
 import urllib.request
 import zipfile
 from xml.etree import ElementTree as ET
@@ -206,6 +207,160 @@ def _normalize_strongs_entry(num: str, raw: dict) -> dict:
     return out
 
 
+# The grammatical categories CBOL prints on a line of their own between
+# a sense and its sub-senses. They are metadata about the headword, not
+# part of any definition, so they end sense 1 rather than continuing it.
+#
+# Both scripts are listed because `sense_one_gloss` is also run over the
+# Traditional `defZhTw` column, which is the same body after `s2t`.
+#
+# This is a closed vocabulary and not a length or indentation test,
+# because both of those misclassify the real data: CBOL indents three of
+# these tags (H369, H4616, H8478) and leaves 107 of them at column zero,
+# while genuine definition text runs as short as `的手上` (H2078) and
+# `地名` is a two-character tag. Only the words themselves separate them.
+_ZH_POS_TERMS = frozenset({
+    '名词', '名詞', '阳性名词', '陽性名詞', '阴性名词', '陰性名詞',
+    '中性名词', '中性名詞', '专有名词', '專有名詞',
+    '阳性专有名词', '陽性專有名詞', '阴性专有名词', '陰性專有名詞',
+    '专有地名词', '專有地名詞', '地名专有名词', '地名專有名詞',
+    '专有名词地名', '專有名詞地名',
+    '形容词', '形容詞', '形容词的', '形容詞的',
+    '副词', '副詞', '作为副词', '作為副詞', '受格的副词', '受格的副詞',
+    '连接词', '連接詞', '介系词', '介系詞', '附介系词', '附介系詞',
+    '动词', '動詞', '及物动词', '及物動詞', '不及物动词', '不及物動詞',
+    '实名词', '實名詞', '作名词用', '作名詞用',
+    '关系代名词', '關係代名詞', '阴性关系代名词', '陰性關係代名詞',
+    '代名词', '代名詞', '假设分词', '假設分詞',
+    '否定词', '否定詞', '复合字', '複合字',
+    '地名', '人名', '种族名称', '種族名稱',
+    '复数', '複數', '单数', '單數', '抽象', '加强语气', '加強語氣',
+    '阳性', '陽性', '阴性', '陰性', '中性',
+    '感叹词', '感嘆詞', '疑问词', '疑問詞', '数词', '數詞', '冠词', '冠詞',
+})
+
+_ZH_POS_SEP = re.compile(r'[\s,，、;；()（）]+')
+# CBOL nests to at least four levels: `1)`, `1a)`, `1a1)`, `1a1a)`.
+# `\d+[a-zA-Z]*\)` stopped at two and read the ~3,900 deeper markers as
+# ordinary text, so `1a1) 神话中的海怪` continued sense 1 of H7293.
+_ZH_NUMBERED = re.compile(r'^\s*\d+(?:[a-zA-Z]+\d*)*\)')
+# Ideographs and the fullwidth forms; a boundary between two of these
+# carries its own spacing and must not be given another.
+_ZH_WIDE = re.compile(r'[　-〿㐀-鿿豈-﫿＀-￯]')
+
+
+# Punctuation that closes what came before it, so a wrap landing just
+# ahead of it must not be given a space: CBOL breaks G5330 between
+# `以自以为是的好行为自豪` and `, 相对之下…`.
+_ZH_LEADS_TIGHT = re.compile(r'[,，、;；.。!！?？:：)）\]】]')
+
+# A line ending on one of these is unfinished: CBOL ran out of column.
+_ZH_DANGLING = re.compile(r'[,，、;；]\s*$')
+# A line has said what it came to say when it closes a sentence, or when
+# it ends on a CBOL reference — `|`, optionally inside the bracket that
+# opened `(#`. A PLAIN bracket is not terminal: `(今 Anata 亚拿塔)`
+# (H1374), `别是巴[884]` (H5683) and `与莉达(Leda)` (G1359) all close a
+# parenthesis in the middle of a sentence, and reading those as the end
+# leaves the gloss saying the village is AT Anathoth rather than between
+# the ridges of Anathoth and Nob.
+_ZH_TERMINAL = re.compile(r'(?:[.。!！?？:：]|\|\s*[)）\]】]?)\s*$')
+
+# Share of the entry's own widest line that a line must reach before a
+# break in it is read as CBOL running out of column. Below it, the break
+# is the editor's.
+_ZH_WRAP_RATIO = 0.70
+
+
+def _is_zh_pos_line(line: str) -> bool:
+    """True when the whole line is grammatical metadata."""
+    toks = [t for t in _ZH_POS_SEP.split(line.strip()) if t]
+    return bool(toks) and all(t in _ZH_POS_TERMS for t in toks)
+
+
+def _display_width(line: str) -> int:
+    """Columns `line` occupies in CBOL's fixed-width layout."""
+    return sum(2 if unicodedata.east_asian_width(c) in 'WF' else 1
+               for c in line)
+
+
+def sense_one_gloss(body: str) -> str:
+    """Sense 1 of a CBOL definition body, joined across the physical
+    lines CBOL happened to wrap it on.
+
+    Until 2026-08-23 this kept only the FIRST line, and the docstring
+    called that "short but accurate". It was short. For 491 entries it
+    was not accurate: CBOL wraps a long sense at its own column width,
+    so `H204` shipped as `位于埃及低地的一个城市, 歌珊的边界处,
+    崇拜太阳神的中心,` — a gloss ending on a comma, with the clause that
+    names it as Potiphera's home town on line two. `glossZh` is the row
+    summary in the Lexicon Browser, so these were on screen (check 44f).
+
+    A following line ends sense 1 when it is blank, when it opens a new
+    numbered item (`2)` or `1a)`), or when it is grammatical metadata.
+
+    Otherwise the question is whether CBOL broke the line or the editor
+    did, because CBOL uses one newline for both. Not every break is a
+    wrap: G749's sense 1 is `祭司长, 大祭司` on a 17-column line in an
+    entry whose other lines run to 90, and the next line begins a fresh
+    article. Joining those two produced `大祭司在祭司中最大的一` — a
+    reading found in no lexicon. So a break counts as a wrap only when
+    the line it ends could not have held more: it dangles on a separator,
+    or it is unterminated AND reaches `_ZH_WRAP_RATIO` of the widest line
+    in its own entry. The comparison is per entry because the corpus has
+    no single column width — the sense-1 line widths run continuously
+    from 5 to 99 with no gap to cut at.
+
+    The join is direct between two wide characters and spaced otherwise.
+    A space is not a word boundary in Chinese: joining `藉着神所赐` to
+    `解梦的恩赐` with one would invent a break inside a phrase (H1841,
+    H3038 `他的后` + `裔`, H6540 `里` + `海和`), while `崇拜太阳神的中心,`
+    + `波提非拉` needs the space CBOL's own style puts after a comma.
+
+    Finally a trailing separator is dropped. After joining, one can only
+    be CBOL's own — measured across both lexicons, every gloss still
+    ending on a comma is followed by a sub-sense, the next sense, or the
+    end of the body, and never by text we declined to take.
+    """
+    if not body:
+        return ''
+    lines = body.split('\n')
+    start = None
+    for i, ln in enumerate(lines):
+        if re.match(r'^\s*1\)\s*\S', ln):
+            start = i
+            break
+    if start is None:
+        for i, ln in enumerate(lines):
+            if re.match(r'^\s*\d+[a-zA-Z]*\)\s*\S', ln):
+                start = i
+                break
+    if start is None:
+        return ''
+    wrap = max(_display_width(ln.rstrip()) for ln in lines)
+    out = re.sub(r'^\s*\d+[a-zA-Z]*\)\s*', '', lines[start]).strip()
+    prev = lines[start].rstrip()
+    for ln in lines[start + 1:]:
+        piece = ln.strip()
+        if not piece or _ZH_NUMBERED.match(ln) or _is_zh_pos_line(ln):
+            break
+        if not _ZH_DANGLING.search(prev):
+            if _ZH_TERMINAL.search(prev):
+                break
+            if _display_width(prev) < _ZH_WRAP_RATIO * wrap:
+                break
+        prev = ln.rstrip()
+        joint = out and (_ZH_LEADS_TIGHT.match(piece[0])
+                         or (_ZH_WIDE.match(out[-1])
+                             and _ZH_WIDE.match(piece[0])))
+        if joint:
+            out += piece
+        elif out:
+            out += ' ' + piece
+        else:
+            out = piece
+    return out.rstrip(' \t,，、;；')
+
+
 def _parse_zh_strongs_body(raw: str) -> tuple[str, str]:
     """Extract a (gloss_zh, def_zh) pair from a CBOL Chinese Strong's
     body. The body's shape is roughly:
@@ -223,8 +378,10 @@ def _parse_zh_strongs_body(raw: str) -> tuple[str, str]:
            ...
 
     For `def_zh` we keep everything from the first numbered line to the
-    end. For `gloss_zh` we take the first "1)" line — short but
-    accurate; the user can read the full body for nuance.
+    end. `gloss_zh` is sense 1, whole — see `sense_one_gloss`, which
+    also handles CBOL's inconsistent spacing after the `1)` marker
+    (G25 has `1)珍爱`, G2316 has `1) 神或女神`) and its habit of
+    wrapping one sense across several printed lines.
     """
     if not raw:
         return ('', '')
@@ -238,14 +395,7 @@ def _parse_zh_strongs_body(raw: str) -> tuple[str, str]:
     if def_start is None:
         return ('', raw.strip())
     body = '\n'.join(lines[def_start:]).rstrip()
-    # CBOL is inconsistent about the space between `1)` and the text
-    # (e.g. G25 has `1)珍爱`, while G2316 has `1) 神或女神`). Accept
-    # either form. Also fall back to "2)..." when "1)" is missing.
-    m = re.search(r'^\s*1\)\s*(.+?)\s*$', body, re.MULTILINE)
-    if not m:
-        m = re.search(r'^\s*\d+\)\s*(.+?)\s*$', body, re.MULTILINE)
-    gloss = m.group(1).strip() if m else ''
-    return (gloss, body.strip())
+    return (sense_one_gloss(body), body.strip())
 
 
 def _load_zh_strongs(url: str, cache_name: str, prefix: str) -> dict[str, tuple[str, str]]:

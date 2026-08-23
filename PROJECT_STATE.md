@@ -11,7 +11,7 @@ ticket briefs belong in the loop's `prompt.md` and, once closed, in
 `prompt-archive.md`. If this file grows past ~150 lines it has stopped
 doing its job.
 
-Last updated: 2026-08-23 (third entry)
+Last updated: 2026-08-23 (fourth entry)
 
 ---
 
@@ -19,10 +19,10 @@ Last updated: 2026-08-23 (third entry)
 
 | | |
 |---|---|
-| `pubspec` / dev | **1.6.152** — deployed; the tree is level with dev |
+| `pubspec` / dev | **1.6.152** — dev is one commit behind `main` (undeployed iteration 1 of 3) |
 | prod (seeksparks.netlify.app) | **1.6.136** — 16 versions behind, by design: prod ships only on the owner's word |
-| `main` | `1fa3e62` + the version bump |
-| Suite | **3,141 tests**, green; `flutter analyze` exit 0 |
+| `main` | the Strong's Chinese gloss repair (check 44g) |
+| Suite | **3,145 tests**, green; `flutter analyze` exit 0 |
 | CI | green (Flutter CI on `main`) |
 
 ---
@@ -94,16 +94,17 @@ parked behind #292) and **1c** (flashcard retention, bwh40). When those go,
 pick a `PARTIAL` from §3–§6 whose "what is missing" paragraph fits one
 iteration — do not re-pick a struck item.
 
-**But §8 item 1 outranks all of them and now has a named next job.**
-`docs/DATA-INTEGRITY.md` "Next, in order" item **0** is the Strong's
-Chinese gloss cut at the printed line break (check 44f) —
-`tools/build_originals.py:244`, at least 279 shipped glosses ending
-mid-clause, on screen in the Lexicon Browser today. Measured, located,
-and repairable unattended: `defZh` ships whole, so no network is needed.
-Fix the generator and the shipped asset in the same change or they
-drift. **Measure the real scope from `defZh` first** — 279 counts only
-the cuts that land on a separator, which is the same instrument that
-reported check 43c as 28 when it was 468.
+**§8 item 1 outranks all of them.** Its named next job — the Strong's
+Chinese gloss cut at the printed line break, "Next, in order" item 0 —
+is **closed by check 44g**: 488 entries repaired, +25,125 characters,
+glosses ending on a separator 558 → 0. The scope was **593**, not the
+279 the separator test reported, which is the check-43c failure mode a
+third time; measure from the source, always.
+
+`docs/DATA-INTEGRITY.md` "Next, in order" now leads with the unnumbered
+item — `assets/biblexg-v2.json` missing 馬可福音 6:8-11 — which **must
+not be taken unattended** (it needs the upstream source or an owner's
+decision). Pick the next accuracy item below it, or a live §8 candidate.
 
 ---
 
@@ -169,6 +170,13 @@ that bite most often:
   because the second work's row was showing a truncated KJV fragment.
   Repair the data and the two works agreed — 88.4% of Greek headwords
   carry the same Chinese summary in both. (check 44e)
+- **When one delimiter carries two meanings, the repair needs a second
+  signal from the data.** CBOL uses a bare newline for both a column
+  wrap and a deliberate break, so "join the lines" fabricated
+  `大祭司在祭司中最大的一` at G749 — a reading in no lexicon, and worse
+  than the truncation it replaced. The signal was the entry's OWN widest
+  line: the corpus has no global column width, but within one entry a
+  wrap is visible. Find that signal before repairing, not after. (44g)
 - **Measure what is measurable; photograph only what is judgement.** A
   screenshot costs ~1.5–2k tokens.
 - The three-pane threshold is mirrored in `workbench_fit.dart` **and**
