@@ -164,7 +164,10 @@ class SmallScreenAdvisory extends StatelessWidget {
                 child: Text(
                   variant,
                   style: (isRotate
-                          ? theme.textTheme.titleMedium
+                          // `bodyMedium` is one of the three roles
+                          // `main.dart` rewires from the reader's setting;
+                          // `titleMedium` is not, so it needs scaling here.
+                          ? type.scaleRole(theme.textTheme.titleMedium)
                           : theme.textTheme.bodyMedium)
                       ?.copyWith(
                     color: cs.onSurface,
@@ -178,8 +181,9 @@ class SmallScreenAdvisory extends StatelessWidget {
           const SizedBox(height: 10),
           Text(
             needs,
-            style:
-                theme.textTheme.bodySmall?.copyWith(color: muted, height: 1.45),
+            style: type
+                .scaleRole(theme.textTheme.bodySmall)
+                ?.copyWith(color: muted, height: 1.45),
           ),
         ],
       ),
@@ -191,7 +195,7 @@ class SmallScreenAdvisory extends StatelessWidget {
     final explanation = <Widget>[
       Text(
         s('fitTitle', 'SeekSparks is a study workbench'),
-        style: theme.textTheme.headlineSmall?.copyWith(
+        style: type.scaleRole(theme.textTheme.headlineSmall)?.copyWith(
           fontWeight: FontWeight.w600,
           color: cs.onSurface,
         ),
@@ -259,7 +263,7 @@ class SmallScreenAdvisory extends StatelessWidget {
                             'For reading on a phone, YsWords is built for '
                             'exactly that — same family, phone-first.'),
                     style: (isRotate
-                            ? theme.textTheme.bodySmall
+                            ? type.scaleRole(theme.textTheme.bodySmall)
                             : theme.textTheme.bodyMedium)
                         ?.copyWith(color: muted, height: 1.5),
                   ),

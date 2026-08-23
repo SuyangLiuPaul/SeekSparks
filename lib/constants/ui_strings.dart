@@ -7041,6 +7041,16 @@ const uiStrings = {
     'zh-Hant': '分佈',
     'en': 'Distribution',
   },
+  // #308 a third time, on the chart the ticket did not name. This panel
+  // plots the concordance's per-book map, which counts OCCURRENCES,
+  // while the search-stats strip beside it plots VERSES — G25 is 37 in
+  // John here and 27 there. Both numbers are right; an unlabelled one
+  // is not.
+  'wordDistributionIn': {
+    'zh-Hans': '分布（{unit}）',
+    'zh-Hant': '分佈（{unit}）',
+    'en': 'Distribution ({unit})',
+  },
   'topBooks': {
     'zh-Hans': '主要出处',
     'zh-Hant': '主要出處',

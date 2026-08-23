@@ -181,6 +181,56 @@ void main() {
             'the file to `finished`:\n${paid.join('\n')}');
   });
 
+  // 2026-08-24 (#315, second mechanism). Everything above counts
+  // `fontSize:` literals, and a literal is only one of the two ways to
+  // write a size the slider cannot move. `main.dart` rewires exactly
+  // three Material roles from `settings.fontSize` — `bodyLarge`,
+  // `bodyMedium`, `titleLarge`. Every OTHER role in `textTheme` is a
+  // fixed number wearing a name, so `theme.textTheme.bodySmall` is as
+  // deaf as `fontSize: 12`, and the literal ratchet scores it zero.
+  //
+  // That gap was not hypothetical: `small_screen_advisory.dart` and
+  // `analysis_tabs.dart` both sat on the `finished` list above — a
+  // promise that the setting reaches everything on them — while holding
+  // seven such sites between them. The detector measured one mechanism
+  // and reported the file clean.
+  test('no Material role is used at its fixed size', () {
+    // `apply` and `copyWith` are methods on the theme, not roles.
+    const notARole = {
+      'bodyLarge', 'bodyMedium', 'titleLarge', 'apply', 'copyWith',
+    };
+    final role = RegExp(r'textTheme\.([A-Za-z]+)');
+    final deaf = <String>[];
+    for (final f in all) {
+      final lines = f.readAsLinesSync();
+      for (var i = 0; i < lines.length; i++) {
+        if (lines[i].trimLeft().startsWith('//')) continue;
+        for (final m in role.allMatches(lines[i])) {
+          if (notARole.contains(m.group(1))) continue;
+          // The style is answered if the chain supplies its own size
+          // (`?.copyWith(fontSize: t.scaled(9.5))`) or is handed to
+          // `scaleRole`, which multiplies the role's own size by the
+          // reader's scale.
+          final window =
+              lines.sublist(i, (i + 5).clamp(0, lines.length)).join(' ');
+          final opener =
+              lines.sublist((i - 2).clamp(0, lines.length), i + 1).join(' ');
+          if (window.contains('fontSize:') ||
+              window.contains('scaleRole(') ||
+              opener.contains('scaleRole(')) {
+            continue;
+          }
+          deaf.add('${f.path}:${i + 1} ${m.group(1)}');
+        }
+      }
+    }
+    expect(deaf, isEmpty,
+        reason: 'only bodyLarge, bodyMedium and titleLarge carry the '
+            'reader\'s Font Size; every other role is a fixed number. Wrap '
+            'it in WbType.scaleRole(), or give the copyWith its own '
+            't.scaled() size:\n${deaf.join('\n')}');
+  });
+
   test('the originals floor is single-sourced, not repeated per page', () {
     // Two pages measured the same threshold independently and happened
     // to agree on 15. If a future page picks 14 "because the help says

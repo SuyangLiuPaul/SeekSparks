@@ -21,8 +21,8 @@ Last updated: 2026-08-24 (seventh entry)
 |---|---|
 | `pubspec` / dev | **1.6.155** — #313 item 5, deployed 2026-08-24 in place at d47a882. Deploying from the shared tree was safe this time: the second writer's only uncommitted files were the `ios/`/`macos/` Xcode projects, which a web build does not read. Carries check 47 too, which had been the one undeployed iteration |
 | prod (seeksparks.netlify.app) | **1.6.136** — 19 versions behind, by design: prod ships only on the owner's word |
-| `main` | #313(5) — the reader stops carrying the workspace's chrome; chapter navigation is now a tested pure core |
-| Suite | **3,276 tests**, green; `flutter analyze` exit 0 |
+| `main` | **the closing pass** — eight rows audited shut on evidence, `prompt.md` 1,682 → 1,322 lines. Ahead of dev by #308's third chart and #315's second mechanism; **not deployed** (undeployed iteration 1 of 3) |
+| Suite | **3,282 tests**, green; `flutter analyze` exit 0 |
 | CI | green (Flutter CI on `main`) |
 
 **45g deployed from a detached worktree, and that was not optional.** A
@@ -51,7 +51,7 @@ here, move its body out of `prompt.md`, and say so in `HANDOFF.md`.
 
 | # | What it is | Status |
 |---|---|---|
-| #289 | Bundle an OFL Hebrew face — Hebrew word study still pulls from `fonts.gstatic.com` | open |
+| #289 | Bundle an OFL Hebrew face — Hebrew word study still pulls from `fonts.gstatic.com` | **closed** — v1.6.73; `NotoSansHebrew-Sub.ttf` is in `pubspec`, wired at `main.dart:565`/`658`, and `release_web.sh:68` passes `--no-web-resources-cdn` so the gstatic path is not merely unused but unreachable. Pinned by `bundled_font_coverage_test.dart` |
 | #292 | Kings of Judah + Israel, synchronised, as a Resource | **blocked** — needs a citable Thiele source |
 | #293 | Sermon audio — permission settled, survey done, hosting undecided | **blocked** — needs a hosting decision |
 | #295 | Live search audit — drive every syntax through the real box | open |
@@ -61,18 +61,18 @@ here, move its body out of `prompt.md`, and say so in `HANDOFF.md`.
 | #301 | Yahwehdehua — re-open the import; the base text matched, the readings did not | open — the lexicon half is **fixed** (v1.6.152, check 44); the readings are not |
 | #302 | Build the backlog before the queue empties → `docs/PARITY-BACKLOG.md` | closed — 75 entries |
 | #304 | Systematic data-integrity audit — "accuracy is the most critical thing" | open, recurring — check 45 landed 2026-08-23 |
-| #307 | Phrasing — open it to translations, indent line one (Pastor Raymond HK) | open |
-| #308 | Search stats: "John 27" never says its unit | open |
+| #307 | Phrasing — open it to translations, indent line one (Pastor Raymond HK) | **closed** — both halves. Translations: `PhrasingSource.translation` is the DEFAULT source (`phrasing_page.dart:192`) with `_translationWords()` behind it, answered for all 1,189 chapters. Line one: v1.6.98 unpinned it from zero — `phrasing_test.dart:636` "the first line indents too", including the clamp and the round-trip |
+| #308 | Search stats: "John 27" never says its unit | **closed** — 2026-08-24, all THREE surfaces. On `main`, NOT yet deployed (dev is v1.6.155). The strip and the Stats tab were fixed when the ticket was filed; `WordDistribution` was found still unlabelled 2026-08-24 and plotting the OTHER unit (its caller feeds `ConcordanceResult.byBook`, the per-book OCCURRENCE map — G25 was 37 in John there and 27 in the strip). `unit` is now required, not defaulted. `search_stats_unit_test.dart` + `word_distribution_unit_label_test.dart` |
 | #309 | Matthew series — reconcile our corpus against CDC's 124 messages | **blocked** — CDC site unreachable |
-| #312 | Phrasing is not usable yet — redesign, don't patch | open |
-| #313 | The Reader is a phone app bolted into a workbench | open — **items 1–3, 5 and 6 are done**; 4 is settled on paper only. Item 5 shipped v1.6.155 (`hostChrome`, audit §8). Its headline evidence was already stale (the Analysis wire exists at `bible_reading_pane.dart:144/149`). **What is left, both in audit §7:** route `_showChapterSermonsSheet` (§7.3) like its sibling, and retire the reader's `StatsPage` push (§7.1) — deferred because `stats_page` is still the only home for the Aramaic sheet and the lemma picker |
-| #314 | Build version printed twice on one screen | open |
-| #315 | 269 hardcoded font sizes — #311 fixed the arithmetic, not the reach | open |
-| #316 | The rotate advisory argues against itself | open |
+| #312 | Phrasing is not usable yet — redesign, don't patch | open — deliberately NOT closed with #307. `PARITY-BACKLOG.md:361` still says "track the remaining #312 items", and the export work it names (`:321`, `:445`) is unbuilt. #307 was two specific asks; #312 is the redesign around them |
+| #313 | The Reader is a phone app bolted into a workbench | **closed** — 2026-08-24, on re-reading the code rather than the row. Both items audit §7 left outstanding are already implemented: `onChapterSermons` routes through `_requestAnalysis(ReaderAnalysisRequest.sermons, …)` (`bible_reading_pane.dart` ~2020), and the reader's `StatsPage` push is behind `if (!hostChrome)` (~7052). The row was stale, not the code. Item 4 remains settled on paper only, and is **not** a defect — it is a design note carried in audit §7 |
+| #314 | Build version printed twice on one screen | **closed** — the menu-bar copy is gone; the surviving one is the status bar's, chosen because it is tappable and opens `AboutPage` where the inert menu text was not. `workbench_version_display_test.dart` is a source ratchet on the call-site count |
+| #315 | 269 hardcoded font sizes — #311 fixed the arithmetic, not the reach | open — **and the detector was narrower than the defect.** A literal is only one of two ways to write a size the slider cannot move: `main.dart:578-591` rewires exactly `bodyLarge`, `bodyMedium` and `titleLarge` from `settings.fontSize`, so every other `textTheme` role is a fixed number wearing a name. 2026-08-24 added `WbType.scaleRole()` (on `main`, not yet deployed), fixed the 7 sites that existed (4 in `small_screen_advisory.dart`, 3 in `analysis_tabs.dart` — **both files were on the ratchet's `finished` list, promising the setting reached everything on them**), and added a tree-wide zero check for the second mechanism. Residue is now literals only: `sermon_detail_page.dart` 6, `version_picker_sheet.dart` 2, and the budget's larger rows |
+| #316 | The rotate advisory argues against itself | **closed** — v1.6.132's □□□ was the last of it: `workbenchTheme` restated only five of fifteen styles with the parent's `fontFamilyFallback`, so `headlineSmall`/`titleMedium` drew Roboto, which has no CJK, with no gstatic fallback to rescue it. `theme_cjk_fallback_test.dart` now asserts *every* style in the theme can render Chinese |
 | #317 | Journey routes on the atlas | open — Pauline itineraries drawn (v1.6.134) |
 | #318 | Interactive Bible chronology, featured module | open — phases 1–5 shipped, runs to the death of Moses |
-| #319 | Atlas filter filters the list but not the map | open |
-| #320 | Place records should show the illustrations we already have | open |
+| #319 | Atlas filter filters the list but not the map | **closed** — the map now takes the subject filter, and the state that fixed it is documented in place: `atlas_page.dart:142` "Whether the map also draws what the filter left out", with `:149` holding the subject ids while the chip is up. The filter is dismissible by design — an atlas that could only ever show the filtered set is a worse atlas |
+| #320 | Place records should show the illustrations we already have | **closed** — `lib/utils/place_illustrations.dart` joins the picture database to the gazetteer. #320 made the feature conditional on measuring the join rate FIRST, and `place_illustrations_test.dart` freezes that measurement rather than quoting it in a commit message: if a plate is added or a caption edited and the join moves, the suite says so |
 | #321 | Greek search cannot match accented input (Aunty Rosa, Hong Kong) | closed — v1.6.126; `foldDiacritics` wired into `text_patterns.dart:171`, `command_query.dart`, `search_highlight.dart` |
 | #322 | The Browse column does not line up — three render paths | open — v1.6.139 |
 | #323 | 雅偉繁體: ~700 verses with the wrong Traditional form (owner-reported) | **closed** — re-verified from the asset 2026-08-23: 賽2:16 船隻, 出14:22 走乾地, and the trap verse 賽29:17 still 只有; 0 occurrences of 船只/其余/走幹地/凈 |
@@ -82,21 +82,31 @@ hosting) · #296 (a fresh crash report) · #309 (the CDC site is unreachable) ·
 #278 (NASB licence — the modules forbid redistribution; the assets must never
 be committed or deployed).
 
-**These statuses are NOT audited, 2026-08-23.** #321 was marked open while
-shipped, and `PARITY-BACKLOG.md` §8 was calling two finished items
-outstanding the same day. Rows carrying a parenthetical version (#317, #318,
-#322, #323) mean work landed against a ticket nobody closed; #289, #308,
-#314–#316, #319 and #320 are old enough to be suspect. **Grep before picking
-one — and grep for the reader's verb, not the technical term**: §8's miss
-happened because the code is named `selectCommonWith`, not `intersect`.
-Closing the finished rows is worth an iteration of its own.
+**The closing pass ran 2026-08-24.** The rows above are audited as of that
+date. Eight closed on evidence read out of the code in this iteration —
+#289, #307, #308, #313, #314, #316, #319, #320 — each carrying in its own
+row the file and line that proves it, so the next reader does not have to
+re-derive what was already derived.
 
-**Two rows were audited on 2026-08-23**: #323 is now closed on fresh
-evidence read out of the asset, and #313's headline evidence is disproved
-in its own row. #308, #314, #316, #319 and #320 were spot-checked and
-look shipped, but are **left open deliberately** — a spot check is not a
-closing pass, and closing a row on a half-remembered grep is the exact
-failure this paragraph exists to warn about.
+**Seven of the eight were finished before the pass began.** Only #308
+needed work, and only on a surface the ticket never named. The rest had
+shipped and nobody wrote it down, which cost more than it sounds: an
+unclosed row keeps its body in `prompt.md`, and `prompt.md` is read whole
+at the top of every iteration. The queue was paying rent on finished work.
+
+**Grep before picking one — and grep for the reader's verb, not the
+technical term.** `PARITY-BACKLOG.md` §8 called two finished items
+outstanding because the code is named `selectCommonWith`, not `intersect`.
+Two rows here resisted the same way: #319's fix is a doc comment reading
+"whether the map also draws what the filter left out", and #313's is the
+word `hostChrome`. Neither contains its ticket number.
+
+**What a closing pass may NOT do is close a row because the neighbouring
+one closed.** #312 sits beside #307 and covers the same screen; #307's two
+asks are both shipped and #312's redesign is not, so #312 stays open and
+says why. #315 likewise stays open — and it is the row worth reading,
+because auditing it found that its own detector could only see one of the
+two mechanisms it was written to police.
 
 ---
 
@@ -179,7 +189,7 @@ printing a literal `#` and the 7 doubling a character against itself.)*
 | **Dead-man switch** | `STOP_AT` in `run.sh` — **2026-09-21 23:00**, then the job `bootout`s itself. Read fresh each invocation, so changing it needs no reload. Owner reset it to 29 days on 2026-08-23 (was 2026-09-09) |
 | Model | `claude-opus-5`, `--effort high`, `MAX_RUN` 90 min |
 | Lock | `.lock` (hidden — not `lock`), self-healing on a dead owner or age > 70 min |
-| Off-peak gate | Sat 05:00 → Mon 22:00 continuous; Tue–Fri 05:00–22:00; held overnight |
+| Off-peak gate | **REMOVED 2026-08-24** on the owner's instruction — runs around the clock; the rate-limit hold is the only pause. Old gate preserved in `run.sh.bak-gate-0824` |
 | Rate limits | 3 retries at 60 s, then a hold to the reset time Claude actually states |
 
 **Known cost problem, 2026-08-23:** the loop spent the entire weekly Claude

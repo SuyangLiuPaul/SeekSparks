@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/utils/search_stats.dart' show HitUnit;
 import 'package:seeksparks/utils/version_mapper.dart'
     show localeAwareBookName;
 import 'package:seeksparks/widgets/wb_pane_bits.dart';
@@ -13,14 +14,31 @@ import 'package:seeksparks/constants/workbench_theme.dart' show WbType;
 ///
 /// Pure presentational widget — accepts the data via [byBook] (canonical
 /// English book names → absolute counts).
+///
+/// 2026-08-24 (#308, third surface): every number this panel draws is in
+/// [unit], and until now it named that unit nowhere. Its only caller
+/// feeds `ConcordanceResult.byBook`, which is the per-book OCCURRENCE
+/// map, while `SearchStatsStrip` — reachable for the same word in the
+/// same session — plots VERSES and says so. G25 is 37 in John here and
+/// 27 there. The ticket's rule is that a count must never be ambiguous
+/// about what it counted, so [unit] is required rather than defaulted:
+/// a future caller with a verse map has to say so instead of inheriting
+/// a wrong label silently.
 class WordDistribution extends StatelessWidget {
   final Map<String, int> byBook;
+
+  /// What each value in [byBook] counts. Shares `search_stats.dart`'s
+  /// vocabulary deliberately — #308 asks for one vocabulary across the
+  /// charts, not a second one that happens to agree today.
+  final HitUnit unit;
+
   final String locale;
   final String? currentVersion;
 
   const WordDistribution({
     super.key,
     required this.byBook,
+    required this.unit,
     required this.locale,
     this.currentVersion,
   });
@@ -74,6 +92,22 @@ class WordDistribution extends StatelessWidget {
     'johannine':  {'en': 'Johannine', 'zh-Hans': '约翰著作', 'zh-Hant': '約翰著作'},
     'otherApostolic': {'en': 'Other Apostolic', 'zh-Hans': '一般书信', 'zh-Hant': '一般書信'},
   };
+
+  String _s(String key, String fallback) =>
+      uiStrings[key]?[locale] ?? fallback;
+
+  /// The panel heading, carrying [unit].
+  ///
+  /// Named once, at the top, rather than suffixed onto all sixteen
+  /// numbers below it: the whole panel is one unit, and repeating it per
+  /// bar would be the noise that made the strip print it once too.
+  String _headerLabel() {
+    final unitName = unit == HitUnit.verses
+        ? _s('hitUnitVerses', 'verses')
+        : _s('hitUnitOccurrences', 'occurrences');
+    return _s('wordDistributionIn', 'Distribution ({unit})')
+        .replaceAll('{unit}', unitName);
+  }
 
   String _label(String key) {
     final m = _sectionLabels[key];
@@ -133,7 +167,7 @@ class WordDistribution extends StatelessWidget {
                 size: 16, color: scheme.onSurfaceVariant),
             const SizedBox(width: 6),
             Text(
-              uiStrings['wordDistribution']?[locale] ?? 'Distribution',
+              _headerLabel(),
               style: TextStyle(
                 fontSize: t.scaled(13),
                 fontWeight: FontWeight.w700,

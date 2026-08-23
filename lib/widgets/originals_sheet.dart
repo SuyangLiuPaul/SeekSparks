@@ -28,6 +28,7 @@ import 'package:seeksparks/utils/ai_markdown.dart' show parseAiMarkdown;
 import 'package:seeksparks/utils/clipboard_helper.dart';
 import 'package:seeksparks/utils/ketiv_qere.dart';
 import 'package:seeksparks/utils/morphology.dart';
+import 'package:seeksparks/utils/search_stats.dart' show HitUnit;
 import 'package:seeksparks/utils/theme_color_helpers.dart';
 import 'package:seeksparks/utils/version_mapper.dart'
     show localeAwareBookName, toEnglish;
@@ -1608,6 +1609,9 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
             const SizedBox(height: 12),
             WordDistribution(
               byBook: concordance.byBook,
+              // `ConcordanceResult.byBook` is the per-book OCCURRENCE
+              // map: it sums to `total`, not to `refs.length`.
+              unit: HitUnit.occurrences,
               locale: locale,
               currentVersion: widget.currentVersion,
             ),

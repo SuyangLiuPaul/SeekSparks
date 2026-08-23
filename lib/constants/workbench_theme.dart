@@ -980,6 +980,22 @@ class WbType {
   /// owns: bar heights, icons, tab labels, badges.
   double scaledChrome(double atDefault) => atDefault * chromeScale;
 
+  /// A Material role's own size, put back on the reader's scale.
+  ///
+  /// A hardcoded literal is not the only way to write a size the slider
+  /// cannot move. `main.dart` rewires exactly three roles from
+  /// `settings.fontSize` — `bodyLarge`, `bodyMedium`, `titleLarge` — so
+  /// every OTHER role in `textTheme` is a fixed number wearing a name,
+  /// and `Text(x, style: theme.textTheme.bodySmall)` is as deaf as
+  /// `fontSize: 12` would have been. #315's ratchet counts literals and
+  /// could not see this.
+  ///
+  /// Do NOT pass one of the three rewired roles: they already carry the
+  /// reader's setting, and scaling them again squares it.
+  TextStyle? scaleRole(TextStyle? role) => role?.fontSize == null
+      ? role
+      : role!.copyWith(fontSize: role.fontSize! * textScale);
+
   /// The same, floored so pointing and accents survive.
   ///
   /// Use this for anything rendering Hebrew or Greek. It is the only
