@@ -19,10 +19,10 @@ Last updated: 2026-08-24 (seventh entry)
 
 | | |
 |---|---|
-| `pubspec` / dev | **1.6.156** — the closing pass, deployed 2026-08-24 in place at 7dc3ae5. Deployed because #308 is **owner-reported** and this iteration fixed its third surface, which is the deploy-on-demand trigger; the undeployed counter was only at 1 of 3. The second writer was mid-rebrand *during* the deploy (new `android/` locale resources and `build.gradle.kts` appeared while it ran) — safe only because a web build reads neither |
-| prod (seeksparks.netlify.app) | **1.6.136** — 20 versions behind, by design: prod ships only on the owner's word |
-| `main` | **the closing pass** — eight rows audited shut on evidence, `prompt.md` 1,682 → 1,322 lines, plus #308's third chart and #315's second mechanism |
-| Suite | **3,282 tests**, green; `flutter analyze` exit 0 |
+| `pubspec` / dev | **1.6.157** — #315's third mechanism, deployed 2026-08-24 from a **detached worktree at the pushed SHA** (d19b645), not from the working tree. The second writer had uncommitted edits to `radial_chronology_layout.dart` when the deploy ran; building in place would have shipped a bundle matching no commit. `release_web.sh` derives its project root from its own path, so a worktree copy just works — the version bump lands there and is ported back by hand. Deployed because #315 is **owner-reported**, the standing trigger; the undeployed counter was only at 1 of 3 |
+| prod (seeksparks.netlify.app) | **1.6.136** — 21 versions behind, by design: prod ships only on the owner's word |
+| `main` | **#315's third mechanism** — a clamp whose ceiling sits below the slider's own default; the reader repaired end to end, and a behaviour test that fails on the previous commit |
+| Suite | **3,290 tests**, green; `flutter analyze` exit 0 |
 | CI | green (Flutter CI on `main`) |
 
 **Verifying CJK in a deployed bundle needs a control, 2026-08-24.** The
@@ -79,14 +79,14 @@ here, move its body out of `prompt.md`, and say so in `HANDOFF.md`.
 | #312 | Phrasing is not usable yet — redesign, don't patch | open — deliberately NOT closed with #307. `PARITY-BACKLOG.md:361` still says "track the remaining #312 items", and the export work it names (`:321`, `:445`) is unbuilt. #307 was two specific asks; #312 is the redesign around them |
 | #313 | The Reader is a phone app bolted into a workbench | **closed** — 2026-08-24, on re-reading the code rather than the row. Both items audit §7 left outstanding are already implemented: `onChapterSermons` routes through `_requestAnalysis(ReaderAnalysisRequest.sermons, …)` (`bible_reading_pane.dart` ~2020), and the reader's `StatsPage` push is behind `if (!hostChrome)` (~7052). The row was stale, not the code. Item 4 remains settled on paper only, and is **not** a defect — it is a design note carried in audit §7 |
 | #314 | Build version printed twice on one screen | **closed** — the menu-bar copy is gone; the surviving one is the status bar's, chosen because it is tappable and opens `AboutPage` where the inert menu text was not. `workbench_version_display_test.dart` is a source ratchet on the call-site count |
-| #315 | 269 hardcoded font sizes — #311 fixed the arithmetic, not the reach | open — **and the detector was narrower than the defect.** A literal is only one of two ways to write a size the slider cannot move: `main.dart:578-591` rewires exactly `bodyLarge`, `bodyMedium` and `titleLarge` from `settings.fontSize`, so every other `textTheme` role is a fixed number wearing a name. v1.6.156 added `WbType.scaleRole()`, fixed the 7 sites that existed (4 in `small_screen_advisory.dart`, 3 in `analysis_tabs.dart` — **both files were on the ratchet's `finished` list, promising the setting reached everything on them**), and added a tree-wide zero check for the second mechanism. Residue is now literals only: `sermon_detail_page.dart` 6, `version_picker_sheet.dart` 2, and the budget's larger rows |
+| #315 | 269 hardcoded font sizes — #311 fixed the arithmetic, not the reach | open — **and the detector was narrower than the defect.** A literal is only one of two ways to write a size the slider cannot move: `main.dart:578-591` rewires exactly `bodyLarge`, `bodyMedium` and `titleLarge` from `settings.fontSize`, so every other `textTheme` role is a fixed number wearing a name. v1.6.156 added `WbType.scaleRole()`, fixed the 7 sites that existed (4 in `small_screen_advisory.dart`, 3 in `analysis_tabs.dart` — **both files were on the ratchet's `finished` list, promising the setting reached everything on them**), and added a tree-wide zero check for the second mechanism. Residue is now literals only: `sermon_detail_page.dart` 6, `version_picker_sheet.dart` 2, and the budget's larger rows. **v1.6.157 found a THIRD mechanism, and it is the largest of the three:** a clamp. `fontSize: (settings.fontSize - 2).clamp(11.0, 16.0)` reads as wired, compiles as wired and reviews as wired, yet it is deaf from 18 pt up — *below* the app's own default of 20. Tree-wide, **80 text sizes run through such a ceiling and 73 are already saturated at the default**, so on those sites 21 of the slider's 29 stops move nothing; `settings_page.dart` holds 28 of them, the page carrying the slider contradicting its own control. The reader is now repaired end to end (41 literals + 10 ceilings + 1 clamped line height → a private `_ReaderTypeScale`), the other 63 are budgeted, and `reader_font_size_behaviour_test.dart` proves a size *moves* — which no source ratchet can. Residue: 63 ceilings + 64 literals across 15 files |
 | #316 | The rotate advisory argues against itself | **closed** — v1.6.132's □□□ was the last of it: `workbenchTheme` restated only five of fifteen styles with the parent's `fontFamilyFallback`, so `headlineSmall`/`titleMedium` drew Roboto, which has no CJK, with no gstatic fallback to rescue it. `theme_cjk_fallback_test.dart` now asserts *every* style in the theme can render Chinese |
 | #317 | Journey routes on the atlas | open — Pauline itineraries drawn (v1.6.134) |
 | #318 | Interactive Bible chronology, featured module | open — phases 1–5 shipped, runs to the death of Moses |
 | #319 | Atlas filter filters the list but not the map | **closed** — the map now takes the subject filter, and the state that fixed it is documented in place: `atlas_page.dart:142` "Whether the map also draws what the filter left out", with `:149` holding the subject ids while the chip is up. The filter is dismissible by design — an atlas that could only ever show the filtered set is a worse atlas |
 | #320 | Place records should show the illustrations we already have | **closed** — `lib/utils/place_illustrations.dart` joins the picture database to the gazetteer. #320 made the feature conditional on measuring the join rate FIRST, and `place_illustrations_test.dart` freezes that measurement rather than quoting it in a commit message: if a plate is added or a caption edited and the join moves, the suite says so |
 | #321 | Greek search cannot match accented input (Aunty Rosa, Hong Kong) | closed — v1.6.126; `foldDiacritics` wired into `text_patterns.dart:171`, `command_query.dart`, `search_highlight.dart` |
-| #322 | The Browse column does not line up — three render paths | open — v1.6.139 |
+| #322 | The Browse column does not line up — three render paths | open — v1.6.139. **Read 2026-08-24 and it looks already done, but nobody has looked at it:** `BrowseVerseRow` (`browse_window.dart:889`) is now the single row for all three paths — one `ConstrainedBox(minWidth: referenceWidth)` plus `Expanded(child:)` — and the gap/spacing are single constants (`kBrowseWordGap`, `kBrowseRunSpacing`). The three render paths the ticket names no longer diverge in source. That is a code reading, not a verdict: the complaint was visual and the closing evidence has to be visual too |
 | #323 | 雅偉繁體: ~700 verses with the wrong Traditional form (owner-reported) | **closed** — re-verified from the asset 2026-08-23: 賽2:16 船隻, 出14:22 走乾地, and the trap verse 賽29:17 still 只有; 0 occurrences of 船只/其余/走幹地/凈 |
 
 **Blocked on the owner, five:** #292 (a citable Thiele source) · #293 (audio
@@ -117,8 +117,11 @@ word `hostChrome`. Neither contains its ticket number.
 one closed.** #312 sits beside #307 and covers the same screen; #307's two
 asks are both shipped and #312's redesign is not, so #312 stays open and
 says why. #315 likewise stays open — and it is the row worth reading,
-because auditing it found that its own detector could only see one of the
-two mechanisms it was written to police.
+because auditing it twice found two more mechanisms than the detector was
+written to police, the second of them larger than the original defect.
+The lesson is now a habit: **when a detector's count and a user's report
+disagree about scope, the detector is the thing to re-measure.** Both
+times the user was right and the instrument was short.
 
 ---
 

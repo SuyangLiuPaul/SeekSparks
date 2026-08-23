@@ -117,6 +117,15 @@ void main() {
     final mid = await at(tester, settings, kFontSizeDefault);
     final high = await at(tester, settings, kFontSizeMax);
 
+    // #315 turned 41 literals into scaled sizes, and a literal could not
+    // overflow because it never grew. At 40 pt they are twice their
+    // design value, so the top of the slider is where new RenderFlex
+    // overflows would appear. Only the pane's own surface is covered —
+    // its sheets and popups need live data to open.
+    expect(tester.takeException(), isNull,
+        reason: 'the reader overflowed somewhere between the bottom and '
+            'the top of the Font Size slider');
+
     for (final label in [verseBody, verseNumber]) {
       final l = low[label], m = mid[label], h = high[label];
       expect(l, isNotNull, reason: '$label not rendered at $kFontSizeMin pt');
