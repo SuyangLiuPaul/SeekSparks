@@ -161,6 +161,21 @@ class StrongsService {
     return out;
   }
 
+  /// Every entry of one lexicon, for the Lexicon Browser (bwh35).
+  ///
+  /// [prefix] is `G` or `H`. The list is in whatever order the JSON was
+  /// written; ordering is `lexicon_browse.dart`'s job, and it is not the
+  /// order the codepoints are in. Loading the whole file is the point of
+  /// this call, so it defeats the lazy load on purpose — a browser of a
+  /// lexicon is exactly the case where the reader asked for all of it.
+  static Future<List<StrongsEntry>> allEntries(String prefix) async {
+    final p = prefix.toUpperCase();
+    if (p != 'G' && p != 'H') return const [];
+    await lookup('${p}1');
+    final lex = (p == 'G' ? _greek : _hebrew) ?? const {};
+    return lex.values.toList();
+  }
+
   /// 2026-05-07: search the lexicon by lemma OR transliteration —
   /// the user types Greek/Hebrew text directly (e.g. "ἀγάπη",
   /// "אהבה") OR a romanised form (e.g. "agape", "ahavah") and we

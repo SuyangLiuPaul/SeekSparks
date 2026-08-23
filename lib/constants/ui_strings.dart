@@ -8496,4 +8496,99 @@ const uiStrings = {
     'zh-Hant': '關閉行程',
     'en': 'Close the itinerary',
   },
+
+  // ── Lexicon Browser (bwh35) ───────────────────────────────────────
+  'lexiconBrowserTitle': {
+    'zh-Hans': '原文词典浏览',
+    'zh-Hant': '原文詞典瀏覽',
+    'en': 'Lexicon Browser',
+  },
+  'lexiconUnavailable': {
+    'zh-Hans': '本版本未收录原文词典。',
+    'zh-Hant': '本版本未收錄原文詞典。',
+    'en': 'The lexicons are not bundled in this build.',
+  },
+  'lexiconHebrew': {
+    'zh-Hans': '希伯来文',
+    'zh-Hant': '希伯來文',
+    'en': 'Hebrew',
+  },
+  'lexiconGreek': {
+    'zh-Hans': '希腊文',
+    'zh-Hant': '希臘文',
+    'en': 'Greek',
+  },
+  // bwh35's own wording for the entry-list box is "typing in the word or
+  // entry"; ours has to add the two things BibleWorks' 2003 desktop did
+  // not need to say — that a romanisation works, and that `*` is the
+  // wildcard, because there is no manual beside this screen.
+  'lexiconSearchHint': {
+    'zh-Hans': '原文、拼音或编号 — * 为通配符',
+    'zh-Hant': '原文、拼音或編號 — * 為萬用字元',
+    'en': 'Word, romanisation or number — * for wildcards',
+  },
+  'lexiconSearchText': {
+    'zh-Hans': '搜索释义全文',
+    'zh-Hant': '搜尋釋義全文',
+    'en': 'Search article text',
+  },
+  'lexiconOrderAlpha': {
+    'zh-Hans': '按字母',
+    'zh-Hant': '按字母',
+    'en': 'alphabetical',
+  },
+  'lexiconOrderNumber': {
+    'zh-Hans': '按编号',
+    'zh-Hant': '按編號',
+    'en': "Strong's order",
+  },
+  'lexiconEntriesAll': {
+    'zh-Hans': '{n} 个词条',
+    'zh-Hant': '{n} 個詞條',
+    'en': '{n} entries',
+  },
+  // The headword tier says "named", not "found": the article tier below
+  // it found things too, and the two counts must not read alike.
+  'lexiconEntriesNamed': {
+    'zh-Hans': '{n} 个词条如此拼写',
+    'zh-Hant': '{n} 個詞條如此拼寫',
+    'en': '{n} entries named',
+  },
+  'lexiconEntriesNamedOne': {
+    'zh-Hans': '1 个词条如此拼写',
+    'zh-Hant': '1 個詞條如此拼寫',
+    'en': '1 entry named',
+  },
+  'lexiconArticleHits': {
+    'zh-Hans': '{n} 条释义提到它',
+    'zh-Hant': '{n} 條釋義提到它',
+    'en': '{n} articles mention it',
+  },
+  'lexiconArticleHitsOne': {
+    'zh-Hans': '1 条释义提到它',
+    'zh-Hant': '1 條釋義提到它',
+    'en': '1 article mentions it',
+  },
+  'lexiconShowingFirst': {
+    'zh-Hans': '先列 {n} 条',
+    'zh-Hant': '先列 {n} 條',
+    'en': 'first {n} shown',
+  },
+  // bwh35's Reload button, by its effect rather than its name: it puts
+  // the full list of entries back.
+  'lexiconShowAll': {
+    'zh-Hans': '显示全部',
+    'zh-Hant': '顯示全部',
+    'en': 'Show all',
+  },
+  'lexiconNoHeadword': {
+    'zh-Hans': '没有词条拼作「{q}」。',
+    'zh-Hant': '沒有詞條拼作「{q}」。',
+    'en': 'No entry is spelled “{q}”.',
+  },
+  'lexiconNothingAnywhere': {
+    'zh-Hans': '没有词条拼作「{q}」，释义中也没有提到它。',
+    'zh-Hant': '沒有詞條拼作「{q}」，釋義中也沒有提到它。',
+    'en': 'No entry is spelled “{q}”, and no article mentions it.',
+  },
 };

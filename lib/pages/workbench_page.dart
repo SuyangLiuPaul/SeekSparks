@@ -30,6 +30,7 @@ import 'package:seeksparks/pages/evidence_page.dart';
 import 'package:seeksparks/pages/family_tree_page.dart';
 import 'package:seeksparks/pages/hebrew_kings_page.dart';
 import 'package:seeksparks/pages/illustrations_page.dart';
+import 'package:seeksparks/pages/lexicon_page.dart';
 import 'package:seeksparks/pages/library_page.dart';
 import 'package:seeksparks/pages/naves_page.dart';
 import 'package:seeksparks/pages/phrasing_page.dart';
@@ -567,6 +568,12 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         // A database you CONSULT needs a door of its own.
         WbMenuItem(s('navesTitle', "Nave's Topical Bible"),
             () => pushPage(const NavesPage())),
+        // bwh35 files the lexicons under Resources for the same reason.
+        // Tapping a word has always shown its entry; nothing could show
+        // the LIST, so a reader had to already hold the word in order to
+        // ask about it, and could never ask what stands beside it.
+        WbMenuItem(s('lexiconBrowserTitle', 'Lexicon Browser'),
+            () => pushPage(const LexiconPage())),
         WbMenuItem(s('familyTree', 'Family Tree'),
             () => pushPage(const FamilyTreePage())),
         // Separate from Family Tree on purpose: the tree is Judah's line
