@@ -92,6 +92,18 @@ const double kBrowseWordGap = 5.0;
 /// set at all. Nothing but the line height, in all three.
 const double kBrowseRunSpacing = 0.0;
 
+/// The tracking the reference column is both MEASURED and PAINTED with.
+///
+/// It has to be one named number in both places. A `Text` merges its
+/// style onto the ambient `DefaultTextStyle`, and under a `Scaffold`
+/// that is `bodyMedium` — which carries `letterSpacing: 0.25`. The
+/// reference style never set the field, so it inherited that 0.25 while
+/// [referenceGutterWidth] modelled the column with none: the painted
+/// string ran `runes.length * 0.25` px wider than the width computed
+/// for it. Naming the constant and passing it to both sides makes them
+/// the same number by construction rather than by luck.
+const double kBrowseReferenceLetterSpacing = 0.25;
+
 /// One printed line: a translation of a verse, or its originals line.
 class _BrowseRow {
   _BrowseRow({
@@ -760,6 +772,7 @@ class _BrowseWindowState extends State<BrowseWindow> {
         final referenceWidth = referenceGutterWidth(
           {for (final r in rows) r.reference},
           t.text,
+          letterSpacing: kBrowseReferenceLetterSpacing,
         );
         final groups = comparableVersionGroups(widget.versionCodes);
         return Container(
@@ -979,6 +992,9 @@ class _RowView extends StatelessWidget {
       fontSize: t.text,
       height: t.lineHeight,
       fontWeight: FontWeight.w600,
+      // Stated, not inherited: the column's width is computed with this
+      // exact number. See [kBrowseReferenceLetterSpacing].
+      letterSpacing: kBrowseReferenceLetterSpacing,
       color: wb.link,
       fontFamily: t.fontFamily,
       fontFamilyFallback: kCjkFontFallback,

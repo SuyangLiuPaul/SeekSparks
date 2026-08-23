@@ -62,8 +62,24 @@ const double _latinEm = 0.78;
 /// wrong, so `i j l` (≈0.26 em) and `m w` (≈0.87 em) are charged
 /// separately — they are 2× off the mean in opposite directions and
 /// they are common in book names (Phi**l**ipp**i**ans, 1 Ch**r**on**i**cles).
-/// With them the model runs +4.5% to +15% over the real width across
-/// all 66 English book names; without them it reached +20%.
+///
+/// MEASURED against the shipped faces on 2026-08-24, 594 references,
+/// by `browse_reference_real_font_test.dart` — the first test here to
+/// lay the strings out in `Roboto-VariableFont` and `NotoSansSC-Sub`
+/// rather than compare the model to itself:
+///
+///   English      +4.19% … +19.57%
+///   Simplified   +1.34% …  +3.90%
+///   Traditional  +1.34% …  +3.90%
+///
+/// An earlier version of this comment claimed "+4.5% to +15% across all
+/// 66 English book names". Both ends were wrong, and it described only
+/// English. **The Chinese margin is three times thinner**, and that is
+/// structural rather than incidental: a Han glyph is charged exactly
+/// 1.0 em with no rounding-up at all, so a Chinese reference's whole
+/// safety margin comes from its ` 1:1` tail. Anyone retuning the Latin
+/// classes below should know they are tuning the only slack a Chinese
+/// reference has.
 const double _refDigitEm = 0.60;
 const double _refSpaceEm = 0.28;
 const double _refColonEm = 0.30;
@@ -149,14 +165,27 @@ double referenceLabelEms(String reference) {
 /// Sized to the [references] actually on screen, which for a chapter is
 /// one book name and a range of verse numbers, so a reader in Obadiah
 /// does not pay for `Song of Solomon` existing.
+///
+/// [letterSpacing] is charged per character, exactly as
+/// [versionGutterWidthForLabels] charges it one column to the left. It
+/// was missing here until 2026-08-24, and the omission was invisible
+/// because the [gap] happened to be larger than the error: a reference
+/// `Text` inherits `bodyMedium`'s 0.25 from the ambient
+/// `DefaultTextStyle`, so the painted string is `runes.length * 0.25`
+/// px wider than this model believed. For `帖撒羅尼迦前書 1:1` that is
+/// 2.75 px of an 8 px gap. The column stayed straight, but only because
+/// one constant was absorbing another's mistake — shrink the gap for a
+/// design reason and Chinese book names would have gone ragged with
+/// nothing in the source to explain why.
 double referenceGutterWidth(
   Iterable<String> references,
   double fontSize, {
+  double letterSpacing = 0,
   double gap = referenceGutterGap,
 }) {
   var widest = 0.0;
   for (final r in references) {
-    final w = referenceLabelEms(r) * fontSize;
+    final w = referenceLabelEms(r) * fontSize + letterSpacing * r.runes.length;
     if (w > widest) widest = w;
   }
   if (widest == 0) return 0;
