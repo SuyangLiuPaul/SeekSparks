@@ -11,7 +11,7 @@ ticket briefs belong in the loop's `prompt.md` and, once closed, in
 `prompt-archive.md`. If this file grows past ~150 lines it has stopped
 doing its job.
 
-Last updated: 2026-08-23 (second entry)
+Last updated: 2026-08-23 (third entry)
 
 ---
 
@@ -19,10 +19,10 @@ Last updated: 2026-08-23 (second entry)
 
 | | |
 |---|---|
-| `pubspec` / dev | **1.6.151** — the tree is **2 iterations ahead of dev** (bwh35 + its second lexicon, not deployed) |
-| prod (seeksparks.netlify.app) | **1.6.136** — 15 versions behind, by design: prod ships only on the owner's word |
-| `main` | `e6eee21` |
-| Suite | **3,136 tests**, green; `flutter analyze` exit 0 |
+| `pubspec` / dev | **1.6.152** — deployed; the tree is level with dev |
+| prod (seeksparks.netlify.app) | **1.6.136** — 16 versions behind, by design: prod ships only on the owner's word |
+| `main` | `1fa3e62` + the version bump |
+| Suite | **3,141 tests**, green; `flutter analyze` exit 0 |
 | CI | green (Flutter CI on `main`) |
 
 ---
@@ -44,7 +44,7 @@ here, move its body out of `prompt.md`, and say so in `HANDOFF.md`.
 | #296 | Prod crash — root cause found and fixed (`9132a14`) | **blocked** — needs a fresh crash report to confirm |
 | #299 | The `?` card teaches syntax you cannot run | closed — v1.6.144 |
 | #300 | Map provenance — rights settled, the maps are the owner's own collection | open |
-| #301 | Yahwehdehua — re-open the import; the base text matched, the readings did not | open — +28 truncated etymologies, check 43c |
+| #301 | Yahwehdehua — re-open the import; the base text matched, the readings did not | open — the lexicon half is **fixed** (v1.6.152, check 44); the readings are not |
 | #302 | Build the backlog before the queue empties → `docs/PARITY-BACKLOG.md` | closed — 75 entries |
 | #304 | Systematic data-integrity audit — "accuracy is the most critical thing" | open, recurring |
 | #307 | Phrasing — open it to translations, indent line one (Pastor Raymond HK) | open |
@@ -94,6 +94,17 @@ parked behind #292) and **1c** (flashcard retention, bwh40). When those go,
 pick a `PARTIAL` from §3–§6 whose "what is missing" paragraph fits one
 iteration — do not re-pick a struck item.
 
+**But §8 item 1 outranks all of them and now has a named next job.**
+`docs/DATA-INTEGRITY.md` "Next, in order" item **0** is the Strong's
+Chinese gloss cut at the printed line break (check 44f) —
+`tools/build_originals.py:244`, at least 279 shipped glosses ending
+mid-clause, on screen in the Lexicon Browser today. Measured, located,
+and repairable unattended: `defZh` ships whole, so no network is needed.
+Fix the generator and the shipped asset in the same change or they
+drift. **Measure the real scope from `defZh` first** — 279 counts only
+the cuts that land on a separator, which is the same instrument that
+reported check 43c as 28 when it was 468.
+
 ---
 
 ## The loop that does the work
@@ -102,7 +113,7 @@ iteration — do not re-pick a struck item.
 |---|---|
 | Script | `~/Library/Application Support/seeksparks-loop/run.sh` |
 | Brief | `prompt.md` beside it — **the per-iteration token cost**; closed tickets move to `prompt-archive.md` |
-| launchd | `com.seeksparks.parityloop`, 60-minute interval |
+| launchd | `com.seeksparks.parityloop`, **30-minute interval** (owner's call, 2026-08-23 18:49; was 60) |
 | Model | `claude-opus-5`, `--effort high`, `MAX_RUN` 90 min |
 | Lock | `.lock` (hidden — not `lock`), self-healing on a dead owner or age > 70 min |
 | Off-peak gate | Sat 05:00 → Mon 22:00 continuous; Tue–Fri 05:00–22:00; held overnight |
@@ -111,9 +122,15 @@ iteration — do not re-pick a struck item.
 **Known cost problem, 2026-08-23:** the loop spent the entire weekly Claude
 allowance in about 3.5 days (~54 iterations, Aug 16–19) and then sat at the
 quota wall doing nothing from **Aug 19 17:27 to Aug 23 15:02**. Sustainable
-throughput is roughly **7–8 iterations a day**, not the ~16 the 60-minute
-interval targets. Either widen the interval to ~2 h or drop `--effort` —
-the owner's call, not the loop's.
+throughput is roughly **7–8 iterations a day**.
+
+The owner was given the choice and chose **30 minutes** (applied 2026-08-23
+18:49; `.bak-1h-0823-1849` holds the 60-minute plist). A run takes about
+40–45 minutes, and launchd will not stack a tick onto a running job, so 30
+minutes does not halve the gap — it removes it, and iterations run
+back-to-back at roughly the length of a run. Expect the weekly allowance to
+go sooner and the quota hold to last longer; that is the accepted trade, not
+a fault to fix. Do not change the interval back without being asked.
 
 ---
 
@@ -141,6 +158,17 @@ that bite most often:
   theme adds below it — `bodyMedium`'s 0.25 px `letterSpacing` cost 1.25 px
   over five characters and clipped every Greek row in the Lexicon Browser.
   Measure from a context inside the subtree you are measuring. (`1542a74`)
+- **A detector reports its own reach, not the defect's size.** An
+  unbalanced-bracket test found 28 truncated etymologies and sounded
+  precise; the real figure was 468, because the test can only see a cut
+  that lands between a bracket and its partner. A published scope
+  measured by a partial instrument is a *different quantity*, not a low
+  estimate. Re-measure from the source before believing one. (check 44)
+- **A test that asserts two things differ is only as good as the reason
+  they differ.** "Picking a work changes the rows" passed for a year
+  because the second work's row was showing a truncated KJV fragment.
+  Repair the data and the two works agreed — 88.4% of Greek headwords
+  carry the same Chinese summary in both. (check 44e)
 - **Measure what is measurable; photograph only what is judgement.** A
   screenshot costs ~1.5–2k tokens.
 - The three-pane threshold is mirrored in `workbench_fit.dart` **and**
