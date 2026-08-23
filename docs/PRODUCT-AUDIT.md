@@ -423,18 +423,46 @@ Wiring the toolbar's search button to `_focusCommandLine` surfaced a
 command pane below 600 px — not collapsed to a rail, absent — so
 `_focusCommandLine` set `_leftOpen` and awaited a frame that never
 mounts. Every search affordance in the workspace routes through that
-method, including the reader's magnifier since #313, so on a phone the
-workbench's search button had been doing nothing at all, silently.
+method, including the reader's magnifier since #313, so at that width the
+workbench's search button did nothing at all, silently.
 
-It became urgent rather than merely wrong once `hostChrome` removed the
-magnifier and left the toolbar as the only way in. Fixed by pushing
-`CommandSearchPage` — which `bible_reading_pane.dart:131` already
-documents as "the same pane full screen" — below that width, and the
-600 is now the named `_commandPaneMinWidth` rather than a literal
-repeated at two sites. Guarded by *below 600 the command line is a
-route, not a dead button*.
+Fixed by pushing `CommandSearchPage` — which `bible_reading_pane.dart:131`
+already documents as "the same pane full screen" — below that width, and
+the 600 is now the named `_commandPaneMinWidth` rather than a literal
+repeated at two sites. Guarded by *below 600 the command line is a route,
+not a dead button*.
 
-### 8.4 What is still open
+**But nobody was ever affected by it, and saying otherwise would be the
+kind of claim this document exists to prevent.** `main.dart:796` wraps
+`home:` in `SmallScreenGate` unconditionally — no `kIsWeb`, no platform
+branch — and `WorkbenchFit.adviceFor` returns `none` only when
+`paneCountFor(width) >= 3`. So **`WorkbenchPage` is never built below
+992 px on any platform.** A 900 px capture of the dev deploy at v1.6.155
+shows the advisory, not a workspace. The dead button was in a branch no
+user can reach.
+
+### 8.4 Two of the three width branches in `workbench_page` are unreachable
+
+That is the larger finding, and it is worth more than the fix above.
+`_buildPanes` carries three layouts — three panes at ≥992, two at
+600–991, one below 600 — and the gate admits only the first. The
+two-pane and one-pane branches, `_commandPaneMinWidth`, the `width >= 600`
+rail condition and the `compact` status-bar trim are all dead in
+production today.
+
+They are not *wrong* — they are what the workspace would do if the gate
+ever moved, and the gate has moved before (1024 → 992, and the foldable
+question is explicitly parked, not settled). But they are untested
+against reality, and this iteration found one silent no-op in them
+within minutes of looking. Assume there are more.
+
+`test/workbench_page_test.dart` pumps `WorkbenchPage` **directly**,
+below the gate, so its 390 px and 768 px cases assert behaviour
+production cannot show. That is defensible as a guard on the branches,
+but it must not be read as evidence about any real viewport — and until
+this note existed, it easily could have been.
+
+### 8.5 What is still open
 
 The `hostChrome` rule is applied to the three `BibleReadingPane` call
 sites in the workspace (centre reader, and both split columns). The

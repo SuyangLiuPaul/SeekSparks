@@ -11,7 +11,7 @@ ticket briefs belong in the loop's `prompt.md` and, once closed, in
 `prompt-archive.md`. If this file grows past ~150 lines it has stopped
 doing its job.
 
-Last updated: 2026-08-24 (sixth entry)
+Last updated: 2026-08-24 (seventh entry)
 
 ---
 
@@ -19,10 +19,10 @@ Last updated: 2026-08-24 (sixth entry)
 
 | | |
 |---|---|
-| `pubspec` / dev | **1.6.154** — check 46, deployed 2026-08-24 from a detached worktree at ad3764d. **Check 47 is committed and NOT deployed** — first undeployed iteration, data-integrity work, nobody reported it; the rule says deploy on the third |
-| prod (seeksparks.netlify.app) | **1.6.136** — 16 versions behind, by design: prod ships only on the owner's word |
-| `main` | check 47 — 5 more reading-text verses repaired, 6 shown to be the sweep's false positives, 16 left with their evidence |
-| Suite | **3,259 tests**, green; `flutter analyze` exit 0 |
+| `pubspec` / dev | **1.6.155** — #313 item 5, deployed 2026-08-24 in place at d47a882. Deploying from the shared tree was safe this time: the second writer's only uncommitted files were the `ios/`/`macos/` Xcode projects, which a web build does not read. Carries check 47 too, which had been the one undeployed iteration |
+| prod (seeksparks.netlify.app) | **1.6.136** — 19 versions behind, by design: prod ships only on the owner's word |
+| `main` | #313(5) — the reader stops carrying the workspace's chrome; chapter navigation is now a tested pure core |
+| Suite | **3,276 tests**, green; `flutter analyze` exit 0 |
 | CI | green (Flutter CI on `main`) |
 
 **45g deployed from a detached worktree, and that was not optional.** A
@@ -65,7 +65,7 @@ here, move its body out of `prompt.md`, and say so in `HANDOFF.md`.
 | #308 | Search stats: "John 27" never says its unit | open |
 | #309 | Matthew series — reconcile our corpus against CDC's 124 messages | **blocked** — CDC site unreachable |
 | #312 | Phrasing is not usable yet — redesign, don't patch | open |
-| #313 | The Reader is a phone app bolted into a workbench | open — **its headline evidence is stale**: the ticket says the reader has no wire to the Analysis pane, but `bible_reading_pane.dart:144/149` carries `onAnalysisRequest` + `activeAnalysisRequest`. Re-scope before working it |
+| #313 | The Reader is a phone app bolted into a workbench | open — **items 1–3, 5 and 6 are done**; 4 is settled on paper only. Item 5 shipped v1.6.155 (`hostChrome`, audit §8). Its headline evidence was already stale (the Analysis wire exists at `bible_reading_pane.dart:144/149`). **What is left, both in audit §7:** route `_showChapterSermonsSheet` (§7.3) like its sibling, and retire the reader's `StatsPage` push (§7.1) — deferred because `stats_page` is still the only home for the Aramaic sheet and the lemma picker |
 | #314 | Build version printed twice on one screen | open |
 | #315 | 269 hardcoded font sizes — #311 fixed the arithmetic, not the reach | open |
 | #316 | The rotate advisory argues against itself | open |
