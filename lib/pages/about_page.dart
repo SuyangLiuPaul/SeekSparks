@@ -184,7 +184,7 @@ class _Header extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    uiStrings['appName']?[locale] ?? 'SeekSparks',
+                    uiStrings['appName']?[locale] ?? "Yahweh's Swords",
                     style: TextStyle(
                       fontSize: t.scaled(18),
                       fontWeight: FontWeight.w700,
@@ -253,7 +253,7 @@ class _ContactCard extends StatelessWidget {
   static const _email = 'paul.sy.liu@gmail.com';
 
   Future<void> _open(BuildContext context) async {
-    final uri = 'mailto:$_email?subject=SeekSparks%20copyright%20enquiry';
+    final uri = 'mailto:$_email?subject=Yahweh%27s%20Swords%20copyright%20enquiry';
     if (LinkOpener.isAvailable) {
       final ok = await LinkOpener.open(uri);
       if (ok) return;

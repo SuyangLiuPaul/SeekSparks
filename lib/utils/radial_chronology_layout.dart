@@ -174,3 +174,51 @@ List<({int year, bool major})> wheelTicks(int endAm) {
   }
   return out;
 }
+
+/// The angle for [year] on an axis running [minYear]..[maxYear] — the
+/// general form of [angleForYear], for the full-history mode whose axis
+/// starts at 4000 BC rather than at the creation's AM 0.
+double angleForSpan(int year, int minYear, int maxYear) {
+  final span = maxYear - minYear;
+  if (span <= 0) return startRad;
+  final t = ((year - minYear) / span).clamp(0.0, 1.0);
+  return startRad + t * sweepRad;
+}
+
+/// Greedy first-fit packing of angular items into a small number of
+/// rings, so a dense century of events spreads across neighbouring
+/// rings instead of printing on top of itself.
+///
+/// [starts] and [ends] are angles in radians, already sorted by start.
+/// Returns a ring index per item, always < [ringCount]: when every
+/// ring is occupied within [minGap] of an item, it goes to the ring
+/// whose last occupant ends earliest — overprinting the least-recently
+/// used ring is the least-bad option, and the tap target still works
+/// because hit-testing is by ring and angle.
+List<int> packIntoRings(
+  List<double> starts,
+  List<double> ends,
+  int ringCount, {
+  double minGap = 0.02,
+}) {
+  final lastEnd = List<double>.filled(ringCount, double.negativeInfinity);
+  final out = <int>[];
+  for (var i = 0; i < starts.length; i++) {
+    var ring = -1;
+    for (var r = 0; r < ringCount; r++) {
+      if (starts[i] - lastEnd[r] >= minGap) {
+        ring = r;
+        break;
+      }
+    }
+    if (ring < 0) {
+      ring = 0;
+      for (var r = 1; r < ringCount; r++) {
+        if (lastEnd[r] < lastEnd[ring]) ring = r;
+      }
+    }
+    lastEnd[ring] = ends[i] > starts[i] ? ends[i] : starts[i];
+    out.add(ring);
+  }
+  return out;
+}

@@ -161,4 +161,43 @@ void main() {
           [500, 1000, 1500, 2000, 2500]);
     });
   });
+
+  group('angleForSpan', () {
+    test('min and max map to the axis ends, BC years included', () {
+      expect(angleForSpan(-4000, -4000, 2026), startRad);
+      expect(angleForSpan(2026, -4000, 2026),
+          closeTo(startRad + sweepRad, 1e-9));
+    });
+
+    test('AD 1 lands past the halfway point of a -4000..2026 axis', () {
+      final a = angleForSpan(1, -4000, 2026);
+      expect(a, greaterThan(startRad + sweepRad / 2));
+    });
+  });
+
+  group('packIntoRings', () {
+    test('non-overlapping items all stay on ring 0', () {
+      expect(
+          packIntoRings([0.0, 0.5, 1.0], [0.1, 0.6, 1.1], 3), [0, 0, 0]);
+    });
+
+    test('items closer than the gap spread across rings', () {
+      final rings =
+          packIntoRings([0.0, 0.005, 0.01], [0.0, 0.005, 0.01], 3);
+      expect(rings.toSet().length, 3);
+    });
+
+    test('overflow falls back to a ring instead of crashing', () {
+      final rings = packIntoRings(
+          [0.0, 0.001, 0.002, 0.003], [0.0, 0.001, 0.002, 0.003], 2);
+      expect(rings.length, 4);
+      expect(rings.every((r) => r >= 0 && r < 2), isTrue);
+    });
+
+    test('a long band holds its ring for its whole length', () {
+      // The band spans 0.0..1.0 on ring 0, so the dot at 0.5 must be
+      // pushed to ring 1.
+      expect(packIntoRings([0.0, 0.5], [1.0, 0.5], 2), [0, 1]);
+    });
+  });
 }

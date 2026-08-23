@@ -554,7 +554,7 @@ class _LoadingPageState extends State<LoadingPage> {
                   Column(
                     children: [
                       Text(
-                        'SeekSparks',
+                        "Yahweh's Swords",
                         style: TextStyle(
                           fontSize: settings.fontSize * 1.2,
                           fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
@@ -564,7 +564,7 @@ class _LoadingPageState extends State<LoadingPage> {
                       ),
                       SizedBox(height: 4 * s),
                       Text(
-                        '寻光',
+                        '雅伟之剑',
                         style: TextStyle(
                           fontSize: settings.fontSize * 1.0,
                           color: Theme.of(context).colorScheme.primary,
@@ -761,7 +761,7 @@ class _LoadingPageState extends State<LoadingPage> {
             ),
             SizedBox(height: 24 * s),
             Text(
-              'SeekSparks',
+              "Yahweh's Swords",
               style: TextStyle(
                 fontSize: settings.fontSize * 1.2,
                 fontFamily: settings.fontFamily,
@@ -772,7 +772,7 @@ class _LoadingPageState extends State<LoadingPage> {
             ),
             SizedBox(height: 4 * s),
             Text(
-              '寻光',
+              '雅伟之剑',
               style: TextStyle(
                 fontSize: settings.fontSize * 1.0,
                 color: Theme.of(context).colorScheme.primary,

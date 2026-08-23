@@ -159,6 +159,7 @@ flutter:
     - assets/bible_timeline.json
     - assets/hebrew_kings.json
     - assets/chronology.json
+    - assets/wheel_history.json
     - assets/sermons/en/
     - assets/sermons/zh-CN/
     - assets/sermons/zh-TW/

@@ -1593,9 +1593,9 @@ const uiStrings = {
   // for any localizations downstream that might still reference
   // them.
   'onboardWelcomeTitle': {
-    'zh-Hans': '欢迎使用 SeekSparks',
-    'zh-Hant': '歡迎使用 SeekSparks',
-    'en': 'Welcome to SeekSparks',
+    'zh-Hans': '欢迎使用雅伟之剑',
+    'zh-Hant': '歡迎使用雅偉之劍',
+    'en': 'Welcome to Yahweh\'s Swords',
   },
   'onboardWelcomeBody': {
     'zh-Hans': '双语圣经阅读应用，14 个译本（英文／简体／繁体）。主页的「读经」卡片会带你回到上次离开的位置。',
@@ -1625,8 +1625,8 @@ const uiStrings = {
     'en': 'AI study helpers',
   },
   'onboardAiBody': {
-    'zh-Hans': '按主题搜经文（"爱"、"信心"），点希腊文／希伯来文原文看 BDAG 级深度释义，对考古和手稿提具体问题。AI 由 Gemini 驱动——可在 设置 → SeekSparks AI 粘贴自己的免费密钥（按 Test 验证），用自己的额度跳过共享池。',
-    'zh-Hant': '按主題搜經文（「愛」、「信心」），點希臘文／希伯來文原文看 BDAG 級深度釋義，對考古和手稿提具體問題。AI 由 Gemini 驅動——可在 設定 → SeekSparks AI 貼上自己的免費密鑰（按 Test 驗證），用自己的額度跳過共享池。',
+    'zh-Hans': '按主题搜经文（"爱"、"信心"），点希腊文／希伯来文原文看 BDAG 级深度释义，对考古和手稿提具体问题。AI 由 Gemini 驱动——可在 设置 → 雅伟之剑 AI 粘贴自己的免费密钥（按 Test 验证），用自己的额度跳过共享池。',
+    'zh-Hant': '按主題搜經文（「愛」、「信心」），點希臘文／希伯來文原文看 BDAG 級深度釋義，對考古和手稿提具體問題。AI 由 Gemini 驅動——可在 設定 → 雅偉之劍 AI 貼上自己的免費密鑰（按 Test 驗證），用自己的額度跳過共享池。',
     'en':
         'Search the Bible by theme ("love", "faith"), tap any Greek or Hebrew word for a BDAG-style deep dive, or ask questions about archaeology and manuscripts. Powered by Gemini — paste your own free key in Settings → AI (and tap Test to verify) to skip the shared developer pool.',
   },
@@ -1790,14 +1790,14 @@ const uiStrings = {
   },
   // ── AI BYOK + Drive sync (2026-05-06) ────────────────────────
   'settingsSectionAi': {
-    'zh-Hans': 'SeekSparks AI 释义',
-    'zh-Hant': 'SeekSparks AI 釋義',
-    'en': 'SeekSparks AI',
+    'zh-Hans': '雅伟之剑 AI 释义',
+    'zh-Hant': '雅偉之劍 AI 釋義',
+    'en': 'Yahweh\'s Swords AI',
   },
   'aboutSectionAi': {
-    'zh-Hans': 'SeekSparks AI（高级 · 可选）',
-    'zh-Hant': 'SeekSparks AI（進階 · 可選）',
-    'en': 'SeekSparks AI (advanced · optional)',
+    'zh-Hans': '雅伟之剑 AI（高级 · 可选）',
+    'zh-Hant': '雅偉之劍 AI（進階 · 可選）',
+    'en': 'Yahweh\'s Swords AI (advanced · optional)',
   },
   // ── Exegesis sheet — proper-noun complementary glosses ────────
   // 2026-05-07: for proper nouns (people, places, deities) the
@@ -1857,19 +1857,19 @@ const uiStrings = {
   // Older "ask AI" wording across the search page maps to the new
   // "search with SeekSparks AI" copy.
   'askAiForVerses': {
-    'zh-Hans': '用 SeekSparks AI 智能搜索（仅供参考）',
-    'zh-Hant': '用 SeekSparks AI 智慧搜尋（僅供參考）',
-    'en': 'Search with SeekSparks AI (reference only)',
+    'zh-Hans': '用雅伟之剑 AI 智能搜索（仅供参考）',
+    'zh-Hant': '用雅偉之劍 AI 智慧搜尋（僅供參考）',
+    'en': 'Search with Yahweh\'s Swords AI (reference only)',
   },
   'aiSearching': {
-    'zh-Hans': 'SeekSparks 正在搜索…',
-    'zh-Hant': 'SeekSparks 正在搜尋…',
-    'en': 'SeekSparks AI searching…',
+    'zh-Hans': '雅伟之剑正在搜索…',
+    'zh-Hant': '雅偉之劍正在搜尋…',
+    'en': 'Yahweh\'s Swords AI searching…',
   },
   'aiBibleSearchHeader': {
-    'zh-Hans': 'SeekSparks 为「{query}」找到了 {count} 处经文（仅供参考）',
-    'zh-Hant': 'SeekSparks 為「{query}」找到了 {count} 處經文（僅供參考）',
-    'en': 'SeekSparks AI found {count} passages for "{query}" (reference only)',
+    'zh-Hans': '雅伟之剑为「{query}」找到了 {count} 处经文（仅供参考）',
+    'zh-Hant': '雅偉之劍為「{query}」找到了 {count} 處經文（僅供參考）',
+    'en': 'Yahweh\'s Swords AI found {count} passages for "{query}" (reference only)',
   },
   'aiBibleSearchNoMatches': {
     'zh-Hans': 'AI 没有找到相关经文，换个说法再试一下吧。',
@@ -1906,26 +1906,26 @@ const uiStrings = {
   // a parseable `error` body — in normal operation the backend
   // sends a user-locale message that's surfaced directly.
   'aiQuotaExhaustedFallback': {
-    'zh-Hans': 'SeekSparks AI 今天的共享配额已用完。明天再试，或在「设置 → '
-        'SeekSparks AI」粘贴您自己的 Gemini API Key 用您的配额。',
-    'zh-Hant': 'SeekSparks AI 今天的共享配額已用完。明天再試，或在「設定 → '
-        'SeekSparks AI」貼上您自己的 Gemini API Key 用您的配額。',
+    'zh-Hans': '雅伟之剑 AI 今天的共享配额已用完。明天再试，或在「设置 → '
+        '雅伟之剑 AI」粘贴您自己的 Gemini API Key 用您的配额。',
+    'zh-Hant': '雅偉之劍 AI 今天的共享配額已用完。明天再試，或在「設定 → '
+        '雅偉之劍 AI」貼上您自己的 Gemini API Key 用您的配額。',
     'en':
-        'SeekSparks AI quota for the developer\'s shared key is used up for today. Try again tomorrow, or paste your own Gemini API key in Settings → AI to use your own quota.',
+        'Yahweh\'s Swords AI quota for the developer\'s shared key is used up for today. Try again tomorrow, or paste your own Gemini API key in Settings → AI to use your own quota.',
   },
   'aiNotConfiguredFallback': {
-    'zh-Hans': 'SeekSparks AI 还没有配置。开发者需要在 Netlify 环境变量里设置 '
+    'zh-Hans': '雅伟之剑 AI 还没有配置。开发者需要在 Netlify 环境变量里设置 '
         'GEMINI_API_KEY。',
-    'zh-Hant': 'SeekSparks AI 還沒有配置。開發者需要在 Netlify 環境變數裡設置 '
+    'zh-Hant': '雅偉之劍 AI 還沒有配置。開發者需要在 Netlify 環境變數裡設置 '
         'GEMINI_API_KEY。',
     'en':
-        'SeekSparks AI is not configured. The developer needs to set GEMINI_API_KEY in Netlify env.',
+        'Yahweh\'s Swords AI is not configured. The developer needs to set GEMINI_API_KEY in Netlify env.',
   },
   'aiBibleSearchSomeMissing': {
-    'zh-Hans': 'SeekSparks AI 还找到 {n} 处经文，但您当前圣经版本中没有匹配（仅供参考）。',
-    'zh-Hant': 'SeekSparks AI 還找到 {n} 處經文，但您當前聖經版本中沒有匹配（僅供參考）。',
+    'zh-Hans': '雅伟之剑 AI 还找到 {n} 处经文，但您当前圣经版本中没有匹配（仅供参考）。',
+    'zh-Hant': '雅偉之劍 AI 還找到 {n} 處經文，但您當前聖經版本中沒有匹配（僅供參考）。',
     'en':
-        'SeekSparks AI also suggested {n} passages not in your current '
+        'Yahweh\'s Swords AI also suggested {n} passages not in your current '
             'Bible version (reference only).',
   },
   // 2026-05-07 (post-fix v3): AI-result note when the active search
@@ -1934,10 +1934,10 @@ const uiStrings = {
   // aiBibleSearchSomeMissing which is for refs not present in the
   // user's loaded Bible version at all.
   'aiBibleSearchOutOfScope': {
-    'zh-Hans': 'SeekSparks AI 还推荐了 {n} 处经文，但当前筛选范围之外（仅供参考）。',
-    'zh-Hant': 'SeekSparks AI 還推薦了 {n} 處經文，但當前篩選範圍之外（僅供參考）。',
+    'zh-Hans': '雅伟之剑 AI 还推荐了 {n} 处经文，但当前筛选范围之外（仅供参考）。',
+    'zh-Hant': '雅偉之劍 AI 還推薦了 {n} 處經文，但當前篩選範圍之外（僅供參考）。',
     'en':
-        'SeekSparks AI also suggested {n} passages outside your current '
+        'Yahweh\'s Swords AI also suggested {n} passages outside your current '
             'filter scope.',
   },
   // 2026-05-07: italic caveat shown directly below the AI search
@@ -2033,7 +2033,7 @@ const uiStrings = {
     'zh-Hans': '深入 · Gemini 3 Flash Preview。带"思考"模式的高速推理模型——接近 Pro 级别的释经深度，但速度快得多（约 4-8 秒）。**免费配额可用**：~250 RPD，独立于 Standard / Fast 配额池。Google 在 2026 年 4 月把 gemini-2.5-pro 收费了——所以我们改用这款，免费即可使用，不需要 BYOK。BYOK 仍然推荐用于高频使用（您自己的密钥有独立配额，更稳定）。',
     'zh-Hant': '深入 · Gemini 3 Flash Preview。帶「思考」模式的高速推理模型——接近 Pro 級別的釋經深度，但速度快得多（約 4-8 秒）。**免費配額可用**：~250 RPD，獨立於 Standard / Fast 配額池。Google 在 2026 年 4 月把 gemini-2.5-pro 收費了——所以我們改用這款，免費即可使用，不需要 BYOK。BYOK 仍然推薦用於高頻使用（您自己的密鑰有獨立配額，更穩定）。',
     'en':
-        'Deep · Gemini 3 Flash Preview. High-speed thinking model with near-Pro reasoning quality — substantially faster than Pro (~4-8 s). **Free-tier compatible** at ~250 RPD, with quota separate from the Standard / Fast pools. Google moved gemini-2.5-pro behind a paywall in April 2026, so SeekSparks switched Deep to this model — free, no BYOK needed. BYOK still recommended for heavy use (your own key has its own quota pool).',
+        'Deep · Gemini 3 Flash Preview. High-speed thinking model with near-Pro reasoning quality — substantially faster than Pro (~4-8 s). **Free-tier compatible** at ~250 RPD, with quota separate from the Standard / Fast pools. Google moved gemini-2.5-pro behind a paywall in April 2026, so Yahweh\'s Swords switched Deep to this model — free, no BYOK needed. BYOK still recommended for heavy use (your own key has its own quota pool).',
   },
   // 2026-05-11 (v1.2.42): three short-lived strings were removed
   // here as dead code:
@@ -2628,9 +2628,9 @@ const uiStrings = {
     'en': 'This is a test notification.',
   },
   'appName': {
-    'zh-Hans': 'SeekSparks 寻光',
-    'zh-Hant': 'SeekSparks 尋光',
-    'en': 'SeekSparks',
+    'zh-Hans': '雅伟之剑',
+    'zh-Hant': '雅偉之劍',
+    'en': 'Yahweh\'s Swords',
   },
   'startReading': {
     // Hero CTA shown when the user has no saved reading position
@@ -3600,13 +3600,13 @@ const uiStrings = {
             '"Did you mean…" card alongside text results.',
   },
   'searchHelpAdvAi': {
-    'zh-Hans': 'SeekSparks AI 搜索：当关键字搜索没有结果时，可以点击「用 SeekSparks AI 智能搜索」'
+    'zh-Hans': '雅伟之剑 AI 搜索：当关键字搜索没有结果时，可以点击「用雅伟之剑 AI 智能搜索」'
         '让 AI 帮你查找主题或模糊查询（如「最爱的章节」）。结果仅供参考，使用前请自行核对。',
-    'zh-Hant': 'SeekSparks AI 搜尋：當關鍵字搜尋沒有結果時，可以點擊「用 SeekSparks AI 智慧搜尋」'
+    'zh-Hant': '雅偉之劍 AI 搜尋：當關鍵字搜尋沒有結果時，可以點擊「用雅偉之劍 AI 智慧搜尋」'
         '讓 AI 幫你查找主題或模糊查詢（如「最愛的章節」）。結果僅供參考，使用前請自行核對。',
     'en':
-        'SeekSparks AI search: when keyword search returns nothing, tap '
-            '"Search with SeekSparks AI" for fuzzy or thematic queries '
+        'Yahweh\'s Swords AI search: when keyword search returns nothing, tap '
+            '"Search with Yahweh\'s Swords AI" for fuzzy or thematic queries '
             '(e.g. "the love chapter"). Results are for reference '
             'only — verify before use.',
   },
@@ -3664,17 +3664,17 @@ const uiStrings = {
             'concordance.',
   },
   'searchModeAi': {
-    'zh-Hans': 'SeekSparks AI',
-    'zh-Hant': 'SeekSparks AI',
-    'en': 'SeekSparks AI',
+    'zh-Hans': '雅伟之剑 AI',
+    'zh-Hant': '雅偉之劍 AI',
+    'en': 'Yahweh\'s Swords AI',
   },
   'searchModeAiTip': {
-    'zh-Hans': '通过 SeekSparks AI 进行模糊或主题搜索（如「最爱的章节」）。结果仅供参考，'
+    'zh-Hans': '通过雅伟之剑 AI 进行模糊或主题搜索（如「最爱的章节」）。结果仅供参考，'
         '使用前请自行核对。',
-    'zh-Hant': '透過 SeekSparks AI 進行模糊或主題搜尋（如「最愛的章節」）。結果僅供參考，'
+    'zh-Hant': '透過雅偉之劍 AI 進行模糊或主題搜尋（如「最愛的章節」）。結果僅供參考，'
         '使用前請自行核對。',
     'en':
-        'Fuzzy / thematic search via SeekSparks AI (e.g. "the love '
+        'Fuzzy / thematic search via Yahweh\'s Swords AI (e.g. "the love '
             'chapter"). Results are reference-only — verify before use.',
   },
   'searchWordStudyNoMatch': {
@@ -3906,9 +3906,9 @@ const uiStrings = {
   // user instead of a generic "AI" label, with reference-only caveat
   // surfaced via the disclaimer strings.
   'askAi': {
-    'zh-Hans': '问 SeekSparks',
-    'zh-Hant': '問 SeekSparks',
-    'en': 'Ask SeekSparks',
+    'zh-Hans': '问雅伟之剑',
+    'zh-Hant': '問雅偉之劍',
+    'en': 'Ask Yahweh\'s Swords',
   },
   'ask': {
     'zh-Hans': '提问',
@@ -4007,12 +4007,12 @@ const uiStrings = {
   // filled in with the actual device (iOS/Android/macOS/Windows/Linux/
   // browser) — it used to hardcode "iOS" on every device.
   'notificationsTestSent': {
-    'zh-Hans': '测试通知已发送。如果没有看到横幅，请在 {platform} 的通知设置中查看 SeekSparks'
+    'zh-Hans': '测试通知已发送。如果没有看到横幅，请在 {platform} 的通知设置中查看雅伟之剑'
         '（以及系统的专注 / 勿扰模式）。',
-    'zh-Hant': '測試通知已發送。如果沒有看到橫幅，請在 {platform} 的通知設定中查看 SeekSparks'
+    'zh-Hant': '測試通知已發送。如果沒有看到橫幅，請在 {platform} 的通知設定中查看雅偉之劍'
         '（以及系統的專注 / 勿擾模式）。',
     'en': "Test notification sent. If you don't see a banner, check your "
-        '{platform} notification settings for SeekSparks (or Focus / Do Not '
+        '{platform} notification settings for Yahweh\'s Swords (or Focus / Do Not '
         'Disturb).',
   },
   'platformBrowser': {
@@ -4941,9 +4941,9 @@ const uiStrings = {
     'en': 'Bundled fonts: Noto Sans Hebrew / Noto Sans / Noto Sans Symbols 2 (subsets)',
   },
   'aboutAi': {
-    'zh-Hans': 'SeekSparks AI 经文释义（仅供参考）',
-    'zh-Hant': 'SeekSparks AI 經文釋義（僅供參考）',
-    'en': 'SeekSparks AI explanations (reference only)',
+    'zh-Hans': '雅伟之剑 AI 经文释义（仅供参考）',
+    'zh-Hant': '雅偉之劍 AI 經文釋義（僅供參考）',
+    'en': 'Yahweh\'s Swords AI explanations (reference only)',
   },
   'aboutLicenseAi': {
     'zh-Hans': 'Google Gemini API · 输出可在 API 条款下重新分发。',
@@ -6085,9 +6085,9 @@ const uiStrings = {
     'en': 'Save to note',
   },
   'aiNoteAttribution': {
-    'zh-Hans': '——SeekSparks AI 生成，仅供参考',
-    'zh-Hant': '——SeekSparks AI 生成，僅供參考',
-    'en': '— generated by SeekSparks AI, for reference',
+    'zh-Hans': '——雅伟之剑 AI 生成，仅供参考',
+    'zh-Hant': '——雅偉之劍 AI 生成，僅供參考',
+    'en': '— generated by Yahweh\'s Swords AI, for reference',
   },
   'aiExplainAsking': {
     'zh-Hans': 'AI 正在生成解释…',
@@ -6181,9 +6181,9 @@ const uiStrings = {
   // canonical pattern / theological weight). Free-tier substitute
   // for what Logos+BDAG charges $200+ for.
   'aiScopeDeepExegesis': {
-    'zh-Hans': '深度释经（BDAG 级 · SeekSparks 智能分析，仅供参考）',
-    'zh-Hant': '深度釋經（BDAG 級 · SeekSparks 智慧分析，僅供參考）',
-    'en': 'Deep exegesis (BDAG-level · SeekSparks AI, reference only)',
+    'zh-Hans': '深度释经（BDAG 级 · 雅伟之剑智能分析，仅供参考）',
+    'zh-Hant': '深度釋經（BDAG 級 · 雅偉之劍智慧分析，僅供參考）',
+    'en': 'Deep exegesis (BDAG-level · Yahweh\'s Swords AI, reference only)',
   },
   'familyTree': {
     'zh-Hans': '圣经家谱',
@@ -6815,9 +6815,9 @@ const uiStrings = {
     'zh-Hant': '講道尚未載入完成 — 請等待內容顯示',
   },
   'sermonAttribution': {
-    'en': "From SeekSparks (Yahweh's Words) — bilingual Bible app",
-    'zh-Hans': '来自 SeekSparks 雅伟之言 — 双语圣经应用',
-    'zh-Hant': '來自 SeekSparks 雅偉之言 — 雙語聖經應用',
+    'en': "From Yahweh's Swords · Yahweh's Words — bilingual Bible apps",
+    'zh-Hans': '来自雅伟之剑·雅伟之言 — 双语圣经应用',
+    'zh-Hant': '來自雅偉之劍·雅偉之言 — 雙語聖經應用',
   },
   // Shown above the body when the text on screen is a condensed summary
   // rather than a transcript. Ten sermons were translated into Chinese at
@@ -7331,9 +7331,9 @@ const uiStrings = {
   // error. It states what the layout needs and what this screen is,
   // and lets the reader overrule it.
   'fitTitle': {
-    'zh-Hans': 'SeekSparks 是研经工作台',
-    'zh-Hant': 'SeekSparks 是研經工作檯',
-    'en': 'SeekSparks is a study workbench',
+    'zh-Hans': '雅伟之剑是研经工作台',
+    'zh-Hant': '雅偉之劍是研經工作檯',
+    'en': 'Yahweh\'s Swords is a study workbench',
   },
   'fitLead': {
     'zh-Hans': '搜索、经文、字词分析三栏并排在同一屏上。这种并排本身就是工具，'
@@ -7386,15 +7386,15 @@ const uiStrings = {
   // right underneath this line, so repeating it here (as both Chinese
   // variants did) said it twice and left the English saying it once.
   'fitLarger': {
-    'zh-Hans': '这块屏幕在任何方向都放不下三栏。SeekSparks 需要平板或电脑。',
-    'zh-Hant': '這塊螢幕在任何方向都放不下三欄。SeekSparks 需要平板或電腦。',
+    'zh-Hans': '这块屏幕在任何方向都放不下三栏。雅伟之剑需要平板或电脑。',
+    'zh-Hant': '這塊螢幕在任何方向都放不下三欄。雅偉之劍需要平板或電腦。',
     'en': 'This screen does not fit three columns in either direction. '
-        'SeekSparks needs a tablet or a laptop.',
+        'Yahweh\'s Swords needs a tablet or a laptop.',
   },
   'fitYsWords': {
-    'zh-Hans': '若只是在手机上读经，YsWords 正是为此而生——同一家族，手机优先。',
-    'zh-Hant': '若只是在手機上讀經，YsWords 正是為此而生——同一家族，手機優先。',
-    'en': 'For reading on a phone, YsWords is built for exactly that — same '
+    'zh-Hans': '若只是在手机上读经，雅伟之言正是为此而生——同一家族，手机优先。',
+    'zh-Hant': '若只是在手機上讀經，雅偉之言正是為此而生——同一家族，手機優先。',
+    'en': 'For reading on a phone, Yahweh\'s Words is built for exactly that — same '
         'family, phone-first.',
   },
   // The same recommendation, demoted, for the rotate case. This device
@@ -7403,15 +7403,15 @@ const uiStrings = {
   // What remains true is that reading in portrait is a real preference,
   // and that there is a phone-first reader in the family for it.
   'fitYsWordsAside': {
-    'zh-Hans': '若想竖着读，同一家族的 YsWords 是为此而生的手机读经器。',
-    'zh-Hant': '若想直向閱讀，同一家族的 YsWords 是為此而生的手機讀經器。',
-    'en': 'Prefer to read in portrait? YsWords is the phone-first reader in '
+    'zh-Hans': '若想竖着读，同一家族的雅伟之言是为此而生的手机读经器。',
+    'zh-Hant': '若想直向閱讀，同一家族的雅偉之言是為此而生的手機讀經器。',
+    'en': 'Prefer to read in portrait? Yahweh\'s Words is the phone-first reader in '
         'the same family.',
   },
   'fitOpenYsWords': {
-    'zh-Hans': '打开 YsWords',
-    'zh-Hant': '開啟 YsWords',
-    'en': 'Open YsWords',
+    'zh-Hans': '打开雅伟之言',
+    'zh-Hant': '開啟雅偉之言',
+    'en': 'Open Yahweh\'s Words',
   },
   'fitContinue': {
     'zh-Hans': '仍然继续',

@@ -543,7 +543,7 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
     final url =
         'https://seeksparks.netlify.app/?sermon=${Uri.encodeComponent(s.id)}';
     final attribution = uiStrings['sermonAttribution']?[locale] ??
-        'From SeekSparks';
+        "From Yahweh's Swords";
     final buf = StringBuffer();
     buf.writeln(title);
     // The byline travels with the text. Without it this payload — forty

@@ -1,11 +1,11 @@
 {
-    "name": "SeekSparks",
-    "short_name": "SeekSparks",
+    "name": "Yahweh's Swords",
+    "short_name": "Yahweh's Swords",
     "start_url": "/",
     "display": "standalone",
     "background_color": "#ffffff",
     "theme_color": "#ffffff",
-    "description": "SeekSparks — a bilingual Bible exegesis tool for bigger screens, with structured original-language search.",
+    "description": "Yahweh's Swords — a bilingual Bible exegesis tool for bigger screens, with structured original-language search.",
     "prefer_related_applications": false,
     "icons": [
         {
