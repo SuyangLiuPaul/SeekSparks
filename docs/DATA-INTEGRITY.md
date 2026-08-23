@@ -5300,6 +5300,79 @@ verify that Nave was right, and it does not verify that CCEL's
 transcription of his prose is faithful. The second would need a scan of
 the 1896 printing.
 
+## Check 43 — the four lexicons, measured because a picker was going to promise coverage
+
+Run 2026-08-23 while building the Lexicon Browser's second lexicon
+(bwh35, backlog 1a). The backlog's instruction was to measure coverage
+*before* designing the picker, "since a picker that offers a lexicon
+with holes in it will state something untrue by omission". The
+instrument is trivial — join every Strong's headword against each
+lexicon and count what comes back empty — and it is the *join* that
+matters: a first pass counted **keys** and reported 100% coverage in
+both directions. Presence of a key is not presence of an article.
+`test/lexicon_browse_test.dart` now pins the numbers below.
+
+### 43a — G190 ἀκολουθέω was shipped and unreachable
+
+Two of `assets/thayer.json`'s 5,799 keys are zero-padded to four digits
+where every other one is bare: `G0190` and `G0446`. Nothing else in the
+app pads a Strong's number, so `ThayerService.lookup('G190')` returned
+null for **ἀκολουθέω** — the New Testament's verb for *following*
+Jesus, 90 occurrences — and for `G446` ἀνθύπατος with it. The articles
+were in the bundle, shipped, and could not be reached from any surface.
+
+Fixed at the boundary rather than the call site: `canonicalKey` strips
+the padding both when the table is built and when it is queried, so the
+defect is unreachable by construction instead of fixed twice and
+forgotten a third time. Measured: exactly 2 padded keys, and neither
+has an unpadded twin, so nothing collides. English Thayer coverage is
+now **5,523 of 5,523**, no holes.
+
+### 43b — 19 headwords whose work never defines them
+
+| work | side | headwords with no article |
+|---|---|---|
+| Strong's (English) | both | 0 |
+| Strong's (Chinese gloss) | Hebrew | 5 — H4084, H4092, H7427, H7627, H7665 |
+| Strong's (Chinese gloss) | Greek | 9 — incl. G4191, G2304, G302, G4236 |
+| Thayer's (English) | Greek | 0 |
+| BDB 中文 | Hebrew | 4 — H2775, H7418, H7427, H8556 |
+| Thayer 中文 | Greek | 1 — G4191 πονηρότερος |
+
+All 19 carry a lemma and a transliteration; none is a wholly empty
+record. Nineteen rows in 14,197 is small enough to keep offering the
+work — but not small enough to leave blank, because a blank cell is
+indistinguishable from a failed load, and filling it from another work
+would credit the wrong lexicographer. The row says
+`lexiconWorkSilent` instead. Note the 14 Strong's-side holes were
+**already blank** for a Chinese reader the day the browser shipped;
+this check found them by asking the question about a different work.
+
+### 43c — 28 truncated etymologies, which belong to #301
+
+Not this feature's defect, and not repaired here. In the Chinese
+module, **28 of 14,696 entries have an `etymology` that stops
+mid-clause** — 9 in `bdb_zh`, 19 in `thayer_zh` — detectable by an
+unbalanced parenthesis:
+
+- H2775 → `charcah (khar'- saw`
+- H205 → `字根已不使用, 可能的意思为喘气(由此,使尽浑身解数`
+- G1537 → `原型的介系词, 表示起源 (一个动作的启始处), 源自, 出自 (某个地点,`
+- H3203 → the same clause repeated five times with different closers
+
+The shape says the importer split a field on a delimiter that also
+occurs *inside* the parentheses. These render today in the word-study
+entry pane, not only in the browser. The fix is in
+`tools/import_yahweh_modules.py`, which is ticket **#301** — the same
+import already re-opened for a different reason. The parenthesis test
+is the detector; it must be run against the regenerated asset, not
+against a hand-corrected one.
+
+*(A per-sense parenthesis count is **not** a detector: 30,508 sense
+lines are "unbalanced" because a parenthetical legitimately opens on
+one numbered sense and closes on the next. Only the single-line
+`etymology` field can be judged this way.)*
+
 ## Next, in order
 
 **First, and deliberately unnumbered so the citations below stay
@@ -5388,6 +5461,11 @@ about the text.
    task — ~85,000 English words need translating, and whether that
    happens, and by whom, is the owner's call. Until it does, the marking
    is the honest state.
+7b. **The 28 truncated etymologies in the Chinese lexicons** (check
+   43c). A field the importer cut mid-clause, rendering today in the
+   word-study pane. Owned by #301, which already re-opens that import;
+   the detector is written and the fix belongs in the generator, not in
+   the shipped asset.
 8. The remaining verse-rendering surfaces, audited but not exhaustively:
    check 14 covers the reader, Browse, the sermon-citation popup, the
    two search-key caches and the clipboard. Strong's-driven surfaces

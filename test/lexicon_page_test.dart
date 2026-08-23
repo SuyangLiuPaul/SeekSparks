@@ -20,8 +20,22 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/pages/lexicon_page.dart';
+import 'package:seeksparks/services/chinese_lexicon_service.dart';
 import 'package:seeksparks/services/strongs_service.dart';
+import 'package:seeksparks/services/thayer_service.dart';
 import 'package:seeksparks/utils/lexicon_browse.dart';
+
+/// The one-line summary in the row whose headword is [lemma]. Last of the
+/// row's three Texts: the number tag, the lemma, then the summary.
+String _rowSummary(WidgetTester t, String lemma) {
+  final row =
+      find.ancestor(of: find.text(lemma), matching: find.byType(InkWell)).first;
+  return t
+          .widget<Text>(find.descendant(of: row, matching: find.byType(Text))
+              .last)
+          .data ??
+      '';
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -33,6 +47,11 @@ void main() {
   setUpAll(() async {
     await StrongsService.allEntries('H');
     await StrongsService.allEntries('G');
+    // The other two works are lazy megabyte assets, warmed for the same
+    // reason: inside the fake-async zone a real disk read never lands.
+    await ThayerService.rawArticles();
+    await ChineseLexiconService.allEntries('H');
+    await ChineseLexiconService.allEntries('G');
   });
 
   Future<void> pump(WidgetTester t,
@@ -54,7 +73,7 @@ void main() {
       (t) async {
     await pump(t);
 
-    expect(find.text('8674 个词条'), findsOneWidget);
+    expect(find.text("8674 个词条 · Strong's"), findsOneWidget);
     // H1 אָב, the first word of every printed Hebrew lexicon. Under a
     // naive sort this row was אֱגוֹז, a nut.
     expect(find.text('H1'), findsOneWidget);
@@ -77,7 +96,7 @@ void main() {
     await t.tap(find.widgetWithText(InkWell, '希腊文'));
     await t.pumpAndSettle();
 
-    expect(find.text('5523 个词条'), findsOneWidget);
+    expect(find.text("5523 个词条 · Strong's"), findsOneWidget);
     expect(find.widgetWithText(InkWell, 'α'), findsOneWidget);
     expect(find.widgetWithText(InkWell, 'א'), findsNothing);
   });
@@ -92,7 +111,7 @@ void main() {
     await t.enterText(find.byType(TextField), 'elohim');
     await t.pumpAndSettle();
 
-    expect(find.text('1 个词条如此拼写'), findsOneWidget);
+    expect(find.text("1 个词条如此拼写 · Strong's"), findsOneWidget);
     expect(find.text('H430'), findsOneWidget);
   });
 
@@ -108,7 +127,7 @@ void main() {
     await t.enterText(find.byType(TextField), '圣约');
     await t.pumpAndSettle();
 
-    expect(find.text('0 个词条如此拼写'), findsOneWidget);
+    expect(find.text("0 个词条如此拼写 · Strong's"), findsOneWidget);
     expect(find.text('4 条释义提到它'), findsOneWidget);
     expect(find.text('H1285'), findsOneWidget);
   });
@@ -122,7 +141,7 @@ void main() {
     await t.enterText(find.byType(TextField), 'covenant');
     await t.pumpAndSettle();
 
-    expect(find.text('0 entries named'), findsOneWidget);
+    expect(find.text("0 entries named · Strong's"), findsOneWidget);
     expect(find.text('5 articles mention it'), findsOneWidget);
   });
 
@@ -131,14 +150,14 @@ void main() {
     await pump(t);
     await t.enterText(find.byType(TextField), 'elohim');
     await t.pumpAndSettle();
-    expect(find.text('8674 个词条'), findsNothing);
+    expect(find.text("8674 个词条 · Strong's"), findsNothing);
 
     // bwh35's Reload button, by its effect: the entry list is REPLACED
     // by results, so something has to put it back.
     await t.tap(find.text('显示全部'));
     await t.pumpAndSettle();
 
-    expect(find.text('8674 个词条'), findsOneWidget);
+    expect(find.text("8674 个词条 · Strong's"), findsOneWidget);
   });
 
   testWidgets("Strong's order and alphabetical order are both real",
@@ -163,7 +182,7 @@ void main() {
     await t.enterText(find.byType(TextField), 'elohim');
     await t.pumpAndSettle();
 
-    expect(find.text('1 entry named'), findsOneWidget);
+    expect(find.text("1 entry named · Strong's"), findsOneWidget);
   });
 
   testWidgets('a single article hit agrees with its verb', (t) async {
@@ -174,5 +193,86 @@ void main() {
     await t.pumpAndSettle();
 
     expect(find.text('1 article mentions it'), findsOneWidget);
+  });
+
+  // ── The second lexicon (bwh35, backlog 1a) ──────────────────────────
+
+  testWidgets('picking a work changes the rows, and says whose they are',
+      (t) async {
+    await pump(t, initial: LexiconId.greek);
+    // G26 ἀγάπη under Strong's Chinese gloss.
+    await t.enterText(find.byType(TextField), 'G26');
+    await t.pumpAndSettle();
+    expect(find.text("1 个词条如此拼写 · Strong's"), findsOneWidget);
+    final underStrongs = _rowSummary(t, 'ἀγάπη');
+
+    await t.tap(find.widgetWithText(InkWell, 'Thayer 中文'));
+    await t.pumpAndSettle();
+
+    // A different lexicographer writes a different sentence about the
+    // same word — and the header now names him, so a reader quoting the
+    // row knows whose words she is quoting.
+    expect(find.text('1 个词条如此拼写 · Thayer 中文'), findsOneWidget);
+    expect(find.text('ἀγάπη'), findsOneWidget);
+    expect(_rowSummary(t, 'ἀγάπη'), isNot(underStrongs));
+  });
+
+  testWidgets("Thayer under Hebrew is refused out loud, not hidden",
+      (t) async {
+    await pump(t, locale: 'en', initial: LexiconId.greek);
+    await t.tap(find.widgetWithText(InkWell, "Thayer's"));
+    await t.pumpAndSettle();
+    expect(find.text("5523 entries · Thayer's"), findsOneWidget);
+
+    await t.tap(find.widgetWithText(InkWell, 'Hebrew'));
+    await t.pumpAndSettle();
+
+    // The reader asked for a work that has no Hebrew side. She gets
+    // Strong's — and is told so, because a page answering out of a
+    // different book than the one she picked is the same defect as a
+    // count that will not say what it counted.
+    expect(find.text("8674 entries · Strong's"), findsOneWidget);
+    expect(
+        find.textContaining('has no Hebrew side'), findsOneWidget);
+  });
+
+  testWidgets('a headword the chosen work never defines says so',
+      (t) async {
+    await pump(t, locale: 'en');
+    await t.tap(find.widgetWithText(InkWell, 'BDB (Chinese)'));
+    await t.pumpAndSettle();
+
+    // One of four in 8,674: the module keys H2775 and never defines it.
+    // Blank would be indistinguishable from a failed load, and Strong's
+    // gloss in its place would credit the wrong lexicographer.
+    await t.enterText(find.byType(TextField), 'H2775');
+    await t.pumpAndSettle();
+    expect(find.text('no definition in this work'), findsOneWidget);
+
+    await t.enterText(find.byType(TextField), 'H1');
+    await t.pumpAndSettle();
+    expect(find.text('no definition in this work'), findsNothing);
+  });
+
+  testWidgets('the article tier searches the work that is open', (t) async {
+    await pump(t, locale: 'en', initial: LexiconId.greek);
+    await t.tap(find.widgetWithText(InkWell, "Thayer's"));
+    await t.pumpAndSettle();
+
+    // 'Vulgate' appears in Strong's Greek definitions and nowhere in
+    // Thayer's 5,523 articles. Answered from the wrong book, the two
+    // counts would be identical.
+    await t.enterText(find.byType(TextField), 'Vulgate');
+    await t.pumpAndSettle();
+    expect(find.text("0 entries named · Thayer's"), findsOneWidget);
+    expect(find.text('No entry is spelled “Vulgate”, and no article '
+        'mentions it.'), findsOneWidget);
+
+    await t.tap(find.widgetWithText(InkWell, "Strong's"));
+    await t.pumpAndSettle();
+    expect(find.text("0 entries named · Strong's"), findsOneWidget);
+    expect(find.textContaining('mention'), findsOneWidget);
+    expect(t.widget<Text>(find.textContaining('mention')).data,
+        isNot('0 articles mention it'));
   });
 }

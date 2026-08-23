@@ -713,20 +713,43 @@ visual defect this project has shipped. A widget test that asserts a
 In rough order of value, if nothing else is pressing.
 
 **2026-08-23: items 2–6 are now all struck through.** That list was
-written 2026-08-12 and it is spent; the live candidates are 1 and 1a–1c
-below. When those empty too, do not pick from the struck items — go back
+written 2026-08-12 and it is spent; 1a closed the same day it was
+picked, so the live candidates are 1, 1b and 1c below. When those empty too, do not pick from the struck items — go back
 to §3–§6 and choose a `PARTIAL` whose "what is missing" paragraph you can
 finish in one iteration.
 
 1. **Anything in `docs/DATA-INTEGRITY.md`'s ranked list.** Accuracy
    outranks everything here.
-1a. **The Lexicon Browser's second lexicon** (§6, bwh35). The Strong's
-   browser shipped 2026-08-23; `bdb_zh.json` / `thayer_zh.json` are
-   bundled and served but not browsable. The work is a lexicon picker
-   plus honest handling of coverage that is not 1:1 with Strong's
-   numbering — measure that coverage *before* designing the picker, since
-   a picker that offers a lexicon with holes in it will state something
-   untrue by omission.
+1a. ~~**The Lexicon Browser's second lexicon**~~ — **DONE 2026-08-23**,
+   §6, bwh35. Three works over one headword list: Strong's, the English
+   Thayer's, and the Chinese module (BDB on the Hebrew side, Thayer on
+   the Greek). The picker changes only what is *said* about a word —
+   `LexiconId` still decides which words exist, how they are spelled and
+   in what order — so the same search returns the same entries whichever
+   lexicographer is open.
+
+   This entry's instruction to measure coverage first was right, and the
+   answer was not the one it expected. **Holes: 5 in 14,197** — H2775,
+   H7418, H7427, H8556 in BDB 中文 and G4191 in Thayer 中文, each a
+   headword the module keys and never defines; plus **14 more in
+   Strong's own Chinese gloss** (5 Hebrew, 9 Greek), blank on screen
+   since the browser shipped the day before. Small enough to offer the
+   work and label the row (`lexiconWorkSilent`), and pinned in
+   `test/lexicon_browse_test.dart` so a re-import cannot widen the gap
+   under a picker that promises coverage.
+
+   The measurement also turned up a live defect it was not looking for:
+   two of the English Thayer's 5,799 keys were zero-padded (`G0190`,
+   `G0446`), so `lookup('G190')` missed **ἀκολουθέω**, the New
+   Testament's verb for following Jesus. The article was in the bundle,
+   shipped, and unreachable. Fixed by `ThayerService.canonicalKey`.
+
+   And a defect for #301 rather than this ticket: **28 of the 14,696
+   Chinese entries have a truncated `etymology`** (9 in `bdb_zh`, 19 in
+   `thayer_zh`), detectable by an unbalanced parenthesis — e.g. H2775
+   reads `charcah (khar'- saw`, G1537 stops mid-clause. The importer
+   split a field on a delimiter that also occurs inside the parentheses.
+   These render today in the entry pane, not only in the browser.
 1b. **The synopsis display** (§6, bwh38). We hold both assets and both
    are reachable; what is missing is passages side by side instead of a
    chip sheet. `docs/PRODUCT-AUDIT.md` §7.4 parks this behind #292, so

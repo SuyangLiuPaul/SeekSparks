@@ -50,6 +50,38 @@ void main() {
       expect(e.grammarLines.join(' '), contains('Voice'));
     });
 
+    test('G190 ἀκολουθέω resolves — it was shipped and unreachable',
+        () async {
+      // Two of the 5,799 keys are zero-padded where every other one is
+      // bare, so `lookup('G190')` missed the New Testament's verb for
+      // following Jesus, and G446 ἀνθύπατος with it. The article was in
+      // the bundle the whole time.
+      final e = await ThayerService.lookup('G190');
+      expect(e, isNotNull);
+      expect(await ThayerService.lookup('G446'), isNotNull);
+    });
+
+    test('canonicalKey strips padding and touches nothing else', () {
+      expect(ThayerService.canonicalKey('G0190'), 'G190');
+      expect(ThayerService.canonicalKey('g0446'), 'G446');
+      expect(ThayerService.canonicalKey('G190'), 'G190');
+      expect(ThayerService.canonicalKey('H1'), 'H1');
+      expect(ThayerService.canonicalKey('G5656'), 'G5656');
+      // Not a Strong's number at all: left as it came in, only
+      // upper-cased, so this can never eat a key it does not understand.
+      expect(ThayerService.canonicalKey('attribution'), 'ATTRIBUTION');
+      expect(ThayerService.canonicalKey('G0'), 'G0');
+    });
+
+    test(
+        'the whole table is available to the Lexicon Browser, keyed '
+        'canonically', () async {
+      final raw = await ThayerService.rawArticles();
+      expect(raw, contains('G190'));
+      expect(raw, isNot(contains('G0190')));
+      expect(raw.length, greaterThan(5700));
+    });
+
     test('an unknown number is null, and stays null without re-reading',
         () async {
       expect(await ThayerService.lookup('G99999'), isNull);

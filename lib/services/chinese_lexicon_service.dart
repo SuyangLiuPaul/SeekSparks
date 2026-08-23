@@ -106,6 +106,21 @@ class ChineseLexiconService {
     return (hit == null || hit.isEmpty) ? null : hit;
   }
 
+  /// Every entry for one side, `H` or `G`. The Lexicon Browser searches
+  /// across the whole lexicon at once and cannot do that one [lookup] at
+  /// a time; nothing else needs it, and a reader who never opens the
+  /// browser never loads it.
+  ///
+  /// Includes the grammar/apparatus codes (`H8675`+ kethiv readings,
+  /// `G5625`+ synonym notes) — those carry [ChineseLexEntry.parsing] and
+  /// no lemma, so a caller building a headword list must skip them.
+  static Future<Map<String, ChineseLexEntry>> allEntries(String head) async {
+    final h = head.toUpperCase();
+    if (h != 'H' && h != 'G') return const {};
+    final file = h == 'H' ? 'bdb_zh' : 'thayer_zh';
+    return _cache[file] ?? await (_inflight[file] ??= _load(file));
+  }
+
   static Future<Map<String, ChineseLexEntry>> _load(String file) async {
     try {
       final raw = await rootBundle.loadString('assets/strongs/$file.json');

@@ -46,10 +46,13 @@ import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/strongs.dart';
 import 'package:seeksparks/pages/strongs_entry_page.dart';
+import 'package:seeksparks/services/chinese_lexicon_service.dart';
 import 'package:seeksparks/services/strongs_service.dart';
+import 'package:seeksparks/services/thayer_service.dart';
 import 'package:seeksparks/utils/app_nav.dart';
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 import 'package:seeksparks/utils/lexicon_browse.dart';
+import 'package:seeksparks/utils/thayer_parse.dart' show parseThayerEntry;
 import 'package:seeksparks/widgets/home_icon_button.dart';
 import 'package:seeksparks/widgets/language_switcher_button.dart';
 import 'package:seeksparks/widgets/localized_back_button.dart';
@@ -126,6 +129,41 @@ class _Lexicon {
   }
 }
 
+/// What one WORK says about the numbers in [_Lexicon]'s list.
+///
+/// Deliberately not a subclass of [_Lexicon]: the headword list, its
+/// order, its alphabet and the widest-number measurement belong to the
+/// canon and are identical whichever work is open. Only these three
+/// functions change, which is why switching works costs no re-sort of
+/// 8,674 rows and why the headword search returns the same entries
+/// either way — the same word, described by a different lexicographer.
+class _Articles {
+  _Articles({
+    required this.id,
+    required this.source,
+    required this.locale,
+    required this.summaryOf,
+    required this.articleOf,
+  });
+
+  final LexiconId id;
+  final LexiconSource source;
+  final String locale;
+
+  /// The row's single line.
+  final String Function(String number) summaryOf;
+
+  /// Everything the article search reads.
+  final String Function(String number) articleOf;
+
+  final Map<String, String> _fold = {};
+
+  /// Folded on first ask and kept. A keystroke must not re-fold a
+  /// megabyte of Thayer.
+  String foldedOf(String number) =>
+      _fold[number] ??= lexiconCollationKey(articleOf(number));
+}
+
 class LexiconPage extends StatefulWidget {
   const LexiconPage({super.key, this.initial = LexiconId.hebrew});
 
@@ -146,6 +184,23 @@ class _LexiconPageState extends State<LexiconPage> {
   String _query = '';
   LexiconOrder _order = LexiconOrder.alphabetical;
   bool _textTier = false;
+
+  /// The work the reader picked. What they actually get is
+  /// [_effectiveSource], which differs only for Thayer under Hebrew.
+  LexiconSource _source = LexiconSource.strongs;
+  final Map<String, _Articles> _articles = {};
+  bool _loadingArticles = false;
+
+  /// Thayer has no Hebrew side, so under Hebrew the reader reads
+  /// Strong's. The substitution is announced in the count header rather
+  /// than made quietly: a page that answers from a different book than
+  /// the one named is the same defect as a count that will not say what
+  /// it counted.
+  LexiconSource get _effectiveSource =>
+      _source.covers(_id) ? _source : LexiconSource.strongs;
+
+  String _articlesKey(LexiconId id, LexiconSource s, String locale) =>
+      '${id.name}/${s.name}/$locale';
 
   @override
   void initState() {
@@ -182,6 +237,82 @@ class _LexiconPageState extends State<LexiconPage> {
       _loaded[id] = _Lexicon(id, entries, locale);
       _loading = false;
     });
+  }
+
+  /// Loads whichever work is showing. Strong's is already in memory once
+  /// [_ensure] has run; the other two are megabyte assets and are
+  /// fetched only when a reader actually asks for them.
+  Future<void> _ensureArticles(
+      LexiconId id, LexiconSource source, String locale) async {
+    final key = _articlesKey(id, source, locale);
+    if (_articles.containsKey(key) || _loadingArticles) return;
+    final lex = _loaded[id];
+    if (lex == null || lex.articleLocale != locale) return;
+    setState(() => _loadingArticles = true);
+    final built = await _buildArticles(lex, id, source, locale);
+    if (!mounted) return;
+    setState(() {
+      _articles[key] = built;
+      _loadingArticles = false;
+    });
+  }
+
+  Future<_Articles> _buildArticles(
+      _Lexicon lex, LexiconId id, LexiconSource source, String locale) async {
+    switch (source) {
+      case LexiconSource.strongs:
+        return _Articles(
+          id: id,
+          source: source,
+          locale: locale,
+          summaryOf: (n) => lex.byNumber[n]?.localizedGloss(locale) ?? '',
+          articleOf: lex.articleOf,
+        );
+
+      case LexiconSource.thayer:
+        final raw = await ThayerService.rawArticles();
+        // Parsed one row at a time and kept. Turning all 5,799 into
+        // structures up front is exactly what `ThayerService` refuses to
+        // do at boot, and a list only ever draws the rows on screen.
+        final summaries = <String, String>{};
+        return _Articles(
+          id: id,
+          source: source,
+          locale: locale,
+          articleOf: (n) => raw[ThayerService.canonicalKey(n)] ?? '',
+          summaryOf: (n) => summaries[n] ??= _thayerSummary(raw, n),
+        );
+
+      case LexiconSource.chinese:
+        final table = await ChineseLexiconService.allEntries(id.prefix);
+        return _Articles(
+          id: id,
+          source: source,
+          locale: locale,
+          // Etymology and the 钦定本 counts are part of the article a
+          // printed lexicon prints, so they are part of what "search the
+          // article text" searches.
+          articleOf: (n) {
+            final e = table[n];
+            if (e == null) return '';
+            return [e.etymology, e.usage, ...e.senses]
+                .where((s) => s.trim().isNotEmpty)
+                .join('\n');
+          },
+          summaryOf: (n) => firstSenseSummary(table[n]?.senses ?? const []),
+        );
+    }
+  }
+
+  String _thayerSummary(Map<String, String> raw, String number) {
+    final article = raw[ThayerService.canonicalKey(number)];
+    if (article == null || article.trim().isEmpty) return '';
+    final entry = parseThayerEntry(number, article);
+    if (entry.isNotUsed) return '';
+    for (final s in entry.senses) {
+      if (s.text.trim().isNotEmpty) return s.text.trim();
+    }
+    return '';
   }
 
   // ── Build ───────────────────────────────────────────────────────────
@@ -221,15 +352,25 @@ class _LexiconPageState extends State<LexiconPage> {
   }
 
   Widget _browser(WbColors c, _Lexicon lex, String locale) {
+    final source = _effectiveSource;
+    final art = _articles[_articlesKey(_id, source, locale)];
+    if (art == null) {
+      WidgetsBinding.instance.addPostFrameCallback(
+          (_) => _ensureArticles(_id, source, locale));
+    }
+
     final searching = _query.trim().isNotEmpty;
     final heads = lex.ordered(_order);
     final hits = searching ? matchHeadwords(heads, _query) : heads;
-    final text = (_textTier && searching)
+    // The article tier reads the WORK, so it waits for the work. The
+    // headword tier never does: the list of words exists before any
+    // lexicographer describes them.
+    final text = (_textTier && searching && art != null)
         ? searchDefinitions(
             heads,
             _query,
-            textOf: lex.articleOf,
-            foldedTextOf: lex.foldedOf,
+            textOf: art.articleOf,
+            foldedTextOf: art.foldedOf,
             limit: _textHitCap,
           )
         : null;
@@ -241,23 +382,29 @@ class _LexiconPageState extends State<LexiconPage> {
           _controls(c, locale, oneRow: box.maxWidth >= _controlsOneRowMin),
           _countHeader(
             c,
-            searching
+            // The work is named on every count. Three lexicons over one
+            // headword list means "5,523 entries" alone no longer says
+            // whose 5,523 they are, and a reader quoting a definition
+            // needs to know which lexicographer wrote it.
+            '${searching
                 // Named, not "found": this tier matched the headword, and
                 // the article tier below it did something else.
                 ? _sn('lexiconEntriesNamed', '{n} entries named',
                     '1 entry named', hits.length, locale)
                 : _s('lexiconEntriesAll', '{n} entries', locale)
-                    .replaceAll('{n}', '${heads.length}'),
+                    .replaceAll('{n}', '${heads.length}')}'
+            ' · ${_sourceName(source, locale)}',
             // bwh35's Reload, by its effect: the entry list is REPLACED
             // by results, so something has to put it back.
             note: searching ? _s('lexiconShowAll', 'Show all', locale) : null,
             onNote: searching ? _clear : null,
           ),
+          _sourceNote(c, locale),
           if (!searching && _order == LexiconOrder.alphabetical)
             _letterStrip(c, heads),
           Divider(height: WbMetrics.hairline, color: c.border),
-          Expanded(
-              child: _list(context, c, lex, hits, text, locale, searching)),
+          Expanded(child: _list(
+              context, c, lex, art, hits, text, locale, searching)),
         ],
       ),
     );
@@ -295,6 +442,27 @@ class _LexiconPageState extends State<LexiconPage> {
               setState(() => _id = id);
               _ensure(id);
               if (_listScroll.hasClients) _listScroll.jumpTo(0);
+            },
+          ),
+        for (final s in LexiconSource.values)
+          _flatButton(
+            c,
+            t,
+            label: _sourceName(s, locale),
+            // The lit button says what is on screen, not what was last
+            // asked for: under Hebrew a chosen Thayer is not being read,
+            // and lighting it there would caption the page with a work
+            // that wrote none of it.
+            active: _effectiveSource == s,
+            // Thayer under Hebrew is offered and refused, not hidden.
+            // Removing the button would leave a reader who knows the
+            // work exists unable to tell whether we lack it or it lacks
+            // Hebrew, and those are different answers.
+            enabled: s.covers(_id),
+            onTap: () {
+              if (_source == s) return;
+              setState(() => _source = s);
+              _ensureArticles(_id, s, locale);
             },
           ),
         for (final order in LexiconOrder.values)
@@ -439,6 +607,7 @@ class _LexiconPageState extends State<LexiconPage> {
     BuildContext rowContext,
     WbColors c,
     _Lexicon lex,
+    _Articles? art,
     List<LexiconHead> hits,
     LexiconTextResult? text,
     String locale,
@@ -451,7 +620,7 @@ class _LexiconPageState extends State<LexiconPage> {
         controller: _listScroll,
         itemCount: hits.length,
         itemExtent: _rowExtent(t),
-        itemBuilder: (context, i) => _row(c, t, hits[i], numWidth),
+        itemBuilder: (context, i) => _row(c, t, hits[i], art, numWidth),
       );
     }
     if (hits.isEmpty && text == null) {
@@ -467,7 +636,7 @@ class _LexiconPageState extends State<LexiconPage> {
         SliverFixedExtentList(
           itemExtent: _rowExtent(t),
           delegate: SliverChildBuilderDelegate(
-            (context, i) => _row(c, t, hits[i], numWidth),
+            (context, i) => _row(c, t, hits[i], art, numWidth),
             childCount: hits.length,
           ),
         ),
@@ -542,8 +711,14 @@ class _LexiconPageState extends State<LexiconPage> {
     return tp.width.ceilToDouble() + 10;
   }
 
-  Widget _row(WbColors c, WbType t, LexiconHead h, double numWidth) {
+  Widget _row(
+      WbColors c, WbType t, LexiconHead h, _Articles? art, double numWidth) {
     final settings = context.read<AppSettings>();
+    // Null only in the frame before the chosen work has loaded; the
+    // canonical gloss is what the row held a moment ago, so it does not
+    // flash empty on the way in.
+    final summary = art?.summaryOf(h.number) ?? h.gloss;
+    final silent = summary.trim().isEmpty;
     return InkWell(
       onTap: () => _open(h.number),
       hoverColor: c.hoverBg,
@@ -576,11 +751,18 @@ class _LexiconPageState extends State<LexiconPage> {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                h.gloss,
+                silent
+                    ? _s('lexiconWorkSilent', 'no definition in this work',
+                        settings.locale)
+                    : summary,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontSize: t.chrome,
+                  // Italic so a reader scanning the column can see at a
+                  // glance that this is our sentence about the lexicon,
+                  // not the lexicon's sentence about the word.
+                  fontStyle: silent ? FontStyle.italic : null,
                   color: c.mutedText,
                   fontFamilyFallback: kCjkFontFallback,
                 ),
@@ -709,18 +891,23 @@ class _LexiconPageState extends State<LexiconPage> {
     required bool active,
     required VoidCallback onTap,
     IconData? icon,
+    bool enabled = true,
   }) =>
       Material(
         color: active ? c.selectionBg : c.paneBg,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.zero,
           side: BorderSide(
-            color: active ? c.text : c.border,
+            color: active
+                ? c.text
+                : enabled
+                    ? c.border
+                    : c.border.withValues(alpha: 0.5),
             width: WbMetrics.hairline,
           ),
         ),
         child: InkWell(
-          onTap: onTap,
+          onTap: enabled ? onTap : null,
           hoverColor: c.hoverBg,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 5),
@@ -741,7 +928,11 @@ class _LexiconPageState extends State<LexiconPage> {
                       fontSize: t.chrome,
                       height: 1.0,
                       fontWeight: active ? FontWeight.w700 : FontWeight.w400,
-                      color: active ? c.text : c.mutedText,
+                      color: active
+                          ? c.text
+                          : enabled
+                              ? c.mutedText
+                              : c.mutedText.withValues(alpha: 0.5),
                       fontFamilyFallback: kCjkFontFallback,
                     ),
                   ),
@@ -751,4 +942,58 @@ class _LexiconPageState extends State<LexiconPage> {
           ),
         ),
       );
+
+  /// What to call the work on screen.
+  ///
+  /// The Chinese module is BDB on the Hebrew side and Thayer on the
+  /// Greek side — one file per side, two different lexicographers — so
+  /// it is named for whichever one the reader is actually in. Calling it
+  /// "Thayer" over a Hebrew list would credit the wrong scholar.
+  String _sourceName(LexiconSource source, String locale) {
+    switch (source) {
+      case LexiconSource.strongs:
+        return _s('lexiconSourceStrongs', "Strong's", locale);
+      case LexiconSource.thayer:
+        return _s('lexiconSourceThayer', "Thayer's", locale);
+      case LexiconSource.chinese:
+        return _id == LexiconId.hebrew
+            ? _s('lexiconSourceBdbZh', 'BDB 中文', locale)
+            : _s('lexiconSourceThayerZh', 'Thayer 中文', locale);
+    }
+  }
+
+  /// The line under the count that says what the reader is NOT getting.
+  ///
+  /// Both cases are substitutions the reader did not ask for, and a
+  /// substitution nobody announces is indistinguishable from a bug.
+  Widget _sourceNote(WbColors c, String locale) {
+    final String? note;
+    if (_source != _effectiveSource) {
+      note = _s(
+        'lexiconThayerGreekOnly',
+        "Thayer's is a New Testament lexicon and has no Hebrew side. "
+            "Showing Strong's.",
+        locale,
+      );
+    } else if (_effectiveSource == LexiconSource.chinese &&
+        ChineseLexiconService.isSimplifiedOnly(locale)) {
+      note = _s('lexiconChineseSimplifiedOnly',
+          '這部詞典只有簡體，未經轉換。', locale);
+    } else {
+      note = null;
+    }
+    if (note == null) return const SizedBox.shrink();
+    final t = WbType.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(10, 0, 10, 6),
+      child: Text(
+        note,
+        style: TextStyle(
+          fontSize: t.chrome,
+          color: c.mutedText,
+          fontFamilyFallback: kCjkFontFallback,
+        ),
+      ),
+    );
+  }
 }

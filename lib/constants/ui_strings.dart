@@ -8591,4 +8591,50 @@ const uiStrings = {
     'zh-Hant': '沒有詞條拼作「{q}」，釋義中也沒有提到它。',
     'en': 'No entry is spelled “{q}”, and no article mentions it.',
   },
+
+  // The three works, named on every count line. A Chinese reader sees
+  // two Thayers side by side — the 1889 English text and the Chinese
+  // edition — so each has to say which one it is.
+  'lexiconSourceStrongs': {
+    'zh-Hans': "Strong's",
+    'zh-Hant': "Strong's",
+    'en': "Strong's",
+  },
+  'lexiconSourceThayer': {
+    'zh-Hans': 'Thayer 英文',
+    'zh-Hant': 'Thayer 英文',
+    'en': "Thayer's",
+  },
+  'lexiconSourceBdbZh': {
+    'zh-Hans': 'BDB 中文',
+    'zh-Hant': 'BDB 中文',
+    'en': 'BDB (Chinese)',
+  },
+  'lexiconSourceThayerZh': {
+    'zh-Hans': 'Thayer 中文',
+    'zh-Hant': 'Thayer 中文',
+    'en': 'Thayer (Chinese)',
+  },
+  'lexiconThayerGreekOnly': {
+    'zh-Hans': 'Thayer 是新约词典，没有希伯来文部分，此处显示 Strong\'s。',
+    'zh-Hant': 'Thayer 是新約詞典，沒有希伯來文部分，此處顯示 Strong\'s。',
+    'en': "Thayer's is a New Testament lexicon and has no Hebrew side. "
+        "Showing Strong's.",
+  },
+  // 19 rows of 14,197 have a headword the chosen work never defines: 14
+  // of them in Strong's own Chinese gloss, where the row has been blank
+  // since the browser shipped. A blank cell is indistinguishable from a
+  // failed load, and borrowing another work's gloss would credit the
+  // wrong lexicographer, so the row says which of the two it is.
+  'lexiconWorkSilent': {
+    'zh-Hans': '此词典未列释义',
+    'zh-Hant': '此詞典未列釋義',
+    'en': 'no definition in this work',
+  },
+  'lexiconChineseSimplifiedOnly': {
+    'zh-Hans': '这部词典只有简体，未经转换。',
+    'zh-Hant': '這部詞典只有簡體，未經轉換。',
+    'en': 'This lexicon exists only in Simplified Chinese; '
+        'it has not been converted.',
+  },
 };

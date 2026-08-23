@@ -70,6 +70,66 @@ extension LexiconIdX on LexiconId {
   String get prefix => this == LexiconId.hebrew ? 'H' : 'G';
 }
 
+/// Which lexicon's ARTICLE is being read and searched.
+///
+/// bwh35's Lexicons menu offers several works over one headword list,
+/// and that is the shape here — deliberately, because the headword list
+/// is not the lexicon's to define. All three works are keyed by the same
+/// Strong's numbers, so [LexiconId] still decides *which words exist*,
+/// their spelling, their order and the alphabet strip; the source
+/// decides only what is said about them and what the article search
+/// reads. Two measurements settled that split:
+///
+///  * **`bdb_zh` prints Hebrew unpointed.** Only 4,798 of its 8,674
+///    lemmas carry any vowel point and only 160 are byte-identical to
+///    the pointed form in `hebrew.json`. Letting the source supply the
+///    headword would silently strip the pointing off a Hebrew list.
+///  * **Coverage is total, and had to be checked to be claimed.** Every
+///    one of the 5,523 Greek and 8,674 Hebrew numbers has a Chinese
+///    article; Thayer has all 5,523 Greek ones once `G0190`/`G0446` are
+///    unpadded. A picker offering a work with holes in it would state
+///    something untrue by omission, so the holes were measured first and
+///    there are none.
+enum LexiconSource {
+  /// Strong's own gloss and definition, from `greek.json`/`hebrew.json`.
+  /// Both sides, and the only source that is already localised.
+  strongs,
+
+  /// Thayer's Greek-English Lexicon (1889, public domain). **Greek
+  /// only** — it is a New Testament lexicon and has no Hebrew side at
+  /// all, which is a fact about the work and not a gap in our copy.
+  thayer,
+
+  /// BDB (Hebrew) and Thayer (Greek) in Chinese. Both sides. Simplified
+  /// only, which the browser says rather than letting a 繁體 reader
+  /// think the conversion failed.
+  chinese,
+}
+
+extension LexiconSourceX on LexiconSource {
+  /// Whether this work says anything at all about [id]'s side of the
+  /// canon. Only Thayer answers false, and only for Hebrew.
+  bool covers(LexiconId id) =>
+      this != LexiconSource.thayer || id == LexiconId.greek;
+}
+
+/// The one-line summary for a row, taken from a work's numbered senses.
+///
+/// Both Thayer and the Chinese module number their senses in the printed
+/// way — `1) a proconsul`, `1) 个人的父亲` — and a row that shows the
+/// number as well as the sense spends its only line saying "1". Strips
+/// one leading enumerator and nothing else: `1a)` stays whole when it is
+/// the first thing present, because a sense that begins at `1a` is a
+/// sub-sense and saying so is information.
+String firstSenseSummary(List<String> senses) {
+  for (final s in senses) {
+    final t = s.trim();
+    if (t.isEmpty) continue;
+    return t.replaceFirst(RegExp(r'^\d+\)\s*'), '').trim();
+  }
+  return '';
+}
+
 /// How the entry list is ordered.
 ///
 /// Both are real lexicon orders and neither is a fallback — see the

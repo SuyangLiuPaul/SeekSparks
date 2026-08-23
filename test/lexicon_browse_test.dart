@@ -12,6 +12,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:seeksparks/services/thayer_service.dart';
 import 'package:seeksparks/utils/lexicon_browse.dart';
 
 List<LexiconHead> _load(String file) {
@@ -27,6 +28,33 @@ List<LexiconHead> _load(String file) {
         gloss: (e.value['gloss'] ?? '') as String,
       ),
   ];
+}
+
+/// The numbers one Chinese module actually says something about —
+/// senses, not merely a key. An entry present but empty is a hole.
+Set<String> _articles(String file) {
+  final raw =
+      json.decode(File('assets/strongs/$file.json').readAsStringSync())
+          as Map<String, dynamic>;
+  return {
+    for (final e in raw.entries)
+      if (((e.value['s'] as List?) ?? const []).isNotEmpty)
+        e.key.toUpperCase(),
+  };
+}
+
+/// The English Thayer, through the shipped canonicaliser rather than a
+/// copy of it: two of the 5,799 keys are zero-padded, and a test that
+/// normalised them its own way would pass while `lookup` still missed.
+Set<String> _thayerEn() {
+  final raw = json.decode(File('assets/thayer.json').readAsStringSync())
+      as Map<String, dynamic>;
+  final entries = raw['entries'] as Map<String, dynamic>;
+  return {
+    for (final e in entries.entries)
+      if ((e.value as String).trim().isNotEmpty)
+        ThayerService.canonicalKey(e.key),
+  };
 }
 
 LexiconHead _head(String number, String lemma,
@@ -234,9 +262,62 @@ void main() {
     });
   });
 
+  group('the second lexicon', () {
+    test('only Thayer refuses a side, and it refuses Hebrew', () {
+      expect(LexiconSource.thayer.covers(LexiconId.greek), isTrue);
+      expect(LexiconSource.thayer.covers(LexiconId.hebrew), isFalse);
+      for (final s in [LexiconSource.strongs, LexiconSource.chinese]) {
+        for (final id in LexiconId.values) {
+          expect(s.covers(id), isTrue, reason: '${s.name}/${id.name}');
+        }
+      }
+    });
+
+    test('the row summary drops the sense number but not a sub-letter', () {
+      // "1)" is the numbering, and printing it on every row would put a
+      // column of 1s down the page. "1a)" is not: it says the article's
+      // first statement is already a subdivision, which is information.
+      expect(firstSenseSummary(['1) 天，诸天']), '天，诸天');
+      expect(firstSenseSummary(['1a) 可见的天']), '1a) 可见的天');
+      expect(firstSenseSummary(['', '  ', '2) 爱']), '爱');
+      expect(firstSenseSummary(const []), '');
+    });
+  });
+
   group('against the shipped lexicons', () {
     late final List<LexiconHead> greek = _load('greek');
     late final List<LexiconHead> hebrew = _load('hebrew');
+
+    test('the works offered cover the list they are captioning', () {
+      // The backlog's worry about item 1a was that a picker offering a
+      // lexicon with holes in it states something untrue by omission.
+      // Measured, the holes are five: H2775, H7418, H7427, H8556 in BDB
+      // 中文 and G4191 in Thayer 中文, each a headword the module keys
+      // but never defines. Five rows in 14,197 is small enough to offer
+      // the work and label the row (`lexiconWorkSilent`), and the
+      // numbers are pinned here so a re-import cannot quietly widen the
+      // gap under a picker that promises coverage.
+      final bdb = _articles('bdb_zh');
+      expect(
+        hebrew.map((h) => h.number).where((n) => !bdb.contains(n)).toSet(),
+        {'H2775', 'H7418', 'H7427', 'H8556'},
+      );
+
+      final thayerZh = _articles('thayer_zh');
+      expect(
+        greek.map((h) => h.number).where((n) => !thayerZh.contains(n)).toSet(),
+        {'G4191'},
+      );
+
+      // The English Thayer is the one work with no holes at all — and
+      // only since `canonicalKey`: G190 ἀκολουθέω, the New Testament's
+      // verb for following Jesus, was zero-padded in the asset and
+      // unreachable until 2026-08-23.
+      final en = _thayerEn();
+      expect(greek.where((h) => !en.contains(h.number)), isEmpty);
+      expect(en, contains('G190'));
+      expect(en, contains('G446'));
+    });
 
     test('the corpus is the size the design was measured on', () {
       expect(greek.length, 5523);

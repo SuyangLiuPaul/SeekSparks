@@ -35,9 +35,32 @@ class ThayerService {
   /// Testament lexicon, so Hebrew numbers never hit the bundle.
   static bool covers(String number) => number.toUpperCase().startsWith('G');
 
+  /// `G0190` → `G190`.
+  ///
+  /// Two of the 5,799 articles are zero-padded to four digits where every
+  /// other one is bare, and nothing else in the app pads a Strong's
+  /// number. Until 2026-08-23 that meant `lookup('G190')` missed
+  /// **ἀκολουθέω**, the New Testament's word for *following* Jesus, and
+  /// `G446` ἀνθύπατος with it: the article was in the bundle, shipped,
+  /// and unreachable. Canonicalising here rather than at each call site
+  /// is what makes it unreachable-by-construction instead of fixed twice
+  /// and forgotten a third time. Measured: exactly 2 keys, and no
+  /// unpadded twin for either, so this collides with nothing.
+  static String canonicalKey(String number) {
+    final up = number.toUpperCase();
+    final m = RegExp(r'^([GH])0+(\d+)$').firstMatch(up);
+    return m == null ? up : '${m[1]}${m[2]}';
+  }
+
+  /// Every article, keyed canonically. The Lexicon Browser needs the
+  /// whole table at once because it searches across all of it; a reader
+  /// who has not opened the browser never pays for this.
+  static Future<Map<String, String>> rawArticles() async =>
+      _raw ?? await (_inflight ??= _load());
+
   static Future<ThayerEntry?> lookup(String number) async {
     if (!covers(number)) return null;
-    final key = number.toUpperCase();
+    final key = canonicalKey(number);
     if (_parsed.containsKey(key)) return _parsed[key];
     final table = _raw ?? await (_inflight ??= _load());
     final raw = table[key];
@@ -59,7 +82,7 @@ class ThayerService {
       final entries = (decoded['entries'] as Map<String, dynamic>?) ?? const {};
       final out = <String, String>{
         for (final e in entries.entries)
-          e.key.toUpperCase(): e.value as String,
+          canonicalKey(e.key): e.value as String,
       };
       _raw = out;
       return out;

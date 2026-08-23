@@ -11,7 +11,7 @@ ticket briefs belong in the loop's `prompt.md` and, once closed, in
 `prompt-archive.md`. If this file grows past ~150 lines it has stopped
 doing its job.
 
-Last updated: 2026-08-23
+Last updated: 2026-08-23 (second entry)
 
 ---
 
@@ -19,10 +19,10 @@ Last updated: 2026-08-23
 
 | | |
 |---|---|
-| `pubspec` / dev | **1.6.151** — the tree is **1 iteration ahead of dev** (bwh35, not deployed) |
+| `pubspec` / dev | **1.6.151** — the tree is **2 iterations ahead of dev** (bwh35 + its second lexicon, not deployed) |
 | prod (seeksparks.netlify.app) | **1.6.136** — 15 versions behind, by design: prod ships only on the owner's word |
-| `main` | `1542a74` |
-| Suite | **3,126 tests**, green; `flutter analyze` exit 0 |
+| `main` | `e6eee21` |
+| Suite | **3,136 tests**, green; `flutter analyze` exit 0 |
 | CI | green (Flutter CI on `main`) |
 
 ---
@@ -44,7 +44,7 @@ here, move its body out of `prompt.md`, and say so in `HANDOFF.md`.
 | #296 | Prod crash — root cause found and fixed (`9132a14`) | **blocked** — needs a fresh crash report to confirm |
 | #299 | The `?` card teaches syntax you cannot run | closed — v1.6.144 |
 | #300 | Map provenance — rights settled, the maps are the owner's own collection | open |
-| #301 | Yahwehdehua — re-open the import; the base text matched, the readings did not | open |
+| #301 | Yahwehdehua — re-open the import; the base text matched, the readings did not | open — +28 truncated etymologies, check 43c |
 | #302 | Build the backlog before the queue empties → `docs/PARITY-BACKLOG.md` | closed — 75 entries |
 | #304 | Systematic data-integrity audit — "accuracy is the most critical thing" | open, recurring |
 | #307 | Phrasing — open it to translations, indent line one (Pastor Raymond HK) | open |
@@ -87,12 +87,12 @@ ones shipped: bwh26 (Word List compare), bwh34 (Nave's Topical Bible, both
 halves), bwh45 (romanised search input), bwh35 (Lexicon Browser).
 
 **§8's shortlist is spent** — items 2–6 are all struck through as of
-2026-08-23. The live candidates are now **1a** (the Lexicon Browser's second
-lexicon: `bdb_zh.json` / `thayer_zh.json` are bundled and served but not
-browsable), **1b** (the synopsis display, parked behind #292) and **1c**
-(flashcard retention, bwh40). When those go, pick a `PARTIAL` from §3–§6
-whose "what is missing" paragraph fits one iteration — do not re-pick a
-struck item.
+2026-08-23, and **1a closed the same day it was picked**: the Lexicon
+Browser now offers three works (Strong's, English Thayer's, the Chinese
+BDB/Thayer module). The live candidates are **1b** (the synopsis display,
+parked behind #292) and **1c** (flashcard retention, bwh40). When those go,
+pick a `PARTIAL` from §3–§6 whose "what is missing" paragraph fits one
+iteration — do not re-pick a struck item.
 
 ---
 
@@ -131,6 +131,11 @@ that bite most often:
   pubspec is part of the change. (`46ed151`, `a7bb0b3` — 201 Nave's files
   shipped, the declaration did not)
 - **A human reported it → it goes first.**
+- **A key is not an article.** Counting keys said the Chinese lexicons
+  covered Strong's 100% in both directions; joining on *content* found 19
+  headwords no work defines, and 14 of them had been rendering blank on a
+  shipped screen. Any coverage claim must be measured on what is said, not
+  on what is addressable. (check 43)
 - **A `State`'s `context` sits ABOVE its own `Scaffold`.** Measuring text
   with `DefaultTextStyle.of(state.context)` misses whatever the Scaffold's
   theme adds below it — `bodyMedium`'s 0.25 px `letterSpacing` cost 1.25 px
