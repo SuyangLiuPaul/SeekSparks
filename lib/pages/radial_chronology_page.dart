@@ -1590,10 +1590,66 @@ class _HistoryWheelPainter extends CustomPainter {
     final rHub = side * _kHubFrac;
     final rMax = side * _kRimFrac;
 
+    _paintZones(canvas, c, rHub, rMax);
     _paintTicks(canvas, c, rHub, rMax);
     _paintItems(canvas, c, rHub, rMax);
+    _paintRim(canvas, c, rMax);
     _paintHubRing(canvas, c, rHub);
     _paintAxisEnds(canvas, c, rHub, rMax);
+  }
+
+  /// The four annulus zones — Bible events, kings, powers, church —
+  /// washed apart the way the engraved charts band their rings, so the
+  /// eye finds the register before it reads a single label. The wash
+  /// is cut as a donut path (rim circle + hub circle, even-odd) and
+  /// clipped to the swept sector so the gap wedge stays paper-bare.
+  void _paintZones(Canvas canvas, Offset c, double rHub, double rMax) {
+    const zones = [
+      (0, 2, Color(0xFF2A4FB0)), // Bible events — monarchy blue
+      (3, 4, Color(0xFF5B87C4)), // kings
+      (5, 6, Color(0xFF7A8B6F)), // powers
+      (7, 8, Color(0xFF3E7CB1)), // church & scripture
+    ];
+    canvas.save();
+    final sector = Path()
+      ..moveTo(c.dx, c.dy)
+      ..arcTo(Rect.fromCircle(center: c, radius: rMax + 2), startRad,
+          sweepRad, false)
+      ..close();
+    canvas.clipPath(sector);
+    for (final (first, last, hue) in zones) {
+      final outer = ringRadii(first, _histRingCount, rHub, rMax).outer;
+      final inner = ringRadii(last, _histRingCount, rHub, rMax).inner;
+      final donut = Path()
+        ..addOval(Rect.fromCircle(center: c, radius: outer + 1))
+        ..addOval(Rect.fromCircle(center: c, radius: inner - 1))
+        ..fillType = PathFillType.evenOdd;
+      canvas.drawPath(
+          donut, Paint()..color = hue.withValues(alpha: 0.055));
+      canvas.drawCircle(
+          c,
+          outer + 1,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 0.4
+            ..color = hue.withValues(alpha: 0.25));
+    }
+    canvas.restore();
+  }
+
+  /// The rim: a double ring, the engraved charts' outer border.
+  void _paintRim(Canvas canvas, Offset c, double rMax) {
+    for (final (r, w, a) in [(rMax + 2.0, 0.9, 0.6), (rMax + 5.0, 0.4, 0.35)]) {
+      canvas.drawArc(
+          Rect.fromCircle(center: c, radius: r),
+          startRad,
+          sweepRad,
+          false,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = w
+            ..color = wb.border.withValues(alpha: a));
+    }
   }
 
   void _paintTicks(Canvas canvas, Offset c, double rHub, double rMax) {
@@ -1603,6 +1659,7 @@ class _HistoryWheelPainter extends CustomPainter {
     final major = Paint()
       ..color = wb.border.withValues(alpha: 0.65)
       ..strokeWidth = 0.9;
+    var stagger = false;
     for (var y = _minY; y <= _maxY; y += 100) {
       if (y == _minY || y == _maxY) continue; // the end spokes own these
       final isMajor = y % 500 == 0;
@@ -1611,7 +1668,12 @@ class _HistoryWheelPainter extends CustomPainter {
       canvas.drawLine(
           c + dir * rHub, c + dir * rMax, isMajor ? major : minor);
       if (isMajor) {
-        _paintLabel(canvas, yearLabel(y, locale), c + dir * (rMax + 11),
+        // Alternate the label radius so adjacent centuries clear each
+        // other even at rest zoom — the engraved charts stagger their
+        // rim years for the same reason.
+        final rr = rMax + (stagger ? 19 : 10);
+        stagger = !stagger;
+        _paintLabel(canvas, yearLabel(y, locale), c + dir * rr,
             wb.mutedText, rimFont,
             center: true);
       }
@@ -1620,7 +1682,17 @@ class _HistoryWheelPainter extends CustomPainter {
 
   void _paintItems(Canvas canvas, Offset c, double rHub, double rMax) {
     final hasSelection = selectedId != null;
-    for (final it in items) {
+    // Sorted by ring then angle so label collision can be decided by
+    // simply remembering where the previous label on the ring ended —
+    // a label that will not fit cleanly is skipped, and the tap still
+    // reveals the record. Overprinted type is the one thing the
+    // engraved charts never allow themselves.
+    final ordered = [...items]..sort((a, b) {
+      final byRing = a.ring.compareTo(b.ring);
+      return byRing != 0 ? byRing : a.a0.compareTo(b.a0);
+    });
+    final labelEnd = List<double>.filled(_histRingCount, double.negativeInfinity);
+    for (final it in ordered) {
       final band = ringRadii(it.ring, _histRingCount, rHub, rMax);
       final selected = it.id == selectedId;
       final dim = hasSelection && !selected ? 0.4 : 1.0;
@@ -1640,12 +1712,15 @@ class _HistoryWheelPainter extends CustomPainter {
                 ..strokeWidth = 1
                 ..color = wb.text);
         }
-        // The label runs along the ring just after the dot — the
-        // density IS the point of this mode, so overlaps in a crowded
-        // century are tolerated rather than hidden.
+        // The label runs along the ring just after the dot. It is
+        // drawn only if it clears the previous label on this ring —
+        // a skipped label stays one tap away, an overprinted one is
+        // lost to everybody.
         final gap = (dotR + 2) / band.centre;
-        _labelOnArc(canvas, c, band.centre, it.label, it.a0 + gap,
-            0.22, band.width * 0.62, dim);
+        final drawn = _labelOnArc(canvas, c, band.centre, it.label,
+            it.a0 + gap, 0.22, band.width * 0.62, dim,
+            notBefore: labelEnd[it.ring]);
+        if (drawn > 0) labelEnd[it.ring] = drawn;
       } else {
         final rect = Rect.fromCircle(center: c, radius: band.centre);
         final w = band.width * (it.kind == _HistKind.king ? 0.88 : 0.72);
@@ -1659,6 +1734,28 @@ class _HistoryWheelPainter extends CustomPainter {
               ..strokeWidth = w
               ..color = it.color.withValues(
                   alpha: (it.kind == _HistKind.king ? 0.9 : 0.55) * dim));
+        if (it.kind == _HistKind.king) {
+          // A hairline at each accession, so forty adjacent reigns
+          // read as forty reigns and not one long ribbon.
+          final sep = Paint()
+            ..strokeWidth = 0.7
+            ..color = wb.paneBg.withValues(alpha: 0.9);
+          for (final a in [it.a0, it.a1]) {
+            final dir = Offset(math.cos(a), math.sin(a));
+            canvas.drawLine(c + dir * (band.centre - w / 2),
+                c + dir * (band.centre + w / 2), sep);
+          }
+        } else {
+          canvas.drawArc(
+              rect,
+              it.a0,
+              it.a1 - it.a0,
+              false,
+              Paint()
+                ..style = PaintingStyle.stroke
+                ..strokeWidth = 0.5
+                ..color = it.color.withValues(alpha: 0.7 * dim));
+        }
         if (selected) {
           canvas.drawArc(
               Rect.fromCircle(center: c, radius: band.outer),
@@ -1670,19 +1767,23 @@ class _HistoryWheelPainter extends CustomPainter {
                 ..strokeWidth = 1
                 ..color = wb.text.withValues(alpha: 0.85));
         }
-        _labelOnArc(canvas, c, band.centre, it.label, it.a0,
+        final drawn = _labelOnArc(canvas, c, band.centre, it.label, it.a0,
             it.a1 - it.a0, band.width * 0.6, dim,
-            centreIn: it.a1 - it.a0);
+            centreIn: it.a1 - it.a0, notBefore: labelEnd[it.ring]);
+        if (drawn > 0) labelEnd[it.ring] = drawn;
       }
     }
   }
 
   /// A tangential label along the ring, flipped upright on the lower
   /// half, skipped entirely when even the shrunken form cannot fit in
-  /// [maxAngular].
-  void _labelOnArc(Canvas canvas, Offset c, double radius, String text,
+  /// [maxAngular] or would start before [notBefore] — the previous
+  /// label's end on this ring. Returns the angle the label ends at,
+  /// or 0 when nothing was drawn, so the caller can carry the
+  /// occupancy forward.
+  double _labelOnArc(Canvas canvas, Offset c, double radius, String text,
       double startAngle, double maxAngular, double fontSizeIn, double dim,
-      {double? centreIn}) {
+      {double? centreIn, double notBefore = double.negativeInfinity}) {
     var fontSize = fontSizeIn.clamp(6.5, 10.5);
     for (var attempt = 0; attempt < 2; attempt++) {
       final style = TextStyle(
@@ -1705,14 +1806,23 @@ class _HistoryWheelPainter extends CustomPainter {
         if (centreIn != null && angular < centreIn) {
           a0 = startAngle + (centreIn - angular) / 2;
         }
+        // A whisker of clearance between neighbouring labels.
+        if (a0 < notBefore + 0.012) {
+          a0 = notBefore + 0.012;
+          // Re-centred labels may no longer fit their band once pushed.
+          if (centreIn != null && a0 + angular > startAngle + centreIn) {
+            return 0;
+          }
+        }
         // Nothing may run into the gap wedge.
-        if (a0 + angular > startRad + sweepRad) return;
+        if (a0 + angular > startRad + sweepRad) return 0;
         _drawChars(canvas, c, radius, text, widths, style, a0, angular);
-        return;
+        return a0 + angular;
       }
       fontSize *= 0.82;
-      if (fontSize < 6) return;
+      if (fontSize < 6) return 0;
     }
+    return 0;
   }
 
   void _drawChars(Canvas canvas, Offset c, double radius, String text,
