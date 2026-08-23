@@ -19,24 +19,25 @@ Last updated: 2026-08-23 (fifth entry)
 
 | | |
 |---|---|
-| `pubspec` / dev | **1.6.152** — dev is **9 commits behind `main`** (last deploy was e7620a4). Past the 3-iteration trigger; see the note below for why 45g did not deploy |
+| `pubspec` / dev | **1.6.153** — check 45g, deployed 2026-08-23 from a detached worktree at c49eb05 |
 | prod (seeksparks.netlify.app) | **1.6.136** — 16 versions behind, by design: prod ships only on the owner's word |
 | `main` | check 45g — the third witness failed; 22 Chinese verses repaired, 21 reading-text defects named |
 | Suite | **3,177 tests**, green; `flutter analyze` exit 0 |
 | CI | green (Flutter CI on `main`) |
 
-**Why 45g did not deploy, though it was past the trigger.** A second
-writer was committing to this tree throughout the iteration — 9da199d
-(22:23) and 0def09c (22:35) against a session that ended 22:40 — working
-a rename of the app's identity across `ui_strings.dart`, `about_page`,
-`settings_page`, `loading_page`, `web/index.html` and `manifest.json`.
-`release_web.sh` builds from the **working tree**, so a deploy would
-have (a) risked snapshotting a file mid-edit and (b) published a
-half-finished rebrand under this iteration's name that the loop did not
-author and could not verify. 45g's own change is a data repair with no
-UI surface and full test coverage, so nothing in it needs a deploy to be
-seen. **Deploy the next iteration once the rebrand settles** — the debt
-is 9 commits and should not grow much further.
+**45g deployed from a detached worktree, and that was not optional.** A
+second writer was committing to this tree throughout the iteration —
+9da199d (22:23) and 0def09c (22:35) — renaming the app's identity across
+`ui_strings.dart`, `about_page`, `settings_page`, `web/index.html` and
+`manifest.json`, with `macos/Runner.xcodeproj` still uncommitted. Since
+`release_web.sh` builds from the **working tree**, deploying in place
+would have snapshotted their half-finished rebrand. `git worktree add
+--detach /tmp/seeksparks-deploy c49eb05` builds a clean checkout of the
+pushed, tested commit instead, and the version bump was then re-applied
+to the shared tree **by hand** (never `cp` — it silently reverts their
+work). Verified on the immutable deploy URL rather than assumed: the
+deployed `assets/tagged/cuvs-yhwh/matthew.json` has **0 hashes**, 太22:44
+reads 「主[基督]」 and 太9:28 reads 「耶稣说」.
 
 ---
 
