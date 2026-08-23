@@ -158,6 +158,37 @@ void main() {
     expect(joined('psalms', '146:6'), contains('雅伟造天、地、海'));
   });
 
+  test('check 47 moved this layer with the reading text', () {
+    // The five verses check 47 repaired. This layer carried every one of
+    // them, so leaving it behind would make the tagged and plain copies
+    // disagree about scripture — the state check 45 was written to detect.
+    expect(joined('jeremiah', '7:14'), contains('向这称为我名下、'));
+    expect(joined('psalms', '102:26'), contains('天地就都改变了'));
+    expect(joined('1_john', '4:2'), contains('是成了肉身来的，就是出于神的'));
+    expect(joined('acts', '26:16'), contains('站着，我特意向你显现'));
+    expect(joined('obadiah', '1:5'), contains('摘葡萄的若来到你那里'));
+  });
+
+  test('check 47 left the Strong\'s numbers it moved characters between', () {
+    // 为 crossed from H8034 שֵׁם (name) to H7121 קרא (call) and 到 from
+    // H518 אִם (if) to H935 בּוֹא (come), so that the runs divide as the
+    // Hebrew does. 使徒行传 26:16 is the one place a character had to cross
+    // a boundary with nowhere honest to land: 我 is carried by the person
+    // of ὤφθην, not by a Greek word of its own, so it became its own run
+    // with an empty number rather than being folded into G5124 τοῦτο and
+    // mis-tagged.
+    String runFor(String book, String ref, String word) => tagged[book]![ref]!
+        .whereType<Map<String, dynamic>>()
+        .firstWhere((r) => r['w'] == word,
+            orElse: () => fail('$book $ref has no run $word'))['s'] as String;
+
+    expect(runFor('jeremiah', '7:14', '所以我要向这称为'), 'H7121');
+    expect(runFor('jeremiah', '7:14', '我名下、'), 'H8034');
+    expect(runFor('obadiah', '1:5', '来到'), 'H935');
+    expect(runFor('acts', '26:16', '我'), '');
+    expect(runFor('acts', '26:16', '特意'), 'G5124');
+  });
+
   // 2026-08-23 (check 45d). Two more classes of the source's markup, both
   // found by comparing this layer against the flat edition it tags rather
   // than by looking at it alone.

@@ -128,8 +128,10 @@ believe it is fine" and "we looked".
 | 45e | Tagged records naming a verse their edition does not have | 5 editions | **0** | clean, now a test |
 | 45g | Can a third 和合本 edition adjudicate 45d's 79 | 31,102 verses × 3 files | **no** — `cuvs-plus` matches the reading text on **99.70% of characters**, so it is descent, not a witness; a majority vote proposed deleting the 六 of Judges 12:7 | the failure is the finding. 22 verses repaired without a vote; **21 word-level defects in the reading text** listed, not repaired |
 
-*(Checks 34, 35, 37, 38 and 41–44 have full sections below but were never
-given rows here; the omission is noted rather than guessed at.)*
+| 47 | The 27 single-character sites check 46 judged editorial, against two texts that do not descend from ours | 27 sites × 2 witnesses | **5 defects**, 6 false positives of the sweep, 16 undecidable | 15 records repaired; the 16 left because the two witnesses' independence *from each other* is unmeasured |
+
+*(Checks 34, 35, 37, 38, 41–44 and 46 have full sections below but were
+never given rows here; the omission is noted rather than guessed at.)*
 
 ---
 
@@ -6145,6 +6147,171 @@ which genuinely gained the 11 code points above, was kept.)*
 
 ---
 
+## Check 47 — the twenty-seven check 46 called editorial
+
+Check 46 ended by leaving the 27 single-character sites
+`tools/sweep_flat_dropouts.py` still reported, on the grounds that a
+short difference between two editions is usually editorial. It also
+recorded why it could not do better: **every 和合本 in this repo
+descends from one publisher's export**, so none of them can testify
+about a loss that export already had. This check found two witnesses
+that do not, and read the 27 again.
+
+| | sites | |
+|---|---|---|
+| single-character sites carried in from check 46 | **27** | |
+| **repaired** | **5** | 3 of them provable from our own corpus alone |
+| proved to be the **sweep's own false positives** | **6** | 3 verse boundaries, 3 cuvs-plus corruptions |
+| witnessed but **deliberately left** | **16** | §47c, with the evidence attached |
+| records written | **15** | flat 简, flat 繁, `tagged/cuvs-yhwh` |
+| `sweep_flat_dropouts.py` single-character sites | 27 → **23** | |
+
+### 47a — the witness problem, and the test that settled it
+
+`cuvs-plus` agrees with the reading text on 99.70% of characters (45g).
+The tagged layer, `cuvs-yhwh-tr` and the yahwehdehua sqlite reproduce our
+reading at **all 27** sites. **The sqlite in particular is our parent,
+not an external witness** — it reads 雅伟 at 申命記 32:19 and 5:5 — which
+corrects check 26's description of it as "the first *external* witness".
+Every in-repo copy abstains, and so does the parent.
+
+Two texts outside that line were found:
+
+| witness | what it is | verse agreement | char agreement |
+|---|---|---|---|
+| ebible.org `cmn-cu89s` | 新标点和合本, simplified, **Public Domain**, digitised by Haiola | 91.01% | **98.74%** |
+| 信望愛 fhl.net `VERSION1=unv` | traditional; the witness check 46 used | — | — |
+| *(for comparison)* `cuvs-plus` | disqualified in 45g | — | *99.70%* |
+
+Provenance is not admissibility. The test is **does the witness
+reproduce our defects**, run against the twelve verses check 46 repaired
+in `ad3764d`: ebible reads the **repaired** text at eleven and our defect
+at **zero**. The twelfth, 以賽亞書 23:1, differs only because that
+edition writes 泰爾 for 推羅 — it still supplies the city our text had
+lost. bolls.life/CUV reproduced seven of the same twelve, which is what a
+descendant looks like.
+
+### 47b — the hypothesis that nearly sank the check
+
+Our edition is demonstrably an **older CUV recension** than ebible's:
+
+| | ours | ebible |
+|---|---|---|
+| 约但 / 约旦 | 200 / 1 | 3 / 198 |
+| 推罗 / 泰尔 | 63 / 0 | 0 / 64 |
+
+If the 27 sites were differences of that kind, repairing them would
+**falsify our edition rather than mend it**. The discriminator is that a
+recension difference is *systematic* — 200 against 198 — and a
+transmission loss is a *singleton*. Every fuller reading below is already
+attested in our own text (弟兄们 139×, 心里 435×, 因他们 92×, 称为我名下
+11×) and the site is the only place it is not written.
+
+The same test **saved** sites as well as condemning them: ebible itself
+writes 约瑟手下 without 的 at 創世記 39:23, one verse after writing it
+with 的 at 39:22. That 的 is free variation, and 39:22 is left alone.
+
+### 47c — the verdicts
+
+**Repaired — three need no external witness at all, because our own
+corpus contradicts itself:**
+
+| verse | was | now | what settles it |
+|---|---|---|---|
+| 耶利米書 7:14 | 称**我为**名下 | 称**为我**名下 | 7:10, 7:11, 7:30 — same chapter, same temple — all read 称为我名下的殿. 11× in this file against 1× |
+| 詩篇 102:26 | 天地就改变了 | 天地就**都**改变了 | 希伯來書 1:12 quotes this verse, and our own copy of the quotation keeps the 都 |
+| 約翰一書 4:2 | 成了肉身来 | 成了肉身来**的** | 約翰二書 1:7 carries the identical confession intact; without 的 the 认…是…的 frame has no nominaliser |
+
+**Repaired — impossible Chinese, both witnesses supplying:**
+
+| verse | was | now | why it cannot stand |
+|---|---|---|---|
+| 使徒行傳 26:16 | 特意向你**我**显现 | **我**特意向你显现 | 向你我 has no parse, and the clause is left with no subject |
+| 俄巴底亞書 1:5 | 若**到来**你那里 | 若**来到**你那里 | 到来 is intransitive and cannot govern 你那里; the verse's own first half reads 若来在你那里 |
+
+**Not defects — the sweep's own false positives, now proved:**
+
+| verse | why the sweep saw it |
+|---|---|
+| 申命記 5:5, 申命記 32:19, 馬可福音 1:24 | verse-boundary placement — our *next* verse begins with the 说 the sibling puts at the end of this one |
+| 創世記 47:9 (早), 那鴻書 3:8 (或), 使徒行傳 28:18 (罪) | corruption in `cuvs-plus`; both external witnesses read exactly as we do. 那鴻書 3:8's 或 is a mangled marginal note, 使徒行傳 28:18 doubles 罪。罪。 |
+
+**Left, deliberately — 16 sites.** At each, two independent witnesses do
+supply a character our text lacks, but our reading is grammatical and
+says the same thing. The last column is how often our own corpus writes
+the fuller form elsewhere — high counts are why these are *listed* rather
+than dismissed.
+
+| verse | ours | published | fuller form elsewhere in our text |
+|---|---|---|---|
+| 創世記 9:11 | 毁坏**了地** | 毁坏**地了** | — (transposition) |
+| 創世記 39:22 | 约瑟手下 | 约瑟**的**手下 | 17 |
+| 創世記 41:30 | 甚至埃及地 | 甚至**在**埃及地 | 3 |
+| 創世記 45:1 | 和弟兄相认 | 和弟兄**们**相认 | 139 |
+| 創世記 45:15 | 他弟兄就和 | 他弟兄**们**就和 | 139 |
+| 創世記 46:15 | 儿孙共三十三人 | 儿孙共**有**三十三人 | — (witnesses split: fhl reads as we do) |
+| 創世記 50:11 | 一场大的哀哭 | 一场**极**大的哀哭 | 20 |
+| 詩篇 59:12 | *(opens)* 他们口中的罪 | **因**他们口中的罪 | 92 |
+| 馬太福音 6:2 | 在你**面前**吹号 | 在你**前面**吹号 | 78 |
+| 馬太福音 25:20 | 那另外五千**的**来 | 那另外**的**五千来 | — (transposition) |
+| 使徒行傳 24:16 | **因此我**自己勉励 | **我因此**自己勉励 | 3 |
+| 使徒行傳 26:29 | 无论是少是多劝 | 无论是少**劝**是多劝 | — |
+| 羅馬書 4:23 | 算为他**的**义这句话 | 算为他义**的**这句话 | — (transposition) |
+| 哥林多後書 12:17 | 借着他一个人 | 借着他**们**一个人 | 3 |
+| 哥林多後書 13:5 | 在你们**里面**吗 | 在你们**心里**吗 | 435 |
+| 希伯來書 2:2 | 凡犯悖逆的 | 凡**干**犯悖逆的 | 39 |
+
+**Why they are left, stated so a later reader can disagree.** §26's rule
+is that a witness *supplies a reading*; it does not vote on whether the
+site is broken. Sixteen verses of shipped scripture are not worth
+rewriting on witnesses whose independence **from each other** this check
+had no way to measure — both may be 新标点和合本 digitisations, in which
+case their agreement is one vote and not two, and measuring it would take
+31,102 requests to an API that serves one verse at a time. The counts
+above are real evidence and several of these are probably losses. That is
+a call for a human, and the table is the state a human can act on.
+
+### 47d — in the tagged layer
+
+Check 46's rule holds: repair the reading, do not re-cut the tagging.
+Four of the five are character moves inside runs that already span the
+site, and each happens to **improve** the Strong's fit — 为 crosses from
+H8034 שֵׁם (*name*) to H7121 קרא (*call*) so that 称为 / 我名下 divide as
+the Hebrew does, and 到 from H518 אִם (*if*) to H935 בּוֹא (*come*).
+
+使徒行傳 26:16 is the exception and is argued rather than assumed. 我 has
+to cross a run boundary and there is nowhere honest for it to land:
+folding it into the G5124 run would tag it τοῦτο, a *new* untruth that 我
+did not carry before. It becomes its own run with an **empty** Strong's
+number, claiming nothing — which is the true statement, since the pronoun
+is carried by the person of ὤφθην and not by a Greek word of its own. 240
+mid-verse runs in this layer already have an empty `s`.
+
+### 47e — two instrument failures worth recording
+
+**`fhl.net` returned Romans for every request and looked like data.** The
+API ignores an unrecognised `engs` parameter and silently falls back to
+羅馬書, so a fetch keyed by English book code returned Romans 9:11 for
+創世記 9:11, Romans 5:5 for 申命記 5:5, and so on for all 27 — plausible
+Chinese scripture, in the right chapter and verse, of the wrong book. It
+was caught by reading the output, not by any error. The fetch now asserts
+that the returned record's own `chineses`/`chap`/`sec` are the ones asked
+for. **An API that answers a question you did not ask is indistinguishable
+from one that answers the question you did, unless the response carries
+its own identity and you check it.** (It also 403s a default
+`python-urllib` User-Agent, and wants `chineses=約一`, not `約壹`.)
+
+**The USFM parse was 81 verses short and the shortfall was benign.** 71
+came from `\v 29-30` ranges, which fold two verse slots into one record;
+the last 10 were 12 classic bracketed NT verses this edition omits
+(馬太福音 18:11, 23:14, 馬可福音 7:16, 15:28, 路加福音 17:36, 23:17,
+約翰福音 5:4, 7:53, 使徒行傳 8:37, 15:34, 24:7, 28:29) less 2 it numbers
+differently (約翰三書 1:15, 啟示錄 12:18). Explaining the gap was the
+precondition for using the witness at all: an unexplained 81-verse
+shortfall could equally have been a misparse silently dropping content.
+
+---
+
 ## Next, in order
 
 **First, and deliberately unnumbered so the citations below stay
@@ -6167,23 +6334,33 @@ reported and left alone, 1 drafted and withdrawn, and 6 more found by a
 sweep the adjudicator was structurally unable to run. 38 records
 written; the tagged-layer disagreement fell 350 → 345.)*
 
-**Second, and the one to take next: the 27 remaining single-character
-sites `tools/sweep_flat_dropouts.py` reports.** Check 46 read the 34 that
-existed before it and repaired 7; the rest were left because a short
-difference between two editions is usually editorial, not a defect. But
-they were adjudicated as a residue, quickly, at the end of a long
-iteration — three 说, three 们, three 的 — and the 们 sites in particular
-are the same shape as 士師記 9:57 归到们, which *was* a defect. Re-read
-them individually.
+*(The 27 remaining single-character sites from
+`tools/sweep_flat_dropouts.py` are **closed by check 47**: 5 repaired, 6
+proved to be the sweep's own false positives, 16 left with their evidence
+tabulated. 15 records written; the sweep now reports 23.)*
 
-**The conditions from 45g still bind, and check 46 strengthened them.**
-Do not resolve by majority: `cuvs-plus` agrees with the reading text on
-99.70% of characters, so it is a *descendant*, not a witness. Neither is
-`bolls.life/CUV`, which reproduces seven of our defects **and carries one
-we do not have** (以便之後 for 以倫之後 at 士師記 12:13) — a shared error
-is evidence of shared ancestry, not of correctness. And our own tagged
-layer is inadmissible on word order: across the 16 pure transpositions
-measured in check 46, it is the corrupt side in 15.
+**Second, and the one to take next: the 16 sites check 47 left, §47c.**
+At each of them two independent witnesses supply a character our text
+lacks, and our reading is nonetheless grammatical and means the same
+thing — 弟兄 where they read 弟兄们, 心 where they read 心里. Check 26's
+rule is not satisfied, so none was repaired. What blocks them is a
+measurement, not a judgement: the two witnesses' independence **from each
+other** is unknown, and if both descend from 新标点和合本 then 16 verses
+would be repaired on one vote wearing two coats. Measure that agreement
+rate on a sample large enough to decide before touching any of them.
+
+**The conditions from 45g still bind, and checks 46 and 47 strengthened
+them.** Do not resolve by majority: `cuvs-plus` agrees with the reading
+text on 99.70% of characters, so it is a *descendant*, not a witness.
+Neither is `bolls.life/CUV`, which reproduces seven of our defects **and
+carries one we do not have** (以便之後 for 以倫之後 at 士師記 12:13) — a
+shared error is evidence of shared ancestry, not of correctness. Our own
+tagged layer is inadmissible on word order: across the 16 pure
+transpositions measured in check 46, it is the corrupt side in 15. And
+the yahwehdehua sqlite, which check 26 described as independent, is our
+**parent** — it reads 雅伟 at 申命记 32:19 and 5:5. Two texts *are*
+admitted, each proved admissible by reading check 46's twelve repaired
+verses back: ebible.org `cmn-cu89s` and 信望愛 fhl.net `unv`. See §47a.
 
 Still open beneath it, and much smaller than it first looked: **three
 broken note delimiters** in `cuvs-yhwh` — 士师记 8:24 and 耶利米书 10:11

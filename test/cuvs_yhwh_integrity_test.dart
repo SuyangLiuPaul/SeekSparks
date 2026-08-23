@@ -51,10 +51,50 @@ void main() {
             '中；那地百物俱全，一無所缺。',
       },
     ),
+    // Check 47. Five of the 27 single-character sites check 46 left as a
+    // residue, re-read against two witnesses that do not descend from our
+    // line (ebible.org cmn-cu89s, 信望愛 unv) — neither reproduces any of
+    // the twelve defects check 46 repaired. Three of the five need no
+    // external witness at all: our own text contradicts itself at 耶利米書
+    // 7:10/7:11/7:30 (稱為我名下的殿), at 希伯來書 1:12 (which quotes 詩篇
+    // 102:26 and keeps the 都), and at 約翰二書 1:7 (the same confession
+    // formula, with its 的).
+    _Spec(
+      'assets/cuvs-yhwh.json',
+      '检 47',
+      {
+        '019102026': '天地都要灭没，你却要长存；天地都要如外衣渐渐旧了。你要将天'
+            '地如里衣更换，天地就都改变了。',
+        '024007014': '所以我要向这称为我名下、你们所倚靠的殿，与我所赐给你们和你'
+            '们列祖的地施行，照我从前向示罗所行的一样。',
+        '031001005': '盗贼若来在你那里，或强盗夜间而来，（你何竟被剪除）岂不偷窃'
+            '直到够了呢？摘葡萄的若来到你那里，岂不剩下些葡萄呢？',
+        '044026016': '你起来站着，我特意向你显现，要派你作执事，作见证，将你所看'
+            '见的事和我将要指示你的事证明出来；',
+        '062004002': '凡灵认耶稣基督是成了肉身来的，就是出于神的；从此你们可以认'
+            '出神的灵来。',
+      },
+    ),
+    _Spec(
+      'assets/cuvs-yhwh-tr.json',
+      '檢 47',
+      {
+        '019102026': '天地都要滅沒，你卻要長存；天地都要如外衣漸漸舊了。你要將天'
+            '地如裏衣更換，天地就都改變了。',
+        '024007014': '所以我要向這稱為我名下、你們所倚靠的殿，與我所賜給你們和你'
+            '們列祖的地施行，照我從前向示羅所行的一樣。',
+        '031001005': '盜賊若來在你那裏，或強盜夜間而來，（你何竟被剪除）豈不偷竊'
+            '直到夠了呢？摘葡萄的若來到你那裏，豈不剩下些葡萄呢？',
+        '044026016': '你起來站著，我特意向你顯現，要派你作執事，作見證，將你所看'
+            '見的事和我將要指示你的事證明出來；',
+        '062004002': '凡靈認耶穌基督是成了肉身來的，就是出於神的；從此你們可以認'
+            '出神的靈來。',
+      },
+    ),
   ];
 
   for (final spec in specs) {
-    group('${spec.asset} integrity', () {
+    group('${spec.asset} integrity (${spec.label})', () {
       late List<dynamic> verses;
 
       setUpAll(() async {

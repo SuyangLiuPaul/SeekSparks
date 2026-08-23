@@ -11,7 +11,7 @@ ticket briefs belong in the loop's `prompt.md` and, once closed, in
 `prompt-archive.md`. If this file grows past ~150 lines it has stopped
 doing its job.
 
-Last updated: 2026-08-23 (fifth entry)
+Last updated: 2026-08-24 (sixth entry)
 
 ---
 
@@ -19,10 +19,10 @@ Last updated: 2026-08-23 (fifth entry)
 
 | | |
 |---|---|
-| `pubspec` / dev | **1.6.154** — check 46, deployed 2026-08-24 from a detached worktree at ad3764d |
+| `pubspec` / dev | **1.6.154** — check 46, deployed 2026-08-24 from a detached worktree at ad3764d. **Check 47 is committed and NOT deployed** — first undeployed iteration, data-integrity work, nobody reported it; the rule says deploy on the third |
 | prod (seeksparks.netlify.app) | **1.6.136** — 16 versions behind, by design: prod ships only on the owner's word |
-| `main` | check 46 — 12 reading-text verses repaired, 15 reported and left, 1 withdrawn |
-| Suite | **3,243 tests**, green; `flutter analyze` exit 0 |
+| `main` | check 47 — 5 more reading-text verses repaired, 6 shown to be the sweep's false positives, 16 left with their evidence |
+| Suite | **3,259 tests**, green; `flutter analyze` exit 0 |
 | CI | green (Flutter CI on `main`) |
 
 **45g deployed from a detached worktree, and that was not optional.** A
@@ -131,21 +131,38 @@ by check 46**, 2026-08-23: read individually as instructed, 6 repaired,
 15 reported and left, 1 drafted and withdrawn, plus 6 more found by a
 new sweep. 38 records written; `audit_tagged_layer.py` 350 → 345.)*
 
-**Take the item check 46 leaves behind: the 27 single-character sites
-`tools/sweep_flat_dropouts.py` still reports.** Check 46 read the 34 it
-found and repaired 7; the remaining 27 were judged editorial, but they
-were judged as a residue at the end of a long iteration. Three of them
-are 们 sites, the same shape as 士師記 9:57 归到们 which *was* a defect.
-**Can be taken unattended**, one at a time, against the 和合本.
+*(The 27 single-character sites check 46 left behind are **read by check
+47**, 2026-08-24: 5 repaired, 6 proved to be the sweep's own false
+positives, 16 left with their evidence written down. 15 records written;
+the sweep reports 27 → 23.)*
 
-**Do not resolve any of these by majority — three witnesses have now been
-disqualified.** `cuvs-plus` agrees with the reading text on 99.70% of
-characters, so it is a descendant. `official_cuv_source` likewise.
-`bolls.life/CUV` reproduces seven of our defects *and* carries one we do
-not have (以便之後 for 以倫之後, 士師記 12:13), so it is a fellow
-descendant of the same digitisation. And our own tagged layer is
+**Take the residue check 47 leaves: the 16 sites where two independent
+witnesses supply a character our text lacks, but our reading is
+grammatical and means the same** (`docs/DATA-INTEGRITY.md` §47c). They
+were left because the two witnesses' independence **from each other**
+could not be measured — both may be 新标点和合本 digitisations, and
+measuring it would need 31,102 one-verse API calls. The honest next move
+is to measure that agreement rate on a sample large enough to decide,
+**not** to repair 16 verses on two votes that may be one. Can be taken
+unattended.
+
+**Do not resolve any of these by majority — four texts have now been
+disqualified, and one long-trusted one was our own parent.**
+`cuvs-plus` agrees with the reading text on 99.70% of characters, so it
+is a descendant. `official_cuv_source` likewise. `bolls.life/CUV`
+reproduces seven of our defects *and* carries one we do not have
+(以便之後 for 以倫之後, 士師記 12:13). Our own tagged layer is
 inadmissible on **word order**: across the 16 pure transpositions check
-46 measured, it is the corrupt side in 15.
+46 measured, it is the corrupt side in 15. And the **yahwehdehua
+sqlite is our parent, not an external witness** — it reads 雅伟 at
+申命记 32:19 and 5:5, which corrects check 26's own description of it.
+
+**Two texts are admitted, and admissibility was proved by test.** Run a
+candidate against check 46's twelve already-repaired verses and require
+it to read the repaired form: ebible.org `cmn-cu89s` (新标点和合本, PD)
+reads 11 repaired, 0 defective. 信望愛 fhl.net `unv` is the second. The
+fetch-and-parse recipe, and the three ways each API lies, are in the
+loop's `research-notes.md` under "Check 47".
 
 *(45d's other two sub-jobs are done: check 45g repaired the 15 verses
 printing a literal `#` and the 7 doubling a character against itself.)*
@@ -260,12 +277,23 @@ that bite most often:
   and `git blame` gone for every verse in both books. Second time this
   has been paid for. Use `write_like()`; minifying saves 1.09 MB raw and
   only **40 KB gzipped**, and these are served compressed. (check 46g)
-- **Ask what a witness DESCENDS FROM before counting its vote.** Three
-  texts have now been disqualified for agreeing with us too well or for
-  carrying our defects plus one of their own. A shared error is evidence
-  of shared ancestry, not of correctness — and a whole framing ("this is
-  an emendation, not a restoration") was withdrawn when the witness it
-  rested on turned out to be a sibling. (checks 26, 45g, 46)
+- **Ask what a witness DESCENDS FROM before counting its vote — and
+  prove admissibility by TEST, not by provenance.** Four texts have been
+  disqualified for agreeing with us too well or for carrying our defects
+  plus one of their own, and a fifth turned out to be our **parent**: the
+  yahwehdehua sqlite reads 雅伟, which is our own editorial signature, so
+  check 26's description of it as independent was wrong. A shared error
+  is evidence of shared ancestry, not of correctness. The test that
+  works: run a candidate against verses we have **already repaired** and
+  require it to read the repaired form — `cmn-cu89s` scored 11 of 12 and
+  was admitted on that, not on its licence page. (checks 26, 45g, 46, 47)
+- **An API that does not recognise your parameter may answer anyway.**
+  fhl.net ignores an unknown `engs=` and returns 羅馬書: 创世纪 9:11 came
+  back as Romans 9:11 — real Chinese scripture, right chapter, right
+  verse, wrong book — for 27 consecutive requests with no error. No
+  status code, no exception, no empty field. **Assert the response's own
+  identity fields equal what you asked for**, on every external fetch.
+  (check 47e)
 - **A guard can be narrower than the generator it guards.**
   `bundled_font_coverage_test.dart` scans two asset trees;
   `build_font_subsets.py` ingests many. Eleven code points in

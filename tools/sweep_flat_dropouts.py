@@ -22,7 +22,13 @@ content in ~7,900 verses, mostly by legitimate editorial choice. The output is
 a candidate list to read one by one, which is how check 46 used it.
 
 Reported 89 sites (34 of them single-character) before check 46; 82 and 27
-after, the seven repairs of this class having closed.
+after, the seven repairs of this class having closed. Check 47 read those 27
+against two witnesses that do not descend from our line, repaired 5 and proved
+6 more to be the sweep's own false positives; 78 and 23 now.
+
+23 rather than 22 because 约翰一书 4:2 is still reported after its repair: the
+sibling has the same 的 in the wrong place, so the two editions now differ by a
+transposition rather than a loss, and this sweep cannot tell those apart.
 """
 import difflib
 import json
