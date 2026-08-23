@@ -19,7 +19,7 @@ Last updated: 2026-08-23 (fifth entry)
 
 | | |
 |---|---|
-| `pubspec` / dev | **1.6.153** — check 45g, deployed 2026-08-23 from a detached worktree at c49eb05 |
+| `pubspec` / dev | **1.6.154** — check 46, deployed 2026-08-24 from a detached worktree at ad3764d |
 | prod (seeksparks.netlify.app) | **1.6.136** — 16 versions behind, by design: prod ships only on the owner's word |
 | `main` | check 46 — 12 reading-text verses repaired, 15 reported and left, 1 withdrawn |
 | Suite | **3,243 tests**, green; `flutter analyze` exit 0 |
