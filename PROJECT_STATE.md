@@ -19,7 +19,7 @@ Last updated: 2026-08-23 (fifth entry)
 
 | | |
 |---|---|
-| `pubspec` / dev | **1.6.152** — dev is two commits behind `main` (undeployed iteration **2 of 3**) |
+| `pubspec` / dev | **1.6.152** — dev is 4 commits behind `main`, which is **2 undeployed iterations** of the 3 that trigger a deploy |
 | prod (seeksparks.netlify.app) | **1.6.136** — 16 versions behind, by design: prod ships only on the owner's word |
 | `main` | check 45 — the tagged layers audited against the flat editions they tag |
 | Suite | **3,154 tests**, green; `flutter analyze` exit 0 |
