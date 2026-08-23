@@ -6,6 +6,7 @@ import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/chronology.dart';
+import 'package:seeksparks/pages/radial_chronology_page.dart';
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/services/chronology_service.dart';
 import 'package:seeksparks/utils/chronology_layout.dart';
@@ -178,7 +179,18 @@ class _ChronologyPageState extends State<ChronologyPage> {
       appBar: AppBar(
         leading: const LocalizedBackButton(),
         title: Text(s('chronology', 'Bible Chronology')),
-        actions: const [LanguageSwitcherButton(), HomeIconButton()],
+        actions: [
+          // The same data as a wheel — see radial_chronology_page.dart
+          // for why both renderings exist.
+          IconButton(
+            icon: const Icon(Icons.donut_large),
+            tooltip: wheelStrings['wheelTitle']?[locale] ?? 'Chronology Wheel',
+            onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => const RadialChronologyPage())),
+          ),
+          const LanguageSwitcherButton(),
+          const HomeIconButton(),
+        ],
       ),
       body: FutureBuilder<ChronologyData>(
         future: _future,
