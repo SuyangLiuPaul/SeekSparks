@@ -12,6 +12,7 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:seeksparks/constants/workbench_theme.dart';
@@ -30,7 +31,14 @@ import 'package:seeksparks/widgets/workbench_chrome.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  Future<MainProvider> pumpWorkbench(WidgetTester tester, Size size) async {
+  // `routable` swaps the plain MaterialApp for the GetMaterialApp the
+  // real app boots with (`main.dart:494`). `pushPage` goes through GetX's
+  // contextless navigator, which throws without one — so any test that
+  // follows a route out of the workspace needs the faithful root. The
+  // rest keep MaterialApp: it pumps faster and GetX brings its own theme
+  // and locale handling that the layout tests have no use for.
+  Future<MainProvider> pumpWorkbench(WidgetTester tester, Size size,
+      {bool routable = false}) async {
     tester.view.devicePixelRatio = 1.0;
     tester.view.physicalSize = size;
     SharedPreferences.setMockInitialValues(<String, Object>{});
@@ -49,7 +57,9 @@ void main() {
           }),
           ChangeNotifierProvider(create: (_) => AppSettings()),
         ],
-        child: const MaterialApp(home: WorkbenchPage()),
+        child: routable
+            ? const GetMaterialApp(home: WorkbenchPage())
+            : const MaterialApp(home: WorkbenchPage()),
       ),
     );
     await tester.pump(const Duration(milliseconds: 100));
@@ -115,17 +125,30 @@ void main() {
     expect(find.byType(BibleReadingPane), findsOneWidget);
   });
 
-  testWidgets('the reader\'s search button focuses the command line here',
+  testWidgets('the workspace owns search; the reader does not repeat it',
       (tester) async {
-    // The reader's search used to push a full-screen search route. In
-    // the workbench that stacks a second, throwaway search on top of
-    // the one already beside the text — the exact duplication this
-    // workspace exists to end.
+    // The reader's search used to push a full-screen search route, then
+    // (#313) was rewired to focus the command line instead. 2026-08-24
+    // finishes the thought: inside the workbench the reader has no
+    // magnifier at all. Its `hostChrome` flag drops it, because the
+    // command line it would focus is already on screen beside the text
+    // and the toolbar carries the same button for when it is collapsed.
     addTearDown(tester.view.reset);
     await pumpWorkbench(tester, const Size(768, 1024));
     expect(find.byType(BibleReadingPane), findsOneWidget);
+    expect(
+        find.descendant(
+            of: find.byType(BibleReadingPane),
+            matching: find.byIcon(Icons.search_rounded)),
+        findsNothing,
+        reason: 'a column may hold column controls; searching the whole '
+            'workspace is the workspace chrome\'s job');
 
-    await tester.tap(find.byIcon(Icons.search_rounded));
+    // Scoped to the toolbar: the command pane has a plain `Icons.search`
+    // of its own (its run button), and the point of this test is the
+    // affordance OUTSIDE the panes.
+    await tester.tap(find.descendant(
+        of: find.byType(WorkbenchToolbar), matching: find.byIcon(Icons.search)));
     await tester.pump(const Duration(milliseconds: 100));
 
     expect(find.byType(CommandSearchPage), findsNothing);
@@ -148,7 +171,11 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.byType(CommandPane), findsNothing);
 
-    await tester.tap(find.byIcon(Icons.search_rounded));
+    // With the pane collapsed the toolbar button is the ONLY way back to
+    // the command line, which is why the reader losing its magnifier is
+    // safe only as long as this stays true. Unscoped is unambiguous here
+    // — the pane that owns the other magnifier is not mounted.
+    await tester.tap(find.byIcon(Icons.search));
     await tester.pump(const Duration(milliseconds: 100));
     await tester.pump(const Duration(milliseconds: 100));
 
@@ -158,6 +185,26 @@ void main() {
             matching: find.byType(TextField)));
     expect(field.focusNode?.hasFocus, isTrue,
         reason: 'focus must wait for the frame that mounts the pane');
+  });
+
+  testWidgets('below 600 the command line is a route, not a dead button',
+      (tester) async {
+    // At 390 the command pane is not laid out at all, so `_leftOpen`
+    // has nothing to open. Focusing it was therefore a no-op — a button
+    // that did nothing, silently, at the one width where the reader's
+    // magnifier is also gone. It pushes the pane full screen instead.
+    addTearDown(tester.view.reset);
+    await pumpWorkbench(tester, const Size(390, 844), routable: true);
+    expect(find.byType(CommandPane), findsNothing);
+    expect(find.byIcon(Icons.search), findsOneWidget,
+        reason: 'the toolbar is the only search affordance at this width');
+
+    await tester.tap(find.byIcon(Icons.search));
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.byType(CommandSearchPage), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('dragging the left divider resizes the command pane',

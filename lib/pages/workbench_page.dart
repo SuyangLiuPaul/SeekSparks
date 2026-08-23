@@ -26,6 +26,7 @@ import 'package:seeksparks/pages/bible_timeline_page.dart';
 import 'package:seeksparks/pages/bible_trivia_page.dart';
 import 'package:seeksparks/pages/books_page.dart';
 import 'package:seeksparks/pages/chronology_page.dart';
+import 'package:seeksparks/pages/command_search_page.dart';
 import 'package:seeksparks/pages/evidence_page.dart';
 import 'package:seeksparks/pages/family_tree_page.dart';
 import 'package:seeksparks/pages/hebrew_kings_page.dart';
@@ -49,6 +50,8 @@ import 'package:seeksparks/services/workbench_warmup.dart'
         defaultParallelVersions,
         kWorkbenchParallelModeKey,
         kWorkbenchParallelVersionsKey;
+import 'package:seeksparks/utils/chapter_navigation.dart'
+    show adjacentChapter, nextChapter, previousChapter;
 import 'package:seeksparks/utils/jump_to_reference.dart' as jumper;
 import 'package:seeksparks/utils/reference_parser.dart' show BibleReference;
 import 'package:seeksparks/utils/morphology.dart' show describeMorphology;
@@ -162,6 +165,13 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
   /// Width of the rail shown in place of a collapsed pane. Named because
   /// the split-mode fit check has to subtract it.
   static const double _railWidth = 44;
+
+  /// Below this the command pane is not laid out at all — not collapsed
+  /// to a rail, absent — because 224 px of search beside 390 px of
+  /// viewport leaves no reading column. `_leftOpen` is ignored here, so
+  /// anything that wants the command line must take the full-screen
+  /// route instead of setting that flag; see [_focusCommandLine].
+  static const double _commandPaneMinWidth = 600;
 
   /// Does this width carry all three panes?
   ///
@@ -607,11 +617,51 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
     ];
   }
 
+  /// Move the workspace one chapter, in the canon the current version
+  /// ships. Null target means the end of that canon, which greys the
+  /// button rather than silently doing nothing.
+  ///
+  /// 2026-08-24 (#313): these arrows used to exist only on the reader's
+  /// own floating bottom bar, laid over the verse being read. The
+  /// reference is not a property of the reading column — the Analysis
+  /// pane, the Browse stack and the status bar all follow it — so it
+  /// belongs to the workspace toolbar. `[` and `]` still work.
+  void _stepChapter(int step) {
+    final mp = context.read<MainProvider>();
+    final target =
+        adjacentChapter(mp.books, mp.currentBook, mp.currentChapter, step: step);
+    if (target == null) return;
+    final verses = mp.versesInChapter(target.book, target.chapter);
+    if (verses.isEmpty) return;
+    mp.clearSelectedVerses();
+    mp.clearHighlightIndex();
+    mp.setCurrentChapter(book: target.book, chapter: target.chapter);
+    mp.updateCurrentVerse(verse: verses.first);
+    mp.jumpToTop();
+  }
+
   List<List<WbToolButton>> _buildToolbar(BuildContext context) {
     final locale = context.read<AppSettings>().locale;
+    final mp = context.read<MainProvider>();
     String s(String key, String fallback) =>
         uiStrings[key]?[locale] ?? fallback;
+    final hasPrev =
+        previousChapter(mp.books, mp.currentBook, mp.currentChapter) != null;
+    final hasNext =
+        nextChapter(mp.books, mp.currentBook, mp.currentChapter) != null;
     return [
+      [
+        WbToolButton(
+          icon: Icons.chevron_left_rounded,
+          tooltip: s('previousChapter', 'Previous chapter'),
+          onPressed: hasPrev ? () => _stepChapter(-1) : null,
+        ),
+        WbToolButton(
+          icon: Icons.chevron_right_rounded,
+          tooltip: s('nextChapter', 'Next chapter'),
+          onPressed: hasNext ? () => _stepChapter(1) : null,
+        ),
+      ],
       [
         WbToolButton(
           icon: Icons.vertical_split_outlined,
@@ -1073,7 +1123,21 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
   /// reader. There is one command line and this puts the caret in it.
   /// A collapsed left pane has no [CommandPane] mounted yet, so the
   /// focus request waits for the frame that builds it.
+  ///
+  /// 2026-08-24: below [_commandPaneMinWidth] there is no frame to wait
+  /// for — `_buildPanes` refuses to mount a second column at all, so
+  /// opening `_leftOpen` set a flag nobody reads and the button did
+  /// nothing, silently. That was already true of the reader's own
+  /// magnifier, which has routed here since #313; it only became
+  /// load-bearing when `hostChrome` removed the magnifier and left the
+  /// toolbar as the sole way in. A phone gets the command line as a
+  /// full-screen route instead — the same pane, in the shape the width
+  /// can hold, which is what the standalone reader has always pushed.
   void _focusCommandLine() {
+    if (MediaQuery.sizeOf(context).width < _commandPaneMinWidth) {
+      pushPage(const CommandSearchPage());
+      return;
+    }
     if (_leftOpen) {
       _commandFocus.requestFocus();
       return;
@@ -1210,7 +1274,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
       builder: (context) {
           final width = MediaQuery.sizeOf(context).width;
           final threePane = _isThreePane(width);
-          final showLeft = _leftOpen && width >= 600;
+          final showLeft = _leftOpen && width >= _commandPaneMinWidth;
           final showRight = _rightOpen && threePane;
           final panes = _paneWidths(width);
           final leftW = panes.left;
@@ -1227,7 +1291,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
                     _buildDivider(context,
                         key: const ValueKey('workbench-divider-left'),
                         isLeft: true),
-                  ] else if (width >= 600) ...[
+                  ] else if (width >= _commandPaneMinWidth) ...[
                     _buildCollapsedRail(context,
                         key: const ValueKey('workbench-rail-left'),
                         isLeft: true),
@@ -1298,6 +1362,11 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         onClose: null,
         showSearchAndSettings: true,
         onSearchRequested: _focusCommandLine,
+        // 2026-08-24 (#313): this reader is a COLUMN in a workspace
+        // that already has a menu bar, a toolbar and a status bar. It
+        // keeps the controls that act on the column and gives up the
+        // ones that duplicate the workspace's own.
+        hostChrome: true,
         onOpenParallel: () => _setCentreMode(WbCentreMode.browse),
         onAnalysisRequest: (request) =>
             _takeReaderRequest(request, paneAvailable: analysisAvailable),
@@ -1453,6 +1522,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
                 onClose: null,
                 showSearchAndSettings: true,
                 onSearchRequested: _focusCommandLine,
+                hostChrome: true,
                 onOpenParallel: () => _setCentreMode(WbCentreMode.browse),
               ),
             ),
@@ -1473,7 +1543,12 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
                   // column: both act on the workspace rather than on a
                   // column, and two of each would invite the reader to
                   // believe otherwise.
+                  //
+                  // 2026-08-24 (#313): that sentence turned out to be
+                  // the general rule, and `hostChrome` is it applied to
+                  // every column rather than just this one.
                   showSearchAndSettings: false,
+                  hostChrome: true,
                 ),
               ),
             ),

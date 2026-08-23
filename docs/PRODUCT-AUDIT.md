@@ -344,3 +344,100 @@ correct** — which is worth as much as a fix, because it means the next
 iteration does not re-open them. The inherited-phone-app problem is real
 but it is concentrated in `bible_reading_pane.dart` and `stats_page.dart`,
 not spread across the app.
+
+## 8. The chrome sweep (#313, item 5) — who owns which control
+
+Section 7 asked *what surface should this content appear on*. This asks
+a narrower question that item 5 raises separately: when the reader is a
+**column inside the workspace** rather than the whole screen, which of
+its own controls should it keep?
+
+### 8.1 The rule, and where it comes from
+
+The tempting answer was "none — the workspace has a menu bar, delete the
+reader's chrome". BibleWorks says otherwise. Help topic **bwh06 (BibleWorks
+UI Overview)** describes each of the three columns as carrying "a narrow
+title bar" whose buttons "open up menus that provide additional tools and
+options". A per-column menu is therefore authentic, not a phone-app
+leftover, and deleting it would have moved us *away* from parity while
+believing the opposite.
+
+What is inauthentic is a column menu holding controls that belong to the
+workspace. So the rule shipped is:
+
+> A column's controls may hold what operates on **that column**. Anything
+> that navigates the app, or opens a Resource, belongs to the one menu
+> bar.
+
+This is not a new principle. `workbench_page.dart` already carried it, in
+a comment on split view's second column ("Deliberately no search or
+settings in the second column…"). Item 5 is that sentence applied to
+every column, as the `BibleReadingPane.hostChrome` flag.
+
+**One deliberate widening of the ticket.** #313 item 5 says to fold the
+reader's chrome away "when three panes are showing". That qualifier was
+written against a workbench that hid its menu bar and toolbar below
+1024 px — behaviour the 2026-08-06 decision reversed ("the chrome is
+present at EVERY width now… a phone reads as the same tool with its side
+panes collapsed"). Since the workspace draws a menu bar, a toolbar and a
+status bar at every width now, the column's copy of them is a duplicate
+at every width, so `hostChrome` is not gated on the three-pane
+threshold. The narrower reading would have left a phone showing two
+menu systems, and it is what hid the 8.3 defect for so long.
+
+### 8.2 Per-affordance verdict
+
+Every control the reader shows when it is the whole screen, and where it
+went when `hostChrome` is true. **Nothing was removed without a home** —
+that was the acceptance test for the whole slice.
+
+| Affordance | Verdict | Where it lives in the workspace |
+| --- | --- | --- |
+| Floating bottom bar (prev/next chapter) | WORKSPACE | Toolbar, new leading group — greys at the ends of the canon |
+| Header 🔍 magnifier | WORKSPACE | Toolbar search + Search menu → Command line; the command line is usually already on screen |
+| ⋮ My Highlights | WORKSPACE | Resources → Notes & highlights |
+| ⋮ Home | DROPPED | The Workbench **is** the app (2026-08-08 decision). There is no home to go to |
+| ⋮ Library | WORKSPACE | Resources menu |
+| ⋮ Statistics | WORKSPACE | Analysis pane's Stats tab is canonical; see 7.1 |
+| ⋮ Parallel | WORKSPACE | Toolbar + View menu (centre mode) |
+| ⋮ Split | WORKSPACE | Toolbar + View menu (centre mode) |
+| ⋮ Settings | WORKSPACE | Toolbar + menu bar |
+| ⋮ Reload | COLUMN | Kept. Also survives on the reader's empty state, the only situation it exists for |
+| ⋮ Bible Evidence | COLUMN | Kept — chapter-scoped |
+| ⋮ Synopsis | COLUMN | Kept — chapter-scoped |
+| ⋮ Illustrations / Maps | COLUMN | Kept. `illustrations_page.dart:21` documents that the chapter-scoped picker deliberately stays here; it is not a duplicate of the Atlas Resource |
+| ⋮ Related sermons | COLUMN | Kept — chapter-scoped |
+| ⋮ Bible Trivia | COLUMN | Kept — chapter-scoped |
+| ⋮ Paragraph mode | COLUMN | Kept, and its gate widened: it hung off `showSidebarToggle`, which the workbench passes false, so removing the bottom bar would have made it unreachable |
+| ⋮ Font size | COLUMN — **new** | The bottom bar was its only door. Added to the ⋮ rather than lost |
+
+Two of these were traps that a "delete the chrome" pass would have shipped
+as silent regressions: **paragraph mode** (wrong gate) and **font size**
+(no other entry point). Both were found by enumerating the affordances
+before writing the flag, not after.
+
+### 8.3 The defect this uncovered
+
+Wiring the toolbar's search button to `_focusCommandLine` surfaced a
+**pre-existing** dead control. `_buildPanes` refuses to lay out the
+command pane below 600 px — not collapsed to a rail, absent — so
+`_focusCommandLine` set `_leftOpen` and awaited a frame that never
+mounts. Every search affordance in the workspace routes through that
+method, including the reader's magnifier since #313, so on a phone the
+workbench's search button had been doing nothing at all, silently.
+
+It became urgent rather than merely wrong once `hostChrome` removed the
+magnifier and left the toolbar as the only way in. Fixed by pushing
+`CommandSearchPage` — which `bible_reading_pane.dart:131` already
+documents as "the same pane full screen" — below that width, and the
+600 is now the named `_commandPaneMinWidth` rather than a literal
+repeated at two sites. Guarded by *below 600 the command line is a
+route, not a dead button*.
+
+### 8.4 What is still open
+
+The `hostChrome` rule is applied to the three `BibleReadingPane` call
+sites in the workspace (centre reader, and both split columns). The
+Browse window and the Analysis pane were not audited on this axis; they
+were built inside the workspace and never had a phone-first chrome to
+inherit, but that is an assumption from provenance, not a measurement.

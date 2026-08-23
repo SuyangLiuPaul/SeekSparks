@@ -32,6 +32,7 @@ import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/services/fetch_books.dart';
 import 'package:seeksparks/services/ai_word_service.dart';
 import 'package:seeksparks/utils/ai_text_cleaner.dart';
+import 'package:seeksparks/utils/chapter_navigation.dart';
 import 'package:seeksparks/utils/chapter_scroll_progress.dart';
 import 'package:seeksparks/services/concordance_service.dart';
 import 'package:seeksparks/constants/sermon_topics.dart';
@@ -148,6 +149,33 @@ class BibleReadingPane extends StatefulWidget {
   /// docked — a standalone reader, or a screen too narrow for the pane.
   final ReaderAnalysisRequest? activeAnalysisRequest;
 
+  /// 2026-08-24 (#313): this reader is a COLUMN inside a workspace that
+  /// already draws a menu bar, a toolbar and a status bar around it.
+  ///
+  /// bwh06 describes BibleWorks' own arrangement: each of the three
+  /// columns carries a narrow title bar with controls "that provide
+  /// additional tools and options" — so a pane having its own controls
+  /// is not the defect. The defect is WHICH controls. This reader was
+  /// built for a phone, where a floating bar over the text and one
+  /// overflow menu are the only surfaces there are, so its ⋮ grew into
+  /// a second copy of the main menu: Home, Settings, Library,
+  /// Statistics, Split View — none of which act on this column, and all
+  /// of which the workspace's own menu bar already carries.
+  ///
+  /// The rule this flag applies, and the same one already written into
+  /// the split view's second column: **a column's controls may hold
+  /// what operates on the column; anything that navigates the app or
+  /// opens a Resource belongs to the one menu bar.** So when true:
+  ///   * the header's magnifier goes — the command line is a pane on
+  ///     the same screen, and the toolbar has a magnifier of its own;
+  ///   * the ⋮ keeps only the chapter-scoped entries and gains the text
+  ///     size control the bottom bar used to own;
+  ///   * the floating bottom bar goes, because a column's controls
+  ///     belong in its title bar rather than laid over its text — and
+  ///     its chapter arrows move to the workspace toolbar, the
+  ///     reference being something the whole workspace follows.
+  final bool hostChrome;
+
   const BibleReadingPane({
     super.key,
     this.showSidebarToggle = false,
@@ -162,6 +190,7 @@ class BibleReadingPane extends StatefulWidget {
     this.onSearchRequested,
     this.onAnalysisRequest,
     this.activeAnalysisRequest,
+    this.hostChrome = false,
   });
 
   @override
@@ -827,60 +856,26 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
 
   // ── Chapter navigation ──────────────────────────────────────────────
 
-  void _goToNextChapter() {
+  void _goToNextChapter() => _stepChapter(1);
+
+  void _goToPreviousChapter() => _stepChapter(-1);
+
+  // 2026-08-24 (#313): the traversal moved to
+  // `utils/chapter_navigation.dart` so the workbench toolbar can ask the
+  // same question. What stays here is what only the reader can do —
+  // dropping the selection and re-anchoring the PageView.
+  void _stepChapter(int step) {
     final provider = context.read<MainProvider>();
+    final target = adjacentChapter(
+      provider.books,
+      provider.currentBook,
+      provider.currentChapter,
+      step: step,
+    );
+    if (target == null) return;
     provider.clearSelectedVerses();
     provider.clearHighlightIndex();
-    final books = provider.books;
-    final currentBook = provider.currentBook;
-    final currentChapter = provider.currentChapter;
-    if (currentBook == null || currentChapter == null) return;
-
-    final bookIdx = books.indexWhere((b) => b.title == currentBook);
-    if (bookIdx < 0) return;
-    final chapters = books[bookIdx].chapters;
-    final chapIdx = chapters.indexWhere((c) => c.title == currentChapter);
-    String nextBook;
-    int nextChap;
-    if (chapIdx < chapters.length - 1) {
-      nextBook = currentBook;
-      nextChap = chapters[chapIdx + 1].title;
-    } else if (bookIdx < books.length - 1) {
-      final nextBookIdx = bookIdx + 1;
-      nextBook = books[nextBookIdx].title;
-      nextChap = books[nextBookIdx].chapters.first.title;
-    } else {
-      return;
-    }
-    _switchTo(provider, nextBook, nextChap);
-  }
-
-  void _goToPreviousChapter() {
-    final provider = context.read<MainProvider>();
-    provider.clearSelectedVerses();
-    provider.clearHighlightIndex();
-    final books = provider.books;
-    final currentBook = provider.currentBook;
-    final currentChapter = provider.currentChapter;
-    if (currentBook == null || currentChapter == null) return;
-
-    final bookIdx = books.indexWhere((b) => b.title == currentBook);
-    if (bookIdx < 0) return;
-    final chapters = books[bookIdx].chapters;
-    final chapIdx = chapters.indexWhere((c) => c.title == currentChapter);
-    String prevBook;
-    int prevChap;
-    if (chapIdx > 0) {
-      prevBook = currentBook;
-      prevChap = chapters[chapIdx - 1].title;
-    } else if (bookIdx > 0) {
-      final prevBookIdx = bookIdx - 1;
-      prevBook = books[prevBookIdx].title;
-      prevChap = books[prevBookIdx].chapters.last.title;
-    } else {
-      return;
-    }
-    _switchTo(provider, prevBook, prevChap);
+    _switchTo(provider, target.book, target.chapter);
   }
 
   // Round 56: helpers extracted to `lib/utils/jump_to_reference.dart`
@@ -2010,6 +2005,8 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
                       splitViewActive: widget.splitViewActive,
                       onClose: widget.onClose,
                       showSearchAndSettings: widget.showSearchAndSettings,
+                      hostChrome: widget.hostChrome,
+                      onTextSize: () => _showFontSizeSheet(context, settings),
                       onOpenWorkbench: widget.onOpenWorkbench,
                       onOpenParallel: widget.onOpenParallel,
                       chapterMaps: _chapterMaps,
@@ -2319,7 +2316,15 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
                     // primary pane's top header still works for nav;
                     // we'll restore the bottom bar in split view once
                     // the layout interaction is understood.
+                    // 2026-08-24 (#313): and absent entirely when the
+                    // host draws the chrome. Every button on it has a
+                    // home there — the arrows in the workspace toolbar,
+                    // Notes in the Analysis pane's own tab,
+                    // Illustrations / text size / paragraph mode in this
+                    // column's ⋮ — so what is left here is a bar laid
+                    // over the verse the reader is studying.
                     if (_chromeFeatureEnabled &&
+                        !widget.hostChrome &&
                         !isSelected &&
                         !widget.splitViewActive &&
                         verses.isNotEmpty)
@@ -6557,6 +6562,22 @@ class _FloatingHeader extends StatelessWidget {
   final bool splitViewActive;
   final VoidCallback? onClose;
   final bool showSearchAndSettings;
+
+  /// 2026-08-24 (#313): see [BibleReadingPane.hostChrome]. Here it does
+  /// two things — drops the magnifier, and reduces the ⋮ to the entries
+  /// that act on THIS chapter. The eight it drops (Home, My Highlights,
+  /// Library, Statistics, Split, Parallel, Workbench, Settings) are each
+  /// on the workspace's menu bar or toolbar already; the seven it keeps
+  /// (Reload, Bible Evidence, Synopsis, Illustrations, Related sermons,
+  /// Bible Trivia, Paragraph mode) are all filtered to the open book and
+  /// chapter and have no other door.
+  final bool hostChrome;
+
+  /// The bottom bar's `Aa` button, which [hostChrome] removes. Moved
+  /// into the ⋮ rather than dropped: Settings → Display has the same
+  /// slider, but reaching it means leaving the text you were sizing.
+  final VoidCallback? onTextSize;
+
   /// 2026-08-04 (Workbench): overflow-menu "Workbench" entry. Null
   /// hides it (the Workbench's own center pane passes null).
   final VoidCallback? onOpenWorkbench;
@@ -6613,6 +6634,8 @@ class _FloatingHeader extends StatelessWidget {
     this.splitViewActive = false,
     this.onClose,
     this.showSearchAndSettings = true,
+    this.hostChrome = false,
+    this.onTextSize,
     this.onOpenWorkbench,
     this.onOpenParallel,
     this.chapterMaps = const [],
@@ -6886,7 +6909,14 @@ class _FloatingHeader extends StatelessWidget {
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    if (showSearchAndSettings)
+                    // 2026-08-24 (#313): and gone when the host draws
+                    // the chrome. The workspace's command line is a
+                    // pane on the same screen and its toolbar carries a
+                    // magnifier of its own, so this one was a second
+                    // door to a door — the exact argument the split
+                    // view's second column already makes below.
+                    // `/` and ⌘F still work; the shortcut is not chrome.
+                    if (showSearchAndSettings && !hostChrome)
                       IconButton(
                         onPressed: onSearch,
                         icon: Icon(Icons.search_rounded, size: iconSize),
@@ -6927,7 +6957,12 @@ class _FloatingHeader extends StatelessWidget {
                       // first split-view tap feel like it was lost.
                       itemBuilder: (context) {
                         final items = <PopupMenuEntry<String>>[];
-                        if (highlightCount > 0) {
+                        // 2026-08-24 (#313): `!hostChrome` reads
+                        // "the workspace has no menu bar of its own,
+                        // so this menu is the only one there is".
+                        // Everything it guards navigates the app
+                        // rather than acting on this chapter.
+                        if (highlightCount > 0 && !hostChrome) {
                           items.add(PopupMenuItem(
                             value: 'highlights',
                             onTap: () => onHighlights?.call(),
@@ -6947,18 +6982,25 @@ class _FloatingHeader extends StatelessWidget {
                         // root; any nested stack (Settings, Library,
                         // Stats etc. on top of the reader) collapses
                         // to it via popUntil(isFirst).
-                        items.add(PopupMenuItem(
-                          value: 'home',
-                          onTap: () {
-                            Navigator.of(context)
-                                .popUntil((r) => r.isFirst);
-                          },
-                          child: _menuRow(
-                            context,
-                            icon: Icons.home_outlined,
-                            label: uiStrings['home']?[locale] ?? 'Home',
-                          ),
-                        ));
+                        // 2026-08-24 (#313): never inside the
+                        // workspace. There is no home screen to go to
+                        // — the Workbench IS the app, and this entry
+                        // popped to a route that no longer means
+                        // anything from there.
+                        if (!hostChrome) {
+                          items.add(PopupMenuItem(
+                            value: 'home',
+                            onTap: () {
+                              Navigator.of(context)
+                                  .popUntil((r) => r.isFirst);
+                            },
+                            child: _menuRow(
+                              context,
+                              icon: Icons.home_outlined,
+                              label: uiStrings['home']?[locale] ?? 'Home',
+                            ),
+                          ));
+                        }
                         // Reload — always available so the user has
                         // a one-tap recovery when the reader ends up
                         // empty (failed version switch, network blip,
@@ -6980,29 +7022,46 @@ class _FloatingHeader extends StatelessWidget {
                         // Library entry — always shown so the user
                         // can discover Notes / Bookmarks even before
                         // creating any.
-                        items.add(PopupMenuItem(
-                          value: 'library',
-                          onTap: () {
-                            pushPage(const LibraryPage());
-                          },
-                          child: _menuRow(
-                            context,
-                            icon: Icons.collections_bookmark_outlined,
-                            label: uiStrings['library']?[locale] ?? 'Library',
-                          ),
-                        ));
-                        items.add(PopupMenuItem(
-                          value: 'stats',
-                          onTap: () {
-                            pushPage(const StatsPage());
-                          },
-                          child: _menuRow(
-                            context,
-                            icon: Icons.insights_outlined,
-                            label: uiStrings['statistics']?[locale] ??
-                                'Statistics',
-                          ),
-                        ));
+                        //
+                        // 2026-08-24 (#313): except inside the
+                        // workspace, where Resources → "Notes &
+                        // highlights" is the same page, and the
+                        // Analysis pane's Notes tab is the wired one.
+                        if (!hostChrome) {
+                          items.add(PopupMenuItem(
+                            value: 'library',
+                            onTap: () {
+                              pushPage(const LibraryPage());
+                            },
+                            child: _menuRow(
+                              context,
+                              icon: Icons.collections_bookmark_outlined,
+                              label:
+                                  uiStrings['library']?[locale] ?? 'Library',
+                            ),
+                          ));
+                        }
+                        // 2026-08-24 (#313): this was the ONLY door to
+                        // `StatsPage` anywhere in the app, and the
+                        // Analysis pane has carried a Stats tab all
+                        // along — the duplicate-implementation case the
+                        // ticket asks to settle. Inside the workspace
+                        // the tab is canonical; the page survives for
+                        // the standalone reader, which has no pane.
+                        if (!hostChrome) {
+                          items.add(PopupMenuItem(
+                            value: 'stats',
+                            onTap: () {
+                              pushPage(const StatsPage());
+                            },
+                            child: _menuRow(
+                              context,
+                              icon: Icons.insights_outlined,
+                              label: uiStrings['statistics']?[locale] ??
+                                  'Statistics',
+                            ),
+                          ));
+                        }
                         // Bible Evidence — pre-filtered to the
                         // current English book AND chapter so users
                         // only see archaeological / manuscript /
@@ -7164,7 +7223,7 @@ class _FloatingHeader extends StatelessWidget {
                         // 2026-08 (SeekSparks): BibleWorks-style
                         // parallel Browse — same verse across every
                         // selected version plus the original line.
-                        if (onOpenParallel != null) {
+                        if (onOpenParallel != null && !hostChrome) {
                           items.add(PopupMenuItem(
                             value: 'parallel',
                             onTap: () => onOpenParallel?.call(),
@@ -7176,7 +7235,12 @@ class _FloatingHeader extends StatelessWidget {
                             ),
                           ));
                         }
-                        if (onToggleSplitView != null) {
+                        // Browse / Reader / Split are the workspace's
+                        // three centre modes and its toolbar shows all
+                        // three at once, with the active one lit. A
+                        // buried menu entry for the same switch could
+                        // only ever say less (#313).
+                        if (onToggleSplitView != null && !hostChrome) {
                           items.add(PopupMenuItem(
                             value: 'split',
                             onTap: () => onToggleSplitView?.call(),
@@ -7193,7 +7257,13 @@ class _FloatingHeader extends StatelessWidget {
                             ),
                           ));
                         }
-                        if (showSidebarToggle &&
+                        // 2026-08-24 (#313): `|| hostChrome` because
+                        // paragraph mode is a property of THIS column's
+                        // text, and inside the workspace the bottom bar
+                        // that used to carry it is gone. Without this
+                        // the setting would be reachable only from
+                        // Settings → Display.
+                        if ((showSidebarToggle || hostChrome) &&
                             onToggleParagraphMode != null) {
                           items.add(PopupMenuItem(
                             value: 'paragraph',
@@ -7213,7 +7283,26 @@ class _FloatingHeader extends StatelessWidget {
                             ),
                           ));
                         }
-                        if (showSearchAndSettings) {
+                        // 2026-08-24 (#313): the bottom bar's `Aa`,
+                        // rehoused. Text size is a property of this
+                        // column's text, so it stays with the column —
+                        // it just stops floating over it.
+                        if (hostChrome && onTextSize != null) {
+                          items.add(PopupMenuItem(
+                            value: 'textSize',
+                            onTap: onTextSize,
+                            child: _menuRow(
+                              context,
+                              icon: Icons.text_fields_rounded,
+                              label: uiStrings['fontSize']?[locale] ??
+                                  'Font size',
+                            ),
+                          ));
+                        }
+                        // Settings is the workspace's, not the
+                        // column's: File → Settings and the toolbar's
+                        // gear both open it (#313).
+                        if (showSearchAndSettings && !hostChrome) {
                           items.add(const PopupMenuDivider());
                           items.add(PopupMenuItem(
                             value: 'settings',
