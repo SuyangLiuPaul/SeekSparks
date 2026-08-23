@@ -120,9 +120,15 @@ believe it is fine" and "we looked".
 | 40d | Does the Chinese title mean what the English title means | 225 title pairs | **2 defects, 8 occurrences** → **0** | **fixed**, now a test; 900 body fields unread |
 | 40e | Image URLs, ids, references, icons | 716 URLs / 225 records | **0** (real bytes at all 206 hosts, 0 SPA fallbacks) | clean |
 | 40f | The same Simplified-in-a-Traditional-slot screen on the two 繁體 Bibles | 2 editions / 62,204 verses | `cuvs-yhwh-tr` **0**; `biblexg-v2-tr` **207 flagged, mixed** | **open** — see "Next, in order" |
+| 45a | Is every verse of a flat edition present in its tagged layer | 155,193 verses / 5 editions | **111 untagged**: 90 placeholders (correct) + **21 real Greek verses** | reported, **not** repaired — frozen by name, a fabricated run is worse |
+| 45b | Do the tagged runs, concatenated, say what the flat verse says | 92,894 verses / kjvs, lxxwh, cuvs-plus | **0** | clean, now a test |
+| 45c | The same question of `bsb` | 31,086 verses | **2** (Exodus 38:28 drops "of silver"; Judges 16:14 drops "it") | reported, pinned at exactly 2 |
+| 45d | The same question of `cuvs-yhwh` | 31,102 verses | **372** = 161 orthographic + 116 note placement + 16 reordering + **79 real word differences** | **open** — the 79 are defects in BOTH layers, ~20 of them in the text the reader reads. New "Next, in order" item |
+| 45f | Does the tagged layer print a character that is not text | 5 editions | **15** `cuvs-yhwh` verses render a literal `#` where the flat prints `[基督]` | **open**, visible on screen |
+| 45e | Tagged records naming a verse their edition does not have | 5 editions | **0** | clean, now a test |
 
-*(Checks 34, 35, 37 and 38 have full sections below but were never given
-rows here; the omission is noted rather than guessed at.)*
+*(Checks 34, 35, 37, 38 and 41–44 have full sections below but were never
+given rows here; the omission is noted rather than guessed at.)*
 
 ---
 
@@ -4893,10 +4899,12 @@ would have shipped a defect:
   books hold every verse the witness has. What that check did *not* ask
   is whether the Greek we do carry is the **right words** — it compared
   what is present against what is present, and a wrong-but-well-formed
-  verse would survive it. Nehemiah 10 is still known to be missing 15 of
-  its 39 verses from the *tagged* import (check 21), which is a coverage
-  gap in the tagging rather than in the text, and has never been chased
-  across the other books.
+  verse would survive it. The *tagged* coverage gap check 21 found in
+  Nehemiah 10 **has now been chased across every book** — check 45: the
+  whole corpus holds 21 untagged Greek verses, the 15 in Nehemiah 10 and
+  six more, all of them inside lists of names. They are reported and
+  frozen by name rather than repaired, because a guessed Strong's number
+  is worse than a verse the reader cannot tap.
 - The **41,032 Septuagint runs that still answer nothing** (check 23).
   Most cannot be answered — they are words the New Testament never uses —
   but nobody has separated "no Strong's number exists" from "a number
@@ -5630,6 +5638,211 @@ That last one is what separates reflowing from paraphrasing. The repair
 is idempotent and re-serialises byte-identically outside the two fields
 it touches — confirmed by a structural diff against `HEAD`.
 
+## Check 45 — every tagged layer against the flat edition it claims to tag
+
+`assets/tagged/<edition>/<book>.json` and `assets/<edition>.json` are two
+records of the same verse, made by different processes, and nothing had
+ever asked whether they agree. They are the two halves of what a reader
+sees: the flat file is the text on the page, the tagged file is what the
+word under their finger answers. Neither needs an outside source to
+witness it, because each witnesses the other.
+
+`tools/audit_tagged_layer.py` asks the two questions that follow from
+that, over all five committed tagged editions — `bsb`, `kjvs`, `lxxwh`,
+`cuvs-yhwh`, `cuvs-plus`. (`nsn-plus` is deliberately excluded: the
+Eagle's View NASB is licensed and never committed, so an audit that read
+it would pass here and fail in CI.)
+
+| | rows | disagreements |
+|---|---|---|
+| coverage — flat verses with a tagged record | 155,193 | **111 absent**: 90 placeholders, **21 real Greek verses** |
+| agreement — `kjvs`, `lxxwh`, `cuvs-plus` | 92,894 | **0** — 100.0000% |
+| agreement — `bsb` | 31,086 | **2** — 99.9936% |
+| agreement — `cuvs-yhwh` | 31,102 | **372** — a second edition, see 45d |
+| orphans — tagged records naming a verse the edition lacks | 5 editions | **0** |
+
+### 45a — the 21 untagged verses, and why they were not repaired
+
+Of the 111 flat verses with no tagged record, 90 are placeholders —
+`见上节`, `OMIT` and the rest of `kVerseAbsenceMarkers` — where having no
+tagged record is *correct*, because there are no words to tag: 74 in
+`cuvs-plus`, 16 in `lxxwh`. The remaining **21 are real Greek text in
+`lxxwh`**, and this closes the "never chased across the other books" note
+that check 21 left open. The whole corpus holds exactly these:
+
+> 1 Chronicles 1:30 · Ezra 10:35, 10:36, 10:40 · Nehemiah 10:3, 10:4,
+> 10:5, 10:11, 10:12, 10:15, 10:16, 10:18, 10:19, 10:20, 10:21, 10:22,
+> 10:24, 10:25, 10:27 · Nehemiah 12:2, 12:3
+
+Check 21's count of **15 in Nehemiah 10 was exactly right** — this is the
+rarer result, a published scope that survived re-measurement from the
+source. What it could not know is that **six more sit in three other
+books**: Nehemiah 12:2–3, Ezra 10:35/36/40, and 1 Chronicles 1:30. Every
+one of the 21 falls inside a list of names.
+
+The worst hypothesis was ruled out before anything else: this is *not* a
+check-40-class one-verse shift that would make the tap layer answer for
+the neighbouring verse. The tagged records that *are* present in
+`nehemiah`, `ezra` and `1_chronicles` reconstruct their own flat verses
+exactly — 0 mismatches in 375, 277 and 928 — so the 21 are genuine
+under-coverage, not misalignment.
+
+**Not repaired, and that is the conservative reading, not the lazy one.**
+`TaggedTextService.forVerse` returns null for a verse it has no record
+of, and the caller renders the plain string, so the reader sees the Greek
+and simply cannot tap it — `browse_window.dart:1036` falls to
+`_TranslationLine`, `phrasing_page.dart:381` falls through to
+`phrasingTokens`.
+
+**With one exception, found by refutation and confirmed here.**
+`kwic_pane.dart:127` does `if (runs == null) continue;` while
+`_totalRefs = refs.length` at line 136 still counts the reference, and
+the footer at line 389 prints "All $_totalRefs references". So a KWIC
+over `lxxwh` whose hits include any of the 21 shows fewer lines than the
+number it asserts, silently. That is a small **false statement**, not
+under-coverage, and it is the reason the blanket phrase "the callers
+degrade gracefully" was wrong. It is filed with the 79 below.
+
+Under-attribution is recoverable and visible; a
+fabricated run — a Strong's number guessed for a Hebrew name — is
+neither, and would be the app stating something untrue about the text in
+order to remove a blank. The 21 are frozen **by name** in
+`test/tagged_layer_coverage_test.dart` so a future import cannot quietly
+add a twenty-second.
+
+### 45b — three layers reconstruct their printed text exactly
+
+`kjvs` (31,102), `lxxwh` (30,763) and `cuvs-plus` (31,029) — **92,894 of
+92,894 verses, 100.0000%** — say through their runs exactly what their
+flat file prints, once markup, punctuation and whitespace are removed.
+That is the result this check was built to be able to fail, and it did
+not.
+
+The normalisation is not carrying that result. Concatenate the runs and
+compare the **raw strings with no stripping at all**: kjvs is
+31,102/31,102 byte-identical, cuvs-plus 31,029/31,029, lxxwh
+30,761/30,763 — the two exceptions being a single trailing space on the
+tagged side at Numbers 10:35 and Deuteronomy 23:23. **92,892 of 92,894
+verses are byte-identical between the two layers**, which is the stronger
+statement and the true one.
+
+`bsb` departs in **2 of 31,086**. Both drop a word from the tap layer
+while the printed verse is correct:
+
+- **Exodus 38:28** — flat "the 1,775 shekels **of silver**", tagged
+  "the 1,775 [shekels]".
+- **Judges 16:14** — flat "she tightened **it** with the pin", tagged
+  drops the pronoun.
+
+This is a **different question from `test/bsb_tagged_layer_test.dart`,
+not a better one.** That test compares under a stricter reduction and
+bounds its residue at 248 verses, nearly all punctuation; these two were
+inside that residue and invisible for it. Coarsening the comparison until
+only whole words survive is what made two dropped words separable from
+248 dropped commas. The count is now pinned at exactly 2.
+
+### 45d — the Chinese layers disagree in 372 verses, and 79 are real
+
+**This subsection was written twice.** The first draft called all 372 an
+editorial difference between two editions and named two defects inside
+it. A refutation pass broke that, and the second measurement agrees with
+the refutation: **most of the 372 is editorial, but 79 verses are a real
+word-level difference and about twenty of them are wrong in the flat file
+— the text the reader reads.** The first framing is left described here
+rather than deleted, because the way it failed is the finding: a
+plausible editorial explanation covered 293 of 372 verses, and covering
+most of a set is not the same as explaining it. The remaining 21% was
+where all the damage was.
+
+The gross gap is 2,220 verses, because the tagged layer keeps the 和合本's
+`〔…〕` marginal notes that the reading text moved into `<note: …>`.
+Removing those takes it to 372, which then decomposes — measured, not
+estimated:
+
+| class | verses | what it is |
+|---|---|---|
+| settled orthographic pairs, and nothing else | **161** | 阿/啊, 它/他/她, 复/覆, 吗/么, 糟/蹧, 做/作, 吧/罢 — the same word, two normalisation dates |
+| note or clause placement | **116** | a gloss inline on one side and in `<note:>` on the other |
+| the same characters, reordered | **16** | an alignment artefact of removing the note, not a difference |
+| **real word difference** | **79** | **a word is added, dropped or substituted** |
+
+Of the 79, **15 are one defect**: the tagged layer prints a literal `#`
+where the flat prints `[基督]` — 「算不得吃主**#**的晚餐」 (1 Cor 11:20),
+「主**#** 说」 (Mt 22:44 and seven more). `browse_window.dart`'s
+`_TaggedLine` renders the run verbatim, so **a 和雅 reader sees the hash
+on screen**. The full set is Matthew 22:43/44/45, Mark 12:36/37, Luke
+20:42/44, Acts 2:34, Romans 14:9, 1 Corinthians 11:20/26/27,
+1 Thessalonians 4:15/16/17.
+
+The other **64 are genuine textual defects, and they are in both files.**
+Neither layer is the authority; each caught the other. Verified by eye:
+
+**Wrong in the flat file — this is scripture the app displays.**
+Judges 12:7 「作以色列的士师**年**」 has lost the 六 and no longer says how
+long Jephthah judged · Isaiah 23:1 「因为**罗**变为荒场」 has lost the 推 of
+推罗, so Tyre is not named · Judges 9:57 「咒诅归到**们**身上」 lost 他 ·
+Judges 15:5 lost 葡萄园 from the list of what burned · 1 Samuel 15:12
+「立了**记**纪念碑」 and Jeremiah 50:32 「城邑**中里**」 carry a spurious
+character · Lamentations 3:1 has a spurious 神 · Numbers 13:5
+「何利的儿子**的**沙法」 · Malachi 2:3 lost 在 · Isaiah 44:19 木**丕**子 for
+木墩子 · Jeremiah 4:31 挓**抄**手 for 挓挲手 · Isaiah 64:3 and Acts 25:18
+**意**料 for 逆料 · Jeremiah 7:20 and 20:2 地**着** for 地里.
+
+**Wrong in the tagged layer — the reader sees the right verse and taps a
+wrong one.** Doubled characters at Leviticus 5:7 (若若), 1 Samuel 20:37
+(箭箭), 1 Kings 19:18 (未未曾), 2 Kings 10:5 (我们我们), Isaiah 41:16
+(以以色列), Ezekiel 36:1 (你要要), Matthew 9:28 (耶稣说说); dropped
+characters at Leviticus 8:14 (头**上**), 1 Kings 15:31, 2 Kings 13:10,
+2 Chronicles 18:18, Ezekiel 10:1, Jeremiah 4:22, 11:2, Nehemiah 2:19.
+
+**None of this is repaired here.** Each one needs its 和合本 reading read
+individually — the discipline check 26 established and
+`tools/repair_chinese_text_defects.py` already follows — and doing 64 of
+them properly is a job of its own, not a coda to an audit. The complete
+list is regenerable from `tools/audit_tagged_layer.py`. It is now the
+leading numbered item under "Next, in order".
+
+The test therefore **bounds this at ≤ 372 rather than pinning it**, so
+normalising 阿 to 啊 does not fail the suite — but the bound is a holding
+position over a known defect, not a clean result, and must not be cited
+as one.
+
+### What this instrument cannot see
+
+Stated because check 44's lesson is that a detector reports its own reach
+and not the defect's size:
+
+- **A shift present in BOTH layers.** Check 40's `cuvs-plus` 1 Chronicles
+  22 defect is exactly that: the text and its Strong's tags carried the
+  identical one-verse shift, so they agreed with each other and this
+  screen would have passed them at 100.0000%. Catching that needed a
+  third layer. **This check guards against one layer drifting off the
+  other, never against both drifting together, and it must not be cited
+  as though it did.**
+- **A wrong Strong's number or a wrong parse.** It compares WORDS only.
+- **The content of a `<note: …>`.** `_TAG` deletes the whole tag from the
+  flat side, and in `cuvs-yhwh` that content is real 和合本 parenthetical
+  text. Beyond the 372 there are **47 further verses this audit passes**
+  where the note's words are absent from or differently worded in the
+  tagged layer (Deuteronomy 6:4, 1 Kings 8:20, 10:5, 10:15, Numbers
+  35:33, Leviticus 25:25 among them). Unmeasured, and named so the pass
+  is not read as covering it. `cuvs-plus`: 0.
+- **The string the reader is actually shown for `cuvs-yhwh`.**
+  `TaggedTextService._load` runs `reuniteGlossRuns`, which rewrites 198
+  verses at load time. This audit and its test both read the **raw
+  asset**, so for that edition they measure the file and not the screen.
+- **Whether the flat text itself is right** — in general. 45d found 79
+  cases only because a second layer disagreed; where both layers hold the
+  same wrong word, nothing here objects. Checks 24, 26, 27 and 31 own
+  that question.
+
+Regression test: `test/tagged_layer_coverage_test.dart`, seven tests. It
+re-derives every figure above from the assets rather than restating them,
+and it reads `verseAbsenceOf` from `lib/utils/verse_text_absence.dart`,
+so it also witnesses that table from the other direction.
+
+---
+
 ## Next, in order
 
 **First, and deliberately unnumbered so the citations below stay
@@ -5645,6 +5858,35 @@ upstream source or an owner's decision and must not be taken
 unattended. **By the accuracy rule it outranks everything below**: a
 missing verse is the strongest form of the app saying something untrue
 about the text.
+
+**Second, unnumbered for the same reason, and the one to take next: the
+79 verses where `cuvs-yhwh`'s two layers disagree on a word, about twenty
+of them wrong in the text the reader reads.** Check 45d, found
+2026-08-23. Unlike the item above it, **this one can be taken
+unattended** — it needs no upstream source and no owner's decision, only
+care. It is an accuracy defect of the first kind, the app displaying a
+word scripture does not say: Judges 12:7 no longer says how many years
+Jephthah judged, Isaiah 23:1 does not name Tyre in its second clause,
+Lamentations 3:1 carries a 神 the 和合本 does not.
+
+Three sub-jobs, and they are **not equally safe**:
+
+  (a) the **15 verses printing a literal `#`** where the flat prints
+  `[基督]` are unambiguous and visible on screen — the safest to take
+  first; (b) the **~8 doubled characters** in the tagged layer (若若,
+  箭箭, 未未曾) are mechanical and equally unambiguous; (c) the **~20
+  flat-text defects need each reading read individually** against the
+  和合本, the discipline check 26 set and
+  `tools/repair_chinese_text_defects.py` already follows. **Do not
+  bulk-apply the tagged layer over the flat text**: 45d found the tagged
+  layer wrong in about as many places as the flat one. Neither file is
+  the authority, which is the whole reason the disagreement was findable.
+  Regenerate the list with `tools/audit_tagged_layer.py --edition
+  cuvs-yhwh`.
+
+Also here, and small: `kwic_pane.dart:127` drops a line whose runs are
+null while still counting the reference, so its "All N references" footer
+overstates on `lxxwh`.
 
    *(This list's item 0, "the Strong's Chinese gloss, cut at the printed
    line break", is closed by check 44g — 488 entries repaired, the real

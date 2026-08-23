@@ -11,7 +11,7 @@ ticket briefs belong in the loop's `prompt.md` and, once closed, in
 `prompt-archive.md`. If this file grows past ~150 lines it has stopped
 doing its job.
 
-Last updated: 2026-08-23 (fourth entry)
+Last updated: 2026-08-23 (fifth entry)
 
 ---
 
@@ -19,10 +19,10 @@ Last updated: 2026-08-23 (fourth entry)
 
 | | |
 |---|---|
-| `pubspec` / dev | **1.6.152** — dev is one commit behind `main` (undeployed iteration 1 of 3) |
+| `pubspec` / dev | **1.6.152** — dev is two commits behind `main` (undeployed iteration **2 of 3**) |
 | prod (seeksparks.netlify.app) | **1.6.136** — 16 versions behind, by design: prod ships only on the owner's word |
-| `main` | the Strong's Chinese gloss repair (check 44g) |
-| Suite | **3,145 tests**, green; `flutter analyze` exit 0 |
+| `main` | check 45 — the tagged layers audited against the flat editions they tag |
+| Suite | **3,154 tests**, green; `flutter analyze` exit 0 |
 | CI | green (Flutter CI on `main`) |
 
 ---
@@ -46,12 +46,12 @@ here, move its body out of `prompt.md`, and say so in `HANDOFF.md`.
 | #300 | Map provenance — rights settled, the maps are the owner's own collection | open |
 | #301 | Yahwehdehua — re-open the import; the base text matched, the readings did not | open — the lexicon half is **fixed** (v1.6.152, check 44); the readings are not |
 | #302 | Build the backlog before the queue empties → `docs/PARITY-BACKLOG.md` | closed — 75 entries |
-| #304 | Systematic data-integrity audit — "accuracy is the most critical thing" | open, recurring |
+| #304 | Systematic data-integrity audit — "accuracy is the most critical thing" | open, recurring — check 45 landed 2026-08-23 |
 | #307 | Phrasing — open it to translations, indent line one (Pastor Raymond HK) | open |
 | #308 | Search stats: "John 27" never says its unit | open |
 | #309 | Matthew series — reconcile our corpus against CDC's 124 messages | **blocked** — CDC site unreachable |
 | #312 | Phrasing is not usable yet — redesign, don't patch | open |
-| #313 | The Reader is a phone app bolted into a workbench | open |
+| #313 | The Reader is a phone app bolted into a workbench | open — **its headline evidence is stale**: the ticket says the reader has no wire to the Analysis pane, but `bible_reading_pane.dart:144/149` carries `onAnalysisRequest` + `activeAnalysisRequest`. Re-scope before working it |
 | #314 | Build version printed twice on one screen | open |
 | #315 | 269 hardcoded font sizes — #311 fixed the arithmetic, not the reach | open |
 | #316 | The rotate advisory argues against itself | open |
@@ -61,7 +61,7 @@ here, move its body out of `prompt.md`, and say so in `HANDOFF.md`.
 | #320 | Place records should show the illustrations we already have | open |
 | #321 | Greek search cannot match accented input (Aunty Rosa, Hong Kong) | closed — v1.6.126; `foldDiacritics` wired into `text_patterns.dart:171`, `command_query.dart`, `search_highlight.dart` |
 | #322 | The Browse column does not line up — three render paths | open — v1.6.139 |
-| #323 | 雅偉繁體: ~700 verses with the wrong Traditional form (owner-reported) | open — 1,607 wrong characters measured |
+| #323 | 雅偉繁體: ~700 verses with the wrong Traditional form (owner-reported) | **closed** — re-verified from the asset 2026-08-23: 賽2:16 船隻, 出14:22 走乾地, and the trap verse 賽29:17 still 只有; 0 occurrences of 船只/其余/走幹地/凈 |
 
 **Blocked on the owner, five:** #292 (a citable Thiele source) · #293 (audio
 hosting) · #296 (a fresh crash report) · #309 (the CDC site is unreachable) ·
@@ -76,6 +76,13 @@ outstanding the same day. Rows carrying a parenthetical version (#317, #318,
 one — and grep for the reader's verb, not the technical term**: §8's miss
 happened because the code is named `selectCommonWith`, not `intersect`.
 Closing the finished rows is worth an iteration of its own.
+
+**Two rows were audited on 2026-08-23**: #323 is now closed on fresh
+evidence read out of the asset, and #313's headline evidence is disproved
+in its own row. #308, #314, #316, #319 and #320 were spot-checked and
+look shipped, but are **left open deliberately** — a spot check is not a
+closing pass, and closing a row on a half-remembered grep is the exact
+failure this paragraph exists to warn about.
 
 ---
 
@@ -101,10 +108,18 @@ glosses ending on a separator 558 → 0. The scope was **593**, not the
 279 the separator test reported, which is the check-43c failure mode a
 third time; measure from the source, always.
 
-`docs/DATA-INTEGRITY.md` "Next, in order" now leads with the unnumbered
-item — `assets/biblexg-v2.json` missing 馬可福音 6:8-11 — which **must
-not be taken unattended** (it needs the upstream source or an owner's
-decision). Pick the next accuracy item below it, or a live §8 candidate.
+`docs/DATA-INTEGRITY.md` "Next, in order" leads with the unnumbered item
+— `assets/biblexg-v2.json` missing 馬可福音 6:8-11 — which **must not be
+taken unattended** (it needs the upstream source or an owner's decision).
+
+**Take the SECOND unnumbered item instead: check 45d's 79 verses where
+`cuvs-yhwh`'s two layers disagree on a word, ~20 of them wrong in the
+text the reader reads** (Judges 12:7 has lost the 六 of 六年; Isaiah 23:1
+no longer names 推罗). Found 2026-08-23, **can be taken unattended**, and
+by the accuracy rule it outranks every feature below. Start with the 15
+verses printing a literal `#` — unambiguous and visible on screen. **Do
+not bulk-apply one layer over the other**: both are wrong in roughly
+equal measure, which is precisely why the disagreement was findable.
 
 ---
 
@@ -115,6 +130,7 @@ decision). Pick the next accuracy item below it, or a live §8 candidate.
 | Script | `~/Library/Application Support/seeksparks-loop/run.sh` |
 | Brief | `prompt.md` beside it — **the per-iteration token cost**; closed tickets move to `prompt-archive.md` |
 | launchd | `com.seeksparks.parityloop`, **30-minute interval** (owner's call, 2026-08-23 18:49; was 60) |
+| **Dead-man switch** | `STOP_AT` in `run.sh` — **2026-09-21 23:00**, then the job `bootout`s itself. Read fresh each invocation, so changing it needs no reload. Owner reset it to 29 days on 2026-08-23 (was 2026-09-09) |
 | Model | `claude-opus-5`, `--effort high`, `MAX_RUN` 90 min |
 | Lock | `.lock` (hidden — not `lock`), self-healing on a dead owner or age > 70 min |
 | Off-peak gate | Sat 05:00 → Mon 22:00 continuous; Tue–Fri 05:00–22:00; held overnight |
@@ -170,6 +186,36 @@ that bite most often:
   because the second work's row was showing a truncated KJV fragment.
   Repair the data and the two works agreed — 88.4% of Greek headwords
   carry the same Chinese summary in both. (check 44e)
+- **Covering MOST of a set is not explaining it — and a plausible
+  explanation is the most dangerous kind.** Check 45d's 372 Chinese
+  disagreements had a good editorial story: 〔…〕 marginal notes plus
+  orthographic pairs. The story was true of **293 of 372**, so every spot
+  check confirmed it, and it was written into the docs as "two editions,
+  not a corruption". The other 79 were real, and about twenty of them are
+  **wrong words in the text the reader reads**. The refuter caught it.
+  When a theory explains most of a residue, subtract what it explains and
+  look at what is LEFT — do not round the remainder off. (check 45d)
+- **Run the refuter, and run it against your own conclusion.** This
+  iteration's central claim was false and the subagent said so. It also
+  over-reached in places (it named 13 verses while asserting 15; the true
+  set is 15 and includes two it had not listed), so its findings were
+  re-measured before any of them was written down. Delegate the search,
+  never the verdict — but *do* delegate the search. (check 45d)
+- **A coarser comparison is a DIFFERENT question, not a weaker one.**
+  `bsb_tagged_layer_test.dart` compares the tagged runs to the printed
+  verse strictly and bounds its residue at 248 verses, nearly all
+  punctuation. Two of those 248 were not punctuation — Exodus 38:28 drops
+  "of silver" and Judges 16:14 drops "it" — and they were invisible
+  precisely because the strict test had to tolerate a large residue.
+  Reducing until only whole words survive made two dropped words
+  separable from 248 dropped commas. Before assuming an existing test
+  covers your question, ask what its tolerance is hiding. (check 45)
+- **Two artefacts built by different processes witness each other, free.**
+  The flat edition and its tagged layer had never been compared; asking
+  cost one script and found 21 untagged verses and 4 dropped or doubled
+  words. But state the blind spot in the same breath: a shift present in
+  BOTH layers passes at 100.0000%, which is exactly how check 40's
+  1 Chronicles 22 defect survived. (check 45)
 - **When one delimiter carries two meanings, the repair needs a second
   signal from the data.** CBOL uses a bare newline for both a column
   wrap and a deliberate break, so "join the lines" fabricated
