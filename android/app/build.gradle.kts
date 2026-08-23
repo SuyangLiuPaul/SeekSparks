@@ -32,11 +32,13 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
-        // 2026-05-24 (v1.3.38): default app_name. Each productFlavor
-        // below overrides this with its own resValue("app_name", ...)
-        // so the home-screen label differs between the international
-        // and China-mode coexist builds.
-        resValue("string", "app_name", "Yahweh\'s Swords")
+        // 2026-08-24: app_name is NOT a resValue any more. It lives in
+        // res/values*/strings.xml so the home-screen label follows the
+        // device language the way iOS's InfoPlist.strings does —
+        // 雅伟之剑 on a Chinese device, Yahweh's Swords otherwise.
+        // (A resValue also cannot hold an apostrophe: the Kotlin
+        // escape \' reaches aapt verbatim and fails the build with
+        // "Invalid unicode escape sequence in string".)
     }
 
     // 2026-05-24 (v1.3.38): product flavors so the international
@@ -60,7 +62,9 @@ android {
         create("cn") {
             dimension = "region"
             applicationIdSuffix = ".cn"
-            resValue("string", "app_name", "雅伟之剑 CN")
+            // The CN coexist build keeps a distinct label so both can
+            // sit on one device — see src/cn/res/values*/strings.xml,
+            // which overrides app_name for this flavor only.
         }
     }
 
