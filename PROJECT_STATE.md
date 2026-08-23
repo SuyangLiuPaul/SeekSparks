@@ -19,10 +19,10 @@ Last updated: 2026-08-23
 
 | | |
 |---|---|
-| `pubspec` / dev | **1.6.151** |
+| `pubspec` / dev | **1.6.151** — the tree is **1 iteration ahead of dev** (bwh35, not deployed) |
 | prod (seeksparks.netlify.app) | **1.6.136** — 15 versions behind, by design: prod ships only on the owner's word |
-| `main` | `ce28f20` |
-| Suite | **3,090 tests**, green |
+| `main` | `1542a74` |
+| Suite | **3,126 tests**, green; `flutter analyze` exit 0 |
 | CI | green (Flutter CI on `main`) |
 
 ---
@@ -59,7 +59,7 @@ here, move its body out of `prompt.md`, and say so in `HANDOFF.md`.
 | #318 | Interactive Bible chronology, featured module | open — phases 1–5 shipped, runs to the death of Moses |
 | #319 | Atlas filter filters the list but not the map | open |
 | #320 | Place records should show the illustrations we already have | open |
-| #321 | Greek search cannot match accented input (Aunty Rosa, Hong Kong) | open |
+| #321 | Greek search cannot match accented input (Aunty Rosa, Hong Kong) | closed — v1.6.126; `foldDiacritics` wired into `text_patterns.dart:171`, `command_query.dart`, `search_highlight.dart` |
 | #322 | The Browse column does not line up — three render paths | open — v1.6.139 |
 | #323 | 雅偉繁體: ~700 verses with the wrong Traditional form (owner-reported) | open — 1,607 wrong characters measured |
 
@@ -68,14 +68,31 @@ hosting) · #296 (a fresh crash report) · #309 (the CDC site is unreachable) ·
 #278 (NASB licence — the modules forbid redistribution; the assets must never
 be committed or deployed).
 
+**These statuses are NOT audited, 2026-08-23.** #321 was marked open while
+shipped, and `PARITY-BACKLOG.md` §8 was calling two finished items
+outstanding the same day. Rows carrying a parenthetical version (#317, #318,
+#322, #323) mean work landed against a ticket nobody closed; #289, #308,
+#314–#316, #319 and #320 are old enough to be suspect. **Grep before picking
+one — and grep for the reader's verb, not the technical term**: §8's miss
+happened because the code is named `selectCommonWith`, not `intersect`.
+Closing the finished rows is worth an iteration of its own.
+
 ---
 
 ## The feeder queue
 
 `docs/PARITY-BACKLOG.md` — **75 entries**, written by the loop under #302 so
 the numbered queue above never runs dry. Entries carry `bwh` ids. Recent
-ones shipped: bwh26 (Word List compare), bwh34 (Nave's Topical Bible),
-bwh45 (romanised search input).
+ones shipped: bwh26 (Word List compare), bwh34 (Nave's Topical Bible, both
+halves), bwh45 (romanised search input), bwh35 (Lexicon Browser).
+
+**§8's shortlist is spent** — items 2–6 are all struck through as of
+2026-08-23. The live candidates are now **1a** (the Lexicon Browser's second
+lexicon: `bdb_zh.json` / `thayer_zh.json` are bundled and served but not
+browsable), **1b** (the synopsis display, parked behind #292) and **1c**
+(flashcard retention, bwh40). When those go, pick a `PARTIAL` from §3–§6
+whose "what is missing" paragraph fits one iteration — do not re-pick a
+struck item.
 
 ---
 
@@ -114,6 +131,11 @@ that bite most often:
   pubspec is part of the change. (`46ed151`, `a7bb0b3` — 201 Nave's files
   shipped, the declaration did not)
 - **A human reported it → it goes first.**
+- **A `State`'s `context` sits ABOVE its own `Scaffold`.** Measuring text
+  with `DefaultTextStyle.of(state.context)` misses whatever the Scaffold's
+  theme adds below it — `bodyMedium`'s 0.25 px `letterSpacing` cost 1.25 px
+  over five characters and clipped every Greek row in the Lexicon Browser.
+  Measure from a context inside the subtree you are measuring. (`1542a74`)
 - **Measure what is measurable; photograph only what is judgement.** A
   screenshot costs ~1.5–2k tokens.
 - The three-pane threshold is mirrored in `workbench_fit.dart` **and**

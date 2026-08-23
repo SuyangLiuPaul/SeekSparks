@@ -379,13 +379,21 @@ Mapped against BibleWorks' own tab set (bwh10):
   *Done:* pick the two that matter for retention (learned marking,
   example verse) and reject the rest — printing flashcards is a paper-era
   feature.
-- **Lexicon Browser (bwh35)** — **PARTIAL.**
-  `lib/pages/strongs_entry_page.dart` shows one entry, reached from a
-  word. bwh35 lets you **browse the lexicon itself** and **search its
-  text** — "which entries mention 'covenant'". We hold four lexicons
-  (`greek.json`, `hebrew.json`, `thayer.json`, and the Chinese
-  `bdb_zh.json` / `thayer_zh.json`). *Done:* a lexicon window with
-  alphabetic browse and full-text search over the definitions.
+- **Lexicon Browser (bwh35)** — **HAVE** for Strong's, **PARTIAL** for
+  the rest. Shipped 2026-08-23: `lib/pages/lexicon_page.dart` +
+  `lib/utils/lexicon_browse.dart`, opened from `Resources`. Both lexicons
+  entire (5,523 Greek, 8,674 Hebrew), alphabetical by default with a
+  letter strip, Strong's-number order as the alternative, and the two-tier
+  search — headwords, then full text over the definitions, which answers
+  the "which entries mention 'covenant'" question this entry was written
+  for. Rows open the existing `strongs_entry_page.dart`; there is
+  deliberately no second entry renderer.
+  *What is left:* the browser reads `greek.json` / `hebrew.json` only. The
+  deeper `bdb_zh.json` / `thayer_zh.json` are bundled and already served
+  by `ChineseLexiconService`, but choosing *which* lexicon to browse is a
+  second axis on the page (a lexicon picker, and per-lexicon coverage that
+  is not 1:1 with Strong's numbering) and was left out rather than
+  half-built. That is the next slice, and it stands on its own.
 - **Maps (bwh33)** — **HAVE.** Atlas + 1,192 plates + gazetteer, with
   provenance (#300). bwh33's route/travel-speed tooling is **REJECTED**;
   it is a cartography editor, not a study feature.
@@ -702,24 +710,50 @@ visual defect this project has shipped. A widget test that asserts a
 
 ## 8. Picking the next item
 
-In rough order of value, if nothing else is pressing:
+In rough order of value, if nothing else is pressing.
+
+**2026-08-23: items 2–6 are now all struck through.** That list was
+written 2026-08-12 and it is spent; the live candidates are 1 and 1a–1c
+below. When those empty too, do not pick from the struck items — go back
+to §3–§6 and choose a `PARTIAL` whose "what is missing" paragraph you can
+finish in one iteration.
 
 1. **Anything in `docs/DATA-INTEGRITY.md`'s ranked list.** Accuracy
    outranks everything here.
+1a. **The Lexicon Browser's second lexicon** (§6, bwh35). The Strong's
+   browser shipped 2026-08-23; `bdb_zh.json` / `thayer_zh.json` are
+   bundled and served but not browsable. The work is a lexicon picker
+   plus honest handling of coverage that is not 1:1 with Strong's
+   numbering — measure that coverage *before* designing the picker, since
+   a picker that offers a lexicon with holes in it will state something
+   untrue by omission.
+1b. **The synopsis display** (§6, bwh38). We hold both assets and both
+   are reachable; what is missing is passages side by side instead of a
+   chip sheet. `docs/PRODUCT-AUDIT.md` §7.4 parks this behind #292, so
+   check whether #292 is still blocked before picking it.
+1c. **Flashcard retention** (§6, bwh40) — learned/not-learned marking and
+   the Example Verse Finder. The entry already rejects printing.
 2. ~~Version difference highlighting~~ — **DONE v1.6.147**, §3.3.
-3. ~~Nave's Topical Bible~~ — the verse-entered half is **DONE
-   2026-08-19**, §3.5. It was not small: the import needed two repair
-   passes before a single count was true (`docs/DATA-INTEGRITY.md` check
-   42), which is the general lesson for the rest of this list — "public
-   domain and openly available" says nothing about whether the data is
-   right. What is left is the **browsable** side (entry list, lookup box,
-   history) under `Resources | X-Refs`; that is a UI slice on a tested
-   service, and it belongs with item 4's kind of work, not with an import.
-4. **Verse list comparison** (§3.5) — the word-list half is **DONE
-   2026-08-19** (compare two books, `word_list_compare.dart`); what is
-   left is set operations over two saved VERSE lists, which share none of
-   that code: a verse list is a set of references a reader assembled, so
-   the interesting output is the three-way split, not a corpus claim.
+3. ~~Nave's Topical Bible~~ — **DONE**, both halves. The verse-entered
+   half landed 2026-08-19 (§3.5); the browsable side this entry named as
+   "what is left" landed 2026-08-22 as `lib/pages/naves_page.dart` under
+   `Resources`. The import was not small: it needed two repair passes
+   before a single count was true (`docs/DATA-INTEGRITY.md` check 42),
+   which is the general lesson for the rest of this list — "public domain
+   and openly available" says nothing about whether the data is right.
+4. ~~Verse list comparison~~ (§3.5) — **DONE**, both halves. The
+   word-list half is `word_list_compare.dart` (2026-08-19). The verse-list
+   set operations this entry called "what is left" were already shipped,
+   under names a grep for *intersect/union/difference* does not find:
+   `VerseList.selectCommonWith` and `selectUniqueTo`
+   (`lib/utils/verse_list.dart:285,301`), wired to the Select menu at
+   `verse_list_pane.dart:237-239`. Composed with `deleteSelected` and
+   `invertSelection` they give intersection, difference and symmetric
+   difference, and `test/verse_list_test.dart:165-251` asserts all three.
+   Corrected 2026-08-23. This is §1's "grep it first" rule catching a
+   fifth case, and it shows the grep has to be for the *reader's* verb:
+   the operations are named for what she does — select what is common —
+   not for the set algebra underneath.
 5. ~~Compound (parenthesised) search~~ — **DONE 2026-08-19**, §3.1. What
    is left of it is Strong's-side grouping, which is a different engine;
    see the corrected §3.1 entry before picking it up.
