@@ -19,11 +19,24 @@ Last updated: 2026-08-23 (fifth entry)
 
 | | |
 |---|---|
-| `pubspec` / dev | **1.6.152** — dev is 4 commits behind `main`, which is **2 undeployed iterations** of the 3 that trigger a deploy |
+| `pubspec` / dev | **1.6.152** — dev is **9 commits behind `main`** (last deploy was e7620a4). Past the 3-iteration trigger; see the note below for why 45g did not deploy |
 | prod (seeksparks.netlify.app) | **1.6.136** — 16 versions behind, by design: prod ships only on the owner's word |
-| `main` | check 45 — the tagged layers audited against the flat editions they tag |
-| Suite | **3,154 tests**, green; `flutter analyze` exit 0 |
+| `main` | check 45g — the third witness failed; 22 Chinese verses repaired, 21 reading-text defects named |
+| Suite | **3,177 tests**, green; `flutter analyze` exit 0 |
 | CI | green (Flutter CI on `main`) |
+
+**Why 45g did not deploy, though it was past the trigger.** A second
+writer was committing to this tree throughout the iteration — 9da199d
+(22:23) and 0def09c (22:35) against a session that ended 22:40 — working
+a rename of the app's identity across `ui_strings.dart`, `about_page`,
+`settings_page`, `loading_page`, `web/index.html` and `manifest.json`.
+`release_web.sh` builds from the **working tree**, so a deploy would
+have (a) risked snapshotting a file mid-edit and (b) published a
+half-finished rebrand under this iteration's name that the loop did not
+author and could not verify. 45g's own change is a data repair with no
+UI surface and full test coverage, so nothing in it needs a deploy to be
+seen. **Deploy the next iteration once the rebrand settles** — the debt
+is 9 commits and should not grow much further.
 
 ---
 
@@ -112,14 +125,25 @@ third time; measure from the source, always.
 — `assets/biblexg-v2.json` missing 馬可福音 6:8-11 — which **must not be
 taken unattended** (it needs the upstream source or an owner's decision).
 
-**Take the SECOND unnumbered item instead: check 45d's 79 verses where
-`cuvs-yhwh`'s two layers disagree on a word, ~20 of them wrong in the
-text the reader reads** (Judges 12:7 has lost the 六 of 六年; Isaiah 23:1
-no longer names 推罗). Found 2026-08-23, **can be taken unattended**, and
-by the accuracy rule it outranks every feature below. Start with the 15
-verses printing a literal `#` — unambiguous and visible on screen. **Do
-not bulk-apply one layer over the other**: both are wrong in roughly
-equal measure, which is precisely why the disagreement was findable.
+**Take the SECOND unnumbered item instead: the 21 word-level defects in
+`cuvs-yhwh`'s reading text**, listed verse by verse in check 45g. Isaiah
+23:1 has lost the 推 of 推罗 and no longer names Tyre; Judges 12:7 has
+lost the 六 of 六年; Lamentations 3:1 carries a 神 the 和合本 lacks. **Can
+be taken unattended**, and by the accuracy rule it outranks every feature
+below. Regenerate the list with `python3 tools/adjudicate_cuvs_yhwh.py`,
+which prints all 21 with the Strong's number each turns on.
+
+*(45d's other two sub-jobs are done: check 45g repaired the 15 verses
+printing a literal `#` and the 7 doubling a character against itself, and
+`audit_tagged_layer.py` fell 372 → 350 to confirm it.)*
+
+**Read each of the 21 against the 和合本 individually. Do not resolve them
+by majority.** 45g measured why: `cuvs-plus` matches the reading text on
+**99.70% of characters**, so it is a descendant and not a witness, and a
+2-of-3 vote proposed deleting the 六 from Judges 12:7. Of the ten verses
+where the tagged layer holds what both flat editions lack, nine go
+against the reading text and **one — Job 31:36 — goes the other way**; a
+rule applied to all ten damages it.
 
 ---
 

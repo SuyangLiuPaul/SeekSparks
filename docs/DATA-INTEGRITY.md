@@ -123,9 +123,10 @@ believe it is fine" and "we looked".
 | 45a | Is every verse of a flat edition present in its tagged layer | 155,193 verses / 5 editions | **111 untagged**: 90 placeholders (correct) + **21 real Greek verses** | reported, **not** repaired — frozen by name, a fabricated run is worse |
 | 45b | Do the tagged runs, concatenated, say what the flat verse says | 92,894 verses / kjvs, lxxwh, cuvs-plus | **0** | clean, now a test |
 | 45c | The same question of `bsb` | 31,086 verses | **2** (Exodus 38:28 drops "of silver"; Judges 16:14 drops "it") | reported, pinned at exactly 2 |
-| 45d | The same question of `cuvs-yhwh` | 31,102 verses | **372** = 161 orthographic + 116 note placement + 16 reordering + **79 real word differences** | **open** — the 79 are defects in BOTH layers, ~20 of them in the text the reader reads. New "Next, in order" item |
-| 45f | Does the tagged layer print a character that is not text | 5 editions | **15** `cuvs-yhwh` verses render a literal `#` where the flat prints `[基督]` | **open**, visible on screen |
+| 45d | The same question of `cuvs-yhwh` | 31,102 verses | **372** = 161 orthographic + 116 note placement + 16 reordering + **79 real word differences** | superseded by 45g — 22 repaired, **350** remain; the reading-text half is the "Next, in order" item |
+| 45f | Does the tagged layer print a character that is not text | 5 editions | **15** `cuvs-yhwh` verses render a literal `#` where the flat prints `[基督]` | **closed** by 45g — 17 marks in 15 verses now read `[基督]`; a test forbids the character |
 | 45e | Tagged records naming a verse their edition does not have | 5 editions | **0** | clean, now a test |
+| 45g | Can a third 和合本 edition adjudicate 45d's 79 | 31,102 verses × 3 files | **no** — `cuvs-plus` matches the reading text on **99.70% of characters**, so it is descent, not a witness; a majority vote proposed deleting the 六 of Judges 12:7 | the failure is the finding. 22 verses repaired without a vote; **21 word-level defects in the reading text** listed, not repaired |
 
 *(Checks 34, 35, 37, 38 and 41–44 have full sections below but were never
 given rows here; the omission is noted rather than guessed at.)*
@@ -5658,7 +5659,7 @@ it would pass here and fail in CI.)
 | coverage — flat verses with a tagged record | 155,193 | **111 absent**: 90 placeholders, **21 real Greek verses** |
 | agreement — `kjvs`, `lxxwh`, `cuvs-plus` | 92,894 | **0** — 100.0000% |
 | agreement — `bsb` | 31,086 | **2** — 99.9936% |
-| agreement — `cuvs-yhwh` | 31,102 | **372** — a second edition, see 45d |
+| agreement — `cuvs-yhwh` | 31,102 | **350** — 372 before 45g repaired 22; see 45d and 45g |
 | orphans — tagged records naming a verse the edition lacks | 5 editions | **0** |
 
 ### 45a — the 21 untagged verses, and why they were not repaired
@@ -5843,6 +5844,119 @@ so it also witnesses that table from the other direction.
 
 ---
 
+### 45g — the third witness failed, 22 verses repaired anyway, and 21 defects in the reading text
+
+*2026-08-23.* `tools/adjudicate_cuvs_yhwh.py`. Check 45d ended on a
+deadlock it stated honestly — "neither layer is the authority; each
+caught the other" — and the obvious way out was a third file.
+`assets/cuvs-plus.json` is a second 和合本 already in this repository,
+imported separately. **It does not work, and that is the first finding.**
+
+**`cuvs-plus` is descent, not independence.** Folded for the divine-name
+restoration and reduced to Han characters, it matches the reading text in
+**29,790 of 31,102 verses (95.78%)** and, character for character, in
+**917,572 of 920,316 (99.70%)**. No two independent translations of the
+Bible agree to 99.7% of characters. The doc already said this in prose
+— "the same base text as cuvs-yhwh but imported separately" — and the
+measurement is what that sentence means.
+
+So a 2-of-3 majority is worthless here, and this is not theoretical: the
+first version of the script trusted it and proposed **deleting the 六
+from Judges 12:7**, where both flat editions read 「作以色列的士师年」 —
+Jephthah judged Israel "_ years" — and only the tagged layer keeps the
+six. That is check 26's lesson a second time, and the reason the script
+survives as a *report* with a deliberately narrow repair gate.
+
+**What was repaired: 22 verses, in the two classes that need no vote,**
+because neither is a reading any edition holds.
+
+| class | verses | what it was |
+| --- | --- | --- |
+| A. a literal `#` drawn as scripture | 15 (17 marks) | the MySword module's stand-in for a supplied word; the reading text prints `[基督]` at all 17 |
+| B. a character doubled against itself | 7 | 若若, 箭箭, 未未曾, 我们我们, 你要要, 以以色列, 耶稣说说 |
+
+Both were settled without consulting any witness: `#` is not a Chinese
+character, and a character doubled where **both** flat editions read it
+once is a duplication artefact rather than a variant. Confirmation from
+an instrument that knows nothing about this script — `audit_tagged_layer.py`
+went from **372 disagreements to 350**, exactly the 22 touched.
+
+**What was found and NOT repaired: 21 word-level defects in the reading
+text** — scripture as the reader sees it, which this script does not
+write to.
+
+- **12 where the reading text stands alone** against both other files:
+  Joshua 5:9 辊/滚, 1 Samuel 15:12 a spurious 纪, 2 Kings 3:2 至/致,
+  Nehemiah 2:19 and 3:3 spurious pronouns, **Isaiah 23:1 missing the 推
+  of 推罗, so the verse no longer names Tyre**, Isaiah 30:24 锨/杴,
+  Isaiah 64:3 and Acts 25:18 意/逆, Jeremiah 7:20 着/里, Jeremiah 50:32
+  a spurious 里, **Lamentations 3:1 a 神 the 和合本 does not have**.
+- **9 where BOTH flat editions have lost a word the tagged layer keeps**:
+  Judges 9:57 (他 — the page reads 「咒诅归到们身上」, and 们 cannot stand
+  alone), 12:7 (六), 15:2 (我请求, H4994 נָא), 15:5 (葡萄园), 15:18
+  (现在, H6258), 2 Samuel 5:17 (众), 21:2 (the 大 of 大发热心), Esther
+  6:7 (人), Malachi 2:3 (the 在 of 抹在). **These are exactly the verses
+  a majority vote destroys**, and they became findable only by refusing
+  the majority.
+
+Their direction is not mechanical and the script does not pretend it is.
+It groups them; each was then read against the Strong's number its
+characters carry, and the ten verdicts are written into `ADJUDICATED` so
+they can be re-checked rather than believed. A guard prints a warning if
+that table ever drifts from what the script finds.
+
+**One of the ten went the other way, and it is the reason the table is
+not a rule.** Job 31:36's tagged run is 「愿那敌我敌」 under a *single*
+H7379 (רִיב) — one word with a duplicated character — so there the
+reading text 「愿那敌我者」 is correct and the tagged layer is wrong. It
+is the same defect as the seven class-B repairs but **non-adjacent**, so
+the doubled-character gate could not see it. Had the nine-of-ten pattern
+been applied as a rule, this verse would have been damaged.
+
+Two further groups are named because they are *not* the same finding:
+**15** verses where the tagged layer prints inline what the reading text
+files as a `<note: …>` (placement, not loss — separated by testing the
+note bodies specifically, since a raw substring test both misses
+1 Samuel 1:24's punctuated note and falsely "finds" Judges 9:57's 他
+three clauses away), and **10** one-for-one substitutions (嗐/咳, 丕/墩,
+抄/挲) that remain undecidable without a source outside this repository.
+
+**Side finding, and the count in it was wrong twice before it was right.**
+`cuvs-yhwh` has **25 verses whose 〔 and 〕 counts differ** (`cuvs-yhwh-tr`
+the same 25; `cuvs-plus` and `biblexg-v2` have 0), and the first draft of
+this section called all 25 a defect and cited Matthew 18:10 "ending on a
+dangling 〔有古卷在此有". **That was wrong.** 和合本 opens a textual note
+in one verse and closes it in a later one, so 22 of the 25 are **11
+correct cross-verse pairs** — Matthew 18:10 opens the note that 18:11
+closes, which is the convention working, not failing.
+
+Counting the brackets over the whole edition is what settles it: **12 〔
+against 13 〕**. Exactly three are genuinely unmatched, and all three are
+reader-visible:
+
+| verse | what is on the page |
+| --- | --- |
+| 士师记 8:24 | ends 「都是戴金耳环的。〕」 — a closing bracket nothing opened |
+| 耶利米书 10:11 | ends 「必从地上从天下被除灭！〕」 — the same |
+| 路加福音 8:45 | opens 〔 and closes with an **ASCII `)`** — 「你还问摸我的是谁吗？)」 |
+
+Reported, not fixed: the first two need the 和合本 consulted for where the
+〔 belongs, and none of the three is a wrong *word*.
+
+Blind spots: note **content** is stripped from all three sides, so a word
+difference living inside a note is invisible here; and where all three
+files inherit the same wrong character nothing objects — Judges 12:7
+shows two of the three routinely do.
+
+Regression test: `test/cuvs_yhwh_tagged_layer_test.dart`, two new tests.
+Each of their eight assertions was checked to **fail against the
+pre-repair asset** — the doubled-character ones needed the character
+*before* the stutter in the fragment, because a doubled character
+otherwise just shifts the match one place right and the assertion passes
+on the damaged text.
+
+---
+
 ## Next, in order
 
 **First, and deliberately unnumbered so the citations below stay
@@ -5860,29 +5974,34 @@ missing verse is the strongest form of the app saying something untrue
 about the text.
 
 **Second, unnumbered for the same reason, and the one to take next: the
-79 verses where `cuvs-yhwh`'s two layers disagree on a word, about twenty
-of them wrong in the text the reader reads.** Check 45d, found
-2026-08-23. Unlike the item above it, **this one can be taken
-unattended** — it needs no upstream source and no owner's decision, only
-care. It is an accuracy defect of the first kind, the app displaying a
-word scripture does not say: Judges 12:7 no longer says how many years
-Jephthah judged, Isaiah 23:1 does not name Tyre in its second clause,
-Lamentations 3:1 carries a 神 the 和合本 does not.
+21 word-level defects in `cuvs-yhwh`'s reading text.** Check 45g,
+2026-08-23, which closed sub-jobs (a) and (b) of 45d — the 15 `#` verses
+and the 7 doubled characters are repaired — and left (c), the flat text,
+listed verse by verse. It is an accuracy defect of the first kind, the
+app displaying a word scripture does not say: Judges 12:7 no longer says
+how many years Jephthah judged, Isaiah 23:1 does not name Tyre in its
+second clause, Lamentations 3:1 carries a 神 the 和合本 does not.
 
-Three sub-jobs, and they are **not equally safe**:
+**This can be taken unattended, with one condition: each of the 21 must
+be read individually against the 和合本**, the discipline check 26 set
+and `tools/repair_chinese_text_defects.py` already follows. The list is
+regenerated by `python3 tools/adjudicate_cuvs_yhwh.py`, which prints all
+21 with the Strong's number each turns on.
 
-  (a) the **15 verses printing a literal `#`** where the flat prints
-  `[基督]` are unambiguous and visible on screen — the safest to take
-  first; (b) the **~8 doubled characters** in the tagged layer (若若,
-  箭箭, 未未曾) are mechanical and equally unambiguous; (c) the **~20
-  flat-text defects need each reading read individually** against the
-  和合本, the discipline check 26 set and
-  `tools/repair_chinese_text_defects.py` already follows. **Do not
-  bulk-apply the tagged layer over the flat text**: 45d found the tagged
-  layer wrong in about as many places as the flat one. Neither file is
-  the authority, which is the whole reason the disagreement was findable.
-  Regenerate the list with `tools/audit_tagged_layer.py --edition
-  cuvs-yhwh`.
+**Do not bulk-apply the tagged layer over the flat text, and do not
+resolve these by majority.** 45g measured why: `cuvs-plus` agrees with
+the reading text on 99.70% of characters, so it is a *descendant*, not a
+witness, and a 2-of-3 vote proposed deleting the 六 from Judges 12:7. Of
+the ten verses where the tagged layer holds what both flats lack, nine
+go against the reading text and **one — Job 31:36 — goes the other way**;
+a rule applied to all ten damages it. Neither file is the authority,
+which is the whole reason the disagreement was findable at all.
+
+Still open beneath it, and much smaller than it first looked: **three
+broken note delimiters** in `cuvs-yhwh` — 士师记 8:24 and 耶利米书 10:11
+end on a 〕 nothing opened, and 路加福音 8:45 closes its 〔 with an ASCII
+`)`. The other 22 of the 25 verses that fail a per-verse bracket count
+are legitimate notes spanning a verse boundary; see 45g.
 
 Also here, and small: `kwic_pane.dart:127` drops a line whose runs are
 null while still counting the reference, so its "All N references" footer

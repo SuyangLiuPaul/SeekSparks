@@ -158,6 +158,43 @@ void main() {
     expect(joined('psalms', '146:6'), contains('雅伟造天、地、海'));
   });
 
+  // 2026-08-23 (check 45d). Two more classes of the source's markup, both
+  // found by comparing this layer against the flat edition it tags rather
+  // than by looking at it alone.
+  test('no run carries a hash', () {
+    // The MySword module writes `#` where the 和合本 prints a supplied word
+    // in brackets. The reading text has 「主[基督]」 at all seventeen of
+    // these; the tagged layer had 「主#」 and drew the hash as scripture.
+    final offenders = <String>[];
+    tagged.forEach((book, verses) {
+      verses.forEach((ref, runs) {
+        for (final run in runs.cast<Map<String, dynamic>>()) {
+          final w = run['w'] as String;
+          if (w.contains('#')) offenders.add('$book $ref ${jsonEncode(w)}');
+        }
+      });
+    });
+    expect(offenders, isEmpty, reason: offenders.join('; '));
+  });
+
+  test('a doubled character no longer stutters', () {
+    // Seven verses repeated one character against themselves — an artefact
+    // of the import, not reduplication. These are asserted by verse and not
+    // by a pattern, because Chinese reduplication is ordinary prose (天天,
+    // 渐渐, 人人) and a general detector would condemn thousands of correct
+    // verses. The flat edition reads all seven as written here.
+    // Each fragment carries the character BEFORE the stutter. Without it
+    // the assertion passes on the damaged text too, because a doubled
+    // character only shifts the match one place to the right.
+    expect(joined('leviticus', '5:7'), contains('他的力量若不够献一只羊羔'));
+    expect(joined('1_samuel', '20:37'), contains('童子说：“箭不是在你前头'));
+    expect(joined('1_kings', '19:18'), contains('屈膝的，未曾与巴力亲嘴的'));
+    expect(joined('2_kings', '10:5'), contains('说：“我们是你的仆人'));
+    expect(joined('isaiah', '41:16'), contains('为喜乐，以色列的圣者为夸耀'));
+    expect(joined('ezekiel', '36:1'), contains('你要对以色列山发预言'));
+    expect(joined('matthew', '9:28'), contains('跟前。耶稣说：“你们信我'));
+  });
+
   test('a damaged code stops stealing its neighbour\'s number', () {
     // 「他若<H518>行恶」: the code was text, so it never split the run, and
     // 他若 was left carrying H4672 — the number of a word further on.

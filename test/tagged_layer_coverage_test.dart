@@ -18,8 +18,9 @@
 // The answer, measured over 155,193 verses: three editions reconstruct
 // their printed text byte for byte, one has two known departures, 21
 // verses of real Greek are absent from a tagged layer, and `cuvs-yhwh`
-// disagrees with itself in 372 verses of which 79 are a real word
-// difference — in BOTH files. See docs/DATA-INTEGRITY.md check 45.
+// disagrees with itself in 350 verses — 372 before check 45g repaired the
+// 22 that needed no adjudication — of which the real word differences are
+// defects in BOTH files. See docs/DATA-INTEGRITY.md checks 45 and 45g.
 //
 // WHAT THIS CANNOT SEE, stated because a detector reports its own reach:
 // a shift present in BOTH layers. Check 40 found `cuvs-plus` numbering
@@ -271,23 +272,25 @@ void main() {
     expect(sweeps['bsb']!.differ, _bsbDepartures);
   });
 
-  test('the Chinese layers disagree in at most the 372 check 45 measured',
+  test('the Chinese layers disagree in at most the 350 left after check 45g',
       () {
     // Holding `cuvs-yhwh`'s two layers to identity would fail for the
-    // wrong reason: 161 of the 372 differ only by settled orthographic
-    // pairs (阿/啊, 复/覆, 它/他/她, 吗/么), 116 by where a gloss sits, and
-    // 16 are an alignment artefact of removing the 〔…〕 notes.
+    // wrong reason: 161 of check 45d's 372 differ only by settled
+    // orthographic pairs (阿/啊, 复/覆, 它/他/她, 吗/么), 116 by where a
+    // gloss sits, and 16 are an alignment artefact of removing the 〔…〕
+    // notes.
     //
     // But 79 ARE a real word difference, and they are defects in both
-    // files — about twenty in the flat text the reader reads (Judges
-    // 12:7 has lost the 六 of 六年; Isaiah 23:1 no longer names 推罗) and
-    // a similar number in the tagged layer (若若 at Leviticus 5:7).
+    // files. Check 45g repaired the 22 that needed no adjudication — 15
+    // verses printing a literal `#`, 7 doubling a character against
+    // itself — which is why the ceiling is 350 and not 372.
     //
-    // So this ceiling is a HOLDING POSITION over a known defect, not a
-    // clean result. It stops the gap growing and lets a repair pass
-    // while it is partial. When the 79 are fixed, tighten it — do not
-    // read a green tick here as the layers agreeing.
-    expect(sweeps['cuvs-yhwh']!.differ.length, lessThanOrEqualTo(372));
+    // It is still a HOLDING POSITION over a known defect, not a clean
+    // result: 21 word-level defects remain in the flat text the reader
+    // reads (Isaiah 23:1 no longer names 推罗; Judges 12:7 has lost the
+    // 六 of 六年). Tighten it again as those are fixed — do not read a
+    // green tick here as the layers agreeing.
+    expect(sweeps['cuvs-yhwh']!.differ.length, lessThanOrEqualTo(350));
   });
 
   test('no tagged run prints a character that is not text', () async {
