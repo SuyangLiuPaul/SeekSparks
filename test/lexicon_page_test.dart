@@ -200,11 +200,25 @@ void main() {
   testWidgets('picking a work changes the rows, and says whose they are',
       (t) async {
     await pump(t, initial: LexiconId.greek);
-    // G26 ἀγάπη under Strong's Chinese gloss.
-    await t.enterText(find.byType(TextField), 'G26');
+    // G76 Ἀδάμ, and the choice of word is the whole test.
+    //
+    // This was written against G26 ἀγάπη and passed — on a defect. The
+    // Chinese module's usage line had been truncated, so Thayer 中文's
+    // first "sense" was the KJV fragment `feast of charity 1; 116`,
+    // which of course differed from Strong's. Repairing the import
+    // (check 44) put the real sense back and the two works turned out
+    // to say the same thing: **4,875 of 5,514 Greek headwords, 88.4%,
+    // carry a Chinese summary identical to Strong's but for
+    // punctuation.** The two Chinese texts share a lineage, so a
+    // difference here has to be CHOSEN, not assumed.
+    //
+    // Proper names are where they genuinely part: Strong's Chinese
+    // describes the person, the module gives the name's meaning.
+    await t.enterText(find.byType(TextField), 'G76');
     await t.pumpAndSettle();
     expect(find.text("1 个词条如此拼写 · Strong's"), findsOneWidget);
-    final underStrongs = _rowSummary(t, 'ἀγάπη');
+    final underStrongs = _rowSummary(t, 'Ἀδάμ');
+    expect(underStrongs, contains('第一个被造之人'));
 
     await t.tap(find.widgetWithText(InkWell, 'Thayer 中文'));
     await t.pumpAndSettle();
@@ -213,8 +227,9 @@ void main() {
     // same word — and the header now names him, so a reader quoting the
     // row knows whose words she is quoting.
     expect(find.text('1 个词条如此拼写 · Thayer 中文'), findsOneWidget);
-    expect(find.text('ἀγάπη'), findsOneWidget);
-    expect(_rowSummary(t, 'ἀγάπη'), isNot(underStrongs));
+    expect(find.text('Ἀδάμ'), findsOneWidget);
+    expect(_rowSummary(t, 'Ἀδάμ'), contains('红土'));
+    expect(_rowSummary(t, 'Ἀδάμ'), isNot(underStrongs));
   });
 
   testWidgets("Thayer under Hebrew is refused out loud, not hidden",

@@ -5350,6 +5350,11 @@ this check found them by asking the question about a different work.
 
 ### 43c — 28 truncated etymologies, which belong to #301
 
+**This section's count and its diagnosis were both wrong. Check 44
+supersedes it; the text is kept because the way it was wrong is the
+lesson.** The defect was real, the repair is shipped, and the scope
+was 468 etymologies and 1,635 usage fields, not 28.
+
 Not this feature's defect, and not repaired here. In the Chinese
 module, **28 of 14,696 entries have an `etymology` that stops
 mid-clause** — 9 in `bdb_zh`, 19 in `thayer_zh` — detectable by an
@@ -5373,6 +5378,178 @@ lines are "unbalanced" because a parenthetical legitimately opens on
 one numbered sense and closes on the next. Only the single-line
 `etymology` field can be judged this way.)*
 
+## Check 44 — the Chinese lexicon's fields, cut wherever the printed page broke
+
+Check 43c reported 28 truncated etymologies and named the cause: "the
+importer split a field on a delimiter that also occurs inside the
+parentheses." Both halves were wrong, and the way they were wrong is
+worth more than the repair.
+
+**The module stores one `<p>` per VISUAL LINE, not one per field.** The
+importer read `lines[2]` as the etymology, `lines[3]` as the KJV usage
+if it began 钦定本, and everything after as senses. That is correct only
+for an entry whose every field happened to fit on one printed line. A
+field that wrapped arrived as two, three — up to nine — `<p>` elements,
+and the positional reading kept the first and misfiled the rest.
+
+What the reader saw, in H205 אָוֶן:
+
+| | shipped | after |
+|---|---|---|
+| etymology | `字根已不使用, 可能的意思为喘气(由此,使尽浑身解数` | …`, 通常是徒劳的); TWOT - 48a; 阳性名词` |
+| usage | *(absent)* | `钦定本 - iniquity 47, wicked(ness) 8, … vain 1; 78` |
+| sense 1 | `, 通常是徒劳的); TWOT - 48a; 阳性名词` | `1) 麻烦, 邪恶, 悲伤` |
+
+A definition that stops mid-clause, no KJV counts at all, and the
+missing half of the etymology served to the reader as **a numbered sense
+of the word**. It rendered perfectly, threw nothing, and the suite was
+green throughout.
+
+### 44a — why the parenthesis test found only 28
+
+Because a parenthesis test can only see a break that lands *between a
+bracket and its partner*. Every other wrap — the overwhelming majority —
+is invisible to it. The published figure was not an undercount by a
+margin; it was a different quantity, measured by an instrument that
+could not reach the defect. **28 of 14,197 is 0.2%. The real figure is
+11.5%.**
+
+The working detector is the module's own convention: a KJV usage block
+reads `钦定本 - word N, word M, …; TOTAL`. The trailing total makes the
+block **self-terminating** — you can tell a wrapped continuation from
+the next real field because the field is not finished until the total
+arrives. Sense markers (`1)`, `1a)`, `1a1a)`, and six rare bare `a)`
+forms) close the other end.
+
+### 44b — measured, on the regenerated asset
+
+14,197 lexical entries across `bdb_zh` and `thayer_zh`, grammar codes
+excluded.
+
+| | before | after |
+|---|---|---|
+| etymologies repaired | — | **468** |
+| usage fields repaired | — | **1,635** |
+| …of those, entirely absent before | — | **468** |
+| sense lists cleaned of misfiled prose | — | **1,631** |
+| entries carrying a usage field | 13,721 | **14,189** |
+| etymologies with unbalanced brackets | 26 | **13** |
+
+The 13 residual unbalanced brackets are damage in the module itself
+(H2775 ships as `charcah (khar'- saw` and nothing follows it), correctly
+left alone rather than invented. The 8 entries with no usage field are
+the same kind: H2059, H2194, H2540, H2775, H7418, H7427, H8556, G4191
+carry no 钦定本 line at all.
+
+**The strongest verification is conservation, not the counts above.**
+Whitespace-flattened `etymology + usage + senses` was compared per entry,
+old against new: **0 entries lost text and 0 gained text.** Every one of
+these changes is a redistribution between fields. Nothing was written
+that the lexicographer did not write.
+
+### 44c — the two failures on the way, both instructive
+
+**A sense-marker regex is a data question, not a guess.** The first
+attempt, `^\d+[a-z]?\d*\)`, does not match `1a1d)`, `1c2d)` or a bare
+`a)`. About 1,900 real senses would have been read as continuation prose
+and glued into the line above — *worse than the defect being repaired,
+and equally silent*. The shapes were enumerated from the data (14
+distinct) and the 6 letter-initial cases read individually before the
+pattern was settled.
+
+**The tidier branch was the wrong one.** For the 8 entries with no
+钦定本 line there is nothing to say where the etymology stops. Joining
+the whole body into the etymology looked cleaner and emptied H2194's
+five numbered senses, H2059's three and H2540's five —
+`test/lexicon_browse_test.dart` caught it, because check 43b had pinned
+the set of article-less headwords and it had grown from 5 to 8. The
+branch now falls back to the exact shipping behaviour. **A pinned set
+from an earlier check is what made a silent regression loud.**
+
+### 44d — what was deliberately NOT repaired
+
+1,514 non-marker lines sit inside sense blocks. Some are wraps; some are
+standalone annotations (`专有名词, 阳性`, `其同义词, 见 5859`) that were
+always their own line. **Nothing in the markup separates the two.**
+Senses render one per line, so an unjoined wrap is cosmetic — while a
+wrong join would state a sense the lexicon does not. Left alone, and
+recorded in `split_entry`'s docstring so the next reader does not
+mistake it for an oversight.
+
+The same reasoning chose the failure direction for the usage block: stop
+early and the old truncation survives; run on and a proper-name gloss is
+glued into a word-frequency list, which reads as a KJV count and is not.
+**A truncated count claim is worse than an absent one.**
+
+### 44e — a green test that was green because of the defect
+
+`test/lexicon_page_test.dart`'s "picking a work changes the rows"
+asserted that Thayer 中文's summary for G26 ἀγάπη differs from
+Strong's. It passed for the wrong reason: Thayer 中文's first "sense"
+was the truncated KJV fragment `feast of charity 1; 116`. Repairing the
+import put the real sense back — and the two works say **the same
+thing**: `重视,喜欢,爱上` in both.
+
+Measured across the Greek side: **4,875 of 5,514 headwords (88.4%)
+carry a Chinese summary identical to Strong's but for punctuation**;
+2,274 are identical character for character. The Chinese Strong's gloss
+comes from CBOL and the module's senses share its lineage, so *the
+browser's second Chinese work mostly repeats the first in the row
+summary*. The works differ in the article body — etymology, the 钦定本
+counts, the sub-senses — which is what the article-tier search reads,
+so the feature is not empty; but the row is not the place to look for
+the difference. Proper names are where they genuinely part: Strong's
+describes the person (`亚当, 第一个被造之人`), the module gives the
+name's meaning (`亚当 = "红土"`). The test now uses G76 Ἀδάμ and says
+why in full.
+
+**A test that asserts two things differ is only as good as the reason
+they differ.** This one would have gone on passing through any repair
+that left the fragment in place.
+
+### 44f — the same cut, in the Strong's asset, NOT repaired here
+
+Found by the comparison above and measured, not fixed — it is a
+different asset and a different generator, and one repair per iteration
+is the rule that keeps a conservation proof meaningful.
+
+`tools/build_originals.py:244` builds the Chinese gloss with
+`re.search(r'^\s*1\)\s*(.+?)\s*$', body, re.MULTILINE)` — **the first
+physical LINE of sense 1**, where CBOL wraps sense 1 across several. The
+docstring calls it "short but accurate". It is short, and for **279
+entries it is not accurate**: 193 Hebrew and 86 Greek glosses end on a
+comma or semicolon, mid-clause.
+
+- H204 → `…崇拜太阳神的中心,` — `defZh` continues `波提非拉 (安城的祭司, 约瑟的岳父) 居住之地`
+- H218 → `在南巴比伦的城市, 迦勒底的城市, 崇拜月神的中心地,` — the next line names Abraham's home town
+- G4102 πίστις → `对任何真理的坚信, 相信;` — the clause that says the New Testament sense is on line two
+
+`glossZh` is the row summary in the Lexicon Browser and the gloss in
+word study, so these are on screen. 279 is a floor, not a total: it
+counts only glosses whose cut happens to land on a separator, which is
+**exactly the mistake check 43c made** — an unbalanced-bracket test
+found 28 of 468. The true figure is however many of the CBOL glosses
+(8,669 Hebrew + 5,514 Greek) have a multi-line sense 1, and it must be
+measured from `defZh`, not guessed.
+
+The repair needs no network: `defZh` ships complete, so the joined gloss
+is derivable from the asset already in the tree. Fix the generator
+function and apply the identical rule to the shipped file in the same
+change, or the two drift apart.
+
+Regression tests: `test/chinese_lexicon_test.dart` — three worked
+examples (H205, G1537, G3588) plus two corpus-wide detectors, one
+asserting no sense begins `钦定本 -` and one pinning 14,189/14,183. Fix
+in `tools/import_yahweh_modules.py` (`split_entry`), ticket **#301**.
+
+*(**Re-running that importer regresses the tagged Bible text.**
+`tools/repair_chinese_lookalikes.py` runs after it and replaces 丶
+U+4E36 with 、 U+3001 at 27 sites in 15 books that check 26 arbitrated
+against two outside witnesses. A plain re-run puts the lookalike back,
+renders perfectly and throws nothing. It happened during this check and
+was caught by `git status` showing 15 files nobody meant to touch. The
+warning is now in the importer's own docstring.)*
+
 ## Next, in order
 
 **First, and deliberately unnumbered so the citations below stay
@@ -5389,6 +5566,16 @@ unattended. **By the accuracy rule it outranks everything below**: a
 missing verse is the strongest form of the app saying something untrue
 about the text.
 
+0. **The Strong's Chinese gloss, cut at the printed line break.** Check
+   44f. `tools/build_originals.py:244` keeps the first physical line of
+   CBOL's sense 1; at least 279 glosses therefore end mid-clause on a
+   comma, and the row summary in the Lexicon Browser is where the reader
+   meets them. The true scope has not been measured — it must be counted
+   from `defZh`, because a separator test is the same undercounting
+   instrument that reported check 43c as 28 when it was 468. No network
+   is needed: `defZh` ships whole. Fix the generator and the shipped
+   asset in one change, or they drift. **Placed first because it is
+   measured, located, repairable unattended, and on screen today.**
 0. **What `assets/kjv.json` actually is.** Check 27 established that it
    is not the King James Version but an unidentified Americanised
    revision of it — not the AKJV (34.1%) and not Webster (39.0%). The

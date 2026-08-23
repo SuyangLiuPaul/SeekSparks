@@ -22,6 +22,14 @@ Outputs
   assets/strongs/bdb_zh.json            Hebrew entries, structured
   assets/strongs/thayer_zh.json         Greek entries, structured
 
+THIS SCRIPT IS NOT THE LAST WORD ON THE TAGGED TEXT. Running it plain
+REGRESSES 27 verses across 15 books: `tools/repair_chinese_lookalikes.py`
+runs after it and replaces 丶 (U+4E36) with 、 (U+3001) at sites check 26
+arbitrated against two outside witnesses, and a bare re-run puts the
+lookalike back. The corruption renders perfectly and throws nothing, so
+nothing downstream would have told you. Re-run the repair with --write
+afterwards, or leave assets/tagged/ alone when only the lexicon is wanted.
+
 Run:  python3 tools/import_yahweh_modules.py <dir-with-unzipped-modules>
 """
 import json
@@ -256,12 +264,131 @@ def import_bible(db_path, out_dir):
 
 
 def clean_lines(html):
-    """MySword entries are <p>-per-line. Keep the lines, drop the markup."""
+    """MySword entries are <p>-per-VISUAL-line. Keep the lines, drop markup.
+
+    The `<p>`s are NOT one per field. The module breaks its prose across
+    them wherever the printed page broke, so a single logical field can
+    arrive as two, three, once nine `<p>` elements. Reassembling them is
+    `split_entry`'s job; this function only strips the markup.
+    """
     s = re.sub(r'(?i)</p\s*>', '\n', html or '')
     s = re.sub(r'<[^>]+>', '', s)
     s = s.replace('&nbsp;', ' ').replace('&amp;', '&')
     s = s.replace('&lt;', '<').replace('&gt;', '>')
     return [ln.strip() for ln in s.split('\n') if ln.strip()]
+
+
+# A numbered sense opens a new logical unit. The module's hierarchy is
+# `1)`, `1a)`, `1a1)`, `1a1a)`, `1a1a1)` — 30,479 markers, all
+# digit-initial — plus six letter-initial ones (`a)`, `b)`, `ac)`).
+# Getting this regex WRONG is worse than the defect it repairs: a first
+# draft matched only `\d+[a-z]?\d*\)` and would therefore have read
+# `1a1d)` and `1c2d)` as continuation prose and glued two distinct
+# senses into one. Enumerated from the data, not assumed.
+SENSE_RE = re.compile(r'^(?:\d+[a-z0-9]*|[a-z])\)')
+
+# The KJV-usage line is `钦定本 - word N, word M, …; TOTAL`, and that
+# trailing total is what makes this block self-terminating: we can stop
+# on evidence rather than on a guess about where the prose ends. 14,159
+# of the 14,187 entries that have the line end it this way (28 use a
+# comma before the total, or omit it on a one-word entry — hence the
+# `[;,]`). Stopping EARLY only leaves the old truncation in place;
+# running ON glues a proper-name gloss into a word-frequency list, so
+# the conservative failure is the one this regex chooses.
+USAGE_TOTAL_RE = re.compile(r'[;,]\s*\d+\s*$')
+
+# `钦定本 - ` glued to the end of the etymology with no break at all.
+# Exactly two entries, and one of them is G3588 ὁ, the commonest word in
+# the Greek New Testament. The dash is what makes this safe: seven other
+# entries mention 钦定本 in running prose (`钦定本译作"底甲之子"`), and
+# none of those is followed by a dash and a count list.
+USAGE_HEAD_RE = re.compile(r'(?<=.)(?=钦定本\s*-\s)')
+
+
+def _join(a, b):
+    """Rejoin two halves of one wrapped line.
+
+    The module's line breaks fall mid-clause, so the halves need a space
+    — except where the continuation opens with punctuation that must sit
+    tight against the word before it (`使尽浑身解数` + `, 通常是徒劳的`).
+    """
+    if not a:
+        return b
+    return a + b if b[:1] in ',，。;；:：)）」”、' else a + ' ' + b
+
+
+def split_entry(lines):
+    """`[visual line, …]` → `(lemma, translit, etymology, usage, senses)`.
+
+    The shape the module intends is lemma / transliteration / etymology /
+    KJV usage / numbered senses, and the first importer read it
+    positionally: line 2 is the etymology, line 3 is the usage if it
+    starts with 钦定本. That holds for the 13,724 entries whose etymology
+    happens to occupy one visual line and breaks for the rest, in three
+    ways at once — the etymology was truncated at the break, the usage
+    field was then MISSING because line 3 was the etymology's second
+    half, and both tails were served to the reader as numbered senses.
+
+    So find the fields by their own markers instead of by their index:
+    the usage block is announced by 钦定本 and closed by its own total,
+    and everything between the transliteration and that announcement is
+    the etymology however many lines it took.
+
+    What this deliberately does NOT do: rejoin wrapped SENSES. 1,514
+    lines inside sense blocks are not numbered, and they are a mixture of
+    genuine wrap continuations (`…在神毁灭所多玛` + `时被神的使者救出`)
+    and standalone annotations that were always their own line
+    (`专有名词, 阳性`, `其同义词, 见 5859`). Nothing in the markup tells
+    the two apart, and gluing a part-of-speech tag onto the end of a
+    sense would state something the lexicon does not. They stay as
+    separate lines, which is how the entry pane already prints them.
+    """
+    lemma = unicodedata.normalize('NFC', lines[0]) if lines else ''
+    translit = lines[1] if len(lines) > 1 else ''
+
+    body = []
+    for ln in lines[2:]:
+        body.extend(p for p in USAGE_HEAD_RE.split(ln) if p)
+
+    head = next((i for i, ln in enumerate(body)
+                 if ln.startswith('钦定本')), None)
+    if head is None:
+        # No usage line anywhere — 10 entries, each damaged at source.
+        # Without the 钦定本 announcement there is nothing to say where
+        # the etymology stops, so fall back to the positional reading
+        # rather than guess. Joining the whole body instead looked
+        # tidier and was worse: H2194's five numbered senses are on
+        # their own lines already, and swallowing them into the
+        # etymology would have emptied its sense list to repair a wrap
+        # it does not have.
+        return lemma, translit, body[0] if body else '', '', body[1:]
+
+    etymology = ''
+    for ln in body[:head]:
+        etymology = _join(etymology, ln)
+
+    usage = body[head]
+    i = head + 1
+    while (i < len(body)
+           and not USAGE_TOTAL_RE.search(usage)
+           and not SENSE_RE.match(body[i])
+           and not body[i].startswith('钦定本')):
+        usage = _join(usage, body[i])
+        i += 1
+
+    senses = body[i:]
+    # G3588 and G3816 had their senses typed onto the end of the usage
+    # line with no break. The module's own convention says the usage ends
+    # at its total, so anything numbered after that total is a sense.
+    # The space before the marker is optional because G3816 reads
+    # `…young man 1; 241) 男孩` — its counts sum to 24, so the total is 24
+    # and `1)` opens the senses. Greedy `\d+` takes `241`, fails to find a
+    # marker, and backtracks to the reading that parses.
+    tail = re.search(r'[;,]\s*\d+\s*((?:\d+[a-z0-9]*|[a-z])\).*)$', usage)
+    if tail:
+        senses = [tail.group(1)] + senses
+        usage = usage[:tail.start(1)].rstrip()
+    return lemma, translit, etymology, usage, senses
 
 
 def import_lexicon(db_path, out_dir):
@@ -279,23 +406,20 @@ def import_lexicon(db_path, out_dir):
             # Grammar code: no lemma, just the parsing description.
             entry['p'] = lines
         else:
-            # line 0 lemma, 1 transliteration, 2 etymology, 3 usage,
-            # rest senses — the shape every entry in this module uses.
             # The module stores Greek DECOMPOSED (Ι + combining comma
             # above), while assets/originals/ is composed. Nothing
             # compares the two today — lookup is by Strong's number —
             # but a Greek text search later would silently miss every
-            # accented word. Normalise on the way in so both agree.
-            entry['l'] = unicodedata.normalize(
-                'NFC', lines[0]) if len(lines) > 0 else ''
-            entry['t'] = lines[1] if len(lines) > 1 else ''
-            if len(lines) > 2:
-                entry['e'] = lines[2]
-            if len(lines) > 3 and lines[3].startswith('钦定本'):
-                entry['u'] = lines[3]
-                entry['s'] = lines[4:]
-            else:
-                entry['s'] = lines[3:]
+            # accented word. `split_entry` normalises on the way in so
+            # both agree.
+            lemma, translit, etym, usage, senses = split_entry(lines)
+            entry['l'] = lemma
+            entry['t'] = translit
+            if etym:
+                entry['e'] = etym
+            if usage:
+                entry['u'] = usage
+            entry['s'] = senses
         (heb if word[0] == 'H' else grk)[word] = entry
     con.close()
 

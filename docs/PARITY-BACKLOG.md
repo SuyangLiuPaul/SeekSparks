@@ -744,12 +744,22 @@ finish in one iteration.
    Testament's verb for following Jesus. The article was in the bundle,
    shipped, and unreachable. Fixed by `ThayerService.canonicalKey`.
 
-   And a defect for #301 rather than this ticket: **28 of the 14,696
-   Chinese entries have a truncated `etymology`** (9 in `bdb_zh`, 19 in
-   `thayer_zh`), detectable by an unbalanced parenthesis — e.g. H2775
-   reads `charcah (khar'- saw`, G1537 stops mid-clause. The importer
-   split a field on a delimiter that also occurs inside the parentheses.
-   These render today in the entry pane, not only in the browser.
+   And a defect for #301 rather than this ticket: **truncated
+   `etymology` fields in the Chinese module** — H2775 reads
+   `charcah (khar'- saw`, G1537 stops mid-clause.
+
+   ~~28 of the 14,696 entries, detectable by an unbalanced parenthesis;
+   the importer split a field on a delimiter that also occurs inside the
+   parentheses.~~ — **FIXED 2026-08-23, and both halves of that sentence
+   were wrong.** The module stores one `<p>` per *visual line*, so any
+   field that wrapped was cut wherever the printed page broke; the
+   parenthesis test could only see the few breaks that happened to land
+   between a bracket and its partner. Real scope: **468 etymologies and
+   1,635 usage fields**, and 468 entries were serving the missing half of
+   an etymology to the reader as a numbered sense. `split_entry` in
+   `tools/import_yahweh_modules.py`; `docs/DATA-INTEGRITY.md` check 44.
+   *An instrument that can only reach 0.2% of a defect will report 0.2%
+   and sound precise.*
 1b. **The synopsis display** (§6, bwh38). We hold both assets and both
    are reachable; what is missing is passages side by side instead of a
    chip sheet. `docs/PRODUCT-AUDIT.md` §7.4 parks this behind #292, so
