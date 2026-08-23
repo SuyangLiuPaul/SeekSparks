@@ -5398,7 +5398,7 @@ What the reader saw, in H205 אָוֶן:
 |---|---|---|
 | etymology | `字根已不使用, 可能的意思为喘气(由此,使尽浑身解数` | …`, 通常是徒劳的); TWOT - 48a; 阳性名词` |
 | usage | *(absent)* | `钦定本 - iniquity 47, wicked(ness) 8, … vain 1; 78` |
-| sense 1 | `, 通常是徒劳的); TWOT - 48a; 阳性名词` | `1) 麻烦, 邪恶, 悲伤` |
+| sense 1 | `, 通常是徒劳的); TWOT - 48a; 阳性名词` | `1) 苦恼, 邪恶, 哀伤` |
 
 A definition that stops mid-clause, no KJV counts at all, and the
 missing half of the etymology served to the reader as **a numbered sense
@@ -5499,9 +5499,9 @@ summary*. The works differ in the article body — etymology, the 钦定本
 counts, the sub-senses — which is what the article-tier search reads,
 so the feature is not empty; but the row is not the place to look for
 the difference. Proper names are where they genuinely part: Strong's
-describes the person (`亚当, 第一个被造之人`), the module gives the
-name's meaning (`亚当 = "红土"`). The test now uses G76 Ἀδάμ and says
-why in full.
+describes the person (`亚当, 第一个被造之人, 全人类的始祖`), the module
+gives the name's meaning (`亚当 = "红土"`). The test now uses G76 Ἀδάμ
+and says why in full.
 
 **A test that asserts two things differ is only as good as the reason
 they differ.** This one would have gone on passing through any repair
