@@ -11,7 +11,8 @@ import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 import 'package:seeksparks/constants/bible_versions.dart';
 import 'package:seeksparks/constants/text_patterns.dart';
-import 'package:seeksparks/constants/workbench_theme.dart' show WbMetrics;
+import 'package:seeksparks/constants/workbench_theme.dart'
+    show WbMetrics, WbType;
 import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/widgets/note_reference_picker_sheet.dart';
 import 'package:seeksparks/models/app_settings.dart';
@@ -415,9 +416,9 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
                       ),
                       child: Text(
                         row[0],
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontFamily: 'monospace',
-                          fontSize: 12,
+                          fontSize: ctx.textSize(12),
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -739,8 +740,8 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
                   children: [
                     Text(
                       uiStrings['fontSize']?[settings.locale] ?? 'Font size',
-                      style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                          fontSize: innerCtx.textSize(16), fontWeight: FontWeight.w600),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 12),
@@ -2858,7 +2859,7 @@ class _SelectionActionBar extends StatelessWidget {
     final ms = settings.menuScale;
     showModalBottomSheet(
       context: context,
-      builder: (_) => SafeArea(
+      builder: (sheetCtx) => SafeArea(
         child: Padding(
           padding: EdgeInsets.all(16 * ms),
           child: Column(
@@ -2867,7 +2868,7 @@ class _SelectionActionBar extends StatelessWidget {
               Text(
                 uiStrings['highlightColor']?[locale] ?? 'Highlight color',
                 style: TextStyle(
-                    fontSize: 16 * ms, fontWeight: FontWeight.w600),
+                    fontSize: sheetCtx.chromeSize(16), fontWeight: FontWeight.w600),
               ),
               SizedBox(height: 16 * ms),
               Row(
@@ -2925,7 +2926,7 @@ class _SelectionActionBar extends StatelessWidget {
         (uiStrings['selectedVerses']?[settings.locale] ?? '{count} selected')
             .replaceAll('{count}', '$selectedCount');
     final fontSize =
-        (settings.fontSize.clamp(11.0, 18.0) * settings.menuScale)
+        context.chromeSize(18)
             .toDouble();
     final inset = ResponsiveBreakpoints.headerInset(deviceClass);
 
@@ -3512,7 +3513,7 @@ class _AiExplainSheetState extends State<_AiExplainSheet> {
                       style: TextStyle(
                         fontFamily: widget.settings.fontFamily,
                         fontFamilyFallback: kCjkFontFallback,
-                        fontSize: 15,
+                        fontSize: context.textSize(15),
                         fontWeight: FontWeight.w700,
                         color: scheme.onSurface,
                       ),
@@ -3561,7 +3562,7 @@ class _AiExplainSheetState extends State<_AiExplainSheet> {
                 style: TextStyle(
                   fontFamily: widget.settings.fontFamily,
                   fontFamilyFallback: kCjkFontFallback,
-                  fontSize: 11,
+                  fontSize: context.textSize(11),
                   fontStyle: FontStyle.italic,
                   color: scheme.onSurfaceVariant.withValues(alpha: 0.8),
                 ),
@@ -3590,7 +3591,7 @@ class _AiExplainSheetState extends State<_AiExplainSheet> {
             style: TextStyle(
               fontFamily: widget.settings.fontFamily,
               fontFamilyFallback: kCjkFontFallback,
-              fontSize: 11,
+              fontSize: context.textSize(11),
               fontWeight: FontWeight.w700,
               letterSpacing: 0.4,
               color: scheme.primary,
@@ -3629,7 +3630,7 @@ class _AiExplainSheetState extends State<_AiExplainSheet> {
               style: TextStyle(
                 fontFamily: widget.settings.fontFamily,
                 fontFamilyFallback: kCjkFontFallback,
-                fontSize: 13,
+                fontSize: context.textSize(13),
                 height: 1.4,
                 color: scheme.onSurfaceVariant,
               ),
@@ -3759,7 +3760,7 @@ class _AiExplainSheetState extends State<_AiExplainSheet> {
                 style: TextStyle(
                   fontFamily: widget.settings.fontFamily,
                   fontFamilyFallback: kCjkFontFallback,
-                  fontSize: 12,
+                  fontSize: context.textSize(12),
                   fontWeight: FontWeight.w600,
                   color: fg,
                 ),
@@ -3791,7 +3792,7 @@ class _AiExplainSheetState extends State<_AiExplainSheet> {
               style: TextStyle(
                 fontFamily: widget.settings.fontFamily,
                 fontFamilyFallback: kCjkFontFallback,
-                fontSize: 13,
+                fontSize: context.textSize(13),
                 color: scheme.onSurfaceVariant,
               ),
             ),
@@ -3905,7 +3906,7 @@ class _AiExplainSheetState extends State<_AiExplainSheet> {
             style: TextStyle(
               fontFamily: widget.settings.fontFamily,
               fontFamilyFallback: kCjkFontFallback,
-              fontSize: 13,
+              fontSize: context.textSize(13),
               color: scheme.onSurfaceVariant,
             ),
           ),
@@ -4052,11 +4053,11 @@ class _PreloadedSermonsSheetBody extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(headerLabel,
-                        style: const TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.w600)),
+                        style: TextStyle(
+                            fontSize: context.textSize(16), fontWeight: FontWeight.w600)),
                     Text(title,
                         style: TextStyle(
-                            fontSize: 12,
+                            fontSize: context.textSize(12),
                             color:
                                 scheme.onSurface.withValues(alpha: 0.6))),
                   ],
@@ -4104,18 +4105,18 @@ class _PreloadedSermonsSheetBody extends StatelessWidget {
                           children: [
                             Text('#${s.id}',
                                 style: TextStyle(
-                                    fontSize: 11,
+                                    fontSize: context.textSize(11),
                                     color: scheme.onSurface
                                         .withValues(alpha: 0.55))),
                             if (s.displayDate != '—')
                               Text(s.displayDate,
                                   style: TextStyle(
-                                      fontSize: 11,
+                                      fontSize: context.textSize(11),
                                       color: scheme.onSurface
                                           .withValues(alpha: 0.55))),
                             Text(localizedSermonTopic(s.topic, locale),
                                 style: TextStyle(
-                                    fontSize: 11,
+                                    fontSize: context.textSize(11),
                                     color: scheme.primary
                                         .withValues(alpha: 0.85),
                                     fontWeight: FontWeight.w500)),
@@ -4224,8 +4225,8 @@ class _RelatedSermonsSheetBodyState extends State<_RelatedSermonsSheetBody> {
                   size: 20, color: scheme.primary),
               const SizedBox(width: 8),
               Text(title,
-                  style: const TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.w600)),
+                  style: TextStyle(
+                      fontSize: context.textSize(16), fontWeight: FontWeight.w600)),
               const Spacer(),
               IconButton(
                 icon: const Icon(Icons.close, size: 20),
@@ -4276,18 +4277,18 @@ class _RelatedSermonsSheetBodyState extends State<_RelatedSermonsSheetBody> {
                         children: [
                           Text('#${s.id}',
                               style: TextStyle(
-                                  fontSize: 11,
+                                  fontSize: context.textSize(11),
                                   color: scheme.onSurface
                                       .withValues(alpha: 0.55))),
                           if (s.displayDate != '—')
                             Text(s.displayDate,
                                 style: TextStyle(
-                                    fontSize: 11,
+                                    fontSize: context.textSize(11),
                                     color: scheme.onSurface
                                         .withValues(alpha: 0.55))),
                           Text(localizedSermonTopic(s.topic, widget.locale),
                               style: TextStyle(
-                                  fontSize: 11,
+                                  fontSize: context.textSize(11),
                                   color: scheme.primary
                                       .withValues(alpha: 0.85),
                                   fontWeight: FontWeight.w500)),
@@ -4724,7 +4725,7 @@ void showNoteEditor({
                       Text(
                         uiStrings['noteEdit']?[locale] ?? 'Edit note',
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: sheetCtx.textSize(16),
                           fontWeight: FontWeight.w700,
                           color: scheme.onSurface,
                         ),
@@ -4732,7 +4733,7 @@ void showNoteEditor({
                       Text(
                         ref,
                         style: TextStyle(
-                          fontSize: 12,
+                          fontSize: sheetCtx.textSize(12),
                           color: scheme.onSurfaceVariant,
                         ),
                       ),
@@ -4769,7 +4770,7 @@ void showNoteEditor({
               maxLines: 1,
               textInputAction: TextInputAction.next,
               style: TextStyle(
-                fontSize: 16,
+                fontSize: sheetCtx.textSize(16),
                 fontWeight: FontWeight.w600,
                 color: scheme.onSurface,
               ),
@@ -4777,7 +4778,7 @@ void showNoteEditor({
                 hintText: uiStrings['noteTitleHint']?[locale] ??
                     'Title (optional)',
                 hintStyle: TextStyle(
-                  fontSize: 16,
+                  fontSize: sheetCtx.textSize(16),
                   fontWeight: FontWeight.w500,
                   color: scheme.onSurfaceVariant.withValues(alpha: 0.6),
                 ),
@@ -5182,7 +5183,7 @@ Widget _buildNoteRefChip({
     label: Text(
       label,
       style: TextStyle(
-        fontSize: 13,
+        fontSize: chipCtx.textSize(13),
         color: scheme.onSurface,
       ),
     ),
@@ -5429,7 +5430,7 @@ class _MapPickerSheetState extends State<_MapPickerSheet>
                     child: Text(
                       uiStrings['maps']?[widget.locale] ?? 'Maps',
                       style: TextStyle(
-                        fontSize: 15,
+                        fontSize: context.textSize(15),
                         fontWeight: FontWeight.w600,
                         color: scheme.onSurface,
                       ),
@@ -5579,7 +5580,7 @@ class _FallbackNote extends StatelessWidget {
             child: Text(
               text,
               style: TextStyle(
-                fontSize: 12,
+                fontSize: context.textSize(12),
                 color: scheme.onSurfaceVariant,
                 height: 1.4,
               ),
@@ -5629,7 +5630,7 @@ class _MapTile extends StatelessWidget {
       ),
       title: Text(
         map.localizedTitle(locale),
-        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+        style: TextStyle(fontSize: context.textSize(14), fontWeight: FontWeight.w600),
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
       ),
@@ -5639,7 +5640,7 @@ class _MapTile extends StatelessWidget {
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style:
-                  TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
+                  TextStyle(fontSize: context.textSize(12), color: scheme.onSurfaceVariant),
             )
           : null,
       trailing:
@@ -5731,14 +5732,14 @@ class _MiniReaderHeader extends StatelessWidget {
     final bookStyle = TextStyle(
       fontFamily: settings.fontFamily,
       fontFamilyFallback: kCjkFontFallback,
-      fontSize: 14,
+      fontSize: context.chromeSize(14),
       fontWeight: FontWeight.w600,
       color: scheme.onSurfaceVariant,
     );
     final versionStyle = TextStyle(
       fontFamily: settings.fontFamily,
       fontFamilyFallback: kCjkFontFallback,
-      fontSize: 15,
+      fontSize: context.chromeSize(15),
       fontWeight: FontWeight.w700,
       color: scheme.primary,
       letterSpacing: 0.1,
@@ -5976,7 +5977,7 @@ class _ChapterPreview extends StatelessWidget {
                       fontFamily: settings.fontFamily,
                       fontFamilyFallback: kCjkFontFallback,
                       fontWeight: FontWeight.w600,
-                      fontSize: (settings.fontSize - 2).clamp(11.0, 16.0),
+                      fontSize: context.textSize(16),
                       color: scheme.primary,
                     ),
                   ),
@@ -6670,7 +6671,7 @@ class _FloatingHeader extends StatelessWidget {
           )
         : baseScheme;
     final fontSize =
-        (settings.fontSize.clamp(12.0, 19.0) * settings.menuScale).toDouble();
+        context.chromeSize(19);
     final iconSize =
         (settings.fontSize.clamp(16.0, 28.0) * settings.menuScale)
             .toDouble();
@@ -7348,7 +7349,7 @@ class _FloatingHeader extends StatelessWidget {
         Text(
           label,
           style: TextStyle(
-            fontSize: 14,
+            fontSize: context.chromeSize(14),
             color: scheme.onSurface,
           ),
         ),
@@ -7364,7 +7365,7 @@ class _FloatingHeader extends StatelessWidget {
             child: Text(
               trailing,
               style: TextStyle(
-                fontSize: 11,
+                fontSize: context.chromeSize(11),
                 fontWeight: FontWeight.w600,
                 color: scheme.onSurfaceVariant,
               ),
@@ -7458,7 +7459,7 @@ class _CrossRefsSheetBodyState extends State<_CrossRefsSheetBody> {
                     Text(
                       uiStrings['crossRefs']?[locale] ?? 'Cross-references',
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: context.textSize(16),
                         fontWeight: FontWeight.w700,
                         color: scheme.onSurface,
                       ),
@@ -7466,7 +7467,7 @@ class _CrossRefsSheetBodyState extends State<_CrossRefsSheetBody> {
                     Text(
                       sourceLabel,
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: context.textSize(12),
                         color: scheme.onSurfaceVariant,
                       ),
                     ),
@@ -7539,7 +7540,7 @@ class _CrossRefsSheetBodyState extends State<_CrossRefsSheetBody> {
                           Text(
                             label,
                             style: TextStyle(
-                              fontSize: 13,
+                              fontSize: ctx.textSize(13),
                               fontWeight: FontWeight.w700,
                               color: scheme.primary,
                             ),
@@ -7551,7 +7552,7 @@ class _CrossRefsSheetBodyState extends State<_CrossRefsSheetBody> {
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
-                                fontSize: 13,
+                                fontSize: ctx.textSize(13),
                                 color: scheme.onSurface,
                                 height: 1.4,
                               ),
@@ -7689,7 +7690,7 @@ class _SynopsisSheetBodyState extends State<_SynopsisSheetBody> {
                           : (uiStrings['synopsisOt']?[widget.locale] ??
                               'Parallel Passages'),
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: context.textSize(16),
                         fontWeight: FontWeight.w700,
                         color: scheme.primary,
                       ),
@@ -7697,7 +7698,7 @@ class _SynopsisSheetBodyState extends State<_SynopsisSheetBody> {
                     Text(
                       '${localeAwareBookName(widget.englishBook, widget.locale, mainProvider.currentVersion)} ${widget.chapter}',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: context.textSize(12),
                         color: scheme.onSurfaceVariant,
                       ),
                     ),
@@ -7781,7 +7782,7 @@ class _SynopsisRow extends StatelessWidget {
           Text(
             event.localizedTitle(locale),
             style: TextStyle(
-              fontSize: 14,
+              fontSize: context.textSize(14),
               fontWeight: FontWeight.w600,
               color: scheme.onSurface,
               fontFamily: fontFamily,
@@ -7808,7 +7809,7 @@ class _SynopsisRow extends StatelessWidget {
                     uiStrings['synopsisOnlyHere']?[locale] ??
                         'Only in this Gospel',
                     style: TextStyle(
-                      fontSize: 11,
+                      fontSize: context.textSize(11),
                       fontStyle: FontStyle.italic,
                       color: scheme.onSurfaceVariant,
                     ),
@@ -7863,7 +7864,7 @@ class _RefChip extends StatelessWidget {
           child: Text(
             label,
             style: TextStyle(
-              fontSize: 12.5,
+              fontSize: context.textSize(12.5),
               fontWeight: FontWeight.w600,
               color: fg,
             ),
@@ -7905,7 +7906,6 @@ class _SectionHeadingState extends State<_SectionHeading> {
   Widget build(BuildContext buildContext) {
     final settings = buildContext.watch<AppSettings>();
     final scheme = Theme.of(buildContext).colorScheme;
-    final fs = settings.fontSize;
     final hasContext =
         widget.context != null && widget.context!.isNotEmpty;
     return Column(
@@ -7924,7 +7924,7 @@ class _SectionHeadingState extends State<_SectionHeading> {
               // shouting.
               Container(
                 width: 3,
-                height: (fs + 2).clamp(14.0, 20.0).toDouble(),
+                height: buildContext.textSize(20),
                 margin: const EdgeInsets.only(right: 8),
                 decoration: BoxDecoration(
                   color: scheme.primary,
@@ -7935,8 +7935,7 @@ class _SectionHeadingState extends State<_SectionHeading> {
                   widget.title,
                   style: TextStyle(
                     fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                    fontSize:
-                        (fs + 1).clamp(14.0, 20.0).toDouble(),
+                    fontSize: buildContext.textSize(20),
                     fontWeight: FontWeight.w700,
                     color: scheme.onSurface,
                     letterSpacing: 0.1,
@@ -7996,9 +7995,7 @@ class _SectionHeadingState extends State<_SectionHeading> {
                         widget.context!,
                         style: TextStyle(
                           fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                          fontSize: (fs - 3)
-                              .clamp(12.0, 15.0)
-                              .toDouble(),
+                          fontSize: buildContext.textSize(15),
                           fontStyle: FontStyle.italic,
                           color: scheme.onSurface,
                           height: 1.5,
@@ -8052,18 +8049,17 @@ class _BookIntroCardState extends State<_BookIntroCard> {
     final settings = context.watch<AppSettings>();
     final scheme = Theme.of(context).colorScheme;
     final locale = widget.locale;
-    final fs = settings.fontSize;
     final intro = widget.intro;
 
     final textStyle = TextStyle(
       fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-      fontSize: (fs - 2).clamp(13.0, 16.0).toDouble(),
+      fontSize: context.textSize(16),
       color: scheme.onSurface,
       height: 1.55,
     );
     final labelStyle = TextStyle(
       fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-      fontSize: (fs - 4).clamp(11.0, 13.0).toDouble(),
+      fontSize: context.textSize(13),
       fontWeight: FontWeight.w700,
       letterSpacing: 0.6,
       color: scheme.primary,
@@ -8137,7 +8133,7 @@ class _BookIntroCardState extends State<_BookIntroCard> {
               intro.getSubtitle(locale),
               style: TextStyle(
                 fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                fontSize: (fs).clamp(14.0, 19.0).toDouble(),
+                fontSize: context.textSize(19),
                 fontWeight: FontWeight.w700,
                 color: scheme.onSurface,
                 height: 1.35,
@@ -8193,9 +8189,7 @@ class _BookIntroCardState extends State<_BookIntroCard> {
                                           style: TextStyle(
                                             fontFamily:
                                                 settings.fontFamily,
-                                            fontSize: (fs - 4)
-                                                .clamp(11.0, 14.0)
-                                                .toDouble(),
+                                            fontSize: context.textSize(14),
                                             color: scheme.primary,
                                             fontWeight: FontWeight.w600,
                                           ),
@@ -8226,8 +8220,7 @@ class _BookIntroCardState extends State<_BookIntroCard> {
                             ),
                             style: TextStyle(
                               fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                              fontSize:
-                                  (fs - 1).clamp(13.0, 17.0).toDouble(),
+                              fontSize: context.textSize(17),
                               fontWeight: FontWeight.w700,
                               color: scheme.onSurface,
                             ),
@@ -8254,4 +8247,49 @@ class _BookIntroCardState extends State<_BookIntroCard> {
       ),
     );
   }
+}
+
+/// The reader's two size controls, reachable from any context here.
+///
+/// #315 counted hardcoded literals, and a literal is only one of three
+/// ways to write a size the Font Size slider cannot move. The other two
+/// both lived in this file. A Material role carries its own fixed
+/// number; and a CLAMP — `(fontSize - 2).clamp(11, 16)` — reads as
+/// wired, compiles as wired, and is deaf from 18 pt upward. Fifty-nine
+/// such ceilings across `lib/` were already saturated at the DEFAULT
+/// 20 pt, so the slider's whole upper half moved nothing on them.
+///
+/// Both methods take the size the surface was DESIGNED at — its value
+/// at the default 20 pt and 1.0x — so a repair is invisible to a reader
+/// who never touched a slider, and changes only what happens at the
+/// ends, which is where the reader was complaining.
+///
+/// Which of the two a site takes is not a style question. [textSize] is
+/// for what the reader READS: scripture, a heading in the reading
+/// column, the prose of a sheet, a sermon title. It follows Font Size.
+/// [chromeSize] is for what the reader OPERATES: the floating header,
+/// the bottom bar, the selection bar, menu rows, chips. That furniture
+/// has its own slider — Menu Size — and giving it to Font Size as well
+/// would multiply the two scales together (up to 2.0 x 1.4) in exactly
+/// the bars that have the least room to grow.
+///
+/// `listen: false` deliberately. Several of these sites are inside
+/// `showModalBottomSheet` and `PopupMenuButton.itemBuilder` callbacks,
+/// which do not always run in a build phase, and `context.watch` throws
+/// there. Nothing is lost: the size cannot change while a transient
+/// sheet is open, and the pane itself watches the settings.
+extension _ReaderTypeScale on BuildContext {
+  WbType get _type {
+    final s = Provider.of<AppSettings>(this, listen: false);
+    return WbType.resolve(
+      fontSize: s.fontSize,
+      lineSpacing: s.lineSpacing,
+      menuScale: s.menuScale,
+      fontFamily: s.fontFamily,
+    );
+  }
+
+  double textSize(double atDefault) => _type.scaled(atDefault);
+
+  double chromeSize(double atDefault) => _type.scaledChrome(atDefault);
 }
