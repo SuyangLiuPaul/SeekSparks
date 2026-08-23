@@ -145,7 +145,7 @@ void main() {
     testWidgets('a search that finds nothing offers the model', (tester) async {
       await pump(tester);
       await submit(tester, 'quantum');
-      expect(find.textContaining("Yahweh's Swords AI"), findsOneWidget);
+      expect(find.textContaining('Search with AI'), findsOneWidget);
     });
   });
 

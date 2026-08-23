@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.yswords"
+    namespace = "com.example.yahwehswords"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = "27.0.12077973"
 
@@ -25,7 +25,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.yswords"
+        applicationId = "com.example.yahwehswords"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
@@ -36,13 +36,13 @@ android {
         // below overrides this with its own resValue("app_name", ...)
         // so the home-screen label differs between the international
         // and China-mode coexist builds.
-        resValue("string", "app_name", "YsWords")
+        resValue("string", "app_name", "Yahweh\'s Swords")
     }
 
     // 2026-05-24 (v1.3.38): product flavors so the international
     // (default) build and the China-mode build can coexist on the
     // same Android device. The `cn` flavor uses
-    //   applicationIdSuffix=".cn"  → installs as `com.example.yswords.cn`
+    //   applicationIdSuffix=".cn"  → installs as `com.example.yahwehswords.cn`
     //   resValue app_name="YsWords CN" → distinct home-screen label
     // and is paired at build time with `--dart-define=CHINA_MODE=true`
     // which gates the runtime behavior (Firebase init skipped,
@@ -60,7 +60,7 @@ android {
         create("cn") {
             dimension = "region"
             applicationIdSuffix = ".cn"
-            resValue("string", "app_name", "YsWords CN")
+            resValue("string", "app_name", "雅伟之剑 CN")
         }
     }
 

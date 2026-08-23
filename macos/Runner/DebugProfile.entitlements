@@ -16,7 +16,7 @@
 	     google_sign_in. See Release.entitlements for full rationale. -->
 	<key>keychain-access-groups</key>
 	<array>
-		<string>$(AppIdentifierPrefix)com.example.yswords</string>
+		<string>$(AppIdentifierPrefix)com.example.yahwehswords</string>
 	</array>
 </dict>
 </plist>

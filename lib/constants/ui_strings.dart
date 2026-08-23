@@ -1625,8 +1625,8 @@ const uiStrings = {
     'en': 'AI study helpers',
   },
   'onboardAiBody': {
-    'zh-Hans': '按主题搜经文（"爱"、"信心"），点希腊文／希伯来文原文看 BDAG 级深度释义，对考古和手稿提具体问题。AI 由 Gemini 驱动——可在 设置 → 雅伟之剑 AI 粘贴自己的免费密钥（按 Test 验证），用自己的额度跳过共享池。',
-    'zh-Hant': '按主題搜經文（「愛」、「信心」），點希臘文／希伯來文原文看 BDAG 級深度釋義，對考古和手稿提具體問題。AI 由 Gemini 驅動——可在 設定 → 雅偉之劍 AI 貼上自己的免費密鑰（按 Test 驗證），用自己的額度跳過共享池。',
+    'zh-Hans': '按主题搜经文（"爱"、"信心"），点希腊文／希伯来文原文看 BDAG 级深度释义，对考古和手稿提具体问题。AI 由 Gemini 驱动——可在 设置 → AI 粘贴自己的免费密钥（按 Test 验证），用自己的额度跳过共享池。',
+    'zh-Hant': '按主題搜經文（「愛」、「信心」），點希臘文／希伯來文原文看 BDAG 級深度釋義，對考古和手稿提具體問題。AI 由 Gemini 驅動——可在 設定 → AI 貼上自己的免費密鑰（按 Test 驗證），用自己的額度跳過共享池。',
     'en':
         'Search the Bible by theme ("love", "faith"), tap any Greek or Hebrew word for a BDAG-style deep dive, or ask questions about archaeology and manuscripts. Powered by Gemini — paste your own free key in Settings → AI (and tap Test to verify) to skip the shared developer pool.',
   },
@@ -1790,14 +1790,14 @@ const uiStrings = {
   },
   // ── AI BYOK + Drive sync (2026-05-06) ────────────────────────
   'settingsSectionAi': {
-    'zh-Hans': '雅伟之剑 AI 释义',
-    'zh-Hant': '雅偉之劍 AI 釋義',
-    'en': 'Yahweh\'s Swords AI',
+    'zh-Hans': 'AI 释义',
+    'zh-Hant': 'AI 釋義',
+    'en': 'AI',
   },
   'aboutSectionAi': {
-    'zh-Hans': '雅伟之剑 AI（高级 · 可选）',
-    'zh-Hant': '雅偉之劍 AI（進階 · 可選）',
-    'en': 'Yahweh\'s Swords AI (advanced · optional)',
+    'zh-Hans': 'AI（高级 · 可选）',
+    'zh-Hant': 'AI（進階 · 可選）',
+    'en': 'AI (advanced · optional)',
   },
   // ── Exegesis sheet — proper-noun complementary glosses ────────
   // 2026-05-07: for proper nouns (people, places, deities) the
@@ -1857,19 +1857,19 @@ const uiStrings = {
   // Older "ask AI" wording across the search page maps to the new
   // "search with SeekSparks AI" copy.
   'askAiForVerses': {
-    'zh-Hans': '用雅伟之剑 AI 智能搜索（仅供参考）',
-    'zh-Hant': '用雅偉之劍 AI 智慧搜尋（僅供參考）',
-    'en': 'Search with Yahweh\'s Swords AI (reference only)',
+    'zh-Hans': '用AI 智能搜索（仅供参考）',
+    'zh-Hant': '用AI 智慧搜尋（僅供參考）',
+    'en': 'Search with AI (reference only)',
   },
   'aiSearching': {
     'zh-Hans': '雅伟之剑正在搜索…',
     'zh-Hant': '雅偉之劍正在搜尋…',
-    'en': 'Yahweh\'s Swords AI searching…',
+    'en': 'AI searching…',
   },
   'aiBibleSearchHeader': {
     'zh-Hans': '雅伟之剑为「{query}」找到了 {count} 处经文（仅供参考）',
     'zh-Hant': '雅偉之劍為「{query}」找到了 {count} 處經文（僅供參考）',
-    'en': 'Yahweh\'s Swords AI found {count} passages for "{query}" (reference only)',
+    'en': 'AI found {count} passages for "{query}" (reference only)',
   },
   'aiBibleSearchNoMatches': {
     'zh-Hans': 'AI 没有找到相关经文，换个说法再试一下吧。',
@@ -1906,26 +1906,26 @@ const uiStrings = {
   // a parseable `error` body — in normal operation the backend
   // sends a user-locale message that's surfaced directly.
   'aiQuotaExhaustedFallback': {
-    'zh-Hans': '雅伟之剑 AI 今天的共享配额已用完。明天再试，或在「设置 → '
-        '雅伟之剑 AI」粘贴您自己的 Gemini API Key 用您的配额。',
-    'zh-Hant': '雅偉之劍 AI 今天的共享配額已用完。明天再試，或在「設定 → '
-        '雅偉之劍 AI」貼上您自己的 Gemini API Key 用您的配額。',
+    'zh-Hans': 'AI 今天的共享配额已用完。明天再试，或在「设置 → '
+        'AI」粘贴您自己的 Gemini API Key 用您的配额。',
+    'zh-Hant': 'AI 今天的共享配額已用完。明天再試，或在「設定 → '
+        'AI」貼上您自己的 Gemini API Key 用您的配額。',
     'en':
-        'Yahweh\'s Swords AI quota for the developer\'s shared key is used up for today. Try again tomorrow, or paste your own Gemini API key in Settings → AI to use your own quota.',
+        'AI quota for the developer\'s shared key is used up for today. Try again tomorrow, or paste your own Gemini API key in Settings → AI to use your own quota.',
   },
   'aiNotConfiguredFallback': {
-    'zh-Hans': '雅伟之剑 AI 还没有配置。开发者需要在 Netlify 环境变量里设置 '
+    'zh-Hans': 'AI 还没有配置。开发者需要在 Netlify 环境变量里设置 '
         'GEMINI_API_KEY。',
-    'zh-Hant': '雅偉之劍 AI 還沒有配置。開發者需要在 Netlify 環境變數裡設置 '
+    'zh-Hant': 'AI 還沒有配置。開發者需要在 Netlify 環境變數裡設置 '
         'GEMINI_API_KEY。',
     'en':
-        'Yahweh\'s Swords AI is not configured. The developer needs to set GEMINI_API_KEY in Netlify env.',
+        'AI is not configured. The developer needs to set GEMINI_API_KEY in Netlify env.',
   },
   'aiBibleSearchSomeMissing': {
-    'zh-Hans': '雅伟之剑 AI 还找到 {n} 处经文，但您当前圣经版本中没有匹配（仅供参考）。',
-    'zh-Hant': '雅偉之劍 AI 還找到 {n} 處經文，但您當前聖經版本中沒有匹配（僅供參考）。',
+    'zh-Hans': 'AI 还找到 {n} 处经文，但您当前圣经版本中没有匹配（仅供参考）。',
+    'zh-Hant': 'AI 還找到 {n} 處經文，但您當前聖經版本中沒有匹配（僅供參考）。',
     'en':
-        'Yahweh\'s Swords AI also suggested {n} passages not in your current '
+        'AI also suggested {n} passages not in your current '
             'Bible version (reference only).',
   },
   // 2026-05-07 (post-fix v3): AI-result note when the active search
@@ -1934,10 +1934,10 @@ const uiStrings = {
   // aiBibleSearchSomeMissing which is for refs not present in the
   // user's loaded Bible version at all.
   'aiBibleSearchOutOfScope': {
-    'zh-Hans': '雅伟之剑 AI 还推荐了 {n} 处经文，但当前筛选范围之外（仅供参考）。',
-    'zh-Hant': '雅偉之劍 AI 還推薦了 {n} 處經文，但當前篩選範圍之外（僅供參考）。',
+    'zh-Hans': 'AI 还推荐了 {n} 处经文，但当前筛选范围之外（仅供参考）。',
+    'zh-Hant': 'AI 還推薦了 {n} 處經文，但當前篩選範圍之外（僅供參考）。',
     'en':
-        'Yahweh\'s Swords AI also suggested {n} passages outside your current '
+        'AI also suggested {n} passages outside your current '
             'filter scope.',
   },
   // 2026-05-07: italic caveat shown directly below the AI search
@@ -3600,13 +3600,13 @@ const uiStrings = {
             '"Did you mean…" card alongside text results.',
   },
   'searchHelpAdvAi': {
-    'zh-Hans': '雅伟之剑 AI 搜索：当关键字搜索没有结果时，可以点击「用雅伟之剑 AI 智能搜索」'
+    'zh-Hans': 'AI 搜索：当关键字搜索没有结果时，可以点击「用AI 智能搜索」'
         '让 AI 帮你查找主题或模糊查询（如「最爱的章节」）。结果仅供参考，使用前请自行核对。',
-    'zh-Hant': '雅偉之劍 AI 搜尋：當關鍵字搜尋沒有結果時，可以點擊「用雅偉之劍 AI 智慧搜尋」'
+    'zh-Hant': 'AI 搜尋：當關鍵字搜尋沒有結果時，可以點擊「用AI 智慧搜尋」'
         '讓 AI 幫你查找主題或模糊查詢（如「最愛的章節」）。結果僅供參考，使用前請自行核對。',
     'en':
-        'Yahweh\'s Swords AI search: when keyword search returns nothing, tap '
-            '"Search with Yahweh\'s Swords AI" for fuzzy or thematic queries '
+        'AI search: when keyword search returns nothing, tap '
+            '"Search with AI" for fuzzy or thematic queries '
             '(e.g. "the love chapter"). Results are for reference '
             'only — verify before use.',
   },
@@ -3664,17 +3664,17 @@ const uiStrings = {
             'concordance.',
   },
   'searchModeAi': {
-    'zh-Hans': '雅伟之剑 AI',
-    'zh-Hant': '雅偉之劍 AI',
-    'en': 'Yahweh\'s Swords AI',
+    'zh-Hans': 'AI',
+    'zh-Hant': 'AI',
+    'en': 'AI',
   },
   'searchModeAiTip': {
-    'zh-Hans': '通过雅伟之剑 AI 进行模糊或主题搜索（如「最爱的章节」）。结果仅供参考，'
+    'zh-Hans': '通过AI 进行模糊或主题搜索（如「最爱的章节」）。结果仅供参考，'
         '使用前请自行核对。',
-    'zh-Hant': '透過雅偉之劍 AI 進行模糊或主題搜尋（如「最愛的章節」）。結果僅供參考，'
+    'zh-Hant': '透過AI 進行模糊或主題搜尋（如「最愛的章節」）。結果僅供參考，'
         '使用前請自行核對。',
     'en':
-        'Fuzzy / thematic search via Yahweh\'s Swords AI (e.g. "the love '
+        'Fuzzy / thematic search via AI (e.g. "the love '
             'chapter"). Results are reference-only — verify before use.',
   },
   'searchWordStudyNoMatch': {
@@ -4941,9 +4941,9 @@ const uiStrings = {
     'en': 'Bundled fonts: Noto Sans Hebrew / Noto Sans / Noto Sans Symbols 2 (subsets)',
   },
   'aboutAi': {
-    'zh-Hans': '雅伟之剑 AI 经文释义（仅供参考）',
-    'zh-Hant': '雅偉之劍 AI 經文釋義（僅供參考）',
-    'en': 'Yahweh\'s Swords AI explanations (reference only)',
+    'zh-Hans': 'AI 经文释义（仅供参考）',
+    'zh-Hant': 'AI 經文釋義（僅供參考）',
+    'en': 'AI explanations (reference only)',
   },
   'aboutLicenseAi': {
     'zh-Hans': 'Google Gemini API · 输出可在 API 条款下重新分发。',
@@ -6085,9 +6085,9 @@ const uiStrings = {
     'en': 'Save to note',
   },
   'aiNoteAttribution': {
-    'zh-Hans': '——雅伟之剑 AI 生成，仅供参考',
-    'zh-Hant': '——雅偉之劍 AI 生成，僅供參考',
-    'en': '— generated by Yahweh\'s Swords AI, for reference',
+    'zh-Hans': '——AI 生成，仅供参考',
+    'zh-Hant': '——AI 生成，僅供參考',
+    'en': '— generated by AI, for reference',
   },
   'aiExplainAsking': {
     'zh-Hans': 'AI 正在生成解释…',
@@ -6183,7 +6183,7 @@ const uiStrings = {
   'aiScopeDeepExegesis': {
     'zh-Hans': '深度释经（BDAG 级 · 雅伟之剑智能分析，仅供参考）',
     'zh-Hant': '深度釋經（BDAG 級 · 雅偉之劍智慧分析，僅供參考）',
-    'en': 'Deep exegesis (BDAG-level · Yahweh\'s Swords AI, reference only)',
+    'en': 'Deep exegesis (BDAG-level · AI, reference only)',
   },
   'familyTree': {
     'zh-Hans': '圣经家谱',

@@ -1,4 +1,4 @@
-package com.example.yswords
+package com.example.yahwehswords
 
 import android.content.ComponentName
 import android.content.pm.PackageManager
@@ -16,7 +16,7 @@ class MainActivity : FlutterActivity() {
     // Aliases must be referenced by their full ComponentName
     // (PACKAGE/.AliasName) — Android won't accept relative names
     // here even though the manifest uses `.AliasRed`.
-    private val pkg = "com.example.yswords"
+    private val pkg = "com.example.yahwehswords"
     private val aliasMap = mapOf(
         // Map alternate-icon name (sent by Dart) → component class
         // path. Null key = "primary icon" = the main MainActivity.
