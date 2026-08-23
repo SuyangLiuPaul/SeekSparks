@@ -19,11 +19,23 @@ Last updated: 2026-08-24 (seventh entry)
 
 | | |
 |---|---|
-| `pubspec` / dev | **1.6.155** — #313 item 5, deployed 2026-08-24 in place at d47a882. Deploying from the shared tree was safe this time: the second writer's only uncommitted files were the `ios/`/`macos/` Xcode projects, which a web build does not read. Carries check 47 too, which had been the one undeployed iteration |
-| prod (seeksparks.netlify.app) | **1.6.136** — 19 versions behind, by design: prod ships only on the owner's word |
-| `main` | **the closing pass** — eight rows audited shut on evidence, `prompt.md` 1,682 → 1,322 lines. Ahead of dev by #308's third chart and #315's second mechanism; **not deployed** (undeployed iteration 1 of 3) |
+| `pubspec` / dev | **1.6.156** — the closing pass, deployed 2026-08-24 in place at 7dc3ae5. Deployed because #308 is **owner-reported** and this iteration fixed its third surface, which is the deploy-on-demand trigger; the undeployed counter was only at 1 of 3. The second writer was mid-rebrand *during* the deploy (new `android/` locale resources and `build.gradle.kts` appeared while it ran) — safe only because a web build reads neither |
+| prod (seeksparks.netlify.app) | **1.6.136** — 20 versions behind, by design: prod ships only on the owner's word |
+| `main` | **the closing pass** — eight rows audited shut on evidence, `prompt.md` 1,682 → 1,322 lines, plus #308's third chart and #315's second mechanism |
 | Suite | **3,282 tests**, green; `flutter analyze` exit 0 |
 | CI | green (Flutter CI on `main`) |
+
+**Verifying CJK in a deployed bundle needs a control, 2026-08-24.** The
+three new distribution labels were checked on the immutable deploy URL,
+and the two Chinese ones came back **0 occurrences** — which looked like
+a shipped defect and was not. `main.dart.js` escapes CJK as lowercase
+`\uXXXX`, so grep for a Han string finds nothing *whatever* the bundle
+contains: four strings known to have shipped for months also scored 0.
+Only after that control did the real search run, and all three locales
+are present (`分布（{unit}）`,
+`分佈（{unit}）`, plus the shared `按出现次数` /
+`按出現次數`). **Test the join key on something you know ships before
+believing an absence.**
 
 **45g deployed from a detached worktree, and that was not optional.** A
 second writer was committing to this tree throughout the iteration —
@@ -62,12 +74,12 @@ here, move its body out of `prompt.md`, and say so in `HANDOFF.md`.
 | #302 | Build the backlog before the queue empties → `docs/PARITY-BACKLOG.md` | closed — 75 entries |
 | #304 | Systematic data-integrity audit — "accuracy is the most critical thing" | open, recurring — check 45 landed 2026-08-23 |
 | #307 | Phrasing — open it to translations, indent line one (Pastor Raymond HK) | **closed** — both halves. Translations: `PhrasingSource.translation` is the DEFAULT source (`phrasing_page.dart:192`) with `_translationWords()` behind it, answered for all 1,189 chapters. Line one: v1.6.98 unpinned it from zero — `phrasing_test.dart:636` "the first line indents too", including the clamp and the round-trip |
-| #308 | Search stats: "John 27" never says its unit | **closed** — 2026-08-24, all THREE surfaces. On `main`, NOT yet deployed (dev is v1.6.155). The strip and the Stats tab were fixed when the ticket was filed; `WordDistribution` was found still unlabelled 2026-08-24 and plotting the OTHER unit (its caller feeds `ConcordanceResult.byBook`, the per-book OCCURRENCE map — G25 was 37 in John there and 27 in the strip). `unit` is now required, not defaulted. `search_stats_unit_test.dart` + `word_distribution_unit_label_test.dart` |
+| #308 | Search stats: "John 27" never says its unit | **closed** — **v1.6.156**, all THREE surfaces. The strip and the Stats tab were fixed when the ticket was filed; `WordDistribution` was found still unlabelled 2026-08-24 and plotting the OTHER unit (its caller feeds `ConcordanceResult.byBook`, the per-book OCCURRENCE map — G25 was 37 in John there and 27 in the strip). `unit` is now required, not defaulted. `search_stats_unit_test.dart` + `word_distribution_unit_label_test.dart` |
 | #309 | Matthew series — reconcile our corpus against CDC's 124 messages | **blocked** — CDC site unreachable |
 | #312 | Phrasing is not usable yet — redesign, don't patch | open — deliberately NOT closed with #307. `PARITY-BACKLOG.md:361` still says "track the remaining #312 items", and the export work it names (`:321`, `:445`) is unbuilt. #307 was two specific asks; #312 is the redesign around them |
 | #313 | The Reader is a phone app bolted into a workbench | **closed** — 2026-08-24, on re-reading the code rather than the row. Both items audit §7 left outstanding are already implemented: `onChapterSermons` routes through `_requestAnalysis(ReaderAnalysisRequest.sermons, …)` (`bible_reading_pane.dart` ~2020), and the reader's `StatsPage` push is behind `if (!hostChrome)` (~7052). The row was stale, not the code. Item 4 remains settled on paper only, and is **not** a defect — it is a design note carried in audit §7 |
 | #314 | Build version printed twice on one screen | **closed** — the menu-bar copy is gone; the surviving one is the status bar's, chosen because it is tappable and opens `AboutPage` where the inert menu text was not. `workbench_version_display_test.dart` is a source ratchet on the call-site count |
-| #315 | 269 hardcoded font sizes — #311 fixed the arithmetic, not the reach | open — **and the detector was narrower than the defect.** A literal is only one of two ways to write a size the slider cannot move: `main.dart:578-591` rewires exactly `bodyLarge`, `bodyMedium` and `titleLarge` from `settings.fontSize`, so every other `textTheme` role is a fixed number wearing a name. 2026-08-24 added `WbType.scaleRole()` (on `main`, not yet deployed), fixed the 7 sites that existed (4 in `small_screen_advisory.dart`, 3 in `analysis_tabs.dart` — **both files were on the ratchet's `finished` list, promising the setting reached everything on them**), and added a tree-wide zero check for the second mechanism. Residue is now literals only: `sermon_detail_page.dart` 6, `version_picker_sheet.dart` 2, and the budget's larger rows |
+| #315 | 269 hardcoded font sizes — #311 fixed the arithmetic, not the reach | open — **and the detector was narrower than the defect.** A literal is only one of two ways to write a size the slider cannot move: `main.dart:578-591` rewires exactly `bodyLarge`, `bodyMedium` and `titleLarge` from `settings.fontSize`, so every other `textTheme` role is a fixed number wearing a name. v1.6.156 added `WbType.scaleRole()`, fixed the 7 sites that existed (4 in `small_screen_advisory.dart`, 3 in `analysis_tabs.dart` — **both files were on the ratchet's `finished` list, promising the setting reached everything on them**), and added a tree-wide zero check for the second mechanism. Residue is now literals only: `sermon_detail_page.dart` 6, `version_picker_sheet.dart` 2, and the budget's larger rows |
 | #316 | The rotate advisory argues against itself | **closed** — v1.6.132's □□□ was the last of it: `workbenchTheme` restated only five of fifteen styles with the parent's `fontFamilyFallback`, so `headlineSmall`/`titleMedium` drew Roboto, which has no CJK, with no gstatic fallback to rescue it. `theme_cjk_fallback_test.dart` now asserts *every* style in the theme can render Chinese |
 | #317 | Journey routes on the atlas | open — Pauline itineraries drawn (v1.6.134) |
 | #318 | Interactive Bible chronology, featured module | open — phases 1–5 shipped, runs to the death of Moses |
