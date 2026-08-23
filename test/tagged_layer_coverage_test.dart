@@ -18,9 +18,10 @@
 // The answer, measured over 155,193 verses: three editions reconstruct
 // their printed text byte for byte, one has two known departures, 21
 // verses of real Greek are absent from a tagged layer, and `cuvs-yhwh`
-// disagrees with itself in 350 verses — 372 before check 45g repaired the
-// 22 that needed no adjudication — of which the real word differences are
-// defects in BOTH files. See docs/DATA-INTEGRITY.md checks 45 and 45g.
+// disagrees with itself in 345 verses — 372 before check 45g repaired the
+// 22 that needed no adjudication, 350 before check 46 repaired 12 more —
+// of which the real word differences are defects in BOTH files. See
+// docs/DATA-INTEGRITY.md checks 45, 45g and 46.
 //
 // WHAT THIS CANNOT SEE, stated because a detector reports its own reach:
 // a shift present in BOTH layers. Check 40 found `cuvs-plus` numbering
@@ -272,7 +273,7 @@ void main() {
     expect(sweeps['bsb']!.differ, _bsbDepartures);
   });
 
-  test('the Chinese layers disagree in at most the 350 left after check 45g',
+  test('the Chinese layers disagree in at most the 345 left after check 46',
       () {
     // Holding `cuvs-yhwh`'s two layers to identity would fail for the
     // wrong reason: 161 of check 45d's 372 differ only by settled
@@ -285,12 +286,16 @@ void main() {
     // verses printing a literal `#`, 7 doubling a character against
     // itself — which is why the ceiling is 350 and not 372.
     //
-    // It is still a HOLDING POSITION over a known defect, not a clean
-    // result: 21 word-level defects remain in the flat text the reader
-    // reads (Isaiah 23:1 no longer names 推罗; Judges 12:7 has lost the
-    // 六 of 六年). Tighten it again as those are fixed — do not read a
-    // green tick here as the layers agreeing.
-    expect(sweeps['cuvs-yhwh']!.differ.length, lessThanOrEqualTo(350));
+    // Check 46 then repaired 12 word-level defects in the flat text the
+    // reader reads (Isaiah 23:1 now names 推罗 again; Judges 12:7 has its
+    // 六年 back), which closed 5 more of these — the other 7 were places
+    // where BOTH layers carried the loss, so repairing both in lockstep
+    // leaves the agreement count where it was. Hence 345.
+    //
+    // It is still a HOLDING POSITION over known defects, not a clean
+    // result. Tighten it again as they are fixed — do not read a green
+    // tick here as the layers agreeing.
+    expect(sweeps['cuvs-yhwh']!.differ.length, lessThanOrEqualTo(345));
   });
 
   test('no tagged run prints a character that is not text', () async {

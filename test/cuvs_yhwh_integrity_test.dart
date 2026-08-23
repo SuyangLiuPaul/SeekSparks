@@ -115,6 +115,49 @@ void main() {
     '承巡': '承巡 standing in for 承受 — 耶利米書 12:14',
     '扔菏': '扔菏 standing in for 凶淫 — 士師記 20:6',
     '暇疵': '暇疵 (leisure-flaw) standing in for 瑕疵 — 撒母耳記下 14:25',
+    // 2026-08-23 (check 46): twelve word-level defects in the *reading
+    // text* — the layer the app actually prints — repaired by
+    // `tools/repair_cuvs_yhwh_reading_text.py`. Each fragment below is
+    // the corrupt state, and each is unreadable rather than merely odd:
+    // a bound plural suffix with nothing to bind to, a doubled
+    // character, a preposition dropped, a place name cut in half.
+    '归到们': '们 is a bound plural suffix and cannot stand alone — 士師記 9:57',
+    '歸到們': '们 is a bound plural suffix and cannot stand alone — 士師記 9:57',
+    '的士师年': '"judged Israel ___ years" lost its numeral (H8337 שֵׁשׁ) — 士師記 12:7',
+    '的士師年': '"judged Israel ___ years" lost its numeral (H8337 שֵׁשׁ) — 士師記 12:7',
+    '因为罗变为': '推罗 (H6865 צֹר) cut to 罗, which names nothing — 以賽亞書 23:1',
+    '因為羅變為': '推羅 (H6865 צֹר) cut to 羅, which names nothing — 以賽亞書 23:1',
+    '地着的出产': '地着 is not Chinese; H6529+H127 is the fruit of the ground — 耶利米書 7:20',
+    '地著的出產': '地著 is not Chinese; H6529+H127 is the fruit of the ground — 耶利米書 7:20',
+    '城邑中里': '中里 doubles the locative — 耶利米書 50:32',
+    '城邑中裏': '中裏 doubles the locative — 耶利米書 50:32',
+    '记纪念碑': '记 and 纪 both survive where the word is two characters — 撒母耳記上 15:12',
+    '記紀念碑': '記 and 紀 both survive where the word is two characters — 撒母耳記上 15:12',
+    // 瑪拉基書 2:3 粪抹你们 was drafted as a guard here and WITHDRAWN. The
+    // draft said 抹 cannot take a location without 在 and that H5921 עַל
+    // was missing; this edition writes 抹 with a bare object eight times
+    // (抹他的舌头, 抹我的脚, 抹墙), and the tagged layer already puts
+    // H5921 on 你们的脸上 — the 上 *is* עַל. A published 和合本 reads it
+    // as we ship it. See the repair script for the full retraction.
+    //
+    // Six more the adjudicator structurally could not see: it only
+    // reported where the reading text stood alone, and in five of these
+    // our own tagged layer had inherited the same loss. Found instead by
+    // diffing the two flat editions on Han characters alone.
+    '像烧碎一样': 'the object of the simile (H7179 קַשׁ, stubble) is gone — 出埃及記 15:7',
+    '像燒碎一樣': 'the object of the simile (H7179 קַשׁ, stubble) is gone — 出埃及記 15:7',
+    '作以色的': '以色 names nothing; H3478 יִשְׂרָאֵל — 士師記 12:13',
+    '站玛他提雅': '站 is stranded subjectless before a name list — 尼希米記 8:4',
+    '站瑪他提雅': '站 is stranded subjectless before a name list — 尼希米記 8:4',
+    // NOT because 上友 is impossible — 尚友 is attested in 孟子 — but
+    // because the 上 it is made of belongs to 嘴上, H8193 שְׂפָתָיו, lips.
+    '为上友': 'the 上 of 嘴上 (H8193, lips) was displaced to here — 箴言 22:11',
+    '為上友': 'the 上 of 嘴上 (H8193, lips) was displaced to here — 箴言 22:11',
+    '江河并河的': '江河并河 repeats without naming anything new — 詩篇 78:44',
+    '江河並河的': '江河并河 repeats without naming anything new — 詩篇 78:44',
+    '愚昧人所用': 'H7462 רֹעֶה is a shepherd; the chapter is about the '
+        'foolish SHEPHERD, and the run tagged H7462 holds only 人 '
+        '— 撒迦利亞書 11:15',
   };
 
   for (final asset in chineseAssets) {

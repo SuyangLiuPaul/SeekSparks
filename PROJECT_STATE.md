@@ -21,8 +21,8 @@ Last updated: 2026-08-23 (fifth entry)
 |---|---|
 | `pubspec` / dev | **1.6.153** — check 45g, deployed 2026-08-23 from a detached worktree at c49eb05 |
 | prod (seeksparks.netlify.app) | **1.6.136** — 16 versions behind, by design: prod ships only on the owner's word |
-| `main` | check 45g — the third witness failed; 22 Chinese verses repaired, 21 reading-text defects named |
-| Suite | **3,177 tests**, green; `flutter analyze` exit 0 |
+| `main` | check 46 — 12 reading-text verses repaired, 15 reported and left, 1 withdrawn |
+| Suite | **3,243 tests**, green; `flutter analyze` exit 0 |
 | CI | green (Flutter CI on `main`) |
 
 **45g deployed from a detached worktree, and that was not optional.** A
@@ -126,25 +126,29 @@ third time; measure from the source, always.
 — `assets/biblexg-v2.json` missing 馬可福音 6:8-11 — which **must not be
 taken unattended** (it needs the upstream source or an owner's decision).
 
-**Take the SECOND unnumbered item instead: the 21 word-level defects in
-`cuvs-yhwh`'s reading text**, listed verse by verse in check 45g. Isaiah
-23:1 has lost the 推 of 推罗 and no longer names Tyre; Judges 12:7 has
-lost the 六 of 六年; Lamentations 3:1 carries a 神 the 和合本 lacks. **Can
-be taken unattended**, and by the accuracy rule it outranks every feature
-below. Regenerate the list with `python3 tools/adjudicate_cuvs_yhwh.py`,
-which prints all 21 with the Strong's number each turns on.
+*(The second unnumbered item — the 21 reading-text defects — is **closed
+by check 46**, 2026-08-23: read individually as instructed, 6 repaired,
+15 reported and left, 1 drafted and withdrawn, plus 6 more found by a
+new sweep. 38 records written; `audit_tagged_layer.py` 350 → 345.)*
+
+**Take the item check 46 leaves behind: the 27 single-character sites
+`tools/sweep_flat_dropouts.py` still reports.** Check 46 read the 34 it
+found and repaired 7; the remaining 27 were judged editorial, but they
+were judged as a residue at the end of a long iteration. Three of them
+are 们 sites, the same shape as 士師記 9:57 归到们 which *was* a defect.
+**Can be taken unattended**, one at a time, against the 和合本.
+
+**Do not resolve any of these by majority — three witnesses have now been
+disqualified.** `cuvs-plus` agrees with the reading text on 99.70% of
+characters, so it is a descendant. `official_cuv_source` likewise.
+`bolls.life/CUV` reproduces seven of our defects *and* carries one we do
+not have (以便之後 for 以倫之後, 士師記 12:13), so it is a fellow
+descendant of the same digitisation. And our own tagged layer is
+inadmissible on **word order**: across the 16 pure transpositions check
+46 measured, it is the corrupt side in 15.
 
 *(45d's other two sub-jobs are done: check 45g repaired the 15 verses
-printing a literal `#` and the 7 doubling a character against itself, and
-`audit_tagged_layer.py` fell 372 → 350 to confirm it.)*
-
-**Read each of the 21 against the 和合本 individually. Do not resolve them
-by majority.** 45g measured why: `cuvs-plus` matches the reading text on
-**99.70% of characters**, so it is a descendant and not a witness, and a
-2-of-3 vote proposed deleting the 六 from Judges 12:7. Of the ten verses
-where the tagged layer holds what both flat editions lack, nine go
-against the reading text and **one — Job 31:36 — goes the other way**; a
-rule applied to all ten damages it.
+printing a literal `#` and the 7 doubling a character against itself.)*
 
 ---
 
@@ -248,6 +252,26 @@ that bite most often:
   than the truncation it replaced. The signal was the entry's OWN widest
   line: the corpus has no global column width, but within one entry a
   wrap is visible. Find that signal before repairing, not after. (44g)
+- **Write a Bible asset back in the layout it already had.** The flat
+  editions are pretty-printed at indent 2; `cuvs-plus` and everything
+  under `assets/tagged/` is minified. Check 46 wrote the flat editions
+  minified and its twelve-verse correction arrived as **435,535 deleted
+  lines** — nothing lost (155,510 leaves both sides), but unreviewable,
+  and `git blame` gone for every verse in both books. Second time this
+  has been paid for. Use `write_like()`; minifying saves 1.09 MB raw and
+  only **40 KB gzipped**, and these are served compressed. (check 46g)
+- **Ask what a witness DESCENDS FROM before counting its vote.** Three
+  texts have now been disqualified for agreeing with us too well or for
+  carrying our defects plus one of their own. A shared error is evidence
+  of shared ancestry, not of correctness — and a whole framing ("this is
+  an emendation, not a restoration") was withdrawn when the witness it
+  rested on turned out to be a sibling. (checks 26, 45g, 46)
+- **A guard can be narrower than the generator it guards.**
+  `bundled_font_coverage_test.dart` scans two asset trees;
+  `build_font_subsets.py` ingests many. Eleven code points in
+  `bible_evidence.json` were therefore rendering as *nothing at all* on
+  web — Flutter web draws an uncovered code point as absent text, not
+  tofu, so nothing looked wrong. (check 46f)
 - **Measure what is measurable; photograph only what is judgement.** A
   screenshot costs ~1.5–2k tokens.
 - The three-pane threshold is mirrored in `workbench_fit.dart` **and**

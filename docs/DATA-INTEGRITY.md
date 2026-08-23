@@ -5957,6 +5957,194 @@ on the damaged text.
 
 ---
 
+## Check 46 — the twenty-one the last check refused to vote on
+
+Check 45g ended by naming **21 word-level defects in the reading text**
+— the layer the app actually prints — and deliberately not repairing
+them, because the only available tiebreaker was a majority and the
+majority was wrong. This check reads them one at a time.
+
+| | verses | note |
+|---|---|---|
+| candidates from `adjudicate_cuvs_yhwh.py` | 21 | 12 standing alone, 9 where both flat editions lost a word |
+| **repaired** from that 21 | **6** | |
+| reported, deliberately not repaired | **15** | attested variants, archaisms, supplied words |
+| **found by a new sweep, repaired** | **6** | invisible to the adjudicator by construction |
+| drafted as a repair and **withdrawn** | **1** | 瑪拉基書 2:3 |
+| records written | **38** | across 5 asset groups, both scripts |
+| `audit_tagged_layer.py` `cuvs-yhwh` | 350 → **345** | |
+
+### 46a — the criterion, because the value is the line not the list
+
+> **REPAIR only where the reading text is not a possible reading of
+> Chinese at all, or where the original-language text we already ship
+> names a word that is absent.** Orthographic variants, archaisms,
+> supplied words, word order and editorial expansions are REPORTED and
+> left alone.
+
+Every repair is carried by `assets/originals/` — the OSHB/MorphGNT
+layer, from outside this line of transmission — or by the text not
+being readable. **Not** by a vote: `cuvs-plus` matches the reading text
+on 99.70% of characters, so its agreement can only inherit a loss, and
+the tagged layer invents text twice in this very sample (Judges 15:5
+splits the construct chain כֶּרֶם זַיִת into 葡萄园橄榄园, conjuring a
+vineyard; Job 31:36 doubles an H7379 run against itself).
+
+**Fifteen left alone, and the reasons are the useful part**: Joshua 5:9
+辊 is directly attested in the old spaced 和合本; 2 Kings 3:2 不至 —
+this file writes 不至 60 times and 不致 55; Isaiah 30:24 锨/杴 — H7371 is
+a hapax, so there is no internal witness either way; Isaiah 64:3 and
+Acts 25:18 意料 — used in **2 of 2** places and 逆料 in none, which is a
+consistent lexical choice, not a slip; Lamentations 3:1 雅伟神 — the
+Hebrew has **no divine name here at all** and the tagged layer marks it
+H0, supplied; and seven (Nehemiah 2:19, Nehemiah 3:3, 2 Samuel 5:17,
+2 Samuel 21:2, Esther 6:7, Judges 15:2, Judges 15:18) that read
+correctly with or without the disputed word.
+
+### 46b — six more the adjudicator could not see, and why
+
+Its rule was "the reading text stands alone against both other files",
+which by construction finds nothing where the tagged layer inherited
+the same loss. `test/tagged_layer_coverage_test.dart` had already
+named this blind spot in its own header — *a shift present in BOTH
+layers passes at 100%* — and this is that blind spot paying out.
+
+Asking the question the other way round (strip every mark of
+punctuation and every note from both flat editions, diff on Han
+characters alone) gives **89 sites where the sibling holds 1–3
+characters we lack**. Almost all are noise: inline note markers the
+sibling renders as text (或译/或作/原文), its own dittographies
+(1 John 4:2 出于神的**的**, Acts 28:18 该死的罪。**罪。**), word order,
+and places where **our** text is the better reading — Jeremiah 7:14
+称我为名下 is genuine 和合本 which the sibling modernised, and
+Deuteronomy 32:19's 说 is not missing at all: our flat text *and* our
+tagged layer put it at the head of 32:20 under H559 וַיֹּאמֶר, where the
+Hebrew has it, while the sibling moved it back a verse and left H559
+with no Chinese.
+
+**Six meet the criterion**, and the reader was seeing all six:
+
+> 出埃及記 15:7 烧灭他们像烧碎**一样** — the thing they burn *like*
+> (H7179 קַשׁ, stubble) is gone · 士師記 12:13 作**以色**的士师 — 以色
+> names nothing · 尼希米記 8:4 木台上。**站**玛他提雅…和玛西雅在他的右边
+> — 站 displaced to the head of the name list · 箴言 22:11 因他**嘴**的
+> 恩言…王必与他为**上友** — the 上 of 嘴上 displaced across the verse ·
+> 詩篇 78:44 江河并**河**的水 · 撒迦利亞書 11:15 愚昧**人**所用的器具 —
+> the chapter is about the foolish *shepherd*, H7462 רֹעֶה
+
+Two of those are **transpositions, not dropouts**, and they matter
+because a detector looking for missing characters cannot see them: the
+verse has the right number of characters, one of them in the wrong
+place. Our own tagged layer carries five of the six; 尼希米記 8:4 is the
+exception and reads correctly — but that is corroboration and not
+proof, since across the 16 places where the flat text and its tagged
+layer differ by a pure transposition, **the tagged layer is the corrupt
+side in 15**.
+
+### 46c — one Strong's number corrected, and the measurement that let it be
+
+At 出埃及記 15:7 the tagged layer read `像烧碎` tagged **H1** — אָב,
+*father*. It is now H7179, which is what OSHB puts at that position.
+Re-tagging is a bigger claim than inserting a character, so H1 was
+measured first: it occurs **1,078 times** and is not a sentinel — every
+other one is a real sense of אָב (父亲, 之祖, 族长, 先人, 继母, 伯叔,
+姑母). Of the **33** whose text contains no 父/祖/宗, 出埃及記 15:7 is the
+only one unrelated to fatherhood. **A singleton, not a class.**
+
+### 46d — the repair that was drafted and withdrawn
+
+瑪拉基書 2:3 was going to become 把你们牺牲的粪抹**在**你们的脸上, on the
+grounds that *抹 cannot take a location without 在* and that H5921 עַל
+was unrendered. **Both halves are false.** This edition writes 抹 with a
+bare object eight times — 抹他的舌头, 抹我的脚, 抹墙, 又用油抹你 — and
+the tagged layer puts H5921 on the run 你们的脸**上**, so 上 *is* עַל
+and the proposed 在 renders nothing. A published 和合本 reads it exactly
+as we ship it. The 在 exists in **one file of five**, our own tagged
+layer, where it is an intrusion; left there rather than re-cut, because
+re-cutting another layer's boundaries on our own authority is the thing
+this check exists to avoid.
+
+### 46e — a witness that was really a copy, for the second time
+
+An earlier pass checked these against `bolls.life/CUV`, found it
+reproduced them character for character, and concluded the reading text
+was a faithful copy of an already-defective ancestor. **Withdrawn.**
+That text carries our 燒滅他們像燒碎一樣 and our 作以色列的士師年 *and* a
+defect of its own we do not have — 以便之後 for 以倫之後 at Judges
+12:13. It is a fellow descendant of the same corrupt e-text, so its
+agreement was never evidence. 信望愛 (fhl.net, `VERSION1=unv`) reads all
+twelve as this check writes them.
+
+That is the same shape as check 45g's finding about `cuvs-plus`, and as
+check 26's about its external export, three times now: **ask what a
+witness descends from before counting its vote.** Where the corruption
+entered is *not established* and the record should not pretend
+otherwise. It does not change the decision — an app printing
+归到们身上 tells its reader something scripture does not say, whoever
+introduced it — but it is a smaller claim than the draft made.
+
+### 46f — eleven characters that were rendering as nothing on web
+
+Incidental, found by obeying the rule that new data means re-running
+`tools/build_font_subsets.py`. The regenerated CJK subset gained **11
+code points** — 勳 橈 氫 蝨 軒 轅 鈣 鉑 鉚 鎬 鏃 — and **none of them
+were the 秸/汊 this check added**, which were already covered. All
+eleven are in `assets/bible_evidence.json`. On Flutter web an uncovered
+code point renders as **absent text, not tofu**, so they were silently
+missing from the Biblical Evidence Archive.
+
+`test/bundled_font_coverage_test.dart` did not catch this because it
+scans only `assets/originals` and `assets/strongs` — **the guard is
+narrower than the generator it guards.** Fixed by regenerating; the
+test's reach is recorded here rather than widened in passing, because
+widening it is a separate change with its own verification.
+
+### 46g — the repair was written in a layout that hid it
+
+Check 46 was interrupted before it committed, and the tree it left
+behind reported **435,535 deleted lines** across the two flat editions.
+Nothing was lost — both files still held **155,510 leaves**, the same as
+`HEAD`, with 0 added and 0 removed and exactly 12 values changed — but
+`repair_cuvs_yhwh_reading_text.py` wrote them with
+`separators=(',', ':')` while the shipped files are pretty-printed at
+indent 2. The whole edition reflowed onto one line, and the twelve-verse
+correction went with it.
+
+**The cost is not disk, it is review.** A twelve-line diff can be read
+against the 和合本 by a person; a 435,535-line one cannot, and every
+verse in both books loses its `git blame`. Re-serialising at indent 2
+reproduces `HEAD` byte for byte, so the change is now 24 lines — the
+twelve verses, twice.
+
+This is the **second** time this trap has been paid for; the first
+buried a 19-verse correction the same way, which is why
+`tools/repair_reference_defects.py` already carries a `write_like()`.
+The repair script now carries one too: it reads the first bytes of the
+file back and follows the layout it finds, so the flat editions stay
+pretty-printed and `cuvs-plus` and the tagged layers stay minified.
+Verified by round-tripping all nine assets this check touched —
+**9 of 9 byte-identical**.
+
+**Pretty-printing is not free, but it is nearly free.** Minified saves
+1,119,674 bytes raw and only **40,392 gzipped** — 2.7% — and these
+assets are served compressed. ~80 KB across both files is the price of a
+diff a human can check, on a corpus whose whole purpose is being
+checkable.
+
+**Not fixed here, and worth an iteration:**
+`tools/import_yahwehdehua_export.py`, `tools/import_yahweh_modules.py`
+and `tools/repair_biblexg_v2_tr.py` all write Bible JSON with no layout
+detection. They are the same loaded gun; they were not touched because
+verifying each one needs its own asset round-trip.
+
+*(Also reverted here: `NotoSansExt-Sub.ttf` and `NotoSansHebrew-Sub.ttf`
+came back from the font rebuild with identical size and **identical
+code-point coverage**, differing only in the `head` table's `modified`
+timestamp. Two binaries of pure rebuild noise. Only the CJK subset,
+which genuinely gained the 11 code points above, was kept.)*
+
+---
+
 ## Next, in order
 
 **First, and deliberately unnumbered so the citations below stay
@@ -5973,29 +6161,29 @@ unattended. **By the accuracy rule it outranks everything below**: a
 missing verse is the strongest form of the app saying something untrue
 about the text.
 
-**Second, unnumbered for the same reason, and the one to take next: the
-21 word-level defects in `cuvs-yhwh`'s reading text.** Check 45g,
-2026-08-23, which closed sub-jobs (a) and (b) of 45d — the 15 `#` verses
-and the 7 doubled characters are repaired — and left (c), the flat text,
-listed verse by verse. It is an accuracy defect of the first kind, the
-app displaying a word scripture does not say: Judges 12:7 no longer says
-how many years Jephthah judged, Isaiah 23:1 does not name Tyre in its
-second clause, Lamentations 3:1 carries a 神 the 和合本 does not.
+*(The second unnumbered item — the 21 word-level defects in `cuvs-yhwh`'s
+reading text — is **closed by check 46**: 6 of the 21 repaired, 15
+reported and left alone, 1 drafted and withdrawn, and 6 more found by a
+sweep the adjudicator was structurally unable to run. 38 records
+written; the tagged-layer disagreement fell 350 → 345.)*
 
-**This can be taken unattended, with one condition: each of the 21 must
-be read individually against the 和合本**, the discipline check 26 set
-and `tools/repair_chinese_text_defects.py` already follows. The list is
-regenerated by `python3 tools/adjudicate_cuvs_yhwh.py`, which prints all
-21 with the Strong's number each turns on.
+**Second, and the one to take next: the 27 remaining single-character
+sites `tools/sweep_flat_dropouts.py` reports.** Check 46 read the 34 that
+existed before it and repaired 7; the rest were left because a short
+difference between two editions is usually editorial, not a defect. But
+they were adjudicated as a residue, quickly, at the end of a long
+iteration — three 说, three 们, three 的 — and the 们 sites in particular
+are the same shape as 士師記 9:57 归到们, which *was* a defect. Re-read
+them individually.
 
-**Do not bulk-apply the tagged layer over the flat text, and do not
-resolve these by majority.** 45g measured why: `cuvs-plus` agrees with
-the reading text on 99.70% of characters, so it is a *descendant*, not a
-witness, and a 2-of-3 vote proposed deleting the 六 from Judges 12:7. Of
-the ten verses where the tagged layer holds what both flats lack, nine
-go against the reading text and **one — Job 31:36 — goes the other way**;
-a rule applied to all ten damages it. Neither file is the authority,
-which is the whole reason the disagreement was findable at all.
+**The conditions from 45g still bind, and check 46 strengthened them.**
+Do not resolve by majority: `cuvs-plus` agrees with the reading text on
+99.70% of characters, so it is a *descendant*, not a witness. Neither is
+`bolls.life/CUV`, which reproduces seven of our defects **and carries one
+we do not have** (以便之後 for 以倫之後 at 士師記 12:13) — a shared error
+is evidence of shared ancestry, not of correctness. And our own tagged
+layer is inadmissible on word order: across the 16 pure transpositions
+measured in check 46, it is the corrupt side in 15.
 
 Still open beneath it, and much smaller than it first looked: **three
 broken note delimiters** in `cuvs-yhwh` — 士师记 8:24 and 耶利米书 10:11
@@ -6006,6 +6194,14 @@ are legitimate notes spanning a verse boundary; see 45g.
 Also here, and small: `kwic_pane.dart:127` drops a line whose runs are
 null while still counting the reference, so its "All N references" footer
 overstates on `lxxwh`.
+
+And one raised by check 46 but deliberately not fixed in it:
+**`test/bundled_font_coverage_test.dart` is narrower than the generator
+it guards.** It scans `assets/originals` and `assets/strongs`;
+`tools/build_font_subsets.py` ingests far more, which is how 11 code
+points in `assets/bible_evidence.json` came to be rendering as nothing at
+all on web. The subset was rebuilt; the guard was not widened, because
+widening it is its own change with its own ratchet. See 46f.
 
    *(This list's item 0, "the Strong's Chinese gloss, cut at the printed
    line break", is closed by check 44g — 488 entries repaired, the real
