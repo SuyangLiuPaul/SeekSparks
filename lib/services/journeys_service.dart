@@ -8,7 +8,7 @@
 /// not belong to Paul's first journey; the journey passes through Antioch,
 /// twice, and Antioch is also in Galatians and Revelation.
 ///
-/// 11 KB, loaded only by the Atlas and only after the gazetteer it needs
+/// 52 KB, loaded only by the Atlas and only after the gazetteer it needs
 /// to resolve against.
 library;
 

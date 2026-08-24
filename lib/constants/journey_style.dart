@@ -68,6 +68,19 @@ class JourneyStyle {
 /// hues would have wrapped the palette, drawing the voyage to Rome in the
 /// first journey's amber.
 ///
+/// **The fifth slot is where the palette reaches its honest limit.** Four
+/// hues can be held apart under deuteranopia and protanopia; five cannot,
+/// and pretending otherwise would be the colour-only scheme this file
+/// exists to avoid. It is a strong blue because blue is the one axis both
+/// forms of red-green blindness leave intact, and its nearest neighbour
+/// is slot 2's teal — the two are separated by saturation and by hue
+/// within that surviving axis, which is a thinner margin than any other
+/// pair here. That margin is acceptable only because colour was never
+/// carrying the identity on its own: every stop is numbered, and every
+/// route is switched on by a NAMED check-box, so a reader who cannot
+/// separate the two blues has two other channels that say which is which.
+/// A sixth route should add a channel, not a sixth hue.
+///
 /// Darkened for the light palette and lightened for the dark one, because
 /// a single hue legible on #FFFFFF is invisible on #101A2B.
 List<JourneyStyle> journeyPalette(WbColors c) => c.isDark
@@ -76,12 +89,14 @@ List<JourneyStyle> journeyPalette(WbColors c) => c.isDark
         JourneyStyle(colour: Color(0xFF5FB8DE), onColour: Color(0xFF06161C)),
         JourneyStyle(colour: Color(0xFFB99BE0), onColour: Color(0xFF150C1F)),
         JourneyStyle(colour: Color(0xFF44C79C), onColour: Color(0xFF04170F)),
+        JourneyStyle(colour: Color(0xFF7FA3E8), onColour: Color(0xFF061024)),
       ]
     : const <JourneyStyle>[
         JourneyStyle(colour: Color(0xFFB35309), onColour: Color(0xFFFFFFFF)),
         JourneyStyle(colour: Color(0xFF0A6A8A), onColour: Color(0xFFFFFFFF)),
         JourneyStyle(colour: Color(0xFF5B3E96), onColour: Color(0xFFFFFFFF)),
         JourneyStyle(colour: Color(0xFF0A6E4E), onColour: Color(0xFFFFFFFF)),
+        JourneyStyle(colour: Color(0xFF1D4E9C), onColour: Color(0xFFFFFFFF)),
       ];
 
 /// The swatch for [style], wrapping if a future file ships more journeys

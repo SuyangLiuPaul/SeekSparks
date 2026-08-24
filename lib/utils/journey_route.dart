@@ -12,6 +12,37 @@
 /// the second invents a leg nobody claimed, which is the same lie as the
 /// first with better manners. So an unresolved stop BREAKS the line and
 /// is counted, and the panel says how many broke.
+///
+/// **The join can also fail in a way that looks like success, and that is
+/// what [StopRun] is for.** A place can be present, carry coordinates,
+/// and still not be located: the gazetteer answers "where is Rissah?"
+/// with a point it also gives to Kehelathah, Mount Shepher, Haradah,
+/// Makheloth, Tahath, Terah, Mithkah, Hashmonah, Moseroth and
+/// Bene-jaakan. Measured over the parsed gazetteer as it ships, **909 of
+/// the 1,228 located places share their point with at least one other**:
+/// 1,228 places on 560 distinct points, 241 of which carry more than one.
+/// The wilderness itinerary of Numbers 33 hits the worst of it, with 27 of
+/// its 42 stations falling into six such runs — and drawn stop-by-stop it
+/// would have emitted 37 legs of which 21 were exactly zero kilometres
+/// long.
+///
+/// Drawn naively that is not a small blemish. Eleven markers land on one
+/// pixel and eleven badges overprint into a smudge, while eleven legs of
+/// no length draw nothing at all — so a reader sees ONE dot where the
+/// text names eleven camps, with no hint that anything is missing. That
+/// is worse than the confident-wrong-line failure the ticket was written
+/// against, because it is silent.
+///
+/// So consecutive waypoints at one point are grouped into a [StopRun],
+/// drawn as a single marker carrying the whole ordinal range, and
+/// counted, so the panel can say plainly that the gazetteer does not tell
+/// these stations apart. **The wording has to be about the DATA, not the
+/// scholarship.** Two quite different facts produce a shared point — the
+/// sites are genuinely unidentified and the source fell back to a region,
+/// or the places really are adjacent, as Jerusalem's gates are — and
+/// nothing in this file can tell which. "One point for N stations" is
+/// true either way; "their location is unknown" would be a claim we
+/// cannot support.
 library;
 
 import 'dart:math' as math;
@@ -46,6 +77,38 @@ class ResolvedStop {
   bool get isAside => stop.isAside;
 }
 
+/// The key two places must share to be drawn as one marker.
+///
+/// Their coordinate, formatted — not their id. A marker is a position on
+/// a map, so what makes two of them the same marker is being in the same
+/// position, and keying on the id instead is what let eleven badges pile
+/// onto one pixel. Places that repeat (Lystra, twice on the first
+/// journey) key identically under both rules, so this is a strict
+/// generalisation rather than a change of behaviour for the routes that
+/// were already right.
+String markerKeyFor(BiblePlace p) => '${p.lat},${p.lon}';
+
+/// Consecutive waypoints the gazetteer puts at one and the same point.
+///
+/// Length 1 is the ordinary case and carries no claim at all. Length > 1
+/// is the thing worth saying: the text names this many separate camps and
+/// our map has one position for all of them.
+class StopRun {
+  const StopRun(this.stops);
+
+  /// In itinerary order, at least one, all at the same coordinate.
+  final List<ResolvedStop> stops;
+
+  ResolvedStop get first => stops.first;
+  ResolvedStop get last => stops.last;
+
+  /// True where the gazetteer cannot separate the stations in this run.
+  bool get collapsed => stops.length > 1;
+
+  List<int> get ordinals =>
+      <int>[for (final s in stops) if (s.ordinal != null) s.ordinal!];
+}
+
 /// One drawable leg, from one resolved stop to the next.
 class RouteSegment {
   const RouteSegment({
@@ -76,6 +139,7 @@ class ResolvedJourney {
     required this.stops,
     required this.segments,
     required this.unresolved,
+    required this.runs,
   });
 
   final BibleJourney journey;
@@ -84,6 +148,22 @@ class ResolvedJourney {
   final List<ResolvedStop> stops;
 
   final List<RouteSegment> segments;
+
+  /// The waypoints grouped by position — see [StopRun]. Asides are not in
+  /// here: an aside is beside the track and takes no ordinal, so it has
+  /// nothing to be run together with.
+  final List<StopRun> runs;
+
+  /// Runs holding more than one station.
+  List<StopRun> get collapsedRuns =>
+      <StopRun>[for (final r in runs) if (r.collapsed) r];
+
+  /// How many waypoints sit in a run the gazetteer cannot separate.
+  ///
+  /// The number a reader wants: not "six runs" but "27 of the 42 stations
+  /// share a point with the station before or after them".
+  int get collapsedStopCount =>
+      collapsedRuns.fold(0, (n, r) => n + r.stops.length);
 
   /// Stops whose place is absent from the gazetteer or has no
   /// coordinates. Their ids, in order, so a message can name them.
@@ -103,22 +183,29 @@ class ResolvedJourney {
   double get straightLineKm =>
       segments.fold(0.0, (sum, s) => sum + s.km);
 
-  /// Which ordinals each place carries, in itinerary order.
+  /// Which ordinals each MARKER carries, in itinerary order.
   ///
   /// Lystra is stops 8 and 10 of the first journey, so its marker reads
-  /// `8,10`. One marker per place rather than per stop: two badges at one
-  /// coordinate overprint into an unreadable smudge, and the doubling
+  /// `8,10`. One entry per position rather than per stop: two badges at
+  /// one coordinate overprint into an unreadable smudge, and the doubling
   /// back is worth *saying* rather than hiding.
   ///
-  /// An aside contributes nothing, so a place that is ONLY an aside is
+  /// Keyed by [markerKeyFor], which is the coordinate. Keying by place id
+  /// looked equivalent for four Pauline itineraries — a place visited
+  /// twice is at one point either way — and was not: eleven DIFFERENT
+  /// wilderness stations share one point, so the id rule produced eleven
+  /// separate badges to draw on the same pixel and the smudge this
+  /// comment has always warned about arrived by another road.
+  ///
+  /// An aside contributes nothing, so a position that is ONLY an aside is
   /// absent from this map rather than present with an empty list — the
   /// painter reads a missing key as "draw no badge".
-  Map<String, List<int>> get ordinalsByPlace {
+  Map<String, List<int>> get ordinalsByMarker {
     final out = <String, List<int>>{};
     for (final s in stops) {
       final n = s.ordinal;
       if (n == null) continue;
-      (out[s.place.id] ??= <int>[]).add(n);
+      (out[markerKeyFor(s.place)] ??= <int>[]).add(n);
     }
     return out;
   }
@@ -145,8 +232,9 @@ class ResolvedJourney {
             stop,
       ];
 
-  /// One entry per place, first appearance order — what the painter walks
-  /// to draw markers.
+  /// One entry per POSITION, first appearance order — what the painter
+  /// walks to draw markers. See [ordinalsByMarker] for why the key is the
+  /// coordinate and not the id.
   ///
   /// Where a place is both an aside and a waypoint, the waypoint wins
   /// however the file orders them: a place they DID reach must not be
@@ -156,9 +244,10 @@ class ResolvedJourney {
     final at = <String, int>{};
     final out = <ResolvedStop>[];
     for (final s in stops) {
-      final seen = at[s.place.id];
+      final key = markerKeyFor(s.place);
+      final seen = at[key];
       if (seen == null) {
-        at[s.place.id] = out.length;
+        at[key] = out.length;
         out.add(s);
       } else if (out[seen].isAside && !s.isAside) {
         out[seen] = s;
@@ -166,6 +255,38 @@ class ResolvedJourney {
     }
     return out;
   }
+}
+
+/// `[17,18,19,20,21,22,23,24,25,26,27]` as `17–27`.
+///
+/// A badge is a few millimetres wide. Eleven comma-separated numerals do
+/// not fit in one and would be clipped or would swell the badge until it
+/// covered the coastline underneath, so a consecutive run collapses to
+/// its ends. **A run is only written with a dash where it really is
+/// consecutive** — `8,10` is Lystra visited twice with Derbe in between,
+/// and printing it `8–10` would say the travellers were at this point for
+/// three stops running, which is exactly the false claim the rest of this
+/// file is built to avoid. Mixed input keeps both forms: `1–3,7,9`.
+///
+/// An en dash, not a hyphen: the numbers on either side are a range, and
+/// the hyphen is already doing work in this app's place names
+/// (`Kibroth-hattaavah`, `Rimmon-perez`).
+String formatOrdinals(List<int> ordinals) {
+  if (ordinals.isEmpty) return '';
+  final sorted = <int>[...ordinals]..sort();
+  final parts = <String>[];
+  var start = sorted.first;
+  var end = start;
+  for (final n in sorted.skip(1)) {
+    if (n == end + 1) {
+      end = n;
+      continue;
+    }
+    parts.add(start == end ? '$start' : '$start–$end');
+    start = end = n;
+  }
+  parts.add(start == end ? '$start' : '$start–$end');
+  return parts.join(',');
 }
 
 /// Join [journey] to [byId], keeping the itinerary's order and breaks.
@@ -178,8 +299,19 @@ ResolvedJourney resolveJourney(
   // Null after a stop that did not resolve, which is what breaks the line
   // rather than bridging the gap.
   ResolvedStop? previous;
-  JourneyStop? previousRaw;
+  var previousAttested = true;
   var ordinal = 0;
+
+  // The run being accumulated. A run is broken by a change of position,
+  // by an unresolved waypoint, and by a `start` leg — a route that
+  // returns to its own first point later on has not been standing still
+  // in between.
+  final runs = <StopRun>[];
+  var open = <ResolvedStop>[];
+  void closeRun() {
+    if (open.isNotEmpty) runs.add(StopRun(List<ResolvedStop>.unmodifiable(open)));
+    open = <ResolvedStop>[];
+  }
 
   for (var i = 0; i < journey.stops.length; i++) {
     final raw = journey.stops[i];
@@ -191,7 +323,8 @@ ResolvedJourney resolveJourney(
       // only a waypoint was holding it together.
       if (!raw.isAside) {
         previous = null;
-        previousRaw = null;
+        previousAttested = true;
+        closeRun();
       }
       continue;
     }
@@ -208,24 +341,58 @@ ResolvedJourney resolveJourney(
     // they never made — is drawn from the waypoints on either side.
     if (raw.isAside) continue;
 
-    if (previous != null && previousRaw != null &&
-        raw.leg != JourneyLeg.start) {
+    // Same point as the stop before? Then there is no leg to draw, and
+    // the two belong to one marker. Emitting a zero-length segment would
+    // put an unhittable, invisible line in the list and quietly inflate
+    // the segment count the panel prints; dropping the stop instead would
+    // delete a camp the text names. Neither. It joins the run.
+    final continues = previous != null &&
+        raw.leg != JourneyLeg.start &&
+        markerKeyFor(previous.place) == markerKeyFor(place);
+    if (continues) {
+      open.add(here);
+      // The run's LAST camp, not the weakest of them.
+      //
+      // Taking the weakest was tried and is wrong. A leg is provisional
+      // when the text does not place the travellers at one of ITS TWO
+      // ENDS — that is the whole meaning of the dotted line — and a camp
+      // in the middle of a run is not an end of anything. ANDing the run
+      // together would draw "the text does not say they went from here to
+      // Z" over a leg the text supports in full, which is the same kind
+      // of false statement as a confident wrong line, made in the same
+      // channel, only in the other direction.
+      //
+      // What it costs: a provisional camp strictly INSIDE a run has no
+      // line of its own and so shows no dash anywhere. No shipped route
+      // has one — `journey_asset_test.dart` fails the build if that ever
+      // changes — and the answer when it arrives belongs at the marker,
+      // which is where the merge happened, not on a neighbouring leg.
+      previousAttested = raw.attested;
+      previous = here;
+      continue;
+    }
+
+    if (previous != null && raw.leg != JourneyLeg.start) {
       segments.add(RouteSegment(
         from: previous,
         to: here,
         leg: raw.leg,
-        attested: raw.attested && previousRaw.attested,
+        attested: raw.attested && previousAttested,
       ));
     }
+    closeRun();
+    open.add(here);
     previous = here;
-    previousRaw = raw;
+    previousAttested = raw.attested;
   }
+  closeRun();
 
   return ResolvedJourney(
     journey: journey,
     stops: stops,
     segments: segments,
     unresolved: unresolved,
+    runs: List<StopRun>.unmodifiable(runs),
   );
 }
 

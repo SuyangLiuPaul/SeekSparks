@@ -1102,21 +1102,30 @@ class _MapPainter extends CustomPainter {
     );
   }
 
-  /// A dot and a numbered badge at each stop.
+  /// A dot and a numbered badge at each POSITION.
   ///
-  /// The badge carries every ordinal the place holds on that route —
+  /// The badge carries every ordinal that position holds on that route —
   /// Lystra reads `8,10` — because two badges at one coordinate overprint
   /// into a smudge, and because the doubling back is the thing worth
   /// saying. Badges from different routes stack upwards rather than
   /// overprint, so a place on both journeys shows both itineraries'
   /// numbering.
+  ///
+  /// 2026-08-24 (#317): "at one coordinate" used to be implemented as "of
+  /// one place", which is the same thing only while every coordinate
+  /// belongs to one place. It does not — 909 of the gazetteer's 1,228
+  /// located places share a point — and the wilderness itinerary put
+  /// eleven distinct stations on one, so the smudge this comment warns
+  /// about was being drawn. The key is [markerKeyFor] now, and the
+  /// numerals are range-compressed, because `17,18,19,20,21,22,23,24,25,
+  /// 26,27` in a badge is its own kind of illegible.
   void _routeMarkers(Canvas canvas, Size size) {
     for (var i = 0; i < routes.length; i++) {
       final r = routes[i];
       final style = journeyStyleFor(colors, r.journey.style);
       final faded =
           selectedRouteId != null && r.id != selectedRouteId ? 0.5 : 1.0;
-      final ordinals = r.ordinalsByPlace;
+      final ordinals = r.ordinalsByMarker;
 
       for (final m in r.markers) {
         final o = projection.project(m.place.lat!, m.place.lon!);
@@ -1149,7 +1158,7 @@ class _MapPainter extends CustomPainter {
 
         final tp = TextPainter(
           text: TextSpan(
-            text: (ordinals[m.place.id] ?? const <int>[]).join(','),
+            text: formatOrdinals(ordinals[markerKeyFor(m.place)] ?? const <int>[]),
             style: TextStyle(
               fontSize: labelSize - 2,
               fontWeight: FontWeight.w700,

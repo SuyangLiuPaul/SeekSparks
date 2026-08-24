@@ -6312,6 +6312,122 @@ shortfall could equally have been a misparse silently dropping content.
 
 ---
 
+## Check 48 — the gazetteer's coordinates, counted before a route was drawn across them
+
+Ticket #317 was written against one failure: *"a confident line drawn on
+a map is the most persuasive thing in this whole app."* Adding Numbers
+33's wilderness itinerary to the Atlas found a different one, and a
+quieter one. The route's ORDER needs no reconstruction — 33:2 says Moses
+wrote the stages down at the LORD's command, so the list is the text's
+own claim — but of its 42 stations, **27 land on six shared points** in
+`assets/bible_places.json`, and drawn stop by stop the itinerary would
+have emitted **37 legs of which 21 were exactly zero kilometres long**.
+Eleven markers on one pixel, eleven badges overprinted into a smudge,
+eleven invisible legs: one dot where the text names eleven camps, with
+nothing on screen to say anything was missing.
+
+| | |
+|---|---|
+| places parsed from the gazetteer | **1,271** |
+| of those, **located** (carry a coordinate) | **1,228** |
+| **distinct coordinates** among them | **560** |
+| coordinates carrying **more than one** place | **241** |
+| located places sitting on a **shared** point | **909** (73.9%) |
+| Numbers 33 stations the gazetteer cannot place at all | **2** |
+| Numbers 33 stations in a collapsed run | **27** of 42, in **6** runs |
+| largest run | **11** — Rissah … Bene-jaakan, badges `17–27` |
+| Pauline itineraries with a collapsed run | **0** of 4 |
+
+### 48a — why four shipped routes never revealed it
+
+The last row is the whole reason this went unmeasured for a week. Paul's
+four itineraries move between named cities of the Roman east, which the
+gazetteer locates individually; not one of their 71 stops shares a point
+with the stop next to it. The marker code keyed on the **place id**, and
+for four routes that was indistinguishable from keying on the position —
+a place visited twice (Lystra, stops 8 and 10) is at one point under
+either rule. The `ordinalsByPlace` doc comment had warned since v1.6.134
+that *"two badges at one coordinate overprint into an unreadable
+smudge"*, and the code did not implement what the comment said. The
+wilderness route is simply the first itinerary to walk into the gap.
+
+Keying markers and badges on `markerKeyFor` — the coordinate — is a
+strict generalisation, which is why no Pauline expectation changed.
+
+### 48b — what a shared point does and does not mean
+
+**Nothing in the data distinguishes two causes**, and this governs every
+word the app prints about it:
+
+* the sites are **unidentified**, and the source fell back to a region
+  or to a neighbouring camp's coordinate;
+* the places really are **adjacent** — as Jerusalem's gates and pools
+  are, and they share points too.
+
+So the shipped sentence is *"{n} of these stops share one map point with
+the stop next to them, in {p} groups"* — true under either cause — and
+never *"their location is unknown"*, which would be a claim about
+scholarship that this repo cannot support. The same rule produced the
+per-row tag 与相邻站共用坐标 rather than 位置不详.
+
+### 48c — a stop that cannot be placed is a different claim, and stays one
+
+Two of Numbers 33's camps have no coordinate at all: **Pi-hahiroth**
+(33:7) and **Hor-haggidgad** (33:32). These BREAK the line rather than
+being bridged, because joining their neighbours would draw a leg nobody
+claimed. Pi-hahiroth is the more interesting of the two — Exodus 14:2
+gives it with Migdol and Baal-zephon, and the gazetteer places none of
+the three, so the line breaks precisely where the sea crossing is
+argued about. That is the right place for it to break.
+
+They are **enumerated by name** in `test/journey_asset_test.dart`, not
+tolerated by a loosened assertion. A typo in a place id and a genuinely
+unidentified site arrive at the resolver as the same event, and only a
+hand-written list separates them; the guard fails the build both when an
+unlisted id stops resolving and when a listed one starts.
+
+### 48d — four mangled names repaired, and two deliberately not
+
+Scanning every raw name for an interior capital found **17**. Fifteen are
+one and the same corruption, an `eph` → `Eph` substitution that predates
+this repo (it is the same damage `bookForPlaceCode` compensates for, where
+Zephaniah's `eph` became Ephesians' `Eph`). Eleven were already repaired
+by `repairPlaceName`'s lowercase-then-uppercase rule. **Four were not**,
+because the substitution landed at index 1 where the letter before it is
+the name's own initial capital and the rule cannot see it:
+
+| shipped as | is | on the wilderness route |
+|---|---|---|
+| `REphidim` | Rephidim | **yes** — Num 33:14 |
+| `REphaim` | Rephaim | no |
+| `NEphtoah` | Nephtoah | no |
+| `SEphar` | Sephar | no |
+
+A second, narrow substitution (`(?<=[A-Za-z])E(?=ph)` → `e`) repairs
+exactly these four and nothing else.
+
+The remaining two, **`BEze 1` and `BEze 2`, are left as they are.** Their
+references — Jdg 1:4, Jdg 1:5, 1Sa 11:8, and *both entries carry the same
+three* — name **Bezek**, so the entry has lost a final letter as well as
+gained a capital. A rule wide enough to catch them would emit `Beze`,
+turning an obviously broken string into a plausible one that is still
+wrong. Recorded here instead, per the standing rule that hedging is the
+conservative option and a plausible repair is worse than a visible defect.
+
+*(Note the ordinal split that gave `BEze 1` and `BEze 2` identical
+reference lists. That is a second, separate oddity in the source and is
+not measured here.)*
+
+### 48e — what this check did not measure
+
+The 241 shared points across the whole gazetteer are **counted, not
+diagnosed**. Which of them are unidentified sites and which are genuine
+neighbours would need an external gazetteer with its own confidence
+field, and the app makes no claim either way. What ships is the count,
+per route, on the route's own panel.
+
+---
+
 ## Next, in order
 
 **First, and deliberately unnumbered so the citations below stay

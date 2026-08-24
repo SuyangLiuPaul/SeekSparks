@@ -819,6 +819,391 @@
      }
     }
    ]
+  },
+  {
+   "id": "exodus-wilderness",
+   "style": 4,
+   "name": {
+    "en": "Israel's wilderness itinerary",
+    "zh-Hans": "以色列出埃及与旷野行程",
+    "zh-Hant": "以色列出埃及與曠野行程"
+   },
+   "range": {
+    "en": "Numbers 33:1 - 49",
+    "zh-Hans": "民数记 33:1 - 49",
+    "zh-Hant": "民數記 33:1 - 49"
+   },
+   "basis": {
+    "en": "The camps and their order are not a reconstruction. Numbers 33:2 says Moses wrote down the stages at the LORD's command, and this route follows that list verse by verse, from Rameses to the plains of Moab. What is uncertain is WHERE the camps were: most have never been identified on the ground, and the gazetteer answers for many of them with one shared point. Runs of stations at a single point are therefore drawn as a single marker carrying the whole range of numbers, and no line is drawn between two camps the gazetteer cannot tell apart. Two camps have no coordinates at all and break the line rather than being bridged.",
+    "zh-Hans": "各营站及其次序并非后人重构：民数记33:2说摩西奉耶和华的吩咐记下他们的行程，本路线即逐节照录，自兰塞至摩押平原。不确定的是各营站的位置——多数从未在实地考定，地名录对其中许多只给出同一个共用坐标。因此凡落在同一点上的连续营站合并为一个标记，标出整段编号，彼此之间不画连线；另有两站全无坐标，连线宁可中断，也不代为接通。",
+    "zh-Hant": "各營站及其次序並非後人重構：民數記33:2說摩西奉耶和華的吩咐記下他們的行程，本路線即逐節照錄，自蘭塞至摩押平原。不確定的是各營站的位置——多數從未在實地考定，地名錄對其中許多只給出同一個共用座標。因此凡落在同一點上的連續營站合併為一個標記，標出整段編號，彼此之間不畫連線；另有兩站全無座標，連線寧可中斷，也不代為接通。"
+   },
+   "stops": [
+    {
+     "place": "Rameses",
+     "book": "Numbers",
+     "chapter": 33,
+     "verse": 3,
+     "leg": "start",
+     "note": {
+      "en": "The starting point, on the day after the Passover. Exodus 12:37 gives the same first stage.",
+      "zh-Hans": "起点，在逾越节的次日。出埃及记12:37所记的第一段行程与此相同。",
+      "zh-Hant": "起點，在逾越節的次日。出埃及記12:37所記的第一段行程與此相同。"
+     }
+    },
+    {
+     "place": "Succoth 2",
+     "book": "Numbers",
+     "chapter": 33,
+     "verse": 5,
+     "leg": "land"
+    },
+    {
+     "place": "Etham",
+     "book": "Numbers",
+     "chapter": 33,
+     "verse": 6,
+     "leg": "land",
+     "note": {
+      "en": "On the edge of the wilderness.",
+      "zh-Hans": "在旷野边界上。",
+      "zh-Hant": "在曠野邊界上。"
+     }
+    },
+    {
+     "place": "Pi-hahiroth",
+     "book": "Numbers",
+     "chapter": 33,
+     "verse": 7,
+     "leg": "land",
+     "note": {
+      "en": "They turned back here, opposite Baal-zephon, and camped near Migdol. The gazetteer has all three names and coordinates for none of them, so the line breaks here rather than guessing where the sea was crossed - the most disputed location on this route.",
+      "zh-Hans": "他们在此转回，对着巴力洗分安营，靠近密夺。地名录收录了这三个地名，却都没有坐标；因此这里的连线中断，而不去臆测过海之处——这是全程争议最大的一点。",
+      "zh-Hant": "他們在此轉回，對著巴力洗分安營，靠近密奪。地名錄收錄了這三個地名，卻都沒有座標；因此這裡的連線中斷，而不去臆測過海之處——這是全程爭議最大的一點。"
+     }
+    },
+    {
+     "place": "Marah",
+     "book": "Numbers",
+     "chapter": 33,
+     "verse": 8,
+     "leg": "land",
+     "note": {
+      "en": "Verse 8 puts three days' march through the Wilderness of Etham between the sea and this camp.",
+      "zh-Hans": "第8节说他们过海之后，在以倘的旷野走了三天才到这里安营。",
+      "zh-Hant": "第8節說他們過海之後，在以倘的曠野走了三天才到這裡安營。"
+     }
+    },
+    {
+     "place": "Elim",
+     "book": "Numbers",
+     "chapter": 33,
+     "verse": 9,
+     "leg": "land",
+     "note": {
+      "en": "Twelve springs and seventy palm trees.",
+      "zh-Hans": "那里有十二股水泉，七十棵棕树。",
+      "zh-Hant": "那裡有十二股水泉，七十棵棕樹。"
+     }
+    },
+    {
+     "place": "Red Sea",
+     "book": "Numbers",
+     "chapter": 33,
+     "verse": 10,
+     "leg": "land"
+    },
+    {
+     "place": "Sin",
+     "book": "Numbers",
+     "chapter": 33,
+     "verse": 11,
+     "leg": "land",
+     "note": {
+      "en": "The Desert of Sin, not the city of Sin in the Nile delta.",
+      "zh-Hans": "汛的旷野，不是尼罗河三角洲的汛城。",
+      "zh-Hant": "汛的曠野，不是尼羅河三角洲的汛城。"
+     }
+    },
+    {
+     "place": "Dophkah",
+     "book": "Numbers",
+     "chapter": 33,
+     "verse": 12,
+     "leg": "land"
+    },
+    {
+     "place": "Alush",
+     "book": "Numbers",
+     "chapter": 33,
+     "verse": 13,
+     "leg": "land"
+    },
+    {
+     "place": "Rephidim",
+     "book": "Numbers",
+     "chapter": 33,
+     "verse": 14,
+     "leg": "land",
+     "note": {
+      "en": "Where there was no water for the people to drink.",
+      "zh-Hans": "在那里百姓没有水喝。",
+      "zh-Hant": "在那裡百姓沒有水喝。"
+     }
+    },
+    {
+     "place": "Sinai",
+     "book": "Numbers",
+     "chapter": 33,
+     "verse": 15,
+     "leg": "land",
+     "note": {
+      "en": "The Wilderness of Sinai. Where Sinai stood is disputed; the gazetteer places it in the south of the peninsula, at the site held by the longest tradition, while other reconstructions put it in Midian or in the north. This route draws the point it is given and does not choose between them.",
+      "zh-Hans": "西奈的旷野。西奈山的位置素有争议；本地名录取半岛南部、传统最久的一处，另有考据把它定在米甸或北方。本路线只按地名录所给的坐标绘制，不代为取舍。",
+      "zh-Hant": "西奈的曠野。西奈山的位置素有爭議；本地名錄取半島南部、傳統最久的一處，另有考據把它定在米甸或北方。本路線只按地名錄所給的座標繪製，不代為取捨。"
+     }
+    },
+    {
+     "place": "Kibroth-hattaavah",
+     "book": "Numbers",
+     "chapter": 33,
+     "verse": 16,
+     "leg": "land"
+    },
+    {
+     "place": "Hazeroth",
+     "book": "Numbers",
+     "chapter": 33,
+     "verse": 17,
+     "leg": "land"
+    },
+    {
+     "place": "Rithmah",
+     "book": "Numbers",
+     "chapter": 33,
+     "verse": 18,
+     "leg": "land"
+    },
+    {
+     "place": "Rimmon-perez",
+     "book": "Numbers",
+     "chapter": 33,
+     "verse": 19,
+     "leg": "land"
+    },
+    {
+     "place": "Libnah 2",
+     "book": "Numbers",
+     "chapter": 33,
+     "verse": 20,
+     "leg": "land"
+    },
+    {
+     "place": "Rissah",
+     "book": "Numbers",
+     "chapter": 33,
+     "verse": 21,
+     "leg": "land"
+    },
+    {
+     "place": "Kehelathah",
+     "book": "Numbers",
+     "chapter": 33,
+     "verse": 22,
+     "leg": "land"
+    },
+    {
+     "place": "Mount Shepher",
+     "book": "Numbers",
+     "chapter": 33,
+     "verse": 23,
+     "leg": "land"
+    },
+    {
+     "place": "Haradah",
+     "book": "Numbers",
+     "chapter": 33,
+     "verse": 24,
+     "leg": "land"
+    },
+    {
+     "place": "Makheloth",
+     "book": "Numbers",
+     "chapter": 33,
+     "verse": 25,
+     "leg": "land"
+    },
+    {
+     "place": "Tahath",
+     "book": "Numbers",
+     "chapter": 33,
+     "verse": 26,
+     "leg": "land"
+    },
+    {
+     "place": "Terah",
+     "book": "Numbers",
+     "chapter": 33,
+     "verse": 27,
+     "leg": "land"
+    },
+    {
+     "place": "Mithkah",
+     "book": "Numbers",
+     "chapter": 33,
+     "verse": 28,
+     "leg": "land"
+    },
+    {
+     "place": "Hashmonah",
+     "book": "Numbers",
+     "chapter": 33,
+     "verse": 29,
+     "leg": "land"
+    },
+    {
+     "place": "Moseroth",
+     "book": "Numbers",
+     "chapter": 33,
+     "verse": 30,
+     "leg": "land"
+    },
+    {
+     "place": "Bene-jaakan",
+     "book": "Numbers",
+     "chapter": 33,
+     "verse": 31,
+     "leg": "land"
+    },
+    {
+     "place": "Hor-haggidgad",
+     "book": "Numbers",
+     "chapter": 33,
+     "verse": 32,
+     "leg": "land",
+     "note": {
+      "en": "The gazetteer has the name and no coordinates, so the line breaks here.",
+      "zh-Hans": "地名录有此地名而无坐标，故连线在此中断。",
+      "zh-Hant": "地名錄有此地名而無座標，故連線在此中斷。"
+     }
+    },
+    {
+     "place": "Jotbathah",
+     "book": "Numbers",
+     "chapter": 33,
+     "verse": 33,
+     "leg": "land"
+    },
+    {
+     "place": "Abronah",
+     "book": "Numbers",
+     "chapter": 33,
+     "verse": 34,
+     "leg": "land"
+    },
+    {
+     "place": "Ezion-geber",
+     "book": "Numbers",
+     "chapter": 33,
+     "verse": 35,
+     "leg": "land"
+    },
+    {
+     "place": "Kadesh 1",
+     "book": "Numbers",
+     "chapter": 33,
+     "verse": 36,
+     "leg": "land",
+     "note": {
+      "en": "Kadesh, in the Wilderness of Zin. The gazetteer gives Kadesh and Zin one and the same point.",
+      "zh-Hans": "加低斯，在寻的旷野。地名录把加低斯与寻标在同一点上。",
+      "zh-Hant": "加低斯，在尋的曠野。地名錄把加低斯與尋標在同一點上。"
+     }
+    },
+    {
+     "place": "Mount Hor 1",
+     "book": "Numbers",
+     "chapter": 33,
+     "verse": 37,
+     "leg": "land",
+     "note": {
+      "en": "On the border of Edom. Aaron died here in the fortieth year (33:38-39).",
+      "zh-Hans": "在以东边界上。亚伦于第四十年死在这里（33:38-39）。",
+      "zh-Hant": "在以東邊界上。亞倫於第四十年死在這裡（33:38-39）。"
+     }
+    },
+    {
+     "place": "Zalmonah",
+     "book": "Numbers",
+     "chapter": 33,
+     "verse": 41,
+     "leg": "land"
+    },
+    {
+     "place": "Punon",
+     "book": "Numbers",
+     "chapter": 33,
+     "verse": 42,
+     "leg": "land"
+    },
+    {
+     "place": "Oboth",
+     "book": "Numbers",
+     "chapter": 33,
+     "verse": 43,
+     "leg": "land"
+    },
+    {
+     "place": "Iye-abarim",
+     "book": "Numbers",
+     "chapter": 33,
+     "verse": 44,
+     "leg": "land",
+     "note": {
+      "en": "On the border of Moab. Verse 45 sets out again from 'Iyim', the short form of the same name.",
+      "zh-Hans": "在摩押边界上。第45节说他们从「以延」起行，就是同一地名的简称。",
+      "zh-Hant": "在摩押邊界上。第45節說他們從「以延」起行，就是同一地名的簡稱。"
+     }
+    },
+    {
+     "place": "Dibon-gad",
+     "book": "Numbers",
+     "chapter": 33,
+     "verse": 45,
+     "leg": "land"
+    },
+    {
+     "place": "Almon-diblathaim",
+     "book": "Numbers",
+     "chapter": 33,
+     "verse": 46,
+     "leg": "land"
+    },
+    {
+     "place": "Abarim",
+     "book": "Numbers",
+     "chapter": 33,
+     "verse": 47,
+     "leg": "land",
+     "note": {
+      "en": "The mountains of Abarim, facing Nebo.",
+      "zh-Hans": "亚巴琳山，在尼波对面。",
+      "zh-Hant": "亞巴琳山，在尼波對面。"
+     }
+    },
+    {
+     "place": "Abel-shittim",
+     "book": "Numbers",
+     "chapter": 33,
+     "verse": 49,
+     "leg": "land",
+     "note": {
+      "en": "Verse 48 gives the last camp as the plains of Moab by the Jordan across from Jericho, and verse 49 names the two ends of that encampment - Beth-jeshimoth and Abel-shittim. The marker takes the second; the camp was the stretch between them, not a point.",
+      "zh-Hans": "第48节说末站是耶利哥对面、约旦河边的摩押平原，第49节点出这营地的两端——伯耶施末与亚伯什亭。此处标记取后者；实际的营地是两端之间的一带，并非一个点。",
+      "zh-Hant": "第48節說末站是耶利哥對面、約旦河邊的摩押平原，第49節點出這營地的兩端——伯耶施末與亞伯什亭。此處標記取後者；實際的營地是兩端之間的一帶，並非一個點。"
+     }
+    }
+   ]
   }
  ]
 }

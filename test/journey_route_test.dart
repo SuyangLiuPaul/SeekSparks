@@ -155,8 +155,8 @@ void main() {
         ]),
         byId,
       );
-      expect(r.ordinalsByPlace['A'], <int>[1, 3]);
-      expect(r.markers.length, 2, reason: 'one marker per PLACE');
+      expect(r.ordinalsByMarker[markerKeyFor(byId['A']!)], <int>[1, 3]);
+      expect(r.markers.length, 2, reason: 'one marker per POSITION');
     });
 
     test('a journey that resolved to nothing is dropped', () {
@@ -197,7 +197,7 @@ void main() {
         byId,
       );
       expect(r.stops.map((s) => s.ordinal), <int?>[1, null, 2]);
-      expect(r.ordinalsByPlace.containsKey('B'), isFalse,
+      expect(r.ordinalsByMarker.containsKey(markerKeyFor(byId['B']!)), isFalse,
           reason: 'no badge at a place they never reached');
     });
 
@@ -241,6 +241,172 @@ void main() {
       );
       // Syrian to Pisidian Antioch on the gazetteer's own coordinates.
       expect(r.straightLineKm, closeTo(500.0, 1.0));
+    });
+  });
+
+  group('stations the gazetteer cannot tell apart', () {
+    // Three DIFFERENT places — three names in the text, three ids — that
+    // the gazetteer answers with one and the same point. This is not a
+    // hypothetical: eleven of Numbers 33's camps do exactly this.
+    final byId = <String, BiblePlace>{
+      'A': _place('A', 36.0, 36.0),
+      'Same1': _place('Same1', 30.0, 34.0),
+      'Same2': _place('Same2', 30.0, 34.0),
+      'Same3': _place('Same3', 30.0, 34.0),
+      'Z': _place('Z', 31.5, 35.5),
+      'Nowhere': _place('Nowhere', null, null),
+    };
+
+    ResolvedJourney run() => resolveJourney(
+          _journey(<JourneyStop>[
+            _stop('A', JourneyLeg.start),
+            _stop('Same1', JourneyLeg.land),
+            _stop('Same2', JourneyLeg.land),
+            _stop('Same3', JourneyLeg.land),
+            _stop('Z', JourneyLeg.land),
+          ]),
+          byId,
+        );
+
+    test('no leg is drawn between two camps at one point', () {
+      final r = run();
+      // The naive answer emits five stops and four legs, two of which are
+      // zero kilometres long: invisible, unhittable, and counted in the
+      // total the panel prints.
+      expect(r.stops.length, 5, reason: 'every camp the text names is kept');
+      expect(r.segments.length, 2);
+      expect(r.segments.map((s) => s.from.place.id), <String>['A', 'Same3']);
+      expect(r.segments.map((s) => s.to.place.id), <String>['Same1', 'Z']);
+      for (final s in r.segments) {
+        expect(s.km, greaterThan(1.0));
+      }
+    });
+
+    test('a run is entered at its first camp and left from its last', () {
+      // The three camps are one position, so this changes no geometry —
+      // but the leg card names both ends, and Numbers 33's own sentence
+      // is "they departed from X and camped at Y". Arriving is what the
+      // run's FIRST camp records and departing is what its LAST one
+      // records, so those are the two the legs must name.
+      final r = run();
+      expect(r.segments.first.to.place.id, 'Same1');
+      expect(r.segments.last.from.place.id, 'Same3');
+    });
+
+    test('the run is one marker carrying every ordinal in it', () {
+      final r = run();
+      expect(r.markers.length, 3, reason: 'A, the shared point, Z');
+      expect(r.ordinalsByMarker[markerKeyFor(byId['Same2']!)], <int>[2, 3, 4]);
+    });
+
+    test('the collapse is counted, so a surface can say it plainly', () {
+      final r = run();
+      expect(r.runs.length, 3);
+      expect(r.collapsedRuns.length, 1);
+      expect(r.collapsedRuns.single.stops.map((s) => s.place.id),
+          <String>['Same1', 'Same2', 'Same3']);
+      expect(r.collapsedStopCount, 3);
+    });
+
+    test('a place LEFT and returned to is not a run', () {
+      // The difference that matters: Same1→Same2 is two names our data
+      // cannot separate, while A→Z→A is a journey that went somewhere and
+      // came back. Grouping the second would delete the trip.
+      final r = resolveJourney(
+        _journey(<JourneyStop>[
+          _stop('A', JourneyLeg.start),
+          _stop('Z', JourneyLeg.land),
+          _stop('A', JourneyLeg.land),
+        ]),
+        byId,
+      );
+      expect(r.collapsedRuns, isEmpty);
+      expect(r.segments.length, 2);
+    });
+
+    test('an unresolved camp breaks the run as well as the line', () {
+      final r = resolveJourney(
+        _journey(<JourneyStop>[
+          _stop('Same1', JourneyLeg.start),
+          _stop('Nowhere', JourneyLeg.land),
+          _stop('Same2', JourneyLeg.land),
+        ]),
+        byId,
+      );
+      // Same1 and Same2 share a point, but a camp the gazetteer cannot
+      // place stands between them. Running them together would say the
+      // travellers never moved, when in fact we do not know that they
+      // did not travel a hundred miles and come back.
+      expect(r.collapsedRuns, isEmpty);
+      expect(r.segments, isEmpty);
+      expect(r.unresolved, <String>['Nowhere']);
+    });
+
+    test('a run carries doubt at its ends and nowhere else', () {
+      final middle = resolveJourney(
+        _journey(<JourneyStop>[
+          _stop('A', JourneyLeg.start),
+          _stop('Same1', JourneyLeg.land),
+          _stop('Same2', JourneyLeg.land, attested: false),
+          _stop('Same3', JourneyLeg.land),
+          _stop('Z', JourneyLeg.land),
+        ]),
+        byId,
+      );
+      // Both legs are supported at both of THEIR ends — A to Same1, and
+      // Same3 to Z — and the doubtful camp is an end of neither. Dotting
+      // them because of it would print "the text does not say they went
+      // from here to Z" over a leg the text gives in full.
+      expect(middle.segments.map((s) => s.attested), <bool>[true, true]);
+
+      final edge = resolveJourney(
+        _journey(<JourneyStop>[
+          _stop('A', JourneyLeg.start),
+          _stop('Same1', JourneyLeg.land),
+          _stop('Same2', JourneyLeg.land),
+          _stop('Same3', JourneyLeg.land, attested: false),
+          _stop('Z', JourneyLeg.land),
+        ]),
+        byId,
+      );
+      // The same doubt at the camp the run is LEFT from is an end, and
+      // the outgoing leg is provisional exactly as it would be without
+      // any merging at all.
+      expect(edge.segments.map((s) => s.attested), <bool>[true, false]);
+    });
+  });
+
+  group('the numbers on a merged badge', () {
+    test('a single stop is just its number', () {
+      expect(formatOrdinals(<int>[7]), '7');
+    });
+
+    test('a consecutive run collapses to its ends', () {
+      expect(formatOrdinals(<int>[18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28]),
+          '18–28');
+    });
+
+    test('a gap is NEVER written as a range', () {
+      // Lystra is stops 8 and 10 of the first journey, with Derbe between
+      // them. `8–10` would say they were at this point for three stops
+      // running, which is a claim about the itinerary and a false one.
+      expect(formatOrdinals(<int>[8, 10]), '8,10');
+    });
+
+    test('mixed input keeps both forms', () {
+      expect(formatOrdinals(<int>[1, 2, 3, 7, 9]), '1–3,7,9');
+    });
+
+    test('even a pair of two takes the dash', () {
+      // `2–3` is no shorter than `2,3`, so this is not about width: the
+      // dash means consecutive and the comma means a gap, and a badge that
+      // switched notation at some length threshold would make the reader
+      // learn two rules to read one map.
+      expect(formatOrdinals(<int>[2, 3]), '2–3');
+    });
+
+    test('nothing to say is said with nothing', () {
+      expect(formatOrdinals(const <int>[]), '');
     });
   });
 
@@ -559,6 +725,18 @@ void main() {
       for (var i = 0; i < light.length; i++) {
         expect(light[i].colour, isNot(dark[i].colour),
             reason: 'a hue legible on white is invisible on #101A2B');
+      }
+    });
+
+    test('the palette holds a hue for every journey that ships', () {
+      // The wrap below is a safety net, not a plan: five routes against a
+      // four-hue palette would silently draw the wilderness itinerary in
+      // the first journey's amber, and the two overlap across Sinai.
+      for (final c in <WbColors>[WbColors.light, WbColors.dark]) {
+        final p = journeyPalette(c);
+        expect(p.length, greaterThanOrEqualTo(5));
+        expect(p.map((s) => s.colour.toARGB32()).toSet().length, p.length,
+            reason: 'two routes inked the same');
       }
     });
 

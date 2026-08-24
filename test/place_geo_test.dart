@@ -69,6 +69,31 @@ void main() {
       expect(repairPlaceName('Mount Shepher'), 'Mount Shepher');
       expect(repairPlaceName('Jerusalem'), 'Jerusalem');
     });
+
+    test('the same damage at index 1 is repaired too', () {
+      // `Rephidim` is `R` + `eph` + `idim`, so whatever mangled every
+      // other `eph` in this file landed here on the SECOND letter — where
+      // the letter before it is the name's own initial capital and the
+      // "lowercase then uppercase" rule cannot see it. Four names in the
+      // gazetteer are in this state, and one of them is a station on the
+      // wilderness itinerary.
+      expect(repairPlaceName('REphidim'), 'Rephidim');
+      expect(repairPlaceName('REphaim'), 'Rephaim');
+      expect(repairPlaceName('NEphtoah'), 'Nephtoah');
+      expect(repairPlaceName('SEphar'), 'Sephar');
+    });
+
+    test('a capital that is not this damage is left alone', () {
+      // Deliberately narrow, and `BEze 1`/`BEze 2` are why. They are
+      // broken — the verses behind them (Jdg 1:4-5, 1Sa 11:8) name Bezek,
+      // so a letter has been LOST as well as a capital gained — and a
+      // rule wide enough to catch them would emit `Beze`, turning an
+      // obviously broken string into a plausible one that is still wrong.
+      // Left as it is and recorded in docs/DATA-INTEGRITY.md.
+      expect(repairPlaceName('BEze 1'), 'BEze 1');
+      expect(repairPlaceName('Ephesus'), 'Ephesus');
+      expect(repairPlaceName('En-gedi'), 'En-gedi');
+    });
   });
 
   group('ordinals', () {

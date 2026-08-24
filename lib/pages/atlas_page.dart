@@ -221,7 +221,7 @@ class _AtlasPageState extends State<AtlasPage> {
         if (!mounted) return;
         setState(() => _base = m);
         if (_selectedId != null) _focusToken++;
-        // 11 KB, and it resolves against the gazetteer that has just
+        // 52 KB, and it resolves against the gazetteer that has just
         // landed, so it cannot be fetched any earlier than this.
         JourneysService.all().then((js) {
           if (!mounted) return;
@@ -1635,6 +1635,14 @@ class _JourneyPanel extends StatelessWidget {
     final litIndices = leg == null
         ? const <int>{}
         : <int>{leg.from.index, leg.to.index};
+    // Which rows the note about shared points is actually ABOUT. A count
+    // with no locator tells a reader that 27 stops are merged and leaves
+    // them unable to find out whether the one they are reading is one of
+    // them.
+    final sharedIndices = <int>{
+      for (final run in journey.collapsedRuns)
+        for (final s in run.stops) s.index,
+    };
 
     return ColoredBox(
       color: c.paneBg,
@@ -1709,6 +1717,22 @@ class _JourneyPanel extends StatelessWidget {
                   .replaceAll('{n}', '${journey.unresolved.length}'),
             ),
           ],
+          // The failure that looks like success. A stop the gazetteer
+          // cannot place at all breaks the line, and the note above says
+          // so; a stop it places on top of its neighbour draws perfectly
+          // and says nothing, and 27 of the wilderness itinerary's 42
+          // stations do exactly that. Without this line the map shows one
+          // dot where the text names eleven camps.
+          if (journey.collapsedRuns.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            _note(
+              c,
+              t,
+              _s('journeyCollapsed', '{n} stops share a point, in {p} groups')
+                  .replaceAll('{n}', '${journey.collapsedStopCount}')
+                  .replaceAll('{p}', '${journey.collapsedRuns.length}'),
+            ),
+          ],
           if (basis.isNotEmpty) ...[
             const SizedBox(height: 10),
             _header(c, t, _s('journeyBasisHeader', 'Basis')),
@@ -1732,7 +1756,7 @@ class _JourneyPanel extends StatelessWidget {
             ].join(' · '),
           ),
           for (final s in journey.stops)
-            _stop(c, t, style, version, s, litIndices),
+            _stop(c, t, style, version, s, litIndices, sharedIndices),
         ],
       ),
     );
@@ -1968,6 +1992,7 @@ class _JourneyPanel extends StatelessWidget {
     String version,
     ResolvedStop s,
     Set<int> litIndices,
+    Set<int> sharedIndices,
   ) {
     final lit = s.place.id == selectedPlaceId || litIndices.contains(s.index);
     final display = _placeName(s);
@@ -2050,11 +2075,18 @@ class _JourneyPanel extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 2),
-                  Row(
+                  // A Wrap, not a Row. Three chips of translated text in
+                  // a panel the reader can drag narrow is the overflow
+                  // this app has shipped before; wrapping costs a line of
+                  // height in the worst case and nothing in the common
+                  // one.
+                  Wrap(
+                    spacing: 4,
+                    runSpacing: 3,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       _refChip(c, t, version, ref),
-                      if (s.isAside || !s.stop.attested) ...[
-                        const SizedBox(width: 4),
+                      if (s.isAside || !s.stop.attested)
                         _tag(
                           c,
                           t,
@@ -2062,7 +2094,14 @@ class _JourneyPanel extends StatelessWidget {
                               ? _s('journeyAsideTag', 'Named, not reached')
                               : _s('journeyProvisionalTag', 'Provisional'),
                         ),
-                      ],
+                      // On every row of the run, not just its first: a
+                      // reader stopped at Rissah is asking about Rissah,
+                      // and a marker that appeared once at the top of a
+                      // group would be invisible to them.
+                      if (sharedIndices.contains(s.index))
+                        _tag(c, t,
+                            _s('journeySharedPointTag', 'One point with its '
+                                'neighbour')),
                     ],
                   ),
                   if (note != null && note.isNotEmpty) ...[

@@ -21,6 +21,7 @@ import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/bible_place.dart';
 import 'package:seeksparks/pages/atlas_page.dart';
 import 'package:seeksparks/providers/main_provider.dart';
+import 'package:seeksparks/services/journeys_service.dart';
 import 'package:seeksparks/services/places_service.dart';
 
 void main() {
@@ -32,6 +33,13 @@ void main() {
     total = (await PlacesService.all()).length;
     await PlacesService.baseMap();
     jonah1 = await PlacesService.forChapter('Jonah', 1);
+    // Warmed here, like the gazetteer above it, because the page loads it
+    // over a real Future while `pump` only advances a FAKE clock. Left
+    // cold, whether the overlay switches exist by the eighth frame is a
+    // race against how long the asset takes to read — which is a fact
+    // about the file's size, not about the page, and it decided these
+    // tests differently the day the file grew from 40 KB to 52 KB.
+    await JourneysService.all();
   });
 
   Future<void> pump(WidgetTester tester, Size size,
@@ -241,6 +249,37 @@ void main() {
     // And the tag is never bare: the row says what the text does and does
     // not say, which is the whole reason the stop is kept.
     expect(find.textContaining('并未说他们到过以哥念'), findsOneWidget);
+
+    await unmount(tester);
+  });
+
+  testWidgets('the wilderness route says where our map cannot tell camps apart',
+      (tester) async {
+    await pump(tester, const Size(1440, 1000));
+
+    // Numbers 33 is the one itinerary scripture gives as a LIST, so the
+    // order needs no reconstruction — but 27 of its 42 stations land on
+    // six shared points in the gazetteer, and drawn without a word about
+    // it the map shows one dot where the text names eleven camps.
+    expect(find.text('以色列出埃及与旷野行程'), findsOneWidget);
+    await tester.tap(find.text('以色列出埃及与旷野行程'));
+    for (var i = 0; i < 6; i++) {
+      await tester.pump(const Duration(milliseconds: 80));
+    }
+    expect(tester.takeException(), isNull);
+
+    // The claim, on screen, in the reader's own language — and phrased
+    // about the DATA, because a shared point can mean an unidentified
+    // site or two places genuinely next door and we cannot tell which.
+    expect(find.textContaining('共用同一个坐标'), findsOneWidget);
+    // And locatable: a count with no locator leaves a reader at Rissah
+    // unable to find out whether Rissah is one of the merged ones.
+    expect(find.text('与相邻站共用坐标'), findsWidgets);
+    // The two camps the gazetteer cannot place at all are a different
+    // claim and keep their own sentence.
+    expect(find.textContaining('线在那里断开'), findsOneWidget);
+    // Every station still carries the verse that puts it on the list.
+    expect(find.textContaining('民数记 33:'), findsWidgets);
 
     await unmount(tester);
   });

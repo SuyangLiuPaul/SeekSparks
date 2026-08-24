@@ -59,22 +59,53 @@ void main() {
     });
   });
 
+  // The stops the gazetteer cannot place, named one by one.
+  //
+  // A typo in a place id and a genuinely unidentified site arrive here as
+  // the same thing — an id that does not resolve — and only a list written
+  // by hand can tell a reader which happened. So the guard is two-sided:
+  // an id NOT in this map fails the build, and an id in it that starts
+  // resolving fails the build too, because that means the list is stale
+  // and the route has quietly begun drawing a line it says it refuses to.
+  //
+  //   * Pi-hahiroth (Num 33:7) — Exodus 14:2 gives it with Migdol and
+  //     Baal-zephon, and the gazetteer places none of the three. Where the
+  //     line breaks is precisely where the sea crossing is argued about,
+  //     which is the right place for it to break.
+  //   * Hor-haggidgad (Num 33:32) — named, unlocated, not bridged.
+  const unlocatedByDesign = <String, Set<String>>{
+    'exodus-wilderness': <String>{'Pi-hahiroth', 'Hor-haggidgad'},
+  };
+
   group('every stop resolves against the gazetteer', () {
-    test('nothing is unresolved', () {
+    test('nothing is unresolved but what is enumerated', () {
       final broken = <String>[
         for (final r in resolved)
-          for (final id in r.unresolved) '${r.id}: $id',
+          for (final id in r.unresolved)
+            if (!(unlocatedByDesign[r.id] ?? const <String>{}).contains(id))
+              '${r.id}: $id',
       ];
       expect(broken, isEmpty,
           reason: 'a stop the gazetteer cannot place breaks the line');
     });
 
-    test('every stop is a gazetteer id with coordinates', () {
+    test('everything enumerated really is still unresolved', () {
+      for (final e in unlocatedByDesign.entries) {
+        final r = resolved.firstWhere((r) => r.id == e.key);
+        expect(r.unresolved.toSet(), e.value,
+            reason: '${e.key}: the exemption list has drifted from the data');
+      }
+    });
+
+    test('every stop is a gazetteer id, located or knowingly not', () {
       for (final j in journeys) {
         for (final s in j.stops) {
           final p = byId[s.placeId];
           expect(p, isNotNull, reason: '${j.id}: ${s.placeId} not in gazetteer');
-          expect(p!.located, isTrue, reason: '${j.id}: ${s.placeId} unlocated');
+          if (p!.located) continue;
+          expect(unlocatedByDesign[j.id] ?? const <String>{},
+              contains(s.placeId),
+              reason: '${j.id}: ${s.placeId} unlocated and unaccounted for');
         }
       }
     });
@@ -165,7 +196,7 @@ void main() {
 
     test('Lystra is stop 8 and stop 10, on one marker', () {
       final r = route('paul-1');
-      expect(r.ordinalsByPlace['Lystra'], <int>[8, 10]);
+      expect(r.ordinalsByMarker[markerKeyFor(byId['Lystra']!)], <int>[8, 10]);
       expect(r.markers.where((m) => m.place.id == 'Lystra').length, 1);
     });
 
@@ -213,7 +244,7 @@ void main() {
       final leg =
           r.segments.firstWhere((s) => s.from.place.id == 'Ephesus');
       expect(leg.leg, JourneyLeg.unknown);
-      expect(r.ordinalsByPlace['Macedonia'], <int>[5, 7],
+      expect(r.ordinalsByMarker[markerKeyFor(byId['Macedonia']!)], <int>[5, 7],
           reason: 'entered twice — 20:1 and again at 20:3, the plot');
     });
 
@@ -268,7 +299,84 @@ void main() {
         ];
         expect(seen, List<int>.generate(seen.length, (i) => i + 1),
             reason: r.id);
-        expect(seen.length, r.journey.waypointCount, reason: r.id);
+        // A waypoint the gazetteer cannot place takes no number, because
+        // it is never drawn. The badges still have to run unbroken over
+        // what IS drawn, so the expected count is the waypoints minus
+        // those — computed here rather than hardcoded, so the row keeps
+        // working when the exemption list changes.
+        final lost = r.journey.stops
+            .where((s) => !s.isAside && r.unresolved.contains(s.placeId))
+            .length;
+        expect(seen.length, r.journey.waypointCount - lost, reason: r.id);
+      }
+    });
+
+    test('no route draws a leg of no length', () {
+      // A zero-length leg is invisible, unhittable, and counted — it pads
+      // the segment total a panel prints with lines a reader can neither
+      // see nor click. Where two consecutive stations share a point the
+      // answer is one marker, not a line from a place to itself.
+      for (final r in resolved) {
+        for (final s in r.segments) {
+          expect(s.km, greaterThan(0.0),
+              reason: '${r.id}: ${s.from.place.id} → ${s.to.place.id}');
+        }
+      }
+    });
+
+    test('the wilderness itinerary ships, all 42 stations of it', () {
+      // Numbers 33:3-49. The count is asserted because this is the one
+      // route in scripture the text itself calls a list: 33:2 says Moses
+      // wrote the stages down at the LORD's command, so a missing camp is
+      // a dropped verse and not a difference of scholarly opinion.
+      final j = journeys.firstWhere((j) => j.id == 'exodus-wilderness');
+      expect(j.stops.length, 42);
+      expect(j.stops.first.placeId, 'Rameses');
+      expect(j.stops.last.placeId, 'Abel-shittim');
+      expect(j.stops.every((s) => s.chapter == 33), isTrue);
+    });
+
+    test('the stations run down the chapter and never back up it', () {
+      final j = journeys.firstWhere((j) => j.id == 'exodus-wilderness');
+      var last = 0;
+      for (final s in j.stops) {
+        expect(s.verse, greaterThanOrEqualTo(last), reason: s.placeId);
+        last = s.verse;
+      }
+      expect(last, lessThanOrEqualTo(49), reason: 'the range says 33:1-49');
+    });
+
+    test('the wilderness route knows how much of itself is one point', () {
+      // The finding that shaped the whole feature: the uncertainty on this
+      // route is not in the ORDER — the text gives that — but in the
+      // gazetteer, which answers "where is Rissah?" with a point it also
+      // gives to ten other camps. If the collapse ever stops being
+      // counted, the map goes back to drawing one dot for eleven names
+      // with nothing to say so.
+      final r = route('exodus-wilderness');
+      expect(r.collapsedRuns.length, greaterThan(1));
+      expect(r.collapsedStopCount, greaterThan(20),
+          reason: 'measured at 27 of 42 against the shipped gazetteer');
+      expect(r.collapsedStopCount, lessThan(r.stops.length),
+          reason: 'a route entirely at one point should not be drawn at all');
+    });
+
+    test('no provisional camp is buried inside a merged run', () {
+      // The one case the drawing has no answer for. A camp strictly
+      // INSIDE a run has no leg of its own, so its dotted line has
+      // nowhere to be drawn, and `journey_route.dart` deliberately
+      // refuses to borrow a neighbouring leg's dash to say it. Nothing
+      // that ships is in this state; if something ever is, this row fails
+      // and a person decides how the marker should say it, rather than
+      // the map quietly presenting a doubtful camp in confident ink.
+      for (final r in resolved) {
+        for (final run in r.collapsedRuns) {
+          for (var i = 1; i < run.stops.length - 1; i++) {
+            expect(run.stops[i].stop.attested, isTrue,
+                reason: '${r.id}: ${run.stops[i].place.id} is provisional '
+                    'and merged out of sight');
+          }
+        }
       }
     });
 

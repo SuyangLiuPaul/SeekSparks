@@ -132,16 +132,37 @@ String? bookForPlaceCode(String code) => kPlaceBookCodes[code];
 final RegExp _midWordCapital = RegExp(r'(?<=[a-z])([A-Z])');
 final RegExp _ordinalSuffix = RegExp(r'\s+(\d+)$');
 
-/// Undo the `eph` → `Eph` capitalisation in the eleven names it hit.
+/// The same damage where the letter before it is the name's own initial.
+///
+/// 2026-08-24 (#317): the general rule below could not reach four names,
+/// because it requires a LOWERCASE letter in front and these have the
+/// capital in the second position — `Rephidim` is `R` + `eph` + `idim`,
+/// so the substitution landed at index 1 and left `REphidim`. Four
+/// entries shipped their English name mangled, and one of them is a stop
+/// on the wilderness itinerary, which is how it was found.
+///
+/// Deliberately narrower than "lower any capital after a letter": it
+/// fires only on the `Eph` that the documented `eph` → `Eph` substitution
+/// produced. The gazetteer holds two further mid-word capitals, `BEze 1`
+/// and `BEze 2`, and they are NOT this damage — no `eph` is involved, and
+/// their verses (Jdg 1:4-5, 1Sa 11:8) name Bezek, so the entry has lost a
+/// final letter as well as gained a capital. Lowering it to `Beze` would
+/// turn an obviously broken string into a plausible one that is still
+/// wrong, which is the worse of the two. Left as it is and recorded in
+/// `docs/DATA-INTEGRITY.md`.
+final RegExp _initialEph = RegExp(r'(?<=[A-Za-z])E(?=ph)');
+
+/// Undo the `eph` → `Eph` capitalisation in the names it hit.
 ///
 /// Stated as a general rule — a capital that directly follows a
-/// lowercase letter is lowered — rather than as a list of eleven
+/// lowercase letter is lowered — rather than as a list of
 /// corrections, because the rule is what is actually true of biblical
 /// transliteration: no name in this gazetteer legitimately capitalises
 /// mid-word. Hyphens and spaces are word boundaries and are untouched,
 /// so `Baal-Hazor` and `Beth-El` keep their capitals.
-String repairPlaceName(String raw) =>
-    raw.replaceAllMapped(_midWordCapital, (m) => m[1]!.toLowerCase());
+String repairPlaceName(String raw) => raw
+    .replaceAllMapped(_midWordCapital, (m) => m[1]!.toLowerCase())
+    .replaceAll(_initialEph, 'e');
 
 /// Split `Antioch 2` into `('Antioch', 2)`.
 ///

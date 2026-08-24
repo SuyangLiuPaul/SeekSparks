@@ -8558,6 +8558,27 @@ const uiStrings = {
     'en': '{n} stops have no location in the gazetteer; the line breaks '
         'there.',
   },
+  // Said about the DATA, never about the scholarship. Two quite different
+  // facts put two stations on one point — the sites are unidentified and
+  // the source fell back to a region, or they really are next door to each
+  // other, as Jerusalem's gates are — and nothing we hold can tell which.
+  // "One point for N stations" is true either way; "their location is
+  // unknown" would be a claim we cannot support.
+  'journeyCollapsed': {
+    'zh-Hans': '其中 {n} 站与相邻的站共用同一个坐标（共 {p} 组）。地名录没有分别'
+        '给出它们的位置，所以每一组画成一个标记，站号一并列在上面。',
+    'zh-Hant': '其中 {n} 站與相鄰的站共用同一個座標（共 {p} 組）。地名錄沒有分別'
+        '給出它們的位置，所以每一組畫成一個標記，站號一併列在上面。',
+    'en': '{n} of these stops share one map point with the stop next to '
+        'them, in {p} groups. The gazetteer gives them no separate '
+        'coordinates, so each group is drawn as a single marker carrying '
+        'all of its numbers.',
+  },
+  'journeySharedPointTag': {
+    'zh-Hans': '与相邻站共用坐标',
+    'zh-Hant': '與相鄰站共用座標',
+    'en': 'One point with its neighbour',
+  },
   'journeyClose': {
     'zh-Hans': '关闭行程',
     'zh-Hant': '關閉行程',
