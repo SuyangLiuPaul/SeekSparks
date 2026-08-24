@@ -1086,10 +1086,12 @@ class _TriviaDiagramView extends StatelessWidget {
     // the floor rather than scaled from 8, which is the one place on this
     // page where the default setting changes appearance.
     final nameSize = t.scaledSmall(WbMetrics.smallPrintFloor);
-    // Four em of the name's type. Reproduces 44 exactly at the default
-    // and at every stop below it, and widens with the longest name
-    // ("Daleth") above it.
-    final cellWidth = math.max(44.0, nameSize * 4.0);
+    // The binding name is the WIDEST, not the longest: "Lamed" and
+    // "Samek" carry an 'm' and outrun the six-letter "Daleth". At the
+    // 11 px floor both need ~37 px of content, which a 44 px cell minus
+    // 8 px of padding does not give — measured on the deployed build at
+    // 12 pt, where they alone wrapped to two lines.
+    final cellWidth = math.max(48.0, nameSize * 4.4);
     final children = [
       for (final pair in letters)
         Container(
