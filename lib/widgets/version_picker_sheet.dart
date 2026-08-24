@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/constants/bible_versions.dart';
 import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/models/app_settings.dart';
@@ -249,7 +250,10 @@ class _LanguageGroupedVersionBodyState
           softWrap: false,
           textAlign: TextAlign.center,
           style: TextStyle(
-            fontSize: settings.fontSize.clamp(12.0, 15.0).toDouble(),
+            // Was `.clamp(12, 15)`: saturated at 15 from 15 pt on, so
+            // the sheet where a reader chooses their Bible answered 26
+            // of the slider's 29 stops identically.
+            fontSize: settings.wbType.scaledSmall(15),
             fontFamily: settings.fontFamily,
             fontFamilyFallback: kCjkFontFallback,
             fontWeight: FontWeight.w700,

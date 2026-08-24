@@ -1246,3 +1246,20 @@ class WbType {
     );
   }
 }
+
+/// The reader's scale from the settings object, without a [BuildContext].
+///
+/// [WbType.of] needs one and half the call sites that want the scale are
+/// in widgets holding the settings as a field, or inside a dialog or
+/// bottom-sheet builder whose context is above the provider. Those sites
+/// used to write the four-argument [WbType.resolve] out longhand, which
+/// is how `fontFamily` came to be omitted at some of them and not
+/// others.
+extension WbSettingsScale on AppSettings {
+  WbType get wbType => WbType.resolve(
+        fontSize: fontSize,
+        lineSpacing: lineSpacing,
+        menuScale: menuScale,
+        fontFamily: fontFamily,
+      );
+}

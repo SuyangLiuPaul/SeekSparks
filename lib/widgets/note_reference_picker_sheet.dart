@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:seeksparks/constants/book_names.dart';
 import 'package:seeksparks/constants/text_patterns.dart' show sanitizeForSearch;
 import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/verse.dart';
 import 'package:seeksparks/providers/main_provider.dart';
@@ -158,7 +159,7 @@ class _NoteReferencePickerSheetState
                   child: Text(
                     _titleForStep(),
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: settings.wbType.scaled(16),
                       fontWeight: FontWeight.w700,
                       color: scheme.onSurface,
                       fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,

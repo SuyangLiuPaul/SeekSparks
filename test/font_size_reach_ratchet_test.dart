@@ -49,15 +49,11 @@ void main() {
     // real, it just is not a defect.
     'models/app_style_preset.dart': 9,
     'pages/bible_trivia_page.dart': 9,
-    'pages/strongs_entry_page.dart': 7,
-    'pages/sermon_detail_page.dart': 6,
     'pages/evidence_page.dart': 5,
     'widgets/book_chapter_picker.dart': 2,
-    'widgets/verse_popup_sheet.dart': 2,
     'widgets/version_picker_sheet.dart': 2,
     'pages/evidence_detail_page.dart': 1,
     'pages/profile_edit_page.dart': 1,
-    'widgets/note_reference_picker_sheet.dart': 1,
   };
 
   /// The surfaces #315 finished. Zero literals, and it stays zero.
@@ -124,6 +120,27 @@ void main() {
     // own work between devices, and the last place to set 11 px and
     // hope.
     'pages/settings_page.dart',
+    // 2026-08-24 (#315). The four surfaces that mix a SCALED body with
+    // frozen furniture, which is the ticket's defect in its sharpest
+    // form: a literal beside a scaled size does not merely fail to
+    // grow, it changes RANK. `sermon_detail_page.dart` carried the only
+    // outright inversion in the app — the sermon's own title was the
+    // literal 22 over a body of `settings.fontSize`, so it led the page
+    // at the default and was SMALLER than the sermon from 23 pt on,
+    // stop 12 of the slider's 29. Proven by measurement, not by source:
+    // `sermon_font_size_behaviour_test.dart` fails at exactly 24 pt
+    // against the commit before the fix.
+    //
+    // `strongs_entry_page.dart` is on this list for a second reason.
+    // Its `_RelatedChip` sets a LEMMA — accented Greek, pointed Hebrew
+    // — at 13 px, two under [WbMetrics.originalFloor], at the DEFAULT
+    // setting. That is not a reach defect at all; it is the app
+    // printing diacritics below the size it decided they survive at,
+    // and no amount of scaling would have found it.
+    'pages/sermon_detail_page.dart',
+    'pages/strongs_entry_page.dart',
+    'widgets/note_reference_picker_sheet.dart',
+    'widgets/verse_popup_sheet.dart',
   ];
 
   final literal = RegExp(r'fontSize:\s*(?:const\s*)?[0-9]+(?:\.[0-9]+)?\b');
@@ -331,21 +348,25 @@ void main() {
     /// a hint at 7.8 px for a reader who set 12 pt. The other entries
     /// should take the same route — [WbType.scaledSmall], which keeps
     /// the floor as one shared number and drops only the ceiling.
+    ///
+    /// 2026-08-24: three more went that way. `sidebar_panel.dart` and
+    /// `version_picker_sheet.dart` are gone from the list entirely, and
+    /// `loading_page.dart` dropped one. The two that emptied were the
+    /// widest-saturating of the set — `.clamp(12, 15)` answered 26 of
+    /// the slider's 29 stops with the same number.
     const known = <String, int>{
       'pages/bible_trivia_page.dart': 5,
       'pages/evidence_detail_page.dart': 3,
       'pages/evidence_page.dart': 8,
       'pages/highlights_page.dart': 1,
       'pages/library_page.dart': 2,
-      'pages/loading_page.dart': 4,
+      'pages/loading_page.dart': 3,
       'pages/profile_edit_page.dart': 1,
       'pages/profiles_page.dart': 1,
       'pages/stats_page.dart': 1,
       'widgets/book_chapter_picker.dart': 2,
       'widgets/gemini_key_card.dart': 4,
       'widgets/onboarding_dialog.dart': 1,
-      'widgets/sidebar_panel.dart': 1,
-      'widgets/version_picker_sheet.dart': 1,
     };
 
     final over = <String>[];

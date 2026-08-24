@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:seeksparks/constants/sermon_credit.dart';
 import 'package:seeksparks/constants/sermon_topics.dart';
 import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/sermon.dart';
 import 'package:seeksparks/utils/floating_toast.dart' show showFloatingToast;
@@ -342,6 +343,7 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<AppSettings>();
+    final t = settings.wbType;
     final scheme = Theme.of(context).colorScheme;
     final s = widget.sermon;
     return Scaffold(
@@ -369,8 +371,13 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
                   key: ValueKey('title-${s.id}'),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 16,
+                  // Scaled, because the OTHER branch of this switcher is
+                  // a bare `Text` and therefore already grows with the
+                  // setting. A literal here made one slot behave two
+                  // ways: at 40 pt the generic word "Sermon" was 44 px
+                  // and the actual title it replaced was 16.
+                  style: TextStyle(
+                    fontSize: t.scaled(16),
                     fontWeight: FontWeight.w600,
                   ),
                 )
@@ -431,10 +438,15 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
             controller: _scrollController,
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
           children: [
+            // The one place in the app where a frozen size did not merely
+            // fail to grow but CHANGED RANK. The body below is
+            // `settings.fontSize`; this title was 22. It is the largest
+            // text on the page at the default 20 pt and smaller than the
+            // sermon itself from 23 pt on — stop 12 of the slider's 29.
             Text(
               s.localizedTitle(settings.locale),
-              style: const TextStyle(
-                fontSize: 22,
+              style: TextStyle(
+                fontSize: t.scaled(22),
                 fontWeight: FontWeight.w700,
                 height: 1.25,
               ),
@@ -450,7 +462,7 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
             Text(
               preacherName(settings.locale),
               style: TextStyle(
-                fontSize: 13,
+                fontSize: t.scaledSmall(13),
                 color: scheme.onSurface.withValues(alpha: 0.7),
               ),
             ),
@@ -694,7 +706,7 @@ class _MetaChip extends StatelessWidget {
       child: Text(
         label,
         style: TextStyle(
-          fontSize: 11.5,
+          fontSize: context.watch<AppSettings>().wbType.scaledSmall(11.5),
           fontWeight: FontWeight.w500,
           color: fg ?? scheme.onSurface.withValues(alpha: 0.75),
           decoration: onTap == null ? null : TextDecoration.underline,
@@ -762,7 +774,7 @@ class _LanguageToggle extends StatelessWidget {
             disabledColor:
                 scheme.surfaceContainerHighest.withValues(alpha: 0.4),
             labelStyle: TextStyle(
-              fontSize: 12.5,
+              fontSize: context.watch<AppSettings>().wbType.scaledSmall(12.5),
               color: has
                   ? null
                   : scheme.onSurface.withValues(alpha: 0.35),
@@ -802,8 +814,13 @@ class _CondensedNotice extends StatelessWidget {
           Expanded(
             child: Text(
               text,
+              // This is the disclosure that the transcript below is
+              // abridged. A reader who raised the slider because they
+              // cannot see small text was being told so at 13 px beside
+              // a 40 px body — the one line on the page they most need
+              // to read was the least readable.
               style: TextStyle(
-                fontSize: 13,
+                fontSize: context.watch<AppSettings>().wbType.scaledSmall(13),
                 height: 1.45,
                 color: scheme.onSurface.withValues(alpha: 0.85),
               ),

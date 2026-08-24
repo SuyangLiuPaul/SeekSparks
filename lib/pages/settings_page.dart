@@ -14,7 +14,7 @@ import 'package:seeksparks/constants/text_patterns.dart' show sanitizeForCopy;
 import 'package:seeksparks/constants/sermon_credit.dart';
 import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/constants/workbench_theme.dart'
-    show WbMetrics, WbType;
+    show WbMetrics, WbType, WbSettingsScale;
 import 'package:provider/provider.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/app_style_preset.dart';
@@ -3332,9 +3332,5 @@ class _ImportDialogState extends State<_ImportDialog> {
 /// as a field (`widget.settings`) and reach them from dialog builders,
 /// where `context.watch` is not available.
 extension _SettingsSmallPrint on AppSettings {
-  double smallPrint(double atDefault) => WbType.resolve(
-        fontSize: fontSize,
-        lineSpacing: lineSpacing,
-        menuScale: menuScale,
-      ).scaledSmall(atDefault);
+  double smallPrint(double atDefault) => wbType.scaledSmall(atDefault);
 }

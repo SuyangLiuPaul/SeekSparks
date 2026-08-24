@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 
 import 'package:seeksparks/constants/text_patterns.dart' show sanitizeVerseText;
 import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/verse.dart';
 // 2026-05-24 (v1.3.7): home_page direct import gone — navigateToReader
@@ -236,6 +237,7 @@ class _VersePopupSheetState extends State<VersePopupSheet> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final settings = context.watch<AppSettings>();
+    final t = settings.wbType;
     final locale = settings.locale;
     final mp = context.watch<MainProvider>();
     final verses = _resolveVerses(mp);
@@ -266,8 +268,8 @@ class _VersePopupSheetState extends State<VersePopupSheet> {
                   Expanded(
                     child: Text(
                       _refLabel(locale),
-                      style: const TextStyle(
-                        fontSize: 18,
+                      style: TextStyle(
+                        fontSize: t.scaled(18),
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -345,7 +347,7 @@ class _VersePopupSheetState extends State<VersePopupSheet> {
                           )
                         : KeyedSubtree(
                             key: const ValueKey('empty'),
-                            child: _buildEmpty(locale, scheme),
+                            child: _buildEmpty(locale, scheme, t),
                           ))
                     : ListView.builder(
                         key: ValueKey(
@@ -365,7 +367,7 @@ class _VersePopupSheetState extends State<VersePopupSheet> {
     );
   }
 
-  Widget _buildEmpty(String locale, ColorScheme scheme) {
+  Widget _buildEmpty(String locale, ColorScheme scheme, WbType t) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -383,7 +385,7 @@ class _VersePopupSheetState extends State<VersePopupSheet> {
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: scheme.onSurface.withValues(alpha: 0.6),
-                fontSize: 13,
+                fontSize: t.scaledSmall(13),
               ),
             ),
           ],

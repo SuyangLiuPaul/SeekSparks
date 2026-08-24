@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/providers/main_provider.dart';
@@ -64,7 +65,10 @@ class SidebarPanel extends StatelessWidget {
                             uiStrings['bibleBooks']?[settings.locale] ??
                                 'Bible Books',
                             style: TextStyle(
-                              fontSize: settings.fontSize.clamp(14.0, 18.0),
+                              // Was `.clamp(14, 18)` — saturated from
+                              // 18 pt on, so 23 of the slider's 29 stops
+                              // moved this heading nothing.
+                              fontSize: settings.wbType.scaledSmall(18),
                               fontWeight: FontWeight.w700,
                               fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
                               color: scheme.onSurface,

@@ -2,6 +2,7 @@ import 'dart:async';
 // 2026-05-20 (v1.2.67): `dart:js_interop` was here, blocking
 // native compile. Replaced with a conditional-export helper —
 // see lib/utils/clear_cache_helper.dart.
+import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/utils/clear_cache_helper.dart';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -886,7 +887,7 @@ class _LoadingPageState extends State<LoadingPage> {
           uiStrings['hardReloadPage']?[settings.locale] ??
               'Reload page (clear cache)',
           style: TextStyle(
-            fontSize: (settings.fontSize - 2).clamp(11.0, 14.0),
+            fontSize: settings.wbType.scaledSmall(14),
             fontFamily: settings.fontFamily,
             fontFamilyFallback: kCjkFontFallback,
           ),

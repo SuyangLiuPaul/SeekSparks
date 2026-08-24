@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:seeksparks/constants/text_patterns.dart'
     show versePreviewText;
 import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/strongs.dart';
 import 'package:seeksparks/providers/main_provider.dart';
@@ -156,7 +157,12 @@ class _StrongsEntryPageState extends State<StrongsEntryPage> {
       AppSettings settings) {
     final e = _entry!;
     final isGreek = e.number.startsWith('G');
-    final lemmaFontSize = settings.fontSize + 8;
+    final t = settings.wbType;
+    // Was `settings.fontSize + 8`. An additive offset does not hold a
+    // ratio — 1.67× the body at 12 pt and 1.20× at 40 — and the headword
+    // is pointed Hebrew or accented Greek, so it also wants the
+    // originals floor rather than the small-print one.
+    final lemmaFontSize = t.scaledOriginal(28);
     // 2026-06-18 (v1.3.90): used by the Occurrences list to render a verse
     // preview and jump to the verse on tap.
     final mainProv = context.read<MainProvider>();
@@ -186,7 +192,7 @@ class _StrongsEntryPageState extends State<StrongsEntryPage> {
                         style: TextStyle(
                           color: scheme.onPrimary,
                           fontWeight: FontWeight.w700,
-                          fontSize: 14,
+                          fontSize: t.scaledSmall(14),
                         ),
                       ),
                     ),
@@ -194,7 +200,7 @@ class _StrongsEntryPageState extends State<StrongsEntryPage> {
                     Text(
                       isGreek ? 'Greek' : 'Hebrew',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: t.scaledSmall(12),
                         fontWeight: FontWeight.w500,
                         color: scheme.onSurfaceVariant,
                       ),
@@ -228,7 +234,7 @@ class _StrongsEntryPageState extends State<StrongsEntryPage> {
                 Text(
                   '${e.translit} • ${e.pronunciation}',
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: t.scaledSmall(13),
                     color: scheme.onSurfaceVariant,
                   ),
                 ),
@@ -237,7 +243,7 @@ class _StrongsEntryPageState extends State<StrongsEntryPage> {
                   Text(
                     e.partOfSpeech!,
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: t.scaledSmall(12),
                       fontStyle: FontStyle.italic,
                       color: scheme.onSurfaceVariant,
                     ),
@@ -390,7 +396,7 @@ class _StrongsEntryPageState extends State<StrongsEntryPage> {
               child: Text(
                 '… +${_concordance!.refs.length - 200}',
                 style: TextStyle(
-                  fontSize: 11,
+                  fontSize: t.scaledSmall(11),
                   color: scheme.onSurfaceVariant,
                   fontStyle: FontStyle.italic,
                 ),
@@ -484,6 +490,7 @@ class _RelatedChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final t = context.watch<AppSettings>().wbType;
     return Material(
       color: scheme.primary.withValues(alpha: 0.08),
       borderRadius: BorderRadius.circular(8),
@@ -496,10 +503,17 @@ class _RelatedChip extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // These chips carry a LEMMA — accented Greek or pointed
+              // Hebrew — and were setting it at 13 px, two under the
+              // app's own [WbMetrics.originalFloor], at the default
+              // setting. Per that constant's rule the design size is
+              // raised to the floor rather than clamped to it, because
+              // clamping would silently enlarge only the bottom of the
+              // slider and leave the default reading wrong.
               Text(
                 '${entry.number} ${entry.lemma}',
                 style: TextStyle(
-                  fontSize: 13,
+                  fontSize: t.scaledOriginal(WbMetrics.originalFloor),
                   fontWeight: FontWeight.w600,
                   color: scheme.primary,
                 ),
@@ -507,7 +521,7 @@ class _RelatedChip extends StatelessWidget {
               Text(
                 entry.localizedGloss(locale),
                 style: TextStyle(
-                  fontSize: 11,
+                  fontSize: t.scaledSmall(11),
                   color: scheme.onSurfaceVariant,
                 ),
               ),
