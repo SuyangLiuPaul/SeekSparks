@@ -13,6 +13,8 @@ import 'package:seeksparks/utils/chronology_layout.dart';
 import 'package:seeksparks/utils/jump_to_reference.dart' as jumper;
 import 'package:seeksparks/utils/navigate_to_reader.dart';
 import 'package:seeksparks/utils/reference_parser.dart';
+import 'package:seeksparks/utils/version_mapper.dart'
+    show localizedReferenceLabel;
 import 'package:seeksparks/widgets/home_icon_button.dart';
 import 'package:seeksparks/widgets/language_switcher_button.dart';
 import 'package:seeksparks/widgets/localized_back_button.dart';
@@ -283,6 +285,7 @@ class _ChronologyPageState extends State<ChronologyPage> {
             tradition: tradition,
             locale: locale,
             onTradition: (id) => setState(() => _tradition = id),
+            onEpoch: (e) => _showEpochSheet(data, e, tradition, locale),
           ),
           Expanded(child: chart),
         ],
@@ -347,6 +350,43 @@ class _ChronologyPageState extends State<ChronologyPage> {
       ),
     );
   }
+
+  /// An epoch opens as a sheet at every width, where a man opens into
+  /// the side panel when there is room for one.
+  ///
+  /// They are not the same kind of thing. The side panel exists because
+  /// selecting a man draws his life as a band down every other row, and
+  /// the panel is what the reader compares that band against — it has to
+  /// stay up while they look at the chart. An epoch has no band: its rule
+  /// is drawn whether or not anyone selected it, and the panel would have
+  /// to take over `_selectedId`, so opening an epoch would silently drop
+  /// whichever man the reader had been comparing.
+  Future<void> _showEpochSheet(
+    ChronologyData data,
+    ChronologyEpoch epoch,
+    ChronologyTradition tradition,
+    String locale,
+  ) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      constraints: const BoxConstraints(maxWidth: 720),
+      builder: (sheetCtx) => DraggableScrollableSheet(
+        initialChildSize: 0.5,
+        minChildSize: 0.3,
+        maxChildSize: 0.95,
+        expand: false,
+        builder: (_, controller) => _EpochPanel(
+          data: data,
+          epoch: epoch,
+          tradition: tradition,
+          locale: locale,
+          scrollController: controller,
+          onClose: () => Navigator.of(sheetCtx).maybePop(),
+        ),
+      ),
+    );
+  }
 }
 
 /// Tradition switch, and the sentences that keep the chart honest.
@@ -356,12 +396,14 @@ class _Header extends StatelessWidget {
     required this.tradition,
     required this.locale,
     required this.onTradition,
+    required this.onEpoch,
   });
 
   final ChronologyData data;
   final ChronologyTradition tradition;
   final String locale;
   final ValueChanged<String> onTradition;
+  final ValueChanged<ChronologyEpoch> onEpoch;
 
   String _s(String key, String fallback) =>
       uiStrings[key]?[locale] ?? fallback;
@@ -399,13 +441,29 @@ class _Header extends StatelessWidget {
               // the position are on the chart; what only this line can
               // give is the exact year and the reference behind it,
               // which is the claim the whole module rests on.
+              //
+              // And each one opens. Every epoch record carries a `note`
+              // saying how its verse yields its year, and for eight
+              // months nothing called `noteFor` — the derivation shipped
+              // and no reader could reach it. It is not printed here for
+              // the same reason the men's caveats are not: the header is
+              // the chart's layout sibling, so five paragraphs would cost
+              // five rows of chart. This label is what tells a reader who
+              // has opened nothing that there is something to open.
+              Text(
+                _s('chronologyEpochs', 'Dated events (select to read)'),
+                style: TextStyle(fontSize: t.chrome, color: wb.mutedText),
+              ),
               for (final e in data.epochs)
                 if (e.years[tradition.id] != null)
-                  Text(
-                    '${e.nameFor(locale)} · ${_s('chronologyAm', 'AM')} '
-                    '${e.years[tradition.id]}'
-                    '${e.ref == null ? '' : ' · ${e.ref}'}',
-                    style: TextStyle(fontSize: t.chrome, color: wb.mutedText),
+                  _EpochLink(
+                    key: ValueKey('chronologyEpoch_${e.id}'),
+                    name: e.nameFor(locale),
+                    trailing: ' · ${_s('chronologyAm', 'AM')} '
+                        '${e.years[tradition.id]}'
+                        '${e.ref == null ? '' : ' · '
+                            '${localizedReferenceLabel(e.ref!, locale)}'}',
+                    onTap: () => onEpoch(e),
                   ),
             ],
           ),
@@ -462,6 +520,42 @@ class _Header extends StatelessWidget {
       for (final p in data.inTradition(tradition.id))
         if (ids.contains(p.id)) p.nameFor(locale),
     ];
+  }
+}
+
+/// An epoch in the header: the name in link colour, its year and verse
+/// after it in the muted weight the rest of the header uses.
+///
+/// Deliberately not a [_Pill]. The pills beside it are the tradition
+/// switch — a control that changes what the chart shows and stays down
+/// — and an epoch does neither. Giving both the same shape would say
+/// they behave alike.
+class _EpochLink extends StatelessWidget {
+  const _EpochLink({
+    super.key,
+    required this.name,
+    required this.trailing,
+    required this.onTap,
+  });
+
+  final String name;
+  final String trailing;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final wb = WbColors.of(context);
+    final t = WbType.of(context);
+    return InkWell(
+      onTap: onTap,
+      child: Text.rich(
+        TextSpan(children: [
+          TextSpan(text: name, style: TextStyle(color: wb.link)),
+          TextSpan(text: trailing, style: TextStyle(color: wb.mutedText)),
+        ]),
+        style: TextStyle(fontSize: t.chrome),
+      ),
+    );
   }
 }
 
@@ -1119,6 +1213,7 @@ class _DetailPanel extends StatelessWidget {
               label: _s('chronologyBegatAt', 'Fathered the next generation at'),
               value: '${figures.begatAt} ${_s('chronologyYears', 'years')}',
               reference: figures.refs['begatAt'],
+              locale: locale,
               onTap: _jump,
             ),
           if (figures.livedAfter != null)
@@ -1126,6 +1221,7 @@ class _DetailPanel extends StatelessWidget {
               label: _s('chronologyLivedAfter', 'Lived after that'),
               value: '${figures.livedAfter} ${_s('chronologyYears', 'years')}',
               reference: figures.refs['livedAfter'],
+              locale: locale,
               onTap: _jump,
             ),
           _Fact(
@@ -1133,6 +1229,7 @@ class _DetailPanel extends StatelessWidget {
             value:
                 '${figures.lifespan} ${_s('chronologyYears', 'years')}',
             reference: figures.refs['lifespan'],
+            locale: locale,
             onTap: _jump,
           ),
           const SizedBox(height: 6),
@@ -1197,7 +1294,7 @@ class _DetailPanel extends StatelessWidget {
             ),
           const SizedBox(height: 16),
           Text(
-            data.unitNote,
+            data.unitNoteFor(locale),
             style: TextStyle(fontSize: t.chrome, color: wb.mutedText),
           ),
         ],
@@ -1222,12 +1319,20 @@ class _Fact extends StatelessWidget {
     required this.label,
     required this.value,
     required this.reference,
+    required this.locale,
     required this.onTap,
   });
 
   final String label;
   final String value;
+
+  /// Always English, because that is what [parseReference] reads and
+  /// what the tap has to hand back to it. It is localised for DISPLAY
+  /// only — every other reference surface in the app already does this
+  /// and this page did not, so a Chinese reader was told 申命记 34:7 in
+  /// the prose of a note and `Deuteronomy 34:7` in the fact above it.
   final String? reference;
+  final String locale;
   final Future<void> Function(BuildContext, String) onTap;
 
   @override
@@ -1249,10 +1354,167 @@ class _Fact extends StatelessWidget {
               if (ref != null)
                 InkWell(
                   onTap: () => onTap(context, ref),
-                  child: Text(ref,
+                  child: Text(localizedReferenceLabel(ref, locale),
                       style: TextStyle(fontSize: t.chrome, color: wb.link)),
                 ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// ONE DATED EVENT: THE VERSE THAT DATES IT, AND WHERE EACH TEXT PUTS IT.
+///
+/// Two questions a reader of this chart cannot otherwise answer.
+///
+/// The first is "why is this line here". The generator writes a `note`
+/// for every epoch saying which figure in which verse yields the year —
+/// Genesis 12:4's 75, Exodus 12:40's 430 — and until now no surface
+/// called [ChronologyEpoch.noteFor]. The derivation shipped in the asset
+/// and no reader could reach it.
+///
+/// The second is "why did everything move when I switched text". The
+/// header shows one year because the chart shows one text, so the
+/// divergence the tradition switch exists for is the one thing it never
+/// states. The flood is 586 years apart between the two; the exodus,
+/// 1,151. Both figures are the chart's own, subtracted here.
+///
+/// It says "on this chart" and not "the two texts differ by", and the
+/// exodus is why: the Septuagint's exodus year rests on the one place
+/// the axis had a year supplied rather than read (where the 430 "in
+/// Egypt and in Canaan" begin), which the sojourn note in the header
+/// says in full. Part of that gap is this chart's reading, so the
+/// sentence claims it for the chart.
+class _EpochPanel extends StatelessWidget {
+  const _EpochPanel({
+    required this.data,
+    required this.epoch,
+    required this.tradition,
+    required this.locale,
+    required this.onClose,
+    this.scrollController,
+  });
+
+  final ChronologyData data;
+  final ChronologyEpoch epoch;
+  final ChronologyTradition tradition;
+  final String locale;
+  final VoidCallback onClose;
+  final ScrollController? scrollController;
+
+  String _s(String key, String fallback) =>
+      uiStrings[key]?[locale] ?? fallback;
+
+  @override
+  Widget build(BuildContext context) {
+    final wb = WbColors.of(context);
+    final t = WbType.of(context);
+    final note = epoch.noteFor(locale);
+    final dated = [
+      for (final tr in data.traditions)
+        if (epoch.years[tr.id] != null) (tr, epoch.years[tr.id]!),
+    ];
+
+    return Container(
+      color: wb.paneBg,
+      child: ListView(
+        controller: scrollController,
+        padding: const EdgeInsets.fromLTRB(14, 12, 14, 24),
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  epoch.nameFor(locale),
+                  style: TextStyle(
+                      fontSize: t.scaled(22),
+                      fontWeight: FontWeight.w600,
+                      color: wb.text),
+                ),
+              ),
+              IconButton(
+                onPressed: onClose,
+                iconSize: t.scaledChrome(18),
+                icon: const Icon(Icons.close),
+                tooltip: _s('close', 'Close'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          if (epoch.years[tradition.id] != null)
+            _Fact(
+              label: _s('chronologyEpochYear', 'Where this chart puts it'),
+              value: '${_s('chronologyAm', 'AM')} '
+                  '${epoch.years[tradition.id]}',
+              reference: epoch.ref,
+              locale: locale,
+              onTap: _jumpToReference,
+            ),
+          // The derivation, set at reading size rather than the muted
+          // footnote size the men's caveats use. On their panel a note is
+          // a caveat beside the figures; here it is the answer to the
+          // only question the sheet was opened to ask.
+          if (note != null && note.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(note, style: TextStyle(fontSize: t.text, color: wb.text)),
+          ],
+          if (dated.length > 1) ...[
+            const SizedBox(height: 16),
+            Text(
+              _s('chronologyEpochAcrossTexts', 'In each text'),
+              style: TextStyle(
+                  fontSize: t.text,
+                  fontWeight: FontWeight.w600,
+                  color: wb.text),
+            ),
+            const SizedBox(height: 4),
+            for (final (tr, year) in dated)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 3),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        tr.longNameFor(locale),
+                        style: TextStyle(
+                          fontSize: t.chrome,
+                          color: tr.id == tradition.id
+                              ? wb.text
+                              : wb.mutedText,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '${_s('chronologyAm', 'AM')} $year',
+                      style: TextStyle(
+                        fontSize: t.text,
+                        color:
+                            tr.id == tradition.id ? wb.text : wb.mutedText,
+                        fontWeight: tr.id == tradition.id
+                            ? FontWeight.w600
+                            : FontWeight.normal,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            if (dated.length == 2) ...[
+              const SizedBox(height: 4),
+              Text(
+                _s('chronologyEpochApart',
+                        'On this chart the two texts are {n} years apart here.')
+                    .replaceAll('{n}', '${(dated[0].$2 - dated[1].$2).abs()}'),
+                style: TextStyle(fontSize: t.chrome, color: wb.mutedText),
+              ),
+            ],
+          ],
+          const SizedBox(height: 16),
+          Text(
+            data.unitNoteFor(locale),
+            style: TextStyle(fontSize: t.chrome, color: wb.mutedText),
           ),
         ],
       ),
@@ -1335,6 +1597,7 @@ class _EraLedger extends StatelessWidget {
                   years: p.years[tradition.id],
                   label: p.nameFor(locale),
                   reference: p.ref,
+                  locale: locale,
                   // Only the rows where the texts differ carry the other
                   // text's figure. Printing both on every row would bury
                   // the two that matter under nineteen that do not.
@@ -1352,6 +1615,7 @@ class _EraLedger extends StatelessWidget {
                 label: _s('chronologyEraCounted', 'The stated periods, '
                     'added up'),
                 reference: null,
+                locale: locale,
                 aside: null,
                 emphasis: true,
               ),
@@ -1359,6 +1623,7 @@ class _EraLedger extends StatelessWidget {
                 years: stated.elapsed,
                 label: _s('chronologyEraStated', 'The total the text states'),
                 reference: stated.ref,
+                locale: locale,
                 aside: null,
                 emphasis: true,
               ),
@@ -1366,6 +1631,7 @@ class _EraLedger extends StatelessWidget {
                 years: residue,
                 label: _s('chronologyEraOver', 'Over by'),
                 reference: null,
+                locale: locale,
                 aside: null,
                 emphasis: true,
               ),
@@ -1383,7 +1649,7 @@ class _EraLedger extends StatelessWidget {
                     children: [
                       InkWell(
                         onTap: () => _jumpToReference(context, g.ref),
-                        child: Text(g.ref,
+                        child: Text(localizedReferenceLabel(g.ref, locale),
                             style: TextStyle(
                                 fontSize: t.chrome, color: wb.link)),
                       ),
@@ -1415,13 +1681,18 @@ class _EraRow extends StatelessWidget {
     required this.years,
     required this.label,
     required this.reference,
+    required this.locale,
     required this.aside,
     this.emphasis = false,
   });
 
   final int? years;
   final String label;
+
+  /// English, always: it is the key `parseReference` reads. The reader
+  /// never sees this string, only `localizedReferenceLabel` of it.
   final String? reference;
+  final String locale;
   final String? aside;
   final bool emphasis;
 
@@ -1476,7 +1747,7 @@ class _EraRow extends StatelessWidget {
             const SizedBox(width: 8),
             InkWell(
               onTap: () => _jumpToReference(context, ref),
-              child: Text(ref,
+              child: Text(localizedReferenceLabel(ref, locale),
                   style: TextStyle(fontSize: t.chrome, color: wb.link)),
             ),
           ],

@@ -370,7 +370,7 @@ class ChronologyData {
     required this.notes,
     required this.patriarchs,
     required this.era,
-    required this.unitNote,
+    required this.unitNotes,
     required this.traditionsNote,
     required this.secondWitness,
     required this.sumsChecked,
@@ -384,10 +384,16 @@ class ChronologyData {
   /// Absent only if the asset predates the era block; every surface that
   /// reads it must cope with that rather than assume.
   final ChronologyEra? era;
-  final String unitNote;
+  /// The caveat that stops the axis being read as a BC dating. It is the
+  /// one string in the asset's `_meta` block the app prints, so it is the
+  /// one that has to exist in the reader's script.
+  final Map<String, String> unitNotes;
   final String traditionsNote;
   final String secondWitness;
   final int sumsChecked;
+
+  String unitNoteFor(String locale) =>
+      unitNotes[locale] ?? unitNotes['en'] ?? '';
 
   ChronologyTradition traditionById(String id) =>
       traditions.firstWhere((t) => t.id == id, orElse: () => traditions.first);
@@ -435,7 +441,7 @@ class ChronologyData {
       era: j['era'] is Map
           ? ChronologyEra.fromJson((j['era'] as Map).cast<String, dynamic>())
           : null,
-      unitNote: (meta['unitNote'] as String?) ?? '',
+      unitNotes: _localised(meta['unitNote']),
       traditionsNote: (meta['traditions'] as String?) ?? '',
       secondWitness: (checks['secondWitness'] as String?) ?? '',
       sumsChecked: (checks['sumsChecked'] as num?)?.toInt() ?? 0,

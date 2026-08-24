@@ -3,7 +3,11 @@
  "_meta": {
   "generator": "scripts/build_chronology.py",
   "unit": "am",
-  "unitNote": "Anno Mundi — years counted from the creation, as the ages in Genesis 5 and 11 accumulate them. The text supplies no absolute date, so no BC year is stated here. Ussher's 4004 BC is one 17th-century reconstruction among several and is not adopted.",
+  "unitNote": {
+   "en": "Anno Mundi — years counted from the creation, as the ages in Genesis 5 and 11 accumulate them. The text supplies no absolute date, so no BC year is stated here. Ussher's 4004 BC is one 17th-century reconstruction among several and is not adopted.",
+   "zh-Hans": "创世纪元——自创世起算的年数，按创世纪 5 章与 11 章所记的岁数累加而得。经文并未给出可换算的绝对年代，故此处不列公元前年份。Ussher 的公元前 4004 年只是十七世纪诸多推算之一，本图未予采用。",
+   "zh-Hant": "創世紀元——自創世起算的年數，按創世紀 5 章與 11 章所記的歲數累加而得。經文並未給出可換算的絕對年代，故此處不列公元前年份。Ussher 的公元前 4004 年只是十七世紀諸多推算之一，本圖未予採用。"
+  },
   "derivedFrom": {
    "mt": "assets/kjv.json (Authorised Version, public domain), which renders the Masoretic figures.",
    "lxx": "assets/lxxwh.json (Septuagint), read in Greek."
@@ -64,8 +68,8 @@
    },
    "note": {
     "en": "Genesis 7:6 states Noah was 600 years old at the flood.",
-    "zh-Hans": "创世记 7:6 记洪水在挪亚600岁那年。",
-    "zh-Hant": "創世記 7:6 記洪水在挪亞600歲那年。"
+    "zh-Hans": "创世纪 7:6 记洪水在挪亚600岁那年。",
+    "zh-Hant": "創世紀 7:6 記洪水在挪亞600歲那年。"
    }
   },
   {
@@ -82,8 +86,8 @@
    },
    "note": {
     "en": "Genesis 12:4 has Abram 75 years old when he left Haran.",
-    "zh-Hans": "创世记 12:4 记亚伯兰离开哈兰时75岁。",
-    "zh-Hant": "創世記 12:4 記亞伯蘭離開哈蘭時75歲。"
+    "zh-Hans": "创世纪 12:4 记亚伯兰离开哈兰时75岁。",
+    "zh-Hant": "創世紀 12:4 記亞伯蘭離開哈蘭時75歲。"
    }
   },
   {
@@ -100,8 +104,8 @@
    },
    "note": {
     "en": "Jacob tells Pharaoh he is 130 (Genesis 47:9); 47:28 adds the 17 years he then lived in Egypt and states the total, so this year is checked against a third figure.",
-    "zh-Hans": "雅各对法老说自己130岁（创世记 47:9）；47:28 记他此后在埃及又活了17年，并记出总岁数，故此年另有第三个数字可核。",
-    "zh-Hant": "雅各對法老說自己130歲（創世記 47:9）；47:28 記他此後在埃及又活了17年，並記出總歲數，故此年另有第三個數字可核。"
+    "zh-Hans": "雅各对法老说自己130岁（创世纪 47:9）；47:28 记他此后在埃及又活了17年，并记出总岁数，故此年另有第三个数字可核。",
+    "zh-Hant": "雅各對法老說自己130歲（創世紀 47:9）；47:28 記他此後在埃及又活了17年，並記出總歲數，故此年另有第三個數字可核。"
    }
   },
   {
@@ -136,8 +140,8 @@
    },
    "note": {
     "en": "Moses is 80 before Pharaoh (Exodus 7:7), the wilderness is 40 years (Numbers 14:33), and Deuteronomy 34:7 states the 120 those two add to — which he also says himself at Deuteronomy 31:2.",
-    "zh-Hans": "摩西见法老时80岁（出埃及记 7:7），旷野40年（民数记 14:33），申命记 34:7 所记的120岁正是二者之和；Deuteronomy 31:2 他也亲口说出这个岁数。",
-    "zh-Hant": "摩西見法老時80歲（出埃及記 7:7），曠野40年（民數記 14:33），申命記 34:7 所記的120歲正是二者之和；Deuteronomy 31:2 他也親口說出這個歲數。"
+    "zh-Hans": "摩西见法老时80岁（出埃及记 7:7），旷野40年（民数记 14:33），申命记 34:7 所记的120岁正是二者之和；申命记 31:2 他也亲口说出这个岁数。",
+    "zh-Hant": "摩西見法老時80歲（出埃及記 7:7），曠野40年（民數記 14:33），申命記 34:7 所記的120歲正是二者之和；申命記 31:2 他也親口說出這個歲數。"
    }
   }
  ],
@@ -148,8 +152,8 @@
    "personId": "noah",
    "text": {
     "en": "The flood is dated twice. Genesis 7:6 states Noah was 600 years old, and this chart takes that plain number, putting the flood at AM 1656. Genesis 7:11 dates the same day to the 600th year of his life, which is 599 years complete; read that way the flood falls at AM 1655, and because Shem's birth is counted from the flood every year after it on this chart moves 1 year with it. That subtraction is the one the era below makes at 1 Kings 6:1, where the text offers no plain number and there is no choice to make.",
-    "zh-Hans": "洪水有两处纪年。创世记 7:6 记挪亚600岁，本图取此明数，故洪水落在创世纪元1656年。创世记 7:11 则记同一日在他一生的第600年，即已过599年；照此读法洪水落在创世纪元1655年，而闪的出生是从洪水起算的，故本图洪水之后的每一年都随之移前1年。下方世代总账在列王纪上 6:1 所作的正是这一减法，那里经文并未另给明数，别无选择。",
-    "zh-Hant": "洪水有兩處紀年。創世記 7:6 記挪亞600歲，本圖取此明數，故洪水落在創世紀元1656年。創世記 7:11 則記同一日在他一生的第600年，即已過599年；照此讀法洪水落在創世紀元1655年，而閃的出生是從洪水起算的，故本圖洪水之後的每一年都隨之移前1年。下方世代總賬在列王紀上 6:1 所作的正是這一減法，那裡經文並未另給明數，別無選擇。"
+    "zh-Hans": "洪水有两处纪年。创世纪 7:6 记挪亚600岁，本图取此明数，故洪水落在创世纪元1656年。创世纪 7:11 则记同一日在他一生的第600年，即已过599年；照此读法洪水落在创世纪元1655年，而闪的出生是从洪水起算的，故本图洪水之后的每一年都随之移前1年。下方世代总账在列王纪上 6:1 所作的正是这一减法，那里经文并未另给明数，别无选择。",
+    "zh-Hant": "洪水有兩處紀年。創世紀 7:6 記挪亞600歲，本圖取此明數，故洪水落在創世紀元1656年。創世紀 7:11 則記同一日在他一生的第600年，即已過599年；照此讀法洪水落在創世紀元1655年，而閃的出生是從洪水起算的，故本圖洪水之後的每一年都隨之移前1年。下方世代總賬在列王紀上 6:1 所作的正是這一減法，那裡經文並未另給明數，別無選擇。"
    }
   },
   {
@@ -158,8 +162,8 @@
    "personId": "noah",
    "text": {
     "en": "The flood is dated twice. Genesis 7:6 states Noah was 600 years old, and this chart takes that plain number, putting the flood at AM 2242. Genesis 7:11 dates the same day to the 600th year of his life, which is 599 years complete; read that way the flood falls at AM 2241, and because Shem's birth is counted from the flood every year after it on this chart moves 1 year with it. That subtraction is the one the era below makes at 1 Kings 6:1, where the text offers no plain number and there is no choice to make.",
-    "zh-Hans": "洪水有两处纪年。创世记 7:6 记挪亚600岁，本图取此明数，故洪水落在创世纪元2242年。创世记 7:11 则记同一日在他一生的第600年，即已过599年；照此读法洪水落在创世纪元2241年，而闪的出生是从洪水起算的，故本图洪水之后的每一年都随之移前1年。下方世代总账在列王纪上 6:1 所作的正是这一减法，那里经文并未另给明数，别无选择。",
-    "zh-Hant": "洪水有兩處紀年。創世記 7:6 記挪亞600歲，本圖取此明數，故洪水落在創世紀元2242年。創世記 7:11 則記同一日在他一生的第600年，即已過599年；照此讀法洪水落在創世紀元2241年，而閃的出生是從洪水起算的，故本圖洪水之後的每一年都隨之移前1年。下方世代總賬在列王紀上 6:1 所作的正是這一減法，那裡經文並未另給明數，別無選擇。"
+    "zh-Hans": "洪水有两处纪年。创世纪 7:6 记挪亚600岁，本图取此明数，故洪水落在创世纪元2242年。创世纪 7:11 则记同一日在他一生的第600年，即已过599年；照此读法洪水落在创世纪元2241年，而闪的出生是从洪水起算的，故本图洪水之后的每一年都随之移前1年。下方世代总账在列王纪上 6:1 所作的正是这一减法，那里经文并未另给明数，别无选择。",
+    "zh-Hant": "洪水有兩處紀年。創世紀 7:6 記挪亞600歲，本圖取此明數，故洪水落在創世紀元2242年。創世紀 7:11 則記同一日在他一生的第600年，即已過599年；照此讀法洪水落在創世紀元2241年，而閃的出生是從洪水起算的，故本圖洪水之後的每一年都隨之移前1年。下方世代總賬在列王紀上 6:1 所作的正是這一減法，那裡經文並未另給明數，別無選擇。"
    }
   },
   {
@@ -178,8 +182,8 @@
    "personId": "abraham",
    "text": {
     "en": "Genesis 11:26 has Terah fathering Abram, Nahor and Haran at 70, and this chart takes that as Abram's year. On it Abram leaves Haran at 75 (Genesis 12:4) 60 years before Terah dies at 205 (Genesis 11:32). Acts 7:4 has Abram moving on after his father's death; chronologies that follow it make Abram the youngest of the three and put his birth at AM 2008, moving him and everyone after him 60 years later.",
-    "zh-Hans": "创世记 11:26 记他拉70岁生亚伯兰、拿鹤、哈兰，本图即以此年为亚伯兰的出生年。照此，亚伯兰75岁离开哈兰（创世记 12:4）时，他拉尚有60年才去世（创世记 11:32 记他拉活了205岁）。使徒行传 7:4 说亚伯兰是在父亲死后才迁往迦南；采此读法的年代学把亚伯兰视为三子中最幼的，出生年定在创世纪元 2008 年，他与其后各人都要往后推60年。",
-    "zh-Hant": "創世記 11:26 記他拉70歲生亞伯蘭、拿鶴、哈蘭，本圖即以此年為亞伯蘭的出生年。照此，亞伯蘭75歲離開哈蘭（創世記 12:4）時，他拉尚有60年才去世（創世記 11:32 記他拉活了205歲）。使徒行傳 7:4 說亞伯蘭是在父親死後才遷往迦南；採此讀法的年代學把亞伯蘭視為三子中最幼的，出生年定在創世紀元 2008 年，他與其後各人都要往後推60年。"
+    "zh-Hans": "创世纪 11:26 记他拉70岁生亚伯兰、拿鹤、哈兰，本图即以此年为亚伯兰的出生年。照此，亚伯兰75岁离开哈兰（创世纪 12:4）时，他拉尚有60年才去世（创世纪 11:32 记他拉活了205岁）。使徒行传 7:4 说亚伯兰是在父亲死后才迁往迦南；采此读法的年代学把亚伯兰视为三子中最幼的，出生年定在创世纪元 2008 年，他与其后各人都要往后推60年。",
+    "zh-Hant": "創世紀 11:26 記他拉70歲生亞伯蘭、拿鶴、哈蘭，本圖即以此年為亞伯蘭的出生年。照此，亞伯蘭75歲離開哈蘭（創世紀 12:4）時，他拉尚有60年才去世（創世紀 11:32 記他拉活了205歲）。使徒行傳 7:4 說亞伯蘭是在父親死後才遷往迦南；採此讀法的年代學把亞伯蘭視為三子中最幼的，出生年定在創世紀元 2008 年，他與其後各人都要往後推60年。"
    }
   },
   {
@@ -188,8 +192,8 @@
    "personId": "abraham",
    "text": {
     "en": "Genesis 11:26 has Terah fathering Abram, Nahor and Haran at 70, and this chart takes that as Abram's year. On it Abram leaves Haran at 75 (Genesis 12:4) 60 years before Terah dies at 205 (Genesis 11:32). Acts 7:4 has Abram moving on after his father's death; chronologies that follow it make Abram the youngest of the three and put his birth at AM 3374, moving him and everyone after him 60 years later.",
-    "zh-Hans": "创世记 11:26 记他拉70岁生亚伯兰、拿鹤、哈兰，本图即以此年为亚伯兰的出生年。照此，亚伯兰75岁离开哈兰（创世记 12:4）时，他拉尚有60年才去世（创世记 11:32 记他拉活了205岁）。使徒行传 7:4 说亚伯兰是在父亲死后才迁往迦南；采此读法的年代学把亚伯兰视为三子中最幼的，出生年定在创世纪元 3374 年，他与其后各人都要往后推60年。",
-    "zh-Hant": "創世記 11:26 記他拉70歲生亞伯蘭、拿鶴、哈蘭，本圖即以此年為亞伯蘭的出生年。照此，亞伯蘭75歲離開哈蘭（創世記 12:4）時，他拉尚有60年才去世（創世記 11:32 記他拉活了205歲）。使徒行傳 7:4 說亞伯蘭是在父親死後才遷往迦南；採此讀法的年代學把亞伯蘭視為三子中最幼的，出生年定在創世紀元 3374 年，他與其後各人都要往後推60年。"
+    "zh-Hans": "创世纪 11:26 记他拉70岁生亚伯兰、拿鹤、哈兰，本图即以此年为亚伯兰的出生年。照此，亚伯兰75岁离开哈兰（创世纪 12:4）时，他拉尚有60年才去世（创世纪 11:32 记他拉活了205岁）。使徒行传 7:4 说亚伯兰是在父亲死后才迁往迦南；采此读法的年代学把亚伯兰视为三子中最幼的，出生年定在创世纪元 3374 年，他与其后各人都要往后推60年。",
+    "zh-Hant": "創世紀 11:26 記他拉70歲生亞伯蘭、拿鶴、哈蘭，本圖即以此年為亞伯蘭的出生年。照此，亞伯蘭75歲離開哈蘭（創世紀 12:4）時，他拉尚有60年才去世（創世紀 11:32 記他拉活了205歲）。使徒行傳 7:4 說亞伯蘭是在父親死後才遷往迦南；採此讀法的年代學把亞伯蘭視為三子中最幼的，出生年定在創世紀元 3374 年，他與其後各人都要往後推60年。"
    }
   },
   {
@@ -218,8 +222,8 @@
    "personId": "moses",
    "text": {
     "en": "Exodus 6:18 gives Kohath 133 years and Exodus 6:20 gives Amram 137, and Genesis 46:11 has Kohath already born when Jacob went down. Read as father to son, what is left of Kohath's life, the whole of Amram's and Moses' 80 years before Pharaoh cannot exceed 350 years — 80 short of the 430 this text puts between the descent and the exodus. It is the oldest objection to counting all 430 in Egypt, and it comes from these same verses rather than from outside them.",
-    "zh-Hans": "Exodus 6:18 记哥辖活了133岁，Exodus 6:20 记暗兰活了137岁，而创世记 46:11 已列哥辖在下埃及之人中。若按父子相承来读，哥辖余下的年岁、暗兰的一生，加上摩西见法老时的80岁，至多不过350年——比本经文所定下埃及至出埃及的430年还少80年。这正是反对把430年全算在埃及的最古老质疑，且出自这几节经文本身，而非外来之说。",
-    "zh-Hant": "Exodus 6:18 記哥轄活了133歲，Exodus 6:20 記暗蘭活了137歲，而創世記 46:11 已列哥轄在下埃及之人中。若按父子相承來讀，哥轄餘下的年歲、暗蘭的一生，加上摩西見法老時的80歲，至多不過350年——比本經文所定下埃及至出埃及的430年還少80年。這正是反對把430年全算在埃及的最古老質疑，且出自這幾節經文本身，而非外來之說。"
+    "zh-Hans": "出埃及记 6:18 记哥辖活了133岁，出埃及记 6:20 记暗兰活了137岁，而创世纪 46:11 已列哥辖在下埃及之人中。若按父子相承来读，哥辖余下的年岁、暗兰的一生，加上摩西见法老时的80岁，至多不过350年——比本经文所定下埃及至出埃及的430年还少80年。这正是反对把430年全算在埃及的最古老质疑，且出自这几节经文本身，而非外来之说。",
+    "zh-Hant": "出埃及記 6:18 記哥轄活了133歲，出埃及記 6:20 記暗蘭活了137歲，而創世紀 46:11 已列哥轄在下埃及之人中。若按父子相承來讀，哥轄餘下的年歲、暗蘭的一生，加上摩西見法老時的80歲，至多不過350年——比本經文所定下埃及至出埃及的430年還少80年。這正是反對把430年全算在埃及的最古老質疑，且出自這幾節經文本身，而非外來之說。"
    }
   },
   {
@@ -228,8 +232,8 @@
    "personId": "moses",
    "text": {
     "en": "Exodus 6:18 gives Kohath 130 years and Exodus 6:20 gives Amram 132, and Genesis 46:11 has Kohath already born when Jacob went down. Read as father to son, what is left of Kohath's life, the whole of Amram's and Moses' 80 years before Pharaoh cannot exceed 342 years, and this text puts 215 years between the descent and the exodus — so the generations fit, with 127 years to spare. On the other text's reading of Exodus 12:40 the same three lives fall short, which is what the argument over that verse is about.",
-    "zh-Hans": "Exodus 6:18 记哥辖活了130岁，Exodus 6:20 记暗兰活了132岁，而创世记 46:11 已列哥辖在下埃及之人中。若按父子相承来读，哥辖余下的年岁、暗兰的一生，加上摩西见法老时的80岁，至多不过342年；而本经文所定下埃及至出埃及为215年，故三代人足以相接，尚余127年。若照另一经文对出埃及记 12:40 的读法，这三人的年岁便不够——两种读法之争正在于此。",
-    "zh-Hant": "Exodus 6:18 記哥轄活了130歲，Exodus 6:20 記暗蘭活了132歲，而創世記 46:11 已列哥轄在下埃及之人中。若按父子相承來讀，哥轄餘下的年歲、暗蘭的一生，加上摩西見法老時的80歲，至多不過342年；而本經文所定下埃及至出埃及為215年，故三代人足以相接，尚餘127年。若照另一經文對出埃及記 12:40 的讀法，這三人的年歲便不夠——兩種讀法之爭正在於此。"
+    "zh-Hans": "出埃及记 6:18 记哥辖活了130岁，出埃及记 6:20 记暗兰活了132岁，而创世纪 46:11 已列哥辖在下埃及之人中。若按父子相承来读，哥辖余下的年岁、暗兰的一生，加上摩西见法老时的80岁，至多不过342年；而本经文所定下埃及至出埃及为215年，故三代人足以相接，尚余127年。若照另一经文对出埃及记 12:40 的读法，这三人的年岁便不够——两种读法之争正在于此。",
+    "zh-Hant": "出埃及記 6:18 記哥轄活了130歲，出埃及記 6:20 記暗蘭活了132歲，而創世紀 46:11 已列哥轄在下埃及之人中。若按父子相承來讀，哥轄餘下的年歲、暗蘭的一生，加上摩西見法老時的80歲，至多不過342年；而本經文所定下埃及至出埃及為215年，故三代人足以相接，尚餘127年。若照另一經文對出埃及記 12:40 的讀法，這三人的年歲便不夠——兩種讀法之爭正在於此。"
    }
   },
   {

@@ -108,6 +108,54 @@ void main() {
           json.decode(raw) as Map<String, dynamic>);
     });
 
+    // Every note in this asset is written three times, and the Chinese
+    // two are hand-written prose with verse addresses interpolated into
+    // them. A reference in PROSE cannot be localised afterwards, so an
+    // English one is simply shipped: `Deuteronomy 31:2` and two
+    // `Exodus 6:18/6:20` sat inside otherwise-Chinese sentences until
+    // 2026-08-25, one word a Chinese reader could not read in the middle
+    // of the paragraph explaining where a date came from.
+    //
+    // The widget tests cannot stand in for this. They sweep the screens
+    // they pump, and these notes are on a panel behind a tap on one
+    // particular man. The guard belongs on the data.
+    //
+    // Ussher stays: a 17th-century Englishman's surname has no CUV form,
+    // and transliterating it would make the one name here a reader might
+    // go and look up unlookup-able.
+    test('no English survives inside a Chinese string', () {
+      const allowed = {'Ussher'};
+      final latin = RegExp(r'[A-Za-z]{3,}');
+      final offenders = <String>[];
+      var seen = 0;
+
+      void walk(Object? node, String path) {
+        if (node is Map) {
+          for (final e in node.entries) {
+            walk(e.value, '$path.${e.key}');
+          }
+        } else if (node is List) {
+          for (var i = 0; i < node.length; i++) {
+            walk(node[i], '$path[$i]');
+          }
+        } else if (node is String &&
+            (path.endsWith('zh-Hans') || path.endsWith('zh-Hant'))) {
+          seen++;
+          final words = latin
+              .allMatches(node)
+              .map((m) => m.group(0)!)
+              .where((w) => !allowed.contains(w))
+              .toSet();
+          if (words.isNotEmpty) offenders.add('$path: ${words.join(", ")}');
+        }
+      }
+
+      walk(json.decode(File('assets/chronology.json').readAsStringSync()), '');
+      // A walk that found no Chinese strings would report no offenders.
+      expect(seen, greaterThan(100));
+      expect(offenders, isEmpty);
+    });
+
     test('holds both texts we ship, and neither is empty', () {
       expect(data.traditions.map((t) => t.id).toList(), ['mt', 'lxx']);
       expect(data.inTradition('mt'), isNotEmpty);
@@ -350,8 +398,15 @@ void main() {
         expect(t.endAm, greaterThan(t.floodAm));
       }
       // And the note says which frame these are in, so a reader is never
-      // left to assume.
-      expect(data.unitNote, contains('Anno Mundi'));
+      // left to assume — in every script the app ships, because this is
+      // the sentence that keeps the axis from being read as a BC dating
+      // and it reached Chinese readers in English until 2026-08-25.
+      expect(data.unitNoteFor('en'), contains('Anno Mundi'));
+      for (final locale in ['zh-Hans', 'zh-Hant']) {
+        final note = data.unitNoteFor(locale);
+        expect(note, isNot(data.unitNoteFor('en')), reason: locale);
+        expect(note, contains('4004'), reason: locale);
+      }
     });
 
     test('the second witness still agrees', () {

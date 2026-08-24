@@ -343,6 +343,46 @@ def cite(chapter, verse, book="Genesis"):
     return f"{book} {chapter}:{verse}"
 
 
+# The English book name is what `parseReference` needs, so every `ref`
+# field stays English and the app localises it for display. A reference
+# written into PROSE cannot be localised afterwards, and the Chinese
+# notes here write every other address out in Chinese — 出埃及记 7:7,
+# 民数记 14:33, 申命记 34:7 — so one interpolated English name is the
+# single word in that sentence a Chinese reader cannot read. It shipped
+# that way in the moses_death note.
+#
+# These are the app's names, copied from englishToChinese /
+# englishToChineseTraditional in lib/constants/book_name_mapping.dart,
+# and they have to stay copied from there: a note is printed inches from
+# the same reference rendered by `localizedReferenceLabel`, which reads
+# that table. Genesis is why this matters. The 和合本's own title is
+# 創世記, but the shipped Chinese corpora file all 1,533 of Genesis's
+# verses under 創世紀, so that is what the reading pane, the search
+# results and the chip beside this prose say. Prose that disagreed put
+# two spellings of one book in a single panel — the notes below said
+# 創世記 while every chip on the page said 創世紀.
+BOOK_ZH = {
+    "Genesis": ("创世纪", "創世紀"),
+    "Exodus": ("出埃及记", "出埃及記"),
+    "Numbers": ("民数记", "民數記"),
+    "Deuteronomy": ("申命记", "申命記"),
+}
+
+
+def cite_zh(ref, script):
+    """`Deuteronomy 31:2` -> `申命记 31:2`.
+
+    An unknown book fails the build. Falling back to the English name is
+    exactly the defect this exists to stop, and it would fall back
+    silently.
+    """
+    book, _, address = ref.rpartition(" ")
+    names = BOOK_ZH.get(book)
+    if names is None:
+        raise SystemExit(f"cite_zh: no Chinese name for {book!r} (in {ref!r})")
+    return f"{names[0 if script == 'zh-Hans' else 1]} {address}"
+
+
 class Reader:
     """One tradition's Genesis, with the numeral parser it needs."""
 
@@ -1229,18 +1269,18 @@ def main():
                        f"subtraction is the one the era below makes at "
                        f"1 Kings 6:1, where the text offers no plain number "
                        f"and there is no choice to make."),
-                "zh-Hans": (f"洪水有两处纪年。创世记 7:6 记挪亚"
+                "zh-Hans": (f"洪水有两处纪年。创世纪 7:6 记挪亚"
                             f"{age}岁，本图取此明数，故洪水落在"
-                            f"创世纪元{flood_am}年。创世记 7:11 则记同一日在"
+                            f"创世纪元{flood_am}年。创世纪 7:11 则记同一日在"
                             f"他一生的第{age}年，即已过"
                             f"{age - 1}年；照此读法洪水落在创世纪元"
                             f"{alt_am}年，而闪的出生是从洪水起算的，故本图"
                             f"洪水之后的每一年都随之移前{shift}年。下方"
                             f"世代总账在列王纪上 6:1 所作的正是这一减法，"
                             f"那里经文并未另给明数，别无选择。"),
-                "zh-Hant": (f"洪水有兩處紀年。創世記 7:6 記挪亞"
+                "zh-Hant": (f"洪水有兩處紀年。創世紀 7:6 記挪亞"
                             f"{age}歲，本圖取此明數，故洪水落在"
-                            f"創世紀元{flood_am}年。創世記 7:11 則記同一日在"
+                            f"創世紀元{flood_am}年。創世紀 7:11 則記同一日在"
                             f"他一生的第{age}年，即已過"
                             f"{age - 1}年；照此讀法洪水落在創世紀元"
                             f"{alt_am}年，而閃的出生是從洪水起算的，故本圖"
@@ -1297,18 +1337,18 @@ def main():
                        f"of the three and put his birth at AM {later}, "
                        f"moving him and everyone after him {gap} years "
                        f"later."),
-                "zh-Hans": (f"创世记 11:26 记他拉{terah['begatAt']}岁生亚伯兰、"
+                "zh-Hans": (f"创世纪 11:26 记他拉{terah['begatAt']}岁生亚伯兰、"
                             f"拿鹤、哈兰，本图即以此年为亚伯兰的出生年。照此，"
-                            f"亚伯兰{depart}岁离开哈兰（创世记 12:4）时，他拉"
-                            f"尚有{gap}年才去世（创世记 11:32 记他拉活了"
+                            f"亚伯兰{depart}岁离开哈兰（创世纪 12:4）时，他拉"
+                            f"尚有{gap}年才去世（创世纪 11:32 记他拉活了"
                             f"{terah['lifespan']}岁）。使徒行传 7:4 说亚伯兰是"
                             f"在父亲死后才迁往迦南；采此读法的年代学把亚伯兰"
                             f"视为三子中最幼的，出生年定在创世纪元 {later} 年，"
                             f"他与其后各人都要往后推{gap}年。"),
-                "zh-Hant": (f"創世記 11:26 記他拉{terah['begatAt']}歲生亞伯蘭、"
+                "zh-Hant": (f"創世紀 11:26 記他拉{terah['begatAt']}歲生亞伯蘭、"
                             f"拿鶴、哈蘭，本圖即以此年為亞伯蘭的出生年。照此，"
-                            f"亞伯蘭{depart}歲離開哈蘭（創世記 12:4）時，他拉"
-                            f"尚有{gap}年才去世（創世記 11:32 記他拉活了"
+                            f"亞伯蘭{depart}歲離開哈蘭（創世紀 12:4）時，他拉"
+                            f"尚有{gap}年才去世（創世紀 11:32 記他拉活了"
                             f"{terah['lifespan']}歲）。使徒行傳 7:4 說亞伯蘭是"
                             f"在父親死後才遷往迦南；採此讀法的年代學把亞伯蘭"
                             f"視為三子中最幼的，出生年定在創世紀元 {later} 年，"
@@ -1330,6 +1370,39 @@ def main():
     canaan_mt = "canaan" in ex_mt.lower()
     mt_era = mt_epochs["exodusEra"]
     lxx_era = lxx_epochs["exodusEra"]
+
+    # THE EPOCH NOTES ARE WRITTEN ONCE AND READ UNDER EITHER TEXT, so
+    # every figure they interpolate has to be the same figure in both.
+    # They are written from the Masoretic variables, which is safe only
+    # while that holds — and it is not a safe assumption in general: the
+    # Septuagint gives Kohath 130 where the Hebrew gives 133, three
+    # verses away from two of these. Measured 2026-08-25, all seven agree;
+    # asserted here so that if one ever stops agreeing the build says so
+    # rather than a Masoretic number quietly speaking for the Greek view
+    # on a surface a reader is now reading. The `notes` list above is the
+    # other shape available — per tradition — and is what a divergence
+    # here should be turned into.
+    for what, a, b in (
+            ("Noah's age at the flood, Genesis 7:6",
+             mt_flood_age, lxx_flood_age),
+            ("Abram's age at Haran, Genesis 12:4",
+             mt_epochs["haran"][2], lxx_epochs["haran"][2]),
+            ("Jacob's age at the descent, Genesis 47:9",
+             mt_epochs["descent"][2], lxx_epochs["descent"][2]),
+            ("the sojourn, Exodus 12:40",
+             mt_era["sojourn"][0], lxx_era["sojourn"][0]),
+            ("Moses before Pharaoh, Exodus 7:7",
+             mt_era["ages"]["moses"], lxx_era["ages"]["moses"]),
+            ("the wilderness, Numbers 14:33",
+             mt_era["wilderness"][0], lxx_era["wilderness"][0]),
+            ("Moses' lifespan, Deuteronomy 34:7",
+             mt_rows["moses"]["lifespan"], lxx_rows["moses"]["lifespan"])):
+        if a != b:
+            raise SystemExit(
+                f"an epoch note interpolates {what}, which is {a} in the "
+                f"Masoretic text and {b} in the Septuagint — the note can "
+                f"no longer be written once for both texts")
+
     if years_mt == years_lxx and canaan_lxx and not canaan_mt:
         n = years_mt
         notes.append({
@@ -1415,13 +1488,15 @@ def main():
             f"Kohath's life, the whole of Amram's and Moses' {pharaoh} years "
             f"before Pharaoh cannot exceed {ceiling} years")
         common_zhs = (
-            f"{kohath_ref} 记哥辖活了{kohath}岁，{amram_ref} 记暗兰活了"
-            f"{amram}岁，而创世记 46:11 已列哥辖在下埃及之人中。若按父子相承"
+            f"{cite_zh(kohath_ref, 'zh-Hans')} 记哥辖活了{kohath}岁，"
+            f"{cite_zh(amram_ref, 'zh-Hans')} 记暗兰活了"
+            f"{amram}岁，而创世纪 46:11 已列哥辖在下埃及之人中。若按父子相承"
             f"来读，哥辖余下的年岁、暗兰的一生，加上摩西见法老时的{pharaoh}"
             f"岁，至多不过{ceiling}年")
         common_zht = (
-            f"{kohath_ref} 記哥轄活了{kohath}歲，{amram_ref} 記暗蘭活了"
-            f"{amram}歲，而創世記 46:11 已列哥轄在下埃及之人中。若按父子相承"
+            f"{cite_zh(kohath_ref, 'zh-Hant')} 記哥轄活了{kohath}歲，"
+            f"{cite_zh(amram_ref, 'zh-Hant')} 記暗蘭活了"
+            f"{amram}歲，而創世紀 46:11 已列哥轄在下埃及之人中。若按父子相承"
             f"來讀，哥轄餘下的年歲、暗蘭的一生，加上摩西見法老時的{pharaoh}"
             f"歲，至多不過{ceiling}年")
         if ceiling < gap:
@@ -1580,12 +1655,29 @@ def main():
         "_meta": {
             "generator": "scripts/build_chronology.py",
             "unit": "am",
-            "unitNote": (
-                "Anno Mundi — years counted from the creation, as the ages "
-                "in Genesis 5 and 11 accumulate them. The text supplies no "
-                "absolute date, so no BC year is stated here. Ussher's "
-                "4004 BC is one 17th-century reconstruction among several "
-                "and is not adopted."),
+            # Localised, unlike its siblings in this block, because it is
+            # the only one of them the app prints. It carries the Ussher
+            # caveat — the sentence that keeps the axis from being read
+            # as a BC dating — and it went to a Chinese reader in
+            # English, which is to say it did not go to them at all.
+            "unitNote": {
+                "en": (
+                    "Anno Mundi — years counted from the creation, as the "
+                    "ages in Genesis 5 and 11 accumulate them. The text "
+                    "supplies no absolute date, so no BC year is stated "
+                    "here. Ussher's 4004 BC is one 17th-century "
+                    "reconstruction among several and is not adopted."),
+                "zh-Hans": (
+                    "创世纪元——自创世起算的年数，按创世纪 5 章与 11 章"
+                    "所记的岁数累加而得。经文并未给出可换算的绝对年代，"
+                    "故此处不列公元前年份。Ussher 的公元前 4004 年只是"
+                    "十七世纪诸多推算之一，本图未予采用。"),
+                "zh-Hant": (
+                    "創世紀元——自創世起算的年數，按創世紀 5 章與 11 章"
+                    "所記的歲數累加而得。經文並未給出可換算的絕對年代，"
+                    "故此處不列公元前年份。Ussher 的公元前 4004 年只是"
+                    "十七世紀諸多推算之一，本圖未予採用。"),
+            },
             "derivedFrom": {
                 "mt": "assets/kjv.json (Authorised Version, public domain), "
                       "which renders the Masoretic figures.",
@@ -1665,8 +1757,8 @@ def main():
                     # and "his 600th year" is the other verse's ordinal
                     # and a year earlier. See the note on Noah.
                     "en": f"Genesis 7:6 states Noah was {mt_flood_age} years old at the flood.",
-                    "zh-Hans": f"创世记 7:6 记洪水在挪亚{mt_flood_age}岁那年。",
-                    "zh-Hant": f"創世記 7:6 記洪水在挪亞{mt_flood_age}歲那年。",
+                    "zh-Hans": f"创世纪 7:6 记洪水在挪亚{mt_flood_age}岁那年。",
+                    "zh-Hant": f"創世紀 7:6 記洪水在挪亞{mt_flood_age}歲那年。",
                 },
             },
             {
@@ -1679,9 +1771,9 @@ def main():
                 "note": {
                     "en": (f"Genesis 12:4 has Abram {mt_epochs['haran'][2]} "
                            f"years old when he left Haran."),
-                    "zh-Hans": (f"创世记 12:4 记亚伯兰离开哈兰时"
+                    "zh-Hans": (f"创世纪 12:4 记亚伯兰离开哈兰时"
                                 f"{mt_epochs['haran'][2]}岁。"),
-                    "zh-Hant": (f"創世記 12:4 記亞伯蘭離開哈蘭時"
+                    "zh-Hant": (f"創世紀 12:4 記亞伯蘭離開哈蘭時"
                                 f"{mt_epochs['haran'][2]}歲。"),
                 },
             },
@@ -1698,10 +1790,10 @@ def main():
                            f"states the total, so this year is checked "
                            f"against a third figure."),
                     "zh-Hans": (f"雅各对法老说自己{mt_epochs['descent'][2]}岁"
-                                f"（创世记 47:9）；47:28 记他此后在埃及又活了"
+                                f"（创世纪 47:9）；47:28 记他此后在埃及又活了"
                                 f"17年，并记出总岁数，故此年另有第三个数字可核。"),
                     "zh-Hant": (f"雅各對法老說自己{mt_epochs['descent'][2]}歲"
-                                f"（創世記 47:9）；47:28 記他此後在埃及又活了"
+                                f"（創世紀 47:9）；47:28 記他此後在埃及又活了"
                                 f"17年，並記出總歲數，故此年另有第三個數字可核。"),
                 },
             },
@@ -1744,14 +1836,16 @@ def main():
                                 f"及记 7:7），旷野{mt_era['wilderness'][0]}年"
                                 f"（民数记 14:33），申命记 34:7 所记的"
                                 f"{mt_rows['moses']['lifespan']}岁正是二者之"
-                                f"和；{mt_era['mosesSaysRef']} 他也亲口说出这个"
-                                f"岁数。"),
+                                f"和；"
+                                f"{cite_zh(mt_era['mosesSaysRef'], 'zh-Hans')}"
+                                f" 他也亲口说出这个岁数。"),
                     "zh-Hant": (f"摩西見法老時{mt_era['ages']['moses']}歲（出埃"
                                 f"及記 7:7），曠野{mt_era['wilderness'][0]}年"
                                 f"（民數記 14:33），申命記 34:7 所記的"
                                 f"{mt_rows['moses']['lifespan']}歲正是二者之"
-                                f"和；{mt_era['mosesSaysRef']} 他也親口說出這個"
-                                f"歲數。"),
+                                f"和；"
+                                f"{cite_zh(mt_era['mosesSaysRef'], 'zh-Hant')}"
+                                f" 他也親口說出這個歲數。"),
                 },
             },
         ],

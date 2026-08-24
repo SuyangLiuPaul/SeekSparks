@@ -6323,6 +6323,32 @@ const uiStrings = {
     'zh-Hant': '另有說明（點選查看）',
     'en': 'More on (select to read)',
   },
+  // The dated events are not men, so they own no row on the chart and no
+  // side panel. The header lists them and each one opens a sheet.
+  'chronologyEpochs': {
+    'zh-Hans': '有年代可考的事件（点选查看）',
+    'zh-Hant': '有年代可考的事件（點選查看）',
+    'en': 'Dated events (select to read)',
+  },
+  // "Where this chart puts it", not "when it happened": the figure is
+  // this reconstruction's, and the sheet says so before it says it.
+  'chronologyEpochYear': {
+    'zh-Hans': '本图表所定的年代',
+    'zh-Hant': '本圖表所定的年代',
+    'en': 'Where this chart puts it',
+  },
+  'chronologyEpochAcrossTexts': {
+    'zh-Hans': '各经文所定',
+    'zh-Hant': '各經文所定',
+    'en': 'In each text',
+  },
+  // "On this chart", because the gap is a property of the two
+  // reconstructions, not a figure either text states.
+  'chronologyEpochApart': {
+    'zh-Hans': '在本图表上，两种经文在此相差 {n} 年。',
+    'zh-Hant': '在本圖表上，兩種經文在此相差 {n} 年。',
+    'en': 'On this chart the two texts are {n} years apart here.',
+  },
   'chronologyBegatAt': {
     'zh-Hans': '生下一代时的年岁',
     'zh-Hant': '生下一代時的年歲',

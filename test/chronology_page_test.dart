@@ -26,6 +26,8 @@ import 'package:seeksparks/models/chronology.dart';
 import 'package:seeksparks/pages/chronology_page.dart';
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/services/chronology_service.dart';
+import 'package:seeksparks/utils/version_mapper.dart'
+    show localizedReferenceLabel;
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -121,9 +123,16 @@ void main() {
     // 187 / 782 / 969 are Genesis 5:25-27. Each is shown beside the
     // verse it was read from, because a number without its verse is an
     // assertion and a number with one is a citation.
+    //
+    // In the reader's own script. The refs are stored English because
+    // that is what `parseReference` takes back when the citation is
+    // tapped; what is PRINTED goes through the same localiser as every
+    // other reference in the app. This page used to print the stored
+    // form, so a Chinese reader got 创世纪 in the prose of a note and
+    // `Genesis 5:25` in the citation directly under it.
     expect(find.textContaining('187'), findsWidgets);
-    expect(find.text('Genesis 5:25'), findsOneWidget);
-    expect(find.text('Genesis 5:27'), findsOneWidget);
+    expect(find.text('创世纪 5:25'), findsOneWidget);
+    expect(find.text('创世纪 5:27'), findsOneWidget);
 
     await unmount(tester);
   });
@@ -157,7 +166,7 @@ void main() {
     await settle(tester);
     expect(tester.takeException(), isNull);
 
-    expect(find.text('Genesis 50:26'), findsOneWidget);
+    expect(find.text('创世纪 50:26'), findsOneWidget);
     // He ends the chain, so there is no age at begetting and no "lived
     // after that". An empty row would say the text was asked and stayed
     // silent; no row says the question does not arise.
@@ -196,11 +205,11 @@ void main() {
   });
 
   // The flood's second dating lives in the asset, and the asset carrying
-  // it is not the same claim as a reader being able to read it: the
-  // epoch records already carry a `note` apiece that nothing on this page
-  // ever calls. So this pins the rendered path, and pins that Noah is
-  // named in the header where a reader who has selected nobody will see
-  // that there is something to open.
+  // it is not the same claim as a reader being able to read it — the
+  // epoch notes shipped for eight months with no call site at all. So
+  // this pins the rendered path, and pins that Noah is named in the
+  // header where a reader who has selected nobody will see that there is
+  // something to open.
   testWidgets('the flood\'s second dating is on Noah\'s panel, and the header '
       'names him', (tester) async {
     await pump(tester, const Size(1440, 900));
@@ -226,6 +235,70 @@ void main() {
     await unmount(tester);
   });
 
+  // Every epoch carries a `note` saying how its verse yields its year —
+  // the derivation the whole chart rests on — and until this was written
+  // `ChronologyEpoch.noteFor` had no call site in `lib/` at all. The
+  // paragraphs were built, translated into three scripts, shipped in the
+  // asset, and unreachable. `find.text(note)` on every one of them is
+  // the assertion that would have caught it.
+  testWidgets('every epoch opens, and its derivation is on the sheet',
+      (tester) async {
+    for (final epoch in data.epochs) {
+      await pump(tester, const Size(1440, 900));
+      final note = epoch.noteFor('zh-Hans')!;
+      expect(note, isNotEmpty, reason: epoch.id);
+
+      // Not on the page until it is asked for: the header is a layout
+      // sibling of the chart, so five paragraphs there would cost five
+      // rows of the bars they are about.
+      expect(find.text(note), findsNothing, reason: epoch.id);
+
+      await tester.tap(find.byKey(ValueKey('chronologyEpoch_${epoch.id}')));
+      await settle(tester);
+      expect(tester.takeException(), isNull, reason: epoch.id);
+
+      expect(find.text(note), findsOneWidget, reason: epoch.id);
+      // And the verse it was read from, in the reader's script.
+      if (epoch.ref != null) {
+        expect(find.text(localizedReferenceLabel(epoch.ref!, 'zh-Hans')),
+            findsWidgets,
+            reason: epoch.id);
+      }
+
+      await unmount(tester);
+    }
+  });
+
+  // The sheet's reason for existing beyond the note: the year is this
+  // reconstruction's, not the text's, and the two texts disagree by
+  // amounts that are the single most surprising thing on the chart.
+  // Both figures are derived here from the asset rather than typed, so a
+  // regenerated asset that moved a date fails this instead of quietly
+  // disagreeing with a literal.
+  testWidgets('an epoch sheet shows both texts and the gap between them',
+      (tester) async {
+    await pump(tester, const Size(1440, 900));
+
+    final flood = data.epochs.firstWhere((e) => e.id == 'flood');
+    final mt = flood.years['mt']!;
+    final lxx = flood.years['lxx']!;
+    expect(mt, isNot(lxx));
+
+    await tester.tap(find.byKey(const ValueKey('chronologyEpoch_flood')));
+    await settle(tester);
+    expect(tester.takeException(), isNull);
+
+    final am = uiStrings['chronologyAm']!['zh-Hans']!;
+    expect(find.text('$am $mt'), findsWidgets);
+    expect(find.text('$am $lxx'), findsWidgets);
+    expect(
+        find.text(uiStrings['chronologyEpochApart']!['zh-Hans']!
+            .replaceAll('{n}', '${(mt - lxx).abs()}')),
+        findsOneWidget);
+
+    await unmount(tester);
+  });
+
   // Moses has no age at begetting and no years after it — the chart ends
   // on him — so the sentence about "all three figures" would be
   // describing a record he has not got.
@@ -239,7 +312,7 @@ void main() {
     await settle(tester);
     expect(tester.takeException(), isNull);
 
-    expect(find.text('Deuteronomy 34:7'), findsOneWidget);
+    expect(find.text('申命记 34:7'), findsOneWidget);
     expect(find.text('生下一代时的年岁'), findsNothing);
     expect(find.textContaining('三个数字'), findsNothing);
 
@@ -368,7 +441,8 @@ void main() {
     expect(find.text('${era.counted['mt']}'), findsOneWidget);
     expect(find.text('${era.stated['mt']!.elapsed}'), findsOneWidget);
     expect(find.text('${era.residue['mt']}'), findsOneWidget);
-    expect(find.text('1 Kings 6:1'), findsWidgets);
+    expect(find.text(localizedReferenceLabel(era.stated['mt']!.ref, 'zh-Hans')),
+        findsWidgets);
 
     // Every period is named and carries the verse it was read from.
     for (final p in era.periods) {
@@ -459,6 +533,107 @@ void main() {
       // three digits proved nothing about the column.
       expect(measured, containsAll(figures), reason: '$fontSize pt');
       await unmount(tester);
+    }
+  });
+
+  // The English that reaches a Chinese reader is never one defect, it is
+  // a class, and grepping for one phrase finds one member of it. Pinning
+  // `Genesis` would have passed over `data.unitNote` — the sentence that
+  // keeps the axis from being read as a BC dating, printed in English on
+  // this page and on the epoch sheets. So the assertion is on the shape:
+  // no run of Latin letters in the rendered text at all.
+  //
+  // Ussher is the exception and stays one. A 17th-century Englishman's
+  // surname has no CUV form, and transliterating it would make the one
+  // citation on this page a reader might go and look up unlookup-able.
+  testWidgets('no English prose survives into the Chinese page',
+      (tester) async {
+    const allowed = {'Ussher'};
+    final latin = RegExp(r'[A-Za-z]{3,}');
+
+    // A sweep over nothing passes. The counts are floors, not pins: what
+    // they rule out is a finder that silently stopped matching, which
+    // would turn this whole test into a green light for the defect.
+    void sweep(String where, int atLeast) {
+      var seen = 0;
+      for (final para
+          in tester.renderObjectList<RenderParagraph>(find.byType(RichText))) {
+        final plain = para.text.toPlainText();
+        seen++;
+        final found = latin
+            .allMatches(plain)
+            .map((m) => m.group(0)!)
+            .where((w) => !allowed.contains(w))
+            .toSet();
+        expect(found, isEmpty, reason: '$where: "$plain"');
+      }
+      expect(seen, greaterThanOrEqualTo(atLeast), reason: where);
+    }
+
+    await pump(tester, const Size(1440, 900));
+    sweep('the chart', 30);
+    await toLedger(tester, data.era!);
+    sweep('the era ledger', 30);
+    await unmount(tester);
+
+    // Moses' panel, because the longest note in the asset is on it —
+    // the Exodus 6:18/6:20 ceiling — and it is the one that carried two
+    // English citations in the middle of a Chinese paragraph.
+    await pump(tester, const Size(1440, 900));
+    await tester.dragUntilVisible(find.text('摩西'),
+        find.byType(Scrollable).first, const Offset(0, -80));
+    await settle(tester);
+    await tester.tap(find.text('摩西'));
+    await settle(tester);
+    sweep('Moses\' panel', 30);
+    await unmount(tester);
+
+    for (final epoch in data.epochs) {
+      await pump(tester, const Size(1440, 900));
+      await tester.tap(find.byKey(ValueKey('chronologyEpoch_${epoch.id}')));
+      await settle(tester);
+      sweep('the ${epoch.id} sheet', 30);
+      await unmount(tester);
+    }
+  });
+
+  // Every reference in this asset is stored English, because that is
+  // what `parseReference` reads when the citation is tapped, and every
+  // one is printed through `localizedReferenceLabel`. A book the
+  // localiser does not know passes through unchanged, silently, and the
+  // reader gets one English word in a Chinese sentence — which is
+  // exactly what this page did on every citation it printed. So the
+  // guard is on the data, not on one rendered screen: a later slice that
+  // cites a tenth book gets told here rather than in a screenshot.
+  test('every reference in the asset localises', () {
+    final refs = <String>{};
+    for (final tr in data.traditions) {
+      for (final p in data.inTradition(tr.id)) {
+        p.figures[tr.id]?.refs.forEach((_, v) => refs.add(v));
+      }
+    }
+    for (final e in data.epochs) {
+      if (e.ref != null) refs.add(e.ref!);
+    }
+    final era = data.era!;
+    for (final p in era.periods) {
+      refs.add(p.ref);
+    }
+    for (final g in era.gaps) {
+      refs.add(g.ref);
+    }
+    refs.add(era.stated['mt']!.ref);
+    refs.add(era.stated['lxx']!.ref);
+
+    // A sweep over an empty set passes. 85 is what the asset holds now;
+    // the assertion is that the sweep saw a corpus, not that it saw
+    // exactly this one.
+    expect(refs.length, greaterThan(50));
+    for (final locale in ['zh-Hans', 'zh-Hant']) {
+      for (final ref in refs) {
+        expect(localizedReferenceLabel(ref, locale), isNot(ref),
+            reason: '$ref in $locale');
+      }
     }
   });
 }
