@@ -13,7 +13,8 @@ import 'package:seeksparks/constants/app_version.dart';
 import 'package:seeksparks/constants/text_patterns.dart' show sanitizeForCopy;
 import 'package:seeksparks/constants/sermon_credit.dart';
 import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/constants/workbench_theme.dart' show WbMetrics;
+import 'package:seeksparks/constants/workbench_theme.dart'
+    show WbMetrics, WbType;
 import 'package:provider/provider.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/app_style_preset.dart';
@@ -580,7 +581,7 @@ class _SettingsPageBodyState extends State<_SettingsPageBody> {
                             'Bundled fonts (Roboto, Microsoft YaHei) work everywhere. Other choices use the system fonts installed on your device.',
                         style: TextStyle(
                           fontSize:
-                              (settings.fontSize - 4).clamp(11.0, 13.0),
+                              settings.smallPrint(13),
                           color: Theme.of(context)
                               .colorScheme
                               .onSurface
@@ -1213,8 +1214,7 @@ class _AccountSectionState extends State<_AccountSection> {
                         'them to another one.',
                 style: TextStyle(
                   fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                  fontSize: (settings.fontSize - 7)
-                      .clamp(12.0, 14.0).toDouble(),
+                  fontSize: settings.smallPrint(13),
                   fontStyle: FontStyle.italic,
                   color: scheme.onSurfaceVariant,
                 ),
@@ -1239,13 +1239,12 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    // Scale with the user's font preference — at the default 16 pt
-    // body size the header reads as 14, at 24 pt body it scales to
-    // 22. Caps at 22 so very-large reader settings don't make
-    // section headers tower over the cards beneath them.
+    // The comment this replaces described a default of 16 pt and a cap
+    // at 22; the default has been 20 for some time and the cap was
+    // reached at 24, so a header stopped growing barely above the
+    // default it was described from.
     final settings = context.watch<AppSettings>();
-    final size =
-        (settings.fontSize - 2).clamp(11.0, 22.0).toDouble();
+    final size = settings.smallPrint(18);
     return Padding(
       padding: const EdgeInsets.fromLTRB(4, 4, 4, 8),
       child: Text(
@@ -1301,7 +1300,7 @@ class _SettingsSwitch extends StatelessWidget {
               subtitle!,
               style: TextStyle(
                 fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                fontSize: (settings.fontSize - 3).clamp(11.0, 14.0),
+                fontSize: settings.smallPrint(14),
                 color: scheme.onSurfaceVariant,
               ),
             ),
@@ -1507,7 +1506,7 @@ class _NotificationsCardState extends State<_NotificationsCard> {
                       style: TextStyle(
                         fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
                         fontSize:
-                            (settings.fontSize - 2).clamp(12.0, 14.0),
+                            settings.smallPrint(14),
                       ),
                     ),
                   ),
@@ -1606,7 +1605,7 @@ class _NotificationCategoriesSection extends StatelessWidget {
                 ? '推送品类（点击编辑时间）'
                 : 'Categories (tap a row to set the time)',
             style: TextStyle(
-              fontSize: (settings.fontSize - 3).clamp(11.0, 13.0),
+              fontSize: settings.smallPrint(13),
               color: scheme.onSurfaceVariant,
               fontWeight: FontWeight.w600,
             ),
@@ -1649,8 +1648,7 @@ class _NotificationCategoriesSection extends StatelessWidget {
                   label: Text(
                     _formatTime(prefs.hour, prefs.minute),
                     style: TextStyle(
-                      fontSize: (settings.fontSize - 2)
-                          .clamp(12.0, 14.0),
+                      fontSize: settings.smallPrint(14),
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -1682,7 +1680,7 @@ class _NotificationCategoriesSection extends StatelessWidget {
                 : 'Times are local. Changes apply immediately; '
                     'fires daily at the chosen time.',
             style: TextStyle(
-              fontSize: (settings.fontSize - 4).clamp(10.0, 12.0),
+              fontSize: settings.smallPrint(12),
               color: scheme.onSurfaceVariant
                   .withValues(alpha: 0.8),
               fontStyle: FontStyle.italic,
@@ -1727,8 +1725,7 @@ class _AiModelCard extends StatelessWidget {
                       'AI response depth',
                   style: TextStyle(
                     fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                    fontSize: (settings.fontSize - 1)
-                        .clamp(13.0, 16.0),
+                    fontSize: settings.smallPrint(16),
                     fontWeight: FontWeight.w700,
                     color: scheme.onSurface,
                   ),
@@ -1741,8 +1738,7 @@ class _AiModelCard extends StatelessWidget {
                   'Choose the trade-off between AI speed and depth.',
               style: TextStyle(
                 fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                fontSize: (settings.fontSize - 4)
-                    .clamp(11.0, 13.0),
+                fontSize: settings.smallPrint(13),
                 color: scheme.onSurface.withValues(alpha: 0.78),
                 height: 1.5,
               ),
@@ -1865,7 +1861,7 @@ class _AiModelDetailPanel extends StatelessWidget {
                   uiStrings[detailKey]?[locale] ?? detailEnFallback,
                   base: TextStyle(
                     fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                    fontSize: (settings.fontSize - 4).clamp(11.0, 13.0),
+                    fontSize: settings.smallPrint(13),
                     color: scheme.onSurface.withValues(alpha: 0.78),
                     height: 1.55,
                   ),
@@ -1919,7 +1915,7 @@ class _AboutCard extends StatelessWidget {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                fontSize: (settings.fontSize - 3).clamp(11.0, 14.0),
+                fontSize: settings.smallPrint(14),
                 color: scheme.onSurfaceVariant,
                 fontStyle: FontStyle.italic,
               ),
@@ -1937,7 +1933,7 @@ class _AboutCard extends StatelessWidget {
               style: TextStyle(
                 fontFamily: settings.fontFamily,
                 fontFamilyFallback: kCjkFontFallback,
-                fontSize: (settings.fontSize - 3).clamp(11.0, 14.0),
+                fontSize: settings.smallPrint(14),
                 fontWeight: FontWeight.w600,
                 color: scheme.onSurfaceVariant,
               ),
@@ -1982,7 +1978,7 @@ class _AboutCard extends StatelessWidget {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                fontSize: (settings.fontSize - 6).clamp(11.0, 13.0),
+                fontSize: settings.smallPrint(13),
                 color: scheme.onSurfaceVariant,
                 fontStyle: FontStyle.italic,
               ),
@@ -2033,7 +2029,7 @@ class _AboutCard extends StatelessWidget {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                fontSize: (settings.fontSize - 6).clamp(11.0, 13.0),
+                fontSize: settings.smallPrint(13),
                 color: scheme.onSurfaceVariant,
                 fontStyle: FontStyle.italic,
               ),
@@ -2184,7 +2180,7 @@ class _StylePresetCard extends StatelessWidget {
                                 active.name),
                 style: TextStyle(
                   fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                  fontSize: (settings.fontSize - 4).clamp(11.0, 13.0),
+                  fontSize: settings.smallPrint(13),
                   color: scheme.onSurfaceVariant,
                   fontStyle: FontStyle.italic,
                 ),
@@ -2239,7 +2235,7 @@ class _StylePresetCard extends StatelessWidget {
                                   style: TextStyle(
                                     fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
                                     fontSize:
-                                        (settings.fontSize).clamp(14.0, 18.0),
+                                        settings.smallPrint(18),
                                     fontWeight: FontWeight.w600,
                                     color: scheme.onSurface,
                                   ),
@@ -2250,8 +2246,7 @@ class _StylePresetCard extends StatelessWidget {
                                     desc,
                                     style: TextStyle(
                                       fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                                      fontSize: (settings.fontSize - 4)
-                                          .clamp(11.0, 13.0),
+                                      fontSize: settings.smallPrint(13),
                                       color: scheme.onSurface
                                           .withValues(alpha: 0.7),
                                       height: 1.35,
@@ -2474,9 +2469,7 @@ class _OfflinePackCardState extends State<_OfflinePackCard> {
                   uiStrings['offlinePackTitle']?[locale] ?? 'Offline pack',
                   style: TextStyle(
                     fontFamily: widget.settings.fontFamily,
-                    fontSize: (widget.settings.fontSize - 1)
-                        .clamp(13.0, 17.0)
-                        .toDouble(),
+                    fontSize: widget.settings.smallPrint(17),
                     fontWeight: FontWeight.w700,
                     color: scheme.onSurface,
                   ),
@@ -2509,7 +2502,7 @@ class _OfflinePackCardState extends State<_OfflinePackCard> {
                   style: TextStyle(
                     fontFamily: widget.settings.fontFamily,
                     fontSize:
-                        (widget.settings.fontSize - 5).clamp(11.0, 13.0),
+                        widget.settings.smallPrint(13),
                     color: !svc.downloading &&
                             svc.lastCompletedAt != null &&
                             svc.lastDownloaded.isNotEmpty
@@ -2554,7 +2547,7 @@ class _OfflinePackCardState extends State<_OfflinePackCard> {
                 style: TextStyle(
                   fontFamily: widget.settings.fontFamily,
                   fontSize:
-                      (widget.settings.fontSize - 6).clamp(10.0, 12.0),
+                      widget.settings.smallPrint(12),
                   color: scheme.error,
                 ),
               ),
@@ -2573,16 +2566,14 @@ class _OfflinePackCardState extends State<_OfflinePackCard> {
                   _categoryLabel(c, locale),
                   style: TextStyle(
                     fontFamily: widget.settings.fontFamily,
-                    fontSize: (widget.settings.fontSize - 3)
-                        .clamp(12.0, 15.0),
+                    fontSize: widget.settings.smallPrint(15),
                   ),
                 ),
                 subtitle: Text(
                   '~${svc.approximateMbFor(c)} MB',
                   style: TextStyle(
                     fontFamily: widget.settings.fontFamily,
-                    fontSize: (widget.settings.fontSize - 6)
-                        .clamp(10.0, 12.0),
+                    fontSize: widget.settings.smallPrint(12),
                     color: scheme.onSurface.withValues(alpha: 0.6),
                   ),
                 ),
@@ -2695,8 +2686,7 @@ class _OfflinePackCardState extends State<_OfflinePackCard> {
                             'load of any non-Roboto font.',
                     style: TextStyle(
                       fontFamily: widget.settings.fontFamily,
-                      fontSize: (widget.settings.fontSize - 6)
-                          .clamp(10.0, 12.0),
+                      fontSize: widget.settings.smallPrint(12),
                       color: scheme.onSurface.withValues(alpha: 0.78),
                       height: 1.45,
                     ),
@@ -2829,7 +2819,7 @@ class _InstallAppCardState extends State<_InstallAppCard> {
                       fontFamily: settings.fontFamily,
                       fontFamilyFallback: kCjkFontFallback,
                       fontSize:
-                          (settings.fontSize - 1).clamp(13.0, 16.0),
+                          settings.smallPrint(16),
                       fontWeight: FontWeight.w700,
                       color: scheme.onSurface,
                     ),
@@ -2843,7 +2833,7 @@ class _InstallAppCardState extends State<_InstallAppCard> {
               style: TextStyle(
                 fontFamily: settings.fontFamily,
                 fontFamilyFallback: kCjkFontFallback,
-                fontSize: (settings.fontSize - 4).clamp(11.0, 13.0),
+                fontSize: settings.smallPrint(13),
                 color: scheme.onSurface.withValues(alpha: 0.85),
                 height: 1.5,
               ),
@@ -2888,7 +2878,7 @@ class _ExportDataCard extends StatelessWidget {
                       fontFamily: settings.fontFamily,
                       fontFamilyFallback: kCjkFontFallback,
                       fontSize:
-                          (settings.fontSize - 1).clamp(13.0, 16.0),
+                          settings.smallPrint(16),
                       fontWeight: FontWeight.w700,
                       color: scheme.onSurface,
                     ),
@@ -2904,7 +2894,7 @@ class _ExportDataCard extends StatelessWidget {
               style: TextStyle(
                 fontFamily: settings.fontFamily,
                 fontFamilyFallback: kCjkFontFallback,
-                fontSize: (settings.fontSize - 4).clamp(11.0, 13.0),
+                fontSize: settings.smallPrint(13),
                 color: scheme.onSurface.withValues(alpha: 0.85),
                 height: 1.5,
               ),
@@ -3021,9 +3011,9 @@ class _ExportDialogState extends State<_ExportDialog> {
               child: Scrollbar(
                 child: SelectableText(
                   _content,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: 'monospace',
-                    fontSize: 11,
+                    fontSize: widget.settings.smallPrint(11),
                     height: 1.4,
                   ),
                 ),
@@ -3033,7 +3023,7 @@ class _ExportDialogState extends State<_ExportDialog> {
             Text(
               isZh ? '大小: $sizeLabel' : 'Size: $sizeLabel',
               style: TextStyle(
-                fontSize: 11,
+                fontSize: widget.settings.smallPrint(11),
                 color: scheme.onSurface.withValues(alpha: 0.6),
               ),
             ),
@@ -3096,7 +3086,7 @@ class _ImportDataCard extends StatelessWidget {
                     style: TextStyle(
                       fontFamily: settings.fontFamily,
                       fontFamilyFallback: kCjkFontFallback,
-                      fontSize: (settings.fontSize - 1).clamp(13.0, 16.0),
+                      fontSize: settings.smallPrint(16),
                       fontWeight: FontWeight.w700,
                       color: scheme.onSurface,
                     ),
@@ -3112,7 +3102,7 @@ class _ImportDataCard extends StatelessWidget {
               style: TextStyle(
                 fontFamily: settings.fontFamily,
                 fontFamilyFallback: kCjkFontFallback,
-                fontSize: (settings.fontSize - 4).clamp(11.0, 13.0),
+                fontSize: settings.smallPrint(13),
                 color: scheme.onSurface.withValues(alpha: 0.85),
                 height: 1.5,
               ),
@@ -3249,9 +3239,9 @@ class _ImportDialogState extends State<_ImportDialog> {
                 onChanged: _onTextChanged,
                 maxLines: null,
                 expands: true,
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'monospace',
-                  fontSize: 11,
+                  fontSize: widget.settings.smallPrint(11),
                   height: 1.4,
                 ),
                 decoration: InputDecoration(
@@ -3265,7 +3255,9 @@ class _ImportDialogState extends State<_ImportDialog> {
             if (_error != null)
               Text(
                 _error!,
-                style: TextStyle(fontSize: 11, color: scheme.error),
+                style: TextStyle(
+                    fontSize: widget.settings.smallPrint(11),
+                    color: scheme.error),
               )
             else if (parsed != null)
               Text(
@@ -3273,7 +3265,7 @@ class _ImportDialogState extends State<_ImportDialog> {
                     ? '找到 ${parsed.highlights.length} 条高亮、${parsed.bookmarks.length} 条书签、${parsed.notes.length} 条笔记——将覆盖同一节经文的本地数据。'
                     : 'Found ${parsed.highlights.length} highlights · ${parsed.bookmarks.length} bookmarks · ${parsed.notes.length} notes — will overwrite existing data for the same verse.',
                 style: TextStyle(
-                  fontSize: 11,
+                  fontSize: widget.settings.smallPrint(11),
                   color: scheme.onSurface.withValues(alpha: 0.6),
                 ),
               ),
@@ -3310,4 +3302,39 @@ class _ImportDialogState extends State<_ImportDialog> {
       ],
     );
   }
+}
+
+/// The settings page's own subordinate type, on the reader's scale.
+///
+/// #315 counted three ways to write a size the Font Size slider cannot
+/// move, and this file held the largest concentration of the third: 28
+/// of the app's saturating ceilings, on the page that carries the
+/// slider. Dragging it to 40 pt left every hint, subtitle and badge
+/// here exactly where it was.
+///
+/// The page had already declared which scale it belongs to. Card
+/// titles are `fontSize: settings.fontSize + 2` with no bound at all,
+/// and a switch row's label is `settings.fontSize` outright — so this
+/// is Font Size's page, not Menu Size's, and the clamped sites were
+/// the ones that fell off that convention rather than a deliberate
+/// second scale. Leaving them behind produced an INVERTED hierarchy at
+/// the top of the range: at 40 pt a `_SettingsSwitch` printed its
+/// title at 40 px and its own subtitle at 14, a 2.9× gap where the
+/// design was 20 and 14.
+///
+/// [WbType.scaledSmall] keeps the floor those clamps carried and drops
+/// the ceiling; the argument is the size the site renders today at the
+/// default 20 pt, so nothing moves for a reader who never touched the
+/// slider.
+///
+/// An extension on [AppSettings] rather than on [BuildContext] because
+/// half this file's call sites are in widgets that hold the settings
+/// as a field (`widget.settings`) and reach them from dialog builders,
+/// where `context.watch` is not available.
+extension _SettingsSmallPrint on AppSettings {
+  double smallPrint(double atDefault) => WbType.resolve(
+        fontSize: fontSize,
+        lineSpacing: lineSpacing,
+        menuScale: menuScale,
+      ).scaledSmall(atDefault);
 }

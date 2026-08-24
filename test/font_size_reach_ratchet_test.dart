@@ -45,7 +45,6 @@ void main() {
     'pages/strongs_entry_page.dart': 7,
     'pages/sermon_detail_page.dart': 6,
     'pages/evidence_page.dart': 5,
-    'pages/settings_page.dart': 5,
     'widgets/book_chapter_picker.dart': 2,
     'widgets/verse_popup_sheet.dart': 2,
     'widgets/version_picker_sheet.dart': 2,
@@ -111,6 +110,13 @@ void main() {
     // routed through `_ReaderTypeScale`, which is also where the
     // text-vs-chrome decision for this file is written down.
     'widgets/bible_reading_pane.dart',
+    // 2026-08-24 (#315). The page the slider itself lives on. Its five
+    // literals were the export and import dialogs — the JSON viewer,
+    // the size label, the parse error and the "found N highlights"
+    // summary — which is the one flow in the app that moves a reader's
+    // own work between devices, and the last place to set 11 px and
+    // hope.
+    'pages/settings_page.dart',
   ];
 
   final literal = RegExp(r'fontSize:\s*(?:const\s*)?[0-9]+(?:\.[0-9]+)?\b');
@@ -313,6 +319,15 @@ void main() {
     /// because raising a size that has been frozen for years changes
     /// what fits on the row beneath it, and that has to be looked at
     /// screen by screen. The number may go DOWN.
+    ///
+    /// 2026-08-24: `settings_page.dart` left this list, and it was 28
+    /// of the 73 — the largest entry, on the page where the reader can
+    /// see the slider and its effect at the same time. Its repair
+    /// answered a question this budget does not ask: a clamp has TWO
+    /// bounds, and the FLOOR was doing real work. Removing it would put
+    /// a hint at 7.8 px for a reader who set 12 pt. The other entries
+    /// should take the same route — [WbType.scaledSmall], which keeps
+    /// the floor as one shared number and drops only the ceiling.
     const known = <String, int>{
       'pages/bible_trivia_page.dart': 5,
       'pages/evidence_detail_page.dart': 3,
@@ -322,11 +337,6 @@ void main() {
       'pages/loading_page.dart': 4,
       'pages/profile_edit_page.dart': 1,
       'pages/profiles_page.dart': 1,
-      // Where the Font Size slider itself lives. Dragging it to 40 pt
-      // leaves twenty-eight labels on that very page exactly where they
-      // were, which is the control contradicting itself in front of
-      // the reader — the #316 defect class, in numbers.
-      'pages/settings_page.dart': 28,
       'pages/stats_page.dart': 1,
       'widgets/book_chapter_picker.dart': 2,
       'widgets/gemini_key_card.dart': 4,
@@ -347,7 +357,8 @@ void main() {
         reason: 'a ceiling below the slider\'s reach is a size the reader '
             'cannot change. Take the value the site has at the default '
             '(${kFontSizeDefault.toStringAsFixed(0)} pt) and put it on the '
-            'scale — WbType.scaled() for text the reader reads, '
+            'scale — WbType.scaledSmall() keeps the clamp\'s floor and '
+            'drops its ceiling, scaled() for text the reader reads, '
             'scaledChrome() for furniture with its own slider:\n'
             '${over.join('\n')}');
 

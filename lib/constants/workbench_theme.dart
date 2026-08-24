@@ -70,6 +70,30 @@ abstract final class WbMetrics {
   /// cannot see is not.
   static const double originalFloor = original;
 
+  /// The size below which the app stops printing its small type at all.
+  ///
+  /// Every ceiling #315 removed came out of a `.clamp(lo, hi)`, and a
+  /// clamp has TWO bounds of which only one was the bug. The ceiling
+  /// froze the site from somewhere below the default 20 pt upward,
+  /// which is the reported defect. The FLOOR was doing real work: a
+  /// reader who drags Font Size down to 12 is asking for dense
+  /// *scripture*, and a proportional caption at 0.6× would put a hint
+  /// under a settings row at 7.8 px — smaller than anything the app
+  /// prints anywhere. Deleting both bounds fixes the complaint and
+  /// invents a new one at the other end.
+  ///
+  /// So the floor survives, once, as a number instead of thirty
+  /// slightly different ones (10, 11, 12 and 13 were all in use). It is
+  /// [chrome] because that is already the app's answer to "the
+  /// smallest text we are willing to set" — menu bars, pane titles,
+  /// status bars. Small print may reach it and stop; it may not go
+  /// under it.
+  ///
+  /// Unlike [originalFloor] this is a comfort bound, not a correctness
+  /// one. A 9 px hint is unpleasant and still says what it says; a 9 px
+  /// qamats is a vowel the reader is not being shown.
+  static const double smallPrintFloor = chrome;
+
   static const double lineHeight = 1.32;
 
   /// Height of the menu bar, the toolbar and the status bar.
@@ -995,6 +1019,29 @@ class WbType {
   TextStyle? scaleRole(TextStyle? role) => role?.fontSize == null
       ? role
       : role!.copyWith(fontSize: role.fontSize! * textScale);
+
+  /// A subordinate size on the reader's scale, floored so small print
+  /// stays print — see [WbMetrics.smallPrintFloor].
+  ///
+  /// This is the replacement for `(fontSize - k).clamp(lo, hi)`, and it
+  /// differs from that shape in two ways beyond losing the ceiling.
+  /// The offset was ADDITIVE, which does not hold a type hierarchy: at
+  /// 12 pt `fontSize - 6` and `fontSize - 1` are 6 and 11, a ratio of
+  /// 1.8, and at 40 pt they are 34 and 39, a ratio of 1.15. The same
+  /// two sizes expressed as [atDefault] keep their proportion at every
+  /// stop of the slider, which is what a caption being "smaller than
+  /// its heading" actually means.
+  ///
+  /// [atDefault] is the size the site renders today at the default
+  /// 20 pt, so the repair is invisible to a reader who never moved the
+  /// slider and changes only the range the slider could not reach.
+  double scaledSmall(double atDefault) {
+    assert(atDefault >= WbMetrics.smallPrintFloor,
+        'small print designed at $atDefault px is already below the '
+        '${WbMetrics.smallPrintFloor} px floor at the default setting — '
+        'raise the design size rather than relying on the floor');
+    return math.max(atDefault * textScale, WbMetrics.smallPrintFloor);
+  }
 
   /// The same, floored so pointing and accents survive.
   ///
