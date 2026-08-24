@@ -12,7 +12,17 @@ Both take `--check`, and `test/brand_marks_test.dart` runs them that way,
 so a derived file that stops matching its master fails the suite.
 
 The launcher icons for iOS, Android and web come from `flutter_launcher_icons`,
-which reads the same master (`flutter_icons.image_path` in `pubspec.yaml`).
+which reads the same master (`flutter_icons.image_path` in `pubspec.yaml`):
+
+```bash
+dart run flutter_launcher_icons
+```
+
+**After running it, check `git diff android/app/src/main/AndroidManifest.xml`
+and revert that file.** The tool rewrites `android:icon` on every
+`activity-alias` to `@mipmap/ic_launcher`, which silently collapses the six
+alternate icons into the default one — pick "Red" in the app and Android
+installs the plain icon. Nothing fails; the picker simply stops working.
 
 ## There is no vector source for the current mark
 

@@ -24,6 +24,14 @@ So the master is now the drawing, and everything derived from it is
 produced here rather than by hand. `test/brand_marks_test.dart` fails
 when any output drifts, which is the part that stops a fourth repeat.
 
+The launcher icons themselves are NOT written here — `dart run
+flutter_launcher_icons` owns those — but they are checked, because
+leaving them out is how the home-screen icon kept the old drawing
+through a --check that reported all clear. If that command has to be
+run, revert `android/app/src/main/AndroidManifest.xml` afterwards: it
+rewrites every activity-alias icon to the default and quietly collapses
+the six alternate icons into one.
+
 Usage:
     python3 tools/generate_brand_marks.py            # write the outputs
     python3 tools/generate_brand_marks.py --check    # verify only, exit 1 on drift
