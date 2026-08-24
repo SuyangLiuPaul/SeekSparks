@@ -66,6 +66,7 @@ class _EvidenceDetailPageState extends State<EvidenceDetailPage> {
     final wb = WbColors.of(context);
     final locale = settings.locale;
     final fs = settings.fontSize;
+    final t = settings.wbType;
     final images = evidence.images;
     final hasImage = images.isNotEmpty;
 
@@ -173,9 +174,9 @@ class _EvidenceDetailPageState extends State<EvidenceDetailPage> {
                                     const SizedBox(width: 4),
                                     Text(
                                       '${_imageIndex + 1}/${images.length}',
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         color: Colors.white,
-                                        fontSize: 12,
+                                        fontSize: t.scaledChrome(12),
                                         fontWeight: FontWeight.w700,
                                       ),
                                     ),
@@ -299,7 +300,18 @@ class _EvidenceDetailPageState extends State<EvidenceDetailPage> {
                       evidence.localizedTitle(locale),
                       style: TextStyle(
                         fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                        fontSize: (fs + 6).clamp(20.0, 32.0).toDouble(),
+                        // 2026-08-25 (#315): was
+                        // `(fs + 6).clamp(20.0, 32.0)`, which saturated
+                        // at 26 pt and left the artefact's own name
+                        // SMALLER than the summary, description and
+                        // correlation beneath it from 33 pt on. 26 is
+                        // what the old expression rendered at the
+                        // default, so a reader who never moved the
+                        // slider sees no change; expressing it as a
+                        // factor also holds the 1.3x it was designed
+                        // at, which `fs + 6` never did — that offset
+                        // was 1.5x at 12 pt and 1.15x at 40.
+                        fontSize: t.scaled(26),
                         fontWeight: FontWeight.w700,
                         color: scheme.onSurface,
                       ),
@@ -585,6 +597,7 @@ class _Meta extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final wb = WbColors.of(context);
     final settings = context.watch<AppSettings>();
+    final t = settings.wbType;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
@@ -609,8 +622,7 @@ class _Meta extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                fontSize:
-                    (settings.fontSize - 3).clamp(11.0, 15.0).toDouble(),
+                fontSize: t.scaledSmall(15),
                 color: scheme.onSurfaceVariant,
                 fontWeight: FontWeight.w500,
               ),
@@ -661,6 +673,7 @@ class _ReferenceChip extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final wb = WbColors.of(context);
     final settings = context.watch<AppSettings>();
+    final t = settings.wbType;
     final currentVersion =
         context.select<MainProvider, String>((m) => m.currentVersion);
     return Material(
@@ -703,8 +716,7 @@ class _ReferenceChip extends StatelessWidget {
                 uiStrings['readInBible']?[locale] ?? 'Read',
                 style: TextStyle(
                   fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                  fontSize:
-                      (settings.fontSize - 3).clamp(11.0, 15.0).toDouble(),
+                  fontSize: t.scaledSmall(15),
                   fontWeight: FontWeight.w600,
                   color: scheme.primary,
                 ),
@@ -725,6 +737,7 @@ class _SourceTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final settings = context.watch<AppSettings>();
+    final t = settings.wbType;
     // No url_launcher dep yet — tap copies the citation. The user
     // can paste into a browser tab if there's a link in there.
     return Material(
@@ -751,9 +764,7 @@ class _SourceTile extends StatelessWidget {
                   text,
                   style: TextStyle(
                     fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                    fontSize: (settings.fontSize - 2)
-                        .clamp(12.0, 17.0)
-                        .toDouble(),
+                    fontSize: t.scaledSmall(17),
                     color: scheme.onSurface,
                     height: 1.4,
                   ),

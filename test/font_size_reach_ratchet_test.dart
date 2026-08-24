@@ -63,10 +63,8 @@ void main() {
     // real, it just is not a defect.
     'models/app_style_preset.dart': 9,
     'pages/bible_trivia_page.dart': 9,
-    'pages/evidence_page.dart': 5,
     'widgets/book_chapter_picker.dart': 2,
     'widgets/version_picker_sheet.dart': 2,
-    'pages/evidence_detail_page.dart': 1,
     'pages/profile_edit_page.dart': 1,
   };
 
@@ -155,6 +153,34 @@ void main() {
     'pages/strongs_entry_page.dart',
     'widgets/note_reference_picker_sheet.dart',
     'widgets/verse_popup_sheet.dart',
+    // 2026-08-25 (#315, EIGHTH pass). The Bible Evidence resource, and
+    // the pass that withdraws the claim written four lines above: that
+    // `sermon_detail_page.dart` carried "the only outright inversion in
+    // the app". That was measured with the LITERAL detector, so it only
+    // ever looked at one of the two shapes that can invert.
+    //
+    // `evidence_detail_page.dart` set the artefact's own name to
+    // `(fs + 6).clamp(20.0, 32.0)` above a summary, description and
+    // correlation of a bare `fs`. It is the CORRECT shape — wired to
+    // the setting, travelling for most of the slider — and it saturates
+    // at 26 pt, after which the body walks past it: equal at 32 pt,
+    // inverted at 33, and 0.80x by 40. Nine of the slider's 29 stops
+    // render the name of the artefact at or below the paragraph
+    // describing it. A ceiling and a literal are not two severities of
+    // one bug; both freeze, and either can reverse rank.
+    //
+    // `evidence_page.dart` carried a second inversion with no clamp of
+    // its own on the losing side. Its `ConfidenceBadge` was repaired in
+    // an earlier pass of this ticket and now runs to 32 px, while the
+    // card title beside it stayed frozen at 18 — so at 40 pt the word
+    // "Definitive" was DOUBLE the size of the artefact it described. A
+    // repair can invert a neighbour it never touched, which no
+    // per-file count here can see.
+    //
+    // Both are measured in `evidence_font_size_behaviour_test.dart`,
+    // which fails on five assertions against the commit before this one.
+    'pages/evidence_detail_page.dart',
+    'pages/evidence_page.dart',
   ];
 
   // 2026-08-24 (#315, SEVENTH mechanism, and a hole in this very test).
@@ -535,10 +561,13 @@ void main() {
     /// `loading_page.dart` dropped one. The two that emptied were the
     /// widest-saturating of the set — `.clamp(12, 15)` answered 26 of
     /// the slider's 29 stops with the same number.
+    ///
+    /// 2026-08-25: the two evidence pages left, taking 11 of the
+    /// remaining ceilings — the largest entry left on this list, and
+    /// the pass that showed a ceiling can INVERT and not merely freeze.
+    /// See the note beside them in `finished` above.
     const known = <String, int>{
       'pages/bible_trivia_page.dart': 5,
-      'pages/evidence_detail_page.dart': 3,
-      'pages/evidence_page.dart': 8,
       'pages/highlights_page.dart': 1,
       'pages/library_page.dart': 2,
       'pages/loading_page.dart': 3,

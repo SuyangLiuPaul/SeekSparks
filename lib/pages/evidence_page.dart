@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show LogicalKeyboardKey;
 import 'package:seeksparks/utils/app_nav.dart';
@@ -183,6 +185,7 @@ class _EvidencePageState extends State<EvidencePage> {
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<AppSettings>();
+    final t = settings.wbType;
     final scheme = Theme.of(context).colorScheme;
     final locale = settings.locale;
     // `filterBook` arrives as the canonical ENGLISH book name, because
@@ -330,10 +333,7 @@ class _EvidencePageState extends State<EvidencePage> {
                                 .replaceAll(
                                     '{n}', filtered.length.toString()),
                             style: TextStyle(
-                              fontSize:
-                                  (settings.fontSize - 3)
-                                      .clamp(11.0, 14.0)
-                                      .toDouble(),
+                              fontSize: t.scaledSmall(14),
                               color: scheme.onSurfaceVariant,
                             ),
                           ),
@@ -373,7 +373,25 @@ class _EvidencePageState extends State<EvidencePage> {
                             // been overflowing the column unboundedly — see
                             // the card). 240 leaves headroom for larger font
                             // scales and taller CJK text without overflow.
-                            mainAxisExtent: 240,
+                            //
+                            // 2026-08-25 (#315): the headroom was fictional.
+                            // It held because all three text sizes in the
+                            // card were clamped and stopped growing at the
+                            // default, so "larger font scales" never
+                            // actually arrived here. Unclamping them makes
+                            // the tile's own 240 the frozen number, so the
+                            // 140 px the text block gets moves with the
+                            // reader while the 100 px hero does not.
+                            // Evaluates to exactly 240 at the default.
+                            //
+                            // The `max` is not belt-and-braces: below the
+                            // default the card's three sizes stop shrinking
+                            // at `WbMetrics.smallPrintFloor`, so the text
+                            // block has a hard minimum height that a
+                            // proportional extent would undercut. Measured
+                            // at 12 pt: ten columns overflowed until the
+                            // tile was allowed to keep its 240.
+                            mainAxisExtent: 100 + math.max(140, t.scaled(140)),
                           ),
                           itemCount: filtered.length,
                           itemBuilder: (_, i) => _EvidenceCard(
@@ -471,6 +489,7 @@ class _EvidenceCard extends StatelessWidget {
     context.select<AppSettings, (String, double)>(
         (s) => (s.fontFamily, s.fontSize));
     final settings = context.read<AppSettings>();
+    final t = settings.wbType;
     // Scoped select (not watch) for the same perf reason as above: only
     // a Bible-version change should re-render these reference labels.
     final currentVersion =
@@ -575,9 +594,13 @@ class _EvidenceCard extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                              fontSize: (settings.fontSize - 1)
-                                  .clamp(13.0, 18.0)
-                                  .toDouble(),
+                              // `scaledSmall`, not `scaled`: at 12 pt a
+                              // plain 18 × 0.6 is 10.8, which puts the
+                              // card's own heading UNDER the floor its
+                              // summary is held at — the same inversion
+                              // this pass exists to remove, arriving from
+                              // the other end of the slider.
+                              fontSize: t.scaledSmall(18),
                               fontWeight: FontWeight.w700,
                               color: scheme.onSurface,
                             ),
@@ -598,9 +621,7 @@ class _EvidenceCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                        fontSize: (settings.fontSize - 3)
-                            .clamp(11.0, 15.0)
-                            .toDouble(),
+                        fontSize: t.scaledSmall(15),
                         color: scheme.onSurfaceVariant,
                         height: 1.3,
                       ),
@@ -640,9 +661,7 @@ class _EvidenceCard extends StatelessWidget {
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
                                   fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                                  fontSize: (settings.fontSize - 4)
-                                      .clamp(11.0, 14.0)
-                                      .toDouble(),
+                                  fontSize: t.scaledSmall(14),
                                   fontWeight: FontWeight.w700,
                                   color: scheme.primary,
                                   decoration: TextDecoration.underline,
@@ -769,6 +788,7 @@ class _Chip extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final settings = context.watch<AppSettings>();
+    final t = settings.wbType;
     final accent = outlineColor ?? scheme.primary;
     return Padding(
       padding: const EdgeInsets.only(right: 8, top: 4, bottom: 4),
@@ -782,8 +802,7 @@ class _Chip extends StatelessWidget {
             width: selected ? 1.4 : 1),
         labelStyle: TextStyle(
           fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-          fontSize:
-              (settings.fontSize - 2).clamp(12.0, 16.0).toDouble(),
+          fontSize: t.scaledSmall(16),
           fontWeight: FontWeight.w600,
           color: selected ? accent : scheme.onSurfaceVariant,
         ),
@@ -1010,6 +1029,7 @@ class _AiSearchDialogState extends State<_AiSearchDialog> {
     final scheme = Theme.of(context).colorScheme;
     final wb = WbColors.of(context);
     final settings = context.watch<AppSettings>();
+    final t = settings.wbType;
     final locale = widget.locale;
 
     return AlertDialog(
@@ -1105,9 +1125,7 @@ class _AiSearchDialogState extends State<_AiSearchDialog> {
                             _notice!,
                             style: TextStyle(
                               fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                              fontSize: (settings.fontSize - 2)
-                                  .clamp(11.0, 14.0)
-                                  .toDouble(),
+                              fontSize: t.scaledSmall(14),
                               color: scheme.onSurfaceVariant,
                             ),
                           ),
@@ -1129,7 +1147,7 @@ class _AiSearchDialogState extends State<_AiSearchDialog> {
                             uiStrings['aiOpenByokSettings']
                                     ?[widget.locale] ??
                                 'Set up your own Gemini API key',
-                            style: const TextStyle(fontSize: 12),
+                            style: TextStyle(fontSize: t.scaledSmall(12)),
                           ),
                           onPressed: () {
                             pushPage(const SettingsPage(
@@ -1153,8 +1171,7 @@ class _AiSearchDialogState extends State<_AiSearchDialog> {
                     'Keyword matches',
                 style: TextStyle(
                   fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                  fontSize:
-                      (settings.fontSize - 2).clamp(11.0, 14.0).toDouble(),
+                  fontSize: t.scaledSmall(14),
                   fontWeight: FontWeight.w700,
                   color: scheme.onSurfaceVariant,
                 ),
@@ -1195,8 +1212,7 @@ class _AiSearchDialogState extends State<_AiSearchDialog> {
                   uiStrings['citations']?[locale] ?? 'Citations',
                   style: TextStyle(
                     fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                    fontSize:
-                        (settings.fontSize - 2).clamp(11.0, 14.0).toDouble(),
+                    fontSize: t.scaledSmall(14),
                     fontWeight: FontWeight.w700,
                     color: scheme.onSurfaceVariant,
                   ),
@@ -1265,8 +1281,12 @@ class _LocalMatchTile extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final wb = WbColors.of(context);
     // PERF: scoped select — see _EvidenceCard for the rationale.
-    context.select<AppSettings, String>((s) => s.fontFamily);
+    // `fontSize` joined it on 2026-08-25 (#315): the reference line below
+    // was a literal 12 and genuinely did not depend on the setting.
+    context.select<AppSettings, (String, double)>(
+        (s) => (s.fontFamily, s.fontSize));
     final settings = context.read<AppSettings>();
+    final t = settings.wbType;
     final currentVersion =
         context.select<MainProvider, String>((m) => m.currentVersion);
     // 2026-05-22 (v1.2.78): replaced the 18-px emoji thumbnail with
@@ -1346,7 +1366,7 @@ class _LocalMatchTile extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                        fontSize: 12,
+                        fontSize: t.scaledSmall(12),
                         color: scheme.primary,
                       ),
                     ),
@@ -1376,6 +1396,7 @@ class _CitationTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final wb = WbColors.of(context);
+    final t = WbType.of(context);
     final currentVersion =
         context.select<MainProvider, String>((m) => m.currentVersion);
     return InkWell(
@@ -1406,7 +1427,7 @@ class _CitationTile extends StatelessWidget {
                       localizedReferenceLabel(
                           citation.scriptureReference, locale, currentVersion),
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: t.scaledSmall(12),
                         color: scheme.primary,
                       ),
                     ),
@@ -1457,6 +1478,7 @@ class _ScopeBanner extends StatelessWidget {
     // meaning anyway.
     final tone = wasFallback ? wb.paneAltBg : wb.chromeBg;
     final onTone = wb.text;
+    final t = WbType.of(context);
 
     String fmt(String key, String fallback) {
       final raw = uiStrings[key]?[locale] ?? fallback;
@@ -1507,7 +1529,7 @@ class _ScopeBanner extends StatelessWidget {
           Expanded(
             child: Text(
               headline,
-              style: TextStyle(fontSize: 13, color: onTone),
+              style: TextStyle(fontSize: t.scaledSmall(13), color: onTone),
             ),
           ),
           const SizedBox(width: 8),
@@ -1520,7 +1542,7 @@ class _ScopeBanner extends StatelessWidget {
             ),
             child: Text(
               widenLabel,
-              style: const TextStyle(fontSize: 13),
+              style: TextStyle(fontSize: t.scaledSmall(13)),
             ),
           ),
         ],
