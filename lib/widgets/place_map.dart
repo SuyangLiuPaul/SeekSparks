@@ -1122,7 +1122,7 @@ class _MapPainter extends CustomPainter {
   void _routeMarkers(Canvas canvas, Size size) {
     for (var i = 0; i < routes.length; i++) {
       final r = routes[i];
-      final style = journeyStyleFor(colors, r.journey.style);
+      final style = journeyStyleFor(colors, r.journey.style, r.journey.mark);
       final faded =
           selectedRouteId != null && r.id != selectedRouteId ? 0.5 : 1.0;
       final ordinals = r.ordinalsByMarker;
@@ -1131,8 +1131,12 @@ class _MapPainter extends CustomPainter {
         final o = projection.project(m.place.lat!, m.place.lon!);
         if (_offPane(o, size)) continue;
 
-        canvas.drawCircle(o, 4.8,
-            Paint()..color = colors.paneBg.withValues(alpha: 0.9 * faded));
+        // The halo takes the mark's own silhouette too. A round halo
+        // under a diamond leaves four pale ears sticking out past its
+        // points, which at this size reads as a second, blurrier marker.
+        paintJourneyMark(canvas, o, 4.8,
+            Paint()..color = colors.paneBg.withValues(alpha: 0.9 * faded),
+            style.mark);
 
         // A place the travellers never reached is drawn HOLLOW and takes
         // no badge. Both halves matter: the ring says "not a stop" at the
@@ -1142,19 +1146,21 @@ class _MapPainter extends CustomPainter {
         // put it in. The label layer still names it, which is the whole
         // reason it is on the map.
         if (m.isAside) {
-          canvas.drawCircle(
+          paintJourneyMark(
+            canvas,
             o,
             3.4,
             Paint()
               ..style = PaintingStyle.stroke
               ..strokeWidth = 1.4
               ..color = style.colour.withValues(alpha: faded),
+            style.mark,
           );
           continue;
         }
 
-        canvas.drawCircle(
-            o, 3.2, Paint()..color = style.colour.withValues(alpha: faded));
+        paintJourneyMark(canvas, o, 3.2,
+            Paint()..color = style.colour.withValues(alpha: faded), style.mark);
 
         final tp = TextPainter(
           text: TextSpan(

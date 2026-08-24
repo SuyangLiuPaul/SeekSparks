@@ -8500,14 +8500,21 @@ const uiStrings = {
         'It is not the road they took — scripture names the stops, not '
         'the route between them.',
   },
+  // The short dash covers two cases — the text refuses the manner, or it
+  // routes them through a place the gazetteer cannot locate — so it is
+  // worded for what it tells the reader, not for either cause.
   'journeysKey': {
-    'zh-Hans': '实线：陆路。长虚线：水路。短虚线：经文未说明方式。点线：经文没有记他们到过此地。'
-        '空心圈：经文提到这地方，但他们并没有到（如非尼基港、赛耳底沙洲）。',
-    'zh-Hant': '實線：陸路。長虛線：水路。短虛線：經文未說明方式。點線：經文沒有記他們到過此地。'
-        '空心圈：經文提到這地方，但他們並沒有到（如非尼基港、賽耳底沙洲）。',
-    'en': 'Solid: by land. Long dash: by sea. Short dash: the text does '
-        'not say. Dots: the text does not put them here. Hollow ring: '
-        'named by the narrative but never reached — no line joins it.',
+    'zh-Hans': '实线：陆路。长虚线：水路。短虚线：只记到达，未记路径。点线：经文没有记他们到过此地。'
+        '空心圈：经文提到这地方，但他们并没有到（如非尼基港、赛耳底沙洲）。'
+        '标记的形状表示这条行程出自哪一卷书。',
+    'zh-Hant': '實線：陸路。長虛線：水路。短虛線：只記到達，未記路徑。點線：經文沒有記他們到過此地。'
+        '空心圈：經文提到這地方，但他們並沒有到（如非尼基港、賽耳底沙洲）。'
+        '標記的形狀表示這條行程出自哪一卷書。',
+    'en': 'Solid: by land. Long dash: by sea. Short dash: the arrival is '
+        'named, the way is not. Dots: the text does not put them here. '
+        'Hollow ring: named by the narrative but never reached — no line '
+        'joins it. The shape of a stop marks which book the itinerary is '
+        'read out of.',
   },
   'journeyShowTip': {
     'zh-Hans': '在地图上画出这条路线',
@@ -8566,9 +8573,9 @@ const uiStrings = {
     'en': 'by sea',
   },
   'journeyLegUnknown': {
-    'zh-Hans': '经文未说明方式',
-    'zh-Hant': '經文未說明方式',
-    'en': 'manner not given',
+    'zh-Hans': '经文未说明路径',
+    'zh-Hant': '經文未說明路徑',
+    'en': 'the way is not given',
   },
   'journeyLegHeader': {
     'zh-Hans': '所选路段',

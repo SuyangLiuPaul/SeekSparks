@@ -5,6 +5,7 @@
   {
    "id": "paul-1",
    "style": 0,
+   "mark": "round",
    "name": {
     "en": "Paul's first journey",
     "zh-Hans": "保罗第一次宣教旅程",
@@ -166,6 +167,7 @@
   {
    "id": "paul-2",
    "style": 1,
+   "mark": "round",
    "name": {
     "en": "Paul's second journey",
     "zh-Hans": "保罗第二次宣教旅程",
@@ -357,6 +359,7 @@
   {
    "id": "paul-3",
    "style": 2,
+   "mark": "round",
    "name": {
     "en": "Paul's third journey",
     "zh-Hans": "保罗第三次宣教旅程",
@@ -615,6 +618,7 @@
   {
    "id": "paul-rome",
    "style": 3,
+   "mark": "round",
    "name": {
     "en": "The voyage to Rome",
     "zh-Hans": "保罗押解往罗马的航程",
@@ -823,6 +827,7 @@
   {
    "id": "exodus-wilderness",
    "style": 4,
+   "mark": "square",
    "name": {
     "en": "Israel's wilderness itinerary",
     "zh-Hans": "以色列出埃及与旷野行程",
@@ -1202,6 +1207,182 @@
       "zh-Hans": "第48节说末站是耶利哥对面、约旦河边的摩押平原，第49节点出这营地的两端——伯耶施末与亚伯什亭。此处标记取后者；实际的营地是两端之间的一带，并非一个点。",
       "zh-Hant": "第48節說末站是耶利哥對面、約旦河邊的摩押平原，第49節點出這營地的兩端——伯耶施末與亞伯什亭。此處標記取後者；實際的營地是兩端之間的一帶，並非一個點。"
      }
+    }
+   ]
+  },
+  {
+   "id": "jesus-mark",
+   "style": 0,
+   "mark": "diamond",
+   "name": {
+    "en": "Jesus' travels, as Mark tells them",
+    "zh-Hans": "主耶稣的行程（马可福音）",
+    "zh-Hant": "主耶穌的行程（馬可福音）"
+   },
+   "range": {
+    "en": "Mark 1:9 – 11:11",
+    "zh-Hans": "马可福音 1:9 – 11:11",
+    "zh-Hant": "馬可福音 1:9 – 11:11"
+   },
+   "basis": {
+    "en": "The stops and their order are Mark's own sequence, read out of one Gospel rather than harmonised across four: where Matthew or Luke place an episode differently, this route follows Mark. Every stop cites the verse that puts it there. The route ends at 11:11, where Mark's travelling ends; what follows happens within Jerusalem, and the gazetteer gives Gethsemane and Golgotha Jerusalem's own coordinate, so the last week cannot be drawn as a route. Several places Mark names are left off for the same reason: the point the gazetteer holds for Judea is Jerusalem's, for the Decapolis is Damascus's, for Galilee is Nazareth's, for Dalmanutha is Magadan's, and the Jordan has one point for the whole river. Drawing them would put Jesus where the text does not, so the legs that pass through them are dashed instead. No Gerasa, Gadara or Gergesa is in the gazetteer, so the crossing of 5:1 is not drawn either.",
+    "zh-Hans": "站点及其次序全按马可福音一卷的记述，不与其余三卷福音书调和：马太或路加另有安排之处，本路线仍从马可。每一站都注明出处经文。路线止于11:11，马可所记的行程到此为止；其后各事都发生在耶路撒冷城内，而地名录给客西马尼和各各他的坐标就是耶路撒冷本身，故受难一周无法作为路线绘出。马可提到的另几处地方也因同一缘故略去：地名录给「犹太」的坐标是耶路撒冷的，给「低加波利」的是大马士革的，给「加利利」的是拿撒勒的，给「大玛努他」的是「马加丹」的，而「约旦河」全河只有一个点。若照画，就把主耶稣放在经文没有放他的地方，所以经过这些地方的路段改用短虚线。地名录中没有格拉森、加大拉或格革森，故5:1的渡湖也未绘出。",
+    "zh-Hant": "站點及其次序全按馬可福音一卷的記述，不與其餘三卷福音書調和：馬太或路加另有安排之處，本路線仍從馬可。每一站都註明出處經文。路線止於11:11，馬可所記的行程到此為止；其後各事都發生在耶路撒冷城內，而地名錄給客西馬尼和各各他的座標就是耶路撒冷本身，故受難一週無法作為路線繪出。馬可提到的另幾處地方也因同一緣故略去：地名錄給「猶太」的座標是耶路撒冷的，給「低加波利」的是大馬士革的，給「加利利」的是拿撒勒的，給「大瑪努他」的是「馬加丹」的，而「約旦河」全河只有一個點。若照畫，就把主耶穌放在經文沒有放他的地方，所以經過這些地方的路段改用短虛線。地名錄中沒有格拉森、加大拉或格革森，故5:1的渡湖也未繪出。"
+   },
+   "stops": [
+    {
+     "place": "Nazareth",
+     "book": "Mark",
+     "chapter": 1,
+     "verse": 9,
+     "leg": "start",
+     "note": {
+      "en": "Mark opens with Jesus coming from Nazareth to be baptized by John in the Jordan. The Jordan itself is not drawn: the gazetteer holds a single point for the whole river, in the valley near Beth-shean, far north of where 1:5 puts John.",
+      "zh-Hans": "马可福音开篇记主耶稣从拿撒勒来，在约旦河受约翰的洗。约旦河本身未绘出：地名录给全河只有一个点，位于伯善附近的河谷，远在1:5所记约翰施洗之处以北。",
+      "zh-Hant": "馬可福音開篇記主耶穌從拿撒勒來，在約旦河受約翰的洗。約旦河本身未繪出：地名錄給全河只有一個點，位於伯善附近的河谷，遠在1:5所記約翰施洗之處以北。"
+     }
+    },
+    {
+     "place": "Capernaum",
+     "book": "Mark",
+     "chapter": 1,
+     "verse": 21,
+     "leg": "unknown",
+     "note": {
+      "en": "Between Nazareth and Capernaum Mark sets the baptism (1:9), the forty days in the wilderness (1:12) and the return to Galilee (1:14). None can be placed — the wilderness is unlocated, and the gazetteer gives Galilee Nazareth's own point — so the leg is dashed rather than drawn as a walk.",
+      "zh-Hans": "拿撒勒与迦百农之间，马可记了受洗（1:9）、旷野四十天（1:12）与回加利利（1:14）。这三处都无法定位——旷野本无坐标，而地名录给「加利利」的坐标就是拿撒勒的——故此段用短虚线，不作陆行实线。",
+      "zh-Hant": "拿撒勒與迦百農之間，馬可記了受洗（1:9）、曠野四十天（1:12）與回加利利（1:14）。這三處都無法定位——曠野本無座標，而地名錄給「加利利」的座標就是拿撒勒的——故此段用短虛線，不作陸行實線。"
+     }
+    },
+    {
+     "place": "Nazareth",
+     "book": "Mark",
+     "chapter": 6,
+     "verse": 1,
+     "leg": "unknown",
+     "note": {
+      "en": "'His hometown'. Mark names it only at 1:9 and 1:24. Between this stop and the last he narrates the crossing to the country of the Gerasenes (5:1) and back (5:21); no Gerasa, Gadara or Gergesa is in the gazetteer — and the three are themselves a textual variant, the shipped KJV reading 'Gadarenes' — so that crossing is not drawn.",
+      "zh-Hans": "「他的家乡」。马可只在1:9与1:24点出其名。此站与上一站之间，他记了渡到格拉森人之地（5:1）又渡回来（5:21）；地名录中没有格拉森、加大拉或格革森——且这三名本身就是经文异读，本书所载的英王钦定本作「加大拉」——故该次渡湖未绘出。",
+      "zh-Hant": "「他的家鄉」。馬可只在1:9與1:24點出其名。此站與上一站之間，他記了渡到格拉森人之地（5:1）又渡回來（5:21）；地名錄中沒有格拉森、加大拉或格革森——且這三名本身就是經文異讀，本書所載的英王欽定本作「加大拉」——故該次渡湖未繪出。"
+     }
+    },
+    {
+     "place": "Gennesaret",
+     "book": "Mark",
+     "chapter": 6,
+     "verse": 53,
+     "leg": "unknown",
+     "note": {
+      "en": "They moored here after a crossing that began at a solitary place Mark does not name (6:32). 6:45 sends the disciples on ahead toward Bethsaida; Mark never says they missed it, and 8:22 has them arrive there, so no separate Bethsaida is drawn here.",
+      "zh-Hans": "他们在此靠岸；这次渡湖是从马可未指名的野地出发的（6:32）。6:45打发门徒先渡到伯赛大去；马可并没有说他们没有到，而8:22记他们到了伯赛大，故此处不另立伯赛大一站。",
+      "zh-Hant": "他們在此靠岸；這次渡湖是從馬可未指名的野地出發的（6:32）。6:45打發門徒先渡到伯賽大去；馬可並沒有說他們沒有到，而8:22記他們到了伯賽大，故此處不另立伯賽大一站。"
+     }
+    },
+    {
+     "place": "Tyre",
+     "book": "Mark",
+     "chapter": 7,
+     "verse": 24,
+     "leg": "land",
+     "note": {
+      "en": "Mark says 'the region of Tyre'; the marker is the city the region is named for, not a stated address.",
+      "zh-Hans": "马可说的是「推罗的境内」；此标记是该地区得名的那座城，并非经文指明的地点。",
+      "zh-Hant": "馬可說的是「推羅的境內」；此標記是該地區得名的那座城，並非經文指明的地點。"
+     }
+    },
+    {
+     "place": "Sidon",
+     "book": "Mark",
+     "chapter": 7,
+     "verse": 31,
+     "leg": "land",
+     "attested": false,
+     "note": {
+      "en": "A textual decision, not a settled stop. The critical text read by BSB, LEB and NASB has Jesus going 'through Sidon'; the Byzantine reading, which the King James Version shipped here prints, has him 'departing from the coasts of Tyre and Sidon' — which places him at neither. Drawn provisionally because a reader comparing this with a printed atlas needs to see where its stop comes from.",
+      "zh-Hans": "这是一个经文校勘上的判断，并非确定的站点。BSB、LEB、NASB所据的校勘本作「经过西顿」；而拜占庭文本——即本书所载英王钦定本所印的——作「从推罗西顿的境界出来」，那就并没有把他放在两地中的任何一处。此站作推定绘出，好让读者对照印本圣经地图时，看得出其站点从何而来。",
+      "zh-Hant": "這是一個經文校勘上的判斷，並非確定的站點。BSB、LEB、NASB所據的校勘本作「經過西頓」；而拜占庭文本——即本書所載英王欽定本所印的——作「從推羅西頓的境界出來」，那就並沒有把他放在兩地中的任何一處。此站作推定繪出，好讓讀者對照印本聖經地圖時，看得出其站點從何而來。"
+     }
+    },
+    {
+     "place": "Bethsaida",
+     "book": "Mark",
+     "chapter": 8,
+     "verse": 22,
+     "leg": "unknown",
+     "note": {
+      "en": "The one arrival at Bethsaida Mark narrates. Between Sidon and here he routes Jesus through the region of the Decapolis (7:31) and the district of Dalmanutha (8:10); the gazetteer gives the Decapolis Damascus's coordinate, and gives Dalmanutha the coordinate of Magadan — which is Matthew's identification, not Mark's word. Neither is drawn, so the leg is dashed.",
+      "zh-Hans": "这是马可所记唯一一次到达伯赛大。西顿与此站之间，他记主耶稣经过低加波利境内（7:31）与大玛努他境内（8:10）；地名录给「低加波利」的坐标是大马士革的，给「大玛努他」的坐标是「马加丹」的——而「马加丹」是马太的对应说法，不是马可的用词。二者皆未绘出，故此段用短虚线。",
+      "zh-Hant": "這是馬可所記唯一一次到達伯賽大。西頓與此站之間，他記主耶穌經過低加波利境內（7:31）與大瑪努他境內（8:10）；地名錄給「低加波利」的座標是大馬士革的，給「大瑪努他」的座標是「馬加丹」的——而「馬加丹」是馬太的對應說法，不是馬可的用詞。二者皆未繪出，故此段用短虛線。"
+     }
+    },
+    {
+     "place": "Caesarea Philippi",
+     "book": "Mark",
+     "chapter": 8,
+     "verse": 27,
+     "leg": "land",
+     "note": {
+      "en": "Mark says 'the villages around Caesarea Philippi'; the marker is the town they are named for.",
+      "zh-Hans": "马可说的是「该撒利亚腓立比的村庄」；此标记是这些村庄所属的那座城。",
+      "zh-Hant": "馬可說的是「該撒利亞腓立比的村莊」；此標記是這些村莊所屬的那座城。"
+     }
+    },
+    {
+     "place": "Capernaum",
+     "book": "Mark",
+     "chapter": 9,
+     "verse": 33,
+     "leg": "land"
+    },
+    {
+     "place": "Jericho",
+     "book": "Mark",
+     "chapter": 10,
+     "verse": 46,
+     "leg": "unknown",
+     "note": {
+      "en": "Between Capernaum and Jericho, 10:1 takes Jesus into 'the region of Judea, beyond the Jordan' — the east bank. The gazetteer gives Judea Jerusalem's own coordinate, so that stage cannot be drawn, and the leg is dashed rather than run straight down the west side of the valley.",
+      "zh-Hans": "迦百农与耶利哥之间，10:1记主耶稣来到「犹太的境界并约旦河外」，即河东一带。地名录给「犹太」的坐标就是耶路撒冷的，故这一程无法绘出；此段改用短虚线，不沿约旦河谷西岸直下。",
+      "zh-Hant": "迦百農與耶利哥之間，10:1記主耶穌來到「猶太的境界並約旦河外」，即河東一帶。地名錄給「猶太」的座標就是耶路撒冷的，故這一程無法繪出；此段改用短虛線，不沿約旦河谷西岸直下。"
+     }
+    },
+    {
+     "place": "Bethphage",
+     "book": "Mark",
+     "chapter": 11,
+     "verse": 1,
+     "leg": "land"
+    },
+    {
+     "place": "Bethany 1",
+     "book": "Mark",
+     "chapter": 11,
+     "verse": 1,
+     "leg": "land",
+     "note": {
+      "en": "The gazetteer holds two Bethanys and gives them identical reference lists, so it cannot tell them apart on its own. This is the one by the Mount of Olives, which is where 11:1 puts it. Mark's own word order is kept — Bethphage, then Bethany — rather than reordering the two to the line of the road.",
+      "zh-Hans": "地名录中有两个伯大尼，而且所列经文出处完全相同，本身无从分辨。此处取橄榄山旁的那一个，即11:1所指的。次序按马可原文——先伯法其，后伯大尼——不照道路走向重排。",
+      "zh-Hant": "地名錄中有兩個伯大尼，而且所列經文出處完全相同，本身無從分辨。此處取橄欖山旁的那一個，即11:1所指的。次序按馬可原文——先伯法其，後伯大尼——不照道路走向重排。"
+     }
+    },
+    {
+     "place": "Jerusalem",
+     "book": "Mark",
+     "chapter": 11,
+     "verse": 11,
+     "leg": "land",
+     "note": {
+      "en": "He entered the temple courts, looked round at everything, and went back out to Bethany. Mark's travelling ends here: what follows happens within the city, where the gazetteer gives Gethsemane and Golgotha Jerusalem's own coordinate and could not draw them apart from it.",
+      "zh-Hans": "他进了圣殿，周围看了各样物件，就出城往伯大尼去。马可所记的行程到此为止：其后各事都发生在城内，而地名录给客西马尼和各各他的坐标就是耶路撒冷本身，无法与之分开绘出。",
+      "zh-Hant": "他進了聖殿，周圍看了各樣物件，就出城往伯大尼去。馬可所記的行程到此為止：其後各事都發生在城內，而地名錄給客西馬尼和各各他的座標就是耶路撒冷本身，無法與之分開繪出。"
+     }
+    },
+    {
+     "place": "Bethany 1",
+     "book": "Mark",
+     "chapter": 11,
+     "verse": 11,
+     "leg": "land"
     }
    ]
   }

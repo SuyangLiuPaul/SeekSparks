@@ -262,8 +262,7 @@ class _AtlasPageState extends State<AtlasPage> {
   /// A new question re-frames the map; a new answer to the same question
   /// does not. Typing, scoping and dropping the subject chip all change
   /// the question.
-  void _questionChanged(VoidCallback change,
-          {List<(double, double)>? fitTo}) =>
+  void _questionChanged(VoidCallback change, {List<(double, double)>? fitTo}) =>
       setState(() {
         change();
         // Always assigned, never merely set: a stale route framing left
@@ -379,9 +378,8 @@ class _AtlasPageState extends State<AtlasPage> {
       context: context,
       locale: locale,
       version: version,
-      activeSpec: (books == null || books.isEmpty)
-          ? null
-          : limitSpecForBooks(books),
+      activeSpec:
+          (books == null || books.isEmpty) ? null : limitSpecForBooks(books),
       activeFallbackLabel: null,
     );
     // Null is a cancel; an EMPTY set is a real answer meaning "no
@@ -391,10 +389,12 @@ class _AtlasPageState extends State<AtlasPage> {
   }
 
   Future<void> _jump(BuildContext context, PlaceRef ref) async {
-    final parsed = parseReference('${ref.englishBook} ${ref.chapter}:${ref.verse}');
+    final parsed =
+        parseReference('${ref.englishBook} ${ref.chapter}:${ref.verse}');
     if (parsed == null) return;
     final mp = context.read<MainProvider>();
-    final result = await jumper.resolveAndPrepareJump(reference: parsed, mp: mp);
+    final result =
+        await jumper.resolveAndPrepareJump(reference: parsed, mp: mp);
     if (!context.mounted) return;
     final ok = await jumper.showJumpResultSnackBar(context, result);
     if (!ok || !context.mounted) return;
@@ -551,8 +551,8 @@ class _AtlasPageState extends State<AtlasPage> {
                   selectedRouteId: _readingRouteId,
                   fitPoints: _fitPoints,
                   selectedLeg: _selectedLeg,
-                  onSelectLeg: (leg) => _selectLeg(
-                      leg, context, locale, script, box.maxWidth),
+                  onSelectLeg: (leg) =>
+                      _selectLeg(leg, context, locale, script, box.maxWidth),
                   onSelect: (id) {
                     setState(() {
                       _selectedId = id;
@@ -584,8 +584,7 @@ class _AtlasPageState extends State<AtlasPage> {
                       SizedBox(
                         // Enough to be a map and not so much that the
                         // index below it becomes a peep-hole.
-                        height:
-                            (box.maxHeight * 0.42).clamp(180.0, 340.0),
+                        height: (box.maxHeight * 0.42).clamp(180.0, 340.0),
                         child: map,
                       ),
                       Divider(height: WbMetrics.hairline, color: c.border),
@@ -626,8 +625,8 @@ class _AtlasPageState extends State<AtlasPage> {
                             scopeLabel: _scopeLabelFor(locale, version),
                             onClearScope: _scopeBooks == null
                                 ? null
-                                : () => _questionChanged(
-                                    () => _scopeBooks = null),
+                                : () =>
+                                    _questionChanged(() => _scopeBooks = null),
                             onJump: (ref) => _jump(context, ref),
                           );
 
@@ -637,8 +636,7 @@ class _AtlasPageState extends State<AtlasPage> {
                 return Row(
                   children: [
                     SizedBox(width: _indexPanelWidth, child: index),
-                    VerticalDivider(
-                        width: WbMetrics.hairline, color: c.border),
+                    VerticalDivider(width: WbMetrics.hairline, color: c.border),
                     Expanded(child: map),
                     if (showDetailColumn) ...[
                       VerticalDivider(
@@ -686,44 +684,55 @@ class _AtlasPageState extends State<AtlasPage> {
     required double width,
   }) {
     final t = WbType.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(8, 8, 8, 6),
-          child: _searchField(c, t, locale),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(8, 0, 8, 6),
-          child: _controls(context, c, t, locale, version),
-        ),
-        if (_subjectIds != null && widget.subjectLabel != null)
+    // The journeys block is the one child here that grows with the DATA:
+    // every route added to the asset costs it another row, and it is not
+    // the flexible child, so on a short pane it ate the place list and
+    // then overflowed. Six routes is where that first showed. Capping it
+    // against the pane's own height means route seven costs nothing.
+    return LayoutBuilder(
+      builder: (context, box) => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(8, 8, 8, 6),
+            child: _searchField(c, t, locale),
+          ),
           Padding(
             padding: const EdgeInsets.fromLTRB(8, 0, 8, 6),
-            child: _subjectChip(c, t, locale),
+            child: _controls(context, c, t, locale, version),
           ),
-        if (_journeys.isNotEmpty)
-          _journeysBlock(context, c, t, locale, script, width: width),
-        _countHeader(c, t, locale, results.length, total),
-        Divider(height: WbMetrics.hairline, color: c.border),
-        Expanded(
-          child: results.isEmpty
-              ? _empty(c, t, locale)
-              : ListView.builder(
-                  padding: const EdgeInsets.symmetric(vertical: 2),
-                  itemCount: results.length,
-                  itemBuilder: (context, i) => _row(
-                    context,
-                    c,
-                    t,
-                    locale,
-                    script,
-                    results[i],
-                    width: width,
+          if (_subjectIds != null && widget.subjectLabel != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 0, 8, 6),
+              child: _subjectChip(c, t, locale),
+            ),
+          if (_journeys.isNotEmpty)
+            _journeysBlock(context, c, t, locale, script,
+                width: width,
+                maxHeight: box.hasBoundedHeight
+                    ? box.maxHeight * 0.42
+                    : double.infinity),
+          _countHeader(c, t, locale, results.length, total),
+          Divider(height: WbMetrics.hairline, color: c.border),
+          Expanded(
+            child: results.isEmpty
+                ? _empty(c, t, locale)
+                : ListView.builder(
+                    padding: const EdgeInsets.symmetric(vertical: 2),
+                    itemCount: results.length,
+                    itemBuilder: (context, i) => _row(
+                      context,
+                      c,
+                      t,
+                      locale,
+                      script,
+                      results[i],
+                      width: width,
+                    ),
                   ),
-                ),
-        ),
-      ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -757,7 +766,8 @@ class _AtlasPageState extends State<AtlasPage> {
                     _questionChanged(() => _query = '');
                   },
                 ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.zero,
             borderSide: BorderSide(color: c.border, width: WbMetrics.hairline),
@@ -843,8 +853,7 @@ class _AtlasPageState extends State<AtlasPage> {
               children: [
                 if (icon != null) ...[
                   Icon(icon,
-                      size: t.chrome + 1,
-                      color: active ? c.text : c.mutedText),
+                      size: t.chrome + 1, color: active ? c.text : c.mutedText),
                   const SizedBox(width: 4),
                 ],
                 Flexible(
@@ -915,42 +924,47 @@ class _AtlasPageState extends State<AtlasPage> {
     String locale,
     BookScript script, {
     required double width,
+    required double maxHeight,
   }) {
     final anyOn = _onRoutes.isNotEmpty;
     return Container(
+      key: const Key('atlas-journeys-block'),
       width: double.infinity,
+      constraints: BoxConstraints(maxHeight: maxHeight),
       decoration: BoxDecoration(
         border: Border(
           top: BorderSide(color: c.border, width: WbMetrics.hairline),
         ),
       ),
       padding: const EdgeInsets.fromLTRB(8, 4, 8, 5),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            _s('journeysHeader', 'Journeys', locale),
-            style: TextStyle(
-              fontSize: t.chrome,
-              fontWeight: FontWeight.w700,
-              color: c.mutedText,
-              fontFamilyFallback: kCjkFontFallback,
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              _s('journeysHeader', 'Journeys', locale),
+              style: TextStyle(
+                fontSize: t.chrome,
+                fontWeight: FontWeight.w700,
+                color: c.mutedText,
+                fontFamilyFallback: kCjkFontFallback,
+              ),
             ),
-          ),
-          const SizedBox(height: 2),
-          for (final j in _journeys)
-            _journeyRow(context, c, t, locale, script, j, width: width),
-          if (anyOn) ...[
-            const SizedBox(height: 4),
-            // The caution is printed whenever a line is on screen, not
-            // tucked inside the itinerary panel: the drawing is what
-            // overclaims, so the correction belongs beside the switch
-            // that produced it.
-            _fineprint(c, t, _s('journeysCaution', '', locale)),
-            const SizedBox(height: 3),
-            _fineprint(c, t, _s('journeysKey', '', locale)),
+            const SizedBox(height: 2),
+            for (final j in _journeys)
+              _journeyRow(context, c, t, locale, script, j, width: width),
+            if (anyOn) ...[
+              const SizedBox(height: 4),
+              // The caution is printed whenever a line is on screen, not
+              // tucked inside the itinerary panel: the drawing is what
+              // overclaims, so the correction belongs beside the switch
+              // that produced it.
+              _fineprint(c, t, _s('journeysCaution', '', locale)),
+              const SizedBox(height: 3),
+              _fineprint(c, t, _s('journeysKey', '', locale)),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
@@ -976,7 +990,7 @@ class _AtlasPageState extends State<AtlasPage> {
   }) {
     final on = _onRoutes.contains(j.id);
     final reading = _readingRouteId == j.id && _detailIsJourney;
-    final style = journeyStyleFor(c, j.journey.style);
+    final style = journeyStyleFor(c, j.journey.style, j.journey.mark);
     final subtitle = <String>[
       j.journey.localizedRange(locale),
       _s('journeyStops', '{n} stops', locale)
@@ -1017,11 +1031,7 @@ class _AtlasPageState extends State<AtlasPage> {
             ),
             Padding(
               padding: const EdgeInsets.only(top: 6, right: 5),
-              child: Container(
-                width: 14,
-                height: 3,
-                color: on ? style.colour : c.border,
-              ),
+              child: JourneySwatch(style: style, lit: on),
             ),
             Expanded(
               child: Column(
@@ -1245,8 +1255,7 @@ class _DetailPanel extends StatelessWidget {
   final void Function(PlaceRef) onJump;
   final ScrollController? scrollController;
 
-  String _s(String key, String fallback) =>
-      uiStrings[key]?[locale] ?? fallback;
+  String _s(String key, String fallback) => uiStrings[key]?[locale] ?? fallback;
 
   @override
   Widget build(BuildContext context) {
@@ -1306,8 +1315,8 @@ class _DetailPanel extends StatelessWidget {
             color: c.chromeBg,
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
             child: Text(
-              _s('atlasRefsHeader', '{n} references')
-                  .replaceAll('{n}', scopedCountLabel(inScope, place.refs.length)),
+              _s('atlasRefsHeader', '{n} references').replaceAll(
+                  '{n}', scopedCountLabel(inScope, place.refs.length)),
               style: TextStyle(
                 fontSize: t.chrome,
                 fontWeight: FontWeight.w700,
@@ -1403,8 +1412,7 @@ class _DetailPanel extends StatelessWidget {
     final found = placeIllustrations(place, all, scopeBooks: scopeBooks);
     if (found.total == 0) return const SizedBox.shrink();
     final title = _s('atlasIllusHeader', '{n} illustrations naming it')
-        .replaceAll(
-            '{n}', scopedCountLabel(found.inScope.length, found.total));
+        .replaceAll('{n}', scopedCountLabel(found.inScope.length, found.total));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1540,9 +1548,7 @@ class _DetailPanel extends StatelessWidget {
                             fontSize: t.chrome,
                             height: 1.0,
                             color: c.link,
-                            fontFeatures: const [
-                              FontFeature.tabularFigures()
-                            ],
+                            fontFeatures: const [FontFeature.tabularFigures()],
                           ),
                         ),
                       ),
@@ -1597,13 +1603,12 @@ class _JourneyPanel extends StatelessWidget {
 
   final ScrollController? scrollController;
 
-  String _s(String key, String fallback) =>
-      uiStrings[key]?[locale] ?? fallback;
+  String _s(String key, String fallback) => uiStrings[key]?[locale] ?? fallback;
 
   String _legWord(JourneyLeg leg) => switch (leg) {
         JourneyLeg.sea => _s('journeyLegSea', 'by sea'),
         JourneyLeg.land => _s('journeyLegLand', 'by land'),
-        JourneyLeg.unknown => _s('journeyLegUnknown', 'manner not given'),
+        JourneyLeg.unknown => _s('journeyLegUnknown', 'the way is not given'),
         JourneyLeg.start => '',
       };
 
@@ -1625,16 +1630,16 @@ class _JourneyPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = WbColors.of(context);
     final t = WbType.of(context);
-    final style = journeyStyleFor(c, journey.journey.style);
+    final style =
+        journeyStyleFor(c, journey.journey.style, journey.journey.mark);
     final version = context.read<MainProvider>().currentVersion;
     final basis = journey.journey.localizedBasis(locale);
     // Lit by stop INDEX, not by place id. Lystra is stops 8 and 10 of the
     // first journey, so lighting by place would light both ends of a leg
     // that only touches one of them.
     final leg = _leg;
-    final litIndices = leg == null
-        ? const <int>{}
-        : <int>{leg.from.index, leg.to.index};
+    final litIndices =
+        leg == null ? const <int>{} : <int>{leg.from.index, leg.to.index};
     // Which rows the note about shared points is actually ABOUT. A count
     // with no locator tells a reader that 27 stops are merged and leaves
     // them unable to find out whether the one they are reading is one of
@@ -1655,7 +1660,7 @@ class _JourneyPanel extends StatelessWidget {
             children: [
               Padding(
                 padding: const EdgeInsets.only(top: 7, right: 6),
-                child: Container(width: 16, height: 3, color: style.colour),
+                child: JourneySwatch(style: style, lit: true),
               ),
               Expanded(
                 child: Text(
@@ -1674,7 +1679,8 @@ class _JourneyPanel extends StatelessWidget {
                   icon: Icon(Icons.close, size: t.text + 2, color: c.mutedText),
                   visualDensity: VisualDensity.compact,
                   padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                  constraints:
+                      const BoxConstraints(minWidth: 24, minHeight: 24),
                   tooltip: _s('journeyClose', 'Close the itinerary'),
                   onPressed: onClose,
                 ),
@@ -1748,8 +1754,8 @@ class _JourneyPanel extends StatelessWidget {
             // stops" with a figure that includes a harbour they missed —
             // the ambiguous-count defect of #308 in a new place.
             <String>[
-              _s('journeyStops', '{n} stops').replaceAll(
-                  '{n}', '${journey.journey.waypointCount}'),
+              _s('journeyStops', '{n} stops')
+                  .replaceAll('{n}', '${journey.journey.waypointCount}'),
               if (journey.journey.asideCount > 0)
                 _s('journeyAsideCount', '{n} named, not reached')
                     .replaceAll('{n}', '${journey.journey.asideCount}'),
@@ -1925,9 +1931,10 @@ class _JourneyPanel extends StatelessWidget {
                   _note(
                     c,
                     t,
-                    _s('journeyLegUnattested',
+                    _s(
+                            'journeyLegUnattested',
                             'The text does not place them at {p}, so this '
-                            'leg is drawn provisionally.')
+                                'leg is drawn provisionally.')
                         .replaceAll('{p}', unvouched.join(' · ')),
                   ),
                 ],
@@ -1936,9 +1943,10 @@ class _JourneyPanel extends StatelessWidget {
                   _note(
                     c,
                     t,
-                    _s('journeyLegAside',
+                    _s(
+                            'journeyLegAside',
                             '{p} is named on this stretch and was not '
-                            'reached.')
+                                'reached.')
                         .replaceAll('{p}', _placeName(a)),
                   ),
                   const SizedBox(height: 3),
@@ -1950,8 +1958,8 @@ class _JourneyPanel extends StatelessWidget {
                         c,
                         t,
                         version,
-                        PlaceRef(a.stop.englishBook, a.stop.chapter,
-                            a.stop.verse),
+                        PlaceRef(
+                            a.stop.englishBook, a.stop.chapter, a.stop.verse),
                       ),
                       _tag(c, t, _s('journeyAsideTag', 'Named, not reached')),
                     ],
@@ -1961,8 +1969,7 @@ class _JourneyPanel extends StatelessWidget {
                 _note(
                   c,
                   t,
-                  _s('journeyLegWarrant',
-                          'What puts {p} on the itinerary')
+                  _s('journeyLegWarrant', 'What puts {p} on the itinerary')
                       .replaceAll('{p}', _placeName(leg.to)),
                 ),
                 const SizedBox(height: 3),
@@ -2099,9 +2106,13 @@ class _JourneyPanel extends StatelessWidget {
                       // and a marker that appeared once at the top of a
                       // group would be invisible to them.
                       if (sharedIndices.contains(s.index))
-                        _tag(c, t,
-                            _s('journeySharedPointTag', 'One point with its '
-                                'neighbour')),
+                        _tag(
+                            c,
+                            t,
+                            _s(
+                                'journeySharedPointTag',
+                                'One point with its '
+                                    'neighbour')),
                     ],
                   ),
                   if (note != null && note.isNotEmpty) ...[

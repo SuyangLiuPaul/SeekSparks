@@ -17,6 +17,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:seeksparks/constants/journey_style.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/bible_place.dart';
 import 'package:seeksparks/pages/atlas_page.dart';
@@ -281,6 +282,34 @@ void main() {
     // Every station still carries the verse that puts it on the list.
     expect(find.textContaining('民数记 33:'), findsWidgets);
 
+    await unmount(tester);
+  });
+
+  testWidgets('the journeys block is bounded by the pane, not by the asset',
+      (tester) async {
+    // The overlay switches are the one part of the index column sized by
+    // the DATA rather than by the viewport: every route in the asset is
+    // another two-line row, and the block is not the column's flexible
+    // child, so it grew at the place list's expense until it pushed the
+    // column off the bottom. The sixth route is where that first showed,
+    // overflowing a 320x640 pane by 34 px — which made it a bug about
+    // the seventh route as much as the sixth.
+    //
+    // So the height is asserted against the PANE. A cap that holds at
+    // six routes holds at ten; a test that only checked for an overflow
+    // exception would go quietly green again at five.
+    await pump(tester, const Size(320, 640));
+    expect(tester.takeException(), isNull);
+    final block = tester.getSize(find.byKey(const Key('atlas-journeys-block')));
+    expect(block.height, lessThanOrEqualTo(640 * 0.42));
+
+    // One swatch per route, and each of them actually occupying space: a
+    // CustomPaint with no child lays out at zero, so the legend would go
+    // silently blank without ever failing a layout.
+    final swatches = find.byType(JourneySwatch);
+    expect(swatches, findsNWidgets(6));
+    expect(tester.getSize(swatches.first).height, greaterThan(0));
+    expect(tester.getSize(swatches.first).width, greaterThan(0));
     await unmount(tester);
   });
 

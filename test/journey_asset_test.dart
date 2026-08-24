@@ -324,6 +324,81 @@ void main() {
       }
     });
 
+    test("the Lord's itinerary is one evangelist, not a harmony", () {
+      // The whole framing of this route. A harmony of the four Gospels
+      // is a reconstruction, and a reconstruction drawn as a line is the
+      // thing this feature exists not to do. So the route is Mark's own
+      // sequence, and the general one-book rule above is not enough to
+      // say so: this row names the book.
+      final j = journeys.firstWhere((j) => j.id == 'jesus-mark');
+      expect(j.stops.every((s) => s.englishBook == 'Mark'), isTrue);
+      expect(j.stops.first.placeId, 'Nazareth');
+      expect(j.stops.first.chapter, 1);
+      expect(j.stops.first.verse, 9);
+      // 11:11 is where the travelling stops, and the route says so on
+      // its face rather than trailing off. Everything after it happens
+      // inside Jerusalem, where the gazetteer gives Gethsemane and
+      // Golgotha Jerusalem's own coordinate.
+      expect(j.stops.last.chapter, 11);
+      expect(j.stops.last.verse, 11);
+    });
+
+    test('the Markan route draws no region that is another place', () {
+      // The failure this route was built around: a gazetteer entry for a
+      // REGION carries a point, and that point is often a city's. Judea
+      // is Jerusalem's own coordinate, the Decapolis is Damascus's,
+      // Galilee is Nazareth's, Dalmanutha is Magadan's — Matthew's
+      // identification, not Mark's word — and the Jordan is one point
+      // for the whole river. Mark names every one of them, and drawing
+      // any would put Jesus where the text does not. If one is ever
+      // added, this row is what notices.
+      final j = journeys.firstWhere((j) => j.id == 'jesus-mark');
+      final drawn = j.stops.map((s) => s.placeId).toSet();
+      for (final banned in const <String>[
+        'Judea', 'Decapolis', 'Galilee', 'Dalmanutha', 'Magadan',
+        'Jordan', 'Gethsemane', 'Golgotha',
+      ]) {
+        expect(drawn, isNot(contains(banned)),
+            reason: '$banned carries another place\'s point');
+      }
+      // Bethany is the same trap from the other side: the gazetteer
+      // holds two, with IDENTICAL reference lists, so it cannot pick for
+      // us and the ordinal has to be in the data.
+      expect(drawn, contains('Bethany 1'));
+      expect(drawn, isNot(contains('Bethany')));
+    });
+
+    test('Sidon is provisional because our own two editions disagree', () {
+      // Mark 7:31 is a textual split, and the app ships both sides of
+      // it: the critical text has Jesus going THROUGH Sidon, while the
+      // KJV's Byzantine reading has him departing FROM the coasts of
+      // Tyre and Sidon, which places him at neither. Drawn as a dotted
+      // stop rather than dropped, so a reader comparing a printed atlas
+      // can see where its stop came from.
+      final j = journeys.firstWhere((j) => j.id == 'jesus-mark');
+      final sidon = j.stops.firstWhere((s) => s.placeId == 'Sidon');
+      expect(sidon.attested, isFalse);
+      expect(sidon.isAside, isFalse);
+      expect(j.provisionalCount, 1);
+      for (final locale in const <String>['en', 'zh-Hans', 'zh-Hant']) {
+        expect(sidon.localizedNote(locale), isNotNull);
+      }
+    });
+
+    test('no leg of the Markan route claims a voyage', () {
+      // Mark is full of boats, and not one crossing can be drawn: every
+      // one of them departs from or arrives at a place the gazetteer
+      // cannot locate — a solitary place (6:32), the country of the
+      // Gerasenes (5:1, absent entirely), Dalmanutha (8:10). A `sea` leg
+      // here would be a long dash drawn over dry land between two towns
+      // the boat never ran between, so the crossings are dashed as
+      // unknown and the basis says why. This row is the guard: if a sea
+      // leg ever appears, the coastline has been guessed at.
+      final r = route('jesus-mark');
+      expect(r.segments.any((s) => s.leg == JourneyLeg.sea), isFalse);
+      expect(r.segments.where((s) => s.leg == JourneyLeg.unknown).length, 5);
+    });
+
     test('the wilderness itinerary ships, all 42 stations of it', () {
       // Numbers 33:3-49. The count is asserted because this is the one
       // route in scripture the text itself calls a list: 33:2 says Moses
@@ -386,23 +461,59 @@ void main() {
       }
     });
 
-    test('the style slots are in the data and distinct', () {
+    test('the style slots are in the data', () {
       // In the DATA so that inserting a journey mid-file cannot silently
       // recolour the ones after it.
-      final slots = journeys.map((j) => j.style).toList();
-      expect(slots.toSet().length, slots.length);
       for (final raw in doc['journeys'] as List<dynamic>) {
         expect((raw as Map<String, dynamic>)['style'], isA<num>());
+        expect((raw)['mark'], isA<String>());
       }
     });
 
+    test('no two routes share an appearance', () {
+      // The hue alone used to be the identity, and this row used to
+      // demand distinct hues. It cannot any more: the palette holds five
+      // hues honestly and Mark's itinerary is the sixth route, so it
+      // takes slot 0's amber and separates itself by silhouette. What
+      // must stay unique is the PAIR — a repeated hue is a repeated
+      // appearance only when the shape repeats too.
+      final seen = journeys.map((j) => (j.style, j.mark)).toList();
+      expect(seen.toSet().length, seen.length,
+          reason: 'two routes would draw identically: $seen');
+    });
+
     test('the straight-line totals are the scale they are offered as', () {
-      // Sanity, not precision: these are sums of chords. If one comes out
-      // an order of magnitude off, a coordinate has moved.
+      // These are sums of chords, and the row exists to catch a MOVED
+      // COORDINATE. It used to do that with a band of 500..20000 km,
+      // which was really a fact about the corpus it was written against:
+      // every route in the file was a Mediterranean voyage. Mark's
+      // itinerary never leaves Galilee and Judea and totals ~479 km, so
+      // the old floor would have rejected it for being the right size.
+      //
+      // Pinning each route to its own total is the stronger check the
+      // comment always claimed: a coordinate that moves now fails the
+      // route it moved in, not merely the ones that fall out of a band.
+      // The band stays for a route added later with no pin.
+      // Sums over the DRAWN segments, so a run of camps collapsed onto
+      // one point contributes once — which is why the wilderness total is
+      // well under the sum of its 42 rows.
+      const expected = <String, double>{
+        'paul-1': 1947.6,
+        'paul-2': 3691.3,
+        'paul-3': 3653.0,
+        'paul-rome': 2995.5,
+        'exodus-wilderness': 1638.4,
+        'jesus-mark': 478.6,
+      };
       for (final r in resolved) {
-        expect(r.straightLineKm, greaterThan(500), reason: r.id);
+        expect(r.straightLineKm, greaterThan(100), reason: r.id);
         expect(r.straightLineKm, lessThan(20000), reason: r.id);
+        final pin = expected[r.id];
+        if (pin == null) continue;
+        expect(r.straightLineKm, closeTo(pin, 2), reason: r.id);
       }
+      expect(expected.keys.toSet(), resolved.map((r) => r.id).toSet(),
+          reason: 'a route was added or renamed without a pinned total');
     });
   });
 }

@@ -8,8 +8,20 @@
 ///
 ///   * solid       — the travellers went by land, and the text says so
 ///   * long dash   — they sailed, and the text says so (`ἀπέπλευσαν`)
-///   * short dash  — the text names the arrival and refuses the manner
+///   * short dash  — the text names the arrival but not a way that can be
+///                   drawn
 ///   * fine dots   — provisional: the text does not put them here at all
+///
+/// **2026-08-24: the short dash covers two cases, not one.** It began as
+/// "the text refuses the manner" — Acts 20:1, which sends Paul to
+/// Macedonia and will not say how. Mark's itinerary brought the second:
+/// the manner is plain (they walked) but the text routes them through a
+/// place this gazetteer cannot put on a map — the wilderness of Mark
+/// 1:12, the country of the Gerasenes, the Decapolis. Both cases make the
+/// same claim to the reader, which is why they share a dash: THIS LINE IS
+/// NOT UNDERWRITTEN AS A DIRECT JOURNEY. Drawing Nazareth→Capernaum solid
+/// because the verbs are verbs of walking would erase the baptism and the
+/// forty days that Mark puts between them.
 ///
 /// A fifth case has no dash because it has no line: a place the narrative
 /// names beside the track — Phoenix, aimed at and missed; Syrtis, feared
@@ -43,13 +55,115 @@ import 'package:seeksparks/models/bible_journey.dart';
 
 /// The ink and the marker for one route.
 class JourneyStyle {
-  const JourneyStyle({required this.colour, required this.onColour});
+  const JourneyStyle({
+    required this.colour,
+    required this.onColour,
+    this.mark = JourneyMark.round,
+  });
 
   final Color colour;
 
   /// What to print ON [colour] — the marker numerals. Fixed per swatch
   /// rather than derived per frame, because these are chosen together.
   final Color onColour;
+
+  final JourneyMark mark;
+
+  JourneyStyle withMark(JourneyMark m) =>
+      JourneyStyle(colour: colour, onColour: onColour, mark: m);
+}
+
+/// Draw one stop marker of [mark] at [centre], sized so that every
+/// silhouette carries the same ink.
+///
+/// **Equal area, not equal radius.** A square drawn across the circle's
+/// diameter has 4/π ≈ 1.27 times its area and reads as a heavier, more
+/// important stop; a diamond inscribed in the same box has half of it
+/// and reads as a fainter one. Weight is not a channel this scheme is
+/// spending, so the two polygons are scaled to the circle's area and the
+/// shapes differ in outline alone — which is the whole point of a second
+/// channel that must not compete with the first.
+void paintJourneyMark(
+  Canvas canvas,
+  Offset centre,
+  double radius,
+  Paint paint,
+  JourneyMark mark,
+) {
+  switch (mark) {
+    case JourneyMark.round:
+      canvas.drawCircle(centre, radius, paint);
+    case JourneyMark.square:
+      // side² = πr²
+      final half = radius * 0.8862269254527580;
+      canvas.drawRect(Rect.fromCenter(
+          center: centre, width: half * 2, height: half * 2), paint);
+    case JourneyMark.diamond:
+      // 2d² = πr², d the half-diagonal
+      final d = radius * 1.2533141373155003;
+      canvas.drawPath(
+        Path()
+          ..moveTo(centre.dx, centre.dy - d)
+          ..lineTo(centre.dx + d, centre.dy)
+          ..lineTo(centre.dx, centre.dy + d)
+          ..lineTo(centre.dx - d, centre.dy)
+          ..close(),
+        paint,
+      );
+  }
+}
+
+/// The legend's swatch: a bar of the route's ink with the route's own
+/// marker sitting on it.
+///
+/// It draws the mark because the mark is half the identity. Two routes
+/// sharing a hue — which is now allowed, and is why [JourneyMark] exists
+/// — would otherwise be two identical bars in the list, and a reader
+/// looking for the amber diamond on the map would have nothing in the
+/// legend to match it against.
+class JourneySwatch extends StatelessWidget {
+  const JourneySwatch({super.key, required this.style, required this.lit});
+
+  final JourneyStyle style;
+
+  /// False where the route is switched off: the bar goes to [dimTo] but
+  /// the SILHOUETTE stays, because the shape is what a reader is
+  /// scanning the list for.
+  final bool lit;
+
+  static const Size _size = Size(18, 9);
+
+  @override
+  Widget build(BuildContext context) {
+    final c = WbColors.of(context);
+    // A childless CustomPaint lays out at zero, so the size is given.
+    return CustomPaint(
+      size: _size,
+      painter: _SwatchPainter(style, lit ? style.colour : c.border),
+    );
+  }
+}
+
+class _SwatchPainter extends CustomPainter {
+  const _SwatchPainter(this.style, this.ink);
+
+  final JourneyStyle style;
+  final Color ink;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final y = size.height / 2;
+    canvas.drawRect(
+      Rect.fromLTWH(0, y - 1.5, size.width, 3),
+      Paint()..color = ink,
+    );
+    paintJourneyMark(
+        canvas, Offset(size.width / 2, y), 3.4, Paint()..color = ink, style.mark);
+  }
+
+  @override
+  bool shouldRepaint(_SwatchPainter old) =>
+      old.ink != ink || old.style.mark != style.mark;
 }
 
 /// Hues that survive both palettes and stay apart under the common forms
@@ -67,6 +181,11 @@ class JourneyStyle {
 /// wanted here because Acts holds FOUR Pauline itineraries and three
 /// hues would have wrapped the palette, drawing the voyage to Rome in the
 /// first journey's amber.
+///
+/// **2026-08-24: the sixth route arrived, and it took the channel rather
+/// than a hue.** Mark's itinerary reuses slot 0's amber and is separated
+/// from Paul's first journey by [JourneyMark.diamond]. See
+/// [journeyStyleFor], which now takes both.
 ///
 /// **The fifth slot is where the palette reaches its honest limit.** Four
 /// hues can be held apart under deuteranopia and protanopia; five cannot,
@@ -99,13 +218,18 @@ List<JourneyStyle> journeyPalette(WbColors c) => c.isDark
         JourneyStyle(colour: Color(0xFF1D4E9C), onColour: Color(0xFFFFFFFF)),
       ];
 
-/// The swatch for [style], wrapping if a future file ships more journeys
-/// than the palette has hues. Wrapping repeats a colour, which is a
-/// legibility cost — but the alternative is a crash or an invisible
-/// route, and the marker numbers still separate them.
-JourneyStyle journeyStyleFor(WbColors c, int style) {
+/// The swatch and silhouette for a route.
+///
+/// [style] still wraps if a file ever ships more journeys than the
+/// palette has hues, because the alternative is a crash or an invisible
+/// route. But wrapping is no longer the only defence: [mark] is an
+/// independent channel, so a repeated hue is a repeated APPEARANCE only
+/// when the shape repeats too — which is what
+/// `journey_asset_test.dart` fails the build over.
+JourneyStyle journeyStyleFor(WbColors c, int style,
+    [JourneyMark mark = JourneyMark.round]) {
   final p = journeyPalette(c);
-  return p[style.abs() % p.length];
+  return p[style.abs() % p.length].withMark(mark);
 }
 
 /// The dash pattern for a leg, in `[on, off]` pixels. Empty means solid.

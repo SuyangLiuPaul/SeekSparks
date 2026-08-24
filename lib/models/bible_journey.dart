@@ -50,6 +50,37 @@
 /// Acts 14.
 library;
 
+/// The silhouette of a route's stop markers — the SECOND identity
+/// channel, and the answer to the sixth route.
+///
+/// `journey_style.dart`'s palette stops honestly at five hues and says
+/// why: five cannot be held apart under deuteranopia and protanopia, so
+/// its note ends "a sixth route should add a channel, not a sixth hue".
+/// This is that channel. Identity is now a PAIR — a hue and a shape — so
+/// a hue may safely repeat once the shape differs, and the palette's
+/// capacity is five times the number of shapes rather than five.
+///
+/// **It is chosen by body of narrative, not by slot arithmetic.** A
+/// mechanical `style ~/ 5` would separate the sixth route from the first
+/// and mean nothing to anybody; a shape that tracks WHERE the itinerary
+/// is read out of is something a reader learns once and keeps — round is
+/// Acts, square is the Torah, diamond is the Gospels.
+///
+/// It lives here rather than beside the palette because it is a fact the
+/// ASSET states about a route, not a decision the painter makes about
+/// one — the same reason [BibleJourney.style] is in the data.
+enum JourneyMark {
+  round,
+  square,
+  diamond;
+
+  static JourneyMark parse(String? raw) => switch (raw) {
+        'square' => JourneyMark.square,
+        'diamond' => JourneyMark.diamond,
+        _ => JourneyMark.round,
+      };
+}
+
 /// How the travellers reached a stop from the one before it.
 ///
 /// Read off the verb, not assumed: `ἀπέπλευσαν` (sailed away) gives
@@ -138,6 +169,7 @@ class BibleJourney {
   const BibleJourney({
     required this.id,
     required this.style,
+    required this.mark,
     required this.name,
     required this.range,
     required this.basis,
@@ -152,6 +184,12 @@ class BibleJourney {
   /// a reader who has learned that the first journey is amber should not
   /// find it green after an update.
   final int style;
+
+  /// The silhouette of this route's markers — the second half of its
+  /// identity, and the reason [style] may repeat. In the data for the
+  /// same reason [style] is, and chosen by the body of narrative the
+  /// itinerary is read out of rather than by position in the file.
+  final JourneyMark mark;
 
   final Map<String, String> name;
   final Map<String, String> range;
@@ -224,6 +262,7 @@ List<BibleJourney> parseJourneys(Map<String, dynamic> doc) {
     out.add(BibleJourney(
       id: id,
       style: (raw['style'] as num?)?.toInt() ?? out.length,
+      mark: JourneyMark.parse(raw['mark'] as String?),
       name: _strings(raw['name']) ?? <String, String>{'en': id},
       range: _strings(raw['range']) ?? const <String, String>{},
       basis: _strings(raw['basis']) ?? const <String, String>{},

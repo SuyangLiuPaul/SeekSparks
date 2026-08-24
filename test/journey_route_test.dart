@@ -8,7 +8,9 @@
 // looks exactly like a correct one — so they are tested without a map.
 
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seeksparks/constants/journey_style.dart';
 import 'package:seeksparks/constants/ui_strings.dart';
@@ -61,6 +63,7 @@ BibleJourney _journey(List<JourneyStop> stops, {String id = 'j'}) =>
     BibleJourney(
       id: id,
       style: 0,
+      mark: JourneyMark.round,
       name: const <String, String>{'en': 'Test'},
       range: const <String, String>{},
       basis: const <String, String>{},
@@ -744,6 +747,86 @@ void main() {
       final p = journeyPalette(WbColors.light);
       expect(journeyStyleFor(WbColors.light, p.length).colour, p.first.colour);
       expect(journeyStyleFor(WbColors.light, -1).colour, p[1 % p.length].colour);
+    });
+
+    test('the mark is a second channel, carried in the data', () {
+      // A hue may now repeat, so long as the shape does not. Mark's
+      // itinerary is the sixth route and takes slot 0's amber.
+      final a = journeyStyleFor(WbColors.light, 0, JourneyMark.round);
+      final b = journeyStyleFor(WbColors.light, 0, JourneyMark.diamond);
+      expect(a.colour, b.colour);
+      expect(a.mark, isNot(b.mark));
+      expect(JourneyMark.parse('diamond'), JourneyMark.diamond);
+      expect(JourneyMark.parse('square'), JourneyMark.square);
+      // Absent or unknown falls back rather than throwing: one bad row
+      // should cost a silhouette, not the Atlas.
+      expect(JourneyMark.parse(null), JourneyMark.round);
+      expect(JourneyMark.parse('hexagon'), JourneyMark.round);
+    });
+  });
+
+  group('the silhouettes carry equal ink', () {
+    // Weight is not a channel this scheme spends. A square drawn across
+    // a circle's diameter has 4/pi times its area and reads as a heavier,
+    // more important stop; a diamond inscribed in the same box has half.
+    // So the polygons are scaled to the circle's AREA and the shapes
+    // differ in outline alone. Asserting the scale factors would only
+    // re-state the constants, so the marks are rasterised and the opaque
+    // pixels counted.
+    //
+    // Drawn large on purpose. Counting a thresholded alpha channel is a
+    // blunt instrument: an antialiased boundary pixel either survives the
+    // threshold or does not, and a diamond's straight diagonals fall on
+    // that threshold differently from a circle's curve. The residual is
+    // proportional to the PERIMETER, so a big radius shrinks it — at
+    // r=40 the two disagreed by 2%, at r=100 by well under 1%. That
+    // residual is the instrument, not the geometry.
+    Future<List<bool>> mask(JourneyMark m) async {
+      final rec = ui.PictureRecorder();
+      paintJourneyMark(Canvas(rec), const Offset(150, 150), 100,
+          Paint()..color = const Color(0xFF000000), m);
+      final img = await rec.endRecording().toImage(300, 300);
+      final bytes = await img.toByteData(format: ui.ImageByteFormat.rawRgba);
+      final out = <bool>[];
+      for (var i = 3; i < bytes!.lengthInBytes; i += 4) {
+        out.add(bytes.getUint8(i) > 128);
+      }
+      return out;
+    }
+
+    test('every mark covers the same area, within a pixel or two', () async {
+      final counts = <JourneyMark, int>{};
+      for (final m in JourneyMark.values) {
+        counts[m] = (await mask(m)).where((p) => p).length;
+      }
+      final circle = counts[JourneyMark.round]!;
+      expect(circle, greaterThan(30000), reason: 'nothing was drawn');
+      for (final m in JourneyMark.values) {
+        // 1% of the circle's area. A square at equal RADIUS would be
+        // 27% larger and a diamond inscribed in that box 36% smaller, so
+        // this is far tighter than the mistake it guards against.
+        expect(counts[m], closeTo(circle, circle * 0.01), reason: '$m');
+      }
+    });
+
+    test('and yet no two are the same shape', () async {
+      final masks = <JourneyMark, List<bool>>{};
+      for (final m in JourneyMark.values) {
+        masks[m] = await mask(m);
+      }
+      for (final a in JourneyMark.values) {
+        for (final b in JourneyMark.values) {
+          if (a == b) continue;
+          var differing = 0;
+          for (var i = 0; i < masks[a]!.length; i++) {
+            if (masks[a]![i] != masks[b]![i]) differing++;
+          }
+          // Equal area plus a real difference of outline is the whole
+          // point: a second channel that does not compete with the first.
+          expect(differing, greaterThan(masks[a]!.length ~/ 100),
+              reason: '$a and $b are indistinguishable');
+        }
+      }
     });
   });
 }
