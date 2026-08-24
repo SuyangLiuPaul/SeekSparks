@@ -11,7 +11,7 @@ ticket briefs belong in the loop's `prompt.md` and, once closed, in
 `prompt-archive.md`. If this file grows past ~150 lines it has stopped
 doing its job.
 
-Last updated: 2026-08-24 (eighth entry)
+Last updated: 2026-08-24 (ninth entry)
 
 ---
 
@@ -22,7 +22,7 @@ Last updated: 2026-08-24 (eighth entry)
 | `pubspec` / dev | **1.6.164** — released by the **second writer**, not the loop: branding/launcher-icon fixes and the splash download bar (`983c0ea`…`200cfdf`, 13:27–14:22). Its build ran against the shared working tree and so also carries the loop's then-uncommitted #317 work; see the `main` row. Before it, **1.6.161** — #312 item 7: the four phrasing level chips now carry the line count they would draw on this passage, and the chosen one says what it cuts at. Built and deployed 2026-08-24 from a **detached worktree at the pushed SHA** (`ccfafc1`), the second writer having released 1.6.160 from the shared tree twenty minutes earlier. Alias and immutable URL both serve `1.6.161` (`version.json`, cache-busted). Previously: **1.6.159** — #315's fourth mechanism: `workbenchTheme`, the app's only theme, sized every Material role from constants. Built and deployed 2026-08-24 from a **detached worktree at the pushed SHA** (`01b5c80`), because the second writer's 106 modified launcher icons and an untracked `output/` were live in the shared tree and `release_web.sh` builds from the *working tree*. **The alias serves it this time** — unlike v1.6.158, which a second writer's build overwrote 83 seconds later; `version.json` and the in-app status bar both read 1.6.159, checked after a second cache-busting navigation to defeat the service worker |
 | prod (seeksparks.netlify.app) | **1.6.136** — 21 versions behind, by design: prod ships only on the owner's word |
 | `main` | **0a14966** — #317: the wilderness itinerary, and the join that fails by succeeding. **Not deployed by the loop, and for once that is not a skipped build:** dev already serves this code. The second writer ran `release_web.sh` at ~14:22 on 2026-08-24 while the killed run's work was live and *uncommitted* in the shared tree, so **v1.6.164 snapshotted it** — verified on the deployed bundle, which carries all 5 journeys in `bible_journeys.json`, the panel's `stops share a point, in` fallback, and the `(?<=[A-Za-z])E(?=ph)` name repair. The gap this iteration closed was therefore the **commit**, not the deploy: dev was serving a build made from a mid-edit tree that no suite had ever run against. Undeployed loop iterations: **2** (the killed run, and this one) |
-| Suite | **3,363 tests**, green; `flutter analyze` exit 0 |
+| Suite | **3,387 tests**, green; `flutter analyze` exit 0 |
 | CI | green (Flutter CI on `main`) |
 
 **Verifying CJK in a deployed bundle needs a control, 2026-08-24.** The
@@ -66,7 +66,7 @@ here, move its body out of `prompt.md`, and say so in `HANDOFF.md`.
 | #289 | Bundle an OFL Hebrew face — Hebrew word study still pulls from `fonts.gstatic.com` | **closed** — v1.6.73; `NotoSansHebrew-Sub.ttf` is in `pubspec`, wired at `main.dart:565`/`658`, and `release_web.sh:68` passes `--no-web-resources-cdn` so the gstatic path is not merely unused but unreachable. Pinned by `bundled_font_coverage_test.dart` |
 | #292 | Kings of Judah + Israel, synchronised, as a Resource | **blocked** — needs a citable Thiele source |
 | #293 | Sermon audio — permission settled, survey done, hosting undecided | **blocked** — needs a hosting decision |
-| #295 | Live search audit — drive every syntax through the real box | open |
+| #295 | Live search audit — drive every syntax through the real box | open — the **grammar** half is done: `docs/SEARCH-AUDIT.md` is the query→count→verdict table, 4 wrong counts found (3 fixed, 1 withdrawn with both numbers), pinned by `command_grammar_audit_test.dart`. §6 names what still needs a human at a browser |
 | #296 | Prod crash — root cause found and fixed (`9132a14`) | **blocked** — needs a fresh crash report to confirm |
 | #299 | The `?` card teaches syntax you cannot run | closed — v1.6.144 |
 | #300 | Map provenance — rights settled, the maps are the owner's own collection | open |

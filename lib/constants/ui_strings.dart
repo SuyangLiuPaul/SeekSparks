@@ -2995,6 +2995,11 @@ const uiStrings = {
     'zh-Hant': '; 後的節數上限為 {max}。',
     'en': 'The verse context after ; must be {max} or less.',
   },
+  'cmdIssueGap': {
+    'zh-Hans': '* 后的间隔词数上限为 {max}。',
+    'zh-Hant': '* 後的間隔詞數上限為 {max}。',
+    'en': 'The word gap after * must be {max} or less.',
+  },
   'cmdSyntaxTitle': {
     'zh-Hans': '命令行语法',
     'zh-Hant': '命令行語法',

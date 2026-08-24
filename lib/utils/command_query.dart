@@ -110,7 +110,20 @@ import 'package:seeksparks/utils/related_verses.dart' show isCjkChar, isWordChar
 const int kMaxVerseContext = 176;
 
 /// Largest `*N` word gap accepted inside a phrase.
-const int kMaxWordGap = 50;
+///
+/// The gap cannot reach past the end of the verse it is searching, so the
+/// ceiling that means anything is the longest verse in any shipped
+/// edition: 202 tokens, `lxxwh` 1 Kings 16:28. Above that the number
+/// cannot change an answer, and [CommandIssue.gapTooLarge] says so
+/// instead of silently rewriting it.
+///
+/// The previous ceiling was 50, applied by clamping rather than by
+/// refusing. KJV alone has 782 verses longer than that, and Esther 8:9
+/// (90 tokens) is a verse the clamp lost: `'then *89 language` finds it,
+/// `'then *50 language` does not. Width is free — `_matchFrom` clamps
+/// each gap to the tokens actually remaining — so the old number bought
+/// nothing it cost.
+const int kMaxWordGap = 202;
 
 /// Most groups one compound search may hold (`compound_query.dart`).
 ///
@@ -144,6 +157,7 @@ enum CommandIssue {
   strongsTagUnsupported,
   phraseNotMultiToken,
   contextTooLarge,
+  gapTooLarge,
   compoundUnclosed,
   compoundSeparator,
   compoundGroupOperator,
@@ -478,10 +492,18 @@ CommandParse parseCommandQuery(String raw) {
   var verseContext = 0;
   final ctx = RegExp(r';(\d+)$').firstMatch(body);
   if (ctx != null) {
-    verseContext = int.parse(ctx.group(1)!);
-    if (verseContext > kMaxVerseContext) {
+    // `tryParse`, not `parse`: the regex guarantees digits but not that
+    // they fit in an int, and the two targets disagree about what
+    // happens next. On the VM `;99999999999999999999` throws, and the
+    // throw escapes `WorkbenchProvider.runSearch`'s `finally` to leave
+    // the reader looking at an empty result list for a search that never
+    // ran; compiled to JS the same line yields 1e20 and is refused
+    // politely. A null here is the same fact either way — too large.
+    final n = int.tryParse(ctx.group(1)!);
+    if (n == null || n > kMaxVerseContext) {
       return const CommandParse.failed(CommandIssue.contextTooLarge);
     }
+    verseContext = n;
     body = body.substring(0, ctx.start).trim();
     if (body.isEmpty) return const CommandParse.failed(CommandIssue.emptyBody);
   }
@@ -508,7 +530,11 @@ CommandParse parseCommandQuery(String raw) {
     // pattern. Only in a phrase — in an AND search "any word" is a
     // condition every verse meets.
     if (kind == CommandKind.phrase) {
-      final gap = _asGap(piece);
+      final parsed = _asGap(piece);
+      if (parsed.tooLarge) {
+        return const CommandParse.failed(CommandIssue.gapTooLarge);
+      }
+      final gap = parsed.gap;
       if (gap != null) {
         sequence.add(gap);
         outline.add((term: null, gap: gap));
@@ -566,14 +592,22 @@ CommandParse parseCommandQuery(String raw) {
   ));
 }
 
-/// `*` → exactly one word; `*3` → three or fewer. Null when the piece is
-/// an ordinary pattern.
-GapElement? _asGap(String piece) {
-  if (piece == '*') return const GapElement(1, 1);
+/// `*` → exactly one word; `*3` → three or fewer.
+///
+/// [gap] is null when the piece is an ordinary pattern rather than a gap.
+/// [tooLarge] means it IS a gap and is wider than [kMaxWordGap], which
+/// used to be clamped to 50 without saying so — the reader typed `*99`,
+/// got the answer to `*50`, and the echo agreed with them. A ceiling the
+/// reader is told about is the same bargain `;N` already offers.
+typedef GapParse = ({GapElement? gap, bool tooLarge});
+
+GapParse _asGap(String piece) {
+  if (piece == '*') return (gap: const GapElement(1, 1), tooLarge: false);
   final m = RegExp(r'^\*(\d+)$').firstMatch(piece);
-  if (m == null) return null;
-  final n = int.parse(m.group(1)!);
-  return GapElement(0, n > kMaxWordGap ? kMaxWordGap : n);
+  if (m == null) return (gap: null, tooLarge: false);
+  final n = int.tryParse(m.group(1)!);
+  if (n == null || n > kMaxWordGap) return (gap: null, tooLarge: true);
+  return (gap: GapElement(0, n), tooLarge: false);
 }
 
 /// Split one term into the sequence of positions it occupies.
@@ -607,8 +641,9 @@ List<QueryElement> _compileTerm(String term) {
           (isWordChar(term.codeUnitAt(j)) || _isMetaChar(term.codeUnitAt(j)))) {
         j++;
       }
-      final run = term.substring(i, j);
+      final run = _trimEdgeApostrophes(term.substring(i, j));
       i = j;
+      if (run.isEmpty) continue;
       if (_isAllMeta(run) && hasCjk) {
         for (var k = 0; k < run.length; k++) {
           out.add(run[k] == '?'
@@ -627,6 +662,32 @@ List<QueryElement> _compileTerm(String term) {
   }
   return out;
 }
+
+/// Drop apostrophes from the ends of a term, because `phraseTokens` drops
+/// them from the ends of every corpus token.
+///
+/// An apostrophe INSIDE a word is a letter here and stays: `god's` is one
+/// token on both sides and finds its 25 verses. An apostrophe at the edge
+/// is not, and until this existed the two sides spelled the possessive
+/// plural differently — the corpus held `sons`, the query held `sons'`,
+/// and `.sons'` reported that the King James Bible does not contain the
+/// word, in 212 verses of which it does. The cost is that `.sons'` now
+/// answers the same as `.sons`; this engine cannot tell them apart, and
+/// over-matching shows the reader verses they can check where the zero
+/// told them a plain untruth.
+String _trimEdgeApostrophes(String run) {
+  var s = 0;
+  var e = run.length;
+  while (s < e && _isApostrophe(run.codeUnitAt(s))) {
+    s++;
+  }
+  while (e > s && _isApostrophe(run.codeUnitAt(e - 1))) {
+    e--;
+  }
+  return run.substring(s, e);
+}
+
+bool _isApostrophe(int c) => c == 0x27 || c == 0x2019;
 
 const TokenMatcher _anyToken = TokenMatcher._('?', null, null, '');
 
@@ -1095,6 +1156,9 @@ String? describeCommandIssue(CommandIssue issue, String locale) {
     CommandIssue.contextTooLarge => s('cmdIssueContext',
             'The verse context after ; must be {max} or less.')
         .replaceAll('{max}', '$kMaxVerseContext'),
+    CommandIssue.gapTooLarge => s('cmdIssueGap',
+            'The word gap after * must be {max} or less.')
+        .replaceAll('{max}', '$kMaxWordGap'),
     CommandIssue.compoundUnclosed => s('cmdIssueCompoundUnclosed',
         'Every ( in a compound search needs a matching ).'),
     CommandIssue.compoundSeparator => s('cmdIssueCompoundSeparator',

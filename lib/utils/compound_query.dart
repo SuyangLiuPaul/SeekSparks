@@ -263,10 +263,14 @@ CompoundParse parseCompoundQuery(String raw) {
       digits.writeCharCode(c);
       i++;
     }
-    var context = digits.isEmpty ? 0 : int.parse(digits.toString());
-    if (context > kMaxVerseContext) {
+    // `tryParse` for the same reason `parseCommandQuery` uses it: the
+    // digit scan above bounds the characters, not the magnitude, and on
+    // the VM `int.parse` throws where JS quietly returns 1e20.
+    final n = digits.isEmpty ? 0 : int.tryParse(digits.toString());
+    if (n == null || n > kMaxVerseContext) {
       return const CompoundParse.failed(CommandIssue.contextTooLarge);
     }
+    var context = n;
     // A distance on an OR cannot mean anything — a union constrains
     // nothing, so there is no window to widen. Dropped rather than
     // reported, which is the same call `parseCommandQuery` makes for
