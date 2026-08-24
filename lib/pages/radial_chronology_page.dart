@@ -3,19 +3,11 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:seeksparks/constants/era_palette.dart';
 import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/app_settings.dart';
-import 'package:seeksparks/models/chronology.dart';
-import 'package:seeksparks/models/hebrew_king.dart';
-import 'package:seeksparks/models/timeline_event.dart';
 import 'package:seeksparks/models/wheel_history.dart';
 import 'package:seeksparks/providers/main_provider.dart';
-import 'package:seeksparks/services/chronology_service.dart';
-import 'package:seeksparks/services/hebrew_kings_service.dart';
-import 'package:seeksparks/services/timeline_service.dart';
-import 'package:seeksparks/utils/chronology_layout.dart' show contemporaries;
 import 'package:seeksparks/utils/jump_to_reference.dart' as jumper;
 import 'package:seeksparks/utils/navigate_to_reader.dart';
 import 'package:seeksparks/utils/radial_chronology_layout.dart';
@@ -23,32 +15,50 @@ import 'package:seeksparks/utils/reference_parser.dart';
 import 'package:seeksparks/widgets/home_icon_button.dart';
 import 'package:seeksparks/widgets/language_switcher_button.dart';
 import 'package:seeksparks/widgets/localized_back_button.dart';
+import 'package:seeksparks/widgets/verse_popup_sheet.dart' show showVersePopup;
 
-/// The same generations `chronology_page.dart` draws as bars, drawn as
-/// a wheel: the creation at twelve o'clock, time sweeping clockwise
-/// round the rim, one concentric ring per generation, each life an arc.
+/// World history on one wheel: 4000 BC at twelve o'clock, time sweeping
+/// clockwise to the present, one concentric band per people or
+/// institution, every dated thing drawn on the band it belongs to.
 ///
-/// The bars page's doc comment explains why bars are *better at
-/// comparison* — arcs on different radii cannot be compared by eye —
-/// and that judgement stands; this page exists because the owner asked
-/// for the wheel as well, and the wheel is better at the other thing: a
-/// single glance that holds all twenty-six lives at once, the way the
-/// engraved radial chronologies have shown them for centuries. Both
-/// pages read the same `assets/chronology.json`, so neither can drift
-/// from the verses.
+/// WHY BANDS AND NOT ONE STREAM OF DATES. The engraved chronologies
+/// organise by NATION, not by kind-of-event: Israel is a band, Rome is
+/// a band, the church is a band. That is what lets a reader follow one
+/// people down the centuries instead of reading an undifferentiated
+/// queue of years, and it is why such charts can carry a thousand
+/// entries and still be read.
 ///
-/// What was taken from the printed charts is the *form* only — the
-/// radial axis, rings by generation, colour by line of descent, epochs
-/// as spokes. The data, palette, and every word on screen are this
-/// app's own; nothing is reproduced from any publisher's artwork.
+/// WHY THE EVENT TEXT RUNS OUTWARD. Angular space is scarce — every
+/// degree of the rim is contested, and two events a decade apart fight
+/// for the same arc. Radial space is nearly free: a label running
+/// outward occupies an angle no wider than its type, so a crowded
+/// century spreads along the radius instead of overprinting. Tangential
+/// labels can only be resolved by dropping one, which loses the entry
+/// and still looks crowded. Several events in one year stack outward
+/// along the same spoke — see `stackRadialLabels`.
 ///
-/// Interaction: pinch or scroll-wheel zooms (the inner rings are tight
-/// at rest — that is what the zoom is for), drag pans, tapping an arc
-/// opens the man's figures with their verses and highlights his years
-/// as a wedge across every ring — "who was alive together", the fact
-/// the whole chart exists to show. Tapping an epoch spoke opens its
-/// note. The Masoretic/Septuagint choice re-lays the entire wheel, ring
-/// count included: the Septuagint has Kainan and the Hebrew does not.
+/// WHY THE COLOURS ARE THE LINES OF GENESIS 10. The bands are coloured
+/// by descent from Shem, Ham and Japheth. That organising idea is the
+/// table of nations itself, which this app reads out of its own
+/// scripture asset and cites verse by verse — so a reader who wonders
+/// why Egypt is one colour and Greece another can open the band and be
+/// sent to Genesis 10:6 or 10:2. Two bands are not descents at all and
+/// are coloured apart: the church, and the text of scripture.
+///
+/// WHAT IS NOT HERE. The lifespans of Genesis 5 and 11 — Adam to
+/// Joseph — are not on this wheel. They have no absolute years (the
+/// text gives intervals, not dates), and they belong to
+/// `chronology_page.dart`, which draws them on their own Anno Mundi
+/// axis in both the Masoretic and Septuagint reckonings.
+///
+/// HONESTY. Every event carries a `basis` — the text states it, or
+/// Thiele's reconstruction supplies the year, or it is the date any
+/// general reference gives — and the detail sheet says which. Every
+/// entry carries `approximate` explicitly, so an absent flag never has
+/// to be read as a claim. A power that has not ended carries no end
+/// year and is drawn to the axis end, labelled "present": writing this
+/// year in would read as though it had ended, and would go stale every
+/// January.
 class RadialChronologyPage extends StatefulWidget {
   const RadialChronologyPage({super.key});
 
@@ -56,192 +66,181 @@ class RadialChronologyPage extends StatefulWidget {
   State<RadialChronologyPage> createState() => _RadialChronologyPageState();
 }
 
-// The four lines of descent, matching chronology_page.dart exactly so a
-// reader moving between the two views never re-learns the palette.
-const Color _sethHue = Color(0xFF5B87C4);
-const Color _shemHue = Color(0xFFC4885B);
-const Color _abrahamHue = Color(0xFF4F8F6E);
-const Color _leviHue = Color(0xFF8B6BA8);
-const Color _epochHue = Color(0xFF3E7CB1);
+// ── the axis ─────────────────────────────────────────────────────────
 
-Color _hueForLine(String line) => switch (line) {
-      'shem' => _shemHue,
-      'abraham' => _abrahamHue,
-      'levi' => _leviHue,
-      _ => _sethHue,
-    };
+const int kMinYear = -4000;
+const int kMaxYear = 2026;
 
-// Wheel geometry as fractions of the square's side. The hub must hold
-// the tradition pills; the band between hub and rim divides among the
-// rings; outside the rim live the year labels and epoch names.
-const double _kHubFrac = 0.145;
-const double _kRimFrac = 0.455;
+// Wheel geometry as fractions of the square's side.
+//   hub  .. bands   the stream bands, one ring each
+//   bands .. rim    radial event labels
+//   beyond rim      century years
+const double _kHubFrac = 0.115;
+const double _kBandsFrac = 0.285;
+const double _kRimFrac = 0.445;
 
-// Strings new to this page. Kept local rather than appended to
-// ui_strings.dart because the unattended loop shares this checkout and
-// that file is one it edits; fold these in on the next quiet merge.
+/// Colour by line of descent — Genesis 10 — with the two institutional
+/// bands set apart from it. Kept literal: a reader learns "the church
+/// is plum" and that must hold whatever accent the app is themed with.
+const Map<String, Color> _lineColors = {
+  'shem': Color(0xFFC4885B),
+  'ham': Color(0xFF4F8F6E),
+  'japheth': Color(0xFF5B87C4),
+  'institution': Color(0xFF8B6BA8),
+  'none': Color(0xFF7A8B6F),
+};
+
+Color _lineColor(String line) => _lineColors[line] ?? _lineColors['none']!;
+
+/// Strings this page owns. Kept local rather than appended to
+/// ui_strings.dart because the unattended loop shares this checkout and
+/// edits that file; fold these in on a quiet merge.
 const Map<String, Map<String, String>> wheelStrings = {
   'wheelTitle': {
-    'zh-Hans': '圣经年代轮盘',
-    'zh-Hant': '聖經年代輪盤',
-    'en': 'Chronology Wheel',
+    'zh-Hans': '世界史轮盘',
+    'zh-Hant': '世界史輪盤',
+    'en': 'World History Wheel',
   },
   'wheelHint': {
-    'zh-Hans': '双指缩放 · 点按弧线看经文出处',
-    'zh-Hant': '雙指縮放 · 點按弧線看經文出處',
-    'en': 'Pinch to zoom · tap an arc for its verses',
+    'zh-Hans': '双指缩放 · 点按带或事件',
+    'zh-Hant': '雙指縮放 · 點按帶或事件',
+    'en': 'Pinch to zoom · tap a band or an event',
   },
-  'wheelLegendGen5': {
-    'zh-Hans': '创世记 5',
-    'zh-Hant': '創世記 5',
-    'en': 'Genesis 5',
+  'wheelPresent': {'zh-Hans': '至今', 'zh-Hant': '至今', 'en': 'present'},
+  'wheelFilter': {'zh-Hans': '筛选', 'zh-Hant': '篩選', 'en': 'Filter'},
+  'wheelReset': {'zh-Hans': '复位', 'zh-Hant': '復位', 'en': 'Reset'},
+  'wheelAll': {'zh-Hans': '全选', 'zh-Hant': '全選', 'en': 'All'},
+  'wheelNone': {'zh-Hans': '全不选', 'zh-Hant': '全不選', 'en': 'None'},
+  'wheelLineShem': {'zh-Hans': '闪族', 'zh-Hant': '閃族', 'en': 'Shem'},
+  'wheelLineHam': {'zh-Hans': '含族', 'zh-Hant': '含族', 'en': 'Ham'},
+  'wheelLineJapheth': {
+    'zh-Hans': '雅弗族',
+    'zh-Hant': '雅弗族',
+    'en': 'Japheth',
   },
-  'wheelLegendGen11': {
-    'zh-Hans': '创世记 11',
-    'zh-Hant': '創世記 11',
-    'en': 'Genesis 11',
+  'wheelLineInstitution': {
+    'zh-Hans': '教会与圣经',
+    'zh-Hant': '教會與聖經',
+    'en': 'Church & Scripture',
   },
-  'wheelLegendGen1250': {
-    'zh-Hans': '创世记 12–50',
-    'zh-Hant': '創世記 12–50',
-    'en': 'Genesis 12–50',
+  'wheelDescent': {
+    'zh-Hans': '创世记 10 章的世系',
+    'zh-Hant': '創世記 10 章的世系',
+    'en': 'Descent in Genesis 10',
   },
-  'wheelLegendExodus': {
-    'zh-Hans': '出埃及记–申命记',
-    'zh-Hant': '出埃及記–申命記',
-    'en': 'Exodus–Deuteronomy',
+  'wheelPowers': {'zh-Hans': '政权', 'zh-Hant': '政權', 'en': 'Powers'},
+  'wheelEvents': {'zh-Hans': '大事', 'zh-Hant': '大事', 'en': 'Events'},
+  'wheelApprox': {
+    'zh-Hans': '约数 · 各家不一',
+    'zh-Hant': '約數 · 各家不一',
+    'en': 'approximate — references differ',
   },
-  'wheelLegendEpoch': {
-    'zh-Hans': '大事（有出处）',
-    'zh-Hant': '大事（有出處）',
-    'en': 'Epochs (each cited)',
+  'wheelBasisScripture': {
+    'zh-Hans': '经文所载',
+    'zh-Hant': '經文所載',
+    'en': 'stated in scripture',
   },
-  'wheelModeAm': {
-    'zh-Hans': '族长（AM）',
-    'zh-Hant': '族長（AM）',
-    'en': 'Patriarchs (AM)',
+  'wheelBasisThiele': {
+    'zh-Hans': '经文所载间隔 · 年份按 Thiele',
+    'zh-Hant': '經文所載間隔 · 年份按 Thiele',
+    'en': 'interval from scripture, year from Thiele',
   },
-  'wheelModeHistory': {
-    'zh-Hans': '全史·至2026',
-    'zh-Hant': '全史·至2026',
-    'en': 'Full history · to 2026',
-  },
-  'wheelHistoryNote': {
-    'zh-Hans': '主前年代按王上6:1年链（Thiele 锚点）；上古为约数，近代按通行年份。',
-    'zh-Hant': '主前年代按王上6:1年鏈（Thiele 錨點）；上古為約數，近代按通行年份。',
-    'en': 'BC years follow the 1 Kings 6:1 chain (Thiele anchor); the earliest '
-        'are approximate, the modern ones conventional.',
-  },
-  'wheelLegendBibleEvents': {
-    'zh-Hans': '圣经大事（98 件，各有出处）',
-    'zh-Hant': '聖經大事（98 件，各有出處）',
-    'en': 'Bible events (98, each cited)',
-  },
-  'wheelLegendJudah': {
-    'zh-Hans': '犹大诸王',
-    'zh-Hant': '猶大諸王',
-    'en': 'Kings of Judah',
-  },
-  'wheelLegendIsrael': {
-    'zh-Hans': '以色列诸王',
-    'zh-Hant': '以色列諸王',
-    'en': 'Kings of Israel',
-  },
-  'wheelLegendPowers': {
-    'zh-Hans': '列国政权（通行年份）',
-    'zh-Hant': '列國政權（通行年份）',
-    'en': 'World powers (conventional)',
-  },
-  'wheelLegendChurch': {
-    'zh-Hans': '教会与圣经史',
-    'zh-Hant': '教會與聖經史',
-    'en': 'Church & scripture history',
-  },
-  'wheelConventional': {
-    'zh-Hans': '通行年份（非经文所载）',
-    'zh-Hant': '通行年份（非經文所載）',
-    'en': 'Conventional date, not stated in scripture',
-  },
-  'wheelReign': {
-    'zh-Hans': '在位',
-    'zh-Hant': '在位',
-    'en': 'Reigned',
+  'wheelBasisConventional': {
+    'zh-Hans': '通行年份 · 非经文所载',
+    'zh-Hant': '通行年份 · 非經文所載',
+    'en': 'conventional date, not stated in scripture',
   },
 };
 
-/// The three threads of the post-scripture events, coloured apart.
-const Map<String, Color> _histEraColors = {
-  'bible': Color(0xFFB8860B), // scripture's own gold, from era_palette
-  'church': Color(0xFF3E7CB1),
-  'world': Color(0xFF6B7280),
-};
+/// Type size ON SCREEN, in logical pixels, held constant as the reader
+/// zooms. The painter divides by the zoom to get the canvas size, so
+/// magnifying the wheel buys DENSITY rather than bigger letters.
+const double _kLabelPx = 10.5;
 
-/// Kingdom hues, matching the app's line-of-descent palette so the two
-/// wheel modes read as one family.
-const Map<Kingdom, Color> _kingdomColors = {
-  Kingdom.united: Color(0xFF8B6BA8),
-  Kingdom.judah: Color(0xFF5B87C4),
-  Kingdom.israel: Color(0xFFC4885B),
-};
-
-const Color _powerHue = Color(0xFF7A8B6F);
-
-/// BC 586 / 主前586 — the year label for the full-history axis.
+/// BC 586 / 主前586.
 String yearLabel(int year, String locale) {
   final zh = locale.startsWith('zh');
   if (year < 0) return zh ? '主前${-year}' : '${-year} BC';
   return zh ? '主后$year' : 'AD $year';
 }
 
-/// Everything both wheel modes need, loaded once. The three history
-/// datasets are small (about 120 KB together) and loading them up
-/// front means the mode toggle is instant.
-class _WheelBundle {
-  const _WheelBundle(this.chronology, this.timeline, this.kings, this.history);
-  final ChronologyData chronology;
-  final List<TimelineEvent> timeline;
-  final HebrewKingsData kings;
-  final WheelHistoryData history;
+// ── what gets drawn ──────────────────────────────────────────────────
+
+/// A power's arc on its band.
+class _Arc {
+  const _Arc(this.power, this.ring, this.a0, this.a1, this.color);
+  final WheelPower power;
+  final int ring;
+  final double a0;
+  final double a1;
+  final Color color;
+}
+
+/// An event's radial label: a tick at the band, then text running out.
+class _Spoke {
+  const _Spoke(this.event, this.label, this.color);
+  final WheelHistoryEvent event;
+  final RadialLabel label;
+  final Color color;
 }
 
 class _RadialChronologyPageState extends State<RadialChronologyPage> {
-  Future<_WheelBundle>? _future;
-  String _tradition = 'mt';
-  bool _historyMode = false;
+  Future<WheelHistoryData>? _future;
+  final _viewer = TransformationController();
+
+  /// Streams the reader has switched off. Empty means all on.
+  final Set<String> _hidden = {};
   String? _selectedId;
-  final _viewerController = TransformationController();
+
+  /// The viewer's current scale.
+  ///
+  /// Everything about legibility hangs off this. InteractiveViewer
+  /// magnifies the whole canvas, so type drawn at a fixed canvas size
+  /// grows on screen as you zoom — which is backwards. What a reader
+  /// wants is type that stays the SAME size on screen while more of it
+  /// fits as they zoom in, the way a map behaves. So the painter is
+  /// given the zoom and divides by it, and the label thinning uses the
+  /// resulting on-screen size to decide how many labels can fit
+  /// without touching.
+  double _zoom = 1;
 
   @override
   void initState() {
     super.initState();
-    _future = () async {
-      final results = await Future.wait([
-        ChronologyService.instance.load(),
-        TimelineService.instance.loadAll(),
-        HebrewKingsService.instance.load(),
-        WheelHistoryService.instance.load(),
-      ]);
-      return _WheelBundle(
-        results[0] as ChronologyData,
-        results[1] as List<TimelineEvent>,
-        results[2] as HebrewKingsData,
-        results[3] as WheelHistoryData,
-      );
-    }();
+    _future = WheelHistoryService.instance.load();
+    _viewer.addListener(_onZoom);
   }
+
+  void _onZoom() {
+    final z = _viewer.value.getMaxScaleOnAxis();
+    // Repaint only on a change worth repainting for.
+    if ((z - _zoom).abs() > 0.02) setState(() => _zoom = z);
+  }
+
+  /// Zoom about the centre of the view, for the +/- buttons: a desktop
+  /// reader has no pinch, and the scroll wheel alone is not obvious.
+  void _zoomBy(double factor) {
+    final m = _viewer.value.clone();
+    final z = m.getMaxScaleOnAxis();
+    final target = (z * factor).clamp(0.8, 14.0);
+    final applied = target / z;
+    if ((applied - 1).abs() < 0.001) return;
+    _viewer.value = m..scaleByDouble(applied, applied, 1, 1);
+  }
+
+  void _resetZoom() => _viewer.value = Matrix4.identity();
 
   @override
   void dispose() {
-    _viewerController.dispose();
+    _viewer.removeListener(_onZoom);
+    _viewer.dispose();
     super.dispose();
   }
 
   String _s(String key, String fallback, String locale) =>
       uiStrings[key]?[locale] ?? wheelStrings[key]?[locale] ?? fallback;
 
-  /// setState is protected, and the full-history tap handling lives in
-  /// an extension for file layout; it selects through this instead.
-  void _setSelected(String? id) => setState(() => _selectedId = id);
+  void _select(String? id) => setState(() => _selectedId = id);
 
   @override
   Widget build(BuildContext context) {
@@ -252,75 +251,65 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
       backgroundColor: wb.paneBg,
       appBar: AppBar(
         leading: const LocalizedBackButton(),
-        title: Text(_s('wheelTitle', 'Chronology Wheel', locale)),
-        actions: const [LanguageSwitcherButton(), HomeIconButton()],
+        title: Text(_s('wheelTitle', 'World History Wheel', locale)),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.filter_list),
+            tooltip: _s('wheelFilter', 'Filter', locale),
+            onPressed: () => _showFilter(context, locale),
+          ),
+          const LanguageSwitcherButton(),
+          const HomeIconButton(),
+        ],
       ),
-      body: FutureBuilder<_WheelBundle>(
+      body: FutureBuilder<WheelHistoryData>(
         future: _future,
         builder: (context, snap) {
           if (snap.hasError) {
             return Center(
               child: Padding(
                 padding: const EdgeInsets.all(24),
-                child: Text('${snap.error}',
-                    style: TextStyle(color: wb.mutedText)),
+                child:
+                    Text('${snap.error}', style: TextStyle(color: wb.mutedText)),
               ),
             );
           }
-          final bundle = snap.data;
-          if (bundle == null) {
+          final data = snap.data;
+          if (data == null) {
             return const Center(child: CircularProgressIndicator());
           }
-          return _body(context, bundle, locale);
+          return _body(context, data, locale);
         },
       ),
     );
   }
 
-  Widget _body(BuildContext context, _WheelBundle bundle, String locale) {
+  /// The bands actually drawn, outermost first. A hidden stream is
+  /// dropped entirely rather than left as a gap, so switching one off
+  /// gives the rest more room instead of leaving a hole.
+  List<WheelStream> _visible(WheelHistoryData d) =>
+      d.streams.where((s) => !_hidden.contains(s.id)).toList();
+
+  Widget _body(BuildContext context, WheelHistoryData data, String locale) {
     final wb = WbColors.of(context);
     final t = WbType.of(context);
-    final data = bundle.chronology;
-    final tradition = data.traditionById(_tradition);
-    final people = data.inTradition(tradition.id);
-    final endAm = tradition.endAm;
-    final arcs =
-        _historyMode ? <WheelArc>[] : buildWheelArcs(people, tradition.id, endAm);
-    final items = _historyMode ? _buildHistoryItems(bundle, locale) : null;
+    final streams = _visible(data);
+    final ringOf = {for (var i = 0; i < streams.length; i++) streams[i].id: i};
 
     return LayoutBuilder(builder: (context, box) {
-      // The wheel wants a square; give it the largest one the pane
-      // holds, and let InteractiveViewer supply what the pane cannot.
       final side = math.min(box.maxWidth, box.maxHeight);
-      final square = Size(side, side);
       final hubD = side * _kHubFrac * 2;
+      final rBands = side * _kBandsFrac;
+      final rRim = side * _kRimFrac;
 
-      final painter = _historyMode
-          ? _HistoryWheelPainter(
-              items: items!,
-              locale: locale,
-              selectedId: _selectedId,
-              wb: wb,
-              rimFont: t.scaledChrome(9),
-              endFont: t.scaledChrome(10),
-            ) as CustomPainter
-          : _WheelPainter(
-              data: data,
-              traditionId: tradition.id,
-              arcs: arcs,
-              endAm: endAm,
-              locale: locale,
-              selectedId: _selectedId,
-              wb: wb,
-              rimFont: t.scaledChrome(9),
-              endFont: t.scaledChrome(10),
-            );
+      final arcs = _buildArcs(data, ringOf);
+      final spokes = _buildSpokes(data, ringOf, rBands, rRim);
 
       return Stack(children: [
         Positioned.fill(
           child: InteractiveViewer(
-            transformationController: _viewerController,
-            maxScale: 10,
+            transformationController: _viewer,
+            maxScale: 14,
             minScale: 0.8,
             child: Center(
               child: SizedBox(
@@ -328,70 +317,62 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
                 height: side,
                 child: GestureDetector(
                   behavior: HitTestBehavior.opaque,
-                  onTapUp: (d) => _historyMode
-                      ? _handleHistoryTap(
-                          context, d.localPosition, side, bundle, items!,
-                          locale)
-                      : _handleTap(
-                          context, d.localPosition, side, data, arcs, locale),
+                  onTapUp: (e) => _handleTap(context, e.localPosition, side,
+                      data, streams, arcs, spokes, locale),
                   child: Stack(children: [
-                    CustomPaint(size: square, painter: painter),
-                    // The hub is real widgets, not paint, so the mode
-                    // and tradition choices stay real tappable controls
-                    // at any zoom.
+                    CustomPaint(
+                      size: Size(side, side),
+                      painter: _WorldWheelPainter(
+                        streams: streams,
+                        arcs: arcs,
+                        spokes: spokes,
+                        locale: locale,
+                        selectedId: _selectedId,
+                        wb: wb,
+                        zoom: _zoom,
+                        rimFont: t.scaledChrome(_kLabelPx),
+                        endFont: t.scaledChrome(11),
+                        bandFont: t.scaledChrome(10),
+                      ),
+                    ),
                     Center(
                       child: SizedBox(
-                        width: hubD * 0.92,
+                        width: hubD * 0.94,
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              _s('wheelTitle', 'Chronology Wheel', locale),
+                              _s('wheelTitle', 'World History Wheel', locale),
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 color: wb.text,
-                                fontSize: t.scaled(13),
+                                fontSize: t.scaled(12),
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
-                            SizedBox(height: t.scaled(5)),
-                            _modePills(locale, t, wb),
-                            SizedBox(height: t.scaled(5)),
-                            if (!_historyMode) ...[
-                              _traditionPills(data, locale, t, wb),
-                              SizedBox(height: t.scaled(5)),
-                              Text(
-                                '${_s('chronologyAm', 'AM', locale)} 0 – $endAm',
-                                style: TextStyle(
-                                    color: wb.mutedText,
-                                    fontSize: t.scaled(10)),
-                              ),
-                            ] else ...[
-                              Text(
-                                '${yearLabel(-4000, locale)} – '
-                                '${yearLabel(2026, locale)}',
-                                style: TextStyle(
-                                    color: wb.mutedText,
-                                    fontSize: t.scaled(10)),
-                              ),
-                              SizedBox(height: t.scaled(3)),
-                              Text(
-                                _s('wheelHistoryNote', '', locale),
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                    color: wb.mutedText,
-                                    fontSize: t.scaled(7.5)),
-                              ),
-                            ],
                             SizedBox(height: t.scaled(4)),
                             Text(
-                              _s('wheelHint',
-                                  'Pinch to zoom · tap an arc for its verses',
-                                  locale),
-                              textAlign: TextAlign.center,
+                              '${yearLabel(kMinYear, locale)} – '
+                              '${yearLabel(kMaxYear, locale)}',
+                              style: TextStyle(
+                                  color: wb.mutedText,
+                                  fontSize: t.scaled(9.5)),
+                            ),
+                            SizedBox(height: t.scaled(3)),
+                            Text(
+                              '${streams.length} · ${data.powers.length} · '
+                              '${data.events.length}',
                               style: TextStyle(
                                   color: wb.mutedText,
                                   fontSize: t.scaled(8.5)),
+                            ),
+                            SizedBox(height: t.scaled(3)),
+                            Text(
+                              _s('wheelHint', '', locale),
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                  color: wb.mutedText,
+                                  fontSize: t.scaled(7.5)),
                             ),
                           ],
                         ),
@@ -403,246 +384,167 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
             ),
           ),
         ),
-        Positioned(
-            left: 10,
-            bottom: 10,
-            child: _historyMode
-                ? _historyLegend(locale, t, wb)
-                : _legend(locale, t, wb)),
+        Positioned(left: 10, bottom: 10, child: _legend(locale, t, wb)),
+        Positioned(right: 10, bottom: 10, child: _zoomControls(locale, t, wb)),
       ]);
     });
   }
 
-  Widget _modePills(String locale, WbType t, WbColors wb) {
-    Widget pill(String key, String fallback, bool active, VoidCallback go) =>
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 2),
-          child: InkWell(
-            onTap: go,
-            child: Container(
-              padding: EdgeInsets.symmetric(
-                  horizontal: t.scaled(7), vertical: t.scaled(3)),
-              decoration: BoxDecoration(
-                color: active ? wb.selectionBg : null,
-                border: Border.all(color: wb.border),
-              ),
-              child: Text(
-                _s(key, fallback, locale),
-                style: TextStyle(
-                  color: wb.text,
-                  fontSize: t.scaled(10),
-                  fontWeight: active ? FontWeight.w600 : FontWeight.w400,
-                ),
-              ),
+  /// Zoom controls, because a desktop reader has no pinch.
+  ///
+  /// InteractiveViewer answers a trackpad and a scroll wheel, but
+  /// neither is discoverable and a mouse-only reader was left with a
+  /// wheel they could not enlarge — which is what made the labels
+  /// unreadable rather than merely dense. The percentage is shown
+  /// because at 300% the reader should know why more labels appeared.
+  Widget _zoomControls(String locale, WbType t, WbColors wb) {
+    Widget btn(IconData icon, String tip, VoidCallback go) => InkWell(
+          onTap: go,
+          child: Padding(
+            padding: EdgeInsets.all(t.scaled(6)),
+            child: Tooltip(
+              message: tip,
+              child: Icon(icon, size: t.scaled(17), color: wb.text),
             ),
           ),
-        );
-    return Row(mainAxisSize: MainAxisSize.min, children: [
-      pill('wheelModeAm', 'Patriarchs (AM)', !_historyMode, () {
-        setState(() {
-          _historyMode = false;
-          _selectedId = null;
-        });
-      }),
-      pill('wheelModeHistory', 'Full history · to 2026', _historyMode, () {
-        setState(() {
-          _historyMode = true;
-          _selectedId = null;
-        });
-      }),
-    ]);
-  }
-
-  Widget _historyLegend(String locale, WbType t, WbColors wb) {
-    Widget row(Color c, String label, {bool line = false}) => Padding(
-          padding: const EdgeInsets.symmetric(vertical: 1.5),
-          child: Row(mainAxisSize: MainAxisSize.min, children: [
-            Container(
-                width: t.scaled(line ? 14 : 10),
-                height: t.scaled(line ? 2 : 10),
-                color: c),
-            SizedBox(width: t.scaled(6)),
-            Text(label,
-                style:
-                    TextStyle(color: wb.mutedText, fontSize: t.scaled(10))),
-          ]),
         );
     return Container(
-      padding: const EdgeInsets.fromLTRB(8, 6, 10, 6),
       decoration: BoxDecoration(
-        color: wb.paneBg.withValues(alpha: 0.92),
+        color: wb.paneBg.withValues(alpha: 0.94),
         border: Border.all(color: wb.border),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          row(eraColor('monarchy'),
-              _s('wheelLegendBibleEvents', 'Bible events (98)', locale)),
-          row(_kingdomColors[Kingdom.judah]!,
-              _s('wheelLegendJudah', 'Kings of Judah', locale)),
-          row(_kingdomColors[Kingdom.israel]!,
-              _s('wheelLegendIsrael', 'Kings of Israel', locale)),
-          row(_powerHue, _s('wheelLegendPowers', 'World powers', locale)),
-          row(_histEraColors['church']!,
-              _s('wheelLegendChurch', 'Church & scripture history', locale)),
-        ],
-      ),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        btn(Icons.remove, '−', () => _zoomBy(1 / 1.4)),
+        Container(width: 1, height: t.scaled(18), color: wb.border),
+        SizedBox(
+          width: t.scaled(46),
+          child: Text('${(_zoom * 100).round()}%',
+              textAlign: TextAlign.center,
+              style:
+                  TextStyle(color: wb.mutedText, fontSize: t.scaled(10.5))),
+        ),
+        Container(width: 1, height: t.scaled(18), color: wb.border),
+        btn(Icons.add, '+', () => _zoomBy(1.4)),
+        Container(width: 1, height: t.scaled(18), color: wb.border),
+        btn(Icons.center_focus_strong,
+            _s('wheelReset', 'Reset', locale), _resetZoom),
+      ]),
     );
   }
 
-  /// Lay the four datasets onto rings. Out to in: three rings of Bible
-  /// events, two of kings, two of powers, two of church history —
-  /// nine rings, the same radial budget the patriarch mode spends on
-  /// twenty-six.
-  List<_HistItem> _buildHistoryItems(_WheelBundle bundle, String locale) {
-    const minY = -4000, maxY = 2026;
-    final items = <_HistItem>[];
-
-    // Bible events: dots, packed over rings 0-2 so neighbours in a
-    // crowded decade spread instead of overprinting.
-    final ev = bundle.timeline;
-    final starts = [for (final e in ev) angleForSpan(e.year, minY, maxY)];
-    final rings = packIntoRings(starts, starts, 3, minGap: 0.045);
-    for (var i = 0; i < ev.length; i++) {
-      items.add(_HistItem(
-        kind: _HistKind.bibleEvent,
-        id: ev[i].id,
-        ring: rings[i],
-        a0: starts[i],
-        a1: starts[i],
-        color: eraColor(ev[i].era),
-        label: _timelineTitle(ev[i], locale),
-        index: i,
+  List<_Arc> _buildArcs(WheelHistoryData data, Map<String, int> ringOf) {
+    final lineOf = {for (final s in data.streams) s.id: s.line};
+    final out = <_Arc>[];
+    for (final p in data.powers) {
+      final ring = ringOf[p.stream];
+      if (ring == null) continue;
+      out.add(_Arc(
+        p,
+        ring,
+        angleForSpan(p.start, kMinYear, kMaxYear),
+        angleForSpan(p.endFor(kMaxYear), kMinYear, kMaxYear),
+        _lineColor(lineOf[p.stream] ?? 'none'),
       ));
     }
+    return out;
+  }
 
-    // Kings: Judah (with the united kingdom) ring 3, Israel ring 4.
-    final kings = bundle.kings.kings;
-    for (var i = 0; i < kings.length; i++) {
-      final k = kings[i];
-      items.add(_HistItem(
-        kind: _HistKind.king,
-        id: k.id,
-        ring: k.kingdom == Kingdom.israel ? 4 : 3,
-        a0: angleForSpan(k.reignStart, minY, maxY),
-        a1: angleForSpan(k.reignEnd, minY, maxY),
-        color: _kingdomColors[k.kingdom]!,
-        label: k.nameFor(locale),
-        index: i,
-      ));
+  /// Events become radial labels in the annulus outside the bands.
+  ///
+  /// Sorted by angle so [stackRadialLabels] can see neighbours: several
+  /// events in one year step outward along the same spoke instead of
+  /// printing on top of each other.
+  List<_Spoke> _buildSpokes(
+    WheelHistoryData data,
+    Map<String, int> ringOf,
+    double rBands,
+    double rRim,
+  ) {
+    final lineOf = {for (final s in data.streams) s.id: s.line};
+    final all = data.events.where((e) => ringOf.containsKey(e.stream)).toList()
+      ..sort((a, b) => a.year.compareTo(b.year));
+    if (all.isEmpty) return const [];
+
+    // ── DECLUTTER, the way a map does ──────────────────────────────
+    //
+    // At rest, 189 labels round 320° means one every 1.7° — shoulder
+    // to shoulder, and the reader's complaint was exactly that: too
+    // dense to read. Drawing them all and letting them touch is the
+    // one thing that must not happen.
+    //
+    // So: a label needs about 1.35 line-heights of angular room at the
+    // radius it sits on. That room is measured ON SCREEN, so zooming in
+    // buys real space and more labels appear — at 1x roughly half the
+    // corpus is drawn, by 3x all of it. Nothing is lost: what is not
+    // drawn is still tappable-adjacent and always in the band's own
+    // sheet, which lists every event on that stream.
+    final onScreenPx = _kLabelPx * 1.35;
+    final minGap = (onScreenPx / _zoom) / rBands;
+
+    // Selection always survives the thinning: hiding the thing the
+    // reader just tapped would be indefensible.
+    final kept = <WheelHistoryEvent>[];
+    var lastAngle = double.negativeInfinity;
+    for (final e in all) {
+      final a = angleForSpan(e.year, kMinYear, kMaxYear);
+      if (a - lastAngle >= minGap || e.id == _selectedId) {
+        kept.add(e);
+        lastAngle = a;
+      }
     }
 
-    // Powers: bands, packed over rings 5-6 by overlap.
-    final powers = bundle.history.powers;
-    final pStarts = [
-      for (final p in powers) angleForSpan(p.start, minY, maxY)
+    // ── THE SCRIPTURE BASELINE ────────────────────────────────────
+    //
+    // Events the text itself dates start on one shared radius; events
+    // that rest on a general reference start outside it. Two groups,
+    // one boundary — so a reader can see at a glance which claims the
+    // Bible makes and which the world's chronologies make, without
+    // opening anything.
+    //
+    // This ADDS ORDER rather than ornament: it is the same labels,
+    // aligned rather than scattered, plus a single hairline arc to
+    // mark where the line is. Nothing new competes for attention.
+    final scripture = <WheelHistoryEvent>[];
+    final conventional = <WheelHistoryEvent>[];
+    for (final e in kept) {
+      (e.basis == 'conventional' ? conventional : scripture).add(e);
+    }
+
+    List<_Spoke> lay(List<WheelHistoryEvent> group, double base, double len) {
+      if (group.isEmpty) return const [];
+      final angles = [
+        for (final e in group) angleForSpan(e.year, kMinYear, kMaxYear)
+      ];
+      final lengths = [for (final _ in group) len];
+      final labels = stackRadialLabels(angles, lengths, base,
+          minGap: minGap * 0.5, gapPx: 3);
+      return [
+        for (var i = 0; i < group.length; i++)
+          _Spoke(group[i], labels[i],
+              _lineColor(lineOf[group[i].stream] ?? 'none'))
+      ];
+    }
+
+    final span = rRim - rBands;
+    return [
+      ...lay(scripture, rBands + 5, span * 0.36),
+      ...lay(conventional, rBands + span * 0.46, span * 0.4),
     ];
-    final pEnds = [for (final p in powers) angleForSpan(p.end, minY, maxY)];
-    final pRings = packIntoRings(pStarts, pEnds, 2, minGap: 0.01);
-    for (var i = 0; i < powers.length; i++) {
-      items.add(_HistItem(
-        kind: _HistKind.power,
-        id: powers[i].id,
-        ring: 5 + pRings[i],
-        a0: pStarts[i],
-        a1: pEnds[i],
-        color: _powerHue,
-        label: powers[i].nameFor(locale),
-        index: i,
-      ));
-    }
-
-    // Church and scripture history: dots, rings 7-8.
-    final ch = bundle.history.events;
-    final cStarts = [for (final e in ch) angleForSpan(e.year, minY, maxY)];
-    final cRings = packIntoRings(cStarts, cStarts, 2, minGap: 0.045);
-    for (var i = 0; i < ch.length; i++) {
-      items.add(_HistItem(
-        kind: _HistKind.churchEvent,
-        id: ch[i].id,
-        ring: 7 + cRings[i],
-        a0: cStarts[i],
-        a1: cStarts[i],
-        color: _histEraColors[ch[i].era] ?? _histEraColors['church']!,
-        label: ch[i].titleFor(locale),
-        index: i,
-      ));
-    }
-
-    return items;
   }
 
-  String _timelineTitle(TimelineEvent e, String locale) {
-    switch (locale) {
-      case 'zh-Hans':
-        return e.titleZhHans;
-      case 'zh-Hant':
-        return e.titleZhHant;
-      default:
-        return e.titleEn;
-    }
-  }
-
-  String _timelineDesc(TimelineEvent e, String locale) {
-    switch (locale) {
-      case 'zh-Hans':
-        return e.descZhHans;
-      case 'zh-Hant':
-        return e.descZhHant;
-      default:
-        return e.descEn;
-    }
-  }
-
-  Widget _traditionPills(
-      ChronologyData data, String locale, WbType t, WbColors wb) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        for (final tr in data.traditions)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 2),
-            child: InkWell(
-              onTap: () => setState(() {
-                _tradition = tr.id;
-                _selectedId = null;
-              }),
-              child: Container(
-                padding: EdgeInsets.symmetric(
-                    horizontal: t.scaled(8), vertical: t.scaled(3)),
-                decoration: BoxDecoration(
-                  color: _tradition == tr.id ? wb.selectionBg : null,
-                  border: Border.all(color: wb.border),
-                ),
-                child: Text(
-                  tr.nameFor(locale),
-                  style: TextStyle(
-                    color: wb.text,
-                    fontSize: t.scaled(10.5),
-                    fontWeight: _tradition == tr.id
-                        ? FontWeight.w600
-                        : FontWeight.w400,
-                  ),
-                ),
-              ),
-            ),
-          ),
-      ],
-    );
-  }
+  // ── legend and filter ──────────────────────────────────────────────
 
   Widget _legend(String locale, WbType t, WbColors wb) {
-    Widget row(Color c, String label, {bool line = false}) => Padding(
+    Widget row(String line, String key, String fallback) => Padding(
           padding: const EdgeInsets.symmetric(vertical: 1.5),
           child: Row(mainAxisSize: MainAxisSize.min, children: [
             Container(
-                width: t.scaled(line ? 14 : 10),
-                height: t.scaled(line ? 2 : 10),
-                color: c),
+                width: t.scaled(10),
+                height: t.scaled(10),
+                color: _lineColor(line)),
             SizedBox(width: t.scaled(6)),
-            Text(label,
-                style:
-                    TextStyle(color: wb.mutedText, fontSize: t.scaled(10))),
+            Text(_s(key, fallback, locale),
+                style: TextStyle(color: wb.mutedText, fontSize: t.scaled(10))),
           ]),
         );
     return Container(
@@ -654,54 +556,180 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          row(_sethHue, _s('wheelLegendGen5', 'Genesis 5', locale)),
-          row(_shemHue, _s('wheelLegendGen11', 'Genesis 11', locale)),
-          row(_abrahamHue, _s('wheelLegendGen1250', 'Genesis 12–50', locale)),
-          row(_leviHue,
-              _s('wheelLegendExodus', 'Exodus–Deuteronomy', locale)),
-          row(_epochHue, _s('wheelLegendEpoch', 'Epochs (each cited)', locale),
-              line: true),
+          row('shem', 'wheelLineShem', 'Shem'),
+          row('ham', 'wheelLineHam', 'Ham'),
+          row('japheth', 'wheelLineJapheth', 'Japheth'),
+          row('institution', 'wheelLineInstitution', 'Church & Scripture'),
         ],
       ),
     );
   }
 
-  // ── taps ────────────────────────────────────────────────────────────
+  void _showFilter(BuildContext context, String locale) {
+    final wb = WbColors.of(context);
+    final t = WbType.of(context);
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: wb.paneBg,
+      shape: const RoundedRectangleBorder(),
+      isScrollControlled: true,
+      builder: (sheet) => FutureBuilder<WheelHistoryData>(
+        future: _future,
+        builder: (c, snap) {
+          final data = snap.data;
+          if (data == null) return const SizedBox(height: 120);
+          return StatefulBuilder(builder: (c, setSheet) {
+            return ConstrainedBox(
+              constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(sheet).size.height * 0.7),
+              child: ListView(
+                shrinkWrap: true,
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
+                children: [
+                  Row(children: [
+                    Expanded(
+                      child: Text(_s('wheelFilter', 'Filter', locale),
+                          style: TextStyle(
+                              color: wb.text,
+                              fontSize: t.scaled(15),
+                              fontWeight: FontWeight.w600)),
+                    ),
+                    TextButton(
+                      onPressed: () =>
+                          setSheet(() => setState(() => _hidden.clear())),
+                      child: Text(_s('wheelAll', 'All', locale)),
+                    ),
+                    TextButton(
+                      onPressed: () => setSheet(() => setState(
+                          () => _hidden.addAll(data.streams.map((s) => s.id)))),
+                      child: Text(_s('wheelNone', 'None', locale)),
+                    ),
+                  ]),
+                  for (final s in data.streams)
+                    CheckboxListTile(
+                      dense: true,
+                      value: !_hidden.contains(s.id),
+                      onChanged: (_) => setSheet(() => setState(() {
+                            if (!_hidden.remove(s.id)) _hidden.add(s.id);
+                          })),
+                      title: Text(s.nameFor(locale),
+                          style: TextStyle(
+                              color: wb.text, fontSize: t.scaled(12.5))),
+                      subtitle: Text(
+                        '${_s('wheelPowers', 'Powers', locale)} '
+                        '${data.powersOf(s.id).length} · '
+                        '${_s('wheelEvents', 'Events', locale)} '
+                        '${data.eventsOf(s.id).length}',
+                        style: TextStyle(
+                            color: wb.mutedText, fontSize: t.scaled(10)),
+                      ),
+                      secondary: Container(
+                          width: t.scaled(12),
+                          height: t.scaled(12),
+                          color: _lineColor(s.line)),
+                    ),
+                ],
+              ),
+            );
+          });
+        },
+      ),
+    );
+  }
 
-  void _handleTap(BuildContext context, Offset local, double side,
-      ChronologyData data, List<WheelArc> arcs, String locale) {
+  // ── taps ───────────────────────────────────────────────────────────
+
+  void _handleTap(
+    BuildContext context,
+    Offset local,
+    double side,
+    WheelHistoryData data,
+    List<WheelStream> streams,
+    List<_Arc> arcs,
+    List<_Spoke> spokes,
+    String locale,
+  ) {
+    if (streams.isEmpty) return;
     final c = side / 2;
     final dx = local.dx - c, dy = local.dy - c;
     final r = math.sqrt(dx * dx + dy * dy);
-    final angle = math.atan2(dy, dx);
-    final rHub = side * _kHubFrac, rMax = side * _kRimFrac;
-    final tradition = data.traditionById(_tradition);
+    var a = math.atan2(dy, dx);
+    while (a < startRad) {
+      a += 2 * math.pi;
+    }
+    if (a - startRad > sweepRad) return;
 
-    final hit = hitTest(r, angle, arcs, arcs.length, rHub, rMax);
-    if (hit != null) {
-      setState(() => _selectedId = hit.personId);
-      _showPerson(context, data, hit.personId, locale);
-      return;
+    final rHub = side * _kHubFrac;
+    final rBands = side * _kBandsFrac;
+    final rRim = side * _kRimFrac;
+
+    // An event spoke, if the tap is out in the label annulus.
+    //
+    // The tolerance is an ARC LENGTH, not a fixed angle: at this radius
+    // a fixed 0.012 rad is under a pixel of slack near the bands and
+    // nobody can hit it. Converting a comfortable finger target (about
+    // 9 logical pixels) into radians at the tapped radius gives the
+    // same physical target everywhere on the wheel, and the nearest
+    // spoke within it wins.
+    if (r >= rBands - 6 && r <= rRim + 8) {
+      final tol = r > 0 ? (9.0 / r) : 0.05;
+      _Spoke? best;
+      var bestD = double.infinity;
+      for (final s in spokes) {
+        if (r < s.label.rStart - 6 || r > s.label.rEnd + 6) continue;
+        final d = (a - s.label.angle).abs();
+        if (d < tol && d < bestD) {
+          best = s;
+          bestD = d;
+        }
+      }
+      if (best != null) {
+        _select(best.event.id);
+        _showEvent(context, best.event, data, locale);
+        return;
+      }
     }
 
-    // An epoch spoke: anywhere along the line or its rim label, within
-    // about a degree and a half of it.
-    if (r >= rHub && r <= rMax * 1.18) {
-      for (final e in data.epochs) {
-        final year = e.years[tradition.id];
-        if (year == null) continue;
-        var d = (angle - angleForYear(year, tradition.endAm)).abs();
-        d = math.min(d, 2 * math.pi - d);
-        if (d < 0.026) {
-          _showEpoch(context, e, year, locale);
+    // Otherwise a band: a power arc if one is under the tap, else the
+    // stream itself.
+    if (r >= rHub && r <= rBands) {
+      for (final arc in arcs) {
+        final band = ringRadii(arc.ring, streams.length, rHub, rBands);
+        if (r < band.inner || r > band.outer) continue;
+        if (a >= arc.a0 && a <= arc.a1) {
+          _select(arc.power.id);
+          _showPower(context, arc.power, data, locale);
+          return;
+        }
+      }
+      for (var i = 0; i < streams.length; i++) {
+        final band = ringRadii(i, streams.length, rHub, rBands);
+        if (r >= band.inner && r <= band.outer) {
+          _select(streams[i].id);
+          _showStream(context, streams[i], data, locale);
           return;
         }
       }
     }
-
-    if (_selectedId != null) setState(() => _selectedId = null);
+    if (_selectedId != null) _select(null);
   }
 
+  /// Read the verse without leaving the wheel.
+  ///
+  /// The app already has a verse sheet the rest of the pages use, so
+  /// this reuses it rather than inventing a second way to show a
+  /// verse: same type, same versions, same behaviour, and nothing new
+  /// on screen. A chart that asserts something about scripture should
+  /// let the reader check the text in one tap, not send them away and
+  /// lose their place on the wheel.
+  Future<void> _readVerse(BuildContext context, String raw) async {
+    final ref = parseReference(raw);
+    if (ref == null) return;
+    await showVersePopup(context, ref);
+  }
+
+  /// Leave the wheel and open the reader at the verse — the long way,
+  /// for when the reader wants the surrounding chapter.
   Future<void> _jump(BuildContext context, String raw) async {
     final ref = parseReference(raw);
     if (ref == null) return;
@@ -713,432 +741,56 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
     navigateToReader(context);
   }
 
-  // ── detail sheets ───────────────────────────────────────────────────
+  // ── detail sheets ──────────────────────────────────────────────────
 
-  void _showEpoch(
-      BuildContext context, ChronologyEpoch epoch, int year, String locale) {
-    final wb = WbColors.of(context);
-    final t = WbType.of(context);
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: wb.paneBg,
-      shape: const RoundedRectangleBorder(),
-      builder: (sheet) => Padding(
-        padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(epoch.nameFor(locale),
-                style: TextStyle(
-                    color: wb.text,
-                    fontSize: t.scaled(15),
-                    fontWeight: FontWeight.w600)),
-            SizedBox(height: t.scaled(4)),
-            Text('${_s('chronologyAm', 'AM', locale)} $year',
-                style:
-                    TextStyle(color: wb.mutedText, fontSize: t.scaled(12))),
-            if (epoch.ref != null) ...[
-              SizedBox(height: t.scaled(6)),
-              InkWell(
-                onTap: () => _jump(context, epoch.ref!),
-                child: Text(epoch.ref!,
-                    style:
-                        TextStyle(color: wb.link, fontSize: t.scaled(12))),
-              ),
-            ],
-            if ((epoch.noteFor(locale) ?? '').isNotEmpty) ...[
-              SizedBox(height: t.scaled(8)),
-              Text(epoch.noteFor(locale)!,
-                  style:
-                      TextStyle(color: wb.text, fontSize: t.scaled(12))),
-            ],
-          ],
+  Widget _sheet(BuildContext sheet, List<Widget> children) => ConstrainedBox(
+        constraints:
+            BoxConstraints(maxHeight: MediaQuery.of(sheet).size.height * 0.7),
+        child: ListView(
+          shrinkWrap: true,
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
+          children: children,
         ),
-      ),
-    );
-  }
+      );
 
-  void _showPerson(BuildContext context, ChronologyData data, String personId,
-      String locale) {
-    final person = data.byId(personId);
-    final tradition = data.traditionById(_tradition);
-    final figures = person?.figures[tradition.id];
-    if (person == null || figures == null) return;
-    final wb = WbColors.of(context);
-    final t = WbType.of(context);
+  Widget _swatch(WbType t, Color c) =>
+      Container(width: t.scaled(10), height: t.scaled(10), color: c);
 
-    final lives = <String, (int, int)>{
-      for (final p in data.inTradition(tradition.id))
-        p.id: (
-          p.figures[tradition.id]!.birthAm,
-          p.figures[tradition.id]!.deathAm
-        ),
-    };
-    final others = contemporaries(
-        person.id, figures.birthAm, figures.deathAm, lives);
-    final notes = data.notesForPerson(tradition.id, person.id);
-
-    Widget fact(String label, String value, String? ref) => Padding(
-          padding: EdgeInsets.only(top: t.scaled(6)),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Expanded(
-                child: Text(label,
-                    style: TextStyle(
-                        color: wb.mutedText, fontSize: t.scaled(11.5))),
-              ),
-              Text(value,
-                  style: TextStyle(color: wb.text, fontSize: t.scaled(12))),
-              if (ref != null) ...[
-                SizedBox(width: t.scaled(8)),
-                InkWell(
-                  onTap: () => _jump(context, ref),
-                  child: Text(ref,
-                      style: TextStyle(
-                          color: wb.link, fontSize: t.scaled(11))),
-                ),
-              ],
-            ],
+  /// Tap reads the verse in place; long-press opens the reader at it.
+  Widget _refRow(
+          BuildContext context, List<String> refs, WbColors wb, WbType t) =>
+      Wrap(spacing: 10, runSpacing: 4, children: [
+        for (final r in refs)
+          InkWell(
+            onTap: () => _readVerse(context, r),
+            onLongPress: () => _jump(context, r),
+            child: Text(r,
+                style: TextStyle(color: wb.link, fontSize: t.scaled(11))),
           ),
-        );
+      ]);
 
+  String _basisText(String basis, String locale) => switch (basis) {
+        'scripture' => _s('wheelBasisScripture', 'stated in scripture', locale),
+        'scripture+thiele' =>
+          _s('wheelBasisThiele', 'interval from scripture', locale),
+        _ => _s('wheelBasisConventional', 'conventional date', locale),
+      };
+
+  void _showEvent(BuildContext context, WheelHistoryEvent e,
+      WheelHistoryData data, String locale) {
+    final wb = WbColors.of(context);
+    final t = WbType.of(context);
+    final stream = data.streams.firstWhere((s) => s.id == e.stream,
+        orElse: () => const WheelStream(id: '', line: 'none', names: {}));
+    final approx = e.approximate ? (locale.startsWith('zh') ? '约' : 'c. ') : '';
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: wb.paneBg,
       shape: const RoundedRectangleBorder(),
       isScrollControlled: true,
-      builder: (sheet) => ConstrainedBox(
-        constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(sheet).size.height * 0.62),
-        child: ListView(
-          shrinkWrap: true,
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
-          children: [
-            Row(children: [
-              Container(
-                  width: t.scaled(10),
-                  height: t.scaled(10),
-                  color: _hueForLine(person.line)),
-              SizedBox(width: t.scaled(8)),
-              Expanded(
-                child: Text(person.nameFor(locale),
-                    style: TextStyle(
-                        color: wb.text,
-                        fontSize: t.scaled(16),
-                        fontWeight: FontWeight.w600)),
-              ),
-              Text(tradition.nameFor(locale),
-                  style: TextStyle(
-                      color: wb.mutedText, fontSize: t.scaled(11))),
-            ]),
-            SizedBox(height: t.scaled(4)),
-            Text(
-              '${_s('chronologyAm', 'AM', locale)} ${figures.birthAm} – '
-              '${figures.deathAm} · ${figures.lifespan} '
-              '${_s('chronologyYears', 'years', locale)}',
-              style: TextStyle(color: wb.mutedText, fontSize: t.scaled(12)),
-            ),
-            if (figures.begatAt != null)
-              fact(
-                _s('chronologyBegatAt', 'Fathered the next generation at',
-                    locale),
-                '${figures.begatAt} ${_s('chronologyYears', 'years', locale)}',
-                figures.refs['begatAt'],
-              ),
-            if (figures.livedAfter != null)
-              fact(
-                _s('chronologyLivedAfter', 'Lived after that', locale),
-                '${figures.livedAfter} '
-                '${_s('chronologyYears', 'years', locale)}',
-                figures.refs['livedAfter'],
-              ),
-            fact(
-              _s('chronologyLifespan', 'Lifespan', locale),
-              '${figures.lifespan} ${_s('chronologyYears', 'years', locale)}',
-              figures.refs['lifespan'],
-            ),
-            for (final n in notes) ...[
-              SizedBox(height: t.scaled(8)),
-              Text(n.textFor(locale),
-                  style: TextStyle(
-                      color: wb.mutedText, fontSize: t.scaled(11))),
-            ],
-            if (others.isNotEmpty) ...[
-              SizedBox(height: t.scaled(12)),
-              Text(
-                '${_s('chronologyContemporaries', 'Alive at the same time', locale)}'
-                ' · ${others.length}',
-                style: TextStyle(
-                    color: wb.text,
-                    fontSize: t.scaled(12),
-                    fontWeight: FontWeight.w600),
-              ),
-              for (final c in others.take(8))
-                Padding(
-                  padding: EdgeInsets.only(top: t.scaled(3)),
-                  child: Row(children: [
-                    Expanded(
-                      child: Text(
-                          data.byId(c.id)?.nameFor(locale) ?? c.id,
-                          style: TextStyle(
-                              color: wb.text, fontSize: t.scaled(11.5))),
-                    ),
-                    Text(
-                        '${c.years} '
-                        '${_s('chronologyYears', 'years', locale)}',
-                        style: TextStyle(
-                            color: wb.mutedText, fontSize: t.scaled(11))),
-                  ]),
-                ),
-            ],
-          ],
-        ),
-      ),
-    ).then((_) {
-      if (mounted) setState(() {});
-    });
-  }
-}
-
-// ── full-history mode: items, taps, sheets ────────────────────────────
-
-enum _HistKind { bibleEvent, king, power, churchEvent }
-
-/// One drawable, tappable thing on the full-history wheel — a Bible
-/// event dot, a reign segment, a power band or a church-history dot —
-/// reduced to ring + angles so drawing and hit-testing share one shape.
-class _HistItem {
-  const _HistItem({
-    required this.kind,
-    required this.id,
-    required this.ring,
-    required this.a0,
-    required this.a1,
-    required this.color,
-    required this.label,
-    required this.index,
-  });
-
-  final _HistKind kind;
-  final String id;
-  final int ring;
-  final double a0;
-  final double a1;
-  final Color color;
-  final String label;
-
-  /// Position in the dataset the kind names, so the tap sheet can get
-  /// back to the full record.
-  final int index;
-
-  bool get isDot => a1 <= a0;
-}
-
-const int _histRingCount = 9;
-
-extension _HistoryTaps on _RadialChronologyPageState {
-  void _handleHistoryTap(BuildContext context, Offset local, double side,
-      _WheelBundle bundle, List<_HistItem> items, String locale) {
-    final c = side / 2;
-    final dx = local.dx - c, dy = local.dy - c;
-    final r = math.sqrt(dx * dx + dy * dy);
-    var angle = math.atan2(dy, dx);
-    final rHub = side * _kHubFrac, rMax = side * _kRimFrac;
-    if (r < rHub || r > rMax * 1.05) {
-      if (_selectedId != null) _setSelected(null);
-      return;
-    }
-    while (angle < startRad) {
-      angle += 2 * math.pi;
-    }
-    if (angle - startRad > sweepRad) return;
-
-    // Dots get a slightly forgiving angular window; bands are exact.
-    _HistItem? best;
-    var bestDist = double.infinity;
-    for (final it in items) {
-      final band = ringRadii(it.ring, _histRingCount, rHub, rMax);
-      if (r < band.inner - band.width * 0.3 ||
-          r > band.outer + band.width * 0.3) {
-        continue;
-      }
-      if (it.isDot) {
-        final d = (angle - it.a0).abs();
-        if (d < 0.03 && d < bestDist) {
-          best = it;
-          bestDist = d;
-        }
-      } else if (angle >= it.a0 && angle <= it.a1) {
-        if (bestDist == double.infinity) best = it;
-        bestDist = 0;
-      }
-    }
-    if (best == null) {
-      if (_selectedId != null) _setSelected(null);
-      return;
-    }
-    _setSelected(best.id);
-    switch (best.kind) {
-      case _HistKind.bibleEvent:
-        _showTimelineEvent(context, bundle.timeline[best.index], locale);
-      case _HistKind.king:
-        _showKing(context, bundle.kings.kings[best.index], locale);
-      case _HistKind.power:
-        _showPower(context, bundle.history.powers[best.index], locale);
-      case _HistKind.churchEvent:
-        _showHistoryEvent(context, bundle.history.events[best.index], locale);
-    }
-  }
-
-  Widget _sheetShell(BuildContext sheet, WbColors wb, List<Widget> children) =>
-      Padding(
-        padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: children,
-        ),
-      );
-
-  void _showTimelineEvent(
-      BuildContext context, TimelineEvent e, String locale) {
-    final wb = WbColors.of(context);
-    final t = WbType.of(context);
-    final approx = e.approximate ? (locale.startsWith('zh') ? '约' : 'c. ') : '';
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: wb.paneBg,
-      shape: const RoundedRectangleBorder(),
-      builder: (sheet) => _sheetShell(sheet, wb, [
+      builder: (sheet) => _sheet(sheet, [
         Row(children: [
-          Container(
-              width: t.scaled(10), height: t.scaled(10),
-              color: eraColor(e.era)),
-          SizedBox(width: t.scaled(8)),
-          Expanded(
-            child: Text(_timelineTitle(e, locale),
-                style: TextStyle(
-                    color: wb.text,
-                    fontSize: t.scaled(15),
-                    fontWeight: FontWeight.w600)),
-          ),
-        ]),
-        SizedBox(height: t.scaled(4)),
-        Text('$approx${yearLabel(e.year, locale)}',
-            style: TextStyle(color: wb.mutedText, fontSize: t.scaled(12))),
-        SizedBox(height: t.scaled(8)),
-        Text(_timelineDesc(e, locale),
-            style: TextStyle(color: wb.text, fontSize: t.scaled(12))),
-        if (e.refs.isNotEmpty) ...[
-          SizedBox(height: t.scaled(8)),
-          Wrap(spacing: 10, runSpacing: 4, children: [
-            for (final ref in e.refs)
-              InkWell(
-                onTap: () => _jump(context, ref),
-                child: Text(ref,
-                    style:
-                        TextStyle(color: wb.link, fontSize: t.scaled(11))),
-              ),
-          ]),
-        ],
-      ]),
-    );
-  }
-
-  void _showKing(BuildContext context, HebrewKing k, String locale) {
-    final wb = WbColors.of(context);
-    final t = WbType.of(context);
-    final refs = [
-      if (k.kingsRef != null) k.kingsRef!,
-      if (k.chroniclesRef != null) k.chroniclesRef!,
-      if (k.accessionRef != null) k.accessionRef!,
-    ];
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: wb.paneBg,
-      shape: const RoundedRectangleBorder(),
-      builder: (sheet) => _sheetShell(sheet, wb, [
-        Row(children: [
-          Container(
-              width: t.scaled(10), height: t.scaled(10),
-              color: _kingdomColors[k.kingdom]),
-          SizedBox(width: t.scaled(8)),
-          Expanded(
-            child: Text(k.nameFor(locale),
-                style: TextStyle(
-                    color: wb.text,
-                    fontSize: t.scaled(15),
-                    fontWeight: FontWeight.w600)),
-          ),
-        ]),
-        SizedBox(height: t.scaled(4)),
-        Text(
-            '${_s('wheelReign', 'Reigned', locale)} '
-            '${yearLabel(k.reignStart, locale)} – '
-            '${yearLabel(k.reignEnd, locale)}',
-            style: TextStyle(color: wb.mutedText, fontSize: t.scaled(12))),
-        if (refs.isNotEmpty) ...[
-          SizedBox(height: t.scaled(8)),
-          Wrap(spacing: 10, runSpacing: 4, children: [
-            for (final ref in refs)
-              InkWell(
-                onTap: () => _jump(context, ref),
-                child: Text(ref,
-                    style:
-                        TextStyle(color: wb.link, fontSize: t.scaled(11))),
-              ),
-          ]),
-        ],
-      ]),
-    );
-  }
-
-  void _showPower(BuildContext context, WheelPower p, String locale) {
-    final wb = WbColors.of(context);
-    final t = WbType.of(context);
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: wb.paneBg,
-      shape: const RoundedRectangleBorder(),
-      builder: (sheet) => _sheetShell(sheet, wb, [
-        Text(p.nameFor(locale),
-            style: TextStyle(
-                color: wb.text,
-                fontSize: t.scaled(15),
-                fontWeight: FontWeight.w600)),
-        SizedBox(height: t.scaled(4)),
-        Text(
-            '${yearLabel(p.start, locale)} – ${yearLabel(p.end, locale)}',
-            style: TextStyle(color: wb.mutedText, fontSize: t.scaled(12))),
-        if (p.noteFor(locale).isNotEmpty) ...[
-          SizedBox(height: t.scaled(8)),
-          Text(p.noteFor(locale),
-              style: TextStyle(color: wb.text, fontSize: t.scaled(12))),
-        ],
-        SizedBox(height: t.scaled(8)),
-        Text(_s('wheelConventional', 'Conventional date', locale),
-            style: TextStyle(color: wb.mutedText, fontSize: t.scaled(10.5))),
-      ]),
-    );
-  }
-
-  void _showHistoryEvent(
-      BuildContext context, WheelHistoryEvent e, String locale) {
-    final wb = WbColors.of(context);
-    final t = WbType.of(context);
-    final approx = e.approximate ? (locale.startsWith('zh') ? '约' : 'c. ') : '';
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: wb.paneBg,
-      shape: const RoundedRectangleBorder(),
-      builder: (sheet) => _sheetShell(sheet, wb, [
-        Row(children: [
-          Container(
-              width: t.scaled(10), height: t.scaled(10),
-              color: _histEraColors[e.era] ?? _histEraColors['church']!),
+          _swatch(t, _lineColor(stream.line)),
           SizedBox(width: t.scaled(8)),
           Expanded(
             child: Text(e.titleFor(locale),
@@ -1147,649 +799,448 @@ extension _HistoryTaps on _RadialChronologyPageState {
                     fontSize: t.scaled(15),
                     fontWeight: FontWeight.w600)),
           ),
+          Text(stream.nameFor(locale),
+              style: TextStyle(color: wb.mutedText, fontSize: t.scaled(11))),
         ]),
         SizedBox(height: t.scaled(4)),
         Text('$approx${yearLabel(e.year, locale)}',
             style: TextStyle(color: wb.mutedText, fontSize: t.scaled(12))),
-        SizedBox(height: t.scaled(8)),
-        Text(e.descFor(locale),
-            style: TextStyle(color: wb.text, fontSize: t.scaled(12))),
-        SizedBox(height: t.scaled(8)),
-        Text(_s('wheelConventional', 'Conventional date', locale),
-            style: TextStyle(color: wb.mutedText, fontSize: t.scaled(10.5))),
+        if (e.descFor(locale).isNotEmpty) ...[
+          SizedBox(height: t.scaled(8)),
+          Text(e.descFor(locale),
+              style: TextStyle(color: wb.text, fontSize: t.scaled(12))),
+        ],
+        if (e.refs.isNotEmpty) ...[
+          SizedBox(height: t.scaled(8)),
+          _refRow(context, e.refs, wb, t),
+        ],
+        SizedBox(height: t.scaled(10)),
+        Text(
+          e.approximate
+              ? '${_basisText(e.basis, locale)} · '
+                  '${_s('wheelApprox', 'approximate', locale)}'
+              : _basisText(e.basis, locale),
+          style: TextStyle(color: wb.mutedText, fontSize: t.scaled(10.5)),
+        ),
+      ]),
+    );
+  }
+
+  void _showPower(BuildContext context, WheelPower p, WheelHistoryData data,
+      String locale) {
+    final wb = WbColors.of(context);
+    final t = WbType.of(context);
+    final stream = data.streams.firstWhere((s) => s.id == p.stream,
+        orElse: () => const WheelStream(id: '', line: 'none', names: {}));
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: wb.paneBg,
+      shape: const RoundedRectangleBorder(),
+      isScrollControlled: true,
+      builder: (sheet) => _sheet(sheet, [
+        Row(children: [
+          _swatch(t, _lineColor(stream.line)),
+          SizedBox(width: t.scaled(8)),
+          Expanded(
+            child: Text(p.nameFor(locale),
+                style: TextStyle(
+                    color: wb.text,
+                    fontSize: t.scaled(15),
+                    fontWeight: FontWeight.w600)),
+          ),
+        ]),
+        SizedBox(height: t.scaled(4)),
+        Text(
+            '${yearLabel(p.start, locale)} – '
+            '${p.ongoing ? _s('wheelPresent', 'present', locale) : yearLabel(p.end!, locale)}',
+            style: TextStyle(color: wb.mutedText, fontSize: t.scaled(12))),
+        if (p.noteFor(locale).isNotEmpty) ...[
+          SizedBox(height: t.scaled(8)),
+          Text(p.noteFor(locale),
+              style: TextStyle(color: wb.text, fontSize: t.scaled(12))),
+        ],
+        SizedBox(height: t.scaled(10)),
+        Text(
+          p.approximate
+              ? '${_s('wheelBasisConventional', 'conventional', locale)} · '
+                  '${_s('wheelApprox', 'approximate', locale)}'
+              : _s('wheelBasisConventional', 'conventional', locale),
+          style: TextStyle(color: wb.mutedText, fontSize: t.scaled(10.5)),
+        ),
+      ]),
+    );
+  }
+
+  /// A band, opened: what it is, whom it descends from in Genesis 10 —
+  /// every name a tappable verse — and everything it carries.
+  void _showStream(BuildContext context, WheelStream s, WheelHistoryData data,
+      String locale) {
+    final wb = WbColors.of(context);
+    final t = WbType.of(context);
+    final nations = data.nationsOf(s.id);
+    final powers = data.powersOf(s.id)
+      ..sort((a, b) => a.start.compareTo(b.start));
+    final events = data.eventsOf(s.id)
+      ..sort((a, b) => a.year.compareTo(b.year));
+
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: wb.paneBg,
+      shape: const RoundedRectangleBorder(),
+      isScrollControlled: true,
+      builder: (sheet) => _sheet(sheet, [
+        Row(children: [
+          _swatch(t, _lineColor(s.line)),
+          SizedBox(width: t.scaled(8)),
+          Expanded(
+            child: Text(s.nameFor(locale),
+                style: TextStyle(
+                    color: wb.text,
+                    fontSize: t.scaled(16),
+                    fontWeight: FontWeight.w600)),
+          ),
+        ]),
+        if (nations.isNotEmpty) ...[
+          SizedBox(height: t.scaled(10)),
+          Text(_s('wheelDescent', 'Descent in Genesis 10', locale),
+              style: TextStyle(
+                  color: wb.text,
+                  fontSize: t.scaled(12),
+                  fontWeight: FontWeight.w600)),
+          for (final n in nations)
+            Padding(
+              padding: EdgeInsets.only(top: t.scaled(4)),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(n.nameFor(locale),
+                            style: TextStyle(
+                                color: wb.text, fontSize: t.scaled(12))),
+                        if (n.noteFor(locale).isNotEmpty)
+                          Text(n.noteFor(locale),
+                              style: TextStyle(
+                                  color: wb.mutedText,
+                                  fontSize: t.scaled(10.5))),
+                      ],
+                    ),
+                  ),
+                  SizedBox(width: t.scaled(8)),
+                  InkWell(
+                    onTap: () => _readVerse(context, n.ref),
+                    onLongPress: () => _jump(context, n.ref),
+                    child: Text(n.ref,
+                        style:
+                            TextStyle(color: wb.link, fontSize: t.scaled(11))),
+                  ),
+                ],
+              ),
+            ),
+        ],
+        if (powers.isNotEmpty) ...[
+          SizedBox(height: t.scaled(12)),
+          Text('${_s('wheelPowers', 'Powers', locale)} · ${powers.length}',
+              style: TextStyle(
+                  color: wb.text,
+                  fontSize: t.scaled(12),
+                  fontWeight: FontWeight.w600)),
+          for (final p in powers)
+            Padding(
+              padding: EdgeInsets.only(top: t.scaled(3)),
+              child: Row(children: [
+                Expanded(
+                  child: Text(p.nameFor(locale),
+                      style:
+                          TextStyle(color: wb.text, fontSize: t.scaled(11.5))),
+                ),
+                Text(
+                    '${yearLabel(p.start, locale)} – '
+                    '${p.ongoing ? _s('wheelPresent', 'present', locale) : yearLabel(p.end!, locale)}',
+                    style: TextStyle(
+                        color: wb.mutedText, fontSize: t.scaled(10.5))),
+              ]),
+            ),
+        ],
+        if (events.isNotEmpty) ...[
+          SizedBox(height: t.scaled(12)),
+          Text('${_s('wheelEvents', 'Events', locale)} · ${events.length}',
+              style: TextStyle(
+                  color: wb.text,
+                  fontSize: t.scaled(12),
+                  fontWeight: FontWeight.w600)),
+          for (final e in events)
+            Padding(
+              padding: EdgeInsets.only(top: t.scaled(3)),
+              child: Row(children: [
+                Expanded(
+                  child: Text(e.titleFor(locale),
+                      style:
+                          TextStyle(color: wb.text, fontSize: t.scaled(11.5))),
+                ),
+                Text(yearLabel(e.year, locale),
+                    style: TextStyle(
+                        color: wb.mutedText, fontSize: t.scaled(10.5))),
+              ]),
+            ),
+        ],
       ]),
     );
   }
 }
 
-// ── the painter ───────────────────────────────────────────────────────
+// ── the painter ──────────────────────────────────────────────────────
 
-class _WheelPainter extends CustomPainter {
-  _WheelPainter({
-    required this.data,
-    required this.traditionId,
+class _WorldWheelPainter extends CustomPainter {
+  _WorldWheelPainter({
+    required this.streams,
     required this.arcs,
-    required this.endAm,
+    required this.spokes,
     required this.locale,
     required this.selectedId,
     required this.wb,
+    required this.zoom,
     required this.rimFont,
     required this.endFont,
+    required this.bandFont,
   });
 
-  final ChronologyData data;
-  final String traditionId;
-  final List<WheelArc> arcs;
-  final int endAm;
+  final List<WheelStream> streams;
+  final List<_Arc> arcs;
+  final List<_Spoke> spokes;
   final String locale;
   final String? selectedId;
   final WbColors wb;
 
-  /// Rim furniture — tick years and epoch names — is chrome, so its
-  /// size comes in through WbType.scaledChrome rather than a literal
-  /// the reader's Font Size setting cannot move (the #315 ratchet).
+  /// Everything textual is divided by this, so a letter keeps the same
+  /// size on the reader's screen however far in they zoom.
+  final double zoom;
+
   final double rimFont;
   final double endFont;
+  final double bandFont;
 
   @override
   void paint(Canvas canvas, Size size) {
+    if (streams.isEmpty) return;
     final side = math.min(size.width, size.height);
     final c = Offset(size.width / 2, size.height / 2);
     final rHub = side * _kHubFrac;
-    final rMax = side * _kRimFrac;
-    final ringCount = arcs.length;
+    final rBands = side * _kBandsFrac;
+    final rRim = side * _kRimFrac;
 
-    _paintTicks(canvas, c, rHub, rMax);
-    _paintSelectionWedge(canvas, c, rHub, rMax);
-    _paintArcs(canvas, c, rHub, rMax, ringCount);
-    _paintEpochs(canvas, c, rHub, rMax);
-    _paintHubRing(canvas, c, rHub);
-    _paintAxisEnds(canvas, c, rHub, rMax);
+    _paintCenturies(canvas, c, rHub, rRim);
+    _paintGrooves(canvas, c, rHub, rBands);
+    _paintArcs(canvas, c, rHub, rBands);
+    _paintBandNames(canvas, c, rHub, rBands);
+    _paintScriptureBaseline(canvas, c, rBands, rRim);
+    _paintSpokes(canvas, c);
+    _paintRim(canvas, c, rBands, rRim);
+    _paintHub(canvas, c, rHub);
+    _paintAxisEnds(canvas, c, rHub, rRim);
   }
 
-  void _paintTicks(Canvas canvas, Offset c, double rHub, double rMax) {
+  void _paintCenturies(Canvas canvas, Offset c, double rHub, double rRim) {
     final minor = Paint()
-      ..color = wb.border.withValues(alpha: 0.35)
+      ..color = wb.border.withValues(alpha: 0.2)
       ..strokeWidth = 0.5;
     final major = Paint()
-      ..color = wb.border.withValues(alpha: 0.7)
-      ..strokeWidth = 0.9;
-    for (final tick in wheelTicks(endAm)) {
-      final a = angleForYear(tick.year, endAm);
-      final dir = Offset(math.cos(a), math.sin(a));
-      canvas.drawLine(c + dir * rHub, c + dir * rMax,
-          tick.major ? major : minor);
-      if (tick.major) {
-        _paintLabel(canvas, '${tick.year}', c + dir * (rMax + 11),
-            wb.mutedText, rimFont, center: true);
-      }
-    }
-  }
-
-  void _paintSelectionWedge(
-      Canvas canvas, Offset c, double rHub, double rMax) {
-    final id = selectedId;
-    if (id == null) return;
-    WheelArc? sel;
-    for (final a in arcs) {
-      if (a.personId == id) sel = a;
-    }
-    if (sel == null) return;
-    final sweep = sel.deathAngle - sel.birthAngle;
-    final fill = Paint()..color = _epochHue.withValues(alpha: 0.08);
-    final edge = Paint()
-      ..color = _epochHue.withValues(alpha: 0.5)
-      ..strokeWidth = 0.7;
-    final path = Path()
-      ..moveTo(c.dx + math.cos(sel.birthAngle) * rHub,
-          c.dy + math.sin(sel.birthAngle) * rHub)
-      ..lineTo(c.dx + math.cos(sel.birthAngle) * rMax,
-          c.dy + math.sin(sel.birthAngle) * rMax)
-      ..arcTo(Rect.fromCircle(center: c, radius: rMax), sel.birthAngle,
-          sweep, false)
-      ..lineTo(c.dx + math.cos(sel.deathAngle) * rHub,
-          c.dy + math.sin(sel.deathAngle) * rHub)
-      ..arcTo(Rect.fromCircle(center: c, radius: rHub), sel.deathAngle,
-          -sweep, false)
-      ..close();
-    canvas.drawPath(path, fill);
-    for (final a in [sel.birthAngle, sel.deathAngle]) {
-      final dir = Offset(math.cos(a), math.sin(a));
-      canvas.drawLine(c + dir * rHub, c + dir * rMax, edge);
-    }
-  }
-
-  void _paintArcs(
-      Canvas canvas, Offset c, double rHub, double rMax, int ringCount) {
-    final hasSelection = selectedId != null;
-    for (final arc in arcs) {
-      final band = ringRadii(arc.ring, ringCount, rHub, rMax);
-      final rect = Rect.fromCircle(center: c, radius: band.centre);
-      final hue = _hueForLine(arc.line);
-      final selected = arc.personId == selectedId;
-      final dim = hasSelection && !selected ? 0.38 : 1.0;
-
-      final darkPaint = Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = band.width
-        ..color = hue.withValues(alpha: 0.95 * dim);
-      final lightPaint = Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = band.width
-        ..color = hue.withValues(alpha: 0.42 * dim);
-
-      final begat = arc.begatAngle;
-      if (begat != null) {
-        canvas.drawArc(
-            rect, arc.birthAngle, begat - arc.birthAngle, false, darkPaint);
-        canvas.drawArc(
-            rect, begat, arc.deathAngle - begat, false, lightPaint);
-      } else {
-        canvas.drawArc(rect, arc.birthAngle,
-            arc.deathAngle - arc.birthAngle, false, darkPaint);
-      }
-
-      // Round the ends with markers that sit ON the birth and death
-      // years rather than stroke caps that would stretch past them — a
-      // chart whose rule is "never invent a date" does not get to add
-      // half a stroke-width of years for looks.
-      final dotR = band.width * 0.5;
-      for (final (a, solid) in [
-        (arc.birthAngle, true),
-        (arc.deathAngle, false)
-      ]) {
-        final p =
-            c + Offset(math.cos(a), math.sin(a)) * band.centre;
-        canvas.drawCircle(
-            p,
-            dotR,
-            Paint()
-              ..color = (solid ? hue : wb.paneBg)
-                  .withValues(alpha: solid ? 0.95 * dim : 1.0));
-        if (!solid) {
-          canvas.drawCircle(
-              p,
-              dotR - 0.5,
-              Paint()
-                ..style = PaintingStyle.stroke
-                ..strokeWidth = 1
-                ..color = hue.withValues(alpha: 0.95 * dim));
-        }
-      }
-
-      if (selected) {
-        canvas.drawArc(
-            Rect.fromCircle(center: c, radius: band.outer),
-            arc.birthAngle,
-            arc.deathAngle - arc.birthAngle,
-            false,
-            Paint()
-              ..style = PaintingStyle.stroke
-              ..strokeWidth = 1
-              ..color = wb.text.withValues(alpha: 0.8));
-      }
-
-      _paintNameOnArc(canvas, c, band, arc, dim);
-    }
-
-    // The chain of descent: at each man's fathering year a hairline
-    // drops from his band to his son's — the same year the son's arc
-    // begins, so the line and the arc meet by arithmetic, not by
-    // drawing. Sons follow fathers ring by ring, so ring+1 is the son.
-    final tick = Paint()
-      ..color = wb.mutedText.withValues(alpha: hasSelection ? 0.25 : 0.5)
-      ..strokeWidth = 0.7;
-    for (final arc in arcs) {
-      final begat = arc.begatAngle;
-      if (begat == null || arc.ring + 1 >= ringCount) continue;
-      final father = ringRadii(arc.ring, ringCount, rHub, rMax);
-      final son = ringRadii(arc.ring + 1, ringCount, rHub, rMax);
-      final dir = Offset(math.cos(begat), math.sin(begat));
-      canvas.drawLine(c + dir * son.outer, c + dir * father.inner, tick);
-    }
-  }
-
-  void _paintNameOnArc(Canvas canvas, Offset c,
-      ({double inner, double outer, double centre, double width}) band,
-      WheelArc arc, double dim) {
-    var name = data.byId(arc.personId)?.nameFor(locale) ?? arc.personId;
-    // The printed chronologies set the years right on the bar, and the
-    // owner asked for that density: append the lifespan when it fits.
-    final span = data.byId(arc.personId)?.figures[traditionId]?.lifespan;
-    if (span != null) name = '$name · $span';
-    // The dark birth→fathering segment is usually the short one, so the
-    // label lives on the long light segment when there is one.
-    final segStart = arc.begatAngle ?? arc.birthAngle;
-    final segEnd = arc.deathAngle;
-    final available = segEnd - segStart;
-    if (available <= 0) return;
-
-    var fontSize = (band.width * 0.72).clamp(7.0, 12.0);
-    for (var attempt = 0; attempt < 2; attempt++) {
-      final style = TextStyle(
-        color: wb.text.withValues(alpha: 0.9 * dim),
-        fontSize: fontSize,
-      );
-      final widths = <double>[];
-      var total = 0.0;
-      for (final ch in name.characters) {
-        final tp = TextPainter(
-            text: TextSpan(text: ch, style: style),
-            textDirection: TextDirection.ltr)
-          ..layout();
-        widths.add(tp.width);
-        total += tp.width;
-      }
-      final angular = total / band.centre;
-      if (angular <= available * 0.9) {
-        _drawCharsOnArc(canvas, c, band.centre, name, widths, style,
-            segStart + (available - angular) / 2, angular);
-        return;
-      }
-      fontSize *= 0.85;
-      if (fontSize < 6.5) break; // too tight — the tap reveals the name
-    }
-    // The years did not fit; the name alone still might.
-    final sep = name.lastIndexOf(' · ');
-    if (sep > 0) {
-      _paintBareNameOnArc(canvas, c, band, arc, dim, name.substring(0, sep));
-    }
-  }
-
-  void _paintBareNameOnArc(Canvas canvas, Offset c,
-      ({double inner, double outer, double centre, double width}) band,
-      WheelArc arc, double dim, String name) {
-    final segStart = arc.begatAngle ?? arc.birthAngle;
-    final available = arc.deathAngle - segStart;
-    if (available <= 0) return;
-    final fontSize = (band.width * 0.72).clamp(7.0, 12.0);
-    final style = TextStyle(
-      color: wb.text.withValues(alpha: 0.9 * dim),
-      fontSize: fontSize,
-    );
-    final widths = <double>[];
-    var total = 0.0;
-    for (final ch in name.characters) {
-      final tp = TextPainter(
-          text: TextSpan(text: ch, style: style),
-          textDirection: TextDirection.ltr)
-        ..layout();
-      widths.add(tp.width);
-      total += tp.width;
-    }
-    final angular = total / band.centre;
-    if (angular > available * 0.9) return;
-    _drawCharsOnArc(canvas, c, band.centre, name, widths, style,
-        segStart + (available - angular) / 2, angular);
-  }
-
-  void _drawCharsOnArc(Canvas canvas, Offset c, double radius, String text,
-      List<double> widths, TextStyle style, double startAngle,
-      double angularLen) {
-    final mid = startAngle + angularLen / 2;
-    // On the lower half of the wheel a tangential baseline runs upside
-    // down; flip the glyphs and walk the arc backwards so the text
-    // still reads left to right.
-    final flip = math.sin(mid) > 0;
-    var pen = flip ? startAngle + angularLen : startAngle;
-    final chars = text.characters.toList();
-    for (var i = 0; i < chars.length; i++) {
-      final w = widths[i];
-      final da = w / radius;
-      final theta = flip ? pen - da / 2 : pen + da / 2;
-      final tp = TextPainter(
-          text: TextSpan(text: chars[i], style: style),
-          textDirection: TextDirection.ltr)
-        ..layout();
-      canvas.save();
-      canvas.translate(c.dx + math.cos(theta) * radius,
-          c.dy + math.sin(theta) * radius);
-      canvas.rotate(theta + (flip ? -math.pi / 2 : math.pi / 2));
-      tp.paint(canvas, Offset(-tp.width / 2, -tp.height / 2));
-      canvas.restore();
-      pen += flip ? -da : da;
-    }
-  }
-
-  void _paintEpochs(Canvas canvas, Offset c, double rHub, double rMax) {
-    final paint = Paint()
-      ..color = _epochHue.withValues(alpha: 0.75)
-      ..strokeWidth = 1.1;
-    for (final e in data.epochs) {
-      final year = e.years[traditionId];
-      if (year == null) continue;
-      final a = angleForYear(year, endAm);
-      final dir = Offset(math.cos(a), math.sin(a));
-      // Dashed by hand: 5 on, 4 off, hub to rim.
-      var r = rHub;
-      while (r < rMax) {
-        final r2 = math.min(r + 5, rMax);
-        canvas.drawLine(c + dir * r, c + dir * r2, paint);
-        r = r2 + 4;
-      }
-      canvas.drawCircle(c + dir * rMax, 2.4,
-          Paint()..color = _epochHue.withValues(alpha: 0.9));
-      _paintRadialLabel(
-          canvas, c, '${e.nameFor(locale)} · $year', a, rMax + 20);
-    }
-  }
-
-  /// A label set along the radius direction just outside the rim,
-  /// flipped on the left half so it never reads upside down.
-  void _paintRadialLabel(
-      Canvas canvas, Offset c, String text, double angle, double radius) {
-    final tp = TextPainter(
-      text: TextSpan(
-          text: text,
-          style: TextStyle(
-              color: _epochHue.withValues(alpha: 0.95), fontSize: rimFont)),
-      textDirection: TextDirection.ltr,
-    )..layout();
-    final flip = math.cos(angle) < 0;
-    canvas.save();
-    canvas.translate(c.dx + math.cos(angle) * radius,
-        c.dy + math.sin(angle) * radius);
-    canvas.rotate(angle + (flip ? math.pi : 0));
-    tp.paint(canvas,
-        Offset(flip ? -tp.width : 0, -tp.height / 2));
-    canvas.restore();
-  }
-
-  void _paintHubRing(Canvas canvas, Offset c, double rHub) {
-    canvas.drawCircle(c, rHub, Paint()..color = wb.paneAltBg);
-    canvas.drawCircle(
-        c,
-        rHub,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1
-          ..color = wb.border);
-  }
-
-  void _paintAxisEnds(Canvas canvas, Offset c, double rHub, double rMax) {
-    final paint = Paint()
-      ..color = wb.border
-      ..strokeWidth = 1;
-    for (final (year, a) in [
-      (0, angleForYear(0, endAm)),
-      (endAm, angleForYear(endAm, endAm))
-    ]) {
-      final dir = Offset(math.cos(a), math.sin(a));
-      canvas.drawLine(c + dir * rHub, c + dir * rMax, paint);
-      // Push the two boundary labels into the gap wedge so they cannot
-      // sit on top of each other.
-      final off = year == 0 ? -0.06 : 0.06;
-      final la = a + off;
-      _paintLabel(
-          canvas,
-          'AM $year',
-          c + Offset(math.cos(la), math.sin(la)) * (rMax + 14),
-          wb.text,
-          endFont,
-          center: true);
-    }
-  }
-
-  void _paintLabel(Canvas canvas, String text, Offset at, Color color,
-      double fontSize,
-      {bool center = false}) {
-    final tp = TextPainter(
-      text: TextSpan(
-          text: text, style: TextStyle(color: color, fontSize: fontSize)),
-      textDirection: TextDirection.ltr,
-    )..layout();
-    tp.paint(
-        canvas,
-        center
-            ? at - Offset(tp.width / 2, tp.height / 2)
-            : at);
-  }
-
-  @override
-  bool shouldRepaint(_WheelPainter old) =>
-      old.traditionId != traditionId ||
-      old.selectedId != selectedId ||
-      old.locale != locale ||
-      old.endAm != endAm ||
-      old.rimFont != rimFont ||
-      old.arcs.length != arcs.length;
-}
-
-// ── the full-history painter ──────────────────────────────────────────
-
-/// Draws the −4000..2026 wheel: nine rings of dots, reigns and bands.
-///
-/// Shares the geometry of [_WheelPainter] but none of its data model,
-/// so it is its own class; the handful of text helpers are duplicated
-/// rather than shared because each painter's label sizing is derived
-/// from its own ring widths.
-class _HistoryWheelPainter extends CustomPainter {
-  _HistoryWheelPainter({
-    required this.items,
-    required this.locale,
-    required this.selectedId,
-    required this.wb,
-    required this.rimFont,
-    required this.endFont,
-  });
-
-  final List<_HistItem> items;
-  final String locale;
-  final String? selectedId;
-  final WbColors wb;
-  final double rimFont;
-  final double endFont;
-
-  static const int _minY = -4000;
-  static const int _maxY = 2026;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final side = math.min(size.width, size.height);
-    final c = Offset(size.width / 2, size.height / 2);
-    final rHub = side * _kHubFrac;
-    final rMax = side * _kRimFrac;
-
-    _paintZones(canvas, c, rHub, rMax);
-    _paintTicks(canvas, c, rHub, rMax);
-    _paintItems(canvas, c, rHub, rMax);
-    _paintRim(canvas, c, rMax);
-    _paintHubRing(canvas, c, rHub);
-    _paintAxisEnds(canvas, c, rHub, rMax);
-  }
-
-  /// The four annulus zones — Bible events, kings, powers, church —
-  /// washed apart the way the engraved charts band their rings, so the
-  /// eye finds the register before it reads a single label. The wash
-  /// is cut as a donut path (rim circle + hub circle, even-odd) and
-  /// clipped to the swept sector so the gap wedge stays paper-bare.
-  void _paintZones(Canvas canvas, Offset c, double rHub, double rMax) {
-    const zones = [
-      (0, 2, Color(0xFF2A4FB0)), // Bible events — monarchy blue
-      (3, 4, Color(0xFF5B87C4)), // kings
-      (5, 6, Color(0xFF7A8B6F)), // powers
-      (7, 8, Color(0xFF3E7CB1)), // church & scripture
-    ];
-    canvas.save();
-    final sector = Path()
-      ..moveTo(c.dx, c.dy)
-      ..arcTo(Rect.fromCircle(center: c, radius: rMax + 2), startRad,
-          sweepRad, false)
-      ..close();
-    canvas.clipPath(sector);
-    for (final (first, last, hue) in zones) {
-      final outer = ringRadii(first, _histRingCount, rHub, rMax).outer;
-      final inner = ringRadii(last, _histRingCount, rHub, rMax).inner;
-      final donut = Path()
-        ..addOval(Rect.fromCircle(center: c, radius: outer + 1))
-        ..addOval(Rect.fromCircle(center: c, radius: inner - 1))
-        ..fillType = PathFillType.evenOdd;
-      canvas.drawPath(
-          donut, Paint()..color = hue.withValues(alpha: 0.055));
-      canvas.drawCircle(
-          c,
-          outer + 1,
-          Paint()
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 0.4
-            ..color = hue.withValues(alpha: 0.25));
-    }
-    canvas.restore();
-  }
-
-  /// The rim: a double ring, the engraved charts' outer border.
-  void _paintRim(Canvas canvas, Offset c, double rMax) {
-    for (final (r, w, a) in [(rMax + 2.0, 0.9, 0.6), (rMax + 5.0, 0.4, 0.35)]) {
-      canvas.drawArc(
-          Rect.fromCircle(center: c, radius: r),
-          startRad,
-          sweepRad,
-          false,
-          Paint()
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = w
-            ..color = wb.border.withValues(alpha: a));
-    }
-  }
-
-  void _paintTicks(Canvas canvas, Offset c, double rHub, double rMax) {
-    final minor = Paint()
-      ..color = wb.border.withValues(alpha: 0.3)
-      ..strokeWidth = 0.5;
-    final major = Paint()
-      ..color = wb.border.withValues(alpha: 0.65)
+      ..color = wb.border.withValues(alpha: 0.5)
       ..strokeWidth = 0.9;
     var stagger = false;
-    for (var y = _minY; y <= _maxY; y += 100) {
-      if (y == _minY || y == _maxY) continue; // the end spokes own these
+    for (var y = kMinYear; y <= kMaxYear; y += 100) {
+      if (y == kMinYear) continue;
       final isMajor = y % 500 == 0;
-      final a = angleForSpan(y, _minY, _maxY);
+      final a = angleForSpan(y, kMinYear, kMaxYear);
       final dir = Offset(math.cos(a), math.sin(a));
-      canvas.drawLine(
-          c + dir * rHub, c + dir * rMax, isMajor ? major : minor);
+      canvas.drawLine(c + dir * rHub, c + dir * rRim, isMajor ? major : minor);
       if (isMajor) {
-        // Alternate the label radius so adjacent centuries clear each
-        // other even at rest zoom — the engraved charts stagger their
-        // rim years for the same reason.
-        final rr = rMax + (stagger ? 19 : 10);
+        // Stagger over two radii so adjacent labels clear each other.
+        final rr = rRim + (stagger ? 22 : 11);
         stagger = !stagger;
-        _paintLabel(canvas, yearLabel(y, locale), c + dir * rr,
-            wb.mutedText, rimFont,
+        _label(canvas, yearLabel(y, locale), c + dir * rr, wb.mutedText,
+            rimFont / zoom,
             center: true);
       }
     }
   }
 
-  void _paintItems(Canvas canvas, Offset c, double rHub, double rMax) {
-    final hasSelection = selectedId != null;
-    // Sorted by ring then angle so label collision can be decided by
-    // simply remembering where the previous label on the ring ended —
-    // a label that will not fit cleanly is skipped, and the tap still
-    // reveals the record. Overprinted type is the one thing the
-    // engraved charts never allow themselves.
-    final ordered = [...items]..sort((a, b) {
-      final byRing = a.ring.compareTo(b.ring);
-      return byRing != 0 ? byRing : a.a0.compareTo(b.a0);
-    });
-    final labelEnd = List<double>.filled(_histRingCount, double.negativeInfinity);
-    for (final it in ordered) {
-      final band = ringRadii(it.ring, _histRingCount, rHub, rMax);
-      final selected = it.id == selectedId;
-      final dim = hasSelection && !selected ? 0.4 : 1.0;
-
-      if (it.isDot) {
-        final p = c +
-            Offset(math.cos(it.a0), math.sin(it.a0)) * band.centre;
-        final dotR = band.width * 0.38;
-        canvas.drawCircle(
-            p, dotR, Paint()..color = it.color.withValues(alpha: 0.95 * dim));
-        if (selected) {
-          canvas.drawCircle(
-              p,
-              dotR + 1.5,
-              Paint()
-                ..style = PaintingStyle.stroke
-                ..strokeWidth = 1
-                ..color = wb.text);
-        }
-        // The label runs along the ring just after the dot. It is
-        // drawn only if it clears the previous label on this ring —
-        // a skipped label stays one tap away, an overprinted one is
-        // lost to everybody.
-        final gap = (dotR + 2) / band.centre;
-        final drawn = _labelOnArc(canvas, c, band.centre, it.label,
-            it.a0 + gap, 0.22, band.width * 0.62, dim,
-            notBefore: labelEnd[it.ring]);
-        if (drawn > 0) labelEnd[it.ring] = drawn;
-      } else {
-        final rect = Rect.fromCircle(center: c, radius: band.centre);
-        final w = band.width * (it.kind == _HistKind.king ? 0.88 : 0.72);
-        canvas.drawArc(
-            rect,
-            it.a0,
-            it.a1 - it.a0,
-            false,
-            Paint()
-              ..style = PaintingStyle.stroke
-              ..strokeWidth = w
-              ..color = it.color.withValues(
-                  alpha: (it.kind == _HistKind.king ? 0.9 : 0.55) * dim));
-        if (it.kind == _HistKind.king) {
-          // A hairline at each accession, so forty adjacent reigns
-          // read as forty reigns and not one long ribbon.
-          final sep = Paint()
-            ..strokeWidth = 0.7
-            ..color = wb.paneBg.withValues(alpha: 0.9);
-          for (final a in [it.a0, it.a1]) {
-            final dir = Offset(math.cos(a), math.sin(a));
-            canvas.drawLine(c + dir * (band.centre - w / 2),
-                c + dir * (band.centre + w / 2), sep);
-          }
-        } else {
-          canvas.drawArc(
-              rect,
-              it.a0,
-              it.a1 - it.a0,
-              false,
-              Paint()
-                ..style = PaintingStyle.stroke
-                ..strokeWidth = 0.5
-                ..color = it.color.withValues(alpha: 0.7 * dim));
-        }
-        if (selected) {
-          canvas.drawArc(
-              Rect.fromCircle(center: c, radius: band.outer),
-              it.a0,
-              it.a1 - it.a0,
-              false,
-              Paint()
-                ..style = PaintingStyle.stroke
-                ..strokeWidth = 1
-                ..color = wb.text.withValues(alpha: 0.85));
-        }
-        final drawn = _labelOnArc(canvas, c, band.centre, it.label, it.a0,
-            it.a1 - it.a0, band.width * 0.6, dim,
-            centreIn: it.a1 - it.a0, notBefore: labelEnd[it.ring]);
-        if (drawn > 0) labelEnd[it.ring] = drawn;
-      }
+  /// A faint groove per band, so an empty stretch still reads as that
+  /// band rather than as blank paper.
+  void _paintGrooves(Canvas canvas, Offset c, double rHub, double rBands) {
+    for (var i = 0; i < streams.length; i++) {
+      final band = ringRadii(i, streams.length, rHub, rBands);
+      canvas.drawArc(
+          Rect.fromCircle(center: c, radius: band.centre),
+          startRad,
+          sweepRad,
+          false,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = band.width
+            ..color = _lineColor(streams[i].line).withValues(alpha: 0.05));
     }
   }
 
-  /// A tangential label along the ring, flipped upright on the lower
-  /// half, skipped entirely when even the shrunken form cannot fit in
-  /// [maxAngular] or would start before [notBefore] — the previous
-  /// label's end on this ring. Returns the angle the label ends at,
-  /// or 0 when nothing was drawn, so the caller can carry the
-  /// occupancy forward.
-  double _labelOnArc(Canvas canvas, Offset c, double radius, String text,
-      double startAngle, double maxAngular, double fontSizeIn, double dim,
-      {double? centreIn, double notBefore = double.negativeInfinity}) {
-    var fontSize = fontSizeIn.clamp(6.5, 10.5);
+  void _paintArcs(Canvas canvas, Offset c, double rHub, double rBands) {
+    final has = selectedId != null;
+    for (final arc in arcs) {
+      final band = ringRadii(arc.ring, streams.length, rHub, rBands);
+      final sel = arc.power.id == selectedId;
+      final dim = has && !sel ? 0.35 : 1.0;
+      canvas.drawArc(
+        Rect.fromCircle(center: c, radius: band.centre),
+        arc.a0,
+        arc.a1 - arc.a0,
+        false,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = band.width * 0.86
+          ..color = arc.color.withValues(alpha: 0.78 * dim),
+      );
+      // Hairlines at the boundaries so adjacent spans read as separate.
+      final edge = Paint()
+        ..strokeWidth = 0.7
+        ..color = wb.paneBg.withValues(alpha: 0.85);
+      for (final a in [arc.a0, arc.a1]) {
+        final dir = Offset(math.cos(a), math.sin(a));
+        canvas.drawLine(c + dir * (band.centre - band.width * 0.43),
+            c + dir * (band.centre + band.width * 0.43), edge);
+      }
+      if (sel) {
+        canvas.drawArc(
+            Rect.fromCircle(center: c, radius: band.outer),
+            arc.a0,
+            arc.a1 - arc.a0,
+            false,
+            Paint()
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = 1
+              ..color = wb.text.withValues(alpha: 0.85));
+      }
+      _tangentialLabel(canvas, c, band.centre, arc.power.nameFor(locale),
+          arc.a0, arc.a1 - arc.a0,
+          math.min(band.width * 0.72, rimFont / zoom), dim);
+    }
+  }
+
+  /// The band's own name, set in the gap wedge before twelve o'clock,
+  /// where no data is ever drawn.
+  void _paintBandNames(Canvas canvas, Offset c, double rHub, double rBands) {
+    for (var i = 0; i < streams.length; i++) {
+      final band = ringRadii(i, streams.length, rHub, rBands);
+      final tp = TextPainter(
+        text: TextSpan(
+          text: streams[i].nameFor(locale),
+          style: TextStyle(
+            color: _lineColor(streams[i].line).withValues(alpha: 0.95),
+            fontSize: math.min(bandFont / zoom, band.width * 1.05),
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout();
+      canvas.save();
+      canvas.translate(c.dx, c.dy - band.centre);
+      tp.paint(canvas, Offset(-tp.width - 7, -tp.height / 2));
+      canvas.restore();
+    }
+  }
+
+  void _paintSpokes(Canvas canvas, Offset c) {
+    final has = selectedId != null;
+    for (final s in spokes) {
+      final sel = s.event.id == selectedId;
+      final dim = has && !sel ? 0.28 : 1.0;
+      final a = s.label.angle;
+      final dir = Offset(math.cos(a), math.sin(a));
+      // The tick: a short line from the band out to the text, so the
+      // label is visibly attached to its stream.
+      canvas.drawLine(
+        c + dir * (s.label.rStart - 5),
+        c + dir * s.label.rStart,
+        Paint()
+          ..strokeWidth = sel ? 1.5 : 0.8
+          ..color = s.color.withValues(alpha: 0.8 * dim),
+      );
+      _radialLabel(canvas, c, s, dim, sel);
+    }
+  }
+
+  /// Event text running OUTWARD along its spoke — the whole reason this
+  /// wheel can carry two hundred events without overprinting.
+  ///
+  /// A scripture event carries its verse right on the label once there
+  /// is room for it: the reference IS the evidence, and a chart that
+  /// makes a claim about scripture should show where to check it
+  /// without a tap.
+  void _radialLabel(Canvas canvas, Offset c, _Spoke s, double dim, bool sel) {
+    final style = TextStyle(
+      color: sel ? wb.text : wb.text.withValues(alpha: 0.82 * dim),
+      fontSize: rimFont / zoom,
+      fontWeight: sel ? FontWeight.w600 : FontWeight.w400,
+    );
+    final refStyle = TextStyle(
+      color: wb.link.withValues(alpha: 0.9 * dim),
+      fontSize: (rimFont / zoom) * 0.86,
+    );
+    final room = s.label.rEnd - s.label.rStart;
+    var text = s.event.titleFor(locale);
+    TextPainter lay(String t) => TextPainter(
+        text: TextSpan(text: t, style: style),
+        textDirection: TextDirection.ltr,
+        maxLines: 1)
+      ..layout();
+
+    var tp = lay(text);
+    // Truncate to the radial room rather than spilling into the rim.
+    while (tp.width > room && text.characters.length > 2) {
+      text = text.characters.take(text.characters.length - 2).toString();
+      tp = lay('$text…');
+    }
+    if (tp.width > room) return;
+
+    // The verse, when the label did not use up the radius.
+    TextPainter? refTp;
+    if (s.event.refs.isNotEmpty) {
+      final probe = TextPainter(
+          text: TextSpan(text: '  ${s.event.refs.first}', style: refStyle),
+          textDirection: TextDirection.ltr,
+          maxLines: 1)
+        ..layout();
+      if (tp.width + probe.width <= room) refTp = probe;
+    }
+
+    final a = s.label.angle;
+    canvas.save();
+    if (s.label.flipped) {
+      // On the left half, run the text from the outer end inward so it
+      // still reads left to right instead of upside down.
+      canvas.translate(c.dx + math.cos(a) * s.label.rEnd,
+          c.dy + math.sin(a) * s.label.rEnd);
+      canvas.rotate(a + math.pi);
+    } else {
+      canvas.translate(c.dx + math.cos(a) * s.label.rStart,
+          c.dy + math.sin(a) * s.label.rStart);
+      canvas.rotate(a);
+    }
+    tp.paint(canvas, Offset(0, -tp.height / 2));
+    refTp?.paint(canvas, Offset(tp.width, -refTp.height / 2));
+    canvas.restore();
+  }
+
+  /// A label along the arc, centred in the span, skipped when it cannot
+  /// fit — the name is one tap away either way, and overprinted type is
+  /// lost to everybody.
+  void _tangentialLabel(Canvas canvas, Offset c, double radius, String text,
+      double a0, double sweep, double fontSizeIn, double dim) {
+    if (sweep <= 0) return;
+    var fontSize = fontSizeIn.clamp(6.0, 10.0);
     for (var attempt = 0; attempt < 2; attempt++) {
       final style = TextStyle(
-        color: wb.text.withValues(alpha: 0.85 * dim),
-        fontSize: fontSize,
-      );
+          color: wb.text.withValues(alpha: 0.9 * dim), fontSize: fontSize);
       final widths = <double>[];
       var total = 0.0;
       for (final ch in text.characters) {
@@ -1801,56 +1252,75 @@ class _HistoryWheelPainter extends CustomPainter {
         total += tp.width;
       }
       final angular = total / radius;
-      if (angular <= maxAngular * 0.95) {
-        var a0 = startAngle;
-        if (centreIn != null && angular < centreIn) {
-          a0 = startAngle + (centreIn - angular) / 2;
-        }
-        // A whisker of clearance between neighbouring labels.
-        if (a0 < notBefore + 0.012) {
-          a0 = notBefore + 0.012;
-          // Re-centred labels may no longer fit their band once pushed.
-          if (centreIn != null && a0 + angular > startAngle + centreIn) {
-            return 0;
-          }
-        }
-        // Nothing may run into the gap wedge.
-        if (a0 + angular > startRad + sweepRad) return 0;
-        _drawChars(canvas, c, radius, text, widths, style, a0, angular);
-        return a0 + angular;
+      if (angular <= sweep * 0.92) {
+        _charsOnArc(canvas, c, radius, text, widths, style,
+            a0 + (sweep - angular) / 2, angular);
+        return;
       }
-      fontSize *= 0.82;
-      if (fontSize < 6) return 0;
+      fontSize *= 0.8;
+      if (fontSize < 5.5) return;
     }
-    return 0;
   }
 
-  void _drawChars(Canvas canvas, Offset c, double radius, String text,
-      List<double> widths, TextStyle style, double startAngle,
-      double angularLen) {
-    final mid = startAngle + angularLen / 2;
-    final flip = math.sin(mid) > 0;
-    var pen = flip ? startAngle + angularLen : startAngle;
+  void _charsOnArc(Canvas canvas, Offset c, double radius, String text,
+      List<double> widths, TextStyle style, double a0, double angular) {
+    final flip = math.sin(a0 + angular / 2) > 0;
+    var pen = flip ? a0 + angular : a0;
     final chars = text.characters.toList();
     for (var i = 0; i < chars.length; i++) {
-      final w = widths[i];
-      final da = w / radius;
-      final theta = flip ? pen - da / 2 : pen + da / 2;
+      final da = widths[i] / radius;
+      final th = flip ? pen - da / 2 : pen + da / 2;
       final tp = TextPainter(
           text: TextSpan(text: chars[i], style: style),
           textDirection: TextDirection.ltr)
         ..layout();
       canvas.save();
-      canvas.translate(c.dx + math.cos(theta) * radius,
-          c.dy + math.sin(theta) * radius);
-      canvas.rotate(theta + (flip ? -math.pi / 2 : math.pi / 2));
+      canvas.translate(
+          c.dx + math.cos(th) * radius, c.dy + math.sin(th) * radius);
+      canvas.rotate(th + (flip ? -math.pi / 2 : math.pi / 2));
       tp.paint(canvas, Offset(-tp.width / 2, -tp.height / 2));
       canvas.restore();
       pen += flip ? -da : da;
     }
   }
 
-  void _paintHubRing(Canvas canvas, Offset c, double rHub) {
+  /// The hairline where scripture-dated events stop and
+  /// reference-dated ones begin. One arc, drawn faintly: the alignment
+  /// of the labels is what carries the meaning, and the line only says
+  /// where the boundary is.
+  void _paintScriptureBaseline(
+      Canvas canvas, Offset c, double rBands, double rRim) {
+    final r = rBands + (rRim - rBands) * 0.44;
+    canvas.drawArc(
+        Rect.fromCircle(center: c, radius: r),
+        startRad,
+        sweepRad,
+        false,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 0.5
+          ..color = wb.border.withValues(alpha: 0.4));
+  }
+
+  void _paintRim(Canvas canvas, Offset c, double rBands, double rRim) {
+    for (final (r, w, alpha) in [
+      (rBands + 1.0, 0.6, 0.45),
+      (rRim + 3.0, 0.9, 0.55),
+      (rRim + 6.0, 0.4, 0.3),
+    ]) {
+      canvas.drawArc(
+          Rect.fromCircle(center: c, radius: r),
+          startRad,
+          sweepRad,
+          false,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = w
+            ..color = wb.border.withValues(alpha: alpha));
+    }
+  }
+
+  void _paintHub(Canvas canvas, Offset c, double rHub) {
     canvas.drawCircle(c, rHub, Paint()..color = wb.paneAltBg);
     canvas.drawCircle(
         c,
@@ -1861,42 +1331,42 @@ class _HistoryWheelPainter extends CustomPainter {
           ..color = wb.border);
   }
 
-  void _paintAxisEnds(Canvas canvas, Offset c, double rHub, double rMax) {
+  void _paintAxisEnds(Canvas canvas, Offset c, double rHub, double rRim) {
     final paint = Paint()
       ..color = wb.border
       ..strokeWidth = 1;
-    for (final (year, off) in [(_minY, -0.06), (_maxY, 0.06)]) {
-      final a = angleForSpan(year, _minY, _maxY);
+    for (final (year, off) in [(kMinYear, -0.055), (kMaxYear, 0.055)]) {
+      final a = angleForSpan(year, kMinYear, kMaxYear);
       final dir = Offset(math.cos(a), math.sin(a));
-      canvas.drawLine(c + dir * rHub, c + dir * rMax, paint);
+      canvas.drawLine(c + dir * rHub, c + dir * (rRim + 6), paint);
       final la = a + off;
-      _paintLabel(
+      _label(
           canvas,
           yearLabel(year, locale),
-          c + Offset(math.cos(la), math.sin(la)) * (rMax + 14),
+          c + Offset(math.cos(la), math.sin(la)) * (rRim + 17),
           wb.text,
-          endFont,
+          endFont / zoom,
           center: true);
     }
   }
 
-  void _paintLabel(Canvas canvas, String text, Offset at, Color color,
-      double fontSize,
+  void _label(Canvas canvas, String text, Offset at, Color color, double size,
       {bool center = false}) {
     final tp = TextPainter(
-      text: TextSpan(
-          text: text, style: TextStyle(color: color, fontSize: fontSize)),
+      text:
+          TextSpan(text: text, style: TextStyle(color: color, fontSize: size)),
       textDirection: TextDirection.ltr,
     )..layout();
-    tp.paint(
-        canvas,
-        center ? at - Offset(tp.width / 2, tp.height / 2) : at);
+    tp.paint(canvas, center ? at - Offset(tp.width / 2, tp.height / 2) : at);
   }
 
   @override
-  bool shouldRepaint(_HistoryWheelPainter old) =>
+  bool shouldRepaint(_WorldWheelPainter old) =>
       old.selectedId != selectedId ||
       old.locale != locale ||
-      old.rimFont != rimFont ||
-      old.items.length != items.length;
+      old.streams.length != streams.length ||
+      old.arcs.length != arcs.length ||
+      old.spokes.length != spokes.length ||
+      old.zoom != zoom ||
+      old.rimFont != rimFont;
 }

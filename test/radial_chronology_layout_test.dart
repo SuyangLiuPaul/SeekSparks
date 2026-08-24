@@ -175,6 +175,33 @@ void main() {
     });
   });
 
+  group('stackRadialLabels', () {
+    test('labels on distinct spokes each start at the base radius', () {
+      final out = stackRadialLabels([0.0, 0.5, 1.0], [20, 20, 20], 100);
+      expect(out.map((l) => l.rStart), [100, 100, 100]);
+    });
+
+    test('labels sharing a spoke step outward instead of overprinting', () {
+      final out = stackRadialLabels([0.0, 0.0, 0.0], [20, 30, 10], 100);
+      expect(out[0].rStart, 100);
+      expect(out[1].rStart, greaterThanOrEqualTo(out[0].rEnd));
+      expect(out[2].rStart, greaterThanOrEqualTo(out[1].rEnd));
+    });
+
+    test('a near-identical angle counts as the same spoke', () {
+      // Two events four days apart on a 6000-year axis.
+      final out = stackRadialLabels([0.0, 0.001], [20, 20], 100);
+      expect(out[1].rStart, greaterThan(out[0].rStart));
+    });
+
+    test('the left half of the wheel is flagged for flipping', () {
+      // 0 rad points right, pi points left.
+      final out = stackRadialLabels([0.0, math.pi], [10, 10], 100);
+      expect(out[0].flipped, isFalse);
+      expect(out[1].flipped, isTrue);
+    });
+  });
+
   group('packIntoRings', () {
     test('non-overlapping items all stay on ring 0', () {
       expect(

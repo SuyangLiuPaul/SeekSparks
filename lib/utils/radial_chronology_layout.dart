@@ -185,6 +185,67 @@ double angleForSpan(int year, int minYear, int maxYear) {
   return startRad + t * sweepRad;
 }
 
+/// Where one event's radial label starts and ends.
+///
+/// The engraved chronologies set their event text along the RADIUS,
+/// not along the arc, and that one choice is what lets them carry
+/// thousands of entries without overprinting. Angular space is scarce
+/// — every degree is contested — while radial space is nearly free: a
+/// label running outward occupies an angle no wider than its type.
+/// Tangential labels on neighbouring years fight for the same arc and
+/// can only be resolved by dropping one, which loses information and
+/// still looks crowded.
+class RadialLabel {
+  const RadialLabel({
+    required this.angle,
+    required this.rStart,
+    required this.rEnd,
+    required this.flipped,
+  });
+
+  final double angle;
+  final double rStart;
+  final double rEnd;
+
+  /// True on the left half of the wheel, where a label running outward
+  /// would read upside down and is drawn inward-to-outward reversed so
+  /// it stays right way up.
+  final bool flipped;
+}
+
+/// Stack radial labels that share an angle, so several events in one
+/// year step outward instead of printing on each other.
+///
+/// [angles] must be sorted. Two labels are "the same spoke" when they
+/// are within [minGap] radians; each subsequent one starts where the
+/// previous ended plus [gapPx].
+List<RadialLabel> stackRadialLabels(
+  List<double> angles,
+  List<double> lengths,
+  double rBase, {
+  double minGap = 0.008,
+  double gapPx = 6,
+}) {
+  final out = <RadialLabel>[];
+  var lastAngle = double.negativeInfinity;
+  var cursor = rBase;
+  for (var i = 0; i < angles.length; i++) {
+    if ((angles[i] - lastAngle).abs() > minGap) {
+      cursor = rBase; // a new spoke — start again at the base radius
+    }
+    final flipped = math.cos(angles[i]) < 0;
+    out.add(RadialLabel(
+      angle: angles[i],
+      rStart: cursor,
+      rEnd: cursor + lengths[i],
+      flipped: flipped,
+    ));
+    cursor += lengths[i] + gapPx;
+    lastAngle = angles[i];
+  }
+  return out;
+}
+
 /// Greedy first-fit packing of angular items into a small number of
 /// rings, so a dense century of events spreads across neighbouring
 /// rings instead of printing on top of itself.

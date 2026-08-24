@@ -1,149 +1,6531 @@
 {
-  "_meta": {
-    "purpose": "The full-history mode of the chronology wheel: the stretch after assets/bible_timeline.json ends (AD 95), carried to the present, plus the surrounding powers of the biblical world.",
-    "basis": "Conventional, widely published dates for well-known events; the selection and wording are this project's own. Nothing here is read out of scripture, so nothing here carries a verse — items state 'conventional' the way bible_timeline.json marks its own approximations.",
-    "note": "Dates before the exile era are round numbers and approximate by nature; power spans use the conventional start and end every general reference gives."
+ "_meta": {
+  "purpose": "The chronology wheel's world-history dataset: the table of nations read out of this app's own scripture, the powers of the world as dated bands, and the events of scripture, church and world history from the ancient near east to the present.",
+  "provenance": "Every nation carries the verse it is read from (assets/kjv.json, Genesis 10 and 11). Every power and post-scriptural event carries a conventional, widely-published date; none is taken from any copyrighted chart. Compiled and then independently audited entry by entry; 77 audit findings were applied before this file was written.",
+  "basisValues": {
+   "scripture": "the text states it",
+   "scripture+thiele": "scripture states the interval; the absolute year follows Thiele's reconstruction",
+   "conventional": "not in scripture; the date any general reference gives"
   },
-  "powers": [
-    { "id": "egypt", "start": -2686, "end": -1069,
-      "name": { "en": "Egypt (Old–New Kingdom)", "zh-Hans": "埃及诸王国", "zh-Hant": "埃及諸王國" },
-      "note": { "en": "The Egypt of the patriarchs and the exodus; spans are the conventional dynastic dates.", "zh-Hans": "族长与出埃及时代的埃及；年段按通行王朝断代。", "zh-Hant": "族長與出埃及時代的埃及；年段按通行王朝斷代。" } },
-    { "id": "assyria", "start": -911, "end": -609,
-      "name": { "en": "Assyrian Empire", "zh-Hans": "亚述帝国", "zh-Hant": "亞述帝國" },
-      "note": { "en": "Took the northern kingdom in 722 BC; Nineveh fell 612 BC.", "zh-Hans": "主前722年掳走北国；尼尼微于主前612年陷落。", "zh-Hant": "主前722年擄走北國；尼尼微於主前612年陷落。" } },
-    { "id": "babylon", "start": -626, "end": -539,
-      "name": { "en": "Neo-Babylonian Empire", "zh-Hans": "新巴比伦帝国", "zh-Hant": "新巴比倫帝國" },
-      "note": { "en": "Destroyed Jerusalem and the first temple in 586 BC.", "zh-Hans": "主前586年毁耶路撒冷与第一圣殿。", "zh-Hant": "主前586年毀耶路撒冷與第一聖殿。" } },
-    { "id": "persia", "start": -550, "end": -330,
-      "name": { "en": "Medo-Persian Empire", "zh-Hans": "玛代波斯帝国", "zh-Hant": "瑪代波斯帝國" },
-      "note": { "en": "Cyrus took Babylon in 539 BC and sent the exiles home.", "zh-Hans": "古列主前539年取巴比伦，准被掳者归回。", "zh-Hant": "古列主前539年取巴比倫，准被擄者歸回。" } },
-    { "id": "greece", "start": -336, "end": -30,
-      "name": { "en": "Greek / Hellenistic era", "zh-Hans": "希腊化时代", "zh-Hant": "希臘化時代" },
-      "note": { "en": "From Alexander to the last Ptolemy; the world the Septuagint was translated for.", "zh-Hans": "自亚历山大至托勒密末代；七十士译本正为这个世界而译。", "zh-Hant": "自亞歷山大至托勒密末代；七十士譯本正為這個世界而譯。" } },
-    { "id": "rome", "start": -509, "end": 476,
-      "name": { "en": "Rome (Republic & Western Empire)", "zh-Hans": "罗马（共和国与西帝国）", "zh-Hant": "羅馬（共和國與西帝國）" },
-      "note": { "en": "The empire of the New Testament; the west fell AD 476.", "zh-Hans": "新约时代的帝国；西罗马亡于主后476年。", "zh-Hant": "新約時代的帝國；西羅馬亡於主後476年。" } },
-    { "id": "byzantium", "start": 330, "end": 1453,
-      "name": { "en": "Byzantine Empire", "zh-Hans": "拜占庭帝国", "zh-Hant": "拜占庭帝國" },
-      "note": { "en": "The Greek east, from Constantinople's founding to its fall.", "zh-Hans": "希腊语的东方，自君士坦丁堡建城至陷落。", "zh-Hant": "希臘語的東方，自君士坦丁堡建城至陷落。" } },
-    { "id": "caliphates", "start": 632, "end": 1258,
-      "name": { "en": "Islamic caliphates", "zh-Hans": "伊斯兰哈里发诸国", "zh-Hant": "伊斯蘭哈里發諸國" },
-      "note": { "en": "From the first caliphate to the fall of Baghdad, 1258.", "zh-Hans": "自首个哈里发国至1258年巴格达陷落。", "zh-Hant": "自首個哈里發國至1258年巴格達陷落。" } },
-    { "id": "ottoman", "start": 1299, "end": 1922,
-      "name": { "en": "Ottoman Empire", "zh-Hans": "奥斯曼帝国", "zh-Hant": "奧斯曼帝國" },
-      "note": { "en": "Held the Holy Land for four centuries, to 1917.", "zh-Hans": "统治圣地四百年，至1917年。", "zh-Hant": "統治聖地四百年，至1917年。" } },
-    { "id": "hre", "start": 800, "end": 1806,
-      "name": { "en": "Holy Roman Empire", "zh-Hans": "神圣罗马帝国", "zh-Hant": "神聖羅馬帝國" },
-      "note": { "en": "The frame of medieval western Christendom, Charlemagne to 1806.", "zh-Hans": "中世纪西方基督教世界的框架，自查理曼至1806年。", "zh-Hant": "中世紀西方基督教世界的框架，自查理曼至1806年。" } },
-    { "id": "britain", "start": 1607, "end": 1947,
-      "name": { "en": "British Empire", "zh-Hans": "大英帝国", "zh-Hant": "大英帝國" },
-      "note": { "en": "Carried the Bible societies and the mandate over the Holy Land.", "zh-Hans": "圣经公会随之而行，并托管圣地。", "zh-Hant": "聖經公會隨之而行，並託管聖地。" } }
-  ],
-  "events": [
-    { "id": "bar_kokhba", "year": 135, "era": "church",
-      "title": { "en": "Bar Kokhba revolt crushed", "zh-Hans": "巴柯巴起义被镇压", "zh-Hant": "巴柯巴起義被鎮壓" },
-      "desc": { "en": "Rome crushes the second Jewish revolt; the people are scattered from the land.", "zh-Hans": "罗马镇压第二次犹太起义，犹太人被逐离故土。", "zh-Hant": "羅馬鎮壓第二次猶太起義，猶太人被逐離故土。" } },
-    { "id": "muratorian", "year": 170, "era": "church", "approximate": true,
-      "title": { "en": "Earliest New Testament canon list", "zh-Hans": "最早的新约书目", "zh-Hant": "最早的新約書目" },
-      "desc": { "en": "The Muratorian fragment lists most of the New Testament books already in use.", "zh-Hans": "穆拉多利残卷列出教会已通用的大部分新约书卷。", "zh-Hant": "穆拉多利殘卷列出教會已通用的大部分新約書卷。" } },
-    { "id": "diocletian", "year": 303, "era": "church",
-      "title": { "en": "The last great persecution", "zh-Hans": "最后的大逼迫", "zh-Hant": "最後的大逼迫" },
-      "desc": { "en": "Diocletian orders scriptures burned and churches razed across the empire.", "zh-Hans": "戴克里先下令全国焚毁圣经、拆毁教堂。", "zh-Hant": "戴克里先下令全國焚毀聖經、拆毀教堂。" } },
-    { "id": "milan", "year": 313, "era": "church",
-      "title": { "en": "Edict of Milan", "zh-Hans": "米兰敕令", "zh-Hant": "米蘭敕令" },
-      "desc": { "en": "Constantine legalises Christian worship throughout the empire.", "zh-Hans": "君士坦丁使基督教信仰在帝国全境合法。", "zh-Hant": "君士坦丁使基督教信仰在帝國全境合法。" } },
-    { "id": "nicaea", "year": 325, "era": "church",
-      "title": { "en": "Council of Nicaea", "zh-Hans": "尼西亚会议", "zh-Hant": "尼西亞會議" },
-      "desc": { "en": "The first ecumenical council meets under Constantine.", "zh-Hans": "首次大公会议在君士坦丁治下召开。", "zh-Hant": "首次大公會議在君士坦丁治下召開。" } },
-    { "id": "athanasius", "year": 367, "era": "church",
-      "title": { "en": "The 27 books named", "zh-Hans": "二十七卷书定目", "zh-Hant": "二十七卷書定目" },
-      "desc": { "en": "Athanasius' festal letter lists exactly the 27 New Testament books.", "zh-Hans": "亚他那修的节期书信恰好列出新约二十七卷。", "zh-Hant": "亞他那修的節期書信恰好列出新約二十七卷。" } },
-    { "id": "vulgate", "year": 405, "era": "bible",
-      "title": { "en": "Jerome completes the Vulgate", "zh-Hans": "耶柔米完成武加大译本", "zh-Hant": "耶柔米完成武加大譯本" },
-      "desc": { "en": "The Latin Bible that would carry the west for a thousand years.", "zh-Hans": "此后一千年西方教会所用的拉丁文圣经。", "zh-Hant": "此後一千年西方教會所用的拉丁文聖經。" } },
-    { "id": "chalcedon", "year": 451, "era": "church",
-      "title": { "en": "Council of Chalcedon", "zh-Hans": "迦克墩会议", "zh-Hant": "迦克墩會議" },
-      "desc": { "en": "The fourth ecumenical council, defining the two natures of Christ.", "zh-Hans": "第四次大公会议，申明基督的神人二性。", "zh-Hant": "第四次大公會議，申明基督的神人二性。" } },
-    { "id": "benedict", "year": 529, "era": "church",
-      "title": { "en": "Monte Cassino founded", "zh-Hans": "本笃建修院", "zh-Hant": "本篤建修院" },
-      "desc": { "en": "Benedict's rule shapes the monasteries that will copy the scriptures for centuries.", "zh-Hans": "本笃会规塑造了此后数百年抄传圣经的修院。", "zh-Hant": "本篤會規塑造了此後數百年抄傳聖經的修院。" } },
-    { "id": "hijra", "year": 622, "era": "world",
-      "title": { "en": "Islam begins", "zh-Hans": "伊斯兰教兴起", "zh-Hant": "伊斯蘭教興起" },
-      "desc": { "en": "The Hijra; within a century the biblical lands are under Islamic rule.", "zh-Hans": "希吉拉之年；百年之内圣经故地尽归伊斯兰治下。", "zh-Hant": "希吉拉之年；百年之內聖經故地盡歸伊斯蘭治下。" } },
-    { "id": "nestorian_china", "year": 635, "era": "church",
-      "title": { "en": "The gospel reaches China", "zh-Hans": "福音初入中国", "zh-Hant": "福音初入中國" },
-      "desc": { "en": "Alopen's mission arrives at Chang'an, recorded on the Nestorian stele.", "zh-Hans": "阿罗本抵长安，大秦景教流行中国碑记其事。", "zh-Hant": "阿羅本抵長安，大秦景教流行中國碑記其事。" } },
-    { "id": "charlemagne", "year": 800, "era": "world",
-      "title": { "en": "Charlemagne crowned", "zh-Hans": "查理曼加冕", "zh-Hant": "查理曼加冕" },
-      "desc": { "en": "A Christian empire proclaimed in the west on Christmas Day.", "zh-Hans": "圣诞日于西方加冕，号为基督教帝国。", "zh-Hant": "聖誕日於西方加冕，號為基督教帝國。" } },
-    { "id": "cyril_methodius", "year": 863, "era": "bible",
-      "title": { "en": "Scripture for the Slavs", "zh-Hans": "圣经译于斯拉夫", "zh-Hant": "聖經譯於斯拉夫" },
-      "desc": { "en": "Cyril and Methodius devise an alphabet to give the Slavs the scriptures.", "zh-Hans": "西里尔与美多德为斯拉夫人造字母译圣经。", "zh-Hant": "西里爾與美多德為斯拉夫人造字母譯聖經。" } },
-    { "id": "schism", "year": 1054, "era": "church",
-      "title": { "en": "The Great Schism", "zh-Hans": "东西教会大分裂", "zh-Hant": "東西教會大分裂" },
-      "desc": { "en": "Rome and Constantinople excommunicate each other.", "zh-Hans": "罗马与君士坦丁堡互相绝罚。", "zh-Hant": "羅馬與君士坦丁堡互相絕罰。" } },
-    { "id": "crusade", "year": 1096, "era": "world",
-      "title": { "en": "The First Crusade", "zh-Hans": "第一次十字军", "zh-Hant": "第一次十字軍" },
-      "desc": { "en": "Two centuries of wars over the Holy Land begin.", "zh-Hans": "为圣地而战的两个世纪自此开始。", "zh-Hant": "為聖地而戰的兩個世紀自此開始。" } },
-    { "id": "waldensians", "year": 1173, "era": "church", "approximate": true,
-      "title": { "en": "The Waldensians", "zh-Hans": "瓦勒度派", "zh-Hant": "瓦勒度派" },
-      "desc": { "en": "Waldo of Lyon has the scriptures translated and preached by laymen.", "zh-Hans": "里昂的瓦勒度使圣经被译出、由平信徒传讲。", "zh-Hant": "里昂的瓦勒度使聖經被譯出、由平信徒傳講。" } },
-    { "id": "wycliffe", "year": 1382, "era": "bible",
-      "title": { "en": "Wycliffe's English Bible", "zh-Hans": "威克里夫英文圣经", "zh-Hant": "威克里夫英文聖經" },
-      "desc": { "en": "The first complete Bible in English, translated from the Vulgate.", "zh-Hans": "第一部完整英文圣经，自武加大译出。", "zh-Hant": "第一部完整英文聖經，自武加大譯出。" } },
-    { "id": "hus", "year": 1415, "era": "church",
-      "title": { "en": "Jan Hus martyred", "zh-Hans": "胡斯殉道", "zh-Hant": "胡斯殉道" },
-      "desc": { "en": "Burned at Constance for preaching what he read in the scriptures.", "zh-Hans": "因照圣经所读而传讲，在康士坦斯被焚。", "zh-Hant": "因照聖經所讀而傳講，在康士坦斯被焚。" } },
-    { "id": "gutenberg", "year": 1455, "era": "bible",
-      "title": { "en": "Gutenberg prints the Bible", "zh-Hans": "古腾堡印刷圣经", "zh-Hant": "古騰堡印刷聖經" },
-      "desc": { "en": "The first major printed book in the west is the Bible itself.", "zh-Hans": "西方第一部大型印刷书籍正是圣经。", "zh-Hant": "西方第一部大型印刷書籍正是聖經。" } },
-    { "id": "erasmus", "year": 1516, "era": "bible",
-      "title": { "en": "Erasmus' Greek New Testament", "zh-Hans": "伊拉斯谟希腊文新约", "zh-Hant": "伊拉斯謨希臘文新約" },
-      "desc": { "en": "The Greek text returns to print and fuels every Reformation translation.", "zh-Hans": "希腊原文重回印刷，成为宗教改革诸译本之源。", "zh-Hant": "希臘原文重回印刷，成為宗教改革諸譯本之源。" } },
-    { "id": "reformation", "year": 1517, "era": "church",
-      "title": { "en": "The Reformation begins", "zh-Hans": "宗教改革开始", "zh-Hant": "宗教改革開始" },
-      "desc": { "en": "Luther posts the Ninety-five Theses at Wittenberg.", "zh-Hans": "路德在维滕贝格贴出九十五条论纲。", "zh-Hant": "路德在維滕貝格貼出九十五條論綱。" } },
-    { "id": "tyndale", "year": 1526, "era": "bible",
-      "title": { "en": "Tyndale's New Testament", "zh-Hans": "丁道尔新约", "zh-Hant": "丁道爾新約" },
-      "desc": { "en": "The first printed English New Testament, translated from the Greek.", "zh-Hans": "第一部自希腊原文译出的英文印刷新约。", "zh-Hant": "第一部自希臘原文譯出的英文印刷新約。" } },
-    { "id": "geneva", "year": 1560, "era": "bible",
-      "title": { "en": "The Geneva Bible", "zh-Hans": "日内瓦圣经", "zh-Hant": "日內瓦聖經" },
-      "desc": { "en": "The first English Bible with verse numbers, the Bible of the Puritans.", "zh-Hans": "第一部标节号的英文圣经，清教徒所用。", "zh-Hant": "第一部標節號的英文聖經，清教徒所用。" } },
-    { "id": "kjv", "year": 1611, "era": "bible",
-      "title": { "en": "The King James Version", "zh-Hans": "英王钦定本", "zh-Hant": "英王欽定本" },
-      "desc": { "en": "The English Bible this app still ships four centuries on.", "zh-Hans": "四百年后本应用仍收录的英文圣经。", "zh-Hant": "四百年後本應用仍收錄的英文聖經。" } },
-    { "id": "mayflower", "year": 1620, "era": "world",
-      "title": { "en": "The Mayflower sails", "zh-Hans": "五月花号启航", "zh-Hant": "五月花號啟航" },
-      "desc": { "en": "A congregation crosses the Atlantic to worship by the Book.", "zh-Hans": "一群会众为按圣经敬拜而横渡大西洋。", "zh-Hant": "一群會眾為按聖經敬拜而橫渡大西洋。" } },
-    { "id": "wesley", "year": 1738, "era": "church",
-      "title": { "en": "The evangelical revival", "zh-Hans": "福音派大复兴", "zh-Hant": "福音派大復興" },
-      "desc": { "en": "Wesley's Aldersgate experience; revival sweeps Britain and America.", "zh-Hans": "卫斯理阿尔德门经历；复兴席卷英美。", "zh-Hant": "衛斯理阿爾德門經歷；復興席捲英美。" } },
-    { "id": "carey", "year": 1793, "era": "church",
-      "title": { "en": "Modern missions begin", "zh-Hans": "近代宣教运动开始", "zh-Hant": "近代宣教運動開始" },
-      "desc": { "en": "William Carey sails for India; the missionary societies follow.", "zh-Hans": "克理威廉启程赴印度，宣教差会相继而起。", "zh-Hant": "克理威廉啟程赴印度，宣教差會相繼而起。" } },
-    { "id": "morrison", "year": 1807, "era": "bible",
-      "title": { "en": "Morrison reaches China", "zh-Hans": "马礼逊来华", "zh-Hant": "馬禮遜來華" },
-      "desc": { "en": "The first Protestant missionary to China; his Chinese Bible follows in 1823.", "zh-Hans": "首位来华更正教宣教士；1823年译成中文圣经。", "zh-Hant": "首位來華更正教宣教士；1823年譯成中文聖經。" } },
-    { "id": "taylor", "year": 1853, "era": "church",
-      "title": { "en": "Hudson Taylor to China", "zh-Hans": "戴德生来华", "zh-Hant": "戴德生來華" },
-      "desc": { "en": "The China Inland Mission carries the gospel beyond the ports.", "zh-Hans": "内地会把福音带出通商口岸、深入内地。", "zh-Hant": "內地會把福音帶出通商口岸、深入內地。" } },
-    { "id": "cuv", "year": 1919, "era": "bible",
-      "title": { "en": "The Chinese Union Version", "zh-Hans": "和合本圣经出版", "zh-Hant": "和合本聖經出版" },
-      "desc": { "en": "The Chinese Bible this app is built around, a century in print.", "zh-Hans": "本应用所本的中文圣经，印行已逾百年。", "zh-Hant": "本應用所本的中文聖經，印行已逾百年。" } },
-    { "id": "dss", "year": 1947, "era": "bible",
-      "title": { "en": "The Dead Sea Scrolls", "zh-Hans": "死海古卷出土", "zh-Hant": "死海古卷出土" },
-      "desc": { "en": "Manuscripts a thousand years older than any then known confirm the text.", "zh-Hans": "比当时已知抄本早一千年的经卷印证经文。", "zh-Hant": "比當時已知抄本早一千年的經卷印證經文。" } },
-    { "id": "israel", "year": 1948, "era": "world",
-      "title": { "en": "Israel restored", "zh-Hans": "以色列复国", "zh-Hant": "以色列復國" },
-      "desc": { "en": "A Jewish state stands in the land again after nineteen centuries.", "zh-Hans": "相隔十九个世纪，犹太人再次立国于故土。", "zh-Hant": "相隔十九個世紀，猶太人再次立國於故土。" } },
-    { "id": "jerusalem67", "year": 1967, "era": "world",
-      "title": { "en": "Jerusalem reunified", "zh-Hans": "耶路撒冷统一", "zh-Hant": "耶路撒冷統一" },
-      "desc": { "en": "The Six-Day War leaves the old city under Israeli rule.", "zh-Hans": "六日战争后旧城归以色列治下。", "zh-Hant": "六日戰爭後舊城歸以色列治下。" } },
-    { "id": "digital", "year": 2008, "era": "bible",
-      "title": { "en": "The Bible goes mobile", "zh-Hans": "圣经进入手机时代", "zh-Hant": "聖經進入手機時代" },
-      "desc": { "en": "Scripture apps put the whole Bible in hundreds of millions of pockets.", "zh-Hans": "圣经应用把全本圣经放进亿万人的口袋。", "zh-Hant": "聖經應用把全本聖經放進億萬人的口袋。" } },
-    { "id": "this_app", "year": 2026, "era": "bible",
-      "title": { "en": "Yahweh's Swords · Yahweh's Words", "zh-Hans": "雅伟之剑·雅伟之言", "zh-Hant": "雅偉之劍·雅偉之言" },
-      "desc": { "en": "This family of study tools joins the same long chain — and the wheel reaches today.", "zh-Hans": "这对研经工具接上同一条长链——轮盘画到今天为止。", "zh-Hant": "這對研經工具接上同一條長鏈——輪盤畫到今天為止。" } }
-  ]
+  "approximate": "true means references genuinely differ or the date is a rounded century. It is written explicitly on every entry rather than left absent.",
+  "streams": "One concentric band per stream. `line` is the Genesis 10 descent the band is coloured by; 'institution' and 'none' are not descents.",
+  "scope": {
+   "en": "The table follows the whole of Genesis 10, then the line of Shem through Genesis 11, stopping with Terah's sons; Lot (Gen 11:27) and the generations after him are not carried here.",
+   "zh-Hans": "本表按创世记第10章全章排列，再沿闪的家谱延至创世记第11章，止于他拉的儿子；罗得（创11:27）及其后的世代不在其中。",
+   "zh-Hant": "本表按創世記第10章全章排列，再沿閃的家譜延至創世記第11章，止於他拉的兒子；羅得（創11:27）及其後的世代不在其中。"
+  }
+ },
+ "streams": [
+  {
+   "id": "israel",
+   "line": "shem",
+   "name": {
+    "zh-Hans": "以色列",
+    "zh-Hant": "以色列",
+    "en": "Israel"
+   }
+  },
+  {
+   "id": "judah",
+   "line": "shem",
+   "name": {
+    "zh-Hans": "犹大",
+    "zh-Hant": "猶大",
+    "en": "Judah"
+   }
+  },
+  {
+   "id": "assyria",
+   "line": "shem",
+   "name": {
+    "zh-Hans": "亚述",
+    "zh-Hant": "亞述",
+    "en": "Assyria"
+   }
+  },
+  {
+   "id": "babylon",
+   "line": "shem",
+   "name": {
+    "zh-Hans": "巴比伦",
+    "zh-Hant": "巴比倫",
+    "en": "Babylon"
+   }
+  },
+  {
+   "id": "persia",
+   "line": "japheth",
+   "name": {
+    "zh-Hans": "波斯",
+    "zh-Hant": "波斯",
+    "en": "Persia"
+   }
+  },
+  {
+   "id": "arabia",
+   "line": "shem",
+   "name": {
+    "zh-Hans": "阿拉伯",
+    "zh-Hant": "阿拉伯",
+    "en": "Arabia"
+   }
+  },
+  {
+   "id": "islam",
+   "line": "shem",
+   "name": {
+    "zh-Hans": "伊斯兰",
+    "zh-Hant": "伊斯蘭",
+    "en": "Islamic world"
+   }
+  },
+  {
+   "id": "egypt",
+   "line": "ham",
+   "name": {
+    "zh-Hans": "埃及",
+    "zh-Hant": "埃及",
+    "en": "Egypt"
+   }
+  },
+  {
+   "id": "phoenicia",
+   "line": "ham",
+   "name": {
+    "zh-Hans": "迦南/腓尼基",
+    "zh-Hant": "迦南/腓尼基",
+    "en": "Canaan & Phoenicia"
+   }
+  },
+  {
+   "id": "philistia",
+   "line": "ham",
+   "name": {
+    "zh-Hans": "非利士",
+    "zh-Hant": "非利士",
+    "en": "Philistia"
+   }
+  },
+  {
+   "id": "anatolia",
+   "line": "japheth",
+   "name": {
+    "zh-Hans": "安纳托利亚",
+    "zh-Hant": "安納托利亞",
+    "en": "Anatolia"
+   }
+  },
+  {
+   "id": "greece",
+   "line": "japheth",
+   "name": {
+    "zh-Hans": "希腊",
+    "zh-Hant": "希臘",
+    "en": "Greece"
+   }
+  },
+  {
+   "id": "rome",
+   "line": "japheth",
+   "name": {
+    "zh-Hans": "罗马",
+    "zh-Hant": "羅馬",
+    "en": "Rome"
+   }
+  },
+  {
+   "id": "byzantium",
+   "line": "japheth",
+   "name": {
+    "zh-Hans": "拜占庭",
+    "zh-Hant": "拜占庭",
+    "en": "Byzantium"
+   }
+  },
+  {
+   "id": "europe",
+   "line": "japheth",
+   "name": {
+    "zh-Hans": "欧洲",
+    "zh-Hant": "歐洲",
+    "en": "Europe"
+   }
+  },
+  {
+   "id": "americas",
+   "line": "japheth",
+   "name": {
+    "zh-Hans": "美洲",
+    "zh-Hant": "美洲",
+    "en": "The Americas"
+   }
+  },
+  {
+   "id": "china",
+   "line": "japheth",
+   "name": {
+    "zh-Hans": "中国",
+    "zh-Hant": "中國",
+    "en": "China"
+   }
+  },
+  {
+   "id": "japan",
+   "line": "japheth",
+   "name": {
+    "zh-Hans": "日本",
+    "zh-Hant": "日本",
+    "en": "Japan"
+   }
+  },
+  {
+   "id": "india",
+   "line": "japheth",
+   "name": {
+    "zh-Hans": "印度",
+    "zh-Hant": "印度",
+    "en": "India"
+   }
+  },
+  {
+   "id": "church",
+   "line": "institution",
+   "name": {
+    "zh-Hans": "教会",
+    "zh-Hant": "教會",
+    "en": "The Church"
+   }
+  },
+  {
+   "id": "scripture",
+   "line": "institution",
+   "name": {
+    "zh-Hans": "圣经",
+    "zh-Hant": "聖經",
+    "en": "Scripture"
+   }
+  },
+  {
+   "id": "world",
+   "line": "none",
+   "name": {
+    "zh-Hans": "其他",
+    "zh-Hant": "其他",
+    "en": "Elsewhere"
+   }
+  }
+ ],
+ "nations": [
+  {
+   "id": "noah",
+   "line": "noah",
+   "father": "",
+   "generation": 0,
+   "stream": "world",
+   "era": "bible",
+   "ref": "Genesis 10:1",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Noah",
+    "zh-Hans": "挪亚",
+    "zh-Hant": "挪亞"
+   }
+  },
+  {
+   "id": "shem",
+   "line": "shem",
+   "father": "",
+   "generation": 1,
+   "stream": "world",
+   "era": "bible",
+   "ref": "Genesis 10:1",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Shem",
+    "zh-Hans": "闪",
+    "zh-Hant": "閃"
+   }
+  },
+  {
+   "id": "ham",
+   "line": "ham",
+   "father": "",
+   "generation": 1,
+   "stream": "world",
+   "era": "bible",
+   "ref": "Genesis 10:1",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Ham",
+    "zh-Hans": "含",
+    "zh-Hant": "含"
+   }
+  },
+  {
+   "id": "japheth",
+   "line": "japheth",
+   "father": "",
+   "generation": 1,
+   "stream": "world",
+   "era": "bible",
+   "ref": "Genesis 10:1",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Japheth",
+    "zh-Hans": "雅弗",
+    "zh-Hant": "雅弗"
+   }
+  },
+  {
+   "id": "gomer",
+   "line": "japheth",
+   "father": "japheth",
+   "generation": 2,
+   "stream": "world",
+   "era": "bible",
+   "ref": "Genesis 10:2",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Gomer",
+    "zh-Hans": "歌篾",
+    "zh-Hant": "歌篾"
+   },
+   "note": {
+    "en": "Conventionally identified with the Cimmerians (Assyrian Gimirraya), north of the Black Sea.",
+    "zh-Hans": "一般认为即黑海以北的辛梅里安人（亚述文献作 Gimirraya）。",
+    "zh-Hant": "一般認為即黑海以北的辛梅里安人（亞述文獻作 Gimirraya）。"
+   }
+  },
+  {
+   "id": "magog",
+   "line": "japheth",
+   "father": "japheth",
+   "generation": 2,
+   "stream": "world",
+   "era": "bible",
+   "ref": "Genesis 10:2",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Magog",
+    "zh-Hans": "玛各",
+    "zh-Hant": "瑪各"
+   }
+  },
+  {
+   "id": "madai",
+   "line": "japheth",
+   "father": "japheth",
+   "generation": 2,
+   "stream": "persia",
+   "era": "bible",
+   "ref": "Genesis 10:2",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Madai",
+    "zh-Hans": "玛代",
+    "zh-Hant": "瑪代"
+   },
+   "note": {
+    "en": "The Medes of the Iranian plateau.",
+    "zh-Hans": "伊朗高原的米底（玛代）人。",
+    "zh-Hant": "伊朗高原的米底（瑪代）人。"
+   }
+  },
+  {
+   "id": "javan",
+   "line": "japheth",
+   "father": "japheth",
+   "generation": 2,
+   "stream": "greece",
+   "era": "bible",
+   "ref": "Genesis 10:2",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Javan",
+    "zh-Hans": "雅完",
+    "zh-Hant": "雅完"
+   },
+   "note": {
+    "en": "The Ionians, i.e. the Greeks.",
+    "zh-Hans": "爱奥尼亚人，即希腊人。",
+    "zh-Hant": "愛奧尼亞人，即希臘人。"
+   }
+  },
+  {
+   "id": "tubal",
+   "line": "japheth",
+   "father": "japheth",
+   "generation": 2,
+   "stream": "anatolia",
+   "era": "bible",
+   "ref": "Genesis 10:2",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Tubal",
+    "zh-Hans": "土巴",
+    "zh-Hant": "土巴"
+   },
+   "note": {
+    "en": "Conventionally identified with Tabal, a kingdom of eastern Anatolia known from Assyrian records.",
+    "zh-Hans": "一般认为即塔巴尔（Tabal），亚述文献所载安纳托利亚东部的王国。",
+    "zh-Hant": "一般認為即塔巴爾（Tabal），亞述文獻所載安納托利亞東部的王國。"
+   }
+  },
+  {
+   "id": "meshech",
+   "line": "japheth",
+   "father": "japheth",
+   "generation": 2,
+   "stream": "anatolia",
+   "era": "bible",
+   "ref": "Genesis 10:2",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Meshech",
+    "zh-Hans": "米设",
+    "zh-Hant": "米設"
+   },
+   "note": {
+    "en": "Conventionally identified with the Mushki, a people of Anatolia known from Assyrian records.",
+    "zh-Hans": "一般认为即穆什基人（Mushki），亚述文献所载安纳托利亚的民族。",
+    "zh-Hant": "一般認為即穆什基人（Mushki），亞述文獻所載安納托利亞的民族。"
+   }
+  },
+  {
+   "id": "tiras",
+   "line": "japheth",
+   "father": "japheth",
+   "generation": 2,
+   "stream": "world",
+   "era": "bible",
+   "ref": "Genesis 10:2",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Tiras",
+    "zh-Hans": "提拉",
+    "zh-Hant": "提拉"
+   }
+  },
+  {
+   "id": "ashkenaz",
+   "line": "japheth",
+   "father": "gomer",
+   "generation": 3,
+   "stream": "world",
+   "era": "bible",
+   "ref": "Genesis 10:3",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Ashkenaz",
+    "zh-Hans": "亚实基拿",
+    "zh-Hant": "亞實基拿"
+   }
+  },
+  {
+   "id": "riphath",
+   "line": "japheth",
+   "father": "gomer",
+   "generation": 3,
+   "stream": "world",
+   "era": "bible",
+   "ref": "Genesis 10:3",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Riphath",
+    "zh-Hans": "利法",
+    "zh-Hant": "利法"
+   }
+  },
+  {
+   "id": "togarmah",
+   "line": "japheth",
+   "father": "gomer",
+   "generation": 3,
+   "stream": "anatolia",
+   "era": "bible",
+   "ref": "Genesis 10:3",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Togarmah",
+    "zh-Hans": "陀迦玛",
+    "zh-Hant": "陀迦瑪"
+   },
+   "note": {
+    "en": "Conventionally identified with Til-Garimmu in eastern Anatolia.",
+    "zh-Hans": "一般认为即安纳托利亚东部的提尔迦利姆（Til-Garimmu）。",
+    "zh-Hant": "一般認為即安納托利亞東部的提爾迦利姆（Til-Garimmu）。"
+   }
+  },
+  {
+   "id": "elishah",
+   "line": "japheth",
+   "father": "javan",
+   "generation": 3,
+   "stream": "greece",
+   "era": "bible",
+   "ref": "Genesis 10:4",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Elishah",
+    "zh-Hans": "以利沙",
+    "zh-Hant": "以利沙"
+   },
+   "note": {
+    "en": "Often identified with Alashiya, a Bronze Age kingdom usually located on Cyprus.",
+    "zh-Hans": "一般认为即阿拉西亚（Alashiya），青铜时代的王国，多定位于塞浦路斯。",
+    "zh-Hant": "一般認為即阿拉西亞（Alashiya），青銅時代的王國，多定位於塞浦路斯。"
+   }
+  },
+  {
+   "id": "tarshish",
+   "line": "japheth",
+   "father": "javan",
+   "generation": 3,
+   "stream": "world",
+   "era": "bible",
+   "ref": "Genesis 10:4",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Tarshish",
+    "zh-Hans": "他施",
+    "zh-Hant": "他施"
+   }
+  },
+  {
+   "id": "kittim",
+   "line": "japheth",
+   "father": "javan",
+   "generation": 3,
+   "stream": "greece",
+   "era": "bible",
+   "ref": "Genesis 10:4",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Kittim",
+    "zh-Hans": "基提",
+    "zh-Hant": "基提"
+   },
+   "note": {
+    "en": "Kition on Cyprus, hence Cyprus generally.",
+    "zh-Hans": "塞浦路斯的基提翁城，引申指塞浦路斯。",
+    "zh-Hant": "塞浦路斯的基提翁城，引申指塞浦路斯。"
+   }
+  },
+  {
+   "id": "dodanim",
+   "line": "japheth",
+   "father": "javan",
+   "generation": 3,
+   "stream": "greece",
+   "era": "bible",
+   "ref": "Genesis 10:4",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Dodanim",
+    "zh-Hans": "多单",
+    "zh-Hant": "多單"
+   }
+  },
+  {
+   "id": "cush",
+   "line": "ham",
+   "father": "ham",
+   "generation": 2,
+   "stream": "world",
+   "era": "bible",
+   "ref": "Genesis 10:6",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Cush",
+    "zh-Hans": "古实",
+    "zh-Hant": "古實"
+   },
+   "note": {
+    "en": "Cush usually denotes Nubia, south of Egypt on the upper Nile. In this chapter, however, the descendants listed at Genesis 10:7 belong to Arabia and Nimrod's kingdom (Gen 10:10) lies in Mesopotamia, so many read the Cush of Genesis 10 differently.",
+    "zh-Hans": "古实通常指埃及以南、尼罗河上游的努比亚。但本章创世记10:7所列的后裔多在阿拉伯半岛，宁录的国度（创10:10）又在美索不达米亚，故许多学者认为创世记第10章的古实另有所指。",
+    "zh-Hant": "古實通常指埃及以南、尼羅河上游的努比亞。但本章創世記10:7所列的後裔多在阿拉伯半島，寧錄的國度（創10:10）又在美索不達米亞，故許多學者認為創世記第10章的古實另有所指。"
+   }
+  },
+  {
+   "id": "mizraim",
+   "line": "ham",
+   "father": "ham",
+   "generation": 2,
+   "stream": "egypt",
+   "era": "bible",
+   "ref": "Genesis 10:6",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Mizraim",
+    "zh-Hans": "麦西",
+    "zh-Hant": "麥西"
+   },
+   "note": {
+    "en": "Mizraim is the ordinary Hebrew name for Egypt.",
+    "zh-Hans": "麦西是希伯来文对埃及的通称。",
+    "zh-Hant": "麥西是希伯來文對埃及的通稱。"
+   }
+  },
+  {
+   "id": "phut",
+   "line": "ham",
+   "father": "ham",
+   "generation": 2,
+   "stream": "world",
+   "era": "bible",
+   "ref": "Genesis 10:6",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Phut",
+    "zh-Hans": "弗",
+    "zh-Hant": "弗"
+   },
+   "note": {
+    "en": "The Septuagint and the Vulgate render this name 'Libya' in the prophets e.g. Jeremiah 46:9, where the KJV likewise reads 'the Libyans'; cf. Ezekiel 30:5. At Genesis 10:6 both versions simply transliterate it.",
+    "zh-Hans": "七十士译本和武加大译本在先知书中将此名译作利比亚（如耶46:9，钦定本同作『利比亚人』，和合本小字作『又作吕彼亚人』；参结30:5）。但在创世记10:6，两个译本都只作音译。",
+    "zh-Hant": "七十士譯本和武加大譯本在先知書中將此名譯作利比亞（如耶46:9，欽定本同作『利比亞人』，和合本小字作『又作呂彼亞人』；參結30:5）。但在創世記10:6，兩個譯本都只作音譯。"
+   }
+  },
+  {
+   "id": "canaan",
+   "line": "ham",
+   "father": "ham",
+   "generation": 2,
+   "stream": "phoenicia",
+   "era": "bible",
+   "ref": "Genesis 10:6",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Canaan",
+    "zh-Hans": "迦南",
+    "zh-Hant": "迦南"
+   },
+   "note": {
+    "en": "The land of Canaan: the Levantine coast and its hinterland.",
+    "zh-Hans": "迦南地，即黎凡特沿海及其内陆。",
+    "zh-Hant": "迦南地，即黎凡特沿海及其內陸。"
+   }
+  },
+  {
+   "id": "seba",
+   "line": "ham",
+   "father": "cush",
+   "generation": 3,
+   "stream": "arabia",
+   "era": "bible",
+   "ref": "Genesis 10:7",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Seba",
+    "zh-Hans": "西巴",
+    "zh-Hant": "西巴"
+   }
+  },
+  {
+   "id": "havilah_cush",
+   "line": "ham",
+   "father": "cush",
+   "generation": 3,
+   "stream": "arabia",
+   "era": "bible",
+   "ref": "Genesis 10:7",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Havilah",
+    "zh-Hans": "哈腓拉",
+    "zh-Hant": "哈腓拉"
+   },
+   "note": {
+    "en": "A second Havilah appears among the sons of Joktan (Gen 10:29).",
+    "zh-Hans": "约坍的儿子中另有一个哈腓拉（创10:29）。",
+    "zh-Hant": "約坍的兒子中另有一個哈腓拉（創10:29）。"
+   }
+  },
+  {
+   "id": "sabtah",
+   "line": "ham",
+   "father": "cush",
+   "generation": 3,
+   "stream": "arabia",
+   "era": "bible",
+   "ref": "Genesis 10:7",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Sabtah",
+    "zh-Hans": "撒弗他",
+    "zh-Hant": "撒弗他"
+   }
+  },
+  {
+   "id": "raamah",
+   "line": "ham",
+   "father": "cush",
+   "generation": 3,
+   "stream": "arabia",
+   "era": "bible",
+   "ref": "Genesis 10:7",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Raamah",
+    "zh-Hans": "拉玛",
+    "zh-Hant": "拉瑪"
+   }
+  },
+  {
+   "id": "sabtechah",
+   "line": "ham",
+   "father": "cush",
+   "generation": 3,
+   "stream": "arabia",
+   "era": "bible",
+   "ref": "Genesis 10:7",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Sabtechah",
+    "zh-Hans": "撒弗提迦",
+    "zh-Hant": "撒弗提迦"
+   }
+  },
+  {
+   "id": "sheba_raamah",
+   "line": "ham",
+   "father": "raamah",
+   "generation": 4,
+   "stream": "arabia",
+   "era": "bible",
+   "ref": "Genesis 10:7",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Sheba",
+    "zh-Hans": "示巴",
+    "zh-Hant": "示巴"
+   },
+   "note": {
+    "en": "A second Sheba appears among the sons of Joktan (Gen 10:28), and a third among the sons of Jokshan (Gen 25:3).",
+    "zh-Hans": "约坍的儿子中另有一个示巴（创10:28），约珊的儿子中还有一个（创25:3）。",
+    "zh-Hant": "約坍的兒子中另有一個示巴（創10:28），約珊的兒子中還有一個（創25:3）。"
+   }
+  },
+  {
+   "id": "dedan",
+   "line": "ham",
+   "father": "raamah",
+   "generation": 4,
+   "stream": "arabia",
+   "era": "bible",
+   "ref": "Genesis 10:7",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Dedan",
+    "zh-Hans": "底但",
+    "zh-Hant": "底但"
+   },
+   "note": {
+    "en": "Dedan, an oasis kingdom of north-west Arabia, in the al-'Ula oasis. A second Dedan, alongside a second Sheba, appears among the sons of Jokshan (Gen 25:3).",
+    "zh-Hans": "底但，阿拉伯半岛西北部的绿洲王国，位于 al-'Ula 绿洲。约珊的儿子中另有一个底但，并另有一个示巴（创25:3）。",
+    "zh-Hant": "底但，阿拉伯半島西北部的綠洲王國，位於 al-'Ula 綠洲。約珊的兒子中另有一個底但，並另有一個示巴（創25:3）。"
+   }
+  },
+  {
+   "id": "nimrod",
+   "line": "ham",
+   "father": "cush",
+   "generation": 3,
+   "stream": "babylon",
+   "era": "bible",
+   "ref": "Genesis 10:8",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Nimrod",
+    "zh-Hans": "宁录",
+    "zh-Hant": "寧錄"
+   },
+   "note": {
+    "en": "The text places the beginning of his kingdom at Babel, Erech, Accad and Calneh in the land of Shinar (Gen 10:10).",
+    "zh-Hans": "经文说他国的起头是示拿地的巴别、以力、亚甲、甲尼（创10:10）。",
+    "zh-Hant": "經文說他國的起頭是示拿地的巴別、以力、亞甲、甲尼（創10:10）。"
+   }
+  },
+  {
+   "id": "ludim",
+   "line": "ham",
+   "father": "mizraim",
+   "generation": 3,
+   "stream": "egypt",
+   "era": "bible",
+   "ref": "Genesis 10:13",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Ludim",
+    "zh-Hans": "路低人",
+    "zh-Hant": "路低人"
+   }
+  },
+  {
+   "id": "anamim",
+   "line": "ham",
+   "father": "mizraim",
+   "generation": 3,
+   "stream": "egypt",
+   "era": "bible",
+   "ref": "Genesis 10:13",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Anamim",
+    "zh-Hans": "亚拿米人",
+    "zh-Hant": "亞拿米人"
+   }
+  },
+  {
+   "id": "lehabim",
+   "line": "ham",
+   "father": "mizraim",
+   "generation": 3,
+   "stream": "egypt",
+   "era": "bible",
+   "ref": "Genesis 10:13",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Lehabim",
+    "zh-Hans": "利哈比人",
+    "zh-Hant": "利哈比人"
+   }
+  },
+  {
+   "id": "naphtuhim",
+   "line": "ham",
+   "father": "mizraim",
+   "generation": 3,
+   "stream": "egypt",
+   "era": "bible",
+   "ref": "Genesis 10:13",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Naphtuhim",
+    "zh-Hans": "拿弗土希人",
+    "zh-Hant": "拿弗土希人"
+   }
+  },
+  {
+   "id": "pathrusim",
+   "line": "ham",
+   "father": "mizraim",
+   "generation": 3,
+   "stream": "egypt",
+   "era": "bible",
+   "ref": "Genesis 10:14",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Pathrusim",
+    "zh-Hans": "帕斯鲁细人",
+    "zh-Hant": "帕斯魯細人"
+   },
+   "note": {
+    "en": "Pathros, i.e. Upper Egypt.",
+    "zh-Hans": "帕斯鲁，即上埃及。",
+    "zh-Hant": "帕斯魯，即上埃及。"
+   }
+  },
+  {
+   "id": "casluhim",
+   "line": "ham",
+   "father": "mizraim",
+   "generation": 3,
+   "stream": "egypt",
+   "era": "bible",
+   "ref": "Genesis 10:14",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Casluhim",
+    "zh-Hans": "迦斯路希人",
+    "zh-Hant": "迦斯路希人"
+   }
+  },
+  {
+   "id": "philistim",
+   "line": "ham",
+   "father": "casluhim",
+   "generation": 4,
+   "stream": "philistia",
+   "era": "bible",
+   "ref": "Genesis 10:14",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Philistim",
+    "zh-Hans": "非利士人",
+    "zh-Hant": "非利士人"
+   },
+   "note": {
+    "en": "The Philistines of the southern coastal plain. The Hebrew, the Septuagint and the KJV attach the clause to Casluhim ('out of whom came Philistim'); the Chinese Union Version attaches it to Caphtor instead, as do Amos 9:7 and Jeremiah 47:4, which bring the Philistines from Caphtor.",
+    "zh-Hans": "非利士人，居于南部沿海平原。希伯来原文、七十士译本和英文钦定本把这一句系于迦斯路希（『从他们中间出来的有非利士人』）；和合本则系于迦斐托（『从迦斐托出来的有非利士人』），与阿摩司书9:7、耶利米书47:4相合。",
+    "zh-Hant": "非利士人，居於南部沿海平原。希伯來原文、七十士譯本和英文欽定本把這一句繫於迦斯路希（『從他們中間出來的有非利士人』）；和合本則繫於迦斐托（『從迦斐托出來的有非利士人』），與阿摩司書9:7、耶利米書47:4相合。"
+   }
+  },
+  {
+   "id": "caphtorim",
+   "line": "ham",
+   "father": "mizraim",
+   "generation": 3,
+   "stream": "egypt",
+   "era": "bible",
+   "ref": "Genesis 10:14",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Caphtorim",
+    "zh-Hans": "迦斐托人",
+    "zh-Hant": "迦斐托人"
+   },
+   "note": {
+    "en": "Caphtor, conventionally identified with Crete.",
+    "zh-Hans": "迦斐托，一般认为即克里特岛。",
+    "zh-Hant": "迦斐托，一般認為即克里特島。"
+   }
+  },
+  {
+   "id": "sidon",
+   "line": "ham",
+   "father": "canaan",
+   "generation": 3,
+   "stream": "phoenicia",
+   "era": "bible",
+   "ref": "Genesis 10:15",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Sidon",
+    "zh-Hans": "西顿",
+    "zh-Hant": "西頓"
+   },
+   "note": {
+    "en": "The Phoenician city of Sidon (modern Saida, Lebanon); called Canaan's firstborn.",
+    "zh-Hans": "腓尼基城邦西顿（今黎巴嫩赛达），经文称为迦南的长子。",
+    "zh-Hant": "腓尼基城邦西頓（今黎巴嫩賽達），經文稱為迦南的長子。"
+   }
+  },
+  {
+   "id": "heth",
+   "line": "ham",
+   "father": "canaan",
+   "generation": 3,
+   "stream": "world",
+   "era": "bible",
+   "ref": "Genesis 10:15",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Heth",
+    "zh-Hans": "赫",
+    "zh-Hant": "赫"
+   },
+   "note": {
+    "en": "Ancestor of the people called 'the sons of Heth' in the Old Testament, conventionally rendered 'Hittites'; their relation to the Anatolian Hittites of Hatti is debated.",
+    "zh-Hans": "旧约称其后裔为『赫的子孙』，通常译作赫人；他们与安纳托利亚赫梯帝国的关系仍有争议。",
+    "zh-Hant": "舊約稱其後裔為『赫的子孫』，通常譯作赫人；他們與安納托利亞赫梯帝國的關係仍有爭議。"
+   }
+  },
+  {
+   "id": "jebusite",
+   "line": "ham",
+   "father": "canaan",
+   "generation": 3,
+   "stream": "phoenicia",
+   "era": "bible",
+   "ref": "Genesis 10:16",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Jebusite",
+    "zh-Hans": "耶布斯人",
+    "zh-Hant": "耶布斯人"
+   },
+   "note": {
+    "en": "The Jebusites, the pre-Israelite inhabitants of Jerusalem.",
+    "zh-Hans": "耶布斯人，以色列人入住之前的耶路撒冷居民。",
+    "zh-Hant": "耶布斯人，以色列人入住之前的耶路撒冷居民。"
+   }
+  },
+  {
+   "id": "amorite",
+   "line": "ham",
+   "father": "canaan",
+   "generation": 3,
+   "stream": "phoenicia",
+   "era": "bible",
+   "ref": "Genesis 10:16",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Amorite",
+    "zh-Hans": "亚摩利人",
+    "zh-Hant": "亞摩利人"
+   },
+   "note": {
+    "en": "The Amorites of Syria and Palestine.",
+    "zh-Hans": "亚摩利人，叙利亚和巴勒斯坦一带的民族。",
+    "zh-Hant": "亞摩利人，敘利亞和巴勒斯坦一帶的民族。"
+   }
+  },
+  {
+   "id": "girgasite",
+   "line": "ham",
+   "father": "canaan",
+   "generation": 3,
+   "stream": "phoenicia",
+   "era": "bible",
+   "ref": "Genesis 10:16",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Girgasite",
+    "zh-Hans": "革迦撒人",
+    "zh-Hant": "革迦撒人"
+   }
+  },
+  {
+   "id": "hivite",
+   "line": "ham",
+   "father": "canaan",
+   "generation": 3,
+   "stream": "phoenicia",
+   "era": "bible",
+   "ref": "Genesis 10:17",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Hivite",
+    "zh-Hans": "希未人",
+    "zh-Hant": "希未人"
+   }
+  },
+  {
+   "id": "arkite",
+   "line": "ham",
+   "father": "canaan",
+   "generation": 3,
+   "stream": "phoenicia",
+   "era": "bible",
+   "ref": "Genesis 10:17",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Arkite",
+    "zh-Hans": "亚基人",
+    "zh-Hant": "亞基人"
+   },
+   "note": {
+    "en": "Arqa, a town north of Tripoli in Lebanon.",
+    "zh-Hans": "亚基（Arqa），黎巴嫩的黎波里以北的城镇。",
+    "zh-Hant": "亞基（Arqa），黎巴嫩的黎波里以北的城鎮。"
+   }
+  },
+  {
+   "id": "sinite",
+   "line": "ham",
+   "father": "canaan",
+   "generation": 3,
+   "stream": "phoenicia",
+   "era": "bible",
+   "ref": "Genesis 10:17",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Sinite",
+    "zh-Hans": "西尼人",
+    "zh-Hant": "西尼人"
+   }
+  },
+  {
+   "id": "arvadite",
+   "line": "ham",
+   "father": "canaan",
+   "generation": 3,
+   "stream": "phoenicia",
+   "era": "bible",
+   "ref": "Genesis 10:18",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Arvadite",
+    "zh-Hans": "亚瓦底人",
+    "zh-Hant": "亞瓦底人"
+   },
+   "note": {
+    "en": "Arvad (modern Ruad), a Phoenician island city off the Syrian coast.",
+    "zh-Hans": "亚瓦底（今 Ruad），叙利亚沿海的腓尼基岛城。",
+    "zh-Hant": "亞瓦底（今 Ruad），敘利亞沿海的腓尼基島城。"
+   }
+  },
+  {
+   "id": "zemarite",
+   "line": "ham",
+   "father": "canaan",
+   "generation": 3,
+   "stream": "phoenicia",
+   "era": "bible",
+   "ref": "Genesis 10:18",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Zemarite",
+    "zh-Hans": "洗玛利人",
+    "zh-Hant": "洗瑪利人"
+   },
+   "note": {
+    "en": "Sumur (Simyra) on the Phoenician coast.",
+    "zh-Hans": "腓尼基沿海的苏木尔（Simyra）。",
+    "zh-Hant": "腓尼基沿海的蘇木爾（Simyra）。"
+   }
+  },
+  {
+   "id": "hamathite",
+   "line": "ham",
+   "father": "canaan",
+   "generation": 3,
+   "stream": "phoenicia",
+   "era": "bible",
+   "ref": "Genesis 10:18",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Hamathite",
+    "zh-Hans": "哈马人",
+    "zh-Hant": "哈馬人"
+   },
+   "note": {
+    "en": "Hamath on the Orontes (modern Hama, Syria).",
+    "zh-Hans": "奥龙特斯河畔的哈马（今叙利亚哈马市）。",
+    "zh-Hant": "奧龍特斯河畔的哈馬（今敘利亞哈馬市）。"
+   }
+  },
+  {
+   "id": "elam",
+   "line": "shem",
+   "father": "shem",
+   "generation": 2,
+   "stream": "persia",
+   "era": "bible",
+   "ref": "Genesis 10:22",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Elam",
+    "zh-Hans": "以拦",
+    "zh-Hant": "以攔"
+   },
+   "note": {
+    "en": "Elam, east of the lower Tigris; its capital was Susa.",
+    "zh-Hans": "以拦，底格里斯河下游以东之地，都城为书珊。",
+    "zh-Hant": "以攔，底格里斯河下游以東之地，都城為書珊。"
+   }
+  },
+  {
+   "id": "asshur",
+   "line": "shem",
+   "father": "shem",
+   "generation": 2,
+   "stream": "assyria",
+   "era": "bible",
+   "ref": "Genesis 10:22",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Asshur",
+    "zh-Hans": "亚述",
+    "zh-Hant": "亞述"
+   },
+   "note": {
+    "en": "Assyria, on the upper Tigris. The same name appears again at Genesis 10:11, where the Hebrew allows two readings: the KJV takes Asshur as a person 'out of that land went forth Asshur, and builded Nineveh', while.",
+    "zh-Hans": "亚述，底格里斯河上游之地。此名亦见于创世记10:11，希伯来原文两读皆通：和合本在该处作地名（『他从那地出来往亚述去』），钦定本则以亚述为出去建造尼尼微的人。",
+    "zh-Hant": "亞述，底格里斯河上游之地。此名亦見於創世記10:11，希伯來原文兩讀皆通：和合本在該處作地名（『他從那地出來往亞述去』），欽定本則以亞述為出去建造尼尼微的人。"
+   }
+  },
+  {
+   "id": "arphaxad",
+   "line": "shem",
+   "father": "shem",
+   "generation": 2,
+   "stream": "israel",
+   "era": "bible",
+   "ref": "Genesis 10:22",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Arphaxad",
+    "zh-Hans": "亚法撒",
+    "zh-Hant": "亞法撒"
+   }
+  },
+  {
+   "id": "lud",
+   "line": "shem",
+   "father": "shem",
+   "generation": 2,
+   "stream": "world",
+   "era": "bible",
+   "ref": "Genesis 10:22",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Lud",
+    "zh-Hans": "路德",
+    "zh-Hant": "路德"
+   }
+  },
+  {
+   "id": "aram",
+   "line": "shem",
+   "father": "shem",
+   "generation": 2,
+   "stream": "world",
+   "era": "bible",
+   "ref": "Genesis 10:22",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Aram",
+    "zh-Hans": "亚兰",
+    "zh-Hant": "亞蘭"
+   },
+   "note": {
+    "en": "The Arameans of Syria and upper Mesopotamia.",
+    "zh-Hans": "亚兰人，叙利亚及美索不达米亚上游的民族。",
+    "zh-Hant": "亞蘭人，敘利亞及美索不達米亞上游的民族。"
+   }
+  },
+  {
+   "id": "uz",
+   "line": "shem",
+   "father": "aram",
+   "generation": 3,
+   "stream": "world",
+   "era": "bible",
+   "ref": "Genesis 10:23",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Uz",
+    "zh-Hans": "乌斯",
+    "zh-Hant": "烏斯"
+   }
+  },
+  {
+   "id": "hul",
+   "line": "shem",
+   "father": "aram",
+   "generation": 3,
+   "stream": "world",
+   "era": "bible",
+   "ref": "Genesis 10:23",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Hul",
+    "zh-Hans": "户勒",
+    "zh-Hant": "戶勒"
+   }
+  },
+  {
+   "id": "gether",
+   "line": "shem",
+   "father": "aram",
+   "generation": 3,
+   "stream": "world",
+   "era": "bible",
+   "ref": "Genesis 10:23",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Gether",
+    "zh-Hans": "基帖",
+    "zh-Hant": "基帖"
+   }
+  },
+  {
+   "id": "mash",
+   "line": "shem",
+   "father": "aram",
+   "generation": 3,
+   "stream": "world",
+   "era": "bible",
+   "ref": "Genesis 10:23",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Mash",
+    "zh-Hans": "玛施",
+    "zh-Hant": "瑪施"
+   }
+  },
+  {
+   "id": "salah",
+   "line": "shem",
+   "father": "arphaxad",
+   "generation": 3,
+   "stream": "israel",
+   "era": "bible",
+   "ref": "Genesis 10:24",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Salah",
+    "zh-Hans": "沙拉",
+    "zh-Hant": "沙拉"
+   }
+  },
+  {
+   "id": "eber",
+   "line": "shem",
+   "father": "salah",
+   "generation": 4,
+   "stream": "israel",
+   "era": "bible",
+   "ref": "Genesis 10:24",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Eber",
+    "zh-Hans": "希伯",
+    "zh-Hant": "希伯"
+   },
+   "note": {
+    "en": "Ancestor of 'all the children of Eber' (Gen 10:21); the name is traditionally connected with 'Hebrew'.",
+    "zh-Hans": "『希伯子孙之祖』（创10:21）；此名传统上与『希伯来』相连。",
+    "zh-Hant": "『希伯子孫之祖』（創10:21）；此名傳統上與『希伯來』相連。"
+   }
+  },
+  {
+   "id": "peleg",
+   "line": "shem",
+   "father": "eber",
+   "generation": 5,
+   "stream": "israel",
+   "era": "bible",
+   "ref": "Genesis 10:25",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Peleg",
+    "zh-Hans": "法勒",
+    "zh-Hant": "法勒"
+   },
+   "note": {
+    "en": "The text explains the name: 'in his days was the earth divided' (Gen 10:25).",
+    "zh-Hans": "经文解释此名：『因为那时人就分地居住』（创10:25）。",
+    "zh-Hant": "經文解釋此名：『因為那時人就分地居住』（創10:25）。"
+   }
+  },
+  {
+   "id": "joktan",
+   "line": "shem",
+   "father": "eber",
+   "generation": 5,
+   "stream": "arabia",
+   "era": "bible",
+   "ref": "Genesis 10:25",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Joktan",
+    "zh-Hans": "约坍",
+    "zh-Hant": "約坍"
+   }
+  },
+  {
+   "id": "almodad",
+   "line": "shem",
+   "father": "joktan",
+   "generation": 6,
+   "stream": "arabia",
+   "era": "bible",
+   "ref": "Genesis 10:26",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Almodad",
+    "zh-Hans": "亚摩答",
+    "zh-Hant": "亞摩答"
+   }
+  },
+  {
+   "id": "sheleph",
+   "line": "shem",
+   "father": "joktan",
+   "generation": 6,
+   "stream": "arabia",
+   "era": "bible",
+   "ref": "Genesis 10:26",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Sheleph",
+    "zh-Hans": "沙列",
+    "zh-Hant": "沙列"
+   }
+  },
+  {
+   "id": "hazarmaveth",
+   "line": "shem",
+   "father": "joktan",
+   "generation": 6,
+   "stream": "arabia",
+   "era": "bible",
+   "ref": "Genesis 10:26",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Hazarmaveth",
+    "zh-Hans": "哈萨玛非",
+    "zh-Hant": "哈薩瑪非"
+   },
+   "note": {
+    "en": "Hadramaut in southern Arabia (modern Yemen).",
+    "zh-Hans": "哈达拉毛，阿拉伯半岛南部（今也门）。",
+    "zh-Hant": "哈達拉毛，阿拉伯半島南部（今葉門）。"
+   }
+  },
+  {
+   "id": "jerah",
+   "line": "shem",
+   "father": "joktan",
+   "generation": 6,
+   "stream": "arabia",
+   "era": "bible",
+   "ref": "Genesis 10:26",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Jerah",
+    "zh-Hans": "耶拉",
+    "zh-Hant": "耶拉"
+   }
+  },
+  {
+   "id": "hadoram",
+   "line": "shem",
+   "father": "joktan",
+   "generation": 6,
+   "stream": "arabia",
+   "era": "bible",
+   "ref": "Genesis 10:27",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Hadoram",
+    "zh-Hans": "哈多兰",
+    "zh-Hant": "哈多蘭"
+   }
+  },
+  {
+   "id": "uzal",
+   "line": "shem",
+   "father": "joktan",
+   "generation": 6,
+   "stream": "arabia",
+   "era": "bible",
+   "ref": "Genesis 10:27",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Uzal",
+    "zh-Hans": "乌萨",
+    "zh-Hant": "烏薩"
+   }
+  },
+  {
+   "id": "diklah",
+   "line": "shem",
+   "father": "joktan",
+   "generation": 6,
+   "stream": "arabia",
+   "era": "bible",
+   "ref": "Genesis 10:27",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Diklah",
+    "zh-Hans": "德拉",
+    "zh-Hant": "德拉"
+   }
+  },
+  {
+   "id": "obal",
+   "line": "shem",
+   "father": "joktan",
+   "generation": 6,
+   "stream": "arabia",
+   "era": "bible",
+   "ref": "Genesis 10:28",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Obal",
+    "zh-Hans": "俄巴路",
+    "zh-Hant": "俄巴路"
+   }
+  },
+  {
+   "id": "abimael",
+   "line": "shem",
+   "father": "joktan",
+   "generation": 6,
+   "stream": "arabia",
+   "era": "bible",
+   "ref": "Genesis 10:28",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Abimael",
+    "zh-Hans": "亚比玛利",
+    "zh-Hant": "亞比瑪利"
+   }
+  },
+  {
+   "id": "sheba_joktan",
+   "line": "shem",
+   "father": "joktan",
+   "generation": 6,
+   "stream": "arabia",
+   "era": "bible",
+   "ref": "Genesis 10:28",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Sheba",
+    "zh-Hans": "示巴",
+    "zh-Hant": "示巴"
+   },
+   "note": {
+    "en": "A second Sheba appears among the sons of Raamah (Gen 10:7), and a third among the sons of Jokshan (Gen 25:3).",
+    "zh-Hans": "拉玛的儿子中另有一个示巴（创10:7），约珊的儿子中还有一个（创25:3）。",
+    "zh-Hant": "拉瑪的兒子中另有一個示巴（創10:7），約珊的兒子中還有一個（創25:3）。"
+   }
+  },
+  {
+   "id": "ophir",
+   "line": "shem",
+   "father": "joktan",
+   "generation": 6,
+   "stream": "world",
+   "era": "bible",
+   "ref": "Genesis 10:29",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Ophir",
+    "zh-Hans": "阿斐",
+    "zh-Hant": "阿斐"
+   },
+   "note": {
+    "en": "A source of gold in Israel's sea trade (1 Kings 9:28); its location is uncertain.",
+    "zh-Hans": "以色列海上贸易中的产金之地（王上9:28），确切位置不详。",
+    "zh-Hant": "以色列海上貿易中的產金之地（王上9:28），確切位置不詳。"
+   }
+  },
+  {
+   "id": "havilah_joktan",
+   "line": "shem",
+   "father": "joktan",
+   "generation": 6,
+   "stream": "arabia",
+   "era": "bible",
+   "ref": "Genesis 10:29",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Havilah",
+    "zh-Hans": "哈腓拉",
+    "zh-Hant": "哈腓拉"
+   },
+   "note": {
+    "en": "A second Havilah appears among the sons of Cush (Gen 10:7).",
+    "zh-Hans": "古实的儿子中另有一个哈腓拉（创10:7）。",
+    "zh-Hant": "古實的兒子中另有一個哈腓拉（創10:7）。"
+   }
+  },
+  {
+   "id": "jobab",
+   "line": "shem",
+   "father": "joktan",
+   "generation": 6,
+   "stream": "arabia",
+   "era": "bible",
+   "ref": "Genesis 10:29",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Jobab",
+    "zh-Hans": "约巴",
+    "zh-Hant": "約巴"
+   }
+  },
+  {
+   "id": "reu",
+   "line": "shem",
+   "father": "peleg",
+   "generation": 6,
+   "stream": "israel",
+   "era": "bible",
+   "ref": "Genesis 11:18",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Reu",
+    "zh-Hans": "拉吴",
+    "zh-Hant": "拉吳"
+   }
+  },
+  {
+   "id": "serug",
+   "line": "shem",
+   "father": "reu",
+   "generation": 7,
+   "stream": "israel",
+   "era": "bible",
+   "ref": "Genesis 11:20",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Serug",
+    "zh-Hans": "西鹿",
+    "zh-Hant": "西鹿"
+   }
+  },
+  {
+   "id": "nahor",
+   "line": "shem",
+   "father": "serug",
+   "generation": 8,
+   "stream": "israel",
+   "era": "bible",
+   "ref": "Genesis 11:22",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Nahor",
+    "zh-Hans": "拿鹤",
+    "zh-Hant": "拿鶴"
+   },
+   "note": {
+    "en": "Grandfather of Abram; a second Nahor is Abram's own brother (Gen 11:26).",
+    "zh-Hans": "亚伯兰的祖父；亚伯兰的兄弟中另有一个拿鹤（创11:26）。",
+    "zh-Hant": "亞伯蘭的祖父；亞伯蘭的兄弟中另有一個拿鶴（創11:26）。"
+   }
+  },
+  {
+   "id": "terah",
+   "line": "shem",
+   "father": "nahor",
+   "generation": 9,
+   "stream": "israel",
+   "era": "bible",
+   "ref": "Genesis 11:24",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Terah",
+    "zh-Hans": "他拉",
+    "zh-Hant": "他拉"
+   },
+   "note": {
+    "en": "Father of Abram, Nahor and Haran; he died in Haran (Gen 11:32).",
+    "zh-Hans": "亚伯兰、拿鹤、哈兰的父亲，死在哈兰（创11:32）。",
+    "zh-Hant": "亞伯蘭、拿鶴、哈蘭的父親，死在哈蘭（創11:32）。"
+   }
+  },
+  {
+   "id": "abram",
+   "line": "shem",
+   "father": "terah",
+   "generation": 10,
+   "stream": "israel",
+   "era": "bible",
+   "ref": "Genesis 11:26",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Abram",
+    "zh-Hans": "亚伯兰",
+    "zh-Hant": "亞伯蘭"
+   },
+   "note": {
+    "en": "Later renamed Abraham (Gen 17:5).",
+    "zh-Hans": "后来改名为亚伯拉罕（创17:5）。",
+    "zh-Hant": "後來改名為亞伯拉罕（創17:5）。"
+   }
+  },
+  {
+   "id": "nahor_terah",
+   "line": "shem",
+   "father": "terah",
+   "generation": 10,
+   "stream": "israel",
+   "era": "bible",
+   "ref": "Genesis 11:26",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Nahor",
+    "zh-Hans": "拿鹤",
+    "zh-Hant": "拿鶴"
+   },
+   "note": {
+    "en": "Brother of Abram; his wife was Milcah (Gen 11:29).",
+    "zh-Hans": "亚伯兰的兄弟，妻子名叫密迦（创11:29）。",
+    "zh-Hant": "亞伯蘭的兄弟，妻子名叫密迦（創11:29）。"
+   }
+  },
+  {
+   "id": "haran",
+   "line": "shem",
+   "father": "terah",
+   "generation": 10,
+   "stream": "israel",
+   "era": "bible",
+   "ref": "Genesis 11:26",
+   "approximate": false,
+   "basis": "scripture",
+   "name": {
+    "en": "Haran",
+    "zh-Hans": "哈兰",
+    "zh-Hant": "哈蘭"
+   },
+   "note": {
+    "en": "Father of Lot; he died in Ur of the Chaldees (Gen 11:27-28).",
+    "zh-Hans": "罗得的父亲，死在迦勒底的吾珥（创11:27-28）。",
+    "zh-Hant": "羅得的父親，死在迦勒底的吾珥（創11:27-28）。"
+   }
+  }
+ ],
+ "powers": [
+  {
+   "id": "egypt-early-dynastic",
+   "start": -3100,
+   "end": -2686,
+   "region": "egypt",
+   "stream": "egypt",
+   "approximate": true,
+   "basis": "conventional",
+   "ref": "Genesis 10:6",
+   "name": {
+    "en": "Early Dynastic Egypt",
+    "zh-Hans": "埃及早王朝时期",
+    "zh-Hant": "埃及早王朝時期"
+   },
+   "note": {
+    "en": "The unification of Upper and Lower Egypt under the first dynasties, the beginning of the recorded state that Genesis later calls Mizraim.",
+    "zh-Hans": "上下埃及在最初几个王朝下统一，形成创世记所称「麦西」（埃及）有文字记载的国家之始。",
+    "zh-Hant": "上下埃及在最初幾個王朝下統一，形成創世記所稱「麥西」（埃及）有文字記載的國家之始。"
+   }
+  },
+  {
+   "id": "egypt-old-kingdom",
+   "start": -2686,
+   "end": -2181,
+   "region": "egypt",
+   "stream": "egypt",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "Old Kingdom Egypt",
+    "zh-Hans": "埃及古王国时期",
+    "zh-Hant": "埃及古王國時期"
+   },
+   "note": {
+    "en": "The pyramid age, when Egypt first became a unified great power — a civilisation already ancient by the time the patriarchs went down into it.",
+    "zh-Hans": "金字塔时代，埃及首次成为统一的强权；及至族长南下寄居之时，这文明早已古老。",
+    "zh-Hant": "金字塔時代，埃及首次成為統一的強權；及至族長南下寄居之時，這文明早已古老。"
+   }
+  },
+  {
+   "id": "egypt-middle-kingdom",
+   "start": -2055,
+   "end": -1650,
+   "region": "egypt",
+   "stream": "egypt",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "Middle Kingdom Egypt",
+    "zh-Hans": "埃及中王国时期",
+    "zh-Hant": "埃及中王國時期"
+   },
+   "note": {
+    "en": "A reunified, prosperous Egypt with strong ties to Canaan — the era into which the patriarchal migrations of Genesis are usually placed.",
+    "zh-Hans": "埃及再度统一且富庶，与迦南往来密切；一般将创世记族长南下寄居的时代置于此期。",
+    "zh-Hant": "埃及再度統一且富庶，與迦南往來密切；一般將創世記族長南下寄居的時代置於此期。"
+   }
+  },
+  {
+   "id": "egypt-new-kingdom",
+   "start": -1550,
+   "end": -1069,
+   "region": "egypt",
+   "stream": "egypt",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "New Kingdom Egypt",
+    "zh-Hans": "埃及新王国时期",
+    "zh-Hant": "埃及新王國時期"
+   },
+   "note": {
+    "en": "Imperial Egypt ruling Canaan directly — the political world of the Exodus and the conquest.",
+    "zh-Hans": "帝国时期的埃及直接统治迦南，是出埃及与征服迦南所处的政治世界。",
+    "zh-Hant": "帝國時期的埃及直接統治迦南，是出埃及與征服迦南所處的政治世界。"
+   }
+  },
+  {
+   "id": "egypt-dynasty-18",
+   "start": -1550,
+   "end": -1295,
+   "region": "egypt",
+   "stream": "egypt",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "Eighteenth Dynasty of Egypt",
+    "zh-Hans": "埃及第十八王朝",
+    "zh-Hant": "埃及第十八王朝"
+   },
+   "note": {
+    "en": "The dynasty of Thutmose III, Akhenaten and Tutankhamun, favoured by those who date the Exodus early (fifteenth century BC).",
+    "zh-Hans": "图特摩斯三世、阿肯那顿与图坦卡门的王朝；主张「早期出埃及」（主前十五世纪）者多定于此朝。",
+    "zh-Hant": "圖特摩斯三世、阿肯那頓與圖坦卡門的王朝；主張「早期出埃及」（主前十五世紀）者多定於此朝。"
+   }
+  },
+  {
+   "id": "egypt-dynasty-19",
+   "start": -1295,
+   "end": -1186,
+   "region": "egypt",
+   "stream": "egypt",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "Nineteenth Dynasty of Egypt",
+    "zh-Hans": "埃及第十九王朝",
+    "zh-Hant": "埃及第十九王朝"
+   },
+   "note": {
+    "en": "The dynasty of Seti I and Ramesses II, favoured by those who date the Exodus late (thirteenth century BC); its Merneptah stele carries the earliest known mention of Israel.",
+    "zh-Hans": "西提一世与拉美西斯二世的王朝；主张「晚期出埃及」（主前十三世纪）者多定于此朝，其麦伦普塔石碑是已知最早提及「以色列」的文献。",
+    "zh-Hant": "西提一世與拉美西斯二世的王朝；主張「晚期出埃及」（主前十三世紀）者多定於此朝，其麥倫普塔石碑是已知最早提及「以色列」的文獻。"
+   }
+  },
+  {
+   "id": "egypt-dynasty-22",
+   "start": -945,
+   "end": -715,
+   "region": "egypt",
+   "stream": "egypt",
+   "approximate": true,
+   "basis": "conventional",
+   "refs": [
+    "1 Kings 14:25-26",
+    "2 Chronicles 12:2-9"
+   ],
+   "name": {
+    "en": "Twenty-Second Dynasty of Egypt (Libyan)",
+    "zh-Hans": "埃及第二十二王朝（利比亚人）",
+    "zh-Hant": "埃及第二十二王朝（利比亞人）"
+   },
+   "note": {
+    "en": "The Libyan dynasty founded by Shoshenq I, generally identified with the Shishak who plundered Jerusalem in Rehoboam's fifth year.",
+    "zh-Hans": "由舍顺克一世创建的利比亚人王朝；一般认为他即在罗波安第五年掳掠耶路撒冷的示撒。",
+    "zh-Hant": "由舍順克一世創建的利比亞人王朝；一般認為他即在羅波安第五年擄掠耶路撒冷的示撒。"
+   }
+  },
+  {
+   "id": "egypt-dynasty-25-kushite",
+   "start": -747,
+   "end": -656,
+   "region": "egypt",
+   "stream": "egypt",
+   "approximate": true,
+   "basis": "conventional",
+   "refs": [
+    "2 Kings 19:9",
+    "Isaiah 37:9"
+   ],
+   "name": {
+    "en": "Twenty-Fifth Dynasty of Egypt (Kushite)",
+    "zh-Hans": "埃及第二十五王朝（库施／努比亚）",
+    "zh-Hant": "埃及第二十五王朝（庫施／努比亞）"
+   },
+   "note": {
+    "en": "Nubian pharaohs ruling Egypt, including Taharqa — the Tirhakah who marched against Sennacherib during Hezekiah's crisis.",
+    "zh-Hans": "努比亚法老统治埃及，包括塔哈尔卡，即希西家危机中出兵抵挡西拿基立的特哈加。",
+    "zh-Hant": "努比亞法老統治埃及，包括塔哈爾卡，即希西家危機中出兵抵擋西拿基立的特哈加。"
+   }
+  },
+  {
+   "id": "egypt-dynasty-26-saite",
+   "start": -664,
+   "end": -525,
+   "region": "egypt",
+   "stream": "egypt",
+   "approximate": false,
+   "basis": "conventional",
+   "refs": [
+    "2 Kings 23:29",
+    "Jeremiah 37:5-7",
+    "Jeremiah 44:30"
+   ],
+   "name": {
+    "en": "Twenty-Sixth Dynasty of Egypt (Saite)",
+    "zh-Hans": "埃及第二十六王朝（塞易斯）",
+    "zh-Hant": "埃及第二十六王朝（塞易斯）"
+   },
+   "note": {
+    "en": "Egypt's last native revival. Its king Neco II killed Josiah at Megiddo; a later king, Hophra, sent the relief force that failed to save Judah from Babylon.",
+    "zh-Hans": "埃及最后一次本土复兴。其王尼哥二世在米吉多杀死约西亚；后来的合弗拉王出兵相救，仍未能使犹大脱离巴比伦。",
+    "zh-Hant": "埃及最後一次本土復興。其王尼哥二世在米吉多殺死約西亞；後來的合弗拉王出兵相救，仍未能使猶大脫離巴比倫。"
+   }
+  },
+  {
+   "id": "ptolemaic-kingdom",
+   "start": -305,
+   "end": -30,
+   "region": "egypt",
+   "stream": "egypt",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Ptolemaic Kingdom",
+    "zh-Hans": "托勒密王朝",
+    "zh-Hant": "托勒密王朝"
+   },
+   "note": {
+    "en": "The Greek dynasty of Egypt that first ruled Judea after Alexander and under which the Hebrew scriptures were translated into Greek as the Septuagint.",
+    "zh-Hans": "亚历山大之后首先统治犹大地的埃及希腊王朝，希伯来圣经在其治下译成希腊文《七十士译本》。",
+    "zh-Hant": "亞歷山大之後首先統治猶大地的埃及希臘王朝，希伯來聖經在其治下譯成希臘文《七十士譯本》。"
+   }
+  },
+  {
+   "id": "sumer-early-dynastic",
+   "start": -2900,
+   "end": -2334,
+   "region": "mesopotamia",
+   "stream": "babylon",
+   "approximate": true,
+   "basis": "conventional",
+   "refs": [
+    "Genesis 10:10",
+    "Genesis 11:31"
+   ],
+   "name": {
+    "en": "Sumerian City-States",
+    "zh-Hans": "苏美尔城邦",
+    "zh-Hant": "蘇美爾城邦"
+   },
+   "note": {
+    "en": "The world's first city-states in the land of Shinar. One of them, Erech, is named in the Genesis table of nations; another, Ur, is the city Abraham's family left in Genesis 11.",
+    "zh-Hans": "示拿地上世界最早的城邦。其中以力见于创世记的列国表；另一座吾珥，则是创世记十一章亚伯拉罕一家所离开的城。",
+    "zh-Hant": "示拿地上世界最早的城邦。其中以力見於創世記的列國表；另一座吾珥，則是創世記十一章亞伯拉罕一家所離開的城。"
+   }
+  },
+  {
+   "id": "akkadian-empire",
+   "start": -2334,
+   "end": -2154,
+   "region": "mesopotamia",
+   "stream": "babylon",
+   "approximate": true,
+   "basis": "conventional",
+   "ref": "Genesis 10:10",
+   "name": {
+    "en": "Akkadian Empire",
+    "zh-Hans": "阿卡德帝国",
+    "zh-Hant": "阿卡德帝國"
+   },
+   "note": {
+    "en": "Sargon's realm, commonly called the first empire in history, uniting Sumer and Akkad — the Accad of Genesis 10.",
+    "zh-Hans": "萨尔贡所建、通称人类史上第一个帝国，统一苏美尔与阿卡得（创世记十章的「亚甲」）。",
+    "zh-Hant": "薩爾貢所建、通稱人類史上第一個帝國，統一蘇美爾與阿卡得（創世記十章的「亞甲」）。"
+   }
+  },
+  {
+   "id": "old-assyrian-period",
+   "start": -2000,
+   "end": -1750,
+   "region": "mesopotamia",
+   "stream": "assyria",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "Old Assyrian Period",
+    "zh-Hans": "古亚述时期",
+    "zh-Hant": "古亞述時期"
+   },
+   "note": {
+    "en": "Ashur as a merchant city-state running trading colonies into Anatolia, the first phase of the Assyrian power that would later destroy Samaria.",
+    "zh-Hans": "亚述城作为商业城邦，在安纳托利亚设立贸易殖民地，是日后灭撒玛利亚之亚述强权的第一阶段。",
+    "zh-Hant": "亞述城作為商業城邦，在安納托利亞設立貿易殖民地，是日後滅撒瑪利亞之亞述強權的第一階段。"
+   }
+  },
+  {
+   "id": "old-babylonian-empire",
+   "start": -1894,
+   "end": -1595,
+   "region": "mesopotamia",
+   "stream": "babylon",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "Old Babylonian Empire",
+    "zh-Hans": "古巴比伦王国",
+    "zh-Hant": "古巴比倫王國"
+   },
+   "note": {
+    "en": "The first dynasty of Babylon, whose king Hammurabi issued the law code most often compared with the covenant laws of Moses.",
+    "zh-Hans": "巴比伦第一王朝，其王汉谟拉比颁布的法典最常被拿来与摩西约书律法比较。",
+    "zh-Hant": "巴比倫第一王朝，其王漢摩拉比頒布的法典最常被拿來與摩西約書律法比較。"
+   }
+  },
+  {
+   "id": "middle-assyrian-empire",
+   "start": -1365,
+   "end": -1050,
+   "region": "mesopotamia",
+   "stream": "assyria",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "Middle Assyrian Empire",
+    "zh-Hans": "中亚述帝国",
+    "zh-Hant": "中亞述帝國"
+   },
+   "note": {
+    "en": "Assyria's first period of true empire, contemporary with the Israelite judges.",
+    "zh-Hans": "亚述首次成为真正的帝国，与以色列士师时期同时。",
+    "zh-Hant": "亞述首次成為真正的帝國，與以色列士師時期同時。"
+   }
+  },
+  {
+   "id": "neo-assyrian-empire",
+   "start": -911,
+   "end": -609,
+   "region": "mesopotamia",
+   "stream": "assyria",
+   "approximate": false,
+   "basis": "conventional",
+   "refs": [
+    "2 Kings 17:6",
+    "2 Kings 18:13"
+   ],
+   "name": {
+    "en": "Neo-Assyrian Empire",
+    "zh-Hans": "新亚述帝国",
+    "zh-Hant": "新亞述帝國"
+   },
+   "note": {
+    "en": "The empire of Tiglath-Pileser III, Shalmaneser V, Sargon II and Sennacherib, which destroyed Samaria in 722 BC and besieged Jerusalem.",
+    "zh-Hans": "提革拉毘列色三世、撒缦以色五世、撒珥根二世与西拿基立的帝国，主前722年灭撒玛利亚并围困耶路撒冷。",
+    "zh-Hant": "提革拉毘列色三世、撒縵以色五世、撒珥根二世與西拿基立的帝國，主前722年滅撒瑪利亞並圍困耶路撒冷。"
+   }
+  },
+  {
+   "id": "neo-babylonian-empire",
+   "start": -626,
+   "end": -539,
+   "region": "mesopotamia",
+   "stream": "babylon",
+   "approximate": false,
+   "basis": "conventional",
+   "refs": [
+    "2 Kings 25:8-9",
+    "Daniel 1:1"
+   ],
+   "name": {
+    "en": "Neo-Babylonian Empire",
+    "zh-Hans": "新巴比伦帝国",
+    "zh-Hant": "新巴比倫帝國"
+   },
+   "note": {
+    "en": "Nebuchadnezzar's Chaldean empire, which burned the temple in 586 BC (587 by some reckonings) and carried Judah into exile — the setting of Daniel and much of Jeremiah and Ezekiel.",
+    "zh-Hans": "尼布甲尼撒的迦勒底帝国，主前586年（一说587年）焚毁圣殿并掳掠犹大，是但以理书及耶利米书、以西结书大部分的背景。",
+    "zh-Hant": "尼布甲尼撒的迦勒底帝國，主前586年（一說587年）焚毀聖殿並擄掠猶大，是但以理書及耶利米書、以西結書大部分的背景。"
+   }
+  },
+  {
+   "id": "hittite-old-kingdom",
+   "start": -1650,
+   "end": -1400,
+   "region": "anatolia",
+   "stream": "anatolia",
+   "approximate": true,
+   "basis": "conventional",
+   "ref": "Genesis 23:3-20",
+   "name": {
+    "en": "Old Hittite Kingdom",
+    "zh-Hans": "赫梯古王国",
+    "zh-Hant": "赫梯古王國"
+   },
+   "note": {
+    "en": "The rise of the Hittite kingdom in Anatolia. The Old Testament calls the Canaanites from whom Abraham bought the cave of Machpelah the sons of Heth (Genesis 23); how they relate to this Anatolian kingdom is debated.",
+    "zh-Hans": "赫梯王国在安纳托利亚兴起。旧约称亚伯拉罕向之买下麦比拉洞的迦南居民为「赫人」（创世记二十三章）；他们与安纳托利亚赫梯王国的关系仍有争议。",
+    "zh-Hant": "赫梯王國在安納托利亞興起。舊約稱亞伯拉罕向之買下麥比拉洞的迦南居民為「赫人」（創世記二十三章）；他們與安納托利亞赫梯王國的關係仍有爭議。"
+   }
+  },
+  {
+   "id": "hittite-empire",
+   "start": -1400,
+   "end": -1180,
+   "region": "anatolia",
+   "stream": "anatolia",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "Hittite Empire",
+    "zh-Hans": "赫梯帝国",
+    "zh-Hant": "赫梯帝國"
+   },
+   "note": {
+    "en": "Egypt's great northern rival, whose vassal treaties are the closest known parallels in form to the covenant of Deuteronomy.",
+    "zh-Hans": "埃及在北方的劲敌，其藩属条约在形式上与申命记之约最为相近。",
+    "zh-Hant": "埃及在北方的勁敵，其藩屬條約在形式上與申命記之約最為相近。"
+   }
+  },
+  {
+   "id": "kingdom-of-lydia",
+   "start": -680,
+   "end": -546,
+   "region": "anatolia",
+   "stream": "anatolia",
+   "approximate": true,
+   "basis": "conventional",
+   "ref": "Revelation 3:1",
+   "name": {
+    "en": "Kingdom of Lydia",
+    "zh-Hans": "吕底亚王国",
+    "zh-Hant": "呂底亞王國"
+   },
+   "note": {
+    "en": "The wealthy Anatolian kingdom of Croesus, minter of the first coins, whose capital Sardis later held one of the seven churches of Revelation.",
+    "zh-Hans": "克罗伊斯所治的富庶安纳托利亚王国，最早铸造钱币；其都撒狄后为启示录七教会之一所在。",
+    "zh-Hant": "克羅伊斯所治的富庶安納托利亞王國，最早鑄造錢幣；其都撒狄後為啟示錄七教會之一所在。"
+   }
+  },
+  {
+   "id": "phoenician-city-states",
+   "start": -1200,
+   "end": -332,
+   "region": "levant",
+   "stream": "phoenicia",
+   "approximate": true,
+   "basis": "conventional",
+   "refs": [
+    "1 Kings 5:6-9",
+    "1 Kings 7:13-14",
+    "Isaiah 23:1",
+    "Ezekiel 26:3"
+   ],
+   "name": {
+    "en": "Phoenician City-States",
+    "zh-Hans": "腓尼基城邦",
+    "zh-Hant": "腓尼基城邦"
+   },
+   "note": {
+    "en": "Tyre and Sidon, seafaring neighbours who supplied Solomon's temple with cedar and craftsmen and drew repeated oracles from the prophets.",
+    "zh-Hans": "推罗与西顿等航海邻邦，为所罗门圣殿供应香柏木与工匠，也屡次成为先知预言的对象。",
+    "zh-Hant": "推羅與西頓等航海鄰邦，為所羅門聖殿供應香柏木與工匠，也屢次成為先知預言的對象。"
+   }
+  },
+  {
+   "id": "philistine-pentapolis",
+   "start": -1175,
+   "end": -604,
+   "region": "levant",
+   "stream": "philistia",
+   "approximate": true,
+   "basis": "conventional",
+   "refs": [
+    "1 Samuel 6:17",
+    "Judges 13:1"
+   ],
+   "name": {
+    "en": "Philistine Pentapolis",
+    "zh-Hans": "非利士五城联盟",
+    "zh-Hant": "非利士五城聯盟"
+   },
+   "note": {
+    "en": "The five cities of Gaza, Ashkelon, Ashdod, Ekron and Gath, Israel's chief enemy through Samson, Samuel, Saul and David.",
+    "zh-Hans": "迦萨、亚实基伦、亚实突、以革伦与迦特五城，从参孙、撒母耳到扫罗、大卫时期都是以色列的主要仇敌。",
+    "zh-Hant": "迦薩、亞實基倫、亞實突、以革倫與迦特五城，從參孫、撒母耳到掃羅、大衛時期都是以色列的主要仇敵。"
+   }
+  },
+  {
+   "id": "aram-damascus",
+   "start": -1100,
+   "end": -732,
+   "region": "levant",
+   "stream": "world",
+   "approximate": true,
+   "basis": "conventional",
+   "refs": [
+    "1 Kings 20:1",
+    "2 Kings 8:15",
+    "2 Kings 16:9"
+   ],
+   "name": {
+    "en": "Aram-Damascus",
+    "zh-Hans": "亚兰－大马士革王国",
+    "zh-Hant": "亞蘭－大馬士革王國"
+   },
+   "note": {
+    "en": "The leading Aramean state, ruled by the Ben-Hadads and Hazael, Israel's constant northern antagonist until Assyria took Damascus in 732 BC.",
+    "zh-Hans": "最强的亚兰城邦，由便哈达诸王与哈薛统治，是以色列北方长期的对头，直到主前732年亚述攻取大马士革。",
+    "zh-Hant": "最強的亞蘭城邦，由便哈達諸王與哈薛統治，是以色列北方長期的對頭，直到主前732年亞述攻取大馬士革。"
+   }
+  },
+  {
+   "id": "israel-united-monarchy",
+   "start": -1050,
+   "end": -930,
+   "region": "levant",
+   "stream": "israel",
+   "approximate": true,
+   "basis": "scripture+thiele",
+   "ref": "1 Kings 12:19-20",
+   "name": {
+    "en": "United Monarchy of Israel",
+    "zh-Hans": "以色列联合王国",
+    "zh-Hant": "以色列聯合王國"
+   },
+   "note": {
+    "en": "The single kingdom of Saul, David and Solomon, ending with the temple built in Jerusalem and the split after Solomon's death.",
+    "zh-Hans": "扫罗、大卫、所罗门统一治理的王国，以耶路撒冷圣殿的建成为高峰，所罗门死后分裂。",
+    "zh-Hant": "掃羅、大衛、所羅門統一治理的王國，以耶路撒冷聖殿的建成為高峰，所羅門死後分裂。"
+   }
+  },
+  {
+   "id": "kingdom-of-israel",
+   "start": -930,
+   "end": -722,
+   "region": "levant",
+   "stream": "israel",
+   "approximate": true,
+   "basis": "scripture+thiele",
+   "ref": "2 Kings 17:6",
+   "name": {
+    "en": "Kingdom of Israel (Northern)",
+    "zh-Hans": "北国以色列",
+    "zh-Hant": "北國以色列"
+   },
+   "note": {
+    "en": "The ten northern tribes from Jeroboam to Hoshea, the world of Elijah, Elisha, Amos and Hosea, ended by Assyria's capture of Samaria. References give 931 or 930 BC for the division and 722 or 721 BC for the fall of Samaria.",
+    "zh-Hans": "自耶罗波安至何细亚的北方十支派，是以利亚、以利沙、阿摩司、何西阿事奉的场景，终于亚述攻陷撒玛利亚。王国分裂一般作主前931或930年，撒玛利亚陷落作主前722或721年。",
+    "zh-Hant": "自耶羅波安至何細亞的北方十支派，是以利亞、以利沙、阿摩司、何西阿事奉的場景，終於亞述攻陷撒瑪利亞。王國分裂一般作主前931或930年，撒瑪利亞陷落作主前722或721年。"
+   }
+  },
+  {
+   "id": "kingdom-of-judah",
+   "start": -930,
+   "end": -586,
+   "region": "levant",
+   "stream": "judah",
+   "approximate": true,
+   "basis": "scripture+thiele",
+   "refs": [
+    "2 Kings 25:8-9",
+    "2 Kings 25:21"
+   ],
+   "name": {
+    "en": "Kingdom of Judah",
+    "zh-Hans": "南国犹大",
+    "zh-Hant": "南國猶大"
+   },
+   "note": {
+    "en": "The Davidic kingdom in Jerusalem from Rehoboam to Zedekiah, ended by Nebuchadnezzar's destruction of the city and temple in 586 BC — a date some reckon as 587.",
+    "zh-Hans": "自罗波安至西底家、以耶路撒冷为都的大卫王朝，终于主前586年（一说587年）尼布甲尼撒毁城灭殿。",
+    "zh-Hant": "自羅波安至西底家、以耶路撒冷為都的大衛王朝，終於主前586年（一說587年）尼布甲尼撒毀城滅殿。"
+   }
+  },
+  {
+   "id": "nabataean-kingdom",
+   "start": -312,
+   "end": 106,
+   "region": "levant",
+   "stream": "arabia",
+   "approximate": true,
+   "basis": "conventional",
+   "ref": "2 Corinthians 11:32-33",
+   "name": {
+    "en": "Nabataean Kingdom",
+    "zh-Hans": "拿巴泰王国",
+    "zh-Hant": "拿巴泰王國"
+   },
+   "note": {
+    "en": "The Arab caravan kingdom of Petra, whose king Aretas IV had Damascus watched when Paul escaped over the wall in a basket.",
+    "zh-Hans": "以彼特拉为都的阿拉伯商旅王国，其王亚哩达四世曾派人把守大马士革，保罗因而坐筐从城墙缒下逃脱。",
+    "zh-Hant": "以彼特拉為都的阿拉伯商旅王國，其王亞哩達四世曾派人把守大馬士革，保羅因而坐筐從城牆縋下逃脫。"
+   }
+  },
+  {
+   "id": "hasmonean-kingdom",
+   "start": -140,
+   "end": -37,
+   "region": "levant",
+   "stream": "judah",
+   "approximate": true,
+   "basis": "conventional",
+   "ref": "John 10:22",
+   "name": {
+    "en": "Hasmonean Kingdom",
+    "zh-Hans": "哈斯蒙尼王朝",
+    "zh-Hant": "哈斯蒙尼王朝"
+   },
+   "note": {
+    "en": "The independent Jewish state won by the Maccabean revolt against the Seleucids. It was the revolt's rededication of the temple, about 164 BC, that the Feast of Dedication commemorates.",
+    "zh-Hans": "马加比起义反抗塞琉古而建立的犹太独立国。修殿节（献殿节）所纪念的，是起义中约主前164年洁净重献圣殿之事。",
+    "zh-Hant": "馬加比起義反抗塞琉古而建立的猶太獨立國。修殿節（獻殿節）所紀念的，是起義中約主前164年潔淨重獻聖殿之事。"
+   }
+  },
+  {
+   "id": "herodian-dynasty",
+   "start": -37,
+   "end": 92,
+   "region": "levant",
+   "stream": "judah",
+   "approximate": true,
+   "basis": "conventional",
+   "refs": [
+    "Matthew 2:16",
+    "Acts 25:13"
+   ],
+   "name": {
+    "en": "Herodian Dynasty",
+    "zh-Hans": "希律王朝",
+    "zh-Hant": "希律王朝"
+   },
+   "note": {
+    "en": "Rome's client kings in Judea, from Herod the Great who rebuilt the temple and killed the infants of Bethlehem, to the Agrippas of Acts.",
+    "zh-Hans": "罗马在犹太地的附庸王室，从重建圣殿并屠杀伯利恒婴孩的大希律，到使徒行传中的亚基帕诸王。",
+    "zh-Hant": "羅馬在猶太地的附庸王室，從重建聖殿並屠殺伯利恆嬰孩的大希律，到使徒行傳中的亞基帕諸王。"
+   }
+  },
+  {
+   "id": "kingdom-of-jerusalem",
+   "start": 1099,
+   "end": 1291,
+   "region": "levant",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Crusader Kingdom of Jerusalem",
+    "zh-Hans": "耶路撒冷王国（十字军）",
+    "zh-Hant": "耶路撒冷王國（十字軍）"
+   },
+   "note": {
+    "en": "The Latin state established by the First Crusade, the last time a Western Christian power ruled the biblical land until modern times.",
+    "zh-Hans": "第一次十字军东征所建的拉丁王国，是近代以前西方基督教势力最后一次统治圣经之地。",
+    "zh-Hant": "第一次十字軍東征所建的拉丁王國，是近代以前西方基督教勢力最後一次統治聖經之地。"
+   }
+  },
+  {
+   "id": "median-empire",
+   "start": -678,
+   "end": -550,
+   "region": "persia",
+   "stream": "persia",
+   "approximate": true,
+   "basis": "conventional",
+   "refs": [
+    "Daniel 6:8",
+    "Daniel 8:20"
+   ],
+   "name": {
+    "en": "Median Empire",
+    "zh-Hans": "米底（玛代）王国",
+    "zh-Hant": "米底（瑪代）王國"
+   },
+   "note": {
+    "en": "The Iranian power that helped Babylon destroy Nineveh; its earliest kings are only traditionally dated. Media stands beside Persia twice in Daniel — in the law of the Medes and Persians (Daniel 6) and in the two-horned ram of the vision (Daniel 8:20).",
+    "zh-Hans": "协助巴比伦攻灭尼尼微的伊朗强权，其最早诸王的年代仅属传统推定。但以理书两次将玛代与波斯并称：「玛代波斯」不更改的律例（但六章），以及异象中双角的公绵羊（但八20）。",
+    "zh-Hant": "協助巴比倫攻滅尼尼微的伊朗強權，其最早諸王的年代僅屬傳統推定。但以理書兩次將瑪代與波斯並稱：「瑪代波斯」不更改的律例（但六章），以及異象中雙角的公綿羊（但八20）。"
+   }
+  },
+  {
+   "id": "achaemenid-empire",
+   "start": -550,
+   "end": -330,
+   "region": "persia",
+   "stream": "persia",
+   "approximate": false,
+   "basis": "conventional",
+   "refs": [
+    "Ezra 1:2",
+    "Esther 1:1"
+   ],
+   "name": {
+    "en": "Achaemenid Persian Empire",
+    "zh-Hans": "阿契美尼德波斯帝国",
+    "zh-Hant": "阿契美尼德波斯帝國"
+   },
+   "note": {
+    "en": "The empire of Cyrus, Darius, Xerxes and Artaxerxes, which released the exiles, funded the second temple, and forms the setting of Ezra, Nehemiah and Esther.",
+    "zh-Hans": "古列、大流士、亚哈随鲁与亚达薛西的帝国，释放被掳者、资助重建第二圣殿，是以斯拉记、尼希米记与以斯帖记的背景。",
+    "zh-Hant": "古列、大流士、亞哈隨魯與亞達薛西的帝國，釋放被擄者、資助重建第二聖殿，是以斯拉記、尼希米記與以斯帖記的背景。"
+   }
+  },
+  {
+   "id": "parthian-empire",
+   "start": -247,
+   "end": 224,
+   "region": "persia",
+   "stream": "persia",
+   "approximate": false,
+   "basis": "conventional",
+   "ref": "Acts 2:9",
+   "name": {
+    "en": "Parthian Empire",
+    "zh-Hans": "帕提亚（安息）帝国",
+    "zh-Hant": "帕提亞（安息）帝國"
+   },
+   "note": {
+    "en": "Rome's great eastern rival, never permanently subdued, home of the large Jewish diaspora whose 'Parthians and Medes and Elamites' appear at Pentecost.",
+    "zh-Hans": "罗马东方的劲敌，始终未被长久征服；境内犹太侨民众多，五旬节所列「帕提亚人、玛代人、以拦人」即出于此。",
+    "zh-Hant": "羅馬東方的勁敵，始終未被長久征服；境內猶太僑民眾多，五旬節所列「帕提亞人、瑪代人、以攔人」即出於此。"
+   }
+  },
+  {
+   "id": "sassanid-empire",
+   "start": 224,
+   "end": 651,
+   "region": "persia",
+   "stream": "persia",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Sassanid Empire",
+    "zh-Hans": "萨珊波斯帝国",
+    "zh-Hant": "薩珊波斯帝國"
+   },
+   "note": {
+    "en": "The last pre-Islamic Persian empire, patron of Zoroastrianism and host to the Church of the East, exhausted by war with Byzantium just before the Arab conquest.",
+    "zh-Hans": "伊斯兰兴起前最后一个波斯帝国，尊奉琐罗亚斯德教并容纳东方教会，与拜占庭长期交战力竭后为阿拉伯所灭。",
+    "zh-Hant": "伊斯蘭興起前最後一個波斯帝國，尊奉瑣羅亞斯德教並容納東方教會，與拜占庭長期交戰力竭後為阿拉伯所滅。"
+   }
+  },
+  {
+   "id": "mycenaean-greece",
+   "start": -1600,
+   "end": -1100,
+   "region": "greece",
+   "stream": "greece",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "Mycenaean Greece",
+    "zh-Hans": "迈锡尼希腊",
+    "zh-Hant": "邁錫尼希臘"
+   },
+   "note": {
+    "en": "The first Greek-speaking palace civilisation, whose collapse belongs to the same upheaval that brought the Sea Peoples to Canaan.",
+    "zh-Hans": "最早使用希腊语的宫殿文明，其崩溃与把「海上民族」带到迦南的大动荡同属一波。",
+    "zh-Hant": "最早使用希臘語的宮殿文明，其崩潰與把「海上民族」帶到迦南的大動盪同屬一波。"
+   }
+  },
+  {
+   "id": "greek-city-states",
+   "start": -800,
+   "end": -338,
+   "region": "greece",
+   "stream": "greece",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "Greek City-States",
+    "zh-Hans": "希腊城邦时代",
+    "zh-Hant": "希臘城邦時代"
+   },
+   "note": {
+    "en": "The archaic and classical age of Athens, Sparta and Corinth, which produced the language and philosophy in which the New Testament would later be written and argued.",
+    "zh-Hans": "雅典、斯巴达、哥林多的古风与古典时代，孕育了日后新约写作与辩论所用的语言与哲学。",
+    "zh-Hant": "雅典、斯巴達、哥林多的古風與古典時代，孕育了日後新約寫作與辯論所用的語言與哲學。"
+   }
+  },
+  {
+   "id": "macedonian-empire",
+   "start": -336,
+   "end": -323,
+   "region": "greece",
+   "stream": "greece",
+   "approximate": false,
+   "basis": "conventional",
+   "refs": [
+    "Daniel 8:5",
+    "Daniel 8:21"
+   ],
+   "name": {
+    "en": "Macedonian Empire of Alexander",
+    "zh-Hans": "马其顿帝国（亚历山大）",
+    "zh-Hant": "馬其頓帝國（亞歷山大）"
+   },
+   "note": {
+    "en": "Alexander's conquest from Greece to India, won in a reign of only thirteen years, spreading Greek as the common tongue — the swift he-goat of Daniel's vision.",
+    "zh-Hans": "亚历山大在位仅十三年，便从希腊征服至印度，使希腊语成为通用语；即但以理异象中疾行的公山羊。",
+    "zh-Hant": "亞歷山大在位僅十三年，便從希臘征服至印度，使希臘語成為通用語；即但以理異象中疾行的公山羊。"
+   }
+  },
+  {
+   "id": "seleucid-empire",
+   "start": -312,
+   "end": -63,
+   "region": "greece",
+   "stream": "greece",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Seleucid Empire",
+    "zh-Hans": "塞琉古帝国",
+    "zh-Hant": "塞琉古帝國"
+   },
+   "note": {
+    "en": "The largest of Alexander's successor kingdoms; its king Antiochus IV desecrated the temple and provoked the Maccabean revolt.",
+    "zh-Hans": "亚历山大继业者中疆域最大的王国，其王安提阿古四世亵渎圣殿，激起马加比起义。",
+    "zh-Hant": "亞歷山大繼業者中疆域最大的王國，其王安提阿古四世褻瀆聖殿，激起馬加比起義。"
+   }
+  },
+  {
+   "id": "roman-kingdom",
+   "start": -753,
+   "end": -509,
+   "region": "rome",
+   "stream": "rome",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "Roman Kingdom",
+    "zh-Hans": "罗马王政时代",
+    "zh-Hant": "羅馬王政時代"
+   },
+   "note": {
+    "en": "Rome's traditional founding and its seven legendary kings, beginning at roughly the time of Israel's last northern kings.",
+    "zh-Hans": "罗马传统建城与七王时期，大致始于北国以色列末代诸王的年代。",
+    "zh-Hant": "羅馬傳統建城與七王時期，大致始於北國以色列末代諸王的年代。"
+   }
+  },
+  {
+   "id": "roman-republic",
+   "start": -509,
+   "end": -27,
+   "region": "rome",
+   "stream": "rome",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Roman Republic",
+    "zh-Hans": "罗马共和国",
+    "zh-Hant": "羅馬共和國"
+   },
+   "note": {
+    "en": "The senatorial republic that grew from a single city to master the Mediterranean, bringing Judea under Roman control when Pompey took Jerusalem in 63 BC.",
+    "zh-Hans": "由元老院主导的共和国，从一城扩张为地中海霸主；主前63年庞培攻取耶路撒冷，犹大地自此落入罗马掌控之下。",
+    "zh-Hant": "由元老院主導的共和國，從一城擴張為地中海霸主；主前63年龐培攻取耶路撒冷，猶大地自此落入羅馬掌控之下。"
+   }
+  },
+  {
+   "id": "roman-empire",
+   "start": -27,
+   "end": 476,
+   "region": "rome",
+   "stream": "rome",
+   "approximate": false,
+   "basis": "conventional",
+   "ref": "Luke 2:1",
+   "name": {
+    "en": "Roman Empire",
+    "zh-Hans": "罗马帝国",
+    "zh-Hant": "羅馬帝國"
+   },
+   "note": {
+    "en": "The empire of Augustus and his successors — the decree, the roads, the peace and the persecutions that frame the whole New Testament.",
+    "zh-Hans": "奥古斯都及其继任者的帝国：报名上册的谕旨、罗马大道、罗马和平与逼迫，构成整卷新约的框架。",
+    "zh-Hant": "奧古斯都及其繼任者的帝國：報名上冊的諭旨、羅馬大道、羅馬和平與逼迫，構成整卷新約的框架。"
+   }
+  },
+  {
+   "id": "western-roman-empire",
+   "start": 395,
+   "end": 476,
+   "region": "rome",
+   "stream": "rome",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Western Roman Empire",
+    "zh-Hans": "西罗马帝国",
+    "zh-Hant": "西羅馬帝國"
+   },
+   "note": {
+    "en": "The Latin half after the final division of the empire, overrun by Germanic peoples until the last emperor was deposed in 476.",
+    "zh-Hans": "帝国最终分治后的拉丁半壁，屡遭日耳曼民族入侵，末代皇帝于476年被废。",
+    "zh-Hant": "帝國最終分治後的拉丁半壁，屢遭日耳曼民族入侵，末代皇帝於476年被廢。"
+   }
+  },
+  {
+   "id": "byzantine-empire",
+   "start": 330,
+   "end": 1453,
+   "region": "rome",
+   "stream": "byzantium",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "Byzantine Empire",
+    "zh-Hans": "拜占庭帝国（东罗马）",
+    "zh-Hant": "拜占庭帝國（東羅馬）"
+   },
+   "note": {
+    "en": "The Greek-speaking Christian empire centred on Constantinople, which preserved the Greek New Testament text and ruled the Holy Land for three centuries.",
+    "zh-Hans": "以君士坦丁堡为中心、讲希腊语的基督教帝国，保存了希腊文新约抄本传统，并统治圣地三百年。",
+    "zh-Hant": "以君士坦丁堡為中心、講希臘語的基督教帝國，保存了希臘文新約抄本傳統，並統治聖地三百年。"
+   }
+  },
+  {
+   "id": "rashidun-caliphate",
+   "start": 632,
+   "end": 661,
+   "region": "islamic",
+   "stream": "islam",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Rashidun Caliphate",
+    "zh-Hans": "正统哈里发国",
+    "zh-Hant": "正統哈里發國"
+   },
+   "note": {
+    "en": "The first caliphate after Muhammad, which took Jerusalem from Byzantium in 638 and began Muslim rule over the biblical land.",
+    "zh-Hans": "穆罕默德之后的第一个哈里发国，638年自拜占庭手中取得耶路撒冷，开启穆斯林统治圣经之地。",
+    "zh-Hant": "穆罕默德之後的第一個哈里發國，638年自拜占庭手中取得耶路撒冷，開啟穆斯林統治聖經之地。"
+   }
+  },
+  {
+   "id": "umayyad-caliphate",
+   "start": 661,
+   "end": 750,
+   "region": "islamic",
+   "stream": "islam",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Umayyad Caliphate",
+    "zh-Hans": "倭马亚王朝",
+    "zh-Hant": "倭馬亞王朝"
+   },
+   "note": {
+    "en": "The Damascus caliphate that stretched from Spain to India and built the Dome of the Rock on the temple mount.",
+    "zh-Hans": "定都大马士革的哈里发国，疆域自西班牙至印度，并在圣殿山上建造圆顶清真寺。",
+    "zh-Hant": "定都大馬士革的哈里發國，疆域自西班牙至印度，並在聖殿山上建造圓頂清真寺。"
+   }
+  },
+  {
+   "id": "abbasid-caliphate",
+   "start": 750,
+   "end": 1258,
+   "region": "islamic",
+   "stream": "islam",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Abbasid Caliphate",
+    "zh-Hans": "阿拔斯王朝",
+    "zh-Hant": "阿拔斯王朝"
+   },
+   "note": {
+    "en": "The Baghdad caliphate of the Islamic golden age, ended by the Mongol sack of the city in 1258.",
+    "zh-Hans": "定都巴格达、开创伊斯兰黄金时代的哈里发国，1258年蒙古军攻陷巴格达而亡。",
+    "zh-Hant": "定都巴格達、開創伊斯蘭黃金時代的哈里發國，1258年蒙古軍攻陷巴格達而亡。"
+   }
+  },
+  {
+   "id": "fatimid-caliphate",
+   "start": 909,
+   "end": 1171,
+   "region": "islamic",
+   "stream": "islam",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Fatimid Caliphate",
+    "zh-Hans": "法蒂玛王朝",
+    "zh-Hant": "法蒂瑪王朝"
+   },
+   "note": {
+    "en": "The Shia caliphate founded in North Africa, ruling Egypt from 969 and for a time Jerusalem; the destruction of the Church of the Holy Sepulchre under its rule helped provoke the Crusades.",
+    "zh-Hans": "在北非兴起的什叶派哈里发国，969年起统治埃及，并一度统治耶路撒冷；其治下拆毁圣墓教堂，成为十字军东征的导火线之一。",
+    "zh-Hant": "在北非興起的什葉派哈里發國，969年起統治埃及，並一度統治耶路撒冷；其治下拆毀聖墓教堂，成為十字軍東征的導火線之一。"
+   }
+  },
+  {
+   "id": "ottoman-empire",
+   "start": 1299,
+   "end": 1922,
+   "region": "islamic",
+   "stream": "islam",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "Ottoman Empire",
+    "zh-Hans": "奥斯曼帝国",
+    "zh-Hant": "鄂圖曼帝國"
+   },
+   "note": {
+    "en": "The Turkish empire, dated by tradition from about 1299, which took Constantinople in 1453 and ruled Palestine for four centuries until its defeat in the First World War. Its end is variously counted: the sultanate was abolished in 1922, the republic proclaimed in 1923, the caliphate abolished in 1924.",
+    "zh-Hans": "土耳其帝国，传统上以约1299年为起点；1453年攻陷君士坦丁堡，统治巴勒斯坦四百年，直到第一次世界大战战败。其终点算法不一：1922年废除苏丹制，1923年成立共和国，1924年废除哈里发。",
+    "zh-Hant": "土耳其帝國，傳統上以約1299年為起點；1453年攻陷君士坦丁堡，統治巴勒斯坦四百年，直到第一次世界大戰戰敗。其終點算法不一：1922年廢除蘇丹制，1923年成立共和國，1924年廢除哈里發。"
+   }
+  },
+  {
+   "id": "merovingian-franks",
+   "start": 481,
+   "end": 751,
+   "region": "europe",
+   "stream": "europe",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Merovingian Frankish Kingdom",
+    "zh-Hans": "墨洛温王朝法兰克王国",
+    "zh-Hant": "墨洛溫王朝法蘭克王國"
+   },
+   "note": {
+    "en": "Founded by Clovis, the first Germanic kingdom in Gaul to adopt Catholic rather than Arian Christianity — the ground from which Catholic Europe took shape.",
+    "zh-Hans": "由克洛维建立，是高卢第一个归信大公教会（而非亚流派）的日耳曼王国，天主教欧洲由此成形。",
+    "zh-Hant": "由克洛維建立，是高盧第一個歸信大公教會（而非亞流派）的日耳曼王國，天主教歐洲由此成形。"
+   }
+  },
+  {
+   "id": "carolingian-empire",
+   "start": 800,
+   "end": 888,
+   "region": "europe",
+   "stream": "europe",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Carolingian Empire",
+    "zh-Hans": "加洛林帝国",
+    "zh-Hant": "加洛林帝國"
+   },
+   "note": {
+    "en": "Charlemagne's empire, crowned by the pope on Christmas Day 800, reviving the idea of a Christian Roman emperor in the West.",
+    "zh-Hans": "查理曼的帝国，800年圣诞日由教皇加冕，使西方重现「基督教罗马皇帝」的观念。",
+    "zh-Hant": "查理曼的帝國，800年聖誕日由教皇加冕，使西方重現「基督教羅馬皇帝」的觀念。"
+   }
+  },
+  {
+   "id": "holy-roman-empire",
+   "start": 962,
+   "end": 1806,
+   "region": "europe",
+   "stream": "europe",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "Holy Roman Empire",
+    "zh-Hans": "神圣罗马帝国",
+    "zh-Hant": "神聖羅馬帝國"
+   },
+   "note": {
+    "en": "The central European empire drawn here from Otto I's coronation in 962, though many references reckon it from Charlemagne in 800. It lasted until 1806, and Luther's Reformation broke out within it.",
+    "zh-Hans": "中欧帝国，此处自962年奥托一世加冕算起，但不少著作从800年查理曼算起。帝国延续至1806年，路德的宗教改革即在其境内爆发。",
+    "zh-Hant": "中歐帝國，此處自962年奧托一世加冕算起，但不少著作從800年查理曼算起。帝國延續至1806年，路德的宗教改革即在其境內爆發。"
+   }
+  },
+  {
+   "id": "spanish-empire",
+   "start": 1492,
+   "end": 1898,
+   "region": "europe",
+   "stream": "europe",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "Spanish Empire",
+    "zh-Hans": "西班牙帝国",
+    "zh-Hant": "西班牙帝國"
+   },
+   "note": {
+    "en": "The first global empire, which carried Catholic missions across the Americas and the Pacific.",
+    "zh-Hans": "史上第一个全球性帝国，将天主教宣教带到美洲与太平洋各地。",
+    "zh-Hant": "史上第一個全球性帝國，將天主教宣教帶到美洲與太平洋各地。"
+   }
+  },
+  {
+   "id": "british-empire",
+   "start": 1583,
+   "end": 1997,
+   "region": "europe",
+   "stream": "europe",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "British Empire",
+    "zh-Hans": "大英帝国",
+    "zh-Hant": "大英帝國"
+   },
+   "note": {
+    "en": "The largest empire in history, whose language, Bible translations and missionary societies spread Protestant Christianity worldwide, and which governed Palestine under mandate before 1948.",
+    "zh-Hans": "史上疆域最广的帝国，其语言、圣经译本与差会把更正教信仰传遍世界，1948年前并以委任统治管理巴勒斯坦。",
+    "zh-Hant": "史上疆域最廣的帝國，其語言、聖經譯本與差會把更正教信仰傳遍世界，1948年前並以委任統治管理巴勒斯坦。"
+   }
+  },
+  {
+   "id": "russian-empire",
+   "start": 1721,
+   "end": 1917,
+   "region": "europe",
+   "stream": "europe",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Russian Empire",
+    "zh-Hans": "俄罗斯帝国",
+    "zh-Hant": "俄羅斯帝國"
+   },
+   "note": {
+    "en": "The Orthodox empire of the tsars, which claimed the mantle of Byzantium and ended in the revolution of 1917.",
+    "zh-Hans": "沙皇治下的东正教帝国，自称拜占庭的继承者，终于1917年革命。",
+    "zh-Hant": "沙皇治下的東正教帝國，自稱拜占庭的繼承者，終於1917年革命。"
+   }
+  },
+  {
+   "id": "han-dynasty",
+   "start": -202,
+   "end": 220,
+   "region": "asia",
+   "stream": "china",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Han Dynasty",
+    "zh-Hans": "汉朝",
+    "zh-Hant": "漢朝"
+   },
+   "note": {
+    "en": "China's formative empire, contemporary with the Roman Republic and Empire, whose Silk Road first linked East Asia to the Near East.",
+    "zh-Hans": "奠定中国格局的帝国，与罗马共和及帝国同时，其丝绸之路首次把东亚与近东相连。",
+    "zh-Hant": "奠定中國格局的帝國，與羅馬共和及帝國同時，其絲綢之路首次把東亞與近東相連。"
+   }
+  },
+  {
+   "id": "tang-dynasty",
+   "start": 618,
+   "end": 907,
+   "region": "asia",
+   "stream": "china",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Tang Dynasty",
+    "zh-Hans": "唐朝",
+    "zh-Hant": "唐朝"
+   },
+   "note": {
+    "en": "Cosmopolitan medieval China, which received the Church of the East at Chang'an in 635 — the first recorded Christian mission to China.",
+    "zh-Hans": "开放包容的中古中国，635年东方教会（景教）传入长安，是有记载最早传入中国的基督教。",
+    "zh-Hant": "開放包容的中古中國，635年東方教會（景教）傳入長安，是有記載最早傳入中國的基督教。"
+   }
+  },
+  {
+   "id": "ming-dynasty",
+   "start": 1368,
+   "end": 1644,
+   "region": "asia",
+   "stream": "china",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Ming Dynasty",
+    "zh-Hans": "明朝",
+    "zh-Hant": "明朝"
+   },
+   "note": {
+    "en": "The last Han Chinese imperial dynasty, during whose later years Jesuit missionaries such as Matteo Ricci reached Beijing.",
+    "zh-Hans": "最后一个汉人皇朝，其后期利玛窦等耶稣会士抵达北京。",
+    "zh-Hant": "最後一個漢人皇朝，其後期利瑪竇等耶穌會士抵達北京。"
+   }
+  },
+  {
+   "id": "mughal-empire",
+   "start": 1526,
+   "end": 1857,
+   "region": "asia",
+   "stream": "india",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Mughal Empire",
+    "zh-Hans": "莫卧儿帝国",
+    "zh-Hant": "蒙兀兒帝國"
+   },
+   "note": {
+    "en": "The Muslim empire of the Indian subcontinent, contemporary with the Reformation and the age of European expansion, replaced by British rule.",
+    "zh-Hans": "统治印度次大陆的穆斯林帝国，与宗教改革及欧洲扩张时代同期，后为英国统治所取代。",
+    "zh-Hant": "統治印度次大陸的穆斯林帝國，與宗教改革及歐洲擴張時代同期，後為英國統治所取代。"
+   }
+  },
+  {
+   "id": "maya-classic-period",
+   "start": 250,
+   "end": 900,
+   "region": "americas",
+   "stream": "americas",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "Maya Classic Period",
+    "zh-Hans": "玛雅古典时期",
+    "zh-Hant": "瑪雅古典時期"
+   },
+   "note": {
+    "en": "The height of Maya city-states in Mesoamerica, contemporary with Byzantium and the early caliphates; their script is the only pre-Columbian American writing system substantially deciphered today.",
+    "zh-Hans": "中美洲玛雅城邦的鼎盛期，与拜占庭及早期哈里发国同时；玛雅文字是前哥伦布时期美洲唯一已大致解读的文字系统。",
+    "zh-Hant": "中美洲瑪雅城邦的鼎盛期，與拜占庭及早期哈里發國同時；瑪雅文字是前哥倫布時期美洲唯一已大致解讀的文字系統。"
+   }
+  },
+  {
+   "id": "inca-empire",
+   "start": 1438,
+   "end": 1533,
+   "region": "americas",
+   "stream": "americas",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "Inca Empire",
+    "zh-Hans": "印加帝国",
+    "zh-Hant": "印加帝國"
+   },
+   "note": {
+    "en": "The largest state in pre-Columbian America, stretching along the Andes until the Spanish conquest.",
+    "zh-Hans": "前哥伦布时期美洲最大的国家，沿安第斯山绵延，终为西班牙征服。",
+    "zh-Hant": "前哥倫布時期美洲最大的國家，沿安第斯山綿延，終為西班牙征服。"
+   }
+  },
+  {
+   "id": "soviet-union",
+   "start": 1922,
+   "end": 1991,
+   "region": "modern",
+   "stream": "europe",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Soviet Union",
+    "zh-Hans": "苏联",
+    "zh-Hant": "蘇聯"
+   },
+   "note": {
+    "en": "The officially atheist superpower whose collapse opened the largest Jewish emigration to Israel in modern times.",
+    "zh-Hans": "以无神论为国策的超级大国，其解体带来近代规模最大的犹太人移居以色列潮。",
+    "zh-Hant": "以無神論為國策的超級大國，其解體帶來近代規模最大的猶太人移居以色列潮。"
+   }
+  },
+  {
+   "id": "state-of-israel",
+   "start": 1948,
+   "end": null,
+   "ongoing": true,
+   "region": "modern",
+   "stream": "israel",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "State of Israel",
+    "zh-Hans": "以色列国",
+    "zh-Hant": "以色列國"
+   },
+   "note": {
+    "en": "The modern Jewish state declared in 1948, the first sovereign Jewish state in the land since the Hasmoneans.",
+    "zh-Hans": "1948年宣告成立的现代犹太国家，是自哈斯蒙尼王朝以来该地首个拥有主权的犹太国家。",
+    "zh-Hant": "1948年宣告成立的現代猶太國家，是自哈斯蒙尼王朝以來該地首個擁有主權的猶太國家。"
+   }
+  }
+ ],
+ "events": [
+  {
+   "id": "nero_persecution",
+   "year": 64,
+   "era": "world",
+   "stream": "rome",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Great Fire of Rome",
+    "zh-Hans": "罗马大火",
+    "zh-Hant": "羅馬大火"
+   },
+   "desc": {
+    "en": "Fire destroys much of Rome; Nero blames the Christians and the first imperial persecution begins.",
+    "zh-Hans": "大火焚毁罗马大半城区；尼禄嫁祸基督徒，帝国第一次逼迫由此开始。",
+    "zh-Hant": "大火焚毀羅馬大半城區；尼祿嫁禍基督徒，帝國第一次逼迫由此開始。"
+   }
+  },
+  {
+   "id": "peter_paul_martyred",
+   "year": 67,
+   "era": "church",
+   "stream": "church",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Peter and Paul Martyred",
+    "zh-Hans": "彼得与保罗殉道",
+    "zh-Hant": "彼得與保羅殉道"
+   },
+   "desc": {
+    "en": "Tradition places the deaths of both apostles at Rome under Nero, Peter crucified and Paul beheaded.",
+    "zh-Hans": "传统记载两位使徒在尼禄治下于罗马殉道，彼得被钉十字架，保罗被斩首。",
+    "zh-Hant": "傳統記載兩位使徒在尼祿治下於羅馬殉道，彼得被釘十字架，保羅被斬首。"
+   }
+  },
+  {
+   "id": "jerusalem_destroyed",
+   "year": 70,
+   "era": "world",
+   "stream": "judah",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Jerusalem and the Temple Fall",
+    "zh-Hans": "耶路撒冷与圣殿陷落",
+    "zh-Hant": "耶路撒冷與聖殿陷落"
+   },
+   "desc": {
+    "en": "Titus takes Jerusalem and burns the Temple, ending the sacrificial system and breaking the centre of Jewish national life.",
+    "zh-Hans": "提多攻陷耶路撒冷并焚烧圣殿，献祭制度终止，犹太民族生活的中心就此瓦解。",
+    "zh-Hant": "提多攻陷耶路撒冷並焚燒聖殿，獻祭制度終止，猶太民族生活的中心就此瓦解。"
+   }
+  },
+  {
+   "id": "ignatius_martyred",
+   "year": 107,
+   "era": "church",
+   "stream": "church",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Ignatius of Antioch Martyred",
+    "zh-Hans": "安提阿的伊格那丢殉道",
+    "zh-Hant": "安提阿的伊格那丟殉道"
+   },
+   "desc": {
+    "en": "On his way to die in Rome the bishop writes seven letters urging unity and steadfastness under persecution.",
+    "zh-Hans": "这位主教在押赴罗马受死途中写下七封书信，劝勉教会合一并在逼迫中站立得稳。",
+    "zh-Hant": "這位主教在押赴羅馬受死途中寫下七封書信，勸勉教會合一並在逼迫中站立得穩。"
+   }
+  },
+  {
+   "id": "p52_papyrus",
+   "year": 125,
+   "era": "bible",
+   "stream": "scripture",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Papyrus P52, a Fragment of John",
+    "zh-Hans": "约翰福音残片 P52",
+    "zh-Hant": "約翰福音殘片 P52"
+   },
+   "desc": {
+    "en": "Papyrus P52, a scrap of John's Gospel copied in Egypt, is among the earliest surviving pieces of the New Testament; palaeographers date it anywhere from the early to the late second century.",
+    "zh-Hans": "蒲草纸抄本 P52 是在埃及抄写的约翰福音残片，属现存最古老的新约经文之列；古文书学者对其年代的估计由二世纪初至二世纪末不等。",
+    "zh-Hant": "蒲草紙抄本 P52 是在埃及抄寫的約翰福音殘片，屬現存最古老的新約經文之列；古文書學者對其年代的估計由二世紀初至二世紀末不等。"
+   }
+  },
+  {
+   "id": "bar_kokhba",
+   "year": 135,
+   "era": "world",
+   "stream": "judah",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Bar Kokhba Revolt Crushed",
+    "zh-Hans": "巴柯巴起义被镇压",
+    "zh-Hant": "巴柯巴起義被鎮壓"
+   },
+   "desc": {
+    "en": "Rome puts down the second Jewish revolt, bars Jews from Jerusalem, and the church becomes largely Gentile.",
+    "zh-Hans": "罗马平定第二次犹太起义，禁止犹太人进入耶路撒冷，教会自此以外邦人为主。",
+    "zh-Hant": "羅馬平定第二次猶太起義，禁止猶太人進入耶路撒冷，教會自此以外邦人為主。"
+   }
+  },
+  {
+   "id": "marcion_canon",
+   "year": 144,
+   "era": "bible",
+   "stream": "scripture",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Marcion Rejected at Rome",
+    "zh-Hans": "马吉安被罗马教会逐出",
+    "zh-Hant": "馬吉安被羅馬教會逐出"
+   },
+   "desc": {
+    "en": "His truncated canon of Luke and ten Pauline letters forces the church to state which books are Scripture.",
+    "zh-Hans": "他只收路加福音与保罗十封书信的残缺书目，迫使教会表明哪些书卷才是圣经。",
+    "zh-Hant": "他只收路加福音與保羅十封書信的殘缺書目，迫使教會表明哪些書卷才是聖經。"
+   }
+  },
+  {
+   "id": "polycarp_martyred",
+   "year": 156,
+   "era": "church",
+   "stream": "church",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Polycarp Martyred at Smyrna",
+    "zh-Hans": "坡旅甲在士每拿殉道",
+    "zh-Hant": "坡旅甲在士每拿殉道"
+   },
+   "desc": {
+    "en": "The aged bishop, a disciple of John, refuses to curse Christ and is burned in the stadium.",
+    "zh-Hans": "这位曾受教于使徒约翰的年长主教拒绝咒诅基督，在竞技场被火焚而死。",
+    "zh-Hant": "這位曾受教於使徒約翰的年長主教拒絕咒詛基督，在競技場被火焚而死。"
+   }
+  },
+  {
+   "id": "muratorian_fragment",
+   "year": 170,
+   "era": "bible",
+   "stream": "scripture",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Muratorian Canon List",
+    "zh-Hans": "穆拉多利残篇书目",
+    "zh-Hant": "穆拉多利殘篇書目"
+   },
+   "desc": {
+    "en": "Usually dated to the late second century, this list of New Testament books names most of the present canon; some scholars place it two centuries later.",
+    "zh-Hans": "这份新约书目通常定于二世纪末，所列书卷已与今日正典大致相同；也有学者认为它晚了两个世纪。",
+    "zh-Hant": "這份新約書目通常定於二世紀末，所列書卷已與今日正典大致相同；也有學者認為它晚了兩個世紀。"
+   }
+  },
+  {
+   "id": "irenaeus_heresies",
+   "year": 180,
+   "era": "church",
+   "stream": "church",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Irenaeus Writes Against Heresies",
+    "zh-Hans": "爱任纽著《驳异端》",
+    "zh-Hant": "愛任紐著《駁異端》"
+   },
+   "desc": {
+    "en": "The bishop of Lyons answers gnostic teaching and appeals to the four Gospels and apostolic tradition.",
+    "zh-Hans": "里昂主教驳斥诺斯底派的教训，诉诸四福音书与使徒所传的信仰。",
+    "zh-Hant": "里昂主教駁斥諾斯底派的教訓，訴諸四福音書與使徒所傳的信仰。"
+   }
+  },
+  {
+   "id": "origen_hexapla",
+   "year": 240,
+   "era": "bible",
+   "stream": "scripture",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Origen Compiles the Hexapla",
+    "zh-Hans": "俄利根编纂六栏合参本",
+    "zh-Hant": "俄利根編纂六欄合參本"
+   },
+   "desc": {
+    "en": "Six parallel columns of the Old Testament in Hebrew and Greek begin the science of textual criticism.",
+    "zh-Hans": "他将旧约希伯来文与希腊文译本并列六栏对照，开启了经文校勘之学。",
+    "zh-Hant": "他將舊約希伯來文與希臘文譯本並列六欄對照，開啟了經文校勘之學。"
+   }
+  },
+  {
+   "id": "decian_persecution",
+   "year": 250,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Decian Persecution",
+    "zh-Hans": "德修逼迫",
+    "zh-Hant": "德修逼迫"
+   },
+   "desc": {
+    "en": "Every subject must sacrifice to the gods and hold a certificate; many Christians die and many lapse.",
+    "zh-Hans": "帝国要求人人向诸神献祭并领取凭证；许多基督徒因此殉道，也有许多人跌倒。",
+    "zh-Hant": "帝國要求人人向諸神獻祭並領取憑證；許多基督徒因此殉道，也有許多人跌倒。"
+   }
+  },
+  {
+   "id": "antony_desert",
+   "year": 270,
+   "era": "church",
+   "stream": "church",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Antony Withdraws to the Desert",
+    "zh-Hans": "安东尼退入旷野",
+    "zh-Hant": "安東尼退入曠野"
+   },
+   "desc": {
+    "en": "The Egyptian hermit's solitary life becomes the seed of Christian monasticism.",
+    "zh-Hans": "这位埃及隐士的独修生活，成为基督教修道运动的起点。",
+    "zh-Hant": "這位埃及隱士的獨修生活，成為基督教修道運動的起點。"
+   }
+  },
+  {
+   "id": "diocletian_persecution",
+   "year": 303,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "The Great Persecution Begins",
+    "zh-Hans": "大逼迫开始",
+    "zh-Hant": "大逼迫開始"
+   },
+   "desc": {
+    "en": "Diocletian orders churches razed and the Scriptures burned in the empire's fiercest attack on the faith.",
+    "zh-Hans": "戴克里先下令拆毁教堂、焚烧圣经，这是帝国对信仰最猛烈的一次打击。",
+    "zh-Hant": "戴克里先下令拆毀教堂、焚燒聖經，這是帝國對信仰最猛烈的一次打擊。"
+   }
+  },
+  {
+   "id": "edict_of_milan",
+   "year": 313,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Edict of Milan",
+    "zh-Hans": "米兰敕令",
+    "zh-Hant": "米蘭敕令"
+   },
+   "desc": {
+    "en": "Constantine and Licinius agree at Milan on freedom of worship for all; toleration for Christians is confirmed and confiscated property restored.",
+    "zh-Hans": "君士坦丁与李锡尼在米兰议定人人可自由敬拜，重申对基督徒的宽容，并归还被充公的产业。",
+    "zh-Hant": "君士坦丁與李錫尼在米蘭議定人人可自由敬拜，重申對基督徒的寬容，並歸還被充公的產業。"
+   }
+  },
+  {
+   "id": "council_nicaea",
+   "year": 325,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "First Council of Nicaea",
+    "zh-Hans": "第一次尼西亚会议",
+    "zh-Hant": "第一次尼西亞會議"
+   },
+   "desc": {
+    "en": "Bishops from across the empire reject Arianism and confess the Son to be of one substance with the Father.",
+    "zh-Hans": "各地主教聚集驳斥亚流派，宣认圣子与圣父同质。",
+    "zh-Hant": "各地主教聚集駁斥亞流派，宣認聖子與聖父同質。"
+   }
+  },
+  {
+   "id": "great_codices",
+   "year": 350,
+   "era": "bible",
+   "stream": "scripture",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Codex Sinaiticus and Vaticanus",
+    "zh-Hans": "西乃抄本与梵蒂冈抄本",
+    "zh-Hant": "西乃抄本與梵蒂岡抄本"
+   },
+   "desc": {
+    "en": "Two great vellum Bibles are copied in Greek; both are among the oldest near-complete witnesses used in editing the New Testament today.",
+    "zh-Hans": "两部希腊文羊皮大抄本问世，同属现存最古老、近乎完整的抄本，至今用于新约经文的校勘。",
+    "zh-Hant": "兩部希臘文羊皮大抄本問世，同屬現存最古老、近乎完整的抄本，至今用於新約經文的校勘。"
+   }
+  },
+  {
+   "id": "gothic_bible",
+   "year": 350,
+   "era": "bible",
+   "stream": "scripture",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Ulfilas Translates the Gothic Bible",
+    "zh-Hans": "乌尔菲拉翻译哥特文圣经",
+    "zh-Hant": "烏爾菲拉翻譯哥特文聖經"
+   },
+   "desc": {
+    "en": "A missionary bishop invents an alphabet for the Goths and gives them Scripture in their own tongue.",
+    "zh-Hans": "宣教士主教为哥特人创制字母，使他们得以用自己的语言读圣经。",
+    "zh-Hant": "宣教士主教為哥特人創制字母，使他們得以用自己的語言讀聖經。"
+   }
+  },
+  {
+   "id": "athanasius_letter",
+   "year": 367,
+   "era": "bible",
+   "stream": "scripture",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Athanasius Lists Twenty-Seven Books",
+    "zh-Hans": "亚他那修列出二十七卷",
+    "zh-Hant": "亞他那修列出二十七卷"
+   },
+   "desc": {
+    "en": "His Easter letter names exactly the twenty-seven books of the New Testament we now receive.",
+    "zh-Hans": "他的复活节书信所列的二十七卷，正是今日所领受的新约正典。",
+    "zh-Hant": "他的復活節書信所列的二十七卷，正是今日所領受的新約正典。"
+   }
+  },
+  {
+   "id": "constantinople_i",
+   "year": 381,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "First Council of Constantinople",
+    "zh-Hans": "第一次君士坦丁堡会议",
+    "zh-Hant": "第一次君士坦丁堡會議"
+   },
+   "desc": {
+    "en": "The council completes the Nicene Creed and confesses the deity of the Holy Spirit.",
+    "zh-Hans": "会议补足尼西亚信经，宣认圣灵的神性。",
+    "zh-Hant": "會議補足尼西亞信經，宣認聖靈的神性。"
+   }
+  },
+  {
+   "id": "augustine_converted",
+   "year": 386,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Conversion of Augustine",
+    "zh-Hans": "奥古斯丁归主",
+    "zh-Hant": "奧古斯丁歸主"
+   },
+   "desc": {
+    "en": "In a Milan garden the African rhetorician turns to Christ and becomes the West's most influential theologian.",
+    "zh-Hans": "这位非洲修辞学家在米兰的园中归向基督，日后成为西方最具影响力的神学家。",
+    "zh-Hant": "這位非洲修辭學家在米蘭的園中歸向基督，日後成為西方最具影響力的神學家。"
+   }
+  },
+  {
+   "id": "carthage_canon",
+   "year": 397,
+   "era": "bible",
+   "stream": "scripture",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Council of Carthage Affirms Canon",
+    "zh-Hans": "迦太基会议确认正典",
+    "zh-Hant": "迦太基會議確認正典"
+   },
+   "desc": {
+    "en": "A North African synod ratifies a canon of Scripture; its Old Testament list includes the books that Catholic and Orthodox Christians count as deuterocanonical and that Protestant churches do not receive as canonical.",
+    "zh-Hans": "北非教会会议确认一份圣经书目；其旧约部分包含天主教与东正教列为次经（第二正典）、基督新教一般不收入正典的那些书卷。",
+    "zh-Hant": "北非教會會議確認一份聖經書目；其舊約部分包含天主教與東正教列為次經（第二正典）、基督新教一般不收入正典的那些書卷。"
+   }
+  },
+  {
+   "id": "vulgate_completed",
+   "year": 405,
+   "era": "bible",
+   "stream": "scripture",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Jerome Completes the Vulgate",
+    "zh-Hans": "耶柔米完成武加大译本",
+    "zh-Hant": "耶柔米完成武加大譯本"
+   },
+   "desc": {
+    "en": "Translating the Old Testament from Hebrew, Jerome gives the West a Latin Bible that stands for a thousand years.",
+    "zh-Hans": "耶柔米直接从希伯来文译出旧约，为西方留下通行千年的拉丁文圣经。",
+    "zh-Hant": "耶柔米直接從希伯來文譯出舊約，為西方留下通行千年的拉丁文聖經。"
+   }
+  },
+  {
+   "id": "sack_of_rome",
+   "year": 410,
+   "era": "world",
+   "stream": "rome",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Alaric Sacks Rome",
+    "zh-Hans": "亚拉里克攻陷罗马",
+    "zh-Hant": "亞拉里克攻陷羅馬"
+   },
+   "desc": {
+    "en": "The fall of the eternal city shakes the empire and prompts Augustine to write on the two cities.",
+    "zh-Hans": "永恒之城的陷落震动帝国，也促使奥古斯丁写下两座城的著作。",
+    "zh-Hant": "永恆之城的陷落震動帝國，也促使奧古斯丁寫下兩座城的著作。"
+   }
+  },
+  {
+   "id": "peshitta",
+   "year": 425,
+   "era": "bible",
+   "stream": "scripture",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Peshitta, the Syriac Bible",
+    "zh-Hans": "叙利亚文别西大译本",
+    "zh-Hant": "敘利亞文別西大譯本"
+   },
+   "desc": {
+    "en": "By the fifth century the Syriac Bible has taken its settled form and carries Scripture east through Persia and into Asia.",
+    "zh-Hans": "到五世纪，叙利亚文圣经已成定本，把圣经越过波斯一路传向亚洲东方。",
+    "zh-Hant": "到五世紀，敘利亞文聖經已成定本，把聖經越過波斯一路傳向亞洲東方。"
+   }
+  },
+  {
+   "id": "city_of_god",
+   "year": 426,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Augustine Completes The City of God",
+    "zh-Hans": "奥古斯丁完成《上帝之城》",
+    "zh-Hant": "奧古斯丁完成《上帝之城》"
+   },
+   "desc": {
+    "en": "He answers the charge that Christianity ruined Rome by tracing two cities through all history.",
+    "zh-Hans": "他以贯穿历史的两座城，回应基督教毁了罗马的指控。",
+    "zh-Hant": "他以貫穿歷史的兩座城，回應基督教毀了羅馬的指控。"
+   }
+  },
+  {
+   "id": "council_ephesus",
+   "year": 431,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Council of Ephesus",
+    "zh-Hans": "以弗所会议",
+    "zh-Hant": "以弗所會議"
+   },
+   "desc": {
+    "en": "The council condemns Nestorius and confesses the one Christ as truly God and truly man; the Church of the East does not receive it.",
+    "zh-Hans": "会议定聂斯脱留为异端，宣认基督一位、真神真人；东方教会不接受此决议。",
+    "zh-Hant": "會議定聶斯脫留為異端，宣認基督一位、真神真人；東方教會不接受此決議。"
+   }
+  },
+  {
+   "id": "patrick_ireland",
+   "year": 432,
+   "era": "church",
+   "stream": "church",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Patrick's Mission to Ireland",
+    "zh-Hans": "帕特里克赴爱尔兰宣教",
+    "zh-Hant": "帕特里克赴愛爾蘭宣教"
+   },
+   "desc": {
+    "en": "A former slave returns to the island that held him and plants churches across it.",
+    "zh-Hans": "曾为奴的他重返掳掠他的海岛，在全岛建立教会。",
+    "zh-Hant": "曾為奴的他重返擄掠他的海島，在全島建立教會。"
+   }
+  },
+  {
+   "id": "council_chalcedon",
+   "year": 451,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Council of Chalcedon",
+    "zh-Hans": "迦克墩会议",
+    "zh-Hant": "迦克墩會議"
+   },
+   "desc": {
+    "en": "The council defines Christ as one person in two natures, without confusion or division; the churches that do not receive the definition separate from it.",
+    "zh-Hans": "会议界定基督为一位而具二性，不相混乱、不相分开；不接受此定义的教会自此分立。",
+    "zh-Hant": "會議界定基督為一位而具二性，不相混亂、不相分開；不接受此定義的教會自此分立。"
+   }
+  },
+  {
+   "id": "fall_west_rome",
+   "year": 476,
+   "era": "world",
+   "stream": "rome",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Western Roman Empire Ends",
+    "zh-Hans": "西罗马帝国灭亡",
+    "zh-Hant": "西羅馬帝國滅亡"
+   },
+   "desc": {
+    "en": "The last emperor in the West is deposed; the church becomes the surviving order in Europe.",
+    "zh-Hans": "西方末代皇帝被废；教会成为欧洲仅存的秩序。",
+    "zh-Hant": "西方末代皇帝被廢；教會成為歐洲僅存的秩序。"
+   }
+  },
+  {
+   "id": "benedict_rule",
+   "year": 529,
+   "era": "church",
+   "stream": "church",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Benedict Founds Monte Cassino",
+    "zh-Hans": "本笃创建蒙特卡西诺修院",
+    "zh-Hant": "本篤創建蒙特卡西諾修院"
+   },
+   "desc": {
+    "en": "His Rule of prayer, work and study shapes Western monasteries and preserves learning for centuries.",
+    "zh-Hans": "他所订祈祷、劳作与研读的会规，塑造西方修院并保存学术达数百年。",
+    "zh-Hant": "他所訂祈禱、勞作與研讀的會規，塑造西方修院並保存學術達數百年。"
+   }
+  },
+  {
+   "id": "gregory_great",
+   "year": 590,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Gregory the Great Elected Pope",
+    "zh-Hans": "大贵格利就任教皇",
+    "zh-Hant": "大貴格利就任教皇"
+   },
+   "desc": {
+    "en": "He reforms worship, feeds Rome in famine, and sends missionaries to the English.",
+    "zh-Hans": "他改革敬拜、于饥荒中赈济罗马，并差派宣教士前往英格兰。",
+    "zh-Hant": "他改革敬拜、於饑荒中賑濟羅馬，並差派宣教士前往英格蘭。"
+   }
+  },
+  {
+   "id": "hijra_islam",
+   "year": 622,
+   "era": "world",
+   "stream": "islam",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "The Hijra and Rise of Islam",
+    "zh-Hans": "希吉拉与伊斯兰兴起",
+    "zh-Hant": "希吉拉與伊斯蘭興起"
+   },
+   "desc": {
+    "en": "Muhammad's migration to Medina begins a movement that will absorb much of the Christian East.",
+    "zh-Hans": "穆罕默德迁往麦地那，开启了日后吞并大部分东方基督教地区的运动。",
+    "zh-Hant": "穆罕默德遷往麥地那，開啟了日後吞併大部分東方基督教地區的運動。"
+   }
+  },
+  {
+   "id": "bede_history",
+   "year": 731,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Bede Completes His Church History",
+    "zh-Hans": "比德完成教会史",
+    "zh-Hant": "比德完成教會史"
+   },
+   "desc": {
+    "en": "The Northumbrian monk records the conversion of England; four years later, tradition says, he dies translating John.",
+    "zh-Hans": "这位诺森布里亚修士记述英格兰归主的历程；相传四年后他在翻译约翰福音时离世。",
+    "zh-Hant": "這位諾森布里亞修士記述英格蘭歸主的歷程；相傳四年後他在翻譯約翰福音時離世。"
+   }
+  },
+  {
+   "id": "boniface_germany",
+   "year": 754,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Boniface Martyred among the Frisians",
+    "zh-Hans": "波尼法修在弗里西亚殉道",
+    "zh-Hant": "波尼法修在弗里西亞殉道"
+   },
+   "desc": {
+    "en": "The apostle to the Germans falls at the hands of those he came to reach after decades of church planting.",
+    "zh-Hans": "这位德意志人的使徒在拓植教会数十年后，死在他前去传道之人手中。",
+    "zh-Hant": "這位德意志人的使徒在拓植教會數十年後，死在他前去傳道之人手中。"
+   }
+  },
+  {
+   "id": "nicaea_ii",
+   "year": 787,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Second Council of Nicaea",
+    "zh-Hans": "第二次尼西亚会议",
+    "zh-Hant": "第二次尼西亞會議"
+   },
+   "desc": {
+    "en": "The last of the seven ecumenical councils permits the veneration of images; a second iconoclast period follows from 815 until 843.",
+    "zh-Hans": "七次大公会议中的末次，准许敬奉圣像；八一五年毁像之争再起，直到八四三年才告平息。",
+    "zh-Hant": "七次大公會議中的末次，准許敬奉聖像；八一五年毀像之爭再起，直到八四三年才告平息。"
+   }
+  },
+  {
+   "id": "charlemagne_crowned",
+   "year": 800,
+   "era": "world",
+   "stream": "europe",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Charlemagne Crowned Emperor",
+    "zh-Hans": "查理曼加冕称帝",
+    "zh-Hant": "查理曼加冕稱帝"
+   },
+   "desc": {
+    "en": "The pope crowns a Frankish king in Rome, binding church and empire together in the West.",
+    "zh-Hans": "教皇在罗马为法兰克王加冕，使西方的教会与帝国紧密结合。",
+    "zh-Hant": "教皇在羅馬為法蘭克王加冕，使西方的教會與帝國緊密結合。"
+   }
+  },
+  {
+   "id": "slavonic_bible",
+   "year": 863,
+   "era": "bible",
+   "stream": "scripture",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Cyril and Methodius Translate Scripture",
+    "zh-Hans": "西里尔与美多德翻译圣经",
+    "zh-Hant": "西里爾與美多德翻譯聖經"
+   },
+   "desc": {
+    "en": "The brothers create an alphabet and put the Scriptures and liturgy into Slavonic.",
+    "zh-Hans": "兄弟二人创制字母，将圣经与礼仪译成斯拉夫文。",
+    "zh-Hant": "兄弟二人創制字母，將聖經與禮儀譯成斯拉夫文。"
+   }
+  },
+  {
+   "id": "cluny_founded",
+   "year": 910,
+   "era": "church",
+   "stream": "church",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Abbey of Cluny Founded",
+    "zh-Hans": "克吕尼修院创建",
+    "zh-Hant": "克呂尼修院創建"
+   },
+   "desc": {
+    "en": "A reformed monastery free of local lords becomes the engine of a century of church renewal.",
+    "zh-Hans": "这所不受地方领主辖制的改革修院，成为往后百年教会革新的动力。",
+    "zh-Hant": "這所不受地方領主轄制的改革修院，成為往後百年教會革新的動力。"
+   }
+  },
+  {
+   "id": "baptism_of_rus",
+   "year": 988,
+   "era": "church",
+   "stream": "church",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Baptism of the Rus",
+    "zh-Hans": "罗斯受洗",
+    "zh-Hant": "羅斯受洗"
+   },
+   "desc": {
+    "en": "Vladimir of Kiev accepts Byzantine Christianity and his people follow, founding Russian Orthodoxy.",
+    "zh-Hans": "基辅的弗拉基米尔接受拜占庭基督教，举国随从，俄罗斯正教由此奠基。",
+    "zh-Hant": "基輔的弗拉基米爾接受拜占庭基督教，舉國隨從，俄羅斯正教由此奠基。"
+   }
+  },
+  {
+   "id": "leningrad_codex",
+   "year": 1008,
+   "era": "bible",
+   "stream": "scripture",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Leningrad Codex Copied",
+    "zh-Hans": "列宁格勒抄本抄成",
+    "zh-Hant": "列寧格勒抄本抄成"
+   },
+   "desc": {
+    "en": "The oldest complete Hebrew Bible, it underlies nearly every modern Old Testament translation.",
+    "zh-Hans": "现存最古老的完整希伯来文圣经，几乎所有现代旧约译本都以它为底本。",
+    "zh-Hant": "現存最古老的完整希伯來文聖經，幾乎所有現代舊約譯本都以它為底本。"
+   }
+  },
+  {
+   "id": "great_schism",
+   "year": 1054,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "East and West Divide",
+    "zh-Hans": "东西教会大分裂",
+    "zh-Hant": "東西教會大分裂"
+   },
+   "desc": {
+    "en": "Mutual excommunications at Constantinople harden a split between Rome and Orthodoxy that still stands.",
+    "zh-Hans": "君士坦丁堡的相互绝罚，使罗马与东正教的裂痕固定下来，至今未愈。",
+    "zh-Hant": "君士坦丁堡的相互絕罰，使羅馬與東正教的裂痕固定下來，至今未癒。"
+   }
+  },
+  {
+   "id": "first_crusade",
+   "year": 1095,
+   "era": "world",
+   "stream": "europe",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "First Crusade Proclaimed",
+    "zh-Hans": "第一次十字军东征",
+    "zh-Hant": "第一次十字軍東征"
+   },
+   "desc": {
+    "en": "Urban II calls Europe to recover Jerusalem, beginning two centuries of holy war.",
+    "zh-Hans": "乌尔班二世号召欧洲夺回耶路撒冷，开启两百年的圣战。",
+    "zh-Hant": "烏爾班二世號召歐洲奪回耶路撒冷，開啟兩百年的聖戰。"
+   }
+  },
+  {
+   "id": "waldensians",
+   "year": 1175,
+   "era": "church",
+   "stream": "church",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Waldo and the Poor of Lyons",
+    "zh-Hans": "韦尔多与里昂穷人派",
+    "zh-Hant": "韋爾多與里昂窮人派"
+   },
+   "desc": {
+    "en": "A Lyons merchant gives away his goods, has the Gospels translated, and sends laymen out to preach.",
+    "zh-Hans": "里昂商人变卖家产，请人翻译福音书，并差派平信徒出去传道。",
+    "zh-Hant": "里昂商人變賣家產，請人翻譯福音書，並差派平信徒出去傳道。"
+   }
+  },
+  {
+   "id": "francis_assisi",
+   "year": 1209,
+   "era": "church",
+   "stream": "church",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Francis of Assisi Gathers Brothers",
+    "zh-Hans": "亚西西的方济聚集弟兄",
+    "zh-Hant": "亞西西的方濟聚集弟兄"
+   },
+   "desc": {
+    "en": "The friars minor take up poverty and preaching, and the movement spreads rapidly across Europe.",
+    "zh-Hans": "小兄弟会以贫穷与宣讲为业，运动迅速传遍欧洲。",
+    "zh-Hant": "小兄弟會以貧窮與宣講為業，運動迅速傳遍歐洲。"
+   }
+  },
+  {
+   "id": "dominicans",
+   "year": 1216,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Order of Preachers Approved",
+    "zh-Hans": "道明会获准成立",
+    "zh-Hant": "道明會獲准成立"
+   },
+   "desc": {
+    "en": "Dominic's friars are formed for study and preaching against error, and fill the new universities.",
+    "zh-Hans": "道明所创的修会以研读与驳斥谬误的讲道为使命，充满了新兴的大学。",
+    "zh-Hant": "道明所創的修會以研讀與駁斥謬誤的講道為使命，充滿了新興的大學。"
+   }
+  },
+  {
+   "id": "aquinas_summa",
+   "year": 1265,
+   "era": "church",
+   "stream": "church",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Aquinas Begins the Summa",
+    "zh-Hans": "阿奎那动笔写《神学大全》",
+    "zh-Hant": "阿奎那動筆寫《神學大全》"
+   },
+   "desc": {
+    "en": "His vast synthesis of Scripture, reason and Aristotle shapes Catholic theology to the present.",
+    "zh-Hans": "他集圣经、理性与亚里士多德于一体的巨著，塑造天主教神学至今。",
+    "zh-Hant": "他集聖經、理性與亞里士多德於一體的巨著，塑造天主教神學至今。"
+   }
+  },
+  {
+   "id": "western_schism",
+   "year": 1378,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Rival Popes Divide the West",
+    "zh-Hans": "西方教会大分裂",
+    "zh-Hant": "西方教會大分裂"
+   },
+   "desc": {
+    "en": "Competing claimants at Rome and Avignon shatter confidence in the papacy for forty years.",
+    "zh-Hans": "罗马与亚维农各立教皇，四十年间教皇威信尽失。",
+    "zh-Hant": "羅馬與亞維農各立教皇，四十年間教皇威信盡失。"
+   }
+  },
+  {
+   "id": "wycliffe_bible",
+   "year": 1382,
+   "era": "bible",
+   "stream": "scripture",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Wycliffe Bible in English",
+    "zh-Hans": "威克里夫英文圣经",
+    "zh-Hant": "威克里夫英文聖經"
+   },
+   "desc": {
+    "en": "The first whole Bible in English, translated from Latin and copied by hand for the common people; an earlier version appears about 1382 and a revised one by the 1390s.",
+    "zh-Hans": "第一部完整的英文圣经，由拉丁文译出并手抄流传于平民之中；初译本约成于一三八二年，修订本至一三九〇年代问世。",
+    "zh-Hant": "第一部完整的英文聖經，由拉丁文譯出並手抄流傳於平民之中；初譯本約成於一三八二年，修訂本至一三九〇年代問世。"
+   }
+  },
+  {
+   "id": "hus_burned",
+   "year": 1415,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Jan Hus Burned at Constance",
+    "zh-Hans": "胡司在康士坦斯被焚",
+    "zh-Hant": "胡司在康士坦斯被焚"
+   },
+   "desc": {
+    "en": "The Bohemian preacher is tried at the Council of Constance on articles concerning the church and papal authority, condemned and burned, a century before Luther.",
+    "zh-Hans": "这位波希米亚传道人在康士坦斯会议因论教会与教皇权柄的条款受审，被定罪焚死，比路德早了一个世纪。",
+    "zh-Hant": "這位波希米亞傳道人在康士坦斯會議因論教會與教皇權柄的條款受審，被定罪焚死，比路德早了一個世紀。"
+   }
+  },
+  {
+   "id": "fall_constantinople",
+   "year": 1453,
+   "era": "world",
+   "stream": "byzantium",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Constantinople Falls to the Ottomans",
+    "zh-Hans": "君士坦丁堡陷落",
+    "zh-Hant": "君士坦丁堡陷落"
+   },
+   "desc": {
+    "en": "Byzantium ends; Greek scholars and manuscripts flee west and fuel the study of the New Testament.",
+    "zh-Hans": "拜占庭覆亡；希腊学者携抄本西逃，助燃了新约原文研究之风。",
+    "zh-Hant": "拜占庭覆亡；希臘學者攜抄本西逃，助燃了新約原文研究之風。"
+   }
+  },
+  {
+   "id": "gutenberg_bible",
+   "year": 1455,
+   "era": "bible",
+   "stream": "scripture",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Gutenberg Prints the Bible",
+    "zh-Hans": "古腾堡印制圣经",
+    "zh-Hant": "古騰堡印製聖經"
+   },
+   "desc": {
+    "en": "Movable type makes Scripture reproducible in quantity for the first time in history.",
+    "zh-Hans": "活字印刷首次使圣经得以大量复制，开创历史。",
+    "zh-Hant": "活字印刷首次使聖經得以大量複製，開創歷史。"
+   }
+  },
+  {
+   "id": "erasmus_greek_nt",
+   "year": 1516,
+   "era": "bible",
+   "stream": "scripture",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Erasmus Prints the Greek New Testament",
+    "zh-Hans": "伊拉斯谟出版希腊文新约",
+    "zh-Hant": "伊拉斯謨出版希臘文新約"
+   },
+   "desc": {
+    "en": "The first published Greek New Testament puts the original text into the reformers' hands.",
+    "zh-Hans": "首部付印的希腊文新约，把原文经文交到改教家手中。",
+    "zh-Hant": "首部付印的希臘文新約，把原文經文交到改教家手中。"
+   }
+  },
+  {
+   "id": "ninety_five_theses",
+   "year": 1517,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Luther's Ninety-Five Theses",
+    "zh-Hans": "路德的九十五条论纲",
+    "zh-Hant": "路德的九十五條論綱"
+   },
+   "desc": {
+    "en": "He sends his protest against indulgences to the archbishop of Mainz on 31 October and, by long tradition, posts it at Wittenberg; the Reformation follows.",
+    "zh-Hans": "十月三十一日，他把反对赎罪券的论纲寄给美因茨大主教；相传他也将论纲张贴于威登堡。宗教改革由此展开。",
+    "zh-Hant": "十月三十一日，他把反對贖罪券的論綱寄給美因茨大主教；相傳他也將論綱張貼於威登堡。宗教改革由此展開。"
+   }
+  },
+  {
+   "id": "diet_of_worms",
+   "year": 1521,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Luther Stands at Worms",
+    "zh-Hans": "路德在沃木斯受审",
+    "zh-Hant": "路德在沃木斯受審"
+   },
+   "desc": {
+    "en": "Summoned before the emperor, he refuses to recant unless convinced by Scripture and plain reason.",
+    "zh-Hans": "他被传至皇帝面前，声明除非圣经与明理说服他，否则绝不收回己说。",
+    "zh-Hant": "他被傳至皇帝面前，聲明除非聖經與明理說服他，否則絕不收回己說。"
+   }
+  },
+  {
+   "id": "luther_nt",
+   "year": 1522,
+   "era": "bible",
+   "stream": "scripture",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Luther's German New Testament",
+    "zh-Hans": "路德的德文新约",
+    "zh-Hant": "路德的德文新約"
+   },
+   "desc": {
+    "en": "Translated from Greek in eleven weeks at the Wartburg, it shapes the German language itself.",
+    "zh-Hans": "他在瓦特堡以十一周从希腊文译成，此书塑造了德语本身。",
+    "zh-Hant": "他在瓦特堡以十一週從希臘文譯成，此書塑造了德語本身。"
+   }
+  },
+  {
+   "id": "tyndale_nt",
+   "year": 1525,
+   "era": "bible",
+   "stream": "scripture",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Tyndale's English New Testament",
+    "zh-Hans": "丁道尔的英文新约",
+    "zh-Hant": "丁道爾的英文新約"
+   },
+   "desc": {
+    "en": "The first English New Testament from Greek; its wording still echoes through English Bibles.",
+    "zh-Hans": "第一部由希腊文译出的英文新约；其用语至今仍回响于英文圣经之中。",
+    "zh-Hant": "第一部由希臘文譯出的英文新約；其用語至今仍迴響於英文聖經之中。"
+   }
+  },
+  {
+   "id": "luther_bible",
+   "year": 1534,
+   "era": "bible",
+   "stream": "scripture",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Luther's Complete German Bible",
+    "zh-Hans": "路德完整德文圣经",
+    "zh-Hant": "路德完整德文聖經"
+   },
+   "desc": {
+    "en": "Old and New Testaments together in the language of the people, printed and widely read.",
+    "zh-Hans": "新旧约以百姓的语言合成一部，付印后广为诵读。",
+    "zh-Hant": "新舊約以百姓的語言合成一部，付印後廣為誦讀。"
+   }
+  },
+  {
+   "id": "coverdale_bible",
+   "year": 1535,
+   "era": "bible",
+   "stream": "scripture",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "First Complete Printed English Bible",
+    "zh-Hans": "首部印行的完整英文圣经",
+    "zh-Hant": "首部印行的完整英文聖經"
+   },
+   "desc": {
+    "en": "Coverdale prints the whole Bible in English, resting heavily on Tyndale's work.",
+    "zh-Hans": "科弗代尔以英文印行全本圣经，大量采用丁道尔的译文。",
+    "zh-Hant": "科弗代爾以英文印行全本聖經，大量採用丁道爾的譯文。"
+   }
+  },
+  {
+   "id": "calvin_institutes",
+   "year": 1536,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Calvin Publishes the Institutes",
+    "zh-Hans": "加尔文出版《基督教要义》",
+    "zh-Hant": "加爾文出版《基督教要義》"
+   },
+   "desc": {
+    "en": "A young Frenchman sets out the reformed faith in order; Tyndale is martyred the same year.",
+    "zh-Hans": "年轻的法国人有条理地阐明改革宗信仰；同年丁道尔殉道。",
+    "zh-Hant": "年輕的法國人有條理地闡明改革宗信仰；同年丁道爾殉道。"
+   }
+  },
+  {
+   "id": "jesuits_founded",
+   "year": 1540,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Society of Jesus Approved",
+    "zh-Hans": "耶稣会获准成立",
+    "zh-Hant": "耶穌會獲准成立"
+   },
+   "desc": {
+    "en": "Ignatius Loyola's disciplined order becomes the spearhead of Catholic reform and world mission.",
+    "zh-Hans": "罗耀拉所创纪律严明的修会，成为天主教改革与海外宣教的先锋。",
+    "zh-Hant": "羅耀拉所創紀律嚴明的修會，成為天主教改革與海外宣教的先鋒。"
+   }
+  },
+  {
+   "id": "council_trent",
+   "year": 1545,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Council of Trent Opens",
+    "zh-Hans": "特伦特会议召开",
+    "zh-Hant": "特倫特會議召開"
+   },
+   "desc": {
+    "en": "The Roman church answers the Reformation, defining doctrine and reforming clergy over eighteen years.",
+    "zh-Hans": "罗马教会回应改教运动，历十八年厘定教义并整饬圣职人员。",
+    "zh-Hant": "羅馬教會回應改教運動，歷十八年釐定教義並整飭聖職人員。"
+   }
+  },
+  {
+   "id": "geneva_bible",
+   "year": 1560,
+   "era": "bible",
+   "stream": "scripture",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Geneva Bible Published",
+    "zh-Hans": "日内瓦圣经出版",
+    "zh-Hant": "日內瓦聖經出版"
+   },
+   "desc": {
+    "en": "Compact, verse-numbered and heavily annotated, it becomes the Bible of the Puritans.",
+    "zh-Hans": "体积轻便、标明节数并附大量注释，成为清教徒手中的圣经。",
+    "zh-Hant": "體積輕便、標明節數並附大量註釋，成為清教徒手中的聖經。"
+   }
+  },
+  {
+   "id": "heidelberg_catechism",
+   "year": 1563,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Heidelberg Catechism",
+    "zh-Hans": "海德堡要理问答",
+    "zh-Hant": "海德堡要理問答"
+   },
+   "desc": {
+    "en": "A warm and pastoral summary of reformed faith in question and answer, still widely used.",
+    "zh-Hans": "以问答形式温和牧养地总结改革宗信仰，至今仍广被使用。",
+    "zh-Hant": "以問答形式溫和牧養地總結改革宗信仰，至今仍廣被使用。"
+   }
+  },
+  {
+   "id": "ricci_china",
+   "year": 1583,
+   "era": "church",
+   "stream": "china",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Matteo Ricci Enters China",
+    "zh-Hans": "利玛窦进入中国",
+    "zh-Hant": "利瑪竇進入中國"
+   },
+   "desc": {
+    "en": "The Jesuit learns Chinese, adopts scholar's dress, and opens a long conversation with Chinese learning.",
+    "zh-Hans": "这位耶稣会士学习中文、身穿儒服，开启了与中国学术长久的对话。",
+    "zh-Hant": "這位耶穌會士學習中文、身穿儒服，開啟了與中國學術長久的對話。"
+   }
+  },
+  {
+   "id": "king_james_version",
+   "year": 1611,
+   "era": "bible",
+   "stream": "scripture",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "King James Version Published",
+    "zh-Hans": "英王钦定本出版",
+    "zh-Hant": "英王欽定本出版"
+   },
+   "desc": {
+    "en": "Forty-seven scholars produce the English Bible that will dominate for three centuries.",
+    "zh-Hans": "四十七位学者译成的英文圣经，主导英语世界达三百年。",
+    "zh-Hant": "四十七位學者譯成的英文聖經，主導英語世界達三百年。"
+   }
+  },
+  {
+   "id": "synod_of_dort",
+   "year": 1618,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Synod of Dort",
+    "zh-Hans": "多特会议",
+    "zh-Hant": "多特會議"
+   },
+   "desc": {
+    "en": "An international reformed assembly answers the Remonstrants and issues its canons on grace.",
+    "zh-Hans": "国际性的改革宗会议回应抗辩派，颁布关于恩典的教规。",
+    "zh-Hant": "國際性的改革宗會議回應抗辯派，頒布關於恩典的教規。"
+   }
+  },
+  {
+   "id": "westminster_confession",
+   "year": 1646,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Westminster Confession Completed",
+    "zh-Hans": "威斯敏斯特信条完成",
+    "zh-Hant": "威斯敏斯特信條完成"
+   },
+   "desc": {
+    "en": "English and Scottish divines complete the confession of Presbyterianism; the Larger and Shorter Catechisms follow the next year.",
+    "zh-Hans": "英格兰与苏格兰神学家完成长老宗的信条；大、小要理问答于次年续成。",
+    "zh-Hant": "英格蘭與蘇格蘭神學家完成長老宗的信條；大、小要理問答於次年續成。"
+   }
+  },
+  {
+   "id": "great_ejection",
+   "year": 1662,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Two Thousand Ministers Ejected",
+    "zh-Hans": "两千牧师被逐",
+    "zh-Hant": "兩千牧師被逐"
+   },
+   "desc": {
+    "en": "The Act of Uniformity drives nonconforming clergy from the Church of England and creates English dissent.",
+    "zh-Hans": "统一法案将不顺从的牧者逐出英国国教，英国非国教派由此形成。",
+    "zh-Hant": "統一法案將不順從的牧者逐出英國國教，英國非國教派由此形成。"
+   }
+  },
+  {
+   "id": "pilgrims_progress",
+   "year": 1678,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Bunyan Publishes Pilgrim's Progress",
+    "zh-Hans": "本仁约翰出版《天路历程》",
+    "zh-Hant": "本仁約翰出版《天路歷程》"
+   },
+   "desc": {
+    "en": "Written largely in prison, the allegory becomes the most translated Christian book after the Bible.",
+    "zh-Hans": "多半写于狱中的这部寓言，成为圣经以外翻译最多的基督教书籍。",
+    "zh-Hant": "多半寫於獄中的這部寓言，成為聖經以外翻譯最多的基督教書籍。"
+   }
+  },
+  {
+   "id": "herrnhut_revival",
+   "year": 1727,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Moravian Revival at Herrnhut",
+    "zh-Hans": "主护村摩拉维亚复兴",
+    "zh-Hant": "主護村摩拉維亞復興"
+   },
+   "desc": {
+    "en": "Refugees under Zinzendorf are united in revival and begin a prayer watch and a missionary force.",
+    "zh-Hans": "在亲岑多夫庇护下的难民经历复兴合一，开始接力祷告并差派宣教士。",
+    "zh-Hant": "在親岑多夫庇護下的難民經歷復興合一，開始接力禱告並差派宣教士。"
+   }
+  },
+  {
+   "id": "great_awakening",
+   "year": 1735,
+   "era": "church",
+   "stream": "americas",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "First Great Awakening",
+    "zh-Hans": "第一次大觉醒",
+    "zh-Hant": "第一次大覺醒"
+   },
+   "desc": {
+    "en": "Edwards in New England from 1735, and Whitefield in the open air from 1739, stir revival across the colonies.",
+    "zh-Hans": "爱德华滋自一七三五年在新英格兰、怀特腓自一七三九年露天布道，复兴席卷北美殖民地。",
+    "zh-Hant": "愛德華滋自一七三五年在新英格蘭、懷特腓自一七三九年露天佈道，復興席捲北美殖民地。"
+   }
+  },
+  {
+   "id": "wesley_aldersgate",
+   "year": 1738,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Wesley's Aldersgate Conversion",
+    "zh-Hans": "卫斯理阿尔德斯门街的经历",
+    "zh-Hant": "衛斯理阿爾德斯門街的經歷"
+   },
+   "desc": {
+    "en": "Assurance of salvation comes to John Wesley at a London meeting; within a year he is preaching in the open air and Methodist societies form.",
+    "zh-Hans": "约翰卫斯理在伦敦一个聚会中得着得救的确据；不到一年他便露天布道，循道会的小组也相继成立。",
+    "zh-Hant": "約翰衛斯理在倫敦一個聚會中得著得救的確據；不到一年他便露天佈道，循道會的小組也相繼成立。"
+   }
+  },
+  {
+   "id": "carey_bms",
+   "year": 1792,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Carey Founds the Baptist Mission",
+    "zh-Hans": "克理创立浸礼会差会",
+    "zh-Hant": "克理創立浸禮會差會"
+   },
+   "desc": {
+    "en": "A cobbler-preacher argues that the Great Commission still binds the church, launching modern missions.",
+    "zh-Hans": "这位补鞋匠传道人力言大使命仍约束今日教会，开启了近代宣教运动。",
+    "zh-Hant": "這位補鞋匠傳道人力言大使命仍約束今日教會，開啟了近代宣教運動。"
+   }
+  },
+  {
+   "id": "rosetta_stone",
+   "year": 1799,
+   "era": "bible",
+   "stream": "scripture",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Rosetta Stone Discovered",
+    "zh-Hans": "罗塞塔石碑出土",
+    "zh-Hant": "羅塞塔石碑出土"
+   },
+   "desc": {
+    "en": "Its Egyptian and Greek text, cut in three scripts, later lets Champollion decipher the hieroglyphs and opens the ancient world behind the Old Testament.",
+    "zh-Hans": "碑上以三种字体刻写的埃及文与希腊文，日后使商博良破译象形文字，打开了旧约背后的古代世界。",
+    "zh-Hant": "碑上以三種字體刻寫的埃及文與希臘文，日後使商博良破譯象形文字，打開了舊約背後的古代世界。"
+   }
+  },
+  {
+   "id": "bfbs_founded",
+   "year": 1804,
+   "era": "bible",
+   "stream": "scripture",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "British and Foreign Bible Society",
+    "zh-Hans": "大英圣书公会成立",
+    "zh-Hant": "大英聖書公會成立"
+   },
+   "desc": {
+    "en": "Formed to supply Welsh Bibles, it grows into a worldwide movement to print Scripture in every tongue.",
+    "zh-Hans": "起初为供应威尔斯人圣经而设，后成为以各种语言印行圣经的全球运动。",
+    "zh-Hant": "起初為供應威爾斯人聖經而設，後成為以各種語言印行聖經的全球運動。"
+   }
+  },
+  {
+   "id": "morrison_china",
+   "year": 1807,
+   "era": "church",
+   "stream": "china",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Robert Morrison Reaches China",
+    "zh-Hans": "马礼逊抵达中国",
+    "zh-Hant": "馬禮遜抵達中國"
+   },
+   "desc": {
+    "en": "The first Protestant missionary to China arrives at Canton and begins learning the language in secret.",
+    "zh-Hans": "第一位到中国的基督新教宣教士抵达广州，暗中开始学习中文。",
+    "zh-Hant": "第一位到中國的基督新教宣教士抵達廣州，暗中開始學習中文。"
+   }
+  },
+  {
+   "id": "slave_trade_abolished",
+   "year": 1807,
+   "era": "world",
+   "stream": "europe",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Britain Abolishes the Slave Trade",
+    "zh-Hans": "英国废除奴隶贸易",
+    "zh-Hant": "英國廢除奴隸貿易"
+   },
+   "desc": {
+    "en": "Wilberforce's twenty-year campaign, driven by evangelical conviction, ends British trafficking in slaves.",
+    "zh-Hans": "威伯福斯出于福音信念的二十年奔走，终止了英国的奴隶买卖。",
+    "zh-Hant": "威伯福斯出於福音信念的二十年奔走，終止了英國的奴隸買賣。"
+   }
+  },
+  {
+   "id": "judson_burma",
+   "year": 1813,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Judson Arrives in Burma",
+    "zh-Hans": "耶德逊抵达缅甸",
+    "zh-Hant": "耶德遜抵達緬甸"
+   },
+   "desc": {
+    "en": "America's pioneer missionary begins decades of imprisonment, loss and Bible translation.",
+    "zh-Hans": "美国宣教先驱由此展开数十年的监禁、丧亲与译经生涯。",
+    "zh-Hant": "美國宣教先驅由此展開數十年的監禁、喪親與譯經生涯。"
+   }
+  },
+  {
+   "id": "american_bible_society",
+   "year": 1816,
+   "era": "bible",
+   "stream": "scripture",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "American Bible Society Founded",
+    "zh-Hans": "美国圣经公会成立",
+    "zh-Hant": "美國聖經公會成立"
+   },
+   "desc": {
+    "en": "Local societies unite to place Scripture in every American home and then far beyond.",
+    "zh-Hans": "各地圣经会联合起来，使每个美国家庭都有圣经，继而推向海外。",
+    "zh-Hant": "各地聖經會聯合起來，使每個美國家庭都有聖經，繼而推向海外。"
+   }
+  },
+  {
+   "id": "morrison_bible",
+   "year": 1823,
+   "era": "bible",
+   "stream": "scripture",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Morrison and Milne's Chinese Bible",
+    "zh-Hans": "马礼逊、米怜《神天圣书》印行",
+    "zh-Hant": "馬禮遜、米憐《神天聖書》印行"
+   },
+   "desc": {
+    "en": "Their complete Chinese Bible is printed after sixteen years of labour; Marshman and Lassar's Chinese Bible had been printed at Serampore the year before.",
+    "zh-Hans": "他们的中文全本圣经历十六年之功印成；马士曼与拉沙的中文圣经已于前一年在塞兰坡印行。",
+    "zh-Hant": "他們的中文全本聖經歷十六年之功印成；馬士曼與拉沙的中文聖經已於前一年在塞蘭坡印行。"
+   }
+  },
+  {
+   "id": "sinaiticus_found",
+   "year": 1844,
+   "era": "bible",
+   "stream": "scripture",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Tischendorf Finds Codex Sinaiticus",
+    "zh-Hans": "提申多夫发现西乃抄本",
+    "zh-Hant": "提申多夫發現西乃抄本"
+   },
+   "desc": {
+    "en": "At St Catherine's Monastery he recovers leaves of a fourth-century Greek Bible of the first rank.",
+    "zh-Hans": "他在圣凯瑟琳修道院寻回四世纪希腊文圣经抄本的散页，价值极高。",
+    "zh-Hant": "他在聖凱瑟琳修道院尋回四世紀希臘文聖經抄本的散頁，價值極高。"
+   }
+  },
+  {
+   "id": "hudson_taylor",
+   "year": 1853,
+   "era": "church",
+   "stream": "china",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Hudson Taylor Sails for China",
+    "zh-Hans": "戴德生前往中国",
+    "zh-Hant": "戴德生前往中國"
+   },
+   "desc": {
+    "en": "At twenty-one he leaves for Shanghai, later adopting Chinese dress to reach the inland provinces.",
+    "zh-Hans": "二十一岁的他启程往上海，后改穿华服以进入内地各省。",
+    "zh-Hant": "二十一歲的他啟程往上海，後改穿華服以進入內地各省。"
+   }
+  },
+  {
+   "id": "delegates_version",
+   "year": 1854,
+   "era": "bible",
+   "stream": "scripture",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Delegates' Version Completed",
+    "zh-Hans": "《委办译本》完成",
+    "zh-Hant": "《委辦譯本》完成"
+   },
+   "desc": {
+    "en": "Missionary translators and Chinese scholars produce an elegant literary Chinese Bible.",
+    "zh-Hans": "宣教士译者与中国文士合译出文辞典雅的文言圣经。",
+    "zh-Hant": "宣教士譯者與中國文士合譯出文辭典雅的文言聖經。"
+   }
+  },
+  {
+   "id": "prayer_revival_1857",
+   "year": 1857,
+   "era": "church",
+   "stream": "americas",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Businessmen's Prayer Revival",
+    "zh-Hans": "商人祈祷大复兴",
+    "zh-Hant": "商人祈禱大復興"
+   },
+   "desc": {
+    "en": "Noon prayer meetings spread from New York across America and on to Ulster and Wales.",
+    "zh-Hans": "午间祈祷会由纽约传遍全美，继而波及厄尔斯特与威尔斯。",
+    "zh-Hant": "午間祈禱會由紐約傳遍全美，繼而波及厄爾斯特與威爾斯。"
+   }
+  },
+  {
+   "id": "china_inland_mission",
+   "year": 1865,
+   "era": "church",
+   "stream": "china",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "China Inland Mission Founded",
+    "zh-Hans": "中国内地会成立",
+    "zh-Hant": "中國內地會成立"
+   },
+   "desc": {
+    "en": "Taylor's faith mission sends workers of every denomination into China's unreached interior.",
+    "zh-Hans": "戴德生所创的信心差会，差派各宗派工人进入中国内地未得之地。",
+    "zh-Hant": "戴德生所創的信心差會，差派各宗派工人進入中國內地未得之地。"
+   }
+  },
+  {
+   "id": "mesha_stele",
+   "year": 1868,
+   "era": "bible",
+   "stream": "scripture",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Moabite Stone Discovered",
+    "zh-Hans": "摩押石碑出土",
+    "zh-Hant": "摩押石碑出土"
+   },
+   "desc": {
+    "en": "King Mesha's inscription names Omri of Israel and gives Moab's own account of the revolt described in Second Kings.",
+    "zh-Hans": "米沙王的碑文提到以色列王暗利，并以摩押自己的说法记述列王纪下所载的背叛。",
+    "zh-Hant": "米沙王的碑文提到以色列王暗利，並以摩押自己的說法記述列王紀下所載的背叛。"
+   },
+   "refs": [
+    "2 Kings 3:4-5"
+   ]
+  },
+  {
+   "id": "salvation_army",
+   "year": 1878,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Salvation Army Takes Its Name",
+    "zh-Hans": "救世军定名",
+    "zh-Hant": "救世軍定名"
+   },
+   "desc": {
+    "en": "William and Catherine Booth's East London mission becomes an army of preaching and practical mercy.",
+    "zh-Hans": "布斯夫妇在伦敦东区的布道所，成为传道与济世并重的军队。",
+    "zh-Hant": "布斯夫婦在倫敦東區的佈道所，成為傳道與濟世並重的軍隊。"
+   }
+  },
+  {
+   "id": "westcott_hort",
+   "year": 1881,
+   "era": "bible",
+   "stream": "scripture",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Westcott and Hort's Greek Text",
+    "zh-Hans": "韦斯科特与霍尔特的希腊文本",
+    "zh-Hant": "韋斯科特與霍爾特的希臘文本"
+   },
+   "desc": {
+    "en": "Their critical text, and the Revised New Testament published the same year, establish the modern critical approach alongside the older received text.",
+    "zh-Hans": "他们的校勘本与同年出版的修订本新约，确立了现代经文校勘的路线，与旧有的公认经文并行。",
+    "zh-Hant": "他們的校勘本與同年出版的修訂本新約，確立了現代經文校勘的路線，與舊有的公認經文並行。"
+   }
+  },
+  {
+   "id": "student_volunteer_movement",
+   "year": 1886,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Student Volunteers at Mount Hermon",
+    "zh-Hans": "赫门山学生立志海外宣教",
+    "zh-Hant": "赫門山學生立志海外宣教"
+   },
+   "desc": {
+    "en": "A hundred students at Mount Hermon pledge themselves to foreign missions; the Student Volunteer Movement is organized two years later and thousands follow.",
+    "zh-Hans": "赫门山上一百名学生立志海外宣教；学生志愿运动于两年后正式组成，随后数以千计的人响应。",
+    "zh-Hant": "赫門山上一百名學生立志海外宣教；學生志願運動於兩年後正式組成，隨後數以千計的人響應。"
+   }
+  },
+  {
+   "id": "union_version_resolved",
+   "year": 1890,
+   "era": "bible",
+   "stream": "scripture",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Shanghai Conference Calls for Union Version",
+    "zh-Hans": "上海大会议决合译和合本",
+    "zh-Hant": "上海大會議決合譯和合本"
+   },
+   "desc": {
+    "en": "Missionaries agree to produce one Chinese Bible for all Protestant churches in China.",
+    "zh-Hans": "在华宣教士议决合力译出一部供全中国基督新教会共用的中文圣经。",
+    "zh-Hant": "在華宣教士議決合力譯出一部供全中國基督新教會共用的中文聖經。"
+   }
+  },
+  {
+   "id": "boxer_martyrs",
+   "year": 1900,
+   "era": "church",
+   "stream": "china",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Boxer Uprising Martyrdoms",
+    "zh-Hans": "庚子教难",
+    "zh-Hant": "庚子教難"
+   },
+   "desc": {
+    "en": "Thousands of Chinese Christians and many missionaries are killed across north China.",
+    "zh-Hans": "华北各地数以千计的中国基督徒与众多宣教士被杀。",
+    "zh-Hant": "華北各地數以千計的中國基督徒與眾多宣教士被殺。"
+   }
+  },
+  {
+   "id": "welsh_revival",
+   "year": 1904,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Welsh Revival",
+    "zh-Hans": "威尔斯大复兴",
+    "zh-Hant": "威爾斯大復興"
+   },
+   "desc": {
+    "en": "Under Evan Roberts a hundred thousand profess faith within a year and the news circles the world.",
+    "zh-Hans": "在伊凡罗伯斯带领下，一年内有十万人归信，消息传遍世界。",
+    "zh-Hant": "在伊凡羅伯斯帶領下，一年內有十萬人歸信，消息傳遍世界。"
+   }
+  },
+  {
+   "id": "azusa_street",
+   "year": 1906,
+   "era": "church",
+   "stream": "americas",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Azusa Street Revival",
+    "zh-Hans": "亚苏萨街复兴",
+    "zh-Hant": "亞蘇薩街復興"
+   },
+   "desc": {
+    "en": "A mission in Los Angeles becomes the seedbed of worldwide Pentecostal and charismatic movements.",
+    "zh-Hans": "洛杉矶的一处布道所，成为全球五旬节与灵恩运动的摇篮。",
+    "zh-Hant": "洛杉磯的一處佈道所，成為全球五旬節與靈恩運動的搖籃。"
+   }
+  },
+  {
+   "id": "edinburgh_1910",
+   "year": 1910,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Edinburgh Missionary Conference",
+    "zh-Hans": "爱丁堡宣教大会",
+    "zh-Hant": "愛丁堡宣教大會"
+   },
+   "desc": {
+    "en": "Twelve hundred delegates plan world evangelization and set the modern ecumenical movement in motion.",
+    "zh-Hans": "一千二百位代表共商普世布道之策，也启动了近代的合一运动。",
+    "zh-Hant": "一千二百位代表共商普世佈道之策，也啟動了近代的合一運動。"
+   }
+  },
+  {
+   "id": "chinese_union_version",
+   "year": 1919,
+   "era": "bible",
+   "stream": "scripture",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Chinese Union Version Published",
+    "zh-Hans": "《和合本》出版",
+    "zh-Hant": "《和合本》出版"
+   },
+   "desc": {
+    "en": "After nearly three decades of work the Mandarin Union Version appears and becomes the Chinese church's Bible.",
+    "zh-Hans": "历近三十年译成的国语和合本问世，成为华人教会通用的圣经。",
+    "zh-Hant": "歷近三十年譯成的國語和合本問世，成為華人教會通用的聖經。"
+   }
+  },
+  {
+   "id": "ugarit_tablets",
+   "year": 1929,
+   "era": "bible",
+   "stream": "scripture",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Ugaritic Tablets Found at Ras Shamra",
+    "zh-Hans": "拉斯珊拉出土乌加列泥版",
+    "zh-Hant": "拉斯珊拉出土烏加列泥版"
+   },
+   "desc": {
+    "en": "A Canaanite library in an alphabetic script illuminates Hebrew poetry and the religion of Baal.",
+    "zh-Hans": "以字母文字写成的迦南文献，照亮了希伯来诗歌与巴力宗教的背景。",
+    "zh-Hant": "以字母文字寫成的迦南文獻，照亮了希伯來詩歌與巴力宗教的背景。"
+   }
+  },
+  {
+   "id": "barmen_declaration",
+   "year": 1934,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Barmen Declaration",
+    "zh-Hans": "巴门宣言",
+    "zh-Hant": "巴門宣言"
+   },
+   "desc": {
+    "en": "German confessing Christians reject Nazi control of the church and confess Christ as sole Lord.",
+    "zh-Hans": "德国认信的基督徒拒绝纳粹掌控教会，宣认基督为唯一的主。",
+    "zh-Hant": "德國認信的基督徒拒絕納粹掌控教會，宣認基督為唯一的主。"
+   }
+  },
+  {
+   "id": "dead_sea_scrolls",
+   "year": 1947,
+   "era": "bible",
+   "stream": "scripture",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Dead Sea Scrolls Discovered",
+    "zh-Hans": "死海古卷出土",
+    "zh-Hant": "死海古卷出土"
+   },
+   "desc": {
+    "en": "Scrolls found at Qumran push the Hebrew manuscript record back a thousand years.",
+    "zh-Hans": "在昆兰发现的古卷，把希伯来文抄本的年代往前推了一千年。",
+    "zh-Hant": "在昆蘭發現的古卷，把希伯來文抄本的年代往前推了一千年。"
+   }
+  },
+  {
+   "id": "wcc_formed",
+   "year": 1948,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "World Council of Churches Formed",
+    "zh-Hans": "普世教会协会成立",
+    "zh-Hant": "普世教會協會成立"
+   },
+   "desc": {
+    "en": "Churches from many traditions constitute a council at Amsterdam to seek visible unity.",
+    "zh-Hans": "众多传统的教会在阿姆斯特丹组成协会，寻求可见的合一。",
+    "zh-Hant": "眾多傳統的教會在阿姆斯特丹組成協會，尋求可見的合一。"
+   }
+  },
+  {
+   "id": "state_of_israel",
+   "year": 1948,
+   "era": "world",
+   "stream": "israel",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "State of Israel Established",
+    "zh-Hans": "以色列国建立",
+    "zh-Hant": "以色列國建立"
+   },
+   "desc": {
+    "en": "A Jewish state is established in the land for the first time since antiquity, reshaping the modern Middle East.",
+    "zh-Hans": "自古代以来，犹太人的国家首次在这片土地上建立，改写了现代中东的局势。",
+    "zh-Hant": "自古代以來，猶太人的國家首次在這片土地上建立，改寫了現代中東的局勢。"
+   }
+  },
+  {
+   "id": "missionaries_leave_china",
+   "year": 1950,
+   "era": "church",
+   "stream": "china",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Missionaries Withdraw from China",
+    "zh-Hans": "宣教士撤离中国",
+    "zh-Hant": "宣教士撤離中國"
+   },
+   "desc": {
+    "en": "Foreign workers leave after the revolution; the Chinese church is left to stand on its own.",
+    "zh-Hans": "革命之后外籍工人相继离去，中国教会须自立自守。",
+    "zh-Hant": "革命之後外籍工人相繼離去，中國教會須自立自守。"
+   }
+  },
+  {
+   "id": "three_self_movement",
+   "year": 1951,
+   "era": "church",
+   "stream": "china",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Three-Self Patriotic Movement",
+    "zh-Hans": "三自爱国运动",
+    "zh-Hant": "三自愛國運動"
+   },
+   "desc": {
+    "en": "A preparatory committee begins reorganizing Chinese Protestant churches under state oversight; the movement is formally constituted in 1954.",
+    "zh-Hans": "筹备委员会开始在官方监管下重组中国基督新教会；运动于一九五四年正式成立。",
+    "zh-Hant": "籌備委員會開始在官方監管下重組中國基督新教會；運動於一九五四年正式成立。"
+   }
+  },
+  {
+   "id": "rsv_published",
+   "year": 1952,
+   "era": "bible",
+   "stream": "scripture",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Revised Standard Version",
+    "zh-Hans": "《修订标准版》圣经",
+    "zh-Hant": "《修訂標準版》聖經"
+   },
+   "desc": {
+    "en": "A modern-English revision in the King James tradition, and the parent of later standard versions.",
+    "zh-Hans": "承钦定本传统的现代英语修订本，也是后来多部标准译本的源头。",
+    "zh-Hant": "承欽定本傳統的現代英語修訂本，也是後來多部標準譯本的源頭。"
+   }
+  },
+  {
+   "id": "ecuador_martyrs",
+   "year": 1956,
+   "era": "church",
+   "stream": "americas",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Five Missionaries Killed in Ecuador",
+    "zh-Hans": "五位宣教士在厄瓜多尔殉道",
+    "zh-Hant": "五位宣教士在厄瓜多爾殉道"
+   },
+   "desc": {
+    "en": "Jim Elliot and four companions die reaching the Waorani; the story stirs a missionary generation.",
+    "zh-Hans": "艾略特等五人为接触瓦达尼族而丧命；此事激励了一整代宣教士。",
+    "zh-Hant": "艾略特等五人為接觸瓦達尼族而喪命；此事激勵了一整代宣教士。"
+   }
+  },
+  {
+   "id": "vatican_ii",
+   "year": 1962,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Second Vatican Council Opens",
+    "zh-Hans": "梵蒂冈第二次大公会议开幕",
+    "zh-Hant": "梵蒂岡第二次大公會議開幕"
+   },
+   "desc": {
+    "en": "Rome permits worship in the vernacular, commends Bible reading, and reconsiders other churches.",
+    "zh-Hans": "罗马准许以本地语言敬拜、鼓励读经，并重新看待其他教会。",
+    "zh-Hant": "羅馬准許以本地語言敬拜、鼓勵讀經，並重新看待其他教會。"
+   }
+  },
+  {
+   "id": "cultural_revolution",
+   "year": 1966,
+   "era": "world",
+   "stream": "china",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Cultural Revolution Closes China's Churches",
+    "zh-Hans": "文化大革命关闭中国教会",
+    "zh-Hant": "文化大革命關閉中國教會"
+   },
+   "desc": {
+    "en": "Every church building is shut and Bibles destroyed; the faith survives in homes and grows.",
+    "zh-Hans": "所有教堂被关闭、圣经遭销毁；信仰却在家庭中存留并增长。",
+    "zh-Hant": "所有教堂被關閉、聖經遭銷毀；信仰卻在家庭中存留並增長。"
+   }
+  },
+  {
+   "id": "nasb_completed",
+   "year": 1971,
+   "era": "bible",
+   "stream": "scripture",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "New American Standard Bible",
+    "zh-Hans": "《新美国标准本》圣经",
+    "zh-Hant": "《新美國標準本》聖經"
+   },
+   "desc": {
+    "en": "A deliberately literal revision of the American Standard Version for close study.",
+    "zh-Hans": "刻意直译的美国标准本修订版，便于仔细查考。",
+    "zh-Hant": "刻意直譯的美國標準本修訂版，便於仔細查考。"
+   }
+  },
+  {
+   "id": "lausanne_congress",
+   "year": 1974,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Lausanne Congress on Evangelization",
+    "zh-Hans": "洛桑世界福音大会",
+    "zh-Hant": "洛桑世界福音大會"
+   },
+   "desc": {
+    "en": "Evangelicals from a hundred and fifty nations covenant together for world evangelization.",
+    "zh-Hans": "来自一百五十个国家的福音派信徒立约，同心完成普世布道。",
+    "zh-Hant": "來自一百五十個國家的福音派信徒立約，同心完成普世佈道。"
+   }
+  },
+  {
+   "id": "niv_published",
+   "year": 1978,
+   "era": "bible",
+   "stream": "scripture",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "New International Version",
+    "zh-Hans": "《新国际版》圣经",
+    "zh-Hant": "《新國際版》聖經"
+   },
+   "desc": {
+    "en": "An international team produces a readable modern translation that becomes widely used in English.",
+    "zh-Hans": "跨国译经团队译成流畅易读的现代译本，在英语世界广受采用。",
+    "zh-Hant": "跨國譯經團隊譯成流暢易讀的現代譯本，在英語世界廣受採用。"
+   }
+  },
+  {
+   "id": "tcv_chinese",
+   "year": 1979,
+   "era": "bible",
+   "stream": "scripture",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Today's Chinese Version",
+    "zh-Hans": "《现代中文译本》",
+    "zh-Hant": "《現代中文譯本》"
+   },
+   "desc": {
+    "en": "A fresh Chinese translation in plain modern language, aimed at readers new to the Bible.",
+    "zh-Hans": "以浅白现代汉语重译的中文圣经，为初读圣经的人而设。",
+    "zh-Hant": "以淺白現代漢語重譯的中文聖經，為初讀聖經的人而設。"
+   }
+  },
+  {
+   "id": "china_churches_reopen",
+   "year": 1979,
+   "era": "church",
+   "stream": "china",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Churches Reopen in China",
+    "zh-Hans": "中国教会重新开放",
+    "zh-Hant": "中國教會重新開放"
+   },
+   "desc": {
+    "en": "Buildings are returned and worship resumes; house churches have multiplied through the closed years.",
+    "zh-Hans": "教产陆续发还、聚会恢复；封闭年间家庭教会已大量增长。",
+    "zh-Hant": "教產陸續發還、聚會恢復；封閉年間家庭教會已大量增長。"
+   }
+  },
+  {
+   "id": "cuv_new_punctuation",
+   "year": 1988,
+   "era": "bible",
+   "stream": "scripture",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "New Punctuation Union Version",
+    "zh-Hans": "《新标点和合本》",
+    "zh-Hant": "《新標點和合本》"
+   },
+   "desc": {
+    "en": "The 1919 text is repunctuated with modern marks and paragraphing without changing the wording.",
+    "zh-Hans": "在不改动译文的前提下，为一九一九年的和合本加上新式标点与分段。",
+    "zh-Hant": "在不改動譯文的前提下，為一九一九年的和合本加上新式標點與分段。"
+   }
+  },
+  {
+   "id": "berlin_wall",
+   "year": 1989,
+   "era": "world",
+   "stream": "europe",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Berlin Wall Falls",
+    "zh-Hans": "柏林围墙倒塌",
+    "zh-Hant": "柏林圍牆倒塌"
+   },
+   "desc": {
+    "en": "Communist restriction of the church collapses across eastern Europe and Bibles flow in freely.",
+    "zh-Hans": "东欧对教会的箝制随之瓦解，圣经得以自由流通。",
+    "zh-Hant": "東歐對教會的箝制隨之瓦解，聖經得以自由流通。"
+   }
+  },
+  {
+   "id": "chinese_new_version",
+   "year": 1992,
+   "era": "bible",
+   "stream": "scripture",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Chinese New Version",
+    "zh-Hans": "《圣经新译本》",
+    "zh-Hant": "《聖經新譯本》"
+   },
+   "desc": {
+    "en": "Chinese scholars complete a translation made directly from the Hebrew and Greek.",
+    "zh-Hans": "华人学者完成直接译自希伯来文与希腊文的中文圣经。",
+    "zh-Hant": "華人學者完成直接譯自希伯來文與希臘文的中文聖經。"
+   }
+  },
+  {
+   "id": "tel_dan_stele",
+   "year": 1993,
+   "era": "bible",
+   "stream": "scripture",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Tel Dan Stele Names David's House",
+    "zh-Hans": "但城石碑提及大卫家",
+    "zh-Hant": "但城石碑提及大衛家"
+   },
+   "desc": {
+    "en": "An Aramaic victory inscription refers to the house of David, the first such mention outside the Bible.",
+    "zh-Hans": "亚兰文的胜利碑文提到大卫家，是圣经以外首次出现的记载。",
+    "zh-Hant": "亞蘭文的勝利碑文提到大衛家，是聖經以外首次出現的記載。"
+   }
+  },
+  {
+   "id": "esv_published",
+   "year": 2001,
+   "era": "bible",
+   "stream": "scripture",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "English Standard Version",
+    "zh-Hans": "《英文标准版》圣经",
+    "zh-Hant": "《英文標準版》聖經"
+   },
+   "desc": {
+    "en": "An essentially literal revision of the Revised Standard Version, standing in the Tyndale and King James line and widely adopted for preaching.",
+    "zh-Hans": "以修订标准版为底本的直译修订本，承丁道尔与钦定本传统，广为讲道所采用。",
+    "zh-Hant": "以修訂標準版為底本的直譯修訂本，承丁道爾與欽定本傳統，廣為講道所採用。"
+   }
+  },
+  {
+   "id": "rcuv_chinese",
+   "year": 2010,
+   "era": "bible",
+   "stream": "scripture",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Revised Chinese Union Version",
+    "zh-Hans": "《和合本修订版》",
+    "zh-Hant": "《和合本修訂版》"
+   },
+   "desc": {
+    "en": "The Union Version is revised against better manuscripts and updated for changed Chinese usage.",
+    "zh-Hans": "和合本依据更佳的抄本修订，并更新已变迁的中文用语。",
+    "zh-Hant": "和合本依據更佳的抄本修訂，並更新已變遷的中文用語。"
+   }
+  },
+  {
+   "id": "covid_pandemic",
+   "year": 2020,
+   "era": "world",
+   "stream": "world",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Pandemic Closes Church Buildings",
+    "zh-Hans": "疫情关闭教会建筑",
+    "zh-Hant": "疫情關閉教會建築"
+   },
+   "desc": {
+    "en": "Congregations worldwide are scattered and worship moves online for the first time on such a scale.",
+    "zh-Hans": "全球会众被迫分散，敬拜首次如此大规模地转往网上。",
+    "zh-Hant": "全球會眾被迫分散，敬拜首次如此大規模地轉往網上。"
+   }
+  },
+  {
+   "id": "hammurabi_babylon",
+   "year": -1792,
+   "era": "world",
+   "stream": "babylon",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Hammurabi Rules Babylon",
+    "zh-Hans": "汉谟拉比统治巴比伦",
+    "zh-Hant": "漢摩拉比統治巴比倫"
+   },
+   "desc": {
+    "en": "Hammurabi reigns over Babylon and issues one of the earliest surviving law codes. His dates follow the middle chronology, which specialists still dispute by several decades.",
+    "zh-Hans": "汉谟拉比统治巴比伦，颁布现存最早的法典之一。其年代采用「中年表」，学界至今仍有数十年的争议。",
+    "zh-Hant": "漢摩拉比統治巴比倫，頒布現存最早的法典之一。其年代採用「中年表」，學界至今仍有數十年的爭議。"
+   }
+  },
+  {
+   "id": "hyksos_egypt",
+   "year": -1650,
+   "era": "world",
+   "stream": "egypt",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Hyksos Rule Northern Egypt",
+    "zh-Hans": "喜克索斯人统治埃及北部",
+    "zh-Hant": "喜克索斯人統治埃及北部"
+   },
+   "desc": {
+    "en": "Semitic-speaking Hyksos kings rule the Egyptian delta until Ahmose I expels them about 1550 BC.",
+    "zh-Hans": "讲闪族语的喜克索斯诸王统治埃及三角洲，直到约主前1550年被雅赫摩斯一世逐出。",
+    "zh-Hant": "講閃族語的喜克索斯諸王統治埃及三角洲，直到約主前1550年被雅赫摩斯一世逐出。"
+   }
+  },
+  {
+   "id": "akhenaten_amarna",
+   "year": -1353,
+   "era": "world",
+   "stream": "egypt",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Akhenaten and the Amarna Age",
+    "zh-Hans": "阿肯那顿与阿马尔纳时代",
+    "zh-Hant": "阿肯那頓與阿馬爾納時代"
+   },
+   "desc": {
+    "en": "Pharaoh Akhenaten turns Egypt toward the sun-disc Aten and moves his capital to Amarna, whose diplomatic letters survive.",
+    "zh-Hans": "法老阿肯那顿推行阿顿日轮崇拜，迁都阿马尔纳，其外交泥板书信留存至今。",
+    "zh-Hant": "法老阿肯那頓推行阿頓日輪崇拜，遷都阿馬爾納，其外交泥板書信留存至今。"
+   }
+  },
+  {
+   "id": "ramesses_ii",
+   "year": -1279,
+   "era": "world",
+   "stream": "egypt",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Reign of Ramesses II",
+    "zh-Hans": "拉美西斯二世在位",
+    "zh-Hant": "拉美西斯二世在位"
+   },
+   "desc": {
+    "en": "Ramesses II rules Egypt for some sixty-six years, the longest and most heavily monumentalised reign of the New Kingdom.",
+    "zh-Hans": "拉美西斯二世统治埃及约六十六年，是新王国时期在位最长、留下建筑最多的法老。",
+    "zh-Hant": "拉美西斯二世統治埃及約六十六年，是新王國時期在位最長、留下建築最多的法老。"
+   }
+  },
+  {
+   "id": "battle_kadesh",
+   "year": -1274,
+   "era": "world",
+   "stream": "egypt",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Battle of Kadesh",
+    "zh-Hans": "卡叠石战役",
+    "zh-Hant": "卡疊石戰役"
+   },
+   "desc": {
+    "en": "Egypt under Ramesses II fights the Hittites on the Orontes; some fifteen years later the two powers signed a treaty that survives in both an Egyptian and a Hittite copy.",
+    "zh-Hans": "拉美西斯二世率埃及军在奥龙特斯河与赫人交战；约十五年后双方订立和约，埃及文与赫梯文两种抄本都保存至今。",
+    "zh-Hant": "拉美西斯二世率埃及軍在奧龍特斯河與赫人交戰；約十五年後雙方訂立和約，埃及文與赫梯文兩種抄本都保存至今。"
+   }
+  },
+  {
+   "id": "merneptah_stele",
+   "year": -1208,
+   "era": "world",
+   "stream": "egypt",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Merneptah Stele Names Israel",
+    "zh-Hans": "麦伦普塔石碑提到以色列",
+    "zh-Hant": "麥倫普塔石碑提到以色列"
+   },
+   "desc": {
+    "en": "Pharaoh Merneptah's victory stele carries the earliest known mention of Israel outside the Bible.",
+    "zh-Hans": "法老麦伦普塔的凯旋石碑，是已知圣经以外最早提到「以色列」的记载。",
+    "zh-Hant": "法老麥倫普塔的凱旋石碑，是已知聖經以外最早提到「以色列」的記載。"
+   }
+  },
+  {
+   "id": "fall_of_troy",
+   "year": -1184,
+   "era": "world",
+   "stream": "anatolia",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Fall of Troy",
+    "zh-Hans": "特洛伊陷落",
+    "zh-Hant": "特洛伊陷落"
+   },
+   "desc": {
+    "en": "The traditional date, calculated by the Greek scholar Eratosthenes, for the sack of Troy at the end of the Trojan War.",
+    "zh-Hans": "希腊学者埃拉托色尼推算的传统年代，即特洛伊战争结束、特洛伊城被攻陷之年。",
+    "zh-Hant": "希臘學者埃拉托色尼推算的傳統年代，即特洛伊戰爭結束、特洛伊城被攻陷之年。"
+   }
+  },
+  {
+   "id": "sea_peoples",
+   "year": -1177,
+   "era": "world",
+   "stream": "egypt",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Ramesses III Repels the Sea Peoples",
+    "zh-Hans": "拉美西斯三世击退海上民族",
+    "zh-Hant": "拉美西斯三世擊退海上民族"
+   },
+   "desc": {
+    "en": "Egypt turns back a coalition of migrating Sea Peoples during the collapse of the Late Bronze Age world.",
+    "zh-Hans": "在青铜时代晚期文明崩溃之际，埃及击退迁徙而来的海上民族联军。",
+    "zh-Hant": "在青銅時代晚期文明崩潰之際，埃及擊退遷徙而來的海上民族聯軍。"
+   }
+  },
+  {
+   "id": "hiram_tyre",
+   "year": -980,
+   "era": "bible",
+   "stream": "phoenicia",
+   "approximate": true,
+   "basis": "scripture+thiele",
+   "refs": [
+    "1 Kings 5:1-10",
+    "1 Kings 9:26-28"
+   ],
+   "title": {
+    "en": "Hiram King of Tyre",
+    "zh-Hans": "推罗王希兰",
+    "zh-Hant": "推羅王希蘭"
+   },
+   "desc": {
+    "en": "Hiram of Tyre, ever a lover of David, supplies Solomon with cedar and timber-workers for the temple and sends experienced seamen on his Red Sea fleet.",
+    "zh-Hans": "推罗王希兰素来爱大卫，供给所罗门香柏木和伐木的工匠以建圣殿，又差熟悉航海的仆人随所罗门的红海船队出航。",
+    "zh-Hant": "推羅王希蘭素來愛大衛，供給所羅門香柏木和伐木的工匠以建聖殿，又差熟悉航海的僕人隨所羅門的紅海船隊出航。"
+   }
+  },
+  {
+   "id": "queen_of_sheba",
+   "year": -950,
+   "era": "bible",
+   "stream": "arabia",
+   "approximate": true,
+   "basis": "scripture+thiele",
+   "refs": [
+    "1 Kings 10:1-10"
+   ],
+   "title": {
+    "en": "Queen of Sheba Visits Solomon",
+    "zh-Hans": "示巴女王来见所罗门",
+    "zh-Hant": "示巴女王來見所羅門"
+   },
+   "desc": {
+    "en": "The queen of Sheba comes to test Solomon with hard questions and gives him gold, spices and precious stones.",
+    "zh-Hans": "示巴女王用难解的话试问所罗门，并献上金子、香料和宝石。",
+    "zh-Hant": "示巴女王用難解的話試問所羅門，並獻上金子、香料和寶石。"
+   }
+  },
+  {
+   "id": "shishak_invasion",
+   "year": -925,
+   "era": "bible",
+   "stream": "egypt",
+   "approximate": true,
+   "basis": "scripture+thiele",
+   "refs": [
+    "1 Kings 14:25-27",
+    "2 Chronicles 12:2-9"
+   ],
+   "title": {
+    "en": "Shishak of Egypt Plunders Jerusalem",
+    "zh-Hans": "埃及王示撒劫掠耶路撒冷",
+    "zh-Hant": "埃及王示撒劫掠耶路撒冷"
+   },
+   "desc": {
+    "en": "In Rehoboam's fifth year Pharaoh Shishak takes the treasures of the temple and the palace, including Solomon's gold shields.",
+    "zh-Hans": "罗波安王第五年，埃及王示撒夺去圣殿和王宫的宝物，连所罗门的金盾牌也掳去。",
+    "zh-Hant": "羅波安王第五年，埃及王示撒奪去聖殿和王宮的寶物，連所羅門的金盾牌也擄去。"
+   }
+  },
+  {
+   "id": "battle_qarqar",
+   "year": -853,
+   "era": "world",
+   "stream": "assyria",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Battle of Qarqar",
+    "zh-Hans": "卡尔卡尔战役",
+    "zh-Hant": "卡爾卡爾戰役"
+   },
+   "desc": {
+    "en": "Shalmaneser III of Assyria fights a western coalition on the Orontes; his annals list Ahab of Israel among the allied kings. The year is fixed by the Assyrian eponym canon.",
+    "zh-Hans": "亚述王撒缦以色三世在奥龙特斯河与西方联军交战，其年鉴列举以色列王亚哈在联军之中。此年由亚述名年官表定出。",
+    "zh-Hant": "亞述王撒縵以色三世在奧龍特斯河與西方聯軍交戰，其年鑑列舉以色列王亞哈在聯軍之中。此年由亞述名年官表定出。"
+   }
+  },
+  {
+   "id": "mesha_moab",
+   "year": -852,
+   "era": "bible",
+   "stream": "israel",
+   "approximate": true,
+   "basis": "scripture+thiele",
+   "refs": [
+    "2 Kings 3:4-5"
+   ],
+   "title": {
+    "en": "Mesha King of Moab Rebels",
+    "zh-Hans": "摩押王米沙背叛",
+    "zh-Hant": "摩押王米沙背叛"
+   },
+   "desc": {
+    "en": "Mesha, the sheep-breeding king of Moab, throws off tribute to Israel when Ahab dies; Jehoram and Jehoshaphat march against him. His own victory stele, set up later in his reign, tells the same war from Moab's side.",
+    "zh-Hans": "摩押王米沙以牧羊为业，趁亚哈死后背叛以色列不再进贡；约兰与约沙法出兵讨伐。他在位后期所立的石碑，从摩押一方记述同一场战争。",
+    "zh-Hant": "摩押王米沙以牧羊為業，趁亞哈死後背叛以色列不再進貢；約蘭與約沙法出兵討伐。他在位後期所立的石碑，從摩押一方記述同一場戰爭。"
+   }
+  },
+  {
+   "id": "hazael_aram",
+   "year": -842,
+   "era": "bible",
+   "stream": "israel",
+   "approximate": true,
+   "basis": "conventional",
+   "refs": [
+    "2 Kings 8:15"
+   ],
+   "title": {
+    "en": "Hazael Seizes the Throne of Aram",
+    "zh-Hans": "哈薛篡夺亚兰王位",
+    "zh-Hant": "哈薛篡奪亞蘭王位"
+   },
+   "desc": {
+    "en": "Hazael smothers Ben-Hadad and rules Damascus, becoming for decades the fiercest oppressor of Israel. Assyrian records bracket his seizure of the throne between 845 and 841 BC.",
+    "zh-Hans": "哈薛闷死便哈达，作亚兰王，数十年间成为压迫以色列最凶猛的仇敌。亚述记录把他夺位之事定在主前845至841年之间。",
+    "zh-Hant": "哈薛悶死便哈達，作亞蘭王，數十年間成為壓迫以色列最兇猛的仇敵。亞述記錄把他奪位之事定在主前845至841年之間。"
+   }
+  },
+  {
+   "id": "first_olympiad",
+   "year": -776,
+   "era": "world",
+   "stream": "greece",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "The First Olympiad",
+    "zh-Hans": "第一届奥林匹亚运动会",
+    "zh-Hant": "第一屆奧林匹亞運動會"
+   },
+   "desc": {
+    "en": "The traditional date, computed by later Greek chronographers from a victor list, from which they counted Olympiads. No contemporary record of games this early survives.",
+    "zh-Hans": "这是后来希腊史家根据优胜者名单推算的传统年代，也是他们计算奥林匹亚纪年的起点；并无同时代的记载证明当时已有竞技会。",
+    "zh-Hant": "這是後來希臘史家根據優勝者名單推算的傳統年代，也是他們計算奧林匹亞紀年的起點；並無同時代的記載證明當時已有競技會。"
+   }
+  },
+  {
+   "id": "rome_founded",
+   "year": -753,
+   "era": "world",
+   "stream": "rome",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Traditional Founding of Rome",
+    "zh-Hans": "罗马传统建城之年",
+    "zh-Hant": "羅馬傳統建城之年"
+   },
+   "desc": {
+    "en": "The date Roman tradition assigns to the founding of the city, from which Romans numbered their years.",
+    "zh-Hans": "罗马传统所定的建城之年，罗马人从此年起纪元。",
+    "zh-Hant": "羅馬傳統所定的建城之年，羅馬人從此年起紀元。"
+   }
+  },
+  {
+   "id": "tiglath_pileser_iii",
+   "year": -745,
+   "era": "bible",
+   "stream": "assyria",
+   "approximate": false,
+   "basis": "conventional",
+   "refs": [
+    "2 Kings 15:19-20",
+    "2 Kings 15:29",
+    "1 Chronicles 5:26"
+   ],
+   "title": {
+    "en": "Tiglath-Pileser III Takes Assyria's Throne",
+    "zh-Hans": "提革拉毗列色三世登亚述王位",
+    "zh-Hant": "提革拉毗列色三世登亞述王位"
+   },
+   "desc": {
+    "en": "Called Pul in scripture, he rebuilds Assyria into an empire, takes a thousand talents of silver from Menahem, and later deports Galilee and Gilead.",
+    "zh-Hans": "圣经又称他为普勒；他重整亚述成为帝国，向米拿现索取银子一千他连得，后来掳掠加利利和基列的居民。",
+    "zh-Hant": "聖經又稱他為普勒；他重整亞述成為帝國，向米拿現索取銀子一千他連得，後來擄掠加利利和基列的居民。"
+   }
+  },
+  {
+   "id": "damascus_falls",
+   "year": -732,
+   "era": "bible",
+   "stream": "assyria",
+   "approximate": false,
+   "basis": "conventional",
+   "refs": [
+    "2 Kings 16:7-9"
+   ],
+   "title": {
+    "en": "Assyria Destroys Damascus",
+    "zh-Hans": "亚述攻陷大马士革",
+    "zh-Hant": "亞述攻陷大馬士革"
+   },
+   "desc": {
+    "en": "At Ahaz's request Tiglath-Pileser takes Damascus, kills King Rezin and carries its people captive to Kir, ending the kingdom of Aram.",
+    "zh-Hans": "应亚哈斯之请，提革拉毗列色攻取大马色（大马士革），杀利汛王并将其民掳到吉珥，亚兰国就此灭亡。",
+    "zh-Hant": "應亞哈斯之請，提革拉毗列色攻取大馬色（大馬士革），殺利汛王並將其民擄到吉珥，亞蘭國就此滅亡。"
+   }
+  },
+  {
+   "id": "shalmaneser_v",
+   "year": -727,
+   "era": "bible",
+   "stream": "assyria",
+   "approximate": false,
+   "basis": "conventional",
+   "refs": [
+    "2 Kings 17:3-5",
+    "2 Kings 18:9-10"
+   ],
+   "title": {
+    "en": "Shalmaneser V Becomes King of Assyria",
+    "zh-Hans": "撒缦以色五世作亚述王",
+    "zh-Hant": "撒縵以色五世作亞述王"
+   },
+   "desc": {
+    "en": "Shalmaneser V succeeds Tiglath-Pileser III and makes Hoshea his vassal. He later shuts Hoshea up in prison and besieges Samaria for three years, a siege 2 Kings dates from Hoshea's seventh year.",
+    "zh-Hans": "撒缦以色五世继提革拉毗列色三世作王，使何细亚臣服；后将何细亚下在监里，围困撒马利亚三年——列王纪把这场围城定在何细亚第七年开始。",
+    "zh-Hant": "撒縵以色五世繼提革拉毗列色三世作王，使何細亞臣服；後將何細亞下在監裡，圍困撒瑪利亞三年——列王紀把這場圍城定在何細亞第七年開始。"
+   }
+  },
+  {
+   "id": "sargon_ii",
+   "year": -722,
+   "era": "bible",
+   "stream": "assyria",
+   "approximate": false,
+   "basis": "conventional",
+   "refs": [
+    "Isaiah 20:1"
+   ],
+   "title": {
+    "en": "Sargon II Rules Assyria",
+    "zh-Hans": "撒珥根二世作亚述王",
+    "zh-Hant": "撒珥根二世作亞述王"
+   },
+   "desc": {
+    "en": "Sargon II takes the Assyrian throne. Isaiah names him once — the only mention of Sargon in scripture — dating a word of the LORD to the year his commander captured Ashdod.",
+    "zh-Hans": "撒珥根二世登亚述王位。以赛亚提过他一次，是圣经中唯一一次提到撒珥根，以他的元帅攻取亚实突之年来标记耶和华的话临到。",
+    "zh-Hant": "撒珥根二世登亞述王位。以賽亞提過他一次，是聖經中唯一一次提到撒珥根，以他的元帥攻取亞實突之年來標記耶和華的話臨到。"
+   }
+  },
+  {
+   "id": "sennacherib_reign",
+   "year": -705,
+   "era": "bible",
+   "stream": "assyria",
+   "approximate": false,
+   "basis": "conventional",
+   "refs": [
+    "2 Kings 19:36"
+   ],
+   "title": {
+    "en": "Sennacherib Becomes King of Assyria",
+    "zh-Hans": "西拿基立作亚述王",
+    "zh-Hant": "西拿基立作亞述王"
+   },
+   "desc": {
+    "en": "Sennacherib succeeds Sargon II and makes Nineveh his capital, rebuilding it on a vast scale. Scripture does not record his accession, but it does place him at Nineveh after his withdrawal from Judah.",
+    "zh-Hans": "西拿基立继撒珥根二世作王，定都尼尼微并大规模重建该城。圣经没有记载他登基之事，却记他从犹大撤军后住在尼尼微。",
+    "zh-Hant": "西拿基立繼撒珥根二世作王，定都尼尼微並大規模重建該城。聖經沒有記載他登基之事，卻記他從猶大撤軍後住在尼尼微。"
+   }
+  },
+  {
+   "id": "sennacherib_invades_judah",
+   "year": -701,
+   "era": "bible",
+   "stream": "assyria",
+   "approximate": false,
+   "basis": "conventional",
+   "refs": [
+    "2 Kings 18:13",
+    "2 Kings 19:35-36"
+   ],
+   "title": {
+    "en": "Sennacherib Invades Judah",
+    "zh-Hans": "西拿基立入侵犹大",
+    "zh-Hant": "西拿基立入侵猶大"
+   },
+   "desc": {
+    "en": "Sennacherib takes the fortified cities of Judah and threatens Jerusalem, but withdraws after the angel of the LORD strikes his camp.",
+    "zh-Hans": "西拿基立攻取犹大的坚固城，威胁耶路撒冷，却因耶和华的使者击杀其营而撤退。",
+    "zh-Hant": "西拿基立攻取猶大的堅固城，威脅耶路撒冷，卻因耶和華的使者擊殺其營而撤退。"
+   }
+  },
+  {
+   "id": "esarhaddon",
+   "year": -681,
+   "era": "bible",
+   "stream": "assyria",
+   "approximate": false,
+   "basis": "conventional",
+   "refs": [
+    "2 Kings 19:37"
+   ],
+   "title": {
+    "en": "Esarhaddon Succeeds Sennacherib",
+    "zh-Hans": "以撒哈顿继西拿基立为王",
+    "zh-Hant": "以撒哈頓繼西拿基立為王"
+   },
+   "desc": {
+    "en": "Scripture records that Sennacherib's sons killed him and that Esarhaddon reigned in his stead; his own annals record his later conquest of Egypt.",
+    "zh-Hans": "圣经记载西拿基立被其子所杀，以撒哈顿接续他作王；他自己的年鉴则记述后来攻取埃及之事。",
+    "zh-Hant": "聖經記載西拿基立被其子所殺，以撒哈頓接續他作王；他自己的年鑑則記述後來攻取埃及之事。"
+   }
+  },
+  {
+   "id": "ashurbanipal",
+   "year": -669,
+   "era": "bible",
+   "stream": "assyria",
+   "approximate": true,
+   "basis": "conventional",
+   "refs": [
+    "Ezra 4:10"
+   ],
+   "title": {
+    "en": "Ashurbanipal Rules Assyria",
+    "zh-Hans": "亚述巴尼拔作亚述王",
+    "zh-Hant": "亞述巴尼拔作亞述王"
+   },
+   "desc": {
+    "en": "Assyria reaches its height under Ashurbanipal, usually identified with the Asnapper who resettled peoples in Samaria; his Nineveh library preserved Mesopotamian literature. His accession is given as 669 or 668 BC depending on how the accession year is counted.",
+    "zh-Hans": "亚述在亚述巴尼拔治下达到极盛；一般认为他就是把外族迁到撒马利亚的亚斯那巴，其尼尼微图书馆保存了大量两河文献。其登基之年按纪年方式不同，或作主前669年，或作668年。",
+    "zh-Hant": "亞述在亞述巴尼拔治下達到極盛；一般認為他就是把外族遷到撒瑪利亞的亞斯那巴，其尼尼微圖書館保存了大量兩河文獻。其登基之年按紀年方式不同，或作主前669年，或作668年。"
+   }
+  },
+  {
+   "id": "nineveh_falls",
+   "year": -612,
+   "era": "world",
+   "stream": "assyria",
+   "approximate": false,
+   "basis": "conventional",
+   "refs": [
+    "Nahum 3:7"
+   ],
+   "title": {
+    "en": "Fall of Nineveh",
+    "zh-Hans": "尼尼微陷落",
+    "zh-Hant": "尼尼微陷落"
+   },
+   "desc": {
+    "en": "Babylonians and Medes destroy the Assyrian capital, as the prophet Nahum had foretold.",
+    "zh-Hans": "巴比伦人与玛代人攻毁亚述京城，正如先知那鸿所预言。",
+    "zh-Hant": "巴比倫人與瑪代人攻毀亞述京城，正如先知那鴻所預言。"
+   }
+  },
+  {
+   "id": "neco_kills_josiah",
+   "year": -609,
+   "era": "bible",
+   "stream": "egypt",
+   "approximate": false,
+   "basis": "scripture+thiele",
+   "refs": [
+    "2 Kings 23:29",
+    "2 Chronicles 35:20-24"
+   ],
+   "title": {
+    "en": "Pharaoh Neco Kills Josiah",
+    "zh-Hans": "法老尼哥杀约西亚",
+    "zh-Hant": "法老尼哥殺約西亞"
+   },
+   "desc": {
+    "en": "Josiah goes out against Pharaoh Neco II as Egypt marches to the Euphrates, and is mortally wounded at Megiddo.",
+    "zh-Hans": "埃及军北上伯拉河（幼发拉底河）时，约西亚出兵迎战法老尼哥二世，在米吉多受了致命的伤。",
+    "zh-Hant": "埃及軍北上伯拉河（幼發拉底河）時，約西亞出兵迎戰法老尼哥二世，在米吉多受了致命的傷。"
+   }
+  },
+  {
+   "id": "battle_carchemish",
+   "year": -605,
+   "era": "bible",
+   "stream": "babylon",
+   "approximate": false,
+   "basis": "conventional",
+   "refs": [
+    "Jeremiah 46:2"
+   ],
+   "title": {
+    "en": "Battle of Carchemish",
+    "zh-Hans": "迦基米施战役",
+    "zh-Hant": "迦基米施戰役"
+   },
+   "desc": {
+    "en": "Nebuchadnezzar shatters Pharaoh Neco's army at Carchemish on the Euphrates, and Babylon inherits the empire of the west.",
+    "zh-Hans": "尼布甲尼撒在伯拉河边的迦基米施击溃法老尼哥的军队，巴比伦从此承接西方霸权。",
+    "zh-Hant": "尼布甲尼撒在伯拉河邊的迦基米施擊潰法老尼哥的軍隊，巴比倫從此承接西方霸權。"
+   }
+  },
+  {
+   "id": "nebuchadnezzar_ii",
+   "year": -605,
+   "era": "bible",
+   "stream": "babylon",
+   "approximate": false,
+   "basis": "conventional",
+   "refs": [
+    "Daniel 1:1-4"
+   ],
+   "title": {
+    "en": "Nebuchadnezzar II Begins His Reign",
+    "zh-Hans": "尼布甲尼撒二世登基",
+    "zh-Hant": "尼布甲尼撒二世登基"
+   },
+   "desc": {
+    "en": "Nebuchadnezzar II takes Babylon's throne in the year of Carchemish; Daniel records that he came against Jerusalem in Jehoiakim's reign and had Daniel and other noble youths carried to Babylon.",
+    "zh-Hans": "尼布甲尼撒二世在迦基米施之役那年登巴比伦王位；但以理书记载他在约雅敬年间上来攻打耶路撒冷，把但以理等贵胄少年掳到巴比伦。",
+    "zh-Hant": "尼布甲尼撒二世在迦基米施之役那年登巴比倫王位；但以理書記載他在約雅敬年間上來攻打耶路撒冷，把但以理等貴冑少年擄到巴比倫。"
+   }
+  },
+  {
+   "id": "exile_of_jehoiachin",
+   "year": -597,
+   "era": "bible",
+   "stream": "judah",
+   "approximate": false,
+   "basis": "conventional",
+   "refs": [
+    "2 Kings 24:14-16",
+    "Ezekiel 1:1-3"
+   ],
+   "title": {
+    "en": "Jehoiachin Deported to Babylon",
+    "zh-Hans": "约雅斤被掳到巴比伦",
+    "zh-Hant": "約雅斤被擄到巴比倫"
+   },
+   "desc": {
+    "en": "Jerusalem surrenders after a short siege; King Jehoiachin, the craftsmen and the smiths are carried to Babylon. Ezekiel, a priest among those captives, dates his visions from this deportation.",
+    "zh-Hans": "耶路撒冷经短暂围困后投降，约雅斤王和一切工匠、铁匠都被掳到巴比伦。被掳之民中的祭司以西结，即以此次被掳之年计算他的异象。",
+    "zh-Hant": "耶路撒冷經短暫圍困後投降，約雅斤王和一切工匠、鐵匠都被擄到巴比倫。被擄之民中的祭司以西結，即以此次被擄之年計算他的異象。"
+   }
+  },
+  {
+   "id": "pharaoh_hophra",
+   "year": -589,
+   "era": "bible",
+   "stream": "egypt",
+   "approximate": false,
+   "basis": "conventional",
+   "refs": [
+    "Jeremiah 37:5-11",
+    "Jeremiah 44:30"
+   ],
+   "title": {
+    "en": "Pharaoh Hophra Rules Egypt",
+    "zh-Hans": "法老合弗拉作埃及王",
+    "zh-Hant": "法老合弗拉作埃及王"
+   },
+   "desc": {
+    "en": "Hophra's army marches out of Egypt and the Chaldeans briefly lift their siege of Jerusalem; Jeremiah declares that Hophra too will be given into the hand of his enemies.",
+    "zh-Hans": "合弗拉的军队从埃及出来，迦勒底人一度撤离耶路撒冷；耶利米却宣告合弗拉自己也必被交在仇敌手中。",
+    "zh-Hant": "合弗拉的軍隊從埃及出來，迦勒底人一度撤離耶路撒冷；耶利米卻宣告合弗拉自己也必被交在仇敵手中。"
+   }
+  },
+  {
+   "id": "evil_merodach",
+   "year": -562,
+   "era": "bible",
+   "stream": "babylon",
+   "approximate": false,
+   "basis": "conventional",
+   "refs": [
+    "2 Kings 25:27-30"
+   ],
+   "title": {
+    "en": "Evil-Merodach Frees Jehoiachin",
+    "zh-Hans": "以未米罗达释放约雅斤",
+    "zh-Hant": "以未米羅達釋放約雅斤"
+   },
+   "desc": {
+    "en": "In the year he began to reign, Evil-Merodach lifts Jehoiachin out of prison, speaks kindly to him, and gives him bread continually at the king's table.",
+    "zh-Hans": "以未米罗达登基那年，把约雅斤从狱中提出来，向他说恩言，使他终身在王面前吃饭。",
+    "zh-Hant": "以未米羅達登基那年，把約雅斤從獄中提出來，向他說恩言，使他終身在王面前吃飯。"
+   }
+  },
+  {
+   "id": "cyrus_the_great",
+   "year": -559,
+   "era": "bible",
+   "stream": "persia",
+   "approximate": false,
+   "basis": "conventional",
+   "refs": [
+    "Isaiah 44:28"
+   ],
+   "title": {
+    "en": "Cyrus the Great Rises in Persia",
+    "zh-Hans": "波斯王古列兴起",
+    "zh-Hant": "波斯王古列興起"
+   },
+   "desc": {
+    "en": "Cyrus becomes king in Anshan and goes on to absorb Media, Lydia and Babylon; Isaiah had named him as the LORD's shepherd.",
+    "zh-Hans": "古列（居鲁士）在安善作王，先后吞并玛代、吕底亚和巴比伦；以赛亚曾预先称他为耶和华的牧人。",
+    "zh-Hant": "古列（居魯士）在安善作王，先後吞併瑪代、呂底亞和巴比倫；以賽亞曾預先稱他為耶和華的牧人。"
+   }
+  },
+  {
+   "id": "confucius_born",
+   "year": -551,
+   "era": "world",
+   "stream": "china",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Birth of Confucius",
+    "zh-Hans": "孔子诞生",
+    "zh-Hant": "孔子誕生"
+   },
+   "desc": {
+    "en": "Confucius is born in the state of Lu during China's Spring and Autumn period, while Judah is in Babylonian exile. The traditional year is 551 BC, though some early sources give 552.",
+    "zh-Hans": "孔子生于春秋时代的鲁国，其时犹大人正被掳在巴比伦。传统作主前551年，早期史料亦有作552年的。",
+    "zh-Hant": "孔子生於春秋時代的魯國，其時猶大人正被擄在巴比倫。傳統作主前551年，早期史料亦有作552年的。"
+   }
+  },
+  {
+   "id": "babylon_falls",
+   "year": -539,
+   "era": "bible",
+   "stream": "babylon",
+   "approximate": false,
+   "basis": "conventional",
+   "refs": [
+    "Daniel 5:30-31"
+   ],
+   "title": {
+    "en": "Babylon Falls to Persia",
+    "zh-Hans": "巴比伦落入波斯手中",
+    "zh-Hant": "巴比倫落入波斯手中"
+   },
+   "desc": {
+    "en": "Daniel records that Belshazzar was slain on the night of his feast and that Darius the Mede received the kingdom; Babylonian records date the entry of Cyrus's forces into the city to October of that year. The Babylonian empire ends.",
+    "zh-Hans": "但以理书记载伯沙撒设筵那夜被杀，玛代人大利乌取了国；巴比伦方面的记录则把古列军队入城定在该年十月。巴比伦帝国就此结束。",
+    "zh-Hant": "但以理書記載伯沙撒設筵那夜被殺，瑪代人大利烏取了國；巴比倫方面的記錄則把古列軍隊入城定在該年十月。巴比倫帝國就此結束。"
+   }
+  },
+  {
+   "id": "darius_i",
+   "year": -522,
+   "era": "bible",
+   "stream": "persia",
+   "approximate": false,
+   "basis": "conventional",
+   "refs": [
+    "Ezra 6:1-12"
+   ],
+   "title": {
+    "en": "Darius I Rules Persia",
+    "zh-Hans": "大流士一世作波斯王",
+    "zh-Hant": "大流士一世作波斯王"
+   },
+   "desc": {
+    "en": "Darius wins the throne after a year of revolts and reorganises the empire into satrapies; it is his confirmation of Cyrus's decree, found in the royal archives, that Ezra records.",
+    "zh-Hans": "大流士在一年的内乱之后夺得王位，将帝国划分为总督省份；以斯拉记所载的，正是他在王家档案中查得古列谕旨后加以确认之事。",
+    "zh-Hant": "大流士在一年的內亂之後奪得王位，將帝國劃分為總督省份；以斯拉記所載的，正是他在王家檔案中查得古列諭旨後加以確認之事。"
+   }
+  },
+  {
+   "id": "battle_marathon",
+   "year": -490,
+   "era": "world",
+   "stream": "greece",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Battle of Marathon",
+    "zh-Hans": "马拉松战役",
+    "zh-Hant": "馬拉松戰役"
+   },
+   "desc": {
+    "en": "Athenian hoplites defeat the invading army of Darius I on the plain of Marathon.",
+    "zh-Hans": "雅典重装步兵在马拉松平原击败大流士一世派来的远征军。",
+    "zh-Hant": "雅典重裝步兵在馬拉松平原擊敗大流士一世派來的遠征軍。"
+   }
+  },
+  {
+   "id": "xerxes_i",
+   "year": -486,
+   "era": "bible",
+   "stream": "persia",
+   "approximate": false,
+   "basis": "conventional",
+   "refs": [
+    "Esther 1:1"
+   ],
+   "title": {
+    "en": "Xerxes I, the Ahasuerus of Esther",
+    "zh-Hans": "薛西斯一世即以斯帖记的亚哈随鲁",
+    "zh-Hant": "薛西斯一世即以斯帖記的亞哈隨魯"
+   },
+   "desc": {
+    "en": "Xerxes I succeeds Darius and rules from India to Cush over a hundred and twenty-seven provinces; the book of Esther calls him Ahasuerus.",
+    "zh-Hans": "薛西斯一世继大流士为王，从印度直到古实，统管一百二十七省；以斯帖记称他为亚哈随鲁。",
+    "zh-Hant": "薛西斯一世繼大流士為王，從印度直到古實，統管一百二十七省；以斯帖記稱他為亞哈隨魯。"
+   }
+  },
+  {
+   "id": "battle_salamis",
+   "year": -480,
+   "era": "world",
+   "stream": "greece",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Battle of Salamis",
+    "zh-Hans": "萨拉米斯海战",
+    "zh-Hant": "薩拉米斯海戰"
+   },
+   "desc": {
+    "en": "The Greek fleet destroys Xerxes' navy in the straits of Salamis, ending his invasion of Greece.",
+    "zh-Hans": "希腊舰队在萨拉米斯海峡歼灭薛西斯的舰队，终结了他对希腊的远征。",
+    "zh-Hant": "希臘艦隊在薩拉米斯海峽殲滅薛西斯的艦隊，終結了他對希臘的遠征。"
+   }
+  },
+  {
+   "id": "artaxerxes_i",
+   "year": -465,
+   "era": "bible",
+   "stream": "persia",
+   "approximate": false,
+   "basis": "conventional",
+   "refs": [
+    "Ezra 7:1-8",
+    "Nehemiah 2:1-8"
+   ],
+   "title": {
+    "en": "Artaxerxes I Rules Persia",
+    "zh-Hans": "亚达薛西一世作波斯王",
+    "zh-Hant": "亞達薛西一世作波斯王"
+   },
+   "desc": {
+    "en": "Artaxerxes I succeeds Xerxes and rules Persia for forty years; both Ezra's commission and Nehemiah's leave to rebuild the wall are dated by his regnal years.",
+    "zh-Hans": "亚达薛西一世继薛西斯作王，统治波斯四十年；以斯拉受差遣和尼希米蒙准重建城墙，都是按他在位的年份纪年。",
+    "zh-Hant": "亞達薛西一世繼薛西斯作王，統治波斯四十年；以斯拉受差遣和尼希米蒙准重建城牆，都是按他在位的年份紀年。"
+   }
+  },
+  {
+   "id": "battle_gaugamela",
+   "year": -331,
+   "era": "world",
+   "stream": "greece",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Battle of Gaugamela",
+    "zh-Hans": "高加米拉战役",
+    "zh-Hant": "高加米拉戰役"
+   },
+   "desc": {
+    "en": "Two years after Issus, Alexander destroys the last Persian field army under Darius III, opening Babylon, Susa and Persepolis to Macedonian rule.",
+    "zh-Hans": "伊苏斯之役两年后，亚历山大歼灭大流士三世最后一支波斯野战军，巴比伦、书珊和波斯波利斯尽归马其顿。",
+    "zh-Hant": "伊蘇斯之役兩年後，亞歷山大殲滅大流士三世最後一支波斯野戰軍，巴比倫、書珊和波斯波利斯盡歸馬其頓。"
+   }
+  },
+  {
+   "id": "alexander_dies",
+   "year": -323,
+   "era": "world",
+   "stream": "greece",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Death of Alexander the Great",
+    "zh-Hans": "亚历山大大帝去世",
+    "zh-Hant": "亞歷山大大帝去世"
+   },
+   "desc": {
+    "en": "Alexander dies at Babylon aged thirty-two, and his generals begin dividing the empire among themselves.",
+    "zh-Hans": "亚历山大三十二岁在巴比伦去世，众将领随即瓜分帝国。",
+    "zh-Hant": "亞歷山大三十二歲在巴比倫去世，眾將領隨即瓜分帝國。"
+   }
+  },
+  {
+   "id": "seleucid_era",
+   "year": -312,
+   "era": "world",
+   "stream": "greece",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Seleucus I Founds the Seleucid Era",
+    "zh-Hans": "塞琉古一世开创塞琉古纪元",
+    "zh-Hant": "塞琉古一世開創塞琉古紀元"
+   },
+   "desc": {
+    "en": "Seleucus I regains Babylon and starts the era by which the Near East counted years for centuries.",
+    "zh-Hans": "塞琉古一世重夺巴比伦，开创此后数百年近东通用的纪年。",
+    "zh-Hant": "塞琉古一世重奪巴比倫，開創此後數百年近東通用的紀年。"
+   }
+  },
+  {
+   "id": "ptolemy_i_egypt",
+   "year": -305,
+   "era": "world",
+   "stream": "egypt",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Ptolemy I Takes the Egyptian Crown",
+    "zh-Hans": "托勒密一世称埃及王",
+    "zh-Hant": "托勒密一世稱埃及王"
+   },
+   "desc": {
+    "en": "Ptolemy I declares himself king of Egypt, founding the dynasty that ruled Judea and its large Jewish community in Alexandria.",
+    "zh-Hans": "托勒密一世自立为埃及王，开创统治犹太地、并庇护亚历山大城庞大犹太侨民的王朝。",
+    "zh-Hant": "托勒密一世自立為埃及王，開創統治猶太地、並庇護亞歷山大城龐大猶太僑民的王朝。"
+   }
+  },
+  {
+   "id": "qin_unifies_china",
+   "year": -221,
+   "era": "world",
+   "stream": "china",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Qin Unifies China",
+    "zh-Hans": "秦始皇统一中国",
+    "zh-Hant": "秦始皇統一中國"
+   },
+   "desc": {
+    "en": "The state of Qin completes its conquest of the warring states, and its king takes the title First Emperor.",
+    "zh-Hans": "秦国灭六国完成统一，秦王自称始皇帝。",
+    "zh-Hant": "秦國滅六國完成統一，秦王自稱始皇帝。"
+   }
+  },
+  {
+   "id": "battle_panium",
+   "year": -200,
+   "era": "world",
+   "stream": "greece",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Battle of Panium",
+    "zh-Hans": "帕尼翁战役",
+    "zh-Hant": "帕尼翁戰役"
+   },
+   "desc": {
+    "en": "Antiochus III defeats Ptolemaic Egypt at Panium near the sources of the Jordan. Most reconstructions date the battle to 200 BC and others to 198; Seleucid control of Judea was secured only when the campaign ended in 198.",
+    "zh-Hans": "安提阿古三世在约旦河源附近的帕尼翁击败托勒密埃及。多数年表把此役定于主前200年，亦有作198年的；塞琉古对犹太地的控制要到198年战事结束才确立。",
+    "zh-Hant": "安提阿古三世在約旦河源附近的帕尼翁擊敗托勒密埃及。多數年表把此役定於主前200年，亦有作198年的；塞琉古對猶太地的控制要到198年戰事結束才確立。"
+   }
+  },
+  {
+   "id": "antiochus_iv",
+   "year": -175,
+   "era": "world",
+   "stream": "greece",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Antiochus IV Epiphanes Takes Power",
+    "zh-Hans": "安提阿古四世掌权",
+    "zh-Hant": "安提阿古四世掌權"
+   },
+   "desc": {
+    "en": "Antiochus IV seizes the Seleucid throne and later enforces Greek religion in Jerusalem, plundering and defiling the temple.",
+    "zh-Hans": "安提阿古四世夺得塞琉古王位，后来在耶路撒冷强推希腊宗教，劫掠并玷污圣殿。",
+    "zh-Hant": "安提阿古四世奪得塞琉古王位，後來在耶路撒冷強推希臘宗教，劫掠並玷污聖殿。"
+   }
+  },
+  {
+   "id": "temple_rededicated",
+   "year": -164,
+   "era": "bible",
+   "stream": "judah",
+   "approximate": true,
+   "basis": "conventional",
+   "refs": [
+    "John 10:22-23"
+   ],
+   "title": {
+    "en": "Temple Rededicated in Jerusalem",
+    "zh-Hans": "耶路撒冷圣殿重献",
+    "zh-Hant": "耶路撒冷聖殿重獻"
+   },
+   "desc": {
+    "en": "Judas Maccabeus cleanses and rededicates the temple, an event usually dated to 164 BC. John records Jesus in the temple at the yearly Feast of Dedication that remembers it.",
+    "zh-Hans": "犹大马加比洁净圣殿并重新奉献，一般定于主前164年。约翰福音记主耶稣在纪念此事的修殿节上，在殿里行走。",
+    "zh-Hant": "猶大馬加比潔淨聖殿並重新奉獻，一般定於主前164年。約翰福音記主耶穌在紀念此事的修殿節上，在殿裡行走。"
+   }
+  },
+  {
+   "id": "qumran_community",
+   "year": -100,
+   "era": "world",
+   "stream": "scripture",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Qumran Community Settles",
+    "zh-Hans": "昆兰社群定居",
+    "zh-Hant": "昆蘭社群定居"
+   },
+   "desc": {
+    "en": "A separatist Jewish community settles by the Dead Sea at Qumran at some point in the late second or first century BC; its library, found in 1947, holds the oldest known copies of much of the Hebrew Bible.",
+    "zh-Hans": "约在主前二世纪末至一世纪之间，一群分离主义的犹太人在死海旁的昆兰定居；其藏书于1947年被发现，其中有现存最古的多卷希伯来圣经抄本。",
+    "zh-Hant": "約在主前二世紀末至一世紀之間，一群分離主義的猶太人在死海旁的昆蘭定居；其藏書於1947年被發現，其中有現存最古的多卷希伯來聖經抄本。"
+   }
+  },
+  {
+   "id": "caesar_assassinated",
+   "year": -44,
+   "era": "world",
+   "stream": "rome",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Julius Caesar Assassinated",
+    "zh-Hans": "凯撒遇刺",
+    "zh-Hant": "凱撒遇刺"
+   },
+   "desc": {
+    "en": "Caesar is killed at a meeting of the senate in Rome, beginning the civil wars that ended the Republic.",
+    "zh-Hans": "凯撒在罗马的元老院会议上被刺，引发终结共和的内战。",
+    "zh-Hant": "凱撒在羅馬的元老院會議上被刺，引發終結共和的內戰。"
+   }
+  },
+  {
+   "id": "herod_takes_jerusalem",
+   "year": -37,
+   "era": "bible",
+   "stream": "judah",
+   "approximate": false,
+   "basis": "conventional",
+   "refs": [
+    "Matthew 2:1"
+   ],
+   "title": {
+    "en": "Herod the Great Takes Jerusalem",
+    "zh-Hans": "大希律夺取耶路撒冷",
+    "zh-Hant": "大希律奪取耶路撒冷"
+   },
+   "desc": {
+    "en": "Herod, named king by the Roman senate three years earlier, captures Jerusalem and rules Judea until his death; it is to his reign that Matthew dates the birth of Jesus.",
+    "zh-Hans": "三年前由罗马元老院立为王的希律攻取耶路撒冷，统治犹太地直到去世；马太福音正是以他在位之时记载主耶稣降生。",
+    "zh-Hant": "三年前由羅馬元老院立為王的希律攻取耶路撒冷，統治猶太地直到去世；馬太福音正是以他在位之時記載主耶穌降生。"
+   }
+  },
+  {
+   "id": "battle_actium",
+   "year": -31,
+   "era": "world",
+   "stream": "rome",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Battle of Actium",
+    "zh-Hans": "亚克兴海战",
+    "zh-Hant": "亞克興海戰"
+   },
+   "desc": {
+    "en": "Octavian's fleet defeats Antony and Cleopatra off western Greece, leaving him master of the Roman world.",
+    "zh-Hans": "屋大维的舰队在希腊西岸外击败安东尼与克娄巴特拉，从此独掌罗马世界。",
+    "zh-Hant": "屋大維的艦隊在希臘西岸外擊敗安東尼與克婁巴特拉，從此獨掌羅馬世界。"
+   }
+  },
+  {
+   "id": "augustus_emperor",
+   "year": -27,
+   "era": "bible",
+   "stream": "rome",
+   "approximate": false,
+   "basis": "conventional",
+   "refs": [
+    "Luke 2:1-3"
+   ],
+   "title": {
+    "en": "Octavian Becomes Caesar Augustus",
+    "zh-Hans": "屋大维成为奥古斯都",
+    "zh-Hant": "屋大維成為奧古斯都"
+   },
+   "desc": {
+    "en": "The senate gives Octavian the name Augustus; Luke dates the census that brought Joseph and Mary to Bethlehem to a decree of his.",
+    "zh-Hans": "元老院尊屋大维为奥古斯都，即圣经的「该撒亚古士督」；路加记载约瑟和马利亚上伯利恒报名上册，是出于他的谕旨。",
+    "zh-Hant": "元老院尊屋大維為奧古斯都，即聖經的「該撒亞古士督」；路加記載約瑟和馬利亞上伯利恆報名上冊，是出於他的諭旨。"
+   }
+  },
+  {
+   "id": "herod_temple_rebuild",
+   "year": -20,
+   "era": "bible",
+   "stream": "judah",
+   "approximate": true,
+   "basis": "conventional",
+   "refs": [
+    "John 2:20"
+   ],
+   "title": {
+    "en": "Herod Begins Rebuilding the Temple",
+    "zh-Hans": "希律开始重建圣殿",
+    "zh-Hant": "希律開始重建聖殿"
+   },
+   "desc": {
+    "en": "Herod starts the vast reconstruction of the second temple, a work still unfinished when Jesus taught in its courts.",
+    "zh-Hans": "希律动工大规模重建第二圣殿，直到主耶稣在殿院施教时仍未完工。",
+    "zh-Hant": "希律動工大規模重建第二聖殿，直到主耶穌在殿院施教時仍未完工。"
+   }
+  },
+  {
+   "id": "herod_dies",
+   "year": -4,
+   "era": "bible",
+   "stream": "judah",
+   "approximate": true,
+   "basis": "conventional",
+   "refs": [
+    "Matthew 2:19-22"
+   ],
+   "title": {
+    "en": "Death of Herod the Great",
+    "zh-Hans": "大希律去世",
+    "zh-Hant": "大希律去世"
+   },
+   "desc": {
+    "en": "Herod dies and Rome divides his realm among his sons Archelaus, Antipas and Philip. His death is usually dated to 4 BC, though a minority of scholars argue for 1 BC.",
+    "zh-Hans": "希律死后，罗马将其国土分给他的儿子亚基老、安提帕和腓力。他去世之年一般定于主前4年，也有少数学者主张主前1年。",
+    "zh-Hant": "希律死後，羅馬將其國土分給他的兒子亞基老、安提帕和腓力。他去世之年一般定於主前4年，也有少數學者主張主前1年。"
+   }
+  },
+  {
+   "id": "judea_roman_province",
+   "year": 6,
+   "era": "bible",
+   "stream": "judah",
+   "approximate": false,
+   "basis": "conventional",
+   "refs": [
+    "Acts 5:37"
+   ],
+   "title": {
+    "en": "Judea Becomes a Roman Province",
+    "zh-Hans": "犹太地成为罗马行省",
+    "zh-Hant": "猶太地成為羅馬行省"
+   },
+   "desc": {
+    "en": "Archelaus is deposed, Judea comes under Roman prefects, and a census under Quirinius provokes the revolt of Judas the Galilean. Luke 2:2 also links the nativity census to Quirinius, while Josephus places his census here in AD 6; how the two relate is disputed.",
+    "zh-Hans": "亚基老被废，犹太地改由罗马巡抚管辖，居里扭办理的报名上册引发加利利人犹大的叛乱。路加福音二章2节也把主降生时的报名上册系于居里扭，而约瑟夫把居里扭的户口普查定在主后6年；二者的关系至今仍有争论。",
+    "zh-Hant": "亞基老被廢，猶太地改由羅馬巡撫管轄，居里扭辦理的報名上冊引發加利利人猶大的叛亂。路加福音二章2節也把主降生時的報名上冊繫於居里扭，而約瑟夫把居里扭的戶口普查定在主後6年；二者的關係至今仍有爭論。"
+   }
+  },
+  {
+   "id": "tiberius_emperor",
+   "year": 14,
+   "era": "bible",
+   "stream": "rome",
+   "approximate": false,
+   "basis": "conventional",
+   "refs": [
+    "Luke 3:1"
+   ],
+   "title": {
+    "en": "Tiberius Becomes Emperor",
+    "zh-Hans": "提比略作罗马皇帝",
+    "zh-Hant": "提比略作羅馬皇帝"
+   },
+   "desc": {
+    "en": "Tiberius succeeds Augustus; Luke dates John the Baptist's ministry to the fifteenth year of his reign.",
+    "zh-Hans": "提比略（圣经作「该撒提庇留」）继奥古斯都为帝；路加以他在位第十五年记述施洗约翰出来传道。",
+    "zh-Hant": "提比略（聖經作「該撒提庇留」）繼奧古斯都為帝；路加以他在位第十五年記述施洗約翰出來傳道。"
+   }
+  },
+  {
+   "id": "pilate_prefect",
+   "year": 26,
+   "era": "bible",
+   "stream": "rome",
+   "approximate": true,
+   "basis": "conventional",
+   "refs": [
+    "Luke 3:1",
+    "Matthew 27:2"
+   ],
+   "title": {
+    "en": "Pontius Pilate Governs Judea",
+    "zh-Hans": "本丢彼拉多任犹太巡抚",
+    "zh-Hant": "本丟彼拉多任猶太巡撫"
+   },
+   "desc": {
+    "en": "Pilate is appointed prefect of Judea, an office he held for about ten years; an inscription from Caesarea names him. His arrival is usually dated to AD 26, though some readings of Josephus place it earlier.",
+    "zh-Hans": "彼拉多受任为犹太巡抚，在任约十年；该撒利亚出土的碑铭刻有他的名字。他到任之年一般定于主后26年，也有学者据约瑟夫的记载定得更早。",
+    "zh-Hant": "彼拉多受任為猶太巡撫，在任約十年；該撒利亞出土的碑銘刻有他的名字。他到任之年一般定於主後26年，也有學者據約瑟夫的記載定得更早。"
+   }
+  },
+  {
+   "id": "claudius_emperor",
+   "year": 41,
+   "era": "bible",
+   "stream": "rome",
+   "approximate": false,
+   "basis": "conventional",
+   "refs": [
+    "Acts 11:28-30"
+   ],
+   "title": {
+    "en": "Claudius Becomes Emperor",
+    "zh-Hans": "革老丢作罗马皇帝",
+    "zh-Hant": "革老丟作羅馬皇帝"
+   },
+   "desc": {
+    "en": "Claudius rules Rome; Agabus foretold the great dearth that came in his reign, and the Antioch church sent relief to Judea.",
+    "zh-Hans": "革老丢作罗马皇帝；亚迦布预言他在位时的大饥荒，安提阿教会因此捐款赈济犹太。",
+    "zh-Hant": "革老丟作羅馬皇帝；亞迦布預言他在位時的大饑荒，安提阿教會因此捐款賑濟猶太。"
+   }
+  },
+  {
+   "id": "agrippa_i_dies",
+   "year": 44,
+   "era": "bible",
+   "stream": "judah",
+   "approximate": false,
+   "basis": "conventional",
+   "refs": [
+    "Acts 12:1-4",
+    "Acts 12:20-23"
+   ],
+   "title": {
+    "en": "Herod Agrippa I Struck Down",
+    "zh-Hans": "希律亚基帕一世被击杀",
+    "zh-Hant": "希律亞基帕一世被擊殺"
+   },
+   "desc": {
+    "en": "The Herod of Acts 12, known from Josephus as Agrippa I, had killed James and imprisoned Peter; he is struck down at Caesarea for accepting the honour due to God.",
+    "zh-Hans": "使徒行传十二章的「希律王」，约瑟夫称之为亚基帕一世；他杀了雅各、囚禁彼得，后在该撒利亚因窃取归神的荣耀而被击杀。",
+    "zh-Hant": "使徒行傳十二章的「希律王」，約瑟夫稱之為亞基帕一世；他殺了雅各、囚禁彼得，後在該撒利亞因竊取歸神的榮耀而被擊殺。"
+   }
+  },
+  {
+   "id": "claudius_expels_jews",
+   "year": 49,
+   "era": "bible",
+   "stream": "rome",
+   "approximate": true,
+   "basis": "conventional",
+   "refs": [
+    "Acts 18:2"
+   ],
+   "title": {
+    "en": "Claudius Expels Jews from Rome",
+    "zh-Hans": "革老丢驱逐犹太人离开罗马",
+    "zh-Hant": "革老丟驅逐猶太人離開羅馬"
+   },
+   "desc": {
+    "en": "Claudius commands all Jews to depart from Rome, which is why Paul met Aquila and Priscilla newly arrived in Corinth; the year comes from a remark of Orosius and is not certain.",
+    "zh-Hans": "革老丢命令犹太人都离开罗马，保罗因此在哥林多遇见刚到的亚居拉和百基拉；此事的年份出自奥罗修斯的记述，并不确定。",
+    "zh-Hant": "革老丟命令猶太人都離開羅馬，保羅因此在哥林多遇見剛到的亞居拉和百基拉；此事的年份出自奧羅修斯的記述，並不確定。"
+   }
+  },
+  {
+   "id": "agrippa_ii_king",
+   "year": 50,
+   "era": "bible",
+   "stream": "judah",
+   "approximate": true,
+   "basis": "conventional",
+   "refs": [
+    "Acts 25:13-27"
+   ],
+   "title": {
+    "en": "Herod Agrippa II Made King",
+    "zh-Hans": "希律亚基帕二世作王",
+    "zh-Hant": "希律亞基帕二世作王"
+   },
+   "desc": {
+    "en": "Agrippa II receives a northern kingdom and, according to Josephus, oversight of the temple; Acts records him hearing Paul's defence at Caesarea with Bernice.",
+    "zh-Hans": "亚基帕二世受封北方国土，据约瑟夫记载并获管理圣殿之权；使徒行传记他与百尼基在该撒利亚听保罗申辩。",
+    "zh-Hant": "亞基帕二世受封北方國土，據約瑟夫記載並獲管理聖殿之權；使徒行傳記他與百尼基在該撒利亞聽保羅申辯。"
+   }
+  },
+  {
+   "id": "gallio_proconsul",
+   "year": 51,
+   "era": "bible",
+   "stream": "rome",
+   "approximate": true,
+   "basis": "conventional",
+   "refs": [
+    "Acts 18:12-17"
+   ],
+   "title": {
+    "en": "Gallio Proconsul of Achaia",
+    "zh-Hans": "迦流作亚该亚方伯",
+    "zh-Hant": "迦流作亞該亞方伯"
+   },
+   "desc": {
+    "en": "Gallio refuses to try the charge brought against Paul at Corinth and drives the accusers from the judgment seat; a Delphi inscription fixes his term and anchors Paul's chronology.",
+    "zh-Hans": "迦流在哥林多不受理控告保罗的案件，把控告的人从公堂赶出去；德尔斐碑文定出他的任期，成为保罗年代学的定点。",
+    "zh-Hant": "迦流在哥林多不受理控告保羅的案件，把控告的人從公堂趕出去；德爾斐碑文定出他的任期，成為保羅年代學的定點。"
+   }
+  },
+  {
+   "id": "felix_procurator",
+   "year": 52,
+   "era": "bible",
+   "stream": "rome",
+   "approximate": true,
+   "basis": "conventional",
+   "refs": [
+    "Acts 24:26-27"
+   ],
+   "title": {
+    "en": "Felix Governs Judea",
+    "zh-Hans": "腓力斯任犹太巡抚",
+    "zh-Hant": "腓力斯任猶太巡撫"
+   },
+   "desc": {
+    "en": "Antonius Felix rules Judea and keeps Paul in custody at Caesarea for two years, hoping money would be given him.",
+    "zh-Hans": "腓力斯管辖犹太地，指望保罗送他银钱，把保罗拘留在该撒利亚两年。",
+    "zh-Hant": "腓力斯管轄猶太地，指望保羅送他銀錢，把保羅拘留在該撒利亞兩年。"
+   }
+  },
+  {
+   "id": "nero_emperor",
+   "year": 54,
+   "era": "bible",
+   "stream": "rome",
+   "approximate": false,
+   "basis": "conventional",
+   "refs": [
+    "Acts 25:11"
+   ],
+   "title": {
+    "en": "Nero Becomes Emperor",
+    "zh-Hans": "尼禄作罗马皇帝",
+    "zh-Hant": "尼祿作羅馬皇帝"
+   },
+   "desc": {
+    "en": "Nero rules Rome. Scripture never names him: Paul appeals simply \"unto Caesar\", and the Caesar of Acts 25 is identified as Nero from the date of that appeal.",
+    "zh-Hans": "尼禄作罗马皇帝。圣经从未提他的名字：保罗只说「要上告于该撒」，使徒行传二十五章的「该撒」是按保罗上告的年代推定为尼禄。",
+    "zh-Hant": "尼祿作羅馬皇帝。聖經從未提他的名字：保羅只說「要上告於該撒」，使徒行傳二十五章的「該撒」是按保羅上告的年代推定為尼祿。"
+   }
+  },
+  {
+   "id": "festus_procurator",
+   "year": 59,
+   "era": "bible",
+   "stream": "rome",
+   "approximate": true,
+   "basis": "conventional",
+   "refs": [
+    "Acts 24:27",
+    "Acts 25:1-12"
+   ],
+   "title": {
+    "en": "Festus Succeeds Felix",
+    "zh-Hans": "非斯都接任腓力斯",
+    "zh-Hant": "非斯都接任腓力斯"
+   },
+   "desc": {
+    "en": "Porcius Festus takes over Judea, reopens Paul's case, and rules that he shall go to Caesar after his appeal.",
+    "zh-Hans": "波求非斯都接管犹太地，重审保罗的案件，因他上告于该撒，就判定他要往该撒那里去。",
+    "zh-Hant": "波求非斯都接管猶太地，重審保羅的案件，因他上告於該撒，就判定他要往該撒那裡去。"
+   }
+  },
+  {
+   "id": "great_fire_rome",
+   "year": 64,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Great Fire of Rome",
+    "zh-Hans": "罗马大火",
+    "zh-Hant": "羅馬大火"
+   },
+   "desc": {
+    "en": "Fire destroys much of Rome, and Nero blames the Christians, beginning the first imperial persecution of the church.",
+    "zh-Hans": "大火烧毁罗马大部分城区，尼禄归罪于基督徒，开启帝国对教会的首次逼迫。",
+    "zh-Hant": "大火燒毀羅馬大部分城區，尼祿歸罪於基督徒，開啟帝國對教會的首次逼迫。"
+   }
+  },
+  {
+   "id": "jewish_revolt",
+   "year": 66,
+   "era": "world",
+   "stream": "judah",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "The Jewish Revolt Begins",
+    "zh-Hans": "犹太人起义爆发",
+    "zh-Hant": "猶太人起義爆發"
+   },
+   "desc": {
+    "en": "Judea rises against Rome; Vespasian and then Titus reduce the country region by region.",
+    "zh-Hans": "犹太地起兵反抗罗马，韦帕芗继而提多逐地平定全境。",
+    "zh-Hant": "猶太地起兵反抗羅馬，韋帕薌繼而提多逐地平定全境。"
+   }
+  },
+  {
+   "id": "masada_falls",
+   "year": 73,
+   "era": "world",
+   "stream": "judah",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Fall of Masada",
+    "zh-Hans": "马萨达陷落",
+    "zh-Hant": "馬薩達陷落"
+   },
+   "desc": {
+    "en": "The Romans take the desert fortress of Masada, the last stronghold of the revolt, by a great siege ramp; the fall is dated AD 73 or 74.",
+    "zh-Hans": "罗马军以巨大的攻城土坡攻下沙漠要塞马萨达，起义的最后据点就此陷落；陷落之年或作主后73年，或作74年。",
+    "zh-Hant": "羅馬軍以巨大的攻城土坡攻下沙漠要塞馬薩達，起義的最後據點就此陷落；陷落之年或作主後73年，或作74年。"
+   }
+  },
+  {
+   "id": "vesuvius_erupts",
+   "year": 79,
+   "era": "world",
+   "stream": "rome",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Eruption of Vesuvius",
+    "zh-Hans": "维苏威火山爆发",
+    "zh-Hant": "維蘇威火山爆發"
+   },
+   "desc": {
+    "en": "Vesuvius buries Pompeii and Herculaneum, sealing two Roman towns of the apostolic age.",
+    "zh-Hans": "维苏威火山掩埋庞贝与赫库兰尼姆，将使徒时代的两座罗马城镇原样封存。",
+    "zh-Hant": "維蘇威火山掩埋龐貝與赫庫蘭尼姆，將使徒時代的兩座羅馬城鎮原樣封存。"
+   }
+  },
+  {
+   "id": "domitian_emperor",
+   "year": 81,
+   "era": "world",
+   "stream": "rome",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Domitian Becomes Emperor",
+    "zh-Hans": "图密善作罗马皇帝",
+    "zh-Hant": "圖密善作羅馬皇帝"
+   },
+   "desc": {
+    "en": "Domitian rules until 96 and presses the worship of the emperor; early tradition places John's exile to Patmos in his reign.",
+    "zh-Hans": "图密善在位至96年，力推皇帝崇拜；早期传统认为约翰被放逐拔摩海岛即在其治下。",
+    "zh-Hant": "圖密善在位至96年，力推皇帝崇拜；早期傳統認為約翰被放逐拔摩海島即在其治下。"
+   }
+  }
+ ]
 }
