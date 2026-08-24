@@ -719,9 +719,23 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
   }
 
   /// Quick font-size adjuster sheet, opened from the bottom bar's Aa
-  /// button. Mirrors the slider in Settings → Display but inline so the
-  /// user doesn't lose their reading position. Range matches AppSettings
-  /// (12-32 pt). Closes when the user taps outside the sheet.
+  /// button (standalone reader) or the column's ⋮ menu (workbench, where
+  /// #313 rehoused it). Mirrors the slider in Settings → Display but
+  /// inline so the user doesn't lose their reading position. Closes when
+  /// the user taps outside the sheet.
+  ///
+  /// 2026-08-25 (#315): the range is `kFontSizeMin`..`kFontSizeMax` and
+  /// is not written here. It used to be `.clamp(12, 32)` in four places,
+  /// inherited from the phone reader this app was forked from and never
+  /// revisited when the setting grew to 40 pt — so the doc comment's own
+  /// claim that the range "matches AppSettings" had been false for the
+  /// life of the project, and it cost more than eight missing stops.
+  /// Increase disabled at 32 while decrease clamped INTO 32 made the
+  /// sheet a one-way trapdoor: a reader who chose 40 pt in Settings and
+  /// tapped A− once here lost 8 pt in a single tap and could not get any
+  /// of it back without leaving the reader. This control is now pure
+  /// delegation — [fontSizeAfterStep] and [canStepFontSize] own the
+  /// arithmetic, so it cannot drift from the slider again.
   void _showFontSizeSheet(BuildContext context, AppSettings settings) {
     showModalBottomSheet(
       context: context,
@@ -750,28 +764,33 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
                       children: [
                         IconButton.filledTonal(
                           icon: const Icon(Icons.text_decrease_rounded),
-                          onPressed: size <= 12
+                          onPressed: !canStepFontSize(size, -1)
                               ? null
                               : () async {
                                   await settings
-                                      .setFontSize((size - 1).clamp(12, 32));
+                                      .setFontSize(fontSizeAfterStep(size, -1));
                                   setSheet(() {});
                                 },
                         ),
+                        // The readout is a SAMPLE of the setting, so it
+                        // has to travel with it. Its old ceiling of 32
+                        // froze the one number on screen that reports
+                        // the size, from 26.7 pt up.
                         Text(
                           size.round().toString(),
                           style: TextStyle(
-                            fontSize: (size * 1.2).clamp(18.0, 32.0),
+                            fontSize: (size * 1.2)
+                                .clamp(kFontSizeMin * 1.2, kFontSizeMax * 1.2),
                             fontWeight: FontWeight.w700,
                           ),
                         ),
                         IconButton.filledTonal(
                           icon: const Icon(Icons.text_increase_rounded),
-                          onPressed: size >= 32
+                          onPressed: !canStepFontSize(size, 1)
                               ? null
                               : () async {
                                   await settings
-                                      .setFontSize((size + 1).clamp(12, 32));
+                                      .setFontSize(fontSizeAfterStep(size, 1));
                                   setSheet(() {});
                                 },
                         ),

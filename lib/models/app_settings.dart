@@ -22,6 +22,15 @@ import 'package:seeksparks/utils/font_catalog.dart';
 /// drifted apart: the slider ran 12–40 while the scale was clamped to
 /// 0.75–1.6, i.e. 15–32 pt, so **11 of the slider's 29 stops moved
 /// nothing at all**.
+///
+/// 2026-08-25 (#315): the slider is not the only control over this
+/// number. The reader's `Aa` sheet is a second one, and it carried its
+/// own literals — `.clamp(12, 32)` — from the initial commit, i.e. from
+/// before these constants existed. So the app shipped two controls over
+/// one setting that disagreed about its maximum. Anything that MOVES the
+/// font size now goes through [fontSizeAfterStep]; anything that STORES
+/// it goes through [setFontSize], which bounds it. A third control
+/// cannot reintroduce a range of its own.
 const double kFontSizeMin = 12.0;
 const double kFontSizeMax = 40.0;
 const double kFontSizeDefault = 20.0;
@@ -30,6 +39,32 @@ const double kFontSizeDefault = 20.0;
 /// narrower 0.8–1.4 clamp ate 2 of its 9 stops.
 const double kMenuScaleMin = 0.7;
 const double kMenuScaleMax = 1.5;
+
+/// The range the Line Spacing slider offers. Named for the same reason
+/// as the two above: the slider held these as literals and no setter,
+/// restore path or import bounded the stored value against them.
+const double kLineSpacingMin = 1.0;
+const double kLineSpacingMax = 3.0;
+const double kLineSpacingDefault = 1.5;
+
+/// One tap of a font-size stepper, as a value rather than as arithmetic
+/// at a call site.
+///
+/// [delta] is in points and may be negative. The result is bounded by
+/// the range Settings offers, so a stepper cannot walk outside it — and,
+/// more to the point, cannot stop short of it. Returns [current]
+/// unchanged when the step would leave the range, which is what
+/// [canStepFontSize] reports to the button's `onPressed`.
+double fontSizeAfterStep(double current, double delta) =>
+    (current + delta).clamp(kFontSizeMin, kFontSizeMax).toDouble();
+
+/// Whether a stepper button that moves the font size by [delta] should
+/// be offered at all.
+///
+/// False only at the ends. A button that is enabled but cannot move is
+/// worse than a disabled one: it reports success and does nothing.
+bool canStepFontSize(double current, double delta) =>
+    fontSizeAfterStep(current, delta) != current;
 
 const _kFontFamily = 'fontFamily';
 const _kFontSize = 'fontSize';
@@ -123,8 +158,8 @@ class AppSettings extends ChangeNotifier {
   /// these were the same string and Google Fonts options silently
   /// fell back to Roboto.
   String _fontFamily = '-apple-system';
-  double _fontSize = 20.0;
-  double _lineSpacing = 1.5;
+  double _fontSize = kFontSizeDefault;
+  double _lineSpacing = kLineSpacingDefault;
   Color _primaryColor = AppIconService.kDefaultPrimaryColor;
   // 2026-05-17 (v1.2.47): default changed from 'withRef' →
   // 'devotional' per user request — devotional puts the
@@ -280,19 +315,22 @@ class AppSettings extends ChangeNotifier {
   }
 
   Future<void> setFontSize(double size) async {
-    if (_fontSize == size) return;
-    _fontSize = size;
+    final clamped = size.clamp(kFontSizeMin, kFontSizeMax).toDouble();
+    if (_fontSize == clamped) return;
+    _fontSize = clamped;
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setDouble(_kFontSize, size);
+    await prefs.setDouble(_kFontSize, clamped);
   }
 
   Future<void> setLineSpacing(double spacing) async {
-    if (_lineSpacing == spacing) return;
-    _lineSpacing = spacing;
+    final clamped =
+        spacing.clamp(kLineSpacingMin, kLineSpacingMax).toDouble();
+    if (_lineSpacing == clamped) return;
+    _lineSpacing = clamped;
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setDouble(_kLineSpacing, spacing);
+    await prefs.setDouble(_kLineSpacing, clamped);
   }
 
   Future<void> setPrimaryColor(Color color) async {
@@ -463,7 +501,7 @@ class AppSettings extends ChangeNotifier {
 
 
   Future<void> setMenuScale(double scale) async {
-    final clamped = scale.clamp(0.7, 1.5);
+    final clamped = scale.clamp(kMenuScaleMin, kMenuScaleMax).toDouble();
     if (_menuScale == clamped) return;
     _menuScale = clamped;
     notifyListeners();
@@ -496,8 +534,8 @@ class AppSettings extends ChangeNotifier {
     // stack to the OS UI font.
     _fontSelection = 'system';
     _fontFamily = '-apple-system';
-    _fontSize = 20.0;
-    _lineSpacing = 1.5;
+    _fontSize = kFontSizeDefault;
+    _lineSpacing = kLineSpacingDefault;
     _primaryColor = AppIconService.kDefaultPrimaryColor;
     _copyFormat = 'devotional';
     _themeMode = ThemeMode.system;
@@ -604,11 +642,20 @@ class AppSettings extends ChangeNotifier {
     if (_fontSelection != stored) {
       await prefs.setString(_kFontFamily, _fontSelection);
     }
-    // Round to nearest step to avoid Slider assertion with stale values
-    final rawFontSize = prefs.getDouble(_kFontSize) ?? 20.0;
-    _fontSize = (rawFontSize - 12).roundToDouble() + 12;
-    final rawLineSpacing = prefs.getDouble(_kLineSpacing) ?? 1.5;
-    _lineSpacing = (rawLineSpacing * 10).roundToDouble() / 10;
+    // Round to nearest step, then bound to the range the slider offers.
+    // The rounding alone was not enough: a `Slider` asserts on a value
+    // outside min..max, and in release JS the assert is stripped and the
+    // thumb simply paints off the end of the track. A value from a
+    // legacy build, a hand-edited prefs file or an imported settings
+    // blob can be anything.
+    final rawFontSize = prefs.getDouble(_kFontSize) ?? kFontSizeDefault;
+    _fontSize = ((rawFontSize - kFontSizeMin).roundToDouble() + kFontSizeMin)
+        .clamp(kFontSizeMin, kFontSizeMax)
+        .toDouble();
+    final rawLineSpacing = prefs.getDouble(_kLineSpacing) ?? kLineSpacingDefault;
+    _lineSpacing = ((rawLineSpacing * 10).roundToDouble() / 10)
+        .clamp(kLineSpacingMin, kLineSpacingMax)
+        .toDouble();
     _primaryColor =
         Color(prefs.getInt(_kPrimaryColor) ?? AppIconService.kDefaultPrimaryColor.toARGB32());
     // 2026-08-06: the icon was redesigned and the brand seed moved from
@@ -655,7 +702,9 @@ class AppSettings extends ChangeNotifier {
     _paragraphMode = prefs.getBool(_kParagraphMode) ?? true;
     _readingPaperTheme = prefs.getBool(_kReadingPaperTheme) ?? false;
     final rawMenuScale = prefs.getDouble(_kMenuScale) ?? 1.0;
-    _menuScale = ((rawMenuScale * 10).roundToDouble() / 10).clamp(0.7, 1.5);
+    _menuScale = ((rawMenuScale * 10).roundToDouble() / 10)
+        .clamp(kMenuScaleMin, kMenuScaleMax)
+        .toDouble();
     // 2026-05-08 (v1.1.1): card material — default `classic` so
     // existing users see no visual change from earlier versions
     // unless they explicitly opt into a new look.
@@ -839,9 +888,21 @@ class AppSettings extends ChangeNotifier {
         _fontSelection = m['fontFamily'] as String;
         _fontFamily = resolveFontFamily(_fontSelection);
       }
-      if (m['fontSize'] is num) _fontSize = (m['fontSize'] as num).toDouble();
+      // An imported blob is a file the reader chose off disk — a real
+      // system boundary, and since sync was removed (#286) the only way
+      // settings cross devices. Bound the three scales here; an
+      // out-of-range one reaches a Slider directly.
+      if (m['fontSize'] is num) {
+        _fontSize = (m['fontSize'] as num)
+            .toDouble()
+            .clamp(kFontSizeMin, kFontSizeMax)
+            .toDouble();
+      }
       if (m['lineSpacing'] is num) {
-        _lineSpacing = (m['lineSpacing'] as num).toDouble();
+        _lineSpacing = (m['lineSpacing'] as num)
+            .toDouble()
+            .clamp(kLineSpacingMin, kLineSpacingMax)
+            .toDouble();
       }
       if (m['primaryColor'] is num) {
         _primaryColor = Color((m['primaryColor'] as num).toInt());
@@ -855,7 +916,12 @@ class AppSettings extends ChangeNotifier {
       if (m['readingPaperTheme'] is bool) {
         _readingPaperTheme = m['readingPaperTheme'] as bool;
       }
-      if (m['menuScale'] is num) _menuScale = (m['menuScale'] as num).toDouble();
+      if (m['menuScale'] is num) {
+        _menuScale = (m['menuScale'] as num)
+            .toDouble()
+            .clamp(kMenuScaleMin, kMenuScaleMax)
+            .toDouble();
+      }
       if (m['cardMaterial'] is String) {
         _cardMaterial = CardMaterial.values.firstWhere(
           (c) => c.name == m['cardMaterial'],

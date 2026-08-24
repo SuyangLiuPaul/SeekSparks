@@ -339,9 +339,10 @@ class _SettingsPageBodyState extends State<_SettingsPageBody> {
                       ),
                       Slider(
                         value: settings.lineSpacing,
-                        min: 1.0,
-                        max: 3.0,
-                        divisions: 20,
+                        min: kLineSpacingMin,
+                        max: kLineSpacingMax,
+                        divisions:
+                            ((kLineSpacingMax - kLineSpacingMin) * 10).round(),
                         label: settings.lineSpacing.toStringAsFixed(1),
                         onChanged: (val) => settings.setLineSpacing(
                             double.parse(val.toStringAsFixed(1))),
