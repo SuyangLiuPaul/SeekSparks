@@ -279,7 +279,7 @@ class _VerseNotesPaneState extends State<VerseNotesPane> {
                         .replaceAll('{count}', '${widget.verses.length}'),
                     maxLines: 2,
                     style: TextStyle(
-                      fontSize: t.scaledChrome(10.5),
+                      fontSize: t.scaledChrome(11),
                       color: scheme.outline,
                       fontFamilyFallback: kCjkFontFallback,
                     ),
@@ -387,7 +387,7 @@ class _VerseNotesPaneState extends State<VerseNotesPane> {
                     : (uiStrings['notesAutosave']?[locale] ??
                         'Saved automatically'),
                 style: TextStyle(
-                  fontSize: t.scaledChrome(10),
+                  fontSize: t.scaledChrome(11),
                   color: pending ? wb.link : scheme.outline,
                   fontFamilyFallback: kCjkFontFallback,
                 ),
@@ -455,7 +455,7 @@ class _VerseNotesPaneState extends State<VerseNotesPane> {
                 : (uiStrings['notesSearchCount']?[locale] ?? '{count} found')
                     .replaceAll('{count}', '${hits.length}'),
             style: TextStyle(
-              fontSize: t.scaledChrome(10.5),
+              fontSize: t.scaledChrome(11),
               color: scheme.outline,
               fontFamilyFallback: kCjkFontFallback,
             ),

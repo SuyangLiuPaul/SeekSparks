@@ -1000,7 +1000,7 @@ Widget _distribution(BuildContext context, GreekWordStats g) {
                   ? '${_abbr(e.key)} ${e.value.$1}'
                   : '${_abbr(e.key)} ${e.value.$1} ·#${e.value.$2}',
               style: theme.textTheme.labelSmall?.copyWith(
-                fontSize: t.scaled(9.5),
+                fontSize: t.scaled(11),
                 color: scheme.primary,
                 fontFeatures: const [FontFeature.tabularFigures()],
               ),
@@ -1010,13 +1010,13 @@ Widget _distribution(BuildContext context, GreekWordStats g) {
           Text(
             '+${g.books.length - top.length}',
             style: theme.textTheme.labelSmall
-                ?.copyWith(fontSize: t.scaled(9.5), color: scheme.outline),
+                ?.copyWith(fontSize: t.scaled(11), color: scheme.outline),
           ),
         if (present.length > 1)
           Text(
             present.map((k) => '${groups[k]} ${g.totals[k]}').join(' / '),
             style: theme.textTheme.labelSmall?.copyWith(
-              fontSize: t.scaled(9.5),
+              fontSize: t.scaled(11),
               color: scheme.onSurfaceVariant,
               fontFeatures: const [FontFeature.tabularFigures()],
             ),
@@ -1294,7 +1294,7 @@ class _SourceHeading extends StatelessWidget {
       child: Text(
         text.toUpperCase(),
         style: theme.textTheme.labelSmall?.copyWith(
-          fontSize: t.scaled(10.5),
+          fontSize: t.scaled(11),
           letterSpacing: 0.8,
           fontWeight: FontWeight.w700,
           color: theme.colorScheme.onSurfaceVariant,
@@ -1323,7 +1323,7 @@ class _Attribution extends StatelessWidget {
       child: Text(
         text,
         style: theme.textTheme.bodySmall?.copyWith(
-          fontSize: t.scaled(10.5),
+          fontSize: t.scaled(11),
           height: 1.35,
           color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
         ),
@@ -1428,7 +1428,7 @@ class _NaveTile extends StatelessWidget {
                           Text(
                             '${line.refs.length}',
                             style: theme.textTheme.labelSmall?.copyWith(
-                              fontSize: t.scaled(10.5),
+                              fontSize: t.scaled(11),
                               color: scheme.onSurfaceVariant,
                             ),
                           ),
@@ -1475,7 +1475,7 @@ class _NaveTile extends StatelessWidget {
                 child: Text(
                   ref.label(locale),
                   style: theme.textTheme.labelSmall?.copyWith(
-                    fontSize: t.scaled(10.5),
+                    fontSize: t.scaled(11),
                     color: isHere ? scheme.primary : scheme.onSurfaceVariant,
                     fontWeight: isHere ? FontWeight.w700 : null,
                     decoration: isHere ? TextDecoration.underline : null,
@@ -1723,7 +1723,7 @@ class _TopicDetailState extends State<_TopicDetail> {
                 child: Text(
                   '${localeAwareBookName(book, widget.locale)} $ch:$vs',
                   style: theme.textTheme.labelSmall?.copyWith(
-                    fontSize: t.scaled(10.5),
+                    fontSize: t.scaled(11),
                     color: isHere ? scheme.primary : scheme.onSurfaceVariant,
                     fontWeight: isHere ? FontWeight.w700 : null,
                     decoration: isHere ? TextDecoration.underline : null,

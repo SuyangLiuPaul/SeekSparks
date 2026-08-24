@@ -43,6 +43,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:seeksparks/constants/workbench_theme.dart' show WbMetrics;
 import 'package:seeksparks/models/app_settings.dart'
     show kFontSizeDefault, kFontSizeMax;
 
@@ -650,6 +651,87 @@ void main() {
     expect(paid, isEmpty,
         reason: 'lower these budgets to what the files now contain:\n'
             '${paid.join('\n')}');
+  });
+
+  // 2026-08-25 (#315, the NINTH SHAPE — and the first one that freezes
+  // nothing at all).
+  //
+  // Every detector above asks the same question: is there a number the
+  // slider cannot move? These sites answer no. `fontSize: t.scaled(7.5)`
+  // is the correct shape, wired to the setting, and it travels all 29
+  // stops. What is wrong with it is the 7.5.
+  //
+  // [WbMetrics.smallPrintFloor] is the app's own answer to "the
+  // smallest text we are willing to set", and its comment says small
+  // print "may reach it and stop; it may not go under it". Thirty-six
+  // sites STARTED under it — at the default setting, before the reader
+  // touches anything: 7.5 px for the World History Wheel's own hint,
+  // 8 px for the `Ketiv` / `Qere` and `Aramaic` badges in 原文逐字 (a
+  // Ketiv/Qere badge is not decoration — it is the app saying the
+  // written form and the read form differ), 10 px for the line that
+  // tells a reader their AI explanation is machine-generated, 10.5 px
+  // for the book-distribution chips in the Analysis pane.
+  //
+  // The sibling helper [WbType.scaledSmall] asserts on exactly this
+  // ('raise the design size rather than relying on the floor'), so the
+  // app already knew. All thirty-six routed around the assert by
+  // picking the unfloored helper — which is legitimate for a SizedBox
+  // and a padding, and is why `scaled()` cannot carry the assert itself.
+  //
+  // Two shapes, because the second hid from the first: the argument
+  // written at the `fontSize:` itself, and a size bound to a name.
+  // `double _axisFont(WbType t) => t.scaledChrome(10);` in
+  // `chronology_page.dart` is used at two `fontSize:` sites twenty and
+  // five hundred lines away, and no rule that reads the expression at
+  // the colon can see the 10.
+  test('no text is designed below the app\'s own small-print floor', () {
+    const floor = WbMetrics.smallPrintFloor;
+    final sized = RegExp(r'\.scaled(?:Chrome|Small|Original)?\(\s*'
+        r'([0-9]+(?:\.[0-9]+)?)\s*\)');
+    // `double _axisFont(WbType t) => t.scaledChrome(10);` and
+    // `final s = t.scaled(9.5);` — a size wearing a name.
+    final bound = RegExp(r'(?:final|var|double)\s+(_?\w+)\s*'
+        r'(?:\([^)]*\))?\s*(?:=>|=)\s*([^;]*)');
+
+    final under = <String>[];
+    for (final f in all) {
+      final text = f.readAsStringSync();
+      final rel = f.path.substring('lib/'.length);
+      final lines = text.split('\n');
+
+      void report(int line, double px, String what) => under.add(
+          '$rel:$line — $what designed at ${px}px, floor is $floor');
+
+      for (final (line, expr) in fontSizeExpressions(text)) {
+        for (final m in sized.allMatches(expr)) {
+          final px = double.parse(m.group(1)!);
+          if (px < floor) report(line, px, expr.trim());
+        }
+      }
+      for (final m in bound.allMatches(text)) {
+        final name = m.group(1)!;
+        final body = m.group(2)!;
+        final line = '\n'.allMatches(text.substring(0, m.start)).length;
+        if (lines[line].trimLeft().startsWith('//')) continue;
+        // Only a name the file actually uses as a font size. Everything
+        // else called `.scaled(4)` is a gap, an inset or a box.
+        if (!RegExp('fontSize:\\s*$name\\b').hasMatch(text)) continue;
+        for (final s in sized.allMatches(body)) {
+          final px = double.parse(s.group(1)!);
+          if (px < floor) report(line + 1, px, '$name = ${body.trim()}');
+        }
+      }
+    }
+
+    expect(under, isEmpty,
+        reason: 'a size below WbMetrics.smallPrintFloor ($floor px) is '
+            'text the app has decided it will not print, printed anyway. '
+            'It is not a reach defect — it moves with the slider — so no '
+            'other test here can see it. Raise the design size to the '
+            'floor; the site keeps whichever scale it already used, '
+            'because introducing a floored helper into a stack whose '
+            'siblings are unfloored inverts their rank at the bottom of '
+            'the slider:\n${under.join('\n')}');
   });
 
   test('the originals floor is single-sourced, not repeated per page', () {

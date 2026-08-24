@@ -923,7 +923,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                     uiStrings['aramaicWordBadge']?[widget.locale] ??
                         'Aramaic',
                     style: TextStyle(
-                      fontSize: _ty.scaled(8),
+                      fontSize: _ty.scaled(11),
                       fontWeight: FontWeight.w700,
                       color: paletteFg(context, Colors.teal),
                       letterSpacing: 0.3,
@@ -950,7 +950,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                   child: Text(
                     w.isKetiv ? 'Ketiv' : 'Qere',
                     style: TextStyle(
-                      fontSize: _ty.scaled(8),
+                      fontSize: _ty.scaled(11),
                       fontWeight: FontWeight.w700,
                       color: scheme.onSurfaceVariant,
                       letterSpacing: 0.3,
@@ -1252,7 +1252,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                   child: Text(
                     uiStrings['aramaicWordBadge']?[locale] ?? 'Aramaic',
                     style: TextStyle(
-                      fontSize: _ty.scaled(10),
+                      fontSize: _ty.scaled(11),
                       fontWeight: FontWeight.w700,
                       color: paletteFg(context, Colors.teal),
                       letterSpacing: 0.4,
@@ -1367,7 +1367,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                       uiStrings['exegesisProperNounBadge']?[locale] ??
                           'Proper noun',
                       style: TextStyle(
-                        fontSize: _ty.scaled(10),
+                        fontSize: _ty.scaled(11),
                         fontWeight: FontWeight.w700,
                         color: scheme.onTertiaryContainer,
                         letterSpacing: 0.4,
@@ -1380,7 +1380,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                       uiStrings['exegesisProperNounNote']?[locale] ??
                           'Etymology + identification (both correct).',
                       style: TextStyle(
-                        fontSize: _ty.scaled(10.5),
+                        fontSize: _ty.scaled(11),
                         color: scheme.onSurfaceVariant,
                         fontStyle: FontStyle.italic,
                       ),
@@ -1486,7 +1486,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                                   ?[locale] ??
                               'Chinese CBOL definition'),
                       style: TextStyle(
-                        fontSize: _ty.scaled(10.5),
+                        fontSize: _ty.scaled(11),
                         fontWeight: FontWeight.w700,
                         color: scheme.onTertiaryContainer,
                         letterSpacing: 0.4,
@@ -1886,7 +1886,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                         'AI-generated. Verify with primary sources for '
                         'study or teaching use.',
                     style: TextStyle(
-                      fontSize: _ty.scaled(10),
+                      fontSize: _ty.scaled(11),
                       color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
                       fontStyle: FontStyle.italic,
                     ),
@@ -2271,7 +2271,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                         Text(
                           uiStrings['fullStudy']?[locale] ?? 'Full study',
                           style: TextStyle(
-                            fontSize: _ty.scaled(10),
+                            fontSize: _ty.scaled(11),
                             fontWeight: FontWeight.w600,
                             color: scheme.primary,
                           ),

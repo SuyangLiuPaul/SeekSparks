@@ -1629,7 +1629,7 @@ class _ComparisonTableState extends State<_ComparisonTable> {
     if (spine.isEmpty) return const SizedBox.shrink();
 
     final headerStyle = TextStyle(
-      fontSize: t.scaled(10),
+      fontSize: t.scaled(11),
       fontWeight: FontWeight.w800,
       letterSpacing: 0.5,
       color: wb.text,
@@ -1799,7 +1799,7 @@ class _ComparisonTableState extends State<_ComparisonTable> {
                         child: Text(
                           years,
                           style: cellStyle.copyWith(
-                            fontSize: t.scaled(10.5),
+                            fontSize: t.scaled(11),
                             fontFeatures: const [FontFeature.tabularFigures()],
                             color: wb.mutedText,
                           ),

@@ -493,7 +493,7 @@ class _ContextPaneState extends State<ContextPane> {
                             ? _s('contextOnlyHere', 'only here')
                             : '/ ${e.bookCount}',
                         style: TextStyle(
-                          fontSize: _ty.scaled(10),
+                          fontSize: _ty.scaled(11),
                           color: e.isExclusive
                               ? scheme.primary
                               : scheme.outline,

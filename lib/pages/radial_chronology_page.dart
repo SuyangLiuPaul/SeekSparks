@@ -488,7 +488,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
                               '${yearLabel(kMaxYear, locale)}',
                               style: TextStyle(
                                   color: wb.mutedText,
-                                  fontSize: t.scaled(9.5)),
+                                  fontSize: t.scaled(11)),
                             ),
                             SizedBox(height: t.scaled(3)),
                             Text(
@@ -496,7 +496,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
                               '${data.events.length}',
                               style: TextStyle(
                                   color: wb.mutedText,
-                                  fontSize: t.scaled(8.5)),
+                                  fontSize: t.scaled(11)),
                             ),
                             SizedBox(height: t.scaled(3)),
                             Text(
@@ -504,7 +504,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                   color: wb.mutedText,
-                                  fontSize: t.scaled(7.5)),
+                                  fontSize: t.scaled(11)),
                             ),
                           ],
                         ),
@@ -555,7 +555,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
           child: Text('${(_zoom * 100).round()}%',
               textAlign: TextAlign.center,
               style:
-                  TextStyle(color: wb.mutedText, fontSize: t.scaled(10.5))),
+                  TextStyle(color: wb.mutedText, fontSize: t.scaled(11))),
         ),
         Container(width: 1, height: t.scaled(18), color: wb.border),
         btn(Icons.add, '+', () => _zoomBy(1.4)),
@@ -678,7 +678,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
                 color: _lineColor(line)),
             SizedBox(width: t.scaled(6)),
             Text(_s(key, fallback, locale),
-                style: TextStyle(color: wb.mutedText, fontSize: t.scaled(10))),
+                style: TextStyle(color: wb.mutedText, fontSize: t.scaled(11))),
           ]),
         );
     return Container(
@@ -696,7 +696,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
           row('institution', 'wheelLineInstitution', 'Church & Scripture'),
           SizedBox(height: t.scaled(3)),
           Text(_s('wheelShadeNote', '', locale),
-              style: TextStyle(color: wb.mutedText, fontSize: t.scaled(8.5))),
+              style: TextStyle(color: wb.mutedText, fontSize: t.scaled(11))),
         ],
       ),
     );
@@ -759,7 +759,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
                         '${_s('wheelEvents', 'Events', locale)} '
                         '${data.eventsOf(s.id).length}',
                         style: TextStyle(
-                            color: wb.mutedText, fontSize: t.scaled(10)),
+                            color: wb.mutedText, fontSize: t.scaled(11)),
                       ),
                       secondary: Container(
                           width: t.scaled(12),
@@ -958,7 +958,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
               ? '${_basisText(e.basis, locale)} · '
                   '${_s('wheelApprox', 'approximate', locale)}'
               : _basisText(e.basis, locale),
-          style: TextStyle(color: wb.mutedText, fontSize: t.scaled(10.5)),
+          style: TextStyle(color: wb.mutedText, fontSize: t.scaled(11)),
         ),
       ]),
     );
@@ -1003,7 +1003,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
               ? '${_s('wheelBasisConventional', 'conventional', locale)} · '
                   '${_s('wheelApprox', 'approximate', locale)}'
               : _s('wheelBasisConventional', 'conventional', locale),
-          style: TextStyle(color: wb.mutedText, fontSize: t.scaled(10.5)),
+          style: TextStyle(color: wb.mutedText, fontSize: t.scaled(11)),
         ),
       ]),
     );
@@ -1062,7 +1062,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
                           Text(n.noteFor(locale),
                               style: TextStyle(
                                   color: wb.mutedText,
-                                  fontSize: t.scaled(10.5))),
+                                  fontSize: t.scaled(11))),
                       ],
                     ),
                   ),
@@ -1098,7 +1098,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
                     '${yearLabel(p.start, locale)} – '
                     '${p.ongoing ? _s('wheelPresent', 'present', locale) : yearLabel(p.end!, locale)}',
                     style: TextStyle(
-                        color: wb.mutedText, fontSize: t.scaled(10.5))),
+                        color: wb.mutedText, fontSize: t.scaled(11))),
               ]),
             ),
         ],
@@ -1120,7 +1120,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
                 ),
                 Text(yearLabel(e.year, locale),
                     style: TextStyle(
-                        color: wb.mutedText, fontSize: t.scaled(10.5))),
+                        color: wb.mutedText, fontSize: t.scaled(11))),
               ]),
             ),
         ],

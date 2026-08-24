@@ -88,7 +88,13 @@ double _rowHeight(WbType t) => t.scaled(30);
 /// Chrome scale, not text: the only things in the axis strip are the
 /// tick labels, the epoch names and the unit, all of which the Menu Size
 /// slider owns.
-double _axisFont(WbType t) => t.scaledChrome(10);
+///
+/// 2026-08-25 (#315): this was 10, and so under
+/// [WbMetrics.smallPrintFloor] at the default setting. An axis tick is
+/// the most defensible sub-floor text in the app and it is still text a
+/// reader has to read. Safe to raise because the strip's height is
+/// MEASURED from this font, three lines below, rather than declared.
+double _axisFont(WbType t) => t.scaledChrome(WbMetrics.smallPrintFloor);
 
 /// The strip is sized from the line it must hold, measured, rather than
 /// from a pixel count that happens to be right at one setting. A CJK
@@ -814,7 +820,7 @@ class _Row extends StatelessWidget {
                       Text(
                         '$overlap',
                         style: TextStyle(
-                            fontSize: t.scaledChrome(10), color: wb.link),
+                            fontSize: t.scaledChrome(11), color: wb.link),
                       ),
                   ],
                 ),

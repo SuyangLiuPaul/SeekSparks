@@ -532,7 +532,7 @@ class _CopyCenterDialogState extends State<_CopyCenterDialog> {
                 border: const OutlineInputBorder(),
                 labelText: _s(locale, 'copyCenterTemplate', 'Reference format'),
                 helperMaxLines: 2,
-                helperStyle: TextStyle(fontSize: _t.scaled(10)),
+                helperStyle: TextStyle(fontSize: _t.scaled(11)),
                 helperText: _s(locale, 'copyCenterTemplateHelp',
                     r'Tags: <ref> <book> <chapter> <verse> <version>'),
               ),
