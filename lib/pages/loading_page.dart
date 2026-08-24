@@ -701,18 +701,29 @@ class _LoadingPageState extends State<LoadingPage> {
                             ?.withValues(alpha: 0.65),
                       ),
                     ),
-                    SizedBox(height: 10 * s),
-                    // Determinate when we already have exact counts
-                    // for free (version pre-load); indeterminate
-                    // during the verse-fetch retry sub-phase, where
-                    // there's no real progress signal to show.
-                    _buildDownloadBar(
-                      context,
-                      value: mainProvider.versionPreloadTotal > 0
-                          ? mainProvider.versionPreloadCount /
-                              mainProvider.versionPreloadTotal
-                          : null,
-                    ),
+                    // Web only. The bar answers "is this frozen or
+                    // working?" during a first, uncached web load,
+                    // where the verse JSON really is coming down the
+                    // wire and the wait is long enough to doubt. On a
+                    // device that text is already in the bundle: there
+                    // is no download to report and the splash is gone
+                    // in about two seconds, so a progress bar for work
+                    // that is not happening reads as delay the app
+                    // invented for itself.
+                    if (kIsWeb) ...[
+                      SizedBox(height: 10 * s),
+                      // Determinate when we already have exact counts
+                      // for free (version pre-load); indeterminate
+                      // during the verse-fetch retry sub-phase, where
+                      // there's no real progress signal to show.
+                      _buildDownloadBar(
+                        context,
+                        value: mainProvider.versionPreloadTotal > 0
+                            ? mainProvider.versionPreloadCount /
+                                mainProvider.versionPreloadTotal
+                            : null,
+                      ),
+                    ],
                   ],
                   // 2026-07-21: same patience escalation as the
                   // booting scaffold. This normal splash is the one
@@ -806,8 +817,11 @@ class _LoadingPageState extends State<LoadingPage> {
                     ?.withValues(alpha: 0.75),
               ),
             ),
-            SizedBox(height: 12 * s),
-            _buildDownloadBar(context),
+            // Web only — see the note on the other call site.
+            if (kIsWeb) ...[
+              SizedBox(height: 12 * s),
+              _buildDownloadBar(context),
+            ],
             _buildPatienceFooter(context, settings),
           ],
         ),
