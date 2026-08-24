@@ -1574,7 +1574,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
       child: Text(
         uiStrings['splitLoading']?[locale] ?? 'Opening the second column…',
         style: TextStyle(
-          fontSize: WbMetrics.text,
+          fontSize: WbType.of(context).text,
           color: Theme.of(context).colorScheme.outline,
         ),
       ),
@@ -1717,7 +1717,8 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
                             'Open a chapter to compare versions side by side.',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                            fontSize: WbMetrics.text, color: wb.mutedText),
+                            fontSize: WbType.of(context).text,
+                            color: wb.mutedText),
                       ),
                     ),
                   )
@@ -2091,23 +2092,15 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
             // to analyse on its own, and gating on `verses` alone threw
             // that readout away before it could ever be built, which is
             // what made hover and tap both look dead.
+            //
+            // 2026-08-24 (#315): this used to be a second, inline copy
+            // of the same sentence at `settings.fontSize - 1` — 19 px
+            // at the default against `_analysisHint`'s 12. One sentence
+            // rendered at two sizes depending on which empty state the
+            // reader arrived in, and the other thirteen empty states in
+            // this pane all go through `_analysisHint`.
             child: verses.isEmpty && _analysisWord == null
-                ? Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Text(
-                        uiStrings['analysisEmptyHint']?[locale] ??
-                            'Tap a verse in the Bible pane and its '
-                                'original-language word study appears here.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: settings.fontSize - 1,
-                          color: scheme.outline,
-                          height: 1.6,
-                        ),
-                      ),
-                    ),
-                  )
+                ? _analysisHint(context, locale)
                 : _buildAnalysisBody(context, wb, mp, verses, locale),
           ),
         ],
@@ -2538,7 +2531,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
                     'occurs, aligned on the word.',
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: WbMetrics.text,
+              fontSize: WbType.of(context).text,
               color: Theme.of(context).colorScheme.outline,
               height: 1.6,
             ),
@@ -2577,7 +2570,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
                     'original-language word study appears here.',
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: WbMetrics.text,
+              fontSize: WbType.of(context).text,
               color: Theme.of(context).colorScheme.outline,
               height: 1.6,
             ),

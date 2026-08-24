@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/constants/workbench_theme.dart' show WbType;
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 
@@ -28,9 +29,14 @@ class ConfidenceBadge extends StatelessWidget {
     final settings = context.watch<AppSettings>();
     final locale = settings.locale;
     final label = _label(level, locale);
-    final fs = (settings.fontSize - (prominent ? 1 : 3))
-        .clamp(10.0, 16.0)
-        .toDouble();
+    // `(fontSize - (prominent ? 1 : 3)).clamp(10, 16)` saturated at 16
+    // for BOTH branches from 19 pt up — below the 20 pt default — so
+    // the badge has rendered at exactly 16 px whatever the reader set,
+    // and the 2 px the ternary asked for has never been drawn. 16 is
+    // kept for both rather than restored to 17/19: this pill shares a
+    // Row with the evidence title on the list card, so growing it is a
+    // layout decision, where putting it on the scale is only a repair.
+    final fs = WbType.of(context).scaledSmall(16);
 
     return Container(
       padding: EdgeInsets.symmetric(

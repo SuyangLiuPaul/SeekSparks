@@ -157,19 +157,96 @@ void main() {
     'widgets/verse_popup_sheet.dart',
   ];
 
-  final literal = RegExp(r'fontSize:\s*(?:const\s*)?[0-9]+(?:\.[0-9]+)?\b');
+  // 2026-08-24 (#315, SEVENTH mechanism, and a hole in this very test).
+  // The detector used to be `RegExp(r'fontSize:\s*(?:const\s*)?[0-9]+')`
+  // — anchored, so it only saw a number written IMMEDIATELY after the
+  // colon. `fontSize: _st.dense ? _st.body : 13` is the same frozen 13
+  // one token further along, and the regex was blind to it. Four such
+  // sites sat inside `originals_sheet.dart` and one inside
+  // `word_distribution_table.dart`, both of which this file lists as
+  // FINISHED — so the ratchet was actively certifying them clean.
+  //
+  // The replacement reads the whole `fontSize:` expression, flattened
+  // across lines and balanced to its own top-level comma, and asks
+  // whether any bare number SURVIVES two removals:
+  //
+  //   1. the argument of a size helper — `t.scaled(13)`,
+  //      `settings.smallPrint(13)`, `context.textSize(12)` and the
+  //      rest all mean "13 px AT THE DEFAULT", which is the fix, not
+  //      the defect;
+  //   2. an arithmetic offset or factor — `settings.fontSize * 0.65`
+  //      and `labelSize - 1` travel with the setting.
+  //
+  // What is left is a number that answers every stop of the slider with
+  // itself, wherever in the expression it was hiding.
+  final helperCall = RegExp(r'\b(?:scaled|scaledSmall|scaledChrome|'
+      r'scaledOriginal|smallPrint|textSize|chromeSize|clamp|max|min)\s*\(');
+  final offsetOrFactor = RegExp(r'[-+*/]\s*[0-9]+(?:\.[0-9]+)?');
+  final bareNumber = RegExp(r'(?<![A-Za-z0-9_.])[0-9]+(?:\.[0-9]+)?');
 
-  int countIn(File f) {
-    var n = 0;
-    for (final line in f.readAsLinesSync()) {
+  /// The `fontSize:` expressions in [source], as (1-based line, text).
+  List<(int, String)> fontSizeExpressions(String source) {
+    final lines = source.split('\n');
+    final flat = source.replaceAll('\n', ' ');
+    final out = <(int, String)>[];
+    for (final m in RegExp(r'fontSize:\s*').allMatches(flat)) {
+      final line = '\n'.allMatches(source.substring(0, m.start)).length;
       // A comment naming an old literal is documentation of the fix,
       // not the defect. `phrasing_page.dart` says "the words used to be
       // `fontSize: 17`" and that sentence should survive.
-      if (line.trimLeft().startsWith('//')) continue;
-      n += literal.allMatches(line).length;
+      if (lines[line].trimLeft().startsWith('//')) continue;
+      var depth = 0;
+      var j = m.end;
+      while (j < flat.length) {
+        final c = flat[j];
+        if (c == '(' || c == '[' || c == '{') {
+          depth++;
+        } else if (c == ')' || c == ']' || c == '}') {
+          if (depth == 0) break;
+          depth--;
+        } else if (c == ',' && depth == 0) {
+          break;
+        }
+        j++;
+      }
+      out.add((line + 1, flat.substring(m.end, j).trim()));
     }
-    return n;
+    return out;
   }
+
+  /// [expr] with every size-helper call's arguments removed.
+  String stripHelperCalls(String expr) {
+    final out = StringBuffer();
+    var i = 0;
+    while (i < expr.length) {
+      final m = helperCall.matchAsPrefix(expr, i);
+      if (m != null) {
+        var depth = 1;
+        var j = m.end;
+        while (j < expr.length && depth > 0) {
+          if (expr[j] == '(') depth++;
+          if (expr[j] == ')') depth--;
+          j++;
+        }
+        out.write('SCALED');
+        i = j;
+        continue;
+      }
+      out.write(expr[i]);
+      i++;
+    }
+    return out.toString();
+  }
+
+  bool isFrozen(String expr) =>
+      bareNumber.hasMatch(stripHelperCalls(expr).replaceAll(offsetOrFactor, ''));
+
+  List<String> frozenIn(File f) => [
+        for (final (line, expr) in fontSizeExpressions(f.readAsStringSync()))
+          if (isFrozen(expr)) '$line: $expr',
+      ];
+
+  int countIn(File f) => frozenIn(f).length;
 
   final all = Directory('lib')
       .listSync(recursive: true)
@@ -226,6 +303,50 @@ void main() {
     expect(paid, isEmpty,
         reason: 'lower these budgets to what the files now contain, or move '
             'the file to `finished`:\n${paid.join('\n')}');
+  });
+
+  // 2026-08-24 (#315, SIXTH mechanism). A design constant wearing a
+  // principled name. `fontSize: WbMetrics.text` looks like the fix —
+  // it names the app's own type scale instead of inventing a number —
+  // and it is exactly as deaf as `fontSize: 12`, because `WbMetrics` is
+  // where the sizes AT THE DEFAULT are written down and `WbType` is the
+  // only thing that multiplies them by the reader's setting.
+  //
+  // Fourteen sites. Five were the workbench's own empty states, and one
+  // of those five is `_analysisHint` — the placeholder for ELEVEN
+  // analysis tabs, called from thirteen places. A reader who moved the
+  // slider to 40 pt because they cannot see small text was told what to
+  // do next at 12 px, in every tab, before any word study existed to
+  // read. That is 「还有很多界面都是」 at its most literal.
+  test('no text size comes straight off WbMetrics', () {
+    // `bible_trivia_page.dart` is 3,213 lines with no WbType anywhere,
+    // and converting it is its own pass on its own screenshots; it is a
+    // game rather than a study surface, so it is budgeted here instead
+    // of blocking the workbench repair.
+    const budget = <String, int>{'pages/bible_trivia_page.dart': 9};
+    final metric = RegExp(r'fontSize:\s*WbMetrics\.[A-Za-z]');
+    final counts = <String, int>{};
+    for (final f in all) {
+      final n = metric.allMatches(f.readAsStringSync()).length;
+      if (n > 0) counts[f.path.substring('lib/'.length)] = n;
+    }
+    final over = <String>[];
+    counts.forEach((rel, n) {
+      if (n > (budget[rel] ?? 0)) over.add('$rel: $n (budget ${budget[rel] ?? 0})');
+    });
+    expect(over, isEmpty,
+        reason: 'WbMetrics holds the size AT THE DEFAULT setting; only '
+            'WbType multiplies it by what the reader chose. Write '
+            't.text / t.chrome / t.original, or t.scaled(...) for a size '
+            'this surface owns:\n${over.join('\n')}');
+
+    final paid = <String>[];
+    budget.forEach((rel, allowed) {
+      final n = counts[rel] ?? 0;
+      if (n < allowed) paid.add('$rel: $n, budget still says $allowed');
+    });
+    expect(paid, isEmpty,
+        reason: 'lower these budgets:\n${paid.join('\n')}');
   });
 
   // 2026-08-24 (#315, second mechanism) — RETIRED the same day, by
@@ -297,9 +418,21 @@ void main() {
   // oversight.
   test('no text size saturates inside the slider\'s own range', () {
     // `(fontSize ± k).clamp(lo, hi)` and the bare `fontSize.clamp(…)`.
+    //
+    // 2026-08-24 (#315): `k` used to have to be a bare number, which
+    // let a ceiling hide behind a ternary offset —
+    // `(settings.fontSize - (compact ? 4 : 2)).clamp(11, 15)` in
+    // `contact_line.dart` and `(… - (prominent ? 1 : 3)).clamp(10, 16)`
+    // in `confidence_badge.dart` were both pinned at their own ceiling
+    // at the DEFAULT setting, on both branches, and neither this
+    // detector nor the literal one above could see either. The offset
+    // may now be a parenthesised expression, and EVERY number in it is
+    // tried: a branch that saturates is a screen where the slider is
+    // dead, whatever the other branch does.
     final ceiling = RegExp(
         r'\(\s*(?:widget\.)?(?:settings\.)?(?:fontSize|(?<![A-Za-z_])fs)\s*'
-        r'(?:([-+*])\s*([0-9.]+)\s*)?\)\s*\.clamp\(\s*([0-9.]+)\s*,\s*([0-9.]+)\s*\)');
+        r'(?:([-+*])\s*(?:([0-9.]+)|\(([^()]*)\))\s*)?\)'
+        r'\s*\.clamp\(\s*([0-9.]+)\s*,\s*([0-9.]+)\s*\)');
     final bare = RegExp(
         r'(?:widget\.)?(?:settings\.)?(?:fontSize|(?<![A-Za-z_])fs)'
         r'\.clamp\(\s*([0-9.]+)\s*,\s*([0-9.]+)\s*\)');
@@ -328,19 +461,53 @@ void main() {
         if (lines[line].trimLeft().startsWith('//')) continue;
         // Text only: the assignment or the argument must name a font
         // size within reach of the match.
-        final before = flat.substring((m.start - 60).clamp(0, flat.length), m.start);
-        if (!before.contains('fontSize')) continue;
-        final g = m.groupCount == 4
-            ? [m.group(1), m.group(2), m.group(3)!, m.group(4)!]
-            : [null, null, m.group(1)!, m.group(2)!];
-        final op = g[0];
-        final k = g[1] == null ? null : double.parse(g[1]!);
-        final lo = double.parse(g[2]!);
-        final hi = double.parse(g[3]!);
-        if (at(kFontSizeDefault, op, k, lo, hi) !=
-            at(kFontSizeMax, op, k, lo, hi)) {
-          continue; // still travelling somewhere above the default
+        //
+        // 2026-08-24 (#315): "within reach" used to mean the 60
+        // characters immediately before, which required the clamp to
+        // sit at a `fontSize:` itself. `confidence_badge.dart` wrote
+        // `final fs = (settings.fontSize - …).clamp(10, 16);` on one
+        // line and `fontSize: fs` fifteen lines later, and was invisible
+        // for that reason alone. A clamp bound to a local now counts if
+        // that local is used as a fontSize anywhere in the same file.
+        final before =
+            flat.substring((m.start - 60).clamp(0, flat.length), m.start);
+        var isTextSize = before.contains('fontSize');
+        if (!isTextSize) {
+          final bind = RegExp(r'(?:final|var|double)\s+([A-Za-z_]\w*)\s*=\s*$')
+              .firstMatch(before);
+          isTextSize = bind != null &&
+              RegExp('fontSize:\\s*${bind.group(1)}\\b').hasMatch(flat);
         }
+        if (!isTextSize) continue;
+        final String? op;
+        final List<double?> ks;
+        final double lo, hi;
+        if (m.groupCount == 5) {
+          op = m.group(1);
+          // A parenthesised offset can hold more than one constant —
+          // one per branch of a ternary. Each is a real rendering.
+          ks = m.group(3) != null
+              ? [
+                  for (final n
+                      in RegExp(r'[0-9]+(?:\.[0-9]+)?').allMatches(m.group(3)!))
+                    double.parse(n.group(0)!)
+                ]
+              : [m.group(2) == null ? null : double.parse(m.group(2)!)];
+          lo = double.parse(m.group(4)!);
+          hi = double.parse(m.group(5)!);
+        } else {
+          op = null;
+          ks = [null];
+          lo = double.parse(m.group(1)!);
+          hi = double.parse(m.group(2)!);
+        }
+        // An offset the detector cannot read any number out of tells us
+        // nothing; do not guess.
+        if (op != null && ks.isEmpty) continue;
+        final dead = ks.any((k) =>
+            at(kFontSizeDefault, op, k, lo, hi) ==
+            at(kFontSizeMax, op, k, lo, hi));
+        if (!dead) continue; // still travelling somewhere above the default
         (saturated[f.path.substring('lib/'.length)] ??= [])
             .add('${line + 1}: ${m.group(0)}');
       }

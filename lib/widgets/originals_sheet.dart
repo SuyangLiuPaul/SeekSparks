@@ -804,7 +804,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                       'Original-language data not available for this verse '
                           'yet.'),
               style: TextStyle(
-                fontSize: _st.dense ? _st.body : 13,
+                fontSize: _st.dense ? _st.body : _ty.scaled(13),
                 color: scheme.onSurfaceVariant,
                 fontStyle: FontStyle.italic,
               ),
@@ -1142,7 +1142,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
           child: Text(
             value,
             style: TextStyle(
-              fontSize: bold ? 15 : 13.5,
+              fontSize: bold ? _ty.scaled(15) : _ty.scaled(13.5),
               fontWeight: bold ? FontWeight.w600 : FontWeight.w400,
               color:
                   bold ? scheme.onSurface : scheme.onSurface.withValues(alpha: 0.85),
@@ -2417,7 +2417,8 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                   child: Text(
                     e.lemma,
                     style: TextStyle(
-                      fontSize: _st.dense ? _st.original : 15,
+                      fontSize:
+                          _st.dense ? _st.original : _ty.scaledOriginal(15),
                       fontWeight: FontWeight.w600,
                       color: scheme.onSurface,
                     ),
@@ -2883,7 +2884,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
               uiStrings['originalHint']?[locale] ??
                   'Tap a word to see its Strong\'s entry.',
               style: TextStyle(
-                fontSize: _st.dense ? _st.ref : 13,
+                fontSize: _st.dense ? _st.ref : _ty.scaled(13),
                 color: scheme.onSurfaceVariant,
               ),
             ),

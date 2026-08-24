@@ -718,8 +718,7 @@ class _BrowseWindowState extends State<BrowseWindow> {
                 Text(
                   _loadingLabel(context),
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                      fontSize: WbMetrics.text, color: wb.mutedText),
+                  style: TextStyle(fontSize: t.text, color: wb.mutedText),
                 ),
               ],
             ),

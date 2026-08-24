@@ -58,6 +58,15 @@ class _WordDistributionTableState extends State<WordDistributionTable> {
   static const double _minZoom = 0.7;
   static const double _maxZoom = 2.0;
 
+  /// Column widths and padding scale by the reader's Font Size as well
+  /// as the table's own zoom, because the cells are fixed-width and the
+  /// numeric ones sit in a `FittedBox`: a bigger font in an unchanged
+  /// column would be silently scaled back down to the size it started
+  /// at, and the setting would appear to do nothing. The percentage in
+  /// the zoom bar still reports `_zoom` alone — it is the control the
+  /// reader is holding.
+  double get _cellScale => _zoom * _ty.textScale;
+
   @override
   void initState() {
     super.initState();
@@ -203,9 +212,9 @@ class _WordDistributionTableState extends State<WordDistributionTable> {
     // Book columns widened from 38 → 46 so 4-digit counts (e.g. 7259
     // for very common words) fit at natural font size; FittedBox
     // (in _cellWidget) is the safety net for the rare wider case.
-    final fixedWidth = (64.0 + 96.0 + 140.0 + 60.0) * _zoom;
-    final groupWidth = groups.length * 70.0 * _zoom;
-    final bookWidth = books.length * 46.0 * _zoom;
+    final fixedWidth = (64.0 + 96.0 + 140.0 + 60.0) * _cellScale;
+    final groupWidth = groups.length * 70.0 * _cellScale;
+    final bookWidth = books.length * 46.0 * _cellScale;
     final totalWidth = fixedWidth + groupWidth + bookWidth;
 
     // Enable mouse-drag scrolling on web: by default Flutter only
@@ -618,7 +627,7 @@ class _WordDistributionTableState extends State<WordDistributionTable> {
     // Scale font size and column width by the current zoom factor so
     // every cell grows / shrinks together when the user taps +/−.
     final style = TextStyle(
-      fontSize: (isHeader ? 11 : 12) * _zoom,
+      fontSize: (isHeader ? _ty.scaled(11) : _ty.scaled(12)) * _zoom,
       fontWeight: isHeader || c.bold ? FontWeight.w700 : FontWeight.w400,
       fontFamily: c.mono ? 'monospace' : null,
       color: color,
@@ -639,8 +648,9 @@ class _WordDistributionTableState extends State<WordDistributionTable> {
       style: style,
     );
     final cell = Container(
-      width: c.width * _zoom,
-      padding: EdgeInsets.symmetric(horizontal: 6 * _zoom, vertical: 6 * _zoom),
+      width: c.width * _cellScale,
+      padding: EdgeInsets.symmetric(
+          horizontal: 6 * _cellScale, vertical: 6 * _cellScale),
       alignment: c.align == TextAlign.left
           ? Alignment.centerLeft
           : Alignment.center,

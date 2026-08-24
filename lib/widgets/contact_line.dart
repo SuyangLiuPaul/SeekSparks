@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/constants/workbench_theme.dart' show WbType;
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/services/link_opener.dart';
 import 'package:seeksparks/utils/clipboard_helper.dart';
@@ -45,9 +46,10 @@ class ContactLine extends StatelessWidget {
       TextSpan(
         style: TextStyle(
           fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-          fontSize: (settings.fontSize - (compact ? 4 : 2))
-              .clamp(11.0, 15.0)
-              .toDouble(),
+          // `settings.fontSize - 2` clamped to 11–15 was already pinned
+          // at its own ceiling by the 20 pt default, so the Font Size
+          // slider moved this line only downward and only below 17 pt.
+          fontSize: WbType.of(context).scaledSmall(compact ? 13 : 15),
           color: scheme.onSurfaceVariant,
           height: 1.4,
         ),
