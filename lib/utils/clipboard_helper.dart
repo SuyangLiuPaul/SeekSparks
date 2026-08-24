@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 
 import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/services/share_service.dart';
 import 'package:seeksparks/utils/clipboard_fallback_stub.dart'
     if (dart.library.js_interop) 'package:seeksparks/utils/clipboard_fallback_web.dart';
@@ -132,13 +134,24 @@ abstract class ClipboardHelper {
     await copyWithFeedback(context, text);
   }
 
+  /// The locale the APP is set to — `AppSettings.locale`, the same
+  /// source every other `uiStrings` lookup in this codebase reads.
+  ///
+  /// 2026-08-24 (owner-reported: the "Copied!" toast stayed English
+  /// after switching the app to 中文). This used to read
+  /// `Localizations.maybeLocaleOf(context)`, which is Flutter's own
+  /// locale — and `GetMaterialApp` in `main.dart` sets no `locale:`,
+  /// no `supportedLocales` and no `localizationsDelegates`, so that
+  /// value is the DEVICE's language and the in-app 🌐 switcher can
+  /// never move it. On an English iPad it returned 'en' forever while
+  /// the entire rest of the UI was Chinese. The lookup and the
+  /// translations were both correct; only the locale source was wrong.
+  ///
+  /// Read without listening: this runs inside an event handler to
+  /// build one snackbar string, not during build, so there is nothing
+  /// to rebuild and `watch` would throw outside a build phase.
   static String _localeFor(BuildContext context) {
-    // Best-effort locale read; ui_strings keys fall back to English.
-    final l = Localizations.maybeLocaleOf(context);
-    if (l == null) return 'en';
-    if (l.languageCode == 'zh') {
-      return l.scriptCode == 'Hant' ? 'zh-Hant' : 'zh-Hans';
-    }
-    return 'en';
+    final s = Provider.of<AppSettings>(context, listen: false);
+    return s.locale;
   }
 }
