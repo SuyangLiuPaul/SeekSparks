@@ -6284,6 +6284,40 @@ const uiStrings = {
   // The header carries the caveats that are about the chart; the ones
   // about a particular man are in his panel, and this line names him so
   // that a reader who has selected nobody still knows they exist.
+  // The era after Moses is counted, never plotted — see
+  // scripts/build_chronology.py. These label a ledger, not a chart.
+  'chronologyEraCounted': {
+    'zh-Hans': '各段年数合计',
+    'zh-Hant': '各段年數合計',
+    'en': 'The stated periods, added up',
+  },
+  'chronologyEraStated': {
+    'zh-Hans': '经文所记的总年数',
+    'zh-Hant': '經文所記的總年數',
+    'en': 'The total the text states',
+  },
+  'chronologyEraOver': {
+    'zh-Hans': '超出',
+    'zh-Hant': '超出',
+    'en': 'Over by',
+  },
+  // Four of these are stretches the text puts no number to at all; the
+  // fifth, Solomon's years before the temple, has one and is left out on
+  // purpose so the overflow stays the smallest the text allows. So the
+  // heading says what the list is — uncounted — and each entry says for
+  // itself why it is.
+  'chronologyEraNoNumber': {
+    'zh-Hans': '未计入上列总数的时期',
+    'zh-Hant': '未計入上列總數的時期',
+    'en': 'Stretches this total does not count',
+  },
+  // Shown only on the rows where the two texts state different figures,
+  // so the reader never has to guess which number belongs to which text.
+  'chronologyEraOtherText': {
+    'zh-Hans': '另一经文作',
+    'zh-Hant': '另一經文作',
+    'en': 'the other text reads',
+  },
   'chronologyMoreOn': {
     'zh-Hans': '另有说明（点选查看）',
     'zh-Hant': '另有說明（點選查看）',

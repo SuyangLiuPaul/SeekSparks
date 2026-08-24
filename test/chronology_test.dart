@@ -497,17 +497,37 @@ void main() {
     });
 
     // Why the chart ends after Moses, said on the chart rather than only
-    // in the source: 1 Kings 6:1 states its year as an ordinal that the
-    // generator's number-reader cannot read in either language. It carries
-    // no person because it is about the chart, not about Moses, and the
-    // header prints exactly the notes that carry no person.
+    // in the source. The reason is no longer that the numbers are
+    // unreadable — they are read, and the ledger below the chart prints
+    // them — but that the periods the text states overrun the total the
+    // text states for the span containing them, so no arrangement of them
+    // on the axis can be read out of the text. The note has to carry that
+    // overflow, because a note claiming the chart stops for want of
+    // numbers while the numbers sit under it would be a lie in print.
     test('why the chart stops is said on the chart, in both texts', () {
+      final era = data.era!;
       for (final t in ['mt', 'lxx']) {
         final note = data.notesFor(t).firstWhere((n) => n.id == 'chart_end');
         expect(note.personId, isNull);
         for (final locale in ['en', 'zh-Hans', 'zh-Hant']) {
-          expect(note.textFor(locale), contains('6:1'), reason: '$t $locale');
+          final text = note.textFor(locale);
+          expect(text, contains('6:1'), reason: '$t $locale');
+          expect(text, contains('${era.counted[t]}'), reason: '$t $locale');
+          expect(text, contains('${era.residue[t]}'), reason: '$t $locale');
+          expect(text, contains('${era.stated[t]!.ordinal}'),
+              reason: '$t $locale');
         }
+      }
+    });
+
+    test('the chart still stops at Moses, ledger or no ledger', () {
+      for (final t in ['mt', 'lxx']) {
+        expect(data.inTradition(t).last.id, 'moses', reason: t);
+        // No era figure may reach the axis: the whole point of counting
+        // this span instead of drawing it is that its years have no
+        // place on it.
+        final end = data.traditions.firstWhere((tr) => tr.id == t).endAm;
+        expect(end, data.byId('moses')!.figures[t]!.deathAm, reason: t);
       }
     });
 
@@ -594,6 +614,181 @@ void main() {
           expect(n.textFor(locale), isNotEmpty, reason: '${n.id} $locale');
         }
       }
+    });
+
+    // FROM THE EXODUS TO THE TEMPLE.
+    //
+    // The chart's bars stop at Moses because the chain of stated
+    // begettings stops. The numbers do not, and this block is what the
+    // text goes on saying. Every figure in it is read out of the shipped
+    // text by the generator, so what these tests pin is not "the right
+    // answer" — nobody has one — but that the asset still says what the
+    // text says, and that the two totals still disagree by the amount
+    // the prose claims. The disagreement IS the finding; a change that
+    // quietly reconciled it would be the defect.
+    group('the era counted below the chart', () {
+      test('the block is present and names itself in all three locales', () {
+        final era = data.era;
+        expect(era, isNotNull,
+            reason: 'the asset predates the era block; re-run '
+                'scripts/build_chronology.py');
+        for (final locale in ['en', 'zh-Hans', 'zh-Hant']) {
+          expect(era!.nameFor(locale), isNotEmpty, reason: locale);
+          expect(era.summaryFor(locale), isNotEmpty, reason: locale);
+          expect(era.divergenceFor(locale), isNotEmpty, reason: locale);
+        }
+      });
+
+      test('1 Kings 6:1 reads 480 in the Hebrew and 440 in the Greek', () {
+        final era = data.era!;
+        expect(era.stated['mt']!.ordinal, 480);
+        expect(era.stated['lxx']!.ordinal, 440);
+        // The ordinal is the year being counted, so one fewer has
+        // elapsed. Confusing the two is the classic error with this
+        // verse and it moves the temple a year.
+        for (final t in ['mt', 'lxx']) {
+          final s = era.stated[t]!;
+          expect(s.elapsed, s.ordinal - 1, reason: t);
+          expect(s.ref, '1 Kings 6:1', reason: t);
+        }
+      });
+
+      test('every period is read in both texts and cites a verse', () {
+        final era = data.era!;
+        expect(era.periods.length, 21);
+        final ref = RegExp(r'^(Numbers|Judges|1 Samuel|2 Samuel) \d+:\d+$');
+        final seen = <String>{};
+        for (final p in era.periods) {
+          expect(seen.add(p.id), isTrue, reason: 'duplicate ${p.id}');
+          expect(ref.hasMatch(p.ref), isTrue, reason: '${p.id} = ${p.ref}');
+          expect(p.kind, isNotEmpty, reason: p.id);
+          for (final t in ['mt', 'lxx']) {
+            expect(p.years[t], isNotNull, reason: '${p.id} $t');
+            expect(p.years[t]!, greaterThan(0), reason: '${p.id} $t');
+          }
+          for (final locale in ['en', 'zh-Hans', 'zh-Hant']) {
+            expect(p.nameFor(locale), isNotEmpty, reason: '${p.id} $locale');
+          }
+        }
+      });
+
+      // The total is arithmetic on the rows above it, and the reader is
+      // being asked to trust that it is. If it were typed rather than
+      // summed, the one number the whole ledger turns on would be the
+      // one number nothing checks.
+      test('the counted total is the sum of the rows, and the residue the '
+          'difference', () {
+        final era = data.era!;
+        for (final t in ['mt', 'lxx']) {
+          final sum = era.periods
+              .map((p) => p.years[t]!)
+              .fold<int>(0, (a, b) => a + b);
+          expect(era.counted[t], sum, reason: t);
+          expect(era.residue[t], era.counted[t]! - era.stated[t]!.elapsed,
+              reason: t);
+        }
+        expect(era.counted['mt'], 530);
+        expect(era.counted['lxx'], 520);
+        expect(era.residue['mt'], 51);
+        expect(era.residue['lxx'], 81);
+      });
+
+      // The reason this era is a ledger and not a row of bars. If a
+      // future edit ever made the periods fit inside the stated span,
+      // that is a finding about the source data and has to be looked at
+      // by a human before the chart is extended — it must not pass
+      // silently.
+      test('the stated periods overrun the stated total, in both texts', () {
+        final era = data.era!;
+        for (final t in ['mt', 'lxx']) {
+          expect(era.counted[t]!, greaterThan(era.stated[t]!.elapsed),
+              reason: t);
+          expect(era.residue[t]!, greaterThan(0), reason: t);
+        }
+      });
+
+      test('splitIds is exactly the rows where the texts disagree', () {
+        final era = data.era!;
+        final differ = [
+          for (final p in era.periods)
+            if (p.years['mt'] != p.years['lxx']) p.id
+        ];
+        expect(era.splitIds, differ);
+        expect(era.splitIds, ['othniel', 'eli']);
+        // Named, because these are the two the ledger prints the other
+        // text's figure beside and the only two it should.
+        final by = {for (final p in era.periods) p.id: p};
+        expect(by['othniel']!.years, {'mt': 40, 'lxx': 50});
+        expect(by['eli']!.years, {'mt': 40, 'lxx': 20});
+      });
+
+      // The overflow is not the whole gap: five further stretches are
+      // stated as periods and given no number at all, so the true total
+      // is unknown rather than merely too large. A reader shown only the
+      // 51 would take it for the size of the problem.
+      test('the unnumbered stretches are listed with their verse and a '
+          'reason', () {
+        final era = data.era!;
+        expect(era.gaps.map((g) => g.id).toList(),
+            ['joshua', 'elders', 'samuel', 'saul', 'solomon']);
+        final ref = RegExp(r'^(Joshua|Judges|1 Samuel|1 Kings) \d+:\d+$');
+        for (final g in era.gaps) {
+          expect(ref.hasMatch(g.ref), isTrue, reason: '${g.id} = ${g.ref}');
+          for (final locale in ['en', 'zh-Hans', 'zh-Hant']) {
+            expect(g.noteFor(locale), isNotEmpty, reason: '${g.id} $locale');
+          }
+        }
+      });
+
+      // The prose is generated from the numbers so that it cannot drift
+      // away from them. Asserting that each figure appears in each
+      // locale is how that stays true after a translation edit.
+      test('the summary and the divergence quote the measured figures', () {
+        final era = data.era!;
+        for (final locale in ['en', 'zh-Hans', 'zh-Hant']) {
+          final s = era.summaryFor(locale);
+          for (final n in [
+            '${era.stated['mt']!.ordinal}',
+            '${era.stated['mt']!.elapsed}',
+            '${era.counted['mt']}',
+            '${era.residue['mt']}',
+            '${era.counted['lxx']}',
+            '${era.stated['lxx']!.elapsed}',
+            '${era.residue['lxx']}',
+            '${era.gaps.length}',
+          ]) {
+            expect(s, contains(n), reason: '$locale is missing $n');
+          }
+          final d = era.divergenceFor(locale);
+          expect(d, contains('${era.splitIds.length}'), reason: locale);
+          expect(d, contains('${era.periods.length}'), reason: locale);
+          expect(d, contains('${era.stated['lxx']!.ordinal}'), reason: locale);
+        }
+      });
+
+      // Same rule as the rest of the asset: prose names its book in the
+      // reader's language, chips carry the asset's English reference.
+      test('the Chinese prose cites the verse in Chinese', () {
+        final era = data.era!;
+        expect(era.summaryFor('zh-Hans'), contains('列王纪上 6:1'));
+        expect(era.summaryFor('zh-Hant'), contains('列王紀上 6:1'));
+        expect(era.summaryFor('zh-Hans'), isNot(contains('1 Kings')));
+        expect(era.summaryFor('zh-Hant'), isNot(contains('1 Kings')));
+      });
+
+      // Anno Mundi is the axis, and this block deliberately supplies no
+      // AM years at all — its figures are durations. A year appearing
+      // here would mean somebody had placed these periods on the axis
+      // after all.
+      test('the era states durations and never a year', () {
+        final era = data.era!;
+        for (final p in era.periods) {
+          for (final y in p.years.values) {
+            expect(y, lessThan(200),
+                reason: '${p.id} looks like an AM year, not a duration');
+          }
+        }
+      });
     });
   });
 }

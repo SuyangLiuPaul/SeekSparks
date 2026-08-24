@@ -20,6 +20,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/chronology.dart';
 import 'package:seeksparks/pages/chronology_page.dart';
@@ -304,5 +305,129 @@ void main() {
     // 12 pt is the tightest end, which is where the English names — not
     // measurable here, see above — have the least room.
     expect(perEm[12.0]!, lessThan(perEm[40.0]!));
+  });
+
+  // THE LEDGER UNDER THE CHART.
+  //
+  // `chronology_test.dart` pins the era block in the asset. What it
+  // cannot see is whether any of it reaches the screen — a ledger widget
+  // that compiles and is never built looks identical from the asset's
+  // side. It sits below Moses, the last bar, so every assertion here has
+  // to scroll to it first, which is itself the check that a reader
+  // running out of chart arrives at it rather than at nothing.
+  Future<void> toLedger(WidgetTester tester, ChronologyEra era) async {
+    await tester.dragUntilVisible(
+      find.text(era.nameFor('zh-Hans')),
+      find.byType(Scrollable).first,
+      const Offset(0, -120),
+    );
+    await settle(tester);
+  }
+
+  testWidgets('the era is reachable below the last bar, with its totals',
+      (tester) async {
+    await pump(tester, const Size(1440, 900));
+    final era = data.era!;
+    await toLedger(tester, era);
+    expect(tester.takeException(), isNull);
+
+    // 530 counted, 479 stated, over by 51 — the three numbers the whole
+    // ledger exists to put side by side. Read off the asset rather than
+    // typed, so this test measures the screen and not itself.
+    expect(find.text('${era.counted['mt']}'), findsOneWidget);
+    expect(find.text('${era.stated['mt']!.elapsed}'), findsOneWidget);
+    expect(find.text('${era.residue['mt']}'), findsOneWidget);
+    expect(find.text('1 Kings 6:1'), findsWidgets);
+
+    // Every period is named and carries the verse it was read from.
+    for (final p in era.periods) {
+      expect(find.text(p.nameFor('zh-Hans')), findsOneWidget, reason: p.id);
+    }
+
+    await unmount(tester);
+  });
+
+  // The two texts disagree at the total and at two of the twenty-one
+  // rows, and the ledger is the only place that disagreement is visible.
+  // A ledger that showed the Hebrew figures under a Greek heading would
+  // be the worst kind of wrong here: plausible and silent.
+  testWidgets('switching to the Greek text moves the whole ledger',
+      (tester) async {
+    await pump(tester, const Size(1440, 900));
+    final era = data.era!;
+
+    await tester.tap(find.text('七十士'));
+    await settle(tester);
+    await toLedger(tester, era);
+    expect(tester.takeException(), isNull);
+
+    expect(find.text('${era.counted['lxx']}'), findsOneWidget);
+    expect(find.text('${era.stated['lxx']!.elapsed}'), findsOneWidget);
+    expect(find.text('${era.residue['lxx']}'), findsOneWidget);
+    // 51 belongs to the Hebrew and must not survive the switch.
+    expect(find.text('${era.residue['mt']}'), findsNothing);
+
+    await unmount(tester);
+  });
+
+  // The other text's figure is printed on the rows where the texts
+  // differ and nowhere else. Nineteen redundant asides would bury the
+  // two that matter, and an aside on a row where both texts agree would
+  // manufacture a disagreement.
+  testWidgets('only the split rows carry the other text\'s figure',
+      (tester) async {
+    await pump(tester, const Size(1440, 900));
+    final era = data.era!;
+    await toLedger(tester, era);
+
+    final aside = uiStrings['chronologyEraOtherText']!['zh-Hans']!;
+    expect(find.textContaining(aside), findsNWidgets(era.splitIds.length));
+    for (final id in era.splitIds) {
+      final p = era.periods.firstWhere((e) => e.id == id);
+      expect(find.text('$aside ${p.years['lxx']}'), findsOneWidget,
+          reason: id);
+    }
+
+    await unmount(tester);
+  });
+
+  // The figures live in a set-width column so the ledger reads as a
+  // column of numbers rather than a ragged list, and a column too narrow
+  // for its widest figure would not throw — it would paint over the
+  // label beside it. This is a floor, not a caught defect: run against a
+  // column of 1.5 em it fails on 530 (14.9 needed, 10.8 granted), and
+  // every width this file has ever shipped clears it. It is here so that
+  // a later edit tightening the column has something to hit.
+  testWidgets('the figure column holds three digits at every font size',
+      (tester) async {
+    final era = data.era!;
+    final figures = {
+      for (final p in era.periods) '${p.years['mt']}',
+      '${era.counted['mt']}',
+      '${era.stated['mt']!.elapsed}',
+      '${era.residue['mt']}',
+    };
+    for (final fontSize in [12.0, 20.0, 40.0]) {
+      final settings = await pump(tester, const Size(1440, 900));
+      settings.setFontSize(fontSize);
+      await settle(tester);
+      await toLedger(tester, era);
+      expect(tester.takeException(), isNull, reason: '$fontSize pt');
+
+      final measured = <String>{};
+      for (final para
+          in tester.renderObjectList<RenderParagraph>(find.byType(RichText))) {
+        final plain = para.text.toPlainText();
+        if (!figures.contains(plain)) continue;
+        measured.add(plain);
+        expect(para.getMaxIntrinsicWidth(double.infinity),
+            lessThanOrEqualTo(para.size.width),
+            reason: '"$plain" at $fontSize pt');
+      }
+      // 530 is the widest figure in the ledger, so a run that never saw
+      // three digits proved nothing about the column.
+      expect(measured, containsAll(figures), reason: '$fontSize pt');
+      await unmount(tester);
+    }
   });
 }

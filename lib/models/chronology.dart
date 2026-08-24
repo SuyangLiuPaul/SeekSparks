@@ -205,12 +205,171 @@ class ChronologyNote {
       );
 }
 
+/// One span the text puts a number of years to, between the exodus and
+/// the temple. It has no place on the chart's axis and is not given one:
+/// the text never says these periods run one after another.
+class ChronologyPeriod {
+  const ChronologyPeriod({
+    required this.id,
+    required this.kind,
+    required this.names,
+    required this.ref,
+    required this.years,
+  });
+
+  final String id;
+
+  /// servitude / rest / judge / reign / wilderness — what kind of span
+  /// the verse is describing, which is the only ordering information
+  /// available without inventing one.
+  final String kind;
+  final Map<String, String> names;
+  final String ref;
+
+  /// The figure each text states. The two do not always agree, and where
+  /// they do not that is the finding, not an error.
+  final Map<String, int> years;
+
+  String nameFor(String locale) => names[locale] ?? names['en'] ?? id;
+
+  static ChronologyPeriod fromJson(Map<String, dynamic> j) => ChronologyPeriod(
+        id: (j['id'] as String?) ?? '',
+        kind: (j['kind'] as String?) ?? '',
+        names: _localised(j['name']),
+        ref: (j['ref'] as String?) ?? '',
+        years: {
+          for (final e in ((j['years'] as Map?) ?? const {}).entries)
+            if (e.value is num) e.key.toString(): (e.value as num).toInt(),
+        },
+      );
+}
+
+/// A stretch inside the same span that neither text puts a number to.
+/// Listed because leaving it out would make the total below look complete.
+class ChronologyGap {
+  const ChronologyGap({
+    required this.id,
+    required this.ref,
+    required this.notes,
+  });
+
+  final String id;
+  final String ref;
+  final Map<String, String> notes;
+
+  String noteFor(String locale) => notes[locale] ?? notes['en'] ?? '';
+
+  static ChronologyGap fromJson(Map<String, dynamic> j) => ChronologyGap(
+        id: (j['id'] as String?) ?? '',
+        ref: (j['ref'] as String?) ?? '',
+        notes: _localised(j['note']),
+      );
+}
+
+/// The whole span 1 Kings 6:1 measures, as one text states it.
+class ChronologyStatedSpan {
+  const ChronologyStatedSpan({
+    required this.ordinal,
+    required this.elapsed,
+    required this.ref,
+  });
+
+  /// The year as the verse writes it — the 480th. An ordinal.
+  final int ordinal;
+
+  /// The years that have therefore run: one fewer. The subtraction is
+  /// made in the generator, once, and said in words on the surface.
+  final int elapsed;
+  final String ref;
+
+  static ChronologyStatedSpan fromJson(Map<String, dynamic> j) =>
+      ChronologyStatedSpan(
+        ordinal: (j['ordinal'] as num?)?.toInt() ?? 0,
+        elapsed: (j['elapsed'] as num?)?.toInt() ?? 0,
+        ref: (j['ref'] as String?) ?? '',
+      );
+}
+
+/// From the exodus to the temple: the era the text counts twice and does
+/// not reconcile with itself. Counted, never plotted — see
+/// `scripts/build_chronology.py`.
+class ChronologyEra {
+  const ChronologyEra({
+    required this.id,
+    required this.names,
+    required this.stated,
+    required this.counted,
+    required this.residue,
+    required this.splitIds,
+    required this.periods,
+    required this.gaps,
+    required this.summary,
+    required this.divergence,
+  });
+
+  final String id;
+  final Map<String, String> names;
+  final Map<String, ChronologyStatedSpan> stated;
+
+  /// The periods below, added up, per tradition.
+  final Map<String, int> counted;
+
+  /// [counted] less the stated span. Positive means the figures the text
+  /// states overrun the total the text states.
+  final Map<String, int> residue;
+
+  /// The periods the two texts number differently.
+  final List<String> splitIds;
+  final List<ChronologyPeriod> periods;
+  final List<ChronologyGap> gaps;
+  final Map<String, String> summary;
+  final Map<String, String> divergence;
+
+  String nameFor(String locale) => names[locale] ?? names['en'] ?? id;
+  String summaryFor(String locale) => summary[locale] ?? summary['en'] ?? '';
+  String divergenceFor(String locale) =>
+      divergence[locale] ?? divergence['en'] ?? '';
+
+  static ChronologyEra fromJson(Map<String, dynamic> j) => ChronologyEra(
+        id: (j['id'] as String?) ?? '',
+        names: _localised(j['name']),
+        stated: {
+          for (final e in ((j['stated'] as Map?) ?? const {}).entries)
+            if (e.value is Map)
+              e.key.toString(): ChronologyStatedSpan.fromJson(
+                  (e.value as Map).cast<String, dynamic>()),
+        },
+        counted: {
+          for (final e in ((j['counted'] as Map?) ?? const {}).entries)
+            if (e.value is num) e.key.toString(): (e.value as num).toInt(),
+        },
+        residue: {
+          for (final e in ((j['residue'] as Map?) ?? const {}).entries)
+            if (e.value is num) e.key.toString(): (e.value as num).toInt(),
+        },
+        splitIds: ((j['splitIds'] as List?) ?? const [])
+            .whereType<String>()
+            .toList(),
+        periods: ((j['periods'] as List?) ?? const [])
+            .whereType<Map<String, dynamic>>()
+            .map(ChronologyPeriod.fromJson)
+            .toList(),
+        gaps: ((j['unnumbered'] as List?) ?? const [])
+            .whereType<Map<String, dynamic>>()
+            .map(ChronologyGap.fromJson)
+            .toList(),
+        summary: _localised(j['summary']),
+        divergence: _localised(j['divergence']),
+      );
+}
+
 class ChronologyData {
   const ChronologyData({
     required this.traditions,
     required this.epochs,
     required this.notes,
     required this.patriarchs,
+    required this.era,
     required this.unitNote,
     required this.traditionsNote,
     required this.secondWitness,
@@ -221,6 +380,10 @@ class ChronologyData {
   final List<ChronologyEpoch> epochs;
   final List<ChronologyNote> notes;
   final List<Patriarch> patriarchs;
+
+  /// Absent only if the asset predates the era block; every surface that
+  /// reads it must cope with that rather than assume.
+  final ChronologyEra? era;
   final String unitNote;
   final String traditionsNote;
   final String secondWitness;
@@ -269,6 +432,9 @@ class ChronologyData {
           .whereType<Map<String, dynamic>>()
           .map(Patriarch.fromJson)
           .toList(),
+      era: j['era'] is Map
+          ? ChronologyEra.fromJson((j['era'] as Map).cast<String, dynamic>())
+          : null,
       unitNote: (meta['unitNote'] as String?) ?? '',
       traditionsNote: (meta['traditions'] as String?) ?? '',
       secondWitness: (checks['secondWitness'] as String?) ?? '',

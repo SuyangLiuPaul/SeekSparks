@@ -54,10 +54,18 @@ import 'package:seeksparks/widgets/localized_back_button.dart';
 /// ground in the two texts — the Hebrew's 430 years are in Egypt, the
 /// Greek's in Egypt *and* Canaan — and each is counted from where its
 /// own wording starts it, which is the same thing this chart does
-/// everywhere else rather than a choice between them. It stops after
-/// Moses because the verse that would carry it on, 1 Kings 6:1, states
-/// its year as an ordinal that the generator's number-reader cannot read
-/// in either language.
+/// everywhere else rather than a choice between them.
+///
+/// The bars stop after Moses because that is where the chain of stated
+/// begettings stops. The numbers do not: 1 Kings 6:1 carries the span on
+/// to Solomon's temple, and the periods inside it — wilderness, the
+/// judges, Eli, David — are all stated. They are shown as a ledger below
+/// the chart rather than as bars, because the text never says one period
+/// begins where the last ends, and at Judges 10:7 two oppressions run at
+/// once. The arithmetic says what drawing them would cost: the stated
+/// periods add up to more than the single total the text states for the
+/// span containing them. That overflow is the finding, and burying it
+/// under a tidy row of bars would be a reconstruction.
 ///
 /// The rows are four kinds of source, and the colour says which: Genesis
 /// 5 and 11 state their figures in a formula, Genesis 12-50 scatters
@@ -616,6 +624,16 @@ class _Chart extends StatelessWidget {
                           selectedHue: _hueFor(selected?.line),
                           onTap: () => onSelect(p.id),
                         ),
+                      // Directly under Moses, the last bar the axis can
+                      // honestly draw, because that is where a reader
+                      // scrolling forward in time arrives at what follows him.
+                      if (data.era != null)
+                        _EraLedger(
+                          data: data,
+                          era: data.era!,
+                          tradition: tradition,
+                          locale: locale,
+                        ),
                       const SizedBox(height: 16),
                     ],
                   ),
@@ -1043,16 +1061,8 @@ class _DetailPanel extends StatelessWidget {
             'Only the total is stated for this man; the other figures were worked out from ages given elsewhere in the narrative.');
   }
 
-  Future<void> _jump(BuildContext context, String raw) async {
-    final ref = parseReference(raw);
-    if (ref == null) return;
-    final mp = context.read<MainProvider>();
-    final result = await jumper.resolveAndPrepareJump(reference: ref, mp: mp);
-    if (!context.mounted) return;
-    final ok = await jumper.showJumpResultSnackBar(context, result);
-    if (!ok || !context.mounted) return;
-    navigateToReader(context);
-  }
+  Future<void> _jump(BuildContext context, String raw) =>
+      _jumpToReference(context, raw);
 
   @override
   Widget build(BuildContext context) {
@@ -1196,6 +1206,17 @@ class _DetailPanel extends StatelessWidget {
   }
 }
 
+Future<void> _jumpToReference(BuildContext context, String raw) async {
+  final ref = parseReference(raw);
+  if (ref == null) return;
+  final mp = context.read<MainProvider>();
+  final result = await jumper.resolveAndPrepareJump(reference: ref, mp: mp);
+  if (!context.mounted) return;
+  final ok = await jumper.showJumpResultSnackBar(context, result);
+  if (!ok || !context.mounted) return;
+  navigateToReader(context);
+}
+
 class _Fact extends StatelessWidget {
   const _Fact({
     required this.label,
@@ -1233,6 +1254,232 @@ class _Fact extends StatelessWidget {
                 ),
             ],
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// FROM THE EXODUS TO THE TEMPLE, COUNTED RATHER THAN DRAWN.
+///
+/// This is deliberately a ledger and not a band on the axis. Genesis
+/// hands the chart an unbroken chain — A lived x years and begat B — and
+/// after Moses the text stops doing that. It goes on stating durations,
+/// but it never says one period begins where the last ends, and at
+/// Judges 10:7 two oppressions run at once. Laying these bars end to end
+/// would be a reconstruction, and the arithmetic says what kind: the
+/// periods the text states add up to MORE than the single total the text
+/// states for the span containing them. Every number below is read out
+/// of the shipped text by `scripts/build_chronology.py`; the two totals
+/// and the overflow are computed there, never typed.
+class _EraLedger extends StatelessWidget {
+  const _EraLedger({
+    required this.data,
+    required this.era,
+    required this.tradition,
+    required this.locale,
+  });
+
+  final ChronologyData data;
+  final ChronologyEra era;
+  final ChronologyTradition tradition;
+  final String locale;
+
+  String _s(String key, String fallback) =>
+      uiStrings[key]?[locale] ?? fallback;
+
+  @override
+  Widget build(BuildContext context) {
+    final wb = WbColors.of(context);
+    final t = WbType.of(context);
+    final stated = era.stated[tradition.id];
+    final counted = era.counted[tradition.id];
+    final residue = era.residue[tradition.id];
+    if (stated == null || counted == null || residue == null) {
+      return const SizedBox.shrink();
+    }
+    final otherId = data.traditions
+        .firstWhere((tr) => tr.id != tradition.id, orElse: () => tradition)
+        .id;
+
+    return Align(
+      alignment: AlignmentDirectional.topStart,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: t.scaled(760)),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(12, 20, 12, 8),
+          decoration: BoxDecoration(
+            border: Border(top: BorderSide(color: wb.border)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                era.nameFor(locale),
+                style: TextStyle(
+                    fontSize: t.text,
+                    color: wb.text,
+                    fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 6),
+              Text(era.summaryFor(locale),
+                  style: TextStyle(fontSize: t.chrome, color: wb.mutedText)),
+              if (era.divergenceFor(locale).isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(era.divergenceFor(locale),
+                    style: TextStyle(fontSize: t.chrome, color: wb.mutedText)),
+              ],
+              const SizedBox(height: 12),
+              for (final p in era.periods)
+                _EraRow(
+                  years: p.years[tradition.id],
+                  label: p.nameFor(locale),
+                  reference: p.ref,
+                  // Only the rows where the texts differ carry the other
+                  // text's figure. Printing both on every row would bury
+                  // the two that matter under nineteen that do not.
+                  aside: era.splitIds.contains(p.id)
+                      ? '${_s('chronologyEraOtherText', 'the other text reads')}'
+                          ' ${p.years[otherId]}'
+                      : null,
+                ),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: Container(height: 1, color: wb.border),
+              ),
+              _EraRow(
+                years: counted,
+                label: _s('chronologyEraCounted', 'The stated periods, '
+                    'added up'),
+                reference: null,
+                aside: null,
+                emphasis: true,
+              ),
+              _EraRow(
+                years: stated.elapsed,
+                label: _s('chronologyEraStated', 'The total the text states'),
+                reference: stated.ref,
+                aside: null,
+                emphasis: true,
+              ),
+              _EraRow(
+                years: residue,
+                label: _s('chronologyEraOver', 'Over by'),
+                reference: null,
+                aside: null,
+                emphasis: true,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                '${_s('chronologyEraNoNumber', 'Stretches the text gives no '
+                    'number to')} · ${era.gaps.length}',
+                style: TextStyle(fontSize: t.chrome, color: wb.mutedText),
+              ),
+              for (final g in era.gaps)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      InkWell(
+                        onTap: () => _jumpToReference(context, g.ref),
+                        child: Text(g.ref,
+                            style: TextStyle(
+                                fontSize: t.chrome, color: wb.link)),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(g.noteFor(locale),
+                            style: TextStyle(
+                                fontSize: t.chrome, color: wb.mutedText)),
+                      ),
+                    ],
+                  ),
+                ),
+              const SizedBox(height: 8),
+              Text(
+                '${_s('chronologyYears', 'years')} · '
+                '${tradition.longNameFor(locale)}',
+                style: TextStyle(fontSize: t.chrome, color: wb.mutedText),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _EraRow extends StatelessWidget {
+  const _EraRow({
+    required this.years,
+    required this.label,
+    required this.reference,
+    required this.aside,
+    this.emphasis = false,
+  });
+
+  final int? years;
+  final String label;
+  final String? reference;
+  final String? aside;
+  final bool emphasis;
+
+  @override
+  Widget build(BuildContext context) {
+    final wb = WbColors.of(context);
+    final t = WbType.of(context);
+    final ref = reference;
+    final note = aside;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            // A multiple of the glyphs it holds, not a round number of
+            // pixels: the widest figure here is three digits, and the
+            // column is right-aligned so an overrun would spill left
+            // across nothing rather than clip. Tying the width to
+            // `t.text` keeps that headroom identical at every font size.
+            width: t.text * 3.4,
+            child: Text(
+              years == null ? '—' : '$years',
+              textAlign: TextAlign.end,
+              style: TextStyle(
+                fontSize: t.text,
+                color: wb.text,
+                fontWeight: emphasis ? FontWeight.w600 : FontWeight.w400,
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label,
+                    style: TextStyle(
+                      fontSize: t.text,
+                      color: wb.text,
+                      fontWeight:
+                          emphasis ? FontWeight.w600 : FontWeight.w400,
+                    )),
+                if (note != null)
+                  Text(note,
+                      style:
+                          TextStyle(fontSize: t.chrome, color: wb.mutedText)),
+              ],
+            ),
+          ),
+          if (ref != null) ...[
+            const SizedBox(width: 8),
+            InkWell(
+              onTap: () => _jumpToReference(context, ref),
+              child: Text(ref,
+                  style: TextStyle(fontSize: t.chrome, color: wb.link)),
+            ),
+          ],
         ],
       ),
     );

@@ -237,9 +237,9 @@
    "tradition": "mt",
    "personId": null,
    "text": {
-    "en": "The chart ends here. The next span the text offers is 1 Kings 6:1, from the exodus to Solomon's temple, and it is written as an ordinal — “the four hundred and eightieth year” — which the number-reader behind this chart cannot read in either language. The two texts do not even spell the same year there: the Greek reads “the fortieth and four hundredth”. A figure this chart cannot read is one it will not plot.",
-    "zh-Hans": "本图到此为止。经文所记的下一段年数是列王纪上 6:1，自出埃及至所罗门建殿，写作序数「第四百八十年」，本图背后的数字解析器在两种语文中都读不出序数。且两种经文在此连年份都不相同：希腊文作「第四十又第四百年」。读不出的数字，本图不画。",
-    "zh-Hant": "本圖到此為止。經文所記的下一段年數是列王紀上 6:1，自出埃及至所羅門建殿，寫作序數「第四百八十年」，本圖背後的數字解析器在兩種語文中都讀不出序數。且兩種經文在此連年份都不相同：希臘文作「第四十又第四百年」。讀不出的數字，本圖不畫。"
+    "en": "The chart ends here, and not for want of numbers. 1 Kings 6:1 carries the span on to Solomon's temple — the 480th year after the exodus, 479 years — but the periods the text states inside it come to 530, over by 51, with more stretches it gives no number to at all. Laying those bars end to end would be a reconstruction, so this era is counted below instead of drawn.",
+    "zh-Hans": "本图到此为止，并非因为经文没有数字。列王纪上 6:1 把年数一直带到所罗门建殿——出埃及后第480年，即479年——但其间经文逐条所记的各段年数合计530年，多出51年，还有几段全然未记年数。把这些年段一段接一段排在轴上，就成了重构；故本图不画这一段，只在下方作统计。",
+    "zh-Hant": "本圖到此為止，並非因為經文沒有數字。列王紀上 6:1 把年數一直帶到所羅門建殿——出埃及後第480年，即479年——但其間經文逐條所記的各段年數合計530年，多出51年，還有幾段全然未記年數。把這些年段一段接一段排在軸上，就成了重構；故本圖不畫這一段，只在下方作統計。"
    }
   },
   {
@@ -247,12 +247,397 @@
    "tradition": "lxx",
    "personId": null,
    "text": {
-    "en": "The chart ends here. The next span the text offers is 1 Kings 6:1, from the exodus to Solomon's temple, and it is written as an ordinal — “the four hundred and eightieth year” — which the number-reader behind this chart cannot read in either language. The two texts do not even spell the same year there: the Greek reads “the fortieth and four hundredth”. A figure this chart cannot read is one it will not plot.",
-    "zh-Hans": "本图到此为止。经文所记的下一段年数是列王纪上 6:1，自出埃及至所罗门建殿，写作序数「第四百八十年」，本图背后的数字解析器在两种语文中都读不出序数。且两种经文在此连年份都不相同：希腊文作「第四十又第四百年」。读不出的数字，本图不画。",
-    "zh-Hant": "本圖到此為止。經文所記的下一段年數是列王紀上 6:1，自出埃及至所羅門建殿，寫作序數「第四百八十年」，本圖背後的數字解析器在兩種語文中都讀不出序數。且兩種經文在此連年份都不相同：希臘文作「第四十又第四百年」。讀不出的數字，本圖不畫。"
+    "en": "The chart ends here, and not for want of numbers. 1 Kings 6:1 carries the span on to Solomon's temple — the 440th year after the exodus, 439 years — but the periods the text states inside it come to 520, over by 81, with more stretches it gives no number to at all. Laying those bars end to end would be a reconstruction, so this era is counted below instead of drawn.",
+    "zh-Hans": "本图到此为止，并非因为经文没有数字。列王纪上 6:1 把年数一直带到所罗门建殿——出埃及后第440年，即439年——但其间经文逐条所记的各段年数合计520年，多出81年，还有几段全然未记年数。把这些年段一段接一段排在轴上，就成了重构；故本图不画这一段，只在下方作统计。",
+    "zh-Hant": "本圖到此為止，並非因為經文沒有數字。列王紀上 6:1 把年數一直帶到所羅門建殿——出埃及後第440年，即439年——但其間經文逐條所記的各段年數合計520年，多出81年，還有幾段全然未記年數。把這些年段一段接一段排在軸上，就成了重構；故本圖不畫這一段，只在下方作統計。"
    }
   }
  ],
+ "era": {
+  "id": "exodus_to_temple",
+  "name": {
+   "en": "From the exodus to the temple",
+   "zh-Hans": "从出埃及到建殿",
+   "zh-Hant": "從出埃及到建殿"
+  },
+  "stated": {
+   "mt": {
+    "ordinal": 480,
+    "elapsed": 479,
+    "ref": "1 Kings 6:1"
+   },
+   "lxx": {
+    "ordinal": 440,
+    "elapsed": 439,
+    "ref": "1 Kings 6:1"
+   }
+  },
+  "counted": {
+   "mt": 530,
+   "lxx": 520
+  },
+  "residue": {
+   "mt": 51,
+   "lxx": 81
+  },
+  "splitIds": [
+   "othniel",
+   "eli"
+  ],
+  "periods": [
+   {
+    "id": "wilderness",
+    "kind": "wilderness",
+    "name": {
+     "en": "The wilderness",
+     "zh-Hans": "旷野漂流",
+     "zh-Hant": "曠野漂流"
+    },
+    "ref": "Numbers 14:33",
+    "years": {
+     "mt": 40,
+     "lxx": 40
+    }
+   },
+   {
+    "id": "cushan",
+    "kind": "servitude",
+    "name": {
+     "en": "Servitude to Cushan-Rishathaim",
+     "zh-Hans": "服事古珊利萨田",
+     "zh-Hant": "服事古珊利薩田"
+    },
+    "ref": "Judges 3:8",
+    "years": {
+     "mt": 8,
+     "lxx": 8
+    }
+   },
+   {
+    "id": "othniel",
+    "kind": "rest",
+    "name": {
+     "en": "Rest under Othniel",
+     "zh-Hans": "俄陀聂时的太平",
+     "zh-Hant": "俄陀聶時的太平"
+    },
+    "ref": "Judges 3:11",
+    "years": {
+     "mt": 40,
+     "lxx": 50
+    }
+   },
+   {
+    "id": "eglon",
+    "kind": "servitude",
+    "name": {
+     "en": "Servitude to Eglon of Moab",
+     "zh-Hans": "服事摩押王伊矶伦",
+     "zh-Hant": "服事摩押王伊磯倫"
+    },
+    "ref": "Judges 3:14",
+    "years": {
+     "mt": 18,
+     "lxx": 18
+    }
+   },
+   {
+    "id": "ehud",
+    "kind": "rest",
+    "name": {
+     "en": "Rest under Ehud",
+     "zh-Hans": "以笏时的太平",
+     "zh-Hant": "以笏時的太平"
+    },
+    "ref": "Judges 3:30",
+    "years": {
+     "mt": 80,
+     "lxx": 80
+    }
+   },
+   {
+    "id": "jabin",
+    "kind": "servitude",
+    "name": {
+     "en": "Oppression by Jabin",
+     "zh-Hans": "耶宾的欺压",
+     "zh-Hant": "耶賓的欺壓"
+    },
+    "ref": "Judges 4:3",
+    "years": {
+     "mt": 20,
+     "lxx": 20
+    }
+   },
+   {
+    "id": "deborah",
+    "kind": "rest",
+    "name": {
+     "en": "Rest after Deborah",
+     "zh-Hans": "底波拉之后的太平",
+     "zh-Hant": "底波拉之後的太平"
+    },
+    "ref": "Judges 5:31",
+    "years": {
+     "mt": 40,
+     "lxx": 40
+    }
+   },
+   {
+    "id": "midian",
+    "kind": "servitude",
+    "name": {
+     "en": "Midian",
+     "zh-Hans": "米甸的手下",
+     "zh-Hant": "米甸的手下"
+    },
+    "ref": "Judges 6:1",
+    "years": {
+     "mt": 7,
+     "lxx": 7
+    }
+   },
+   {
+    "id": "gideon",
+    "kind": "rest",
+    "name": {
+     "en": "Quietness in Gideon's days",
+     "zh-Hans": "基甸年间的安静",
+     "zh-Hant": "基甸年間的安靜"
+    },
+    "ref": "Judges 8:28",
+    "years": {
+     "mt": 40,
+     "lxx": 40
+    }
+   },
+   {
+    "id": "abimelech",
+    "kind": "judge",
+    "name": {
+     "en": "Abimelech",
+     "zh-Hans": "亚比米勒",
+     "zh-Hant": "亞比米勒"
+    },
+    "ref": "Judges 9:22",
+    "years": {
+     "mt": 3,
+     "lxx": 3
+    }
+   },
+   {
+    "id": "tola",
+    "kind": "judge",
+    "name": {
+     "en": "Tola",
+     "zh-Hans": "陀拉",
+     "zh-Hant": "陀拉"
+    },
+    "ref": "Judges 10:2",
+    "years": {
+     "mt": 23,
+     "lxx": 23
+    }
+   },
+   {
+    "id": "jair",
+    "kind": "judge",
+    "name": {
+     "en": "Jair",
+     "zh-Hans": "睚珥",
+     "zh-Hant": "睚珥"
+    },
+    "ref": "Judges 10:3",
+    "years": {
+     "mt": 22,
+     "lxx": 22
+    }
+   },
+   {
+    "id": "ammon",
+    "kind": "servitude",
+    "name": {
+     "en": "Oppression from Ammon",
+     "zh-Hans": "亚扪人的欺压",
+     "zh-Hant": "亞捫人的欺壓"
+    },
+    "ref": "Judges 10:8",
+    "years": {
+     "mt": 18,
+     "lxx": 18
+    }
+   },
+   {
+    "id": "jephthah",
+    "kind": "judge",
+    "name": {
+     "en": "Jephthah",
+     "zh-Hans": "耶弗他",
+     "zh-Hant": "耶弗他"
+    },
+    "ref": "Judges 12:7",
+    "years": {
+     "mt": 6,
+     "lxx": 6
+    }
+   },
+   {
+    "id": "ibzan",
+    "kind": "judge",
+    "name": {
+     "en": "Ibzan",
+     "zh-Hans": "以比赞",
+     "zh-Hant": "以比讚"
+    },
+    "ref": "Judges 12:9",
+    "years": {
+     "mt": 7,
+     "lxx": 7
+    }
+   },
+   {
+    "id": "elon",
+    "kind": "judge",
+    "name": {
+     "en": "Elon",
+     "zh-Hans": "以伦",
+     "zh-Hant": "以倫"
+    },
+    "ref": "Judges 12:11",
+    "years": {
+     "mt": 10,
+     "lxx": 10
+    }
+   },
+   {
+    "id": "abdon",
+    "kind": "judge",
+    "name": {
+     "en": "Abdon",
+     "zh-Hans": "押顿",
+     "zh-Hant": "押頓"
+    },
+    "ref": "Judges 12:14",
+    "years": {
+     "mt": 8,
+     "lxx": 8
+    }
+   },
+   {
+    "id": "philistines",
+    "kind": "servitude",
+    "name": {
+     "en": "The Philistines",
+     "zh-Hans": "非利士人的手下",
+     "zh-Hant": "非利士人的手下"
+    },
+    "ref": "Judges 13:1",
+    "years": {
+     "mt": 40,
+     "lxx": 40
+    }
+   },
+   {
+    "id": "samson",
+    "kind": "judge",
+    "name": {
+     "en": "Samson",
+     "zh-Hans": "参孙",
+     "zh-Hant": "參孫"
+    },
+    "ref": "Judges 15:20",
+    "years": {
+     "mt": 20,
+     "lxx": 20
+    }
+   },
+   {
+    "id": "eli",
+    "kind": "judge",
+    "name": {
+     "en": "Eli",
+     "zh-Hans": "以利",
+     "zh-Hant": "以利"
+    },
+    "ref": "1 Samuel 4:18",
+    "years": {
+     "mt": 40,
+     "lxx": 20
+    }
+   },
+   {
+    "id": "david",
+    "kind": "reign",
+    "name": {
+     "en": "David's reign",
+     "zh-Hans": "大卫作王",
+     "zh-Hant": "大衛作王"
+    },
+    "ref": "2 Samuel 5:4",
+    "years": {
+     "mt": 40,
+     "lxx": 40
+    }
+   }
+  ],
+  "unnumbered": [
+   {
+    "id": "joshua",
+    "ref": "Joshua 24:29",
+    "note": {
+     "en": "Joshua's leadership after the conquest — the verse gives his age at death, 110, not the length of his rule.",
+     "zh-Hans": "约书亚得地之后带领以色列的年数——该节只记他去世时110岁，未记年数。",
+     "zh-Hant": "約書亞得地之後帶領以色列的年數——該節只記他去世時110歲，未記年數。"
+    }
+   },
+   {
+    "id": "elders",
+    "ref": "Judges 2:7",
+    "note": {
+     "en": "The elders who outlived Joshua. No number of years is given.",
+     "zh-Hans": "比约书亚长寿的众长老在世的年数，经文未记。",
+     "zh-Hant": "比約書亞長壽的眾長老在世的年數，經文未記。"
+    }
+   },
+   {
+    "id": "samuel",
+    "ref": "1 Samuel 7:15",
+    "note": {
+     "en": "Samuel judged Israel all the days of his life; the days are not counted.",
+     "zh-Hans": "撒母耳一生作以色列的士师，但未记年数。",
+     "zh-Hant": "撒母耳一生作以色列的士師，但未記年數。"
+    }
+   },
+   {
+    "id": "saul",
+    "ref": "1 Samuel 13:1",
+    "note": {
+     "en": "Saul's reign. The figure in this verse is famously incomplete in the Hebrew, and the forty years usually given for it come from Acts 13:21, not from the books this era is read out of.",
+     "zh-Hans": "扫罗作王的年数。此节在希伯来文中数字残缺，通常所说的四十年出自使徒行传 13:21，并非出自本段所据的经卷。",
+     "zh-Hant": "掃羅作王的年數。此節在希伯來文中數字殘缺，通常所說的四十年出自使徒行傳 13:21，並非出自本段所據的經卷。"
+    }
+   },
+   {
+    "id": "solomon",
+    "ref": "1 Kings 6:1",
+    "note": {
+     "en": "Solomon's years before the temple. The verse dates it in his fourth year — an ordinal, and one this total leaves out so that the overflow below is the smallest the text allows.",
+     "zh-Hans": "所罗门在建殿之前作王的年数。该节记为他作王第四年——是序数；此处不计入总数，使下面的超出量取经文所容许的最小值。",
+     "zh-Hant": "所羅門在建殿之前作王的年數。該節記為他作王第四年——是序數；此處不計入總數，使下面的超出量取經文所容許的最小值。"
+    }
+   }
+  ],
+  "summary": {
+   "en": "1 Kings 6:1 states the whole span from the exodus to the founding of the temple as one number — the 480th year, so 479 years have run. The periods this era states one by one add up to 530, which is 51 years more than the span containing them, and that is before 5 further stretches listed below that this total does not count. On the Greek the same two figures are 520 against 439, over by 81. Nothing here is reconciled: the text nowhere says these periods run one after another, and at Judges 10:7 two oppressions run at once. So this era is counted and not drawn — no arrangement of these figures on the chart's axis can be read out of the text alone.",
+   "zh-Hans": "列王纪上 6:1 把出埃及到建殿的整段年数记作一个数字——第480年，即已过479年。而本段逐条所记的各段年数相加共530年，比容纳它们的总年数多出51年；这还没算下列5段未计入此数的时期。按希腊文，这两个数字是520对439，多出81年。此处不作调和：经文从未说这些时期是一段接一段的，士师记 10:7 更记有两处欺压同时进行。故本段只作统计，不入图——单凭经文无法定出这些数字在年表轴上的位置。",
+   "zh-Hant": "列王紀上 6:1 把出埃及到建殿的整段年數記作一個數字——第480年，即已過479年。而本段逐條所記的各段年數相加共530年，比容納它們的總年數多出51年；這還沒算下列5段未計入此數的時期。按希臘文，這兩個數字是520對439，多出81年。此處不作調和：經文從未說這些時期是一段接一段的，士師記 10:7 更記有兩處欺壓同時進行。故本段只作統計，不入圖——單憑經文無法定出這些數字在年表軸上的位置。"
+  },
+  "divergence": {
+   "en": "The two texts do not state the same figures here. They differ at 2 of 21 periods, and at the total itself: the Hebrew's 480th year is the Greek's 440th.",
+   "zh-Hans": "两种经文在此所记的数字并不相同：21段之中有2段不同，连总数也不同——希伯来文的第480年，在希腊文是第440年。",
+   "zh-Hant": "兩種經文在此所記的數字並不相同：21段之中有2段不同，連總數也不同——希伯來文的第480年，在希臘文是第440年。"
+  }
+ },
  "patriarchs": [
   {
    "id": "adam",

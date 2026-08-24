@@ -178,6 +178,11 @@ GK_WORDS = {
     "εικοσι": 20, "τριακοντα": 30, "τεσσαρακοντα": 40,
     "πεντηκοντα": 50, "εξηκοντα": 60, "εβδομηκοντα": 70,
     "ογδοηκοντα": 80, "ενενηκοντα": 90,
+    # Judges 10:8 writes eighteen as one word where 3:14 writes it as
+    # two (δεκα οκτω). A compound the tokeniser cannot split has to be
+    # listed whole or the verse states no number at all — which is what
+    # it did, silently, until the periods were read.
+    "οκτωκαιδεκα": 18,
     "εκατον": 100, "διακοσια": 200, "διακοσιων": 200,
     "τριακοσια": 300, "τριακοσιων": 300,
     "τετρακοσια": 400, "τετρακοσιων": 400,
@@ -238,6 +243,80 @@ def gk_runs(text):
     return _runs(text, GK_WORDS, GK_JOIN)
 
 
+# ---------------------------------------------------------------- ordinals
+#
+# ORDINALS ARE READ BY A SEPARATE PARSER, ON PURPOSE. Every figure in
+# Genesis and the exodus era is a cardinal, and folding ordinals into the
+# tables above would re-read verses that are already checked against a
+# third stated number — Genesis 7:11's ἑξακοστῷ, Numbers 33:38's "in the
+# fortieth year" — and could move a year no test is watching. This reader
+# is used at exactly one address, 1 Kings 6:1, and nothing already on the
+# chart passes through it.
+#
+# A RUN COUNTS ONLY IF IT CONTAINS AN ORDINAL. "Four hundred and
+# eightieth" is a cardinal ("four hundred") and an ordinal ("eightieth")
+# in one breath, so the cardinals have to be admitted — but requiring at
+# least one ordinal token is what keeps this parser from answering with
+# the plain numbers standing elsewhere in the same verse.
+#
+# The tables hold the forms these verses actually print and no more. A
+# speculative form is a silent invitation to read some other verse wrong.
+EN_ORDINALS = {
+    "first": 1, "second": 2, "third": 3, "fourth": 4, "fifth": 5,
+    "sixth": 6, "seventh": 7, "eighth": 8, "ninth": 9, "tenth": 10,
+    "eleventh": 11, "twelfth": 12, "twentieth": 20, "thirtieth": 30,
+    "fortieth": 40, "fiftieth": 50, "sixtieth": 60, "seventieth": 70,
+    "eightieth": 80, "ninetieth": 90, "hundredth": 100,
+}
+# ἐν "in" and ἕν "one" are one string unaccented and `εν` is therefore
+# absent from GK_WORDS; the Greek ordinals carry their own endings and do
+# not collide with it. `εκτος` IS a collision — sixth, and also "outside"
+# — and is left out because no verse read here needs it.
+GK_ORDINALS = {
+    "πρωτω": 1, "δευτερω": 2, "τριτω": 3, "τεταρτω": 4, "πεμπτω": 5,
+    "εβδομω": 7, "ογδοω": 8, "ενατω": 9, "δεκατω": 10,
+    "εικοστω": 20, "τριακοστω": 30, "τεσσαρακοστω": 40,
+    "πεντηκοστω": 50, "εξηκοστω": 60, "εβδομηκοστω": 70,
+    "ογδοηκοστω": 80, "ενενηκοστω": 90,
+    "εκατοστω": 100, "διακοσιοστω": 200, "τριακοσιοστω": 300,
+    "τετρακοσιοστω": 400, "πεντακοσιοστω": 500, "εξακοσιοστω": 600,
+}
+
+
+def _ordinal_runs(text, cardinals, ordinals, join, mult=None):
+    words = dict(cardinals)
+    words.update(ordinals)
+    toks = re.findall(r"[^\W\d_]+", text.lower(), flags=re.UNICODE)
+    out, cur = [], []
+
+    def flush():
+        if cur and any(t in ordinals for t in cur):
+            out.append(_value(cur, words, mult))
+        cur.clear()
+
+    for i, t in enumerate(toks):
+        numeric = t in words or (mult is not None and t == mult)
+        if numeric:
+            cur.append(t)
+            continue
+        if t in join and cur:
+            nxt = toks[i + 1] if i + 1 < len(toks) else None
+            if nxt is not None and (nxt in words
+                                    or (mult is not None and nxt == mult)):
+                continue
+        flush()
+    flush()
+    return out
+
+
+def en_ordinal_runs(text):
+    return _ordinal_runs(text, EN_WORDS, EN_ORDINALS, EN_JOIN, EN_MULT)
+
+
+def gk_ordinal_runs(text):
+    return _ordinal_runs(text, GK_WORDS, GK_ORDINALS, GK_JOIN)
+
+
 # ------------------------------------------------------------------ corpus
 
 
@@ -253,12 +332,13 @@ def cite(chapter, verse, book="Genesis"):
 class Reader:
     """One tradition's Genesis, with the numeral parser it needs."""
 
-    def __init__(self, tradition, asset, runs, famine_remaining_index,
-                 famine_stated_index):
+    def __init__(self, tradition, asset, runs, ordinal_runs,
+                 famine_remaining_index, famine_stated_index):
         self.tradition = tradition
         self.asset = asset
         self.text = load(asset)
         self.runs = runs
+        self.ordinal_runs = ordinal_runs
         self.famine_remaining_index = famine_remaining_index
         # Genesis 45:6 states how many famine years have passed AND how
         # many remain. The Hebrew gives both as cardinals ("these two
@@ -297,6 +377,25 @@ class Reader:
                 f"{'#' + str(index + 1) if index >= 0 else str(-index) + ' from the end'}"
                 f" — {self.text[key][:120]!r}"
             )
+        return found[index], cite(chapter, verse, book)
+
+    def ordinal(self, chapter, verse, index=0, book="Genesis"):
+        """The [index]th ORDINAL stated in [book] [chapter]:[verse].
+
+        Returned as the ordinal itself — the 480th year, not 479 years
+        elapsed. Turning one into the other is a reading, and it is made
+        once, in the open, where the era is assembled.
+        """
+        key = (book, str(chapter), str(verse))
+        if key not in self.text:
+            raise SystemExit(f"{self.asset}: missing {cite(chapter, verse, book)}")
+        found = self.ordinal_runs(self.text[key])
+        wanted = abs(index) if index < 0 else index + 1
+        if len(found) < wanted:
+            raise SystemExit(
+                f"{self.asset}: {cite(chapter, verse, book)} states "
+                f"{len(found)} ordinals, wanted {index} — "
+                f"{self.text[key][:120]!r}")
         return found[index], cite(chapter, verse, book)
 
 
@@ -812,10 +911,150 @@ def build_exodus(reader, rows, order, birth, haran, descent, problems):
     }
 
 
+# ------------------------------------- from the exodus to the temple
+#
+# WHY THIS ERA IS COUNTED AND NOT PLACED.
+#
+# Genesis can be drawn because it hands over an unbroken chain: A lived
+# x years and begat B. After Moses the chain stops. The text goes on
+# stating numbers — this servitude lasted eight years, the land had rest
+# forty — but it never says that one period begins where the last one
+# ends, and at Judges 10:7 it has two oppressions running at once. So a
+# chain of bars laid end to end from the exodus would be a
+# reconstruction, and this module has refused reconstructions since its
+# first line.
+#
+# What can be done without one is arithmetic. 1 Kings 6:1 states the
+# whole span as a single number, and the periods inside it are stated
+# individually. Adding the individual figures up and setting the total
+# beside the stated one asks nothing of the reader's judgement and
+# nothing of ours — and the answer is that they do not fit. That is a
+# fact about the text, published for centuries, and it is the reason the
+# era gets a ledger here instead of an axis.
+#
+# EVERY FIGURE IS READ AT THE LAST NUMBER IN ITS VERSE, because the
+# duration is what these verses end on — "and he judged Israel eight
+# years" — while the numbers standing in front of it are chariots, sons
+# and daughters. Judges 12:7 is the exception in the English, where
+# Jephthah is buried "in one of the cities of Gilead", so it is taken
+# from the front.
+PERIOD_LAST = -1
+PERIODS = [
+    # (id, kind, book, chapter, verse, index, en, zh-Hans, zh-Hant)
+    ("wilderness", "wilderness", "Numbers", 14, 33, 0,
+     "The wilderness", "旷野漂流", "曠野漂流"),
+    ("cushan", "servitude", "Judges", 3, 8, PERIOD_LAST,
+     "Servitude to Cushan-Rishathaim", "服事古珊利萨田", "服事古珊利薩田"),
+    ("othniel", "rest", "Judges", 3, 11, PERIOD_LAST,
+     "Rest under Othniel", "俄陀聂时的太平", "俄陀聶時的太平"),
+    ("eglon", "servitude", "Judges", 3, 14, PERIOD_LAST,
+     "Servitude to Eglon of Moab", "服事摩押王伊矶伦", "服事摩押王伊磯倫"),
+    ("ehud", "rest", "Judges", 3, 30, PERIOD_LAST,
+     "Rest under Ehud", "以笏时的太平", "以笏時的太平"),
+    ("jabin", "servitude", "Judges", 4, 3, PERIOD_LAST,
+     "Oppression by Jabin", "耶宾的欺压", "耶賓的欺壓"),
+    ("deborah", "rest", "Judges", 5, 31, PERIOD_LAST,
+     "Rest after Deborah", "底波拉之后的太平", "底波拉之後的太平"),
+    ("midian", "servitude", "Judges", 6, 1, PERIOD_LAST,
+     "Midian", "米甸的手下", "米甸的手下"),
+    ("gideon", "rest", "Judges", 8, 28, PERIOD_LAST,
+     "Quietness in Gideon's days", "基甸年间的安静", "基甸年間的安靜"),
+    ("abimelech", "judge", "Judges", 9, 22, PERIOD_LAST,
+     "Abimelech", "亚比米勒", "亞比米勒"),
+    ("tola", "judge", "Judges", 10, 2, PERIOD_LAST,
+     "Tola", "陀拉", "陀拉"),
+    ("jair", "judge", "Judges", 10, 3, PERIOD_LAST,
+     "Jair", "睚珥", "睚珥"),
+    ("ammon", "servitude", "Judges", 10, 8, PERIOD_LAST,
+     "Oppression from Ammon", "亚扪人的欺压", "亞捫人的欺壓"),
+    ("jephthah", "judge", "Judges", 12, 7, 0,
+     "Jephthah", "耶弗他", "耶弗他"),
+    ("ibzan", "judge", "Judges", 12, 9, PERIOD_LAST,
+     "Ibzan", "以比赞", "以比讚"),
+    ("elon", "judge", "Judges", 12, 11, PERIOD_LAST,
+     "Elon", "以伦", "以倫"),
+    ("abdon", "judge", "Judges", 12, 14, PERIOD_LAST,
+     "Abdon", "押顿", "押頓"),
+    ("philistines", "servitude", "Judges", 13, 1, PERIOD_LAST,
+     "The Philistines", "非利士人的手下", "非利士人的手下"),
+    ("samson", "judge", "Judges", 15, 20, PERIOD_LAST,
+     "Samson", "参孙", "參孫"),
+    ("eli", "judge", "1 Samuel", 4, 18, PERIOD_LAST,
+     "Eli", "以利", "以利"),
+    ("david", "reign", "2 Samuel", 5, 4, PERIOD_LAST,
+     "David's reign", "大卫作王", "大衛作王"),
+]
+
+# NAMED BECAUSE THEY ARE MISSING. Each of these stands inside the span 1
+# Kings 6:1 measures and none is counted in the total below, so that
+# total is short by all of them — which only widens the gap it already
+# reports. An era that listed nothing here would read as complete.
+# Four of them carry no number at all. The fifth, Solomon's years before
+# the temple, does: 1 Kings 6:1 dates the founding in his fourth year.
+# It is listed rather than counted on purpose, because the point of the
+# ledger is the smallest overflow the text allows, and its own note says
+# so — a reader who checks the verse must not find the ledger silent
+# about a number that is plainly there.
+PERIODS_UNNUMBERED = [
+    ("joshua", "Joshua 24:29",
+     "Joshua's leadership after the conquest — the verse gives his age at "
+     "death, 110, not the length of his rule.",
+     "约书亚得地之后带领以色列的年数——该节只记他去世时110岁，未记年数。",
+     "約書亞得地之後帶領以色列的年數——該節只記他去世時110歲，未記年數。"),
+    ("elders", "Judges 2:7",
+     "The elders who outlived Joshua. No number of years is given.",
+     "比约书亚长寿的众长老在世的年数，经文未记。",
+     "比約書亞長壽的眾長老在世的年數，經文未記。"),
+    ("samuel", "1 Samuel 7:15",
+     "Samuel judged Israel all the days of his life; the days are not "
+     "counted.",
+     "撒母耳一生作以色列的士师，但未记年数。",
+     "撒母耳一生作以色列的士師，但未記年數。"),
+    ("saul", "1 Samuel 13:1",
+     "Saul's reign. The figure in this verse is famously incomplete in "
+     "the Hebrew, and the forty years usually given for it come from Acts "
+     "13:21, not from the books this era is read out of.",
+     "扫罗作王的年数。此节在希伯来文中数字残缺，通常所说的四十年出自使徒行传 "
+     "13:21，并非出自本段所据的经卷。",
+     "掃羅作王的年數。此節在希伯來文中數字殘缺，通常所說的四十年出自使徒行傳 "
+     "13:21，並非出自本段所據的經卷。"),
+    ("solomon", "1 Kings 6:1",
+     "Solomon's years before the temple. The verse dates it in his fourth "
+     "year — an ordinal, and one this total leaves out so that the "
+     "overflow below is the smallest the text allows.",
+     "所罗门在建殿之前作王的年数。该节记为他作王第四年——是序数；此处不计入总"
+     "数，使下面的超出量取经文所容许的最小值。",
+     "所羅門在建殿之前作王的年數。該節記為他作王第四年——是序數；此處不計入總"
+     "數，使下面的超出量取經文所容許的最小值。"),
+]
+
+TEMPLE_ANCHOR = (6, 1, 0, "1 Kings")   # the 480th / 440th year
+
+
+def build_periods(reader):
+    """Every period this era states, plus the one total it states."""
+    rows = []
+    for (pid, kind, book, chapter, verse, index, en, zhs, zht) in PERIODS:
+        years, ref = reader.figure(chapter, verse, index, book=book)
+        rows.append({"id": pid, "kind": kind, "years": years, "ref": ref,
+                     "names": {"en": en, "zh-Hans": zhs, "zh-Hant": zht}})
+    stated, stated_ref = reader.ordinal(*TEMPLE_ANCHOR[:3],
+                                        book=TEMPLE_ANCHOR[3])
+    return {
+        "rows": rows,
+        "counted": sum(r["years"] for r in rows),
+        # "In the 480th year" is an ordinal: 479 years have run. The
+        # subtraction is made here, once, and the asset says so in words.
+        "statedOrdinal": stated,
+        "statedElapsed": stated - 1,
+        "statedRef": stated_ref,
+    }
+
+
 def main():
     problems = []
-    mt = Reader("mt", "kjv.json", en_runs, 1, 0)
-    lxx = Reader("lxx", "lxxwh.json", gk_runs, 0, None)
+    mt = Reader("mt", "kjv.json", en_runs, en_ordinal_runs, 1, 0)
+    lxx = Reader("lxx", "lxxwh.json", gk_runs, gk_ordinal_runs, 0, None)
 
     (mt_order, mt_rows, mt_flood, flood_ref, mt_flood_age,
      mt_epochs) = build_tradition(mt, GEN11_MT, problems)
@@ -895,6 +1134,47 @@ def main():
     # who sees the bar cross the flood line will assume we miscounted, so
     # the chart has to say it — but the sentence is only emitted when the
     # numbers actually show it, so it can never outlive the data.
+    # THE ERA AFTER MOSES, COUNTED. See build_periods for why it is not
+    # drawn on the axis.
+    mt_periods = build_periods(mt)
+    lxx_periods = build_periods(lxx)
+    period_rows = []
+    for a, b in zip(mt_periods["rows"], lxx_periods["rows"]):
+        if a["id"] != b["id"] or a["ref"] != b["ref"]:
+            raise SystemExit("periods: the two readers disagree about which "
+                             f"verse is being read — {a['id']} {a['ref']} vs "
+                             f"{b['id']} {b['ref']}")
+        period_rows.append({
+            "id": a["id"],
+            "kind": a["kind"],
+            "name": a["names"],
+            "ref": a["ref"],
+            "years": {"mt": a["years"], "lxx": b["years"]},
+        })
+    period_splits = [r["id"] for r in period_rows
+                     if r["years"]["mt"] != r["years"]["lxx"]]
+    era_stated = {
+        tid: {"ordinal": p["statedOrdinal"], "elapsed": p["statedElapsed"],
+              "ref": p["statedRef"]}
+        for tid, p in (("mt", mt_periods), ("lxx", lxx_periods))
+    }
+    era_counted = {"mt": mt_periods["counted"], "lxx": lxx_periods["counted"]}
+    era_residue = {tid: era_counted[tid] - era_stated[tid]["elapsed"]
+                   for tid in ("mt", "lxx")}
+    # Every other citation this asset sets in Chinese prose names the book
+    # in Chinese, so this one has to as well. Only the book name is typed:
+    # the chapter and verse come off the same constant the number was read
+    # at, so the prose cannot cite a verse the parser did not visit.
+    era_ref_zh = {
+        "zh-Hans": f"列王纪上 {TEMPLE_ANCHOR[0]}:{TEMPLE_ANCHOR[1]}",
+        "zh-Hant": f"列王紀上 {TEMPLE_ANCHOR[0]}:{TEMPLE_ANCHOR[1]}",
+    }
+    if era_stated["mt"]["ordinal"] == era_stated["lxx"]["ordinal"]:
+        raise SystemExit(
+            "1 Kings 6:1 read the same in both texts — the Greek states the "
+            "440th year where the Hebrew states the 480th, so an equal read "
+            "means the ordinal parser has failed in one of them")
+
     notes = []
     for tid, rows, flood_am in (("mt", mt_rows, mt_flood),
                                 ("lxx", lxx_rows, lxx_flood)):
@@ -1135,46 +1415,55 @@ def main():
             },
         })
 
-    # WHERE THE CHART STOPS, AND THE MEASUREMENT THAT DECIDED IT. The
-    # verse that would carry the axis on to Solomon is 1 Kings 6:1, and
-    # this note is emitted only while the two parsers disagree about it —
-    # which is the proof that neither can be trusted to cross it. The
-    # English ordinal comes back as 400 and the Greek reads ἐξ, "out of",
-    # as the numeral 6.
-    kings_mt = mt.verse(6, 1, book="1 Kings")
-    kings_lxx = lxx.verse(6, 1, book="1 Kings")
-    if en_runs(kings_mt) != gk_runs(kings_lxx):
-        for tid in ("mt", "lxx"):
-            notes.append({
-                "id": "chart_end",
-                "tradition": tid,
-                # About the chart, not about Moses — he is merely the
-                # last man on it — so it belongs in the header, where a
-                # reader who has selected nobody is looking.
-                "personId": None,
-                "text": {
-                    "en": ("The chart ends here. The next span the text "
-                           "offers is 1 Kings 6:1, from the exodus to "
-                           "Solomon's temple, and it is written as an "
-                           "ordinal — “the four hundred and eightieth "
-                           "year” — which the number-reader behind this "
-                           "chart cannot read in either language. The two "
-                           "texts do not even spell the same year there: the "
-                           "Greek reads “the fortieth and four hundredth”. A "
-                           "figure this chart cannot read is one it will not "
-                           "plot."),
-                    "zh-Hans": ("本图到此为止。经文所记的下一段年数是列王纪上 "
-                                "6:1，自出埃及至所罗门建殿，写作序数「第四百八"
-                                "十年」，本图背后的数字解析器在两种语文中都读不"
-                                "出序数。且两种经文在此连年份都不相同：希腊文作"
-                                "「第四十又第四百年」。读不出的数字，本图不画。"),
-                    "zh-Hant": ("本圖到此為止。經文所記的下一段年數是列王紀上 "
-                                "6:1，自出埃及至所羅門建殿，寫作序數「第四百八"
-                                "十年」，本圖背後的數字解析器在兩種語文中都讀不"
-                                "出序數。且兩種經文在此連年份都不相同：希臘文作"
-                                "「第四十又第四百年」。讀不出的數字，本圖不畫。"),
-                },
-            })
+    # WHERE THE CHART STOPS, AND WHY THE REASON CHANGED. Until the
+    # ordinal reader existed this note said the chart stopped because the
+    # parser could not read 1 Kings 6:1, and that was true. It is no
+    # longer: the verse is read, in both languages, and the era it opens
+    # is counted in `era` below. The chart still stops here, for a reason
+    # that is about the TEXT rather than about us — after Moses it stops
+    # handing over a chain, and the periods it does state overrun the one
+    # total it states. So the note is emitted only while that overflow is
+    # actually in the data, and it prints the measurement.
+    for tid in ("mt", "lxx"):
+        if era_residue[tid] <= 0:
+            continue
+        notes.append({
+            "id": "chart_end",
+            "tradition": tid,
+            # About the chart, not about Moses — he is merely the last
+            # man on it — so it belongs in the header, where a reader who
+            # has selected nobody is looking.
+            "personId": None,
+            "text": {
+                "en": (f"The chart ends here, and not for want of "
+                       f"numbers. {era_stated[tid]['ref']} carries the "
+                       f"span on to Solomon's temple — the "
+                       f"{era_stated[tid]['ordinal']}th year after the "
+                       f"exodus, {era_stated[tid]['elapsed']} years — but "
+                       f"the periods the text states inside it come to "
+                       f"{era_counted[tid]}, over by {era_residue[tid]}, "
+                       f"with more stretches it gives no number to at "
+                       f"all. Laying those bars end to end would be a "
+                       f"reconstruction, so this era is counted below "
+                       f"instead of drawn."),
+                "zh-Hans": (f"本图到此为止，并非因为经文没有数字。"
+                            f"{era_ref_zh['zh-Hans']} 把年数一直带到所罗门建"
+                            f"殿——出埃及后第{era_stated[tid]['ordinal']}年，"
+                            f"即{era_stated[tid]['elapsed']}年——但其间经文逐"
+                            f"条所记的各段年数合计{era_counted[tid]}年，多出"
+                            f"{era_residue[tid]}年，还有几段全然未记年数。把这"
+                            f"些年段一段接一段排在轴上，就成了重构；故本图不画"
+                            f"这一段，只在下方作统计。"),
+                "zh-Hant": (f"本圖到此為止，並非因為經文沒有數字。"
+                            f"{era_ref_zh['zh-Hant']} 把年數一直帶到所羅門建"
+                            f"殿——出埃及後第{era_stated[tid]['ordinal']}年，"
+                            f"即{era_stated[tid]['elapsed']}年——但其間經文逐"
+                            f"條所記的各段年數合計{era_counted[tid]}年，多出"
+                            f"{era_residue[tid]}年，還有幾段全然未記年數。把這"
+                            f"些年段一段接一段排在軸上，就成了重構；故本圖不畫"
+                            f"這一段，只在下方作統計。"),
+            },
+        })
 
     patriarchs = []
     for pid in order:
@@ -1391,6 +1680,89 @@ def main():
             },
         ],
         "notes": notes,
+        "era": {
+            "id": "exodus_to_temple",
+            "name": {
+                "en": "From the exodus to the temple",
+                "zh-Hans": "从出埃及到建殿",
+                "zh-Hant": "從出埃及到建殿",
+            },
+            "stated": era_stated,
+            "counted": era_counted,
+            "residue": era_residue,
+            "splitIds": period_splits,
+            "periods": period_rows,
+            "unnumbered": [
+                {"id": pid, "ref": ref,
+                 "note": {"en": en, "zh-Hans": zhs, "zh-Hant": zht}}
+                for (pid, ref, en, zhs, zht) in PERIODS_UNNUMBERED
+            ],
+            "summary": {
+                "en": (
+                    f"{era_stated['mt']['ref']} states the whole span from "
+                    f"the exodus to the founding of the temple as one "
+                    f"number — the {era_stated['mt']['ordinal']}th year, so "
+                    f"{era_stated['mt']['elapsed']} years have run. The "
+                    f"periods this era states one by one add up to "
+                    f"{era_counted['mt']}, which is {era_residue['mt']} "
+                    f"years more than the span containing them, and that is "
+                    f"before {len(PERIODS_UNNUMBERED)} further stretches "
+                    f"listed below that this total does not count. On "
+                    f"the Greek the same two figures are "
+                    f"{era_counted['lxx']} against "
+                    f"{era_stated['lxx']['elapsed']}, over by "
+                    f"{era_residue['lxx']}. Nothing here is reconciled: the "
+                    f"text nowhere says these periods run one after "
+                    f"another, and at Judges 10:7 two oppressions run at "
+                    f"once. So this era is counted and not drawn — no "
+                    f"arrangement of these figures on the chart's axis can "
+                    f"be read out of the text alone."),
+                "zh-Hans": (
+                    f"{era_ref_zh['zh-Hans']} 把出埃及到建殿的整段年数记作一"
+                    f"个数字——第{era_stated['mt']['ordinal']}年，即已过"
+                    f"{era_stated['mt']['elapsed']}年。而本段逐条所记的各段年"
+                    f"数相加共{era_counted['mt']}年，比容纳它们的总年数多出"
+                    f"{era_residue['mt']}年；这还没算下列"
+                    f"{len(PERIODS_UNNUMBERED)}段未计入此数的时期。按"
+                    f"希腊文，这两个数字是{era_counted['lxx']}对"
+                    f"{era_stated['lxx']['elapsed']}，多出"
+                    f"{era_residue['lxx']}年。此处不作调和：经文从未说这些时期"
+                    f"是一段接一段的，士师记 10:7 更记有两处欺压同时进行。故本"
+                    f"段只作统计，不入图——单凭经文无法定出这些数字在年表轴上的"
+                    f"位置。"),
+                "zh-Hant": (
+                    f"{era_ref_zh['zh-Hant']} 把出埃及到建殿的整段年數記作一"
+                    f"個數字——第{era_stated['mt']['ordinal']}年，即已過"
+                    f"{era_stated['mt']['elapsed']}年。而本段逐條所記的各段年"
+                    f"數相加共{era_counted['mt']}年，比容納它們的總年數多出"
+                    f"{era_residue['mt']}年；這還沒算下列"
+                    f"{len(PERIODS_UNNUMBERED)}段未計入此數的時期。按"
+                    f"希臘文，這兩個數字是{era_counted['lxx']}對"
+                    f"{era_stated['lxx']['elapsed']}，多出"
+                    f"{era_residue['lxx']}年。此處不作調和：經文從未說這些時期"
+                    f"是一段接一段的，士師記 10:7 更記有兩處欺壓同時進行。故本"
+                    f"段只作統計，不入圖——單憑經文無法定出這些數字在年表軸上的"
+                    f"位置。"),
+            },
+            "divergence": {
+                "en": (
+                    f"The two texts do not state the same figures here. They "
+                    f"differ at {len(period_splits)} of {len(period_rows)} "
+                    f"periods, and at the total itself: the Hebrew's "
+                    f"{era_stated['mt']['ordinal']}th year is the Greek's "
+                    f"{era_stated['lxx']['ordinal']}th."),
+                "zh-Hans": (
+                    f"两种经文在此所记的数字并不相同：{len(period_rows)}段之中"
+                    f"有{len(period_splits)}段不同，连总数也不同——希伯来文的第"
+                    f"{era_stated['mt']['ordinal']}年，在希腊文是第"
+                    f"{era_stated['lxx']['ordinal']}年。"),
+                "zh-Hant": (
+                    f"兩種經文在此所記的數字並不相同：{len(period_rows)}段之中"
+                    f"有{len(period_splits)}段不同，連總數也不同——希伯來文的第"
+                    f"{era_stated['mt']['ordinal']}年，在希臘文是第"
+                    f"{era_stated['lxx']['ordinal']}年。"),
+            },
+        },
         "patriarchs": patriarchs,
     }
 
@@ -1419,6 +1791,12 @@ def main():
           f"{gen_same}/{gen_both} · Genesis 12-50 {abr_same}/{abr_both}")
     print(f"  notes emitted: {', '.join(sorted({n['id'] for n in notes}))}")
     print(f"  second witness: {agreed}/{checked} agree with family_tree.json")
+    print(f"  exodus to the temple: stated MT {era_stated['mt']['ordinal']}th "
+          f"year / LXX {era_stated['lxx']['ordinal']}th; periods counted MT "
+          f"{era_counted['mt']} / LXX {era_counted['lxx']}; over by MT "
+          f"{era_residue['mt']} / LXX {era_residue['lxx']}; "
+          f"{len(period_splits)} of {len(period_rows)} periods differ "
+          f"between the texts ({', '.join(period_splits)})")
     for d in disagreements:
         print("  DISAGREES:", d)
 
