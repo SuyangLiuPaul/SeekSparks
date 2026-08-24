@@ -84,46 +84,71 @@ const double _kHubFrac = 0.115;
 const double _kBandsFrac = 0.285;
 const double _kRimFrac = 0.445;
 
-/// Colour by line of descent — Genesis 10 — with the two institutional
-/// bands set apart from it. Kept literal: a reader learns "the church
-/// is plum" and that must hold whatever accent the app is themed with.
-const Map<String, Color> _lineColors = {
-  'shem': Color(0xFFC4885B),
-  'ham': Color(0xFF4F8F6E),
-  'japheth': Color(0xFF5B87C4),
-  'institution': Color(0xFF8B6BA8),
-  'none': Color(0xFF7A8B6F),
+/// The arc of the colour wheel each Genesis 10 family occupies.
+///
+/// (start hue, end hue) in degrees. A family's bands spread across its
+/// own arc, so no two bands share a colour, while the arcs stay far
+/// enough apart that a family still reads as one.
+///
+/// The first attempt kept every family inside a narrow swing around a
+/// single hue. That was faithful to the idea and useless in practice:
+/// ten Japhethite bands came out as ten near-identical blues and a
+/// reader could not tell Rome from Japan. The bands are ALREADY
+/// contiguous by family on the wheel — Israel through the Islamic
+/// world sit together, Persia through India sit together — so
+/// adjacency is already saying "these belong together", which frees
+/// hue to spend itself on telling them apart. Japheth gets the widest
+/// arc because it carries ten of the twenty-two.
+///
+/// Kept literal: a reader learns what a colour means, and that must
+/// hold whatever accent the app is themed with.
+const Map<String, (double, double)> _lineHueArcs = {
+  'shem': (10, 64), // red through amber to olive
+  'ham': (88, 150), // yellow-green through green
+  'japheth': (178, 300), // teal, cyan, blue, indigo, violet
+  'institution': (312, 342), // magenta through rose
+  'none': (0, 0), // grey: belongs to no descent
 };
 
-Color _lineColor(String line) => _lineColors[line] ?? _lineColors['none']!;
+const Color _noDescentColor = Color(0xFF828282);
 
-/// A colour for ONE band, distinct from its siblings but still legibly
-/// of its family.
+/// A colour for ONE band: its family's arc, at position [t] (0..1),
+/// with [index] deciding which way its lightness steps.
 ///
-/// Colouring purely by line of descent put ten bands — Persia through
-/// India — in one identical blue, which told the reader the truth
-/// about Genesis 10 and nothing whatever about which band they were
-/// looking at. The descent is worth keeping: it is the chart's
-/// organising idea and its root is scripture. So the family keeps its
-/// hue and each band takes its own step through that family's range —
-/// a swing of hue either side of the base, a lightness ramp, and a
-/// slight saturation fall. Shem still reads warm, Japheth still reads
-/// blue, and Rome no longer looks like Japan.
+/// Three things had to be true at once, and each was learned by a test
+/// failing rather than by eye:
 ///
-/// [index] is the band's position among its own family and [count] the
-/// size of that family, so the spread adapts: a family of three is
-/// spaced widely, one of ten finely.
-Color streamColor(String line, int index, int count) {
-  final base = HSLColor.fromColor(_lineColor(line));
-  if (count <= 1) return base.toColor();
-  // -0.5 .. +0.5 across the family.
-  final t = index / (count - 1) - 0.5;
-  return base
-      .withHue((base.hue + t * 34 + 360) % 360)
-      .withLightness((base.lightness - t * 0.30).clamp(0.26, 0.74))
-      .withSaturation((base.saturation + t * 0.16).clamp(0.18, 0.92))
-      .toColor();
+///  * NEIGHBOURS MUST DIFFER. Hue alone was not enough — six Semitic
+///    bands inside a 34° swing left Arabia and the Islamic world 35
+///    apart, which reads as the same colour. So lightness ZIGZAGS with
+///    the index: two adjacent bands differ in hue AND in lightness,
+///    never in one channel only.
+///  * NOTHING MAY GO NEAR BLACK OR WHITE. A smooth lightness ramp
+///    across a ten-band family drove its ends to #612218 and #E69DE6 —
+///    separable, and unreadable on the page. The zigzag keeps every
+///    band between 0.37 and 0.57.
+///  * FAMILIES MUST NOT TOUCH. Ham's arc ended at 165° where Japheth's
+///    began, so Philistia and Persia came out the SAME colour; the
+///    test measured 0.0 between them. The arcs now leave a gap.
+Color _bandColor(String line, double t, int index) {
+  final arc = _lineHueArcs[line];
+  if (arc == null || line == 'none') return _noDescentColor;
+  final (h0, h1) = arc;
+  return HSLColor.fromAHSL(
+    1,
+    (h0 + (h1 - h0) * t) % 360,
+    // Saturation peaks mid-arc so the ends do not turn to mud.
+    (0.60 + 0.12 * math.sin(math.pi * t)).clamp(0.0, 1.0),
+    (0.47 + (index.isEven ? -0.10 : 0.10)).clamp(0.0, 1.0),
+  ).toColor();
 }
+
+/// The family's own colour, for the legend — the middle of its arc.
+Color _lineColor(String line) => _bandColor(line, 0.5, 0);
+
+/// The colour of one band, given its position among its own family.
+Color streamColor(String line, int index, int count) =>
+    _bandColor(line, count <= 1 ? 0.5 : index / (count - 1), index);
 
 /// Strings this page owns. Kept local rather than appended to
 /// ui_strings.dart because the unattended loop shares this checkout and
