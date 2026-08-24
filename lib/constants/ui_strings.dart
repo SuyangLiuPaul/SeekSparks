@@ -285,6 +285,11 @@ const uiStrings = {
     'zh-Hant': '出現 {count} 次',
     'en': 'Used {count} times',
   },
+  'concordanceNoResults': {
+    'zh-Hans': '此条目没有对应的经文出处。',
+    'zh-Hant': '此條目沒有對應的經文出處。',
+    'en': 'No verse references for this entry.',
+  },
   'concordanceShowingFirst': {
     'zh-Hans': '显示前 {shown} 条（共 {total} 条）',
     'zh-Hant': '顯示前 {shown} 條（共 {total} 條）',
@@ -4529,6 +4534,11 @@ const uiStrings = {
     'zh-Hant': '與前面的經文合併印行',
     'en': 'Printed with an earlier verse',
   },
+  'verseMergedWithNext': {
+    'zh-Hans': '与后面的经文合并印行',
+    'zh-Hant': '與後面的經文合併印行',
+    'en': 'Printed with the verse that follows',
+  },
   'verseOmittedFromBaseText': {
     'zh-Hans': '此底本不收录本节',
     'zh-Hant': '此底本不收錄本節',
@@ -5341,6 +5351,25 @@ const uiStrings = {
     'zh-Hant': '總',
     'en': 'Total',
   },
+  // 2026-08-24: the seven keys below were referenced from code but
+  // defined nowhere, so every call site fell through to its English
+  // literal in all three languages — see `ui_string_keys_test.dart`,
+  // which now fails if a key is used without being defined here.
+  'lemma': {
+    'zh-Hans': '原形',
+    'zh-Hant': '原形',
+    'en': 'Word',
+  },
+  'gloss': {
+    'zh-Hans': '释义',
+    'zh-Hant': '釋義',
+    'en': 'Gloss',
+  },
+  'noData': {
+    'zh-Hans': '暂无数据。',
+    'zh-Hant': '暫無資料。',
+    'en': 'No data.',
+  },
   'colGospelsActs': {
     'zh-Hans': '福音+徒',
     'zh-Hant': '福音+徒',
@@ -5925,6 +5954,19 @@ const uiStrings = {
     'zh-Hans': '阅读模式',
     'zh-Hant': '閱讀模式',
     'en': 'Reading Mode',
+  },
+  // The two halves of one toggle: each label names the mode the tap
+  // will switch TO, not the mode currently showing (#312's lesson —
+  // a control should say what it does).
+  'verseMode': {
+    'zh-Hans': '分节模式',
+    'zh-Hant': '分節模式',
+    'en': 'Verse mode',
+  },
+  'paragraphMode': {
+    'zh-Hans': '段落模式',
+    'zh-Hant': '段落模式',
+    'en': 'Paragraph mode',
   },
   'verseByVerse': {
     'zh-Hans': '逐节显示',
