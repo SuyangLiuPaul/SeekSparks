@@ -22,6 +22,20 @@
 // widget test found in one pump. Neither instrument dominates the
 // other; `test/theme_font_size_behaviour_test.dart` is the other half.
 //
+// 2026-08-24 (#315), and a third instrument. The FIFTH mechanism is
+// invisible to both of the first two: `book_chapter_picker.dart` wrote
+// `fontSize: settings.fontSize * 1.15`, which is the correct shape and
+// moves at every stop, inside a `FittedBox` inside a grid cell sized
+// from the MENU scale. The declared size travelled the whole slider
+// and the painted glyph was `cellWidth / labelEmWidth`, a constant —
+// `Jonah` measured 44.0 px wide at 20 pt and 44.0 px at 40 pt. A
+// source rule sees nothing wrong, and a widget test that reads
+// `RichText.text.style.fontSize` reads the DECLARED size and agrees
+// with the lie. Only the PAINTED rect separates them, because
+// `tester.getRect` resolves through `localToGlobal` and so through the
+// fit's transform where `tester.getSize` does not.
+// `test/fitted_label_reach_test.dart` is that third instrument.
+//
 // So: the count per file may go DOWN, never UP. A new screen written
 // with hardcoded sizes fails here on the day it is written, instead of
 // being found in a photograph two months later.

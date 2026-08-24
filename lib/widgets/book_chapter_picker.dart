@@ -52,8 +52,21 @@ import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/utils/responsive.dart';
 import 'package:seeksparks/utils/version_mapper.dart' show toEnglish;
+import 'package:seeksparks/utils/fitted_label_metrics.dart'
+    show columnsThatFit, widestLabelEmWidth;
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 import 'package:seeksparks/widgets/wb_surfaces.dart' show WbTag;
+
+/// The book tile's label size, relative to the reader's Font Size.
+///
+/// Shared by the tile that PAINTS it and the column count that has to
+/// make room for it. #322 was a gutter model that omitted a
+/// `letterSpacing` the painted string had; two numbers describing one
+/// thing drift, so there is one number.
+const double kBookTileFontRatio = 1.15;
+
+/// Padding on each side of the tile's label, inside the tile.
+const double kBookTilePadding = 7.0;
 
 class BookChapterPicker extends StatefulWidget {
   final String currentBook;
@@ -868,8 +881,52 @@ class _BookChapterPickerState extends State<BookChapterPicker> {
     }
 
     return LayoutBuilder(builder: (context, constraints) {
-      final targetWidth = 80.0 * settings.menuScale;
-      final cols = (constraints.maxWidth / targetWidth).floor().clamp(4, 10);
+      // The tile is square and its label is FITTED into it, so the
+      // column width — not `fontSize` — is what decides how large the
+      // abbreviation is actually painted. Sizing the columns from the
+      // menu scale alone therefore froze the label: measured in the
+      // shipped faces, 62 of the 156 abbreviations were already at
+      // their maximum painted size at the DEFAULT 20 pt in the 280 px
+      // reader sidebar, and every one of the 156 froze somewhere inside
+      // the slider. `Jonah` is the worst at 2.78 em, stuck at 15.8 px
+      // from 13.8 pt upward. See `lib/utils/fitted_label_metrics.dart`.
+      //
+      // Two bounds, and the smaller wins. The menu scale keeps its say
+      // over how dense the grid is; the label says how few columns it
+      // can be drawn in without being shrunk. The widest label is
+      // MEASURED rather than assumed, because it depends on the script
+      // (2 Han characters are 2.00 em, five Latin letters 2.78) and on
+      // the reader's chosen face.
+      final widestEm = widestLabelEmWidth(
+        filteredBooks.map((b) => _shortBookTitle(b.title)),
+        fontFamily: settings.fontFamily,
+        fontFamilyFallback: kCjkFontFallback,
+        fontWeight: FontWeight.w700,
+      );
+      final byMenu =
+          (constraints.maxWidth / (80.0 * settings.menuScale)).floor();
+      final byLabel = columnsThatFit(
+        available: constraints.maxWidth,
+        widestEm: widestEm,
+        fontSize: settings.fontSize * kBookTileFontRatio,
+        outerPadding: 24,
+        spacing: 8,
+        perColumnPadding: kBookTilePadding * 2,
+        min: 1,
+        max: 10,
+      );
+      // The old floor was a flat 4, and that is what froze the label:
+      // four columns in a 280 px sidebar leave 44 px of tile. But a
+      // floor of 4 is only wrong when the label cannot FILL four
+      // columns — Chinese abbreviations are one character, and lowering
+      // their floor would thin the sidebar from 4 columns to 3 while
+      // painting exactly the same glyph. So the floor stays at 4 and is
+      // capped by what the label can actually use. Two is the hard
+      // bottom: one column is the only count that could satisfy the
+      // widest Latin label at 40 pt, and 66 books in a single file is a
+      // worse way to find Habakkuk than a label 14% under size.
+      final floor = byLabel >= 4 ? 4 : (byLabel < 2 ? 2 : byLabel);
+      final cols = (byMenu < byLabel ? byMenu : byLabel).clamp(floor, 10);
       return GridView.builder(
         padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -916,10 +973,23 @@ class _BookChapterPickerState extends State<BookChapterPicker> {
             alignment: Alignment.center,
             // 2026-06-30: even padding so the glyph is centred with
             // consistent breathing room on all four sides.
-            padding: const EdgeInsets.all(7),
+            padding: const EdgeInsets.all(kBookTilePadding),
             // 2026-05-10 (v1.2.19): switched fit from `scaleDown` →
             // `contain` so single-char labels ("创") scale UP to fill
             // the tile and long ones ("撒母耳记") scale DOWN.
+            //
+            // 2026-08-24 (#315): the first half of that has never
+            // happened, and it is worth knowing why before touching the
+            // fit again. `Container(alignment:)` inserts an `Align`,
+            // which passes LOOSE constraints down, so the `FittedBox`
+            // shrink-wraps its child; the fit is then computed between
+            // the child and a box the same size, giving scale 1.0.
+            // `contain` and `scaleDown` are the same widget here.
+            // Measured: at 12 pt the label painted 41.4 px wide inside a
+            // 104.4 px tile — it did not fill anything. What the fit
+            // really does is the second half, shrink, and that made it a
+            // silent CEILING on the reader's font size until the column
+            // count above started falling to make room.
             // 2026-06-30: user reported the CJK glyphs looked THIN and
             // small. Root cause: w500 weight + a loose line box
             // (`height: 1.1` plus the CJK font's generous ascent/
@@ -938,13 +1008,21 @@ class _BookChapterPickerState extends State<BookChapterPicker> {
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
                 softWrap: false,
-                strutStyle: const StrutStyle(
+                // 2026-08-24 (#315): the strut carried no `fontSize`, and
+                // an unset one is 14 — not inherited from the text. With
+                // `forceStrutHeight` that pinned the LINE BOX to 14 px at
+                // every setting while the glyph grew past it, so the
+                // baseline was placed by a 14 px box and a 46 pt letter
+                // sat about 9 px above the centre of its tile. Same
+                // number as the text, from the same expression.
+                strutStyle: StrutStyle(
+                  fontSize: settings.fontSize * kBookTileFontRatio,
                   height: 1.0,
                   forceStrutHeight: true,
                   leading: 0,
                 ),
                 style: TextStyle(
-                  fontSize: settings.fontSize * 1.15,
+                  fontSize: settings.fontSize * kBookTileFontRatio,
                   fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
                   fontWeight: FontWeight.w700,
                   color: fgColor,

@@ -3391,7 +3391,17 @@ class _NumberGrid extends StatelessWidget {
                     // getting ellipsised to "1.." in the picker.
                     // FittedBox.scaleDown is a safety net for the
                     // longest book Psalms 119 (verse 176).
-                    width: 56,
+                    //
+                    // 2026-08-24 (#315, fifth mechanism): × the
+                    // reader's scale. The chip's label carries no style
+                    // and so takes the theme's, which HAS scaled since
+                    // v1.6.159 — but the box around it did not, so the
+                    // `FittedBox` above stopped being a safety net for
+                    // Psalm 119 and became a ceiling on the whole
+                    // slider. The two have to move together or the fit
+                    // silently eats the difference. 56 at the default,
+                    // so nothing a reader has already seen changes.
+                    width: 56 * WbType.of(context).textScale,
                     child: ChoiceChip(
                       labelPadding: const EdgeInsets.symmetric(horizontal: 2),
                       label: Center(
