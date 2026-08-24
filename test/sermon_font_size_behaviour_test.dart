@@ -66,11 +66,11 @@ void main() {
   /// A `Text` resolves into a `RichText` whose root style carries the
   /// size actually used, so this reads what the tree produced rather
   /// than what some `TextStyle` in the source says.
-  Future<Map<String, double>> sizesAt(
-      WidgetTester tester, double fontSize) async {
+  Future<Map<String, double>> sizesAt(WidgetTester tester, double fontSize,
+      {Size viewport = const Size(1280, 900)}) async {
     SharedPreferences.setMockInitialValues(<String, Object>{});
     tester.view.devicePixelRatio = 1.0;
-    tester.view.physicalSize = const Size(1280, 900);
+    tester.view.physicalSize = viewport;
     addTearDown(tester.view.reset);
 
     final settings = AppSettings();
@@ -149,5 +149,26 @@ void main() {
     final big = await sizesAt(tester, 40);
     expect(sizeOf(mid, '#004'), 11.5);
     expect(sizeOf(big, '#004'), 23.0);
+  });
+
+  // Doubling a size is only a repair if what it grew into still fits.
+  // The three tests above prove the numbers moved and would pass just as
+  // happily on a page overflowing by 40 px, because an overflow is
+  // painted, not measured — so it is asserted here separately.
+  //
+  // The narrow end of the sweep is 1000, not 320: `SmallScreenGate`
+  // admits only widths >= 992, so a page pumped narrower than that is a
+  // layout no reader can reach and a failure there would be a false one.
+  testWidgets('nothing overflows at any width the app admits',
+      (tester) async {
+    // Confirmed to fire: at 120 px this same sweep reports "A RenderFlex
+    // overflowed by 24 pixels on the right".
+    for (final w in <double>[1000, 1280, 1600]) {
+      for (final pt in <double>[12, 20, 40]) {
+        await sizesAt(tester, pt, viewport: Size(w, 800));
+        expect(tester.takeException(), isNull,
+            reason: 'the sermon page overflows at ${w}x800 at $pt pt');
+      }
+    }
   });
 }
