@@ -631,7 +631,39 @@ Color versionTagColor(String code) {
 /// bundled CJK subset and the platform faces that actually have those
 /// scripts live in the parent's fallback list, not in any font this
 /// file names.
-ThemeData workbenchTheme(ThemeData parent, {bool paper = false}) {
+///
+/// [textScale] is the reader's Font Size divided by the app default —
+/// `WbType.textScale`, and 1.0 means "the sizes written below, exactly".
+/// It has to be passed IN rather than read off [parent], because this
+/// function is also called with a theme it built earlier
+/// (`workbench_page.dart`, `books_page.dart`, `family_tree_page.dart`,
+/// `book_chapter_picker.dart` all re-theme a subtree). Deriving the
+/// scale from the parent's own already-scaled `bodyLarge` would square
+/// it on the second pass; taking it as an argument is idempotent.
+///
+/// 2026-08-24 (#315, FOURTH mechanism). Until this parameter existed
+/// every size below was a constant, and because this is the app's ONLY
+/// theme — `main.dart:523` and `:642` wrap both `theme:` and
+/// `darkTheme:` — that made the reader's Font Size slider unable to move
+/// any Material text anywhere in the app. Measured before the fix, at
+/// 20 pt and at 40 pt: all fifteen roles identical, and an unstyled
+/// `Text` painting at 12.0 px at both ends of a 12–40 slider.
+///
+/// The three roles `main.dart` wires to `settings.fontSize` were caught
+/// by the same net. This function builds from a FRESH
+/// `ThemeData.light/dark` and takes only `fontFamilyFallback` off
+/// [parent], so `bodyLarge: fontSize: settings.fontSize` was overwritten
+/// with a hard 12 one line later. Two doc comments asserted the
+/// opposite — `main.dart` promised the workbench theme "is layered OVER
+/// the app's own ThemeData … so the font settings … still apply", and
+/// `WbType.scaleRole` warned callers off the three roles because they
+/// "already carry the reader's setting". Neither was true of the
+/// shipped app.
+ThemeData workbenchTheme(
+  ThemeData parent, {
+  bool paper = false,
+  double textScale = 1.0,
+}) {
   final brightness = parent.brightness;
   // Paper wins over light/dark — see [WbColors.paper]. A reader who
   // turned paper on wants paper everywhere in the workbench, including
@@ -658,8 +690,63 @@ ThemeData workbenchTheme(ThemeData parent, {bool paper = false}) {
     surfaceContainerHighest: wb.paneAltBg,
   );
 
+  /// A design size, put on the reader's scale and floored.
+  ///
+  /// The floor is [WbMetrics.smallPrintFloor], for the reason given
+  /// there and applied the same way [WbType.scaledSmall] applies it: a
+  /// reader who drags Font Size down to 12 is asking for dense
+  /// scripture in the reading pane, not for a 7 px button label in the
+  /// chrome around it. At the default 20 pt the scale is 1.0 and every
+  /// size below is unchanged to the byte, so this repair is invisible
+  /// to a reader who never moved the slider — it only opens the range
+  /// the slider could not reach.
+  double onScale(double atDefault) =>
+      math.max(atDefault * textScale, WbMetrics.smallPrintFloor);
+
+  /// Every role in a [TextTheme], on the reader's scale.
+  ///
+  /// Material's own roles are inherited rather than restated — only
+  /// five of the fifteen are overridden below — so scaling has to reach
+  /// the other ten too. `labelLarge` alone sizes every button and chip
+  /// label in the app.
+  ///
+  /// This is applied to the [Typography] geometry, NOT to
+  /// `base.textTheme`, and that distinction cost a wrong first attempt.
+  /// At the moment this function runs, every role in `base.textTheme`
+  /// has a **null** `fontSize`: the numbers are injected later, by
+  /// `ThemeData.localize`, which merges in
+  /// `typography.geometryThemeFor(scriptCategory)` when the theme is
+  /// applied to a subtree. Scaling `base.textTheme` therefore multiplied
+  /// fifteen nulls and changed nothing, and the probe still read 12.0 px
+  /// at both ends of the slider. Scaling the geometry works, and it also
+  /// covers all three script categories — `dense` is the one a Chinese
+  /// UI resolves to, so a fix applied only to `englishLike` would have
+  /// reached the English app and left the Chinese one deaf.
+  TextTheme onScaleAll(TextTheme t) {
+    TextStyle? s(TextStyle? r) => r?.fontSize == null
+        ? r
+        : r!.copyWith(fontSize: onScale(r.fontSize!));
+    return t.copyWith(
+      displayLarge: s(t.displayLarge),
+      displayMedium: s(t.displayMedium),
+      displaySmall: s(t.displaySmall),
+      headlineLarge: s(t.headlineLarge),
+      headlineMedium: s(t.headlineMedium),
+      headlineSmall: s(t.headlineSmall),
+      titleLarge: s(t.titleLarge),
+      titleMedium: s(t.titleMedium),
+      titleSmall: s(t.titleSmall),
+      bodyLarge: s(t.bodyLarge),
+      bodyMedium: s(t.bodyMedium),
+      bodySmall: s(t.bodySmall),
+      labelLarge: s(t.labelLarge),
+      labelMedium: s(t.labelMedium),
+      labelSmall: s(t.labelSmall),
+    );
+  }
+
   TextStyle body(double size, {FontWeight? w, Color? c}) => TextStyle(
-        fontSize: size,
+        fontSize: onScale(size),
         height: WbMetrics.lineHeight,
         fontWeight: w,
         color: c ?? wb.text,
@@ -708,6 +795,12 @@ ThemeData workbenchTheme(ThemeData parent, {bool paper = false}) {
           labelSmall: body(WbMetrics.chrome, c: wb.mutedText),
           titleSmall: body(WbMetrics.chrome, w: FontWeight.w600),
         ),
+    // Where the other ten roles get their numbers. See [onScaleAll].
+    typography: base.typography.copyWith(
+      englishLike: onScaleAll(base.typography.englishLike),
+      dense: onScaleAll(base.typography.dense),
+      tall: onScaleAll(base.typography.tall),
+    ),
     iconTheme: IconThemeData(color: wb.mutedText, size: 15),
     // Square, hairline-bordered, no elevation — everywhere.
     cardTheme: CardThemeData(
@@ -1004,21 +1097,14 @@ class WbType {
   /// owns: bar heights, icons, tab labels, badges.
   double scaledChrome(double atDefault) => atDefault * chromeScale;
 
-  /// A Material role's own size, put back on the reader's scale.
-  ///
-  /// A hardcoded literal is not the only way to write a size the slider
-  /// cannot move. `main.dart` rewires exactly three roles from
-  /// `settings.fontSize` — `bodyLarge`, `bodyMedium`, `titleLarge` — so
-  /// every OTHER role in `textTheme` is a fixed number wearing a name,
-  /// and `Text(x, style: theme.textTheme.bodySmall)` is as deaf as
-  /// `fontSize: 12` would have been. #315's ratchet counts literals and
-  /// could not see this.
-  ///
-  /// Do NOT pass one of the three rewired roles: they already carry the
-  /// reader's setting, and scaling them again squares it.
-  TextStyle? scaleRole(TextStyle? role) => role?.fontSize == null
-      ? role
-      : role!.copyWith(fontSize: role.fontSize! * textScale);
+  // `scaleRole` lived here from 2026-08-24 until later the same day. It
+  // put a Material role's own size back on the reader's scale, because
+  // only three roles were wired and the rest were fixed numbers wearing
+  // names. That was a patch on a symptom: the roles were fixed because
+  // `workbenchTheme` built them from constants, and now that it scales
+  // all fifteen itself, a bare `theme.textTheme.bodySmall` is correct
+  // and `scaleRole` would square the scale. Removed rather than left as
+  // a no-op, so no call site can quietly reintroduce the squaring.
 
   /// A subordinate size on the reader's scale, floored so small print
   /// stays print — see [WbMetrics.smallPrintFloor].
@@ -1111,6 +1197,20 @@ class WbType {
   /// answer to "I asked for 40 pt in a 200 px pane" — shrinking it back
   /// would be the app overruling the setting again, which is the very
   /// defect this fixes.
+  /// The body-text scale for a Font Size setting, guarded to the range
+  /// Settings offers.
+  ///
+  /// Shared with [workbenchTheme], which needs the same number before a
+  /// [WbType] exists — the app theme is built above the widget tree that
+  /// [of] reads from. One function so the theme and the panes cannot
+  /// disagree about what "40 pt" means.
+  static double scaleFor(double fontSize) => (fontSize / kFontSizeDefault)
+      .clamp(
+        kFontSizeMin / kFontSizeDefault,
+        kFontSizeMax / kFontSizeDefault,
+      )
+      .toDouble();
+
   static WbType resolve({
     required double fontSize,
     required double lineSpacing,
@@ -1120,10 +1220,7 @@ class WbType {
     // 20 / 1.5 / 1.0 are the app defaults for these three. Expressing
     // the bounds as the slider's own ends divided by the default is what
     // makes the two impossible to drift apart again.
-    final textScale = (fontSize / kFontSizeDefault).clamp(
-      kFontSizeMin / kFontSizeDefault,
-      kFontSizeMax / kFontSizeDefault,
-    );
+    final textScale = scaleFor(fontSize);
     final chromeScale = menuScale.clamp(kMenuScaleMin, kMenuScaleMax);
     // Line spacing moves the workbench's own tighter leading in the
     // same direction the reader asked for, without adopting the

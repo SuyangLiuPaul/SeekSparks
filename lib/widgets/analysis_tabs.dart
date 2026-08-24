@@ -1397,9 +1397,7 @@ class _NaveTile extends StatelessWidget {
                             padding: const EdgeInsets.only(top: 2),
                             child: Text(
                               text,
-                              style: t
-                                  .scaleRole(theme.textTheme.bodySmall)
-                                  ?.copyWith(
+                              style: theme.textTheme.bodySmall?.copyWith(
                                 height: 1.35,
                                 color: scheme.onSurfaceVariant,
                                 fontFamilyFallback: kCjkFontFallback,
@@ -1609,7 +1607,6 @@ class _TopicDetailState extends State<_TopicDetail> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final t = WbType.of(context);
     return FutureBuilder<(List<ConcordanceSection>, String?)>(
       future: _future,
       builder: (context, snap) {
@@ -1643,7 +1640,7 @@ class _TopicDetailState extends State<_TopicDetail> {
                   padding: const EdgeInsets.only(bottom: 6),
                   child: Text(
                     translit,
-                    style: t.scaleRole(theme.textTheme.labelMedium)?.copyWith(
+                    style: theme.textTheme.labelMedium?.copyWith(
                       color: scheme.primary,
                       letterSpacing: 0.4,
                     ),
@@ -1652,7 +1649,7 @@ class _TopicDetailState extends State<_TopicDetail> {
               for (final (_, e) in entries) ...[
                 Text(
                   e.label(widget.locale),
-                  style: t.scaleRole(theme.textTheme.bodySmall)?.copyWith(
+                  style: theme.textTheme.bodySmall?.copyWith(
                     height: 1.4,
                     fontFamilyFallback: kCjkFontFallback,
                   ),

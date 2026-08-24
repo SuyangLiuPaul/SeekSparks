@@ -10,10 +10,17 @@
 // whole problem: it was not one screen.
 //
 // This is a source ratchet, not a behaviour test, and deliberately so.
-// The defect is invisible to a widget test: a `TextStyle` assertion
+// A literal is invisible to a widget test: a `TextStyle` assertion
 // passes whether the number came from the setting or from thin air, and
 // the number IS real — it simply never moves. Only the source can say
 // which.
+//
+// 2026-08-24 (#315): that paragraph used to end "the defect is invisible
+// to a widget test", and the fourth mechanism found that day was the
+// exact converse — `workbenchTheme` sizing every Material role from
+// constants, which no source rule at a call site could see and which a
+// widget test found in one pump. Neither instrument dominates the
+// other; `test/theme_font_size_behaviour_test.dart` is the other half.
 //
 // So: the count per file may go DOWN, never UP. A new screen written
 // with hardcoded sizes fails here on the day it is written, instead of
@@ -190,54 +197,50 @@ void main() {
             'the file to `finished`:\n${paid.join('\n')}');
   });
 
-  // 2026-08-24 (#315, second mechanism). Everything above counts
-  // `fontSize:` literals, and a literal is only one of the two ways to
-  // write a size the slider cannot move. `main.dart` rewires exactly
-  // three Material roles from `settings.fontSize` — `bodyLarge`,
-  // `bodyMedium`, `titleLarge`. Every OTHER role in `textTheme` is a
-  // fixed number wearing a name, so `theme.textTheme.bodySmall` is as
-  // deaf as `fontSize: 12`, and the literal ratchet scores it zero.
+  // 2026-08-24 (#315, second mechanism) — RETIRED the same day, by
+  // fixing what it was working around.
   //
-  // That gap was not hypothetical: `small_screen_advisory.dart` and
-  // `analysis_tabs.dart` both sat on the `finished` list above — a
-  // promise that the setting reaches everything on them — while holding
-  // seven such sites between them. The detector measured one mechanism
-  // and reported the file clean.
-  test('no Material role is used at its fixed size', () {
-    // `apply` and `copyWith` are methods on the theme, not roles.
-    const notARole = {
-      'bodyLarge', 'bodyMedium', 'titleLarge', 'apply', 'copyWith',
-    };
-    final role = RegExp(r'textTheme\.([A-Za-z]+)');
+  // A test called 'no Material role is used at its fixed size' stood
+  // here. It forbade `theme.textTheme.bodySmall` and the twelve roles
+  // like it, on the grounds that `main.dart` rewired only three roles
+  // from `settings.fontSize` and every other role was a fixed number
+  // wearing a name. That was true, and it caught seven real sites in
+  // `small_screen_advisory.dart` and `analysis_tabs.dart`.
+  //
+  // It was also a rule against a symptom. The roles were fixed because
+  // `workbenchTheme` — the app's ONLY theme — sized them from constants
+  // and threw the caller's `textTheme` away; the three "rewired" roles
+  // were overwritten one line after they were set, so in truth all
+  // fifteen were deaf, not twelve. `workbenchTheme` now takes the
+  // reader's scale and puts every role on it, which makes a bare
+  // `theme.textTheme.bodySmall` the CORRECT thing to write and this
+  // test a rule against correct code. Its escape hatch, `scaleRole`, is
+  // gone for the same reason: it would now square the scale.
+  //
+  // What replaces it is below, and it guards the one seam the root fix
+  // opened: `textScale` defaults to 1.0, so a call site that forgets to
+  // pass it re-creates the whole defect silently and locally.
+  test('every workbenchTheme call passes the reader\'s scale', () {
     final deaf = <String>[];
     for (final f in all) {
       final lines = f.readAsLinesSync();
       for (var i = 0; i < lines.length; i++) {
         if (lines[i].trimLeft().startsWith('//')) continue;
-        for (final m in role.allMatches(lines[i])) {
-          if (notARole.contains(m.group(1))) continue;
-          // The style is answered if the chain supplies its own size
-          // (`?.copyWith(fontSize: t.scaled(9.5))`) or is handed to
-          // `scaleRole`, which multiplies the role's own size by the
-          // reader's scale.
-          final window =
-              lines.sublist(i, (i + 5).clamp(0, lines.length)).join(' ');
-          final opener =
-              lines.sublist((i - 2).clamp(0, lines.length), i + 1).join(' ');
-          if (window.contains('fontSize:') ||
-              window.contains('scaleRole(') ||
-              opener.contains('scaleRole(')) {
-            continue;
-          }
-          deaf.add('${f.path}:${i + 1} ${m.group(1)}');
-        }
+        if (!lines[i].contains('workbenchTheme(')) continue;
+        // The declaration itself, not a call.
+        if (lines[i].contains('ThemeData workbenchTheme(')) continue;
+        final window =
+            lines.sublist(i, (i + 4).clamp(0, lines.length)).join(' ');
+        if (window.contains('textScale:')) continue;
+        deaf.add('${f.path}:${i + 1}');
       }
     }
     expect(deaf, isEmpty,
-        reason: 'only bodyLarge, bodyMedium and titleLarge carry the '
-            'reader\'s Font Size; every other role is a fixed number. Wrap '
-            'it in WbType.scaleRole(), or give the copyWith its own '
-            't.scaled() size:\n${deaf.join('\n')}');
+        reason: 'workbenchTheme(textScale:) defaults to 1.0, which pins '
+            'every Material text size in that subtree to its design value '
+            'and makes the Font Size slider do nothing there. Pass '
+            'WbType.of(context).textScale, or WbType.scaleFor(fontSize) '
+            'where there is no WbType above you:\n${deaf.join('\n')}');
   });
 
   // 2026-08-24 (#315, third mechanism). A CLAMP is the third way to

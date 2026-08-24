@@ -50,6 +50,7 @@ class BooksPage extends StatelessWidget {
       data: workbenchTheme(
         Theme.of(context),
         paper: settings.readingPaperTheme,
+        textScale: WbType.scaleFor(settings.fontSize),
       ),
       child: Builder(
         builder: (context) =>

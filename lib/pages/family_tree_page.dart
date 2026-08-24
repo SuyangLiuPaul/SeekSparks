@@ -77,6 +77,7 @@ class FamilyTreePage extends StatelessWidget {
       data: workbenchTheme(
         Theme.of(context),
         paper: context.watch<AppSettings>().readingPaperTheme,
+        textScale: WbType.of(context).textScale,
       ),
       child: const _FamilyTreeBody(),
     );

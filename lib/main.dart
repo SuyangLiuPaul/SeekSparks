@@ -514,13 +514,22 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
           ),
           themeMode: settings.themeMode,
           // 2026-08-06: SeekSparks is a study tool, not a reading app,
-          // and the whole product should read as one. The Workbench's
-          // dense BibleWorks theme is layered OVER the app's own
-          // ThemeData rather than replacing it, so the font settings,
-          // the CJK fallback chain and every per-widget theme below
-          // still apply — `workbenchTheme` then overrides the palette,
-          // the corner radii, the text scale and the ripple.
-          theme: workbenchTheme(ThemeData(
+          // and the whole product should read as one, so the Workbench's
+          // dense BibleWorks theme is the app's only theme.
+          //
+          // 2026-08-24 (#315): this comment used to say the workbench
+          // theme was "layered OVER the app's own ThemeData rather than
+          // replacing it, so the font settings … still apply". It
+          // replaces it. `workbenchTheme` builds from a fresh
+          // `ThemeData.light/dark` and reads exactly two things off the
+          // theme passed in — brightness and `fontFamilyFallback` — so
+          // the sizes set below were overwritten one line later, and the
+          // reader's Font Size reached no Material text anywhere in the
+          // app. The scale is passed in explicitly now; the measurement
+          // and the rest of the story are on `workbenchTheme` itself.
+          theme: workbenchTheme(
+              textScale: WbType.scaleFor(settings.fontSize),
+              ThemeData(
             fontFamily: settings.fontFamily,
             // 2026-05-08 (v1.1.0 — Liquid Glass / v1.1.2 — system
             // defaults): a comprehensive OS-native font fallback
@@ -579,15 +588,12 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
             textTheme: ThemeData.light().textTheme.copyWith(
                   bodyLarge: ThemeData.light().textTheme.bodyLarge?.copyWith(
                         fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                        fontSize: settings.fontSize,
                       ),
                   bodyMedium: ThemeData.light().textTheme.bodyMedium?.copyWith(
                         fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                        fontSize: settings.fontSize - 2,
                       ),
                   titleLarge: ThemeData.light().textTheme.titleLarge?.copyWith(
                         fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                        fontSize: settings.fontSize + 4,
                       ),
                 ),
             colorScheme: lightScheme,
@@ -639,7 +645,9 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
               indicatorColor: lightScheme.onPrimary,
             ),
           )),
-          darkTheme: workbenchTheme(ThemeData(
+          darkTheme: workbenchTheme(
+              textScale: WbType.scaleFor(settings.fontSize),
+              ThemeData(
             fontFamily: settings.fontFamily,
             // 2026-05-08 (v1.1.0 / v1.1.2): same comprehensive OS-
             // native font fallback chain as light theme. See light
@@ -672,17 +680,14 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
             textTheme: ThemeData.dark().textTheme.copyWith(
                   bodyLarge: ThemeData.dark().textTheme.bodyLarge?.copyWith(
                         fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                        fontSize: settings.fontSize,
                         color: Color(0xFFCCCCCC),
                       ),
                   bodyMedium: ThemeData.dark().textTheme.bodyMedium?.copyWith(
                         fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                        fontSize: settings.fontSize - 2,
                         color: Color(0xFFCCCCCC),
                       ),
                   titleLarge: ThemeData.dark().textTheme.titleLarge?.copyWith(
                         fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                        fontSize: settings.fontSize + 4,
                         color: Color(0xFFCCCCCC),
                       ),
                 ),

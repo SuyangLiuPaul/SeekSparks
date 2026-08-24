@@ -288,6 +288,7 @@ class _BookChapterPickerState extends State<BookChapterPicker> {
       data: workbenchTheme(
         Theme.of(context),
         paper: settings.readingPaperTheme,
+        textScale: WbType.scaleFor(settings.fontSize),
       ),
       child: Builder(
         builder: (themedContext) => ColoredBox(

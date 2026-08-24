@@ -1202,7 +1202,8 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
     // at once.
     final paper = context.watch<AppSettings>().readingPaperTheme;
     return Theme(
-      data: workbenchTheme(Theme.of(context), paper: paper),
+      data: workbenchTheme(Theme.of(context),
+          paper: paper, textScale: WbType.of(context).textScale),
       child: ChangeNotifierProvider<WorkbenchProvider>.value(
         value: _wb,
         child: Builder(
