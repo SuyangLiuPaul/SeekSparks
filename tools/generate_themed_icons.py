@@ -1,30 +1,45 @@
 #!/usr/bin/env python3
-"""Regenerate every alternate launcher icon from the current master artwork.
+"""Derive every alternate launcher icon size from its own variant master.
 
-The colour variants deliberately tint only the ink-blue parts of the current
-SeekSparks mark. The white pages and gold sparks/words stay unchanged, so a
-brand refresh cannot leave the alternate icons carrying an older drawing.
+This script used to hue-rotate the default mark to make each colour
+variant. That worked while the mark was the SeekSparks drawing — a dark
+ground with an open book and gold sparks — because the rule it keyed on
+("cool ink is anything blue with value < 0.72") happened to select that
+ground and nothing else.
+
+It does not work on the current mark. The Yahweh's Swords drawing puts
+the book on a PALE blue ground at value 0.97, so the ground fell outside
+the rule: re-running the script produced a green book sitting on a blue
+background, with the spine and the line down the blade left blue as
+well. The shipped variants do not look like that — a green icon is a
+green DRAWING, authored as one, and no rotation of the blue art
+reproduces it (the closest fit measured 18 levels per channel away).
+
+So the variants are no longer derived from the default mark. Each is its
+own master under assets/themed_icons/, which is also the image the
+in-app icon picker shows, and this script only resizes those into the
+per-platform slots. Dark is the exception and IS derived — see
+tools/generate_brand_marks.py, which rebuilds it from the default mark
+on the dark ground, because Dark is the default drawing at night rather
+than a different palette.
+
+Usage:
+    python3 tools/generate_themed_icons.py            # write the sizes
+    python3 tools/generate_themed_icons.py --check    # verify only
 """
 
 from __future__ import annotations
 
-import colorsys
 import json
+import sys
 from pathlib import Path
 
 from PIL import Image
 
-
 ROOT = Path(__file__).resolve().parent.parent
-MASTER = ROOT / "assets" / "app_icon.png"
-VARIANTS = {
-    "Dark": None,
-    "Green": "#176B4A",
-    "Orange": "#A14F16",
-    "Pink": "#A3376E",
-    "Purple": "#603C9E",
-    "Red": "#9E3038",
-}
+MASTERS = ROOT / "assets" / "themed_icons"
+VARIANTS = ["Dark", "Green", "Orange", "Pink", "Purple", "Red"]
+
 ANDROID_SIZES = {
     "mipmap-mdpi": 48,
     "mipmap-hdpi": 72,
@@ -32,72 +47,79 @@ ANDROID_SIZES = {
     "mipmap-xxhdpi": 144,
     "mipmap-xxxhdpi": 192,
 }
-
-
-def _rgb(hex_colour: str) -> tuple[int, int, int]:
-    return tuple(int(hex_colour[i : i + 2], 16) for i in (1, 3, 5))
-
-
-def tint_ink(master: Image.Image, target: str | None) -> Image.Image:
-    image = master.convert("RGB")
-    if target is None:
-        return image
-
-    target_h, target_s, _ = colorsys.rgb_to_hsv(
-        *[channel / 255 for channel in _rgb(target)]
-    )
-    pixels = []
-    for red, green, blue in image.get_flattened_data():
-        hue, saturation, value = colorsys.rgb_to_hsv(
-            red / 255, green / 255, blue / 255
-        )
-        # The master uses cool ink-blue for the ground, shadows, gutter and
-        # unlit words. Preserve the bright pages and every warm gold pixel.
-        is_cool_ink = blue >= red * 1.04 and value < 0.72
-        if is_cool_ink:
-            strength = min(1.0, max(0.35, (0.72 - value) / 0.55))
-            hue = target_h
-            saturation = saturation * (1 - strength) + target_s * strength
-            red_f, green_f, blue_f = colorsys.hsv_to_rgb(hue, saturation, value)
-            pixels.append((round(red_f * 255), round(green_f * 255), round(blue_f * 255)))
-        else:
-            pixels.append((red, green, blue))
-    image.putdata(pixels)
-    return image
+WEB_SIZES = [192, 512]
 
 
 def resize(image: Image.Image, size: int) -> Image.Image:
+    if image.size == (size, size):
+        return image.copy()
     return image.resize((size, size), Image.Resampling.LANCZOS)
 
 
-def generate_ios(variant: str, image: Image.Image) -> None:
+def _targets(variant: str, master: Image.Image) -> dict[Path, Image.Image]:
+    out: dict[Path, Image.Image] = {}
+
     icon_set = ROOT / "ios" / "Runner" / "Assets.xcassets" / f"AppIcon-{variant}.appiconset"
-    contents = json.loads((icon_set / "Contents.json").read_text())
-    for entry in contents["images"]:
-        filename = entry["filename"]
-        points = float(entry["size"].split("x", 1)[0])
-        scale = int(entry["scale"].removesuffix("x"))
-        resize(image, round(points * scale)).save(icon_set / filename)
+    contents_file = icon_set / "Contents.json"
+    if contents_file.exists():
+        contents = json.loads(contents_file.read_text())
+        for entry in contents["images"]:
+            filename = entry.get("filename")
+            if not filename:
+                continue
+            points = float(entry["size"].split("x", 1)[0])
+            scale = int(entry["scale"].removesuffix("x"))
+            out[icon_set / filename] = resize(master, round(points * scale))
 
-
-def generate_android(variant: str, image: Image.Image) -> None:
     suffix = variant.lower()
     for density, size in ANDROID_SIZES.items():
-        output = ROOT / "android" / "app" / "src" / "main" / "res" / density
-        resize(image, size).save(output / f"ic_launcher_{suffix}.png")
+        directory = ROOT / "android" / "app" / "src" / "main" / "res" / density
+        if directory.exists():
+            out[directory / f"ic_launcher_{suffix}.png"] = resize(master, size)
+
+    web = ROOT / "web" / "icons"
+    if web.exists():
+        for size in WEB_SIZES:
+            out[web / f"Icon-{variant}-{size}.png"] = resize(master, size)
+
+    return out
 
 
-def main() -> None:
-    master = Image.open(MASTER)
-    output = ROOT / "assets" / "themed_icons"
-    output.mkdir(exist_ok=True)
-    for variant, target in VARIANTS.items():
-        image = tint_ink(master, target)
-        image.save(output / f"{variant}.png", optimize=True)
-        generate_ios(variant, image)
-        generate_android(variant, image)
-        print(f"generated {variant}")
+def main() -> int:
+    check_only = "--check" in sys.argv
+    drifted: list[str] = []
+
+    for variant in VARIANTS:
+        path = MASTERS / f"{variant}.png"
+        if not path.exists():
+            sys.exit(f"variant master missing: {path}")
+        master = Image.open(path).convert("RGB")
+
+        for target, image in _targets(variant, master).items():
+            rel = target.relative_to(ROOT)
+            if check_only:
+                if not target.exists():
+                    drifted.append(f"{rel} is missing")
+                    continue
+                have = Image.open(target).convert("RGB")
+                if have.size != image.size or have.tobytes() != image.tobytes():
+                    drifted.append(f"{rel} does not match {variant}.png resized")
+                continue
+            image.save(target, optimize=True)
+
+        if not check_only:
+            print(f"generated {variant}")
+
+    if check_only:
+        if drifted:
+            print("alternate icons have drifted from their masters:", file=sys.stderr)
+            for line in drifted:
+                print(f"  - {line}", file=sys.stderr)
+            print("\nrun: python3 tools/generate_themed_icons.py", file=sys.stderr)
+            return 1
+        print("alternate icons match their masters")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
