@@ -62,7 +62,6 @@ void main() {
     // Counted here anyway so the grep stays honest: the number is
     // real, it just is not a defect.
     'models/app_style_preset.dart': 9,
-    'pages/bible_trivia_page.dart': 9,
     'widgets/book_chapter_picker.dart': 2,
     'widgets/version_picker_sheet.dart': 2,
     'pages/profile_edit_page.dart': 1,
@@ -181,6 +180,48 @@ void main() {
     // which fails on five assertions against the commit before this one.
     'pages/evidence_detail_page.dart',
     'pages/evidence_page.dart',
+    // 2026-08-25 (#315, NINTH pass). 冷知识 — the largest single item
+    // left on this ticket, and the only file that appeared in all THREE
+    // budgets here at once: 9 literals, 9 `WbMetrics` constants and 5
+    // saturating ceilings, 23 sites in one page.
+    //
+    // It was budgeted on the note that it is "a game rather than a study
+    // surface". That was wrong, and the note is deleted below. The page
+    // renders pointed Hebrew (בְּרֵאשִׁית, אֱלֹהִים), the 22-letter
+    // alphabet with romanised names, Genesis 1:1 word by word with
+    // transliteration and gloss, and acrostic verse-count charts. It is
+    // a study surface reached from the workbench, and every one of those
+    // sizes was frozen.
+    //
+    // All five clamps saturated at or BELOW the app's own default of
+    // 20 pt, so between 20 and 40 — half the slider's travel — nothing
+    // the page sized for itself changed. (Not "nothing on the page": the
+    // eleven `Text()`s here that carry no style at all did travel, off
+    // the theme's scaled typography. A probe that pumps `MaterialApp`
+    // without the app's own theme cannot tell the two apart.) The worst
+    // of it is the pointed Hebrew:
+    // frozen at 16 px, one pixel above [WbMetrics.originalFloor], whose
+    // comment records that below it qamats/patach and tsere/segol are a
+    // single grey smudge. A reader who dragged the slider to 40 BECAUSE
+    // of the vowels got 16 px.
+    //
+    // The only three fontSize literals below 11 anywhere in `lib/` were
+    // here — 8.0 and both instances of 10.0 — and all three are raised to
+    // the floor, which is the one place this pass changes what a reader
+    // at the default setting sees. They are not the smallest sizes the
+    // app RENDERS: `radial_chronology_page.dart` and `originals_sheet`
+    // reach 7.5 and 8 px at the default through `t.scaled(...)`, which
+    // carries no floor. Those move with the slider, so this ticket's
+    // detectors are right to ignore them, but they are the same
+    // legibility question and are the obvious next thing to look at.
+    //
+    // Measured in `bible_trivia_font_size_behaviour_test.dart`, which
+    // fails four of its seven tests against the commit before this one.
+    // The other three pass there, and say so honestly: they guard what
+    // the repair could BREAK — rank between the title, body and
+    // reference, the vowel floor, and the four fixed-size containers the
+    // type now outgrows. A frozen page cannot overflow.
+    'pages/bible_trivia_page.dart',
   ];
 
   // 2026-08-24 (#315, SEVENTH mechanism, and a hole in this very test).
@@ -345,11 +386,13 @@ void main() {
   // do next at 12 px, in every tab, before any word study existed to
   // read. That is 「还有很多界面都是」 at its most literal.
   test('no text size comes straight off WbMetrics', () {
-    // `bible_trivia_page.dart` is 3,213 lines with no WbType anywhere,
-    // and converting it is its own pass on its own screenshots; it is a
-    // game rather than a study surface, so it is budgeted here instead
-    // of blocking the workbench repair.
-    const budget = <String, int>{'pages/bible_trivia_page.dart': 9};
+    // Empty since 2026-08-25. The last entry was `bible_trivia_page.dart`
+    // at 9, budgeted on the claim that it is "a game rather than a study
+    // surface" — see the ninth-pass note in `finished` for why that was
+    // wrong. `WbMetrics.chrome` is still legitimate as the ARGUMENT to
+    // `t.scaledSmall(...)`, which is what those nine became; what this
+    // detector forbids is the constant reaching `fontSize:` unmultiplied.
+    const budget = <String, int>{};
     final metric = RegExp(r'fontSize:\s*WbMetrics\.[A-Za-z]');
     final counts = <String, int>{};
     for (final f in all) {
@@ -566,8 +609,11 @@ void main() {
     /// remaining ceilings — the largest entry left on this list, and
     /// the pass that showed a ceiling can INVERT and not merely freeze.
     /// See the note beside them in `finished` above.
+    /// 2026-08-25: `bible_trivia_page.dart` left with 5 — every one of
+    /// them saturated at or below the default 20 pt, which is the worst
+    /// version of this defect: the ceiling is not a limit the reader can
+    /// reach, it is one they START at.
     const known = <String, int>{
-      'pages/bible_trivia_page.dart': 5,
       'pages/highlights_page.dart': 1,
       'pages/library_page.dart': 2,
       'pages/loading_page.dart': 3,

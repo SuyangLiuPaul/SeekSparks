@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:seeksparks/utils/app_nav.dart';
 import 'package:provider/provider.dart';
@@ -415,6 +417,7 @@ class _TriviaFilterBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final wb = WbColors.of(context);
+    final t = settings.wbType;
     final searchHint =
         uiStrings['bibleTriviaSearchHint']?[locale] ??
             'Search trivia…';
@@ -456,7 +459,7 @@ class _TriviaFilterBar extends StatelessWidget {
                 onChanged: onQueryChanged,
                 style: TextStyle(
                   fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                  fontSize: (settings.fontSize - 1).clamp(13.0, 17.0),
+                  fontSize: t.scaledSmall(17),
                 ),
               ),
             ),
@@ -471,7 +474,7 @@ class _TriviaFilterBar extends StatelessWidget {
               ),
               label: Text(
                 filterLabel,
-                style: const TextStyle(fontSize: 13),
+                style: TextStyle(fontSize: t.scaledSmall(13)),
               ),
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -508,7 +511,14 @@ class _TriviaFilterBar extends StatelessWidget {
         ),
         const SizedBox(height: 10),
         SizedBox(
-          height: 38,
+          // The chip's own label is on the reader's scale (the theme's
+          // `chipTheme.labelStyle` runs through `onScale`), so a fixed
+          // 38 clips it from about 24 pt up. `math.max` rather than a
+          // bare proportion because the label is FLOORED below the
+          // default while the chip's padding is fixed: at 12 pt a
+          // proportional 22.8 would undercut a chip that has stopped
+          // shrinking.
+          height: math.max(38.0, t.scaled(38)),
           child: ListView(
             scrollDirection: Axis.horizontal,
             children: [
@@ -530,7 +540,7 @@ class _TriviaFilterBar extends StatelessWidget {
         Text(
           '$matchCount / $totalCount',
           style: TextStyle(
-            fontSize: WbMetrics.chrome,
+            fontSize: t.scaledSmall(WbMetrics.chrome),
             color: wb.mutedText,
             fontFeatures: const [FontFeature.tabularFigures()],
           ),
@@ -611,6 +621,7 @@ class _TriviaBookFilterSheetState extends State<_TriviaBookFilterSheet> {
   @override
   Widget build(BuildContext context) {
     final wb = WbColors.of(context);
+    final t = WbType.of(context);
     final locale = widget.locale;
     return SafeArea(
       child: Padding(
@@ -627,7 +638,7 @@ class _TriviaBookFilterSheetState extends State<_TriviaBookFilterSheet> {
                   uiStrings['sermonFilterByPassage']?[locale] ??
                       'Filter by passage',
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: t.scaled(14),
                     fontWeight: FontWeight.w700,
                     color: wb.text,
                   ),
@@ -649,7 +660,8 @@ class _TriviaBookFilterSheetState extends State<_TriviaBookFilterSheet> {
             Text(
               uiStrings['sermonFilterBookLabel']?[locale] ?? 'Book',
               style: TextStyle(
-                  fontSize: WbMetrics.chrome, color: wb.mutedText),
+                  fontSize: t.scaledSmall(WbMetrics.chrome),
+                  color: wb.mutedText),
             ),
             const SizedBox(height: 6),
             ConstrainedBox(
@@ -710,7 +722,7 @@ class _TriviaBookChip extends StatelessWidget {
       label: Text(
         localized,
         style: TextStyle(
-          fontSize: 13,
+          fontSize: WbType.of(context).scaledSmall(13),
           color: hasEntries ? null : Theme.of(context).disabledColor,
         ),
       ),
@@ -767,7 +779,7 @@ class _IntroCard extends StatelessWidget {
         style: TextStyle(
           fontFamily: settings.fontFamily,
           fontFamilyFallback: kCjkFontFallback,
-          fontSize: (settings.fontSize - 2).clamp(12.0, 16.0),
+          fontSize: settings.wbType.scaledSmall(16),
           color: wb.mutedText,
           height: 1.45,
         ),
@@ -818,6 +830,7 @@ class _TriviaTileState extends State<_TriviaTile> {
     final entry = widget.entry;
     final wb = WbColors.of(context);
     final settings = widget.settings;
+    final t = settings.wbType;
     final title = entry.title[locale] ?? entry.title['en'] ?? '';
     final body = entry.body[locale] ?? entry.body['en'] ?? '';
     final tag = entry.tag[locale] ?? entry.tag['en'] ?? '';
@@ -848,7 +861,7 @@ class _TriviaTileState extends State<_TriviaTile> {
                     style: TextStyle(
                       fontFamily: settings.fontFamily,
                       fontFamilyFallback: kCjkFontFallback,
-                      fontSize: (settings.fontSize - 5).clamp(10.0, 12.0),
+                      fontSize: t.scaledSmall(12),
                       color: wb.mutedText,
                       fontFeatures: const [FontFeature.tabularFigures()],
                     ),
@@ -873,7 +886,7 @@ class _TriviaTileState extends State<_TriviaTile> {
             style: TextStyle(
               fontFamily: settings.fontFamily,
               fontFamilyFallback: kCjkFontFallback,
-              fontSize: (settings.fontSize + 1).clamp(14.0, 19.0),
+              fontSize: t.scaled(19),
               fontWeight: FontWeight.w700,
               color: wb.text,
             ),
@@ -912,8 +925,13 @@ class _TriviaTileState extends State<_TriviaTile> {
                             base: TextStyle(
                               fontFamily: settings.fontFamily,
                               fontFamilyFallback: kCjkFontFallback,
-                              fontSize: (settings.fontSize - 1)
-                                  .clamp(12.0, 17.0),
+                              // Floored, not bare `scaled`: the
+                              // reference label beside the title has a
+                              // floor of its own, and an unfloored body
+                              // slips under it below about 13 pt —
+                              // making the grey metadata larger than the
+                              // prose it labels.
+                              fontSize: t.scaledSmall(17),
                               color: wb.text,
                               height: 1.55,
                             ),
@@ -994,9 +1012,10 @@ class _TriviaDiagramView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final wb = WbColors.of(context);
+    final t = WbType.of(context);
     final d = diagram;
     if (d is HebrewAlphabetDiagram) {
-      return _buildHebrewAlphabet(d, wb);
+      return _buildHebrewAlphabet(d, wb, t);
     }
     if (d is ChapterVerseCountsDiagram) {
       // The one colour on this page that is DATA rather than chrome,
@@ -1004,18 +1023,18 @@ class _TriviaDiagramView extends StatelessWidget {
       // broken" in all three locales, so the hue is part of the
       // sentence. Squaring the bars is the whole of the change here.
       return _buildChapterCounts(
-          d, wb, Theme.of(context).colorScheme.error);
+          d, wb, t, Theme.of(context).colorScheme.error);
     }
     if (d is SequenceDiagram) {
-      return _buildSequence(d, wb);
+      return _buildSequence(d, wb, t);
     }
     if (d is NumberedWordsDiagram) {
-      return _buildNumberedWords(d, wb);
+      return _buildNumberedWords(d, wb, t);
     }
     return const SizedBox.shrink();
   }
 
-  Widget _wrapper(WbColors wb, Widget child, {String? caption}) {
+  Widget _wrapper(WbColors wb, WbType t, Widget child, {String? caption}) {
     // `double.infinity` rather than letting the panel shrink-wrap: the
     // alphabet grid centres its rows and the chapter chart divides the
     // width between `Expanded` bars, and both need the box to be as
@@ -1034,7 +1053,7 @@ class _TriviaDiagramView extends StatelessWidget {
               caption,
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: WbMetrics.chrome,
+                fontSize: t.scaledSmall(WbMetrics.chrome),
                 color: wb.mutedText,
                 height: 1.35,
                 letterSpacing: 0.2,
@@ -1047,7 +1066,8 @@ class _TriviaDiagramView extends StatelessWidget {
     );
   }
 
-  Widget _buildHebrewAlphabet(HebrewAlphabetDiagram d, WbColors wb) {
+  Widget _buildHebrewAlphabet(
+      HebrewAlphabetDiagram d, WbColors wb, WbType t) {
     // Hebrew alphabet — 22 consonants. Letter glyph + romanised name.
     const letters = <List<String>>[
       ['א', 'Aleph'], ['ב', 'Beth'], ['ג', 'Gimel'], ['ד', 'Daleth'],
@@ -1061,10 +1081,19 @@ class _TriviaDiagramView extends StatelessWidget {
     // buttons. The tinted fill went; what separates one letter from the
     // next is the hairline, which is also what separates one cell from
     // the next everywhere else in this app.
+    // The romanised name was 8 px — the smallest text in the app and
+    // three below the workbench's own small-print floor. It is raised to
+    // the floor rather than scaled from 8, which is the one place on this
+    // page where the default setting changes appearance.
+    final nameSize = t.scaledSmall(WbMetrics.smallPrintFloor);
+    // Four em of the name's type. Reproduces 44 exactly at the default
+    // and at every stop below it, and widens with the longest name
+    // ("Daleth") above it.
+    final cellWidth = math.max(44.0, nameSize * 4.0);
     final children = [
       for (final pair in letters)
         Container(
-          width: 44,
+          width: cellWidth,
           padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
           decoration: BoxDecoration(
             color: wb.paneBg,
@@ -1076,7 +1105,7 @@ class _TriviaDiagramView extends StatelessWidget {
               Text(
                 pair[0],
                 style: TextStyle(
-                  fontSize: 18,
+                  fontSize: t.scaledOriginal(18),
                   fontWeight: FontWeight.w700,
                   color: wb.text,
                   height: 1.0,
@@ -1087,7 +1116,7 @@ class _TriviaDiagramView extends StatelessWidget {
                 Text(
                   pair[1],
                   style: TextStyle(
-                    fontSize: 8,
+                    fontSize: nameSize,
                     color: wb.mutedText,
                     letterSpacing: 0.2,
                   ),
@@ -1103,6 +1132,7 @@ class _TriviaDiagramView extends StatelessWidget {
         : caption;
     return _wrapper(
       wb,
+      t,
       Wrap(
         spacing: 6,
         runSpacing: 6,
@@ -1113,10 +1143,10 @@ class _TriviaDiagramView extends StatelessWidget {
     );
   }
 
-  Widget _buildChapterCounts(
-      ChapterVerseCountsDiagram d, WbColors wb, Color brokenColor) {
+  Widget _buildChapterCounts(ChapterVerseCountsDiagram d, WbColors wb,
+      WbType t, Color brokenColor) {
     final maxCount = d.chapters.fold<int>(0, (m, c) => c > m ? c : m);
-    const barAreaHeight = 96.0;
+    final barAreaHeight = t.scaled(96);
     final bars = <Widget>[];
     for (int i = 0; i < d.chapters.length; i++) {
       final count = d.chapters[i];
@@ -1126,12 +1156,16 @@ class _TriviaDiagramView extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 4),
           child: Column(
+            // `min`, and the fixed-height box below is gone: the chart
+            // now sizes itself from the bar area plus its two labels, so
+            // there is no constant left to fall behind the type.
+            mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               Text(
                 '$count',
                 style: TextStyle(
-                  fontSize: WbMetrics.chrome,
+                  fontSize: t.scaledSmall(WbMetrics.chrome),
                   fontWeight: FontWeight.w700,
                   color: isBroken ? brokenColor : wb.mutedText,
                   fontFeatures: const [FontFeature.tabularFigures()],
@@ -1146,7 +1180,7 @@ class _TriviaDiagramView extends StatelessWidget {
               Text(
                 '${i + 1}',
                 style: TextStyle(
-                  fontSize: 10,
+                  fontSize: t.scaledSmall(WbMetrics.smallPrintFloor),
                   color: wb.mutedText,
                   fontWeight: FontWeight.w600,
                   fontFeatures: const [FontFeature.tabularFigures()],
@@ -1160,18 +1194,16 @@ class _TriviaDiagramView extends StatelessWidget {
     final caption = uiStrings['triviaChapterCountsCaption']?[locale] ?? '';
     return _wrapper(
       wb,
-      SizedBox(
-        height: barAreaHeight + 36,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: bars,
-        ),
+      t,
+      Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: bars,
       ),
       caption: caption,
     );
   }
 
-  Widget _buildSequence(SequenceDiagram d, WbColors wb) {
+  Widget _buildSequence(SequenceDiagram d, WbColors wb, WbType t) {
     final cells = <Widget>[];
     for (int i = 0; i < d.segments.length; i++) {
       final s = d.segments[i];
@@ -1191,7 +1223,7 @@ class _TriviaDiagramView extends StatelessWidget {
                 label,
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: WbMetrics.chrome,
+                  fontSize: t.scaledSmall(WbMetrics.chrome),
                   fontWeight: FontWeight.w700,
                   color: wb.text,
                   height: 1.3,
@@ -1202,7 +1234,7 @@ class _TriviaDiagramView extends StatelessWidget {
                 caption,
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 10,
+                  fontSize: t.scaledSmall(WbMetrics.smallPrintFloor),
                   color: wb.mutedText,
                   height: 1.3,
                 ),
@@ -1220,12 +1252,14 @@ class _TriviaDiagramView extends StatelessWidget {
     }
     return _wrapper(
       wb,
+      t,
       Row(crossAxisAlignment: CrossAxisAlignment.center, children: cells),
     );
   }
 
-  Widget _buildNumberedWords(NumberedWordsDiagram d, WbColors wb) {
+  Widget _buildNumberedWords(NumberedWordsDiagram d, WbColors wb, WbType t) {
     final rows = <Widget>[];
+    final ordinalSize = t.scaledSmall(WbMetrics.chrome);
     for (int i = 0; i < d.words.length; i++) {
       final w = d.words[i];
       final gloss = uiStrings[w.glossKey]?[locale] ?? w.glossKey;
@@ -1238,12 +1272,14 @@ class _TriviaDiagramView extends StatelessWidget {
             // and the tabular figures keep the glyphs left-aligned with
             // each other however many words there are.
             SizedBox(
-              width: 18,
+              // 1.6 em of the ordinal's own type — two tabular figures
+              // and a full stop. 18 at the default, wider above it.
+              width: math.max(18.0, ordinalSize * 1.6),
               child: Text(
                 '${i + 1}.',
                 textAlign: TextAlign.right,
                 style: TextStyle(
-                  fontSize: WbMetrics.chrome,
+                  fontSize: ordinalSize,
                   fontWeight: FontWeight.w700,
                   fontFeatures: const [FontFeature.tabularFigures()],
                   color: wb.mutedText,
@@ -1258,7 +1294,7 @@ class _TriviaDiagramView extends StatelessWidget {
             Text(
               w.original,
               style: TextStyle(
-                fontSize: 16,
+                fontSize: t.scaledOriginal(16),
                 fontWeight: FontWeight.w700,
                 color: wb.text,
               ),
@@ -1268,7 +1304,7 @@ class _TriviaDiagramView extends StatelessWidget {
               child: Text(
                 '${w.translit} · $gloss',
                 style: TextStyle(
-                  fontSize: WbMetrics.text,
+                  fontSize: t.scaledSmall(WbMetrics.text),
                   color: wb.mutedText,
                   height: 1.35,
                 ),
@@ -1280,6 +1316,7 @@ class _TriviaDiagramView extends StatelessWidget {
     }
     return _wrapper(
       wb,
+      t,
       Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: rows,
@@ -1448,6 +1485,7 @@ Future<void> showBibleTriviaSheet({
   final entries =
       triviaForChapter(englishBook: englishBook, chapter: chapter);
   final wb = WbColors.of(context);
+  final t = settings.wbType;
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
@@ -1486,7 +1524,7 @@ Future<void> showBibleTriviaSheet({
                                   'Bible Trivia',
                               style: TextStyle(
                                 fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                                fontSize: 14,
+                                fontSize: t.scaled(14),
                                 fontWeight: FontWeight.w700,
                                 color: wb.text,
                               ),
@@ -1495,7 +1533,7 @@ Future<void> showBibleTriviaSheet({
                               '${localeAwareBookName(englishBook, locale)}  $chapter',
                               style: TextStyle(
                                 fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                                fontSize: WbMetrics.chrome,
+                                fontSize: t.scaledSmall(WbMetrics.chrome),
                                 color: wb.mutedText,
                                 fontFeatures: const [
                                   FontFeature.tabularFigures()
@@ -1534,7 +1572,7 @@ Future<void> showBibleTriviaSheet({
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                                  fontSize: WbMetrics.text,
+                                  fontSize: t.scaledSmall(WbMetrics.text),
                                   color: wb.mutedText,
                                 ),
                               ),
