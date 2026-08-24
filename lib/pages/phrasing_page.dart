@@ -56,6 +56,94 @@ String phrasingRelationLabel(PhrasingRelation r, String locale) {
   return uiStrings[key]?[locale] ?? fallbacks[r] ?? r.name;
 }
 
+/// The four level chips: enum, string key, English fallback.
+///
+/// One list, because [phrasingLevelNote] names the same levels the chips
+/// do and two lists would let a rename drift them apart.
+const phrasingLevelChips = <(PhrasingLevel, String, String)>[
+  (PhrasingLevel.verses, 'phrasingLevelVerses', 'Verses'),
+  (PhrasingLevel.clauses, 'phrasingLevelClauses', 'Clauses'),
+  (PhrasingLevel.verbals, 'phrasingLevelVerbals', '+ Verbals'),
+  (PhrasingLevel.phrases, 'phrasingLevelPhrases', '+ Phrases'),
+];
+
+String phrasingLevelName(PhrasingLevel l, String locale) {
+  final e = phrasingLevelChips.firstWhere((e) => e.$1 == l);
+  return uiStrings[e.$2]?[locale] ?? e.$3;
+}
+
+/// What the chosen level cuts at, and what that costs on this page.
+///
+/// The chip numbers let the reader COMPARE without committing; this says
+/// what the number means for the one they are on. The overlap is
+/// deliberate — it is what teaches them to read the chips at all.
+///
+/// The second sentence is the one that earns the widget. Measured over
+/// the bundled corpus, `+ Verbals` draws the identical page in 20.9% of
+/// three-verse windows (see [phrasingLevelLineCounts]), and until now the
+/// reader tapped it, saw nothing move, and concluded the tool was broken.
+/// Naming it turns a dead control into a fact about the passage.
+///
+/// Top-level and locale-taking, like [phrasingRelationLabel], so the copy
+/// can be asserted per locale without pumping the page: the web build is
+/// skwasm, where rendered text is not in the DOM and a screenshot cannot
+/// read it back.
+///
+/// Null when the level carries no count — a level this edition cannot
+/// support is disabled, and describing a page nobody can reach is #299's
+/// defect in a sentence.
+String? phrasingLevelNote(
+  Phrasing p,
+  Map<PhrasingLevel, int> counts,
+  String locale,
+) {
+  final n = counts[p.level];
+  if (n == null) return null;
+  String s(String k, String fallback) => uiStrings[k]?[locale] ?? fallback;
+  const what = {
+    PhrasingLevel.verses: (
+      'phrasingLevelWhatVerses',
+      'cut at verse starts only, with no grammatical claim',
+    ),
+    PhrasingLevel.clauses: (
+      'phrasingLevelWhatClauses',
+      'cut at verse starts, conjunctions and relative pronouns',
+    ),
+    PhrasingLevel.verbals: (
+      'phrasingLevelWhatVerbals',
+      'also cut at participles and infinitives',
+    ),
+    PhrasingLevel.phrases: (
+      'phrasingLevelWhatPhrases',
+      'also cut at prepositions — the finest level, and in Hebrew a '
+          'very fine one',
+    ),
+  };
+  final w = what[p.level]!;
+  final parts = <String>[
+    s('phrasingLevelCount', '{name}: {n} lines in verses {a}–{b} — {what}.')
+        .replaceAll('{name}', phrasingLevelName(p.level, locale))
+        .replaceAll('{n}', '$n')
+        .replaceAll('{a}', '${p.startVerse}')
+        .replaceAll('{b}', '${p.endVerse}')
+        .replaceAll('{what}', s(w.$1, w.$2)),
+  ];
+  final coarser = coarserPhrasingLevel(p.level, counts.keys.toSet());
+  if (coarser != null && counts[coarser] == n) {
+    parts.add(s('phrasingLevelSameAs',
+            'Same lines as {b} — nothing new is cut inside this window.')
+        .replaceAll('{b}', phrasingLevelName(coarser, locale)));
+  }
+  // Only for a reader who has something to lose. Someone who has drawn no
+  // lines does not need reassuring about lines they have not drawn, and
+  // the header is already the tallest thing on this screen.
+  if (p.isTouched) {
+    parts.add(s('phrasingLevelKeepsWork',
+        'Changing level keeps your own breaks, indents and labels.'));
+  }
+  return parts.join(' ');
+}
+
 class PhrasingPage extends StatefulWidget {
   const PhrasingPage({
     super.key,
@@ -200,6 +288,15 @@ class _PhrasingPageState extends State<PhrasingPage> {
   List<({int verse, String text})> _punctuation = const [];
   PhrasingWindowSource _punctuationSource = PhrasingWindowSource.none;
 
+  /// How many lines each level would draw, right now, in this window.
+  ///
+  /// Held rather than computed in `build` because `build` also runs on
+  /// every hover, and this is four whole layouts of the chapter. It
+  /// depends only on the words and on the [Phrasing] itself, and every
+  /// mutation of the latter goes through [_update], so those two places
+  /// are the whole of it.
+  Map<PhrasingLevel, int> _levelCounts = const {};
+
   /// Whose punctuation drew the window, when it was not the phrased text
   /// itself. Printed, never assumed: LEB makes Ephesians 1:3-14 one
   /// sentence, the KJV makes it three and the BSB makes it seven, and a
@@ -282,6 +379,7 @@ class _PhrasingPageState extends State<PhrasingPage> {
     setState(() {
       _words = words;
       _p = p;
+      _levelCounts = phrasingLevelLineCounts(p, words);
       _loading = false;
     });
   }
@@ -531,7 +629,14 @@ class _PhrasingPageState extends State<PhrasingPage> {
   }
 
   void _update(Phrasing next) {
-    setState(() => _p = next);
+    setState(() {
+      _p = next;
+      // Recomputed here and not in `build`: widening the window or
+      // drawing a break by hand both change what every level would
+      // produce, and a stale count is worse than none — it is a promise
+      // about a page the reader is about to be given.
+      _levelCounts = phrasingLevelLineCounts(next, _words);
+    });
     PhrasingStore.save(next);
   }
 
@@ -621,14 +726,36 @@ class _PhrasingPageState extends State<PhrasingPage> {
           ? const Center(child: CircularProgressIndicator())
           : (p == null || _words.isEmpty)
               ? _empty(scheme)
-              : Column(
-                  children: [
-                    _controls(p, scheme, t),
-                    const Divider(height: 1),
-                    Expanded(child: _diagram(p, scheme, t)),
-                    const Divider(height: 1),
-                    _footer(scheme, t),
-                  ],
+              : LayoutBuilder(
+                  builder: (context, box) => Column(
+                    children: [
+                      // The header is capped and scrolls past the cap.
+                      //
+                      // Left to its natural height it takes whatever it
+                      // wants and the diagram gets the remainder, which
+                      // at the reader's largest font on a short window
+                      // was a RenderFlex overflow — 20px before the
+                      // level note was added and 68px after. #312 item 4
+                      // was a complaint about this header's height, so
+                      // making it able to squeeze the text out entirely
+                      // is not a trade this page may make.
+                      //
+                      // `SingleChildScrollView` still shrink-wraps under
+                      // a bounded maxHeight, so a short header is not
+                      // padded out to the cap.
+                      ConstrainedBox(
+                        constraints:
+                            BoxConstraints(maxHeight: box.maxHeight * 0.55),
+                        child: SingleChildScrollView(
+                          child: _controls(p, scheme, t),
+                        ),
+                      ),
+                      const Divider(height: 1),
+                      Expanded(child: _diagram(p, scheme, t)),
+                      const Divider(height: 1),
+                      _footer(scheme, t),
+                    ],
+                  ),
                 ),
     );
   }
@@ -685,25 +812,32 @@ class _PhrasingPageState extends State<PhrasingPage> {
             runSpacing: 8,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              for (final e in const [
-                (PhrasingLevel.verses, 'phrasingLevelVerses', 'Verses'),
-                (PhrasingLevel.clauses, 'phrasingLevelClauses', 'Clauses'),
-                (PhrasingLevel.verbals, 'phrasingLevelVerbals', '+ Verbals'),
-                (PhrasingLevel.phrases, 'phrasingLevelPhrases', '+ Phrases'),
-              ])
+              for (final e in phrasingLevelChips)
                 ChoiceChip(
-                  label: Text(_s(e.$2, e.$3),
-                      style: TextStyle(fontSize: t.chrome)),
+                  // The count rides on the chip, not in a tooltip: this
+                  // app is tablet-first and a tablet has no hover, which
+                  // is the same reason #312 gave for the parse being
+                  // unreachable. A number the reader has to earn with a
+                  // pointer is a number half of them cannot have.
+                  label: Text(
+                    _levelCounts[e.$1] == null
+                        ? _s(e.$2, e.$3)
+                        : '${_s(e.$2, e.$3)} · ${_levelCounts[e.$1]}',
+                    style: TextStyle(fontSize: t.chrome),
+                  ),
                   selected: p.level == e.$1,
                   // A level this text cannot support is disabled rather
                   // than left tappable and inert — see
-                  // [availablePhrasingLevels].
+                  // [availablePhrasingLevels]. It carries no count
+                  // either: a number beside a chip that cannot be
+                  // pressed is a promise about a page nobody can reach.
                   onSelected: levels.contains(e.$1)
                       ? (_) => _update(setPhrasingLevel(p, e.$1))
                       : null,
                 ),
             ],
           ),
+          _levelNote(p, scheme, t),
           if (!levels.contains(PhrasingLevel.verbals)) ...[
             const SizedBox(height: 6),
             Text(
@@ -769,6 +903,18 @@ class _PhrasingPageState extends State<PhrasingPage> {
             style: TextStyle(fontSize: t.chrome, color: scheme.outline),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _levelNote(Phrasing p, ColorScheme scheme, _PhrasingType t) {
+    final note = phrasingLevelNote(p, _levelCounts, widget.locale);
+    if (note == null) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: 6),
+      child: Text(
+        note,
+        style: TextStyle(fontSize: t.chrome, color: scheme.outline),
       ),
     );
   }

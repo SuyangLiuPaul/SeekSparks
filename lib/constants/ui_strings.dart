@@ -7863,6 +7863,54 @@ const uiStrings = {
     'zh-Hant': '＋介詞片語',
     'en': '+ Phrases',
   },
+  // What each level cuts at. Written as an effect on the page, not as a
+  // definition of a grammatical term: the reader is choosing between
+  // four buttons, not looking up "participle". "Also cut at" carries the
+  // cumulativity — each level keeps every break of the one before it —
+  // which the `+` prefixes only hint at and `Clauses` does not hint at
+  // at all.
+  'phrasingLevelWhatVerses': {
+    'zh-Hans': '只在每节开头断行，不作任何语法判断',
+    'zh-Hant': '只在每節開頭斷行，不作任何語法判斷',
+    'en': 'cut at verse starts only, with no grammatical claim',
+  },
+  'phrasingLevelWhatClauses': {
+    'zh-Hans': '在节首、连接词与关系代词处断行',
+    'zh-Hant': '在節首、連接詞與關係代名詞處斷行',
+    'en': 'cut at verse starts, conjunctions and relative pronouns',
+  },
+  'phrasingLevelWhatVerbals': {
+    'zh-Hans': '另在分词与不定词处断行',
+    'zh-Hant': '另在分詞與不定詞處斷行',
+    'en': 'also cut at participles and infinitives',
+  },
+  'phrasingLevelWhatPhrases': {
+    'zh-Hans': '另在介词处断行——最细的一级，希伯来文尤其细',
+    'zh-Hant': '另在介詞處斷行——最細的一級，希伯來文尤其細',
+    'en': 'also cut at prepositions — the finest level, and in Hebrew a '
+        'very fine one',
+  },
+  'phrasingLevelCount': {
+    'zh-Hans': '{name}：{a}–{b} 节共 {n} 行——{what}。',
+    'zh-Hant': '{name}：{a}–{b} 節共 {n} 行——{what}。',
+    'en': '{name}: {n} lines in verses {a}–{b} — {what}.',
+  },
+  // Printed when a level draws the identical page to the coarser one.
+  // Exact, not a hedge: the levels are monotone supersets, so an equal
+  // line count means no new break fell inside the window. Says it of
+  // THIS window rather than of the text, because a participle that
+  // happens to sit where a conjunction already broke the line is a real
+  // participle that adds no line.
+  'phrasingLevelSameAs': {
+    'zh-Hans': '与「{b}」画出的行完全相同——此范围内没有新的断行。',
+    'zh-Hant': '與「{b}」畫出的行完全相同——此範圍內沒有新的斷行。',
+    'en': 'Same lines as {b} — nothing new is cut inside this window.',
+  },
+  'phrasingLevelKeepsWork': {
+    'zh-Hans': '切换分级不会丢失你自己的断行、缩进与标注。',
+    'zh-Hant': '切換分級不會失去你自己的斷行、縮排與標註。',
+    'en': 'Changing level keeps your own breaks, indents and labels.',
+  },
   // The eighteen relation labels. `phrasingRelationLabel` derives each
   // key as phrasingRel + the enum name capitalised, so renaming an enum
   // value silently drops that label back to English — keep the two

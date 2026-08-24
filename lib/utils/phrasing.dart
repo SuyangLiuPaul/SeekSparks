@@ -1355,6 +1355,84 @@ Set<PhrasingLevel> availablePhrasingLevels(List<PhrasingWord> words) {
   };
 }
 
+/// How many lines each level would draw in the reader's current window.
+///
+/// The level control is ours, not BibleWorks'. `bwh25`'s diagrammer is a
+/// symbol canvas with no granularity setting at all, so a reader arrives
+/// at these four chips with no model from any other tool of what
+/// `+ Verbals` will do to their page. Until now the only way to find out
+/// was to tap it — which replaces the page they were reading. That is
+/// the defect #312 opened with (hover destroying the thing it shows)
+/// wearing different clothes: **the control cannot be inspected without
+/// being committed to.**
+///
+/// So measure it, and measure it through the widgets' own path —
+/// [layoutPhrasing] then [visiblePhrasingLines], over the same words,
+/// the same source and the same verse window, including the reader's own
+/// added and removed breaks, because that is the page they will actually
+/// get. A count taken any other way is a different quantity wearing the
+/// same label, which is what #308 was.
+///
+/// Only levels this text can support are returned, so no count can be
+/// printed beside a chip that cannot be tapped.
+///
+/// **Two adjacent counts being equal is exact, not approximate.** The
+/// levels are monotone supersets, so a finer level can only ADD breaks;
+/// an added break inside the window always adds a visible line, and one
+/// outside it never does. Equal count therefore means no new break fell
+/// inside the window and the two levels draw the identical page.
+///
+/// That case is not an edge. Swept over the whole bundled
+/// original-language corpus — 9,982 three-verse windows —
+/// `+ Verbals` draws the identical page in **2,087 of them (20.9%)**,
+/// `+ Phrases` in 356 (3.6%) and `Clauses` in 236 (2.4%).
+/// [availablePhrasingLevels] cannot see any of it, because it asks
+/// whether the EDITION carries a parse, not whether this PASSAGE has a
+/// participle in it. One tap in five was the dead control its doc
+/// comment warns about, at an address it does not reach.
+///
+/// The answer is not to disable those chips. The level is a persisted
+/// claim about how the reader wants the text cut, and it still applies
+/// when they move the window; a chip that draws nothing new *here* is
+/// still meaningful. Printing the number turns a control that looked
+/// broken into a fact about the passage.
+Map<PhrasingLevel, int> phrasingLevelLineCounts(
+  Phrasing p,
+  List<PhrasingWord> words,
+) {
+  final available = availablePhrasingLevels(words);
+  return {
+    for (final level in PhrasingLevel.values)
+      if (available.contains(level))
+        level: visiblePhrasingLines(
+          layoutPhrasing(p.copyWith(level: level), words),
+          words,
+          p.startVerse,
+          p.endVerse,
+        ).length,
+  };
+}
+
+/// The next coarser level the text actually supports, or null for the
+/// coarsest.
+///
+/// Not `PhrasingLevel.values[level.index - 1]`: a Strong's-tagged
+/// translation supports `{verses, clauses, phrases}` and skips
+/// `verbals`, so the neighbour by enum index may be a level this text
+/// never offered. Comparing a count against a chip the reader cannot see
+/// would explain a page by something absent from it.
+PhrasingLevel? coarserPhrasingLevel(
+  PhrasingLevel level,
+  Set<PhrasingLevel> available,
+) {
+  PhrasingLevel? out;
+  for (final l in PhrasingLevel.values) {
+    if (l.index >= level.index) break;
+    if (available.contains(l)) out = l;
+  }
+  return out;
+}
+
 /// Greek relative pronouns by Strong's number.
 ///
 /// Four numbers cover 1,671 of the corpus's 1,672 `RR` words. The fifth,
