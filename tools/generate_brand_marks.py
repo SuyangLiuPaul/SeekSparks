@@ -137,6 +137,80 @@ def render_dark_variant(master: Image.Image) -> Image.Image:
     )
 
 
+# The DEFAULT launcher icons — the ones on the home screen — are made by
+# `dart run flutter_launcher_icons` from the same master, not by this
+# script. They are checked here anyway, because they are exactly what
+# went stale: the master was trimmed, every mark this script owns was
+# regenerated, --check passed, and the icon on the phone still had the
+# pages hanging out of the book. A check that clears while the most
+# visible surface is wrong is worse than no check.
+#
+# The comparison is deliberately loose. flutter_launcher_icons resizes
+# and (for iOS) flattens alpha with its own filters, so byte equality
+# would fail on every run. What must hold is that each icon is the same
+# PICTURE as the master: downscale both to a common size and require
+# them to agree closely.
+LAUNCHER_ICONS = [
+    Path("ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-1024x1024@1x.png"),
+    Path("android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png"),
+    Path("web/icons/Icon-512.png"),
+    Path("macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_1024.png"),
+    Path("macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_512.png"),
+]
+# Only sizes where the drawing is still legible are checked. Below about
+# 128 px a change of this kind covers a couple of pixels and cannot be
+# told from resampling; those files come out of the same command as the
+# ones above, so checking the large ones proves the command was run.
+LAUNCHER_MIN_SIZE = 128
+# Compared by counting pixels that differ GROSSLY, not by averaging.
+# The first version of this check averaged, passed, and let the very
+# bug it was written for through: trimming the page block moves about
+# 0.2% of the image, and a mean over the whole picture drowns that
+# completely. A gross difference is unambiguous — trimming turned page
+# white into cover blue, roughly 187 levels — while the resampling
+# flutter_launcher_icons applies moves pixels by a few levels at most,
+# so the two do not overlap and the threshold is not a guess.
+LAUNCHER_COMPARE_SIZE = 512
+LAUNCHER_PIXEL_DELTA = 60          # per-channel; well above resampling noise
+LAUNCHER_MAX_FRACTION = 0.0005     # 0.05% of the picture may differ that much
+
+
+def launcher_drift(master: Image.Image) -> list[str]:
+    source = master.convert("RGB")
+    out: list[str] = []
+    for relative in LAUNCHER_ICONS:
+        path = ROOT / relative
+        if not path.exists():
+            out.append(f"{relative} is missing")
+            continue
+        have = Image.open(path).convert("RGB")
+        if have.size[0] < LAUNCHER_MIN_SIZE:
+            continue
+        # Compare at the icon's OWN size, never above it. Upscaling the
+        # smaller image to meet the larger one manufactures edge noise
+        # and reports a correct icon as drifted.
+        size = min(have.size[0], LAUNCHER_COMPARE_SIZE)
+        reference_pixels = list(
+            source.resize((size, size), Image.Resampling.LANCZOS).getdata()
+        )
+        if have.size[0] != size:
+            have = have.resize((size, size), Image.Resampling.LANCZOS)
+        pixels = list(have.getdata())
+        gross = sum(
+            1
+            for got, want in zip(pixels, reference_pixels)
+            if max(abs(a - b) for a, b in zip(got, want)) > LAUNCHER_PIXEL_DELTA
+        )
+        fraction = gross / len(pixels)
+        if fraction > LAUNCHER_MAX_FRACTION:
+            out.append(
+                f"{relative} differs from {MASTER.name} over {fraction*100:.2f}% "
+                f"of the picture — it is not the same drawing. Regenerate with: "
+                f"dart run flutter_launcher_icons"
+            )
+    return out
+
+
 def macos_targets(master: Image.Image) -> dict[Path, Image.Image]:
     contents_file = MACOS_ICONSET / "Contents.json"
     if not contents_file.exists():
@@ -171,7 +245,6 @@ def main() -> int:
     rendered: dict[Path, Image.Image] = {
         path: render(master) for path, render in OUTPUTS.items()
     }
-    rendered.update(macos_targets(master))
 
     for path, want in rendered.items():
         rel = path.relative_to(ROOT)
@@ -192,23 +265,9 @@ def main() -> int:
         want.save(path, optimize=True)
         print(f"wrote {rel}")
 
-    # Windows keeps every size inside one .ico, so it is written whole
-    # rather than per-file.
-    if WINDOWS_ICO.parent.exists():
-        square = master.convert("RGBA")
-        if check_only:
-            if not WINDOWS_ICO.exists():
-                drifted.append(f"{WINDOWS_ICO.relative_to(ROOT)} is missing")
-            else:
-                have = Image.open(WINDOWS_ICO).convert("RGBA")
-                want = square.resize(have.size, Image.Resampling.LANCZOS)
-                if have.tobytes() != want.tobytes():
-                    drifted.append(
-                        f"{WINDOWS_ICO.relative_to(ROOT)} does not match {MASTER.name}"
-                    )
-        else:
-            square.save(WINDOWS_ICO, sizes=WINDOWS_ICO_SIZES)
-            print(f"wrote {WINDOWS_ICO.relative_to(ROOT)}")
+
+    if check_only:
+        drifted.extend(launcher_drift(master))
 
     if check_only:
         if drifted:
