@@ -204,29 +204,30 @@ def _runs(text, words, join, mult=None):
     at `years` instead of swallowing the next clause.
     """
     toks = re.findall(r"[^\W\d_]+", text.lower(), flags=re.UNICODE)
+    mults = () if mult is None else (mult,)
     out, cur = [], []
     for i, t in enumerate(toks):
-        numeric = t in words or (mult is not None and t == mult)
+        numeric = t in words or t in mults
         if numeric:
             cur.append(t)
             continue
         if t in join and cur:
             nxt = toks[i + 1] if i + 1 < len(toks) else None
-            if nxt is not None and (nxt in words or (mult is not None and nxt == mult)):
+            if nxt is not None and (nxt in words or nxt in mults):
                 continue
         if cur:
-            out.append(_value(cur, words, mult))
+            out.append(_value(cur, words, mults))
             cur = []
     if cur:
-        out.append(_value(cur, words, mult))
+        out.append(_value(cur, words, mults))
     return out
 
 
-def _value(toks, words, mult):
+def _value(toks, words, mults):
     total = 0
     acc = 0
     for t in toks:
-        if mult is not None and t == mult:
+        if t in mults:
             acc = (acc or 1) * 100
             total += acc
             acc = 0
@@ -266,8 +267,16 @@ EN_ORDINALS = {
     "sixth": 6, "seventh": 7, "eighth": 8, "ninth": 9, "tenth": 10,
     "eleventh": 11, "twelfth": 12, "twentieth": 20, "thirtieth": 30,
     "fortieth": 40, "fiftieth": 50, "sixtieth": 60, "seventieth": 70,
-    "eightieth": 80, "ninetieth": 90, "hundredth": 100,
+    "eightieth": 80, "ninetieth": 90,
 }
+# "hundredth" IS A MULTIPLIER, NOT A WORD WORTH 100. It behaves exactly
+# as "hundred" does — "six hundredth" is 600, and standing alone it is
+# 100 — so listing it beside "eightieth" read Genesis 7:11's "six
+# hundredth year" as 6 + 100 = 106. It was unreachable while 1 Kings 6:1
+# ("four hundred and eightieth", which spells the multiplier the
+# ordinary way) was the only address this parser served, and it is
+# reachable now that the flood's second verse is read.
+EN_ORDINAL_MULT = "hundredth"
 # ἐν "in" and ἕν "one" are one string unaccented and `εν` is therefore
 # absent from GK_WORDS; the Greek ordinals carry their own endings and do
 # not collide with it. `εκτος` IS a collision — sixth, and also "outside"
@@ -283,26 +292,30 @@ GK_ORDINALS = {
 }
 
 
-def _ordinal_runs(text, cardinals, ordinals, join, mult=None):
+def _ordinal_runs(text, cardinals, ordinals, join, mult=None,
+                  ordinal_mult=None):
     words = dict(cardinals)
     words.update(ordinals)
     toks = re.findall(r"[^\W\d_]+", text.lower(), flags=re.UNICODE)
+    mults = tuple(m for m in (mult, ordinal_mult) if m is not None)
+    # An ordinal multiplier is what makes the run an ordinal one: "six
+    # hundredth" carries no other ordinal token in it.
+    marks = tuple(ordinals) + ((ordinal_mult,) if ordinal_mult else ())
     out, cur = [], []
 
     def flush():
-        if cur and any(t in ordinals for t in cur):
-            out.append(_value(cur, words, mult))
+        if cur and any(t in marks for t in cur):
+            out.append(_value(cur, words, mults))
         cur.clear()
 
     for i, t in enumerate(toks):
-        numeric = t in words or (mult is not None and t == mult)
+        numeric = t in words or t in mults
         if numeric:
             cur.append(t)
             continue
         if t in join and cur:
             nxt = toks[i + 1] if i + 1 < len(toks) else None
-            if nxt is not None and (nxt in words
-                                    or (mult is not None and nxt == mult)):
+            if nxt is not None and (nxt in words or nxt in mults):
                 continue
         flush()
     flush()
@@ -310,7 +323,8 @@ def _ordinal_runs(text, cardinals, ordinals, join, mult=None):
 
 
 def en_ordinal_runs(text):
-    return _ordinal_runs(text, EN_WORDS, EN_ORDINALS, EN_JOIN, EN_MULT)
+    return _ordinal_runs(text, EN_WORDS, EN_ORDINALS, EN_JOIN, EN_MULT,
+                         EN_ORDINAL_MULT)
 
 
 def gk_ordinal_runs(text):
@@ -618,13 +632,25 @@ def build_tradition(reader, gen11, problems):
     for i, pid in enumerate(chain5[:-1]):
         birth[chain5[i + 1]] = birth[pid] + rows[pid]["begatAt"]
 
-    # Genesis 7:6 puts the flood in Noah's 600th year. The same fact is in
-    # 7:11, but as an ORDINAL — "the six hundredth year", "τω
-    # εξακοσιοστω ετει" — and an ordinal is not a numeral this parser can
-    # read: it took "six hundredth" for six. 7:6 states it as a cardinal
-    # in both traditions, so the figure is taken there.
+    # THE FLOOD IS DATED TWICE, ONE YEAR APART. Genesis 7:6 states Noah
+    # was 600 years old — a cardinal, 600 years complete — and 7:11 dates
+    # the same day to "the six hundredth year" of his life, "τω
+    # εξακοσιοστω ετει", an ordinal, which is 599 complete. The chart
+    # takes 7:6, and that choice carries: Shem's birth is anchored on the
+    # flood, so every year from here to the end of the axis would move
+    # with it. The other reading is measured rather than dismissed and is
+    # stated on the chart; it is the same subtraction the era ledger makes
+    # at 1 Kings 6:1, where no cardinal is offered and there is no choice.
     flood_age, flood_ref = reader.figure(7, 6)
     flood = birth["noah"] + flood_age
+    flood_ordinal, flood_ordinal_ref = reader.ordinal(7, 11)
+    if flood_ordinal != flood_age:
+        raise SystemExit(
+            f"{reader.asset}: {flood_ref} states {flood_age} and "
+            f"{flood_ordinal_ref} states the {flood_ordinal}th year — the "
+            f"two verses no longer name the same year of Noah's life, so "
+            f"the one-year note below would be describing something else")
+    flood_alt = birth["noah"] + flood_ordinal - 1
 
     # Genesis 11:10 makes Shem 100 two years after the flood. Genesis
     # 5:32 has Noah fathering three sons at 500, so Shem's birth lands at
@@ -652,7 +678,7 @@ def build_tradition(reader, gen11, problems):
         rows[pid]["birthAm"] = birth[pid]
         rows[pid]["deathAm"] = birth[pid] + rows[pid]["lifespan"]
 
-    return order, rows, flood, flood_ref, flood_age, epochs
+    return order, rows, flood, flood_ref, flood_age, flood_alt, epochs
 
 
 def build_abrahamic(reader, rows, order, birth, problems):
@@ -1056,9 +1082,9 @@ def main():
     mt = Reader("mt", "kjv.json", en_runs, en_ordinal_runs, 1, 0)
     lxx = Reader("lxx", "lxxwh.json", gk_runs, gk_ordinal_runs, 0, None)
 
-    (mt_order, mt_rows, mt_flood, flood_ref, mt_flood_age,
+    (mt_order, mt_rows, mt_flood, flood_ref, mt_flood_age, mt_flood_alt,
      mt_epochs) = build_tradition(mt, GEN11_MT, problems)
-    (lxx_order, lxx_rows, lxx_flood, _, _,
+    (lxx_order, lxx_rows, lxx_flood, _, lxx_flood_age, lxx_flood_alt,
      lxx_epochs) = build_tradition(lxx, GEN11_LXX, problems)
 
     if problems:
@@ -1176,6 +1202,53 @@ def main():
             "means the ordinal parser has failed in one of them")
 
     notes = []
+    # THE ONE YEAR THE WHOLE AXIS AFTER THE FLOOD RESTS ON. Both figures
+    # are read out of the text — the cardinal at 7:6 and the ordinal at
+    # 7:11 — and the gap between them is measured here rather than
+    # asserted, so that if the two verses ever stopped being one year
+    # apart the sentence would stop describing the data and the check in
+    # build_tradition would have already stopped the build.
+    for tid, flood_am, alt_am, age in (
+            ("mt", mt_flood, mt_flood_alt, mt_flood_age),
+            ("lxx", lxx_flood, lxx_flood_alt, lxx_flood_age)):
+        shift = flood_am - alt_am
+        notes.append({
+            "id": "flood_two_datings",
+            "tradition": tid,
+            "personId": "noah",
+            "text": {
+                "en": (f"The flood is dated twice. Genesis 7:6 states Noah "
+                       f"was {age} years old, and this chart takes "
+                       f"that plain number, putting the flood at AM "
+                       f"{flood_am}. Genesis 7:11 dates the same day to the "
+                       f"{age}th year of his life, which is "
+                       f"{age - 1} years complete; read that way "
+                       f"the flood falls at AM {alt_am}, and because Shem's "
+                       f"birth is counted from the flood every year after "
+                       f"it on this chart moves {shift} year with it. That "
+                       f"subtraction is the one the era below makes at "
+                       f"1 Kings 6:1, where the text offers no plain number "
+                       f"and there is no choice to make."),
+                "zh-Hans": (f"洪水有两处纪年。创世记 7:6 记挪亚"
+                            f"{age}岁，本图取此明数，故洪水落在"
+                            f"创世纪元{flood_am}年。创世记 7:11 则记同一日在"
+                            f"他一生的第{age}年，即已过"
+                            f"{age - 1}年；照此读法洪水落在创世纪元"
+                            f"{alt_am}年，而闪的出生是从洪水起算的，故本图"
+                            f"洪水之后的每一年都随之移前{shift}年。下方"
+                            f"世代总账在列王纪上 6:1 所作的正是这一减法，"
+                            f"那里经文并未另给明数，别无选择。"),
+                "zh-Hant": (f"洪水有兩處紀年。創世記 7:6 記挪亞"
+                            f"{age}歲，本圖取此明數，故洪水落在"
+                            f"創世紀元{flood_am}年。創世記 7:11 則記同一日在"
+                            f"他一生的第{age}年，即已過"
+                            f"{age - 1}年；照此讀法洪水落在創世紀元"
+                            f"{alt_am}年，而閃的出生是從洪水起算的，故本圖"
+                            f"洪水之後的每一年都隨之移前{shift}年。下方"
+                            f"世代總賬在列王紀上 6:1 所作的正是這一減法，"
+                            f"那裡經文並未另給明數，別無選擇。"),
+            },
+        })
     for tid, rows, flood_am in (("mt", mt_rows, mt_flood),
                                 ("lxx", lxx_rows, lxx_flood)):
         over = rows["methuselah"]["deathAm"] - flood_am
@@ -1588,7 +1661,10 @@ def main():
                 "ref": flood_ref,
                 "years": {"mt": mt_flood, "lxx": lxx_flood},
                 "note": {
-                    "en": f"Genesis 7:6 puts the flood in Noah's {mt_flood_age}th year.",
+                    # 7:6's wording, not 7:11's: this verse states an age,
+                    # and "his 600th year" is the other verse's ordinal
+                    # and a year earlier. See the note on Noah.
+                    "en": f"Genesis 7:6 states Noah was {mt_flood_age} years old at the flood.",
                     "zh-Hans": f"创世记 7:6 记洪水在挪亚{mt_flood_age}岁那年。",
                     "zh-Hant": f"創世記 7:6 記洪水在挪亞{mt_flood_age}歲那年。",
                 },
@@ -1774,6 +1850,8 @@ def main():
           f"{doc['_meta']['checks']['sumsChecked']}")
     print(f"  flood: MT AM {mt_flood} · LXX AM {lxx_flood} "
           f"(difference {lxx_flood - mt_flood})")
+    print(f"    on Genesis 7:11's ordinal instead: MT AM {mt_flood_alt} · "
+          f"LXX AM {lxx_flood_alt}")
     print(f"  into Egypt: MT AM {mt_epochs['descent'][0]} · "
           f"LXX AM {lxx_epochs['descent'][0]}")
     print(f"  the exodus: MT AM {mt_era['exodus'][0]} · "

@@ -1371,8 +1371,8 @@ class _EraLedger extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               Text(
-                '${_s('chronologyEraNoNumber', 'Stretches the text gives no '
-                    'number to')} · ${era.gaps.length}',
+                '${_s('chronologyEraNoNumber', 'Stretches this total does '
+                    'not count')} · ${era.gaps.length}',
                 style: TextStyle(fontSize: t.chrome, color: wb.mutedText),
               ),
               for (final g in era.gaps)

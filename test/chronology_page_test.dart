@@ -195,6 +195,37 @@ void main() {
     await unmount(tester);
   });
 
+  // The flood's second dating lives in the asset, and the asset carrying
+  // it is not the same claim as a reader being able to read it: the
+  // epoch records already carry a `note` apiece that nothing on this page
+  // ever calls. So this pins the rendered path, and pins that Noah is
+  // named in the header where a reader who has selected nobody will see
+  // that there is something to open.
+  testWidgets('the flood\'s second dating is on Noah\'s panel, and the header '
+      'names him', (tester) async {
+    await pump(tester, const Size(1440, 900));
+
+    final note = data
+        .notesForPerson('mt', 'noah')
+        .firstWhere((n) => n.id == 'flood_two_datings')
+        .textFor('zh-Hans');
+    expect(find.text(note), findsNothing);
+    expect(find.textContaining('挪亚', findRichText: true), findsWidgets);
+
+    await tester.tap(find.text('挪亚'));
+    await settle(tester);
+    expect(tester.takeException(), isNull);
+
+    expect(find.text(note), findsOneWidget);
+    // The whole point of the sentence is the pair of years; a panel that
+    // showed the note but clipped it to one of them would pass a
+    // findsOneWidget on the string and still tell the reader nothing.
+    expect(note, contains('1656'));
+    expect(note, contains('1655'));
+
+    await unmount(tester);
+  });
+
   // Moses has no age at begetting and no years after it — the chart ends
   // on him — so the sentence about "all three figures" would be
   // describing a record he has not got.

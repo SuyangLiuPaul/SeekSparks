@@ -274,6 +274,44 @@ void main() {
           isNot(contains('methuselah_flood')));
     });
 
+    // The flood is the only epoch the text dates twice, and the two
+    // datings are one year apart: Genesis 7:6 states Noah's age as a
+    // plain 600, Genesis 7:11 puts the same day in his 600th year, which
+    // is 599 complete. The chart takes 7:6, and since Shem's birth is
+    // counted off the flood the choice moves every year after it. These
+    // assert the numbers the note claims, not the verses it cites — a
+    // note can name the right chapter and still state the wrong year.
+    test('the flood note gives both datings and the year between them', () {
+      final flood = data.epochs.firstWhere((e) => e.id == 'flood');
+      for (final t in ['mt', 'lxx']) {
+        final taken = flood.years[t]!;
+        final note = data
+            .notesForPerson(t, 'noah')
+            .firstWhere((n) => n.id == 'flood_two_datings');
+        for (final locale in ['en', 'zh-Hans', 'zh-Hant']) {
+          final text = note.textFor(locale);
+          expect(text, contains('$taken'), reason: '$t $locale taken');
+          // The alternative reading, one year earlier and stated as a
+          // year rather than left to the reader to subtract.
+          expect(text, contains('${taken - 1}'), reason: '$t $locale other');
+          expect(text, contains('600'), reason: '$t $locale age');
+          expect(text, contains('599'), reason: '$t $locale elapsed');
+          expect(text, contains('7:6'), reason: '$t $locale cardinal ref');
+          expect(text, contains('7:11'), reason: '$t $locale ordinal ref');
+        }
+      }
+    });
+
+    // Noah was 600 years old (7:6); "his 600th year" is 7:11's wording
+    // and a year earlier. The epoch cites 7:6, so it has to say what 7:6
+    // says.
+    test('the flood epoch states an age, not the other verse\'s ordinal', () {
+      final flood = data.epochs.firstWhere((e) => e.id == 'flood');
+      expect(flood.ref, 'Genesis 7:6');
+      expect(flood.noteFor('en'), isNot(contains('600th')));
+      expect(flood.noteFor('en'), contains('600 years old'));
+    });
+
     test('every name and note is in all three locales', () {
       for (final p in data.patriarchs) {
         for (final locale in ['en', 'zh-Hans', 'zh-Hant']) {

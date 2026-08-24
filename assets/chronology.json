@@ -63,7 +63,7 @@
     "lxx": 2242
    },
    "note": {
-    "en": "Genesis 7:6 puts the flood in Noah's 600th year.",
+    "en": "Genesis 7:6 states Noah was 600 years old at the flood.",
     "zh-Hans": "创世记 7:6 记洪水在挪亚600岁那年。",
     "zh-Hant": "創世記 7:6 記洪水在挪亞600歲那年。"
    }
@@ -142,6 +142,26 @@
   }
  ],
  "notes": [
+  {
+   "id": "flood_two_datings",
+   "tradition": "mt",
+   "personId": "noah",
+   "text": {
+    "en": "The flood is dated twice. Genesis 7:6 states Noah was 600 years old, and this chart takes that plain number, putting the flood at AM 1656. Genesis 7:11 dates the same day to the 600th year of his life, which is 599 years complete; read that way the flood falls at AM 1655, and because Shem's birth is counted from the flood every year after it on this chart moves 1 year with it. That subtraction is the one the era below makes at 1 Kings 6:1, where the text offers no plain number and there is no choice to make.",
+    "zh-Hans": "洪水有两处纪年。创世记 7:6 记挪亚600岁，本图取此明数，故洪水落在创世纪元1656年。创世记 7:11 则记同一日在他一生的第600年，即已过599年；照此读法洪水落在创世纪元1655年，而闪的出生是从洪水起算的，故本图洪水之后的每一年都随之移前1年。下方世代总账在列王纪上 6:1 所作的正是这一减法，那里经文并未另给明数，别无选择。",
+    "zh-Hant": "洪水有兩處紀年。創世記 7:6 記挪亞600歲，本圖取此明數，故洪水落在創世紀元1656年。創世記 7:11 則記同一日在他一生的第600年，即已過599年；照此讀法洪水落在創世紀元1655年，而閃的出生是從洪水起算的，故本圖洪水之後的每一年都隨之移前1年。下方世代總賬在列王紀上 6:1 所作的正是這一減法，那裡經文並未另給明數，別無選擇。"
+   }
+  },
+  {
+   "id": "flood_two_datings",
+   "tradition": "lxx",
+   "personId": "noah",
+   "text": {
+    "en": "The flood is dated twice. Genesis 7:6 states Noah was 600 years old, and this chart takes that plain number, putting the flood at AM 2242. Genesis 7:11 dates the same day to the 600th year of his life, which is 599 years complete; read that way the flood falls at AM 2241, and because Shem's birth is counted from the flood every year after it on this chart moves 1 year with it. That subtraction is the one the era below makes at 1 Kings 6:1, where the text offers no plain number and there is no choice to make.",
+    "zh-Hans": "洪水有两处纪年。创世记 7:6 记挪亚600岁，本图取此明数，故洪水落在创世纪元2242年。创世记 7:11 则记同一日在他一生的第600年，即已过599年；照此读法洪水落在创世纪元2241年，而闪的出生是从洪水起算的，故本图洪水之后的每一年都随之移前1年。下方世代总账在列王纪上 6:1 所作的正是这一减法，那里经文并未另给明数，别无选择。",
+    "zh-Hant": "洪水有兩處紀年。創世記 7:6 記挪亞600歲，本圖取此明數，故洪水落在創世紀元2242年。創世記 7:11 則記同一日在他一生的第600年，即已過599年；照此讀法洪水落在創世紀元2241年，而閃的出生是從洪水起算的，故本圖洪水之後的每一年都隨之移前1年。下方世代總賬在列王紀上 6:1 所作的正是這一減法，那裡經文並未另給明數，別無選擇。"
+   }
+  },
   {
    "id": "methuselah_flood",
    "tradition": "lxx",
