@@ -27,6 +27,7 @@ import 'package:seeksparks/services/fetch_verses.dart';
 import 'package:seeksparks/services/profile_service.dart';
 import 'package:seeksparks/services/book_intro_service.dart';
 import 'package:seeksparks/services/section_title_service.dart';
+import 'package:seeksparks/pages/radial_chronology_page.dart';
 import 'package:seeksparks/services/url_sync_service.dart';
 import 'package:seeksparks/services/workbench_warmup.dart'
     show warmWorkbenchFirstPaint;
@@ -861,6 +862,9 @@ class _RootRouterState extends State<_RootRouter> {
   /// finish before OR after the home page appears.
   bool _bootHashLandingPending = false;
 
+  /// A shared page link is opened once and only once.
+  bool _bootPageOpened = false;
+
   @override
   void initState() {
     super.initState();
@@ -885,6 +889,7 @@ class _RootRouterState extends State<_RootRouter> {
   Future<void> _handleDeepLink() async {
     if (_deepLinkHandled) return;
     _deepLinkHandled = true;
+
     Uri? uri;
     try {
       uri = Uri.base;
@@ -950,6 +955,26 @@ class _RootRouterState extends State<_RootRouter> {
     // this point, so simply consuming the flag is enough.
     if (_showHome && _bootHashLandingPending) {
       _bootHashLandingPending = false;
+    }
+
+    // 2026-08-24: a shared PAGE link — a full-screen page that owned
+    // the URL while it was open, e.g. `#/wheel`.
+    //
+    // Opened HERE, after the first frame, rather than from
+    // _handleDeepLink: the root of this app IS the workbench, so at
+    // deep-link time there is no Navigator above it to push onto and
+    // the push was silently doing nothing — a shared wheel link kept
+    // landing people on Genesis 1, which is the whole bug.
+    if (_showHome && !_bootPageOpened) {
+      final page = UrlSyncService.bootPagePath();
+      if (page != null && page.startsWith('/wheel')) {
+        _bootPageOpened = true;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          Navigator.of(context).push(MaterialPageRoute<void>(
+              builder: (_) => const RadialChronologyPage()));
+        });
+      }
     }
     // 2026-08 (SeekSparks): the study workspace is the root, not a
     // dashboard. SeekSparks is a Bible STUDY tool, not a devotional

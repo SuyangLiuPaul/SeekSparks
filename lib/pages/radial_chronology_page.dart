@@ -8,6 +8,7 @@ import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/wheel_history.dart';
 import 'package:seeksparks/providers/main_provider.dart';
+import 'package:seeksparks/services/url_sync_service.dart';
 import 'package:seeksparks/utils/jump_to_reference.dart' as jumper;
 import 'package:seeksparks/utils/navigate_to_reader.dart';
 import 'package:seeksparks/utils/radial_chronology_layout.dart';
@@ -68,6 +69,10 @@ class RadialChronologyPage extends StatefulWidget {
 
 // ── the axis ─────────────────────────────────────────────────────────
 
+/// The share link for this page. A reader who sends this address
+/// sends the wheel, not the chapter behind it.
+const String kWheelUrlPath = '/wheel';
+
 const int kMinYear = -4000;
 const int kMaxYear = 2026;
 
@@ -92,6 +97,34 @@ const Map<String, Color> _lineColors = {
 
 Color _lineColor(String line) => _lineColors[line] ?? _lineColors['none']!;
 
+/// A colour for ONE band, distinct from its siblings but still legibly
+/// of its family.
+///
+/// Colouring purely by line of descent put ten bands — Persia through
+/// India — in one identical blue, which told the reader the truth
+/// about Genesis 10 and nothing whatever about which band they were
+/// looking at. The descent is worth keeping: it is the chart's
+/// organising idea and its root is scripture. So the family keeps its
+/// hue and each band takes its own step through that family's range —
+/// a swing of hue either side of the base, a lightness ramp, and a
+/// slight saturation fall. Shem still reads warm, Japheth still reads
+/// blue, and Rome no longer looks like Japan.
+///
+/// [index] is the band's position among its own family and [count] the
+/// size of that family, so the spread adapts: a family of three is
+/// spaced widely, one of ten finely.
+Color streamColor(String line, int index, int count) {
+  final base = HSLColor.fromColor(_lineColor(line));
+  if (count <= 1) return base.toColor();
+  // -0.5 .. +0.5 across the family.
+  final t = index / (count - 1) - 0.5;
+  return base
+      .withHue((base.hue + t * 34 + 360) % 360)
+      .withLightness((base.lightness - t * 0.30).clamp(0.26, 0.74))
+      .withSaturation((base.saturation + t * 0.16).clamp(0.18, 0.92))
+      .toColor();
+}
+
 /// Strings this page owns. Kept local rather than appended to
 /// ui_strings.dart because the unattended loop shares this checkout and
 /// edits that file; fold these in on a quiet merge.
@@ -109,6 +142,11 @@ const Map<String, Map<String, String>> wheelStrings = {
   'wheelPresent': {'zh-Hans': '至今', 'zh-Hant': '至今', 'en': 'present'},
   'wheelFilter': {'zh-Hans': '筛选', 'zh-Hant': '篩選', 'en': 'Filter'},
   'wheelReset': {'zh-Hans': '复位', 'zh-Hant': '復位', 'en': 'Reset'},
+  'wheelShadeNote': {
+    'zh-Hans': '同一血统内，每条带一个色阶',
+    'zh-Hant': '同一血統內，每條帶一個色階',
+    'en': 'each band is its own shade of its line',
+  },
   'wheelAll': {'zh-Hans': '全选', 'zh-Hant': '全選', 'en': 'All'},
   'wheelNone': {'zh-Hans': '全不选', 'zh-Hant': '全不選', 'en': 'None'},
   'wheelLineShem': {'zh-Hans': '闪族', 'zh-Hant': '閃族', 'en': 'Shem'},
@@ -152,10 +190,20 @@ const Map<String, Map<String, String>> wheelStrings = {
   },
 };
 
-/// Type size ON SCREEN, in logical pixels, held constant as the reader
-/// zooms. The painter divides by the zoom to get the canvas size, so
-/// magnifying the wheel buys DENSITY rather than bigger letters.
+/// Type size ON SCREEN at rest, in logical pixels.
 const double _kLabelPx = 10.5;
+
+/// How type responds to zoom.
+///
+/// Dividing the canvas size by the full zoom holds letters at a
+/// constant size on screen — mathematically tidy, and wrong: a reader
+/// who zooms to 500% has asked to see this part BETTER, and type that
+/// refuses to grow reads as a chart that ignored them. Dividing by
+/// `zoom^0.55` instead means the on-screen size grows as `zoom^0.45`:
+/// at 500% the letters are about twice the size they were, while the
+/// wheel still buys real angular room, so more labels appear as well.
+/// Legibility and density both improve, which is what zooming is for.
+double _labelScale(double zoom) => math.pow(zoom, 0.5).toDouble();
 
 /// BC 586 / 主前586.
 String yearLabel(int year, String locale) {
@@ -209,6 +257,10 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
     super.initState();
     _future = WheelHistoryService.instance.load();
     _viewer.addListener(_onZoom);
+    // Own the address bar while this page is up, so a reader who
+    // shares the link sends people to the wheel and not to whatever
+    // chapter they happened to have open behind it.
+    UrlSyncService.claimUrl(kWheelUrlPath);
   }
 
   void _onZoom() {
@@ -217,21 +269,46 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
     if ((z - _zoom).abs() > 0.02) setState(() => _zoom = z);
   }
 
-  /// Zoom about the centre of the view, for the +/- buttons: a desktop
-  /// reader has no pinch, and the scroll wheel alone is not obvious.
+  /// Zoom about the centre of what the reader is LOOKING AT.
+  ///
+  /// A bare `scale()` multiplies the matrix about the child's own
+  /// origin — its top-left — so every press throws the wheel off
+  /// towards a corner and the reader has to drag it back. The fix is
+  /// the standard one: translate the viewport centre to the origin,
+  /// scale there, translate back. Whatever is in the middle of the
+  /// screen stays in the middle.
   void _zoomBy(double factor) {
+    final size = _viewportSize;
+    if (size == null) return;
     final m = _viewer.value.clone();
     final z = m.getMaxScaleOnAxis();
-    final target = (z * factor).clamp(0.8, 14.0);
-    final applied = target / z;
+    final applied = (z * factor).clamp(0.8, 14.0) / z;
     if ((applied - 1).abs() < 0.001) return;
-    _viewer.value = m..scaleByDouble(applied, applied, 1, 1);
+
+    // The scene point currently under the middle of the viewport.
+    final focal = Offset(size.width / 2, size.height / 2);
+    final scene = _toScene(m, focal);
+
+    _viewer.value = m
+      ..translateByDouble(scene.dx, scene.dy, 0, 1)
+      ..scaleByDouble(applied, applied, 1, 1)
+      ..translateByDouble(-scene.dx, -scene.dy, 0, 1);
   }
+
+  /// Inverse-transform a viewport point into scene coordinates.
+  ///
+  /// MatrixUtils rather than a Vector3, so this needs no dependency
+  /// beyond Flutter itself — vector_math is only a transitive one.
+  Offset _toScene(Matrix4 m, Offset viewportPoint) =>
+      MatrixUtils.transformPoint(Matrix4.inverted(m), viewportPoint);
+
+  Size? _viewportSize;
 
   void _resetZoom() => _viewer.value = Matrix4.identity();
 
   @override
   void dispose() {
+    UrlSyncService.claimUrl(null);
     _viewer.removeListener(_onZoom);
     _viewer.dispose();
     super.dispose();
@@ -290,20 +367,37 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
   List<WheelStream> _visible(WheelHistoryData d) =>
       d.streams.where((s) => !_hidden.contains(s.id)).toList();
 
+  /// Per-band colours, computed from the FULL stream list rather than
+  /// the visible one — hiding a band must not recolour the rest.
+  Map<String, Color> _colorsFor(WheelHistoryData data) {
+    final byLine = <String, List<String>>{};
+    for (final s in data.streams) {
+      byLine.putIfAbsent(s.line, () => []).add(s.id);
+    }
+    final out = <String, Color>{};
+    for (final s in data.streams) {
+      final family = byLine[s.line]!;
+      out[s.id] = streamColor(s.line, family.indexOf(s.id), family.length);
+    }
+    return out;
+  }
+
   Widget _body(BuildContext context, WheelHistoryData data, String locale) {
     final wb = WbColors.of(context);
     final t = WbType.of(context);
     final streams = _visible(data);
     final ringOf = {for (var i = 0; i < streams.length; i++) streams[i].id: i};
+    final colors = _colorsFor(data);
 
     return LayoutBuilder(builder: (context, box) {
+      _viewportSize = Size(box.maxWidth, box.maxHeight);
       final side = math.min(box.maxWidth, box.maxHeight);
       final hubD = side * _kHubFrac * 2;
       final rBands = side * _kBandsFrac;
       final rRim = side * _kRimFrac;
 
-      final arcs = _buildArcs(data, ringOf);
-      final spokes = _buildSpokes(data, ringOf, rBands, rRim);
+      final arcs = _buildArcs(data, ringOf, colors);
+      final spokes = _buildSpokes(data, ringOf, rBands, rRim, colors);
 
       return Stack(children: [
         Positioned.fill(
@@ -324,6 +418,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
                       size: Size(side, side),
                       painter: _WorldWheelPainter(
                         streams: streams,
+                        colors: colors,
                         arcs: arcs,
                         spokes: spokes,
                         locale: locale,
@@ -335,7 +430,19 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
                         bandFont: t.scaledChrome(10),
                       ),
                     ),
+                    // The hub says where you are; it is not part of the
+                    // chart. Inside the zoomable child it was magnified
+                    // with everything else and swallowed the middle of
+                    // the screen at 384%. It now shrinks against the
+                    // zoom and fades out entirely once the reader has
+                    // zoomed in to read — by then they know what they
+                    // are looking at, and the space is worth more than
+                    // the caption.
                     Center(
+                      child: Opacity(
+                        opacity: (1.6 - _zoom).clamp(0.0, 1.0),
+                        child: Transform.scale(
+                          scale: 1 / _zoom,
                       child: SizedBox(
                         width: hubD * 0.94,
                         child: Column(
@@ -375,6 +482,8 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
                                   fontSize: t.scaled(7.5)),
                             ),
                           ],
+                        ),
+                      ),
                         ),
                       ),
                     ),
@@ -432,8 +541,8 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
     );
   }
 
-  List<_Arc> _buildArcs(WheelHistoryData data, Map<String, int> ringOf) {
-    final lineOf = {for (final s in data.streams) s.id: s.line};
+  List<_Arc> _buildArcs(WheelHistoryData data, Map<String, int> ringOf,
+      Map<String, Color> colors) {
     final out = <_Arc>[];
     for (final p in data.powers) {
       final ring = ringOf[p.stream];
@@ -443,7 +552,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
         ring,
         angleForSpan(p.start, kMinYear, kMaxYear),
         angleForSpan(p.endFor(kMaxYear), kMinYear, kMaxYear),
-        _lineColor(lineOf[p.stream] ?? 'none'),
+        colors[p.stream] ?? _lineColor('none'),
       ));
     }
     return out;
@@ -459,8 +568,8 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
     Map<String, int> ringOf,
     double rBands,
     double rRim,
+    Map<String, Color> colors,
   ) {
-    final lineOf = {for (final s in data.streams) s.id: s.line};
     final all = data.events.where((e) => ringOf.containsKey(e.stream)).toList()
       ..sort((a, b) => a.year.compareTo(b.year));
     if (all.isEmpty) return const [];
@@ -479,7 +588,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
     // drawn is still tappable-adjacent and always in the band's own
     // sheet, which lists every event on that stream.
     final onScreenPx = _kLabelPx * 1.35;
-    final minGap = (onScreenPx / _zoom) / rBands;
+    final minGap = (onScreenPx / _labelScale(_zoom)) / rBands;
 
     // Selection always survives the thinning: hiding the thing the
     // reader just tapped would be indefensible.
@@ -521,7 +630,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
       return [
         for (var i = 0; i < group.length; i++)
           _Spoke(group[i], labels[i],
-              _lineColor(lineOf[group[i].stream] ?? 'none'))
+              colors[group[i].stream] ?? _lineColor('none'))
       ];
     }
 
@@ -560,6 +669,9 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
           row('ham', 'wheelLineHam', 'Ham'),
           row('japheth', 'wheelLineJapheth', 'Japheth'),
           row('institution', 'wheelLineInstitution', 'Church & Scripture'),
+          SizedBox(height: t.scaled(3)),
+          Text(_s('wheelShadeNote', '', locale),
+              style: TextStyle(color: wb.mutedText, fontSize: t.scaled(8.5))),
         ],
       ),
     );
@@ -578,6 +690,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
         builder: (c, snap) {
           final data = snap.data;
           if (data == null) return const SizedBox(height: 120);
+          final colors = _colorsFor(data);
           return StatefulBuilder(builder: (c, setSheet) {
             return ConstrainedBox(
               constraints: BoxConstraints(
@@ -626,7 +739,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
                       secondary: Container(
                           width: t.scaled(12),
                           height: t.scaled(12),
-                          color: _lineColor(s.line)),
+                          color: colors[s.id] ?? _lineColor(s.line)),
                     ),
                 ],
               ),
@@ -790,7 +903,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
       isScrollControlled: true,
       builder: (sheet) => _sheet(sheet, [
         Row(children: [
-          _swatch(t, _lineColor(stream.line)),
+          _swatch(t, _colorsFor(data)[stream.id] ?? _lineColor(stream.line)),
           SizedBox(width: t.scaled(8)),
           Expanded(
             child: Text(e.titleFor(locale),
@@ -839,7 +952,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
       isScrollControlled: true,
       builder: (sheet) => _sheet(sheet, [
         Row(children: [
-          _swatch(t, _lineColor(stream.line)),
+          _swatch(t, _colorsFor(data)[stream.id] ?? _lineColor(stream.line)),
           SizedBox(width: t.scaled(8)),
           Expanded(
             child: Text(p.nameFor(locale),
@@ -890,7 +1003,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
       isScrollControlled: true,
       builder: (sheet) => _sheet(sheet, [
         Row(children: [
-          _swatch(t, _lineColor(s.line)),
+          _swatch(t, _colorsFor(data)[s.id] ?? _lineColor(s.line)),
           SizedBox(width: t.scaled(8)),
           Expanded(
             child: Text(s.nameFor(locale),
@@ -996,6 +1109,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
 class _WorldWheelPainter extends CustomPainter {
   _WorldWheelPainter({
     required this.streams,
+    required this.colors,
     required this.arcs,
     required this.spokes,
     required this.locale,
@@ -1008,6 +1122,10 @@ class _WorldWheelPainter extends CustomPainter {
   });
 
   final List<WheelStream> streams;
+
+  /// Band id → its own shade. See `streamColor`.
+  final Map<String, Color> colors;
+
   final List<_Arc> arcs;
   final List<_Spoke> spokes;
   final String locale;
@@ -1061,7 +1179,7 @@ class _WorldWheelPainter extends CustomPainter {
         final rr = rRim + (stagger ? 22 : 11);
         stagger = !stagger;
         _label(canvas, yearLabel(y, locale), c + dir * rr, wb.mutedText,
-            rimFont / zoom,
+            rimFont / _labelScale(zoom),
             center: true);
       }
     }
@@ -1080,7 +1198,8 @@ class _WorldWheelPainter extends CustomPainter {
           Paint()
             ..style = PaintingStyle.stroke
             ..strokeWidth = band.width
-            ..color = _lineColor(streams[i].line).withValues(alpha: 0.05));
+            ..color = (colors[streams[i].id] ?? _lineColor(streams[i].line))
+                .withValues(alpha: 0.06));
     }
   }
 
@@ -1122,7 +1241,7 @@ class _WorldWheelPainter extends CustomPainter {
       }
       _tangentialLabel(canvas, c, band.centre, arc.power.nameFor(locale),
           arc.a0, arc.a1 - arc.a0,
-          math.min(band.width * 0.72, rimFont / zoom), dim);
+          math.min(band.width * 0.72, rimFont / _labelScale(zoom)), dim);
     }
   }
 
@@ -1135,8 +1254,9 @@ class _WorldWheelPainter extends CustomPainter {
         text: TextSpan(
           text: streams[i].nameFor(locale),
           style: TextStyle(
-            color: _lineColor(streams[i].line).withValues(alpha: 0.95),
-            fontSize: math.min(bandFont / zoom, band.width * 1.05),
+            color: (colors[streams[i].id] ?? _lineColor(streams[i].line))
+                .withValues(alpha: 0.98),
+            fontSize: math.min(bandFont / _labelScale(zoom), band.width * 1.05),
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -1178,13 +1298,13 @@ class _WorldWheelPainter extends CustomPainter {
   /// without a tap.
   void _radialLabel(Canvas canvas, Offset c, _Spoke s, double dim, bool sel) {
     final style = TextStyle(
-      color: sel ? wb.text : wb.text.withValues(alpha: 0.82 * dim),
-      fontSize: rimFont / zoom,
+      color: sel ? wb.text : wb.text.withValues(alpha: 0.95 * dim),
+      fontSize: rimFont / _labelScale(zoom),
       fontWeight: sel ? FontWeight.w600 : FontWeight.w400,
     );
     final refStyle = TextStyle(
-      color: wb.link.withValues(alpha: 0.9 * dim),
-      fontSize: (rimFont / zoom) * 0.86,
+      color: wb.link.withValues(alpha: 0.95 * dim),
+      fontSize: (rimFont / _labelScale(zoom)) * 0.86,
     );
     final room = s.label.rEnd - s.label.rStart;
     var text = s.event.titleFor(locale);
@@ -1240,7 +1360,7 @@ class _WorldWheelPainter extends CustomPainter {
     var fontSize = fontSizeIn.clamp(6.0, 10.0);
     for (var attempt = 0; attempt < 2; attempt++) {
       final style = TextStyle(
-          color: wb.text.withValues(alpha: 0.9 * dim), fontSize: fontSize);
+          color: wb.text.withValues(alpha: 0.98 * dim), fontSize: fontSize);
       final widths = <double>[];
       var total = 0.0;
       for (final ch in text.characters) {
@@ -1345,7 +1465,7 @@ class _WorldWheelPainter extends CustomPainter {
           yearLabel(year, locale),
           c + Offset(math.cos(la), math.sin(la)) * (rRim + 17),
           wb.text,
-          endFont / zoom,
+          endFont / _labelScale(zoom),
           center: true);
     }
   }

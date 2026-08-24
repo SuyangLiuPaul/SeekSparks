@@ -26,6 +26,7 @@ import 'package:seeksparks/pages/bible_timeline_page.dart';
 import 'package:seeksparks/pages/bible_trivia_page.dart';
 import 'package:seeksparks/pages/books_page.dart';
 import 'package:seeksparks/pages/chronology_page.dart';
+import 'package:seeksparks/pages/radial_chronology_page.dart';
 import 'package:seeksparks/pages/command_search_page.dart';
 import 'package:seeksparks/pages/evidence_page.dart';
 import 'package:seeksparks/pages/family_tree_page.dart';
@@ -596,6 +597,14 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         // the verses.
         WbMenuItem(s('chronology', 'Bible Chronology'),
             () => pushPage(const ChronologyPage())),
+        // 2026-08-24: its own entry. The wheel used to be reachable
+        // only through a button on the Bible Chronology page, so a
+        // reader who wanted one never discovered the other — and they
+        // answer different questions: that page is the lifespans of
+        // Genesis 5 and 11 on an Anno Mundi axis, this is world
+        // history from 4000 BC to the present.
+        WbMenuItem(s('wheelTitle', 'World History Wheel'),
+            () => pushPage(const RadialChronologyPage())),
         WbMenuItem(s('library', 'Notes & highlights'),
             () => pushPage(const LibraryPage())),
         WbMenuItem(

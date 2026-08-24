@@ -26,3 +26,9 @@ void setBootDeepLinkCallback(void Function() cb) {}
 
 /// Native targets: no URL to restore.
 void onRouteChanged() {}
+
+/// Native targets: no URL bar, nothing for a page to claim.
+void claimUrl(String? path) {}
+
+/// Native targets: cold opens carry no URL.
+String? bootPagePath() => null;

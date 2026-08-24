@@ -69,6 +69,22 @@ class UrlSyncService {
   /// fragment shortly after the engine's write. Native no-op.
   static void onRouteChanged() => impl.onRouteChanged();
 
+  /// 2026-08-24: let a full-screen page OWN the URL while it is open.
+  ///
+  /// Every write here is otherwise the canonical reader link
+  /// `#/<book>/<chapter>?v=`, and `onRouteChanged` deliberately
+  /// restores it 350 ms after any push — so a reader who opened the
+  /// chronology wheel and shared the address sent people to Genesis 1
+  /// instead. A page calls this with its own path on open and with
+  /// null on close; while a claim is held, that path is what gets
+  /// written and what a shared link reopens. Native targets no-op.
+  static void claimUrl(String? path) => impl.claimUrl(path);
+
+  /// The path claimed at cold open, if the boot URL was a page link
+  /// rather than a reader link — so `main()` can put the reader back
+  /// where the link pointed. Null on native and on reader links.
+  static String? bootPagePath() => impl.bootPagePath();
+
   /// Initialise. Web reads the boot URL, applies it to providers,
   /// then starts listening for further state / popstate events.
   /// Native targets no-op.

@@ -150,6 +150,37 @@ void setBootDeepLinkCallback(void Function() cb) {
 /// (`#/minified:Xt`); 350 ms later we put the share link back. The
 /// `_lastWrittenUrl = null` reset forces the write even though our
 /// state hasn't changed since the last one.
+void claimUrl(String? path) {
+  if (_claimedPath == path) return;
+  _claimedPath = path;
+  if (!_initialized) return;
+  // Write immediately so the address bar is right the moment the page
+  // opens, and right again the moment it closes.
+  _lastWrittenUrl = '';
+  try {
+    _writeStateToUrl();
+  } catch (e) {
+    debugPrint('[UrlSync] claim write failed: $e');
+  }
+}
+
+/// Derived from the hash captured synchronously in `main()`, NOT from
+/// whatever `_applyHashToState` has managed to run by now.
+///
+/// Reading a field that init fills in was a race the splash won: the
+/// home page finished its timer and asked before the async init had
+/// applied the boot hash, got null, and fell through to the reader —
+/// so a shared `#/wheel` link still opened Genesis 1. `captureBootHash`
+/// runs at the top of main(), so this answer is available from the
+/// first frame onwards and cannot be raced.
+String? bootPagePath() {
+  final raw = (_bootHash != null && _bootHash!.length > 1)
+      ? _bootHash!
+      : _window.location.hash;
+  final path = raw.startsWith('#') ? raw.substring(1) : raw;
+  return path.startsWith('/wheel') ? path : _bootPagePath;
+}
+
 void onRouteChanged() {
   if (!_initialized) return;
   Timer(const Duration(milliseconds: 350), () {
@@ -162,6 +193,13 @@ void onRouteChanged() {
     }
   });
 }
+/// A page's claim on the URL, or null when the reader link owns it.
+/// See `UrlSyncService.claimUrl`.
+String? _claimedPath;
+
+/// The page path the app was cold-opened at, if any.
+String? _bootPagePath;
+
 bool _isApplyingFromUrl = false;
 Timer? _writeDebounce;
 String _lastWrittenUrl = '';
@@ -232,6 +270,22 @@ void _onMpChange() {
 }
 
 void _writeStateToUrl() {
+  // A page that has claimed the URL owns it entirely: writing the
+  // reader link underneath it is exactly the bug this exists to fix.
+  final claimed = _claimedPath;
+  if (claimed != null) {
+    final newHash = '#$claimed';
+    if (newHash == _lastWrittenUrl) return;
+    try {
+      _window.history
+          .pushState(kAppHistoryEntryState.jsify(), '', newHash);
+      _lastWrittenUrl = newHash;
+    } catch (e) {
+      debugPrint('[UrlSync] claimed-path write failed: $e');
+    }
+    return;
+  }
+
   final mp = _mp;
   if (mp == null) return;
   final localBook = mp.currentBook;
@@ -270,6 +324,16 @@ void _writeStateToUrl() {
 // ── Apply: URL → state ─────────────────────────────────────────
 
 Future<void> _applyHashToState(String rawHash, {bool isBoot = false}) async {
+  // A page link, not a reader link. Record it so main() can reopen the
+  // page the sender was actually looking at, and do NOT try to parse it
+  // as a book and chapter — that is what dropped shared page links on
+  // Genesis 1.
+  final path = rawHash.startsWith('#') ? rawHash.substring(1) : rawHash;
+  if (path.startsWith('/wheel')) {
+    if (isBoot) _bootPagePath = path;
+    return;
+  }
+
   final parsed = _parseHash(rawHash);
   if (parsed == null) return;
   final mp = _mp;

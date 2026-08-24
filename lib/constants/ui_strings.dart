@@ -6202,6 +6202,15 @@ const uiStrings = {
   // The parenthetical named Genesis 5 and 11 until phase 2 carried the
   // chart through Genesis 12-50; it now names the two men it runs
   // between, which stays true whichever chapters supply the figures.
+  // The world-history wheel. Lives here as well as in the page's own
+  // map because the Resources menu resolves through uiStrings, and a
+  // menu entry that fell back to English for a Chinese reader is not
+  // a menu entry.
+  'wheelTitle': {
+    'zh-Hans': '世界史轮盘',
+    'zh-Hant': '世界史輪盤',
+    'en': 'World History Wheel',
+  },
   'chronology': {
     'zh-Hans': '圣经年代（亚当到约瑟）',
     'zh-Hant': '聖經年代（亞當到約瑟）',
