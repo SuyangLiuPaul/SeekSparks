@@ -433,4 +433,58 @@ void main() {
     expect(tester.takeException(), isNull);
     await unmount(tester);
   });
+
+  /// Found on the deployed build, not here: one hit sat at the top of an
+  /// otherwise empty half-page, because a `ListView` inside a `Flexible`
+  /// takes every pixel it is offered and the sheet offers 70% of the
+  /// screen. Every other test was green — they all read text, and the
+  /// text was right. A list's height is not something reading its rows
+  /// can see.
+  testWidgets('the result list is as tall as its results, not as tall as '
+      'it is allowed', (tester) async {
+    const height = 900.0;
+    await pump(tester, const Size(1440, height));
+    await openFind(tester);
+    final list = find.byKey(const ValueKey('wheelFindList'));
+    // The sheet's own ceiling, which is what the list used to take
+    // whatever it held.
+    const allowance = height * 0.7;
+
+    expect(tester.getSize(list).height, lessThan(allowance / 2),
+        reason: 'with nothing typed there are no rows at all');
+
+    await tester.enterText(
+        find.byKey(const ValueKey('wheelFindField')), 'Magna Carta');
+    await settle(tester);
+    expect(sheetText(tester), contains('1 项'));
+    final one = tester.getSize(list).height;
+    expect(one, lessThan(allowance / 2),
+        reason: 'one result must not reserve half the screen');
+
+    // And the shrink-wrap must not have turned into a cap: a long list
+    // still fills the allowance and scrolls.
+    await tester.enterText(find.byKey(const ValueKey('wheelFindField')), '*');
+    await settle(tester);
+    final many = tester.getSize(list).height;
+    expect(many, greaterThan(one * 3));
+    expect(many, lessThanOrEqualTo(allowance + 0.5));
+    expect(tester.takeException(), isNull);
+    await unmount(tester);
+  });
+
+  /// English inflects and Chinese does not, so a single count string
+  /// cannot serve both. "1 results" shipped to the dev build and no
+  /// assertion anywhere could see it, because every widget test here
+  /// renders the zh-Hans default where the two forms are identical.
+  test('the count line has an English singular', () {
+    final one = wheelStrings['wheelFindCountOne']!;
+    final many = wheelStrings['wheelFindCount']!;
+    expect(one['en'], '{n} result');
+    expect(many['en'], '{n} results');
+    for (final locale in ['zh-Hans', 'zh-Hant']) {
+      expect(one[locale], many[locale],
+          reason: 'Chinese does not inflect for number, so inventing a '
+              'second form here would only be a place to diverge');
+    }
+  });
 }

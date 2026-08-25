@@ -246,9 +246,11 @@ const Map<String, Map<String, String>> wheelStrings = {
         '年份可输入「主前586」「586 BC」或「-586」；只输数字则两个纪元都查。',
     'zh-Hant': '可查 {e} 件大事、{p} 個政權、創世記 10 章的 {n} 族與 {b} 條帶。'
         '年份可輸入「主前586」「586 BC」或「-586」；只輸數字則兩個紀元都查。',
+    // The Chinese forms are accepted in every locale, but naming them
+    // here would offer an English reader a keyboard they do not have.
     'en': 'Searches {e} events, {p} powers, the {n} nations of Genesis 10 '
-        'and {b} bands. For a year type 586 BC, -586 or 主前586; a bare '
-        'number searches both eras.',
+        'and {b} bands. For a year type 586 BC or -586; a bare number '
+        'searches both eras.',
   },
   'wheelFindNone': {
     'zh-Hans': '没有找到「{q}」。',
@@ -259,6 +261,13 @@ const Map<String, Map<String, String>> wheelStrings = {
     'zh-Hans': '{n} 项',
     'zh-Hant': '{n} 項',
     'en': '{n} results',
+  },
+  // English needs its own singular; Chinese does not inflect, so both
+  // scripts reuse the plural form and the caller picks by count.
+  'wheelFindCountOne': {
+    'zh-Hans': '{n} 项',
+    'zh-Hant': '{n} 項',
+    'en': '{n} result',
   },
   // The one cap in the search, said out loud. A sorted list that stops
   // without saying so is a hidden filter.
@@ -1119,6 +1128,14 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
                   ),
                   Flexible(
                     child: ListView.builder(
+                      key: const ValueKey('wheelFindList'),
+                      // Without this the list takes the whole 70% of
+                      // the screen the sheet is allowed, so one hit
+                      // sits at the top of an otherwise empty half
+                      // page and the box reads as broken. Shrink-wrap
+                      // is safe under a bounded maxHeight: the
+                      // viewport still only builds as far as it fills.
+                      shrinkWrap: true,
                       padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
                       itemCount: result.hits.length,
                       itemBuilder: (c, i) {
@@ -1226,7 +1243,11 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
           {'q': query.trim()});
     }
     final parts = <String>[
-      _fill('wheelFindCount', '{n} results', locale, {'n': result.hits.length}),
+      if (result.hits.length == 1)
+        _fill('wheelFindCountOne', '{n} result', locale, {'n': 1})
+      else
+        _fill('wheelFindCount', '{n} results', locale,
+            {'n': result.hits.length}),
       if (result.years.isNotEmpty)
         result.years.map((y) => yearLabel(y, locale)).join(' · '),
       if (result.nearestShown > 0)
