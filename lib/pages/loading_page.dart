@@ -990,8 +990,7 @@ class _LoadingPageState extends State<LoadingPage> {
                     uiStrings['hardReloadPage']?[settings.locale] ??
                         'Reload page (clear cache)',
                     style: TextStyle(
-                      fontSize: (settings.fontSize - 2)
-                          .clamp(11.0, 14.0),
+                      fontSize: settings.wbType.scaledSmall(14),
                       fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
                     ),
                   ),
@@ -1019,8 +1018,7 @@ class _LoadingPageState extends State<LoadingPage> {
                         uiStrings['showDetails']?[settings.locale] ??
                             'Show details',
                         style: TextStyle(
-                          fontSize: (settings.fontSize - 2)
-                              .clamp(11.0, 14.0),
+                          fontSize: settings.wbType.scaledSmall(14),
                           color: Theme.of(context)
                               .colorScheme
                               .onSurfaceVariant,
@@ -1031,8 +1029,7 @@ class _LoadingPageState extends State<LoadingPage> {
                           mainProvider.loadError!,
                           style: TextStyle(
                             fontFamily: 'monospace',
-                            fontSize: (settings.fontSize - 4)
-                                .clamp(10.0, 12.0),
+                            fontSize: settings.wbType.scaledSmall(12),
                             color: Theme.of(context)
                                 .colorScheme
                                 .onSurfaceVariant,

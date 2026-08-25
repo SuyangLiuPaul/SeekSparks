@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:provider/provider.dart';
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
@@ -137,9 +138,8 @@ class _OnboardingDialogState extends State<OnboardingDialog> {
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
                                       fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                                      fontSize: (settings.fontSize + 2)
-                                          .clamp(16.0, 26.0)
-                                          .toDouble(),
+                                      fontSize:
+                                          settings.wbType.scaledSmall(22),
                                       fontWeight: FontWeight.w700,
                                       color: scheme.onSurface,
                                     ),
@@ -150,9 +150,8 @@ class _OnboardingDialogState extends State<OnboardingDialog> {
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
                                       fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                                      fontSize: (settings.fontSize - 2)
-                                          .clamp(12.0, 18.0)
-                                          .toDouble(),
+                                      fontSize:
+                                          settings.wbType.scaledSmall(18),
                                       height: 1.4,
                                       color: scheme.onSurfaceVariant,
                                     ),

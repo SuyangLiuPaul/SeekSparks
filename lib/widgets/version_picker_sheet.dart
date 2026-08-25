@@ -172,7 +172,7 @@ class _LanguageGroupedVersionBodyState
                           style: TextStyle(
                             fontFamily: settings.fontFamily,
                             fontFamilyFallback: kCjkFontFallback,
-                            fontSize: 14.5,
+                            fontSize: settings.wbType.scaledSmall(14.5),
                             fontWeight: v.value == widget.currentVersion
                                 ? FontWeight.w700
                                 : FontWeight.w500,
@@ -191,7 +191,7 @@ class _LanguageGroupedVersionBodyState
                               style: TextStyle(
                                 fontFamily: settings.fontFamily,
                                 fontFamilyFallback: kCjkFontFallback,
-                                fontSize: 11,
+                                fontSize: settings.wbType.scaledSmall(11),
                                 color: scheme.onSurface
                                     .withValues(alpha: 0.55),
                               ),

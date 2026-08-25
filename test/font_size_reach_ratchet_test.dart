@@ -54,8 +54,11 @@ void main() {
   /// the classic reader pages, which #279's chrome pass owns and which
   /// have their own type story, plus a tail of small screens that each
   /// still scale their main text and write literals only around it.
+  /// 2026-08-25 (#315, TWELFTH and final pass). What is left here is two
+  /// entries, and NEITHER is a size the slider ought to reach. The
+  /// ticket closes on documented non-defects rather than on zero,
+  /// because a rule with no exceptions written down grows them silently.
   const budget = <String, int>{
-    'pages/stats_page.dart': 12,
     // NOT text sizes. These nine are `fontSize:` FIELDS of a style
     // preset — the value handed to `settings.setFontSize()` when the
     // reader picks "Compact" or "Large". Routing them through the
@@ -63,8 +66,19 @@ void main() {
     // Counted here anyway so the grep stays honest: the number is
     // real, it just is not a defect.
     'models/app_style_preset.dart': 9,
-    'widgets/book_chapter_picker.dart': 2,
-    'widgets/version_picker_sheet.dart': 2,
+    // NOT text the reader reads. The single literal is `fontSize: 36`
+    // on the one-letter monogram inside a `CircleAvatar(radius: 48)` —
+    // a 96 px circle that does not move with the setting, so a scaled
+    // glyph would grow straight through its own disc and clip. It is
+    // sized BY its container, in the same way an icon is, and it
+    // carries no information the reader could not get from the account
+    // name printed beside it in full.
+    //
+    // The honest alternative was to scale the circle too. That is a
+    // layout change to a screen this ticket was not asked about, on the
+    // strength of a rule about legibility that a single initial does
+    // not engage. Left alone, and said out loud here so the next pass
+    // does not re-derive it.
     'pages/profile_edit_page.dart': 1,
   };
 
@@ -223,6 +237,48 @@ void main() {
     // reference, the vowel floor, and the four fixed-size containers the
     // type now outgrows. A frozen page cannot overflow.
     'pages/bible_trivia_page.dart',
+    // 2026-08-25 (#315, TWELFTH pass — the residue, and the close).
+    // Nine files, 32 sites, and after them both detectors read zero
+    // everywhere except the two documented non-defects in the budget
+    // above.
+    //
+    // `stats_page.dart` was the largest, 13 sites, and the one where
+    // the ticket's defect had the widest blast radius: Search
+    // Statistics is where a reader goes AFTER a search, so every label
+    // frozen here was frozen at the moment the app was answering a
+    // question. Its distribution hint carried
+    // `(settings.fontSize - 3).clamp(11.0, 14.0)` — the additive-then-
+    // clamped shape this ticket has now removed from the tree
+    // entirely, and which cannot hold a hierarchy: 3 pt of separation
+    // is a ratio of 1.27 at 11 pt and 1.08 at 40.
+    //
+    // `book_chapter_picker.dart` is the app's primary navigation
+    // surface and the reason this pass needed more than a substitution.
+    // Its verse grid had TWO `fontSize: 13` literals on `_NumberTile`
+    // and hard-coded column breakpoints. Unfreezing the size alone
+    // would have made it worse: unlike the book grid above it,
+    // `_NumberTile` has no `FittedBox`, so an oversized label CLIPS
+    // rather than shrinks — and a clipped verse number is not an ugly
+    // verse number, it is a PLAUSIBLE WRONG ONE. "176" clipped reads as
+    // "17". So the column count is now solved against the measured
+    // widest label (`columnsThatFit`), and falls as the font rises.
+    // Measured in `book_chapter_picker_font_size_behaviour_test.dart`.
+    //
+    // The remaining seven were saturating ceilings only, each on a
+    // screen a reader meets once or rarely — first run, key entry,
+    // profile switch, library, loading. They are on this list rather
+    // than budgeted because "rarely" is not "never", and the onboarding
+    // dialog in particular is the FIRST type the app shows a reader who
+    // may have come to the settings screen looking for the slider.
+    'pages/stats_page.dart',
+    'widgets/book_chapter_picker.dart',
+    'widgets/version_picker_sheet.dart',
+    'pages/highlights_page.dart',
+    'pages/library_page.dart',
+    'pages/loading_page.dart',
+    'pages/profiles_page.dart',
+    'widgets/gemini_key_card.dart',
+    'widgets/onboarding_dialog.dart',
   ];
 
   // 2026-08-24 (#315, SEVENTH mechanism, and a hole in this very test).
@@ -541,13 +597,25 @@ void main() {
         // that local is used as a fontSize anywhere in the same file.
         final before =
             flat.substring((m.start - 60).clamp(0, flat.length), m.start);
-        var isTextSize = before.contains('fontSize');
-        if (!isTextSize) {
-          final bind = RegExp(r'(?:final|var|double)\s+([A-Za-z_]\w*)\s*=\s*$')
-              .firstMatch(before);
-          isTextSize = bind != null &&
-              RegExp('fontSize:\\s*${bind.group(1)}\\b').hasMatch(flat);
-        }
+        // 2026-08-25 (#315, twelfth pass): the binding is asked about
+        // FIRST, and a bare assignment counts as one. It used to be a
+        // fallback behind `before.contains('fontSize')`, and that order
+        // made the window's own contents decide. `verse_widget.dart`
+        // wrote two statements in a row —
+        //   `topGap = … settings.fontSize * 0.4 : 0;`
+        //   `vertPadding = (settings.fontSize * 0.4).clamp(6.0, 12.0);`
+        // — and the second was counted as text because the FIRST one
+        // mentioned `fontSize` within 60 characters. It is padding. The
+        // detector's own doc says only text is policed, so a padding
+        // scored here is a false positive that would have to be bought
+        // off with a budget line, which is how a real defect gets
+        // filed next to a non-defect and stops being read.
+        final bind = RegExp(r'(?:(?:final|var|double)\s+)?([A-Za-z_]\w*)'
+                r'\s*=\s*$')
+            .firstMatch(before);
+        final isTextSize = bind != null
+            ? RegExp('fontSize:\\s*${bind.group(1)}\\b').hasMatch(flat)
+            : before.contains('fontSize');
         if (!isTextSize) continue;
         final String? op;
         final List<double?> ks;
@@ -574,10 +642,26 @@ void main() {
         // An offset the detector cannot read any number out of tells us
         // nothing; do not guess.
         if (op != null && ks.isEmpty) continue;
+        // 2026-08-25 (#315, TENTH mechanism, and a second hole in this
+        // test). This used to ask `at(default) == at(max)`, which is
+        // not what the test is named for. A clamp that clears the
+        // default by a pixel and freezes one stop later passed:
+        // `(settings.fontSize - 2).clamp(12.0, 20.0)` renders 18 at the
+        // default and 20 at the max, so it "travels" — and is IDENTICAL
+        // at 19 of the slider's 29 stops, everything from 22 pt up. The
+        // reader who drags to 40 to read a label gets the same label a
+        // reader at 22 gets.
+        //
+        // The question the name asks is whether the size saturates
+        // ANYWHERE inside the range, and the cheapest exact form of it
+        // is the top two stops: a monotonic clamp that has stopped by
+        // 40 has stopped by 39. Strictly stronger than the old test —
+        // if a size is equal at the default and the max it is equal at
+        // every stop between — so nothing already paid for comes back.
         final dead = ks.any((k) =>
-            at(kFontSizeDefault, op, k, lo, hi) ==
+            at(kFontSizeMax - 1, op, k, lo, hi) ==
             at(kFontSizeMax, op, k, lo, hi));
-        if (!dead) continue; // still travelling somewhere above the default
+        if (!dead) continue; // still travelling at the top of the slider
         (saturated[f.path.substring('lib/'.length)] ??= [])
             .add('${line + 1}: ${m.group(0)}');
       }
@@ -614,17 +698,15 @@ void main() {
     /// them saturated at or below the default 20 pt, which is the worst
     /// version of this defect: the ceiling is not a limit the reader can
     /// reach, it is one they START at.
-    const known = <String, int>{
-      'pages/highlights_page.dart': 1,
-      'pages/library_page.dart': 2,
-      'pages/loading_page.dart': 3,
-      'pages/profile_edit_page.dart': 1,
-      'pages/profiles_page.dart': 1,
-      'pages/stats_page.dart': 1,
-      'widgets/book_chapter_picker.dart': 2,
-      'widgets/gemini_key_card.dart': 4,
-      'widgets/onboarding_dialog.dart': 1,
-    };
+    /// 2026-08-25: the last nine went, and this map is EMPTY. From 73
+    /// saturating ceilings to zero, and the detector now has no
+    /// exceptions at all — any clamp whose value at 20 pt equals its
+    /// value at 40 pt fails here on the day it is written.
+    ///
+    /// The empty map is deliberately left in place rather than deleted
+    /// along with the two tests that read it. A detector with nothing
+    /// left to find is exactly when it is most worth keeping.
+    const known = <String, int>{};
 
     final over = <String>[];
     saturated.forEach((rel, sites) {

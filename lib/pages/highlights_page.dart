@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import 'package:seeksparks/constants/text_patterns.dart' show sanitizeForSearch;
 import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/verse.dart';
 import 'package:seeksparks/providers/main_provider.dart';
@@ -328,8 +329,7 @@ class _FilterChip extends StatelessWidget {
         selectedColor: scheme.primary.withValues(alpha: 0.18),
         labelStyle: TextStyle(
           fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-          fontSize:
-              (settings.fontSize - 2).clamp(12.0, 16.0).toDouble(),
+          fontSize: settings.wbType.scaledSmall(16),
           fontWeight: FontWeight.w600,
           color: selected ? scheme.primary : scheme.onSurfaceVariant,
         ),

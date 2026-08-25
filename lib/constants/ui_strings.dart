@@ -2117,16 +2117,35 @@ const uiStrings = {
     'zh-Hant': '重新下載以刷新',
     'en': 'Re-download to refresh',
   },
+  // 2026-08-25 (#315 pass, accuracy). This note carried TWO claims that
+  // had stopped being true, and it is the note whose whole job is to
+  // keep "ready offline" from being read as "everything works" — so a
+  // stale item here costs the reader the exact thing the note exists to
+  // buy.
+  //
+  //   • "cloud-sync sign-in" — removed with cross-device sync. There is
+  //     no sign-in, so it cannot be a reason to need the network.
+  //   • "the first load of any non-Roboto font (Google Fonts download
+  //     once)" — untrue since v1.6.62 removed `google_fonts` and
+  //     v1.6.73 bundled the last face. pubspec.yaml states it plainly:
+  //     "nothing is downloaded at runtime". Emoji are deliberately not
+  //     bundled, but those are drawn by the OS, not fetched.
+  //
+  // What remains is verified: AI runs against a live Gemini call, and
+  // the news digest is fetched from the yswords-data CDN
+  // (`NotificationCategoryIds.newsDigest`). Bible Evidence also
+  // refreshes over the network but is NOT listed — it ships a bundled
+  // snapshot and works offline, so naming it would make the note
+  // over-warn, which is the same defect pointing the other way.
   'offlinePackNetworkNote': {
-    'zh-Hans': '以下功能仍需要网络：AI 释义 / AI 搜索、云端同步登录、新闻实时更新，'
-        '以及首次加载非 Roboto 字体（Google Fonts 在线下载，下载后会被浏览器缓存）。',
-    'zh-Hant': '以下功能仍需要網路：AI 釋義 / AI 搜尋、雲端同步登入、新聞即時更新，'
-        '以及首次載入非 Roboto 字體（Google Fonts 線上下載，下載後會被瀏覽器快取）。',
+    'zh-Hans': '以下功能仍需要网络：AI 释义 / AI 搜索，以及新闻摘要的实时更新。'
+        '其余内容（含字体）已随应用打包，离线可用。',
+    'zh-Hant': '以下功能仍需要網路：AI 釋義 / AI 搜尋，以及新聞摘要的即時更新。'
+        '其餘內容（含字體）已隨應用打包，離線可用。',
     'en':
-        'Network is still required for: AI explanations / search, '
-            'cloud-sync sign-in, live news refresh, and the first load '
-            'of any non-Roboto font (Google Fonts download once, then '
-            'cache in the browser).',
+        'Network is still required for: AI explanations / search, and '
+            'refreshing the news digest. Everything else, fonts '
+            'included, is bundled with the app and works offline.',
   },
   'offlinePackDownload': {
     'zh-Hans': '下载',
@@ -3766,11 +3785,21 @@ const uiStrings = {
     'en': 'Avatar color',
   },
   'save': {'zh-Hans': '保存', 'zh-Hant': '保存', 'en': 'Save'},
+  // 2026-08-25 (#315 pass, accuracy): all three locales promised a
+  // Google sign-in that was removed with cross-device sync —
+  // `google_sign_in` is gone from pubspec.yaml and nothing in `lib/`
+  // signs in. The photo that overrides the initial is one the reader
+  // uploads on this very screen through `AvatarPickerService`, and
+  // `ProfileService` documents `photoDataUrl` as an "optional
+  // locally-uploaded avatar". The notice named the wrong source for a
+  // file the reader had chosen themselves, and told a reader looking
+  // for their Google picture to go looking for a control that does not
+  // exist.
   'profileEditNotice': {
-    'zh-Hans': '账号名和颜色仅保存在本设备。若已使用 Google 登录，将以 Google 头像优先显示。',
-    'zh-Hant': '帳號名和顏色僅保存在本裝置。若已使用 Google 登入，將以 Google 頭像優先顯示。',
+    'zh-Hans': '账号名、颜色和头像仅保存在本设备，不会上传。设置头像后，将以头像取代彩色字母显示。',
+    'zh-Hant': '帳號名、顏色和頭像僅保存在本裝置，不會上傳。設定頭像後，將以頭像取代彩色字母顯示。',
     'en':
-        'Profile name and color are stored on this device. If you\'re signed in with Google your photo will appear instead of the colored initial.',
+        'Profile name, color, and photo are stored on this device and are never uploaded. If you set a photo it replaces the colored initial.',
   },
   'editProfile': {
     'zh-Hans': '编辑账号',
@@ -5169,11 +5198,13 @@ const uiStrings = {
     'zh-Hant': '取消',
     'en': 'Cancel',
   },
-  'cloudSignIn': {
-    'zh-Hans': '登录以在多设备同步',
-    'zh-Hant': '登入以在多裝置同步',
-    'en': 'Sign in to sync across devices',
-  },
+  // 2026-08-25 (#315 pass): `cloudSignIn` — "Sign in to sync across
+  // devices" — deleted. Unlike the two notices repaired above it was
+  // NOT a shipped defect: nothing outside this file read the key, so no
+  // reader was ever shown it. It is removed rather than corrected
+  // because there is nothing to correct it TO. Left in place its only
+  // possible future is to be wired up by someone who trusted that a
+  // string in this file describes a feature that exists.
   'clearCache': {
     'zh-Hans': '清除缓存并重新加载',
     'zh-Hant': '清除快取並重新載入',

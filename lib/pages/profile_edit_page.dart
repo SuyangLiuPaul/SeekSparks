@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/services/avatar_picker_service.dart';
 import 'package:seeksparks/services/profile_service.dart';
@@ -132,9 +133,10 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
               // Big preview avatar at the top so the user sees the
               // result of their selections immediately.
               // Priority: locally-uploaded photo > color tile + initial.
-              // (Google profile photo overrides this elsewhere when
-              // signed in — but the editor is for the LOCAL profile
-              // settings, so we show what the user controls.)
+              // That is the whole rule. It used to carry a second
+              // clause about a Google photo overriding it "elsewhere",
+              // which has been untrue since sign-in was removed with
+              // cross-device sync — there is no other source.
               Center(
                 child: CircleAvatar(
                   radius: 48,
@@ -195,8 +197,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                 uiStrings['displayName']?[locale] ?? 'Display name',
                 style: TextStyle(
                   fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                  fontSize:
-                      (settings.fontSize - 2).clamp(12.0, 20.0).toDouble(),
+                  fontSize: settings.wbType.scaledSmall(18),
                   fontWeight: FontWeight.w700,
                   color: scheme.primary,
                 ),
@@ -218,8 +219,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                 uiStrings['avatarColor']?[locale] ?? 'Avatar color',
                 style: TextStyle(
                   fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                  fontSize:
-                      (settings.fontSize - 2).clamp(12.0, 20.0).toDouble(),
+                  fontSize: settings.wbType.scaledSmall(18),
                   fontWeight: FontWeight.w700,
                   color: scheme.primary,
                 ),
@@ -251,11 +251,12 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
               const SizedBox(height: 24),
               Text(
                 uiStrings['profileEditNotice']?[locale] ??
-                    'Profile name and color are stored on this device. If you\'re signed in with Google your photo will appear instead of the colored initial.',
+                    'Profile name, color, and photo are stored on this '
+                        'device and are never uploaded. If you set a photo '
+                        'it replaces the colored initial.',
                 style: TextStyle(
                   fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                  fontSize:
-                      (settings.fontSize - 3).clamp(11.0, 16.0).toDouble(),
+                  fontSize: settings.wbType.scaledSmall(16),
                   fontStyle: FontStyle.italic,
                   color: scheme.onSurfaceVariant,
                 ),

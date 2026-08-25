@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:seeksparks/utils/app_nav.dart';
 
 import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/pages/profile_edit_page.dart';
 import 'package:seeksparks/services/profile_service.dart';
@@ -222,9 +223,7 @@ class _ProfilesPageState extends State<ProfilesPage> {
                     '${(uiStrings['profileLocalOnly']?[locale] ?? 'Local profile')} • id: ${p.id}',
                     style: TextStyle(
                       fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                      fontSize: (settings.fontSize - 4)
-                          .clamp(11.0, 15.0)
-                          .toDouble(),
+                      fontSize: settings.wbType.scaledSmall(15),
                       color: scheme.onSurfaceVariant,
                     ),
                   ),

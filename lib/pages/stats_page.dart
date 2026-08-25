@@ -689,6 +689,7 @@ class _OverviewBookFilterSheetState extends State<_OverviewBookFilterSheet> {
   @override
   Widget build(BuildContext context) {
     final locale = widget.locale;
+    final t = WbType.of(context);
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
@@ -704,8 +705,8 @@ class _OverviewBookFilterSheetState extends State<_OverviewBookFilterSheet> {
                 Text(
                   uiStrings['sermonFilterByPassage']?[locale] ??
                       'Filter by passage',
-                  style: const TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                      fontSize: t.scaled(16), fontWeight: FontWeight.w600),
                 ),
                 const Spacer(),
                 if (widget.initialBook != null)
@@ -775,7 +776,7 @@ class _OverviewBookChip extends StatelessWidget {
       label: Text(
         localized,
         style: TextStyle(
-          fontSize: 13,
+          fontSize: WbType.of(context).scaledSmall(13),
           color: hasData ? null : Theme.of(context).disabledColor,
         ),
       ),
@@ -1232,8 +1233,9 @@ class _AramaicPassagesSheet extends StatelessWidget {
                     child: Text(
                       uiStrings['aramSheetTitle']?[locale] ??
                           'Aramaic in the Bible',
-                      style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.w700),
+                      style: TextStyle(
+                          fontSize: settings.wbType.scaled(16),
+                          fontWeight: FontWeight.w700),
                     ),
                   ),
                   // Round 56 (continued — Aramaic copy): one-tap export
@@ -1258,7 +1260,7 @@ class _AramaicPassagesSheet extends StatelessWidget {
                 uiStrings['aramSheetSubtitle']?[locale] ??
                     'Tap any entry to open the verse with word-by-word breakdown and Gemini AI explanation.',
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: settings.wbType.scaledSmall(12),
                   color: WbColors.of(context).mutedText,
                   height: 1.4,
                 ),
@@ -1423,7 +1425,7 @@ class _SheetGroupHeader extends StatelessWidget {
       child: Text(
         text,
         style: TextStyle(
-          fontSize: 11,
+          fontSize: WbType.of(context).scaledSmall(11),
           fontWeight: FontWeight.w800,
           color: WbColors.of(context).mutedText,
           letterSpacing: 0.6,
@@ -2339,7 +2341,7 @@ class _WordDistributionTabState extends State<_WordDistributionTab>
                     uiStrings['statsDistributionHint']?[locale] ??
                         'Pick a Strong\'s word to see its distribution across books, plus word-family + synonym comparison.',
                     style: TextStyle(
-                      fontSize: (settings.fontSize - 3).clamp(11.0, 14.0),
+                      fontSize: settings.wbType.scaledSmall(14),
                       color: WbColors.of(context).mutedText,
                       fontStyle: FontStyle.italic,
                       height: 1.4,
@@ -2684,7 +2686,7 @@ class _StrongsPickerSheetState extends State<_StrongsPickerSheet> {
                     label: Text(
                       uiStrings['statsOriginalsHideStopwordsTitle']?[locale] ??
                           'Hide common particles',
-                      style: const TextStyle(fontSize: 12),
+                      style: TextStyle(fontSize: t.scaledSmall(12)),
                     ),
                     selected: _hideStopwords,
                     onSelected: (v) => setState(() => _hideStopwords = v),
@@ -2899,7 +2901,7 @@ class _PopularPassagesCardState extends State<_PopularPassagesCard> {
                   uiStrings['lookupPopularEmpty']?[locale] ??
                       'No daily verses available yet.',
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: settings.wbType.scaledSmall(12),
                     color: WbColors.of(context).mutedText,
                   ),
                 );
@@ -3108,7 +3110,7 @@ class _ExegesisFeaturesCard extends StatelessWidget {
                     style: TextStyle(
                       fontFamily: settings.fontFamily,
                       fontFamilyFallback: kCjkFontFallback,
-                      fontSize: 12,
+                      fontSize: settings.wbType.scaledSmall(12),
                       height: 1.45,
                       color: wb.text,
                     ),
@@ -3262,7 +3264,7 @@ class _VersePickerSheetState extends State<_VersePickerSheet> {
                   uiStrings['statsLookupNoCurrentReading']?[locale] ??
                       'Open a passage in the reader first to continue here.',
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: widget.settings.wbType.scaledSmall(12),
                     color: WbColors.of(context).mutedText,
                     fontStyle: FontStyle.italic,
                   ),
@@ -3286,6 +3288,7 @@ class _PickerHeader extends StatelessWidget {
   });
   @override
   Widget build(BuildContext context) {
+    final t = WbType.of(context);
     final stepText = step == 1
         ? (uiStrings['statsLookupStepBook']?[locale] ?? 'Pick a book')
         : step == 2
@@ -3304,13 +3307,14 @@ class _PickerHeader extends StatelessWidget {
         Expanded(
           child: Text(
             stepText,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            style: TextStyle(
+                fontSize: t.scaled(16), fontWeight: FontWeight.w600),
           ),
         ),
         Text(
           '$step / 3',
           style: TextStyle(
-            fontSize: 12,
+            fontSize: t.scaledSmall(12),
             color: WbColors.of(context).mutedText,
             fontFeatures: const [FontFeature.tabularFigures()],
           ),
@@ -3372,7 +3376,7 @@ class _NumberGrid extends StatelessWidget {
           child: Text(
             label,
             style: TextStyle(
-              fontSize: 13,
+              fontSize: WbType.of(context).scaledSmall(13),
               fontWeight: FontWeight.w600,
               color: WbColors.of(context).mutedText,
             ),

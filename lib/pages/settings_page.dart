@@ -2681,9 +2681,10 @@ class _OfflinePackCardState extends State<_OfflinePackCard> {
                 Expanded(
                   child: Text(
                     uiStrings['offlinePackNetworkNote']?[locale] ??
-                        'Network is still required for AI explanations / search, '
-                            'cloud sync (sign-in), live news refresh, and the first '
-                            'load of any non-Roboto font.',
+                        'Network is still required for AI explanations / '
+                            'search, and refreshing the news digest. '
+                            'Everything else, fonts included, is bundled '
+                            'with the app and works offline.',
                     style: TextStyle(
                       fontFamily: widget.settings.fontFamily,
                       fontSize: widget.settings.smallPrint(12),

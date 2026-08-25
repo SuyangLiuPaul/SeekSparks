@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import 'package:seeksparks/constants/text_patterns.dart' show sanitizeForSearch;
 import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/verse.dart';
 // 2026-05-24 (v1.3.7): home_page direct import gone — navigateToReader
@@ -549,9 +550,7 @@ class _AnnotationTile extends StatelessWidget {
           : TextDecoration.none,
       decorationStyle: TextDecorationStyle.dotted,
       decorationColor: scheme.primary.withValues(alpha: 0.6),
-      fontSize: hasTitle
-          ? (settings.fontSize - 3).clamp(11.0, 14.0)
-          : settings.fontSize,
+      fontSize: hasTitle ? settings.wbType.scaledSmall(14) : settings.fontSize,
     );
     // Reusable tappable ref widget. HitTestBehavior.opaque consumes
     // the tap so the outer ListTile.onTap doesn't ALSO fire — keeps
@@ -661,8 +660,7 @@ class _AnnotationTile extends StatelessWidget {
                     Text(
                       relativeTime(when, locale),
                       style: TextStyle(
-                        fontSize: (settings.fontSize - 5)
-                            .clamp(10.0, 13.0),
+                        fontSize: settings.wbType.scaledSmall(13),
                         color: scheme.onSurfaceVariant
                             .withValues(alpha: 0.8),
                       ),

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/services/ai_bible_search_service.dart';
 import 'package:seeksparks/services/api_base.dart';
@@ -280,8 +281,7 @@ class GeminiKeyCardState extends State<GeminiKeyCard> {
                       'Use my own Gemini API key',
                   style: TextStyle(
                     fontFamily: widget.settings.fontFamily,
-                    fontSize: (widget.settings.fontSize - 1)
-                        .clamp(13.0, 16.0),
+                    fontSize: widget.settings.wbType.scaledSmall(16),
                     fontWeight: FontWeight.w700,
                     color: scheme.onSurface,
                   ),
@@ -302,8 +302,7 @@ class GeminiKeyCardState extends State<GeminiKeyCard> {
                       'everyone. The key stays on this device only.',
               style: TextStyle(
                 fontFamily: widget.settings.fontFamily,
-                fontSize: (widget.settings.fontSize - 4)
-                    .clamp(11.0, 13.0),
+                fontSize: widget.settings.wbType.scaledSmall(13),
                 color: scheme.onSurface.withValues(alpha: 0.78),
                 height: 1.5,
               ),
@@ -333,8 +332,7 @@ class GeminiKeyCardState extends State<GeminiKeyCard> {
               ),
               style: TextStyle(
                 fontFamily: 'monospace',
-                fontSize: (widget.settings.fontSize - 3)
-                    .clamp(12.0, 14.0),
+                fontSize: widget.settings.wbType.scaledSmall(14),
               ),
             ),
             SizedBox(height: 8 * s),
@@ -432,8 +430,7 @@ class GeminiKeyCardState extends State<GeminiKeyCard> {
                                   'Test failed.')),
                       style: TextStyle(
                         fontFamily: widget.settings.fontFamily,
-                        fontSize: (widget.settings.fontSize - 4)
-                            .clamp(11.0, 13.0),
+                        fontSize: widget.settings.wbType.scaledSmall(13),
                         color: _testStatus == _TestStatus.ok
                             ? paletteAccent(context, Colors.green)
                             : paletteAccent(context, Colors.red),

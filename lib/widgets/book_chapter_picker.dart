@@ -38,6 +38,8 @@
 /// been wrapped from outside, and 护眼纸质 has to reach both.
 library;
 
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:seeksparks/models/book.dart';
@@ -67,6 +69,17 @@ const double kBookTileFontRatio = 1.15;
 
 /// Padding on each side of the tile's label, inside the tile.
 const double kBookTilePadding = 7.0;
+
+/// The chapter tile's label size, relative to the reader's Font Size,
+/// in the two places a chapter number is drawn.
+///
+/// Same rule as [kBookTileFontRatio] and for the same reason: the
+/// column solver and the tile that paints the label must read one
+/// number. These two differ from each other (the grid's tile is a
+/// square cell, the list's is a fixed box) and that difference is
+/// deliberate, so they are two constants rather than one.
+const double kGridChapterFontRatio = 0.95;
+const double kListChapterFontRatio = 0.9;
 
 class BookChapterPicker extends StatefulWidget {
   final String currentBook;
@@ -619,7 +632,7 @@ class _BookChapterPickerState extends State<BookChapterPicker> {
                     '$book $chapter',
                     style: TextStyle(
                       fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                      fontSize: (settings.fontSize - 2).clamp(12.0, 16.0),
+                      fontSize: settings.wbType.scaledSmall(16),
                       color: wb.mutedText,
                     ),
                   ),
@@ -633,7 +646,28 @@ class _BookChapterPickerState extends State<BookChapterPicker> {
             child: LayoutBuilder(
               builder: (gridCtx, constraints) {
                 final w = constraints.maxWidth;
-                final cols = w < 360
+                // 2026-08-25 (#315, last pass): the verse number was the
+                // literal 13, while the CHAPTER number one screen back
+                // is `settings.fontSize * 0.95` — the same [_NumberTile]
+                // widget, sized two different ways. 13 is kept as the
+                // size AT THE DEFAULT so nothing a reader has already
+                // seen moves; what changes is that it now moves.
+                //
+                // But this tile has no [FittedBox], unlike the book
+                // grid, so an unfrozen size here fails the other way:
+                // the label CLIPS rather than shrinks, and clipping a
+                // verse number leaves a plausible wrong number ("176"
+                // reading as "17"). So the column count has to fall as
+                // the font rises, measured through the same helper the
+                // book grid uses — the widest label is Psalm 119's
+                // three digits, not a guess.
+                final fontSize = settings.wbType.scaledSmall(13);
+                const gap = 6.0;
+                final widestEm = widestLabelEmWidth(
+                  verses.map((v) => '${v.verse}'),
+                  fontWeight: FontWeight.w500,
+                );
+                final byWidth = w < 360
                     ? 6
                     : w < 480
                         ? 7
@@ -642,7 +676,22 @@ class _BookChapterPickerState extends State<BookChapterPicker> {
                             : w < 800
                                 ? 10
                                 : 12;
-                const gap = 6.0;
+                final byLabel = columnsThatFit(
+                  available: w,
+                  widestEm: widestEm,
+                  fontSize: fontSize,
+                  outerPadding: 0,
+                  spacing: gap,
+                  // The tile's own horizontal padding, plus the two
+                  // hairlines of its border.
+                  perColumnPadding: 8 + 2 * WbMetrics.hairline,
+                  // Four is the floor for the same reason the book grid
+                  // holds four: below it the grid stops being scannable
+                  // faster than the label stops being legible.
+                  min: 4,
+                  max: 12,
+                );
+                final cols = byWidth < byLabel ? byWidth : byLabel;
                 final tileW = (w - gap * (cols - 1)) / cols;
                 return Wrap(
                   spacing: gap,
@@ -654,7 +703,7 @@ class _BookChapterPickerState extends State<BookChapterPicker> {
                         label: uiStrings['versePickerTop']?[locale] ??
                             'Top',
                         selected: false,
-                        fontSize: 13,
+                        fontSize: fontSize,
                         onTap: () => _onVersePicked(mainProvider, 0),
                       ),
                     ),
@@ -664,7 +713,7 @@ class _BookChapterPickerState extends State<BookChapterPicker> {
                         child: _NumberTile(
                           label: '${v.verse}',
                           selected: false,
-                          fontSize: 13,
+                          fontSize: fontSize,
                           onTap: () =>
                               _onVersePicked(mainProvider, v.verse),
                         ),
@@ -711,6 +760,17 @@ class _BookChapterPickerState extends State<BookChapterPicker> {
       // button is too narrow for the natural-size text, instead of
       // truncating with a near-invisible ellipsis that swallowed the
       // last character ("Hebrew Bible" → "Hebrew", "希伯来圣经" → "希伯来圣").
+      //
+      // 2026-08-25 (#315): the ceiling below it is gone; the fit stays.
+      // In the WIDE layout these two buttons sit in a horizontal
+      // scroll view, so their constraints are loose, the fit resolves
+      // to 1.0 and the declared size is what paints. In the NARROW
+      // layout each is inside an `Expanded`, so the width is tight and
+      // the fit does cap the glyph — the fifth mechanism, and here it
+      // is the right answer rather than a defect: there are exactly two
+      // buttons and no column count to trade away, so the only
+      // alternatives to shrinking are truncating a label #297 forbids
+      // truncating, or overflowing the row.
       child: FittedBox(
         fit: BoxFit.scaleDown,
         child: Text(
@@ -719,7 +779,7 @@ class _BookChapterPickerState extends State<BookChapterPicker> {
         softWrap: false,
         textAlign: TextAlign.center,
         style: TextStyle(
-          fontSize: settings.fontSize.clamp(13.0, 17.0).toDouble(),
+          fontSize: settings.wbType.scaledSmall(17),
           fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
           fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
         ),
@@ -852,9 +912,41 @@ class _BookChapterPickerState extends State<BookChapterPicker> {
             ),
             Expanded(
               child: LayoutBuilder(builder: (context, constraints) {
+                // 2026-08-25 (#315, twelfth pass). The column count came
+                // from the MENU scale while the label came from the FONT
+                // scale — two sliders feeding one tile — and this tile,
+                // unlike the book tile below, has no [FittedBox] to
+                // absorb the disagreement. So the label did not shrink,
+                // it CLIPPED: measured at 28 pt, "150" wanted 80.6 px in
+                // a tile that granted 72.4. A clipped chapter number is
+                // not a cosmetic fault, it is a number that still reads
+                // as a number — "150" becomes "15" — so the reader is
+                // shown a different chapter and has no way to tell.
+                //
+                // Same repair as the verse grid: keep the menu scale's
+                // answer as a CEILING on how many columns to draw, and
+                // solve a second one against the measured widest label.
+                // Taking the smaller means the count falls as the font
+                // rises. At the default setting the label needs far less
+                // than the menu already gives, so this changes nothing a
+                // reader has seen — it only opens the top of the slider.
                 final tileTarget = 56.0 * settings.menuScale;
+                final byMenu = (constraints.maxWidth / tileTarget).floor();
+                final byLabel = columnsThatFit(
+                  available: constraints.maxWidth,
+                  widestEm: widestLabelEmWidth(
+                    book.chapters.map((c) => '${c.title}'),
+                    fontWeight: FontWeight.w500,
+                  ),
+                  fontSize: settings.fontSize * kGridChapterFontRatio,
+                  outerPadding: 24,
+                  spacing: 8,
+                  perColumnPadding: 8 + 2 * WbMetrics.hairline,
+                  min: 4,
+                  max: 10,
+                );
                 final cols =
-                    (constraints.maxWidth / tileTarget).floor().clamp(4, 10);
+                    (byMenu < byLabel ? byMenu : byLabel).clamp(4, 10);
                 return GridView.builder(
                   padding: const EdgeInsets.all(12),
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -1116,7 +1208,7 @@ class _BookChapterPickerState extends State<BookChapterPicker> {
     return _NumberTile(
       label: chapter.title.toString(),
       selected: selected,
-      fontSize: settings.fontSize * 0.95,
+      fontSize: settings.fontSize * kGridChapterFontRatio,
       onTap: () => _selectChapter(mainProvider, book.title, chapter.title),
     );
   }
@@ -1149,7 +1241,27 @@ class _BookChapterPickerState extends State<BookChapterPicker> {
       bool selected) {
     final dc = ResponsiveBreakpoints.classOf(
         MediaQuery.of(context).size.width);
-    final tileSize = ResponsiveBreakpoints.chapterTileSize(dc);
+    // 2026-08-25 (#315, twelfth pass). The grid view next door can trade
+    // a column away to make room for a bigger label. This one cannot —
+    // it is a `Wrap` of FIXED squares off the breakpoint table (44 to
+    // 72 px), so there is nothing to trade and the label simply clipped
+    // past about 22 pt. The box has to grow instead.
+    //
+    // The breakpoint size stays the FLOOR, so at the default setting a
+    // three-digit chapter needs ~30 px inside a 44 px tile and nothing
+    // moves. Only a reader who raised the font past what the fixed box
+    // could hold sees a difference, and what they see is the whole
+    // number.
+    final fontSize = settings.fontSize * kListChapterFontRatio;
+    final needed = widestLabelEmWidth(
+          [chapter.title.toString()],
+          fontWeight: FontWeight.w500,
+        ) *
+        fontSize;
+    final tileSize = math.max(
+      ResponsiveBreakpoints.chapterTileSize(dc),
+      needed + 8 + 2 * WbMetrics.hairline,
+    );
     return Padding(
       padding: const EdgeInsets.all(4),
       child: SizedBox(
@@ -1158,7 +1270,7 @@ class _BookChapterPickerState extends State<BookChapterPicker> {
         child: _NumberTile(
           label: chapter.title.toString(),
           selected: selected,
-          fontSize: settings.fontSize * 0.9,
+          fontSize: fontSize,
           onTap: () => _selectChapter(mainProvider, book.title, chapter.title),
         ),
       ),
