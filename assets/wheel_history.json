@@ -2221,7 +2221,7 @@
   {
    "id": "israel-united-monarchy",
    "start": -1050,
-   "end": -930,
+   "end": -931,
    "region": "levant",
    "stream": "israel",
    "approximate": true,
@@ -2240,7 +2240,7 @@
   },
   {
    "id": "kingdom-of-israel",
-   "start": -930,
+   "start": -931,
    "end": -722,
    "region": "levant",
    "stream": "israel",
@@ -2260,7 +2260,7 @@
   },
   {
    "id": "kingdom-of-judah",
-   "start": -930,
+   "start": -931,
    "end": -586,
    "region": "levant",
    "stream": "judah",

@@ -152,11 +152,21 @@ void main() {
             '${unresolved.join("\n")}');
   });
 
-  test('a Thiele-dated event sits inside the reign it belongs to', () {
-    // hebrew_kings.json is the app's Thiele reconstruction. Where an
-    // event says its year comes from Thiele, that year must fall
+  test('a Thiele-dated record sits inside the reign it belongs to', () {
+    // hebrew_kings.json is the app's Thiele reconstruction. Where a
+    // record says its year comes from Thiele, that year must fall
     // inside the span of the kings that reconstruction gives — the two
     // datasets cannot be allowed to drift apart in silence.
+    //
+    // They drifted anyway, and this is the test that let them. It swept
+    // `events` while the drift was in `powers`, so the carrier holding
+    // all three offending records was never read; and its ±60 years of
+    // slack are 60 times the size of the error, which was one year on
+    // the division of the kingdom. A range check and an agreement check
+    // catch different things, so both are kept: this asks whether a
+    // record belongs to the era at all, and
+    // `cross_asset_year_agreement_test.dart` asks whether the app
+    // states one fact one way.
     final kings = (json.decode(
                 File('assets/hebrew_kings.json').readAsStringSync())
             as Map<String, dynamic>)['kings'] as List;
@@ -170,15 +180,31 @@ void main() {
     final earliest = spans.map((s) => s.$1).reduce((a, b) => a < b ? a : b);
     final latest = spans.map((s) => s.$2).reduce((a, b) => a > b ? a : b);
 
-    for (final e in (raw['events'] as List).cast<Map<String, dynamic>>()) {
-      if (e['basis'] != 'scripture+thiele') continue;
-      final y = (e['year'] as num).toInt();
+    // Every year on every carrier that claims Thiele: an event's `year`,
+    // and a power's `start` and `end` both, since a band claims its whole
+    // span.
+    final claims = <(String, int)>[
+      for (final e in (raw['events'] as List).cast<Map<String, dynamic>>())
+        if (e['basis'] == 'scripture+thiele')
+          ('event ${e['id']}', (e['year'] as num).toInt()),
+      for (final p in (raw['powers'] as List).cast<Map<String, dynamic>>())
+        if (p['basis'] == 'scripture+thiele') ...[
+          ('power ${p['id']} start', (p['start'] as num).toInt()),
+          if (p['end'] != null)
+            ('power ${p['id']} end', (p['end'] as num).toInt()),
+        ],
+    ];
+    // The sweep reached both carriers, so an emptied one cannot pass.
+    expect(claims.where((c) => c.$1.startsWith('event')), isNotEmpty);
+    expect(claims.where((c) => c.$1.startsWith('power')), isNotEmpty);
+
+    for (final (who, y) in claims) {
       expect(y, greaterThanOrEqualTo(earliest - 60),
-          reason: '${e['id']} at $y claims a Thiele year, but Thiele\'s own '
+          reason: '$who at $y claims a Thiele year, but Thiele\'s own '
               'reconstruction in this app does not reach back that far '
               '(earliest reign starts $earliest)');
       expect(y, lessThanOrEqualTo(latest + 60),
-          reason: '${e['id']} at $y claims a Thiele year past the end of the '
+          reason: '$who at $y claims a Thiele year past the end of the '
               'reconstruction (latest reign ends $latest)');
     }
   });

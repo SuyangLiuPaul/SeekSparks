@@ -6632,3 +6632,139 @@ fixed. The 2,203 words with no morphology code were third and are now
 869. cuvs-plus's "60 gaps" were fourth, and turned out not to be gaps at
 all — see check 4 — but chasing them found eight other classes that
 were.)*
+
+## Check 49 — one event, two years, and the guard that swept the wrong carrier
+
+Three assets date the Hebrew monarchy and none of them shares an id with
+another: `hebrew_kings.json` files by king and by epoch,
+`bible_timeline.json` by event, `wheel_history.json` by power. Nothing
+joined them. **The division of the kingdom is stated eight times across
+the three files — five times as 931 BC and three times as 930 BC.** A
+reader who opened Resources → Bible Chronology and then Resources → World
+History Wheel was given two different years for the same event by the
+same app, in the same session, two menu items apart.
+
+| where the app states the division | year |
+|---|---|
+| `hebrew_kings.json` `epochs/division` | **−931** |
+| `hebrew_kings.json` `kings/solomon/reignEnd` | **−931** |
+| `hebrew_kings.json` `kings/jeroboam_i/reignStart` | **−931** |
+| `hebrew_kings.json` `kings/rehoboam/reignStart` | **−931** |
+| `bible_timeline.json` `events/kingdom_divided` | **−931** |
+| `wheel_history.json` `powers/israel-united-monarchy/end` | **−930** |
+| `wheel_history.json` `powers/kingdom-of-israel/start` | **−930** |
+| `wheel_history.json` `powers/kingdom-of-judah/start` | **−930** |
+
+**This needed no chronologist.** Which year is right is a question about
+Thiele, and #292 — a citable Thiele source — is still open. The defect is
+not that the wheel disagrees with Thiele; it is that the app disagrees
+with itself, and that is a defect whichever side is correct. The fix
+therefore reconciles rather than adjudicates: the three `−930`s become
+`−931`, the value the app already gave in five other places.
+
+### 49a — the label was false by the file's own definition
+
+All three wheel records carry `basis: "scripture+thiele"`, which
+`wheel_history.json`'s own `_meta.basisValues` defines as *"scripture
+states the interval; the absolute year follows Thiele's reconstruction"*.
+`bible_timeline.json`'s `_meta.basis.thiele` names the authority
+outright: *"From hebrew_kings.json, which follows Thiele and cites him."*
+And `hebrew_kings.json` declares `"system": "thiele"` at its root and says
+931.
+
+So this is not an inference about what a book says. The asset states the
+rule, a sibling asset names the authority, and the record breaks both.
+The reader is shown the claim in words, too — `wheelBasisThiele` prints
+**"interval from scripture, year from Thiele"** and **"年份按 Thiele"** —
+so the app named a chronologist to the reader and then gave a year its own
+chart of that chronologist contradicts.
+
+### 49b — why it is a slip and not an editorial choice
+
+This was the strongest counter-argument and it does not hold.
+`kingdom-of-israel`'s note discloses *two* disputes — "References give 931
+or 930 BC for the division and 722 or 721 BC for the fall of Samaria" —
+and `kingdom-of-judah`'s note discloses a third, 586 against 587. **Where
+the record had to choose, it took Thiele's number every time but one:**
+−722 for Samaria, −586 for Jerusalem, and then −930 for the division. An
+editor deliberately preferring the published alternative would have
+written 721 and 587.
+
+Two further facts. `git log -S'"end": -930'` returns exactly one commit —
+the bulk commit that authored the whole file — so no incremental edit ever
+weighed the year. And two of the three records carrying −930
+(`israel-united-monarchy`, `kingdom-of-judah`) disclose nothing whatever
+about the division being contested; only one does. A disclosure that
+covers a third of its instances is not a policy.
+
+Neither the note nor `approximate: true` retracts the `basis` field's
+affirmative claim. Saying "references differ" is not the same as saying
+"our year is not Thiele's", and only the second would have made the label
+true.
+
+### 49c — the guard existed, and it swept the wrong carrier
+
+`wheel_history_asset_test.dart` already held a test whose comment states
+this exact obligation: *"the two datasets cannot be allowed to drift apart
+in silence."* It was blind twice over.
+
+- It iterated **`raw['events']`** only. All three offending records are
+  **powers**. The carrier holding the entire defect was never read.
+- Its tolerance is **±60 years**, sixty times the size of the error.
+
+That is the *grep the shape, not the instance* failure in its data form: a
+detector written against one carrier, in a file with four, and a slack
+chosen for "does this belong to the era at all" being asked to do the work
+of "is this the same year". Both questions are worth asking, so both
+guards are now kept:
+
+- the range check is extended to powers (`start` **and** `end`, since a
+  band claims its whole span) and asserts it reached both carriers, so an
+  emptied sweep cannot pass. **Stated plainly: this extension would not
+  have caught this defect** — −930 sits comfortably inside a ±60 window.
+  It closes a carrier gap, not this one.
+- `test/cross_asset_year_agreement_test.dart` is the instrument that
+  catches it: an explicit hand-written join of **23 statements of 6 facts
+  across the 3 assets**, asserting only that no fact is stated at two
+  different years. Run against the unfixed assets it fails on exactly the
+  division, naming all eight paths and clearing the other five facts.
+  Because there is no key to join on, the join table is the thing most
+  likely to rot, so its first test resolves every path and fails on any
+  that no longer lands.
+
+### 49d — what else was measured, and what was left alone
+
+The corpus was swept rather than the one record fixed. **31
+Thiele-claiming records live outside `hebrew_kings.json`** — 23 in
+`bible_timeline.json` (18 `scripture+thiele`, 5 `thiele`) and 8 in
+`wheel_history.json` (5 events, 3 powers). Every one of the other 28
+agrees with the authority or lies outside its reach. `family_tree.json`
+agrees on all 14 shared reigns. `chronology.json` is AM-only and states no
+BC year, so it cannot conflict. No wheel *event* states the division at
+all, so the eight statements above are the complete set.
+
+Two findings are recorded and **not** fixed, because the conservative
+option was to leave them:
+
+- **`israel-united-monarchy`'s start, −1050, labelled `scripture+thiele`.**
+  Scripture states no year for Saul's accession and Thiele's chart begins
+  at the division, which reads like an over-claim — but −1050 is exactly
+  −1010 (Thiele's David) minus the forty years Acts 13:21 gives Saul, and
+  that is precisely what `scripture+thiele` is defined to mean. The record
+  cites only 1 Kings 12:19-20, which supports the band's *end*. The claim
+  is defensible and the citation is thin; deciding between them is the
+  owner's call, and `bible_timeline.json` calls the same year
+  `conventional`.
+- **`hiram_tyre` at −980** falls inside David's reign (−1010…−970) while
+  its own description is about supplying **Solomon's** temple (−966). Not
+  a contradiction with `hebrew_kings.json`, but the year does not fit the
+  sentence.
+
+Downgrading `israel-united-monarchy` to `conventional` was considered and
+**rejected**: the basis line prints directly beneath the refs row
+(`radial_chronology_page.dart:1085-1096`), so it would have printed
+*"conventional date · not stated in scripture"* two lines under
+1 Kings 12:19-20 — verbatim the printed falsehood v1.6.175 shipped to
+remove, on one of the three records that fix was about. Claiming less is
+not always the safer option; here it would have re-introduced a closed
+defect.
