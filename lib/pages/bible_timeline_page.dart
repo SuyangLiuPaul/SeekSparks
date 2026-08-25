@@ -8,10 +8,13 @@ import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/widgets/left_accent_card.dart';
 import 'package:seeksparks/models/app_settings.dart';
+import 'package:seeksparks/models/biblical_person.dart';
 import 'package:seeksparks/models/timeline_event.dart';
 import 'package:seeksparks/pages/chronology_page.dart';
 import 'package:seeksparks/providers/main_provider.dart';
+import 'package:seeksparks/services/family_tree_service.dart';
 import 'package:seeksparks/services/timeline_service.dart';
+import 'package:seeksparks/widgets/person_detail_sheet.dart';
 import 'package:seeksparks/utils/jump_to_reference.dart' as jumper;
 import 'package:seeksparks/utils/reference_parser.dart';
 import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
@@ -58,8 +61,23 @@ import 'package:seeksparks/utils/navigate_to_reader.dart';
 /// Conquest / Monarchy / Exile / Inter-testamental / NT) reuse the
 /// family-tree era palette.
 ///
-/// Search at top filters by title / description / id.
+/// Search at top filters by title / description / id / linked person
+/// name, in all three scripts.
 /// Tap a verse-ref chip → jumps to that verse in the reader.
+/// Tap a person chip → opens that person's family-tree sheet.
+///
+/// THE PEOPLE WERE IN THE ASSET AND ON NO SCREEN (#318 phase 20).
+/// `bible_timeline.json` files `personIds` on 61 of the 98 events — 88
+/// links naming 37 people — and [TimelineEvent] had parsed the field
+/// since the model was written. `personIds` appeared at exactly three
+/// lines in all of `lib/`, all three inside `timeline_event.dart`:
+/// declaration, constructor, `fromJson`. Nothing read it.
+///
+/// Publishing 88 claims meant auditing them first, and the audit found
+/// the two assets disagreeing about Moses: the tree said -1525..-1405,
+/// the timeline -1526 and -1406, both stated exactly, on the same
+/// basis, citing the same two verses. The tree was corrected and
+/// `test/timeline_person_join_test.dart` now walks every link.
 double _yearFont(WbType t) => t.scaled(11.5);
 
 TextStyle _yearStyle(WbType t, ColorScheme scheme) => TextStyle(
@@ -137,9 +155,32 @@ class _BibleTimelinePageState extends State<BibleTimelinePage> {
   @override
   void initState() {
     super.initState();
-    _future = TimelineService.instance.loadAll();
+    _future = _load();
     _searchController = TextEditingController();
   }
+
+  /// The family tree is awaited here rather than looked up lazily
+  /// because [FamilyTreeService.byId] is synchronous and returns null
+  /// until [FamilyTreeService.loadAll] has completed. A chip row that
+  /// filled in one frame late would be a row that silently rendered
+  /// empty, and the search below would agree with it.
+  Future<List<TimelineEvent>> _load() async {
+    final loaded = await Future.wait([
+      TimelineService.instance.loadAll(),
+      FamilyTreeService.instance.loadAll(),
+    ]);
+    return loaded.first as List<TimelineEvent>;
+  }
+
+  /// The people this event files, in the asset's own order, dropping
+  /// ids the tree does not hold. `test/timeline_person_join_test.dart`
+  /// asserts all 88 resolve, so the drop is a belt on a fastened
+  /// braces — but a missing id must not take the row down with it.
+  List<BiblicalPerson> _peopleOf(TimelineEvent e) => [
+        for (final id in e.personIds)
+          if (FamilyTreeService.instance.byId(id) != null)
+            FamilyTreeService.instance.byId(id)!,
+      ];
 
   @override
   void dispose() {
@@ -193,6 +234,19 @@ class _BibleTimelinePageState extends State<BibleTimelinePage> {
                     e.descZhHans,
                     e.descZhHant,
                     e.id,
+                    // The people are searched because they are now
+                    // PRINTED. 17 of the 88 links name someone the
+                    // title and description never do, so without this
+                    // the page would show a reader a chip reading
+                    // "Jeconiah" and then answer "0 events" when they
+                    // typed it — denying a record it was displaying.
+                    // All three scripts, because the chip renders one
+                    // and the reader may be typing another.
+                    for (final p in _peopleOf(e)) ...[
+                      p.name,
+                      p.nameZhHans,
+                      p.nameZhHant,
+                    ],
                   ].join(' ').toLowerCase();
                   return hay.contains(q);
                 }).toList();
@@ -278,8 +332,10 @@ class _BibleTimelinePageState extends State<BibleTimelinePage> {
                                     _expanded.add(ev.id);
                                   }
                                 }),
+                                people: _peopleOf(ev),
                                 onTapRef: (raw) =>
                                     _jumpToRef(context, raw),
+                                onTapPerson: _showPerson,
                               );
                             },
                           ),
@@ -312,7 +368,7 @@ class _BibleTimelinePageState extends State<BibleTimelinePage> {
                   },
                 ),
           hintText: uiStrings['bibleTimelineSearchHint']?[locale] ??
-              'Search events, descriptions…',
+              'Search events and people…',
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
           ),
@@ -342,6 +398,35 @@ class _BibleTimelinePageState extends State<BibleTimelinePage> {
     final ok = await jumper.showJumpResultSnackBar(context, result);
     if (!ok || !context.mounted) return;
     navigateToReader(context);
+  }
+
+  /// The same sheet the family tree opens, with the same lineage
+  /// hopping. It is opened here rather than pushing the family tree
+  /// page because the reader asked about one person in one event, and
+  /// dropping them into a 277-row scroller loses their place on the
+  /// timeline.
+  Future<void> _showPerson(BiblicalPerson p) async {
+    final settings = context.read<AppSettings>();
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      constraints: const BoxConstraints(maxWidth: 720),
+      builder: (sheetCtx) => DraggableScrollableSheet(
+        initialChildSize: 0.65,
+        minChildSize: 0.35,
+        maxChildSize: 0.95,
+        expand: false,
+        builder: (_, scrollController) => PersonDetailSheet(
+          person: p,
+          locale: settings.locale,
+          scrollController: scrollController,
+          onPersonTap: (other) {
+            Navigator.of(sheetCtx).maybePop();
+            _showPerson(other);
+          },
+        ),
+      ),
+    );
   }
 }
 
@@ -485,6 +570,11 @@ class _EventTile extends StatelessWidget {
   final VoidCallback onToggleExpand;
   final void Function(String raw) onTapRef;
 
+  /// Resolved by the host, not by this widget, so that the row and the
+  /// search filter cannot disagree about who is in the event.
+  final List<BiblicalPerson> people;
+  final void Function(BiblicalPerson) onTapPerson;
+
   const _EventTile({
     required this.event,
     required this.locale,
@@ -494,6 +584,8 @@ class _EventTile extends StatelessWidget {
     required this.expanded,
     required this.onToggleExpand,
     required this.onTapRef,
+    required this.people,
+    required this.onTapPerson,
   });
 
   @override
@@ -658,6 +750,42 @@ class _EventTile extends StatelessWidget {
                             ],
                           ),
                         ],
+                        // The people the record files under this event.
+                        // Both ref rows spend `scheme.primary`, which
+                        // on this page means "tapping this opens the
+                        // reader at a verse". A person chip does not —
+                        // it opens a sheet — so it is deliberately not
+                        // given that hue, and carries the family tree's
+                        // own `person_outline` instead of a third
+                        // invented glyph.
+                        if (people.isNotEmpty) ...[
+                          const SizedBox(height: 6),
+                          Wrap(
+                            spacing: 4,
+                            runSpacing: 4,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: [
+                              Text(
+                                uiStrings['timelinePeople']?[locale] ??
+                                    uiStrings['timelinePeople']?['en'] ??
+                                    '',
+                                style: TextStyle(
+                                  fontSize: t.scaled(11),
+                                  color: scheme.onSurface
+                                      .withValues(alpha: 0.55),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              for (final p in people)
+                                _PersonChip(
+                                  person: p,
+                                  locale: locale,
+                                  scheme: scheme,
+                                  onTap: () => onTapPerson(p),
+                                ),
+                            ],
+                          ),
+                        ],
                       ],
                       if (event.refs.isNotEmpty) ...[
                         const SizedBox(height: 6),
@@ -720,14 +848,12 @@ class _RefChip extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(4),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
           decoration: BoxDecoration(
             color: outlined
                 ? Colors.transparent
                 : scheme.primaryContainer.withValues(alpha: 0.25),
-            borderRadius: BorderRadius.circular(4),
             border: Border.all(
               color: scheme.primary.withValues(alpha: outlined ? 0.5 : 0.35),
               width: 0.7,
@@ -744,6 +870,65 @@ class _RefChip extends StatelessWidget {
                 style: TextStyle(
                   fontSize: t.scaled(11),
                   color: scheme.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A person the event's record names, and a door into their sheet.
+///
+/// NO YEARS ON THE CHIP, though [BiblicalPerson.displayYears] is right
+/// there and the family tree's own chip prints them. This row sits two
+/// lines under a year column and a hedged event year, and a chip
+/// reading "Moses (1526–1406 BC)" beside a row reading "1446 BC" asks
+/// the reader to hold three dates to read one. The sheet gives the
+/// lifespan the moment the chip is tapped.
+class _PersonChip extends StatelessWidget {
+  final BiblicalPerson person;
+  final String locale;
+  final ColorScheme scheme;
+  final VoidCallback onTap;
+
+  const _PersonChip({
+    required this.person,
+    required this.locale,
+    required this.scheme,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final t = WbType.of(context);
+    final ink = scheme.onSurface.withValues(alpha: 0.75);
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          decoration: BoxDecoration(
+            color: scheme.onSurface.withValues(alpha: 0.05),
+            border: Border.all(
+              color: scheme.onSurface.withValues(alpha: 0.25),
+              width: 0.7,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.person_outline, size: 11, color: ink),
+              const SizedBox(width: 3),
+              Text(
+                person.localizedName(locale),
+                style: TextStyle(
+                  fontSize: t.scaled(11),
+                  color: ink,
                   fontWeight: FontWeight.w600,
                 ),
               ),

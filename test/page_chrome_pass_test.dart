@@ -117,7 +117,13 @@ const List<String> _passed = <String>[
 /// narrower check, so they were never comparable to these; a ceiling
 /// raised by re-measurement is annotated, and only those.
 const Map<String, int> _remaining = <String, int>{
-  'lib/pages/bible_timeline_page.dart': 5,
+  // 2026-08-26: 5 -> 3. The page's two chip species were one widget
+  // copied, so a new person chip arrived carrying a fourth and fifth
+  // rounded corner. Both chips were squared rather than declaring the
+  // growth; what is left is the search field's radius-10 box, the
+  // event card's radius-8, and the
+  // glow under the rail bullet.
+  'lib/pages/bible_timeline_page.dart': 3,
   'lib/main.dart': 4,
   'lib/pages/highlights_page.dart': 4,
   'lib/pages/sermons_page.dart': 5, // re-measured

@@ -2872,8 +2872,8 @@
         "eliezer_son"
       ],
       "yearSystem": "bc",
-      "birthYear": -1525,
-      "deathYear": -1405,
+      "birthYear": -1526,
+      "deathYear": -1406,
       "summary": "Lawgiver of Israel; led the Exodus from Egypt; received the Ten Commandments at Sinai. Author of the Pentateuch (Genesis–Deuteronomy).",
       "summaryZhHans": "以色列的律法颁布者；带领出埃及；在西奈山领受十诫。摩西五经（创世记—申命记）的作者。",
       "summaryZhHant": "以色列的律法頒布者；帶領出埃及；在西奈山領受十誡。摩西五經（創世記—申命記）的作者。",
@@ -8194,6 +8194,18 @@
       "field": "name",
       "from": "Melki",
       "why": "Luke 3:24, the record's only reference, reads \"Melchi\" in bsb, kjv, kjv+s, nasb and leb; \"Melki\" appears in none of the five. The file already names the other man \"Melchi (II)\""
+    },
+    {
+      "id": "moses",
+      "field": "birthYear",
+      "from": -1525,
+      "why": "bible_timeline.json's moses_born states -1526 exactly (approximate:false) on this record's own basis, scripture+thiele, citing this record's own two verses, 1 Kings 6:1 and Exodus 7:7; tools/audit_dates.py check 32b validates that chain (exodus -1446, Exodus 7:7's 80 years). Isaac (-2066) and Jacob (-2006) agree exactly across the two assets, so the offset was isolated to this record, not a convention"
+    },
+    {
+      "id": "moses",
+      "field": "deathYear",
+      "from": -1405,
+      "why": "follows the repair of moses.birthYear; bible_timeline.json's moses_dies states -1406 exactly on the same basis, citing Deuteronomy 34:7's 120 years alongside Exodus 7:7 and 1 Kings 6:1"
     }
   ]
 }

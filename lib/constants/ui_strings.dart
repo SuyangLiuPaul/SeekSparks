@@ -6907,10 +6907,13 @@ const uiStrings = {
     'zh-Hans': '圣经时间轴',
     'zh-Hant': '聖經時間軸',
   },
+  // Names the people because the field matches them, and matching
+  // something the hint does not name is how a reader concludes the
+  // search is broken when it worked.
   'bibleTimelineSearchHint': {
-    'en': 'Search events…',
-    'zh-Hans': '搜索事件…',
-    'zh-Hant': '搜尋事件…',
+    'en': 'Search events and people…',
+    'zh-Hans': '搜索事件与人物…',
+    'zh-Hant': '搜尋事件與人物…',
   },
   'bibleTimelineCount': {
     'en': '{count} events',
@@ -6970,6 +6973,17 @@ const uiStrings = {
     'en': 'Dated by',
     'zh-Hans': '定年所据',
     'zh-Hant': '定年所據',
+  },
+  // The people `bible_timeline.json` files under the event, resolved
+  // against `family_tree.json`. Deliberately NOT "who was there": 17 of
+  // the 88 links name someone the event's own title and description
+  // never mention — Abraham under "Call of Abram", Jeconiah under
+  // "Judah Falls" — because the field files the record, it does not
+  // cast the scene.
+  'timelinePeople': {
+    'en': 'People',
+    'zh-Hans': '相关人物',
+    'zh-Hant': '相關人物',
   },
   // Shown only where the chain runs through Exodus 12:40, whose two
   // texts disagree about where the 430 years were spent. The caveat is

@@ -30,7 +30,9 @@ import 'package:seeksparks/models/timeline_event.dart';
 import 'package:seeksparks/pages/bible_timeline_page.dart';
 import 'package:seeksparks/pages/chronology_page.dart';
 import 'package:seeksparks/providers/main_provider.dart';
+import 'package:seeksparks/services/family_tree_service.dart';
 import 'package:seeksparks/services/timeline_service.dart';
+import 'package:seeksparks/widgets/person_detail_sheet.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -38,13 +40,23 @@ void main() {
   late List<TimelineEvent> events;
   setUpAll(() async {
     events = await TimelineService.instance.loadAll();
+    // Both, and both HERE. `rootBundle.loadString` on an asset that is
+    // not already cached does not complete under the fake clock inside
+    // `testWidgets` — no number of `tester.pump(Duration)` calls
+    // delivers it — so a page awaiting a cold asset renders its
+    // spinner forever and every finder in this file matches nothing.
+    // The page has awaited the family tree since #318 phase 20.
+    await FamilyTreeService.instance.loadAll();
   });
 
-  Future<AppSettings> pump(WidgetTester tester) async {
+  Future<AppSettings> pump(
+    WidgetTester tester, {
+    Size size = const Size(1440, 900),
+  }) async {
     SharedPreferences.setMockInitialValues(<String, Object>{});
     addTearDown(tester.view.reset);
     tester.view.devicePixelRatio = 1.0;
-    tester.view.physicalSize = const Size(1440, 900);
+    tester.view.physicalSize = size;
     final settings = AppSettings();
     await tester.pumpWidget(
       MultiProvider(
@@ -224,6 +236,113 @@ void main() {
     await tester.tap(find.text('打开「圣经年代」'));
     await settle(tester);
     expect(find.byType(ChronologyPage), findsOneWidget);
+
+    await unmount(tester);
+  });
+
+  // ── #318 phase 20: the people the record files ────────────────
+
+  // `personIds` shipped in the asset and was parsed by [TimelineEvent],
+  // and appeared at three lines in all of `lib/` — all three inside the
+  // model. 88 links on 61 events rendered nowhere. The value the row
+  // adds is exactly the part the reader cannot get from the text: this
+  // event's title and description name Moses, and say nothing at all
+  // about the parents who are also filed under it.
+  testWidgets('an open row names the people the text does not', (tester) async {
+    await pump(tester);
+
+    // Filtered by id, not by title: `enterText` puts the query into an
+    // EditableText, so a query equal to the title makes `find.text`
+    // ambiguous between the search box and the row.
+    await tester.enterText(find.byType(TextField), 'moses_born');
+    await settle(tester);
+    await tester.tap(find.text('摩西出生'));
+    await settle(tester);
+
+    expect(find.text('相关人物'), findsOneWidget);
+    for (final name in ['摩西', '约基别', '暗兰']) {
+      expect(find.text(name), findsOneWidget, reason: name);
+    }
+    // The parents are named nowhere else on the row — the chips are the
+    // only place this page has ever said Moses had any.
+    expect(find.textContaining('约基别'), findsOneWidget);
+    expect(find.textContaining('暗兰'), findsOneWidget);
+
+    await unmount(tester);
+  });
+
+  // The chip is a door, so it has to open. The years it opens onto are
+  // the ones the repair produced: the tree shipped -1525..-1405 against
+  // a timeline that stated -1526 and -1406 exactly, on the same basis,
+  // citing the same two verses.
+  testWidgets('a person chip opens the sheet, at the corrected years',
+      (tester) async {
+    await pump(tester);
+
+    await tester.enterText(find.byType(TextField), 'moses_born');
+    await settle(tester);
+    await tester.tap(find.text('摩西出生'));
+    await settle(tester);
+
+    await tester.tap(find.text('摩西'));
+    await settle(tester);
+    expect(find.byType(PersonDetailSheet), findsOneWidget);
+    expect(find.text('公元前 1526 年 – 公元前 1406 年'), findsOneWidget);
+    expect(find.textContaining('1525'), findsNothing);
+
+    await unmount(tester);
+  });
+
+  // THE FALSE ABSENCE THIS FEATURE WOULD HAVE SHIPPED. 17 of the 88
+  // links name someone the event's own title and description never
+  // mention, and the filter read titles, descriptions and ids only.
+  // Jeconiah is the sharpest case: the string 耶哥尼雅 appears in no
+  // event's text in the whole asset, so before the row was searched the
+  // page would have printed his chip and then answered "0 events" to a
+  // reader who typed what it had just shown them.
+  testWidgets('a person the event text never names is still findable',
+      (tester) async {
+    await pump(tester);
+
+    await tester.enterText(find.byType(TextField), '耶哥尼雅');
+    await settle(tester);
+
+    expect(find.text('1 项事件'), findsOneWidget);
+    expect(find.text('犹大亡国；圣殿被毁'), findsOneWidget);
+
+    await unmount(tester);
+  });
+
+  // Nothing in the chip ellipsises, so an over-wide name does not clip —
+  // the Row inside it overflows and paints a stripe. Worst case is the
+  // narrowest window the app admits (992 px, `SmallScreenGate`) at the
+  // top of the Font Size slider, on the longest name in the corpus:
+  // 「约瑟(马利亚之夫)」, ten glyphs and two brackets.
+  testWidgets('the person chips fit at 2x font in the narrowest window',
+      (tester) async {
+    final settings = await pump(tester, size: const Size(992, 900));
+    settings.setFontSize(40.0);
+    await settle(tester);
+
+    await tester.enterText(find.byType(TextField), 'jesus_born');
+    await settle(tester);
+    await tester.tap(find.textContaining('耶稣').first);
+    await settle(tester);
+    expect(tester.takeException(), isNull);
+
+    const names = {'耶稣', '马利亚', '约瑟(马利亚之夫)'};
+    final measured = <String>{};
+    for (final para
+        in tester.renderObjectList<RenderParagraph>(find.byType(RichText))) {
+      final text = para.text.toPlainText();
+      if (!names.contains(text)) continue;
+      measured.add(text);
+      expect(para.getMaxIntrinsicWidth(double.infinity),
+          lessThanOrEqualTo(para.size.width),
+          reason: '"$text" at 40 pt on 992 px');
+    }
+    // Without this the loop above passes by matching nothing.
+    expect(measured, names);
 
     await unmount(tester);
   });
