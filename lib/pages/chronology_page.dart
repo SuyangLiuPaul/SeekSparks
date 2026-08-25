@@ -1819,7 +1819,18 @@ class _EraLedger extends StatelessWidget {
                 label: _s('chronologyEraStated', 'The total the text states'),
                 reference: stated.ref,
                 locale: locale,
-                aside: null,
+                // The Greek states the year in one of the edition's own
+                // verses and the founding the year is measured to in
+                // another, and our numbering folds them into the same
+                // record. Printed here rather than only in the header
+                // note because this is the row that carries the figure:
+                // a reader checking 1 Kings 6:1 in the Greek finds a
+                // date and no temple, and must not conclude the ledger
+                // invented one.
+                aside: stated.joined
+                    ? '${_s('chronologyEraFoundingAt', 'the founding is '
+                        'stated at')} ${stated.foundingAt}'
+                    : null,
                 emphasis: true,
               ),
               _EraRow(

@@ -1068,6 +1068,65 @@ void main() {
         expect(era.summaryFor('zh-Hant'), isNot(contains('1 Kings')));
       });
 
+      // ONE VERSE, ONE UNIT IN THE HEBREW AND FIVE IN THE GREEK.
+      //
+      // Our records are keyed on the Hebrew's numbering, so the Greek's
+      // own 6:1a-d are folded into the single record we call 1 Kings
+      // 6:1. In the Hebrew the year and the building are one sentence.
+      // In the Greek the 440th year is stated in 6:1 and the founding it
+      // is measured to is stated in 6:1c, so the ledger's one total is
+      // read across two of the edition's units. A reader who opens the
+      // Greek at 6:1 sees a date and no temple, and the app must say
+      // where the rest of the claim is rather than let them conclude it
+      // was invented.
+      test('the stated span names the unit that gives the year and the unit '
+          'that gives the founding', () {
+        final era = data.era!;
+        final mt = era.stated['mt']!;
+        expect(mt.units, 1);
+        expect(mt.yearAt, '6:1');
+        expect(mt.foundingAt, '6:1');
+        expect(mt.joined, isFalse);
+
+        final lxx = era.stated['lxx']!;
+        expect(lxx.units, 5);
+        expect(lxx.yearAt, '6:1');
+        expect(lxx.foundingAt, '6:1c');
+        expect(lxx.joined, isTrue);
+      });
+
+      // The disclosure, not the datum. A tradition that reads its total
+      // across two units has to say so somewhere the reader will meet
+      // it; one that does not must not carry a note explaining a split
+      // it does not have.
+      test('only the joined tradition carries the note that explains it', () {
+        final era = data.era!;
+        final join = data.notes.where((n) => n.id == 'era_join').toList();
+        expect(join.length, 1);
+        for (final locale in ['en', 'zh-Hans', 'zh-Hant']) {
+          expect(join.single.textFor(locale), isNotEmpty, reason: locale);
+        }
+        final joined = [
+          for (final e in era.stated.entries)
+            if (e.value.joined) e.key
+        ];
+        expect(joined, ['lxx']);
+      });
+
+      // Generated prose again: the note is written from the measured
+      // units, so if the Greek were ever re-keyed to fewer of them the
+      // sentence would have to change with the number.
+      test('the note quotes the unit count and the founding label', () {
+        final lxx = data.era!.stated['lxx']!;
+        final join = data.notes.firstWhere((n) => n.id == 'era_join');
+        for (final locale in ['en', 'zh-Hans', 'zh-Hant']) {
+          final t = join.textFor(locale);
+          expect(t, contains('${lxx.units}'), reason: locale);
+          expect(t, contains(lxx.foundingAt), reason: locale);
+          expect(t, contains('${lxx.ordinal}'), reason: locale);
+        }
+      });
+
       // Anno Mundi is the axis, and this block deliberately supplies no
       // AM years at all — its figures are durations. A year appearing
       // here would mean somebody had placed these periods on the axis
@@ -1081,6 +1140,81 @@ void main() {
           }
         }
       });
+    });
+  });
+
+  // THE READING TEXT IS THE WITNESS, NOT THE GENERATOR.
+  //
+  // Everything above reads `assets/chronology.json`, which is the
+  // generator's own output — so those tests can only catch the asset
+  // drifting away from the generator, never both drifting away from
+  // scripture. This group re-derives the split from the two shipped
+  // texts and then holds the asset to it. It is deliberately the long
+  // way round: it decodes 16MB to check two records.
+  group('1 Kings 6:1 in the shipped texts', () {
+    late String kjv;
+    late String lxx;
+    late ChronologyStatedSpan statedMt;
+    late ChronologyStatedSpan statedLxx;
+
+    setUpAll(() {
+      String verse(String path) {
+        final rows = json.decode(File(path).readAsStringSync()) as List;
+        return rows.cast<Map<String, dynamic>>().firstWhere((r) =>
+            r['book'] == '1 Kings' &&
+            '${r['chapter']}' == '6' &&
+            '${r['verse']}' == '1')['text'] as String;
+      }
+
+      kjv = verse('assets/kjv.json');
+      lxx = verse('assets/lxxwh.json');
+      final era = ChronologyData.fromJson(
+              json.decode(File('assets/chronology.json').readAsStringSync())
+                  as Map<String, dynamic>)
+          .era!;
+      statedMt = era.stated['mt']!;
+      statedLxx = era.stated['lxx']!;
+    });
+
+    // The edition's own numbering, folded into our record because our
+    // keys are the Hebrew's. `units` counts these and nothing else.
+    Map<String, String> units(String text) {
+      final parts = text.split(RegExp(r'<vs:([^>]+)>'));
+      final labels = [
+        '6:1',
+        for (final m in RegExp(r'<vs:([^>]+)>').allMatches(text)) m.group(1)!,
+      ];
+      return {for (var i = 0; i < parts.length; i++) labels[i]: parts[i]};
+    }
+
+    test('the Hebrew states the year and the building in one unit', () {
+      final u = units(kjv);
+      expect(u.keys, ['6:1']);
+      expect(u['6:1'], contains('four hundred and eightieth year'));
+      expect(u['6:1'], contains('began to build the house'));
+      expect(statedMt.units, u.length);
+      expect(statedMt.yearAt, statedMt.foundingAt);
+    });
+
+    test('the Greek states the year in 6:1 and the founding in 6:1c', () {
+      final u = units(lxx);
+      expect(u.keys, ['6:1', '6:1a', '6:1b', '6:1c', '6:1d']);
+      // The 440th year: "in the fortieth and four-hundredth year".
+      expect(u['6:1'], contains('τεσσαρακοστω και τετρακοσιοστω ετει'));
+      // And having dated it, that unit says nothing about a house being
+      // founded. This is the whole reason the app has to disclose the
+      // split.
+      expect(u['6:1'], isNot(contains('εθεμελιωσεν')));
+      expect(u['6:1c'], contains('εθεμελιωσεν τον οικον κυριου'));
+      // The noun is not the key, and here is why: 6:1a carries it while
+      // stating only that stones were quarried for it.
+      expect(u['6:1a'], contains('εις τον θεμελιον του οικου'));
+      expect(u['6:1a'], isNot(contains('εθεμελιωσεν')));
+
+      expect(statedLxx.units, u.length);
+      expect(statedLxx.yearAt, '6:1');
+      expect(statedLxx.foundingAt, '6:1c');
+      expect(statedLxx.joined, isTrue);
     });
   });
 }

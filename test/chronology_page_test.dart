@@ -496,6 +496,41 @@ void main() {
     await unmount(tester);
   });
 
+  // The Greek reads its one total across two of the edition's own
+  // verses: the 440th year in 6:1, the founding it is measured to in
+  // 6:1c. The header note says so in prose, but this is the row that
+  // prints the figure, and a reader who opens the Greek at the cited
+  // 1 Kings 6:1 meets a date and no temple. Without the aside the
+  // ledger looks like it supplied the temple itself. The Hebrew states
+  // both in one clause and must not carry the aside, or the app would
+  // be reporting a split that text does not have.
+  testWidgets('the founding\'s own verse is named on the Greek total only',
+      (tester) async {
+    await pump(tester, const Size(1440, 900));
+    final era = data.era!;
+    final label = uiStrings['chronologyEraFoundingAt']!['zh-Hans']!;
+
+    final note =
+        data.notes.firstWhere((n) => n.id == 'era_join').textFor('zh-Hans');
+
+    await toLedger(tester, era);
+    expect(era.stated['mt']!.joined, isFalse);
+    expect(find.textContaining(label), findsNothing);
+    expect(find.text(note), findsNothing);
+
+    await tester.tap(find.text('七十士'));
+    await settle(tester);
+    // The prose in the header and the aside on the row are two halves of
+    // one disclosure. The header explains the split; the row says which
+    // verse. Either alone leaves the reader with half the citation.
+    expect(find.text(note), findsOneWidget);
+    await toLedger(tester, era);
+    expect(find.text('$label ${era.stated['lxx']!.foundingAt}'),
+        findsOneWidget);
+
+    await unmount(tester);
+  });
+
   // The figures live in a set-width column so the ledger reads as a
   // column of numbers rather than a ragged list, and a column too narrow
   // for its widest figure would not throw — it would paint over the

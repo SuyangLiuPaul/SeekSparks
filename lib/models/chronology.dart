@@ -272,6 +272,9 @@ class ChronologyStatedSpan {
     required this.ordinal,
     required this.elapsed,
     required this.ref,
+    required this.yearAt,
+    required this.foundingAt,
+    required this.units,
   });
 
   /// The year as the verse writes it — the 480th. An ordinal.
@@ -282,11 +285,29 @@ class ChronologyStatedSpan {
   final int elapsed;
   final String ref;
 
+  /// Which of the edition's own verses states the year, and which states
+  /// the founding the year is measured to. Our records are keyed on the
+  /// Hebrew's numbering, so where the Greek runs several of its own
+  /// verses inside one of ours these are not the same: the Greek gives
+  /// the 440th year at 6:1 and the founding at 6:1c.
+  final String yearAt;
+  final String foundingAt;
+
+  /// How many of the edition's own verses this one verse holds.
+  final int units;
+
+  /// The span is stated across two units rather than in one clause.
+  /// Read, never asserted — see `FOUNDING_VERB` in the generator.
+  bool get joined => yearAt != foundingAt;
+
   static ChronologyStatedSpan fromJson(Map<String, dynamic> j) =>
       ChronologyStatedSpan(
         ordinal: (j['ordinal'] as num?)?.toInt() ?? 0,
         elapsed: (j['elapsed'] as num?)?.toInt() ?? 0,
         ref: (j['ref'] as String?) ?? '',
+        yearAt: (j['yearAt'] as String?) ?? '',
+        foundingAt: (j['foundingAt'] as String?) ?? '',
+        units: (j['units'] as num?)?.toInt() ?? 1,
       );
 }
 

@@ -1106,6 +1106,51 @@ PERIODS_UNNUMBERED = [
 
 TEMPLE_ANCHOR = (6, 1, 0, "1 Kings")   # the 480th / 440th year
 
+# THE ONE TOTAL THIS ERA HAS IS NOT STATED THE SAME WAY IN THE TWO TEXTS,
+# and until this was read the asset printed the two figures side by side
+# as though it were.
+#
+# The Hebrew's 1 Kings 6:1 is one sentence: the 480th year after the
+# exodus, Solomon's fourth, the month Zif, "that he began to build the
+# house of the LORD". Year and building in one clause, so the span it
+# measures is stated whole.
+#
+# The Greek is a different edition of the chapter. 3 Kingdoms 6:1 gives
+# the 440th year and the same regnal date and then STOPS — it never says
+# what was done in that year. The founding stands in the Greek's own
+# 6:1c, "εθεμελιωσεν τον οικον κυριου", which our records fold into the
+# same verse because they are keyed on the Hebrew's numbering. So the
+# Greek's total is read across two of the edition's own units.
+#
+# That is a fact about the text and it is recoverable from the text: the
+# asset carries the edition's own numbering as `<vs:6:1c>` markers,
+# printed to the reader as `(6:1c)` by build_verse_content_spans.dart.
+# Splitting on them recovers the Greek's units without a second source,
+# and the reader can check the finding on our own reading surface.
+SUBVERSE = re.compile(r"<vs:([^>]+)>")
+
+# THE ONLY WORDS TYPED INTO THIS FILE THAT ARE NOT A VERSE ADDRESS. They
+# are a search key, not a figure: the question is which unit of the verse
+# states the founding, and the answer is looked up rather than assumed.
+# Both are the FINITE VERB of the founding clause, and the Greek one has
+# to be, because 6:1a already speaks of stones hewn "εις τον θεμελιον
+# του οικου" — the noun matches a unit that states no founding at all. If
+# either key stops matching, the build stops.
+FOUNDING_VERB = {"mt": "began to build", "lxx": "εθεμελιωσεν"}
+
+
+def verse_units(raw, chapter, verse):
+    """The edition's own verses inside one of ours, each with its label.
+
+    The first unit carries our own reference; every later one carries the
+    label the edition itself gives it.
+    """
+    parts = SUBVERSE.split(raw)
+    units = [(f"{chapter}:{verse}", parts[0])]
+    for i in range(1, len(parts), 2):
+        units.append((parts[i], parts[i + 1]))
+    return units
+
 
 def build_periods(reader):
     """Every period this era states, plus the one total it states."""
@@ -1114,8 +1159,33 @@ def build_periods(reader):
         years, ref = reader.figure(chapter, verse, index, book=book)
         rows.append({"id": pid, "kind": kind, "years": years, "ref": ref,
                      "names": {"en": en, "zh-Hans": zhs, "zh-Hant": zht}})
-    stated, stated_ref = reader.ordinal(*TEMPLE_ANCHOR[:3],
-                                        book=TEMPLE_ANCHOR[3])
+    chapter, verse, _index, book = TEMPLE_ANCHOR
+    stated, stated_ref = reader.ordinal(*TEMPLE_ANCHOR[:3], book=book)
+
+    # WHERE, inside that verse, each half of the claim stands.
+    units = verse_units(reader.verse(chapter, verse, book=book), chapter, verse)
+    # Not "a unit with some ordinal in it" — the unit that yields THIS
+    # figure. A verse dated four ways over five units would otherwise
+    # name whichever one came first.
+    year_at = next(
+        (label for label, body in units
+         if reader.ordinal_runs(body)[:1] == [stated]), None)
+    founding_at = next(
+        (label for label, body in units
+         if FOUNDING_VERB[reader.tradition] in body), None)
+    if year_at is None:
+        raise SystemExit(
+            f"{reader.asset}: {stated_ref} parses an ordinal for the whole "
+            f"verse but for none of its {len(units)} units — the split on "
+            f"the edition's own numbering has gone wrong")
+    if founding_at is None:
+        raise SystemExit(
+            f"{reader.asset}: {stated_ref} never states the founding — "
+            f"{FOUNDING_VERB[reader.tradition]!r} matches none of its "
+            f"{len(units)} units. The era's one total rests on this verse "
+            f"measuring a span that ends at the temple; if the verb has "
+            f"moved, the span has not been read.")
+
     return {
         "rows": rows,
         "counted": sum(r["years"] for r in rows),
@@ -1124,6 +1194,10 @@ def build_periods(reader):
         "statedOrdinal": stated,
         "statedElapsed": stated - 1,
         "statedRef": stated_ref,
+        "yearAt": year_at,
+        "foundingAt": founding_at,
+        "units": len(units),
+        "joined": year_at != founding_at,
     }
 
 
@@ -1277,7 +1351,12 @@ def main():
                      if r["years"]["mt"] != r["years"]["lxx"]]
     era_stated = {
         tid: {"ordinal": p["statedOrdinal"], "elapsed": p["statedElapsed"],
-              "ref": p["statedRef"]}
+              # No "joined" key: it is yearAt != foundingAt, and a
+              # stored duplicate of a derivable fact is a second thing
+              # that can go out of step with the first. The model
+              # derives it.
+              "ref": p["statedRef"], "yearAt": p["yearAt"],
+              "foundingAt": p["foundingAt"], "units": p["units"]}
         for tid, p in (("mt", mt_periods), ("lxx", lxx_periods))
     }
     era_counted = {"mt": mt_periods["counted"], "lxx": lxx_periods["counted"]}
@@ -1619,6 +1698,55 @@ def main():
             },
         })
 
+    # ONE TOTAL, TWO WAYS OF STATING IT. Emitted only for a tradition
+    # whose year and whose founding were found in different units of the
+    # verse, so a text that states both together says nothing here. See
+    # FOUNDING_VERB for how the two are located.
+    for tid in ("mt", "lxx"):
+        st = era_stated[tid]
+        if st["yearAt"] == st["foundingAt"]:
+            continue
+        notes.append({
+            "id": "era_join",
+            "tradition": tid,
+            # No `refs` key: ChronologyNote carries none, and a key
+            # nothing renders is worse than a key nobody wrote. The
+            # reference is named in the prose instead.
+            "personId": None,
+            "text": {
+                "en": (f"This text does not state that span in one place. "
+                       f"{st['ref']} in this app's numbering holds "
+                       f"{st['units']} of the edition's own verses, and the "
+                       f"reading text marks where each of them begins. "
+                       f"The {st['ordinal']}th year stands in "
+                       f"{st['yearAt']}, which dates it to Solomon's fourth "
+                       f"year and the second month and then says nothing "
+                       f"about what was done in it; the founding of the "
+                       f"house is stated in {st['foundingAt']}. So this "
+                       f"total is read across two units, and the ledger "
+                       f"below says which. The other text states the year "
+                       f"and the building in one sentence."),
+                "zh-Hans": (f"本经文并非在一处记下这段年数。"
+                            f"{era_ref_zh['zh-Hans']} 在本应用的编号之下，"
+                            f"含该版本自己的 {st['units']} 节，阅读界面在"
+                            f"每节起处均有标记。第"
+                            f"{st['ordinal']}年记在 {st['yearAt']}，只把它"
+                            f"系于所罗门作王第四年二月，并未说那一年作了什"
+                            f"么；殿的奠基则记在 {st['foundingAt']}。故此"
+                            f"总数是跨两节读出的，下方的统计表注明是哪两"
+                            f"节。另一经文则在一句之内同记年份与建殿。"),
+                "zh-Hant": (f"本經文並非在一處記下這段年數。"
+                            f"{era_ref_zh['zh-Hant']} 在本應用的編號之下，"
+                            f"含該版本自己的 {st['units']} 節，閱讀介面在"
+                            f"每節起處均有標記。第"
+                            f"{st['ordinal']}年記在 {st['yearAt']}，只把它"
+                            f"繫於所羅門作王第四年二月，並未說那一年作了什"
+                            f"麼；殿的奠基則記在 {st['foundingAt']}。故此"
+                            f"總數是跨兩節讀出的，下方的統計表註明是哪兩"
+                            f"節。另一經文則在一句之內同記年份與建殿。"),
+            },
+        })
+
     # WHERE THE CHART STOPS, AND WHY THE REASON CHANGED. Until the
     # ordinal reader existed this note said the chart stopped because the
     # parser could not read 1 Kings 6:1, and that was true. It is no
@@ -1631,6 +1759,23 @@ def main():
     for tid in ("mt", "lxx"):
         if era_residue[tid] <= 0:
             continue
+        # "Carries the span on to Solomon's temple" is a plain claim
+        # about a verse, and in the Greek it was not true of the verse
+        # alone — that text names the year in one unit and the founding
+        # in another. The clause is hedged from the reading, so a text
+        # that states both together is not hedged for the sake of it.
+        joined_en = (f" (read across its {era_stated[tid]['yearAt']} and "
+                     f"{era_stated[tid]['foundingAt']}, see the note above)"
+                     if era_stated[tid]["yearAt"]
+                     != era_stated[tid]["foundingAt"] else "")
+        joined_zh = (f"（跨该版本 {era_stated[tid]['yearAt']} 与 "
+                     f"{era_stated[tid]['foundingAt']} 两节读出，见上）"
+                     if era_stated[tid]["yearAt"]
+                     != era_stated[tid]["foundingAt"] else " ")
+        joined_zht = (f"（跨該版本 {era_stated[tid]['yearAt']} 與 "
+                      f"{era_stated[tid]['foundingAt']} 兩節讀出，見上）"
+                      if era_stated[tid]["yearAt"]
+                     != era_stated[tid]["foundingAt"] else " ")
         notes.append({
             "id": "chart_end",
             "tradition": tid,
@@ -1640,8 +1785,8 @@ def main():
             "personId": None,
             "text": {
                 "en": (f"The chart ends here, and not for want of "
-                       f"numbers. {era_stated[tid]['ref']} carries the "
-                       f"span on to Solomon's temple — the "
+                       f"numbers. {era_stated[tid]['ref']}{joined_en} "
+                       f"carries the span on to Solomon's temple — the "
                        f"{era_stated[tid]['ordinal']}th year after the "
                        f"exodus, {era_stated[tid]['elapsed']} years — but "
                        f"the periods the text states inside it come to "
@@ -1651,7 +1796,7 @@ def main():
                        f"reconstruction, so this era is counted below "
                        f"instead of drawn."),
                 "zh-Hans": (f"本图到此为止，并非因为经文没有数字。"
-                            f"{era_ref_zh['zh-Hans']} 把年数一直带到所罗门建"
+                            f"{era_ref_zh['zh-Hans']}{joined_zh}把年数一直带到所罗门建"
                             f"殿——出埃及后第{era_stated[tid]['ordinal']}年，"
                             f"即{era_stated[tid]['elapsed']}年——但其间经文逐"
                             f"条所记的各段年数合计{era_counted[tid]}年，多出"
@@ -1659,7 +1804,7 @@ def main():
                             f"些年段一段接一段排在轴上，就成了重构；故本图不画"
                             f"这一段，只在下方作统计。"),
                 "zh-Hant": (f"本圖到此為止，並非因為經文沒有數字。"
-                            f"{era_ref_zh['zh-Hant']} 把年數一直帶到所羅門建"
+                            f"{era_ref_zh['zh-Hant']}{joined_zht}把年數一直帶到所羅門建"
                             f"殿——出埃及後第{era_stated[tid]['ordinal']}年，"
                             f"即{era_stated[tid]['elapsed']}年——但其間經文逐"
                             f"條所記的各段年數合計{era_counted[tid]}年，多出"
@@ -2208,6 +2353,13 @@ def main():
           f"{era_residue['mt']} / LXX {era_residue['lxx']}; "
           f"{len(period_splits)} of {len(period_rows)} periods differ "
           f"between the texts ({', '.join(period_splits)})")
+    for tid in ("mt", "lxx"):
+        st = era_stated[tid]
+        joined = st["yearAt"] != st["foundingAt"]
+        print(f"    {tid} {st['ref']}: {st['units']} unit"
+              f"{'' if st['units'] == 1 else 's'}, year at {st['yearAt']}, "
+              f"founding at {st['foundingAt']}"
+              f"{' — READ ACROSS TWO' if joined else ''}")
     # A DISAGREEMENT NOW STOPS THE BUILD, because the chart says so on
     # the reader's own screen. Until this slice nothing rendered the
     # second witness, so a disagreement could be printed here, scroll

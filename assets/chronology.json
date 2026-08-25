@@ -287,6 +287,16 @@
    }
   },
   {
+   "id": "era_join",
+   "tradition": "lxx",
+   "personId": null,
+   "text": {
+    "en": "This text does not state that span in one place. 1 Kings 6:1 in this app's numbering holds 5 of the edition's own verses, and the reading text marks where each of them begins. The 440th year stands in 6:1, which dates it to Solomon's fourth year and the second month and then says nothing about what was done in it; the founding of the house is stated in 6:1c. So this total is read across two units, and the ledger below says which. The other text states the year and the building in one sentence.",
+    "zh-Hans": "本经文并非在一处记下这段年数。列王纪上 6:1 在本应用的编号之下，含该版本自己的 5 节，阅读界面在每节起处均有标记。第440年记在 6:1，只把它系于所罗门作王第四年二月，并未说那一年作了什么；殿的奠基则记在 6:1c。故此总数是跨两节读出的，下方的统计表注明是哪两节。另一经文则在一句之内同记年份与建殿。",
+    "zh-Hant": "本經文並非在一處記下這段年數。列王紀上 6:1 在本應用的編號之下，含該版本自己的 5 節，閱讀介面在每節起處均有標記。第440年記在 6:1，只把它繫於所羅門作王第四年二月，並未說那一年作了什麼；殿的奠基則記在 6:1c。故此總數是跨兩節讀出的，下方的統計表註明是哪兩節。另一經文則在一句之內同記年份與建殿。"
+   }
+  },
+  {
    "id": "chart_end",
    "tradition": "mt",
    "personId": null,
@@ -301,9 +311,9 @@
    "tradition": "lxx",
    "personId": null,
    "text": {
-    "en": "The chart ends here, and not for want of numbers. 1 Kings 6:1 carries the span on to Solomon's temple — the 440th year after the exodus, 439 years — but the periods the text states inside it come to 520, over by 81, with more stretches it gives no number to at all. Laying those bars end to end would be a reconstruction, so this era is counted below instead of drawn.",
-    "zh-Hans": "本图到此为止，并非因为经文没有数字。列王纪上 6:1 把年数一直带到所罗门建殿——出埃及后第440年，即439年——但其间经文逐条所记的各段年数合计520年，多出81年，还有几段全然未记年数。把这些年段一段接一段排在轴上，就成了重构；故本图不画这一段，只在下方作统计。",
-    "zh-Hant": "本圖到此為止，並非因為經文沒有數字。列王紀上 6:1 把年數一直帶到所羅門建殿——出埃及後第440年，即439年——但其間經文逐條所記的各段年數合計520年，多出81年，還有幾段全然未記年數。把這些年段一段接一段排在軸上，就成了重構；故本圖不畫這一段，只在下方作統計。"
+    "en": "The chart ends here, and not for want of numbers. 1 Kings 6:1 (read across its 6:1 and 6:1c, see the note above) carries the span on to Solomon's temple — the 440th year after the exodus, 439 years — but the periods the text states inside it come to 520, over by 81, with more stretches it gives no number to at all. Laying those bars end to end would be a reconstruction, so this era is counted below instead of drawn.",
+    "zh-Hans": "本图到此为止，并非因为经文没有数字。列王纪上 6:1（跨该版本 6:1 与 6:1c 两节读出，见上）把年数一直带到所罗门建殿——出埃及后第440年，即439年——但其间经文逐条所记的各段年数合计520年，多出81年，还有几段全然未记年数。把这些年段一段接一段排在轴上，就成了重构；故本图不画这一段，只在下方作统计。",
+    "zh-Hant": "本圖到此為止，並非因為經文沒有數字。列王紀上 6:1（跨該版本 6:1 與 6:1c 兩節讀出，見上）把年數一直帶到所羅門建殿——出埃及後第440年，即439年——但其間經文逐條所記的各段年數合計520年，多出81年，還有幾段全然未記年數。把這些年段一段接一段排在軸上，就成了重構；故本圖不畫這一段，只在下方作統計。"
    }
   }
  ],
@@ -318,12 +328,18 @@
    "mt": {
     "ordinal": 480,
     "elapsed": 479,
-    "ref": "1 Kings 6:1"
+    "ref": "1 Kings 6:1",
+    "yearAt": "6:1",
+    "foundingAt": "6:1",
+    "units": 1
    },
    "lxx": {
     "ordinal": 440,
     "elapsed": 439,
-    "ref": "1 Kings 6:1"
+    "ref": "1 Kings 6:1",
+    "yearAt": "6:1",
+    "foundingAt": "6:1c",
+    "units": 5
    }
   },
   "counted": {

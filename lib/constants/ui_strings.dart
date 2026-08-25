@@ -6318,6 +6318,16 @@ const uiStrings = {
     'zh-Hant': '另一經文作',
     'en': 'the other text reads',
   },
+  // Shown only where the year and the founding it is measured to stand
+  // in different verses of the edition's own numbering — the Greek's
+  // 6:1 and 6:1c, which our records key on the Hebrew and so fold into
+  // one. The bare sub-verse follows this label; the row's own reference
+  // already names the book.
+  'chronologyEraFoundingAt': {
+    'zh-Hans': '奠基一事记在',
+    'zh-Hant': '奠基一事記在',
+    'en': 'the founding is stated at',
+  },
   'chronologyMoreOn': {
     'zh-Hans': '另有说明（点选查看）',
     'zh-Hant': '另有說明（點選查看）',
