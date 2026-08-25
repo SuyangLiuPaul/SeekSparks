@@ -88,6 +88,30 @@ const double _kHubFrac = 0.115;
 const double _kBandsFrac = 0.285;
 const double _kRimFrac = 0.445;
 
+/// The outermost hairline `_paintRim` draws, as an offset from the rim.
+/// Named because two things depend on it and they must not drift: the
+/// ring itself, and the clearance every axis label is placed against.
+const double kRimOuterRing = 6.0;
+
+/// How far outside the rim the axis may start printing.
+///
+/// This is the whole collision argument, and it is short: every event
+/// label ends at `rRim` or inside it — `planRadialSpokes` drops the
+/// words of any label that would overrun, keeping only its tick — so a
+/// scale label whose box begins here cannot reach one. The three units
+/// past [kRimOuterRing] are so the type does not sit on the hairline.
+const double kAxisLabelClearance = kRimOuterRing + 3.0;
+
+/// How far off its own axis line each end label is swung, in radians.
+///
+/// It swings so as not to print on the line it names. It swings THIS
+/// far — 5.7°, up from the 3.15° it carried until 2026-08-26 — because
+/// the last century tick, AD 2000, is only 26 years from the AD 2026
+/// end, which on this axis is 1.4°: the two labels were fighting for
+/// the same arc. Both ends swing into the wheel's 40° gap, which is
+/// empty by construction, so the room costs nothing.
+const double kAxisEndSwing = 0.10;
+
 /// The arc of the colour wheel each Genesis 10 family occupies.
 ///
 /// (start hue, end hue) in degrees. A family's bands spread across its
@@ -169,6 +193,15 @@ const Map<String, Map<String, String>> wheelStrings = {
     'en': 'Pinch to zoom · tap a band or an event',
   },
   'wheelPresent': {'zh-Hans': '至今', 'zh-Hant': '至今', 'en': 'present'},
+  // The one tick on the axis that names a boundary instead of a year —
+  // see `centuryTickLabel`. 主前/主后 rather than 公元前/公元 because that
+  // is this chart's own register throughout; `ui_strings.dart` uses the
+  // other one elsewhere and the two are not being mixed here.
+  'wheelEraBoundary': {
+    'zh-Hans': '主前｜主后',
+    'zh-Hant': '主前｜主後',
+    'en': 'BC | AD',
+  },
   'wheelFilter': {'zh-Hans': '筛选', 'zh-Hant': '篩選', 'en': 'Filter'},
   'wheelReset': {'zh-Hans': '复位', 'zh-Hant': '復位', 'en': 'Reset'},
   'wheelShadeNote': {
@@ -375,6 +408,33 @@ String yearLabel(int year, String locale) {
   if (!zh) return 'AD $year';
   return locale == 'zh-Hant' ? '主後$year' : '主后$year';
 }
+
+/// What a 500-year tick prints, which is [yearLabel] everywhere except
+/// at zero.
+///
+/// **There is no year zero in the era this chart counts in.** The
+/// Dionysian reckoning runs 1 BC → AD 1 with nothing between, so the
+/// `AD 0` / `主后0` this tick printed until 2026-08-26 named a year that
+/// has never existed — the app stating something untrue on a scholarly
+/// surface, which is the one class of defect that outranks everything
+/// else here.
+///
+/// The internal numbering is astronomical, where 0 does exist and is
+/// 1 BC. That does not rescue the label; it makes it worse, because the
+/// two systems disagree by exactly one year over the whole BC half and
+/// `-586` is printed as `586 BC` throughout, which is the Dionysian
+/// reading. One asset cannot be read both ways.
+///
+/// What the tick actually marks is the boundary. Its neighbours are one
+/// unit either side of it, and on an axis where a degree is 19 years the
+/// half-year the two conventions differ by is not a distance anything
+/// here can express. So it is named as a boundary rather than as a date,
+/// and the two ticks beside it — 500 BC and AD 500 — already say which
+/// way each half runs.
+String centuryTickLabel(int year, String locale) => year == 0
+    ? (wheelStrings['wheelEraBoundary']?[locale] ??
+        wheelStrings['wheelEraBoundary']!['en']!)
+    : yearLabel(year, locale);
 
 // ── what gets drawn ──────────────────────────────────────────────────
 
@@ -1895,22 +1955,57 @@ class _WorldWheelPainter extends CustomPainter {
     final major = Paint()
       ..color = wb.border.withValues(alpha: 0.5)
       ..strokeWidth = 0.9;
-    var stagger = false;
     for (var y = kMinYear; y <= kMaxYear; y += 100) {
       if (y == kMinYear) continue;
       final isMajor = y % 500 == 0;
       final a = angleForSpan(y, kMinYear, kMaxYear);
       final dir = Offset(math.cos(a), math.sin(a));
       canvas.drawLine(c + dir * rHub, c + dir * rRim, isMajor ? major : minor);
-      if (isMajor) {
-        // Stagger over two radii so adjacent labels clear each other.
-        final rr = rRim + (stagger ? 22 : 11);
-        stagger = !stagger;
-        _label(canvas, yearLabel(y, locale), c + dir * rr, wb.mutedText,
-            rimFont / _labelScale(zoom),
-            center: true);
-      }
     }
+    // The stagger this replaces — 11 units, then 22, alternating — was
+    // there "so adjacent labels clear each other", and adjacent 500-year
+    // labels are 26.5° and about 190 canvas units apart: they were never
+    // in any danger from one another. What it did achieve was to put
+    // half the scale INSIDE the rim, on top of the event titles that end
+    // there. See `ringLabelRadius`.
+    for (final l in _axisLabels().where((l) => l.onRing)) {
+      _ringLabel(canvas, c, l.text, l.angle, rRim + kAxisLabelClearance,
+          wb.mutedText, rimFont / _labelScale(zoom));
+    }
+  }
+
+  List<AxisLabel> _axisLabels() => planAxisLabels(
+        minYear: kMinYear,
+        maxYear: kMaxYear,
+        tickLabel: (y) => centuryTickLabel(y, locale),
+        endLabel: (y) => yearLabel(y, locale),
+        endSwing: kAxisEndSwing,
+      );
+
+  /// A label lying along the ring outside the rim, centred on [angle],
+  /// its inner edge on [innerEdge].
+  ///
+  /// Drawn as one straight run rather than character by character. The
+  /// arc labels inside the wheel are bent glyph by glyph because they
+  /// span whole eras; a year label spans six degrees, where bending
+  /// would buy 0.6 canvas units of fidelity and cost every kerning pair
+  /// in the string.
+  void _ringLabel(Canvas canvas, Offset c, String text, double angle,
+      double innerEdge, Color color, double size) {
+    if (text.isEmpty) return;
+    final tp = _painter(text, color, size);
+    final r =
+        ringLabelRadius(rRim: innerEdge, clearance: 0, height: tp.height);
+    // On the lower half the tangent would run the text upside down, so
+    // it is turned the other way — the same rule `_charsOnArc` uses, so
+    // every word outside the hub keeps its top pointing outward.
+    final flip = math.sin(angle) > 0;
+    canvas.save();
+    canvas.translate(
+        c.dx + math.cos(angle) * r, c.dy + math.sin(angle) * r);
+    canvas.rotate(angle + (flip ? -math.pi / 2 : math.pi / 2));
+    tp.paint(canvas, Offset(-tp.width / 2, -tp.height / 2));
+    canvas.restore();
   }
 
   /// A faint groove per band, so an empty stretch still reads as that
@@ -2187,7 +2282,7 @@ class _WorldWheelPainter extends CustomPainter {
     for (final (r, w, alpha) in [
       (rBands + 1.0, 0.6, 0.45),
       (rRim + 3.0, 0.9, 0.55),
-      (rRim + 6.0, 0.4, 0.3),
+      (rRim + kRimOuterRing, 0.4, 0.3),
     ]) {
       canvas.drawArc(
           Rect.fromCircle(center: c, radius: r),
@@ -2216,30 +2311,42 @@ class _WorldWheelPainter extends CustomPainter {
     final paint = Paint()
       ..color = wb.border
       ..strokeWidth = 1;
-    for (final (year, off) in [(kMinYear, -0.055), (kMaxYear, 0.055)]) {
-      final a = angleForSpan(year, kMinYear, kMaxYear);
+    for (final l in _axisLabels().where((l) => !l.onRing)) {
+      final a = angleForSpan(l.year, kMinYear, kMaxYear);
       final dir = Offset(math.cos(a), math.sin(a));
-      canvas.drawLine(c + dir * rHub, c + dir * (rRim + 6), paint);
-      final la = a + off;
-      _label(
+      canvas.drawLine(c + dir * rHub, c + dir * (rRim + kRimOuterRing), paint);
+      final la = l.angle;
+      final size = endFont / _labelScale(zoom);
+      final tp = _painter(l.text, wb.text, size);
+      // Same rule as the century ticks and for the same reason, but
+      // horizontal: these two say what the chart's range IS, they are
+      // the labels a reader goes to first, and at 53° and 37° off the
+      // horizontal there is room for them to stay level. `rRim + 17`
+      // was not enough — 主后2026 reached 3.9 units inside the rim.
+      final r = axialLabelRadius(
+        angle: la,
+        rRim: rRim,
+        width: tp.width,
+        height: tp.height,
+        clearance: kAxisLabelClearance,
+      );
+      tp.paint(
           canvas,
-          yearLabel(year, locale),
-          c + Offset(math.cos(la), math.sin(la)) * (rRim + 17),
-          wb.text,
-          endFont / _labelScale(zoom),
-          center: true);
+          c +
+              Offset(math.cos(la), math.sin(la)) * r -
+              Offset(tp.width / 2, tp.height / 2));
     }
   }
 
-  void _label(Canvas canvas, String text, Offset at, Color color, double size,
-      {bool center = false}) {
-    final tp = TextPainter(
-      text:
-          TextSpan(text: text, style: TextStyle(color: color, fontSize: size)),
-      textDirection: TextDirection.ltr,
-    )..layout();
-    tp.paint(canvas, center ? at - Offset(tp.width / 2, tp.height / 2) : at);
-  }
+  /// A laid-out run. Everything outside the hub now needs the SIZE of
+  /// its text before it can decide where the text goes, so measuring
+  /// and painting are two steps rather than one.
+  TextPainter _painter(String text, Color color, double size) => TextPainter(
+        text: TextSpan(
+            text: text, style: TextStyle(color: color, fontSize: size)),
+        textDirection: TextDirection.ltr,
+        maxLines: 1,
+      )..layout();
 
   @override
   bool shouldRepaint(_WorldWheelPainter old) =>

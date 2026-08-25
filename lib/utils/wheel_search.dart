@@ -222,12 +222,19 @@ RegExp _wildcard(String needle) {
 
 /// Read a year out of whatever a reader typed.
 ///
-/// THE RULE THAT KEEPS THIS HONEST: the parser accepts everything the
-/// wheel PRINTS. `yearLabel` renders `586 BC`, `AD 33`, `主前586` and
+/// THE RULE THAT KEEPS THIS HONEST: the parser accepts every YEAR the
+/// wheel prints. `yearLabel` renders `586 BC`, `AD 33`, `主前586` and
 /// `主後33`, so all four come back, in every locale — pinned by a test
 /// that round-trips all 588 events through both functions. Anything
 /// else it accepts (`-586`, `公元前586`, `b.c. 586`) is a courtesy on
 /// top of that floor.
+///
+/// ONE THING THE WHEEL PRINTS IS NOT A YEAR AND IS NOT PARSED: the tick
+/// at the origin says `BC | AD` / `主前｜主后`, because the era it counts
+/// in has no year zero (see `centuryTickLabel`). It names a boundary,
+/// no record carries that value, and there is nothing for a reader to
+/// search for — so the exemption costs nothing and is written down here
+/// rather than left for the next round-trip test to trip over.
 ///
 /// Returns 0, 1 or 2 years. Two when the reader typed a bare number
 /// with no era: that is genuinely ambiguous on a chart running from

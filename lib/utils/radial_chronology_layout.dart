@@ -657,6 +657,157 @@ List<PlannedSpoke> planRadialSpokes({
   return out;
 }
 
+// ── the axis's own labels, outside the rim ───────────────────────────
+//
+// The century ticks and the two axis ends are not data; they are the
+// SCALE, and until 2026-08-26 both families were placed by a bare
+// constant — `rRim + 11`, alternating with `rRim + 22`, and `rRim + 17`
+// — that knew nothing about the string it was positioning.
+//
+// A constant cannot be right here, and the reason is worth stating
+// because it is not obvious: a scale label is drawn HORIZONTALLY, so it
+// is not rotated with the ray it sits on, so how far it reaches back
+// towards the wheel's centre depends on WHICH WAY THE RAY POINTS. At
+// twelve o'clock only the label's height points inward; at nine o'clock
+// its whole width does. Measured in the shipped faces over the real
+// corpus, 主前2500 at ten past ten reached **12.3 canvas units inside
+// the rim** and printed straight through the event titles ending there
+// — 8 of the 12 century labels intruded at 900 px in Chinese, 192 of
+// 432 across a 3-locale × 3-size × 4-zoom sweep, producing 113 pairs of
+// overlapping ink. The photographed instance was 主前3500 mashed into
+// 最早的轮式车辆, which is a *wheel-native* event at exactly -3500: a
+// year that is a multiple of 500 puts an event's label at precisely the
+// century label's own angle.
+//
+// [axialLabelRadius] is the honest form of that constant. It is the
+// support function of an axis-aligned box in the ray's direction, so it
+// is exact rather than a margin somebody guessed.
+
+/// Where the CENTRE of a horizontal label must sit on the ray [angle]
+/// for the whole of its [width] × [height] box to stay at least
+/// [clearance] outside [rRim].
+///
+/// The box is axis-aligned — a year on a scale reads horizontally — so
+/// its reach back towards the centre is `w/2·|cos| + h/2·|sin|`, which
+/// swings between h/2 at the top of the wheel and w/2 at its side. That
+/// is the whole content of this function, and it is why one constant
+/// could never serve both.
+double axialLabelRadius({
+  required double angle,
+  required double rRim,
+  required double width,
+  required double height,
+  required double clearance,
+}) =>
+    rRim +
+    clearance +
+    (width / 2) * math.cos(angle).abs() +
+    (height / 2) * math.sin(angle).abs();
+
+/// Where the centre of a label lying ALONG the ring must sit, so its
+/// run clears [rRim] by [clearance].
+///
+/// WHY THE CENTURY LABELS RUN ALONG THE RING AND THE AXIS ENDS DO NOT.
+/// Horizontal placement was tried first and does not fit. [rRim] is
+/// 0.445 of the canvas side and the painting is clipped at 0.5 of it, so
+/// there are only `side × 0.055` units outside the rim — 38.5 at a 700 px
+/// pane, 49.5 at 900 px — while the label's size is fixed in pixels and
+/// does not shrink with the canvas. A horizontal 主后1000 sits at 175.5°,
+/// very nearly due left, where it needs `clearance + w/2` of radial room
+/// before it starts and another `w/2` after it: 53.6 units at 900 px
+/// against the 49.5 available. It cannot be made to fit by moving it,
+/// only by shrinking it, and shrinking axis type is the defect #315 spent
+/// ten mechanisms closing.
+///
+/// A run laid along the ring needs only `clearance + h/2` inward and
+/// `h/2 + w²/8r` outward — 16.5 and 8.1 at 900 px — because its width is
+/// spent tangentially, where the ticks are 26.5° and about 190 units
+/// apart and there is nothing to hit. The axis ENDS keep horizontal
+/// placement: there are two of them, they state the chart's range, they
+/// are the labels most often read, and they sit at 53° and 37° off the
+/// horizontal where [axialLabelRadius] does fit.
+double ringLabelRadius({
+  required double rRim,
+  required double clearance,
+  required double height,
+}) =>
+    rRim + clearance + height / 2;
+
+/// The farthest any corner of a ring-laid run gets from the centre.
+///
+/// The run is drawn straight, not bent character by character — at
+/// 44.6 units on a radius of 417 the chord departs from the arc by
+/// 0.6 units, which no reader can see and which costs none of the
+/// kerning that per-character placement throws away. Its ENDS are
+/// therefore further out than its middle, and this is that distance.
+double ringLabelOuterReach({
+  required double radius,
+  required double width,
+  required double height,
+}) =>
+    math.sqrt(radius * radius + (width * width) / 4) + height / 2;
+
+/// One label the axis prints outside the rim.
+class AxisLabel {
+  const AxisLabel({
+    required this.year,
+    required this.angle,
+    required this.text,
+    required this.onRing,
+  });
+
+  final int year;
+
+  /// Where it is drawn, which for the two ends is their axis line's
+  /// angle plus the swing that keeps the words off the line.
+  final double angle;
+  final String text;
+
+  /// True when it lies along the ring — see [ringLabelRadius] for why
+  /// the century ticks do and the two ends do not.
+  final bool onRing;
+}
+
+/// Every word the axis prints outside the rim, in one list.
+///
+/// This exists for the same reason [planRadialSpokes] does. Canvas text
+/// leaves no widget, no semantics node and nothing a `find.text` can
+/// reach, so for as long as the painter decided where a label went, the
+/// decision sat in the one place no test could read — and it was wrong
+/// for years in both families at once. Returning the plan means a test
+/// reads what the page runs instead of a copy of it that can only ever
+/// agree with itself.
+///
+/// [tickLabel] and [endLabel] are passed in rather than called here so
+/// this file stays free of the page's strings and its locale.
+List<AxisLabel> planAxisLabels({
+  required int minYear,
+  required int maxYear,
+  required String Function(int year) tickLabel,
+  required String Function(int year) endLabel,
+  required double endSwing,
+}) {
+  final out = <AxisLabel>[];
+  for (var y = minYear; y <= maxYear; y += 100) {
+    if (y == minYear || y % 500 != 0) continue;
+    out.add(AxisLabel(
+      year: y,
+      angle: angleForSpan(y, minYear, maxYear),
+      text: tickLabel(y),
+      onRing: true,
+    ));
+  }
+  for (final (y, swing) in [(minYear, -endSwing), (maxYear, endSwing)]) {
+    out.add(AxisLabel(
+      year: y,
+      angle: angleForSpan(y, minYear, maxYear) + swing,
+      text: endLabel(y),
+      onRing: false,
+    ));
+  }
+  return out;
+}
+
 // ── the arc labels, the last family no test could read ───────────────
 //
 // The rim's labels have been planned out here since phase 11. The band
