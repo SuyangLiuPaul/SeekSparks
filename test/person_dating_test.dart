@@ -69,10 +69,15 @@ void main() {
       expect(abraham.displayYears('en').startsWith('c.'), isFalse);
     });
 
+    /// "In both scripts" used to mean one string handed to both, and
+    /// this assertion said so out loud: it passed `zh-Hant` and expected
+    /// 约, which is the Simplified form. The hedge is a different word
+    /// in each script; see `test/date_hedge_test.dart`.
     test('an unsourced year is hedged, in both scripts', () {
       final rebekah = _person(kind: 'approximate', birth: -2030, death: -1900);
       expect(rebekah.displayYears('en'), 'c. 2030 BC – 1900 BC');
-      expect(rebekah.displayYears('zh-Hant'), '约 公元前 2030 年 – 公元前 1900 年');
+      expect(rebekah.displayYears('zh-Hans'), '约 公元前 2030 年 – 公元前 1900 年');
+      expect(rebekah.displayYears('zh-Hant'), '約 公元前 2030 年 – 公元前 1900 年');
     });
 
     test('Anno Mundi records are unaffected by the hedge', () {
@@ -368,10 +373,12 @@ void main() {
 
     test('the hedge is worded exactly as the family tree words it', () {
       // Same generator, same two surfaces, same vocabulary — a reader
-      // moving between them must not have to learn a second one.
+      // moving between them must not have to learn a second one. What
+      // that does NOT mean is one Chinese string for both scripts,
+      // which is what these two lines used to assert.
       expect(parse('conventional').displayYear('en'), 'c. 4000 BC');
       expect(parse('conventional').displayYear('zh-Hans'), '约 公元前 4000 年');
-      expect(parse('conventional').displayYear('zh-Hant'), '约 公元前 4000 年');
+      expect(parse('conventional').displayYear('zh-Hant'), '約 公元前 4000 年');
       expect(parse('scripture+thiele').displayYear('en'), '4000 BC');
       expect(parse('scripture+thiele').displayYear('zh-Hans'), '公元前 4000 年');
     });

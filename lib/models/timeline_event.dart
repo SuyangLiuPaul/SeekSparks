@@ -1,5 +1,9 @@
 /// One row in the Bible timeline. Loaded from
 /// `assets/bible_timeline.json`.
+library;
+
+import 'package:seeksparks/utils/date_hedge.dart';
+
 class TimelineEvent {
   /// Stable id (kebab/snake-case).
   final String id;
@@ -111,10 +115,9 @@ class TimelineEvent {
   /// draw on the same generator and a reader moving between the family
   /// tree and the timeline must not have to learn a second vocabulary.
   String displayYear(String locale) {
-    final isZh = locale.startsWith('zh');
-    final plain = _plainYear(year, isZh);
+    final plain = _plainYear(year, locale.startsWith('zh'));
     if (!approximate) return plain;
-    return isZh ? '约 $plain' : 'c. $plain';
+    return '${approximatePrefix(locale)}$plain';
   }
 
   /// The Septuagint's year in the same words, or null where there is

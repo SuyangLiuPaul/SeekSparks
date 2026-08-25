@@ -3,6 +3,10 @@
 /// the canonical Adam → Jesus line per Matthew 1 and Luke 3 (~70
 /// people). Extended over time by editing the JSON; the model and UI
 /// don't need to change to absorb new entries.
+library;
+
+import 'package:seeksparks/utils/date_hedge.dart';
+
 class BiblicalPerson {
   /// Stable kebab/snake-case id used by parent / spouse / child
   /// references in this same dataset. Never user-facing.
@@ -165,10 +169,7 @@ class BiblicalPerson {
     }
     String fmt(int? y) {
       if (y == null) return '';
-      if (am) {
-        if (isZh) return '创世后 $y 年';
-        return 'AM $y';
-      }
+      if (am) return annoMundiLabel(y, locale);
       if (y < 0) {
         // BC → 公元前 (Simplified) / 公元前 (Traditional, same chars)
         if (isZh) return '公元前 ${-y} 年';
@@ -193,7 +194,7 @@ class BiblicalPerson {
       return '';
     }
     if (datingKind == 'approximate') {
-      range = isZh ? '约 $range' : 'c. $range';
+      range = '${approximatePrefix(locale)}$range';
     }
     if (lifespan != null) {
       final yrs = locale == 'zh-Hans'

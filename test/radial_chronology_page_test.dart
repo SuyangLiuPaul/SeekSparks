@@ -38,6 +38,7 @@ import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/wheel_history.dart';
 import 'package:seeksparks/pages/radial_chronology_page.dart';
 import 'package:seeksparks/providers/main_provider.dart';
+import 'package:seeksparks/utils/wheel_search.dart' show kWheelNearestPerYear;
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -289,6 +290,147 @@ void main() {
     expect(biggest, greaterThan(5),
         reason: 'the crowded stretches are the whole point; a sweep that '
             'only found pairs is not reaching them');
+    await unmount(tester);
+  });
+
+  /// FIND — the half of BibleWorks' Timeline command line this page did
+  /// not have.
+  ///
+  /// `wheel_search_test.dart` pins the search itself, exhaustively and
+  /// against the real asset. What it cannot answer is whether the box
+  /// on the page is WIRED to it, and that is where this feature can
+  /// still be wholly broken with every other test green: the sheet has
+  /// to open, the rows have to be tappable, and the tap has to land on
+  /// the right record's detail sheet.
+  ///
+  /// Rendered in the shipped default (zh-Hans), so "Magna Carta" also
+  /// exercises the cross-locale path end to end — the query is English,
+  /// every string on screen is Chinese, and the row still has to be
+  /// there and still has to open the right thing.
+  /// Several frames, not one, and both reasons bit while this was
+  /// written. The find sheet is opened from the AppBar, OUTSIDE the
+  /// page's own `FutureBuilder`, so it resolves the data again: frame
+  /// one builds the route with nothing yet and the already-completed
+  /// future arrives in a microtask after it. And a route that has been
+  /// popped is only taken out of the tree once its exit animation has
+  /// finished AND the frame after that has run — so a single pump sees
+  /// the old sheet still there and reads it as "the tap did nothing".
+  Future<void> settle(WidgetTester tester) async {
+    for (var i = 0; i < 6; i++) {
+      await tester.pump(const Duration(milliseconds: 150));
+    }
+  }
+
+  Future<void> openFind(WidgetTester tester) async {
+    await tester.tap(find.byIcon(Icons.search));
+    await settle(tester);
+  }
+
+  String sheetText(WidgetTester tester) => tester
+      .renderObjectList<RenderParagraph>(find.byType(RichText))
+      .map((p) => p.text.toPlainText())
+      .join('\n');
+
+  testWidgets('the find box opens and teaches what it can be asked',
+      (tester) async {
+    await pump(tester, const Size(1440, 900));
+    await openFind(tester);
+    expect(tester.takeException(), isNull,
+        reason: 'opening the box threw — `WbType.of` watches, and the '
+            'AppBar action is a tap handler, not a build');
+    expect(find.byKey(const ValueKey('wheelFindField')), findsOneWidget);
+
+    // The status line always says something, and with nothing typed it
+    // says what is searchable. The counts are read from the asset so
+    // this cannot drift into a hardcoded advertisement.
+    final text = sheetText(tester);
+    for (final n in [
+      data.events.length,
+      data.powers.length,
+      data.nations.length,
+      data.streams.length,
+    ]) {
+      expect(text, contains('$n'),
+          reason: 'the box does not tell the reader it can search $n of '
+              'something');
+    }
+    await unmount(tester);
+  });
+
+  testWidgets('an English query opens the Chinese record it found',
+      (tester) async {
+    await pump(tester, const Size(1440, 900));
+    await openFind(tester);
+
+    final event =
+        data.events.firstWhere((e) => e.id == 'magna_carta', orElse: () {
+      // Identified by its English title rather than its id, so a data
+      // edit that renames the record fails loudly here instead of
+      // quietly selecting a different one.
+      return data.events.firstWhere(
+          (e) => (e.titles['en'] ?? '').contains('Magna Carta'));
+    });
+    final zh = event.titles['zh-Hans']!;
+    expect(zh, isNotEmpty);
+
+    await tester.enterText(
+        find.byKey(const ValueKey('wheelFindField')), 'Magna Carta');
+    await settle(tester);
+
+    // The row prints the title the reader is shown, and the English
+    // string it actually matched — a row whose words do not contain
+    // what was typed reads as a wrong result unless it explains itself.
+    final listed = sheetText(tester);
+    expect(listed, contains(zh));
+    expect(listed, contains('Magna Carta'));
+    expect(listed, contains(yearLabel(event.year, 'zh-Hans')));
+
+    await tester.tap(find.text(zh).first);
+    await settle(tester);
+    expect(tester.takeException(), isNull);
+
+    // The search sheet is gone and the record's own sheet is open. The
+    // field is the search sheet's, so its absence is what proves the
+    // swap rather than the mere presence of some bottom sheet.
+    expect(find.byKey(const ValueKey('wheelFindField')), findsNothing);
+    expect(find.byType(BottomSheet), findsOneWidget);
+    final opened = sheetText(tester);
+    expect(opened, contains(zh));
+    expect(opened, contains(yearLabel(event.year, 'zh-Hans')),
+        reason: 'the sheet that opened is not the record that was tapped');
+    await unmount(tester);
+  });
+
+  testWidgets('a year finds what happened in it, and says what is only near',
+      (tester) async {
+    await pump(tester, const Size(1440, 900));
+    await openFind(tester);
+    await tester.enterText(
+        find.byKey(const ValueKey('wheelFindField')), '主前586');
+    await settle(tester);
+
+    final text = sheetText(tester);
+    // The year the query was read as, echoed back. A search box that
+    // reads "主前586" as a year and does not say so leaves the reader
+    // unable to tell a year query from a word query.
+    expect(text, contains('主前586'));
+    // The near-miss rows are labelled and their number is disclosed —
+    // a cap on a sorted list is a silent WHERE clause otherwise.
+    expect(text, contains('年份相近'));
+    expect(text, contains('$kWheelNearestPerYear'));
+    expect(tester.takeException(), isNull);
+    await unmount(tester);
+  });
+
+  testWidgets('a query nothing matches says so, in the reader\'s words',
+      (tester) async {
+    await pump(tester, const Size(1440, 900));
+    await openFind(tester);
+    await tester.enterText(
+        find.byKey(const ValueKey('wheelFindField')), 'qqzzxx');
+    await settle(tester);
+    expect(sheetText(tester), contains('没有找到「qqzzxx」'));
+    expect(tester.takeException(), isNull);
     await unmount(tester);
   });
 }

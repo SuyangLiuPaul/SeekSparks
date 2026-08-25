@@ -823,3 +823,39 @@ List<int> packIntoRings(
   }
   return out;
 }
+
+/// Where to move the scene so a point on the wheel sits under the middle
+/// of the viewport, at the zoom the reader has already chosen.
+///
+/// Search has to do more than name a record: on a chart this dense,
+/// telling a reader "it is on the wheel somewhere" is barely better
+/// than not finding it. BibleWorks' timeline scrolls to the date
+/// (`bwh39`); the radial equivalent is to pan the found spoke into the
+/// middle. Zoom is deliberately NOT changed — the reader set it, and a
+/// search that silently rescales the chart is a search that loses
+/// their place.
+///
+/// [px], [py] are in scene coordinates: the `InteractiveViewer`'s child
+/// fills the viewport, so the square canvas is centred inside it and a
+/// point at radius r and angle a is at
+/// `(viewW / 2 + r cos a, viewH / 2 + r sin a)`.
+///
+/// The result is CLAMPED to the range `InteractiveViewer` itself
+/// enforces on a drag, because the transformation controller can be set
+/// to anything and an unclamped jump would leave the canvas half off
+/// the frame until the reader's next gesture snapped it back. At a
+/// scale of 1 or less the whole canvas already fits, so there is
+/// nothing to pan to and the identity is returned — which is also the
+/// honest answer to "centre this" when it is already all visible.
+({double dx, double dy}) focusTranslation({
+  required double px,
+  required double py,
+  required double scale,
+  required double viewW,
+  required double viewH,
+}) {
+  if (scale <= 1.0) return (dx: 0, dy: 0);
+  final tx = (viewW / 2 - scale * px).clamp(viewW * (1 - scale), 0.0);
+  final ty = (viewH / 2 - scale * py).clamp(viewH * (1 - scale), 0.0);
+  return (dx: tx, dy: ty);
+}

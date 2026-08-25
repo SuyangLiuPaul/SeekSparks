@@ -9,12 +9,14 @@ import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/wheel_history.dart';
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/services/url_sync_service.dart';
+import 'package:seeksparks/utils/date_hedge.dart';
 import 'package:seeksparks/utils/jump_to_reference.dart' as jumper;
 import 'package:seeksparks/utils/navigate_to_reader.dart';
 import 'package:seeksparks/utils/radial_chronology_layout.dart';
 import 'package:seeksparks/utils/reference_parser.dart';
 import 'package:seeksparks/utils/version_mapper.dart'
     show localizedReferenceLabel;
+import 'package:seeksparks/utils/wheel_search.dart';
 import 'package:seeksparks/widgets/home_icon_button.dart';
 import 'package:seeksparks/widgets/language_switcher_button.dart';
 import 'package:seeksparks/widgets/localized_back_button.dart';
@@ -229,6 +231,58 @@ const Map<String, Map<String, String>> wheelStrings = {
     'zh-Hant': '通行年份 · 非經文所載',
     'en': 'conventional date, not stated in scripture',
   },
+  // ── find ────────────────────────────────────────────────────────────
+  'wheelFind': {'zh-Hans': '查找', 'zh-Hant': '查找', 'en': 'Find'},
+  'wheelFindHint': {
+    'zh-Hans': '名称、经文或年份',
+    'zh-Hant': '名稱、經文或年份',
+    'en': 'A name, a verse or a year',
+  },
+  // The empty box has to teach what the box can answer, or a reader
+  // types one word, gets nothing, and concludes the wheel is thin.
+  // {e} {p} {n} {b} are the corpus's own counts, read from the asset.
+  'wheelFindTeach': {
+    'zh-Hans': '可查 {e} 件大事、{p} 个政权、创世记 10 章的 {n} 族与 {b} 条带。'
+        '年份可输入「主前586」「586 BC」或「-586」；只输数字则两个纪元都查。',
+    'zh-Hant': '可查 {e} 件大事、{p} 個政權、創世記 10 章的 {n} 族與 {b} 條帶。'
+        '年份可輸入「主前586」「586 BC」或「-586」；只輸數字則兩個紀元都查。',
+    'en': 'Searches {e} events, {p} powers, the {n} nations of Genesis 10 '
+        'and {b} bands. For a year type 586 BC, -586 or 主前586; a bare '
+        'number searches both eras.',
+  },
+  'wheelFindNone': {
+    'zh-Hans': '没有找到「{q}」。',
+    'zh-Hant': '沒有找到「{q}」。',
+    'en': 'Nothing here matches “{q}”.',
+  },
+  'wheelFindCount': {
+    'zh-Hans': '{n} 项',
+    'zh-Hant': '{n} 項',
+    'en': '{n} results',
+  },
+  // The one cap in the search, said out loud. A sorted list that stops
+  // without saying so is a hidden filter.
+  'wheelFindNearNote': {
+    'zh-Hans': '含年份最接近的 {n} 件大事，各自年份如下。',
+    'zh-Hant': '含年份最接近的 {n} 件大事，各自年份如下。',
+    'en': 'Includes the {n} events nearest that year; each row shows its own.',
+  },
+  'wheelFindNear': {'zh-Hans': '年份相近', 'zh-Hant': '年份相近', 'en': 'nearby'},
+  'wheelFindSpan': {'zh-Hans': '横跨该年', 'zh-Hant': '橫跨該年', 'en': 'spans it'},
+  'wheelFindInDesc': {
+    'zh-Hans': '见于说明',
+    'zh-Hant': '見於說明',
+    'en': 'in the description',
+  },
+  'wheelFindHiddenBand': {
+    'zh-Hans': '该带已隐藏 · 打开即显示',
+    'zh-Hant': '該帶已隱藏 · 開啟即顯示',
+    'en': 'band hidden — opening this shows it again',
+  },
+  'wheelKindEvent': {'zh-Hans': '大事', 'zh-Hant': '大事', 'en': 'event'},
+  'wheelKindPower': {'zh-Hans': '政权', 'zh-Hant': '政權', 'en': 'power'},
+  'wheelKindNation': {'zh-Hans': '列族', 'zh-Hant': '列族', 'en': 'nation'},
+  'wheelKindBand': {'zh-Hans': '带', 'zh-Hant': '帶', 'en': 'band'},
 };
 
 /// Type size ON SCREEN at rest, in logical pixels.
@@ -280,11 +334,27 @@ double _measureChars(String text, double size) {
 /// Legibility and density both improve, which is what zooming is for.
 double _labelScale(double zoom) => math.pow(zoom, 0.5).toDouble();
 
-/// BC 586 / 主前586.
+/// A year as this page prints it: `586 BC` / `主前586` / `AD 33` / `主後33`.
+///
+/// 后 and 後 ARE NOT THE SAME CHARACTER outside Simplified — 后 is a
+/// queen, 後 is "after" — so one `startsWith('zh')` test printed
+/// Simplified 主后 to Traditional readers on 382 of the 491 events, on
+/// the 27 powers whose span touches AD, and on the axis range in the
+/// hub. The app's own `ui_strings.dart` already distinguishes them
+/// (主后 7-10 世紀 against 主後 7-10 世紀 at :1045/:1047), so this was a
+/// slip and not a house style. Same defect, same fix, for 约 / 約 —
+/// [approximatePrefix], on the 161 events the references do not
+/// settle. That one had been made in two more places, so it now lives
+/// once, in `date_hedge.dart`.
+///
+/// [parseWheelYears] accepts everything this function emits, in every
+/// locale, and a test round-trips all 491 events through both — the
+/// search box must never fail to find a year the chart is showing.
 String yearLabel(int year, String locale) {
   final zh = locale.startsWith('zh');
   if (year < 0) return zh ? '主前${-year}' : '${-year} BC';
-  return zh ? '主后$year' : 'AD $year';
+  if (!zh) return 'AD $year';
+  return locale == 'zh-Hant' ? '主後$year' : '主后$year';
 }
 
 // ── what gets drawn ──────────────────────────────────────────────────
@@ -403,6 +473,10 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
 
   Size? _viewportSize;
 
+  /// The side of the square canvas at the last layout — what turns a
+  /// year into a point search can pan to.
+  double _side = 0;
+
   void _resetZoom() => _viewer.value = Matrix4.identity();
 
   @override
@@ -410,6 +484,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
     UrlSyncService.claimUrl(null);
     _viewer.removeListener(_onZoom);
     _viewer.dispose();
+    _findCtl.dispose();
     super.dispose();
   }
 
@@ -429,6 +504,11 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
         leading: const LocalizedBackButton(),
         title: Text(_s('wheelTitle', 'World History Wheel', locale)),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.search),
+            tooltip: _s('wheelFind', 'Find', locale),
+            onPressed: () => _showSearch(context, locale),
+          ),
           IconButton(
             icon: const Icon(Icons.filter_list),
             tooltip: _s('wheelFilter', 'Filter', locale),
@@ -491,6 +571,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
     return LayoutBuilder(builder: (context, box) {
       _viewportSize = Size(box.maxWidth, box.maxHeight);
       final side = math.min(box.maxWidth, box.maxHeight);
+      _side = side;
       final hubD = side * _kHubFrac * 2;
       final rBands = side * _kBandsFrac;
       final rRim = side * _kRimFrac;
@@ -894,6 +975,360 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
     );
   }
 
+  // ── find ───────────────────────────────────────────────────────────
+
+  /// Kept on the state, not on the sheet, so a reader who closes the
+  /// box to look at what it found still has their query when they
+  /// reopen it.
+  final _findCtl = TextEditingController();
+
+  String _fill(String key, String fallback, String locale,
+      Map<String, Object> values) {
+    var out = _s(key, fallback, locale);
+    for (final e in values.entries) {
+      out = out.replaceAll('{${e.key}}', '${e.value}');
+    }
+    return out;
+  }
+
+  String _kindLabel(WheelHitKind kind, String locale) => switch (kind) {
+        WheelHitKind.event => _s('wheelKindEvent', 'event', locale),
+        WheelHitKind.power => _s('wheelKindPower', 'power', locale),
+        WheelHitKind.nation => _s('wheelKindNation', 'nation', locale),
+        WheelHitKind.stream => _s('wheelKindBand', 'band', locale),
+      };
+
+  /// The year column of a result row.
+  ///
+  /// A power gets its whole span, not just its start: half the reason
+  /// to search a year is to see what was standing at the time, and
+  /// "Babylon 626 BC" answers a different question from
+  /// "Babylon 626–539 BC".
+  String _hitYears(WheelHit hit, WheelHistoryData data, String locale) {
+    if (hit.kind == WheelHitKind.power) {
+      final p = _find(data.powers, (p) => p.id == hit.id);
+      if (p != null) {
+        final end = p.ongoing
+            ? _s('wheelPresent', 'present', locale)
+            : yearLabel(p.end!, locale);
+        return '${yearLabel(p.start, locale)} – $end';
+      }
+    }
+    return hit.year == null ? '' : yearLabel(hit.year!, locale);
+  }
+
+  /// Why this row is in the list, when the title alone does not show it.
+  String _hitVia(WheelHit hit, String locale) => switch (hit.via) {
+        WheelHitVia.otherLocale => hit.matched,
+        WheelHitVia.description => _s('wheelFindInDesc', 'in the description',
+            locale),
+        WheelHitVia.reference => localizedReferenceLabel(hit.matched, locale),
+        WheelHitVia.yearSpan => _s('wheelFindSpan', 'spans it', locale),
+        WheelHitVia.yearNear => _s('wheelFindNear', 'nearby', locale),
+        _ => '',
+      };
+
+  static T? _find<T>(List<T> xs, bool Function(T) test) {
+    for (final x in xs) {
+      if (test(x)) return x;
+    }
+    return null;
+  }
+
+  /// The command line BibleWorks' Timeline has and this wheel did not.
+  ///
+  /// 55 of 491 events carry a label at rest, so before this there was
+  /// no way to reach a record you could not already see. The search
+  /// itself is `searchWheel`, kept pure and tested; everything here is
+  /// presentation and the one thing presentation must get right — a
+  /// row has to say WHY it matched when the title does not show it.
+  void _showSearch(BuildContext context, String locale) {
+    final wb = WbColors.of(context);
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: wb.paneBg,
+      shape: const RoundedRectangleBorder(),
+      isScrollControlled: true,
+      builder: (sheet) => FutureBuilder<WheelHistoryData>(
+        future: _future,
+        builder: (c, snap) {
+          final data = snap.data;
+          if (data == null) return const SizedBox(height: 120);
+          final t = WbType.of(c);
+          final colors = _colorsFor(data);
+          return StatefulBuilder(builder: (c, setSheet) {
+            final query = _findCtl.text;
+            final result = searchWheel(
+              data: data,
+              query: query,
+              locale: locale,
+              axisEnd: kMaxYear,
+              hiddenStreams: _hidden,
+            );
+            return Padding(
+              padding: EdgeInsets.only(
+                  bottom: MediaQuery.viewInsetsOf(sheet).bottom),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                    maxHeight: MediaQuery.of(sheet).size.height * 0.7),
+                child: Column(mainAxisSize: MainAxisSize.min, children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+                    child: TextField(
+                      key: const ValueKey('wheelFindField'),
+                      controller: _findCtl,
+                      autofocus: true,
+                      style:
+                          TextStyle(color: wb.text, fontSize: t.scaled(13.5)),
+                      decoration: InputDecoration(
+                        isDense: true,
+                        prefixIcon:
+                            Icon(Icons.search, size: t.scaled(17)),
+                        prefixIconConstraints: BoxConstraints(
+                            minWidth: t.scaled(34), minHeight: t.scaled(20)),
+                        hintText:
+                            _s('wheelFindHint', 'A name, a verse or a year',
+                                locale),
+                        hintStyle: TextStyle(
+                            color: wb.mutedText, fontSize: t.scaled(13)),
+                        suffixIcon: query.isEmpty
+                            ? null
+                            : IconButton(
+                                icon: Icon(Icons.close, size: t.scaled(16)),
+                                onPressed: () => setSheet(_findCtl.clear),
+                              ),
+                        border: const OutlineInputBorder(
+                            borderRadius: BorderRadius.zero),
+                        enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.zero,
+                            borderSide: BorderSide(color: wb.border)),
+                      ),
+                      onChanged: (_) => setSheet(() {}),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
+                    child: Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: Text(
+                        _searchStatus(query, result, data, locale),
+                        style: TextStyle(
+                            color: wb.mutedText, fontSize: t.scaled(11)),
+                      ),
+                    ),
+                  ),
+                  Flexible(
+                    child: ListView.builder(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                      itemCount: result.hits.length,
+                      itemBuilder: (c, i) {
+                        final hit = result.hits[i];
+                        final via = _hitVia(hit, locale);
+                        return InkWell(
+                          onTap: () {
+                            Navigator.of(sheet).pop();
+                            _reveal(context, hit, data, locale);
+                          },
+                          child: Padding(
+                            padding:
+                                EdgeInsets.symmetric(vertical: t.scaled(5)),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Padding(
+                                  padding: EdgeInsets.only(top: t.scaled(3)),
+                                  child: _swatch(
+                                      t,
+                                      colors[hit.streamId] ??
+                                          _lineColor('none')),
+                                ),
+                                SizedBox(width: t.scaled(8)),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(hit.title,
+                                          style: TextStyle(
+                                              color: wb.text,
+                                              fontSize: t.scaled(12.5))),
+                                      if (via.isNotEmpty ||
+                                          hit.streamHidden) ...[
+                                        SizedBox(height: t.scaled(1)),
+                                        Text(
+                                          [
+                                            if (via.isNotEmpty) via,
+                                            if (hit.streamHidden)
+                                              _s(
+                                                  'wheelFindHiddenBand',
+                                                  'band hidden — opening '
+                                                      'this shows it again',
+                                                  locale),
+                                          ].join(' · '),
+                                          // 11 rather than 10.5: the app's
+                                          // own small-print floor, which a
+                                          // subordinate line may reach but
+                                          // never go under.
+                                          style: TextStyle(
+                                              color: wb.mutedText,
+                                              fontSize: t.scaled(11)),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ),
+                                SizedBox(width: t.scaled(8)),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text(_hitYears(hit, data, locale),
+                                        style: TextStyle(
+                                            color: wb.mutedText,
+                                            fontSize: t.scaled(11))),
+                                    Text(_kindLabel(hit.kind, locale),
+                                        style: TextStyle(
+                                            color: wb.mutedText,
+                                            fontSize: t.scaled(11))),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ]),
+              ),
+            );
+          });
+        },
+      ),
+    );
+  }
+
+  /// The one line under the box. It always says something: what can be
+  /// searched when nothing is typed, what was found when something is,
+  /// and — when a year was read out of the query — which years, and
+  /// that some of the rows are neighbours rather than hits.
+  String _searchStatus(String query, WheelSearchResult result,
+      WheelHistoryData data, String locale) {
+    if (query.trim().isEmpty) {
+      return _fill('wheelFindTeach', '', locale, {
+        'e': data.events.length,
+        'p': data.powers.length,
+        'n': data.nations.length,
+        'b': data.streams.length,
+      });
+    }
+    if (result.isEmpty) {
+      return _fill('wheelFindNone', 'Nothing here matches “{q}”.', locale,
+          {'q': query.trim()});
+    }
+    final parts = <String>[
+      _fill('wheelFindCount', '{n} results', locale, {'n': result.hits.length}),
+      if (result.years.isNotEmpty)
+        result.years.map((y) => yearLabel(y, locale)).join(' · '),
+      if (result.nearestShown > 0)
+        _fill('wheelFindNearNote', '', locale, {'n': result.nearestShown}),
+    ];
+    return parts.join(' · ');
+  }
+
+  /// Take the reader to what they found.
+  ///
+  /// Three things, in this order, and each is load-bearing. UN-HIDE the
+  /// band, because a result whose band is switched off is not on the
+  /// wheel at all and selecting it would do nothing visible. SELECT it,
+  /// which is also what forces it through the declutter — a selected
+  /// event always represents its own cluster, so a record that had no
+  /// label a moment ago now has one. PAN it to the middle, but only if
+  /// the reader is zoomed in; at rest the whole wheel is on screen and
+  /// moving it would be motion for its own sake.
+  void _reveal(BuildContext context, WheelHit hit, WheelHistoryData data,
+      String locale) {
+    setState(() {
+      _hidden.remove(hit.streamId);
+      // A nation of Genesis 10 is not drawn on the axis — it is the
+      // descent behind a band — so what gets selected is that band.
+      _selectedId =
+          hit.kind == WheelHitKind.nation ? hit.streamId : hit.id;
+    });
+    _panTo(hit, data);
+    switch (hit.kind) {
+      case WheelHitKind.event:
+        final e = _find(data.events, (e) => e.id == hit.id);
+        if (e != null) _showEvent(context, e, data, locale);
+      case WheelHitKind.power:
+        final p = _find(data.powers, (p) => p.id == hit.id);
+        if (p != null) _showPower(context, p, data, locale);
+      case WheelHitKind.nation:
+      case WheelHitKind.stream:
+        final s = _find(data.streams, (s) => s.id == hit.streamId);
+        if (s != null) _showStream(context, s, data, locale);
+    }
+  }
+
+  /// A DELIBERATE DEPARTURE FROM BibleWorks, recorded because the next
+  /// reader of `bwh39_Timeline` will notice it. There, typing a date
+  /// scrolls the timeline to it unconditionally, because that timeline
+  /// is a strip far wider than the window and the year you asked for is
+  /// almost never on screen.
+  ///
+  /// This chart is a disc, and at rest all 4000 BC – AD 2026 of it is in
+  /// the viewport. Scrolling would move a target that is already visible
+  /// and cost the reader the surrounding centuries — the thing a wheel
+  /// is for. So panning happens only once the reader has zoomed in and
+  /// the year genuinely can be off-screen. Selection, which forces the
+  /// record through the angular declutter and gives it a label, is what
+  /// does the finding at rest.
+  void _panTo(WheelHit hit, WheelHistoryData data) {
+    final view = _viewportSize;
+    if (view == null || _side <= 0) return;
+    final scale = _viewer.value.getMaxScaleOnAxis();
+    if (scale <= 1.0) return;
+
+    final streams = _visible(data);
+    final ring = streams.indexWhere((s) => s.id == hit.streamId);
+    if (ring < 0) return;
+    final rHub = _side * _kHubFrac;
+    final rBands = _side * _kBandsFrac;
+    final rRim = _side * _kRimFrac;
+    final band = ringRadii(ring, streams.length, rHub, rBands);
+
+    double angle;
+    double radius;
+    switch (hit.kind) {
+      case WheelHitKind.event:
+        final e = _find(data.events, (e) => e.id == hit.id);
+        if (e == null) return;
+        angle = angleForSpan(e.year, kMinYear, kMaxYear);
+        radius = (rBands + rRim) / 2;
+      case WheelHitKind.power:
+        final p = _find(data.powers, (p) => p.id == hit.id);
+        if (p == null) return;
+        angle = (angleForSpan(p.start, kMinYear, kMaxYear) +
+                angleForSpan(p.endFor(kMaxYear), kMinYear, kMaxYear)) /
+            2;
+        radius = band.centre;
+      case WheelHitKind.nation:
+      case WheelHitKind.stream:
+        angle = startRad + sweepRad / 2;
+        radius = band.centre;
+    }
+
+    final t = focusTranslation(
+      px: view.width / 2 + radius * math.cos(angle),
+      py: view.height / 2 + radius * math.sin(angle),
+      scale: scale,
+      viewW: view.width,
+      viewH: view.height,
+    );
+    _viewer.value = Matrix4.identity()
+      ..translateByDouble(t.dx, t.dy, 0, 1)
+      ..scaleByDouble(scale, scale, 1, 1);
+  }
+
   // ── taps ───────────────────────────────────────────────────────────
 
   void _handleTap(
@@ -1048,7 +1483,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
     final wb = WbColors.of(context);
     final stream = data.streams.firstWhere((s) => s.id == e.stream,
         orElse: () => const WheelStream(id: '', line: 'none', names: {}));
-    final approx = e.approximate ? (locale.startsWith('zh') ? '约' : 'c. ') : '';
+    final approx = e.approximate ? approximatePrefix(locale) : '';
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: wb.paneBg,

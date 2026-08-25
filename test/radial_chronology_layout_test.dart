@@ -227,4 +227,58 @@ void main() {
       expect(packIntoRings([0.0, 0.5], [1.0, 0.5], 2), [0, 1]);
     });
   });
+
+  /// Panning a found record into view — the radial answer to what
+  /// BibleWorks' timeline does when you type a date at it.
+  group('focusTranslation', () {
+    test('a point in the middle of the scene needs no pan', () {
+      // At 4× the middle of the scene sits at 4 × 500 = 2000, and the
+      // middle of the viewport is 500, so the scene moves back by 1500.
+      final t = focusTranslation(
+          px: 500, py: 400, scale: 4, viewW: 1000, viewH: 800);
+      expect(t.dx, closeTo(-1500, 0.001));
+      expect(t.dy, closeTo(-1200, 0.001));
+    });
+
+    /// The controller can be set to anything, so an unclamped jump
+    /// leaves the canvas hanging half out of the frame until the
+    /// reader's next gesture snaps it back. These are the bounds
+    /// `InteractiveViewer` enforces for itself on a drag.
+    test('a point near an edge is clamped to keep the canvas covering', () {
+      final topLeft =
+          focusTranslation(px: 0, py: 0, scale: 4, viewW: 1000, viewH: 800);
+      expect(topLeft.dx, 0.0);
+      expect(topLeft.dy, 0.0);
+
+      final bottomRight = focusTranslation(
+          px: 1000, py: 800, scale: 4, viewW: 1000, viewH: 800);
+      expect(bottomRight.dx, closeTo(-3000, 0.001));
+      expect(bottomRight.dy, closeTo(-2400, 0.001));
+    });
+
+    test('the clamp never lets the canvas leave the frame, anywhere', () {
+      const w = 1000.0, h = 800.0;
+      for (final scale in [1.5, 2.0, 7.0, 14.0]) {
+        for (var i = 0; i <= 20; i++) {
+          final t = focusTranslation(
+              px: w * i / 20, py: h * i / 20, scale: scale, viewW: w, viewH: h);
+          expect(t.dx, lessThanOrEqualTo(0.0001));
+          expect(t.dy, lessThanOrEqualTo(0.0001));
+          expect(t.dx, greaterThanOrEqualTo(w * (1 - scale) - 0.0001));
+          expect(t.dy, greaterThanOrEqualTo(h * (1 - scale) - 0.0001));
+        }
+      }
+    });
+
+    /// At rest the whole wheel is on screen, so "centre this" has no
+    /// work to do — and moving anyway would be motion for its own sake.
+    test('nothing moves at a scale of 1 or less', () {
+      for (final scale in [0.8, 1.0]) {
+        final t = focusTranslation(
+            px: 100, py: 700, scale: scale, viewW: 1000, viewH: 800);
+        expect(t.dx, 0.0);
+        expect(t.dy, 0.0);
+      }
+    });
+  });
 }
