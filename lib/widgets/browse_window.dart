@@ -1659,6 +1659,11 @@ class _HoverWordState extends State<_HoverWord> {
       widget.grammar.isNotEmpty ||
       widget.implied.isNotEmpty;
 
+  (String, String) get _splitWord =>
+      splitTrailingCjkPunctuation(widget.word.text);
+  String get _wordStem => _splitWord.$1;
+  String get _trailingPunctuation => _splitWord.$2;
+
   /// One inline number, set small and raised — a superscript in all but
   /// name. Flutter has no baseline-shift, so the size drop plus the hue
   /// is what keeps it from reading as part of the sentence.
@@ -1738,7 +1743,14 @@ class _HoverWordState extends State<_HoverWord> {
                 // `主[雅伟]` is ONE tagged run once the halves are put
                 // back together, and it is κύριος, so this is the word
                 // a Strong's search on G2962 marks as its hit.
-                for (final span in parseScripture(widget.word.text))
+                // 2026-08-25: the run's own trailing CJK punctuation
+                // (baked into `w` by the source format — see
+                // splitTrailingCjkPunctuation) is split off HERE and
+                // printed after the numbers below, not as part of this
+                // block, so 起初，H7225 becomes 起初H7225，— the number
+                // sits against the word it tags, not against the CUV's
+                // own comma.
+                for (final span in parseScripture(_wordStem))
                   if (span.kind == ScriptureSpanKind.divineName ||
                       span.kind == ScriptureSpanKind.gloss)
                     glossSpan(
@@ -1777,6 +1789,13 @@ class _HoverWordState extends State<_HoverWord> {
                   if (widget.translation && _hasNumbers)
                     const TextSpan(text: ' '),
                 ],
+                if (_trailingPunctuation.isNotEmpty)
+                  TextSpan(
+                    text: _trailingPunctuation,
+                    style: TextStyle(
+                      fontWeight: widget.hit ? FontWeight.w700 : null,
+                    ),
+                  ),
                 // LAST, and not behind [showNumbers]. A Strong's number
                 // is optional apparatus; this letter is the only thing
                 // saying why two words stand where the text has one, so

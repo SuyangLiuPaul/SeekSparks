@@ -58,6 +58,69 @@ void main() {
         isEmpty);
   });
 
+  group('splitTrailingCjkPunctuation', () {
+    // 2026-08-25, owner-reported: {"w":"起初，","s":"H7225"} (Genesis
+    // 1:1, cuvs-yhwh) rendered 起初，H7225 — the number after the CUV's
+    // own comma, which has no Hebrew behind it. H7225 is רֵאשִׁית.
+    test('Genesis 1:1 — one trailing comma comes off the word', () {
+      expect(splitTrailingCjkPunctuation('起初，'), ('起初', '，'));
+    });
+
+    test('a word with no trailing punctuation is untouched', () {
+      expect(splitTrailingCjkPunctuation('神'), ('神', ''));
+    });
+
+    // Measured across assets/tagged/cuvs-yhwh/*.json: every trailing
+    // mark actually shipped, one test each so a corpus edit that
+    // introduces a new one is caught by a failing case, not silence.
+    for (final punct in ['，', '。', '；', '：', '！', '？', '、', '）', '〕']) {
+      test('splits trailing $punct', () {
+        expect(splitTrailingCjkPunctuation('地$punct'), ('地', punct));
+      });
+    }
+
+    // 1 Chronicles 1:6 and 2:47 in the shipped corpus: more than one
+    // closing mark in a row (a doubled comma is itself a known data
+    // defect elsewhere in this file — DATA-INTEGRITY.md — but however
+    // many trail, all of them belong after the number, not the word).
+    test('more than one trailing mark all comes off, in order', () {
+      expect(splitTrailingCjkPunctuation('沙亚弗。）'), ('沙亚弗', '。）'));
+      expect(splitTrailingCjkPunctuation('的血，，'), ('的血', '，，'));
+    });
+
+    // 1 Chronicles 2:3 in the shipped corpus: a LEADING dùn hào opens
+    // this run because it continues a list from the previous run. It
+    // is not trailing THIS word, so it stays — splitting it would
+    // attribute someone else's separator to this word's number.
+    test('leading punctuation is left alone', () {
+      expect(splitTrailingCjkPunctuation('、俄南'), ('、俄南', ''));
+    });
+
+    // 1 Chronicles 1:19: an entire 〔note〕 folded into one run, itself
+    // ending mid-clause with no trailing punctuation of its own at
+    // this point — nothing to split, and the note's internal 〕 must
+    // not be mistaken for a trailing mark since it does not sit at
+    // the very end.
+    test('an embedded note with nothing trailing is left alone', () {
+      expect(splitTrailingCjkPunctuation('居住；法勒的兄弟'),
+          ('居住；法勒的兄弟', ''));
+    });
+
+    test('a run that is ONLY punctuation splits to an empty stem', () {
+      // The "punctuation stands for an unrendered original word" class
+      // documented in DATA-INTEGRITY.md (CUV omits a Hebrew word the
+      // Strong's number still names) — the number belongs right where
+      // the word would have been, ahead of the mark it borrowed.
+      expect(splitTrailingCjkPunctuation('，'), ('', '，'));
+    });
+
+    test('ASCII punctuation (English tagged editions) is left alone', () {
+      // Deliberately out of scope — see the function's own doc comment
+      // for why "the same underlying defect" is not "the same fix".
+      expect(splitTrailingCjkPunctuation('beginning,'), ('beginning,', ''));
+    });
+  });
+
   group('pickAnalysisVerse', () {
     // v1.5.4 blanked the entire Workbench: the X-Refs and Stats tabs
     // read `verses.first` unconditionally, and a hovered word could

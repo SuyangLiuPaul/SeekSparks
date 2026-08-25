@@ -74,6 +74,48 @@ List<StrongsNumberToken> inlineStrongsNumbers({
         if (g.isNotEmpty) StrongsNumberToken(g, StrongsNumberKind.grammar),
     ];
 
+/// The Chinese closing/separator marks this splits off a tagged run's
+/// trailing edge — comma, full stop, semicolon, colon, exclamation,
+/// question, dùn hào, and the four bracket/quote closers this corpus
+/// is measured to actually use. Deliberately the CJK "cannot start a
+/// line" set (every mark Chinese typesetting hangs at a line's end,
+/// nothing that opens), so nothing legitimately CJK-and-trailing is
+/// left un-split, and nothing that could open a clause is ever
+/// mistaken for a closer.
+const _kCjkTrailingPunctuation = '，。；：！？、）〕」』】》〉';
+
+/// Splits a tagged run's word text into (stem, trailing punctuation).
+///
+/// 2026-08-25 (owner-reported): `cuvs-yhwh`'s source format bakes
+/// trailing punctuation straight into the tagged word — `{"w":"起初，",
+/// "s":"H7225"}` for Genesis 1:1 — because that is genuinely how the
+/// upstream module stores it (measured: 93,722 of 367,649 runs, 25.5%,
+/// not a one-off). H7225 tags רֵאשִׁית, "beginning"; the CUV's own comma
+/// has no Hebrew behind it. Printing the run as-is puts the number
+/// after punctuation that is not what the number is *for* — 起初，H7225
+/// reads as though H7225 tagged the comma. This function is the split;
+/// the caller inserts the number(s) between the two halves it returns,
+/// so the line reads 起初H7225， instead.
+///
+/// Only the MAXIMAL TRAILING run is taken — leading or mid-run
+/// punctuation (a list separator opening the next item, a 〔note〕
+/// folded into the same run) is untouched, because that punctuation
+/// is not trailing this word's own content and splitting it would
+/// misattribute it to a number it has nothing to do with.
+///
+/// English tagged editions carry the identical baked-in-punctuation
+/// convention (measured: 25,606 BSB runs, 31,273 KJVS+ runs end in
+/// ASCII `,.;:!?`) but are deliberately left alone here — a citation
+/// mark trailing a comma is standard English typesetting, so "correct
+/// by the same logic as Chinese" is not "wrong the same way".
+(String stem, String trailing) splitTrailingCjkPunctuation(String word) {
+  var i = word.length;
+  while (i > 0 && _kCjkTrailingPunctuation.contains(word[i - 1])) {
+    i--;
+  }
+  return (word.substring(0, i), word.substring(i));
+}
+
 /// Which verse the Analysis window's X-Refs and Stats tabs report on.
 ///
 /// 2026-08-06: split out of `workbench_page.dart` so the empty cases are
