@@ -8544,11 +8544,6 @@ const uiStrings = {
     'zh-Hant': '另有 {n} 個地名位置不詳，無法標示',
     'en': '{n} more named here have no known location',
   },
-  'placesMapDays': {
-    'zh-Hans': '约 {n} 天脚程',
-    'zh-Hant': '約 {n} 天腳程',
-    'en': 'about {n} days on foot',
-  },
   'placesMapHint': {
     'zh-Hans': '滚轮缩放，拖动平移，点选地名量距。',
     'zh-Hant': '滾輪縮放，拖曳平移，點選地名量距。',
@@ -8738,6 +8733,87 @@ const uiStrings = {
     'zh-Hant': '各站之間直線距離合計 {n} 公里；不是實際行程。',
     'en': '{n} km in straight lines between the stops — not the distance '
         'travelled.',
+  },
+  // The same total split by how the text says they went. Printed only
+  // where the bucket is non-zero, and NEVER suppressed when it is: the
+  // voyage to Rome is 93.6% sea and the route through Mark 58% unstated,
+  // so a route that showed a walking estimate and stayed quiet about the
+  // rest would be read as an estimate of the whole thing.
+  'journeyLandKm': {
+    'zh-Hans': '其中陆路 {n} 公里',
+    'zh-Hant': '其中陸路 {n} 公里',
+    'en': '{n} km of that by land',
+  },
+  'journeySeaKm': {
+    'zh-Hans': '水路 {n} 公里',
+    'zh-Hant': '水路 {n} 公里',
+    'en': '{n} km by sea',
+  },
+  'journeyUnknownKm': {
+    'zh-Hans': '另有 {n} 公里，经文未说明走法',
+    'zh-Hant': '另有 {n} 公里，經文未說明走法',
+    'en': '{n} km where the text does not say how they went',
+  },
+  // Three keys for one number because English inflects and Chinese does
+  // not. The band closes on itself once rounding takes over — 40 km is
+  // 2–2 days — and printing "2–2" would claim a precision the arithmetic
+  // does not have, so the closed case gets its own wording.
+  'travelDaysOne': {
+    'zh-Hans': '步行 {n} 天',
+    'zh-Hant': '步行 {n} 天',
+    'en': '{n} day on foot',
+  },
+  'travelDaysMany': {
+    'zh-Hans': '步行 {n} 天',
+    'zh-Hant': '步行 {n} 天',
+    'en': '{n} days on foot',
+  },
+  'travelDaysBand': {
+    'zh-Hans': '步行 {a}–{b} 天',
+    'zh-Hant': '步行 {a}–{b} 天',
+    'en': '{a}–{b} days on foot',
+  },
+  // Everything the number rests on, in one line, because a day count with
+  // no basis is exactly the kind of confident-and-wrong figure this app
+  // is built against. Three separate hedges, all load-bearing: the speed
+  // has a source AND a named population, the distance is a chord and so a
+  // floor, and the unit is days spent travelling rather than the span of
+  // the journey — Acts 18:11 puts Paul at Corinth for eighteen months and
+  // Acts 20:31 has him three years at Ephesus, on journeys this would
+  // otherwise price at about three walking months each.
+  'travelDaysBasis': {
+    'zh-Hans': '按步行每日 20–30 公里估算：上限是行军或轻装的队伍，'
+        '下限是负重而行的（ORBIS，斯坦福大学，2012 年版）；'
+        '又以直线距离计算，故实际路程只会更长。所计为在路上的天数，'
+        '不是这趟行程所历的时间。',
+    'zh-Hant': '按步行每日 20–30 公里估算：上限是行軍或輕裝的隊伍，'
+        '下限是負重而行的（ORBIS，史丹佛大學，2012 年版）；'
+        '又以直線距離計算，故實際路程只會更長。所計為在路上的天數，'
+        '不是這趟行程所歷的時間。',
+    'en': 'At 20–30 km a day on foot — from a party on the march down to one '
+        'under heavy load (ORBIS, Stanford, 2012) — and measured over straight '
+        'lines, so the real journey is longer. Days on the road, not the time '
+        'the journey took.',
+  },
+  // The abstention, said out loud. BibleWorks' ruler will apply a walking
+  // speed to a line drawn across the Mediterranean; we would rather give
+  // no number than that one.
+  'travelNoEstimateSea': {
+    'zh-Hans': '水路不作天数估算：古时船只顺风约 4–6 节，逆风顶多走出 2.5 节，'
+        '何况根本无法沿直线行驶——徒 27 章绕着塞浦路斯、克里特的背风一面走，'
+        '正是为此。',
+    'zh-Hant': '水路不作天數估算：古時船隻順風約 4–6 節，逆風頂多走出 2.5 節，'
+        '何況根本無法沿直線行駛——徒 27 章繞著賽普勒斯、克里特的背風一面走，'
+        '正是為此。',
+    'en': 'No day estimate for the sea: an ancient ship made 4–6 knots with a '
+        'following wind and under 2.5 against one, and could not sail the '
+        'straight line at all — Acts 27 runs under the lee of Cyprus and Crete '
+        'for that very reason.',
+  },
+  'travelNoEstimateUnknown': {
+    'zh-Hans': '经文未说明走法的路段，不作天数估算。',
+    'zh-Hant': '經文未說明走法的路段，不作天數估算。',
+    'en': 'No day estimate where the text does not say how they went.',
   },
   'journeyLegLand': {
     'zh-Hans': '走陆路',

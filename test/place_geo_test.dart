@@ -255,13 +255,6 @@ void main() {
       expect(haversineKm(31.78, 35.22, 31.78, 35.22), closeTo(0, 1e-9));
     });
 
-    test('days on foot rounds up and never returns zero', () {
-      // A short hop is still a day's journey, not "no time at all".
-      expect(daysOnFootFor(1), 1);
-      expect(daysOnFootFor(32), 1);
-      expect(daysOnFootFor(33), 2);
-      expect(daysOnFootFor(880), 28);
-    });
   });
 
   group('bounds', () {

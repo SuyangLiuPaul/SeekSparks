@@ -198,6 +198,18 @@ void main() {
       expect(tester.takeException(), isNull);
       expect(find.textContaining('Joppa →'), findsOneWidget);
       expect(find.textContaining('days on foot'), findsOneWidget);
+      // The ruler used to print one unsourced figure and hedge it with
+      // the word "about". The hedge is now a real one and rides in a
+      // tooltip, because it is three clauses long and the footer is two
+      // lines; a band with no basis beside it would be the same defect
+      // wearing a range.
+      final tip = tester.widget<Tooltip>(find.ancestor(
+        of: find.textContaining('Joppa →'),
+        matching: find.byType(Tooltip),
+      ));
+      expect(tip.message, contains('ORBIS'));
+      expect(tip.message, contains('straight'));
+      expect(find.textContaining('about '), findsNothing);
     });
 
     testWidgets('an empty passage falls back to the Levant instead of '

@@ -36,6 +36,7 @@ import 'package:seeksparks/utils/atlas_index.dart' show labelPriority;
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 import 'package:seeksparks/utils/journey_route.dart';
 import 'package:seeksparks/utils/place_geo.dart';
+import 'package:seeksparks/utils/travel_time.dart';
 
 /// Base geography, the places asked about, and a ruler between them.
 class PlaceMapView extends StatefulWidget {
@@ -693,22 +694,35 @@ class _PlaceMapViewState extends State<PlaceMapView> {
           ),
           if (sel != null && others.isNotEmpty) ...[
             const SizedBox(height: 3),
-            Text(
-              // The ruler. Nearest three, because a chapter can name a
-              // dozen places and the far end of that list is noise.
-              others.take(3).map((e) {
-                final name = e.$1.displayName(widget.script);
-                final days = s('placesMapDays', 'about {n} days on foot')
-                    .replaceAll('{n}', '${daysOnFootFor(e.$2)}');
-                return '${sel.displayName(widget.script)} → $name  '
-                    '${e.$2.round()} km · $days';
-              }).join('    '),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: t.chrome - 1,
-                color: c.text,
-                height: 1.35,
+            // The basis rides in a tooltip because it is three clauses
+            // long and the footer is two lines. It used to be carried by
+            // the word "about", which was doing none of the work: the
+            // speed had no source, the distance was a chord, and the unit
+            // was never named.
+            Tooltip(
+              message: s('travelDaysBasis',
+                  'At 20–30 km a day on foot (ORBIS, Stanford, 2012), over '
+                  'straight lines — so the real journey is longer. Days on '
+                  'the road, not the time the journey took.'),
+              child: Text(
+                // The ruler. Nearest three, because a chapter can name a
+                // dozen places and the far end of that list is noise.
+                others.take(3).map((e) {
+                  final name = e.$1.displayName(widget.script);
+                  final days = walkingDaysFor(e.$2);
+                  final walk = days == null
+                      ? ''
+                      : ' · ${formatTravelDays(days, widget.locale)}';
+                  return '${sel.displayName(widget.script)} → $name  '
+                      '${e.$2.round()} km$walk';
+                }).join('    '),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: t.chrome - 1,
+                  color: c.text,
+                  height: 1.35,
+                ),
               ),
             ),
           ],

@@ -285,6 +285,62 @@ void main() {
     await unmount(tester);
   });
 
+  testWidgets('a route says how long it took to walk, and where it will not '
+      'guess', (tester) async {
+    await pump(tester, const Size(1440, 1000));
+
+    // The wilderness itinerary is the all-land case: every kilometre of
+    // it can carry an estimate, so it gets a band and the basis, and
+    // there is nothing for it to decline.
+    await tester.tap(find.text('以色列出埃及与旷野行程'));
+    for (var i = 0; i < 6; i++) {
+      await tester.pump(const Duration(milliseconds: 80));
+    }
+    expect(tester.takeException(), isNull);
+    expect(find.textContaining('步行 55–82 天'), findsOneWidget);
+    expect(find.textContaining('ORBIS'), findsWidgets);
+    expect(find.textContaining('水路不作天数估算'), findsNothing);
+    // A migration with flocks is slower than a party on the march, and
+    // the route's own provenance says so rather than the estimate being
+    // quietly wrong for this one journey.
+    expect(find.textContaining('牛羊同行'), findsOneWidget);
+
+    // The voyage to Rome is the opposite case and the reason the refusal
+    // has to be printed rather than merely honoured: 2,803 of its 2,996
+    // km are at sea, so a panel that showed the band for its three land
+    // legs and stopped would say Paul walked to Rome in a week and a
+    // half.
+    // The name is on the switch AND on the open panel's header by now, so
+    // the switch is the first of the two.
+    await tester.tap(find.text('以色列出埃及与旷野行程').first);
+    await tester.pump(const Duration(milliseconds: 80));
+    await tester.tap(find.text('保罗押解往罗马的航程').first);
+    for (var i = 0; i < 6; i++) {
+      await tester.pump(const Duration(milliseconds: 80));
+    }
+    expect(tester.takeException(), isNull);
+    expect(find.textContaining('水路 2803 公里'), findsOneWidget);
+    expect(find.textContaining('水路不作天数估算'), findsOneWidget);
+    expect(find.textContaining('步行 7–10 天'), findsOneWidget);
+
+    await unmount(tester);
+  });
+
+  testWidgets('the travel notes do not overflow the narrowest pane',
+      (tester) async {
+    // Up to six lines were added under a route, and the panel is a
+    // column inside a fixed pane. The route that adds the most is one
+    // with all three buckets non-zero — every bucket printed, the band,
+    // the basis, and both refusals.
+    await pump(tester, const Size(320, 640));
+    await tester.tap(find.text('保罗第二次宣教旅程'));
+    for (var i = 0; i < 6; i++) {
+      await tester.pump(const Duration(milliseconds: 80));
+    }
+    expect(tester.takeException(), isNull);
+    await unmount(tester);
+  });
+
   testWidgets('the journeys block is bounded by the pane, not by the asset',
       (tester) async {
     // The overlay switches are the one part of the index column sized by

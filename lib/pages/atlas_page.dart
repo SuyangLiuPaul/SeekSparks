@@ -78,6 +78,7 @@ import 'package:seeksparks/utils/place_illustrations.dart';
 import 'package:seeksparks/utils/reference_parser.dart' show parseReference;
 import 'package:seeksparks/utils/search_scope.dart'
     show limitSpecForBooks, scopeDisplayName, scopedCountLabel;
+import 'package:seeksparks/utils/travel_time.dart';
 import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
 import 'package:seeksparks/widgets/home_icon_button.dart';
 import 'package:seeksparks/widgets/illustration_image.dart';
@@ -1714,6 +1715,7 @@ class _JourneyPanel extends StatelessWidget {
             _s('journeyStraightLine', '{n} km in straight lines')
                 .replaceAll('{n}', '${journey.straightLineKm.round()}'),
           ),
+          ..._travelNotes(c, t, travelOf(journey)),
           if (journey.unresolved.isNotEmpty) ...[
             const SizedBox(height: 4),
             _note(
@@ -1792,6 +1794,72 @@ class _JourneyPanel extends StatelessWidget {
           fontFamilyFallback: kCjkFontFallback,
         ),
       );
+
+  /// The straight-line total broken down by how the text says they went,
+  /// and a day band over the part that can carry one.
+  ///
+  /// **The order is deliberate: what was estimated, then what was not.**
+  /// Every non-zero bucket is named, with no threshold — the voyage to
+  /// Rome is 2,803 of its 2,996 km at sea, so a panel that printed a
+  /// walking band for its three land legs and stopped would have told a
+  /// reader that Paul walked to Rome in a week and a half.
+  List<Widget> _travelNotes(WbColors c, WbType t, JourneyTravel travel) {
+    final out = <Widget>[];
+    void add(String text) {
+      out.add(const SizedBox(height: 4));
+      out.add(_note(c, t, text));
+    }
+
+    String km(double v) => '${v.round()}';
+
+    if (travel.landKm > 0) {
+      add(_s('journeyLandKm', '{n} km of that by land')
+          .replaceAll('{n}', km(travel.landKm)));
+    }
+    if (travel.seaKm > 0) {
+      add(_s('journeySeaKm', '{n} km by sea')
+          .replaceAll('{n}', km(travel.seaKm)));
+    }
+    if (travel.unknownKm > 0) {
+      add(_s('journeyUnknownKm',
+              '{n} km where the text does not say how they went')
+          .replaceAll('{n}', km(travel.unknownKm)));
+    }
+    final walk = travel.walk;
+    if (walk != null) {
+      add(formatTravelDays(walk, locale));
+      add(_s('travelDaysBasis', ''));
+    }
+    if (travel.seaKm > 0) add(_s('travelNoEstimateSea', ''));
+    if (travel.unknownKm > 0) add(_s('travelNoEstimateUnknown', ''));
+    return out;
+  }
+
+  /// The same estimate for ONE leg, which needs no breakdown — the card
+  /// has already printed the leg's kilometres and its mode, so repeating
+  /// them under a different label would just be the same fact twice.
+  List<Widget> _legTravelNotes(WbColors c, WbType t, RouteSegment leg) {
+    final out = <Widget>[];
+    void add(String text) {
+      out.add(const SizedBox(height: 5));
+      out.add(_note(c, t, text));
+    }
+
+    switch (leg.leg) {
+      case JourneyLeg.land:
+        final walk = walkingDaysFor(leg.km);
+        if (walk != null) {
+          add(formatTravelDays(walk, locale));
+          add(_s('travelDaysBasis', ''));
+        }
+      case JourneyLeg.sea:
+        add(_s('travelNoEstimateSea', ''));
+      case JourneyLeg.start:
+      case JourneyLeg.unknown:
+        add(_s('travelNoEstimateUnknown', ''));
+    }
+    return out;
+  }
 
   /// A reference, and a way into it. A stop or a leg whose verse the
   /// reader cannot open is an assertion.
@@ -1926,6 +1994,12 @@ class _JourneyPanel extends StatelessWidget {
                   _s('journeyLegKm', '{n} km in a straight line')
                       .replaceAll('{n}', '${leg.km.round()}'),
                 ),
+                // The leg is where the mode is known most precisely, so
+                // it is where the estimate — or the refusal — belongs.
+                // The refusal is not silence: a sea leg says why it has
+                // no number, because a leg that simply omitted one would
+                // be indistinguishable from a leg we forgot.
+                ..._legTravelNotes(c, t, leg),
                 if (unvouched.isNotEmpty) ...[
                   const SizedBox(height: 5),
                   _note(

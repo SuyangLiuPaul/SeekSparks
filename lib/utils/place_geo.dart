@@ -390,21 +390,6 @@ BaseMap parseBaseMap(Map<String, dynamic> doc) => BaseMap(
       rivers: _runs(doc['rivers']),
     );
 
-/// Days on foot for a distance in kilometres.
-///
-/// BibleWorks' ruler converts a drawn distance into a travel time
-/// (bwh33, the Travel Speed Window) and the idea is worth borrowing
-/// wholesale: "Nineveh is 1,100 km from Joppa" means very little, and
-/// "about seven weeks' walk in the wrong direction" means a great deal.
-///
-/// 32 km/day is the conventional figure for a party travelling on foot
-/// over the terrain of the Levant. BibleWorks computes a min/max pair
-/// instead — distance ÷ speed ÷ hours-per-day at both ends of two
-/// reader-set ranges — which is more honest and needs a settings window
-/// this does not have. A single rounded figure captioned "about" is
-/// what fits beside a scale bar, and the caption does the hedging.
-int daysOnFootFor(double km) => (km / 32.0).ceil().clamp(1, 100000);
-
 /// The largest round number of kilometres that fits in [targetPx].
 ///
 /// 1-2-5 steps, so the bar reads "50 km" rather than "63 km".
