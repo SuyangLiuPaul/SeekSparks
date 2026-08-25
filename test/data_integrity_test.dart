@@ -112,6 +112,41 @@ String _ref(Map<dynamic, dynamic> v) =>
     '${v['chapter']}:${v['verse']}';
 
 void main() {
+  // 2026-08-25: a deploy was cut from a detached worktree and the three
+  // licensed Eagle's View paths were copied into it by hand, on the
+  // belief that a worktree "ships a bundle with no NASB". It does not.
+  // The NASB a reader sees is assets/nasb.json, which is tracked and
+  // listed in pubspec.yaml; the licensed three are absent from every
+  // asset list and read by nothing in lib/, which DELETION-REVIEW.md
+  // records as deliberate. The belief was wrong in the dangerous
+  // direction — it argued for moving licensed data toward a build — so
+  // the invariant it misread is pinned here.
+  //
+  // .gitignore answers "will this be committed". Only pubspec.yaml
+  // answers "will this be bundled". They are different questions.
+  test('the licensed Eagle\'s View assets are in no pubspec asset list', () {
+    const licensed = <String>[
+      'assets/nasb-ev.json',
+      'assets/nsn-plus.json',
+      'assets/tagged/nsn-plus/',
+    ];
+    final pubspec = File('pubspec.yaml').readAsStringSync();
+    for (final path in licensed) {
+      expect(pubspec.contains(path), isFalse,
+          reason: '$path is licensed and must never be bundled '
+              '(docs/DELETION-REVIEW.md:93)');
+    }
+    final ignore = File('.gitignore').readAsStringSync();
+    for (final path in licensed) {
+      expect(ignore.contains(path.replaceAll(RegExp(r'/$'), '')), isTrue,
+          reason: '$path must stay gitignored');
+    }
+    // The edition that IS shipped, so a future "cleanup" cannot silently
+    // take the reader's NASB away while this test still passes.
+    expect(pubspec, contains('assets/nasb.json'));
+    expect(File('assets/nasb.json').existsSync(), isTrue);
+  });
+
   test('no edition numbers a verse past the end of its chapter', () {
     // 2026-08-10 (#304): assets/cuvs-plus.json filed 1 Chronicles 22:1
     // as 21:31 and shifted the rest of the chapter down, so chapter 21
