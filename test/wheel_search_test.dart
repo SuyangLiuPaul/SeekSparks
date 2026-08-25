@@ -459,4 +459,96 @@ void main() {
       expect(r.years, isEmpty);
     });
   });
+
+  /// A NAME THE RECORD HOLDS (#318 phase 21).
+  ///
+  /// The wheel's false absences, found by asking the engine about all
+  /// 37 people the merged records name rather than about a handful:
+  /// five returned nothing in all three scripts. Four of them — Aaron,
+  /// Amram, Jochebed, Miriam — appear in no title and no description
+  /// anywhere on the wheel, so the search box was answering "no
+  /// results" about records that name them.
+  ///
+  /// The fifth, Jeconiah, is the more interesting one and the reason
+  /// this group asserts reachability by NAME rather than by count: the
+  /// wheel does carry him, spelled Jehoiachin / 约雅斤 on two other
+  /// records. He was unreachable only under the name the family tree
+  /// prefers. Linking the people fixes a naming mismatch there, not an
+  /// absence, and the test says so.
+  group('a name the record holds is a name the wheel can find', () {
+    test('every person the merged records name is reachable', () {
+      final linked = <String, WheelPersonLink>{};
+      for (final e in data.events) {
+        for (final p in e.people) {
+          linked[p.id] = p;
+        }
+      }
+      expect(linked, hasLength(37));
+      for (final locale in _locales) {
+        for (final p in linked.values) {
+          final name = p.nameFor(locale);
+          expect(find(name, locale: locale).hits, isNotEmpty,
+              reason: '$locale: the wheel names ${p.id} as "$name" '
+                  'and cannot find it');
+        }
+      }
+    });
+
+    // The five that returned nothing before, pinned to the record that
+    // actually names them so a future merge that finds them on the
+    // wrong event still fails.
+    test('the five that the wheel could not find land on their own event',
+        () {
+      const expected = {
+        'Aaron': 'bible:plagues',
+        'Amram': 'bible:moses_born',
+        'Jochebed': 'bible:moses_born',
+        'Miriam': 'bible:wilderness_40',
+        'Jeconiah': 'bible:judah_falls',
+      };
+      expected.forEach((name, id) {
+        final hits = find(name).hits;
+        expect(hits.map((h) => h.id), contains(id), reason: name);
+        expect(hits.first.via, WheelHitVia.person,
+            reason: '$name is claimed by some other tier first');
+      });
+    });
+
+    // Chinese readers had the same absence, and the row must print the
+    // name in the script the reader is reading — the chip beside it
+    // will.
+    test('the Chinese names reach the same records', () {
+      const expected = {
+        '亚伦': 'bible:plagues',
+        '约基别': 'bible:moses_born',
+        '米利暗': 'bible:wilderness_40',
+      };
+      expected.forEach((name, id) {
+        final hits = find(name, locale: 'zh-Hans').hits;
+        expect(hits.map((h) => h.id), contains(id), reason: name);
+        final hit = hits.firstWhere((h) => h.id == id);
+        expect(hit.via, WheelHitVia.person, reason: name);
+        expect(hit.matched, name,
+            reason: 'the row printed "${hit.matched}" to a Simplified reader');
+      });
+    });
+
+    // The person tier was inserted above `reference`, which pushed that
+    // tier's rank from 14 to 15. Measured before the change: exactly
+    // one record's chip name also matches its own reference —
+    // `bible:ruth` ("Ruth" against `Ruth 1-4`) — and its title claims
+    // it first, so no reference row reclassifies.
+    test('a subject outranks an address, and no address was displaced', () {
+      expect(find('Ruth').hits.first.via, WheelHitVia.title);
+      final hits = find('Moses').hits;
+      final lastDesc =
+          hits.lastIndexWhere((h) => h.via == WheelHitVia.description);
+      final firstPerson =
+          hits.indexWhere((h) => h.via == WheelHitVia.person);
+      expect(firstPerson, greaterThan(lastDesc));
+      expect(find('2 Kings 19').hits.every((h) => h.via == WheelHitVia.reference),
+          isTrue,
+          reason: 'the reference tier stopped answering');
+    });
+  });
 }

@@ -38,7 +38,9 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart' show rootBundle;
 
+import 'package:seeksparks/models/biblical_person.dart';
 import 'package:seeksparks/models/timeline_event.dart';
+import 'package:seeksparks/services/family_tree_service.dart';
 import 'package:seeksparks/services/timeline_service.dart';
 
 
@@ -200,6 +202,34 @@ class WheelPower {
       );
 }
 
+/// One person a wheel event names, resolved at merge time.
+///
+/// The names are COPIED rather than looked up at paint time, and that
+/// is the point of the class. `FamilyTreeService.byId` is synchronous
+/// and returns null until its own load has finished, so a chip that
+/// resolved itself while drawing would render empty for one frame and
+/// — worse — the search running beside it would agree, reporting an
+/// absence that was really a race. [bibleNarrativeEvents] takes the
+/// people as an argument, so by the time any wheel record exists its
+/// links are already resolved or already dropped, and both the chip
+/// and the haystack read the same resolved list.
+class WheelPersonLink {
+  const WheelPersonLink({required this.id, required this.names});
+
+  /// `family_tree.json` id. Held so a tap can open the real record;
+  /// never shown.
+  final String id;
+
+  /// Locale → display name, `en` always present.
+  final Map<String, String> names;
+
+  String nameFor(String locale) => names[locale] ?? names['en'] ?? id;
+
+  /// Every script this person is written in, for the search haystack.
+  /// The chip renders one and the reader may be typing another.
+  Iterable<String> get allNames => names.values;
+}
+
 /// One dated event, drawn on the band of the stream it belongs to.
 class WheelHistoryEvent {
   const WheelHistoryEvent({
@@ -215,6 +245,7 @@ class WheelHistoryEvent {
     this.datingRefs = const [],
     this.septuagintYear,
     this.timelineEra,
+    this.people = const [],
   });
 
   final String id;
@@ -239,7 +270,7 @@ class WheelHistoryEvent {
   final Map<String, String> titles;
   final Map<String, String> descs;
 
-  /// The three fields below arrive only from [bibleNarrativeEvents];
+  /// The four fields below arrive only from [bibleNarrativeEvents];
   /// `wheel_history.json` has no record carrying any of them, so
   /// [fromJson] does not look for them. They are the apparatus that
   /// makes a derived year checkable, and the wheel inherited the years
@@ -264,6 +295,27 @@ class WheelHistoryEvent {
   /// that are owes the reader the same seam note the timeline page
   /// gives. [era] cannot answer this — the merge sets it to `bible`.
   final String? timelineEra;
+
+  /// The people this event names, in the asset's own order.
+  ///
+  /// `bible_timeline.json` files `personIds` on 61 of its 98 events —
+  /// 88 links naming 37 people — and for four phases the merge dropped
+  /// them at the constructor, which is the same failure #318 phase 19
+  /// fixed for `datingRefs` one field earlier. The consequence here was
+  /// not only a missing row: the wheel's search reads the record text,
+  /// and FIVE of the 37 (Aaron, Amram, Jeconiah, Jochebed, Miriam) are
+  /// named by no title or description anywhere in the wheel's 588
+  /// records, in any of the three scripts. Measured through
+  /// `searchWheel` itself, the wheel answered "no results" for each of
+  /// them while holding records that name them.
+  ///
+  /// This is the wheel's half of what BibleWorks' Timeline calls the
+  /// event context menu (`bwh39`), where one caption carries both verse
+  /// lookups and named-entity lookups into a resource. We keep the two
+  /// kinds in separate labelled rows rather than one menu, because a
+  /// verse chip navigates the reader out to the text and a person chip
+  /// does not.
+  final List<WheelPersonLink> people;
 
   String titleFor(String locale) => titles[locale] ?? titles['en'] ?? id;
   String descFor(String locale) => descs[locale] ?? descs['en'] ?? '';
@@ -422,7 +474,28 @@ const Set<String> kTimelineIdsAlreadyOnWheel = {'temple_destroyed'};
 /// own label; for three phases it did not travel at all, which left
 /// the wheel saying "interval from scripture" over a chip list that
 /// states no interval.
-List<WheelHistoryEvent> bibleNarrativeEvents(List<TimelineEvent> events) => [
+///
+/// [people] is `family_tree.json`, passed in rather than looked up, so
+/// this stays pure and so the resolution happens once at load instead
+/// of once per paint. An id the tree does not hold is DROPPED here
+/// rather than carried as a name-less chip:
+/// `test/timeline_person_join_test.dart` asserts all 88 resolve, so a
+/// drop means the assets have moved apart, and a chip that cannot open
+/// anything is worse than an absent one.
+///
+/// EVERY field of [TimelineEvent] must be accounted for here.
+/// `test/wheel_timeline_field_coverage_test.dart` reads that class's
+/// declarations out of the source and fails if one of them is not
+/// mentioned in this function's body — the defect this function has now
+/// shipped three times (`basis`, then `datingRefs`/`septuagintYear`/
+/// `era`, then `personIds`) is a field silently lost at a constructor
+/// call, which no test of the asset and no test of either page can see.
+List<WheelHistoryEvent> bibleNarrativeEvents(
+  List<TimelineEvent> events, {
+  List<BiblicalPerson> people = const [],
+}) {
+  final byId = {for (final p in people) p.id: p};
+  return [
       for (final e in events)
         if (!kTimelineIdsAlreadyOnWheel.contains(e.id))
           WheelHistoryEvent(
@@ -438,6 +511,17 @@ List<WheelHistoryEvent> bibleNarrativeEvents(List<TimelineEvent> events) => [
             datingRefs: e.datingRefs,
             septuagintYear: e.septuagintYear,
             timelineEra: e.era,
+            people: [
+              for (final id in e.personIds)
+                if (byId[id] != null)
+                  WheelPersonLink(id: id, names: {
+                    'en': byId[id]!.name,
+                    if ((byId[id]!.nameZhHans ?? '').isNotEmpty)
+                      'zh-Hans': byId[id]!.nameZhHans!,
+                    if ((byId[id]!.nameZhHant ?? '').isNotEmpty)
+                      'zh-Hant': byId[id]!.nameZhHant!,
+                  }),
+            ],
             titles: {
               'en': e.titleEn,
               if (e.titleZhHans.isNotEmpty) 'zh-Hans': e.titleZhHans,
@@ -450,6 +534,7 @@ List<WheelHistoryEvent> bibleNarrativeEvents(List<TimelineEvent> events) => [
             },
           )
     ];
+}
 
 class WheelHistoryService {
   WheelHistoryService._();
@@ -464,19 +549,32 @@ class WheelHistoryService {
   /// the audit the first time a year moved. Everything downstream —
   /// the hub counts, the stream filter, the declutter, the search
   /// box, the detail sheets — sees one list and needs no special case.
+  ///
+  /// The family tree is awaited HERE, not in the page, and that is what
+  /// lets `WheelPersonLink` be a value rather than a lookup. Anything
+  /// holding a [WheelHistoryData] is past this await, so
+  /// `FamilyTreeService.byId` is warm for the tap handler as well as
+  /// for the chip.
   Future<WheelHistoryData> load() async {
     final cached = _cache;
     if (cached != null) return cached;
     final raw = await rootBundle.loadString('assets/wheel_history.json');
     final base =
         WheelHistoryData.fromJson(json.decode(raw) as Map<String, dynamic>);
+    final loaded = await Future.wait([
+      TimelineService.instance.loadAll(),
+      FamilyTreeService.instance.loadAll(),
+    ]);
     final data = WheelHistoryData(
       streams: base.streams,
       nations: base.nations,
       powers: base.powers,
       events: [
         ...base.events,
-        ...bibleNarrativeEvents(await TimelineService.instance.loadAll()),
+        ...bibleNarrativeEvents(
+          loaded.first as List<TimelineEvent>,
+          people: loaded.last as List<BiblicalPerson>,
+        ),
       ]..sort((a, b) => a.year.compareTo(b.year)),
     );
     _cache = data;

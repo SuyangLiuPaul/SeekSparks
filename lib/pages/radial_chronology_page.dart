@@ -9,6 +9,7 @@ import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/wheel_history.dart';
 import 'package:seeksparks/pages/chronology_page.dart';
 import 'package:seeksparks/providers/main_provider.dart';
+import 'package:seeksparks/services/family_tree_service.dart';
 import 'package:seeksparks/services/url_sync_service.dart';
 import 'package:seeksparks/utils/date_hedge.dart';
 import 'package:seeksparks/utils/jump_to_reference.dart' as jumper;
@@ -21,6 +22,7 @@ import 'package:seeksparks/utils/wheel_search.dart';
 import 'package:seeksparks/widgets/home_icon_button.dart';
 import 'package:seeksparks/widgets/language_switcher_button.dart';
 import 'package:seeksparks/widgets/localized_back_button.dart';
+import 'package:seeksparks/widgets/person_detail_sheet.dart';
 import 'package:seeksparks/widgets/verse_popup_sheet.dart' show showVersePopup;
 
 /// World history on one wheel: 4000 BC at twelve o'clock, time sweeping
@@ -326,6 +328,17 @@ const Map<String, Map<String, String>> wheelStrings = {
     'zh-Hans': '见于说明',
     'zh-Hant': '見於說明',
     'en': 'in the description',
+  },
+  // The name is substituted rather than left to stand alone, because
+  // the reader typed it: a row whose reason simply echoes the query
+  // explains nothing. Five of the 37 people the wheel's records name
+  // appear in no title or description in the whole corpus, so for
+  // those this line is the only thing on screen connecting what was
+  // typed to what came back.
+  'wheelFindPerson': {
+    'zh-Hans': '记有{name}',
+    'zh-Hant': '記有{name}',
+    'en': 'names {name}',
   },
   'wheelFindHiddenBand': {
     'zh-Hans': '该带已隐藏 · 打开即显示',
@@ -1104,6 +1117,8 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
         WheelHitVia.otherLocale => hit.matched,
         WheelHitVia.description => _s('wheelFindInDesc', 'in the description',
             locale),
+        WheelHitVia.person => _s('wheelFindPerson', 'names {name}', locale)
+            .replaceFirst('{name}', hit.matched),
         WheelHitVia.reference => localizedReferenceLabel(hit.matched, locale),
         WheelHitVia.yearSpan => _s('wheelFindSpan', 'spans it', locale),
         WheelHitVia.yearNear => _s('wheelFindNear', 'nearby', locale),
@@ -1565,6 +1580,71 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
           ),
       ]);
 
+  /// The people a record names, as tappable names in the page's own
+  /// idiom — a `Wrap` of plain text, like [_refRow], and not a boxed
+  /// chip. Two reasons: `workbench_theme.dart:16` forbids rounded
+  /// corners and a copied chip carried two of them into the timeline
+  /// page one phase ago; and the sheet already has a reference row that
+  /// looks like this, so a second visual language here would suggest a
+  /// difference in kind that does not exist.
+  ///
+  /// They are deliberately NOT [WbColors.link]. On this page that
+  /// colour means "this leaves for the reader", which a verse chip does
+  /// and a person does not — tapping a person opens their record
+  /// without moving the wheel. The underline says tappable; the colour
+  /// says where it goes.
+  Widget _personRow(BuildContext context, List<WheelPersonLink> people,
+          WbColors wb, WbType t, String locale) =>
+      Wrap(spacing: 10, runSpacing: 4, children: [
+        for (final p in people)
+          InkWell(
+            onTap: () => _showPerson(context, p.id, locale),
+            child: Text(
+              p.nameFor(locale),
+              style: TextStyle(
+                color: wb.text,
+                fontSize: t.scaled(11),
+                decoration: TextDecoration.underline,
+                decorationColor: wb.mutedText,
+              ),
+            ),
+          ),
+      ]);
+
+  /// Open one person's family-tree record over the wheel.
+  ///
+  /// The lookup is synchronous and safe here because
+  /// [WheelHistoryService.load] awaits the family tree before it
+  /// returns any record — a page showing a person link is a page that
+  /// is past that await. The null branch is a belt: the merge already
+  /// drops an id the tree does not hold, so this row can only name
+  /// people who resolve.
+  Future<void> _showPerson(
+      BuildContext context, String personId, String locale) async {
+    final person = FamilyTreeService.instance.byId(personId);
+    if (person == null) return;
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      constraints: const BoxConstraints(maxWidth: 720),
+      builder: (sheetCtx) => DraggableScrollableSheet(
+        initialChildSize: 0.65,
+        minChildSize: 0.35,
+        maxChildSize: 0.95,
+        expand: false,
+        builder: (_, scrollController) => PersonDetailSheet(
+          person: person,
+          locale: locale,
+          scrollController: scrollController,
+          onPersonTap: (other) {
+            Navigator.of(sheetCtx).maybePop();
+            _showPerson(context, other.id, locale);
+          },
+        ),
+      ),
+    );
+  }
+
   String _basisText(String basis, String locale) => switch (basis) {
         'scripture' => _s('wheelBasisScripture', 'stated in scripture', locale),
         'scripture+thiele' =>
@@ -1653,6 +1733,26 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
             ),
             SizedBox(height: t.scaled(4)),
             _refRow(context, e.datingRefs, wb, t, locale),
+          ],
+          // The people, under the timeline page's own label, for the
+          // same reason the three blocks above reuse its wording: one
+          // event, two surfaces, and nothing gained by a second
+          // vocabulary. Last of the record's own content and above
+          // nothing, because it is the only row here that opens
+          // another sheet rather than adding to this one.
+          if (e.people.isNotEmpty) ...[
+            SizedBox(height: t.scaled(8)),
+            Text(
+              uiStrings['timelinePeople']?[locale] ??
+                  uiStrings['timelinePeople']?['en'] ??
+                  'People',
+              style: TextStyle(
+                  color: wb.mutedText,
+                  fontSize: t.scaled(11),
+                  fontWeight: FontWeight.w600),
+            ),
+            SizedBox(height: t.scaled(4)),
+            _personRow(context, e.people, wb, t, locale),
           ],
           // The seam. These eight are not counted back from the Thiele
           // anchor the way everything below Abraham is, and the wheel

@@ -15,6 +15,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/models/biblical_person.dart';
 import 'package:seeksparks/models/timeline_event.dart';
 import 'package:seeksparks/models/wheel_history.dart';
 import 'package:seeksparks/utils/reference_parser.dart';
@@ -304,6 +305,96 @@ void main() {
           expect(uiStrings[key]?[locale], isNotNull, reason: '$key/$locale');
           expect(uiStrings[key]![locale]!, isNotEmpty, reason: '$key/$locale');
         }
+      }
+    });
+  });
+
+  /// THE PEOPLE TRAVEL WITH THE EVENTS (#318 phase 21).
+  ///
+  /// The last field the merge dropped. `bible_timeline.json` names 37
+  /// people across 61 of its events — Aaron on the plagues, Jochebed at
+  /// the birth of Moses — and the linear timeline page has rendered
+  /// them as chips and searched them since it shipped. The wheel drew
+  /// the same 61 records with none of it, so a reader who typed a name
+  /// the record holds was told there were no results.
+  ///
+  /// The names are resolved once at merge and COPIED onto the event
+  /// rather than looked up while painting, because
+  /// `FamilyTreeService.byId` is synchronous and answers null until its
+  /// own load finishes: a chip resolving itself mid-paint would render
+  /// empty for a frame, and the search running beside it would agree,
+  /// reporting an absence that was really a race.
+  group('the people travel with the events', () {
+    final tree = (_json('assets/family_tree.json')['people'] as List)
+        .cast<Map<String, dynamic>>()
+        .map(BiblicalPerson.fromJson)
+        .toList();
+    final withPeople = bibleNarrativeEvents(timeline, people: tree);
+    final links = [for (final e in withPeople) ...e.people];
+
+    test('the links arrive, all 88 of them across 61 events', () {
+      expect(withPeople.where((e) => e.people.isNotEmpty), hasLength(61));
+      expect(links, hasLength(88));
+      expect(links.map((l) => l.id).toSet(), hasLength(37));
+      // The timeline's own count, so a link lost between the two files
+      // fails here rather than shrinking a number nobody re-derives.
+      expect(links.length,
+          timeline.fold<int>(0, (n, e) => n + e.personIds.length));
+    });
+
+    test('nothing is linked to a person the family tree does not hold', () {
+      final ids = tree.map((p) => p.id).toSet();
+      for (final e in timeline) {
+        for (final id in e.personIds) {
+          expect(ids, contains(id),
+              reason: '${e.id} links $id, which is not in the family tree');
+        }
+      }
+    });
+
+    test('every link carries all three scripts', () {
+      for (final l in links) {
+        for (final locale in ['en', 'zh-Hans', 'zh-Hant']) {
+          expect(l.names[locale], isNotNull, reason: '${l.id}/$locale');
+          expect(l.nameFor(locale), isNotEmpty, reason: '${l.id}/$locale');
+        }
+      }
+    });
+
+    // Without the `people:` argument the function must still work and
+    // still drop nothing else — the wheel's own asset tests call it
+    // that way, and a link list silently populated from a singleton
+    // would make those tests lie about what the page renders.
+    test('the merge is pure: no people in, no people out', () {
+      expect(bibleNarrativeEvents(timeline).every((e) => e.people.isEmpty),
+          isTrue);
+    });
+
+    // Refuted assumption, kept as a guard. Twelve family-tree ids are
+    // also wheel record ids — `noah`, `shem`, `judah` and nine more —
+    // because both datasets name people after the nations descended
+    // from them. Only `noah` is currently linked to an event, so the
+    // hazard is live. A person link's id addresses the family tree and
+    // nothing else; feeding one to a wheel-record lookup would silently
+    // open the nation of Judah instead of the man.
+    test('a person id is not a wheel record id', () {
+      final wheelIds = {
+        ...wheel.events.map((e) => e.id),
+        ...wheel.nations.map((n) => n.id),
+        ...wheel.powers.map((p) => p.id),
+        ...wheel.streams.map((s) => s.id),
+      };
+      final collisions =
+          tree.map((p) => p.id).where(wheelIds.contains).toSet();
+      expect(collisions, contains('noah'));
+      expect(collisions, contains('judah'));
+      expect(collisions.length, greaterThanOrEqualTo(12));
+      // Every hit the search returns is still addressed by event id, so
+      // the two namespaces never meet in a result.
+      final byEventId = {for (final e in withPeople) e.id: e};
+      for (final e in withPeople.where((e) => e.people.isNotEmpty)) {
+        expect(byEventId[e.id], isNotNull);
+        expect(e.id, startsWith(kBibleEventIdPrefix));
       }
     });
   });

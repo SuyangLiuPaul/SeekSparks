@@ -44,6 +44,7 @@ import 'package:seeksparks/services/chronology_service.dart';
 import 'package:seeksparks/utils/version_mapper.dart'
     show localizedReferenceLabel;
 import 'package:seeksparks/utils/wheel_search.dart' show kWheelNearestPerYear;
+import 'package:seeksparks/widgets/person_detail_sheet.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -599,5 +600,46 @@ void main() {
         data.events.where((e) => e.timelineEra == 'antediluvian').toList();
     expect(ante, hasLength(8));
     expect(ante.every((e) => e.id.startsWith(kBibleEventIdPrefix)), isTrue);
+  });
+
+  /// THE PEOPLE ON THE RECORD (#318 phase 21).
+  ///
+  /// `wheel_bible_narrative_test.dart` proves the names arrive on the
+  /// event and `wheel_search_test.dart` proves the box can find them.
+  /// Neither can see the two ways this feature is still wholly broken
+  /// with both of them green: the sheet may never print the row, and
+  /// the row's tap may throw.
+  ///
+  /// The tap is the one worth pumping. `WbType.of` and `WbColors.of`
+  /// WATCH, and `context.watch` asserts outside `build` — a tap handler
+  /// is not a build. That exact mistake once meant no detail sheet on
+  /// this page could open at all in a debug build, and it is invisible
+  /// to `flutter analyze`, invisible in release, and invisible to any
+  /// test that only reads the page at rest.
+  testWidgets('an event names its people, and the name opens the person',
+      (tester) async {
+    final e = injected('moses_born');
+    expect(e.people, isNotEmpty,
+        reason: 'the record chosen for this test no longer links anyone');
+    await pump(tester, const Size(1440, 900));
+    await openByYear(tester, e);
+
+    // Labelled, and reusing the timeline page's own heading rather than
+    // inventing a second word for the same thing.
+    final sheet = sheetText(tester);
+    expect(sheet, contains(uiStrings['timelinePeople']!['zh-Hans']!));
+    for (final p in e.people) {
+      expect(sheet, contains(p.nameFor('zh-Hans')), reason: p.id);
+    }
+
+    final name = e.people.first.nameFor('zh-Hans');
+    await tester.tap(find.text(name).first);
+    await settle(tester);
+    expect(tester.takeException(), isNull,
+        reason: 'tapping a person threw — a tap handler is not a build, so '
+            'a `WbType.of`/`WbColors.of` watch in it asserts');
+    expect(find.byType(PersonDetailSheet), findsOneWidget,
+        reason: 'the name is underlined and does nothing');
+    await unmount(tester);
   });
 }

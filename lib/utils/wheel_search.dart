@@ -60,6 +60,16 @@ enum WheelHitVia {
   /// In the description or note.
   description,
 
+  /// In the name of one of the people the record NAMES —
+  /// [WheelHit.matched] carries that name, in the script it matched in.
+  ///
+  /// Above [reference] because the person is a subject of the record
+  /// and the reference is only its address, and because five of the
+  /// people the wheel's records name appear in no title or description
+  /// anywhere in the corpus: for those readers this tier is not a
+  /// refinement of the answer, it IS the answer.
+  person,
+
   /// In one of the verses the record cites — [WheelHit.matched] carries
   /// the reference, in its stored English form.
   reference,
@@ -407,11 +417,16 @@ WheelSearchResult searchWheel({
   }
 
   /// The strongest tier this record matches on, or null.
+  ///
+  /// [people] is empty for every kind but an event — a band, a nation
+  /// of Genesis 10 and a power carry no person links — so the tier
+  /// simply never fires for them rather than needing a special case.
   (int, WheelHitVia, String)? classify(
     Map<String, String> names,
     Map<String, String> prose,
-    List<String> refs,
-  ) {
+    List<String> refs, {
+    List<WheelPersonLink> people = const [],
+  }) {
     final shown = names[locale] ?? names['en'] ?? '';
     final foldedShown = foldForWheelSearch(shown);
     if (foldedShown == q) return (10, WheelHitVia.title, '');
@@ -427,16 +442,32 @@ WheelSearchResult searchWheel({
         return (13, WheelHitVia.description, '');
       }
     }
+    // The reader's own script first, so `matched` prints the name the
+    // chip beside it will print. Falling through to the other two is
+    // the same courtesy `otherLocale` extends to a title.
+    for (final p in people) {
+      final own = p.names[locale];
+      if (own != null && wheelMatches(foldForWheelSearch(own), q)) {
+        return (14, WheelHitVia.person, own);
+      }
+    }
+    for (final p in people) {
+      for (final n in p.allNames) {
+        if (wheelMatches(foldForWheelSearch(n), q)) {
+          return (14, WheelHitVia.person, n);
+        }
+      }
+    }
     var found = '';
     if (refHit(refs, (r) => found = r)) {
-      return (14, WheelHitVia.reference, found);
+      return (15, WheelHitVia.reference, found);
     }
     return null;
   }
 
   for (final e in data.events) {
     if (seen.contains('event:${e.id}')) continue;
-    final c = classify(e.titles, e.descs, e.refs);
+    final c = classify(e.titles, e.descs, e.refs, people: e.people);
     if (c == null) continue;
     take('event:${e.id}');
     hits.add(WheelHit(
