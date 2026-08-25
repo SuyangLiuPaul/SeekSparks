@@ -286,6 +286,7 @@ class _ChronologyPageState extends State<ChronologyPage> {
             locale: locale,
             onTradition: (id) => setState(() => _tradition = id),
             onEpoch: (e) => _showEpochSheet(data, e, tradition, locale),
+            onProvenance: () => _showProvenanceSheet(data, tradition, locale),
           ),
           Expanded(child: chart),
         ],
@@ -387,6 +388,35 @@ class _ChronologyPageState extends State<ChronologyPage> {
       ),
     );
   }
+
+  /// The same kind of thing as an epoch — a sheet, at every width, over a
+  /// chart that keeps its selection — for the same reason: it has no band
+  /// to draw and must not take `_selectedId` from whoever the reader was
+  /// comparing.
+  Future<void> _showProvenanceSheet(
+    ChronologyData data,
+    ChronologyTradition tradition,
+    String locale,
+  ) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      constraints: const BoxConstraints(maxWidth: 720),
+      builder: (sheetCtx) => DraggableScrollableSheet(
+        initialChildSize: 0.6,
+        minChildSize: 0.3,
+        maxChildSize: 0.95,
+        expand: false,
+        builder: (_, controller) => _ProvenancePanel(
+          data: data,
+          tradition: tradition,
+          locale: locale,
+          scrollController: controller,
+          onClose: () => Navigator.of(sheetCtx).maybePop(),
+        ),
+      ),
+    );
+  }
 }
 
 /// Tradition switch, and the sentences that keep the chart honest.
@@ -397,6 +427,7 @@ class _Header extends StatelessWidget {
     required this.locale,
     required this.onTradition,
     required this.onEpoch,
+    required this.onProvenance,
   });
 
   final ChronologyData data;
@@ -404,6 +435,7 @@ class _Header extends StatelessWidget {
   final String locale;
   final ValueChanged<String> onTradition;
   final ValueChanged<ChronologyEpoch> onEpoch;
+  final VoidCallback onProvenance;
 
   String _s(String key, String fallback) =>
       uiStrings[key]?[locale] ?? fallback;
@@ -437,6 +469,16 @@ class _Header extends StatelessWidget {
                   selected: tr.id == tradition.id,
                   onTap: () => onTradition(tr.id),
                 ),
+              // Beside the text switch rather than at the end of the
+              // epoch list, because the first thing this sheet answers is
+              // what those two pills are and where each one's numbers
+              // were read from.
+              _HeaderLink(
+                key: const ValueKey('chronologyProvenance'),
+                name: _s('chronologyProvenance',
+                    'How this chart was made (select to read)'),
+                onTap: onProvenance,
+              ),
               // Every epoch, with the verse that dates it. The name and
               // the position are on the chart; what only this line can
               // give is the exact year and the reference behind it,
@@ -456,7 +498,7 @@ class _Header extends StatelessWidget {
               ),
               for (final e in data.epochs)
                 if (e.years[tradition.id] != null)
-                  _EpochLink(
+                  _HeaderLink(
                     key: ValueKey('chronologyEpoch_${e.id}'),
                     name: e.nameFor(locale),
                     trailing: ' · ${_s('chronologyAm', 'AM')} '
@@ -523,18 +565,19 @@ class _Header extends StatelessWidget {
   }
 }
 
-/// An epoch in the header: the name in link colour, its year and verse
-/// after it in the muted weight the rest of the header uses.
+/// Something in the header that opens: the name in link colour, and
+/// whatever qualifies it after that in the muted weight the rest of the
+/// header uses.
 ///
 /// Deliberately not a [_Pill]. The pills beside it are the tradition
 /// switch — a control that changes what the chart shows and stays down
-/// — and an epoch does neither. Giving both the same shape would say
-/// they behave alike.
-class _EpochLink extends StatelessWidget {
-  const _EpochLink({
+/// — and neither an epoch nor the provenance sheet does either.
+/// Giving both the same shape would say they behave alike.
+class _HeaderLink extends StatelessWidget {
+  const _HeaderLink({
     super.key,
     required this.name,
-    required this.trailing,
+    this.trailing = '',
     required this.onTap,
   });
 
@@ -1511,6 +1554,158 @@ class _EpochPanel extends StatelessWidget {
               ),
             ],
           ],
+          const SizedBox(height: 16),
+          Text(
+            data.unitNoteFor(locale),
+            style: TextStyle(fontSize: t.chrome, color: wb.mutedText),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// THE ANSWER TO "HOW DO YOU KNOW", WHICH SHIPPED IN THE ASSET AND HAD
+/// NO SURFACE.
+///
+/// Five paragraphs were written into `_meta` when this module was built
+/// — which editions the figures were read out of, what `checked` means
+/// and how many figures carry it, how far the two texts diverge, that a
+/// separately-built artefact agrees with 23 of 23 shared figures, and why
+/// there are two texts here and not three. `ChronologyData` parsed two of
+/// them and printed none. That is the same defect as the epoch notes one
+/// phase earlier, and it matters more: bars on an axis look settled, and
+/// the sentences saying what kind of claim they are were unreachable.
+///
+/// Why a sheet rather than the header. The header is the chart's layout
+/// sibling, so a line there is a line of chart, and these are long
+/// paragraphs — the checks note alone is six sentences. The header
+/// carries the link, which is what tells a reader who has opened nothing
+/// that there is something to open.
+///
+/// The disagreement COUNT is printed and the disagreements themselves are
+/// not. There can never be one: the generator fails the build rather than
+/// writing it, which is what the second-witness paragraph tells the
+/// reader. Rendering the list would mean shipping a widget that prints
+/// the generator's own English diagnostics into a Chinese page, for a
+/// case that cannot arise.
+class _ProvenancePanel extends StatelessWidget {
+  const _ProvenancePanel({
+    required this.data,
+    required this.tradition,
+    required this.locale,
+    required this.onClose,
+    this.scrollController,
+  });
+
+  final ChronologyData data;
+  final ChronologyTradition tradition;
+  final String locale;
+  final VoidCallback onClose;
+  final ScrollController? scrollController;
+
+  String _s(String key, String fallback) =>
+      uiStrings[key]?[locale] ?? fallback;
+
+  @override
+  Widget build(BuildContext context) {
+    final wb = WbColors.of(context);
+    final t = WbType.of(context);
+    final p = data.provenance;
+
+    Widget heading(String text) => Padding(
+          padding: const EdgeInsets.only(top: 16, bottom: 4),
+          child: Text(
+            text,
+            style: TextStyle(
+                fontSize: t.text,
+                fontWeight: FontWeight.w600,
+                color: wb.text),
+          ),
+        );
+    Widget body(String text) => Padding(
+          padding: const EdgeInsets.only(bottom: 2),
+          child:
+              Text(text, style: TextStyle(fontSize: t.text, color: wb.text)),
+        );
+
+    return Container(
+      color: wb.paneBg,
+      child: ListView(
+        controller: scrollController,
+        padding: const EdgeInsets.fromLTRB(14, 12, 14, 24),
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  _s('chronologyProvenanceTitle', 'How this chart was made'),
+                  style: TextStyle(
+                      fontSize: t.scaled(22),
+                      fontWeight: FontWeight.w600,
+                      color: wb.text),
+                ),
+              ),
+              IconButton(
+                onPressed: onClose,
+                iconSize: t.scaledChrome(18),
+                icon: const Icon(Icons.close),
+                tooltip: _s('close', 'Close'),
+              ),
+            ],
+          ),
+          heading(_s('chronologyProvenanceTexts', 'Which texts')),
+          body(p.traditionsNoteFor(locale)),
+          heading(
+              _s('chronologyProvenanceSources', 'Where the numbers come from')),
+          // Both texts, not only the one on show: the reader can switch,
+          // and the sentence explaining what they would be switching to
+          // is exactly what this sheet is for. The one in front of them is
+          // in reading colour and the other muted, the same distinction
+          // the epoch sheet draws between the two years.
+          for (final tr in data.traditions)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    tr.longNameFor(locale),
+                    style: TextStyle(
+                      fontSize: t.chrome,
+                      fontWeight: tr.id == tradition.id
+                          ? FontWeight.w600
+                          : FontWeight.normal,
+                      color: tr.id == tradition.id ? wb.text : wb.mutedText,
+                    ),
+                  ),
+                  Text(
+                    p.sourceFor(tr.id, locale),
+                    style: TextStyle(
+                      fontSize: t.text,
+                      color: tr.id == tradition.id ? wb.text : wb.mutedText,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          heading(_s('chronologyProvenanceChecks', 'What was checked')),
+          body(_s(
+                  'chronologyProvenanceSums',
+                  '{n} figures on this chart are checked against a third '
+                      'number the verse itself states.')
+              .replaceAll('{n}', '${p.sumsChecked}')),
+          body(p.checksNoteFor(locale)),
+          heading(_s('chronologyProvenanceWitness', 'A second witness')),
+          body(p.secondWitnessFor(locale)),
+          Text(
+            _s('chronologyProvenanceDisagreements', 'Disagreements: {n}')
+                .replaceAll('{n}', '${p.disagreements.length}'),
+            style: TextStyle(fontSize: t.chrome, color: wb.mutedText),
+          ),
+          heading(_s(
+              'chronologyProvenanceDiffers', 'How far the two texts differ')),
+          body(p.traditionAgreementFor(locale)),
           const SizedBox(height: 16),
           Text(
             data.unitNoteFor(locale),

@@ -6349,6 +6349,68 @@ const uiStrings = {
     'zh-Hant': '在本圖表上，兩種經文在此相差 {n} 年。',
     'en': 'On this chart the two texts are {n} years apart here.',
   },
+  // A chart of dates is the most persuasive thing this app draws, and
+  // every sentence answering "how do you know" was written into the asset
+  // and rendered nowhere. One link, one sheet.
+  'chronologyProvenance': {
+    'zh-Hans': '本图表的依据（点选查看）',
+    'zh-Hant': '本圖表的依據（點選查看）',
+    'en': 'How this chart was made (select to read)',
+  },
+  'chronologyProvenanceTitle': {
+    'zh-Hans': '本图表的依据',
+    'zh-Hant': '本圖表的依據',
+    'en': 'How this chart was made',
+  },
+  'chronologyProvenanceTexts': {
+    'zh-Hans': '所用经文',
+    'zh-Hant': '所用經文',
+    'en': 'Which texts',
+  },
+  'chronologyProvenanceSources': {
+    'zh-Hans': '数字的来源',
+    'zh-Hant': '數字的來源',
+    'en': 'Where the numbers come from',
+  },
+  'chronologyProvenanceChecks': {
+    'zh-Hans': '核对过的地方',
+    'zh-Hant': '核對過的地方',
+    'en': 'What was checked',
+  },
+  // "Checked against a third number the verse states" is the whole claim
+  // — not that the figure is true, but that our reading of it cannot be
+  // out by a digit without the verse itself saying so.
+  //
+  // The count is per text, not per man: 24 is twelve men read twice, and
+  // a reader who takes it for twelve-times-two men is told twice as much
+  // as was checked. The unit is named in the sentence rather than fixed
+  // by a second hardcoded number, which would go stale on its own.
+  'chronologyProvenanceSums': {
+    'zh-Hans': '本图表有 {n} 处数字，是用经文自己给出的第三个数核对过的'
+        '（两种经文各算一处）。',
+    'zh-Hant': '本圖表有 {n} 處數字，是用經文自己給出的第三個數核對過的'
+        '（兩種經文各算一處）。',
+    'en': '{n} figures on this chart are checked against a third number the '
+        'verse itself states — one for each man in each of the two texts.',
+  },
+  'chronologyProvenanceWitness': {
+    'zh-Hans': '另一个见证',
+    'zh-Hant': '另一個見證',
+    'en': 'A second witness',
+  },
+  // Stated even when it is zero. A line that appears only on failure
+  // leaves a reader unable to tell "we looked and found none" from "we
+  // never looked".
+  'chronologyProvenanceDisagreements': {
+    'zh-Hans': '不合之处：{n}',
+    'zh-Hant': '不合之處：{n}',
+    'en': 'Disagreements: {n}',
+  },
+  'chronologyProvenanceDiffers': {
+    'zh-Hans': '两种经文相差多少',
+    'zh-Hant': '兩種經文相差多少',
+    'en': 'How far the two texts differ',
+  },
   'chronologyBegatAt': {
     'zh-Hans': '生下一代时的年岁',
     'zh-Hant': '生下一代時的年歲',

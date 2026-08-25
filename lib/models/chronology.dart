@@ -363,6 +363,84 @@ class ChronologyEra {
       );
 }
 
+/// How the chart knows what it draws.
+///
+/// The generator has written all of this into the asset's `_meta` block
+/// since the module shipped, and until now the app rendered none of it:
+/// which editions the figures were read out of, what "checked" means and
+/// how many figures carry it, how far the two texts actually diverge, and
+/// that a second artefact built by a different script agrees. A chart of
+/// dates is the most persuasive thing this app draws, so the answer to
+/// "how do you know" has to be reachable from it.
+///
+/// Every string here is localised, because printing them in English is
+/// the same defect as not printing them — a Chinese reader could not read
+/// the answer either way. The asset paths are deliberately NOT part of
+/// the prose: a path cannot be translated, and naming the edition sends
+/// the reader to something they can actually open in this app.
+class ChronologyProvenance {
+  const ChronologyProvenance({
+    required this.traditionsNote,
+    required this.sources,
+    required this.sumsChecked,
+    required this.checksNote,
+    required this.traditionAgreement,
+    required this.secondWitness,
+    required this.disagreements,
+  });
+
+  /// Why two texts are charted, and why the Samaritan Pentateuch is not.
+  final Map<String, String> traditionsNote;
+
+  /// Tradition id -> the localised sentence naming the edition its
+  /// figures were read out of.
+  final Map<String, Map<String, String>> sources;
+
+  /// How many figures were checked against a third number the verse
+  /// itself states, across both texts.
+  final int sumsChecked;
+  final Map<String, String> checksNote;
+  final Map<String, String> traditionAgreement;
+  final Map<String, String> secondWitness;
+
+  /// Where the second witness and this chart disagree. The generator
+  /// fails rather than emitting one, so this is empty in every shipped
+  /// asset — and the surface still states the count, because "none" is a
+  /// result and an absent line is not.
+  final List<String> disagreements;
+
+  String traditionsNoteFor(String locale) => _pick(traditionsNote, locale);
+  String checksNoteFor(String locale) => _pick(checksNote, locale);
+  String traditionAgreementFor(String locale) =>
+      _pick(traditionAgreement, locale);
+  String secondWitnessFor(String locale) => _pick(secondWitness, locale);
+  String sourceFor(String traditionId, String locale) =>
+      _pick(sources[traditionId] ?? const {}, locale);
+
+  static String _pick(Map<String, String> m, String locale) =>
+      m[locale] ?? m['en'] ?? '';
+
+  static ChronologyProvenance fromMeta(Map<String, dynamic> meta) {
+    final checks = ((meta['checks'] as Map?) ?? const {}).cast<String, dynamic>();
+    final derived =
+        ((meta['derivedFrom'] as Map?) ?? const {}).cast<String, dynamic>();
+    return ChronologyProvenance(
+      traditionsNote: _localised(meta['traditions']),
+      sources: {
+        for (final e in derived.entries)
+          if (e.value is Map)
+            e.key: _localised((e.value as Map)['text']),
+      },
+      sumsChecked: (checks['sumsChecked'] as num?)?.toInt() ?? 0,
+      checksNote: _localised(checks['note']),
+      traditionAgreement: _localised(checks['traditionAgreement']),
+      secondWitness: _localised(checks['secondWitness']),
+      disagreements:
+          ((checks['disagreements'] as List?) ?? const []).map((e) => '$e').toList(),
+    );
+  }
+}
+
 class ChronologyData {
   const ChronologyData({
     required this.traditions,
@@ -371,9 +449,7 @@ class ChronologyData {
     required this.patriarchs,
     required this.era,
     required this.unitNotes,
-    required this.traditionsNote,
-    required this.secondWitness,
-    required this.sumsChecked,
+    required this.provenance,
   });
 
   final List<ChronologyTradition> traditions;
@@ -388,9 +464,7 @@ class ChronologyData {
   /// one string in the asset's `_meta` block the app prints, so it is the
   /// one that has to exist in the reader's script.
   final Map<String, String> unitNotes;
-  final String traditionsNote;
-  final String secondWitness;
-  final int sumsChecked;
+  final ChronologyProvenance provenance;
 
   String unitNoteFor(String locale) =>
       unitNotes[locale] ?? unitNotes['en'] ?? '';
@@ -420,7 +494,6 @@ class ChronologyData {
 
   static ChronologyData fromJson(Map<String, dynamic> j) {
     final meta = ((j['_meta'] as Map?) ?? const {}).cast<String, dynamic>();
-    final checks = ((meta['checks'] as Map?) ?? const {}).cast<String, dynamic>();
     return ChronologyData(
       traditions: ((j['traditions'] as List?) ?? const [])
           .whereType<Map<String, dynamic>>()
@@ -442,9 +515,7 @@ class ChronologyData {
           ? ChronologyEra.fromJson((j['era'] as Map).cast<String, dynamic>())
           : null,
       unitNotes: _localised(meta['unitNote']),
-      traditionsNote: (meta['traditions'] as String?) ?? '',
-      secondWitness: (checks['secondWitness'] as String?) ?? '',
-      sumsChecked: (checks['sumsChecked'] as num?)?.toInt() ?? 0,
+      provenance: ChronologyProvenance.fromMeta(meta),
     );
   }
 }

@@ -595,6 +595,104 @@ void main() {
       sweep('the ${epoch.id} sheet', 30);
       await unmount(tester);
     }
+
+    // The provenance sheet is the longest continuous prose the module
+    // has, and it scrolls — one screenful holds about two of its seven
+    // paragraphs, so a sweep that did not scroll would clear the title
+    // and miss every sentence the sheet exists to show.
+    await pump(tester, const Size(1440, 900));
+    await tester.tap(find.byKey(const ValueKey('chronologyProvenance')));
+    await settle(tester);
+    for (var i = 0; i < 8; i++) {
+      sweep('the provenance sheet', 8);
+      await tester.drag(find.byType(Scrollable).last, const Offset(0, -260));
+      await settle(tester);
+    }
+    await unmount(tester);
+  });
+
+  // #318 phase 9. Every sentence on this sheet was generated into the
+  // asset on the day the module shipped and NOTHING IN lib/ READ ANY OF
+  // THEM: which editions the figures were read out of, what "checked"
+  // means, how far the two texts diverge, that a separately built
+  // artefact agrees. A chart of dates is the most persuasive thing this
+  // app draws and the answer to "how do you know" was in the file and
+  // not on the screen. This is a call-site guard, not a wording one: it
+  // asserts each string reaches a pixel, so the block cannot quietly go
+  // back to being unreachable.
+  testWidgets('the provenance sheet renders every sentence the asset carries',
+      (tester) async {
+    const locale = 'zh-Hans';
+    final p = data.provenance;
+    final expected = <String>{
+      p.traditionsNoteFor(locale),
+      p.checksNoteFor(locale),
+      p.secondWitnessFor(locale),
+      p.traditionAgreementFor(locale),
+      for (final tr in data.traditions) p.sourceFor(tr.id, locale),
+      uiStrings['chronologyProvenanceSums']![locale]!
+          .replaceAll('{n}', '${p.sumsChecked}'),
+      // Printed even at nought. A line that appears only on failure
+      // tells a reader nothing on the run where it is absent.
+      uiStrings['chronologyProvenanceDisagreements']![locale]!
+          .replaceAll('{n}', '${p.disagreements.length}'),
+      data.unitNoteFor(locale),
+    };
+    expect(expected.length, 9);
+
+    await pump(tester, const Size(1440, 900));
+    await tester.tap(find.byKey(const ValueKey('chronologyProvenance')));
+    await settle(tester);
+    expect(tester.takeException(), isNull);
+
+    final seen = <String>{};
+    for (var i = 0; i < 10; i++) {
+      for (final para
+          in tester.renderObjectList<RenderParagraph>(find.byType(RichText))) {
+        seen.add(para.text.toPlainText());
+      }
+      await tester.drag(find.byType(Scrollable).last, const Offset(0, -260));
+      await settle(tester);
+    }
+    for (final s in expected) {
+      expect(seen, contains(s),
+          reason: s.substring(0, s.length < 14 ? s.length : 14));
+    }
+    await unmount(tester);
+  });
+
+  // The sheet, not the side panel. `_DetailPanel` is keyed on the
+  // selected man so that his band can be drawn across the rows; handing
+  // it an epoch or this sheet would silently drop whoever the reader was
+  // comparing. Opening provenance while a man is selected must leave him
+  // selected and his panel intact underneath.
+  testWidgets('provenance opens over the chart without dropping a selection',
+      (tester) async {
+    final noah = data.byId('noah')!;
+    // The verse his lifespan was read out of is printed on his panel and
+    // nowhere else, so it stands in for "the panel is open on Noah" —
+    // and it is asserted absent first, or the last assertion here would
+    // pass on a page that never had a panel at all.
+    final ref = localizedReferenceLabel(
+        noah.figures['mt']!.refs['lifespan']!, 'zh-Hans');
+
+    await pump(tester, const Size(1440, 900));
+    expect(find.text(ref), findsNothing);
+    await tester.tap(find.text(noah.nameFor('zh-Hans')));
+    await settle(tester);
+    expect(find.text(ref), findsWidgets);
+
+    await tester.tap(find.byKey(const ValueKey('chronologyProvenance')));
+    await settle(tester);
+    expect(tester.takeException(), isNull);
+    expect(find.text(data.provenance.traditionsNoteFor('zh-Hans')),
+        findsOneWidget);
+
+    await tester.tapAt(const Offset(20, 20));
+    await settle(tester);
+    expect(find.text(ref), findsWidgets,
+        reason: 'the provenance sheet took the selection with it');
+    await unmount(tester);
   });
 
   // Every reference in this asset is stored English, because that is

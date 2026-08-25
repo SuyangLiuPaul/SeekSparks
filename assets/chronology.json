@@ -9,17 +9,47 @@
    "zh-Hant": "創世紀元——自創世起算的年數，按創世紀 5 章與 11 章所記的歲數累加而得。經文並未給出可換算的絕對年代，故此處不列公元前年份。Ussher 的公元前 4004 年只是十七世紀諸多推算之一，本圖未予採用。"
   },
   "derivedFrom": {
-   "mt": "assets/kjv.json (Authorised Version, public domain), which renders the Masoretic figures.",
-   "lxx": "assets/lxxwh.json (Septuagint), read in Greek."
+   "mt": {
+    "asset": "assets/kjv.json",
+    "text": {
+     "en": "Every Masoretic figure on this chart is read out of the Authorised Version bundled with this app (public domain), which renders the Masoretic numbers. Only the verse addresses are written down; every number is taken from the verse itself.",
+     "zh-Hans": "本图表中马所拉一系的每个数字，都是从本应用所载的英王钦定本（公有领域）中读出的，该译本所据即马所拉经文。写定的只有经文出处，数字一概取自经文本身。",
+     "zh-Hant": "本圖表中馬所拉一系的每個數字，都是從本應用所載的英王欽定本（公有領域）中讀出的，該譯本所據即馬所拉經文。寫定的只有經文出處，數字一概取自經文本身。"
+    }
+   },
+   "lxx": {
+    "asset": "assets/lxxwh.json",
+    "text": {
+     "en": "The Septuagint figures are read in Greek out of the Septuagint bundled with this app, by the same script and in the same way.",
+     "zh-Hans": "七十士一系的数字，则以希腊文从本应用所载的七十士译本中读出，方法与上相同。",
+     "zh-Hant": "七十士一系的數字，則以希臘文從本應用所載的七十士譯本中讀出，方法與上相同。"
+    }
+   }
   },
   "checks": {
    "sumsChecked": 24,
-   "note": "Genesis 5 states the age at begetting, the years lived afterwards, and the total, so the parse of every Genesis 5 figure is checked against the third number the verse itself supplies. Genesis 11 states only the first two, so those lifespans are sums and carry no such check; they are marked checked: false. In Genesis 12-50 only Jacob has a third figure — 47:9's 130 plus 47:28's 17 years in Egypt against the 147 that same verse states — and it checks the descent year as well as the parse. Moses and Aaron are checked the same way across three books: an age before Pharaoh (Exodus 7:7), the forty years of Numbers 14:33, and a lifetime stated separately in Deuteronomy 34:7 and Numbers 33:39. Checked describes the parse, never the year on the axis; where a year had to be supplied the note says so.",
-   "traditionAgreement": "Genesis 5 and 11: the two texts state the same begetting age and lifespan for 4 of 19 men. Genesis 12-50: 4 of 4. The choice of text therefore moves the genealogies and leaves the patriarchs where they are.",
-   "secondWitness": "23 of 23 Anno Mundi birth years agree with assets/family_tree.json, which was built separately.",
+   "note": {
+    "en": "Genesis 5 states the age at begetting, the years lived afterwards, and the total, so the parse of every Genesis 5 figure is checked against the third number the verse itself supplies. Genesis 11 states only the first two, so those lifespans are sums and carry no such check. In Genesis 12-50 only Jacob has a third figure — Genesis 47:9's 130 plus Genesis 47:28's 17 years in Egypt against the 147 that same verse states — and it checks the descent year as well as the parse. Moses and Aaron are checked the same way across three books: an age before Pharaoh (Exodus 7:7), the forty years of Numbers 14:33, and a lifetime stated separately in Deuteronomy 34:7 and Numbers 33:39. Checked describes the parse, never the year on the axis; where a year had to be supplied the note says so.",
+    "zh-Hans": "创世纪 5 章同时记下生子时的岁数、生子之后所活的年数，以及一生的总年数，所以该章每个数字的解析，都可以用经文自己给出的第三个数来核对。创世纪 11 章只记前两项，故那些寿数是相加所得，无从如此核对。创世纪 12-50 章中只有雅各有第三个数——创世纪 47:9 的 130 岁，加上创世纪 47:28 在埃及的 17 年，正是同一节所说的 147 年——这不但核对了数字的解析，也核对了下埃及的那一年。摩西与亚伦则跨三卷书以同样方式核对：见法老前的岁数（出埃及记 7:7）、民数记 14:33 的四十年，以及申命记 34:7 与民数记 33:39 分别记下的一生年数。所谓核对，说的是数字的解析，而非轴上的年份；凡年份须由推算补上之处，注中都会说明。",
+    "zh-Hant": "創世紀 5 章同時記下生子時的歲數、生子之後所活的年數，以及一生的總年數，所以該章每個數字的解析，都可以用經文自己給出的第三個數來核對。創世紀 11 章只記前兩項，故那些壽數是相加所得，無從如此核對。創世紀 12-50 章中只有雅各有第三個數——創世紀 47:9 的 130 歲，加上創世紀 47:28 在埃及的 17 年，正是同一節所說的 147 年——這不但核對了數字的解析，也核對了下埃及的那一年。摩西與亞倫則跨三卷書以同樣方式核對：見法老前的歲數（出埃及記 7:7）、民數記 14:33 的四十年，以及申命記 34:7 與民數記 33:39 分別記下的一生年數。所謂核對，說的是數字的解析，而非軸上的年份；凡年份須由推算補上之處，註中都會說明。"
+   },
+   "traditionAgreement": {
+    "en": "Genesis 5 and 11: the two texts state the same figures for 4 of 19 men. Genesis 12-50: 4 of 4. Exodus to Deuteronomy: 2 of 2. The choice of text therefore moves the genealogies and leaves everyone after them where they are.",
+    "zh-Hans": "创世纪 5、11 章：两种经文对其中 19 人里的 4 人，所记数字相同。创世纪 12-50 章：4 人里 4 人。出埃及记至申命记：2 人里 2 人。可见选用哪一种经文，动的是家谱，其后各人所在的年代并不改变。",
+    "zh-Hant": "創世紀 5、11 章：兩種經文對其中 19 人裡的 4 人，所記數字相同。創世紀 12-50 章：4 人裡 4 人。出埃及記至申命記：2 人裡 2 人。可見選用哪一種經文，動的是家譜，其後各人所在的年代並不改變。"
+   },
+   "secondWitness": {
+    "en": "28 of 28 figures agree with this app's Family Tree, which was built separately, from a different source: 19 Anno Mundi birth years compared directly, 6 lifespans compared as intervals because that record dates those men BC, and 3 father-to-son gaps. A disagreement stops this chart being built.",
+    "zh-Hans": "本图表有 28 处可与本应用另行建立的圣经家谱对照，28 处相符。家谱是另据别的资料、由另一段程式建成的：其中 19 处直接比对创世纪元的出生年，6 处因家谱以公元前纪年，改以一生年数这一段年数比对，另有 3 处比对父子出生相隔的年数。若有一处不合，本图表便不会生成。",
+    "zh-Hant": "本圖表有 28 處可與本應用另行建立的聖經家譜對照，28 處相符。家譜是另據別的資料、由另一段程式建成的：其中 19 處直接比對創世紀元的出生年，6 處因家譜以公元前紀年，改以一生年數這一段年數比對，另有 3 處比對父子出生相隔的年數。若有一處不合，本圖表便不會生成。"
+   },
    "disagreements": []
   },
-  "traditions": "The Masoretic Text and the Septuagint state different ages in Genesis 5 and 11, and both texts ship with this app, so both are charted. The Samaritan Pentateuch states a third set; this repo does not hold that text and it is therefore absent rather than estimated."
+  "traditions": {
+   "en": "The Masoretic Text and the Septuagint state different ages in Genesis 5 and 11, and both texts ship with this app, so both are charted. The Samaritan Pentateuch states a third set of figures; this app does not carry that text, so it is absent here rather than estimated.",
+   "zh-Hans": "马所拉经文与七十士译本在创世纪 5、11 章所记的岁数并不相同，而本应用两种经文都有，故两种都绘出。撒玛利亚五经另记第三套数字；本应用未收录该经文，因此此处付之阙如，而不以推算补足。",
+   "zh-Hant": "馬所拉經文與七十士譯本在創世紀 5、11 章所記的歲數並不相同，而本應用兩種經文都有，故兩種都繪出。撒瑪利亞五經另記第三套數字；本應用未收錄該經文，因此此處付之闕如，而不以推算補足。"
+  }
  },
  "traditions": [
   {

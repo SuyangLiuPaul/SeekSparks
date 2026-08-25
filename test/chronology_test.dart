@@ -9,6 +9,17 @@ import 'package:seeksparks/utils/chronology_layout.dart';
 /// The chart is arithmetic on ages the Bible states, so the tests that
 /// matter are about the arithmetic and about the asset, not about
 /// widgets. A widget test would pass just as happily on wrong numbers.
+
+/// The other artefact, keyed by its own ids — which are not this chart's.
+Map<String, Map<String, dynamic>> _familyTree() {
+  final tree = json.decode(File('assets/family_tree.json').readAsStringSync())
+      as Map<String, dynamic>;
+  return {
+    for (final person in (tree['people'] as List).cast<Map<String, dynamic>>())
+      person['id'] as String: person
+  };
+}
+
 void main() {
   group('sharedYears', () {
     test('lives that never met share nothing', () {
@@ -409,9 +420,197 @@ void main() {
       }
     });
 
-    test('the second witness still agrees', () {
-      expect(data.secondWitness, contains('23 of 23'));
-      expect(data.sumsChecked, 24);
+    // The generator has written this block into the asset since the module
+    // shipped and the app rendered none of it, so nothing had ever read
+    // these sentences either — which is how one of them came to describe
+    // 23 comparisons as though all 23 were of the same kind. They render
+    // now, so every count inside them is a claim the app makes on screen,
+    // and a note is only as true as the arithmetic it quotes.
+    group('_meta provenance', () {
+      test('every sentence exists in all three scripts', () {
+        final p = data.provenance;
+        final sentences = <String, String Function(String)>{
+          'traditionsNote': p.traditionsNoteFor,
+          'checksNote': p.checksNoteFor,
+          'traditionAgreement': p.traditionAgreementFor,
+          'secondWitness': p.secondWitnessFor,
+          for (final t in data.traditions)
+            'source.${t.id}': (locale) => p.sourceFor(t.id, locale),
+        };
+        for (final e in sentences.entries) {
+          final en = e.value('en');
+          expect(en, isNotEmpty, reason: e.key);
+          for (final locale in ['zh-Hans', 'zh-Hant']) {
+            final s = e.value(locale);
+            expect(s, isNotEmpty, reason: '${e.key} $locale');
+            // The lookup falls back to English, so an ABSENT translation
+            // reads on screen as a present one. Only comparing catches it.
+            expect(s, isNot(en), reason: '${e.key} $locale is the English');
+          }
+        }
+      });
+
+      // A path is not an answer to "where did this come from": it cannot
+      // be translated, and it names a file the reader cannot open. The
+      // edition can be opened in this app, in their own script.
+      test('the reader is given editions, never our file paths', () {
+        for (final t in data.traditions) {
+          for (final locale in ['en', 'zh-Hans', 'zh-Hant']) {
+            final s = data.provenance.sourceFor(t.id, locale);
+            expect(s, isNot(contains('assets/')), reason: '${t.id} $locale');
+            expect(s, isNot(contains('.json')), reason: '${t.id} $locale');
+          }
+        }
+      });
+
+      test('the sums claim counts the figures actually marked checked', () {
+        final checked = [
+          for (final person in data.patriarchs)
+            for (final f in person.figures.values)
+              if (f.checked) person.id
+        ];
+        expect(data.provenance.sumsChecked, checked.length);
+        expect(data.provenance.sumsChecked, 24);
+      });
+
+      // THE JOIN KEY IS THE FIRST THING TO CHECK, and it was wrong. This
+      // chart spells men as the Authorised Version does (Enos, Cainan,
+      // Mahalaleel, Salah) and `family_tree.json` as modern versions do
+      // (Enosh, Kenan, Mahalalel, Shelah), plus a Nahor that has to be
+      // told from Abram's brother — so five rows missed the lookup and
+      // were dropped without a word. They all agreed, so the witness was
+      // only weaker than advertised, but they could not have failed the
+      // build if they had disagreed, which is what the sentence promises.
+      test('every man on the chart is joined to the second witness', () {
+        final byId = _familyTree();
+        const alias = {
+          'enos': 'enosh',
+          'cainan': 'kenan',
+          'mahalaleel': 'mahalalel',
+          'salah': 'shelah',
+          'nahor': 'nahor_elder',
+        };
+        // The tree holds both Nahors. A join that guessed from the
+        // spelling would have compared Terah's father with Abram's
+        // brother and reported an agreement either way.
+        expect(byId.containsKey('nahor'), isFalse);
+        expect(byId.containsKey('nahor_younger'), isTrue);
+        for (final person in data.inTradition('mt')) {
+          expect(byId[alias[person.id] ?? person.id], isNotNull,
+              reason: '${person.id} is witnessed by nothing');
+        }
+      });
+
+      // Re-derived here from the other asset, by the rule the generator
+      // uses, because the sentence's whole value is that a second artefact
+      // agrees — and a sentence saying so is worthless if nothing rechecks
+      // that it still does. THE SPLIT IS THE POINT: the tree dates the
+      // patriarchs BC, so 9 of the rows cannot be compared as years at
+      // all, only as intervals, and the note called all of them "birth
+      // years".
+      test('the second witness sentence states the split it measured', () {
+        final byId = _familyTree();
+        const alias = {
+          'enos': 'enosh',
+          'cainan': 'kenan',
+          'mahalaleel': 'mahalalel',
+          'salah': 'shelah',
+          'nahor': 'nahor_elder',
+        };
+        var birth = 0, span = 0, gap = 0, agreed = 0;
+        for (final person in data.inTradition('mt')) {
+          final rec = byId[alias[person.id] ?? person.id];
+          if (rec == null || rec['birthYear'] == null) continue;
+          final f = person.figures['mt']!;
+          if (rec['yearSystem'] == 'am') {
+            birth++;
+            if (rec['birthYear'] == f.birthAm) agreed++;
+          } else if (rec['deathYear'] != null) {
+            span++;
+            final years =
+                (rec['deathYear'] as num) - (rec['birthYear'] as num);
+            if (years == f.lifespan) agreed++;
+          }
+        }
+        for (final pair in [
+          ['abraham', 'isaac'],
+          ['isaac', 'jacob'],
+          ['jacob', 'joseph'],
+        ]) {
+          final a = byId[alias[pair[0]] ?? pair[0]];
+          final b = byId[alias[pair[1]] ?? pair[1]];
+          if (a == null || b == null) continue;
+          if (a['yearSystem'] != b['yearSystem']) continue;
+          if (a['birthYear'] == null || b['birthYear'] == null) continue;
+          gap++;
+          final years = (b['birthYear'] as num) - (a['birthYear'] as num);
+          if (years == data.byId(pair[0])!.figures['mt']!.begatAt) agreed++;
+        }
+        final total = birth + span + gap;
+        expect([birth, span, gap], [19, 6, 3]);
+        expect(agreed, total, reason: 'the second witness has stopped agreeing');
+
+        final en = data.provenance.secondWitnessFor('en');
+        expect(en, contains('$agreed of $total figures'));
+        expect(en, contains('$birth Anno Mundi birth years'));
+        expect(en, contains('$span lifespans'));
+        expect(en, contains('$gap father-to-son gaps'));
+        for (final locale in ['zh-Hans', 'zh-Hant']) {
+          final s = data.provenance.secondWitnessFor(locale);
+          for (final n in {birth, span, gap, total}) {
+            expect(s, contains('$n'), reason: '$locale does not state $n');
+          }
+        }
+        // Nothing may ship disagreeing: the generator raises rather than
+        // emit one, and the sheet still prints the count, because "none"
+        // is a result and a missing line is not.
+        expect(data.provenance.disagreements, isEmpty);
+      });
+
+      // Every man carried in both texts belongs to exactly one of the
+      // three groups the sentence names, or the sentence is quietly
+      // reporting on a subset. It covered 23 of 25 for a whole phase,
+      // because Moses and Aaron arrived after it was written.
+      test('the agreement sentence accounts for every two-tradition man', () {
+        final both = [
+          for (final person in data.patriarchs)
+            if (person.figures.containsKey('mt') &&
+                person.figures.containsKey('lxx'))
+              person
+        ];
+        int same(Iterable<Patriarch> group) => group.where((person) {
+              final m = person.figures['mt']!, l = person.figures['lxx']!;
+              return m.begatAt == l.begatAt && m.lifespan == l.lifespan;
+            }).length;
+        final genealogies =
+            both.where((p) => p.line == 'seth' || p.line == 'shem').toList();
+        final patriarchs = both.where((p) => p.line == 'abraham').toList();
+        final wilderness = both.where((p) => p.line == 'levi').toList();
+        expect(
+            genealogies.length + patriarchs.length + wilderness.length,
+            both.length,
+            reason: 'a man in both texts is in none of the three groups');
+        expect([genealogies.length, patriarchs.length, wilderness.length],
+            [19, 4, 2]);
+
+        final en = data.provenance.traditionAgreementFor('en');
+        expect(en, contains('${same(genealogies)} of ${genealogies.length}'));
+        expect(en, contains('${same(patriarchs)} of ${patriarchs.length}'));
+        expect(en, contains('${same(wilderness)} of ${wilderness.length}'));
+        // The asymmetry is the module's point: the texts diverge through
+        // the genealogies and agree on everyone after them.
+        expect(same(genealogies), 4);
+        expect(same(patriarchs), patriarchs.length);
+        expect(same(wilderness), wilderness.length);
+
+        // Joseph, Aaron and Moses state no begetting age in EITHER text,
+        // so the sentence's old "the same begetting age and lifespan"
+        // reported an agreement of two absences as two statements. What
+        // is true of all 25 is that every figure either text states, the
+        // other states alike.
+        expect(both.where((p) => p.figures['mt']!.begatAt == null).length, 3);
+        expect(en, isNot(contains('begetting age')));
+      });
     });
 
     test('the chart runs to Moses in both texts', () {

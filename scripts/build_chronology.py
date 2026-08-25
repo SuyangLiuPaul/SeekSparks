@@ -377,10 +377,20 @@ def cite_zh(ref, script):
     silently.
     """
     book, _, address = ref.rpartition(" ")
+    return f"{book_zh(book, script)} {address}"
+
+
+def book_zh(book, script):
+    """`Deuteronomy` -> `申命记`, failing the build on an unknown book.
+
+    A book named without an address — "Exodus to Deuteronomy" — cannot go
+    through [cite_zh], and stripping the address back off its output is
+    the kind of trick that works until someone cites chapter 10.
+    """
     names = BOOK_ZH.get(book)
     if names is None:
-        raise SystemExit(f"cite_zh: no Chinese name for {book!r} (in {ref!r})")
-    return f"{names[0 if script == 'zh-Hans' else 1]} {address}"
+        raise SystemExit(f"book_zh: no Chinese name for {book!r}")
+    return names[0 if script == "zh-Hans" else 1]
 
 
 class Reader:
@@ -1136,16 +1146,59 @@ def main():
     # same people, put there by a different script from a different
     # reading. Where both speak they must agree; a disagreement is a bug
     # in one of them and is worth more than either number alone.
+    #
+    # THREE DIFFERENT COMPARISONS ARE MADE HERE, AND THE SENTENCE THIS
+    # BLOCK WRITES HAS TO SAY SO. It read "N of N Anno Mundi birth years
+    # agree" from the day it was written, which is true of 14 of the 23
+    # and false of the other 9: the tree dates the patriarchs BC, so
+    # their rows are compared as intervals — a lifespan, or a
+    # father-to-son gap — and an interval is not a birth year. Nothing
+    # rendered the string, so nothing ever read it. Counting the kinds
+    # separately is what lets the sentence be checked.
+    #
+    # AND THE JOIN KEY HAD TO BE PROVED BEFORE ANY OF IT COUNTED. This
+    # chart names men as the Authorised Version spells them (Enos,
+    # Cainan, Mahalaleel, Salah) and family_tree.json names them as most
+    # modern versions do (Enosh, Kenan, Mahalalel, Shelah), so five ids
+    # missed the lookup and were dropped in silence — not compared, not
+    # reported, and not able to fail the build no matter what they said.
+    # The sentence's counts were true and its last clause was false for
+    # those five. Every one of them agrees, so the witness only ever got
+    # weaker, but a witness that skips a fifth of its rows without
+    # saying so is the failure this project has already been bitten by.
+    #
+    # The aliases are written out one by one and never guessed from the
+    # spelling: the tree holds BOTH `nahor_elder` (Terah's father, who is
+    # on this chart) and `nahor_younger` (Abram's brother, who is not),
+    # so a prefix match would have compared the wrong man and still
+    # reported an agreement.
+    TREE_ALIAS = {
+        "enos": "enosh",
+        "cainan": "kenan",
+        "mahalaleel": "mahalalel",
+        "salah": "shelah",
+        "nahor": "nahor_elder",
+    }
     tree = json.loads((ASSETS / "family_tree.json").read_text(encoding="utf-8"))
     by_id = {p["id"]: p for p in tree["people"]}
+    unjoined = [pid for pid in mt_order
+                if by_id.get(TREE_ALIAS.get(pid, pid)) is None]
+    if unjoined:
+        raise SystemExit(
+            f"no family_tree.json record for {unjoined}; add the id to "
+            f"TREE_ALIAS, or state in this message why that man cannot be "
+            f"witnessed — a row that silently misses the join is not "
+            f"checked by anything")
     agreed = checked = 0
+    witness_kinds = {"birth": 0, "span": 0, "gap": 0}
     disagreements = []
     for pid in mt_order:
-        person = by_id.get(pid)
-        if person is None or person.get("birthYear") is None:
+        person = by_id[TREE_ALIAS.get(pid, pid)]
+        if person.get("birthYear") is None:
             continue
         if person.get("yearSystem") == "am":
             checked += 1
+            witness_kinds["birth"] += 1
             if person["birthYear"] == mt_rows[pid]["birthAm"]:
                 agreed += 1
             else:
@@ -1163,6 +1216,7 @@ def main():
         # derivation is real corroboration rather than a restatement.
         if person.get("deathYear") is not None:
             checked += 1
+            witness_kinds["span"] += 1
             span = person["deathYear"] - person["birthYear"]
             if span == mt_rows[pid]["lifespan"]:
                 agreed += 1
@@ -1172,7 +1226,8 @@ def main():
                     f"Genesis as read here says {mt_rows[pid]['lifespan']}")
     for parent, child in (("abraham", "isaac"), ("isaac", "jacob"),
                           ("jacob", "joseph")):
-        a, b = by_id.get(parent), by_id.get(child)
+        a = by_id.get(TREE_ALIAS.get(parent, parent))
+        b = by_id.get(TREE_ALIAS.get(child, child))
         if a is None or b is None:
             continue
         if a.get("yearSystem") != b.get("yearSystem"):
@@ -1180,6 +1235,7 @@ def main():
         if a.get("birthYear") is None or b.get("birthYear") is None:
             continue
         checked += 1
+        witness_kinds["gap"] += 1
         gap = b["birthYear"] - a["birthYear"]
         if gap == mt_rows[parent]["begatAt"]:
             agreed += 1
@@ -1633,6 +1689,12 @@ def main():
     # two genealogical formulae, and from Terah on the two texts state
     # the same numbers. Worth saying, because it tells a reader which
     # part of this chart the choice of text actually moves.
+    #
+    # "The same FIGURES", not "the same begetting age and lifespan": for
+    # Joseph, Aaron and Moses the begetting age is null in both texts, so
+    # the sentence was reporting an agreement of two absences as though
+    # the texts had each stated an age. What is true of all 25 is that
+    # every figure either text states, the other states alike.
     def _agree(pids):
         same = both = 0
         for pid in pids:
@@ -1647,8 +1709,23 @@ def main():
     gen_ids = [p[0] for p in GEN5] + ["noah", "shem"] + [
         p[0] for p in GEN11_MT]
     abr_ids = [p[0] for p in ABRAHAMIC]
+    # Moses and Aaron are the only rows read from outside Genesis, and
+    # while the axis stopped at Joseph the sentence covered every man on
+    # the chart. It no longer did: two rows were drawn that no group
+    # counted, so a reader was being told how far the texts differ by a
+    # sentence silently scoped to 23 of the 25 rows in front of them.
+    exo_ids = ["aaron", "moses"]
     gen_same, gen_both = _agree(gen_ids)
     abr_same, abr_both = _agree(abr_ids)
+    exo_same, exo_both = _agree(exo_ids)
+    # Every row is in exactly one group, or is stated by one text only
+    # (the Septuagint's second Kainan) and so cannot agree or disagree.
+    single = sum(1 for p in patriarchs if len(p["figures"]) < 2)
+    if gen_both + abr_both + exo_both + single != len(patriarchs):
+        raise SystemExit(
+            f"the agreement sentence covers {gen_both + abr_both + exo_both} "
+            f"of {len(patriarchs) - single} comparable rows; every row on the "
+            f"chart has to be in one of its groups")
 
     doc = {
         "schemaVersion": 1,
@@ -1678,49 +1755,211 @@ def main():
                     "故此處不列公元前年份。Ussher 的公元前 4004 年只是"
                     "十七世紀諸多推算之一，本圖未予採用。"),
             },
+            # THE READER IS OWED THE EDITION, NOT OUR FILENAME. These
+            # sentences are printed now, so they are written three times
+            # like everything else on the page — and the asset path is a
+            # sibling key rather than part of the prose. A path cannot be
+            # translated, so putting one inside a Chinese paragraph
+            # would reintroduce the exact defect phase 8 removed; and
+            # naming the *edition* is the more useful sentence anyway,
+            # because a reader can open 英王钦定本 in this app and check
+            # the verse, which they cannot do with `assets/kjv.json`.
             "derivedFrom": {
-                "mt": "assets/kjv.json (Authorised Version, public domain), "
-                      "which renders the Masoretic figures.",
-                "lxx": "assets/lxxwh.json (Septuagint), read in Greek.",
+                "mt": {
+                    "asset": "assets/kjv.json",
+                    "text": {
+                        "en": (
+                            "Every Masoretic figure on this chart is read "
+                            "out of the Authorised Version bundled with "
+                            "this app (public domain), which renders the "
+                            "Masoretic numbers. Only the verse addresses "
+                            "are written down; every number is taken from "
+                            "the verse itself."),
+                        "zh-Hans": (
+                            "本图表中马所拉一系的每个数字，都是从本应用"
+                            "所载的英王钦定本（公有领域）中读出的，该译本"
+                            "所据即马所拉经文。写定的只有经文出处，数字"
+                            "一概取自经文本身。"),
+                        "zh-Hant": (
+                            "本圖表中馬所拉一系的每個數字，都是從本應用"
+                            "所載的英王欽定本（公有領域）中讀出的，該譯本"
+                            "所據即馬所拉經文。寫定的只有經文出處，數字"
+                            "一概取自經文本身。"),
+                    },
+                },
+                "lxx": {
+                    "asset": "assets/lxxwh.json",
+                    "text": {
+                        "en": (
+                            "The Septuagint figures are read in Greek out "
+                            "of the Septuagint bundled with this app, by "
+                            "the same script and in the same way."),
+                        "zh-Hans": (
+                            "七十士一系的数字，则以希腊文从本应用所载的"
+                            "七十士译本中读出，方法与上相同。"),
+                        "zh-Hant": (
+                            "七十士一系的數字，則以希臘文從本應用所載的"
+                            "七十士譯本中讀出，方法與上相同。"),
+                    },
+                },
             },
             "checks": {
                 "sumsChecked": sum(
                     1 for p in patriarchs for f in p["figures"].values()
                     if f["checked"]),
-                "note": (
-                    "Genesis 5 states the age at begetting, the years lived "
-                    "afterwards, and the total, so the parse of every "
-                    "Genesis 5 figure is checked against the third number "
-                    "the verse itself supplies. Genesis 11 states only the "
-                    "first two, so those lifespans are sums and carry no "
-                    "such check; they are marked checked: false. In Genesis "
-                    "12-50 only Jacob has a third figure — 47:9's 130 plus "
-                    "47:28's 17 years in Egypt against the 147 that same "
-                    "verse states — and it checks the descent year as well "
-                    "as the parse. Moses and Aaron are checked the same way "
-                    "across three books: an age before Pharaoh (Exodus 7:7), "
-                    "the forty years of Numbers 14:33, and a lifetime stated "
-                    "separately in Deuteronomy 34:7 and Numbers 33:39. "
-                    "Checked describes the parse, never the year on the "
-                    "axis; where a year had to be supplied the note says so."),
-                "traditionAgreement": (
-                    f"Genesis 5 and 11: the two texts state the same "
-                    f"begetting age and lifespan for {gen_same} of "
-                    f"{gen_both} men. Genesis 12-50: {abr_same} of "
-                    f"{abr_both}. The choice of text therefore moves the "
-                    f"genealogies and leaves the patriarchs where they are."),
-                "secondWitness": (
-                    f"{agreed} of {checked} Anno Mundi birth years agree "
-                    f"with assets/family_tree.json, which was built "
-                    f"separately."),
+                "note": {
+                    "en": (
+                        "Genesis 5 states the age at begetting, the years "
+                        "lived afterwards, and the total, so the parse of "
+                        "every Genesis 5 figure is checked against the third "
+                        "number the verse itself supplies. Genesis 11 states "
+                        "only the first two, so those lifespans are sums and "
+                        "carry no such check. In Genesis 12-50 only Jacob "
+                        "has a third figure — Genesis 47:9's 130 plus "
+                        "Genesis 47:28's 17 years in Egypt against the 147 "
+                        "that same verse states — and it checks the descent "
+                        "year as well as the parse. Moses and Aaron are "
+                        "checked the same way across three books: an age "
+                        "before Pharaoh (Exodus 7:7), the forty years of "
+                        "Numbers 14:33, and a lifetime stated separately in "
+                        "Deuteronomy 34:7 and Numbers 33:39. Checked "
+                        "describes the parse, never the year on the axis; "
+                        "where a year had to be supplied the note says so."),
+                    **{
+                        script: (
+                            f"{cite_zh('Genesis 5', script)} 章同时记下生子"
+                            f"时的岁数、生子之后所活的年数，以及一生的总"
+                            f"年数，所以该章每个数字的解析，都可以用经文"
+                            f"自己给出的第三个数来核对。"
+                            f"{cite_zh('Genesis 11', script)} 章只记前两项，"
+                            f"故那些寿数是相加所得，无从如此核对。"
+                            f"{cite_zh('Genesis 12-50', script)} 章中只有"
+                            f"雅各有第三个数——"
+                            f"{cite_zh('Genesis 47:9', script)} 的 130 岁，"
+                            f"加上{cite_zh('Genesis 47:28', script)} 在埃及"
+                            f"的 17 年，正是同一节所说的 147 年——这不但"
+                            f"核对了数字的解析，也核对了下埃及的那一年。"
+                            f"摩西与亚伦则跨三卷书以同样方式核对：见法老"
+                            f"前的岁数（{cite_zh('Exodus 7:7', script)}）、"
+                            f"{cite_zh('Numbers 14:33', script)} 的四十年，"
+                            f"以及{cite_zh('Deuteronomy 34:7', script)} 与"
+                            f"{cite_zh('Numbers 33:39', script)} 分别记下的"
+                            f"一生年数。所谓核对，说的是数字的解析，而非轴"
+                            f"上的年份；凡年份须由推算补上之处，注中都会"
+                            f"说明。"
+                        ) if script == "zh-Hans" else (
+                            f"{cite_zh('Genesis 5', script)} 章同時記下生子"
+                            f"時的歲數、生子之後所活的年數，以及一生的總"
+                            f"年數，所以該章每個數字的解析，都可以用經文"
+                            f"自己給出的第三個數來核對。"
+                            f"{cite_zh('Genesis 11', script)} 章只記前兩項，"
+                            f"故那些壽數是相加所得，無從如此核對。"
+                            f"{cite_zh('Genesis 12-50', script)} 章中只有"
+                            f"雅各有第三個數——"
+                            f"{cite_zh('Genesis 47:9', script)} 的 130 歲，"
+                            f"加上{cite_zh('Genesis 47:28', script)} 在埃及"
+                            f"的 17 年，正是同一節所說的 147 年——這不但"
+                            f"核對了數字的解析，也核對了下埃及的那一年。"
+                            f"摩西與亞倫則跨三卷書以同樣方式核對：見法老"
+                            f"前的歲數（{cite_zh('Exodus 7:7', script)}）、"
+                            f"{cite_zh('Numbers 14:33', script)} 的四十年，"
+                            f"以及{cite_zh('Deuteronomy 34:7', script)} 與"
+                            f"{cite_zh('Numbers 33:39', script)} 分別記下的"
+                            f"一生年數。所謂核對，說的是數字的解析，而非軸"
+                            f"上的年份；凡年份須由推算補上之處，註中都會"
+                            f"說明。"
+                        )
+                        for script in ("zh-Hans", "zh-Hant")
+                    },
+                },
+                "traditionAgreement": {
+                    "en": (
+                        f"Genesis 5 and 11: the two texts state the same "
+                        f"figures for {gen_same} of "
+                        f"{gen_both} men. Genesis 12-50: {abr_same} of "
+                        f"{abr_both}. Exodus to Deuteronomy: {exo_same} of "
+                        f"{exo_both}. The choice of text therefore moves the "
+                        f"genealogies and leaves everyone after them where "
+                        f"they are."),
+                    "zh-Hans": (
+                        f"{cite_zh('Genesis 5', 'zh-Hans')}、11 章："
+                        f"两种经文对其中 {gen_both} 人里的 {gen_same} 人，"
+                        f"所记数字相同。"
+                        f"{cite_zh('Genesis 12-50', 'zh-Hans')} 章："
+                        f"{abr_both} 人里 {abr_same} 人。"
+                        f"{book_zh('Exodus', 'zh-Hans')}至"
+                        f"{book_zh('Deuteronomy', 'zh-Hans')}："
+                        f"{exo_both} 人里 {exo_same} 人。可见选用哪一种经文，"
+                        f"动的是家谱，其后各人所在的年代并不改变。"),
+                    "zh-Hant": (
+                        f"{cite_zh('Genesis 5', 'zh-Hant')}、11 章："
+                        f"兩種經文對其中 {gen_both} 人裡的 {gen_same} 人，"
+                        f"所記數字相同。"
+                        f"{cite_zh('Genesis 12-50', 'zh-Hant')} 章："
+                        f"{abr_both} 人裡 {abr_same} 人。"
+                        f"{book_zh('Exodus', 'zh-Hant')}至"
+                        f"{book_zh('Deuteronomy', 'zh-Hant')}："
+                        f"{exo_both} 人裡 {exo_same} 人。可見選用哪一種經文，"
+                        f"動的是家譜，其後各人所在的年代並不改變。"),
+                },
+                # THE THREE KINDS ARE NAMED because they are not the same
+                # claim. Comparing two Anno Mundi birth years tests the
+                # anchor as well as the arithmetic; comparing an interval
+                # tests only the arithmetic, and is all a BC-dated witness
+                # can give. A sentence that called all 23 "birth years"
+                # would overstate 9 of them.
+                "secondWitness": {
+                    "en": (
+                        f"{agreed} of {checked} figures agree with this "
+                        f"app's Family Tree, which was built separately, "
+                        f"from a different source: "
+                        f"{witness_kinds['birth']} Anno Mundi birth years "
+                        f"compared directly, {witness_kinds['span']} "
+                        f"lifespans compared as intervals because that "
+                        f"record dates those men BC, and "
+                        f"{witness_kinds['gap']} father-to-son gaps. A "
+                        f"disagreement stops this chart being built."),
+                    "zh-Hans": (
+                        f"本图表有 {checked} 处可与本应用另行建立的圣经"
+                        f"家谱对照，{agreed} 处相符。家谱是另据别的资料、"
+                        f"由另一段程式建成的：其中 {witness_kinds['birth']} "
+                        f"处直接比对创世纪元的出生年，"
+                        f"{witness_kinds['span']} 处因家谱以公元前纪年，"
+                        f"改以一生年数这一段年数比对，另有 "
+                        f"{witness_kinds['gap']} 处比对父子出生相隔的年数。"
+                        f"若有一处不合，本图表便不会生成。"),
+                    "zh-Hant": (
+                        f"本圖表有 {checked} 處可與本應用另行建立的聖經"
+                        f"家譜對照，{agreed} 處相符。家譜是另據別的資料、"
+                        f"由另一段程式建成的：其中 {witness_kinds['birth']} "
+                        f"處直接比對創世紀元的出生年，"
+                        f"{witness_kinds['span']} 處因家譜以公元前紀年，"
+                        f"改以一生年數這一段年數比對，另有 "
+                        f"{witness_kinds['gap']} 處比對父子出生相隔的年數。"
+                        f"若有一處不合，本圖表便不會生成。"),
+                },
                 "disagreements": disagreements,
             },
-            "traditions": (
-                "The Masoretic Text and the Septuagint state different ages "
-                "in Genesis 5 and 11, and both texts ship with this app, so "
-                "both are charted. The Samaritan Pentateuch states a third "
-                "set; this repo does not hold that text and it is therefore "
-                "absent rather than estimated."),
+            "traditions": {
+                "en": (
+                    "The Masoretic Text and the Septuagint state different "
+                    "ages in Genesis 5 and 11, and both texts ship with this "
+                    "app, so both are charted. The Samaritan Pentateuch "
+                    "states a third set of figures; this app does not carry "
+                    "that text, so it is absent here rather than estimated."),
+                "zh-Hans": (
+                    f"马所拉经文与七十士译本在"
+                    f"{cite_zh('Genesis 5', 'zh-Hans')}、11 章所记的岁数"
+                    f"并不相同，而本应用两种经文都有，故两种都绘出。"
+                    f"撒玛利亚五经另记第三套数字；本应用未收录该经文，"
+                    f"因此此处付之阙如，而不以推算补足。"),
+                "zh-Hant": (
+                    f"馬所拉經文與七十士譯本在"
+                    f"{cite_zh('Genesis 5', 'zh-Hant')}、11 章所記的歲數"
+                    f"並不相同，而本應用兩種經文都有，故兩種都繪出。"
+                    f"撒瑪利亞五經另記第三套數字；本應用未收錄該經文，"
+                    f"因此此處付之闕如，而不以推算補足。"),
+            },
         },
         "traditions": [
             {
@@ -1969,8 +2208,19 @@ def main():
           f"{era_residue['mt']} / LXX {era_residue['lxx']}; "
           f"{len(period_splits)} of {len(period_rows)} periods differ "
           f"between the texts ({', '.join(period_splits)})")
-    for d in disagreements:
-        print("  DISAGREES:", d)
+    # A DISAGREEMENT NOW STOPS THE BUILD, because the chart says so on
+    # the reader's own screen. Until this slice nothing rendered the
+    # second witness, so a disagreement could be printed here, scroll
+    # past, and ship under bars a reader would read as settled. The two
+    # artefacts must agree; if they ever do not, one of them is wrong and
+    # a person has to decide which, rather than the loop emitting a
+    # footnote about it.
+    if disagreements:
+        for d in disagreements:
+            print("  DISAGREES:", d, file=sys.stderr)
+        raise SystemExit(
+            f"{len(disagreements)} of {checked} figures disagree with "
+            f"family_tree.json; one of the two is wrong")
 
 
 if __name__ == "__main__":
