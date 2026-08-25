@@ -6,12 +6,12 @@ import 'package:flutter_test/flutter_test.dart';
 /// test: the mark changed and only some of the files carrying it were
 /// regenerated.
 ///
-/// The Yahweh's Swords drawing reached the shipped launcher icons in
+/// The Yahweh's Sword drawing reached the shipped launcher icons in
 /// dc146fc, and its hilt was fixed in b6d9859, but neither commit
 /// touched `assets/app_icon.png` — the file pubspec's `flutter_icons`
 /// block and both icon generators name as the master. So the loading
 /// screen went on showing the retired SeekSparks mark for as long as
-/// the app has been called Yahweh's Swords, the macOS and Windows
+/// the app has been called Yahweh's Sword, the macOS and Windows
 /// builds still carried it, the "Dark" alternate icon installed it onto
 /// the home screen of anyone who picked it, and the in-app icon picker
 /// previewed six variants of a drawing the app no longer used.

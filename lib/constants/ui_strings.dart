@@ -1600,7 +1600,7 @@ const uiStrings = {
   'onboardWelcomeTitle': {
     'zh-Hans': '欢迎使用雅伟之剑',
     'zh-Hant': '歡迎使用雅偉之劍',
-    'en': 'Welcome to Yahweh\'s Swords',
+    'en': 'Welcome to Yahweh\'s Sword',
   },
   'onboardWelcomeBody': {
     'zh-Hans': '双语圣经阅读应用，14 个译本（英文／简体／繁体）。主页的「读经」卡片会带你回到上次离开的位置。',
@@ -2038,7 +2038,7 @@ const uiStrings = {
     'zh-Hans': '深入 · Gemini 3 Flash Preview。带"思考"模式的高速推理模型——接近 Pro 级别的释经深度，但速度快得多（约 4-8 秒）。**免费配额可用**：~250 RPD，独立于 Standard / Fast 配额池。Google 在 2026 年 4 月把 gemini-2.5-pro 收费了——所以我们改用这款，免费即可使用，不需要 BYOK。BYOK 仍然推荐用于高频使用（您自己的密钥有独立配额，更稳定）。',
     'zh-Hant': '深入 · Gemini 3 Flash Preview。帶「思考」模式的高速推理模型——接近 Pro 級別的釋經深度，但速度快得多（約 4-8 秒）。**免費配額可用**：~250 RPD，獨立於 Standard / Fast 配額池。Google 在 2026 年 4 月把 gemini-2.5-pro 收費了——所以我們改用這款，免費即可使用，不需要 BYOK。BYOK 仍然推薦用於高頻使用（您自己的密鑰有獨立配額，更穩定）。',
     'en':
-        'Deep · Gemini 3 Flash Preview. High-speed thinking model with near-Pro reasoning quality — substantially faster than Pro (~4-8 s). **Free-tier compatible** at ~250 RPD, with quota separate from the Standard / Fast pools. Google moved gemini-2.5-pro behind a paywall in April 2026, so Yahweh\'s Swords switched Deep to this model — free, no BYOK needed. BYOK still recommended for heavy use (your own key has its own quota pool).',
+        'Deep · Gemini 3 Flash Preview. High-speed thinking model with near-Pro reasoning quality — substantially faster than Pro (~4-8 s). **Free-tier compatible** at ~250 RPD, with quota separate from the Standard / Fast pools. Google moved gemini-2.5-pro behind a paywall in April 2026, so Yahweh\'s Sword switched Deep to this model — free, no BYOK needed. BYOK still recommended for heavy use (your own key has its own quota pool).',
   },
   // 2026-05-11 (v1.2.42): three short-lived strings were removed
   // here as dead code:
@@ -2635,7 +2635,7 @@ const uiStrings = {
   'appName': {
     'zh-Hans': '雅伟之剑',
     'zh-Hant': '雅偉之劍',
-    'en': 'Yahweh\'s Swords',
+    'en': 'Yahweh\'s Sword',
   },
   'startReading': {
     // Hero CTA shown when the user has no saved reading position
@@ -3918,7 +3918,7 @@ const uiStrings = {
   'askAi': {
     'zh-Hans': '问雅伟之剑',
     'zh-Hant': '問雅偉之劍',
-    'en': 'Ask Yahweh\'s Swords',
+    'en': 'Ask Yahweh\'s Sword',
   },
   'ask': {
     'zh-Hans': '提问',
@@ -4022,7 +4022,7 @@ const uiStrings = {
     'zh-Hant': '測試通知已發送。如果沒有看到橫幅，請在 {platform} 的通知設定中查看雅偉之劍'
         '（以及系統的專注 / 勿擾模式）。',
     'en': "Test notification sent. If you don't see a banner, check your "
-        '{platform} notification settings for Yahweh\'s Swords (or Focus / Do Not '
+        '{platform} notification settings for Yahweh\'s Sword (or Focus / Do Not '
         'Disturb).',
   },
   'platformBrowser': {
@@ -6993,7 +6993,7 @@ const uiStrings = {
     'zh-Hant': '講道尚未載入完成 — 請等待內容顯示',
   },
   'sermonAttribution': {
-    'en': "From Yahweh's Swords · Yahweh's Words — bilingual Bible apps",
+    'en': "From Yahweh's Sword · Yahweh's Words — bilingual Bible apps",
     'zh-Hans': '来自雅伟之剑·雅伟之言 — 双语圣经应用',
     'zh-Hant': '來自雅偉之劍·雅偉之言 — 雙語聖經應用',
   },
@@ -7521,7 +7521,7 @@ const uiStrings = {
   'fitTitle': {
     'zh-Hans': '雅伟之剑是研经工作台',
     'zh-Hant': '雅偉之劍是研經工作檯',
-    'en': 'Yahweh\'s Swords is a study workbench',
+    'en': 'Yahweh\'s Sword is a study workbench',
   },
   'fitLead': {
     'zh-Hans': '搜索、经文、字词分析三栏并排在同一屏上。这种并排本身就是工具，'
@@ -7577,7 +7577,7 @@ const uiStrings = {
     'zh-Hans': '这块屏幕在任何方向都放不下三栏。雅伟之剑需要平板或电脑。',
     'zh-Hant': '這塊螢幕在任何方向都放不下三欄。雅偉之劍需要平板或電腦。',
     'en': 'This screen does not fit three columns in either direction. '
-        'Yahweh\'s Swords needs a tablet or a laptop.',
+        'Yahweh\'s Sword needs a tablet or a laptop.',
   },
   'fitYsWords': {
     'zh-Hans': '若只是在手机上读经，雅伟之言正是为此而生——同一家族，手机优先。',

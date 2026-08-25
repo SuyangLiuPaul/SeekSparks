@@ -1354,7 +1354,7 @@ class _NotificationsCardState extends State<_NotificationsCard> {
           // they look like.
           await NotificationService.show(
             title: uiStrings['appName']?[widget.settings.locale] ??
-                "Yahweh's Swords",
+                "Yahweh's Sword",
             body: uiStrings['notificationsEnabledBody']
                     ?[widget.settings.locale] ??
                 'Notifications are on. You\'ll get gentle daily reminders.',
@@ -1443,7 +1443,7 @@ class _NotificationsCardState extends State<_NotificationsCard> {
                       final messenger = ScaffoldMessenger.of(context);
                       try {
                         await NotificationService.show(
-                          title: uiStrings['appName']?[locale] ?? "Yahweh's Swords",
+                          title: uiStrings['appName']?[locale] ?? "Yahweh's Sword",
                           body: uiStrings['notificationsTestBody']
                                   ?[locale] ??
                               'This is a test notification.',

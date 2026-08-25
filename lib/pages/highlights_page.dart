@@ -206,7 +206,7 @@ class _HighlightsPageState extends State<HighlightsPage> {
     }
     if (!context.mounted) return;
     await ClipboardHelper.shareOrCopy(context, buf.toString().trim(),
-        title: "Yahweh's Swords highlights");
+        title: "Yahweh's Sword highlights");
   }
 
   void _showActions(BuildContext context, _HighlightItem it,

@@ -1,11 +1,11 @@
 {
-    "name": "Yahweh's Swords",
-    "short_name": "Yahweh's Swords",
+    "name": "Yahweh's Sword",
+    "short_name": "Yahweh's Sword",
     "start_url": "/",
     "display": "standalone",
     "background_color": "#ffffff",
     "theme_color": "#ffffff",
-    "description": "Yahweh's Swords — a bilingual Bible exegesis tool for bigger screens, with structured original-language search.",
+    "description": "Yahweh's Sword — a bilingual Bible exegesis tool for bigger screens, with structured original-language search.",
     "prefer_related_applications": false,
     "icons": [
         {
