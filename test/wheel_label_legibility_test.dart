@@ -242,15 +242,27 @@ void main() {
   test('the rim says enough to be worth drawing', () {
     // Floors, not exact counts — the asset will grow. They exist so a
     // change that quietly empties the wheel, or that goes back to
-    // handing every label a constant box, cannot pass. Measured
-    // 2026-08-25 at 900 px and rest: 55 kept, 55 whole in Chinese, 31
-    // whole plus 24 word-cut in English. Before that work: 9 and 0.
+    // handing every label a constant box, cannot pass. Before that
+    // work, 900 px at rest drew 9 whole Chinese names and 0 whole
+    // English ones; after it, 55 and 31.
     //
-    // The badge then bought its room from the title, and only Chinese
-    // paid, because Chinese is whole-or-nothing: 55 titles became 53 at
-    // 900 px and 38 became 22 at 700 px, while English stayed at 55 and
-    // 48. That is the trade this fix chose deliberately — see
-    // `fitRadialLabel` — so the floors below are the post-badge ones.
+    // The badge then bought its room from the title. Measured both ways
+    // over the real corpus (badge on vs badge off, same canvas, same
+    // faces), 900 px at rest: Chinese 55 whole names -> 53, English 31
+    // uncut titles -> 22; 700 px: Chinese 38 -> 22, English 6 -> 3. So
+    // BOTH locales pay — Chinese in whole names, English in words, and
+    // the first draft of this file recorded only the Chinese half. At
+    // 1400 px the badge is free in both (79 of 79 either way).
+    //
+    // The margins below are sized from a sensitivity sweep, not picked:
+    // re-measured with every width scaled by (1+e) to stand in for a
+    // rasterizer that disagrees, the Chinese count holds 53 to e=5% and
+    // the English uncut count falls 22, 21, 19 at e=0, 1%, 2%. English
+    // is the metric-sensitive one here, and its floor is set to survive
+    // roughly 10%. This is the assertion class that kept `main` red for
+    // six CI runs (macOS CoreText vs Linux FreeType, owner's 17d6a6d),
+    // and a real regression to constant boxes undercuts to 0, so a
+    // generous margin still fails loudly on the bug this guards.
     for (final locale in ['zh-Hans', 'zh-Hant']) {
       final p = _plan(data, locale, 900, 1);
       final whole = p.spokes.where((s) => s.hasText).length;
@@ -259,8 +271,8 @@ void main() {
     }
     final en = _plan(data, 'en', 900, 1);
     expect(en.spokes.where((s) => s.hasText && !s.ellipsised).length,
-        greaterThanOrEqualTo(20),
-        reason: 'English at rest: at least 20 labels whole');
+        greaterThanOrEqualTo(15),
+        reason: 'English at rest: at least 15 labels whole and uncut');
     expect(en.spokes.where((s) => !s.hasText).length, isZero,
         reason: 'English at rest: nothing reduced to a bare tick');
   });

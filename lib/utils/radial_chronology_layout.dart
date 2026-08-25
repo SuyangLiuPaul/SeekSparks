@@ -313,15 +313,22 @@ typedef LabelMeasure = double Function(String text, double size);
 /// is.
 ///
 /// WHAT THE BADGE COSTS, measured in the shipped faces over the real
-/// corpus at rest. English pays nothing at all — 48 of 48 titles at
-/// 700 px and 55 of 55 at 900 px, badge or no badge, because Latin
-/// already falls back to whole words and the badge only shortens the
-/// cut. Chinese pays, because it is whole-or-nothing: 55 titles become
-/// 53 at 900 px, and 38 become 22 at 700 px. Against that, the number
-/// of spokes saying NOTHING AT ALL falls from 10 to 2 at 700 px, and 43
-/// spokes that stood mute for their 400-odd hidden events now say how
-/// many they stand for. A name the reader can recover by zooming or by
-/// tapping is the cheaper thing to spend.
+/// corpus at rest. English keeps every label — 48 of 48 at 700 px and
+/// 55 of 55 at 900 px, badge or no badge — and an earlier version of
+/// this comment read "English pays nothing at all" on the strength of
+/// that. That is the count of labels DRAWN, not of names drawn WHOLE,
+/// and English does pay: titles that fit with no ellipsis fall from 31
+/// to 22 at 900 px and from 6 to 3 at 700 px. English pays in words
+/// where Chinese pays in whole names, because Latin may cut at a word
+/// and Han may not (#297): 55 Chinese titles become 53 at 900 px, and
+/// 38 become 22 at 700 px. At 1400 px the badge is free in both — 79 of
+/// 79, whole and uncut, either way — so the entire cost sits on the two
+/// smallest canvases the wheel is reachable on.
+///
+/// Against that, the number of spokes saying NOTHING AT ALL falls from
+/// 10 to 2 at 700 px, and 43 spokes that stood mute for their 400-odd
+/// hidden events now say how many they stand for. A name the reader can
+/// recover by zooming or by tapping is the cheaper thing to spend.
 ({String title, String ref, String badge, double width, bool ellipsised})
     fitRadialLabel({
   required String title,
