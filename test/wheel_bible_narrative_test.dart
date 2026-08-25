@@ -14,8 +14,10 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/models/timeline_event.dart';
 import 'package:seeksparks/models/wheel_history.dart';
+import 'package:seeksparks/utils/reference_parser.dart';
 
 Map<String, dynamic> _json(String path) =>
     json.decode(File(path).readAsStringSync()) as Map<String, dynamic>;
@@ -194,6 +196,114 @@ void main() {
     test('approximate agrees with basis on every injected event', () {
       for (final e in injected) {
         expect(e.approximate, e.basis == 'conventional', reason: e.id);
+      }
+    });
+  });
+
+  /// THE APPARATUS TRAVELS WITH THE YEARS (#318 phase 19).
+  ///
+  /// Phase 17 brought the years across and left behind the three things
+  /// that make a year checkable. The wheel printed "interval from
+  /// scripture" over a chip list that states no interval, printed one
+  /// year where the timeline page prints two, and drew the eight events
+  /// that are NOT counted back from the Thiele anchor on the same axis
+  /// as the ones that are, with nothing said about the seam.
+  ///
+  /// None of it failed anything: `WheelHistoryEvent` had no field to
+  /// drop the data into, so it was dropped at the constructor and every
+  /// test stayed green. The counts are pinned rather than described,
+  /// because a merge that quietly stops carrying one of them looks
+  /// exactly like a merge that carries them all.
+  group('the apparatus travels with the years', () {
+    test('the dating verses arrive, all 18 of them', () {
+      final withDating = injected.where((e) => e.datingRefs.isNotEmpty);
+      expect(withDating, hasLength(18));
+      expect(withDating.length,
+          timeline.where((e) => e.datingRefs.isNotEmpty).length);
+      for (final e in withDating) {
+        final source = timeline
+            .firstWhere((t) => '$kBibleEventIdPrefix${t.id}' == e.id);
+        expect(e.datingRefs, source.datingRefs, reason: e.id);
+      }
+    });
+
+    // The five derived events that legitimately have none: their year
+    // is Thiele's, not a chain of intervals this app can count, so
+    // there are no verses to show and `wheelBasisThieleOnly` says so.
+    test('only the Thiele years are derived without dating verses', () {
+      final gap = injected
+          .where((e) => e.basis != 'conventional' && e.datingRefs.isEmpty);
+      expect(gap.map((e) => e.basis).toSet(), {'thiele'});
+      expect(gap, hasLength(5));
+    });
+
+    // A chip whose reference does not parse is a dead tap: `_refRow`
+    // returns early and nothing happens. The narrative refs were
+    // already covered; these are a second, differently-authored set.
+    test('every dating verse is tappable', () {
+      for (final e in injected) {
+        for (final r in e.datingRefs) {
+          expect(parseReference(r), isNotNull, reason: '${e.id}: $r');
+        }
+      }
+    });
+
+    test('the Septuagint alternative arrives, all 8 of them', () {
+      final lxx = injected.where((e) => e.septuagintYear != null).toList();
+      expect(lxx, hasLength(8));
+      expect(
+          lxx.length, timeline.where((e) => e.septuagintYear != null).length);
+      // All eight come through Exodus 12:40, which is the one thing
+      // `timelineSeptuagintYear` explains. A ninth arriving from the
+      // Genesis 5/11 genealogies would need a different sentence, and
+      // would land under this one silently.
+      for (final e in lxx) {
+        expect(e.septuagintYear! - e.year, 215, reason: e.id);
+      }
+    });
+
+    test('the antediluvian block is identifiable on the wheel', () {
+      final ante = injected.where((e) => e.timelineEra == 'antediluvian');
+      expect(ante, hasLength(8));
+      expect(ante.map((e) => e.id.substring(kBibleEventIdPrefix.length)),
+          containsAll(['creation', 'flood', 'babel']));
+      // `era` cannot answer this question — the merge overwrites it.
+      expect(injected.map((e) => e.era).toSet(), {'bible'});
+      // Every one of them is a reconstruction with no chain reaching it,
+      // which is what makes the seam note necessary rather than pedantic.
+      for (final e in ante) {
+        expect(e.basis, 'conventional', reason: e.id);
+        expect(e.approximate, isTrue, reason: e.id);
+        expect(e.datingRefs, isEmpty, reason: e.id);
+      }
+    });
+
+    // The seam itself, stated as arithmetic so the disclosure's number
+    // cannot drift away from the data it describes.
+    test('the seam the note discloses is really 1,652 years', () {
+      int yearOf(String id) =>
+          injected.firstWhere((e) => e.id == '$kBibleEventIdPrefix$id').year;
+      expect(yearOf('creation') - yearOf('flood'), -1652);
+      expect(
+          uiStrings['timelineAntediluvianBasis']!['en']!, contains('1,652'));
+      expect(uiStrings['timelineAntediluvianBasis']!['zh-Hans']!,
+          contains('1652'));
+    });
+
+    test('the wheel renders all four apparatus strings', () {
+      final src =
+          File('lib/pages/radial_chronology_page.dart').readAsStringSync();
+      for (final key in [
+        'timelineDatedBy',
+        'timelineSeptuagintYear',
+        'timelineAntediluvianBasis',
+        'timelineOpenChronology',
+      ]) {
+        expect(src, contains(key), reason: '$key never reaches the wheel');
+        for (final locale in ['en', 'zh-Hans', 'zh-Hant']) {
+          expect(uiStrings[key]?[locale], isNotNull, reason: '$key/$locale');
+          expect(uiStrings[key]![locale]!, isNotEmpty, reason: '$key/$locale');
+        }
       }
     });
   });

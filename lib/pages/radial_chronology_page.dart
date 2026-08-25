@@ -7,6 +7,7 @@ import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/wheel_history.dart';
+import 'package:seeksparks/pages/chronology_page.dart';
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/services/url_sync_service.dart';
 import 'package:seeksparks/utils/date_hedge.dart';
@@ -1625,6 +1626,71 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
                 : _basisText(e.basis, locale),
             style: TextStyle(color: wb.mutedText, fontSize: t.scaled(11)),
           ),
+          // The apparatus the merge left behind, in the timeline page's
+          // own words — the same three blocks, the same shared strings,
+          // so the two surfaces cannot drift into saying different
+          // things about one event.
+          if (e.septuagintYear != null) ...[
+            SizedBox(height: t.scaled(4)),
+            Text(
+              _s('timelineSeptuagintYear', 'On the Septuagint: {year}.', locale)
+                  .replaceFirst('{year}', yearLabel(e.septuagintYear!, locale)),
+              style: TextStyle(color: wb.mutedText, fontSize: t.scaled(11)),
+            ),
+          ],
+          // Kept apart from the reference row above and labelled: those
+          // are where the event is told, these are where its year was
+          // counted from, and on nine of them the two name no chapter
+          // in common.
+          if (e.datingRefs.isNotEmpty) ...[
+            SizedBox(height: t.scaled(8)),
+            Text(
+              _s('timelineDatedBy', 'Dated by', locale),
+              style: TextStyle(
+                  color: wb.mutedText,
+                  fontSize: t.scaled(11),
+                  fontWeight: FontWeight.w600),
+            ),
+            SizedBox(height: t.scaled(4)),
+            _refRow(context, e.datingRefs, wb, t, locale),
+          ],
+          // The seam. These eight are not counted back from the Thiele
+          // anchor the way everything below Abraham is, and the wheel
+          // draws both on one axis — which is the strongest invitation
+          // in the app to read them as equally fixed. Disclosed, not
+          // repaired: fixing it means fixing a year for the creation.
+          if (e.timelineEra == 'antediluvian') ...[
+            SizedBox(height: t.scaled(8)),
+            Text(
+              uiStrings['timelineAntediluvianBasis']?[locale] ??
+                  uiStrings['timelineAntediluvianBasis']?['en'] ??
+                  '',
+              style: TextStyle(
+                  color: wb.mutedText, fontSize: t.scaled(11), height: 1.5),
+            ),
+            SizedBox(height: t.scaled(4)),
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: TextButton(
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const ChronologyPage(),
+                  ),
+                ),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  foregroundColor: wb.link,
+                ),
+                child: Text(
+                  _s('timelineOpenChronology', 'Open Bible Chronology', locale),
+                  style: TextStyle(
+                      fontSize: t.scaled(11.5), fontWeight: FontWeight.w700),
+                ),
+              ),
+            ),
+          ],
         ]);
       },
     );

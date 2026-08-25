@@ -212,6 +212,9 @@ class WheelHistoryEvent {
     required this.refs,
     required this.titles,
     required this.descs,
+    this.datingRefs = const [],
+    this.septuagintYear,
+    this.timelineEra,
   });
 
   final String id;
@@ -224,8 +227,9 @@ class WheelHistoryEvent {
   /// The band this event is drawn on.
   final String stream;
 
-  /// What the year rests on: 'scripture', 'scripture+thiele', or
-  /// 'conventional'. The wheel says so on every detail sheet, because
+  /// What the year rests on: 'scripture', 'scripture+thiele',
+  /// 'thiele' or 'conventional'. The wheel says so on every detail
+  /// sheet, because
   /// a date the text states and a date a reference supplies are not
   /// equally strong and the reader is entitled to know which is which.
   final String basis;
@@ -234,6 +238,32 @@ class WheelHistoryEvent {
   final List<String> refs;
   final Map<String, String> titles;
   final Map<String, String> descs;
+
+  /// The three fields below arrive only from [bibleNarrativeEvents];
+  /// `wheel_history.json` has no record carrying any of them, so
+  /// [fromJson] does not look for them. They are the apparatus that
+  /// makes a derived year checkable, and the wheel inherited the years
+  /// without it: 18 of the merged events state an interval the reader
+  /// could not see the verses for, and 8 printed one year where the
+  /// timeline page prints two.
+
+  /// The verses whose intervals the year was counted along — NOT
+  /// [refs], which is where the event is narrated. See
+  /// [TimelineEvent.datingRefs]: on nine of them the two sets name no
+  /// chapter in common.
+  final List<String> datingRefs;
+
+  /// Where the year falls if Exodus 12:40 is read as the Septuagint
+  /// reads it. Null unless the chain runs through that verse.
+  final int? septuagintYear;
+
+  /// The era of `bible_timeline.json` this came from, or null for the
+  /// wheel's own records. Carried for one reason: `antediluvian` marks
+  /// the eight events that are NOT counted back from the Thiele
+  /// anchor, and a wheel that draws them on the same axis as the ones
+  /// that are owes the reader the same seam note the timeline page
+  /// gives. [era] cannot answer this — the merge sets it to `bible`.
+  final String? timelineEra;
 
   String titleFor(String locale) => titles[locale] ?? titles['en'] ?? id;
   String descFor(String locale) => descs[locale] ?? descs['en'] ?? '';
@@ -387,7 +417,11 @@ const Set<String> kTimelineIdsAlreadyOnWheel = {'temple_destroyed'};
 /// Pure so it can be measured without a binding. [refs] carries only
 /// where the event is NARRATED — [TimelineEvent.datingRefs], the
 /// verses a derived year was counted along, is a different claim and
-/// belongs beside the year rather than in the wheel's jump list.
+/// belongs beside the year rather than in the wheel's jump list. It
+/// travels in [WheelHistoryEvent.datingRefs] and is printed under its
+/// own label; for three phases it did not travel at all, which left
+/// the wheel saying "interval from scripture" over a chip list that
+/// states no interval.
 List<WheelHistoryEvent> bibleNarrativeEvents(List<TimelineEvent> events) => [
       for (final e in events)
         if (!kTimelineIdsAlreadyOnWheel.contains(e.id))
@@ -401,6 +435,9 @@ List<WheelHistoryEvent> bibleNarrativeEvents(List<TimelineEvent> events) => [
             basis: e.basis,
             approximate: e.approximate,
             refs: e.refs,
+            datingRefs: e.datingRefs,
+            septuagintYear: e.septuagintYear,
+            timelineEra: e.era,
             titles: {
               'en': e.titleEn,
               if (e.titleZhHans.isNotEmpty) 'zh-Hans': e.titleZhHans,

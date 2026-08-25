@@ -34,10 +34,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/wheel_history.dart';
+import 'package:seeksparks/pages/chronology_page.dart';
 import 'package:seeksparks/pages/radial_chronology_page.dart';
 import 'package:seeksparks/providers/main_provider.dart';
+import 'package:seeksparks/services/chronology_service.dart';
+import 'package:seeksparks/utils/version_mapper.dart'
+    show localizedReferenceLabel;
 import 'package:seeksparks/utils/wheel_search.dart' show kWheelNearestPerYear;
 
 void main() {
@@ -50,6 +55,10 @@ void main() {
     // caches, so the page's own `load()` in `initState` resolves from the
     // cache and the wheel builds.
     data = await WheelHistoryService.instance.load();
+    // The seam note's door opens ChronologyPage, whose own asset load
+    // would never resolve inside a widget test's fake-async zone. Warm
+    // the same cache for the same reason.
+    await ChronologyService.instance.load();
   });
 
   Future<void> pump(WidgetTester tester, Size size) async {
@@ -486,5 +495,109 @@ void main() {
           reason: 'Chinese does not inflect for number, so inventing a '
               'second form here would only be a place to diverge');
     }
+  });
+
+  /// THE APPARATUS, AS THE READER MEETS IT (#318 phase 19).
+  ///
+  /// `wheel_bible_narrative_test.dart` proves the three fields survive
+  /// the merge, and that is not the same claim as "a reader can see
+  /// them" — the sheet could carry every field and print none of it,
+  /// which is exactly the state phase 18 shipped in. So these open the
+  /// real sheet on the real record and read what is on it.
+  ///
+  /// Opened by YEAR rather than by title: typing a title puts that
+  /// title into the search field, and `find.text` matches an
+  /// `EditableText` too, so the tap could land on the box instead of on
+  /// the row and prove nothing.
+  Future<void> openByYear(WidgetTester tester, WheelHistoryEvent e) async {
+    expect(e.year, lessThan(0));
+    await openFind(tester);
+    await tester.enterText(
+        find.byKey(const ValueKey('wheelFindField')), '主前${-e.year}');
+    await settle(tester);
+    await tester.tap(find.text(e.titles['zh-Hans']!).first);
+    await settle(tester);
+    expect(find.byKey(const ValueKey('wheelFindField')), findsNothing,
+        reason: 'the search sheet did not give way to the record sheet');
+    expect(sheetText(tester), contains(e.titles['zh-Hans']!));
+  }
+
+  WheelHistoryEvent injected(String id) =>
+      data.events.firstWhere((e) => e.id == '$kBibleEventIdPrefix$id');
+
+  testWidgets('a derived year shows the verses it was counted along',
+      (tester) async {
+    final e = data.events.firstWhere(
+        (x) => x.datingRefs.isNotEmpty && x.year < 0 && x.basis != 'thiele');
+    await pump(tester, const Size(1440, 900));
+    await openByYear(tester, e);
+
+    final sheet = sheetText(tester);
+    // Labelled, because these are not the chapters the event is told
+    // in and an unlabelled second row of verses reads as more of the
+    // same.
+    expect(sheet, contains(uiStrings['timelineDatedBy']!['zh-Hans']!),
+        reason: 'the wheel states an interval and hides the verses that '
+            'state it');
+    for (final r in e.datingRefs) {
+      expect(sheet, contains(localizedReferenceLabel(r, 'zh-Hans')),
+          reason: '${e.id}: $r');
+    }
+    expect(tester.takeException(), isNull);
+    await unmount(tester);
+  });
+
+  testWidgets('the Septuagint alternative is printed, not dropped',
+      (tester) async {
+    final e = injected('abram_called');
+    expect(e.septuagintYear, isNotNull);
+    await pump(tester, const Size(1440, 900));
+    await openByYear(tester, e);
+
+    final sheet = sheetText(tester);
+    expect(sheet, contains(yearLabel(e.year, 'zh-Hans')));
+    expect(sheet, contains(yearLabel(e.septuagintYear!, 'zh-Hans')),
+        reason: 'the timeline page prints two years here and the wheel '
+            'printed one');
+    // The reason, not just the number: a bare second year is a
+    // contradiction until the reader is told which text it comes from.
+    expect(sheet, contains('出埃及记 12:40'));
+    expect(tester.takeException(), isNull);
+    await unmount(tester);
+  });
+
+  testWidgets('the antediluvian seam is disclosed on the wheel too, with a '
+      'door out', (tester) async {
+    final e = injected('flood');
+    await pump(tester, const Size(1440, 900));
+    await openByYear(tester, e);
+
+    // The seam: these eight are not counted back from the Thiele
+    // anchor, and on a wheel they are drawn on the same axis as the
+    // ones that are.
+    expect(sheetText(tester), contains('1652'),
+        reason: 'the wheel draws the flood beside dates derived from '
+            'Solomon and says nothing about the 1,652/1,656 seam');
+    expect(sheetText(tester), contains('Ussher'));
+
+    final door = find.text(uiStrings['timelineOpenChronology']!['zh-Hans']!);
+    expect(door, findsOneWidget);
+    await tester.tap(door);
+    await settle(tester);
+    expect(find.byType(ChronologyPage), findsOneWidget,
+        reason: 'the door has to reach the chart that does count the '
+            'text\'s own numbers');
+    expect(tester.takeException(), isNull);
+    await unmount(tester);
+  });
+
+  // The block is eight records, and the note is worth nothing on seven
+  // of them if it is wired to one. Read at the data layer what the
+  // three tests above read at the widget layer.
+  test('all eight antediluvian records are marked for the note', () {
+    final ante =
+        data.events.where((e) => e.timelineEra == 'antediluvian').toList();
+    expect(ante, hasLength(8));
+    expect(ante.every((e) => e.id.startsWith(kBibleEventIdPrefix)), isTrue);
   });
 }
