@@ -205,7 +205,7 @@ class _SettingsPageBodyState extends State<_SettingsPageBody> {
           final currentChapter = mainProvider.currentChapter;
 
           // 2026-06-16 (v1.3.87): exactly 7 swatches, each mapping 1:1 to one
-          // of the 7 themed app icons (default-indigo, Red, Orange, Green,
+          // of the 7 themed app icons (default, Red, Orange, Green,
           // Purple, Pink, Dark) via AppIconService.variantForColor — so every
           // pick predictably changes BOTH the theme AND the home-screen / dock
           // / favicon icon. Previously the picker offered 18 Material colours
@@ -214,12 +214,11 @@ class _SettingsPageBodyState extends State<_SettingsPageBody> {
           // icon change?". Order matches the README "Your theme, your icon"
           // row. Keep this list in lock-step with variantForColor's buckets.
           //
-          // SeekSparks fork: swatch 0 is the app's own brand indigo (the
-          // icon's gradient start colour) instead of YsWords' blue, so the
-          // "default" pick matches the actual logo instead of clashing with
-          // it.
+          // SeekSparks fork: swatch 0 is THIS app's own icon ink, not
+          // YsWords' blue, so the "default" pick matches the logo the
+          // reader is actually looking at instead of a sibling app's.
           final List<Color> palette = [
-            AppIconService.kDefaultPrimaryColor, // → default (indigo) icon
+            AppIconService.kDefaultPrimaryColor, // → default icon
             Colors.red, // → AppIcon-Red
             Colors.orange, // → AppIcon-Orange
             Colors.green, // → AppIcon-Green

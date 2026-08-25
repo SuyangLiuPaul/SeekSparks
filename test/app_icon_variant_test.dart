@@ -45,7 +45,7 @@ void main() {
           isNull);
     });
 
-    // SeekSparks fork: the app's own brand indigo (swatch 0 / the default
+    // SeekSparks fork: the app's own brand blue (swatch 0 / the default
     // AppSettings.primaryColor) must also fall through to "no variant" —
     // it's a distinct value from Colors.indigo (which maps to 'Purple'),
     // so this isn't automatically covered by the existing indigo case
