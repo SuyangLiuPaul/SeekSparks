@@ -1,9 +1,47 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
+
+// 2026-08-25: real release signing, replacing the Flutter template's
+// "sign with the debug keys for now" TODO that had survived since the
+// project was generated. A debug-signed APK carries
+// `CN=Android Debug, O=Android, C=US` as its certificate DN — which is
+// what a recipient sees — and every Flutter install on every machine
+// shares that one well-known keypair, so it identifies nobody and
+// anyone can forge an "update" to it.
+//
+// The keystore is NEVER in this repository. It is looked for in two
+// places, in order, and if neither exists the build FALLS BACK to
+// debug signing rather than failing. That fallback is load-bearing:
+// GitHub Actions has no keystore, and `release-android.yml` must keep
+// producing its sideload APK.
+//
+//   1. android/key.properties     — the Flutter convention, already
+//                                   covered by android/.gitignore
+//   2. ~/.config/yswords/secrets/ — where this machine's secrets live
+//
+// Losing the keystore is unrecoverable: Android refuses an update
+// signed with a different key, so a lost key forces every user to
+// uninstall and reinstall, losing local data (this app has no cloud
+// sync — Firebase was removed at v1.6.62). Hence the mirror at
+// ~/Documents/secure-keys-backup/.
+val keystoreProperties = Properties().apply {
+    val candidates = listOf(
+        rootProject.file("key.properties"),
+        File(
+            System.getProperty("user.home"),
+            ".config/yswords/secrets/seeksparks-key.properties",
+        ),
+    )
+    candidates.firstOrNull { it.exists() }?.inputStream()?.use { load(it) }
+}
+val releaseStoreFile: File? =
+    keystoreProperties.getProperty("storeFile")?.let(::File)?.takeIf { it.exists() }
 
 android {
     namespace = "com.example.yahwehswords"
@@ -68,11 +106,33 @@ android {
         }
     }
 
+    signingConfigs {
+        if (releaseStoreFile != null) {
+            create("release") {
+                storeFile = releaseStoreFile
+                storePassword = keystoreProperties.getProperty("storePassword")
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            // See the keystore note at the top of this file. Falls back
+            // to the debug key when no keystore is present so CI — which
+            // has none — still builds a sideloadable APK; a build that
+            // failed there instead would break `release-android.yml`.
+            signingConfig = if (releaseStoreFile != null) {
+                signingConfigs.getByName("release")
+            } else {
+                logger.warn(
+                    "SeekSparks: no release keystore found — signing with " +
+                        "the DEBUG key. This APK is for testing only; its " +
+                        "certificate DN reads CN=Android Debug.",
+                )
+                signingConfigs.getByName("debug")
+            }
         }
     }
 }
