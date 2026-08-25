@@ -22,6 +22,7 @@ library;
 import 'dart:math' as math;
 
 import 'package:seeksparks/models/chronology.dart';
+import 'package:seeksparks/utils/related_verses.dart' show isCjkChar;
 
 /// How far round the wheel the axis runs. The remaining 40° is the gap.
 const double sweepRad = 320 * math.pi / 180;
@@ -242,6 +243,239 @@ List<RadialLabel> stackRadialLabels(
     ));
     cursor += lengths[i] + gapPx;
     lastAngle = angles[i];
+  }
+  return out;
+}
+
+// ── what the rim can actually say ────────────────────────────────────
+
+/// The painted width of [text] at [size], in canvas units.
+///
+/// Passed in rather than computed here so this file stays free of
+/// widgets, and so a test can lay the strings out in the faces the app
+/// really ships instead of `flutter test`'s fixed-width stand-in.
+typedef LabelMeasure = double Function(String text, double size);
+
+/// The text the wheel can honestly draw for one event, given [room]
+/// canvas units of radius.
+///
+/// WHY THIS IS NOT A TRUNCATION. Until 2026-08-25 the painter cut the
+/// title down two characters at a time until it fitted a box of a
+/// CONSTANT length — `span * 0.36`, about 40 px, the same box whatever
+/// the label said. Measured in the shipped faces over all 491 events on
+/// a 700 px canvas at rest: **not one English title was drawn whole**,
+/// 462 of 491 Chinese ones were cut, and 77% of the English characters
+/// never reached the reader. What did reach them was
+/// `Mosc…` for *Moscow Council Restores the Patriarchate* and `奧斯…`
+/// for *奧斯曼境內基督徒遭驅逐與殺害* — a rim of stubs that names
+/// nothing and reads as a broken chart.
+///
+/// So a label is now **legible or absent**:
+///
+///  * Chinese is whole or nothing. Every ideograph is a morpheme, so
+///    two of them are not an abbreviation of ten, they are a different
+///    word — 莫斯 is not 莫斯科. This is the standing rule (#297) that
+///    a CJK label is never ellipsised, and the wheel is the surface
+///    that broke it hardest.
+///  * Latin may fall back to whole WORDS with an ellipsis, because
+///    *Moscow…* still names something and *Mosc…* does not. If not even
+///    the first word fits, nothing is drawn.
+///
+/// Nothing is lost by omitting text: the tick stays, so the event is
+/// still visible and still tappable, and the band's own sheet lists
+/// every event on that stream. The reader's lever is zoom, which shrinks
+/// type against a fixed canvas and so buys real room.
+({String title, String ref, double width, bool ellipsised}) fitRadialLabel({
+  required String title,
+  required String ref,
+  required double room,
+  required double titleSize,
+  required double refSize,
+  required LabelMeasure measure,
+}) {
+  const nothing = (title: '', ref: '', width: 0.0, ellipsised: false);
+  if (room <= 0 || title.isEmpty) return nothing;
+
+  final full = measure(title, titleSize);
+  if (full <= room) {
+    // The verse rides along only when the title did not spend the
+    // radius. Measured on the LOCALISED reference, which is what the
+    // caller passes: 创世纪 10:6 and Genesis 10:6 are not the same width.
+    if (ref.isNotEmpty) {
+      final refW = measure('  $ref', refSize);
+      if (full + refW <= room) {
+        return (title: title, ref: ref, width: full + refW, ellipsised: false);
+      }
+    }
+    return (title: title, ref: '', width: full, ellipsised: false);
+  }
+
+  if (title.runes.any(isCjkChar)) return nothing;
+
+  final words = title.split(' ').where((w) => w.isNotEmpty).toList();
+  for (var take = words.length - 1; take >= 1; take--) {
+    final cut = '${words.take(take).join(' ')}…';
+    final w = measure(cut, titleSize);
+    if (w <= room) {
+      return (title: cut, ref: '', width: w, ellipsised: true);
+    }
+  }
+  return nothing;
+}
+
+/// One event asking for a place on the rim, already localised.
+class SpokeRequest {
+  const SpokeRequest({
+    required this.angle,
+    required this.scripture,
+    required this.title,
+    required this.ref,
+  });
+
+  final double angle;
+
+  /// True when the year rests on the text rather than on a general
+  /// reference — which decides the radius the label starts from, the
+  /// scripture baseline the wheel draws as a hairline arc.
+  final bool scripture;
+
+  final String title;
+
+  /// Empty when the event cites no verse.
+  final String ref;
+}
+
+/// A planned label: where it goes and what it says.
+class PlannedSpoke {
+  const PlannedSpoke({
+    required this.index,
+    required this.label,
+    required this.title,
+    required this.ref,
+    required this.ellipsised,
+  });
+
+  /// Into the request list the caller passed.
+  final int index;
+  final RadialLabel label;
+
+  /// Empty when only the tick is drawn — see [fitRadialLabel].
+  final String title;
+  final String ref;
+  final bool ellipsised;
+
+  bool get hasText => title.isNotEmpty;
+}
+
+/// Where the scripture group's labels begin, as a radius. Five canvas
+/// units clear of the bands, so the tick has somewhere to be.
+double scriptureLabelBase(double rBands) => rBands + 5;
+
+/// Every label on the rim: its radius, its flip, and the text it can
+/// honestly carry.
+///
+/// [requests] must be in ascending angle and no two closer than
+/// [minGap] — which is what the page's declutter guarantees, and what
+/// the argument below rests on.
+///
+/// WHY BOTH GROUPS NOW GET THE WHOLE ANNULUS. Until 2026-08-25 the
+/// annulus was cut in two: scripture-dated events were given its inner
+/// 36% and conventionally-dated ones a band starting at 46%, so that a
+/// reader could tell the two apart by which ring a label sat in. The
+/// idea is good and the cost was not affordable — measured over the
+/// real corpus at 900 px, the split left **20 of 55 Chinese labels able
+/// to say anything at all** where the undivided annulus lets all 55 say
+/// it whole, and took English from 31 whole labels to 3. Two thirds of
+/// the wheel's words were being spent on a cue **nothing on screen
+/// explains**: there is no legend entry for the two rings, and the
+/// basis is disclosed properly where it is actually read — in words, on
+/// the detail sheet, for every event.
+///
+/// The distinction is kept, and kept for free, by ANCHORING rather than
+/// by zoning: a scripture label is flush against the bands and grows
+/// outward, a conventional label is flush against the rim and grows
+/// inward. Two straight edges, each already drawn as a ring, and every
+/// label may use the full radius.
+///
+/// They cannot collide. Any two labels are at least [minGap] apart in
+/// angle, and [minGap] is one line-height divided by [rBands] — so at
+/// any radius `r >= rBands` their arc separation is at least
+/// `r * lineHeight / rBands >= lineHeight`. Every label sits outside
+/// `rBands`. The one exception is an event forced back in because the
+/// reader selected it, which may sit closer than [minGap] to its
+/// neighbour: hiding the thing just tapped would be worse.
+List<PlannedSpoke> planRadialSpokes({
+  required List<SpokeRequest> requests,
+  required double rBands,
+  required double rRim,
+  required double titleSize,
+  required double refSize,
+  required LabelMeasure measure,
+  required double minGap,
+  required double lineHeight,
+}) {
+  if (requests.isEmpty) return const [];
+  final base = scriptureLabelBase(rBands);
+  final room = rRim - base;
+
+  final scripture = <int>[];
+  final conventional = <int>[];
+  for (var i = 0; i < requests.length; i++) {
+    (requests[i].scripture ? scripture : conventional).add(i);
+  }
+
+  final out = <PlannedSpoke>[];
+  for (final group in [scripture, conventional]) {
+    if (group.isEmpty) continue;
+    final inward = !requests[group.first].scripture;
+    final fits = [
+      for (final i in group)
+        fitRadialLabel(
+          title: requests[i].title,
+          ref: requests[i].ref,
+          room: room,
+          titleSize: titleSize,
+          refSize: refSize,
+          measure: measure,
+        )
+    ];
+    // Stack from zero, then mirror the outward group about the rim.
+    // Stacking is what lets several events in one year step clear of
+    // each other; going inward from the rim is the same arithmetic
+    // read the other way, so there is one implementation of it.
+    final stacked = stackRadialLabels(
+        [for (final i in group) requests[i].angle],
+        [for (final f in fits) f.width],
+        0,
+        minGap: minGap * 0.5,
+        gapPx: 3);
+    for (var k = 0; k < group.length; k++) {
+      final s = stacked[k];
+      final label = inward
+          ? RadialLabel(
+              angle: s.angle,
+              rStart: rRim - s.rEnd,
+              rEnd: rRim - s.rStart,
+              flipped: s.flipped)
+          : RadialLabel(
+              angle: s.angle,
+              rStart: base + s.rStart,
+              rEnd: base + s.rEnd,
+              flipped: s.flipped);
+      // Stacking can push a label past the annulus its text was
+      // measured against. Rather than let it print into the bands or
+      // through the rim, it keeps its tick and loses its words.
+      final fit = fits[k];
+      final overflows = fit.width > 0 &&
+          (label.rStart < base - 0.001 || label.rEnd > rRim + 0.001);
+      out.add(PlannedSpoke(
+        index: group[k],
+        label: label,
+        title: overflows ? '' : fit.title,
+        ref: overflows ? '' : fit.ref,
+        ellipsised: !overflows && fit.ellipsised,
+      ));
+    }
   }
   return out;
 }

@@ -220,6 +220,25 @@ const Map<String, Map<String, String>> wheelStrings = {
 /// Type size ON SCREEN at rest, in logical pixels.
 const double _kLabelPx = 10.5;
 
+/// The verse beside a label is set smaller than the label itself.
+const double _kRefSizeRatio = 0.86;
+
+/// The width of one rim label, in canvas units.
+///
+/// The planner and the painter must agree to the pixel about what a
+/// string measures, so both go through this. A style that differs here
+/// from the one `_radialLabel` paints with would decide "it fits" about
+/// a string nobody draws. The one deliberate exception is the selected
+/// label, which is painted semibold and so runs a little wider than it
+/// was measured — it is the one the reader just tapped, and its whole
+/// purpose is to stand out.
+double _measureLabel(String text, double size) => (TextPainter(
+      text: TextSpan(text: text, style: TextStyle(fontSize: size)),
+      textDirection: TextDirection.ltr,
+      maxLines: 1,
+    )..layout())
+    .width;
+
 /// How type responds to zoom.
 ///
 /// Dividing the canvas size by the full zoom holds letters at a
@@ -252,11 +271,22 @@ class _Arc {
 }
 
 /// An event's radial label: a tick at the band, then text running out.
+///
+/// [title] and [ref] are what `planRadialSpokes` decided this label can
+/// honestly say at this size — already localised, already fitted. The
+/// painter draws them and makes no judgement of its own, which is the
+/// only way anything can test canvas text: nothing in the suite can
+/// read a `TextPainter`, but every one of these strings is reachable.
 class _Spoke {
-  const _Spoke(this.event, this.label, this.color);
+  const _Spoke(this.event, this.label, this.color, this.title, this.ref);
   final WheelHistoryEvent event;
   final RadialLabel label;
   final Color color;
+
+  /// Empty when the label would not have been legible and only the tick
+  /// is drawn.
+  final String title;
+  final String ref;
 }
 
 class _RadialChronologyPageState extends State<RadialChronologyPage> {
@@ -424,7 +454,8 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
       final rRim = side * _kRimFrac;
 
       final arcs = _buildArcs(data, ringOf, colors);
-      final spokes = _buildSpokes(data, ringOf, rBands, rRim, colors);
+      final spokes = _buildSpokes(data, ringOf, rBands, rRim, colors, locale,
+          t.scaledChrome(_kLabelPx));
 
       return Stack(children: [
         Positioned.fill(
@@ -594,15 +625,23 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
 
   /// Events become radial labels in the annulus outside the bands.
   ///
-  /// Sorted by angle so [stackRadialLabels] can see neighbours: several
-  /// events in one year step outward along the same spoke instead of
-  /// printing on top of each other.
+  /// Sorted by angle so the stacker can see neighbours: several events
+  /// in one year step outward along the same spoke instead of printing
+  /// on top of each other. In practice that almost never happens on
+  /// this corpus and the page comment used to claim otherwise — the
+  /// declutter below keeps consecutive labels at least `minGap` apart
+  /// and the stacker only stacks within `minGap / 2`, so the two are
+  /// arranged so that stacking is unreachable except for a selected
+  /// event forced back in. `wheel_label_legibility_test.dart` pins that
+  /// relationship rather than leaving it as a belief.
   List<_Spoke> _buildSpokes(
     WheelHistoryData data,
     Map<String, int> ringOf,
     double rBands,
     double rRim,
     Map<String, Color> colors,
+    String locale,
+    double rimFont,
   ) {
     final all = data.events.where((e) => ringOf.containsKey(e.stream)).toList()
       ..sort((a, b) => a.year.compareTo(b.year));
@@ -647,31 +686,35 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
     // This ADDS ORDER rather than ornament: it is the same labels,
     // aligned rather than scattered, plus a single hairline arc to
     // mark where the line is. Nothing new competes for attention.
-    final scripture = <WheelHistoryEvent>[];
-    final conventional = <WheelHistoryEvent>[];
-    for (final e in kept) {
-      (e.basis == 'conventional' ? conventional : scripture).add(e);
-    }
-
-    List<_Spoke> lay(List<WheelHistoryEvent> group, double base, double len) {
-      if (group.isEmpty) return const [];
-      final angles = [
-        for (final e in group) angleForSpan(e.year, kMinYear, kMaxYear)
-      ];
-      final lengths = [for (final _ in group) len];
-      final labels = stackRadialLabels(angles, lengths, base,
-          minGap: minGap * 0.5, gapPx: 3);
-      return [
-        for (var i = 0; i < group.length; i++)
-          _Spoke(group[i], labels[i],
-              colors[group[i].stream] ?? _lineColor('none'))
-      ];
-    }
-
-    final span = rRim - rBands;
+    //
+    // Which radius each group starts from, how much room each label
+    // gets, and what it can legibly say are all `planRadialSpokes` —
+    // kept out of the painter because the painter cannot be tested.
+    final titleSize = rimFont / _labelScale(_zoom);
+    final planned = planRadialSpokes(
+      requests: [
+        for (final e in kept)
+          SpokeRequest(
+            angle: angleForSpan(e.year, kMinYear, kMaxYear),
+            scripture: e.basis != 'conventional',
+            title: e.titleFor(locale),
+            ref: e.refs.isEmpty
+                ? ''
+                : localizedReferenceLabel(e.refs.first, locale),
+          )
+      ],
+      rBands: rBands,
+      rRim: rRim,
+      titleSize: titleSize,
+      refSize: titleSize * _kRefSizeRatio,
+      measure: _measureLabel,
+      minGap: minGap,
+      lineHeight: titleSize * 1.35,
+    );
     return [
-      ...lay(scripture, rBands + 5, span * 0.36),
-      ...lay(conventional, rBands + span * 0.46, span * 0.4),
+      for (final p in planned)
+        _Spoke(kept[p.index], p.label,
+            colors[kept[p.index].stream] ?? _lineColor('none'), p.title, p.ref)
     ];
   }
 
@@ -1213,8 +1256,7 @@ class _WorldWheelPainter extends CustomPainter {
     _paintGrooves(canvas, c, rHub, rBands);
     _paintArcs(canvas, c, rHub, rBands);
     _paintBandNames(canvas, c, rHub, rBands);
-    _paintScriptureBaseline(canvas, c, rBands, rRim);
-    _paintSpokes(canvas, c);
+    _paintSpokes(canvas, c, rBands);
     _paintRim(canvas, c, rBands, rRim);
     _paintHub(canvas, c, rHub);
     _paintAxisEnds(canvas, c, rHub, rRim);
@@ -1329,18 +1371,23 @@ class _WorldWheelPainter extends CustomPainter {
     }
   }
 
-  void _paintSpokes(Canvas canvas, Offset c) {
+  void _paintSpokes(Canvas canvas, Offset c, double rBands) {
     final has = selectedId != null;
+    // The tick sits ON THE BAND, for every event, whichever end of the
+    // annulus its words are flush with. That is what it is for — the
+    // year's mark on its own stream — and it is now the only thing
+    // drawn for an event whose title could not be set legibly at this
+    // size, so it must be where the event belongs rather than where its
+    // text happens to start.
+    final rTick = scriptureLabelBase(rBands);
     for (final s in spokes) {
       final sel = s.event.id == selectedId;
       final dim = has && !sel ? 0.28 : 1.0;
       final a = s.label.angle;
       final dir = Offset(math.cos(a), math.sin(a));
-      // The tick: a short line from the band out to the text, so the
-      // label is visibly attached to its stream.
       canvas.drawLine(
-        c + dir * (s.label.rStart - 5),
-        c + dir * s.label.rStart,
+        c + dir * (rTick - 5),
+        c + dir * rTick,
         Paint()
           ..strokeWidth = sel ? 1.5 : 0.8
           ..color = s.color.withValues(alpha: 0.8 * dim),
@@ -1356,7 +1403,13 @@ class _WorldWheelPainter extends CustomPainter {
   /// is room for it: the reference IS the evidence, and a chart that
   /// makes a claim about scripture should show where to check it
   /// without a tap.
+  ///
+  /// WHAT to draw was decided by `planRadialSpokes`, not here. The
+  /// painter used to fit the text itself, which put the one decision
+  /// nothing can test — is this label legible? — inside the one place
+  /// no test can read. An empty [_Spoke.title] means the tick alone.
   void _radialLabel(Canvas canvas, Offset c, _Spoke s, double dim, bool sel) {
+    if (s.title.isEmpty) return;
     final style = TextStyle(
       color: sel ? wb.text : wb.text.withValues(alpha: 0.95 * dim),
       fontSize: rimFont / _labelScale(zoom),
@@ -1364,39 +1417,20 @@ class _WorldWheelPainter extends CustomPainter {
     );
     final refStyle = TextStyle(
       color: wb.link.withValues(alpha: 0.95 * dim),
-      fontSize: (rimFont / _labelScale(zoom)) * 0.86,
+      fontSize: (rimFont / _labelScale(zoom)) * _kRefSizeRatio,
     );
-    final room = s.label.rEnd - s.label.rStart;
-    var text = s.event.titleFor(locale);
-    TextPainter lay(String t) => TextPainter(
-        text: TextSpan(text: t, style: style),
+    final tp = TextPainter(
+        text: TextSpan(text: s.title, style: style),
         textDirection: TextDirection.ltr,
         maxLines: 1)
       ..layout();
-
-    var tp = lay(text);
-    // Truncate to the radial room rather than spilling into the rim.
-    while (tp.width > room && text.characters.length > 2) {
-      text = text.characters.take(text.characters.length - 2).toString();
-      tp = lay('$text…');
-    }
-    if (tp.width > room) return;
-
-    // The verse, when the label did not use up the radius. Localise
-    // BEFORE measuring: 创世纪 10:6 and Genesis 10:6 are not the same
-    // width, so measuring the English and drawing the Chinese would
-    // decide "it fits" on the wrong string.
-    TextPainter? refTp;
-    if (s.event.refs.isNotEmpty) {
-      final probe = TextPainter(
-          text: TextSpan(
-              text: '  ${localizedReferenceLabel(s.event.refs.first, locale)}',
-              style: refStyle),
-          textDirection: TextDirection.ltr,
-          maxLines: 1)
-        ..layout();
-      if (tp.width + probe.width <= room) refTp = probe;
-    }
+    final refTp = s.ref.isEmpty
+        ? null
+        : (TextPainter(
+            text: TextSpan(text: '  ${s.ref}', style: refStyle),
+            textDirection: TextDirection.ltr,
+            maxLines: 1)
+          ..layout());
 
     final a = s.label.angle;
     canvas.save();
@@ -1469,23 +1503,13 @@ class _WorldWheelPainter extends CustomPainter {
     }
   }
 
-  /// The hairline where scripture-dated events stop and
-  /// reference-dated ones begin. One arc, drawn faintly: the alignment
-  /// of the labels is what carries the meaning, and the line only says
-  /// where the boundary is.
-  void _paintScriptureBaseline(
-      Canvas canvas, Offset c, double rBands, double rRim) {
-    final r = rBands + (rRim - rBands) * 0.44;
-    canvas.drawArc(
-        Rect.fromCircle(center: c, radius: r),
-        startRad,
-        sweepRad,
-        false,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 0.5
-          ..color = wb.border.withValues(alpha: 0.4));
-  }
+  // A hairline used to be drawn at 44% of the annulus, marking where
+  // scripture-dated labels stopped and conventionally-dated ones began.
+  // There is no such boundary now — see `planRadialSpokes`, which gives
+  // both the whole radius and distinguishes them by which ring they are
+  // flush against. The line is gone rather than left pointing at
+  // nothing; the two edges it would mark are the band ring and the rim
+  // ring, and both are already drawn.
 
   void _paintRim(Canvas canvas, Offset c, double rBands, double rRim) {
     for (final (r, w, alpha) in [
