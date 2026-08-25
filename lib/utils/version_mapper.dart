@@ -78,8 +78,52 @@ String localizedReferenceLabel(
     final trimmed = segment.trim();
     final ref = parseReference(trimmed);
     if (ref == null) return trimmed;
-    return _localizedRefPart(ref, locale, currentVersion);
+    final rendered = _localizedRefPart(ref, locale, currentVersion);
+    final kept = _extentKeptVerbatim(trimmed, ref, locale, currentVersion);
+    return kept ?? rendered;
   }).join('; ');
+}
+
+/// The tail of a reference — everything after the book name.
+final RegExp _refTail = RegExp(r'[\d:,–\-\s]+$');
+
+/// Localise the book name and keep the reader's own extent, for the
+/// references the parse-and-re-render round trip would NARROW.
+///
+/// Null when the round trip is faithful, which is the ordinary case.
+///
+/// [parseReference] answers "where does this land?", so it keeps a
+/// start and discards what it does not need to navigate: `Genesis 6-9`
+/// becomes chapter 6, `John 18:31-33, 37-38` loses its second range,
+/// `2 Kings 9:2–10:36` loses the far end, and a bare `Leviticus`
+/// acquires a chapter 1 nothing claimed. Re-rendering from that is
+/// fine for navigation and wrong for a LABEL: 79 references across
+/// `bible_timeline.json`, `family_tree.json` and `bible_evidence.json`
+/// were printed narrower than they were written, and one of them told
+/// the reader the tabernacle is Leviticus 1.
+///
+/// Narrowing is detected on the digits alone, so a genuine correction
+/// still goes through the ordinary path — `Jude 11` must keep becoming
+/// `Jude 1:11`, because Jude has one chapter and 11 is the verse.
+String? _extentKeptVerbatim(
+    String trimmed, BibleReference ref, String locale, String? version) {
+  final book = localeAwareBookName(ref.englishBook, locale, version);
+  final rawTail = (_refTail.firstMatch(trimmed)?.group(0) ?? '').trim();
+  final rawDigits = rawTail.replaceAll(RegExp(r'\D'), '');
+  final renderedDigits =
+      _localizedRefPart(ref, 'en', null).replaceAll(RegExp(r'\D'), '');
+  if (rawDigits.isEmpty) {
+    return renderedDigits.isEmpty ? null : book;
+  }
+  final bookDigits = ref.englishBook.replaceAll(RegExp(r'\D'), '');
+  final tailDigits = renderedDigits.startsWith(bookDigits)
+      ? renderedDigits.substring(bookDigits.length)
+      : renderedDigits;
+  if (tailDigits.length < rawDigits.length &&
+      rawDigits.startsWith(tailDigits)) {
+    return '$book $rawTail';
+  }
+  return null;
 }
 
 String? toEnglish(String? book) {

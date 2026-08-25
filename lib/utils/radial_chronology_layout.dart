@@ -409,7 +409,7 @@ typedef LabelMeasure = double Function(String text, double size);
 /// 1900-1957 and said only *Boxer Uprising Martyrdoms* — while the hub
 /// prints the figure 491 two inches away.
 ///
-/// Dropping is not the problem; a rim cannot carry 491 labels at once
+/// Dropping is not the problem; a rim cannot carry 588 labels at once
 /// and something must give. Dropping in SILENCE is the problem, and it
 /// is the same defect this project has now fixed three times over
 /// (#280, #308, #319): a view narrowed its own contents and said

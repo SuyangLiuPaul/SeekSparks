@@ -1,6 +1,6 @@
 /// Find on the wheel — the pure core, against the real asset.
 ///
-/// The wheel holds 657 records and draws 55 labels at rest, so the
+/// The wheel holds 754 records and draws 64 labels at rest, so the
 /// search box is now the only way most of the corpus can be reached at
 /// all. That makes a FALSE ABSENCE the defect that matters here: the
 /// app telling a reader it does not know something it does know. Every
@@ -10,10 +10,10 @@
 /// cost the reader:
 ///
 ///  * THE ROUND TRIP. `parseWheelYears` must accept everything
-///    `yearLabel` prints, for all 491 events and all 62 power spans, in
+///    `yearLabel` prints, for all 588 events and all 62 power spans, in
 ///    all three locales. Nothing enforces that but this test, and the
 ///    two functions live in different files.
-///  * THE BARE WILDCARD reaches 491 + 62 + 82 + 22 = 657 records. Not a
+///  * THE BARE WILDCARD reaches 588 + 62 + 82 + 22 = 754 records. Not a
 ///    round number for its own sake — it is the only assertion that
 ///    fails if a whole KIND stops being searched, which is exactly what
 ///    a naive "search the events" version would do.
@@ -63,7 +63,7 @@ void main() {
     /// on screen.
     test('every event round-trips through both functions, in every locale',
         () {
-      expect(data.events, hasLength(491));
+      expect(data.events, hasLength(588));
       final broken = <String>[];
       for (final e in data.events) {
         for (final locale in _locales) {
@@ -186,7 +186,7 @@ void main() {
           isTrue);
     });
 
-    /// The matcher is called once per field per record — 657 records
+    /// The matcher is called once per field per record — 754 records
     /// across four fields on every keystroke — so a needle that
     /// compiles a pattern must compile it once. This asserts the
     /// behaviour the cache has to preserve, since a cache that returns
@@ -219,9 +219,9 @@ void main() {
     /// The single assertion that fails if a whole kind stops being
     /// searched. A version that searched only events would still pass
     /// most of this file.
-    test('the bare wildcard returns all 657 records, of all four kinds', () {
+    test('the bare wildcard returns all 754 records, of all four kinds', () {
       final r = find('*');
-      expect(r.hits, hasLength(657));
+      expect(r.hits, hasLength(754));
       final byKind = {
         for (final k in WheelHitKind.values)
           k: r.hits.where((h) => h.kind == k).length,
@@ -294,7 +294,7 @@ void main() {
 
     test('hiding every band still returns everything, all flagged', () {
       final all = find('*', hidden: {for (final s in data.streams) s.id});
-      expect(all.hits, hasLength(657));
+      expect(all.hits, hasLength(754));
       expect(all.hits.every((h) => h.streamHidden), isTrue);
     });
   });
@@ -316,7 +316,7 @@ void main() {
       }
     });
 
-    /// The corpus is 491 events over 5,526 years, so almost any year a
+    /// The corpus is 588 events over 6,026 years, so almost any year a
     /// reader types has nothing on it. The neighbours are what makes the
     /// feature useful — but they are a weaker claim, so they are capped,
     /// counted, and last.

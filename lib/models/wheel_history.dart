@@ -1,7 +1,19 @@
-/// `assets/wheel_history.json` — the stretch the chronology wheel's
-/// full-history mode covers after `bible_timeline.json` ends (AD 95),
-/// carried to the present, plus the powers of the biblical world drawn
-/// as bands.
+/// `assets/wheel_history.json` — world history for the chronology
+/// wheel, plus the powers of the biblical world drawn as bands.
+///
+/// It is HALF the wheel's dataset. An earlier version of this comment
+/// described the file as "the stretch the wheel covers after
+/// `bible_timeline.json` ends (AD 95)", which described a division of
+/// labour that was never implemented: the page loaded this file and
+/// only this file, so the wheel drew Hammurabi and Confucius and the
+/// First Olympiad while the Exodus, the divided kingdom, the fall of
+/// Jerusalem and the whole New Testament were missing from it. The
+/// `israel` and `judah` bands held 18 records between them, none of
+/// them the story the bands are named for. [bibleNarrativeEvents] is
+/// the missing half — the 98 events of `assets/bible_timeline.json`
+/// mapped onto these bands and merged at load — and it exists so that
+/// the wheel's whole point, synchronism, works in the direction that
+/// matters: the reader sees Hammurabi BESIDE the patriarchs.
 ///
 /// Most of the file is a well-known historical fact at its conventional
 /// date, selected and worded by this project. But NOT all of it, and an
@@ -25,6 +37,9 @@ library;
 import 'dart:convert';
 
 import 'package:flutter/services.dart' show rootBundle;
+
+import 'package:seeksparks/models/timeline_event.dart';
+import 'package:seeksparks/services/timeline_service.dart';
 
 
 /// One concentric band of the wheel.
@@ -290,18 +305,143 @@ Map<String, String> _localised(Object? raw) => {
         if (e.value is String) e.key.toString(): e.value as String,
     };
 
+/// Prefix on every id [bibleNarrativeEvents] produces. The two assets
+/// were compiled separately and share no id today, but nothing stops
+/// one of them adding `exile` or `jonah` tomorrow, and a collision
+/// would show as the wrong detail sheet rather than as a crash.
+const String kBibleEventIdPrefix = 'bible:';
+
+/// Which band each timeline era is drawn on. The wheel organises by
+/// PEOPLE, not by kind-of-event, so the mapping is a question about
+/// whose history the event belongs to, not about its subject.
+///
+/// `antediluvian` goes to `world` — the residual band, the one whose
+/// Genesis 10 line is `none` and which already carries the Iron Age
+/// and the Bantu expansion. Creation, the Flood and Babel belong to
+/// no one people for the same reason those do: they are before the
+/// peoples, and Babel is where the peoples the other bands are named
+/// for begin. Its English label reads "Elsewhere", which fits a
+/// migration better than it fits the Creation; renaming a band that
+/// 54 existing events are correctly on is a bigger change than this
+/// merge, so it is left alone and noted here.
+const Map<String, String> kTimelineEraStream = {
+  'antediluvian': 'world',
+  'patriarchs': 'israel',
+  'mosaic': 'israel',
+  'conquest': 'israel',
+  'monarchy': 'israel',
+  'exile': 'judah',
+  'intertestamental': 'judah',
+  'nt': 'judah',
+};
+
+/// The records whose era answers the question wrongly.
+///
+/// Two boundaries the era key cannot see. After 931 BC `monarchy`
+/// covers two kingdoms, and Hezekiah, Isaiah, Jeremiah and Josiah are
+/// southern — leaving them on `israel` would draw Josiah's reform on a
+/// band whose kingdom had fallen a century earlier. (The four are the
+/// whole southern set: the other post-931 `monarchy` records — Elijah,
+/// Elisha, Jonah, the fall of Samaria — are northern and stay.) And
+/// `nt` spans Pentecost: everything up to the Ascension happened to
+/// Judea and is drawn there, everything from Acts 2 onward is the
+/// church's own history, which is why the wheel's church band
+/// otherwise began in AD 64 with the fire of Rome.
+///
+/// Two records the era describes correctly and the band would not.
+/// Job is dated to the patriarchal era but the record's own text puts
+/// him outside the family — "a righteous man from Uz … no Mosaic law,
+/// Tabernacle, or Levitical priesthood in view" — so drawing him on
+/// Israel's band would be the app contradicting its own description.
+/// And the Septuagint is not an event in Judah's history but in the
+/// text's: the `scripture` band is where Qumran, P52 and the Vulgate
+/// already are, and it had no record of the Greek Old Testament at all.
+const Map<String, String> kTimelineStreamOverrides = {
+  'job_trial': 'world',
+  'hezekiah_reform': 'judah',
+  'isaiah': 'judah',
+  'jeremiah': 'judah',
+  'josiah_reform': 'judah',
+  'septuagint': 'scripture',
+  'pentecost': 'church',
+  'stephen_martyred': 'church',
+  'paul_converted': 'church',
+  'paul_journeys': 'church',
+  'jerusalem_council': 'church',
+  'paul_rome': 'church',
+  'john_patmos': 'church',
+};
+
+/// Timeline events the wheel already tells, listed by name so a test
+/// fails if either asset moves.
+///
+/// One entry: `temple_destroyed` (AD 70) is `jerusalem_destroyed` on
+/// the wheel's `judah` band, same year, and the wheel's record carries
+/// the surrounding revolt (AD 66) and Masada (AD 73) with it. Reading
+/// the wheel's 133 records in −2400…AD 150 against all 98 timeline
+/// records turned up no other pair naming one fact.
+const Set<String> kTimelineIdsAlreadyOnWheel = {'temple_destroyed'};
+
+/// The Bible's own narrative, shaped for the wheel.
+///
+/// Pure so it can be measured without a binding. [refs] carries only
+/// where the event is NARRATED — [TimelineEvent.datingRefs], the
+/// verses a derived year was counted along, is a different claim and
+/// belongs beside the year rather than in the wheel's jump list.
+List<WheelHistoryEvent> bibleNarrativeEvents(List<TimelineEvent> events) => [
+      for (final e in events)
+        if (!kTimelineIdsAlreadyOnWheel.contains(e.id))
+          WheelHistoryEvent(
+            id: '$kBibleEventIdPrefix${e.id}',
+            year: e.year,
+            era: 'bible',
+            stream: kTimelineStreamOverrides[e.id] ??
+                kTimelineEraStream[e.era] ??
+                'world',
+            basis: e.basis,
+            approximate: e.approximate,
+            refs: e.refs,
+            titles: {
+              'en': e.titleEn,
+              if (e.titleZhHans.isNotEmpty) 'zh-Hans': e.titleZhHans,
+              if (e.titleZhHant.isNotEmpty) 'zh-Hant': e.titleZhHant,
+            },
+            descs: {
+              if (e.descEn.isNotEmpty) 'en': e.descEn,
+              if (e.descZhHans.isNotEmpty) 'zh-Hans': e.descZhHans,
+              if (e.descZhHant.isNotEmpty) 'zh-Hant': e.descZhHant,
+            },
+          )
+    ];
+
 class WheelHistoryService {
   WheelHistoryService._();
   static final WheelHistoryService instance = WheelHistoryService._();
 
   WheelHistoryData? _cache;
 
+  /// Merged at load rather than written into the asset, so the two
+  /// files stay single sources: `bible_timeline.json` is audited by
+  /// `tools/audit_dates.py` and read by the timeline page, and a copy
+  /// of it inside `wheel_history.json` would drift out of step with
+  /// the audit the first time a year moved. Everything downstream —
+  /// the hub counts, the stream filter, the declutter, the search
+  /// box, the detail sheets — sees one list and needs no special case.
   Future<WheelHistoryData> load() async {
     final cached = _cache;
     if (cached != null) return cached;
     final raw = await rootBundle.loadString('assets/wheel_history.json');
-    final data =
+    final base =
         WheelHistoryData.fromJson(json.decode(raw) as Map<String, dynamic>);
+    final data = WheelHistoryData(
+      streams: base.streams,
+      nations: base.nations,
+      powers: base.powers,
+      events: [
+        ...base.events,
+        ...bibleNarrativeEvents(await TimelineService.instance.loadAll()),
+      ]..sort((a, b) => a.year.compareTo(b.year)),
+    );
     _cache = data;
     return data;
   }

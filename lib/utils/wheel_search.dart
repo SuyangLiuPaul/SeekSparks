@@ -3,9 +3,9 @@
 /// BibleWorks' Timeline (`bwh39`) puts a command line on the toolbar:
 /// type a term and the matching events are listed; type a date and the
 /// timeline scrolls to it. That is the half this app was missing. The
-/// wheel holds 657 records — 491 events, 62 powers, 82 nations of
+/// wheel holds 754 records — 588 events, 62 powers, 82 nations of
 /// Genesis 10, 22 bands — and until now the only way to reach one was
-/// to recognise it on the rim. The declutter draws 55 labels at rest,
+/// to recognise it on the rim. The declutter draws 64 labels at rest,
 /// so a reader looking for Sennacherib had no way to find him even
 /// though the record was there and reachable by tap once found.
 ///
@@ -18,8 +18,8 @@
 ///     wants a nation out of Genesis 10. All four record kinds are
 ///     searched and each says what kind it is.
 ///  2. SEARCHING ONE LOCALE. Every record here carries all three
-///     locales (measured: 491/491 titles and descriptions in en,
-///     zh-Hans and zh-Hant). A bilingual reader types whichever comes
+///     locales (measured: 588/588 titles in en, zh-Hans and
+///     zh-Hant). A bilingual reader types whichever comes
 ///     to mind, and a Traditional reader may paste Simplified. So all
 ///     locales are matched, and when the hit was not in the displayed
 ///     string the row SHOWS the string that matched — otherwise the
@@ -149,7 +149,7 @@ class WheelSearchResult {
 
 /// How many events either side of a typed year are offered.
 ///
-/// The corpus is 491 events over 5,526 years, so an exact year usually
+/// The corpus is 588 events over 6,026 years, so an exact year usually
 /// has no event on it at all and a strict match would answer "nothing"
 /// for almost every year a reader could type. The neighbours are what
 /// makes a year query useful — but they are a different claim from an
@@ -194,7 +194,7 @@ bool wheelMatches(String haystack, String needle) {
 }
 
 /// Compiled once per pattern. A keystroke runs the matcher a few
-/// thousand times — once per localised field of all 657 records — so
+/// thousand times — once per localised field of all 754 records — so
 /// building the same `RegExp` each time is the difference between a
 /// search box that keeps up with typing and one that does not.
 final _wildcards = <String, RegExp>{};
@@ -225,7 +225,7 @@ RegExp _wildcard(String needle) {
 /// THE RULE THAT KEEPS THIS HONEST: the parser accepts everything the
 /// wheel PRINTS. `yearLabel` renders `586 BC`, `AD 33`, `主前586` and
 /// `主後33`, so all four come back, in every locale — pinned by a test
-/// that round-trips all 491 events through both functions. Anything
+/// that round-trips all 588 events through both functions. Anything
 /// else it accepts (`-586`, `公元前586`, `b.c. 586`) is a courtesy on
 /// top of that floor.
 ///

@@ -176,7 +176,7 @@ const Map<String, Map<String, String>> wheelStrings = {
     'zh-Hant': '同一血統內，每條帶一個色階',
     'en': 'each band is its own shade of its line',
   },
-  // The rim cannot carry 491 names at once, so a spoke often stands for
+  // The rim cannot carry 588 names at once, so a spoke often stands for
   // several events. `+65` is the mark that says so, and this is the one
   // place on screen that says what the mark means — the control has to
   // teach, or a reader reads `+65` as part of the title beside it.
@@ -225,6 +225,16 @@ const Map<String, Map<String, String>> wheelStrings = {
     'zh-Hans': '经文所载间隔 · 年份按 Thiele',
     'zh-Hant': '經文所載間隔 · 年份按 Thiele',
     'en': 'interval from scripture, year from Thiele',
+  },
+  // The kings' own years rest on Thiele without an interval stated
+  // from the anchor. Before the Bible narrative was merged onto the
+  // wheel no record used this basis, and `thiele` fell through
+  // _basisText's default to "conventional date, not stated in
+  // scripture" — which of David's accession is simply untrue.
+  'wheelBasisThieleOnly': {
+    'zh-Hans': '年份按 Thiele 列王年代',
+    'zh-Hant': '年份按 Thiele 列王年代',
+    'en': 'year from Thiele’s chronology of the kings',
   },
   'wheelBasisConventional': {
     'zh-Hans': '通行年份 · 非经文所载',
@@ -357,7 +367,7 @@ double _labelScale(double zoom) => math.pow(zoom, 0.5).toDouble();
 /// once, in `date_hedge.dart`.
 ///
 /// [parseWheelYears] accepts everything this function emits, in every
-/// locale, and a test round-trips all 491 events through both — the
+/// locale, and a test round-trips all 588 events through both — the
 /// search box must never fail to find a year the chart is showing.
 String yearLabel(int year, String locale) {
   final zh = locale.startsWith('zh');
@@ -781,7 +791,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
 
     // ── DECLUTTER, the way a map does ──────────────────────────────
     //
-    // 491 labels round 320° is one every 0.65° — far past shoulder to
+    // 588 labels round 320° is one every 0.54° — far past shoulder to
     // shoulder, and the reader's complaint was exactly that: too dense
     // to read. (This comment used to say 189, the corpus size when it
     // was written; the figure below was derived from that one and is
@@ -843,6 +853,8 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
         for (var i = 0; i < kept.length; i++)
           SpokeRequest(
             angle: angles[clusters[i].representative],
+            // `thiele` counts as the scripture side: the reign lengths
+            // it is counted along are the text's own.
             scripture: kept[i].basis != 'conventional',
             title: kept[i].titleFor(locale),
             ref: kept[i].refs.isEmpty
@@ -1046,7 +1058,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
 
   /// The command line BibleWorks' Timeline has and this wheel did not.
   ///
-  /// 55 of 491 events carry a label at rest, so before this there was
+  /// 64 of 588 events carry a label at rest, so before this there was
   /// no way to reach a record you could not already see. The search
   /// itself is `searchWheel`, kept pure and tested; everything here is
   /// presentation and the one thing presentation must get right — a
@@ -1496,6 +1508,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
         'scripture' => _s('wheelBasisScripture', 'stated in scripture', locale),
         'scripture+thiele' =>
           _s('wheelBasisThiele', 'interval from scripture', locale),
+        'thiele' => _s('wheelBasisThieleOnly', 'year from Thiele', locale),
         _ => _s('wheelBasisConventional', 'conventional date', locale),
       };
 

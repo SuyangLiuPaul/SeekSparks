@@ -19,7 +19,6 @@
 // stand-in face, which would make a fitting test pass while proving
 // nothing about the shipped build. The fonts are loaded for real, and
 // the control at the bottom fails if that ever stops working.
-import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -132,8 +131,11 @@ void main() {
   setUpAll(() async {
     await _load('Roboto', 'assets/fonts/Roboto-VariableFont_wdth,wght.ttf');
     await _load('NotoSansSC-Sub', 'assets/fonts/NotoSansSC-Sub.otf');
-    final raw = await rootBundle.loadString('assets/wheel_history.json');
-    data = WheelHistoryData.fromJson(json.decode(raw) as Map<String, dynamic>);
+    // Through the service, not the asset: the wheel draws the world
+    // history file MERGED with the Bible narrative, and a legibility
+    // guard that reads only one of the two files is blind to 97 of
+    // the labels it exists to protect.
+    data = await WheelHistoryService.instance.load();
   });
 
   test('the control: the real faces are loaded, not the stand-in', () {
@@ -229,12 +231,14 @@ void main() {
             reason: 'a scripture-dated label rises from the bands');
       }
     }
-    // Only 5 of the asset's 491 events carry a scripture-derived date
-    // (basis "scripture+thiele", all between -980 and -609), and the
-    // declutter keeps exactly one of them at rest and at 400%. So this
-    // floor is 1, not a comfortable number: it is the whole visible
-    // population of the group, and it is why the two-anchor layout had
-    // to stop costing the other 54 labels their words.
+    // 28 of the merged 588 events carry a scripture-derived date
+    // (basis "scripture+thiele" or "thiele", between -2091 and -586),
+    // of which the declutter keeps 5 at rest and 8 at 400%. Before the
+    // Bible narrative was merged in the asset held 5 such events and
+    // the declutter kept exactly ONE — the floor was 1 because that
+    // was the whole visible population of the group, and it is why the
+    // two-anchor layout had to stop costing the other labels their
+    // words. It stays a floor, not an exact count.
     expect(scripture, greaterThanOrEqualTo(1));
     expect(conventional, greaterThan(20));
   });
@@ -450,10 +454,16 @@ void main() {
   // same year are at the same angle at every magnification the viewer
   // permits. The page used to answer that by keeping the first and
   // dropping the rest with no mark of any kind and no tap target:
-  // measured over the shipped corpus on a 900 px canvas, 55 of 491 drawn
-  // at rest and 136 at the maximum 14x, one spoke standing for the 66
-  // events of 1900-1957. These pin the new contract — every event
+  // measured over the then-shipped corpus on a 900 px canvas, 55 of 491
+  // drawn at rest and 136 at the maximum 14x, one spoke standing for the
+  // 66 events of 1900-1957. These pin the new contract — every event
   // belongs to exactly one spoke, and the spoke says so.
+  //
+  // The merged corpus is 588 events: 64 spokes at rest, 157 at 14x, of
+  // which 19 and 34 are named by a Bible event. That the six events of
+  // AD 33 share one spoke at every zoom is arithmetic, not a defect —
+  // the axis spends about 0.000927 rad on a year and a label needs
+  // 0.0553 of them at rest, so there is one name per ~60 years.
   group('clusterByAngle', () {
     test('every event belongs to exactly one cluster, at every size '
         'and zoom', () {
