@@ -3,12 +3,23 @@
 /// carried to the present, plus the powers of the biblical world drawn
 /// as bands.
 ///
-/// Everything in the file is a well-known historical fact at its
-/// conventional date, selected and worded by this project. Nothing is
-/// read out of scripture, so nothing here carries a verse; the wheel
-/// says "conventional" for these the way the timeline marks its own
-/// approximations. Model and loader share a file because the payload
-/// is two flat lists.
+/// Most of the file is a well-known historical fact at its conventional
+/// date, selected and worded by this project. But NOT all of it, and an
+/// earlier version of this comment said otherwise — "nothing is read out
+/// of scripture, so nothing here carries a verse". That was false when it
+/// was written: all 82 nations are read out of Genesis 10, 55 event
+/// references cite scripture, and 24 of the 62 powers carry the verses
+/// their span was read from. The comment was not merely stale, it was
+/// load-bearing — [WheelPower] was written to match it and so parsed
+/// neither `basis` nor `ref`/`refs`, which left the three Israelite
+/// kingdoms telling the reader their dates were "not stated in
+/// scripture" while the asset held the very verses. A wrong comment
+/// about the data becomes a wrong claim to the reader.
+///
+/// So: every record says what its date rests on, in [WheelPower.basis]
+/// and [WheelHistoryEvent.basis], and the wheel prints that rather than
+/// assuming. Model and loader share a file because the payload is flat
+/// lists.
 library;
 
 import 'dart:convert';
@@ -102,7 +113,9 @@ class WheelPower {
     required this.start,
     required this.end,
     required this.stream,
+    required this.basis,
     required this.approximate,
+    required this.refs,
     required this.names,
     required this.notes,
   });
@@ -112,10 +125,26 @@ class WheelPower {
   /// The band this power is drawn on.
   final String stream;
 
+  /// What the SPAN rests on: 'scripture', 'scripture+thiele' or
+  /// 'conventional' — the same three values, and the same reason, as
+  /// [WheelHistoryEvent.basis]. Stored on all 62 powers since the asset
+  /// was compiled; 3 of them are `scripture+thiele` (the united
+  /// monarchy, and the kingdoms of Israel and Judah), and until this
+  /// field existed the wheel printed "conventional date, not stated in
+  /// scripture" over all three.
+  final String basis;
+
   /// True when references genuinely differ on the span, or it is a
   /// rounded century. Written explicitly in the data on every entry —
   /// an absent flag must not be the way "settled" is expressed.
   final bool approximate;
+
+  /// The verses the span was read from, empty for a power dated only by
+  /// convention. The asset spells this `ref` on the 10 records with one
+  /// verse and `refs` on the 14 with several; both are read here into
+  /// one list, because two spellings for one idea is how 42 references
+  /// came to be stored and never shown.
+  final List<String> refs;
 
   /// Astronomical years: negative is BC, and there is no year zero to
   /// worry about at this resolution — every span here is conventional
@@ -144,7 +173,13 @@ class WheelPower {
         start: (j['start'] as num).toInt(),
         end: (j['end'] as num?)?.toInt(),
         stream: (j['stream'] as String?) ?? 'world',
+        basis: (j['basis'] as String?) ?? 'conventional',
         approximate: j['approximate'] == true,
+        refs: [
+          if (j['ref'] is String && (j['ref'] as String).isNotEmpty)
+            j['ref'] as String,
+          ...((j['refs'] as List?) ?? const []).whereType<String>(),
+        ],
         names: _localised(j['name']),
         notes: _localised(j['note']),
       );

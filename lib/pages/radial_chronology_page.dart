@@ -13,6 +13,8 @@ import 'package:seeksparks/utils/jump_to_reference.dart' as jumper;
 import 'package:seeksparks/utils/navigate_to_reader.dart';
 import 'package:seeksparks/utils/radial_chronology_layout.dart';
 import 'package:seeksparks/utils/reference_parser.dart';
+import 'package:seeksparks/utils/version_mapper.dart'
+    show localizedReferenceLabel;
 import 'package:seeksparks/widgets/home_icon_button.dart';
 import 'package:seeksparks/widgets/language_switcher_button.dart';
 import 'package:seeksparks/widgets/localized_back_button.dart';
@@ -435,6 +437,13 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
                 width: side,
                 height: side,
                 child: GestureDetector(
+                  // The wheel is one square canvas and every band, arc
+                  // and spoke is painted, not laid out, so a test can
+                  // only reach a detail sheet by tapping a computed
+                  // point. This key is how it finds the square and its
+                  // centre — same reason as `chronologyAxis` on the
+                  // sibling page.
+                  key: const ValueKey('chronologyWheel'),
                   behavior: HitTestBehavior.opaque,
                   onTapUp: (e) => _handleTap(context, e.localPosition, side,
                       data, streams, arcs, spokes, locale),
@@ -704,7 +713,6 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
 
   void _showFilter(BuildContext context, String locale) {
     final wb = WbColors.of(context);
-    final t = WbType.of(context);
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: wb.paneBg,
@@ -713,6 +721,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
       builder: (sheet) => FutureBuilder<WheelHistoryData>(
         future: _future,
         builder: (c, snap) {
+          final t = WbType.of(c);
           final data = snap.data;
           if (data == null) return const SizedBox(height: 120);
           final colors = _colorsFor(data);
@@ -895,14 +904,20 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
       Container(width: t.scaled(10), height: t.scaled(10), color: c);
 
   /// Tap reads the verse in place; long-press opens the reader at it.
-  Widget _refRow(
-          BuildContext context, List<String> refs, WbColors wb, WbType t) =>
+  ///
+  /// The reference is STORED in English — that is the form
+  /// [parseReference] reads on the way back — and localised only here,
+  /// at the print site. So `r` goes to the handlers and
+  /// [localizedReferenceLabel] goes on screen; passing the localised
+  /// string to either handler would break the tap.
+  Widget _refRow(BuildContext context, List<String> refs, WbColors wb,
+          WbType t, String locale) =>
       Wrap(spacing: 10, runSpacing: 4, children: [
         for (final r in refs)
           InkWell(
             onTap: () => _readVerse(context, r),
             onLongPress: () => _jump(context, r),
-            child: Text(r,
+            child: Text(localizedReferenceLabel(r, locale),
                 style: TextStyle(color: wb.link, fontSize: t.scaled(11))),
           ),
       ]);
@@ -917,7 +932,6 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
   void _showEvent(BuildContext context, WheelHistoryEvent e,
       WheelHistoryData data, String locale) {
     final wb = WbColors.of(context);
-    final t = WbType.of(context);
     final stream = data.streams.firstWhere((s) => s.id == e.stream,
         orElse: () => const WheelStream(id: '', line: 'none', names: {}));
     final approx = e.approximate ? (locale.startsWith('zh') ? '约' : 'c. ') : '';
@@ -926,48 +940,56 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
       backgroundColor: wb.paneBg,
       shape: const RoundedRectangleBorder(),
       isScrollControlled: true,
-      builder: (sheet) => _sheet(sheet, [
-        Row(children: [
-          _swatch(t, _colorsFor(data)[stream.id] ?? _lineColor(stream.line)),
-          SizedBox(width: t.scaled(8)),
-          Expanded(
-            child: Text(e.titleFor(locale),
-                style: TextStyle(
-                    color: wb.text,
-                    fontSize: t.scaled(15),
-                    fontWeight: FontWeight.w600)),
+      // `WbType.of` WATCHES, and a tap handler is not a build — resolving
+      // it out here threw before the sheet ever opened, so no detail sheet
+      // on this page could be opened in a debug build. Resolved against
+      // the sheet's own context instead, which is also what keeps an open
+      // sheet responsive to the Font Size slider. `WbColors.of` reads a
+      // theme extension and is safe either side of the boundary.
+      builder: (sheet) {
+        final t = WbType.of(sheet);
+        return _sheet(sheet, [
+          Row(children: [
+            _swatch(t, _colorsFor(data)[stream.id] ?? _lineColor(stream.line)),
+            SizedBox(width: t.scaled(8)),
+            Expanded(
+              child: Text(e.titleFor(locale),
+                  style: TextStyle(
+                      color: wb.text,
+                      fontSize: t.scaled(15),
+                      fontWeight: FontWeight.w600)),
+            ),
+            Text(stream.nameFor(locale),
+                style: TextStyle(color: wb.mutedText, fontSize: t.scaled(11))),
+          ]),
+          SizedBox(height: t.scaled(4)),
+          Text('$approx${yearLabel(e.year, locale)}',
+              style: TextStyle(color: wb.mutedText, fontSize: t.scaled(12))),
+          if (e.descFor(locale).isNotEmpty) ...[
+            SizedBox(height: t.scaled(8)),
+            Text(e.descFor(locale),
+                style: TextStyle(color: wb.text, fontSize: t.scaled(12))),
+          ],
+          if (e.refs.isNotEmpty) ...[
+            SizedBox(height: t.scaled(8)),
+            _refRow(context, e.refs, wb, t, locale),
+          ],
+          SizedBox(height: t.scaled(10)),
+          Text(
+            e.approximate
+                ? '${_basisText(e.basis, locale)} · '
+                    '${_s('wheelApprox', 'approximate', locale)}'
+                : _basisText(e.basis, locale),
+            style: TextStyle(color: wb.mutedText, fontSize: t.scaled(11)),
           ),
-          Text(stream.nameFor(locale),
-              style: TextStyle(color: wb.mutedText, fontSize: t.scaled(11))),
-        ]),
-        SizedBox(height: t.scaled(4)),
-        Text('$approx${yearLabel(e.year, locale)}',
-            style: TextStyle(color: wb.mutedText, fontSize: t.scaled(12))),
-        if (e.descFor(locale).isNotEmpty) ...[
-          SizedBox(height: t.scaled(8)),
-          Text(e.descFor(locale),
-              style: TextStyle(color: wb.text, fontSize: t.scaled(12))),
-        ],
-        if (e.refs.isNotEmpty) ...[
-          SizedBox(height: t.scaled(8)),
-          _refRow(context, e.refs, wb, t),
-        ],
-        SizedBox(height: t.scaled(10)),
-        Text(
-          e.approximate
-              ? '${_basisText(e.basis, locale)} · '
-                  '${_s('wheelApprox', 'approximate', locale)}'
-              : _basisText(e.basis, locale),
-          style: TextStyle(color: wb.mutedText, fontSize: t.scaled(11)),
-        ),
-      ]),
+        ]);
+      },
     );
   }
 
   void _showPower(BuildContext context, WheelPower p, WheelHistoryData data,
       String locale) {
     final wb = WbColors.of(context);
-    final t = WbType.of(context);
     final stream = data.streams.firstWhere((s) => s.id == p.stream,
         orElse: () => const WheelStream(id: '', line: 'none', names: {}));
     showModalBottomSheet<void>(
@@ -975,37 +997,48 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
       backgroundColor: wb.paneBg,
       shape: const RoundedRectangleBorder(),
       isScrollControlled: true,
-      builder: (sheet) => _sheet(sheet, [
-        Row(children: [
-          _swatch(t, _colorsFor(data)[stream.id] ?? _lineColor(stream.line)),
-          SizedBox(width: t.scaled(8)),
-          Expanded(
-            child: Text(p.nameFor(locale),
-                style: TextStyle(
-                    color: wb.text,
-                    fontSize: t.scaled(15),
-                    fontWeight: FontWeight.w600)),
+      builder: (sheet) {
+        final t = WbType.of(sheet);
+        return _sheet(sheet, [
+          Row(children: [
+            _swatch(t, _colorsFor(data)[stream.id] ?? _lineColor(stream.line)),
+            SizedBox(width: t.scaled(8)),
+            Expanded(
+              child: Text(p.nameFor(locale),
+                  style: TextStyle(
+                      color: wb.text,
+                      fontSize: t.scaled(15),
+                      fontWeight: FontWeight.w600)),
+            ),
+          ]),
+          SizedBox(height: t.scaled(4)),
+          Text(
+              '${yearLabel(p.start, locale)} – '
+              '${p.ongoing ? _s('wheelPresent', 'present', locale) : yearLabel(p.end!, locale)}',
+              style: TextStyle(color: wb.mutedText, fontSize: t.scaled(12))),
+          if (p.noteFor(locale).isNotEmpty) ...[
+            SizedBox(height: t.scaled(8)),
+            Text(p.noteFor(locale),
+                style: TextStyle(color: wb.text, fontSize: t.scaled(12))),
+          ],
+          if (p.refs.isNotEmpty) ...[
+            SizedBox(height: t.scaled(8)),
+            _refRow(context, p.refs, wb, t, locale),
+          ],
+          SizedBox(height: t.scaled(10)),
+          // Ask the record, do not assume. This line used to be a constant
+          // "conventional date, not stated in scripture" — which the three
+          // Israelite kingdoms contradict, and whose verses sit two lines
+          // above it.
+          Text(
+            p.approximate
+                ? '${_basisText(p.basis, locale)} · '
+                    '${_s('wheelApprox', 'approximate', locale)}'
+                : _basisText(p.basis, locale),
+            style: TextStyle(color: wb.mutedText, fontSize: t.scaled(11)),
           ),
-        ]),
-        SizedBox(height: t.scaled(4)),
-        Text(
-            '${yearLabel(p.start, locale)} – '
-            '${p.ongoing ? _s('wheelPresent', 'present', locale) : yearLabel(p.end!, locale)}',
-            style: TextStyle(color: wb.mutedText, fontSize: t.scaled(12))),
-        if (p.noteFor(locale).isNotEmpty) ...[
-          SizedBox(height: t.scaled(8)),
-          Text(p.noteFor(locale),
-              style: TextStyle(color: wb.text, fontSize: t.scaled(12))),
-        ],
-        SizedBox(height: t.scaled(10)),
-        Text(
-          p.approximate
-              ? '${_s('wheelBasisConventional', 'conventional', locale)} · '
-                  '${_s('wheelApprox', 'approximate', locale)}'
-              : _s('wheelBasisConventional', 'conventional', locale),
-          style: TextStyle(color: wb.mutedText, fontSize: t.scaled(11)),
-        ),
-      ]),
+        ]);
+      },
     );
   }
 
@@ -1014,7 +1047,6 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
   void _showStream(BuildContext context, WheelStream s, WheelHistoryData data,
       String locale) {
     final wb = WbColors.of(context);
-    final t = WbType.of(context);
     final nations = data.nationsOf(s.id);
     final powers = data.powersOf(s.id)
       ..sort((a, b) => a.start.compareTo(b.start));
@@ -1026,105 +1058,108 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
       backgroundColor: wb.paneBg,
       shape: const RoundedRectangleBorder(),
       isScrollControlled: true,
-      builder: (sheet) => _sheet(sheet, [
-        Row(children: [
-          _swatch(t, _colorsFor(data)[s.id] ?? _lineColor(s.line)),
-          SizedBox(width: t.scaled(8)),
-          Expanded(
-            child: Text(s.nameFor(locale),
+      builder: (sheet) {
+        final t = WbType.of(sheet);
+        return _sheet(sheet, [
+          Row(children: [
+            _swatch(t, _colorsFor(data)[s.id] ?? _lineColor(s.line)),
+            SizedBox(width: t.scaled(8)),
+            Expanded(
+              child: Text(s.nameFor(locale),
+                  style: TextStyle(
+                      color: wb.text,
+                      fontSize: t.scaled(16),
+                      fontWeight: FontWeight.w600)),
+            ),
+          ]),
+          if (nations.isNotEmpty) ...[
+            SizedBox(height: t.scaled(10)),
+            Text(_s('wheelDescent', 'Descent in Genesis 10', locale),
                 style: TextStyle(
                     color: wb.text,
-                    fontSize: t.scaled(16),
+                    fontSize: t.scaled(12),
                     fontWeight: FontWeight.w600)),
-          ),
-        ]),
-        if (nations.isNotEmpty) ...[
-          SizedBox(height: t.scaled(10)),
-          Text(_s('wheelDescent', 'Descent in Genesis 10', locale),
-              style: TextStyle(
-                  color: wb.text,
-                  fontSize: t.scaled(12),
-                  fontWeight: FontWeight.w600)),
-          for (final n in nations)
-            Padding(
-              padding: EdgeInsets.only(top: t.scaled(4)),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(n.nameFor(locale),
-                            style: TextStyle(
-                                color: wb.text, fontSize: t.scaled(12))),
-                        if (n.noteFor(locale).isNotEmpty)
-                          Text(n.noteFor(locale),
+            for (final n in nations)
+              Padding(
+                padding: EdgeInsets.only(top: t.scaled(4)),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(n.nameFor(locale),
                               style: TextStyle(
-                                  color: wb.mutedText,
-                                  fontSize: t.scaled(11))),
-                      ],
+                                  color: wb.text, fontSize: t.scaled(12))),
+                          if (n.noteFor(locale).isNotEmpty)
+                            Text(n.noteFor(locale),
+                                style: TextStyle(
+                                    color: wb.mutedText,
+                                    fontSize: t.scaled(11))),
+                        ],
+                      ),
                     ),
-                  ),
-                  SizedBox(width: t.scaled(8)),
-                  InkWell(
-                    onTap: () => _readVerse(context, n.ref),
-                    onLongPress: () => _jump(context, n.ref),
-                    child: Text(n.ref,
-                        style:
-                            TextStyle(color: wb.link, fontSize: t.scaled(11))),
-                  ),
-                ],
+                    SizedBox(width: t.scaled(8)),
+                    InkWell(
+                      onTap: () => _readVerse(context, n.ref),
+                      onLongPress: () => _jump(context, n.ref),
+                      child: Text(localizedReferenceLabel(n.ref, locale),
+                          style: TextStyle(
+                              color: wb.link, fontSize: t.scaled(11))),
+                    ),
+                  ],
+                ),
               ),
-            ),
-        ],
-        if (powers.isNotEmpty) ...[
-          SizedBox(height: t.scaled(12)),
-          Text('${_s('wheelPowers', 'Powers', locale)} · ${powers.length}',
-              style: TextStyle(
-                  color: wb.text,
-                  fontSize: t.scaled(12),
-                  fontWeight: FontWeight.w600)),
-          for (final p in powers)
-            Padding(
-              padding: EdgeInsets.only(top: t.scaled(3)),
-              child: Row(children: [
-                Expanded(
-                  child: Text(p.nameFor(locale),
-                      style:
-                          TextStyle(color: wb.text, fontSize: t.scaled(11.5))),
-                ),
-                Text(
-                    '${yearLabel(p.start, locale)} – '
-                    '${p.ongoing ? _s('wheelPresent', 'present', locale) : yearLabel(p.end!, locale)}',
-                    style: TextStyle(
-                        color: wb.mutedText, fontSize: t.scaled(11))),
-              ]),
-            ),
-        ],
-        if (events.isNotEmpty) ...[
-          SizedBox(height: t.scaled(12)),
-          Text('${_s('wheelEvents', 'Events', locale)} · ${events.length}',
-              style: TextStyle(
-                  color: wb.text,
-                  fontSize: t.scaled(12),
-                  fontWeight: FontWeight.w600)),
-          for (final e in events)
-            Padding(
-              padding: EdgeInsets.only(top: t.scaled(3)),
-              child: Row(children: [
-                Expanded(
-                  child: Text(e.titleFor(locale),
-                      style:
-                          TextStyle(color: wb.text, fontSize: t.scaled(11.5))),
-                ),
-                Text(yearLabel(e.year, locale),
-                    style: TextStyle(
-                        color: wb.mutedText, fontSize: t.scaled(11))),
-              ]),
-            ),
-        ],
-      ]),
+          ],
+          if (powers.isNotEmpty) ...[
+            SizedBox(height: t.scaled(12)),
+            Text('${_s('wheelPowers', 'Powers', locale)} · ${powers.length}',
+                style: TextStyle(
+                    color: wb.text,
+                    fontSize: t.scaled(12),
+                    fontWeight: FontWeight.w600)),
+            for (final p in powers)
+              Padding(
+                padding: EdgeInsets.only(top: t.scaled(3)),
+                child: Row(children: [
+                  Expanded(
+                    child: Text(p.nameFor(locale),
+                        style: TextStyle(
+                            color: wb.text, fontSize: t.scaled(11.5))),
+                  ),
+                  Text(
+                      '${yearLabel(p.start, locale)} – '
+                      '${p.ongoing ? _s('wheelPresent', 'present', locale) : yearLabel(p.end!, locale)}',
+                      style: TextStyle(
+                          color: wb.mutedText, fontSize: t.scaled(11))),
+                ]),
+              ),
+          ],
+          if (events.isNotEmpty) ...[
+            SizedBox(height: t.scaled(12)),
+            Text('${_s('wheelEvents', 'Events', locale)} · ${events.length}',
+                style: TextStyle(
+                    color: wb.text,
+                    fontSize: t.scaled(12),
+                    fontWeight: FontWeight.w600)),
+            for (final e in events)
+              Padding(
+                padding: EdgeInsets.only(top: t.scaled(3)),
+                child: Row(children: [
+                  Expanded(
+                    child: Text(e.titleFor(locale),
+                        style: TextStyle(
+                            color: wb.text, fontSize: t.scaled(11.5))),
+                  ),
+                  Text(yearLabel(e.year, locale),
+                      style: TextStyle(
+                          color: wb.mutedText, fontSize: t.scaled(11))),
+                ]),
+              ),
+          ],
+        ]);
+      },
     );
   }
 }
@@ -1347,11 +1382,16 @@ class _WorldWheelPainter extends CustomPainter {
     }
     if (tp.width > room) return;
 
-    // The verse, when the label did not use up the radius.
+    // The verse, when the label did not use up the radius. Localise
+    // BEFORE measuring: 创世纪 10:6 and Genesis 10:6 are not the same
+    // width, so measuring the English and drawing the Chinese would
+    // decide "it fits" on the wrong string.
     TextPainter? refTp;
     if (s.event.refs.isNotEmpty) {
       final probe = TextPainter(
-          text: TextSpan(text: '  ${s.event.refs.first}', style: refStyle),
+          text: TextSpan(
+              text: '  ${localizedReferenceLabel(s.event.refs.first, locale)}',
+              style: refStyle),
           textDirection: TextDirection.ltr,
           maxLines: 1)
         ..layout();
