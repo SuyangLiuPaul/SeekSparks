@@ -111,6 +111,12 @@ List<WheelArc> buildWheelArcs(
   return out;
 }
 
+/// Centre-to-centre spacing of the rings, which is what a label has to
+/// stay inside to keep clear of the neighbouring stream — the band
+/// returned by [ringRadii] is only four fifths of it.
+double ringPitch(int ringCount, double rHub, double rMax) =>
+    ringCount <= 0 ? 0 : (rMax - rHub) / ringCount;
+
 /// The band of radii ring [ring] occupies, given [ringCount] rings
 /// between the hub at [rHub] and the rim at [rMax]. A fifth of each
 /// ring's width is left as the gap between neighbours, so the bands
@@ -478,6 +484,135 @@ List<PlannedSpoke> planRadialSpokes({
     }
   }
   return out;
+}
+
+// ── the arc labels, the last family no test could read ───────────────
+//
+// The rim's labels have been planned out here since phase 11. The band
+// names and the arc labels were still decided inside the painter, where
+// canvas text leaves no widget and no semantics node for a test to find
+// — so both were measured in the shipped faces over the real 22 streams
+// and 62 powers before anything was changed. The band names came back
+// sound: rendered and read back pixel by pixel, no two adjacent rows'
+// INK touches at 700, 900 or 1200 px in either locale, worst clearance
+// 0.91 canvas units, and their size is already bounded when magnified.
+// They are left exactly as they were.
+//
+// The arc labels were not sound. `.clamp(6.0, 10.0)` on top of the
+// geometric cap made the FLOOR the binding limit — a 3.12-unit cap at
+// 700 px came back out of the clamp as 6.0 — so a label was set at
+// exactly 6.00 canvas units at every canvas size, every locale and
+// every zoom. Three things followed:
+//
+//   * on screen the size was 6 x zoom: 48 px at 800%, beside rim
+//     labels holding station at 10.5.
+//   * the SET never grew. 26 of 62 English names at 900 px, the same 26
+//     however far the reader zoomed in. The rule this page is built on
+//     is that zooming shows MORE; here it showed the same, larger.
+//   * at 700 px the ink of all 22 English and all 34 Chinese labels
+//     drawn was 5.88-5.94 units tall in a ring pitch of 5.41 — they
+//     printed across the neighbouring stream's row. That is what
+//     overriding a geometric cap with a floor buys.
+//
+// The size now comes from the same two questions the rim answers, and
+// the floor is kept but read in the units that make sense of it.
+
+/// The smallest this wheel will put an arc label on the reader's
+/// SCREEN, in logical pixels.
+///
+/// The number is not new: `.clamp(6.0, 10.0)` in the painter has been
+/// the wheel's floor all along, and 6.0 is what it produced at every
+/// canvas size. What changes is the units. As a floor on the CANVAS
+/// size it was multiplied by the `InteractiveViewer` — 6 px at rest and
+/// 48 px at 800% — and it could raise a size back over the geometry it
+/// had just been capped by. As a floor on the SCREEN size it means at
+/// rest what it always meant, and nothing absurd when magnified.
+///
+/// It is well under [WbMetrics.smallPrintFloor], the 11 px the app
+/// holds its chrome to, and that gap is deliberate but unresolved:
+/// 22 rings share 153 canvas units at 900 px, so no type that stays
+/// inside a ring is 11 px at rest, and raising the floor to 11 would
+/// take every arc label off the wheel until the reader zooms to about
+/// 200%. Whether a chart's annotations owe the chrome floor is a
+/// product question with a real cost either way, and no honest answer
+/// is available from the code. This pass keeps the number that ships.
+const double kArcLabelFloorPx = 6;
+
+/// Whether the reader's selection covers a thing on a band.
+///
+/// A tap selects one id, and it may be a power's, an event's, or — when
+/// the tap lands on a stretch of band nobody occupies — the STREAM's.
+/// Both painters used to test `ownId == selectedId` alone, so selecting
+/// a band dimmed the entire wheel, the tapped band included: the reader
+/// asked "show me Assyria" and the wheel greyed out with nothing lit.
+/// A power belongs to its stream and so does an event, so both count.
+bool selectionCovers({
+  required String? selectedId,
+  required String ownId,
+  required String streamId,
+}) =>
+    selectedId != null && (selectedId == ownId || selectedId == streamId);
+
+/// How much of the ring pitch an arc label's em box may occupy.
+///
+/// The em box is the right bound, and neither the line box nor the band
+/// stroke is. The line box carries leading that is not ink — rendered
+/// and read back pixel by pixel in the shipped faces, a label's ink is
+/// 0.98 em in Latin and 0.99 in Han, against a line box of 1.17 and
+/// 1.37 — so bounding the line box throws away a fifth of the size for
+/// nothing. The band stroke is narrower than the pitch and there is no
+/// harm in a name overhanging the colour it names. What must not happen
+/// is reaching the NEXT stream's row, and an em inside the pitch cannot:
+/// 0.99 x 0.9 leaves a tenth of the pitch as clearance.
+const double kArcLabelPitchFraction = 0.9;
+
+/// The size at which a power's name can be set along its own arc, or 0
+/// when this arc cannot carry it.
+///
+/// Three limits, and the old painter respected only the third. The em
+/// may not exceed [maxEm] or the label reaches the neighbouring stream
+/// — measured, at 700 px it did, for all 22 English and all 34 Chinese
+/// labels drawn, because `.clamp(6, 10)` RAISED the size back over the
+/// geometric cap; it may not be smaller on screen than [floorPx], which
+/// is that same clamp's floor read in the units that make sense of it;
+/// and it must fit the arc, which carries [fillFraction] of
+/// `sweep * radius` of arc length.
+///
+/// [measure] must be the SUM OF THE CHARACTERS' widths, because that is
+/// what the painter lays out — one `TextPainter` per grapheme, set
+/// along the curve. A whole-string measurement is shaped and kerned and
+/// would decide "it fits" about a string nobody draws.
+double fitArcLabel({
+  required String text,
+  required double radius,
+  required double sweep,
+  required double maxEm,
+  required double desiredSize,
+  required double zoom,
+  required double floorPx,
+  required LabelMeasure measure,
+  double fillFraction = 0.92,
+}) {
+  if (text.isEmpty || sweep <= 0 || radius <= 0 || zoom <= 0) return 0;
+  final smallest = floorPx / zoom;
+  final room = sweep * fillFraction * radius;
+  var size = math.min(desiredSize, maxEm);
+
+  // Scaling the size by room/width is a good guess and not an answer:
+  // glyph advances are hinted and quantised, so a string is not exactly
+  // proportional to its size and the guess can still overrun. Measured
+  // over the real corpus it overran for one power at 700 px. So the
+  // guess is re-measured, with at least 2% taken off each pass to
+  // guarantee it terminates, and a label that still will not fit keeps
+  // its arc and loses its words.
+  for (var attempt = 0; attempt < 6; attempt++) {
+    if (size < smallest) return 0;
+    final w = measure(text, size);
+    if (w <= 0) return 0;
+    if (w <= room) return size;
+    size = math.min(size * room / w, size * 0.98);
+  }
+  return 0;
 }
 
 /// Greedy first-fit packing of angular items into a small number of

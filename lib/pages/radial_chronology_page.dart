@@ -239,15 +239,30 @@ double _measureLabel(String text, double size) => (TextPainter(
     )..layout())
     .width;
 
+/// A tangential label's width: the sum of its characters, because
+/// `_charsOnArc` sets them one at a time along the curve. Shaping the
+/// whole string would measure a line nobody draws.
+double _measureChars(String text, double size) {
+  var total = 0.0;
+  for (final ch in text.characters) {
+    total += (TextPainter(
+      text: TextSpan(text: ch, style: TextStyle(fontSize: size)),
+      textDirection: TextDirection.ltr,
+    )..layout())
+        .width;
+  }
+  return total;
+}
+
 /// How type responds to zoom.
 ///
 /// Dividing the canvas size by the full zoom holds letters at a
 /// constant size on screen — mathematically tidy, and wrong: a reader
 /// who zooms to 500% has asked to see this part BETTER, and type that
 /// refuses to grow reads as a chart that ignored them. Dividing by
-/// `zoom^0.55` instead means the on-screen size grows as `zoom^0.45`:
-/// at 500% the letters are about twice the size they were, while the
-/// wheel still buys real angular room, so more labels appear as well.
+/// `sqrt(zoom)` instead means the on-screen size grows as `sqrt(zoom)`:
+/// at 500% the letters are a bit over twice the size they were, while
+/// the wheel buys real angular room, so more labels appear as well.
 /// Legibility and density both improve, which is what zooming is for.
 double _labelScale(double zoom) => math.pow(zoom, 0.5).toDouble();
 
@@ -1309,8 +1324,15 @@ class _WorldWheelPainter extends CustomPainter {
     final has = selectedId != null;
     for (final arc in arcs) {
       final band = ringRadii(arc.ring, streams.length, rHub, rBands);
+      // The outline marks the power itself; the dimming follows the
+      // whole selection, which may be this arc's stream.
       final sel = arc.power.id == selectedId;
-      final dim = has && !sel ? 0.35 : 1.0;
+      final lit = selectionCovers(
+        selectedId: selectedId,
+        ownId: arc.power.id,
+        streamId: streams[arc.ring].id,
+      );
+      final dim = has && !lit ? 0.35 : 1.0;
       canvas.drawArc(
         Rect.fromCircle(center: c, radius: band.centre),
         arc.a0,
@@ -1341,9 +1363,22 @@ class _WorldWheelPainter extends CustomPainter {
               ..strokeWidth = 1
               ..color = wb.text.withValues(alpha: 0.85));
       }
-      _tangentialLabel(canvas, c, band.centre, arc.power.nameFor(locale),
-          arc.a0, arc.a1 - arc.a0,
-          math.min(band.width * 0.72, rimFont / _labelScale(zoom)), dim);
+      final name = arc.power.nameFor(locale);
+      final size = fitArcLabel(
+        text: name,
+        radius: band.centre,
+        sweep: arc.a1 - arc.a0,
+        maxEm: ringPitch(streams.length, rHub, rBands) *
+            kArcLabelPitchFraction,
+        desiredSize: rimFont / _labelScale(zoom),
+        zoom: zoom,
+        floorPx: kArcLabelFloorPx,
+        measure: _measureChars,
+      );
+      if (size > 0) {
+        _tangentialLabel(
+            canvas, c, band.centre, name, arc.a0, arc.a1 - arc.a0, size, dim);
+      }
     }
   }
 
@@ -1382,7 +1417,12 @@ class _WorldWheelPainter extends CustomPainter {
     final rTick = scriptureLabelBase(rBands);
     for (final s in spokes) {
       final sel = s.event.id == selectedId;
-      final dim = has && !sel ? 0.28 : 1.0;
+      final lit = selectionCovers(
+        selectedId: selectedId,
+        ownId: s.event.id,
+        streamId: s.event.stream,
+      );
+      final dim = has && !lit ? 0.28 : 1.0;
       final a = s.label.angle;
       final dir = Offset(math.cos(a), math.sin(a));
       canvas.drawLine(
@@ -1450,35 +1490,33 @@ class _WorldWheelPainter extends CustomPainter {
     canvas.restore();
   }
 
-  /// A label along the arc, centred in the span, skipped when it cannot
-  /// fit — the name is one tap away either way, and overprinted type is
-  /// lost to everybody.
+  /// A label along the arc, centred in the span, at the size
+  /// [fitArcLabel] resolved.
+  ///
+  /// The painter used to decide the size itself: a `clamp(6, 10)` on a
+  /// geometric cap, then two attempts at 80%. The clamp's FLOOR was the
+  /// binding limit — it raised a 4 px cap back to 6 — so every label on
+  /// this wheel was set at exactly 6 canvas units whatever the canvas
+  /// size, the locale or the zoom, which is 6 px on screen at rest and
+  /// 48 px at 800%. The decision now lives in a function a test can read.
   void _tangentialLabel(Canvas canvas, Offset c, double radius, String text,
-      double a0, double sweep, double fontSizeIn, double dim) {
-    if (sweep <= 0) return;
-    var fontSize = fontSizeIn.clamp(6.0, 10.0);
-    for (var attempt = 0; attempt < 2; attempt++) {
-      final style = TextStyle(
-          color: wb.text.withValues(alpha: 0.98 * dim), fontSize: fontSize);
-      final widths = <double>[];
-      var total = 0.0;
-      for (final ch in text.characters) {
-        final tp = TextPainter(
-            text: TextSpan(text: ch, style: style),
-            textDirection: TextDirection.ltr)
-          ..layout();
-        widths.add(tp.width);
-        total += tp.width;
-      }
-      final angular = total / radius;
-      if (angular <= sweep * 0.92) {
-        _charsOnArc(canvas, c, radius, text, widths, style,
-            a0 + (sweep - angular) / 2, angular);
-        return;
-      }
-      fontSize *= 0.8;
-      if (fontSize < 5.5) return;
+      double a0, double sweep, double fontSize, double dim) {
+    if (sweep <= 0 || fontSize <= 0) return;
+    final style = TextStyle(
+        color: wb.text.withValues(alpha: 0.98 * dim), fontSize: fontSize);
+    final widths = <double>[];
+    var total = 0.0;
+    for (final ch in text.characters) {
+      final tp = TextPainter(
+          text: TextSpan(text: ch, style: style),
+          textDirection: TextDirection.ltr)
+        ..layout();
+      widths.add(tp.width);
+      total += tp.width;
     }
+    final angular = total / radius;
+    _charsOnArc(canvas, c, radius, text, widths, style,
+        a0 + (sweep - angular) / 2, angular);
   }
 
   void _charsOnArc(Canvas canvas, Offset c, double radius, String text,
@@ -1577,5 +1615,7 @@ class _WorldWheelPainter extends CustomPainter {
       old.arcs.length != arcs.length ||
       old.spokes.length != spokes.length ||
       old.zoom != zoom ||
-      old.rimFont != rimFont;
+      old.rimFont != rimFont ||
+      old.endFont != endFont ||
+      old.bandFont != bandFont;
 }
