@@ -172,4 +172,123 @@ void main() {
         reason: 'the wheel shows a Chinese reader an English reference');
     await unmount(tester);
   });
+
+  /// THE EVENTS BEHIND A SPOKE ARE REACHABLE, AND THE COUNT IS HONEST.
+  ///
+  /// Until 2026-08-25 a tap could only ever reach the 55 events the rim
+  /// happened to draw, because `_handleTap` iterates the drawn spokes:
+  /// the other 436 had no hit target anywhere on the page, at any zoom.
+  /// A spoke now stands for its whole cluster, so this asks the page for
+  /// the one thing the pure geometry cannot answer — that the tap opens
+  /// the list, and that the number in its header is the number of rows
+  /// under it. A header that says 66 over 12 rows would be the old
+  /// silent narrowing wearing a count.
+  testWidgets('a spoke standing for several events lists all of them',
+      (tester) async {
+    await pump(tester, const Size(1440, 900));
+    final rect = tester.getRect(find.byKey(const ValueKey('chronologyWheel')));
+    final side = rect.width;
+    final centre = rect.center;
+    const startRad = -math.pi / 2;
+    const sweepRad = 320 * math.pi / 180;
+
+    // '大事 · 66' — the sheet's own header, in the shipped default
+    // locale. A stream's sheet prints the identical header over its own
+    // event list, so the cluster sheet is identified by the note only it
+    // carries. Matching on the header alone found the stream sheet and
+    // measured the wrong list.
+    final header = RegExp(r'^大事 · (\d+)$');
+    const note = '此处轮缘只容得下一个名称。点按任一大事可打开。';
+    var listsOpened = 0;
+    var biggest = 0;
+
+    // The event spokes live between the bands at 0.285 and the rim at
+    // 0.445, so sweep that annulus rather than the whole disc.
+    for (var ri = 0; ri < 4; ri++) {
+      final r = side * (0.30 + (0.44 - 0.30) * ri / 3);
+      for (var ai = 0; ai < 40; ai++) {
+        final a = startRad + sweepRad * ai / 39;
+        await tester.tapAt(centre + Offset(r * math.cos(a), r * math.sin(a)));
+        await tester.pump(const Duration(milliseconds: 400));
+        if (find.byType(BottomSheet).evaluate().isEmpty) continue;
+
+        int? stated;
+        var isCluster = false;
+        for (final para in tester
+            .renderObjectList<RenderParagraph>(find.byType(RichText))) {
+          final plain = para.text.toPlainText().trim();
+          final m = header.firstMatch(plain);
+          if (m != null) stated = int.parse(m.group(1)!);
+          if (plain == note) isCluster = true;
+        }
+        if (isCluster && stated != null && stated > 1) {
+          listsOpened++;
+          if (stated > biggest) biggest = stated;
+          // One tappable row per member is what makes them reachable.
+          //
+          // Counting the `InkWell`s in the tree does NOT answer this:
+          // the sheet is a `ListView`, which builds only what its
+          // viewport needs, so a complete list of 47 shows 22 elements
+          // and a truncated list of 22 shows the same 22. The instrument
+          // has to do what the reader does — go to the bottom — and
+          // count what it passes.
+          //
+          // Rows are identified by where they sit in the list, not by
+          // what they say. `nero_persecution` and `great_fire_rome` are
+          // two records for one fire — same year, same title in all
+          // three locales — so a set keyed on the words would silently
+          // count 46 of 47 and blame the page for it. They are the only
+          // such pair in the 491.
+          final pos = tester
+              .state<ScrollableState>(find.descendant(
+                  of: find.byType(BottomSheet),
+                  matching: find.byType(Scrollable)))
+              .position;
+          final seen = <int>{};
+          void harvest() {
+            for (final ink in find
+                .descendant(
+                    of: find.byType(BottomSheet),
+                    matching: find.byType(InkWell))
+                .evaluate()) {
+              final box = ink.renderObject as RenderBox?;
+              if (box == null || !box.hasSize) continue;
+              seen.add(
+                  (box.localToGlobal(Offset.zero).dy + pos.pixels).round());
+            }
+          }
+
+          harvest();
+          // Driven through the scroll position rather than by dragging.
+          // A drag on this sheet never moves it — the modal's own
+          // drag-to-dismiss recogniser takes the gesture, so `pixels`
+          // stays at 0.0 and the list looks truncated when it is not.
+          // That is an arena question, and this test is not asking it.
+          var at = 0.0;
+          while (seen.length < stated && at < pos.maxScrollExtent) {
+            at = math.min(at + pos.viewportDimension * 0.8,
+                pos.maxScrollExtent);
+            pos.jumpTo(at);
+            await tester.pump();
+            harvest();
+          }
+          expect(seen.length, equals(stated),
+              reason: 'the sheet said $stated events and a reader who '
+                  'went to the bottom of it could open ${seen.length}');
+        }
+        tester.state<NavigatorState>(find.byType(Navigator).first).pop();
+        await tester.pump(const Duration(milliseconds: 400));
+      }
+    }
+
+    expect(tester.takeException(), isNull);
+    expect(listsOpened, greaterThan(3),
+        reason: 'the sweep never landed on a clustered spoke, so it '
+            'checked nothing — 49 of the 55 spokes drawn at rest stand '
+            'for more than one event');
+    expect(biggest, greaterThan(5),
+        reason: 'the crowded stretches are the whole point; a sweep that '
+            'only found pairs is not reaching them');
+    await unmount(tester);
+  });
 }

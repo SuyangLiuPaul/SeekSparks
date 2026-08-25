@@ -291,42 +291,189 @@ typedef LabelMeasure = double Function(String text, double size);
 /// still visible and still tappable, and the band's own sheet lists
 /// every event on that stream. The reader's lever is zoom, which shrinks
 /// type against a fixed canvas and so buys real room.
-({String title, String ref, double width, bool ellipsised}) fitRadialLabel({
+///
+/// [badge] — the `+65` of a spoke standing for a cluster — is reserved
+/// BEFORE the title, and is the last thing given up. A title is one
+/// event's name and can be recovered by zooming or by tapping; the
+/// badge is the only mark on the whole wheel saying that sixty-five
+/// other events are behind this one, and a chart that drops it is back
+/// to narrowing in silence. So the order of sacrifice is verse, then
+/// title, then badge.
+///
+/// It is set at [refSize] — the size the verse already rides this same
+/// label at — for hierarchy, NOT for room. It buys no room worth having:
+/// measured in the shipped faces, Chinese titles are quantised in whole
+/// ideographs, so shrinking the badge from [titleSize] to [refSize]
+/// recovers the same 22 of 48 at 700 px and the same 53 of 55 at 900 px.
+/// (A one-space gap at 0.85 does recover 7 more at 700 px, and that is
+/// exactly the kind of knife-edge not to build on — one space either
+/// way, on one corpus, at one canvas size.) The reason is that `+65`
+/// set in the title's own face reads as another word in the name; at
+/// the verse's size it reads as an annotation on it, which is what it
+/// is.
+///
+/// WHAT THE BADGE COSTS, measured in the shipped faces over the real
+/// corpus at rest. English pays nothing at all — 48 of 48 titles at
+/// 700 px and 55 of 55 at 900 px, badge or no badge, because Latin
+/// already falls back to whole words and the badge only shortens the
+/// cut. Chinese pays, because it is whole-or-nothing: 55 titles become
+/// 53 at 900 px, and 38 become 22 at 700 px. Against that, the number
+/// of spokes saying NOTHING AT ALL falls from 10 to 2 at 700 px, and 43
+/// spokes that stood mute for their 400-odd hidden events now say how
+/// many they stand for. A name the reader can recover by zooming or by
+/// tapping is the cheaper thing to spend.
+({String title, String ref, String badge, double width, bool ellipsised})
+    fitRadialLabel({
   required String title,
   required String ref,
   required double room,
   required double titleSize,
   required double refSize,
   required LabelMeasure measure,
+  String badge = '',
 }) {
-  const nothing = (title: '', ref: '', width: 0.0, ellipsised: false);
-  if (room <= 0 || title.isEmpty) return nothing;
+  const nothing =
+      (title: '', ref: '', badge: '', width: 0.0, ellipsised: false);
+  if (room <= 0) return nothing;
+
+  final badgeW = badge.isEmpty ? 0.0 : measure('  $badge', refSize);
+  if (badgeW > room) return nothing;
+  final forText = room - badgeW;
+  final badgeOnly =
+      (title: '', ref: '', badge: badge, width: badgeW, ellipsised: false);
+  if (title.isEmpty) return badge.isEmpty ? nothing : badgeOnly;
 
   final full = measure(title, titleSize);
-  if (full <= room) {
+  if (full <= forText) {
     // The verse rides along only when the title did not spend the
     // radius. Measured on the LOCALISED reference, which is what the
     // caller passes: 创世纪 10:6 and Genesis 10:6 are not the same width.
     if (ref.isNotEmpty) {
       final refW = measure('  $ref', refSize);
-      if (full + refW <= room) {
-        return (title: title, ref: ref, width: full + refW, ellipsised: false);
+      if (full + refW <= forText) {
+        return (
+          title: title,
+          ref: ref,
+          badge: badge,
+          width: full + refW + badgeW,
+          ellipsised: false
+        );
       }
     }
-    return (title: title, ref: '', width: full, ellipsised: false);
+    return (
+      title: title,
+      ref: '',
+      badge: badge,
+      width: full + badgeW,
+      ellipsised: false
+    );
   }
 
-  if (title.runes.any(isCjkChar)) return nothing;
+  if (title.runes.any(isCjkChar)) return badge.isEmpty ? nothing : badgeOnly;
 
   final words = title.split(' ').where((w) => w.isNotEmpty).toList();
   for (var take = words.length - 1; take >= 1; take--) {
     final cut = '${words.take(take).join(' ')}…';
     final w = measure(cut, titleSize);
-    if (w <= room) {
-      return (title: cut, ref: '', width: w, ellipsised: true);
+    if (w <= forText) {
+      return (
+        title: cut,
+        ref: '',
+        badge: badge,
+        width: w + badgeW,
+        ellipsised: true
+      );
     }
   }
-  return nothing;
+  return badge.isEmpty ? nothing : badgeOnly;
+}
+
+/// The events that one spoke stands for.
+///
+/// WHY THIS EXISTS. Angle on this wheel is a linear function of the
+/// year, so two events in the same year are at the same angle and no
+/// magnification separates them — 55 years of the corpus carry more
+/// than one event and 125 events are involved. The page's answer used
+/// to be a first-past-the-post declutter: sort by year, keep an event
+/// only when it clears the last KEPT one by [minGap], drop the rest
+/// with no mark of any kind. Measured over the shipped 491 events on a
+/// 900 px canvas that keeps **55 at rest and 136 at the viewer's
+/// maximum 14x** — one drawn spoke stood for the 66 events of
+/// 1900-1957 and said only *Boxer Uprising Martyrdoms* — while the hub
+/// prints the figure 491 two inches away.
+///
+/// Dropping is not the problem; a rim cannot carry 491 labels at once
+/// and something must give. Dropping in SILENCE is the problem, and it
+/// is the same defect this project has now fixed three times over
+/// (#280, #308, #319): a view narrowed its own contents and said
+/// nothing. BibleWorks' own Timeline (`bwh39`) carries "thousands of
+/// chronological events" and never does this — it scrolls the axis
+/// both ways, stacks events into era rows, and puts an explicit
+/// indicator on the toolbar "when there are more timeline items
+/// visible by scrolling up or down". Our axis cannot scroll: it IS the
+/// whole of history, by design. So the equivalent honesty is to make
+/// the survivor say how many it stands for and to let a tap list them.
+///
+/// Grouping is greedy on the same rule the declutter used, so the
+/// representatives are the identical set of events at the identical
+/// angles — the wheel does not move, it only stops lying about what is
+/// on it.
+class SpokeCluster {
+  const SpokeCluster({required this.members, required this.representative});
+
+  /// Indices into the caller's list, ascending. Never empty.
+  final List<int> members;
+
+  /// The member whose title is drawn, and whose year the tick marks.
+  final int representative;
+
+  /// How many members are not the one drawn.
+  int get hidden => members.length - 1;
+}
+
+/// Group [angles] — ascending — into one cluster per spoke.
+///
+/// A new cluster starts when an angle clears the FIRST member of the
+/// open cluster by [minGap], which is exactly the comparison the old
+/// declutter made against the last event it kept. [minGap] must be
+/// positive; at zero every entry becomes its own cluster and coincident
+/// labels would print on each other.
+///
+/// [pinned] is an index that must represent its own cluster rather than
+/// merely belong to it — the reader's selection, which may not be
+/// hidden behind a neighbour's title. That moves one tick by up to
+/// [minGap] and is the single exception to the collision argument in
+/// [planRadialSpokes]. It is a smaller exception than the one it
+/// replaces: the old code added the selected event as an EXTRA label
+/// beside the one already there.
+List<SpokeCluster> clusterByAngle(
+  List<double> angles,
+  double minGap, {
+  int pinned = -1,
+}) {
+  final out = <SpokeCluster>[];
+  var members = <int>[];
+  var anchor = double.negativeInfinity;
+
+  void close() {
+    if (members.isEmpty) return;
+    out.add(SpokeCluster(
+      members: members,
+      representative: members.contains(pinned) ? pinned : members.first,
+    ));
+  }
+
+  for (var i = 0; i < angles.length; i++) {
+    if (members.isEmpty || angles[i] - anchor >= minGap) {
+      close();
+      members = [i];
+      anchor = angles[i];
+    } else {
+      members.add(i);
+    }
+  }
+  close();
+  return out;
 }
 
 /// One event asking for a place on the rim, already localised.
@@ -336,6 +483,7 @@ class SpokeRequest {
     required this.scripture,
     required this.title,
     required this.ref,
+    this.badge = '',
   });
 
   final double angle;
@@ -349,6 +497,10 @@ class SpokeRequest {
 
   /// Empty when the event cites no verse.
   final String ref;
+
+  /// What this spoke stands for beyond the one event named — `+65` —
+  /// or empty when it stands for itself alone.
+  final String badge;
 }
 
 /// A planned label: where it goes and what it says.
@@ -358,6 +510,7 @@ class PlannedSpoke {
     required this.label,
     required this.title,
     required this.ref,
+    required this.badge,
     required this.ellipsised,
   });
 
@@ -368,6 +521,11 @@ class PlannedSpoke {
   /// Empty when only the tick is drawn — see [fitRadialLabel].
   final String title;
   final String ref;
+
+  /// The `+65` this spoke carries, or empty. It can survive alone: a
+  /// spoke whose title would not fit still says how many events it
+  /// stands for.
+  final String badge;
   final bool ellipsised;
 
   bool get hasText => title.isNotEmpty;
@@ -407,9 +565,13 @@ double scriptureLabelBase(double rBands) => rBands + 5;
 /// angle, and [minGap] is one line-height divided by [rBands] — so at
 /// any radius `r >= rBands` their arc separation is at least
 /// `r * lineHeight / rBands >= lineHeight`. Every label sits outside
-/// `rBands`. The one exception is an event forced back in because the
-/// reader selected it, which may sit closer than [minGap] to its
-/// neighbour: hiding the thing just tapped would be worse.
+/// `rBands`. The one exception is [clusterByAngle]'s `pinned`: the
+/// reader's selection represents its own cluster rather than hiding
+/// behind a neighbour's title, which can move one tick by up to
+/// [minGap] and so bring one pair closer than that. Hiding the thing
+/// just tapped would be worse — and this is the smaller of the two
+/// exceptions available, since the alternative is an extra label beside
+/// one already drawn.
 List<PlannedSpoke> planRadialSpokes({
   required List<SpokeRequest> requests,
   required double rBands,
@@ -443,6 +605,7 @@ List<PlannedSpoke> planRadialSpokes({
           titleSize: titleSize,
           refSize: refSize,
           measure: measure,
+          badge: requests[i].badge,
         )
     ];
     // Stack from zero, then mirror the outward group about the rim.
@@ -479,6 +642,7 @@ List<PlannedSpoke> planRadialSpokes({
         label: label,
         title: overflows ? '' : fit.title,
         ref: overflows ? '' : fit.ref,
+        badge: overflows ? '' : fit.badge,
         ellipsised: !overflows && fit.ellipsised,
       ));
     }

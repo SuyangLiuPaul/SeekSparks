@@ -174,6 +174,20 @@ const Map<String, Map<String, String>> wheelStrings = {
     'zh-Hant': '同一血統內，每條帶一個色階',
     'en': 'each band is its own shade of its line',
   },
+  // The rim cannot carry 491 names at once, so a spoke often stands for
+  // several events. `+65` is the mark that says so, and this is the one
+  // place on screen that says what the mark means — the control has to
+  // teach, or a reader reads `+65` as part of the title beside it.
+  'wheelClusterLegend': {
+    'zh-Hans': '＋n：此处另有 n 件大事，点按可列出',
+    'zh-Hant': '＋n：此處另有 n 件大事，點按可列出',
+    'en': '+n — n more events here; tap to list them',
+  },
+  'wheelClusterNote': {
+    'zh-Hans': '此处轮缘只容得下一个名称。点按任一大事可打开。',
+    'zh-Hant': '此處輪緣只容得下一個名稱。點按任一大事可開啟。',
+    'en': 'The rim has room for one name here. Tap any event to open it.',
+  },
   'wheelAll': {'zh-Hans': '全选', 'zh-Hant': '全選', 'en': 'All'},
   'wheelNone': {'zh-Hans': '全不选', 'zh-Hant': '全不選', 'en': 'None'},
   'wheelLineShem': {'zh-Hans': '闪族', 'zh-Hant': '閃族', 'en': 'Shem'},
@@ -293,7 +307,15 @@ class _Arc {
 /// only way anything can test canvas text: nothing in the suite can
 /// read a `TextPainter`, but every one of these strings is reachable.
 class _Spoke {
-  const _Spoke(this.event, this.label, this.color, this.title, this.ref);
+  const _Spoke(
+      this.members, this.event, this.label, this.color, this.title, this.ref,
+      {this.badge = ''});
+
+  /// Every event this spoke stands for, in year order, including
+  /// [event]. A spoke is never empty and is usually one event long.
+  final List<WheelHistoryEvent> members;
+
+  /// The one whose title is drawn and whose year the tick marks.
   final WheelHistoryEvent event;
   final RadialLabel label;
   final Color color;
@@ -302,6 +324,11 @@ class _Spoke {
   /// is drawn.
   final String title;
   final String ref;
+
+  /// `+65` when this spoke stands for more than itself.
+  final String badge;
+
+  int get hidden => members.length - 1;
 }
 
 class _RadialChronologyPageState extends State<RadialChronologyPage> {
@@ -664,31 +691,46 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
 
     // ── DECLUTTER, the way a map does ──────────────────────────────
     //
-    // At rest, 189 labels round 320° means one every 1.7° — shoulder
-    // to shoulder, and the reader's complaint was exactly that: too
-    // dense to read. Drawing them all and letting them touch is the
-    // one thing that must not happen.
+    // 491 labels round 320° is one every 0.65° — far past shoulder to
+    // shoulder, and the reader's complaint was exactly that: too dense
+    // to read. (This comment used to say 189, the corpus size when it
+    // was written; the figure below was derived from that one and is
+    // wrong by the same neglect.) Drawing them all and letting them
+    // touch is the one thing that must not happen.
     //
     // So: a label needs about 1.35 line-heights of angular room at the
     // radius it sits on. That room is measured ON SCREEN, so zooming in
-    // buys real space and more labels appear — at 1x roughly half the
-    // corpus is drawn, by 3x all of it. Nothing is lost: what is not
-    // drawn is still tappable-adjacent and always in the band's own
-    // sheet, which lists every event on that stream.
+    // buys real space and more labels appear.
+    //
+    // WHAT THIS COMMENT USED TO SAY, and why it mattered: "at 1x
+    // roughly half the corpus is drawn, by 3x all of it. Nothing is
+    // lost." Measured through this very arithmetic over the shipped 491
+    // events on a 900 px canvas, it is 55 at 1x — 11%, not half — and
+    // 136 at the `InteractiveViewer`'s maximum 14x, so about 72% of the
+    // corpus can be seen at NO magnification this app permits. Zoom
+    // cannot in principle rescue the worst of it: angle is linear in
+    // the year, so the 125 events sharing a year with another event sit
+    // at identical angles for ever. A false belief about the data
+    // became a design that shipped a silent 89% cut with the figure 491
+    // printed in the hub two inches away.
+    //
+    // Nothing is DROPPED now. Events that cannot each have a label are
+    // grouped, and the spoke that survives says how many it stands for
+    // and lists them when tapped — see [clusterByAngle]. The grouping
+    // rule is the old keep-rule read the other way round, so every
+    // label that used to be drawn is still drawn, at the same angle.
     final onScreenPx = _kLabelPx * 1.35;
     final minGap = (onScreenPx / _labelScale(_zoom)) / rBands;
 
+    final angles = [
+      for (final e in all) angleForSpan(e.year, kMinYear, kMaxYear)
+    ];
     // Selection always survives the thinning: hiding the thing the
-    // reader just tapped would be indefensible.
-    final kept = <WheelHistoryEvent>[];
-    var lastAngle = double.negativeInfinity;
-    for (final e in all) {
-      final a = angleForSpan(e.year, kMinYear, kMaxYear);
-      if (a - lastAngle >= minGap || e.id == _selectedId) {
-        kept.add(e);
-        lastAngle = a;
-      }
-    }
+    // reader just tapped would be indefensible. It now represents its
+    // cluster instead of being added beside it.
+    final clusters = clusterByAngle(angles, minGap,
+        pinned: all.indexWhere((e) => e.id == _selectedId));
+    final kept = [for (final c in clusters) all[c.representative]];
 
     // ── THE SCRIPTURE BASELINE ────────────────────────────────────
     //
@@ -708,14 +750,15 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
     final titleSize = rimFont / _labelScale(_zoom);
     final planned = planRadialSpokes(
       requests: [
-        for (final e in kept)
+        for (var i = 0; i < kept.length; i++)
           SpokeRequest(
-            angle: angleForSpan(e.year, kMinYear, kMaxYear),
-            scripture: e.basis != 'conventional',
-            title: e.titleFor(locale),
-            ref: e.refs.isEmpty
+            angle: angles[clusters[i].representative],
+            scripture: kept[i].basis != 'conventional',
+            title: kept[i].titleFor(locale),
+            ref: kept[i].refs.isEmpty
                 ? ''
-                : localizedReferenceLabel(e.refs.first, locale),
+                : localizedReferenceLabel(kept[i].refs.first, locale),
+            badge: clusters[i].hidden == 0 ? '' : '+${clusters[i].hidden}',
           )
       ],
       rBands: rBands,
@@ -728,8 +771,15 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
     );
     return [
       for (final p in planned)
-        _Spoke(kept[p.index], p.label,
-            colors[kept[p.index].stream] ?? _lineColor('none'), p.title, p.ref)
+        _Spoke(
+          [for (final m in clusters[p.index].members) all[m]],
+          kept[p.index],
+          p.label,
+          colors[kept[p.index].stream] ?? _lineColor('none'),
+          p.title,
+          p.ref,
+          badge: p.badge,
+        )
     ];
   }
 
@@ -763,6 +813,8 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
           row('institution', 'wheelLineInstitution', 'Church & Scripture'),
           SizedBox(height: t.scaled(3)),
           Text(_s('wheelShadeNote', '', locale),
+              style: TextStyle(color: wb.mutedText, fontSize: t.scaled(11))),
+          Text(_s('wheelClusterLegend', '', locale),
               style: TextStyle(color: wb.mutedText, fontSize: t.scaled(11))),
         ],
       ),
@@ -890,7 +942,11 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
       }
       if (best != null) {
         _select(best.event.id);
-        _showEvent(context, best.event, data, locale);
+        if (best.members.length > 1) {
+          _showCluster(context, best.members, data, locale);
+        } else {
+          _showEvent(context, best.event, data, locale);
+        }
         return;
       }
     }
@@ -1040,6 +1096,77 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
                 : _basisText(e.basis, locale),
             style: TextStyle(color: wb.mutedText, fontSize: t.scaled(11)),
           ),
+        ]);
+      },
+    );
+  }
+
+  /// Everything one spoke stands for, when it stands for more than one
+  /// event.
+  ///
+  /// This is the other half of the `+65` badge and the reason the badge
+  /// can be told the truth: the events a rim has no room to name are
+  /// not lost, they are one tap away, in year order, each opening its
+  /// own sheet. Which one the rim names is stated here rather than left
+  /// to be inferred — it is the earliest in the stretch, which is an
+  /// arbitrary choice among the members and should read as one.
+  void _showCluster(BuildContext context, List<WheelHistoryEvent> events,
+      WheelHistoryData data, String locale) {
+    final wb = WbColors.of(context);
+    final colors = _colorsFor(data);
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: wb.paneBg,
+      shape: const RoundedRectangleBorder(),
+      isScrollControlled: true,
+      builder: (sheet) {
+        final t = WbType.of(sheet);
+        return _sheet(sheet, [
+          Text(
+            '${_s('wheelEvents', 'Events', locale)} · ${events.length}',
+            style: TextStyle(
+                color: wb.text,
+                fontSize: t.scaled(15),
+                fontWeight: FontWeight.w600),
+          ),
+          SizedBox(height: t.scaled(2)),
+          Text(
+            '${yearLabel(events.first.year, locale)} – '
+            '${yearLabel(events.last.year, locale)}',
+            style: TextStyle(color: wb.mutedText, fontSize: t.scaled(12)),
+          ),
+          SizedBox(height: t.scaled(6)),
+          Text(
+            _s('wheelClusterNote',
+                'The rim has room for one name here. Tap any event to open it.',
+                locale),
+            style: TextStyle(color: wb.mutedText, fontSize: t.scaled(11)),
+          ),
+          SizedBox(height: t.scaled(8)),
+          for (final e in events)
+            InkWell(
+              onTap: () {
+                Navigator.of(sheet).pop();
+                _select(e.id);
+                _showEvent(context, e, data, locale);
+              },
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: t.scaled(4)),
+                child: Row(children: [
+                  _swatch(t, colors[e.stream] ?? _lineColor('none')),
+                  SizedBox(width: t.scaled(8)),
+                  Expanded(
+                    child: Text(e.titleFor(locale),
+                        style: TextStyle(
+                            color: wb.text, fontSize: t.scaled(12))),
+                  ),
+                  SizedBox(width: t.scaled(8)),
+                  Text(yearLabel(e.year, locale),
+                      style: TextStyle(
+                          color: wb.mutedText, fontSize: t.scaled(11))),
+                ]),
+              ),
+            ),
         ]);
       },
     );
@@ -1201,19 +1328,34 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
                     color: wb.text,
                     fontSize: t.scaled(12),
                     fontWeight: FontWeight.w600)),
+            // These rows open. They did not until 2026-08-25: a stream's
+            // sheet named every event on it and offered no way to reach
+            // one, so a reader who found what they were looking for here
+            // had to go back and hunt the rim for a tick. That is the
+            // same defect the `+n` badge exists to end — an event the
+            // wheel names and the reader cannot open — and the powers
+            // above are left alone precisely because they do NOT have
+            // it: a power occupies a band, and tapping the band opens it.
             for (final e in events)
-              Padding(
-                padding: EdgeInsets.only(top: t.scaled(3)),
-                child: Row(children: [
-                  Expanded(
-                    child: Text(e.titleFor(locale),
+              InkWell(
+                onTap: () {
+                  Navigator.of(sheet).pop();
+                  _select(e.id);
+                  _showEvent(context, e, data, locale);
+                },
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: t.scaled(3)),
+                  child: Row(children: [
+                    Expanded(
+                      child: Text(e.titleFor(locale),
+                          style: TextStyle(
+                              color: wb.text, fontSize: t.scaled(11.5))),
+                    ),
+                    Text(yearLabel(e.year, locale),
                         style: TextStyle(
-                            color: wb.text, fontSize: t.scaled(11.5))),
-                  ),
-                  Text(yearLabel(e.year, locale),
-                      style: TextStyle(
-                          color: wb.mutedText, fontSize: t.scaled(11))),
-                ]),
+                            color: wb.mutedText, fontSize: t.scaled(11))),
+                  ]),
+                ),
               ),
           ],
         ]);
@@ -1449,7 +1591,7 @@ class _WorldWheelPainter extends CustomPainter {
   /// nothing can test — is this label legible? — inside the one place
   /// no test can read. An empty [_Spoke.title] means the tick alone.
   void _radialLabel(Canvas canvas, Offset c, _Spoke s, double dim, bool sel) {
-    if (s.title.isEmpty) return;
+    if (s.title.isEmpty && s.badge.isEmpty) return;
     final style = TextStyle(
       color: sel ? wb.text : wb.text.withValues(alpha: 0.95 * dim),
       fontSize: rimFont / _labelScale(zoom),
@@ -1457,6 +1599,15 @@ class _WorldWheelPainter extends CustomPainter {
     );
     final refStyle = TextStyle(
       color: wb.link.withValues(alpha: 0.95 * dim),
+      fontSize: (rimFont / _labelScale(zoom)) * _kRefSizeRatio,
+    );
+    // Muted ink and the verse's size, so it reads as a count of things
+    // rather than as part of the name it follows: `+65` after *Boxer
+    // Uprising Martyrdoms* must not look like a title. The size must
+    // match what `fitRadialLabel` reserved for it, or the fitting is
+    // measuring a string nobody draws.
+    final badgeStyle = TextStyle(
+      color: wb.mutedText.withValues(alpha: 0.95 * dim),
       fontSize: (rimFont / _labelScale(zoom)) * _kRefSizeRatio,
     );
     final tp = TextPainter(
@@ -1468,6 +1619,15 @@ class _WorldWheelPainter extends CustomPainter {
         ? null
         : (TextPainter(
             text: TextSpan(text: '  ${s.ref}', style: refStyle),
+            textDirection: TextDirection.ltr,
+            maxLines: 1)
+          ..layout());
+    final badgeTp = s.badge.isEmpty
+        ? null
+        : (TextPainter(
+            text: TextSpan(
+                text: s.title.isEmpty ? s.badge : '  ${s.badge}',
+                style: badgeStyle),
             textDirection: TextDirection.ltr,
             maxLines: 1)
           ..layout());
@@ -1485,8 +1645,13 @@ class _WorldWheelPainter extends CustomPainter {
           c.dy + math.sin(a) * s.label.rStart);
       canvas.rotate(a);
     }
-    tp.paint(canvas, Offset(0, -tp.height / 2));
-    refTp?.paint(canvas, Offset(tp.width, -refTp.height / 2));
+    if (s.title.isNotEmpty) tp.paint(canvas, Offset(0, -tp.height / 2));
+    final afterTitle = s.title.isEmpty ? 0.0 : tp.width;
+    refTp?.paint(canvas, Offset(afterTitle, -refTp.height / 2));
+    badgeTp?.paint(
+        canvas,
+        Offset(afterTitle + (refTp?.width ?? 0),
+            -badgeTp.height / 2));
     canvas.restore();
   }
 
