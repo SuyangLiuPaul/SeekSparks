@@ -12,6 +12,7 @@ import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/services/family_tree_service.dart';
 import 'package:seeksparks/services/url_sync_service.dart';
 import 'package:seeksparks/utils/date_hedge.dart';
+import 'package:seeksparks/utils/font_catalog.dart';
 import 'package:seeksparks/utils/jump_to_reference.dart' as jumper;
 import 'package:seeksparks/utils/navigate_to_reader.dart';
 import 'package:seeksparks/utils/radial_chronology_layout.dart';
@@ -366,8 +367,14 @@ const double _kRefSizeRatio = 0.86;
 /// label, which is painted semibold and so runs a little wider than it
 /// was measured — it is the one the reader just tapped, and its whole
 /// purpose is to stand out.
+// 2026-08-31 (#318): every style on this page's canvas is built by
+// `canvasTextStyle`, not `TextStyle`. A TextPainter inherits no theme,
+// and on the web build a style with no `fontFamilyFallback` has no face
+// that can render Chinese at all — the label goes absent, not tofu. This
+// one is a MEASUREMENT, and it must use the same face as the paint or
+// `fitRadialLabel` is reserving room for a string nobody draws.
 double _measureLabel(String text, double size) => (TextPainter(
-      text: TextSpan(text: text, style: TextStyle(fontSize: size)),
+      text: TextSpan(text: text, style: canvasTextStyle(fontSize: size)),
       textDirection: TextDirection.ltr,
       maxLines: 1,
     )..layout())
@@ -380,7 +387,7 @@ double _measureChars(String text, double size) {
   var total = 0.0;
   for (final ch in text.characters) {
     total += (TextPainter(
-      text: TextSpan(text: ch, style: TextStyle(fontSize: size)),
+      text: TextSpan(text: ch, style: canvasTextStyle(fontSize: size)),
       textDirection: TextDirection.ltr,
     )..layout())
         .width;
@@ -2262,7 +2269,7 @@ class _WorldWheelPainter extends CustomPainter {
       final tp = TextPainter(
         text: TextSpan(
           text: streams[i].nameFor(locale),
-          style: TextStyle(
+          style: canvasTextStyle(
             color: (colors[streams[i].id] ?? _lineColor(streams[i].line))
                 .withValues(alpha: 0.98),
             fontSize: math.min(bandFont / _labelScale(zoom), band.width * 1.05),
@@ -2322,12 +2329,12 @@ class _WorldWheelPainter extends CustomPainter {
   /// no test can read. An empty [_Spoke.title] means the tick alone.
   void _radialLabel(Canvas canvas, Offset c, _Spoke s, double dim, bool sel) {
     if (s.title.isEmpty && s.badge.isEmpty) return;
-    final style = TextStyle(
+    final style = canvasTextStyle(
       color: sel ? wb.text : wb.text.withValues(alpha: 0.95 * dim),
       fontSize: rimFont / _labelScale(zoom),
       fontWeight: sel ? FontWeight.w600 : FontWeight.w400,
     );
-    final refStyle = TextStyle(
+    final refStyle = canvasTextStyle(
       color: wb.link.withValues(alpha: 0.95 * dim),
       fontSize: (rimFont / _labelScale(zoom)) * _kRefSizeRatio,
     );
@@ -2336,7 +2343,7 @@ class _WorldWheelPainter extends CustomPainter {
     // Uprising Martyrdoms* must not look like a title. The size must
     // match what `fitRadialLabel` reserved for it, or the fitting is
     // measuring a string nobody draws.
-    final badgeStyle = TextStyle(
+    final badgeStyle = canvasTextStyle(
       color: wb.mutedText.withValues(alpha: 0.95 * dim),
       fontSize: (rimFont / _labelScale(zoom)) * _kRefSizeRatio,
     );
@@ -2397,7 +2404,7 @@ class _WorldWheelPainter extends CustomPainter {
   void _tangentialLabel(Canvas canvas, Offset c, double radius, String text,
       double a0, double sweep, double fontSize, double dim) {
     if (sweep <= 0 || fontSize <= 0) return;
-    final style = TextStyle(
+    final style = canvasTextStyle(
         color: wb.text.withValues(alpha: 0.98 * dim), fontSize: fontSize);
     final widths = <double>[];
     var total = 0.0;
@@ -2509,7 +2516,7 @@ class _WorldWheelPainter extends CustomPainter {
   /// and painting are two steps rather than one.
   TextPainter _painter(String text, Color color, double size) => TextPainter(
         text: TextSpan(
-            text: text, style: TextStyle(color: color, fontSize: size)),
+            text: text, style: canvasTextStyle(color: color, fontSize: size)),
         textDirection: TextDirection.ltr,
         maxLines: 1,
       )..layout();

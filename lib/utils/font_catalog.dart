@@ -127,6 +127,39 @@ const List<String> kCjkFontFallback = [
   'sans-serif',
 ];
 
+/// A [TextStyle] for text painted on a CANVAS rather than laid out by a
+/// [Text] widget.
+///
+/// **A `TextPainter` inherits nothing.** #316 made every style in
+/// `workbenchTheme` carry [kCjkFontFallback], and
+/// `theme_cjk_fallback_test.dart` holds it there — but a theme only
+/// reaches widgets. A `TextPainter` uses the [TextStyle] it is handed,
+/// verbatim, so a style built inline for a painter starts from nothing.
+///
+/// On Flutter web that is not a cosmetic difference. `NotoSansSC-Sub` is
+/// registered as its OWN family (`pubspec.yaml`), CanvasKit resolves only
+/// what is in its Skia registry, and v1.6.62 removed the runtime font
+/// download — so a canvas style with no fallback has **no** face that can
+/// render Chinese, and the pubspec's own note spells out the result:
+/// "CanvasKit renders nothing rather than tofu". The label does not go
+/// tofu, it goes ABSENT, which reads as a layout bug and is why this
+/// survived on the featured chronology wheel.
+///
+/// It also matters for MEASUREMENT. A painter's width feeds the layout
+/// arithmetic that decides whether a label fits; measuring with a font
+/// that cannot render the string measures the wrong string.
+TextStyle canvasTextStyle({
+  Color? color,
+  required double fontSize,
+  FontWeight? fontWeight,
+}) =>
+    TextStyle(
+      color: color,
+      fontSize: fontSize,
+      fontWeight: fontWeight,
+      fontFamilyFallback: kCjkFontFallback,
+    );
+
 const List<FontOption> _catalog = [
   // ── System default (preferred default since v1.1.2) ──────────────
   // Routes through the OS's native UI font via the CSS font-stack
