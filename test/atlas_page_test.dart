@@ -256,7 +256,16 @@ void main() {
 
   testWidgets('the wilderness route says where our map cannot tell camps apart',
       (tester) async {
-    await pump(tester, const Size(1440, 1000));
+    // 4000 px tall, not 1000: the itinerary panel is a lazy `ListView`,
+    // so `find.text` only ever sees the rows it has MOUNTED. At 1000 px
+    // the wilderness route's 42 stations mount only as far as the panel
+    // fills, and the shared-point tag — which sits on 27 rows further
+    // down — is absent, which reads as a missing feature rather than an
+    // unbuilt widget. Measured: 1000 px mounts 0 tags, 2000 px mounts 18
+    // of 27 and stops short of the last station, 3000 px mounts all 42
+    // rows, and 4000 and 6000 are identical to 3000. 4000 is the
+    // saturating height with headroom.
+    await pump(tester, const Size(1440, 4000));
 
     // Numbers 33 is the one itinerary scripture gives as a LIST, so the
     // order needs no reconstruction — but 27 of its 42 stations land on
@@ -268,6 +277,14 @@ void main() {
       await tester.pump(const Duration(milliseconds: 80));
     }
     expect(tester.takeException(), isNull);
+
+    // The instrument before the claim. The last of Numbers 33's 42
+    // stations must be mounted, or every count below counts what fitted
+    // rather than what the panel says. This row is the FIRST to go
+    // missing when the list outgrows the viewport, so a future note that
+    // pushes the panel past 4000 px reds here, with a reason, instead of
+    // quietly emptying the tag assertion underneath it.
+    expect(find.textContaining('民数记 33:49'), findsOneWidget);
 
     // The claim, on screen, in the reader's own language — and phrased
     // about the DATA, because a shared point can mean an unidentified

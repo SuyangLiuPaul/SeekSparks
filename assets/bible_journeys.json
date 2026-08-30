@@ -191,9 +191,9 @@
      "verse": 40,
      "leg": "start",
      "note": {
-      "en": "Paul chose Silas and set out. Barnabas and Mark sailed for Cyprus instead (15:39); that parting is not drawn here.",
-      "zh-Hans": "保罗拣选西拉起行。巴拿巴带着马可另行开船往塞浦路斯去（15:39），那一路本图未画。",
-      "zh-Hant": "保羅揀選西拉起行。巴拿巴帶著馬可另行開船往塞浦路斯去（15:39），那一路本圖未畫。"
+      "en": "Paul chose Silas and set out. Barnabas and Mark sailed for Cyprus instead (15:39); that parting is not drawn here. Acts 15:40 names no city; 15:35 is what puts them in Antioch, and 14:26 is where the first journey brought them back to it.",
+      "zh-Hans": "保罗拣选西拉起行。巴拿巴带着马可另行开船往塞浦路斯去（15:39），那一路本图未画。使徒行传15:40没有提到城名；把他们放在安提阿的是15:35，而14:26正是第一次旅程带他们回到那里的一节。",
+      "zh-Hant": "保羅揀選西拉起行。巴拿巴帶著馬可另行開船往塞浦路斯去（15:39），那一路本圖未畫。使徒行傳15:40沒有提到城名；把他們放在安提阿的是15:35，而14:26正是第一次旅程帶他們回到那裡的一節。"
      }
     },
     {
@@ -916,7 +916,12 @@
      "book": "Numbers",
      "chapter": 33,
      "verse": 10,
-     "leg": "land"
+     "leg": "land",
+     "note": {
+      "en": "Numbers 33:10 camps them by the Red Sea. The gazetteer holds one point for the whole sea, as it does for the Jordan, so this marker stands for the body of water and not for where on its shore the camp was.",
+      "zh-Hans": "民数记33:10记他们在红海边安营。地名录对整片红海只给一个点，正如对约旦河一样；所以这个标记代表的是那片水域，而不是营地在岸上的哪一处。",
+      "zh-Hant": "民數記33:10記他們在紅海邊安營。地名錄對整片紅海只給一個點，正如對約旦河一樣；所以這個標記代表的是那片水域，而不是營地在岸上的哪一處。"
+     }
     },
     {
      "place": "Sin",
