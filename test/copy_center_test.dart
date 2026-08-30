@@ -18,6 +18,7 @@ import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/verse.dart';
 import 'package:seeksparks/pages/workbench_page.dart';
 import 'package:seeksparks/providers/main_provider.dart';
+import 'package:seeksparks/providers/workbench_provider.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -187,5 +188,75 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(find.text('复制中心'), findsOneWidget);
     expect(find.text('Copy Center'), findsNothing);
+  });
+
+  // ── Marking the search hit (2026-08-31) ─────────────────────────
+
+  /// Put a query on the workbench without running a search: the search
+  /// itself reads assets this test has none of, and what is under test
+  /// is what the Copy Center does with a query, not how one is found.
+  void setQuery(WidgetTester tester, String query) {
+    final ctx = tester.element(find.byIcon(Icons.copy_all_outlined).first);
+    Provider.of<WorkbenchProvider>(ctx, listen: false).lastQuery = query;
+  }
+
+  /// The preview's rich text, which is where a marked preview lives —
+  /// `SelectableText.data` is null once it is built from spans.
+  InlineSpan? previewSpan(WidgetTester tester) => tester
+      .widgetList<SelectableText>(find.byType(SelectableText))
+      .first
+      .textSpan;
+
+  testWidgets('with no search running the switch is not offered',
+      (tester) async {
+    addTearDown(tester.view.reset);
+    await pump(tester);
+    await openCopyCenter(tester);
+    expect(find.text('Mark search hits'), findsNothing);
+    expect(previewText(tester), contains('verse text 1'));
+  });
+
+  testWidgets('a running search offers the switch and marks the preview',
+      (tester) async {
+    addTearDown(tester.view.reset);
+    await pump(tester);
+    setQuery(tester, 'text');
+    await openCopyCenter(tester);
+
+    expect(tester.takeException(), isNull);
+    expect(find.text('Mark search hits'), findsOneWidget);
+
+    final span = previewSpan(tester);
+    expect(span, isNotNull);
+    // Same words, and the searched one carries weight the rest does not.
+    expect(span!.toPlainText(), contains('verse text 1'));
+    final marked = <String>[];
+    span.visitChildren((s) {
+      if (s is TextSpan && s.style?.fontWeight == FontWeight.w700) {
+        marked.add(s.text ?? '');
+      }
+      return true;
+    });
+    expect(marked, isNotEmpty);
+    expect(marked.every((m) => m.toLowerCase() == 'text'), isTrue,
+        reason: 'only the query term should be marked, got $marked');
+  });
+
+  testWidgets('turning the switch off puts the plain preview back',
+      (tester) async {
+    addTearDown(tester.view.reset);
+    await pump(tester);
+    setQuery(tester, 'text');
+    await openCopyCenter(tester);
+    expect(previewSpan(tester), isNotNull);
+
+    // The options column scrolls; the switch sits below the fold at
+    // this height, so it has to be brought into view before it can be
+    // tapped — the same thing the reader does.
+    await tester.ensureVisible(find.text('Mark search hits'));
+    await tester.pump();
+    await tester.tap(find.text('Mark search hits'));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(previewText(tester), contains('verse text 1'));
   });
 }

@@ -13,7 +13,11 @@ import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/verse.dart';
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/services/fetch_verses.dart';
+import 'package:seeksparks/services/tagged_text_service.dart';
 import 'package:seeksparks/utils/copy_format.dart';
+import 'package:seeksparks/utils/copy_marking.dart'
+    show hasHitMarks, hitMarkedSpans, markVerseHits;
+import 'package:seeksparks/utils/search_highlight.dart' show SearchHighlight;
 import 'package:seeksparks/utils/short_book_name.dart';
 import 'package:seeksparks/utils/verse_list.dart';
 
@@ -36,26 +40,43 @@ const _kCopyOptionsPrefKey = 'workbench.copyOptions';
 /// without copying. It deliberately does NOT touch the clipboard: the
 /// success snackbar has to appear over the workbench, not underneath a
 /// dialog that is still up, so the caller pops first and then hands the
-/// string to `ClipboardHelper.copyWithFeedback`.
+/// string to `ClipboardHelper.copyMarkedWithFeedback`.
+///
+/// 2026-08-31: the returned string is MARKED — search hits wrapped in
+/// `copy_marking.dart`'s sentinels — so that the caller can put a
+/// highlighted `text/html` flavour on the clipboard beside the plain
+/// one. With no [highlight], or with marking switched off, it is the
+/// same plain string it always was.
 Future<String?> showCopyCenter(
   BuildContext context, {
   required List<CopyScope> scopes,
   required String primaryVersion,
+  SearchHighlight highlight = const SearchHighlight(),
 }) {
   return showDialog<String>(
     context: context,
     builder: (_) => _CopyCenterDialog(
       scopes: scopes,
       primaryVersion: primaryVersion,
+      highlight: highlight,
     ),
   );
 }
 
 class _CopyCenterDialog extends StatefulWidget {
-  const _CopyCenterDialog({required this.scopes, required this.primaryVersion});
+  const _CopyCenterDialog({
+    required this.scopes,
+    required this.primaryVersion,
+    this.highlight = const SearchHighlight(),
+  });
 
   final List<CopyScope> scopes;
   final String primaryVersion;
+
+  /// What the running search found, or an empty highlight when none is
+  /// running. Empty is the ordinary case and turns the whole feature
+  /// off — there is nothing to mark.
+  final SearchHighlight highlight;
 
   @override
   State<_CopyCenterDialog> createState() => _CopyCenterDialogState();
@@ -82,6 +103,16 @@ class _CopyCenterDialogState extends State<_CopyCenterDialog> {
   /// the loaded verses rather than a table, so a Chinese edition's
   /// copied reference reads in that edition's own vocabulary.
   final Map<String, String> _bookLabels = {};
+
+  /// `version/book` pairs whose tagging has been asked for. A Strong's
+  /// query knows a NUMBER, and which WORD carries it is knowable only
+  /// from the tagged layer — so unlike the results list, which marks
+  /// only what happens to be cached, the Copy Center loads what the
+  /// copy needs. It can afford to: the load happens while the dialog is
+  /// open, not inside the click that writes the clipboard, so the
+  /// browser's user-activation window is still intact when the rich
+  /// flavour goes out.
+  final Set<String> _tagged = {};
 
   late final TextEditingController _template;
 
@@ -124,6 +155,34 @@ class _CopyCenterDialogState extends State<_CopyCenterDialog> {
       }
     }
     await _ensureLoaded(_o.versions);
+    await _ensureTagging();
+  }
+
+  /// Whether the active query is one only the tagging can locate.
+  bool get _needsTagging =>
+      widget.highlight.strongsNumbers.isNotEmpty ||
+      widget.highlight.strongsPrefixes.isNotEmpty;
+
+  /// Load the tagging for exactly the books this copy will quote.
+  ///
+  /// Bounded by the scope rather than by a count: a reader copying the
+  /// 35 books an H430 search touches is building a document that quotes
+  /// 35 books, and marking two-thirds of it would be worse than marking
+  /// none. Books already loaded cost nothing — the service caches.
+  Future<void> _ensureTagging() async {
+    if (!_o.markHits || !_needsTagging) return;
+    final books = <String>{for (final r in _effectiveRefs) r.englishBook};
+    var loaded = false;
+    for (final code in _o.versions) {
+      if (!TaggedTextService.supports(code)) continue;
+      for (final b in books) {
+        final key = '$code/$b';
+        if (!_tagged.add(key)) continue;
+        await TaggedTextService.prefetchBook(code, b);
+        loaded = true;
+      }
+    }
+    if (loaded && mounted) setState(() {});
   }
 
   Future<void> _persist() async {
@@ -135,6 +194,7 @@ class _CopyCenterDialogState extends State<_CopyCenterDialog> {
     setState(() => _o = next);
     _persist();
     _ensureLoaded(next.versions);
+    _ensureTagging();
   }
 
   /// Every reference any scope could ask for. Loading is keyed on this
@@ -219,12 +279,29 @@ class _CopyCenterDialogState extends State<_CopyCenterDialog> {
           )
           .shortLabel,
       verseText: (code, ref) => _texts[code]?[ref.key],
+      mark: widget.highlight.isEmpty ? null : _mark,
       attribution: (code) {
         final key = attributionKeyFor(code);
         return key == null ? null : uiStrings[key]?[locale];
       },
     );
   }
+
+  /// Mark one verse's text with whatever the search found in it.
+  ///
+  /// Per version, because the tagging is: the same reference marked in
+  /// 雅伟版 and unmarked in NASB is not an inconsistency, it is the two
+  /// editions saying what each of them knows.
+  String _mark(String code, VerseRef r, String text) => markVerseHits(
+        text,
+        highlight: widget.highlight,
+        runs: TaggedTextService.cachedForVerse(
+          version: code,
+          englishBook: r.englishBook,
+          chapter: r.chapter,
+          verse: r.verse,
+        )?.map((x) => (text: x.text, strongs: x.strongs)).toList(),
+      );
 
   // ── Build ─────────────────────────────────────────────────────────
 
@@ -389,22 +466,54 @@ class _CopyCenterDialogState extends State<_CopyCenterDialog> {
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(10),
-              child: SelectableText(
-                text.isEmpty
-                    ? _s(locale, 'copyCenterEmpty', 'Nothing to copy.')
-                    : text,
-                style: TextStyle(
+              child: Builder(builder: (context) {
+                final style = TextStyle(
                   fontSize: _t.scaled(12.5),
                   height: 1.5,
                   color: text.isEmpty ? scheme.outline : null,
-                ),
-              ),
+                );
+                if (text.isEmpty) {
+                  return SelectableText(
+                    _s(locale, 'copyCenterEmpty', 'Nothing to copy.'),
+                    style: style,
+                  );
+                }
+                // The sample shows the marking, because a switch whose
+                // effect is invisible until the reader has already
+                // pasted into a document is not a choice they can make.
+                // Selecting from here yields the plain words: the
+                // sentinels are display state, and the Copy button is
+                // what puts the marked flavour on the clipboard.
+                if (!hasHitMarks(text)) {
+                  return SelectableText(text, style: style);
+                }
+                return SelectableText.rich(
+                  TextSpan(
+                    children: hitMarkedSpans(
+                      text,
+                      base: style,
+                      hit: style.copyWith(
+                        fontWeight: FontWeight.w700,
+                        backgroundColor: _previewHitColour(scheme),
+                      ),
+                    ),
+                  ),
+                );
+              }),
             ),
           ),
         ],
       ),
     );
   }
+
+  /// The wash the preview paints behind a hit. Deliberately the same
+  /// pale yellow the HTML flavour carries rather than the app's accent,
+  /// so the sample looks like the document will.
+  Color _previewHitColour(ColorScheme scheme) =>
+      Theme.of(context).brightness == Brightness.dark
+          ? const Color(0x55ffe9a3)
+          : const Color(0xffffe9a3);
 
   Widget _options(String locale, ColorScheme scheme) {
     final preset = presetOf(_o);
@@ -425,7 +534,10 @@ class _CopyCenterDialogState extends State<_CopyCenterDialog> {
                   label: Text(widget.scopes[i].label,
                       style: TextStyle(fontSize: _t.scaled(12))),
                   selected: _scopeIndex == i,
-                  onSelected: (_) => setState(() => _scopeIndex = i),
+                  onSelected: (_) {
+                    setState(() => _scopeIndex = i);
+                    _ensureTagging();
+                  },
                 ),
             ],
           ),
@@ -579,6 +691,25 @@ class _CopyCenterDialogState extends State<_CopyCenterDialog> {
             _o.includeNotes,
             (v) => _set(_o.copyWith(includeNotes: v)),
           ),
+          // Only when a search is running: with nothing found, the
+          // switch would govern nothing and asking about it would be
+          // one more decision for no outcome.
+          if (!widget.highlight.isEmpty)
+            _switch(
+              locale,
+              'copyCenterMarkHits',
+              'Mark search hits',
+              _o.markHits,
+              (v) {
+                _set(_o.copyWith(markHits: v));
+              },
+              subtitle: _s(
+                locale,
+                'copyCenterMarkHitsHelp',
+                'Highlighted when pasted into Word or Docs; '
+                    'plain text carries no mark',
+              ),
+            ),
           if (_o.versions.length > 1)
             _switch(
               locale,
@@ -655,8 +786,9 @@ class _CopyCenterDialogState extends State<_CopyCenterDialog> {
     String key,
     String fallback,
     bool value,
-    ValueChanged<bool> onChanged,
-  ) =>
+    ValueChanged<bool> onChanged, {
+    String? subtitle,
+  }) =>
       SwitchListTile(
         dense: true,
         contentPadding: EdgeInsets.zero,
@@ -664,6 +796,13 @@ class _CopyCenterDialogState extends State<_CopyCenterDialog> {
         controlAffinity: ListTileControlAffinity.leading,
         title: Text(_s(locale, key, fallback),
             style: TextStyle(fontSize: _t.scaled(12.5))),
+        subtitle: subtitle == null
+            ? null
+            : Text(subtitle,
+                style: TextStyle(
+                  fontSize: _t.scaled(11),
+                  color: Theme.of(context).colorScheme.outline,
+                )),
         value: value,
         onChanged: onChanged,
       );

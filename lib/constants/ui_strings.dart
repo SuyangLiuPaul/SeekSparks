@@ -5735,6 +5735,27 @@ const uiStrings = {
     'zh-Hant': '已複製！',
     'en': 'Copied!',
   },
+  // The destination could not take the highlight — a plain-text field,
+  // or a browser that refused the rich flavour. The words are on the
+  // clipboard either way; only the marking is gone, and the reader
+  // would otherwise find that out in the document.
+  'copiedNoHighlight': {
+    'zh-Hans': '已复制（此处为纯文本，无标记）',
+    'zh-Hant': '已複製（此處為純文字，無標記）',
+    'en': 'Copied — plain text here, no highlight',
+  },
+  // Copy Center: mark what the search found, so the pasted document
+  // shows which word answered the query.
+  'copyCenterMarkHits': {
+    'zh-Hans': '标记搜索命中',
+    'zh-Hant': '標記搜尋命中',
+    'en': 'Mark search hits',
+  },
+  'copyCenterMarkHitsHelp': {
+    'zh-Hans': '粘贴到 Word／Google 文档时高亮；纯文本不带标记',
+    'zh-Hant': '貼上 Word／Google 文件時醒目提示；純文字不帶標記',
+    'en': 'Highlighted when pasted into Word or Docs; plain text carries no mark',
+  },
   'sendFeedback': {
     'zh-Hans': '发送反馈',
     'zh-Hant': '發送反饋',

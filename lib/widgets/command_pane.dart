@@ -22,6 +22,8 @@ import 'package:seeksparks/utils/ai_markdown.dart' show parseAiMarkdown;
 import 'package:seeksparks/utils/app_nav.dart' show pushPage;
 import 'package:seeksparks/utils/atomic_text_edit.dart';
 import 'package:seeksparks/utils/clipboard_helper.dart';
+import 'package:seeksparks/utils/copy_marking.dart'
+    show markHits, markVerseHits;
 import 'package:seeksparks/services/tagged_text_service.dart';
 import 'package:seeksparks/utils/search_highlight.dart';
 import 'package:seeksparks/utils/command_draft.dart';
@@ -637,6 +639,7 @@ class _CommandPaneState extends State<CommandPane> {
   Future<void> _copyAllStrongsRefs(
       WorkbenchProvider wb, AppSettings settings, List<ConcordanceRef> refs) async {
     final mp = wb.mainProvider;
+    final hl = highlightsForQuery(wb.lastQuery);
     final lines = <String>[wb.strongsQueryLabel ?? '', ''];
     for (final r in refs) {
       final displayBook =
@@ -645,9 +648,28 @@ class _CommandPaneState extends State<CommandPane> {
           _cleanPreview(wb.verseByRef['${r.englishBook}-${r.chapter}-${r.verse}']
                   ?.text ??
               '');
-      lines.add('$displayBook ${r.chapter}:${r.verse}  $clean'.trim());
+      // Marked from the tagging ALREADY loaded, never by loading more.
+      // Two reasons, and either alone would settle it: the rich
+      // clipboard flavour rides the browser's copy event and an await
+      // here would close the user-activation window that makes it
+      // possible; and a list showing 35 books would pull most of the
+      // tagged layer to mark a copy. So the clipboard carries exactly
+      // the marking the list on screen carries — which is also the
+      // only marking the reader has been shown and can predict.
+      final runs = TaggedTextService.cachedForVerse(
+        version: mp.currentVersion,
+        englishBook: r.englishBook,
+        chapter: r.chapter,
+        verse: r.verse,
+      );
+      final marked = markVerseHits(
+        clean,
+        highlight: hl,
+        runs: runs?.map((x) => (text: x.text, strongs: x.strongs)).toList(),
+      );
+      lines.add('$displayBook ${r.chapter}:${r.verse}  $marked'.trim());
     }
-    await ClipboardHelper.copyWithFeedback(
+    await ClipboardHelper.copyMarkedWithFeedback(
       context,
       lines.join('\n'),
       messageOverride: (uiStrings['copyAllResultsToast']?[settings.locale] ??
@@ -660,14 +682,19 @@ class _CommandPaneState extends State<CommandPane> {
       AppSettings settings, List<Verse> results) async {
     final wb = context.read<WorkbenchProvider>();
     final mp = wb.mainProvider;
+    final hl = highlightsForQuery(wb.lastQuery);
     final lines = <String>[wb.lastQuery, ''];
     for (final v in results) {
       final displayBook =
           localeAwareBookName(v.book, settings.locale, mp.currentVersion);
-      lines.add('$displayBook ${v.chapter}:${v.verseLabel}  '
-          '${sanitizeForSearch(v.scriptureText)}'.trim());
+      // A text query carries its own terms, so unlike the Strong's list
+      // above this marks every line regardless of edition — there is no
+      // tagging to be missing.
+      final marked = markHits(sanitizeForSearch(v.scriptureText),
+          splitOnTerms(sanitizeForSearch(v.scriptureText), hl.textTerms));
+      lines.add('$displayBook ${v.chapter}:${v.verseLabel}  $marked'.trim());
     }
-    await ClipboardHelper.copyWithFeedback(
+    await ClipboardHelper.copyMarkedWithFeedback(
       context,
       lines.join('\n'),
       messageOverride: (uiStrings['copyAllResultsToast']?[settings.locale] ??
@@ -1839,8 +1866,10 @@ class _CommandPaneState extends State<CommandPane> {
                   final verse = wb.verseForRef(ref);
                   if (verse != null) _openVerse(verse);
                 },
-                onLongPress: () => ClipboardHelper.copyWithFeedback(context,
-                    '$displayBook ${ref.chapter}:${ref.verse}  $preview'),
+                onLongPress: () => ClipboardHelper.copyMarkedWithFeedback(
+                    context,
+                    '$displayBook ${ref.chapter}:${ref.verse}  '
+                    '${markVerseHits(preview, highlight: hl, runs: runs?.map((x) => (text: x.text, strongs: x.strongs)).toList())}'),
               );
             },
           ),
@@ -1950,8 +1979,10 @@ class _CommandPaneState extends State<CommandPane> {
                 // since 2026-08-06 while this list never did.
                 spans: splitOnTerms(clean, hl.textTerms),
                 onTap: () => _openVerse(v),
-                onLongPress: () => ClipboardHelper.copyWithFeedback(context,
-                    '$displayBook ${v.chapter}:${v.verseLabel}  $clean'),
+                onLongPress: () => ClipboardHelper.copyMarkedWithFeedback(
+                    context,
+                    '$displayBook ${v.chapter}:${v.verseLabel}  '
+                    '${markHits(clean, splitOnTerms(clean, hl.textTerms))}'),
               );
             },
           ),

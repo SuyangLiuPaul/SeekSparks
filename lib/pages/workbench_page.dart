@@ -798,9 +798,13 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
       context,
       scopes: scopes,
       primaryVersion: context.read<MainProvider>().currentVersion,
+      // What the running search found, so the copy can say which word
+      // answered it — the same highlight the results list and the text
+      // pane are already marking from.
+      highlight: highlightsForQuery(_wb.lastQuery),
     );
     if (text == null || !mounted) return;
-    await ClipboardHelper.copyWithFeedback(context, text);
+    await ClipboardHelper.copyMarkedWithFeedback(context, text);
   }
 
   /// The status bar's left-hand readout: whatever the mouse is over.

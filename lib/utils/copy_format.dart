@@ -92,6 +92,13 @@ typedef VerseTextLookup = String? Function(String versionCode, VerseRef ref);
 /// attribution block, or null for a version that needs none.
 typedef AttributionLookup = String? Function(String versionCode);
 
+/// Mark, inside one verse's already-formatted text, whatever the active
+/// search found in it — see `copy_marking.dart` for the sentinels this
+/// is expected to return. Null means "no search is running", which is
+/// the ordinary case and produces the same output this always had.
+typedef CopyVerseMarker = String Function(
+    String versionCode, VerseRef ref, String text);
+
 // ── Options ─────────────────────────────────────────────────────────
 
 /// Where the reference sits relative to the text.
@@ -209,6 +216,7 @@ class CopyOptions {
     this.refListOnePerLine = false,
     this.separators = const CopySeparators(),
     this.includeAttribution = true,
+    this.markHits = true,
   });
 
   /// `<ref> (<version>)`. See [renderTemplate] for the tag list.
@@ -270,6 +278,13 @@ class CopyOptions {
   /// on — see the library comment.
   final bool includeAttribution;
 
+  /// Mark what the search found, so a pasted handout shows which word
+  /// answered the query. Defaults on and costs nothing when no search
+  /// is running — there is then nothing to mark. Only the `text/html`
+  /// flavour can carry it; the plain-text flavour is unchanged either
+  /// way, which is why this is not called "highlight".
+  final bool markHits;
+
   CopyOptions copyWith({
     bool? includeText,
     List<String>? versions,
@@ -288,6 +303,7 @@ class CopyOptions {
     bool? refListOnePerLine,
     CopySeparators? separators,
     bool? includeAttribution,
+    bool? markHits,
   }) =>
       CopyOptions(
         includeText: includeText ?? this.includeText,
@@ -308,6 +324,7 @@ class CopyOptions {
         refListOnePerLine: refListOnePerLine ?? this.refListOnePerLine,
         separators: separators ?? this.separators,
         includeAttribution: includeAttribution ?? this.includeAttribution,
+        markHits: markHits ?? this.markHits,
       );
 
   Map<String, dynamic> toJson() => {
@@ -328,6 +345,7 @@ class CopyOptions {
         'refListOnePerLine': refListOnePerLine,
         'separators': separators.toJson(),
         'includeAttribution': includeAttribution,
+        'markHits': markHits,
       };
 
   /// Tolerant by design: a stored blob from an older build is missing
@@ -369,6 +387,7 @@ class CopyOptions {
           : d.separators,
       includeAttribution:
           j['includeAttribution'] as bool? ?? d.includeAttribution,
+      markHits: j['markHits'] as bool? ?? d.markHits,
     );
   }
 }
@@ -700,6 +719,7 @@ String formatCopy(
   required VersionNamer versionName,
   required VerseTextLookup verseText,
   AttributionLookup? attribution,
+  CopyVerseMarker? mark,
 }) {
   final list = normaliseRefs(refs);
   if (list.isEmpty) return '';
@@ -723,6 +743,13 @@ String formatCopy(
     if (raw == null || raw.trim().isEmpty) return null;
     var text = copyVerseText(raw, o);
     if (text.isEmpty) return null;
+    // Marked here, once the verse is the string it will actually be —
+    // after notes and supplied-word brackets have been decided, and
+    // before quotes, the reference label and the verse number go round
+    // it. A mark placed any earlier would have to survive edits it
+    // cannot see; any later and it would have to find the words again
+    // inside furniture that is not scripture.
+    if (o.markHits && mark != null) text = mark(code, r, text);
     if (o.refScope == CopyRefScope.perVerse) {
       final label = renderTemplate(
         o.refTemplate,

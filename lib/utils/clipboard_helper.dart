@@ -5,6 +5,8 @@ import 'package:provider/provider.dart';
 import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/services/share_service.dart';
+import 'package:seeksparks/utils/copy_marking.dart'
+    show hasHitMarks, hitMarkedHtml, stripHitMarks;
 import 'package:seeksparks/utils/clipboard_fallback_stub.dart'
     if (dart.library.js_interop) 'package:seeksparks/utils/clipboard_fallback_web.dart';
 
@@ -69,12 +71,20 @@ abstract class ClipboardHelper {
   }) async {
     final ok = await copyText(text);
     if (!context.mounted) return;
-    final scheme = Theme.of(context).colorScheme;
     final locale = _localeFor(context);
     final message = ok
         ? (messageOverride ?? (uiStrings['copied']?[locale] ?? 'Copied!'))
         : (uiStrings['shareLinkFailed']?[locale] ??
             'Copy failed — clipboard unavailable');
+    _toast(context, message, ok: ok);
+  }
+
+  /// The one copy-feedback snackbar. Floating, icon-led, and anchored
+  /// to the nearest [ScaffoldMessenger] — see [copyWithFeedback] for
+  /// what a modal sheet has to do to get its own.
+  static void _toast(BuildContext context, String message,
+      {required bool ok}) {
+    final scheme = Theme.of(context).colorScheme;
     final fg = ok ? scheme.onInverseSurface : scheme.onError;
     final messenger = ScaffoldMessenger.maybeOf(context);
     if (messenger == null) return;
@@ -110,6 +120,53 @@ abstract class ClipboardHelper {
         ),
       ),
     );
+  }
+
+  /// Copy a hit-MARKED string: the words with their marks as
+  /// `text/html`, the same words without them as `text/plain`, and a
+  /// snackbar that says which one the destination will get.
+  ///
+  /// 2026-08-31: takes the string already marked with
+  /// `copy_marking.dart`'s sentinels and derives both flavours here, so
+  /// no caller has to know that the plain flavour is the marked one
+  /// with the sentinels removed.
+  ///
+  /// Two messages, because the difference is visible in the document:
+  /// a paste into Word or Google Docs arrives with the searched word
+  /// highlighted, and a paste into a plain-text field cannot. Saying
+  /// only "Copied!" in the second case would be a small lie the reader
+  /// discovers after they have already sent the handout.
+  ///
+  /// Does NOT await anything before writing: on web the rich flavour
+  /// rides the `copy` EVENT, which needs the user-activation window
+  /// still to be open. An await here (loading a tagged book, say) is
+  /// what would silently downgrade every copy to plain text.
+  static Future<void> copyMarkedWithFeedback(
+    BuildContext context,
+    String marked, {
+    String? messageOverride,
+  }) async {
+    final plain = stripHitMarks(marked);
+    if (!hasHitMarks(marked)) {
+      return copyWithFeedback(context, plain,
+          messageOverride: messageOverride);
+    }
+    final r = await copyRich(hitMarkedHtml(marked), plain);
+    if (!context.mounted) return;
+    final locale = _localeFor(context);
+    final message = !r.copied
+        ? null
+        : r.formatted
+            ? (messageOverride ??
+                (uiStrings['copied']?[locale] ?? 'Copied!'))
+            : (uiStrings['copiedNoHighlight']?[locale] ??
+                'Copied — plain text here, no highlight');
+    if (message == null) {
+      // Nothing reached the clipboard: fall through to the shared
+      // failure snackbar rather than inventing a second wording for it.
+      return copyWithFeedback(context, plain);
+    }
+    _toast(context, message, ok: true);
   }
 
   /// Share-first with copy-as-fallback. On platforms with the Web

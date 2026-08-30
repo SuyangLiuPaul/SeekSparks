@@ -1,6 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:seeksparks/utils/copy_format.dart';
+import 'package:seeksparks/utils/copy_marking.dart'
+    show hitOpen, hitClose, markVerseHits, stripHitMarks;
+import 'package:seeksparks/utils/search_highlight.dart' show SearchHighlight;
 import 'package:seeksparks/utils/verse_list.dart' show VerseRef;
 
 // ── Fakes ───────────────────────────────────────────────────────────
@@ -54,6 +57,21 @@ String _format(Iterable<VerseRef> refs, CopyOptions o) => formatCopy(
       versionName: _version,
       verseText: _text,
       attribution: _rights,
+    );
+
+String _formatMarked(
+  Iterable<VerseRef> refs,
+  CopyOptions o,
+  SearchHighlight hl,
+) =>
+    formatCopy(
+      refs,
+      o,
+      bookName: _book,
+      versionName: _version,
+      verseText: _text,
+      attribution: _rights,
+      mark: (code, r, text) => markVerseHits(text, highlight: hl),
     );
 
 void main() {
@@ -469,6 +487,69 @@ void main() {
     test('an unrecognised enum name falls back rather than throwing', () {
       final back = CopyOptions.fromJson({'refScope': 'nonsense'});
       expect(back.refScope, const CopyOptions().refScope);
+    });
+  });
+
+  // ── Marking the search hit ──────────────────────────────────────
+
+  group('marked output', () {
+    const god = SearchHighlight(textTerms: ['god']);
+
+    test('the mark lands on the word, inside the reference furniture', () {
+      final out = _formatMarked(
+        [_r('Genesis', 1, 1)],
+        const CopyOptions(
+          versions: ['bsb'],
+          refScope: CopyRefScope.perVerse,
+          includeAttribution: false,
+        ),
+        god,
+      );
+      expect(out, contains('${hitOpen}God$hitClose'));
+      // The label is furniture, not scripture: a book called "God" would
+      // still not be a search hit.
+      expect(out.startsWith('Genesis 1:1 (BSB)'), isTrue);
+    });
+
+    test('quotes go outside the mark, not inside it', () {
+      final out = _formatMarked(
+        [_r('Genesis', 1, 1)],
+        const CopyOptions(
+          versions: ['bsb'],
+          refScope: CopyRefScope.perVerse,
+          quoteText: true,
+          includeAttribution: false,
+        ),
+        god,
+      );
+      expect(out, contains('\u201cIn the beginning ${hitOpen}God$hitClose'));
+    });
+
+    test('stripping the marks gives back exactly the unmarked output', () {
+      const o = CopyOptions(versions: ['bsb', 'kjv']);
+      final refs = [_r('John', 3, 16), _r('John', 3, 17), _r('John', 3, 18)];
+      expect(stripHitMarks(_formatMarked(refs, o, god)), _format(refs, o));
+    });
+
+    test('markHits off leaves the output untouched even with a hit', () {
+      const o = CopyOptions(versions: ['bsb'], markHits: false);
+      final refs = [_r('Genesis', 1, 1)];
+      expect(_formatMarked(refs, o, god), _format(refs, o));
+    });
+
+    test('no mark function is the ordinary case and changes nothing', () {
+      const o = CopyOptions(versions: ['bsb']);
+      final refs = [_r('Genesis', 1, 1)];
+      expect(_format(refs, o), isNot(contains(hitOpen)));
+    });
+
+    test('markHits defaults on, and survives a settings round-trip', () {
+      expect(const CopyOptions().markHits, isTrue);
+      final back = CopyOptions.fromJson(
+          const CopyOptions(markHits: false).toJson());
+      expect(back.markHits, isFalse);
+      // A blob written before this field existed keeps the default.
+      expect(CopyOptions.fromJson({'quoteText': true}).markHits, isTrue);
     });
   });
 }
