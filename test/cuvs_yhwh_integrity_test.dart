@@ -27,16 +27,24 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   const specs = <_Spec>[
+    // 2026-08-30: the four readings below were re-pinned to the
+    // publisher's 2026-08-29 revision. The CHARACTERS are unchanged —
+    // these are the same verified readings check 26 established — but
+    // that revision marks the speech with quotation marks, and the
+    // stray U+25A1 this test was written to keep out is still gone
+    // (verified: zero occurrences in either file). What is pinned here
+    // is the reading, not the punctuation of the edition that carried
+    // it.
     _Spec(
       'assets/cuvs-yhwh.json',
       '士师记 13:7 / 18:10',
       {
         '007013007':
-            '却对我说：你要怀孕生一个儿子，所以清酒浓酒都不可喝，一切不洁之物也'
-            '不可吃；因为这孩子从出胎一直到死，必归神作拿细耳人。',
+            '却对我说：‘你要怀孕生一个儿子，所以清酒浓酒都不可喝，一切不洁之物也不可吃；因为这孩子从出胎一直到死，必归神作拿细耳人。’”'
+,
         '007018010':
-            '你们到了那里，必看见安居无虑的民，地也宽阔。神已将那地交在你们手'
-            '中；那地百物俱全，一无所缺。',
+            '你们到了那里，必看见安居无虑的民，地也宽阔。神已将那地交在你们手中；那地百物俱全，一无所缺。”'
+,
       },
     ),
     _Spec(
@@ -44,11 +52,11 @@ void main() {
       '士師記 13:7 / 18:10',
       {
         '007013007':
-            '卻對我說：你要懷孕生一個兒子，所以清酒濃酒都不可喝，一切不潔之物'
-            '也不可吃；因為這孩子從出胎一直到死，必歸神作拿細耳人。',
+            '卻對我說：『你要懷孕生一個兒子，所以清酒濃酒都不可喝，一切不潔之物也不可吃；因為這孩子從出胎一直到死，必歸神作拿細耳人。』」'
+,
         '007018010':
-            '你們到了那裏，必看見安居無慮的民，地也寬闊。神已將那地交在你們手'
-            '中；那地百物俱全，一無所缺。',
+            '你們到了那裏，必看見安居無慮的民，地也寬闊。神已將那地交在你們手中；那地百物俱全，一無所缺。」'
+,
       },
     ),
     // Check 47. Five of the 27 single-character sites check 46 left as a

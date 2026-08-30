@@ -88,12 +88,32 @@ void main() {
   test('no run carries a Latin letter', () {
     // The translation is Chinese and the 〔…〕 notes cite chapter and verse
     // in digits, so a Latin letter can only be a leaked alignment code.
+    //
+    // 2026-08-30: that premise held for the MySword edition and no longer
+    // holds inside a NOTE. The publisher's 2026-08-29 revision adds a
+    // textual note at 馬太福音 21:31 that names manuscript families —
+    // WH, NA27, BYZ, KJV — and cites two Strong's numbers, explaining why
+    // 和合本 follows one reading over another. That is scholarship, not a
+    // leaked code, and it is the sort of thing this edition should be
+    // allowed to say. So the check now runs on the whole VERSE with 〔…〕
+    // notes removed: a Latin letter in the scripture is still a defect,
+    // which is what the guard was built to catch.
+    //
+    // It has to be the whole verse, not each run. A note spans several
+    // runs — the run carrying WH/NA27/BYZ does not carry the 〔 that opens
+    // it — so stripping notes run by run removes nothing and the guard
+    // fires anyway.
+    final noteSpan = RegExp(r'〔[^〕]*〕');
     final offenders = <String>[];
     tagged.forEach((book, verses) {
       verses.forEach((ref, runs) {
-        for (final run in runs.cast<Map<String, dynamic>>()) {
-          final w = run['w'] as String;
-          if (_latin.hasMatch(w)) offenders.add('$book $ref ${jsonEncode(w)}');
+        final joined = runs
+            .cast<Map<String, dynamic>>()
+            .map((r) => r['w'] as String)
+            .join();
+        final scripture = joined.replaceAll(noteSpan, '');
+        if (_latin.hasMatch(scripture)) {
+          offenders.add('$book $ref ${jsonEncode(scripture)}');
         }
       });
     });

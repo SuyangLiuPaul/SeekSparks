@@ -100,8 +100,16 @@ const _chineseVersions = <String>[
   'biblexg-v2-tr',
 ];
 
+// 2026-08-30: 合和译本并入上一节 added. It is the wording cuvs-plus uses
+// for the same thing, and the 雅伟版 used it too until the publisher's
+// 2026-08-29 revision switched that edition to 见上节. With only the
+// short forms listed, the revision made 詩篇 63:6 a marker in one
+// edition and ordinary text in another, and the cross-edition check
+// below failed on a disagreement that does not exist.
 final _mergeMarker = RegExp(
-    r'^(?:<note:\s*)?[〔\[（(]?\s*(?:见上节|見上節|见下节|見下節)\s*[〕\]）)]?>?$');
+    r'^(?:<note:\s*)?[〔\[（(]?\s*'
+    r'(?:见上节|見上節|见下节|見下節|合和译本并入上一节|合和譯本併入上一節)'
+    r'\s*[〕\]）)]?>?$');
 
 List<Map<dynamic, dynamic>> _edition(String code) =>
     (jsonDecode(File('assets/$code.json').readAsStringSync()) as List)
@@ -726,9 +734,15 @@ void main() {
       // versification tradition has. See check 30.
       expect(records, 295532);
       expect(census, {
-        'cuvs-yhwh/merged': 71,
+        // 70, not 71, since the publisher's 2026-08-29 revision: 約伯記
+        // 10:21 was a 见上节 placeholder in every edition we had, and that
+        // revision SUPPLIES THE VERSE — 叫我在往而不返之先，就是往黑暗和
+        // 死荫之地以先，可以稍得畅快。 A merged reference becoming real
+        // text is the corpus getting better, so the census moves with it.
+        // cuvs-plus keeps 71 because it was not re-imported.
+        'cuvs-yhwh/merged': 70,
         'cuvs-yhwh/mergedNext': 1,
-        'cuvs-yhwh-tr/merged': 71,
+        'cuvs-yhwh-tr/merged': 70,
         'cuvs-yhwh-tr/mergedNext': 1,
         'cuvs-plus/merged': 71,
         'cuvs-plus/mergedNext': 1,
@@ -801,7 +815,12 @@ void main() {
         });
       }
       expect(failures, isEmpty, reason: failures.take(20).join('\n'));
-      expect(resolved, 213);
+      // 211, not 213: the same 約伯記 10:21 that left the census above.
+      // It stopped being a placeholder in cuvs-yhwh AND cuvs-yhwh-tr when
+      // the publisher's 2026-08-29 revision supplied the verse, so two
+      // placeholder→head resolutions no longer exist to count. cuvs-plus
+      // still carries it and still resolves.
+      expect(resolved, 211);
     });
 
     test('every reference an edition lacks sits in a chapter it has', () {
