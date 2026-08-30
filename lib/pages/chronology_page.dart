@@ -10,6 +10,7 @@ import 'package:seeksparks/pages/radial_chronology_page.dart';
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/services/chronology_service.dart';
 import 'package:seeksparks/utils/chronology_layout.dart';
+import 'package:seeksparks/utils/font_catalog.dart';
 import 'package:seeksparks/utils/jump_to_reference.dart' as jumper;
 import 'package:seeksparks/utils/navigate_to_reader.dart';
 import 'package:seeksparks/utils/reference_parser.dart';
@@ -110,11 +111,18 @@ double _axisFont(WbType t) => t.scaledChrome(WbMetrics.smallPrintFloor);
 /// from a pixel count that happens to be right at one setting. A CJK
 /// glyph is in the probe because it is the tallest thing the strip ever
 /// holds and it is what the Chinese epoch names are set in.
+///
+/// The probe measures through [canvasTextStyle] rather than a bare
+/// `TextStyle`: a `TextPainter` inherits no theme, and on the web build
+/// `NotoSansSC-Sub` is the only face that can resolve 年 at all. Measured
+/// without it the CJK glyph contributes nothing, the probe comes back at
+/// Roboto's line box, and `axisStripHeight` triples the shortfall — so the
+/// strip written to fit Chinese would be sized as if Chinese were absent.
 double _axisHeight(WbType t) {
   final probe = TextPainter(
     text: TextSpan(
       text: '年0',
-      style: TextStyle(fontSize: _axisFont(t)),
+      style: canvasTextStyle(fontSize: _axisFont(t)),
     ),
     textDirection: TextDirection.ltr,
   )..layout();
@@ -824,7 +832,7 @@ class _AxisPainter extends CustomPainter {
       final tp = TextPainter(
         text: TextSpan(
           text: '$year',
-          style: TextStyle(color: textColor, fontSize: fontSize),
+          style: canvasTextStyle(color: textColor, fontSize: fontSize),
         ),
         textDirection: TextDirection.ltr,
       )..layout();
@@ -845,10 +853,13 @@ class _AxisPainter extends CustomPainter {
     for (var i = 0; i < epochs.length; i++) {
       final (year, label) = epochs[i];
       final x = xForYear(year, firstYear, lastYear, size.width);
+      // The name is `nameFor(locale)` — 洪水 / 出埃及 in the default locale
+      // — so this painter must carry the bundled CJK face itself. See
+      // `canvasTextStyle`.
       final tp = TextPainter(
         text: TextSpan(
           text: label,
-          style: TextStyle(color: epochColor, fontSize: fontSize),
+          style: canvasTextStyle(color: epochColor, fontSize: fontSize),
         ),
         textDirection: TextDirection.ltr,
       )..layout();

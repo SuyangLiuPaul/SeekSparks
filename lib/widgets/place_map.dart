@@ -1241,6 +1241,7 @@ class _MapPainter extends CustomPainter {
               fontWeight: FontWeight.w700,
               color: style.onColour.withValues(alpha: faded),
               height: 1.0,
+              fontFamilyFallback: kCjkFontFallback,
             ),
           ),
           textDirection: TextDirection.ltr,
