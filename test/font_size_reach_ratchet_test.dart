@@ -766,6 +766,15 @@ void main() {
   // `chronology_page.dart` is used at two `fontSize:` sites twenty and
   // five hundred lines away, and no rule that reads the expression at
   // the colon can see the 10.
+  //
+  // A third shape hid from both, found 2026-08-31: an arithmetic offset
+  // off a resolved `WbType` FIELD. `fontSize: t.chrome - 1` is 10 px at
+  // the default Menu Size — `resolve` sets `chrome: WbMetrics.chrome *
+  // chromeScale`, so the field IS the floor and anything subtracted from
+  // it is under it. Fifty-two such sites were live across fifteen files
+  // and this detector could not see one of them, because it reads the
+  // argument of a helper call and there was no call. They are now
+  // `t.chrome`, and the sibling test below forbids the notation outright.
   test('no text is designed below the app\'s own small-print floor', () {
     const floor = WbMetrics.smallPrintFloor;
     final sized = RegExp(r'\.scaled(?:Chrome|Small|Original)?\(\s*'
@@ -814,6 +823,91 @@ void main() {
             'because introducing a floored helper into a stack whose '
             'siblings are unfloored inverts their rank at the bottom of '
             'the slider:\n${under.join('\n')}');
+  });
+
+  test('no font size is written as an offset off a resolved WbType field',
+      () {
+    const base = {'text': 12.0, 'chrome': 11.0, 'original': 15.0};
+    const floor = WbMetrics.smallPrintFloor;
+    final offset =
+        RegExp(r'\.(text|chrome|original)\s*([-+])\s*([0-9]+(?:\.[0-9]+)?)');
+
+    // Additive offsets that are AT or ABOVE the floor. These are a
+    // separate, weaker defect — the #315 proportion argument
+    // (`WbType.scaledSmall`'s doc comment) says an additive offset does
+    // not hold a type hierarchy across the slider, because `t.text + 1`
+    // is a ratio of 1.08 at the default and 1.03 at 40 pt. They are NOT
+    // under-floor and nothing is illegible today, so converting them to
+    // `scaled(13)` is deferred rather than bundled into a floor repair.
+    // Two of them (`stats_page.dart`'s `t.original + 5` / `+ 2`) are not
+    // a mechanical conversion at all: `t.original` is itself FLOORED at
+    // `WbMetrics.originalFloor` (workbench_theme.dart:1233-1237), so
+    // `t.original + 5` and `t.scaledOriginal(20)` agree at the default
+    // and diverge at the bottom of the slider. That needs its own look.
+    const aboveFloorOffsets = <String, int>{
+      'pages/atlas_page.dart': 2, // t.text + 3, t.text + 2
+      'pages/hebrew_kings_page.dart': 1, // type.text + 5
+      'pages/lexicon_page.dart': 1, // t.text + 1
+      'pages/map_viewer_page.dart': 1, // t.text + 1
+      'pages/naves_page.dart': 1, // t.text + 1
+      'pages/stats_page.dart': 7, // 4×t.text+1/+2, 2×t.original+N
+      'widgets/command_pane.dart': 1, // t.text - 1  == 11.0, at floor
+      'widgets/phrase_match_pane.dart': 1, // t.text - 1  == 11.0, at floor
+      'widgets/related_verses_pane.dart': 1, // t.text - 1 == 11.0, at floor
+      'widgets/wb_surfaces.dart': 1, // t.text + 1
+      'widgets/word_forms_section.dart': 1, // t.text + 1
+    };
+    expect(aboveFloorOffsets.values.fold<int>(0, (a, b) => a + b), 18,
+        reason: 'the allowlist total is asserted so a future edit cannot '
+            'quietly grow one entry while shrinking another');
+
+    final chromeMinus = <String>[];
+    final underFloor = <String>[];
+    final surviving = <String, int>{};
+
+    for (final f in all) {
+      final rel = f.path.substring('lib/'.length);
+      final text = f.readAsStringSync();
+      for (final (line, expr) in fontSizeExpressions(text)) {
+        for (final m in offset.allMatches(expr)) {
+          final b = base[m.group(1)!]!;
+          final sign = m.group(2)!;
+          final n = double.parse(m.group(3)!);
+          final v = sign == '-' ? b - n : b + n;
+          final where = '$rel:$line — $expr (=$v px)';
+          if (m.group(1) == 'chrome' && sign == '-') {
+            chromeMinus.add(where);
+          }
+          if (v < floor) {
+            underFloor.add(where);
+          } else {
+            surviving[rel] = (surviving[rel] ?? 0) + 1;
+          }
+        }
+      }
+    }
+
+    expect(chromeMinus, isEmpty,
+        reason: 'a size subtracted from t.chrome is a size subtracted from '
+            'the floor itself — WbMetrics.smallPrintFloor IS '
+            'WbMetrics.chrome, so this notation can never produce a value '
+            'at or above the floor. Write `t.chrome` (or the resolved '
+            'field the site already uses) with no offset:\n'
+            '${chromeMinus.join('\n')}');
+
+    expect(underFloor, isEmpty,
+        reason: 'a font size written as an offset off a resolved WbType '
+            'field landed below WbMetrics.smallPrintFloor ($floor px). '
+            'Raise the design size to the floor, the same remedy as the '
+            'sibling test above:\n${underFloor.join('\n')}');
+
+    expect(surviving, equals(aboveFloorOffsets),
+        reason: 'the surviving additive offsets (at or above the floor) '
+            'no longer match the written allowlist. If you added a new '
+            'one deliberately, add it to aboveFloorOffsets in this test '
+            'with a comment saying why; if one disappeared, remove it '
+            'from the allowlist rather than leaving debt that is already '
+            'paid:\nfound: $surviving\nallowed: $aboveFloorOffsets');
   });
 
   test('the originals floor is single-sourced, not repeated per page', () {

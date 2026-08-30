@@ -459,7 +459,7 @@ class _VocabularyPaneState extends State<VocabularyPane> {
                     // The count that matters is the one you sorted by.
                     '${_sort == VocabSort.scopeFrequency && w.scopeCount > 0 ? w.scopeCount : w.corpusCount}',
                     style:
-                        TextStyle(fontSize: t.chrome - 1, color: wb.mutedText),
+                        TextStyle(fontSize: t.chrome, color: wb.mutedText),
                   ),
                 ),
                 SizedBox(
@@ -514,7 +514,7 @@ class _VocabularyPaneState extends State<VocabularyPane> {
           children: [
             Text(
               '${w.strongs} · ${w.translit}',
-              style: TextStyle(fontSize: t.chrome - 1, color: wb.mutedText),
+              style: TextStyle(fontSize: t.chrome, color: wb.mutedText),
             ),
             const SizedBox(height: 2),
             Text(
@@ -522,7 +522,7 @@ class _VocabularyPaneState extends State<VocabularyPane> {
                   ? '${w.scopeCount}× ${_s('vocabHere', 'here')} · '
                       '${w.corpusCount}× ${_s('vocabInAll', 'in all')}'
                   : '${w.corpusCount}× ${_s('vocabInAll', 'in all')}',
-              style: TextStyle(fontSize: t.chrome - 1, color: wb.mutedText),
+              style: TextStyle(fontSize: t.chrome, color: wb.mutedText),
             ),
             const SizedBox(height: 3),
             Text(w.gloss,
@@ -673,7 +673,7 @@ class _VocabularyPaneState extends State<VocabularyPane> {
           const SizedBox(height: 8),
           Text(
             '${card.translit} · ${card.strongs} · ${card.corpusCount}×',
-            style: TextStyle(fontSize: t.chrome - 1, color: wb.mutedText),
+            style: TextStyle(fontSize: t.chrome, color: wb.mutedText),
           ),
           const SizedBox(height: 10),
           TextButton.icon(
@@ -722,7 +722,7 @@ class _VocabularyPaneState extends State<VocabularyPane> {
               }),
               Text(
                 '${_examples.length}',
-                style: TextStyle(fontSize: t.chrome - 1, color: wb.mutedText),
+                style: TextStyle(fontSize: t.chrome, color: wb.mutedText),
               ),
             ],
           ),
@@ -776,7 +776,7 @@ class _VocabularyPaneState extends State<VocabularyPane> {
               const SizedBox(width: 8),
               Text(
                 '${ex.listWords} · ${(ex.coverage * 100).round()}%',
-                style: TextStyle(fontSize: t.chrome - 1, color: wb.mutedText),
+                style: TextStyle(fontSize: t.chrome, color: wb.mutedText),
               ),
             ],
           ),

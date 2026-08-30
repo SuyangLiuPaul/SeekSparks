@@ -1672,7 +1672,7 @@ class _HoverWordState extends State<_HoverWord> {
         style: TextStyle(
           // Resolved here rather than passed down: _num is called from
           // a span builder, not from build().
-          fontSize: WbType.of(context).chrome - 2,
+          fontSize: WbType.of(context).chrome,
           color: color,
           fontWeight: FontWeight.w500,
           decoration: TextDecoration.none,

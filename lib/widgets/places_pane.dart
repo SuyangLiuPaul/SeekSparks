@@ -143,7 +143,7 @@ class _PlacesPaneState extends State<PlacesPane> {
                 child: Text(
                   PlacesService.attribution,
                   style: TextStyle(
-                    fontSize: t.chrome - 1.5,
+                    fontSize: t.chrome,
                     color: c.mutedText,
                     height: 1.35,
                     fontFamilyFallback: kCjkFontFallback,
@@ -261,7 +261,7 @@ class _PlacesPaneState extends State<PlacesPane> {
                           child: Text(
                             '${p.ordinal}',
                             style: TextStyle(
-                              fontSize: t.chrome - 1,
+                              fontSize: t.chrome,
                               color: c.mutedText,
                             ),
                           ),
@@ -270,7 +270,7 @@ class _PlacesPaneState extends State<PlacesPane> {
                       Text(
                         '${p.refs.length} ${_s('placesOccurrences', 'refs')}',
                         style: TextStyle(
-                          fontSize: t.chrome - 1,
+                          fontSize: t.chrome,
                           color: c.mutedText,
                           fontFeatures: const [FontFeature.tabularFigures()],
                           fontFamilyFallback: kCjkFontFallback,
@@ -290,7 +290,7 @@ class _PlacesPaneState extends State<PlacesPane> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          fontSize: t.chrome - 1,
+                          fontSize: t.chrome,
                           color: c.mutedText,
                           fontFamilyFallback: kCjkFontFallback,
                         ),

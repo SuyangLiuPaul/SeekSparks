@@ -404,7 +404,7 @@ class _RelatedVersesPaneState extends State<RelatedVersesPane> {
         ),
         Text(
           '${hits.length} · ${_elapsedMs}ms',
-          style: TextStyle(fontSize: t.chrome - 1, color: wb.mutedText),
+          style: TextStyle(fontSize: t.chrome, color: wb.mutedText),
         ),
       ],
     );
@@ -461,7 +461,7 @@ class _RelatedVersesPaneState extends State<RelatedVersesPane> {
                   width: 26,
                   child: Text('[${h.hits}]',
                       style: TextStyle(
-                          fontSize: t.chrome - 1, color: wb.mutedText)),
+                          fontSize: t.chrome, color: wb.mutedText)),
                 ),
                 Expanded(
                   child: Text(

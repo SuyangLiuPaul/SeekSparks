@@ -148,7 +148,7 @@ class WbPaneChip extends StatelessWidget {
                 trailing!,
                 style: TextStyle(
                   fontFamily: t.fontFamily,
-                  fontSize: t.chrome - 1.5,
+                  fontSize: t.chrome,
                   color: trailingColor ?? wb.mutedText,
                   fontWeight: trailingBold ? FontWeight.w700 : FontWeight.w400,
                   fontFeatures: const [FontFeature.tabularFigures()],

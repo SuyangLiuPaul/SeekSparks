@@ -984,7 +984,7 @@ class _AtlasPageState extends State<AtlasPage> {
   Widget _fineprint(WbColors c, WbType t, String text) => Text(
         text,
         style: TextStyle(
-          fontSize: t.chrome - 1.5,
+          fontSize: t.chrome,
           color: c.mutedText,
           height: 1.35,
           fontFamilyFallback: kCjkFontFallback,
@@ -1065,7 +1065,7 @@ class _AtlasPageState extends State<AtlasPage> {
                       subtitle,
                       maxLines: 2,
                       style: TextStyle(
-                        fontSize: t.chrome - 1,
+                        fontSize: t.chrome,
                         color: c.mutedText,
                         height: 1.3,
                         fontFamilyFallback: kCjkFontFallback,
@@ -1181,7 +1181,7 @@ class _AtlasPageState extends State<AtlasPage> {
                           child: Text(
                             '${p.ordinal}',
                             style: TextStyle(
-                              fontSize: t.chrome - 1,
+                              fontSize: t.chrome,
                               color: c.mutedText,
                             ),
                           ),
@@ -1199,7 +1199,7 @@ class _AtlasPageState extends State<AtlasPage> {
                           p.refs.length,
                         ),
                         style: TextStyle(
-                          fontSize: t.chrome - 1,
+                          fontSize: t.chrome,
                           color: c.mutedText,
                           fontFeatures: const [FontFeature.tabularFigures()],
                         ),
@@ -1216,7 +1216,7 @@ class _AtlasPageState extends State<AtlasPage> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontSize: t.chrome - 1,
+                        fontSize: t.chrome,
                         color: c.mutedText,
                         fontFamilyFallback: kCjkFontFallback,
                       ),
@@ -1809,7 +1809,7 @@ class _JourneyPanel extends StatelessWidget {
   Widget _note(WbColors c, WbType t, String text) => Text(
         text,
         style: TextStyle(
-          fontSize: t.chrome - 0.5,
+          fontSize: t.chrome,
           color: c.mutedText,
           height: 1.4,
           fontFamilyFallback: kCjkFontFallback,
@@ -1838,7 +1838,7 @@ class _JourneyPanel extends StatelessWidget {
                   child: Text(
                     travelBandLabel(b, locale),
                     style: TextStyle(
-                      fontSize: t.chrome - 0.5,
+                      fontSize: t.chrome,
                       height: 1.4,
                       fontWeight:
                           b == band ? FontWeight.w700 : FontWeight.w400,
@@ -1959,7 +1959,7 @@ class _JourneyPanel extends StatelessWidget {
         child: Text(
           text,
           style: TextStyle(
-            fontSize: t.chrome - 1,
+            fontSize: t.chrome,
             height: 1.0,
             color: c.mutedText,
             fontFamilyFallback: kCjkFontFallback,
@@ -2172,7 +2172,7 @@ class _JourneyPanel extends StatelessWidget {
               child: Text(
                 s.ordinal == null ? '–' : '${s.ordinal}',
                 style: TextStyle(
-                  fontSize: t.chrome - 0.5,
+                  fontSize: t.chrome,
                   fontWeight: FontWeight.w700,
                   height: 1.2,
                   color: s.isAside ? style.colour : style.onColour,
@@ -2206,7 +2206,7 @@ class _JourneyPanel extends StatelessWidget {
                         Text(
                           leg,
                           style: TextStyle(
-                            fontSize: t.chrome - 1,
+                            fontSize: t.chrome,
                             color: c.mutedText,
                             fontFamilyFallback: kCjkFontFallback,
                           ),

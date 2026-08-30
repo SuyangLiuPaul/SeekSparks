@@ -264,7 +264,7 @@ class _WordFormsSectionState extends State<WordFormsSection> {
           child: Text(
             _s(key, fallback),
             style: TextStyle(
-              fontSize: t.chrome - 1,
+              fontSize: t.chrome,
               fontWeight: on ? FontWeight.w700 : FontWeight.w400,
               color: on ? wb.link : wb.mutedText,
             ),
@@ -277,7 +277,7 @@ class _WordFormsSectionState extends State<WordFormsSection> {
       padding: const EdgeInsets.only(top: 2, bottom: 2),
       child: Row(children: [
         Text(_s('formsSortBy', 'Sort:'),
-            style: TextStyle(fontSize: t.chrome - 1, color: wb.mutedText)),
+            style: TextStyle(fontSize: t.chrome, color: wb.mutedText)),
         button(FormSort.frequency, 'formsSortFrequency', 'frequency'),
         button(FormSort.morphCode, 'formsSortCode', 'parsing'),
         button(FormSort.alphabetical, 'formsSortAlpha', 'a–z'),
@@ -359,7 +359,7 @@ class _WordFormsSectionState extends State<WordFormsSection> {
                         '${shortBookName(r.englishBook, widget.locale, widget.version)} '
                         '${r.chapter}:${r.verse}',
                         style: TextStyle(
-                          fontSize: t.chrome - 1,
+                          fontSize: t.chrome,
                           color: widget.onOpenRef == null
                               ? wb.mutedText
                               : wb.link,

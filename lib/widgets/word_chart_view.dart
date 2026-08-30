@@ -222,7 +222,7 @@ class _WordChartViewState extends State<WordChartView> {
         child: Text(
           label,
           style: TextStyle(
-            fontSize: t.chrome - 0.5,
+            fontSize: t.chrome,
             color: active ? c.text : c.mutedText,
             fontWeight: active ? FontWeight.w700 : FontWeight.w400,
           ),
@@ -373,7 +373,7 @@ class _WordChartViewState extends State<WordChartView> {
         parts.join('  ·  '),
         maxLines: 3,
         overflow: TextOverflow.ellipsis,
-        style: TextStyle(fontSize: t.chrome - 0.5, color: c.mutedText),
+        style: TextStyle(fontSize: t.chrome, color: c.mutedText),
       ),
     );
   }

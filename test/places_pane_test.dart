@@ -397,14 +397,28 @@ void main() {
             w is CustomPaint &&
             w.painter.runtimeType.toString().contains('_MapPainter'));
         final height = tester.getSize(painter).height;
-        // Measured on the pre-change tree at the same 320x400 size:
-        // 293.0px. One `maxLines: 1` footer line at `t.chrome - 1` plus
-        // its `SizedBox(height: 3)` should cost ~14-18px, squeezing the
-        // map rather than overflowing it (the footer sits above an
-        // Expanded map, place_map.dart:476-477).
-        expect(height, greaterThan(293.0 - 25),
-            reason: 'pre-change height at 320x400 was 293.0; the map '
-                'canvas must not be squeezed by more than ~25px');
+        // Three measured heights for this canvas at 320x400, so the
+        // number below is a baseline and not a tolerance nobody can
+        // re-derive:
+        //   293.0  before #317's band footer existed (measured by the
+        //          #317 iteration via a scratch test)
+        //   276.0  with the band footer, its rows at `t.chrome - 1`
+        //   267.0  with those rows raised to `t.chrome`, the app's own
+        //          `WbMetrics.smallPrintFloor` — measured 2026-08-31
+        // The floor repair cost 9px, not the ~1px one line suggests:
+        // `_footer` is a stack of ~7 text rows (place_map.dart:523-793)
+        // and each gained ~1-1.5px. Nothing wrapped and nothing
+        // overflowed — the `takeException` check above is what guards
+        // that, and the map still holds 267 of 400px.
+        // 255.0 is chosen so this still fires if someone adds ANOTHER
+        // footer line (~15px at 11px type would land near 252) while
+        // not firing on a sub-pixel type change.
+        expect(height, greaterThan(255.0),
+            reason: 'the map canvas at the 320x400 pane floor was 293.0 '
+                'before the band footer, 276.0 with it, and 267.0 once '
+                'its rows reached the small-print floor. Below 255 means '
+                'a whole new line has been added to the footer, not a '
+                'type-size change — give it back to the map.');
       });
     });
   });

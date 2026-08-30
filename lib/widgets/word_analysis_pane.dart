@@ -241,7 +241,7 @@ class _WordAnalysisPaneState extends State<WordAnalysisPane> {
                   child: Text(
                     s('analysisFrozen', 'FROZEN — Shift'),
                     style: TextStyle(
-                      fontSize: t.chrome - 1,
+                      fontSize: t.chrome,
                       fontWeight: FontWeight.w700,
                       color: wb.text,
                     ),
@@ -624,7 +624,7 @@ class _WordAnalysisPaneState extends State<WordAnalysisPane> {
       child: Text(
         lines.join('\n'),
         style: TextStyle(
-          fontSize: t.chrome - 1,
+          fontSize: t.chrome,
           fontStyle: FontStyle.italic,
           color: wb.mutedText,
           height: 1.35,

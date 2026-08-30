@@ -59,7 +59,7 @@ class AnalysisPinBar extends StatelessWidget {
                 TextSpan(
                   text: '$label  ',
                   style: TextStyle(
-                    fontSize: t.chrome - 1,
+                    fontSize: t.chrome,
                     fontWeight: FontWeight.w700,
                     color: wb.mutedText,
                   ),
@@ -77,7 +77,7 @@ class AnalysisPinBar extends StatelessWidget {
                   TextSpan(
                     text: '  $reference',
                     style: TextStyle(
-                      fontSize: t.chrome - 1,
+                      fontSize: t.chrome,
                       color: wb.mutedText,
                       fontFamilyFallback: kCjkFontFallback,
                     ),
@@ -104,7 +104,7 @@ class AnalysisPinBar extends StatelessWidget {
               child: Text(
                 _s('analysisUnpin', 'Unpin'),
                 style: TextStyle(
-                  fontSize: t.chrome - 1,
+                  fontSize: t.chrome,
                   fontWeight: FontWeight.w600,
                 ),
               ),

@@ -520,7 +520,7 @@ class _PlaceMapViewState extends State<PlaceMapView> {
                     overflow: TextOverflow.ellipsis,
                     textAlign: TextAlign.right,
                     style:
-                        TextStyle(fontSize: t.chrome - 1.5, color: c.mutedText),
+                        TextStyle(fontSize: t.chrome, color: c.mutedText),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -601,7 +601,7 @@ class _PlaceMapViewState extends State<PlaceMapView> {
                   label,
                   maxLines: 1,
                   style: TextStyle(
-                    fontSize: t.chrome - 0.5,
+                    fontSize: t.chrome,
                     fontWeight: shown ? FontWeight.w700 : FontWeight.w400,
                     color: shown ? c.text : c.mutedText,
                     fontFamilyFallback: kCjkFontFallback,
@@ -626,7 +626,7 @@ class _PlaceMapViewState extends State<PlaceMapView> {
           ),
           child: Text(
             label,
-            style: TextStyle(fontSize: t.chrome - 0.5, color: c.text),
+            style: TextStyle(fontSize: t.chrome, color: c.text),
           ),
         ),
       );
@@ -683,7 +683,7 @@ class _PlaceMapViewState extends State<PlaceMapView> {
                 const SizedBox(width: 5),
                 Text(
                   km >= 1 ? '${km.round()} km' : '${km.toStringAsFixed(1)} km',
-                  style: TextStyle(fontSize: t.chrome - 1, color: c.mutedText),
+                  style: TextStyle(fontSize: t.chrome, color: c.mutedText),
                 ),
               ],
               const Spacer(),
@@ -696,7 +696,7 @@ class _PlaceMapViewState extends State<PlaceMapView> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style:
-                        TextStyle(fontSize: t.chrome - 1, color: c.mutedText),
+                        TextStyle(fontSize: t.chrome, color: c.mutedText),
                   ),
                 ),
             ],
@@ -735,7 +735,7 @@ class _PlaceMapViewState extends State<PlaceMapView> {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: t.chrome - 1,
+                    fontSize: t.chrome,
                     color: c.text,
                     height: 1.35,
                   ),
@@ -762,7 +762,7 @@ class _PlaceMapViewState extends State<PlaceMapView> {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  fontSize: t.chrome - 1,
+                  fontSize: t.chrome,
                   color: c.mutedText,
                   height: 1.35,
                 ),
@@ -776,7 +776,7 @@ class _PlaceMapViewState extends State<PlaceMapView> {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  fontSize: t.chrome - 1,
+                  fontSize: t.chrome,
                   color: c.mutedText,
                   height: 1.35,
                 ),
@@ -790,7 +790,7 @@ class _PlaceMapViewState extends State<PlaceMapView> {
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                fontSize: t.chrome - 2,
+                fontSize: t.chrome,
                 color: c.mutedText,
                 height: 1.3,
               ),

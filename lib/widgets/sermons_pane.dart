@@ -143,7 +143,7 @@ class _SermonsPaneState extends State<SermonsPane> {
               child: Text(
                 sermonLibraryCredit(widget.locale),
                 style: TextStyle(
-                  fontSize: t.chrome - 1.5,
+                  fontSize: t.chrome,
                   color: c.mutedText,
                   height: 1.35,
                   fontFamilyFallback: kCjkFontFallback,
@@ -278,7 +278,7 @@ class _SermonsPaneState extends State<SermonsPane> {
                     child: Text(
                       citation,
                       style: TextStyle(
-                        fontSize: t.chrome - 1,
+                        fontSize: t.chrome,
                         color: emphasised ? c.link : c.mutedText,
                         fontWeight: FontWeight.w600,
                         fontFeatures: const [FontFeature.tabularFigures()],
@@ -294,7 +294,7 @@ class _SermonsPaneState extends State<SermonsPane> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          fontSize: t.chrome - 1,
+                          fontSize: t.chrome,
                           color: c.mutedText,
                           fontFamilyFallback: kCjkFontFallback,
                         ),

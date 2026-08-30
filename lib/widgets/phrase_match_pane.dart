@@ -387,7 +387,7 @@ class _PhraseMatchPaneState extends State<PhraseMatchPane> {
           ),
         Text(
           '${groups.length} · ${_elapsedMs}ms',
-          style: TextStyle(fontSize: t.chrome - 1, color: wb.mutedText),
+          style: TextStyle(fontSize: t.chrome, color: wb.mutedText),
         ),
       ],
     );
@@ -527,7 +527,7 @@ class _PhraseMatchPaneState extends State<PhraseMatchPane> {
                   width: 26,
                   child: Text('[$count]',
                       style: TextStyle(
-                          fontSize: t.chrome - 1, color: wb.mutedText)),
+                          fontSize: t.chrome, color: wb.mutedText)),
                 ),
                 Expanded(
                   child: Text(

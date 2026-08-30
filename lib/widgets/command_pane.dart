@@ -1048,7 +1048,7 @@ class _CommandPaneState extends State<CommandPane> {
                 uiStrings['cmdSyntaxTapHint']?[locale] ??
                     'Tap any line to put that example on the command line.',
                 style: TextStyle(
-                  fontSize: t.chrome - 1,
+                  fontSize: t.chrome,
                   color: wbc.mutedText,
                   fontStyle: FontStyle.italic,
                   fontFamilyFallback: kCjkFontFallback,
@@ -2196,7 +2196,7 @@ class _AiRefRowState extends State<_AiRefRow> {
                       child: Text(
                         widget.unresolvedTag,
                         style: TextStyle(
-                            fontSize: t.chrome - 1, color: wbc.mutedText),
+                            fontSize: t.chrome, color: wbc.mutedText),
                       ),
                     ),
                   ],
@@ -2369,7 +2369,7 @@ class _HintAction extends StatelessWidget {
               Text(
                 tooltip!,
                 style: TextStyle(
-                  fontSize: t.chrome - 1,
+                  fontSize: t.chrome,
                   color: wbc.mutedText,
                   fontFamilyFallback: kCjkFontFallback,
                 ),

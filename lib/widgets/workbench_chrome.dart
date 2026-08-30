@@ -141,7 +141,7 @@ class _MenuTitle extends StatelessWidget {
                         item.shortcut!,
                         textAlign: TextAlign.right,
                         style: TextStyle(
-                          fontSize: t.chrome - 1,
+                          fontSize: t.chrome,
                           color: wb.mutedText,
                         ),
                       ),
