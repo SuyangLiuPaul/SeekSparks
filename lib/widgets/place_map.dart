@@ -62,6 +62,7 @@ class PlaceMapView extends StatefulWidget {
     this.focusToken = 0,
     this.fitPoints,
     this.attribution = '',
+    this.travelBand = kDefaultTravelBand,
   });
 
   /// What this map is of — printed in the header so a map detached from
@@ -157,6 +158,10 @@ class PlaceMapView extends StatefulWidget {
   final int focusToken;
 
   final String attribution;
+
+  /// The pace the Atlas's estimate is currently made at (#317). Defaulted
+  /// so a host that has no opinion still gets the app's own band.
+  final TravelBand travelBand;
 
   @override
   State<PlaceMapView> createState() => _PlaceMapViewState();
@@ -707,7 +712,8 @@ class _PlaceMapViewState extends State<PlaceMapView> {
                   // dozen places and the far end of that list is noise.
                   reading.measured.map((e) {
                     final name = e.place.displayName(widget.script);
-                    final days = walkingDaysFor(e.km);
+                    final days =
+                        walkingDaysFor(e.km, band: widget.travelBand);
                     final walk = days == null
                         ? ''
                         : ' · ${formatTravelDays(days, widget.locale)}';

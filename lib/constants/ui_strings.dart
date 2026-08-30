@@ -8830,6 +8830,76 @@ const uiStrings = {
         'lines, so the real journey is longer. Days on the road, not the time '
         'the journey took.',
   },
+  // #317 / bwh33: the reader's choice of pace. Every figure below is one
+  // of the four daily distances in ORBIS v1.0's single sentence on land
+  // speeds; nothing here is a number this app invented.
+  'travelBandCarts': {
+    'zh-Hans': '牛车至负重脚夫 · 每日 12–20 公里',
+    'zh-Hant': '牛車至負重腳夫 · 每日 12–20 公里',
+    'en': 'Ox carts to porters · 12–20 km a day',
+  },
+  'travelBandOnFoot': {
+    'zh-Hans': '负重脚夫至行军队伍 · 每日 20–30 公里',
+    'zh-Hant': '負重腳夫至行軍隊伍 · 每日 20–30 公里',
+    'en': 'Porters to a party on the march · 20–30 km a day',
+  },
+  'travelBandVehicle': {
+    'zh-Hans': '行军队伍至寻常车马代步 · 每日 30–36 公里',
+    'zh-Hant': '行軍隊伍至尋常車馬代步 · 每日 30–36 公里',
+    'en': 'On the march to routine vehicular travel · 30–36 km a day',
+  },
+  'travelDaysBasisCarts': {
+    'zh-Hans': '按每日 12–20 公里估算：上限是负重脚夫或重载骡马，'
+        '下限是牛车（ORBIS，斯坦福大学，2012 年版）；'
+        '又以直线距离计算，故实际路程只会更长。所计为在路上的天数，'
+        '不是这趟行程所历的时间。',
+    'zh-Hant': '按每日 12–20 公里估算：上限是負重腳夫或重載騾馬，'
+        '下限是牛車（ORBIS，史丹佛大學，2012 年版）；'
+        '又以直線距離計算，故實際路程只會更長。所計為在路上的天數，'
+        '不是這趟行程所歷的時間。',
+    'en': 'At 12–20 km a day — from porters and heavily loaded mules down '
+        'to ox carts (ORBIS, Stanford, 2012) — and measured over straight '
+        'lines, so the real journey is longer. Days on the road, not the '
+        'time the journey took.',
+  },
+  'travelDaysBasisVehicle': {
+    'zh-Hans': '按每日 30–36 公里估算：上限是备有歇脚处的寻常车马代步，'
+        '下限是行军队伍（ORBIS，斯坦福大学，2012 年版）；'
+        '又以直线距离计算，故实际路程只会更长。所计为在路上的天数，'
+        '不是这趟行程所历的时间。',
+    'zh-Hant': '按每日 30–36 公里估算：上限是備有歇腳處的尋常車馬代步，'
+        '下限是行軍隊伍（ORBIS，史丹佛大學，2012 年版）；'
+        '又以直線距離計算，故實際路程只會更長。所計為在路上的天數，'
+        '不是這趟行程所歷的時間。',
+    'en': 'At 30–36 km a day — from routine private travel with convenient '
+        'rest stops down to a party on the march (ORBIS, Stanford, 2012) — '
+        'and measured over straight lines, so the real journey is longer. '
+        'Days on the road, not the time the journey took.',
+  },
+  // The label on the control itself.
+  'travelBandPicker': {
+    'zh-Hans': '按此脚程估算：',
+    'zh-Hant': '按此腳程估算：',
+    'en': 'Estimate at:',
+  },
+  // Shown only while a NON-default band is chosen. The default is not
+  // merely a default: Deuteronomy 1:2 gives eleven days from Horeb to
+  // Kadesh-barnea, our gazetteer puts 244 km between them, and 20–30 km a
+  // day is the only one of the three bands whose range contains eleven.
+  // A reader is free to ask a different question; the app should not let
+  // the answer look like its own.
+  'travelBandNotOurs': {
+    'zh-Hans': '这不是本程序所主张的估算。申命记 1:2 说何烈山到加低斯巴尼亚'
+        '是十一天的路程，按本地名录两地相距约 244 公里；三段脚程之中，'
+        '惟有每日 20–30 公里所得的日数涵盖这十一天。',
+    'zh-Hant': '這不是本程式所主張的估算。申命記 1:2 說何烈山到加低斯巴尼亞'
+        '是十一天的路程，按本地名錄兩地相距約 244 公里；三段腳程之中，'
+        '惟有每日 20–30 公里所得的日數涵蓋這十一天。',
+    'en': 'This is not the estimate SeekSparks stands behind. Deuteronomy '
+        '1:2 gives eleven days from Horeb to Kadesh-barnea, which our own '
+        'gazetteer puts 244 km apart, and of the three paces only 20–30 km '
+        'a day yields a range that contains eleven.',
+  },
   // The abstention, said out loud. BibleWorks' ruler will apply a walking
   // speed to a line drawn across the Mediterranean; we would rather give
   // no number than that one.

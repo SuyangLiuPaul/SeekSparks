@@ -147,6 +147,12 @@ class _AtlasPageState extends State<AtlasPage> {
   /// names should not have to ask again after every keystroke.
   bool _showContext = false;
 
+  /// #317 / bwh33. Session-only, deliberately: #280 settled that a
+  /// filter which silently persists is worse than one the reader re-sets,
+  /// and a persisted pace would quietly re-word every estimate on a later
+  /// launch with no visible cause.
+  TravelBand _band = kDefaultTravelBand;
+
   /// The ids of [AtlasPage.subjectPlaces] while the filter is up, null
   /// once it is dismissed or superseded.
   Set<String>? _subjectIds;
@@ -500,6 +506,8 @@ class _AtlasPageState extends State<AtlasPage> {
             _focusToken++;
           }),
           onJump: (ref) => _jump(sheetCtx, ref),
+          band: _band,
+          onSelectBand: (b) => setState(() => _band = b),
         ),
       ),
     );
@@ -531,6 +539,7 @@ class _AtlasPageState extends State<AtlasPage> {
                 final map = PlaceMapView(
                   title: _mapTitle(results, selected, locale, script),
                   emphasised: results,
+                  travelBand: _band,
                   // Exactly what the index left out — `atlasIndex` caps
                   // nothing, so this is the filter's complement and not
                   // "the geography around it". Hidden unless the reader
@@ -610,6 +619,8 @@ class _AtlasPageState extends State<AtlasPage> {
                           _focusToken++;
                         }),
                         onJump: (ref) => _jump(context, ref),
+                        band: _band,
+                        onSelectBand: (b) => setState(() => _band = b),
                         onClose: () => setState(() {
                           _detailIsJourney = false;
                           _selectedLeg = null;
@@ -1580,6 +1591,8 @@ class _JourneyPanel extends StatelessWidget {
     required this.selectedLegIndex,
     required this.onSelectStop,
     required this.onJump,
+    required this.band,
+    required this.onSelectBand,
     this.onClose,
     this.scrollController,
   });
@@ -1587,6 +1600,13 @@ class _JourneyPanel extends StatelessWidget {
   final ResolvedJourney journey;
   final String locale;
   final BookScript script;
+
+  /// The pace the reader has chosen for this session (#317).
+  final TravelBand band;
+
+  /// Set it. The panel is stateless; the Atlas owns the choice because
+  /// the ruler on the map has to move with it.
+  final ValueChanged<TravelBand> onSelectBand;
 
   /// Lit in the list so the map and the panel agree on where the reader
   /// is in the itinerary.
@@ -1716,6 +1736,7 @@ class _JourneyPanel extends StatelessWidget {
                 .replaceAll('{n}', '${journey.straightLineKm.round()}'),
           ),
           ..._travelNotes(c, t, travelOf(journey)),
+          _bandPicker(c, t),
           if (journey.unresolved.isNotEmpty) ...[
             const SizedBox(height: 4),
             _note(
@@ -1795,6 +1816,42 @@ class _JourneyPanel extends StatelessWidget {
         ),
       );
 
+  /// The reader's choice of pace (#317, bwh33's Travel Speed Window).
+  ///
+  /// Three tap targets rather than a dropdown: there are exactly three
+  /// and they form a scale, so showing all three at once is also the
+  /// only place the reader can see what the alternatives ARE. The chosen
+  /// one is bold and unlinked; the others are `c.link`, which on this
+  /// page means "tapping this changes what you are looking at".
+  Widget _bandPicker(WbColors c, WbType t) => Padding(
+        padding: const EdgeInsets.only(top: 6),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _note(c, t, _s('travelBandPicker', 'Estimate at:')),
+            for (final b in kTravelBands)
+              InkWell(
+                onTap: b == band ? null : () => onSelectBand(b),
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+                  child: Text(
+                    travelBandLabel(b, locale),
+                    style: TextStyle(
+                      fontSize: t.chrome - 0.5,
+                      height: 1.4,
+                      fontWeight:
+                          b == band ? FontWeight.w700 : FontWeight.w400,
+                      color: b == band ? c.text : c.link,
+                      fontFamilyFallback: kCjkFontFallback,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      );
+
   /// The straight-line total broken down by how the text says they went,
   /// and a day band over the part that can carry one.
   ///
@@ -1825,10 +1882,11 @@ class _JourneyPanel extends StatelessWidget {
               '{n} km where the text does not say how they went')
           .replaceAll('{n}', km(travel.unknownKm)));
     }
-    final walk = travel.walk;
+    final walk = travel.walk(band: band);
     if (walk != null) {
       add(formatTravelDays(walk, locale));
-      add(_s('travelDaysBasis', ''));
+      add(travelBandBasis(band, locale));
+      if (band != kDefaultTravelBand) add(_s('travelBandNotOurs', ''));
     }
     if (travel.seaKm > 0) add(_s('travelNoEstimateSea', ''));
     if (travel.unknownKm > 0) add(_s('travelNoEstimateUnknown', ''));
@@ -1847,10 +1905,11 @@ class _JourneyPanel extends StatelessWidget {
 
     switch (leg.leg) {
       case JourneyLeg.land:
-        final walk = walkingDaysFor(leg.km);
+        final walk = walkingDaysFor(leg.km, band: band);
         if (walk != null) {
           add(formatTravelDays(walk, locale));
-          add(_s('travelDaysBasis', ''));
+          add(travelBandBasis(band, locale));
+          if (band != kDefaultTravelBand) add(_s('travelBandNotOurs', ''));
         }
       case JourneyLeg.sea:
         add(_s('travelNoEstimateSea', ''));

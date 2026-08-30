@@ -299,9 +299,9 @@ void main() {
       // Its three land legs DO carry a band — the refusal is per-mode,
       // not per-route — but the panel is obliged to state the sea
       // alongside it, which `hasUnestimated` above is what drives.
-      expect(rome.walk, isNotNull);
-      expect(rome.walk!.fewest, 7);
-      expect(rome.walk!.most, 10);
+      expect(rome.walk(), isNotNull);
+      expect(rome.walk()!.fewest, 7);
+      expect(rome.walk()!.most, 10);
     });
 
     test('a route the text will not assign a mode to says so', () {
@@ -322,7 +322,7 @@ void main() {
       expect(exodus.unknownKm, 0);
       expect(exodus.hasUnestimated, isFalse);
       expect(exodus.landKm, closeTo(1638, 5));
-      expect(exodus.walk, const TravelDays(55, 82));
+      expect(exodus.walk(), const TravelDays(55, 82));
     });
 
     test('the three missionary journeys split land from sea', () {
@@ -330,7 +330,7 @@ void main() {
       expect(one.landKm, closeTo(959, 5));
       expect(one.seaKm, closeTo(989, 5));
       expect(one.unknownKm, 0);
-      expect(one.walk, const TravelDays(32, 48));
+      expect(one.walk(), const TravelDays(32, 48));
 
       final two = travelOf(route('paul-2'));
       expect(two.landKm, closeTo(1860, 5));
@@ -346,8 +346,105 @@ void main() {
     test('a band is offered for every route with land, and only those', () {
       for (final r in routes) {
         final t = travelOf(r);
-        expect(t.walk != null, t.landKm > 0, reason: r.id);
+        expect(t.walk() != null, t.landKm > 0, reason: r.id);
       }
+    });
+  });
+
+  group("the reader's band (bwh33)", () {
+    test('the three bands quote ORBIS and nothing else', () {
+      final speeds = {
+        for (final b in kTravelBands) ...[b.slowKmPerDay, b.fastKmPerDay],
+      };
+      expect(speeds, {12.0, 20.0, 30.0, 36.0});
+      for (final b in kTravelBands) {
+        expect(b.slowKmPerDay, lessThan(b.fastKmPerDay), reason: b.id);
+      }
+      expect(kTravelBands.length, 3);
+      for (var i = 1; i < kTravelBands.length; i++) {
+        expect(kTravelBands[i].slowKmPerDay,
+            greaterThan(kTravelBands[i - 1].slowKmPerDay));
+      }
+      expect(kDefaultTravelBand, kBandOnFoot);
+      expect(kBandOnFoot.slowKmPerDay, kFootSlowKmPerDay);
+      expect(kBandOnFoot.fastKmPerDay, kFootFastKmPerDay);
+    });
+
+    test("Deuteronomy 1:2 picks the default and rules out the other two",
+        () {
+      final horeb = places.firstWhere((p) => p.id == 'Horeb');
+      final kadesh = places.firstWhere((p) => p.id == 'Kadesh-barnea');
+      final km =
+          haversineKm(horeb.lat!, horeb.lon!, kadesh.lat!, kadesh.lon!);
+
+      expect(walkingDaysFor(km, band: kBandCarts),
+          const TravelDays(13, 21));
+      final onFoot = walkingDaysFor(km, band: kBandOnFoot)!;
+      expect(onFoot.fewest, lessThanOrEqualTo(11));
+      expect(onFoot.most, greaterThanOrEqualTo(11));
+      expect(walkingDaysFor(km, band: kBandVehicle),
+          const TravelDays(7, 9));
+
+      expect(11 < walkingDaysFor(km, band: kBandCarts)!.fewest, isTrue);
+      expect(11 > walkingDaysFor(km, band: kBandVehicle)!.most, isTrue);
+    });
+
+    test('every band has a label and a basis in all three locales', () {
+      for (final b in kTravelBands) {
+        for (final locale in ['en', 'zh-Hans', 'zh-Hant']) {
+          final label = travelBandLabel(b, locale);
+          expect(label, isNotEmpty, reason: '${b.id}/$locale');
+          expect(label, isNot(b.id), reason: '${b.id}/$locale');
+          expect(label.contains('{'), isFalse, reason: '${b.id}/$locale');
+
+          final basis = travelBandBasis(b, locale);
+          expect(basis, isNotEmpty, reason: '${b.id}/$locale');
+          expect(basis.contains('ORBIS'), isTrue, reason: '${b.id}/$locale');
+        }
+        expect(uiStrings[b.labelKey], isNotNull, reason: b.id);
+        expect(uiStrings[b.basisKey], isNotNull, reason: b.id);
+      }
+    });
+
+    test("the default band's basis is the sentence that already ships", () {
+      expect(kBandOnFoot.basisKey, 'travelDaysBasis');
+      for (final locale in ['en', 'zh-Hans', 'zh-Hant']) {
+        expect(travelBandBasis(kBandOnFoot, locale),
+            uiStrings['travelDaysBasis']![locale]);
+      }
+    });
+
+    test('a slower band never yields fewer days', () {
+      for (final km in [1.0, 40.0, 244.3, 2803.0]) {
+        final carts = walkingDaysFor(km, band: kBandCarts)!;
+        final onFoot = walkingDaysFor(km, band: kBandOnFoot)!;
+        final vehicle = walkingDaysFor(km, band: kBandVehicle)!;
+        expect(carts.most, greaterThanOrEqualTo(onFoot.most), reason: '$km');
+        expect(onFoot.most, greaterThanOrEqualTo(vehicle.most),
+            reason: '$km');
+        expect(carts.fewest, greaterThanOrEqualTo(onFoot.fewest),
+            reason: '$km');
+        expect(onFoot.fewest, greaterThanOrEqualTo(vehicle.fewest),
+            reason: '$km');
+      }
+    });
+
+    test('the band does not rescue a distance that cannot be estimated', () {
+      for (final b in kTravelBands) {
+        expect(walkingDaysFor(0, band: b), isNull, reason: b.id);
+        expect(walkingDaysFor(-5, band: b), isNull, reason: b.id);
+        expect(walkingDaysFor(double.nan, band: b), isNull, reason: b.id);
+        expect(walkingDaysFor(double.infinity, band: b), isNull,
+            reason: b.id);
+      }
+    });
+
+    test("a route's estimate moves with the band", () {
+      final t = travelOf(route('paul-1'));
+      expect(t.walk(band: kBandVehicle)!.most, lessThanOrEqualTo(t.walk()!.most));
+      expect(t.walk(band: kBandCarts)!.fewest,
+          greaterThanOrEqualTo(t.walk()!.fewest));
+      expect(t.walk(), t.walk(band: kDefaultTravelBand));
     });
   });
 }
