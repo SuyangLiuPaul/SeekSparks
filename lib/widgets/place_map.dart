@@ -650,6 +650,13 @@ class _PlaceMapViewState extends State<PlaceMapView> {
       reading.samePoint.map((p) => p.displayName(widget.script)).toList(),
       widget.locale,
     );
+    final bandBasis = travelBandBasis(widget.travelBand, widget.locale);
+    final rulerBasis = widget.travelBand == kDefaultTravelBand
+        ? bandBasis
+        // The panel says both of these together at atlas_page.dart:1888
+        // and :1911; the ruler must not say less about the same choice.
+        : '$bandBasis\n\n'
+            '${s('travelBandNotOurs', '')}';
 
     return Container(
       color: c.chromeBg,
@@ -702,11 +709,16 @@ class _PlaceMapViewState extends State<PlaceMapView> {
               // the word "about", which was doing none of the work: the
               // speed had no source, the distance was a chord, and the unit
               // was never named.
+              //
+              // #317: the ruler's days are computed at `widget.travelBand`
+              // (see `walkingDaysFor` below), so the citation under them has
+              // to be that band's, not `kBandOnFoot`'s. It hardcoded
+              // `travelDaysBasis` and therefore said "20–30 km a day" over
+              // numbers made at 12–20 or 30–36 — a source vouching for an
+              // arithmetic it did not make, which is the one thing the
+              // three-band design (travel_time.dart:89) exists to prevent.
               Tooltip(
-                message: s('travelDaysBasis',
-                    'At 20–30 km a day on foot (ORBIS, Stanford, 2012), over '
-                    'straight lines — so the real journey is longer. Days on '
-                    'the road, not the time the journey took.'),
+                message: rulerBasis,
                 child: Text(
                   // The ruler. Nearest three, because a chapter can name a
                   // dozen places and the far end of that list is noise.
@@ -727,6 +739,32 @@ class _PlaceMapViewState extends State<PlaceMapView> {
                     color: c.text,
                     height: 1.35,
                   ),
+                ),
+              ),
+            ],
+            // A tooltip is a hover, and this app is tablet-first — #312.
+            // The pace the days were made at has to be legible without a
+            // pointer, and it has to be legible when the picker that set
+            // it is off screen, which it is whenever the journey panel is
+            // closed (`_detailIsJourney`, atlas_page.dart:608) while
+            // `travelBand` still reaches this widget unconditionally
+            // (atlas_page.dart:542).
+            //
+            // Only on a NON-DEFAULT band. The default is the estimate the
+            // app stands behind, needs no qualifier, and printing it on
+            // every ruler reading would cost a footer line always and
+            // train the reader to stop reading this one.
+            if (widget.travelBand != kDefaultTravelBand) ...[
+              const SizedBox(height: 3),
+              Text(
+                key: const Key('places-map-band'),
+                travelBandLabel(widget.travelBand, widget.locale),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: t.chrome - 1,
+                  color: c.mutedText,
+                  height: 1.35,
                 ),
               ),
             ],

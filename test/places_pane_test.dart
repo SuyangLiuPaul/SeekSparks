@@ -21,6 +21,7 @@ import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/bible_place.dart';
 import 'package:seeksparks/services/places_service.dart';
 import 'package:seeksparks/utils/place_geo.dart' show BaseMap;
+import 'package:seeksparks/utils/travel_time.dart';
 import 'package:seeksparks/widgets/place_map.dart';
 import 'package:seeksparks/widgets/places_pane.dart';
 
@@ -159,6 +160,7 @@ void main() {
       VoidCallback? onClose,
       int fitToken = 0,
       int focusToken = 0,
+      TravelBand band = kDefaultTravelBand,
     }) =>
         PlaceMapView(
           title: 'Jonah 1:3',
@@ -173,6 +175,7 @@ void main() {
           fitToken: fitToken,
           focusToken: focusToken,
           attribution: PlacesService.attribution,
+          travelBand: band,
         );
 
     testWidgets('draws, and the scale bar appears on the first open',
@@ -303,6 +306,106 @@ void main() {
       await settle(tester);
       expect(find.text('Fit'), findsNothing);
       expect(tester.takeException(), isNull);
+    });
+
+    // #317: the ruler's days are computed at the reader's chosen band,
+    // but the citation under them used to always be `kBandOnFoot`'s —
+    // a source vouching for an arithmetic it did not make.
+    group("the ruler's pace (#317)", () {
+      testWidgets('the citation names the band that made the number',
+          (tester) async {
+        final joppa = jonah1.firstWhere((p) => p.name == 'Joppa');
+
+        for (final band in [kBandCarts, kBandVehicle]) {
+          await tester.pumpWidget(host(
+              map(selectedId: joppa.id, band: band),
+              width: 900,
+              height: 600));
+          await settle(tester);
+
+          final tip = tester.widget<Tooltip>(find.ancestor(
+            of: find.textContaining('Joppa →'),
+            matching: find.byType(Tooltip),
+          ));
+          // For a non-default band the message is two paragraphs: the
+          // band's own arithmetic citation, then `travelBandNotOurs`
+          // explaining why the DEFAULT is what SeekSparks recommends —
+          // and that explanation legitimately names the default's own
+          // "20–30" range (Deut 1:2's eleven days only fits at 20–30).
+          // So the "not the default's range" check belongs to the first
+          // paragraph only; the message as a whole is allowed to mention
+          // 20-30 in its second paragraph without that being the defect
+          // this test guards against.
+          final arithmeticCitation = tip.message!.split('\n\n').first;
+          if (band == kBandCarts) {
+            expect(arithmeticCitation, contains('12–20'));
+            expect(arithmeticCitation, isNot(contains('20–30')));
+          } else {
+            expect(arithmeticCitation, contains('30–36'));
+            expect(arithmeticCitation, isNot(contains('20–30')));
+          }
+        }
+      });
+
+      testWidgets("the default band's citation is unchanged", (tester) async {
+        final joppa = jonah1.firstWhere((p) => p.name == 'Joppa');
+        await tester.pumpWidget(
+            host(map(selectedId: joppa.id), width: 900, height: 600));
+        await settle(tester);
+
+        final tip = tester.widget<Tooltip>(find.ancestor(
+          of: find.textContaining('Joppa →'),
+          matching: find.byType(Tooltip),
+        ));
+        expect(tip.message, contains('20–30'));
+        expect(tip.message, contains('ORBIS'));
+        expect(tip.message, contains('straight'));
+      });
+
+      testWidgets(
+          'a non-default pace says so where a touch reader can read it',
+          (tester) async {
+        final joppa = jonah1.firstWhere((p) => p.name == 'Joppa');
+
+        await tester.pumpWidget(host(
+            map(selectedId: joppa.id, band: kBandCarts),
+            width: 900,
+            height: 600));
+        await settle(tester);
+        expect(find.byKey(const Key('places-map-band')), findsOneWidget);
+        final label = tester
+            .widget<Text>(find.byKey(const Key('places-map-band')))
+            .data;
+        expect(label, travelBandLabel(kBandCarts, 'en'));
+
+        await tester.pumpWidget(
+            host(map(selectedId: joppa.id), width: 900, height: 600));
+        await settle(tester);
+        expect(find.byKey(const Key('places-map-band')), findsNothing);
+      });
+
+      testWidgets('the added line does not eat the map', (tester) async {
+        final joppa = jonah1.firstWhere((p) => p.name == 'Joppa');
+        await tester.pumpWidget(host(
+            map(selectedId: joppa.id, band: kBandCarts),
+            width: 320,
+            height: 400));
+        await settle(tester);
+
+        expect(tester.takeException(), isNull);
+        final painter = find.byWidgetPredicate((w) =>
+            w is CustomPaint &&
+            w.painter.runtimeType.toString().contains('_MapPainter'));
+        final height = tester.getSize(painter).height;
+        // Measured on the pre-change tree at the same 320x400 size:
+        // 293.0px. One `maxLines: 1` footer line at `t.chrome - 1` plus
+        // its `SizedBox(height: 3)` should cost ~14-18px, squeezing the
+        // map rather than overflowing it (the footer sits above an
+        // Expanded map, place_map.dart:476-477).
+        expect(height, greaterThan(293.0 - 25),
+            reason: 'pre-change height at 320x400 was 293.0; the map '
+                'canvas must not be squeezed by more than ~25px');
+      });
     });
   });
 
