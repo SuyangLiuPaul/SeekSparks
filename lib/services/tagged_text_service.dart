@@ -101,6 +101,35 @@ class TaggedTextService {
     return book?['$chapter:$verse'];
   }
 
+  /// The runs for one verse IF its book is already in memory, else null.
+  ///
+  /// The search results list marks the word a Strong's query matched, and
+  /// it does that while building a row inside a `ListView.builder`. An
+  /// async lookup there would either rebuild every row on every scroll or
+  /// flash the mark in a frame late, so the row asks this instead: mark
+  /// on a cache hit, leave the line plain on a miss, and let
+  /// [prefetchBook] fill the cache and trigger one rebuild.
+  ///
+  /// Returning null for "not loaded" and for "this version has no
+  /// tagging" is deliberate — the caller does the same thing in both
+  /// cases, and a row has no business telling them apart.
+  static List<TaggedRun>? cachedForVerse({
+    required String version,
+    required String englishBook,
+    required int chapter,
+    required int verse,
+  }) {
+    if (!supports(version)) return null;
+    final key = '${version.toLowerCase()}/${_fileName(englishBook)}';
+    return _cache[key]?['$chapter:$verse'];
+  }
+
+  /// Load one book into the cache. Cheap and idempotent once loaded.
+  static Future<void> prefetchBook(String version, String englishBook) async {
+    if (!supports(version)) return;
+    await _book(version, englishBook);
+  }
+
   static Future<Map<String, List<TaggedRun>>?> _book(
       String version, String englishBook) async {
     final key = '${version.toLowerCase()}/${_fileName(englishBook)}';

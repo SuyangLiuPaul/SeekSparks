@@ -22,6 +22,8 @@ import 'package:seeksparks/utils/ai_markdown.dart' show parseAiMarkdown;
 import 'package:seeksparks/utils/app_nav.dart' show pushPage;
 import 'package:seeksparks/utils/atomic_text_edit.dart';
 import 'package:seeksparks/utils/clipboard_helper.dart';
+import 'package:seeksparks/services/tagged_text_service.dart';
+import 'package:seeksparks/utils/search_highlight.dart';
 import 'package:seeksparks/utils/command_draft.dart';
 import 'package:seeksparks/utils/command_examples.dart';
 import 'package:seeksparks/utils/command_query.dart';
@@ -1759,6 +1761,12 @@ class _CommandPaneState extends State<CommandPane> {
     if (refs.isEmpty) {
       return _noResults(settings, scheme, locale);
     }
+    final hl = highlightsForQuery(wb.lastQuery);
+    // Warm the books this list will draw from. cachedForVerse is a
+    // cache peek and marks nothing on a miss, so without this the first
+    // paint of a new search would be unmarked and would stay that way
+    // until something else rebuilt the list.
+    _warmTagging(wb, refs);
     // 2026-08-06: the distribution goes ABOVE the list. BibleWorks puts
     // search statistics in their own window, which on a pad would mean
     // a second surface for something you want to read alongside the
@@ -1805,9 +1813,36 @@ class _CommandPaneState extends State<CommandPane> {
                   wb.verseByRef['${ref.englishBook}-${ref.chapter}-${ref.verse}']
                           ?.text ??
                       '');
+              final runs = TaggedTextService.cachedForVerse(
+                version: wb.mainProvider.currentVersion,
+                englishBook: ref.englishBook,
+                chapter: ref.chapter,
+                verse: ref.verse,
+              );
+              // Which WORD carries the number is something only the
+              // tagging knows, so an untagged edition (NASB, 梁家铿, and
+              // 雅偉版繁體 today) cannot mark a Strong's hit at all —
+              // there is nothing that says which word it is. Those fall
+              // through to an unmarked line rather than guessing.
+              final marked = runs
+                  ?.where((r) => hl.matchesStrongs(r.strongs))
+                  .map((r) => r.text.trim())
+                  .where((w) => w.isNotEmpty)
+                  .toList();
               return _ResultRow(
                 reference: '$displayBook ${ref.chapter}:${ref.verse}',
                 text: preview,
+                // Locate the matched run's own text in the cleaned
+                // preview rather than mapping run offsets onto it: the
+                // preview has had markup stripped, so the offsets no
+                // longer line up, but the word itself still reads the
+                // same. The cost is that a word occurring twice in one
+                // verse marks both — over-marking, in a two-line
+                // snippet, which is cheaper than marking nothing.
+                spans: (marked == null || marked.isEmpty)
+                    ? null
+                    : splitOnTerms(preview,
+                        marked.map((w) => w.toLowerCase()).toList()),
                 onTap: () {
                   final verse = wb.verseForRef(ref);
                   if (verse != null) _openVerse(verse);
@@ -1822,9 +1857,36 @@ class _CommandPaneState extends State<CommandPane> {
     );
   }
 
+  /// Load the tagging for the books on screen, then rebuild once.
+  ///
+  /// Bounded to the first books the list touches: a query like H430 hits
+  /// 35 of them, and pulling every one would load most of the tagged
+  /// layer to mark a list the reader scrolls past.
+  void _warmTagging(WorkbenchProvider wb, List<ConcordanceRef> refs) {
+    final version = wb.mainProvider.currentVersion;
+    if (!TaggedTextService.supports(version)) return;
+    final books = <String>{};
+    for (final r in refs) {
+      books.add(r.englishBook);
+      if (books.length >= 8) break;
+    }
+    final pending = books
+        .where((b) =>
+            TaggedTextService.cachedForVerse(
+                version: version, englishBook: b, chapter: 1, verse: 1) ==
+            null)
+        .toList();
+    if (pending.isEmpty) return;
+    Future.wait(pending.map((b) => TaggedTextService.prefetchBook(version, b)))
+        .then((_) {
+      if (mounted) setState(() {});
+    });
+  }
+
   Widget _buildTextResults(BuildContext context, WorkbenchProvider wb,
       AppSettings settings, ColorScheme scheme, String locale) {
     final results = wb.textResults;
+    final hl = highlightsForQuery(wb.lastQuery);
     if (results.isEmpty) {
       // The one place the model earns its keep: the literal scan has
       // said the words are not there, so "describe what you mean
@@ -1890,6 +1952,11 @@ class _CommandPaneState extends State<CommandPane> {
               return _ResultRow(
                 reference: '$displayBook ${v.chapter}:${v.verseLabel}',
                 text: clean,
+                // Mark what was found. Without this the hit list is a
+                // table of contents — the same argument search_highlight
+                // makes for the text pane, which has marked its hits
+                // since 2026-08-06 while this list never did.
+                spans: splitOnTerms(clean, hl.textTerms),
                 onTap: () => _openVerse(v),
                 onLongPress: () => ClipboardHelper.copyWithFeedback(context,
                     '$displayBook ${v.chapter}:${v.verseLabel}  $clean'),
@@ -2239,10 +2306,19 @@ class _ResultRow extends StatefulWidget {
     required this.text,
     required this.onTap,
     required this.onLongPress,
+    this.spans,
   });
 
   final String reference;
   final String text;
+
+  /// The snippet already split into hit / not-hit pieces. Null means
+  /// "nothing to mark" — an empty query, or a Strong's query whose
+  /// edition ships no tagging — and the row falls back to [text].
+  ///
+  /// The pieces must tile [text]; that is the contract splitOnTerms
+  /// keeps, and the row does not re-check it.
+  final List<HighlightSpan>? spans;
   final VoidCallback onTap;
   final VoidCallback onLongPress;
 
@@ -2276,8 +2352,21 @@ class _ResultRowState extends State<_ResultRow> {
                 style: TextStyle(
                     color: wbc.link, fontWeight: FontWeight.w600),
               ),
-              TextSpan(
-                  text: widget.text, style: TextStyle(color: wbc.text)),
+              if (widget.spans == null)
+                TextSpan(
+                    text: widget.text, style: TextStyle(color: wbc.text))
+              else
+                for (final s in widget.spans!)
+                  TextSpan(
+                    text: s.text,
+                    style: TextStyle(
+                      color: wbc.text,
+                      // Same weight the text pane marks a hit with, so a
+                      // result and the verse it opens agree on what was
+                      // found. See browse_window.dart:1760.
+                      fontWeight: s.isHit ? FontWeight.w700 : null,
+                    ),
+                  ),
             ]),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
