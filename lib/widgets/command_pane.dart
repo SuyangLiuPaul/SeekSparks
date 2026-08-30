@@ -1824,25 +1824,17 @@ class _CommandPaneState extends State<CommandPane> {
               // 雅偉版繁體 today) cannot mark a Strong's hit at all —
               // there is nothing that says which word it is. Those fall
               // through to an unmarked line rather than guessing.
-              final marked = runs
-                  ?.where((r) => hl.matchesStrongs(r.strongs))
-                  .map((r) => r.text.trim())
-                  .where((w) => w.isNotEmpty)
-                  .toList();
+
               return _ResultRow(
                 reference: '$displayBook ${ref.chapter}:${ref.verse}',
                 text: preview,
-                // Locate the matched run's own text in the cleaned
-                // preview rather than mapping run offsets onto it: the
-                // preview has had markup stripped, so the offsets no
-                // longer line up, but the word itself still reads the
-                // same. The cost is that a word occurring twice in one
-                // verse marks both — over-marking, in a two-line
-                // snippet, which is cheaper than marking nothing.
-                spans: (marked == null || marked.isEmpty)
-                    ? null
-                    : splitOnTerms(preview,
-                        marked.map((w) => w.toLowerCase()).toList()),
+                spans: strongsSnippetSpans(
+                  preview: preview,
+                  runs: runs
+                      ?.map((r) => (text: r.text, strongs: r.strongs))
+                      .toList(),
+                  highlight: hl,
+                ),
                 onTap: () {
                   final verse = wb.verseForRef(ref);
                   if (verse != null) _openVerse(verse);

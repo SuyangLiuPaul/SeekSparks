@@ -215,3 +215,33 @@ List<HighlightSpan> splitOnTerms(String text, List<String> terms) {
   }
   return out;
 }
+
+/// The snippet spans for a Strong's hit, or null when nothing can be marked.
+///
+/// [runs] are the tagged runs for the verse, or null when the edition on
+/// screen ships no tagging — NASB, 梁家铿 and 雅偉版繁體 today. That case
+/// returns null rather than an unmarked span list so the caller can tell
+/// "nothing matched" from "this edition cannot say", and it is a real
+/// case: which WORD carries H430 is knowable only from the tagging, so an
+/// untagged edition can never mark a Strong's hit and should not pretend.
+///
+/// The matched run's own text is located inside [preview] rather than
+/// mapping run offsets onto it, because the preview has had markup
+/// stripped and the offsets no longer line up. The cost is that a word
+/// occurring twice in one verse marks both — over-marking, in a two-line
+/// snippet, which is cheaper than marking nothing.
+List<HighlightSpan>? strongsSnippetSpans({
+  required String preview,
+  required List<({String text, String strongs})>? runs,
+  required SearchHighlight highlight,
+}) {
+  if (runs == null || preview.isEmpty) return null;
+  final words = <String>[];
+  for (final r in runs) {
+    if (!highlight.matchesStrongs(r.strongs)) continue;
+    final w = r.text.trim().toLowerCase();
+    if (w.isNotEmpty) words.add(w);
+  }
+  if (words.isEmpty) return null;
+  return splitOnTerms(preview, words);
+}
