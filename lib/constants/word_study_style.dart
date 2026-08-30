@@ -192,8 +192,27 @@ class WordStudyStyle {
       body: type.text,
       ref: type.chrome,
       gloss: type.chrome,
-      translit: type.chrome - 2,
-      micro: type.chrome - 2,
+      // #315 residue, 2026-08-31. These two were 9.0px at the default
+      // Menu Size — `resolve` sets `chrome: WbMetrics.chrome *
+      // chromeScale`, so the field IS `WbMetrics.smallPrintFloor` and
+      // anything subtracted from it is under a floor whose comment says
+      // small print "may reach it and stop; it may not go under it".
+      //
+      // They survived last run's 52-site sweep because that ratchet
+      // reads the argument of a `fontSize:` expression, and these are
+      // named-argument initialisers on a data class, read six files
+      // away as `fontSize: _st.translit`. A guard that counts notation
+      // cannot see a number. `word_study_style_test.dart`'s group "no
+      // field in the docked column is designed under the floor" reads
+      // the resolved values instead.
+      //
+      // Ranking them BELOW `ref`/`gloss` by size is not what makes them
+      // subordinate and never was: all six call sites in
+      // `originals_sheet.dart` already mute, italicise, embolden or
+      // track them (980, 1004, 1048, 1531, 2234, 2408). One of them is
+      // a CC-BY-NC-SA attribution we are obliged to print.
+      translit: type.chrome,
+      micro: type.chrome,
       original: type.original,
       // The headword is the one thing in the pane worth being large.
       // +6 lands it on WordAnalysisPane's 21px at the default scale,

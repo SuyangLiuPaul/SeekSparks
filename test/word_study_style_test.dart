@@ -218,4 +218,81 @@ void main() {
       expect(small.body, lessThan(WbMetrics.originalFloor));
     });
   });
+
+  // 2026-08-31 (#315 residue). The source ratchet in
+  // `font_size_reach_ratchet_test.dart` lists this file under
+  // `finished` — "zero literals, and it stays zero" — and that was true
+  // while `translit` and `micro` resolved to 9.0px, the smallest type
+  // in the app. The ratchet counts notation. This group counts pixels.
+  group('no field in the docked column is designed under the floor', () {
+    /// Every field of [WordStudyStyle] that is handed to a `fontSize:`.
+    /// Written out rather than reflected over, so adding a size field
+    /// and forgetting it here is a visible omission in a diff.
+    Map<String, double> fontFields(WordStudyStyle s) => {
+          'body': s.body,
+          'ref': s.ref,
+          'gloss': s.gloss,
+          'translit': s.translit,
+          'micro': s.micro,
+          'original': s.original,
+          'lemma': s.lemma,
+        };
+
+    test('the workbench column, at the default Menu Size', () {
+      final under = <String>[];
+      fontFields(_dense()).forEach((name, px) {
+        if (px < WbMetrics.smallPrintFloor) {
+          under.add('$name resolved to ${px}px');
+        }
+      });
+      expect(under, isEmpty,
+          reason: 'WbMetrics.smallPrintFloor is '
+              '${WbMetrics.smallPrintFloor}px and this pane is a '
+              'workbench resident, where that floor is the rule the '
+              'other 88 sites already pay. A size written as an offset '
+              'off a resolved WbType field is invisible to the source '
+              'ratchet, so this is the only guard that can see it:\n'
+              '${under.join('\n')}');
+    });
+
+    test('the two smallest fields sit exactly on the floor, not above it',
+        () {
+      // Not `greaterThanOrEqualTo`: the floor is a floor, and quietly
+      // growing these to 12 would be a design change nobody asked for.
+      expect(_dense().translit, WbMetrics.smallPrintFloor);
+      expect(_dense().micro, WbMetrics.smallPrintFloor);
+    });
+
+    test('rank in this column is not carried by size, and never was', () {
+      // The stated reason these two were deferred was that raising them
+      // collapses four ranks. It does collapse four SIZES — and all six
+      // call sites in originals_sheet.dart distinguish these fields by
+      // colour, weight, italics or tracking, never by size alone. This
+      // asserts the collapse the change actually makes, so a reader of
+      // the diff is not left guessing whether it was noticed.
+      final st = _dense();
+      expect(st.ref, st.gloss);
+      expect(st.gloss, st.translit);
+      expect(st.translit, st.micro);
+    });
+
+    test('the phone modal is UNDER the floor and is deliberately left so',
+        () {
+      // Not a passing guard — a written exception, so the debt is
+      // stated rather than skipped over.
+      //
+      // The modal's proportions are pinned at :142-143 as "what the
+      // phone reader shipped with before WordStudyStyle existed", a
+      // decision from #284 that still stands, and
+      // WbMetrics.smallPrintFloor's own comment calls it "a comfort
+      // bound, not a correctness one" — which does not license
+      // overriding a deliberate decision about a different surface.
+      // Raising these is an OWNER call, not a loop call.
+      final m = _modal();
+      expect(m.translit, lessThan(WbMetrics.smallPrintFloor));
+      expect(m.micro, lessThan(WbMetrics.smallPrintFloor));
+      expect(m.translit, 10);
+      expect(m.micro, 9);
+    });
+  });
 }

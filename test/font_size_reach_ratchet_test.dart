@@ -88,6 +88,18 @@ void main() {
   /// a debt: each is a workbench-resident pane or a screen the reader
   /// photographed, and a literal reappearing in one of them is the
   /// original bug, not new debt.
+  ///
+  /// **"Zero literals" is not "nothing under the floor", 2026-08-31.**
+  /// `constants/word_study_style.dart` sat first on this list while
+  /// resolving `translit` and `micro` to 9.0px — the smallest type in
+  /// the app — because it writes its sizes as named-argument
+  /// initialisers (`translit: type.chrome - 2`), read six files away as
+  /// `fontSize: _st.translit`. Neither detector in this file can see
+  /// that shape: one reads the argument at a `fontSize:` colon, the
+  /// other a local name used at one. A style OBJECT's fields are a
+  /// fourth shape and the instrument for it is a value test, not a
+  /// regex — see `test/word_study_style_test.dart`, group
+  /// "no field in the docked column is designed under the floor".
   const finished = <String>[
     'constants/word_study_style.dart',
     'pages/phrasing_page.dart',
