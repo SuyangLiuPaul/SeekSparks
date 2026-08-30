@@ -36,6 +36,7 @@ import 'package:seeksparks/utils/atlas_index.dart' show labelPriority;
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 import 'package:seeksparks/utils/journey_route.dart';
 import 'package:seeksparks/utils/place_geo.dart';
+import 'package:seeksparks/utils/place_ruler.dart';
 import 'package:seeksparks/utils/travel_time.dart';
 
 /// Base geography, the places asked about, and a ruler between them.
@@ -639,15 +640,11 @@ class _PlaceMapViewState extends State<PlaceMapView> {
     final km = proj == null ? null : niceScaleKm(proj.kmPerPixel, 90);
     final barPx = (proj == null || km == null) ? 0.0 : km / proj.kmPerPixel;
 
-    final others = <(BiblePlace, double)>[];
-    if (sel != null) {
-      for (final p in _located) {
-        if (p.id == sel.id) continue;
-        final d = sel.distanceKmTo(p);
-        if (d != null) others.add((p, d));
-      }
-      others.sort((a, b) => a.$2.compareTo(b.$2));
-    }
+    final reading = rulerReadingFor(sel, _located);
+    final samePointText = samePointSentence(
+      reading.samePoint.map((p) => p.displayName(widget.script)).toList(),
+      widget.locale,
+    );
 
     return Container(
       color: c.chromeBg,
@@ -692,39 +689,55 @@ class _PlaceMapViewState extends State<PlaceMapView> {
                 ),
             ],
           ),
-          if (sel != null && others.isNotEmpty) ...[
-            const SizedBox(height: 3),
-            // The basis rides in a tooltip because it is three clauses
-            // long and the footer is two lines. It used to be carried by
-            // the word "about", which was doing none of the work: the
-            // speed had no source, the distance was a chord, and the unit
-            // was never named.
-            Tooltip(
-              message: s('travelDaysBasis',
-                  'At 20–30 km a day on foot (ORBIS, Stanford, 2012), over '
-                  'straight lines — so the real journey is longer. Days on '
-                  'the road, not the time the journey took.'),
-              child: Text(
-                // The ruler. Nearest three, because a chapter can name a
-                // dozen places and the far end of that list is noise.
-                others.take(3).map((e) {
-                  final name = e.$1.displayName(widget.script);
-                  final days = walkingDaysFor(e.$2);
-                  final walk = days == null
-                      ? ''
-                      : ' · ${formatTravelDays(days, widget.locale)}';
-                  return '${sel.displayName(widget.script)} → $name  '
-                      '${e.$2.round()} km$walk';
-                }).join('    '),
+          if (sel != null && !reading.isEmpty) ...[
+            if (reading.measured.isNotEmpty) ...[
+              const SizedBox(height: 3),
+              // The basis rides in a tooltip because it is three clauses
+              // long and the footer is two lines. It used to be carried by
+              // the word "about", which was doing none of the work: the
+              // speed had no source, the distance was a chord, and the unit
+              // was never named.
+              Tooltip(
+                message: s('travelDaysBasis',
+                    'At 20–30 km a day on foot (ORBIS, Stanford, 2012), over '
+                    'straight lines — so the real journey is longer. Days on '
+                    'the road, not the time the journey took.'),
+                child: Text(
+                  // The ruler. Nearest three, because a chapter can name a
+                  // dozen places and the far end of that list is noise.
+                  reading.measured.map((e) {
+                    final name = e.place.displayName(widget.script);
+                    final days = walkingDaysFor(e.km);
+                    final walk = days == null
+                        ? ''
+                        : ' · ${formatTravelDays(days, widget.locale)}';
+                    return '${sel.displayName(widget.script)} → $name  '
+                        '${rulerKmLabel(e.km)} km$walk';
+                  }).join('    '),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: t.chrome - 1,
+                    color: c.text,
+                    height: 1.35,
+                  ),
+                ),
+              ),
+            ],
+            if (reading.samePoint.isNotEmpty && samePointText != null) ...[
+              const SizedBox(height: 3),
+              Text(
+                key: const Key('places-map-same-point'),
+                samePointText,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontSize: t.chrome - 1,
-                  color: c.text,
+                  color: c.mutedText,
                   height: 1.35,
                 ),
               ),
-            ),
+            ],
           ],
           if (widget.attribution.isNotEmpty) ...[
             const SizedBox(height: 3),

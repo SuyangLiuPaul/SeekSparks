@@ -8544,6 +8544,41 @@ const uiStrings = {
     'zh-Hant': '另有 {n} 個地名位置不詳，無法標示',
     'en': '{n} more named here have no known location',
   },
+  'placesMapSamePoint': {
+    // The ruler's abstention, and it has to be an abstention rather than
+    // "0 km". Our gazetteer gives 1,233 located records far fewer
+    // distinct coordinates than that: a region carries some city's
+    // point, and Nehemiah 3's gates and towers all carry Jerusalem's.
+    // Two names on one point is a limit of the DATA — it is not a claim
+    // that they are one place (Jerusalem's gates are genuinely
+    // adjacent), and not a claim that either is unlocated (they are
+    // not). #317 settled that wording on the journey panel and this
+    // repeats it rather than inventing a second way to say it.
+    'zh-Hans': '{names} 等 {n} 处与所选地点共用同一个地图点：地名录没有'
+        '分别给出它们的坐标，因此这里量不出距离。',
+    'zh-Hant': '{names} 等 {n} 處與所選地點共用同一個地圖點：地名錄沒有'
+        '分別給出它們的座標，因此這裡量不出距離。',
+    'en': '{names} — {n} in all — sit on the same map point as the place '
+        'selected. The gazetteer gives them no separate coordinates, so '
+        'there is no distance here to measure.',
+  },
+  'placesMapSamePointOne': {
+    // The n == 1 form, and it is the form 63.8% of readings will use
+    // (1,620 of 2,539 situations, measured over the gazetteer's own
+    // chapter index). The plural template rendered it as "Dung Gate —
+    // 1 in all — sit on the same map point", which is wrong twice: the
+    // verb does not agree and the count is noise when there is one.
+    // Same claim as the plural, and deliberately the same claim: the
+    // gazetteer's silence, never "these are one place" and never
+    // "this one is unlocated".
+    'zh-Hans': '{name} 与所选地点共用同一个地图点：地名录没有分别给出'
+        '它们的坐标，因此这里量不出距离。',
+    'zh-Hant': '{name} 與所選地點共用同一個地圖點：地名錄沒有分別給出'
+        '它們的座標，因此這裡量不出距離。',
+    'en': '{name} sits on the same map point as the place selected. The '
+        'gazetteer gives them no separate coordinates, so there is no '
+        'distance here to measure.',
+  },
   'placesMapHint': {
     'zh-Hans': '滚轮缩放，拖动平移，点选地名量距。',
     'zh-Hant': '滾輪縮放，拖曳平移，點選地名量距。',
