@@ -14,6 +14,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/original_word.dart';
 import 'package:seeksparks/widgets/analysis_tabs.dart';
@@ -479,6 +480,109 @@ void main() {
         expect(find.text('ὁ'), findsNothing);
       });
     }
+  });
+
+  // The chronology band (#318 phase 25): #315's overflow guard above
+  // pumps only 'John' 1, which cites no dated event at all — the band's
+  // `if (_events.isNotEmpty)` false branch. These cases exercise the
+  // TRUE branch, including the single widest row in the corpus.
+  group('ContextPane — the chronology band', () {
+    Widget host({
+      required double width,
+      required String englishBook,
+      required int chapter,
+      String locale = 'en',
+    }) =>
+        _settingsHost(MaterialApp(
+          home: Scaffold(
+            body: SizedBox(
+              width: width,
+              child: ContextPane(
+                englishBook: englishBook,
+                chapter: chapter,
+                verse: 1,
+                locale: locale,
+                version: 'kjv',
+                onOpenVerse: _ignoreVerse,
+              ),
+            ),
+          ),
+        ));
+
+    Future<void> pumpUntilLoaded(WidgetTester tester, Widget widget) async {
+      await tester.runAsync(() async {
+        await tester.pumpWidget(widget);
+        for (var i = 0; i < 40; i++) {
+          await Future<void>.delayed(const Duration(milliseconds: 100));
+          await tester.pump();
+          if (find.byType(CircularProgressIndicator).evaluate().isEmpty) {
+            break;
+          }
+        }
+      });
+      await tester.pump();
+    }
+
+    testWidgets(
+        'the widest event line in the corpus (john_patmos, 41 chars, '
+        'alone in Revelation 1) does not overflow at 320 px', (tester) async {
+      await pumpUntilLoaded(
+        tester,
+        host(width: 320.0, englishBook: 'Revelation', chapter: 1),
+      );
+      expect(tester.takeException(), isNull);
+      expect(find.text('John Exiled to Patmos; Revelation Written'),
+          findsOneWidget);
+    });
+
+    testWidgets(
+        'the widest zh-Hans title (elisha_succeeds, 2 Kings 2) does not '
+        'get ellipsised, and does not overflow at 320 px', (tester) async {
+      await pumpUntilLoaded(
+        tester,
+        host(
+          width: 320.0,
+          englishBook: '2 Kings',
+          chapter: 2,
+          locale: 'zh-Hans',
+        ),
+      );
+      expect(tester.takeException(), isNull);
+      expect(find.text('以利亚被接升天；以利沙继任'), findsOneWidget);
+    });
+
+    testWidgets(
+        '2 Kings 17 shows the band heading, israel_falls, its plain '
+        '(non-hedged) year, and — once expanded — the Thiele basis '
+        'sentence', (tester) async {
+      await pumpUntilLoaded(
+        tester,
+        host(width: 420.0, englishBook: '2 Kings', chapter: 17),
+      );
+      expect(tester.takeException(), isNull);
+      expect(find.text('Dated in this chapter'), findsOneWidget);
+      expect(find.text('Northern Kingdom Falls to Assyria'), findsOneWidget);
+      // basis: 'thiele', approximate: false — must print plain.
+      expect(find.text('722 BC'), findsOneWidget);
+      expect(find.textContaining('c. 722'), findsNothing);
+
+      await tester.tap(find.text('Northern Kingdom Falls to Assyria'));
+      await tester.pump();
+      expect(
+        find.text(uiStrings['timelineBasisThiele']!['en']!),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('Joshua 1 cites no dated event, so the band is absent, '
+        'not empty', (tester) async {
+      await pumpUntilLoaded(
+        tester,
+        host(width: 420.0, englishBook: 'Joshua', chapter: 1),
+      );
+      expect(tester.takeException(), isNull);
+      expect(find.text('Dated in this chapter'), findsNothing);
+    });
   });
 
   // The eleventh tab is what forced this: eleven bare icons no longer

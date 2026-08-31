@@ -30,10 +30,13 @@ import 'package:seeksparks/pages/strongs_entry_page.dart';
 import 'package:seeksparks/services/originals_service.dart';
 import 'package:seeksparks/services/section_title_service.dart';
 import 'package:seeksparks/services/strongs_service.dart';
+import 'package:seeksparks/services/timeline_service.dart';
 import 'package:seeksparks/utils/app_nav.dart';
 import 'package:seeksparks/constants/workbench_theme.dart' show WbType;
 import 'package:seeksparks/utils/context_words.dart';
+import 'package:seeksparks/utils/passage_events.dart';
 import 'package:seeksparks/utils/pericope.dart';
+import 'package:seeksparks/utils/timeline_basis.dart';
 import 'package:seeksparks/utils/word_pos.dart';
 
 class ContextPane extends StatefulWidget {
@@ -67,6 +70,7 @@ class _ContextPaneState extends State<ContextPane> {
   ContextSort _sort = ContextSort.distinctive;
   bool _includeFunctionWords = false;
   String? _expanded;
+  String? _expandedEvent;
 
   bool _loading = true;
   Map<String, List<OriginalWord>> _bookVerses = const {};
@@ -76,6 +80,7 @@ class _ContextPaneState extends State<ContextPane> {
   double _maxKeyness = 0;
   int _scopeVerses = 0;
   Map<String, StrongsEntry> _lex = const {};
+  List<EventHere> _events = const [];
 
   @override
   void initState() {
@@ -127,6 +132,7 @@ class _ContextPaneState extends State<ContextPane> {
     setState(() {
       _loading = true;
       _expanded = null;
+      _expandedEvent = null;
     });
 
     final headings = SectionTitleService.headingsInBook(
@@ -188,6 +194,12 @@ class _ContextPaneState extends State<ContextPane> {
       if (hit != null) lex[e.strongs] = hit;
     }
 
+    final events = eventsIn(
+      widget.englishBook,
+      widget.chapter,
+      await TimelineService.instance.loadAll(),
+    );
+
     if (!mounted) return;
     setState(() {
       _scope = scope;
@@ -196,6 +208,7 @@ class _ContextPaneState extends State<ContextPane> {
           0, (m, e) => (e.keyness ?? 0) > m ? e.keyness! : m);
       _scopeVerses = scopeVerses;
       _lex = lex;
+      _events = events;
       _loading = false;
     });
   }
@@ -252,6 +265,10 @@ class _ContextPaneState extends State<ContextPane> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        if (_events.isNotEmpty) ...[
+          _chronologyBand(scheme),
+          const Divider(height: 1),
+        ],
         _controls(scheme),
         const Divider(height: 1),
         Expanded(
@@ -269,6 +286,121 @@ class _ContextPaneState extends State<ContextPane> {
                     ),
         ),
       ],
+    );
+  }
+
+  /// One dated event per row, in the order `eventsIn` returned them —
+  /// which is the asset's own oldest-first order, so this band and the
+  /// standalone timeline page never disagree about the sequence of the
+  /// same events. Absent entirely when [_events] is empty; see [build].
+  Widget _chronologyBand(ColorScheme scheme) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            _s('contextChronologyHeading', 'Dated in this chapter'),
+            style: TextStyle(
+              fontSize: _ty.scaled(11),
+              fontWeight: FontWeight.w600,
+              color: scheme.outline,
+            ),
+          ),
+          const SizedBox(height: 4),
+          for (final eh in _events) _chronologyRow(eh, scheme),
+        ],
+      ),
+    );
+  }
+
+  Widget _chronologyRow(EventHere eh, ColorScheme scheme) {
+    final event = eh.event;
+    final expanded = _expandedEvent == event.id;
+    return InkWell(
+      onTap: () =>
+          setState(() => _expandedEvent = expanded ? null : event.id),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Text(
+                    event.localizedTitle(widget.locale),
+                    style: TextStyle(
+                      fontSize: _ty.scaled(12.5),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  event.displayYear(widget.locale),
+                  style:
+                      TextStyle(fontSize: _ty.scaled(11), color: scheme.outline),
+                ),
+              ],
+            ),
+            Text(
+              eh.refsHere.join(' · '),
+              style:
+                  TextStyle(fontSize: _ty.scaled(11), color: scheme.outline),
+            ),
+            if (expanded) ...[
+              const SizedBox(height: 4),
+              Text(
+                event.localizedDesc(widget.locale),
+                style: TextStyle(
+                  fontSize: _ty.scaled(11.5),
+                  color: scheme.onSurface.withValues(alpha: 0.85),
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                basisText(event, widget.locale),
+                style: TextStyle(
+                  fontSize: _ty.scaled(11),
+                  fontStyle: FontStyle.italic,
+                  color: scheme.onSurface.withValues(alpha: 0.6),
+                  height: 1.4,
+                ),
+              ),
+              if (event.datingRefs.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(
+                  '${_s('timelineDatedBy', 'Dated by')}: '
+                  '${event.datingRefs.join(', ')}',
+                  style: TextStyle(
+                      fontSize: _ty.scaled(11), color: scheme.outline),
+                ),
+              ],
+              if (event.displaySeptuagintYear(widget.locale) != null) ...[
+                const SizedBox(height: 4),
+                Text(
+                  (uiStrings['timelineSeptuagintYear']?[widget.locale] ??
+                          uiStrings['timelineSeptuagintYear']?['en'] ??
+                          '')
+                      .replaceFirst(
+                    '{year}',
+                    event.displaySeptuagintYear(widget.locale) ?? '',
+                  ),
+                  style: TextStyle(
+                    fontSize: _ty.scaled(11),
+                    fontStyle: FontStyle.italic,
+                    color: scheme.onSurface.withValues(alpha: 0.6),
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ],
+          ],
+        ),
+      ),
     );
   }
 

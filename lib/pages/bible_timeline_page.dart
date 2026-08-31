@@ -17,6 +17,7 @@ import 'package:seeksparks/services/timeline_service.dart';
 import 'package:seeksparks/widgets/person_detail_sheet.dart';
 import 'package:seeksparks/utils/jump_to_reference.dart' as jumper;
 import 'package:seeksparks/utils/reference_parser.dart';
+import 'package:seeksparks/utils/timeline_basis.dart';
 import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
 import 'package:seeksparks/widgets/home_icon_button.dart';
 import 'package:seeksparks/widgets/language_switcher_button.dart';
@@ -544,20 +545,6 @@ class _EraDivider extends StatelessWidget {
   }
 }
 
-/// One sentence saying what a year rests on, keyed on the asset's own
-/// `basis` vocabulary. An unrecognised value reads as the weakest of
-/// the three rather than as nothing, so a future basis added to the
-/// generator cannot make the app silently confident.
-String _basisText(TimelineEvent e, String locale) {
-  const keys = <String, String>{
-    'scripture+thiele': 'timelineBasisScripture',
-    'thiele': 'timelineBasisThiele',
-    'conventional': 'timelineBasisConventional',
-  };
-  final key = keys[e.basis] ?? 'timelineBasisConventional';
-  return uiStrings[key]?[locale] ?? uiStrings[key]?['en'] ?? '';
-}
-
 // ── Event tile ──────────────────────────────────────────────────
 
 class _EventTile extends StatelessWidget {
@@ -688,7 +675,7 @@ class _EventTile extends StatelessWidget {
                         // in the year already tells them which years are
                         // reconstructions.
                         Text(
-                          _basisText(event, locale),
+                          basisText(event, locale),
                           style: TextStyle(
                             fontSize: t.scaled(11.5),
                             fontStyle: FontStyle.italic,

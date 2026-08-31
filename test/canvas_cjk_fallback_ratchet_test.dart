@@ -96,7 +96,7 @@ void main() {
     // `DefaultTextStyle.of(context).style.merge(...)` ON PURPOSE —
     // `lexicon_page.dart`'s own doc comment records that measuring
     // WITHOUT the inherited `letterSpacing` clipped every Greek row, and
-    // `bible_timeline_page.dart:115-121` records the same 0.25px-a-character
+    // `bible_timeline_page.dart:116-122` records the same 0.25px-a-character
     // finding. Converting either to `canvasTextStyle` would re-break a
     // fixed bug.
     final windows = painterWindows();
@@ -108,7 +108,7 @@ void main() {
         .toList()
       ..sort();
     expect(fails,
-        ['lib/pages/bible_timeline_page.dart:131', 'lib/pages/lexicon_page.dart:698']);
+        ['lib/pages/bible_timeline_page.dart:132', 'lib/pages/lexicon_page.dart:698']);
   });
 
   testWidgets('the ambient DefaultTextStyle carries the bundled CJK face',

@@ -7815,6 +7815,14 @@ const uiStrings = {
     'zh-Hant': '本段沒有隨附的原文經文。',
     'en': 'No original-language text is bundled for this passage.',
   },
+  // Heading for the band above the vocabulary controls (#318 phase 25):
+  // which dated events in assets/bible_timeline.json narrate THIS
+  // chapter. Absent, not empty, on the 865 of 1,189 chapters with none.
+  'contextChronologyHeading': {
+    'zh-Hans': '本章年代',
+    'zh-Hant': '本章年代',
+    'en': 'Dated in this chapter',
+  },
   // Once Nave's shares this tab the old wording is wrong: an empty pane no
   // longer means "the New Testament concordance has nothing", it means
   // neither work files this verse at all.
