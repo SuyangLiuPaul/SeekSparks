@@ -337,6 +337,50 @@ void main() {
     });
   });
 
+  group("the chart's own header", () {
+    late HebrewKingsData data;
+    late Map<String, dynamic> raw;
+
+    setUpAll(() async {
+      final text = await rootBundle.loadString('assets/hebrew_kings.json');
+      raw = json.decode(text) as Map<String, dynamic>;
+      data = HebrewKingsData.fromJson(raw);
+    });
+
+    test('the asset\'s note is trilingual and reaches the model', () {
+      expect(data.meta.note.keys.toSet(), {'en', 'zh-Hans', 'zh-Hant'});
+      for (final locale in ['en', 'zh-Hans', 'zh-Hant']) {
+        expect(data.meta.note[locale], isNotEmpty, reason: locale);
+      }
+      expect(data.meta.noteFor('en'), contains('792/791'));
+      expect(data.meta.noteFor('zh-Hans'), contains('792/791'));
+    });
+
+    // Four keys the model does not parse, each excused by name: `generator`
+    // and `kingCount` are build facts, `yearSign` describes the JSON's
+    // minus signs (which no screen shows — the UI always prints "BC"),
+    // and `systems` is already stated permanently by `kingsSystemsDiffer`
+    // in the header bar (`_Header` at hebrew_kings_page.dart:317-330). A
+    // NEW `_meta` key appearing here must be read by the model, not added
+    // to this excuse list.
+    test(
+        "the header's reader-facing fields are all disclosed, "
+        'and the rest are excused by name', () {
+      final meta = (raw['_meta'] as Map).cast<String, dynamic>();
+      expect(
+        meta.keys.toSet(),
+        <String>{
+          'generator',
+          'kingCount',
+          'yearSign',
+          'note',
+          'systems',
+          'sources',
+        },
+      );
+    });
+  });
+
   // The page's whole reason for existing is that selecting a king shows
   // who stood on the other throne. Rendered at desktop width so the
   // detail panel is present rather than behind a sheet.
@@ -424,6 +468,42 @@ void main() {
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pump(const Duration(milliseconds: 50));
     });
+
+    // Below _sideBySideMinWidth (900) the detail panel — and the Sources
+    // block inside its empty state — is never built at all; the About
+    // action is the only route to the citations at this width.
+    testWidgets('the About action reaches the sources at a width where '
+        'the panel does not', (tester) async {
+      await pump(tester, const Size(880, 700));
+      expect(tester.takeException(), isNull);
+
+      expect(find.textContaining('Mysterious Numbers'), findsNothing);
+
+      await tester.tap(find.byIcon(Icons.info_outline));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.textContaining('Mysterious Numbers'), findsOneWidget);
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump(const Duration(milliseconds: 50));
+    });
+
+    testWidgets(
+        'the precision note is on screen once the About sheet is open',
+        (tester) async {
+      await pump(tester, const Size(880, 700));
+      expect(tester.takeException(), isNull);
+
+      await tester.tap(find.byIcon(Icons.info_outline));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.textContaining('792/791'), findsOneWidget);
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump(const Duration(milliseconds: 50));
+    });
   });
 
   test('every string the page shows exists in all three locales', () {
@@ -441,6 +521,9 @@ void main() {
       'kingsSystemsDiffer',
       'kingsSelectHint',
       'kingsSources',
+      'kingsAbout',
+      'kingsAboutPrecision',
+      'kingsAboutSystem',
       'kingsReign',
       'kingsPassages',
       'kingsAccession',

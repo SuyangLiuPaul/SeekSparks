@@ -9,7 +9,12 @@
  "_meta": {
   "generator": "scripts/build_hebrew_kings.py",
   "kingCount": 42,
-  "note": "Years are negative for BC. Thiele frequently writes a date as a pair (792/791) because a Hebrew regnal year straddles two Julian years; the single years here are the conventional reproduction of his figures, not a claim of greater precision.",
+  "yearSign": "Years are negative for BC.",
+  "note": {
+   "en": "Thiele frequently writes a date as a pair (792/791) because a Hebrew regnal year straddles two Julian years; the single years here are the conventional reproduction of his figures, not a claim of greater precision.",
+   "zh-Hans": "锡尔常把年份写成一对（792/791），因为希伯来的王年跨越两个儒略年；此处的单一年份是对他数字的惯常复述，并非声称更高的精确度。",
+   "zh-Hant": "錫爾常把年份寫成一對（792/791），因為希伯來的王年跨越兩個儒略年；此處的單一年份是對他數字的慣常複述，並非聲稱更高的精確度。"
+  },
   "systems": "Chronologies of the Hebrew kings differ over Nisan vs Tishri new year, accession vs non-accession year reckoning, co-regencies, and the Assyrian synchronisms. Albright, Galil and Kitchen each give different dates. This chart follows Thiele throughout and offers no other system.",
   "sources": [
    "Edwin R. Thiele, The Mysterious Numbers of the Hebrew Kings, 3rd ed. (Grand Rapids: Zondervan/Kregel, 1983).",

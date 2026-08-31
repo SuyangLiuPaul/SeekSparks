@@ -117,6 +117,92 @@ class _HebrewKingsPageState extends State<HebrewKingsPage> {
     );
   }
 
+  /// The chart's provenance, always reachable.
+  ///
+  /// `_DetailPanel` prints the sources only in its `king == null` empty
+  /// state, so they vanish on the first tap — and below
+  /// `_sideBySideMinWidth` the panel is never built at all, so they were
+  /// unreachable outright. An AppBar action does not depend on either.
+  Future<void> _showAbout(String locale) async {
+    String s(String key, String fallback) =>
+        uiStrings[key]?[locale] ?? fallback;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      constraints: const BoxConstraints(maxWidth: 720),
+      shape: const RoundedRectangleBorder(),
+      builder: (sheetCtx) => FutureBuilder<HebrewKingsData>(
+        future: _future,
+        builder: (c, snap) {
+          final wb = WbColors.of(c);
+          final type = WbType.of(c);
+          final data = snap.data;
+          if (data == null) return const SizedBox(height: 120);
+          Widget section(String heading, String body) => body.isEmpty
+              ? const SizedBox.shrink()
+              : Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(heading,
+                          style: TextStyle(
+                              color: wb.mutedText,
+                              fontSize: type.chrome,
+                              fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 4),
+                      Text(body,
+                          style: TextStyle(
+                              color: wb.mutedText,
+                              fontSize: type.chrome,
+                              height: 1.35)),
+                    ],
+                  ),
+                );
+          return SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(s('kingsAbout', 'About this chart'),
+                      style: TextStyle(
+                          color: wb.text,
+                          fontSize: type.text,
+                          fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 10),
+                  section(
+                      s('kingsAboutSystem',
+                          'The chronology this is drawn on'),
+                      data.systemNameFor(locale)),
+                  section(s('kingsAboutPrecision', 'Why a single year'),
+                      data.meta.noteFor(locale)),
+                  Text(s('kingsSources', 'Sources'),
+                      style: TextStyle(
+                          color: wb.mutedText,
+                          fontSize: type.chrome,
+                          fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 4),
+                  for (final src in data.meta.sources)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: Text(src,
+                          style: TextStyle(
+                              color: wb.mutedText,
+                              fontSize: type.chrome,
+                              height: 1.3)),
+                    ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final locale = context.watch<AppSettings>().locale;
@@ -129,7 +215,15 @@ class _HebrewKingsPageState extends State<HebrewKingsPage> {
       appBar: AppBar(
         leading: const LocalizedBackButton(),
         title: Text(s('hebrewKings', 'Kings of Judah & Israel')),
-        actions: const [LanguageSwitcherButton(), HomeIconButton()],
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.info_outline),
+            tooltip: s('kingsAbout', 'About this chart'),
+            onPressed: () => _showAbout(locale),
+          ),
+          const LanguageSwitcherButton(),
+          const HomeIconButton(),
+        ],
       ),
       body: FutureBuilder<HebrewKingsData>(
         future: _future,

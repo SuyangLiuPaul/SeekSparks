@@ -4,6 +4,33 @@ import 'package:flutter/services.dart' show rootBundle;
 
 import 'package:seeksparks/models/hebrew_king.dart';
 
+/// The chart's own header, as opposed to its records.
+///
+/// `hebrew_kings.json` has carried these fields since the asset was
+/// written and nothing parsed them; #318 phase 24 found the identical
+/// gap on the wheel. A provenance sentence that no widget reads is not
+/// a disclosed one.
+class HebrewKingsMeta {
+  const HebrewKingsMeta({required this.note, required this.sources});
+
+  /// Why a single year stands where Thiele writes a pair. Trilingual.
+  final Map<String, String> note;
+
+  final List<String> sources;
+
+  String noteFor(String locale) => note[locale] ?? note['en'] ?? '';
+
+  static HebrewKingsMeta fromJson(Map<String, dynamic>? m) => HebrewKingsMeta(
+        note: {
+          for (final e in ((m?['note'] as Map?) ?? const {}).entries)
+            if (e.value is String) e.key.toString(): e.value as String,
+        },
+        sources: ((m?['sources'] as List?) ?? const [])
+            .whereType<String>()
+            .toList(),
+      );
+}
+
 /// Loads `assets/hebrew_kings.json` — the kings of Judah and Israel on
 /// Thiele's chronology — and answers the one question the chart exists
 /// to answer: who was on the other throne at the same time.
@@ -13,12 +40,14 @@ class HebrewKingsData {
     required this.epochs,
     required this.systemNames,
     required this.sources,
+    required this.meta,
   });
 
   final List<HebrewKing> kings;
   final List<KingsEpoch> epochs;
   final Map<String, String> systemNames;
   final List<String> sources;
+  final HebrewKingsMeta meta;
 
   String systemNameFor(String locale) =>
       systemNames[locale] ?? systemNames['en'] ?? 'Thiele';
@@ -63,7 +92,8 @@ class HebrewKingsData {
   }
 
   static HebrewKingsData fromJson(Map<String, dynamic> j) {
-    final meta = (j['_meta'] as Map?)?.cast<String, dynamic>();
+    final meta =
+        HebrewKingsMeta.fromJson((j['_meta'] as Map?)?.cast<String, dynamic>());
     return HebrewKingsData(
       kings: ((j['kings'] as List?) ?? const [])
           .whereType<Map<String, dynamic>>()
@@ -77,9 +107,8 @@ class HebrewKingsData {
         for (final e in ((j['systemName'] as Map?) ?? const {}).entries)
           if (e.value is String) e.key.toString(): e.value as String,
       },
-      sources: ((meta?['sources'] as List?) ?? const [])
-          .whereType<String>()
-          .toList(),
+      sources: meta.sources,
+      meta: meta,
     );
   }
 }

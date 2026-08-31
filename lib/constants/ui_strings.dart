@@ -6599,6 +6599,21 @@ const uiStrings = {
     'zh-Hant': '資料來源',
     'en': 'Sources',
   },
+  'kingsAbout': {
+    'zh-Hans': '关于本图表',
+    'zh-Hant': '關於本圖表',
+    'en': 'About this chart',
+  },
+  'kingsAboutPrecision': {
+    'zh-Hans': '为何是单一年份',
+    'zh-Hant': '為何是單一年份',
+    'en': 'Why a single year',
+  },
+  'kingsAboutSystem': {
+    'zh-Hans': '本图表所依据的年代系统',
+    'zh-Hant': '本圖表所依據的年代系統',
+    'en': 'The chronology this is drawn on',
+  },
   'kingsReign': {
     'zh-Hans': '在位',
     'zh-Hant': '在位',
