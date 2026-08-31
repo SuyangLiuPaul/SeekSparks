@@ -6431,6 +6431,24 @@
    }
   },
   {
+   "id": "leo_i_attila",
+   "year": 452,
+   "era": "church",
+   "stream": "church",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "Leo I Meets Attila outside Rome",
+    "zh-Hans": "良一世出城会见阿提拉",
+    "zh-Hant": "良一世出城會見阿提拉"
+   },
+   "desc": {
+    "en": "Leo went out to Attila on behalf of a city the emperor no longer defended, and the Huns turned back; the year before, his letter on the two natures of Christ had been read at Chalcedon as the standard of the faith.",
+    "zh-Hans": "皇帝已不再保护罗马，良一世代表全城出见匈人王阿提拉，匈人随即退兵；前一年，他论基督二性的信函已在迦克墩会议上被诵读，作为信仰的准则。",
+    "zh-Hant": "皇帝已不再保護羅馬，良一世代表全城出見匈人王阿提拉，匈人隨即退兵；前一年，他論基督二性的信函已在迦克墩會議上被誦讀，成為信仰的準繩。"
+   }
+  },
+  {
    "id": "fall_west_rome",
    "year": 476,
    "era": "world",
@@ -6457,13 +6475,31 @@
    "approximate": false,
    "title": {
     "en": "Theodoric Rules Italy from Ravenna",
-    "zh-Hans": "狄奥多里克在拉韦纳统治意大利",
-    "zh-Hant": "狄奧多里克在拉韋納統治義大利"
+    "zh-Hans": "狄奥多里克统治意大利",
+    "zh-Hant": "狄奧多里克統治義大利"
    },
    "desc": {
     "en": "An Ostrogothic king governs Italy with Roman law and Roman officials, an Arian ruling a Catholic people; Boethius wrote under him and died by his order.",
-    "zh-Hans": "一位东哥特国王以罗马法律与罗马官吏治理意大利，身为亚流派而统治公教子民；波爱修在其治下著书，也死于其命令。",
-    "zh-Hant": "一位東哥德國王以羅馬法律與羅馬官吏治理義大利，身為亞流派而統治公教子民；波愛修在其治下著書，也死於其命令。"
+    "zh-Hans": "一位东哥特国王在拉韦纳以罗马法律与罗马官吏治理意大利，身为亚流派而统治公教子民；波爱修在其治下著书，也死于其命令。",
+    "zh-Hant": "一位東哥德國王在拉韋納以羅馬法律與羅馬官吏治理義大利，身為亞流派而統治公教子民；波愛修在其治下著書，也死於其命令。"
+   }
+  },
+  {
+   "id": "gelasius_two_powers",
+   "year": 494,
+   "era": "church",
+   "stream": "church",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "Gelasius Writes of Two Powers",
+    "zh-Hans": "杰拉修一世论两种权柄",
+    "zh-Hant": "傑拉修一世論兩種權柄"
+   },
+   "desc": {
+    "en": "Gelasius I wrote to the emperor at Constantinople that two powers rule the world, the priestly and the royal, and that priests must answer to God even for kings. The letter was quoted in Western argument between church and crown for a thousand years.",
+    "zh-Hans": "杰拉修一世致书君士坦丁堡的皇帝，称统治世界的有两种权柄，一为祭司，一为君王，而祭司连君王的事也要向神交代。此信在西方教会与王权之争中被引用了一千年。",
+    "zh-Hant": "傑拉修一世致書君士坦丁堡的皇帝，稱治理世界者有兩種權柄，一屬祭司，一屬君王，而祭司連君王的事也須向神交代。此信在其後千年裡，屢被引為教會與王權之爭的依據。"
    }
   },
   {
@@ -6971,6 +7007,24 @@
    }
   },
   {
+   "id": "papal_states_begin",
+   "year": 756,
+   "era": "church",
+   "stream": "church",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "The Papal States Begin",
+    "zh-Hans": "教皇国的开端",
+    "zh-Hant": "教宗國的開端"
+   },
+   "desc": {
+    "en": "Pippin defeated the Lombards and handed the towns of the Ravenna exarchate to the pope, who from then on was a ruler of land as well as a bishop; the states lasted until 1870.",
+    "zh-Hans": "丕平击败伦巴底人，将拉文纳总督区的城邑交给罗马主教，教皇自此既是主教，也是治理土地的君主；教皇国一直存续到1870年。",
+    "zh-Hant": "丕平擊敗倫巴底人，把拉文納總督區的城邑交予羅馬主教，教宗自此既是主教，也是掌有領土的君王；教宗國一直存續到1870年。"
+   }
+  },
+  {
    "id": "charlemagne_takes_lombardy",
    "year": 774,
    "era": "world",
@@ -7166,6 +7220,24 @@
     "en": "The brothers create an alphabet and put the Scriptures and liturgy into Slavonic.",
     "zh-Hans": "兄弟二人创制字母，将圣经与礼仪译成斯拉夫文。",
     "zh-Hant": "兄弟二人創制字母，將聖經與禮儀譯成斯拉夫文。"
+   }
+  },
+  {
+   "id": "nicholas_i_deposes_archbishops",
+   "year": 863,
+   "era": "church",
+   "stream": "church",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "Nicholas I Deposes Two Archbishops",
+    "zh-Hans": "尼古拉一世废黜大主教",
+    "zh-Hant": "尼各老一世廢黜總主教"
+   },
+   "desc": {
+    "en": "Two synods had dissolved the marriage of King Lothar II; Nicholas I declared their act void and deposed the archbishops who allowed it, holding that bishops and kings alike could be judged at Rome.",
+    "zh-Hans": "洛泰尔二世的婚姻曾由两次会议判为解除，尼古拉一世宣告该判决无效，并废黜准许此事的两位大主教，主张主教与君王同样可在罗马受审。",
+    "zh-Hant": "洛泰爾二世的婚姻曾經兩次會議判為解除，尼各老一世宣告此判無效，並廢黜准許其事的兩位總主教，主張主教與君王同樣可在羅馬受審。"
    }
   },
   {
@@ -7493,6 +7565,42 @@
    }
   },
   {
+   "id": "papal_election_decree_1059",
+   "year": 1059,
+   "era": "church",
+   "stream": "church",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "Cardinals Given the Papal Election",
+    "zh-Hans": "选举教皇之权归于枢机",
+    "zh-Hant": "選舉教宗之權歸於樞機"
+   },
+   "desc": {
+    "en": "A Lateran synod under Nicholas II ruled that the cardinal bishops should choose the pope, taking the election out of the hands of the Roman nobles and the emperor; the conclave grew from this decree.",
+    "zh-Hans": "尼古拉二世主持的拉特兰会议议定，由枢机主教推选教皇，把选举从罗马贵族与皇帝手中取回；后世的教皇选举会议即由此发端。",
+    "zh-Hant": "尼各老二世主持的拉特朗會議議定，由樞機主教推選教宗，將選舉自羅馬貴族與皇帝手中收回；後世的教宗選舉會議即由此而來。"
+   }
+  },
+  {
+   "id": "canossa_1077",
+   "year": 1077,
+   "era": "church",
+   "stream": "church",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "Henry IV Waits at Canossa",
+    "zh-Hans": "亨利四世在卡诺莎候见",
+    "zh-Hant": "亨利四世在卡諾莎候見"
+   },
+   "desc": {
+    "en": "Excommunicated and deposed by Gregory VII in the quarrel over who appoints bishops, the German king stood three days at the gate of Canossa before he was absolved. The dispute ran on until the Concordat of Worms separated the two investitures in 1122.",
+    "zh-Hans": "为主教任命之权，格列高利七世将德意志王绝罚废位；亨利四世在卡诺莎门外守候三日才获赦免。争端延续到1122年的沃尔姆斯协约，才把属灵与属世的授职分开。",
+    "zh-Hant": "為主教任命之權，額我略七世將德意志王絕罰廢位；亨利四世在卡諾莎門外守候三日方獲赦免。爭端延至1122年的沃姆斯協約，方將屬靈與屬世的授職分開。"
+   }
+  },
+  {
    "id": "shen_kuo_compass",
    "year": 1088,
    "era": "world",
@@ -7634,6 +7742,24 @@
     "en": "Minamoto no Yoritomo takes power; the shogunate is dated from 1185 or from his 1192 appointment.",
     "zh-Hans": "源赖朝掌权，武家幕府始于1185年，或自1192年受封征夷大将军起算。",
     "zh-Hant": "源賴朝掌權，武家幕府始於1185年，或自1192年受封征夷大將軍起算。"
+   }
+  },
+  {
+   "id": "innocent_iii_height",
+   "year": 1198,
+   "era": "church",
+   "stream": "church",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "The Papacy at Its Height under Innocent III",
+    "zh-Hans": "英诺森三世时教皇权势的顶点",
+    "zh-Hant": "依諾森三世時教宗權勢的頂點"
+   },
+   "desc": {
+    "en": "Innocent III took the title vicar of Christ, judged a disputed imperial election, and received England, Bulgaria and Portugal as papal fiefs; the medieval papacy made its widest claims in his eighteen years.",
+    "zh-Hans": "英诺森三世自称基督的代理者，裁断帝国的王位之争，英格兰、保加利亚与葡萄牙都成为教皇的采邑；中世纪教皇的主张在他在位的十八年间伸展得最远。",
+    "zh-Hant": "依諾森三世自稱基督的代表，裁斷帝國王位之爭，英格蘭、保加利亞與葡萄牙皆成為教宗的采邑；中世紀教宗的主張在他在位的十八年間達於最廣。"
    }
   },
   {
@@ -7781,6 +7907,24 @@
    }
   },
   {
+   "id": "papal_inquisition_1231",
+   "year": 1231,
+   "era": "church",
+   "stream": "church",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "The Papal Inquisition Established",
+    "zh-Hans": "教廷异端裁判所设立",
+    "zh-Hant": "教廷異端裁判所設立"
+   },
+   "desc": {
+    "en": "Gregory IX ordered convicted heretics handed to the civil power and sent papal judges, most of them Dominican and Franciscan friars, to try such cases; the trials passed from local bishops to Rome.",
+    "zh-Hans": "格列高利九世下令把定罪的异端交与官府处置，并派遣教廷法官审理此类案件，法官多为道明会与方济会士，审断之权由各地主教移归罗马。",
+    "zh-Hant": "額我略九世下令將定罪的異端交由官府處置，並派遣教廷法官審理此類案件，法官多為道明會與方濟會士，審斷之權遂由各地主教移歸羅馬。"
+   }
+  },
+  {
    "id": "mongols_sack_baghdad",
    "year": 1258,
    "era": "world",
@@ -7886,6 +8030,42 @@
     "en": "Weight-driven escapement clocks appear in town towers, dividing the day into equal hours.",
     "zh-Hans": "重锤擒纵式时钟出现于市镇塔楼，把一日划为等长的时辰。",
     "zh-Hant": "重錘擒縱式時鐘出現於市鎮塔樓，把一日劃為等長的時辰。"
+   }
+  },
+  {
+   "id": "unam_sanctam",
+   "year": 1302,
+   "era": "church",
+   "stream": "church",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "Unam Sanctam on Papal Authority",
+    "zh-Hans": "《一圣》诏书论教皇权柄",
+    "zh-Hant": "《一聖》詔書論教宗權柄"
+   },
+   "desc": {
+    "en": "In a quarrel with Philip IV of France over taxing the clergy, Boniface VIII declared that submission to the Roman pontiff is necessary to salvation. The next year the king's agents seized him at Anagni, and he died within weeks.",
+    "zh-Hans": "为向圣职人员征税一事与法王腓力四世相争，卜尼法斯八世颁诏宣告：顺服罗马教皇乃是得救所必需。次年国王的使者在阿纳尼将他拘执，他数周后去世。",
+    "zh-Hant": "因向聖職人員徵稅與法王腓力四世相爭，波尼法八世頒詔宣告：順服羅馬教宗乃得救所必需。翌年國王的使者在阿納尼將他拘執，他數週後辭世。"
+   }
+  },
+  {
+   "id": "avignon_papacy",
+   "year": 1309,
+   "era": "church",
+   "stream": "church",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "The Popes Settle at Avignon",
+    "zh-Hans": "教皇迁居亚维农",
+    "zh-Hant": "教宗遷居亞維農"
+   },
+   "desc": {
+    "en": "Clement V moved the curia to Avignon, within reach of the French crown; seven popes ruled from there for nearly seventy years before the return to Rome in 1377.",
+    "zh-Hans": "克莱孟五世将教廷迁到法国王权可及的亚维农，七位教皇在此驻留将近七十年，直到1377年才迁回罗马。",
+    "zh-Hant": "克萊孟五世將教廷遷至法國王權可及的亞維農，七位教宗在此駐留將近七十年，至1377年方遷回羅馬。"
    }
   },
   {
@@ -8105,6 +8285,24 @@
    }
   },
   {
+   "id": "constance_elects_martin_v",
+   "year": 1417,
+   "era": "church",
+   "stream": "church",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "Constance Elects a Single Pope",
+    "zh-Hans": "康士坦斯会议选出唯一教皇",
+    "zh-Hant": "康士坦斯會議選出唯一教宗"
+   },
+   "desc": {
+    "en": "The council set aside three rival claimants and elected Martin V, ending forty years of division; it also decreed that a general council holds authority over the pope, a claim later popes did not accept.",
+    "zh-Hans": "会议撤除三位并立的教皇人选，另选马丁五世，四十年的分裂就此终结；会议又议定大公会议的权柄在教皇之上，此说后来的教皇并不承认。",
+    "zh-Hant": "會議撤除三位並立的教宗人選，另選馬丁五世，四十年的分裂就此告終；會議又議定大公會議的權柄在教宗之上，此說為後來的教宗所不受。"
+   }
+  },
+  {
    "id": "inca_pachacuti",
    "year": 1438,
    "era": "world",
@@ -8231,6 +8429,24 @@
    }
   },
   {
+   "id": "alexander_vi_line",
+   "year": 1493,
+   "era": "church",
+   "stream": "church",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "A Bull Divides the Atlantic",
+    "zh-Hans": "一道诏书划分大西洋",
+    "zh-Hant": "一道詔書劃分大西洋"
+   },
+   "desc": {
+    "en": "Alexander VI drew a line down the Atlantic and granted Spain the newly found lands west of it, Portugal those to the east; the two crowns moved the line themselves by treaty the next year.",
+    "zh-Hans": "亚历山大六世在大西洋上划下一线，线西新发现的土地归西班牙，线东归葡萄牙；次年两国另订条约，自行把此线西移。",
+    "zh-Hant": "亞歷山大六世在大西洋上劃定一線，線西新發現的土地歸西班牙，線東歸葡萄牙；翌年兩國另訂條約，自行將此線西移。"
+   }
+  },
+  {
    "id": "columbian_exchange",
    "year": 1500,
    "era": "world",
@@ -8275,8 +8491,8 @@
    "approximate": false,
    "title": {
     "en": "A Map Names the New Land America",
-    "zh-Hans": "地图首次将新大陆命名为亚美利加",
-    "zh-Hant": "地圖首次將新大陸命名為亞美利加"
+    "zh-Hans": "新大陆得名亚美利加",
+    "zh-Hant": "新大陸得名亞美利加"
    },
    "desc": {
     "en": "Waldseemuller's world map prints the name America, after Amerigo Vespucci, who had argued the land was a continent and not Asia.",
@@ -8447,6 +8663,24 @@
    }
   },
   {
+   "id": "zurich_anabaptist_baptisms",
+   "year": 1525,
+   "era": "church",
+   "stream": "church",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "First Anabaptist Baptisms at Zurich",
+    "zh-Hans": "再洗礼派在苏黎世首行洗礼",
+    "zh-Hant": "重洗派在蘇黎世首行洗禮"
+   },
+   "desc": {
+    "en": "On 21 January a small company in a Zurich house baptised one another on confession of faith, breaking with Zwingli's city church; Felix Manz was put to death at Zurich in 1527, and the movement was hunted in Catholic and Protestant lands alike.",
+    "zh-Hans": "1月21日，一小群人在苏黎世一户人家里彼此按信心受洗，与慈运理的市立教会决裂；曼兹于1527年在苏黎世被处死，此派在天主教与更正教辖地同遭追捕。",
+    "zh-Hant": "1月21日，一小群人在蘇黎世一戶人家裡彼此按信心受洗，與慈運理的市立教會決裂；曼茲於1527年在蘇黎世被處死，此派在天主教與更正教轄地同遭追捕。"
+   }
+  },
+  {
    "id": "mughal_empire_founded",
    "year": 1526,
    "era": "world",
@@ -8462,6 +8696,24 @@
     "en": "Babur wins at Panipat; the Mughals rule much of India and build the Taj Mahal a century later.",
     "zh-Hans": "巴布尔于帕尼帕特获胜；莫卧儿统治印度大部，一世纪后建泰姬陵。",
     "zh-Hant": "巴布爾於帕尼帕特獲勝；蒙兀兒統治印度大部，一世紀後建泰姬陵。"
+   }
+  },
+  {
+   "id": "protestation_at_speyer",
+   "year": 1529,
+   "era": "church",
+   "stream": "europe",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "The Protestation at Speyer",
+    "zh-Hans": "施派尔的抗议",
+    "zh-Hant": "施派爾的抗議"
+   },
+   "desc": {
+    "en": "Evangelical princes and cities protested when the diet withdrew the liberty granted them three years before, and the name Protestant came from that protest; the same diet made rebaptism a capital offence throughout the empire.",
+    "zh-Hans": "帝国会议收回三年前所给的自由，福音派诸侯与城市当场抗议，「抗议宗」之名即由此而来；同一次会议又定重洗为死罪，通行全帝国。",
+    "zh-Hant": "帝國會議收回三年前所給的自由，福音派諸侯與城市當場抗議，「抗議宗」之名即由此而來；同一次會議又定重洗為死罪，通行全帝國。"
    }
   },
   {
@@ -8501,6 +8753,24 @@
    }
   },
   {
+   "id": "act_of_supremacy",
+   "year": 1534,
+   "era": "church",
+   "stream": "europe",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "The Act of Supremacy in England",
+    "zh-Hans": "英格兰《至尊法案》",
+    "zh-Hant": "英格蘭《至尊法案》"
+   },
+   "desc": {
+    "en": "Parliament declared Henry VIII supreme head on earth of the Church of England, cutting the English church's ties to Rome; to deny the supremacy was made treason.",
+    "zh-Hans": "国会宣告亨利八世为英格兰教会在地上的至尊元首，教会自此与罗马断绝隶属；否认此权者以叛国论处。",
+    "zh-Hant": "國會宣告亨利八世為英格蘭教會在地上的至尊元首，教會自此與羅馬斷絕隸屬；否認此權者以叛國論處。"
+   }
+  },
+  {
    "id": "coverdale_bible",
    "year": 1535,
    "era": "bible",
@@ -8534,6 +8804,24 @@
     "en": "A young Frenchman sets out the reformed faith in order; Tyndale is martyred the same year.",
     "zh-Hans": "年轻的法国人有条理地阐明改革宗信仰；同年丁道尔殉道。",
     "zh-Hant": "年輕的法國人有條理地闡明改革宗信仰；同年丁道爾殉道。"
+   }
+  },
+  {
+   "id": "dissolution_of_monasteries",
+   "year": 1536,
+   "era": "church",
+   "stream": "europe",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "Dissolution of the English Monasteries",
+    "zh-Hans": "英格兰解散修道院",
+    "zh-Hant": "英格蘭解散修道院"
+   },
+   "desc": {
+    "en": "From 1536 to 1540 the crown closed the religious houses of England, Wales and Ireland, took their lands and income into a new Court of Augmentations, and pensioned the monks and nuns turned out of them.",
+    "zh-Hans": "1536至1540年间，王室关闭英格兰、威尔士与爱尔兰的一切修道院，其田产与岁入归新设的增收法庭管理，遣散的修士修女则给予年金。",
+    "zh-Hant": "1536至1540年間，王室關閉英格蘭、威爾斯與愛爾蘭的一切修道院，其田產與歲入歸新設的增收法庭管理，遣散的修士修女則給予年金。"
    }
   },
   {
@@ -8645,6 +8933,24 @@
    }
   },
   {
+   "id": "schmalkaldic_war",
+   "year": 1546,
+   "era": "church",
+   "stream": "europe",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "The Schmalkaldic War",
+    "zh-Hans": "施马尔卡尔登战争",
+    "zh-Hant": "施馬爾卡登戰爭"
+   },
+   "desc": {
+    "en": "Charles V made war on the league of Lutheran princes and cities and broke its armies at Muhlberg in April 1547; the religious order he then imposed on the empire did not hold.",
+    "zh-Hans": "查理五世出兵征讨路德派诸侯与城市结成的同盟，1547年4月击溃其军；他随后强加于帝国的宗教安排未能维持。",
+    "zh-Hant": "查理五世出兵征討路德派諸侯與城市結成的同盟，1547年4月擊潰其軍；他隨後強加於帝國的宗教安排未能維持。"
+   }
+  },
+  {
    "id": "xavier_japan",
    "year": 1549,
    "era": "church",
@@ -8663,6 +8969,60 @@
    }
   },
   {
+   "id": "book_of_common_prayer",
+   "year": 1549,
+   "era": "church",
+   "stream": "church",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "The First Book of Common Prayer",
+    "zh-Hans": "首部《公祷书》",
+    "zh-Hant": "首部《公禱書》"
+   },
+   "desc": {
+    "en": "An Act of Uniformity required Cranmer's English prayer book in every parish from Whitsunday 1549, so that the services and the communion were heard in the people's own tongue.",
+    "zh-Hans": "《划一法案》规定自1549年五旬节起，各堂区一律使用克兰麦所编的英文祷书，礼拜与圣餐遂以本国语言举行。",
+    "zh-Hant": "《劃一法案》規定自1549年五旬節起，各堂區一律使用克蘭默所編的英文禱書，禮拜與聖餐遂以本國語言舉行。"
+   }
+  },
+  {
+   "id": "peace_of_augsburg",
+   "year": 1555,
+   "era": "church",
+   "stream": "europe",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "The Peace of Augsburg",
+    "zh-Hans": "奥格斯堡和约",
+    "zh-Hant": "奧格斯堡和約"
+   },
+   "desc": {
+    "en": "Signed on 25 September, it let each imperial estate fix the religion of its own land and required dissenting subjects to conform or leave; it covered Catholics and holders of the Augsburg Confession, and not the Reformed or the Anabaptists.",
+    "zh-Hans": "9月25日签订，准各邦自定本邦宗教，异议的臣民须归从或迁离；和约所涵盖的只有天主教与持奥格斯堡信条的一方，不及改革宗与再洗礼派。",
+    "zh-Hant": "9月25日簽訂，准各邦自定本邦宗教，異議的臣民須歸從或遷離；和約所涵蓋的只有天主教與持奧格斯堡信條的一方，不及改革宗與重洗派。"
+   }
+  },
+  {
+   "id": "elizabethan_settlement",
+   "year": 1559,
+   "era": "church",
+   "stream": "europe",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "The Elizabethan Religious Settlement",
+    "zh-Hans": "伊丽莎白的宗教安排",
+    "zh-Hant": "伊莉莎白的宗教安排"
+   },
+   "desc": {
+    "en": "Acts of Supremacy and Uniformity made Elizabeth I supreme governor of the church and restored the English prayer book, its words at communion left open to both a Catholic and a Protestant reading.",
+    "zh-Hans": "《至尊法案》与《划一法案》立伊丽莎白一世为教会的最高治理者，并恢复英文祷书；圣餐用语两可，天主教与更正教各能照己意领会。",
+    "zh-Hant": "《至尊法案》與《劃一法案》立伊莉莎白一世為教會的最高治理者，並恢復英文禱書；聖餐用語兩可，天主教與更正教各能照己意領會。"
+   }
+  },
+  {
    "id": "geneva_bible",
    "year": 1560,
    "era": "bible",
@@ -8678,6 +9038,24 @@
     "en": "Compact, verse-numbered and heavily annotated, it becomes the Bible of the Puritans.",
     "zh-Hans": "体积轻便、标明节数并附大量注释，成为清教徒手中的圣经。",
     "zh-Hant": "體積輕便、標明節數並附大量註釋，成為清教徒手中的聖經。"
+   }
+  },
+  {
+   "id": "french_wars_of_religion",
+   "year": 1562,
+   "era": "church",
+   "stream": "europe",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "The French Wars of Religion Begin",
+    "zh-Hans": "法国宗教战争开始",
+    "zh-Hant": "法國宗教戰爭開始"
+   },
+   "desc": {
+    "en": "About a hundred Protestants at worship in a barn at Wassy were killed on 1 March, and eight wars followed over thirty-six years; Catholic accounts date the outbreak instead to Conde's seizure of Orleans a month later.",
+    "zh-Hans": "3月1日，约百名更正教徒在瓦西一座谷仓聚会时被杀，此后三十六年间接连爆发八次战争；天主教一方则以孔代于一个月后夺取奥尔良为战端之始。",
+    "zh-Hant": "3月1日，約百名更正教徒在瓦西一座穀倉聚會時被殺，此後三十六年間接連爆發八次戰爭；天主教一方則以孔代於一個月後奪取奧爾良為戰端之始。"
    }
   },
   {
@@ -8714,6 +9092,42 @@
     "en": "A Spanish expedition plants the oldest continuously occupied European settlement in what is now the United States, forty-two years before Jamestown.",
     "zh-Hans": "西班牙远征队所建，是今日美国境内最早持续有人居住的欧洲聚落，比詹姆斯敦早四十二年。",
     "zh-Hant": "西班牙遠征隊所建，是今日美國境內最早持續有人居住的歐洲聚落，比詹姆斯敦早四十二年。"
+   }
+  },
+  {
+   "id": "st_bartholomews_massacre",
+   "year": 1572,
+   "era": "church",
+   "stream": "europe",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "The Saint Bartholomew's Day Massacre",
+    "zh-Hans": "圣巴多罗买日大屠杀",
+    "zh-Hant": "聖巴多羅買日大屠殺"
+   },
+   "desc": {
+    "en": "Coligny and other Huguenot leaders were killed in Paris on 24 August, and the killing spread through the city and into the provinces; about four thousand died in Paris and several thousand more elsewhere.",
+    "zh-Hans": "8月24日，科利尼与胡格诺派其他首领在巴黎遇害，屠杀继而蔓延全城并波及外省；巴黎死者约四千，外省另有数千。",
+    "zh-Hant": "8月24日，科利尼與胡格諾派其他首領在巴黎遇害，屠殺繼而蔓延全城並波及外省；巴黎死者約四千，外省另有數千。"
+   }
+  },
+  {
+   "id": "union_of_utrecht",
+   "year": 1579,
+   "era": "church",
+   "stream": "europe",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "The Union of Utrecht",
+    "zh-Hans": "乌得勒支同盟",
+    "zh-Hant": "烏特勒支同盟"
+   },
+   "desc": {
+    "en": "The northern Netherlands bound themselves together against Spain and agreed that no one was to be questioned or troubled over his faith; Holland and Zeeland ordered religion as they chose, while the other provinces left Catholic worship standing.",
+    "zh-Hans": "尼德兰北方各省结盟共抗西班牙，并约定不得因信仰查究或为难任何人；荷兰与泽兰两省自定其宗教，其余各省则仍保留天主教礼拜。",
+    "zh-Hant": "尼德蘭北方各省結盟共抗西班牙，並約定不得因信仰查究或為難任何人；荷蘭與澤蘭兩省自定其宗教，其餘各省則仍保留天主教禮拜。"
    }
   },
   {
@@ -8786,6 +9200,24 @@
     "en": "Six missionaries and twenty Japanese Christians were executed at Nagasaki in 1597.",
     "zh-Hans": "1597年，六名传教士与二十名日本基督徒在长崎被处死。",
     "zh-Hant": "1597年，六名傳教士與二十名日本基督徒在長崎被處死。"
+   }
+  },
+  {
+   "id": "edict_of_nantes",
+   "year": 1598,
+   "era": "church",
+   "stream": "europe",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "The Edict of Nantes",
+    "zh-Hans": "南特敕令",
+    "zh-Hant": "南特詔令"
+   },
+   "desc": {
+    "en": "Henry IV closed thirty-six years of civil war by granting Protestants freedom of conscience, worship in named places, equal standing at law and access to office; worship stayed barred in Paris and at court, and a separate warrant left them fortified towns for eight years.",
+    "zh-Hans": "亨利四世颁令终结三十六年内战，予更正教徒信仰自由、在指定地点聚会之权、法律上的同等地位与任官之途；惟巴黎与宫廷仍禁其礼拜，另有敕书许其驻守设防城镇八年。",
+    "zh-Hant": "亨利四世頒令終結三十六年內戰，予更正教徒信仰自由、在指定地點聚會之權、法律上的同等地位與任官之途；惟巴黎與宮廷仍禁其禮拜，另有詔書許其駐守設防城鎮八年。"
    }
   },
   {
@@ -8951,6 +9383,24 @@
    }
   },
   {
+   "id": "thirty_years_war",
+   "year": 1618,
+   "era": "world",
+   "stream": "europe",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "The Thirty Years' War Begins",
+    "zh-Hans": "三十年战争爆发",
+    "zh-Hant": "三十年戰爭爆發"
+   },
+   "desc": {
+    "en": "Men of the Bohemian Protestant estates threw two royal regents and a secretary from a window of Prague Castle in May; the revolt drew in Denmark, Sweden, France and Spain, and the fighting ran thirty years, mostly on German ground.",
+    "zh-Hans": "5月，波希米亚更正教等级会议的人把两名王室摄政与一名书记从布拉格城堡窗口掷出；这场起事引来丹麦、瑞典、法国与西班牙，战火持续三十年，多在德意志土地上。",
+    "zh-Hant": "5月，波希米亞更正教等級會議的人把兩名王室攝政與一名書記從布拉格城堡窗口擲出；這場起事引來丹麥、瑞典、法國與西班牙，戰火持續三十年，多在德意志土地上。"
+   }
+  },
+  {
    "id": "mayflower_compact",
    "year": 1620,
    "era": "world",
@@ -9049,13 +9499,13 @@
    "approximate": false,
    "title": {
     "en": "Roger Williams Founds Providence",
-    "zh-Hans": "罗杰·威廉斯创建普罗维登斯",
-    "zh-Hant": "羅傑·威廉斯創建普羅維登斯"
+    "zh-Hans": "威廉斯创建普罗维登斯",
+    "zh-Hant": "威廉斯創建普羅維登斯"
    },
    "desc": {
     "en": "Banished from Massachusetts for holding that the magistrate has no authority over conscience, he founds a colony on that principle.",
-    "zh-Hans": "他因主张官府无权管辖良心而被逐出马萨诸塞，遂依此原则另建殖民地。",
-    "zh-Hant": "他因主張官府無權管轄良心而被逐出麻薩諸塞，遂依此原則另建殖民地。"
+    "zh-Hans": "罗杰·威廉斯因主张官府无权管辖良心而被逐出马萨诸塞，遂依此原则另建殖民地。",
+    "zh-Hant": "羅傑·威廉斯因主張官府無權管轄良心而被逐出麻薩諸塞，遂依此原則另建殖民地。"
    }
   },
   {
@@ -9074,6 +9524,24 @@
     "en": "Edicts of 1633-39 bar most foreign contact and ban Christianity; one Dutch post remains.",
     "zh-Hans": "1633至1639年历次锁国令禁绝多数对外往来，并禁基督教；仅长崎留一荷兰商馆。",
     "zh-Hant": "1633至1639年歷次鎖國令禁絕多數對外往來，並禁基督教；僅長崎留一荷蘭商館。"
+   }
+  },
+  {
+   "id": "english_civil_war",
+   "year": 1642,
+   "era": "world",
+   "stream": "europe",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "The English Civil War Begins",
+    "zh-Hans": "英格兰内战爆发",
+    "zh-Hant": "英格蘭內戰爆發"
+   },
+   "desc": {
+    "en": "Charles I raised his standard at Nottingham on 22 August after long dispute with Parliament over taxes, prerogative and the form of worship. He was tried and executed in 1649, and England was governed without a king until 1660.",
+    "zh-Hans": "8月22日，查理一世在诺丁汉竖起王旗；此前他与国会久争赋税、王权与礼拜形式。1649年他受审被处死，英格兰直到1660年才再立君王。",
+    "zh-Hant": "8月22日，查理一世在諾丁漢豎起王旗；此前他與國會久爭賦稅、王權與禮拜形式。1649年他受審被處死，英格蘭直到1660年才再立君王。"
    }
   },
   {
@@ -9110,6 +9578,24 @@
     "en": "English and Scottish divines complete the confession of Presbyterianism; the Larger and Shorter Catechisms follow the next year.",
     "zh-Hans": "英格兰与苏格兰神学家完成长老宗的信条；大、小要理问答于次年续成。",
     "zh-Hant": "英格蘭與蘇格蘭神學家完成長老宗的信條；大、小要理問答於次年續成。"
+   }
+  },
+  {
+   "id": "peace_of_westphalia",
+   "year": 1648,
+   "era": "world",
+   "stream": "europe",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "The Peace of Westphalia",
+    "zh-Hans": "威斯特伐利亚和约",
+    "zh-Hant": "西發里亞和約"
+   },
+   "desc": {
+    "en": "Treaties settled at Munster and Osnabruck ended the Thirty Years' War, took 1624 as the year by which church lands and rights were to be judged, extended the terms of Augsburg to the Reformed, and left the imperial estates free to make alliances of their own.",
+    "zh-Hans": "在明斯特与奥斯纳布吕克议定的两项条约结束三十年战争，以1624年为裁定教产与教权的准年，将奥格斯堡的条款推及改革宗，并许各邦自行缔结盟约。",
+    "zh-Hant": "在明斯特與奧斯納布呂克議定的兩項條約結束三十年戰爭，以1624年為裁定教產與教權的準年，將奧格斯堡的條款推及改革宗，並許各邦自行締結盟約。"
    }
   },
   {
@@ -9239,6 +9725,24 @@
    }
   },
   {
+   "id": "revocation_edict_nantes",
+   "year": 1685,
+   "era": "church",
+   "stream": "europe",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "The Revocation of the Edict of Nantes",
+    "zh-Hans": "南特敕令被撤销",
+    "zh-Hant": "南特詔令遭撤銷"
+   },
+   "desc": {
+    "en": "Louis XIV revoked the edict in October, forbidding Protestant worship and ordering the Reformed churches pulled down. Pastors had a fortnight to convert or leave and other Protestants were forbidden to emigrate, yet 160,000 to 200,000 left the kingdom for the Netherlands, England, Switzerland and the German states.",
+    "zh-Hans": "10月，路易十四撤销该敕令，禁止更正教礼拜并下令拆毁其礼拜堂。牧师限两周内改宗或离境，其余信徒不许出国，仍有十六万至二十万人逃往尼德兰、英格兰、瑞士与德意志各邦。",
+    "zh-Hant": "10月，路易十四撤銷該詔令，禁止更正教禮拜並下令拆毀其禮拜堂。牧師限兩週內改宗或離境，其餘信徒不許出國，仍有十六萬至二十萬人逃往尼德蘭、英格蘭、瑞士與德意志各邦。"
+   }
+  },
+  {
    "id": "newton_principia",
    "year": 1687,
    "era": "world",
@@ -9254,6 +9758,42 @@
     "en": "Three laws of motion and universal gravitation set the framework physics used for two centuries.",
     "zh-Hans": "书中提出三大运动定律与万有引力，为其后两百年的物理学奠定框架。",
     "zh-Hant": "書中提出三大運動定律與萬有引力，為其後兩百年的物理學奠定框架。"
+   }
+  },
+  {
+   "id": "glorious_revolution",
+   "year": 1688,
+   "era": "world",
+   "stream": "europe",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "The Glorious Revolution",
+    "zh-Hans": "光荣革命",
+    "zh-Hant": "光榮革命"
+   },
+   "desc": {
+    "en": "William of Orange landed at Torbay in November and James II left the kingdom; Parliament gave the crown to William and Mary and, in the Bill of Rights, barred any Catholic from the throne.",
+    "zh-Hans": "11月，奥兰治的威廉在托贝登陆，詹姆斯二世出走；国会将王位授予威廉与玛丽，并以《权利法案》禁天主教徒继位。",
+    "zh-Hant": "11月，奧蘭治的威廉在托貝登陸，詹姆斯二世出走；國會將王位授予威廉與瑪麗，並以《權利法案》禁天主教徒繼位。"
+   }
+  },
+  {
+   "id": "toleration_act_1689",
+   "year": 1689,
+   "era": "church",
+   "stream": "europe",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "The English Toleration Act",
+    "zh-Hans": "英格兰《宽容法案》",
+    "zh-Hant": "英格蘭《寬容法令》"
+   },
+   "desc": {
+    "en": "Dissenters who swore allegiance could worship in licensed meeting houses of their own; the act did not cover Roman Catholics, its required declaration of belief in the Trinity left out those who denied it, and dissenters remained under other legal restrictions.",
+    "zh-Hans": "凡宣誓效忠的非国教徒，得在领有执照的会所自行聚会；此法不及罗马天主教徒，又因须声明信奉三一而将否认者排除在外，非国教徒仍受其他法律限制。",
+    "zh-Hant": "凡宣誓效忠的非國教徒，得在領有執照的會所自行聚會；此法不及羅馬天主教徒，又因須聲明信奉三一而將否認者排除在外，非國教徒仍受其他法律限制。"
    }
   },
   {
@@ -9578,6 +10118,24 @@
     "en": "Its Egyptian and Greek text, cut in three scripts, later lets Champollion decipher the hieroglyphs and opens the ancient world behind the Old Testament.",
     "zh-Hans": "碑上以三种字体刻写的埃及文与希腊文，日后使商博良破译象形文字，打开了旧约背后的古代世界。",
     "zh-Hant": "碑上以三種字體刻寫的埃及文與希臘文，日後使商博良破譯象形文字，打開了舊約背後的古代世界。"
+   }
+  },
+  {
+   "id": "pius_vi_dies_captive",
+   "year": 1799,
+   "era": "church",
+   "stream": "church",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "A Pope Dies a French Prisoner",
+    "zh-Hans": "教皇死于法国的囚禁",
+    "zh-Hant": "教宗死於法國的囚禁"
+   },
+   "desc": {
+    "en": "French troops held Rome and carried Pius VI into France, where he died in captivity; with the Papal States lost and the curia scattered, his successor had to be elected at Venice under Austrian protection.",
+    "zh-Hans": "法军占领罗马，将庇护六世掳往法国，他在囚禁中去世；教皇国已失，教廷四散，继任者只得在威尼斯于奥地利保护下选出。",
+    "zh-Hant": "法軍佔領羅馬，將庇護六世擄往法國，他於囚禁中辭世；教宗國既失、教廷四散，繼任者只得在威尼斯由奧地利護持下選出。"
    }
   },
   {
@@ -10337,6 +10895,24 @@
     "en": "Rails joined in Utah cut a journey of months to a week, largely built by Chinese and Irish labour.",
     "zh-Hans": "两线在犹他接轨，数月路程缩为一周；筑路者多为华工与爱尔兰工人。",
     "zh-Hant": "兩線在猶他接軌，數月路程縮為一週；築路者多為華工與愛爾蘭工人。"
+   }
+  },
+  {
+   "id": "rome_taken_1870",
+   "year": 1870,
+   "era": "church",
+   "stream": "church",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "Italy Takes Rome from the Pope",
+    "zh-Hans": "意大利收取罗马",
+    "zh-Hant": "義大利取得羅馬"
+   },
+   "desc": {
+    "en": "Italian troops breached the wall at the Porta Pia and Rome became the capital of Italy, ending eleven centuries of papal rule. Pius IX refused the settlement and stayed within the Vatican, as his successors did until 1929.",
+    "zh-Hans": "意大利军队自庇亚门破墙而入，罗马成为意大利的首都，十一个世纪的教皇治权就此结束。庇护九世不接受这个局面，自居为梵蒂冈内的囚徒，历任继任者也是如此，直到1929年。",
+    "zh-Hant": "義大利軍隊自庇亞門破牆而入，羅馬成為義大利首都，十一個世紀的教宗治權就此結束。庇護九世不接受此一局面，自居為梵蒂岡中的囚徒，其後諸任教宗亦然，直至1929年。"
    }
   },
   {
@@ -11276,6 +11852,24 @@
    }
   },
   {
+   "id": "lateran_treaty",
+   "year": 1929,
+   "era": "church",
+   "stream": "church",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "The Lateran Treaty Creates Vatican City",
+    "zh-Hans": "拉特兰条约设立梵蒂冈城国",
+    "zh-Hant": "拉特朗條約設立梵蒂岡城國"
+   },
+   "desc": {
+    "en": "Italy and the Holy See settled the Roman Question: the pope recognised the Italian state with Rome as its capital, and Italy recognised his sovereignty over a hundred acres around St Peter's.",
+    "zh-Hans": "意大利与教廷了结罗马问题：教皇承认以罗马为首都的意大利，意大利承认教皇对圣彼得大教堂周围一小片土地的主权。",
+    "zh-Hant": "義大利與教廷了結羅馬問題：教宗承認以羅馬為首都的義大利，義大利承認教宗對聖伯多祿大殿周圍一小片土地的主權。"
+   }
+  },
+  {
    "id": "manchuria_occupied",
    "year": 1931,
    "era": "world",
@@ -12158,6 +12752,24 @@
    }
   },
   {
+   "id": "john_paul_ii_elected",
+   "year": 1978,
+   "era": "church",
+   "stream": "church",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "A Polish Pope Elected",
+    "zh-Hans": "波兰人当选教皇",
+    "zh-Hant": "波蘭人當選教宗"
+   },
+   "desc": {
+    "en": "John Paul II was the first non-Italian pope in 455 years and made 104 journeys abroad; the crowds that gathered on his 1979 visit to Poland were themselves a political fact.",
+    "zh-Hans": "若望保禄二世是四百五十五年来第一位非意大利籍教皇，出访一百零四次；1979年他回到波兰，聚集人群的规模本身就是一件政治事实。",
+    "zh-Hant": "若望保祿二世是四百五十五年來首位非義大利籍教宗，出訪一百零四次；1979年他重返波蘭，群眾聚集的規模本身便具政治分量。"
+   }
+  },
+  {
    "id": "tcv_chinese",
    "year": 1979,
    "era": "bible",
@@ -12626,6 +13238,24 @@
    }
   },
   {
+   "id": "benedict_resigns_francis",
+   "year": 2013,
+   "era": "church",
+   "stream": "church",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "A Pope Resigns, an Argentine Follows",
+    "zh-Hans": "教皇辞位，阿根廷人继任",
+    "zh-Hant": "教宗辭位，阿根廷人繼任"
+   },
+   "desc": {
+    "en": "Benedict XVI resigned for age and health, the first pope to do so since 1415, and the conclave elected Jorge Mario Bergoglio of Argentina, the first pope from the Americas and the first Jesuit.",
+    "zh-Hans": "本笃十六世以年老与健康为由辞去教皇之位，是1415年以来的头一次；枢机会议选出阿根廷的伯格里奥，第一位来自美洲、也是第一位耶稣会出身的教皇。",
+    "zh-Hant": "本篤十六世以年邁與健康為由辭去教宗之位，為1415年以來首見；樞機會議選出阿根廷的柏格里奧，是首位來自美洲、亦是首位出身耶穌會的教宗。"
+   }
+  },
+  {
    "id": "covid_pandemic",
    "year": 2020,
    "era": "world",
@@ -12695,6 +13325,24 @@
     "en": "Russian forces invaded Ukraine in February 2022, after fighting in the east and Crimea since 2014.",
     "zh-Hans": "2022年2月俄军入侵乌克兰；此前自2014年起，乌东与克里米亚已有战事。",
     "zh-Hant": "2022年2月俄軍入侵烏克蘭；此前自2014年起，烏東與克里米亞已有戰事。"
+   }
+  },
+  {
+   "id": "leo_xiv_elected",
+   "year": 2025,
+   "era": "church",
+   "stream": "church",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "The First Pope from the United States",
+    "zh-Hans": "第一位美国出生的教皇",
+    "zh-Hant": "首位美國出生的教宗"
+   },
+   "desc": {
+    "en": "After the death of Francis the conclave elected Robert Prevost, an Augustinian who had served many years in Peru; he took the name Leo XIV, the first pope born in the United States.",
+    "zh-Hans": "方济各去世后，枢机会议选出普雷沃斯特；他是奥斯定会士，多年在秘鲁牧养，取名良十四世，为第一位在美国出生的教皇。",
+    "zh-Hant": "方濟各離世後，樞機會議選出普雷沃斯特；他是奧斯定會士，多年在祕魯牧養，取名良十四世，是首位在美國出生的教宗。"
    }
   }
  ]
