@@ -3552,6 +3552,24 @@
    }
   },
   {
+   "id": "chavin_de_huantar",
+   "year": -900,
+   "era": "world",
+   "stream": "americas",
+   "basis": "conventional",
+   "approximate": true,
+   "title": {
+    "en": "Chavin de Huantar Rises in the Andes",
+    "zh-Hans": "查文德万塔尔在安第斯山兴起",
+    "zh-Hant": "查文德萬塔爾在安第斯山興起"
+   },
+   "desc": {
+    "en": "A stone temple complex in the northern Peruvian highlands anchors the earliest widely shared culture of the Andes, about 900 to 200 BC.",
+    "zh-Hans": "秘鲁北部高地的石造神庙建筑群，是安第斯地区最早广泛传播的文化中心，约公元前900年至前200年。",
+    "zh-Hant": "秘魯北部高地的石造神廟建築群，是安第斯地區最早廣泛傳播的文化中心，約公元前900年至前200年。"
+   }
+  },
+  {
    "id": "battle_qarqar",
    "year": -853,
    "era": "world",
@@ -4192,6 +4210,24 @@
     "en": "Chinese furnaces pour liquid iron for ploughs and pots; European foundries cast iron from about 1400.",
     "zh-Hans": "中国的高炉炼出液态生铁，铸成犁铧与锅釜；欧洲的铸铁约始于1400年。",
     "zh-Hant": "中國的高爐煉出液態生鐵，鑄成犁鏵與鍋釜；歐洲的鑄鐵約始於1400年。"
+   }
+  },
+  {
+   "id": "nazca_lines",
+   "year": -500,
+   "era": "world",
+   "stream": "americas",
+   "basis": "conventional",
+   "approximate": true,
+   "title": {
+    "en": "Nazca Lines Cut into the Peruvian Desert",
+    "zh-Hans": "纳斯卡线条刻于秘鲁荒漠",
+    "zh-Hant": "納斯卡線條刻於秘魯荒漠"
+   },
+   "desc": {
+    "en": "Animals, plants and figures kilometres long are scratched into the desert floor between 500 BC and AD 500, and are still not fully explained.",
+    "zh-Hans": "在公元前500年至公元500年间，人们在荒漠地面刻出长达数公里的动物、植物与图形，其用途至今未有定论。",
+    "zh-Hant": "在公元前500年至公元500年間，人們在荒漠地面刻出長達數公里的動物、植物與圖形，其用途至今未有定論。"
    }
   },
   {
@@ -7187,6 +7223,24 @@
    }
   },
   {
+   "id": "cahokia_rises",
+   "year": 1050,
+   "era": "world",
+   "stream": "americas",
+   "basis": "conventional",
+   "approximate": true,
+   "title": {
+    "en": "Cahokia Becomes the Largest City North of Mexico",
+    "zh-Hans": "卡霍基亚成为墨西哥以北最大城邑",
+    "zh-Hant": "卡霍基亞成為墨西哥以北最大城邑"
+   },
+   "desc": {
+    "en": "A mound city on the Mississippi reaches perhaps twenty thousand people at its height, the size of a large European city of the day.",
+    "zh-Hans": "密西西比河畔的土墩城邑，鼎盛时人口或达两万，与当时欧洲大城相当。",
+    "zh-Hant": "密西西比河畔的土墩城邑，鼎盛時人口或達兩萬，與當時歐洲大城相當。"
+   }
+  },
+  {
    "id": "great_schism",
    "year": 1054,
    "era": "church",
@@ -7961,6 +8015,42 @@
    }
   },
   {
+   "id": "cabral_brazil",
+   "year": 1500,
+   "era": "world",
+   "stream": "americas",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "Cabral Lands on the Coast of Brazil",
+    "zh-Hans": "卡布拉尔抵达巴西海岸",
+    "zh-Hant": "卡布拉爾抵達巴西海岸"
+   },
+   "desc": {
+    "en": "A Portuguese fleet bound for India makes landfall in the west and claims the coast, dividing the continent's future between two crowns.",
+    "zh-Hans": "一支驶往印度的葡萄牙船队西行登陆，宣示占有该海岸，此后美洲南部分属两国。",
+    "zh-Hant": "一支駛往印度的葡萄牙船隊西行登陸，宣示占有該海岸，此後美洲南部分屬兩國。"
+   }
+  },
+  {
+   "id": "waldseemuller_map",
+   "year": 1507,
+   "era": "world",
+   "stream": "americas",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "A Map Names the New Land America",
+    "zh-Hans": "地图首次将新大陆命名为亚美利加",
+    "zh-Hant": "地圖首次將新大陸命名為亞美利加"
+   },
+   "desc": {
+    "en": "Waldseemuller's world map prints the name America, after Amerigo Vespucci, who had argued the land was a continent and not Asia.",
+    "zh-Hans": "瓦尔德泽米勒的世界地图首次印出「亚美利加」之名，取自韦斯普奇——他主张这片土地是新大陆，而非亚洲。",
+    "zh-Hant": "瓦爾德澤米勒的世界地圖首次印出「亞美利加」之名，取自韋斯普奇——他主張這片土地是新大陸，而非亞洲。"
+   }
+  },
+  {
    "id": "sistine_ceiling",
    "year": 1512,
    "era": "world",
@@ -7976,6 +8066,24 @@
     "en": "Four years of painting in the Vatican chapel produced one of the best-known works of the Renaissance.",
     "zh-Hans": "历时四年在梵蒂冈礼拜堂绘成，是文艺复兴最广为人知的作品之一。",
     "zh-Hant": "歷時四年在梵蒂岡禮拜堂繪成，是文藝復興最廣為人知的作品之一。"
+   }
+  },
+  {
+   "id": "balboa_pacific",
+   "year": 1513,
+   "era": "world",
+   "stream": "americas",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "Balboa Sights the Pacific from Panama",
+    "zh-Hans": "巴尔博亚在巴拿马望见太平洋",
+    "zh-Hant": "巴爾博亞在巴拿馬望見太平洋"
+   },
+   "desc": {
+    "en": "Crossing the isthmus, a Spanish party sees the ocean on the far side and learns that the new land is not the edge of Asia.",
+    "zh-Hans": "西班牙一行人横越地峡，望见彼岸大洋，方知这片新土并非亚洲边缘。",
+    "zh-Hant": "西班牙一行人橫越地峽，望見彼岸大洋，方知這片新土並非亞洲邊緣。"
    }
   },
   {
@@ -8231,6 +8339,24 @@
    }
   },
   {
+   "id": "desoto_mississippi",
+   "year": 1541,
+   "era": "world",
+   "stream": "americas",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "De Soto's Expedition Crosses the Mississippi",
+    "zh-Hans": "德索托远征队渡过密西西比河",
+    "zh-Hant": "德索托遠征隊渡過密西西比河"
+   },
+   "desc": {
+    "en": "The first Europeans to record the great river cross it in the south; the expedition leaves disease behind it that reshapes the interior.",
+    "zh-Hans": "首批留下记载的欧洲人在南段渡河；远征队沿途留下的疫病，深刻改变了内陆各族。",
+    "zh-Hant": "首批留下記載的歐洲人在南段渡河；遠征隊沿途留下的疫病，深刻改變了內陸各族。"
+   }
+  },
+  {
    "id": "copernicus_revolutions",
    "year": 1543,
    "era": "world",
@@ -8336,6 +8462,24 @@
     "en": "A warm and pastoral summary of reformed faith in question and answer, still widely used.",
     "zh-Hans": "以问答形式温和牧养地总结改革宗信仰，至今仍广被使用。",
     "zh-Hant": "以問答形式溫和牧養地總結改革宗信仰，至今仍廣被使用。"
+   }
+  },
+  {
+   "id": "st_augustine_founded",
+   "year": 1565,
+   "era": "world",
+   "stream": "americas",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "St. Augustine Founded in Florida",
+    "zh-Hans": "圣奥古斯丁城建于佛罗里达",
+    "zh-Hant": "聖奧古斯丁城建於佛羅里達"
+   },
+   "desc": {
+    "en": "A Spanish expedition plants the oldest continuously occupied European settlement in what is now the United States, forty-two years before Jamestown.",
+    "zh-Hans": "西班牙远征队所建，是今日美国境内最早持续有人居住的欧洲聚落，比詹姆斯敦早四十二年。",
+    "zh-Hant": "西班牙遠征隊所建，是今日美國境內最早持續有人居住的歐洲聚落，比詹姆斯敦早四十二年。"
    }
   },
   {
@@ -8465,6 +8609,42 @@
    }
   },
   {
+   "id": "jamestown_founded",
+   "year": 1607,
+   "era": "world",
+   "stream": "americas",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "Jamestown Founded in Virginia",
+    "zh-Hans": "詹姆斯敦建于弗吉尼亚",
+    "zh-Hant": "詹姆斯敦建於維吉尼亞"
+   },
+   "desc": {
+    "en": "The first lasting English settlement in North America; most of its first colonists died within a year.",
+    "zh-Hans": "英格兰人在北美的第一个长期聚落；首批殖民者多在一年内死去。",
+    "zh-Hant": "英格蘭人在北美的第一個長期聚落；首批殖民者多在一年內死去。"
+   }
+  },
+  {
+   "id": "quebec_founded",
+   "year": 1608,
+   "era": "world",
+   "stream": "americas",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "Champlain Founds Quebec",
+    "zh-Hans": "尚普兰建立魁北克",
+    "zh-Hant": "尚普蘭建立魁北克"
+   },
+   "desc": {
+    "en": "A fur-trading post below the cliff at Cape Diamond becomes the base of New France and the oldest French city in the Americas.",
+    "zh-Hans": "钻石角崖下的皮毛贸易站，成为新法兰西的根据地，也是美洲最古老的法国城市。",
+    "zh-Hant": "鑽石角崖下的皮毛貿易站，成為新法蘭西的根據地，也是美洲最古老的法國城市。"
+   }
+  },
+  {
    "id": "kepler_elliptical_orbits",
    "year": 1609,
    "era": "world",
@@ -8537,6 +8717,24 @@
    }
   },
   {
+   "id": "mayflower_compact",
+   "year": 1620,
+   "era": "world",
+   "stream": "americas",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "The Mayflower Compact at Plymouth",
+    "zh-Hans": "五月花号公约签于普利茅斯",
+    "zh-Hant": "五月花號公約簽於普利茅斯"
+   },
+   "desc": {
+    "en": "Before landing, the passengers bind themselves by signed agreement into a civil body politic, an early written basis for self-government.",
+    "zh-Hans": "登陆之前，船上乘客签约结为公民政治体，成为自治政府最早的成文依据之一。",
+    "zh-Hant": "登陸之前，船上乘客簽約結為公民政治體，成為自治政府最早的成文依據之一。"
+   }
+  },
+  {
    "id": "propaganda_fide",
    "year": 1622,
    "era": "church",
@@ -8573,6 +8771,24 @@
    }
   },
   {
+   "id": "new_amsterdam_founded",
+   "year": 1625,
+   "era": "world",
+   "stream": "americas",
+   "basis": "conventional",
+   "approximate": true,
+   "title": {
+    "en": "New Amsterdam Founded on Manhattan",
+    "zh-Hans": "新阿姆斯特丹建于曼哈顿",
+    "zh-Hant": "新阿姆斯特丹建於曼哈頓"
+   },
+   "desc": {
+    "en": "The Dutch West India Company settles the tip of the island; the town is surrendered to England in 1664 and renamed New York.",
+    "zh-Hans": "荷兰西印度公司在岛尖设镇；1664年让与英格兰，改名纽约。",
+    "zh-Hant": "荷蘭西印度公司在島尖設鎮；1664年讓與英格蘭，改名紐約。"
+   }
+  },
+  {
    "id": "harvey_circulation",
    "year": 1628,
    "era": "world",
@@ -8588,6 +8804,24 @@
     "en": "William Harvey demonstrates that the heart pumps a fixed volume of blood round the body.",
     "zh-Hans": "威廉·哈维证明心脏把定量的血液泵送并循环全身。",
     "zh-Hant": "威廉·哈維證明心臟把定量的血液泵送並循環全身。"
+   }
+  },
+  {
+   "id": "providence_founded",
+   "year": 1636,
+   "era": "world",
+   "stream": "americas",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "Roger Williams Founds Providence",
+    "zh-Hans": "罗杰·威廉斯创建普罗维登斯",
+    "zh-Hant": "羅傑·威廉斯創建普羅維登斯"
+   },
+   "desc": {
+    "en": "Banished from Massachusetts for holding that the magistrate has no authority over conscience, he founds a colony on that principle.",
+    "zh-Hans": "他因主张官府无权管辖良心而被逐出马萨诸塞，遂依此原则另建殖民地。",
+    "zh-Hant": "他因主張官府無權管轄良心而被逐出麻薩諸塞，遂依此原則另建殖民地。"
    }
   },
   {
@@ -8753,6 +8987,24 @@
    }
   },
   {
+   "id": "la_salle_louisiana",
+   "year": 1682,
+   "era": "world",
+   "stream": "americas",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "La Salle Claims the Mississippi Basin",
+    "zh-Hans": "拉萨尔宣告占有密西西比流域",
+    "zh-Hant": "拉薩爾宣告占有密西西比流域"
+   },
+   "desc": {
+    "en": "Reaching the river's mouth, he claims the whole watershed for France and names it Louisiana.",
+    "zh-Hans": "他抵达河口，为法国宣告占有整个流域，命名为路易斯安那。",
+    "zh-Hant": "他抵達河口，為法國宣告占有整個流域，命名為路易斯安那。"
+   }
+  },
+  {
    "id": "newton_principia",
    "year": 1687,
    "era": "world",
@@ -8768,6 +9020,24 @@
     "en": "Three laws of motion and universal gravitation set the framework physics used for two centuries.",
     "zh-Hans": "书中提出三大运动定律与万有引力，为其后两百年的物理学奠定框架。",
     "zh-Hant": "書中提出三大運動定律與萬有引力，為其後兩百年的物理學奠定框架。"
+   }
+  },
+  {
+   "id": "salem_witch_trials",
+   "year": 1692,
+   "era": "world",
+   "stream": "americas",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "The Salem Witch Trials",
+    "zh-Hans": "塞勒姆女巫审判",
+    "zh-Hant": "塞勒姆女巫審判"
+   },
+   "desc": {
+    "en": "Twenty people are executed in Massachusetts on spectral evidence; the colony later called the trials a wrong and kept a day of fasting for them.",
+    "zh-Hans": "马萨诸塞有二十人因「幽灵证据」被处死；殖民地后来承认此案有错，并为之守禁食之日。",
+    "zh-Hant": "麻薩諸塞有二十人因「幽靈證據」被處死；殖民地後來承認此案有錯，並為之守禁食之日。"
    }
   },
   {
@@ -8951,6 +9221,24 @@
    }
   },
   {
+   "id": "us_constitution_signed",
+   "year": 1787,
+   "era": "world",
+   "stream": "americas",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "The United States Constitution Signed",
+    "zh-Hans": "美国宪法签署",
+    "zh-Hant": "美國憲法簽署"
+   },
+   "desc": {
+    "en": "A written frame of government with separated powers, ratified in 1788 and amended in 1791 by a bill of rights that opens with the free exercise of religion.",
+    "zh-Hans": "一部分权制衡的成文政体，1788年批准，1791年增补权利法案，其首条即为宗教信仰自由。",
+    "zh-Hant": "一部分權制衡的成文政體，1788年批准，1791年增補權利法案，其首條即為宗教信仰自由。"
+   }
+  },
+  {
    "id": "lavoisier_chemistry",
    "year": 1789,
    "era": "world",
@@ -9059,6 +9347,24 @@
    }
   },
   {
+   "id": "louisiana_purchase",
+   "year": 1803,
+   "era": "world",
+   "stream": "americas",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "The Louisiana Purchase",
+    "zh-Hans": "路易斯安那购地",
+    "zh-Hant": "路易斯安那購地"
+   },
+   "desc": {
+    "en": "France sells its claim to the Mississippi basin and the United States doubles in size overnight, at the cost of the nations already living there.",
+    "zh-Hans": "法国出售其对密西西比流域的主权主张，美国国土一夜倍增，代价则由原住其地的各族承担。",
+    "zh-Hant": "法國出售其對密西西比流域的主權主張，美國國土一夜倍增，代價則由原住其地的各族承擔。"
+   }
+  },
+  {
    "id": "bfbs_founded",
    "year": 1804,
    "era": "bible",
@@ -9095,6 +9401,24 @@
    }
   },
   {
+   "id": "haiti_independence",
+   "year": 1804,
+   "era": "world",
+   "stream": "americas",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "Haiti Wins Independence",
+    "zh-Hans": "海地独立",
+    "zh-Hant": "海地獨立"
+   },
+   "desc": {
+    "en": "The only state founded by a successful revolt of the enslaved, and the second republic in the Americas.",
+    "zh-Hans": "史上唯一由奴隶起义成功而立国者，也是美洲的第二个共和国。",
+    "zh-Hant": "史上唯一由奴隸起義成功而立國者，也是美洲的第二個共和國。"
+   }
+  },
+  {
    "id": "morrison_china",
    "year": 1807,
    "era": "church",
@@ -9128,6 +9452,24 @@
     "en": "Wilberforce's twenty-year campaign, driven by evangelical conviction, ends British trafficking in slaves.",
     "zh-Hans": "威伯福斯出于福音信念的二十年奔走，终止了英国的奴隶买卖。",
     "zh-Hant": "威伯福斯出於福音信念的二十年奔走，終止了英國的奴隸買賣。"
+   }
+  },
+  {
+   "id": "hidalgo_grito",
+   "year": 1810,
+   "era": "world",
+   "stream": "americas",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "Hidalgo's Call Begins Mexico's Revolt",
+    "zh-Hans": "伊达尔戈之呼揭开墨西哥独立",
+    "zh-Hant": "伊達爾戈之呼揭開墨西哥獨立"
+   },
+   "desc": {
+    "en": "A parish priest rings his church bell and calls his people to rise; Mexico's independence is secured in 1821.",
+    "zh-Hans": "一位堂区神父敲响教堂钟声，号召民众起事；墨西哥于1821年独立。",
+    "zh-Hant": "一位堂區神父敲響教堂鐘聲，號召民眾起事；墨西哥於1821年獨立。"
    }
   },
   {
@@ -9185,6 +9527,24 @@
    }
   },
   {
+   "id": "brazil_independence",
+   "year": 1822,
+   "era": "world",
+   "stream": "americas",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "Brazil Declares Independence",
+    "zh-Hans": "巴西宣告独立",
+    "zh-Hant": "巴西宣告獨立"
+   },
+   "desc": {
+    "en": "The heir to the Portuguese throne declares the colony independent and is crowned its emperor, an empire that lasts until 1889.",
+    "zh-Hans": "葡萄牙王储宣告殖民地独立并即位为帝，此帝国延续至1889年。",
+    "zh-Hant": "葡萄牙王儲宣告殖民地獨立並即位為帝，此帝國延續至1889年。"
+   }
+  },
+  {
    "id": "morrison_bible",
    "year": 1823,
    "era": "bible",
@@ -9203,6 +9563,24 @@
    }
   },
   {
+   "id": "monroe_doctrine",
+   "year": 1823,
+   "era": "world",
+   "stream": "americas",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "The Monroe Doctrine",
+    "zh-Hans": "门罗主义",
+    "zh-Hant": "門羅主義"
+   },
+   "desc": {
+    "en": "The United States tells Europe that the Americas are closed to further colonisation, a claim it could not yet enforce.",
+    "zh-Hans": "美国向欧洲宣告美洲不再接受殖民，尽管当时尚无力执行。",
+    "zh-Hant": "美國向歐洲宣告美洲不再接受殖民，儘管當時尚無力執行。"
+   }
+  },
+  {
    "id": "beethoven_ninth_symphony",
    "year": 1824,
    "era": "world",
@@ -9218,6 +9596,24 @@
     "en": "A deaf composer's choral symphony premiered in Vienna and set the pattern for Romantic orchestras.",
     "zh-Hans": "已经失聪的作曲家在维也纳首演此合唱交响曲，为浪漫派管弦乐立下典范。",
     "zh-Hant": "已經失聰的作曲家在維也納首演此合唱交響曲，為浪漫派管弦樂立下典範。"
+   }
+  },
+  {
+   "id": "battle_of_ayacucho",
+   "year": 1824,
+   "era": "world",
+   "stream": "americas",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "Ayacucho Ends Spanish Rule in South America",
+    "zh-Hans": "阿亚库乔之役终结西班牙在南美的统治",
+    "zh-Hant": "阿亞庫喬之役終結西班牙在南美的統治"
+   },
+   "desc": {
+    "en": "The last royalist army in the Andes is defeated, completing the independence of Spanish South America.",
+    "zh-Hans": "安第斯地区最后一支保王军战败，西属南美独立至此完成。",
+    "zh-Hant": "安第斯地區最後一支保王軍戰敗，西屬南美獨立至此完成。"
    }
   },
   {
@@ -9362,6 +9758,24 @@
     "en": "The potato crop failed repeatedly from 1845; by 1852 about a million had died and a million more emigrated.",
     "zh-Hans": "自1845年起马铃薯连年歉收；至1852年，约百万人死亡，另有百万人移居海外。",
     "zh-Hant": "自1845年起馬鈴薯連年歉收；至1852年，約百萬人死亡，另有百萬人移居海外。"
+   }
+  },
+  {
+   "id": "guadalupe_hidalgo",
+   "year": 1848,
+   "era": "world",
+   "stream": "americas",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "Mexico Cedes the Southwest",
+    "zh-Hans": "墨西哥割让西南地区",
+    "zh-Hant": "墨西哥割讓西南地區"
+   },
+   "desc": {
+    "en": "The treaty ending the Mexican-American War transfers about half of Mexico's territory, including California, to the United States.",
+    "zh-Hans": "结束美墨战争的条约，将墨西哥约一半国土（含加利福尼亚）转予美国。",
+    "zh-Hant": "結束美墨戰爭的條約，將墨西哥約一半國土（含加利福尼亞）轉予美國。"
    }
   },
   {
@@ -9527,6 +9941,24 @@
    }
   },
   {
+   "id": "american_civil_war",
+   "year": 1861,
+   "era": "world",
+   "stream": "americas",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "The American Civil War Begins",
+    "zh-Hans": "美国内战爆发",
+    "zh-Hant": "美國內戰爆發"
+   },
+   "desc": {
+    "en": "Four years of war over slavery and union; about six hundred thousand die, and it ends with emancipation.",
+    "zh-Hans": "为奴隶制与联邦存续而战，历时四年，约六十万人阵亡，终以废奴收场。",
+    "zh-Hant": "為奴隸制與聯邦存續而戰，歷時四年，約六十萬人陣亡，終以廢奴收場。"
+   }
+  },
+  {
    "id": "china_inland_mission",
    "year": 1865,
    "era": "church",
@@ -9653,6 +10085,24 @@
     "en": "The council opened in 1869 and defined papal primacy and infallibility in 1870 before adjourning.",
     "zh-Hans": "会议1869年开幕，1870年界定教宗的首席权与不能错误的特恩，随后休会。",
     "zh-Hant": "會議1869年開幕，1870年界定教宗的首席權與不能錯誤的特恩，隨後休會。"
+   }
+  },
+  {
+   "id": "transcontinental_railroad",
+   "year": 1869,
+   "era": "world",
+   "stream": "americas",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "The First Transcontinental Railroad Completed",
+    "zh-Hans": "首条横贯大陆铁路建成",
+    "zh-Hant": "首條橫貫大陸鐵路建成"
+   },
+   "desc": {
+    "en": "Rails joined in Utah cut a journey of months to a week, largely built by Chinese and Irish labour.",
+    "zh-Hans": "两线在犹他接轨，数月路程缩为一周；筑路者多为华工与爱尔兰工人。",
+    "zh-Hant": "兩線在猶他接軌，數月路程縮為一週；築路者多為華工與愛爾蘭工人。"
    }
   },
   {
@@ -9905,6 +10355,24 @@
     "en": "Becquerel finds that uranium emits rays; the Curies isolate polonium and radium two years later.",
     "zh-Hans": "贝克勒尔发现铀会放出射线；两年后居里夫妇分离出钋与镭。",
     "zh-Hant": "貝克勒發現鈾會放出射線；兩年後居禮夫婦分離出釙與鐳。"
+   }
+  },
+  {
+   "id": "spanish_american_war",
+   "year": 1898,
+   "era": "world",
+   "stream": "americas",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "The Spanish-American War",
+    "zh-Hans": "美西战争",
+    "zh-Hant": "美西戰爭"
+   },
+   "desc": {
+    "en": "Spain loses Cuba, Puerto Rico, Guam and the Philippines; the United States becomes a power beyond its own hemisphere.",
+    "zh-Hans": "西班牙失去古巴、波多黎各、关岛与菲律宾；美国自此成为跨半球的强权。",
+    "zh-Hant": "西班牙失去古巴、波多黎各、關島與菲律賓；美國自此成為跨半球的強權。"
    }
   },
   {
@@ -10193,6 +10661,24 @@
     "en": "War broke out across Europe in July and August 1914 and drew in powers around the world.",
     "zh-Hans": "1914年七八月间战火在欧洲燃起，随后卷入世界各强国。",
     "zh-Hant": "1914年七八月間戰火在歐洲燃起，隨後捲入世界各強國。"
+   }
+  },
+  {
+   "id": "panama_canal_opens",
+   "year": 1914,
+   "era": "world",
+   "stream": "americas",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "The Panama Canal Opens",
+    "zh-Hans": "巴拿马运河通航",
+    "zh-Hant": "巴拿馬運河通航"
+   },
+   "desc": {
+    "en": "Ships pass between the oceans without rounding South America; the work cost tens of thousands of lives, most of them to disease.",
+    "zh-Hans": "船只不必绕行南美即可往来两洋；工程夺去数万人性命，多数死于疫病。",
+    "zh-Hant": "船隻不必繞行南美即可往來兩洋；工程奪去數萬人性命，多數死於疫病。"
    }
   },
   {
