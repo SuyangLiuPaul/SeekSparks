@@ -1007,6 +1007,8 @@ class _AtlasPageState extends State<AtlasPage> {
       j.journey.localizedRange(locale),
       _s('journeyStops', '{n} stops', locale)
           .replaceAll('{n}', '${j.journey.waypointCount}'),
+      _s('journeyMarkers', '{n} markers', locale)
+          .replaceAll('{n}', '${j.markers.length}'),
       if (j.journey.provisionalCount > 0)
         _s('journeyProvisionalCount', '{n} provisional', locale)
             .replaceAll('{n}', '${j.journey.provisionalCount}'),

@@ -19,6 +19,7 @@ import 'package:seeksparks/models/bible_journey.dart';
 import 'package:seeksparks/models/bible_place.dart';
 import 'package:seeksparks/utils/journey_route.dart';
 import 'package:seeksparks/utils/place_geo.dart' show haversineKm;
+import 'package:seeksparks/constants/ui_strings.dart';
 
 void main() {
   final places = parseGazetteer(
@@ -56,6 +57,32 @@ void main() {
           expect(j.basis[locale], isNotNull, reason: '${j.id} basis $locale');
         }
       }
+    });
+
+    test('the marker count the row prints is the count the map paints', () {
+      // Measured over the shipped assets, and it is the whole reason the
+      // row now prints it: a reader who ticks the wilderness box reads
+      // "42 stops" and can count 18 dots. `markers` is what
+      // `place_map.dart:1201` walks, so this is the drawn number and not
+      // a second estimate of it.
+      const expected = <String, int>{
+        'paul-1': 10,
+        'paul-2': 18,
+        'paul-3': 20,
+        'paul-rome': 16,
+        'exodus-wilderness': 18,
+        'jesus-mark': 11,
+      };
+      for (final r in resolved) {
+        expect(r.markers.length, expected[r.id],
+            reason: '${r.id}: the map draws one marker per POSITION');
+      }
+      // paul-rome draws MORE markers than it has waypoints, because its
+      // two asides take hollow markers without being stops. Any wording
+      // of the form "only N can be drawn" would be false here.
+      final rome = resolved.firstWhere((r) => r.id == 'paul-rome');
+      expect(rome.markers.length,
+          greaterThan(rome.journey.waypointCount));
     });
   });
 
@@ -534,6 +561,36 @@ void main() {
       }
       expect(expected.keys.toSet(), resolved.map((r) => r.id).toSet(),
           reason: 'a route was added or renamed without a pinned total');
+    });
+  });
+
+  // The legend under the toggles (`journeysKey`, atlas_page.dart:976) is
+  // on screen at the same moment as every route's own two counts, so a
+  // sentence in it that names a DIRECTION is a claim about numbers the
+  // reader can read one line above it.
+  group('the legend claims no direction the routes refute', () {
+    test('a route draws MORE markers than it has stops', () {
+      // paul-rome is the only route carrying asides (2). An aside is not
+      // a stop — bible_journey.dart:218 counts it out of waypointCount —
+      // but it still takes a hollow marker, so the total goes UP.
+      final more = resolved
+          .where((r) => r.markers.length > r.journey.waypointCount)
+          .map((r) => r.id)
+          .toList();
+      expect(more, contains('paul-rome'),
+          reason: 'the legend may not say markers are always the fewer');
+    });
+
+    test('the legend never says the marker count is the smaller one', () {
+      // Measured 2026-09-01: paul-rome's row prints
+      // "14 站 · 16 个标记" while this legend is on screen beneath it.
+      // A directional sentence here contradicts the row above it using
+      // the reader's own printed numbers — the same defect class as the
+      // small-screen advisory that argued against its own figures.
+      expect(uiStrings['journeysKey']!['en']!,
+          isNot(contains('fewer marker')));
+      expect(uiStrings['journeysKey']!['zh-Hans']!, isNot(contains('少于')));
+      expect(uiStrings['journeysKey']!['zh-Hant']!, isNot(contains('少於')));
     });
   });
 }

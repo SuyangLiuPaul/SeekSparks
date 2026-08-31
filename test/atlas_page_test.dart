@@ -430,4 +430,33 @@ void main() {
 
     await unmount(tester);
   });
+
+  testWidgets('the journeys switch says how many markers it will draw',
+      (tester) async {
+    await pump(tester, const Size(1440, 1000));
+
+    // The Journeys block lists every route with its own checkbox, and
+    // ticking that box does NOT open the itinerary — which is exactly
+    // why the reconciliation has to be on this row. 42 stations, 18
+    // dots.
+    //
+    // The subtitle is one joined Text ('range · N 站 · N 个标记'), never
+    // a standalone '42 站' widget — measured directly against the real
+    // tree, not the scroll/mount issue the neighbouring 4000px tests
+    // guard against (this block is a SingleChildScrollView, not a lazy
+    // ListView, so nothing here is unmounted). And '18 个标记' alone is
+    // not unique: paul-2 (19 waypoints) also resolves to 18 markers, so
+    // the two counts are asserted together, which only the wilderness
+    // route's row can print.
+    expect(find.textContaining('42 站 · 18 个标记'), findsOneWidget);
+
+    // And the route that goes the OTHER way, on the same screen: 14
+    // stops, 16 markers, because its two asides take hollow markers
+    // without being stops. This is unique to paul-rome — jesus-mark also
+    // has 14 stops but prints "14 站 · 11 个标记".
+    expect(find.textContaining('14 站 · 16 个标记'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+
+    await unmount(tester);
+  });
 }

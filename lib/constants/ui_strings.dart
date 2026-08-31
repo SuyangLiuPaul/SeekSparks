@@ -8781,15 +8781,29 @@ const uiStrings = {
   'journeysKey': {
     'zh-Hans': '实线：陆路。长虚线：水路。短虚线：只记到达，未记路径。点线：经文没有记他们到过此地。'
         '空心圈：经文提到这地方，但他们并没有到（如非尼基港、赛耳底沙洲）。'
-        '标记的形状表示这条行程出自哪一卷书。',
+        '标记的形状表示这条行程出自哪一卷书。'
+        '标记代表位置，不代表到访次数：同一地点去过两次只有一个标记；'
+        '地名录把几站放在同一坐标时，这几站共用一个标记，站号一并列在上面；'
+        '地名录查不到坐标的站没有标记。而空心圈本身不是行程的一站，'
+        '却占一个标记。所以标记数和站数是两个数，两边都可能更大。',
     'zh-Hant': '實線：陸路。長虛線：水路。短虛線：只記到達，未記路徑。點線：經文沒有記他們到過此地。'
         '空心圈：經文提到這地方，但他們並沒有到（如非尼基港、賽耳底沙洲）。'
-        '標記的形狀表示這條行程出自哪一卷書。',
+        '標記的形狀表示這條行程出自哪一卷書。'
+        '標記代表位置，不代表到訪次數：同一地點去過兩次只有一個標記；'
+        '地名錄把幾站放在同一座標時，這幾站共用一個標記，站號一併列在上面；'
+        '地名錄查不到座標的站沒有標記。而空心圈本身不是行程的一站，'
+        '卻佔一個標記。所以標記數和站數是兩個數，兩邊都可能更大。',
     'en': 'Solid: by land. Long dash: by sea. Short dash: the arrival is '
         'named, the way is not. Dots: the text does not put them here. '
         'Hollow ring: named by the narrative but never reached — no line '
         'joins it. The shape of a stop marks which book the itinerary is '
-        'read out of.',
+        'read out of. A marker is a position, not a visit: a place '
+        'reached twice takes one, camps the gazetteer puts at one point '
+        'share one marker carrying all of their numbers, and a stop the '
+        'gazetteer cannot place takes none — while a hollow ring takes a '
+        'marker without being a stop at all. So the marker count and the '
+        'stop count are two different numbers, and either can be the '
+        'larger.',
   },
   'journeyShowTip': {
     'zh-Hans': '在地图上画出这条路线',
@@ -8800,6 +8814,19 @@ const uiStrings = {
     'zh-Hans': '{n} 站',
     'zh-Hant': '{n} 站',
     'en': '{n} stops',
+  },
+  // The number the reader can actually count on the map, printed beside
+  // the number of stops because the two differ on EVERY route and the
+  // page never said why. A marker is a POSITION: a place reached twice
+  // takes one, consecutive camps the gazetteer puts at one point share
+  // one, a stop with no coordinates takes none, and an aside takes one
+  // without being a stop at all — which is why this can be larger than
+  // the stop count as well as smaller. See `journeysKey` for the wording
+  // that explains it.
+  'journeyMarkers': {
+    'zh-Hans': '{n} 个标记',
+    'zh-Hant': '{n} 個標記',
+    'en': '{n} markers',
   },
   'journeyProvisionalCount': {
     'zh-Hans': '其中 {n} 站为推定',
