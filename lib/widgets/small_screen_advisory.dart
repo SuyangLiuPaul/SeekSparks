@@ -11,7 +11,12 @@ import 'package:seeksparks/utils/workbench_fit.dart';
 
 /// The sibling app. SeekSparks was forked from it; on a phone it is
 /// the honest recommendation, not a competitor.
-const String kYsWordsUrl = 'https://yswords.netlify.app';
+///
+/// The canonical home, not the Netlify subdomain it is also served on:
+/// this gate is the one screen a phone reader ever sees, so the address
+/// it hands them is the one they will remember and type again. Same
+/// family as this app's own `sword.yahwehword.com`.
+const String kYsWordsUrl = 'https://yahwehword.com';
 
 /// Shows the advisory instead of the app on a viewport that cannot
 /// carry the workbench.
