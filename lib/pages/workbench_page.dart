@@ -2417,6 +2417,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
             id,
             '${bookNameInScript(book, script)} ${v.chapter}:${v.verse}',
           ),
+          onOpenJourney: (id) => pushPage(AtlasPage(initialRouteIds: [id])),
         );
 
       case AnalysisTab.sermons:

@@ -19,6 +19,7 @@ import 'package:provider/provider.dart';
 import 'package:seeksparks/constants/book_name_mapping.dart' show BookScript;
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/bible_place.dart';
+import 'package:seeksparks/services/journeys_service.dart';
 import 'package:seeksparks/services/places_service.dart';
 import 'package:seeksparks/utils/place_geo.dart' show BaseMap;
 import 'package:seeksparks/utils/travel_time.dart';
@@ -35,6 +36,7 @@ void main() {
   late List<BiblePlace> jonah1;
   setUpAll(() async {
     await PlacesService.all();
+    await JourneysService.all();
     baseMap = await PlacesService.baseMap();
     jonah1 = await PlacesService.forChapter('Jonah', 1);
   });
@@ -65,6 +67,7 @@ void main() {
           locale: locale,
           script: script,
           onOpenAtlas: (_, __) {},
+          onOpenJourney: (_) {},
         );
 
     for (final width in const [320.0, 560.0]) {
@@ -116,6 +119,7 @@ void main() {
           handed = places;
           calls++;
         },
+        onOpenJourney: (_) {},
       )));
       await settle(tester);
 
@@ -145,11 +149,95 @@ void main() {
         locale: 'en',
         script: BookScript.english,
         onOpenAtlas: _ignore,
+        onOpenJourney: _ignoreJourney,
       )));
       await settle(tester);
 
       expect(tester.takeException(), isNull);
       expect(find.textContaining('names no place'), findsOneWidget);
+    });
+  });
+
+  group('PlacesPane journeys', () {
+    testWidgets(
+        'the chapter the first journey opens in says so, and says which '
+        'stop this verse is', (tester) async {
+      await tester.pumpWidget(host(PlacesPane(
+        englishBook: 'Acts',
+        chapter: 13,
+        verse: 4,
+        locale: 'en',
+        script: BookScript.english,
+        onOpenAtlas: _ignore,
+        onOpenJourney: _ignoreJourney,
+      )));
+      await settle(tester);
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('Journeys through this passage'), findsOneWidget);
+      expect(find.text("Paul's first journey"), findsOneWidget);
+      expect(find.textContaining('This verse: Stop 2'), findsOneWidget);
+      expect(find.textContaining('7 stops in this chapter'), findsOneWidget);
+    });
+
+    testWidgets('a chapter no journey touches shows no journey section',
+        (tester) async {
+      await tester.pumpWidget(host(PlacesPane(
+        englishBook: 'Jonah',
+        chapter: 1,
+        verse: 3,
+        locale: 'en',
+        script: BookScript.english,
+        onOpenAtlas: _ignore,
+        onOpenJourney: _ignoreJourney,
+      )));
+      await settle(tester);
+
+      expect(find.byKey(const Key('places-journeys')), findsNothing);
+      expect(find.textContaining('Journeys through'), findsNothing);
+    });
+
+    testWidgets('tapping a journey asks for the Atlas with that route',
+        (tester) async {
+      String? opened;
+      var calls = 0;
+      var atlasCalls = 0;
+      await tester.pumpWidget(host(PlacesPane(
+        englishBook: 'Acts',
+        chapter: 13,
+        verse: 4,
+        locale: 'en',
+        script: BookScript.english,
+        onOpenAtlas: (_, __) => atlasCalls++,
+        onOpenJourney: (id) {
+          opened = id;
+          calls++;
+        },
+      )));
+      await settle(tester);
+
+      await tester.tap(find.text("Paul's first journey"));
+      await settle(tester);
+      expect(calls, 1);
+      expect(opened, 'paul-1');
+      expect(atlasCalls, 0);
+    });
+
+    testWidgets('a Chinese reader sees the header and count in Chinese',
+        (tester) async {
+      await tester.pumpWidget(host(PlacesPane(
+        englishBook: 'Acts',
+        chapter: 13,
+        verse: 4,
+        locale: 'zh-Hans',
+        script: BookScript.simplified,
+        onOpenAtlas: _ignore,
+        onOpenJourney: _ignoreJourney,
+      )));
+      await settle(tester);
+
+      expect(find.text('经过本段的行程'), findsOneWidget);
+      expect(find.textContaining('本章共 7 站'), findsOneWidget);
     });
   });
 
@@ -562,3 +650,4 @@ void main() {
 }
 
 void _ignore(List<BiblePlace> places, String? id) {}
+void _ignoreJourney(String id) {}

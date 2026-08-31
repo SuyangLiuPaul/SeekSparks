@@ -8589,6 +8589,38 @@ const uiStrings = {
     'zh-Hant': '在地圖上檢視',
     'en': 'Show on map',
   },
+  // The passage→journey join (#317). "Runs through" rather than "is",
+  // because a chapter is not a journey: Acts 18 carries the end of the
+  // second journey and the start of the third, and a header saying
+  // "this chapter IS a journey" would be false on the one chapter where
+  // two of them meet.
+  'placesJourneysHeader': {
+    'zh-Hans': '经过本段的行程',
+    'zh-Hant': '經過本段的行程',
+    'en': 'Journeys through this passage',
+  },
+  // {stops} is a joined list, so it needs no plural form. The shipped
+  // asset's worst verse carries three stops (Acts 18:22) and 91 of the
+  // 106 cited verses carry exactly one.
+  'placesJourneyThisVerse': {
+    'zh-Hans': '本节：{stops}',
+    'zh-Hant': '本節：{stops}',
+    'en': 'This verse: {stops}',
+  },
+  // The chapter tier is a count, not a list — Numbers 33 puts 42 stops
+  // in one chapter. It counts the verse's own stops too, so the number
+  // is exactly true without a "more" or an "other" the reader would
+  // have to reason about.
+  'placesJourneyInChapter': {
+    'zh-Hans': '本章共 {n} 站',
+    'zh-Hant': '本章共 {n} 站',
+    'en': '{n} stops in this chapter',
+  },
+  'placesJourneyInChapterOne': {
+    'zh-Hans': '本章共 1 站',
+    'zh-Hant': '本章共 1 站',
+    'en': '1 stop in this chapter',
+  },
   'placesMapTitle': {
     'zh-Hans': '地图',
     'zh-Hant': '地圖',

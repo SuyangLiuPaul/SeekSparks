@@ -111,6 +111,7 @@ class AtlasPage extends StatefulWidget {
     this.subjectPlaces,
     this.subjectLabel,
     this.initialPlaceId,
+    this.initialRouteIds,
   });
 
   /// Places to open on — the passage's, when the Analysis pane sent the
@@ -125,6 +126,15 @@ class AtlasPage extends StatefulWidget {
 
   /// Selected and centred on open.
   final String? initialPlaceId;
+
+  /// Routes to switch on once the journeys land, the first of them
+  /// opened in the detail column.
+  ///
+  /// Applied inside the `JourneysService.all()` callback rather than in
+  /// `initState`, because a route id means nothing until the asset has
+  /// been resolved against the gazetteer — there is nothing to switch
+  /// on and nothing to frame the map to before then.
+  final List<String>? initialRouteIds;
 
   @override
   State<AtlasPage> createState() => _AtlasPageState();
@@ -234,6 +244,19 @@ class _AtlasPageState extends State<AtlasPage> {
         JourneysService.all().then((js) {
           if (!mounted) return;
           setState(() => _journeys = js);
+          final wanted = widget.initialRouteIds;
+          if (wanted == null || wanted.isEmpty) return;
+          ResolvedJourney? first;
+          for (final id in wanted) {
+            final j = _routeById(id);
+            if (j == null) continue;
+            _onRoutes.add(j.id);
+            first ??= j;
+          }
+          // `_openRoute` is the one that also opens the itinerary and
+          // frames the map, so the LAST call must be the one whose
+          // route the reader asked for first.
+          if (first != null) _openRoute(first);
         });
         // Last of the four: `maps_index.json` is 1 MB and nothing on
         // this page needs it until a place is selected.
