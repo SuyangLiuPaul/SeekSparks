@@ -75,6 +75,7 @@ import 'package:seeksparks/utils/jump_to_reference.dart' as jumper;
 import 'package:seeksparks/utils/navigate_to_reader.dart';
 import 'package:seeksparks/utils/place_geo.dart' show BaseMap;
 import 'package:seeksparks/utils/place_illustrations.dart';
+import 'package:seeksparks/utils/place_journeys.dart';
 import 'package:seeksparks/utils/reference_parser.dart' show parseReference;
 import 'package:seeksparks/utils/search_scope.dart'
     show limitSpecForBooks, scopeDisplayName, scopedCountLabel;
@@ -304,9 +305,11 @@ class _AtlasPageState extends State<AtlasPage> {
     );
   }
 
-  /// Open a route's itinerary, switching it on if it was off.
-  void _readRoute(ResolvedJourney j, BuildContext context, String locale,
-      BookScript script, double width) {
+  /// The state half of [_readRoute], without the decision about WHERE to
+  /// put the answer. Split out because the place panel opens a route
+  /// from inside the detail sheet, where the sheet must be replaced
+  /// rather than merely chosen.
+  void _openRoute(ResolvedJourney j) {
     _questionChanged(
       () {
         _onRoutes.add(j.id);
@@ -316,6 +319,19 @@ class _AtlasPageState extends State<AtlasPage> {
       },
       fitTo: _pointsOf(j),
     );
+  }
+
+  ResolvedJourney? _routeById(String id) {
+    for (final j in _journeys) {
+      if (j.id == id) return j;
+    }
+    return null;
+  }
+
+  /// Open a route's itinerary, switching it on if it was off.
+  void _readRoute(ResolvedJourney j, BuildContext context, String locale,
+      BookScript script, double width) {
+    _openRoute(j);
     if (width < _detailColumnMin) _showJourneySheet(context, locale, script);
   }
 
@@ -467,6 +483,23 @@ class _AtlasPageState extends State<AtlasPage> {
                   },
             scrollController: controller,
             onJump: (ref) => _jump(sheetCtx, ref),
+            journeys: _journeys,
+            activeRouteIds: _onRoutes,
+            onOpenRoute: (id) {
+              final j = _routeById(id);
+              if (j == null) return;
+              // The place sheet and the itinerary sheet are the same
+              // slot, so this replaces rather than stacks: leaving the
+              // place sheet underneath would put the reader two pops
+              // from the map. `_showDetailSheet` exists only in the
+              // narrow layout, so the itinerary always wants a sheet
+              // here — hence `_openRoute` + `_showJourneySheet` rather
+              // than `_readRoute`, which would re-test a width this
+              // branch has already answered.
+              Navigator.of(sheetCtx).pop();
+              _openRoute(j);
+              _showJourneySheet(context, locale, script);
+            },
           ),
         ),
       ),
@@ -640,6 +673,15 @@ class _AtlasPageState extends State<AtlasPage> {
                                 : () =>
                                     _questionChanged(() => _scopeBooks = null),
                             onJump: (ref) => _jump(context, ref),
+                            journeys: _journeys,
+                            activeRouteIds: _onRoutes,
+                            onOpenRoute: (id) {
+                              final j = _routeById(id);
+                              if (j != null) {
+                                _readRoute(j, context, locale, script,
+                                    box.maxWidth);
+                              }
+                            },
                           );
 
                 final showDetailColumn =
@@ -1242,6 +1284,9 @@ class _DetailPanel extends StatelessWidget {
     required this.locale,
     required this.script,
     required this.plates,
+    required this.journeys,
+    required this.activeRouteIds,
+    required this.onOpenRoute,
     required this.scopeBooks,
     required this.scopeLabel,
     required this.onClearScope,
@@ -1257,6 +1302,21 @@ class _DetailPanel extends StatelessWidget {
   /// no strip, and neither states anything — the strip's absence is
   /// silence, not the claim that no plate names this place.
   final List<BibleMap>? plates;
+
+  /// Every journey, resolved. Empty until the asset lands, which reads
+  /// here as "no route names this place" — and that is the right reading
+  /// while there are no routes to name it with.
+  final List<ResolvedJourney> journeys;
+
+  /// The routes currently drawn. The swatch here shows the same lit/unlit
+  /// state the index column shows, rather than asserting a second one:
+  /// two views of one selection that are free to disagree is what #319
+  /// was.
+  final Set<String> activeRouteIds;
+
+  /// Opens a route's itinerary. Takes the id rather than the object so
+  /// the panel can never hand back a route the page has since replaced.
+  final void Function(String journeyId) onOpenRoute;
 
   final Set<String>? scopeBooks;
 
@@ -1321,6 +1381,7 @@ class _DetailPanel extends StatelessWidget {
               fontFamilyFallback: kCjkFontFallback,
             ),
           ),
+          _journeysHere(context, c, t),
           // Above the references, not below: Jerusalem carries 755 of
           // them, and a strip under that is a strip nobody reaches.
           _illustrations(context, c, t),
@@ -1420,6 +1481,159 @@ class _DetailPanel extends StatelessWidget {
   /// `0 / n`: 56 of the 79 joined places have a book under which every
   /// plate falls away, and vanishing there would tell the reader "there
   /// are no pictures of this place" when there are n of them.
+  /// The routes that name this place (#317) — the direction the Atlas
+  /// has never had.
+  ///
+  /// Absent when no route names it: 1,168 of the 1,271 places are on no
+  /// itinerary, and an apology printed on each of them is not a feature.
+  /// The scope filter deliberately does NOT reach in here. A route is
+  /// read out of one book and the reader has filtered by another; hiding
+  /// Paul's first journey from Antioch because the reader is reading
+  /// Jonah would be the silent narrowing #280 forbids, and unlike the
+  /// reference list there is no `n / total` here to admit it with.
+  Widget _journeysHere(BuildContext context, WbColors c, WbType t) {
+    final on = journeysNaming(place.id, journeys);
+    if (on.isEmpty) return const SizedBox.shrink();
+    final version = context.read<MainProvider>().currentVersion;
+    return Padding(
+      padding: const EdgeInsets.only(top: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: double.infinity,
+            color: c.chromeBg,
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+            child: Text(
+              on.length == 1
+                  ? _s('atlasPlaceJourneysOne', 'One journey names this place')
+                  : _s('atlasPlaceJourneys', '{n} journeys name this place')
+                      .replaceAll('{n}', '${on.length}'),
+              style: TextStyle(
+                fontSize: t.chrome,
+                fontWeight: FontWeight.w700,
+                color: c.mutedText,
+                fontFamilyFallback: kCjkFontFallback,
+              ),
+            ),
+          ),
+          for (final e in on) _journeyHere(context, c, t, version, e),
+        ],
+      ),
+    );
+  }
+
+  Widget _journeyHere(BuildContext context, WbColors c, WbType t,
+      String version, PlaceOnJourney e) {
+    final style = journeyStyleFor(c, e.journey.journey.style,
+        e.journey.journey.mark);
+    final lit = activeRouteIds.contains(e.id);
+    return InkWell(
+      onTap: () => onOpenRoute(e.id),
+      hoverColor: c.hoverBg,
+      child: Padding(
+        padding: const EdgeInsets.only(top: 6),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 5, right: 5),
+              child: Tooltip(
+                message: _s('journeyShowTip', 'Draw this route on the map'),
+                child: JourneySwatch(style: style, lit: lit),
+              ),
+            ),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    e.journey.journey.localizedName(locale),
+                    style: TextStyle(
+                      fontSize: t.chrome,
+                      fontWeight: FontWeight.w700,
+                      color: lit ? c.text : c.mutedText,
+                      height: 1.3,
+                      fontFamilyFallback: kCjkFontFallback,
+                    ),
+                  ),
+                  for (final r in e.rows) _journeyRowHere(c, t, version, r),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// One appearance: what the itinerary calls it, and the verse that puts
+  /// it there.
+  ///
+  /// **An unplaced stop gets no number.** `UnplacedStop` carries no
+  /// ordinal because `resolveJourney` does not spend one on it, so the
+  /// wilderness badges run 1-40 over 42 stations; printing "Stop 4" for
+  /// Pi-hahiroth here would put a number on the page that no marker on
+  /// the map agrees with.
+  Widget _journeyRowHere(
+      WbColors c, WbType t, String version, ItineraryRow r) {
+    final ordinal = r.placed?.ordinal;
+    final how = <String>[
+      if (ordinal != null)
+        _s('atlasPlaceJourneyStop', 'Stop {n}').replaceAll('{n}', '$ordinal'),
+      if (r.placed == null) _s('journeyNoLocationTag', 'No location on our map'),
+      if (r.stop.isAside) _s('journeyAsideTag', 'Named, not reached'),
+      if (!r.stop.isAside && !r.stop.attested)
+        _s('journeyProvisionalTag', 'Provisional'),
+    ].join(' · ');
+    final ref = PlaceRef(r.stop.englishBook, r.stop.chapter, r.stop.verse);
+    return Padding(
+      padding: const EdgeInsets.only(top: 2),
+      child: Wrap(
+        spacing: 5,
+        runSpacing: 2,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          if (how.isNotEmpty)
+            Text(
+              how,
+              style: TextStyle(
+                fontSize: t.chrome,
+                color: c.mutedText,
+                height: 1.3,
+                fontFamilyFallback: kCjkFontFallback,
+              ),
+            ),
+          Material(
+            color: c.paneBg,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.zero,
+              side: BorderSide(color: c.border, width: WbMetrics.hairline),
+            ),
+            child: InkWell(
+              onTap: () => onJump(ref),
+              hoverColor: c.hoverBg,
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                child: Text(
+                  '${localeAwareBookName(ref.englishBook, locale, version)}'
+                  ' ${ref.chapter}:${ref.verse}',
+                  style: TextStyle(
+                    fontSize: t.chrome,
+                    height: 1.0,
+                    color: c.link,
+                    fontFamilyFallback: kCjkFontFallback,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _illustrations(BuildContext context, WbColors c, WbType t) {
     final all = plates;
     if (all == null) return const SizedBox.shrink();

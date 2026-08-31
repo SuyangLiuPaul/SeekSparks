@@ -9097,6 +9097,35 @@ const uiStrings = {
     'en': 'Close the itinerary',
   },
 
+  // The reverse of the Journeys block: this one is on a PLACE record and
+  // counts ROUTES, not appearances — Perga is one journey and two stops,
+  // and a header that said "2" would be counting the thing the rows
+  // below it already show. #308's rule: a count must never be ambiguous
+  // about what it counted, so the noun is in the string.
+  //
+  // "Names" rather than "visits": 2 of the 103 places a route names are
+  // asides — Phoenix, aimed at and missed; the Syrtis, feared and
+  // avoided — and a header saying the journey WENT there would be false
+  // on exactly the two places the schema exists to keep honest.
+  'atlasPlaceJourneys': {
+    'zh-Hans': '{n} 条行程提到此地',
+    'zh-Hant': '{n} 條行程提到此地',
+    'en': '{n} journeys name this place',
+  },
+  // 92 of the 103 are on exactly one route, so the singular is the
+  // common case and not an edge one. Chinese needs no second form; the
+  // key exists for English.
+  'atlasPlaceJourneysOne': {
+    'zh-Hans': '1 条行程提到此地',
+    'zh-Hant': '1 條行程提到此地',
+    'en': 'One journey names this place',
+  },
+  'atlasPlaceJourneyStop': {
+    'zh-Hans': '第 {n} 站',
+    'zh-Hant': '第 {n} 站',
+    'en': 'Stop {n}',
+  },
+
   // ── Lexicon Browser (bwh35) ───────────────────────────────────────
   'lexiconBrowserTitle': {
     'zh-Hans': '原文词典浏览',

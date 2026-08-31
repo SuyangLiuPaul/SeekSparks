@@ -459,4 +459,26 @@ void main() {
 
     await unmount(tester);
   });
+
+  testWidgets('a place record names the journeys that pass through it',
+      (tester) async {
+    await pump(
+      tester,
+      const Size(1440, 1000),
+      page: const AtlasPage(initialPlaceId: 'Antioch 1'),
+    );
+    expect(tester.takeException(), isNull);
+
+    // Syrian Antioch sends out all three Pauline journeys and two of
+    // them come back to it. Before this the place record said only that
+    // Acts names it.
+    expect(find.text('3 条行程提到此地'), findsOneWidget);
+
+    // Sent out on each of the three...
+    expect(find.textContaining('第 1 站'), findsNWidgets(3));
+    // ...and returned to on the first, which is unique to that row.
+    expect(find.textContaining('第 15 站'), findsOneWidget);
+
+    await unmount(tester);
+  });
 }
