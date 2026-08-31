@@ -70,7 +70,15 @@
       "Jude"
     ],
     "generatedAt": "2026-04-29T01:28:28Z",
-    "description": "Book-level introductions: subtitle, summary, author, date, audience, themes, and key-passage spotlight. Loaded by BookIntroService and rendered as a collapsible card at the top of the reading pane when a book opens at chapter 1."
+    "description": "Book-level introductions: subtitle, summary, author, date, audience, themes, and key-passage spotlight. Loaded by BookIntroService and rendered as a collapsible card at the top of the reading pane when a book opens at chapter 1.",
+    "source": "app-curated",
+    "notFromAnyEdition": true,
+    "datingSystem": "traditional ascription; early-Exodus chain (1446 BC), the same chain assets/bible_timeline.json records as scripture+thiele",
+    "note": {
+      "en": "These book introductions are written for this app. They are not taken from any published Bible or study edition. Authorship follows the traditional ascriptions, and the dates follow the same early chronology used elsewhere in this app — the Exodus at 1446 BC; other scholars ascribe and date several of these books differently. This card is a study aid; the Bible text itself is unaffected.",
+      "zh-Hans": "本书卷简介由本应用自行编写，并非取自任何已出版的圣经或研读本。作者采用传统的归属说法，年代与本应用其他部分所用的早期年表一致（出埃及定于公元前1446年）；对其中若干书卷，另有学者提出不同的作者或年代。此卡片为研经辅助材料，经文本身不受影响。",
+      "zh-Hant": "本書卷簡介由本應用自行編寫，並非取自任何已出版的聖經或研讀本。作者採用傳統的歸屬說法，年代與本應用其他部分所用的早期年表一致（出埃及定於公元前1446年）；對其中若干書卷，另有學者提出不同的作者或年代。此卡片為研經輔助材料，經文本身不受影響。"
+    }
   },
   "intros": {
     "Genesis": {

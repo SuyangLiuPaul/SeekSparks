@@ -690,6 +690,17 @@ class _OtherAttributions extends StatelessWidget {
         licence: uiStrings['aboutLicenseAi']?[locale] ??
             'Google Gemini API · output redistribution permitted under API terms.',
       ),
+      // 66 book introductions, each stating an author and a date, rendered
+      // by default at the top of chapter 1. They are the app's own, and the
+      // dates follow the same early-Exodus chain `bible_timeline.json`
+      // records — neither fact was reachable from anywhere in the app.
+      _AttribRow(
+        name: uiStrings['aboutBookIntros']?[locale] ??
+            'Book introductions (66 books)',
+        licence: uiStrings['aboutLicenseBookIntros']?[locale] ??
+            'Original to this app · traditional ascriptions, early-Exodus '
+                'dating; not from any published edition.',
+      ),
       // The headings are the app's own and the reader meets them in the
       // register a printed edition's own 段落標題 occupies. Counted from the
       // asset: 1,443 headings per title set, every one carrying a background

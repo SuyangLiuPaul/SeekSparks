@@ -5001,6 +5001,17 @@ const uiStrings = {
     'en':
         'Google Gemini API · output redistribution permitted under API terms.',
   },
+  'aboutBookIntros': {
+    'zh-Hans': '书卷简介（66 卷）',
+    'zh-Hant': '書卷簡介（66 卷）',
+    'en': 'Book introductions (66 books)',
+  },
+  'aboutLicenseBookIntros': {
+    'zh-Hans': '本应用自行编写 · 作者采用传统归属说法，年代用早期年表 · 并非取自任何已出版的版本。',
+    'zh-Hant': '本應用自行編寫 · 作者採用傳統歸屬說法，年代用早期年表 · 並非取自任何已出版的版本。',
+    'en': 'Original to this app · traditional ascriptions, early-Exodus '
+        'dating; not from any published edition.',
+  },
   'aboutSectionHeadings': {
     'zh-Hans': '段落标题与背景说明（每套 1,443 条）',
     'zh-Hant': '段落標題與背景說明（每套 1,443 條）',
@@ -5266,10 +5277,13 @@ const uiStrings = {
     'en': 'Book introductions',
   },
   'showBookIntroSubtitle': {
-    'zh-Hans': '在每卷书第一章顶部显示作者、年代、主题与关键经文等背景介绍。',
-    'zh-Hant': '在每卷書第一章頂部顯示作者、年代、主題與關鍵經文等背景介紹。',
+    'zh-Hans': '在每卷书第一章顶部显示作者、年代、主题与关键经文等背景介绍。'
+        '这些简介由本应用自行编写。',
+    'zh-Hant': '在每卷書第一章頂部顯示作者、年代、主題與關鍵經文等背景介紹。'
+        '這些簡介由本應用自行編寫。',
     'en': 'Show a collapsible card at the top of chapter 1 with the '
-        'book\'s author, date, audience, themes, and key passage.',
+        'book\'s author, date, audience, themes, and key passage. '
+        'The introductions are written for this app.',
   },
   // 2026-05-19 (v1.2.55): the v1.2.53 cross-version LEB overlay
   // ui-strings were removed. LEB's own inline notes render via

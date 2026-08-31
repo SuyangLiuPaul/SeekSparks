@@ -8280,6 +8280,26 @@ class _BookIntroCardState extends State<_BookIntroCard> {
                             ),
                           ],
                         ],
+                        if (BookIntroService.provenanceNote(locale) !=
+                            null) ...[
+                          SizedBox(height: context.textSize(10)),
+                          Container(
+                            height: WbMetrics.hairline,
+                            color: scheme.outlineVariant,
+                          ),
+                          SizedBox(height: context.textSize(8)),
+                          Text(
+                            BookIntroService.provenanceNote(locale)!,
+                            style: TextStyle(
+                              fontFamily: settings.fontFamily,
+                              fontFamilyFallback: kCjkFontFallback,
+                              fontSize: context.textSize(12),
+                              color:
+                                  scheme.onSurface.withValues(alpha: 0.62),
+                              height: 1.4,
+                            ),
+                          ),
+                        ],
                       ],
                     )
                   : const SizedBox(width: double.infinity),

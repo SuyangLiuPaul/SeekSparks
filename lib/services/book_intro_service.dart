@@ -72,13 +72,66 @@ class BookIntro {
       _keyPassageDescription.get(locale);
 }
 
+/// The asset's own header. Parsed because `source`, `datingSystem` and the
+/// trilingual `note` are the only record of WHOSE ascriptions and WHOSE
+/// chronology these 66 cards print, and until now nothing read them — the
+/// same defect #318 phase 24 found on `wheel_history.json`, the #292 pass
+/// found on `hebrew_kings.json` and v1.6.195 found on `section_titles.json`.
+/// This asset is the sharpest of the four: it is the only one that prints a
+/// DATE and an AUTHOR, which #292 and #318 both require to name their system.
+class BookIntroMeta {
+  final String source;
+  final bool notFromAnyEdition;
+  final String datingSystem;
+  final Map<String, String> note;
+  const BookIntroMeta({
+    required this.source,
+    required this.notFromAnyEdition,
+    required this.datingSystem,
+    required this.note,
+  });
+
+  factory BookIntroMeta.fromJson(Map<String, dynamic> j) {
+    final n = j['note'];
+    return BookIntroMeta(
+      source: (j['source'] as String?) ?? '',
+      notFromAnyEdition: j['notFromAnyEdition'] == true,
+      datingSystem: (j['datingSystem'] as String?) ?? '',
+      note: n is Map
+          ? {
+              for (final e in n.entries)
+                if (e.value is String) e.key.toString(): e.value as String
+            }
+          : const {},
+    );
+  }
+
+  /// The note in [locale], falling back to English. Empty string when the
+  /// asset carries nothing — callers render nothing rather than a blank line.
+  String noteFor(String locale) => note[locale] ?? note['en'] ?? '';
+}
+
 /// Lazy loader for `assets/book_introductions.json`. Single
 /// in-memory cache. Returns null when the requested book has no
-/// authored intro yet (10 books in the Phase-1 dataset; rest follow
-/// in subsequent rounds).
+/// authored intro yet (all 66 books are authored; the null is kept for the
+/// deuterocanon and for a book name the asset does not carry).
 class BookIntroService {
   static Map<String, BookIntro>? _cache;
   static Future<void>? _loadFuture;
+  static BookIntroMeta? _meta;
+
+  /// The asset header, or null before [ensureLoaded] completes.
+  static BookIntroMeta? get meta => _meta;
+
+  /// The provenance sentence for [locale], or null when there is nothing to
+  /// say. A caller renders this ONLY inside the card it is about; it is not
+  /// a global disclaimer.
+  static String? provenanceNote(String locale) {
+    final m = _meta;
+    if (m == null) return null;
+    final s = m.noteFor(locale);
+    return s.isEmpty ? null : s;
+  }
 
   static Future<void> ensureLoaded() {
     if (_cache != null) return Future.value();
@@ -90,6 +143,10 @@ class BookIntroService {
       final raw =
           await rootBundle.loadString('assets/book_introductions.json');
       final decoded = jsonDecode(raw) as Map<String, dynamic>;
+      final metaJson = decoded['_meta'];
+      _meta = metaJson is Map<String, dynamic>
+          ? BookIntroMeta.fromJson(metaJson)
+          : null;
       final intros = decoded['intros'] as Map<String, dynamic>?;
       final out = <String, BookIntro>{};
       if (intros != null) {
@@ -153,5 +210,6 @@ class BookIntroService {
   static void clearCache() {
     _cache = null;
     _loadFuture = null;
+    _meta = null;
   }
 }
