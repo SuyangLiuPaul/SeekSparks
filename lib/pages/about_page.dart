@@ -690,6 +690,17 @@ class _OtherAttributions extends StatelessWidget {
         licence: uiStrings['aboutLicenseAi']?[locale] ??
             'Google Gemini API · output redistribution permitted under API terms.',
       ),
+      // The headings are the app's own and the reader meets them in the
+      // register a printed edition's own 段落標題 occupies. Counted from the
+      // asset: 1,443 headings per title set, every one carrying a background
+      // note, across three sets.
+      _AttribRow(
+        name: uiStrings['aboutSectionHeadings']?[locale] ??
+            'Section headings + background notes (1,443 per title set)',
+        licence: uiStrings['aboutLicenseSectionHeadings']?[locale] ??
+            'Original to this app · not taken from any published Bible '
+                'edition.',
+      ),
       _AttribRow(
         name: uiStrings['aboutTrivia']?[locale] ??
             'Trivia text + diagrams',

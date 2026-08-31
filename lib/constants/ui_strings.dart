@@ -5001,6 +5001,16 @@ const uiStrings = {
     'en':
         'Google Gemini API · output redistribution permitted under API terms.',
   },
+  'aboutSectionHeadings': {
+    'zh-Hans': '段落标题与背景说明（每套 1,443 条）',
+    'zh-Hant': '段落標題與背景說明（每套 1,443 條）',
+    'en': 'Section headings + background notes (1,443 per title set)',
+  },
+  'aboutLicenseSectionHeadings': {
+    'zh-Hans': '本应用自行编写 · 并非取自任何已出版的圣经版本。',
+    'zh-Hant': '本應用自行編寫 · 並非取自任何已出版的聖經版本。',
+    'en': 'Original to this app · not taken from any published Bible edition.',
+  },
   'aboutTrivia': {
     'zh-Hans': '冷知识文本与图示',
     'zh-Hant': '冷知識文本與圖示',
@@ -5242,10 +5252,13 @@ const uiStrings = {
     'en': 'Section titles',
   },
   'showSectionTitlesSubtitle': {
-    'zh-Hans': '在相应经文上方显示段落主题（如「登山宝训」、「耶稣家谱」等）。',
-    'zh-Hant': '在相應經文上方顯示段落主題（如「登山寶訓」、「耶穌家譜」等）。',
+    'zh-Hans': '在相应经文上方显示段落主题（如「登山宝训」、「耶稣家谱」等）。'
+        '标题与说明均为本应用自行编写。',
+    'zh-Hant': '在相應經文上方顯示段落主題（如「登山寶訓」、「耶穌家譜」等）。'
+        '標題與說明均為本應用自行編寫。',
     'en': 'Render paragraph headings (e.g. "The Sermon on the Mount") '
-        'above the matched verse in the reading pane.',
+        'above the matched verse in the reading pane. The headings and '
+        'notes are written for this app.',
   },
   'showBookIntro': {
     'zh-Hans': '书卷简介',

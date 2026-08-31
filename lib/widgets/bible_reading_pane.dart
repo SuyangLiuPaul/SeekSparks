@@ -8010,15 +8010,38 @@ class _SectionHeadingState extends State<_SectionHeading> {
                             color: scheme.outlineVariant
                                 .withValues(alpha: 0.6)),
                       ),
-                      child: Text(
-                        widget.context!,
-                        style: TextStyle(
-                          fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                          fontSize: buildContext.textSize(15),
-                          fontStyle: FontStyle.italic,
-                          color: scheme.onSurface,
-                          height: 1.5,
-                        ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            widget.context!,
+                            style: TextStyle(
+                              fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
+                              fontSize: buildContext.textSize(15),
+                              fontStyle: FontStyle.italic,
+                              color: scheme.onSurface,
+                              height: 1.5,
+                            ),
+                          ),
+                          if (SectionTitleService.provenanceNote(
+                                  settings.locale) !=
+                              null) ...[
+                            SizedBox(height: buildContext.textSize(8)),
+                            Text(
+                              SectionTitleService.provenanceNote(
+                                  settings.locale)!,
+                              style: TextStyle(
+                                fontFamily: settings.fontFamily,
+                                fontFamilyFallback: kCjkFontFallback,
+                                fontSize: buildContext.textSize(12),
+                                color: scheme.onSurface
+                                    .withValues(alpha: 0.62),
+                                height: 1.4,
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                     ),
                   )

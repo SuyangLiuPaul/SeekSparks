@@ -15,6 +15,39 @@ class SectionHeading {
   const SectionHeading({required this.title, this.context});
 }
 
+/// The asset's own header. Parsed because `notPublishedHeadings` and the
+/// trilingual `note` are the only record of WHOSE headings these are, and
+/// until v1.6.195 nothing read them — the same defect #318 phase 24 found on
+/// `wheel_history.json` and the #292 pass found on `hebrew_kings.json`.
+class SectionTitleMeta {
+  final String source;
+  final bool notPublishedHeadings;
+  final Map<String, String> note;
+  const SectionTitleMeta({
+    required this.source,
+    required this.notPublishedHeadings,
+    required this.note,
+  });
+
+  factory SectionTitleMeta.fromJson(Map<String, dynamic> j) {
+    final n = j['note'];
+    return SectionTitleMeta(
+      source: (j['source'] as String?) ?? '',
+      notPublishedHeadings: j['notPublishedHeadings'] == true,
+      note: n is Map
+          ? {
+              for (final e in n.entries)
+                if (e.value is String) e.key.toString(): e.value as String
+            }
+          : const {},
+    );
+  }
+
+  /// The note in [locale], falling back to English. Empty string when the
+  /// asset carries nothing — callers render nothing rather than a blank line.
+  String noteFor(String locale) => note[locale] ?? note['en'] ?? '';
+}
+
 /// Section / paragraph titles bundled at `assets/section_titles.json`.
 /// One asset, multiple title-sets (cuv / cuv-tr / english-classic /
 /// future cnv), wired via `lib/constants/section_title_map.dart`.
@@ -26,6 +59,20 @@ class SectionTitleService {
   /// Two-level index: setId → "Book/chapter/verse" → SectionHeading.
   static Map<String, Map<String, SectionHeading>>? _cache;
   static Future<void>? _loadFuture;
+  static SectionTitleMeta? _meta;
+
+  /// The asset header, or null before [ensureLoaded] completes.
+  static SectionTitleMeta? get meta => _meta;
+
+  /// The provenance sentence for [locale], or null when there is nothing to
+  /// say. A caller renders this ONLY where it is adjacent to the headings it
+  /// is about; it is not a global disclaimer.
+  static String? provenanceNote(String locale) {
+    final m = _meta;
+    if (m == null) return null;
+    final s = m.noteFor(locale);
+    return s.isEmpty ? null : s;
+  }
 
   /// Trigger the asset load. Idempotent. The reading pane calls this
   /// from `initState` so the first chapter render already has data.
@@ -38,6 +85,10 @@ class SectionTitleService {
     try {
       final raw = await rootBundle.loadString('assets/section_titles.json');
       final decoded = jsonDecode(raw) as Map<String, dynamic>;
+      final metaJson = decoded['_meta'];
+      _meta = metaJson is Map<String, dynamic>
+          ? SectionTitleMeta.fromJson(metaJson)
+          : null;
       final sets = decoded['sets'] as Map<String, dynamic>?;
       final out = <String, Map<String, SectionHeading>>{};
       if (sets != null) {
