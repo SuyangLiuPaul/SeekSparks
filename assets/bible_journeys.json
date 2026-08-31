@@ -1390,6 +1390,162 @@
      "leg": "land"
     }
    ]
+  },
+  {
+   "id": "jacob",
+   "style": 3,
+   "mark": "square",
+   "name": {
+    "en": "Jacob's journey",
+    "zh-Hans": "雅各的旅程",
+    "zh-Hant": "雅各的旅程"
+   },
+   "range": {
+    "en": "Genesis 28:10 – 46:28",
+    "zh-Hans": "创世记 28:10 – 46:28",
+    "zh-Hant": "創世記 28:10 – 46:28"
+   },
+   "basis": {
+    "en": "The stops and their order are read out of Genesis 28-46, which names each place as Jacob reaches it; every stop cites the verse that puts him there. Coordinates come from the gazetteer, not from this route. Mount Gilead (31:23-25) is a real camp and is NOT drawn: the gazetteer gives it the same point as Mount Gilboa, a different mountain about 20 km away, and a marker there would put the camp on the wrong hill. Mahanaim (32:2) is named by the text and unlocated in the gazetteer, so the line breaks there rather than being bridged.",
+    "zh-Hans": "站点及其次序取自创世记28至46章：雅各每到一处，经文都指名说出，每一站都注明出处经文。坐标取自地名录，不由本路线另行提供。基列山（31:23-25）确是一处宿营地，但本路线不予绘出：地名录给它的坐标与基利波山相同，而那是约20公里外的另一座山，在那里下标记会把宿营地放错山头。玛哈念（32:2）经文有名，地名录却无坐标，因此线在该处断开，不作连接。",
+    "zh-Hant": "站點及其次序取自創世記28至46章：雅各每到一處，經文都指名說出，每一站都註明出處經文。座標取自地名錄，不由本路線另行提供。基列山（31:23-25）確是一處宿營地，但本路線不予繪出：地名錄給它的座標與基利波山相同，而那是約20公里外的另一座山，在那裡下標記會把宿營地放錯山頭。瑪哈念（32:2）經文有名，地名錄卻無座標，因此線在該處斷開，不作連接。"
+   },
+   "stops": [
+    {
+     "place": "Beersheba",
+     "book": "Genesis",
+     "chapter": 28,
+     "verse": 10,
+     "leg": "start",
+     "note": {
+      "en": "28:10 sets out from Beersheba, where Isaac was living.",
+      "zh-Hans": "28:10从别是巴动身，那时以撒住在那里。",
+      "zh-Hant": "28:10從別是巴動身，那時以撒住在那裡。"
+     }
+    },
+    {
+     "place": "Bethel 1",
+     "book": "Genesis",
+     "chapter": 28,
+     "verse": 19,
+     "leg": "land",
+     "note": {
+      "en": "28:11 calls it only 'a certain place'; 28:19 gives it the name Bethel, and says the city had been called Luz.",
+      "zh-Hans": "28:11只说是「一个地方」；28:19才给它起名伯特利，并说那城原名路斯。",
+      "zh-Hant": "28:11只說是「一個地方」；28:19才給它起名伯特利，並說那城原名路斯。"
+     }
+    },
+    {
+     "place": "Haran",
+     "book": "Genesis",
+     "chapter": 29,
+     "verse": 4,
+     "leg": "land",
+     "note": {
+      "en": "28:10 says he set out toward Haran; 29:4 is where the shepherds answer that they are of Haran, which puts him there.",
+      "zh-Hans": "28:10说他往哈兰去；29:4牧人回答说自己是哈兰人，才把他放在那里。",
+      "zh-Hant": "28:10說他往哈蘭去；29:4牧人回答說自己是哈蘭人，才把他放在那裡。"
+     }
+    },
+    {
+     "place": "Mahanaim",
+     "book": "Genesis",
+     "chapter": 32,
+     "verse": 2,
+     "leg": "land",
+     "note": {
+      "en": "Jacob names the place Mahanaim. The gazetteer has the name and no coordinate, so the line breaks here on both sides rather than guessing a crossing of the Jordan.",
+      "zh-Hans": "雅各给那地方起名玛哈念。地名录有名无坐标，所以线在此前后两段都断开，不去猜测约旦河的渡口。",
+      "zh-Hant": "雅各給那地方起名瑪哈念。地名錄有名無座標，所以線在此前後兩段都斷開，不去猜測約旦河的渡口。"
+     }
+    },
+    {
+     "place": "Peniel",
+     "book": "Genesis",
+     "chapter": 32,
+     "verse": 30,
+     "leg": "land"
+    },
+    {
+     "place": "Succoth 1",
+     "book": "Genesis",
+     "chapter": 33,
+     "verse": 17,
+     "leg": "land"
+    },
+    {
+     "place": "Shechem",
+     "book": "Genesis",
+     "chapter": 33,
+     "verse": 18,
+     "leg": "land",
+     "note": {
+      "en": "The first ground in Canaan he buys rather than passes through (33:19).",
+      "zh-Hans": "这是他在迦南第一块买下、而非路过的地（33:19）。",
+      "zh-Hant": "這是他在迦南第一塊買下、而非路過的地（33:19）。"
+     }
+    },
+    {
+     "place": "Bethel 1",
+     "book": "Genesis",
+     "chapter": 35,
+     "verse": 6,
+     "leg": "land",
+     "note": {
+      "en": "The second visit, seven chapters after the first - 35:6 names Luz and Bethel together, as 28:19 did.",
+      "zh-Hans": "第二次到伯特利，距第一次隔了七章——35:6像28:19一样，把路斯与伯特利并称。",
+      "zh-Hant": "第二次到伯特利，距第一次隔了七章——35:6像28:19一樣，把路斯與伯特利並稱。"
+     }
+    },
+    {
+     "place": "Ephrath",
+     "book": "Genesis",
+     "chapter": 35,
+     "verse": 19,
+     "leg": "land",
+     "note": {
+      "en": "35:19 says Ephrath, and adds 'that is, Bethlehem'.",
+      "zh-Hans": "35:19说以法他，并加上「就是伯利恒」。",
+      "zh-Hant": "35:19說以法他，並加上「就是伯利恆」。"
+     }
+    },
+    {
+     "place": "Mamre",
+     "book": "Genesis",
+     "chapter": 35,
+     "verse": 27,
+     "leg": "land",
+     "note": {
+      "en": "35:27 brings him back to Isaac at Mamre, 'the city of Arbah, which is Hebron'.",
+      "zh-Hans": "35:27带他回到幔利以撒那里，就是「基列亚巴，即希伯仑」。",
+      "zh-Hant": "35:27帶他回到幔利以撒那裡，就是「基列亞巴，即希伯崙」。"
+     }
+    },
+    {
+     "place": "Beersheba",
+     "book": "Genesis",
+     "chapter": 46,
+     "verse": 1,
+     "leg": "land",
+     "note": {
+      "en": "The same Beersheba he left in 28:10, and the last stop before Egypt.",
+      "zh-Hans": "就是他28:10离开的那个别是巴，也是下埃及前的最后一站。",
+      "zh-Hant": "就是他28:10離開的那個別是巴，也是下埃及前的最後一站。"
+     }
+    },
+    {
+     "place": "Goshen 1",
+     "book": "Genesis",
+     "chapter": 46,
+     "verse": 28,
+     "leg": "land",
+     "note": {
+      "en": "46:5 says they travelled in the wagons Pharaoh sent, so the descent is drawn as a land leg. This is where the wilderness route's own first station stands four hundred years later.",
+      "zh-Hans": "46:5说他们坐法老打发来的车，所以下埃及这一段按陆路绘出。四百年后，旷野路线的第一站就立在这里。",
+      "zh-Hant": "46:5說他們坐法老打發來的車，所以下埃及這一段按陸路繪出。四百年後，曠野路線的第一站就立在這裡。"
+     }
+    }
+   ]
   }
  ]
 }

@@ -104,7 +104,7 @@ void main() {
 
     const assetOrder = [
       'paul-1', 'paul-2', 'paul-3', 'paul-rome', 'exodus-wilderness',
-      'jesus-mark',
+      'jesus-mark', 'jacob',
     ];
     final resolvedOrder = resolved.map((j) => j.id).toList();
     expect(resolvedOrder, assetOrder);

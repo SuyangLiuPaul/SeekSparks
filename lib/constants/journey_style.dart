@@ -200,6 +200,20 @@ class _SwatchPainter extends CustomPainter {
 /// separate the two blues has two other channels that say which is which.
 /// A sixth route should add a channel, not a sixth hue.
 ///
+/// **2026-09-01: the seventh route took a hue that was already spoken
+/// for, and chose WHICH one on the map rather than on the wheel.** Jacob's
+/// itinerary is Torah, so [JourneyMark.square] is not a choice; only the
+/// hue is, and every hue is held. Slot 0's amber was rejected because
+/// `jesus-mark` holds it and draws through Shechem and Bethel, the same
+/// ground Jacob crosses — two amber shapes side by side at one latitude.
+/// Slot 3's green was taken because `paul-rome`, its only other holder,
+/// runs Caesarea to Rome and shares no ground with Genesis, and because
+/// green is far from slot 4's blue on the axis red-green blindness leaves
+/// intact — and slot 4 is `exodus-wilderness`, the route a reader is
+/// likeliest to have on at the same time. **A repeated hue costs nothing
+/// where the two routes are never on the same coastline; it costs
+/// everything where they are.**
+///
 /// Darkened for the light palette and lightened for the dark one, because
 /// a single hue legible on #FFFFFF is invisible on #101A2B.
 List<JourneyStyle> journeyPalette(WbColors c) => c.isDark

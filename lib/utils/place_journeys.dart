@@ -38,7 +38,7 @@ class PlaceOnJourney {
 /// Asset order, not "most stops first": the file's order is a curatorial
 /// decision already made — the three Pauline journeys in sequence — and
 /// re-sorting it here would give a reader two different orders for the
-/// same six routes on one screen.
+/// same seven routes on one screen.
 List<PlaceOnJourney> journeysNaming(
     String placeId, List<ResolvedJourney> journeys) {
   final out = <PlaceOnJourney>[];

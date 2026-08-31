@@ -72,6 +72,7 @@ void main() {
         'paul-rome': 16,
         'exodus-wilderness': 18,
         'jesus-mark': 11,
+        'jacob': 9,
       };
       for (final r in resolved) {
         expect(r.markers.length, expected[r.id],
@@ -100,8 +101,12 @@ void main() {
   //     line breaks is precisely where the sea crossing is argued about,
   //     which is the right place for it to break.
   //   * Hor-haggidgad (Num 33:32) — named, unlocated, not bridged.
+  //   * Mahanaim (Gen 32:2) — Jacob names the place; the gazetteer carries
+  //     the name with no coordinate. The break falls on the Jordan
+  //     crossing, which is where the route is least certain anyway.
   const unlocatedByDesign = <String, Set<String>>{
     'exodus-wilderness': <String>{'Pi-hahiroth', 'Hor-haggidgad'},
+    'jacob': <String>{'Mahanaim'},
   };
 
   group('every stop resolves against the gazetteer', () {
@@ -551,6 +556,7 @@ void main() {
         'paul-rome': 2995.5,
         'exodus-wilderness': 1638.4,
         'jesus-mark': 478.6,
+        'jacob': 1189.3,
       };
       for (final r in resolved) {
         expect(r.straightLineKm, greaterThan(100), reason: r.id);
@@ -561,6 +567,55 @@ void main() {
       }
       expect(expected.keys.toSet(), resolved.map((r) => r.id).toSet(),
           reason: 'a route was added or renamed without a pinned total');
+    });
+
+    group("Jacob's journey", () {
+      test('the route ships, twelve stops of Genesis', () {
+        final j = journeys.firstWhere((j) => j.id == 'jacob');
+        expect(j.stops.length, 12);
+        expect(j.stops.first.placeId, 'Beersheba');
+        expect(j.stops.last.placeId, 'Goshen 1');
+        expect(j.stops.every((s) => s.englishBook == 'Genesis'), isTrue);
+      });
+
+      test('it is a round trip, and the map says so once', () {
+        final r = route('jacob');
+        expect(
+          r.ordinalsByMarker[markerKeyFor(byId['Beersheba']!)]?.length,
+          2,
+        );
+        expect(
+          r.ordinalsByMarker[markerKeyFor(byId['Bethel 1']!)]?.length,
+          2,
+        );
+      });
+
+      test('the line breaks at Mahanaim and is not bridged', () {
+        final r = route('jacob');
+        expect(r.unplaced.map((u) => u.stop.placeId), <String>['Mahanaim']);
+        expect(r.unplaced.map((u) => u.index), <int>[3]);
+        expect(
+          r.unplaced.map((u) => (u.stop.chapter, u.stop.verse)),
+          <(int, int)>[(32, 2)],
+        );
+      });
+
+      test('Mount Gilead is refused, and the basis says why', () {
+        final r = route('jacob');
+        final ids = r.stops.map((s) => s.place.id).toList();
+        expect(ids, isNot(contains('Mount Gilead')));
+        expect(ids, isNot(contains('Gilead')));
+        expect(ids, isNot(contains('Mount Gilboa')));
+        final basis = r.journey.basis['en']!;
+        expect(basis, contains('Mount Gilead'));
+        expect(basis, contains('Mount Gilboa'));
+      });
+
+      test('nothing on this route is provisional', () {
+        final j = journeys.firstWhere((j) => j.id == 'jacob');
+        expect(j.provisionalCount, 0);
+        expect(j.asideCount, 0);
+      });
     });
   });
 

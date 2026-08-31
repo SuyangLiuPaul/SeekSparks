@@ -414,7 +414,7 @@ void main() {
     // CustomPaint with no child lays out at zero, so the legend would go
     // silently blank without ever failing a layout.
     final swatches = find.byType(JourneySwatch);
-    expect(swatches, findsNWidgets(6));
+    expect(swatches, findsNWidgets(7));
     expect(tester.getSize(swatches.first).height, greaterThan(0));
     expect(tester.getSize(swatches.first).width, greaterThan(0));
     await unmount(tester);

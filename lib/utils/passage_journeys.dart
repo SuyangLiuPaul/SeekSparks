@@ -65,7 +65,7 @@ class JourneyHere {
 /// Asset order, not "most stops first" — the same argument
 /// [journeysNaming] makes: the file's order is a curatorial decision
 /// already made, and re-sorting here would give a reader two different
-/// orders for the same six routes on one screen.
+/// orders for the same seven routes on one screen.
 List<JourneyHere> journeysThrough(
   String englishBook,
   int chapter,
