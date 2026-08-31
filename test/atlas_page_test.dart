@@ -254,6 +254,40 @@ void main() {
     await unmount(tester);
   });
 
+  testWidgets('the two camps the map cannot draw still have rows of their own',
+      (tester) async {
+    // Same 4000 px as the test above, and for the same reason: the
+    // itinerary is a lazy `ListView` and `find.text` only sees rows it
+    // has MOUNTED. Hor-haggidgad is station 29 of 42, well past what a
+    // 1000 px panel builds.
+    await pump(tester, const Size(1440, 4000));
+
+    expect(find.text('以色列出埃及与旷野行程'), findsOneWidget);
+    await tester.tap(find.text('以色列出埃及与旷野行程'));
+    for (var i = 0; i < 6; i++) {
+      await tester.pump(const Duration(milliseconds: 80));
+    }
+    expect(tester.takeException(), isNull);
+
+    // The tag can only come from `_unplacedStop`, so exactly two of it
+    // IS the claim: the header counts 42 stations and the list now shows
+    // 42, where it used to show 40. Pi-hahiroth is the case that matters
+    // — Exodus 14:2 camps Israel there before the crossing, and it
+    // reached no surface at all.
+    expect(find.text('本图没有此地的坐标'), findsNWidgets(2));
+
+    // Named, in the reader's own script, not left as a bare count.
+    expect(find.text('比哈希录'), findsWidgets);
+    expect(find.text('曷哈及甲'), findsWidgets);
+
+    // And carrying the verse that puts each camp on the itinerary —
+    // the one route from a camp we cannot draw back to scripture.
+    expect(find.textContaining('民数记 33:7'), findsWidgets);
+    expect(find.textContaining('民数记 33:32'), findsWidgets);
+
+    await unmount(tester);
+  });
+
   testWidgets('the wilderness route says where our map cannot tell camps apart',
       (tester) async {
     // 4000 px tall, not 1000: the itinerary panel is a lazy `ListView`,

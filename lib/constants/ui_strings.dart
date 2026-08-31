@@ -8811,6 +8811,11 @@ const uiStrings = {
     'zh-Hant': '推定',
     'en': 'Provisional',
   },
+  'journeyNoLocationTag': {
+    'en': 'No location on our map',
+    'zh-Hans': '本图没有此地的坐标',
+    'zh-Hant': '本圖沒有此地的座標',
+  },
   // Deliberately NOT the same word as "provisional". Provisional means we
   // are unsure they were there; this means the text says they were not.
   'journeyAsideTag': {

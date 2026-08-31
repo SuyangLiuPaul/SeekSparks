@@ -121,6 +121,26 @@ void main() {
         }
       }
     });
+
+    // The panel's header counts the asset (waypointCount); the list under
+    // it must count the same thing, or a stop the gazetteer cannot place
+    // reaches no surface at all (#317).
+    test('every camp the text names has a row of its own', () {
+      for (final r in resolved) {
+        expect(r.itineraryRows.length, r.journey.stops.length, reason: r.id);
+      }
+    });
+
+    test('the two unlocated camps are rows, with their verses', () {
+      final r = resolved.firstWhere((r) => r.id == 'exodus-wilderness');
+      expect(r.unplaced.map((u) => u.stop.placeId),
+          <String>['Pi-hahiroth', 'Hor-haggidgad']);
+      expect(r.unplaced.map((u) => u.index), <int>[3, 28]);
+      expect(
+        r.unplaced.map((u) => (u.stop.chapter, u.stop.verse)),
+        <(int, int)>[(33, 7), (33, 32)],
+      );
+    });
   });
 
   group('every stop carries its warrant', () {

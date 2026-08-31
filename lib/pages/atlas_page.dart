@@ -1784,8 +1784,11 @@ class _JourneyPanel extends StatelessWidget {
                     .replaceAll('{n}', '${journey.journey.asideCount}'),
             ].join(' · '),
           ),
-          for (final s in journey.stops)
-            _stop(c, t, style, version, s, litIndices, sharedIndices),
+          for (final row in journey.itineraryRows)
+            row.placed != null
+                ? _stop(c, t, style, version, row.placed!, litIndices,
+                    sharedIndices)
+                : _unplacedStop(c, t, style, version, row.unplaced!),
         ],
       ),
     );
@@ -2257,6 +2260,114 @@ class _JourneyPanel extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  /// The gazetteer's name where we have a record, the itinerary's own id
+  /// where we do not. Never blank: the row exists to say this camp was
+  /// named, and a row with no name says nothing.
+  String _unplacedName(UnplacedStop u) {
+    final p = u.place;
+    if (p == null) return u.stop.placeId;
+    return p.ordinal == null
+        ? p.displayName(script)
+        : '${p.displayName(script)} ${p.ordinal}';
+  }
+
+  /// A stop the text names but the gazetteer cannot put on the map — see
+  /// [UnplacedStop]. Not an [InkWell]: [onSelectStop] lights a marker on
+  /// the map, and there is no marker here to jump to.
+  Widget _unplacedStop(
+    WbColors c,
+    WbType t,
+    JourneyStyle style,
+    String version,
+    UnplacedStop u,
+  ) {
+    final display = _unplacedName(u);
+    final note = u.stop.localizedNote(locale);
+    final leg = u.stop.isAside ? '' : _legWord(u.stop.leg);
+    final ref = PlaceRef(u.stop.englishBook, u.stop.chapter, u.stop.verse);
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(0, 5, 0, 5),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            margin: const EdgeInsets.only(top: 1, right: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+            decoration: BoxDecoration(
+              border:
+                  Border.all(color: style.colour, width: WbMetrics.hairline),
+            ),
+            child: Text(
+              '–',
+              style: TextStyle(
+                fontSize: t.chrome,
+                fontWeight: FontWeight.w700,
+                height: 1.2,
+                color: style.colour,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+          ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        display,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: t.text,
+                          fontWeight: FontWeight.w600,
+                          color: c.text,
+                          fontFamilyFallback: kCjkFontFallback,
+                        ),
+                      ),
+                    ),
+                    if (leg.isNotEmpty) ...[
+                      const SizedBox(width: 5),
+                      Text(
+                        leg,
+                        style: TextStyle(
+                          fontSize: t.chrome,
+                          color: c.mutedText,
+                          fontFamilyFallback: kCjkFontFallback,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 2),
+                Wrap(
+                  spacing: 4,
+                  runSpacing: 3,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    _refChip(c, t, version, ref),
+                    _tag(c, t,
+                        _s('journeyNoLocationTag', 'No location on our map')),
+                    if (!u.stop.attested)
+                      _tag(c, t, _s('journeyProvisionalTag', 'Provisional')),
+                  ],
+                ),
+                if (note != null && note.isNotEmpty) ...[
+                  const SizedBox(height: 3),
+                  _note(c, t, note),
+                ],
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -77,6 +77,38 @@ class ResolvedStop {
   bool get isAside => stop.isAside;
 }
 
+/// A stop the map cannot draw, kept so the itinerary can still show it.
+///
+/// Dropping it was the old behaviour and it is a quieter version of the
+/// invented-leg failure this file was written against: the line breaks,
+/// which is right, and the reader is given no way to see WHERE it broke
+/// or which camp is behind the break. Pi-hahiroth is the case that
+/// matters — Exodus 14:2 camps Israel there before the crossing, and it
+/// vanished from a list headed "42 stops" that showed 40.
+///
+/// [place] is null only when the gazetteer has no such id at all, which
+/// `journey_asset_test.dart` fails the build on, so no shipped route can
+/// produce one. It is nullable because `resolveJourney` is pure and must
+/// answer for a typo without throwing.
+class UnplacedStop {
+  const UnplacedStop({
+    required this.index,
+    required this.stop,
+    required this.place,
+  });
+
+  /// Position in the stop LIST, zero-based — the same index
+  /// [ResolvedStop.index] uses, so the two interleave by it.
+  final int index;
+  final JourneyStop stop;
+  final BiblePlace? place;
+
+  /// True where the gazetteer does not hold this id at all, as against
+  /// holding it without coordinates. Both are "we cannot draw it"; only
+  /// the second is a site the sources have not fixed.
+  bool get absent => place == null;
+}
+
 /// The key two places must share to be drawn as one marker.
 ///
 /// Their coordinate, formatted — not their id. A marker is a position on
@@ -132,13 +164,30 @@ class RouteSegment {
       haversineKm(from.place.lat!, from.place.lon!, to.place.lat!, to.place.lon!);
 }
 
+/// One line of the itinerary as a reader reads it — every stop the text
+/// names, drawable or not, in narrative order.
+///
+/// The panel walks this instead of [ResolvedJourney.stops], which holds
+/// only what can be drawn. The map still walks `stops`: a marker needs a
+/// coordinate and an unplaced camp has none.
+class ItineraryRow {
+  const ItineraryRow.placed(ResolvedStop this.placed) : unplaced = null;
+  const ItineraryRow.unplaced(UnplacedStop this.unplaced) : placed = null;
+
+  final ResolvedStop? placed;
+  final UnplacedStop? unplaced;
+
+  int get index => placed?.index ?? unplaced!.index;
+  JourneyStop get stop => placed?.stop ?? unplaced!.stop;
+}
+
 /// A journey joined to the gazetteer, ready to draw.
 class ResolvedJourney {
   const ResolvedJourney({
     required this.journey,
     required this.stops,
     required this.segments,
-    required this.unresolved,
+    required this.unplaced,
     required this.runs,
   });
 
@@ -166,8 +215,21 @@ class ResolvedJourney {
       collapsedRuns.fold(0, (n, r) => n + r.stops.length);
 
   /// Stops whose place is absent from the gazetteer or has no
-  /// coordinates. Their ids, in order, so a message can name them.
-  final List<String> unresolved;
+  /// coordinates, kept so the itinerary can still show them.
+  final List<UnplacedStop> unplaced;
+
+  /// The ids, in order — what the panel's count line has always printed.
+  List<String> get unresolved =>
+      <String>[for (final u in unplaced) u.stop.placeId];
+
+  /// Every stop the text names, placed and unplaced, in narrative order.
+  List<ItineraryRow> get itineraryRows {
+    final out = <ItineraryRow>[
+      for (final s in stops) ItineraryRow.placed(s),
+      for (final u in unplaced) ItineraryRow.unplaced(u),
+    ]..sort((a, b) => a.index.compareTo(b.index));
+    return List<ItineraryRow>.unmodifiable(out);
+  }
 
   String get id => journey.id;
 
@@ -294,7 +356,7 @@ ResolvedJourney resolveJourney(
     BibleJourney journey, Map<String, BiblePlace> byId) {
   final stops = <ResolvedStop>[];
   final segments = <RouteSegment>[];
-  final unresolved = <String>[];
+  final unplaced = <UnplacedStop>[];
 
   // Null after a stop that did not resolve, which is what breaks the line
   // rather than bridging the gap.
@@ -317,7 +379,7 @@ ResolvedJourney resolveJourney(
     final raw = journey.stops[i];
     final place = byId[raw.placeId];
     if (place == null || !place.located) {
-      unresolved.add(raw.placeId);
+      unplaced.add(UnplacedStop(index: i, stop: raw, place: place));
       // An aside is beside the track, so losing it costs a marker and
       // nothing else. Only a missing WAYPOINT breaks the line, because
       // only a waypoint was holding it together.
@@ -391,7 +453,7 @@ ResolvedJourney resolveJourney(
     journey: journey,
     stops: stops,
     segments: segments,
-    unresolved: unresolved,
+    unplaced: unplaced,
     runs: List<StopRun>.unmodifiable(runs),
   );
 }
