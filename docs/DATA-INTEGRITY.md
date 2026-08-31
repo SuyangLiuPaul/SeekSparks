@@ -6484,17 +6484,28 @@ end on a 〕 nothing opened, and 路加福音 8:45 closes its 〔 with an ASCII
 `)`. The other 22 of the 25 verses that fail a per-verse bracket count
 are legitimate notes spanning a verse boundary; see 45g.
 
-Also here, and small: `kwic_pane.dart:127` drops a line whose runs are
-null while still counting the reference, so its "All N references" footer
-overstates on `lxxwh`.
+**Closed:** `kwic_pane.dart`'s footer printed `_totalRefs` — what was
+*fetched* from the concordance — not what was *drawn*; a reference drops
+silently either when the tagged layer lacks the verse (the cause this
+entry named) or, more often, when it has the verse but no run whose
+*primary* number matches the one under study. `KwicTally` now derives the
+drawn-line and drawn-reference counts from the rendered lines themselves,
+the footer reports both plus a disclosure line for anything dropped, and
+the header's "hits" label — a verse count printed over a list that draws
+one line per occurrence — is now "references". `test/kwic_tally_test.dart`.
 
-And one raised by check 46 but deliberately not fixed in it:
-**`test/bundled_font_coverage_test.dart` is narrower than the generator
-it guards.** It scans `assets/originals` and `assets/strongs`;
-`tools/build_font_subsets.py` ingests far more, which is how 11 code
-points in `assets/bible_evidence.json` came to be rendering as nothing at
-all on web. The subset was rebuilt; the guard was not widened, because
-widening it is its own change with its own ratchet. See 46f.
+**Closed:** `test/bundled_font_coverage_test.dart`'s last test scanned
+eight hand-picked paths against a generator that walks all of `assets/`
+and `lib/`; the gap had already bitten once (46f) and bit again — #317's
+`bible_journeys.json` and #318's `chronology.json`/`wheel_history.json`
+shipped 44 Han characters with no glyph in `NotoSansSC-Sub` (41 in
+`wheel_history.json`, 2 in `chronology.json`, 1 in `bible_journeys.json`),
+rendering as silent absent text on web CanvasKit. The guard now walks
+every `.json` under `assets/` unconditionally, with pinned floors (1,200
+files, 5,600 code points) so it cannot pass by reading nothing; `lib/`
+stays out of scope because its only hits are regex character-class
+endpoints written as literals, never painted. The four font subsets were
+rebuilt with `tools/build_font_subsets.py`.
 
    *(This list's item 0, "the Strong's Chinese gloss, cut at the printed
    line break", is closed by check 44g — 488 entries repaired, the real
