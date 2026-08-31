@@ -254,10 +254,23 @@ void main() {
     }
 
     // Pinned floors on both axes, so the guard cannot pass by walking an
-    // empty or truncated tree. Measured this run: 1,236 assets/**/*.json
-    // files, 6,665 distinct code points across assets/ + lib/ (this scan,
-    // assets/ only, sits between that and the narrower scan it replaces).
-    expect(jsonFiles.length, greaterThan(1200),
+    // empty or truncated tree.
+    //
+    // MEASURE THESE ON THE COMMITTED TREE, NOT A WORKING COPY. A dev
+    // checkout also carries the licensed Eagle's View files, which are
+    // deliberately never committed — `assets/nasb-ev.json`,
+    // `assets/nsn-plus.json` and the 66 files in
+    // `assets/tagged/nsn-plus/`, 68 in all. A floor read off a local
+    // `find` is therefore ~68 too high for anywhere else, and CI, which
+    // only ever has what is committed, fails a guard that has found
+    // nothing wrong. That is exactly what a floor of 1200 (measured
+    // locally at 1,236) did to every run between cf2fc76 and here.
+    //
+    // Committed corpus: 1,168 assets/**/*.json files, 6,151 distinct
+    // code points. The floors sit below both with room for the corpus to
+    // shrink a little, while still catching the failure they exist for —
+    // a walk that has broken or narrowed returns near zero, not 1,100.
+    expect(jsonFiles.length, greaterThan(1100),
         reason: 'the walk found only ${jsonFiles.length} .json files under '
             'assets/ — did the directory move, or did the walk narrow?');
     expect(seen.length, greaterThan(5600),
