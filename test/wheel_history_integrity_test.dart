@@ -55,6 +55,17 @@ import 'package:flutter_test/flutter_test.dart';
 /// examine the data — and the last group proves it by rejecting a
 /// deliberately wrong reference before it trusts its verdict on the real
 /// ones.
+///
+/// WHERE THE SIBLING ASSETS ARE COVERED, so nobody writes this twice:
+/// `data_integrity_test.dart` already sweeps `ot_synopsis`,
+/// `gospel_synopsis`, `family_tree`, `bible_timeline`, `bible_evidence`,
+/// `hebrew_kings` and `section_titles` for references that name a verse
+/// which does not exist. `wheel_history.json` was the one asset in that
+/// family it did not reach, which is why the second group below exists.
+/// The 97 narrative events merged in from `bible_timeline.json` at load
+/// are pinned by `wheel_bible_narrative_test.dart` and their references
+/// by that same sweep, so this file deliberately reads the wheel's own
+/// asset and does not re-check them.
 void main() {
   final wheel =
       json.decode(File('assets/wheel_history.json').readAsStringSync())
