@@ -554,21 +554,26 @@ class _LoadingPageState extends State<LoadingPage> {
                   SizedBox(height: 24 * s),
                   Column(
                     children: [
+                      // ONE name, in the reader's own language — not
+                      // the English and the Chinese stacked together.
+                      // Asked for by the owner on 2026-08-31: a splash
+                      // that prints both is telling every reader half a
+                      // thing they cannot read.
+                      //
+                      // Routed through `appName` rather than a second
+                      // hardcoded pair, which is also what fixes 繁體:
+                      // the stacked version hardcoded the SIMPLIFIED
+                      // 雅伟之剑, so a Traditional reader was shown a
+                      // script they did not choose. The catalogue has
+                      // 雅偉之劍 and always did.
                       Text(
-                        "Yahweh's Sword",
+                        uiStrings['appName']?[settings.locale] ??
+                            "Yahweh's Sword",
                         style: TextStyle(
                           fontSize: settings.fontSize * 1.2,
                           fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
                           color: Theme.of(context).colorScheme.primary,
                           fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      SizedBox(height: 4 * s),
-                      Text(
-                        '雅伟之剑',
-                        style: TextStyle(
-                          fontSize: settings.fontSize * 1.0,
-                          color: Theme.of(context).colorScheme.primary,
                         ),
                       ),
                       SizedBox(height: 10 * s),
@@ -772,22 +777,15 @@ class _LoadingPageState extends State<LoadingPage> {
               ),
             ),
             SizedBox(height: 24 * s),
+            // Same single-name rule as the booting scaffold above.
             Text(
-              "Yahweh's Sword",
+              uiStrings['appName']?[settings.locale] ?? "Yahweh's Sword",
               style: TextStyle(
                 fontSize: settings.fontSize * 1.2,
                 fontFamily: settings.fontFamily,
                 fontFamilyFallback: kCjkFontFallback,
                 color: Theme.of(context).colorScheme.primary,
                 fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 4 * s),
-            Text(
-              '雅伟之剑',
-              style: TextStyle(
-                fontSize: settings.fontSize * 1.0,
-                color: Theme.of(context).colorScheme.primary,
               ),
             ),
             SizedBox(height: 10 * s),
