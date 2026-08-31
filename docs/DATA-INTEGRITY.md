@@ -6859,3 +6859,58 @@ edition is its own witness, and asking it costs no network at all.
 re-runnable and idempotent; `test/edition_script_purity_test.dart`
 ratchets both defect classes so a future re-import cannot reintroduce
 them silently.
+
+## Check 51 — the book-intro card's author and date, against the timeline's own dating apparatus
+
+(Labelled "check 50" by the plan that produced this run; that number was
+already taken by the check above, `2c45a9e`, which the plan's own
+`git log --oneline -3` did not reach. Numbered 51 here to avoid a
+duplicate label; the already-pushed commit trailer for this work reads
+"check 50" and is left as committed rather than rewritten.)
+
+`assets/book_introductions.json` ships 66 book introductions, each
+carrying `author` and `date` among other fields, trilingual, rendered by
+default at the top of chapter 1 (`showBookIntro` defaults true). Its
+`_meta` carried no `source` key at all — not "app-curated", not
+anything, the key did not exist — and nothing in `lib/` parsed `_meta`.
+So the app printed 66 authorship ascriptions and 66 dates as simply
+true, with no dating system named, on a surface a reader meets before
+either the kings chart (#292) or the chronology wheel (#318) — both of
+which already carry that apparatus.
+
+`bible_timeline.json` gives every one of its 98 events a `basis`
+(`thiele` / `scripture+thiele` / `conventional`) and an `approximate`
+flag. Cross-checking the two assets where they restate the same event:
+
+| | |
+|---|---|
+| shared events checked | 11 (the book-intro's date field against the matching `bible_timeline` event's year) |
+| agree | **10** — Exodus 1446, Deuteronomy 1406, 2 Samuel 1010, 1 Kings 970, 2 Kings 586, Malachi 430, Jeremiah 627, Nehemiah 445, Ezra 458, Revelation 95 |
+| disagree | **1** — Jonah: timeline −780 (`approximate: true`), intro "ca. 760 BCE" |
+| repaired | **0** |
+| named and left | **1** (Jonah) |
+
+Both sides of the Jonah disagreement are hedged (`approximate: true` on
+one, "ca." on the other), so by the rule this repo has now paid for
+repeatedly (both exact → repair; either hedged → name it and leave)
+neither number was changed. `test/book_intro_provenance_test.dart`
+pins the disagreement so it cannot be silently "fixed" by a later run
+or forgotten.
+
+**The fix was apparatus, not re-dating.** `_meta` gained
+`source: "app-curated"`, `notFromAnyEdition: true`, a named
+`datingSystem` field (the same early-Exodus chain `bible_timeline.json`
+records as `scripture+thiele`), and a trilingual `note` stating plainly
+that the introductions are written for this app, follow the traditional
+ascriptions, and that other scholars date and ascribe several of these
+books differently. `BookIntroMeta`/`BookIntroService.provenanceNote()`
+parse it; the reading-pane card renders it as one line under a hairline
+in its expanded state; the About page and the settings subtitle
+disclose it too. No `date`, `author`, `audience`, `summary` or verse
+string was altered. Full detail in `PROJECT_STATE.md`'s `main` row for
+`be9ec0d` and `HANDOFF.md`.
+
+Deferred, same unparsed-header shape, not touched this run:
+`bible_evidence.json`, `daily_verses.json`, `gospel_synopsis.json`,
+`chronology.json`, `bible_timeline.json`, `family_tree.json`,
+`bible_journeys.json` — each needs its own surface, not a sweep.
