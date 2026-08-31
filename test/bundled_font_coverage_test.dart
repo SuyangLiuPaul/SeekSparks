@@ -226,30 +226,43 @@ void main() {
 
   test('every character in the app data is covered, in the scripts we claim',
       () {
-    // This is the assertion that would have caught the fork-parent bug.
-    // Scans the original-language texts and the lexicons — where a gap
-    // costs a reader an actual word — rather than all 475 MB.
+    // This is the assertion that would have caught the fork-parent bug —
+    // and the one that follows it: tools/build_font_subsets.py scans
+    // every .json/.dart/.txt/.md under assets/ AND lib/, but this test
+    // used to check only eight hand-picked paths. #317's bible_journeys
+    // and #318's chronology/wheel_history shipped 44 Han characters with
+    // no glyph before this widened. So: every .json under assets/,
+    // unconditionally — no per-name exclusion list, because a named
+    // exclusion is exactly how the old guard went stale.
+    //
+    // lib/ is deliberately NOT walked, unlike the generator. Its only
+    // hits are regex character-class endpoints written as literals
+    // (`[一-鿿]` and friends in strongs_service.dart, text_patterns.dart,
+    // tagged_text_service.dart, models/strongs.dart) — code, never
+    // painted, four of the six even unassigned in Unicode. Matching the
+    // generator's scope exactly would import those as permanent
+    // exceptions into a test whose whole value is having none.
+    final jsonFiles = Directory('assets')
+        .listSync(recursive: true)
+        .whereType<File>()
+        .where((f) => f.path.endsWith('.json'))
+        .toList();
+
     final seen = <int>{};
-    for (final dir in const ['assets/originals', 'assets/strongs']) {
-      for (final f in Directory(dir).listSync(recursive: true).whereType<File>()) {
-        if (!f.path.endsWith('.json')) continue;
-        seen.addAll(utf8.decode(f.readAsBytesSync()).runes);
-      }
-    }
-    for (final f in const [
-      'assets/lxxwh.json',
-      'assets/cuvs-plus.json',
-      'assets/cuvs-yhwh.json',
-      'assets/bible_names.json',
-      'assets/family_tree.json',
-      'assets/hebrew_kings.json',
-    ]) {
-      seen.addAll(utf8.decode(File(f).readAsBytesSync()).runes);
+    for (final f in jsonFiles) {
+      seen.addAll(utf8.decode(f.readAsBytesSync()).runes);
     }
 
-    // The scan finding nothing would also pass; say so out loud.
-    expect(seen.length, greaterThan(5000),
-        reason: 'the scan read almost nothing — did the asset paths move?');
+    // Pinned floors on both axes, so the guard cannot pass by walking an
+    // empty or truncated tree. Measured this run: 1,236 assets/**/*.json
+    // files, 6,665 distinct code points across assets/ + lib/ (this scan,
+    // assets/ only, sits between that and the narrower scan it replaces).
+    expect(jsonFiles.length, greaterThan(1200),
+        reason: 'the walk found only ${jsonFiles.length} .json files under '
+            'assets/ — did the directory move, or did the walk narrow?');
+    expect(seen.length, greaterThan(5600),
+        reason: 'the scan read only ${seen.length} distinct code points — '
+            'did the asset paths move?');
 
     final missing = seen.where((c) => _isClaimed(c) && !covered.contains(c));
     expect(missing, isEmpty,
