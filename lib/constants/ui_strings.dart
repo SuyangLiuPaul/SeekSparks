@@ -4331,8 +4331,14 @@ const uiStrings = {
     'zh-Hant': '上下文',
     'en': 'KWIC',
   },
-  'kwicHits': {'zh-Hans': '处', 'zh-Hant': '處', 'en': 'hits'},
   'kwicRefs': {'zh-Hans': '处经文', 'zh-Hant': '處經文', 'en': 'references'},
+  'kwicLines': {'zh-Hans': '行', 'zh-Hant': '行', 'en': 'lines'},
+  'kwicNotTagged': {
+    'zh-Hans': '另有 {n} 处经文未列出（共 {total} 处）——本译本在这些经文中没有标注 {strongs}。',
+    'zh-Hant': '另有 {n} 處經文未列出（共 {total} 處）——本譯本在這些經文中沒有標註 {strongs}。',
+    'en': '{n} of {total} references are not shown — this edition tags '
+        'no {strongs} in them.',
+  },
   'kwicSortRef': {'zh-Hans': '按经卷', 'zh-Hant': '按經卷', 'en': 'Reference'},
   'kwicSortLeft': {'zh-Hans': '按左侧', 'zh-Hant': '按左側', 'en': 'Left'},
   'kwicSortRight': {'zh-Hans': '按右侧', 'zh-Hant': '按右側', 'en': 'Right'},

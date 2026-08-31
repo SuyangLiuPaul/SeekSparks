@@ -248,7 +248,7 @@ class _KwicPaneState extends State<KwicPane> {
                 child: Text(
                   '${widget.strongs} · '
                   '${scopedCountLabel(_totalRefs, _wholeRefs)} '
-                  '${s('kwicHits', 'hits')}',
+                  '${s('kwicRefs', 'references')}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
@@ -382,14 +382,45 @@ class _KwicPaneState extends State<KwicPane> {
 
   Widget _footer(WbColors wb, WbType t, String Function(String, String) s) {
     if (_loaded >= _totalRefs && _totalRefs > 0) {
+      // Every reference has been fetched, so the shortfall is final: the
+      // pane printed `_totalRefs` here, which is what it ASKED the
+      // concordance for, not what it drew. A reference the edition does
+      // not tag produces no line and leaves nothing on screen to account
+      // for it, and that happens for about one Strong's number in three
+      // (see [KwicTally]). Report the drawn counts and disclose the rest.
+      final tally = KwicTally.of(
+        referencesFetched: _totalRefs,
+        lines: _lines,
+      );
       return Padding(
         padding: const EdgeInsets.all(10),
-        child: Center(
-          child: Text(
-            '${s('kwicAllShown', 'All')} $_totalRefs '
-            '${s('kwicRefs', 'references')}',
-            style: TextStyle(fontSize: t.chrome, color: wb.mutedText),
-          ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '${s('kwicAllShown', 'All')} ${tally.lines} '
+              '${s('kwicLines', 'lines')} · ${tally.referencesShown} '
+              '${s('kwicRefs', 'references')}',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: t.chrome, color: wb.mutedText),
+            ),
+            if (tally.referencesDropped > 0)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  s(
+                    'kwicNotTagged',
+                    '{n} of {total} references are not shown — this '
+                        'edition tags no {strongs} in them.',
+                  )
+                      .replaceAll('{n}', '${tally.referencesDropped}')
+                      .replaceAll('{total}', '$_totalRefs')
+                      .replaceAll('{strongs}', widget.strongs),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: t.chrome, color: wb.mutedText),
+                ),
+              ),
+          ],
         ),
       );
     }

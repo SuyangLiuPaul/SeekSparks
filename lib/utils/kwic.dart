@@ -121,6 +121,63 @@ List<KwicLine> kwicLinesForVerse({
   return out;
 }
 
+/// What the pane actually DREW, against what it fetched.
+///
+/// The KWIC pane asks the concordance for the verses that carry a number
+/// and turns each into zero or more lines. Zero happens two ways: the
+/// tagged layer has no such verse at all, or it has the verse and no run
+/// whose PRIMARY number is the one under study — an implied number is
+/// context, not a hit, by [kwicLinesForVerse]'s own rule. Either way the
+/// reference is fetched and never drawn, so a footer reporting the
+/// FETCHED count is naming a set the reader cannot see.
+///
+/// It is not a rounding error. Joining `assets/strongs/concordance.json`
+/// against the shipped tagged layers, 4,442 of the 14,040 Strong's
+/// numbers lose at least one reference on the BSB and 4,652 do on
+/// 和合本雅伟版 — about one lookup in three. G25 is 110 references and
+/// the BSB tags it in 108; H430 is 2,246, of which 29 are verses the BSB
+/// tagged layer does not carry at all and 199 more carry no primary H430.
+///
+/// The counts must be taken FROM THE LINES rather than predicted from
+/// the assets, because `TaggedTextService` rewrites runs on load —
+/// `reuniteGlossRuns` strips a number off the closing half of a
+/// bracketed gloss in 193 verses of `cuvs-yhwh` — so the asset and the
+/// list do not have to agree.
+class KwicTally {
+  const KwicTally({
+    required this.referencesFetched,
+    required this.referencesShown,
+    required this.lines,
+  });
+
+  /// How many concordance references the pane has consumed so far.
+  final int referencesFetched;
+
+  /// How many of those produced at least one line.
+  final int referencesShown;
+
+  /// How many lines they produced. A verse may carry the number more
+  /// than once, so this is an OCCURRENCE count and is normally larger
+  /// than [referencesShown] — G25 draws 141 lines from 108 verses.
+  final int lines;
+
+  /// Fetched and never drawn. Only meaningful once every reference has
+  /// been loaded; while the list is still streaming, the references not
+  /// yet reached are not the same claim as the references that drew
+  /// nothing.
+  int get referencesDropped => referencesFetched - referencesShown;
+
+  static KwicTally of({
+    required int referencesFetched,
+    required List<KwicLine> lines,
+  }) =>
+      KwicTally(
+        referencesFetched: referencesFetched,
+        referencesShown: lines.map((l) => l.reference).toSet().length,
+        lines: lines.length,
+      );
+}
+
 /// The sort key for [KwicSort.leftContext].
 ///
 /// Reversed word order, so the word ADJACENT to the keyword sorts
