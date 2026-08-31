@@ -4,7 +4,7 @@
 // 2026-05-24 (v1.3.24): tightened from `Access-Control-Allow-Origin: *`
 // which let any website on the internet POST to these endpoints from
 // a user's browser. With the wide-open CORS, a malicious page could:
-//   * spam the developer's lsy95112@gmail.com inbox by sending fake
+//   * spam the developer's support@yahwehword.com inbox by sending fake
 //     error reports / feedback submissions
 //   * exhaust the Resend free quota
 //

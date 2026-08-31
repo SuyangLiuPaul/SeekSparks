@@ -79,6 +79,27 @@ void main() {
       expect(stripHitMarks(marked).contains(hitOpen), isFalse);
     });
 
+    test('plain marks the hit in brackets the destination cannot strip', () {
+      // The whole reason this exists: a .txt paste keeps no formatting,
+      // and Word and Pages did not take the rich flavour either.
+      const marked = '创世记 1:1  起初$hitOpen神$hitClose创造天地。';
+      expect(plainHitMarks(marked), '创世记 1:1  起初【神】创造天地。');
+    });
+
+    test('the brackets do not collide with the corpus own brackets', () {
+      // `[ ]` is a supplied word and the divine-name glosses print it
+      // unconditionally, so marking a hit on 主 with square brackets
+      // would be indistinguishable from 主[雅伟]. 【 】 occurs in no
+      // shipped edition.
+      final marked = markVerseHits('主[雅伟]是我的牧者',
+          highlight: const SearchHighlight(textTerms: ['主']));
+      expect(plainHitMarks(marked), '【主】[雅伟]是我的牧者');
+    });
+
+    test('an unmarked string is untouched by the plain flavour', () {
+      expect(plainHitMarks('nothing marked here'), 'nothing marked here');
+    });
+
     test('html wraps the hit and escapes everything else', () {
       final html = hitMarkedHtml('a ${hitOpen}b$hitClose <c> & d');
       expect(html, contains('<span style="$kHitHtmlStyle">b</span>'));

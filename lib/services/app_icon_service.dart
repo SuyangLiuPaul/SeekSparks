@@ -69,7 +69,18 @@ class AppIconService {
   ///
   /// Falls through variantForColor's named-colour buckets untouched, so
   /// it still resolves to "no variant" (the default icon).
-  static const Color kDefaultPrimaryColor = Color(0xFF2F72A6);
+  /// The app's ink, and the book on its icon — the two are the same
+  /// value on purpose, so the default swatch matches the logo the
+  /// reader is looking at.
+  ///
+  /// 2026-08-31 (owner-reported): "sword logo 颜色和 words 颜色一模一样
+  /// 很 confuse". SeekSparks and YsWords shipped the same pale-blue
+  /// ground, the same steel-blue book and the same off-white; only the
+  /// sword-versus-dove differed, which is invisible in a tab strip or a
+  /// row of home-screen icons. This is the book colour sampled from the
+  /// red icon art already in the repo (#B23A32), so the whole app moves
+  /// with the logo rather than the logo alone.
+  static const Color kDefaultPrimaryColor = Color(0xFFB23A32);
 
   /// The seed SeekSparks shipped with before the icon was first
   /// redesigned (the indigo→ember gradient icon, retired 2026-08-06).
@@ -82,6 +93,12 @@ class AppIconService {
   /// in the product (2026-08-25). Same forward-migration reasoning as
   /// [kLegacyPrimaryColor], one generation later.
   static const Color kLegacyPrimaryColor2 = Color(0xFF27395A);
+
+  /// The steel blue SeekSparks shipped from 2026-08-25 until the icon
+  /// went red (2026-08-31) to stop it reading as YsWords. Same
+  /// forward-migration reasoning as the two above: nobody chose it, it
+  /// was simply the default, so it moves with the default.
+  static const Color kLegacyPrimaryColor3 = Color(0xFF2F72A6);
 
   static const _iosChannel = MethodChannel('yswords/ios_icon');
   static const _androidChannel = MethodChannel('yswords/android_icon');

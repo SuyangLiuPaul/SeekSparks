@@ -6,7 +6,7 @@ import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/services/share_service.dart';
 import 'package:seeksparks/utils/copy_marking.dart'
-    show hasHitMarks, hitMarkedHtml, stripHitMarks;
+    show hasHitMarks, hitMarkedHtml, plainHitMarks;
 import 'package:seeksparks/utils/clipboard_fallback_stub.dart'
     if (dart.library.js_interop) 'package:seeksparks/utils/clipboard_fallback_web.dart';
 
@@ -146,27 +146,32 @@ abstract class ClipboardHelper {
     String marked, {
     String? messageOverride,
   }) async {
-    final plain = stripHitMarks(marked);
     if (!hasHitMarks(marked)) {
-      return copyWithFeedback(context, plain,
+      return copyWithFeedback(context, marked,
           messageOverride: messageOverride);
     }
+    // BOTH flavours carry the mark, and that is the point. The rich one
+    // arrives highlighted where it is accepted; the plain one arrives
+    // bracketed everywhere else — a .txt file, a plain-text mail part,
+    // and (2026-08-31, owner-reported) Word and Pages, which did not
+    // take the rich flavour from this app at all.
+    final plain = plainHitMarks(marked);
     final r = await copyRich(hitMarkedHtml(marked), plain);
     if (!context.mounted) return;
     final locale = _localeFor(context);
-    final message = !r.copied
-        ? null
-        : r.formatted
-            ? (messageOverride ??
-                (uiStrings['copied']?[locale] ?? 'Copied!'))
-            : (uiStrings['copiedNoHighlight']?[locale] ??
-                'Copied — plain text here, no highlight');
-    if (message == null) {
+    if (!r.copied) {
       // Nothing reached the clipboard: fall through to the shared
       // failure snackbar rather than inventing a second wording for it.
       return copyWithFeedback(context, plain);
     }
-    _toast(context, message, ok: true);
+    _toast(
+      context,
+      r.formatted
+          ? (messageOverride ?? (uiStrings['copied']?[locale] ?? 'Copied!'))
+          : (uiStrings['copiedBracketed']?[locale] ??
+              'Copied — hits marked 【 】'),
+      ok: true,
+    );
   }
 
   /// Share-first with copy-as-fallback. On platforms with the Web

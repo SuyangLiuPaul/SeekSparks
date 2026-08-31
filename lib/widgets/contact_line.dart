@@ -28,7 +28,7 @@ class ContactLine extends StatelessWidget {
 
   const ContactLine({
     super.key,
-    this.email = 'paul.sy.liu@gmail.com',
+    this.email = 'support@yahwehword.com',
     this.compact = false,
   });
 

@@ -12,7 +12,7 @@
 //                       → Environment variables.
 //
 // Optional Netlify env vars:
-//   FEEDBACK_TO       — destination email (default 'paulsyliu@gmail.com').
+//   FEEDBACK_TO       — destination email (default 'support@yahwehword.com').
 //                       Note: Resend's free tier without a verified domain
 //                       only allows sending TO the email tied to the API
 //                       key. Set FEEDBACK_TO to that address until you
@@ -34,7 +34,7 @@
 
 import { corsHeaders, isAllowedOrigin } from './_cors.mjs';
 
-const TO_DEFAULT = 'paulsyliu@gmail.com';
+const TO_DEFAULT = 'support@yahwehword.com';
 const FROM_DEFAULT = 'YsWords Feedback <onboarding@resend.dev>';
 
 export const config = {

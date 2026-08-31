@@ -658,15 +658,18 @@ class AppSettings extends ChangeNotifier {
         .toDouble();
     _primaryColor =
         Color(prefs.getInt(_kPrimaryColor) ?? AppIconService.kDefaultPrimaryColor.toARGB32());
-    // The icon has been redesigned twice (2026-08-06, then again
-    // 2026-08-25) and the default seed drifted from it both times —
+    // The icon has been redesigned three times (2026-08-06, 2026-08-25,
+    // then recoloured red on 2026-08-31 so it stops reading as YsWords)
+    // and the default seed moved with it every time —
     // see kDefaultPrimaryColor's doc comment. Either shipped default a
     // reader never deliberately chose gets moved forward to today's; a
     // colour the reader actually picked is left alone.
     if (_primaryColor.toARGB32() ==
             AppIconService.kLegacyPrimaryColor.toARGB32() ||
         _primaryColor.toARGB32() ==
-            AppIconService.kLegacyPrimaryColor2.toARGB32()) {
+            AppIconService.kLegacyPrimaryColor2.toARGB32() ||
+        _primaryColor.toARGB32() ==
+            AppIconService.kLegacyPrimaryColor3.toARGB32()) {
       _primaryColor = AppIconService.kDefaultPrimaryColor;
       await prefs.setInt(_kPrimaryColor, _primaryColor.toARGB32());
     }

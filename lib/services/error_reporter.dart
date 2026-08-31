@@ -3,7 +3,7 @@
 /// Captures uncaught Flutter / async errors on every platform we
 /// ship (web / iOS / macOS / Android) and POSTs a JSON blob to
 /// `/api/errorReport` — which forwards via Resend to the developer
-/// inbox (`lsy95112@gmail.com`).
+/// inbox (`support@yahwehword.com`).
 ///
 /// 2026-05-24 (v1.3.21): added in response to the priorities.md
 /// item #2 — "Today, a crash on seeksparks.netlify.app is invisible

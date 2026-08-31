@@ -85,7 +85,38 @@ String markVerseHits(
   return markHits(text, splitOnTerms(text, highlight.textTerms));
 }
 
-/// The `text/plain` flavour: the same words, no sentinels.
+/// The brackets the plain-text flavour marks a hit with.
+///
+/// 2026-08-31, second round (owner-reported): "复制粘贴 txt 里面就没用了
+/// format" — and, as it turned out, Word and Pages did not take the
+/// rich flavour either. A mark that exists only as colour is a mark
+/// that most destinations drop, so the words now say it themselves.
+///
+/// Lenticular brackets rather than the `[God]` first suggested, because
+/// square brackets already mean something in this corpus and would be
+/// read as that meaning: `[ ]` is a translator's supplied word, and the
+/// divine-name glosses print it unconditionally — 主[雅伟], 主[基督].
+/// Marking a hit the same way would make 主[雅伟] and a hit on 主
+/// indistinguishable. 【 】 occurs nowhere in any shipped edition
+/// (checked across cuvs-yhwh, bsb and kjvs: zero), reads as deliberate
+/// in a Chinese handout, and is unmistakably a marker in an English one.
+const String kPlainHitOpen = '【';
+const String kPlainHitClose = '】';
+
+/// The `text/plain` flavour: the hit in brackets the destination cannot
+/// strip. This is what a .txt file, a code box or a mail client's
+/// plain-text part receives — and, whenever the rich flavour is
+/// refused, what Word and Pages receive too.
+String plainHitMarks(
+  String marked, {
+  String open = kPlainHitOpen,
+  String close = kPlainHitClose,
+}) =>
+    marked.replaceAll(hitOpen, open).replaceAll(hitClose, close);
+
+/// The same words with the marking removed entirely — for a caller that
+/// wants the verse as the edition prints it, and for proving that
+/// marking changed nothing else.
 String stripHitMarks(String marked) =>
     marked.replaceAll(hitOpen, '').replaceAll(hitClose, '');
 

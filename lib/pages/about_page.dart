@@ -250,7 +250,7 @@ class _ContactCard extends StatelessWidget {
   final String locale;
   const _ContactCard({required this.scheme, required this.locale});
 
-  static const _email = 'paul.sy.liu@gmail.com';
+  static const _email = 'support@yahwehword.com';
 
   Future<void> _open(BuildContext context) async {
     final uri = 'mailto:$_email?subject=Yahweh%27s%20Sword%20copyright%20enquiry';

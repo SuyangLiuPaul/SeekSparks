@@ -15,7 +15,7 @@
 // Required env vars (shared with submitFeedback.mjs):
 //   RESEND_API_KEY    — Resend account
 // Optional:
-//   FEEDBACK_TO       — destination email (default lsy95112@gmail.com)
+//   FEEDBACK_TO       — destination email (default support@yahwehword.com)
 //   ERROR_REPORT_RATE — per-IP rate cap in errors-per-minute (default 6)
 //
 // Request shape (every field optional except `error`):
@@ -38,7 +38,7 @@
 
 import { corsHeaders, isAllowedOrigin } from './_cors.mjs';
 
-const TO_DEFAULT = 'lsy95112@gmail.com';
+const TO_DEFAULT = 'support@yahwehword.com';
 const FROM_DEFAULT = 'SeekSparks <onboarding@resend.dev>';
 
 // Per-instance rate-limit map. Resets when Netlify recycles the

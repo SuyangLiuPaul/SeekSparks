@@ -5652,12 +5652,12 @@ const uiStrings = {
   },
   'feedbackCopiedFallback': {
     'zh-Hans': '邮件应用不可用，反馈已复制到剪贴板。'
-        '请粘贴到您的邮件中发到 paulsyliu@gmail.com。',
+        '请粘贴到您的邮件中发到 support@yahwehword.com。',
     'zh-Hant': '郵件應用不可用，回饋已複製到剪貼簿。'
-        '請貼到您的郵件中發到 paulsyliu@gmail.com。',
+        '請貼到您的郵件中發到 support@yahwehword.com。',
     'en':
         'Mail app unavailable — feedback copied to clipboard. '
-            'Paste it into your email to paulsyliu@gmail.com.',
+            'Paste it into your email to support@yahwehword.com.',
   },
   'feedbackPrivacyNote': {
     'zh-Hans': '为方便排查问题，发送时会一并附上：界面语言、圣经版本、'
@@ -5735,14 +5735,13 @@ const uiStrings = {
     'zh-Hant': '已複製！',
     'en': 'Copied!',
   },
-  // The destination could not take the highlight — a plain-text field,
-  // or a browser that refused the rich flavour. The words are on the
-  // clipboard either way; only the marking is gone, and the reader
-  // would otherwise find that out in the document.
-  'copiedNoHighlight': {
-    'zh-Hans': '已复制（此处为纯文本，无标记）',
-    'zh-Hant': '已複製（此處為純文字，無標記）',
-    'en': 'Copied — plain text here, no highlight',
+  // The destination took only plain text, so the hits arrived in
+  // brackets rather than in colour. Worth saying: the reader is about
+  // to see 【 】 in their document and should know they put it there.
+  'copiedBracketed': {
+    'zh-Hans': '已复制（命中以【】标记）',
+    'zh-Hant': '已複製（命中以【】標記）',
+    'en': 'Copied — hits marked 【 】',
   },
   // Copy Center: mark what the search found, so the pasted document
   // shows which word answered the query.
