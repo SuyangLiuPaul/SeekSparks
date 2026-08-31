@@ -186,6 +186,25 @@ Color streamColor(String line, int index, int count) =>
 /// ui_strings.dart because the unattended loop shares this checkout and
 /// edits that file; fold these in on a quiet merge.
 const Map<String, Map<String, String>> wheelStrings = {
+  'wheelAbout': {
+    'zh-Hans': '关于本图', 'zh-Hant': '關於本圖', 'en': 'About this chart',
+  },
+  'wheelAboutProvenance': {
+    'zh-Hans': '年份的来源', 'zh-Hant': '年份的來源',
+    'en': 'Where the dates come from',
+  },
+  'wheelAboutCoverage': {
+    'zh-Hans': '本图收录什么', 'zh-Hant': '本圖收錄什麼',
+    'en': 'What is on the chart',
+  },
+  'wheelAboutScope': {
+    'zh-Hans': '民族表止于何处', 'zh-Hant': '民族表止於何處',
+    'en': 'Where the table of nations stops',
+  },
+  'wheelAboutAxis': {
+    'zh-Hans': '年代轴止于何处', 'zh-Hant': '年代軸止於何處',
+    'en': 'Where the axis stops',
+  },
   'wheelTitle': {
     'zh-Hans': '世界史轮盘',
     'zh-Hant': '世界史輪盤',
@@ -613,6 +632,11 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
             icon: const Icon(Icons.filter_list),
             tooltip: _s('wheelFilter', 'Filter', locale),
             onPressed: () => _showFilter(context, locale),
+          ),
+          IconButton(
+            icon: const Icon(Icons.info_outline),
+            tooltip: _s('wheelAbout', 'About this chart', locale),
+            onPressed: () => _showAbout(context, locale),
           ),
           const LanguageSwitcherButton(),
           const HomeIconButton(),
@@ -1072,6 +1096,63 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
               ),
             );
           });
+        },
+      ),
+    );
+  }
+
+  void _showAbout(BuildContext context, String locale) {
+    final wb = WbColors.of(context);
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: wb.paneBg,
+      shape: const RoundedRectangleBorder(),
+      isScrollControlled: true,
+      builder: (sheet) => FutureBuilder<WheelHistoryData>(
+        future: _future,
+        builder: (c, snap) {
+          final t = WbType.of(c);
+          final data = snap.data;
+          if (data == null) return const SizedBox(height: 120);
+          final meta = data.meta;
+          Widget section(String headingKey, String headingFallback,
+                  String body) =>
+              body.isEmpty
+                  ? const SizedBox.shrink()
+                  : Padding(
+                      padding: EdgeInsets.only(bottom: t.scaled(8)),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(_s(headingKey, headingFallback, locale),
+                              style: TextStyle(
+                                  color: wb.mutedText,
+                                  fontSize: t.scaled(12),
+                                  fontWeight: FontWeight.w600)),
+                          SizedBox(height: t.scaled(4)),
+                          Text(body,
+                              style: TextStyle(
+                                  color: wb.mutedText,
+                                  fontSize: t.scaled(12))),
+                        ],
+                      ),
+                    );
+          return _sheet(c, [
+            Text(_s('wheelAbout', 'About this chart', locale),
+                style: TextStyle(
+                    color: wb.text,
+                    fontSize: t.scaled(15),
+                    fontWeight: FontWeight.w600)),
+            SizedBox(height: t.scaled(8)),
+            section('wheelAboutProvenance', 'Where the dates come from',
+                meta.provenanceFor(locale)),
+            section('wheelAboutCoverage', 'What is on the chart',
+                meta.coverageFor(locale)),
+            section('wheelAboutScope', 'Where the table of nations stops',
+                meta.scopeFor(locale)),
+            section('wheelAboutAxis', 'Where the axis stops',
+                meta.axisFor(locale)),
+          ]);
         },
       ),
     );

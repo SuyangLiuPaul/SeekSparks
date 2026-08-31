@@ -1,7 +1,11 @@
 {
  "_meta": {
   "purpose": "The chronology wheel's world-history dataset: the table of nations read out of this app's own scripture, the powers of the world as dated bands, and the events of scripture, church and world history from the ancient near east to the present.",
-  "provenance": "Every nation carries the verse it is read from (assets/kjv.json, Genesis 10 and 11). Every power and post-scriptural event carries a conventional, widely-published date; none is taken from any copyrighted chart. Compiled and then independently audited entry by entry; 77 audit findings were applied before this file was written.",
+  "provenance": {
+   "en": "Every nation on this chart carries the verse it was read from, in Genesis 10 and 11. Every power, and every event after the close of scripture, carries a conventional, widely published date; none was taken from any copyrighted chart. The whole file was audited entry by entry before it shipped.",
+   "zh-Hans": "本图中每个民族都注明其所据经文，出自创世记第10、11章。圣经之后的每个政权与事件所用年份，均为通行且广为出版的年代；没有一项取自任何受版权保护的图表。全部条目在发布前已逐条核查。",
+   "zh-Hant": "本圖中每個民族都註明其所據經文，出自創世記第10、11章。聖經之後的每個政權與事件所用年份，均為通行且廣為出版的年代；沒有一項取自任何受版權保護的圖表。全部條目在發布前已逐條核查。"
+  },
   "basisValues": {
    "scripture": "the text states it",
    "scripture+thiele": "scripture states the interval; the absolute year follows Thiele's reconstruction",
@@ -14,8 +18,16 @@
    "zh-Hans": "本表按创世记第10章全章排列，再沿闪的家谱延至创世记第11章，止于他拉的儿子；罗得（创11:27）及其后的世代不在其中。",
    "zh-Hant": "本表按創世記第10章全章排列，再沿閃的家譜延至創世記第11章，止於他拉的兒子；羅得（創11:27）及其後的世代不在其中。"
   },
-  "coverage": "Two layers: the events scripture and church history record, and the era-defining events of the wider world — war, discovery, invention, law, migration and disaster — without which the centuries a reader has lived through would be the emptiest part of the chart.",
-  "axis": "4000 BC to AD 2026. Events earlier than the axis are not carried: drawing one would clamp it to the rim and state a year nobody claims. The beginning of farming, c. 9500 BC, is left off for this reason rather than moved."
+  "coverage": {
+   "en": "Two layers: the events scripture and church history record, and the era-defining events of the wider world — war, discovery, invention, law, migration and disaster — without which the centuries a reader has lived through would be the emptiest part of the chart.",
+   "zh-Hans": "本图分两层：一是圣经与教会历史所记载的事件，二是世界史上划定时代的事件——战争、发现、发明、法律、迁徙与灾难。若无后者，读者自身所经历的那几个世纪反而会是全图最空白的部分。",
+   "zh-Hant": "本圖分兩層：一是聖經與教會歷史所記載的事件，二是世界史上劃定時代的事件——戰爭、發現、發明、法律、遷徙與災難。若無後者，讀者自身所經歷的那幾個世紀反而會是全圖最空白的部分。"
+  },
+  "axis": {
+   "en": "The axis runs from 4000 BC to AD 2026. Anything earlier is not carried: drawing it would pin it to the rim and state a year nobody claims. The beginning of farming, about 9500 BC, is left off for that reason rather than moved.",
+   "zh-Hans": "本图的年代轴自公元前4000年至公元2026年。更早的事件不予收录：若强行绘出，只能贴在最外圈，等于标出一个无人主张的年份。农业的起源（约公元前9500年）因此被略去，而非被挪动。",
+   "zh-Hant": "本圖的年代軸自公元前4000年至公元2026年。更早的事件不予收錄：若強行繪出，只能貼在最外圈，等於標出一個無人主張的年份。農業的起源（約公元前9500年）因此被略去，而非被挪動。"
+  }
  },
  "streams": [
   {

@@ -367,6 +367,24 @@ void main() {
     await unmount(tester);
   });
 
+  testWidgets('the About sheet says where the dates come from',
+      (tester) async {
+    await pump(tester, const Size(1440, 900));
+    await tester.tap(find.byIcon(Icons.info_outline));
+    await settle(tester);
+    expect(tester.takeException(), isNull,
+        reason: 'opening the sheet threw — `WbType.of` watches, and the '
+            'AppBar action is a tap handler, not a build');
+    final text = sheetText(tester);
+    // Read from the asset, never hardcoded: the sheet must be showing the
+    // file's own header, not a sentence written in the page. This page's
+    // shipped default is zh-Hans, so assert the Chinese strings.
+    expect(text, contains('创世记'));       // provenance, zh-Hans
+    expect(text, contains('版权保护'));     // provenance, zh-Hans
+    expect(text, contains('公元前4000年')); // axis, zh-Hans
+    await unmount(tester);
+  });
+
   testWidgets('an English query opens the Chinese record it found',
       (tester) async {
     await pump(tester, const Size(1440, 900));

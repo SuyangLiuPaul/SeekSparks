@@ -334,18 +334,51 @@ class WheelHistoryEvent {
       );
 }
 
+/// The file's own header, and the only place the wheel says where its
+/// dates come from and where it stops.
+class WheelHistoryMeta {
+  const WheelHistoryMeta({
+    required this.provenance,
+    required this.coverage,
+    required this.scope,
+    required this.axis,
+  });
+
+  final Map<String, String> provenance;
+  final Map<String, String> coverage;
+  final Map<String, String> scope;
+  final Map<String, String> axis;
+
+  String provenanceFor(String locale) => _pick(provenance, locale);
+  String coverageFor(String locale) => _pick(coverage, locale);
+  String scopeFor(String locale) => _pick(scope, locale);
+  String axisFor(String locale) => _pick(axis, locale);
+
+  static const WheelHistoryMeta empty =
+      WheelHistoryMeta(provenance: {}, coverage: {}, scope: {}, axis: {});
+
+  static WheelHistoryMeta fromJson(Map<String, dynamic> j) => WheelHistoryMeta(
+        provenance: _localised(j['provenance']),
+        coverage: _localised(j['coverage']),
+        scope: _localised(j['scope']),
+        axis: _localised(j['axis']),
+      );
+}
+
 class WheelHistoryData {
   const WheelHistoryData({
     required this.streams,
     required this.nations,
     required this.powers,
     required this.events,
+    required this.meta,
   });
 
   final List<WheelStream> streams;
   final List<WheelNation> nations;
   final List<WheelPower> powers;
   final List<WheelHistoryEvent> events;
+  final WheelHistoryMeta meta;
 
   /// The nations whose descent feeds one band, in generational order —
   /// what a reader sees when they open a band and ask "who is this?"
@@ -379,6 +412,8 @@ class WheelHistoryData {
             .map(WheelHistoryEvent.fromJson)
             .toList()
           ..sort((a, b) => a.year.compareTo(b.year)),
+        meta: WheelHistoryMeta.fromJson(
+            ((j['_meta'] as Map?) ?? const {}).cast<String, dynamic>()),
       );
 }
 
@@ -386,6 +421,9 @@ Map<String, String> _localised(Object? raw) => {
       for (final e in ((raw as Map?) ?? const {}).entries)
         if (e.value is String) e.key.toString(): e.value as String,
     };
+
+String _pick(Map<String, String> m, String locale) =>
+    m[locale] ?? m['en'] ?? '';
 
 /// Prefix on every id [bibleNarrativeEvents] produces. The two assets
 /// were compiled separately and share no id today, but nothing stops
@@ -569,6 +607,7 @@ class WheelHistoryService {
       streams: base.streams,
       nations: base.nations,
       powers: base.powers,
+      meta: base.meta,
       events: [
         ...base.events,
         ...bibleNarrativeEvents(

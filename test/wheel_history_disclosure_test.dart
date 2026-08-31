@@ -126,6 +126,21 @@ void main() {
             '${split.map((e) => "${e.key}=${e.value}").join(", ")}');
   });
 
+  /// The detector above iterates the four RECORD lists, so the asset's
+  /// own header — `_meta` — is outside its reach by construction. This
+  /// is that same excuse-or-read discipline applied to the header
+  /// (#318 phase 24).
+  test('the file header is disclosed too, or excused with its reason', () {
+    final meta = (raw['_meta'] as Map).cast<String, dynamic>();
+    const readByModel = {'provenance', 'coverage', 'scope', 'axis'};
+    final remainder = meta.keys.toSet().difference(readByModel);
+    expect(remainder, <String>{'purpose', 'basisValues', 'approximate', 'streams'},
+        reason: 'these four are compiler notes and per-record glossaries the '
+            'page already prints per record via `_basisText` / '
+            '`approximatePrefix` — a NEW `_meta` key appearing here must be '
+            'read by the model, not added to this excuse list');
+  });
+
   /// The defect this ticket actually found, stated as the reader saw it.
   test('a power dated from scripture does not say it is not in scripture',
       () {
