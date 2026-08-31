@@ -6162,7 +6162,7 @@ that do not, and read the 27 again.
 | single-character sites carried in from check 46 | **27** | |
 | **repaired** | **5** | 3 of them provable from our own corpus alone |
 | proved to be the **sweep's own false positives** | **6** | 3 verse boundaries, 3 cuvs-plus corruptions |
-| witnessed but **deliberately left** | **16** | §47c, with the evidence attached |
+| witnessed but **deliberately left** | **15** | §47c, with the evidence attached (was 16; check 50 struck 馬太福音 25:20, resolved upstream) |
 | records written | **15** | flat 简, flat 繁, `tagged/cuvs-yhwh` |
 | `sweep_flat_dropouts.py` single-character sites | 27 → **23** | |
 
@@ -6236,11 +6236,12 @@ corpus contradicts itself:**
 | 申命記 5:5, 申命記 32:19, 馬可福音 1:24 | verse-boundary placement — our *next* verse begins with the 说 the sibling puts at the end of this one |
 | 創世記 47:9 (早), 那鴻書 3:8 (或), 使徒行傳 28:18 (罪) | corruption in `cuvs-plus`; both external witnesses read exactly as we do. 那鴻書 3:8's 或 is a mangled marginal note, 使徒行傳 28:18 doubles 罪。罪。 |
 
-**Left, deliberately — 16 sites.** At each, two independent witnesses do
-supply a character our text lacks, but our reading is grammatical and
-says the same thing. The last column is how often our own corpus writes
-the fuller form elsewhere — high counts are why these are *listed* rather
-than dismissed.
+**Left, deliberately — 15 sites (was 16; check 50 struck 馬太福音 25:20,
+resolved by the publisher's 2026-08-29 revision).** At each, two
+independent witnesses do supply a character our text lacks, but our
+reading is grammatical and says the same thing. The last column is how
+often our own corpus writes the fuller form elsewhere — high counts are
+why these are *listed* rather than dismissed.
 
 | verse | ours | published | fuller form elsewhere in our text |
 |---|---|---|---|
@@ -6253,7 +6254,7 @@ than dismissed.
 | 創世記 50:11 | 一场大的哀哭 | 一场**极**大的哀哭 | 20 |
 | 詩篇 59:12 | *(opens)* 他们口中的罪 | **因**他们口中的罪 | 92 |
 | 馬太福音 6:2 | 在你**面前**吹号 | 在你**前面**吹号 | 78 |
-| 馬太福音 25:20 | 那另外五千**的**来 | 那另外**的**五千来 | — (transposition) |
+| ~~馬太福音 25:20~~ | ~~那另外五千**的**来~~ | ~~那另外**的**五千来~~ | struck — check 50: the publisher's 2026-08-29 revision (`49af9be`) already carries the published reading; `assets/cuvs-yhwh.json` at `040025020` now reads 那另外的五千来 |
 | 使徒行傳 24:16 | **因此我**自己勉励 | **我因此**自己勉励 | 3 |
 | 使徒行傳 26:29 | 无论是少是多劝 | 无论是少**劝**是多劝 | — |
 | 羅馬書 4:23 | 算为他**的**义这句话 | 算为他义**的**这句话 | — (transposition) |
@@ -6261,9 +6262,14 @@ than dismissed.
 | 哥林多後書 13:5 | 在你们**里面**吗 | 在你们**心里**吗 | 435 |
 | 希伯來書 2:2 | 凡犯悖逆的 | 凡**干**犯悖逆的 | 39 |
 
+*(Note for whoever reads this table next: the 羅馬書 4:23 row is not
+stale like 馬太福音 25:20 was. Our "ours" reading is present in the
+current asset, wrapped in `"…"`, which is why a naive substring search
+for 算为他的义这句话 misses it — check 50 verified this directly.)*
+
 **Why they are left, stated so a later reader can disagree.** §26's rule
 is that a witness *supplies a reading*; it does not vote on whether the
-site is broken. Sixteen verses of shipped scripture are not worth
+site is broken. Fifteen verses of shipped scripture are not worth
 rewriting on witnesses whose independence **from each other** this check
 had no way to measure — both may be 新标点和合本 digitisations, in which
 case their agreement is one vote and not two, and measuring it would take
@@ -6461,9 +6467,20 @@ lacks, and our reading is nonetheless grammatical and means the same
 thing — 弟兄 where they read 弟兄们, 心 where they read 心里. Check 26's
 rule is not satisfied, so none was repaired. What blocks them is a
 measurement, not a judgement: the two witnesses' independence **from each
-other** is unknown, and if both descend from 新标点和合本 then 16 verses
-would be repaired on one vote wearing two coats. Measure that agreement
-rate on a sample large enough to decide before touching any of them.
+other** is unknown, and if both descend from 新标点和合本 then 15 verses
+(16 before check 50 struck 馬太福音 25:20) would be repaired on one vote
+wearing two coats. Measure that agreement rate on a sample large enough
+to decide before touching any of them.
+
+*(Measured by check 50, and worth recording here rather than acting on:
+`bible.fhl.net/json/qb.php` returns a whole chapter when `sec` is
+omitted — verified this run, `chineses=約一&chap=4&version=unv` returned
+21 records with `status:success` — so the stated obstacle above, "31,102
+requests to an API that serves one verse at a time", is really **1,189
+chapter requests**, and the independence measurement is affordable.
+`https://ebible.org/Scriptures/cmn-cu89s_usfm.zip` also still returns
+200 / 1,424,987 bytes. Both checked this run; the measurement itself is
+not done this run.)*
 
 **The conditions from 45g still bind, and checks 46 and 47 strengthened
 them.** Do not resolve by majority: `cuvs-plus` agrees with the reading
@@ -6779,3 +6796,66 @@ Downgrading `israel-united-monarchy` to `conventional` was considered and
 remove, on one of the three records that fix was about. Claiming less is
 not always the safer option; here it would have re-introduced a closed
 defect.
+
+---
+
+## Check 50 — the two 和合本雅伟版 editions witness each other
+
+`assets/cuvs-yhwh.json` (Simplified, 31,102 verses) and
+`assets/cuvs-yhwh-tr.json` (Traditional, 31,102 verses) were regenerated
+together, one day apart from this check, by `49af9be feat(和合本雅伟版):
+import the publisher's 2026-08-29 revision`. They are the same edition in
+two scripts — and nothing in the repo had ever asked them to agree.
+Deriving a traditional→simplified character map from the corpus itself
+(every equal-length verse pair, majority vote per character) and
+converting every traditional verse against its simplified twin costs no
+network at all.
+
+| | |
+|---|---|
+| records, both files | 31,102 / 31,102, ids identical |
+| verse pairs whose length differs | 0 |
+| derived t→s map | 3,106 characters, 4 ambiguous (all punctuation) |
+| verses disagreeing after conversion | **7** |
+| **repaired** | **2** |
+| named and left | **5** |
+
+**Repaired — both are singletons against the file's own overwhelming
+pattern, not a recension difference:**
+
+| verse | file | was | now | what settles it |
+|---|---|---|---|---|
+| 038001003 撒迦利亞書 1:3 | Simplified | 万军之雅伟**說** | 万军之雅伟**说** | the Simplified file writes 说 9,538 times and 說 exactly once — this site — while the Traditional twin already reads 說 correctly at the matching position |
+| 040025020 馬太福音 25:20 | Traditional | 那另外**的的**五**來** | 那另外**的**五**千**來 | 的 doubled and 千 dropped; the Simplified twin reads 那另外的五千来, and the same verse writes 五千 three more times in the same sentence |
+
+**Named and left — 凋 (Simplified) / 雕 (Traditional), the traditional
+edition's own orthography, systematic and not a defect:**
+
+| verse | Simplified | Traditional |
+|---|---|---|
+| 023033009 賽33:9 | 樹林凋残 | 樹林雕殘 |
+| 023040007 賽40:7 | 花必凋残 | 花必雕殘 |
+| 023040008 賽40:8 | 花必凋残 | 花必雕殘 |
+| 059001011 雅1:11 | 花也凋谢 | 花也雕謝 |
+| 060001024 彼前1:24 | 花必凋谢 | 花必雕謝 |
+
+Counted across both files: 凋 occurs 5 times, always Simplified; 雕 occurs
+83 times, including these same 5 sites in Traditional. 83 against 5 is
+**systematic**, not a singleton — the Traditional 和合本's own spelling,
+where 雕殘/雕謝 stands for what the Simplified modernisation spells
+凋残/凋谢. By the rule this repo has paid for twice (check 41's
+`biblexg-v2-tr` entry: both exact → repair; either hedged → name and
+leave), repairing these would impose one edition's house spelling on the
+other's and is not done. The `”` vs `」` difference at 023040008 is a
+quotation-mark convention, not a defect, and surfaces only because the
+derived map picks a majority for the four ambiguous punctuation
+characters; it is not normalised in either direction.
+
+**The structural point.** Neither defect was found by reading — both
+editions were regenerated in the same commit and, until this check,
+nothing had ever compared them character for character. A bilingual
+edition is its own witness, and asking it costs no network at all.
+`tools/repair_cuvs_yhwh_editions.py` carries the repair forward and is
+re-runnable and idempotent; `test/edition_script_purity_test.dart`
+ratchets both defect classes so a future re-import cannot reintroduce
+them silently.
