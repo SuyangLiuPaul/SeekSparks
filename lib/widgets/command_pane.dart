@@ -629,6 +629,12 @@ class _CommandPaneState extends State<CommandPane> {
   /// Tap a result: scroll the center reader to the verse (pendingJump
   /// handshake, drained by the reader's next frame) and focus it in
   /// the analysis pane.
+  /// `version/book` pairs whose tagging has been asked for already —
+  /// see [_warmTaggingForRow].
+  final Set<String> _tagRequested = {};
+  final Set<String> _tagPending = {};
+  bool _tagFlushScheduled = false;
+
   void _openVerse(Verse verse) {
     final wb = context.read<WorkbenchProvider>();
     jumper.prepareJumpToVerse(verse, wb.mainProvider);
@@ -640,6 +646,22 @@ class _CommandPaneState extends State<CommandPane> {
       WorkbenchProvider wb, AppSettings settings, List<ConcordanceRef> refs) async {
     final mp = wb.mainProvider;
     final hl = highlightsForQuery(wb.lastQuery);
+    // A Strong's number cannot be located in a verse without that
+    // book's tagging, so a copy of the whole result set loads the whole
+    // result set's books — the reader asked for every match, and half a
+    // document marked is worse than either alternative.
+    //
+    // This awaits before writing to the clipboard, which on web can
+    // cost the user-activation window the rich `text/html` flavour
+    // rides on. That is an acceptable trade only because the plain
+    // flavour now carries the mark too: the worst case is 【神】 in
+    // brackets instead of a yellow wash, not an unmarked document.
+    if (TaggedTextService.supports(mp.currentVersion)) {
+      final books = <String>{for (final r in refs) r.englishBook};
+      await Future.wait(books
+          .map((b) => TaggedTextService.prefetchBook(mp.currentVersion, b)));
+      if (!mounted) return;
+    }
     final lines = <String>[wb.strongsQueryLabel ?? '', ''];
     for (final r in refs) {
       final displayBook =
@@ -648,14 +670,9 @@ class _CommandPaneState extends State<CommandPane> {
           _cleanPreview(wb.verseByRef['${r.englishBook}-${r.chapter}-${r.verse}']
                   ?.text ??
               '');
-      // Marked from the tagging ALREADY loaded, never by loading more.
-      // Two reasons, and either alone would settle it: the rich
-      // clipboard flavour rides the browser's copy event and an await
-      // here would close the user-activation window that makes it
-      // possible; and a list showing 35 books would pull most of the
-      // tagged layer to mark a copy. So the clipboard carries exactly
-      // the marking the list on screen carries — which is also the
-      // only marking the reader has been shown and can predict.
+      // Every book in the copy is loaded first (above), so a copy of
+      // 22 books is marked in all 22 — not in the handful the reader
+      // happened to scroll past.
       final runs = TaggedTextService.cachedForVerse(
         version: mp.currentVersion,
         englishBook: r.englishBook,
@@ -1793,7 +1810,6 @@ class _CommandPaneState extends State<CommandPane> {
     // cache peek and marks nothing on a miss, so without this the first
     // paint of a new search would be unmarked and would stay that way
     // until something else rebuilt the list.
-    _warmTagging(wb, refs);
     // 2026-08-06: the distribution goes ABOVE the list. BibleWorks puts
     // search statistics in their own window, which on a pad would mean
     // a second surface for something you want to read alongside the
@@ -1846,6 +1862,13 @@ class _CommandPaneState extends State<CommandPane> {
                 chapter: ref.chapter,
                 verse: ref.verse,
               );
+              if (runs == null) {
+                // Not cached yet: ask for this book's tagging and let
+                // the row redraw when it lands. An edition that ships
+                // none never gets past the supports() check inside.
+                _warmTaggingForRow(
+                    wb.mainProvider.currentVersion, ref.englishBook);
+              }
               // Which WORD carries the number is something only the
               // tagging knows, so an untagged edition (NASB, 梁家铿, and
               // 雅偉版繁體 today) cannot mark a Strong's hit at all —
@@ -1878,28 +1901,39 @@ class _CommandPaneState extends State<CommandPane> {
     );
   }
 
-  /// Load the tagging for the books on screen, then rebuild once.
+  /// Load the tagging for the book a row needs, the first time a row
+  /// from that book is built.
   ///
-  /// Bounded to the first books the list touches: a query like H430 hits
-  /// 35 of them, and pulling every one would load most of the tagged
-  /// layer to mark a list the reader scrolls past.
-  void _warmTagging(WorkbenchProvider wb, List<ConcordanceRef> refs) {
-    final version = wb.mainProvider.currentVersion;
+  /// 2026-08-31 (owner-reported: "why some has highlight while many
+  /// don't"): this used to warm the first EIGHT books the result set
+  /// touched and stop. A G25 search spans 22 books, so 罗马书 and
+  /// 哥林多前书 marked and 加拉太书 and 以弗所书 did not — not a gap in
+  /// the tagging, a cap in the loader, and one the reader could only
+  /// read as the app being unreliable about its own highlighting.
+  ///
+  /// The cap existed to stop a 35-book query pulling most of the tagged
+  /// layer for rows nobody scrolls to. Warming per ROW keeps that
+  /// saving and loses the arbitrariness: a book is fetched when a row
+  /// from it is actually built, which is the same "on screen" the old
+  /// comment claimed and the prefix never was. Requests are batched to
+  /// one round after the frame, so a fling through the list does not
+  /// fire a fetch per row.
+  void _warmTaggingForRow(String version, String englishBook) {
     if (!TaggedTextService.supports(version)) return;
-    final books = <String>{};
-    for (final r in refs) {
-      books.add(r.englishBook);
-      if (books.length >= 8) break;
-    }
-    final pending = books
-        .where((b) =>
-            TaggedTextService.cachedForVerse(
-                version: version, englishBook: b, chapter: 1, verse: 1) ==
-            null)
-        .toList();
-    if (pending.isEmpty) return;
-    Future.wait(pending.map((b) => TaggedTextService.prefetchBook(version, b)))
-        .then((_) {
+    final key = '$version/$englishBook';
+    if (!_tagRequested.add(key)) return;
+    _tagPending.add(key);
+    if (_tagFlushScheduled) return;
+    _tagFlushScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      _tagFlushScheduled = false;
+      final batch = _tagPending.toList();
+      _tagPending.clear();
+      await Future.wait(batch.map((k) {
+        final i = k.indexOf('/');
+        return TaggedTextService.prefetchBook(k.substring(0, i),
+            k.substring(i + 1));
+      }));
       if (mounted) setState(() {});
     });
   }
