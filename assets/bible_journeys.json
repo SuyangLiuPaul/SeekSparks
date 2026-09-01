@@ -1747,6 +1747,124 @@
      }
     }
    ]
+  },
+  {
+   "id": "ark",
+   "style": 4,
+   "mark": "diamond",
+   "name": {
+    "en": "The ark of the covenant",
+    "zh-Hans": "约柜的行程",
+    "zh-Hant": "約櫃的行程"
+   },
+   "range": {
+    "en": "1 Samuel 4 – 2 Samuel 6",
+    "zh-Hans": "撒母耳记上4章 – 撒母耳记下6章",
+    "zh-Hant": "撒母耳記上4章 – 撒母耳記下6章"
+   },
+   "basis": {
+    "en": "The stops and their order are read out of 1 Samuel 4-7 and 2 Samuel 6, which name each place as the ark reaches it; every stop cites the verse that puts it there. Coordinates come from the gazetteer, not from this route. Kiriath-jearim, where the ark rested twenty years (1 Samuel 7:1-2), is named by the text and has NO coordinate in the gazetteer, so the line breaks there rather than being bridged: the leg from Beth-shemesh and the leg on to Jerusalem are both undrawn. Mount Jearim is a different place and is not substituted for it. Aphek (1 Samuel 4:1) is where the Philistine army camped, not a place the ark was taken, and is not a stop. Perez-uzzah (2 Samuel 6:8) is a real stop and is not drawn: the gazetteer gives it Jerusalem's own coordinate, and 2 Samuel 6:10 is explicit that the ark did NOT go on into the city at that time, so a marker there would say the opposite of the text.",
+    "zh-Hans": "站点及其次序取自撒母耳记上4至7章和撒母耳记下6章：约柜每到一处，经文都指名说出，每一站都注明出处经文。坐标取自地名录，不由本路线另行提供。基列耶琳是约柜停放二十年之处（撒上7:1-2），经文有名，地名录却无坐标，因此线在该处断开，不作连接：伯示麦到基列耶琳、以及基列耶琳到耶路撒冷这两段都不绘出。耶琳山是另一处地方，不以之顶替。亚弗（撒上4:1）是非利士军队扎营之处，并非约柜被抬到的地方，故不列为站点。毗列斯乌撒（撒下6:8）确是一站，但本路线不予绘出：地名录给它的坐标就是耶路撒冷本身的坐标，而撒下6:10明说约柜当时并没有运进城去，在那里下标记会与经文相反。",
+    "zh-Hant": "站點及其次序取自撒母耳記上4至7章和撒母耳記下6章：約櫃每到一處，經文都指名說出，每一站都註明出處經文。座標取自地名錄，不由本路線另行提供。基列耶琳是約櫃停放二十年之處（撒上7:1-2），經文有名，地名錄卻無座標，因此線在此處斷開，不作連接：伯示麥到基列耶琳、以及基列耶琳到耶路撒冷這兩段都不繪出。耶琳山是另一處地方，不以之頂替。亞弗（撒上4:1）是非利士軍隊紮營之處，並非約櫃被抬到的地方，故不列為站點。毗列斯烏撒（撒下6:8）確是一站，但本路線不予繪出：地名錄給它的座標就是耶路撒冷本身的座標，而撒下6:10明說約櫃當時並沒有運進城去，在那裡下標記會與經文相反。"
+   },
+   "stops": [
+    {
+     "place": "Shiloh",
+     "book": "1 Samuel",
+     "chapter": 4,
+     "verse": 4,
+     "leg": "start",
+     "note": {
+      "en": "4:4 sends to Shiloh for the ark and brings it out to the camp.",
+      "zh-Hans": "4:4打发人到示罗去，将约柜抬到营中。",
+      "zh-Hant": "4:4打發人到示羅去，將約櫃抬到營中。"
+     }
+    },
+    {
+     "place": "Ebenezer",
+     "book": "1 Samuel",
+     "chapter": 5,
+     "verse": 1,
+     "leg": "land",
+     "note": {
+      "en": "Israel's camp, where the ark was captured; 5:1 says the Philistines took it from Ebenezer.",
+      "zh-Hans": "以色列安营之处，约柜在此被掳；5:1说非利士人将约柜从以便以谢抬走。",
+      "zh-Hant": "以色列安營之處，約櫃在此被擄；5:1說非利士人將約櫃從以便以謝抬走。"
+     }
+    },
+    {
+     "place": "Ashdod",
+     "book": "1 Samuel",
+     "chapter": 5,
+     "verse": 1,
+     "leg": "land",
+     "note": {
+      "en": "5:1 brings it to Ashdod, into the house of Dagon.",
+      "zh-Hans": "5:1把约柜抬到亚实突，放在大衮庙里。",
+      "zh-Hant": "5:1把約櫃抬到亞實突，放在大袞廟裡。"
+     }
+    },
+    {
+     "place": "Gath",
+     "book": "1 Samuel",
+     "chapter": 5,
+     "verse": 8,
+     "leg": "land",
+     "note": {
+      "en": "5:8 is the lords of the Philistines deciding to carry it round to Gath.",
+      "zh-Hans": "5:8非利士人的首领议定把约柜运到迦特去。",
+      "zh-Hant": "5:8非利士人的首領議定把約櫃運到迦特去。"
+     }
+    },
+    {
+     "place": "Ekron",
+     "book": "1 Samuel",
+     "chapter": 5,
+     "verse": 10,
+     "leg": "land",
+     "note": {
+      "en": "5:10 sends it on to Ekron, and the Ekronites cry out at its arrival.",
+      "zh-Hans": "5:10又把约柜送到以革伦，约柜一到，以革伦人就喊嚷起来。",
+      "zh-Hant": "5:10又把約櫃送到以革倫，約櫃一到，以革倫人就喊嚷起來。"
+     }
+    },
+    {
+     "place": "Beth-shemesh 1",
+     "book": "1 Samuel",
+     "chapter": 6,
+     "verse": 12,
+     "leg": "land",
+     "note": {
+      "en": "6:12 the cows take the straight road to Beth-shemesh, the Judean town of the three the gazetteer holds under this name.",
+      "zh-Hans": "6:12母牛直行大道往伯示麦去；地名录中同名之地有三处，此为犹大境内的一处。",
+      "zh-Hant": "6:12母牛直行大道往伯示麥去；地名錄中同名之地有三處，此為猶大境內的一處。"
+     }
+    },
+    {
+     "place": "Kiriath-jearim",
+     "book": "1 Samuel",
+     "chapter": 7,
+     "verse": 1,
+     "leg": "land",
+     "note": {
+      "en": "7:1 the men of Kiriath-jearim fetch the ark up into the house of Abinadab, where 7:2 leaves it for twenty years. The gazetteer holds the name without a coordinate, so it cannot be drawn and the line breaks here.",
+      "zh-Hans": "7:1基列耶琳人把约柜接到亚比拿达家中，7:2说约柜在那里停放了二十年。地名录有此名而无坐标，故无法绘出，线在此断开。",
+      "zh-Hant": "7:1基列耶琳人把約櫃接到亞比拿達家中，7:2說約櫃在那裡停放了二十年。地名錄有此名而無座標，故無法繪出，線在此斷開。"
+     }
+    },
+    {
+     "place": "Jerusalem",
+     "book": "2 Samuel",
+     "chapter": 6,
+     "verse": 12,
+     "leg": "land",
+     "note": {
+      "en": "6:12 brings the ark up out of the house of Obed-edom, but 2 Samuel 6 calls the destination only 'the city of David' and never names it. 1 Chronicles 15:3, the parallel account of the same day, says Jerusalem.",
+      "zh-Hans": "6:12把约柜从俄别以东家中抬上来；但撒母耳记下6章只称目的地为「大卫的城」，始终没有指名。历代志上15:3是同一日的平行记载，说的是耶路撒冷。",
+      "zh-Hant": "6:12把約櫃從俄別以東家中抬上來；但撒母耳記下6章只稱目的地為「大衛的城」，始終沒有指名。歷代志上15:3是同一日的平行記載，說的是耶路撒冷。"
+     }
+    }
+   ]
   }
  ]
 }

@@ -48,6 +48,9 @@ const unnamed = <String, String>{
   'paul-2/0': '15:35', // Acts 15:40 names no city; 15:35 does.
   'jesus-mark/2': 'hometown', // Mark 6:1 is 'his hometown'; Mark names
   // Nazareth only at 1:9 and 1:24.
+  'ark/7': 'city of David', // 2 Samuel 6:12 brings the ark up "into the
+  // city of David" and no shipped edition names Jerusalem anywhere in
+  // 2 Samuel 6; 1 Chronicles 15:3 is the parallel account and does.
 };
 
 void main() {

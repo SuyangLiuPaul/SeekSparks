@@ -20,6 +20,26 @@ import 'package:seeksparks/models/bible_place.dart';
 import 'package:seeksparks/utils/journey_route.dart';
 import 'package:seeksparks/utils/place_geo.dart' show haversineKm;
 import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/constants/book_names.dart' show standardBookOrder;
+
+/// The books a journey's declared English range names.
+///
+/// The vocabulary is the canon's own list, matched as substrings, with any
+/// hit that is contained in a longer hit dropped — so `1 John 1:1 – 2:2`
+/// declares `1 John` and not also `John`. That collision is the only one in
+/// the 66: the numbered families (`N John`, `N Kings`, `N Samuel`,
+/// `N Corinthians`, …) are the only names that contain another name.
+/// `Judges` does not contain `Jude`.
+Set<String> booksNamedIn(String range) {
+  final hits = <String>{
+    for (final b in standardBookOrder)
+      if (range.contains(b)) b,
+  };
+  return <String>{
+    for (final b in hits)
+      if (!hits.any((o) => o != b && o.contains(b))) b,
+  };
+}
 
 void main() {
   final places = parseGazetteer(
@@ -74,6 +94,7 @@ void main() {
         'jesus-mark': 11,
         'jacob': 9,
         'abraham': 13,
+        'ark': 7,
       };
       for (final r in resolved) {
         expect(r.markers.length, expected[r.id],
@@ -105,9 +126,14 @@ void main() {
   //   * Mahanaim (Gen 32:2) — Jacob names the place; the gazetteer carries
   //     the name with no coordinate. The break falls on the Jordan
   //     crossing, which is where the route is least certain anyway.
+  //   * Kiriath-jearim (1 Sa 7:1) — the ark rests here twenty years and
+  //     the gazetteer carries the name with no coordinate. The break
+  //     falls on the twenty-year stop, so the line cannot imply the ark
+  //     went straight up to Jerusalem.
   const unlocatedByDesign = <String, Set<String>>{
     'exodus-wilderness': <String>{'Pi-hahiroth', 'Hor-haggidgad'},
     'jacob': <String>{'Mahanaim'},
+    'ark': <String>{'Kiriath-jearim'},
   };
 
   group('every stop resolves against the gazetteer', () {
@@ -187,12 +213,53 @@ void main() {
       }
     });
 
+    // #317: this test now does what its name says, and did not before.
+    //
+    // It used to assert `j.stops.map((s) => s.englishBook).toSet().length
+    // == 1` and never once looked at `range`. That was a proxy which held
+    // only while every shipped range named one book, and it would have
+    // passed a journey declaring "Acts 13:1 – 14:28" whose stops all cited
+    // John — the exact failure the name claims to catch.
+    //
+    // `ark` is the first route whose narrative genuinely crosses a book
+    // boundary (1 Samuel 4 into 2 Samuel 6), as any Samuel/Kings or
+    // Kings/Chronicles route will, so the proxy had to go. The replacement
+    // is the claim in the name: a stop may only cite a book its own
+    // declared range names.
+    //
+    // One-directional on purpose. The range is the narrative span; the
+    // stops are point citations. A range MAY name a book no stop happens
+    // to cite — ark's "2 Samuel 6" is where the arrival is told and only
+    // one verse of it is a stop. The direction that matters is the other
+    // one: a stop citing a book the route never claimed to be reading is a
+    // route reading out of somewhere it did not say.
+    //
+    // Only the ENGLISH range is scanned: `englishBook` is English, and the
+    // localised ranges print localised book names.
     test('the reference is in the book the range names', () {
       for (final j in journeys) {
-        final books = j.stops.map((s) => s.englishBook).toSet();
-        expect(books.length, 1,
-            reason: '${j.id} reads out of ${books.join(', ')}');
+        final declared = booksNamedIn(j.range['en']!);
+        expect(declared, isNotEmpty,
+            reason: '${j.id}: the range names no book at all');
+        for (final s in j.stops) {
+          expect(declared, contains(s.englishBook),
+              reason: '${j.id}: a stop cites ${s.englishBook}, '
+                  'which "${j.range['en']}" never names');
+        }
       }
+    });
+
+    test('a range names each of its books, longest form winning', () {
+      // The eight shipped ranges and the ninth, read this run.
+      expect(booksNamedIn('Acts 13:1 – 14:28'), <String>{'Acts'});
+      expect(booksNamedIn('Numbers 33:1 - 49'), <String>{'Numbers'});
+      expect(booksNamedIn('1 Samuel 4 – 2 Samuel 6'),
+          <String>{'1 Samuel', '2 Samuel'});
+      // The one collision in the canon: a numbered book contains the bare
+      // one. Without the longest-hit rule this would also declare 'John'.
+      expect(booksNamedIn('1 John 1:1 – 2:2'), <String>{'1 John'});
+      // And the near-miss that is NOT a collision, so nobody "fixes" it.
+      expect(booksNamedIn('Judges 3:1 – 4:24'), <String>{'Judges'});
     });
 
     test('a provisional stop always says WHY, in all three locales', () {
@@ -559,6 +626,7 @@ void main() {
         'jesus-mark': 478.6,
         'jacob': 1189.3,
         'abraham': 3374.8,
+        'ark': 122.1,
       };
       for (final r in resolved) {
         expect(r.straightLineKm, greaterThan(100), reason: r.id);
@@ -617,6 +685,57 @@ void main() {
         final j = journeys.firstWhere((j) => j.id == 'jacob');
         expect(j.provisionalCount, 0);
         expect(j.asideCount, 0);
+      });
+    });
+
+    group("The ark's journey", () {
+      test('the route ships, eight stops', () {
+        final j = journeys.firstWhere((j) => j.id == 'ark');
+        expect(j.stops.length, 8);
+        expect(j.stops.first.placeId, 'Shiloh');
+        expect(j.stops.last.placeId, 'Jerusalem');
+        expect(j.style, 4);
+        expect(j.mark, JourneyMark.diamond);
+      });
+
+      test('nothing on it is provisional and nothing is an aside', () {
+        final j = journeys.firstWhere((j) => j.id == 'ark');
+        expect(j.provisionalCount, 0);
+        expect(j.asideCount, 0);
+      });
+
+      test('Kiriath-jearim is named and undrawn, and the line breaks there',
+          () {
+        final r = route('ark');
+        expect(r.unresolved, <String>['Kiriath-jearim']);
+        expect(r.stops.length, 7);
+        expect(r.segments.length, 5);
+        expect(
+          r.segments.every((s) =>
+              s.from.place.id != 'Jerusalem' && s.to.place.id != 'Jerusalem'),
+          isTrue,
+          reason: 'Jerusalem must draw no segment — that would bridge the '
+              'twenty years at Kiriath-jearim',
+        );
+      });
+
+      test('the itinerary still shows the stop the map cannot draw', () {
+        final r = route('ark');
+        expect(r.itineraryRows.length, 8);
+        final row = r.itineraryRows[6];
+        expect(row.unplaced, isNotNull);
+        expect(row.unplaced!.stop.placeId, 'Kiriath-jearim');
+        expect(row.unplaced!.absent, isFalse,
+            reason: 'the gazetteer has the name and lacks the point — '
+                'that is not the same as not having the name at all');
+      });
+
+      test('the arrival is cited where the arrival is told', () {
+        final j = journeys.firstWhere((j) => j.id == 'ark');
+        expect(j.stops.last.englishBook, '2 Samuel');
+        expect(j.stops.last.chapter, 6);
+        expect(j.stops.last.verse, 12);
+        expect(j.stops.last.note!['en']!, contains('city of David'));
       });
     });
   });
