@@ -1,27 +1,37 @@
-/// Pure geometry for the chronology wheel — the radial rendering of the
-/// same Genesis lifespans `chronology_layout.dart` lays out as bars.
+/// Pure geometry for the world-history wheel.
 ///
-/// The wheel was asked for by the owner after seeing a printed radial
-/// chart: time sweeping clockwise round a rim, one concentric ring per
-/// generation, each life an arc. That *form* is centuries old — radial
+/// A radial chronology was asked for by the owner after seeing a
+/// printed one: time sweeping clockwise round a rim, concentric rings,
+/// text set along the radius. That *form* is centuries old — radial
 /// chronologies were being engraved long before any living publisher —
 /// and it is all this file takes. The data underneath is ours
-/// (`assets/chronology.json`, every figure carrying its verse), the
+/// (`assets/wheel_history.json`, every nation carrying its verse), the
 /// palette is the app's own line-of-descent hues, and no wording,
 /// artwork or compiled table from any printed chart is reproduced.
 ///
+/// THIS FILE ONCE DREW THE GENESIS LIFESPANS AND NO LONGER DOES. It
+/// began as the radial rendering of `chronology_layout.dart`'s bars,
+/// one ring per generation, each life an arc on an Anno Mundi axis
+/// with the creation at twelve o'clock. The wheel became world history
+/// in `b75ffc6` and the patriarchs kept their own AM page, where their
+/// intervals belong — but this file's AM half stayed behind, tested
+/// and unreachable, for long enough to read as an unfinished feature
+/// and send a later reader looking for the missing wiring. It is gone;
+/// `3b44f2e` holds it whole if it is ever wanted. What survives is
+/// BC/AD geometry only, and the two axes must not be mixed: they map
+/// the same angle of the same circle to different years.
+///
 /// Angle convention is the canvas's: 0 rad points right (+x), positive
-/// is clockwise because y grows downward. The creation (AM 0) sits at
-/// twelve o'clock and time runs clockwise through [sweepRad], leaving a
-/// gap wedge before twelve o'clock again so the first and last rim
-/// labels cannot collide.
+/// is clockwise because y grows downward. The axis starts at twelve
+/// o'clock and runs clockwise through [sweepRad], leaving a gap wedge
+/// before twelve o'clock again so the first and last rim labels cannot
+/// collide.
 ///
 /// Kept free of widgets because it is the part worth testing.
 library;
 
 import 'dart:math' as math;
 
-import 'package:seeksparks/models/chronology.dart';
 import 'package:seeksparks/utils/related_verses.dart' show isCjkChar;
 
 /// How far round the wheel the axis runs. The remaining 40° is the gap.
@@ -29,87 +39,6 @@ const double sweepRad = 320 * math.pi / 180;
 
 /// Twelve o'clock in canvas angles.
 const double startRad = -math.pi / 2;
-
-/// The angle at which [year] falls on an axis running from AM 0 to
-/// [endAm].
-double angleForYear(int year, int endAm) {
-  if (endAm <= 0) return startRad;
-  final t = (year / endAm).clamp(0.0, 1.0);
-  return startRad + t * sweepRad;
-}
-
-/// The inverse: which AM year an angle points at, or null when the
-/// angle is inside the gap wedge.
-int? yearForAngle(double angle, int endAm) {
-  // Normalise into [startRad, startRad + 2π).
-  var a = angle;
-  while (a < startRad) {
-    a += 2 * math.pi;
-  }
-  while (a >= startRad + 2 * math.pi) {
-    a -= 2 * math.pi;
-  }
-  final t = (a - startRad) / sweepRad;
-  if (t > 1.0) return null; // the gap
-  return (t * endAm).round();
-}
-
-/// One life, ready to draw: ring number and the three angles that carve
-/// the arc into its two tones (birth→fathering dark, fathering→death
-/// light — the same split the bar chart draws).
-class WheelArc {
-  const WheelArc({
-    required this.personId,
-    required this.line,
-    required this.ring,
-    required this.birthAngle,
-    required this.begatAngle,
-    required this.deathAngle,
-  });
-
-  final String personId;
-
-  /// `seth` / `shem` / `abraham` / `levi` — the four ways an age reaches
-  /// this chart. Colour is decided from this by the painter.
-  final String line;
-
-  /// 0 is the outermost ring. Adam is 0: the earliest generation rides
-  /// the rim, and each generation steps one ring inward, which is also
-  /// the order the eye meets them sweeping clockwise.
-  final int ring;
-
-  final double birthAngle;
-
-  /// Null when the man ends the chain and no fathering age exists.
-  final double? begatAngle;
-  final double deathAngle;
-}
-
-/// Every life in [people] under [traditionId], as arcs. Ring order is
-/// the list's order, which `ChronologyData.inTradition` already gives
-/// generationally.
-List<WheelArc> buildWheelArcs(
-  List<Patriarch> people,
-  String traditionId,
-  int endAm,
-) {
-  final out = <WheelArc>[];
-  for (var i = 0; i < people.length; i++) {
-    final f = people[i].figures[traditionId];
-    if (f == null) continue;
-    final begat = f.begatAt;
-    out.add(WheelArc(
-      personId: people[i].id,
-      line: people[i].line,
-      ring: i,
-      birthAngle: angleForYear(f.birthAm, endAm),
-      begatAngle:
-          begat == null ? null : angleForYear(f.birthAm + begat, endAm),
-      deathAngle: angleForYear(f.deathAm, endAm),
-    ));
-  }
-  return out;
-}
 
 /// Centre-to-centre spacing of the rings, which is what a label has to
 /// stay inside to keep clear of the neighbouring stream — the band
@@ -138,53 +67,14 @@ double ringPitch(int ringCount, double rHub, double rMax) =>
   );
 }
 
-/// Which arc a point at polar ([r], [angle]) lands on, or null.
+/// The angle for [year] on an axis running [minYear]..[maxYear].
 ///
-/// This is the whole of tap handling: the page converts the tap to
-/// polar about the wheel's centre and asks. Endpoint years count as
-/// inside, matching the closed intervals `sharedYears` measures.
-WheelArc? hitTest(
-  double r,
-  double angle,
-  List<WheelArc> arcs,
-  int ringCount,
-  double rHub,
-  double rMax,
-) {
-  if (r < rHub || r > rMax || ringCount <= 0) return null;
-  // Normalise like yearForAngle, then reject the gap.
-  var a = angle;
-  while (a < startRad) {
-    a += 2 * math.pi;
-  }
-  while (a >= startRad + 2 * math.pi) {
-    a -= 2 * math.pi;
-  }
-  if (a - startRad > sweepRad) return null;
-  for (final arc in arcs) {
-    final band = ringRadii(arc.ring, ringCount, rHub, rMax);
-    if (r < band.inner || r > band.outer) continue;
-    if (a >= arc.birthAngle && a <= arc.deathAngle) return arc;
-  }
-  return null;
-}
-
-/// The century spokes: every 100 years minor, every 500 major (major
-/// ticks carry a year label at the rim). AM 0 is skipped — the axis
-/// start already marks it — and the final century is kept even when it
-/// falls within 50 years of the end, because the wheel's rim has room
-/// where a linear axis would not.
-List<({int year, bool major})> wheelTicks(int endAm) {
-  final out = <({int year, bool major})>[];
-  for (var y = 100; y <= endAm; y += 100) {
-    out.add((year: y, major: y % 500 == 0));
-  }
-  return out;
-}
-
-/// The angle for [year] on an axis running [minYear]..[maxYear] — the
-/// general form of [angleForYear], for the full-history mode whose axis
-/// starts at 4000 BC rather than at the creation's AM 0.
+/// The axis starts at 4000 BC, not at a creation year. An Anno Mundi
+/// form of this function used to live beside it, from when this wheel
+/// drew the Genesis lifespans; it went when they did (`b75ffc6`), and
+/// putting AM angles back on a BC/AD circle would point one angle at
+/// two different years. See the WHAT IS NOT HERE note in
+/// `radial_chronology_page.dart`.
 double angleForSpan(int year, int minYear, int maxYear) {
   final span = maxYear - minYear;
   if (span <= 0) return startRad;

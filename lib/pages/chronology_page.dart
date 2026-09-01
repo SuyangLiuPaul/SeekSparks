@@ -204,8 +204,12 @@ class _ChronologyPageState extends State<ChronologyPage> {
         leading: const LocalizedBackButton(),
         title: Text(s('chronology', 'Bible Chronology')),
         actions: [
-          // The same data as a wheel — see radial_chronology_page.dart
-          // for why both renderings exist.
+          // NOT the same data. This button opened a radial rendering of
+          // these same lifespans until `b75ffc6`, when the wheel became
+          // world history and the patriarchs stayed here, on the only
+          // axis their intervals have. It now leads to a different
+          // chart, which is the point: this page answers how long, that
+          // one answers alongside what.
           IconButton(
             icon: const Icon(Icons.donut_large),
             tooltip: wheelStrings['wheelTitle']?[locale] ?? 'Chronology Wheel',
