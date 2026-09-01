@@ -17,6 +17,11 @@
 ///    round number for its own sake — it is the only assertion that
 ///    fails if a whole KIND stops being searched, which is exactly what
 ///    a naive "search the events" version would do.
+///  * THE INDEX BAR. Every one of the 830 records, in all three
+///    locales, must come back when its own printed title is typed —
+///    2,490 searches, and never below second place. This is the only
+///    pin here that grows with the corpus instead of with the examples
+///    someone remembered to write down.
 ///  * THE SCRIPTS. `yearLabel` printed Simplified 主后, and the hedge in
 ///    front of an unsettled date printed Simplified 约, to Traditional
 ///    readers until 2026-08-26. Both are pinned here by sweeping the
@@ -549,6 +554,158 @@ void main() {
       expect(find('2 Kings 19').hits.every((h) => h.via == WheelHitVia.reference),
           isTrue,
           reason: 'the reference tier stopped answering');
+    });
+  });
+
+  /// THE INDEX BAR.
+  ///
+  /// The printed World History Chart this wheel is measured against
+  /// carries an index of 885 entries — every entity on the sheet,
+  /// alphabetised, addressed by section and line. That is the standard
+  /// it sets: any name, found in seconds. The groups above prove the
+  /// search box can reach a nation, a band, a person, a verse and a
+  /// year, each by example. What none of them proves is the whole
+  /// claim, which is not "a record is reachable" but EVERY record is,
+  /// by the one string the reader has actually seen — the title the
+  /// wheel printed — in whichever of the three languages they are
+  /// reading it in.
+  ///
+  /// So this group asks the corpus itself: 830 records x 3 locales,
+  /// 2,490 searches, each typing a record's own displayed title back
+  /// at the search box. It is the only assertion in this file that
+  /// scales with the corpus rather than with the examples someone
+  /// thought to write down, which means a record added years from now
+  /// is covered the day it ships.
+  ///
+  /// REACHABLE IS NOT THE SAME AS FINDABLE, so both are measured. A
+  /// record returned at position 400 satisfies "reachable" and fails
+  /// the reader completely. The measured worst position is SECOND, in
+  /// all three locales, and the test holds that line rather than a
+  /// slack one — see the second test for what the seconds are and why
+  /// they are not a defect.
+  group('the index bar — every record answers to its own name', () {
+    /// (id, kind) -> where it came back, for one locale.
+    List<MapEntry<String, int>> ownTitleRank(String locale) {
+      final all = find('*', locale: locale).hits;
+      return [
+        for (final h in all)
+          MapEntry(
+            '$locale ${h.kind.name} ${h.id} "${h.title}"',
+            find(h.title, locale: locale)
+                .hits
+                .indexWhere((x) => x.id == h.id && x.kind == h.kind),
+          ),
+      ];
+    }
+
+    test('all 830, in all three locales, come back when typed', () {
+      for (final locale in _locales) {
+        final ranks = ownTitleRank(locale);
+        expect(ranks, hasLength(830),
+            reason: 'the sweep itself stopped seeing the corpus');
+        final unreachable =
+            ranks.where((e) => e.value < 0).map((e) => e.key).toList();
+        expect(unreachable, isEmpty,
+            reason: 'the wheel prints these and cannot find them again');
+      }
+    });
+
+    /// Measured, not assumed: no record is ever pushed past second by
+    /// typing its own title, in any locale.
+    ///
+    /// The seconds are all homonyms, and each is a record the reader
+    /// genuinely might have meant — Genesis 10 names two Shebas and
+    /// two Havilahs, Nahor is both Abraham's brother and his
+    /// grandfather, `asshur` the nation shares its name with the band,
+    /// and `great_fire_rome` sits under a band whose own title
+    /// contains Rome. A homonym above the record is a second right
+    /// answer, not a wrong one, which is why the bound is two and not
+    /// one.
+    test('and it is never buried: first or second, always', () {
+      for (final locale in _locales) {
+        final buried = ownTitleRank(locale)
+            .where((e) => e.value > 1)
+            .map((e) => '${e.key} came back at #${e.value + 1}')
+            .toList();
+        expect(buried, isEmpty);
+      }
+    });
+
+    /// The guard against a sweep that passes because it is not
+    /// actually exercising anything.
+    ///
+    /// `foldForWheelSearch` lowercases and strips diacritics on BOTH
+    /// sides of the comparison; if it ever stopped doing so on the
+    /// corpus side, every title with a capital in it would stop
+    /// answering to itself. That is all 830 of them, so the sweep
+    /// above is load-bearing for the case fold.
+    ///
+    /// The diacritic half is thin and says so: exactly three English
+    /// titles carry a non-ASCII Latin letter. If a future edit
+    /// removes all three the fold stops being tested at all, and this
+    /// assertion is what will say so.
+    test('the sweep is not passing vacuously', () {
+      final titles = find('*').hits.map((h) => h.title).toList();
+      expect(titles.where((t) => RegExp(r'[A-Z]').hasMatch(t)), hasLength(830),
+          reason: 'the case fold is exercised by every record, or was');
+      final accented = titles
+          .where((t) => RegExp(r'[À-ɏ]').hasMatch(t))
+          .toList()
+        ..sort();
+      expect(accented, hasLength(3));
+      expect(accented.join(' | '), contains('Córdoba'));
+      expect(accented.join(' | '), contains('Encyclopédie'));
+      expect(accented.join(' | '), contains('Lumière'));
+    });
+
+    /// Both claims above are worth nothing unless they can fail, so
+    /// here they are, failing.
+    ///
+    /// A title of nothing but spaces folds to an empty needle, and
+    /// `wheelMatches` answers false to an empty needle by design —
+    /// so the record is printed and cannot be found again. Six
+    /// records sharing one name bury the sixth at position six. If
+    /// either of these ever stops being detected, the two tests above
+    /// have quietly become decoration.
+    test('a record that really is unfindable is reported as one', () {
+      WheelHistoryData withNations(List<WheelNation> ns) => WheelHistoryData(
+            streams: const [],
+            nations: ns,
+            powers: const [],
+            events: const [],
+            meta: WheelHistoryMeta.empty,
+          );
+      WheelNation nation(String id, String name) => WheelNation(
+            id: id,
+            line: 'none',
+            father: '',
+            generation: 1,
+            stream: 'none',
+            ref: 'Genesis 10:1',
+            names: {'en': name},
+            notes: const {},
+          );
+      List<WheelHit> hitsIn(WheelHistoryData d, String q) => searchWheel(
+            data: d,
+            query: q,
+            locale: 'en',
+            axisEnd: kMaxYear,
+            hiddenStreams: const {},
+          ).hits;
+
+      final blank = withNations([nation('blank', '   ')]);
+      expect(hitsIn(blank, '*'), hasLength(1),
+          reason: 'the record is on the wheel');
+      expect(hitsIn(blank, hitsIn(blank, '*').single.title), isEmpty,
+          reason: 'a title that folds away must read as UNREACHABLE');
+
+      final homonyms = withNations([
+        for (var i = 0; i < 6; i++) nation('same_$i', 'Aaa'),
+      ]);
+      final back = hitsIn(homonyms, 'Aaa');
+      expect(back, hasLength(6));
+      expect(back.indexWhere((h) => h.id == 'same_5'), greaterThan(1),
+          reason: 'the "first or second" bound must be able to fail');
     });
   });
 }
