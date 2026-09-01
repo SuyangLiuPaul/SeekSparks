@@ -1865,6 +1865,148 @@
      }
     }
    ]
+  },
+  {
+   "id": "elijah",
+   "style": 1,
+   "mark": "diamond",
+   "name": {
+    "en": "Elijah: Cherith to Horeb",
+    "zh-Hans": "以利亚：从基立溪到何烈山",
+    "zh-Hant": "以利亞：從基立溪到何烈山"
+   },
+   "range": {
+    "en": "1 Kings 17:1 – 19:21",
+    "zh-Hans": "列王纪上 17:1 – 19:21",
+    "zh-Hant": "列王紀上 17:1 – 19:21"
+   },
+   "basis": {
+    "en": "The stops and their order are read out of 1 Kings 17-19, which names each place as Elijah reaches it; every stop cites the verse that puts him there, and where the text gives both a command to go and a record of going, the citation is the going. Coordinates come from the gazetteer, not from this route. Three places are named by the narrative without the text placing Elijah at them, and are drawn as hollow markers joined to nothing: Samaria, which 18:2 names as where the famine was and not as somewhere he went; the wilderness of Damascus, which 19:15 tells him to return to and which no verse in Kings records him reaching; and Abel-meholah, which 19:16 names as Elisha's town, while 19:19 - the verse that actually has Elijah find him ploughing - names no place at all. Two gazetteer names are traps and the ordinals matter: the stop at 18:46 is Jezreel 2, the northern Jezreel of the Esdraelon plain, not the ordinal-less Jezreel, which is the Judean town of Joshua 15:56 about 145 km away; and the stop at 18:20 is Mount Carmel, not Carmel, which is Nabal's town in Judah. Gilead, which 17:1 names as where Elijah was from, is not a stop: the itinerary is in narrative order and 17:1 stands before the first place he is sent to, but the text records no stage of this journey there. 2 Kings 2 - Gilgal, Bethel, Jericho, the Jordan - is deliberately not part of this route: the gazetteer carries two Gilgals and two Bethels, and which Gilgal 2 Kings 2:1 means is exactly what the reconstructions disagree about.",
+    "zh-Hans": "站点及其次序取自列王纪上17至19章：以利亚每到一处，经文都指名说出，每一站都注明出处经文；凡经文既有吩咐去、又有记载去的，所注的都是记载去的那一节。坐标取自地名录，不由本路线另行提供。有三处地方经文虽然提名，却没有说以利亚到过，故只画空心标记、不连线：撒玛利亚，18:2说的是饥荒在那里，并非说他去了那里；大马士革的旷野，19:15吩咐他回去，列王纪却没有一节记载他到达；亚伯米何拉，19:16说的是以利沙的本乡，而真正记载以利亚遇见他耕田的19:19一节，并没有指明地名。地名录里有两个陷阱，序号不可略去：18:46那一站是Jezreel 2，即以斯得伦平原上的北国耶斯列，不是不带序号的Jezreel——那是约书亚记15:56所记犹大的耶斯列，相距约145公里；18:20那一站是Mount Carmel（迦密山），不是Carmel（迦密），后者是犹大境内拿八的城。基列虽在17:1被提为以利亚的出身之地，却不列为站点：本行程按叙事次序排列，17:1在他被差去的第一处之前，而经文并未记载本次行程有哪一段在那里。列王纪下第2章——吉甲、伯特利、耶利哥、约旦河——特意不列入本路线：地名录中吉甲有两处、伯特利也有两处，而列王纪下2:1所指的是哪一个吉甲，正是各家重建彼此不一之处。",
+    "zh-Hant": "站點及其次序取自列王紀上17至19章：以利亞每到一處，經文都指名說出，每一站都註明出處經文；凡經文既有吩咐去、又有記載去的，所註的都是記載去的那一節。座標取自地名錄，不由本路線另行提供。有三處地方經文雖然提名，卻沒有說以利亞到過，故只畫空心標記、不連線：撒瑪利亞，18:2說的是饑荒在那裡，並非說他去了那裡；大馬士革的曠野，19:15吩咐他回去，列王紀卻沒有一節記載他到達；亞伯米何拉，19:16說的是以利沙的本鄉，而真正記載以利亞遇見他耕田的19:19一節，並沒有指明地名。地名錄裡有兩個陷阱，序號不可略去：18:46那一站是Jezreel 2，即以斯得倫平原上的北國耶斯列，不是不帶序號的Jezreel——那是約書亞記15:56所記猶大的耶斯列，相距約145公里；18:20那一站是Mount Carmel（迦密山），不是Carmel（迦密），後者是猶大境內拿八的城。基列雖在17:1被提為以利亞的出身之地，卻不列為站點：本行程按敘事次序排列，17:1在他被差去的第一處之前，而經文並未記載本次行程有哪一段在那裡。列王紀下第2章——吉甲、伯特利、耶利哥、約旦河——特意不列入本路線：地名錄中吉甲有兩處、伯特利也有兩處，而列王紀下2:1所指的是哪一個吉甲，正是各家重建彼此不一之處。"
+   },
+   "stops": [
+    {
+     "place": "Cherith",
+     "book": "1 Kings",
+     "chapter": 17,
+     "verse": 5,
+     "leg": "start",
+     "note": {
+      "en": "17:3 sends him east to the brook Cherith; 17:5 is the verse that says he went and dwelt there. The gazetteer gives Cherith the Jordan's own point, which is as much as the text supports - 17:5 places it only 'before Jordan'.",
+      "zh-Hans": "17:3吩咐他往东去，藏在基立溪旁；17:5才是记载他去了、并且住在那里的一节。地名录给基立溪的坐标就是约旦河本身的坐标，这也正是经文所能支持的——17:5只说它「在约旦河东」。",
+      "zh-Hant": "17:3吩咐他往東去，藏在基立溪旁；17:5才是記載他去了、並且住在那裡的一節。地名錄給基立溪的座標就是約旦河本身的座標，這也正是經文所能支持的——17:5只說它「在約旦河東」。"
+     }
+    },
+    {
+     "place": "Zarephath",
+     "book": "1 Kings",
+     "chapter": 17,
+     "verse": 10,
+     "leg": "land",
+     "note": {
+      "en": "17:9 sends him to Zarephath, which belongs to Sidon; 17:10 says he arose and went. It is outside Israel - the widow he is sent to is a Sidonian, which is the point Luke 4:26 makes of it.",
+      "zh-Hans": "17:9差他往属西顿的撒勒法去；17:10说他就起身前往。那地在以色列境外——他被差去投靠的寡妇是西顿人，路加福音4:26正是就此说的。",
+      "zh-Hant": "17:9差他往屬西頓的撒勒法去；17:10說他就起身前往。那地在以色列境外——他被差去投靠的寡婦是西頓人，路加福音4:26正是就此說的。"
+     }
+    },
+    {
+     "place": "Samaria",
+     "book": "1 Kings",
+     "chapter": 18,
+     "verse": 2,
+     "kind": "aside",
+     "note": {
+      "en": "Named, not reached. 18:2 says Elijah went to show himself to Ahab and that the famine was sore IN SAMARIA - it does not say he went to the city. Ahab comes out to meet him at 18:16, and where that happened the text does not say. No line is drawn to it.",
+      "zh-Hans": "只被提名，未见到达。18:2说以利亚去见亚哈，又说撒玛利亚的饥荒甚是严重——并没有说他进了那城。18:16是亚哈出来迎见他，经文没有说在何处。因此这里不画线。",
+      "zh-Hant": "只被提名，未見到達。18:2說以利亞去見亞哈，又說撒瑪利亞的饑荒甚是嚴重——並沒有說他進了那城。18:16是亞哈出來迎見他，經文沒有說在何處。因此這裡不畫線。"
+     }
+    },
+    {
+     "place": "Mount Carmel",
+     "book": "1 Kings",
+     "chapter": 18,
+     "verse": 20,
+     "leg": "land",
+     "note": {
+      "en": "18:19 calls all Israel to mount Carmel and 18:20 gathers them there. This is Mount Carmel on the coast, not the gazetteer's Carmel, which is Nabal's town in Judah, 145 km south.",
+      "zh-Hans": "18:19召聚以色列众人到迦密山，18:20说他们都聚集在那里。这是海边的迦密山，不是地名录里的「迦密」——那是犹大境内拿八的城，在南边约145公里处。",
+      "zh-Hant": "18:19召聚以色列眾人到迦密山，18:20說他們都聚集在那裡。這是海邊的迦密山，不是地名錄裡的「迦密」——那是猶大境內拿八的城，在南邊約145公里處。"
+     }
+    },
+    {
+     "place": "Kishon",
+     "book": "1 Kings",
+     "chapter": 18,
+     "verse": 40,
+     "leg": "land",
+     "note": {
+      "en": "18:40 brings the prophets of Baal down from the mountain to the brook Kishon. Under 5 km from the Carmel marker, which is what the text describes - down off the ridge, not away from it.",
+      "zh-Hans": "18:40把巴力的众先知从山上带下到基顺河边。此处离迦密山的标记不足5公里，与经文所述相符——是下山，不是远行。",
+      "zh-Hant": "18:40把巴力的眾先知從山上帶下到基順河邊。此處離迦密山的標記不足5公里，與經文所述相符——是下山，不是遠行。"
+     }
+    },
+    {
+     "place": "Jezreel 2",
+     "book": "1 Kings",
+     "chapter": 18,
+     "verse": 46,
+     "leg": "land",
+     "note": {
+      "en": "18:45 sends Ahab to Jezreel and 18:46 has Elijah run before him to its entrance. The ordinal is load-bearing: this is the northern Jezreel of 1 Kings 21, not the Judean town of Joshua 15:56 that the gazetteer files without one.",
+      "zh-Hans": "18:45说亚哈往耶斯列去，18:46说以利亚在他前头奔跑，直到耶斯列的城门。序号不可略去：这是列王纪上21章里北国的耶斯列，不是地名录中不带序号的那个——那是约书亚记15:56所记犹大的耶斯列。",
+      "zh-Hant": "18:45說亞哈往耶斯列去，18:46說以利亞在他前頭奔跑，直到耶斯列的城門。序號不可略去：這是列王紀上21章裡北國的耶斯列，不是地名錄中不帶序號的那個——那是約書亞記15:56所記猶大的耶斯列。"
+     }
+    },
+    {
+     "place": "Beersheba",
+     "book": "1 Kings",
+     "chapter": 19,
+     "verse": 3,
+     "leg": "land",
+     "note": {
+      "en": "19:3 has him flee for his life and come to Beersheba, which belongs to Judah, and leave his servant there. It is the far southern edge of the settled land, which is why the next verse is a day's journey into the wilderness.",
+      "zh-Hans": "19:3说他为自己的性命逃走，来到属犹大的别是巴，把仆人留在那里。那是有人烟之地的最南端，所以下一节就是往旷野去一日的路程。",
+      "zh-Hant": "19:3說他為自己的性命逃走，來到屬猶大的別是巴，把僕人留在那裡。那是有人煙之地的最南端，所以下一節就是往曠野去一日的路程。"
+     }
+    },
+    {
+     "place": "Horeb",
+     "book": "1 Kings",
+     "chapter": 19,
+     "verse": 8,
+     "leg": "land",
+     "note": {
+      "en": "19:8 takes him forty days and forty nights to Horeb the mount of God. The gazetteer gives Horeb and Sinai the same point, so with the wilderness itinerary switched on this marker falls exactly where Israel camped in Exodus 19 - the same mountain under its other name, and the map says so by drawing them together.",
+      "zh-Hans": "19:8说他仗着这饮食的力，走了四十昼夜，到了神的山何烈。地名录给何烈与西奈同一个坐标，所以同时打开旷野行程时，这个标记恰好落在出埃及记19章以色列安营之处——同一座山的另一个名字，地图把两者画在一起，正是要说明这一点。",
+      "zh-Hant": "19:8說他仗著這飲食的力，走了四十晝夜，到了神的山何烈。地名錄給何烈與西奈同一個座標，所以同時打開曠野行程時，這個標記恰好落在出埃及記19章以色列安營之處——同一座山的另一個名字，地圖把兩者畫在一起，正是要說明這一點。"
+     }
+    },
+    {
+     "place": "Damascus",
+     "book": "1 Kings",
+     "chapter": 19,
+     "verse": 15,
+     "kind": "aside",
+     "note": {
+      "en": "Named, not reached. 19:15 tells him to return on his way to the wilderness of Damascus and anoint Hazael; no verse in Kings records Elijah arriving, and it is Elisha who is in Damascus when Hazael is finally told, at 2 Kings 8:7-13. A line to it would draw a journey the book never reports.",
+      "zh-Hans": "只被吩咐，未见到达。19:15吩咐他从原路回去，往大马士革的旷野，膏哈薛作王；列王纪没有一节记载以利亚到了那里，而哈薛最终得知这话时，在大马士革的是以利沙（王下8:7-13）。若在此画线，就是画出一段全书从未记载的行程。",
+      "zh-Hant": "只被吩咐，未見到達。19:15吩咐他從原路回去，往大馬士革的曠野，膏哈薛作王；列王紀沒有一節記載以利亞到了那裡，而哈薛最終得知這話時，在大馬士革的是以利沙（王下8:7-13）。若在此畫線，就是畫出一段全書從未記載的行程。"
+     }
+    },
+    {
+     "place": "Abel-meholah",
+     "book": "1 Kings",
+     "chapter": 19,
+     "verse": 16,
+     "kind": "aside",
+     "note": {
+      "en": "Named, not reached. 19:16 names Abel-meholah as Elisha's town, inside the same commission as Damascus. 19:19 - the verse that actually has Elijah depart and find Elisha ploughing - names no place at all, so putting him at Abel-meholah would be an identification the text does not make. Marked, unjoined.",
+      "zh-Hans": "只被提名，未见到达。19:16在同一段吩咐里提到亚伯米何拉，说的是以利沙的本乡。真正记载以利亚离开、遇见以利沙耕田的19:19一节，并没有指明地名；若把他放在亚伯米何拉，就是替经文作了它没有作的判定。故只下标记，不连线。",
+      "zh-Hant": "只被提名，未見到達。19:16在同一段吩咐裡提到亞伯米何拉，說的是以利沙的本鄉。真正記載以利亞離開、遇見以利沙耕田的19:19一節，並沒有指明地名；若把他放在亞伯米何拉，就是替經文作了它沒有作的判定。故只下標記，不連線。"
+     }
+    }
+   ]
   }
  ]
 }

@@ -95,6 +95,7 @@ void main() {
         'jacob': 9,
         'abraham': 13,
         'ark': 7,
+        'elijah': 10,
       };
       for (final r in resolved) {
         expect(r.markers.length, expected[r.id],
@@ -627,6 +628,7 @@ void main() {
         'jacob': 1189.3,
         'abraham': 3374.8,
         'ark': 122.1,
+        'elijah': 715.2,
       };
       for (final r in resolved) {
         expect(r.straightLineKm, greaterThan(100), reason: r.id);
@@ -736,6 +738,99 @@ void main() {
         expect(j.stops.last.chapter, 6);
         expect(j.stops.last.verse, 12);
         expect(j.stops.last.note!['en']!, contains('city of David'));
+      });
+    });
+
+    group("Elijah's journey", () {
+      test('the route ships, ten stops of 1 Kings', () {
+        final j = journeys.firstWhere((j) => j.id == 'elijah');
+        expect(j.stops.length, 10);
+        expect(j.stops.first.placeId, 'Cherith');
+        expect(j.stops.first.leg, JourneyLeg.start);
+        expect(j.stops.last.placeId, 'Abel-meholah');
+        expect(j.style, 1);
+        expect(j.mark, JourneyMark.diamond);
+        expect(j.waypointCount, 7);
+        expect(j.asideCount, 3);
+        expect(j.provisionalCount, 0);
+      });
+
+      test('Horeb is the point the wilderness route calls Sinai', () {
+        // The whole reason this route earns its place beside
+        // `exodus-wilderness`: 1 Kings 19:8 sends Elijah to "Horeb the
+        // mount of God", and the gazetteer files Horeb and Sinai as two
+        // ids at ONE point. Toggled together the two routes meet there.
+        // Asserted through the gazetteer rather than against a literal
+        // pair of numbers, so a coordinate that moves moves both sides.
+        final horeb = byId['Horeb']!;
+        final sinai = byId['Sinai']!;
+        expect(horeb.lat, sinai.lat);
+        expect(horeb.lon, sinai.lon);
+        expect(horeb.id, isNot(sinai.id),
+            reason: 'one point, two names — not one place record');
+
+        final elijah = route('elijah');
+        final wilderness = route('exodus-wilderness');
+        final end = elijah.stops.last.place;
+        expect(elijah.stops.map((s) => s.place.id), contains('Horeb'));
+        expect(wilderness.stops.map((s) => s.place.id), contains('Sinai'));
+        expect(end.id, isNot('Horeb'),
+            reason: 'the last STOP is the Abel-meholah aside, not Horeb — '
+                'this row must not be read as "the route ends at Horeb"');
+      });
+
+      test('the three asides are marked, unnumbered and joined to nothing',
+          () {
+        final r = route('elijah');
+        final asides = r.stops.where((s) => s.isAside).toList();
+        expect(asides.map((s) => s.place.id),
+            <String>['Samaria', 'Damascus', 'Abel-meholah']);
+        for (final a in asides) {
+          expect(a.ordinal, isNull, reason: a.place.id);
+        }
+        for (final s in r.segments) {
+          expect(s.from.isAside, isFalse);
+          expect(s.to.isAside, isFalse);
+        }
+        expect(r.segments.length, 6);
+      });
+
+      test('Samaria sits between Zarephath and Carmel without breaking the leg',
+          () {
+        // An aside keeps its narrative position and must not split the
+        // leg that passes it: 18:2 names Samaria between the Sidonian
+        // coast and Carmel, and the line Zarephath -> Mount Carmel is one
+        // leg, not two.
+        final r = route('elijah');
+        final carmel =
+            r.segments.firstWhere((s) => s.to.place.id == 'Mount Carmel');
+        expect(carmel.from.place.id, 'Zarephath');
+      });
+
+      test('the northern Jezreel, kept apart by its ordinal', () {
+        final r = route('elijah');
+        final stop = r.stops.firstWhere((s) => s.place.name == 'Jezreel');
+        expect(stop.place.id, 'Jezreel 2');
+        expect(stop.place.ordinal, 2);
+        final judean = byId['Jezreel']!;
+        expect(stop.place.lat, isNot(judean.lat),
+            reason: 'the ordinal-less Jezreel is Joshua 15:56, in Judah');
+        expect(
+            haversineKm(stop.place.lat!, stop.place.lon!, judean.lat!,
+                judean.lon!),
+            greaterThan(100));
+      });
+
+      test('Mount Carmel, not the Carmel of Judah', () {
+        final r = route('elijah');
+        final stop = r.stops.firstWhere((s) => s.place.id == 'Mount Carmel');
+        final nabals = byId['Carmel']!;
+        expect(
+            haversineKm(stop.place.lat!, stop.place.lon!, nabals.lat!,
+                nabals.lon!),
+            greaterThan(100),
+            reason: 'two different places share the name; the wrong one is '
+                'Nabal of 1 Samuel 25');
       });
     });
   });

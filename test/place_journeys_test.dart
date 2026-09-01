@@ -92,12 +92,12 @@ void main() {
     expect(wilderness.journey.waypointCount, 42);
   });
 
-  test('the reverse join covers 129 places', () {
+  test('the reverse join covers 138 places', () {
     final covered = <String>{
       for (final p in places)
         if (journeysNaming(p.id, resolved).isNotEmpty) p.id,
     };
-    expect(covered, hasLength(129));
+    expect(covered, hasLength(138));
   });
 
   test('16 places are on more than one route', () {
