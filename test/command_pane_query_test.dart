@@ -104,6 +104,48 @@ void main() {
       wb.dispose();
     });
 
+    test('a refused Strong\'s expression is reported, not run as text',
+        () async {
+      // #295: `G25 NEAR G26` used to fall through to the literal text
+      // scan and come back "no results" — the engine's refusal and an
+      // empty Bible are different facts, and the reader saw only the
+      // second.
+      final wb = WorkbenchProvider(mainProvider: _mp());
+      await wb.runSearch('G25 NEAR G26');
+      expect(wb.commandIssue, CommandIssue.strongsNearNeedsDistance);
+      expect(wb.textResults, isEmpty);
+      expect(wb.strongsRefs, isNull);
+      expect(wb.broadening, isNull,
+          reason: 'a grammar error is not a thin result');
+      wb.dispose();
+    });
+
+    test(
+        'a wildcard in a refused expression is not promoted to a text search',
+        () async {
+      // `G25* NEAR G26` carries a `*`, so without diagnosing it BEFORE
+      // wildcard-promotion this is rewritten into `.G25* NEAR G26` and
+      // run as a wildcard TEXT search instead.
+      final wb = WorkbenchProvider(mainProvider: _mp());
+      await wb.runSearch('G25* NEAR G26');
+      expect(wb.commandIssue, CommandIssue.strongsNearNeedsDistance);
+      expect(wb.textResults, isEmpty);
+      expect(wb.strongsRefs, isNull);
+      expect(wb.broadening, isNull,
+          reason: 'a grammar error is not a thin result');
+      expect(wb.commandQuery, isNull);
+      wb.dispose();
+    });
+
+    test('plain text that starts with a Strong\'s-shaped word is still text',
+        () async {
+      final wb = WorkbenchProvider(mainProvider: _mp());
+      await wb.runSearch('H1 will');
+      expect(wb.commandIssue, isNull);
+      expect(wb.commandQuery, isNull);
+      wb.dispose();
+    });
+
     test('a parenthesised line without operators is still plain text',
         () async {
       // `(god OR world)` used to be refused as an unsupported compound.

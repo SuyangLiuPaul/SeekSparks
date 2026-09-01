@@ -22,6 +22,8 @@
 // and UI live elsewhere (search_page.dart), so this stays unit-testable with
 // no asset or Flutter dependency.
 
+import 'package:seeksparks/utils/command_query.dart' show CommandIssue;
+
 /// One term in a boolean query, e.g. `G25` or `H7225*`.
 class StrongsTerm {
   /// 'G' (Greek) or 'H' (Hebrew).
@@ -73,6 +75,21 @@ class StrongsBooleanQuery {
 }
 
 enum StrongsOp { and, or, not, near }
+
+/// Largest word distance accepted after NEAR / WITHIN.
+///
+/// Declared so `describeCommandIssue` can quote the same number the parser
+/// enforces. A NEARn above this is refused, not clamped — #311's rule:
+/// two clamps that disagree with the control feeding them is how a
+/// control comes to look dead.
+const int kMaxNearDistance = 50;
+
+/// The Strong's ranges this parser accepts. Deliberately a little above
+/// the highest number either lexicon actually carries: the guard exists to
+/// stop plain text like `H1 will` masquerading as an expression, not to
+/// adjudicate what a real Strong's number is.
+const int kMaxGreekStrongs = 5700;
+const int kMaxHebrewStrongs = 8700;
 
 final RegExp _termRe = RegExp(r'^([gGhH])0*(\d+)(\*?)$');
 final RegExp _nearRe = RegExp(r'^(?:NEAR|WITHIN)(\d+)$');
@@ -130,7 +147,7 @@ StrongsBooleanQuery? parseStrongsBoolean(String input) {
       final nearM = _nearRe.firstMatch(upper);
       if (nearM != null) {
         final n = int.parse(nearM.group(1)!);
-        if (n < 1 || n > 50) return null; // absurd distance, reject
+        if (n < 1 || n > kMaxNearDistance) return null; // absurd distance, reject
         ops.add(StrongsOp.near);
         nearDistance.add(n);
         expectingTerm = true;
@@ -143,8 +160,8 @@ StrongsBooleanQuery? parseStrongsBoolean(String input) {
     // Reject absurd numbers so plain text like "H1 will" can't masquerade.
     final n = int.tryParse(digits) ?? 0;
     final prefix = m.group(1)!.toUpperCase();
-    if (prefix == 'G' && (n < 1 || n > 5700)) return null;
-    if (prefix == 'H' && (n < 1 || n > 8700)) return null;
+    if (prefix == 'G' && (n < 1 || n > kMaxGreekStrongs)) return null;
+    if (prefix == 'H' && (n < 1 || n > kMaxHebrewStrongs)) return null;
     if (!expectingTerm) {
       // Two terms with no operator between them → implicit AND.
       ops.add(StrongsOp.and);
@@ -162,6 +179,104 @@ StrongsBooleanQuery? parseStrongsBoolean(String input) {
   final isCombined = terms.length >= 2 || (terms.length == 1 && terms[0].wildcard);
   if (!isCombined) return null;
   return StrongsBooleanQuery(terms, ops, nearDistance);
+}
+
+/// Term-shape check only, no range: kept separate from [_termRe] (which is
+/// identical today) because this one deliberately skips the 1..max range
+/// guard — [diagnoseStrongsBoolean] needs to recognise a term SHAPE first
+/// and decide separately whether its number is in range.
+final RegExp _termShapeRe = RegExp(r'^([gGhH])0*(\d+)(\*?)$');
+final RegExp _nearWordRe = RegExp(r'^(?:NEAR|WITHIN)(\d*)$');
+const _strongsOpWords = {'AND', '&', '+', 'OR', '|', '/', 'NOT', '!'};
+
+/// Why a line that LOOKS like a Strong's expression did not parse — or
+/// null when it does not look like one at all.
+///
+/// [parseStrongsBoolean] returns null for two different situations and the
+/// caller cannot tell them apart: `H1 will` is ordinary text that must go
+/// to the text scan, and `G25 NEAR G26` is a Strong's expression the
+/// parser REFUSED. Before this function the second was shown to the reader
+/// as an empty result list for a literal substring search — the engine
+/// declining a query and the app reporting "no verses" are different
+/// facts, and the reader was only ever told the second one.
+///
+/// **Deliberately narrow.** It answers only when EVERY token is either a
+/// Strong's-shaped token or a known operator, and at least one is
+/// Strong's-shaped. One unrecognised word — `H1 will`, `G25 AND love` —
+/// and this returns null and the text scan keeps the line. That loses the
+/// chance to explain `G25 AND love`, and it is the right trade: a false
+/// refusal takes a working text search away from a reader who never meant
+/// to write an expression, while a missed explanation only leaves them
+/// where they already were.
+CommandIssue? diagnoseStrongsBoolean(String input) {
+  final raw = input.trim();
+  if (raw.isEmpty) return null;
+  if (parseStrongsBoolean(raw) != null) return null;
+
+  final terms = <Match>[];
+  final ops = <String>[];
+  final nearDigits = <String>[];
+  var hasOther = false;
+
+  var expectingTerm = true;
+  for (var tok in raw.split(RegExp(r'\s+'))) {
+    // Same `!`-gluing split the parser applies: a leading `!` on a
+    // non-first token is an operator plus a term, e.g. `G25 !G26`.
+    if (!expectingTerm && tok.length > 1 && tok.startsWith('!')) {
+      ops.add('!');
+      expectingTerm = true;
+      tok = tok.substring(1);
+    }
+    final upper = tok.toUpperCase();
+    if (_strongsOpWords.contains(upper)) {
+      ops.add(upper);
+      expectingTerm = true;
+      continue;
+    }
+    final nearM = _nearWordRe.firstMatch(upper);
+    if (nearM != null) {
+      nearDigits.add(nearM.group(1) ?? '');
+      expectingTerm = true;
+      continue;
+    }
+    final termM = _termShapeRe.firstMatch(tok);
+    if (termM != null) {
+      terms.add(termM);
+      expectingTerm = false;
+      continue;
+    }
+    hasOther = true;
+    expectingTerm = false;
+  }
+
+  if (hasOther) return null;
+  if (terms.isEmpty) return null;
+  // A single valid-shaped term with no operator and no NEAR word is the
+  // single-lexicon lookup path (`_singleStrongsRe` in the provider),
+  // handled elsewhere and out of scope here.
+  if (ops.isEmpty && nearDigits.isEmpty && terms.length == 1) return null;
+
+  for (final d in nearDigits) {
+    if (d.isEmpty) return CommandIssue.strongsNearNeedsDistance;
+  }
+  for (final d in nearDigits) {
+    final n = int.tryParse(d);
+    if (n == null || n < 1 || n > kMaxNearDistance) {
+      return CommandIssue.strongsNearDistanceOutOfRange;
+    }
+  }
+  for (final m in terms) {
+    final digits = m.group(2)!;
+    final n = int.tryParse(digits) ?? 0;
+    final prefix = m.group(1)!.toUpperCase();
+    if (prefix == 'G' && (n < 1 || n > kMaxGreekStrongs)) {
+      return CommandIssue.strongsNumberOutOfRange;
+    }
+    if (prefix == 'H' && (n < 1 || n > kMaxHebrewStrongs)) {
+      return CommandIssue.strongsNumberOutOfRange;
+    }
+  }
+  return CommandIssue.strongsOperatorNeedsTerms;
 }
 
 /// Evaluate [query] to the set of verse-reference labels (e.g. "John 3:16")

@@ -292,8 +292,9 @@ deployed build:
   scope logic is tested; that the reader can *see* which scope is active
   is a screen claim and is not.
 - **Reference navigation** — `John 1:1`, `3:16`, a bare `17`.
-- **Strong's proximity** — `G25 NEAR5 G26`, and `G25 NEAR G26` with the
-  number missing giving a message rather than an empty list.
+- **Strong's proximity actually returning the right verses** — `G25
+  NEAR5 G26` through the live box. That needs the concordance and a
+  browser.
 - **A capped result list admitting the cap** on screen.
 - **The same searches under a Chinese UI locale.** The three locale
   *strings* are asserted by test; that they render un-truncated in the
@@ -310,3 +311,8 @@ deployed build:
   grammar is expected to give, including the prefilter's "never costs a
   hit" contract.
 - `test/command_query_test.dart` — the mechanics, on a six-verse fixture.
+- `test/strongs_query_diagnosis_test.dart` — #295's other half: a
+  malformed Strong's expression (`G25 NEAR G26`, a missing distance, an
+  out-of-range number, a trailing operator) is now named as a refusal
+  instead of silently running as a literal text search that finds
+  nothing.

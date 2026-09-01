@@ -98,6 +98,8 @@ import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/utils/diacritics.dart' show foldDiacritics;
 import 'package:seeksparks/utils/phrase_match.dart' show phraseTokens;
 import 'package:seeksparks/utils/related_verses.dart' show isCjkChar, isWordChar;
+import 'package:seeksparks/utils/strongs_boolean_search.dart'
+    show kMaxNearDistance, kMaxGreekStrongs, kMaxHebrewStrongs;
 
 // ── Limits ──────────────────────────────────────────────────────────
 
@@ -146,7 +148,8 @@ const int kMaxCompoundGroups = 6;
 /// what `~(a|b)` meant and running half of it would be worse than saying
 /// it is not supported.
 ///
-/// The `compound*` values belong to `compound_query.dart` and are
+/// The `compound*` values belong to `compound_query.dart` and the
+/// `strongs*` values belong to `strongs_boolean_search.dart`; both are
 /// declared here so that one enum covers the whole command line and
 /// `describeCommandIssue` stays the single place a failure is worded.
 enum CommandIssue {
@@ -163,6 +166,10 @@ enum CommandIssue {
   compoundGroupOperator,
   compoundNested,
   compoundTooManyGroups,
+  strongsNearNeedsDistance,
+  strongsNearDistanceOutOfRange,
+  strongsOperatorNeedsTerms,
+  strongsNumberOutOfRange,
 }
 
 /// Parse outcome: exactly one of [query] / [issue] is non-null.
@@ -1170,5 +1177,16 @@ String? describeCommandIssue(CommandIssue issue, String locale) {
     CommandIssue.compoundTooManyGroups => s('cmdIssueCompoundTooMany',
             'A compound search can hold at most {max} groups.')
         .replaceAll('{max}', '$kMaxCompoundGroups'),
+    CommandIssue.strongsNearNeedsDistance => s('cmdIssueNearNoDistance',
+        "NEAR needs a number: G25 NEAR5 G26 finds them within 5 words."),
+    CommandIssue.strongsNearDistanceOutOfRange => s('cmdIssueNearRange',
+            'The word distance after NEAR must be between 1 and {max}.')
+        .replaceAll('{max}', '$kMaxNearDistance'),
+    CommandIssue.strongsOperatorNeedsTerms => s('cmdIssueStrongsOperator',
+        "Every operator needs a Strong's number on both sides — for example G25 AND G26."),
+    CommandIssue.strongsNumberOutOfRange => s('cmdIssueStrongsRange',
+            "Strong's numbers here run G1–G{g} and H1–H{h}.")
+        .replaceAll('{g}', '$kMaxGreekStrongs')
+        .replaceAll('{h}', '$kMaxHebrewStrongs'),
   };
 }

@@ -3024,6 +3024,26 @@ const uiStrings = {
     'zh-Hant': '* 後的間隔詞數上限為 {max}。',
     'en': 'The word gap after * must be {max} or less.',
   },
+  'cmdIssueNearNoDistance': {
+    'zh-Hans': 'NEAR 后面要写数字：G25 NEAR5 G26 表示两词相隔不超过 5 个词。',
+    'zh-Hant': 'NEAR 後面要寫數字：G25 NEAR5 G26 表示兩詞相隔不超過 5 個詞。',
+    'en': "NEAR needs a number: G25 NEAR5 G26 finds them within 5 words.",
+  },
+  'cmdIssueNearRange': {
+    'zh-Hans': 'NEAR 后面的词距必须在 1 到 {max} 之间。',
+    'zh-Hant': 'NEAR 後面的詞距必須在 1 到 {max} 之間。',
+    'en': 'The word distance after NEAR must be between 1 and {max}.',
+  },
+  'cmdIssueStrongsOperator': {
+    'zh-Hans': '运算符两边都要有原文编号，例如 G25 AND G26。',
+    'zh-Hant': '運算子兩邊都要有原文編號，例如 G25 AND G26。',
+    'en': "Every operator needs a Strong's number on both sides — for example G25 AND G26.",
+  },
+  'cmdIssueStrongsRange': {
+    'zh-Hans': '此处的原文编号范围是 G1–G{g} 和 H1–H{h}。',
+    'zh-Hant': '此處的原文編號範圍是 G1–G{g} 和 H1–H{h}。',
+    'en': "Strong's numbers here run G1–G{g} and H1–H{h}.",
+  },
   'cmdSyntaxTitle': {
     'zh-Hans': '命令行语法',
     'zh-Hant': '命令行語法',

@@ -502,6 +502,18 @@ class WorkbenchProvider extends ChangeNotifier {
           scoped: hasSearchLimit,
         );
       } else {
+        // A Strong's expression the parser REFUSED is not plain text.
+        // Before this, `G25 NEAR G26` fell through to the literal scan
+        // below and came back "no results" — the engine's refusal and an
+        // empty Bible are different facts and the reader saw only the
+        // second. `G25* NEAR G26` was worse: it carries a `*`, so the
+        // promotion below rewrote it into `.G25* NEAR G26` and ran it as
+        // a wildcard TEXT search. Hence: before the promotion, not after.
+        final strongsIssue = diagnoseStrongsBoolean(query);
+        if (strongsIssue != null) {
+          commandIssue = strongsIssue;
+          return;
+        }
         // A bare `faith*` reaches here only because it is not a command
         // and not Strong's, and the scan below is literal — so it would
         // find nothing, which is what the `✶` chip's own example did
