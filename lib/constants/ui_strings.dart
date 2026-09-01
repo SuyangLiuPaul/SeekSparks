@@ -3044,6 +3044,28 @@ const uiStrings = {
     'zh-Hant': '此處的原文編號範圍是 G1–G{g} 和 H1–H{h}。',
     'en': "Strong's numbers here run G1–G{g} and H1–H{h}.",
   },
+  'strongsAbsenceUnknown': {
+    'zh-Hans': '{n} 不在原文编号的范围内（{range}），本应用所收录的经文中也没有任何词标注为它。',
+    'zh-Hant': '{n} 不在原文編號的範圍內（{range}），本應用所收錄的經文中也沒有任何詞標註為它。',
+    'en': "{n} is outside Strong's numbering ({range}), and no word in the "
+        'texts SeekSparks carries is tagged with it.',
+  },
+  'strongsAbsenceNotInCorpus': {
+    'zh-Hans': '{n} 在原文编号的范围内（{range}），但本应用所收录的标注经文中没有任何词使用它。',
+    'zh-Hant': '{n} 在原文編號的範圍內（{range}），但本應用所收錄的標註經文中沒有任何詞使用它。',
+    'en': "{n} is inside Strong's numbering ({range}), but no word in the "
+        'tagged texts SeekSparks carries uses it.',
+  },
+  'strongsAbsenceOutsideScope': {
+    'zh-Hans': '{n} 全经共出现 {occ} 次，分布在 {verses} 节，但{scope}之内一节也没有。',
+    'zh-Hant': '{n} 全經共出現 {occ} 次，分布在 {verses} 節，但{scope}之內一節也沒有。',
+    'en': '{n} occurs {occ} times in {verses} verses, none of them in {scope}.',
+  },
+  'strongsAbsenceScopeFallback': {
+    'zh-Hans': '当前的搜索范围',
+    'zh-Hant': '目前的搜尋範圍',
+    'en': 'the current search limit',
+  },
   'cmdSyntaxTitle': {
     'zh-Hans': '命令行语法',
     'zh-Hant': '命令行語法',

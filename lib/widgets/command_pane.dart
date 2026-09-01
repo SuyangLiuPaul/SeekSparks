@@ -42,6 +42,7 @@ import 'package:seeksparks/constants/book_groups.dart'
     show oldTestamentBooks, canonicalOtBooks, canonicalNtBooks;
 import 'package:seeksparks/utils/search_scope.dart' show scopeDisplayName;
 import 'package:seeksparks/utils/search_stats.dart';
+import 'package:seeksparks/utils/strongs_absence.dart';
 import 'package:seeksparks/utils/strongs_result_counts.dart';
 import 'package:seeksparks/utils/version_abbreviation.dart';
 import 'package:seeksparks/widgets/search_stats_strip.dart';
@@ -1803,7 +1804,23 @@ class _CommandPaneState extends State<CommandPane> {
       AppSettings settings, ColorScheme scheme, String locale,
       List<ConcordanceRef> refs) {
     if (refs.isEmpty) {
-      return _noResults(settings, scheme, locale);
+      // "No results found" alone conflates three different facts — see
+      // `strongs_absence.dart`. Name which one this is.
+      final label = wb.strongsQueryLabel ?? wb.lastQuery;
+      final absence = classifyStrongsAbsence(
+        label: label,
+        corpusVerses: wb.strongsCorpusVerses,
+        shownVerses: refs.length,
+        scoped: wb.hasSearchLimit,
+      );
+      return _noResults(settings, scheme, locale,
+          message: absence == null
+              ? null
+              : describeStrongsAbsence(absence, locale,
+                  label: label,
+                  corpusVerses: wb.strongsCorpusVerses,
+                  corpusOccurrences: wb.strongsCorpusOccurrences,
+                  scopeLabel: wb.searchLimitLabel));
     }
     final hl = highlightsForQuery(wb.lastQuery);
     // Warm the books this list will draw from. cachedForVerse is a

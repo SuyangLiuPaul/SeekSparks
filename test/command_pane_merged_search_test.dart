@@ -17,6 +17,7 @@ import 'package:seeksparks/models/verse.dart';
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/providers/workbench_provider.dart';
 import 'package:seeksparks/services/ai_bible_search_service.dart';
+import 'package:seeksparks/services/concordance_service.dart';
 import 'package:seeksparks/services/recent_searches_service.dart';
 import 'package:seeksparks/widgets/command_pane.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -45,6 +46,16 @@ AiBibleRef _ref(String book, int chapter, int start, int end, String reason) =>
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  // `testWidgets` runs its body in a fake-async zone, where a Future
+  // waiting on real disk I/O never completes — the same hazard
+  // `naves_pane_test.dart:30-45` documents for `NavesService`. So the
+  // 6.9 MB concordance is warmed HERE, outside that zone. Afterwards
+  // `ConcordanceService.lookup` hits its static `_cache` and resolves
+  // as a microtask, which `pump` can drive.
+  setUpAll(() async {
+    await ConcordanceService.lookup('G25');
+  });
 
   Future<WorkbenchProvider> pump(
     WidgetTester tester, {
@@ -219,6 +230,19 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
       expect(find.text('.love god'), findsOneWidget);
       expect(find.text("'in the beginning"), findsOneWidget);
+    });
+  });
+
+  group("a Strong's number with nothing to show", () {
+    testWidgets('an unknown number says so instead of "No results found"',
+        (tester) async {
+      // G9999 is past the last number greek.json holds (G5624), so this
+      // is the `unknownNumber` case: not a word we lack, a number that
+      // does not exist. The concordance is warm from `setUpAll`.
+      await pump(tester);
+      await submit(tester, 'G9999');
+      expect(find.textContaining("outside Strong's numbering"), findsOneWidget);
+      expect(find.textContaining('G1–G5624'), findsOneWidget);
     });
   });
 }

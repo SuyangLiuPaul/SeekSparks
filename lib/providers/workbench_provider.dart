@@ -96,6 +96,18 @@ class WorkbenchProvider extends ChangeNotifier {
   /// were never searched.
   bool strongsListTruncated = false;
 
+  /// The whole-Bible totals for a SINGLE-number query, before the `l`
+  /// search limit narrowed them. Null when the concordance has no entry
+  /// for the number, and null on every other search shape.
+  ///
+  /// Kept raw and separate from [strongsCounts] on purpose:
+  /// `strongsResultCounts` drops the occurrence total whenever a limit is
+  /// active (correctly — an unattributed Bible-wide number beside a
+  /// Genesis-only list reads as Genesis's own). The empty-result message
+  /// names the scope in the same sentence, so it may state both.
+  int? strongsCorpusVerses;
+  int? strongsCorpusOccurrences;
+
   /// The last query, parsed, when it was written in the command-line
   /// grammar (`.love god`, `'in the beginning`, …). The pane echoes it
   /// back in words: a grammar whose operators are punctuation is only
@@ -432,6 +444,8 @@ class WorkbenchProvider extends ChangeNotifier {
     strongsCounts = null;
     strongsByBook = const <String, int>{};
     strongsListTruncated = false;
+    strongsCorpusVerses = null;
+    strongsCorpusOccurrences = null;
     commandQuery = null;
     compoundQuery = null;
     compoundGroupCounts = null;
@@ -490,6 +504,12 @@ class WorkbenchProvider extends ChangeNotifier {
         // order (Genesis … Revelation), so no re-sort here.
         final listed = result?.refs ?? const <ConcordanceRef>[];
         final refs = _limitRefs(listed);
+        // Raw, pre-limit, so an empty list can say WHICH kind of empty it
+        // is: absent from the corpus, or present and excluded by the `l`
+        // limit. Null lookup ⇔ absent — the concordance ships no entry
+        // with an empty ref list (14,040 checked).
+        strongsCorpusVerses = result == null ? null : listed.length;
+        strongsCorpusOccurrences = result?.total;
         strongsRefs = refs;
         strongsByBook = result?.byBook ?? const <String, int>{};
         // A single number's verse list is complete since v1.6.96, so the
@@ -753,6 +773,8 @@ class WorkbenchProvider extends ChangeNotifier {
     strongsCounts = null;
     strongsByBook = const <String, int>{};
     strongsListTruncated = false;
+    strongsCorpusVerses = null;
+    strongsCorpusOccurrences = null;
     commandQuery = null;
     compoundQuery = null;
     compoundGroupCounts = null;
@@ -805,6 +827,8 @@ class WorkbenchProvider extends ChangeNotifier {
     strongsCounts = null;
     strongsByBook = const <String, int>{};
     strongsListTruncated = false;
+    strongsCorpusVerses = null;
+    strongsCorpusOccurrences = null;
     commandQuery = null;
     compoundQuery = null;
     compoundGroupCounts = null;
