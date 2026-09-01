@@ -35,9 +35,22 @@
 // sends, which meant every error SeekSparks ever reported was dropped
 // at the door and no email was ever sent. The yswords entries stay:
 // the two apps share this function source.
+//
+// 2026-09-02: and it still listed only the *.netlify.app origins, never
+// the custom domains the apps are actually served on. A browser sends
+// the origin of the page it loaded, so every real user of SeekSparks
+// (`sword.yahwehword.com`) and of YsWords (`yahwehword.com`) was 403'd
+// by `errorReport`'s `isAllowedOrigin` guard BEFORE anything was sent.
+// The netlify.app origins alone only ever worked for whoever typed
+// those URLs directly. Both apex forms plus `www.` are listed because
+// `www.yahwehword.com` resolves on its own; a redirect to the apex
+// makes the Origin apex, but a direct hit makes it `www.`.
 const _ALLOWLIST = [
 	'https://seeksparks.netlify.app',
 	'https://seeksparks-dev.netlify.app',
+	'https://sword.yahwehword.com',
+	'https://yahwehword.com',
+	'https://www.yahwehword.com',
 	'https://yswords.netlify.app',
 	'https://yswords-cn.netlify.app',
 	'https://yswords-dev.netlify.app',
