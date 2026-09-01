@@ -6914,3 +6914,143 @@ Deferred, same unparsed-header shape, not touched this run:
 `bible_evidence.json`, `daily_verses.json`, `gospel_synopsis.json`,
 `chronology.json`, `bible_timeline.json`, `family_tree.json`,
 `bible_journeys.json` — each needs its own surface, not a sweep.
+
+## Check 52 — identifying `lc` and `wh` in the Yahwehdehua export, and why their witness sweep cannot yet be trusted
+
+`#301`'s stated blocker on the import decision was that the export's `lc`
+version code (23,145 readings) was never identified. Measured this run
+against `~/Documents/New project/yahwehdehua_bible/output/bible.sqlite`
+(the export has sat on disk, unidentified, since 2026-08-07):
+
+| field | `lc` | `wh` |
+|---|---|---|
+| `language` / `direction` | `he` / `rtl` | `grc` / `ltr` |
+| `kind` | `original_text` | `original_text` |
+| distinct `book_code` | 39 | 27 |
+| `verse_readings` rows | 23,145 | 7,957 |
+| `source_label` | `LC` | `WH` |
+
+Note the version codes are **lowercase** in `verse_readings` (`lc`, `wh`)
+but **uppercase** in `manifest.json` (`LC`, `WH`); querying `version='LC'`
+returns zero rows and looks like an empty table rather than a case
+mismatch.
+
+**The identification.** `lc` is a Hebrew Old Testament: `language=he`,
+`direction=rtl`, `kind=original_text`, 39 books, and its 23,145 verses is
+exactly the OT's share of the 31,102-reference canon this repo already
+uses. `wh` is a Greek New Testament: `language=grc`, 27 books, 7,957
+verses — exactly the NT's share. 23,145 + 7,957 = 31,102, and neither
+figure is approximate. `lc`'s sample text is pointed and accented and
+divides prefixes with a literal `.` (`בְּ.רֵאשִׁ֖ית`), the OSHB/WLC
+morpheme-divider convention; `LC` is the ordinary abbreviation for the
+**Leningrad Codex**, the manuscript OSHB/WLC transcribes. `wh`'s sample
+text is unaccented, lower-case, no final-sigma distinction — the printed
+convention of **Westcott–Hort**, which is also what the label says. This
+resolves the ticket's stated blocker.
+
+**The witness script.** `tools/witness_lc_strongs.py` (new, committed)
+joins every `assets/originals/*.json` book against `lc`'s Strong's-tagged
+segments, using the OSIS code list already vetted in
+`tools/build_originals.py`'s `OSIS_HEBREW` (not a hand-written table),
+cross-checked per book against the export's own `books.chapter_count`
+before trusting the join. Neither side pads Strong's numbers with a
+leading zero, so no normalisation was applied.
+
+**Proof of the join, read before the aggregate:** Genesis 1:1 —
+`ours=[H7225, H1254, H430, H853, H8064, H853, H776]`,
+`theirs=` the same seven, same order. Song of Solomon 1:1 (`Song`, a code
+that is not an obvious prefix of `song_of_solomon.json`) — `ours=[H7892,
+H7892, H834, H8010]`, `theirs=` the same four. Both match exactly.
+
+**Two whole books do not join.** `Joel`: export's `books.chapter_count`
+says 3, our asset's highest chapter is 4. `Mal`: export says 4, ours is
+3. This is not a bug in either source — Joel and Malachi are the two
+best-known cases where the Hebrew Masoretic chapter division differs
+from the English one (Hebrew Joel 2:28–32 is Hebrew Joel 3:1–5, pushing
+the rest of Hebrew Joel into a fourth chapter; Hebrew Malachi 3:19–24 is
+English Malachi 4). `assets/originals/joel.json` and `malachi.json` use
+the **Hebrew** division (verified: Joel chapters end at 20/27/5/21,
+Malachi at 14/17/24 across 3 chapters) while the export's `lc` reading
+uses the **English/standard** division throughout (Joel 20/32/21 across
+3 chapters, Malachi across 4). Excluded from the sweep, not silently
+dropped — the script names them and exits non-zero.
+
+**A more consequential finding: this same divergence recurs inside
+otherwise-resolved books, at the sub-chapter level, and the naive
+`chapter:verse` join cannot see it.** Comparing the first 20 printed
+differences by reading the actual words (not the counts, per the
+standing rule): most read as one- or two-token discrepancies, but four —
+Genesis 32:17, Exodus 22:19, Exodus 22:28, Exodus 17:15 — compare
+**entirely unrelated word lists**, the signature of two different
+verses being held under the same key, not of a tagging disagreement on
+one verse. Checked directly: our `genesis.json` has Genesis 31 ending at
+verse 54 and chapter 32 running to verse 33; the export's `lc` has
+Genesis 31 ending at verse 55 and chapter 32 running to verse 32. This is
+the well-documented Hebrew/English boundary shift at Genesis 31:55/32:1
+(the material English numbers as 31:55 is Hebrew 32:1, shifting every
+verse in Hebrew ch.32 forward by one relative to English). **The same
+pattern that produced the Joel/Malachi *chapter*-count mismatch recurs as
+a *verse*-count mismatch inside Genesis, Exodus, and — unverified but
+expected on the same grounds — wherever else Hebrew and English
+versification diverge (1 Kings 4/5 and a number of psalm superscriptions
+are the other commonly-cited cases).** `assets/originals/*.json` carries
+native Hebrew/WLC numbering throughout; the export's `lc` reading carries
+English/standard numbering throughout. The book-level chapter-count
+check catches the cases where the divergence spans a whole chapter
+boundary at a book's edge; it cannot catch — and this run's join
+therefore cannot correct — a shift living inside a book's middle.
+
+**What this means for the aggregate.** The raw sweep, uncorrected for
+this: 37 of 39 books joined, 22,910 verses compared, 19,352 identical
+Strong's sequences, 3,160 differing in length, 398 same length with
+different values. Of the 3,160 length-differing verses, at least 1,249
+are fully explained by a **tokenization-granularity convention, not a
+tagging error**: our OSHB-based tagging assigns the same Strong's number
+to *each word-token* of a multi-word proper name or repeated root
+(verified against the raw asset: Genesis 4:22 tags both `תּ֣וּבַל` and
+`קַ֔יִן` — "Tubal" and "Cain" — as two separate `H8423` entries; the same
+pattern recurs for Bethel/`H1008`, Beersheba/`H884`, and infinitive-
+absolute verb doubling), while the export's `lc` segments appear to
+collapse an adjacent run of identical Strong's numbers into one
+occurrence. Confirmed programmatically: collapsing adjacent duplicates
+in `ours` reproduces `theirs` exactly for 1,249 of the 3,160 cases. The
+remaining ~1,911 length-differing verses and the 398 same-length
+differing verses were **not** individually classified — the sample read
+above shows they are a mix of the same tokenization pattern, a recurring
+`H853`/`H854` confusion (the direct-object marker אֵת vs. the near-
+homographic preposition "with" — a genuine Hebrew parsing ambiguity, not
+obviously an error on either side), and verse-misalignment noise from
+the versification shift just described, in a proportion this run did not
+determine.
+
+**Verdict: the raw 84.5% identical rate (19,352 / 22,910) is not a
+trustworthy agreement rate and should not be read as measuring how often
+our tagging and `lc` agree.** It is contaminated, by an unmeasured
+amount, with false disagreements produced by comparing misaligned
+verses rather than the same verse twice. Per the standing rule that a
+documented rate resting on a broken join is worse than no document, this
+run does not publish a corrected number — it did not have one to
+publish. **Fixing this needs a Hebrew-to-English verse crosswalk before
+the sweep is re-run**; `lib/services/versification.dart` (the #304 /
+v1.6.90 derived table) exists for exactly this purpose but is a Dart
+asset, porting or reusing it for a Python join is new work this
+documentation-only run did not do. Per plan §D, that repair is left for
+a future iteration with this count in hand; no `assets/` file was
+touched.
+
+**The import decision stands independent of the exact rate.** Whatever
+the corrected agreement rate turns out to be, `lc` and `wh` cover exactly
+the same canon this repo already ships tagged (`assets/originals/` for
+Hebrew, `assets/tagged/lxxwh` for Greek), so a second copy of either
+buys a reader nothing while costing bundle size. **Recommend: do not
+import `lc` or `wh` as new versions.** This is a recommendation, not a
+closure — closing `#301` is the owner's call.
+
+**Already shipped, contrary to the ticket body's implication:** the
+LEB notes (24,245, `<note: …>` inline, parsed by `scripture_markup.dart`
+`_angleRe`) and the supplied-word marks (29,650, `ScriptureSpanKind.
+supplied`) the export also carries are already in `assets/leb.json` and
+already rendered. The ticket's remaining stated scope
+(`LC` unidentified) is resolved by this check; the readings-import
+question is not "not yet done" so much as "recommended against," for the
+reason above.
