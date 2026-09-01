@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/app_settings.dart';
+import 'package:seeksparks/models/biblical_person.dart';
 import 'package:seeksparks/models/wheel_history.dart';
 import 'package:seeksparks/pages/chronology_page.dart';
 import 'package:seeksparks/providers/main_provider.dart';
@@ -322,6 +323,32 @@ const Map<String, Map<String, String>> wheelStrings = {
     'zh-Hans': '没有找到「{q}」。',
     'zh-Hant': '沒有找到「{q}」。',
     'en': 'Nothing here matches “{q}”.',
+  },
+  // WHEN THE APP KNOWS THE NAME AND THIS WHEEL CANNOT CARRY IT.
+  //
+  // Methuselah is in the app: his years are in `family_tree.json` and
+  // his life is drawn on the Bible Chronology page. He is not on this
+  // wheel and cannot be — the text gives him an interval, not a date,
+  // so there is no BC year to draw him at (the reason is set out under
+  // WHAT IS NOT HERE at the top of this file). Without this line the
+  // reader is told "Nothing here matches Methuselah", which reads as
+  // the app never having heard of him.
+  //
+  // NO NUMBER IN THIS SENTENCE. Eight of these men are given different
+  // lifespans by the Masoretic text and the Septuagint, and this page
+  // has no way to let a reader choose between them. The Chronology
+  // page does. Printing "969 years" here would pick one silently.
+  //
+  // No pronoun either — the same sentence has to serve whoever the
+  // reader typed.
+  'wheelFindAmElsewhere': {
+    'zh-Hans': '{name}不在这个轮盘上：经文给的是年数，不是年份。'
+        '生平记在「圣经年代」，自创世起算。',
+    'zh-Hant': '{name}不在這個輪盤上：經文給的是年數，不是年份。'
+        '生平記在「聖經年代」，自創世起算。',
+    'en': '{name} is not on this wheel: the text gives a lifespan, not a '
+        'date. That life is charted in Bible Chronology, counted from '
+        'the creation.',
   },
   'wheelFindCount': {
     'zh-Hans': '{n} 项',
@@ -1302,6 +1329,60 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
                       ),
                     ),
                   ),
+                  // A "nothing matches" that is not the whole truth is
+                  // the worst answer a search box gives: it reads as
+                  // ignorance rather than as a boundary. Only reached
+                  // when the index really is empty, so it can never
+                  // stand in front of a result.
+                  if (result.isEmpty)
+                    Builder(builder: (_) {
+                      final person = _amPersonFor(query);
+                      if (person == null) return const SizedBox.shrink();
+                      return Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _fill('wheelFindAmElsewhere', '', locale,
+                                  {'name': person.localizedName(locale)}),
+                              style: TextStyle(
+                                  color: wb.mutedText,
+                                  fontSize: t.scaled(11),
+                                  height: 1.5),
+                            ),
+                            Align(
+                              alignment: AlignmentDirectional.centerStart,
+                              child: TextButton(
+                                onPressed: () {
+                                  Navigator.of(sheet).pop();
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute<void>(
+                                      builder: (_) => const ChronologyPage(),
+                                    ),
+                                  );
+                                },
+                                style: TextButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8),
+                                  minimumSize: Size.zero,
+                                  tapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
+                                  foregroundColor: wb.link,
+                                ),
+                                child: Text(
+                                  _s('timelineOpenChronology',
+                                      'Open Bible Chronology', locale),
+                                  style: TextStyle(
+                                      fontSize: t.scaled(11.5),
+                                      fontWeight: FontWeight.w700),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
                   Flexible(
                     child: ListView.builder(
                       key: const ValueKey('wheelFindList'),
@@ -1398,6 +1479,45 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
         },
       ),
     );
+  }
+
+  /// The person a reader asked for who IS in this app and CANNOT be on
+  /// this wheel.
+  ///
+  /// The test is the data's own: a record whose years are counted in
+  /// Anno Mundi has no BC year, because the text gave it none. That is
+  /// exactly the condition that keeps a name off a BC/AD circle, so it
+  /// is the condition asked about — no hand-written list of patriarchs
+  /// to fall out of step with the asset.
+  ///
+  /// Nineteen records qualify. Eight of them (Noah, Shem, Arphaxad,
+  /// Eber, Peleg, Reu, Serug, Terah) also stand on the wheel as nations
+  /// of Genesis 10 and 11, so a search for them is never empty and this
+  /// never runs. It answers for the eleven who are only here:
+  /// Adam through Lamech, Nahor the elder, and Shelah — whom the wheel
+  /// spells Salah.
+  ///
+  /// Matching is equality on the folded name, in each of the three
+  /// scripts, not a substring: this replaces a "found nothing" with a
+  /// definite claim about one man, and a loose match would make that
+  /// claim about the wrong one.
+  ///
+  /// The lookup is synchronous for the same reason `_showPerson`'s is —
+  /// [WheelHistoryService.load] awaits the family tree before it
+  /// returns, so a page drawing the wheel is a page past that await.
+  BiblicalPerson? _amPersonFor(String query) {
+    final q = foldForWheelSearch(query);
+    if (q.isEmpty) return null;
+    for (final p in FamilyTreeService.instance.allOrEmpty()) {
+      if (p.yearSystem != 'am') continue;
+      if (p.lifespan == null || p.birthYear == null || p.deathYear == null) {
+        continue;
+      }
+      for (final n in [p.name, p.nameZhHans ?? '', p.nameZhHant ?? '']) {
+        if (n.isNotEmpty && foldForWheelSearch(n) == q) return p;
+      }
+    }
+    return null;
   }
 
   /// The one line under the box. It always says something: what can be

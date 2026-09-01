@@ -660,4 +660,66 @@ void main() {
         reason: 'the name is underlined and does nothing');
     await unmount(tester);
   });
+
+  /// A NAME THE APP KNOWS AND THIS WHEEL CANNOT CARRY.
+  ///
+  /// Methuselah is in the app — 969 years, in `family_tree.json`, drawn
+  /// on the Bible Chronology page. He is not on this wheel and cannot
+  /// be: the text gives him an interval, not a date. Until this
+  /// existed, the box answered "Nothing here matches Methuselah",
+  /// which reads as the app never having heard of him — a false
+  /// absence, which is the defect class the whole search box was built
+  /// against.
+  ///
+  /// Three things are asserted, and the second and third are the ones
+  /// that make the first mean anything: it fires for him, it does NOT
+  /// fire for a name near his, and it can never appear in front of a
+  /// real result.
+  testWidgets('a patriarch the wheel cannot carry is sent where he is',
+      (tester) async {
+    await pump(tester, const Size(1440, 900));
+    await openFind(tester);
+
+    // Typed in English; this page's shipped default is zh-Hans, so a
+    // hit proves the fold reaches every script the record carries and
+    // that the sentence is shown in the reader's own language.
+    await tester.enterText(
+        find.byKey(const ValueKey('wheelFindField')), 'Methuselah');
+    await settle(tester);
+    final shown = sheetText(tester);
+    expect(shown, contains('玛土撒拉'),
+        reason: 'the box knows this man and said nothing about him');
+    expect(shown, contains('不在这个轮盘上'));
+    expect(shown, contains('自创世起算'),
+        reason: 'the reader is told he is absent but not where he is');
+
+    // The figure is 969 in the Masoretic text and 969 in the
+    // Septuagint too — but eight of these men differ between the two,
+    // and this page has no way to let a reader choose. So it prints no
+    // figure at all, for any of them.
+    expect(shown, isNot(contains('969')));
+
+    // And the way out is offered, not merely described.
+    expect(find.text('打开「圣经年代」'), findsOneWidget);
+
+    // A name one letter off is a different question, and answering it
+    // with Methuselah's sentence would be worse than answering nothing.
+    await tester.enterText(
+        find.byKey(const ValueKey('wheelFindField')), 'Methuselahx');
+    await settle(tester);
+    expect(sheetText(tester), isNot(contains('不在这个轮盘上')),
+        reason: 'a loose match makes a definite claim about the wrong man');
+
+    // Shem carries AM years too, and is ALSO a nation of Genesis 10, so
+    // the wheel can answer for him. The hand-off must never stand in
+    // front of a record that exists.
+    await tester.enterText(
+        find.byKey(const ValueKey('wheelFindField')), 'Shem');
+    await settle(tester);
+    final shem = sheetText(tester);
+    expect(shem, contains('闪'), reason: 'the wheel lost its own record');
+    expect(shem, isNot(contains('不在这个轮盘上')));
+
+    await unmount(tester);
+  });
 }
