@@ -37,6 +37,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/wheel_history.dart';
+import 'package:seeksparks/services/hebrew_kings_service.dart';
+import 'package:seeksparks/models/hebrew_king.dart';
 import 'package:seeksparks/pages/chronology_page.dart';
 import 'package:seeksparks/pages/radial_chronology_page.dart';
 import 'package:seeksparks/providers/main_provider.dart';
@@ -721,5 +723,182 @@ void main() {
     expect(shem, isNot(contains('不在这个轮盘上')));
 
     await unmount(tester);
+  });
+
+  /// WHO REIGNED IN IT.
+  ///
+  /// The wheel draws the Kingdom of Judah, not Ahab, and until now a
+  /// reader who opened that kingdom got two names out of its note —
+  /// "from Rehoboam to Zedekiah" — and no route to the other eighteen,
+  /// though this app charts all forty-two on its own page. There was no
+  /// link from the wheel to that page anywhere in the app.
+  ///
+  /// The counts are read from `hebrew_kings.json`, never written here.
+  /// Twenty and twenty is Thiele's arrangement, not a fact about the
+  /// world, and a literal in a test is a literal that outlives the data
+  /// it was copied from.
+  group('a kingdom says who reigned in it', () {
+    late HebrewKingsData kings;
+    setUpAll(() async {
+      kings = await HebrewKingsService.instance.load();
+    });
+
+    /// Reach a power's sheet the way a reader can: find it by name.
+    ///
+    /// Typed in English and tapped in Chinese on purpose. Entering the
+    /// same string the row prints makes `find.text` ambiguous — the
+    /// search field holds it too — and the tap lands on the box instead
+    /// of the result, which is a silent no-op that leaves every later
+    /// assertion reading the wrong widget tree.
+    Future<void> openPower(WidgetTester tester, String en, String zh) async {
+      await openFind(tester);
+      await tester.enterText(find.byKey(const ValueKey('wheelFindField')), en);
+      await settle(tester);
+      final row = find.descendant(
+          of: find.byKey(const ValueKey('wheelFindList')),
+          matching: find.text(zh));
+      expect(row, findsWidgets, reason: 'the box could not find $en');
+      await tester.tap(row.first);
+      await settle(tester);
+    }
+
+    testWidgets('Judah lists its twenty, in order, under the Thiele line',
+        (tester) async {
+      await pump(tester, const Size(1440, 900));
+      await openPower(tester, 'Kingdom of Judah', '南国犹大');
+      final text = sheetText(tester);
+
+      final judah = kings.ofKingdom(Kingdom.judah);
+      expect(text, contains('列王 · ${judah.length}'));
+      for (final k in judah) {
+        expect(text, contains(k.nameFor('zh-Hans')),
+            reason: '${k.id} is charted by this app and missing here');
+      }
+      // The order is the file's, which is reign order.
+      expect(text.indexOf(judah.first.nameFor('zh-Hans')),
+          lessThan(text.indexOf(judah.last.nameFor('zh-Hans'))));
+
+      // The years are covered by the basis line already on this sheet;
+      // no reign carries a disclosure of its own, so that line has to
+      // actually be there.
+      // The line reads "interval from scripture · year by Thiele ·
+      // approximate · authorities differ". It sits directly above the
+      // list and is the only disclosure these twenty reign years get,
+      // so it has to actually be on screen — and it carries the
+      // systems caveat too, which is why no row repeats it.
+      expect(text, contains('Thiele'),
+          reason: 'reign years are printed with nothing saying what they '
+              'rest on');
+      expect(text, contains('各家不一'),
+          reason: 'the reader is not told the authorities disagree');
+      expect(find.text('犹大与以色列列王'), findsOneWidget,
+          reason: 'the wheel still has no route to the page that charts '
+              'these reigns');
+      await unmount(tester);
+    });
+
+    testWidgets('Israel lists its own twenty, not Judah\'s', (tester) async {
+      await pump(tester, const Size(1440, 900));
+      await openPower(tester, 'Kingdom of Israel (Northern)', '北国以色列');
+      final text = sheetText(tester);
+
+      final israel = kings.ofKingdom(Kingdom.israel);
+      expect(text, contains('列王 · ${israel.length}'));
+      expect(text, contains(israel.first.nameFor('zh-Hans')));
+      expect(text, contains(israel.last.nameFor('zh-Hans')));
+      // Judah's kings reigned at the same time and are NOT here: this
+      // sheet answers who reigned in this kingdom, not who reigned
+      // alongside. That question has its own page, and the link row is
+      // how the reader gets to it.
+      //
+      // Checked name by name rather than by one example, and the
+      // exclusion is the point of the exercise: 罗波安 (Rehoboam of
+      // Judah) is a SUBSTRING of 耶罗波安 (Jeroboam of Israel), so the
+      // obvious assertion fails on a list that is perfectly correct.
+      // Only the names that cannot collide are asked about.
+      final israelNames =
+          israel.map((k) => k.nameFor('zh-Hans')).toList();
+      var asked = 0;
+      for (final k in kings.ofKingdom(Kingdom.judah)) {
+        final n = k.nameFor('zh-Hans');
+        if (israelNames.any((i) => i.contains(n) || n.contains(i))) continue;
+        expect(text, isNot(contains(n)), reason: '${k.id} reigned in Judah');
+        asked++;
+      }
+      expect(asked, greaterThan(10),
+          reason: 'too many collisions to have tested anything');
+      await unmount(tester);
+    });
+
+    /// THE ONE THAT KEEPS THIS HONEST.
+    ///
+    /// The united monarchy runs from 1050 BC, which is Saul. Thiele's
+    /// chart is of the divided monarchy and begins at David in 1010 BC
+    /// with no Saul in it at all. So "list the kings of every
+    /// scripture+thiele power" would drop Saul from the one power whose
+    /// own note names him — and an absence reads as a claim. The join is
+    /// a written map for exactly this reason.
+    testWidgets('the united monarchy lists none, because Saul is not there',
+        (tester) async {
+      expect(kings.kings.any((k) => k.id == 'saul'), isFalse,
+          reason: 'if Saul has landed, this exclusion should be revisited');
+      await pump(tester, const Size(1440, 900));
+      await openPower(tester, 'United Monarchy of Israel', '以色列联合王国');
+      final text = sheetText(tester);
+      // Its own span, which nothing but this sheet prints — the name
+      // alone would also match the query still sitting in the box, and
+      // a test that passes on a sheet that never opened proves nothing.
+      expect(text, contains('主前1050'), reason: 'the sheet did not open');
+      expect(text, isNot(contains('列王 ·')));
+      await unmount(tester);
+    });
+
+    /// A rename on either side of a hand-written join is a silent loss.
+    test('every power the map names is a power the wheel has', () {
+      expect(kWheelPowerKingdoms, isNotEmpty);
+      for (final id in kWheelPowerKingdoms.keys) {
+        expect(data.powers.map((p) => p.id), contains(id));
+      }
+      expect(kWheelPowerKingdoms.containsKey('israel-united-monarchy'), isFalse,
+          reason: 'listing kings there would drop Saul without saying so');
+    });
+
+    testWidgets('a king the wheel cannot draw is sent where he is charted',
+        (tester) async {
+      await pump(tester, const Size(1440, 900));
+      await openFind(tester);
+
+      await tester.enterText(
+          find.byKey(const ValueKey('wheelFindField')), 'Jehu');
+      await settle(tester);
+      final shown = sheetText(tester);
+      expect(shown, contains('耶户'));
+      expect(shown, contains('轮盘画的是列国，不是列王'));
+      expect(find.text('犹大与以色列列王'), findsOneWidget);
+
+      // A name one letter off is a different question.
+      await tester.enterText(
+          find.byKey(const ValueKey('wheelFindField')), 'Jehux');
+      await settle(tester);
+      expect(sheetText(tester), isNot(contains('轮盘画的是列国')));
+
+      // Hezekiah's reform IS drawn on the wheel. The hand-off must never
+      // stand in front of a record that exists.
+      await tester.enterText(
+          find.byKey(const ValueKey('wheelFindField')), 'Hezekiah');
+      await settle(tester);
+      expect(sheetText(tester), isNot(contains('轮盘画的是列国')));
+
+      // And the one that matters most: Zechariah is a king of Israel
+      // AND the father of John the Baptist, who is on the wheel. The
+      // wheel answers first.
+      await tester.enterText(
+          find.byKey(const ValueKey('wheelFindField')), 'Zechariah');
+      await settle(tester);
+      expect(sheetText(tester), isNot(contains('轮盘画的是列国')),
+          reason: 'the wheel had an answer and this spoke over it');
+
+      await unmount(tester);
+    });
   });
 }

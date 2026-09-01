@@ -7,10 +7,13 @@ import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/biblical_person.dart';
+import 'package:seeksparks/models/hebrew_king.dart';
 import 'package:seeksparks/models/wheel_history.dart';
 import 'package:seeksparks/pages/chronology_page.dart';
+import 'package:seeksparks/pages/hebrew_kings_page.dart';
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/services/family_tree_service.dart';
+import 'package:seeksparks/services/hebrew_kings_service.dart';
 import 'package:seeksparks/services/url_sync_service.dart';
 import 'package:seeksparks/utils/date_hedge.dart';
 import 'package:seeksparks/utils/font_catalog.dart';
@@ -341,6 +344,39 @@ const Map<String, Map<String, String>> wheelStrings = {
   //
   // No pronoun either — the same sentence has to serve whoever the
   // reader typed.
+  // The heading over the reigns inside a kingdom's sheet. {n} is read
+  // from `hebrew_kings.json`, never written here: twenty and twenty is
+  // Thiele's count, not a fact about the world, and a number typed into
+  // a heading is a number that goes stale silently.
+  'wheelKings': {
+    'zh-Hans': '列王 · {n}',
+    'zh-Hant': '列王 · {n}',
+    'en': 'Kings · {n}',
+  },
+  // WHY A KING THE APP CHARTS IS NOT ON THIS WHEEL.
+  //
+  // The wheel's unit is the polity: it draws the Kingdom of Judah, not
+  // Ahab. About half the forty-two return nothing here, and "Nothing
+  // here matches Baasha" reads as the app never having heard of him
+  // when it has a whole page for him.
+  //
+  // The sentence differs from `wheelFindAmElsewhere` in what it claims.
+  // Methuselah has no date to draw; Baasha does — this app prints it,
+  // from Thiele. What is missing is not the year but the RESOLUTION:
+  // the wheel is drawn at the scale of kingdoms.
+  //
+  // No year in this sentence either, and for a reason of this page's
+  // own: on the wheel a year never appears without the line that says
+  // what it rests on, and a search status line has no room for one.
+  'wheelFindKingElsewhere': {
+    'zh-Hans': '{name}不在这个轮盘上：轮盘画的是列国，不是列王。'
+        '这段在位记在「犹大与以色列列王」，与另一个王座并排。',
+    'zh-Hant': '{name}不在這個輪盤上：輪盤畫的是列國，不是列王。'
+        '這段在位記在「猶大與以色列列王」，與另一個王座並排。',
+    'en': '{name} is not on this wheel: it draws kingdoms, not reigns. '
+        'That reign is charted beside the other throne in Kings of '
+        'Judah & Israel.',
+  },
   'wheelFindAmElsewhere': {
     'zh-Hans': '{name}不在这个轮盘上：经文给的是年数，不是年份。'
         '生平记在「圣经年代」，自创世起算。',
@@ -1337,15 +1373,27 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
                   if (result.isEmpty)
                     Builder(builder: (_) {
                       final person = _amPersonFor(query);
-                      if (person == null) return const SizedBox.shrink();
+                      final king = person == null ? _kingFor(query) : null;
+                      if (person == null && king == null) {
+                        return const SizedBox.shrink();
+                      }
+                      final line = person != null
+                          ? _fill('wheelFindAmElsewhere', '', locale,
+                              {'name': person.localizedName(locale)})
+                          : _fill('wheelFindKingElsewhere', '', locale,
+                              {'name': king!.nameFor(locale)});
+                      final label = person != null
+                          ? _s('timelineOpenChronology',
+                              'Open Bible Chronology', locale)
+                          : _s('hebrewKings', 'Kings of Judah & Israel',
+                              locale);
                       return Padding(
                         padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              _fill('wheelFindAmElsewhere', '', locale,
-                                  {'name': person.localizedName(locale)}),
+                              line,
                               style: TextStyle(
                                   color: wb.mutedText,
                                   fontSize: t.scaled(11),
@@ -1358,7 +1406,9 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
                                   Navigator.of(sheet).pop();
                                   Navigator.of(context).push(
                                     MaterialPageRoute<void>(
-                                      builder: (_) => const ChronologyPage(),
+                                      builder: (_) => person != null
+                                          ? const ChronologyPage()
+                                          : const HebrewKingsPage(),
                                     ),
                                   );
                                 },
@@ -1371,8 +1421,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
                                   foregroundColor: wb.link,
                                 ),
                                 child: Text(
-                                  _s('timelineOpenChronology',
-                                      'Open Bible Chronology', locale),
+                                  label,
                                   style: TextStyle(
                                       fontSize: t.scaled(11.5),
                                       fontWeight: FontWeight.w700),
@@ -1515,6 +1564,42 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
       }
       for (final n in [p.name, p.nameZhHans ?? '', p.nameZhHant ?? '']) {
         if (n.isNotEmpty && foldForWheelSearch(n) == q) return p;
+      }
+    }
+    return null;
+  }
+
+  /// The king a reader asked for who IS charted by this app and is not
+  /// drawn on this wheel.
+  ///
+  /// The wheel's unit is the polity — it draws the Kingdom of Judah,
+  /// not Ahab — so about half of Thiele's forty-two return nothing
+  /// here, and a bare "nothing matches" reads as the app never having
+  /// heard of a man it gives a whole page to.
+  ///
+  /// Only ever consulted when the index is genuinely empty, which is
+  /// what keeps it from answering over a real hit. That guard is doing
+  /// specific work, not being careful in general: Zechariah is a king
+  /// of Israel AND the father of John the Baptist, who is on the wheel;
+  /// Hezekiah and Josiah have their reforms drawn. For those the wheel
+  /// answers first and this never runs.
+  ///
+  /// Equality on the folded name, in each script and including the
+  /// alternative names the file carries — never a substring, because
+  /// this replaces "found nothing" with a claim about one man.
+  ///
+  /// `altNames` holds several names in one string where scripture gives
+  /// several ("Jeconiah, Coniah" for Jehoiachin, "Azariah" for Uzziah),
+  /// so it is split: a reader types one of them, not the list.
+  HebrewKing? _kingFor(String query) {
+    final q = foldForWheelSearch(query);
+    if (q.isEmpty) return null;
+    for (final k in HebrewKingsService.instance.cached?.kings ??
+        const <HebrewKing>[]) {
+      for (final field in [...k.names.values, ...?k.altNames?.values]) {
+        for (final n in field.split(',')) {
+          if (n.trim().isNotEmpty && foldForWheelSearch(n) == q) return k;
+        }
       }
     }
     return null;
@@ -2125,6 +2210,90 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
                 : _basisText(p.basis, locale),
             style: TextStyle(color: wb.mutedText, fontSize: t.scaled(11)),
           ),
+          // WHO REIGNED IN IT.
+          //
+          // A reader who taps the Kingdom of Judah is asking who, and
+          // until now the sheet answered with two names in the note —
+          // "from Rehoboam to Zedekiah" — and no way to reach the other
+          // eighteen. The app charts all forty-two, on its own page,
+          // and nothing on this wheel led there.
+          //
+          // Read live from `hebrew_kings.json`, never copied into the
+          // wheel's asset: that file IS this app's Thiele chart, and a
+          // copy would drift from it.
+          //
+          // The basis line sits directly above and covers these years —
+          // for these three powers it already reads "interval from
+          // scripture, year from Thiele" — which is why no reign here
+          // carries a second disclosure of its own.
+          //
+          // Rows do not open anything. A king's record lives on a page
+          // this sheet cannot select into, and a row that looks
+          // tappable and merely closes the sheet is worse than a row
+          // that plainly is not. The one tappable thing is the way out.
+          ...(() {
+            final kingdom = kWheelPowerKingdoms[p.id];
+            if (kingdom == null) return const <Widget>[];
+            final kings = HebrewKingsService.instance.cached
+                    ?.ofKingdom(kingdom) ??
+                const <HebrewKing>[];
+            if (kings.isEmpty) return const <Widget>[];
+            return <Widget>[
+              SizedBox(height: t.scaled(12)),
+              Text(
+                _fill('wheelKings', 'Kings · {n}', locale, {'n': kings.length}),
+                style: TextStyle(
+                    color: wb.mutedText,
+                    fontSize: t.scaled(11),
+                    fontWeight: FontWeight.w600),
+              ),
+              SizedBox(height: t.scaled(4)),
+              for (final k in kings)
+                Padding(
+                  padding: EdgeInsets.symmetric(vertical: t.scaled(3)),
+                  child: Row(children: [
+                    Expanded(
+                      child: Text(
+                        k.spans.length > 1
+                            ? '${k.nameFor(locale)} · '
+                                '${_s('kingsCoregency', 'co-regency', locale)}'
+                            : k.nameFor(locale),
+                        style: TextStyle(
+                            color: wb.text, fontSize: t.scaled(11.5)),
+                      ),
+                    ),
+                    Text(
+                      '${yearLabel(k.reignStart, locale)} – '
+                      '${yearLabel(k.reignEnd, locale)}',
+                      style: TextStyle(
+                          color: wb.mutedText, fontSize: t.scaled(11)),
+                    ),
+                  ]),
+                ),
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: TextButton(
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const HebrewKingsPage(),
+                    ),
+                  ),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    foregroundColor: wb.link,
+                  ),
+                  child: Text(
+                    _s('hebrewKings', 'Kings of Judah & Israel', locale),
+                    style: TextStyle(
+                        fontSize: t.scaled(11.5),
+                        fontWeight: FontWeight.w700),
+                  ),
+                ),
+              ),
+            ];
+          })(),
         ]);
       },
     );

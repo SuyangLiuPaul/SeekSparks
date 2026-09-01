@@ -41,6 +41,8 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:seeksparks/models/biblical_person.dart';
 import 'package:seeksparks/models/timeline_event.dart';
 import 'package:seeksparks/services/family_tree_service.dart';
+import 'package:seeksparks/models/hebrew_king.dart';
+import 'package:seeksparks/services/hebrew_kings_service.dart';
 import 'package:seeksparks/services/timeline_service.dart';
 
 
@@ -528,6 +530,30 @@ const Set<String> kTimelineIdsAlreadyOnWheel = {'temple_destroyed'};
 /// shipped three times (`basis`, then `datingRefs`/`septuagintYear`/
 /// `era`, then `personIds`) is a field silently lost at a constructor
 /// call, which no test of the asset and no test of either page can see.
+/// Which of the wheel's powers is a throne `hebrew_kings.json` has
+/// kings for.
+///
+/// WRITTEN OUT BECAUSE THERE IS NO SHARED KEY. The two assets were
+/// built for different purposes and name nothing the same way, which
+/// `cross_asset_year_agreement_test.dart` says of every join between
+/// them: the agreement is asserted, never inferred. A power renamed
+/// without this map renamed loses its kings silently, so a test pins
+/// both sides.
+///
+/// `israel-united-monarchy` IS DELIBERATELY ABSENT, and that is the
+/// whole reason this is a map and not a rule about `scripture+thiele`
+/// powers. The power runs from 1050 BC, which is Saul; the kings file
+/// is Thiele's chart of the divided monarchy and starts at David in
+/// 1010 BC, with no Saul in it at all. Listing "the kings" under a
+/// power whose own note names Saul would drop him without saying so —
+/// an absence the reader would read as a claim. The two kings the file
+/// does hold for that span, David and Solomon, are already on the
+/// wheel as dated events.
+const Map<String, Kingdom> kWheelPowerKingdoms = {
+  'kingdom-of-judah': Kingdom.judah,
+  'kingdom-of-israel': Kingdom.israel,
+};
+
 List<WheelHistoryEvent> bibleNarrativeEvents(
   List<TimelineEvent> events, {
   List<BiblicalPerson> people = const [],
@@ -603,6 +629,13 @@ class WheelHistoryService {
       TimelineService.instance.loadAll(),
       FamilyTreeService.instance.loadAll(),
     ]);
+    // The two divided kingdoms list their kings from `hebrew_kings.json`
+    // when their sheet opens, and that lookup is synchronous. Awaited
+    // here for the same reason the family tree is: a synchronous read
+    // that answers empty because the file has not landed yet reports an
+    // absence that was really a race. Cached, so this costs one bundle
+    // read for the life of the app.
+    await HebrewKingsService.instance.load();
     final data = WheelHistoryData(
       streams: base.streams,
       nations: base.nations,

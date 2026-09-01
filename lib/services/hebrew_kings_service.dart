@@ -119,6 +119,17 @@ class HebrewKingsService {
 
   HebrewKingsData? _cache;
 
+  /// What has been loaded, or null.
+  ///
+  /// For a caller that is already past the await — the world-history
+  /// wheel lists a kingdom's kings when its sheet opens, and
+  /// `WheelHistoryService.load` awaits [load] before it returns any
+  /// record, so a page drawing the wheel is a page past it. Null is a
+  /// real answer for anyone else and is not papered over with an empty
+  /// list: an empty chart of the kings and an unloaded one are
+  /// different facts.
+  HebrewKingsData? get cached => _cache;
+
   Future<HebrewKingsData> load() async {
     final cached = _cache;
     if (cached != null) return cached;
