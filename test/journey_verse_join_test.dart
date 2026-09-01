@@ -37,6 +37,8 @@ String _bare(String place) => place.replaceAll(RegExp(r'\s+\d+$'), '');
 const spelled = <String, String>{
   'paul-2/14': 'Cenchrea', // gazetteer 'Cenchreae'; KJV, BSB and LEB all
   // print 'Cenchrea' at Acts 18:18.
+  'abraham/4': 'Negev', // gazetteer 'Negeb'; BSB and LEB print 'Negev'
+  'abraham/6': 'Negev', // at 12:9 and 13:1, and KJV says only 'the south'.
 };
 
 // A stop the cited verse genuinely does not name. Allowed only where the

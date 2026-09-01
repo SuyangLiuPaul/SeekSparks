@@ -1546,6 +1546,207 @@
      }
     }
    ]
+  },
+  {
+   "id": "abraham",
+   "style": 2,
+   "mark": "square",
+   "name": {
+    "en": "Abraham's journey",
+    "zh-Hans": "亚伯拉罕的旅程",
+    "zh-Hant": "亞伯拉罕的旅程"
+   },
+   "range": {
+    "en": "Genesis 11:31 – 23:19",
+    "zh-Hans": "创世记 11:31 – 23:19",
+    "zh-Hant": "創世記 11:31 – 23:19"
+   },
+   "basis": {
+    "en": "The stops and their order are read out of Genesis 11-23, which names each place as Abraham reaches it; every stop cites the verse that puts him there. Coordinates come from the gazetteer, not from this route. Salem (14:18) and Moriah (22:2) are drawn at Jerusalem's own coordinate, and the two collapse onto a single marker carrying both ordinals - an identification, not a reading: Genesis calls them Salem and the land of Moriah and says nothing about Jerusalem, and the gazetteer joins them to it on Psalm 76:2, which sets Salem beside Zion, and 2 Chronicles 3:1, which names Mount Moriah as the temple site in Jerusalem. Both are traditional identifications held nearly universally, and this route follows them, but the marker is standing on a verse from outside Genesis and a reader should know that. This is the opposite case from the jacob route's Mount Gilead, which is NOT drawn because its shared point belongs to Mount Gilboa, a different mountain 20 km away - there the shared point is a collision to avoid, here it is the claim itself, disclosed rather than hidden. The leg from Ur to Haran is the longest on the map and is drawn straight; no route in this asset stores a path, so this line is the same abstraction every other leg is, and should not be read as a claim that they crossed the desert rather than following the Euphrates. Left off deliberately: the Negeb is one point for a whole region, Egypt is one point for a whole country, and the route stops at Machpelah, because everything Genesis records after 23:19 for Abraham happens at Mamre and Beersheba, ground the route has already drawn.",
+    "zh-Hans": "站点及其次序取自创世记11至23章：亚伯拉罕每到一处，经文都指名说出，每一站都注明出处经文。坐标取自地名录，不由本路线另行提供。撒冷（14:18）与摩利亚（22:2）绘于耶路撒冷本身的坐标处，两者合并为同一个标记，携带两个序号——这是一种认定，而非经文直读：创世记只称之为撒冷和摩利亚地，并未提及耶路撒冷；地名录把二者与耶路撒冷相连，依据的是诗篇76:2（把撒冷与锡安并提）和历代志下3:1（称摩利亚山为耶路撒冷圣殿之地）。这两个传统认定几乎为众所公认，本路线也依循之，但读者应当知道，这个标记所依据的是创世记之外的经文。这与雅各路线中的基列山恰成对照：那里因共享坐标属于基利波山（约20公里外的另一座山）而不予绘出；这里共享的坐标正是要表明的认定本身，因此予以绘出并加以说明，而非隐去。从吾珥到哈兰这一段是全图最长的一段，按直线绘出；本资产不储存任何路径，所以这条线与其余每一段一样，都只是同一种抽象，不应被读作他们穿越沙漠而非沿幼发拉底河而行的主张。刻意略去的：南地只取一点代表整个地区，埃及只取一点代表整个国家；路线止于麦比拉，因为创世记23:19之后有关亚伯拉罕的一切记载，都发生在幔利与别是巴，是路线已经绘出的地方。",
+    "zh-Hant": "站點及其次序取自創世記11至23章：亞伯拉罕每到一處，經文都指名說出，每一站都註明出處經文。座標取自地名錄，不由本路線另行提供。撒冷（14:18）與摩利亞（22:2）繪於耶路撒冷本身的座標處，兩者合併為同一個標記，攜帶兩個序號——這是一種認定，而非經文直讀：創世記只稱之為撒冷和摩利亞地，並未提及耶路撒冷；地名錄把二者與耶路撒冷相連，依據的是詩篇76:2（把撒冷與錫安並提）和歷代志下3:1（稱摩利亞山為耶路撒冷聖殿之地）。這兩個傳統認定幾乎為眾所公認，本路線也依循之，但讀者應當知道，這個標記所依據的是創世記之外的經文。這與雅各路線中的基列山恰成對照：那裡因共享座標屬於基利波山（約20公里外的另一座山）而不予繪出；這裡共享的座標正是要表明的認定本身，因此予以繪出並加以說明，而非隱去。從吾珥到哈蘭這一段是全圖最長的一段，按直線繪出；本資產不儲存任何路徑，所以這條線與其餘每一段一樣，都只是同一種抽象，不應被讀作他們穿越沙漠而非沿幼發拉底河而行的主張。刻意略去的：南地只取一點代表整個地區，埃及只取一點代表整個國家；路線止於麥比拉，因為創世記23:19之後有關亞伯拉罕的一切記載，都發生在幔利與別是巴，是路線已經繪出的地方。"
+   },
+   "stops": [
+    {
+     "place": "Ur",
+     "book": "Genesis",
+     "chapter": 11,
+     "verse": 31,
+     "leg": "start",
+     "note": {
+      "en": "11:31 has Terah take the family out of Ur to go into the land of Canaan; they get as far as Haran and settle. The call of 12:1 comes later, so the route starts here rather than at Haran.",
+      "zh-Hans": "11:31记他拉带着全家离开吾珥，要往迦南地去；他们走到哈兰就住下了。12:1的呼召在后头，所以路线从这里开始，而非从哈兰开始。",
+      "zh-Hant": "11:31記他拉帶著全家離開吾珥，要往迦南地去；他們走到哈蘭就住下了。12:1的呼召在後頭，所以路線從這裡開始，而非從哈蘭開始。"
+     }
+    },
+    {
+     "place": "Haran",
+     "book": "Genesis",
+     "chapter": 11,
+     "verse": 31,
+     "leg": "land",
+     "note": {
+      "en": "Named by the same verse that names Ur: they came to Haran and dwelt there. 12:4 is where Abram leaves it, aged seventy-five.",
+      "zh-Hans": "与吾珥同在一节经文中提到：他们来到哈兰，就住在那里。12:4是亚伯兰离开哈兰的地方，那年他七十五岁。",
+      "zh-Hant": "與吾珥同在一節經文中提到：他們來到哈蘭，就住在那裡。12:4是亞伯蘭離開哈蘭的地方，那年他七十五歲。"
+     }
+    },
+    {
+     "place": "Shechem",
+     "book": "Genesis",
+     "chapter": 12,
+     "verse": 6,
+     "leg": "land",
+     "note": {
+      "en": "KJV prints Sichem here; BSB and LEB print Shechem, which is the gazetteer's spelling. Same place.",
+      "zh-Hans": "KJV在此处印作Sichem；BSB和LEB印作Shechem，与地名录的拼法一致。同一地方。",
+      "zh-Hant": "KJV在此處印作Sichem；BSB和LEB印作Shechem，與地名錄的拼法一致。同一地方。"
+     }
+    },
+    {
+     "place": "Bethel 1",
+     "book": "Genesis",
+     "chapter": 12,
+     "verse": 8,
+     "leg": "land",
+     "note": {
+      "en": "12:8 pitches the tent with Bethel to the west and Ai to the east. Both are in the gazetteer; only Bethel is taken as the stop, because the tent is the stop and Ai is a bearing.",
+      "zh-Hans": "12:8支搭帐棚，西边是伯特利，东边是艾城。两处地名录都有，但只取伯特利为一站，因为帐棚所在才是站点，艾城只是方位。",
+      "zh-Hant": "12:8支搭帳棚，西邊是伯特利，東邊是艾城。兩處地名錄都有，但只取伯特利為一站，因為帳棚所在才是站點，艾城只是方位。"
+     }
+    },
+    {
+     "place": "Negeb",
+     "book": "Genesis",
+     "chapter": 12,
+     "verse": 9,
+     "leg": "land"
+    },
+    {
+     "place": "Egypt",
+     "book": "Genesis",
+     "chapter": 12,
+     "verse": 10,
+     "leg": "land",
+     "note": {
+      "en": "The famine of 12:10 takes him down to Egypt. The gazetteer answers Egypt with one point, so the leg ends at a country, not at a city the text does not name.",
+      "zh-Hans": "12:10的饥荒使他下到埃及。地名录对埃及只给出一个点，所以这一段落在一个国家，而非经文并未指名的某座城市。",
+      "zh-Hant": "12:10的饑荒使他下到埃及。地名錄對埃及只給出一個點，所以這一段落在一個國家，而非經文並未指名的某座城市。"
+     }
+    },
+    {
+     "place": "Negeb",
+     "book": "Genesis",
+     "chapter": 13,
+     "verse": 1,
+     "leg": "land"
+    },
+    {
+     "place": "Bethel 1",
+     "book": "Genesis",
+     "chapter": 13,
+     "verse": 3,
+     "leg": "land",
+     "note": {
+      "en": "The second visit — 13:3 brings him back from the Negeb to the very place his tent had been at the beginning.",
+      "zh-Hans": "第二次到访——13:3带他从南地回到起初支搭帐棚的原处。",
+      "zh-Hant": "第二次到訪——13:3帶他從南地回到起初支搭帳棚的原處。"
+     }
+    },
+    {
+     "place": "Mamre",
+     "book": "Genesis",
+     "chapter": 13,
+     "verse": 18,
+     "leg": "land",
+     "note": {
+      "en": "13:18 settles him by the oaks of Mamre, which is in Hebron. Mamre and Hebron are two records in the gazetteer, about a kilometre apart; the stop takes Mamre, which is the word the verse uses.",
+      "zh-Hans": "13:18使他定居在幔利的橡树旁，就是希伯仑。幔利与希伯仑在地名录中是两笔记录，相距约一公里；本站取幔利，因为经文用的是这个词。",
+      "zh-Hant": "13:18使他定居在幔利的橡樹旁，就是希伯崙。幔利與希伯崙在地名錄中是兩筆記錄，相距約一公里；本站取幔利，因為經文用的是這個詞。"
+     }
+    },
+    {
+     "place": "Dan",
+     "book": "Genesis",
+     "chapter": 14,
+     "verse": 14,
+     "leg": "land",
+     "note": {
+      "en": "The pursuit of 14:14 is the northernmost point Abraham reaches, and the only leg on this route driven by a battle rather than by a move of household.",
+      "zh-Hans": "14:14的追击是亚伯拉罕所到最北之处，也是本路线中唯一一段因交战而非举家迁移所致的行程。",
+      "zh-Hant": "14:14的追擊是亞伯拉罕所到最北之處，也是本路線中唯一一段因交戰而非舉家遷移所致的行程。"
+     }
+    },
+    {
+     "place": "Hobah",
+     "book": "Genesis",
+     "chapter": 14,
+     "verse": 15,
+     "leg": "land"
+    },
+    {
+     "place": "Salem",
+     "book": "Genesis",
+     "chapter": 14,
+     "verse": 18,
+     "leg": "land",
+     "note": {
+      "en": "The gazetteer answers Salem with Jerusalem's own coordinate, on Psalm 76:2. Genesis 14 does not say Salem is Jerusalem — see the route's own note.",
+      "zh-Hans": "地名录对撒冷给出的正是耶路撒冷的坐标，依据诗篇76:2。创世记14章并未说撒冷就是耶路撒冷——详见本路线自身的说明。",
+      "zh-Hant": "地名錄對撒冷給出的正是耶路撒冷的座標，依據詩篇76:2。創世記14章並未說撒冷就是耶路撒冷——詳見本路線自身的說明。"
+     }
+    },
+    {
+     "place": "Gerar",
+     "book": "Genesis",
+     "chapter": 20,
+     "verse": 1,
+     "leg": "land"
+    },
+    {
+     "place": "Beersheba",
+     "book": "Genesis",
+     "chapter": 21,
+     "verse": 31,
+     "leg": "land"
+    },
+    {
+     "place": "Moriah",
+     "book": "Genesis",
+     "chapter": 22,
+     "verse": 2,
+     "leg": "land",
+     "note": {
+      "en": "The gazetteer answers Moriah with Jerusalem's own coordinate, on 2 Chronicles 3:1. Genesis 22 says only 'the land of Moriah', and 22:4 has him see the place on the third day — see the route's own note.",
+      "zh-Hans": "地名录对摩利亚给出的正是耶路撒冷的坐标，依据历代志下3:1。创世记22章只说「摩利亚地」，22:4记他第三日才远远看见那地方——详见本路线自身的说明。",
+      "zh-Hant": "地名錄對摩利亞給出的正是耶路撒冷的座標，依據歷代志下3:1。創世記22章只說「摩利亞地」，22:4記他第三日才遠遠看見那地方——詳見本路線自身的說明。"
+     }
+    },
+    {
+     "place": "Beersheba",
+     "book": "Genesis",
+     "chapter": 22,
+     "verse": 19,
+     "leg": "land",
+     "note": {
+      "en": "22:19 returns him to Beersheba, the same Beersheba of 21:31, and it is the last place Genesis has him living.",
+      "zh-Hans": "22:19记他回到别是巴，就是21:31那个别是巴，也是创世记记载他最后居住之地。",
+      "zh-Hant": "22:19記他回到別是巴，就是21:31那個別是巴，也是創世記記載他最後居住之地。"
+     }
+    },
+    {
+     "place": "Machpelah",
+     "book": "Genesis",
+     "chapter": 23,
+     "verse": 19,
+     "leg": "land",
+     "note": {
+      "en": "The cave he buys in chapter 23 to bury Sarah, and the first ground in Canaan that is his by purchase rather than by promise. 25:9 buries him in it too.",
+      "zh-Hans": "第23章他买下这洞穴安葬撒拉，是他在迦南第一块凭购买而非应许所得的地。25:9记他也葬在其中。",
+      "zh-Hant": "第23章他買下這洞穴安葬撒拉，是他在迦南第一塊憑購買而非應許所得的地。25:9記他也葬在其中。"
+     }
+    }
+   ]
   }
  ]
 }

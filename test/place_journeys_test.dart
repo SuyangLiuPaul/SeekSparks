@@ -92,23 +92,24 @@ void main() {
     expect(wilderness.journey.waypointCount, 42);
   });
 
-  test('the reverse join covers 113 places', () {
+  test('the reverse join covers 122 places', () {
     final covered = <String>{
       for (final p in places)
         if (journeysNaming(p.id, resolved).isNotEmpty) p.id,
     };
-    expect(covered, hasLength(113));
+    expect(covered, hasLength(122));
   });
 
-  test('11 places are on more than one route', () {
+  test('16 places are on more than one route', () {
     final onSeveral = <String>{
       for (final p in places)
         if (journeysNaming(p.id, resolved).length > 1) p.id,
     };
-    expect(onSeveral, hasLength(11));
+    expect(onSeveral, hasLength(16));
     expect(onSeveral, {
-      'Antioch 1', 'Caesarea', 'Derbe', 'Ephesus', 'Iconium', 'Jerusalem',
-      'Lystra', 'Philippi', 'Sidon', 'Troas', 'Tyre',
+      'Antioch 1', 'Beersheba', 'Bethel 1', 'Caesarea', 'Derbe', 'Ephesus',
+      'Haran', 'Iconium', 'Jerusalem', 'Lystra', 'Mamre', 'Philippi',
+      'Shechem', 'Sidon', 'Troas', 'Tyre',
     });
   });
 }

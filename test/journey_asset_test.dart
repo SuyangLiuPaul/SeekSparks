@@ -73,6 +73,7 @@ void main() {
         'exodus-wilderness': 18,
         'jesus-mark': 11,
         'jacob': 9,
+        'abraham': 13,
       };
       for (final r in resolved) {
         expect(r.markers.length, expected[r.id],
@@ -557,6 +558,7 @@ void main() {
         'exodus-wilderness': 1638.4,
         'jesus-mark': 478.6,
         'jacob': 1189.3,
+        'abraham': 3374.8,
       };
       for (final r in resolved) {
         expect(r.straightLineKm, greaterThan(100), reason: r.id);
