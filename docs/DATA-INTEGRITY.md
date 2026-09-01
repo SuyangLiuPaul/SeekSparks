@@ -7054,3 +7054,83 @@ already rendered. The ticket's remaining stated scope
 (`LC` unidentified) is resolved by this check; the readings-import
 question is not "not yet done" so much as "recommended against," for the
 reason above.
+
+## Check 53 — the atlas's traditional place names, witnessed by our own CUV pair
+
+`assets/bible_places.json` carries 1,276 places, 1,273 of them with both a
+simplified name `s` and a traditional name `t`, rendered straight to the
+reader on the atlas, the Places pane and the journey stops
+(`lib/models/bible_place.dart`'s `displayName`).
+
+**Rows examined:** all 1,273 `s`/`t` pairs.
+
+**The two fields are not the same name in two scripts.** They were produced
+by an opencc profile that does Taiwan-idiom substitution — correct for UI
+vocabulary, wrong for proper nouns — and, for a handful of entries, by a
+machine transliteration of the English headword instead of the CUV's own
+rendering.
+
+**Method — two independent, cheap tests, neither needing an outside
+authority:**
+
+1. **Length.** Han script conversion is 1:1 per character; a pair of
+   different lengths cannot be a script conversion. Found: **4** —
+   Abel-maim, Abel-meholah, Abel-mizraim, Abel-shittim. All four carry
+   埃布尔 in `s`, a transliteration of the English name "Abel" (as in Abel
+   Tasman); the biblical 亞伯/亚伯 is what `t` already has.
+2. **A variant map derived from our own Bible pair.** `assets/cuvs-yhwh.json`
+   and `assets/cuvs-yhwh-tr.json` are the same 31,102 verses in the two
+   scripts. Aligned on `id`, every verse pair has identical length (0
+   skipped), giving a witnessed simplified→traditional character map over
+   3,089 distinct characters. Any place-name character pair the map has
+   never seen is a suspect: **47** equal-length pairs failed it.
+
+4 + 47 = **51 suspects out of 1,273**.
+
+**The largest class: 谷 (valley) rendered as 穀 (grain).** Over the whole
+31,102-verse traditional edition, 穀 occurs **0** times and 谷 occurs **244**
+times, including the exact strings 亞割谷 ×5, 欣嫩子谷 ×10, 谷門 ×4. The atlas
+printed 亞割穀, 欣嫩子穀, 穀門 — 穀 is *grain*, 谷 is *valley*; a 繁體 reader was
+being shown "the Grain of Achor". This class covered 24 of the 25 places
+carrying 穀 (Gudgodah's `s`/`t` mismatch — 谷歌大/穀歌大, literally "Google" —
+was the 25th).
+
+**The adjudication rule.** For each suspect, with `SP` the concatenated
+simplified CUV and `TR` the traditional: if `SP` attests `s` and `TR` does
+not attest `t`, and mapping `s` through the corpus map yields a `t'` that
+`TR` does attest, `t` was wrong and `t'` is written (symmetrically for `s`).
+Otherwise: leave it, and name it — never guess.
+
+**Disagreements found: 51. Repaired: 46** (44 by direct attestation; 2 more
+by class evidence — Kidron Valley 汲淪穀→汲淪谷 because 穀 is never right for a
+valley even though the compound 汲淪谷 itself is unattested, and Wildgoats'
+Rocks 野羊盘石→野羊磐石 because 磐石 occurs 127× in both scripts against 0 for
+盘石). **Left, with reason, 5:**
+
+| place | s | t | why left |
+|---|---|---|---|
+| Cyprus | 塞浦路斯 | 賽普勒斯 | neither attested — CUV says 居比路; mainland vs Taiwan modern names, both defensible |
+| Italy | 意大利 | 義大利 | `s` is correct standard mainland Chinese; CUV-simplified writes 义大利 only as a mechanical t2s of 義大利 — the corpus witness is itself the artifact here, "repairing" would regress it |
+| Malta | 马耳他 | 馬爾他 | neither attested — CUV says 米利大; regional variants |
+| Geder | 基德 | 吉德 | both attested (基德 ×1 simplified, 吉德 ×4 traditional) — ambiguous, needs a human |
+| Neapolis | 尼亚坡里 | 尼亞坡裡 | neither attested — CUV says 尼亞波利; the 里/裡/裏 question is not decidable from our corpus |
+
+**Fix:** `assets/bible_places.json`, 46 field repairs applied by exact
+string replacement (the file is one 459,552-character line; `json.dump`
+would have reformatted the whole file and buried the edit — see the huge-
+asset-diff rule). Record count unchanged, 1,276 in and out.
+
+**Guard:** `test/place_name_script_test.dart` (new) rebuilds the witness map
+from the two CUV editions in `setUpAll` and asserts, permanently: every
+`s`/`t` pair is equal length; every differing character pair is either
+witnessed by the corpus map or is one of the five named exceptions above
+(the assertion is on set *equality*, so a future repair of one of the five
+also fails the test until the allow-list is updated); and no traditional
+place name contains 穀. Pre-repair, the three tests fail with exactly 4 / 47
+/ 25 offenders, matching the counts above.
+
+Not touched: `assets/cuvs-yhwh.json` / `cuvs-yhwh-tr.json` (the instrument,
+not the subject), `assets/bible_geo.json`, `bible_journeys.json`,
+`family_tree.json`, `hebrew_kings.json`, `chronology.json` (swept for
+simplified/traditional field pairs this run; `bible_places.json` is the only
+asset carrying them).
