@@ -348,6 +348,20 @@ const Map<String, Map<String, String>> wheelStrings = {
   // from `hebrew_kings.json`, never written here: twenty and twenty is
   // Thiele's count, not a fact about the world, and a number typed into
   // a heading is a number that goes stale silently.
+  // The events falling inside a power's own span.
+  //
+  // Deliberately NOT the wheel's `wheelEvents` heading ("Events · n"),
+  // which the band's sheet uses. That one means "this band's events";
+  // this one means "events that happened while this stood", which is a
+  // weaker and different claim — the Fire of Rome is not an event OF
+  // the Roman Empire in the sense that its founding is. The heading
+  // says span, not ownership, so the list cannot be read as a claim
+  // about what belonged to whom.
+  'wheelWithinSpan': {
+    'zh-Hans': '此期间 · {n}',
+    'zh-Hant': '此期間 · {n}',
+    'en': 'Within this span · {n}',
+  },
   'wheelKings': {
     'zh-Hans': '列王 · {n}',
     'zh-Hant': '列王 · {n}',
@@ -2292,6 +2306,63 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
                   ),
                 ),
               ),
+            ];
+          })(),
+          // WHAT STOOD AT THE SAME TIME AS IT.
+          //
+          // The wheel draws a power as an arc and its events as spokes
+          // on the same ring, and nothing said the two were related.
+          // That relation is the one thing the printed chart carries
+          // that this app did not — it nests a reign inside a kingdom
+          // inside a people, so the geometry states the parentage.
+          // Stated here in a heading instead, which is the form this
+          // app has always used for containment (a band's sheet lists
+          // its powers; the family tree indents; a book holds its
+          // chapters).
+          //
+          // The heading says SPAN, not ownership, and that wording is
+          // load-bearing: an event on this band inside these years is
+          // not thereby an event of this power.
+          ...(() {
+            final end = p.ongoing ? kMaxYear : p.end!;
+            final within = data
+                .eventsOf(p.stream)
+                .where((e) => e.year >= p.start && e.year <= end)
+                .toList()
+              ..sort((a, b) => a.year.compareTo(b.year));
+            if (within.isEmpty) return const <Widget>[];
+            return <Widget>[
+              SizedBox(height: t.scaled(12)),
+              Text(
+                _fill('wheelWithinSpan', 'Within this span · {n}', locale,
+                    {'n': within.length}),
+                style: TextStyle(
+                    color: wb.mutedText,
+                    fontSize: t.scaled(11),
+                    fontWeight: FontWeight.w600),
+              ),
+              SizedBox(height: t.scaled(4)),
+              for (final e in within)
+                InkWell(
+                  onTap: () {
+                    Navigator.of(sheet).pop();
+                    _select(e.id);
+                    _showEvent(context, e, data, locale);
+                  },
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: t.scaled(3)),
+                    child: Row(children: [
+                      Expanded(
+                        child: Text(e.titleFor(locale),
+                            style: TextStyle(
+                                color: wb.text, fontSize: t.scaled(11.5))),
+                      ),
+                      Text(yearLabel(e.year, locale),
+                          style: TextStyle(
+                              color: wb.mutedText, fontSize: t.scaled(11))),
+                    ]),
+                  ),
+                ),
             ];
           })(),
         ]);

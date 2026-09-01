@@ -863,6 +863,95 @@ void main() {
           reason: 'listing kings there would drop Saul without saying so');
     });
 
+    /// The sheet is a `ListView` and builds lazily, so a section under
+    /// twenty king rows is not in the widget tree until it is scrolled
+    /// to. Reading it without this would be testing the viewport.
+    Future<void> scrollSheet(WidgetTester tester) async {
+      for (var i = 0; i < 6; i++) {
+        await tester.drag(find.byType(ListView).last, const Offset(0, -260));
+        await settle(tester);
+      }
+    }
+
+    /// WHAT STOOD AT THE SAME TIME AS IT.
+    ///
+    /// The wheel draws a power as an arc and its events as spokes on
+    /// the same ring, and until now nothing said the two were related.
+    /// That relation is the one thing the printed chart carries that
+    /// this app did not — it nests a reign inside a kingdom inside a
+    /// people, so the geometry states the parentage. The app states it
+    /// in a heading instead, which is the form it has always used.
+    testWidgets('a power lists what fell inside its own span',
+        (tester) async {
+      await pump(tester, const Size(1440, 900));
+      await openPower(tester, 'Kingdom of Judah', '南国犹大');
+      await scrollSheet(tester);
+      final text = sheetText(tester);
+
+      // Computed from the merged corpus the page actually draws, not
+      // written down: the merge injects narrative events at load, so a
+      // literal here would be a number copied out of one asset and
+      // asserted about another.
+      final judah = data.powers.firstWhere((p) => p.id == 'kingdom-of-judah');
+      final within = data
+          .eventsOf(judah.stream)
+          .where((e) => e.year >= judah.start && e.year <= judah.end!)
+          .toList();
+      expect(within, isNotEmpty, reason: 'nothing to list, so nothing tested');
+      // The COUNT is the claim, and it is the thing worth pinning: it
+      // is computed here from the same merged corpus the page draws
+      // from, so a filter that quietly drops a record fails here.
+      expect(text, contains('此期间 · ${within.length}'));
+
+      // Only the head of the list is asserted present, and the reason
+      // is mechanical rather than editorial: the sheet is a `ListView`,
+      // which builds lazily, so rows below the fold are not in the
+      // widget tree at all and a "every one of them is on screen"
+      // assertion would be testing the viewport, not the list.
+      within.sort((a, b) => a.year.compareTo(b.year));
+      for (final e in within.take(3)) {
+        expect(text, contains(e.titleFor('zh-Hans')), reason: e.id);
+      }
+
+      // The heading says span, not ownership. An event inside these
+      // years is not thereby an event OF this kingdom, and the wheel's
+      // own "Events · n" heading — which does mean ownership — must not
+      // be what this list is filed under.
+      expect(text, isNot(contains('大事 · ${within.length}')));
+      await unmount(tester);
+    });
+
+    /// The list is a claim about a span, so it has to end where the
+    /// span does.
+    testWidgets('and nothing that fell outside it', (tester) async {
+      await pump(tester, const Size(1440, 900));
+      await openPower(tester, 'Kingdom of Judah', '南国犹大');
+      await scrollSheet(tester);
+      final text = sheetText(tester);
+
+      final judah = data.powers.firstWhere((p) => p.id == 'kingdom-of-judah');
+      final outside = data
+          .eventsOf(judah.stream)
+          .where((e) => e.year < judah.start || e.year > judah.end!)
+          .toList();
+      expect(outside, isNotEmpty,
+          reason: 'the band holds nothing outside this span, so the '
+              'boundary is untested');
+      var asked = 0;
+      for (final e in outside) {
+        final title = e.titleFor('zh-Hans');
+        // The note above the list is prose and may legitimately name
+        // something later; only titles that cannot appear there are
+        // asked about.
+        if (judah.noteFor('zh-Hans').contains(title)) continue;
+        expect(text, isNot(contains(title)), reason: '${e.id} at ${e.year}');
+        asked++;
+      }
+      expect(asked, greaterThan(3),
+          reason: 'too little left to have tested the boundary');
+      await unmount(tester);
+    });
+
     testWidgets('a king the wheel cannot draw is sent where he is charted',
         (tester) async {
       await pump(tester, const Size(1440, 900));
