@@ -938,11 +938,31 @@ def annotate_timeline(tl_doc, stated, kings):
     tl_doc['_meta'] = {
         'count': len(tl_doc['events']),
         'generator': 'tools/audit_dates.py',
-        'anchor': 'Solomon\'s accession, from hebrew_kings.json (Thiele). '
-                  '1 Kings 6:1 dates the temple to his fourth year and '
-                  'places that 480 years after the exodus; every earlier '
-                  'year is counted back from there along intervals the '
-                  'text states, and `datingRefs` gives the whole chain.',
+        # Reader-facing: this is what the About sheet prints. Trilingual
+        # for that reason, and worded without field or file names.
+        'anchor': {
+            'en': 'Every year on this axis is counted back from one fixed '
+                  'point: Solomon\'s accession, which this app takes from '
+                  'Thiele, as it does throughout. 1 Kings 6:1 dates the '
+                  'temple to Solomon\'s fourth year and places that 480 '
+                  'years after the exodus; each earlier year is counted '
+                  'back along intervals the text states, and every event '
+                  'lists the verses its own chain runs through.',
+            'zh-Hans': '此图各年皆自一个定点上溯而得：所罗门登基之年。该年取自'
+                       '锡尔（Thiele），本应用一律采用。王上 6:1 记圣殿建于所罗门'
+                       '在位第四年，并谓该年在出埃及后 480 年；其前各年，皆按经文'
+                       '自述的年数逐段上溯，每项事件亦各自列出所据的经文。',
+            'zh-Hant': '此圖各年皆自一個定點上溯而得：所羅門登基之年。該年取自'
+                       '錫爾（Thiele），本應用一律採用。王上 6:1 記聖殿建於所羅門'
+                       '在位第四年，並謂該年在出埃及後 480 年；其前各年，皆按經文'
+                       '自述的年數逐段上溯，每項事件亦各自列出所據的經文。',
+        },
+        # NOT trilingual and NOT rendered, on purpose. `ui_strings.dart`
+        # already carries the reader's wording of all three of these
+        # (`timelineBasisScripture` / `timelineBasisThiele` /
+        # `timelineBasisConventional`) in all three locales, and
+        # `basisText` already prints it on every expanded row. This copy
+        # is the audit log. One fact, one wording, one place.
         'basis': {
             'scripture+thiele': 'The intervals are stated by scripture and '
                                 'the year they are measured from is '
@@ -954,6 +974,7 @@ def annotate_timeline(tl_doc, stated, kings):
                             'is shown as a commonly published '
                             'reconstruction, marked approximate.',
         },
+        # Also the audit log; the reader's copy is `timelineSeptuagintYear`.
         'septuagintYear': 'Present only where the chain runs through '
                           'Exodus 12:40. The Hebrew counts its 430 years in '
                           'Egypt; the Greek counts them in Egypt AND in '
@@ -965,8 +986,15 @@ def annotate_timeline(tl_doc, stated, kings):
                           f'{shift} years later. Both texts ship with this '
                           'app; neither is corrected to the other.',
         'counts': counts,
-        'note': 'Chronologies differ. Nothing here is presented as a date '
-                'the text gives unless the text gives it.',
+        # Reader-facing, same as `anchor`.
+        'note': {
+            'en': 'Chronologies differ. Nothing here is presented as a date '
+                  'the text gives unless the text gives it.',
+            'zh-Hans': '各家年代系统互有出入。凡经文未曾明记的年份，此处一概不作'
+                       '经文所记而列。',
+            'zh-Hant': '各家年代系統互有出入。凡經文未曾明記的年份，此處一概不作'
+                       '經文所記而列。',
+        },
     }
     return shift
 

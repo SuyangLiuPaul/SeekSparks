@@ -201,7 +201,15 @@ class _BibleTimelinePageState extends State<BibleTimelinePage> {
         title: Text(
           uiStrings['bibleTimeline']?[locale] ?? 'Bible Timeline',
         ),
-        actions: const [LanguageSwitcherButton(), HomeIconButton()],
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.info_outline),
+            tooltip: uiStrings['timelineAbout']?[locale] ?? 'About this chart',
+            onPressed: () => _showAbout(locale),
+          ),
+          const LanguageSwitcherButton(),
+          const HomeIconButton(),
+        ],
       ),
       body: FutureBuilder<List<TimelineEvent>>(
         future: _future,
@@ -376,6 +384,113 @@ class _BibleTimelinePageState extends State<BibleTimelinePage> {
         ),
         onChanged: (v) => setState(() => _query = v),
       ),
+    );
+  }
+
+  /// The shape of the whole chart, which no single row can state: 75 of
+  /// 98 years are commonly published reconstructions and the axis is
+  /// counted back from one fixed point. Every row already discloses its
+  /// own basis on expand (since v1.6.142); this says it once for the
+  /// chart as a whole. Modelled on `FamilyTreePage._showAbout`.
+  Future<void> _showAbout(String locale) async {
+    await TimelineService.instance.loadAll();
+    if (!mounted) return;
+    final svc = TimelineService.instance;
+    final meta = svc.meta;
+    final all = svc.allOrEmpty();
+    final septuagintCount =
+        all.where((e) => e.septuagintYear != null).length;
+    String s(String key, String fallback) =>
+        uiStrings[key]?[locale] ?? fallback;
+    String basisString(String key) =>
+        uiStrings[key]?[locale] ?? uiStrings[key]?['en'] ?? '';
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      constraints: const BoxConstraints(maxWidth: 720),
+      shape: const RoundedRectangleBorder(),
+      builder: (sheetCtx) {
+        final wb = WbColors.of(sheetCtx);
+        final t = WbType.of(sheetCtx);
+        Widget section(String heading, List<String> paragraphs) {
+          final body = paragraphs.where((p) => p.isNotEmpty).toList();
+          if (body.isEmpty) return const SizedBox.shrink();
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(heading,
+                    style: TextStyle(
+                        color: wb.mutedText,
+                        fontSize: t.chrome,
+                        fontWeight: FontWeight.w600)),
+                const SizedBox(height: 4),
+                for (final p in body) ...[
+                  Text(p,
+                      style: TextStyle(
+                          color: wb.mutedText, fontSize: t.chrome, height: 1.35)),
+                  if (p != body.last) const SizedBox(height: 8),
+                ],
+              ],
+            ),
+          );
+        }
+
+        return SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(s('timelineAbout', 'About this chart'),
+                    style: TextStyle(
+                        color: wb.text,
+                        fontSize: t.text,
+                        fontWeight: FontWeight.w600)),
+                const SizedBox(height: 2),
+                Text(
+                  s('bibleTimelineCount', '{count} events')
+                      .replaceAll('{count}', '${all.length}'),
+                  style: TextStyle(color: wb.mutedText, fontSize: t.chrome),
+                ),
+                const SizedBox(height: 10),
+                section(
+                  s('timelineAboutAnchor', 'What every year is counted from'),
+                  [meta.anchorFor(locale)],
+                ),
+                section(
+                  s('timelineAboutHowMany', 'How many rest on what'),
+                  [
+                    '${meta.counts['conventional'] ?? 0} — '
+                        '${basisString('timelineBasisConventional')}',
+                    '${meta.counts['scripture+thiele'] ?? 0} — '
+                        '${basisString('timelineBasisScripture')}',
+                    '${meta.counts['thiele'] ?? 0} — '
+                        '${basisString('timelineBasisThiele')}',
+                  ],
+                ),
+                Text(
+                  s('timelineAboutSeptuagint',
+                          '{count} events also carry the year the '
+                          'Septuagint gives.')
+                      .replaceAll('{count}', '$septuagintCount'),
+                  style: TextStyle(
+                      color: wb.mutedText, fontSize: t.chrome, height: 1.35),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  meta.noteFor(locale),
+                  style: TextStyle(
+                      color: wb.mutedText, fontSize: t.chrome, height: 1.35),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 

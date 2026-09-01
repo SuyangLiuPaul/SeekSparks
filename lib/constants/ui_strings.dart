@@ -9324,4 +9324,31 @@ const uiStrings = {
     'zh-Hans': '此年份的出处', 'zh-Hant': '此年份的出處',
     'en': 'Where this year comes from',
   },
+
+  // The Bible Timeline's About sheet (#318 constraint 2 / #304). The page
+  // has disclosed each year's basis per event since v1.6.142, but only on
+  // expand and only one row at a time — nothing tells a reader that 75 of
+  // the 98 years are reconstructions, or what the whole axis is counted
+  // back from. `_meta.anchor` and `_meta.note` said both in one sentence
+  // each and nothing parsed them.
+  //
+  // There is no `timelineAboutBasis…` key here on purpose: the three basis
+  // sentences already exist as `timelineBasis*` and the sheet reuses them,
+  // so the app states each of those facts exactly one way.
+  'timelineAbout': {
+    'zh-Hans': '关于本图表', 'zh-Hant': '關於本圖表', 'en': 'About this chart',
+  },
+  'timelineAboutAnchor': {
+    'zh-Hans': '各年自何处起算', 'zh-Hant': '各年自何處起算',
+    'en': 'What every year is counted from',
+  },
+  'timelineAboutHowMany': {
+    'zh-Hans': '各类年份各有多少', 'zh-Hant': '各類年份各有多少',
+    'en': 'How many rest on what',
+  },
+  'timelineAboutSeptuagint': {
+    'zh-Hans': '另有 {count} 项事件载有七十士译本所给的年份。',
+    'zh-Hant': '另有 {count} 項事件載有七十士譯本所給的年份。',
+    'en': '{count} events also carry the year the Septuagint gives.',
+  },
 };
