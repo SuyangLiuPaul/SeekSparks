@@ -671,25 +671,63 @@ def annotate(ft_doc, tl_doc, chain, am_year, stated, kings, acc, events):
         'use canonical English book names and parse cleanly via '
         'lib/utils/reference_parser.dart.')
     ft_doc['_meta']['yearLegend'] = {
-        'am': 'Anno Mundi — years from the creation, as the ages in '
-              'Genesis 5 and 11 accumulate them. The Masoretic figures; '
-              'the Septuagint states different ones.',
-        'bc': 'Years before Christ. Where a record carries one it is '
-              'derived from an age scripture states, anchored on '
-              'hebrew_kings.json, which follows Thiele and cites him.',
+        'am': {
+            'en': 'Anno Mundi — years from the creation, as the ages in '
+                  'Genesis 5 and 11 accumulate them. The Masoretic figures; '
+                  'the Septuagint states different ones.',
+            'zh-Hans': '创世纪元——自创世起算的年数，按创世纪 5 章与 11 章所记的'
+                       '岁数累加而得。此处用的是马所拉文本的数字；七十士译本'
+                       '所记不同。',
+            'zh-Hant': '創世紀元——自創世起算的年數，按創世紀 5 章與 11 章所記的'
+                       '歲數累加而得。此處用的是馬所拉文本的數字；七十士譯本'
+                       '所記不同。',
+        },
+        'bc': {
+            'en': 'Years before Christ. Where a record carries one it is '
+                  'derived from an age scripture states, anchored on '
+                  'hebrew_kings.json, which follows Thiele and cites him.',
+            'zh-Hans': '公元前年份。凡带有此种年份的记录，都是由经文所记的岁数'
+                       '推得，其定点取自 hebrew_kings.json，该表依据锡尔'
+                       '（Thiele）并注明出处。',
+            'zh-Hant': '公元前年份。凡帶有此種年份的記錄，都是由經文所記的歲數'
+                       '推得，其定點取自 hebrew_kings.json，該表依據錫爾'
+                       '（Thiele）並註明出處。',
+        },
     }
     ft_doc['_meta']['dating'] = {
         'generator': 'tools/audit_dates.py',
         'kinds': {
-            'birth': 'A birth, shown exactly. Derivable from an age the '
-                     'text states; `refs` gives the verses.',
-            'reign': 'A reign, not a birth. birthYear here is an accession '
-                     'or coregency year and is NOT displayed; the span in '
-                     'reignStart/reignEnd is, and it is Thiele\'s, from '
-                     'hebrew_kings.json.',
-            'approximate': 'Shown with "c.". A commonly published '
-                           'reconstruction. Nothing we ship fixes this '
-                           'year, so it is not stated as exact.',
+            'birth': {
+                'en': 'A birth, shown exactly. Derivable from an age the '
+                      'text states; `refs` gives the verses.',
+                'zh-Hans': '出生年份，按确数列出。可由经文所记的岁数推得；'
+                           '`refs` 列出所据经文。',
+                'zh-Hant': '出生年份，按確數列出。可由經文所記的歲數推得；'
+                           '`refs` 列出所據經文。',
+            },
+            'reign': {
+                'en': 'A reign, not a birth. birthYear here is an accession '
+                      'or coregency year and is NOT displayed; the span in '
+                      'reignStart/reignEnd is, and it is Thiele\'s, from '
+                      'hebrew_kings.json.',
+                'zh-Hans': '在位年份，并非出生年份。此处的 birthYear 是登基或'
+                           '摄政之年，并不显示；显示的是 reignStart/reignEnd '
+                           '的在位年段，取自 hebrew_kings.json，依据锡尔'
+                           '（Thiele）。',
+                'zh-Hant': '在位年份，並非出生年份。此處的 birthYear 是登基或'
+                           '攝政之年，並不顯示；顯示的是 reignStart/reignEnd '
+                           '的在位年段，取自 hebrew_kings.json，依據錫爾'
+                           '（Thiele）。',
+            },
+            'approximate': {
+                'en': 'Shown with "c.". A commonly published '
+                      'reconstruction. Nothing we ship fixes this '
+                      'year, so it is not stated as exact.',
+                'zh-Hans': '以「约」标示。这是通行的推算年份。本应用所载的资料'
+                           '并不能确定此年，故不作确数陈述。',
+                'zh-Hant': '以「約」標示。這是通行的推算年份。本應用所載的資料'
+                           '並不能確定此年，故不作確數陳述。',
+            },
         },
         'counts': {
             'birth': sum(1 for p in people if p['dating']['kind'] == 'birth'),

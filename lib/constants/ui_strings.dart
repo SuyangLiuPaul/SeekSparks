@@ -9306,4 +9306,22 @@ const uiStrings = {
     'en': 'This lexicon exists only in Simplified Chinese; '
         'it has not been converted.',
   },
+  'familyTreeAbout': {
+    'zh-Hans': '关于本图表', 'zh-Hant': '關於本圖表', 'en': 'About this chart',
+  },
+  'familyTreeAboutYears': {
+    'zh-Hans': '年份的含义', 'zh-Hant': '年份的含義',
+    'en': 'What the years mean',
+  },
+  'familyTreeAboutPrecision': {
+    'zh-Hans': '每个年份的确定程度', 'zh-Hant': '每個年份的確定程度',
+    'en': 'How exact each year is',
+  },
+  'familyTreeAboutCounts': {
+    'zh-Hans': '共 277 人', 'zh-Hant': '共 277 人', 'en': '277 people',
+  },
+  'familyTreeDatingBasis': {
+    'zh-Hans': '此年份的出处', 'zh-Hant': '此年份的出處',
+    'en': 'Where this year comes from',
+  },
 };

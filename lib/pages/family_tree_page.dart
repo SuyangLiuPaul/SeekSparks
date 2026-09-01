@@ -318,7 +318,16 @@ class _FamilyTreePageState extends State<_FamilyTreeBody> {
       appBar: AppBar(
         leading: const LocalizedBackButton(),
         title: Text(uiStrings['familyTree']?[locale] ?? 'Family Tree'),
-        actions: const [LanguageSwitcherButton(), HomeIconButton()],
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.info_outline),
+            tooltip:
+                uiStrings['familyTreeAbout']?[locale] ?? 'About this chart',
+            onPressed: () => _showAbout(locale),
+          ),
+          const LanguageSwitcherButton(),
+          const HomeIconButton(),
+        ],
       ),
       body: FutureBuilder<_TreeData>(
         future: _future,
@@ -766,6 +775,98 @@ class _FamilyTreePageState extends State<_FamilyTreeBody> {
     // not by a SnackBar. What used to fire here was an untranslated
     // developer diagnostic ("jumped: was=1240 → 3180") shown to users.
     debugPrint('familyTree: jumped to ${clamped.toInt()} (raw ${raw.toInt()})');
+  }
+
+  // ── About sheet ────────────────────────────────────────────────
+
+  /// The legend `_meta.yearLegend` / `_meta.dating.kinds` has carried
+  /// since the dating audit ran, and that nothing rendered until now —
+  /// same gap #292 closed on `hebrew_kings_page.dart` and #318 phase 24
+  /// closed on the wheel.
+  Future<void> _showAbout(String locale) async {
+    await FamilyTreeService.instance.loadAll();
+    if (!mounted) return;
+    final svc = FamilyTreeService.instance;
+    final meta = svc.meta;
+    final all = svc.allOrEmpty();
+    final bcCount = all.where((p) => p.yearSystem != 'am').length;
+    final amCount = all.where((p) => p.yearSystem == 'am').length;
+    String s(String key, String fallback) =>
+        uiStrings[key]?[locale] ?? fallback;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      constraints: const BoxConstraints(maxWidth: 720),
+      shape: const RoundedRectangleBorder(),
+      builder: (sheetCtx) {
+        final wb = WbColors.of(sheetCtx);
+        final t = WbType.of(sheetCtx);
+        Widget section(String heading, List<String> paragraphs) {
+          final body = paragraphs.where((p) => p.isNotEmpty).toList();
+          if (body.isEmpty) return const SizedBox.shrink();
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(heading,
+                    style: TextStyle(
+                        color: wb.mutedText,
+                        fontSize: t.chrome,
+                        fontWeight: FontWeight.w600)),
+                const SizedBox(height: 4),
+                for (final p in body) ...[
+                  Text(p,
+                      style: TextStyle(
+                          color: wb.mutedText, fontSize: t.chrome, height: 1.35)),
+                  if (p != body.last) const SizedBox(height: 8),
+                ],
+              ],
+            ),
+          );
+        }
+
+        return SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(s('familyTreeAbout', 'About this chart'),
+                    style: TextStyle(
+                        color: wb.text,
+                        fontSize: t.text,
+                        fontWeight: FontWeight.w600)),
+                const SizedBox(height: 2),
+                Text(s('familyTreeAboutCounts', '277 people'),
+                    style: TextStyle(color: wb.mutedText, fontSize: t.chrome)),
+                const SizedBox(height: 10),
+                section(
+                  s('familyTreeAboutYears', 'What the years mean'),
+                  [
+                    '$bcCount — ${meta.yearLegendBcFor(locale)}',
+                    '$amCount — ${meta.yearLegendAmFor(locale)}',
+                  ],
+                ),
+                section(
+                  s('familyTreeAboutPrecision', 'How exact each year is'),
+                  [
+                    '${meta.counts['approximate'] ?? 0} — '
+                        '${meta.kindApproximateFor(locale)}',
+                    '${meta.counts['birth'] ?? 0} — '
+                        '${meta.kindBirthFor(locale)}',
+                    '${meta.counts['reign'] ?? 0} — '
+                        '${meta.kindReignFor(locale)}',
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   // ── Detail sheet ───────────────────────────────────────────────

@@ -197,6 +197,18 @@ class PersonDetailSheet extends StatelessWidget {
               _personChip(context, tribeAncestor, wb),
             ],
           ),
+        if (person.datingRefs.isNotEmpty) ...[
+          const SizedBox(height: 4),
+          _section(
+            wb: wb,
+            t: t,
+            label: uiStrings['familyTreeDatingBasis']?[locale] ??
+                'Where this year comes from',
+            children: [
+              for (final ref in person.datingRefs) _refChip(context, ref, wb),
+            ],
+          ),
+        ],
         if (person.refs.isNotEmpty) ...[
           const SizedBox(height: 4),
           _section(
@@ -293,6 +305,15 @@ class PersonDetailSheet extends StatelessWidget {
         person.localizedName(locale),
       ];
       buf.writeln('  ${chainTopDown.join(' → ')}');
+    }
+
+    if (person.datingRefs.isNotEmpty) {
+      buf.writeln();
+      buf.writeln(
+          '${uiStrings['familyTreeDatingBasis']?[locale] ?? 'Where this year comes from'}:');
+      for (final r in person.datingRefs) {
+        buf.writeln('  • ${_localizedRef(r, version)}');
+      }
     }
 
     if (person.refs.isNotEmpty) {

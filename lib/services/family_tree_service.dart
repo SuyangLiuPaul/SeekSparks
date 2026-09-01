@@ -4,12 +4,94 @@ import 'package:flutter/services.dart' show rootBundle;
 
 import 'package:seeksparks/models/biblical_person.dart';
 
+/// The `_meta` block of `assets/family_tree.json`, written by
+/// `tools/audit_dates.py`.
+///
+/// The legend saying what an AM year and a BC year each rest on — and
+/// what the "c." prefix means — has been in the asset since the dating
+/// audit ran, and nothing parsed it: `yearLegend` appeared at zero lines
+/// in all of `lib/`. Same gap `HebrewKingsMeta` closed for the kings and
+/// #318 phase 24 closed for the wheel. A stamped asset is not a
+/// disclosed one.
+class FamilyTreeMeta {
+  const FamilyTreeMeta({
+    required this.yearLegendAm,
+    required this.yearLegendBc,
+    required this.kindBirth,
+    required this.kindReign,
+    required this.kindApproximate,
+    required this.counts,
+  });
+
+  /// Trilingual: `en` / `zh-Hans` / `zh-Hant`.
+  final Map<String, String> yearLegendAm;
+  final Map<String, String> yearLegendBc;
+  final Map<String, String> kindBirth;
+  final Map<String, String> kindReign;
+  final Map<String, String> kindApproximate;
+
+  /// `{'birth': 27, 'reign': 14, 'approximate': 236}` — the asset's own
+  /// count, already pinned against the records by
+  /// `person_dating_test.dart`'s "the counts in _meta match the records".
+  final Map<String, int> counts;
+
+  static const empty = FamilyTreeMeta(
+    yearLegendAm: {},
+    yearLegendBc: {},
+    kindBirth: {},
+    kindReign: {},
+    kindApproximate: {},
+    counts: {},
+  );
+
+  String yearLegendAmFor(String locale) => _pick(yearLegendAm, locale);
+  String yearLegendBcFor(String locale) => _pick(yearLegendBc, locale);
+  String kindBirthFor(String locale) => _pick(kindBirth, locale);
+  String kindReignFor(String locale) => _pick(kindReign, locale);
+  String kindApproximateFor(String locale) => _pick(kindApproximate, locale);
+
+  static String _pick(Map<String, String> m, String locale) =>
+      m[locale] ?? m['en'] ?? '';
+
+  /// Tolerates the OLD shape, where each of these fields was a bare
+  /// English `String` rather than a trilingual map — a stale cached
+  /// asset must not throw.
+  static Map<String, String> _localized(dynamic v) {
+    if (v is String) return {'en': v};
+    if (v is Map) {
+      return {
+        for (final e in v.entries)
+          if (e.value is String) e.key.toString(): e.value as String,
+      };
+    }
+    return const {};
+  }
+
+  static FamilyTreeMeta fromJson(Map<String, dynamic>? m) {
+    final legend = (m?['yearLegend'] as Map?)?.cast<String, dynamic>();
+    final dating = (m?['dating'] as Map?)?.cast<String, dynamic>();
+    final kinds = (dating?['kinds'] as Map?)?.cast<String, dynamic>();
+    final rawCounts = (dating?['counts'] as Map?)?.cast<String, dynamic>();
+    return FamilyTreeMeta(
+      yearLegendAm: _localized(legend?['am']),
+      yearLegendBc: _localized(legend?['bc']),
+      kindBirth: _localized(kinds?['birth']),
+      kindReign: _localized(kinds?['reign']),
+      kindApproximate: _localized(kinds?['approximate']),
+      counts: {
+        for (final e in (rawCounts ?? const {}).entries)
+          if (e.value is num) e.key.toString(): (e.value as num).toInt(),
+      },
+    );
+  }
+}
+
 /// Loads the curated `assets/family_tree.json` dataset and provides
 /// id-based lookups + a few traversal helpers used by the
 /// FamilyTreePage and PersonDetailSheet.
 ///
-/// Data shape: `{ "_meta": …, "people": [BiblicalPerson, …] }`. The
-/// service caches the parsed list for the process lifetime; a single
+/// Data shape: `{ "_meta": FamilyTreeMeta, "people": [BiblicalPerson, …] }`.
+/// The service caches the parsed list for the process lifetime; a single
 /// asset read on first access.
 class FamilyTreeService {
   FamilyTreeService._();
@@ -17,6 +99,7 @@ class FamilyTreeService {
 
   List<BiblicalPerson>? _list;
   Map<String, BiblicalPerson>? _byId;
+  FamilyTreeMeta? _meta;
 
   Future<List<BiblicalPerson>> loadAll() async {
     if (_list != null) return _list!;
@@ -29,11 +112,16 @@ class FamilyTreeService {
         .toList();
     _list = list;
     _byId = {for (final p in list) p.id: p};
+    _meta = FamilyTreeMeta.fromJson((j['_meta'] as Map?)?.cast<String, dynamic>());
     return list;
   }
 
   /// Synchronous lookup — caller must have awaited [loadAll] first.
   BiblicalPerson? byId(String id) => _byId?[id];
+
+  /// The asset's `_meta` legend. `FamilyTreeMeta.empty` until [loadAll]
+  /// has completed at least once.
+  FamilyTreeMeta get meta => _meta ?? FamilyTreeMeta.empty;
 
   /// Synchronous full-list accessor for callers that need every
   /// person but don't want to await. Returns `[]` when [loadAll]
