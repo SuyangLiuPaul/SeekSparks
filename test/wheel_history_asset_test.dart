@@ -218,14 +218,51 @@ void main() {
     }
   });
 
-  test('every event says what its date rests on, and says it explicitly',
-      () {
+  /// THE SAME QUESTION, ASKED OF EVERY KIND THAT ANSWERS IT.
+  ///
+  /// This check used to run over `events` alone, and `powers` and
+  /// `nations` carry `basis` and `approximate` too. Nothing read them.
+  /// An unrecognised value on a power would have parsed, loaded,
+  /// rendered, and passed every test in this file — and then fallen
+  /// through the default arm of `_basisText`
+  /// (`radial_chronology_page.dart`) to tell the reader "a conventional
+  /// date, not stated in scripture" about a date that might be neither.
+  ///
+  /// That is not a hypothetical. `wheel_history_disclosure_test.dart`
+  /// exists because a field of this asset once reached the screen
+  /// saying the wrong thing about the three Israelite kingdoms. A
+  /// vocabulary guarded on one record kind and not its siblings is the
+  /// same shape of hole.
+  ///
+  /// All three kinds are legal today — `nations` are all `scripture`,
+  /// `powers` and `events` divide between `conventional` and
+  /// `scripture+thiele`. So this test defends the state of the file
+  /// rather than repairing it, which is what a guard is for.
+  test('every dated record says what its date rests on, and says it '
+      'explicitly', () {
     const allowed = {'scripture', 'scripture+thiele', 'conventional'};
-    for (final e in (raw['events'] as List).cast<Map<String, dynamic>>()) {
-      expect(allowed, contains(e['basis']), reason: '${e['id']}');
-      expect(e['approximate'], isA<bool>(),
-          reason: '${e['id']} leaves approximate absent — absence has to '
-              'mean something, so it is written on every entry');
+    const kinds = ['events', 'powers', 'nations'];
+    final seen = <String>{};
+    var checked = 0;
+    for (final kind in kinds) {
+      final rows = (raw[kind] as List).cast<Map<String, dynamic>>();
+      expect(rows, isNotEmpty, reason: '$kind stopped being swept');
+      for (final r in rows) {
+        expect(allowed, contains(r['basis']), reason: '$kind ${r['id']}');
+        expect(r['approximate'], isA<bool>(),
+            reason: '$kind ${r['id']} leaves approximate absent — absence '
+                'has to mean something, so it is written on every entry');
+        seen.add(r['basis'] as String);
+        checked++;
+      }
     }
+    // The guard on the guard: a sweep that saw one record, or one
+    // vocabulary word, would pass everything above and prove nothing.
+    expect(checked, 711,
+        reason: '567 events + 62 powers + 82 nations; if this moved, the '
+            'corpus grew and the count should move with it');
+    expect(seen, {'scripture', 'scripture+thiele', 'conventional'},
+        reason: 'all three words are in use, so the closed set is doing '
+            'work rather than admitting the only value there is');
   });
 }
