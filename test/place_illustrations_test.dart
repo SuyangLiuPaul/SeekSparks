@@ -178,13 +178,13 @@ void main() {
         pairs += r.total;
         distinct.addAll(r.inScope.map((m) => m.id));
       }
-      // 79 of 1,271 places — 6.2%. All 218 pairs were read by hand before
+      // 79 of 1,266 places — 6.2%. All 218 pairs were read by hand before
       // the feature shipped; moving these numbers means re-reading the
       // ones that changed, not editing the expectation.
       expect(joined, 79);
       expect(pairs, 218);
       expect(distinct.length, 149);
-      expect(places.length, 1271);
+      expect(places.length, 1266);
       expect(plates.length, 1192);
     });
 

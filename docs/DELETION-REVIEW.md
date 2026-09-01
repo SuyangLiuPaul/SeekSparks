@@ -161,7 +161,7 @@ which only **55** are bundled map images (`source: asset`); the other
 is an illustration viewer with 55 maps in it, not a second atlas — which
 is also why its ui_strings key is `maps` = 插图 / Illustrations. Deleting
 it to satisfy "one map surface" would have taken 1,136 pictures with it.
-The two surfaces do not overlap: the Atlas draws the gazetteer's 1,271
+The two surfaces do not overlap: the Atlas draws the gazetteer's 1,266
 named places from coordinates, the viewer shows pictures. Conservative
 call, taken without a human in the loop, and recorded here so it is not
 re-litigated from the name alone.

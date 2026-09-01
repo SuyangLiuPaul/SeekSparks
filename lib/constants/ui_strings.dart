@@ -8820,7 +8820,7 @@ const uiStrings = {
     'en': 'Clear the filter',
   },
   // The map's layer control. Carries the count so it can be read against
-  // the index header's own `12 / 1271` and seen to be the same filter.
+  // the index header's own `12 / 1266` and seen to be the same filter.
   'atlasContextShow': {
     'zh-Hans': '显示其余 {n} 处',
     'zh-Hant': '顯示其餘 {n} 處',

@@ -7134,3 +7134,101 @@ not the subject), `assets/bible_geo.json`, `bible_journeys.json`,
 `family_tree.json`, `hebrew_kings.json`, `chronology.json` (swept for
 simplified/traditional field pairs this run; `bible_places.json` is the only
 asset carrying them).
+
+## Check 54 — five places the gazetteer draws twice
+
+Closes a finding recorded out of scope inside #317's own `PROJECT_STATE.md`
+row: *"`Jezreel 2`/`Jezreel 3` are byte-identical gazetteer duplicates"*.
+
+**Method.** Grouped all 1,276 raw records in `assets/bible_places.json` on
+`(name-without-ordinal, coordinate)` and kept groups with more than one
+member:
+
+```
+groups sharing name AND coordinate: 5
+  Baalath    (31.92, 35.05)  ['Baalath 1', 'Baalath 2']      identicalRefs=True sameCJK=True
+  Cabul      (32.86, 35.21)  ['Cabul 1', 'Cabul 2']          identicalRefs=True sameCJK=True
+  Chinnereth (32.8,  35.58)  ['Chinnereth 1','Chinnereth 2'] identicalRefs=True sameCJK=True
+  Jezreel    (32.55, 35.33)  ['Jezreel 2', 'Jezreel 3']      identicalRefs=True sameCJK=True
+  Zin        (30.68, 34.49)  ['Zin 1', 'Zin 2']              identicalRefs=True sameCJK=True
+
+groups where the shared coordinate is null: []
+```
+
+Every pair agrees on the English name, both Chinese scripts, the
+coordinate, and the full reference list — nothing distinguishes the two
+records. **Reach:** 39 verses across 22 chapters carried the same place
+twice in `PlacesService.forVerse`/`forChapter`, and the Atlas plotted two
+identically-labelled markers on one point: `1Ki 4, 9, 18, 21 · 2Ch 8, 22 ·
+2Ki 8, 9, 10 · 2Sa 2, 4 · Deu 3, 32 · Hos 1, 2 · Jos 15, 19 · Num 13, 20, 27,
+33, 34`.
+
+**Why five, not more.** `test/atlas_index_test.dart` check 38 measures that
+66 of the gazetteer's 80 ordinal groups carry byte-identical reference lists
+(131 entries) — e.g. `Antioch 1`/`Antioch 2`, Syrian and Pisidian Antioch,
+which sit at *different* coordinates. That is a gap in the source (it never
+partitioned the two cities' verses), not damage to repair, and folding those
+61 groups would destroy a real distinction the coordinates still preserve.
+**Only where the coordinate also matches is there no distinction left to
+destroy** — the strict subset checked here. Two further ordinal-plus-plain
+families exist (`Jezreel`/`Jezreel 2`/`Jezreel 3` and `Beer`/`Beer 2`) and
+were confirmed to be real distinctions; left alone.
+
+**Zero results, reported as such:** zero groups shared a name and had a null
+coordinate; zero of the five names (`Baalath`, `Cabul`, `Chinnereth`,
+`Jezreel`, `Zin`) appear as a whole word in any of the 1,192 illustration
+plate captions, so `place_illustrations_test.dart`'s `joined`/`pairs`/
+`distinct` figures do not move; zero of the absorbed ids (`Baalath 2`,
+`Cabul 2`, `Chinnereth 2`, `Jezreel 3`, `Zin 2`) are cited as a journey stop
+in `assets/bible_journeys.json` — `Jezreel 2`, the survivor, is the only one
+of the ten ids cited there.
+
+**Fix:** `lib/models/bible_place.dart` — new `mergeIdenticalPlaces`, called
+from `parseGazetteer` after `mergePossessives`. Groups on the whole record
+(name, lat, lon, simplified, traditional, sorted ref-key list) and, within
+any group of more than one, keeps only the lowest ordinal. The ordinal is
+NOT stripped from the survivor, so check 38's 80/66 pin (which measures the
+data, not our merge policy) does not move; only the 131-entries prose figure
+it quotes drops to 126. The asset itself is untouched — the twins are the
+upstream source's, and the parser is where every such repair lives so no
+caller can index the raw form.
+
+**Count:** parsed places 1,271 (after `mergePossessives`) → **1,266** (after
+`mergeIdenticalPlaces`), i.e. `1,271 − 5`.
+
+**Guard:** `test/place_identical_merge_test.dart` (new). Four pure tests on
+hand-built `BiblePlace` lists pin the rule and its fence independently of
+the data (folds an exact-match pair; keeps a pair differing only in
+coordinate — the Antioch case; keeps a pair differing only in references;
+the lower ordinal survives regardless of input order). Four corpus tests on
+the parsed asset: no two places share name+coordinate+refs (red before the
+fix, green after — the actual regression guard); the five absorbed ids are
+gone and their five survivors remain; Joshua 19:44 names Baalath exactly
+once; Antioch is still two places at two coordinates.
+
+**Found, not fixed:** `lib/pages/atlas_page.dart:1510` ("1,168 of the 1,271
+places are on no itinerary") is already stale for an unrelated reason —
+routes added since it was written mean 1,168 is not `1,271 − 138` (the
+current reverse-join reach). Left alone; needs its own measurement.
+
+Not touched: checks 1–53 and their recorded 1,271 figures (check 48's
+`| places parsed from the gazetteer | 1,271 |` and the 1,271 near line
+4392) — those are what was true when measured; this check records that the
+number moved and why, not a rewrite of history.
+
+**Stale-number sweep, this run.** Every `1,271` in `lib/` and `test/` was
+re-read after the fold. Two were left by the first pass and are corrected
+here: `place_map.dart`'s `"1259 others"` (12 + 1259 = 1271, contradicting
+the `12 / 1266` on the line below it — now 1254), and
+`place_illustrations.dart`'s "reaches all 1,271 places and 17,177 pairs",
+which is a measurement of a *rejected* join and whose paired 17,177 was not
+re-derived, so it is date-stamped rather than renumbered. `atlas_page.dart`
+line ~1510 ("1,168 of the 1,271 places are on no itinerary") is left as
+recorded above: measured this run, `assets/bible_journeys.json` names 138
+distinct stop ids of which 136 resolve to a gazetteer record, so the true
+figure is 1,130 of 1,266 — the comment was already stale before this change
+for an unrelated reason (routes added since it was written), and correcting
+it belongs to its own measurement, not to this one. The two unresolved stop
+ids are `Mount Shepher` and `Rephidim`; `lib/utils/journey_route.dart`
+already treats an unresolved stop as a designed condition rather than an
+error, so this is disclosed, not a new defect.

@@ -1256,7 +1256,7 @@ class _AtlasPageState extends State<AtlasPage> {
                       const Spacer(),
                       // Under a scope this is `2 / 755`, not `755`: the
                       // row sits beneath a header that has just said
-                      // `12 / 1271`, and a bare whole-Bible total there
+                      // `12 / 1266`, and a bare whole-Bible total there
                       // reads as the count for the book in the filter.
                       // Scoped to Esther it claimed 755 for a city the
                       // book names once (#308's rule, third outing).
@@ -1498,7 +1498,7 @@ class _DetailPanel extends StatelessWidget {
   /// because 66 of its 80 ordinal groups share one reference list. See
   /// `utils/place_illustrations.dart` for the measurement.
   ///
-  /// Absent when the join found nothing, because 1,192 of 1,271 places
+  /// Absent when the join found nothing, because 1,187 of 1,266 places
   /// have no plate and an apology on each of them is not a feature. But
   /// a scope that empties the strip prints the header alone reading
   /// `0 / n`: 56 of the 79 joined places have a book under which every

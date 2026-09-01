@@ -2,7 +2,7 @@
 ///
 /// `atlas_index_test.dart` pins the ranking, the scope and the label
 /// budget as pure functions. What that cannot catch is the thing this
-/// page is most likely to get wrong: an index of 1,271 rows and a map of
+/// page is most likely to get wrong: an index of 1,266 rows and a map of
 /// 1,228 dots living in one Row, at a laptop width AND at the 320 px a
 /// phone gives it.
 ///

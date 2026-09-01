@@ -15,7 +15,8 @@
 ///
 /// **Rejected: chapter coverage alone.** Every plate declares a
 /// book→chapter range, and every place declares verses; intersecting them
-/// reaches all 1,271 places and 17,177 pairs — a 100% "join rate" that
+/// reaches every place and 17,177 pairs — measured when the gazetteer
+/// parsed to 1,271, before check 54 folded five — a 100% "join rate" that
 /// means nothing, because it is answering "was this plate drawn from a
 /// chapter that happens to name this place". It puts four *Valley of
 /// Hinnom* plates on **Ziph**, *The Creation of Eve* on the **Tigris**,
@@ -69,7 +70,7 @@
 /// **What the strip may therefore claim.** Not "pictures of this place" —
 /// "illustrations that name it". The gazetteer's disambiguating ordinal
 /// does not survive this join, and mostly does not exist to survive it:
-/// of its 80 ordinal groups, 66 (131 entries) carry byte-identical
+/// of its 80 ordinal groups, 66 (126 entries) carry byte-identical
 /// reference lists, so `Antioch 1` and `Antioch 2` cannot be told apart
 /// by anything this file can see. See `docs/DATA-INTEGRITY.md` check 38.
 library;

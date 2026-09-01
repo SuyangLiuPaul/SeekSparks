@@ -92,7 +92,8 @@ class BiblePlace {
 /// case-replace is undone in the names, the eight damaged book codes are
 /// resolved, unknown codes are dropped rather than guessed at, the
 /// disambiguating ordinal is split out, and the six possessive entries
-/// are folded into their base city.
+/// are folded into their base city, and the five ordinal pairs that differ
+/// in no field at all are folded into the lower ordinal.
 List<BiblePlace> parseGazetteer(Map<String, dynamic> doc) {
   final rows = (doc['places'] as List<dynamic>? ?? const <dynamic>[]);
   final out = <BiblePlace>[];
@@ -137,7 +138,7 @@ List<BiblePlace> parseGazetteer(Map<String, dynamic> doc) {
     ));
   }
 
-  return mergePossessives(out);
+  return mergeIdenticalPlaces(mergePossessives(out));
 }
 
 /// Fold `Jerusalem's` into `Jerusalem`.
@@ -184,5 +185,61 @@ List<BiblePlace> mergePossessives(List<BiblePlace> places) {
             refs: <PlaceRef>{...p.refs, ...extra[p.id]!}.toList()
               ..sort((a, b) => a.key.compareTo(b.key)),
           ),
+  ];
+}
+
+/// Fold an ordinal pair that differs in no field at all.
+///
+/// The gazetteer's ordinal usually separates two genuinely different cities
+/// that share a name — `Antioch 1` is Syrian, `Antioch 2` Pisidian — and
+/// `atlas_index_test.dart`'s check 38 pins the fact that 66 of its 80
+/// ordinal groups nonetheless carry byte-identical reference lists, because
+/// the source never partitioned the verses. **That is a gap to disclose,
+/// not to merge:** Antioch's two entries sit at different coordinates, so
+/// something real is being distinguished even though our references cannot
+/// see it.
+///
+/// Five groups go further and agree on *everything* — name, both Chinese
+/// scripts, coordinate, and every reference: `Baalath`, `Cabul`,
+/// `Chinnereth`, `Jezreel` (its 2 and 3, not the ordinal-less Judean town)
+/// and `Zin`. Two records carrying one place's worth of information are one
+/// place. Left alone they put 巴拉 twice in Joshua 19:44's list and stack
+/// two markers on one point, which is exactly the defect `mergePossessives`
+/// above exists to prevent — the same fault arriving by a second route.
+///
+/// The **lower** ordinal survives, keeping its id, so `Jezreel 2` — cited by
+/// id as a stop on Elijah's journey in `bible_journeys.json`, whose own
+/// basis note says "the ordinal is load-bearing" — is the record that
+/// remains. The ordinal is deliberately NOT stripped from the survivor: it
+/// records that the gazetteer filed more than one, and dropping it would
+/// move check 38's pinned group count, which measures the DATA and must not
+/// move because our merge policy changed.
+List<BiblePlace> mergeIdenticalPlaces(List<BiblePlace> places) {
+  String key(BiblePlace p) => '${p.name}|${p.lat}|${p.lon}|'
+      '${p.simplified}|${p.traditional}|'
+      '${(<String>[for (final r in p.refs) r.key]..sort()).join(',')}';
+
+  final groups = <String, List<BiblePlace>>{};
+  for (final p in places) {
+    (groups[key(p)] ??= <BiblePlace>[]).add(p);
+  }
+
+  final absorbed = <String>{};
+  for (final members in groups.values) {
+    if (members.length < 2) continue;
+    // Lowest ordinal wins; an ordinal-less member would sort first and
+    // win, which is right — it is the least qualified name for a place
+    // nothing distinguishes.
+    final sorted = <BiblePlace>[...members]
+      ..sort((a, b) => (a.ordinal ?? -1).compareTo(b.ordinal ?? -1));
+    for (final p in sorted.skip(1)) {
+      absorbed.add(p.id);
+    }
+  }
+
+  if (absorbed.isEmpty) return places;
+  return <BiblePlace>[
+    for (final p in places)
+      if (!absorbed.contains(p.id)) p,
   ];
 }

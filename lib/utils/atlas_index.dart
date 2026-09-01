@@ -6,7 +6,7 @@
 /// is the direction BibleWorks cannot be asked. It leaves the other
 /// direction — the one every printed atlas has an index for — with no
 /// surface at all: **where is Ashkelon, and where does scripture name
-/// it?** 1,271 places ship in the bundle and a reader can only reach the
+/// it?** 1,266 places ship in the bundle and a reader can only reach the
 /// twelve of them their current chapter happens to mention.
 ///
 /// bwh33 answers it with the Find Place window: type a name, get a site,

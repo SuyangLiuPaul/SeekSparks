@@ -559,9 +559,9 @@ class _PlaceMapViewState extends State<PlaceMapView> {
 
   /// The one control that says out loud what the filter did to the map.
   ///
-  /// It prints the COUNT rather than an eye icon alone: "1259 others" is
+  /// It prints the COUNT rather than an eye icon alone: "1254 others" is
   /// a fact the reader can check against the index header's own
-  /// `12 / 1271`, and the two numbers adding up is what makes the map and
+  /// `12 / 1266`, and the two numbers adding up is what makes the map and
   /// the list legibly one filter. A bare icon would teach nothing on a
   /// tablet, where there is no hover to reveal a tooltip (#299).
   Widget _contextToggle(WbColors c, WbType t, int n) {
