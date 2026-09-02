@@ -10,7 +10,7 @@
 /// Jerusalem and the whole New Testament were missing from it. The
 /// `israel` and `judah` bands held 18 records between them, none of
 /// them the story the bands are named for. [bibleNarrativeEvents] is
-/// the missing half — the 98 events of `assets/bible_timeline.json`
+/// the missing half — the 105 events of `assets/bible_timeline.json`
 /// mapped onto these bands and merged at load — and it exists so that
 /// the wheel's whole point, synchronism, works in the direction that
 /// matters: the reader sees Hammurabi BESIDE the patriarchs.
@@ -331,7 +331,7 @@ class WheelHistoryEvent {
 
   /// The people this event names, in the asset's own order.
   ///
-  /// `bible_timeline.json` files `personIds` on 61 of its 98 events —
+  /// `bible_timeline.json` files `personIds` on 68 of its 105 events —
   /// 88 links naming 37 people — and for four phases the merge dropped
   /// them at the constructor, which is the same failure #318 phase 19
   /// fixed for `datingRefs` one field earlier. The consequence here was

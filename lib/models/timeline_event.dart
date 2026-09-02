@@ -44,7 +44,7 @@ class TimelineEvent {
   /// rests on Thiele as well. `family_tree.json` already said so.
   ///
   /// WHY THIS IS ON THE MODEL AND NOT ONLY IN THE ASSET. Check 32
-  /// (v1.6.120) put a basis on all 277 people *and* all 98 events, and
+  /// (v1.6.120) put a basis on all 277 people *and* all 105 events, and
   /// the people's half reached the reader — [BiblicalPerson
   /// .displayYears] prefixes "c." for a reconstruction and refuses to
   /// print a birth year for a record that holds an accession year. The

@@ -33,11 +33,14 @@ import 'package:seeksparks/utils/navigate_to_reader.dart';
 ///   [Year column]   ●   [Title + refs chips on tap-expand
 ///                        shows description and what the year rests on]
 ///
-/// WHY EVERY YEAR SAYS WHAT IT RESTS ON. 75 of the 98 events are
+/// WHY EVERY YEAR SAYS WHAT IT RESTS ON. 71 of the 105 events are
 /// `conventional` — a reconstruction no chain of stated intervals
-/// reaches — 5 are Thiele's outright, and 18 are counted from Thiele's
-/// anchor along intervals the text states. Until v1.6.142 the page
-/// printed all 98 identically, because [TimelineEvent] dropped `basis`
+/// reaches — 5 are Thiele's outright, and 29 are counted from Thiele's
+/// anchor along intervals the text states. (75 / 5 / 18 of 98 until
+/// 2026-09-02, when the seven Genesis 5 births went in and the wheel's
+/// re-derivation moved four more off `conventional`.) Until v1.6.142
+/// the page printed all of them identically, because [TimelineEvent]
+/// dropped `basis`
 /// and `approximate` when it parsed the asset. A reader was told
 /// "4000 BC" for the creation in the same voice as "1446 BC" for the
 /// exodus, and only one of those is countable from anything.
@@ -68,13 +71,14 @@ import 'package:seeksparks/utils/navigate_to_reader.dart';
 /// Tap a person chip → opens that person's family-tree sheet.
 ///
 /// THE PEOPLE WERE IN THE ASSET AND ON NO SCREEN (#318 phase 20).
-/// `bible_timeline.json` files `personIds` on 61 of the 98 events — 88
-/// links naming 37 people — and [TimelineEvent] had parsed the field
+/// `bible_timeline.json` files `personIds` on 68 of the 105 events — 95
+/// links naming 44 people (61 of 98, 88 links, 37 people when this was
+/// written) — and [TimelineEvent] had parsed the field
 /// since the model was written. `personIds` appeared at exactly three
 /// lines in all of `lib/`, all three inside `timeline_event.dart`:
 /// declaration, constructor, `fromJson`. Nothing read it.
 ///
-/// Publishing 88 claims meant auditing them first, and the audit found
+/// Publishing those claims meant auditing them first, and the audit found
 /// the two assets disagreeing about Moses: the tree said -1525..-1405,
 /// the timeline -1526 and -1406, both stated exactly, on the same
 /// basis, citing the same two verses. The tree was corrected and

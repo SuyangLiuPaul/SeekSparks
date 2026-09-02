@@ -2,8 +2,9 @@
 ///
 /// `person_dating_test.dart` pins the asset and the formatter. What
 /// neither can see is the page, and the page is where check 32 actually
-/// failed: the asset had carried a `basis` on all 98 events since
-/// v1.6.120 and an asset test had been passing on it the whole time,
+/// failed: the asset had carried a `basis` on all 98 events it then
+/// held since v1.6.120 (105 today) and an asset test had been passing
+/// on it the whole time,
 /// while the reader was still shown "4000 BC" for the creation in the
 /// same voice as "1446 BC" for the exodus.
 ///

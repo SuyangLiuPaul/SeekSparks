@@ -7,9 +7,10 @@
 /// exact call three times:
 ///
 ///   * `radial_chronology_page.dart`, on the wheel's 161 approximate
-///     events and its 382 AD year labels;
-///   * `timeline_event.dart`, on 75 of the Bible timeline's 98 events,
-///     all 98 of which carry Traditional titles — so the hedge was the
+///     events and its 382 AD year labels — 168 approximate as the
+///     asset stands today, 161 when this was written;
+///   * `timeline_event.dart`, on 71 of the Bible timeline's 105 events,
+///     all 105 of which carry Traditional titles — so the hedge was the
 ///     one Simplified word in a Traditional sentence;
 ///   * `biblical_person.dart`, on the family tree, which printed
 ///     创世后 ("the queen of creation") where 創世後 was meant, two

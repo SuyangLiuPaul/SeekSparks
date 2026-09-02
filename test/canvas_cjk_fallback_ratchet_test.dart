@@ -96,8 +96,8 @@ void main() {
     // `DefaultTextStyle.of(context).style.merge(...)` ON PURPOSE —
     // `lexicon_page.dart`'s own doc comment records that measuring
     // WITHOUT the inherited `letterSpacing` clipped every Greek row, and
-    // `bible_timeline_page.dart:116-122` records the same 0.25px-a-character
-    // finding. Converting either to `canvasTextStyle` would re-break a
+    // `bible_timeline_page.dart`'s `_measureYearLane` doc comment records
+    // the same 0.25px-a-character finding. Converting either to `canvasTextStyle` would re-break a
     // fixed bug.
     final windows = painterWindows();
     final fails = windows.entries
@@ -107,8 +107,13 @@ void main() {
         .map((e) => e.key)
         .toList()
       ..sort();
+    // Line numbers, so a doc comment growing above one of these moves
+    // the pin — as `bible_timeline_page.dart` did on 2026-09-02, 132 to
+    // 136, when its header was corrected from 98 events to 105. That is
+    // the ratchet working: it cannot tell a moved line from a new
+    // painter, so it asks every time.
     expect(fails,
-        ['lib/pages/bible_timeline_page.dart:132', 'lib/pages/lexicon_page.dart:698']);
+        ['lib/pages/bible_timeline_page.dart:136', 'lib/pages/lexicon_page.dart:698']);
   });
 
   testWidgets('the ambient DefaultTextStyle carries the bundled CJK face',
