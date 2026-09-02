@@ -2986,23 +2986,47 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
 
     // Otherwise a band: a power arc if one is under the tap, else the
     // stream itself.
+    //
+    // BY PITCH, NOT BY INK. `ringRadii` paints four fifths of each
+    // band's share of the annulus and leaves a fifth as air, so that
+    // neighbouring bands read as two rings rather than one solid
+    // disc — and this test used to ask whether the finger was inside
+    // the PAINTED part. A tap in the air between two bands therefore
+    // hit nothing at all and the sheet did not open, which at 900 px is
+    // one pixel of dead space in every seven.
+    //
+    // The band's whole share belongs to the band, exactly as a
+    // sub-ring's whole share belongs to the life in it — the arcs have
+    // worked that way since they were written and the bands never did.
+    // It matters more here: 22 bands share a smaller annulus, so a band
+    // is 6.95 px deep at 900 px and 5.41 at 700, against the nine a
+    // finger wants. Ink is even thinner — 5.56 and 4.33.
     if (r >= rHub && r <= rBands) {
+      final pitch = ringPitch(streams.length, rHub, rBands);
       for (final arc in arcs) {
         final band = ringRadii(arc.ring, streams.length, rHub, rBands);
-        if (r < band.inner || r > band.outer) continue;
+        if ((r - band.centre).abs() > pitch / 2) continue;
         if (a >= arc.a0 && a <= arc.a1) {
           _select(arc.power.id);
           _showPower(context, arc.power, data, locale);
           return;
         }
       }
+      // Nearest band centre, so the outermost and innermost edges of
+      // the annulus round INTO their band rather than falling through.
+      var best = -1;
+      var bestD = double.infinity;
       for (var i = 0; i < streams.length; i++) {
-        final band = ringRadii(i, streams.length, rHub, rBands);
-        if (r >= band.inner && r <= band.outer) {
-          _select(streams[i].id);
-          _showStream(context, streams[i], data, locale);
-          return;
+        final d = (r - ringRadii(i, streams.length, rHub, rBands).centre).abs();
+        if (d < bestD) {
+          bestD = d;
+          best = i;
         }
+      }
+      if (best >= 0) {
+        _select(streams[best].id);
+        _showStream(context, streams[best], data, locale);
+        return;
       }
     }
     if (_selectedId != null) _select(null);
