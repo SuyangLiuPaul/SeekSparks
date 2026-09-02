@@ -938,6 +938,62 @@ class LifeArc {
   double get sweep => a1 - a0;
 }
 
+/// One span offered to [buildSpanArcs], in BC years already.
+///
+/// Deliberately not a model type. The band draws lives from
+/// `chronology.json` and reigns from `hebrew_kings.json`, which share
+/// no supertype and should not be made to — what the packer needs is
+/// two years, an id to hand back, and a `line` the page can colour by.
+typedef SpanInput = ({String id, String line, int startYear, int endYear});
+
+/// Spans packed into as few sub-rings as their overlaps allow.
+///
+/// This is the whole of the band's geometry, and every layer that draws
+/// in it MUST come through one call. Packing two sets separately and
+/// concatenating them would give both a ring 0 and print one over the
+/// other — which looks like a rendering bug and is really an arithmetic
+/// one, so it is said here rather than discovered.
+///
+/// Years are BC-negative and already converted; see [buildLifeArcs] for
+/// the Anno Mundi case.
+List<LifeArc> buildSpanArcs({
+  required List<SpanInput> spans,
+  required int minYear,
+  required int maxYear,
+  double minGap = 0.02,
+}) {
+  final placed = <({SpanInput s, double a0, double a1})>[
+    for (final s in spans)
+      (
+        s: s,
+        a0: angleForSpan(s.startYear, minYear, maxYear),
+        a1: angleForSpan(s.endYear, minYear, maxYear),
+      )
+  ]..sort((a, b) => a.a0.compareTo(b.a0));
+  if (placed.isEmpty) return const [];
+
+  // Enough rings that first-fit never has to overprint, so the count
+  // that comes back is the one the overlaps actually require.
+  final rings = packIntoRings(
+    [for (final p in placed) p.a0],
+    [for (final p in placed) p.a1],
+    placed.length,
+    minGap: minGap,
+  );
+  return [
+    for (var i = 0; i < placed.length; i++)
+      LifeArc(
+        id: placed[i].s.id,
+        ring: rings[i],
+        a0: placed[i].a0,
+        a1: placed[i].a1,
+        line: placed[i].s.line,
+        birthYear: placed[i].s.startYear,
+        deathYear: placed[i].s.endYear,
+      )
+  ];
+}
+
 /// Every life the given tradition has figures for, packed into as few
 /// sub-rings as their overlaps allow.
 ///
@@ -961,43 +1017,37 @@ List<LifeArc> buildLifeArcs({
   required int minYear,
   required int maxYear,
   double minGap = 0.02,
-}) {
-  final lives = <({Patriarch man, int birth, int death, double a0, double a1})>[
-    for (final p in patriarchs)
-      if (p.figures[tradition] != null)
-        (
-          man: p,
-          birth: creationYear + p.figures[tradition]!.birthAm,
-          death: creationYear + p.figures[tradition]!.deathAm,
-          a0: angleForSpan(
-              creationYear + p.figures[tradition]!.birthAm, minYear, maxYear),
-          a1: angleForSpan(
-              creationYear + p.figures[tradition]!.deathAm, minYear, maxYear),
-        )
-  ]..sort((a, b) => a.a0.compareTo(b.a0));
-  if (lives.isEmpty) return const [];
+  List<SpanInput> alsoPack = const [],
+}) =>
+    buildSpanArcs(
+      spans: [
+        ...patriarchsAsSpans(patriarchs, tradition, creationYear),
+        // Packed in the SAME call, never appended after one. See
+        // [buildSpanArcs].
+        ...alsoPack,
+      ],
+      minYear: minYear,
+      maxYear: maxYear,
+      minGap: minGap,
+    );
 
-  // Enough rings that first-fit never has to overprint, so the count
-  // that comes back is the one the overlaps actually require.
-  final rings = packIntoRings(
-    [for (final l in lives) l.a0],
-    [for (final l in lives) l.a1],
-    lives.length,
-    minGap: minGap,
-  );
-  return [
-    for (var i = 0; i < lives.length; i++)
-      LifeArc(
-        id: lives[i].man.id,
-        ring: rings[i],
-        a0: lives[i].a0,
-        a1: lives[i].a1,
-        line: lives[i].man.line,
-        birthYear: lives[i].birth,
-        deathYear: lives[i].death,
-      )
-  ];
-}
+/// The Anno Mundi → BC conversion, on its own so a caller that needs the
+/// years without the packing can have them.
+List<SpanInput> patriarchsAsSpans(
+  List<Patriarch> patriarchs,
+  String tradition,
+  int creationYear,
+) =>
+    [
+      for (final p in patriarchs)
+        if (p.figures[tradition] != null)
+          (
+            id: p.id,
+            line: p.line,
+            startYear: creationYear + p.figures[tradition]!.birthAm,
+            endYear: creationYear + p.figures[tradition]!.deathAm,
+          )
+    ];
 
 /// How many sub-rings [arcs] occupy. Derived, never written down.
 int lifeArcRingCount(List<LifeArc> arcs) {

@@ -327,7 +327,7 @@ String formatReignYears(String locale, int start, int end) {
   return a == b ? '公元前$a年' : '公元前$a–$b年';
 }
 
-String _kingdomLabel(String locale, Kingdom k) {
+String kingdomLabel(String locale, Kingdom k) {
   final key = switch (k) {
     Kingdom.judah => 'kingsJudah',
     Kingdom.israel => 'kingsIsrael',
@@ -341,7 +341,7 @@ String _kingdomLabel(String locale, Kingdom k) {
   return uiStrings[key]?[locale] ?? fallback;
 }
 
-String _spanKindLabel(String locale, SpanKind kind) {
+String spanKindLabel(String locale, SpanKind kind) {
   final key = switch (kind) {
     SpanKind.sole => 'kingsSole',
     SpanKind.coregency => 'kingsCoregency',
@@ -444,7 +444,7 @@ class _LegendSwatch extends StatelessWidget {
         _bandDecoration(kind, _judahHue, wb, width: 18, height: 10),
         const SizedBox(width: 5),
         Text(
-          _spanKindLabel(locale, kind),
+          spanKindLabel(locale, kind),
           style: TextStyle(fontSize: type.chrome, color: wb.mutedText),
         ),
       ],
@@ -768,7 +768,7 @@ class _KingdomColumn extends StatelessWidget {
             color: wb.paneBg,
             padding: const EdgeInsets.symmetric(horizontal: 3),
             child: Text(
-              _kingdomLabel(locale, kingdom),
+              kingdomLabel(locale, kingdom),
               style: TextStyle(
                 fontSize: type.chrome,
                 fontWeight: FontWeight.w700,
@@ -1004,7 +1004,7 @@ class _DetailPanel extends StatelessWidget {
         const SizedBox(height: 6),
         Text(
           [
-            _kingdomLabel(locale, k.kingdom),
+            kingdomLabel(locale, k.kingdom),
             if (houseKing != null)
               (uiStrings['kingsHouseOf']?[locale] ?? 'House of {name}')
                   .replaceAll('{name}', houseKing.nameFor(locale)),
@@ -1029,7 +1029,7 @@ class _DetailPanel extends StatelessWidget {
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    '${_spanKindLabel(locale, span.kind)} · '
+                    '${spanKindLabel(locale, span.kind)} · '
                     '${formatReignYears(locale, span.start, span.end)}',
                     style: TextStyle(fontSize: type.text, color: wb.text),
                   ),
@@ -1091,7 +1091,7 @@ class _DetailPanel extends StatelessWidget {
           const SizedBox(height: 14),
           _SectionTitle(
             '${_s('kingsContemporaries', 'On the other throne')} · '
-            '${_kingdomLabel(locale, otherKingdom)} · '
+            '${kingdomLabel(locale, otherKingdom)} · '
             '${contemporaries.length}',
           ),
           if (contemporaries.isEmpty)
