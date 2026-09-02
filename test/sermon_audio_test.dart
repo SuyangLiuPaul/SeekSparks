@@ -105,7 +105,7 @@ void main() {
           expect(u, isNot(contains('://')),
               reason: '${entry.key}: a row hard-codes a host, so the '
                   'dart-define cannot move it');
-          expect(u.toLowerCase(), endsWith('.mp3'), reason: '${entry.key}');
+          expect(u.toLowerCase(), endsWith('.mp3'), reason: entry.key);
         }
       }
     });
