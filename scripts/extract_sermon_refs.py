@@ -292,15 +292,82 @@ REF_RE = re.compile(
 )
 
 
+# A number that belongs to the FOLLOWING UNIT, not to scripture.
+#
+# "the word occurs in Deuteronomy 43 times" indexed Deuteronomy 43, a
+# chapter that does not exist — and the canon check caught that one. It
+# cannot catch the ones that land on a real chapter: this corpus says
+# "is 27 times", "is 25 years", "is 30 years", "is 15 years", and `Is`
+# is an alias for Isaiah, so four valid-looking Isaiah chapters entered
+# the index off the verb "is".
+#
+# `%` sits OUTSIDE the `\b`. A per-cent sign is not a word character, so
+# `%\b` matches only when a letter follows it — and sermon 424 asks "Is
+# 50% enough?", which reached the index as Isaiah 50. This is the shape
+# YsWords arrived at (406ed88) and the reason is worth carrying with it.
+#
+# `verse(s)` is deliberately NOT in this list. "Jeremiah 12 verse 2" is
+# the most explicit citation English has, and REF_RE reads the verse
+# word as a SEPARATOR — so a unit match can never reach it.
+_UNIT_AFTER = re.compile(
+    r"\s*(?:(?:times?|years?|days?|hours?|minutes?|weeks?|months?|"
+    r"words?|percent)\b|%)", re.IGNORECASE)
+
+
 def normalize_alias(s: str) -> str:
     return re.sub(r"[\s\.　]+", "", s.lower())
+
+
+# The five books with only one chapter, and the citation form that
+# belongs to them alone.
+#
+# A one-chapter book is cited WITHOUT a chapter — "2 John, verse 7",
+# "the Letter of Jude, verse 6" — because there is no chapter to name.
+# REF_RE requires digits after the alias, so every such citation was
+# invisible: sermon 238 ("The arch-deceiver and how not to be deceived")
+# is built on 2 John and reached the index with NO references at all.
+#
+# The key is `Book N`, not `Book 1:N`, because that is the convention
+# this corpus already holds — `2 John 7`, `Jude 6`, `Jude 11` are all in
+# the shipped asset, produced by the bare-number form — and because
+# `reference_parser.dart` re-reads exactly that shape: `_singleChapterBooks`
+# turns "Jude 14" into chapter 1, verse 14. Emitting `2 John 1:7` here
+# would have been a second spelling for one idea, which is how 42
+# references came to be stored and never shown.
+#
+# Restricted to these five on purpose. "Jeremiah, verse 7" is not a
+# citation in any book that has chapters — it is a sentence that ran on.
+_ONE_CHAPTER_BOOKS = ("Obadiah", "Philemon", "2 John", "3 John", "Jude")
+
+# The SAME alias patterns REF_RE uses, then filtered by canon after the
+# match. Building an alternation out of `ALIAS`'s own keys does not
+# work and the reason is quiet: those keys are normalised — "2 John" is
+# stored as `2john`, spaces stripped — so a literal alternation matches
+# nothing a preacher ever typed.
+#
+# The gap allows the apposition a preacher actually speaks: "2 John, the
+# Second Letter of John, verse 7". It may not cross a sentence, which is
+# what excludes ". " from the run.
+# The lookahead after the alias is NOT decoration. REF_RE needs no
+# trailing boundary because a digit must follow immediately, so "Ob"
+# inside "obligation" can never reach a chapter. Here a 60-character gap
+# follows the alias, and without the boundary sermon 034 —
+# "…under the OBligation to forgive… verse 21 or 22, Peter says…" —
+# produced `Obadiah 21`. Caught by reading all five new references back
+# against the corpus rather than trusting the count.
+_ONE_CHAPTER_VERSE_RE = re.compile(
+    rf"\b({SPELLED_BOOK_RE}|{ABBREV_BOOK_RE}\.?)"
+    rf"(?![A-Za-z])"
+    rf"[^.;:!?\d]{{0,60}}?"
+    rf"\bverses?\s+(\d+)",
+    re.IGNORECASE)
 
 
 def extract_refs(text: str) -> list[str]:
     """Return canonical "Book chapter:verse" strings (deduped, in
     order of first appearance) found in [text]."""
     seen: set[str] = set()
-    out: list[str] = []
+    found: list[tuple[int, str]] = []
     for m in REF_RE.finditer(text):
         alias_raw, chapter, verse = m.group(1), m.group(2), m.group(3)
         canon = ALIAS.get(normalize_alias(alias_raw))
@@ -312,6 +379,11 @@ def extract_refs(text: str) -> list[str]:
             continue
         if ch <= 0 or ch > 200:
             continue
+        # Only a BARE chapter can be a counted number. "Isaiah 27:3" is
+        # a citation whatever follows it; "Isaiah 27 times" is arithmetic
+        # wearing a book's name.
+        if not verse and _UNIT_AFTER.match(text, m.end()):
+            continue
         if verse:
             try:
                 v = int(verse)
@@ -322,8 +394,24 @@ def extract_refs(text: str) -> list[str]:
             key = f"{canon} {ch}"
         if key not in seen:
             seen.add(key)
-            out.append(key)
-    return out
+            found.append((m.start(), key))
+
+    # The one-chapter form, merged by POSITION so "first appearance"
+    # still means first in the text and not "after everything else".
+    for m in _ONE_CHAPTER_VERSE_RE.finditer(text):
+        canon = ALIAS.get(normalize_alias(m.group(1)))
+        if canon not in _ONE_CHAPTER_BOOKS:
+            continue
+        v = int(m.group(2))
+        if v <= 0 or v > 200:
+            continue
+        key = f"{canon} {v}"
+        if key not in seen:
+            seen.add(key)
+            found.append((m.start(), key))
+
+    found.sort(key=lambda pair: pair[0])
+    return [key for _, key in found]
 
 
 # ────────────────────────────────────────────────────────────────────
