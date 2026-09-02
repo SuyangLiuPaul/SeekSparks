@@ -1,0 +1,3540 @@
+{
+ "_meta": {
+  "purpose": "Where each sermon's audio lives. The app ships the PATHS, never the audio: 589 files and 4.88 GB of it are already public on the church's own site, and mirroring them would be four and a half gigabytes of hosting to serve files that are already served.",
+  "source": "https://www.christiandiscipleschurch.org/content/ehhc_sermons_public",
+  "surveyed": "2026-09-02",
+  "base": "https://www.christiandiscipleschurch.org",
+  "baseIsADefault": "The host is overridable at build time with --dart-define=SERMON_AUDIO_BASE=... so that moving to a mirror is a rebuild rather than a rewrite of this file.",
+  "sermons": 289,
+  "files": 589,
+  "bytes": 4879668799,
+  "verified": "All 589 URLs returned HTTP 200 with Content-Type audio/mpeg and Accept-Ranges: bytes on 2026-09-02, and two real ranged requests came back 206 including a mid-file seek, so a listener can scrub. Every Last-Modified falls inside one 18-minute window on 2022-01-09.",
+  "cors": "The host sends no Access-Control-Allow-Origin. A media element is not subject to CORS unless it sets crossOrigin, so playback works; fetch()/XHR against these URLs does NOT, which is why web cannot add audio to the offline pack and native can.",
+  "parts": "A sermon in several parts is several files, in the order given. `p` is the part letter as the church names it, `u` the path under `base`, `b` the size in bytes."
+ },
+ "audio": {
+  "002": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/002a_1980-0210_Mt.3.13-17_Submission.mp3",
+    "b": 6582824
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/002b_1980-0210_Mt.3.13-17_Submission.mp3",
+    "b": 3854700
+   }
+  ],
+  "004": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/11_Baptism/004a_1979-0408_Luke_4.5-13_Temptation_after_baptism_(2).mp3",
+    "b": 9163722
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/11_Baptism/004b_1979-0408_Luke_4.5-13_Temptation_after_baptism_(2).mp3",
+    "b": 9210011
+   }
+  ],
+  "005": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/005a_1980-0217_Mt.3.15_and_Mt.4.17_Righteousness.mp3",
+    "b": 9166334
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/005b_1980-0217_Mt.3.15_and_Mt.4.17_Righteousness.mp3",
+    "b": 2758602
+   }
+  ],
+  "006": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/006a_1980-0224_Mt.4.18-22_The_Lord's_Concept_of_Discipleship.mp3",
+    "b": 9250553
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/006b_1980-0224_Mt.4.18-22_The_Lord's_Concept_of_Discipleship.mp3",
+    "b": 6466840
+   }
+  ],
+  "007": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/007a_1980-0302_Paul's_Concept_of_Discipleship.mp3",
+    "b": 8950876
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/007b_1980-0302_Paul's_Concept_of_Discipleship.mp3",
+    "b": 6039059
+   }
+  ],
+  "008": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/06_The_Beatitudes/008a_1980-0309_Mt.5.3_Beatitudes_Blessed_are_the_Poor.mp3",
+    "b": 8613479
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/06_The_Beatitudes/008b_1980-0309_Mt.5.3_Beatitudes_Blessed_are_the_Poor.mp3",
+    "b": 7361796
+   }
+  ],
+  "009": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/06_The_Beatitudes/009a_1980-0316_Mt.5.4_Beatitudes_Blessed_are_those_who_Mourn.mp3",
+    "b": 9299977
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/06_The_Beatitudes/009b_1980-0316_Mt.5.4_Beatitudes_Blessed_are_those_who_Mourn.mp3",
+    "b": 6936940
+   }
+  ],
+  "010": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/06_The_Beatitudes/010a_1980-0323_Mt.5.5_Beatitudes_Blessed_are_the_Meek.mp3",
+    "b": 9563605
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/06_The_Beatitudes/010b_1980-0323_Mt.5.5_Beatitudes_Blessed_are_the_Meek.mp3",
+    "b": 5400522
+   }
+  ],
+  "011": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/06_The_Beatitudes/011a_1980-0413_Mt.5.6_Beatitudes_Blessed_are_those_who_Hunger_and_Thirst_for_Righteousness.mp3",
+    "b": 9695366
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/06_The_Beatitudes/011b_1980-0413_Mt.5.6_Beatitudes_Blessed_are_those_who_Hunger_and_Thirst_for_Righteousness.mp3",
+    "b": 6630576
+   }
+  ],
+  "012": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/06_The_Beatitudes/012a_1980-0420_Mt.5.7_Beatitudes_Blessed_are_the_Merciful.mp3",
+    "b": 8650468
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/06_The_Beatitudes/012b_1980-0420_Mt.5.7_Beatitudes_Blessed_are_the_Merciful.mp3",
+    "b": 7106423
+   }
+  ],
+  "013": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/06_The_Beatitudes/013a_1980-0427_Mt.5.8_Beatitudes_Blessed_are_the_Pure_in_Heart.mp3",
+    "b": 8141603
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/06_The_Beatitudes/013b_1980-0427_Mt.5.8_Beatitudes_Blessed_are_the_Pure_in_Heart.mp3",
+    "b": 5969051
+   }
+  ],
+  "014": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/06_The_Beatitudes/014a_1980-0504_Mt.5.9_Beatitudes_Blessed_are_the_Peacemakers.mp3",
+    "b": 9040947
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/06_The_Beatitudes/014b_1980-0504_Mt.5.9_Beatitudes_Blessed_are_the_Peacemakers.mp3",
+    "b": 6961600
+   }
+  ],
+  "015": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/06_The_Beatitudes/015a_1980-0511_Mt.5.10-12_Beatitudes_Blessed_are_those_Persecuted_for_Righteousness's_Sake.mp3",
+    "b": 8962475
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/06_The_Beatitudes/015b_1980-0511_Mt.5.10-12_Beatitudes_Blessed_are_those_Persecuted_for_Righteousness's_Sake.mp3",
+    "b": 7378200
+   }
+  ],
+  "016": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/06_The_Beatitudes/016a_1980-0518_Mt.5.3-12_The_Beatitudes_and_the_Fruit_of_the_Spirit.mp3",
+    "b": 8358837
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/06_The_Beatitudes/016b_1980-0518_Mt.5.3-12_The_Beatitudes_and_the_Fruit_of_the_Spirit.mp3",
+    "b": 5393521
+   }
+  ],
+  "017": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/06_The_Beatitudes/017a_1980-0525_Mt.5.3-12_The_Beatitudes_and_the_Lord's_Prayer.mp3",
+    "b": 10488653
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/06_The_Beatitudes/017b_1980-0525_Mt.5.3-12_The_Beatitudes_and_the_Lord's_Prayer.mp3",
+    "b": 1452584
+   }
+  ],
+  "018": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/08_Sermon_on_the_Mount/018a_1980-0601_Mt.5.13_You_are_the_Salt_of_the_Earth.mp3",
+    "b": 9179814
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/08_Sermon_on_the_Mount/018b_1980-0601_Mt.5.13_You_are_the_Salt_of_the_Earth.mp3",
+    "b": 6586063
+   }
+  ],
+  "019": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/08_Sermon_on_the_Mount/019a_1976-0704_Mt.5.14_You_are_the_Light_of_the_World_(1).mp3",
+    "b": 10089397
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/08_Sermon_on_the_Mount/019b_1976-0704_Mt.5.14_You_are_the_Light_of_the_World_(1).mp3",
+    "b": 4496790
+   }
+  ],
+  "021": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/08_Sermon_on_the_Mount/021a_1976-0718_Mt.5.17-20_Surpassing_the_Pharisees'_Righteousness.mp3",
+    "b": 10979441
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/08_Sermon_on_the_Mount/021b_1976-0718_Mt.5.17-20_Surpassing_the_Pharisees'_Righteousness.mp3",
+    "b": 10588754
+   }
+  ],
+  "023": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/08_Sermon_on_the_Mount/023a_1976-0808_Mt.5.27-30_You_Shall_Not_Commit_Adultery.mp3",
+    "b": 10955827
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/08_Sermon_on_the_Mount/023b_1976-0808_Mt.5.27-30_You_Shall_Not_Commit_Adultery.mp3",
+    "b": 10339232
+   }
+  ],
+  "027": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/08_Sermon_on_the_Mount/027a_1976-0926_Mt.5.43-48_Love_Your_Enemies.mp3",
+    "b": 10749459
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/08_Sermon_on_the_Mount/027b_1976-0926_Mt.5.43-48_Love_Your_Enemies.mp3",
+    "b": 11292806
+   }
+  ],
+  "029": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/08_Sermon_on_the_Mount/029a_1976-1024_Mt.6.9_The_Lord's_Prayer_(1)_Our_Father.mp3",
+    "b": 10906089
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/08_Sermon_on_the_Mount/029b_1976-1024_Mt.6.9_The_Lord's_Prayer_(1)_Our_Father.mp3",
+    "b": 11057809
+   }
+  ],
+  "030": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/08_Sermon_on_the_Mount/030a_1976-1107_Mt.6.9_The_Lord's_Prayer_(2)_Heaven.mp3",
+    "b": 10689064
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/08_Sermon_on_the_Mount/030b_1976-1107_Mt.6.9_The_Lord's_Prayer_(2)_Heaven.mp3",
+    "b": 9312516
+   }
+  ],
+  "031": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/08_Sermon_on_the_Mount/031a_1976-1121_Mt.6.9_The_Lord's_Prayer_Hallowed_be_thy_Name.mp3",
+    "b": 10846008
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/08_Sermon_on_the_Mount/031b_1976-1121_Mt.6.9_The_Lord's_Prayer_Hallowed_be_thy_Name.mp3",
+    "b": 7208927
+   }
+  ],
+  "032": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/08_Sermon_on_the_Mount/032a_1976-1128_Mt.6.10_The_Lord's_Prayer_Thy_Kingdom_come.mp3",
+    "b": 10932525
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/08_Sermon_on_the_Mount/032b_1976-1128_Mt.6.10_The_Lord's_Prayer_Thy_Kingdom_come.mp3",
+    "b": 10067977
+   }
+  ],
+  "034": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/08_Sermon_on_the_Mount/034a_1976-1212_Mt.6.12_14_15_The_Lord's_Prayer_Forgive_our_debts.mp3",
+    "b": 11153417
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/08_Sermon_on_the_Mount/034b_1976-1212_Mt.6.12_14_15_The_Lord's_Prayer_Forgive_our_debts.mp3",
+    "b": 3279170
+   }
+  ],
+  "036": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/08_Sermon_on_the_Mount/036a_1976-1226_Mt.6.19-21_Lay_not_your_treasures_on_earth.mp3",
+    "b": 10910478
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/08_Sermon_on_the_Mount/036b_1976-1226_Mt.6.19-21_Lay_not_your_treasures_on_earth.mp3",
+    "b": 7809534
+   }
+  ],
+  "038": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/08_Sermon_on_the_Mount/038a_1977-0109_Mt.6.24-34_Be_not_anxious.mp3",
+    "b": 10288868
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/08_Sermon_on_the_Mount/038b_1977-0109_Mt.6.24-34_Be_not_anxious.mp3",
+    "b": 7206210
+   }
+  ],
+  "039": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/08_Sermon_on_the_Mount/039a_1977-0116_Mt.7.1-5_Judge_not_that_you_not_be_judged.mp3",
+    "b": 10672555
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/08_Sermon_on_the_Mount/039b_1977-0116_Mt.7.1-5_Judge_not_that_you_not_be_judged.mp3",
+    "b": 8206491
+   }
+  ],
+  "040": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/08_Sermon_on_the_Mount/040a_1977-0327_Mt.7.6_Give_not_holy_things_to_dogs.mp3",
+    "b": 10751027
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/08_Sermon_on_the_Mount/040b_1977-0327_Mt.7.6_Give_not_holy_things_to_dogs.mp3",
+    "b": 10715396
+   }
+  ],
+  "042": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/08_Sermon_on_the_Mount/042a_1977-0417_Mt.7.8-12_Ask_for_bread_and_fish.mp3",
+    "b": 9978220
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/08_Sermon_on_the_Mount/042b_1977-0417_Mt.7.8-12_Ask_for_bread_and_fish.mp3",
+    "b": 6785534
+   }
+  ],
+  "043": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/08_Sermon_on_the_Mount/043a_1977-0424_Mt.7.12_What_you_wish_men_to_do_to_you_do_so_to_them.mp3",
+    "b": 9559425
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/08_Sermon_on_the_Mount/043b_1977-0424_Mt.7.12_What_you_wish_men_to_do_to_you_do_so_to_them.mp3",
+    "b": 9182112
+   }
+  ],
+  "046": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/08_Sermon_on_the_Mount/046a_1977-0515_Mt.7.21-27_and_Lk.6.46-49_Depart_from_me_you_evildoers.mp3",
+    "b": 10240072
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/08_Sermon_on_the_Mount/046b_1977-0515_Mt.7.21-27_and_Lk.6.46-49_Depart_from_me_you_evildoers.mp3",
+    "b": 4951843
+   }
+  ],
+  "047": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/08_Sermon_on_the_Mount/047a_1977-0522_Mt.7.21-27_and_Lk.6.46-49_Two_types_of_foundation.mp3",
+    "b": 9675200
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/08_Sermon_on_the_Mount/047b_1977-0522_Mt.7.21-27_and_Lk.6.46-49_Two_types_of_foundation.mp3",
+    "b": 8801456
+   }
+  ],
+  "049": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/049a_1977-0619_Lk.9.57-62_(Mt.8.19-22)_The_qualification_for_following_Christ.mp3",
+    "b": 9142406
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/049b_1977-0619_Lk.9.57-62_(Mt.8.19-22)_The_qualification_for_following_Christ.mp3",
+    "b": 8428009
+   }
+  ],
+  "053": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/053a_1977-0724_Mt.10.26-33_Fear_not.mp3",
+    "b": 10380088
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/053b_1977-0724_Mt.10.26-33_Fear_not.mp3",
+    "b": 7302236
+   }
+  ],
+  "056": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/056a_1977-0821_Mt.10.40-42_Our_union_with_Christ.mp3",
+    "b": 10111131
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/056b_1977-0821_Mt.10.40-42_Our_union_with_Christ.mp3",
+    "b": 8032307
+   }
+  ],
+  "057": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/057a_1977-0828_Mt.11.1-11_The_greatness_of_John_the_Baptist.mp3",
+    "b": 9661198
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/057b_1977-0828_Mt.11.1-11_The_greatness_of_John_the_Baptist.mp3",
+    "b": 7519784
+   }
+  ],
+  "059": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/059a_1977-1023_Mt.11.12_Take_up_your_cross_Love_as_Christ_has_loved_you.mp3",
+    "b": 9833711
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/059b_1977-1023_Mt.11.12_Take_up_your_cross_Love_as_Christ_has_loved_you.mp3",
+    "b": 8906991
+   }
+  ],
+  "062": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/062a_1977-1120_Mt.11.28_Give_to_be_the_light_of_the_world.mp3",
+    "b": 7939520
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/062b_1977-1120_Mt.11.28_Give_to_be_the_light_of_the_world.mp3",
+    "b": 5279418
+   }
+  ],
+  "063": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/063a_1977-1127_Mt.11.30-12.1-8_Being_yoked_to_Christ.mp3",
+    "b": 7593658
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/063b_1977-1127_Mt.11.30-12.1-8_Being_yoked_to_Christ.mp3",
+    "b": 7530651
+   }
+  ],
+  "065": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/065a_1977-1211_Mt.12.22-29_The_Spirit_of_God_overcomes_Satanic_affliction.mp3",
+    "b": 7982674
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/065b_1977-1211_Mt.12.22-29_The_Spirit_of_God_overcomes_Satanic_affliction.mp3",
+    "b": 10491160
+   }
+  ],
+  "066": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/066a_1977-1218_Mt.12.30_Not_only_gather_for_Christ_but_also_with_him.mp3",
+    "b": 10344248
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/066b_1977-1218_Mt.12.30_Not_only_gather_for_Christ_but_also_with_him.mp3",
+    "b": 5766863
+   }
+  ],
+  "067": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/067a_1978-0430_Mt.12.30_Gather_with_Christ_Build_up_his_church.mp3",
+    "b": 9265495
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/067b_1978-0430_Mt.12.30_Gather_with_Christ_Build_up_his_church.mp3",
+    "b": 7691774
+   }
+  ],
+  "068": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/068a_1978-0423_Mt.12.31-32_The_unforgiven_sin.mp3",
+    "b": 8301159
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/068b_1978-0423_Mt.12.31-32_The_unforgiven_sin.mp3",
+    "b": 8041920
+   }
+  ],
+  "069": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/069a_1977-0410_Mt.12.38-42_The_sign_of_Jonah.mp3",
+    "b": 10103085
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/069b_1977-0410_Mt.12.38-42_The_sign_of_Jonah.mp3",
+    "b": 4428245
+   }
+  ],
+  "070": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/070a_1978-0507_Mt.12.43-45_Be_either_the_temple_of_God_or_the_house_of_Belial.mp3",
+    "b": 8644721
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/070b_1978-0507_Mt.12.43-45_Be_either_the_temple_of_God_or_the_house_of_Belial.mp3",
+    "b": 3660558
+   }
+  ],
+  "071": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/071a_1978-0521_Mt.12.46-50_The_will_of_God.mp3",
+    "b": 9539676
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/071b_1978-0521_Mt.12.46-50_The_will_of_God.mp3",
+    "b": 8623196
+   }
+  ],
+  "072": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/072a_1978-0723_Mt.13.1-9_The_parable_of_the_sower_from_the_salvation_viewpoint.mp3",
+    "b": 9027258
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/072b_1978-0723_Mt.13.1-9_The_parable_of_the_sower_from_the_salvation_viewpoint.mp3",
+    "b": 8433756
+   }
+  ],
+  "073": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/073a_1978-0716_Mt.13.10-17_The_purpose_of_the_parables_from_the_salvation_viewpoint.mp3",
+    "b": 8468552
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/073b_1978-0716_Mt.13.10-17_The_purpose_of_the_parables_from_the_salvation_viewpoint.mp3",
+    "b": 4544228
+   }
+  ],
+  "074": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/074a_1978-0528_Lk.8.4-8_11-15_The_parable_of_the_sower.mp3",
+    "b": 9415438
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/074b_1978-0528_Lk.8.4-8_11-15_The_parable_of_the_sower.mp3",
+    "b": 7898037
+   }
+  ],
+  "075": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/075a_1978-0730_Mk.4.21-25_The_responsibility_incumbent_upon_the_hearers.mp3",
+    "b": 9160901
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/075b_1978-0730_Mk.4.21-25_The_responsibility_incumbent_upon_the_hearers.mp3",
+    "b": 4019480
+   }
+  ],
+  "076": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/076a_1978-0806_Mk.4.26-29_Respond_to_God's_grace_yield_fruit.mp3",
+    "b": 10699931
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/076b_1978-0806_Mk.4.26-29_Respond_to_God's_grace_yield_fruit.mp3",
+    "b": 1732617
+   }
+  ],
+  "077": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/077a_1978-0813_Mt.13.24-30_36-43_The_parable_of_the_tares.mp3",
+    "b": 9861087
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/077b_1978-0813_Mt.13.24-30_36-43_The_parable_of_the_tares.mp3",
+    "b": 5260401
+   }
+  ],
+  "078": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/078a_1978-0820_Mt.13.31-32_A_parable_of_life_and_transformation.mp3",
+    "b": 8012976
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/078b_1978-0820_Mt.13.31-32_A_parable_of_life_and_transformation.mp3",
+    "b": 3228388
+   }
+  ],
+  "079": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/079a_1978-0827_Mt.13.31-33_The_parable_of_the_mustard_seed_and_the_leaven.mp3",
+    "b": 9001867
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/079b_1978-0827_Mt.13.31-33_The_parable_of_the_mustard_seed_and_the_leaven.mp3",
+    "b": 9416796
+   }
+  ],
+  "080": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/080a_1978-0903_Mt.13.44_The_parable_of_the_lost_treasure.mp3",
+    "b": 9476147
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/080b_1978-0903_Mt.13.44_The_parable_of_the_lost_treasure.mp3",
+    "b": 8275454
+   }
+  ],
+  "082": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/082a_1978-0910_Mt.13.45-46_The_parable_of_the_pearl.mp3",
+    "b": 8637303
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/082b_1978-0910_Mt.13.45-46_The_parable_of_the_pearl.mp3",
+    "b": 6899846
+   }
+  ],
+  "083": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/083a_1978-0917_Mt.13.47-50_The_parable_of_the_net.mp3",
+    "b": 8866449
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/083b_1978-0917_Mt.13.47-50_The_parable_of_the_net.mp3",
+    "b": 6322854
+   }
+  ],
+  "084": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/084a_1978-1001_Mt.13.51-52_Scribes_trained_for_the_Kingdom_of_Heaven.mp3",
+    "b": 9030602
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/084b_1978-1001_Mt.13.51-52_Scribes_trained_for_the_Kingdom_of_Heaven.mp3",
+    "b": 7327523
+   }
+  ],
+  "085": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/085a_1978-1008_Lk.10.25-37_The_parable_of_the_good_Samaritan.mp3",
+    "b": 8088836
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/085b_1978-1008_Lk.10.25-37_The_parable_of_the_good_Samaritan.mp3",
+    "b": 8185071
+   }
+  ],
+  "086": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/086a_1978-1022_Lk.11.5-13_Persistence_in_prayer.mp3",
+    "b": 8277544
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/086b_1978-1022_Lk.11.5-13_Persistence_in_prayer.mp3",
+    "b": 4770658
+   }
+  ],
+  "087": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/087a_1978-1029_Lk.12.13-21_The_parable_of_the_rich_fool.mp3",
+    "b": 8856313
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/087b_1978-1029_Lk.12.13-21_The_parable_of_the_rich_fool.mp3",
+    "b": 4337338
+   }
+  ],
+  "088": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/088a_1978-1105_Lk.13.6-9_The_parable_of_the_barren_fig_tree.mp3",
+    "b": 9242910
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/088b_1978-1105_Lk.13.6-9_The_parable_of_the_barren_fig_tree.mp3",
+    "b": 4603996
+   }
+  ],
+  "089": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/089a_1980-1101_Lk.14.7-14_The_parable_of_the_banquet.mp3",
+    "b": 8507004
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/089b_1980-1101_Lk.14.7-14_The_parable_of_the_banquet.mp3",
+    "b": 4970965
+   }
+  ],
+  "090": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/090a_1978-1112_Lk.14.12-24_The_parable_of_the_great_banquet.mp3",
+    "b": 8346403
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/090b_1978-1112_Lk.14.12-24_The_parable_of_the_great_banquet.mp3",
+    "b": 5272627
+   }
+  ],
+  "091": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/091a_1979-0318_Lk.14.25-33_Cost_of_discipleship.mp3",
+    "b": 8688607
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/091b_1979-0318_Lk.14.25-33_Cost_of_discipleship.mp3",
+    "b": 1968032
+   }
+  ],
+  "092": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/092a_1978-1119_Lk.15.1-7_The_parable_of_the_lost_sheep.mp3",
+    "b": 8356643
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/092b_1978-1119_Lk.15.1-7_The_parable_of_the_lost_sheep.mp3",
+    "b": 6510204
+   }
+  ],
+  "093": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/093a_1978-1203_Lk.15.8-10_The_parable_of_the_lost_coin.mp3",
+    "b": 9067696
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/093b_1978-1203_Lk.15.8-10_The_parable_of_the_lost_coin.mp3",
+    "b": 4839098
+   }
+  ],
+  "095": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/095a_1978-1231_Lk.16.1-13_The_parable_of_the_unjust_steward.mp3",
+    "b": 8471895
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/095b_1978-1231_Lk.16.1-13_The_parable_of_the_unjust_steward.mp3",
+    "b": 4940663
+   }
+  ],
+  "097": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/097a_1979-0128_Lk.17.5-10_The_parable_of_the_unprofitable_servant.mp3",
+    "b": 8415053
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/097b_1979-0128_Lk.17.5-10_The_parable_of_the_unprofitable_servant.mp3",
+    "b": 7175699
+   }
+  ],
+  "098": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/098a_1979-0513_Lk.18.1-8_The_parable_of_the_unjust_judge.mp3",
+    "b": 8223314
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/098b_1979-0513_Lk.18.1-8_The_parable_of_the_unjust_judge.mp3",
+    "b": 6257443
+   }
+  ],
+  "099": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/099a_1979-0520_Lk.18.9-14_The_parable_of_the_Pharisee_and_the_tax_collector.mp3",
+    "b": 8521423
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/099b_1979-0520_Lk.18.9-14_The_parable_of_the_Pharisee_and_the_tax_collector.mp3",
+    "b": 8532604
+   }
+  ],
+  "100": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/100a_1979-0527_Lk.19.11-27_The_parable_of_the_pounds.mp3",
+    "b": 8891944
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/100b_1979-0527_Lk.19.11-27_The_parable_of_the_pounds.mp3",
+    "b": 7722703
+   }
+  ],
+  "101": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/101a_1979-0610_Mt.14.13-21_Compassion_A_requirement_to_be_a_channel_of_blessing.mp3",
+    "b": 8823503
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/101b_1979-0610_Mt.14.13-21_Compassion_A_requirement_to_be_a_channel_of_blessing.mp3",
+    "b": 5203454
+   }
+  ],
+  "102": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/102a_1978-0924_Mt.14.22-33_The_principle_of_spiritual_excellence.mp3",
+    "b": 9585234
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/102b_1978-0924_Mt.14.22-33_The_principle_of_spiritual_excellence.mp3",
+    "b": 6146997
+   }
+  ],
+  "103": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/103a_1979-0624_Mk.7.1-15_(Mt.15.1-11)_Man's_way_or_God's_way.mp3",
+    "b": 8599164
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/103b_1979-0624_Mk.7.1-15_(Mt.15.1-11)_Man's_way_or_God's_way.mp3",
+    "b": 9180440
+   }
+  ],
+  "104": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/104a_1979-0708_Mk.7.1-15_(Mt.15.1-11)_Man's_way_or_God's_way_(2).mp3",
+    "b": 9529750
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/104b_1979-0708_Mk.7.1-15_(Mt.15.1-11)_Man's_way_or_God's_way_(2).mp3",
+    "b": 2383379
+   }
+  ],
+  "105": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/105a_1979-0729_Mt.15.10-20_Root_of_man's_problem.mp3",
+    "b": 9709054
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/105b_1979-0729_Mt.15.10-20_Root_of_man's_problem.mp3",
+    "b": 6007085
+   }
+  ],
+  "106": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/106a_1979-0715_Mt.15.21-28_The_Syrophoenician_woman's_faith.mp3",
+    "b": 10442991
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/106b_1979-0715_Mt.15.21-28_The_Syrophoenician_woman's_faith.mp3",
+    "b": 6190569
+   }
+  ],
+  "108": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/108a_1980-0622_Mt.16.18_You_are_Peter_and_on_this_rock_I_will_build_my_church.mp3",
+    "b": 7957492
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/108b_1980-0622_Mt.16.18_You_are_Peter_and_on_this_rock_I_will_build_my_church.mp3",
+    "b": 7774844
+   }
+  ],
+  "109": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/109a_1980-0706_Mt.16.24-26_(Lk.14.25-33)_Love_and_hatred.mp3",
+    "b": 8562174
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/109b_1980-0706_Mt.16.24-26_(Lk.14.25-33)_Love_and_hatred.mp3",
+    "b": 7769201
+   }
+  ],
+  "110": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/110a_1980-0713_Mt.16.24-28_Some_standing_here_will_not_taste_death_until_they_see_the_Kingdom_of_God.mp3",
+    "b": 8395931
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/110b_1980-0713_Mt.16.24-28_Some_standing_here_will_not_taste_death_until_they_see_the_Kingdom_of_God.mp3",
+    "b": 9038648
+   }
+  ],
+  "111": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/111a_1980-0727_Mt.17.14-21_The_way_of_power_is_the_path_of_the_cross.mp3",
+    "b": 7617064
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/111b_1980-0727_Mt.17.14-21_The_way_of_power_is_the_path_of_the_cross.mp3",
+    "b": 5782014
+   }
+  ],
+  "112": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/112a_1980-0810_Mt.17.14-21_(Mk.9.14-29)_Faith_that_moves_mountains.mp3",
+    "b": 6984796
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/112b_1980-0810_Mt.17.14-21_(Mk.9.14-29)_Faith_that_moves_mountains.mp3",
+    "b": 9723474
+   }
+  ],
+  "114": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/114a_1980-0907_Mt.18.5-9_Woe_to_the_man_by_whom_temptation_comes.mp3",
+    "b": 8499585
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/114b_1980-0907_Mt.18.5-9_Woe_to_the_man_by_whom_temptation_comes.mp3",
+    "b": 6111157
+   }
+  ],
+  "115": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/115a_1980-0914_Mt.18.10_Their_angels_always_behold_the_face_of_my_Father.mp3",
+    "b": 8697071
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/115b_1980-0914_Mt.18.10_Their_angels_always_behold_the_face_of_my_Father.mp3",
+    "b": 6410312
+   }
+  ],
+  "116": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/116a_1980-0928_Mt.18.15-20_True_friend.mp3",
+    "b": 8316414
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/116b_1980-0928_Mt.18.15-20_True_friend.mp3",
+    "b": 5508460
+   }
+  ],
+  "117": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/117a_1980-1012_Mt.18.21-35_(Lk.17.3-4)_Forgiving_others.mp3",
+    "b": 8362599
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/117b_1980-1012_Mt.18.21-35_(Lk.18.3-4)_Forgiving_others.mp3",
+    "b": 5980545
+   }
+  ],
+  "118": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/118a_1980-1109_Mt.19.1-12_Marriage_The_concept_of_the_church.mp3",
+    "b": 8087059
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/118b_1980-1109_Mt.19.1-12_Marriage_The_concept_of_the_church.mp3",
+    "b": 6362978
+   }
+  ],
+  "119": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/119a_1980-1123_Mt.19.10-12_God's_grace_Determinative_or_enabling.mp3",
+    "b": 8485374
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/119b_1980-1123_Mt.19.10-12_God's_grace_Determinative_or_enabling.mp3",
+    "b": 5024568
+   }
+  ],
+  "120": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/120a_1980-1130_Mt.19.13-15_(Mk.10.13-16)_Let_the_children_come.mp3",
+    "b": 8126034
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/120b_1980-1130_Mt.19.13-15_(Mk.10.13-16)_Let_the_children_come.mp3",
+    "b": 5030942
+   }
+  ],
+  "121": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/121a_1980-1207_Mt.19.16-30_What_good_must_I_do_to_inherit_eternal_life.mp3",
+    "b": 8450579
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/121b_1980-1207_Mt.19.16-30_What_good_must_I_do_to_inherit_eternal_life.mp3",
+    "b": 3429949
+   }
+  ],
+  "122": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/122a_1980-1214_Mt.19.16-30_(Mk.10.21-31)_How_hard_shall_they_that_have_riches_to_enter_into_the_Kingdom.mp3",
+    "b": 8270334
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/122b_1980-1214_Mt.19.16-30_(Mk.10.21-31)_How_hard_shall_they_that_have_riches_to_enter_into_the_Kingdom.mp3",
+    "b": 6661923
+   }
+  ],
+  "123": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/123a_1980-1221_Mt.19.16-30_(Mk.10.21-31)_Go_sell_what_you_have_and_come_follow_me.mp3",
+    "b": 8447340
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/123b_1980-1221_Mt.19.16-30_(Mk.10.21-31)_Go_sell_what_you_have_and_come_follow_me.mp3",
+    "b": 5408881
+   }
+  ],
+  "124": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/124a_1980-1225_Mt.19.30_(Mk.10.31)_But_many_that_are_first_will_be_last.mp3",
+    "b": 6047314
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/124b_1980-1225_Mt.19.30_(Mk.10.31)_But_many_that_are_first_will_be_last.mp3",
+    "b": 7472450
+   }
+  ],
+  "125": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/125a_1981-0104_Mt.20.1-16_Laborers_in_the_vineyard.mp3",
+    "b": 9222968
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/125b_1981-0104_Mt.20.1-16_Laborers_in_the_vineyard.mp3",
+    "b": 5213694
+   }
+  ],
+  "126": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/126a_1981-0111_Mt.20.1-16_The_principle_of_first_and_last.mp3",
+    "b": 8880764
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/126b_1981-0111_Mt.20.1-16_The_principle_of_first_and_last.mp3",
+    "b": 5671151
+   }
+  ],
+  "127": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/127a_1981-0111_Mt.20.17-28_(Mk.10.32-45)_Whoever_would_be_first_among_you_must_be_your_slave.mp3",
+    "b": 7499722
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/127b_1981-0111_Mt.20.17-28_(Mk.10.32-45)_Whoever_would_be_first_among_you_must_be_your_slave.mp3",
+    "b": 4607027
+   }
+  ],
+  "128": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/128a_1981-0125_Lk.14.7-14_For_whoever_exalts_himself_shall_be_humbled.mp3",
+    "b": 8117257
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/128b_1981-0125_Lk.14.7-14_For_whoever_exalts_himself_shall_be_humbled.mp3",
+    "b": 4726458
+   }
+  ],
+  "129": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/129a_1981-0201_Mk.10.46-52_(Mt.20.29-34)_Your_faith_has_made_you_well.mp3",
+    "b": 9024437
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/129b_1981-0201_Mk.10.46-52_(Mt.20.29-34)_Your_faith_has_made_you_well.mp3",
+    "b": 4287810
+   }
+  ],
+  "130": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/130a_1981-0208_Mk.11.12-26_The_cursing_of_the_fig_tree.mp3",
+    "b": 7252186
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/130b_1981-0208_Mk.11.12-26_The_cursing_of_the_fig_tree.mp3",
+    "b": 9658168
+   }
+  ],
+  "131": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/131a_1981-0215_Mk.11.27-33_Commitment_to_the_truth.mp3",
+    "b": 8061668
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/131b_1981-0215_Mk.11.27-33_Commitment_to_the_truth.mp3",
+    "b": 4717995
+   }
+  ],
+  "132": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/132a_1981-0222_Mt.21.28-32_Answering_Yes_to_God's_call.mp3",
+    "b": 8424143
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/132b_1981-0222_Mt.21.28-32_Answering_Yes_to_God's_call.mp3",
+    "b": 4779121
+   }
+  ],
+  "133": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/133a_1981-0308_Mt.21.33-46_The_Kingdom_will_be_given_to_a_nation_producing_the_fruits_of_it.mp3",
+    "b": 8051742
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/133b_1981-0308_Mt.21.33-46_The_Kingdom_will_be_given_to_a_nation_producing_the_fruits_of_it.mp3",
+    "b": 5011402
+   }
+  ],
+  "134": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/134a_1981-0315_Lk.14.15-24_And_they_all_began_to_make_excuses.mp3",
+    "b": 7735242
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/134b_1981-0315_Lk.14.15-23_And_they_all_began_to_make_excuses.mp3",
+    "b": 8286426
+   }
+  ],
+  "135": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/135a_1981-0322_Mt.22.1-14_Many_are_called_few_are_chosen.mp3",
+    "b": 8041815
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/135b_1981-0322_Mt.22.1-14_Many_are_called_few_are_chosen.mp3",
+    "b": 6365381
+   }
+  ],
+  "136": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/136a_1981-0419_Mt.22.23-33_He_is_not_God_of_the_dead_but_of_the_living.mp3",
+    "b": 6332989
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/136b_1981-0419_Mt.22.23-33_He_is_not_God_of_the_dead_but_of_the_living.mp3",
+    "b": 6284610
+   }
+  ],
+  "137": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/137a_1981-0405_Mt.23.1-22_The_leaven_of_the_Pharisees.mp3",
+    "b": 8180473
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/137b_1981-0405_Mt.23.1-22_The_leaven_of_the_Pharisees.mp3",
+    "b": 5614413
+   }
+  ],
+  "138": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/138a_1981-0412_Mt.23.13-26_Woe_to_you_hypocrites.mp3",
+    "b": 8215373
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/138b_1981-0412_Mt.23.13-26_Woe_to_you_hypocrites.mp3",
+    "b": 8154455
+   }
+  ],
+  "139": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/139a_1981-0513_Mt.23.27-33_But_within_you_are_full_of_hypocricy_and_iniquity.mp3",
+    "b": 7910472
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/139b_1981-0513_Mt.23.27-33_But_within_you_are_full_of_hypocricy_and_iniquity.mp3",
+    "b": 5753698
+   }
+  ],
+  "140": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/140a_1981-0510_Mt.23_22.41-46_Christ_as_Lord_the_remedy_for_hypocricy.mp3",
+    "b": 8010991
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/140b_1981-0510_Mt.23_22.41-46_Christ_as_Lord_the_remedy_for_hypocricy.mp3",
+    "b": 6922207
+   }
+  ],
+  "141": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/141a_1981-0517_Mt.23.29-39_You_did_what_your_fathers_did.mp3",
+    "b": 8465626
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/141b_1981-0517_Mt.23.29-39_You_did_what_your_fathers_did.mp3",
+    "b": 3807784
+   }
+  ],
+  "142": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/142a_1981-0531_Mt.23.29-39_Sonship_and_self-justification.mp3",
+    "b": 7514142
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/142b_1981-0531_Mt.23.29-39_Sonship_and_self-justification.mp3",
+    "b": 4216339
+   }
+  ],
+  "143": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/143a_1981-0614_Mt.23.31-24.3_The_measure_of_wickedness.mp3",
+    "b": 8027918
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/143b_1981-0614_Mt.23.31-24.3_The_measure_of_wickedness.mp3",
+    "b": 3690860
+   }
+  ],
+  "144": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/144a_1981-0621_Mt.23.33_Hell.mp3",
+    "b": 8116943
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/144b_1981-0621_Mt.23.33_Hell.mp3",
+    "b": 5964140
+   }
+  ],
+  "146": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/146a_1981-0705_Mt.24.1-14_The_signs_of_Christ's_coming.mp3",
+    "b": 7629707
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/146b_1981-0705_Mt.24.1-14_The_signs_of_Christ's_coming.mp3",
+    "b": 4100669
+   }
+  ],
+  "147": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/147a_1981-0712_Mt.24.15-24_The_abomination_of_desolation.mp3",
+    "b": 9657645
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/147b_1981-0712_Mt.24.15-24_The_abomination_of_desolation.mp3",
+    "b": 7117812
+   }
+  ],
+  "148": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/148a_1981-0719_Mt.24.24-27_False_Christs_will_arise_to_lead_many_astray.mp3",
+    "b": 8235017
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/148b_1981-0719_Mt.24.24-27_False_Christs_will_arise_to_lead_many_astray.mp3",
+    "b": 7875363
+   }
+  ],
+  "149": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/149a_1981-0726_Mt.24.15-28_Where_the_body_is_there_the_vultures_will_be_gathered.mp3",
+    "b": 8019559
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/149b_1981-0726_Mt.24.15-28_Where_the_body_is_there_the_vultures_will_be_gathered.mp3",
+    "b": 6057658
+   }
+  ],
+  "150": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/150a_1981-0816_Lk.21.25-27_(Mt.24.29-30)_Signs_in_the_heavens.mp3",
+    "b": 8322266
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/150b_1981-0816_Lk.21.25-27_(Mt.24.29-30)_Signs_in_the_heavens.mp3",
+    "b": 4850070
+   }
+  ],
+  "151": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/151a_1981-0830_Lk.21.25-28_34-36_Redemption.mp3",
+    "b": 8601672
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/151b_1981-0830_Lk.21.25-28_34-36_Redemption.mp3",
+    "b": 4088966
+   }
+  ],
+  "152": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/152a_1981-0906_Lk.21.27-28_Your_redemption_is_drawing_near.mp3",
+    "b": 8348388
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/152b_1981-0906_Lk.21.27-28_Your_redemption_is_drawing_near.mp3",
+    "b": 7604943
+   }
+  ],
+  "153": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/153a_1981-1011_Mk.13.33-37_Watch_therefore_lest_he_comes_suddenly_and_finds_you_asleep.mp3",
+    "b": 8111405
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/153b_1981-1011_Mk.13.33-37_Watch_therefore_lest_he_comes_suddenly_and_finds_you_asleep.mp3",
+    "b": 5114011
+   }
+  ],
+  "155": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/155a_1981-1025_Mt.24.34_This_generation.mp3",
+    "b": 9215654
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/155b_1981-1025_Mt.24.34_This_generation.mp3",
+    "b": 6065809
+   }
+  ],
+  "156": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/156a_1981-1108_Mt.25.1-13_The_parable_of_the_ten_virgins.mp3",
+    "b": 8100329
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/156b_1981-1108_Mt.25.1-13_The_parable_of_the_ten_virgins.mp3",
+    "b": 2414099
+   }
+  ],
+  "157": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/157a_1981-1115_Mt.25.14-30_The_parable_of_the_talents.mp3",
+    "b": 7250305
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/157b_1981-1115_Mt.25.14-30_The_parable_of_the_talents.mp3",
+    "b": 8279843
+   }
+  ],
+  "158": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/158a_1981-1122_Mt.24.45-25.30_The_parables_of_the_second_coming.mp3",
+    "b": 8557368
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/07_Parables/158b_1981-1122_Mt.24.45-25.30_The_parables_of_the_second_coming.mp3",
+    "b": 5250579
+   }
+  ],
+  "159": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/159a_1981-1129_Mt.25.31-46_The_separation_of_sheep_and_goats.mp3",
+    "b": 8297502
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/159b_1981-1129_Mt.25.31-46_The_separation_of_sheep_and_goats.mp3",
+    "b": 4932826
+   }
+  ],
+  "160": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/160a_1981-1206_Mt.25.31-46_Goat_A_detour_in_the_conversion.mp3",
+    "b": 8441593
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/160b_1981-1206_Mt.25.31-46_Goat_A_detour_in_the_conversion.mp3",
+    "b": 4018749
+   }
+  ],
+  "161": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/161a_1981-1213_Mt.25.31-46_The_judgment_of_God.mp3",
+    "b": 9500493
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/161b_1981-1213_Mt.25.31-46_The_judgment_of_God.mp3",
+    "b": 5499578
+   }
+  ],
+  "162": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/162a_1982-0117_Lk.22.31-34_Behold_Satan_demanded_to_have_you.mp3",
+    "b": 7212793
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/162b_1982-0117_Lk.22.31-46_Behold_Satan_demanded_to_have_you.mp3",
+    "b": 8411814
+   }
+  ],
+  "164": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/164a_1981-1101_Mt.26.41_Crucify_the_flesh.mp3",
+    "b": 8415262
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/09_Matthew_and_Luke/164b_1981-1101_Mt.26.41_Crucify_the_flesh.mp3",
+    "b": 9802468
+   }
+  ],
+  "166": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/19_Spiritual_Mission/166a_1987-0704_Mission_of_the_church.mp3",
+    "b": 6148042
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/19_Spiritual_Mission/166b_1987-0704_Mission_of_the_church.mp3",
+    "b": 3921260
+   }
+  ],
+  "167": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/13_Eschatology/167a_1988-0816_Lk.18.8_Will_Jesus_find_faith_(1).mp3",
+    "b": 6393280
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/13_Eschatology/167b_1988-0816_Lk.18.8_Will_Jesus_find_faith_(1).mp3",
+    "b": 9789616
+   }
+  ],
+  "168": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/13_Eschatology/168a_1988-0817_Lk.18.8_Will_Jesus_find_faith_(2).mp3",
+    "b": 7299311
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/13_Eschatology/168b_1988-0817_Lk.18.8_Will_Jesus_find_faith_(2).mp3",
+    "b": 10675480
+   }
+  ],
+  "169": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/02_Spiritual_Vision/169a_1989-0205_Jn.2.17_Zeal_for_thy_house.mp3",
+    "b": 7406726
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/02_Spiritual_Vision/169b_1989-0205_Jn.2.17_Zeal_for_thy_house.mp3",
+    "b": 8528738
+   }
+  ],
+  "174": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/01_Spiritual_Experience_Knowing_God/174a_1989-1216_O_Taste_and_see_that_God_is_good.mp3",
+    "b": 5536254
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/01_Spiritual_Experience_Knowing_God/174b_1989-1216_O_Taste_and_see_that_God_is_good.mp3",
+    "b": 8721103
+   }
+  ],
+  "194-1": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/01_Spiritual_Experience_Knowing_God/194-1a_1989-0818_Show_us_thy_glory_(1).mp3",
+    "b": 7344032
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/01_Spiritual_Experience_Knowing_God/194-1b_1989-0818_Show_us_thy_glory_(1).mp3",
+    "b": 9878328
+   }
+  ],
+  "194-2": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/01_Spiritual_Experience_Knowing_God/194-2a_1989-0818_Show_us_thy_glory_(2).mp3",
+    "b": 3391497
+   }
+  ],
+  "196-1": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/18_Christians_Relating_to_Others/196-1a_1989-0816_Workshop_on_Parenting_(1).mp3",
+    "b": 9390465
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/18_Christians_Relating_to_Others/196-1b_1989-0816_Workshop_on_Parenting_(1).mp3",
+    "b": 8996538
+   }
+  ],
+  "196-2": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/18_Christians_Relating_to_Others/196-2a_1989-0816_Workshop_on_Parenting_(2).mp3",
+    "b": 10790524
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/18_Christians_Relating_to_Others/196-2b_1989-0816_Workshop_on_Parenting_(2).mp3",
+    "b": 4571709
+   }
+  ],
+  "201": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/02_Spiritual_Vision/201a_yyyy-mmdd_Victorious_Faith.mp3",
+    "b": 33005319
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/02_Spiritual_Vision/201b_yyyy-mmdd_Victorious_Faith.mp3",
+    "b": 8614474
+   }
+  ],
+  "203": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/05_Spiritual_Direction/203a_1980-1019_Lk.9.62_He_who_puts_his_hands_to_the_plough.mp3",
+    "b": 7723644
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/05_Spiritual_Direction/203b_1980-1019_Lk.9.62_He_who_puts_his_hands_to_the_plough.mp3",
+    "b": 5331768
+   }
+  ],
+  "204": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/05_Spiritual_Direction/204a_1980-1026_Lk.10.38-42_One_thing_is_needful.mp3",
+    "b": 8699683
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/05_Spiritual_Direction/204b_1980-1026_Lk.10.38-42_One_thing_is_needful.mp3",
+    "b": 4110909
+   }
+  ],
+  "206": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/02_Spiritual_Vision/206a_1977-0130_Jn.7.38_Rivers_of_living_water.mp3",
+    "b": 9923676
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/02_Spiritual_Vision/206b_1977-0130_Jn.7.38_Rivers_of_living_water.mp3",
+    "b": 7798354
+   }
+  ],
+  "207": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/11_Baptism/207a_1982-0627_Jn.14.8-23_Baptism_and_Resurrection_I_will_manifest_myself_to_you.mp3",
+    "b": 8664574
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/11_Baptism/207b_1982-0627_Jn.14.8-23_Baptism_and_Resurrection_I_will_manifest_myself_to_you.mp3",
+    "b": 6191928
+   }
+  ],
+  "210": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/11_Baptism/210a_1979-0829_1Cor.6.17_The_meaning_of_baptism_covenant_of_union.mp3",
+    "b": 7283533
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/11_Baptism/210b_1979-0829_1Cor.6.17_The_meaning_of_baptism_covenant_of_union.mp3",
+    "b": 3477387
+   }
+  ],
+  "211": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/05_Spiritual_Direction/211a_1979-1007_Phil_3.2-17_The_picture_of_a_true_Christian.mp3",
+    "b": 8594984
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/05_Spiritual_Direction/211b_1979-1007_Phil_3.2-17_The_picture_of_a_true_Christian.mp3",
+    "b": 5531866
+   }
+  ],
+  "212": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/12_Death_and_Resurrection_of_Christ/212a_1979-0413_Titus_2.14_The_purpose_of_Christ's_death.mp3",
+    "b": 8561547
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/12_Death_and_Resurrection_of_Christ/212b_1979-0413_Titus_2.14_The_purpose_of_Christ's_death.mp3",
+    "b": 8393005
+   }
+  ],
+  "213": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/12_Death_and_Resurrection_of_Christ/213a_1981-0417_Heb.2.14-15_Destroy_the_power_of_death.mp3",
+    "b": 7675474
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/12_Death_and_Resurrection_of_Christ/213b_1981-0417_Heb.2.14-15_Destroy_the_power_of_death.mp3",
+    "b": 5244519
+   }
+  ],
+  "214": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/12_Death_and_Resurrection_of_Christ/214a_1980-0404_Heb.5.7_The_meaning_of_Jesus'_death_(1).mp3",
+    "b": 8821727
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/12_Death_and_Resurrection_of_Christ/214b_1980-0404_Heb.5.7_The_meaning_of_Jesus'_death_(1).mp3",
+    "b": 3739448
+   }
+  ],
+  "217": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/11_Baptism/217a_1981-0920_1Pet.3.21_Baptism_A_pledge_of_good_conscience_to_God.mp3",
+    "b": 8401887
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/11_Baptism/217b_1981-0920_1Pet.3.21_Baptism_A_pledge_of_good_conscience_to_God.mp3",
+    "b": 7048326
+   }
+  ],
+  "219": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/01_Spiritual_Experience_Knowing_God/219a_1984-0830_Rom.8.14_Being_led_by_the_Spirit.mp3",
+    "b": 10772865
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/01_Spiritual_Experience_Knowing_God/219b_1984-0830_Rom.8.14_Being_led_by_the_Spirit.mp3",
+    "b": 10493564
+   }
+  ],
+  "220": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/01_Spiritual_Experience_Knowing_God/220a_1985-0929_Gal.2.20_Experience_the_reality_of_the_indwelling_presence_of_Christ.mp3",
+    "b": 7904516
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/01_Spiritual_Experience_Knowing_God/220b_1985-0929_Gal.2.20_Experience_the_reality_of_the_indweling_presence_of_Christ.mp3",
+    "b": 8986821
+   }
+  ],
+  "221": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/02_Spiritual_Vision/221a_1985-1006_Man_of_God.mp3",
+    "b": 10124610
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/02_Spiritual_Vision/221b_1985-1006_Man_of_God.mp3",
+    "b": 2691206
+   }
+  ],
+  "222": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/13_Eschatology/222a_1982-0804_1Pet.4.7_The_end_of_all_things_is_at_hand.mp3",
+    "b": 8586103
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/13_Eschatology/222b_1982-0804_1Pet.4.7_The_end_of_all_things_is_at_hand.mp3",
+    "b": 5942511
+   }
+  ],
+  "224": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/01_Spiritual_Experience_Knowing_God/224a_1986-0413_Fullness_of_the_Holy_Spirit.mp3",
+    "b": 9867043
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/01_Spiritual_Experience_Knowing_God/224b_1986-0413_Fullness_of_the_Holy_Spirit.mp3",
+    "b": 11008176
+   },
+   {
+    "p": "c",
+    "u": "/sites/default/files/ehhc_mp3_sermons/01_Spiritual_Experience_Knowing_God/224c_1986-0413_Fullness_of_the_Holy_Spirit.mp3",
+    "b": 3106553
+   }
+  ],
+  "225": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/18_Christians_Relating_to_Others/225a_1986-0504_Difference_between_spiritual_and_religious.mp3",
+    "b": 8995912
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/18_Christians_Relating_to_Others/225b_1986-0504_Difference_between_spiritual_and_religious.mp3",
+    "b": 5567810
+   }
+  ],
+  "226": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/01_Spiritual_Experience_Knowing_God/226a_1986-0601_Manifestation_of_true_spirituality.mp3",
+    "b": 9607908
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/01_Spiritual_Experience_Knowing_God/226b_1986-0601_Manifestation_of_true_spirituality.mp3",
+    "b": 4826873
+   }
+  ],
+  "229": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/01_Spiritual_Experience_Knowing_God/229a_yyyy-mmdd_Near_to_the_Heart_of_God.mp3",
+    "b": 40104774
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/01_Spiritual_Experience_Knowing_God/229b_yyyy-mmdd_Near_to_the_Heart_of_God.mp3",
+    "b": 29374507
+   }
+  ],
+  "230": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/02_Spiritual_Vision/230a_1986-0706_Fruitfulness_The_evidence_of_inner_character_transformation.mp3",
+    "b": 8790589
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/02_Spiritual_Vision/230b_1986-0706_Fruitfulness_The_evidence_of_inner_character_transformation.mp3",
+    "b": 4645479
+   }
+  ],
+  "231": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/19_Spiritual_Mission/231a_1986-0822_The_Spirit_and_witnessing.mp3",
+    "b": 9595369
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/19_Spiritual_Mission/231b_1986-0822_The_Spirit_and_witnessing.mp3",
+    "b": 8114331
+   }
+  ],
+  "232": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/02_Spiritual_Vision/232a_1986-1026_What_is_holiness.mp3",
+    "b": 9304470
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/02_Spiritual_Vision/232b_1986-1026_What_is_holiness.mp3",
+    "b": 3730775
+   }
+  ],
+  "234": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/20_Antichrist/234a_1986-1221_The_cross_and_the_Antichrist.mp3",
+    "b": 3056607
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/20_Antichrist/234b_1986-1221_The_cross_and_the_Antichrist.mp3",
+    "b": 5581498
+   }
+  ],
+  "235": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/02_Spiritual_Vision/235a_1986-1231_The_new_creation.mp3",
+    "b": 10221054
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/02_Spiritual_Vision/235b_1986-1231_The_new_creation.mp3",
+    "b": 8935621
+   }
+  ],
+  "236": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/20_Antichrist/236a_1987-0125_How_to_discern_the_false_Christ.mp3",
+    "b": 2260186
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/20_Antichrist/236b_1987-0125_How_to_discern_the_false_Christ.mp3",
+    "b": 7465032
+   }
+  ],
+  "237": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/20_Antichrist/237a_1987-0222_Antichrist_and_the_spirit_of_deception.mp3",
+    "b": 9280855
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/20_Antichrist/237b_1987-0222_Antichrist_and_the_spirit_of_deception.mp3",
+    "b": 3609567
+   }
+  ],
+  "238": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/20_Antichrist/238a_1987-0329_The_arch-deceiver_and_how_not_to_be_deceived.mp3",
+    "b": 10681645
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/20_Antichrist/238b_1987-0329_The_arch-deceiver_and_how_not_to_be_deceived.mp3",
+    "b": 1373381
+   }
+  ],
+  "239": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/20_Antichrist/239a_1987-0426_Truth_versus_the_Antichrist.mp3",
+    "b": 3161619
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/20_Antichrist/239b_1987-0426_Truth_versus_the_Antichrist.mp3",
+    "b": 5883265
+   }
+  ],
+  "241": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/20_Antichrist/241a_1987-0628_Antichrist_Judgment_upon_the_church.mp3",
+    "b": 9334040
+   }
+  ],
+  "242": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/20_Antichrist/242a_1987-0726_Sin_Satan_and_the_Antichrist.mp3",
+    "b": 10215725
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/20_Antichrist/242b_1987-0726_Sin_Satan_and_the_Antichrist.mp3",
+    "b": 4490207
+   }
+  ],
+  "243": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/20_Antichrist/243a_1987-0830_Antichrist_against_Christian_soldiers.mp3",
+    "b": 7842449
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/20_Antichrist/243b_1987-0830_Antichrist_against_Christian_soldiers.mp3",
+    "b": 5866756
+   }
+  ],
+  "244": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/20_Antichrist/244a_1987-0927_Antichrist_A_perversion_of_Paul.mp3",
+    "b": 11046733
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/20_Antichrist/244b_1987-0927_Antichrist_A_perversion_of_Paul.mp3",
+    "b": 4654883
+   }
+  ],
+  "245": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/20_Antichrist/245a_1987-1024_Prepare_to_face_the_Antichrist.mp3",
+    "b": 8223627
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/20_Antichrist/245b_1987-1024_Prepare_to_face_the_Antichrist.mp3",
+    "b": 6739141
+   }
+  ],
+  "246": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/20_Antichrist/246a_1987-1129_Antichrist_means_pseudo-Christ.mp3",
+    "b": 4354475
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/20_Antichrist/246b_1987-1129_Antichrist_means_pseudo-Christ.mp3",
+    "b": 9379180
+   }
+  ],
+  "247": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/20_Antichrist/247a_1988-0131_Kingship_God's_or_Satan's.mp3",
+    "b": 8582863
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/20_Antichrist/247b_1988-0131_Kingship_God's_or_Satan's.mp3",
+    "b": 6513547
+   }
+  ],
+  "314": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/05_Spiritual_Direction/314a_1981-1227_The_spiritual_direction_of_life_(1).mp3",
+    "b": 8059683
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/05_Spiritual_Direction/314b_1981-1227_The_spiritual_direction_of_life_(1).mp3",
+    "b": 6295059
+   }
+  ],
+  "317": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/02_Spiritual_Vision/317a_1982-0328_Spiritual_greatness.mp3",
+    "b": 9817097
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/02_Spiritual_Vision/317b_1982-0328_Spiritual_greatness.mp3",
+    "b": 7225854
+   }
+  ],
+  "318": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/05_Spiritual_Direction/318a_1982-0404_Deny_yourself_and_take_up_the_cross.mp3",
+    "b": 10569423
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/05_Spiritual_Direction/318b_1982-0404_Deny_yourself_and_take_up_the_cross.mp3",
+    "b": 1067957
+   }
+  ],
+  "320": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/05_Spiritual_Direction/320a_1982-0411_The_cross_to_bring_life_to_others.mp3",
+    "b": 6620649
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/05_Spiritual_Direction/320b_1982-0411_The_cross_to_bring_life_to_others.mp3",
+    "b": 6184196
+   }
+  ],
+  "323": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/10_The_Lord's_Vision_for_the_Church/323a_1982-0523_Mk.8.31-38_Self_the_hindrance_to_Christ's_fullness_in_our_lives.mp3",
+    "b": 6647503
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/10_The_Lord's_Vision_for_the_Church/323b_1982-0523_Mk.8.31-38_Self_the_hindrance_to_Christ's_fullness_in_our_lives.mp3",
+    "b": 8140036
+   }
+  ],
+  "324": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/10_The_Lord's_Vision_for_the_Church/324a_1982-0530_Lk.14.25-30_Hate_to_offer_up_what_you_love.mp3",
+    "b": 7995317
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/10_The_Lord's_Vision_for_the_Church/324b_1982-0530_Lk.14.25-30_Hate_to_offer_up_what_you_love.mp3",
+    "b": 7175490
+   }
+  ],
+  "325": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/10_The_Lord's_Vision_for_the_Church/325a_1982-0606_Lk.9.23-25_The_meaning_of_the_cross_in_the_life_of_the_disciples.mp3",
+    "b": 8162083
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/10_The_Lord's_Vision_for_the_Church/325b_1982-0606_Lk.9.23-25_The_meaning_of_the_cross_in_the_life_of_the_disciples.mp3",
+    "b": 4872849
+   }
+  ],
+  "326": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/10_The_Lord's_Vision_for_the_Church/326a_1982-0613_Jn.12.23-26_32-34_Our_attitude_in_relation_to_cross-bearing.mp3",
+    "b": 6717303
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/10_The_Lord's_Vision_for_the_Church/326b_1982-0613_Jn.12.23-26_32-34_Our_attitude_in_relation_to_cross-bearing.mp3",
+    "b": 8530514
+   }
+  ],
+  "327": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/10_The_Lord's_Vision_for_the_Church/327a_1982-0711_Mt.6.28-30_Clothed_with_glory_greater_than_Solomon.mp3",
+    "b": 8729358
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/10_The_Lord's_Vision_for_the_Church/327b_1982-0711_Mt.6.28-30_Clothed_with_glory_greater_than_Solomon.mp3",
+    "b": 6720751
+   }
+  ],
+  "328": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/10_The_Lord's_Vision_for_the_Church/328a_1982-0718_Mt.23.34_Would_that_all_the_LORD's_people_were_prophets.mp3",
+    "b": 7379036
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/10_The_Lord's_Vision_for_the_Church/328b_1982-0718_Mt.23.34_Would_that_all_the_LORD's_people_were_prophets.mp3",
+    "b": 10046661
+   }
+  ],
+  "329": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/10_The_Lord's_Vision_for_the_Church/329a_1982-0725_Jn.15_Obtaining_prophecy.mp3",
+    "b": 8119242
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/10_The_Lord's_Vision_for_the_Church/329b_1982-0725_Jn.15_Obtaining_prophecy.mp3",
+    "b": 5177227
+   }
+  ],
+  "331": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/10_The_Lord's_Vision_for_the_Church/331a_1982-0815_Eph.3.14-19_Be_filled_with_the_fullness_of_God_(2).mp3",
+    "b": 6868604
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/10_The_Lord's_Vision_for_the_Church/331b_1982-0815_Eph.3.14-19_Be_filled_with_the_fullness_of_God_(2).mp3",
+    "b": 6733498
+   }
+  ],
+  "335": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/335a_1982-0829_We_Who_Died_to_Sin.mp3",
+    "b": 6987827
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/335b_1982-0829_We_Who_Died_to_Sin.mp3",
+    "b": 7981420
+   }
+  ],
+  "336": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/336a_1982-1017_Death_Bid_Goodbye_to_Self_and_the_World.mp3",
+    "b": 7567223
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/336b_1982-1017_Death_Bid_Goodbye_to_Self_and_the_World.mp3",
+    "b": 8185698
+   }
+  ],
+  "337": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/337a_1982-1024_Regeneration_and_renewal.mp3",
+    "b": 7448209
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/337b_1982-1024_Regeneration_and_renewal.mp3",
+    "b": 9248881
+   }
+  ],
+  "338": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/338a_1982-1114_Regeneration_and_victory.mp3",
+    "b": 8143902
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/338b_1982-1114_Regeneration_and_victory.mp3",
+    "b": 6453675
+   }
+  ],
+  "339": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/339a_1982-0102_Seven_Marks_of_a_Regenerated_Christian.mp3",
+    "b": 7134008
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/339b_1982-0102_Seven_Marks_of_a_Regenerated_Christian.mp3",
+    "b": 7825939
+   }
+  ],
+  "341": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/341a_1983-0123_Perfection_as_Maturity_and_Inner_Strength.mp3",
+    "b": 6965466
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/341b_1983-0123_Perfection_as_Maturity_and_Inner_Strength.mp3",
+    "b": 8864568
+   }
+  ],
+  "342": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/342a_1983-0206_Are_We_Sinless_After_Regeneration.mp3",
+    "b": 7218958
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/342b_1983-0206_Are_We_Sinless_After_Regeneration.mp3",
+    "b": 6720124
+   }
+  ],
+  "343": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/343a_1983-0220_Abiding_in_Christ.mp3",
+    "b": 7092107
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/343b_1983-0220_Abiding_in_Christ.mp3",
+    "b": 7608705
+   }
+  ],
+  "344": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/344a_1983-0105_Being_Like_Christ_Standing_in_the_Gap.mp3",
+    "b": 7414667
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/344b_1983-0105_Being_Like_Christ_Standing_in_the_Gap.mp3",
+    "b": 6083363
+   }
+  ],
+  "345": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/345a_1983-0508_Goal_of_renewal_fulfilling_Christ's_mission.mp3",
+    "b": 7596062
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/345b_1983-0508_Goal_of_renewal_fulfilling_Christ's_mission.mp3",
+    "b": 7596062
+   }
+  ],
+  "347": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/347a_1983-0821_Jn.17.20-23_Perfection_in_the_oneness_of_God's_people.mp3",
+    "b": 6919072
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/347b_1983-0821_Jn.17.20-23_Perfection_in_the_oneness_of_God's_people.mp3",
+    "b": 8326341
+   }
+  ],
+  "348": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/348a_1983-0925_In_His_image_(1).mp3",
+    "b": 7218436
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/348b_1983-0925_In_His_image_(1).mp3",
+    "b": 8109838
+   }
+  ],
+  "350": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/350a_1983-1113_In_His_image_(3).mp3",
+    "b": 7075076
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/350b_1983-1113_In_His_image_(3).mp3",
+    "b": 7735347
+   }
+  ],
+  "351": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/351a_1983-1204_Being_perfected_through_Christ's_sacrifice.mp3",
+    "b": 6833495
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/351b_1983-1204_Being_perfected_through_Christ's_sacrifice.mp3",
+    "b": 5961632
+   }
+  ],
+  "352": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/352a_1984-0101_Faith_Seeing_the_unseen.mp3",
+    "b": 7632215
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/352b_1984-0101_Faith_Seeing_the_unseen.mp3",
+    "b": 7105378
+   }
+  ],
+  "353": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/353a_1984-0304_The_meaning_of_perfection_in_Hebrews.mp3",
+    "b": 7301296
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/353b_1984-0304_The_meaning_of_perfection_in_Hebrews.mp3",
+    "b": 9509479
+   }
+  ],
+  "354": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/354a_1984-0401_Three_types_of_perfection.mp3",
+    "b": 6590034
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/354b_1984-0401_Three_types_of_perfection.mp3",
+    "b": 7592927
+   }
+  ],
+  "355": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/355a_1984-0420_Relationship_of_salvation_to_the_imitation_of_Christ.mp3",
+    "b": 7885603
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/355b_1984-0420_Relationship_of_salvation_to_the_imitation_of_Christ.mp3",
+    "b": 7496274
+   }
+  ],
+  "356": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/356a_1984-0506_The_attitude_of_perfection.mp3",
+    "b": 6971944
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/356b_1984-0506_The_attitude_of_perfection.mp3",
+    "b": 5657254
+   }
+  ],
+  "357": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/357a_1984-0603_Reasons_for_sins_in_the_renewal_process.mp3",
+    "b": 7620199
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/357b_1984-0603_Reasons_for_sins_in_the_renewal_process.mp3",
+    "b": 9693067
+   }
+  ],
+  "359": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/359a_1984-0729_Perfection_in_relation_to_assurance.mp3",
+    "b": 7467957
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/359b_1984-0729_Perfection_in_relation_to_assurance.mp3",
+    "b": 8445355
+   }
+  ],
+  "360": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/360a_1984-0805_The_importance_of_perfection.mp3",
+    "b": 6820747
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/360b_1984-0805_The_importance_of_perfection.mp3",
+    "b": 4133688
+   }
+  ],
+  "363": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/363a_1984-0710_Perfection_through_faith.mp3",
+    "b": 7499409
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/363b_1984-0710_Perfection_through_faith.mp3",
+    "b": 7318119
+   }
+  ],
+  "364": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/364a_1984-1125_In_His_image_(4).mp3",
+    "b": 7746945
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/364b_1984-1125_In_His_image_(4).mp3",
+    "b": 6685956
+   }
+  ],
+  "365": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/365a_1984-1225_I_have_come_to_do_your_will.mp3",
+    "b": 8116212
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/365b_1984-1225_I_have_come_to_do_your_will.mp3",
+    "b": 5154031
+   }
+  ],
+  "366": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/366a_1985-0601_Communion_with_God.mp3",
+    "b": 10081665
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/366b_1985-0601_Communion_with_God.mp3",
+    "b": 9293394
+   }
+  ],
+  "367": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/367a_1985-0302_Perfection_Functioning_spiritually.mp3",
+    "b": 8110256
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/367b_1985-0302_Perfection_Functioning_spiritually.mp3",
+    "b": 7116558
+   }
+  ],
+  "368": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/368a_1985-0303_The_path_to_eternal_life.mp3",
+    "b": 8477538
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/368b_1985-0303_The_path_to_eternal_life.mp3",
+    "b": 5875742
+   }
+  ],
+  "369": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/369a_1985-0704_The_meaning_of_faith.mp3",
+    "b": 7819252
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/369b_1985-0704_The_meaning_of_faith.mp3",
+    "b": 6055255
+   }
+  ],
+  "370": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/370a_1985-0428_The_lifestyle_of_one_who_pursues_perfection.mp3",
+    "b": 7707030
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/370b_1985-0428_The_lifestyle_of_one_who_pursues_perfection.mp3",
+    "b": 9658795
+   }
+  ],
+  "371": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/371a_1985-0206_Perfection_Absolute_demand_requires_absolute_response.mp3",
+    "b": 7721032
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/371b_1985-0206_Perfection_Absolute_demand_requires_absolute_response.mp3",
+    "b": 6173538
+   }
+  ],
+  "372": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/372a_1985-1013_Regeneration_Governed_by_the_Spirit.mp3",
+    "b": 8359151
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/372b_1985-1013_Regeneration_Governed_by_the_Spirit.mp3",
+    "b": 7527516
+   }
+  ],
+  "373": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/373a_1985-1120_Friendship_with_God_Doing_His_will.mp3",
+    "b": 6150654
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/373b_1985-1120_Friendship_with_God_Doing_His_will.mp3",
+    "b": 7326583
+   }
+  ],
+  "374": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/374a_1985-1103_Spiritual_vision_through_regeneration.mp3",
+    "b": 7032444
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/374b_1985-1103_Spiritual_vision_through_regeneration.mp3",
+    "b": 8842103
+   }
+  ],
+  "376": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/17_Understanding_the_Truth_of_God's_Word/376a_1991-0127_Watch_How_to_discern_the_truth.mp3",
+    "b": 5426018
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/17_Understanding_the_Truth_of_God's_Word/376b_1991-0127_Watch_How_to_discern_the_truth.mp3",
+    "b": 10393358
+   },
+   {
+    "p": "c",
+    "u": "/sites/default/files/ehhc_mp3_sermons/17_Understanding_the_Truth_of_God's_Word/376c_1991-0127_Watch_How_to_discern_the_truth.mp3",
+    "b": 3735686
+   }
+  ],
+  "385": [
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/05_Spiritual_Direction/385b_1992-0417_Longing_for_a_better_country_(Workshop_2).mp3",
+    "b": 6589512
+   }
+  ],
+  "386": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/05_Spiritual_Direction/386a_1992-0419_Longing_for_a_better_country_(Message_3).mp3",
+    "b": 3426292
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/05_Spiritual_Direction/386b_1992-0419_Longing_for_a_better_country_(Message_3).mp3",
+    "b": 10824901
+   },
+   {
+    "p": "c",
+    "u": "/sites/default/files/ehhc_mp3_sermons/05_Spiritual_Direction/386c_1992-0419_Longing_for_a_better_country_(Message_3).mp3",
+    "b": 5049854
+   }
+  ],
+  "393": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/14_Hasten_the_Lord's_Coming/393a_1992-1108_2Pet.3.8-13_How_to_hasten_the_Lord's_return.mp3",
+    "b": 8391752
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/14_Hasten_the_Lord's_Coming/393b_1992-1108_2Pet.3.8-13_How_to_hasten_the_Lord's_return.mp3",
+    "b": 7849972
+   }
+  ],
+  "394": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/05_Spiritual_Direction/394a_1992-0809_Love.mp3",
+    "b": 3380421
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/05_Spiritual_Direction/394b_1992-0809_Love.mp3",
+    "b": 8975745
+   }
+  ],
+  "396": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/02_Spiritual_Vision/396a_1993-0110_Salvation_and_weakness.mp3",
+    "b": 10531285
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/02_Spiritual_Vision/396b_1993-0110_Salvation_and_weakness.mp3",
+    "b": 8291232
+   }
+  ],
+  "397-1": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/14_Hasten_the_Lord's_Coming/397-1a_1993-0409_Hasten_the_Lord's_coming_(1).mp3",
+    "b": 9306560
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/14_Hasten_the_Lord's_Coming/397-1b_1993-0409_Hasten_the_Lord's_coming_(1).mp3",
+    "b": 11036388
+   },
+   {
+    "p": "c",
+    "u": "/sites/default/files/ehhc_mp3_sermons/14_Hasten_the_Lord's_Coming/397-1c_1993-0409_Hasten_the_Lord's_coming_(1).mp3",
+    "b": 4462308
+   }
+  ],
+  "397-2": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/14_Hasten_the_Lord's_Coming/397-2a_1993-0409_Hasten_the_Lord's_coming_(2).mp3",
+    "b": 8962266
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/14_Hasten_the_Lord's_Coming/397-2b_1993-0409_Hasten_the_Lord's_coming_(2).mp3",
+    "b": 10727830
+   },
+   {
+    "p": "c",
+    "u": "/sites/default/files/ehhc_mp3_sermons/14_Hasten_the_Lord's_Coming/397-2c_1993-0409_Hasten_the_Lord's_coming_(2).mp3",
+    "b": 2255588
+   }
+  ],
+  "398": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/02_Spiritual_Vision/398a_1993-0314_2Cor.12.7b-10_Power_in_weakness.mp3",
+    "b": 9292663
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/02_Spiritual_Vision/398b_1993-0314_2Cor.12.7b-10_Power_in_weakness.mp3",
+    "b": 10675167
+   },
+   {
+    "p": "c",
+    "u": "/sites/default/files/ehhc_mp3_sermons/02_Spiritual_Vision/398c_1993-0314_2Cor.12.7b-10_Power_in_weakness.mp3",
+    "b": 2989420
+   }
+  ],
+  "401": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/02_Spiritual_Vision/401a_1993-0606_Spiritual_motivation.mp3",
+    "b": 8671680
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/02_Spiritual_Vision/401b_1993-0606_Spiritual_motivation.mp3",
+    "b": 10918106
+   }
+  ],
+  "407": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/16_Life_Quality/407a_yyyy-mmdd_Life_quality_(1)_An_abundant_life.mp3",
+    "b": 9461100
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/16_Life_Quality/407b_yyyy-mmdd_Life_quality_(1)_An_abundant_life.mp3",
+    "b": 3349387
+   }
+  ],
+  "408": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/16_Life_Quality/408a_yyyy-mmdd_Life_quality_(2)_Importance_of_purity_in_heart.mp3",
+    "b": 6814374
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/16_Life_Quality/408b_yyyy-mmdd_Life_quality_(2)_Importance_of_purity_in_heart.mp3",
+    "b": 7773172
+   }
+  ],
+  "409": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/05_Spiritual_Direction/409a_1996-0505_Removing_the_barriers.mp3",
+    "b": 6515219
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/05_Spiritual_Direction/409b_1996-0505_Removing_the_barriers.mp3",
+    "b": 3376659
+   }
+  ],
+  "410-1": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/01_Spiritual_Experience_Knowing_God/410-1a_1996-0310_Experiencing_God_(1).mp3",
+    "b": 4698769
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/01_Spiritual_Experience_Knowing_God/410-1b_1996-0310_Experiencing_God_(1).mp3",
+    "b": 8396767
+   }
+  ],
+  "410-2": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/01_Spiritual_Experience_Knowing_God/410-2a_1996-0317_Experiencing_God_(2).mp3",
+    "b": 5798628
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/01_Spiritual_Experience_Knowing_God/410-2b_1996-0317_Experiencing_God_(2).mp3",
+    "b": 9999118
+   }
+  ],
+  "411": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/05_Spiritual_Direction/411a_1996-0908_Phil.3.13-14_Fundamental_question_of_the_Christian_life.mp3",
+    "b": 10774746
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/05_Spiritual_Direction/411b_1996-0908_Phil.3.13-14_Fundamental_question_of_the_Christian_life.mp3",
+    "b": 5443781
+   }
+  ],
+  "412": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/01_Spiritual_Experience_Knowing_God/412a_1996-1222_Friendship_with_God.mp3",
+    "b": 10009149
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/01_Spiritual_Experience_Knowing_God/412b_1996-1222_Friendship_with_God.mp3",
+    "b": 10244669
+   }
+  ],
+  "416": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/02_Spiritual_Vision/416a_1997-0907_King_of_the_universe.mp3",
+    "b": 10357727
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/02_Spiritual_Vision/416b_1997-0907_King_of_the_universe.mp3",
+    "b": 5418181
+   }
+  ],
+  "420": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/02_Spiritual_Vision/420a_1999-1128_Lk.2.34-35_A_sign_for_the_Lord_Jesus_Being_spoken_against.mp3",
+    "b": 10470158
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/02_Spiritual_Vision/420b_1999-1128_Lk.2.34-35_A_sign_for_the_Lord_Jesus_Being_spoken_against.mp3",
+    "b": 6972780
+   }
+  ],
+  "421": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/13_Eschatology/421a_1999-1218_The_Lord's_coming_and_events_preceding_it.mp3",
+    "b": 9749805
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/13_Eschatology/421b_1999-1218_The_Lord's_coming_and_events_preceding_it.mp3",
+    "b": 10808809
+   },
+   {
+    "p": "c",
+    "u": "/sites/default/files/ehhc_mp3_sermons/13_Eschatology/421c_1999-1218_The_Lord's_coming_and_events_preceding_it.mp3",
+    "b": 6116068
+   }
+  ],
+  "422": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/13_Eschatology/422a_1999-1219_Steps_in_preparation_for_his_coming.mp3",
+    "b": 10402449
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/13_Eschatology/422b_1999-1219_Steps_in_preparation_for_his_coming.mp3",
+    "b": 10828140
+   },
+   {
+    "p": "c",
+    "u": "/sites/default/files/ehhc_mp3_sermons/13_Eschatology/422c_1999-1219_Steps_in_preparation_for_his_coming.mp3",
+    "b": 9069263
+   }
+  ],
+  "423": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/05_Spiritual_Direction/423a_1999-1226_New_life.mp3",
+    "b": 4826664
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/05_Spiritual_Direction/423b_1999-1226_New_life.mp3",
+    "b": 10954155
+   },
+   {
+    "p": "c",
+    "u": "/sites/default/files/ehhc_mp3_sermons/05_Spiritual_Direction/423c_1999-1226_New_life.mp3",
+    "b": 7747154
+   }
+  ],
+  "424": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/05_Spiritual_Direction/424a_1977-0218_The_meaning_of_faith_(1).mp3",
+    "b": 9797244
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/05_Spiritual_Direction/424b_1977-0218_The_meaning_of_faith_(1).mp3",
+    "b": 7236930
+   }
+  ],
+  "425": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/05_Spiritual_Direction/425a_1977-0219_The_meaning_of_faith_(2).mp3",
+    "b": 8575549
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/05_Spiritual_Direction/425b_1977-0219_The_meaning_of_faith_(2).mp3",
+    "b": 5701766
+   }
+  ],
+  "721": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/01_Spiritual_Experience_Knowing_God/721a_1991-0630_Songs_1.2_Let_him_kiss_me.mp3",
+    "b": 11038792
+   }
+  ],
+  "751": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/05_Spiritual_Direction/751a_1975-mmdd_Philippians_1_Christian_soldier.mp3",
+    "b": 10504744
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/05_Spiritual_Direction/751b_1975-mmdd_Philippians_1_Christian_soldier.mp3",
+    "b": 3669753
+   }
+  ],
+  "752": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/05_Spiritual_Direction/752a_1975-mmdd_Philippians_2_Christian_priesthood.mp3",
+    "b": 10027226
+   }
+  ],
+  "753": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/05_Spiritual_Direction/753a_1975-mmdd_Philippians_3_Christian_athlete.mp3",
+    "b": 9527974
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/05_Spiritual_Direction/753b_1975-mmdd_Philippians_3_Christian_athlete.mp3",
+    "b": 9016287
+   }
+  ],
+  "761": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/15_Survey_of_2_Timothy/761a_yyyy-mmdd_2_Timothy_Power.mp3",
+    "b": 8409201
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/15_Survey_of_2_Timothy/761b_yyyy-mmdd_2_Timothy_Power.mp3",
+    "b": 7978912
+   }
+  ],
+  "763": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/15_Survey_of_2_Timothy/763a_yyyy-mmdd_2_Timothy_Spiritual_ambition.mp3",
+    "b": 10437557
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/15_Survey_of_2_Timothy/763b_yyyy-mmdd_2_Timothy_Spiritual_ambition.mp3",
+    "b": 7406099
+   }
+  ],
+  "764": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/15_Survey_of_2_Timothy/764a_yyyy-mmdd_2_Timothy_Divine_guidance.mp3",
+    "b": 10108519
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/15_Survey_of_2_Timothy/764b_yyyy-mmdd_2_Timothy_Divine_guidance.mp3",
+    "b": 7254589
+   }
+  ],
+  "765": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/15_Survey_of_2_Timothy/765a_yyyy-mmdd_2_Timothy_Salvific_value_of_suffering.mp3",
+    "b": 6733080
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/15_Survey_of_2_Timothy/765b_yyyy-mmdd_2_Timothy_Salvific_value_of_suffering.mp3",
+    "b": 8720790
+   }
+  ],
+  "767": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/15_Survey_of_2_Timothy/767a_yyyy-mmdd_2_Timothy_Summary.mp3",
+    "b": 7233169
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/15_Survey_of_2_Timothy/767b_yyyy-mmdd_2_Timothy_Summary.mp3",
+    "b": 3720953
+   }
+  ],
+  "771": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/01_Spiritual_Experience_Knowing_God/771a_yyyy-mmdd_The_divine_fire.mp3",
+    "b": 6916774
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/01_Spiritual_Experience_Knowing_God/771b_yyyy-mmdd_The_divine_fire.mp3",
+    "b": 6356693
+   }
+  ],
+  "772": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/11_Baptism/772a_yyyy-mmdd_Lk.12.49-50_The_baptism_of_fire.mp3",
+    "b": 7383320
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/11_Baptism/772b_yyyy-mmdd_Lk.12.49-50_The_baptism_of_fire.mp3",
+    "b": 9097476
+   }
+  ],
+  "773": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/01_Spiritual_Experience_Knowing_God/773a_yyyy-mmdd_The_fire_of_sacrifice.mp3",
+    "b": 5831856
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/01_Spiritual_Experience_Knowing_God/773b_yyyy-mmdd_The_fire_of_sacrifice.mp3",
+    "b": 5896326
+   }
+  ],
+  "834": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/13_Eschatology/834a_1987-0419_The_Lord_is_coming_soon.mp3",
+    "b": 7390530
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/13_Eschatology/834b_1987-0419_The_Lord_is_coming_soon.mp3",
+    "b": 8158844
+   }
+  ],
+  "837": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/01_Spiritual_Experience_Knowing_God/837a_1987-1226_Friendship_with_God.mp3",
+    "b": 9965995
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/01_Spiritual_Experience_Knowing_God/837b_1987-1226_Friendship_with_God.mp3",
+    "b": 7422191
+   }
+  ],
+  "844": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/16_Life_Quality/844a_1988-1225_Flame_of_love.mp3",
+    "b": 7907128
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/16_Life_Quality/844b_1988-1225_Flame_of_love.mp3",
+    "b": 6431105
+   }
+  ],
+  "846": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/05_Spiritual_Direction/846a_1989-0115_What_shall_I_do_to_obtain_eternal_life_(1).mp3",
+    "b": 2047967
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/05_Spiritual_Direction/846b_1989-0115_What_shall_I_do_to_obtain_eternal_life_(1).mp3",
+    "b": 8937920
+   }
+  ],
+  "847": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/05_Spiritual_Direction/847a_1989-0116_What_shall_I_do_to_obtain_eternal_life_(2).mp3",
+    "b": 8307742
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/05_Spiritual_Direction/847b_1989-0116_What_shall_I_do_to_obtain_eternal_life_(2).mp3",
+    "b": 10215203
+   }
+  ],
+  "848": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/19_Spiritual_Mission/848a_1989-0326_Prepare_ye_the_way.mp3",
+    "b": 5800196
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/19_Spiritual_Mission/848b_1989-0326_Prepare_ye_the_way.mp3",
+    "b": 11067213
+   },
+   {
+    "p": "c",
+    "u": "/sites/default/files/ehhc_mp3_sermons/19_Spiritual_Mission/848c_1989-0326_Prepare_ye_the_way.mp3",
+    "b": 5070648
+   }
+  ],
+  "901": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/901a_yyyy-mmdd_Regeneration_and_Renewal_True_and_False_Predestination.mp3",
+    "b": 28781423
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/04_Regeneration_and_Renewal/901b_yyyy-mmdd_Regeneration_and_Renewal_True_and_False_Predestination.mp3",
+    "b": 29623611
+   }
+  ],
+  "902": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/10_The_Lord's_Vision_for_the_Church/902a_yyyy-mmdd_The_Nature_of_the_Church_in_NT_(An_Elephant_Analogy).mp3",
+    "b": 31334318
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/10_The_Lord's_Vision_for_the_Church/902b_yyyy-mmdd_The_Nature_of_the_Church_in_NT_(An_Elephant_Analogy).mp3",
+    "b": 4762562
+   }
+  ],
+  "C115": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/02_Spiritual_Vision/C115a_1990-1225_Behold_the_mountain_of_God.mp3",
+    "b": 4304842
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/02_Spiritual_Vision/C115b_1990-1225_Behold_the_mountain_of_God.mp3",
+    "b": 10340591
+   },
+   {
+    "p": "c",
+    "u": "/sites/default/files/ehhc_mp3_sermons/02_Spiritual_Vision/C115c_1990-1225_Behold_the_mountain_of_God.mp3",
+    "b": 3019931
+   }
+  ],
+  "C174": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/02_Spiritual_Vision/C174a_1996-0331_Man's_aspiration_to_immortality.mp3",
+    "b": 8248392
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/02_Spiritual_Vision/C174b_1996-0331_Man's_aspiration_to_immortality.mp3",
+    "b": 3022439
+   }
+  ],
+  "C175": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/19_Spiritual_Mission/C175a_1996-0407_Freedom_Program_of_liberation.mp3",
+    "b": 10911000
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/19_Spiritual_Mission/C175b_1996-0407_Freedom_Program_of_liberation.mp3",
+    "b": 7904725
+   }
+  ],
+  "C178": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/05_Spiritual_Direction/C178a_1998-0405_A_new_man.mp3",
+    "b": 5410344
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/05_Spiritual_Direction/C178b_1998-0405_A_new_man.mp3",
+    "b": 10390850
+   }
+  ],
+  "CP18": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/02_Spiritual_Vision/CP18a_yyyy-mmdd_On_Being_a_Wise_Man.mp3",
+    "b": 27664636
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/02_Spiritual_Vision/CP18b_yyyy-mmdd_On_Being_a_Wise_Man.mp3",
+    "b": 43756065
+   }
+  ],
+  "CP37": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/01_Spiritual_Experience_Knowing_God/CP37a_yyyy-mmdd_To_Live_is_Christ.mp3",
+    "b": 35512238
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/01_Spiritual_Experience_Knowing_God/CP37b_yyyy-mmdd_To_Live_is_Christ.mp3",
+    "b": 34250419
+   }
+  ],
+  "CP60": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/17_Understanding_the_Truth_of_God's_Word/CP60a_yyyy-mmdd_Truth.mp3",
+    "b": 28568682
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/17_Understanding_the_Truth_of_God's_Word/CP60b_yyyy-mmdd_Truth.mp3",
+    "b": 31504845
+   }
+  ],
+  "CP70": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/05_Spiritual_Direction/CP70a_yyyy-mmdd_Awake_Arise_and_be_Ablaze.mp3",
+    "b": 40801930
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/05_Spiritual_Direction/CP70b_yyyy-mmdd_Awake_Arise_and_be_Ablaze.mp3",
+    "b": 40235595
+   }
+  ],
+  "EC003": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/03_Pastor_Eric's_Testimony/EC003a_2000-1225_Testimony_of_Pastor_Eric_Chang.mp3",
+    "b": 7281025
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/03_Pastor_Eric's_Testimony/EC003b_2000-1225_Testimony_of_Pastor_Eric_Chang.mp3",
+    "b": 10512581
+   },
+   {
+    "p": "c",
+    "u": "/sites/default/files/ehhc_mp3_sermons/03_Pastor_Eric's_Testimony/EC003c_2000-1225_Testimony_of_Pastor_Eric_Chang.mp3",
+    "b": 4638478
+   }
+  ],
+  "EC004": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/05_Spiritual_Direction/EC004a_2001-0107_Freedom_in_Christ.mp3",
+    "b": 8436787
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/05_Spiritual_Direction/EC004b_2001-0107_Freedom_in_Christ.mp3",
+    "b": 6817717
+   }
+  ],
+  "EC006": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/05_Spiritual_Direction/EC006a_yyyy-mmdd_Paul_scum_of_the_earth.mp3",
+    "b": 6988872
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/05_Spiritual_Direction/EC006b_yyyy-mmdd_Paul_scum_of_the_earth.mp3",
+    "b": 2988062
+   }
+  ],
+  "EC009": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/05_Spiritual_Direction/EC009a_2001-1007_Hindrances_to_repentance.mp3",
+    "b": 10583843
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/05_Spiritual_Direction/EC009b_2001-1007_Hindrances_to_repentance.mp3",
+    "b": 5232398
+   }
+  ],
+  "EC010": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/13_Eschatology/EC010a_2002-0127_How_to_understand_the_prophecies_concerning_the_end_times.mp3",
+    "b": 10891670
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/13_Eschatology/EC010b_2002-0127_How_to_understand_the_prophecies_concerning_the_end_times.mp3",
+    "b": 6630158
+   }
+  ],
+  "EC011": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/01_Spiritual_Experience_Knowing_God/EC011a_2003-0316_Walking_with_God_in_ten_steps.mp3",
+    "b": 10002357
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/01_Spiritual_Experience_Knowing_God/EC011b_2003-0316_Walking_with_God_in_ten_steps.mp3",
+    "b": 4864698
+   }
+  ],
+  "EC012": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/01_Spiritual_Experience_Knowing_God/EC012a_2003-0309_Walking_with_God_in_these_last_days_as_Noah_did.mp3",
+    "b": 4016137
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/01_Spiritual_Experience_Knowing_God/EC012b_2003-0309_Walking_with_God_in_these_last_days_as_Noah_did.mp3",
+    "b": 10296809
+   }
+  ],
+  "EC013": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/19_Spiritual_Mission/EC013a_2003-0420_God's_will_in_this_chaotic_generation.mp3",
+    "b": 10398896
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/19_Spiritual_Mission/EC013b_2003-0420_God's_will_in_this_chaotic_generation.mp3",
+    "b": 10844023
+   },
+   {
+    "p": "c",
+    "u": "/sites/default/files/ehhc_mp3_sermons/19_Spiritual_Mission/EC013c_2003-0420_God's_will_in_this_chaotic_generation.mp3",
+    "b": 3449280
+   }
+  ],
+  "EC014": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/19_Spiritual_Mission/EC014a_2003-0203_Heart_for_China.mp3",
+    "b": 10303183
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/19_Spiritual_Mission/EC014b_2003-0203_Heart_for_China.mp3",
+    "b": 6634024
+   }
+  ],
+  "EC015": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/03_Pastor_Eric's_Testimony/EC015a_2002-1207_Testimony_of_Pastor_Eric_Chang.mp3",
+    "b": 9538945
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/03_Pastor_Eric's_Testimony/EC015b_2002-1207_Testimony_of_Pastor_Eric_Chang.mp3",
+    "b": 11065959
+   },
+   {
+    "p": "c",
+    "u": "/sites/default/files/ehhc_mp3_sermons/03_Pastor_Eric's_Testimony/EC015c_2002-1207_Testimony_of_Pastor_Eric_Chang.mp3",
+    "b": 2585567
+   },
+   {
+    "p": "d",
+    "u": "/sites/default/files/ehhc_mp3_sermons/03_Pastor_Eric's_Testimony/EC015d_2002-1207_Testimony_of_Pastor_Eric_Chang.mp3",
+    "b": 4212055
+   }
+  ],
+  "EC016": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/19_Spiritual_Mission/EC016a_2002-1208_Increase_our_faith.mp3",
+    "b": 6361515
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/19_Spiritual_Mission/EC016b_2002-1208_Increase_our_faith.mp3",
+    "b": 10975993
+   },
+   {
+    "p": "c",
+    "u": "/sites/default/files/ehhc_mp3_sermons/19_Spiritual_Mission/EC016c_2002-1208_Increase_our_faith.mp3",
+    "b": 4888836
+   }
+  ],
+  "EC018": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/02_Spiritual_Vision/EC018a_2004-0717_Vision_of_God's_kingdom_(1).mp3",
+    "b": 8782961
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/02_Spiritual_Vision/EC018b_2004-0717_Vision_of_God's_kingdom_(1).mp3",
+    "b": 11045270
+   }
+  ],
+  "EC019": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/02_Spiritual_Vision/EC019a_2004-0718_Vision_of_God's_kingdom_(2).mp3",
+    "b": 9915735
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/02_Spiritual_Vision/EC019b_2004-0718_Vision_of_God's_kingdom_(2).mp3",
+    "b": 8311399
+   }
+  ],
+  "M5": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/10_The_Lord's_Vision_for_the_Church/M5a_yyyy-mmdd_Preach_the_gospel_without_compromise.mp3",
+    "b": 36091530
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/10_The_Lord's_Vision_for_the_Church/M5b_yyyy-mmdd_Preach_the_gospel_without_compromise.mp3",
+    "b": 32698119
+   }
+  ],
+  "c106": [
+   {
+    "p": "a",
+    "u": "/sites/default/files/ehhc_mp3_sermons/02_Spiritual_Vision/c106a_1990-0818_Zeal_for_your_house.mp3",
+    "b": 9424529
+   },
+   {
+    "p": "b",
+    "u": "/sites/default/files/ehhc_mp3_sermons/02_Spiritual_Vision/c106b_1990-0818_Zeal_for_your_house.mp3",
+    "b": 9579592
+   }
+  ]
+ }
+}

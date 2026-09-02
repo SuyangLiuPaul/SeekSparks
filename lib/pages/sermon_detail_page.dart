@@ -22,6 +22,8 @@ import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
 import 'package:seeksparks/widgets/home_icon_button.dart';
 import 'package:seeksparks/widgets/language_switcher_button.dart';
 import 'package:seeksparks/widgets/localized_back_button.dart';
+import 'package:seeksparks/services/sermon_audio_service.dart';
+import 'package:seeksparks/widgets/sermon_audio_player.dart';
 
 /// The warning to print above a body that is a condensed summary rather
 /// than a transcript of the preaching — null when the body on screen is
@@ -265,6 +267,13 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
       _loading = true;
       _error = null;
     });
+    // The audio manifest, awaited here rather than in the widget that
+    // reads it. `partsFor` is synchronous — it is called from `build` —
+    // and a synchronous read that answers empty because the file has
+    // not landed yet reports "no recording" for a sermon that has one.
+    // 107 KB, cached for the life of the app, one bundle read.
+    await SermonAudioService.instance.load();
+    if (!mounted) return;
     final loc = _localeToBodyLang(appLocale);
     try {
       final res = await SermonService.instance.loadBestBody(
@@ -513,6 +522,19 @@ class _SermonDetailPageState extends State<SermonDetailPage> {
               _CondensedNotice(text: notice),
               const SizedBox(height: 16),
             ],
+            // The recording, above the transcript. Above because a
+            // reader who came to LISTEN should not have to scroll a
+            // sermon to find the play button, and because a sermon
+            // with no recording then costs no space at all — the
+            // church publishes transcripts for messages it has no
+            // audio for, so an empty list is a normal state.
+            if (SermonAudioService.instance.partsFor(s.id)
+                case final parts when parts.isNotEmpty)
+              SermonAudioPlayer(
+                key: ValueKey('sermon-audio-${s.id}'),
+                parts: parts,
+                locale: settings.locale,
+              ),
             if (_loading)
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 32),

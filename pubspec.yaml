@@ -55,6 +55,11 @@ dependencies:
   # never actually runs on web (notification_scheduler.dart early-
   # returns on kIsWeb) — it only needed to *compile* cleanly to wasm.
   flutter_timezone: ^5.1.0
+  # 2026-09-02 (#293): sermon audio. The app had no player at all —
+  # `audioplayers` went out at v1.3.19 with the 朗读 feature — and the
+  # 589 recordings have been public on the church's own site since
+  # 2022. We ship the URLs, not the audio.
+  just_audio: ^0.9.40
   # 2026-05-24 (v1.2.97): web favicon swap. AppIconServiceWeb uses
   # the modern package:web DOM bindings (not dart:html) to mutate
   # <link rel="icon"> when the user changes primaryColor. Already
@@ -155,6 +160,7 @@ flutter:
     - assets/forms/l/
     - assets/sermons/index.json
     - assets/sermons/refs.json
+    - assets/sermons/audio.json
     - assets/family_tree.json
     - assets/bible_timeline.json
     - assets/hebrew_kings.json
