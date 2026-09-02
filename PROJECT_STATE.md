@@ -96,6 +96,14 @@ reads 「主[基督]」 and 太9:28 reads 「耶稣说」.
 
 ---
 
+## Asked for and not started
+
+| what | why it is not done yet |
+|---|---|
+| **Remove the small-screen gate** (owner, 2026-09-03) | 「很多人看了屏幕限制就不知道怎么做了」 — a hard block at 992 px tells a reader they are wrong without telling them what to do, and a cramped-but-usable wheel tells them by itself. The gate exists because `workbench_page` lays out two panes above `WorkbenchFit.threePaneMinWidth` and the half-product below it was what the gate was written to keep off screen — so removing the gate is not a one-line delete: it is making the workbench, the wheel and the reader legible at phone widths. Do it as a real responsive pass, not by deleting the guard. |
+| **The chart's remaining 462 names** | 41% of the index's 784 names are on the wheel. Israel 80, Americas 56, Christian Church 42 (a second pass), Arabia 19, Rome 19, Greece 19, China 19, India 15, Egypt 14. **But the annulus is full** — see `wheel_lifespans_test.dart`: 1400 px stopped placing all 25 Genesis names on 2026-09-03. Something has to give before the next batch. |
+| **`main.dart`'s three (O4)** | the boot-page latch that is not one; `_applyHashToState` early-returning for `/wheel` on popstate; the cold `#/wheel` that only starts loading its 131 KB asset at push time. |
+
 ## The queue
 
 Status is one of: **open** · **in progress** · **blocked** (needs the owner) ·
