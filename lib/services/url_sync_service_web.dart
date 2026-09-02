@@ -180,6 +180,9 @@ void onRouteChanged() {
 /// See `UrlSyncService.claimUrl`.
 String? _claimedPath;
 
+/// The claim, read-only. See `UrlSyncService.claimedPath`.
+String? get claimedPath => _claimedPath;
+
 bool _isApplyingFromUrl = false;
 Timer? _writeDebounce;
 String _lastWrittenUrl = '';

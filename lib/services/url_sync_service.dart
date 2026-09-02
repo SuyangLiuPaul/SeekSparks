@@ -80,6 +80,17 @@ class UrlSyncService {
   /// written and what a shared link reopens. Native targets no-op.
   static void claimUrl(String? path) => impl.claimUrl(path);
 
+  /// The path a page currently holds through [claimUrl], or null when
+  /// the reader link owns the URL.
+  ///
+  /// 2026-09-02: read by `browserRouteAction` in `main.dart`. When the
+  /// browser hands the app a page path, "is that page already open?"
+  /// decides between opening it and going back off it, and the claim is
+  /// the app's own record of which page owns the address bar. Native
+  /// targets always answer null, which is correct there: nothing claims,
+  /// and nothing pushes a route from the platform either.
+  static String? get claimedPath => impl.claimedPath;
+
   /// Initialise. Web reads the boot URL, applies it to providers,
   /// then starts listening for further state / popstate events.
   /// Native targets no-op.

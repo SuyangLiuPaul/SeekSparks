@@ -29,3 +29,6 @@ void onRouteChanged() {}
 
 /// Native targets: no URL bar, nothing for a page to claim.
 void claimUrl(String? path) {}
+
+/// Native targets: nothing can have claimed a URL there isn't.
+String? get claimedPath => null;

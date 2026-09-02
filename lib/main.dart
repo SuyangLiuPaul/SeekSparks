@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/utils/app_nav.dart';
-import 'package:seeksparks/utils/page_links.dart' show pageForUrlPath;
+import 'package:seeksparks/utils/page_links.dart'
+    show pageForUrlPath, samePageUrlPath;
 import 'package:seeksparks/utils/app_scroll_behavior.dart';
 import 'package:seeksparks/models/sermon.dart';
 import 'package:seeksparks/pages/workbench_page.dart';
@@ -106,9 +107,22 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
   /// setState on a disposed State.
   Timer? _splashWatchdog;
 
+  /// Browser Back, and every other route the platform pushes at the app.
+  /// A separate observer rather than another override on this State: the
+  /// decision it carries is a documented one with its own tests, and it
+  /// has nothing to do with the app lifecycle. See [BrowserRouteObserver].
+  late final BrowserRouteObserver _browserRoutes;
+
   @override
   void initState() {
     super.initState();
+    // Registered here, from an ANCESTOR of `GetMaterialApp`, so it is
+    // ahead of `WidgetsApp`'s own observer in the binding's list — see
+    // [BrowserRouteObserver] for why that matters and why it is not
+    // pinned by a test.
+    _browserRoutes =
+        BrowserRouteObserver(navigator: () => Get.key.currentState);
+    WidgetsBinding.instance.addObserver(_browserRoutes);
     // 2026-05-24 (v1.3.22): subscribe to lifecycle events so we can
     // receive `didHaveMemoryPressure()` callbacks from iOS / Android.
     // See the override below for the cache-drop behaviour.
@@ -126,6 +140,7 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    WidgetsBinding.instance.removeObserver(_browserRoutes);
     _splashWatchdog?.cancel();
     super.dispose();
   }
@@ -890,6 +905,15 @@ Route<dynamic>? appGenerateRoute(RouteSettings settings) {
 /// first here, exactly as `pushNamed` asks it first — so the two doors
 /// cannot disagree. (`Get.to(...)` pushes anonymous routes and is
 /// unaffected by either handler.)
+///
+/// 2026-09-02: and the BROWSER no longer reaches it at all.
+/// [BrowserRouteObserver] consumes every platform route push that is not
+/// a page, because answering browser Back with "here is the app root"
+/// was itself the bug — see [browserRouteAction]. What is left for this
+/// handler is an in-app `pushNamed` of a name nothing registers, which
+/// is the null-`onUnknownRoute` crash this was written for. It stays
+/// because that crash was real, not because anything is expected to
+/// arrive here.
 @visibleForTesting
 Route<dynamic> appUnknownRoute(RouteSettings settings) {
   final known = appGenerateRoute(settings);
@@ -900,6 +924,156 @@ Route<dynamic> appUnknownRoute(RouteSettings settings) {
       initialVerses: Provider.of<MainProvider>(ctx, listen: false).verses,
     ),
   );
+}
+
+/// What the app does with a route the PLATFORM pushed at it — which on
+/// the web means: what browser Back does.
+///
+/// 2026-09-02: Back used to stack a whole extra copy of the app on top
+/// of the one you were using, every press. Reproduced on an instrumented
+/// profile web build — cold-open a reader link, read a few chapters,
+/// press Back:
+///
+///     [ROUTE] onGenerateRoute name=/genesis/1:1?v=nasb  (null)
+///     [ROUTE] onUnknownRoute  name=/genesis/1:1?v=nasb
+///     [MOUNT] _RootRouter #2
+///
+/// — two Search panes and two menu bars on screen; a second press gave
+/// `#3`. Nothing about it was wheel-specific.
+///
+/// The mechanism is the web engine's SINGLE-ENTRY history mode, which
+/// the non-Router Navigator selects for itself. The engine keeps one
+/// entry of its own, the "flutter" entry, and treats everything above it
+/// as pushed by somebody else. Every reader move IS somebody else:
+/// `UrlSyncService` writes `#/<book>/<chapter>` with `history.pushState`
+/// under its own `{'seeksparks': true}` tag, deliberately neither of the
+/// engine's tags (see `history_state_repair.dart` for why that tag is
+/// what it is). So on Back, `SingleEntryBrowserHistory.onPopState` takes
+/// its `else` branch: capture the landed path, `go(-1)`, and again for
+/// every app entry until it reaches the flutter entry — then hand the
+/// framework `pushRoute(<the captured path>)`.
+///
+/// `WidgetsApp.didPushRouteInformation` answers that with
+/// `navigator.pushNamed(path)`. A passage names no route, so it fell
+/// through to [appUnknownRoute], whose answer for a stray name is the
+/// app root — and THAT is the second workbench. The URL was right and
+/// the reader had already been moved to it (the URL-sync layer's own
+/// popstate listener applied every hash it walked past); the app pushed
+/// a fresh copy of itself over the top anyway.
+///
+/// Two properties of the captured path are worth knowing before the
+/// rules below, because both are counter-intuitive:
+///
+///   • It is the OLDEST app entry, not the one the reader just left.
+///     `onPopState` overwrites its `_currentRouteName` on EVERY entry it
+///     walks, so the surviving value is the one nearest the flutter
+///     entry. Measured: a reader on `/genesis/1:16` pressed Back and the
+///     path reported was `/genesis/1:1`.
+///   • In a document cold-opened at `#/wheel`, that oldest entry IS
+///     `#/wheel` — the wheel claims the URL on open and the claim is the
+///     first thing written. So Back off a chapter reports the wheel, and
+///     that is not a bug in the report.
+///
+/// What Back SHOULD do, which this is the statement of:
+///
+///   • Back off a page returns to what was underneath. The wheel is a
+///     page; it closes, and the reader is there.
+///   • Back within reader history moves the reader and mounts NOTHING.
+///     The move has already happened on the way past. (It lands on the
+///     oldest entry rather than the previous one, because the engine
+///     rewound the whole run of app entries in one press. That is
+///     single-entry mode; this seam cannot undo it, and pretending
+///     otherwise would need the Router API and a real page stack.)
+///   • Back at the first entry does whatever the browser would do. It
+///     never arrives here: landing on the engine's ORIGIN entry takes
+///     `onPopState`'s first branch, which sends `popRoute`, which
+///     `WidgetsApp.didPopRoute` answers with `maybePop`. Untouched.
+///   • Back onto a page entry OPENS that page — unless that page is
+///     already what is on screen, in which case there is nothing to
+///     restore and it is a plain Back off it. Without that last clause
+///     the wheel opens a second wheel: opening one claims the URL and so
+///     writes another `#/wheel` entry, and the next Back reports it.
+///
+/// The first three collapse into one action — pop one level — which is
+/// exactly what the engine's OTHER Back branch already does. So the two
+/// branches stop disagreeing, and `pushNamed`, the thing that mounted
+/// the second app, is never reached for a name that is not a page.
+@visibleForTesting
+enum BrowserRouteAction {
+  /// Let the Navigator open it. [appGenerateRoute] builds the page.
+  openPage,
+
+  /// Go back one level, and mount nothing.
+  goBack,
+}
+
+/// The decision above, as a pure function of the only two things it
+/// depends on: the path the platform reported, and the path a page has
+/// claimed (`UrlSyncService.claimedPath`, null when the reader link owns
+/// the URL).
+@visibleForTesting
+BrowserRouteAction browserRouteAction(String? path, String? claimedPath) {
+  if (pageForUrlPath(path) == null) return BrowserRouteAction.goBack;
+  // The page the URL names is the page already open. Nothing to restore.
+  if (samePageUrlPath(path, claimedPath)) return BrowserRouteAction.goBack;
+  return BrowserRouteAction.openPage;
+}
+
+/// The seam [browserRouteAction] is carried out at.
+///
+/// Registered by [_MainAppState] in its `initState`, which runs before
+/// `WidgetsApp` registers itself — `WidgetsApp` is built by [MainApp],
+/// and a descendant's `initState` runs after its ancestor's.
+/// `handlePushRouteInformation` stops at the first observer to return
+/// true, so this one answers first. That ordering is a consequence of
+/// the widget nesting rather than a contract, so no test pins it; what
+/// the tests pin is the decision and what this class does with it.
+///
+/// Native targets never reach here — the app declares no deep-link
+/// intent filter and no associated domain, so nothing on those
+/// platforms pushes a route at it. The Android hardware back button is
+/// `popRoute`, a different callback, and is unaffected.
+@visibleForTesting
+class BrowserRouteObserver with WidgetsBindingObserver {
+  BrowserRouteObserver({
+    required this.navigator,
+    this.claimedPath = _liveClaimedPath,
+  });
+
+  /// Looked up late: there is no navigator yet when this is built.
+  final NavigatorState? Function() navigator;
+
+  /// Injectable so a VM test can stand a page's claim up; in the app it
+  /// is the live one. (`UrlSyncService` is the no-op stub under `flutter
+  /// test`, so the real accessor can only ever answer null there.)
+  final String? Function() claimedPath;
+
+  static String? _liveClaimedPath() => UrlSyncService.claimedPath;
+
+  @override
+  Future<bool> didPushRouteInformation(
+      RouteInformation routeInformation) async {
+    switch (browserRouteAction(
+        routeInformation.uri.toString(), claimedPath())) {
+      case BrowserRouteAction.openPage:
+        // NOT handled: fall through to `WidgetsApp`, whose `pushNamed`
+        // reaches [appGenerateRoute] and opens the page. This is the
+        // live-tab door `50ee136` wired up, and it stays open.
+        return false;
+      case BrowserRouteAction.goBack:
+        // One level, and never a mount. `maybePop` rather than
+        // `popUntil(isFirst)` on purpose: it is what the engine's other
+        // Back branch does, it honours a route that wants to intercept
+        // Back, and with nothing above the root it is a no-op — which is
+        // the right answer for a reader already at the root whose
+        // passage the URL layer has just applied. Fire-and-forget so a
+        // route that answers Back with a confirmation dialog does not
+        // hold up the binding's observer loop.
+        // ignore: unawaited_futures
+        navigator()?.maybePop();
+        return true;
+    }
+  }
 }
 
 /// v1.3.62 UX: the web engine writes the pushed route's minified name

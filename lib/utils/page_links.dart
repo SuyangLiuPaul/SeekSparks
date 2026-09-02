@@ -57,3 +57,24 @@ Widget? pageForUrlPath(String? path) {
   }
   return null;
 }
+
+/// True when [a] and [b] name the SAME page.
+///
+/// False whenever either names no page at all — two passages are not
+/// "the same page", they are not pages.
+///
+/// 2026-09-02: this exists for one question, asked by `browserRouteAction`
+/// in `main.dart`. When the browser hands the app a page path, the app
+/// has to know whether that page is the thing already on screen, because
+/// the two answers are opposite: open it, or go back off it. The URL a
+/// page has claimed (`UrlSyncService.claimedPath`) is what it is compared
+/// against, and the two are not textually equal in general — a claim is
+/// written without its `#`, and a page path matches by prefix, so
+/// `/wheel` and `/wheel?year=-4000` are the same page and must compare
+/// equal here.
+bool samePageUrlPath(String? a, String? b) {
+  final pageA = pageForUrlPath(a);
+  if (pageA == null) return false;
+  final pageB = pageForUrlPath(b);
+  return pageB != null && pageA.runtimeType == pageB.runtimeType;
+}
