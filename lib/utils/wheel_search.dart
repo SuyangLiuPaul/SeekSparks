@@ -50,7 +50,7 @@ import 'package:seeksparks/utils/reference_parser.dart';
 /// questions and open different sheets, and because a reader typing
 /// "Methuselah" should get both: the birth spoke that says WHEN, and
 /// the arc that says HOW LONG and alongside whom.
-enum WheelHitKind { event, power, nation, stream, patriarch }
+enum WheelHitKind { event, power, nation, stream, patriarch, ministry }
 
 /// The id the lifespan layer answers to in the stream filter.
 ///
@@ -478,6 +478,24 @@ WheelSearchResult searchWheel({
         ));
       }
     }
+    // A ministry running through the year asked for, on the same tier
+    // as a power spanning it: "who was prophesying in 700 BC" is the
+    // same shape of question as "which empire held the levant".
+    for (final m in data.ministries) {
+      if (m.start <= y && y <= m.end && take('ministry:${m.id}')) {
+        hits.add(WheelHit(
+          kind: WheelHitKind.ministry,
+          via: WheelHitVia.yearSpan,
+          id: m.id,
+          streamId: m.stream,
+          title: m.nameFor(locale),
+          year: m.start,
+          matched: '',
+          rank: 1,
+          streamHidden: hidden(m.stream),
+        ));
+      }
+    }
     for (final e in data.events) {
       if (e.year == y && take('event:${e.id}')) {
         hits.add(WheelHit(
@@ -614,6 +632,30 @@ WheelSearchResult searchWheel({
       matched: c.$3,
       rank: c.$1,
       streamHidden: hidden(p.stream),
+    ));
+  }
+  // 2026-09-02: the 39 ministries shipped a day before this block knew
+  // about them, so for one build Isaiah was drawn on the wheel and
+  // could not be found by typing his name. The index-bar test sweeps
+  // "every record answers to its own name" — but only over the record
+  // lists it is given, so a whole array left out of the corpus is
+  // invisible to it AND to the reader. That is the failure this entry
+  // exists to have prevented.
+  for (final m in data.ministries) {
+    if (seen.contains('ministry:${m.id}')) continue;
+    final c = classify(m.names, m.notes, m.refs);
+    if (c == null) continue;
+    take('ministry:${m.id}');
+    hits.add(WheelHit(
+      kind: WheelHitKind.ministry,
+      via: c.$2,
+      id: m.id,
+      streamId: m.stream,
+      title: m.nameFor(locale),
+      year: m.start,
+      matched: c.$3,
+      rank: c.$1,
+      streamHidden: hidden(m.stream),
     ));
   }
   for (final s in data.streams) {

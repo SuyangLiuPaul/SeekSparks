@@ -434,6 +434,9 @@ const Map<String, Map<String, String>> wheelStrings = {
   // does so because the papacy and the crusades genuinely happened in
   // different places. A field that carries information and is never
   // shown is information held back, so it is shown.
+  'wheelKindMinistry': {
+    'zh-Hans': '事奉', 'zh-Hant': '事奉', 'en': 'ministry',
+  },
   'wheelRegionEgypt': {'zh-Hans': '埃及', 'zh-Hant': '埃及', 'en': 'Egypt'},
   'wheelRegionMesopotamia': {
     'zh-Hans': '美索不达米亚', 'zh-Hant': '美索不達米亞', 'en': 'Mesopotamia',
@@ -2184,6 +2187,8 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
         WheelHitKind.nation => _s('wheelKindNation', 'nation', locale),
         WheelHitKind.stream => _s('wheelKindBand', 'band', locale),
         WheelHitKind.patriarch => _s('wheelKindLife', 'life', locale),
+        WheelHitKind.ministry =>
+          _s('wheelKindMinistry', 'ministry', locale),
       };
 
   /// The year column of a result row.
@@ -2720,6 +2725,9 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
       case WheelHitKind.patriarch:
         final man = ChronologyService.instance.cached?.byId(hit.id);
         if (man != null) _showPatriarch(context, man, locale);
+      case WheelHitKind.ministry:
+        final m = data.ministryById(hit.id);
+        if (m != null) _showMinistry(context, m, locale);
     }
   }
 
@@ -2755,7 +2763,11 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
     // that laid the arcs out.
     double? lifeRadius;
     double? lifeAngle;
-    if (hit.kind == WheelHitKind.patriarch) {
+    // A ministry lives in the same annulus as a life and belongs to no
+    // band either, so it takes the same branch: the arc id is prefixed
+    // (`ministry:`) exactly so that one lookup can serve both.
+    if (hit.kind == WheelHitKind.patriarch ||
+        hit.kind == WheelHitKind.ministry) {
       final chron = ChronologyService.instance.cached;
       final creation = _creationYear;
       if (chron == null || creation == null) return;
@@ -2774,7 +2786,10 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
             : (WheelHistoryService.instance.cached?.ministries ??
                 const <WheelMinistry>[]),
       );
-      final arc = _find(all, (a) => a.id == hit.id);
+      final wanted = hit.kind == WheelHitKind.ministry
+          ? '$kMinistryArcPrefix${hit.id}'
+          : hit.id;
+      final arc = _find(all, (a) => a.id == wanted);
       if (arc == null) return;
       lifeRadius = lifeArcRadii(arc.ring, lifeArcRingCount(all),
               scriptureLabelBase(rBands), rRim)
@@ -2790,6 +2805,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
     double radius;
     switch (hit.kind) {
       case WheelHitKind.patriarch:
+      case WheelHitKind.ministry:
         angle = lifeAngle!;
         radius = lifeRadius!;
       case WheelHitKind.event:

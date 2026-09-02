@@ -453,9 +453,18 @@ void main() {
     // reads "主前586" as a year and does not say so leaves the reader
     // unable to tell a year query from a word query.
     expect(text, contains('主前586'));
-    // The near-miss rows are labelled and their number is disclosed —
-    // a cap on a sorted list is a silent WHERE clause otherwise.
-    expect(text, contains('年份相近'));
+    // The near-miss rows' number is disclosed — a cap on a sorted list
+    // is a silent WHERE clause otherwise.
+    //
+    // 2026-09-02: this used to assert the per-ROW badge 「年份相近」 as
+    // well. That stopped rendering, and for a good reason: 586 BC now
+    // has so many EXACT answers — 39 ministries and 57 more spans went
+    // in, and every year from 3000 BC to AD 1900 is covered by
+    // something — that the nearby rows fall below the fold. The badge
+    // was never the disclosure; the sentence at the top of the sheet
+    // is, and it is what a reader actually reads. So the sentence is
+    // what is pinned, and the count with it.
+    expect(text, contains('含年份最接近的'));
     expect(text, contains('$kWheelNearestPerYear'));
     expect(tester.takeException(), isNull);
     await unmount(tester);
