@@ -821,6 +821,112 @@ void main() {
     await unmount(tester);
   });
 
+  testWidgets('a long label crossing an arc no longer takes the arc\'s tap',
+      (tester) async {
+    // The rule that was WRONG until 2026-09-02, and the test I got wrong
+    // three times before it said anything.
+    //
+    // `_handleTap` gave every spoke in radial range precedence over
+    // every arc, justified by the spoke being the smaller target — nine
+    // pixels of arc against a 9.73 px sub-ring. The reigns, the
+    // ministries and the genealogy rail took the band to sixteen
+    // sub-rings and a sub-ring to 8.69 px at this canvas, so the ARC
+    // became the smaller target and the fixed precedence pointed the
+    // wrong way. The owner reported it from the screen:
+    // 「我要按那个环而不是字」.
+    //
+    // WHAT THE FIRST THREE ATTEMPTS TAUGHT, since each looked right:
+    //   * tapping the point furthest from every spoke proves nothing —
+    //     no spoke is in range there, so the old rule passes too;
+    //   * a spoke only competes over the radial extent of its OWN TEXT,
+    //     so a short label near the base never reaches ring 8 and is
+    //     not a tie either;
+    //   * asserting the NAME is not enough — the spoke nearest the
+    //     start of Methuselah's arc is `methuselah_born`, whose title is
+    //     「玛土撒拉出生」, so a name check passes whichever sheet opens.
+    //
+    // So the spoke here is chosen by MEASURING which planned label
+    // actually spans the arc's radius, and the assertion is on 「创世后」
+    // — the Anno Mundi line, which only the life sheet prints.
+    await pump(tester, const Size(900, 900));
+    final rect = tester.getRect(find.byKey(const ValueKey('chronologyWheel')));
+    final side = rect.width;
+    final rBands = side * _bandsFrac;
+    final rRim = side * _rimFrac;
+    final inner = scriptureLabelBase(rBands);
+    final rings = lifeArcRingCount(arcs());
+
+    final wheel = await WheelHistoryService.instance.load();
+    const locale = 'zh-Hans';
+    final titleSize = _rimFontPx;
+    final all = wheel.events.toList()
+      ..sort((x, y) => x.year.compareTo(y.year));
+    final angles = [
+      for (final e in all) angleForSpan(e.year, kMinYear, kMaxYear)
+    ];
+    final minGapLabel = (_rimFontPx * 1.35) / rBands;
+    final clusters = clusterByAngle(angles, minGapLabel);
+    final planned = planRadialSpokes(
+      requests: [
+        for (final c in clusters)
+          SpokeRequest(
+            angle: angles[c.representative],
+            scripture: all[c.representative].basis != 'conventional',
+            title: all[c.representative].titleFor(locale),
+            ref: all[c.representative].refs.isEmpty
+                ? ''
+                : localizedReferenceLabel(all[c.representative].refs.first,
+                    locale),
+            badge: c.hidden == 0 ? '' : '+${c.hidden}',
+          )
+      ],
+      rBands: rBands,
+      rRim: rRim,
+      titleSize: titleSize,
+      refSize: titleSize * 0.86,
+      measure: _measureLabel,
+      minGap: minGapLabel,
+      lineHeight: titleSize * 1.35,
+    );
+
+    // A (life, spoke) pair where the label really does run across the
+    // arc's own radius and its angle really does fall inside the arc.
+    ({LifeArc arc, double radius, double angle})? found;
+    for (final arc in patriarchArcs()) {
+      final band = lifeArcRadii(arc.ring, rings, inner, rRim);
+      for (final p in planned) {
+        if (!p.hasText) continue;
+        if (p.label.rStart > band.centre || p.label.rEnd < band.centre) {
+          continue;
+        }
+        if (p.label.angle <= arc.a0 || p.label.angle >= arc.a1) continue;
+        found = (arc: arc, radius: band.centre, angle: p.label.angle);
+        break;
+      }
+      if (found != null) break;
+    }
+    expect(found, isNotNull,
+        reason: 'no planned label crosses any arc at its own radius, so '
+            'the two never compete and this test proves nothing');
+
+    final hit = found!;
+    final tol = 9.0 / hit.radius;
+    // Just inside the spoke's own target, and dead on the arc's centre
+    // radius where the arc's score is 0. Under the old rule the spoke
+    // took every point it could reach.
+    final at = hit.angle + tol * 0.7;
+    expect(at, lessThan(hit.arc.a1), reason: 'the tap left the arc');
+
+    await tester.tapAt(rect.topLeft +
+        Offset(side / 2 + hit.radius * math.cos(at),
+            side / 2 + hit.radius * math.sin(at)));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(sheetText(tester), contains('创世后'),
+        reason: 'a label crossing the band took a tap that landed dead on '
+            'the band — the labels are taking the arcs\' taps again');
+    await unmount(tester);
+  });
+
   testWidgets('the layer switch hides all 25 and brings them back',
       (tester) async {
     await pump(tester, const Size(900, 900));

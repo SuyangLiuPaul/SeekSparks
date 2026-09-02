@@ -2874,41 +2874,58 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
     // 9 logical pixels) into radians at the tapped radius gives the
     // same physical target everywhere on the wheel, and the nearest
     // spoke within it wins.
+    _Spoke? bestSpoke;
+    var spokeScore = double.infinity;
     if (r >= rBands - 6 && r <= rRim + 8) {
       final tol = r > 0 ? (9.0 / r) : 0.05;
-      _Spoke? best;
-      var bestD = double.infinity;
       for (final s in spokes) {
         if (r < s.label.rStart - 6 || r > s.label.rEnd + 6) continue;
-        final d = (a - s.label.angle).abs();
-        if (d < tol && d < bestD) {
-          best = s;
-          bestD = d;
+        // NORMALISED, not absolute: how far into its own target the
+        // finger fell, 0 dead centre and 1 at the edge. That is what
+        // makes it comparable with an arc's, whose target is a
+        // different shape and a different size.
+        final d = (a - s.label.angle).abs() / tol;
+        if (d <= 1 && d < spokeScore) {
+          bestSpoke = s;
+          spokeScore = d;
         }
-      }
-      if (best != null) {
-        _select(best.event.id);
-        if (best.members.length > 1) {
-          _showCluster(context, best.members, data, locale);
-        } else {
-          _showEvent(context, best.event, data, locale);
-        }
-        return;
       }
     }
 
-    // A life, if the tap is in the annulus and no spoke claimed it.
+    void openSpoke(_Spoke s) {
+      _select(s.event.id);
+      if (s.members.length > 1) {
+        _showCluster(context, s.members, data, locale);
+      } else {
+        _showEvent(context, s.event, data, locale);
+      }
+    }
+
+    // A life, and THE SMALLER NORMALISED DISTANCE WINS — not the spoke.
     //
-    // SPOKES WIN TIES, and that is the right way round: a spoke's
-    // target is one tick and about nine pixels of arc, a life's is a
-    // whole sub-ring from birth to death. The smaller target has to be
-    // reachable or it is not a target at all, and a reader who misses
-    // the tick lands on the life running underneath it — which is a
-    // useful answer rather than nothing.
+    // This used to read "SPOKES WIN TIES, and that is the right way
+    // round: a spoke's target is one tick and about nine pixels of arc,
+    // a life's is a whole sub-ring. The smaller target has to be
+    // reachable or it is not a target at all." The reasoning was right
+    // and its premise stopped being true on 2026-09-02, when the reigns,
+    // the ministries and the genealogy rail took the band from eleven
+    // sub-rings to sixteen: a sub-ring went from 9.73 px deep to 6.69,
+    // so the ARC is now the smaller target and the fixed precedence was
+    // pointing the wrong way. In the Genesis stretch, where every birth
+    // is a spoke, the labels were taking almost every tap meant for an
+    // arc — the owner reported exactly that: 「我要按那个环而不是字」.
     //
-    // Resolved by RING then by angle, not by distance, because these
-    // arcs are butt-jointed rings: the ring the finger is in is the
-    // only ring it can mean.
+    // So the rule is derived rather than written down: each candidate
+    // reports how far into ITS OWN target the finger fell, 0 at the
+    // centre and 1 at the edge, and the nearer one opens. A reader who
+    // aims at a tick still gets the tick; a reader who aims at the band
+    // between two ticks now gets the band. It re-derives itself the day
+    // the geometry moves again, which is the property the old rule
+    // lacked.
+    //
+    // Within the arcs it is still resolved by RING then by angle, not
+    // by distance, because these arcs are butt-jointed rings: the ring
+    // the finger is in is the only ring it can mean.
     // The rail first, because it owns the innermost sub-ring outright
     // and no arc is drawn there — checking the arcs first would let a
     // ring-1 arc claim a tap that fell in ring 0.
@@ -2916,9 +2933,18 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
       for (final m in rail) {
         if ((r - m.centre).abs() > m.pitch / 2) continue;
         // A mark has no width, so the target is angular: half the
-        // gap to a neighbour, floored at what a finger needs.
+        // gap to a neighbour, floored at what a finger needs. Scored
+        // the same way as everything else here, and compared with the
+        // spoke for the same reason — a mark is a small target too,
+        // and precedence written down rather than measured is what
+        // sent the arcs' taps to the labels.
         final tolerance = math.max(9 / m.centre, 0.004);
-        if ((a - m.angle).abs() <= tolerance) {
+        final into = (a - m.angle).abs() / tolerance;
+        if (into <= 1) {
+          if (bestSpoke case final s? when spokeScore < into) {
+            openSpoke(s);
+            return;
+          }
           _select('$kLineageArcPrefix${m.cohort.year}');
           _showCohort(context, m.cohort, locale);
           return;
@@ -2928,8 +2954,14 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
 
     if (r >= scriptureLabelBase(rBands) && r <= rRim && lives.isNotEmpty) {
       for (final l in lives) {
-        if ((r - l.centre).abs() > l.pitch / 2) continue;
+        final into = (r - l.centre).abs() / (l.pitch / 2);
+        if (into > 1) continue;
         if (a >= l.arc.a0 && a <= l.arc.a1) {
+          // The one place the two shapes are compared.
+          if (bestSpoke case final s? when spokeScore < into) {
+            openSpoke(s);
+            return;
+          }
           _select(l.id);
           final man = l.man;
           final king = l.king;
@@ -2944,6 +2976,12 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
           return;
         }
       }
+    }
+
+    // No arc took it, so a spoke that was in range does.
+    if (bestSpoke case final s?) {
+      openSpoke(s);
+      return;
     }
 
     // Otherwise a band: a power arc if one is under the tap, else the
