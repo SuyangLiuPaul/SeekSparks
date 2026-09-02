@@ -478,9 +478,9 @@ GEN5 = [
     # id,           begat, after, total
     ("adam",        (5, 3), (5, 4), (5, 5)),
     ("seth",        (5, 6), (5, 7), (5, 8)),
-    ("enos",        (5, 9), (5, 10), (5, 11)),
-    ("cainan",      (5, 12), (5, 13), (5, 14)),
-    ("mahalaleel",  (5, 15), (5, 16), (5, 17)),
+    ("enosh",       (5, 9), (5, 10), (5, 11)),
+    ("kenan",       (5, 12), (5, 13), (5, 14)),
+    ("mahalalel",   (5, 15), (5, 16), (5, 17)),
     ("jared",       (5, 18), (5, 19), (5, 20)),
     ("enoch",       (5, 21), (5, 22), (5, 23)),
     ("methuselah",  (5, 25), (5, 26), (5, 27)),
@@ -497,23 +497,23 @@ GEN5 = [
 # remainder, which is why that verse is read three times by index.
 GEN11_MT = [
     ("arphaxad", (11, 12, 0), (11, 13, 0)),
-    ("salah",    (11, 14, 0), (11, 15, 0)),
+    ("shelah",   (11, 14, 0), (11, 15, 0)),
     ("eber",     (11, 16, 0), (11, 17, 0)),
     ("peleg",    (11, 18, 0), (11, 19, 0)),
     ("reu",      (11, 20, 0), (11, 21, 0)),
     ("serug",    (11, 22, 0), (11, 23, 0)),
-    ("nahor",    (11, 24, 0), (11, 25, 0)),
+    ("nahor_elder", (11, 24, 0), (11, 25, 0)),
     ("terah",    (11, 26, 0), None),
 ]
 GEN11_LXX = [
     ("arphaxad", (11, 12, 0), (11, 13, 0)),
     ("kainan2",  (11, 13, 1), (11, 13, 2)),
-    ("salah",    (11, 14, 0), (11, 15, 0)),
+    ("shelah",   (11, 14, 0), (11, 15, 0)),
     ("eber",     (11, 16, 0), (11, 17, 0)),
     ("peleg",    (11, 18, 0), (11, 19, 0)),
     ("reu",      (11, 20, 0), (11, 21, 0)),
     ("serug",    (11, 22, 0), (11, 23, 0)),
-    ("nahor",    (11, 24, 0), (11, 25, 0)),
+    ("nahor_elder", (11, 24, 0), (11, 25, 0)),
     ("terah",    (11, 26, 0), None),
 ]
 
@@ -562,7 +562,7 @@ LINE.update({p[0]: "abraham" for p in ABRAHAMIC})
 LINE["moses"] = "levi"
 LINE["aaron"] = "levi"
 
-# THE SPELLING THIS CHART PRINTS, and why it is not the one the ids use.
+# THE SPELLING THIS CHART PRINTS, and the id that now matches it.
 #
 # The wheel drew a birth spoke reading "Birth of Kenan" — that string
 # comes from `bible_timeline.json`, which spells the line as modern
@@ -578,24 +578,41 @@ LINE["aaron"] = "levi"
 # the name on every sheet, so the older spelling stays findable and the
 # reader can see the two forms are one man rather than guess it.
 #
+# THE IDS FOLLOWED THE SPELLING, one phase later. They were left alone
+# when the names moved, and the cost showed up immediately: the witness
+# below needed an alias table to join this file to `family_tree.json` at
+# all, and the wheel's lifespan sheet simply dropped its "People" row for
+# the five men whose ids did not match. So `enos`/`cainan`/`mahalaleel`/
+# `salah`/`nahor` are now `enosh`/`kenan`/`mahalalel`/`shelah`/
+# `nahor_elder` — the tree's ids, exactly — and the join is a plain
+# lookup with nothing in between. The KJV spellings are not lost by that:
+# they are what `KJV_NAMES` holds, and that is the field search reaches
+# them through.
+#
+# `nahor_elder` and not `nahor`, and `shelah` and not `shelah_judah`,
+# because the tree distinguishes two men in each of those pairs and this
+# chart carries exactly one of each — Terah's father, and Arphaxad's son.
+# The ids are the tree's own, so which man is meant is not a convention
+# this file invents.
+#
 # Every value is read off the text, never invented: `kjv.json` reads
 # Enos / Cainan / Mahalaleel / Salah at Genesis 5:9-15 and 10:24, and
 # `bsb.json`, `nasb.json` and `leb.json` read Enosh / Kenan / Mahalalel
 # / Shelah at those same verses. Pinned by
 # `test/patriarch_spelling_test.dart`.
 KJV_NAMES = {
-    "enos": "Enos",
-    "cainan": "Cainan",
-    "mahalaleel": "Mahalaleel",
-    "salah": "Salah",
+    "enosh": "Enos",
+    "kenan": "Cainan",
+    "mahalalel": "Mahalaleel",
+    "shelah": "Salah",
 }
 
 NAMES = {
     "adam":       ("Adam", "亚当", "亞當"),
     "seth":       ("Seth", "塞特", "塞特"),
-    "enos":       ("Enosh", "以挪士", "以挪士"),
-    "cainan":     ("Kenan", "该南", "該南"),
-    "mahalaleel": ("Mahalalel", "玛勒列", "瑪勒列"),
+    "enosh":      ("Enosh", "以挪士", "以挪士"),
+    "kenan":      ("Kenan", "该南", "該南"),
+    "mahalalel":  ("Mahalalel", "玛勒列", "瑪勒列"),
     "jared":      ("Jared", "雅列", "雅列"),
     "enoch":      ("Enoch", "以诺", "以諾"),
     "methuselah": ("Methuselah", "玛土撒拉", "瑪土撒拉"),
@@ -604,12 +621,12 @@ NAMES = {
     "shem":       ("Shem", "闪", "閃"),
     "arphaxad":   ("Arphaxad", "亚法撒", "亞法撒"),
     "kainan2":    ("Kainan", "该南", "該南"),
-    "salah":      ("Shelah", "沙拉", "沙拉"),
+    "shelah":     ("Shelah", "沙拉", "沙拉"),
     "eber":       ("Eber", "希伯", "希伯"),
     "peleg":      ("Peleg", "法勒", "法勒"),
     "reu":        ("Reu", "拉吴", "拉吳"),
     "serug":      ("Serug", "西鹿", "西鹿"),
-    "nahor":      ("Nahor", "拿鹤", "拿鶴"),
+    "nahor_elder": ("Nahor", "拿鹤", "拿鶴"),
     "terah":      ("Terah", "他拉", "他拉"),
     # Abram is renamed Abraham in Genesis 17:5, before every figure the
     # chart reads for him, so the later name is the one used.
@@ -1258,46 +1275,49 @@ def main():
     # rendered the string, so nothing ever read it. Counting the kinds
     # separately is what lets the sentence be checked.
     #
-    # AND THE JOIN KEY HAD TO BE PROVED BEFORE ANY OF IT COUNTED. The
-    # IDS here are the Authorised Version's spellings (enos, cainan,
-    # mahalaleel, salah) and family_tree.json's are the modern ones
-    # (enosh, kenan, mahalalel, shelah), so five ids missed the lookup
-    # and were dropped in silence — not compared, not reported, and not
-    # able to fail the build no matter what they said. The DISPLAYED
-    # names now agree across both assets; the ids still do not, and this
-    # alias table is the whole of what holds them together.
+    # AND THE JOIN KEY HAD TO BE PROVED BEFORE ANY OF IT COUNTED. The ids
+    # here were the Authorised Version's spellings (enos, cainan,
+    # mahalaleel, salah, nahor) and family_tree.json's were the modern
+    # ones, so five ids missed the lookup and were dropped in silence —
+    # not compared, not reported, and not able to fail the build no
+    # matter what they said. A five-entry alias table held the two
+    # together for one phase; the ids themselves now match, so the lookup
+    # below is direct and there is nothing left to forget to update.
     # The sentence's counts were true and its last clause was false for
     # those five. Every one of them agrees, so the witness only ever got
     # weaker, but a witness that skips a fifth of its rows without
     # saying so is the failure this project has already been bitten by.
     #
-    # The aliases are written out one by one and never guessed from the
-    # spelling: the tree holds BOTH `nahor_elder` (Terah's father, who is
-    # on this chart) and `nahor_younger` (Abram's brother, who is not),
-    # so a prefix match would have compared the wrong man and still
-    # reported an agreement.
-    TREE_ALIAS = {
-        "enos": "enosh",
-        "cainan": "kenan",
-        "mahalaleel": "mahalalel",
-        "salah": "shelah",
-        "nahor": "nahor_elder",
-    }
+    # THE TWO PAIRS THE TREE DISTINGUISHES AND THIS CHART DOES NOT.
+    # `nahor_elder` (Terah's father) sits beside `nahor_younger` (Abram's
+    # brother), and `shelah` (Arphaxad's son) beside `shelah_judah`
+    # (Judah's third son). Only the first of each pair is on this chart,
+    # and taking the tree's ids verbatim is what keeps the right one
+    # joined — a bare `nahor`, or a prefix match, could reach either. So
+    # the parentage is asserted rather than assumed: a rename in the tree
+    # that swapped the two would otherwise pass here and print a
+    # confident agreement about the wrong man.
     tree = json.loads((ASSETS / "family_tree.json").read_text(encoding="utf-8"))
     by_id = {p["id"]: p for p in tree["people"]}
-    unjoined = [pid for pid in mt_order
-                if by_id.get(TREE_ALIAS.get(pid, pid)) is None]
+    unjoined = [pid for pid in mt_order if by_id.get(pid) is None]
     if unjoined:
         raise SystemExit(
-            f"no family_tree.json record for {unjoined}; add the id to "
-            f"TREE_ALIAS, or state in this message why that man cannot be "
+            f"no family_tree.json record for {unjoined}; give the man the "
+            f"tree's own id, or state in this message why he cannot be "
             f"witnessed — a row that silently misses the join is not "
             f"checked by anything")
+    for pid, father in (("nahor_elder", "serug"), ("shelah", "arphaxad")):
+        got = by_id.get(pid, {}).get("fatherId")
+        if got != father:
+            raise SystemExit(
+                f"family_tree.json says {pid}'s father is {got!r}, not "
+                f"{father!r} — this chart carries one of two men of that "
+                f"name and the id is the only thing saying which")
     agreed = checked = 0
     witness_kinds = {"birth": 0, "span": 0, "gap": 0}
     disagreements = []
     for pid in mt_order:
-        person = by_id[TREE_ALIAS.get(pid, pid)]
+        person = by_id[pid]
         if person.get("birthYear") is None:
             continue
         if person.get("yearSystem") == "am":
@@ -1330,8 +1350,8 @@ def main():
                     f"Genesis as read here says {mt_rows[pid]['lifespan']}")
     for parent, child in (("abraham", "isaac"), ("isaac", "jacob"),
                           ("jacob", "joseph")):
-        a = by_id.get(TREE_ALIAS.get(parent, parent))
-        b = by_id.get(TREE_ALIAS.get(child, child))
+        a = by_id.get(parent)
+        b = by_id.get(child)
         if a is None or b is None:
             continue
         if a.get("yearSystem") != b.get("yearSystem"):

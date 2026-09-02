@@ -374,6 +374,124 @@ void main() {
       expect(missing, isEmpty, reason: missing.join('\n'));
       expect(wrong, isEmpty, reason: wrong.join('\n'));
     });
+
+    /// TWO ROWS, ONE LABEL, AND NOTHING ON SCREEN TELLING THEM APART.
+    ///
+    /// The band sheet lists a stream's nations as name + reference, so
+    /// two records that display the same string in the same stream read
+    /// as one man written twice. The Israel sheet did exactly that for
+    /// Genesis 11:22 (Terah's father) and Genesis 11:26 (Abram's
+    /// brother) — both "Nahor" — and `family_tree.json` had already
+    /// settled that pair as `nahor_elder` "Nahor (the elder)" /
+    /// 拿鹤(亚伯拉罕祖父) and `nahor_younger` "Nahor". Those exact
+    /// strings are now what the bands display, so the two are told
+    /// apart in all three scripts by the label itself and not only by
+    /// the note under it.
+    ///
+    /// TWO PAIRS ARE LEFT AND ARE ALLOWED BY NAME, because there is no
+    /// honest string to give them. Genesis 10 holds two men called
+    /// Havilah (10:7, Cush's son; 10:29, Joktan's) and two called Sheba
+    /// (10:7, Raamah's son; 10:28, Joktan's), and `family_tree.json`
+    /// carries no record of any of the four — so unlike Nahor there is
+    /// no existing display string to copy, and writing one here would
+    /// be inventing a name the app does not otherwise use. What is
+    /// required of them instead is the thing that IS in the text: each
+    /// must carry a `note`, in all three locales, and the note must
+    /// cite the other one's chapter and verse. The exception is
+    /// therefore a documented one rather than a hole, and a NEW
+    /// collision — one nobody has looked at — still fails.
+    test('no two bands in a stream display the same name', () {
+      // The pairs Genesis itself doubles, with no second spelling to
+      // reach for. Anything else colliding is a defect.
+      const allowed = {'Havilah', 'Sheba'};
+      final clashes = <String>[];
+      for (final locale in ['en', 'zh-Hans', 'zh-Hant']) {
+        final byKey = <String, List<Map<String, dynamic>>>{};
+        for (final n in nations) {
+          final names = n['name'] as Map;
+          final shown = (names[locale] ?? names['en']) as String;
+          byKey.putIfAbsent('${n['stream']}|$shown', () => []).add(n);
+        }
+        byKey.forEach((key, group) {
+          if (group.length < 2) return;
+          final en = (group.first['name'] as Map)['en'] as String;
+          if (allowed.contains(en)) return;
+          clashes.add('$locale $key: '
+              '${group.map((n) => n['id']).join(', ')}');
+        });
+      }
+      expect(clashes, isEmpty,
+          reason: 'a band sheet would print these rows with the same '
+              'label and no way to tell them apart\n${clashes.join('\n')}');
+    });
+
+    /// The price of the exception above: an allowed twin must say, in
+    /// every locale, where its namesake is. Without this the allow-list
+    /// would be a licence rather than a record.
+    test('every allowed twin points at its namesake in all three locales',
+        () {
+      const allowed = {'Havilah', 'Sheba'};
+      // Where the OTHER one of each pair is stated, by band id. Written
+      // out rather than derived, so a band silently changing its
+      // reference cannot quietly satisfy its twin's note.
+      const namesake = {
+        'havilah_cush': '10:29',
+        'havilah_joktan': '10:7',
+        'sheba_raamah': '10:28',
+        'sheba_joktan': '10:7',
+      };
+      final twins = nations
+          .where((n) => allowed.contains((n['name'] as Map)['en']))
+          .toList();
+      expect(twins.map((n) => n['id']).toSet(), namesake.keys.toSet(),
+          reason: 'the allow-list and the bands must name the same records');
+      final bad = <String>[];
+      for (final n in twins) {
+        final note = n['note'] as Map?;
+        for (final locale in ['en', 'zh-Hans', 'zh-Hant']) {
+          final text = note?[locale] as String?;
+          if (text == null || text.isEmpty) {
+            bad.add('${n['id']}: no $locale note');
+            continue;
+          }
+          if (!text.contains(namesake[n['id']]!)) {
+            bad.add('${n['id']}: the $locale note does not cite '
+                '${namesake[n['id']]}, so a reader cannot find the other one');
+          }
+        }
+      }
+      expect(bad, isEmpty, reason: bad.join('\n'));
+    });
+
+    /// The Nahor pair specifically, pinned to the strings
+    /// `family_tree.json` already uses. Copied, never coined: if the
+    /// tree ever renames those two records, this fails rather than
+    /// letting the wheel drift away from it.
+    test('the two Nahors display what the family tree calls them', () {
+      final tree = jsonDecode(
+              File('assets/family_tree.json').readAsStringSync())
+          as Map<String, dynamic>;
+      final people = {
+        for (final p in (tree['people'] as List).cast<Map<String, dynamic>>())
+          p['id'] as String: p,
+      };
+      final bands = {for (final n in nations) n['id'] as String: n};
+      for (final pair in const [
+        ('nahor', 'nahor_elder'),
+        ('nahor_terah', 'nahor_younger'),
+      ]) {
+        final band = bands[pair.$1]!;
+        final person = people[pair.$2]!;
+        final names = band['name'] as Map;
+        expect(names['en'], person['name'], reason: pair.$1);
+        expect(names['zh-Hans'], person['nameZhHans'], reason: pair.$1);
+        expect(names['zh-Hant'], person['nameZhHant'], reason: pair.$1);
+      }
+      // And the band still cites the verse it always did — a display
+      // name is the only thing that moved.
+      expect(bands['nahor']!['ref'], 'Genesis 11:22');
+      expect(bands['nahor_terah']!['ref'], 'Genesis 11:26');
+    });
   });
 
   group('no king is placed outside the reign this app gives him', () {

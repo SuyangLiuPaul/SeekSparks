@@ -32,6 +32,8 @@
 /// `popUntil(isFirst)` and needs something to land on.
 library;
 
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -249,5 +251,52 @@ void main() {
 
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(milliseconds: 50));
+  });
+
+  /// WHAT A READER'S SAVED WHEEL LINK ACTUALLY HOLDS, asked because a
+  /// rename of the chart's ids had to answer it.
+  ///
+  /// `chronology.json` keyed five patriarchs on the Authorised Version's
+  /// spelling — enos, cainan, mahalaleel, salah, nahor — and they were
+  /// renamed onto `family_tree.json`'s. If any of those ids were ever
+  /// written into a URL, a link somebody saved would now name a record
+  /// that does not exist, and the honest fix would be to keep the old
+  /// spellings resolving as aliases forever.
+  ///
+  /// They are not. The wheel's selection lives in `_selectedId`, in
+  /// `State`, and the address bar is claimed with a CONSTANT: the page
+  /// calls `claimUrl(kWheelUrlPath)` on open and `claimUrl(null)` on
+  /// close, and `kWheelUrlPath` is the literal `/wheel`. There is no
+  /// second argument, no interpolation, no query, and the page reads and
+  /// writes no `SharedPreferences` at all — so no id of any kind is
+  /// persisted, by the URL or by anything else, and a saved link opens
+  /// the wheel with nothing selected exactly as it did before.
+  ///
+  /// Asserted against the source rather than described, because the
+  /// claim is about what the page CANNOT do. The day someone puts a
+  /// record id in the address bar, this fails and the alias question
+  /// gets asked again.
+  test('a saved wheel link names no record, so a rename cannot break one',
+      () {
+    expect(kWheelUrlPath, '/wheel');
+    final src =
+        File('lib/pages/radial_chronology_page.dart').readAsStringSync();
+    expect(RegExp(r'claimUrl\(').allMatches(src).length, 2,
+        reason: 'the page claims the URL on open and releases it on close, '
+            'and nothing else may write the address bar');
+    expect(src, contains('claimUrl(kWheelUrlPath)'));
+    expect(src, contains('claimUrl(null)'));
+    expect(src, contains("const String kWheelUrlPath = '/wheel';"),
+        reason: 'the claimed path is a literal — the moment it is built '
+            'from a record id, a saved link starts carrying one');
+    expect(src, isNot(contains('SharedPreferences')),
+        reason: 'a persisted selection would outlive a rename the same way '
+            'a URL would');
+
+    // And the door is wide anyway: a URL that DID carry a query still
+    // resolves to the wheel, so even a hand-edited one opens the page
+    // rather than falling through to the reader.
+    expect(pageForUrlPath('#/wheel?year=-4000'), isA<RadialChronologyPage>());
+    expect(pageForUrlPath('#/wheel'), isA<RadialChronologyPage>());
   });
 }

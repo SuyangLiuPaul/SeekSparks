@@ -112,18 +112,15 @@ void main() {
   /// for one man.
   test('every birth event equals its patriarch\'s Anno Mundi birth', () {
     final base = (creation!['year'] as num).toInt();
-    // `chronology.json` spells these men as the Authorised Version does
-    // and `family_tree.json` as modern versions do, so the join needs
-    // the same alias table `chronology_test.dart` already writes out.
-    // Without it four of the eight miss the lookup and are dropped
-    // without a word, which is why the count below is pinned.
-    const alias = {
-      'enosh': 'enos',
-      'kenan': 'cainan',
-      'mahalalel': 'mahalaleel',
-      'shelah': 'salah',
-      'nahor_elder': 'nahor',
-    };
+    // A PLAIN LOOKUP ON THE EVENT'S OWN LINK. `chronology.json` used to
+    // spell these men as the Authorised Version does while the events'
+    // `personIds` name them as `family_tree.json` does, so this join
+    // needed the same five-entry alias table three other files each
+    // wrote out — and without it four of the eight missed the lookup and
+    // were dropped without a word. The chart's ids are the tree's now,
+    // so the link IS the key. The count below stays pinned: that is what
+    // makes a link quietly dropped fail here instead of shrinking the
+    // loop in silence.
     final byId = {
       for (final p
           in (chronology['patriarchs'] as List).cast<Map<String, dynamic>>())
@@ -135,7 +132,7 @@ void main() {
       if (!id.endsWith('_born')) continue;
       final links = ((e['personIds'] as List?) ?? const []).cast<String>();
       if (links.length != 1) continue;
-      final p = byId[alias[links.single] ?? links.single];
+      final p = byId[links.single];
       if (p == null) continue;
       final figures = (p['figures'] as Map?)?['mt'] as Map?;
       final birthAm = (figures?['birthAm'] as num?)?.toInt();

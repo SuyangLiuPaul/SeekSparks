@@ -784,7 +784,7 @@
    }
   },
   {
-   "id": "enos",
+   "id": "enosh",
    "name": {
     "en": "Enosh",
     "zh-Hans": "以挪士",
@@ -822,7 +822,7 @@
    }
   },
   {
-   "id": "cainan",
+   "id": "kenan",
    "name": {
     "en": "Kenan",
     "zh-Hans": "该南",
@@ -860,7 +860,7 @@
    }
   },
   {
-   "id": "mahalaleel",
+   "id": "mahalalel",
    "name": {
     "en": "Mahalalel",
     "zh-Hans": "玛勒列",
@@ -1181,7 +1181,7 @@
    }
   },
   {
-   "id": "salah",
+   "id": "shelah",
    "name": {
     "en": "Shelah",
     "zh-Hans": "沙拉",
@@ -1367,7 +1367,7 @@
    }
   },
   {
-   "id": "nahor",
+   "id": "nahor_elder",
    "name": {
     "en": "Nahor",
     "zh-Hans": "拿鹤",

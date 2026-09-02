@@ -719,32 +719,65 @@ void main() {
         reason: 'the two traditions differ across these men and this '
             'page cannot let a reader choose');
 
-    // THE HAND-OFF INVERTED. It used to say "not on this wheel: the
-    // text gives a lifespan, not a date". Since the lifespans are drawn
-    // that sentence is false about every man it can reach, and the one
-    // case left to it is a SPELLING — the chart calls him Nahor, the
-    // family tree calls him Nahor (the elder), and nothing indexed
-    // answers to the longer name.
+    // THE HAND-OFF'S LAST CASE, AND HOW IT WAS CLOSED. It used to say
+    // "not on this wheel: the text gives a lifespan, not a date" —
+    // false the moment the lifespans were drawn — and the one case left
+    // to it after that was a SPELLING: the chart called him Nahor, the
+    // family tree called him Nahor (the elder), and nothing indexed
+    // answered to the longer name, so a reader typing it was told
+    // nothing matched.
+    //
+    // The Israel band now DISPLAYS "Nahor (the elder)", the tree's own
+    // string, because the sheet was printing two rows both labelled
+    // "Nahor" — Genesis 11:22 and Genesis 11:26 — with nothing on
+    // screen telling them apart. So the longer name is a real record
+    // now and the reader gets the record instead of a sentence about
+    // one. That is the better answer, and this is where it is pinned:
+    // an index that stops carrying the name would fall back to the
+    // hand-off, and the two assertions below tell those apart.
     await tester.enterText(
         find.byKey(const ValueKey('wheelFindField')), 'Nahor (the elder)');
     await settle(tester);
     final shown = sheetText(tester);
     expect(shown, isNot(contains('不在这个轮盘上')),
-        reason: 'his life IS drawn on this wheel now — the sentence may not '
-            'go on disowning a man the chart carries');
-    expect(shown, contains('已画在本图上'),
-        reason: 'the reader has to be told the life is here, not absent');
+        reason: 'his life IS drawn on this wheel — the sentence may not go '
+            'on disowning a man the chart carries');
+    expect(shown, contains('拿鹤(亚伯拉罕祖父)'),
+        reason: 'the band answers to the tree\'s own name for him now, so a '
+            'reader typing it must reach the band and not a hand-off');
+    expect(shown, isNot(contains('已画在本图上')),
+        reason: 'the hand-off is for an empty index; standing it in front of '
+            'a record that exists is the false absence it was built to stop');
     expect(shown, isNot(contains('148')),
         reason: 'no lifespan figure in a search status line, for any of them');
-    expect(find.text('打开「圣经年代」'), findsOneWidget);
+
+    // AND THE OTHER NAHOR IS STILL HIS OWN ROW. Genesis 11:26, Abram's
+    // brother, keeps the bare name — searching it reaches both, and the
+    // two are told apart by the label rather than by the note under it.
+    await tester.enterText(
+        find.byKey(const ValueKey('wheelFindField')), 'Nahor');
+    await settle(tester);
+    final bothNahors = sheetText(tester);
+    expect(bothNahors, contains('拿鹤(亚伯拉罕祖父)'));
+    expect(bothNahors, contains('Nahor (the elder)'));
+    // The younger keeps the bare name, so the plain form is still on
+    // two rows of its own — his band, and the elder's lifespan arc,
+    // which the chart spells briefly. Two men, three rows, and the one
+    // label that used to be ambiguous is not any more.
+    expect(RegExp(r'拿鹤\nNahor\n').allMatches(bothNahors).length, 2,
+        reason: 'the plain name must still reach the arc and the younger '
+            'Nahor\'s band\n$bothNahors');
 
     // A name one letter off is a different question, and answering it
-    // with his sentence would be worse than answering nothing.
+    // with either man would be worse than answering nothing.
     await tester.enterText(
         find.byKey(const ValueKey('wheelFindField')), 'Nahor (the elderx)');
     await settle(tester);
-    expect(sheetText(tester), isNot(contains('已画在本图上')),
+    final off = sheetText(tester);
+    expect(off, isNot(contains('已画在本图上')),
         reason: 'a loose match makes a definite claim about the wrong man');
+    expect(off, isNot(contains('拿鹤(亚伯拉罕祖父)')),
+        reason: 'and it must not reach the band either');
 
     // THE SECOND SENTENCE, which the hand-off never had. Genesis
     // 4:17-24 gives Cain's line a city, wives, trades and a boast and

@@ -437,12 +437,17 @@ const Map<String, Map<String, String>> wheelStrings = {
   // THIS SENTENCE USED TO SAY THE OPPOSITE, and had to stop. It read
   // "{name} is not on this wheel: the text gives a lifespan, not a
   // date" — true while the wheel drew no lifespans, and false the
-  // moment it drew them. Every man this branch can now reach has an
-  // arc on the chart; the one thing the search could not do was
-  // recognise the name, because the family tree spells one of them
-  // longer than the chart does (Nahor the elder). So the sentence
-  // reports the spelling, which is the real gap, and never an absence
-  // that is not there.
+  // moment it drew them. Every man this branch can reach has an arc on
+  // the chart; the one thing the search could not do was recognise the
+  // name, because the family tree spelled one of them longer than the
+  // chart did (Nahor the elder). So the sentence reports the spelling,
+  // which was the real gap, and never an absence that is not there.
+  //
+  // AND THE ONE MAN IT SPOKE FOR NO LONGER NEEDS IT: the Israel band
+  // displays "Nahor (the elder)" now, so that name reaches a record.
+  // Kept because it is a guard on the data rather than a case for a
+  // person — see `_amPersonFor` — and because a string deleted the day
+  // its last caller went quiet is a string someone has to write again.
   'wheelFindAmElsewhere': {
     'zh-Hans': '{name}的生平已画在本图上，只是本图所用的名字略短。'
         '同一组年数，自创世起算，另绘于「圣经年代」。',
@@ -1969,23 +1974,35 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
   /// none. No hand-written list of patriarchs to fall out of step with
   /// the asset.
   ///
-  /// NINETEEN RECORDS QUALIFY AND EIGHTEEN ARE FOUND BY NAME, so this
-  /// almost never runs. Ten stand on the wheel as nations of Genesis 10
-  /// and 11 (Noah, Shem, Arphaxad, Shelah, Eber, Peleg, Reu, Serug,
-  /// Nahor and Terah), the whole Genesis 5 line stands on it as birth
-  /// events, and since the lifespans went back on, every one of them is
-  /// also an arc. Shelah used to be the exception — the table of
+  /// NINETEEN RECORDS QUALIFY AND NINETEEN ARE NOW FOUND BY NAME, so as
+  /// of today this never runs. Ten stand on the wheel as nations of
+  /// Genesis 10 and 11 (Noah, Shem, Arphaxad, Shelah, Eber, Peleg, Reu,
+  /// Serug, Nahor and Terah), the whole Genesis 5 line stands on it as
+  /// birth events, and since the lifespans went back on, every one of
+  /// them is also an arc. Shelah used to be an exception — the table of
   /// nations spelled him Salah while everything else spelled him
   /// Shelah — and is not any more: all five surfaces agree on the
   /// modern form and the KJV's is carried as `nameKjv`.
   ///
-  /// SO THIS ANSWERS FOR ONE MAN, and what it says about him has
-  /// changed. It used to say "not on this wheel: the text gives a
-  /// lifespan, not a date", which was true while no lifespan was drawn
-  /// and false the moment one was. What is actually missing for him is
-  /// a SPELLING: the chart calls him Nahor and the family tree calls
-  /// him Nahor (the elder), and nothing indexed here answers to the
-  /// longer name. That is what the sentence now reports.
+  /// THE LAST MAN IT ANSWERED FOR WAS NAHOR THE ELDER, and his case is
+  /// closed too. The sentence used to read "not on this wheel: the text
+  /// gives a lifespan, not a date" — true while no lifespan was drawn,
+  /// false the moment one was — and was rewritten to report the real
+  /// gap, which was a SPELLING: the chart called him Nahor, the family
+  /// tree called him Nahor (the elder), and nothing indexed answered to
+  /// the longer name. The Israel band now DISPLAYS "Nahor (the elder)",
+  /// because the band sheet was printing two rows both labelled "Nahor"
+  /// — Genesis 11:22 and Genesis 11:26 — so the longer name is a real
+  /// record and the reader gets the record instead of a sentence about
+  /// one.
+  ///
+  /// KEPT ANYWAY, and deliberately. This is a guard on the DATA, not a
+  /// special case for a man: the family tree can gain a record tomorrow
+  /// whose name no wheel record displays, and the failure it prevents —
+  /// "nothing matches" about someone the app charts — is one this page
+  /// has already shipped twice. It costs one lookup on an empty result
+  /// and it is what `test/radial_chronology_page_test.dart` tells apart
+  /// from a real hit.
   ///
   /// The men with no figures at all — Cain's line, and Eve, Cain, Abel,
   /// Ham and Japheth — are [_amPersonWithoutFigures]' business, and get
@@ -2830,12 +2847,20 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
             _refRow(context, TimelineService.instance.meta.creation!.datingRefs,
                 wb, t, locale),
           ],
-          // The family-tree record, when the tree holds this man under
-          // the same id. Five of the twenty-five it spells differently
-          // (Enosh, Kenan, Mahalalel, Shelah, Nahor the elder) and the
-          // row is simply absent for them — the same rule `_personRow`
-          // already follows, which is to link what resolves and claim
-          // nothing about what does not.
+          // The family-tree record, when the tree holds this man.
+          //
+          // FIVE ROWS WERE MISSING HERE AND NOTHING SAID SO. The lookup
+          // is by the chart's own id, and the chart used to key five of
+          // the twenty-five on the Authorised Version's spelling — enos,
+          // cainan, mahalaleel, salah, nahor — while the tree keys them
+          // enosh, kenan, mahalalel, shelah, nahor_elder. So those five
+          // sheets simply had no "People" row, by the same rule
+          // `_personRow` follows, which is to link what resolves and
+          // claim nothing about what does not: the rule was right and
+          // the key was wrong. The ids are the tree's now and all
+          // twenty-five resolve. The null branch stays, because the rule
+          // is still the rule — the wheel draws men the tree may not
+          // hold — but it is no longer standing in for a defect.
           if (person != null) ...[
             SizedBox(height: t.scaled(8)),
             Text(

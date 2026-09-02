@@ -169,15 +169,24 @@ void main() {
 
   /// A SPOKE SAYS WHEN AND AN ARC SAYS HOW LONG, and they must be the
   /// same arithmetic or the chart answers one question twice.
-  /// THE JOIN IS BY YEAR, NOT BY ID, and that is a finding rather than
-  /// a convenience. `chronology.json` and `family_tree.json` spell five
-  /// of these men differently — enos/enosh, cainan/kenan,
-  /// mahalaleel/mahalalel, salah/shelah, nahor/nahor_elder — so the
-  /// `personIds` join the ruling assumed reaches only four of the eight
-  /// Genesis 5 births and proves nothing. The year is what must agree
-  /// anyway: it is the thing a reader can see two of.
+  /// THE JOIN IS BY ID NOW, AND IT IS BOTH SIMPLER AND STRONGER.
+  ///
+  /// It was by year, and that was a finding rather than a convenience:
+  /// `chronology.json` spelled five of these men as the Authorised
+  /// Version does (enos, cainan, mahalaleel, salah, nahor) while the
+  /// events' `personIds` name them as `family_tree.json` does, so the
+  /// id join reached four of the eight Genesis births and proved almost
+  /// nothing. Joining on the year — the thing a reader can see two of —
+  /// was what could be checked at the time.
+  ///
+  /// The ids were unified onto the tree's, so all eight join, and the
+  /// claim gets sharper rather than merely shorter. "Some arc starts in
+  /// this year" cannot tell Kenan's spoke from Mahalalel's arc if the
+  /// two ever collided; "THIS man's arc starts in this year" can. The
+  /// year assertion is kept — it is still what must agree — and the id
+  /// is now what selects the arc to assert it about.
   test('every birth spoke sits exactly on its own arc start', () {
-    final arcYears = {for (final a in arcs()) a.birthYear: a};
+    final arcById = {for (final a in arcs()) a.id: a};
     final abram = (event('abram_called')['year'] as num).toInt();
     var joined = 0;
     for (final e in events()) {
@@ -188,27 +197,54 @@ void main() {
       // absence is not a disagreement.
       if (year > abram) continue;
       final ids = ((e['personIds'] as List?) ?? const []).cast<String>();
-      if (ids.isEmpty) continue;
+      if (ids.length != 1) continue;
+      final arc = arcById[ids.single];
+      expect(arc, isNotNull,
+          reason: '${e['id']} links ${ids.single} and no arc carries that '
+              'id — the spoke and the arc are two answers to one question '
+              'and they have stopped being about the same man');
       joined++;
-      expect(arcYears.containsKey(year), isTrue,
-          reason: '${e['id']} is at $year and no arc starts there — the '
-              'spoke and the arc are two answers to one question');
+      expect(arc!.birthYear, year,
+          reason: '${e['id']} is at $year and ${arc.id} starts at '
+              '${arc.birthYear}');
     }
-    expect(joined, greaterThanOrEqualTo(8),
-        reason: 'the join found almost nothing, so it proves almost nothing');
+    // EXACTLY EIGHT, not "at least". Eight is the whole of what the
+    // timeline carries above Abraham with a single person link, and it
+    // was four before the ids were unified. Pinning the number is what
+    // makes a link quietly dropped — the failure this join has already
+    // had once — fail here instead of shrinking the loop in silence.
+    expect(joined, 8,
+        reason: 'the join must reach every birth spoke on the Genesis chain');
   });
 
-  /// The five spellings, pinned so a future rename is loud. Both files
-  /// are right about their own man; what must not happen is code that
-  /// silently assumes they agree.
-  test('the two assets spell five of these men differently', () {
+  /// The five that moved, pinned so a partial revert is loud. Both files
+  /// were right about their own man; what was wrong was two join keys
+  /// for one person, and four separate alias tables holding them
+  /// together.
+  test('the two assets key these five men the same way', () {
     final chronIds = {for (final p in chron.inTradition(_drawn)) p.id};
     final personIds = <String>{
       for (final e in events())
         ...((e['personIds'] as List?) ?? const []).cast<String>()
     };
-    expect(chronIds.difference(personIds),
-        containsAll(<String>{'enos', 'cainan', 'mahalaleel', 'salah'}));
+    const moved = <String>{
+      'enosh',
+      'kenan',
+      'mahalalel',
+      'shelah',
+      'nahor_elder',
+    };
+    // `nahor_elder` has no birth event of his own, so he is checked on
+    // the chart's side only — the other four must be in both.
+    expect(chronIds, containsAll(moved));
+    expect(personIds, containsAll(moved.difference({'nahor_elder'})));
+    // And the spellings they replaced are gone, so nothing can join on
+    // one and silently find nothing.
+    for (final old in const ['enos', 'cainan', 'mahalaleel', 'salah',
+        'nahor']) {
+      expect(chronIds, isNot(contains(old)), reason: old);
+      expect(personIds, isNot(contains(old)), reason: old);
+    }
   });
 
   test('the flood, and Moses, land where the arcs end', () {
@@ -237,9 +273,9 @@ void main() {
       {
         'adam': 0,
         'seth': 1,
-        'enos': 2,
-        'cainan': 3,
-        'mahalaleel': 4,
+        'enosh': 2,
+        'kenan': 3,
+        'mahalalel': 4,
         'jared': 5,
         'enoch': 6,
         'methuselah': 7,
@@ -247,12 +283,12 @@ void main() {
         'noah': 0,
         'shem': 1,
         'arphaxad': 2,
-        'salah': 3,
+        'shelah': 3,
         'eber': 4,
         'peleg': 5,
         'reu': 6,
         'serug': 7,
-        'nahor': 8,
+        'nahor_elder': 8,
         'terah': 9,
         'abraham': 10,
         'isaac': 0,
@@ -583,6 +619,63 @@ void main() {
             'Septuagint year and not this man\'s');
     expect(find.text('打开「圣经年代」'), findsOneWidget);
     await unmount(tester);
+  });
+
+  /// THE ROW THAT WAS MISSING, AND WHO IT WAS MISSING FOR.
+  ///
+  /// The arc sheet ends with a "People" row linking the man's
+  /// family-tree record, looked up by the chart's own id. Five of the
+  /// twenty-five were keyed on the Authorised Version's spelling — enos,
+  /// cainan, mahalaleel, salah, nahor — where the tree keys them enosh,
+  /// kenan, mahalalel, shelah, nahor_elder, so `byId` returned null and
+  /// the row was simply absent. Not an error on screen: a link the
+  /// reader never saw, on the five sheets most likely to send them
+  /// looking for one, because those are the men whose two spellings they
+  /// have just been shown.
+  ///
+  /// The ids are unified, so all five are checked here by tapping the
+  /// arc and reading the sheet. Adam is checked alongside them as the
+  /// control — his id never moved, so if HIS row is missing too the
+  /// failure is in the sheet and not in the join.
+  testWidgets('the five renamed men have their family-tree row back',
+      (tester) async {
+    const people = '相关人物';
+    for (final man in const [
+      ('adam', '亚当'),
+      ('enosh', '以挪士'),
+      ('kenan', '该南'),
+      ('mahalalel', '玛勒列'),
+      ('shelah', '沙拉'),
+      ('nahor_elder', '拿鹤'),
+    ]) {
+      await pump(tester, const Size(900, 900));
+      final rect =
+          tester.getRect(find.byKey(const ValueKey('chronologyWheel')));
+      final arc = arcs().firstWhere((a) => a.id == man.$1);
+      // SPOKES WIN TIES, on purpose — a birth tick is a much smaller
+      // target than a life and must never be swallowed by one. So the
+      // arc's mid-angle is not always the arc: Enosh's centre sits under
+      // Methuselah's birth spoke. Walk across the span until the tap
+      // lands on the life itself, and fail if none of them does.
+      var text = '';
+      for (final f in const [0.5, 0.35, 0.65, 0.2, 0.8]) {
+        await tester.tapAt(rect.topLeft +
+            pointOn(arc, rect.width,
+                atAngle: arc.a0 + (arc.a1 - arc.a0) * f));
+        await tester.pump(const Duration(milliseconds: 400));
+        text = sheetText(tester);
+        if (text.contains(man.$2) && text.contains('列祖寿数')) break;
+        await unmount(tester);
+        await pump(tester, const Size(900, 900));
+      }
+      expect(text, contains(man.$2),
+          reason: '${man.$1}: no tap across his span opened his life');
+      expect(text, contains(people),
+          reason: '${man.$1}: no People row — the sheet could not find him '
+              'in family_tree.json, which is the defect the unified ids '
+              'were meant to close');
+      await unmount(tester);
+    }
   });
 
   testWidgets('Lamech prints the figures the two texts disagree on',

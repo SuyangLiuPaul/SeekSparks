@@ -474,31 +474,33 @@ void main() {
       });
 
       // THE JOIN KEY IS THE FIRST THING TO CHECK, and it was wrong. The
-      // IDS on this chart are the Authorised Version's spellings (enos,
-      // cainan, mahalaleel, salah) and `family_tree.json`'s are the
-      // modern ones (enosh, kenan, mahalalel, shelah), plus a Nahor that
-      // has to be told from Abram's brother — so five rows missed the
-      // lookup and were dropped without a word. The DISPLAYED names have
-      // agreed since the spellings were unified; the ids have not, and
-      // this alias table is still the whole of what joins them. They all agreed, so the witness was
-      // only weaker than advertised, but they could not have failed the
-      // build if they had disagreed, which is what the sentence promises.
+      // ids on this chart were the Authorised Version's spellings (enos,
+      // cainan, mahalaleel, salah) and `family_tree.json`'s the modern
+      // ones, plus a Nahor that has to be told from Abram's brother — so
+      // five rows missed the lookup and were dropped without a word.
+      // They all agreed, so the witness was only weaker than advertised,
+      // but they could not have failed the build if they had disagreed,
+      // which is what the sentence promises. A five-entry alias table
+      // closed that; the ids themselves are the tree's now, so the join
+      // is `person.id` and there is no table left to fall out of date.
       test('every man on the chart is joined to the second witness', () {
         final byId = _familyTree();
-        const alias = {
-          'enos': 'enosh',
-          'cainan': 'kenan',
-          'mahalaleel': 'mahalalel',
-          'salah': 'shelah',
-          'nahor': 'nahor_elder',
-        };
-        // The tree holds both Nahors. A join that guessed from the
-        // spelling would have compared Terah's father with Abram's
-        // brother and reported an agreement either way.
+        // The tree holds both Nahors and both Shelahs, and this chart
+        // carries one of each. A join that guessed from the spelling
+        // could compare Terah's father with Abram's brother, or
+        // Arphaxad's son with Judah's, and report an agreement either
+        // way — so the chart takes the tree's id verbatim and the two it
+        // does NOT carry are named here.
         expect(byId.containsKey('nahor'), isFalse);
         expect(byId.containsKey('nahor_younger'), isTrue);
+        expect(byId.containsKey('shelah_judah'), isTrue);
+        final charted = {for (final p in data.inTradition('mt')) p.id};
+        expect(charted, isNot(contains('nahor_younger')));
+        expect(charted, isNot(contains('shelah_judah')));
+        expect(byId['nahor_elder']!['fatherId'], 'serug');
+        expect(byId['shelah']!['fatherId'], 'arphaxad');
         for (final person in data.inTradition('mt')) {
-          expect(byId[alias[person.id] ?? person.id], isNotNull,
+          expect(byId[person.id], isNotNull,
               reason: '${person.id} is witnessed by nothing');
         }
       });
@@ -512,16 +514,9 @@ void main() {
       // years".
       test('the second witness sentence states the split it measured', () {
         final byId = _familyTree();
-        const alias = {
-          'enos': 'enosh',
-          'cainan': 'kenan',
-          'mahalaleel': 'mahalalel',
-          'salah': 'shelah',
-          'nahor': 'nahor_elder',
-        };
         var birth = 0, span = 0, gap = 0, agreed = 0;
         for (final person in data.inTradition('mt')) {
-          final rec = byId[alias[person.id] ?? person.id];
+          final rec = byId[person.id];
           if (rec == null || rec['birthYear'] == null) continue;
           final f = person.figures['mt']!;
           if (rec['yearSystem'] == 'am') {
@@ -539,8 +534,8 @@ void main() {
           ['isaac', 'jacob'],
           ['jacob', 'joseph'],
         ]) {
-          final a = byId[alias[pair[0]] ?? pair[0]];
-          final b = byId[alias[pair[1]] ?? pair[1]];
+          final a = byId[pair[0]];
+          final b = byId[pair[1]];
           if (a == null || b == null) continue;
           if (a['yearSystem'] != b['yearSystem']) continue;
           if (a['birthYear'] == null || b['birthYear'] == null) continue;

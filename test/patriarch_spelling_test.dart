@@ -48,11 +48,15 @@ import 'package:seeksparks/utils/wheel_search.dart';
 
 /// The four men, and the two forms each answers to.
 ///
-/// [chronId] and [treeId] differ because the ids were never unified —
-/// `chronology.json` keyed itself on the Authorised Version's spelling
-/// and `family_tree.json` on the modern one, and both are join keys in
-/// shipped code. Naming both here is what lets this file compare the
-/// records rather than assume a shared key it does not have.
+/// [chronId] and [treeId] ARE THE SAME STRING NOW, and the pair of
+/// fields is kept rather than collapsed because that is the fact worth
+/// asserting. They were different: `chronology.json` keyed itself on the
+/// Authorised Version's spelling and `family_tree.json` on the modern
+/// one, both are join keys in shipped code, and every join between them
+/// needed an alias table that four separate files each wrote out for
+/// themselves. The ids were unified onto the tree's, so the two columns
+/// below read identically — and `the two assets key these men the same
+/// way` fails the moment they stop.
 class _Man {
   const _Man({
     required this.chronId,
@@ -80,7 +84,7 @@ class _Man {
 
 const _men = <_Man>[
   _Man(
-    chronId: 'enos',
+    chronId: 'enosh',
     treeId: 'enosh',
     timelineId: 'enosh_born',
     modern: 'Enosh',
@@ -90,7 +94,7 @@ const _men = <_Man>[
     witness: 'Genesis 5:6',
   ),
   _Man(
-    chronId: 'cainan',
+    chronId: 'kenan',
     treeId: 'kenan',
     timelineId: 'kenan_born',
     modern: 'Kenan',
@@ -100,7 +104,7 @@ const _men = <_Man>[
     witness: 'Genesis 5:9',
   ),
   _Man(
-    chronId: 'mahalaleel',
+    chronId: 'mahalalel',
     treeId: 'mahalalel',
     timelineId: 'mahalalel_born',
     modern: 'Mahalalel',
@@ -110,7 +114,7 @@ const _men = <_Man>[
     witness: 'Genesis 5:12',
   ),
   _Man(
-    chronId: 'salah',
+    chronId: 'shelah',
     treeId: 'shelah',
     timelineId: 'shelah_born',
     modern: 'Shelah',
@@ -271,22 +275,19 @@ void main() {
         for (final p in (treeRaw['people'] as List).cast<Map<String, dynamic>>())
           p['id'] as String: p['name'] as String,
       };
-      // The chart's ids are the AV's and the tree's are the modern
-      // ones, so the join is written out. Never guessed from the
-      // spelling: the tree holds both `nahor_elder` (Terah's father,
-      // who is on the chart) and `nahor_younger` (Abram's brother, who
-      // is not), and a prefix match would compare the wrong man.
-      const alias = <String, String>{
-        'enos': 'enosh',
-        'cainan': 'kenan',
-        'mahalaleel': 'mahalalel',
-        'salah': 'shelah',
-        'nahor': 'nahor_elder',
-      };
+      // A PLAIN LOOKUP, and it did not used to be one. The chart's ids
+      // were the AV's and the tree's the modern ones, so this test — and
+      // three others, and the generator — each wrote out the same
+      // five-entry alias table. The ids were unified onto the tree's, so
+      // the join is now `p.id` itself. The two men the tree distinguishes
+      // and the chart does not (`nahor_elder`/`nahor_younger`,
+      // `shelah`/`shelah_judah`) are still safe for the same reason they
+      // were before: the id is the tree's own, so nothing is inferred
+      // from the spelling.
       final disagree = <String>[];
       var compared = 0;
       for (final p in chron.patriarchs) {
-        final treeName = treeNames[alias[p.id] ?? p.id];
+        final treeName = treeNames[p.id];
         if (treeName == null) continue; // not in the tree; nothing to compare
         compared++;
         // The tree tags two men of one name — "Nahor (the elder)" — and
@@ -298,13 +299,74 @@ void main() {
         }
       }
       // The sweep really swept. A join that silently stopped resolving
-      // — which is the exact defect the alias table above was written
-      // to fix in `build_chronology.py` — would leave this at zero and
+      // — the exact defect the alias table this replaced was written to
+      // fix in `build_chronology.py` — would leave this at zero and
       // report agreement about nothing.
       expect(compared, greaterThanOrEqualTo(20));
       expect(disagree, isEmpty,
           reason: 'two assets print two spellings of one man\n'
               '${disagree.join('\n')}');
+    });
+
+    /// THE JOIN KEY ITSELF, now that there is only one.
+    ///
+    /// Five men were keyed `enos` / `cainan` / `mahalaleel` / `salah` /
+    /// `nahor` on the chart and `enosh` / `kenan` / `mahalalel` /
+    /// `shelah` / `nahor_elder` in the tree. Every consumer that wanted
+    /// both had to carry an alias table, and the one that forgot simply
+    /// dropped the row: the wheel's lifespan sheet had no "People" link
+    /// for those five, because it looked them up by the chart's id.
+    ///
+    /// So the assertion is not "the tables agree" but "there is no
+    /// table" — every id on the chart is an id the tree holds, spelled
+    /// the same way.
+    test('the two assets key these men the same way', () {
+      final treeIds = {
+        for (final p in (treeRaw['people'] as List).cast<Map<String, dynamic>>())
+          p['id'] as String
+      };
+      for (final m in _men) {
+        expect(m.chronId, m.treeId, reason: m.modern);
+      }
+      // The five that moved, by name, so a partial revert is loud.
+      for (final id in const [
+        'enosh',
+        'kenan',
+        'mahalalel',
+        'shelah',
+        'nahor_elder',
+      ]) {
+        expect(chron.byId(id), isNotNull,
+            reason: '$id is the id the family tree uses and the chart must '
+                'use it too');
+        expect(treeIds, contains(id));
+      }
+      // And the spellings they replaced are gone from the chart's keys —
+      // not merely unused, absent, so nothing can quietly join on one.
+      for (final old in const [
+        'enos',
+        'cainan',
+        'mahalaleel',
+        'salah',
+        'nahor',
+      ]) {
+        expect(chron.byId(old), isNull, reason: old);
+      }
+      // `shelah` is Arphaxad's son and not Judah's, and `nahor_elder` is
+      // Terah's father and not Abram's brother. The tree holds all four
+      // records and the ids are the only thing choosing between them, so
+      // the choice is asserted rather than assumed.
+      final tree = {
+        for (final p in (treeRaw['people'] as List).cast<Map<String, dynamic>>())
+          p['id'] as String: p,
+      };
+      expect(tree['shelah']!['fatherId'], 'arphaxad');
+      expect(tree['nahor_elder']!['fatherId'], 'serug');
+      expect(tree['shelah_judah']!['fatherId'], 'judah');
+      expect(tree['nahor_younger']!['fatherId'], 'terah');
+      // Neither of the other two is on the chart at all.
+      expect(chron.byId('shelah_judah'), isNull);
+      expect(chron.byId('nahor_younger'), isNull);
     });
   });
 
@@ -425,6 +487,52 @@ void main() {
               (h) => h.kind == WheelHitKind.patriarch && h.id == m.chronId),
           isTrue,
           reason: m.chronId,
+        );
+      }
+    });
+
+    /// EVERY ID THE CHART NO LONGER USES, TYPED AS A WORD.
+    ///
+    /// Renaming a join key is only safe if nothing was reaching the
+    /// record THROUGH that key, and the search box is the one place a
+    /// reader types a string of their own. The five ids that were
+    /// retired — enos, cainan, mahalaleel, salah, nahor — all read as
+    /// names, and four of them are exactly what the Authorised Version
+    /// prints, so a reader may well type one. Each must still land on
+    /// the man it used to name.
+    ///
+    /// Typed lower-case, as an id is written, to prove the fold is
+    /// doing the work rather than a lucky capitalisation.
+    test('every retired id still finds the man it used to name', () {
+      const retired = <String, String>{
+        'enos': 'enosh',
+        'cainan': 'kenan',
+        'mahalaleel': 'mahalalel',
+        'salah': 'shelah',
+        // Not a KJV spelling — this one was retired because the tree
+        // tells two Nahors apart and the chart had to say which.
+        'nahor': 'nahor_elder',
+      };
+      retired.forEach((typed, nowId) {
+        final r = find(typed);
+        expect(
+          r.hits.any(
+              (h) => h.kind == WheelHitKind.patriarch && h.id == nowId),
+          isTrue,
+          reason: '"$typed" was a live id and is now nothing; a reader who '
+              'types it must still reach $nowId',
+        );
+      });
+      // The Chinese reader loses nothing either: the four the KJV
+      // spells differently were always identical in Chinese, and the
+      // fifth is reached by the name the chart prints.
+      for (final m in _men) {
+        expect(
+          find(m.zhHans, locale: 'zh-Hans')
+              .hits
+              .any((h) => h.kind == WheelHitKind.patriarch),
+          isTrue,
+          reason: m.zhHans,
         );
       }
     });
