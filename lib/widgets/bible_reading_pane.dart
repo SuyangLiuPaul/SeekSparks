@@ -689,7 +689,9 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
   void _scrollChapterToTop() {
     final mp = context.read<MainProvider>();
     final c = mp.itemScrollController;
-    if (!c.isAttached) return;
+    // `canScrollList`, not `isAttached` — see MainProvider. A pane can
+    // be attached and never laid out, and `scrollTo` throws there.
+    if (!mp.canScrollList) return;
     c.scrollTo(
       index: 0,
       duration: const Duration(milliseconds: 350),
@@ -1505,7 +1507,12 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
                 debugPrint('[SeekSparks jump] bail: !mounted (attempt $attempt)');
                 return;
               }
-              if (mp.itemScrollController.isAttached) {
+              // `canScrollList`, not `isAttached`: attached-but-never
+              // laid out was the state this used to try to scroll in,
+              // where `scrollToIndexAnimated` now no-ops — so the jump
+              // was silently lost instead of retried. The retry is
+              // bounded at 60 attempts below.
+              if (mp.canScrollList) {
                 try {
                   mp.scrollToIndexAnimated(
                     index: pendingIdx,
@@ -1529,7 +1536,7 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
                   // settles guarantees the final position is right.
                   Future.delayed(const Duration(milliseconds: 380), () {
                     if (!mounted) return;
-                    if (!mp.itemScrollController.isAttached) return;
+                    if (!mp.canScrollList) return;
                     try {
                       mp.scrollToIndexAnimated(
                         index: pendingIdx,
@@ -2539,10 +2546,7 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
                         child: GestureDetector(
                         behavior: HitTestBehavior.opaque,
                         onTap: () {
-                          if (!mainProvider
-                              .itemScrollController.isAttached) {
-                            return;
-                          }
+                          if (!mainProvider.canScrollList) return;
                           mainProvider.itemScrollController.scrollTo(
                             index: 0,
                             duration:

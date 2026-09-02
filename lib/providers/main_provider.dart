@@ -1476,10 +1476,43 @@ class MainProvider extends ChangeNotifier {
     return v;
   }
 
+  /// True when the active list can actually be scrolled.
+  ///
+  /// `isAttached` IS NOT THIS CHECK, and the difference cost a live
+  /// crash on 2026-09-02 (`Bad state: No element`, v1.6.204, route
+  /// `/wheel`). It says only that a `ScrollablePositionedList` reached
+  /// `initState` and registered its controller. The scroll POSITION is
+  /// made by the `Scrollable` inside it, under a `LayoutBuilder`, so it
+  /// exists only after LAYOUT — and `scrollTo` goes straight to
+  /// `ScrollController.position`, which is `_positions.single` and
+  /// throws on an empty list. In debug that is a framework assertion;
+  /// release compiles the assertion out and `.single`'s error is what
+  /// the reader sees.
+  ///
+  /// Between attach and layout there is normally no frame in which
+  /// anything can call. There is one now: a cold `#/wheel` boots the
+  /// stack `[home, wheel]`, and the Overlay lays out only the entries
+  /// above the last opaque one, so the workbench underneath is built —
+  /// and goes on building, because a descendant's `setState` needs no
+  /// layout — while never being laid out at all.
+  ///
+  /// `itemPositions` is the honest answer: it is empty until the list
+  /// has laid out, and it is what the list itself fills. It is also
+  /// empty for a list with no items, and scrolling one of those is
+  /// meaningless, so the same guard covers both.
+  ///
+  /// `jumpTo` does NOT need this — `ScrollController.jumpTo` iterates
+  /// `_positions` and no-ops on an empty one — but it is harmless
+  /// there and the callers are easier to read when every scroll asks
+  /// the same question.
+  bool get canScrollList =>
+      itemScrollController.isAttached &&
+      itemPositionsListener.itemPositions.value.isNotEmpty;
+
   // Method to scroll to a specific index in the list and notify listeners
   void scrollToIndex({required int index}) {
     final mapped = _verseToItemMap[index] ?? index;
-    if (itemScrollController.isAttached) {
+    if (canScrollList) {
       itemScrollController.scrollTo(
         index: mapped,
         duration: const Duration(milliseconds: 800),
@@ -1518,7 +1551,7 @@ class MainProvider extends ChangeNotifier {
     double alignment = 0.0,
   }) {
     final mapped = _verseToItemMap[index] ?? index;
-    if (itemScrollController.isAttached) {
+    if (canScrollList) {
       itemScrollController.scrollTo(
         index: mapped,
         duration: duration,
