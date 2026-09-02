@@ -158,11 +158,12 @@ void main() {
     }
     // And the converse, so this cannot be satisfied by marking everything
     // conventional again.
-    // 116 since 2026-09-02: 59 plus the 57 church-history spans — 42
-    // pontificates, 8 Byzantine reigns, 5 crusades, the Latin Empire
-    // and the Order of Saint John. Every one of them is conventional,
-    // and none could be anything else: scripture dates no pope.
-    expect(data.powers.where((p) => p.basis == 'conventional').length, 116);
+    // 146 since 2026-09-03: 59, plus the 57 church-history spans (42
+    // pontificates, 8 Byzantine reigns, 5 crusades, the Latin Empire and
+    // the Order of Saint John), plus 30 Roman and Greek ones. Every one
+    // is conventional and none could be anything else: scripture dates
+    // no pope and no emperor.
+    expect(data.powers.where((p) => p.basis == 'conventional').length, 146);
   });
 
   test('both spellings of a power reference reach the model', () {

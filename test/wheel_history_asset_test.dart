@@ -258,11 +258,13 @@ void main() {
     }
     // The guard on the guard: a sweep that saw one record, or one
     // vocabulary word, would pass everything above and prove nothing.
-    expect(checked, 785,
-        reason: '584 events + 119 powers + 82 nations; if this moved, the '
-            'corpus grew and the count should move with it. It grew on '
-            '2026-09-02 by the 74 church-history records — 17 events and '
-            '57 spans covering the papacy, Byzantium and the crusades');
+    expect(checked, 825,
+        reason: '594 events + 149 powers + 82 nations; if this moved, the '
+            'corpus grew and the count should move with it. 2026-09-02 '
+            'added 74 church-history records; 2026-09-03 added 42 Roman '
+            'and Greek ones and MERGED two duplicate pairs away — the '
+            'library of Alexandria and the Silk Road were each entered '
+            'twice, ten and eight years apart');
     expect(seen, {'scripture', 'scripture+thiele', 'conventional'},
         reason: 'all three words are in use, so the closed set is doing '
             'work rather than admitting the only value there is');

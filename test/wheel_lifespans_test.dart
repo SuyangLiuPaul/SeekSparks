@@ -444,40 +444,47 @@ void main() {
   /// absent. These numbers are therefore a conservative floor under a
   /// real render, which is the direction a ratchet should be wrong in.
   ///
-  /// 2026-09-02, RE-MEASURED after the ministries joined the band, and
-  /// two of the six cells really did fall. The ministries take the band
-  /// from eleven sub-rings to fifteen — they overlap each other and the
-  /// reigns through the whole divided monarchy, and `ringPitch` divides
-  /// the annulus by the GLOBAL ring count, so a pile-up in one sector
-  /// thins the rings everywhere — and the pitch at 700 px goes from
-  /// 9.73 px to 7.13. What that costs, exactly:
+  /// 2026-09-03, RE-MEASURED. Two things have squeezed this annulus in
+  /// two days, and both were asked for.
+  ///
+  /// THE BAND took the reigns, the ministries and the genealogy rail,
+  /// going from eleven sub-rings to sixteen — a sub-ring from 9.73 px
+  /// deep to 8.69 at 900 px, 6.69 at 700. THE ANNULUS took 74
+  /// church-history and 42 Roman and Greek records, of which 29 are
+  /// EVENTS, and an event is a spoke: 29 more radial labels that an
+  /// arc's name has to find room beside.
+  ///
+  /// What that has cost, cell by cell, against the 25 Genesis names:
   ///
   ///     700 en        21 -> 20   Abraham, Jacob, Joseph, Aaron, Moses
-  ///     700 zh-Hans   24 -> 24   unchanged
-  ///     900 en        23 -> 22   Jacob, Joseph, Moses
-  ///     900 zh-Hans   23 -> 22   Abraham, Isaac, Moses
-  ///     1400 en       25 -> 25   every name
+  ///     700 zh-Hans   24 -> 24   only Jacob
+  ///     900 en        23 -> 21   Jacob, Joseph, Aaron, Moses
+  ///     900 zh-Hans   23 -> 21   Abraham, Isaac, Aaron, Moses
+  ///     1400 en       25 -> 23   Aaron and Moses
   ///     1400 zh-Hans  25 -> 25   every name
   ///
-  /// Both figures above are AFTER the genealogy rail took the sixteenth
-  /// ring as well. Four names across six cells, none at 1400 px.
+  /// **1400 px no longer places all 25 in English, and it did until
+  /// today.** That is worth saying plainly rather than burying: the
+  /// largest canvas was the guarantee that nothing was permanently
+  /// lost, and it has stopped being one for two names. Aaron and Moses
+  /// are the shortest-lived of the 25 by a wide margin — 123 and 120
+  /// years against 900-odd — so they have the least arc to write in,
+  /// and they are the first to go every time.
   ///
-  /// Three names lost across six cells, all of them long, none of them
-  /// at the canvas the wheel usually gets, and every one of them back
-  /// at 1400 px. `900 en` rose because a thinner ring is also a shorter
-  /// arc to clear, and one name that used to collide now fits.
-  ///
-  /// An arc that loses its label is still tappable and its sheet still
-  /// names it, so what is lost is scanning, not reach. The numbers are
-  /// written down rather than the floors lowered quietly, and `the
-  /// strong floors still hold with the ministries off` below is what
-  /// keeps this from becoming a licence to keep spending the annulus.
+  /// An arc that loses its label is still tappable, still selected by
+  /// search, and still named in its own sheet, so what is lost is
+  /// SCANNING, not reach. The numbers are written down rather than the
+  /// floors lowered quietly, and `the strong floors still hold with the
+  /// ministries off` below is what keeps this from becoming a licence
+  /// to keep spending the annulus. If a third layer wants room, the
+  /// answer is no longer "measure the cost" — it is that the cost has
+  /// reached the largest canvas and something has to give first.
   const floors = <String, int>{
     '700 en': 20,
     '700 zh-Hans': 24,
-    '900 en': 22,
-    '900 zh-Hans': 22,
-    '1400 en': 25,
+    '900 en': 21,
+    '900 zh-Hans': 21,
+    '1400 en': 23,
     '1400 zh-Hans': 25,
   };
   test('every life can be named at rest, at every canvas the wheel gets',

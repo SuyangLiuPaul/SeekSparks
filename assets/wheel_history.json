@@ -4087,6 +4087,576 @@
     "zh-Hans": "1113年由巴斯加二世确认为在耶路撒冷照顾朝圣者的修会，后转为武装修会，1310至1522年治理罗得岛，1530至1798年治理马耳他，至今仍以主权修会的身分存在。",
     "zh-Hant": "1113年由巴斯加二世確認為在耶路撒冷照顧朝聖者的修會，後轉為武裝修會，1310至1522年治理羅得島，1530至1798年治理馬爾他，至今仍以主權修會的身分存在。"
    }
+  },
+  {
+   "id": "grc-kingdom-of-macedon",
+   "start": -700,
+   "end": -168,
+   "region": "greece",
+   "stream": "greece",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "Kingdom of Macedon",
+    "zh-Hans": "马其顿王国",
+    "zh-Hant": "馬其頓王國"
+   },
+   "note": {
+    "en": "The Argead kingdom on Greece's northern edge, reckoned from about the seventh century BC, which under Philip II and Alexander came to rule the Greek world. Rome abolished the monarchy after Pydna in 168 BC. The start is a rounded century; no founding year is recoverable.",
+    "zh-Hans": "希腊北缘的阿吉德王国，约自主前七世纪算起，至腓力二世与亚历山大时统治全希腊世界。主前168年彼得那之役后，罗马废其王统。起点为约略的世纪之数；真正的建国年份已不可考。",
+    "zh-Hant": "希臘北緣的阿吉德王國，約自主前七世紀算起，至腓力二世與亞歷山大時統治全希臘世界。主前168年彼得那之役後，羅馬廢其王統。起點為約略的世紀之數；真正的建國年份已不可考。"
+   }
+  },
+  {
+   "id": "grc-philip-ii",
+   "start": -359,
+   "end": -336,
+   "region": "greece",
+   "stream": "greece",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Philip II of Macedon",
+    "zh-Hans": "马其顿的腓力二世",
+    "zh-Hant": "馬其頓的腓力二世"
+   },
+   "note": {
+    "en": "He remade the Macedonian army, took the Greek cities one by one, and left his son Alexander a kingdom ready to march on Persia. He was assassinated in 336 BC.",
+    "zh-Hans": "他重整马其顿军制，逐一收服希腊城邦，把一个整装待发、可挥师波斯的王国留给儿子亚历山大。主前336年遇刺身亡。",
+    "zh-Hant": "他重整馬其頓軍制，逐一收服希臘城邦，把一個整裝待發、可揮師波斯的王國留給兒子亞歷山大。主前336年遇刺身亡。"
+   }
+  },
+  {
+   "id": "grc-theban-hegemony",
+   "start": -371,
+   "end": -362,
+   "region": "greece",
+   "stream": "greece",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Theban Hegemony",
+    "zh-Hans": "底比斯霸权",
+    "zh-Hant": "底比斯霸權"
+   },
+   "note": {
+    "en": "Thebes broke Sparta at Leuctra in 371 BC and led Greece for nine years, until Epaminondas fell at Mantinea in 362. The city itself was destroyed by Alexander in 335 BC.",
+    "zh-Hans": "主前371年底比斯于琉克特拉击破斯巴达，领袖希腊九年，至主前362年埃帕米农达战殁于曼丁尼亚为止。底比斯城本身则于主前335年被亚历山大夷平。",
+    "zh-Hant": "主前371年底比斯於琉克特拉擊破斯巴達，領袖希臘九年，至主前362年埃帕米農達戰歿於曼丁尼亞為止。底比斯城本身則於主前335年被亞歷山大夷平。"
+   }
+  },
+  {
+   "id": "grc-hippias-tyranny",
+   "start": -527,
+   "end": -510,
+   "region": "greece",
+   "stream": "greece",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Hippias, Last Tyrant of Athens",
+    "zh-Hans": "雅典末代僭主希庇亚斯",
+    "zh-Hant": "雅典末代僭主希庇亞斯"
+   },
+   "note": {
+    "en": "He succeeded his father Peisistratos in 528/527 BC and was driven out by a Spartan army in 510. Athens' democracy was framed in the years just after him.",
+    "zh-Hans": "主前528／527年继其父庇西特拉图之位，主前510年被斯巴达军逐出。雅典的民主制即在他去后数年间成形。",
+    "zh-Hant": "主前528／527年繼其父庇西特拉圖之位，主前510年被斯巴達軍逐出。雅典的民主制即在他去後數年間成形。"
+   }
+  },
+  {
+   "id": "grc-herodotus",
+   "start": -484,
+   "end": -425,
+   "region": "greece",
+   "stream": "greece",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "Herodotus",
+    "zh-Hans": "希罗多德",
+    "zh-Hant": "希羅多德"
+   },
+   "note": {
+    "en": "The band is his life, and both ends are approximate: the ancient notices are few and late. His enquiry into the Persian wars is the earliest work of prose history that survives whole.",
+    "zh-Hans": "此段所画的是他的一生，两端皆为约数：古代关于他的记载既少且晚。他对波斯战争的考究，是完整传世最早的散文史著。",
+    "zh-Hant": "此段所畫的是他的一生，兩端皆為約數：古代關於他的記載既少且晚。他對波斯戰爭的考究，是完整傳世最早的散文史著。"
+   }
+  },
+  {
+   "id": "grc-delphic-oracle",
+   "start": -800,
+   "end": 393,
+   "region": "greece",
+   "stream": "greece",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "The Oracle at Delphi",
+    "zh-Hans": "德尔斐神谕所",
+    "zh-Hant": "德爾斐神諭所"
+   },
+   "note": {
+    "en": "The shrine whose priestess was consulted by cities and kings for more than a thousand years, established by the eighth century BC at latest and silenced under Theodosius I at the end of the fourth century AD. Both ends are approximate.",
+    "zh-Hans": "此圣所的女祭司千余年间为城邦与君王卜问，最迟主前八世纪已设立，至公元四世纪末在狄奥多西一世治下沉寂。两端皆为约数。",
+    "zh-Hant": "此聖所的女祭司千餘年間為城邦與君王卜問，最遲主前八世紀已設立，至公元四世紀末在狄奧多西一世治下沉寂。兩端皆為約數。"
+   }
+  },
+  {
+   "id": "grc-greek-colonisation",
+   "start": -750,
+   "end": -550,
+   "region": "greece",
+   "stream": "greece",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "Greek Colonisation of the Mediterranean",
+    "zh-Hans": "希腊大殖民",
+    "zh-Hant": "希臘大殖民"
+   },
+   "note": {
+    "en": "Two centuries in which Greek cities planted settlements from Spain to the Black Sea — Ionians chiefly eastward and northward, Dorians in Sicily and southern Italy. It is why the Greek of the New Testament was already a Mediterranean language before Alexander.",
+    "zh-Hans": "两个世纪之间，希腊各城邦自西班牙至黑海广布殖民地——伊奥尼亚人多向东、向北，多里安人则在西西里与南意大利。故此在亚历山大之前，新约所用的希腊语早已是地中海的通行语。",
+    "zh-Hant": "兩個世紀之間，希臘各城邦自西班牙至黑海廣布殖民地——伊奧尼亞人多向東、向北，多里安人則在西西里與南意大利。故此在亞歷山大之前，新約所用的希臘語早已是地中海的通行語。"
+   }
+  },
+  {
+   "id": "rom-numa-pompilius",
+   "start": -715,
+   "end": -672,
+   "region": "rome",
+   "stream": "rome",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "Numa Pompilius, Second King of Rome",
+    "zh-Hans": "罗马第二王努马·庞皮里乌斯",
+    "zh-Hant": "羅馬第二王努瑪·龐皮里烏斯"
+   },
+   "note": {
+    "en": "The seven kings of Rome are legend as much as history — the city's own records were destroyed when the Gauls sacked it in 390 BC — and these are the traditional years the Roman writers gave. Numa was remembered as the king who gave Rome its priesthoods and its calendar.",
+    "zh-Hans": "罗马七王半属传说：主前390年高卢人洗劫罗马时，城中档案尽毁；此处所用是罗马作家相传的年份。努马被记为为罗马定立祭司制度与历法的王。",
+    "zh-Hant": "羅馬七王半屬傳說：主前390年高盧人洗劫羅馬時，城中檔案盡毀；此處所用是羅馬作家相傳的年份。努瑪被記為為羅馬定立祭司制度與曆法的王。"
+   }
+  },
+  {
+   "id": "rom-ancus-marcius",
+   "start": -640,
+   "end": -616,
+   "region": "rome",
+   "stream": "rome",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "Ancus Marcius, Fourth King of Rome",
+    "zh-Hans": "罗马第四王安库斯·马奇乌斯",
+    "zh-Hant": "羅馬第四王安庫斯·馬奇烏斯"
+   },
+   "note": {
+    "en": "Traditional years again, and legendary like the rest of the seven kings. He was remembered for the first bridge over the Tiber and for the port at Ostia.",
+    "zh-Hans": "同为相传的年份，与七王中其余诸王一样属于传说。他被记为架起台伯河上第一座桥、并开辟奥斯提亚港口的王。",
+    "zh-Hant": "同為相傳的年份，與七王中其餘諸王一樣屬於傳說。他被記為架起台伯河上第一座橋、並開闢奧斯提亞港口的王。"
+   }
+  },
+  {
+   "id": "rom-etruscan-wars",
+   "start": -509,
+   "end": -264,
+   "region": "rome",
+   "stream": "rome",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "Rome's Wars with the Etruscans",
+    "zh-Hans": "罗马与伊特鲁里亚人的战争",
+    "zh-Hant": "羅馬與伊特魯里亞人的戰爭"
+   },
+   "note": {
+    "en": "From the expulsion of the Etruscan kings to the destruction of Volsinii in 264 BC, by which the last Etruscan city fell. Veii, the nearest and greatest, was taken about 396 BC. Both ends are conventional; some references close the wars at 283 or 273 BC instead.",
+    "zh-Hans": "自驱逐伊特鲁里亚诸王起，至主前264年伏尔西尼被毁、最后一座伊特鲁里亚城邦陷落为止。距罗马最近、也最强的维爱约于主前396年被攻取。两端皆属通行之说；也有著作把战事的终点定在主前283或273年。",
+    "zh-Hant": "自驅逐伊特魯里亞諸王起，至主前264年伏爾西尼被毀、最後一座伊特魯里亞城邦陷落為止。距羅馬最近、也最強的維愛約於主前396年被攻取。兩端皆屬通行之說；也有著作把戰事的終點定在主前283或273年。"
+   }
+  },
+  {
+   "id": "rom-conquest-hispania",
+   "start": -206,
+   "end": -19,
+   "region": "rome",
+   "stream": "rome",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "Roman Conquest of Spain",
+    "zh-Hans": "罗马征服西班牙",
+    "zh-Hant": "羅馬征服西班牙"
+   },
+   "note": {
+    "en": "Nearly two centuries: from the taking of the Carthaginian south and east in the Second Punic War to Augustus finishing the Cantabrian wars in the north in 19 BC. Many references start it instead at the Roman landing of 218 BC.",
+    "zh-Hans": "前后近两个世纪：自第二次布匿战争中夺取迦太基人所据的南部与东部，至主前19年奥古斯都在北方结束坎塔布里亚战事为止。也有不少著作把起点定在主前218年罗马登陆之时。",
+    "zh-Hant": "前後近兩個世紀：自第二次布匿戰爭中奪取迦太基人所據的南部與東部，至主前19年奧古斯都在北方結束坎塔布里亞戰事為止。也有不少著作把起點定在主前218年羅馬登陸之時。"
+   }
+  },
+  {
+   "id": "rom-cicero",
+   "start": -106,
+   "end": -43,
+   "region": "rome",
+   "stream": "rome",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Cicero",
+    "zh-Hans": "西塞罗",
+    "zh-Hant": "西塞羅"
+   },
+   "note": {
+    "en": "The band is his life. Consul in 63 BC, the greatest of Latin orators, and the author whose prose fixed the language the western church would later think and pray in. He was proscribed and killed by Antony's men in December 43 BC.",
+    "zh-Hans": "此段所画的是他的一生。主前63年任执政官，为拉丁演说家之首；他的散文定下了日后西方教会思想与祷告所用的语言。主前43年12月，被安东尼的部下列入公敌名单并杀害。",
+    "zh-Hant": "此段所畫的是他的一生。主前63年任執政官，為拉丁演說家之首；他的散文定下了日後西方教會思想與禱告所用的語言。主前43年12月，被安東尼的部下列入公敵名單並殺害。"
+   }
+  },
+  {
+   "id": "rom-pompey",
+   "start": -106,
+   "end": -48,
+   "region": "rome",
+   "stream": "rome",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Pompey the Great",
+    "zh-Hans": "庞培",
+    "zh-Hant": "龐培"
+   },
+   "note": {
+    "en": "The band is his life. He cleared the seas of pirates, annexed Syria, and in 63 BC took Jerusalem and walked into the Holy of Holies — the moment Judea passed under Rome. He was murdered in Egypt after Pharsalus.",
+    "zh-Hans": "此段所画的是他的一生。他扫清海盗，并吞叙利亚，主前63年攻取耶路撒冷并擅入至圣所——犹大自此归于罗马治下。法萨卢斯之败后，他在埃及遇害。",
+    "zh-Hant": "此段所畫的是他的一生。他掃清海盜，併吞敘利亞，主前63年攻取耶路撒冷並擅入至聖所——猶大自此歸於羅馬治下。法薩盧斯之敗後，他在埃及遇害。"
+   }
+  },
+  {
+   "id": "rom-mark-antony",
+   "start": -83,
+   "end": -30,
+   "region": "rome",
+   "stream": "rome",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Mark Antony",
+    "zh-Hans": "马克·安东尼",
+    "zh-Hant": "馬克·安東尼"
+   },
+   "note": {
+    "en": "The band is his life. Caesar's lieutenant, one of the three who divided the Roman world in 43 BC, and ruler of the east with Cleopatra until Actium. He took his own life in Egypt in 30 BC.",
+    "zh-Hans": "此段所画的是他的一生。凯撒的副手，主前43年瓜分罗马世界的三巨头之一，与克娄巴特拉同治东方，直至亚克兴之败。主前30年在埃及自尽。",
+    "zh-Hant": "此段所畫的是他的一生。凱撒的副手，主前43年瓜分羅馬世界的三巨頭之一，與克婁巴特拉同治東方，直至亞克興之敗。主前30年在埃及自盡。"
+   }
+  },
+  {
+   "id": "rom-julio-claudian",
+   "start": -27,
+   "end": 68,
+   "region": "rome",
+   "stream": "rome",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "The Julio-Claudian Emperors",
+    "zh-Hans": "尤利乌斯－克劳狄王朝",
+    "zh-Hant": "尤利烏斯－克勞狄王朝"
+   },
+   "note": {
+    "en": "Augustus, Tiberius, Caligula, Claudius and Nero — the first five emperors, and the whole span within which Christ was born, taught, died and rose, and the apostles carried the gospel to Rome itself.",
+    "zh-Hans": "奥古斯都、提比略、卡里古拉、克劳狄、尼禄——最初的五位皇帝；基督降生、传道、受死、复活，以及使徒把福音传到罗马城，都在这一段之内。",
+    "zh-Hant": "奧古斯都、提比略、卡里古拉、克勞狄、尼祿——最初的五位皇帝；基督降生、傳道、受死、復活，以及使徒把福音傳到羅馬城，都在這一段之內。"
+   }
+  },
+  {
+   "id": "rom-flavian-dynasty",
+   "start": 69,
+   "end": 96,
+   "region": "rome",
+   "stream": "rome",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "The Flavian Emperors",
+    "zh-Hans": "弗拉维王朝",
+    "zh-Hant": "弗拉維王朝"
+   },
+   "note": {
+    "en": "Vespasian, Titus and Domitian. The dynasty was made by the Jewish war: Vespasian was proclaimed while besieging Judea, and Titus took Jerusalem in 70. Revelation is usually placed at the end of Domitian's reign.",
+    "zh-Hans": "韦帕芗、提图斯、图密善。此王朝由犹太战争而起：韦帕芗围攻犹大地时被拥立，提图斯于70年攻陷耶路撒冷。启示录一般定在图密善在位末年。",
+    "zh-Hant": "韋帕薌、提圖斯、圖密善。此王朝由猶太戰爭而起：韋帕薌圍攻猶大地時被擁立，提圖斯於70年攻陷耶路撒冷。啟示錄一般定在圖密善在位末年。"
+   }
+  },
+  {
+   "id": "rom-vespasian",
+   "start": 69,
+   "end": 79,
+   "region": "rome",
+   "stream": "rome",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Vespasian",
+    "zh-Hans": "韦帕芗",
+    "zh-Hant": "韋帕薌"
+   },
+   "note": {
+    "en": "He came out of the Jewish war to end the year of four emperors, restored the state's finances, and began the Colosseum. He left his son Titus to finish the siege of Jerusalem.",
+    "zh-Hans": "他自犹太战场归来，终止了四帝之年，整顿国库，并动工兴建大竞技场。耶路撒冷之围则交由其子提图斯完成。",
+    "zh-Hant": "他自猶太戰場歸來，終止了四帝之年，整頓國庫，並動工興建大競技場。耶路撒冷之圍則交由其子提圖斯完成。"
+   }
+  },
+  {
+   "id": "rom-adoptive-emperors",
+   "start": 96,
+   "end": 180,
+   "region": "rome",
+   "stream": "rome",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "The Adoptive Emperors",
+    "zh-Hans": "五贤帝（收养继位诸帝）",
+    "zh-Hant": "五賢帝（收養繼位諸帝）"
+   },
+   "note": {
+    "en": "Nerva, Trajan, Hadrian, Antoninus Pius and Marcus Aurelius, each raised by adoption rather than birth — the eighty-four years usually called the height of the Roman peace, and also the years of Ignatius, Polycarp and the first apologists.",
+    "zh-Hans": "涅尔瓦、图拉真、哈德良、安敦尼·庇护、马可·奥勒留，五帝皆以收养而非血统继位——这八十四年通称罗马和平的鼎盛期，也正是伊格那丢、坡旅甲与最早一批护教士的年代。",
+    "zh-Hant": "涅爾瓦、圖拉真、哈德良、安敦尼·庇護、馬可·奧勒留，五帝皆以收養而非血統繼位——這八十四年通稱羅馬和平的鼎盛期，也正是伊格那丟、坡旅甲與最早一批護教士的年代。"
+   }
+  },
+  {
+   "id": "rom-hadrian",
+   "start": 117,
+   "end": 138,
+   "region": "rome",
+   "stream": "rome",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Hadrian",
+    "zh-Hans": "哈德良",
+    "zh-Hant": "哈德良"
+   },
+   "note": {
+    "en": "He gave up Trajan's newest conquests and walled the frontiers instead. He crushed the Bar Kokhba revolt, renamed Judea Syria Palaestina and barred Jews from Jerusalem.",
+    "zh-Hans": "他放弃图拉真最新的征地，改以边墙固守。他镇压巴柯巴起义，把犹大省改名叙利亚—巴勒斯坦，并禁止犹太人入耶路撒冷。",
+    "zh-Hant": "他放棄圖拉真最新的征地，改以邊牆固守。他鎮壓巴柯巴起義，把猶大省改名敘利亞—巴勒斯坦，並禁止猶太人入耶路撒冷。"
+   }
+  },
+  {
+   "id": "rom-marcus-aurelius",
+   "start": 161,
+   "end": 180,
+   "region": "rome",
+   "stream": "rome",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Marcus Aurelius",
+    "zh-Hans": "马可·奥勒留",
+    "zh-Hant": "馬可·奧勒留"
+   },
+   "note": {
+    "en": "The Stoic philosopher on the throne, who spent most of his reign at war on the Danube and whose Meditations are still read. Christians were persecuted under him, at Lyons in 177 among other places.",
+    "zh-Hans": "在位的斯多亚派哲人，在位大半时间征战于多瑙河一线，所著《沉思录》至今仍有人读。他在位期间基督徒屡遭逼迫，177年里昂一役即为其一。",
+    "zh-Hant": "在位的斯多亞派哲人，在位大半時間征戰於多瑙河一線，所著《沉思錄》至今仍有人讀。他在位期間基督徒屢遭逼迫，177年里昂一役即為其一。"
+   }
+  },
+  {
+   "id": "rom-tacitus-writing",
+   "start": 98,
+   "end": 117,
+   "region": "rome",
+   "stream": "rome",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "Tacitus at Work",
+    "zh-Hans": "塔西佗著史",
+    "zh-Hant": "塔西佗著史"
+   },
+   "note": {
+    "en": "The band is his writing years, not his life (about AD 56 to about 120), and both ends are approximate: the Agricola belongs to 98, the Histories to about 105, the Annals to about 117. His notice of Christians punished by Nero is the earliest Roman account of them.",
+    "zh-Hans": "此段所画的是他著述的年月，不是他的一生（约公元56至约120年），两端皆为约数：《阿古利可拉传》成于98年，《历史》约105年，《编年史》约117年。他记尼禄惩治基督徒一段，是罗马方面最早提及基督徒的记载。",
+    "zh-Hant": "此段所畫的是他著述的年月，不是他的一生（約公元56至約120年），兩端皆為約數：《阿古利可拉傳》成於98年，《歷史》約105年，《編年史》約117年。他記尼祿懲治基督徒一段，是羅馬方面最早提及基督徒的記載。"
+   }
+  },
+  {
+   "id": "rom-military-emperors",
+   "start": 235,
+   "end": 284,
+   "region": "rome",
+   "stream": "rome",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "The Military Emperors",
+    "zh-Hans": "军营皇帝时期",
+    "zh-Hant": "軍營皇帝時期"
+   },
+   "note": {
+    "en": "Fifty years in which the armies made and unmade emperors — more than fifty men claimed the title and all but one of those the senate recognised died violently. It ends with Diocletian; some references close it at 285 instead.",
+    "zh-Hans": "五十年间，皇位由军队所立、亦由军队所废——称帝者五十余人，其中获元老院承认者除一人外无不死于非命。此期终于戴克里先；也有著作把终点定在285年。",
+    "zh-Hant": "五十年間，皇位由軍隊所立、亦由軍隊所廢——稱帝者五十餘人，其中獲元老院承認者除一人外無不死於非命。此期終於戴克里先；也有著作把終點定在285年。"
+   }
+  },
+  {
+   "id": "rom-maxentius",
+   "start": 306,
+   "end": 312,
+   "region": "rome",
+   "stream": "rome",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Maxentius",
+    "zh-Hans": "马克森提乌斯",
+    "zh-Hant": "馬克森提烏斯"
+   },
+   "note": {
+    "en": "He held Rome and Italy for six years against the other claimants of the tetrarchy, and drowned in the Tiber after losing to Constantine at the Milvian Bridge.",
+    "zh-Hans": "他据罗马与意大利六年，抗衡四帝共治下的其他称帝者，最终在米尔维安大桥败于君士坦丁，溺毙于台伯河。",
+    "zh-Hant": "他據羅馬與意大利六年，抗衡四帝共治下的其他稱帝者，最終在米爾維安大橋敗於君士坦丁，溺斃於台伯河。"
+   }
+  },
+  {
+   "id": "rom-constantine-i",
+   "start": 306,
+   "end": 337,
+   "region": "rome",
+   "stream": "rome",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Constantine I",
+    "zh-Hans": "君士坦丁一世",
+    "zh-Hant": "君士坦丁一世"
+   },
+   "note": {
+    "en": "Proclaimed at York in 306, sole emperor from 324, dead in 337. He legalised the faith, called the council of Nicaea, and moved the capital to the city that took his name.",
+    "zh-Hans": "306年在约克被拥立，324年起独掌帝国，337年去世。他使基督信仰合法，召开尼西亚会议，并把都城迁往以他为名的城市。",
+    "zh-Hant": "306年在約克被擁立，324年起獨掌帝國，337年去世。他使基督信仰合法，召開尼西亞會議，並把都城遷往以他為名的城市。"
+   }
+  },
+  {
+   "id": "rom-constantine-ii",
+   "start": 337,
+   "end": 340,
+   "region": "rome",
+   "stream": "rome",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Constantine II",
+    "zh-Hans": "君士坦丁二世",
+    "zh-Hant": "君士坦丁二世"
+   },
+   "note": {
+    "en": "The eldest surviving son of Constantine, who ruled the western provinces for three years and was killed in an ambush near Aquileia when he attacked his brother Constans.",
+    "zh-Hans": "君士坦丁尚存诸子中的长子，治西部行省三年，因进攻其弟康斯坦斯，在阿奎莱亚附近中伏被杀。",
+    "zh-Hant": "君士坦丁尚存諸子中的長子，治西部行省三年，因進攻其弟康斯坦斯，在阿奎萊亞附近中伏被殺。"
+   }
+  },
+  {
+   "id": "rom-constantius-ii",
+   "start": 337,
+   "end": 361,
+   "region": "rome",
+   "stream": "rome",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Constantius II",
+    "zh-Hans": "君士坦提乌斯二世",
+    "zh-Hant": "君士坦提烏斯二世"
+   },
+   "note": {
+    "en": "The second son of Constantine, emperor in the east from 337 and over the whole empire from 353. He backed the Arian side and drove Athanasius from Alexandria more than once.",
+    "zh-Hans": "君士坦丁的次子，337年起治东方，353年起统辖全帝国。他袒护亚流一派，屡次把亚他那修逐出亚历山大。",
+    "zh-Hant": "君士坦丁的次子，337年起治東方，353年起統轄全帝國。他袒護亞流一派，屢次把亞他那修逐出亞歷山大。"
+   }
+  },
+  {
+   "id": "rom-christian-emperors",
+   "start": 306,
+   "end": 476,
+   "region": "rome",
+   "stream": "rome",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "The Christian Emperors of Rome",
+    "zh-Hans": "罗马的基督教诸帝",
+    "zh-Hant": "羅馬的基督教諸帝"
+   },
+   "note": {
+    "en": "From Constantine's proclamation in 306 to the end of the western line in 476, the emperors professed the Christian faith — with the interruption of Julian, who tried to restore the old gods between 361 and 363. Both ends are drawn conventionally.",
+    "zh-Hans": "自306年君士坦丁被拥立，至476年西部帝系告终，历代皇帝皆自称信奉基督——其间惟有尤利安例外：他在361至363年间试图恢复旧神崇拜。两端皆按通行之说绘定。",
+    "zh-Hant": "自306年君士坦丁被擁立，至476年西部帝系告終，歷代皇帝皆自稱信奉基督——其間惟有尤利安例外：他在361至363年間試圖恢復舊神崇拜。兩端皆按通行之說繪定。"
+   }
+  },
+  {
+   "id": "rom-valentinian-i",
+   "start": 364,
+   "end": 375,
+   "region": "rome",
+   "stream": "rome",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Valentinian I",
+    "zh-Hans": "瓦伦提尼安一世",
+    "zh-Hant": "瓦倫提尼安一世"
+   },
+   "note": {
+    "en": "He took the west and gave the east to his brother Valens, holding the Rhine and Danube frontiers for eleven years. He allowed the churches their disputes without taking a side, and died of a stroke at Brigetio.",
+    "zh-Hans": "他自领西部，把东部交给兄弟瓦伦斯，十一年间守住莱茵与多瑙两道防线。他任由各教会自行争辩而不选边，最后在布里格提奥中风而死。",
+    "zh-Hant": "他自領西部，把東部交給兄弟瓦倫斯，十一年間守住萊茵與多瑙兩道防線。他任由各教會自行爭辯而不選邊，最後在布里格提奧中風而死。"
+   }
+  },
+  {
+   "id": "rom-magnus-maximus",
+   "start": 383,
+   "end": 388,
+   "region": "rome",
+   "stream": "rome",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Magnus Maximus",
+    "zh-Hans": "马格努斯·马克西穆斯",
+    "zh-Hant": "馬格努斯·馬克西穆斯"
+   },
+   "note": {
+    "en": "Proclaimed by the armies of Britain and ruling the west from Trier for five years, until Theodosius defeated and executed him. The first execution of a Christian for heresy, that of Priscillian, took place under him.",
+    "zh-Hans": "由不列颠驻军拥立，据特里尔统治西部五年，终为狄奥多西击败处死。基督教史上第一宗因异端而处死的案件——普里西利安之死——即发生在他治下。",
+    "zh-Hant": "由不列顛駐軍擁立，據特里爾統治西部五年，終為狄奧多西擊敗處死。基督教史上第一宗因異端而處死的案件——普里西利安之死——即發生在他治下。"
+   }
+  },
+  {
+   "id": "rom-arcadius",
+   "start": 383,
+   "end": 408,
+   "region": "rome",
+   "stream": "rome",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Arcadius",
+    "zh-Hans": "阿卡狄乌斯",
+    "zh-Hant": "阿卡狄烏斯"
+   },
+   "note": {
+    "en": "Made augustus as a child of five in 383 and emperor of the east in his own right from his father's death in 395 — the division that never healed. John Chrysostom was twice exiled from Constantinople in his reign.",
+    "zh-Hans": "383年年方五岁即被立为奥古斯都，395年其父去世后正式独治东部——此次分治自此再未弥合。金口约翰在他在位期间两度被逐出君士坦丁堡。",
+    "zh-Hant": "383年年方五歲即被立為奧古斯都，395年其父去世後正式獨治東部——此次分治自此再未彌合。金口約翰在他在位期間兩度被逐出君士坦丁堡。"
+   }
   }
  ],
  "ministries": [
@@ -6715,26 +7285,8 @@
    }
   },
   {
-   "id": "library_alexandria",
-   "year": -295,
-   "era": "world",
-   "stream": "egypt",
-   "basis": "conventional",
-   "approximate": true,
-   "title": {
-    "en": "Library and Museum of Alexandria",
-    "zh-Hans": "亚历山大图书馆与缪斯宫",
-    "zh-Hant": "亞歷山卓圖書館與繆思宮"
-   },
-   "desc": {
-    "en": "The Ptolemies gather scrolls and scholars, making Alexandria the research centre of the ancient world.",
-    "zh-Hans": "托勒密王朝汇聚典籍与学者，使亚历山大城成为古代世界的研究中心。",
-    "zh-Hant": "托勒密王朝匯聚典籍與學者，使亞歷山卓成為古代世界的研究中心。"
-   }
-  },
-  {
    "id": "library_of_alexandria",
-   "year": -285,
+   "year": -295,
    "era": "world",
    "stream": "egypt",
    "basis": "conventional",
@@ -6745,9 +7297,9 @@
     "zh-Hant": "亞歷山大圖書館建立"
    },
    "desc": {
-    "en": "The Ptolemies gathered scrolls from across the known world into one library and school of scholars.",
-    "zh-Hans": "托勒密王朝把当时已知世界各地的书卷汇聚一处，并设学者研究之所。",
-    "zh-Hant": "托勒密王朝把當時已知世界各地的書卷匯聚一處，並設學者研究之所。"
+    "en": "The Ptolemies gather scrolls and scholars from across the known world into one library and school. Sources put the founding anywhere from about 295 BC under Ptolemy I to about 283 BC under Ptolemy II, which is why the year is marked approximate.",
+    "zh-Hans": "托勒密王朝把已知世界各地的卷册与学者汇聚成一座图书馆与学园。各家把创建定在托勒密一世时的约公元前295年至托勒密二世时的约公元前283年之间，故此年份标为约数。",
+    "zh-Hant": "托勒密王朝把已知世界各地的卷冊與學者匯聚成一座圖書館與學園。各家把創建定在托勒密一世時的約公元前295年至託勒密二世時的約公元前283年之間，故此年份標為約數。"
    }
   },
   {
@@ -6970,24 +7522,6 @@
    }
   },
   {
-   "id": "zhang_qian_silk_road",
-   "year": -138,
-   "era": "world",
-   "stream": "china",
-   "basis": "conventional",
-   "approximate": true,
-   "title": {
-    "en": "Zhang Qian Opens the Silk Road",
-    "zh-Hans": "张骞出使西域",
-    "zh-Hant": "張騫出使西域"
-   },
-   "desc": {
-    "en": "The Han envoy travels to Central Asia; the routes he reports become the trade road west.",
-    "zh-Hans": "汉使张骞出使西域，所通道路日后成为通往西方的丝绸之路。",
-    "zh-Hant": "漢使張騫出使西域，所通道路日後成為通往西方的絲綢之路。"
-   }
-  },
-  {
    "id": "silk_road_opens",
    "year": -130,
    "era": "world",
@@ -7000,9 +7534,9 @@
     "zh-Hant": "絲綢之路開通"
    },
    "desc": {
-    "en": "After Han envoys reach central Asia, caravan routes link China with Persia and the Mediterranean.",
-    "zh-Hans": "汉朝使者通西域之后，商队路线把中国与波斯及地中海连在一起。",
-    "zh-Hant": "漢朝使者通西域之後，商隊路線把中國與波斯及地中海連在一起。"
+    "en": "The Han envoy Zhang Qian travels to Central Asia — out in 138 BC, back in 126 — and the routes he reports become the trade road west. The year an actual road \"opens\" is a convention, which is why it is marked approximate.",
+    "zh-Hans": "汉使张骞出使西域——公元前138年出发，前126年归来——他所报的路线成为西通的商道。所谓商路「开通」的年份本是约定，故标为约数。",
+    "zh-Hant": "漢使張騫出使西域——公元前138年出發，前126年歸來——他所報的路線成為西通的商道。所謂商路「開通」的年份本是約定，故標為約數。"
    }
   },
   {
@@ -7475,14 +8009,14 @@
    "approximate": false,
    "basis": "conventional",
    "title": {
-    "en": "Great Fire of Rome",
-    "zh-Hans": "罗马大火",
-    "zh-Hant": "羅馬大火"
+    "en": "Nero's Persecution of the Christians Begins",
+    "zh-Hans": "尼禄逼迫基督徒的开始",
+    "zh-Hant": "尼祿逼迫基督徒的開始"
    },
    "desc": {
-    "en": "Fire destroys much of Rome, and Nero blames the Christians, beginning the first imperial persecution of the church.",
-    "zh-Hans": "大火烧毁罗马大部分城区，尼禄归罪于基督徒，开启帝国对教会的首次逼迫。",
-    "zh-Hant": "大火燒毀羅馬大部分城區，尼祿歸罪於基督徒，開啟帝國對教會的首次逼迫。"
+    "en": "Nero blames the Christians for the fire that has just destroyed much of Rome, and the first imperial persecution of the church begins.",
+    "zh-Hans": "尼禄把刚刚烧毁罗马大半的那场大火归咎于基督徒，帝国对教会的第一次逼迫由此开始。",
+    "zh-Hant": "尼祿把剛剛燒燬羅馬大半的那場大火歸咎於基督徒，帝國對教會的第一次逼迫由此開始。"
    }
   },
   {
@@ -15748,6 +16282,222 @@
     "en": "At the diet Charles V called to reunite his empire, Melanchthon's statement of the Lutheran faith was read out before the emperor on 25 June 1530; it remains the founding confession of Lutheran churches.",
     "zh-Hans": "查理五世召开帝国议会，本意在使帝国重归一致；1530年6月25日，梅兰希顿所撰的信义宗信仰宣言在皇帝面前宣读。此信条至今仍是信义宗教会的根本信条。",
     "zh-Hant": "查理五世召開帝國議會，本意在使帝國重歸一致；1530年6月25日，梅蘭希頓所撰的信義宗信仰宣言在皇帝面前宣讀。此信條至今仍是信義宗教會的根本信條。"
+   }
+  },
+  {
+   "id": "grc_cecrops_athens",
+   "year": -1581,
+   "era": "world",
+   "stream": "greece",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Cecrops, Legendary First King of Athens",
+    "zh-Hans": "刻克洛普斯：雅典传说中的开国之王",
+    "zh-Hant": "刻克洛普斯：雅典傳說中的開國之王"
+   },
+   "desc": {
+    "en": "Cecrops is a figure of legend, not history; the Athenians told of him as their first king. The year is the one the Parian Marble — a Greek chronicle carved about 264 BC — reckoned for the start of his reign, and it is where that chronicle's whole list begins.",
+    "zh-Hans": "刻克洛普斯属于传说，不属于史实；雅典人称他为开国之王。此处年份出自《帕罗斯石碑》——约主前264年刻成的一份希腊编年碑铭——所推的他即位之年，也是该碑全表的起点。",
+    "zh-Hant": "刻克洛普斯屬於傳說，不屬於史實；雅典人稱他為開國之王。此處年份出自《帕羅斯石碑》——約主前264年刻成的一份希臘編年碑銘——所推的他即位之年，也是該碑全表的起點。"
+   }
+  },
+  {
+   "id": "grc_cadmus_thebes",
+   "year": -1519,
+   "era": "world",
+   "stream": "greece",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Cadmus Founds Thebes in Legend",
+    "zh-Hans": "卡德摩斯建底比斯（传说）",
+    "zh-Hant": "卡德摩斯建底比斯（傳說）"
+   },
+   "desc": {
+    "en": "The Greeks told that a Phoenician prince from Tyre founded Thebes and brought them the alphabet. The story is legend; the year is the Parian Marble's reckoning, not a record from the time.",
+    "zh-Hans": "希腊人相传，一位来自推罗的腓尼基王子建了底比斯，并把字母带给他们。此说属于传说；年份出自《帕罗斯石碑》的推算，并非当时的记载。",
+    "zh-Hant": "希臘人相傳，一位來自推羅的腓尼基王子建了底比斯，並把字母帶給他們。此說屬於傳說；年份出自《帕羅斯石碑》的推算，並非當時的記載。"
+   }
+  },
+  {
+   "id": "grc_danaus_ship",
+   "year": -1511,
+   "era": "world",
+   "stream": "greece",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Danaus Sails from Egypt to Greece in Legend",
+    "zh-Hans": "达那俄斯自埃及航向希腊（传说）",
+    "zh-Hant": "達那俄斯自埃及航向希臘（傳說）"
+   },
+   "desc": {
+    "en": "The Parian Marble records that Danaus crossed from Egypt to Greece in the first fifty-oared ship. Danaus belongs to legend; the year is that chronicle's reckoning and nothing older confirms it.",
+    "zh-Hans": "《帕罗斯石碑》记载，达那俄斯乘最早的五十桨船自埃及渡海至希腊。达那俄斯属于传说；年份出自该碑推算，别无更早的佐证。",
+    "zh-Hant": "《帕羅斯石碑》記載，達那俄斯乘最早的五十槳船自埃及渡海至希臘。達那俄斯屬於傳說；年份出自該碑推算，別無更早的佐證。"
+   }
+  },
+  {
+   "id": "grc_draco_code",
+   "year": -621,
+   "era": "world",
+   "stream": "greece",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Draco's Law Code at Athens",
+    "zh-Hans": "雅典德拉古法典",
+    "zh-Hant": "雅典德拉古法典"
+   },
+   "desc": {
+    "en": "Athens' first written laws, set down in the archonship of Aristaechmus in 621/620 BC and remembered for their severity. Almost nothing else is known of Draco himself.",
+    "zh-Hans": "雅典最早的成文法，订于主前621／620年阿里斯泰克穆斯任执政官之时，以严苛著称。除此之外，关于德拉古其人几乎一无所知。",
+    "zh-Hant": "雅典最早的成文法，訂於主前621／620年阿里斯泰克穆斯任執政官之時，以嚴苛著稱。除此之外，關於德拉古其人幾乎一無所知。"
+   }
+  },
+  {
+   "id": "rom_servian_wall",
+   "year": -378,
+   "era": "world",
+   "stream": "rome",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Rome Walled with the Servian Wall",
+    "zh-Hans": "罗马修筑塞尔维安城墙",
+    "zh-Hant": "羅馬修築塞爾維安城牆"
+   },
+   "desc": {
+    "en": "Tradition credited the city wall to king Servius Tullius in the sixth century, but the standing masonry is of the early fourth, built after the Gauls sacked Rome, from stone quarried at captured Veii.",
+    "zh-Hans": "传统把这道城墙归于主前六世纪的国王塞尔维乌斯·图利乌斯，但现存石工属主前四世纪初，是高卢人洗劫罗马之后，用攻下维爱所采之石修成的。",
+    "zh-Hant": "傳統把這道城牆歸於主前六世紀的國王塞爾維烏斯·圖利烏斯，但現存石工屬主前四世紀初，是高盧人洗劫羅馬之後，用攻下維愛所採之石修成的。"
+   }
+  },
+  {
+   "id": "rom_sabines_conquered",
+   "year": -290,
+   "era": "world",
+   "stream": "rome",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Rome Conquers the Sabines",
+    "zh-Hans": "罗马征服萨宾人",
+    "zh-Hant": "羅馬征服薩賓人"
+   },
+   "desc": {
+    "en": "Manius Curius Dentatus subdued the Sabine hill country. They were given citizenship without the vote the same year, and the full vote in 268 BC — Rome's habit of absorbing those it beat.",
+    "zh-Hans": "曼尼乌斯·库里乌斯·登塔图斯平定萨宾山地。同年萨宾人获得无投票权的公民身分，主前268年再得完全投票权——这正是罗马吞并败者的一贯作法。",
+    "zh-Hant": "曼尼烏斯·庫里烏斯·登塔圖斯平定薩賓山地。同年薩賓人獲得無投票權的公民身分，主前268年再得完全投票權——這正是羅馬吞併敗者的一貫作法。"
+   }
+  },
+  {
+   "id": "rom_fabius_dictator",
+   "year": -217,
+   "era": "world",
+   "stream": "rome",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Fabius Maximus Made Dictator against Hannibal",
+    "zh-Hans": "费边·马克西姆斯受任独裁官御汉尼拔",
+    "zh-Hant": "費邊·馬克西姆斯受任獨裁官禦漢尼拔"
+   },
+   "desc": {
+    "en": "After the rout at Lake Trasimene the senate named the old Fabius dictator. He refused open battle and shadowed Hannibal instead; the delaying strategy still carries his name.",
+    "zh-Hans": "特拉西梅诺湖惨败之后，元老院任命年迈的费边为独裁官。他拒绝会战，只尾随牵制汉尼拔；这套拖延战法至今仍以他为名。",
+    "zh-Hant": "特拉西梅諾湖慘敗之後，元老院任命年邁的費邊為獨裁官。他拒絕會戰，只尾隨牽制漢尼拔；這套拖延戰法至今仍以他為名。"
+   }
+  },
+  {
+   "id": "rom_agrarian_law",
+   "year": -133,
+   "era": "world",
+   "stream": "rome",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "The Agrarian Law of Tiberius Gracchus",
+    "zh-Hans": "提比略·格拉古的土地法",
+    "zh-Hant": "提比略·格拉古的土地法"
+   },
+   "desc": {
+    "en": "The tribune's law to redistribute public land to the poor was carried, and he was killed by a mob the next year for seeking re-election. The century of civil strife that ended the republic begins here.",
+    "zh-Hans": "这位保民官提出把公有土地分给贫民的法案得以通过；次年他因谋求连任而被暴众打死。终结共和国的百年内乱自此开端。",
+    "zh-Hant": "這位保民官提出把公有土地分給貧民的法案得以通過；次年他因謀求連任而被暴眾打死。終結共和國的百年內亂自此開端。"
+   }
+  },
+  {
+   "id": "rom_julian_calendar",
+   "year": -46,
+   "era": "world",
+   "stream": "rome",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Caesar Reforms the Calendar",
+    "zh-Hans": "凯撒改革历法",
+    "zh-Hant": "凱撒改革曆法"
+   },
+   "desc": {
+    "en": "Caesar replaced the drifting Roman year with a solar calendar of 365 days and a leap day, in force from 1 January 45 BC. It governed Europe's dates for sixteen centuries.",
+    "zh-Hans": "凯撒废去年年偏移的旧罗马历，改行365日加闰日的太阳历，自主前45年1月1日施行，此后十六个世纪欧洲的年月皆依此制。",
+    "zh-Hant": "凱撒廢去年年偏移的舊羅馬曆，改行365日加閏日的太陽曆，自主前45年1月1日施行，此後十六個世紀歐洲的年月皆依此制。"
+   }
+  },
+  {
+   "id": "rom_hadrians_wall",
+   "year": 122,
+   "era": "world",
+   "stream": "rome",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Hadrian's Wall Begun in Britain",
+    "zh-Hans": "不列颠始筑哈德良长城",
+    "zh-Hant": "不列顛始築哈德良長城"
+   },
+   "desc": {
+    "en": "Three legions began the stone wall across northern Britain, some eighty Roman miles from sea to sea. It took about six years and marked the empire's chosen limit rather than its reach.",
+    "zh-Hans": "三个军团开始在不列颠北部修筑石墙，横贯两海之间约八十罗马里。工程约历六年，标示的是帝国自定的边界，而非力所能及的极限。",
+    "zh-Hant": "三個軍團開始在不列顛北部修築石牆，橫貫兩海之間約八十羅馬里。工程約歷六年，標示的是帝國自定的邊界，而非力所能及的極限。"
+   }
+  },
+  {
+   "id": "rom_milvian_bridge",
+   "year": 312,
+   "era": "world",
+   "stream": "rome",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Battle of the Milvian Bridge",
+    "zh-Hans": "米尔维安大桥之战",
+    "zh-Hant": "米爾維安大橋之戰"
+   },
+   "desc": {
+    "en": "Constantine defeated Maxentius outside Rome and Maxentius drowned in the Tiber. Constantine ascribed the victory to the God of the Christians; the Edict of Milan followed the next year.",
+    "zh-Hans": "君士坦丁在罗马城外击败马克森提乌斯，后者溺毙于台伯河。君士坦丁把胜利归于基督徒所信的神；次年即颁《米兰敕令》。",
+    "zh-Hant": "君士坦丁在羅馬城外擊敗馬克森提烏斯，後者溺斃於台伯河。君士坦丁把勝利歸於基督徒所信的神；次年即頒《米蘭敕令》。"
+   }
+  },
+  {
+   "id": "rom_last_olympiad",
+   "year": 393,
+   "era": "world",
+   "stream": "rome",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "The Last Recorded Olympiad",
+    "zh-Hans": "有记载的末届奥林匹亚运动会",
+    "zh-Hant": "有記載的末屆奧林匹亞運動會"
+   },
+   "desc": {
+    "en": "The last games recorded at Olympia, in the reign of Theodosius I, closing a contest held since 776 BC by tradition. Archaeology suggests some games went on afterwards, so the end is not as sharp as the date looks.",
+    "zh-Hans": "奥林匹亚有记载的最后一届竞技会，在狄奥多西一世治下举行，为传统自主前776年延续的赛会画上句点。考古迹象显示其后仍有若干赛事，故此终结并不如年份看来那样干脆。",
+    "zh-Hant": "奧林匹亞有記載的最後一屆競技會，在狄奧多西一世治下舉行，為傳統自主前776年延續的賽會畫上句點。考古跡象顯示其後仍有若干賽事，故此終結並不如年份看來那樣乾脆。"
    }
   }
  ]
