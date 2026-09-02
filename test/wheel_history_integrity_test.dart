@@ -139,9 +139,18 @@ void main() {
       }
     }
 
+    /// `stream|name numeral` -> the reigns it is stated as a SPAN.
+    final reigns = <String, List<({int start, int end})>>{};
+
     for (final p in powers) {
-      note(p['stream'] as String, (p['name'] as Map)['en'] as String,
-          (p['start'] as num).toInt());
+      final start = (p['start'] as num).toInt();
+      final end = (p['end'] as num?)?.toInt() ?? start;
+      for (final m
+          in regnal.allMatches((p['name'] as Map)['en'] as String)) {
+        final key = '${p['stream']}|${m.group(0)!.toLowerCase()}';
+        examples.add(m.group(0)!);
+        reigns.putIfAbsent(key, () => []).add((start: start, end: end));
+      }
     }
     for (final e in events) {
       note(e['stream'] as String, (e['title'] as Map)['en'] as String,
@@ -157,17 +166,50 @@ void main() {
     });
 
     test('the same ruler never appears at two different years', () {
+      // 2026-09-02: this used to fold a power's START into the same set
+      // as an event's year, and 42 pontificates broke it correctly —
+      // Pope Nicholas I reigns 858–867 and an event has him deposing
+      // two archbishops in 863. Same man, two years, and no defect at
+      // all: one is a reign and the other is a thing he did inside it.
+      //
+      // The premise only ever held while every record was a POINT. So
+      // the check now reads a span as an interval, which makes it
+      // STRICTER rather than looser — an event attributed to a ruler
+      // outside his own reign is a new thing it can catch, and the
+      // chart's Gregory VII / Gregory IX defect is still caught by the
+      // last clause exactly as before.
       final clashes = <String>[];
-      seen.forEach((key, years) {
-        if (years.length > 1) {
-          clashes.add('$key stated at ${(years.toList()..sort()).join(", ")}');
+
+      reigns.forEach((key, spans) {
+        if (spans.length > 1) {
+          clashes.add('$key reigns twice: '
+              '${spans.map((s) => "${s.start}-${s.end}").join(", ")}');
         }
       });
-      // A ruler CAN legitimately head two entries — an accession and a death.
-      // If that is ever wanted, the fix is to give the two entries different
-      // titles, not to delete this test: the chart's Gregory VII and its
-      // Gregory IX were also "the same name at two years", and that was the
-      // whole defect.
+
+      seen.forEach((key, years) {
+        final spans = reigns[key];
+        if (spans == null || spans.isEmpty) {
+          // No reign known for him: the original check, unchanged. A
+          // ruler CAN legitimately head two entries — an accession and
+          // a death — and if that is ever wanted the fix is to give the
+          // two entries different titles, not to delete this test.
+          if (years.length > 1) {
+            clashes.add(
+                '$key stated at ${(years.toList()..sort()).join(", ")}');
+          }
+          return;
+        }
+        for (final y in years) {
+          final inside =
+              spans.any((s) => y >= s.start - 1 && y <= s.end + 1);
+          if (!inside) {
+            clashes.add('$key acts in $y, outside '
+                '${spans.map((s) => "${s.start}-${s.end}").join(", ")}');
+          }
+        }
+      });
+
       expect(clashes, isEmpty);
     });
   });

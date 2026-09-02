@@ -103,27 +103,28 @@ void main() {
       expect(n['era'], 'bible', reason: n['id'] as String);
     }
 
-    // `region` survives unread because the wheel draws by STREAM and the
-    // region is very nearly a function of it: 20 of the 22 streams map to
-    // exactly one region. It is a coarser regrouping of what the chart
-    // already shows, not information held back. `ongoing` is computed
-    // from `end`, and is checked to agree with it rather than trusted.
-    expect(unreadByClass['WheelPower'], <String>{'region', 'ongoing'});
-    final regionsOfStream = <String, Set<String>>{};
+    // `region` USED to be excused here, on the grounds that it was very
+    // nearly a function of `stream` — 20 of the 22 streams mapped to
+    // exactly one region, so it was a coarser regrouping of what the
+    // chart already showed rather than information held back.
+    //
+    // 2026-09-02 ended that. Adding 42 pontificates and five crusades
+    // put the church band through `europe` AND `levant`, which is not a
+    // data error — the papacy and the crusades genuinely happened in
+    // different places — and took the split streams from two to three.
+    // The excuse's own premise had started to fail, so rather than
+    // widening the threshold the field was READ: the power sheet prints
+    // the region beside the years. `ongoing` stays excused because it
+    // is computed from `end`, and is checked to agree with it rather
+    // than trusted.
+    expect(unreadByClass['WheelPower'], <String>{'ongoing'});
     for (final p in records('powers')) {
-      regionsOfStream
-          .putIfAbsent(p['stream'] as String, () => <String>{})
-          .add(p['region'] as String);
       if (p.containsKey('ongoing')) {
         expect(p['ongoing'], p['end'] == null,
             reason: '${p['id']} writes `ongoing` and the model computes it '
                 'from `end`; the two must not be able to disagree');
       }
     }
-    final split = regionsOfStream.entries.where((e) => e.value.length > 1);
-    expect(split.length, lessThanOrEqualTo(2),
-        reason: 'region is excused for tracking stream; it no longer does: '
-            '${split.map((e) => "${e.key}=${e.value}").join(", ")}');
   });
 
   /// The detector above iterates the four RECORD lists, so the asset's
@@ -157,7 +158,11 @@ void main() {
     }
     // And the converse, so this cannot be satisfied by marking everything
     // conventional again.
-    expect(data.powers.where((p) => p.basis == 'conventional').length, 59);
+    // 116 since 2026-09-02: 59 plus the 57 church-history spans — 42
+    // pontificates, 8 Byzantine reigns, 5 crusades, the Latin Empire
+    // and the Order of Saint John. Every one of them is conventional,
+    // and none could be anything else: scripture dates no pope.
+    expect(data.powers.where((p) => p.basis == 'conventional').length, 116);
   });
 
   test('both spellings of a power reference reach the model', () {

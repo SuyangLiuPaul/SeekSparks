@@ -3003,6 +3003,1090 @@
     "zh-Hans": "1948年宣告成立的现代犹太国家，是自哈斯蒙尼王朝以来该地首个拥有主权的犹太国家。",
     "zh-Hant": "1948年宣告成立的現代猶太國家，是自哈斯蒙尼王朝以來該地首個擁有主權的猶太國家。"
    }
+  },
+  {
+   "id": "pope-leo-ii",
+   "start": 682,
+   "end": 683,
+   "region": "europe",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Pope Leo II",
+    "zh-Hans": "教皇良二世",
+    "zh-Hant": "教皇良二世"
+   },
+   "note": {
+    "en": "Confirmed the Third Council of Constantinople and its condemnation of the one-will teaching, including its censure of his predecessor Honorius.",
+    "zh-Hans": "他确认第三次君士坦丁堡会议的决议，接受该会对基督一志论的定罪，连同对前任教皇何诺留的谴责。",
+    "zh-Hant": "他確認第三次君士坦丁堡會議的決議，接受該會對基督一志論的定罪，連同對前任教皇何諾留的譴責。"
+   }
+  },
+  {
+   "id": "pope-adrian-i",
+   "start": 772,
+   "end": 795,
+   "region": "europe",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Pope Adrian I",
+    "zh-Hans": "教皇哈德良一世",
+    "zh-Hant": "教皇哈德良一世"
+   },
+   "note": {
+    "en": "The longest reign of the early medieval papacy; he called Charlemagne in against the Lombards and sent legates to the Second Council of Nicaea.",
+    "zh-Hans": "中世纪早期在位最久的教皇；他求助查理曼以制伏伦巴底人，并派代表出席第二次尼西亚会议。",
+    "zh-Hant": "中世紀早期在位最久的教皇；他求助查理曼以制伏倫巴底人，並派代表出席第二次尼西亞會議。"
+   }
+  },
+  {
+   "id": "pope-leo-iii",
+   "start": 795,
+   "end": 816,
+   "region": "europe",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Pope Leo III",
+    "zh-Hans": "教皇良三世",
+    "zh-Hant": "教皇良三世"
+   },
+   "note": {
+    "en": "Crowned Charlemagne emperor at Rome on Christmas Day 800, an act the East never accepted.",
+    "zh-Hans": "800年圣诞日在罗马为查理曼加冕称帝，此举东方教会始终不予承认。",
+    "zh-Hant": "800年聖誕日在羅馬為查理曼加冕稱帝，此舉東方教會始終不予承認。"
+   }
+  },
+  {
+   "id": "pope-leo-iv",
+   "start": 847,
+   "end": 855,
+   "region": "europe",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Pope Leo IV",
+    "zh-Hans": "教皇良四世",
+    "zh-Hant": "教皇良四世"
+   },
+   "note": {
+    "en": "Walled the Vatican quarter after Arab raiders plundered St Peter's in 846.",
+    "zh-Hans": "846年阿拉伯人劫掠圣彼得大堂后，他为梵蒂冈一带筑起城墙。",
+    "zh-Hant": "846年阿拉伯人劫掠聖彼得大堂後，他為梵蒂岡一帶築起城牆。"
+   }
+  },
+  {
+   "id": "pope-nicholas-i",
+   "start": 858,
+   "end": 867,
+   "region": "europe",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Pope Nicholas I",
+    "zh-Hans": "教皇尼古拉一世",
+    "zh-Hant": "教皇尼古拉一世"
+   },
+   "note": {
+    "en": "Held that bishops and kings alike could be judged at Rome; his quarrel with Photius of Constantinople opened the first great breach with the East.",
+    "zh-Hans": "他主张主教与君王同样可在罗马受审；与君士坦丁堡的佛提乌之争，揭开东西方第一次大的裂痕。",
+    "zh-Hant": "他主張主教與君王同樣可在羅馬受審；與君士坦丁堡的佛提烏之爭，揭開東西方第一次大的裂痕。"
+   }
+  },
+  {
+   "id": "pope-gregory-v",
+   "start": 996,
+   "end": 999,
+   "region": "europe",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Pope Gregory V",
+    "zh-Hans": "教皇格列高利五世",
+    "zh-Hant": "教皇格列高利五世"
+   },
+   "note": {
+    "en": "The first German pope, cousin of Otto III, driven from Rome by an antipope and restored by imperial arms.",
+    "zh-Hans": "第一位德意志人教皇，奥托三世的表亲；一度被对立教皇逐出罗马，靠帝国军力复位。",
+    "zh-Hant": "第一位德意志人教皇，奧托三世的表親；一度被對立教皇逐出羅馬，靠帝國軍力復位。"
+   }
+  },
+  {
+   "id": "pope-gregory-vi",
+   "start": 1045,
+   "end": 1046,
+   "region": "europe",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Pope Gregory VI",
+    "zh-Hans": "教皇格列高利六世",
+    "zh-Hant": "教皇格列高利六世"
+   },
+   "note": {
+    "en": "Bought the papacy from Benedict IX to end a scandal, and was deposed for simony at the Synod of Sutri.",
+    "zh-Hans": "为终止丑闻，他出钱从本笃九世手中买得教皇之位，后在苏特里会议上因买卖圣职被废。",
+    "zh-Hant": "為終止醜聞，他出錢從本篤九世手中買得教皇之位，後在蘇特里會議上因買賣聖職被廢。"
+   }
+  },
+  {
+   "id": "pope-clement-ii",
+   "start": 1046,
+   "end": 1047,
+   "region": "europe",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Pope Clement II",
+    "zh-Hans": "教皇克莱孟二世",
+    "zh-Hant": "教皇克萊孟二世"
+   },
+   "note": {
+    "en": "The German bishop set on the throne by Henry III at Sutri, the beginning of the imperial reform of the papacy.",
+    "zh-Hans": "亨利三世在苏特里会议后立这位德意志主教为教皇，帝国主导的教廷改革由此开始。",
+    "zh-Hant": "亨利三世在蘇特里會議後立這位德意志主教為教皇，帝國主導的教廷改革由此開始。"
+   }
+  },
+  {
+   "id": "pope-nicholas-ii",
+   "start": 1058,
+   "end": 1061,
+   "region": "europe",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Pope Nicholas II",
+    "zh-Hans": "教皇尼古拉二世",
+    "zh-Hant": "教皇尼古拉二世"
+   },
+   "note": {
+    "en": "His Lateran synod of 1059 gave the choice of a pope to the cardinal bishops, out of the hands of the Roman nobles and the emperor.",
+    "zh-Hans": "他1059年主持的拉特兰会议，把选举教皇之权交给枢机主教，从罗马贵族与皇帝手中收回。",
+    "zh-Hant": "他1059年主持的拉特蘭會議，把選舉教皇之權交給樞機主教，從羅馬貴族與皇帝手中收回。"
+   }
+  },
+  {
+   "id": "pope-gregory-vii",
+   "start": 1073,
+   "end": 1085,
+   "region": "europe",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Pope Gregory VII",
+    "zh-Hans": "教皇格列高利七世",
+    "zh-Hant": "教皇格列高利七世"
+   },
+   "note": {
+    "en": "Hildebrand, who forbade lay investiture and excommunicated Henry IV; he died in exile at Salerno with the quarrel unsettled.",
+    "zh-Hans": "即希尔德布兰德；他禁止俗人授职，将亨利四世绝罚，争端未了便流亡萨莱诺去世。",
+    "zh-Hant": "即希爾德布蘭德；他禁止俗人授職，將亨利四世絕罰，爭端未了便流亡薩萊諾去世。"
+   }
+  },
+  {
+   "id": "pope-urban-ii",
+   "start": 1088,
+   "end": 1099,
+   "region": "europe",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Pope Urban II",
+    "zh-Hans": "教皇乌尔班二世",
+    "zh-Hant": "教皇烏爾班二世"
+   },
+   "note": {
+    "en": "Preached the First Crusade at Clermont in 1095 and died a fortnight before news of Jerusalem's fall reached Rome.",
+    "zh-Hans": "1095年在克莱蒙号召第一次十字军东征；耶路撒冷陷落的消息传到罗马前两周，他已去世。",
+    "zh-Hant": "1095年在克萊蒙號召第一次十字軍東征；耶路撒冷陷落的消息傳到羅馬前兩週，他已去世。"
+   }
+  },
+  {
+   "id": "pope-adrian-iv",
+   "start": 1154,
+   "end": 1159,
+   "region": "europe",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Pope Adrian IV",
+    "zh-Hans": "教皇哈德良四世",
+    "zh-Hant": "教皇哈德良四世"
+   },
+   "note": {
+    "en": "Nicholas Breakspear, the only Englishman to hold the office.",
+    "zh-Hans": "本名尼古拉·布雷克斯皮尔，是唯一一位英格兰人教皇。",
+    "zh-Hant": "本名尼古拉·布雷克斯皮爾，是唯一一位英格蘭人教皇。"
+   }
+  },
+  {
+   "id": "pope-alexander-iii",
+   "start": 1159,
+   "end": 1181,
+   "region": "europe",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Pope Alexander III",
+    "zh-Hans": "教皇亚历山大三世",
+    "zh-Hant": "教皇亞歷山大三世"
+   },
+   "note": {
+    "en": "Held out eighteen years against Frederick Barbarossa and the antipopes he set up, and called the Third Lateran Council in 1179.",
+    "zh-Hans": "他与腓特烈一世（巴巴罗萨）及其所立的对立教皇相持十八年，1179年召开第三次拉特兰会议。",
+    "zh-Hant": "他與腓特烈一世（巴巴羅薩）及其所立的對立教皇相持十八年，1179年召開第三次拉特蘭會議。"
+   }
+  },
+  {
+   "id": "antipope-victor-iv",
+   "start": 1159,
+   "end": 1164,
+   "region": "europe",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Antipope Victor IV",
+    "zh-Hans": "对立教皇维克多四世",
+    "zh-Hant": "對立教皇維克多四世"
+   },
+   "note": {
+    "en": "Barbarossa's candidate against Alexander III, the first of four imperial antipopes in a schism that lasted until 1180.",
+    "zh-Hans": "巴巴罗萨扶立以对抗亚历山大三世的人选，是那场持续到1180年的分裂中，四位帝国系对立教皇的头一位。",
+    "zh-Hant": "巴巴羅薩扶立以對抗亞歷山大三世的人選，是那場持續到1180年的分裂中，四位帝國系對立教皇的頭一位。"
+   }
+  },
+  {
+   "id": "pope-innocent-iv",
+   "start": 1243,
+   "end": 1254,
+   "region": "europe",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Pope Innocent IV",
+    "zh-Hans": "教皇英诺森四世",
+    "zh-Hant": "教皇英諾森四世"
+   },
+   "note": {
+    "en": "Deposed the emperor Frederick II at the First Council of Lyons and sent the first papal envoys to the Mongol court.",
+    "zh-Hans": "他在第一次里昂会议上废黜皇帝腓特烈二世，并首次派遣教廷使节前往蒙古王庭。",
+    "zh-Hant": "他在第一次里昂會議上廢黜皇帝腓特烈二世，並首次派遣教廷使節前往蒙古王庭。"
+   }
+  },
+  {
+   "id": "pope-boniface-viii",
+   "start": 1294,
+   "end": 1303,
+   "region": "europe",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Pope Boniface VIII",
+    "zh-Hans": "教皇卜尼法斯八世",
+    "zh-Hant": "教皇卜尼法斯八世"
+   },
+   "note": {
+    "en": "Declared in Unam Sanctam that submission to the Roman pontiff is necessary to salvation; the French king's men seized him at Anagni and he died within weeks.",
+    "zh-Hans": "他在《一圣》诏书中宣告顺服罗马教皇乃得救所必需；法王的使者在阿纳尼将他拘执，他数周后去世。",
+    "zh-Hant": "他在《一聖》詔書中宣告順服羅馬教皇乃得救所必需；法王的使者在阿納尼將他拘執，他數週後去世。"
+   }
+  },
+  {
+   "id": "pope-clement-v",
+   "start": 1305,
+   "end": 1314,
+   "region": "europe",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Pope Clement V",
+    "zh-Hans": "教皇克莱孟五世",
+    "zh-Hant": "教皇克萊孟五世"
+   },
+   "note": {
+    "en": "The first pope to rule from Avignon; at the Council of Vienne he suppressed the Knights Templar.",
+    "zh-Hans": "首位驻亚维农的教皇，在维埃纳会议上取缔圣殿骑士团。",
+    "zh-Hant": "首位駐亞維農的教皇，在維埃納會議上取締聖殿騎士團。"
+   }
+  },
+  {
+   "id": "pope-john-xxii",
+   "start": 1316,
+   "end": 1334,
+   "region": "europe",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Pope John XXII",
+    "zh-Hans": "教皇若望二十二世",
+    "zh-Hant": "教皇若望二十二世"
+   },
+   "note": {
+    "en": "The second Avignon pope, who built the papal financial system and condemned the Franciscan Spirituals over the poverty of Christ.",
+    "zh-Hans": "亚维农第二位教皇，建立教廷的财政体系，并就基督是否一无所有之争定罪方济会属灵派。",
+    "zh-Hant": "亞維農第二位教皇，建立教廷的財政體系，並就基督是否一無所有之爭定罪方濟會屬靈派。"
+   }
+  },
+  {
+   "id": "pope-eugene-iv",
+   "start": 1431,
+   "end": 1447,
+   "region": "europe",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Pope Eugene IV",
+    "zh-Hans": "教皇恩仁四世",
+    "zh-Hant": "教皇恩仁四世"
+   },
+   "note": {
+    "en": "Fought the conciliarists of Basel and presided at Florence over a union with the Greeks that the East did not receive.",
+    "zh-Hans": "他与巴塞尔的大公会议派相争，并在佛罗伦萨主持与希腊教会的合一，但东方教会并未接受。",
+    "zh-Hant": "他與巴塞爾的大公會議派相爭，並在佛羅倫薩主持與希臘教會的合一，但東方教會並未接受。"
+   }
+  },
+  {
+   "id": "pope-nicholas-v",
+   "start": 1447,
+   "end": 1455,
+   "region": "europe",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Pope Nicholas V",
+    "zh-Hans": "教皇尼古拉五世",
+    "zh-Hant": "教皇尼古拉五世"
+   },
+   "note": {
+    "en": "Ended the last of the schisms and founded the Vatican Library; his bull Dum Diversas of 1452 sanctioned the enslavement of captured non-Christians.",
+    "zh-Hans": "他终结最后一次教会分裂，创立梵蒂冈图书馆；1452年所颁《众多》诏书却准许奴役被掳的非基督徒。",
+    "zh-Hant": "他終結最後一次教會分裂，創立梵蒂岡圖書館；1452年所頒《眾多》詔書卻准許奴役被擄的非基督徒。"
+   }
+  },
+  {
+   "id": "pope-paul-ii",
+   "start": 1464,
+   "end": 1471,
+   "region": "europe",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Pope Paul II",
+    "zh-Hans": "教皇保禄二世",
+    "zh-Hant": "教皇保祿二世"
+   },
+   "note": {
+    "en": "A Venetian, who fixed the jubilee year at every twenty-five years.",
+    "zh-Hans": "威尼斯人，定下每二十五年一次禧年的惯例。",
+    "zh-Hant": "威尼斯人，定下每二十五年一次禧年的慣例。"
+   }
+  },
+  {
+   "id": "pope-alexander-vi",
+   "start": 1492,
+   "end": 1503,
+   "region": "europe",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Pope Alexander VI",
+    "zh-Hans": "教皇亚历山大六世",
+    "zh-Hant": "教皇亞歷山大六世"
+   },
+   "note": {
+    "en": "The Borgia pope, remembered for his household as much as his office; he divided the newly found Atlantic lands between Spain and Portugal.",
+    "zh-Hans": "波吉亚家族的教皇，后世记得他的家事不下于他的职分；他把新发现的大西洋彼岸土地划分给西班牙与葡萄牙。",
+    "zh-Hant": "波吉亞家族的教皇，後世記得他的家事不下於他的職分；他把新發現的大西洋彼岸土地劃分給西班牙與葡萄牙。"
+   }
+  },
+  {
+   "id": "pope-julius-ii",
+   "start": 1503,
+   "end": 1513,
+   "region": "europe",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Pope Julius II",
+    "zh-Hans": "教皇儒略二世",
+    "zh-Hant": "教皇儒略二世"
+   },
+   "note": {
+    "en": "The warrior pope: he laid the foundation stone of the new St Peter's and set Michelangelo to the Sistine ceiling.",
+    "zh-Hans": "好战的教皇：他为新的圣彼得大堂奠基，又延请米开朗基罗绘制西斯廷礼拜堂天顶画。",
+    "zh-Hant": "好戰的教皇：他為新的聖彼得大堂奠基，又延請米開朗基羅繪製西斯廷禮拜堂天頂畫。"
+   }
+  },
+  {
+   "id": "pope-leo-x",
+   "start": 1513,
+   "end": 1521,
+   "region": "europe",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Pope Leo X",
+    "zh-Hans": "教皇良十世",
+    "zh-Hant": "教皇良十世"
+   },
+   "note": {
+    "en": "The Medici pope whose indulgence for the building of St Peter's provoked Luther's theses; he excommunicated Luther in 1521.",
+    "zh-Hans": "美第奇家族的教皇；为建圣彼得大堂而颁售的赎罪券激起路德的抗议，他于1521年将路德绝罚。",
+    "zh-Hant": "美第奇家族的教皇；為建聖彼得大堂而頒售的贖罪券激起路德的抗議，他於1521年將路德絕罰。"
+   }
+  },
+  {
+   "id": "pope-clement-vii",
+   "start": 1523,
+   "end": 1534,
+   "region": "europe",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Pope Clement VII",
+    "zh-Hans": "教皇克莱孟七世",
+    "zh-Hant": "教皇克萊孟七世"
+   },
+   "note": {
+    "en": "Imperial troops sacked Rome in 1527 during his reign, and his refusal of Henry VIII's divorce cost Rome the English church.",
+    "zh-Hans": "他在位时罗马于1527年遭帝国军队洗劫；他拒绝亨利八世的离婚请求，罗马因此失去英格兰教会。",
+    "zh-Hant": "他在位時羅馬於1527年遭帝國軍隊洗劫；他拒絕亨利八世的離婚請求，羅馬因此失去英格蘭教會。"
+   }
+  },
+  {
+   "id": "pope-paul-iii",
+   "start": 1534,
+   "end": 1549,
+   "region": "europe",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Pope Paul III",
+    "zh-Hans": "教皇保禄三世",
+    "zh-Hant": "教皇保祿三世"
+   },
+   "note": {
+    "en": "Called the Council of Trent, approved the Society of Jesus, and forbade the enslavement of the peoples of the Americas.",
+    "zh-Hans": "他召开特伦特会议，批准耶稣会成立，并禁止奴役美洲各族人民。",
+    "zh-Hant": "他召開特倫特會議，批准耶穌會成立，並禁止奴役美洲各族人民。"
+   }
+  },
+  {
+   "id": "pope-paul-iv",
+   "start": 1555,
+   "end": 1559,
+   "region": "europe",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Pope Paul IV",
+    "zh-Hans": "教皇保禄四世",
+    "zh-Hant": "教皇保祿四世"
+   },
+   "note": {
+    "en": "Made the Index of Forbidden Books and shut the Jews of Rome into a walled quarter.",
+    "zh-Hans": "他编订禁书目录，并把罗马的犹太人圈禁于设墙的隔离区内。",
+    "zh-Hant": "他編訂禁書目錄，並把羅馬的猶太人圈禁於設牆的隔離區內。"
+   }
+  },
+  {
+   "id": "pope-gregory-xiii",
+   "start": 1572,
+   "end": 1585,
+   "region": "europe",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Pope Gregory XIII",
+    "zh-Hans": "教皇格列高利十三世",
+    "zh-Hant": "教皇格列高利十三世"
+   },
+   "note": {
+    "en": "Reformed the calendar in 1582 and founded colleges at Rome to train clergy for the mission field.",
+    "zh-Hans": "他1582年改革历法，又在罗马设立多所学院，为宣教工场培养圣职人员。",
+    "zh-Hant": "他1582年改革曆法，又在羅馬設立多所學院，為宣教工場培養聖職人員。"
+   }
+  },
+  {
+   "id": "pope-innocent-xi",
+   "start": 1676,
+   "end": 1689,
+   "region": "europe",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Pope Innocent XI",
+    "zh-Hans": "教皇英诺森十一世",
+    "zh-Hant": "教皇英諾森十一世"
+   },
+   "note": {
+    "en": "Resisted Louis XIV over the liberties of the French church and helped pay for the relief of Vienna in 1683.",
+    "zh-Hans": "他就法国教会的自主权与路易十四相抗，并出资助成1683年解维也纳之围。",
+    "zh-Hant": "他就法國教會的自主權與路易十四相抗，並出資助成1683年解維也納之圍。"
+   }
+  },
+  {
+   "id": "pope-innocent-xiii",
+   "start": 1721,
+   "end": 1724,
+   "region": "europe",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Pope Innocent XIII",
+    "zh-Hans": "教皇英诺森十三世",
+    "zh-Hant": "教皇英諾森十三世"
+   },
+   "note": {
+    "en": "A short reign, remembered chiefly for his suspicion of the Jesuits in the quarrel over the Chinese rites.",
+    "zh-Hans": "在位甚短，后世记得的主要是他在中国礼仪之争中对耶稣会的猜忌。",
+    "zh-Hant": "在位甚短，後世記得的主要是他在中國禮儀之爭中對耶穌會的猜忌。"
+   }
+  },
+  {
+   "id": "pope-clement-xiv",
+   "start": 1769,
+   "end": 1774,
+   "region": "europe",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Pope Clement XIV",
+    "zh-Hans": "教皇克莱孟十四世",
+    "zh-Hant": "教皇克萊孟十四世"
+   },
+   "note": {
+    "en": "Suppressed the Society of Jesus in 1773 under pressure from the Bourbon courts.",
+    "zh-Hans": "迫于波旁诸王室的压力，他于1773年解散耶稣会。",
+    "zh-Hant": "迫於波旁諸王室的壓力，他於1773年解散耶穌會。"
+   }
+  },
+  {
+   "id": "pope-pius-vi",
+   "start": 1775,
+   "end": 1799,
+   "region": "europe",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Pope Pius VI",
+    "zh-Hans": "教皇庇护六世",
+    "zh-Hant": "教皇庇護六世"
+   },
+   "note": {
+    "en": "Saw the French Revolution dismantle the church in France; French troops carried him into France, where he died a prisoner.",
+    "zh-Hans": "他目睹法国大革命拆毁法国教会；法军将他掳往法国，他死于囚禁之中。",
+    "zh-Hant": "他目睹法國大革命拆毀法國教會；法軍將他擄往法國，他死於囚禁之中。"
+   }
+  },
+  {
+   "id": "pope-pius-vii",
+   "start": 1800,
+   "end": 1823,
+   "region": "europe",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Pope Pius VII",
+    "zh-Hans": "教皇庇护七世",
+    "zh-Hant": "教皇庇護七世"
+   },
+   "note": {
+    "en": "Signed the concordat of 1801 with Napoleon, was imprisoned by him, outlived him, and restored the Jesuits in 1814.",
+    "zh-Hans": "他与拿破仑签订1801年教务专约，其后被拿破仑囚禁，终得复位，并于1814年恢复耶稣会。",
+    "zh-Hant": "他與拿破崙簽訂1801年教務專約，其後被拿破崙囚禁，終得復位，並於1814年恢復耶穌會。"
+   }
+  },
+  {
+   "id": "pope-leo-xii",
+   "start": 1823,
+   "end": 1829,
+   "region": "europe",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Pope Leo XII",
+    "zh-Hans": "教皇良十二世",
+    "zh-Hant": "教皇良十二世"
+   },
+   "note": {
+    "en": "Set his face against the new liberal age and restored much of the old order in the Papal States.",
+    "zh-Hans": "他抵拒新兴的自由主义风气，在教皇国内恢复旧制。",
+    "zh-Hant": "他抵拒新興的自由主義風氣，在教皇國內恢復舊制。"
+   }
+  },
+  {
+   "id": "pope-pius-viii",
+   "start": 1829,
+   "end": 1830,
+   "region": "europe",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Pope Pius VIII",
+    "zh-Hans": "教皇庇护八世",
+    "zh-Hant": "教皇庇護八世"
+   },
+   "note": {
+    "en": "Twenty months in office, in which he accepted the government that came out of the July revolution in France.",
+    "zh-Hans": "在位仅二十个月，其间承认法国七月革命后成立的政权。",
+    "zh-Hant": "在位僅二十個月，其間承認法國七月革命後成立的政權。"
+   }
+  },
+  {
+   "id": "pope-gregory-xvi",
+   "start": 1831,
+   "end": 1846,
+   "region": "europe",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Pope Gregory XVI",
+    "zh-Hans": "教皇格列高利十六世",
+    "zh-Hant": "教皇格列高利十六世"
+   },
+   "note": {
+    "en": "Condemned liberalism, and railways in the Papal States with it, yet pressed the revival of Catholic missions overseas and condemned the slave trade in 1839.",
+    "zh-Hans": "他谴责自由主义，连教皇国内的铁路也在反对之列，却大力推动海外天主教宣教，并于1839年谴责贩奴。",
+    "zh-Hant": "他譴責自由主義，連教皇國內的鐵路也在反對之列，卻大力推動海外天主教宣教，並於1839年譴責販奴。"
+   }
+  },
+  {
+   "id": "pope-pius-ix",
+   "start": 1846,
+   "end": 1878,
+   "region": "europe",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Pope Pius IX",
+    "zh-Hans": "教皇庇护九世",
+    "zh-Hant": "教皇庇護九世"
+   },
+   "note": {
+    "en": "The longest reign in papal history: he defined the Immaculate Conception, called the First Vatican Council, and lost the Papal States to Italy.",
+    "zh-Hans": "教皇史上在位最久者：他界定圣母无染原罪的教义，召开第一次梵蒂冈会议，又将教皇国尽失于意大利。",
+    "zh-Hant": "教皇史上在位最久者：他界定聖母無染原罪的教義，召開第一次梵蒂岡會議，又將教皇國盡失於意大利。"
+   }
+  },
+  {
+   "id": "pope-leo-xiii",
+   "start": 1878,
+   "end": 1903,
+   "region": "europe",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Pope Leo XIII",
+    "zh-Hans": "教皇良十三世",
+    "zh-Hant": "教皇良十三世"
+   },
+   "note": {
+    "en": "Opened modern Catholic social teaching with Rerum Novarum in 1891, and encouraged the study of Scripture and of Aquinas.",
+    "zh-Hans": "他1891年以《新事》通谕开启近代天主教社会训导，并鼓励研读圣经与阿奎那的著作。",
+    "zh-Hant": "他1891年以《新事》通諭開啟近代天主教社會訓導，並鼓勵研讀聖經與阿奎那的著作。"
+   }
+  },
+  {
+   "id": "pope-pius-x",
+   "start": 1903,
+   "end": 1914,
+   "region": "europe",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Pope Pius X",
+    "zh-Hans": "教皇庇护十世",
+    "zh-Hant": "教皇庇護十世"
+   },
+   "note": {
+    "en": "Condemned modernism, restored frequent communion, and began the codification of canon law.",
+    "zh-Hans": "他定罪现代主义，恢复常领圣餐之例，并着手编纂教会法典。",
+    "zh-Hant": "他定罪現代主義，恢復常領聖餐之例，並着手編纂教會法典。"
+   }
+  },
+  {
+   "id": "pope-benedict-xv",
+   "start": 1914,
+   "end": 1922,
+   "region": "europe",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Pope Benedict XV",
+    "zh-Hans": "教皇本笃十五世",
+    "zh-Hant": "教皇本篤十五世"
+   },
+   "note": {
+    "en": "Called the First World War a useless slaughter, kept the Holy See neutral, and spent its means on relief and the exchange of prisoners.",
+    "zh-Hans": "他称第一次世界大战为无益的屠杀，使教廷保持中立，并倾其财力于救济与交换战俘。",
+    "zh-Hant": "他稱第一次世界大戰為無益的屠殺，使教廷保持中立，並傾其財力於救濟與交換戰俘。"
+   }
+  },
+  {
+   "id": "pope-pius-xi",
+   "start": 1922,
+   "end": 1939,
+   "region": "europe",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Pope Pius XI",
+    "zh-Hans": "教皇庇护十一世",
+    "zh-Hant": "教皇庇護十一世"
+   },
+   "note": {
+    "en": "Signed the Lateran Treaty of 1929 and condemned Nazi racial doctrine in 1937 in an encyclical written in German.",
+    "zh-Hans": "他签订1929年拉特兰条约，1937年又以一封德文通谕谴责纳粹的种族学说。",
+    "zh-Hant": "他簽訂1929年拉特蘭條約，1937年又以一封德文通諭譴責納粹的種族學說。"
+   }
+  },
+  {
+   "id": "pope-john-xxiii",
+   "start": 1958,
+   "end": 1963,
+   "region": "europe",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Pope John XXIII",
+    "zh-Hans": "教皇若望二十三世",
+    "zh-Hant": "教皇若望二十三世"
+   },
+   "note": {
+    "en": "Elected at seventy-six as a caretaker, he called the Second Vatican Council and did not live to see it close.",
+    "zh-Hans": "七十六岁当选，本被视为过渡人选，他却召开第二次梵蒂冈会议，未及闭幕便去世。",
+    "zh-Hant": "七十六歲當選，本被視為過渡人選，他卻召開第二次梵蒂岡會議，未及閉幕便去世。"
+   }
+  },
+  {
+   "id": "justinian-i-reign",
+   "start": 527,
+   "end": 565,
+   "region": "rome",
+   "stream": "byzantium",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Justinian I",
+    "zh-Hans": "查士丁尼一世",
+    "zh-Hant": "查士丁尼一世"
+   },
+   "note": {
+    "en": "He recovered Africa and Italy for the empire, had the whole of Roman law gathered into a code, and built Hagia Sophia.",
+    "zh-Hans": "他为帝国收复北非与意大利，下令将历代罗马法汇编成典，并建造圣索菲亚大教堂。",
+    "zh-Hant": "他為帝國收復北非與意大利，下令將歷代羅馬法彙編成典，並建造聖索菲亞大教堂。"
+   }
+  },
+  {
+   "id": "belisarius-campaigns",
+   "start": 530,
+   "end": 559,
+   "region": "rome",
+   "stream": "byzantium",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "Belisarius",
+    "zh-Hans": "贝利撒留",
+    "zh-Hant": "貝利撒留"
+   },
+   "note": {
+    "en": "Justinian's general: victory at Dara in 530, the destruction of the Vandal kingdom in 533-534, the recovery of Rome, and in his old age the driving of the Huns from the walls of Constantinople in 559. The band is his years in command, not his life; he died in 565.",
+    "zh-Hans": "查士丁尼麾下的名将：530年达拉之役取胜，533至534年灭汪达尔王国，收复罗马，年老时又于559年将匈人逐离君士坦丁堡城下。此段所画的是他统兵的年月，不是他的一生；他卒于565年。",
+    "zh-Hant": "查士丁尼麾下的名將：530年達拉之役取勝，533至534年滅汪達爾王國，收復羅馬，年老時又於559年將匈人逐離君士坦丁堡城下。此段所畫的是他統兵的年月，不是他的一生；他卒於565年。"
+   }
+  },
+  {
+   "id": "heraclius-reign",
+   "start": 610,
+   "end": 641,
+   "region": "rome",
+   "stream": "byzantium",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Heraclius",
+    "zh-Hans": "希拉克略",
+    "zh-Hant": "希拉剋略"
+   },
+   "note": {
+    "en": "He broke the Persian empire and carried the True Cross back to Jerusalem in 630, then lost Syria, Palestine and Egypt to the Arabs within ten years.",
+    "zh-Hans": "他击破波斯帝国，630年将真十字架迎回耶路撒冷；不出十年，叙利亚、巴勒斯坦与埃及尽失于阿拉伯人。",
+    "zh-Hant": "他擊破波斯帝國，630年將真十字架迎回耶路撒冷；不出十年，敘利亞、巴勒斯坦與埃及盡失於阿拉伯人。"
+   }
+  },
+  {
+   "id": "constantine-iv-reign",
+   "start": 668,
+   "end": 685,
+   "region": "rome",
+   "stream": "byzantium",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Constantine IV",
+    "zh-Hans": "君士坦丁四世",
+    "zh-Hant": "君士坦丁四世"
+   },
+   "note": {
+    "en": "He broke the first Arab siege of Constantinople with Greek fire and summoned the council of 680-681 that condemned the one-will teaching.",
+    "zh-Hans": "他以希腊火击退阿拉伯人第一次围攻君士坦丁堡，并召开680至681年的会议，定罪基督一志论。",
+    "zh-Hant": "他以希臘火擊退阿拉伯人第一次圍攻君士坦丁堡，並召開680至681年的會議，定罪基督一志論。"
+   }
+  },
+  {
+   "id": "theodora-michael-iii",
+   "start": 842,
+   "end": 867,
+   "region": "rome",
+   "stream": "byzantium",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Theodora and Michael III",
+    "zh-Hans": "狄奥多拉与米海尔三世",
+    "zh-Hant": "狄奧多拉與米海爾三世"
+   },
+   "note": {
+    "en": "The empress Theodora ruled as regent and restored the icons in 843; her son Michael III came of age in 856 and sent Cyril and Methodius to the Slavs.",
+    "zh-Hans": "太后狄奥多拉摄政，843年恢复敬奉圣像；其子米海尔三世856年亲政，差派西里尔与美多德往斯拉夫人中传道。",
+    "zh-Hant": "太后狄奧多拉攝政，843年恢復敬奉聖像；其子米海爾三世856年親政，差派西里爾與美多德往斯拉夫人中傳道。"
+   }
+  },
+  {
+   "id": "constantine-vii-reign",
+   "start": 913,
+   "end": 959,
+   "region": "rome",
+   "stream": "byzantium",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Constantine VII",
+    "zh-Hans": "君士坦丁七世",
+    "zh-Hant": "君士坦丁七世"
+   },
+   "note": {
+    "en": "Emperor from childhood but ruling alone only from 945; the books compiled at his court preserve much of what is known of the Byzantine state.",
+    "zh-Hans": "幼年即位，直到945年才亲政；他宫中编成的书卷，保存了后世对拜占庭朝廷所知的大半。",
+    "zh-Hant": "幼年即位，直到945年才親政；他宮中編成的書卷，保存了後世對拜占庭朝廷所知的大半。"
+   }
+  },
+  {
+   "id": "basil-ii-reign",
+   "start": 976,
+   "end": 1025,
+   "region": "rome",
+   "stream": "byzantium",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Basil II",
+    "zh-Hans": "巴西尔二世",
+    "zh-Hant": "巴西爾二世"
+   },
+   "note": {
+    "en": "He destroyed the Bulgarian tsardom and brought the empire to its widest medieval extent; the Rus were baptised in his reign.",
+    "zh-Hans": "他灭保加利亚王国，使帝国版图达到中世纪的最大范围；罗斯人也在他在位期间受洗归主。",
+    "zh-Hant": "他滅保加利亞王國，使帝國版圖達到中世紀的最大範圍；羅斯人也在他在位期間受洗歸主。"
+   }
+  },
+  {
+   "id": "alexios-i-reign",
+   "start": 1081,
+   "end": 1118,
+   "region": "rome",
+   "stream": "byzantium",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Alexios I Komnenos",
+    "zh-Hans": "阿历克塞一世·科穆宁",
+    "zh-Hant": "阿歷克塞一世·科穆寧"
+   },
+   "note": {
+    "en": "He put the empire back on its feet after Manzikert and asked the West for soldiers; what came was the First Crusade.",
+    "zh-Hans": "曼齐刻尔特之败后，他重整帝国，向西方求兵；来的却是第一次十字军。",
+    "zh-Hant": "曼齊刻爾特之敗後，他重整帝國，向西方求兵；來的卻是第一次十字軍。"
+   }
+  },
+  {
+   "id": "latin-empire",
+   "start": 1204,
+   "end": 1261,
+   "region": "rome",
+   "stream": "byzantium",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Latin Empire of Constantinople",
+    "zh-Hans": "君士坦丁堡拉丁帝国",
+    "zh-Hant": "君士坦丁堡拉丁帝國"
+   },
+   "note": {
+    "en": "The Frankish and Venetian state set up in Constantinople after the Fourth Crusade; Greek rule returned in 1261.",
+    "zh-Hans": "第四次十字军之后在君士坦丁堡建立的法兰克与威尼斯政权；1261年希腊人复国。",
+    "zh-Hant": "第四次十字軍之後在君士坦丁堡建立的法蘭克與威尼斯政權；1261年希臘人復國。"
+   }
+  },
+  {
+   "id": "second-crusade",
+   "start": 1147,
+   "end": 1149,
+   "region": "levant",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Second Crusade",
+    "zh-Hans": "第二次十字军东征",
+    "zh-Hant": "第二次十字軍東征"
+   },
+   "note": {
+    "en": "Preached by Bernard of Clairvaux after Edessa fell in 1144; the kings of France and Germany failed before Damascus and went home.",
+    "zh-Hans": "1144年埃德萨陷落后，由克莱尔沃的伯尔纳鼓动；法德两王在大马士革受挫，无功而返。",
+    "zh-Hant": "1144年埃德薩陷落後，由克萊爾沃的伯爾納鼓動；法德兩王在大馬士革受挫，無功而返。"
+   }
+  },
+  {
+   "id": "third-crusade",
+   "start": 1189,
+   "end": 1192,
+   "region": "levant",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Third Crusade",
+    "zh-Hans": "第三次十字军东征",
+    "zh-Hant": "第三次十字軍東征"
+   },
+   "note": {
+    "en": "Called after Saladin took Jerusalem in 1187; Richard I of England won back the coast but never entered the city.",
+    "zh-Hans": "1187年萨拉丁夺取耶路撒冷后发动；英王理查一世夺回沿海诸城，却始终未能进城。",
+    "zh-Hant": "1187年薩拉丁奪取耶路撒冷後發動；英王理查一世奪回沿海諸城，卻始終未能進城。"
+   }
+  },
+  {
+   "id": "fifth-crusade",
+   "start": 1217,
+   "end": 1221,
+   "region": "levant",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Fifth Crusade",
+    "zh-Hans": "第五次十字军东征",
+    "zh-Hant": "第五次十字軍東征"
+   },
+   "note": {
+    "en": "Aimed at Egypt: Damietta was taken and lost again, and Francis of Assisi crossed the lines to preach to the sultan.",
+    "zh-Hans": "以埃及为目标：达米埃塔得而复失，亚西西的方济各曾越过阵线向苏丹传道。",
+    "zh-Hant": "以埃及為目標：達米埃塔得而復失，亞西西的方濟各曾越過陣線向蘇丹傳道。"
+   }
+  },
+  {
+   "id": "sixth-crusade",
+   "start": 1228,
+   "end": 1229,
+   "region": "levant",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Sixth Crusade",
+    "zh-Hans": "第六次十字军东征",
+    "zh-Hant": "第六次十字軍東征"
+   },
+   "note": {
+    "en": "Frederick II, himself under excommunication, obtained Jerusalem by treaty for ten years without a battle.",
+    "zh-Hans": "腓特烈二世身负绝罚，却不经一战，以条约取得耶路撒冷十年。",
+    "zh-Hant": "腓特烈二世身負絕罰，卻不經一戰，以條約取得耶路撒冷十年。"
+   }
+  },
+  {
+   "id": "seventh-crusade",
+   "start": 1248,
+   "end": 1254,
+   "region": "levant",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Seventh Crusade",
+    "zh-Hans": "第七次十字军东征",
+    "zh-Hant": "第七次十字軍東征"
+   },
+   "note": {
+    "en": "Louis IX of France was beaten in Egypt, taken prisoner, and ransomed; he spent four more years in the Holy Land.",
+    "zh-Hans": "法王路易九世在埃及战败被俘，出赎金获释，此后又在圣地留驻四年。",
+    "zh-Hant": "法王路易九世在埃及戰敗被俘，出贖金獲釋，此後又在聖地留駐四年。"
+   }
+  },
+  {
+   "id": "order-of-malta",
+   "start": 1113,
+   "end": null,
+   "ongoing": true,
+   "region": "europe",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Order of the Hospital of Saint John",
+    "zh-Hans": "医院骑士团",
+    "zh-Hant": "醫院騎士團"
+   },
+   "note": {
+    "en": "Recognised by Paschal II in 1113 as a religious order caring for pilgrims at Jerusalem, it became a fighting order, ruled Rhodes from 1310 to 1522 and Malta from 1530 to 1798, and still exists as a sovereign order.",
+    "zh-Hans": "1113年由巴斯加二世确认为在耶路撒冷照顾朝圣者的修会，后转为武装修会，1310至1522年治理罗得岛，1530至1798年治理马耳他，至今仍以主权修会的身分存在。",
+    "zh-Hant": "1113年由巴斯加二世確認為在耶路撒冷照顧朝聖者的修會，後轉為武裝修會，1310至1522年治理羅得島，1530至1798年治理馬爾他，至今仍以主權修會的身分存在。"
+   }
   }
  ],
  "ministries": [
@@ -14358,6 +15442,312 @@
     "en": "After the death of Francis the conclave elected Robert Prevost, an Augustinian who had served many years in Peru; he took the name Leo XIV, the first pope born in the United States.",
     "zh-Hans": "方济各去世后，枢机会议选出普雷沃斯特；他是奥斯定会士，多年在秘鲁牧养，取名良十四世，为第一位在美国出生的教皇。",
     "zh-Hant": "方濟各離世後，樞機會議選出普雷沃斯特；他是奧斯定會士，多年在祕魯牧養，取名良十四世，是首位在美國出生的教宗。"
+   }
+  },
+  {
+   "id": "arab_conquest_jerusalem",
+   "year": 638,
+   "era": "church",
+   "stream": "islam",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Jerusalem Surrenders to the Arabs",
+    "zh-Hans": "耶路撒冷向阿拉伯人投降",
+    "zh-Hant": "耶路撒冷向阿拉伯人投降"
+   },
+   "desc": {
+    "en": "Two years after the Arab victory at the Yarmuk in 636 the patriarch Sophronius gave up the city; references date the surrender to 637 or 638, and Christian rule over Jerusalem did not return for four and a half centuries.",
+    "zh-Hans": "636年阿拉伯人在雅尔穆克大胜后两年，牧首索夫罗尼乌斯献城；各家将投降之年定在637或638年不等。此后四个半世纪，耶路撒冷不再由基督教政权统治。",
+    "zh-Hant": "636年阿拉伯人在雅爾穆克大勝後兩年，牧首索夫羅尼烏斯獻城；各家將投降之年定在637或638年不等。此後四個半世紀，耶路撒冷不再由基督教政權統治。"
+   }
+  },
+  {
+   "id": "arab_siege_constantinople_674",
+   "year": 674,
+   "era": "world",
+   "stream": "byzantium",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "First Arab Siege of Constantinople",
+    "zh-Hans": "阿拉伯人首次围攻君士坦丁堡",
+    "zh-Hant": "阿拉伯人首次圍攻君士坦丁堡"
+   },
+   "desc": {
+    "en": "Umayyad fleets pressed the city season after season from 674 to 678 and were finally burned off the water by Greek fire; the first time the Arab advance on the Christian capital was stopped.",
+    "zh-Hans": "674至678年间，伍麦叶王朝的舰队年复一年进逼该城，最终被希腊火焚于海上；这是阿拉伯人向基督教都城的进军首次被遏止。",
+    "zh-Hant": "674至678年間，伍麥葉王朝的艦隊年復一年進逼該城，最終被希臘火焚於海上；這是阿拉伯人向基督教都城的進軍首次被遏止。"
+   }
+  },
+  {
+   "id": "arab_siege_constantinople_717",
+   "year": 717,
+   "era": "world",
+   "stream": "byzantium",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Second Arab Siege of Constantinople",
+    "zh-Hans": "阿拉伯人再围君士坦丁堡",
+    "zh-Hant": "阿拉伯人再圍君士坦丁堡"
+   },
+   "desc": {
+    "en": "A Muslim army and fleet shut the city in from the summer of 717 until August 718, when hunger, a hard winter and Greek fire broke the siege; the failure fixed the frontier in Asia Minor for three centuries.",
+    "zh-Hans": "717年夏至718年8月，穆斯林的军队与舰队合围该城，终因饥荒、严冬与希腊火而撤围；此役失利使小亚细亚的边界稳定了三百年。",
+    "zh-Hant": "717年夏至718年8月，穆斯林的軍隊與艦隊合圍該城，終因饑荒、嚴冬與希臘火而撤圍；此役失利使小亞細亞的邊界穩定了三百年。"
+   }
+  },
+  {
+   "id": "synod_of_whitby",
+   "year": 664,
+   "era": "church",
+   "stream": "church",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "The Synod of Whitby",
+    "zh-Hans": "惠特比会议",
+    "zh-Hant": "惠特比會議"
+   },
+   "desc": {
+    "en": "King Oswiu of Northumbria ruled that his kingdom would keep Easter and the tonsure after the Roman rather than the Irish use, turning the English church toward Rome; references date the meeting to 663 or 664.",
+    "zh-Hans": "诺森布里亚王奥斯威裁定，本国守复活节与剃发之礼当从罗马之例，不从爱尔兰之例，英格兰教会自此转向罗马；各家把这次会议定在663或664年。",
+    "zh-Hant": "諾森布里亞王奧斯威裁定，本國守復活節與剃髮之禮當從羅馬之例，不從愛爾蘭之例，英格蘭教會自此轉向羅馬；各家把這次會議定在663或664年。"
+   }
+  },
+  {
+   "id": "council_constantinople_iii",
+   "year": 680,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Third Council of Constantinople",
+    "zh-Hans": "第三次君士坦丁堡会议",
+    "zh-Hant": "第三次君士坦丁堡會議"
+   },
+   "desc": {
+    "en": "Summoned by Constantine IV and sitting from 680 into 681, the sixth ecumenical council confessed two wills and two operations in Christ and condemned the one-will teaching, naming Pope Honorius I among those censured.",
+    "zh-Hans": "由君士坦丁四世召开，自680年开至681年。这第六次大公会议宣认基督有两个意志、两种运作，定罪一志论，并把教皇何诺留一世列在受谴责者之中。",
+    "zh-Hant": "由君士坦丁四世召開，自680年開至681年。這第六次大公會議宣認基督有兩個意志、兩種運作，定罪一志論，並把教皇何諾留一世列在受譴責者之中。"
+   }
+  },
+  {
+   "id": "iconoclasm_begins",
+   "year": 730,
+   "era": "church",
+   "stream": "byzantium",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "The Iconoclast Controversy Begins",
+    "zh-Hans": "破坏圣像之争兴起",
+    "zh-Hant": "破壞聖像之爭興起"
+   },
+   "desc": {
+    "en": "Leo III turned against the images: the older account puts the removal of the icon at the palace gate in 726, while his edict and the forced resignation of the patriarch Germanus fall in 730, and many scholars now reckon from that year.",
+    "zh-Hans": "利奥三世转而反对圣像：较早的记载把宫门圣像被撤之事定在726年，而他颁布敕令、逼使牧首日尔曼努斯辞职则在730年，今日不少学者即以该年起算。",
+    "zh-Hant": "利奧三世轉而反對聖像：較早的記載把宮門聖像被撤之事定在726年，而他頒佈敕令、逼使牧首日爾曼努斯辭職則在730年，今日不少學者即以該年起算。"
+   }
+  },
+  {
+   "id": "pope_leo_v_deposed",
+   "year": 903,
+   "era": "church",
+   "stream": "church",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Leo V Deposed after Two Months",
+    "zh-Hans": "良五世在位两月被废",
+    "zh-Hant": "良五世在位兩月被廢"
+   },
+   "desc": {
+    "en": "Elected in July 903, he was thrown into prison by his own chaplain within two months and died there; his short reign belongs to the darkest stretch of the tenth-century papacy.",
+    "zh-Hans": "他903年7月当选，不出两月即被自己的司铎囚禁，死于狱中；这段短暂的在位，正处于十世纪教廷最黑暗的时期。",
+    "zh-Hant": "他903年7月當選，不出兩月即被自己的司鐸囚禁，死於獄中；這段短暫的在位，正處於十世紀教廷最黑暗的時期。"
+   }
+  },
+  {
+   "id": "council_of_reims_1049",
+   "year": 1049,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "The Reforming Council of Reims",
+    "zh-Hans": "兰斯改革会议",
+    "zh-Hant": "蘭斯改革會議"
+   },
+   "desc": {
+    "en": "Leo IX made the bishops present swear over the relics of Saint Remigius that they had not bought their office; the council's canons against simony and clerical marriage set the programme of the reform papacy.",
+    "zh-Hans": "利奥九世令与会主教在圣雷米的圣髑前起誓，声明自己并非买得职分；会议所定禁止买卖圣职与圣职人员婚娶的教规，成为其后改革派教廷的纲领。",
+    "zh-Hant": "利奧九世令與會主教在聖雷米的聖髑前起誓，聲明自己並非買得職分；會議所定禁止買賣聖職與聖職人員婚娶的教規，成為其後改革派教廷的綱領。"
+   }
+  },
+  {
+   "id": "battle_of_manzikert",
+   "year": 1071,
+   "era": "world",
+   "stream": "byzantium",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "The Seljuk Turks Break Byzantium at Manzikert",
+    "zh-Hans": "曼齐刻尔特之役突厥大败拜占庭",
+    "zh-Hant": "曼齊刻爾特之役突厥大敗拜占庭"
+   },
+   "desc": {
+    "en": "Alp Arslan destroyed the Byzantine field army and took the emperor prisoner; within twenty years most of Asia Minor was Turkish, and it was this loss that brought Alexios I to ask the West for help.",
+    "zh-Hans": "阿尔普·阿尔斯兰歼灭拜占庭野战军，并生擒皇帝；二十年内小亚细亚大半落入突厥之手。正是此败，使阿历克塞一世转而向西方求援。",
+    "zh-Hant": "阿爾普·阿爾斯蘭殲滅拜占庭野戰軍，並生擒皇帝；二十年內小亞細亞大半落入突厥之手。正是此敗，使阿歷克塞一世轉而向西方求援。"
+   }
+  },
+  {
+   "id": "council_of_toulouse_1229",
+   "year": 1229,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Toulouse Forbids the Laity the Bible",
+    "zh-Hans": "图卢兹会议禁止平信徒读经",
+    "zh-Hant": "圖盧茲會議禁止平信徒讀經"
+   },
+   "desc": {
+    "en": "A local council called at the close of the Albigensian war forbade lay people to keep the books of the Old and New Testaments, allowing only the Psalter and the breviary, and only in Latin.",
+    "zh-Hans": "阿尔比战争结束之际召开的一次地方会议，禁止平信徒收存旧约与新约书卷，只准持有诗篇集与日课经，且限用拉丁文。",
+    "zh-Hant": "阿爾比戰爭結束之際召開的一次地方會議，禁止平信徒收存舊約與新約書卷，只准持有詩篇集與日課經，且限用拉丁文。"
+   }
+  },
+  {
+   "id": "augustinian_grand_union",
+   "year": 1256,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "The Augustinian Friars United",
+    "zh-Hans": "奥斯定会合并成立",
+    "zh-Hant": "奧斯定會合併成立"
+   },
+   "desc": {
+    "en": "Alexander IV joined several Italian groups of hermits into one order of friars living under the Rule of Augustine; three centuries later one of its German friars was Martin Luther.",
+    "zh-Hans": "亚历山大四世把意大利数个隐修团体合并为一个遵行奥古斯丁会规的托钵修会；三百年后，其德意志会士中有一位名叫马丁·路德。",
+    "zh-Hant": "亞歷山大四世把意大利數個隱修團體合併為一個遵行奧古斯丁會規的托鉢修會；三百年後，其德意志會士中有一位名叫馬丁·路德。"
+   }
+  },
+  {
+   "id": "unigenitus_1343",
+   "year": 1343,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "A Treasury of Merit Defined",
+    "zh-Hans": "功德宝库的教义确立",
+    "zh-Hant": "功德寶庫的教義確立"
+   },
+   "desc": {
+    "en": "Clement VI's bull Unigenitus Dei Filius stated that the church holds a treasury of merit which the pope may apply through indulgences; Luther's ninety-five theses attacked exactly this claim.",
+    "zh-Hans": "克莱孟六世颁《上帝的独生子》诏书，宣告教会存有功德宝库，教皇可藉赎罪券支取施予；路德的九十五条所攻击的，正是这一主张。",
+    "zh-Hant": "克萊孟六世頒《上帝的獨生子》詔書，宣告教會存有功德寶庫，教皇可藉贖罪券支取施予；路德的九十五條所攻擊的，正是這一主張。"
+   }
+  },
+  {
+   "id": "ottomans_take_gallipoli",
+   "year": 1354,
+   "era": "world",
+   "stream": "islam",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "The Ottomans Cross into Europe at Gallipoli",
+    "zh-Hans": "奥斯曼人自加里波利进入欧洲",
+    "zh-Hant": "鄂圖曼人自加里波利進入歐洲"
+   },
+   "desc": {
+    "en": "An earthquake threw down the walls of Gallipoli in March 1354 and Suleyman Pasha seized and refortified it, giving the Ottomans their first permanent foothold on the European shore.",
+    "zh-Hans": "1354年3月地震震塌加里波利城墙，苏莱曼帕夏乘势占据并重新筑防，奥斯曼人自此在欧洲一岸有了第一处长驻的据点。",
+    "zh-Hant": "1354年3月地震震塌加里波利城牆，蘇萊曼帕夏乘勢佔據並重新築防，鄂圖曼人自此在歐洲一岸有了第一處長駐的據點。"
+   }
+  },
+  {
+   "id": "ottomans_take_adrianople",
+   "year": 1369,
+   "era": "world",
+   "stream": "islam",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "The Ottomans Take Adrianople",
+    "zh-Hans": "奥斯曼人夺取阿德里安堡",
+    "zh-Hant": "鄂圖曼人奪取阿德里安堡"
+   },
+   "desc": {
+    "en": "The city became the Ottoman capital and cut Constantinople off from the west; the year is disputed, older accounts giving 1361 to 1363 and recent work on the Byzantine sources 1369.",
+    "zh-Hans": "此城成为奥斯曼的国都，切断君士坦丁堡与西方的联系；其年份有争议，旧说定于1361至1363年间，近人据拜占庭史料则定于1369年。",
+    "zh-Hant": "此城成為鄂圖曼的國都，切斷君士坦丁堡與西方的聯繫；其年份有爭議，舊說定於1361至1363年間，近人據拜占庭史料則定於1369年。"
+   }
+  },
+  {
+   "id": "spanish_inquisition_1478",
+   "year": 1478,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "The Spanish Inquisition Authorised",
+    "zh-Hans": "西班牙宗教裁判所获准设立",
+    "zh-Hant": "西班牙宗教裁判所獲准設立"
+   },
+   "desc": {
+    "en": "Sixtus IV allowed Ferdinand and Isabella to name their own inquisitors; unlike the papal inquisition this one answered to the crown, and its first tribunal sat at Seville in 1480.",
+    "zh-Hans": "西克斯图斯四世准许斐迪南与伊莎贝拉自行任命裁判官；与教廷的异端裁判所不同，这一机构隶属王室，1480年在塞维利亚开设第一个法庭。",
+    "zh-Hant": "西克斯圖斯四世准許斐迪南與伊莎貝拉自行任命裁判官；與教廷的異端裁判所不同，這一機構隸屬王室，1480年在塞維利亞開設第一個法庭。"
+   }
+  },
+  {
+   "id": "battle_of_mohacs",
+   "year": 1526,
+   "era": "world",
+   "stream": "islam",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Hungary Falls at Mohacs",
+    "zh-Hans": "摩哈赤之役匈牙利覆亡",
+    "zh-Hant": "摩哈赤之役匈牙利覆亡"
+   },
+   "desc": {
+    "en": "Suleiman destroyed the Hungarian army and its king in a single afternoon on 29 August 1526; the kingdom was partitioned, and the Ottoman threat shaped every imperial diet of the Reformation years.",
+    "zh-Hans": "1526年8月29日一个下午之间，苏莱曼歼灭匈牙利大军，国王亦阵亡；王国就此分裂，奥斯曼的威胁笼罩了改教年间每一次帝国议会。",
+    "zh-Hant": "1526年8月29日一個下午之間，蘇萊曼殲滅匈牙利大軍，國王亦陣亡；王國就此分裂，鄂圖曼的威脅籠罩了改教年間每一次帝國議會。"
+   }
+  },
+  {
+   "id": "diet_of_augsburg_1530",
+   "year": 1530,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "The Augsburg Confession Presented",
+    "zh-Hans": "奥格斯堡信条呈上",
+    "zh-Hant": "奧格斯堡信條呈上"
+   },
+   "desc": {
+    "en": "At the diet Charles V called to reunite his empire, Melanchthon's statement of the Lutheran faith was read out before the emperor on 25 June 1530; it remains the founding confession of Lutheran churches.",
+    "zh-Hans": "查理五世召开帝国议会，本意在使帝国重归一致；1530年6月25日，梅兰希顿所撰的信义宗信仰宣言在皇帝面前宣读。此信条至今仍是信义宗教会的根本信条。",
+    "zh-Hant": "查理五世召開帝國議會，本意在使帝國重歸一致；1530年6月25日，梅蘭希頓所撰的信義宗信仰宣言在皇帝面前宣讀。此信條至今仍是信義宗教會的根本信條。"
    }
   }
  ]

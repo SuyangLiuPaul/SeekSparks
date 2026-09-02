@@ -148,6 +148,7 @@ class WheelPower {
     required this.id,
     required this.start,
     required this.end,
+    required this.region,
     required this.stream,
     required this.basis,
     required this.approximate,
@@ -157,6 +158,18 @@ class WheelPower {
   });
 
   final String id;
+
+  /// Where it was, in the asset's twelve-value vocabulary.
+  ///
+  /// READ SINCE 2026-09-02, and it was not before. The disclosure test
+  /// excused it as unread on the grounds that it was "very nearly a
+  /// function of stream" — 20 of the 22 streams mapped to exactly one
+  /// region. Adding 42 pontificates and five crusades broke that: the
+  /// church band now runs through `europe` AND `levant`, because the
+  /// papacy and the crusades genuinely happened in different places.
+  /// A field that carries information and is never shown is
+  /// information held back, so the power sheet shows it.
+  final String region;
 
   /// The band this power is drawn on.
   final String stream;
@@ -208,6 +221,7 @@ class WheelPower {
         id: j['id'] as String,
         start: (j['start'] as num).toInt(),
         end: (j['end'] as num?)?.toInt(),
+        region: (j['region'] as String?) ?? '',
         stream: (j['stream'] as String?) ?? 'world',
         basis: (j['basis'] as String?) ?? 'conventional',
         approximate: j['approximate'] == true,

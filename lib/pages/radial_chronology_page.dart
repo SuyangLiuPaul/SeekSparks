@@ -425,6 +425,39 @@ Color streamColor(String line, int index, int count) =>
 /// ui_strings.dart because the unattended loop shares this checkout and
 /// edits that file; fold these in on a quiet merge.
 const Map<String, Map<String, String>> wheelStrings = {
+  // WHERE A POWER WAS, in the asset's own twelve-value vocabulary.
+  //
+  // `region` used to be excused as unread on the grounds that it was
+  // "very nearly a function of stream" — 20 of 22 streams mapped to one
+  // region. Adding 42 pontificates and five crusades broke that: the
+  // church band now runs through both `europe` and `levant`, and it
+  // does so because the papacy and the crusades genuinely happened in
+  // different places. A field that carries information and is never
+  // shown is information held back, so it is shown.
+  'wheelRegionEgypt': {'zh-Hans': '埃及', 'zh-Hant': '埃及', 'en': 'Egypt'},
+  'wheelRegionMesopotamia': {
+    'zh-Hans': '美索不达米亚', 'zh-Hant': '美索不達米亞', 'en': 'Mesopotamia',
+  },
+  'wheelRegionAnatolia': {
+    'zh-Hans': '安纳托利亚', 'zh-Hant': '安納托利亞', 'en': 'Anatolia',
+  },
+  'wheelRegionLevant': {
+    'zh-Hans': '黎凡特', 'zh-Hant': '黎凡特', 'en': 'The Levant',
+  },
+  'wheelRegionPersia': {'zh-Hans': '波斯', 'zh-Hant': '波斯', 'en': 'Persia'},
+  'wheelRegionGreece': {'zh-Hans': '希腊', 'zh-Hant': '希臘', 'en': 'Greece'},
+  'wheelRegionRome': {'zh-Hans': '罗马', 'zh-Hant': '羅馬', 'en': 'Rome'},
+  'wheelRegionIslamic': {
+    'zh-Hans': '伊斯兰世界', 'zh-Hant': '伊斯蘭世界', 'en': 'The Islamic world',
+  },
+  'wheelRegionEurope': {'zh-Hans': '欧洲', 'zh-Hant': '歐洲', 'en': 'Europe'},
+  'wheelRegionAsia': {'zh-Hans': '亚洲', 'zh-Hant': '亞洲', 'en': 'Asia'},
+  'wheelRegionAmericas': {
+    'zh-Hans': '美洲', 'zh-Hant': '美洲', 'en': 'The Americas',
+  },
+  'wheelRegionModern': {
+    'zh-Hans': '现代世界', 'zh-Hant': '現代世界', 'en': 'The modern world',
+  },
   'wheelRefs': {
     'zh-Hans': '经文出处', 'zh-Hant': '經文出處', 'en': 'References',
   },
@@ -3047,6 +3080,29 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
     );
   }
 
+  /// The asset's `region` in the reader's language.
+  ///
+  /// Returns empty for a value this app has no word for, which is the
+  /// honest failure: a raw `mesopotamia` printed into a Chinese sheet
+  /// would be worse than saying nothing, and
+  /// `wheel_history_disclosure_test.dart` pins that every region in the
+  /// asset has a label so the empty branch stays unreachable.
+  String _regionLabel(String region, String locale) => switch (region) {
+        'egypt' => _s('wheelRegionEgypt', 'Egypt', locale),
+        'mesopotamia' => _s('wheelRegionMesopotamia', 'Mesopotamia', locale),
+        'anatolia' => _s('wheelRegionAnatolia', 'Anatolia', locale),
+        'levant' => _s('wheelRegionLevant', 'The Levant', locale),
+        'persia' => _s('wheelRegionPersia', 'Persia', locale),
+        'greece' => _s('wheelRegionGreece', 'Greece', locale),
+        'rome' => _s('wheelRegionRome', 'Rome', locale),
+        'islamic' => _s('wheelRegionIslamic', 'The Islamic world', locale),
+        'europe' => _s('wheelRegionEurope', 'Europe', locale),
+        'asia' => _s('wheelRegionAsia', 'Asia', locale),
+        'americas' => _s('wheelRegionAmericas', 'The Americas', locale),
+        'modern' => _s('wheelRegionModern', 'The modern world', locale),
+        _ => '',
+      };
+
   String _basisText(String basis, String locale) => switch (basis) {
         'scripture' => _s('wheelBasisScripture', 'stated in scripture', locale),
         'scripture+thiele' =>
@@ -3873,8 +3929,14 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
           ]),
           SizedBox(height: t.scaled(4)),
           Text(
-              '${yearLabel(p.start, locale)} – '
-              '${p.ongoing ? _s('wheelPresent', 'present', locale) : yearLabel(p.end!, locale)}',
+              [
+                '${yearLabel(p.start, locale)} – '
+                    '${p.ongoing ? _s('wheelPresent', 'present', locale) : yearLabel(p.end!, locale)}',
+                // The place, beside the years. See `wheelRegion*`.
+                if (_regionLabel(p.region, locale) case final where
+                    when where.isNotEmpty)
+                  where,
+              ].join(' · '),
               style: TextStyle(color: wb.mutedText, fontSize: t.scaled(12))),
           if (p.noteFor(locale).isNotEmpty) ...[
             SizedBox(height: t.scaled(8)),
