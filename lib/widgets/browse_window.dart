@@ -371,6 +371,11 @@ class _BrowseWindowState extends State<BrowseWindow> {
   /// offset.
   final ItemScrollController _scroll = ItemScrollController();
 
+  /// The list [_scroll] drives, so [_scrollToFocused] can ask whether it
+  /// has been LAID OUT — which is a different question from whether the
+  /// controller is attached, and the one that matters. See there.
+  final GlobalKey _listKey = GlobalKey();
+
   /// Row index of the first line of each verse, so a jump lands on the
   /// verse's own block rather than mid-way through the previous one.
   final Map<int, int> _firstRowOfVerse = {};
@@ -416,8 +421,43 @@ class _BrowseWindowState extends State<BrowseWindow> {
     }
   }
 
+  /// True when the list [_scroll] drives has actually been laid out.
+  ///
+  /// 2026-09-02: this is the guard `isAttached` was mistaken for. A live
+  /// prod crash from v1.6.204 (`Bad state: No element`, web, route
+  /// `/wheel`) deobfuscated to `ScrollController.position` —
+  /// `_positions.single` on an empty list — reached from
+  /// `ItemScrollController.scrollTo` below. `isAttached` only says that a
+  /// `ScrollablePositionedList` registered itself from `initState`; the
+  /// scroll POSITION is created by the `Scrollable` inside it, which
+  /// exists only once the list has been laid out. Between those two
+  /// moments `scrollTo` throws, and in release the framework's assertion
+  /// is compiled out so what surfaces is `.single`'s empty-iterable error.
+  ///
+  /// The two moments were always distinct, but until v1.6.204 nothing
+  /// could sit between them: this pane only ever built inside a workbench
+  /// that was on screen. `af9d956` made a cold `#/wheel` boot with the
+  /// initial stack `[home, wheel]`, so the workbench beneath is BUILT and
+  /// never laid out — the Overlay lays out only the entries above the
+  /// last opaque one. Building continues normally down there (a
+  /// descendant's `setState` does not need layout), so this pane mounts,
+  /// loads its chapter, builds its list, `isAttached` turns true — and
+  /// the list never gets a position because a `LayoutBuilder` inside
+  /// `ScrollablePositionedList` never runs. Reproduced in
+  /// `test/browse_window_offstage_scroll_test.dart`.
+  ///
+  /// Asking the LIST rather than this pane is deliberate: the pane can
+  /// have been laid out earlier and be offstage by the time the load
+  /// lands, and it is the list's own layout that creates the position.
+  bool get _listIsLaidOut {
+    final box = _listKey.currentContext?.findRenderObject();
+    return box is RenderBox && box.hasSize;
+  }
+
   /// Bring the focused verse into view. Deferred a frame so it also
-  /// works right after a load, when the list has not been laid out yet.
+  /// works right after a load, when the rows exist but the list built
+  /// from them has not had its frame yet — and gated on [_listIsLaidOut],
+  /// because a frame this pane is not part of does not give it one.
   void _scrollToFocused() {
     final v = widget.focusedVerse;
     if (v == null || v == _scrolledTo) return;
@@ -427,7 +467,14 @@ class _BrowseWindowState extends State<BrowseWindow> {
     // queue the same jump twice.
     _scrolledTo = v;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || !_scroll.isAttached) return;
+      if (!mounted || !_scroll.isAttached || !_listIsLaidOut) {
+        // Give the record back, or a pane that was not on screen when
+        // its chapter landed would never scroll to this verse at all —
+        // the early record above is a within-the-frame de-duplicator,
+        // not a claim that the scroll happened.
+        if (mounted && _scrolledTo == v) _scrolledTo = null;
+        return;
+      }
       _scroll.scrollTo(
         index: index,
         duration: const Duration(milliseconds: 180),
@@ -787,6 +834,7 @@ class _BrowseWindowState extends State<BrowseWindow> {
                 ]),
               Expanded(
                 child: ScrollablePositionedList.builder(
+                    key: _listKey,
                     itemScrollController: _scroll,
                     padding: EdgeInsets.zero,
                     itemCount: rows.length,
