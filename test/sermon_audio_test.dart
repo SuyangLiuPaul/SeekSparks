@@ -34,7 +34,11 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:just_audio/just_audio.dart' show ProcessingState;
+
 import 'package:seeksparks/services/sermon_audio_service.dart';
+import 'package:seeksparks/widgets/sermon_audio_player.dart'
+    show sermonAudioControl;
 
 late final Map<String, dynamic> manifest;
 late final Map<String, List<dynamic>> audio;
@@ -128,6 +132,68 @@ void main() {
       expect(url, 'https://www.christiandiscipleschurch.org/x/y.mp3');
       expect('://'.allMatches(url).length, 1);
       expect(url, isNot(contains('//x/y')));
+    });
+  });
+
+  group('the transport control', () {
+    // Reported from the screen: "why is there no pause button on the
+    // sermon recording". There was one, and buffering was eating it.
+    // `waiting` folded in `ProcessingState.buffering`, which is right
+    // BEFORE playback starts and wrong after it — a stream re-buffers
+    // while it plays, so the first network hiccup swapped the pause
+    // button for a disabled spinner and the reader could not stop the
+    // sermon. The spinner means "not yet playable" and nothing else.
+
+    test('once it is playing the control is PAUSE, buffering or not', () {
+      for (final p in ProcessingState.values) {
+        final c = sermonAudioControl(
+            playing: true, preparing: false, processing: p);
+        expect(c.showPause, isTrue, reason: '$p');
+        expect(c.waiting, isFalse,
+            reason: '$p disabled the control while the sermon was playing');
+      }
+    });
+
+    test('before playback, loading and buffering both wait', () {
+      for (final p in [
+        ProcessingState.loading,
+        ProcessingState.buffering,
+      ]) {
+        final c = sermonAudioControl(
+            playing: false, preparing: false, processing: p);
+        expect(c.waiting, isTrue, reason: '$p');
+        expect(c.showPause, isFalse);
+      }
+    });
+
+    test('idle and ready offer PLAY, and completed offers it again', () {
+      for (final p in [
+        ProcessingState.idle,
+        ProcessingState.ready,
+        ProcessingState.completed,
+      ]) {
+        final c = sermonAudioControl(
+            playing: false, preparing: false, processing: p);
+        expect(c.waiting, isFalse, reason: '$p');
+        expect(c.showPause, isFalse, reason: '$p');
+      }
+    });
+
+    test('the gap between the tap and the first state change waits', () {
+      // `setUrl` opens the connection; until it returns there is no
+      // player state at all, and the control must not look like PLAY or
+      // the reader taps it twice.
+      final c = sermonAudioControl(
+          playing: false, preparing: true, processing: null);
+      expect(c.waiting, isTrue);
+      // ...but not once audio is actually coming out, even if a stale
+      // `_preparing` were still set.
+      expect(
+        sermonAudioControl(
+                playing: true, preparing: true, processing: null)
+            .waiting,
+        isFalse,
+      );
     });
   });
 

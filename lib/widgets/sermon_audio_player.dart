@@ -26,6 +26,32 @@ import 'package:seeksparks/services/sermon_audio_service.dart';
 /// normal state here — someone else's nginx is one Drupal upgrade away
 /// from renaming every path — so it is caught, said plainly, and the
 /// player collapses to a single sentence.
+/// What the one transport control should be, given the player's state.
+///
+/// A pure function, and pulled out of `build` because the bug it
+/// encodes was invisible in a widget: the control used to fold
+/// `ProcessingState.buffering` into a disabled spinner, which is right
+/// before playback starts and WRONG after it — a stream re-buffers
+/// while it plays, so the spinner replaced the pause button the first
+/// time the network hiccuped and the reader could not stop the sermon.
+/// It was reported as "there is no pause button", which is what it
+/// looked like from the outside.
+///
+/// The rule: the spinner means "not yet playable" and nothing else.
+/// Once [playing] is true the control is PAUSE and stays pause.
+@visibleForTesting
+({bool showPause, bool waiting}) sermonAudioControl({
+  required bool playing,
+  required bool preparing,
+  required ProcessingState? processing,
+}) {
+  final waiting = !playing &&
+      (preparing ||
+          processing == ProcessingState.loading ||
+          processing == ProcessingState.buffering);
+  return (showPause: playing, waiting: waiting);
+}
+
 class SermonAudioPlayer extends StatefulWidget {
   const SermonAudioPlayer({
     super.key,
@@ -132,11 +158,15 @@ class _SermonAudioPlayerState extends State<SermonAudioPlayer> {
             StreamBuilder<PlayerState>(
               stream: _player.playerStateStream,
               builder: (context, snap) {
-                final playing = snap.data?.playing ?? false;
-                final waiting = _preparing ||
-                    snap.data?.processingState == ProcessingState.loading ||
-                    snap.data?.processingState == ProcessingState.buffering;
+                final state = sermonAudioControl(
+                  playing: snap.data?.playing ?? false,
+                  preparing: _preparing,
+                  processing: snap.data?.processingState,
+                );
+                final playing = state.showPause;
+                final waiting = state.waiting;
                 return IconButton(
+                  key: const ValueKey('sermonAudioToggle'),
                   onPressed: waiting
                       ? null
                       : (playing ? _player.pause : _play),
@@ -149,7 +179,8 @@ class _SermonAudioPlayerState extends State<SermonAudioPlayer> {
                       : Icon(playing
                           ? Icons.pause_rounded
                           : Icons.play_arrow_rounded),
-                  tooltip: playing ? _s('sermonAudioPause', 'Pause')
+                  tooltip: playing
+                      ? _s('sermonAudioPause', 'Pause')
                       : _s('sermonAudioPlay', 'Play'),
                 );
               },
