@@ -3686,9 +3686,9 @@
     "zh-Hant": "施洗約翰"
    },
    "note": {
-    "en": "The start is this app's own year for the baptism of Jesus (`jesus_baptized`, AD 26) and the end is its year for the feeding of the five thousand (`5000_fed`, AD 29), before which Matthew 14:10 has him already beheaded; note that Luke 3:1's fifteenth year of Tiberius, counted from this chart's own `tiberius_emperor` at AD 14, would give AD 28/29 instead — see the inconsistency flagged in section 1.",
-    "zh-Hans": "起始年取本应用自定的耶稣受洗之年（`jesus_baptized`，公元26年），末年取其五饼二鱼之年（`5000_fed`，公元29年），而马太福音 14:10 记在此之前约翰已被斩；须注意路加福音 3:1「提比留在位第十五年」若自本图 `tiberius_emperor`（公元14年）起算，应得公元28/29年——见第1节所列的不一致。",
-    "zh-Hant": "起始年取本應用自定的耶穌受洗之年（`jesus_baptized`，公元26年），末年取其五餅二魚之年（`5000_fed`，公元29年），而馬太福音 14:10 記在此之前約翰已被斬；須注意路加福音 3:1「提比留在位第十五年」若自本圖 `tiberius_emperor`（公元14年）起算，應得公元28/29年——見第1節所列的不一致。"
+    "en": "The start is this chart's own year for the baptism of Jesus (AD 26) and the end its year for the feeding of the five thousand (AD 29), before which Matthew 14:10 has him already beheaded. Luke 3:1's fifteenth year of Tiberius, counted from this chart's accession year of AD 14, would give AD 28 or 29 instead; the same verse's Pontius Pilate takes office in AD 26. The two clauses bracket the ministry and this span sits at the early end of that bracket — see the Tiberius record, which states the same thing.",
+    "zh-Hans": "起始年取本图所记耶稣受洗之年（公元26年），末年取五饼二鱼之年（公元29年）——马太福音 14:10 记在此之前约翰已被斩。路加福音 3:1「提比留在位第十五年」若自本图所记的登基之年（公元14年）起算，应得公元28或29年；而同一节所记的本丢彼拉多到任在公元26年。两项记述把这段事奉夹在一个区间内，本段取的是区间前端——提比略那条记录说的是同一件事。",
+    "zh-Hant": "起始年取本圖所記耶穌受洗之年（公元26年），末年取五餅二魚之年（公元29年）——馬太福音 14:10 記在此之前約翰已被斬。路加福音 3:1「提比留在位第十五年」若自本圖所記的登基之年（公元14年）起算，應得公元28或29年；而同一節所記的本丟彼拉多到任在公元26年。兩項記述把這段事奉夾在一個區間內，本段取的是區間前端——提比略那條記錄說的是同一件事。"
    },
    "anchorKings": []
   },
@@ -6150,9 +6150,9 @@
     "zh-Hant": "提比略作羅馬皇帝"
    },
    "desc": {
-    "en": "Tiberius succeeds Augustus; Luke dates John the Baptist's ministry to the fifteenth year of his reign.",
-    "zh-Hans": "提比略（圣经作「该撒提庇留」）继奥古斯都为帝；路加以他在位第十五年记述施洗约翰出来传道。",
-    "zh-Hant": "提比略（聖經作「該撒提庇留」）繼奧古斯都為帝；路加以他在位第十五年記述施洗約翰出來傳道。"
+    "en": "Tiberius succeeds Augustus. Luke 3:1 dates John the Baptist's ministry to the fifteenth year of his reign, which counted from this year is AD 28 or 29 — later than this chart's own AD 26 for the baptism. The same verse names Pontius Pilate as governor, and his prefecture begins in AD 26, so the verse's two clauses bracket the ministry rather than fix one year; the chart sits at the early end of that bracket and says so.",
+    "zh-Hans": "提比略（圣经作「该撒提庇留」）继奥古斯都为帝。路加福音 3:1 以他在位第十五年记施洗约翰出来传道；自本年起算即公元28或29年，晚于本图所记的受洗之年（公元26年）。同一节又记本丢彼拉多作犹太巡抚，而彼拉多到任在公元26年——故此节的两项记述是把这段事奉夹在一个区间内，而非定出某一年；本图取的是区间的前端，并在此说明。",
+    "zh-Hant": "提比留（聖經作「該撒提庇留」）繼奧古斯都為帝。路加福音 3:1 以他在位第十五年記施洗約翰出來傳道；自本年起算即公元28或29年，晚於本圖所記的受洗之年（公元26年）。同一節又記本丟彼拉多作猶太巡撫，而彼拉多到任在公元26年——故此節的兩項記述是把這段事奉夾在一個區間內，而非定出某一年；本圖取的是區間的前端，並在此說明。"
    }
   },
   {

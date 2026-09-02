@@ -2084,12 +2084,13 @@
       "titleEn": "Baptism of Jesus",
       "titleZhHans": "耶稣受洗",
       "titleZhHant": "耶穌受洗",
-      "descEn": "John baptizes Jesus in the Jordan; the Father speaks, the Spirit descends.",
-      "descZhHans": "约翰在约旦河为耶稣施洗；父神发声，圣灵降临。",
-      "descZhHant": "約翰在約旦河為耶穌施洗；父神發聲，聖靈降臨。",
+      "descEn": "John baptizes Jesus in the Jordan; the Father speaks, the Spirit descends. The year is the earliest Luke 3:1 allows — it names Pontius Pilate as governor, and his prefecture begins in AD 26 — while the same verse's fifteenth year of Tiberius, counted from his accession in AD 14, would give AD 28 or 29. The verse brackets the ministry rather than fixing one year, and this chart sits at the early end.",
+      "descZhHans": "约翰在约旦河为耶稣施洗；父神发声，圣灵降临。此年份取路加福音 3:1 所容许的最早一年——该节记本丢彼拉多作巡抚，而彼拉多到任在公元26年；而同一节的「提比留在位第十五年」若自其公元14年登基起算，则应得公元28或29年。此节是把这段事奉夹在一个区间内，而非定出某一年，本图取的是区间前端。",
+      "descZhHant": "約翰在約旦河為耶穌施洗；父神發聲，聖靈降臨。此年份取路加福音 3:1 所容許的最早一年——該節記本丟彼拉多作巡撫，而彼拉多到任在公元26年；而同一節的「提比留在位第十五年」若自其公元14年登基起算，則應得公元28或29年。此節是把這段事奉夾在一個區間內，而非定出某一年，本圖取的是區間前端。",
       "refs": [
         "Matthew 3:13-17",
-        "Mark 1:9-11"
+        "Mark 1:9-11",
+        "Luke 3:1"
       ],
       "personIds": [
         "jesus"

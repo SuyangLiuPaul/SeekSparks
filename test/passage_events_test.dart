@@ -82,14 +82,21 @@ void main() {
         perChapterCount[key] = here.length;
       }
     }
-    expect(pairs, hasLength(325));
+    // 326 since 2026-09-02: `jesus_baptized` gained Luke 3:1, the verse
+    // that creates the chart's own Tiberius/Pilate tension, so the
+    // reader can open it from the record that discusses it. Luke 3 was
+    // not reachable from the timeline before. A census is a
+    // measurement — when it moves, the reason belongs here.
+    expect(pairs, hasLength(326));
     expect(pairs.map((p) => p.$1).toSet(), hasLength(31));
 
     final dist = <int, int>{};
     for (final count in perChapterCount.values) {
       dist[count] = (dist[count] ?? 0) + 1;
     }
-    expect(dist[1], 304);
+    // 305: the new Luke 3 pairing carries exactly one event, so the
+    // whole of the census growth lands in this bucket.
+    expect(dist[1], 305);
     expect(dist[2], 19);
     // Two chapters carry more. Genesis 5 IS the register of the line
     // from Adam to Noah, so the six generations added to the asset all
