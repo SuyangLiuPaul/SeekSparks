@@ -53,14 +53,16 @@ void main() {
   });
 
   test('versionsForLanguage returns the expected editions', () {
-    // 2026-09-02: `leb` and `nasb` used to be asserted here. They are
-    // still in the catalog and their assets still ship — they are hidden
-    // (see `disabledVersions`), and `versionsForLanguage` is what fills
-    // the picker's English tab, so they must not come back out of it.
+    // 2026-09-02: `nasb` used to be asserted here. It is still in the
+    // catalog and its asset still ships — it is hidden (see
+    // `disabledVersions`), and `versionsForLanguage` is what fills the
+    // picker's English tab, so it must not come back out of it. `leb`
+    // was hidden alongside it for a few hours the same day and is
+    // visible again, so it is asserted PRESENT rather than dropped.
     expect(versionsForLanguage('en').map((v) => v.value),
-        containsAll(<String>['kjv', 'bsb', 'kjvs']));
+        containsAll(<String>['kjv', 'leb', 'bsb', 'kjvs']));
     expect(versionsForLanguage('en').map((v) => v.value),
-        isNot(anyOf(contains('leb'), contains('nasb'))));
+        isNot(contains('nasb')));
     expect(versionsForLanguage('zh-Hans').map((v) => v.value),
         containsAll(<String>['cuvs-yhwh', 'biblexg-v2', 'cuvs-plus']));
     expect(versionsForLanguage('zh-Hant').map((v) => v.value),
@@ -84,13 +86,15 @@ void main() {
       expect(allCodes.contains(code), isFalse,
           reason: '$code should no longer exist in the catalog at all');
     }
-    // 2026-09-02: the mechanism is no longer unused. NASB and LEB are
-    // hidden from the interface at the owner's instruction while their
-    // assets stay bundled and deployed — which is precisely the case
+    // 2026-09-02: the mechanism is no longer unused. The NASB is hidden
+    // from the interface at the owner's instruction while its asset
+    // stays bundled and deployed — which is precisely the case
     // `disabledVersions` exists for, and the opposite of the outright
-    // removal the rest of this test covers. Pinned exactly, so a third
-    // edition cannot be hidden without someone saying so here.
-    expect(disabledVersions, <String>{'nasb', 'leb'},
+    // removal the rest of this test covers. The LEB was hidden with it
+    // for a few hours the same day and came back once its licence had
+    // been checked. Pinned exactly, so neither a second edition can be
+    // hidden nor the LEB re-hidden without someone saying so here.
+    expect(disabledVersions, <String>{'nasb'},
         reason: 'hiding an edition is a product decision, not a detail — '
             'it belongs in a diff someone reads');
   });

@@ -69,17 +69,17 @@ void main() {
     await openMenu(tester, currentVersion: 'cuvs-yhwh');
     await tester.tap(find.text('English'));
     await tester.pumpAndSettle();
-    // 2026-09-02: this looked for 'New American Standard Bible'. NASB and
-    // LEB are hidden from the interface now (their assets still ship —
-    // see `disabledVersions`), so the English tab shows the three
-    // editions a reader can actually open, and neither hidden one is
-    // reachable from the one screen a reader uses to change edition.
+    // 2026-09-02: this looked for 'New American Standard Bible'. The
+    // NASB is hidden from the interface now (its asset still ships —
+    // see `disabledVersions`), so it is not reachable from the one
+    // screen a reader uses to change edition. The LEB was hidden with it
+    // for a few hours the same day and is visible again, so it is
+    // asserted PRESENT here — this screen is where a re-hide would show.
     expect(find.text('Berean Standard Bible'), findsOneWidget);
     expect(find.text('King James Version'), findsOneWidget);
+    expect(find.text('Lexham English Bible'), findsOneWidget);
     expect(find.text('New American Standard Bible'), findsNothing);
-    expect(find.text('Lexham English Bible'), findsNothing);
     expect(find.text('NASB'), findsNothing);
-    expect(find.text('LEB'), findsNothing);
     await tester.tap(find.text('繁體中文'));
     await tester.pumpAndSettle();
     expect(find.text('和合本雅伟版(繁體)'), findsOneWidget);

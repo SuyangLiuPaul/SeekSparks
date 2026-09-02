@@ -38,11 +38,14 @@ void main() {
       // BSB against KJV, 和合本 against 梁家铿译本 — a real comparison,
       // in a script the reader already has open.
       //
-      // 2026-09-02: was `nasb → kjv` and `kjv → leb`. Both named an
-      // edition that is hidden now, and `kjv → leb` in particular was
-      // asserting that Split View seeds a column a reader cannot pick.
+      // 2026-09-02: was `nasb → kjv` and `kjv → leb`; both named a
+      // hidden edition that morning, so both were rewritten. The LEB
+      // came back the same day and `kjv → leb` came back with it — this
+      // is the catalog's own order speaking, not a preference, and the
+      // rule it obeys is the same one the test above states: pair with a
+      // sibling in the reader's language.
       expect(defaultSecondaryVersion('bsb'), 'kjv');
-      expect(defaultSecondaryVersion('kjv'), 'bsb');
+      expect(defaultSecondaryVersion('kjv'), 'leb');
       expect(defaultSecondaryVersion('cuvs-yhwh'), 'biblexg-v2');
       expect(defaultSecondaryVersion('cuvs-yhwh-tr'), 'biblexg-v2-tr');
     });
@@ -71,15 +74,24 @@ void main() {
     test('a stored version that has been HIDDEN is not kept', () {
       // The reader's own pick normally wins over any default. It cannot
       // win when the edition has been taken off the interface: keeping
-      // `leb` here would reopen the split column on a Bible with no row
+      // `nasb` here would reopen the split column on a Bible with no row
       // in the picker, which is the one place the reader would go to
       // change it back. It lands on the successor instead — BSB, which
       // is the primary here, so the pairing rule takes over from there.
+      //
+      // This case was written with `leb` as its example on the morning
+      // both editions were hidden. The LEB is visible again, so it is
+      // now the CONTROL directly below: a stored edition that is on
+      // offer must be kept, and only a hidden one replaced.
       final got =
-          resolveSecondaryVersion(primaryVersion: 'bsb', stored: 'leb');
-      expect(got, isNot('leb'));
+          resolveSecondaryVersion(primaryVersion: 'bsb', stored: 'nasb');
+      expect(got, isNot('nasb'));
       expect(got, isNot('bsb'), reason: 'a column comparing BSB to BSB');
       expect(availableVersions.any((v) => v.value == got), isTrue);
+
+      expect(resolveSecondaryVersion(primaryVersion: 'bsb', stored: 'leb'),
+          'leb',
+          reason: 'the LEB is on offer again; the reader chose it');
     });
 
     test('falls back when nothing is stored', () {

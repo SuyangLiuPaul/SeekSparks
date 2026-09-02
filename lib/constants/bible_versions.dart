@@ -201,21 +201,27 @@ const bibleVersions = <BibleVersionInfo>[
 /// by CUVS-YHWH / biblexg-v2, assets and all. ⚠️ Old shared links using
 /// those version codes no longer resolve.
 ///
-/// 2026-09-02 — NASB and LEB are the first entries. The owner's
-/// instruction was 只从界面藏掉: take them off the interface, do NOT take
-/// them out of the build. So `pubspec.yaml` still lists
-/// `assets/nasb.json` and `assets/leb.json`, the files still ship, and
-/// `test/data_integrity_test.dart` still pins that they do. What changes
-/// is that nothing offers them: `availableVersions` is what the picker,
-/// the Browse stack sheet, the command line's version verb, the Browse
-/// nav strip and the Copy Center all read.
+/// 2026-09-02 — the NASB is the only entry. The owner's instruction was
+/// 只从界面藏掉: take it off the interface, do NOT take it out of the
+/// build. So `pubspec.yaml` still lists `assets/nasb.json`, the file
+/// still ships, and `test/data_integrity_test.dart` still pins that it
+/// does. What changes is that nothing offers it: `availableVersions` is
+/// what the picker, the Browse stack sheet, the command line's version
+/// verb, the Browse nav strip and the Copy Center all read.
 ///
 /// Hiding is not free, because a version code outlives the reader's
 /// choice of it — see [retiredVersionSuccessors], which is where a
-/// stored `nasb` or `leb` is turned back into a Bible.
+/// stored `nasb` is turned back into a Bible.
+///
+/// **LEB was hidden alongside it for a few hours the same day and is
+/// visible again**: the owner checked the licence and it permits what
+/// this app does with it. Only the NASB's permission is still in
+/// question, and that question is out with the publisher rather than
+/// settled here. Do not re-hide the LEB on the strength of the pair
+/// having once been listed together — they were listed together because
+/// the question had not been asked, not because the answers matched.
 const disabledVersions = <String>{
   'nasb',
-  'leb',
 };
 
 /// Versions shown in the picker (excludes disabled ones).
@@ -391,12 +397,16 @@ const Map<String, String> retiredVersionSuccessors = <String, String>{
   // to the LOCALE default, and a zh-Hans-locale reader who had
   // deliberately chosen an English Bible would be handed 和合本.
   //
-  // BSB for both: it is the English default now, it is public domain,
-  // and it is the only English edition here carrying Strong's tagging.
-  // Language is preserved, which is the property that matters — the
-  // same rule the Chinese rows above are held to.
+  // BSB: it is the English default now, it is public domain, and it is
+  // the only English edition here carrying Strong's tagging. Language is
+  // preserved, which is the property that matters — the same rule the
+  // Chinese rows above are held to.
+  //
+  // There is deliberately NO `leb` row. The LEB is visible again, so a
+  // stored `leb` is a Bible the reader can still find in the picker and
+  // must be left alone; a successor row would silently move readers off
+  // an edition that is on offer.
   'nasb': 'bsb',
-  'leb': 'bsb',
 };
 
 /// Whether [code] names an edition this build can actually load.

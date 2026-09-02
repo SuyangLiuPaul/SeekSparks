@@ -1,7 +1,16 @@
-/// 2026-09-02: NASB and LEB are hidden from the interface.
+/// 2026-09-02: the NASB is hidden from the interface.
 ///
-/// The owner's instruction was 只从界面藏掉 — take them off the interface,
-/// not out of the build. That is a narrower change than a removal and it
+/// The owner's instruction was 只从界面藏掉 — take it off the interface,
+/// not out of the build.
+///
+/// **The LEB was hidden alongside it for a few hours the same day and is
+/// visible again.** The owner checked its licence and it permits what
+/// this app does; only the NASB's permission is still an open question,
+/// and it is open with the publisher rather than here. The pair were
+/// hidden together because the question had not been asked, not because
+/// the answers matched — so this file now holds ONE edition, and the
+/// LEB appears below only as the control that proves the hiding is
+/// narrow. That is a narrower change than a removal and it
 /// has a narrower failure mode, which is what this file is for.
 ///
 /// Two halves, and both have to hold:
@@ -41,8 +50,13 @@ import 'package:seeksparks/services/workbench_warmup.dart'
     show defaultParallelVersions, sanitiseParallelVersions;
 import 'package:seeksparks/utils/version_abbreviation.dart';
 
-/// The two editions this change is about.
-const _hidden = <String>['nasb', 'leb'];
+/// The edition this change is about.
+const _hidden = <String>['nasb'];
+
+/// The edition that was hidden with it and is visible again. Every place
+/// `_hidden` is asserted absent, this is asserted PRESENT, so a re-hide
+/// cannot slip through as a passing test.
+const _restored = 'leb';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -106,7 +120,7 @@ void main() {
         }
       }
       expect(versionsForLanguage('en').map((v) => v.value),
-          <String>['kjv', 'bsb', 'kjvs']);
+          <String>['kjv', _restored, 'bsb', 'kjvs']);
     });
 
     test('the command line cannot summon them by abbreviation', () {
@@ -114,18 +128,16 @@ void main() {
       // an edition, so it has to offer what the picker offers — matched
       // against `availableVersions`, the way command_pane now builds it.
       final live = {for (final v in availableVersions) v.value: v.shortLabel};
-      for (final q in const [
-        'nas',
-        'nasb',
-        'NASB',
-        'leb',
-        'LEB',
-        'lex',
-        'lexham',
-      ]) {
+      for (final q in const ['nas', 'nasb', 'NASB']) {
         final hit = matchVersionAbbreviation(q, live);
         expect(_hidden.contains(hit), isFalse,
             reason: 'typing "$q" reached $hit');
+      }
+      // ...and the LEB's abbreviations resolve again, which is the half
+      // of this test that would still pass if the restore were undone.
+      for (final q in const ['leb', 'LEB']) {
+        expect(matchVersionAbbreviation(q, live), _restored,
+            reason: 'typing "$q" no longer reaches the LEB');
       }
       // The abbreviations that still belong to somebody keep working —
       // narrowing the candidate set must not have cost a live edition.
@@ -215,11 +227,15 @@ void main() {
       // who arranged columns still has columns — and the two that both
       // land on BSB collapse into one rather than comparing a text
       // against itself.
-      expect(loadableVersions(['kjv', 'nasb', 'leb']), ['kjv', 'bsb']);
+      expect(loadableVersions(['kjv', 'nasb', 'leb']), ['kjv', 'bsb', 'leb']);
       expect(loadableVersions(['nasb', 'kjvs']), ['bsb', 'kjvs']);
-      // A stack made only of hidden editions still yields a stack.
-      expect(loadableVersions(['nasb', 'leb']), ['bsb']);
-      expect(sanitiseParallelVersions(['nasb', 'leb'], 'en'), ['bsb']);
+      // A stack made only of the hidden edition still yields a stack.
+      expect(loadableVersions(['nasb']), ['bsb']);
+      expect(sanitiseParallelVersions(['nasb'], 'en'), ['bsb']);
+      // The restored edition passes through untouched — no successor
+      // row, no substitution, no collapse into BSB.
+      expect(loadableVersions(['leb']), ['leb']);
+      expect(sanitiseParallelVersions(['leb'], 'en'), ['leb']);
     });
 
     test('a stored split-pane pick does not reopen on a hidden edition', () {
@@ -255,8 +271,11 @@ void main() {
       expect(mp.retiredVersionNotice!.substituted, 'bsb');
     });
 
-    test('a saved LEB reader on a Chinese locale still gets English',
-        () async {
+    test('a saved LEB reader keeps the LEB, and is told nothing', () async {
+      // While the LEB was hidden this asserted the reader landed on BSB.
+      // It is visible again, so the honest outcome is that NOTHING
+      // happens to them — and a notice would be worse than a silent
+      // swap, because it would announce a change that did not occur.
       SharedPreferences.setMockInitialValues({
         'version': 'leb',
         'locale': 'zh-Hans',
@@ -266,9 +285,8 @@ void main() {
       final mp = MainProvider();
       await mp.restoreState();
 
-      expect(mp.currentVersion, 'bsb',
-          reason: 'they chose an English Bible; the UI locale is not that '
-              'choice being revoked');
+      expect(mp.currentVersion, _restored);
+      expect(mp.retiredVersionNotice, isNull);
     });
 
     test('the v1.3.46 English migration no longer lands on a hidden edition',
@@ -291,7 +309,10 @@ void main() {
               'picker does not offer');
     });
 
-    test('the successor table covers both, and to a live edition', () {
+    test('the successor table covers the hidden one, to a live edition', () {
+      expect(retiredVersionSuccessors.containsKey(_restored), isFalse,
+          reason: 'a successor row would move readers off an edition the '
+              'picker is offering them');
       for (final code in _hidden) {
         expect(retiredVersionSuccessors.containsKey(code), isTrue,
             reason: '$code has no successor — its readers fall through to '
