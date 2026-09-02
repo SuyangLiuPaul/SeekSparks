@@ -1640,11 +1640,15 @@ const uiStrings = {
     'zh-Hant': '講道',
     'en': 'Sermons',
   },
+  // 289, not 587 — see the note at `offlinePackSermons` below. The
+  // offline-pack rows were corrected when that count was first measured;
+  // these three, the FIRST number a new reader is ever shown, were
+  // missed. `assets/sermons/index.json` holds 289 records.
   'onboardSermonsBody': {
-    'zh-Hans': '587 篇解经讲道（英／简／繁）。讲道中的经文引用可弹出小窗预览，无需离开。主页有「继续讲道」卡片显示上次进度。',
-    'zh-Hant': '587 篇解經講道（英／簡／繁）。講道中的經文引用可彈出小窗預覽，無需離開。主頁有「繼續講道」卡片顯示上次進度。',
+    'zh-Hans': '289 篇解经讲道（英／简／繁）。讲道中的经文引用可弹出小窗预览，无需离开。主页有「继续讲道」卡片显示上次进度。',
+    'zh-Hant': '289 篇解經講道（英／簡／繁）。講道中的經文引用可彈出小窗預覽，無需離開。主頁有「繼續講道」卡片顯示上次進度。',
     'en':
-        '587 expository sermons in EN / 简 / 繁. Verse refs in the body open a popup so you can peek at scripture without leaving. Home shows a "Resume sermon" card with your progress.',
+        '289 expository sermons in EN / 简 / 繁. Verse refs in the body open a popup so you can peek at scripture without leaving. Home shows a "Resume sermon" card with your progress.',
   },
   'onboardDiscoverTitle': {
     'zh-Hans': '探索工具',
