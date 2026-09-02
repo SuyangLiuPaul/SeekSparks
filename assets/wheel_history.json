@@ -24,9 +24,9 @@
    "zh-Hant": "本圖分兩層：一是聖經與教會歷史所記載的事件，二是世界史上劃定時代的事件——戰爭、發現、發明、法律、遷徙與災難。若無後者，讀者自身所經歷的那幾個世紀反而會是全圖最空白的部分。"
   },
   "axis": {
-   "en": "The axis runs from 4000 BC to AD 2026. Anything earlier is not carried: drawing it would pin it to the rim and state a year nobody claims. The beginning of farming, about 9500 BC, is left off for that reason rather than moved.",
-   "zh-Hans": "本图的年代轴自公元前4000年至公元2026年。更早的事件不予收录：若强行绘出，只能贴在最外圈，等于标出一个无人主张的年份。农业的起源（约公元前9500年）因此被略去，而非被挪动。",
-   "zh-Hant": "本圖的年代軸自公元前4000年至公元2026年。更早的事件不予收錄：若強行繪出，只能貼在最外圈，等於標出一個無人主張的年份。農業的起源（約公元前9500年）因此被略去，而非被挪動。"
+   "en": "The axis runs from 4200 BC to AD 2026. Its earliest stretch is the Genesis chain: the creation at 4114 BC, counted back from Thiele's Solomon along twenty-five intervals the text itself states, which is the anchor every other year on this chart already rested on. Twenty-five lives, Adam to Moses, are drawn on that stretch as arcs, on the Masoretic figures; the Septuagint's are printed on each life's own sheet rather than drawn, because its chain puts the creation 1,366 years earlier and carrying it would cost every event here about a fifth of its room. Anything earlier than 4200 BC is not carried at all: drawing it would pin it to the rim and state a year nobody claims. The beginning of farming, about 9500 BC, is left off for that reason rather than moved.",
+   "zh-Hans": "本图的年代轴自公元前4200年至公元2026年。轴的最早一段来自创世记的年数链：创世定于公元前4114年，自锡尔（Thiele）所定的所罗门之年上溯二十五段经文自述的年数而得，与本图其余各年所据的定点原是同一个。亚当至摩西共二十五人的寿数，即按此段绘成弧线，所用为马所拉经文的数字；七十士译本的数字不作绘制，而印在每一条弧自己的说明里——因其年数链把创世再推早1366年，若一并画上轴，全图每一件事都要让出约五分之一的余地。公元前4200年以前的事件一概不予收录：若强行绘出，只能贴在最外圈，等于标出一个无人主张的年份。农业的起源（约公元前9500年）因此被略去，而非被挪动。",
+   "zh-Hant": "本圖的年代軸自公元前4200年至公元2026年。軸的最早一段來自創世記的年數鏈：創世定於公元前4114年，自錫爾（Thiele）所定的所羅門之年上溯二十五段經文自述的年數而得，與本圖其餘各年所據的定點原是同一個。亞當至摩西共二十五人的壽數，即按此段繪成弧線，所用為馬所拉經文的數字；七十士譯本的數字不作繪製，而印在每一條弧自己的說明裡——因其年數鏈把創世再推早1366年，若一併畫上軸，全圖每一件事都要讓出約五分之一的餘地。公元前4200年以前的事件一概不予收錄：若強行繪出，只能貼在最外圈，等於標出一個無人主張的年份。農業的起源（約公元前9500年）因此被略去，而非被挪動。"
   }
  },
  "streams": [

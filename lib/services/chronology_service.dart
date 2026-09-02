@@ -21,4 +21,14 @@ class ChronologyService {
     _cache = data;
     return data;
   }
+
+  /// The loaded data, or null before [load] has completed once.
+  ///
+  /// For the wheel, which awaits [load] inside
+  /// `WheelHistoryService.load` and then reads the figures
+  /// synchronously in `build` — the same shape `HebrewKingsService`
+  /// already has, and for the same reason: a synchronous read that
+  /// answers empty because the bundle has not landed reports an absence
+  /// that was really a race.
+  ChronologyData? get cached => _cache;
 }

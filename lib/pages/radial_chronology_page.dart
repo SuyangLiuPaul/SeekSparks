@@ -7,13 +7,17 @@ import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/biblical_person.dart';
+import 'package:seeksparks/models/chronology.dart' show Patriarch;
 import 'package:seeksparks/models/hebrew_king.dart';
 import 'package:seeksparks/models/wheel_history.dart';
 import 'package:seeksparks/pages/chronology_page.dart';
+import 'package:seeksparks/pages/family_tree_page.dart';
 import 'package:seeksparks/pages/hebrew_kings_page.dart';
 import 'package:seeksparks/providers/main_provider.dart';
+import 'package:seeksparks/services/chronology_service.dart';
 import 'package:seeksparks/services/family_tree_service.dart';
 import 'package:seeksparks/services/hebrew_kings_service.dart';
+import 'package:seeksparks/services/timeline_service.dart';
 import 'package:seeksparks/services/url_sync_service.dart';
 import 'package:seeksparks/utils/date_hedge.dart';
 import 'package:seeksparks/utils/font_catalog.dart';
@@ -30,7 +34,7 @@ import 'package:seeksparks/widgets/localized_back_button.dart';
 import 'package:seeksparks/widgets/person_detail_sheet.dart';
 import 'package:seeksparks/widgets/verse_popup_sheet.dart' show showVersePopup;
 
-/// World history on one wheel: 4000 BC at twelve o'clock, time sweeping
+/// World history on one wheel: 4200 BC at twelve o'clock, time sweeping
 /// clockwise to the present, one concentric band per people or
 /// institution, every dated thing drawn on the band it belongs to.
 ///
@@ -58,11 +62,40 @@ import 'package:seeksparks/widgets/verse_popup_sheet.dart' show showVersePopup;
 /// sent to Genesis 10:6 or 10:2. Two bands are not descents at all and
 /// are coloured apart: the church, and the text of scripture.
 ///
-/// WHAT IS NOT HERE. The lifespans of Genesis 5 and 11 — Adam to
-/// Joseph — are not on this wheel. They have no absolute years (the
-/// text gives intervals, not dates), and they belong to
-/// `chronology_page.dart`, which draws them on their own Anno Mundi
-/// axis in both the Masoretic and Septuagint reckonings.
+/// WHAT IS HERE, AND ON WHAT AXIS. Two kinds of mark, and the
+/// difference between them is the whole design.
+///
+/// A SPOKE SAYS WHEN. Every event is a moment: a tick on its own band
+/// and text running outward. Adam, Seth, Enosh, Kenan, Mahalalel,
+/// Jared, Enoch, Methuselah, Lamech and Shelah have birth spokes like
+/// anything else, because a birth is a moment.
+///
+/// AN ARC SAYS HOW LONG, AND ALONGSIDE WHOM. The lifespans of Genesis 5
+/// and 11 — Adam to Moses, 25 men — are drawn in the label annulus,
+/// eleven sub-rings deep, each life running from its birth year to its
+/// death year. This is what a spoke cannot do and must not try to: an
+/// arc shows Methuselah's years ending in the year of the flood, which
+/// the text nowhere states and the arithmetic does, and it shows the
+/// eleven lives that overlap between Noah and Abraham. No death events
+/// were added for the same reason — fourteen more spokes in a sector
+/// that already holds fifty would be redundancy, and the arc's end IS
+/// the death.
+///
+/// THEY ARE ON ONE AXIS, NOT TWO. Anno Mundi figures reach BC years
+/// through `bible_timeline.json`'s `_meta.creation.year` (4114 BC),
+/// derived once by `tools/audit_dates.py` as Thiele's Solomon counted
+/// back along twenty-five stated intervals, and every Abraham-to-Moses
+/// arc lands exactly on the spoke this wheel already drew for him. If
+/// that field cannot be read, the layer draws NOTHING — a fallback
+/// constant here is how one man ends up with two years.
+///
+/// MASORETIC IS DRAWN; THE SEPTUAGINT IS PRINTED. The Greek chain puts
+/// the creation 1,366 years earlier, and carrying it on the axis would
+/// cost about a fifth of the angular resolution of every event on the
+/// wheel for the sake of nineteen arcs. So the arcs are Masoretic, the
+/// layer's own row says so, and every arc's sheet prints BOTH
+/// traditions' figures with their verses — so no tradition is chosen in
+/// silence.
 ///
 /// HONESTY. Every event carries a `basis` — the text states it, or
 /// Thiele's reconstruction supplies the year, or it is the date any
@@ -383,9 +416,11 @@ const Map<String, Map<String, String>> wheelStrings = {
   // when it has a whole page for him.
   //
   // The sentence differs from `wheelFindAmElsewhere` in what it claims.
-  // Methuselah has no date to draw; Baasha does — this app prints it,
-  // from Thiele. What is missing is not the year but the RESOLUTION:
-  // the wheel is drawn at the scale of kingdoms.
+  // Baasha has a year this app prints, from Thiele, and what is missing
+  // is not the year but the RESOLUTION: the wheel is drawn at the scale
+  // of kingdoms. Methuselah's problem was a different one and is now
+  // solved — his life is an arc — so that sentence has been rewritten
+  // and this one has not.
   //
   // No year in this sentence either, and for a reason of this page's
   // own: on the wheel a year never appears without the line that says
@@ -399,14 +434,23 @@ const Map<String, Map<String, String>> wheelStrings = {
         'That reign is charted beside the other throne in Kings of '
         'Judah & Israel.',
   },
+  // THIS SENTENCE USED TO SAY THE OPPOSITE, and had to stop. It read
+  // "{name} is not on this wheel: the text gives a lifespan, not a
+  // date" — true while the wheel drew no lifespans, and false the
+  // moment it drew them. Every man this branch can now reach has an
+  // arc on the chart; the one thing the search could not do was
+  // recognise the name, because the family tree spells one of them
+  // longer than the chart does (Nahor the elder). So the sentence
+  // reports the spelling, which is the real gap, and never an absence
+  // that is not there.
   'wheelFindAmElsewhere': {
-    'zh-Hans': '{name}不在这个轮盘上：经文给的是年数，不是年份。'
-        '生平记在「圣经年代」，自创世起算。',
-    'zh-Hant': '{name}不在這個輪盤上：經文給的是年數，不是年份。'
-        '生平記在「聖經年代」，自創世起算。',
-    'en': '{name} is not on this wheel: the text gives a lifespan, not a '
-        'date. That life is charted in Bible Chronology, counted from '
-        'the creation.',
+    'zh-Hans': '{name}的生平已画在本图上，只是本图所用的名字略短。'
+        '同一组年数，自创世起算，另绘于「圣经年代」。',
+    'zh-Hant': '{name}的生平已畫在本圖上，只是本圖所用的名字略短。'
+        '同一組年數，自創世起算，另繪於「聖經年代」。',
+    'en': "{name}'s life is drawn on this wheel; the chart spells the "
+        'name more briefly than the family tree does. The same figures, '
+        'counted from the creation, are charted in Bible Chronology.',
   },
   'wheelFindCount': {
     'zh-Hans': '{n} 项',
@@ -454,6 +498,87 @@ const Map<String, Map<String, String>> wheelStrings = {
   'wheelKindPower': {'zh-Hans': '政权', 'zh-Hant': '政權', 'en': 'power'},
   'wheelKindNation': {'zh-Hans': '列族', 'zh-Hant': '列族', 'en': 'nation'},
   'wheelKindBand': {'zh-Hans': '带', 'zh-Hant': '帶', 'en': 'band'},
+  'wheelKindLife': {'zh-Hans': '生平', 'zh-Hant': '生平', 'en': 'life'},
+
+  // ── the lifespan layer ─────────────────────────────────────────────
+
+  'wheelLifespans': {
+    'zh-Hans': '列祖寿数',
+    'zh-Hant': '列祖壽數',
+    'en': 'Genesis lifespans',
+  },
+  // The filter row's second line, and the only place on screen that
+  // says which text the ARCS are drawn from. Both traditions are
+  // printed on every arc's own sheet; this says which one has the
+  // geometry, because a reader looking at a length is looking at a
+  // claim and is owed the source of it without a tap.
+  'wheelLifespansNote': {
+    'zh-Hans': '亚当至摩西 · 创世记 5、11 章 · 按马所拉经文绘制',
+    'zh-Hant': '亞當至摩西 · 創世記 5、11 章 · 按馬所拉經文繪製',
+    'en': 'Adam to Moses · Genesis 5 and 11 · drawn on the Masoretic text',
+  },
+  // Kept as a string rather than read from `chronology.json`'s
+  // `traditions[0].name` on purpose: the legend is drawn at rest, on
+  // every frame, from a synchronous read, and a legend that goes blank
+  // for the first frame after a cold load is a legend that says nothing
+  // about the arcs already on screen. The SHEET reads the asset.
+  'wheelLifespansTradition': {
+    'zh-Hans': '马所拉经文',
+    'zh-Hant': '馬所拉經文',
+    'en': 'Masoretic',
+  },
+  // Where the Greek's BC years come from. The {year} is derived, never
+  // written: the two chains meet at Abram leaving Haran — the wheel's
+  // own `abram_called`, from Thiele — so the Greek creation is that
+  // year less the Greek's own count to it.
+  'wheelLifeSeptuagintChain': {
+    'zh-Hans': '希腊文经文的年数，自与马所拉同一个定点——亚伯兰离开哈兰——'
+        '按其自身的年数链上溯，故其创世之年为{year}。此年数链不作绘制：'
+        '若一并画上轴，全图每一件事都要让出约五分之一的余地。',
+    'zh-Hant': '希臘文經文的年數，自與馬所拉同一個定點——亞伯蘭離開哈蘭——'
+        '按其自身的年數鏈上溯，故其創世之年為{year}。此年數鏈不作繪製：'
+        '若一併畫上軸，全圖每一件事都要讓出約五分之一的餘地。',
+    'en': "The Greek text's own years, counted back from the same point "
+        'the Masoretic is — Abram leaving Haran — along its own chain, '
+        'which puts its creation at {year}. It is printed and not drawn: '
+        'carrying it on the axis would cost every event on this chart '
+        'about a fifth of its room.',
+  },
+  'wheelLifeYears': {
+    'zh-Hans': '享年 {n} 岁',
+    'zh-Hant': '享年 {n} 歲',
+    'en': '{n} years',
+  },
+  // "Anno Mundi", the count the text itself gives. Printed beside the
+  // BC years rather than instead of them: the AM figure is what
+  // Genesis states and the BC year is what this app derived, and a
+  // reader must be able to tell those apart.
+  'wheelLifeAm': {
+    'zh-Hans': '创世后 {a}–{b} 年',
+    'zh-Hant': '創世後 {a}–{b} 年',
+    'en': 'Anno Mundi {a}–{b}',
+  },
+  // What the two hairlines mean. Written because the feature is
+  // invisible until it is used and unguessable when it is.
+  'wheelLifeContemporaries': {
+    'zh-Hans': '选中时，两条细线画出他生卒的两个年份；线间跨过的每一道弧，都是与他同世之人。',
+    'zh-Hant': '選中時，兩條細線畫出他生卒的兩個年份；線間跨過的每一道弧，都是與他同世之人。',
+    'en': 'Selected, two hairlines mark his birth year and his death year. '
+        'Every arc they cross is a life that overlapped his.',
+  },
+  // The second sentence the AM hand-off never had. Genesis 4:17-24
+  // names ten of Cain's line and gives not one age, interval or total,
+  // so there is nothing to draw and nothing to date — and a bare
+  // "nothing matches" about a man this app holds a record for is the
+  // false absence this whole hand-off exists to stop.
+  'wheelFindNoYears': {
+    'zh-Hans': '{name}记在「圣经家谱」里。经文没有给{name}任何年岁或年数，'
+        '所以本图无从落笔。',
+    'zh-Hant': '{name}記在「聖經家譜」裡。經文沒有給{name}任何年歲或年數，'
+        '所以本圖無從落筆。',
+    'en': '{name} is in the Family Tree. The text gives no age and no '
+        'interval for {name}, so there is nothing this chart could draw.',
+  },
 };
 
 /// Type size ON SCREEN at rest, in logical pixels.
@@ -571,6 +696,53 @@ class _Arc {
   final double a0;
   final double a1;
   final Color color;
+}
+
+/// One patriarch's life, placed and fitted.
+///
+/// Everything the painter needs and nothing it has to decide. The name
+/// is what [fitArcLabel] and [placeArcName] between them agreed this
+/// arc can honestly carry at this size, in the stretch of it no spoke
+/// title crosses — so an empty [name] means the arc keeps its ink and
+/// loses its word, the rule the rim already lives by. Same reason the
+/// spoke's text is resolved outside the painter: canvas text leaves no
+/// widget for a test to find, and a decision taken inside `paint` is a
+/// decision nothing can read.
+class _Life {
+  const _Life({
+    required this.man,
+    required this.arc,
+    required this.centre,
+    required this.stroke,
+    required this.pitch,
+    required this.color,
+    required this.name,
+    required this.nameA0,
+    required this.nameSweep,
+    required this.nameSize,
+  });
+
+  final Patriarch man;
+  final LifeArc arc;
+
+  /// The radius of this life's sub-ring, ring 0 innermost.
+  final double centre;
+  final double stroke;
+
+  /// Centre-to-centre spacing of the sub-rings, which is the TAP
+  /// target: the whole of a sub-ring's share of the annulus belongs to
+  /// the life in it, not merely the width of the stroke. At 700 px
+  /// eleven rings in the annulus are 9.7 units apart, which clears the
+  /// nine the spokes use as a finger target; at 1400 px it is 19.9.
+  final double pitch;
+
+  final Color color;
+
+  /// Empty when no legible name would fit the free part of the arc.
+  final String name;
+  final double nameA0;
+  final double nameSweep;
+  final double nameSize;
 }
 
 /// An event's radial label: a tick at the band, then text running out.
@@ -788,6 +960,10 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
       final arcs = _buildArcs(data, ringOf, colors);
       final spokes = _buildSpokes(data, ringOf, rBands, rRim, colors, locale,
           t.scaledChrome(_kLabelPx));
+      // AFTER the spokes, because the arc names have to dodge the spoke
+      // titles and cannot know where they are until they are planned.
+      final lives = _buildLifespans(
+          rBands, rRim, spokes, locale, t.scaledChrome(_kLabelPx));
 
       return Stack(children: [
         Positioned.fill(
@@ -809,7 +985,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
                   key: const ValueKey('chronologyWheel'),
                   behavior: HitTestBehavior.opaque,
                   onTapUp: (e) => _handleTap(context, e.localPosition, side,
-                      data, streams, arcs, spokes, locale),
+                      data, streams, arcs, spokes, lives, locale),
                   child: Stack(children: [
                     CustomPaint(
                       size: Size(side, side),
@@ -818,6 +994,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
                         colors: colors,
                         arcs: arcs,
                         spokes: spokes,
+                        lives: lives,
                         locale: locale,
                         selectedId: _selectedId,
                         wb: wb,
@@ -864,8 +1041,13 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
                             ),
                             SizedBox(height: t.scaled(3)),
                             Text(
+                              // Bands, powers, events — and the lives,
+                              // last and only when the layer is on, so
+                              // the count is of what is actually drawn
+                              // rather than of what the file holds.
                               '${streams.length} · ${data.powers.length} · '
-                              '${data.events.length}',
+                              '${data.events.length}'
+                              '${lives.isEmpty ? '' : ' · ${lives.length}'}',
                               style: TextStyle(
                                   color: wb.mutedText,
                                   fontSize: t.scaled(11)),
@@ -1075,6 +1257,134 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
     ];
   }
 
+  // ── the lifespans ──────────────────────────────────────────────────
+
+  /// The tradition the ARCS are drawn on. The other one is printed on
+  /// every sheet; see the class comment for why it is not an axis
+  /// toggle.
+  static const String _kDrawnTradition = 'mt';
+
+  /// The creation year, or null when the asset does not carry it.
+  ///
+  /// One field, read in one place. `TimelineService` has parsed it by
+  /// the time any wheel data exists (`WheelHistoryService.load` awaits
+  /// it), and a null here means the layer draws nothing — never a
+  /// literal. A silent -4000 is the calendar this anchor replaced, and
+  /// it would put Methuselah's death four years after the flood spoke.
+  int? get _creationYear => TimelineService.instance.meta.creation?.year;
+
+  /// The 25 Masoretic lives, packed into sub-rings of the annulus and
+  /// fitted with whatever name each can legibly carry.
+  ///
+  /// [spokes] is passed in — already planned — because the names have
+  /// to dodge them. A tangential name laid across a radial title is two
+  /// illegible strings, so a name goes in the widest stretch of its own
+  /// arc that no spoke TITLE crosses, and a life with no such stretch
+  /// keeps its ink and loses its word.
+  ///
+  /// Returns empty for any of three honest reasons: the layer is
+  /// switched off, the chronology asset has not loaded, or the creation
+  /// anchor could not be read.
+  List<_Life> _buildLifespans(
+    double rBands,
+    double rRim,
+    List<_Spoke> spokes,
+    String locale,
+    double rimFont,
+  ) {
+    if (_hidden.contains(kLifespanLayerId)) return const [];
+    final chron = ChronologyService.instance.cached;
+    final creation = _creationYear;
+    if (chron == null || creation == null) return const [];
+
+    final arcs = buildLifeArcs(
+      patriarchs: chron.patriarchs,
+      tradition: _kDrawnTradition,
+      creationYear: creation,
+      minYear: kMinYear,
+      maxYear: kMaxYear,
+      // STATED, not defaulted. `packIntoRings`' own 0.02 rad is 22
+      // years on this axis today and would be some other number of
+      // years the day `kMinYear` moved — a silent repack.
+      minGap: 0.02,
+    );
+    if (arcs.isEmpty) return const [];
+    final rings = lifeArcRingCount(arcs);
+    final inner = scriptureLabelBase(rBands);
+
+    final titleSize = rimFont / _labelScale(_zoom);
+    // What a spoke's TITLE occupies in angle at a given radius. A tick
+    // alone is a hairline and not worth dodging; a title is a column of
+    // type one line-height wide.
+    final lineHeight = titleSize * 1.35;
+
+    final out = <_Life>[];
+    for (final arc in arcs) {
+      final man = chron.byId(arc.id);
+      if (man == null) continue;
+      final band = lifeArcRadii(arc.ring, rings, inner, rRim);
+      final occupied = <ArcSpan>[
+        for (final s in spokes)
+          if (s.title.isNotEmpty &&
+              s.label.rStart - 2 <= band.centre &&
+              s.label.rEnd + 2 >= band.centre)
+            (
+              start: s.label.angle - (lineHeight / 2) / band.centre,
+              end: s.label.angle + (lineHeight / 2) / band.centre,
+            )
+      ];
+      final room = arcNameRoom(arc.a0, arc.a1, occupied);
+      final name = man.nameFor(locale);
+      final size = fitArcLabel(
+        text: name,
+        radius: band.centre,
+        sweep: room,
+        // The sub-ring's own pitch, not the stream bands' — these
+        // rings are wider, which is exactly why the names survive at
+        // rest here and would not survive on a band.
+        maxEm: ringPitch(rings, inner, rRim) * kArcLabelPitchFraction,
+        desiredSize: titleSize,
+        zoom: _zoom,
+        floorPx: kArcLabelFloorPx,
+        measure: _measureChars,
+      );
+      var a0 = 0.0;
+      var sweep = 0.0;
+      var drawn = '';
+      if (size > 0) {
+        final needed = _measureChars(name, size) / band.centre;
+        final at = placeArcName(arc.a0, arc.a1, occupied, needed);
+        if (at != null) {
+          drawn = name;
+          a0 = at;
+          sweep = needed;
+        }
+      }
+      out.add(_Life(
+        man: man,
+        arc: arc,
+        centre: band.centre,
+        // Just over half the pitch, so two neighbouring sub-rings read
+        // as two arcs with air between them rather than as a solid
+        // annulus — the same reason `ringRadii` leaves a fifth of each
+        // stream band unpainted.
+        stroke: ringPitch(rings, inner, rRim) * 0.55,
+        pitch: ringPitch(rings, inner, rRim),
+        // Adam to Noah in the unaffiliated hue and Shem onward in
+        // Israel's, because Genesis 10's descent BEGINS with Noah's
+        // sons: painting Adam in Shem's colour would be a claim the
+        // table of nations does not make. Read off the asset's own
+        // `line` field rather than off a list of ids kept here.
+        color: arc.line == 'seth' ? _lineColor('none') : _lineColor('shem'),
+        name: drawn,
+        nameA0: a0,
+        nameSweep: sweep,
+        nameSize: size,
+      ));
+    }
+    return out;
+  }
+
   // ── legend and filter ──────────────────────────────────────────────
 
   Widget _legend(String locale, WbType t, WbColors wb) {
@@ -1103,6 +1413,28 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
           row('ham', 'wheelLineHam', 'Ham'),
           row('japheth', 'wheelLineJapheth', 'Japheth'),
           row('institution', 'wheelLineInstitution', 'Church & Scripture'),
+          // WHICH TEXT THE ARCS ARE DRAWN ON, on screen and not behind
+          // a tap. The lengths in the annulus are a claim, and a chart
+          // that draws one tradition of a disputed figure has to name
+          // it where the figure is visible — the sheet says it too,
+          // and says the other one's numbers as well. Absent when the
+          // layer is off, because then it describes nothing.
+          if (!_hidden.contains(kLifespanLayerId)) ...[
+            SizedBox(height: t.scaled(3)),
+            Row(mainAxisSize: MainAxisSize.min, children: [
+              Container(
+                  width: t.scaled(10),
+                  height: t.scaled(4),
+                  color: _lineColor('shem').withValues(alpha: 0.5)),
+              SizedBox(width: t.scaled(6)),
+              Text(
+                '${_s('wheelLifespans', 'Genesis lifespans', locale)} · '
+                '${_s('wheelLifespansTradition', 'Masoretic', locale)}',
+                style: TextStyle(
+                    color: wb.mutedText, fontSize: t.scaled(11)),
+              ),
+            ]),
+          ],
           SizedBox(height: t.scaled(3)),
           Text(_s('wheelShadeNote', '', locale),
               style: TextStyle(color: wb.mutedText, fontSize: t.scaled(11))),
@@ -1149,11 +1481,43 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
                       child: Text(_s('wheelAll', 'All', locale)),
                     ),
                     TextButton(
-                      onPressed: () => setSheet(() => setState(
-                          () => _hidden.addAll(data.streams.map((s) => s.id)))),
+                      onPressed: () => setSheet(() => setState(() {
+                            _hidden.addAll(data.streams.map((s) => s.id));
+                            _hidden.add(kLifespanLayerId);
+                          })),
                       child: Text(_s('wheelNone', 'None', locale)),
                     ),
                   ]),
+                  // The lifespans are a LAYER, not a band: they belong
+                  // to no stream, they live in the annulus rather than
+                  // on a ring, and their id is deliberately not a
+                  // stream id (the stream set is pinned by tests, and a
+                  // collision would switch a band off with the arcs).
+                  // First in the list because it is the one row here
+                  // that is not a people.
+                  CheckboxListTile(
+                    key: const ValueKey('wheelFilterLifespans'),
+                    dense: true,
+                    value: !_hidden.contains(kLifespanLayerId),
+                    onChanged: (_) => setSheet(() => setState(() {
+                          if (!_hidden.remove(kLifespanLayerId)) {
+                            _hidden.add(kLifespanLayerId);
+                          }
+                        })),
+                    title: Text(
+                        _s('wheelLifespans', 'Genesis lifespans', locale),
+                        style: TextStyle(
+                            color: wb.text, fontSize: t.scaled(12.5))),
+                    subtitle: Text(
+                      _s('wheelLifespansNote', '', locale),
+                      style: TextStyle(
+                          color: wb.mutedText, fontSize: t.scaled(11)),
+                    ),
+                    secondary: Container(
+                        width: t.scaled(12),
+                        height: t.scaled(12),
+                        color: _lineColor('shem')),
+                  ),
                   for (final s in data.streams)
                     CheckboxListTile(
                       dense: true,
@@ -1264,6 +1628,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
         WheelHitKind.power => _s('wheelKindPower', 'power', locale),
         WheelHitKind.nation => _s('wheelKindNation', 'nation', locale),
         WheelHitKind.stream => _s('wheelKindBand', 'band', locale),
+        WheelHitKind.patriarch => _s('wheelKindLife', 'life', locale),
       };
 
   /// The year column of a result row.
@@ -1334,6 +1699,15 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
               locale: locale,
               axisEnd: kMaxYear,
               hiddenStreams: _hidden,
+              // The 25 lives, so a reader typing "Methuselah" reaches
+              // the arc as well as the birth spoke — and so a reader
+              // typing a year is told who was alive in it, which on
+              // this stretch of the axis is often the only question
+              // the text can answer.
+              patriarchs:
+                  ChronologyService.instance.cached?.patriarchs ?? const [],
+              creationYear: _creationYear,
+              tradition: _kDrawnTradition,
             );
             return Padding(
               padding: EdgeInsets.only(
@@ -1394,21 +1768,39 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
                   // stand in front of a result.
                   if (result.isEmpty)
                     Builder(builder: (_) {
+                      // Two AM sentences now, not one. The text gives
+                      // the Sethite line ages and intervals, so those
+                      // men have arcs and a search finds them; the ten
+                      // of Cain's line in Genesis 4:17-24 are given a
+                      // wife, a trade and a boast and not one number,
+                      // so they have no arc, no spoke and no year —
+                      // and a bare "nothing matches" about a man this
+                      // app holds a record for is exactly the false
+                      // absence this hand-off exists to stop.
                       final person = _amPersonFor(query);
-                      final king = person == null ? _kingFor(query) : null;
-                      if (person == null && king == null) {
+                      final noYears =
+                          person == null ? _amPersonWithoutFigures(query) : null;
+                      final king = person == null && noYears == null
+                          ? _kingFor(query)
+                          : null;
+                      if (person == null && noYears == null && king == null) {
                         return const SizedBox.shrink();
                       }
                       final line = person != null
                           ? _fill('wheelFindAmElsewhere', '', locale,
                               {'name': person.localizedName(locale)})
-                          : _fill('wheelFindKingElsewhere', '', locale,
-                              {'name': king!.nameFor(locale)});
+                          : noYears != null
+                              ? _fill('wheelFindNoYears', '', locale,
+                                  {'name': noYears.localizedName(locale)})
+                              : _fill('wheelFindKingElsewhere', '', locale,
+                                  {'name': king!.nameFor(locale)});
                       final label = person != null
                           ? _s('timelineOpenChronology',
                               'Open Bible Chronology', locale)
-                          : _s('hebrewKings', 'Kings of Judah & Israel',
-                              locale);
+                          : noYears != null
+                              ? _s('familyTree', 'Family Tree', locale)
+                              : _s('hebrewKings', 'Kings of Judah & Israel',
+                                  locale);
                       return Padding(
                         padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
                         child: Column(
@@ -1430,7 +1822,9 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
                                     MaterialPageRoute<void>(
                                       builder: (_) => person != null
                                           ? const ChronologyPage()
-                                          : const HebrewKingsPage(),
+                                          : noYears != null
+                                              ? const FamilyTreePage()
+                                              : const HebrewKingsPage(),
                                     ),
                                   );
                                 },
@@ -1552,39 +1946,33 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
     );
   }
 
-  /// The person a reader asked for who IS in this app and CANNOT be on
-  /// this wheel.
+  /// The Anno Mundi person a reader asked for whose LIFE this wheel
+  /// draws, under a name the wheel does not answer to.
   ///
   /// The test is the data's own: a record whose years are counted in
-  /// Anno Mundi has no BC year, because the text gave it none. That is
-  /// exactly the condition that keeps a name off a BC/AD circle, so it
-  /// is the condition asked about — no hand-written list of patriarchs
-  /// to fall out of step with the asset.
+  /// Anno Mundi has no BC year of its own, because the text gave it
+  /// none. No hand-written list of patriarchs to fall out of step with
+  /// the asset.
   ///
-  /// Nineteen records qualify, and eighteen of them are now reachable
-  /// on the wheel under a name a reader would type, so a search for
-  /// them is never empty and this never runs. Ten stand on it as
-  /// nations of Genesis 10 and 11 (Noah, Shem, Arphaxad, Shelah — whom
-  /// the table of nations spells Salah — Eber, Peleg, Reu, Serug, Nahor
-  /// and Terah), and the whole Genesis 5 line stands on it as dated
-  /// events: Adam, Seth and Enoch always did, and Enosh, Kenan,
-  /// Mahalalel, Jared, Methuselah, Lamech and Shelah joined them when
-  /// the chain was carried above Abraham and their births could be
-  /// counted along it.
+  /// NINETEEN RECORDS QUALIFY AND EIGHTEEN ARE FOUND BY NAME, so this
+  /// almost never runs. Ten stand on the wheel as nations of Genesis 10
+  /// and 11 (Noah, Shem, Arphaxad, Shelah — whom the table of nations
+  /// spells Salah — Eber, Peleg, Reu, Serug, Nahor and Terah), the
+  /// whole Genesis 5 line stands on it as birth events, and since the
+  /// lifespans went back on, every one of them is also an arc.
   ///
-  /// SO THIS ANSWERS FOR ONE MAN, and the shrinking is the point: it
-  /// existed to replace a false absence, and the absences are gone. The
-  /// one left is a spelling — the wheel calls him Nahor and the family
-  /// tree calls him Nahor (the elder), and nothing on the wheel answers
-  /// to the longer name.
+  /// SO THIS ANSWERS FOR ONE MAN, and what it says about him has
+  /// changed. It used to say "not on this wheel: the text gives a
+  /// lifespan, not a date", which was true while no lifespan was drawn
+  /// and false the moment one was. What is actually missing for him is
+  /// a SPELLING: the chart calls him Nahor and the family tree calls
+  /// him Nahor (the elder), and nothing indexed here answers to the
+  /// longer name. That is what the sentence now reports.
   ///
-  /// WHOM IT STILL DOES NOT ANSWER FOR, and should. Ten Cainites of
-  /// Genesis 4:17-24 fail the figures guard below, because the text
-  /// gives them no age, no interval and no total — so a reader typing
-  /// "Jabal" or "Tubal-cain" gets a bare "nothing matches" about men
-  /// the family tree holds. That wants a second sentence of its own
-  /// ("X is in the family tree; the text gives no years for X"), not
-  /// this one, which promises a life charted from the creation.
+  /// The men with no figures at all — Cain's line, and Eve, Cain, Abel,
+  /// Ham and Japheth — are [_amPersonWithoutFigures]' business, and get
+  /// a different sentence, because a promise of a charted life is not
+  /// one to make about a man the text gives no number for.
   ///
   /// Matching is equality on the folded name, in each of the three
   /// scripts, not a substring: this replaces a "found nothing" with a
@@ -1600,6 +1988,43 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
     for (final p in FamilyTreeService.instance.allOrEmpty()) {
       if (p.yearSystem != 'am') continue;
       if (p.lifespan == null || p.birthYear == null || p.deathYear == null) {
+        continue;
+      }
+      for (final n in [p.name, p.nameZhHans ?? '', p.nameZhHant ?? '']) {
+        if (n.isNotEmpty && foldForWheelSearch(n) == q) return p;
+      }
+    }
+    return null;
+  }
+
+  /// The person a reader asked for whom the text gives no number at
+  /// all.
+  ///
+  /// GENESIS 4:17-24 STATES NO FIGURE. Cain's line is given a city, a
+  /// wife, two more wives, three trades and a boast, and not one age,
+  /// interval or total. So there is no year to put on this axis, no
+  /// span to draw as an arc, and nothing this chart could honestly
+  /// show — and the family tree's own 100, 200 … 545 for them are
+  /// marked `conventional / approximate` placeholders, which is exactly
+  /// why the guard below is on the FIGURES and not on the years.
+  ///
+  /// Sixteen records qualify: the ten of Cain's line plus Adah,
+  /// Zillah and Naamah who stand in the same passage, and Eve, Cain,
+  /// Abel, Ham and Japheth, whom the text places but does not measure.
+  /// Before this they got a bare "nothing matches" about people this
+  /// app holds a record for, which is the false absence
+  /// [_amPersonFor] was built to stop, half-built.
+  ///
+  /// Equality on the folded name in each of the three scripts, for the
+  /// same reason: this replaces "found nothing" with a definite claim
+  /// about one person, and a loose match would make the claim about the
+  /// wrong one.
+  BiblicalPerson? _amPersonWithoutFigures(String query) {
+    final q = foldForWheelSearch(query);
+    if (q.isEmpty) return null;
+    for (final p in FamilyTreeService.instance.allOrEmpty()) {
+      if (p.yearSystem != 'am') continue;
+      if (p.lifespan != null && p.birthYear != null && p.deathYear != null) {
         continue;
       }
       for (final n in [p.name, p.nameZhHans ?? '', p.nameZhHant ?? '']) {
@@ -1708,6 +2133,9 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
       case WheelHitKind.stream:
         final s = _find(data.streams, (s) => s.id == hit.streamId);
         if (s != null) _showStream(context, s, data, locale);
+      case WheelHitKind.patriarch:
+        final man = ChronologyService.instance.cached?.byId(hit.id);
+        if (man != null) _showPatriarch(context, man, locale);
     }
   }
 
@@ -1731,16 +2159,48 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
     if (scale <= 1.0) return;
 
     final streams = _visible(data);
-    final ring = streams.indexWhere((s) => s.id == hit.streamId);
-    if (ring < 0) return;
     final rHub = _side * _kHubFrac;
     final rBands = _side * _kBandsFrac;
     final rRim = _side * _kRimFrac;
-    final band = ringRadii(ring, streams.length, rHub, rBands);
+
+    // A life belongs to no band, so its sub-ring is resolved before the
+    // ring lookup below — which would fail, `lifespans` being a layer id
+    // and not a stream id, and leave a search result unpanned in
+    // silence. The geometry is recomputed rather than held because it
+    // depends on the canvas size and the pan can run before the frame
+    // that laid the arcs out.
+    double? lifeRadius;
+    double? lifeAngle;
+    if (hit.kind == WheelHitKind.patriarch) {
+      final chron = ChronologyService.instance.cached;
+      final creation = _creationYear;
+      if (chron == null || creation == null) return;
+      final all = buildLifeArcs(
+        patriarchs: chron.patriarchs,
+        tradition: _kDrawnTradition,
+        creationYear: creation,
+        minYear: kMinYear,
+        maxYear: kMaxYear,
+        minGap: 0.02,
+      );
+      final arc = _find(all, (a) => a.id == hit.id);
+      if (arc == null) return;
+      lifeRadius = lifeArcRadii(arc.ring, lifeArcRingCount(all),
+              scriptureLabelBase(rBands), rRim)
+          .centre;
+      lifeAngle = (arc.a0 + arc.a1) / 2;
+    }
+
+    final ring = streams.indexWhere((s) => s.id == hit.streamId);
+    if (lifeAngle == null && ring < 0) return;
+    final band = ringRadii(ring < 0 ? 0 : ring, streams.length, rHub, rBands);
 
     double angle;
     double radius;
     switch (hit.kind) {
+      case WheelHitKind.patriarch:
+        angle = lifeAngle!;
+        radius = lifeRadius!;
       case WheelHitKind.event:
         final e = _find(data.events, (e) => e.id == hit.id);
         if (e == null) return;
@@ -1781,6 +2241,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
     List<WheelStream> streams,
     List<_Arc> arcs,
     List<_Spoke> spokes,
+    List<_Life> lives,
     String locale,
   ) {
     if (streams.isEmpty) return;
@@ -1825,6 +2286,29 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
           _showEvent(context, best.event, data, locale);
         }
         return;
+      }
+    }
+
+    // A life, if the tap is in the annulus and no spoke claimed it.
+    //
+    // SPOKES WIN TIES, and that is the right way round: a spoke's
+    // target is one tick and about nine pixels of arc, a life's is a
+    // whole sub-ring from birth to death. The smaller target has to be
+    // reachable or it is not a target at all, and a reader who misses
+    // the tick lands on the life running underneath it — which is a
+    // useful answer rather than nothing.
+    //
+    // Resolved by RING then by angle, not by distance, because these
+    // arcs are butt-jointed rings: the ring the finger is in is the
+    // only ring it can mean.
+    if (r >= scriptureLabelBase(rBands) && r <= rRim && lives.isNotEmpty) {
+      for (final l in lives) {
+        if ((r - l.centre).abs() > l.pitch / 2) continue;
+        if (a >= l.arc.a0 && a <= l.arc.a1) {
+          _select(l.man.id);
+          _showPatriarch(context, l.man, locale);
+          return;
+        }
       }
     }
 
@@ -2124,6 +2608,236 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
               ),
             ),
           ],
+        ]);
+      },
+    );
+  }
+
+  /// The epoch both chains are anchored at.
+  ///
+  /// Abram leaving Haran is the one year the Masoretic and the
+  /// Septuagint reckonings share on this axis — the wheel's own
+  /// `abram_called`, from Thiele — so it is what turns the Greek's
+  /// Anno Mundi figures into BC years without a second anchor being
+  /// invented here: `creationLxx = creationMt + haran.mt - haran.lxx`.
+  /// An id, not a figure; the numbers are the asset's.
+  static const String _kAnchorEpoch = 'haran';
+
+  /// One life, printed — and printed in BOTH traditions.
+  ///
+  /// WHY BOTH. The wheel DRAWS the Masoretic, because its axis is
+  /// absolute and the Greek chain puts the creation 1,366 years
+  /// earlier: carrying it would cost about a fifth of the angular
+  /// resolution of all ~665 events for the sake of nineteen arcs, and
+  /// would put a second flood 780 years before the first. But a chart
+  /// that draws one tradition and never names the other has chosen in
+  /// silence, which is the objection this app has answered three times
+  /// before. So the ARC is Masoretic and the SHEET is both: each
+  /// tradition's own Anno Mundi years, its own total, its own verses,
+  /// under its own name out of the asset.
+  ///
+  /// THE ARC AND THE SPOKE MUST NOT DISAGREE. The birth year here and
+  /// the birth year on this man's own event spoke are the same
+  /// arithmetic on the same anchor — `_meta.creation.year` plus the
+  /// figure — computed from one field, never from two.
+  void _showPatriarch(BuildContext context, Patriarch man, String locale) {
+    final wb = WbColors.of(context);
+    final chron = ChronologyService.instance.cached;
+    final creation = _creationYear;
+    if (chron == null || creation == null) return;
+    final anchor = _find(chron.epochs, (e) => e.id == _kAnchorEpoch);
+
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: wb.paneBg,
+      shape: const RoundedRectangleBorder(),
+      isScrollControlled: true,
+      builder: (sheet) {
+        final t = WbType.of(sheet);
+        final mt = man.figures[_kDrawnTradition];
+
+        /// One tradition's block: its name, the years it counts, the
+        /// total it states, and the verses each figure rests on.
+        List<Widget> tradition(String id, {required bool drawn}) {
+          final f = man.figures[id];
+          if (f == null) return const [];
+          final name = chron.traditionById(id).nameFor(locale);
+          // The BC year only where this app can honestly compute one:
+          // the Masoretic from the derived anchor, the Septuagint from
+          // the same anchor shifted by the one epoch both chains share.
+          final shift = id == _kDrawnTradition
+              ? 0
+              : (anchor == null
+                  ? null
+                  : (anchor.years[_kDrawnTradition] ?? 0) -
+                      (anchor.years[id] ?? 0));
+          final bc = shift == null ? null : creation + shift + f.birthAm;
+          final bcEnd = shift == null ? null : creation + shift + f.deathAm;
+          final refs = f.refs.values.toSet().toList();
+          return [
+            SizedBox(height: t.scaled(8)),
+            Text(
+              drawn
+                  ? '$name · ${_s('wheelLifespansNote', '', locale)}'
+                  : name,
+              style: TextStyle(
+                  color: wb.mutedText,
+                  fontSize: t.scaled(11),
+                  fontWeight: FontWeight.w600),
+            ),
+            SizedBox(height: t.scaled(3)),
+            Text(
+              [
+                _fill('wheelLifeAm', 'Anno Mundi {a}–{b}', locale,
+                    {'a': f.birthAm, 'b': f.deathAm}),
+                _fill('wheelLifeYears', '{n} years', locale,
+                    {'n': f.lifespan}),
+                if (bc != null && bcEnd != null)
+                  '${yearLabel(bc, locale)} – ${yearLabel(bcEnd, locale)}',
+              ].join(' · '),
+              style: TextStyle(color: wb.text, fontSize: t.scaled(12)),
+            ),
+            // NOT `timelineSeptuagintYear`, and the reason is the
+            // asset's own. That string's body is about Exodus 12:40 —
+            // the Greek counting its 430 years in Egypt AND Canaan,
+            // which shifts the exodus block by 215 — and
+            // `bible_timeline.json`'s `_meta.septuagintYear` states
+            // plainly that the pre-Abraham years are "not this shift
+            // but a different number for each of them", and declines
+            // to print one under that sentence for exactly this
+            // reason. Printing 4193 BC under a paragraph about the
+            // sojourn would be a figure the sentence does not
+            // describe. So this block says what is actually true of a
+            // Genesis 5 figure, and the year in it is derived.
+            if (!drawn && bc != null) ...[
+              SizedBox(height: t.scaled(3)),
+              Text(
+                _fill('wheelLifeSeptuagintChain', '', locale,
+                    {'year': yearLabel(creation + shift!, locale)}),
+                style: TextStyle(
+                    color: wb.mutedText, fontSize: t.scaled(11), height: 1.4),
+              ),
+            ],
+            if (refs.isNotEmpty) ...[
+              SizedBox(height: t.scaled(4)),
+              _refRow(context, refs, wb, t, locale),
+            ],
+          ];
+        }
+
+        final person = FamilyTreeService.instance.byId(man.id);
+        return _sheet(sheet, [
+          Row(children: [
+            _swatch(
+                t,
+                man.line == 'seth'
+                    ? _lineColor('none')
+                    : _lineColor('shem')),
+            SizedBox(width: t.scaled(8)),
+            Expanded(
+              child: Text(man.nameFor(locale),
+                  style: TextStyle(
+                      color: wb.text,
+                      fontSize: t.scaled(15),
+                      fontWeight: FontWeight.w600)),
+            ),
+            Text(_s('wheelLifespans', 'Genesis lifespans', locale),
+                style:
+                    TextStyle(color: wb.mutedText, fontSize: t.scaled(11))),
+          ]),
+          if (mt != null) ...[
+            SizedBox(height: t.scaled(4)),
+            Text(
+              '${yearLabel(creation + mt.birthAm, locale)} – '
+              '${yearLabel(creation + mt.deathAm, locale)} · '
+              '${_fill('wheelLifeYears', '{n} years', locale, {'n': mt.lifespan})}',
+              style: TextStyle(color: wb.mutedText, fontSize: t.scaled(12)),
+            ),
+          ],
+          SizedBox(height: t.scaled(8)),
+          Text(
+            _s('wheelLifeContemporaries', '', locale),
+            style: TextStyle(
+                color: wb.mutedText, fontSize: t.scaled(11), height: 1.5),
+          ),
+          for (final id in [
+            _kDrawnTradition,
+            ...chron.traditions
+                .map((x) => x.id)
+                .where((x) => x != _kDrawnTradition)
+          ])
+            ...tradition(id, drawn: id == _kDrawnTradition),
+          SizedBox(height: t.scaled(10)),
+          Text(_basisText('scripture+thiele', locale),
+              style:
+                  TextStyle(color: wb.mutedText, fontSize: t.scaled(11))),
+          // The whole chain the BC years hang on — 1 Kings 6:1 down to
+          // Genesis 5:3 — under the timeline page's own label. Long, and
+          // that length is the honest one.
+          if (TimelineService.instance.meta.creation!.datingRefs
+              .isNotEmpty) ...[
+            SizedBox(height: t.scaled(8)),
+            Text(
+              _s('timelineDatedBy', 'Dated by', locale),
+              style: TextStyle(
+                  color: wb.mutedText,
+                  fontSize: t.scaled(11),
+                  fontWeight: FontWeight.w600),
+            ),
+            SizedBox(height: t.scaled(4)),
+            _refRow(context, TimelineService.instance.meta.creation!.datingRefs,
+                wb, t, locale),
+          ],
+          // The family-tree record, when the tree holds this man under
+          // the same id. Five of the twenty-five it spells differently
+          // (Enosh, Kenan, Mahalalel, Shelah, Nahor the elder) and the
+          // row is simply absent for them — the same rule `_personRow`
+          // already follows, which is to link what resolves and claim
+          // nothing about what does not.
+          if (person != null) ...[
+            SizedBox(height: t.scaled(8)),
+            Text(
+              uiStrings['timelinePeople']?[locale] ??
+                  uiStrings['timelinePeople']?['en'] ??
+                  'People',
+              style: TextStyle(
+                  color: wb.mutedText,
+                  fontSize: t.scaled(11),
+                  fontWeight: FontWeight.w600),
+            ),
+            SizedBox(height: t.scaled(4)),
+            _personRow(
+              context,
+              [
+                WheelPersonLink(id: man.id, names: man.names),
+              ],
+              wb,
+              t,
+              locale,
+            ),
+          ],
+          SizedBox(height: t.scaled(4)),
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: TextButton(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const ChronologyPage(),
+                ),
+              ),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                foregroundColor: wb.link,
+              ),
+              child: Text(
+                _s('timelineOpenChronology', 'Open Bible Chronology', locale),
+                style: TextStyle(
+                    fontSize: t.scaled(11.5), fontWeight: FontWeight.w700),
+              ),
+            ),
+          ),
         ]);
       },
     );
@@ -2541,6 +3255,7 @@ class _WorldWheelPainter extends CustomPainter {
     required this.colors,
     required this.arcs,
     required this.spokes,
+    required this.lives,
     required this.locale,
     required this.selectedId,
     required this.wb,
@@ -2557,6 +3272,7 @@ class _WorldWheelPainter extends CustomPainter {
 
   final List<_Arc> arcs;
   final List<_Spoke> spokes;
+  final List<_Life> lives;
   final String locale;
   final String? selectedId;
   final WbColors wb;
@@ -2582,6 +3298,11 @@ class _WorldWheelPainter extends CustomPainter {
     _paintGrooves(canvas, c, rHub, rBands);
     _paintArcs(canvas, c, rHub, rBands);
     _paintBandNames(canvas, c, rHub, rBands);
+    // BEFORE the spokes, deliberately. The lives are a tint the event
+    // text prints over, the way a printed chart sets its text over its
+    // bars — the wheel's own grooves are alpha 0.06 and its power arcs
+    // 0.78, and this sits between at 0.22.
+    _paintLifespans(canvas, c, rBands, rRim);
     _paintSpokes(canvas, c, rBands);
     _paintRim(canvas, c, rBands, rRim);
     _paintHub(canvas, c, rHub);
@@ -2726,6 +3447,71 @@ class _WorldWheelPainter extends CustomPainter {
             canvas, c, band.centre, name, arc.a0, arc.a1 - arc.a0, size, dim);
       }
     }
+  }
+
+  /// The Genesis lifespans, as arcs in the label annulus.
+  ///
+  /// TICKS ON THE YEARS, AND NOTHING PAST THEM. The stroke runs from
+  /// the birth angle to the death angle with a butt cap and a hairline
+  /// across the ring at each end. A round cap would put ink a pixel
+  /// either side of both, which on this axis is about eleven years at
+  /// rest — a chart whose rule is "never invent a date" does not
+  /// stretch a life for looks.
+  ///
+  /// WHEN ONE IS SELECTED, two hairlines run the whole depth of the
+  /// annulus at his birth year and his death year. That is the
+  /// Chronology page's vertical contemporaries band, read in polar:
+  /// every arc the pair crosses is a life that overlapped his.
+  void _paintLifespans(Canvas canvas, Offset c, double rBands, double rRim) {
+    if (lives.isEmpty) return;
+    final has = selectedId != null;
+    for (final l in lives) {
+      final sel = l.man.id == selectedId;
+      // 0.22 at rest, so spoke titles stay legible over it; 0.85 for
+      // the one selected; a third for everything else once something
+      // is.
+      final alpha = sel ? 0.85 : (has ? 0.22 * 0.35 : 0.22);
+      canvas.drawArc(
+        Rect.fromCircle(center: c, radius: l.centre),
+        l.arc.a0,
+        l.arc.sweep,
+        false,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeCap = StrokeCap.butt
+          ..strokeWidth = l.stroke
+          ..color = l.color.withValues(alpha: alpha),
+      );
+      final tick = Paint()
+        ..strokeWidth = sel ? 1.4 : 0.7
+        ..color = l.color.withValues(alpha: (alpha * 2).clamp(0.0, 1.0));
+      for (final a in [l.arc.a0, l.arc.a1]) {
+        final dir = Offset(math.cos(a), math.sin(a));
+        canvas.drawLine(c + dir * (l.centre - l.stroke * 0.62),
+            c + dir * (l.centre + l.stroke * 0.62), tick);
+      }
+      if (l.name.isNotEmpty && l.nameSize > 0) {
+        _tangentialLabel(canvas, c, l.centre, l.name, l.nameA0, l.nameSweep,
+            l.nameSize, sel ? 1.0 : 0.75);
+      }
+    }
+    final chosen = _find(lives, (l) => l.man.id == selectedId);
+    if (chosen == null) return;
+    final rule = Paint()
+      ..strokeWidth = 0.9
+      ..color = wb.text.withValues(alpha: 0.5);
+    for (final a in [chosen.arc.a0, chosen.arc.a1]) {
+      final dir = Offset(math.cos(a), math.sin(a));
+      canvas.drawLine(
+          c + dir * scriptureLabelBase(rBands), c + dir * rRim, rule);
+    }
+  }
+
+  static T? _find<T>(List<T> xs, bool Function(T) test) {
+    for (final x in xs) {
+      if (test(x)) return x;
+    }
+    return null;
   }
 
   /// The band's own name, set in the gap wedge before twelve o'clock,
@@ -2995,6 +3781,7 @@ class _WorldWheelPainter extends CustomPainter {
       old.streams.length != streams.length ||
       old.arcs.length != arcs.length ||
       old.spokes.length != spokes.length ||
+      old.lives.length != lives.length ||
       old.zoom != zoom ||
       old.rimFont != rimFont ||
       old.endFont != endFont ||

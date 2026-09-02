@@ -204,12 +204,20 @@ class _ChronologyPageState extends State<ChronologyPage> {
         leading: const LocalizedBackButton(),
         title: Text(s('chronology', 'Bible Chronology')),
         actions: [
-          // NOT the same data. This button opened a radial rendering of
-          // these same lifespans until `b75ffc6`, when the wheel became
-          // world history and the patriarchs stayed here, on the only
-          // axis their intervals have. It now leads to a different
-          // chart, which is the point: this page answers how long, that
-          // one answers alongside what.
+          // THE SAME LIVES ON A DIFFERENT AXIS — which is the whole
+          // reason to keep both, and is no longer "NOT the same data"
+          // as this comment said while the wheel drew no lifespans.
+          //
+          // This page counts in ANNO MUNDI, the reckoning Genesis
+          // actually states, and can therefore toggle Masoretic against
+          // Septuagint: a relative axis simply rescales. The wheel
+          // counts in BC on the derived creation anchor, beside every
+          // other dated thing this app holds — so it can show what this
+          // page cannot, that Methuselah's years run out in the year of
+          // the flood and that eleven of these lives overlap between
+          // Noah and Abraham; and it cannot offer the toggle, because
+          // an absolute axis would have to move 1,366 years to carry
+          // the Greek. Neither chart is a rendering of the other.
           IconButton(
             icon: const Icon(Icons.donut_large),
             tooltip: wheelStrings['wheelTitle']?[locale] ?? 'Chronology Wheel',

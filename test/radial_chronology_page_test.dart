@@ -383,7 +383,16 @@ void main() {
     // shipped default is zh-Hans, so assert the Chinese strings.
     expect(text, contains('创世记'));       // provenance, zh-Hans
     expect(text, contains('版权保护'));     // provenance, zh-Hans
-    expect(text, contains('公元前4000年')); // axis, zh-Hans
+    // The axis moved to 4200 BC when the creation anchor was derived
+    // and the lifespans went back on it as arcs. Read from the asset,
+    // so this catches the sheet and the file drifting apart.
+    expect(text, contains('公元前4200年')); // axis, zh-Hans
+    expect(text, contains('4114'),
+        reason: 'the About sheet must name the creation year that the arcs '
+            'and the pre-Abraham spokes are both counted from');
+    expect(text, contains('马所拉'),
+        reason: 'the arcs are drawn on ONE tradition and the chart has to '
+            'say which, in words, where the axis is disclosed');
     await unmount(tester);
   });
 
@@ -710,18 +719,23 @@ void main() {
         reason: 'the two traditions differ across these men and this '
             'page cannot let a reader choose');
 
-    // The hand-off itself, on the one case still left to it: the wheel
-    // spells him Nahor, the family tree calls him Nahor (the elder),
-    // and nothing on the wheel answers to the longer name.
+    // THE HAND-OFF INVERTED. It used to say "not on this wheel: the
+    // text gives a lifespan, not a date". Since the lifespans are drawn
+    // that sentence is false about every man it can reach, and the one
+    // case left to it is a SPELLING — the chart calls him Nahor, the
+    // family tree calls him Nahor (the elder), and nothing indexed
+    // answers to the longer name.
     await tester.enterText(
         find.byKey(const ValueKey('wheelFindField')), 'Nahor (the elder)');
     await settle(tester);
     final shown = sheetText(tester);
-    expect(shown, contains('不在这个轮盘上'));
-    expect(shown, contains('自创世起算'),
-        reason: 'the reader is told he is absent but not where he is');
+    expect(shown, isNot(contains('不在这个轮盘上')),
+        reason: 'his life IS drawn on this wheel now — the sentence may not '
+            'go on disowning a man the chart carries');
+    expect(shown, contains('已画在本图上'),
+        reason: 'the reader has to be told the life is here, not absent');
     expect(shown, isNot(contains('148')),
-        reason: 'no lifespan figure, for any of them');
+        reason: 'no lifespan figure in a search status line, for any of them');
     expect(find.text('打开「圣经年代」'), findsOneWidget);
 
     // A name one letter off is a different question, and answering it
@@ -729,8 +743,32 @@ void main() {
     await tester.enterText(
         find.byKey(const ValueKey('wheelFindField')), 'Nahor (the elderx)');
     await settle(tester);
-    expect(sheetText(tester), isNot(contains('不在这个轮盘上')),
+    expect(sheetText(tester), isNot(contains('已画在本图上')),
         reason: 'a loose match makes a definite claim about the wrong man');
+
+    // THE SECOND SENTENCE, which the hand-off never had. Genesis
+    // 4:17-24 gives Cain's line a city, wives, trades and a boast and
+    // not one number, so Jabal has no arc, no spoke and no year — and
+    // a bare "nothing matches" about a man this app holds a record for
+    // is the false absence the whole hand-off exists to stop.
+    await tester.enterText(
+        find.byKey(const ValueKey('wheelFindField')), 'Jabal');
+    await settle(tester);
+    final jabal = sheetText(tester);
+    expect(jabal, contains('圣经家谱'),
+        reason: 'Jabal is in the family tree and the box said nothing');
+    expect(jabal, contains('雅八'));
+    expect(jabal, isNot(contains('已画在本图上')),
+        reason: 'the promise of a charted life must not be made about a man '
+            'the text gives no figure for');
+    // NO YEAR FOR A CAINITE, and the two that could leak are named:
+    // `family_tree.json` carries him an Anno Mundi 540 as a
+    // conventional placeholder, and 540 on this anchor would be
+    // 3574 BC. Neither number may reach the reader from this page,
+    // because Genesis 4:17-24 states neither.
+    expect(jabal, isNot(contains('540')));
+    expect(jabal, isNot(contains('3574')));
+    expect(find.text('圣经家谱'), findsWidgets);
 
     // Shem carries AM years too, and is ALSO a nation of Genesis 10, so
     // the wheel can answer for him. The hand-off must never stand in

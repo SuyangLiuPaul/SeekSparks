@@ -37,12 +37,28 @@
 ///     the reader instead of silently by us.
 library;
 
+import 'package:seeksparks/models/chronology.dart' show Patriarch;
 import 'package:seeksparks/models/wheel_history.dart';
 import 'package:seeksparks/utils/diacritics.dart' show foldDiacritics;
 import 'package:seeksparks/utils/reference_parser.dart';
 
-/// Which of the wheel's four record kinds a hit is.
-enum WheelHitKind { event, power, nation, stream }
+/// Which of the wheel's five record kinds a hit is.
+///
+/// [patriarch] is a LIFE — one of the arcs the annulus carries, drawn
+/// from a birth year to a death year — as against an [event], which is
+/// a moment. They are indexed apart because they answer different
+/// questions and open different sheets, and because a reader typing
+/// "Methuselah" should get both: the birth spoke that says WHEN, and
+/// the arc that says HOW LONG and alongside whom.
+enum WheelHitKind { event, power, nation, stream, patriarch }
+
+/// The id the lifespan layer answers to in the stream filter.
+///
+/// NOT a stream id — the stream set is pinned by tests and a collision
+/// would switch a band off with the arcs. It is also the `streamId` a
+/// patriarch hit carries, so the page's existing "un-hide what you
+/// found" step needs no special case.
+const String kLifespanLayerId = 'lifespans';
 
 /// Where in the record the query was found.
 ///
@@ -322,12 +338,23 @@ List<int> parseWheelYears(String input) {
 /// [hiddenStreams] does not filter — it only marks. See the library
 /// comment: a filter the reader set for the CHART must not silently
 /// answer a question they asked the SEARCH.
+/// [patriarchs] are the lives the annulus draws as arcs. They arrive as
+/// records rather than as another list on [data] because they come out
+/// of a different asset (`chronology.json`) that the wheel merges at
+/// paint time, and because this function must stay pure.
+///
+/// [creationYear] is `bible_timeline.json`'s `_meta.creation.year`, and
+/// null means "the anchor could not be read": the lives are then not
+/// indexed at all rather than indexed at a year invented here.
 WheelSearchResult searchWheel({
   required WheelHistoryData data,
   required String query,
   required String locale,
   required int axisEnd,
   Set<String> hiddenStreams = const {},
+  List<Patriarch> patriarchs = const [],
+  int? creationYear,
+  String tradition = 'mt',
 }) {
   final raw = query.trim();
   if (raw.isEmpty) return const WheelSearchResult.empty();
@@ -352,8 +379,45 @@ WheelSearchResult searchWheel({
   // question — "what was standing then" — so it follows. Both are
   // exact, so both stay above the term tiers. The near misses are not
   // exact and sort below everything (rank [_kNearRank]).
+  // The lives, as the page draws them: figures out of `chronology.json`
+  // turned into BC years against the one anchor. Empty when either half
+  // is missing, which is the same "draw nothing rather than guess" rule
+  // the painter follows.
+  final lives = creationYear == null
+      ? const <({Patriarch man, int birth, int death, List<String> refs})>[]
+      : [
+          for (final p in patriarchs)
+            if (p.figures[tradition] != null)
+              (
+                man: p,
+                birth: creationYear + p.figures[tradition]!.birthAm,
+                death: creationYear + p.figures[tradition]!.deathAm,
+                refs: p.figures[tradition]!.refs.values.toSet().toList(),
+              )
+        ];
+
   var nearestShown = 0;
   for (final y in years) {
+    // A life that was being lived in the year asked for. Same tier as a
+    // power spanning it and for the same reason: "who was alive in 2200
+    // BC" is the neighbouring question to "what happened in 2200 BC",
+    // and on this stretch of the axis it is often the only one the text
+    // can answer.
+    for (final l in lives) {
+      if (l.birth <= y && y <= l.death && take('patriarch:${l.man.id}')) {
+        hits.add(WheelHit(
+          kind: WheelHitKind.patriarch,
+          via: WheelHitVia.yearSpan,
+          id: l.man.id,
+          streamId: kLifespanLayerId,
+          title: l.man.nameFor(locale),
+          year: l.birth,
+          matched: '',
+          rank: 1,
+          streamHidden: hidden(kLifespanLayerId),
+        ));
+      }
+    }
     for (final p in data.powers) {
       // A power with no end year runs to the end of the axis — the same
       // reading [WheelPower.endFor] gives the painter, not a sentinel
@@ -527,6 +591,28 @@ WheelSearchResult searchWheel({
       matched: c.$3.isEmpty && n.ref.isNotEmpty ? n.ref : c.$3,
       rank: c.$1,
       streamHidden: hidden(n.stream),
+    ));
+  }
+
+  // The lives, by name. Their names are in the same three scripts as
+  // everything else, and the verses are the ones each FIGURE rests on
+  // — Genesis 5:27 for Methuselah's 969 — so a reader who searches a
+  // verse of Genesis 5 reaches the man it numbers.
+  for (final l in lives) {
+    if (seen.contains('patriarch:${l.man.id}')) continue;
+    final c = classify(l.man.names, const {}, l.refs);
+    if (c == null) continue;
+    take('patriarch:${l.man.id}');
+    hits.add(WheelHit(
+      kind: WheelHitKind.patriarch,
+      via: c.$2,
+      id: l.man.id,
+      streamId: kLifespanLayerId,
+      title: l.man.nameFor(locale),
+      year: l.birth,
+      matched: c.$3,
+      rank: c.$1,
+      streamHidden: hidden(kLifespanLayerId),
     ));
   }
 

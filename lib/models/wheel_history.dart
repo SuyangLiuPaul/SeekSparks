@@ -40,6 +40,7 @@ import 'package:flutter/services.dart' show rootBundle;
 
 import 'package:seeksparks/models/biblical_person.dart';
 import 'package:seeksparks/models/timeline_event.dart';
+import 'package:seeksparks/services/chronology_service.dart';
 import 'package:seeksparks/services/family_tree_service.dart';
 import 'package:seeksparks/models/hebrew_king.dart';
 import 'package:seeksparks/services/hebrew_kings_service.dart';
@@ -636,6 +637,14 @@ class WheelHistoryService {
     // absence that was really a race. Cached, so this costs one bundle
     // read for the life of the app.
     await HebrewKingsService.instance.load();
+    // The Genesis lifespans, drawn as arcs in the annulus, come from
+    // `chronology.json` — the Anno Mundi figures — and are turned into
+    // BC years against `bible_timeline.json`'s `_meta.creation`, which
+    // the `TimelineService` load above has just parsed. BOTH have to be
+    // warm before the first paint or the layer draws nothing on the way
+    // in and appears a frame later, and a chart that assembles itself in
+    // stages reads as broken.
+    await ChronologyService.instance.load();
     final data = WheelHistoryData(
       streams: base.streams,
       nations: base.nations,

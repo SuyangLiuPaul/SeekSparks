@@ -9,17 +9,26 @@
 /// palette is the app's own line-of-descent hues, and no wording,
 /// artwork or compiled table from any printed chart is reproduced.
 ///
-/// THIS FILE ONCE DREW THE GENESIS LIFESPANS AND NO LONGER DOES. It
-/// began as the radial rendering of `chronology_layout.dart`'s bars,
-/// one ring per generation, each life an arc on an Anno Mundi axis
-/// with the creation at twelve o'clock. The wheel became world history
-/// in `b75ffc6` and the patriarchs kept their own AM page, where their
-/// intervals belong — but this file's AM half stayed behind, tested
-/// and unreachable, for long enough to read as an unfinished feature
-/// and send a later reader looking for the missing wiring. It is gone;
-/// `3b44f2e` holds it whole if it is ever wanted. What survives is
-/// BC/AD geometry only, and the two axes must not be mixed: they map
-/// the same angle of the same circle to different years.
+/// THE GENESIS LIFESPANS ARE DRAWN HERE AGAIN, AND ON THE BC AXIS —
+/// NOT ON A SECOND ONE. This file once carried an Anno Mundi half: one
+/// ring per generation, each life an arc, the creation at twelve
+/// o'clock. It went in `b75ffc6`/`2d1a66d`, and the reason it went is
+/// still true and still binding — two axes on one circle point one
+/// angle at two different years. What changed is the DATA, not the
+/// drawing. Since the creation anchor was derived
+/// (`bible_timeline.json` `_meta.creation`, 4114 BC: Thiele's Solomon
+/// counted back along twenty-five stated intervals) every Anno Mundi
+/// figure has one honest BC year, `creation + am`, and [buildLifeArcs]
+/// draws the lives at those years through the SAME [angleForSpan]
+/// every event uses. There is no AM geometry in this file and there
+/// must never be: the conversion happens once, in the caller, out of
+/// the one field that holds the anchor.
+///
+/// A SPOKE SAYS WHEN; AN ARC SAYS HOW LONG, AND ALONGSIDE WHOM. The
+/// births of Genesis 5 and 11 are events with their own spokes. The
+/// lives are arcs in the label annulus, and they carry the one thing
+/// no event may state: that Methuselah's years run out in the year of
+/// the flood — which the text nowhere says and the arithmetic does.
 ///
 /// Angle convention is the canvas's: 0 rad points right (+x), positive
 /// is clockwise because y grows downward. The axis starts at twelve
@@ -32,6 +41,7 @@ library;
 
 import 'dart:math' as math;
 
+import 'package:seeksparks/models/chronology.dart' show Patriarch;
 import 'package:seeksparks/utils/related_verses.dart' show isCjkChar;
 
 /// How far round the wheel the axis runs. The remaining 40° is the gap.
@@ -69,12 +79,14 @@ double ringPitch(int ringCount, double rHub, double rMax) =>
 
 /// The angle for [year] on an axis running [minYear]..[maxYear].
 ///
-/// The axis starts at 4000 BC, not at a creation year. An Anno Mundi
-/// form of this function used to live beside it, from when this wheel
-/// drew the Genesis lifespans; it went when they did (`b75ffc6`), and
-/// putting AM angles back on a BC/AD circle would point one angle at
-/// two different years. See the WHAT IS NOT HERE note in
-/// `radial_chronology_page.dart`.
+/// THE ONLY YEAR→ANGLE FUNCTION ON THIS WHEEL, and that is the whole
+/// point of it. An Anno Mundi form used to live beside it, back when
+/// the lifespans were drawn on their own axis; it went with them
+/// (`b75ffc6`) and has not come back. The lifespans return through
+/// [buildLifeArcs], which converts each figure to a BC year against the
+/// derived creation anchor and then calls THIS — so a life and an event
+/// in the same year are at the same angle, which is the claim the chart
+/// is making.
 double angleForSpan(int year, int minYear, int maxYear) {
   final span = maxYear - minYear;
   if (span <= 0) return startRad;
@@ -863,6 +875,213 @@ List<int> packIntoRings(
     out.add(ring);
   }
   return out;
+}
+
+// ── the lifespans, as arcs in the annulus ────────────────────────────
+//
+// WHY THE ANNULUS AND NOT A BAND. Twenty-five lives, eleven of them
+// running at once (Noah through Abraham, AM 1948-1996), will not go on
+// the stream bands: a 23rd band at 900 px is 5.6 canvas units and
+// eleven sub-rings of it are half a unit each. Eleven NEW bands among
+// the streams drops the ring pitch from 6.95 to 4.8, so `fitArcLabel`'s
+// cap (pitch x 0.9 = 4.3) falls under the 6 px floor and every one of
+// the 62 power names goes dark at rest — the wheel's main content
+// paying for a side layer. Shrinking the hub buys 6.3, cap 5.7, still
+// under the floor.
+//
+// The annulus is the one region with room. It is 112 units deep at
+// 700 px and 224 at 1400, it holds one label per spoke by design (see
+// [planRadialSpokes] — stacking is deliberately unreachable), and in
+// the 139 degrees these lives occupy it carries about 50 spokes against
+// 88 slots. Eleven sub-rings there are 9.7 units apart at 700 px, which
+// clears the 9 px finger target, and 19.9 at 1400.
+//
+// Radial space is nearly free; angular space is scarce. That is the
+// sentence the whole page is built on, and a span layer is what it buys.
+
+/// One life, placed: which sub-ring it sits in and the two angles its
+/// years fall at.
+///
+/// [line] is the patriarch's own `line` out of `chronology.json`, not a
+/// colour: the page decides the hue, this file decides the geometry.
+class LifeArc {
+  const LifeArc({
+    required this.id,
+    required this.ring,
+    required this.a0,
+    required this.a1,
+    required this.line,
+    required this.birthYear,
+    required this.deathYear,
+  });
+
+  /// The `chronology.json` patriarch id.
+  final String id;
+
+  /// 0 is INNERMOST — flush against the scripture label base. That is
+  /// the opposite of [ringRadii]'s convention, which counts 0 from the
+  /// outside, so a caller turning one of these into a radius must index
+  /// `ringCount - 1 - ring`. See [lifeArcRadii], which does it.
+  final int ring;
+
+  final double a0;
+  final double a1;
+
+  /// `seth` / `shem` / `abraham` / `levi`, straight from the asset.
+  final String line;
+
+  /// Astronomical BC years, `creationYear + am`. Carried so nothing
+  /// downstream has to redo the conversion — see the library note.
+  final int birthYear;
+  final int deathYear;
+
+  double get sweep => a1 - a0;
+}
+
+/// Every life the given tradition has figures for, packed into as few
+/// sub-rings as their overlaps allow.
+///
+/// [creationYear] is `_meta.creation.year` out of `bible_timeline.json`
+/// and there is no default: a caller that cannot find it must draw
+/// nothing rather than substitute a literal, because a silent -4000 is
+/// the calendar this anchor replaced.
+///
+/// [minGap] is passed to the packer IN RADIANS and is stated rather
+/// than defaulted, because `packIntoRings`' own 0.02 rad default is 22
+/// years on THIS axis and would silently become some other number of
+/// years the day the axis moved.
+///
+/// The ring count is not an argument: it is whatever the overlaps
+/// demand, which for the Masoretic figures is eleven. Writing a number
+/// in would be a claim about the data that the data already makes.
+List<LifeArc> buildLifeArcs({
+  required List<Patriarch> patriarchs,
+  required String tradition,
+  required int creationYear,
+  required int minYear,
+  required int maxYear,
+  double minGap = 0.02,
+}) {
+  final lives = <({Patriarch man, int birth, int death, double a0, double a1})>[
+    for (final p in patriarchs)
+      if (p.figures[tradition] != null)
+        (
+          man: p,
+          birth: creationYear + p.figures[tradition]!.birthAm,
+          death: creationYear + p.figures[tradition]!.deathAm,
+          a0: angleForSpan(
+              creationYear + p.figures[tradition]!.birthAm, minYear, maxYear),
+          a1: angleForSpan(
+              creationYear + p.figures[tradition]!.deathAm, minYear, maxYear),
+        )
+  ]..sort((a, b) => a.a0.compareTo(b.a0));
+  if (lives.isEmpty) return const [];
+
+  // Enough rings that first-fit never has to overprint, so the count
+  // that comes back is the one the overlaps actually require.
+  final rings = packIntoRings(
+    [for (final l in lives) l.a0],
+    [for (final l in lives) l.a1],
+    lives.length,
+    minGap: minGap,
+  );
+  return [
+    for (var i = 0; i < lives.length; i++)
+      LifeArc(
+        id: lives[i].man.id,
+        ring: rings[i],
+        a0: lives[i].a0,
+        a1: lives[i].a1,
+        line: lives[i].man.line,
+        birthYear: lives[i].birth,
+        deathYear: lives[i].death,
+      )
+  ];
+}
+
+/// How many sub-rings [arcs] occupy. Derived, never written down.
+int lifeArcRingCount(List<LifeArc> arcs) {
+  var top = -1;
+  for (final a in arcs) {
+    if (a.ring > top) top = a.ring;
+  }
+  return top + 1;
+}
+
+/// The radii of one life's sub-ring, with ring 0 INNERMOST.
+///
+/// [ringRadii] counts ring 0 from the rim inward, which is right for
+/// the stream bands (the outermost band is the first stream) and wrong
+/// here: the lives read outward from the scripture baseline, so Adam is
+/// against the bands and the eleventh sub-ring is against the rim. The
+/// index is flipped here, once, rather than at each call site.
+({double inner, double outer, double centre, double width}) lifeArcRadii(
+  int ring,
+  int ringCount,
+  double rInner,
+  double rOuter,
+) =>
+    ringRadii(ringCount - 1 - ring, ringCount, rInner, rOuter);
+
+/// An angular stretch something else has already claimed.
+typedef ArcSpan = ({double start, double end});
+
+/// The stretches of `[a0, a1]` that [occupied] does not cover, in order.
+List<ArcSpan> _freeSpans(double a0, double a1, List<ArcSpan> occupied) {
+  final blocks = [
+    for (final o in occupied)
+      if (o.end > a0 && o.start < a1)
+        (start: math.max(o.start, a0), end: math.min(o.end, a1))
+  ]..sort((x, y) => x.start.compareTo(y.start));
+  final out = <ArcSpan>[];
+  var cursor = a0;
+  for (final b in blocks) {
+    if (b.start > cursor) out.add((start: cursor, end: b.start));
+    if (b.end > cursor) cursor = b.end;
+  }
+  if (cursor < a1) out.add((start: cursor, end: a1));
+  return out;
+}
+
+/// The widest run of `[a0, a1]` no planned spoke label crosses.
+///
+/// What a name has to FIT, which is not the arc's own sweep. A
+/// tangential name laid across a radial title is two illegible strings,
+/// and this wheel's rule is legible or absent — so a life whose whole
+/// span is under a spoke keeps its ink and loses its word, exactly as
+/// the rim already does.
+double arcNameRoom(double a0, double a1, List<ArcSpan> occupied) {
+  var best = 0.0;
+  for (final s in _freeSpans(a0, a1, occupied)) {
+    final w = s.end - s.start;
+    if (w > best) best = w;
+  }
+  return best;
+}
+
+/// Where a name [needed] radians wide can start, or null.
+///
+/// Centred in the widest free run rather than at the arc's midpoint,
+/// which is the whole difference: the midpoint of Methuselah's 969
+/// years is under the spokes of a dozen events.
+double? placeArcName(
+  double a0,
+  double a1,
+  List<ArcSpan> occupied,
+  double needed,
+) {
+  if (needed <= 0) return null;
+  ArcSpan? best;
+  var bestW = 0.0;
+  for (final s in _freeSpans(a0, a1, occupied)) {
+    final w = s.end - s.start;
+    if (w > bestW) {
+      best = s;
+      bestW = w;
+    }
+  }
+  if (best == null || bestW < needed) return null;
+  return best.start + (bestW - needed) / 2;
 }
 
 /// Where to move the scene so a point on the wheel sits under the middle

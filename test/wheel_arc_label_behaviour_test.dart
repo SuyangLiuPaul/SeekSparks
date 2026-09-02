@@ -31,7 +31,11 @@ const _fallback = ['NotoSansSC-Sub'];
 const double _hubFrac = 0.115;
 const double _bandsFrac = 0.285;
 const double _rimFont = 10.5;
-const int _minYear = -4000;
+// -4200 since the creation anchor was derived (`_meta.creation`, 4114
+// BC) and the axis moved to hold it. This copy went on saying -4000
+// after the page's did not, which measured every power's arc against a
+// sweep 3.2% wider than the one that ships.
+const int _minYear = -4200;
 const int _maxYear = 2026;
 double _labelScale(double zoom) => math.sqrt(zoom);
 
