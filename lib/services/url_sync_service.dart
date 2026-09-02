@@ -80,11 +80,6 @@ class UrlSyncService {
   /// written and what a shared link reopens. Native targets no-op.
   static void claimUrl(String? path) => impl.claimUrl(path);
 
-  /// The path claimed at cold open, if the boot URL was a page link
-  /// rather than a reader link — so `main()` can put the reader back
-  /// where the link pointed. Null on native and on reader links.
-  static String? bootPagePath() => impl.bootPagePath();
-
   /// Initialise. Web reads the boot URL, applies it to providers,
   /// then starts listening for further state / popstate events.
   /// Native targets no-op.

@@ -164,23 +164,6 @@ void claimUrl(String? path) {
   }
 }
 
-/// Derived from the hash captured synchronously in `main()`, NOT from
-/// whatever `_applyHashToState` has managed to run by now.
-///
-/// Reading a field that init fills in was a race the splash won: the
-/// home page finished its timer and asked before the async init had
-/// applied the boot hash, got null, and fell through to the reader —
-/// so a shared `#/wheel` link still opened Genesis 1. `captureBootHash`
-/// runs at the top of main(), so this answer is available from the
-/// first frame onwards and cannot be raced.
-String? bootPagePath() {
-  final raw = (_bootHash != null && _bootHash!.length > 1)
-      ? _bootHash!
-      : _window.location.hash;
-  final path = raw.startsWith('#') ? raw.substring(1) : raw;
-  return path.startsWith('/wheel') ? path : _bootPagePath;
-}
-
 void onRouteChanged() {
   if (!_initialized) return;
   Timer(const Duration(milliseconds: 350), () {
@@ -196,9 +179,6 @@ void onRouteChanged() {
 /// A page's claim on the URL, or null when the reader link owns it.
 /// See `UrlSyncService.claimUrl`.
 String? _claimedPath;
-
-/// The page path the app was cold-opened at, if any.
-String? _bootPagePath;
 
 bool _isApplyingFromUrl = false;
 Timer? _writeDebounce;
@@ -324,15 +304,17 @@ void _writeStateToUrl() {
 // ── Apply: URL → state ─────────────────────────────────────────
 
 Future<void> _applyHashToState(String rawHash, {bool isBoot = false}) async {
-  // A page link, not a reader link. Record it so main() can reopen the
-  // page the sender was actually looking at, and do NOT try to parse it
-  // as a book and chapter — that is what dropped shared page links on
-  // Genesis 1.
+  // A page link, not a reader link. Do NOT try to parse it as a book
+  // and chapter — that is what dropped shared page links on Genesis 1.
+  //
+  // 2026-09-02: this used to also record the boot path so `main()`
+  // could reopen the page after the splash. It no longer needs to: a
+  // page path is an INITIAL ROUTE now (`appGenerateRoute`), created by
+  // the Navigator exactly once per document, at the first frame. The
+  // recording API went with the post-splash push it existed for, so no
+  // cold-open push can quietly come back without re-adding it.
   final path = rawHash.startsWith('#') ? rawHash.substring(1) : rawHash;
-  if (path.startsWith('/wheel')) {
-    if (isBoot) _bootPagePath = path;
-    return;
-  }
+  if (path.startsWith('/wheel')) return;
 
   final parsed = _parseHash(rawHash);
   if (parsed == null) return;

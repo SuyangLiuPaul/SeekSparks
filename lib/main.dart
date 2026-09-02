@@ -499,12 +499,18 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
           // report ("Null check operator used on a null value", Android web):
           // on Flutter web a browser/back/deep-link navigation to a URL path
           // the app doesn't register reaches the Navigator with an unknown
-          // route name. The app sets only `home:` (no routes/onGenerateRoute),
-          // so Flutter fell through to `onUnknownRoute` — which was null —
-          // crashing inside `_WidgetsAppState._onUnknownRoute`. Answering
+          // route name. The app declared only `home:` — no `routes`, no
+          // `onGenerateRoute` — so Flutter fell through to
+          // `onUnknownRoute`, which was null, and it crashed
+          // inside `_WidgetsAppState._onUnknownRoute`. Answering
           // every unknown route means a stray URL never crashes. What it
           // gets answered WITH is [appUnknownRoute] — see there for why
           // "the app root, always" was itself a bug.
+          // 2026-09-02: a page path is answered HERE, at the first
+          // frame, so a cold `#/wheel` boots as `[home, wheel]` instead
+          // of painting the workbench first and pushing the wheel over
+          // it a beat later. See [appGenerateRoute].
+          onGenerateRoute: appGenerateRoute,
           onUnknownRoute: appUnknownRoute,
           themeMode: settings.themeMode,
           // 2026-08-06: SeekSparks is a study tool, not a reading app,
@@ -818,39 +824,76 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
   }
 }
 
-/// The route the app answers a name it does not register with.
+/// The route the app answers a name it KNOWS with.
 ///
-/// 2026-09-02: a name it does not register is not the same thing as a
-/// name it does not KNOW. `#/wheel` is a real page — the chronology
-/// wheel claims that path while it is open, so it is what a shared wheel
-/// link says and what a wheel history entry holds — but it is not a
-/// registered route, because the app declares no `routes` map at all.
+/// 2026-09-02: a name the app does not register is not the same thing
+/// as a name it does not KNOW. `#/wheel` is a real page — the
+/// chronology wheel claims that path while it is open, so it is what a
+/// shared wheel link says and what a wheel history entry holds — but it
+/// is not a registered route, because the app declares no `routes` map
+/// at all. Answering it HERE, rather than only in [appUnknownRoute], is
+/// what makes a page path a page through both of its doors:
 ///
-/// On the web that difference is the whole bug. A COLD open is fine:
-/// `main()` snapshots the fragment and `_RootRouter` opens the page on
-/// its first post-splash frame. But a fragment that changes in a LIVE
-/// tab — the reader edits the address bar, or presses Back / Forward
-/// onto a `#/wheel` entry — is a same-document navigation, so the engine
-/// does not restart the app; it hands the framework
-/// `pushRoute('/wheel')`, which lands here. This handler used to answer
-/// every unknown name with the app root, so what it pushed was a SECOND
-/// `_RootRouter` — another workbench, freshly mounted at Genesis 1, on
-/// top of whatever was showing, while the address bar read `#/wheel` and
-/// the wheel never opened. That is exactly the report this fixes;
-/// verified against the release build with the route logged.
+///   • COLD OPEN. On the web the engine's boot route name IS the hash
+///     path, so `Navigator.defaultGenerateInitialRoutes` asks this
+///     function for `/wheel` (with `allowNull: true`) while it builds
+///     the very first frame. Unanswered, the route was dropped and the
+///     initial stack was just `[home]` — so the reader watched the
+///     splash, then the workbench's first frame, and only in THAT
+///     frame's post-frame callback was the wheel pushed, with a page
+///     transition, and only then did the wheel's `initState` start
+///     loading `wheel_history.json`. Measured on dev v1.6.203:
+///     `main.dart.js` landed at 179 ms and the wheel's own asset was
+///     not requested until 30.6 s — the asset was never the cost, the
+///     ordering was. Answered, the initial stack is `[home, wheel]`,
+///     ADDED rather than pushed (so no transition); home is built
+///     beneath but neither laid out nor painted, because the Overlay
+///     marks entries below the last opaque one offstage; and the
+///     wheel's asset request starts at the first frame instead of
+///     after the workbench's.
 ///
-/// So: ask [pageForUrlPath] first, and fall back to the app root only
-/// for a name that really is stray. (Get.to(...) pushes anonymous
-/// routes and is unaffected by this handler.)
+///   • A LIVE TAB. Editing the fragment in the address bar, or pressing
+///     Back / Forward onto a `#/wheel` entry, is a same-document
+///     navigation: the engine does not restart the app, it hands the
+///     framework `pushRoute('/wheel')` — and `pushNamed` consults this
+///     function BEFORE `onUnknownRoute`. So both doors are now one
+///     lookup, which is what `page_links.dart` promised.
+///
+/// Null for every other name, so `home:` still answers `/` and
+/// [appUnknownRoute] still answers a genuinely stray one.
+///
+/// Wrapping in [SmallScreenGate] is a decision, not an option: the gate
+/// is documented as a hard block and it wraps `home:`, so without the
+/// wrap a phone opening `#/wheel` would get the wheel laid OVER the
+/// advisory instead of the advisory.
+@visibleForTesting
+Route<dynamic>? appGenerateRoute(RouteSettings settings) {
+  final page = pageForUrlPath(settings.name);
+  if (page == null) return null;
+  return MaterialPageRoute<void>(
+    settings: settings,
+    builder: (_) => SmallScreenGate(child: page),
+  );
+}
+
+/// The route the app answers a genuinely STRAY name with.
+///
+/// 2026-06-28 (v1.3.111): answering at all is the point. Diagnosed by
+/// source-map-deobfuscating a prod (v1.3.102) crash report ("Null check
+/// operator used on a null value", Android web): a browser / back /
+/// deep-link navigation to a path the app does not register reaches the
+/// Navigator with an unknown route name, and with `onUnknownRoute` null
+/// the framework crashed inside `_WidgetsAppState._onUnknownRoute`.
+///
+/// What a stray name gets answered WITH is the app root. A name the app
+/// KNOWS never reaches that fallback — [appGenerateRoute] is asked
+/// first here, exactly as `pushNamed` asks it first — so the two doors
+/// cannot disagree. (`Get.to(...)` pushes anonymous routes and is
+/// unaffected by either handler.)
 @visibleForTesting
 Route<dynamic> appUnknownRoute(RouteSettings settings) {
-  final page = pageForUrlPath(settings.name);
-  if (page != null) {
-    return MaterialPageRoute<void>(
-      settings: settings,
-      builder: (_) => page,
-    );
-  }
+  final known = appGenerateRoute(settings);
+  if (known != null) return known;
   return MaterialPageRoute<void>(
     settings: settings,
     builder: (ctx) => _RootRouter(
@@ -901,9 +944,6 @@ class _RootRouterState extends State<_RootRouter> {
   /// (rather than navigating from the callback) because the apply can
   /// finish before OR after the home page appears.
   bool _bootHashLandingPending = false;
-
-  /// A shared page link is opened once and only once.
-  bool _bootPageOpened = false;
 
   @override
   void initState() {
@@ -997,32 +1037,6 @@ class _RootRouterState extends State<_RootRouter> {
       _bootHashLandingPending = false;
     }
 
-    // 2026-08-24: a shared PAGE link — a full-screen page that owned
-    // the URL while it was open, e.g. `#/wheel`.
-    //
-    // Opened HERE, after the first frame, rather than from
-    // _handleDeepLink: the root of this app IS the workbench, so at
-    // deep-link time there is no Navigator above it to push onto and
-    // the push was silently doing nothing — a shared wheel link kept
-    // landing people on Genesis 1, which is the whole bug.
-    //
-    // 2026-09-02: this covers the COLD open only, and reading it as the
-    // whole fix is what let the same symptom survive it. A fragment that
-    // changes in a live tab never restarts the app, so it never reaches
-    // this branch — it arrives as a named route instead. See
-    // [appUnknownRoute], which answers the other door with the same
-    // [pageForUrlPath] lookup used here.
-    if (_showHome && !_bootPageOpened) {
-      final page = pageForUrlPath(UrlSyncService.bootPagePath());
-      if (page != null) {
-        _bootPageOpened = true;
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!mounted) return;
-          Navigator.of(context)
-              .push(MaterialPageRoute<void>(builder: (_) => page));
-        });
-      }
-    }
     // 2026-08 (SeekSparks): the study workspace is the root, not a
     // dashboard. SeekSparks is a Bible STUDY tool, not a devotional
     // reader — landing on a greeting + verse-of-the-day + bookmark

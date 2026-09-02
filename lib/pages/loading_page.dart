@@ -140,6 +140,20 @@ class _LoadingPageState extends State<LoadingPage> {
     if (kIsWeb) {
       _autoHardReload = Timer(_kAutoHardReloadThreshold, () {
         if (!mounted) return;
+        // 2026-09-02: only ever recover the screen the reader is
+        // actually looking at. A page path is an initial route now
+        // (`appGenerateRoute`), so a cold `#/wheel` boots as
+        // `[home, wheel]` and this splash runs BENEATH the wheel. On a
+        // connection where the Bible boot passes 25 s, a hard reload
+        // here would tear the document down under a reader who is
+        // looking at a rendered wheel — and then boot to `#/wheel`
+        // again, and again. Beneath, the splash is invisible and there
+        // is nothing to recover; the reader can see the wheel.
+        //
+        // Not reachable from the VM suite: `kIsWeb` is false there, so
+        // the timer is never armed. Covered by the manual cold-`#/wheel`
+        // check on a throttled connection.
+        if (!(ModalRoute.of(context)?.isCurrent ?? true)) return;
         final mp = context.read<MainProvider>();
         final stillStuck = mp.bootInFlight ||
             _retrying ||
