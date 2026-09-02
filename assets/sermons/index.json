@@ -481,7 +481,7 @@
     "topicSlug": "Matthew and parallels in Luke and Mark",
     "date": "1977-06-19",
     "parts": "A/B",
-    "passage": "Lk 9:57-62",
+    "passage": "Lk 9:57-62 (Mt 8:19-22)",
     "title": "The qualification for following Christ",
     "titles": {
       "en": "The Qualification for Following Christ — Counting the Cost: This World Is Not Our Home",
@@ -770,7 +770,7 @@
     "topicSlug": "Matthew and parallels in Luke and Mark",
     "date": "1979-06-24",
     "parts": "A/B",
-    "passage": "Mk 7:1-15",
+    "passage": "Mk 7:1-15 (Mt 15:1-11)",
     "title": "Man's way or God's way",
     "titles": {
       "en": "Man's Way or God's Way — Human Tradition Versus God's Commandment; the Church Degrading the Word of God",
@@ -787,7 +787,7 @@
     "topicSlug": "Matthew and parallels in Luke and Mark",
     "date": "1979-07-08",
     "parts": "A/B",
-    "passage": "Mk 7:1-15",
+    "passage": "Mk 7:1-15 (Mt 15:1-11)",
     "title": "Man's way or God's way (2)",
     "titles": {
       "en": "Man's Way or God's Way (Part 2) — What Is a Church? Community Versus Meeting; Honoring Parents",
@@ -855,7 +855,7 @@
     "topicSlug": "Matthew and parallels in Luke and Mark",
     "date": "1980-07-06",
     "parts": "A/B",
-    "passage": "Mt 16:24-26",
+    "passage": "Mt 16:24-26 (Lk 14:25-33)",
     "title": "Love and hatred",
     "titles": {
       "en": "Love and Hatred — Human Love Versus Divine Love; the Satanic Nature of Possessive Love",
@@ -906,7 +906,7 @@
     "topicSlug": "Matthew and parallels in Luke and Mark",
     "date": "1980-08-10",
     "parts": "A/B",
-    "passage": "Mt 17:14-21",
+    "passage": "Mt 17:14-21 (Mk 9:14-29)",
     "title": "Faith that moves mountains",
     "titles": {
       "en": "Faith That Moves Mountains — The Mixture of Faith and Unbelief; Selfishness as the Root of Powerlessness",
@@ -1008,7 +1008,7 @@
     "topicSlug": "Matthew and parallels in Luke and Mark",
     "date": "1980-11-30",
     "parts": "A/B",
-    "passage": "Mt 19:13-15",
+    "passage": "Mt 19:13-15 (Mk 10:13-16)",
     "title": "Let the children come",
     "titles": {
       "en": "Let the Children Come — Infants and Total Helplessness; Original Sin Doctrine Refuted",
@@ -1042,7 +1042,7 @@
     "topicSlug": "Matthew and parallels in Luke and Mark",
     "date": "1980-12-14",
     "parts": "A/B",
-    "passage": "Mt 19:16-30",
+    "passage": "Mt 19:16-30 (Mk 10:21-31)",
     "title": "How hard shall they that have riches to enter into the Kingdom",
     "titles": {
       "en": "How Hard It Is for the Rich to Enter the Kingdom — Conditional Obedience; Eight Points on the Danger of Riches",
@@ -1059,7 +1059,7 @@
     "topicSlug": "Matthew and parallels in Luke and Mark",
     "date": "1980-12-21",
     "parts": "A/B",
-    "passage": "Mt 19:16-30",
+    "passage": "Mt 19:16-30 (Mk 10:21-31)",
     "title": "Go sell what you have and come follow me",
     "titles": {
       "en": "\"Go, Sell What You Have and Come, Follow Me\" — How to Deal with Riches; The Camel and the Church",
@@ -1076,7 +1076,7 @@
     "topicSlug": "Matthew and parallels in Luke and Mark",
     "date": "1980-12-25",
     "parts": "A/B",
-    "passage": "Mt 19:30",
+    "passage": "Mt 19:30 (Mk 10:31)",
     "title": "But many that are first will be last",
     "titles": {
       "en": "\"But Many That Are First Will Be Last\" — Competition, Revolution, and the One Solitary Life",
@@ -1093,7 +1093,7 @@
     "topicSlug": "Matthew and parallels in Luke and Mark",
     "date": "1981-01-11",
     "parts": "A/B",
-    "passage": "Mt 20:17-28",
+    "passage": "Mt 20:17-28 (Mk 10:32-45)",
     "title": "Whoever would be first among you must be your slave",
     "titles": {
       "en": "Whoever Would Be First Among You Must Be Your Slave — The Cup; James and John; The Narrow Road",
@@ -1127,7 +1127,7 @@
     "topicSlug": "Matthew and parallels in Luke and Mark",
     "date": "1981-02-01",
     "parts": "A/B",
-    "passage": "Mk 10:46-52",
+    "passage": "Mk 10:46-52 (Mt 20:29-34)",
     "title": "Your faith has made you well",
     "titles": {
       "en": "Your Faith Has Made You Well — Disciples' Unbelief; Bartimaeus; Guy Bevington's Broken Ribs",
@@ -1244,7 +1244,7 @@
     "id": "139",
     "topic": "Matthew and parallels in Luke and Mark",
     "topicSlug": "Matthew and parallels in Luke and Mark",
-    "date": "1981-05-13",
+    "date": "1981-05-03",
     "parts": "A/B",
     "passage": "Mt 23:27-33",
     "title": "But within you are full of hypocricy and iniquity",
@@ -1263,8 +1263,8 @@
     "topicSlug": "Matthew and parallels in Luke and Mark",
     "date": "1981-05-10",
     "parts": "A/B",
-    "passage": "Mt 23",
-    "title": "22.41-46 Christ as Lord the remedy for hypocricy",
+    "passage": "Mt 23:23 and Mt 22:41-46",
+    "title": "Christ as Lord the remedy for hypocricy",
     "titles": {
       "en": "Christ as Lord, the Remedy for Hypocrisy — ; 23 — Human Nature as Hypocrisy; The Pharisees' Self-Awareness; David's Lord",
       "zh-CN": "基督为主 — 假冒为善的解药 — ；23章 — 人性即假冒为善；法利赛人的自我认知；大卫的主",
@@ -1416,7 +1416,7 @@
     "topicSlug": "Matthew and parallels in Luke and Mark",
     "date": "1981-08-16",
     "parts": "A/B",
-    "passage": "Lk 21:25-27",
+    "passage": "Lk 21:25-27 (Mt 24:29-30)",
     "title": "Signs in the heavens",
     "titles": {
       "en": "Signs in the Heavens — / — Jupiter Effect; Perplexity and Fainting; Sign of the Son of Man",
@@ -4735,7 +4735,7 @@
     "topicSlug": "The Parables of Jesus",
     "date": "1980-10-12",
     "parts": "A/B",
-    "passage": "Mt 18:21-35",
+    "passage": "Mt 18:21-35 (Lk 17:3-4)",
     "title": "Forgiving others",
     "titles": {
       "en": "Forgiving Others — The Unforgiving Servant ( , )",
