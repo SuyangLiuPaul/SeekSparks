@@ -248,26 +248,35 @@ class OfflinePackService extends ChangeNotifier {
     return urls.toSet().toList();
   }
 
+  /// The editions the offline pack pre-fetches.
+  ///
+  /// EVERY ENTRY MUST BE A FILE THAT SHIPS, and until 2026-09-02 six of
+  /// them were not. `cuv`, `cuv-tr`, `cnv`, `cnv-tr`, `biblexg` and
+  /// `biblexg-tr` were removed from the catalog and from `pubspec.yaml`
+  /// when `cuvs-yhwh` and `biblexg-v2` superseded them, and stayed here.
+  ///
+  /// On web that is not a 404. `netlify.toml` redirects `/*` to
+  /// `/index.html` with status 200, so the pack fetched SIX COPIES OF
+  /// THE APP'S OWN HTML, cached them under Bible names, and reported
+  /// success — a reader who "downloaded for offline use" got six
+  /// index.html files and no warning. `offline_pack_urls_test.dart` now
+  /// checks every entry against the filesystem and against pubspec,
+  /// which is the check that would have caught this the day it started.
+  ///
+  /// `assets/nasb.json` is deliberately absent: it still ships, but it
+  /// is hidden from every surface a reader picks from, so pre-fetching
+  /// 7.2 MB of it would spend bandwidth on a Bible the app will not
+  /// open. `assets/leb.json` was absent for the same reason for a few
+  /// hours the same day and is back, because the LEB is on offer again.
+  /// (`assets/niv.json` went in 2026-05 with its picker entry.)
   static const List<String> _bibleUrls = [
     'assets/kjv.json',
+    'assets/kjvs.json',
     'assets/bsb.json',
-    // 'assets/leb.json' / 'assets/nasb.json' removed 2026-09-02. The
-    // assets still ship — this is a visibility change, not a removal —
-    // but both editions are hidden from every surface a reader picks
-    // from, so pre-caching them would spend a reader's bandwidth and
-    // storage on two Bibles the app will never open. `assets/bsb.json`
-    // takes their place: it is the English default now, and it was
-    // missing from this list entirely.
-    // 'assets/niv.json' removed 2026-05 — NIV asset bundle removed
-    // along with its picker entry (see bible_versions.dart).
-    'assets/cuv.json',
-    'assets/cuv-tr.json',
+    'assets/leb.json',
     'assets/cuvs-yhwh.json',
     'assets/cuvs-yhwh-tr.json',
-    'assets/cnv.json',
-    'assets/cnv-tr.json',
-    'assets/biblexg.json',
-    'assets/biblexg-tr.json',
+    'assets/cuvs-plus.json',
     'assets/biblexg-v2.json',
     'assets/biblexg-v2-tr.json',
   ];
