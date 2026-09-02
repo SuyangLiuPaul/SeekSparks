@@ -1269,6 +1269,17 @@ class _DetailPanel extends StatelessWidget {
             ' · ${figures.lifespan} ${_s('chronologyYears', 'years')}',
             style: TextStyle(fontSize: t.text, color: wb.mutedText),
           ),
+          // The verses this panel links are read out of the KJV among
+          // others, and for four of these men the KJV spells the name
+          // differently from the heading above. Saying so here is what
+          // keeps the reference chips below from looking like they
+          // belong to somebody else.
+          if (person.nameKjv.isNotEmpty)
+            Text(
+              _s('chronologyNameKjv', 'King James Version: {name}')
+                  .replaceAll('{name}', person.nameKjv),
+              style: TextStyle(fontSize: t.text, color: wb.mutedText),
+            ),
           const SizedBox(height: 12),
           // Joseph ends the chain, so these two figures do not exist for
           // him rather than being unknown. An empty row would claim the

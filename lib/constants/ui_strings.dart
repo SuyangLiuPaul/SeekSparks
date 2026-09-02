@@ -6411,6 +6411,19 @@ const uiStrings = {
     'zh-Hant': '年',
     'en': 'years',
   },
+  // The spelling this chart does not print. Four men here are named as
+  // the modern versions read them — Enosh, Kenan, Mahalalel, Shelah —
+  // and the Authorised Version, which this app also ships, reads Enos,
+  // Cainan, Mahalaleel and Salah at the very verses each row cites. The
+  // edition is NAMED rather than the form being offered as a bare
+  // alternative: a reader holding a KJV needs to know it is their
+  // Bible that spells him so, not that the app is unsure which is
+  // right.
+  'chronologyNameKjv': {
+    'zh-Hans': '英王钦定本作 {name}',
+    'zh-Hant': '英王欽定本作 {name}',
+    'en': 'King James Version: {name}',
+  },
   // The header carries the caveats that are about the chart; the ones
   // about a particular man are in his panel, and this line names him so
   // that a reader who has selected nobody still knows they exist.

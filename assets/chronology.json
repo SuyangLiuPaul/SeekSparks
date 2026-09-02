@@ -786,10 +786,11 @@
   {
    "id": "enos",
    "name": {
-    "en": "Enos",
+    "en": "Enosh",
     "zh-Hans": "以挪士",
     "zh-Hant": "以挪士"
    },
+   "nameKjv": "Enos",
    "line": "seth",
    "figures": {
     "mt": {
@@ -823,10 +824,11 @@
   {
    "id": "cainan",
    "name": {
-    "en": "Cainan",
+    "en": "Kenan",
     "zh-Hans": "该南",
     "zh-Hant": "該南"
    },
+   "nameKjv": "Cainan",
    "line": "seth",
    "figures": {
     "mt": {
@@ -860,10 +862,11 @@
   {
    "id": "mahalaleel",
    "name": {
-    "en": "Mahalaleel",
+    "en": "Mahalalel",
     "zh-Hans": "玛勒列",
     "zh-Hant": "瑪勒列"
    },
+   "nameKjv": "Mahalaleel",
    "line": "seth",
    "figures": {
     "mt": {
@@ -1180,10 +1183,11 @@
   {
    "id": "salah",
    "name": {
-    "en": "Salah",
+    "en": "Shelah",
     "zh-Hans": "沙拉",
     "zh-Hant": "沙拉"
    },
+   "nameKjv": "Salah",
    "line": "shem",
    "figures": {
     "mt": {

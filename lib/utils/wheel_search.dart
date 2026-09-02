@@ -73,6 +73,22 @@ enum WheelHitVia {
   /// carries that title.
   otherLocale,
 
+  /// In the same language, under a spelling the app does not display —
+  /// the Authorised Version's, which [WheelHit.matched] carries.
+  ///
+  /// FIVE RECORDS ANSWER TO ONE. The wheel shows a reader "Kenan",
+  /// because that is what the modern versions read and what every other
+  /// asset here already said; the KJV this same app ships reads
+  /// "Cainan" at Genesis 5:9, so that is the only spelling some readers
+  /// have ever seen and the one they will type. A search that answered
+  /// "nothing" would be reporting an absence about a record it draws.
+  ///
+  /// Its own tier rather than [otherLocale] because the claim is
+  /// different and the row has to be able to say which: not "we have
+  /// this under another language" but "this edition spells him that
+  /// way".
+  otherSpelling,
+
   /// In the description or note.
   description,
 
@@ -485,11 +501,17 @@ WheelSearchResult searchWheel({
   /// [people] is empty for every kind but an event — a band, a nation
   /// of Genesis 10 and a power carry no person links — so the tier
   /// simply never fires for them rather than needing a special case.
+  /// [aliases] are spellings the record answers to and never shows —
+  /// today, the Authorised Version's forms of the four antediluvian
+  /// names the app displays as most modern versions do. Ranked below
+  /// every displayed name and above the prose, because it IS the name,
+  /// just not the one on screen.
   (int, WheelHitVia, String)? classify(
     Map<String, String> names,
     Map<String, String> prose,
     List<String> refs, {
     List<WheelPersonLink> people = const [],
+    List<String> aliases = const [],
   }) {
     final shown = names[locale] ?? names['en'] ?? '';
     final foldedShown = foldForWheelSearch(shown);
@@ -499,6 +521,11 @@ WheelSearchResult searchWheel({
       if (entry.key == locale) continue;
       if (wheelMatches(foldForWheelSearch(entry.value), q)) {
         return (12, WheelHitVia.otherLocale, entry.value);
+      }
+    }
+    for (final a in aliases) {
+      if (a.isNotEmpty && wheelMatches(foldForWheelSearch(a), q)) {
+        return (12, WheelHitVia.otherSpelling, a);
       }
     }
     for (final text in prose.values) {
@@ -579,7 +606,8 @@ WheelSearchResult searchWheel({
     ));
   }
   for (final n in data.nations) {
-    final c = classify(n.names, n.notes, n.ref.isEmpty ? const [] : [n.ref]);
+    final c = classify(n.names, n.notes, n.ref.isEmpty ? const [] : [n.ref],
+        aliases: [n.nameKjv]);
     if (c == null) continue;
     hits.add(WheelHit(
       kind: WheelHitKind.nation,
@@ -600,7 +628,8 @@ WheelSearchResult searchWheel({
   // verse of Genesis 5 reaches the man it numbers.
   for (final l in lives) {
     if (seen.contains('patriarch:${l.man.id}')) continue;
-    final c = classify(l.man.names, const {}, l.refs);
+    final c =
+        classify(l.man.names, const {}, l.refs, aliases: [l.man.nameKjv]);
     if (c == null) continue;
     take('patriarch:${l.man.id}');
     hits.add(WheelHit(

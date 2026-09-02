@@ -98,6 +98,7 @@ class WheelNation {
     required this.ref,
     required this.names,
     required this.notes,
+    this.nameKjv = '',
   });
 
   final String id;
@@ -111,6 +112,20 @@ class WheelNation {
   final Map<String, String> names;
   final Map<String, String> notes;
 
+  /// The Authorised Version's spelling, when it differs from the
+  /// English name; empty when the two agree.
+  ///
+  /// One band of the 82 has one, and it is the sharpest case in the
+  /// asset because this table exists to cite verses. The band's own
+  /// [ref] is Genesis 10:24, which the KJV reads "Salah" and the BSB,
+  /// NASB and LEB all read "Shelah". The band displays the modern form,
+  /// because that is what a reader of four of the five English editions
+  /// this app ships will see, and carries the KJV's here so that the
+  /// name it does not print is still a name it can be asked for. What
+  /// the verse actually reads in which edition is spelled out in
+  /// [notes] rather than left for the reader to reconcile.
+  final String nameKjv;
+
   String nameFor(String locale) => names[locale] ?? names['en'] ?? id;
   String noteFor(String locale) => notes[locale] ?? notes['en'] ?? '';
 
@@ -122,6 +137,7 @@ class WheelNation {
         stream: (j['stream'] as String?) ?? 'world',
         ref: (j['ref'] as String?) ?? '',
         names: _localised(j['name']),
+        nameKjv: (j['nameKjv'] as String?) ?? '',
         notes: _localised(j['note']),
       );
 }
@@ -217,7 +233,18 @@ class WheelPower {
 /// links are already resolved or already dropped, and both the chip
 /// and the haystack read the same resolved list.
 class WheelPersonLink {
-  const WheelPersonLink({required this.id, required this.names});
+  const WheelPersonLink({
+    required this.id,
+    required this.names,
+    this.nameKjv = '',
+  });
+
+  /// The Authorised Version's spelling of this person, when it differs
+  /// from the English one; empty otherwise. Carried for the same reason
+  /// the three scripts are: the chip prints one spelling and the reader
+  /// may be typing another, and this app ships the edition that uses
+  /// the other one.
+  final String nameKjv;
 
   /// `family_tree.json` id. Held so a tap can open the real record;
   /// never shown.
@@ -229,8 +256,11 @@ class WheelPersonLink {
   String nameFor(String locale) => names[locale] ?? names['en'] ?? id;
 
   /// Every script this person is written in, for the search haystack.
-  /// The chip renders one and the reader may be typing another.
-  Iterable<String> get allNames => names.values;
+  /// The chip renders one and the reader may be typing another — and
+  /// the one the reader has in front of them may be the KJV's, which is
+  /// never displayed here and is still searchable.
+  Iterable<String> get allNames =>
+      [...names.values, if (nameKjv.isNotEmpty) nameKjv];
 }
 
 /// One dated event, drawn on the band of the stream it belongs to.
@@ -579,7 +609,7 @@ List<WheelHistoryEvent> bibleNarrativeEvents(
             people: [
               for (final id in e.personIds)
                 if (byId[id] != null)
-                  WheelPersonLink(id: id, names: {
+                  WheelPersonLink(id: id, nameKjv: byId[id]!.nameKjv, names: {
                     'en': byId[id]!.name,
                     if ((byId[id]!.nameZhHans ?? '').isNotEmpty)
                       'zh-Hans': byId[id]!.nameZhHans!,

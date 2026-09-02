@@ -249,6 +249,13 @@ class _FamilyTreePageState extends State<_FamilyTreeBody> {
         p.name.toLowerCase(),
         (p.nameZhHans ?? '').toLowerCase(),
         (p.nameZhHant ?? '').toLowerCase(),
+        // The spelling this page does not print. Four of the
+        // antediluvian line are shown as the modern versions read them
+        // — Enosh, Kenan, Mahalalel, Shelah — and the KJV this app also
+        // ships reads Enos, Cainan, Mahalaleel and Salah. Without this
+        // line a reader typing the only spelling their Bible gives them
+        // was told the tree had never heard of the man.
+        p.nameKjv.toLowerCase(),
       ];
       final role = (p.role ?? '').toLowerCase();
       final summary = [

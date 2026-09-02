@@ -66,7 +66,9 @@ void main() {
     /// drew four of them (Adam in Eden and the Fall, Seth's birth,
     /// Enoch's walk, Noah's flood). Six were nowhere on it in any form,
     /// and Shelah stood on it only as an undated name in the table of
-    /// nations, under the Genesis 10:24 spelling Salah.
+    /// nations, under the KJV's Genesis 10:24 spelling Salah — the band
+    /// reads Shelah now and carries the KJV's form as `nameKjv`, so the
+    /// spoke and the band no longer disagree on screen.
     ///
     /// Asserted HERE rather than against the asset, because the asset
     /// is not what the reader sees: `bibleNarrativeEvents` is a

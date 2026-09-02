@@ -562,12 +562,40 @@ LINE.update({p[0]: "abraham" for p in ABRAHAMIC})
 LINE["moses"] = "levi"
 LINE["aaron"] = "levi"
 
+# THE SPELLING THIS CHART PRINTS, and why it is not the one the ids use.
+#
+# The wheel drew a birth spoke reading "Birth of Kenan" — that string
+# comes from `bible_timeline.json`, which spells the line as modern
+# versions do — beside a lifespan arc reading "Cainan", which came from
+# here. One man, two spellings, touching on screen. The owner's ruling
+# was the modern form: 现代的这样看得懂.
+#
+# So `name.en` is the modern spelling and `nameKjv` carries the
+# Authorised Version's, for the four men where the two differ. NOT a
+# note and NOT dropped: this app ships the KJV and `kjvs.json`, and a
+# reader looking at Genesis 5:9 sees "Cainan" and will type "Cainan".
+# The field is searched wherever a name is searched, and printed under
+# the name on every sheet, so the older spelling stays findable and the
+# reader can see the two forms are one man rather than guess it.
+#
+# Every value is read off the text, never invented: `kjv.json` reads
+# Enos / Cainan / Mahalaleel / Salah at Genesis 5:9-15 and 10:24, and
+# `bsb.json`, `nasb.json` and `leb.json` read Enosh / Kenan / Mahalalel
+# / Shelah at those same verses. Pinned by
+# `test/patriarch_spelling_test.dart`.
+KJV_NAMES = {
+    "enos": "Enos",
+    "cainan": "Cainan",
+    "mahalaleel": "Mahalaleel",
+    "salah": "Salah",
+}
+
 NAMES = {
     "adam":       ("Adam", "亚当", "亞當"),
     "seth":       ("Seth", "塞特", "塞特"),
-    "enos":       ("Enos", "以挪士", "以挪士"),
-    "cainan":     ("Cainan", "该南", "該南"),
-    "mahalaleel": ("Mahalaleel", "玛勒列", "瑪勒列"),
+    "enos":       ("Enosh", "以挪士", "以挪士"),
+    "cainan":     ("Kenan", "该南", "該南"),
+    "mahalaleel": ("Mahalalel", "玛勒列", "瑪勒列"),
     "jared":      ("Jared", "雅列", "雅列"),
     "enoch":      ("Enoch", "以诺", "以諾"),
     "methuselah": ("Methuselah", "玛土撒拉", "瑪土撒拉"),
@@ -576,7 +604,7 @@ NAMES = {
     "shem":       ("Shem", "闪", "閃"),
     "arphaxad":   ("Arphaxad", "亚法撒", "亞法撒"),
     "kainan2":    ("Kainan", "该南", "該南"),
-    "salah":      ("Salah", "沙拉", "沙拉"),
+    "salah":      ("Shelah", "沙拉", "沙拉"),
     "eber":       ("Eber", "希伯", "希伯"),
     "peleg":      ("Peleg", "法勒", "法勒"),
     "reu":        ("Reu", "拉吴", "拉吳"),
@@ -1230,12 +1258,14 @@ def main():
     # rendered the string, so nothing ever read it. Counting the kinds
     # separately is what lets the sentence be checked.
     #
-    # AND THE JOIN KEY HAD TO BE PROVED BEFORE ANY OF IT COUNTED. This
-    # chart names men as the Authorised Version spells them (Enos,
-    # Cainan, Mahalaleel, Salah) and family_tree.json names them as most
-    # modern versions do (Enosh, Kenan, Mahalalel, Shelah), so five ids
-    # missed the lookup and were dropped in silence — not compared, not
-    # reported, and not able to fail the build no matter what they said.
+    # AND THE JOIN KEY HAD TO BE PROVED BEFORE ANY OF IT COUNTED. The
+    # IDS here are the Authorised Version's spellings (enos, cainan,
+    # mahalaleel, salah) and family_tree.json's are the modern ones
+    # (enosh, kenan, mahalalel, shelah), so five ids missed the lookup
+    # and were dropped in silence — not compared, not reported, and not
+    # able to fail the build no matter what they said. The DISPLAYED
+    # names now agree across both assets; the ids still do not, and this
+    # alias table is the whole of what holds them together.
     # The sentence's counts were true and its last clause was false for
     # those five. Every one of them agrees, so the witness only ever got
     # weaker, but a witness that skips a fifth of its rows without
@@ -1822,6 +1852,11 @@ def main():
             "line": LINE.get(pid, "seth"),
             "figures": {},
         }
+        if pid in KJV_NAMES:
+            # After "name", before "line" — the order the asset is in.
+            entry = {"id": entry["id"], "name": entry["name"],
+                     "nameKjv": KJV_NAMES[pid], "line": entry["line"],
+                     "figures": entry["figures"]}
         for tid, rows in (("mt", mt_rows), ("lxx", lxx_rows)):
             if pid in rows:
                 entry["figures"][tid] = rows[pid]

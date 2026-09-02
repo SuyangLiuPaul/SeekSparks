@@ -94,7 +94,8 @@ void main() {
 
     // Kainan stands in the Septuagint's Genesis 11 and not the Hebrew's,
     // so he is the visible tell that the switch changed the source and
-    // not just the scale. He shares a name with Genesis 5's Cainan —
+    // not just the scale. He shares a name with Genesis 5's Kenan, whom
+    // the KJV spells Cainan —
     // 该南 in the CUV for both, and the very resemblance that makes his
     // presence in Genesis 11 a textual crux — so the count goes from one
     // to two rather than from none to one. The two are told apart by the

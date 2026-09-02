@@ -17,6 +17,17 @@ class BiblicalPerson {
   final String? nameZhHans;
   final String? nameZhHant;
 
+  /// The Authorised Version's spelling, when it differs from [name];
+  /// empty for the 273 people where the two agree.
+  ///
+  /// Four of the antediluvian line have one — Enosh, Kenan, Mahalalel
+  /// and Shelah, whom the KJV calls Enos, Cainan, Mahalaleel and Salah.
+  /// The tree has always printed the modern form and, until this field
+  /// existed, a reader of the KJV this app also ships could type the
+  /// only spelling they had ever seen and be told the tree had never
+  /// heard of the man. It is searched, not displayed as a second name.
+  final String nameKjv;
+
   /// Optional parent ids. `null` means "not in dataset" rather than
   /// "no parent" (Adam genuinely has no father; Eve in the dataset
   /// also has none — both render with no parent row).
@@ -108,6 +119,7 @@ class BiblicalPerson {
     required this.name,
     this.nameZhHans,
     this.nameZhHant,
+    this.nameKjv = '',
     this.fatherId,
     this.motherId,
     this.spouseIds = const [],
@@ -226,6 +238,7 @@ class BiblicalPerson {
       name: j['name'] as String,
       nameZhHans: j['nameZhHans'] as String?,
       nameZhHant: j['nameZhHant'] as String?,
+      nameKjv: (j['nameKjv'] as String?) ?? '',
       fatherId: j['fatherId'] as String?,
       motherId: j['motherId'] as String?,
       spouseIds: (j['spouseIds'] as List?)?.cast<String>() ?? const [],

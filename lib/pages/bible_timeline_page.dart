@@ -255,6 +255,10 @@ class _BibleTimelinePageState extends State<BibleTimelinePage> {
                       p.name,
                       p.nameZhHans,
                       p.nameZhHant,
+                      // And the KJV's spelling, for the same reason one
+                      // step further: the chip renders "Kenan" and the
+                      // reader's Bible reads "Cainan".
+                      p.nameKjv,
                     ],
                   ].join(' ').toLowerCase();
                   return hay.contains(q);

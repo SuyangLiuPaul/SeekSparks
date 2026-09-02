@@ -74,6 +74,7 @@ class Patriarch {
     required this.line,
     required this.names,
     required this.figures,
+    this.nameKjv = '',
   });
 
   final String id;
@@ -95,12 +96,40 @@ class Patriarch {
   /// itself worth showing.
   final Map<String, ChronologyFigures> figures;
 
+  /// The Authorised Version's spelling, when it differs from the
+  /// English name above; empty when the two agree.
+  ///
+  /// Four men have one: Enosh, Kenan, Mahalalel and Shelah, whom the
+  /// KJV calls Enos, Cainan, Mahalaleel and Salah. The chart used to
+  /// PRINT those four forms while `bible_timeline.json` printed the
+  /// modern ones, so the wheel drew a spoke reading "Birth of Kenan"
+  /// beside an arc reading "Cainan" — one man, two spellings, touching.
+  /// The displayed name is now the modern one everywhere.
+  ///
+  /// This field is what stops that being a regression. The app ships
+  /// the KJV and `kjvs.json`; a reader looking at Genesis 5:9 sees
+  /// "Cainan" and types "Cainan", so the older spelling is searched
+  /// wherever a name is searched and printed under the name on the
+  /// sheet. Both forms are read off the shipped text and neither is
+  /// invented — see `test/patriarch_spelling_test.dart`.
+  ///
+  /// Chinese needs no equivalent: 以挪士 / 该南 / 玛勒列 / 沙拉 are what
+  /// the CUV reads and what every asset here already carried.
+  final String nameKjv;
+
   String nameFor(String locale) => names[locale] ?? names['en'] ?? id;
+
+  /// Every spelling this man answers to, in every script. Used by the
+  /// wheel's search so that a name the app does not display is still a
+  /// name the app can be asked for.
+  Iterable<String> get allNames =>
+      [...names.values, if (nameKjv.isNotEmpty) nameKjv];
 
   static Patriarch fromJson(Map<String, dynamic> j) => Patriarch(
         id: j['id'] as String,
         line: (j['line'] as String?) ?? 'seth',
         names: _localised(j['name']),
+        nameKjv: (j['nameKjv'] as String?) ?? '',
         figures: {
           for (final e in ((j['figures'] as Map?) ?? const {}).entries)
             if (e.value is Map)

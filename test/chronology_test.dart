@@ -473,12 +473,14 @@ void main() {
         expect(data.provenance.sumsChecked, 24);
       });
 
-      // THE JOIN KEY IS THE FIRST THING TO CHECK, and it was wrong. This
-      // chart spells men as the Authorised Version does (Enos, Cainan,
-      // Mahalaleel, Salah) and `family_tree.json` as modern versions do
-      // (Enosh, Kenan, Mahalalel, Shelah), plus a Nahor that has to be
-      // told from Abram's brother — so five rows missed the lookup and
-      // were dropped without a word. They all agreed, so the witness was
+      // THE JOIN KEY IS THE FIRST THING TO CHECK, and it was wrong. The
+      // IDS on this chart are the Authorised Version's spellings (enos,
+      // cainan, mahalaleel, salah) and `family_tree.json`'s are the
+      // modern ones (enosh, kenan, mahalalel, shelah), plus a Nahor that
+      // has to be told from Abram's brother — so five rows missed the
+      // lookup and were dropped without a word. The DISPLAYED names have
+      // agreed since the spellings were unified; the ids have not, and
+      // this alias table is still the whole of what joins them. They all agreed, so the witness was
       // only weaker than advertised, but they could not have failed the
       // build if they had disagreed, which is what the sentence promises.
       test('every man on the chart is joined to the second witness', () {

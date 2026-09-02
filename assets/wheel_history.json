@@ -1319,9 +1319,15 @@
    "approximate": false,
    "basis": "scripture",
    "name": {
-    "en": "Salah",
+    "en": "Shelah",
     "zh-Hans": "沙拉",
     "zh-Hant": "沙拉"
+   },
+   "nameKjv": "Salah",
+   "note": {
+    "en": "Genesis 10:24, the verse this band cites, reads 'Salah' in the King James Version; the Berean Standard Bible, the New American Standard Bible and the Lexham English Bible all read 'Shelah' at the same verse.",
+    "zh-Hans": "本条所据的创世记10:24，英王钦定本作『Salah』；同一节经文在标准译本、新美国标准本、莱克翰英文圣经中均作『Shelah』。",
+    "zh-Hant": "本條所據的創世記10:24，英王欽定本作『Salah』；同一節經文在標準譯本、新美國標準本、萊克翰英文聖經中均作『Shelah』。"
    }
   },
   {

@@ -472,6 +472,18 @@ const Map<String, Map<String, String>> wheelStrings = {
     'en': 'Includes the {n} events nearest that year; each row shows its own.',
   },
   'wheelFindNear': {'zh-Hans': '年份相近', 'zh-Hant': '年份相近', 'en': 'nearby'},
+  // The spelling the app does NOT print, named as what it is rather
+  // than offered as a bare second name. Four men on this wheel are
+  // drawn under the form the modern versions read and the Authorised
+  // Version — which this app also ships, and which is the only English
+  // text some readers have in front of them — spells them otherwise.
+  // Printing the edition's name is the difference between "this is also
+  // him" and "your Bible calls him this".
+  'wheelNameKjv': {
+    'zh-Hans': '英王钦定本作 {name}',
+    'zh-Hant': '英王欽定本作 {name}',
+    'en': 'King James Version: {name}',
+  },
   'wheelFindSpan': {'zh-Hans': '横跨该年', 'zh-Hant': '橫跨該年', 'en': 'spans it'},
   'wheelFindInDesc': {
     'zh-Hans': '见于说明',
@@ -1653,6 +1665,9 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
   /// Why this row is in the list, when the title alone does not show it.
   String _hitVia(WheelHit hit, String locale) => switch (hit.via) {
         WheelHitVia.otherLocale => hit.matched,
+        WheelHitVia.otherSpelling => _fill(
+            'wheelNameKjv', 'King James Version: {name}', locale,
+            {'name': hit.matched}),
         WheelHitVia.description => _s('wheelFindInDesc', 'in the description',
             locale),
         WheelHitVia.person => _s('wheelFindPerson', 'names {name}', locale)
@@ -1956,10 +1971,13 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
   ///
   /// NINETEEN RECORDS QUALIFY AND EIGHTEEN ARE FOUND BY NAME, so this
   /// almost never runs. Ten stand on the wheel as nations of Genesis 10
-  /// and 11 (Noah, Shem, Arphaxad, Shelah — whom the table of nations
-  /// spells Salah — Eber, Peleg, Reu, Serug, Nahor and Terah), the
-  /// whole Genesis 5 line stands on it as birth events, and since the
-  /// lifespans went back on, every one of them is also an arc.
+  /// and 11 (Noah, Shem, Arphaxad, Shelah, Eber, Peleg, Reu, Serug,
+  /// Nahor and Terah), the whole Genesis 5 line stands on it as birth
+  /// events, and since the lifespans went back on, every one of them is
+  /// also an arc. Shelah used to be the exception — the table of
+  /// nations spelled him Salah while everything else spelled him
+  /// Shelah — and is not any more: all five surfaces agree on the
+  /// modern form and the KJV's is carried as `nameKjv`.
   ///
   /// SO THIS ANSWERS FOR ONE MAN, and what it says about him has
   /// changed. It used to say "not on this wheel: the text gives a
@@ -1975,9 +1993,10 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
   /// one to make about a man the text gives no number for.
   ///
   /// Matching is equality on the folded name, in each of the three
-  /// scripts, not a substring: this replaces a "found nothing" with a
-  /// definite claim about one man, and a loose match would make that
-  /// claim about the wrong one.
+  /// scripts and in the KJV's spelling where the record carries one,
+  /// not a substring: this replaces a "found nothing" with a definite
+  /// claim about one man, and a loose match would make that claim about
+  /// the wrong one.
   ///
   /// The lookup is synchronous for the same reason `_showPerson`'s is —
   /// [WheelHistoryService.load] awaits the family tree before it
@@ -1990,7 +2009,12 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
       if (p.lifespan == null || p.birthYear == null || p.deathYear == null) {
         continue;
       }
-      for (final n in [p.name, p.nameZhHans ?? '', p.nameZhHant ?? '']) {
+      for (final n in [
+        p.name,
+        p.nameZhHans ?? '',
+        p.nameZhHant ?? '',
+        p.nameKjv,
+      ]) {
         if (n.isNotEmpty && foldForWheelSearch(n) == q) return p;
       }
     }
@@ -2015,10 +2039,10 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
   /// app holds a record for, which is the false absence
   /// [_amPersonFor] was built to stop, half-built.
   ///
-  /// Equality on the folded name in each of the three scripts, for the
-  /// same reason: this replaces "found nothing" with a definite claim
-  /// about one person, and a loose match would make the claim about the
-  /// wrong one.
+  /// Equality on the folded name in each of the three scripts and in
+  /// the KJV's spelling, for the same reason: this replaces "found
+  /// nothing" with a definite claim about one person, and a loose match
+  /// would make the claim about the wrong one.
   BiblicalPerson? _amPersonWithoutFigures(String query) {
     final q = foldForWheelSearch(query);
     if (q.isEmpty) return null;
@@ -2027,7 +2051,12 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
       if (p.lifespan != null && p.birthYear != null && p.deathYear != null) {
         continue;
       }
-      for (final n in [p.name, p.nameZhHans ?? '', p.nameZhHant ?? '']) {
+      for (final n in [
+        p.name,
+        p.nameZhHans ?? '',
+        p.nameZhHant ?? '',
+        p.nameKjv,
+      ]) {
         if (n.isNotEmpty && foldForWheelSearch(n) == q) return p;
       }
     }
@@ -2752,6 +2781,19 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
               '${yearLabel(creation + mt.deathAm, locale)} · '
               '${_fill('wheelLifeYears', '{n} years', locale, {'n': mt.lifespan})}',
               style: TextStyle(color: wb.mutedText, fontSize: t.scaled(12)),
+            ),
+          ],
+          // The other spelling, when there is one. The reader may have
+          // arrived here from the KJV's Genesis 5 and has to be told in
+          // as many words that the arc named "Kenan" is the Cainan they
+          // were reading about — the app cannot leave them to infer it
+          // from four letters in common.
+          if (man.nameKjv.isNotEmpty) ...[
+            SizedBox(height: t.scaled(2)),
+            Text(
+              _fill('wheelNameKjv', 'King James Version: {name}', locale,
+                  {'name': man.nameKjv}),
+              style: TextStyle(color: wb.mutedText, fontSize: t.scaled(11)),
             ),
           ],
           SizedBox(height: t.scaled(8)),

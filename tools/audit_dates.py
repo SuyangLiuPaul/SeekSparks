@@ -994,12 +994,11 @@ BIRTH_EVENTS = [
         'titleZhHant': '沙拉出生',
         'descEn': "Arphaxad's son Shelah is born, the first generation "
                   'after the flood to be born rather than saved from '
-                  'it; the wheel carries him among the nations as '
-                  'Salah.',
+                  'it; the King James Version spells his name Salah.',
         'descZhHans': '亚法撒之子沙拉出生，是洪水之后头一代生于水后、而非'
-                      '得救于水中的人；轮盘的列国表中作「沙拉」。',
+                      '得救于水中的人；英王钦定本作「Salah」。',
         'descZhHant': '亞法撒之子沙拉出生，是洪水之後頭一代生於水後、而非'
-                      '得救於水中的人；輪盤的列國表中作「沙拉」。',
+                      '得救於水中的人；英王欽定本作「Salah」。',
         'refs': ['Genesis 10:24', 'Genesis 11:12-15'],
     },
 ]

@@ -228,13 +228,52 @@ void main() {
     /// sampled: all of them cite Genesis 10 or 11, and every one of them is
     /// a name the passage either says or does not say.
 
-    /// The wheel's English and the KJV's spelling do not always agree
+    /// The wheel's English and an edition's spelling do not always agree
     /// (Kittim/Chittim), so the comparison is on a prefix of the letters.
     String letters(String s) => s.toLowerCase().replaceAll(RegExp(r'[^a-z]'), '');
 
-    /// The verses a reference covers, joined. A chapter-only reference
-    /// ("Genesis 11") is read as the whole chapter.
-    String passageFor(String ref) {
+    /// EVERY ENGLISH BIBLE THE APP SHIPS, not just the KJV — and the
+    /// change is the whole point of this block rather than a widening
+    /// of convenience.
+    ///
+    /// The band at Genesis 10:24 used to display "Salah" because that
+    /// is what the KJV reads there, while `family_tree.json`,
+    /// `bible_timeline.json` and the birth spoke the wheel draws all
+    /// said "Shelah". The owner saw a spoke reading "Birth of Kenan"
+    /// beside an arc reading "Cainan" and ruled for the modern
+    /// spellings, so the band reads "Shelah" now.
+    ///
+    /// Witnessing that against the KJV alone would fail it, and the
+    /// failure would be an artefact of asking one edition. The app
+    /// ships five English Bibles and the reader can open any of them:
+    /// Genesis 10:24 reads "Shelah" in the BSB, the NASB and the LEB,
+    /// and "Salah" in the KJV and `kjvs.json`. So the standard is the
+    /// one `family_tree_names_test.dart` already holds the tree to —
+    /// SOME shipped edition of the verse the record itself cites must
+    /// contain the name printed over it. No aliases, no near misses,
+    /// and no second chance from a verse the record does not point at.
+    const editions = <String>['kjv', 'bsb', 'nasb', 'leb', 'kjvs'];
+    final byEdition = <String, Map<String, String>>{};
+    for (final ed in editions) {
+      final rows = <String, String>{};
+      for (final r
+          in json.decode(File('assets/$ed.json').readAsStringSync()) as List) {
+        final row = r as Map<String, dynamic>;
+        // Psalm superscriptions carry `title` where a verse number
+        // belongs; they are not verses and nothing here cites one.
+        final v = int.tryParse('${row['verse']}');
+        if (v == null) continue;
+        rows['${row['book']}|${int.parse('${row['chapter']}')}|$v'] =
+            row['text'] as String;
+      }
+      byEdition[ed] = rows;
+    }
+
+    /// The verses a reference covers, joined, in one edition. A
+    /// chapter-only reference ("Genesis 11") is read as the whole
+    /// chapter. Chapter LENGTHS stay the KJV's, because they decide
+    /// which verses to read, not what those verses say.
+    String passageIn(String ref, String edition) {
       final m = refPattern.firstMatch(ref.trim());
       if (m == null) return '';
       final book = m.group(1)!.replaceAll(RegExp(r'\s+'), ' ').trim();
@@ -247,27 +286,43 @@ void main() {
           : (m.group(4) == null ? from : int.parse(m.group(4)!));
       final buffer = StringBuffer();
       for (var v = from; v <= to; v++) {
-        buffer.write(verseText['$book|$ch|$v'] ?? '');
+        buffer.write(byEdition[edition]!['$book|$ch|$v'] ?? '');
         buffer.write(' ');
       }
       return buffer.toString();
     }
 
-    bool named(String name, String ref) {
+    bool namedIn(String name, String ref, String edition) {
       final stem = letters(name);
       if (stem.length < 3) return true; // too short to assert anything about
-      return letters(passageFor(ref)).contains(
+      return letters(passageIn(ref, edition)).contains(
           stem.length > 5 ? stem.substring(0, 5) : stem);
+    }
+
+    /// Which shipped edition witnesses this name at this reference, or
+    /// null when none does.
+    String? witnessFor(String name, String ref) {
+      for (final ed in editions) {
+        if (namedIn(name, ref, ed)) return ed;
+      }
+      return null;
     }
 
     test('the matcher rejects a reference that merely resolves', () {
       // Proof that the assertion below is capable of failing. Both of these
-      // are real, resolvable references; neither passage names the nation.
-      // They are the exact shape of the defect this group exists to catch.
-      expect(named('Magog', 'John 11:3'), isFalse);
-      expect(named('Meshech', 'Genesis 5:32'), isFalse);
+      // are real, resolvable references; neither passage names the nation
+      // in ANY edition the app ships. They are the exact shape of the
+      // defect this group exists to catch.
+      expect(witnessFor('Magog', 'John 11:3'), isNull);
+      expect(witnessFor('Meshech', 'Genesis 5:32'), isNull);
       // ...and that it still accepts the true one.
-      expect(named('Meshech', 'Genesis 10:2'), isTrue);
+      expect(witnessFor('Meshech', 'Genesis 10:2'), isNotNull);
+      // The editions really are different texts, which is what makes
+      // the widening above mean anything. If this ever passes for the
+      // KJV the fixture has silently loaded the same file five times.
+      expect(namedIn('Shelah', 'Genesis 10:24', 'kjv'), isFalse);
+      expect(namedIn('Shelah', 'Genesis 10:24', 'bsb'), isTrue);
+      expect(namedIn('Salah', 'Genesis 10:24', 'kjv'), isTrue);
     });
 
     test('all 82 nations are named where they point', () {
@@ -280,11 +335,44 @@ void main() {
           wrong.add('${n['id']}: no reference at all');
           continue;
         }
-        if (!named(name, ref)) {
-          wrong.add('${n['id']}: "$name" is not named in $ref');
+        if (witnessFor(name, ref) == null) {
+          wrong.add('${n['id']}: "$name" is named in $ref by no edition '
+              'this app ships');
         }
       }
       expect(wrong, isEmpty);
+    });
+
+    /// THE BRIDGE BACK TO THE KJV, and the reason it is an assertion
+    /// rather than a courtesy.
+    ///
+    /// A band the KJV does not witness is a band a KJV reader cannot
+    /// reconcile: they are looking at Genesis 10:24, it says "Salah",
+    /// and the wheel says "Shelah". `nameKjv` is what closes that — it
+    /// is printed under the name and searched wherever a name is
+    /// searched, so the older spelling still finds the man. Requiring
+    /// it exactly where the KJV disagrees means the bridge cannot be
+    /// forgotten the next time a name is modernised.
+    test('every name the KJV spells differently carries its KJV form', () {
+      final missing = <String>[];
+      final wrong = <String>[];
+      for (final n in nations) {
+        final name = (n['name'] as Map)['en'] as String;
+        final ref = (n['ref'] as String?)?.trim() ?? '';
+        final kjvName = (n['nameKjv'] as String?) ?? '';
+        if (ref.isEmpty) continue;
+        if (!namedIn(name, ref, 'kjv') && kjvName.isEmpty) {
+          missing.add('${n['id']}: "$name" is not in the KJV at $ref and the '
+              'record carries no nameKjv, so a reader of the KJV has no way '
+              'back to him');
+        }
+        if (kjvName.isNotEmpty && !namedIn(kjvName, ref, 'kjv')) {
+          wrong.add('${n['id']}: nameKjv "$kjvName" is not what the KJV reads '
+              'at $ref');
+        }
+      }
+      expect(missing, isEmpty, reason: missing.join('\n'));
+      expect(wrong, isEmpty, reason: wrong.join('\n'));
     });
   });
 

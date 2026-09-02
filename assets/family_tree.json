@@ -208,6 +208,7 @@
     {
       "id": "enosh",
       "name": "Enosh",
+      "nameKjv": "Enos",
       "nameZhHans": "以挪士",
       "nameZhHant": "以挪士",
       "fatherId": "seth",
@@ -241,6 +242,7 @@
     {
       "id": "kenan",
       "name": "Kenan",
+      "nameKjv": "Cainan",
       "nameZhHans": "该南",
       "nameZhHant": "該南",
       "fatherId": "enosh",
@@ -274,6 +276,7 @@
     {
       "id": "mahalalel",
       "name": "Mahalalel",
+      "nameKjv": "Mahalaleel",
       "nameZhHans": "玛勒列",
       "nameZhHant": "瑪勒列",
       "fatherId": "kenan",
@@ -7122,6 +7125,7 @@
     {
       "id": "shelah",
       "name": "Shelah",
+      "nameKjv": "Salah",
       "nameZhHans": "沙拉",
       "nameZhHant": "沙拉",
       "fatherId": "arphaxad",
