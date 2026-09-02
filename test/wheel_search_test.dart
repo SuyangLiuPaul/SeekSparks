@@ -672,6 +672,7 @@ void main() {
             streams: const [],
             nations: ns,
             powers: const [],
+            ministries: const [],
             events: const [],
             meta: WheelHistoryMeta.empty,
           );

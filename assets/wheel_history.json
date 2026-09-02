@@ -3005,6 +3005,1015 @@
    }
   }
  ],
+ "ministries": [
+  {
+   "id": "isaiah_prophet",
+   "start": -792,
+   "end": -687,
+   "region": "levant",
+   "stream": "scripture",
+   "approximate": true,
+   "basis": "scripture+thiele",
+   "refs": [
+    "Isaiah 1:1",
+    "Isaiah 6:1"
+   ],
+   "name": {
+    "en": "Isaiah",
+    "zh-Hans": "以赛亚",
+    "zh-Hant": "以賽亞"
+   },
+   "note": {
+    "en": "Isaiah 1:1 names four reigns of Judah, so the span is the union of them as hebrew_kings.json gives them (Uzziah's coregency start -792 to Hezekiah's last year -687); the tightest window the verse actually requires is -740 to -716, and Isaiah 6:1 fixes one vision in Uzziah's death year, -740.",
+    "zh-Hans": "以赛亚书 1:1 列出犹大四王，故此段取 hebrew_kings.json 中四段王年的并集（自乌西雅摄政起始的前792年，至希西家末年的前687年）；该节实际要求的最窄区间是前740至前716年，而以赛亚书 6:1 把一次异象定在乌西雅崩的那年，即前740年。",
+    "zh-Hant": "以賽亞書 1:1 列出猶大四王，故此段取 hebrew_kings.json 中四段王年的併集（自烏西雅攝政起始的前792年，至希西家末年的前687年）；該節實際要求的最窄區間是前740至前716年，而以賽亞書 6:1 把一次異象定在烏西雅崩的那年，即前740年。"
+   },
+   "anchorKings": [
+    "uzziah",
+    "jotham",
+    "ahaz",
+    "hezekiah"
+   ]
+  },
+  {
+   "id": "jeremiah_prophet",
+   "start": -627,
+   "end": -586,
+   "region": "levant",
+   "stream": "scripture",
+   "approximate": true,
+   "basis": "scripture+thiele",
+   "refs": [
+    "Jeremiah 1:1-3",
+    "Jeremiah 25:1",
+    "Jeremiah 43:8-13"
+   ],
+   "name": {
+    "en": "Jeremiah",
+    "zh-Hans": "耶利米",
+    "zh-Hant": "耶利米"
+   },
+   "note": {
+    "en": "Jeremiah 1:2 dates the call to Josiah's thirteenth year (-627 on Thiele's Josiah) and 1:3 runs the ministry to the end of Zedekiah's eleventh year and the carrying away of Jerusalem (-586); the book itself then continues in Egypt (Jeremiah 43-44) with no year given, so -586 is a floor, not a close.",
+    "zh-Hans": "耶利米书 1:2 把蒙召定在约西亚第十三年（按锡尔的约西亚年代即前627年），1:3 把事奉延至西底家第十一年终、耶路撒冷被掳之时（前586年）；其后本书仍记他在埃及的话（耶43-44章），未记年数，故前586年是下限而非终点。",
+    "zh-Hant": "耶利米書 1:2 把蒙召定在約西亞第十三年（按錫爾的約西亞年代即前627年），1:3 把事奉延至西底家第十一年終、耶路撒冷被擄之時（前586年）；其後本書仍記他在埃及的話（耶43-44章），未記年數，故前586年是下限而非終點。"
+   },
+   "anchorKings": [
+    "josiah",
+    "jehoahaz_judah",
+    "jehoiakim",
+    "jehoiachin",
+    "zedekiah"
+   ]
+  },
+  {
+   "id": "ezekiel_prophet",
+   "start": -593,
+   "end": -571,
+   "region": "mesopotamia",
+   "stream": "scripture",
+   "approximate": false,
+   "basis": "scripture+thiele",
+   "refs": [
+    "Ezekiel 1:1-3",
+    "Ezekiel 29:17",
+    "Ezekiel 40:1"
+   ],
+   "name": {
+    "en": "Ezekiel",
+    "zh-Hans": "以西结",
+    "zh-Hant": "以西結"
+   },
+   "note": {
+    "en": "Ezekiel counts from Jehoiachin's deportation, which this app already dates -597: the fifth year (1:2) is -593 and the twenty-seventh (29:17), his latest dated oracle, is -571; 40:1 cross-checks the count by adding that the twenty-fifth year was the fourteenth after the city fell.",
+    "zh-Hans": "以西结书按约雅斤被掳之年起算，本应用已把该年定为前597年：第五年（1:2）即前593年，第二十七年（29:17，全书最晚的日期）即前571年；40:1 又记第二十五年是城被攻破后第十四年，正可互证。",
+    "zh-Hant": "以西結書按約雅斤被擄之年起算，本應用已把該年定為前597年：第五年（1:2）即前593年，第二十七年（29:17，全書最晚的日期）即前571年；40:1 又記第二十五年是城被攻破後第十四年，正可互證。"
+   },
+   "anchorKings": [
+    "jehoiachin",
+    "zedekiah"
+   ]
+  },
+  {
+   "id": "daniel_prophet",
+   "start": -605,
+   "end": -536,
+   "region": "mesopotamia",
+   "stream": "scripture",
+   "approximate": true,
+   "basis": "conventional",
+   "refs": [
+    "Daniel 1:1",
+    "Daniel 1:21",
+    "Daniel 10:1"
+   ],
+   "name": {
+    "en": "Daniel",
+    "zh-Hans": "但以理",
+    "zh-Hant": "但以理"
+   },
+   "note": {
+    "en": "Daniel 1:1 sets the deportation in Jehoiakim's third year, which Jeremiah 25:1 synchronises with Nebuchadnezzar's first year (-605), and Daniel 10:1 gives a vision in Cyrus's third year (-536); the basis is conventional rather than scripture+thiele only because the closing year rests on the Persian king-list, not on Thiele.",
+    "zh-Hans": "但以理书 1:1 把被掳定在约雅敬第三年，而耶利米书 25:1 记该年即尼布甲尼撒元年（前605年）；但10:1 又记古列第三年的异象（前536年）。此处不作 scripture+thiele，只因末年所据的是波斯王表，而非锡尔。",
+    "zh-Hant": "但以理書 1:1 把被擄定在約雅敬第三年，而耶利米書 25:1 記該年即尼布甲尼撒元年（前605年）；但10:1 又記古列第三年的異象（前536年）。此處不作 scripture+thiele，只因末年所據的是波斯王表，而非錫爾。"
+   },
+   "anchorKings": [
+    "jehoiakim"
+   ]
+  },
+  {
+   "id": "hosea_prophet",
+   "start": -793,
+   "end": -687,
+   "region": "levant",
+   "stream": "scripture",
+   "approximate": true,
+   "basis": "scripture+thiele",
+   "refs": [
+    "Hosea 1:1"
+   ],
+   "name": {
+    "en": "Hosea",
+    "zh-Hans": "何西阿",
+    "zh-Hant": "何西阿"
+   },
+   "note": {
+    "en": "Hosea 1:1 names Jeroboam II of Israel and four kings of Judah, which cannot all be simultaneous, so the span is their union (-793 to -687); the window the verse strictly requires is narrower and stronger — he must have begun by -753, when Jeroboam II died, and still been prophesying by -716, when Hezekiah came to the throne.",
+    "zh-Hans": "何西阿书 1:1 同列以色列王耶罗波安二世与犹大四王，此五人不可能同时在位，故取其并集（前793至前687年）；该节严格要求的区间更窄也更确定——他必在耶罗波安二世去世的前753年之前已经开口，并至少延续到希西家登基的前716年。",
+    "zh-Hant": "何西阿書 1:1 同列以色列王耶羅波安二世與猶大四王，此五人不可能同時在位，故取其併集（前793至前687年）；該節嚴格要求的區間更窄也更確定——他必在耶羅波安二世去世的前753年之前已經開口，並至少延續到希西家登基的前716年。"
+   },
+   "anchorKings": [
+    "jeroboam_ii",
+    "uzziah",
+    "jotham",
+    "ahaz",
+    "hezekiah"
+   ]
+  },
+  {
+   "id": "amos_prophet",
+   "start": -792,
+   "end": -753,
+   "region": "levant",
+   "stream": "scripture",
+   "approximate": true,
+   "basis": "scripture+thiele",
+   "refs": [
+    "Amos 1:1"
+   ],
+   "name": {
+    "en": "Amos",
+    "zh-Hans": "阿摩司",
+    "zh-Hant": "阿摩司"
+   },
+   "note": {
+    "en": "Amos 1:1 names Uzziah and Jeroboam II as reigning together, so this is the one superscription where the INTERSECTION of the two reigns is the right span rather than their union; the earthquake it dates him by is not dated anywhere in scripture, so the forty-year window cannot be narrowed from the text.",
+    "zh-Hans": "阿摩司书 1:1 记乌西雅与耶罗波安二世同时在位，故此处当取两段王年的交集，而非并集——全部题记中仅此一例；至于经文用以定年的那次地震，圣经并未记其年份，故这四十年的区间无法再靠经文收窄。",
+    "zh-Hant": "阿摩司書 1:1 記烏西雅與耶羅波安二世同時在位，故此處當取兩段王年的交集，而非併集——全部題記中僅此一例；至於經文用以定年的那次地震，聖經並未記其年份，故這四十年的區間無法再靠經文收窄。"
+   },
+   "anchorKings": [
+    "uzziah",
+    "jeroboam_ii"
+   ]
+  },
+  {
+   "id": "jonah_prophet",
+   "start": -793,
+   "end": -753,
+   "region": "levant",
+   "stream": "scripture",
+   "approximate": true,
+   "basis": "scripture+thiele",
+   "refs": [
+    "2 Kings 14:25",
+    "Jonah 1:1"
+   ],
+   "name": {
+    "en": "Jonah",
+    "zh-Hans": "约拿",
+    "zh-Hant": "約拿"
+   },
+   "note": {
+    "en": "The book of Jonah dates nothing, but 2 Kings 14:25 names Jonah son of Amittai as the prophet whose word Jeroboam II fulfilled, which places him no later than that reign (-793 to -753); the verse puts the word BEFORE the restoration, so his ministry may have begun earlier still, and the mission to Nineveh carries no date at all.",
+    "zh-Hans": "约拿书本身未记任何年份，但列王纪下 14:25 记耶罗波安二世所成就的正是亚米太的儿子约拿所传的话，故其事奉不晚于该王在位之时（前793至前753年）；该节把这话置于收复疆界之前，故他起初事奉或更早，而往尼尼微一行则全无年份可考。",
+    "zh-Hant": "約拿書本身未記任何年份，但列王紀下 14:25 記耶羅波安二世所成就的正是亞米太的兒子約拿所傳的話，故其事奉不晚於該王在位之時（前793至前753年）；該節把這話置於收復疆界之前，故他起初事奉或更早，而往尼尼微一行則全無年份可考。"
+   },
+   "anchorKings": [
+    "jeroboam_ii"
+   ]
+  },
+  {
+   "id": "micah_prophet",
+   "start": -750,
+   "end": -687,
+   "region": "levant",
+   "stream": "scripture",
+   "approximate": true,
+   "basis": "scripture+thiele",
+   "refs": [
+    "Micah 1:1",
+    "Jeremiah 26:18"
+   ],
+   "name": {
+    "en": "Micah",
+    "zh-Hans": "弥迦",
+    "zh-Hant": "彌迦"
+   },
+   "note": {
+    "en": "Micah 1:1 names Jotham, Ahaz and Hezekiah, so the span is the union of those three reigns; Jeremiah 26:18 independently confirms he prophesied in Hezekiah's days, and the window the two verses strictly require is -732 to -716.",
+    "zh-Hans": "弥迦书 1:1 列出约坦、亚哈斯、希西家三王，故取三段王年的并集；耶利米书 26:18 另行证实他在希西家年间说预言，两处经文严格要求的区间为前732至前716年。",
+    "zh-Hant": "彌迦書 1:1 列出約坦、亞哈斯、希西家三王，故取三段王年的併集；耶利米書 26:18 另行證實他在希西家年間說預言，兩處經文嚴格要求的區間為前732至前716年。"
+   },
+   "anchorKings": [
+    "jotham",
+    "ahaz",
+    "hezekiah"
+   ]
+  },
+  {
+   "id": "nahum_prophet",
+   "start": -663,
+   "end": -612,
+   "region": "mesopotamia",
+   "stream": "scripture",
+   "approximate": true,
+   "basis": "conventional",
+   "refs": [
+    "Nahum 3:8"
+   ],
+   "name": {
+    "en": "Nahum",
+    "zh-Hans": "那鸿",
+    "zh-Hant": "那鴻"
+   },
+   "note": {
+    "en": "Nahum names no king; the window is bracketed by two events instead — Nahum 3:8 speaks of Thebes' fall as already past (Ashurbanipal, 663 BC) and the whole book foretells Nineveh's fall as still future (612 BC, already on this chart as `nineveh_falls`), so both ends are Assyriological rather than scriptural.",
+    "zh-Hans": "那鸿书未提任何君王，其年代只能由两件事夹定：那鸿书 3:8 提挪（底比斯）陷落已成过去（亚述巴尼拔，前663年），而全书预言尼尼微将亡尚未应验（前612年，本图已有 `nineveh_falls`）；故两端所据皆为亚述史料，而非经文。",
+    "zh-Hant": "那鴻書未提任何君王，其年代只能由兩件事夾定：那鴻書 3:8 提挪（底比斯）陷落已成過去（亞述巴尼拔，前663年），而全書預言尼尼微將亡尚未應驗（前612年，本圖已有 `nineveh_falls`）；故兩端所據皆為亞述史料，而非經文。"
+   },
+   "anchorKings": []
+  },
+  {
+   "id": "zephaniah_prophet",
+   "start": -641,
+   "end": -609,
+   "region": "levant",
+   "stream": "scripture",
+   "approximate": true,
+   "basis": "scripture+thiele",
+   "refs": [
+    "Zephaniah 1:1"
+   ],
+   "name": {
+    "en": "Zephaniah",
+    "zh-Hans": "西番雅",
+    "zh-Hant": "西番雅"
+   },
+   "note": {
+    "en": "Zephaniah 1:1 names one reign only, Josiah's, so the span is that reign entire (-641 to -609); the book gives nothing that would place him before or after the reform of -622, and the common claim that he preached before it is an inference from his subject matter, not from a date.",
+    "zh-Hans": "西番雅书 1:1 只提约西亚一朝，故此段即该王在位全期（前641至前609年）；书中并无任何线索可定他在前622年改革之前或之后，通常所说他在改革前传道，乃由内容推想，并非据于年份。",
+    "zh-Hant": "西番雅書 1:1 只提約西亞一朝，故此段即該王在位全期（前641至前609年）；書中並無任何線索可定他在前622年改革之前或之後，通常所說他在改革前傳道，乃由內容推想，並非據於年份。"
+   },
+   "anchorKings": [
+    "josiah"
+   ]
+  },
+  {
+   "id": "haggai_prophet",
+   "start": -520,
+   "end": -520,
+   "region": "levant",
+   "stream": "scripture",
+   "approximate": false,
+   "basis": "conventional",
+   "refs": [
+    "Haggai 1:1",
+    "Haggai 2:10",
+    "Haggai 2:20"
+   ],
+   "name": {
+    "en": "Haggai",
+    "zh-Hans": "哈该",
+    "zh-Hant": "哈該"
+   },
+   "note": {
+    "en": "Every one of Haggai's four oracles is dated inside the second year of Darius, from the sixth month to the ninth, so the whole recorded ministry falls in a single year, 520 BC by the Persian king-list; the arc has zero width and should be drawn as a marker rather than a band.",
+    "zh-Hans": "哈该书四段信息都注明在大流士第二年，自六月至九月，故全部记载在案的事奉只在一年之内，按波斯王表即公元前520年；此弧宽度为零，宜作标记而非绘成条带。",
+    "zh-Hant": "哈該書四段信息都註明在大流士第二年，自六月至九月，故全部記載在案的事奉只在一年之內，按波斯王表即公元前520年；此弧寬度為零，宜作標記而非繪成條帶。"
+   },
+   "anchorKings": []
+  },
+  {
+   "id": "zechariah_prophet",
+   "start": -520,
+   "end": -518,
+   "region": "levant",
+   "stream": "scripture",
+   "approximate": true,
+   "basis": "conventional",
+   "refs": [
+    "Zechariah 1:1",
+    "Zechariah 1:7",
+    "Zechariah 7:1"
+   ],
+   "name": {
+    "en": "Zechariah the Prophet",
+    "zh-Hans": "撒迦利亚（先知）",
+    "zh-Hant": "撒迦利亞（先知）"
+   },
+   "note": {
+    "en": "Zechariah's dated oracles run from the eighth month of Darius's second year (1:1, 520 BC) to the ninth month of his fourth (7:1, 518 BC); chapters 9-14 carry no date at all, so the end is the last date stated, not the end of the ministry.",
+    "zh-Hans": "撒迦利亚书注明日期的信息，自大流士第二年八月（1:1，前520年）至第四年九月（7:1，前518年）；九至十四章全无日期，故此处的末年只是经文所记最晚的日子，并非事奉的终点。",
+    "zh-Hant": "撒迦利亞書註明日期的信息，自大流士第二年八月（1:1，前520年）至第四年九月（7:1，前518年）；九至十四章全無日期，故此處的末年只是經文所記最晚的日子，並非事奉的終點。"
+   },
+   "anchorKings": []
+  },
+  {
+   "id": "samuel_prophet",
+   "start": -1080,
+   "end": -1010,
+   "region": "levant",
+   "stream": "scripture",
+   "approximate": true,
+   "basis": "conventional",
+   "refs": [
+    "1 Samuel 3:20",
+    "1 Samuel 7:15",
+    "1 Samuel 25:1"
+   ],
+   "name": {
+    "en": "Samuel",
+    "zh-Hans": "撒母耳",
+    "zh-Hant": "撒母耳"
+   },
+   "note": {
+    "en": "Samuel is the one major prophet no reign can anchor: hebrew_kings.json begins with David, and 1 Samuel 13:1 leaves Saul's regnal figure incomplete, so both ends here are the app's own conventional dates — bible_timeline.json's `samuel_called` (-1080) and, as an outer bound for a death that 1 Samuel 25:1 places before Saul's, David's accession (-1010); he certainly died earlier than that.",
+    "zh-Hans": "撒母耳是唯一无王年可依的大先知：hebrew_kings.json 自大卫起算，而撒母耳记上 13:1 所记扫罗的年数在希伯来文中残缺，故此段两端皆取本应用自定的通行年份——bible_timeline.json 的 `samuel_called`（前1080年），以及作为外界的大卫登基之年（前1010年）；撒上 25:1 记他死在扫罗之前，故实际必更早。",
+    "zh-Hant": "撒母耳是唯一無王年可依的大先知：hebrew_kings.json 自大衛起算，而撒母耳記上 13:1 所記掃羅的年數在希伯來文中殘缺，故此段兩端皆取本應用自定的通行年份——bible_timeline.json 的 `samuel_called`（前1080年），以及作為外界的大衛登基之年（前1010年）；撒上 25:1 記他死在掃羅之前，故實際必更早。"
+   },
+   "anchorKings": []
+  },
+  {
+   "id": "elijah_prophet",
+   "start": -874,
+   "end": -848,
+   "region": "levant",
+   "stream": "scripture",
+   "approximate": true,
+   "basis": "scripture+thiele",
+   "refs": [
+    "1 Kings 17:1",
+    "2 Kings 1:17",
+    "2 Chronicles 21:12"
+   ],
+   "name": {
+    "en": "Elijah",
+    "zh-Hans": "以利亚",
+    "zh-Hant": "以利亞"
+   },
+   "note": {
+    "en": "Elijah first appears before Ahab (-874 at the earliest) and last in the letter of 2 Chronicles 21:12 to Jehoram of Judah, whose sole reign began -848; that letter is the whole reason the arc runs past Ahaziah of Israel, and it sits awkwardly with 2 Kings 2, which narrates the translation before Joram's Moab campaign — a tension the text does not resolve and this span does not hide.",
+    "zh-Hans": "以利亚初见于亚哈面前（最早为前874年），末次见于历代志下 21:12 写给犹大王约兰的书信，而约兰单独作王始于前848年；此段之所以越过以色列王亚哈谢，全因这封信，而它与列王纪下第2章（把以利亚被接叙在约兰征摩押之前）颇难相合——经文未加调和，此处亦不掩饰。",
+    "zh-Hant": "以利亞初見於亞哈面前（最早為前874年），末次見於歷代志下 21:12 寫給猶大王約蘭的書信，而約蘭單獨作王始於前848年；此段之所以越過以色列王亞哈謝，全因這封信，而它與列王紀下第2章（把以利亞被接敘在約蘭征摩押之前）頗難相合——經文未加調和，此處亦不掩飾。"
+   },
+   "anchorKings": [
+    "ahab",
+    "ahaziah_israel",
+    "jehoram_judah"
+   ]
+  },
+  {
+   "id": "elisha_prophet",
+   "start": -848,
+   "end": -782,
+   "region": "levant",
+   "stream": "scripture",
+   "approximate": true,
+   "basis": "scripture+thiele",
+   "refs": [
+    "2 Kings 2:9-15",
+    "2 Kings 13:14-20"
+   ],
+   "name": {
+    "en": "Elisha",
+    "zh-Hans": "以利沙",
+    "zh-Hant": "以利沙"
+   },
+   "note": {
+    "en": "The span runs from Elisha's succession at Elijah's translation, which this app already dates -848, to his death, which 2 Kings 13:14-20 places inside the reign of Jehoash of Israel (-798 to -782); he was called earlier still, under Ahab (1 Kings 19:16), and the year within Jehoash's reign is not stated.",
+    "zh-Hans": "此段自以利亚被接、以利沙接续（本应用已定为前848年），至他去世；列王纪下 13:14-20 把他的死放在以色列王约阿施在位之时（前798至前782年）。他蒙召其实更早，在亚哈年间（王上 19:16），而他死于约阿施哪一年，经文未记。",
+    "zh-Hant": "此段自以利亞被接、以利沙接續（本應用已定為前848年），至他去世；列王紀下 13:14-20 把他的死放在以色列王約阿施在位之時（前798至前782年）。他蒙召其實更早，在亞哈年間（王上 19:16），而他死於約阿施哪一年，經文未記。"
+   },
+   "anchorKings": [
+    "jehoash_israel"
+   ]
+  },
+  {
+   "id": "nathan_prophet",
+   "start": -1010,
+   "end": -970,
+   "region": "levant",
+   "stream": "scripture",
+   "approximate": true,
+   "basis": "scripture+thiele",
+   "refs": [
+    "2 Samuel 7:2",
+    "2 Samuel 12:1",
+    "1 Kings 1:11-45"
+   ],
+   "name": {
+    "en": "Nathan the Prophet",
+    "zh-Hans": "先知拿单",
+    "zh-Hant": "先知拿單"
+   },
+   "note": {
+    "en": "Only one of Nathan's appearances can be dated: 1 Kings 1, at Solomon's accession (-970). The rest fall somewhere inside David's reign with no year attached, so the span is David's reign closed at that one fixed point.",
+    "zh-Hans": "拿单的事迹中只有一处可定年：列王纪上第1章，所罗门登基之时（前970年）。其余各处只知在大卫在位期间，未系年份，故此段即大卫的王年，止于那一个定点。",
+    "zh-Hant": "拿單的事蹟中只有一處可定年：列王紀上第1章，所羅門登基之時（前970年）。其餘各處只知在大衛在位期間，未繫年份，故此段即大衛的王年，止於那一個定點。"
+   },
+   "anchorKings": [
+    "david",
+    "solomon"
+   ]
+  },
+  {
+   "id": "ahijah_shilonite",
+   "start": -970,
+   "end": -910,
+   "region": "levant",
+   "stream": "scripture",
+   "approximate": true,
+   "basis": "scripture+thiele",
+   "refs": [
+    "1 Kings 11:29-39",
+    "1 Kings 14:2-18"
+   ],
+   "name": {
+    "en": "Ahijah the Shilonite",
+    "zh-Hans": "示罗人亚希雅",
+    "zh-Hant": "示羅人亞希雅"
+   },
+   "note": {
+    "en": "Ahijah meets Jeroboam once in Solomon's reign (1 Kings 11:29) and once in Jeroboam's own (1 Kings 14:2), and neither meeting is dated within its reign, so the span is the union of the two reigns and nothing narrower can be read out.",
+    "zh-Hans": "亚希雅两次与耶罗波安相遇：一在所罗门年间（王上 11:29），一在耶罗波安自己作王之时（王上 14:2）；两次皆未系年，故只能取两段王年的并集，无法再窄。",
+    "zh-Hant": "亞希雅兩次與耶羅波安相遇：一在所羅門年間（王上 11:29），一在耶羅波安自己作王之時（王上 14:2）；兩次皆未繫年，故只能取兩段王年的併集，無法再窄。"
+   },
+   "anchorKings": [
+    "solomon",
+    "jeroboam_i"
+   ]
+  },
+  {
+   "id": "micaiah_prophet",
+   "start": -853,
+   "end": -853,
+   "region": "levant",
+   "stream": "scripture",
+   "approximate": false,
+   "basis": "scripture+thiele",
+   "refs": [
+    "1 Kings 22:8-28",
+    "2 Chronicles 18:7-27"
+   ],
+   "name": {
+    "en": "Micaiah son of Imlah",
+    "zh-Hans": "音拉的儿子米该雅",
+    "zh-Hant": "音拉的兒子米該雅"
+   },
+   "note": {
+    "en": "Micaiah is recorded on one day only — the council before Ramoth-gilead, the campaign in which Ahab died, which Thiele dates -853; nothing else in scripture is attributed to him, so the arc is a single year and no reconstruction is involved.",
+    "zh-Hans": "米该雅只见于一日之事——基列的拉末之战前的会议，亚哈即死于此役，锡尔定为前853年；圣经再无别处记他的话，故此弧只有一年，全不涉及重建。",
+    "zh-Hant": "米該雅只見於一日之事——基列的拉末之戰前的會議，亞哈即死於此役，錫爾定為前853年；聖經再無別處記他的話，故此弧只有一年，全不涉及重建。"
+   },
+   "anchorKings": [
+    "ahab",
+    "jehoshaphat"
+   ]
+  },
+  {
+   "id": "huldah_prophet",
+   "start": -622,
+   "end": -622,
+   "region": "levant",
+   "stream": "scripture",
+   "approximate": false,
+   "basis": "scripture+thiele",
+   "refs": [
+    "2 Kings 22:14-20",
+    "2 Chronicles 34:22-28"
+   ],
+   "name": {
+    "en": "Huldah",
+    "zh-Hans": "户勒大",
+    "zh-Hant": "戶勒大"
+   },
+   "note": {
+    "en": "Huldah is consulted once, in the eighteenth year of Josiah (2 Kings 22:3), which is -622 on Thiele's accession year for Josiah and the year this app already carries as `josiah_reform`; a one-year arc, and the only one of the seven non-writing prophets with an exact regnal date.",
+    "zh-Hans": "户勒大只被求问一次，在约西亚十八年（王下 22:3）；按锡尔所定的约西亚登基之年，即前622年，也正是本应用已有的 `josiah_reform` 之年。此弧只一年，是七位不著书先知中唯一有确切王年的一位。",
+    "zh-Hant": "戶勒大只被求問一次，在約西亞十八年（王下 22:3）；按錫爾所定的約西亞登基之年，即前622年，也正是本應用已有的 `josiah_reform` 之年。此弧只一年，是七位不著書先知中唯一有確切王年的一位。"
+   },
+   "anchorKings": [
+    "josiah"
+   ]
+  },
+  {
+   "id": "zerubbabel_governor",
+   "start": -538,
+   "end": -516,
+   "region": "levant",
+   "stream": "scripture",
+   "approximate": true,
+   "basis": "conventional",
+   "refs": [
+    "Ezra 2:2",
+    "Ezra 3:8",
+    "Ezra 6:15",
+    "Haggai 1:1"
+   ],
+   "name": {
+    "en": "Zerubbabel",
+    "zh-Hans": "所罗巴伯",
+    "zh-Hant": "所羅巴伯"
+   },
+   "note": {
+    "en": "From the first return under Cyrus, which this app dates -538, to the temple's completion in Darius's sixth year (Ezra 6:15), which it dates -516; both ends rest on the Persian king-list, and nothing is said of Zerubbabel after the temple is finished.",
+    "zh-Hans": "自古列时的首次归回（本应用定为前538年），至大流士第六年圣殿告成（拉 6:15，本应用定为前516年）；两端所据皆为波斯王表，而圣殿建成之后经文再未提及所罗巴伯。",
+    "zh-Hant": "自古列時的首次歸回（本應用定為前538年），至大流士第六年聖殿告成（拉 6:15，本應用定為前516年）；兩端所據皆為波斯王表，而聖殿建成之後經文再未提及所羅巴伯。"
+   },
+   "anchorKings": []
+  },
+  {
+   "id": "joshua_high_priest",
+   "start": -538,
+   "end": -516,
+   "region": "levant",
+   "stream": "scripture",
+   "approximate": true,
+   "basis": "conventional",
+   "refs": [
+    "Ezra 3:2",
+    "Ezra 5:2",
+    "Haggai 1:1",
+    "Zechariah 3:1"
+   ],
+   "name": {
+    "en": "Joshua the High Priest",
+    "zh-Hans": "大祭司约书亚",
+    "zh-Hant": "大祭司約書亞"
+   },
+   "note": {
+    "en": "Joshua son of Jozadak stands beside Zerubbabel at every point the text names either of them, so his span is identical and rests on the same two Persian dates; Ezra spells the name Jeshua and Haggai and Zechariah spell it Joshua, which is one man, not two.",
+    "zh-Hans": "约萨达的儿子约书亚，凡经文提到所罗巴伯之处必与他并列，故其年段相同，所据亦是同两个波斯年份；以斯拉记作「耶书亚」，哈该书与撒迦利亚书作「约书亚」，实为一人，非二人。",
+    "zh-Hant": "約薩達的兒子約書亞，凡經文提到所羅巴伯之處必與他並列，故其年段相同，所據亦是同兩個波斯年份；以斯拉記作「耶書亞」，哈該書與撒迦利亞書作「約書亞」，實為一人，非二人。"
+   },
+   "anchorKings": []
+  },
+  {
+   "id": "ezra_scribe",
+   "start": -458,
+   "end": -444,
+   "region": "levant",
+   "stream": "scripture",
+   "approximate": true,
+   "basis": "conventional",
+   "refs": [
+    "Ezra 7:7-8",
+    "Nehemiah 8:1-9"
+   ],
+   "name": {
+    "en": "Ezra",
+    "zh-Hans": "以斯拉",
+    "zh-Hant": "以斯拉"
+   },
+   "note": {
+    "en": "Ezra 7:7-8 dates his going up to the seventh year of Artaxerxes (-458 by the Persian king-list, the year this app already carries) and Nehemiah 8:1-9 has him reading the law in the seventh month of the year the wall was finished (-444); whether that Artaxerxes is the first or the second is the live dispute, and this span assumes the first, as the app does.",
+    "zh-Hans": "以斯拉记 7:7-8 把他上耶路撒冷定在亚达薛西第七年（按波斯王表为前458年，即本应用已用之年），尼希米记 8:1-9 记他在城墙修毕那年的七月宣读律法（前444年）；此亚达薛西是一世还是二世，历来有争，此段依本应用之例取一世。",
+    "zh-Hant": "以斯拉記 7:7-8 把他上耶路撒冷定在亞達薛西第七年（按波斯王表為前458年，即本應用已用之年），尼希米記 8:1-9 記他在城牆修畢那年的七月宣讀律法（前444年）；此亞達薛西是一世還是二世，歷來有爭，此段依本應用之例取一世。"
+   },
+   "anchorKings": []
+  },
+  {
+   "id": "nehemiah_governor",
+   "start": -445,
+   "end": -433,
+   "region": "levant",
+   "stream": "scripture",
+   "approximate": true,
+   "basis": "conventional",
+   "refs": [
+    "Nehemiah 2:1",
+    "Nehemiah 5:14",
+    "Nehemiah 13:6"
+   ],
+   "name": {
+    "en": "Nehemiah",
+    "zh-Hans": "尼希米",
+    "zh-Hant": "尼希米"
+   },
+   "note": {
+    "en": "Nehemiah 2:1 dates his commission to the twentieth year of Artaxerxes (-445) and 13:6 has him back at court in the thirty-second (-433), and 5:14 states the interval itself as twelve years of governorship; he then returned to Jerusalem 'after certain days', which fixes no year, so the arc's end is the last stated date and not the end of his governorship.",
+    "zh-Hans": "尼希米记 2:1 把他受命定在亚达薛西二十年（前445年），13:6 记他在三十二年回到王那里（前433年）；其后他「过了多日」再回耶路撒冷，未记年份，故此弧的末端只是经文所记最晚的日子，并非他省长任期之终。",
+    "zh-Hant": "尼希米記 2:1 把他受命定在亞達薛西二十年（前445年），13:6 記他在三十二年回到王那裡（前433年）；其後他「過了多日」再回耶路撒冷，未記年份，故此弧的末端只是經文所記最晚的日子，並非他省長任期之終。"
+   },
+   "anchorKings": []
+  },
+  {
+   "id": "esther_queen",
+   "start": -483,
+   "end": -473,
+   "region": "levant",
+   "stream": "scripture",
+   "approximate": true,
+   "basis": "conventional",
+   "refs": [
+    "Esther 1:3",
+    "Esther 2:16",
+    "Esther 9:1"
+   ],
+   "name": {
+    "en": "Esther",
+    "zh-Hans": "以斯帖",
+    "zh-Hant": "以斯帖"
+   },
+   "note": {
+    "en": "Esther's dates are regnal years of Ahasuerus, whom this app already identifies as Xerxes I in the event `xerxes_i`: the third year (1:3) is -483, the seventh (2:16) -479, and the twelfth, in which Purim falls (9:1), -473; the whole span therefore stands or falls with that identification.",
+    "zh-Hans": "以斯帖记所用的是亚哈随鲁的王年，而本应用已在 `xerxes_i` 一条中认定亚哈随鲁即薛西斯一世：第三年（1:3）为前483年，第七年（2:16）为前479年，普珥日所在的第十二年（9:1）为前473年；故此段成立与否，全系于这一认定。",
+    "zh-Hant": "以斯帖記所用的是亞哈隨魯的王年，而本應用已在 `xerxes_i` 一條中認定亞哈隨魯即薛西斯一世：第三年（1:3）為前483年，第七年（2:16）為前479年，普珥日所在的第十二年（9:1）為前473年；故此段成立與否，全繫於這一認定。"
+   },
+   "anchorKings": []
+  },
+  {
+   "id": "mordecai",
+   "start": -483,
+   "end": -473,
+   "region": "levant",
+   "stream": "scripture",
+   "approximate": true,
+   "basis": "conventional",
+   "refs": [
+    "Esther 2:5-7",
+    "Esther 9:1",
+    "Esther 10:3"
+   ],
+   "name": {
+    "en": "Mordecai",
+    "zh-Hans": "末底改",
+    "zh-Hant": "末底改"
+   },
+   "note": {
+    "en": "Mordecai appears throughout the same dated frame as Esther and is left second to the king at the book's close (10:3), which carries no date, so his span is hers and its end is the last year the book states rather than the end of his service.",
+    "zh-Hans": "末底改与以斯帖同处一个有年份的叙事之中，卷末（10:3）记他位居王之下第二，却未系年份，故其年段与她相同，末端只是本书所记最晚的一年，并非他任职之终。",
+    "zh-Hant": "末底改與以斯帖同處一個有年份的敘事之中，卷末（10:3）記他位居王之下第二，卻未繫年份，故其年段與她相同，末端只是本書所記最晚的一年，並非他任職之終。"
+   },
+   "anchorKings": []
+  },
+  {
+   "id": "john_the_baptist",
+   "start": 26,
+   "end": 29,
+   "region": "levant",
+   "stream": "church",
+   "approximate": true,
+   "basis": "conventional",
+   "refs": [
+    "Luke 3:1-2",
+    "Luke 3:19-20",
+    "Matthew 14:1-12"
+   ],
+   "name": {
+    "en": "John the Baptist",
+    "zh-Hans": "施洗约翰",
+    "zh-Hant": "施洗約翰"
+   },
+   "note": {
+    "en": "The start is this app's own year for the baptism of Jesus (`jesus_baptized`, AD 26) and the end is its year for the feeding of the five thousand (`5000_fed`, AD 29), before which Matthew 14:10 has him already beheaded; note that Luke 3:1's fifteenth year of Tiberius, counted from this chart's own `tiberius_emperor` at AD 14, would give AD 28/29 instead — see the inconsistency flagged in section 1.",
+    "zh-Hans": "起始年取本应用自定的耶稣受洗之年（`jesus_baptized`，公元26年），末年取其五饼二鱼之年（`5000_fed`，公元29年），而马太福音 14:10 记在此之前约翰已被斩；须注意路加福音 3:1「提比留在位第十五年」若自本图 `tiberius_emperor`（公元14年）起算，应得公元28/29年——见第1节所列的不一致。",
+    "zh-Hant": "起始年取本應用自定的耶穌受洗之年（`jesus_baptized`，公元26年），末年取其五餅二魚之年（`5000_fed`，公元29年），而馬太福音 14:10 記在此之前約翰已被斬；須注意路加福音 3:1「提比留在位第十五年」若自本圖 `tiberius_emperor`（公元14年）起算，應得公元28/29年——見第1節所列的不一致。"
+   },
+   "anchorKings": []
+  },
+  {
+   "id": "peter_apostle",
+   "start": 27,
+   "end": 67,
+   "region": "levant",
+   "stream": "church",
+   "approximate": true,
+   "basis": "conventional",
+   "refs": [
+    "Matthew 4:18-20",
+    "Acts 2:14",
+    "Acts 12:3-19"
+   ],
+   "name": {
+    "en": "Peter",
+    "zh-Hans": "彼得",
+    "zh-Hant": "彼得"
+   },
+   "note": {
+    "en": "From this chart's `disciples_called` (AD 27) to its `peter_paul_martyred` (AD 67); the martyrdom year is a church tradition tied to Nero's persecution, not a statement of scripture, and the calling year is a reconstruction of the gospel narrative.",
+    "zh-Hans": "自本图 `disciples_called`（公元27年）至 `peter_paul_martyred`（公元67年）；殉道之年出于教会传统，与尼禄逼迫相系，并非经文所记，而蒙召之年则是对福音书叙事的重建。",
+    "zh-Hant": "自本圖 `disciples_called`（公元27年）至 `peter_paul_martyred`（公元67年）；殉道之年出於教會傳統，與尼祿逼迫相繫，並非經文所記，而蒙召之年則是對福音書敘事的重建。"
+   },
+   "anchorKings": []
+  },
+  {
+   "id": "paul_apostle",
+   "start": 35,
+   "end": 67,
+   "region": "levant",
+   "stream": "church",
+   "approximate": true,
+   "basis": "conventional",
+   "refs": [
+    "Acts 9:1-19",
+    "Acts 28:30-31"
+   ],
+   "name": {
+    "en": "Paul",
+    "zh-Hans": "保罗",
+    "zh-Hant": "保羅"
+   },
+   "note": {
+    "en": "From this chart's `paul_converted` (AD 35) to `peter_paul_martyred` (AD 67); the one externally checkable point in between is Gallio's proconsulship (Acts 18:12), already on this chart at AD 51 from the Delphi inscription, which is what makes the whole Pauline chronology datable at all.",
+    "zh-Hans": "自本图 `paul_converted`（公元35年）至 `peter_paul_martyred`（公元67年）；其间唯一可由外证核对的定点，是迦流作方伯（徒 18:12），本图已据德尔斐铭文列于公元51年——保罗年代之所以可定，全赖于此。",
+    "zh-Hant": "自本圖 `paul_converted`（公元35年）至 `peter_paul_martyred`（公元67年）；其間唯一可由外證核對的定點，是迦流作方伯（徒 18:12），本圖已據德爾斐銘文列於公元51年——保羅年代之所以可定，全賴於此。"
+   },
+   "anchorKings": []
+  },
+  {
+   "id": "john_apostle",
+   "start": 27,
+   "end": 95,
+   "region": "levant",
+   "stream": "church",
+   "approximate": true,
+   "basis": "conventional",
+   "refs": [
+    "Matthew 4:21-22",
+    "Revelation 1:9"
+   ],
+   "name": {
+    "en": "John the Apostle",
+    "zh-Hans": "使徒约翰",
+    "zh-Hant": "使徒約翰"
+   },
+   "note": {
+    "en": "From this chart's `disciples_called` (AD 27) to its `john_patmos` (AD 95); the Patmos date is the traditional Domitianic setting of Revelation, which is contested by a minority who place it before AD 70, and nothing in scripture dates either end.",
+    "zh-Hans": "自本图 `disciples_called`（公元27年）至 `john_patmos`（公元95年）；拔摩之年取启示录成书于多米田年间的传统说法，少数学者主张在公元70年之前，而两端皆非经文所定。",
+    "zh-Hant": "自本圖 `disciples_called`（公元27年）至 `john_patmos`（公元95年）；拔摩之年取啟示錄成書於多米田年間的傳統說法，少數學者主張在公元70年之前，而兩端皆非經文所定。"
+   },
+   "anchorKings": []
+  },
+  {
+   "id": "james_son_of_zebedee",
+   "start": 27,
+   "end": 44,
+   "region": "levant",
+   "stream": "church",
+   "approximate": true,
+   "basis": "conventional",
+   "refs": [
+    "Matthew 4:21-22",
+    "Acts 12:2"
+   ],
+   "name": {
+    "en": "James son of Zebedee",
+    "zh-Hans": "西庇太的儿子雅各",
+    "zh-Hant": "西庇太的兒子雅各"
+   },
+   "note": {
+    "en": "From this chart's `disciples_called` (AD 27) to his execution by Herod Agrippa I, which Acts 12:2 places shortly before Agrippa's death — an event this chart already dates AD 44 as `agrippa_i_dies`; this is the only apostle's death scripture itself records.",
+    "zh-Hans": "自本图 `disciples_called`（公元27年）至他被希律亚基帕一世所杀；使徒行传 12:2 把此事记在亚基帕去世前不久，而本图已把该事定于公元44年（`agrippa_i_dies`）。使徒之死，唯此一例见于经文。",
+    "zh-Hant": "自本圖 `disciples_called`（公元27年）至他被希律亞基帕一世所殺；使徒行傳 12:2 把此事記在亞基帕去世前不久，而本圖已把該事定於公元44年（`agrippa_i_dies`）。使徒之死，唯此一例見於經文。"
+   },
+   "anchorKings": []
+  },
+  {
+   "id": "james_brother_of_jesus",
+   "start": 33,
+   "end": 62,
+   "region": "levant",
+   "stream": "church",
+   "approximate": true,
+   "basis": "conventional",
+   "refs": [
+    "Acts 1:14",
+    "Acts 15:13",
+    "Acts 21:18"
+   ],
+   "name": {
+    "en": "James the Lord's Brother",
+    "zh-Hans": "主的兄弟雅各",
+    "zh-Hant": "主的兄弟雅各"
+   },
+   "note": {
+    "en": "From the upper room (Acts 1:14, this chart's AD 33) to his execution in AD 62, which Josephus records (Antiquities 20.200) and scripture does not; he must be kept distinct from James son of Zebedee, whom the chart would otherwise merge with him.",
+    "zh-Hans": "自马可楼（徒 1:14，本图定为公元33年）至公元62年被处死；后者见于约瑟夫《犹太古史》20.200，圣经未记。此人须与西庇太的儿子雅各分开，否则本图会将二人混为一谈。",
+    "zh-Hant": "自馬可樓（徒 1:14，本圖定為公元33年）至公元62年被處死；後者見於約瑟夫《猶太古史》20.200，聖經未記。此人須與西庇太的兒子雅各分開，否則本圖會將二人混為一談。"
+   },
+   "anchorKings": []
+  },
+  {
+   "id": "barnabas",
+   "start": 35,
+   "end": 50,
+   "region": "levant",
+   "stream": "church",
+   "approximate": true,
+   "basis": "conventional",
+   "refs": [
+    "Acts 4:36-37",
+    "Acts 13:2-3",
+    "Acts 15:39"
+   ],
+   "name": {
+    "en": "Barnabas",
+    "zh-Hans": "巴拿巴",
+    "zh-Hant": "巴拿巴"
+   },
+   "note": {
+    "en": "Neither end is dated: Acts 4:36 is early in the Jerusalem church and Acts 15:39, his parting from Paul for Cyprus, is the last narrative mention; both years are read off the same Pauline chronology this chart already uses, and the span is the weakest of the NT rows.",
+    "zh-Hans": "两端皆无年份：使徒行传 4:36 属耶路撒冷教会初期，15:39 与保罗分手往居比路，是叙事中末次提及；两个年份皆循本图已用的保罗年代推得，是新约诸条中最弱的一段。",
+    "zh-Hant": "兩端皆無年份：使徒行傳 4:36 屬耶路撒冷教會初期，15:39 與保羅分手往居比路，是敘事中末次提及；兩個年份皆循本圖已用的保羅年代推得，是新約諸條中最弱的一段。"
+   },
+   "anchorKings": []
+  },
+  {
+   "id": "timothy",
+   "start": 50,
+   "end": 67,
+   "region": "levant",
+   "stream": "church",
+   "approximate": true,
+   "basis": "conventional",
+   "refs": [
+    "Acts 16:1-3",
+    "2 Timothy 4:9"
+   ],
+   "name": {
+    "en": "Timothy",
+    "zh-Hans": "提摩太",
+    "zh-Hant": "提摩太"
+   },
+   "note": {
+    "en": "Timothy joins Paul at Lystra just after the Jerusalem council, which this chart dates AD 49, and 2 Timothy is written to him from Paul's last imprisonment; both ends are inferred from the Pauline chronology and neither is stated.",
+    "zh-Hans": "提摩太在耶路撒冷会议（本图定为公元49年）之后不久于路司得加入保罗，而提摩太后书写于保罗末次被囚之时；两端皆由保罗年代推得，经文均未明记。",
+    "zh-Hant": "提摩太在耶路撒冷會議（本圖定為公元49年）之後不久於路司得加入保羅，而提摩太後書寫於保羅末次被囚之時；兩端皆由保羅年代推得，經文均未明記。"
+   },
+   "anchorKings": []
+  },
+  {
+   "id": "nebuchadnezzar_reign",
+   "start": -605,
+   "end": -562,
+   "region": "mesopotamia",
+   "stream": "babylon",
+   "approximate": false,
+   "basis": "conventional",
+   "refs": [
+    "Jeremiah 25:1",
+    "Daniel 1:1",
+    "2 Kings 24:1"
+   ],
+   "name": {
+    "en": "Nebuchadnezzar II",
+    "zh-Hans": "尼布甲尼撒二世",
+    "zh-Hant": "尼布甲尼撒二世"
+   },
+   "note": {
+    "en": "Jeremiah 25:1 equates Nebuchadnezzar's first year with Jehoiakim's fourth, which ties the Babylonian king-list to Thiele's Judah at -605; the end is this chart's own `evil_merodach` at -562, and the chart currently marks only the start as a point event.",
+    "zh-Hans": "耶利米书 25:1 记尼布甲尼撒元年即约雅敬第四年，正把巴比伦王表与锡尔所定的犹大年代系在前605年；末年取本图已有的 `evil_merodach`（前562年）。本图现只以一个点标出其起始。",
+    "zh-Hant": "耶利米書 25:1 記尼布甲尼撒元年即約雅敬第四年，正把巴比倫王表與錫爾所定的猶大年代繫在前605年；末年取本圖已有的 `evil_merodach`（前562年）。本圖現只以一個點標出其起始。"
+   },
+   "anchorKings": [
+    "jehoiakim"
+   ]
+  },
+  {
+   "id": "cyrus_reign",
+   "start": -559,
+   "end": -530,
+   "region": "persia",
+   "stream": "persia",
+   "approximate": false,
+   "basis": "conventional",
+   "refs": [
+    "Isaiah 44:28",
+    "Ezra 1:1-4",
+    "Daniel 10:1"
+   ],
+   "name": {
+    "en": "Cyrus the Great",
+    "zh-Hans": "古列",
+    "zh-Hant": "古列"
+   },
+   "note": {
+    "en": "559 to 530 BC is the standard reign; Babylon fell in his own nineteenth year, which this chart already carries as `babylon_falls` (-539), and scripture's 'first year of Cyrus' in Ezra 1:1 means his first year over Babylon, -538, not -559.",
+    "zh-Hans": "在位年代通行作前559至前530年；巴比伦陷落于其第十九年，本图已列为 `babylon_falls`（前539年）。以斯拉记 1:1 所谓「古列元年」指他统治巴比伦的第一年，即前538年，而非前559年。",
+    "zh-Hant": "在位年代通行作前559至前530年；巴比倫陷落於其第十九年，本圖已列為 `babylon_falls`（前539年）。以斯拉記 1:1 所謂「古列元年」指他統治巴比倫的第一年，即前538年，而非前559年。"
+   },
+   "anchorKings": []
+  },
+  {
+   "id": "darius_i_reign",
+   "start": -522,
+   "end": -486,
+   "region": "persia",
+   "stream": "persia",
+   "approximate": false,
+   "basis": "conventional",
+   "refs": [
+    "Ezra 6:1-12",
+    "Haggai 1:1",
+    "Zechariah 1:1"
+   ],
+   "name": {
+    "en": "Darius I",
+    "zh-Hans": "大流士一世",
+    "zh-Hant": "大流士一世"
+   },
+   "note": {
+    "en": "522 to 486 BC by the Persian king-list; both ends are already point events on this chart (`darius_i` and `xerxes_i`), and this reign is what dates Haggai and Zechariah, so drawing it as a band makes their arcs legible.",
+    "zh-Hans": "按波斯王表为前522至前486年；两端在本图皆已有点标（`darius_i` 与 `xerxes_i`）。哈该与撒迦利亚的年代全系于此王，故把它画成条带，可使二人之弧一目了然。",
+    "zh-Hant": "按波斯王表為前522至前486年；兩端在本圖皆已有點標（`darius_i` 與 `xerxes_i`）。哈該與撒迦利亞的年代全繫於此王，故把它畫成條帶，可使二人之弧一目了然。"
+   },
+   "anchorKings": []
+  },
+  {
+   "id": "artaxerxes_i_reign",
+   "start": -465,
+   "end": -424,
+   "region": "persia",
+   "stream": "persia",
+   "approximate": false,
+   "basis": "conventional",
+   "refs": [
+    "Ezra 7:1-8",
+    "Nehemiah 2:1",
+    "Nehemiah 13:6"
+   ],
+   "name": {
+    "en": "Artaxerxes I",
+    "zh-Hans": "亚达薛西一世",
+    "zh-Hant": "亞達薛西一世"
+   },
+   "note": {
+    "en": "465 to 424 BC by the Persian king-list; the start is already on this chart, and Ezra's seventh year and Nehemiah's twentieth and thirty-second are all counted inside it, so the band is what makes those three arcs checkable.",
+    "zh-Hans": "按波斯王表为前465至前424年；起始年本图已有，而以斯拉的第七年、尼希米的第二十年与第三十二年皆在其中，故此带正是那三条弧可供核对的依据。",
+    "zh-Hant": "按波斯王表為前465至前424年；起始年本圖已有，而以斯拉的第七年、尼希米的第二十年與第三十二年皆在其中，故此帶正是那三條弧可供核對的依據。"
+   },
+   "anchorKings": []
+  },
+  {
+   "id": "herod_the_great_reign",
+   "start": -37,
+   "end": -4,
+   "region": "levant",
+   "stream": "rome",
+   "approximate": false,
+   "basis": "conventional",
+   "refs": [
+    "Matthew 2:1",
+    "Matthew 2:19-22"
+   ],
+   "name": {
+    "en": "Herod the Great",
+    "zh-Hans": "大希律",
+    "zh-Hant": "大希律"
+   },
+   "note": {
+    "en": "Both ends are already point events on this chart (`herod_takes_jerusalem` and `herod_dies`); note that the power band `herodian-dynasty` already runs -37 to AD 92, so a separate Herod band may be redundant rather than missing.",
+    "zh-Hans": "两端在本图皆已有点标（`herod_takes_jerusalem` 与 `herod_dies`）；须注意 `herodian-dynasty` 一带已自前37年延至公元92年，故另立大希律一带或属重复，而非缺漏。",
+    "zh-Hant": "兩端在本圖皆已有點標（`herod_takes_jerusalem` 與 `herod_dies`）；須注意 `herodian-dynasty` 一帶已自前37年延至公元92年，故另立大希律一帶或屬重複，而非缺漏。"
+   },
+   "anchorKings": []
+  },
+  {
+   "id": "pilate_prefecture",
+   "start": 26,
+   "end": 36,
+   "region": "levant",
+   "stream": "rome",
+   "approximate": false,
+   "basis": "conventional",
+   "refs": [
+    "Luke 3:1",
+    "Matthew 27:2"
+   ],
+   "name": {
+    "en": "Pontius Pilate",
+    "zh-Hans": "本丢彼拉多",
+    "zh-Hant": "本丟彼拉多"
+   },
+   "note": {
+    "en": "AD 26 to 36: the start is already this chart's `pilate_prefect`, and the end is his recall by Vitellius after the Samaritan affair, which Josephus records; the crucifixion at AD 33 sits inside the band, which is the check the band exists to provide.",
+    "zh-Hans": "公元26至36年：起始年即本图已有的 `pilate_prefect`，末年为撒玛利亚事件后被叙利亚巡抚维特利乌召回，见于约瑟夫的记载；本图所定公元33年的钉十字架正落在此带之内，而这也正是设此带的用处。",
+    "zh-Hant": "公元26至36年：起始年即本圖已有的 `pilate_prefect`，末年為撒瑪利亞事件後被敘利亞巡撫維特利烏召回，見於約瑟夫的記載；本圖所定公元33年的釘十字架正落在此帶之內，而這也正是設此帶的用處。"
+   },
+   "anchorKings": []
+  }
+ ],
  "events": [
   {
    "id": "wheel_earliest",

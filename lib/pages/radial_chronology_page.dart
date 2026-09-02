@@ -249,6 +249,74 @@ Color kingdomArcColor(Kingdom kingdom) => switch (kingdom) {
       Kingdom.judah || Kingdom.united => _bandColor('shem', 0, 0),
     };
 
+/// Arc ids for the ministry band, for the same reason as
+/// [kKingArcPrefix]: one id space, and `daniel_prophet` must never be
+/// mistaken for a patriarch or a king.
+const String kMinistryArcPrefix = 'ministry:';
+
+/// The ministries' own shade — the middle of the church line's arc.
+///
+/// NOT one of Shem's three. A prophet's years are a third kind of claim
+/// again: not a stated age (the lifespans), not a synchronised reign
+/// (the kings), but the window a text places a man's work in. Giving it
+/// a Semitic shade would have said it was the same sort of number as
+/// the two beside it.
+Color ministryArcColor() => _lineColor('institution');
+
+/// The ministries as spans for the arc band.
+List<SpanInput> ministrySpans(List<WheelMinistry> ministries) => [
+      for (final m in ministries)
+        (
+          id: '$kMinistryArcPrefix${m.id}',
+          line: 'ministry',
+          startYear: m.start,
+          endYear: m.end,
+        )
+    ];
+
+/// The tradition the arc band is drawn on. Top-level because
+/// [packWheelBand] defaults to it and the tests read it.
+const String kDrawnTradition = 'mt';
+
+/// THE BAND'S PACKING, IN ONE PLACE — and the reason it is top-level
+/// rather than a method is that the tests needed it too.
+///
+/// `packIntoRings` is first-fit over whatever list it is given, so any
+/// caller that assembles its own list gets its own ring numbers. Three
+/// callers need these arcs: the painter, the search pan, and
+/// `wheel_lifespans_test.dart`, which taps an arc at a radius it
+/// computes. The test had its own copy of this call, and the day the
+/// kings and the ministries joined the band that copy started
+/// describing a wheel the app no longer drew — four tests failed by
+/// tapping empty annulus. They were right to fail, and the fix is not
+/// to teach the copy about kings: it is to delete the copy.
+///
+/// So this is the only place the band is packed, and a layer added to
+/// it here is added everywhere at once.
+@visibleForTesting
+List<LifeArc> packWheelBand({
+  required ChronologyData chron,
+  required int creationYear,
+  required List<HebrewKing> kings,
+  required List<WheelMinistry> ministries,
+  String tradition = kDrawnTradition,
+}) =>
+    buildLifeArcs(
+      patriarchs: chron.patriarchs,
+      tradition: tradition,
+      creationYear: creationYear,
+      minYear: kMinYear,
+      maxYear: kMaxYear,
+      // STATED, not defaulted. `packIntoRings`' own 0.02 rad is 22
+      // years on this axis today and would be some other number of
+      // years the day `kMinYear` moved — a silent repack.
+      minGap: 0.02,
+      alsoPack: [
+        ...kingReignSpans(kings),
+        ...ministrySpans(ministries),
+      ],
+    );
+
 /// The 42 reigns as spans for the arc band.
 ///
 /// Uses `reignStart`/`reignEnd`, which is the OUTER hull of a king's
@@ -275,6 +343,29 @@ Color streamColor(String line, int index, int count) =>
 /// ui_strings.dart because the unattended loop shares this checkout and
 /// edits that file; fold these in on a quiet merge.
 const Map<String, Map<String, String>> wheelStrings = {
+  'wheelRefs': {
+    'zh-Hans': '经文出处', 'zh-Hant': '經文出處', 'en': 'References',
+  },
+  'wheelMinistryAnchors': {
+    'zh-Hans': '所据王年',
+    'zh-Hant': '所據王年',
+    'en': 'Anchored on the reigns of',
+  },
+  'wheelReigns': {
+    'zh-Hans': '犹大与以色列列王',
+    'zh-Hant': '猶大與以色列列王',
+    'en': 'Reigns of Judah & Israel',
+  },
+  'wheelMinistriesNote': {
+    'zh-Hans': '事奉年间；多为通用年代，非经文所载',
+    'zh-Hant': '事奉年間；多為通用年代，非經文所載',
+    'en': 'ministry spans; most are conventional, not stated in scripture',
+  },
+  'wheelMinistries': {
+    'zh-Hans': '先知与使徒的年间',
+    'zh-Hant': '先知與使徒的年間',
+    'en': 'Prophets & apostles',
+  },
   'wheelKingsThiele': {
     'zh-Hans': '列王在位（Thiele）',
     'zh-Hant': '列王在位（Thiele）',
@@ -778,6 +869,7 @@ class _Life {
   const _Life({
     required this.man,
     required this.king,
+    required this.ministry,
     required this.id,
     required this.arc,
     required this.centre,
@@ -795,6 +887,7 @@ class _Life {
   /// tap handler's two branches look optional; they are not.
   final Patriarch? man;
   final HebrewKing? king;
+  final WheelMinistry? ministry;
   final String id;
   final LifeArc arc;
 
@@ -1335,7 +1428,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
   /// The tradition the ARCS are drawn on. The other one is printed on
   /// every sheet; see the class comment for why it is not an axis
   /// toggle.
-  static const String _kDrawnTradition = 'mt';
+  static const String _kDrawnTradition = kDrawnTradition;
 
   /// The creation year, or null when the asset does not carry it.
   ///
@@ -1355,31 +1448,17 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
   /// arc that no spoke TITLE crosses, and a life with no such stretch
   /// keeps its ink and loses its word.
   ///
-  /// The band's packing, in ONE place.
-  ///
-  /// Both the painter and the search pan need these arcs, and they must
-  /// agree exactly: `packIntoRings` is first-fit over the whole list, so
-  /// packing the patriarchs alone and the kings alone gives BOTH a ring
-  /// 0, and the pan would then scroll to a radius nothing was drawn at.
-  /// That failure is silent — the wheel looks right and the search
-  /// lands in the wrong annulus — so the two callers share a function
-  /// rather than a convention.
   List<LifeArc> _packBand(
     ChronologyData chron,
     int creation,
     List<HebrewKing> kings,
+    List<WheelMinistry> ministries,
   ) =>
-      buildLifeArcs(
-        patriarchs: chron.patriarchs,
-        tradition: _kDrawnTradition,
+      packWheelBand(
+        chron: chron,
         creationYear: creation,
-        minYear: kMinYear,
-        maxYear: kMaxYear,
-        // STATED, not defaulted. `packIntoRings`' own 0.02 rad is 22
-        // years on this axis today and would be some other number of
-        // years the day `kMinYear` moved — a silent repack.
-        minGap: 0.02,
-        alsoPack: kingReignSpans(kings),
+        kings: kings,
+        ministries: ministries,
       );
 
   /// Returns empty for any of three honest reasons: the layer is
@@ -1397,10 +1476,19 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
     final creation = _creationYear;
     if (chron == null || creation == null) return const [];
 
-    final kings =
-        HebrewKingsService.instance.cached?.kings ?? const <HebrewKing>[];
+    final kings = _hidden.contains(kReignLayerId)
+        ? const <HebrewKing>[]
+        : (HebrewKingsService.instance.cached?.kings ??
+            const <HebrewKing>[]);
+    final ministries = _hidden.contains(kMinistryLayerId)
+        ? const <WheelMinistry>[]
+        : (WheelHistoryService.instance.cached?.ministries ??
+            const <WheelMinistry>[]);
     final byKingId = {for (final k in kings) '$kKingArcPrefix${k.id}': k};
-    final arcs = _packBand(chron, creation, kings);
+    final byMinistryId = {
+      for (final m in ministries) '$kMinistryArcPrefix${m.id}': m
+    };
+    final arcs = _packBand(chron, creation, kings, ministries);
     if (arcs.isEmpty) return const [];
     final rings = lifeArcRingCount(arcs);
     final inner = scriptureLabelBase(rBands);
@@ -1415,7 +1503,8 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
     for (final arc in arcs) {
       final man = chron.byId(arc.id);
       final king = byKingId[arc.id];
-      if (man == null && king == null) continue;
+      final ministry = byMinistryId[arc.id];
+      if (man == null && king == null && ministry == null) continue;
       final band = lifeArcRadii(arc.ring, rings, inner, rRim);
       final occupied = <ArcSpan>[
         for (final s in spokes)
@@ -1428,7 +1517,9 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
             )
       ];
       final room = arcNameRoom(arc.a0, arc.a1, occupied);
-      final name = man?.nameFor(locale) ?? king!.nameFor(locale);
+      final name = man?.nameFor(locale) ??
+          king?.nameFor(locale) ??
+          ministry!.nameFor(locale);
       final size = fitArcLabel(
         text: name,
         radius: band.centre,
@@ -1457,6 +1548,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
       out.add(_Life(
         man: man,
         king: king,
+        ministry: ministry,
         id: arc.id,
         arc: arc,
         centre: band.centre,
@@ -1477,6 +1569,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
           'seth' => _lineColor('none'),
           'judah' => kingdomArcColor(Kingdom.judah),
           'israel' => kingdomArcColor(Kingdom.israel),
+          'ministry' => ministryArcColor(),
           _ => _lineColor('shem'),
         },
         name: drawn,
@@ -1544,7 +1637,8 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
             // are both spans on one axis, so the legend has to be the
             // place a reader learns they rest on different things —
             // named by kingdom, because that is what the two hues mean.
-            for (final kingdom in const [Kingdom.judah, Kingdom.israel])
+            if (!_hidden.contains(kReignLayerId))
+              for (final kingdom in const [Kingdom.judah, Kingdom.israel])
               Padding(
                 padding: EdgeInsets.only(top: t.scaled(2)),
                 child: Row(mainAxisSize: MainAxisSize.min, children: [
@@ -1561,6 +1655,29 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
                   ),
                 ]),
               ),
+            // A THIRD KIND OF CLAIM IN THE SAME ANNULUS. A lifespan is a
+            // stated age; a reign is a synchronised reconstruction; a
+            // ministry is the window a text places a man's work in, and
+            // twenty-five of the thirty-nine rest on nothing stronger
+            // than convention. Its own hue and its own row, because a
+            // reader who cannot tell the three apart has been told the
+            // weakest of them in the voice of the strongest.
+            if (!_hidden.contains(kMinistryLayerId))
+            Padding(
+              padding: EdgeInsets.only(top: t.scaled(2)),
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                Container(
+                    width: t.scaled(10),
+                    height: t.scaled(4),
+                    color: ministryArcColor().withValues(alpha: 0.5)),
+                SizedBox(width: t.scaled(6)),
+                Text(
+                  _s('wheelMinistries', 'Prophets & apostles', locale),
+                  style: TextStyle(
+                      color: wb.mutedText, fontSize: t.scaled(11)),
+                ),
+              ]),
+            ),
           ],
           SizedBox(height: t.scaled(3)),
           Text(_s('wheelShadeNote', '', locale),
@@ -1611,6 +1728,8 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
                       onPressed: () => setSheet(() => setState(() {
                             _hidden.addAll(data.streams.map((s) => s.id));
                             _hidden.add(kLifespanLayerId);
+                            _hidden.add(kReignLayerId);
+                            _hidden.add(kMinistryLayerId);
                           })),
                       child: Text(_s('wheelNone', 'None', locale)),
                     ),
@@ -1644,6 +1763,59 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
                         width: t.scaled(12),
                         height: t.scaled(12),
                         color: _lineColor('shem')),
+                  ),
+                  // The other two layers in the same annulus. Separate
+                  // switches because they are separate kinds of claim,
+                  // and because only one of them costs anything: the
+                  // reigns fit in the sub-rings the patriarchs already
+                  // demand, while the ministries take the band from
+                  // eleven to fifteen. A reader on a small canvas who
+                  // wants a bigger target turns this one off.
+                  CheckboxListTile(
+                    key: const ValueKey('wheelFilterReigns'),
+                    dense: true,
+                    value: !_hidden.contains(kReignLayerId),
+                    onChanged: (_) => setSheet(() => setState(() {
+                          if (!_hidden.remove(kReignLayerId)) {
+                            _hidden.add(kReignLayerId);
+                          }
+                        })),
+                    title: Text(
+                        _s('wheelReigns', 'Reigns of Judah & Israel', locale),
+                        style: TextStyle(
+                            color: wb.text, fontSize: t.scaled(12.5))),
+                    subtitle: Text(
+                      _s('wheelKingsThiele', 'reigns (Thiele)', locale),
+                      style: TextStyle(
+                          color: wb.mutedText, fontSize: t.scaled(11)),
+                    ),
+                    secondary: Container(
+                        width: t.scaled(12),
+                        height: t.scaled(12),
+                        color: kingdomArcColor(Kingdom.judah)),
+                  ),
+                  CheckboxListTile(
+                    key: const ValueKey('wheelFilterMinistries'),
+                    dense: true,
+                    value: !_hidden.contains(kMinistryLayerId),
+                    onChanged: (_) => setSheet(() => setState(() {
+                          if (!_hidden.remove(kMinistryLayerId)) {
+                            _hidden.add(kMinistryLayerId);
+                          }
+                        })),
+                    title: Text(
+                        _s('wheelMinistries', 'Prophets & apostles', locale),
+                        style: TextStyle(
+                            color: wb.text, fontSize: t.scaled(12.5))),
+                    subtitle: Text(
+                      _s('wheelMinistriesNote', '', locale),
+                      style: TextStyle(
+                          color: wb.mutedText, fontSize: t.scaled(11)),
+                    ),
+                    secondary: Container(
+                        width: t.scaled(12),
+                        height: t.scaled(12),
+                        color: ministryArcColor()),
                   ),
                   for (final s in data.streams)
                     CheckboxListTile(
@@ -2331,8 +2503,21 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
       final chron = ChronologyService.instance.cached;
       final creation = _creationYear;
       if (chron == null || creation == null) return;
-      final all = _packBand(chron, creation,
-          HebrewKingsService.instance.cached?.kings ?? const <HebrewKing>[]);
+      // The SAME layer set the painter used, hidden layers included:
+      // a pan computed over arcs the reader has switched off would
+      // land in the wrong sub-ring.
+      final all = _packBand(
+        chron,
+        creation,
+        _hidden.contains(kReignLayerId)
+            ? const <HebrewKing>[]
+            : (HebrewKingsService.instance.cached?.kings ??
+                const <HebrewKing>[]),
+        _hidden.contains(kMinistryLayerId)
+            ? const <WheelMinistry>[]
+            : (WheelHistoryService.instance.cached?.ministries ??
+                const <WheelMinistry>[]),
+      );
       final arc = _find(all, (a) => a.id == hit.id);
       if (arc == null) return;
       lifeRadius = lifeArcRadii(arc.ring, lifeArcRingCount(all),
@@ -2458,10 +2643,13 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
           _select(l.id);
           final man = l.man;
           final king = l.king;
+          final ministry = l.ministry;
           if (man != null) {
             _showPatriarch(context, man, locale);
           } else if (king != null) {
             _showKing(context, king, locale);
+          } else if (ministry != null) {
+            _showMinistry(context, ministry, locale);
           }
           return;
         }
@@ -2796,6 +2984,108 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
   /// the birth year on this man's own event spoke are the same
   /// arithmetic on the same anchor — `_meta.creation.year` plus the
   /// figure — computed from one field, never from two.
+  /// A ministry arc's own sheet.
+  ///
+  /// The note is the point of it. A reign arc can show its years and be
+  /// understood; a ministry arc cannot, because the years were REACHED
+  /// rather than read, and by a different route for almost every man.
+  /// So the note — which says which verse fixed which end, and where
+  /// the tighter window would be — is not an extra here, it is the
+  /// record. Printed before the references, not after them.
+  void _showMinistry(
+      BuildContext context, WheelMinistry ministry, String locale) {
+    final wb = WbColors.of(context);
+
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: wb.paneBg,
+      shape: const RoundedRectangleBorder(),
+      isScrollControlled: true,
+      builder: (sheet) {
+        final t = WbType.of(sheet);
+        final note = ministry.noteFor(locale);
+        return _sheet(sheet, [
+          Text(ministry.nameFor(locale),
+              style: TextStyle(
+                  color: wb.text,
+                  fontSize: t.scaled(16),
+                  fontWeight: FontWeight.w600)),
+          SizedBox(height: t.scaled(4)),
+          Text(
+            '${yearLabel(ministry.start, locale)} – '
+            '${yearLabel(ministry.end, locale)}',
+            style: TextStyle(color: wb.text, fontSize: t.scaled(12.5)),
+          ),
+          SizedBox(height: t.scaled(3)),
+          // WHAT THE SPAN RESTS ON, unconditionally and before anything
+          // else the sheet says. Twenty-five of the thirty-nine are
+          // `conventional`; a reader who is not told cannot tell those
+          // from the fourteen the text and Thiele fix between them.
+          Text(
+            ministry.approximate
+                ? '${_basisText(ministry.basis, locale)} · '
+                    '${_s('wheelApprox', 'approximate', locale)}'
+                : _basisText(ministry.basis, locale),
+            style: TextStyle(color: wb.mutedText, fontSize: t.scaled(11)),
+          ),
+          if (note.isNotEmpty) ...[
+            SizedBox(height: t.scaled(10)),
+            Text(note,
+                style: TextStyle(
+                    color: wb.text, fontSize: t.scaled(12), height: 1.45)),
+          ],
+          if (ministry.refs.isNotEmpty) ...[
+            SizedBox(height: t.scaled(12)),
+            Text(_s('wheelRefs', 'References', locale),
+                style: TextStyle(
+                    color: wb.mutedText,
+                    fontSize: t.scaled(11),
+                    fontWeight: FontWeight.w600)),
+            SizedBox(height: t.scaled(3)),
+            Wrap(
+              spacing: t.scaled(6),
+              runSpacing: t.scaled(4),
+              children: [
+                for (final ref in ministry.refs)
+                  InkWell(
+                    onTap: () {
+                      Navigator.of(sheet).pop();
+                      _jump(context, ref);
+                    },
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                          horizontal: t.scaled(6), vertical: t.scaled(2)),
+                      decoration: BoxDecoration(
+                          border: Border.all(color: wb.border)),
+                      child: Text(ref,
+                          style: TextStyle(
+                              color: wb.accent, fontSize: t.scaled(11))),
+                    ),
+                  ),
+              ],
+            ),
+          ],
+          // The reigns the span was reached FROM, named rather than
+          // implied. They are not a formula — see `WheelMinistry` — so
+          // they are labelled as what they are: the anchors, not the
+          // arithmetic.
+          if (ministry.anchorKings.isNotEmpty) ...[
+            SizedBox(height: t.scaled(10)),
+            Text(
+              '${_s('wheelMinistryAnchors', 'Anchored on the reigns of', locale)}: '
+              '${[
+                for (final id in ministry.anchorKings)
+                  HebrewKingsService.instance.cached?.byId(id)?.nameFor(locale) ??
+                      id
+              ].join(' · ')}',
+              style: TextStyle(color: wb.mutedText, fontSize: t.scaled(11)),
+            ),
+          ],
+        ]);
+      },
+    );
+  }
+
   /// A reign arc's own sheet.
   ///
   /// NOT a push to [HebrewKingsPage]. That page cannot be opened on a

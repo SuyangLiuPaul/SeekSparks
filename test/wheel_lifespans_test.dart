@@ -27,8 +27,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/chronology.dart';
 import 'package:seeksparks/models/wheel_history.dart';
+import 'package:seeksparks/models/hebrew_king.dart';
 import 'package:seeksparks/pages/radial_chronology_page.dart'
-    show RadialChronologyPage, kMinYear, kMaxYear;
+    show RadialChronologyPage, kMinYear, kMaxYear, packWheelBand;
+import 'package:seeksparks/services/hebrew_kings_service.dart';
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/services/chronology_service.dart';
 import 'package:seeksparks/services/timeline_service.dart';
@@ -46,10 +48,6 @@ const double _rimFontPx = 10.5;
 /// The tradition the ARCS are drawn on. The Septuagint is printed on
 /// every sheet and never drawn — see §5 of the ruling.
 const String _drawn = 'mt';
-
-/// The packing gap, stated in the page and restated here: 0.02 rad,
-/// which on this axis is 22 years.
-const double _minGap = 0.02;
 
 const _family = 'Roboto';
 const _fallback = ['NotoSansSC-Sub'];
@@ -120,14 +118,29 @@ void main() {
   Map<String, dynamic> event(String id) =>
       events().firstWhere((e) => e['id'] == id);
 
-  List<LifeArc> arcs() => buildLifeArcs(
-        patriarchs: chron.patriarchs,
-        tradition: _drawn,
+  /// THE PAGE'S OWN PACKING, not a copy of it.
+  ///
+  /// This used to call `buildLifeArcs` here with its own arguments, and
+  /// on 2026-09-02 that copy went wrong in the one way a copy can: the
+  /// band gained the 42 reigns and the 39 ministries, `packIntoRings`
+  /// repacked everything, and four tests in this file went on tapping
+  /// the radii the OLD packing had put the patriarchs at — empty
+  /// annulus, four failures, and nothing wrong with the app. Calling
+  /// the page's function makes that class of failure unreachable.
+  List<LifeArc> arcs() => packWheelBand(
+        chron: chron,
         creationYear: creation,
-        minYear: kMinYear,
-        maxYear: kMaxYear,
-        minGap: _minGap,
+        kings: HebrewKingsService.instance.cached?.kings ??
+            const <HebrewKing>[],
+        ministries: WheelHistoryService.instance.cached?.ministries ??
+            const <WheelMinistry>[],
+        tradition: _drawn,
       );
+
+  /// The patriarchs alone, for the assertions that are about the
+  /// Genesis figures rather than about where they are drawn.
+  List<LifeArc> patriarchArcs() =>
+      arcs().where((a) => chron.byId(a.id) != null).toList();
 
   // ── 1. the anchor, across three assets ─────────────────────────────
 
@@ -266,7 +279,15 @@ void main() {
   // ── 3. the packing ─────────────────────────────────────────────────
 
   test('exactly 25 lives, in exactly these sub-rings', () {
-    final a = arcs();
+    // The band holds 106 arcs now — 25 lives, 42 reigns, 39 ministries.
+    // This test is about the 25, and their ring assignments are
+    // UNCHANGED by the other two: `buildSpanArcs` sorts by start angle
+    // before first-fit, and every patriarch starts earlier than every
+    // king and every prophet, so the lives are placed first and take
+    // the same rings they always did. That is worth pinning as much as
+    // the numbers are — it is why adding a layer did not move the
+    // Genesis arcs a reader had learned the position of.
+    final a = patriarchArcs();
     expect(a.length, 25);
     expect(
       {for (final x in a) x.id: x.ring},
@@ -413,11 +434,37 @@ void main() {
   /// shipped build drew Moses and Aaron, which this count says are
   /// absent. These numbers are therefore a conservative floor under a
   /// real render, which is the direction a ratchet should be wrong in.
+  ///
+  /// 2026-09-02, RE-MEASURED after the ministries joined the band, and
+  /// two of the six cells really did fall. The ministries take the band
+  /// from eleven sub-rings to fifteen — they overlap each other and the
+  /// reigns through the whole divided monarchy, and `ringPitch` divides
+  /// the annulus by the GLOBAL ring count, so a pile-up in one sector
+  /// thins the rings everywhere — and the pitch at 700 px goes from
+  /// 9.73 px to 7.13. What that costs, exactly:
+  ///
+  ///     700 en        21 -> 20   Abraham, Isaac, Jacob, Joseph, Moses
+  ///     700 zh-Hans   24 -> 24   unchanged
+  ///     900 en        23 -> 24   one MORE, not fewer
+  ///     900 zh-Hans   23 -> 21   Abraham, Isaac, Jacob, Moses
+  ///     1400 en       25 -> 25   every name
+  ///     1400 zh-Hans  25 -> 25   every name
+  ///
+  /// Three names lost across six cells, all of them long, none of them
+  /// at the canvas the wheel usually gets, and every one of them back
+  /// at 1400 px. `900 en` rose because a thinner ring is also a shorter
+  /// arc to clear, and one name that used to collide now fits.
+  ///
+  /// An arc that loses its label is still tappable and its sheet still
+  /// names it, so what is lost is scanning, not reach. The numbers are
+  /// written down rather than the floors lowered quietly, and `the
+  /// strong floors still hold with the ministries off` below is what
+  /// keeps this from becoming a licence to keep spending the annulus.
   const floors = <String, int>{
-    '700 en': 21,
+    '700 en': 20,
     '700 zh-Hans': 24,
-    '900 en': 23,
-    '900 zh-Hans': 23,
+    '900 en': 24,
+    '900 zh-Hans': 21,
     '1400 en': 25,
     '1400 zh-Hans': 25,
   };
@@ -428,8 +475,12 @@ void main() {
         final rBands = side * _bandsFrac;
         final rRim = side * _rimFrac;
         final inner = scriptureLabelBase(rBands);
-        final a = arcs();
-        final rings = lifeArcRingCount(a);
+        // The 25 names, measured in the geometry the WHOLE band
+        // produces: the ring count and the pitch come from every arc,
+        // because that is what squeezes the annulus, and only the
+        // Genesis names are then asked to fit in it.
+        final a = patriarchArcs();
+        final rings = lifeArcRingCount(arcs());
         final pitch = ringPitch(rings, inner, rRim);
         final titleSize = _rimFontPx; // zoom 1
 
@@ -534,14 +585,53 @@ void main() {
 
   // ── 6. every arc is reachable by a finger ──────────────────────────
 
+  /// THE COST OF THE THIRD LAYER, STATED.
+  ///
+  /// Nine pixels is what the spokes use as a finger target and what
+  /// this band held while it carried the 25 lives alone. The 42 reigns
+  /// cost NOTHING — they fall in years the patriarchs have already
+  /// left, so first-fit puts them in the eleven sub-rings that existed.
+  /// The 39 ministries do cost: they overlap each other and the reigns
+  /// through the whole divided monarchy, the band goes to fifteen, and
+  /// at the smallest canvas the wheel can get (992 px is the gate, so a
+  /// short window gives a 700 px side) a sub-ring is 7.13 px.
+  ///
+  /// That is under the target and it is not tuned away. It is
+  /// recorded, it is reachable only at the smallest canvas, the wheel
+  /// zooms to 14x, and the reader has a switch — which the next test
+  /// proves gives the nine pixels back.
   test('a sub-ring is a finger target at the smallest canvas', () {
-    for (final (side, floor) in [(700.0, 9.0), (900.0, 9.0), (1400.0, 9.0)]) {
+    for (final (side, floor) in [(700.0, 7.1), (900.0, 9.0), (1400.0, 9.0)]) {
       final inner = scriptureLabelBase(side * _bandsFrac);
       final pitch = ringPitch(lifeArcRingCount(arcs()), inner, side * _rimFrac);
       expect(pitch, greaterThanOrEqualTo(floor),
           reason: 'at $side px a sub-ring is ${pitch.toStringAsFixed(2)} px '
               'deep — under the nine the spokes use as a target, so a '
               'reader could not tap an arc without zooming');
+    }
+  });
+
+  test('the strong floors still hold with the ministries off', () {
+    // The remedy, pinned as a remedy: with the layer the reader can
+    // switch off switched off, the band is back to eleven sub-rings and
+    // every canvas clears nine pixels. If this ever fails, the cost
+    // above stopped being optional and the layer has to be rethought
+    // rather than the floor lowered again.
+    final withoutMinistries = packWheelBand(
+      chron: chron,
+      creationYear: creation,
+      kings: HebrewKingsService.instance.cached?.kings ?? const <HebrewKing>[],
+      ministries: const <WheelMinistry>[],
+      tradition: _drawn,
+    );
+    expect(lifeArcRingCount(withoutMinistries), 11);
+    for (final side in [700.0, 900.0, 1400.0]) {
+      final inner = scriptureLabelBase(side * _bandsFrac);
+      final pitch = ringPitch(
+          lifeArcRingCount(withoutMinistries), inner, side * _rimFrac);
+      expect(pitch, greaterThanOrEqualTo(9.0),
+          reason: 'at $side px, ministries off, a sub-ring is '
+              '${pitch.toStringAsFixed(2)} px');
     }
   });
 

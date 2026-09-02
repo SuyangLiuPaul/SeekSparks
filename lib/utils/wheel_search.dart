@@ -60,6 +60,23 @@ enum WheelHitKind { event, power, nation, stream, patriarch }
 /// found" step needs no special case.
 const String kLifespanLayerId = 'lifespans';
 
+/// The two layers that joined the same annulus on 2026-09-02: the 42
+/// reigns out of `hebrew_kings.json` and the 39 ministries out of
+/// `wheel_history.json`.
+///
+/// They are separate switches rather than one because they are separate
+/// KINDS OF CLAIM — a stated age, a synchronised reign, and the window
+/// a text places a man's work in — and because they cost different
+/// amounts of annulus. The reigns are free: they fall in years the
+/// patriarchs have left, so eleven sub-rings still hold them. The
+/// ministries are not: they overlap each other and the reigns through
+/// the whole divided monarchy and take the band to fifteen, which at a
+/// 700 px canvas is a 7.1 px sub-ring against the 9 px a finger wants.
+/// So the reader who needs a bigger target has a switch that gives it
+/// back, and `wheel_lifespans_test.dart` pins both numbers.
+const String kReignLayerId = 'reigns';
+const String kMinistryLayerId = 'ministries';
+
 /// Where in the record the query was found.
 ///
 /// This is shown to the reader. A row whose title does not visibly

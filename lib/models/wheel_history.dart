@@ -221,6 +221,99 @@ class WheelPower {
       );
 }
 
+/// A ministry: the years one prophet, apostle or named ruler is placed
+/// in, as an arc in the same annulus the Genesis lifespans and the
+/// reigns are drawn in.
+///
+/// A MINISTRY IS NOT A LIFE, and the distinction is the reason this
+/// class exists rather than a `WheelPower` with a different colour.
+/// Scripture almost never gives a prophet a birth or a death; what it
+/// gives is the reigns he prophesied under (Isaiah 1:1) or a regnal
+/// year it dates a word to (Jeremiah 1:2, Ezekiel 1:2). So the span is
+/// a ministry, the note says how it was reached, and [anchorKings]
+/// carries the reigns it was reached FROM.
+///
+/// [anchorKings] IS NOT A FORMULA, and reading it as one is the first
+/// mistake anyone will make with this field. Six of the anchored rows
+/// really are the union of the reigns they name and one (Amos) is the
+/// intersection, because Amos 1:1 names Uzziah and Jeroboam II
+/// CONCURRENTLY. The other nine are not either: Ezekiel runs to the
+/// twenty-seventh year of his own exile (Ezekiel 29:17), which is
+/// fifteen years past the end of the last reign he names, and Huldah is
+/// one day in Josiah's eighteenth year. What holds for every anchored
+/// row is weaker and true: the span OVERLAPS the reigns it cites.
+/// `wheel_ministries_test.dart` pins the strong claim only where the
+/// note makes it.
+class WheelMinistry {
+  const WheelMinistry({
+    required this.id,
+    required this.start,
+    required this.end,
+    required this.region,
+    required this.stream,
+    required this.basis,
+    required this.approximate,
+    required this.refs,
+    required this.anchorKings,
+    required this.names,
+    required this.notes,
+  });
+
+  final String id;
+
+  /// Astronomical years, negative for BC. Unlike [WheelPower.end] this
+  /// is never null: every ministry here has ended.
+  final int start;
+  final int end;
+
+  /// Where it happened — the same vocabulary the powers use.
+  final String region;
+
+  /// The band this ministry belongs to for search and filtering. Every
+  /// prophet and apostle is on `scripture` or `church` rather than on
+  /// the political band of the kingdom he prophesied to, and that is
+  /// deliberate twice over: it is what he actually is, and it keeps
+  /// `wheel_history_integrity_test.dart`'s "a king the wheel names must
+  /// be inside his reign" check off him — Zechariah the prophet (-520)
+  /// and Zechariah king of Israel (-753) are one name and two men.
+  final String stream;
+
+  /// 'scripture+thiele' or 'conventional'. NEVER 'scripture': scripture
+  /// states no BC year for anyone, so a bare `scripture` on a span
+  /// would be a claim the text does not make. Pinned in the test.
+  final String basis;
+
+  final bool approximate;
+
+  /// The verses that FIX the span — not every verse about the man.
+  final List<String> refs;
+
+  /// The `hebrew_kings.json` ids the span was reached from. Empty for
+  /// the rows that rest on the Persian or Roman king-lists instead.
+  final List<String> anchorKings;
+
+  final Map<String, String> names;
+  final Map<String, String> notes;
+
+  String nameFor(String locale) => names[locale] ?? names['en'] ?? id;
+  String noteFor(String locale) => notes[locale] ?? notes['en'] ?? '';
+
+  static WheelMinistry fromJson(Map<String, dynamic> j) => WheelMinistry(
+        id: j['id'] as String,
+        start: (j['start'] as num).toInt(),
+        end: (j['end'] as num).toInt(),
+        region: (j['region'] as String?) ?? 'levant',
+        stream: (j['stream'] as String?) ?? 'scripture',
+        basis: (j['basis'] as String?) ?? 'conventional',
+        approximate: j['approximate'] == true,
+        refs: ((j['refs'] as List?) ?? const []).whereType<String>().toList(),
+        anchorKings:
+            ((j['anchorKings'] as List?) ?? const []).whereType<String>().toList(),
+        names: _localised(j['name']),
+        notes: _localised(j['note']),
+      );
+}
+
 /// One person a wheel event names, resolved at merge time.
 ///
 /// The names are COPIED rather than looked up at paint time, and that
@@ -403,6 +496,7 @@ class WheelHistoryData {
     required this.streams,
     required this.nations,
     required this.powers,
+    required this.ministries,
     required this.events,
     required this.meta,
   });
@@ -410,6 +504,7 @@ class WheelHistoryData {
   final List<WheelStream> streams;
   final List<WheelNation> nations;
   final List<WheelPower> powers;
+  final List<WheelMinistry> ministries;
   final List<WheelHistoryEvent> events;
   final WheelHistoryMeta meta;
 
@@ -421,6 +516,16 @@ class WheelHistoryData {
 
   List<WheelPower> powersOf(String streamId) =>
       powers.where((p) => p.stream == streamId).toList();
+
+  List<WheelMinistry> ministriesOf(String streamId) =>
+      ministries.where((m) => m.stream == streamId).toList();
+
+  WheelMinistry? ministryById(String id) {
+    for (final m in ministries) {
+      if (m.id == id) return m;
+    }
+    return null;
+  }
 
   List<WheelHistoryEvent> eventsOf(String streamId) =>
       events.where((e) => e.stream == streamId).toList();
@@ -438,6 +543,11 @@ class WheelHistoryData {
         powers: ((j['powers'] as List?) ?? const [])
             .whereType<Map<String, dynamic>>()
             .map(WheelPower.fromJson)
+            .toList()
+          ..sort((a, b) => a.start.compareTo(b.start)),
+        ministries: ((j['ministries'] as List?) ?? const [])
+            .whereType<Map<String, dynamic>>()
+            .map(WheelMinistry.fromJson)
             .toList()
           ..sort((a, b) => a.start.compareTo(b.start)),
         events: ((j['events'] as List?) ?? const [])
@@ -637,6 +747,12 @@ class WheelHistoryService {
 
   WheelHistoryData? _cache;
 
+  /// The loaded data, or null before [load] has finished — the same
+  /// synchronous door `ChronologyService` and `HebrewKingsService`
+  /// already offer, and for the same caller: the arc band is built
+  /// inside a paint pass and cannot await.
+  WheelHistoryData? get cached => _cache;
+
   /// Merged at load rather than written into the asset, so the two
   /// files stay single sources: `bible_timeline.json` is audited by
   /// `tools/audit_dates.py` and read by the timeline page, and a copy
@@ -679,6 +795,7 @@ class WheelHistoryService {
       streams: base.streams,
       nations: base.nations,
       powers: base.powers,
+      ministries: base.ministries,
       meta: base.meta,
       events: [
         ...base.events,
