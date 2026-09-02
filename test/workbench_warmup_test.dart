@@ -10,6 +10,8 @@ library;
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seeksparks/models/wb_centre_mode.dart';
+import 'package:seeksparks/constants/bible_versions.dart'
+    show loadableVersions;
 import 'package:seeksparks/services/workbench_warmup.dart';
 
 void main() {
@@ -109,7 +111,17 @@ void main() {
           const ['cuvs-yhwh', 'biblexg-v2', 'bsb']);
       expect(defaultParallelVersions('zh-Hant'),
           const ['cuvs-yhwh-tr', 'biblexg-v2-tr', 'bsb']);
-      expect(defaultParallelVersions('en'), const ['bsb', 'nasb', 'kjv']);
+      // 2026-09-02: was `bsb, nasb, kjv`. With NASB hidden, a default
+      // naming it would not simply be stale — `WorkbenchProvider` runs
+      // every stack through `loadableVersions`, which maps `nasb` onto
+      // `bsb` and collapses it against the first column, leaving the
+      // English reader with two where every other locale gets three.
+      expect(defaultParallelVersions('en'), const ['bsb', 'kjv', 'kjvs']);
+      for (final locale in const ['en', 'zh-Hans', 'zh-Hant', 'fr']) {
+        final stack = defaultParallelVersions(locale);
+        expect(loadableVersions(stack), stack,
+            reason: '$locale seeds a stack that sanitising would change');
+      }
     });
 
     test('an unknown locale gets the English stack, not an empty one', () {

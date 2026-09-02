@@ -193,14 +193,30 @@ const bibleVersions = <BibleVersionInfo>[
   // are fixed, so the set can be rebuilt if the source ever diverges.
 ];
 
-/// Versions hidden from the picker (currently none). CUV, CNV, and LJK1
-/// (`biblexg`/`biblexg-tr`) were REMOVED OUTRIGHT (2026-08, ported from
-/// YsWords v1.4.0) rather than hidden — superseded by CUVS-YHWH /
-/// biblexg-v2. ⚠️ Old shared links using those version codes no longer
-/// resolve; this mirrors the explicit product choice made for YsWords.
-/// Kept as a mechanism in case a future edition needs to be superseded
-/// without breaking old shared links.
-const disabledVersions = <String>{};
+/// Versions hidden from every surface a reader picks from, while their
+/// assets stay bundled and deployed.
+///
+/// CUV, CNV, and LJK1 (`biblexg`/`biblexg-tr`) were REMOVED OUTRIGHT
+/// (2026-08, ported from YsWords v1.4.0) rather than hidden — superseded
+/// by CUVS-YHWH / biblexg-v2, assets and all. ⚠️ Old shared links using
+/// those version codes no longer resolve.
+///
+/// 2026-09-02 — NASB and LEB are the first entries. The owner's
+/// instruction was 只从界面藏掉: take them off the interface, do NOT take
+/// them out of the build. So `pubspec.yaml` still lists
+/// `assets/nasb.json` and `assets/leb.json`, the files still ship, and
+/// `test/data_integrity_test.dart` still pins that they do. What changes
+/// is that nothing offers them: `availableVersions` is what the picker,
+/// the Browse stack sheet, the command line's version verb, the Browse
+/// nav strip and the Copy Center all read.
+///
+/// Hiding is not free, because a version code outlives the reader's
+/// choice of it — see [retiredVersionSuccessors], which is where a
+/// stored `nasb` or `leb` is turned back into a Bible.
+const disabledVersions = <String>{
+  'nasb',
+  'leb',
+};
 
 /// Versions shown in the picker (excludes disabled ones).
 List<BibleVersionInfo> get availableVersions =>
@@ -367,6 +383,20 @@ const Map<String, String> retiredVersionSuccessors = <String, String>{
   // Removed 2026-05 for licensing (Biblica / Zondervan). KJV is the
   // closest English text that is unambiguously public domain.
   'niv': 'kjv',
+  // 2026-09-02 — hidden rather than removed (see [disabledVersions]),
+  // but the reader-facing question is identical and so is the answer.
+  // `isKnownVersion` keys on `availableVersions`, so a hidden code is
+  // already "unloadable" as far as every caller is concerned; without a
+  // row here a reader whose saved version is `nasb` would fall through
+  // to the LOCALE default, and a zh-Hans-locale reader who had
+  // deliberately chosen an English Bible would be handed 和合本.
+  //
+  // BSB for both: it is the English default now, it is public domain,
+  // and it is the only English edition here carrying Strong's tagging.
+  // Language is preserved, which is the property that matters — the
+  // same rule the Chinese rows above are held to.
+  'nasb': 'bsb',
+  'leb': 'bsb',
 };
 
 /// Whether [code] names an edition this build can actually load.
@@ -390,7 +420,10 @@ bool isKnownVersion(String? code) {
 String localeDefaultVersion(String locale) {
   switch (locale) {
     case 'en':
-      return 'nasb';
+      // 2026-09-02: was 'nasb'. NASB is hidden from the interface now
+      // (see [disabledVersions]), so it can no longer be what a fresh
+      // English install opens on. BSB is the owner's replacement.
+      return 'bsb';
     case 'zh-Hant':
       return 'cuvs-yhwh-tr';
     case 'zh-Hans':

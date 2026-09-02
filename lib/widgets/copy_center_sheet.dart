@@ -139,10 +139,14 @@ class _CopyCenterDialogState extends State<_CopyCenterDialog> {
           json.decode(raw) as Map<String, dynamic>,
         );
         // The stored version list can name editions that no longer
-        // exist; and if it ends up empty, fall back to what is on
-        // screen rather than opening on an empty preview.
+        // exist — or, since 2026-09-02, ones that still load but are
+        // hidden from the interface. `availableVersions` covers both:
+        // a Copy Center that kept exporting NASB from a blob written
+        // last month would be the hidden edition leaking out through
+        // the clipboard. If the filter empties the list, fall back to
+        // what is on screen rather than opening on an empty preview.
         final known = stored.versions
-            .where((v) => bibleVersions.any((b) => b.value == v))
+            .where((v) => availableVersions.any((b) => b.value == v))
             .toList();
         setState(() {
           _o = stored.copyWith(

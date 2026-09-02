@@ -118,7 +118,11 @@ void main() {
   });
 
   group('version abbreviations', () {
-    // The live version list, as the dev build reports it.
+    // A FIXTURE, not the live catalog — `cuvs` is not a real code, and
+    // since 2026-09-02 `leb` and `nasb` are hidden from the interface so
+    // the command line no longer offers them. Both stay here on purpose:
+    // the matcher under test is pure, and LEB is what makes `l` and `lx`
+    // ambiguous, which is the case the ambiguity test exists for.
     const versions = {
       'kjv': 'KJV',
       'leb': 'LEB',

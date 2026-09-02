@@ -68,7 +68,19 @@ List<String> defaultParallelVersions(String locale) {
     case 'zh-Hant':
       return const ['cuvs-yhwh-tr', 'biblexg-v2-tr', 'bsb'];
     default:
-      return const ['bsb', 'nasb', 'kjv'];
+      // 2026-09-02: was `bsb, nasb, kjv`. NASB is hidden from the
+      // interface now, and a default stack naming a hidden edition is
+      // not merely stale — `WorkbenchProvider.parallelVersions` runs
+      // every assignment through `loadableVersions`, which maps `nasb`
+      // onto `bsb`, collides it with the `bsb` already in the list and
+      // collapses the pair. The English reader would silently get two
+      // columns where every other locale gets three.
+      //
+      // KJV+S is the third English row rather than a fourth translation
+      // because there is no fourth: it earns the slot on its Strong's
+      // tagging, which neither BSB's nor KJV's column carries in the
+      // same form.
+      return const ['bsb', 'kjv', 'kjvs'];
   }
 }
 

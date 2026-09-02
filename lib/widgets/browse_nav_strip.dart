@@ -15,7 +15,8 @@ library;
 
 import 'package:flutter/material.dart';
 
-import 'package:seeksparks/constants/bible_versions.dart' show bibleVersions;
+import 'package:seeksparks/constants/bible_versions.dart'
+    show availableVersions;
 import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/verse.dart';
 
@@ -85,8 +86,11 @@ class BrowseNavStrip extends StatelessWidget {
             value: version,
             // The reading version — the one whose book names and canon
             // drive the other three lists.
+            // `availableVersions`: this dropdown is one of the places a
+            // reader CHOOSES the reading version, so a hidden edition
+            // must not appear in it (2026-09-02).
             items: [
-              for (final v in bibleVersions) (v.value, v.shortLabel),
+              for (final v in availableVersions) (v.value, v.shortLabel),
             ],
             onChanged: onVersion,
             minWidth: 62,

@@ -104,13 +104,13 @@ void main() {
       // cuv-yhwd and cuvs-yhwh share all 31,102 references, so this
       // reader loses nothing at all.
       expect(
-        resolveReadingVersion(stored: 'cuv-yhwd', fallback: 'nasb'),
+        resolveReadingVersion(stored: 'cuv-yhwd', fallback: 'bsb'),
         'cuvs-yhwh',
       );
     });
 
     test('a live code is returned untouched', () {
-      expect(resolveReadingVersion(stored: 'bsb', fallback: 'nasb'), 'bsb');
+      expect(resolveReadingVersion(stored: 'kjv', fallback: 'bsb'), 'kjv');
     });
 
     test('an unrecognisable code lands on the fallback, never throws', () {
@@ -130,10 +130,10 @@ void main() {
       // A code reaches this from a hand-edited URL as readily as from
       // prefs, and `?v=CUV-YHWD` is the same request.
       expect(
-        resolveReadingVersion(stored: '  CUV-YHWD ', fallback: 'nasb'),
+        resolveReadingVersion(stored: '  CUV-YHWD ', fallback: 'bsb'),
         'cuvs-yhwh',
       );
-      expect(resolveReadingVersion(stored: 'BSB', fallback: 'nasb'), 'bsb');
+      expect(resolveReadingVersion(stored: 'BSB', fallback: 'kjv'), 'bsb');
     });
 
     test('every retired code resolves to something loadable', () {
@@ -199,7 +199,9 @@ void main() {
       final mp = MainProvider();
       await mp.restoreState();
 
-      expect(mp.currentVersion, 'nasb');
+      // The English locale default. It was NASB until 2026-09-02, when
+      // NASB was hidden from the interface; BSB replaced it.
+      expect(mp.currentVersion, 'bsb');
       expect(isKnownVersion(mp.currentVersion), isTrue);
     });
 
@@ -274,7 +276,11 @@ void main() {
     });
 
     test('order is preserved — the stack is a layout, not a set', () {
-      expect(loadableVersions(['bsb', 'kjv', 'nasb']), ['bsb', 'kjv', 'nasb']);
+      // Three live editions. `nasb` stood in the third slot until
+      // 2026-09-02; it now resolves to `bsb` and collapses against the
+      // first entry, which would have made this read as an ordering
+      // failure when it is really a deduplication (covered below).
+      expect(loadableVersions(['bsb', 'kjv', 'kjvs']), ['bsb', 'kjv', 'kjvs']);
     });
 
     test('codes that collapse onto one edition are deduplicated', () {

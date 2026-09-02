@@ -35,10 +35,14 @@ void main() {
     });
 
     test('pairs the concrete cases the catalog actually holds', () {
-      // NASB against KJV, 和合本 against 梁家铿译本 — a real comparison,
+      // BSB against KJV, 和合本 against 梁家铿译本 — a real comparison,
       // in a script the reader already has open.
-      expect(defaultSecondaryVersion('nasb'), 'kjv');
-      expect(defaultSecondaryVersion('kjv'), 'leb');
+      //
+      // 2026-09-02: was `nasb → kjv` and `kjv → leb`. Both named an
+      // edition that is hidden now, and `kjv → leb` in particular was
+      // asserting that Split View seeds a column a reader cannot pick.
+      expect(defaultSecondaryVersion('bsb'), 'kjv');
+      expect(defaultSecondaryVersion('kjv'), 'bsb');
       expect(defaultSecondaryVersion('cuvs-yhwh'), 'biblexg-v2');
       expect(defaultSecondaryVersion('cuvs-yhwh-tr'), 'biblexg-v2-tr');
     });
@@ -59,27 +63,41 @@ void main() {
     // would load one Bible and the pane would then fetch a different one.
     test('keeps a stored version that still exists', () {
       expect(
-        resolveSecondaryVersion(primaryVersion: 'nasb', stored: 'leb'),
-        'leb',
+        resolveSecondaryVersion(primaryVersion: 'bsb', stored: 'kjv'),
+        'kjv',
       );
+    });
+
+    test('a stored version that has been HIDDEN is not kept', () {
+      // The reader's own pick normally wins over any default. It cannot
+      // win when the edition has been taken off the interface: keeping
+      // `leb` here would reopen the split column on a Bible with no row
+      // in the picker, which is the one place the reader would go to
+      // change it back. It lands on the successor instead — BSB, which
+      // is the primary here, so the pairing rule takes over from there.
+      final got =
+          resolveSecondaryVersion(primaryVersion: 'bsb', stored: 'leb');
+      expect(got, isNot('leb'));
+      expect(got, isNot('bsb'), reason: 'a column comparing BSB to BSB');
+      expect(availableVersions.any((v) => v.value == got), isTrue);
     });
 
     test('falls back when nothing is stored', () {
       expect(
-        resolveSecondaryVersion(primaryVersion: 'nasb'),
-        defaultSecondaryVersion('nasb'),
+        resolveSecondaryVersion(primaryVersion: 'bsb'),
+        defaultSecondaryVersion('bsb'),
       );
     });
 
     test('falls back when the stored version was retired', () {
       expect(
         resolveSecondaryVersion(
-            primaryVersion: 'nasb', stored: 'some-retired-code'),
-        defaultSecondaryVersion('nasb'),
+            primaryVersion: 'bsb', stored: 'some-retired-code'),
+        defaultSecondaryVersion('bsb'),
       );
       expect(
-        resolveSecondaryVersion(primaryVersion: 'nasb', stored: ''),
-        defaultSecondaryVersion('nasb'),
+        resolveSecondaryVersion(primaryVersion: 'bsb', stored: ''),
+        defaultSecondaryVersion('bsb'),
       );
     });
 

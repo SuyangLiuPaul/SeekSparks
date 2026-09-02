@@ -434,10 +434,13 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
     const candidates = <String>[
       // Simplified Chinese staple — largest user base.
       'cuvs-yhwh',
-      // English flagships.
+      // English flagships. 2026-09-02: `nasb` and `leb` were here and
+      // are gone — they are hidden from the interface, so no reader can
+      // reach them and every second spent parsing their JSON on the
+      // splash is a second spent on nothing. `bsb` replaces both: it is
+      // the English default now.
+      'bsb',
       'kjv',
-      'nasb',
-      'leb',
       // Traditional Chinese variant.
       'cuvs-yhwh-tr',
       // LJK2 — NT-only specialty translation.

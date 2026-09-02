@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import 'package:seeksparks/constants/bible_versions.dart'
-    show bibleVersions, shortBibleVersionLabel;
+    show availableVersions, bibleVersions, shortBibleVersionLabel;
 import 'package:seeksparks/constants/text_patterns.dart';
 import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/constants/workbench_theme.dart';
@@ -369,8 +369,14 @@ class _CommandPaneState extends State<CommandPane> {
     final wb = context.read<WorkbenchProvider>();
     final book = mp.currentBook;
     return VerbContext(
+      // 2026-09-02: `availableVersions`, not `bibleVersions`. The verb
+      // grammar is a way of PICKING an edition — `d nas` stacks it, `l
+      // leb` limits to it — so it has to offer exactly what the picker
+      // offers. Reading the raw catalog meant a hidden edition stayed
+      // reachable by typing its name, which is the interface still
+      // offering it, just quietly.
       versions: [
-        for (final v in bibleVersions)
+        for (final v in availableVersions)
           VerbVersion(code: v.value, label: v.shortLabel, language: v.language),
       ],
       searchVersion: mp.currentVersion,
@@ -398,7 +404,7 @@ class _CommandPaneState extends State<CommandPane> {
         parse.detail,
         locale,
         available: parse.issue == CommandVerbIssue.unknownVersion
-            ? [for (final v in bibleVersions) v.shortLabel]
+            ? [for (final v in availableVersions) v.shortLabel]
             : const [],
       ));
       _controller.clear();
@@ -485,13 +491,19 @@ class _CommandPaneState extends State<CommandPane> {
     _focus.requestFocus();
   }
 
-  /// `nas`, `NASB`, `kjv`… → that version's code. Exact code or short
+  /// `bsb`, `KJV`, `lxx`… → that version's code. Exact code or short
   /// label first, then an unambiguous 3-character-or-longer prefix; null
   /// for anything else, so the token falls through to reference-parsing
   /// and then to search.
+  ///
+  /// Matched against `availableVersions` so a hidden edition cannot be
+  /// summoned by typing its abbreviation. Narrowing the candidate set
+  /// also makes some prefixes newly unambiguous rather than fewer: with
+  /// LEB gone, `l` still collides with nothing else that starts with it
+  /// at three characters, and `lxx` resolves as it always did.
   String? _matchVersion(String raw) => matchVersionAbbreviation(
         raw,
-        {for (final v in bibleVersions) v.value: v.shortLabel},
+        {for (final v in availableVersions) v.value: v.shortLabel},
       );
 
   /// Insert an operator/wildcard token at the caret (used by the

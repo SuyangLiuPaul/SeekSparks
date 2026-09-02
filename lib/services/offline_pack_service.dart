@@ -250,8 +250,14 @@ class OfflinePackService extends ChangeNotifier {
 
   static const List<String> _bibleUrls = [
     'assets/kjv.json',
-    'assets/leb.json',
-    'assets/nasb.json',
+    'assets/bsb.json',
+    // 'assets/leb.json' / 'assets/nasb.json' removed 2026-09-02. The
+    // assets still ship — this is a visibility change, not a removal —
+    // but both editions are hidden from every surface a reader picks
+    // from, so pre-caching them would spend a reader's bandwidth and
+    // storage on two Bibles the app will never open. `assets/bsb.json`
+    // takes their place: it is the English default now, and it was
+    // missing from this list entirely.
     // 'assets/niv.json' removed 2026-05 — NIV asset bundle removed
     // along with its picker entry (see bible_versions.dart).
     'assets/cuv.json',

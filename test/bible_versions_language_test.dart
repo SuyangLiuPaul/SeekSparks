@@ -53,8 +53,14 @@ void main() {
   });
 
   test('versionsForLanguage returns the expected editions', () {
+    // 2026-09-02: `leb` and `nasb` used to be asserted here. They are
+    // still in the catalog and their assets still ship — they are hidden
+    // (see `disabledVersions`), and `versionsForLanguage` is what fills
+    // the picker's English tab, so they must not come back out of it.
     expect(versionsForLanguage('en').map((v) => v.value),
-        containsAll(<String>['kjv', 'leb', 'nasb']));
+        containsAll(<String>['kjv', 'bsb', 'kjvs']));
+    expect(versionsForLanguage('en').map((v) => v.value),
+        isNot(anyOf(contains('leb'), contains('nasb'))));
     expect(versionsForLanguage('zh-Hans').map((v) => v.value),
         containsAll(<String>['cuvs-yhwh', 'biblexg-v2', 'cuvs-plus']));
     expect(versionsForLanguage('zh-Hant').map((v) => v.value),
@@ -78,9 +84,15 @@ void main() {
       expect(allCodes.contains(code), isFalse,
           reason: '$code should no longer exist in the catalog at all');
     }
-    expect(disabledVersions, isEmpty,
-        reason: 'nothing should be hidden — the mechanism is unused '
-            'until a future version needs it');
+    // 2026-09-02: the mechanism is no longer unused. NASB and LEB are
+    // hidden from the interface at the owner's instruction while their
+    // assets stay bundled and deployed — which is precisely the case
+    // `disabledVersions` exists for, and the opposite of the outright
+    // removal the rest of this test covers. Pinned exactly, so a third
+    // edition cannot be hidden without someone saying so here.
+    expect(disabledVersions, <String>{'nasb', 'leb'},
+        reason: 'hiding an edition is a product decision, not a detail — '
+            'it belongs in a diff someone reads');
   });
 
   test('bibleVersionLanguage resolves known codes + falls back safely', () {
@@ -91,10 +103,20 @@ void main() {
     expect(bibleVersionLanguage('does-not-exist'), 'zh-Hans');
   });
 
-  test('the locale-default versions exist in the catalog', () {
+  test('the locale-default versions are ones a reader can also pick', () {
     // Mirrors MainProvider.restoreState fresh-install defaults:
-    //   en → nasb, zh-Hant → cuvs-yhwh-tr, zh-Hans → cuvs-yhwh.
-    final codes = bibleVersions.map((v) => v.value).toSet();
-    expect(codes, containsAll(<String>['nasb', 'cuvs-yhwh-tr', 'cuvs-yhwh']));
+    //   en → bsb, zh-Hant → cuvs-yhwh-tr, zh-Hans → cuvs-yhwh.
+    //
+    // 2026-09-02: this asked `bibleVersions` — the raw catalog — which
+    // was the weaker question. `nasb` satisfied it right up to the day
+    // it was hidden, and a locale default nobody can find in the picker
+    // is exactly the state that would have shipped. `availableVersions`
+    // is what the picker offers, so that is what a default has to be in.
+    final codes = availableVersions.map((v) => v.value).toSet();
+    expect(codes, containsAll(<String>['bsb', 'cuvs-yhwh-tr', 'cuvs-yhwh']));
+    for (final locale in const ['en', 'zh-Hant', 'zh-Hans', 'fr', '']) {
+      expect(codes.contains(localeDefaultVersion(locale)), isTrue,
+          reason: '$locale opens on an edition the picker does not offer');
+    }
   });
 }
