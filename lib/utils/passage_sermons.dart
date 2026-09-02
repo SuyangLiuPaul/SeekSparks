@@ -8,10 +8,18 @@
 /// one flat list, so the reader could not tell a sermon that preaches
 /// the verse in front of them from one that merely mentions another
 /// verse of the same chapter. **Measured over the whole corpus: of the
-/// 9,857 rows that list produces across its 946 verse-level keys, only
-/// 1,211 — 12.3% — cite the verse the reader selected.** On Romans 8:1
-/// it returns 49 sermons and says nothing about which of them are on
-/// 8:1. That is the #308 defect class: a list whose unit is unstated.
+/// 20,450 rows that list produces across its 1,707 verse-level keys,
+/// only 2,404 — 11.8% — cite the verse the reader selected.** On
+/// Romans 8:1 it returns 64 sermons and says nothing about which of
+/// them are on 8:1. That is the #308 defect class: a list whose unit
+/// is unstated.
+///
+/// Those counts rose (from 9,857 rows over 946 keys, 12.3%) when
+/// `scripts/extract_sermon_refs.py` learned to read a citation in the
+/// form the preacher speaks it — "Romans chapter 8 verse 14", which
+/// this corpus uses far more often than the punctuated form. The
+/// proportion barely moved, so the argument this file rests on is the
+/// same one.
 ///
 /// The exactness was not lost, only invisible — the service sorted
 /// exact hits first, and sort order is not a label. This file makes it
@@ -53,7 +61,7 @@ class SermonCitation {
 ///
 /// [byVerse] is `SermonRefs.byVerse` — canonical `"Book C"` or
 /// `"Book C:V"` keys to sermon ids. Both shapes are real and only both
-/// exist: 351 chapter-level keys and 946 verse-level ones.
+/// exist: 288 chapter-level keys and 1,707 verse-level ones.
 ///
 /// [verse] is the verse the reader has selected. Pass 0 when there is
 /// no focused verse (the chapter-scoped entry point); nothing then

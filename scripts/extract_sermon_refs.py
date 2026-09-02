@@ -26,7 +26,15 @@ post-`translateBookName`). Chinese references in zh-CN / zh-TW bodies
 are mapped through the same alias index `parseReference` uses.
 
 Run from repo root:
-    python3 scripts/extract_sermon_refs.py
+    python3 scripts/extract_sermon_refs.py            # rewrite the asset
+    python3 scripts/extract_sermon_refs.py --check    # is it up to date?
+    python3 scripts/extract_sermon_refs.py --out /tmp/refs.json
+
+`--check` rebuilds in memory and compares against the committed asset,
+naming what moved and exiting non-zero on any difference. `--out` writes
+somewhere else, so the output can be inspected without touching the
+shipped file — the two things this script needed and did not have while
+it was quietly failing to reproduce its own asset.
 """
 from __future__ import annotations
 
@@ -216,28 +224,71 @@ ALIAS = build_alias_index()
 
 # Build an alternation regex of all known book aliases, ordered by
 # length descending so "1 Corinthians" beats "Corinth" beats "Cor".
-def build_book_pattern() -> str:
-    aliases = set()
-    for b in CANONICAL_BOOKS:
-        aliases.add(b)
+#
+# Split in two by whether a trailing `.` may belong to the name. An
+# abbreviation carries one — "Mt. 6" is a citation. A spelled-out book
+# name does not, and reading its full stop as one merges two sentences:
+# "the letters of John. 1 John 2 and verse 18" was read as John chapter
+# 1, which then ate the "1" of the real citation and left "John 2:18"
+# standing where the corpus says 1 John 2:18. Three sites, all the same
+# shape — a sentence ending in a book name in front of a numbered book
+# — and all three invented a reference the sermon never made.
+def build_book_patterns() -> tuple[str, str]:
+    """(spelled-out names, abbreviations) as length-ordered alternations."""
+    spelled = set(CANONICAL_BOOKS)
+    abbreviated: set[str] = set()
     for canon, lst in ENGLISH_ALIASES.items():
-        aliases.update(lst)
-    aliases.update(CHINESE_ALIASES.keys())
-    # Longest first so partial matches don't shadow longer ones.
-    sorted_aliases = sorted(aliases, key=lambda s: (-len(s), s))
-    escaped = [re.escape(a) for a in sorted_aliases]
-    return r"(?:" + "|".join(escaped) + r")"
+        abbreviated.update(lst)
+    abbreviated.update(CHINESE_ALIASES.keys())
+    abbreviated -= spelled
+
+    def alternation(names: set[str]) -> str:
+        # Longest first so partial matches don't shadow longer ones.
+        ordered = sorted(names, key=lambda s: (-len(s), s))
+        return r"(?:" + "|".join(re.escape(a) for a in ordered) + r")"
+
+    return alternation(spelled), alternation(abbreviated)
 
 
-BOOK_RE = build_book_pattern()
+SPELLED_BOOK_RE, ABBREV_BOOK_RE = build_book_patterns()
 
 # A full reference: <book><opt-space><chapter>(:|.|：<verse>(-<verse>)?)?
 # Stops at sensible boundaries to avoid eating prose.
+#
+# The preacher speaks his citations and the transcripts keep them that
+# way: "Acts chapter 5", "Romans chapter 8 verse 14", "in Matthew
+# chapter 6, verses 25 to 34". A punctuation-only separator cannot see
+# any of those, so eight references the corpus states outright were
+# invisible to this script. `refs.json` holds them because whatever
+# generated it could read the spoken form; every regeneration since has
+# silently dropped them.
+#
+# Only the whole words are admitted, never `ch.` or `v.`. Requiring the
+# word means a match needs a token that no ordinary sentence puts
+# between a book name and a number, and the corpus does not abbreviate.
+#
+# The comma and the word `and` are admitted only in front of `verse(s)`
+# — never on their own between book and chapter, where "in Mark, 12
+# disciples" would become Mark 12. `and` earns its place: the corpus
+# says "Luke chapter 4 and verse 18" as readily as "Luke chapter 4,
+# verse 18", and without it those sites match only as far as the
+# chapter and file the sermon under a whole chapter when it named one
+# verse. That is not a false positive but it is the wrong key, and it
+# was 168 of them.
+#
+# The range tail is deliberately left as it was. A bare number with no
+# book in front of it cannot match this pattern at all, so the "to 34"
+# of "verses 25 to 34" is inert whether it is consumed or not, and what
+# is recorded is the head — `Matthew 6:25`, which is exactly what the
+# committed asset holds for 038. Same for "verses 12 and 13" (339) and
+# "verses 1 and 2" (314): heads only, asset agrees.
 REF_RE = re.compile(
-    rf"\b({BOOK_RE})"
-    rf"\.?\s*"
+    rf"\b({SPELLED_BOOK_RE}|{ABBREV_BOOK_RE}\.?)"
+    rf"\s*"
+    rf"(?:chapters?\s+)?"
     rf"(\d+)"
-    rf"(?:\s*[:：.]\s*(\d+)(?:\s*[-–—]\s*\d+)?)?",
+    rf"(?:\s*(?:[:：.]|[,，]?\s*(?:and\s+)?verses?\s+)\s*(\d+)"
+    rf"(?:\s*[-–—]\s*\d+)?)?",
 )
 
 
@@ -275,15 +326,68 @@ def extract_refs(text: str) -> list[str]:
     return out
 
 
-def main() -> int:
-    if not INDEX_JSON.exists():
-        print(f"ERROR: {INDEX_JSON} missing — run ingest_sermons.py first",
-              file=sys.stderr)
-        return 1
+# ────────────────────────────────────────────────────────────────────
+# Staleness digest.
+#
+# `refs.json` is derived, and nothing used to notice when it stopped
+# matching what it is derived FROM. The corpus was edited after the
+# asset was written, the asset kept the references the edit removed,
+# and the next person to run this script would have deleted them
+# without a word. That is the failure this stamp exists to make loud.
+#
+# FNV-1a is a change detector, not a security hash: no adversary is
+# being modelled, and the only property needed is that a different
+# input gives a different number. It is spelled out here — rather than
+# reached for from a library — because the guard that reads it back is
+# `test/sermon_refs_up_to_date_test.dart`, which runs in CI where
+# Python does not, and `crypto` is only a transitive dependency of this
+# project. Fourteen lines of arithmetic in each language beats a new
+# direct dependency for a checksum.
+#
+# The generator's own source is digested alongside the corpus, so
+# editing the extraction rules also marks the asset stale.
+_FNV_OFFSET = 0xCBF29CE484222325
+_FNV_PRIME = 0x100000001B3
+_MASK64 = 0xFFFFFFFFFFFFFFFF
+
+
+def digest_inputs() -> str:
+    """A hex FNV-1a/64 over every byte this script reads, in a fixed
+    order. Mirrored exactly by the Dart guard."""
+    h = _FNV_OFFSET
+
+    def feed(data: bytes) -> None:
+        nonlocal h
+        for byte in data:
+            h = ((h ^ byte) * _FNV_PRIME) & _MASK64
+
+    for path in inputs_in_digest_order():
+        # The path is fed too, so a body file that goes missing is a
+        # change even when some other file's bytes make up the loss.
+        feed(path.relative_to(REPO).as_posix().encode("utf-8"))
+        feed(path.read_bytes())
+    return f"{h:016x}"
+
+
+def inputs_in_digest_order() -> list[Path]:
+    """Everything the output depends on, in the order the digest walks
+    it: this script, the index, then every body file the index names,
+    by sermon id then language."""
+    paths = [Path(__file__).resolve(), INDEX_JSON]
+    sermons = json.loads(INDEX_JSON.read_text(encoding="utf-8"))
+    for sermon in sorted(sermons, key=lambda s: s["id"]):
+        for lang in ("en", "zh-CN", "zh-TW"):
+            body = SERMONS / lang / f"{sermon['id']}.txt"
+            if body.exists():
+                paths.append(body)
+    return paths
+
+
+def build() -> dict:
+    """The whole asset, as it should be on disk right now."""
     sermons = json.loads(INDEX_JSON.read_text(encoding="utf-8"))
     by_sermon: dict[str, list[str]] = {}
     by_verse: dict[str, list[str]] = defaultdict(list)
-    total_refs = 0
 
     for sermon in sermons:
         sid = sermon["id"]
@@ -311,24 +415,93 @@ def main() -> int:
             by_sermon[sid] = merged
             for ref in merged:
                 by_verse[ref].append(sid)
-            total_refs += len(merged)
 
     # Sort byVerse keys + ids for deterministic output.
     sorted_by_verse = {
         k: sorted(set(v)) for k, v in sorted(by_verse.items())
     }
 
-    REFS_OUT.write_text(
-        json.dumps(
-            {"byVerse": sorted_by_verse, "bySermon": by_sermon},
-            ensure_ascii=False,
-            separators=(",", ":"),
-        ),
-        encoding="utf-8",
-    )
+    return {
+        "_meta": {
+            "generator": "scripts/extract_sermon_refs.py",
+            "note": (
+                "Derived file — do not hand-edit. Re-run the generator. "
+                "`inputsFnv1a64` digests the generator plus every corpus "
+                "file it reads; test/sermon_refs_up_to_date_test.dart "
+                "recomputes it and fails when this asset is stale."
+            ),
+            "inputsFnv1a64": digest_inputs(),
+        },
+        "byVerse": sorted_by_verse,
+        "bySermon": by_sermon,
+    }
 
-    size_kb = REFS_OUT.stat().st_size / 1024
-    print(f"Wrote {REFS_OUT.relative_to(REPO)}")
+
+def serialise(doc: dict) -> str:
+    return json.dumps(doc, ensure_ascii=False, separators=(",", ":"))
+
+
+def main(argv: list[str] | None = None) -> int:
+    argv = list(sys.argv[1:] if argv is None else argv)
+    check_only = "--check" in argv
+    if check_only:
+        argv.remove("--check")
+    out_path = REFS_OUT
+    if "--out" in argv:
+        i = argv.index("--out")
+        out_path = Path(argv[i + 1]).resolve()
+        del argv[i:i + 2]
+    if argv:
+        print(f"ERROR: unrecognised arguments {argv}", file=sys.stderr)
+        return 2
+
+    if not INDEX_JSON.exists():
+        print(f"ERROR: {INDEX_JSON} missing — run ingest_sermons.py first",
+              file=sys.stderr)
+        return 1
+
+    doc = build()
+    sermons = json.loads(INDEX_JSON.read_text(encoding="utf-8"))
+    by_sermon, sorted_by_verse = doc["bySermon"], doc["byVerse"]
+    total_refs = sum(len(v) for v in by_sermon.values())
+    text = serialise(doc)
+
+    if check_only:
+        if not REFS_OUT.exists():
+            print(f"DRIFT: {REFS_OUT} does not exist", file=sys.stderr)
+            return 1
+        on_disk = REFS_OUT.read_text(encoding="utf-8")
+        if on_disk == text:
+            print(f"OK: {REFS_OUT.relative_to(REPO)} is what this "
+                  f"generator produces.")
+            return 0
+        print(f"DRIFT: {REFS_OUT.relative_to(REPO)} is not what this "
+              f"generator produces.", file=sys.stderr)
+        old = json.loads(on_disk)
+        for section in ("byVerse", "bySermon"):
+            was, now = old.get(section, {}), doc[section]
+            gone = sorted(set(was) - set(now))
+            added = sorted(set(now) - set(was))
+            changed = [k for k in sorted(set(was) & set(now))
+                       if was[k] != now[k]]
+            print(f"  {section}: {len(gone)} key(s) only on disk, "
+                  f"{len(added)} only from the generator, "
+                  f"{len(changed)} differing", file=sys.stderr)
+            if gone:
+                print(f"    only on disk : {gone[:12]}", file=sys.stderr)
+            if added:
+                print(f"    only new     : {added[:12]}", file=sys.stderr)
+        print("  Re-run without --check to rewrite it, and read the diff "
+              "before committing: a reference that disappears is a "
+              "reference the corpus no longer states.", file=sys.stderr)
+        return 1
+
+    out_path.write_text(text, encoding="utf-8")
+
+    size_kb = out_path.stat().st_size / 1024
+    shown = (out_path.relative_to(REPO)
+             if out_path.is_relative_to(REPO) else out_path)
+    print(f"Wrote {shown}")
     print(f"  Sermons with at least 1 ref : {len(by_sermon)} / {len(sermons)}")
     print(f"  Unique verses cited         : {len(sorted_by_verse)}")
     print(f"  Total ref occurrences       : {total_refs}")
