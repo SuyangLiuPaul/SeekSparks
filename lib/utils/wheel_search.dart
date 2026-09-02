@@ -77,6 +77,15 @@ const String kLifespanLayerId = 'lifespans';
 const String kReignLayerId = 'reigns';
 const String kMinistryLayerId = 'ministries';
 
+/// The genealogy rail: 107 year-marks standing for 198 people out of
+/// `family_tree.json` whom no other layer draws.
+///
+/// Its own switch because its years are its own kind of thing — every
+/// one of the 198 has an EMPTY `datingRefs`, so not one of them rests
+/// on a verse. It is drawn because the owner asked for it and it is
+/// switched separately because a reader is owed the choice.
+const String kLineageLayerId = 'lineage';
+
 /// Where in the record the query was found.
 ///
 /// This is shown to the reader. A row whose title does not visibly

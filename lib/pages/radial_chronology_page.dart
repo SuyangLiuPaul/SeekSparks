@@ -274,6 +274,67 @@ List<SpanInput> ministrySpans(List<WheelMinistry> ministries) => [
         )
     ];
 
+/// One year of the genealogy, and everybody the tree places in it.
+///
+/// A COHORT, NOT A PERSON, and that is the whole design. The 198
+/// family-tree people this layer draws share only 107 distinct years,
+/// and one of those years holds 44 of them — the sons and grandsons of
+/// Jacob who went down into Egypt, whom `family_tree.json` gives one
+/// nominal year because Genesis 46 lists them together and dates none
+/// of them. Drawing 198 marks would print 198 datings; drawing 107
+/// marks, each saying how many people stand behind it, prints what the
+/// asset actually contains.
+///
+/// EVERY ONE OF THESE YEARS HAS AN EMPTY `datingRefs`. Measured, all
+/// 198: 197 are `approximate` and one is a reign, and not one carries
+/// a verse. So this layer is drawn in its own muted style, switched
+/// separately, and its sheet says the year is the genealogy's placement
+/// with no verse behind it — before it says anything else.
+class LineageCohort {
+  const LineageCohort({required this.year, required this.people});
+
+  final int year;
+
+  /// In `family_tree.json` order, which is the tree's own generational
+  /// order — not sorted here, because a re-sort would be an opinion
+  /// about who matters.
+  final List<BiblicalPerson> people;
+}
+
+/// The genealogy's people who are on no other layer, grouped by year.
+///
+/// [drawnIds] is every id the wheel already draws — patriarchs, kings,
+/// and anyone an event names through `personIds`. Excluding BY ID and
+/// not by name is deliberate: a person whose name merely occurs in an
+/// event's prose has no record on the wheel to reach, and dropping him
+/// here would remove the only way to reach him at all.
+@visibleForTesting
+List<LineageCohort> lineageCohorts({
+  required List<BiblicalPerson> people,
+  required Set<String> drawnIds,
+}) {
+  final byYear = <int, List<BiblicalPerson>>{};
+  for (final p in people) {
+    if (p.yearSystem != 'bc') continue;
+    final y = p.birthYear;
+    if (y == null) continue;
+    if (drawnIds.contains(p.id)) continue;
+    byYear.putIfAbsent(y, () => []).add(p);
+  }
+  final years = byYear.keys.toList()..sort();
+  return [
+    for (final y in years) LineageCohort(year: y, people: byYear[y]!)
+  ];
+}
+
+/// The selection id a rail mark answers to. A year, not a person: the
+/// mark stands for everybody in it.
+const String kLineageArcPrefix = 'lineage:';
+
+/// The genealogy rail's own shade: the no-descent grey, because a
+/// conventional placement belongs to no claim the chart makes.
+Color lineageRailColor() => _noDescentColor;
+
 /// The tradition the arc band is drawn on. Top-level because
 /// [packWheelBand] defaults to it and the tests read it.
 const String kDrawnTradition = 'mt';
@@ -300,8 +361,9 @@ List<LifeArc> packWheelBand({
   required List<HebrewKing> kings,
   required List<WheelMinistry> ministries,
   String tradition = kDrawnTradition,
-}) =>
-    buildLifeArcs(
+  int reservedInnerRings = 0,
+}) {
+  final packed = buildLifeArcs(
       patriarchs: chron.patriarchs,
       tradition: tradition,
       creationYear: creationYear,
@@ -316,6 +378,26 @@ List<LifeArc> packWheelBand({
         ...ministrySpans(ministries),
       ],
     );
+  if (reservedInnerRings == 0) return packed;
+  // THE SHIFT LIVES HERE, not at the call site. It was applied in the
+  // page for about ten minutes and immediately broke the same test the
+  // duplicated packing had broken an hour earlier: the arcs moved out
+  // by one sub-ring and `wheel_lifespans_test.dart` went on tapping the
+  // old radii. Anything that changes where an arc is drawn belongs to
+  // this function, because this function is what every caller shares.
+  return [
+    for (final a in packed)
+      LifeArc(
+        id: a.id,
+        ring: a.ring + reservedInnerRings,
+        a0: a.a0,
+        a1: a.a1,
+        line: a.line,
+        birthYear: a.birthYear,
+        deathYear: a.deathYear,
+      )
+  ];
+}
 
 /// The 42 reigns as spans for the arc band.
 ///
@@ -350,6 +432,23 @@ const Map<String, Map<String, String>> wheelStrings = {
     'zh-Hans': '所据王年',
     'zh-Hant': '所據王年',
     'en': 'Anchored on the reigns of',
+  },
+  'wheelLineage': {
+    'zh-Hans': '家谱人物（约）',
+    'zh-Hant': '家譜人物（約）',
+    'en': 'Genealogy (approximate)',
+  },
+  'wheelLineageNote': {
+    'zh-Hans': '此年份是家谱为排布世代所定的位置，并无经文可据；'
+        '本图所收这一层的每一位，其年份都没有经文出处。',
+    'zh-Hant': '此年份是家譜為排布世代所定的位置，並無經文可據；'
+        '本圖所收這一層的每一位，其年份都沒有經文出處。',
+    'en': 'This year is where the genealogy places these people so a '
+        'tree can be drawn. It rests on no verse — not one person in '
+        'this layer carries a reference for their year.',
+  },
+  'wheelLineageCount': {
+    'zh-Hans': '{n} 位', 'zh-Hant': '{n} 位', 'en': '{n} people',
   },
   'wheelReigns': {
     'zh-Hans': '犹大与以色列列王',
@@ -911,6 +1010,27 @@ class _Life {
   final double nameSize;
 }
 
+/// A cohort placed on the rail: its angle, and the radius of the rail.
+class _Rail {
+  const _Rail({
+    required this.cohort,
+    required this.angle,
+    required this.centre,
+    required this.pitch,
+  });
+
+  final LineageCohort cohort;
+  final double angle;
+
+  /// The rail's own radius — the innermost sub-ring of the arc annulus,
+  /// reserved for it. See [_RadialChronologyPageState._reservedRings].
+  final double centre;
+
+  /// The sub-ring's depth, which is the tap target: a mark on the rail
+  /// owns its share of the annulus the same way an arc owns its own.
+  final double pitch;
+}
+
 /// An event's radial label: a tick at the band, then text running out.
 ///
 /// [title] and [ref] are what `planRadialSpokes` decided this label can
@@ -1130,6 +1250,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
       // titles and cannot know where they are until they are planned.
       final lives = _buildLifespans(
           rBands, rRim, spokes, locale, t.scaledChrome(_kLabelPx));
+      final rail = _buildRail(rBands, rRim, lives);
 
       return Stack(children: [
         Positioned.fill(
@@ -1151,7 +1272,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
                   key: const ValueKey('chronologyWheel'),
                   behavior: HitTestBehavior.opaque,
                   onTapUp: (e) => _handleTap(context, e.localPosition, side,
-                      data, streams, arcs, spokes, lives, locale),
+                      data, streams, arcs, spokes, lives, rail, locale),
                   child: Stack(children: [
                     CustomPaint(
                       size: Size(side, side),
@@ -1161,6 +1282,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
                         arcs: arcs,
                         spokes: spokes,
                         lives: lives,
+                        rail: rail,
                         locale: locale,
                         selectedId: _selectedId,
                         wb: wb,
@@ -1459,7 +1581,60 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
         creationYear: creation,
         kings: kings,
         ministries: ministries,
+        reservedInnerRings: _reservedRings,
       );
+
+  /// How many innermost sub-rings the arcs must give up.
+  ///
+  /// One, when the genealogy rail is on. It is a RESERVED ring rather
+  /// than a share of ring 0, because a cohort has no angular width and
+  /// `packIntoRings` would have put every one of the 102 in ring 0
+  /// beside the arcs — 102 marks printed over Adam, Seth and Enosh.
+  ///
+  /// It costs: with all three arc layers on the band goes from fifteen
+  /// sub-rings to sixteen, and at the smallest canvas a sub-ring from
+  /// 7.13 px to 6.69. That is why this layer has its own switch, and
+  /// why `wheel_lifespans_test.dart` pins all three states.
+  int get _reservedRings => _hidden.contains(kLineageLayerId) ? 0 : 1;
+
+  /// The genealogy rail: 107 year-marks, and the people behind each.
+  List<_Rail> _buildRail(double rBands, double rRim, List<_Life> lives) {
+    if (_hidden.contains(kLineageLayerId)) return const [];
+    final people = FamilyTreeService.instance.cached;
+    if (people == null || people.isEmpty) return const [];
+    final chron = ChronologyService.instance.cached;
+    final data = WheelHistoryService.instance.cached;
+    if (chron == null || data == null) return const [];
+
+    // Everything the wheel ALREADY draws, by id. A person on another
+    // layer must not also be a mark on the rail — he would be the same
+    // man twice, in two styles, saying two different kinds of thing.
+    final drawn = <String>{
+      for (final p in chron.patriarchs) p.id,
+      for (final k in HebrewKingsService.instance.cached?.kings ??
+          const <HebrewKing>[])
+        k.id,
+      for (final e in data.events)
+        for (final link in e.people) link.id,
+    };
+    final cohorts = lineageCohorts(people: people, drawnIds: drawn);
+    if (cohorts.isEmpty) return const [];
+
+    final inner = scriptureLabelBase(rBands);
+    final rings = lifeArcRingCount(
+        lives.isEmpty ? const <LifeArc>[] : [for (final l in lives) l.arc]);
+    if (rings == 0) return const [];
+    final band = lifeArcRadii(0, rings, inner, rRim);
+    return [
+      for (final c in cohorts)
+        _Rail(
+          cohort: c,
+          angle: angleForSpan(c.year, kMinYear, kMaxYear),
+          centre: band.centre,
+          pitch: ringPitch(rings, inner, rRim),
+        )
+    ];
+  }
 
   /// Returns empty for any of three honest reasons: the layer is
   /// switched off, the chronology asset has not loaded, or the creation
@@ -1490,6 +1665,8 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
     };
     final arcs = _packBand(chron, creation, kings, ministries);
     if (arcs.isEmpty) return const [];
+    // `packWheelBand` has already shifted the arcs off the reserved
+    // ring, so the count it yields is the whole annulus.
     final rings = lifeArcRingCount(arcs);
     final inner = scriptureLabelBase(rBands);
 
@@ -1663,21 +1840,43 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
             // reader who cannot tell the three apart has been told the
             // weakest of them in the voice of the strongest.
             if (!_hidden.contains(kMinistryLayerId))
-            Padding(
-              padding: EdgeInsets.only(top: t.scaled(2)),
-              child: Row(mainAxisSize: MainAxisSize.min, children: [
-                Container(
-                    width: t.scaled(10),
-                    height: t.scaled(4),
-                    color: ministryArcColor().withValues(alpha: 0.5)),
-                SizedBox(width: t.scaled(6)),
-                Text(
-                  _s('wheelMinistries', 'Prophets & apostles', locale),
-                  style: TextStyle(
-                      color: wb.mutedText, fontSize: t.scaled(11)),
-                ),
-              ]),
-            ),
+              Padding(
+                padding: EdgeInsets.only(top: t.scaled(2)),
+                child: Row(mainAxisSize: MainAxisSize.min, children: [
+                  Container(
+                      width: t.scaled(10),
+                      height: t.scaled(4),
+                      color: ministryArcColor().withValues(alpha: 0.5)),
+                  SizedBox(width: t.scaled(6)),
+                  Text(
+                    _s('wheelMinistries', 'Prophets & apostles', locale),
+                    style: TextStyle(
+                        color: wb.mutedText, fontSize: t.scaled(11)),
+                  ),
+                ]),
+              ),
+            // A TICK, NOT A BAR, and the swatch says so: these are
+            // marks on a rail, not spans, because a birth year is a
+            // point and none of these people has a death year the tree
+            // is willing to state. The word 「约」/"approximate" is in
+            // the label itself — this is the one layer on the wheel
+            // whose every year rests on no verse at all.
+            if (!_hidden.contains(kLineageLayerId))
+              Padding(
+                padding: EdgeInsets.only(top: t.scaled(2)),
+                child: Row(mainAxisSize: MainAxisSize.min, children: [
+                  Container(
+                      width: t.scaled(2),
+                      height: t.scaled(9),
+                      color: lineageRailColor().withValues(alpha: 0.6)),
+                  SizedBox(width: t.scaled(14)),
+                  Text(
+                    _s('wheelLineage', 'Genealogy (approximate)', locale),
+                    style: TextStyle(
+                        color: wb.mutedText, fontSize: t.scaled(11)),
+                  ),
+                ]),
+              ),
           ],
           SizedBox(height: t.scaled(3)),
           Text(_s('wheelShadeNote', '', locale),
@@ -1730,6 +1929,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
                             _hidden.add(kLifespanLayerId);
                             _hidden.add(kReignLayerId);
                             _hidden.add(kMinistryLayerId);
+                            _hidden.add(kLineageLayerId);
                           })),
                       child: Text(_s('wheelNone', 'None', locale)),
                     ),
@@ -1816,6 +2016,29 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
                         width: t.scaled(12),
                         height: t.scaled(12),
                         color: ministryArcColor()),
+                  ),
+                  CheckboxListTile(
+                    key: const ValueKey('wheelFilterLineage'),
+                    dense: true,
+                    value: !_hidden.contains(kLineageLayerId),
+                    onChanged: (_) => setSheet(() => setState(() {
+                          if (!_hidden.remove(kLineageLayerId)) {
+                            _hidden.add(kLineageLayerId);
+                          }
+                        })),
+                    title: Text(
+                        _s('wheelLineage', 'Genealogy (approximate)', locale),
+                        style: TextStyle(
+                            color: wb.text, fontSize: t.scaled(12.5))),
+                    subtitle: Text(
+                      _s('wheelLineageNote', '', locale),
+                      style: TextStyle(
+                          color: wb.mutedText, fontSize: t.scaled(11)),
+                    ),
+                    secondary: Container(
+                        width: t.scaled(3),
+                        height: t.scaled(12),
+                        color: lineageRailColor()),
                   ),
                   for (final s in data.streams)
                     CheckboxListTile(
@@ -2577,6 +2800,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
     List<_Arc> arcs,
     List<_Spoke> spokes,
     List<_Life> lives,
+    List<_Rail> rail,
     String locale,
   ) {
     if (streams.isEmpty) return;
@@ -2636,6 +2860,23 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
     // Resolved by RING then by angle, not by distance, because these
     // arcs are butt-jointed rings: the ring the finger is in is the
     // only ring it can mean.
+    // The rail first, because it owns the innermost sub-ring outright
+    // and no arc is drawn there — checking the arcs first would let a
+    // ring-1 arc claim a tap that fell in ring 0.
+    if (rail.isNotEmpty) {
+      for (final m in rail) {
+        if ((r - m.centre).abs() > m.pitch / 2) continue;
+        // A mark has no width, so the target is angular: half the
+        // gap to a neighbour, floored at what a finger needs.
+        final tolerance = math.max(9 / m.centre, 0.004);
+        if ((a - m.angle).abs() <= tolerance) {
+          _select('$kLineageArcPrefix${m.cohort.year}');
+          _showCohort(context, m.cohort, locale);
+          return;
+        }
+      }
+    }
+
     if (r >= scriptureLabelBase(rBands) && r <= rRim && lives.isNotEmpty) {
       for (final l in lives) {
         if ((r - l.centre).abs() > l.pitch / 2) continue;
@@ -2984,6 +3225,73 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
   /// the birth year on this man's own event spoke are the same
   /// arithmetic on the same anchor — `_meta.creation.year` plus the
   /// figure — computed from one field, never from two.
+  /// A rail mark's sheet: the year, and everybody the tree places in it.
+  ///
+  /// THE DISCLAIMER COMES FIRST, before the year is even repeated,
+  /// because it is the most important thing on the sheet. All 192 of
+  /// these people have an EMPTY `datingRefs` in `family_tree.json` —
+  /// 191 `conventional`, one `thiele`, and not one resting on a verse.
+  /// The year is where the genealogy PLACES them so that a tree can be
+  /// drawn, and a reader who takes it for a date has been misled by
+  /// this app rather than by the asset, which says so plainly.
+  void _showCohort(
+      BuildContext context, LineageCohort cohort, String locale) {
+    final wb = WbColors.of(context);
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: wb.paneBg,
+      shape: const RoundedRectangleBorder(),
+      isScrollControlled: true,
+      builder: (sheet) {
+        final t = WbType.of(sheet);
+        return _sheet(sheet, [
+          Text(yearLabel(cohort.year, locale),
+              style: TextStyle(
+                  color: wb.text,
+                  fontSize: t.scaled(16),
+                  fontWeight: FontWeight.w600)),
+          SizedBox(height: t.scaled(4)),
+          Text(
+            _s('wheelLineageNote', '', locale),
+            style: TextStyle(
+                color: wb.mutedText, fontSize: t.scaled(11), height: 1.4),
+          ),
+          SizedBox(height: t.scaled(12)),
+          Text(
+            _fill('wheelLineageCount', '{n} people', locale,
+                {'n': cohort.people.length}),
+            style: TextStyle(
+                color: wb.mutedText,
+                fontSize: t.scaled(11),
+                fontWeight: FontWeight.w600),
+          ),
+          SizedBox(height: t.scaled(4)),
+          for (final p in cohort.people)
+            InkWell(
+              onTap: () {
+                Navigator.of(sheet).pop();
+                _showPerson(context, p.id, locale);
+              },
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: t.scaled(3)),
+                child: Row(children: [
+                  Expanded(
+                    child: Text(p.localizedName(locale),
+                        style: TextStyle(
+                            color: wb.link, fontSize: t.scaled(12.5))),
+                  ),
+                  if (p.role != null && p.role!.isNotEmpty)
+                    Text(p.role!,
+                        style: TextStyle(
+                            color: wb.mutedText, fontSize: t.scaled(11))),
+                ]),
+              ),
+            ),
+        ]);
+      },
+    );
+  }
+
   /// A ministry arc's own sheet.
   ///
   /// The note is the point of it. A reign arc can show its years and be
@@ -3881,6 +4189,7 @@ class _WorldWheelPainter extends CustomPainter {
     required this.arcs,
     required this.spokes,
     required this.lives,
+    required this.rail,
     required this.locale,
     required this.selectedId,
     required this.wb,
@@ -3891,6 +4200,9 @@ class _WorldWheelPainter extends CustomPainter {
   });
 
   final List<WheelStream> streams;
+
+  /// The genealogy rail's marks, empty when the layer is off.
+  final List<_Rail> rail;
 
   /// Band id → its own shade. See `streamColor`.
   final Map<String, Color> colors;
@@ -3928,6 +4240,7 @@ class _WorldWheelPainter extends CustomPainter {
     // bars — the wheel's own grooves are alpha 0.06 and its power arcs
     // 0.78, and this sits between at 0.22.
     _paintLifespans(canvas, c, rBands, rRim);
+    _paintRail(canvas, c);
     _paintSpokes(canvas, c, rBands);
     _paintRim(canvas, c, rBands, rRim);
     _paintHub(canvas, c, rHub);
@@ -4087,6 +4400,36 @@ class _WorldWheelPainter extends CustomPainter {
   /// annulus at his birth year and his death year. That is the
   /// Chronology page's vertical contemporaries band, read in polar:
   /// every arc the pair crosses is a life that overlapped his.
+  /// The genealogy rail: one mark per year, its height saying how many
+  /// people the tree places in that year.
+  ///
+  /// A HEIGHT, NOT A NUMBER PRINTED. Forty-four names cannot be written
+  /// at one angle, and a mark that is taller than its neighbours says
+  /// "more here" without claiming to say who — which the sheet does
+  /// when the mark is tapped. Drawn dashed and grey because none of
+  /// these years rests on a verse.
+  void _paintRail(Canvas canvas, Offset c) {
+    if (rail.isEmpty) return;
+    final has = selectedId != null;
+    for (final r in rail) {
+      final sel = selectedId == '$kLineageArcPrefix${r.cohort.year}';
+      final alpha = sel ? 0.9 : (has ? 0.30 * 0.35 : 0.30);
+      // 1 person is a third of the ring, 8 or more fills it. Clamped so
+      // the 44-person year does not print into its neighbours.
+      final fill = (0.34 + 0.66 * ((r.cohort.people.length - 1) / 7))
+          .clamp(0.34, 1.0);
+      final half = r.pitch * 0.5 * fill;
+      final dir = Offset(math.cos(r.angle), math.sin(r.angle));
+      canvas.drawLine(
+        c + dir * (r.centre - half),
+        c + dir * (r.centre + half),
+        Paint()
+          ..strokeWidth = sel ? 1.8 : 1.0
+          ..color = lineageRailColor().withValues(alpha: alpha),
+      );
+    }
+  }
+
   void _paintLifespans(Canvas canvas, Offset c, double rBands, double rRim) {
     if (lives.isEmpty) return;
     final has = selectedId != null;

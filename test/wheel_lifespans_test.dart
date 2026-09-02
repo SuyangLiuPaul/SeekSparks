@@ -135,6 +135,11 @@ void main() {
         ministries: WheelHistoryService.instance.cached?.ministries ??
             const <WheelMinistry>[],
         tradition: _drawn,
+        // The genealogy rail is on out of the box and owns the
+        // innermost sub-ring, so the arcs start at ring 1. Passed here
+        // because this file taps arcs at radii it computes, and the
+        // app's default is the state it is testing.
+        reservedInnerRings: 1,
       );
 
   /// The patriarchs alone, for the assertions that are about the
@@ -279,44 +284,46 @@ void main() {
   // ── 3. the packing ─────────────────────────────────────────────────
 
   test('exactly 25 lives, in exactly these sub-rings', () {
-    // The band holds 106 arcs now — 25 lives, 42 reigns, 39 ministries.
-    // This test is about the 25, and their ring assignments are
-    // UNCHANGED by the other two: `buildSpanArcs` sorts by start angle
+    // The band holds 106 arcs now — 25 lives, 42 reigns, 39 ministries
+    // — plus a reserved innermost ring the genealogy rail owns.
+    //
+    // This test is about the 25, and their RELATIVE order is unchanged
+    // by the other two layers: `buildSpanArcs` sorts by start angle
     // before first-fit, and every patriarch starts earlier than every
-    // king and every prophet, so the lives are placed first and take
-    // the same rings they always did. That is worth pinning as much as
-    // the numbers are — it is why adding a layer did not move the
-    // Genesis arcs a reader had learned the position of.
+    // king and every prophet, so the lives are placed first and keep
+    // the assignment they always had. Every number below is one higher
+    // than it used to be, and only because ring 0 is now the rail's —
+    // `packWheelBand` applies that shift so no caller can forget it.
     final a = patriarchArcs();
     expect(a.length, 25);
     expect(
       {for (final x in a) x.id: x.ring},
       {
-        'adam': 0,
-        'seth': 1,
-        'enosh': 2,
-        'kenan': 3,
-        'mahalalel': 4,
-        'jared': 5,
-        'enoch': 6,
-        'methuselah': 7,
-        'lamech': 8,
-        'noah': 0,
-        'shem': 1,
-        'arphaxad': 2,
-        'shelah': 3,
-        'eber': 4,
-        'peleg': 5,
-        'reu': 6,
-        'serug': 7,
-        'nahor_elder': 8,
-        'terah': 9,
-        'abraham': 10,
-        'isaac': 0,
-        'jacob': 5,
-        'joseph': 1,
-        'aaron': 0,
-        'moses': 1,
+        'adam': 1,
+        'seth': 2,
+        'enosh': 3,
+        'kenan': 4,
+        'mahalalel': 5,
+        'jared': 6,
+        'enoch': 7,
+        'methuselah': 8,
+        'lamech': 9,
+        'noah': 1,
+        'shem': 2,
+        'arphaxad': 3,
+        'shelah': 4,
+        'eber': 5,
+        'peleg': 6,
+        'reu': 7,
+        'serug': 8,
+        'nahor_elder': 9,
+        'terah': 10,
+        'abraham': 11,
+        'isaac': 1,
+        'jacob': 6,
+        'joseph': 2,
+        'aaron': 1,
+        'moses': 2,
       },
       reason: 'greedy first-fit on the birth angle is deterministic, and a '
           'changed assignment means the figures, the axis or the gap moved',
@@ -325,13 +332,15 @@ void main() {
     // Noah through Abraham — so eleven is what the overlaps demand, and
     // writing the number into the builder would be a claim about the
     // data that the data already makes.
-    expect(lifeArcRingCount(a), 11);
+    // Twelve now: eleven the overlaps demand, plus the rail's.
+    expect(lifeArcRingCount(a), 12);
     var maxAlive = 0;
     for (var y = creation; y < 0; y++) {
       final k = a.where((x) => x.birthYear <= y && y <= x.deathYear).length;
       if (k > maxAlive) maxAlive = k;
     }
-    expect(lifeArcRingCount(a), maxAlive);
+    expect(lifeArcRingCount(a), maxAlive + 1,
+        reason: 'the reserved rail ring is the only one no life is in');
   });
 
   /// [ringRadii] counts ring 0 from the RIM inward, which is right for
@@ -443,12 +452,15 @@ void main() {
   /// thins the rings everywhere — and the pitch at 700 px goes from
   /// 9.73 px to 7.13. What that costs, exactly:
   ///
-  ///     700 en        21 -> 20   Abraham, Isaac, Jacob, Joseph, Moses
+  ///     700 en        21 -> 20   Abraham, Jacob, Joseph, Aaron, Moses
   ///     700 zh-Hans   24 -> 24   unchanged
-  ///     900 en        23 -> 24   one MORE, not fewer
-  ///     900 zh-Hans   23 -> 21   Abraham, Isaac, Jacob, Moses
+  ///     900 en        23 -> 22   Jacob, Joseph, Moses
+  ///     900 zh-Hans   23 -> 22   Abraham, Isaac, Moses
   ///     1400 en       25 -> 25   every name
   ///     1400 zh-Hans  25 -> 25   every name
+  ///
+  /// Both figures above are AFTER the genealogy rail took the sixteenth
+  /// ring as well. Four names across six cells, none at 1400 px.
   ///
   /// Three names lost across six cells, all of them long, none of them
   /// at the canvas the wheel usually gets, and every one of them back
@@ -463,8 +475,8 @@ void main() {
   const floors = <String, int>{
     '700 en': 20,
     '700 zh-Hans': 24,
-    '900 en': 24,
-    '900 zh-Hans': 21,
+    '900 en': 22,
+    '900 zh-Hans': 22,
     '1400 en': 25,
     '1400 zh-Hans': 25,
   };
@@ -594,14 +606,16 @@ void main() {
   /// The 39 ministries do cost: they overlap each other and the reigns
   /// through the whole divided monarchy, the band goes to fifteen, and
   /// at the smallest canvas the wheel can get (992 px is the gate, so a
-  /// short window gives a 700 px side) a sub-ring is 7.13 px.
+  /// short window gives a 700 px side) a sub-ring is 6.69 px — 7.13
+  /// from the ministries, and 6.69 once the genealogy rail reserves the
+  /// innermost ring on top of that.
   ///
   /// That is under the target and it is not tuned away. It is
   /// recorded, it is reachable only at the smallest canvas, the wheel
   /// zooms to 14x, and the reader has a switch — which the next test
   /// proves gives the nine pixels back.
   test('a sub-ring is a finger target at the smallest canvas', () {
-    for (final (side, floor) in [(700.0, 7.1), (900.0, 9.0), (1400.0, 9.0)]) {
+    for (final (side, floor) in [(700.0, 6.6), (900.0, 8.6), (1400.0, 9.0)]) {
       final inner = scriptureLabelBase(side * _bandsFrac);
       final pitch = ringPitch(lifeArcRingCount(arcs()), inner, side * _rimFrac);
       expect(pitch, greaterThanOrEqualTo(floor),
@@ -623,6 +637,9 @@ void main() {
       kings: HebrewKingsService.instance.cached?.kings ?? const <HebrewKing>[],
       ministries: const <WheelMinistry>[],
       tradition: _drawn,
+      // ...and the rail off too, which is the state a reader reaches
+      // by clearing the two switches this test is about.
+      reservedInnerRings: 0,
     );
     expect(lifeArcRingCount(withoutMinistries), 11);
     for (final side in [700.0, 900.0, 1400.0]) {

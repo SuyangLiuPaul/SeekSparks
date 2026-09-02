@@ -119,6 +119,12 @@ class FamilyTreeService {
   /// Synchronous lookup — caller must have awaited [loadAll] first.
   BiblicalPerson? byId(String id) => _byId?[id];
 
+  /// The loaded people, or null before [loadAll] has finished — the
+  /// same synchronous door `ChronologyService` and `HebrewKingsService`
+  /// offer, and for the same caller: the wheel's genealogy rail is
+  /// built inside a paint pass and cannot await.
+  List<BiblicalPerson>? get cached => _list;
+
   /// The asset's `_meta` legend. `FamilyTreeMeta.empty` until [loadAll]
   /// has completed at least once.
   FamilyTreeMeta get meta => _meta ?? FamilyTreeMeta.empty;
