@@ -587,19 +587,24 @@ void main() {
     await unmount(tester);
   });
 
-  testWidgets('the antediluvian seam is disclosed on the wheel too, with a '
-      'door out', (tester) async {
+  testWidgets('the era note on the wheel says what the years rest on, with '
+      'a door out', (tester) async {
     final e = injected('flood');
     await pump(tester, const Size(1440, 900));
     await openByYear(tester, e);
 
-    // The seam: these eight are not counted back from the Thiele
-    // anchor, and on a wheel they are drawn on the same axis as the
-    // ones that are.
-    expect(sheetText(tester), contains('1652'),
-        reason: 'the wheel draws the flood beside dates derived from '
-            'Solomon and says nothing about the 1,652/1,656 seam');
-    expect(sheetText(tester), contains('Ussher'));
+    // THIS USED TO ASSERT A SEAM AND NOW ASSERTS ITS ABSENCE. The eight
+    // records above Abraham were Ussher's, drawn on the same axis as
+    // dates counted back from Solomon and 1,652 years from creation to
+    // flood where Genesis 5 and 7:6 give 1,656. The chain reaches them
+    // now, so the note names the anchor instead — and the door stays,
+    // because Bible Chronology counts from the creation rather than
+    // towards it and still shows the reader something this wheel cannot.
+    expect(sheetText(tester), isNot(contains('1652')));
+    expect(sheetText(tester), isNot(contains('Ussher')));
+    expect(sheetText(tester), contains('4114'),
+        reason: 'the wheel draws the flood on a chain and says nothing '
+            'about where that chain starts');
 
     final door = find.text(uiStrings['timelineOpenChronology']!['zh-Hans']!);
     expect(door, findsOneWidget);
@@ -612,13 +617,13 @@ void main() {
     await unmount(tester);
   });
 
-  // The block is eight records, and the note is worth nothing on seven
-  // of them if it is wired to one. Read at the data layer what the
-  // three tests above read at the widget layer.
-  test('all eight antediluvian records are marked for the note', () {
+  // The block is fifteen records, and the note is worth nothing on
+  // fourteen of them if it is wired to one. Read at the data layer what
+  // the three tests above read at the widget layer.
+  test('all fifteen antediluvian records are marked for the note', () {
     final ante =
         data.events.where((e) => e.timelineEra == 'antediluvian').toList();
-    expect(ante, hasLength(8));
+    expect(ante, hasLength(15));
     expect(ante.every((e) => e.id.startsWith(kBibleEventIdPrefix)), isTrue);
   });
 
@@ -663,51 +668,66 @@ void main() {
     await unmount(tester);
   });
 
-  /// A NAME THE APP KNOWS AND THIS WHEEL CANNOT CARRY.
+  /// A NAME THE APP KNOWS AND WHERE THE WHEEL NOW ANSWERS FROM.
   ///
-  /// Methuselah is in the app — 969 years, in `family_tree.json`, drawn
-  /// on the Bible Chronology page. He is not on this wheel and cannot
-  /// be: the text gives him an interval, not a date. Until this
-  /// existed, the box answered "Nothing here matches Methuselah",
-  /// which reads as the app never having heard of him — a false
-  /// absence, which is the defect class the whole search box was built
-  /// against.
+  /// THIS TEST HAS BEEN INVERTED, AND THAT INVERSION IS THE FEATURE.
+  /// It used to assert that typing "Methuselah" produced the hand-off
+  /// sentence — "he is not on this wheel: the text gives a lifespan,
+  /// not a date" — because the wheel held no record naming him. It
+  /// holds one now: `bible:methuselah_born`, counted along the same
+  /// chain as the exodus. So the hand-off must NOT fire for him, and
+  /// the wheel must answer with his own record instead.
   ///
-  /// Three things are asserted, and the second and third are the ones
-  /// that make the first mean anything: it fires for him, it does NOT
-  /// fire for a name near his, and it can never appear in front of a
-  /// real result.
-  testWidgets('a patriarch the wheel cannot carry is sent where he is',
+  /// What the hand-off is still for has narrowed to the men whose name
+  /// the wheel spells differently: Nahor the elder, whom the table of
+  /// nations calls plain Nahor. The three assertions that made the old
+  /// version mean anything are kept and pointed at him — it fires, it
+  /// does not fire for a name near his, and it can never stand in front
+  /// of a real result.
+  ///
+  /// The no-figure rule survives intact and is asserted twice over: 969
+  /// is the same in the Masoretic and the Greek, but eight of these men
+  /// differ between the two and this page gives a reader no way to
+  /// choose, so no lifespan figure is printed for any of them — not by
+  /// the hand-off, and not by the new record either.
+  testWidgets('a patriarch the wheel once could not carry is on it now',
       (tester) async {
     await pump(tester, const Size(1440, 900));
     await openFind(tester);
 
     // Typed in English; this page's shipped default is zh-Hans, so a
     // hit proves the fold reaches every script the record carries and
-    // that the sentence is shown in the reader's own language.
+    // that the answer is shown in the reader's own language.
     await tester.enterText(
         find.byKey(const ValueKey('wheelFindField')), 'Methuselah');
     await settle(tester);
-    final shown = sheetText(tester);
-    expect(shown, contains('玛土撒拉'),
+    final found = sheetText(tester);
+    expect(found, contains('玛土撒拉'),
         reason: 'the box knows this man and said nothing about him');
+    expect(found, isNot(contains('不在这个轮盘上')),
+        reason: 'the wheel carries his birth and must not disown him');
+    expect(found, isNot(contains('969')),
+        reason: 'the two traditions differ across these men and this '
+            'page cannot let a reader choose');
+
+    // The hand-off itself, on the one case still left to it: the wheel
+    // spells him Nahor, the family tree calls him Nahor (the elder),
+    // and nothing on the wheel answers to the longer name.
+    await tester.enterText(
+        find.byKey(const ValueKey('wheelFindField')), 'Nahor (the elder)');
+    await settle(tester);
+    final shown = sheetText(tester);
     expect(shown, contains('不在这个轮盘上'));
     expect(shown, contains('自创世起算'),
         reason: 'the reader is told he is absent but not where he is');
-
-    // The figure is 969 in the Masoretic text and 969 in the
-    // Septuagint too — but eight of these men differ between the two,
-    // and this page has no way to let a reader choose. So it prints no
-    // figure at all, for any of them.
-    expect(shown, isNot(contains('969')));
-
-    // And the way out is offered, not merely described.
+    expect(shown, isNot(contains('148')),
+        reason: 'no lifespan figure, for any of them');
     expect(find.text('打开「圣经年代」'), findsOneWidget);
 
     // A name one letter off is a different question, and answering it
-    // with Methuselah's sentence would be worse than answering nothing.
+    // with his sentence would be worse than answering nothing.
     await tester.enterText(
-        find.byKey(const ValueKey('wheelFindField')), 'Methuselahx');
+        find.byKey(const ValueKey('wheelFindField')), 'Nahor (the elderx)');
     await settle(tester);
     expect(sheetText(tester), isNot(contains('不在这个轮盘上')),
         reason: 'a loose match makes a definite claim about the wrong man');

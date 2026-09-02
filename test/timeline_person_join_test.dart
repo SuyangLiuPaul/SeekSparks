@@ -5,8 +5,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 /// THE CHRONOLOGY AND THE FAMILY TREE NAME THE SAME PEOPLE.
 ///
-/// `bible_timeline.json` carries `personIds` on 61 of its 98 events —
-/// 88 links naming 37 people in `family_tree.json`. The field had
+/// `bible_timeline.json` carries `personIds` on 68 of its 105 events —
+/// 95 links naming 44 people in `family_tree.json`. The field had
 /// shipped in the asset and been parsed into [TimelineEvent] since the
 /// page was written, and `personIds` appeared at exactly three lines in
 /// all of `lib/`, all three inside `lib/models/timeline_event.dart`.
@@ -134,6 +134,15 @@ void main() {
   /// carries the reason it is allowed. A new one is a defect until
   /// someone writes its reason here.
   ///
+  /// `wilderness_40/aaron` WAS HERE AND HAS BEEN DELETED, which is what
+  /// the dead-entry assertion at the foot of this file is for. It read
+  /// "Aaron dies in the fortieth of them" and existed only because the
+  /// tree shipped his death as -1407 against the event's -1406.
+  /// `audit_dates.py` now derives him from Exodus 7:7 (83 at the
+  /// exodus) and Numbers 33:39 (123 at his death), which puts the death
+  /// at -1406 and the link inside his life. Nothing is excused any
+  /// more, so nothing is listed.
+  ///
   /// THE FIVE JESUS ENTRIES ARE NOT ADJUDICATED, ON PURPOSE. The tree
   /// says c. 4 BC – c. AD 30 and the timeline says -5 and AD 33, and
   /// BOTH sides are `conventional` and marked approximate — two
@@ -147,9 +156,6 @@ void main() {
     'transfiguration/moses':
         'Moses dies -1406 and appears in glory at Matthew 17:3. The '
             'scene is the point of the record, not a slip.',
-    'wilderness_40/aaron':
-        'The event is the forty years, dated at their end (-1406). '
-            'Aaron dies in the fortieth of them, Numbers 33:38.',
     'jesus_born/jesus':
         'Both sides conventional and approximate: the tree shows c. 4 BC, '
             'the timeline -5. Not adjudicated.',

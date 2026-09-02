@@ -38,8 +38,19 @@ void main() {
   final all = (doc['events'] as List)
       .whereType<Map<String, dynamic>>()
       .map(TimelineEvent.fromJson)
-      .toList()
-    ..sort((a, b) => a.year.compareTo(b.year));
+      .toList();
+  // Stable, exactly as `TimelineService.loadAll` sorts: four events
+  // share -1446 and three share -1406, and only the asset's own order
+  // says the plagues came before the departure. `List.sort` is not
+  // stable in Dart, so a year-only comparator lets an edit anywhere in
+  // the file reshuffle those groups.
+  final assetOrder = {for (var i = 0; i < all.length; i++) all[i].id: i};
+  all.sort((a, b) {
+    final byYear = a.year.compareTo(b.year);
+    return byYear != 0
+        ? byYear
+        : assetOrder[a.id]!.compareTo(assetOrder[b.id]!);
+  });
 
   final books = _candidateBooks(all);
 
@@ -71,7 +82,7 @@ void main() {
         perChapterCount[key] = here.length;
       }
     }
-    expect(pairs, hasLength(324));
+    expect(pairs, hasLength(325));
     expect(pairs.map((p) => p.$1).toSet(), hasLength(31));
 
     final dist = <int, int>{};
@@ -79,8 +90,17 @@ void main() {
       dist[count] = (dist[count] ?? 0) + 1;
     }
     expect(dist[1], 304);
-    expect(dist[2], 20);
-    expect(dist.keys.where((k) => k >= 3), isEmpty);
+    expect(dist[2], 19);
+    // Two chapters carry more. Genesis 5 IS the register of the line
+    // from Adam to Noah, so the six generations added to the asset all
+    // cite it, alongside Seth's birth and Enoch's walk. Genesis 4 gains
+    // one — 4:26, the verse that dates "men began to call on the name
+    // of God" to Enosh's generation. Shelah's birth brings Genesis 10
+    // onto the chart for the first time (10:24) and gives Genesis 11 a
+    // second record beside Babel.
+    expect(perChapterCount[('Genesis', 5)], 8);
+    expect(perChapterCount[('Genesis', 4)], 3);
+    expect(dist.keys.where((k) => k >= 3).toSet(), {3, 8});
   });
 
   test('five events cite no scripture and that is correct', () {

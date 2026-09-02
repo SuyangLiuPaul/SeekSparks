@@ -18,6 +18,8 @@ import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/models/biblical_person.dart';
 import 'package:seeksparks/models/timeline_event.dart';
 import 'package:seeksparks/models/wheel_history.dart';
+import 'package:seeksparks/pages/radial_chronology_page.dart'
+    show kMaxYear, kMinYear;
 import 'package:seeksparks/utils/reference_parser.dart';
 
 Map<String, dynamic> _json(String path) =>
@@ -53,8 +55,72 @@ void main() {
 
     test('the merge adds the whole story and drops one duplicate', () {
       expect(injected, hasLength(timeline.length - 1));
-      expect(injected, hasLength(97));
-      expect(merged, hasLength(wheel.events.length + 97));
+      expect(injected, hasLength(104));
+      expect(merged, hasLength(wheel.events.length + 104));
+    });
+
+    /// THE SEVEN THE OWNER SAID WERE MISSING, MEASURED AT THE MERGE.
+    ///
+    /// The complaint was that the line between Adam and Noah is absent
+    /// from the wheel: Genesis 5 walks ten generations and the wheel
+    /// drew four of them (Adam in Eden and the Fall, Seth's birth,
+    /// Enoch's walk, Noah's flood). Six were nowhere on it in any form,
+    /// and Shelah stood on it only as an undated name in the table of
+    /// nations, under the Genesis 10:24 spelling Salah.
+    ///
+    /// Asserted HERE rather than against the asset, because the asset
+    /// is not what the reader sees: `bibleNarrativeEvents` is a
+    /// constructor call with fourteen arguments and this repository has
+    /// shipped a field silently lost at it three times. A record that
+    /// exists in the file and does not survive the merge is exactly as
+    /// absent as one that was never written.
+    test('the seven generations the wheel had no record of arrive', () {
+      const added = [
+        'enosh_born',
+        'kenan_born',
+        'mahalalel_born',
+        'jared_born',
+        'methuselah_born',
+        'lamech_born',
+        'shelah_born',
+      ];
+      final byId = {for (final e in injected) e.id: e};
+      for (final id in added) {
+        final e = byId['$kBibleEventIdPrefix$id'];
+        expect(e, isNotNull, reason: '$id did not survive the merge');
+        expect(e!.stream, 'world',
+            reason: '$id must land on a band the wheel draws');
+        expect(e.datingRefs, isNotEmpty, reason: '$id lost its chain');
+        expect(e.basis, 'scripture+thiele', reason: id);
+        for (final locale in const ['en', 'zh-Hans', 'zh-Hant']) {
+          expect(e.titleFor(locale), isNotEmpty, reason: '$id $locale');
+          expect(e.descFor(locale), isNotEmpty, reason: '$id $locale');
+        }
+        // The Traditional text is not the Simplified text. A copied
+        // zh-Hant is the quiet failure this asset is prone to.
+        expect(e.titleFor('zh-Hant').isNotEmpty, isTrue, reason: id);
+        expect(e.descFor('zh-Hant'), isNot(e.descFor('zh-Hans')),
+            reason: '$id: zh-Hant looks copied from zh-Hans');
+      }
+
+      // And the whole Genesis 5 line is now on the wheel, in order,
+      // which is the thing that was actually missing.
+      final line = [
+        for (final id in const [
+          'eden',
+          'seth_born',
+          'enosh_born',
+          'kenan_born',
+          'mahalalel_born',
+          'jared_born',
+          'methuselah_born',
+          'lamech_born',
+          'flood',
+        ])
+          byId['$kBibleEventIdPrefix$id']!.year,
+      ];
+      expect(line, orderedEquals(List.of(line)..sort()),
+          reason: 'the ten generations must read forwards on the axis');
     });
 
     test('nothing arrives nameless', () {
@@ -160,13 +226,27 @@ void main() {
       expect(w.stream, 'judah');
     });
 
-    // Two events sit exactly on kMinYear; a third below it would be
-    // drawn off the axis rather than at its start.
+    // Nothing sits ON kMinYear any more. Two events used to — the
+    // creation and Eden, both -4000 when -4000 was the axis start and
+    // Ussher's rounded creation at once. The chain now puts them at
+    // -4114, and `kMinYear` moved to -4200 to hold them; an event below
+    // the axis start would be clamped onto the rim and read as a year
+    // nobody claims. Read from the constant, not from a literal, so the
+    // two cannot drift apart again.
     test('no injected year falls outside the wheel axis', () {
       for (final e in injected) {
-        expect(e.year, greaterThanOrEqualTo(-4000), reason: e.id);
-        expect(e.year, lessThanOrEqualTo(2026), reason: e.id);
+        expect(e.year, greaterThanOrEqualTo(kMinYear), reason: e.id);
+        expect(e.year, lessThanOrEqualTo(kMaxYear), reason: e.id);
       }
+      final earliest = injected
+          .map((e) => e.year)
+          .reduce((a, b) => a < b ? a : b);
+      expect(
+          injected.firstWhere((e) => e.year == earliest).id,
+          '${kBibleEventIdPrefix}creation',
+          reason: 'nothing may be drawn before the creation');
+      expect(earliest, greaterThan(kMinYear),
+          reason: 'the axis must start before the creation, not on it');
     });
   });
 
@@ -216,9 +296,12 @@ void main() {
   /// because a merge that quietly stops carrying one of them looks
   /// exactly like a merge that carries them all.
   group('the apparatus travels with the years', () {
-    test('the dating verses arrive, all 18 of them', () {
+    test('the dating verses arrive, all 29 of them', () {
       final withDating = injected.where((e) => e.datingRefs.isNotEmpty);
-      expect(withDating, hasLength(18));
+      // 18 counted down from the anchor to Abraham and below; 11 more
+      // counted UP from Abraham through Genesis 11 and Genesis 5, which
+      // is what closed the seam this group's header used to describe.
+      expect(withDating, hasLength(29));
       expect(withDating.length,
           timeline.where((e) => e.datingRefs.isNotEmpty).length);
       for (final e in withDating) {
@@ -265,30 +348,67 @@ void main() {
 
     test('the antediluvian block is identifiable on the wheel', () {
       final ante = injected.where((e) => e.timelineEra == 'antediluvian');
-      expect(ante, hasLength(8));
+      // Fifteen since the six generations Genesis 5 walks between Seth
+      // and Noah — Enosh, Kenan, Mahalalel, Jared, Methuselah, Lamech —
+      // and Shelah of Genesis 11 were added to the asset.
+      expect(ante, hasLength(15));
       expect(ante.map((e) => e.id.substring(kBibleEventIdPrefix.length)),
-          containsAll(['creation', 'flood', 'babel']));
+          containsAll([
+            'creation',
+            'flood',
+            'babel',
+            'enosh_born',
+            'kenan_born',
+            'mahalalel_born',
+            'jared_born',
+            'methuselah_born',
+            'lamech_born',
+            'shelah_born',
+          ]));
       // `era` cannot answer this question — the merge overwrites it.
       expect(injected.map((e) => e.era).toSet(), {'bible'});
-      // Every one of them is a reconstruction with no chain reaching it,
-      // which is what makes the seam note necessary rather than pedantic.
+      // ELEVEN OF THE FIFTEEN ARE NOW DERIVED, AND FOUR ARE NOT, AND
+      // that split is the whole content of the era note. Until the
+      // chain was carried above Abraham all fifteen were
+      // reconstructions on Ussher's rounded 4000, 114 years out of step
+      // with the Thiele-anchored half of the same circle. The four that
+      // stayed behind rest on no stated interval — Genesis gives no
+      // number between the creation and Eden, the Fall, Cain's murder,
+      // or Babel — so they travel with the anchor and keep their hedge.
+      const noStatedInterval = {'eden', 'fall', 'cain_abel', 'babel'};
       for (final e in ante) {
-        expect(e.basis, 'conventional', reason: e.id);
-        expect(e.approximate, isTrue, reason: e.id);
-        expect(e.datingRefs, isEmpty, reason: e.id);
+        final id = e.id.substring(kBibleEventIdPrefix.length);
+        if (noStatedInterval.contains(id)) {
+          expect(e.basis, 'conventional', reason: id);
+          expect(e.approximate, isTrue, reason: id);
+          expect(e.datingRefs, isEmpty, reason: id);
+        } else {
+          expect(e.basis, 'scripture+thiele', reason: id);
+          expect(e.approximate, isFalse, reason: id);
+          expect(e.datingRefs, isNotEmpty, reason: id);
+        }
       }
+      expect(ante.where((e) => e.basis == 'conventional'), hasLength(4));
     });
 
-    // The seam itself, stated as arithmetic so the disclosure's number
-    // cannot drift away from the data it describes.
-    test('the seam the note discloses is really 1,652 years', () {
+    // THE SEAM IS GONE, AND THIS IS THE ASSERTION THAT SAYS SO. It used
+    // to read "the seam the note discloses is really 1,652 years" and
+    // pinned the shortfall in the era note against the shortfall in the
+    // data. Both are now zero: creation to flood is the 1,656 Genesis 5
+    // and 7:6 give, and the note no longer claims otherwise. Pinned in
+    // the same direction — the arithmetic first, the prose against it —
+    // so a regression cannot restore one without the other.
+    test('creation to flood is the 1,656 years Genesis states', () {
       int yearOf(String id) =>
           injected.firstWhere((e) => e.id == '$kBibleEventIdPrefix$id').year;
-      expect(yearOf('creation') - yearOf('flood'), -1652);
-      expect(
-          uiStrings['timelineAntediluvianBasis']!['en']!, contains('1,652'));
-      expect(uiStrings['timelineAntediluvianBasis']!['zh-Hans']!,
-          contains('1652'));
+      expect(yearOf('flood') - yearOf('creation'), 1656);
+      final note = uiStrings['timelineAntediluvianBasis']!;
+      for (final locale in const ['en', 'zh-Hans', 'zh-Hant']) {
+        expect(note[locale]!, isNot(contains('1,652')), reason: locale);
+        expect(note[locale]!, isNot(contains('1652')), reason: locale);
+        expect(note[locale]!, isNot(contains('Ussher')), reason: locale);
+        expect(note[locale]!, contains('4114'), reason: locale);
+      }
     });
 
     test('the wheel renders all four apparatus strings', () {
@@ -332,10 +452,28 @@ void main() {
     final withPeople = bibleNarrativeEvents(timeline, people: tree);
     final links = [for (final e in withPeople) ...e.people];
 
-    test('the links arrive, all 88 of them across 61 events', () {
-      expect(withPeople.where((e) => e.people.isNotEmpty), hasLength(61));
-      expect(links, hasLength(88));
-      expect(links.map((l) => l.id).toSet(), hasLength(37));
+    test('the links arrive, all 95 of them across 68 events', () {
+      expect(withPeople.where((e) => e.people.isNotEmpty), hasLength(68));
+      expect(links, hasLength(95));
+      expect(links.map((l) => l.id).toSet(), hasLength(44));
+      // The seven added for the generations the wheel had no record of
+      // each name exactly one man, and the merge must carry him: a chip
+      // that cannot open anything is worse than an absent one, and the
+      // constructor is where such links have been dropped before.
+      final byId = {for (final e in withPeople) e.id: e};
+      for (final id in const [
+        'enosh_born',
+        'kenan_born',
+        'mahalalel_born',
+        'jared_born',
+        'methuselah_born',
+        'lamech_born',
+        'shelah_born',
+      ]) {
+        final people = byId['$kBibleEventIdPrefix$id']!.people;
+        expect(people, hasLength(1), reason: id);
+        expect(people.single.nameFor('zh-Hant'), isNotEmpty, reason: id);
+      }
       // The timeline's own count, so a link lost between the two files
       // fails here rather than shrinking a number nobody re-derives.
       expect(links.length,

@@ -35,9 +35,9 @@
         }
       },
       "counts": {
-        "birth": 27,
+        "birth": 28,
         "reign": 14,
-        "approximate": 236
+        "approximate": 235
       }
     }
   },
@@ -2857,8 +2857,8 @@
         "ithamar"
       ],
       "yearSystem": "bc",
-      "birthYear": -1530,
-      "deathYear": -1407,
+      "birthYear": -1529,
+      "deathYear": -1406,
       "summary": "Older brother of Moses; first High Priest of Israel; spokesman to Pharaoh. Founded the Aaronic priesthood that served until the New Covenant.",
       "summaryZhHans": "摩西的哥哥；以色列的第一位大祭司；对法老的发言人。开创了亚伦的祭司体系，事奉直到新约。",
       "summaryZhHant": "摩西的哥哥；以色列的第一位大祭司；對法老的發言人。開創了亞倫的祭司體系，事奉直到新約。",
@@ -2872,9 +2872,12 @@
       "accent": "priestly",
       "era": "mosaic",
       "dating": {
-        "kind": "approximate",
-        "basis": "conventional",
-        "refs": []
+        "kind": "birth",
+        "basis": "scripture+thiele",
+        "refs": [
+          "Exodus 7:7",
+          "1 Kings 6:1"
+        ]
       }
     },
     {
@@ -8226,6 +8229,18 @@
       "field": "deathYear",
       "from": -1405,
       "why": "follows the repair of moses.birthYear; bible_timeline.json's moses_dies states -1406 exactly on the same basis, citing Deuteronomy 34:7's 120 years alongside Exodus 7:7 and 1 Kings 6:1"
+    },
+    {
+      "id": "aaron",
+      "field": "birthYear",
+      "from": -1530,
+      "why": "Exodus 7:7 makes him 83 in the year of the exodus and Numbers 33:39 gives him 123 at his death, which on this app's own exodus (-1446) is -1529; chronology.json already derived it"
+    },
+    {
+      "id": "aaron",
+      "field": "deathYear",
+      "from": -1407,
+      "why": "Exodus 7:7 makes him 83 in the year of the exodus and Numbers 33:39 gives him 123 at his death, which on this app's own exodus (-1446) is -1406; chronology.json already derived it"
     }
   ]
 }

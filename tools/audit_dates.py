@@ -276,6 +276,20 @@ STATED = [
      r'David was {n} years old when he became king'),
     ('david_reign', 40, '2 Samuel 5:4',
      r'he reigned {n} years'),
+    # The five below carry the chain BACK past Abraham. Genesis 5 and 11
+    # are read as intervals by `read_genesis_chain`; these are the
+    # figures that join those two runs to each other and to the flood,
+    # plus the two that fix Aaron.
+    ('noah_at_flood', 600, 'Genesis 7:6',
+     r'Noah was {n} years old when the floodwaters came'),
+    ('arphaxad_after_flood', 2, 'Genesis 11:10',
+     r'{n} years after the flood'),
+    ('enoch_lifespan', 365, 'Genesis 5:23',
+     r'Enoch lived a total of {n} years'),
+    ('aaron_at_exodus', 83, 'Exodus 7:7',
+     r'Aaron was {n} when they spoke to Pharaoh'),
+    ('aaron_lifespan_n33', 123, 'Numbers 33:39',
+     r'Aaron was {n} years old when he died'),
 ]
 
 
@@ -396,6 +410,14 @@ FT_ID = {'manasseh': 'manasseh_king'}
 
 def near(a, b):
     return a is not None and b is not None and abs(a - b) <= SLACK
+
+
+def record_correction(doc, pid, field, was, why):
+    """Append to the asset's own `corrections` log, once per field."""
+    log = doc.setdefault('corrections', [])
+    if any(c.get('id') == pid and c.get('field') == field for c in log):
+        return
+    log.append({'id': pid, 'field': field, 'from': was, 'why': why})
 
 
 # ----------------------------------------------------------------- checks
@@ -627,6 +649,37 @@ def annotate(ft_doc, tl_doc, chain, am_year, stated, kings, acc, events):
             dated[pid] = {'kind': 'birth', 'basis': 'scripture+thiele',
                           'refs': refs}
 
+    # AARON, WHO IS THE ONE MAN THIS TOOL RE-DATES. Everywhere else it
+    # abstains when a derivation disagrees with a shipped year, because
+    # moving a published date is a decision. This one was already
+    # decided twice, differently, inside this repository: `family_tree`
+    # carried -1530/-1407 as a `conventional` reconstruction while
+    # `chronology.json` derives AM 2585-2708 — -1529/-1406 — from the
+    # two verses this tool already probes. Moses stands beside him,
+    # derived from the same exodus by Exodus 7:7 and agreeing exactly;
+    # Aaron was never reached only because no step named him. Leaving
+    # the year would print one man's life as two spans, one on the
+    # person sheet and one wherever `chronology.json` is drawn.
+    aaron_birth, aaron_death = aaron_years(stated, exodus)
+    aaron = ft.get('aaron')
+    if aaron is not None:
+        for field, was, now in (('birthYear', aaron.get('birthYear'),
+                                 aaron_birth),
+                                ('deathYear', aaron.get('deathYear'),
+                                 aaron_death)):
+            if was == now:
+                continue
+            aaron[field] = now
+            record_correction(ft_doc, 'aaron', field, was,
+                              f'Exodus 7:7 makes him 83 in the year of '
+                              f'the exodus and Numbers 33:39 gives him '
+                              f'123 at his death, which on this app\'s '
+                              f'own exodus ({exodus}) is {now}; '
+                              f'chronology.json already derived it')
+        dated['aaron'] = {'kind': 'birth', 'basis': 'scripture+thiele',
+                          'refs': [stated['aaron_at_exodus'][1],
+                                   '1 Kings 6:1']}
+
     # 3. The kings. A man whose reign hebrew_kings carries always gets the
     #    reign, because that span is sourced. Whether he ALSO gets a birth
     #    depends on the accession age: if the text states one and
@@ -741,7 +794,14 @@ def annotate(ft_doc, tl_doc, chain, am_year, stated, kings, acc, events):
         encoding='utf-8')
 
     # ---- the timeline ---------------------------------------------------
-    sojourn = annotate_timeline(tl_doc, stated, kings)
+    # The pre-Abraham block is re-anchored and the seven missing births
+    # go in BEFORE the annotation runs, so they are stamped by the same
+    # derivation as everything else rather than carrying a basis this
+    # section typed for them.
+    creation_year, creation_refs, prior = prehistory(
+        tl_doc, chain, am_year, stated)
+    sojourn = annotate_timeline(tl_doc, stated, kings, prior,
+                                creation_year, creation_refs)
     (ASSETS / 'bible_timeline.json').write_text(
         json.dumps(tl_doc, ensure_ascii=False, indent=2) + '\n',
         encoding='utf-8')
@@ -750,6 +810,375 @@ def annotate(ft_doc, tl_doc, chain, am_year, stated, kings, acc, events):
     print(f"  family tree: {ft_doc['_meta']['dating']['counts']}")
     print(f"  timeline   : {tl_doc['_meta']['counts']}, "
           f"Septuagint shift {sojourn} years")
+
+
+# --------------------------------------------- the chain, carried upward
+#
+# WHY THIS EXISTS, AND WHAT IT CHANGES.
+#
+# Until now the wheel and the timeline drew ONE CIRCLE ON TWO CALENDARS.
+# Everything from Abraham down is counted back from Thiele's Solomon
+# along intervals the text states — `_meta.anchor` says so, and 32f
+# checks it. The eight events above Abraham were not: they were Ussher's
+# reconstruction with the creation rounded to 4000 BC, and the app
+# disclosed the seam (`timelineAntediluvianBasis`) rather than closing
+# it. The seam is not small. On the Ussher origin the creation-to-flood
+# span is 1,652 where Genesis 5 + 7:6 give 1,656; and Abram, born AM
+# 1948, lands at -2052 on that origin against the -2166 the Thiele chain
+# gives for the same man. 114 years, at the one join a reader is most
+# likely to look at.
+#
+# Nothing in the text stops the chain at Abraham. Genesis 11:26 gives
+# Terah 70 at Abram's birth, Genesis 11:24 back to 11:12 give the seven
+# fathers before him, Genesis 11:10 puts Arphaxad two years after the
+# flood, Genesis 7:6 puts the flood in Noah's 600th year, and Genesis
+# 5:28 back to 5:3 give the nine fathers before Noah. Those are stated
+# intervals of exactly the kind `timeline_steps` is already made of. So
+# the chain is carried up, and the two calendars become one:
+#
+#     creationYear = abram_called.year - AM(Abram's departure from Haran)
+#                  = -2091 - (Terah AM + 70 + 75)
+#                  = -4114
+#
+# CHECKED THREE WAYS, and the tool aborts on any of them:
+#   * the AM figure it lands on must equal `chronology.json`'s own
+#     `epochs.haran.mt`, which `build_chronology` read out of the Greek
+#     and the Hebrew independently;
+#   * creationYear + `traditions.mt.floodAm` must equal the year this
+#     table derives for the flood from Genesis 5 + 7:6;
+#   * creationYear + AM must reproduce the years the asset ALREADY holds
+#     for Abraham's line, which it does not touch — `isaac_born`,
+#     `jacob_esau_born`, `moses_born` and `moses_dies` are the proof
+#     that this is the wheel's existing axis extended, not a new one.
+#
+# THIS SECTION MOVES PUBLISHED YEARS, WHICH THE REST OF THIS TOOL
+# REFUSES TO DO. 32f abstains whenever a derivation disagrees with the
+# shipped year, on the ground that moving a published date is a decision
+# and this tool does not make decisions. The decision was made outside
+# it (`SeekSparks-chart-audit/RULING-WHEEL-PEOPLE.md` §2, §4): the eight
+# antediluvian events move onto the anchor the other ninety already use.
+# It is confined to the pre-Abraham block, listed event by event below,
+# and printed as before/after on every run.
+#
+# WHAT IS DERIVED AND WHAT IS ONLY CARRIED. Eleven events sit on an
+# Anno Mundi figure the chain states, and those are exact
+# (`scripture+thiele`). Four — Eden, the Fall, Cain and Abel, Babel —
+# rest on no stated interval at all, and they are NOT promoted: they
+# keep the offset from the creation that the compiler gave them and stay
+# `conventional`, so they travel with the anchor instead of being left
+# behind on the old one. The offset is read out of the asset rather than
+# typed here, so re-running cannot drift them.
+#
+# NO DEATH EVENTS, for any of them. A spoke answers "when"; the lifespan
+# arcs the wheel is gaining answer "how long", and Methuselah's arc
+# ending on the flood spoke shows what no event may say — the text never
+# says he died in the flood year, the arithmetic does.
+#
+# THE CAINITES GET NOTHING. Genesis 4:17-24 gives Irad, Mehujael,
+# Methushael, Lamech, Adah, Zillah, Jabal, Jubal, Tubal-cain and Naamah
+# begettings, wives, trades and a boast, and not one age, interval or
+# total. There is nothing to count along, so they get no year — not even
+# an approximate one — and no event on an axis made of years.
+
+# The six generations of Genesis 5 the wheel had no record of, and
+# Shelah, whom Genesis 11 dates and the wheel carried only as an undated
+# name from the table of nations. Each is a BIRTH, shaped like the
+# `seth_born` already in the asset.
+#
+# NO LIFESPAN FIGURE APPEARS IN ANY OF THESE. The Masoretic and Greek
+# texts, both of which this app ships, do not agree on all of them
+# (Lamech is 777 in one and 753 in the other), and neither the wheel nor
+# this record gives a reader any way to choose. Bible Chronology plots
+# both. So these say the generation and the story and leave every figure
+# to the page that can qualify it.
+BIRTH_EVENTS = [
+    {
+        'id': 'enosh_born',
+        'name': 'Enosh',
+        'person': 'enosh',
+        'era': 'antediluvian',
+        'titleEn': 'Birth of Enosh',
+        'titleZhHans': '以挪士出生',
+        'titleZhHant': '以挪士出生',
+        'descEn': "Seth's son Enosh is born, third from Adam; in his "
+                  'time men began to call on the name of God.',
+        'descZhHans': '塞特之子以挪士出生，为亚当以下第三代；那时人开始'
+                      '求告神的名。',
+        'descZhHant': '塞特之子以挪士出生，為亞當以下第三代；那時人開始'
+                      '求告神的名。',
+        'refs': ['Genesis 4:26', 'Genesis 5:6-11'],
+    },
+    {
+        'id': 'kenan_born',
+        'name': 'Kenan',
+        'person': 'kenan',
+        'era': 'antediluvian',
+        'titleEn': 'Birth of Kenan',
+        'titleZhHans': '该南出生',
+        'titleZhHant': '該南出生',
+        'descEn': "Enosh's son Kenan is born, fourth from Adam in the "
+                  'line of Seth.',
+        'descZhHans': '以挪士之子该南出生，为塞特家系中亚当以下第四代。',
+        'descZhHant': '以挪士之子該南出生，為塞特家系中亞當以下第四代。',
+        'refs': ['Genesis 5:9-14'],
+    },
+    {
+        'id': 'mahalalel_born',
+        'name': 'Mahalalel',
+        'person': 'mahalalel',
+        'era': 'antediluvian',
+        'titleEn': 'Birth of Mahalalel',
+        'titleZhHans': '玛勒列出生',
+        'titleZhHant': '瑪勒列出生',
+        'descEn': "Kenan's son Mahalalel is born, fifth from Adam in "
+                  'the line of Seth.',
+        'descZhHans': '该南之子玛勒列出生，为塞特家系中亚当以下第五代。',
+        'descZhHant': '該南之子瑪勒列出生，為塞特家系中亞當以下第五代。',
+        'refs': ['Genesis 5:12-17'],
+    },
+    {
+        'id': 'jared_born',
+        'name': 'Jared',
+        'person': 'jared',
+        'era': 'antediluvian',
+        'titleEn': 'Birth of Jared',
+        'titleZhHans': '雅列出生',
+        'titleZhHant': '雅列出生',
+        'descEn': "Mahalalel's son Jared is born, sixth from Adam and "
+                  'the father of Enoch.',
+        'descZhHans': '玛勒列之子雅列出生，为亚当以下第六代，是以诺的父亲。',
+        'descZhHant': '瑪勒列之子雅列出生，為亞當以下第六代，是以諾的父親。',
+        'refs': ['Genesis 5:15-20'],
+    },
+    {
+        'id': 'methuselah_born',
+        'name': 'Methuselah',
+        'person': 'methuselah',
+        'era': 'antediluvian',
+        'titleEn': 'Birth of Methuselah',
+        'titleZhHans': '玛土撒拉出生',
+        'titleZhHant': '瑪土撒拉出生',
+        'descEn': "Enoch's son Methuselah is born; Genesis records no "
+                  'longer life than his.',
+        'descZhHans': '以诺之子玛土撒拉出生；创世记所载的寿数，无人长过他。',
+        'descZhHant': '以諾之子瑪土撒拉出生；創世記所載的壽數，無人長過他。',
+        'refs': ['Genesis 5:21-27'],
+    },
+    {
+        'id': 'lamech_born',
+        'name': 'Lamech',
+        'person': 'lamech',
+        'era': 'antediluvian',
+        'titleEn': "Birth of Lamech, Noah's Father",
+        'titleZhHans': '拉麦出生（挪亚之父）',
+        'titleZhHant': '拉麥出生（挪亞之父）',
+        'descEn': "Methuselah's son Lamech is born; he names his son "
+                  'Noah, hoping for comfort from the toil of the '
+                  'cursed ground.',
+        'descZhHans': '玛土撒拉之子拉麦出生；他给儿子起名挪亚，指望在受咒诅'
+                      '之地的劳苦中得安慰。',
+        'descZhHant': '瑪土撒拉之子拉麥出生；他給兒子起名挪亞，指望在受咒詛'
+                      '之地的勞苦中得安慰。',
+        'refs': ['Genesis 5:25-31'],
+    },
+    {
+        'id': 'shelah_born',
+        'name': 'Shelah',
+        'person': 'shelah',
+        # `antediluvian` is what this asset's era key means by "before
+        # Abraham" — `babel` is post-flood and carries it too — and it
+        # is the only pre-patriarchal value `kTimelineEraStream` maps.
+        'era': 'antediluvian',
+        'titleEn': 'Birth of Shelah',
+        'titleZhHans': '沙拉出生',
+        'titleZhHant': '沙拉出生',
+        'descEn': "Arphaxad's son Shelah is born, the first generation "
+                  'after the flood to be born rather than saved from '
+                  'it; the wheel carries him among the nations as '
+                  'Salah.',
+        'descZhHans': '亚法撒之子沙拉出生，是洪水之后头一代生于水后、而非'
+                      '得救于水中的人；轮盘的列国表中作「沙拉」。',
+        'descZhHant': '亞法撒之子沙拉出生，是洪水之後頭一代生於水後、而非'
+                      '得救於水中的人；輪盤的列國表中作「沙拉」。',
+        'refs': ['Genesis 10:24', 'Genesis 11:12-15'],
+    },
+]
+
+# The four events above Abraham that rest on no stated interval. They
+# are NOT promoted and NOT re-dated by hand: each keeps the offset from
+# the creation it already had, so it travels with the anchor.
+CARRIED_EVENTS = ['eden', 'fall', 'cain_abel', 'babel']
+
+
+def prehistory(tl_doc, chain, am_year, stated):
+    """Re-anchor everything above Abraham, and add the missing births.
+
+    Returns `(creation_year, {event id: (year, datingRefs)})` for the
+    events whose year the chain now states. `annotate_timeline` stamps
+    the basis from that map, so nothing here types a basis for itself.
+    """
+    events = tl_doc['events']
+    by_id = {e['id']: e for e in events}
+
+    # ---- the anchor ----------------------------------------------------
+    # Abram leaves Haran at 75 (Genesis 12:4); Terah is 70 at his birth
+    # (Genesis 11:26); Terah's own AM comes from the Genesis 11 run.
+    abram_born_am = am_year['Terah'] + chain['Terah']['beget']
+    haran_am = abram_born_am + stated['abraham_at_call'][0]
+    ch = load('chronology.json')
+    ep = {e['id']: e['years'] for e in ch['epochs']}
+    if ep['haran']['mt'] != haran_am:
+        sys.exit(f'aborting: this chain puts Abram\'s departure at AM '
+                 f'{haran_am}; chronology.json says {ep["haran"]["mt"]}')
+    creation_year = by_id['abram_called']['year'] - haran_am
+
+    flood_am = am_year['Noah'] + stated['noah_at_flood'][0]
+    mt = next(t for t in ch['traditions'] if t['id'] == 'mt')
+    if mt['floodAm'] != flood_am or ep['flood']['mt'] != flood_am:
+        sys.exit(f'aborting: Genesis 5 + 7:6 put the flood at AM '
+                 f'{flood_am}; chronology.json says {mt["floodAm"]}')
+
+    # The proof this is the existing axis and not a new one: the years
+    # the asset ALREADY holds for Abraham's line have to fall out of
+    # `creation_year + AM` unchanged. Nothing below Abraham is moved by
+    # this section, so any disagreement means the two halves of the
+    # chain do not meet and there is no single axis to draw.
+    #   Isaac  = Abram's birth + 100 (Genesis 21:5)
+    #   Jacob  = Isaac  + 60  (Genesis 25:26)
+    #   Egypt  = Jacob  + 130 (Genesis 47:9)
+    #   exodus = Egypt  + 430 (Exodus 12:40)
+    isaac_am = abram_born_am + stated['abraham_at_isaac'][0]
+    jacob_am = isaac_am + stated['isaac_at_jacob'][0]
+    egypt_am = jacob_am + stated['jacob_at_egypt'][0]
+    exodus_am = egypt_am + stated['egypt_sojourn'][0]
+    joins = [
+        ('abram_called', haran_am),
+        ('isaac_born', isaac_am),
+        ('jacob_esau_born', jacob_am),
+        ('israel_egypt', egypt_am),
+        ('exodus', exodus_am),
+        ('moses_born', exodus_am - stated['moses_at_exodus'][0]),
+        ('moses_dies', exodus_am + stated['moses_lifespan'][0]
+         - stated['moses_at_exodus'][0]),
+    ]
+    for eid, am in joins:
+        if creation_year + am != by_id[eid]['year']:
+            sys.exit(f'aborting: the anchor puts {eid} at '
+                     f'{creation_year + am}; the asset holds '
+                     f'{by_id[eid]["year"]} — the two halves of the '
+                     f'chain do not meet')
+    if creation_year + ep['exodus']['mt'] != by_id['exodus']['year']:
+        sys.exit('aborting: chronology.json and this chain disagree on '
+                 'the exodus')
+
+    # ---- the chain of verses -------------------------------------------
+    # Whatever `abram_called` already cites, plus every interval this
+    # section walks up through. A reader gets the whole chain, because
+    # the last link alone does not say the year rests on Thiele too.
+    upward = [chain['Terah']['begetRef']]
+    upward += [chain[n]['begetRef'] for n in reversed(GEN11[:-1])]
+    upward += [chain['Shem']['begetRef'], stated['noah_at_flood'][1]]
+    upward += [chain[n]['begetRef'] for n in reversed(GEN5[:-1])]
+    creation_refs = list(by_id['abram_called'].get('datingRefs', []))
+    for r in upward:
+        for part in r.split(', '):
+            if part not in creation_refs:
+                creation_refs.append(part)
+
+    # ---- what each event's year now is ---------------------------------
+    # (event id, Anno Mundi year). Everything here is an interval the
+    # text states; `CARRIED_EVENTS` below are the ones that are not.
+    dated_am = [('creation', 0), ('seth_born', am_year['Seth'])]
+    dated_am += [(row['id'], am_year[row['name']]) for row in BIRTH_EVENTS]
+    # Enoch's event is his being TAKEN, not his birth: Genesis 5:23-24
+    # gives him 365 years and then he is not. Its shipped year sat 127
+    # years after that, outside his own life.
+    dated_am.append(('enoch_walks',
+                     am_year['Enoch'] + stated['enoch_lifespan'][0]))
+    dated_am.append(('flood', flood_am))
+
+    print('\n32g — the chain carried above Abraham')
+    print(f'  Abram leaves Haran in AM {haran_am} '
+          f'(Genesis 11:26 + Genesis 12:4, on the Genesis 11 run)')
+    print(f'  so the creation falls in {creation_year}, on '
+          f'{len(creation_refs)} stated intervals')
+    print(f'  the flood falls in AM {flood_am} -> '
+          f'{creation_year + flood_am}')
+
+    # Offsets are read from the asset BEFORE anything moves, so a second
+    # run recomputes the same numbers instead of drifting.
+    old_creation = by_id['creation']['year']
+    carried = {eid: by_id[eid]['year'] - old_creation
+               for eid in CARRIED_EVENTS if eid in by_id}
+
+    derived = {}
+    moved = []
+    for eid, am in dated_am:
+        year = creation_year + am
+        extra = [chain['Enoch']['spanRef']] if eid == 'enoch_walks' else []
+        refs = creation_refs + [r for r in extra if r not in creation_refs]
+        old = by_id.get(eid)
+        if old is not None and old['year'] != year:
+            moved.append((eid, old['year'], year))
+        derived[eid] = (year, refs)
+        if old is not None:
+            old['year'] = year
+
+    for eid, offset in carried.items():
+        year = creation_year + offset
+        if by_id[eid]['year'] != year:
+            moved.append((eid, by_id[eid]['year'], year))
+        by_id[eid]['year'] = year
+
+    # ---- the records that did not exist --------------------------------
+    added = []
+    for row in BIRTH_EVENTS:
+        year = derived[row['id']][0]
+        rec = {
+            'id': row['id'],
+            'year': year,
+            'era': row['era'],
+            'titleEn': row['titleEn'],
+            'titleZhHans': row['titleZhHans'],
+            'titleZhHant': row['titleZhHant'],
+            'descEn': row['descEn'],
+            'descZhHans': row['descZhHans'],
+            'descZhHant': row['descZhHant'],
+            'refs': row['refs'],
+            'personIds': [row['person']],
+            'basis': 'scripture+thiele',
+            'approximate': False,
+        }
+        old = by_id.get(row['id'])
+        if old is None:
+            at = next((i for i, e in enumerate(events) if e['year'] > year),
+                      len(events))
+            events.insert(at, rec)
+            added.append(row['id'])
+        else:
+            old.clear()
+            old.update(rec)
+
+    for eid, was, now in moved:
+        print(f'    MOVED  {eid:18} {was:>6} -> {now:>6}')
+    print(f'    added  {", ".join(added) if added else "(none — refreshed)"}')
+    return creation_year, creation_refs, derived
+
+
+# ------------------------------------------------------- Aaron, by the text
+#
+# `family_tree.json` carried Aaron as -1530/-1407, `conventional`, while
+# `chronology.json` derives AM 2585-2708 from the very figures this tool
+# probes — Exodus 7:7 (83 at the confrontation with Pharaoh, the year of
+# the exodus) and Numbers 33:39 (123 at his death). One man, two files,
+# one year apart, and the wheel is about to draw a lifespan arc from one
+# of them beside a person sheet printing the other. Moses is already
+# derived by the same chain and agrees exactly; Aaron was simply never
+# reached, because no step named him.
+def aaron_years(stated, exodus_year):
+    """Aaron's birth and death, from the two verses that state them."""
+    birth = exodus_year - stated['aaron_at_exodus'][0]
+    return birth, birth + stated['aaron_lifespan_n33'][0]
 
 
 # ------------------------------------------------- the timeline, derived
@@ -851,7 +1280,8 @@ THIELE_EVENTS = ['solomon_king', 'david_king', 'kingdom_divided',
                  'israel_falls', 'judah_falls']
 
 
-def annotate_timeline(tl_doc, stated, kings):
+def annotate_timeline(tl_doc, stated, kings, prior, creation_year,
+                      creation_refs):
     """Derive each event's basis and dating verses. Returns the LXX shift."""
     events = {e['id']: e for e in tl_doc['events']}
     # THE SEPTUAGINT'S OWN READING, checked rather than asserted. Exodus
@@ -874,7 +1304,13 @@ def annotate_timeline(tl_doc, stated, kings):
                  f'{stated["egypt_sojourn"][0] - shift}')
 
     anchor = kings['solomon']['reignStart']
-    derived = {'solomon_king': (anchor, [], False)}
+    # The pre-Abraham block arrives already derived: its steps run
+    # UPWARD from `abram_called` rather than downward from Solomon, so
+    # `timeline_steps` cannot express them, but the basis they earn is
+    # the same one and is stamped in the same pass.
+    derived = {eid: (year, refs, False) for eid, (year, refs)
+               in prior.items()}
+    derived['solomon_king'] = (anchor, [], False)
     for eid in THIELE_EVENTS:
         if eid == 'solomon_king':
             continue
@@ -938,6 +1374,17 @@ def annotate_timeline(tl_doc, stated, kings):
     tl_doc['_meta'] = {
         'count': len(tl_doc['events']),
         'generator': 'tools/audit_dates.py',
+        # THE ONE DEFINITION OF THE CREATION YEAR. Written here so that
+        # everything which needs an Anno Mundi figure on the BC axis —
+        # this file's own pre-Abraham events, and the wheel's lifespan
+        # arcs, which read their AM figures from `chronology.json` —
+        # adds the SAME number to it. Two places computing it is how one
+        # man ends up with two years.
+        'creation': {
+            'year': creation_year,
+            'basis': 'scripture+thiele',
+            'datingRefs': creation_refs,
+        },
         # Reader-facing: this is what the About sheet prints. Trilingual
         # for that reason, and worded without field or file names.
         'anchor': {
@@ -984,7 +1431,16 @@ def annotate_timeline(tl_doc, stated, kings):
                           'on that axis where a year had to be supplied '
                           'rather than read — puts the event '
                           f'{shift} years later. Both texts ship with this '
-                          'app; neither is corrected to the other.',
+                          'app; neither is corrected to the other. ABSENT '
+                          'above Abraham even though the chain there runs '
+                          'through the same verse: it runs on through '
+                          'Genesis 11 and Genesis 5, where the Greek states '
+                          'different begetting ages, so the Greek year for '
+                          'those events is not this shift but a different '
+                          'number for each of them. A figure printed under '
+                          'this sentence would be a figure this sentence '
+                          'does not describe, so none is written; '
+                          'chronology.json plots both traditions in full.',
         'counts': counts,
         # Reader-facing, same as `anchor`.
         'note': {

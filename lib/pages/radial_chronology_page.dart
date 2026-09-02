@@ -85,7 +85,15 @@ class RadialChronologyPage extends StatefulWidget {
 /// sends the wheel, not the chapter behind it.
 const String kWheelUrlPath = '/wheel';
 
-const int kMinYear = -4000;
+// THE AXIS STARTS BEFORE THE CREATION, AND HAS TO.
+// `bible_timeline.json` now counts its pre-Abraham years back from the
+// same anchor as everything else (`_meta.creation`, -4114) instead of
+// from Ussher's rounded 4000. -4000 would put the creation and Eden off
+// the start of the axis, where `angleForSpan` clamps them onto the rim
+// and states a year nobody claims. -4200 is round, so the century loop
+// and the %500 label rule need no change, and it leaves 86 years of
+// room before Adam. The cost is 3.2% of angular resolution everywhere.
+const int kMinYear = -4200;
 const int kMaxYear = 2026;
 
 // Wheel geometry as fractions of the square's side.
@@ -1553,12 +1561,30 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
   /// is the condition asked about — no hand-written list of patriarchs
   /// to fall out of step with the asset.
   ///
-  /// Nineteen records qualify. Eight of them (Noah, Shem, Arphaxad,
-  /// Eber, Peleg, Reu, Serug, Terah) also stand on the wheel as nations
-  /// of Genesis 10 and 11, so a search for them is never empty and this
-  /// never runs. It answers for the eleven who are only here:
-  /// Adam through Lamech, Nahor the elder, and Shelah — whom the wheel
-  /// spells Salah.
+  /// Nineteen records qualify, and eighteen of them are now reachable
+  /// on the wheel under a name a reader would type, so a search for
+  /// them is never empty and this never runs. Ten stand on it as
+  /// nations of Genesis 10 and 11 (Noah, Shem, Arphaxad, Shelah — whom
+  /// the table of nations spells Salah — Eber, Peleg, Reu, Serug, Nahor
+  /// and Terah), and the whole Genesis 5 line stands on it as dated
+  /// events: Adam, Seth and Enoch always did, and Enosh, Kenan,
+  /// Mahalalel, Jared, Methuselah, Lamech and Shelah joined them when
+  /// the chain was carried above Abraham and their births could be
+  /// counted along it.
+  ///
+  /// SO THIS ANSWERS FOR ONE MAN, and the shrinking is the point: it
+  /// existed to replace a false absence, and the absences are gone. The
+  /// one left is a spelling — the wheel calls him Nahor and the family
+  /// tree calls him Nahor (the elder), and nothing on the wheel answers
+  /// to the longer name.
+  ///
+  /// WHOM IT STILL DOES NOT ANSWER FOR, and should. Ten Cainites of
+  /// Genesis 4:17-24 fail the figures guard below, because the text
+  /// gives them no age, no interval and no total — so a reader typing
+  /// "Jabal" or "Tubal-cain" gets a bare "nothing matches" about men
+  /// the family tree holds. That wants a second sentence of its own
+  /// ("X is in the family tree; the text gives no years for X"), not
+  /// this one, which promises a life charted from the creation.
   ///
   /// Matching is equality on the folded name, in each of the three
   /// scripts, not a substring: this replaces a "found nothing" with a

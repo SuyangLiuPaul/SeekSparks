@@ -50,10 +50,10 @@ void main() {
         tally[e.basis] = (tally[e.basis] ?? 0) + 1;
       }
       expect(meta.counts, tally);
-      expect(meta.counts.values.fold<int>(0, (a, b) => a + b), 98);
-      expect(events.length, 98);
-      expect(meta.counts['conventional'], 75);
-      expect(meta.counts['scripture+thiele'], 18);
+      expect(meta.counts.values.fold<int>(0, (a, b) => a + b), 105);
+      expect(events.length, 105);
+      expect(meta.counts['conventional'], 71);
+      expect(meta.counts['scripture+thiele'], 29);
       expect(meta.counts['thiele'], 5);
     });
 
@@ -120,7 +120,10 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 400));
 
-      expect(find.textContaining('75'), findsWidgets);
+      // The conventional tally, which is what the sheet's basis
+      // breakdown prints; it fell from 75 to 71 when the chain was
+      // carried above Abraham and four of that block became derived.
+      expect(find.textContaining('71'), findsWidgets);
       expect(find.textContaining('Thiele'), findsWidgets);
 
       await tester.pumpWidget(const SizedBox.shrink());

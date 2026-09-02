@@ -57,7 +57,7 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 400));
 
-      expect(find.textContaining('236'), findsWidgets);
+      expect(find.textContaining('235'), findsWidgets);
       expect(find.textContaining('Thiele'), findsWidgets);
 
       await tester.pumpWidget(const SizedBox.shrink());

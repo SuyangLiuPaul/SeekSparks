@@ -70,7 +70,9 @@ void main() {
     expect(meta.kindReignFor('zh-Hant'), isNot(meta.kindReignFor('zh-Hans')));
     expect(meta.kindApproximateFor('zh-Hant'),
         isNot(meta.kindApproximateFor('zh-Hans')));
-    expect(meta.counts, {'birth': 27, 'reign': 14, 'approximate': 236});
+    // 28 births since Aaron was derived from Exodus 7:7 and
+    // Numbers 33:39 instead of left as a reconstruction.
+    expect(meta.counts, {'birth': 28, 'reign': 14, 'approximate': 235});
   });
 
   test('a bare string still parses as English (old-shape tolerance)', () {
@@ -92,7 +94,7 @@ void main() {
 
   test('the service exposes the meta after loadAll', () async {
     await FamilyTreeService.instance.loadAll();
-    expect(FamilyTreeService.instance.meta.counts['approximate'], 236);
+    expect(FamilyTreeService.instance.meta.counts['approximate'], 235);
   });
 
   test('the legends do not name a chronology the file does not follow',

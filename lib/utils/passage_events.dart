@@ -1,14 +1,14 @@
 /// 2026-09-01 (SeekSparks, #318 phase 25): which dated events narrate
 /// THIS chapter.
 ///
-/// `assets/bible_timeline.json` holds 98 dated events, each carrying the
+/// `assets/bible_timeline.json` holds 104 dated events, each carrying the
 /// verses that narrate it (`refs`). Until now the only way to see one was
 /// to leave the text for the standalone timeline page — a reader sitting
 /// in 2 Kings 17, which the asset dates to 722 BC, was told nothing. This
 /// is the same move #317 made for routes (`passage_journeys.dart`): join
 /// the dated record back onto the chapter that names it.
 ///
-/// **The ref parser is the whole risk of this file.** The asset's 123
+/// **The ref parser is the whole risk of this file.** The asset's 130
 /// `refs` strings take exactly five shapes, and two of them look alike
 /// but are not: `'Genesis 2:8-25'` is a VERSE range within chapter 2, not
 /// a chapter range — a `:` anywhere in a part means its `-` is verses,

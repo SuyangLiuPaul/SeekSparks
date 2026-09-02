@@ -7111,20 +7111,25 @@ const uiStrings = {
     'zh-Hant':
         '按七十士譯本：{year}。該本出埃及記 12:40 將 430 年算在埃及與迦南兩地，而非單在埃及；迦南那一段自何時起算，經文未言，此處與「聖經年代」一圖同，自亞伯蘭離哈蘭起算。',
   },
-  // The seam. Everything from Abraham down is counted back from the
-  // Thiele anchor; the eight events above him are not, and the two
-  // halves are 110 years out of step with each other. Recorded rather
-  // than repaired — fixing it means fixing a year for the creation,
-  // which this repository deliberately does not do.
+  // THE SEAM IS CLOSED, AND THIS SENTENCE NOW SAYS SO.
+  //
+  // It used to disclose one: the eight events above Abraham were
+  // Ussher's, rounded, while everything below him was counted back
+  // from Thiele's Solomon, and the two halves were 114 years out of
+  // step at the join. `tools/audit_dates.py` now carries the same
+  // chain upward — Genesis 11:26 to 11:10, Genesis 7:6, Genesis 5:28
+  // to 5:3 — so there is one anchor and one calendar. What is left to
+  // disclose is what these years now REST on, and the four records in
+  // this era that no stated interval reaches.
   'timelineAntediluvianBasis': {
     'en':
-        'The text dates nothing before Abraham. These years follow Ussher’s reconstruction, with the creation rounded to 4000, and they do not join the dates below them: Genesis 5 and 7:6 put 1,656 years between the creation and the flood, where these leave 1,652. Genesis’s own arithmetic is charted in Bible Chronology, counted from the creation, because scripture gives no BC year to count from.',
+        'These years are counted back along the same chain as everything below them: 1 Kings 6:1 to the exodus, then Exodus 12:40 and Genesis 47:9, 25:26 and 21:5 to Abram, then Genesis 11, Genesis 7:6 and Genesis 5 to the creation — twenty-five intervals the text states, ending at 4114 BC. Scripture states no BC year, so the point they are counted back FROM is still Thiele’s. Eden, the Fall, Cain and Abel, and Babel rest on no stated interval and stay marked approximate. Genesis’s own arithmetic, counted from the creation instead, is charted in Bible Chronology.',
     'zh-Hans':
-        '亚伯拉罕以前的事，经文一概未记年份。此处各年采用 Ussher 的推算，并将创世之年取整为公元前 4000 年；它们与其下各条并不衔接：按创世记 5 章与 7:6，创世到洪水共 1656 年，而此处只相隔 1652 年。经文自身的年数另绘于「圣经年代」一图，以创世为起点计算——因为经文并未给出可换算的公元前年份。',
+        '此处各年与其下各条同用一条年数链上溯而得：自王上 6:1 上溯至出埃及，再经出 12:40 与创 47:9、25:26、21:5 上溯至亚伯兰，再经创世记 11 章、创 7:6 与创世记 5 章上溯至创世——共二十五段经文自述的年数，止于公元前 4114 年。经文未记公元前年份，故所从上溯的定点仍取自锡尔（Thiele）。伊甸园、堕落、该隐杀亚伯、巴别塔四条并无经文自述的年数，仍以「约」标示。经文自身的年数（以创世为起点）另绘于「圣经年代」一图。',
     'zh-Hant':
-        '亞伯拉罕以前的事，經文一概未記年份。此處各年採用 Ussher 的推算，並將創世之年取整為公元前 4000 年；它們與其下各條並不銜接：按創世記 5 章與 7:6，創世到洪水共 1656 年，而此處只相隔 1652 年。經文自身的年數另繪於「聖經年代」一圖，以創世為起點計算——因為經文並未給出可換算的公元前年份。',
+        '此處各年與其下各條同用一條年數鏈上溯而得：自王上 6:1 上溯至出埃及，再經出 12:40 與創 47:9、25:26、21:5 上溯至亞伯蘭，再經創世記 11 章、創 7:6 與創世記 5 章上溯至創世——共二十五段經文自述的年數，止於公元前 4114 年。經文未記公元前年份，故所從上溯的定點仍取自錫爾（Thiele）。伊甸園、墮落、該隱殺亞伯、巴別塔四條並無經文自述的年數，仍以「約」標示。經文自身的年數（以創世為起點）另繪於「聖經年代」一圖。',
   },
-  'timelineOpenChronology': {
+'timelineOpenChronology': {
     'en': 'Open Bible Chronology',
     'zh-Hans': '打开「圣经年代」',
     'zh-Hant': '開啟「聖經年代」',

@@ -462,8 +462,11 @@ void main() {
         }
       }
     }
-    expect(checked, equals(_locales.length * _sizes.length * _zooms.length * 14),
-        reason: '12 century ticks and 2 axis ends in every cell');
+    // 13 since `kMinYear` moved to -4200 to hold a creation the chain
+    // now puts at -4114: the tick loop skips `kMinYear` itself, so
+    // -4000 is a label now where it used to be the axis start.
+    expect(checked, equals(_locales.length * _sizes.length * _zooms.length * 15),
+        reason: '13 century ticks and 2 axis ends in every cell');
   });
 
   test('no scale label prints through another one', () {
@@ -529,7 +532,7 @@ void main() {
 
     test('every other tick is still its year, unchanged', () {
       for (final locale in _locales) {
-        for (var y = -3500; y <= 2000; y += 500) {
+        for (var y = -4000; y <= 2000; y += 500) {
           if (y == 0) continue;
           expect(centuryTickLabel(y, locale), equals(yearLabel(y, locale)));
           expect(parseWheelYears(centuryTickLabel(y, locale)), contains(y),

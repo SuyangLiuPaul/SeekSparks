@@ -89,9 +89,14 @@ void main() {
     await pump(tester);
     expect(tester.takeException(), isNull);
 
-    // The creation and Eden share the year, so this is two rows.
-    expect(find.text('约 公元前 4000 年'), findsNWidgets(2));
-    expect(find.text('公元前 4000 年'), findsNothing);
+    // The creation and Eden share the year and no longer share a
+    // confidence: the chain reaches the creation (Genesis 5 up to
+    // Genesis 11 and on to Solomon) and states no interval at all for
+    // the placing in the garden, so one row is exact and the other is
+    // hedged on the same year.
+    expect(find.text('公元前 4114 年'), findsOneWidget);
+    expect(find.text('约 公元前 4114 年'), findsOneWidget);
+    expect(find.text('约 公元前 4000 年'), findsNothing);
 
     // Six events sit on -1446 and the two voices end up in adjacent
     // rows. Three are counted into the year: the exodus by 1 Kings 6:1's
@@ -128,7 +133,7 @@ void main() {
 
       // Matched against the strings the model actually produces rather
       // than by pattern: the era header's disclosure note names 「公元前
-      // 4000 年」 too, and it is a wrapping paragraph whose intrinsic
+      // 4114 年」 too, and it is a wrapping paragraph whose intrinsic
       // width is meant to exceed the width it is granted.
       final years = {for (final e in events) e.displayYear('zh-Hans')};
       var measured = 0;
@@ -167,7 +172,7 @@ void main() {
 
     // Unfiltered, the widest year is on screen, so the lane it is
     // granted is the whole corpus's lane.
-    final full = laneOf('约 公元前 4000 年');
+    final full = laneOf('约 公元前 4114 年');
 
     // Filter down to the exodus, whose year is the narrowest kind the
     // page has — unhedged, four digits — and whose match set contains
@@ -175,7 +180,7 @@ void main() {
     // lane would shrink to fit these matches alone.
     await tester.enterText(find.byType(TextField), '出埃及');
     await settle(tester);
-    expect(find.text('约 公元前 4000 年'), findsNothing);
+    expect(find.text('约 公元前 4114 年'), findsNothing);
     expect(laneOf('公元前 1446 年'), full);
 
     await unmount(tester);
@@ -184,12 +189,25 @@ void main() {
   testWidgets('an open row says what its year rests on', (tester) async {
     await pump(tester);
 
+    // THIS ROW HAS CHANGED ITS ANSWER, WHICH IS THE POINT OF IT. The
+    // creation was `conventional` — Ussher's 4004 rounded — and this
+    // asserted the row said so. The same chain that dates the exodus
+    // now reaches it, so the row must state the intervals instead, and
+    // Eden beside it must still say the text fixes nothing.
     await tester.tap(find.text('创造'));
     await settle(tester);
+    expect(find.textContaining('并无一串经文自述的年数可推至此事'), findsNothing);
+    expect(find.text('定年所据'), findsOneWidget,
+        reason: 'the chain that reaches the creation is not labelled');
+    expect(find.textContaining('5:3'), findsWidgets,
+        reason: 'the last link of the chain, Genesis 5:3, is not shown');
 
-    // The creation is `conventional`, so the open row must say so in
-    // words and not only by the 「约」 in the column.
-    expect(find.textContaining('并无一串经文自述的年数可推至此事'), findsOneWidget);
+    await tester.tap(find.text('创造'));
+    await settle(tester);
+    await tester.tap(find.text('亚当夏娃在伊甸园'));
+    await settle(tester);
+    expect(find.textContaining('并无一串经文自述的年数可推至此事'), findsOneWidget,
+        reason: 'Eden rests on no stated interval and must still say so');
 
     await unmount(tester);
   });
@@ -227,11 +245,20 @@ void main() {
       (tester) async {
     await pump(tester);
 
-    // Genesis 5 and 7:6 put 1,656 years between the creation and the
-    // flood; these eight events leave 1,652, because the years above
-    // Abraham come from Ussher and the ones below him are counted back
-    // from Solomon. Said once, on the era header where it happens.
-    expect(find.textContaining('1652'), findsOneWidget);
+    // THE SEAM IS CLOSED AND THE NOTE NOW SAYS WHAT REPLACED IT. It
+    // used to disclose a 1,652-year creation-to-flood span against the
+    // 1,656 Genesis 5 and 7:6 give, because the years above Abraham
+    // were Ussher's and the ones below him were counted back from
+    // Solomon. One chain now reaches both, so the note names the
+    // creation year that chain lands on and the four records in the era
+    // it still does not reach. Said once, on the era header, and the
+    // door to Bible Chronology stays: that page counts from the
+    // creation instead of towards it.
+    expect(find.textContaining('1652'), findsNothing);
+    expect(find.textContaining('Ussher'), findsNothing);
+    // Once on the era header — the year labels beside it carry 4114 too,
+    // so the note is matched by a phrase only it has.
+    expect(find.textContaining('共二十五段经文自述的年数'), findsOneWidget);
 
     await tester.tap(find.text('打开「圣经年代」'));
     await settle(tester);

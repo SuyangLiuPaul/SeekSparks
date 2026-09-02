@@ -240,7 +240,7 @@ void main() {
               reason: '${e['id']} cannot parse "$r"');
         }
       }
-      expect(derived, 18);
+      expect(derived, 29);
     });
 
     // The Septuagint reads Exodus 12:40's 430 years as covering Egypt
@@ -248,23 +248,44 @@ void main() {
     // years later. The flag must ride the chain: an event whose chain
     // does not pass through the verse must carry no alternative, or the
     // page offers a Greek year for an event the Greek does not move.
+    //
+    // AND A CHAIN MAY RUN THROUGH THAT VERSE AND STILL CARRY NONE. When
+    // the anchor was carried above Abraham, eleven more events joined
+    // the chain, and the chain reaches them THROUGH Exodus 12:40 — but
+    // it also runs on through Genesis 11 and Genesis 5, where the Greek
+    // states different begetting ages for the same men. Their Greek
+    // year is therefore not `+215`; it is a different number for every
+    // one of them, and the sentence the page prints beside a Septuagint
+    // year explains only the 430. A figure that landed under a sentence
+    // which does not describe it would be worse than none, so the
+    // pre-Abraham block carries none and this test says which rule each
+    // event falls under rather than testing one rule twice.
     test('the Septuagint alternative appears exactly on the chain that '
-        'runs through Exodus 12:40', () async {
+        'runs through Exodus 12:40 and no further', () async {
       final doc = jsonDecode(await rootBundle.loadString(
           'assets/bible_timeline.json')) as Map<String, dynamic>;
       final events = (doc['events'] as List).cast<Map<String, dynamic>>();
       var shifted = 0;
+      var declined = 0;
       for (final e in events) {
         final refs = (e['datingRefs'] as List?)?.cast<String>() ?? const [];
         final viaLxx = refs.contains('Exodus 12:40');
-        expect(e.containsKey('septuagintYear'), viaLxx,
+        final viaGenealogy =
+            refs.any((r) => r.startsWith('Genesis 5:') ||
+                r.startsWith('Genesis 11:'));
+        expect(e.containsKey('septuagintYear'), viaLxx && !viaGenealogy,
             reason: e['id'] as String);
         if (!viaLxx) continue;
+        if (viaGenealogy) {
+          declined++;
+          continue;
+        }
         shifted++;
         expect(e['septuagintYear'], (e['year'] as int) + 215,
             reason: e['id'] as String);
       }
       expect(shifted, 8);
+      expect(declined, 11);
     });
 
     // Not derived, and each for a reason the text itself supplies.
@@ -294,20 +315,41 @@ void main() {
       expect(events['ishmael_born']!['year'], -2080);
     });
 
-    test('the creation and the flood are not presented as fixed by the text',
+    // THIS TEST HAS BEEN INVERTED, AND THE REASON MATTERS. It used to
+    // read "the creation and the flood are not presented as fixed by
+    // the text", because -4000 was a rounding of Ussher's 4004 and
+    // -2348 was Ussher's flood as printed, leaving 1,652 years where
+    // Genesis 5 and 7:6 give 1,656. Neither number was scriptural and
+    // the asset was forbidden to say otherwise. The chain now reaches
+    // both — Genesis 11:26 up to 11:10, Genesis 7:6, Genesis 5:28 up
+    // to 5:3 — so the interval between them IS the 1,656 the text
+    // states, and the year they hang from is Thiele's, exactly as for
+    // the exodus. What must still be false is that anything here rests
+    // on scripture ALONE: `scripture` is not a value this asset may
+    // carry, because scripture states no BC year.
+    test('the creation and the flood are now derived, and say so',
         () async {
-      // Genesis's own chain puts 1656 years between them; the file has
-      // 1652, because -4000 is a rounding of Ussher's 4004 while -2348 is
-      // Ussher's flood taken as printed. Neither is scriptural, and the
-      // asset must not say otherwise.
       final doc = jsonDecode(await rootBundle.loadString(
           'assets/bible_timeline.json')) as Map<String, dynamic>;
       final events = {
         for (final e in (doc['events'] as List).cast<Map<String, dynamic>>())
           e['id'] as String: e,
       };
-      expect(events['creation']!['approximate'], isTrue);
-      expect(events['flood']!['approximate'], isTrue);
+      expect(events['creation']!['approximate'], isFalse);
+      expect(events['flood']!['approximate'], isFalse);
+      expect(events['creation']!['basis'], 'scripture+thiele');
+      expect(events['flood']!['basis'], 'scripture+thiele');
+      expect((events['flood']!['year'] as int) -
+          (events['creation']!['year'] as int), 1656);
+      for (final e in (doc['events'] as List).cast<Map<String, dynamic>>()) {
+        expect(e['basis'], isNot('scripture'), reason: e['id'] as String);
+      }
+      // Eden, the Fall, Cain and Abel and Babel rest on no stated
+      // interval and did NOT move into the derived column with them.
+      for (final id in ['eden', 'fall', 'cain_abel', 'babel']) {
+        expect(events[id]!['basis'], 'conventional', reason: id);
+        expect(events[id]!['approximate'], isTrue, reason: id);
+      }
       // The exodus and the temple, by contrast, are derived and exact.
       expect(events['exodus']!['basis'], 'scripture+thiele');
       expect(events['exodus']!['year'], -1446);
@@ -403,7 +445,7 @@ void main() {
           .cast<Map<String, dynamic>>()
           .map(TimelineEvent.fromJson)
           .toList();
-      expect(events, hasLength(98));
+      expect(events, hasLength(105));
       var hedged = 0;
       for (final e in events) {
         final en = e.displayYear('en');
@@ -412,12 +454,16 @@ void main() {
         expect(zh.startsWith('约 '), e.approximate, reason: '${e.id} zh');
         if (e.approximate) hedged++;
       }
-      // 75 reconstructions, 23 not (18 counted from the anchor along
+      // 71 reconstructions, 34 not (29 counted from the anchor along
       // stated intervals, 5 Thiele's outright). The numbers are pinned
       // rather than merely counted so that a generator run which quietly
-      // promoted a guess to a derivation has to be argued for here.
-      expect(hedged, 75);
-      expect(events.length - hedged, 23);
+      // promoted a guess to a derivation has to be argued for here. The
+      // block above Abraham moved into the derived column when the
+      // chain was carried up through Genesis 11 and Genesis 5; the four
+      // records there that rest on no stated interval — Eden, the Fall,
+      // Cain and Abel, Babel — did not, and are still hedged.
+      expect(hedged, 71);
+      expect(events.length - hedged, 34);
     });
   });
 }
