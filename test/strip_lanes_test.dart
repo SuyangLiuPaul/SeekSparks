@@ -6,9 +6,11 @@ library;
 
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:seeksparks/models/biblical_person.dart';
 import 'package:seeksparks/models/chronology.dart';
 import 'package:seeksparks/models/hebrew_king.dart';
 import 'package:seeksparks/models/strip_lanes.dart';
@@ -28,9 +30,8 @@ Map<String, dynamic> _json(String path) =>
 WheelHistoryData _loadWheel() {
   final base = WheelHistoryData.fromJson(_json('assets/wheel_history.json'));
   final timeline = [
-    for (final r
-        in (_json('assets/bible_timeline.json')['events'] as List)
-            .cast<Map<String, dynamic>>())
+    for (final r in (_json('assets/bible_timeline.json')['events'] as List)
+        .cast<Map<String, dynamic>>())
       TimelineEvent.fromJson(r)
   ];
   final injected = bibleNarrativeEvents(timeline);
@@ -46,26 +47,51 @@ WheelHistoryData _loadWheel() {
   );
 }
 
-List<HebrewKing> _loadKings() => (_json('assets/hebrew_kings.json')['kings']
-        as List)
-    .cast<Map<String, dynamic>>()
-    .map(HebrewKing.fromJson)
-    .toList();
+List<HebrewKing> _loadKings() =>
+    (_json('assets/hebrew_kings.json')['kings'] as List)
+        .cast<Map<String, dynamic>>()
+        .map(HebrewKing.fromJson)
+        .toList();
+
+List<BiblicalPerson> _loadFamilyTree() =>
+    (_json('assets/family_tree.json')['people'] as List)
+        .cast<Map<String, dynamic>>()
+        .map(BiblicalPerson.fromJson)
+        .toList();
 
 late final WheelHistoryData wheel;
 late final List<HebrewKing> kings;
 late final ChronologyData chron;
+late final List<BiblicalPerson> familyTree;
 late final int creation;
+
+/// The exclusion set `buildStripLanes` computes internally for the
+/// rail — reproduced here (not exposed by the model) so a test can
+/// hand it to [stripLineageCohorts] directly and get the same ground
+/// truth the builder packs, the same cross-check the wheel's own
+/// `wheel_lifespans_test.dart` runs against `_buildRail`.
+Set<String> _drawnIds({
+  required List<Patriarch> patriarchs,
+  required List<HebrewKing> kings,
+}) =>
+    {
+      for (final p in patriarchs) p.id,
+      for (final k in kings) k.id,
+      for (final e in wheel.events)
+        for (final link in e.people) link.id,
+    };
 
 List<StripLane> build({
   required double pxPerYear,
   List<HebrewKing>? kingsOverride,
   List<Patriarch>? patriarchsOverride,
+  List<BiblicalPerson>? familyTreeOverride,
 }) =>
     buildStripLanes(
       wheel: wheel,
       kings: kingsOverride ?? kings,
       patriarchs: patriarchsOverride ?? chron.patriarchs,
+      familyTreePeople: familyTreeOverride ?? familyTree,
       tradition: 'mt',
       creationYear: creation,
       pxPerYear: pxPerYear,
@@ -76,9 +102,10 @@ void main() {
     wheel = _loadWheel();
     kings = _loadKings();
     chron = ChronologyData.fromJson(_json('assets/chronology.json'));
+    familyTree = _loadFamilyTree();
     creation = (((_json('assets/bible_timeline.json'))['_meta']
-        as Map<String, dynamic>)['creation'] as Map<String, dynamic>)['year']
-        as int;
+            as Map<String, dynamic>)['creation']
+        as Map<String, dynamic>)['year'] as int;
   });
 
   test('the corpus really is what the rest of this file assumes', () {
@@ -89,6 +116,79 @@ void main() {
         reason: '747 from wheel_history.json + 104 merged from '
             'bible_timeline.json, per WheelHistoryService.load()');
     expect(kings, hasLength(42));
+    expect(familyTree, hasLength(277));
+  });
+
+  group('the genealogy rail', () {
+    late Set<String> drawnIds;
+    late List<StripLineageCohort> cohorts;
+
+    setUpAll(() {
+      drawnIds = _drawnIds(patriarchs: chron.patriarchs, kings: kings);
+      cohorts = stripLineageCohorts(people: familyTree, drawnIds: drawnIds);
+    });
+
+    test(
+        'the corpus really is what this group assumes: 122 cohort '
+        'years behind 217 people once patriarchs, kings and every '
+        'event-linked person are excluded, the same exclusion the '
+        "wheel's own _buildRail applies", () {
+      final total = cohorts.fold(0, (n, c) => n + c.people.length);
+      expect(cohorts, hasLength(122));
+      expect(total, 217);
+      // Genesis 46's sons and grandsons of Jacob, one nominal year —
+      // the wheel's own class doc on LineageCohort names this cohort.
+      final maxCohort = cohorts.map((c) => c.people.length).fold(0, math.max);
+      expect(maxCohort, 44);
+    });
+
+    test(
+        'a person on another layer never doubles as a rail mark: no '
+        'patriarch, king or event-linked person id survives into a '
+        'cohort', () {
+      for (final c in cohorts) {
+        for (final p in c.people) {
+          expect(drawnIds, isNot(contains(p.id)),
+              reason: '${p.id} is drawn elsewhere and must not also be '
+                  'a lineage cohort member');
+        }
+      }
+    });
+
+    test(
+        'every cohort year appears exactly once as a rail span, at '
+        'every zoom step, carrying its own cohort size', () {
+      for (final zoom in kStripZoomSteps) {
+        final lanes = build(pxPerYear: zoom);
+        final railSpans = [
+          for (final l in lanes.where((l) => l.kind == StripLaneKind.rail))
+            ...l.spans
+        ];
+        expect(railSpans, hasLength(cohorts.length),
+            reason: 'at ${zoom}px/year');
+        final byId = {for (final s in railSpans) s.id: s};
+        for (final c in cohorts) {
+          final span = byId['$kStripLineagePrefix${c.year}'];
+          expect(span, isNotNull, reason: 'no span for year ${c.year}');
+          expect(span!.startYear, c.year);
+          expect(span.endYear, c.year,
+              reason: 'a birth year with no stated death year must stay '
+                  'a point, never widened into a span');
+          expect(span.cohortSize, c.people.length);
+        }
+      }
+    });
+
+    test(
+        'no family tree passed in means no rail lane at all — the '
+        'same off-switch contract kings and patriarchs already have', () {
+      final lanes = build(
+          pxPerYear: kStripZoomSteps.first,
+          familyTreeOverride: const <BiblicalPerson>[]);
+      expect(lanes.where((l) => l.kind == StripLaneKind.rail), isEmpty);
+      // The other layers are unaffected by the rail being switched off.
+      expect(lanes.where((l) => l.kind == StripLaneKind.kings), isNotEmpty);
+    });
   });
 
   group('every stream gets at least one lane', () {
@@ -106,7 +206,8 @@ void main() {
       }
     });
 
-    test('`scripture` carries no powers and still gets exactly one, '
+    test(
+        '`scripture` carries no powers and still gets exactly one, '
         'empty, lane — a stream that exists and is empty is '
         'information, not silence', () {
       expect(wheel.powersOf('scripture'), isEmpty,
@@ -114,15 +215,16 @@ void main() {
               'test below stops being about the empty case');
       final lanes = build(pxPerYear: kStripZoomSteps.first);
       final scriptureLanes = lanes
-          .where((l) =>
-              l.kind == StripLaneKind.stream && l.ownerId == 'scripture')
+          .where(
+              (l) => l.kind == StripLaneKind.stream && l.ownerId == 'scripture')
           .toList();
       expect(scriptureLanes, hasLength(1));
       expect(scriptureLanes.single.spans, isEmpty);
       expect(scriptureLanes.single.subLane, 0);
     });
 
-    test('a stream with real powers never fabricates an empty lane '
+    test(
+        'a stream with real powers never fabricates an empty lane '
         'alongside the real ones', () {
       final lanes = build(pxPerYear: kStripZoomSteps.first);
       final israelLanes = lanes
@@ -136,8 +238,10 @@ void main() {
   });
 
   group('lane order, top to bottom', () {
-    test('events, then lives, then kings, then ministries, then one '
-        'group per stream in the asset\'s own order', () {
+    test(
+        'events, then lives, then kings, then ministries, then the '
+        "genealogy rail, then one group per stream in the asset's own "
+        'order', () {
       final lanes = build(pxPerYear: kStripZoomSteps.first);
       final kindOrder = <StripLaneKind>[];
       for (final l in lanes) {
@@ -146,15 +250,17 @@ void main() {
         }
       }
       // Each kind's lanes are contiguous, and the block order matches
-      // the contract exactly.
-      expect(kindOrder.take(4), [
+      // the contract exactly — the wheel's own filter-sheet lists these
+      // same four annulus layers in this order (Lifespans, Reigns,
+      // Ministries, Genealogy).
+      expect(kindOrder.take(5), [
         StripLaneKind.events,
         StripLaneKind.lives,
         StripLaneKind.kings,
         StripLaneKind.ministries,
+        StripLaneKind.rail,
       ]);
-      expect(kindOrder.skip(4).every((k) => k == StripLaneKind.stream),
-          isTrue);
+      expect(kindOrder.skip(5).every((k) => k == StripLaneKind.stream), isTrue);
 
       final streamOrder = <String>[];
       for (final l in lanes.where((l) => l.kind == StripLaneKind.stream)) {
@@ -165,7 +271,8 @@ void main() {
       expect(streamOrder, wheel.streams.map((s) => s.id).toList());
     });
 
-    test('sub-lanes within one kind are numbered 0, 1, 2, ... with no '
+    test(
+        'sub-lanes within one kind are numbered 0, 1, 2, ... with no '
         'gap and no repeat', () {
       final lanes = build(pxPerYear: 6);
       for (final kind in StripLaneKind.values) {
@@ -195,7 +302,8 @@ void main() {
   });
 
   group('packing correctness across the whole real corpus', () {
-    test('no two spans sharing a lane overlap in ink, at every zoom '
+    test(
+        'no two spans sharing a lane overlap in ink, at every zoom '
         'step, across every lane the builder produces', () {
       for (final zoom in kStripZoomSteps) {
         final lanes = build(pxPerYear: zoom);
@@ -217,7 +325,8 @@ void main() {
       }
     });
 
-    test('every span the builder emits is accounted for by kind: the '
+    test(
+        'every span the builder emits is accounted for by kind: the '
         'total across all lanes of one kind matches the input list, '
         'so packing never drops an item — rule 2', () {
       final lanes = build(pxPerYear: kStripZoomSteps.first);
@@ -226,12 +335,16 @@ void main() {
       expect(countOf(StripLaneKind.events), 851);
       expect(countOf(StripLaneKind.kings), 42);
       expect(countOf(StripLaneKind.ministries), wheel.ministries.length);
+      expect(countOf(StripLaneKind.rail), 122,
+          reason: '122 cohort years, one span per year — see the '
+              "genealogy rail group's own guard test");
       expect(countOf(StripLaneKind.stream), wheel.powers.length);
     });
   });
 
   group('zero-width reigns and ministries are real and legal', () {
-    test('the four zero-width KINGS are Zimri, Ahaziah of Judah, '
+    test(
+        'the four zero-width KINGS are Zimri, Ahaziah of Judah, '
         'Jehoahaz of Judah and Shallum of Israel — NOT Huldah, who is '
         'a ministry, not a king', () {
       final zeroKingIds = kings
@@ -248,7 +361,8 @@ void main() {
           reason: 'Huldah is not in hebrew_kings.json at all');
     });
 
-    test('those four kings survive into the kings lane at 0 width, not '
+    test(
+        'those four kings survive into the kings lane at 0 width, not '
         'dropped and not fattened', () {
       final lanes = build(pxPerYear: kStripZoomSteps.first);
       final kingSpans = [
@@ -267,12 +381,12 @@ void main() {
       }
     });
 
-    test('Huldah is a zero-width MINISTRY span, on the ministries '
+    test(
+        'Huldah is a zero-width MINISTRY span, on the ministries '
         'lane, not the kings lane', () {
       final lanes = build(pxPerYear: kStripZoomSteps.first);
       final ministrySpans = [
-        for (final l
-            in lanes.where((l) => l.kind == StripLaneKind.ministries))
+        for (final l in lanes.where((l) => l.kind == StripLaneKind.ministries))
           ...l.spans
       ];
       final huldah = ministrySpans
@@ -283,7 +397,8 @@ void main() {
   });
 
   group('open-ended powers', () {
-    test('a power with a null end is drawn to the axis end and marked '
+    test(
+        'a power with a null end is drawn to the axis end and marked '
         'ongoing, never given an invented literal year', () {
       final ongoingIds =
           wheel.powers.where((p) => p.ongoing).map((p) => p.id).toSet();
@@ -320,7 +435,8 @@ void main() {
   });
 
   group('line-of-descent colouring', () {
-    test('every event lands with a real line, even one whose stream '
+    test(
+        'every event lands with a real line, even one whose stream '
         'defaults to `world` through the bible-narrative merge', () {
       final lanes = build(pxPerYear: kStripZoomSteps.first);
       final eventSpans = [
@@ -352,7 +468,8 @@ void main() {
       }
     });
 
-    test('a stream\'s powers all carry that stream\'s own descent line, '
+    test(
+        'a stream\'s powers all carry that stream\'s own descent line, '
         'not the power\'s own `region`', () {
       final lanes = build(pxPerYear: kStripZoomSteps.first);
       for (final stream in wheel.streams) {
@@ -368,21 +485,23 @@ void main() {
   });
 
   group('lane assignment moves with zoom, by design', () {
-    test('`europe`, whose powers reach 8 genuinely concurrent bands, '
+    test(
+        '`europe`, whose powers reach 8 genuinely concurrent bands, '
         'never packs into fewer than 8 lanes at any zoom — real time '
         'overlap is not a zoom-dependent fact', () {
       for (final zoom in kStripZoomSteps) {
         final lanes = build(pxPerYear: zoom);
         final europeLanes = lanes
-            .where((l) =>
-                l.kind == StripLaneKind.stream && l.ownerId == 'europe')
+            .where(
+                (l) => l.kind == StripLaneKind.stream && l.ownerId == 'europe')
             .length;
         expect(europeLanes, greaterThanOrEqualTo(8),
             reason: 'at ${zoom}px/year europe only used $europeLanes lanes');
       }
     });
 
-    test('the SAME stream needs fewer or equal lanes at high zoom than '
+    test(
+        'the SAME stream needs fewer or equal lanes at high zoom than '
         'at low zoom, because the same minGapPx is a smaller time gap '
         'once each year buys more pixels', () {
       final lowZoomLanes = build(pxPerYear: kStripZoomSteps.first)
@@ -395,8 +514,7 @@ void main() {
     });
   });
 
-  group('empty inputs produce no lane for that kind, except a stream',
-      () {
+  group('empty inputs produce no lane for that kind, except a stream', () {
     test('no kings passed in means no kings lane at all', () {
       final lanes =
           build(pxPerYear: kStripZoomSteps.first, kingsOverride: const []);

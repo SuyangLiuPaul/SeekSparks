@@ -21,11 +21,13 @@
 /// rather than the wheel's paint-method boundaries. Flagged in the
 /// implementing agent's report, not silently resolved either way.
 ///
-/// THE GENEALOGY RAIL IS NOT PAINTED HERE. `strip_lanes.dart` builds no
-/// `StripLaneKind` for it — `buildStripLanes` covers events, lives,
-/// kings, ministries and streams only — so there is no lane list for
-/// this file to draw from. Reported, not invented: adding a sixth kind
-/// is `strip_lanes.dart`'s call, not this file's.
+/// THE GENEALOGY RAIL is `_paintRail` below, §3.4 — a vertical tick per
+/// [StripLaneKind.rail] span, its height (not its width; every one of
+/// these years is a point) carrying the same "how many people share
+/// this year" fact the wheel's `_Rail` mark carries as a stroke LENGTH.
+/// One fixed, muted colour (`lineageRailColor()`), never a stream's or
+/// descent hue, because [stripLineageCohorts]'s own doc is the fact
+/// this file must not flatten: none of these years rest on a verse.
 library;
 
 import 'dart:math' as math;
@@ -41,6 +43,7 @@ import 'package:seeksparks/pages/radial_chronology_page.dart'
     show
         centuryTickLabel,
         kingdomArcColor,
+        lineageRailColor,
         lineColor,
         ministryArcColor,
         yearLabel;
@@ -209,6 +212,13 @@ Color _spanColor(StripSpan span, StripLane lane, StripPalette palette) {
       return ministryArcColor();
     case StripLaneKind.lives:
       return lineColor(span.line ?? 'none');
+    case StripLaneKind.rail:
+      // One fixed shade for every cohort, never `span.line` — see
+      // `strip_lanes.dart`'s `stripLineageCohorts` doc: none of these
+      // years rest on a verse, so there is no "more confident" cohort
+      // to give a stronger colour, and inventing one would print a
+      // distinction the data does not support.
+      return lineageRailColor();
     case StripLaneKind.ruler:
       // Never produced by `buildStripLanes` — see that file's own doc
       // on why the enum value exists at all.
@@ -224,10 +234,12 @@ Color _spanColor(StripSpan span, StripLane lane, StripPalette palette) {
 /// not carried on [StripSpan], which only keeps the colour-family
 /// `line`) and is read from [StripPalette.eventById] so that selecting a
 /// stream still lights that stream's events, as it does on the wheel.
-/// Kings, ministries and patriarch lifespans belong to no stream — on
-/// the wheel these three are painted by `_paintLifespans`, which never
-/// calls `selectionCovers` at all, so passing an id nothing can equal
-/// reproduces that absence of group-lighting rather than inventing one.
+/// Kings, ministries, patriarch lifespans and the genealogy rail belong
+/// to no stream — on the wheel the first three are painted by
+/// `_paintLifespans` and the rail by its own `_paintRail`, neither of
+/// which ever calls `selectionCovers`, so passing an id nothing can
+/// equal reproduces that absence of group-lighting rather than
+/// inventing one.
 String _streamIdFor(StripSpan span, StripLane lane, StripPalette palette) {
   switch (span.kind) {
     case StripLaneKind.stream:
@@ -237,18 +249,19 @@ String _streamIdFor(StripSpan span, StripLane lane, StripPalette palette) {
     case StripLaneKind.kings:
     case StripLaneKind.ministries:
     case StripLaneKind.lives:
+    case StripLaneKind.rail:
     case StripLaneKind.ruler:
       return '';
   }
 }
 
-/// Grooves, bars, lifespans, event ticks and the selection cross-hair —
-/// the whole scrolling content area. `docs/strip-painter-spec.md` §2's
-/// paint order, followed exactly except step 4 (the genealogy rail,
-/// absent — see this file's own header) and step 3's "before the
-/// spokes" ordering, which collapses here since nothing on the strip
-/// needs to dodge a spoke's text the way the wheel's arc names do
-/// (`fitBarLabel` truncates instead of searching for room — §7.4).
+/// Grooves, bars, lifespans, the genealogy rail, event ticks and the
+/// selection cross-hair — the whole scrolling content area.
+/// `docs/strip-painter-spec.md` §2's paint order, followed exactly
+/// except step 3's "before the spokes" ordering, which collapses here
+/// since nothing on the strip needs to dodge a spoke's text the way the
+/// wheel's arc names do (`fitBarLabel` truncates instead of searching
+/// for room — §7.4).
 class StripLanesPainter extends CustomPainter {
   StripLanesPainter({
     required this.rows,
@@ -287,6 +300,7 @@ class StripLanesPainter extends CustomPainter {
     _paintGrooves(canvas, size.width);
     _paintFilledBars(canvas);
     _paintLifespans(canvas);
+    _paintRail(canvas);
     _paintEvents(canvas);
     _paintCrosshair(canvas, size.height);
   }
@@ -482,6 +496,47 @@ class StripLanesPainter extends CustomPainter {
       maxLines: 1,
     )..layout();
     tp.paint(canvas, Offset(labelX, y - tp.height / 2));
+  }
+
+  /// The genealogy rail — §3.4, descended from the wheel's own
+  /// `_paintRail`. A tick, not a bar: a birth year is a point, and none
+  /// of these people has a death year the tree is willing to state, the
+  /// same reason the wheel draws a mark rather than a span here.
+  void _paintRail(Canvas canvas) {
+    for (final row in rows) {
+      if (row.isHeading || row.lane!.kind != StripLaneKind.rail) continue;
+      final lane = row.lane!;
+      for (final span in lane.spans) {
+        _paintOneRailTick(canvas, span, lane, row);
+      }
+    }
+  }
+
+  void _paintOneRailTick(
+      Canvas canvas, StripSpan span, StripLane lane, StripRow row) {
+    final x = xForYear(span.startYear, pxPerYear);
+    final sel = span.id == selectedId;
+    final has = selectedId != null;
+    final alpha = sel ? 0.9 : (has ? 0.30 * 0.35 : 0.30);
+    // The wheel's own fill formula, unchanged: 1 person is a third of
+    // the mark's own share of room, 8 or more fills it, clamped so the
+    // 44-person year (Genesis 46's sons and grandsons of Jacob) does
+    // not bleed into its neighbours. The wheel spends this fraction on
+    // the mark's LENGTH inside its angular pitch; a strip has no
+    // angular pitch, so §3.4 spends it on the tick's HEIGHT inside the
+    // lane's own row instead — the one substitution, everything else
+    // verbatim.
+    final count = span.cohortSize ?? 1;
+    final fill = (0.34 + 0.66 * ((count - 1) / 7)).clamp(0.34, 1.0);
+    final tickHeight = row.height * fill;
+    final y = _rowFor(span, row);
+    canvas.drawLine(
+      Offset(x, y - tickHeight / 2),
+      Offset(x, y + tickHeight / 2),
+      Paint()
+        ..strokeWidth = sel ? 1.8 : 1.0
+        ..color = _spanColor(span, lane, palette).withValues(alpha: alpha),
+    );
   }
 
   /// Event ticks and their labels, running rightward — §3.5. Declutter
