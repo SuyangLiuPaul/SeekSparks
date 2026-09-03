@@ -40,6 +40,38 @@
 /// claims its own path — see `UrlClaim`'s own doc for why `owner: this`
 /// is what lets the incoming page's claim survive the outgoing page's
 /// `dispose`.
+///
+/// FIND, FILTER AND ABOUT ARE THE WHEEL'S OWN, NOT A SECOND
+/// VOCABULARY. `searchWheel` (`utils/wheel_search.dart`) is a pure
+/// function of a `WheelHistoryData` and knows nothing about either
+/// form, so it is called unchanged — a name, a verse or a year finds
+/// the same records here it finds on the wheel, ranked the same way,
+/// and `wheelFindTeach` reports the same `data.events.length` (851:
+/// 747 from `wheel_history.json` plus 104 merged from
+/// `bible_timeline.json`). `WheelSheets` (`pages/wheel_sheets.dart`)
+/// opens the identical detail sheet either page's tap resolves to. Only
+/// the RESULT-LIST GLUE — which small label a `WheelHitKind` prints,
+/// the status line's wording — could not be shared: `_kindLabel`,
+/// `_hitYears`, `_hitVia` and `_searchStatus` live on
+/// `_RadialChronologyPageState`, private to that file, and this page
+/// may not edit it to lift them out. They are reproduced here reading
+/// the SAME `wheelStrings`/`uiStrings` keys through `s()`/`fill()`
+/// (`WheelSheets`'s own lookup), so the words never drift even though
+/// the four small functions are typed twice. Filter is the same story:
+/// `_hidden`, `kLifespanLayerId`/`kReignLayerId`/`kMinistryLayerId`
+/// (`wheel_search.dart`, already shared) and the wheel's own filter
+/// strings are reused; only the "which lanes does hiding actually
+/// remove" plumbing is the strip's own, because a lane is not a ring.
+///
+/// REVEALING A FOUND RECORD IS `scrollToCentre` PLUS ITS OWN VERTICAL
+/// HALF. The horizontal half is the layout file's own
+/// `scrollToCentre` — the strip's `focusTranslation`, deliberately
+/// never rescaling `_pxPerYear`. There is no wheel equivalent of the
+/// vertical half — a ring has no "row" — so `_rowForHit` and the
+/// centring math in `_scrollToHit` are new, not a port, and run
+/// unconditionally rather than gated on zoom the way the wheel's
+/// `_panTo` is: `scrollToCentre` already clamps to 0 when the content
+/// fits the viewport, so nothing is lost by always calling it.
 library;
 
 import 'dart:math' as math;
@@ -51,17 +83,26 @@ import 'package:seeksparks/constants/strip_strings.dart';
 import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/chronology.dart' show Patriarch;
-import 'package:seeksparks/models/hebrew_king.dart' show HebrewKing;
+import 'package:seeksparks/models/hebrew_king.dart' show HebrewKing, Kingdom;
 import 'package:seeksparks/models/strip_lanes.dart';
 import 'package:seeksparks/models/wheel_history.dart';
 import 'package:seeksparks/pages/radial_chronology_page.dart'
-    show RadialChronologyPage, kDrawnTradition;
+    show
+        RadialChronologyPage,
+        kDrawnTradition,
+        kingdomArcColor,
+        lineColor,
+        ministryArcColor,
+        yearLabel;
 import 'package:seeksparks/pages/wheel_sheets.dart';
 import 'package:seeksparks/services/chronology_service.dart';
 import 'package:seeksparks/services/hebrew_kings_service.dart';
 import 'package:seeksparks/services/url_sync_service.dart';
 import 'package:seeksparks/utils/font_catalog.dart' show canvasTextStyle;
 import 'package:seeksparks/utils/strip_chronology_layout.dart';
+import 'package:seeksparks/utils/version_mapper.dart'
+    show localizedReferenceLabel;
+import 'package:seeksparks/utils/wheel_search.dart';
 import 'package:seeksparks/widgets/home_icon_button.dart';
 import 'package:seeksparks/widgets/language_switcher_button.dart';
 import 'package:seeksparks/widgets/localized_back_button.dart';
@@ -98,6 +139,22 @@ class _StripChronologyPageState extends State<StripChronologyPage>
 
   double _pxPerYear = kStripZoomSteps.first;
   String? _selectedId;
+
+  /// Streams the reader has switched off — the wheel's own field
+  /// (`radial_chronology_page.dart`'s `_hidden`), reproduced with the
+  /// same contract: empty means all on, and it also carries the three
+  /// non-stream layer ids (`kLifespanLayerId`, `kReignLayerId`,
+  /// `kMinistryLayerId`) the wheel's filter sheet toggles. NOT
+  /// `kLineageLayerId` — the strip draws no genealogy rail yet (see the
+  /// class doc and `_showAbout`), so there is nothing for that id to
+  /// switch off here.
+  final Set<String> _hidden = {};
+
+  /// Kept on the state for the same reason the wheel's is
+  /// (`_RadialChronologyPageState._findCtl`'s own doc): a reader who
+  /// closes the sheet to look at what it found still has their query
+  /// when they reopen it.
+  final _findCtl = TextEditingController();
 
   /// The two REAL, draggable controllers. The ruler's and the header's
   /// own controllers only ever receive `jumpTo` from these two — see
@@ -146,6 +203,7 @@ class _StripChronologyPageState extends State<StripChronologyPage>
       ..dispose();
     _rulerHCtl.dispose();
     _headerVCtl.dispose();
+    _findCtl.dispose();
     super.dispose();
   }
 
@@ -180,6 +238,25 @@ class _StripChronologyPageState extends State<StripChronologyPage>
         leading: const LocalizedBackButton(),
         title: Text(_kPageTitle[locale] ?? _kPageTitle['en']!),
         actions: [
+          // Same three, same order, same tooltips as the wheel's own
+          // toolbar (`radial_chronology_page.dart`'s `build`) — a
+          // reader switching forms should find Find/Filter/About in
+          // the same place they left them.
+          IconButton(
+            icon: const Icon(Icons.search),
+            tooltip: s('wheelFind', 'Find', locale),
+            onPressed: () => _showSearch(context, locale),
+          ),
+          IconButton(
+            icon: const Icon(Icons.filter_list),
+            tooltip: s('wheelFilter', 'Filter', locale),
+            onPressed: () => _showFilter(context, locale),
+          ),
+          IconButton(
+            icon: const Icon(Icons.info_outline),
+            tooltip: s('wheelAbout', 'About this chart', locale),
+            onPressed: () => _showAbout(context, locale),
+          ),
           _viewSwitch(context, locale),
           const LanguageSwitcherButton(),
           const HomeIconButton(),
@@ -254,19 +331,10 @@ class _StripChronologyPageState extends State<StripChronologyPage>
         ? const <Patriarch>[]
         : (chron?.patriarchs ?? const []);
 
-    final lanes = buildStripLanes(
-      wheel: data,
-      kings: kings,
-      patriarchs: patriarchs,
-      tradition: kDrawnTradition,
-      creationYear: creation ?? 0,
-      pxPerYear: _pxPerYear,
-    );
-
     final laneFontPx = t.scaledSmall(12);
     final headingFontPx = laneFontPx * 1.15;
     final tickFontPx = t.scaledChrome(11);
-    final rows = _buildRows(lanes, t.textScale);
+    final rows = _currentRows(data, kings, patriarchs, t.textScale);
     final contentW = stripContentWidth(_pxPerYear);
     final contentH = rows.isEmpty ? 0.0 : rows.last.top + rows.last.height;
 
@@ -447,9 +515,7 @@ class _StripChronologyPageState extends State<StripChronologyPage>
     double laneFontPx,
     WheelHistoryData data,
   ) {
-    final xs = [
-      for (final s in lane.spans) xForYear(s.startYear, _pxPerYear)
-    ];
+    final xs = [for (final s in lane.spans) xForYear(s.startYear, _pxPerYear)];
     final clusters = clusterByX(xs, laneFontPx * kStripEventClusterEm);
     for (final c in clusters) {
       if (!c.members.contains(index)) continue;
@@ -576,6 +642,728 @@ class _StripChronologyPageState extends State<StripChronologyPage>
         showPower(context, power, data, locale, _select);
       case StripLaneKind.ruler:
         break;
+    }
+  }
+
+  // ── filter ─────────────────────────────────────────────────────────
+
+  /// Which lanes [_hidden] actually removes, applied BEFORE
+  /// `buildStripLanes` runs rather than after — so a hidden stream's
+  /// row is never produced in the first place (and never falls back to
+  /// `ensureAtLeastOne`'s empty placeholder, which would be exactly the
+  /// "silently blank row" the wheel's own filter avoids by dropping the
+  /// ring entirely — see `_visible`'s doc there).
+  ///
+  /// A hidden stream also drops its OWN events out of the shared events
+  /// group, not just its band: on the wheel an event is a spoke ON its
+  /// stream's ring, so switching the ring off already takes the event
+  /// with it, and a strip that kept showing "Babylon" events in the
+  /// Events lane after the Babylon band vanished would be answering the
+  /// filter question two different ways in two lanes. `events`/`powers`
+  /// are filtered by their own `.stream`; `ministries` and `streams`
+  /// itself are filtered whole, because `kMinistryLayerId` is one
+  /// switch for all of them (the wheel's own annulus row) and a stream
+  /// with no [WheelStream] entry left cannot get an
+  /// `ensureAtLeastOne` lane to begin with.
+  ///
+  /// Sheets opened from a tap or from search are never given this
+  /// filtered copy — they take the page's own, unfiltered `data`, so a
+  /// record's own detail sheet always shows everything it owns
+  /// regardless of what the chart currently draws, the same split the
+  /// wheel keeps between `_visible(data)` (paints) and `data` (sheets).
+  ({WheelHistoryData data, List<HebrewKing> kings, List<Patriarch> patriarchs})
+      _visibleInputs(
+    WheelHistoryData data,
+    List<HebrewKing> kings,
+    List<Patriarch> patriarchs,
+  ) {
+    if (_hidden.isEmpty) {
+      return (data: data, kings: kings, patriarchs: patriarchs);
+    }
+    return (
+      data: WheelHistoryData(
+        streams: data.streams.where((s) => !_hidden.contains(s.id)).toList(),
+        nations: data.nations,
+        powers: data.powers.where((p) => !_hidden.contains(p.stream)).toList(),
+        ministries:
+            _hidden.contains(kMinistryLayerId) ? const [] : data.ministries,
+        omissions: data.omissions,
+        events: data.events.where((e) => !_hidden.contains(e.stream)).toList(),
+        meta: data.meta,
+      ),
+      kings: _hidden.contains(kReignLayerId) ? const <HebrewKing>[] : kings,
+      patriarchs:
+          _hidden.contains(kLifespanLayerId) ? const <Patriarch>[] : patriarchs,
+    );
+  }
+
+  /// [_body]'s own row list, and also what a search reveal recomputes
+  /// against (`_scrollToHit`) — one function, so a row a filter just
+  /// hid cannot be the row a search scrolls to a moment later. Reads
+  /// [_hidden] and [_pxPerYear] fresh each call rather than trusting a
+  /// cached list, the same reason the wheel's own `_panTo` rebuilds
+  /// `_packBand` instead of reusing the last frame's geometry: "a pan
+  /// computed over arcs the reader has switched off would land in the
+  /// wrong sub-ring."
+  List<StripRow> _currentRows(
+    WheelHistoryData data,
+    List<HebrewKing> kings,
+    List<Patriarch> patriarchs,
+    double textScale,
+  ) {
+    final visible = _visibleInputs(data, kings, patriarchs);
+    final lanes = buildStripLanes(
+      wheel: visible.data,
+      kings: visible.kings,
+      patriarchs: visible.patriarchs,
+      tradition: kDrawnTradition,
+      creationYear: creationYear ?? 0,
+      pxPerYear: _pxPerYear,
+    );
+    return _buildRows(lanes, textScale);
+  }
+
+  void _showFilter(BuildContext context, String locale) {
+    final wb = WbColors.of(context);
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: wb.paneBg,
+      shape: const RoundedRectangleBorder(),
+      isScrollControlled: true,
+      builder: (sheet) => FutureBuilder<WheelHistoryData>(
+        future: _future,
+        builder: (c, snap) {
+          final t = WbType.of(c);
+          final data = snap.data;
+          if (data == null) return const SizedBox(height: 120);
+          final colors = colorsFor(data);
+          return StatefulBuilder(builder: (c, setSheet) {
+            return ConstrainedBox(
+              constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(sheet).size.height * 0.7),
+              child: ListView(
+                shrinkWrap: true,
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
+                children: [
+                  Row(children: [
+                    Expanded(
+                      child: Text(s('wheelFilter', 'Filter', locale),
+                          style: TextStyle(
+                              color: wb.text,
+                              fontSize: t.scaled(15),
+                              fontWeight: FontWeight.w600)),
+                    ),
+                    TextButton(
+                      onPressed: () =>
+                          setSheet(() => setState(() => _hidden.clear())),
+                      child: Text(s('wheelAll', 'All', locale)),
+                    ),
+                    TextButton(
+                      // NOT `kLineageLayerId` — see the class doc and
+                      // `_hidden`'s own: there is no lineage rail on
+                      // this form to switch off yet.
+                      onPressed: () => setSheet(() => setState(() {
+                            _hidden.addAll(data.streams.map((s) => s.id));
+                            _hidden.add(kLifespanLayerId);
+                            _hidden.add(kReignLayerId);
+                            _hidden.add(kMinistryLayerId);
+                          })),
+                      child: Text(s('wheelNone', 'None', locale)),
+                    ),
+                  ]),
+                  CheckboxListTile(
+                    key: const ValueKey('stripFilterLifespans'),
+                    dense: true,
+                    value: !_hidden.contains(kLifespanLayerId),
+                    onChanged: (_) => setSheet(() => setState(() {
+                          if (!_hidden.remove(kLifespanLayerId)) {
+                            _hidden.add(kLifespanLayerId);
+                          }
+                        })),
+                    title: Text(
+                        s('wheelLifespans', 'Genesis lifespans', locale),
+                        style: TextStyle(
+                            color: wb.text, fontSize: t.scaled(12.5))),
+                    subtitle: Text(
+                      s('wheelLifespansNote', '', locale),
+                      style: TextStyle(
+                          color: wb.mutedText, fontSize: t.scaled(11)),
+                    ),
+                    secondary: Container(
+                        width: t.scaled(12),
+                        height: t.scaled(12),
+                        color: lineColor('shem')),
+                  ),
+                  CheckboxListTile(
+                    key: const ValueKey('stripFilterReigns'),
+                    dense: true,
+                    value: !_hidden.contains(kReignLayerId),
+                    onChanged: (_) => setSheet(() => setState(() {
+                          if (!_hidden.remove(kReignLayerId)) {
+                            _hidden.add(kReignLayerId);
+                          }
+                        })),
+                    title: Text(
+                        s('wheelReigns', 'Reigns of Judah & Israel', locale),
+                        style: TextStyle(
+                            color: wb.text, fontSize: t.scaled(12.5))),
+                    subtitle: Text(
+                      s('wheelKingsThiele', 'reigns (Thiele)', locale),
+                      style: TextStyle(
+                          color: wb.mutedText, fontSize: t.scaled(11)),
+                    ),
+                    secondary: Container(
+                        width: t.scaled(12),
+                        height: t.scaled(12),
+                        color: kingdomArcColor(Kingdom.judah)),
+                  ),
+                  CheckboxListTile(
+                    key: const ValueKey('stripFilterMinistries'),
+                    dense: true,
+                    value: !_hidden.contains(kMinistryLayerId),
+                    onChanged: (_) => setSheet(() => setState(() {
+                          if (!_hidden.remove(kMinistryLayerId)) {
+                            _hidden.add(kMinistryLayerId);
+                          }
+                        })),
+                    title: Text(
+                        s('wheelMinistries', 'Prophets & apostles', locale),
+                        style: TextStyle(
+                            color: wb.text, fontSize: t.scaled(12.5))),
+                    subtitle: Text(
+                      s('wheelMinistriesNote', '', locale),
+                      style: TextStyle(
+                          color: wb.mutedText, fontSize: t.scaled(11)),
+                    ),
+                    secondary: Container(
+                        width: t.scaled(12),
+                        height: t.scaled(12),
+                        color: ministryArcColor()),
+                  ),
+                  for (final stream in data.streams)
+                    CheckboxListTile(
+                      dense: true,
+                      value: !_hidden.contains(stream.id),
+                      onChanged: (_) => setSheet(() => setState(() {
+                            if (!_hidden.remove(stream.id)) {
+                              _hidden.add(stream.id);
+                            }
+                          })),
+                      title: Text(stream.nameFor(locale),
+                          style: TextStyle(
+                              color: wb.text, fontSize: t.scaled(12.5))),
+                      subtitle: Text(
+                        '${s('wheelPowers', 'Powers', locale)} '
+                        '${data.powersOf(stream.id).length} · '
+                        '${s('wheelEvents', 'Events', locale)} '
+                        '${data.eventsOf(stream.id).length}',
+                        style: TextStyle(
+                            color: wb.mutedText, fontSize: t.scaled(11)),
+                      ),
+                      secondary: Container(
+                          width: t.scaled(12),
+                          height: t.scaled(12),
+                          color: colors[stream.id] ?? lineColor(stream.line)),
+                    ),
+                ],
+              ),
+            );
+          });
+        },
+      ),
+    );
+  }
+
+  // ── about ──────────────────────────────────────────────────────────
+
+  void _showAbout(BuildContext context, String locale) {
+    final wb = WbColors.of(context);
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: wb.paneBg,
+      shape: const RoundedRectangleBorder(),
+      isScrollControlled: true,
+      builder: (sheet) => FutureBuilder<WheelHistoryData>(
+        future: _future,
+        builder: (c, snap) {
+          final t = WbType.of(c);
+          final data = snap.data;
+          if (data == null) return const SizedBox(height: 120);
+          final meta = data.meta;
+          Widget section(String heading, String body) => body.isEmpty
+              ? const SizedBox.shrink()
+              : Padding(
+                  padding: EdgeInsets.only(bottom: t.scaled(8)),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(heading,
+                          style: TextStyle(
+                              color: wb.mutedText,
+                              fontSize: t.scaled(12),
+                              fontWeight: FontWeight.w600)),
+                      SizedBox(height: t.scaled(4)),
+                      Text(body,
+                          style: TextStyle(
+                              color: wb.mutedText, fontSize: t.scaled(12))),
+                    ],
+                  ),
+                );
+          return buildSheet(c, [
+            Text(s('wheelAbout', 'About this chart', locale),
+                style: TextStyle(
+                    color: wb.text,
+                    fontSize: t.scaled(15),
+                    fontWeight: FontWeight.w600)),
+            SizedBox(height: t.scaled(8)),
+            // Read live off the SAME `WheelHistoryMeta` the wheel's own
+            // About sheet reads — one asset, one set of facts about
+            // provenance, coverage, scope and axis, so the two forms
+            // cannot come to state them differently.
+            section(
+                s('wheelAboutProvenance', 'Where the dates come from', locale),
+                meta.provenanceFor(locale)),
+            section(s('wheelAboutCoverage', 'What is on the chart', locale),
+                meta.coverageFor(locale)),
+            section(
+                s('wheelAboutScope', 'Where the table of nations stops',
+                    locale),
+                meta.scopeFor(locale)),
+            section(s('wheelAboutAxis', 'Where the axis stops', locale),
+                meta.axisFor(locale)),
+            // What THIS form does not yet draw — see `strip_strings
+            // .dart`'s own doc on these two keys for why this belongs
+            // here and not on the wheel's sheet.
+            section(ss('stripAboutGap', locale),
+                ss('stripAboutGapLineage', locale)),
+          ]);
+        },
+      ),
+    );
+  }
+
+  // ── find ───────────────────────────────────────────────────────────
+
+  /// The wheel's own `_kindLabel`, reproduced rather than shared — see
+  /// the class doc's FIND paragraph for why (`_RadialChronologyPage
+  /// State` is private to `radial_chronology_page.dart`, which this
+  /// page may not edit). Every string is looked up through the same
+  /// `wheelStrings` keys via `s()`, so the words themselves never
+  /// diverge even though the switch is typed twice.
+  String _kindLabel(WheelHitKind kind, String locale) => switch (kind) {
+        WheelHitKind.event => s('wheelKindEvent', 'event', locale),
+        WheelHitKind.power => s('wheelKindPower', 'power', locale),
+        WheelHitKind.nation => s('wheelKindNation', 'nation', locale),
+        WheelHitKind.stream => s('wheelKindBand', 'band', locale),
+        WheelHitKind.patriarch => s('wheelKindLife', 'life', locale),
+        WheelHitKind.ministry => s('wheelKindMinistry', 'ministry', locale),
+        WheelHitKind.omission => s('wheelKindOmission', 'no date', locale),
+      };
+
+  /// The wheel's own `_hitYears`.
+  String _hitYears(WheelHit hit, WheelHistoryData data, String locale) {
+    if (hit.kind == WheelHitKind.power) {
+      final p = find(data.powers, (p) => p.id == hit.id);
+      if (p != null) {
+        final end = p.ongoing
+            ? s('wheelPresent', 'present', locale)
+            : yearLabel(p.end!, locale);
+        return '${yearLabel(p.start, locale)} – $end';
+      }
+    }
+    return hit.year == null ? '' : yearLabel(hit.year!, locale);
+  }
+
+  /// The wheel's own `_hitVia`.
+  String _hitVia(WheelHit hit, String locale) => switch (hit.via) {
+        WheelHitVia.otherLocale => hit.matched,
+        WheelHitVia.otherSpelling => fill('wheelNameKjv',
+            'King James Version: {name}', locale, {'name': hit.matched}),
+        WheelHitVia.description =>
+          s('wheelFindInDesc', 'in the description', locale),
+        WheelHitVia.person => s('wheelFindPerson', 'names {name}', locale)
+            .replaceFirst('{name}', hit.matched),
+        WheelHitVia.reference => localizedReferenceLabel(hit.matched, locale),
+        WheelHitVia.yearSpan => s('wheelFindSpan', 'spans it', locale),
+        WheelHitVia.yearNear => s('wheelFindNear', 'nearby', locale),
+        _ => '',
+      };
+
+  /// The wheel's own `_searchStatus`. `data.events.length` is what the
+  /// FutureBuilder actually loaded — 851 in the shipped corpus (747
+  /// from `wheel_history.json` plus 104 `WheelHistoryService.load`
+  /// merges in from `bible_timeline.json`) — never the smaller
+  /// asset-file count, so a "can search N events" line is never a lie
+  /// about what is actually drawn.
+  String _searchStatus(String query, WheelSearchResult result,
+      WheelHistoryData data, String locale) {
+    if (query.trim().isEmpty) {
+      return fill('wheelFindTeach', '', locale, {
+        'e': data.events.length,
+        'p': data.powers.length,
+        'm': data.ministries.length,
+        'n': data.nations.length,
+        'b': data.streams.length,
+        'o': data.omissions.length,
+      });
+    }
+    if (result.isEmpty) {
+      return fill('wheelFindNone', 'Nothing here matches “{q}”.', locale,
+          {'q': query.trim()});
+    }
+    final parts = <String>[
+      if (result.hits.length == 1)
+        fill('wheelFindCountOne', '{n} result', locale, {'n': 1})
+      else
+        fill(
+            'wheelFindCount', '{n} results', locale, {'n': result.hits.length}),
+      if (result.years.isNotEmpty)
+        result.years.map((y) => yearLabel(y, locale)).join(' · '),
+      if (result.nearestShown > 0)
+        fill('wheelFindNearNote', '', locale, {'n': result.nearestShown}),
+    ];
+    return parts.join(' · ');
+  }
+
+  void _showSearch(BuildContext context, String locale) {
+    final wb = WbColors.of(context);
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: wb.paneBg,
+      shape: const RoundedRectangleBorder(),
+      isScrollControlled: true,
+      builder: (sheet) => FutureBuilder<WheelHistoryData>(
+        future: _future,
+        builder: (c, snap) {
+          final data = snap.data;
+          if (data == null) return const SizedBox(height: 120);
+          final t = WbType.of(c);
+          final colors = colorsFor(data);
+          final kings = HebrewKingsService.instance.cached?.kings ?? const [];
+          final patriarchs =
+              ChronologyService.instance.cached?.patriarchs ?? const [];
+          return StatefulBuilder(builder: (c, setSheet) {
+            final query = _findCtl.text;
+            // `searchWheel` itself — the wheel's, unchanged, called the
+            // same way: it does not read [_hidden] to narrow, only to
+            // mark `WheelHit.streamHidden` (see that function's own
+            // library comment, point 3).
+            final result = searchWheel(
+              data: data,
+              query: query,
+              locale: locale,
+              axisEnd: kStripMaxYear,
+              hiddenStreams: _hidden,
+              patriarchs: patriarchs,
+              creationYear: creationYear,
+              tradition: kDrawnTradition,
+            );
+            return Padding(
+              padding: EdgeInsets.only(
+                  bottom: MediaQuery.viewInsetsOf(sheet).bottom),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                    maxHeight: MediaQuery.of(sheet).size.height * 0.7),
+                child: Column(mainAxisSize: MainAxisSize.min, children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+                    child: TextField(
+                      key: const ValueKey('stripFindField'),
+                      controller: _findCtl,
+                      autofocus: true,
+                      style:
+                          TextStyle(color: wb.text, fontSize: t.scaled(13.5)),
+                      decoration: InputDecoration(
+                        isDense: true,
+                        prefixIcon: Icon(Icons.search, size: t.scaled(17)),
+                        prefixIconConstraints: BoxConstraints(
+                            minWidth: t.scaled(34), minHeight: t.scaled(20)),
+                        hintText: s('wheelFindHint',
+                            'A name, a verse or a year', locale),
+                        hintStyle: TextStyle(
+                            color: wb.mutedText, fontSize: t.scaled(13)),
+                        suffixIcon: query.isEmpty
+                            ? null
+                            : IconButton(
+                                icon: Icon(Icons.close, size: t.scaled(16)),
+                                onPressed: () => setSheet(_findCtl.clear),
+                              ),
+                        border: const OutlineInputBorder(
+                            borderRadius: BorderRadius.zero),
+                        enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.zero,
+                            borderSide: BorderSide(color: wb.border)),
+                      ),
+                      onChanged: (_) => setSheet(() {}),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
+                    child: Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: Text(
+                        _searchStatus(query, result, data, locale),
+                        style: TextStyle(
+                            color: wb.mutedText, fontSize: t.scaled(11)),
+                      ),
+                    ),
+                  ),
+                  Flexible(
+                    child: ListView.builder(
+                      key: const ValueKey('stripFindList'),
+                      shrinkWrap: true,
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                      itemCount: result.hits.length,
+                      itemBuilder: (c, i) {
+                        final hit = result.hits[i];
+                        final via = _hitVia(hit, locale);
+                        return InkWell(
+                          key: ValueKey('stripFindHit${hit.id}'),
+                          onTap: () {
+                            Navigator.of(sheet).pop();
+                            _reveal(context, hit, data, kings, patriarchs,
+                                locale, t.textScale);
+                          },
+                          child: Padding(
+                            padding:
+                                EdgeInsets.symmetric(vertical: t.scaled(5)),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Padding(
+                                  padding: EdgeInsets.only(top: t.scaled(3)),
+                                  child: swatch(
+                                      t,
+                                      colors[hit.streamId] ??
+                                          lineColor('none')),
+                                ),
+                                SizedBox(width: t.scaled(8)),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(hit.title,
+                                          style: TextStyle(
+                                              color: wb.text,
+                                              fontSize: t.scaled(12.5))),
+                                      if (via.isNotEmpty ||
+                                          hit.streamHidden) ...[
+                                        SizedBox(height: t.scaled(1)),
+                                        Text(
+                                          [
+                                            if (via.isNotEmpty) via,
+                                            if (hit.streamHidden)
+                                              s(
+                                                  'wheelFindHiddenBand',
+                                                  'band hidden — opening '
+                                                      'this shows it again',
+                                                  locale),
+                                          ].join(' · '),
+                                          style: TextStyle(
+                                              color: wb.mutedText,
+                                              fontSize: t.scaled(11)),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ),
+                                SizedBox(width: t.scaled(8)),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text(_hitYears(hit, data, locale),
+                                        style: TextStyle(
+                                            color: wb.mutedText,
+                                            fontSize: t.scaled(11))),
+                                    Text(_kindLabel(hit.kind, locale),
+                                        style: TextStyle(
+                                            color: wb.mutedText,
+                                            fontSize: t.scaled(11))),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ]),
+              ),
+            );
+          });
+        },
+      ),
+    );
+  }
+
+  /// The strip's own `_reveal` — same three steps as the wheel's
+  /// (`radial_chronology_page.dart`'s own doc on `_reveal`): un-hide
+  /// the record's stream so it is actually on the chart, select it,
+  /// then take the reader there. "There" is `_scrollToHit` — see that
+  /// method's own doc for why it runs unconditionally rather than
+  /// gated on zoom the way the wheel's `_panTo` is.
+  void _reveal(
+    BuildContext context,
+    WheelHit hit,
+    WheelHistoryData data,
+    List<HebrewKing> kings,
+    List<Patriarch> patriarchs,
+    String locale,
+    double textScale,
+  ) {
+    // An omission takes none of the steps below, for the same reason
+    // the wheel's own `_reveal` returns early for one: there is no
+    // band to un-hide, no span to select and nowhere on the axis to
+    // scroll to. The sheet is the whole answer.
+    if (hit.kind == WheelHitKind.omission) {
+      final o = data.omissionById(hit.id);
+      if (o != null) showOmission(context, o, locale);
+      return;
+    }
+    setState(() {
+      _hidden.remove(hit.streamId);
+      _selectedId = hit.kind == WheelHitKind.nation ? hit.streamId : hit.id;
+    });
+    _scrollToHit(hit, data, kings, patriarchs, textScale);
+    switch (hit.kind) {
+      case WheelHitKind.event:
+        final e = find(data.events, (e) => e.id == hit.id);
+        if (e != null) showEvent(context, e, data, locale);
+      case WheelHitKind.power:
+        final p = find(data.powers, (p) => p.id == hit.id);
+        if (p != null) showPower(context, p, data, locale, _select);
+      case WheelHitKind.nation:
+      case WheelHitKind.stream:
+        final s = find(data.streams, (s) => s.id == hit.streamId);
+        if (s != null) showStream(context, s, data, locale, _select);
+      case WheelHitKind.patriarch:
+        final man = ChronologyService.instance.cached?.byId(hit.id);
+        if (man != null) showPatriarch(context, man, locale);
+      case WheelHitKind.ministry:
+        final m = data.ministryById(hit.id);
+        if (m != null) showMinistry(context, m, locale);
+      case WheelHitKind.omission:
+        break;
+    }
+  }
+
+  /// The year a hit's own record centres on, for [_scrollToHit]'s
+  /// horizontal half. Not always [WheelHit.year] as-is: a power's own
+  /// field is its START (so the status line and the result row can
+  /// print it beside its end), but the reveal should centre the whole
+  /// span, and a life or a ministry has no [WheelHit.year] at all — the
+  /// search indexes a patriarch under his BIRTH year (`wheel_search
+  /// .dart`), but centring on the birth would push half his own life
+  /// arc's lane content off whichever side the death year falls on.
+  /// Null for a kind with no year to centre on, exactly the kinds
+  /// [_rowForHit] also cannot place on the x axis.
+  int? _yearForHit(WheelHit hit, WheelHistoryData data) {
+    switch (hit.kind) {
+      case WheelHitKind.event:
+        return find(data.events, (e) => e.id == hit.id)?.year;
+      case WheelHitKind.power:
+        final p = find(data.powers, (p) => p.id == hit.id);
+        return p == null
+            ? null
+            : ((p.start + p.endFor(kStripMaxYear)) / 2).round();
+      case WheelHitKind.ministry:
+        final m = data.ministryById(hit.id);
+        return m == null ? null : ((m.start + m.end) / 2).round();
+      case WheelHitKind.patriarch:
+        final creation = creationYear;
+        final man = ChronologyService.instance.cached?.byId(hit.id);
+        final f = man?.figures[kDrawnTradition];
+        if (creation == null || f == null) return null;
+        return creation + ((f.birthAm + f.deathAm) ~/ 2);
+      case WheelHitKind.nation:
+      case WheelHitKind.stream:
+      case WheelHitKind.omission:
+        return null;
+    }
+  }
+
+  /// Which row of a FRESH `_currentRows` carries [hit] — the strip's
+  /// answer to "which ring", built the same way the wheel resolves a
+  /// life or a ministry's ring in `_panTo`: by id, against the exact
+  /// prefix the lane builder itself uses (`kStripKingPrefix` /
+  /// `kStripMinistryPrefix`, `strip_lanes.dart`), never a second copy
+  /// of that string. A nation or a band has no single span standing
+  /// for it — it names a whole stream, not a moment — so those two
+  /// match on [StripLane.ownerId] instead and land on that stream's
+  /// first sub-lane.
+  StripRow? _rowForHit(WheelHit hit, List<StripRow> rows) {
+    final StripLaneKind wantKind;
+    String? wantId;
+    switch (hit.kind) {
+      case WheelHitKind.event:
+        wantKind = StripLaneKind.events;
+        wantId = hit.id;
+      case WheelHitKind.power:
+        wantKind = StripLaneKind.stream;
+        wantId = hit.id;
+      case WheelHitKind.patriarch:
+        wantKind = StripLaneKind.lives;
+        wantId = hit.id;
+      case WheelHitKind.ministry:
+        wantKind = StripLaneKind.ministries;
+        wantId = '$kStripMinistryPrefix${hit.id}';
+      case WheelHitKind.nation:
+      case WheelHitKind.stream:
+        wantKind = StripLaneKind.stream;
+        wantId = null;
+      case WheelHitKind.omission:
+        return null;
+    }
+    for (final row in rows) {
+      if (row.isHeading) continue;
+      final lane = row.lane!;
+      if (lane.kind != wantKind) continue;
+      if (wantId != null) {
+        if (lane.spans.any((s) => s.id == wantId)) return row;
+      } else if (lane.ownerId == hit.streamId) {
+        return row;
+      }
+    }
+    return null;
+  }
+
+  /// Take the reader to what a search found: [scrollToCentre]
+  /// horizontally (`strip_chronology_layout.dart`'s own "the strip's
+  /// `focusTranslation`" — zoom is never touched, so a search cannot
+  /// cost the reader their place), and the found row centred
+  /// vertically, which has no wheel equivalent to share (a ring has no
+  /// "row") and so is plain, new arithmetic in the same clamped shape.
+  ///
+  /// Runs UNCONDITIONALLY, never gated on zoom the way the wheel's own
+  /// `_panTo` is: the wheel gates because at rest its whole axis is
+  /// already on screen and panning would be motion for nothing, but
+  /// `scrollToCentre` already returns 0 whenever the content is
+  /// narrower than the viewport, so calling it every time costs an
+  /// idle reveal nothing and a genuinely off-screen one everything.
+  void _scrollToHit(
+    WheelHit hit,
+    WheelHistoryData data,
+    List<HebrewKing> kings,
+    List<Patriarch> patriarchs,
+    double textScale,
+  ) {
+    final year = _yearForHit(hit, data);
+    if (year != null && _hCtl.hasClients && _viewportW > 0) {
+      final target = scrollToCentre(year, _pxPerYear, _viewportW);
+      _hCtl.animateTo(target,
+          duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
+    }
+    final rows = _currentRows(data, kings, patriarchs, textScale);
+    final row = _rowForHit(hit, rows);
+    if (row != null && _vCtl.hasClients) {
+      final viewportH = _vCtl.position.viewportDimension;
+      final maxOffset = _vCtl.position.maxScrollExtent;
+      final target =
+          (row.top + row.height / 2 - viewportH / 2).clamp(0.0, maxOffset);
+      _vCtl.animateTo(target,
+          duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
     }
   }
 
