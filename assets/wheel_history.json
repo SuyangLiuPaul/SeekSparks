@@ -5792,6 +5792,50 @@
     "zh-Hans": "哈斯蒙尼王朝的王兼大祭司，把犹太国的疆域扩至最广；他与法利赛人长年的争斗，使福音书所遇的各派愈发壁垒分明。在位于公元前103至前76年，属本图已绘的哈斯蒙尼王国之内。",
     "zh-Hant": "哈斯蒙尼王朝的王兼大祭司，把猶太國的疆域擴至最廣；他與法利賽人長年的爭鬥，使福音書所遇的各派愈發壁壘分明。在位於公元前103至前76年，屬本圖已繪的哈斯蒙尼王國之內。"
    }
+  },
+  {
+   "id": "artaxerxes_ii_reign",
+   "start": -404,
+   "end": -358,
+   "region": "persia",
+   "stream": "persia",
+   "approximate": false,
+   "basis": "conventional",
+   "refs": [
+    "Ezra 7:7-8"
+   ],
+   "name": {
+    "en": "Artaxerxes II",
+    "zh-Hans": "亚达薛西二世",
+    "zh-Hant": "亞達薛西二世"
+   },
+   "note": {
+    "en": "404 to 358 BC by the Persian king-list. Ezra 7:7 dates the return to the seventh year of Artaxerxes but does not say which one: most readings take Artaxerxes I and reach 458 BC, a minority takes this king and reaches 398. The band is here so the second reading can be seen against the chart rather than argued in the abstract.",
+    "zh-Hans": "按波斯王表为前404至前358年。以斯拉记7:7把上耶路撒冷定在亚达薛西第七年，却未说是哪一位：多数读法取亚达薛西一世，得主前458年；少数取此王，得主前398年。设此带，是要让第二种读法能对着图看，而不是空口争辩。",
+    "zh-Hant": "按波斯王表為前404至前358年。以斯拉記7:7把上耶路撒冷定在亞達薛西第七年，卻未說是哪一位：多數讀法取亞達薛西一世，得主前458年；少數取此王，得主前398年。設此帶，是要讓第二種讀法能對著圖看，而不是空口爭辯。"
+   },
+   "anchorKings": []
+  },
+  {
+   "id": "antiochus_iii_reign",
+   "start": -222,
+   "end": -187,
+   "region": "greece",
+   "stream": "greece",
+   "approximate": false,
+   "basis": "conventional",
+   "refs": [],
+   "name": {
+    "en": "Antiochus III",
+    "zh-Hans": "安提阿古三世",
+    "zh-Hant": "安提阿古三世"
+   },
+   "note": {
+    "en": "222 to 187 BC. He took Judea from Ptolemaic Egypt at Panium, which this chart already carries, and was broken by Rome at Magnesia fourteen years later; his son Antiochus IV is on the chart too. Scripture does not name him, so nothing here rests on identifying him with a figure in Daniel 11 — the band only lets such a reading be checked against a span.",
+    "zh-Hans": "主前222至187年。他在帕尼翁（本图已有）从托勒密埃及手中夺取犹太地，十四年后在马格尼西亚败于罗马；其子安提阿古四世本图亦已收录。经文并未提他的名字，故此处不倚赖把他等同于但以理书11章中的某一位——设此带，只为使这类读法能对着一段年限查考。",
+    "zh-Hant": "主前222至187年。他在帕尼翁（本圖已有）從托勒密埃及手中奪取猶太地，十四年後在馬格尼西亞敗於羅馬；其子安提阿古四世本圖亦已收錄。經文並未提他的名字，故此處不倚賴把他等同於但以理書11章中的某一位——設此帶，只為使這類讀法能對著一段年限查考。"
+   },
+   "anchorKings": []
   }
  ],
  "events": [
@@ -16806,6 +16850,102 @@
     "en": "David brings the ark up from the house of Obed-edom and sets it in the tent he had pitched in the city of David, where it stays until Solomon's temple receives it. Scripture gives no year; it follows the capture of Jerusalem, which this chart already dates -1003.",
     "zh-Hans": "大卫把约柜从俄别以东家中抬上来，安放在他于大卫城所搭的帐幕里，直到所罗门的殿建成才迎入殿中。经文未记年份；此事紧接攻取耶路撒冷之后，而本图已把攻取耶路撒冷定于前1003年。",
     "zh-Hant": "大衛把約櫃從俄別以東家中抬上來，安放在他於大衛城所搭的帳幕裏，直到所羅門的殿建成才迎入殿中。經文未記年份；此事緊接攻取耶路撒冷之後，而本圖已把攻取耶路撒冷定於前1003年。"
+   }
+  },
+  {
+   "id": "thebes_sacked",
+   "year": -663,
+   "era": "bible",
+   "stream": "egypt",
+   "approximate": false,
+   "basis": "conventional",
+   "refs": [
+    "Nahum 3:8"
+   ],
+   "title": {
+    "en": "Assyria Sacks Thebes, the No-Amon of Nahum",
+    "zh-Hans": "亚述攻陷底比斯，即那鸿书的挪亚们",
+    "zh-Hant": "亞述攻陷底比斯，即那鴻書的挪亞們"
+   },
+   "desc": {
+    "en": "Ashurbanipal takes the southern capital of Egypt and carries off its wealth. Nahum later asks Nineveh whether she is better than No-Amon, the city that sat among the rivers and still fell — so the sack is the fixed point his question is measured from.",
+    "zh-Hans": "亚述巴尼拔攻取埃及南方京城，掳走城中财富。那鸿后来问尼尼微：你比挪亚们强么？那城四面环水，尚且倾覆——这次陷落正是他发问所据的定点。",
+    "zh-Hant": "亞述巴尼拔攻取埃及南方京城，擄走城中財富。那鴻後來問尼尼微：你比挪亞們強麼？那城四面環水，尚且傾覆——這次陷落正是他發問所據的定點。"
+   }
+  },
+  {
+   "id": "king_so_egypt",
+   "year": -725,
+   "era": "bible",
+   "stream": "egypt",
+   "approximate": true,
+   "basis": "scripture+thiele",
+   "refs": [
+    "2 Kings 17:3-4"
+   ],
+   "title": {
+    "en": "Hoshea Sends to So, King of Egypt",
+    "zh-Hans": "何细亚差人去见埃及王梭",
+    "zh-Hant": "何細亞差人去見埃及王梭"
+   },
+   "desc": {
+    "en": "The last king of Israel stops his tribute to Assyria and appeals to Egypt instead; Shalmaneser finds him out, imprisons him, and besieges Samaria. Who So was is not settled — the name has been read as a pharaoh, as a general and as the city of Sais — so only the appeal is dated here, not the man: within Hoshea's reign and before the siege.",
+    "zh-Hans": "以色列末王停纳亚述贡银，转而求助埃及；撒缦以色查知此事，将他囚禁，并围困撒玛利亚。梭是谁尚无定论——此名曾被解为一位法老、一员将领，也曾被解为塞易斯城——故此处所定的只是求助一事，不是其人：在何细亚在位期间、围城之前。",
+    "zh-Hant": "以色列末王停納亞述貢銀，轉而求助埃及；撒縵以色查知此事，將他囚禁，並圍困撒瑪利亞。梭是誰尚無定論——此名曾被解為一位法老、一員將領，也曾被解為塞易斯城——故此處所定的只是求助一事，不是其人：在何細亞在位期間、圍城之前。"
+   }
+  },
+  {
+   "id": "amenhotep_iii",
+   "year": -1390,
+   "era": "world",
+   "stream": "egypt",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Amenhotep III Rules Egypt at Its Height",
+    "zh-Hans": "阿蒙霍特普三世治下埃及鼎盛",
+    "zh-Hant": "阿蒙霍特普三世治下埃及鼎盛"
+   },
+   "desc": {
+    "en": "Egypt is at its wealthiest and least troubled, and its correspondence with the kings of Canaan and Mesopotamia is the archive his son's capital preserved. Reconstructions place the reign at about 1390 to 1352 BC, a few years earlier on the high chronology.",
+    "zh-Hans": "埃及最富庶、最少战事的时期，其与迦南和两河诸王往来的书信，正是其子京城所存的档案。各家年表把这段在位定于约主前1390至1352年，高年表则再早数年。",
+    "zh-Hant": "埃及最富庶、最少戰事的時期，其與迦南和兩河諸王往來的書信，正是其子京城所存的檔案。各家年表把這段在位定於約主前1390至1352年，高年表則再早數年。"
+   }
+  },
+  {
+   "id": "thutmose_i",
+   "year": -1504,
+   "era": "world",
+   "stream": "egypt",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Thutmose I Carries Egypt to the Euphrates",
+    "zh-Hans": "图特摩斯一世兵至伯拉河",
+    "zh-Hant": "圖特摩斯一世兵至伯拉河"
+   },
+   "desc": {
+    "en": "Egypt's reach is at its furthest north, and the Eighteenth Dynasty already on this chart begins in earnest here. Those who date the exodus to the fifteenth century read the years of oppression against this dynasty; the chart carries the dynasty, not that identification.",
+    "zh-Hans": "埃及国势北达最远，本图已有的第十八王朝自此真正兴起。把出埃及定在主前十五世纪的人，将为奴受苦的年日读在这王朝之内；本图所载的是王朝，不是这一认定。",
+    "zh-Hant": "埃及國勢北達最遠，本圖已有的第十八王朝自此真正興起。把出埃及定在主前十五世紀的人，將為奴受苦的年日讀在這王朝之內；本圖所載的是王朝，不是這一認定。"
+   }
+  },
+  {
+   "id": "carthage_founded",
+   "year": -814,
+   "era": "world",
+   "stream": "phoenicia",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Tyre Founds Carthage, by the Traditional Date",
+    "zh-Hans": "推罗建迦太基（传统纪年）",
+    "zh-Hant": "推羅建迦太基（傳統紀年）"
+   },
+   "desc": {
+    "en": "The furthest of the Phoenician colonies, and the one that outlived the mother city. Greek historians give 814 BC; the earliest excavated material at the site is a little later, around 800, and the chart keeps the traditional year while saying so.",
+    "zh-Hans": "腓尼基众殖民地中最远的一座，也是比母城更长久的一座。希腊史家作主前814年；遗址出土最早的实物略晚，约主前800年。本图仍取传统年份，并如实注明。",
+    "zh-Hant": "腓尼基眾殖民地中最遠的一座，也是比母城更長久的一座。希臘史家作主前814年；遺址出土最早的實物略晚，約主前800年。本圖仍取傳統年份，並如實註明。"
    }
   }
  ]

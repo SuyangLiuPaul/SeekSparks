@@ -1,6 +1,6 @@
 /// Find on the wheel — the pure core, against the real asset.
 ///
-/// The wheel holds 1005 records and draws 64 labels at rest, so the
+/// The wheel holds 1012 records and draws 64 labels at rest, so the
 /// search box is now the only way most of the corpus can be reached at
 /// all. That makes a FALSE ABSENCE the defect that matters here: the
 /// app telling a reader it does not know something it does know. Every
@@ -13,11 +13,11 @@
 ///    `yearLabel` prints, for all 671 events and all 62 power spans, in
 ///    all three locales. Nothing enforces that but this test, and the
 ///    two functions live in different files.
-///  * THE BARE WILDCARD reaches 707 + 152 + 82 + 22 + 42 = 1005 records. Not a
+///  * THE BARE WILDCARD reaches 712 + 152 + 82 + 22 + 44 = 1012 records. Not a
 ///    round number for its own sake — it is the only assertion that
 ///    fails if a whole KIND stops being searched, which is exactly what
 ///    a naive "search the events" version would do.
-///  * THE INDEX BAR. Every one of the 1005 records, in all three
+///  * THE INDEX BAR. Every one of the 1012 records, in all three
 ///    locales, must come back when its own printed title is typed —
 ///    2,490 searches, and never below second place. This is the only
 ///    pin here that grows with the corpus instead of with the examples
@@ -68,7 +68,7 @@ void main() {
     /// on screen.
     test('every event round-trips through both functions, in every locale',
         () {
-      expect(data.events, hasLength(707));
+      expect(data.events, hasLength(712));
       final broken = <String>[];
       for (final e in data.events) {
         for (final locale in _locales) {
@@ -191,7 +191,7 @@ void main() {
           isTrue);
     });
 
-    /// The matcher is called once per field per record — 1005 records
+    /// The matcher is called once per field per record — 1012 records
     /// across four fields on every keystroke — so a needle that
     /// compiles a pattern must compile it once. This asserts the
     /// behaviour the cache has to preserve, since a cache that returns
@@ -224,9 +224,9 @@ void main() {
     /// The single assertion that fails if a whole kind stops being
     /// searched. A version that searched only events would still pass
     /// most of this file.
-    test('the bare wildcard returns all 1005 records, of all four kinds', () {
+    test('the bare wildcard returns all 1012 records, of all four kinds', () {
       final r = find('*');
-      expect(r.hits, hasLength(1005));
+      expect(r.hits, hasLength(1012));
       final byKind = {
         for (final k in WheelHitKind.values)
           k: r.hits.where((h) => h.kind == k).length,
@@ -299,7 +299,7 @@ void main() {
 
     test('hiding every band still returns everything, all flagged', () {
       final all = find('*', hidden: {for (final s in data.streams) s.id});
-      expect(all.hits, hasLength(1005));
+      expect(all.hits, hasLength(1012));
       expect(all.hits.every((h) => h.streamHidden), isTrue);
     });
   });
@@ -570,7 +570,7 @@ void main() {
   /// wheel printed — in whichever of the three languages they are
   /// reading it in.
   ///
-  /// So this group asks the corpus itself: 1005 records x 3 locales,
+  /// So this group asks the corpus itself: 1012 records x 3 locales,
   /// 2,490 searches, each typing a record's own displayed title back
   /// at the search box. It is the only assertion in this file that
   /// scales with the corpus rather than with the examples someone
@@ -598,10 +598,10 @@ void main() {
       ];
     }
 
-    test('all 1005, in all three locales, come back when typed', () {
+    test('all 1012, in all three locales, come back when typed', () {
       for (final locale in _locales) {
         final ranks = ownTitleRank(locale);
-        expect(ranks, hasLength(1005),
+        expect(ranks, hasLength(1012),
             reason: 'the sweep itself stopped seeing the corpus');
         final unreachable =
             ranks.where((e) => e.value < 0).map((e) => e.key).toList();
@@ -637,7 +637,7 @@ void main() {
     /// `foldForWheelSearch` lowercases and strips diacritics on BOTH
     /// sides of the comparison; if it ever stopped doing so on the
     /// corpus side, every title with a capital in it would stop
-    /// answering to itself. That is all 1005 of them, so the sweep
+    /// answering to itself. That is all 1012 of them, so the sweep
     /// above is load-bearing for the case fold.
     ///
     /// The diacritic half is thin and says so: exactly three English
@@ -646,7 +646,7 @@ void main() {
     /// assertion is what will say so.
     test('the sweep is not passing vacuously', () {
       final titles = find('*').hits.map((h) => h.title).toList();
-      expect(titles.where((t) => RegExp(r'[A-Z]').hasMatch(t)), hasLength(1005),
+      expect(titles.where((t) => RegExp(r'[A-Z]').hasMatch(t)), hasLength(1012),
           reason: 'the case fold is exercised by every record, or was');
       final accented = titles
           .where((t) => RegExp(r'[À-ɏ]').hasMatch(t))

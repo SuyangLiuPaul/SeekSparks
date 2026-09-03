@@ -203,7 +203,9 @@ void main() {
       ],
       'power': [for (final p in data.powers) ...p.refs],
     };
-    expect(byCarrier['event']!.length, 65);
+    // 67 since 2026-09-03: Nahum 3:8 on the sack of Thebes and
+    // 2 Kings 17:3-4 on Hoshea's appeal to So of Egypt.
+    expect(byCarrier['event']!.length, 67);
     expect(byCarrier['nation']!.length, 82);
     expect(byCarrier['power']!.length, 45);
 
