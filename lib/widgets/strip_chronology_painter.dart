@@ -123,7 +123,16 @@ double stripHeaderColumnWidth({
     widest = math.max(widest, measure(text, headingFontPx));
   }
   final padded = widest + headingFontPx * 2;
-  return padded.clamp(headingFontPx * 4, viewportWidth * 0.30);
+  // 0.30 of the viewport is generous on a desktop and too tight on a
+  // phone, and it was the phone that showed it: at 375 px the clamp is
+  // 112 and 犹大与以色列列王 — a heading this chart actually draws, and
+  // one of the five measured just above — wants more, so it was painted
+  // straight past the column and cut MID-GLYPH by the canvas edge.
+  // A narrow viewport gets 0.40 instead. The content column loses about
+  // 37 px, which at the opening 1.5 px/year is 25 years out of 250; a
+  // row whose name is cut in half costs the reader the whole row.
+  final share = viewportWidth < 600 ? 0.40 : 0.30;
+  return padded.clamp(headingFontPx * 4, viewportWidth * share);
 }
 
 /// One row of the strip's vertical stack — a lane-group heading or one
@@ -855,6 +864,14 @@ class StripLaneHeaderPainter extends CustomPainter {
       if (row.isHeading) {
         final text = stripStrings[row.headingKey]?[locale] ??
             stripStrings[row.headingKey]!['en']!;
+        // `maxWidth` and an ellipsis, because `layout()` with neither
+        // lays the heading out at its natural width and paints it from
+        // `_padding` regardless — the canvas edge then cuts it mid-
+        // glyph, which is how 犹大与以色列列王 reached a phone reader as
+        // 犹大与以色列列3. The wider clamp in `stripHeaderColumnWidth`
+        // is what actually makes the headings fit at 375; this is the
+        // net under it, so no future heading, locale or font size can
+        // put a half-drawn character on the screen again.
         final tp = TextPainter(
           text: TextSpan(
               text: text,
@@ -864,7 +881,8 @@ class StripLaneHeaderPainter extends CustomPainter {
                   fontWeight: FontWeight.w600)),
           textDirection: TextDirection.ltr,
           maxLines: 1,
-        )..layout();
+          ellipsis: '…',
+        )..layout(maxWidth: math.max(0, size.width - _padding * 2));
         tp.paint(
             canvas, Offset(_padding, row.top + (row.height - tp.height) / 2));
         continue;
