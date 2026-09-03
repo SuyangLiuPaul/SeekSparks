@@ -635,8 +635,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         // not always the wheel — see that file for why there is no
         // second "World History Strip" item beside this one.
         WbMenuItem(s('wheelTitle', 'World History Wheel'),
-            () => pushPage(
-                chronologyChartEntryPage(context.read<AppSettings>()))),
+            () => pushPage(chronologyChartEntryPage(settings))),
         WbMenuItem(s('library', 'Notes & highlights'),
             () => pushPage(const LibraryPage())),
         WbMenuItem(
