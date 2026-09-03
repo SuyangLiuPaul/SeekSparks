@@ -1210,10 +1210,34 @@ double fingerHalfWidth(double radius, {double fingerPx = 9}) =>
 /// So an arc's target is its own sweep OR a finger, whichever is wider,
 /// centred on the arc. A long reign keeps exactly the extent it paints;
 /// a hairline borrows a few pixels from the air either side of it, which
-/// is where its neighbours' own slack would otherwise go unused. Ties go
-/// to the nearer centre, normalised — the same rule the rest of the page
-/// already resolves by, so a reader who aims at the hairline between two
-/// long reigns gets the hairline.
+/// is where its neighbours' own slack would otherwise go unused.
+///
+/// CONTAINMENT BEATS PROXIMITY, and this is the one case the "nearer
+/// centre" rule above does not cover, because it was written for
+/// SIBLINGS — reigns packed by [buildSpanArcs] never overlap within one
+/// ring, so at most one of them could ever geometrically contain a tap
+/// and the old rule never had to choose between two that did. The power
+/// bands added on 2026-09 are not siblings: `_buildArcs` on the wheel
+/// page deliberately keeps every power in its stream on ONE ring rather
+/// than sub-ringing (a stream ring is 6.95 canvas units at 900 px and
+/// europe alone nests eight powers deep — eight sub-rings of that would
+/// be 0.87 units, under any target this file defines), so a tap inside
+/// the Crusader Kingdom of Jerusalem can land inside a pope's or a
+/// crusade's arc as well. Scoring by normalised distance from centre
+/// answered that wrong far more often than right: a pope's own `own` is
+/// a few years wide against the kingdom's few centuries, so almost any
+/// tap that was not dead in the pope's middle scored lower for the
+/// KINGDOM and the reader asking for the pope got the kingdom instead.
+/// So containment is now checked FIRST and separately from the score: of
+/// every arc whose true, unpadded `[a0, a1]` actually contains [angle],
+/// the NARROWEST wins outright, tie-broken by score if two are exactly
+/// the same width. Only when no arc's true extent contains the tap —
+/// which is exactly the hairline case the rest of this comment is
+/// about — does the search fall back to nearest-centre-by-score among
+/// every candidate a finger could plausibly have meant. Ties among
+/// siblings, and every hairline arc's rescue by finger padding, are
+/// untouched: this only changes the answer when two candidates'
+/// genuine spans overlap, which packed siblings never do.
 ({int index, double score})? nearestArcAt(
   double angle,
   double radius,
@@ -1223,15 +1247,30 @@ double fingerHalfWidth(double radius, {double fingerPx = 9}) =>
   final half = fingerHalfWidth(radius, fingerPx: fingerPx);
   int? best;
   var bestScore = double.infinity;
+  // The narrowest arc whose true (unpadded) extent contains the tap —
+  // see the CONTAINMENT paragraph above. Tracked separately from `best`
+  // because a wide containing arc almost always scores lower than a
+  // narrow one nested inside it, which is the wrong answer here.
+  int? nested;
+  var nestedWidth = double.infinity;
+  var nestedScore = double.infinity;
   for (var i = 0; i < arcs.length; i++) {
     final a = arcs[i];
     final centre = (a.a0 + a.a1) / 2;
     final own = math.max((a.a1 - a.a0).abs() / 2, half);
     final score = (angle - centre).abs() / own;
-    if (score <= 1 && score < bestScore) {
+    if (score > 1) continue;
+    if (score < bestScore) {
       best = i;
       bestScore = score;
     }
+    final width = a.a1 - a.a0;
+    if (angle >= a.a0 && angle <= a.a1 && width < nestedWidth) {
+      nested = i;
+      nestedWidth = width;
+      nestedScore = score;
+    }
   }
+  if (nested != null) return (index: nested, score: nestedScore);
   return best == null ? null : (index: best, score: bestScore);
 }
