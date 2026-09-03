@@ -153,14 +153,12 @@ void main() {
   /// to be subtracted.
   Future<void> tapContent(
       WidgetTester tester, double contentX, double contentY) async {
-    final hScrollable =
-        scrollableFor(tester, const ValueKey('stripHScroll'));
+    final hScrollable = scrollableFor(tester, const ValueKey('stripHScroll'));
     final hTarget = (contentX - hScrollable.position.viewportDimension / 2)
         .clamp(0.0, hScrollable.position.maxScrollExtent);
     hScrollable.position.jumpTo(hTarget);
 
-    final vScrollable =
-        scrollableFor(tester, const ValueKey('stripVScroll'));
+    final vScrollable = scrollableFor(tester, const ValueKey('stripVScroll'));
     final vTarget = (contentY - vScrollable.position.viewportDimension / 2)
         .clamp(0.0, vScrollable.position.maxScrollExtent);
     vScrollable.position.jumpTo(vTarget);
@@ -266,8 +264,7 @@ void main() {
   testWidgets('the sticky ruler tracks the content\'s own horizontal scroll',
       (tester) async {
     await pump(tester, const Size(900, 700));
-    final content =
-        scrollableFor(tester, const ValueKey('stripHScroll'));
+    final content = scrollableFor(tester, const ValueKey('stripHScroll'));
     final ruler = scrollableFor(tester, const ValueKey('stripRulerHScroll'));
 
     expect(content.position.pixels, ruler.position.pixels);
@@ -288,8 +285,7 @@ void main() {
       'the sticky lane-header column tracks the content\'s own vertical '
       'scroll', (tester) async {
     await pump(tester, const Size(900, 700));
-    final content =
-        scrollableFor(tester, const ValueKey('stripVScroll'));
+    final content = scrollableFor(tester, const ValueKey('stripVScroll'));
     final header = scrollableFor(tester, const ValueKey('stripHeaderVScroll'));
 
     expect(content.position.pixels, header.position.pixels);
@@ -305,8 +301,7 @@ void main() {
   /// events in the densest window alone, `strip_chronology_layout.dart`'s
   /// own worked example), certainly more below. Scrolling to the very
   /// bottom must flip both.
-  testWidgets('an off-screen lane group raises its indicator',
-      (tester) async {
+  testWidgets('an off-screen lane group raises its indicator', (tester) async {
     await pump(tester, const Size(900, 500));
     expect(find.text('下方还有更多'), findsOneWidget,
         reason: 'the corpus needs far more rows than a 500 px pane shows '
@@ -315,8 +310,7 @@ void main() {
         reason: 'the strip opens scrolled to its own top — there is '
             'nothing above it yet');
 
-    final content =
-        scrollableFor(tester, const ValueKey('stripVScroll'));
+    final content = scrollableFor(tester, const ValueKey('stripVScroll'));
     content.position.jumpTo(content.position.maxScrollExtent);
     await tester.pump();
 
@@ -336,11 +330,11 @@ void main() {
   /// `didReplace` — the one route-change `_UrlRestoreObserver`
   /// (`main.dart`) does not watch. Only the page's own claim keeps the
   /// address bar honest across that switch.
-  test('the page claims kStripUrlPath on open and releases it on close, '
+  test(
+      'the page claims kStripUrlPath on open and releases it on close, '
       'the same two calls the wheel makes', () {
     expect(kStripUrlPath, '/strip');
-    final src =
-        File('lib/pages/strip_chronology_page.dart').readAsStringSync();
+    final src = File('lib/pages/strip_chronology_page.dart').readAsStringSync();
     expect(RegExp(r'claimUrl\(').allMatches(src).length, 2,
         reason: 'the page claims the URL on open and releases it on '
             'close, and nothing else may write the address bar');

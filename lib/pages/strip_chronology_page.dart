@@ -244,13 +244,15 @@ class _StripChronologyPageState extends State<StripChronologyPage>
     final wb = WbColors.of(context);
     final t = WbType.of(context);
     final chron = ChronologyService.instance.cached;
-    final kings = HebrewKingsService.instance.cached?.kings ?? const <HebrewKing>[];
+    final kings =
+        HebrewKingsService.instance.cached?.kings ?? const <HebrewKing>[];
     final creation = creationYear;
     // Honest fallback, the wheel's own rule (class doc, `radial_chronology
     // _page.dart`): if the creation anchor cannot be read, the layer
     // draws NOTHING rather than borrow a stand-in year.
-    final patriarchs =
-        creation == null ? const <Patriarch>[] : (chron?.patriarchs ?? const []);
+    final patriarchs = creation == null
+        ? const <Patriarch>[]
+        : (chron?.patriarchs ?? const []);
 
     final lanes = buildStripLanes(
       wheel: data,
@@ -353,9 +355,8 @@ class _StripChronologyPageState extends State<StripChronologyPage>
                     child: GestureDetector(
                       key: const ValueKey('chronologyStrip'),
                       behavior: HitTestBehavior.opaque,
-                      onTapUp: (e) => _handleTap(
-                          context, e.localPosition, data, kings, patriarchs,
-                          locale, rows),
+                      onTapUp: (e) => _handleTap(context, e.localPosition, data,
+                          kings, patriarchs, locale, rows),
                       child: SizedBox(
                         width: contentW,
                         height: contentH,
@@ -388,8 +389,7 @@ class _StripChronologyPageState extends State<StripChronologyPage>
           maxScrollX: math.max(0.0, contentW - _viewportW),
           maxScrollY: math.max(0.0, contentH - (box.maxHeight - rulerH)),
         ),
-        Positioned(
-            right: 10, bottom: 10, child: _zoomControls(locale, t, wb)),
+        Positioned(right: 10, bottom: 10, child: _zoomControls(locale, t, wb)),
       ]);
     });
   }
@@ -564,7 +564,8 @@ class _StripChronologyPageState extends State<StripChronologyPage>
     final vMoreBelow = maxScrollY > 0.5 &&
         (!_vCtl.hasClients || _vCtl.offset < maxScrollY - 0.5);
 
-    Widget banner(IconData icon, String label, {required bool top}) => Positioned(
+    Widget banner(IconData icon, String label, {required bool top}) =>
+        Positioned(
           left: headerW,
           right: 0,
           top: top ? 0 : null,
@@ -587,16 +588,20 @@ class _StripChronologyPageState extends State<StripChronologyPage>
 
     return [
       if (vMoreAbove)
-        banner(Icons.keyboard_arrow_up, ss('stripMoreAbove', locale), top: true),
+        banner(Icons.keyboard_arrow_up, ss('stripMoreAbove', locale),
+            top: true),
       if (vMoreBelow)
-        banner(Icons.keyboard_arrow_down, ss('stripMoreBelow', locale), top: false),
+        banner(Icons.keyboard_arrow_down, ss('stripMoreBelow', locale),
+            top: false),
       if (hMoreBefore)
         Positioned(
           left: headerW,
           top: 0,
           bottom: 0,
           child: IgnorePointer(
-            child: Container(width: 20, color: wb.paneBg.withValues(alpha: 0.55),
+            child: Container(
+                width: 20,
+                color: wb.paneBg.withValues(alpha: 0.55),
                 child: Icon(Icons.chevron_left,
                     size: t.scaledChrome(16), color: wb.mutedText)),
           ),
@@ -607,7 +612,9 @@ class _StripChronologyPageState extends State<StripChronologyPage>
           top: 0,
           bottom: 0,
           child: IgnorePointer(
-            child: Container(width: 20, color: wb.paneBg.withValues(alpha: 0.55),
+            child: Container(
+                width: 20,
+                color: wb.paneBg.withValues(alpha: 0.55),
                 child: Icon(Icons.chevron_right,
                     size: t.scaledChrome(16), color: wb.mutedText)),
           ),
@@ -627,7 +634,9 @@ class _StripChronologyPageState extends State<StripChronologyPage>
               message: tip,
               child: Icon(icon,
                   size: t.scaled(17),
-                  color: go == null ? wb.mutedText.withValues(alpha: 0.4) : wb.text),
+                  color: go == null
+                      ? wb.mutedText.withValues(alpha: 0.4)
+                      : wb.text),
             ),
           ),
         );

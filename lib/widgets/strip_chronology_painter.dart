@@ -163,8 +163,7 @@ class StripPalette {
   final Map<String, String> spanLabel;
 }
 
-double _measure(String text, double size, {FontWeight? weight}) =>
-    (TextPainter(
+double _measure(String text, double size, {FontWeight? weight}) => (TextPainter(
       text: TextSpan(
           text: text,
           style: canvasTextStyle(fontSize: size, fontWeight: weight)),
@@ -338,7 +337,8 @@ class StripLanesPainter extends CustomPainter {
       canvas.drawCircle(
         Offset(x0, _rowFor(span, row)),
         math.min(1.6, fillHeight * 0.28),
-        Paint()..color = color.withValues(alpha: (0.78 * dim * 2.6).clamp(0.0, 1.0)),
+        Paint()
+          ..color = color.withValues(alpha: (0.78 * dim * 2.6).clamp(0.0, 1.0)),
       );
       return;
     }
@@ -372,7 +372,11 @@ class StripLanesPainter extends CustomPainter {
     if (fit.text.isEmpty) return;
     final labelW = _measure(fit.text, laneFontPx);
     final labelX = barLabelX(
-        barX0: x0, barX1: x1, labelW: labelW, viewX0: visibleX0, viewX1: visibleX1);
+        barX0: x0,
+        barX1: x1,
+        labelW: labelW,
+        viewX0: visibleX0,
+        viewX1: visibleX1);
     final tp = TextPainter(
       text: TextSpan(
           text: fit.text,
@@ -446,7 +450,11 @@ class StripLanesPainter extends CustomPainter {
     if (fit.text.isEmpty) return;
     final labelW = _measure(fit.text, laneFontPx);
     final labelX = barLabelX(
-        barX0: x0, barX1: x1, labelW: labelW, viewX0: visibleX0, viewX1: visibleX1);
+        barX0: x0,
+        barX1: x1,
+        labelW: labelW,
+        viewX0: visibleX0,
+        viewX1: visibleX1);
     final tp = TextPainter(
       text: TextSpan(
           text: fit.text,
@@ -474,9 +482,7 @@ class StripLanesPainter extends CustomPainter {
   void _paintOneEventRow(Canvas canvas, StripRow row) {
     final lane = row.lane!;
     if (lane.spans.isEmpty) return;
-    final xs = [
-      for (final s in lane.spans) xForYear(s.startYear, pxPerYear)
-    ];
+    final xs = [for (final s in lane.spans) xForYear(s.startYear, pxPerYear)];
     // A label needs about 1.35 line-heights of room — the wheel's own
     // heuristic (`_kLabelPx * 1.35`), transposed straight to linear
     // content px: §1 states content px equal screen px on this axis, so
@@ -553,9 +559,8 @@ class StripLanesPainter extends CustomPainter {
               maxLines: 1)
             ..layout());
 
-      final totalW = (titleTp?.width ?? 0) +
-          (refTp?.width ?? 0) +
-          (badgeTp?.width ?? 0);
+      final totalW =
+          (titleTp?.width ?? 0) + (refTp?.width ?? 0) + (badgeTp?.width ?? 0);
       // The right-edge flip: `barLabelX` cannot serve a true point (its
       // own `maxStart` collapses to `barX0` whenever `barX1 == barX0`,
       // so it always answers `x` and never pulls the label back — found
@@ -652,8 +657,8 @@ class StripRulerPainter extends CustomPainter {
     for (final year in rulerTicks(step)) {
       final x = xForYear(year, pxPerYear);
       final isMajor = year % 500 == 0;
-      canvas.drawLine(
-          Offset(x, size.height * 0.45), Offset(x, size.height), isMajor ? major : minor);
+      canvas.drawLine(Offset(x, size.height * 0.45), Offset(x, size.height),
+          isMajor ? major : minor);
       final tp = TextPainter(
         text: TextSpan(
             text: centuryTickLabel(year, locale),
@@ -730,8 +735,8 @@ class StripLaneHeaderPainter extends CustomPainter {
           textDirection: TextDirection.ltr,
           maxLines: 1,
         )..layout();
-        tp.paint(canvas,
-            Offset(_padding, row.top + (row.height - tp.height) / 2));
+        tp.paint(
+            canvas, Offset(_padding, row.top + (row.height - tp.height) / 2));
         continue;
       }
 
@@ -748,14 +753,15 @@ class StripLaneHeaderPainter extends CustomPainter {
       if (lane.kind != StripLaneKind.stream || lane.subLane != 0) continue;
 
       final name = palette.spanLabel[lane.ownerId] ?? lane.ownerId ?? '';
-      final color =
-          (palette.streamColors[lane.ownerId] ?? lineColor('none'))
-              .withValues(alpha: 0.98);
+      final color = (palette.streamColors[lane.ownerId] ?? lineColor('none'))
+          .withValues(alpha: 0.98);
       final tp = TextPainter(
         text: TextSpan(
             text: name,
             style: canvasTextStyle(
-                fontSize: laneFontPx, color: color, fontWeight: FontWeight.w600)),
+                fontSize: laneFontPx,
+                color: color,
+                fontWeight: FontWeight.w600)),
         textDirection: TextDirection.ltr,
         maxLines: 1,
       )..layout();
@@ -771,8 +777,8 @@ class StripLaneHeaderPainter extends CustomPainter {
         final noteTp = TextPainter(
           text: TextSpan(
               text: note,
-              style: canvasTextStyle(
-                  fontSize: laneFontPx, color: wb.mutedText)),
+              style:
+                  canvasTextStyle(fontSize: laneFontPx, color: wb.mutedText)),
           textDirection: TextDirection.ltr,
           maxLines: 1,
         )..layout();
