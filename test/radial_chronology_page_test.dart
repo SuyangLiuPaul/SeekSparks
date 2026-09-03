@@ -359,13 +359,25 @@ void main() {
     for (final n in [
       data.events.length,
       data.powers.length,
+      // 2026-09-03: ministries and omissions joined the line. The box
+      // had always searched the 44 ministry spans without saying so,
+      // and the omissions are the one kind of record a reader would
+      // never think to look for — a row that exists to say the chart
+      // draws NOTHING for that prophet.
+      data.ministries.length,
       data.nations.length,
       data.streams.length,
+      data.omissions.length,
     ]) {
       expect(text, contains('$n'),
           reason: 'the box does not tell the reader it can search $n of '
               'something');
     }
+    // And every placeholder was filled. A `{m}` with no value in the
+    // map does not throw and does not fail any count check above — it
+    // prints itself, and the reader is shown a template.
+    expect(text, isNot(contains('{')),
+        reason: 'an unfilled placeholder reached the screen: $text');
     await unmount(tester);
   });
 

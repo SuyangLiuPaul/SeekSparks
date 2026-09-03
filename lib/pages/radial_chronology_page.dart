@@ -627,15 +627,26 @@ const Map<String, Map<String, String>> wheelStrings = {
   // The empty box has to teach what the box can answer, or a reader
   // types one word, gets nothing, and concludes the wheel is thin.
   // {e} {p} {n} {b} are the corpus's own counts, read from the asset.
+  // 2026-09-03: this line used to promise events, powers, nations and
+  // bands, and the box searched MINISTRY spans too — 44 of them, every
+  // prophet and reign on the arc band — so the line undersold the box by
+  // a whole kind of record. It now also counts the records that exist to
+  // say the chart draws NOTHING, which is the one kind a reader would
+  // never think to look for. Deliberately "{o} records this chart cannot
+  // date" and not "{o} prophets": all three are prophets today, and a
+  // fourth need not be.
   'wheelFindTeach': {
-    'zh-Hans': '可查 {e} 件大事、{p} 个政权、创世记 10 章的 {n} 族与 {b} 条带。'
+    'zh-Hans': '可查 {e} 件大事、{p} 个政权、{m} 段事奉与在位、创世记 10 章的 {n} 族、'
+        '{b} 条带，以及 {o} 条本图无从定年的记录。'
         '年份可输入「主前586」「586 BC」或「-586」；只输数字则两个纪元都查。',
-    'zh-Hant': '可查 {e} 件大事、{p} 個政權、創世記 10 章的 {n} 族與 {b} 條帶。'
+    'zh-Hant': '可查 {e} 件大事、{p} 個政權、{m} 段事奉與在位、創世記 10 章的 {n} 族、'
+        '{b} 條帶，以及 {o} 條本圖無從定年的記錄。'
         '年份可輸入「主前586」「586 BC」或「-586」；只輸數字則兩個紀元都查。',
     // The Chinese forms are accepted in every locale, but naming them
     // here would offer an English reader a keyboard they do not have.
-    'en': 'Searches {e} events, {p} powers, the {n} nations of Genesis 10 '
-        'and {b} bands. For a year type 586 BC or -586; a bare number '
+    'en': 'Searches {e} events, {p} powers, {m} ministries and reigns, the '
+        '{n} nations of Genesis 10, {b} bands, and {o} records this chart '
+        'cannot date. For a year type 586 BC or -586; a bare number '
         'searches both eras.',
   },
   'wheelFindNone': {
@@ -2699,8 +2710,10 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
       return _fill('wheelFindTeach', '', locale, {
         'e': data.events.length,
         'p': data.powers.length,
+        'm': data.ministries.length,
         'n': data.nations.length,
         'b': data.streams.length,
+        'o': data.omissions.length,
       });
     }
     if (result.isEmpty) {
