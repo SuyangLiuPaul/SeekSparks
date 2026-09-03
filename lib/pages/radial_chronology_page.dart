@@ -791,6 +791,27 @@ const Map<String, Map<String, String>> wheelStrings = {
   'wheelKindNation': {'zh-Hans': '列族', 'zh-Hant': '列族', 'en': 'nation'},
   'wheelKindBand': {'zh-Hans': '带', 'zh-Hant': '帶', 'en': 'band'},
   'wheelKindLife': {'zh-Hans': '生平', 'zh-Hant': '生平', 'en': 'life'},
+  // The kind column of a row that is not a record OF anything on the
+  // chart. It has to read as a fact about the TEXT rather than about
+  // this app — "no date" says the date does not exist to be had, where
+  // "not on the chart" would say we left it out. The year column beside
+  // it is empty, so the two columns of the row say the same thing in
+  // two ways, which is deliberate: the year column being blank is
+  // otherwise indistinguishable from a bug.
+  'wheelKindOmission': {
+    'zh-Hans': '无从定年',
+    'zh-Hant': '無從定年',
+    'en': 'no date',
+  },
+  // The line where a ministry sheet prints its years. Says what is
+  // missing AND whose silence it is, in one sentence, because the
+  // reader arrives here from rows that all had a year and needs to know
+  // within a second that this one is not a loading state.
+  'wheelOmissionNoSpan': {
+    'zh-Hans': '本图未画：经文没有给出可据以落笔的年份。',
+    'zh-Hant': '本圖未畫：經文沒有給出可據以落筆的年份。',
+    'en': 'Not drawn on this chart: the text gives no year to draw it at.',
+  },
 
   // ── the lifespan layer ─────────────────────────────────────────────
 
@@ -2191,6 +2212,13 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
         WheelHitKind.patriarch => _s('wheelKindLife', 'life', locale),
         WheelHitKind.ministry =>
           _s('wheelKindMinistry', 'ministry', locale),
+        // The one label in this switch that names a NON-record. It sits
+        // in the same column as "event" and "ministry" so the reader
+        // can see at a glance that this row is a different kind of
+        // answer before they open it — and the year column beside it is
+        // empty, which is the same statement said twice.
+        WheelHitKind.omission =>
+          _s('wheelKindOmission', 'no date', locale),
       };
 
   /// The year column of a result row.
@@ -2705,6 +2733,17 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
   /// moving it would be motion for its own sake.
   void _reveal(BuildContext context, WheelHit hit, WheelHistoryData data,
       String locale) {
+    // An omission takes NONE of the three steps, because all three
+    // would be lies about the canvas. There is no band to un-hide, no
+    // arc to select, and panning would carry the reader to whatever
+    // happens to sit at angle zero and present it as the thing they
+    // asked for. The sheet is the entire answer; the wheel does not
+    // move, which is itself the point being made.
+    if (hit.kind == WheelHitKind.omission) {
+      final o = data.omissionById(hit.id);
+      if (o != null) _showOmission(context, o, locale);
+      return;
+    }
     setState(() {
       _hidden.remove(hit.streamId);
       // A nation of Genesis 10 is not drawn on the axis — it is the
@@ -2730,6 +2769,12 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
       case WheelHitKind.ministry:
         final m = data.ministryById(hit.id);
         if (m != null) _showMinistry(context, m, locale);
+      // Unreachable — the early return above owns this kind. Written
+      // out rather than left to a default so that a kind added later
+      // fails at compile time here, which is how the ministry kind was
+      // caught when it was added and the search box had not been told.
+      case WheelHitKind.omission:
+        break;
     }
   }
 
@@ -2826,6 +2871,13 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
       case WheelHitKind.stream:
         angle = startRad + sweepRad / 2;
         radius = band.centre;
+      // A record with no year has no angle, and the ring lookup above
+      // already returned for it (`streamId` is empty, so no band
+      // matches). Never reached in practice — `_reveal` returns before
+      // calling this for an omission — and written out anyway so the
+      // next kind added has to answer the question here.
+      case WheelHitKind.omission:
+        return;
     }
 
     final t = focusTranslation(
@@ -3523,6 +3575,94 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
                       id
               ].join(' · ')}',
               style: TextStyle(color: wb.mutedText, fontSize: t.scaled(11)),
+            ),
+          ],
+        ]);
+      },
+    );
+  }
+
+  /// The sheet for a record that is not on the chart, and says so.
+  ///
+  /// SHAPED LIKE [_showMinistry] AND MISSING ITS SECOND LINE, which is
+  /// the whole design. A ministry sheet reads name / years / basis /
+  /// note / references; this one reads name / "not drawn, and here is
+  /// why not" / note / references. The reader who has just come from
+  /// Isaiah's sheet sees the same furniture with the years taken out of
+  /// it, which states the difference faster than any sentence could.
+  ///
+  /// THE REFERENCES ARE THE POINT OF THE SHEET, not an appendix. Every
+  /// other claim on this wheel can be checked against a verse; a claim
+  /// that a book supplies no anchor can only be checked by reading the
+  /// verse that would have supplied one. So Joel 1:1 is tappable here
+  /// for exactly the reason Isaiah 1:1 is tappable there — except that
+  /// opening it is what proves the record right.
+  ///
+  /// No basis line, deliberately. `_basisText` answers "what does this
+  /// year rest on", and there is no year; printing `conventional` over
+  /// a record whose content is that no date can be reached would be the
+  /// contradiction this sheet exists to remove.
+  void _showOmission(
+      BuildContext context, WheelOmission omission, String locale) {
+    final wb = WbColors.of(context);
+
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: wb.paneBg,
+      shape: const RoundedRectangleBorder(),
+      isScrollControlled: true,
+      builder: (sheet) {
+        final t = WbType.of(sheet);
+        final note = omission.noteFor(locale);
+        return _sheet(sheet, [
+          Text(omission.nameFor(locale),
+              style: TextStyle(
+                  color: wb.text,
+                  fontSize: t.scaled(16),
+                  fontWeight: FontWeight.w600)),
+          SizedBox(height: t.scaled(4)),
+          Text(
+            _s('wheelOmissionNoSpan',
+                'Not drawn on this chart: the text gives no year to draw it '
+                    'at.',
+                locale),
+            style: TextStyle(color: wb.mutedText, fontSize: t.scaled(11.5)),
+          ),
+          if (note.isNotEmpty) ...[
+            SizedBox(height: t.scaled(10)),
+            Text(note,
+                style: TextStyle(
+                    color: wb.text, fontSize: t.scaled(12), height: 1.45)),
+          ],
+          if (omission.refs.isNotEmpty) ...[
+            SizedBox(height: t.scaled(12)),
+            Text(_s('wheelRefs', 'References', locale),
+                style: TextStyle(
+                    color: wb.mutedText,
+                    fontSize: t.scaled(11),
+                    fontWeight: FontWeight.w600)),
+            SizedBox(height: t.scaled(3)),
+            Wrap(
+              spacing: t.scaled(6),
+              runSpacing: t.scaled(4),
+              children: [
+                for (final ref in omission.refs)
+                  InkWell(
+                    onTap: () {
+                      Navigator.of(sheet).pop();
+                      _jump(context, ref);
+                    },
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                          horizontal: t.scaled(6), vertical: t.scaled(2)),
+                      decoration: BoxDecoration(
+                          border: Border.all(color: wb.border)),
+                      child: Text(localizedReferenceLabel(ref, locale),
+                          style: TextStyle(
+                              color: wb.accent, fontSize: t.scaled(11))),
+                    ),
+                  ),
+              ],
             ),
           ],
         ]);

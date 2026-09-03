@@ -482,6 +482,77 @@ void main() {
     await unmount(tester);
   });
 
+  /// THE SENTENCE ABOVE, ABOUT A PROPHET. Until 2026-09-03 a reader who
+  /// typed 约珥 got "没有找到「约珥」" — the wheel reporting an oversight
+  /// where it had actually made a decision, because Joel's book names no
+  /// king, no regnal year and no dated event, so any span would be
+  /// invented. `wheel_omissions_test.dart` owns the data and the claim
+  /// that Joel, Obadiah and Habakkuk are the whole set; this is the one
+  /// place that proves a reader can SEE it — the row, the sheet, and the
+  /// one thing the sheet must never do.
+  testWidgets('a prophet the chart cannot date says so instead of nothing',
+      (tester) async {
+    await pump(tester, const Size(1440, 900));
+    await openFind(tester);
+    await tester.enterText(
+        find.byKey(const ValueKey('wheelFindField')), '约珥');
+    await settle(tester);
+
+    final listed = sheetText(tester);
+    expect(listed, isNot(contains('没有找到')),
+        reason: 'the search still reports an absence it has an answer for');
+    expect(listed, contains('约珥'));
+    // The kind column. It is what tells the reader, before they open
+    // anything, that this row is a different kind of answer from the
+    // dated ones — and it is why the empty year column beside it does
+    // not read as a rendering bug.
+    expect(listed, contains('无从定年'));
+
+    // Scoped to the result list, not `find.text` on the page. The query
+    // and the record's name are the SAME STRING here — unlike the Magna
+    // Carta case above, where an English query finds a Chinese title —
+    // so an unscoped finder returns the search field's own contents
+    // first and the test taps the box it just typed into.
+    await tester.tap(find
+        .descendant(
+          of: find.byKey(const ValueKey('wheelFindList')),
+          matching: find.text('约珥'),
+        )
+        .first);
+    await settle(tester);
+    expect(tester.takeException(), isNull);
+
+    // The search sheet has been replaced by the record's own, as with
+    // every other kind of hit.
+    expect(find.byKey(const ValueKey('wheelFindField')), findsNothing);
+    expect(find.byType(BottomSheet), findsOneWidget);
+    // SCOPED TO THE SHEET, unlike `sheetText`, which sweeps the whole
+    // page. The wheel's own header behind the sheet reads
+    // "主前4200 – 主后2026", so a page-wide sweep contains both era words
+    // no matter what the sheet says — and the assertion below is
+    // precisely that this sheet prints no year.
+    final opened = tester
+        .renderObjectList<RenderParagraph>(find.descendant(
+          of: find.byType(BottomSheet),
+          matching: find.byType(RichText),
+        ))
+        .map((p) => p.text.toPlainText())
+        .join('\n');
+    expect(opened, contains('本图未画'));
+    expect(opened, contains('毗土珥'),
+        reason: 'the sheet opened without the note that is its whole point');
+    // The verse the claim rests on is on the sheet and localised, so a
+    // reader can go and check that Joel 1:1 really does name no king.
+    expect(opened, contains(localizedReferenceLabel('Joel 1:1', 'zh-Hans')));
+    // AND NO YEAR. Not a hedged one, not a rounded one. If a BC label
+    // ever appears on this sheet the record has begun asserting the very
+    // thing it exists to refuse.
+    expect(opened, isNot(contains('主后')));
+    expect(RegExp(r'主前\d').hasMatch(opened), isFalse,
+        reason: 'the sheet that says it has no date printed one');
+    await unmount(tester);
+  });
+
   /// Found on the deployed build, not here: one hit sat at the top of an
   /// otherwise empty half-page, because a `ListView` inside a `Flexible`
   /// takes every pixel it is offered and the sheet offers 70% of the

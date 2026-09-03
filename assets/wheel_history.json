@@ -5895,6 +5895,61 @@
    "anchorKings": []
   }
  ],
+ "omissions": [
+  {
+   "id": "joel_undated",
+   "refs": [
+    "Joel 1:1",
+    "Joel 1:4",
+    "Acts 2:16"
+   ],
+   "name": {
+    "en": "Joel",
+    "zh-Hans": "约珥",
+    "zh-Hant": "約珥"
+   },
+   "note": {
+    "en": "Joel 1:1 names him son of Pethuel and stops there: no king, no regnal year, no dated event. The locusts of 1:4 are a disaster the text does not place, and the day of the LORD he preaches is not a year. Nothing outside the book dates him either — scripture uses the name Joel nineteen more times, eighteen of them of other men and none of them identified as this prophet, and Acts 2:16 quotes the book without giving a year. Hosea, Amos and Micah are drawn on this chart because their first verse names the reigns they prophesied under; Joel's does not, so proposals for his date rest on inference from his subject and his language rather than on an anchor, and a span drawn from that would be this chart inventing one.",
+    "zh-Hans": "约珥书 1:1 只说他是毗土珥的儿子，此外别无一字：没有王，没有王年，没有可定年的事件。1:4 的蝗灾，经文并未说是哪一年；他所传的耶和华的日子，也不是一个年份。书外同样定不了他——圣经另有十九处用到「约珥」这名字，其中十八处指的是别人，没有一处说那就是这位先知；使徒行传 2:16 引用本书，却未记年。何西阿、阿摩司、弥迦所以能画在本图上，是因他们书卷的头一节点出了所经历的王年；约珥书的头一节没有。所以一切定年之说，都出于对其题材与文辞的推论，而非出于定点；若照此画一段年限，便是本图自己造了一个年份。",
+    "zh-Hant": "約珥書 1:1 只說他是毗土珥的兒子，此外別無一字：沒有王，沒有王年，沒有可定年的事件。1:4 的蝗災，經文並未說是哪一年；他所傳的耶和華的日子，也不是一個年份。書外同樣定不了他——聖經另有十九處用到「約珥」這名字，其中十八處指的是別人，沒有一處說那就是這位先知；使徒行傳 2:16 引用本書，卻未記年。何西阿、阿摩司、彌迦所以能畫在本圖上，是因他們書卷的頭一節點出了所經歷的王年；約珥書的頭一節沒有。所以一切定年之說，都出於對其題材與文辭的推論，而非出於定點；若照此畫一段年限，便是本圖自己造了一個年份。"
+   }
+  },
+  {
+   "id": "obadiah_undated",
+   "refs": [
+    "Obadiah 1:1",
+    "Obadiah 1:11"
+   ],
+   "name": {
+    "en": "Obadiah",
+    "zh-Hans": "俄巴底亚",
+    "zh-Hant": "俄巴底亞"
+   },
+   "note": {
+    "en": "Obadiah names no king and states no year. Verse 11 does describe a day — strangers carrying off Jerusalem's forces, foreigners in her gates, lots cast over her, with Edom standing by — but it does not say which day, and Jerusalem was entered more than once inside the stretch this chart draws: Shishak is on it at 925 BC and the Babylonian fall of the city at 586 BC, and the verse names neither. An event scripture declines to identify is not an anchor. Nothing outside the book helps: the name Obadiah is used nineteen more times, always of other men, and no verse identifies any of them as this prophet. So the span is left undrawn rather than pinned to whichever sack a reader assumed.",
+    "zh-Hans": "俄巴底亚书没有点出任何王，也没有记下年份。第11节确实描述了一天——外人掳掠耶路撒冷的财物，外邦人进了她的城门，为她拈阄，而以东站在一旁——却没有说是哪一天；在本图所画的年代之内，耶路撒冷不止一次被人攻进：示撒于主前925年、巴比伦攻陷此城于主前586年，两件都在本图上，而这一节一件也没有点名。经文自己不肯指明的事件，不能当作定点。书外也帮不上忙：「俄巴底亚」这名字另有十九处，指的都是别人，没有一处说那就是这位先知。所以本图宁可不画，也不把这段年限钉在读者自行认定的那一次劫掠上。",
+    "zh-Hant": "俄巴底亞書沒有點出任何王，也沒有記下年份。第11節確實描述了一天——外人擄掠耶路撒冷的財物，外邦人進了她的城門，為她拈鬮，而以東站在一旁——卻沒有說是哪一天；在本圖所畫的年代之內，耶路撒冷不止一次被人攻進：示撒於主前925年、巴比倫攻陷此城於主前586年，兩件都在本圖上，而這一節一件也沒有點名。經文自己不肯指明的事件，不能當作定點。書外也幫不上忙：「俄巴底亞」這名字另有十九處，指的都是別人，沒有一處說那就是這位先知。所以本圖寧可不畫，也不把這段年限釘在讀者自行認定的那一次劫掠上。"
+   }
+  },
+  {
+   "id": "habakkuk_undated",
+   "refs": [
+    "Habakkuk 1:1",
+    "Habakkuk 1:6",
+    "Habakkuk 3:1"
+   ],
+   "name": {
+    "en": "Habakkuk",
+    "zh-Hans": "哈巴谷",
+    "zh-Hant": "哈巴谷"
+   },
+   "note": {
+    "en": "Habakkuk names no king either, and no verse outside his book names him at all — 1:1 and 3:1 are the only two occurrences in scripture. What the book does name is a nation: \"lo, I raise up the Chaldeans\" (1:6), still to come when he wrote. That is one loose bracket with nothing to close it against. Nahum is drawn on this chart by exactly this kind of reasoning, and the difference is what makes his span drawable and this one not: Nahum's two brackets are both dated events — Thebes already fallen at 663 BC, Nineveh not yet fallen at 612 BC, and both are records on this chart. A nation being raised up is not a dated event, so nothing is drawn here.",
+    "zh-Hans": "哈巴谷同样没有点出任何王；全本圣经提到他的，只有他自己书上的 1:1 与 3:1 两处。书中点出的是一个国：「我必兴起迦勒底人」（1:6）——他写的时候，这事还未发生。这只是一头松着的括号，另一头无从合拢。那鸿之所以能画在本图上，正是靠同一类推理，而两者的分别恰恰在于：那鸿两头所据的都是有年份的事件——主前663年底比斯已陷、主前612年尼尼微未亡，两件都是本图上的记录。一个国被兴起，不是一件有年份的事件，所以此处不画。",
+    "zh-Hant": "哈巴谷同樣沒有點出任何王；全本聖經提到他的，只有他自己書上的 1:1 與 3:1 兩處。書中點出的是一個國：「我必興起迦勒底人」（1:6）——他寫的時候，這事還未發生。這只是一頭鬆著的括號，另一頭無從合攏。那鴻之所以能畫在本圖上，正是靠同一類推理，而兩者的分別恰恰在於：那鴻兩頭所據的都是有年份的事件——主前663年底比斯已陷、主前612年尼尼微未亡，兩件都是本圖上的記錄。一個國被興起，不是一件有年份的事件，所以此處不畫。"
+   }
+  }
+ ],
  "events": [
   {
    "id": "wheel_earliest",

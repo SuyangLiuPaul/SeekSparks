@@ -15,8 +15,12 @@
 ///
 ///  1. SEARCHING EVENTS ONLY. A reader typing "Babylon" wants the
 ///     BAND and the POWER at least as much as the events; "Javan"
-///     wants a nation out of Genesis 10. All four record kinds are
-///     searched and each says what kind it is.
+///     wants a nation out of Genesis 10. EVERY record kind is
+///     searched and each says what kind it is — the list has grown
+///     from four to seven since this was written (lives, ministries,
+///     and the omissions, which are records ABOUT what is not drawn),
+///     and "four" is not written here again because the next kind
+///     would make it stale a fourth time.
 ///  2. SEARCHING ONE LOCALE. Every record here carries all three
 ///     locales (measured: 588/588 titles in en, zh-Hans and
 ///     zh-Hant). A bilingual reader types whichever comes
@@ -50,7 +54,24 @@ import 'package:seeksparks/utils/reference_parser.dart';
 /// questions and open different sheets, and because a reader typing
 /// "Methuselah" should get both: the birth spoke that says WHEN, and
 /// the arc that says HOW LONG and alongside whom.
-enum WheelHitKind { event, power, nation, stream, patriarch, ministry }
+///
+/// [omission] is the one kind the wheel does NOT draw, and it is here
+/// for the same class of defect as the four names above: Joel, Obadiah
+/// and Habakkuk returned nothing in all three scripts, not because the
+/// corpus overlooked them but because their books supply no anchor to
+/// draw a span from. That is a DECISION, and a search box that answers
+/// it with "nothing matches" reports it as an oversight. A row of this
+/// kind carries no year, sits on no band, and opens a sheet whose whole
+/// content is the reason. See [WheelOmission].
+enum WheelHitKind {
+  event,
+  power,
+  nation,
+  stream,
+  patriarch,
+  ministry,
+  omission,
+}
 
 /// The id the lifespan layer answers to in the stream filter.
 ///
@@ -656,6 +677,38 @@ WheelSearchResult searchWheel({
       matched: c.$3,
       rank: c.$1,
       streamHidden: hidden(m.stream),
+    ));
+  }
+  // The records that say the chart draws nothing, and why.
+  //
+  // NOT in the year branch above, and that is the whole shape of them:
+  // they have no year to span and no year to be exact about, so there
+  // is nothing for a year query to claim. The near-miss pass at the
+  // bottom is over `data.events` only, so one of these can never be
+  // offered as "nearby" either — which would be the chart answering a
+  // year question with a record whose entire content is that it has no
+  // year.
+  //
+  // No `take` and no `seen` check, like the streams and the nations
+  // below: nothing else in this function can have claimed one, because
+  // no other pass looks at this list.
+  for (final o in data.omissions) {
+    final c = classify(o.names, o.notes, o.refs);
+    if (c == null) continue;
+    hits.add(WheelHit(
+      kind: WheelHitKind.omission,
+      via: c.$2,
+      id: o.id,
+      // Deliberately empty. An omission is on no band, so there is no
+      // band to un-hide on the way in and no band whose filter could
+      // mark it hidden — `hidden('')` is false for every filter state,
+      // which is the truth about a record the chart never drew.
+      streamId: '',
+      title: o.nameFor(locale),
+      year: null,
+      matched: c.$3,
+      rank: c.$1,
+      streamHidden: false,
     ));
   }
   for (final s in data.streams) {

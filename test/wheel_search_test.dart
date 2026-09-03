@@ -1,6 +1,6 @@
 /// Find on the wheel — the pure core, against the real asset.
 ///
-/// The wheel holds 1029 records and draws 64 labels at rest, so the
+/// The wheel holds 1032 records and draws 64 labels at rest, so the
 /// search box is now the only way most of the corpus can be reached at
 /// all. That makes a FALSE ABSENCE the defect that matters here: the
 /// app telling a reader it does not know something it does know. Every
@@ -13,13 +13,15 @@
 ///    `yearLabel` prints, for all 671 events and all 62 power spans, in
 ///    all three locales. Nothing enforces that but this test, and the
 ///    two functions live in different files.
-///  * THE BARE WILDCARD reaches 726 + 155 + 82 + 22 + 44 = 1029 records. Not a
-///    round number for its own sake — it is the only assertion that
-///    fails if a whole KIND stops being searched, which is exactly what
-///    a naive "search the events" version would do.
-///  * THE INDEX BAR. Every one of the 1029 records, in all three
+///  * THE BARE WILDCARD reaches 726 + 155 + 82 + 22 + 44 + 3 = 1032
+///    records. Not a round number for its own sake — it is the only
+///    assertion that fails if a whole KIND stops being searched, which
+///    is exactly what a naive "search the events" version would do.
+///    The last 3 are the omissions, which are records ABOUT what the
+///    chart does not draw; `wheel_omissions_test.dart` owns them.
+///  * THE INDEX BAR. Every one of the 1032 records, in all three
 ///    locales, must come back when its own printed title is typed —
-///    2,490 searches, and never below second place. This is the only
+///    3,096 searches, and never below second place. This is the only
 ///    pin here that grows with the corpus instead of with the examples
 ///    someone remembered to write down.
 ///  * THE SCRIPTS. `yearLabel` printed Simplified 主后, and the hedge in
@@ -191,7 +193,7 @@ void main() {
           isTrue);
     });
 
-    /// The matcher is called once per field per record — 1029 records
+    /// The matcher is called once per field per record — 1032 records
     /// across four fields on every keystroke — so a needle that
     /// compiles a pattern must compile it once. This asserts the
     /// behaviour the cache has to preserve, since a cache that returns
@@ -224,9 +226,10 @@ void main() {
     /// The single assertion that fails if a whole kind stops being
     /// searched. A version that searched only events would still pass
     /// most of this file.
-    test('the bare wildcard returns all 1029 records, of all four kinds', () {
+    test('the bare wildcard returns all 1032 records, of every asset kind',
+        () {
       final r = find('*');
-      expect(r.hits, hasLength(1029));
+      expect(r.hits, hasLength(1032));
       final byKind = {
         for (final k in WheelHitKind.values)
           k: r.hits.where((h) => h.kind == k).length,
@@ -235,6 +238,11 @@ void main() {
       expect(byKind[WheelHitKind.power], data.powers.length);
       expect(byKind[WheelHitKind.nation], data.nations.length);
       expect(byKind[WheelHitKind.stream], data.streams.length);
+      expect(byKind[WheelHitKind.ministry], data.ministries.length);
+      // The kind that ships three records and was the whole reason the
+      // wildcard count moved. Counted from the data like the rest, so
+      // a fourth omission needs no edit here beyond the total.
+      expect(byKind[WheelHitKind.omission], data.omissions.length);
     });
 
     test('no result row is untitled', () {
@@ -297,10 +305,25 @@ void main() {
       expect(open.hits.single.streamHidden, isFalse);
     });
 
+    /// EVERY RECORD THAT IS ON A BAND, which is now a real
+    /// qualification rather than a pedantic one. An omission is drawn
+    /// nowhere, so it belongs to no band, so no band filter can be
+    /// hiding it — flagging it would tell the reader to switch
+    /// something on that would not make it appear.
     test('hiding every band still returns everything, all flagged', () {
       final all = find('*', hidden: {for (final s in data.streams) s.id});
-      expect(all.hits, hasLength(1029));
-      expect(all.hits.every((h) => h.streamHidden), isTrue);
+      expect(all.hits, hasLength(1032));
+      final drawn =
+          all.hits.where((h) => h.kind != WheelHitKind.omission).toList();
+      expect(drawn, hasLength(1032 - data.omissions.length));
+      expect(drawn.every((h) => h.streamHidden), isTrue);
+      final undrawn =
+          all.hits.where((h) => h.kind == WheelHitKind.omission).toList();
+      expect(undrawn, hasLength(data.omissions.length));
+      expect(undrawn.every((h) => !h.streamHidden), isTrue,
+          reason: 'a record on no band was reported as hidden by a band');
+      expect(undrawn.every((h) => h.streamId.isEmpty), isTrue,
+          reason: 'an omission was given a band, which a filter can hide');
     });
   });
 
@@ -570,8 +593,8 @@ void main() {
   /// wheel printed — in whichever of the three languages they are
   /// reading it in.
   ///
-  /// So this group asks the corpus itself: 1029 records x 3 locales,
-  /// 2,490 searches, each typing a record's own displayed title back
+  /// So this group asks the corpus itself: 1032 records x 3 locales,
+  /// 3,096 searches, each typing a record's own displayed title back
   /// at the search box. It is the only assertion in this file that
   /// scales with the corpus rather than with the examples someone
   /// thought to write down, which means a record added years from now
@@ -598,10 +621,10 @@ void main() {
       ];
     }
 
-    test('all 1029, in all three locales, come back when typed', () {
+    test('all 1032, in all three locales, come back when typed', () {
       for (final locale in _locales) {
         final ranks = ownTitleRank(locale);
-        expect(ranks, hasLength(1029),
+        expect(ranks, hasLength(1032),
             reason: 'the sweep itself stopped seeing the corpus');
         final unreachable =
             ranks.where((e) => e.value < 0).map((e) => e.key).toList();
@@ -637,7 +660,7 @@ void main() {
     /// `foldForWheelSearch` lowercases and strips diacritics on BOTH
     /// sides of the comparison; if it ever stopped doing so on the
     /// corpus side, every title with a capital in it would stop
-    /// answering to itself. That is all 1029 of them, so the sweep
+    /// answering to itself. That is all 1032 of them, so the sweep
     /// above is load-bearing for the case fold.
     ///
     /// The diacritic half is thin and says so: exactly three English
@@ -646,7 +669,7 @@ void main() {
     /// assertion is what will say so.
     test('the sweep is not passing vacuously', () {
       final titles = find('*').hits.map((h) => h.title).toList();
-      expect(titles.where((t) => RegExp(r'[A-Z]').hasMatch(t)), hasLength(1029),
+      expect(titles.where((t) => RegExp(r'[A-Z]').hasMatch(t)), hasLength(1032),
           reason: 'the case fold is exercised by every record, or was');
       final accented = titles
           .where((t) => RegExp(r'[À-ɏ]').hasMatch(t))
@@ -673,6 +696,7 @@ void main() {
             nations: ns,
             powers: const [],
             ministries: const [],
+            omissions: const [],
             events: const [],
             meta: WheelHistoryMeta.empty,
           );

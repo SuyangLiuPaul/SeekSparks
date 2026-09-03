@@ -328,6 +328,66 @@ class WheelMinistry {
       );
 }
 
+/// A record whose whole content is that this chart draws NOTHING, and
+/// why.
+///
+/// THE ABSENCE WAS ALREADY A DECISION; what it was not was a disclosed
+/// one. Twelve of the seventeen prophetic books have a ministry arc and
+/// Malachi has a dated event, so a reader who works down the prophets
+/// and reaches Joel finds silence — and silence from a search box does
+/// not read as "the text supplies no anchor", it reads as an oversight.
+/// The rule this file has followed since its first commit is that a
+/// year is never invented; the rule it had not followed is that the
+/// refusal has to be visible to the person it is being made for.
+///
+/// THREE RECORDS, NOT ONE, and the count was measured rather than
+/// assumed — see `wheel_omissions_test.dart`, which asks the corpus
+/// which prophetic books reach no record at all in any of the three
+/// scripts. Joel, Obadiah and Habakkuk are the answer, and each note
+/// says what its own book withholds, because the three are not the same
+/// case: Joel's superscription simply stops, Obadiah's verse 11 names a
+/// day without saying which day, and Habakkuk 1:6 names a nation still
+/// to be raised up, which is half of the bracket Nahum got a span from.
+///
+/// NO YEAR, NO SPAN, NO STREAM, and all three absences are the point.
+/// A `start`/`end` here would be the fabrication the record exists to
+/// refuse; a `stream` would put it on a band, and a band can be
+/// switched off, which would let a filter the reader set for the CHART
+/// hide a statement about something the chart does not draw. So the
+/// hit carries an empty `streamId` and can never be flagged hidden.
+///
+/// Everything else a wheel record has, it has: an id, the three names,
+/// the note in three scripts, and the verses — so the reader who wants
+/// to check the claim can open the very verse the claim is about.
+class WheelOmission {
+  const WheelOmission({
+    required this.id,
+    required this.refs,
+    required this.names,
+    required this.notes,
+  });
+
+  final String id;
+
+  /// The verses the note reasons FROM — the superscription that names
+  /// no king, and the one verse in the book that comes nearest to an
+  /// anchor. Tappable on the sheet, like every other reference here.
+  final List<String> refs;
+
+  final Map<String, String> names;
+  final Map<String, String> notes;
+
+  String nameFor(String locale) => names[locale] ?? names['en'] ?? id;
+  String noteFor(String locale) => notes[locale] ?? notes['en'] ?? '';
+
+  static WheelOmission fromJson(Map<String, dynamic> j) => WheelOmission(
+        id: j['id'] as String,
+        refs: ((j['refs'] as List?) ?? const []).whereType<String>().toList(),
+        names: _localised(j['name']),
+        notes: _localised(j['note']),
+      );
+}
+
 /// One person a wheel event names, resolved at merge time.
 ///
 /// The names are COPIED rather than looked up at paint time, and that
@@ -511,6 +571,7 @@ class WheelHistoryData {
     required this.nations,
     required this.powers,
     required this.ministries,
+    required this.omissions,
     required this.events,
     required this.meta,
   });
@@ -519,6 +580,12 @@ class WheelHistoryData {
   final List<WheelNation> nations;
   final List<WheelPower> powers;
   final List<WheelMinistry> ministries;
+
+  /// The records that state an absence — see [WheelOmission]. Not a
+  /// sixth thing the wheel DRAWS: nothing here reaches the painter, and
+  /// `packWheelBand` is never given this list. It exists so the search
+  /// box can answer for something the chart deliberately leaves blank.
+  final List<WheelOmission> omissions;
   final List<WheelHistoryEvent> events;
   final WheelHistoryMeta meta;
 
@@ -537,6 +604,13 @@ class WheelHistoryData {
   WheelMinistry? ministryById(String id) {
     for (final m in ministries) {
       if (m.id == id) return m;
+    }
+    return null;
+  }
+
+  WheelOmission? omissionById(String id) {
+    for (final o in omissions) {
+      if (o.id == id) return o;
     }
     return null;
   }
@@ -564,6 +638,15 @@ class WheelHistoryData {
             .map(WheelMinistry.fromJson)
             .toList()
           ..sort((a, b) => a.start.compareTo(b.start)),
+        // NOT sorted. Every other list here sorts by year, and these
+        // records have none — sorting them by anything would be
+        // asserting an order the data does not carry. They come back in
+        // the order the asset writes them, which is the order of the
+        // books.
+        omissions: ((j['omissions'] as List?) ?? const [])
+            .whereType<Map<String, dynamic>>()
+            .map(WheelOmission.fromJson)
+            .toList(),
         events: ((j['events'] as List?) ?? const [])
             .whereType<Map<String, dynamic>>()
             .map(WheelHistoryEvent.fromJson)
@@ -810,6 +893,7 @@ class WheelHistoryService {
       nations: base.nations,
       powers: base.powers,
       ministries: base.ministries,
+      omissions: base.omissions,
       meta: base.meta,
       events: [
         ...base.events,
