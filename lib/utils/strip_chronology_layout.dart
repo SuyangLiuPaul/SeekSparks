@@ -19,12 +19,16 @@
 /// the numbers behind it are in `WHEEL-UX-REDESIGN.md`.
 ///
 /// WHAT A STRIP DOES NOT FIX, so that nobody expects it to. The corpus
-/// is violently front-loaded — 140 of 747 events fall in the 2% of the
-/// axis after 1900, and 271 fall in the last 390 years. A *uniform*
+/// is violently front-loaded. The wheel draws 851 events — 747 from
+/// `wheel_history.json` plus 104 merged in from `bible_timeline.json`
+/// by `WheelHistoryService.load()` — and 140 of the 851 fall in the 2%
+/// of the axis after 1900 (8.06x its share of the axis), while the
+/// whole 4200-2000 BC third holds 35 (0.12x its share). A *uniform*
 /// strip at 2 px/year on a 900 px screen still has **298 events in its
-/// densest window**, needing about 30 rows to name them all. The strip's
-/// win is not that crowding disappears; it is that crowding becomes
-/// scrollable and x-zoomable, which the wheel structurally forbids.
+/// densest window**, AD 1559-2008, needing about 30 rows to name them
+/// all. The strip's win is not that crowding disappears; it is that
+/// crowding becomes scrollable and x-zoomable, which the wheel
+/// structurally forbids.
 ///
 /// TWO RULES THIS FILE MAY NOT BREAK, both inherited and both earned:
 ///
@@ -46,6 +50,10 @@
 ///
 /// Kept free of widgets because it is the part worth testing.
 library;
+
+import 'dart:math' as math;
+
+import 'package:seeksparks/utils/related_verses.dart' show isCjkChar;
 
 // ── the time axis ────────────────────────────────────────────────────
 
@@ -69,30 +77,56 @@ const List<double> kStripZoomSteps = [0.15, 0.3, 0.6, 1.5, 3, 6, 12, 24];
 /// duration — see rule 1. If the axis is ever compressed, the
 /// compression must be DRAWN (a visible fold or break), not silent.
 double xForYear(int year, double pxPerYear, {int minYear = kStripMinYear}) =>
-    throw UnimplementedError();
+    (year - minYear) * pxPerYear;
 
 /// The year at content-x [x]. The inverse of [xForYear], and the thing a
 /// tap on the ruler means.
 double yearForX(double x, double pxPerYear, {int minYear = kStripMinYear}) =>
-    throw UnimplementedError();
+    minYear + x / pxPerYear;
 
 /// The whole strip's content width at [pxPerYear].
 double stripContentWidth(double pxPerYear,
         {int minYear = kStripMinYear, int maxYear = kStripMaxYear}) =>
-    throw UnimplementedError();
+    xForYear(maxYear, pxPerYear, minYear: minYear);
 
 /// The px a span of [start]..[end] occupies. May be 0 — see rule 1.
 double spanWidth(int start, int end, double pxPerYear) =>
-    throw UnimplementedError();
+    (end - start) * pxPerYear;
 
 /// The pxPerYear at which [year] range fits [viewportPx], for "fit all"
 /// and for search's "show me this century".
-double pxPerYearToFit(int fromYear, int toYear, double viewportPx) =>
-    throw UnimplementedError();
+///
+/// A degenerate request — [fromYear] equals [toYear], or a viewport of
+/// no width — has no honest ratio to report, so it returns the ladder's
+/// own maximum rather than a divide-by-zero: "fit this single year"
+/// can only mean "as close as the ladder gets".
+double pxPerYearToFit(int fromYear, int toYear, double viewportPx) {
+  final span = (toYear - fromYear).abs();
+  if (span <= 0 || viewportPx <= 0) return kStripZoomSteps.last;
+  return viewportPx / span;
+}
 
 /// The nearest ladder step to [want], so the reader's zoom always lands
 /// on a value the ruler has a sensible tick step for.
-double snapZoom(double want) => throw UnimplementedError();
+///
+/// Distance is measured linearly, not geometrically, even though the
+/// ladder itself roughly doubles step to step. "Nearest" is the literal
+/// contract and the ladder was chosen for its two ENDS (0.15 fits the
+/// axis, 24 separates the post-1900 events), not for even perceptual
+/// spacing, so there is no geometric mean here worth preferring over
+/// the plain one.
+double snapZoom(double want) {
+  var best = kStripZoomSteps.first;
+  var bestDiff = (want - best).abs();
+  for (final step in kStripZoomSteps.skip(1)) {
+    final diff = (want - step).abs();
+    if (diff < bestDiff) {
+      best = step;
+      bestDiff = diff;
+    }
+  }
+  return best;
+}
 
 // ── the ruler ────────────────────────────────────────────────────────
 
@@ -102,16 +136,38 @@ double snapZoom(double want) => throw UnimplementedError();
 /// Returns one of 1, 5, 10, 25, 50, 100, 250, 500, 1000 — a "nice"
 /// ladder, because a ruler stepping by 137 years is a ruler nobody can
 /// read. The smallest step whose spacing clears [labelPx] wins.
-int rulerStep(double pxPerYear, {double labelPx = 56}) =>
-    throw UnimplementedError();
+int rulerStep(double pxPerYear, {double labelPx = 56}) {
+  for (final step in _kNiceSteps) {
+    if (step * pxPerYear >= labelPx) return step;
+  }
+  // Even the coarsest step does not clear labelPx: pxPerYear is smaller
+  // than any ladder value would ever produce (kStripZoomSteps bottoms
+  // out at 0.15, where 1000 * 0.15 = 150 already clears 56). Returning
+  // the coarsest step is the honest best effort rather than a step the
+  // ladder promises but cannot reach.
+  return _kNiceSteps.last;
+}
+
+const List<int> _kNiceSteps = [1, 5, 10, 25, 50, 100, 250, 500, 1000];
 
 /// Every labelled tick year on the axis at [step], ascending.
 ///
 /// Year 0 does not exist in this calendar — 1 BC is followed by AD 1 —
 /// so a tick never lands on it and the caller never has to render "0".
 List<int> rulerTicks(int step,
-        {int minYear = kStripMinYear, int maxYear = kStripMaxYear}) =>
-    throw UnimplementedError();
+    {int minYear = kStripMinYear, int maxYear = kStripMaxYear}) {
+  if (step <= 0 || minYear > maxYear) return const [];
+  final out = <int>[];
+  // The first multiple of `step`, in the ordinary numeric sense, at or
+  // after minYear — ticks land on ..., -1000, -500, 500, 1000, ..., not
+  // on offsets from minYear, which is what a reader means by "every 500
+  // years" on a calendar that did not start counting at -4200.
+  var y = (minYear / step).ceil() * step;
+  for (; y <= maxYear; y += step) {
+    if (y != 0) out.add(y);
+  }
+  return out;
+}
 
 // ── lanes ────────────────────────────────────────────────────────────
 
@@ -144,8 +200,29 @@ const double kLaneGap = 2;
 /// Returns a lane index per span. Never overprints: the lane count is
 /// whatever the data requires.
 List<int> packIntoLanes(List<double> starts, List<double> ends,
-        {double minGapPx = 4}) =>
-    throw UnimplementedError();
+    {double minGapPx = 4}) {
+  // lastEnd[lane] is the x the lane is occupied until. Unlike
+  // packIntoRings there is no fixed ringCount to run out of, so a span
+  // that cannot join any existing lane simply opens a new one.
+  final lastEnd = <double>[];
+  final out = <int>[];
+  for (var i = 0; i < starts.length; i++) {
+    var lane = -1;
+    for (var l = 0; l < lastEnd.length; l++) {
+      if (starts[i] - lastEnd[l] >= minGapPx) {
+        lane = l;
+        break;
+      }
+    }
+    if (lane < 0) {
+      lane = lastEnd.length;
+      lastEnd.add(double.negativeInfinity);
+    }
+    lastEnd[lane] = ends[i] > starts[i] ? ends[i] : starts[i];
+    out.add(lane);
+  }
+  return out;
+}
 
 /// The hit target for a span painted from [x0] to [x1].
 ///
@@ -154,8 +231,13 @@ List<int> packIntoLanes(List<double> starts, List<double> ends,
 /// exactly what `nearestArcAt` does on the wheel, and for the same
 /// reported reason: 「按也很难按到，打也打不开」.
 ({double x0, double x1}) hitTargetFor(double x0, double x1,
-        {double fingerPx = 9}) =>
-    throw UnimplementedError();
+    {double fingerPx = 9}) {
+  final width = x1 - x0;
+  if (width >= fingerPx) return (x0: x0, x1: x1);
+  final centre = (x0 + x1) / 2;
+  final half = fingerPx / 2;
+  return (x0: centre - half, x1: centre + half);
+}
 
 /// Which span a tap at content-x [x] in one lane means, or null.
 ///
@@ -163,9 +245,22 @@ List<int> packIntoLanes(List<double> starts, List<double> ends,
 /// target — so a reader aiming at a hairline between two long reigns
 /// gets the hairline, not whichever long reign was first in the list.
 ({int index, double score})? nearestSpanAt(
-        double x, List<({double x0, double x1})> spans,
-        {double fingerPx = 9}) =>
-    throw UnimplementedError();
+    double x, List<({double x0, double x1})> spans,
+    {double fingerPx = 9}) {
+  int? best;
+  var bestScore = double.infinity;
+  for (var i = 0; i < spans.length; i++) {
+    final s = spans[i];
+    final centre = (s.x0 + s.x1) / 2;
+    final own = math.max((s.x1 - s.x0).abs() / 2, fingerPx / 2);
+    final score = (x - centre).abs() / own;
+    if (score <= 1 && score < bestScore) {
+      best = i;
+      bestScore = score;
+    }
+  }
+  return best == null ? null : (index: best, score: bestScore);
+}
 
 // ── labels in bars ───────────────────────────────────────────────────
 
@@ -190,8 +285,25 @@ typedef LabelMeasure = double Function(String text, double size);
   required double roomPx,
   required double size,
   required LabelMeasure measure,
-}) =>
-    throw UnimplementedError();
+}) {
+  const nothing = (text: '', ellipsised: false);
+  if (text.isEmpty || roomPx <= 0) return nothing;
+
+  final full = measure(text, size);
+  if (full <= roomPx) return (text: text, ellipsised: false);
+
+  // #297, restated for bars: a CJK label is whole or absent, never cut
+  // mid-word, because every ideograph is its own morpheme.
+  if (text.runes.any(isCjkChar)) return nothing;
+
+  final words = text.split(' ').where((w) => w.isNotEmpty).toList();
+  for (var take = words.length - 1; take >= 1; take--) {
+    final cut = '${words.take(take).join(' ')}…';
+    final w = measure(cut, size);
+    if (w <= roomPx) return (text: cut, ellipsised: true);
+  }
+  return nothing;
+}
 
 /// Where a bar's label starts, so a label on a bar that runs off both
 /// edges of the viewport stays visible.
@@ -207,8 +319,22 @@ double barLabelX({
   required double labelW,
   required double viewX0,
   required double viewX1,
-}) =>
-    throw UnimplementedError();
+}) {
+  final visStart = math.max(barX0, viewX0);
+  final visEnd = math.min(barX1, viewX1);
+  // maxStart keeps the label from running past the bar's own right
+  // edge — it may still overhang [viewX1] if the bar itself does, but
+  // it may never claim to name ink that is not there.
+  final maxStart = math.max(barX0, barX1 - labelW);
+  if (visEnd <= visStart) {
+    // Bar and viewport do not overlap at all — cannot happen if the
+    // caller only calls this for bars it is about to paint, but the
+    // honest answer for an off-screen bar is still a point inside it:
+    // the middle of the range the label is allowed to start in.
+    return (barX0 + maxStart) / 2;
+  }
+  return visStart.clamp(barX0, maxStart);
+}
 
 // ── events, which are points and not spans ───────────────────────────
 
@@ -224,9 +350,32 @@ double barLabelX({
 /// [xs] must be ascending. A new cluster starts when an x clears the
 /// FIRST member of the open one by [minGapPx].
 List<({List<int> members, int representative})> clusterByX(
-        List<double> xs, double minGapPx,
-        {int pinned = -1}) =>
-    throw UnimplementedError();
+    List<double> xs, double minGapPx,
+    {int pinned = -1}) {
+  final out = <({List<int> members, int representative})>[];
+  var members = <int>[];
+  var anchor = double.negativeInfinity;
+
+  void close() {
+    if (members.isEmpty) return;
+    out.add((
+      members: members,
+      representative: members.contains(pinned) ? pinned : members.first,
+    ));
+  }
+
+  for (var i = 0; i < xs.length; i++) {
+    if (members.isEmpty || xs[i] - anchor >= minGapPx) {
+      close();
+      members = [i];
+      anchor = xs[i];
+    } else {
+      members.add(i);
+    }
+  }
+  close();
+  return out;
+}
 
 /// Where the strip must scroll to put [year] in the middle of a
 /// [viewportPx]-wide window, clamped to the content.
@@ -235,5 +384,18 @@ List<({List<int> members, int representative})> clusterByX(
 /// the reader set it, and a search that silently rescales the chart is a
 /// search that loses their place.
 double scrollToCentre(int year, double pxPerYear, double viewportPx,
-        {int minYear = kStripMinYear, int maxYear = kStripMaxYear}) =>
-    throw UnimplementedError();
+    {int minYear = kStripMinYear, int maxYear = kStripMaxYear}) {
+  // Unlike focusTranslation's dx (a canvas translation for
+  // InteractiveViewer), this returns a ScrollController-style OFFSET —
+  // 0 at the axis start, increasing rightward — because the strip only
+  // ever moves in x and that is the primitive a horizontal
+  // ScrollController already speaks. The result can be handed straight
+  // to `controller.jumpTo` / `animateTo`.
+  final contentW =
+      stripContentWidth(pxPerYear, minYear: minYear, maxYear: maxYear);
+  final maxOffset = math.max(0.0, contentW - viewportPx);
+  if (maxOffset == 0) return 0;
+  final px = xForYear(year, pxPerYear, minYear: minYear);
+  final offset = px - viewportPx / 2;
+  return offset.clamp(0.0, maxOffset);
+}
