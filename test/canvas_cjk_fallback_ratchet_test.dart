@@ -78,6 +78,13 @@ void main() {
       'lib/pages/chronology_page.dart': 3,
       'lib/pages/lexicon_page.dart': 1,
       'lib/pages/radial_chronology_page.dart': 9,
+      // 2026-09-04: the strip's own canvases. The page's one site is
+      // `_measureText`, its own `canvasTextStyle(` call in the same
+      // window as the wheel's `_measureLabel`; the painter's eleven are
+      // `StripLanesPainter`/`StripRulerPainter`/`StripLaneHeaderPainter`
+      // — see `docs/strip-painter-spec.md`.
+      'lib/pages/strip_chronology_page.dart': 1,
+      'lib/widgets/strip_chronology_painter.dart': 11,
       'lib/utils/fitted_label_metrics.dart': 1,
       'lib/widgets/analysis_tabs.dart': 1,
       'lib/widgets/place_map.dart': 2,
