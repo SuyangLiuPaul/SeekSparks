@@ -70,6 +70,22 @@ const int kStripMaxYear = 2026;
 /// which is what it takes to separate the 140 events after 1900.
 const List<double> kStripZoomSteps = [0.15, 0.3, 0.6, 1.5, 3, 6, 12, 24];
 
+/// The zoom the strip OPENS on — deliberately not the widest step.
+///
+/// `kStripZoomSteps.first` (0.15) puts all 6226 years on one screen,
+/// which is the wheel's fixed condition and the one this form exists to
+/// escape. Measured on the shipped corpus at that scale, an event tick
+/// owns about 3 px before the next one, so no title fits and the events
+/// lane opens as a field of bare `+n` badges: the reader is told a great
+/// deal is here and shown none of it.
+///
+/// 1.5 px/year shows about 930 years on a 1400 px pane and about 250 on
+/// a phone — an era at a time, with room for names — and the whole axis
+/// is one drag or one press of Fit All away. Free scrolling is what a
+/// strip buys; spending it to reproduce a single crowded screen would be
+/// paying for the ticket and staying home.
+const double kStripInitialPxPerYear = 1.5;
+
 /// x, in content pixels from the strip's left edge, for [year].
 ///
 /// Linear and uniform, deliberately. A log or era-compressed axis would

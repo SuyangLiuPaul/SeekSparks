@@ -577,17 +577,18 @@ class StripLanesPainter extends CustomPainter {
     // dense — which is every century after 1500. The heuristic was
     // transposed from the wheel with its dimension unchanged.
     //
-    // So a title is drawn only when it clears the last title actually
-    // drawn. The TICK is never suppressed: it is drawn above this gate,
-    // so the event stays visible and stays tappable, and its sheet is
-    // one tap away. That is the wheel's own rule for a label that will
-    // not fit — legible or absent — and it costs less here than there,
-    // because on a strip the reader's lever really is free: the same
-    // title reappears at the next zoom step without the chart having to
-    // give up anything else to show it.
-    var lastLabelEnd = double.negativeInfinity;
+    // The gate is per-tick room (see the loop below), which makes ink
+    // touching ink impossible by construction rather than by a running
+    // cursor. The TICK is never suppressed either way: it is drawn
+    // before any label decision, so the event stays visible and stays
+    // tappable and its sheet is one tap away. That is the wheel's own
+    // rule for a label that will not fit — legible or absent — and it
+    // costs less here than there, because on a strip the reader's lever
+    // really is free: the same title reappears at the next zoom step
+    // without the chart having to give up anything else to show it.
 
-    for (final cluster in clusters) {
+    for (var ci = 0; ci < clusters.length; ci++) {
+      final cluster = clusters[ci];
       final repIdx = cluster.representative;
       final repSpan = lane.spans[repIdx];
       final event = palette.eventById[repSpan.id];
@@ -610,12 +611,48 @@ class StripLanesPainter extends CustomPainter {
       );
       if (event == null) continue;
 
-      final title = event.titleFor(locale);
-      final ref = event.refs.isEmpty
-          ? ''
-          : localizedReferenceLabel(event.refs.first, locale);
+      // A LABEL BELONGS TO ITS OWN TICK, AND MAY NOT REACH THE NEXT.
+      //
+      // The first cut of this gate only asked that a title clear the
+      // last title DRAWN, which stops ink touching ink and does not
+      // stop a title running straight past two or three later ticks.
+      // `packIntoLanes` fills a row with whatever fits, so one row
+      // carries events from 4200 BC, 490 BC, AD 180 and AD 1170 side by
+      // side; with titles crossing ticks the row reads as one nonsense
+      // sentence and — worse — there is no way to tell which mark any
+      // given name belongs to. Reported as 「你这种要人怎么读」, which is
+      // the right question.
+      //
+      // The room a title actually has is therefore the distance to the
+      // NEXT TICK IN THIS ROW, less a gap, and never more. That makes
+      // the label unambiguous by construction: every name sits in the
+      // clear stretch its own mark owns.
+      final nextX = ci + 1 < clusters.length
+          ? xs[clusters[ci + 1].representative]
+          : xForYear(kStripMaxYear, pxPerYear);
+      final room = nextX - x - laneFontPx * 0.75;
+
       final badge =
           cluster.members.length > 1 ? '+${cluster.members.length - 1}' : '';
+      // The order of sacrifice is the wheel's, for the wheel's reason
+      // (`fitRadialLabel`): verse, then title, then badge. The badge is
+      // the only mark saying other records are behind this tick, so it
+      // is the last thing given up.
+      final badgeW =
+          badge.isEmpty ? 0.0 : _measure('  $badge', laneFontPx * kStripRefSizeRatio);
+      final fit = fitBarLabel(
+        text: event.titleFor(locale),
+        roomPx: room - badgeW,
+        size: laneFontPx,
+        measure: _measure,
+      );
+      final title = fit.text;
+      var ref = '';
+      if (title.isNotEmpty && event.refs.isNotEmpty) {
+        final candidate = localizedReferenceLabel(event.refs.first, locale);
+        final w = _measure('  $candidate', laneFontPx * kStripRefSizeRatio);
+        if (_measure(title, laneFontPx) + w + badgeW <= room) ref = candidate;
+      }
       if (title.isEmpty && badge.isEmpty) continue;
 
       final titleTp = title.isEmpty
@@ -654,24 +691,17 @@ class StripLanesPainter extends CustomPainter {
               maxLines: 1)
             ..layout());
 
-      final totalW =
-          (titleTp?.width ?? 0) + (refTp?.width ?? 0) + (badgeTp?.width ?? 0);
-      // The right-edge flip: `barLabelX` cannot serve a true point (its
-      // own `maxStart` collapses to `barX0` whenever `barX1 == barX0`,
-      // so it always answers `x` and never pulls the label back — found
-      // while wiring this up, and reported rather than silently patched
-      // around in `strip_chronology_layout.dart`, which this file does
-      // not own). This keeps the label's own END inside the visible
-      // window instead, the same goal §3.5 asks for.
-      final labelX = (x + totalW <= visibleX1)
-          ? x
-          : math.max(visibleX0, visibleX1 - totalW);
-
-      // The gate itself. `labelX` and not `x`, because the right-edge
-      // flip above can pull a label back towards its neighbour.
-      if (labelX < lastLabelEnd) continue;
-      lastLabelEnd = labelX + totalW + laneFontPx * 0.75;
-
+      // NO RIGHT-EDGE FLIP. An earlier cut pulled a label left so its
+      // end stayed inside the viewport, and that is wrong here twice
+      // over: it walks the name backwards over the PREVIOUS tick, so
+      // the reader cannot tell whose name it is; and it is computed
+      // from the visible window, so every label near an edge moves as
+      // the reader drags — a chart whose words shuffle while you scroll
+      // it. A label now always starts at its own tick and runs right
+      // inside the room that tick owns. Near the right edge it is
+      // simply clipped, and one drag brings it back, which on a strip
+      // costs nothing.
+      final labelX = x;
       var penX = labelX;
       final y = row.top + row.height / 2;
       if (titleTp != null) {

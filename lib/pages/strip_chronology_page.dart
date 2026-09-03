@@ -141,7 +141,7 @@ class _StripChronologyPageState extends State<StripChronologyPage>
     with WheelSheets<StripChronologyPage> {
   Future<WheelHistoryData>? _future;
 
-  double _pxPerYear = kStripZoomSteps.first;
+  double _pxPerYear = kStripInitialPxPerYear;
   String? _selectedId;
 
   /// Streams the reader has switched off — the wheel's own field

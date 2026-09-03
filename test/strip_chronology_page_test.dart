@@ -104,9 +104,10 @@ void main() {
   double totalHeight(List<StripRow> rows) =>
       rows.isEmpty ? 0.0 : rows.last.top + rows.last.height;
 
-  /// Where one span's row sits, at the page's own starting zoom — the
-  /// widest step, `kStripZoomSteps.first`, which is what the page opens
-  /// on (`_pxPerYear = kStripZoomSteps.first`).
+  /// Where one span's row sits, at the page's own starting zoom —
+  /// `kStripInitialPxPerYear`, which is what the page opens on. Named
+  /// rather than written out, so a change to the opening zoom moves the
+  /// test with the page instead of re-baselining a number here.
   StripRow rowContaining(List<StripRow> rows, String spanId) {
     for (final row in rows) {
       if (row.isHeading) continue;
@@ -212,9 +213,9 @@ void main() {
             'reign to prove rule 1');
 
     await pump(tester, const Size(1440, 900));
-    final rows = rowsFor(kStripZoomSteps.first);
+    final rows = rowsFor(kStripInitialPxPerYear);
     final row = rowContaining(rows, '$kStripKingPrefix${zimri.id}');
-    final x = xForYear(zimri.reignStart, kStripZoomSteps.first);
+    final x = xForYear(zimri.reignStart, kStripInitialPxPerYear);
 
     await tapContent(tester, x, row.top + row.height / 2);
     expect(tester.takeException(), isNull,
@@ -241,6 +242,7 @@ void main() {
     final zimri = kings.firstWhere((k) => k.id == 'zimri');
     await pump(tester, const Size(1440, 900));
 
+    var current = kStripInitialPxPerYear;
     for (final zoom in [kStripZoomSteps.first, kStripZoomSteps.last]) {
       final rows = rowsFor(zoom);
       final row = rowContaining(rows, '$kStripKingPrefix${zimri.id}');
@@ -249,12 +251,23 @@ void main() {
       // Zoom the page itself to `zoom` via its own control, not by
       // reaching into private state — the '+' button steps one rung of
       // `kStripZoomSteps` per tap.
+      // Stepped from where the page ACTUALLY IS, not from where it
+      // opened. The first pass through this loop leaves the zoom at the
+      // ladder's low end, so a second pass computing its taps against
+      // the opening zoom would land four rungs short and then blame the
+      // hit test for the miss. (It did: the page used to open on the
+      // low end, so the first pass took no taps and the bug could not
+      // show. Moving the opening zoom is what exposed it.) Stepping
+      // down is a real direction now, so tap whichever control moves
+      // that way.
       final steps = kStripZoomSteps.indexOf(zoom) -
-          kStripZoomSteps.indexOf(kStripZoomSteps.first);
+          kStripZoomSteps.indexOf(current);
+      final tip = steps >= 0 ? '放大' : '缩小';
       for (var i = 0; i < steps.abs(); i++) {
-        await tester.tap(find.byTooltip('放大'));
+        await tester.tap(find.byTooltip(tip));
         await tester.pump();
       }
+      current = zoom;
       await tester.pump(const Duration(milliseconds: 200));
 
       await tapContent(tester, x, row.top + row.height / 2);
@@ -444,21 +457,25 @@ void main() {
   /// reveal against the same function called directly with the same
   /// inputs — not a tolerance on "moved somewhere", the exact target.
   ///
-  /// Zoomed in first, deliberately: at the page's own opening zoom
-  /// (`kStripZoomSteps.first`) the whole 6226-year axis already fits a
-  /// 900 px pane, `scrollToCentre` would clamp to 0 regardless of
-  /// whether the page called it correctly, and the test would prove
-  /// nothing.
+  /// Zoomed in first, deliberately: the reveal must be measured where
+  /// `scrollToCentre` can actually move something. If the axis already
+  /// fits the pane it clamps to 0 regardless of whether the page called
+  /// it correctly, and the test would prove nothing.
   testWidgets('a year query scrolls the strip so the record is centred',
       (tester) async {
     await pump(tester, const Size(900, 700));
 
-    for (var i = 0; i < 4; i++) {
-      await tester.tap(find.byTooltip('放大'));
+    // Derived from where the page opens, so the zoom this test asserts
+    // against is the zoom the page is actually at — not a ladder index
+    // that silently means something else once the opening zoom moves.
+    const zoom = 6.0;
+    final steps = kStripZoomSteps.indexOf(zoom) -
+        kStripZoomSteps.indexOf(kStripInitialPxPerYear);
+    for (var i = 0; i < steps.abs(); i++) {
+      await tester.tap(find.byTooltip(steps >= 0 ? '放大' : '缩小'));
       await tester.pump();
     }
     await tester.pump(const Duration(milliseconds: 200));
-    final zoom = kStripZoomSteps[4];
 
     final event = data.events.firstWhere((e) => e.id == 'magna_carta',
         orElse: () => data.events
@@ -513,7 +530,7 @@ void main() {
     await pump(tester, const Size(900, 700));
     final stream = data.streams.first;
 
-    final baseRows = rowsFor(kStripZoomSteps.first);
+    final baseRows = rowsFor(kStripInitialPxPerYear);
     final beforeHeight = totalHeight(baseRows);
 
     final visibleData = WheelHistoryData(
@@ -525,7 +542,8 @@ void main() {
       events: data.events.where((e) => e.stream != stream.id).toList(),
       meta: data.meta,
     );
-    final predictedRows = rowsFor(kStripZoomSteps.first, forData: visibleData);
+    final predictedRows =
+        rowsFor(kStripInitialPxPerYear, forData: visibleData);
     final removedHeight = beforeHeight - totalHeight(predictedRows);
     expect(removedHeight, greaterThan(0),
         reason: 'this test needs a stream whose own band and/or events '
