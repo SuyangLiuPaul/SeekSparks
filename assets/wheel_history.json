@@ -4717,6 +4717,63 @@
     "zh-Hans": "以扫的后裔，住在死海东南的西珥山地，约自公元前1200年立国。经巴比伦征伐后，于公元前六世纪不再见于记载；西迁进入犹大南地的以东人成为以土买人，其故地后归拿巴提人。此带两端均为约数。",
     "zh-Hant": "以掃的後裔，住在死海東南的西珥山地，約自公元前1200年立國。經巴比倫征伐後，於公元前六世紀不再見於記載；西遷進入猶大南地的以東人成為以土買人，其故地後歸拿巴提人。此帶兩端均為約數。"
    }
+  },
+  {
+   "id": "himyarite-kingdom",
+   "start": -110,
+   "end": 525,
+   "region": "levant",
+   "stream": "arabia",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "Himyarite Kingdom",
+    "zh-Hans": "希木叶尔王国",
+    "zh-Hant": "希木葉爾王國"
+   },
+   "note": {
+    "en": "The last great kingdom of South Arabia, in the land the older Sabaean realm had held — the country this chart already names for the queen who came to Solomon. Its later kings professed Judaism, and it fell to Christian Aksum in 525.",
+    "zh-Hans": "南阿拉伯最后一个大国，据有更早的示巴王国故地——本图已因那位来见所罗门的女王而载有此地。其后期诸王奉犹太教，525年亡于信奉基督教的阿克苏姆。",
+    "zh-Hant": "南阿拉伯最後一個大國，據有更早的示巴王國故地——本圖已因那位來見所羅門的女王而載有此地。其後期諸王奉猶太教，525年亡於信奉基督教的阿克蘇姆。"
+   }
+  },
+  {
+   "id": "liao-khitan",
+   "start": 907,
+   "end": 1125,
+   "region": "asia",
+   "stream": "china",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Liao Empire of the Khitan",
+    "zh-Hans": "契丹辽朝",
+    "zh-Hant": "契丹遼朝"
+   },
+   "note": {
+    "en": "A steppe empire holding the north while Song ruled the south, and the power Europe's older books mean by Cathay. The Song dynasty already on this chart paid it tribute for peace.",
+    "zh-Hans": "宋据南方之时据有北方的草原帝国，欧洲旧籍所称的契丹（Cathay）即指此。本图已有的宋朝曾向其纳币求和。",
+    "zh-Hant": "宋據南方之時據有北方的草原帝國，歐洲舊籍所稱的契丹（Cathay）即指此。本圖已有的宋朝曾向其納幣求和。"
+   }
+  },
+  {
+   "id": "tibetan-empire",
+   "start": 618,
+   "end": 842,
+   "region": "asia",
+   "stream": "india",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "Tibetan Empire",
+    "zh-Hans": "吐蕃王朝",
+    "zh-Hant": "吐蕃王朝"
+   },
+   "note": {
+    "en": "Songtsen Gampo unites the Tibetan plateau and his successors take Chang'an itself for a fortnight in 763. Buddhism enters Tibet under these kings and the empire breaks apart in 842.",
+    "zh-Hans": "松赞干布统一青藏高原，其后继者更于763年一度攻入长安，据城半月。佛教在这几代赞普治下传入西藏，王朝于842年崩解。",
+    "zh-Hant": "松贊干布統一青藏高原，其後繼者更於763年一度攻入長安，據城半月。佛教在這幾代贊普治下傳入西藏，王朝於842年崩解。"
+   }
   }
  ],
  "ministries": [
@@ -16946,6 +17003,258 @@
     "en": "The furthest of the Phoenician colonies, and the one that outlived the mother city. Greek historians give 814 BC; the earliest excavated material at the site is a little later, around 800, and the chart keeps the traditional year while saying so.",
     "zh-Hans": "腓尼基众殖民地中最远的一座，也是比母城更长久的一座。希腊史家作主前814年；遗址出土最早的实物略晚，约主前800年。本图仍取传统年份，并如实注明。",
     "zh-Hant": "腓尼基眾殖民地中最遠的一座，也是比母城更長久的一座。希臘史家作主前814年；遺址出土最早的實物略晚，約主前800年。本圖仍取傳統年份，並如實註明。"
+   }
+  },
+  {
+   "id": "teutoburg_forest",
+   "year": 9,
+   "era": "world",
+   "stream": "rome",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Arminius Destroys Three Legions in the Teutoburg Forest",
+    "zh-Hans": "阿米尼乌斯在条顿堡森林全歼三个军团",
+    "zh-Hant": "阿米尼烏斯在條頓堡森林全殲三個軍團"
+   },
+   "desc": {
+    "en": "A Roman-trained Cheruscan chief ambushes Varus and three legions; Rome never again holds Germany east of the Rhine, and the river becomes the border it still was when the gospel travelled the empire's roads.",
+    "zh-Hans": "受过罗马训练的车鲁西部族首领伏击瓦鲁斯及其三个军团；罗马从此不再据有莱茵河以东的日耳曼地，这条河成了帝国的边界——福音沿帝国道路传开时，界线仍在那里。",
+    "zh-Hant": "受過羅馬訓練的車魯西部族首領伏擊瓦魯斯及其三個軍團；羅馬從此不再據有萊茵河以東的日耳曼地，這條河成了帝國的邊界——福音沿帝國道路傳開時，界線仍在那裡。"
+   }
+  },
+  {
+   "id": "quran_compiled",
+   "year": 650,
+   "era": "world",
+   "stream": "islam",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "The Caliph Uthman Fixes One Text of the Quran",
+    "zh-Hans": "哈里发奥斯曼定一本《古兰经》文本",
+    "zh-Hant": "哈里發奧斯曼定一本《古蘭經》文本"
+   },
+   "desc": {
+    "en": "Copies of a single recension are sent to the provinces and the variant collections withdrawn. The traditional date falls in Uthman's caliphate, 644 to 656, and is given as about 650.",
+    "zh-Hans": "一种定本抄本颁往各省，异本收回。传统年代落在奥斯曼任哈里发的644至656年之间，通常作约650年。",
+    "zh-Hant": "一種定本抄本頒往各省，異本收回。傳統年代落在奧斯曼任哈里發的644至656年之間，通常作約650年。"
+   }
+  },
+  {
+   "id": "ottoman_state_founded",
+   "year": 1299,
+   "era": "world",
+   "stream": "islam",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Osman Founds the Ottoman State",
+    "zh-Hans": "奥斯曼建奥斯曼国",
+    "zh-Hant": "奧斯曼建奧斯曼國"
+   },
+   "desc": {
+    "en": "A frontier principality in Bithynia grows into the empire that took Gallipoli, Adrianople and finally Constantinople — all three already on this chart. The year 1299 is traditional; the state's beginnings are gradual and not documented to a year.",
+    "zh-Hans": "比提尼亚的一个边地侯国，日后成为攻取加利波利、阿德里安堡以至君士坦丁堡的帝国——这三件本图皆已收录。1299年是传统纪年；此国之兴是渐进的，并无逐年可考的记载。",
+    "zh-Hant": "比提尼亞的一個邊地侯國，日後成為攻取加利波利、阿德里安堡以至君士坦丁堡的帝國——這三件本圖皆已收錄。1299年是傳統紀年；此國之興是漸進的，並無逐年可考的記載。"
+   }
+  },
+  {
+   "id": "taiho_code",
+   "year": 701,
+   "era": "world",
+   "stream": "japan",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Japan Promulgates the Taiho Code",
+    "zh-Hans": "日本颁布大宝律令",
+    "zh-Hant": "日本頒布大寶律令"
+   },
+   "desc": {
+    "en": "The first full law code of the Japanese state, modelled on Tang administration, gives the court a bureaucracy of ranks and provinces. It is the legal frame the capital at Kyoto, already on this chart, was built to run.",
+    "zh-Hans": "日本国家第一部完整律令，仿唐制而立，为朝廷立起品阶与国郡的官僚体制。本图已有的京都建都，正是在这套法制框架下运作的。",
+    "zh-Hant": "日本國家第一部完整律令，仿唐制而立，為朝廷立起品階與國郡的官僚體制。本圖已有的京都建都，正是在這套法制框架下運作的。"
+   }
+  },
+  {
+   "id": "russo_japanese_war",
+   "year": 1904,
+   "era": "world",
+   "stream": "japan",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "The Russo-Japanese War",
+    "zh-Hans": "日俄战争",
+    "zh-Hant": "日俄戰爭"
+   },
+   "desc": {
+    "en": "Japan defeats Russia at sea and on land in Manchuria, and the peace is signed in 1905. It is the first time in the modern age that an Asian power defeats a European one, and it is read across Asia as such.",
+    "zh-Hans": "日本在海上及满洲陆上击败俄国，1905年议和。这是近代亚洲国家首次战胜欧洲国家，全亚洲当时都是这样看的。",
+    "zh-Hant": "日本在海上及滿洲陸上擊敗俄國，1905年議和。這是近代亞洲國家首次戰勝歐洲國家，全亞洲當時都是這樣看的。"
+   }
+  },
+  {
+   "id": "drake_circumnavigation",
+   "year": 1580,
+   "era": "world",
+   "stream": "europe",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Drake Completes the Second Circumnavigation",
+    "zh-Hans": "德雷克完成第二次环球航行",
+    "zh-Hant": "德雷克完成第二次環球航行"
+   },
+   "desc": {
+    "en": "The Golden Hind returns to Plymouth after three years, the first ship whose captain survived the whole voyage round the world. English claims on the Pacific coast begin here.",
+    "zh-Hans": "金鹿号历时三年回到普利茅斯，是第一艘船长本人活着走完环球全程的船。英国对太平洋沿岸的主张由此开始。",
+    "zh-Hant": "金鹿號歷時三年回到普利茅斯，是第一艘船長本人活著走完環球全程的船。英國對太平洋沿岸的主張由此開始。"
+   }
+  },
+  {
+   "id": "montreal_founded",
+   "year": 1642,
+   "era": "world",
+   "stream": "americas",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Ville-Marie Founded, Later Montreal",
+    "zh-Hans": "建玛利城，即后来的蒙特利尔",
+    "zh-Hant": "建瑪利城，即後來的蒙特利爾"
+   },
+   "desc": {
+    "en": "A French missionary settlement on the St Lawrence, founded to reach the peoples of the interior; it became the fur trade's inland capital and then the city of Montreal.",
+    "zh-Hans": "圣劳伦斯河畔的法国传教据点，为向内陆各族传教而设；后成为皮毛贸易的内陆中心，再成为蒙特利尔城。",
+    "zh-Hant": "聖勞倫斯河畔的法國傳教據點，為向內陸各族傳教而設；後成為皮毛貿易的內陸中心，再成為蒙特利爾城。"
+   }
+  },
+  {
+   "id": "penn_philadelphia",
+   "year": 1682,
+   "era": "world",
+   "stream": "americas",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Penn Lays Out Philadelphia",
+    "zh-Hans": "宾建费城",
+    "zh-Hant": "賓建費城"
+   },
+   "desc": {
+    "en": "A Quaker proprietor plans a city on the Delaware and writes liberty of conscience into his colony's frame of government, at a time when the older colonies were still punishing dissent.",
+    "zh-Hans": "一位贵格会业主在特拉华河畔规划新城，并把良心自由写进殖民地的政府章程；彼时较早的殖民地仍在惩治异议。",
+    "zh-Hant": "一位貴格會業主在特拉華河畔規劃新城，並把良心自由寫進殖民地的政府章程；彼時較早的殖民地仍在懲治異議。"
+   }
+  },
+  {
+   "id": "alaska_purchase",
+   "year": 1867,
+   "era": "world",
+   "stream": "americas",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "The United States Buys Alaska from Russia",
+    "zh-Hans": "美国向俄国购得阿拉斯加",
+    "zh-Hant": "美國向俄國購得阿拉斯加"
+   },
+   "desc": {
+    "en": "Russia sells its American territory and withdraws from the continent; the Orthodox mission it had planted among the Aleut and Tlingit stayed, and is there still.",
+    "zh-Hans": "俄国售出其美洲领地，退出美洲大陆；它在阿留申人与特林吉特人中所设的东正教差传却留了下来，至今仍在。",
+    "zh-Hant": "俄國售出其美洲領地，退出美洲大陸；它在阿留申人與特林吉特人中所設的東正教差傳卻留了下來，至今仍在。"
+   }
+  },
+  {
+   "id": "balfour_declaration",
+   "year": 1917,
+   "era": "world",
+   "stream": "israel",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "The Balfour Declaration",
+    "zh-Hans": "贝尔福宣言",
+    "zh-Hant": "貝爾福宣言"
+   },
+   "desc": {
+    "en": "Britain declares itself in favour of a national home for the Jewish people in Palestine, with the civil and religious rights of the existing communities to be safeguarded. Thirty-one years later the State of Israel, already on this chart, was declared.",
+    "zh-Hans": "英国声明赞成在巴勒斯坦为犹太民族建立一个民族家园，并须保障当地原有各族群的公民与宗教权利。三十一年后，本图已有的以色列国宣告成立。",
+    "zh-Hant": "英國聲明贊成在巴勒斯坦為猶太民族建立一個民族家園，並須保障當地原有各族群的公民與宗教權利。三十一年後，本圖已有的以色列國宣告成立。"
+   }
+  },
+  {
+   "id": "allenby_jerusalem",
+   "year": 1917,
+   "era": "world",
+   "stream": "israel",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Allenby Enters Jerusalem, Ending Ottoman Rule",
+    "zh-Hans": "艾伦比入耶路撒冷，奥斯曼统治告终",
+    "zh-Hant": "艾倫比入耶路撒冷，鄂圖曼統治告終"
+   },
+   "desc": {
+    "en": "British forces take the city and its Ottoman governors leave after four hundred years. Allenby entered on foot through the Jaffa Gate; the chart carries the transfer of rule, not the legends that grew around it.",
+    "zh-Hans": "英军攻取该城，统治了四百年的奥斯曼官员撤离。艾伦比是步行经雅法门入城的；本图所载的是治权的转移，不是后来附会的传说。",
+    "zh-Hant": "英軍攻取該城，統治了四百年的鄂圖曼官員撤離。艾倫比是步行經雅法門入城的；本圖所載的是治權的轉移，不是後來附會的傳說。"
+   }
+  },
+  {
+   "id": "cromwell_protectorate",
+   "year": 1653,
+   "era": "world",
+   "stream": "europe",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Cromwell Rules England as Lord Protector",
+    "zh-Hans": "克伦威尔以护国公治英格兰",
+    "zh-Hant": "克倫威爾以護國公治英格蘭"
+   },
+   "desc": {
+    "en": "England is governed without a king for a decade. Under this rule the Jews, expelled in 1290, were allowed back into England after a conference at Whitehall in 1655 and 1656 reached no formal decision against them.",
+    "zh-Hans": "英格兰有十年之久无君而治。在此治下，1290年被逐的犹太人得以重返英格兰——1655至1656年白厅会议未作出禁止他们的正式决议。",
+    "zh-Hant": "英格蘭有十年之久無君而治。在此治下，1290年被逐的猶太人得以重返英格蘭——1655至1656年白廳會議未作出禁止他們的正式決議。"
+   }
+  },
+  {
+   "id": "marconi_transatlantic",
+   "year": 1901,
+   "era": "world",
+   "stream": "europe",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Marconi Sends a Signal Across the Atlantic",
+    "zh-Hans": "马可尼发出跨大西洋无线电信号",
+    "zh-Hant": "馬可尼發出跨大西洋無線電信號"
+   },
+   "desc": {
+    "en": "A wireless signal is received in Newfoundland from Cornwall, two thousand miles away, with no cable between. The telegraph and the telephone are already on this chart; this is the step that needed no wire at all.",
+    "zh-Hans": "康沃尔发出的无线电信号在两千英里外的纽芬兰收到，中间没有电缆。电报与电话本图已有；这一步则连线都不需要了。",
+    "zh-Hant": "康沃爾發出的無線電信號在兩千英里外的紐芬蘭收到，中間沒有電纜。電報與電話本圖已有；這一步則連線都不需要了。"
+   }
+  },
+  {
+   "id": "san_francisco_earthquake",
+   "year": 1906,
+   "era": "world",
+   "stream": "americas",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "The San Francisco Earthquake and Fire",
+    "zh-Hans": "旧金山大地震与大火",
+    "zh-Hant": "舊金山大地震與大火"
+   },
+   "desc": {
+    "en": "The San Andreas fault ruptures and the fire that follows destroys most of the city. It falls in the same year as the Azusa Street revival across the bay in Los Angeles, which this chart already carries; the two are often told together and were not connected.",
+    "zh-Hans": "圣安地列斯断层错动，随后的大火烧毁全城大半。此事与本图已有的洛杉矶阿苏萨街复兴同在一年；二者常被合在一处讲述，其实并无关联。",
+    "zh-Hant": "聖安地列斯斷層錯動，隨後的大火燒毀全城大半。此事與本圖已有的洛杉磯阿蘇薩街復興同在一年；二者常被合在一處講述，其實並無關聯。"
    }
   }
  ]
