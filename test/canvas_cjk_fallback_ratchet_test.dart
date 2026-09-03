@@ -77,7 +77,13 @@ void main() {
       'lib/pages/bible_timeline_page.dart': 1,
       'lib/pages/chronology_page.dart': 3,
       'lib/pages/lexicon_page.dart': 1,
-      'lib/pages/radial_chronology_page.dart': 9,
+      // 2026-09-04: the tenth is `_hubCaption`'s `blockHeight`, off the
+      // canvas entirely — it measures a real `Text` widget's own height
+      // BEFORE the widget is built, so the hub caption can drop its
+      // cheapest lines when the four of them do not fit the hub (see
+      // that method's own doc). Not a painter, but still a
+      // `TextPainter(` and still Chinese, so it still needs a CJK face.
+      'lib/pages/radial_chronology_page.dart': 10,
       // 2026-09-04: the strip's own canvases. The page's one site is
       // `_measureText`, its own `canvasTextStyle(` call in the same
       // window as the wheel's `_measureLabel`; the painter's eleven are
