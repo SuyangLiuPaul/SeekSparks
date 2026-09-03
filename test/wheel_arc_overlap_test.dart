@@ -5,26 +5,34 @@
 /// neighbour. Measured over `assets/wheel_history.json`: 226 powers
 /// across 21 of 22 streams produce 327 overlapping PAIRS OF ARCS, with
 /// depth 8 in europe, 6 in church and rome, 5 in greece, 4 in americas
-/// and world — the numbers `_buildArcs`'s own doc comment cites for why
-/// sub-ringing was rejected (a stream ring is 6.95 canvas units at
-/// 900 px; eight sub-rings of it would be 0.87).
+/// and world — the numbers `planArcNames`'s own doc comment
+/// (`radial_chronology_layout.dart`) cites for why sub-ringing was
+/// rejected (a stream ring is 6.95 canvas units at 900 px; eight
+/// sub-rings of it would be 0.87).
 ///
-/// Two placements are mirrored here, both built from the same public
-/// primitives `radial_chronology_layout.dart` exports so this file never
-/// reaches into the page's private members — the same discipline
-/// `wheel_arc_label_behaviour_test.dart` already keeps, with the same
-/// risk: a mirror can drift from what ships. `_placeOld` is a literal
-/// transcription of what `_paintArcs` did before 2026-09-04 — one
+/// TWO PLACEMENTS, AND ONLY ONE OF THEM IS A MIRROR. `_placeShipped`
+/// calls `planArcNames` directly — the exact public function
+/// `_buildArcs` calls to decide where every power's name goes — so this
+/// file exercises the real packing rather than a transcription of it.
+/// That distinction was raised on the first version of this file, which
+/// reimplemented `_buildArcs`'s whole loop by hand: a mirror can only
+/// prove that a TRANSCRIPTION of the algorithm has no overlaps, never
+/// that `_buildArcs` does, and it goes on passing the day someone edits
+/// `_buildArcs` without touching this file — precisely how the strip's
+/// events lane shipped solid black while 4254 tests stayed green,
+/// because everything under test was geometry nobody drew.
+///
+/// `_placeOld` stays a transcription, and has to: it is a literal
+/// record of what `_paintArcs` did before 2026-09-04 — one
 /// `fitArcLabel` call per arc, against that arc's own full sweep, in
 /// the file's own data order, each name centred on its own arc with no
-/// memory of any other. `_placeNew` is a transcription of `_buildArcs`
-/// as it stands after this pass — ring ascending, span descending
-/// within the ring, each name asking `arcNameRoom`/`placeArcName` for
-/// the widest stretch its OWN arc's neighbours-so-far have not already
-/// claimed. Neither mirror touches `nearestArcAt`, `fitArcLabel`,
-/// `arcNameRoom`, `placeArcName`, `ringRadii` or `angleForSpan` — every
-/// one of those is unmodified by this pass, so `_placeOld`'s answer is
-/// the answer `main` gives today, not a guess about it.
+/// memory of any other — and that code no longer exists to be called.
+/// It is the witness for what the reader photographed, not a claim
+/// about what ships today. It touches no line this pass changed —
+/// `fitArcLabel`, `ringRadii` and `angleForSpan` are exactly as they
+/// were — so its answer is provably `main`'s answer: run verbatim
+/// against a real `main` checkout in a throwaway worktree, it found the
+/// same 17 overlapping pairs reported below.
 library;
 
 import 'dart:convert';
@@ -128,13 +136,20 @@ List<_Placed> _placeOld(
   return out;
 }
 
-/// The fixed placement: [_RadialChronologyPageState._buildArcs] read
-/// back into a test. Ring ascending, span descending within the ring —
-/// so a long-lived power picks the widest free stretch of its own arc
-/// first — then `arcNameRoom`/`placeArcName` place every shorter power
-/// after it in whatever the earlier ones left free, all within the same
-/// ring's occupied list.
-List<_Placed> _placeNew(
+/// The SHIPPED placement. This calls `planArcNames` — the exact public
+/// function `_buildArcs` calls — rather than a transcription of it, on
+/// the coordinator's objection that a mirror of `_buildArcs` can only
+/// prove a mirror has no overlaps, never that `_buildArcs` does, and
+/// goes on passing the day someone edits `_buildArcs` without touching
+/// this file. Everything here that is NOT `planArcNames` itself —
+/// building the ring lookup, converting years to angles, and the
+/// ring-ascending/span-descending sort that decides priority — is
+/// necessarily still a transcription of the page's `_body`/`_buildArcs`,
+/// because those steps are private to the page and canvas text leaves
+/// nothing else a test could call. What matters is that the one function
+/// actually doing the packing — the thing this whole file exists to
+/// guard — is not reimplemented here twice.
+List<_Placed> _placeShipped(
   WheelHistoryData data,
   double side,
   String locale,
@@ -144,7 +159,6 @@ List<_Placed> _placeNew(
   final n = data.streams.length;
   final ringOf = {for (var i = 0; i < n; i++) data.streams[i].id: i};
   final titleSize = _rimFont / _labelScale(zoom);
-  final maxEm = ringPitch(n, rHub, rBands) * kArcLabelPitchFraction;
 
   final geo = <({WheelPower power, int ring, double a0, double a1})>[];
   for (final p in data.powers) {
@@ -157,33 +171,32 @@ List<_Placed> _placeNew(
       a1: angleForSpan(p.endFor(_maxYear), _minYear, _maxYear),
     ));
   }
+  // Priority order, not just a display order — see `planArcNames`'s own
+  // doc comment for why it does not re-sort and relies on its caller
+  // (here, and on the page) to have done this first.
   geo.sort((a, b) => a.ring != b.ring
       ? a.ring.compareTo(b.ring)
       : (b.a1 - b.a0).compareTo(a.a1 - a.a0));
 
-  final occupied = <int, List<ArcSpan>>{};
+  final planned = planArcNames(
+    requests: [
+      for (final arc in geo)
+        (ring: arc.ring, a0: arc.a0, a1: arc.a1, name: arc.power.nameFor(locale))
+    ],
+    ringCount: n,
+    rHub: rHub,
+    rBands: rBands,
+    desiredSize: titleSize,
+    zoom: zoom,
+    floorPx: kArcLabelFloorPx,
+    measure: _measureChars,
+  );
+
   final out = <_Placed>[];
-  for (final arc in geo) {
-    final claimed = occupied.putIfAbsent(arc.ring, () => []);
-    final band = ringRadii(arc.ring, n, rHub, rBands);
-    final name = arc.power.nameFor(locale);
-    final room = arcNameRoom(arc.a0, arc.a1, claimed);
-    final size = fitArcLabel(
-      text: name,
-      radius: band.centre,
-      sweep: room,
-      maxEm: maxEm,
-      desiredSize: titleSize,
-      zoom: zoom,
-      floorPx: kArcLabelFloorPx,
-      measure: _measureChars,
-    );
-    if (size <= 0) continue;
-    final needed = _measureChars(name, size) / band.centre;
-    final at = placeArcName(arc.a0, arc.a1, claimed, needed);
-    if (at == null) continue;
-    claimed.add((start: at, end: at + needed));
-    out.add((id: arc.power.id, ring: arc.ring, a0: at, a1: at + needed));
+  for (var i = 0; i < geo.length; i++) {
+    final p = planned[i];
+    if (p.size <= 0) continue;
+    out.add((id: geo[i].power.id, ring: geo[i].ring, a0: p.a0, a1: p.a0 + p.sweep));
   }
   return out;
 }
@@ -256,7 +269,7 @@ void main() {
       for (final locale in ['en', 'zh-Hans']) {
         for (final zoom in [1.0, 2.0]) {
           test('side=$side locale=$locale zoom=$zoom', () {
-            final placed = _placeNew(data, side, locale, zoom);
+            final placed = _placeShipped(data, side, locale, zoom);
             final overlaps = _overlaps(placed);
             expect(overlaps, isEmpty,
                 reason: '${overlaps.length} overlapping pairs: '
@@ -276,12 +289,12 @@ void main() {
     // asserted tightly, because the honest number moves with the corpus
     // and the fonts, not because it does not matter.
     final before = _placeOld(data, 900, 'en', 1).length;
-    final after = _placeNew(data, 900, 'en', 1).length;
+    final after = _placeShipped(data, 900, 'en', 1).length;
     // ignore: avoid_print
     print('900px @ rest, en: before=$before after=$after of '
         '${data.powers.length} powers');
     final beforeZh = _placeOld(data, 900, 'zh-Hans', 1).length;
-    final afterZh = _placeNew(data, 900, 'zh-Hans', 1).length;
+    final afterZh = _placeShipped(data, 900, 'zh-Hans', 1).length;
     // ignore: avoid_print
     print('900px @ rest, zh-Hans: before=$beforeZh after=$afterZh of '
         '${data.powers.length} powers');

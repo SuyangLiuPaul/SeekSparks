@@ -1551,43 +1551,23 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
   /// Every power's arc, and the stretch of its own name the band can
   /// honestly carry.
   ///
-  /// NO SUB-RINGING. [_buildLifespans] resolves ITS overlaps by adding
-  /// rings — Adam and Seth never share a radius — and the first instinct
-  /// here is the same move. It does not scale: 22 streams already share
-  /// about 153 canvas units at 900 px (`rBands - rHub`), one ring is
-  /// `ringPitch(22, rHub, rBands)` = 6.95 units, and europe's worst
-  /// overlap depth is 8 — eight sub-rings of a 6.95-unit ring are 0.87
-  /// units each, under a hairline and under any finger. So every power
-  /// in a stream stays on the ONE ring its stream already owns, exactly
-  /// as `ringOf` has always placed it, and what changes is that a name is
-  /// now set in the widest FREE stretch of its own arc —
-  /// [placeArcName], the identical function [_buildLifespans] already
-  /// ships and tests — instead of centred on the whole arc regardless of
-  /// who else is drawn across it.
+  /// The geometry and the packing both live in [planArcNames]
+  /// (`radial_chronology_layout.dart`) — NO SUB-RINGING, and the name is
+  /// set in the widest FREE stretch of its own arc rather than centred
+  /// on the whole arc regardless of who else is drawn across it. See
+  /// that function's own doc comment for the measured reasons (a stream
+  /// ring is 6.95 canvas units at 900 px and europe alone nests eight
+  /// powers deep) and for why the sort below — ring ascending, span
+  /// descending — is done HERE rather than inside it: this same order is
+  /// also `_paintArcs`'s paint order, and [planArcNames] deliberately
+  /// does not re-sort, so there is exactly one sort for both.
   ///
-  /// ORDER IS LONGEST SPAN FIRST, WITHIN EACH RING, AND DELIBERATELY SO.
-  /// [placeArcName] gives the first candidate it sees the whole arc to
-  /// itself; every candidate after it gets only what the earlier ones
-  /// left free. Building in the file's own order let a twenty-year
-  /// papacy or a nine-year dynasty claim the middle of the nine-hundred-
-  /// year empire that contains it, leaving the empire's own name with
-  /// nowhere left to go — backwards, since the empire is what a reader
-  /// scanning the ring is most likely looking for. Longest first means
-  /// the container is never silenced by what nests inside it, and the
-  /// short span then takes whatever room remains, which the data being
-  /// mostly CONTAINMENT rather than collision (New Kingdom Egypt holds
-  /// the Eighteenth Dynasty, the Crusader Kingdom of Jerusalem holds
-  /// popes and crusades, Rome's emperors nest inside Rome's empire)
-  /// usually leaves plenty of. A power whose name still loses the draw
-  /// is not lost outright: tapping its own stretch of the band opens
-  /// [showPower] (`wheel_sheets.dart`) exactly as it always did — hit
-  /// testing runs on `arc.a0`/`arc.a1`, not on whether the label drew —
-  /// and `showStream`'s sheet lists every power on the stream by name
-  /// and span whether or not its ring label made it onto the wheel.
-  ///
-  /// This same sort also fixes PAINT order — see `_paintArcs` — so it is
-  /// done once, here, and both the coloured arcs and their names read
-  /// off the one list.
+  /// A power whose name loses the draw is not lost outright: tapping its
+  /// own stretch of the band opens [showPower] (`wheel_sheets.dart`)
+  /// exactly as it always did — hit testing runs on `arc.a0`/`arc.a1`,
+  /// not on whether the label drew — and `showStream`'s sheet lists
+  /// every power on the stream by name and span whether or not its ring
+  /// label made it onto the wheel.
   List<_Arc> _buildArcs(
     WheelHistoryData data,
     Map<String, int> ringOf,
@@ -1598,74 +1578,54 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
     String locale,
     double rimFont,
   ) {
-    final geo = <_Arc>[];
+    final geo = <({WheelPower power, int ring, double a0, double a1})>[];
     for (final p in data.powers) {
       final ring = ringOf[p.stream];
       if (ring == null) continue;
-      geo.add(_Arc(
-        p,
-        ring,
-        angleForSpan(p.start, kMinYear, kMaxYear),
-        angleForSpan(p.endFor(kMaxYear), kMinYear, kMaxYear),
-        colors[p.stream] ?? lineColor('none'),
+      geo.add((
+        power: p,
+        ring: ring,
+        a0: angleForSpan(p.start, kMinYear, kMaxYear),
+        a1: angleForSpan(p.endFor(kMaxYear), kMinYear, kMaxYear),
       ));
     }
     // Ring ascending, then span descending within the ring — see the
-    // doc comment above for why the second key is the one that matters.
+    // doc comment above and [planArcNames]'s for why the second key is
+    // the one that matters, and why it is fixed here rather than there.
     geo.sort((a, b) {
       if (a.ring != b.ring) return a.ring.compareTo(b.ring);
       return (b.a1 - b.a0).compareTo(a.a1 - a.a0);
     });
-    if (geo.isEmpty) return geo;
+    if (geo.isEmpty) return const [];
 
-    final titleSize = rimFont / _labelScale(_zoom);
-    final maxEm = ringPitch(ringCount, rHub, rBands) * kArcLabelPitchFraction;
-    final occupiedByRing = <int, List<ArcSpan>>{};
+    final planned = planArcNames(
+      requests: [
+        for (final arc in geo)
+          (ring: arc.ring, a0: arc.a0, a1: arc.a1, name: arc.power.nameFor(locale))
+      ],
+      ringCount: ringCount,
+      rHub: rHub,
+      rBands: rBands,
+      desiredSize: rimFont / _labelScale(_zoom),
+      zoom: _zoom,
+      floorPx: kArcLabelFloorPx,
+      measure: _measureChars,
+    );
 
-    final out = <_Arc>[];
-    for (final arc in geo) {
-      final claimed = occupiedByRing.putIfAbsent(arc.ring, () => []);
-      final band = ringRadii(arc.ring, ringCount, rHub, rBands);
-      final name = arc.power.nameFor(locale);
-      final room = arcNameRoom(arc.a0, arc.a1, claimed);
-      final size = fitArcLabel(
-        text: name,
-        radius: band.centre,
-        sweep: room,
-        maxEm: maxEm,
-        desiredSize: titleSize,
-        zoom: _zoom,
-        floorPx: kArcLabelFloorPx,
-        measure: _measureChars,
-      );
-      var drawn = '';
-      var nameA0 = 0.0;
-      var nameSweep = 0.0;
-      if (size > 0) {
-        final needed = _measureChars(name, size) / band.centre;
-        final at = placeArcName(arc.a0, arc.a1, claimed, needed);
-        if (at != null) {
-          drawn = name;
-          nameA0 = at;
-          nameSweep = needed;
-          // Claimed BEFORE the next (shorter) power in this ring is
-          // placed, so it dodges this name rather than printing over it.
-          claimed.add((start: nameA0, end: nameA0 + nameSweep));
-        }
-      }
-      out.add(_Arc(
-        arc.power,
-        arc.ring,
-        arc.a0,
-        arc.a1,
-        arc.color,
-        name: drawn,
-        nameA0: nameA0,
-        nameSweep: nameSweep,
-        nameSize: size,
-      ));
-    }
-    return out;
+    return [
+      for (var i = 0; i < geo.length; i++)
+        _Arc(
+          geo[i].power,
+          geo[i].ring,
+          geo[i].a0,
+          geo[i].a1,
+          colors[geo[i].power.stream] ?? lineColor('none'),
+          name: planned[i].name,
+          nameA0: planned[i].a0,
+          nameSweep: planned[i].sweep,
+          nameSize: planned[i].size,
+        )
+    ];
   }
 
   /// Events become radial labels in the annulus outside the bands.

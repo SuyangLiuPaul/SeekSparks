@@ -108,4 +108,84 @@ void main() {
     expect(near * 100, closeTo(far * 400, 0.001),
         reason: 'the same number of pixels at both radii');
   });
+
+  group('containment on the power bands', () {
+    // The power bands (`_buildArcs` on the wheel page) do not pack like
+    // the lives above: every power in a stream shares ONE ring, so a
+    // tap inside the Crusader Kingdom of Jerusalem can land inside a
+    // pope's or a crusade's arc too. `nearestArcAt`'s old rule — nearest
+    // centre, normalised by each arc's own half-width — answered that
+    // wrong far more often than right: a pope's `own` is a few years
+    // against the kingdom's few centuries, so almost any tap not dead
+    // in the pope's middle scored lower for the KINGDOM.
+    const r = 240.0; // a band radius, roughly, at 900 px
+
+    test('a tap inside a nested arc reaches the nested arc, not its container',
+        () {
+      const kingdom = (a0: 0.0, a1: 1.0); // wide: the containing power
+      const pope = (a0: 0.45, a1: 0.55); // narrow: nested well inside it
+      final list = [kingdom, pope];
+
+      // Not at the pope's own centre — near his edge, where the old
+      // nearest-centre rule answered KINGDOM instead.
+      final pick = nearestArcAt(0.53, r, list);
+      expect(pick!.index, 1,
+          reason: 'a tap inside the narrow nested arc must return it, '
+              'even off-centre, not the wide arc containing it');
+    });
+
+    test('a tap outside the nested arc but inside the container reaches the '
+        'container', () {
+      const kingdom = (a0: 0.0, a1: 1.0);
+      const pope = (a0: 0.45, a1: 0.55);
+      final list = [kingdom, pope];
+
+      final pick = nearestArcAt(0.1, r, list);
+      expect(pick!.index, 0,
+          reason: 'outside the nested arc entirely, the container is the '
+              'only thing that truly contains the tap');
+    });
+
+    test('identical spans: the score ties too, and the first in the list '
+        'wins, deterministically', () {
+      // Kingdom of Moab and Kingdom of Ammon, both -1200..-582 in the
+      // `world` stream — a real pair on the shipped corpus, not a
+      // contrived one. See the test below for the asset check.
+      const moab = (a0: 0.2, a1: 0.6);
+      const ammon = (a0: 0.2, a1: 0.6); // byte-identical span
+
+      // Kept clear of the exact edges: 0.2 and 0.6 are not exactly
+      // representable in binary floating point, so a tap placed AT the
+      // boundary can round to a score fractionally over 1 and be
+      // rejected by both arcs — a real hazard for a real tap, but not
+      // the one this test exists to pin.
+      for (final angle in [0.22, 0.35, 0.4, 0.45, 0.58]) {
+        final pick = nearestArcAt(angle, r, [moab, ammon]);
+        expect(pick!.index, 0,
+            reason: 'two identical spans compute identical scores for any '
+                'tap; nothing here can break that tie, so index 0 — the '
+                "first in the caller's own order — must win at angle=$angle");
+        // And reversing which one is first reverses the answer, which is
+        // the point: the tie is broken by ORDER, not by anything about
+        // the arcs themselves.
+        final reversed = nearestArcAt(angle, r, [ammon, moab]);
+        expect(reversed!.index, 0);
+      }
+    });
+
+    test('the real Moab/Ammon pair really does tie on span', () {
+      // The premise the test above stands on. If this ever stops being
+      // true the identical-span test is exercising a pair that no
+      // longer exists.
+      final w = jsonDecode(File('assets/wheel_history.json').readAsStringSync())
+          as Map<String, dynamic>;
+      final data = WheelHistoryData.fromJson(w);
+      final moab = data.powers.firstWhere((p) => p.id == 'kingdom-of-moab');
+      final ammon = data.powers.firstWhere((p) => p.id == 'kingdom-of-ammon');
+      expect(moab.stream, ammon.stream,
+          reason: 'the tie only matters if they share a ring');
+      expect(moab.start, ammon.start);
+      expect(moab.endFor(9999), ammon.endFor(9999));
+    });
+  });
 }
