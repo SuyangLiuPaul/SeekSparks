@@ -1032,14 +1032,37 @@ String centuryTickLabel(int year, String locale) => year == 0
 
 // ── what gets drawn ──────────────────────────────────────────────────
 
-/// A power's arc on its band.
+/// A power's arc on its band, and — the same treatment
+/// [_RadialChronologyPageState._buildLifespans] gives the lives — the
+/// stretch of its own name the band can honestly carry.
+///
+/// [name] is empty when no legible placement was found for this power at
+/// this size, exactly the rule the rim and the lifespans already live by:
+/// the arc keeps its colour and its tap target, and loses only its word.
+/// See [_RadialChronologyPageState._buildArcs] for how [name]/[nameA0]/
+/// [nameSweep]/[nameSize] are decided.
 class _Arc {
-  const _Arc(this.power, this.ring, this.a0, this.a1, this.color);
+  const _Arc(
+    this.power,
+    this.ring,
+    this.a0,
+    this.a1,
+    this.color, {
+    this.name = '',
+    this.nameA0 = 0,
+    this.nameSweep = 0,
+    this.nameSize = 0,
+  });
   final WheelPower power;
   final int ring;
   final double a0;
   final double a1;
   final Color color;
+
+  final String name;
+  final double nameA0;
+  final double nameSweep;
+  final double nameSize;
 }
 
 /// One patriarch's life, placed and fitted.
@@ -1355,10 +1378,12 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
       final side = math.min(box.maxWidth, box.maxHeight);
       _side = side;
       final hubD = side * _kHubFrac * 2;
+      final rHub = side * _kHubFrac;
       final rBands = side * _kBandsFrac;
       final rRim = side * _kRimFrac;
 
-      final arcs = _buildArcs(data, ringOf, colors);
+      final arcs = _buildArcs(data, ringOf, colors, streams.length, rHub,
+          rBands, locale, t.scaledChrome(_kLabelPx));
       final spokes = _buildSpokes(data, ringOf, rBands, rRim, colors, locale,
           t.scaledChrome(_kLabelPx));
       // AFTER the spokes, because the arc names have to dodge the spoke
@@ -1523,21 +1548,84 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
     );
   }
 
-  List<_Arc> _buildArcs(WheelHistoryData data, Map<String, int> ringOf,
-      Map<String, Color> colors) {
-    final out = <_Arc>[];
+  /// Every power's arc, and the stretch of its own name the band can
+  /// honestly carry.
+  ///
+  /// The geometry and the packing both live in [planArcNames]
+  /// (`radial_chronology_layout.dart`) — NO SUB-RINGING, and the name is
+  /// set in the widest FREE stretch of its own arc rather than centred
+  /// on the whole arc regardless of who else is drawn across it. See
+  /// that function's own doc comment for the measured reasons (a stream
+  /// ring is 6.95 canvas units at 900 px and europe alone nests eight
+  /// powers deep) and for why the sort below — ring ascending, span
+  /// descending — is done HERE rather than inside it: this same order is
+  /// also `_paintArcs`'s paint order, and [planArcNames] deliberately
+  /// does not re-sort, so there is exactly one sort for both.
+  ///
+  /// A power whose name loses the draw is not lost outright: tapping its
+  /// own stretch of the band opens [showPower] (`wheel_sheets.dart`)
+  /// exactly as it always did — hit testing runs on `arc.a0`/`arc.a1`,
+  /// not on whether the label drew — and `showStream`'s sheet lists
+  /// every power on the stream by name and span whether or not its ring
+  /// label made it onto the wheel.
+  List<_Arc> _buildArcs(
+    WheelHistoryData data,
+    Map<String, int> ringOf,
+    Map<String, Color> colors,
+    int ringCount,
+    double rHub,
+    double rBands,
+    String locale,
+    double rimFont,
+  ) {
+    final geo = <({WheelPower power, int ring, double a0, double a1})>[];
     for (final p in data.powers) {
       final ring = ringOf[p.stream];
       if (ring == null) continue;
-      out.add(_Arc(
-        p,
-        ring,
-        angleForSpan(p.start, kMinYear, kMaxYear),
-        angleForSpan(p.endFor(kMaxYear), kMinYear, kMaxYear),
-        colors[p.stream] ?? lineColor('none'),
+      geo.add((
+        power: p,
+        ring: ring,
+        a0: angleForSpan(p.start, kMinYear, kMaxYear),
+        a1: angleForSpan(p.endFor(kMaxYear), kMinYear, kMaxYear),
       ));
     }
-    return out;
+    // Ring ascending, then span descending within the ring — see the
+    // doc comment above and [planArcNames]'s for why the second key is
+    // the one that matters, and why it is fixed here rather than there.
+    geo.sort((a, b) {
+      if (a.ring != b.ring) return a.ring.compareTo(b.ring);
+      return (b.a1 - b.a0).compareTo(a.a1 - a.a0);
+    });
+    if (geo.isEmpty) return const [];
+
+    final planned = planArcNames(
+      requests: [
+        for (final arc in geo)
+          (ring: arc.ring, a0: arc.a0, a1: arc.a1, name: arc.power.nameFor(locale))
+      ],
+      ringCount: ringCount,
+      rHub: rHub,
+      rBands: rBands,
+      desiredSize: rimFont / _labelScale(_zoom),
+      zoom: _zoom,
+      floorPx: kArcLabelFloorPx,
+      measure: _measureChars,
+    );
+
+    return [
+      for (var i = 0; i < geo.length; i++)
+        _Arc(
+          geo[i].power,
+          geo[i].ring,
+          geo[i].a0,
+          geo[i].a1,
+          colors[geo[i].power.stream] ?? lineColor('none'),
+          name: planned[i].name,
+          nameA0: planned[i].a0,
+          nameSweep: planned[i].sweep,
+          nameSize: planned[i].size,
+        )
+    ];
   }
 
   /// Events become radial labels in the annulus outside the bands.
@@ -3284,6 +3372,19 @@ class _WorldWheelPainter extends CustomPainter {
     }
   }
 
+  /// Paints [arcs] in the order `_buildArcs` already put them in: ring
+  /// ascending, span descending within the ring.
+  ///
+  /// THE SAME ORDER SERVES TWO PURPOSES. Painted in the file's own data
+  /// order, a long span painted after a short one buried it completely
+  /// — every one of these arcs is drawn at the same alpha 0.78, so
+  /// whichever is drawn LAST wins the pixels underneath it, and the data
+  /// is mostly containment: New Kingdom Egypt holds the Eighteenth
+  /// Dynasty, Rome's empire holds its emperors. Painting longest-span
+  /// first means the container goes down first and the short span
+  /// nested inside it is drawn afterwards, on top, where it can be seen
+  /// — which is also the order `_buildArcs` already needed for the
+  /// names, so there is one sort instead of two.
   void _paintArcs(Canvas canvas, Offset c, double rHub, double rBands) {
     final has = selectedId != null;
     for (final arc in arcs) {
@@ -3327,20 +3428,13 @@ class _WorldWheelPainter extends CustomPainter {
               ..strokeWidth = 1
               ..color = wb.text.withValues(alpha: 0.85));
       }
-      final name = arc.power.nameFor(locale);
-      final size = fitArcLabel(
-        text: name,
-        radius: band.centre,
-        sweep: arc.a1 - arc.a0,
-        maxEm: ringPitch(streams.length, rHub, rBands) * kArcLabelPitchFraction,
-        desiredSize: rimFont / _labelScale(zoom),
-        zoom: zoom,
-        floorPx: kArcLabelFloorPx,
-        measure: _measureChars,
-      );
-      if (size > 0) {
-        _tangentialLabel(
-            canvas, c, band.centre, name, arc.a0, arc.a1 - arc.a0, size, dim);
+      // Where the name goes, and at what size, was already decided in
+      // `_buildArcs` — against every other power sharing this ring, not
+      // just this one arc's own sweep. Deciding it again here, blind to
+      // the neighbours, is the defect this whole pass exists to close.
+      if (arc.name.isNotEmpty && arc.nameSize > 0) {
+        _tangentialLabel(canvas, c, band.centre, arc.name, arc.nameA0,
+            arc.nameSweep, arc.nameSize, dim);
       }
     }
   }

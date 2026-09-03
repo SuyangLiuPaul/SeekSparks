@@ -1134,6 +1134,118 @@ double? placeArcName(
   return best.start + (bestW - needed) / 2;
 }
 
+/// One power (or other stream member) asking for its name to be set on
+/// its own ring, before any placement has decided whether it survives.
+///
+/// `ring` is a plain index into the caller's own ring geometry, exactly
+/// as [ringRadii] wants it — this file does not know a "stream" is the
+/// thing behind the ring, only that requests sharing a ring number share
+/// a radius and so can print over each other.
+typedef ArcNameRequest = ({int ring, double a0, double a1, String name});
+
+/// Where one [ArcNameRequest]'s name ended up, or nowhere.
+///
+/// `name` is empty and `a0`/`sweep`/`size` are all 0 when no legible
+/// placement was found at this size — the rim's rule again: legible or
+/// absent, never a stub. The arc itself is unaffected; only the word is
+/// lost, and [name] on the ORIGINAL request is what a caller still has
+/// to draw the coloured arc from.
+typedef PlannedArcName = ({String name, double a0, double sweep, double size});
+
+/// Places every request's name on its own ring, so two powers sharing a
+/// ring never print over each other.
+///
+/// NO SUB-RINGING. The lifespans in [buildSpanArcs] resolve overlaps by
+/// adding rings — Adam and Seth never share a radius — and the first
+/// instinct for the wheel's power bands is the same move. It does not
+/// scale there: 22 streams share about 153 canvas units at 900 px
+/// (`rBands - rHub` on the wheel page), one ring is
+/// `ringPitch(22, rHub, rBands)` = 6.95 units, and the worst overlap
+/// depth measured on the shipped corpus is 8 (europe) — eight sub-rings
+/// of a 6.95-unit ring are 0.87 units each, under a hairline and under
+/// any finger this file defines a target for. So every request stays on
+/// the ONE ring it asked for, and what this function does instead is set
+/// each name in the widest FREE stretch of its own arc — [placeArcName],
+/// the identical function [buildSpanArcs]'s callers already ship and
+/// test for the Genesis lifespans — rather than centred on the whole arc
+/// regardless of who else is drawn across it.
+///
+/// [requests]' ORDER IS PRIORITY, AND THIS FUNCTION DOES NOT RE-SORT IT.
+/// [placeArcName] gives the first request it sees in a ring the whole
+/// arc to itself; every later request in that ring gets only what the
+/// earlier ones left free. A caller that hands requests in file order
+/// lets a twenty-year papacy or a nine-year dynasty claim the middle of
+/// the nine-hundred-year empire that contains it, leaving the empire's
+/// own name with nowhere left to go — backwards, since the empire is
+/// what a reader scanning the ring is most likely looking for. The
+/// wheel page's own caller sorts ring ascending, span descending before
+/// calling this, so the longest span in each ring is always seen first
+/// and is never silenced by what nests inside it; the short span then
+/// takes whatever room remains, which the data being mostly CONTAINMENT
+/// rather than collision (New Kingdom Egypt holds the Eighteenth
+/// Dynasty, the Crusader Kingdom of Jerusalem holds popes and crusades,
+/// Rome's emperors nest inside Rome's empire) usually leaves plenty of.
+/// A name that still loses the draw is not a lost power: the caller
+/// still has [ArcNameRequest.a0]/`.a1` to draw the coloured arc and its
+/// tap target from, whether or not [PlannedArcName.name] came back
+/// non-empty — on the wheel page, tapping that stretch of the band still
+/// opens `showPower`, and `showStream`'s sheet lists every power on the
+/// stream by name and span whether or not its ring label made it on.
+///
+/// This is also why this function must NOT re-sort: [requests]' order is
+/// simultaneously the wheel page's PAINT order — see `_paintArcs`, which
+/// relies on the same longest-first sort to paint a nested short arc
+/// after (and so on top of) its container — and re-sorting here would
+/// decouple placement order from paint order silently, the day someone
+/// reordered one without the other.
+List<PlannedArcName> planArcNames({
+  required List<ArcNameRequest> requests,
+  required int ringCount,
+  required double rHub,
+  required double rBands,
+  required double desiredSize,
+  required double zoom,
+  required double floorPx,
+  required LabelMeasure measure,
+}) {
+  const nothing = (name: '', a0: 0.0, sweep: 0.0, size: 0.0);
+  if (requests.isEmpty) return const [];
+
+  final maxEm = ringPitch(ringCount, rHub, rBands) * kArcLabelPitchFraction;
+  final occupiedByRing = <int, List<ArcSpan>>{};
+  final out = <PlannedArcName>[];
+  for (final r in requests) {
+    final claimed = occupiedByRing.putIfAbsent(r.ring, () => []);
+    final band = ringRadii(r.ring, ringCount, rHub, rBands);
+    final room = arcNameRoom(r.a0, r.a1, claimed);
+    final size = fitArcLabel(
+      text: r.name,
+      radius: band.centre,
+      sweep: room,
+      maxEm: maxEm,
+      desiredSize: desiredSize,
+      zoom: zoom,
+      floorPx: floorPx,
+      measure: measure,
+    );
+    if (size <= 0) {
+      out.add(nothing);
+      continue;
+    }
+    final needed = measure(r.name, size) / band.centre;
+    final at = placeArcName(r.a0, r.a1, claimed, needed);
+    if (at == null) {
+      out.add(nothing);
+      continue;
+    }
+    // Claimed BEFORE the next request in this ring is placed, so it
+    // dodges this name rather than printing over it.
+    claimed.add((start: at, end: at + needed));
+    out.add((name: r.name, a0: at, sweep: needed, size: size));
+  }
+  return out;
+}
+
 /// Where to move the scene so a point on the wheel sits under the middle
 /// of the viewport, at the zoom the reader has already chosen.
 ///
@@ -1210,10 +1322,44 @@ double fingerHalfWidth(double radius, {double fingerPx = 9}) =>
 /// So an arc's target is its own sweep OR a finger, whichever is wider,
 /// centred on the arc. A long reign keeps exactly the extent it paints;
 /// a hairline borrows a few pixels from the air either side of it, which
-/// is where its neighbours' own slack would otherwise go unused. Ties go
-/// to the nearer centre, normalised — the same rule the rest of the page
-/// already resolves by, so a reader who aims at the hairline between two
-/// long reigns gets the hairline.
+/// is where its neighbours' own slack would otherwise go unused.
+///
+/// CONTAINMENT BEATS PROXIMITY, and this is the one case the "nearer
+/// centre" rule above does not cover, because it was written for
+/// SIBLINGS — reigns packed by [buildSpanArcs] never overlap within one
+/// ring, so at most one of them could ever geometrically contain a tap
+/// and the old rule never had to choose between two that did. The power
+/// bands added on 2026-09 are not siblings: `_buildArcs` on the wheel
+/// page deliberately keeps every power in its stream on ONE ring rather
+/// than sub-ringing (a stream ring is 6.95 canvas units at 900 px and
+/// europe alone nests eight powers deep — eight sub-rings of that would
+/// be 0.87 units, under any target this file defines), so a tap inside
+/// the Crusader Kingdom of Jerusalem can land inside a pope's or a
+/// crusade's arc as well. Scoring by normalised distance from centre
+/// answered that wrong far more often than right: a pope's own `own` is
+/// a few years wide against the kingdom's few centuries, so almost any
+/// tap that was not dead in the pope's middle scored lower for the
+/// KINGDOM and the reader asking for the pope got the kingdom instead.
+/// So containment is now checked FIRST and separately from the score: of
+/// every arc whose true, unpadded `[a0, a1]` actually contains [angle],
+/// the NARROWEST wins outright, tie-broken by score when two are exactly
+/// the same width. Only when no arc's true extent contains the tap —
+/// which is exactly the hairline case the rest of this comment is
+/// about — does the search fall back to nearest-centre-by-score among
+/// every candidate a finger could plausibly have meant. Ties among
+/// siblings, and every hairline arc's rescue by finger padding, are
+/// untouched: this only changes the answer when two candidates'
+/// genuine spans overlap, which packed siblings never do.
+///
+/// AND WHEN TWO SPANS ARE THEMSELVES IDENTICAL, the score tie-break
+/// resolves nothing either, because score is a function only of the
+/// span and the tap — two arcs with the same `[a0, a1]` compute the
+/// same centre, the same `own` and so the same score for any [angle].
+/// This is not hypothetical: in the `world` stream, Kingdom of Moab and
+/// Kingdom of Ammon both run -1200..-582. Nothing geometric can break
+/// that tie, so the FIRST one in the caller's own list wins — which is
+/// deterministic, not arbitrary, because `_buildArcs`'s own sort fixed
+/// the list's order before it ever reached here.
 ({int index, double score})? nearestArcAt(
   double angle,
   double radius,
@@ -1223,15 +1369,32 @@ double fingerHalfWidth(double radius, {double fingerPx = 9}) =>
   final half = fingerHalfWidth(radius, fingerPx: fingerPx);
   int? best;
   var bestScore = double.infinity;
+  // The narrowest arc whose true (unpadded) extent contains the tap —
+  // see the CONTAINMENT paragraph above. Tracked separately from `best`
+  // because a wide containing arc almost always scores lower than a
+  // narrow one nested inside it, which is the wrong answer here.
+  int? nested;
+  var nestedWidth = double.infinity;
+  var nestedScore = double.infinity;
   for (var i = 0; i < arcs.length; i++) {
     final a = arcs[i];
     final centre = (a.a0 + a.a1) / 2;
     final own = math.max((a.a1 - a.a0).abs() / 2, half);
     final score = (angle - centre).abs() / own;
-    if (score <= 1 && score < bestScore) {
+    if (score > 1) continue;
+    if (score < bestScore) {
       best = i;
       bestScore = score;
     }
+    final width = a.a1 - a.a0;
+    final contains = angle >= a.a0 && angle <= a.a1;
+    if (contains &&
+        (width < nestedWidth || (width == nestedWidth && score < nestedScore))) {
+      nested = i;
+      nestedWidth = width;
+      nestedScore = score;
+    }
   }
+  if (nested != null) return (index: nested, score: nestedScore);
   return best == null ? null : (index: best, score: bestScore);
 }
