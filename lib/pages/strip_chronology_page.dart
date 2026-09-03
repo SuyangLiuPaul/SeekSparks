@@ -107,10 +107,9 @@ import 'package:seeksparks/utils/strip_chronology_layout.dart';
 import 'package:seeksparks/utils/version_mapper.dart'
     show localizedReferenceLabel;
 import 'package:seeksparks/utils/wheel_search.dart';
-import 'package:seeksparks/widgets/home_icon_button.dart';
-import 'package:seeksparks/widgets/language_switcher_button.dart';
 import 'package:seeksparks/widgets/localized_back_button.dart';
 import 'package:seeksparks/widgets/strip_chronology_painter.dart';
+import 'package:seeksparks/widgets/wheel_chrome_bar.dart';
 
 /// The address this page owns, in the same shape as `kWheelUrlPath`.
 ///
@@ -242,30 +241,24 @@ class _StripChronologyPageState extends State<StripChronologyPage>
       appBar: AppBar(
         leading: const LocalizedBackButton(),
         title: Text(_kPageTitle[locale] ?? _kPageTitle['en']!),
-        actions: [
-          // Same three, same order, same tooltips as the wheel's own
-          // toolbar (`radial_chronology_page.dart`'s `build`) — a
-          // reader switching forms should find Find/Filter/About in
-          // the same place they left them.
-          IconButton(
-            icon: const Icon(Icons.search),
-            tooltip: s('wheelFind', 'Find', locale),
-            onPressed: () => _showSearch(context, locale),
-          ),
-          IconButton(
-            icon: const Icon(Icons.filter_list),
-            tooltip: s('wheelFilter', 'Filter', locale),
-            onPressed: () => _showFilter(context, locale),
-          ),
-          IconButton(
-            icon: const Icon(Icons.info_outline),
-            tooltip: s('wheelAbout', 'About this chart', locale),
-            onPressed: () => _showAbout(context, locale),
-          ),
-          _viewSwitch(context, locale),
-          const LanguageSwitcherButton(),
-          const HomeIconButton(),
-        ],
+        // Same three, same order, same tooltips as the wheel's own
+        // toolbar (`radial_chronology_page.dart`'s `build`) — a
+        // reader switching forms should find Find/Filter/About in
+        // the same place they left them. Below `kWheelNarrowPaneWidth`
+        // they fold into one sheet — see `wheelChromeActions`'s own
+        // doc (`widgets/wheel_chrome_bar.dart`) for the 0.0 px title
+        // this page rendered at 375 px before the fold, measured the
+        // same way the wheel's own AppBar comment cites.
+        actions: wheelChromeActions(
+          context: context,
+          locale: locale,
+          paneWidth: MediaQuery.sizeOf(context).width,
+          s: (key, fallback) => s(key, fallback, locale),
+          onFind: () => _showSearch(context, locale),
+          onFilter: () => _showFilter(context, locale),
+          onAbout: () => _showAbout(context, locale),
+          viewSwitch: _viewSwitch(context, locale),
+        ),
       ),
       body: FutureBuilder<WheelHistoryData>(
         future: _future,
@@ -290,36 +283,24 @@ class _StripChronologyPageState extends State<StripChronologyPage>
   }
 
   /// The mirror of the wheel's own `SegmentedButton` — same strings,
-  /// same shape, opposite default selection. Tapping the already-
-  /// selected 'strip' segment is a no-op, exactly as tapping 'wheel'
-  /// is one on the wheel's side.
-  Widget _viewSwitch(BuildContext context, String locale) => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4),
-        child: Tooltip(
-          message: ss('stripViewSwitch', locale),
-          child: SegmentedButton<String>(
-            showSelectedIcon: false,
-            style: const ButtonStyle(
-              visualDensity: VisualDensity.compact,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            ),
-            segments: [
-              ButtonSegment(
-                  value: 'wheel', label: Text(ss('stripViewWheel', locale))),
-              ButtonSegment(
-                  value: 'strip', label: Text(ss('stripViewStrip', locale))),
-            ],
-            selected: const {'strip'},
-            onSelectionChanged: (selected) {
-              if (selected.first != 'wheel') return;
-              context.read<AppSettings>().setChronologyView('wheel');
-              Navigator.of(context).pushReplacement(
-                MaterialPageRoute<void>(
-                    builder: (_) => const RadialChronologyPage()),
-              );
-            },
-          ),
-        ),
+  /// same shape, opposite default selection, and since 2026-09-04 the
+  /// SAME widget (`wheelViewSwitch`, `widgets/wheel_chrome_bar.dart`)
+  /// rather than a second hand-typed copy — see that file's doc for
+  /// why. Tapping the already-selected 'strip' segment is a no-op,
+  /// exactly as tapping 'wheel' is one on the wheel's side.
+  Widget _viewSwitch(BuildContext context, String locale) => wheelViewSwitch(
+        locale: locale,
+        narrow: MediaQuery.sizeOf(context).width < kWheelNarrowPaneWidth,
+        ss: (key, fallback) => ss(key, locale),
+        selected: const {'strip'},
+        onSelectionChanged: (selected) {
+          if (selected.first != 'wheel') return;
+          context.read<AppSettings>().setChronologyView('wheel');
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute<void>(
+                builder: (_) => const RadialChronologyPage()),
+          );
+        },
       );
 
   Widget _body(BuildContext context, WheelHistoryData data, String locale) {

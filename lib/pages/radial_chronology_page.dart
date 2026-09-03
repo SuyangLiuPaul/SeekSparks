@@ -26,9 +26,8 @@ import 'package:seeksparks/utils/radial_chronology_layout.dart';
 import 'package:seeksparks/utils/version_mapper.dart'
     show localizedReferenceLabel;
 import 'package:seeksparks/utils/wheel_search.dart';
-import 'package:seeksparks/widgets/home_icon_button.dart';
-import 'package:seeksparks/widgets/language_switcher_button.dart';
 import 'package:seeksparks/widgets/localized_back_button.dart';
+import 'package:seeksparks/widgets/wheel_chrome_bar.dart';
 
 /// World history on one wheel: 4200 BC at twelve o'clock, time sweeping
 /// clockwise to the present, one concentric band per people or
@@ -1253,67 +1252,49 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
       appBar: AppBar(
         leading: const LocalizedBackButton(),
         title: Text(s('wheelTitle', 'World History Wheel', locale)),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search),
-            tooltip: s('wheelFind', 'Find', locale),
-            onPressed: () => _showSearch(context, locale),
-          ),
-          IconButton(
-            icon: const Icon(Icons.filter_list),
-            tooltip: s('wheelFilter', 'Filter', locale),
-            onPressed: () => _showFilter(context, locale),
-          ),
-          IconButton(
-            icon: const Icon(Icons.info_outline),
-            tooltip: s('wheelAbout', 'About this chart', locale),
-            onPressed: () => _showAbout(context, locale),
-          ),
+        // Six actions plus the back button used to be typed out here
+        // unconditionally, and measured on the real page at 375 px —
+        // reachable at any width since `#/wheel` stopped being gated by
+        // `SmallScreenGate` on 2026-09-03 — the title above renders at
+        // 0.0 px wide: `AppBar` gives it a `Flexible` and the six
+        // actions spent the whole toolbar before the title got a
+        // pixel. `wheelChromeActions` (`widgets/wheel_chrome_bar.dart`)
+        // folds Find/Filter/About into one sheet below
+        // `kWheelNarrowPaneWidth` and keeps the view-switch itself
+        // direct — see that file's doc for the full reasoning, and
+        // `strip_chronology_page.dart`'s own AppBar for why this is a
+        // shared function and not a second copy of the same decision.
+        actions: wheelChromeActions(
+          context: context,
+          locale: locale,
+          paneWidth: MediaQuery.sizeOf(context).width,
+          s: (key, fallback) => s(key, fallback, locale),
+          onFind: () => _showSearch(context, locale),
+          onFilter: () => _showFilter(context, locale),
+          onAbout: () => _showAbout(context, locale),
           // The wheel and the strip are one chart in two forms, so this
           // is a SWITCH between the two rather than a second "open the
           // strip" button — tapping the already-selected 'wheel'
           // segment is a no-op. `stripStrings` (not `wheelStrings`)
           // because the two option labels belong with the control's own
-          // name (`stripViewSwitch`), which the strip's own AppBar will
-          // read once it grows one — see that key's doc comment.
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: Tooltip(
-              message: stripStrings['stripViewSwitch']?[locale] ??
-                  'Chart view',
-              child: SegmentedButton<String>(
-                showSelectedIcon: false,
-                style: const ButtonStyle(
-                  visualDensity: VisualDensity.compact,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-                segments: [
-                  ButtonSegment(
-                    value: 'wheel',
-                    label: Text(stripStrings['stripViewWheel']?[locale] ??
-                        'Wheel'),
-                  ),
-                  ButtonSegment(
-                    value: 'strip',
-                    label: Text(stripStrings['stripViewStrip']?[locale] ??
-                        'Strip'),
-                  ),
-                ],
-                selected: const {'wheel'},
-                onSelectionChanged: (selected) {
-                  if (selected.first != 'strip') return;
-                  context.read<AppSettings>().setChronologyView('strip');
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(
-                        builder: (_) => const StripChronologyPage()),
-                  );
-                },
-              ),
-            ),
+          // name (`stripViewSwitch`), which the strip's own AppBar
+          // reads too.
+          viewSwitch: wheelViewSwitch(
+            locale: locale,
+            narrow:
+                MediaQuery.sizeOf(context).width < kWheelNarrowPaneWidth,
+            ss: (key, fallback) => stripStrings[key]?[locale] ?? fallback,
+            selected: const {'wheel'},
+            onSelectionChanged: (selected) {
+              if (selected.first != 'strip') return;
+              context.read<AppSettings>().setChronologyView('strip');
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(
+                    builder: (_) => const StripChronologyPage()),
+              );
+            },
           ),
-          const LanguageSwitcherButton(),
-          const HomeIconButton(),
-        ],
+        ),
       ),
       body: FutureBuilder<WheelHistoryData>(
         future: _future,
@@ -1420,53 +1401,8 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
                         opacity: (1.6 - _zoom).clamp(0.0, 1.0),
                         child: Transform.scale(
                           scale: 1 / _zoom,
-                          child: SizedBox(
-                            width: hubD * 0.94,
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  s('wheelTitle', 'World History Wheel',
-                                      locale),
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    color: wb.text,
-                                    fontSize: t.scaled(12),
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                SizedBox(height: t.scaled(4)),
-                                Text(
-                                  '${yearLabel(kMinYear, locale)} – '
-                                  '${yearLabel(kMaxYear, locale)}',
-                                  style: TextStyle(
-                                      color: wb.mutedText,
-                                      fontSize: t.scaled(11)),
-                                ),
-                                SizedBox(height: t.scaled(3)),
-                                Text(
-                                  // Bands, powers, events — and the lives,
-                                  // last and only when the layer is on, so
-                                  // the count is of what is actually drawn
-                                  // rather than of what the file holds.
-                                  '${streams.length} · ${data.powers.length} · '
-                                  '${data.events.length}'
-                                  '${lives.isEmpty ? '' : ' · ${lives.length}'}',
-                                  style: TextStyle(
-                                      color: wb.mutedText,
-                                      fontSize: t.scaled(11)),
-                                ),
-                                SizedBox(height: t.scaled(3)),
-                                Text(
-                                  s('wheelHint', '', locale),
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                      color: wb.mutedText,
-                                      fontSize: t.scaled(11)),
-                                ),
-                              ],
-                            ),
-                          ),
+                          child: _hubCaption(context, locale, t, wb, hubD,
+                              streams, data, lives),
                         ),
                       ),
                     ),
@@ -1476,10 +1412,225 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
             ),
           ),
         ),
-        Positioned(left: 10, bottom: 10, child: _legend(locale, t, wb)),
+        Positioned(
+            left: 10,
+            bottom: 10,
+            child: side < kWheelNarrowPaneWidth
+                ? _legendChip(context, locale, t, wb)
+                : _legend(locale, t, wb)),
         Positioned(right: 10, bottom: 10, child: _zoomControls(locale, t, wb)),
       ]);
     });
+  }
+
+  /// The hub's caption — title, year range, counts, hint — sized to fit
+  /// [hubD] rather than the SizedBox's fixed WIDTH alone, the way it was
+  /// measured until 2026-09-04. The width constraint (`hubD * 0.94`) was
+  /// the whole fit check; nothing bounded the STACK's height, and at
+  /// side=375 (the width `#/wheel` is now reached at — no
+  /// `SmallScreenGate` since 2026-09-03) the app's own shipped default
+  /// locale, 简体中文, measured **171 px against an 86 px hub** — pumped
+  /// against the real asset, real corpus, real faces, no maxLines cap
+  /// on any of the four `Text` widgets (the same cap the widgets
+  /// themselves do not carry, so a capped measurement here would have
+  /// predicted a string nobody draws — `fitArcLabel`'s own warning, for
+  /// the same reason). Two of the four lines wrap on their own at 81 px
+  /// of width — the year range to 3 lines, and the counts line to 4
+  /// once `· ${lives.length}` is the real corpus figure (111, not a
+  /// short guess) — so the caption printed out over the bands twice
+  /// its own hub's height, not merely a little past it.
+  ///
+  /// The fix is [fitRadialLabel]'s own doctrine (`radial_chronology_
+  /// layout.dart`), read onto a real widget instead of a canvas string:
+  /// drop lines CHEAPEST FIRST until what remains fits, rather than
+  /// clip or shrink type silently. The hint goes first — it explains a
+  /// gesture, not a fact, and a reader who has already found the
+  /// wheel's zoom and tap without it loses nothing durable. The year
+  /// range goes second, and only if losing the hint alone still isn't
+  /// enough — it is RECOVERABLE: `_paintAxisEnds` already prints both
+  /// years, once each, at the axis's own two ends, so dropping the copy
+  /// here loses no information from the screen. The title and the
+  /// counts are never dropped: measured the same way, title+counts
+  /// alone is 85 px against the same 86 px hub at 375 — the counts line
+  /// still wraps to four lines on its own, and the fit is real but
+  /// tight, which is the honest shape of "never dropped" once the
+  /// corpus itself is long — so the two facts a reader needs are never
+  /// the ones squeezed out. (A hub smaller still than title+counts
+  /// together is not reached at any width this app now opens at; if
+  /// one ever is, this stops being enough and the overflow will show
+  /// rather than lie, which is the same trade [fitRadialLabel] makes at
+  /// its own floor.)
+  Widget _hubCaption(
+      BuildContext context,
+      String locale,
+      WbType t,
+      WbColors wb,
+      double hubD,
+      List<WheelStream> streams,
+      WheelHistoryData data,
+      List<_Life> lives) {
+    final hubW = hubD * 0.94;
+    final ambient = DefaultTextStyle.of(context).style;
+    // No `maxLines` cap: none of the four `Text` widgets below carries
+    // one either, so a cap here would measure a STRING NOBODY DRAWS —
+    // exactly the mistake `fitArcLabel`'s own doc warns against for a
+    // shaped run, for the same reason. Caught in review: the counts
+    // line wraps to FOUR lines at 81 px width once `+ ${lives.length}`
+    // is real corpus data (`111`, not a guessed `39`) — 64 px on its
+    // own — and a `maxLines: 1` guess here had let that line's true
+    // height go unmeasured, so the cascade below kept the hint on a
+    // caption that was already 136 px against an 86 px hub.
+    double blockHeight(String text, double size, FontWeight weight) {
+      if (text.isEmpty) return 0;
+      return (TextPainter(
+        text: TextSpan(
+            text: text,
+            // `fontFamilyFallback: kCjkFontFallback` explicitly, on
+            // top of `ambient`'s own family and line height, rather
+            // than `canvasTextStyle` — this is a real widget's OWN
+            // size being measured before it is built, not a canvas
+            // string with no ambient at all, and `ambient`'s height
+            // and letter-spacing are exactly what the `Text` widgets
+            // below actually render at.
+            style: ambient.copyWith(
+                fontSize: size,
+                fontWeight: weight,
+                fontFamilyFallback: kCjkFontFallback)),
+        textDirection: TextDirection.ltr,
+        textAlign: TextAlign.center,
+      )..layout(maxWidth: hubW))
+          .height;
+    }
+
+    final titleText = s('wheelTitle', 'World History Wheel', locale);
+    final yearRangeText =
+        '${yearLabel(kMinYear, locale)} – ${yearLabel(kMaxYear, locale)}';
+    // Bands, powers, events — and the lives, last and only when the
+    // layer is on, so the count is of what is actually drawn rather
+    // than of what the file holds.
+    final countsText = '${streams.length} · ${data.powers.length} · '
+        '${data.events.length}${lives.isEmpty ? '' : ' · ${lives.length}'}';
+    final hintText = s('wheelHint', '', locale);
+
+    final titleSize = t.scaled(12);
+    final bodySize = t.scaled(11);
+    final gapAfterTitle = t.scaled(4);
+    final gapBetween = t.scaled(3);
+
+    final titleH = blockHeight(titleText, titleSize, FontWeight.w600);
+    final yearRangeH = blockHeight(yearRangeText, bodySize, FontWeight.normal);
+    final countsH = blockHeight(countsText, bodySize, FontWeight.normal);
+    final hintH = blockHeight(hintText, bodySize, FontWeight.normal);
+
+    double totalWith({required bool yearRange, required bool hint}) {
+      var h = titleH + gapAfterTitle;
+      if (yearRange) h += yearRangeH + gapBetween;
+      h += countsH;
+      if (hint) h += gapBetween + hintH;
+      return h;
+    }
+
+    var showHint = hintText.isNotEmpty;
+    var showYearRange = true;
+    if (showHint && totalWith(yearRange: true, hint: true) > hubD) {
+      showHint = false;
+    }
+    if (!showHint && totalWith(yearRange: true, hint: false) > hubD) {
+      showYearRange = false;
+    }
+
+    Text body(String text) => Text(text,
+        textAlign: TextAlign.center,
+        style: TextStyle(color: wb.mutedText, fontSize: bodySize));
+
+    return SizedBox(
+      key: const ValueKey('wheelHubCaption'),
+      width: hubW,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            titleText,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: wb.text,
+              fontSize: titleSize,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          SizedBox(height: gapAfterTitle),
+          if (showYearRange) ...[
+            body(yearRangeText),
+            SizedBox(height: gapBetween),
+          ],
+          body(countsText),
+          if (showHint) ...[
+            SizedBox(height: gapBetween),
+            body(hintText),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// The legend, collapsed to a single tappable chip in the wheel's own
+  /// bottom-left corner — the same corner [_legend] itself sits in,
+  /// below [kWheelNarrowPaneWidth] of wheel DIAMETER (`side`, not the
+  /// screen width the AppBar collapse reads — the two happen to share
+  /// one constant because both are answering "is this a phone", and a
+  /// second, separately-tuned number would only invite the two to
+  /// drift).
+  ///
+  /// MEASURED, NOT GUESSED. [_legend] at rest with every layer on (the
+  /// app's own default — `_hidden` starts empty) is 238.5 x 216 px,
+  /// independent of `side` since nothing in it scales with the canvas.
+  /// At side=375 that is 216 px of a 375 px wheel sitting in one
+  /// corner — most of its bottom-left QUADRANT, which is the reported
+  /// defect — while at a desktop side of 900+ the same 216 px is under
+  /// a quarter of the diameter, the size the wheel already shipped at.
+  /// A chip in the same corner keeps the affordance where a reader
+  /// already looks for it; tapping it opens [_legend]'s own body
+  /// UNCHANGED in a bottom sheet, so nothing the legend is obliged to
+  /// disclose — which lifespans read which tradition, that reigns and
+  /// lifespans are different kinds of claim — is lost, only reached one
+  /// tap later.
+  Widget _legendChip(
+      BuildContext context, String locale, WbType t, WbColors wb) {
+    // Square, not rounded — task #279's rule (`workbench_theme.dart`:
+    // "square corners and 1px hairline borders, no shadows, no cards")
+    // and `page_chrome_pass_test.dart`'s own ratchet catch a rounded
+    // corner appearing in a file the pass had left clean, which a
+    // `BorderRadius.circular(...)` here was. `_legend` and
+    // `_zoomControls`, the two widgets already sharing this page's
+    // bottom corners, are both bare rectangles for the same reason.
+    return Material(
+      color: wb.paneBg.withValues(alpha: 0.92),
+      shape: RoundedRectangleBorder(side: BorderSide(color: wb.border)),
+      child: InkWell(
+        onTap: () => showModalBottomSheet<void>(
+          context: context,
+          backgroundColor: wb.paneBg,
+          shape: const RoundedRectangleBorder(),
+          isScrollControlled: true,
+          builder: (sheet) => SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 20),
+              child: SingleChildScrollView(
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: _legend(locale, t, wb),
+                ),
+              ),
+            ),
+          ),
+        ),
+        child: Padding(
+          padding: EdgeInsets.all(t.scaled(8)),
+          child: Icon(Icons.legend_toggle,
+              size: t.scaled(20), color: wb.text),
+        ),
+      ),
+    );
   }
 
   /// Zoom controls, because a desktop reader has no pinch.
