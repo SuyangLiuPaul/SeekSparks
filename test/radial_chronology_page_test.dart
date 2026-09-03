@@ -247,11 +247,19 @@ void main() {
           // count what it passes.
           //
           // Rows are identified by where they sit in the list, not by
-          // what they say. `nero_persecution` and `great_fire_rome` are
-          // two records for one fire — same year, same title in all
-          // three locales — so a set keyed on the words would silently
-          // count 46 of 47 and blame the page for it. They are the only
-          // such pair in the 491.
+          // what they say. When this was written `nero_persecution` and
+          // `great_fire_rome` were two records for one fire, carrying
+          // the SAME title in all three locales, so a set keyed on the
+          // words would silently count 46 of 47 and blame the page for
+          // it — the only such pair in the corpus.
+          //
+          // 2026-09-03: they are two events now, the fire and the
+          // persecution, with different titles — and their ids had been
+          // left CROSSED, each carrying the other's headline, which is
+          // how that split was found. Keying by position is kept
+          // anyway: it is the reader's own way through a lazy list, and
+          // it does not need the corpus to stay free of duplicate
+          // titles to keep working.
           final pos = tester
               .state<ScrollableState>(find.descendant(
                   of: find.byType(BottomSheet),
