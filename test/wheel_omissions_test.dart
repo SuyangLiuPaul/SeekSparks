@@ -319,6 +319,29 @@ void main() {
       expect(find('Habakkuk 1').hits.map((h) => h.id),
           contains('habakkuk_undated'));
     });
+
+    /// THE BOOK, NOT THE MAN — and the Chinese half of this is a real
+    /// gap rather than a courtesy. `约珥` is a man and `约珥书` is a
+    /// book, and the matcher is a plain substring, so the name alone
+    /// cannot answer to the longer string: a reader who types the book
+    /// title would be told nothing matches unless something else in the
+    /// record carries it. The note does, because it opens by citing the
+    /// verse — which is why this is asserted here rather than left to
+    /// hold by accident, since a note reworded to start elsewhere would
+    /// take the book title down with it.
+    test('the book title reaches the record too, in both Chinese scripts',
+        () {
+      for (final book in _undrawn) {
+        for (final locale in ['zh-Hans', 'zh-Hant']) {
+          final title = locale == 'zh-Hans'
+              ? englishToChinese[book]!
+              : englishToChineseTraditional[book]!;
+          expect(find(title, locale: locale).hits.map((h) => h.id),
+              contains('${book.toLowerCase()}_undated'),
+              reason: '$locale: "$title" reaches no record');
+        }
+      }
+    });
   });
 
   group('a record with no year behaves like one', () {
