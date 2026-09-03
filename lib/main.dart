@@ -38,6 +38,8 @@ import 'package:seeksparks/widgets/retired_version_notice.dart'
     show RetiredVersionNotice;
 import 'package:seeksparks/widgets/small_screen_advisory.dart'
     show SmallScreenGate;
+import 'package:seeksparks/models/wheel_history.dart'
+    show WheelHistoryService;
 import 'package:seeksparks/utils/theme_accent.dart'
     show darkReadingAccent, onAccentColor;
 
@@ -339,6 +341,39 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
               debugPrint('background version preload failed: $e'));
     }
 
+    // 2026-09-03 (O4): warm the WHEEL, but only for a reader who asked
+    // for it.
+    //
+    // `wheel_history.json` is 131 KB and its service also awaits the
+    // timeline, the family tree, the kings and the chronology. On a
+    // cold `#/wheel` none of that starts until the route is pushed —
+    // after the workbench's first frame — so the reader who followed a
+    // shared wheel link watches Genesis 1 for a moment first.
+    //
+    // Warming it for EVERYONE would be the obvious fix and the wrong
+    // one: most readers never open the wheel, and the splash's three
+    // seconds are already spent on the Bibles they will read. So the
+    // boot URL decides. `pageForUrlPath` is the same function the
+    // router uses, so this cannot warm a page the router would not
+    // open, or miss one it would.
+    if (kIsWeb) {
+      String? bootPath;
+      try {
+        final hash = Uri.base.fragment;
+        bootPath = hash.isEmpty ? null : (hash.startsWith('/') ? hash : '/$hash');
+      } catch (_) {
+        bootPath = null;
+      }
+      if (bootPath != null && pageForUrlPath(bootPath) != null) {
+        // ignore: unawaited_futures
+        WheelHistoryService.instance.load().catchError(
+            (Object e, StackTrace st) {
+          debugPrint('wheel warm-up failed: $e');
+          throw e;
+        });
+      }
+    }
+
     // 2026-08-08 (#274): warm the centre pane while the splash is idle.
     // Measured on the deployed dev build: every boot asset settles by
     // ~1 s, the splash then holds for its fixed 3 s, and only after it
@@ -434,13 +469,16 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
     const candidates = <String>[
       // Simplified Chinese staple — largest user base.
       'cuvs-yhwh',
-      // English flagships. 2026-09-02: `nasb` and `leb` were here and
-      // are gone — they are hidden from the interface, so no reader can
-      // reach them and every second spent parsing their JSON on the
-      // splash is a second spent on nothing. `bsb` replaces both: it is
-      // the English default now.
+      // English flagships. 2026-09-02: `nasb` and `leb` came out of
+      // this list because both were hidden from the interface, and a
+      // second spent parsing a Bible no reader can open is a second
+      // spent on nothing. **The LEB came back the same day** and this
+      // list did not follow it until 2026-09-03 — the same oversight,
+      // in the same shape, as the one that left `assets/leb.json` out
+      // of the offline pack. The NASB stays out: it is still hidden.
       'bsb',
       'kjv',
+      'leb',
       // Traditional Chinese variant.
       'cuvs-yhwh-tr',
       // LJK2 — NT-only specialty translation.
