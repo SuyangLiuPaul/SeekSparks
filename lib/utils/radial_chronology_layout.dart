@@ -1185,13 +1185,27 @@ double fingerHalfWidth(double radius, {double fingerPx = 9}) =>
 /// exact containment with no slack at all, while every other target on
 /// this page — spokes, rail marks — converts a finger into radians at
 /// the tapped radius. Measured against the real corpus, that was not a
-/// rounding matter: **61 of 86 arcs are narrower than a 9 px finger at
-/// 700 px, 55 at 900, and 39 even at 1400** — and four are exactly
-/// **0.00 px wide**, because Zimri, Huldah, Ahaziah of Judah and
-/// Jehoahaz of Judah each begin and end in the same year. Those four
-/// could not be opened by tapping at any zoom, on any canvas, ever. The
-/// owner reported it as 「按也很难按到，打也打不开」, which is what half a
-/// pixel of target feels like from the outside.
+/// rounding matter. Measured over the 111 arcs this band actually packs
+/// — 26 patriarch lives, 42 reigns and 44 ministries, in one call —
+/// **83 are narrower than a 9 px finger at 390 px, 72 at 700, 59 at 900,
+/// and 41 even at 1400**; and **seven are exactly 0.00 px wide**, each
+/// beginning and ending in the same year: the reigns of Zimri, Shallum
+/// of Israel, Ahaziah of Judah and Jehoahaz of Judah, and the ministries
+/// of Micaiah, Huldah and Haggai. Those seven could not be opened by
+/// tapping at any zoom, on any canvas, ever. The owner reported it as
+/// 「按也很难按到，打也打不开」, which is what half a pixel of target feels
+/// like from the outside.
+///
+/// AN EARLIER VERSION OF THIS PARAGRAPH WAS WRONG TWICE, and the way it
+/// was wrong is worth keeping. It said "four … Zimri, Huldah, Ahaziah of
+/// Judah and Jehoahaz of Judah" against "86 arcs". Huldah is not a king
+/// — she is a `WheelMinistry`, one day in Josiah's eighteenth year — so
+/// the fourth zero-width REIGN is Shallum of Israel; and counting only
+/// the kings missed three zero-width ministries entirely. The 86 was a
+/// stale count from before the ministries joined this band. Both errors
+/// came from measuring a list assembled by hand instead of the one
+/// `buildLifeArcs` returns, which is why the figures above are now taken
+/// from that call.
 ///
 /// So an arc's target is its own sweep OR a finger, whichever is wider,
 /// centred on the arc. A long reign keeps exactly the extent it paints;
