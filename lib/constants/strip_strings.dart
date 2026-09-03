@@ -176,28 +176,27 @@ const Map<String, Map<String, String>> stripStrings = {
   //
   // The wheel's own About sheet (`wheelAboutProvenance/Coverage/Scope/
   // Axis`, all read live off `WheelHistoryMeta`) is reused verbatim by
-  // the strip's — same facts, same wording, one asset. This pair is the
-  // one thing that sheet must say and the wheel's cannot: at the time
-  // this page gained a Find/Filter/About of its own, the genealogy rail
-  // (`kLineageLayerId`, `wheel_search.dart`) draws on the wheel and not
-  // here. "Nothing narrows in silence" (#280/#308/#319) is written about
-  // a filter or a search hiding what it already drew; a form that has
-  // simply not built a layer yet owes the same honesty for the same
-  // reason — a reader who cannot find the 198 people this rail carries
-  // must be told that, not left to conclude the strip has fewer records
-  // than the wheel.
-  'stripAboutGap': {
-    'zh-Hans': '本表尚未绘制',
-    'zh-Hant': '本表尚未繪製',
-    'en': 'Not yet on this form',
-  },
-  'stripAboutGapLineage': {
-    'zh-Hans': '轮盘在外圈另绘的家谱标记——107 个年份点，代表 family_tree.json 中'
-        '其余各层都未收录的 198 人——本表尚未绘制。',
-    'zh-Hant': '輪盤在外圈另繪的家譜標記——107 個年份點，代表 family_tree.json 中'
-        '其餘各層都未收錄的 198 人——本表尚未繪製。',
-    'en': 'The genealogy rail the wheel draws in its outer annulus — 107 '
-        'year-marks for 198 people out of family_tree.json that no other '
-        'layer draws — is not yet drawn on this form.',
+  // the strip's — same facts, same wording, one asset.
+  //
+  // 2026-09-04: this block also carried `stripAboutGap` /
+  // `stripAboutGapLineage`, saying the genealogy rail was drawn on the
+  // wheel and not here. That was honest for about an hour and then the
+  // rail landed, so the sentence became the opposite of what it was
+  // written for. It is deleted rather than left to rot: a disclosure
+  // that a form is missing a layer is only honest while the layer is
+  // missing, and a stale one is worse than none — it tells a reader to
+  // go and look somewhere else for records that are in front of them.
+  // (Its own figures were wrong too: it said 107 year-marks for 198
+  // people; the corpus carries 122 and 217.)
+
+  /// The rail's own lane heading. Same words as the wheel's legend row
+  /// for the layer, `(approximate)` included — every year on this layer
+  /// is the genealogy's placement with no verse behind it, and the
+  /// heading is where a reader scanning the sticky column learns that
+  /// before they read a single mark.
+  'stripLaneRail': {
+    'zh-Hans': '家谱人物（约）',
+    'zh-Hant': '家譜人物（約）',
+    'en': 'Genealogy (approximate)',
   },
 };

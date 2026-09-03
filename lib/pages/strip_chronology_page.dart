@@ -82,20 +82,24 @@ import 'package:provider/provider.dart';
 import 'package:seeksparks/constants/strip_strings.dart';
 import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/app_settings.dart';
+import 'package:seeksparks/models/biblical_person.dart' show BiblicalPerson;
 import 'package:seeksparks/models/chronology.dart' show Patriarch;
 import 'package:seeksparks/models/hebrew_king.dart' show HebrewKing, Kingdom;
 import 'package:seeksparks/models/strip_lanes.dart';
 import 'package:seeksparks/models/wheel_history.dart';
 import 'package:seeksparks/pages/radial_chronology_page.dart'
     show
+        LineageCohort,
         RadialChronologyPage,
         kDrawnTradition,
         kingdomArcColor,
         lineColor,
+        lineageRailColor,
         ministryArcColor,
         yearLabel;
 import 'package:seeksparks/pages/wheel_sheets.dart';
 import 'package:seeksparks/services/chronology_service.dart';
+import 'package:seeksparks/services/family_tree_service.dart';
 import 'package:seeksparks/services/hebrew_kings_service.dart';
 import 'package:seeksparks/services/url_sync_service.dart';
 import 'package:seeksparks/utils/font_catalog.dart' show canvasTextStyle;
@@ -144,10 +148,11 @@ class _StripChronologyPageState extends State<StripChronologyPage>
   /// (`radial_chronology_page.dart`'s `_hidden`), reproduced with the
   /// same contract: empty means all on, and it also carries the three
   /// non-stream layer ids (`kLifespanLayerId`, `kReignLayerId`,
-  /// `kMinistryLayerId`) the wheel's filter sheet toggles. NOT
-  /// `kLineageLayerId` — the strip draws no genealogy rail yet (see the
-  /// class doc and `_showAbout`), so there is nothing for that id to
-  /// switch off here.
+  /// `kMinistryLayerId`, `kLineageLayerId`) the wheel's filter sheet
+  /// toggles. All four, since the genealogy rail landed: an earlier
+  /// version of this comment said the strip drew no rail and so had
+  /// nothing for that id to switch off, which stopped being true the
+  /// hour the rail was added.
   final Set<String> _hidden = {};
 
   /// Kept on the state for the same reason the wheel's is
@@ -482,6 +487,7 @@ class _StripChronologyPageState extends State<StripChronologyPage>
           StripLaneKind.lives => 'stripLaneLifespans',
           StripLaneKind.kings => 'stripLaneKings',
           StripLaneKind.ministries => 'stripLaneMinistries',
+          StripLaneKind.rail => 'stripLaneRail',
           StripLaneKind.stream => 'stripLaneStreams',
           StripLaneKind.ruler => null,
         };
@@ -640,6 +646,39 @@ class _StripChronologyPageState extends State<StripChronologyPage>
         if (power == null) return;
         _select(power.id);
         showPower(context, power, data, locale, _select);
+      case StripLaneKind.rail:
+        // The rail's sheet is the wheel's own `showCohort`, and it must
+        // be: the first thing it says is that the year is the
+        // genealogy's placement with no verse behind it. That sentence
+        // is the whole reason this layer is drawn in a muted style and
+        // switched separately, and a strip that opened some other sheet
+        // would drop the one qualification the layer exists to carry.
+        //
+        // `StripLineageCohort` is rebuilt into the wheel's
+        // `LineageCohort` rather than the sheet being widened to take
+        // both: two types with the same two fields is the smaller
+        // duplication, and `showCohort` belongs to neither form.
+        final year = int.tryParse(
+            span.id.substring(kStripLineagePrefix.length));
+        if (year == null) return;
+        final drawn = <String>{
+          for (final p in patriarchs) p.id,
+          for (final k in kings) k.id,
+          for (final e in data.events)
+            for (final link in e.people) link.id,
+        };
+        final cohort = find(
+          stripLineageCohorts(
+            people:
+                FamilyTreeService.instance.cached ?? const <BiblicalPerson>[],
+            drawnIds: drawn,
+          ),
+          (c) => c.year == year,
+        );
+        if (cohort == null) return;
+        _select(span.id);
+        showCohort(context,
+            LineageCohort(year: cohort.year, people: cohort.people), locale);
       case StripLaneKind.ruler:
         break;
     }
@@ -716,6 +755,13 @@ class _StripChronologyPageState extends State<StripChronologyPage>
       wheel: visible.data,
       kings: visible.kings,
       patriarchs: visible.patriarchs,
+      // Switched off as a LAYER, like the lifespans and the reigns, so
+      // an empty list is the reader's choice rather than a missing
+      // service — `stripLineageCohorts` treats both the same way and
+      // builds no lane, which is what the filter is asking for.
+      familyTreePeople: _hidden.contains(kLineageLayerId)
+          ? const <BiblicalPerson>[]
+          : (FamilyTreeService.instance.cached ?? const <BiblicalPerson>[]),
       tradition: kDrawnTradition,
       creationYear: creationYear ?? 0,
       pxPerYear: _pxPerYear,
@@ -760,13 +806,12 @@ class _StripChronologyPageState extends State<StripChronologyPage>
                     ),
                     TextButton(
                       // NOT `kLineageLayerId` — see the class doc and
-                      // `_hidden`'s own: there is no lineage rail on
-                      // this form to switch off yet.
                       onPressed: () => setSheet(() => setState(() {
                             _hidden.addAll(data.streams.map((s) => s.id));
                             _hidden.add(kLifespanLayerId);
                             _hidden.add(kReignLayerId);
                             _hidden.add(kMinistryLayerId);
+                            _hidden.add(kLineageLayerId);
                           })),
                       child: Text(s('wheelNone', 'None', locale)),
                     ),
@@ -839,6 +884,28 @@ class _StripChronologyPageState extends State<StripChronologyPage>
                         width: t.scaled(12),
                         height: t.scaled(12),
                         color: ministryArcColor()),
+                  ),
+                  CheckboxListTile(
+                    key: const ValueKey('stripFilterLineage'),
+                    dense: true,
+                    value: !_hidden.contains(kLineageLayerId),
+                    onChanged: (_) => setSheet(() => setState(() {
+                          if (!_hidden.remove(kLineageLayerId)) {
+                            _hidden.add(kLineageLayerId);
+                          }
+                        })),
+                    title: Text(s('wheelLineage', 'Genealogy', locale),
+                        style: TextStyle(
+                            color: wb.text, fontSize: t.scaled(12.5))),
+                    subtitle: Text(
+                      s('wheelLineageNote', '', locale),
+                      style: TextStyle(
+                          color: wb.mutedText, fontSize: t.scaled(11)),
+                    ),
+                    secondary: Container(
+                        width: t.scaled(12),
+                        height: t.scaled(12),
+                        color: lineageRailColor()),
                   ),
                   for (final stream in data.streams)
                     CheckboxListTile(
@@ -931,11 +998,13 @@ class _StripChronologyPageState extends State<StripChronologyPage>
                 meta.scopeFor(locale)),
             section(s('wheelAboutAxis', 'Where the axis stops', locale),
                 meta.axisFor(locale)),
-            // What THIS form does not yet draw — see `strip_strings
-            // .dart`'s own doc on these two keys for why this belongs
-            // here and not on the wheel's sheet.
-            section(ss('stripAboutGap', locale),
-                ss('stripAboutGapLineage', locale)),
+            // NOTHING IS LISTED HERE AS MISSING, and that is now a
+            // fact rather than an omission: this sheet briefly carried
+            // a "not yet on this form" section for the genealogy rail,
+            // and the rail landed the same day. Both forms draw the
+            // same layers. If one ever stops doing so, the honesty
+            // owed is the same as a filter's — say what is absent —
+            // and this is where it goes.
           ]);
         },
       ),

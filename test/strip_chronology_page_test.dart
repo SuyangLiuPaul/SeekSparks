@@ -78,6 +78,7 @@ void main() {
     final lanes = buildStripLanes(
       wheel: forData ?? data,
       kings: forKings ?? kings,
+      familyTreePeople: const [],
       patriarchs: forPatriarchs ?? patriarchs,
       tradition: kDrawnTradition,
       creationYear: creationYear,
