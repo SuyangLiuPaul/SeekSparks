@@ -492,6 +492,33 @@ class StripLanesPainter extends CustomPainter {
     final clusters = clusterByX(xs, minGapPx, pinned: pinned);
     final has = selectedId != null;
 
+    // WHY A SECOND, WIDER GATE BELOW. `minGapPx` above is right for the
+    // TICKS and wrong for the WORDS, and the reason is the one thing
+    // that changes when a chart stops being round.
+    //
+    // On the wheel an event's title runs along the RADIUS — across the
+    // time axis — so the angular room it needs is its LINE HEIGHT, and
+    // `_kLabelPx * 1.35` is that line height. `radial_chronology_layout`
+    // says so in as many words: "Angular space is scarce... a label
+    // running outward occupies an angle no wider than its type."
+    //
+    // Here the title runs ALONG the axis, so what it occupies is its
+    // WIDTH. Measured on the shipped corpus at 1.5 px/year, that gate
+    // let clusters 15 px apart each draw a title 60-250 px wide, and the
+    // events lane came out as solid black ink wherever the corpus is
+    // dense — which is every century after 1500. The heuristic was
+    // transposed from the wheel with its dimension unchanged.
+    //
+    // So a title is drawn only when it clears the last title actually
+    // drawn. The TICK is never suppressed: it is drawn above this gate,
+    // so the event stays visible and stays tappable, and its sheet is
+    // one tap away. That is the wheel's own rule for a label that will
+    // not fit — legible or absent — and it costs less here than there,
+    // because on a strip the reader's lever really is free: the same
+    // title reappears at the next zoom step without the chart having to
+    // give up anything else to show it.
+    var lastLabelEnd = double.negativeInfinity;
+
     for (final cluster in clusters) {
       final repIdx = cluster.representative;
       final repSpan = lane.spans[repIdx];
@@ -571,6 +598,11 @@ class StripLanesPainter extends CustomPainter {
       final labelX = (x + totalW <= visibleX1)
           ? x
           : math.max(visibleX0, visibleX1 - totalW);
+
+      // The gate itself. `labelX` and not `x`, because the right-edge
+      // flip above can pull a label back towards its neighbour.
+      if (labelX < lastLabelEnd) continue;
+      lastLabelEnd = labelX + totalW + laneFontPx * 0.75;
 
       var penX = labelX;
       final y = row.top + row.height / 2;
