@@ -1274,7 +1274,12 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
       backgroundColor: wb.paneBg,
       appBar: AppBar(
         leading: const LocalizedBackButton(),
-        title: Text(s('wheelTitle', 'World History Wheel', locale)),
+        title: wheelChromeTitle(
+            context,
+            s('wheelTitle', 'World History Wheel', locale),
+            MediaQuery.sizeOf(context).width),
+        titleSpacing:
+            wheelChromeTitleSpacing(MediaQuery.sizeOf(context).width),
         // Six actions plus the back button used to be typed out here
         // unconditionally, and measured on the real page at 375 px —
         // reachable at any width since `#/wheel` stopped being gated by

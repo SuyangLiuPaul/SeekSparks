@@ -240,7 +240,12 @@ class _StripChronologyPageState extends State<StripChronologyPage>
       backgroundColor: wb.paneBg,
       appBar: AppBar(
         leading: const LocalizedBackButton(),
-        title: Text(_kPageTitle[locale] ?? _kPageTitle['en']!),
+        title: wheelChromeTitle(
+            context,
+            _kPageTitle[locale] ?? _kPageTitle['en']!,
+            MediaQuery.sizeOf(context).width),
+        titleSpacing:
+            wheelChromeTitleSpacing(MediaQuery.sizeOf(context).width),
         // Same three, same order, same tooltips as the wheel's own
         // toolbar (`radial_chronology_page.dart`'s `build`) — a
         // reader switching forms should find Find/Filter/About in

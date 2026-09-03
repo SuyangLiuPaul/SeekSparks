@@ -60,6 +60,33 @@ void main() {
     }
   }
 
+  /// The width [text] wants when nothing constrains it, in the same
+  /// style the `AppBar` sets its title in.
+  ///
+  /// `getSize(title).width > 0` is not the question, and asking it was
+  /// how the first pass at this shipped a title nobody could read.
+  /// `AppBar` gives the title a `Flexible`: when the actions have
+  /// spent the toolbar, Flutter lays the `Text` out at its NATURAL
+  /// size and then clips it, so `getSize` reports the full 71 px while
+  /// the reader sees one glyph and an ellipsis — or, at 375 px,
+  /// nothing at all. Read on the shipped page at a 500 px viewport
+  /// the title rendered as `世···`, which is exactly the clipped
+  /// fragment `wheelViewSwitch` refuses to make of a two-word label.
+  ///
+  /// So the assertion is that the title is WHOLE: the box it occupies
+  /// is at least as wide as the text wants, and it ends before the
+  /// first action begins.
+  double naturalWidth(WidgetTester tester, Finder title) {
+    final widget = tester.widget<Text>(title);
+    final style = DefaultTextStyle.of(tester.element(title)).style
+        .merge(widget.style);
+    return (TextPainter(
+      text: TextSpan(text: widget.data, style: style),
+      textDirection: TextDirection.ltr,
+    )..layout())
+        .width;
+  }
+
   Future<void> unmount(WidgetTester tester) async {
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(milliseconds: 50));
@@ -77,9 +104,14 @@ void main() {
       final title = find.descendant(
           of: find.byType(AppBar), matching: find.text('世界史轮盘'));
       expect(title, findsOneWidget);
-      expect(tester.getSize(title).width, greaterThan(0),
-          reason: 'the AppBar title must render at some visible width, '
-              'not be squeezed out by the actions beside it');
+      expect(tester.getSize(title).width,
+          greaterThanOrEqualTo(naturalWidth(tester, title) - 0.5),
+          reason: 'the AppBar title must render WHOLE, not be laid out '
+              'at its natural size and clipped away by the actions '
+              'beside it — see naturalWidth');
+      expect(tester.getTopRight(title).dx,
+          lessThanOrEqualTo(tester.getTopLeft(find.byIcon(Icons.more_vert)).dx),
+          reason: 'and it must end before the overflow button begins');
       await unmount(tester);
     });
 
@@ -155,6 +187,25 @@ void main() {
       await unmount(tester);
     });
 
+    // 500 px is inside the band the FIRST version of this fix got
+    // wrong. `kWheelNarrowPaneWidth` was 480, so 500 took the WIDE bar
+    // — back, three icons, the two-word switch, language, home, 406 px
+    // of chrome — and the shipped page rendered its title as `世···`,
+    // one glyph and an ellipsis. A threshold chosen from what counts as
+    // a phone rather than from what the bar actually costs is a
+    // threshold that will be wrong again, so this pins the cost.
+    testWidgets('500 px takes the narrow bar, and the title is whole',
+        (tester) async {
+      await pump(tester, const StripChronologyPage(), const Size(500, 800));
+      expect(find.byIcon(Icons.more_vert), findsOneWidget,
+          reason: '500 px cannot afford the wide bar');
+      final title = find.descendant(
+          of: find.byType(AppBar), matching: find.text('世界历史时间条'));
+      expect(tester.getSize(title).width,
+          greaterThanOrEqualTo(naturalWidth(tester, title) - 0.5));
+      await unmount(tester);
+    });
+
     testWidgets('nothing regresses at a desktop width', (tester) async {
       await pump(tester, const RadialChronologyPage(), const Size(1440, 900));
       expect(tester.takeException(), isNull);
@@ -178,11 +229,19 @@ void main() {
       final title = find.descendant(
           of: find.byType(AppBar), matching: find.text('世界历史时间条'));
       expect(title, findsOneWidget);
-      expect(tester.getSize(title).width, greaterThan(0),
-          reason: 'the strip carries MORE actions than the wheel — '
-              'three icons, the switch, the language switcher, the '
-              'home button — and measured 0.0 px wide before the fix, '
-              'worse than the wheel\'s own defect');
+      // The strip's own name is the LONGER of the two — seven Han
+      // characters against the wheel's five, and 'World History Strip'
+      // against 'World History Wheel' — so it is the page that decides
+      // how much room the narrow bar has to leave, and the one that
+      // fails first if it leaves too little.
+      expect(tester.getSize(title).width,
+          greaterThanOrEqualTo(naturalWidth(tester, title) - 0.5),
+          reason: 'the strip carries the same actions as the wheel and '
+              'a longer name; its title must render WHOLE, not be laid '
+              'out at natural size and clipped away');
+      expect(tester.getTopRight(title).dx,
+          lessThanOrEqualTo(tester.getTopLeft(find.byIcon(Icons.more_vert)).dx),
+          reason: 'and it must end before the overflow button begins');
       await unmount(tester);
     });
 
