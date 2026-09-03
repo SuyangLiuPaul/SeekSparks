@@ -107,8 +107,37 @@ void main() {
           WbCentreMode.reader);
     });
 
-    test('Browse falls back to the reader below three panes', () {
+    test('Browse does NOT fall back — it never needed the three-pane width',
+        () {
+      // This test asserted the opposite until 2026-09-03, and the rule
+      // it pinned was wrong on its own terms. The reason given was
+      // "three editions of a verse read as fragments" — which is
+      // split's reasoning, about side-by-side COLUMNS, applied to a
+      // layout that has none. `BrowseWindow` builds one ROW per (verse,
+      // edition) in a single vertical list, so every edition already
+      // gets the full width of the pane and narrowing the pane narrows
+      // one column of prose rather than slicing it into three.
+      //
+      // Nobody could see it while `SmallScreenGate` refused every
+      // viewport under that width anyway. The day the gate came off,
+      // the toolbar's Browse button was dead on a phone — pressed, and
+      // the centre stayed on the reader. Reported within the hour.
       expect(effective(WbCentreMode.browse, threePane: false),
+          WbCentreMode.browse);
+      expect(effective(WbCentreMode.browse, threePane: true),
+          WbCentreMode.browse);
+      // And at a phone's centre width, which is what actually changed.
+      expect(effective(WbCentreMode.browse, threePane: false, centre: 375),
+          WbCentreMode.browse);
+    });
+
+    test('split still falls back, because split really does need columns',
+        () {
+      // The control. If the repair above had been "stop refusing
+      // anything", this is the test that would have caught it: split's
+      // rule is measured — two reading columns at the app's own minimum
+      // width — and it stands.
+      expect(effective(WbCentreMode.split, threePane: false, centre: 375),
           WbCentreMode.reader);
     });
 

@@ -130,8 +130,13 @@ void main() {
         expect(find.byKey(ValueKey('workbench-phone-tab-$pane')), findsOneWidget,
             reason: '$label has no $pane tab, so that pane is unreachable');
       }
-      // Read first: a reader who opened a Bible app is reading.
-      expect(find.byType(BibleReadingPane), findsOneWidget);
+      // Read first, and the Read tab honours the reader's CENTRE MODE
+      // exactly as the three-pane layout does — which on a fresh
+      // install is Browse, the app's own identity. It briefly did not:
+      // the tab forced the chapter reader, so the toolbar's Browse
+      // button was dead on a phone the day the gate came off.
+      expect(find.byType(BrowseWindow), findsWidgets,
+          reason: 'the Read tab is ignoring the centre mode again');
       expect(find.byType(CommandPane), findsNothing);
       // And never two panes at once, which is the product the gate's
       // own ruling refused.
@@ -154,7 +159,7 @@ void main() {
       // no pane to open; there is now, and a route on top of a tab is a
       // second way to be somewhere.
       expect(find.byType(CommandSearchPage), findsNothing);
-      expect(find.byType(BibleReadingPane), findsNothing,
+      expect(find.byType(BrowseWindow), findsNothing,
           reason: 'two panes at once is the product the gate refused');
       expect(tester.takeException(), isNull);
     });
@@ -171,6 +176,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
       await tester.pump(const Duration(milliseconds: 300));
 
+      expect(find.byType(BrowseWindow), findsNothing);
       expect(find.byType(BibleReadingPane), findsNothing);
       expect(tester.takeException(), isNull);
     });
@@ -223,7 +229,7 @@ void main() {
     // why this is its own test rather than a second pump.
     addTearDown(tester.view.reset);
     await pumpWorkbench(tester, const Size(768, 1024));
-    expect(find.byType(BibleReadingPane), findsOneWidget);
+    // Whatever the centre holds, no magnifier of its own.
     expect(
         find.descendant(
             of: find.byType(BibleReadingPane),

@@ -1426,16 +1426,31 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
 
   /// The one pane a narrow screen is showing, full width.
   ///
-  /// The centre is forced to `reader` here rather than asked for.
-  /// `effectiveCentreMode` already refuses Browse and split below the
-  /// three-pane width — three editions of a verse read as fragments in
-  /// a phone's column, and split needs two reading columns — so this
-  /// only says out loud what that function decides anyway.
+  /// The Read tab honours the reader's CENTRE MODE, exactly as the
+  /// three-pane layout does. It used to force the chapter reader, on
+  /// the strength of a comment saying `effectiveCentreMode` refuses
+  /// Browse at this width anyway — which was true and was itself the
+  /// bug: that refusal borrowed split's reasoning about side-by-side
+  /// columns for a layout that has none, so the toolbar's Browse button
+  /// was dead on a phone the day the gate came off. Reported at once.
+  ///
+  /// Split still falls back, and honestly: it really does need two
+  /// reading columns, and `splitFitsIn` is measured rather than
+  /// asserted.
   Widget _buildPhonePane(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
     return switch (_phonePane) {
       _PhonePane.search => _buildCommandFrame(context),
-      _PhonePane.read => _buildReaderFrame(context,
-          splitAvailable: false, analysisAvailable: false),
+      _PhonePane.read => switch (effectiveCentreMode(
+          preferred: context.watch<WorkbenchProvider>().centreMode,
+          centreWidth: width,
+          threePane: false,
+        )) {
+          WbCentreMode.browse => _buildParallelFrame(context),
+          WbCentreMode.split => _buildSplitFrame(context),
+          WbCentreMode.reader => _buildReaderFrame(context,
+              splitAvailable: splitFitsIn(width), analysisAvailable: false),
+        },
       _PhonePane.analyse => _buildAnalysisFrame(context),
     };
   }

@@ -80,12 +80,24 @@ bool splitFitsIn(double centreWidth) =>
 
 /// The mode the centre pane can actually render, given the room it has.
 ///
-/// A persisted preference is a wish, not an instruction. Browse needs the
-/// three-pane width before three editions of a verse stop reading as
-/// fragments; split needs two reading columns. Where neither holds, the
-/// chapter reader always does, and it is what the pane falls back to —
-/// the reader keeps their saved preference for the next screen that can
-/// honour it.
+/// A persisted preference is a wish, not an instruction. Split needs two
+/// reading columns; where it does not have them the chapter reader does,
+/// and the reader keeps their saved preference for the next screen that
+/// can honour it.
+///
+/// BROWSE USED TO BE REFUSED BELOW THE THREE-PANE WIDTH and that rule
+/// was wrong on its own terms. It said "three editions of a verse read
+/// as fragments" — which is split's reasoning, about side-by-side
+/// COLUMNS, borrowed for a layout that has none. `BrowseWindow` builds
+/// one ROW per (verse, edition) in a single vertical list: every
+/// edition already gets the full width of the pane, and narrowing the
+/// pane narrows one column of prose rather than slicing it into three.
+///
+/// Nobody could see the mistake while it stood, because
+/// `SmallScreenGate` refused every viewport under the three-pane width
+/// anyway. Removing the gate on 2026-09-03 made Browse reachable on a
+/// phone and the toolbar's Browse button dead there — pressed, and the
+/// centre stayed on the reader. Reported immediately.
 WbCentreMode effectiveCentreMode({
   required WbCentreMode preferred,
   required double centreWidth,
@@ -93,8 +105,7 @@ WbCentreMode effectiveCentreMode({
 }) =>
     switch (preferred) {
       WbCentreMode.reader => WbCentreMode.reader,
-      WbCentreMode.browse =>
-        threePane ? WbCentreMode.browse : WbCentreMode.reader,
+      WbCentreMode.browse => WbCentreMode.browse,
       WbCentreMode.split =>
         splitFitsIn(centreWidth) ? WbCentreMode.split : WbCentreMode.reader,
     };
