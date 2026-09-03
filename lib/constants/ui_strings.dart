@@ -1,4 +1,10 @@
 const uiStrings = {
+  // The phone's bottom bar. Verbs, not pane names: a bottom bar is
+  // read as "what am I doing", and 搜索 / 阅读 / 分析 is how the three
+  // panes are already described everywhere else in the app.
+  'wbPhoneSearch': {'zh-Hans': '搜索', 'zh-Hant': '搜尋', 'en': 'Search'},
+  'wbPhoneRead': {'zh-Hans': '阅读', 'zh-Hant': '閱讀', 'en': 'Read'},
+  'wbPhoneAnalyse': {'zh-Hans': '分析', 'zh-Hant': '分析', 'en': 'Analysis'},
   // ====== Search Page ======
   'search': {
     'zh-Hans': '搜索',

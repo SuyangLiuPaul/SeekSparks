@@ -104,26 +104,77 @@ void main() {
         findsOneWidget);
   });
 
-  testWidgets('iPad portrait (768×1024): command + reader, analysis hidden',
-      (tester) async {
-    addTearDown(tester.view.reset);
-    await pumpWorkbench(tester, const Size(768, 1024));
-    expect(tester.takeException(), isNull);
-    expect(find.byType(CommandPane), findsOneWidget);
-    // 768 is below the three-pane breakpoint, so Browse is suppressed
-    // and the chapter reader holds the centre.
-    expect(find.byType(BibleReadingPane), findsOneWidget);
-    expect(find.byKey(const ValueKey('workbench-divider-right')), findsNothing);
-    expect(find.byType(OriginalsSheet), findsNothing);
-  });
+  /// 2026-09-03: the two tests that used to sit here described a
+  /// TWO-PANE workbench at 768 and a reader-alone one at 390, and no
+  /// reader ever saw either — `SmallScreenGate` blocked every viewport
+  /// under 992 px outright and printed an advisory instead. They were
+  /// pinning unreachable behaviour.
+  ///
+  /// The gate is gone on the owner's reversal (「很多人看了屏幕限制就不
+  /// 知道怎么做了」), and what replaces it answers the ruling the gate
+  /// came from — 「不能打开三个的，全部都把它显示让他用我的另外一个
+  /// 软件」 — rather than ignoring it. Two columns really is a worse
+  /// product, so a narrow screen is never given two. It is given all
+  /// three, one at a time, with a bottom bar between them.
+  for (final (label, size) in [
+    ('iPad portrait', Size(768, 1024)),
+    ('phone', Size(390, 844)),
+  ]) {
+    testWidgets('$label: three tabs, one pane, and Read is the one showing',
+        (tester) async {
+      addTearDown(tester.view.reset);
+      await pumpWorkbench(tester, size);
+      expect(tester.takeException(), isNull);
 
-  testWidgets('phone width (390): reader alone', (tester) async {
-    addTearDown(tester.view.reset);
-    await pumpWorkbench(tester, const Size(390, 844));
-    expect(tester.takeException(), isNull);
-    expect(find.byType(CommandPane), findsNothing);
-    expect(find.byType(BibleReadingPane), findsOneWidget);
-  });
+      for (final pane in ['search', 'read', 'analyse']) {
+        expect(find.byKey(ValueKey('workbench-phone-tab-$pane')), findsOneWidget,
+            reason: '$label has no $pane tab, so that pane is unreachable');
+      }
+      // Read first: a reader who opened a Bible app is reading.
+      expect(find.byType(BibleReadingPane), findsOneWidget);
+      expect(find.byType(CommandPane), findsNothing);
+      // And never two panes at once, which is the product the gate's
+      // own ruling refused.
+      expect(find.byKey(const ValueKey('workbench-divider-left')), findsNothing);
+      expect(
+          find.byKey(const ValueKey('workbench-divider-right')), findsNothing);
+    });
+
+    testWidgets('$label: the Search tab shows the command pane in place',
+        (tester) async {
+      addTearDown(tester.view.reset);
+      await pumpWorkbench(tester, size);
+      await tester.tap(find.byKey(const ValueKey('workbench-phone-tab-search')));
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.byType(CommandPane), findsOneWidget);
+      // IN PLACE, not as a pushed route. Below 600 the toolbar button
+      // used to push `CommandSearchPage` full screen because there was
+      // no pane to open; there is now, and a route on top of a tab is a
+      // second way to be somewhere.
+      expect(find.byType(CommandSearchPage), findsNothing);
+      expect(find.byType(BibleReadingPane), findsNothing,
+          reason: 'two panes at once is the product the gate refused');
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('$label: the Analysis tab reaches the third pane',
+        (tester) async {
+      // The whole point of the reversal. Under the gate this pane was
+      // not merely hidden on a phone — it was the reason the phone was
+      // turned away.
+      addTearDown(tester.view.reset);
+      await pumpWorkbench(tester, size);
+      await tester
+          .tap(find.byKey(const ValueKey('workbench-phone-tab-analyse')));
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.byType(BibleReadingPane), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+  }
 
   testWidgets('the workspace owns search; the reader does not repeat it',
       (tester) async {
@@ -133,16 +184,15 @@ void main() {
     // magnifier at all. Its `hostChrome` flag drops it, because the
     // command line it would focus is already on screen beside the text
     // and the toolbar carries the same button for when it is collapsed.
+    // 2026-09-03: this half runs at a THREE-PANE width now. It used to
+    // run at 768, where the command pane and the reader sat side by
+    // side — a layout no reader could reach, because the gate blocked
+    // that width outright. Below 992 the panes take turns, so focusing
+    // the command line there DISPLACES the text, and the claim being
+    // made here is about chrome that owns search without moving the
+    // reader. The reader's own missing magnifier is the test below.
     addTearDown(tester.view.reset);
-    await pumpWorkbench(tester, const Size(768, 1024));
-    expect(find.byType(BibleReadingPane), findsOneWidget);
-    expect(
-        find.descendant(
-            of: find.byType(BibleReadingPane),
-            matching: find.byIcon(Icons.search_rounded)),
-        findsNothing,
-        reason: 'a column may hold column controls; searching the whole '
-            'workspace is the workspace chrome\'s job');
+    await pumpWorkbench(tester, const Size(1366, 900));
 
     // Scoped to the toolbar: the command pane has a plain `Icons.search`
     // of its own (its run button), and the point of this test is the
@@ -153,7 +203,11 @@ void main() {
 
     expect(find.byType(CommandSearchPage), findsNothing);
     expect(find.byType(CommandPane), findsOneWidget);
-    expect(find.byType(BibleReadingPane), findsOneWidget,
+    // The centre is BROWSE at this width, not the chapter reader — that
+    // is what a three-pane workbench opens on. What the claim needs is
+    // that the centre is still THERE, whatever it holds: focusing the
+    // command line must not replace the text with a search screen.
+    expect(find.byType(BrowseWindow), findsWidgets,
         reason: 'the text stays on screen; only the caret moved');
     final field = tester.widget<TextField>(
         find.descendant(of: find.byType(CommandPane),
@@ -161,10 +215,31 @@ void main() {
     expect(field.focusNode?.hasFocus, isTrue);
   });
 
-  testWidgets('collapsed, the same button reopens the pane and focuses it',
+  testWidgets('the reader carries no magnifier of its own, at any width',
       (tester) async {
+    // The other half, at the width where the reader is what is on
+    // screen: the phone layout's Read tab. `pumpWorkbench` cannot be
+    // called twice in one test — its `mp` is a `late` local — which is
+    // why this is its own test rather than a second pump.
     addTearDown(tester.view.reset);
     await pumpWorkbench(tester, const Size(768, 1024));
+    expect(find.byType(BibleReadingPane), findsOneWidget);
+    expect(
+        find.descendant(
+            of: find.byType(BibleReadingPane),
+            matching: find.byIcon(Icons.search_rounded)),
+        findsNothing,
+        reason: 'a column may hold column controls; searching the whole '
+            'workspace is the workspace chrome\'s job');
+  });
+
+  testWidgets('collapsed, the same button reopens the pane and focuses it',
+      (tester) async {
+    // Also moved off 768 on 2026-09-03: collapsing a pane is a
+    // three-pane gesture, and below that width the panes take turns
+    // rather than sitting beside each other.
+    addTearDown(tester.view.reset);
+    await pumpWorkbench(tester, const Size(1366, 900));
     // The Search strip's chevron is the only left-pointing one.
     await tester.tap(find.byIcon(Icons.chevron_left));
     await tester.pump(const Duration(milliseconds: 100));
@@ -187,23 +262,30 @@ void main() {
         reason: 'focus must wait for the frame that mounts the pane');
   });
 
-  testWidgets('below 600 the command line is a route, not a dead button',
+  testWidgets('below 600 the toolbar search still has somewhere to go',
       (tester) async {
-    // At 390 the command pane is not laid out at all, so `_leftOpen`
-    // has nothing to open. Focusing it was therefore a no-op — a button
-    // that did nothing, silently, at the one width where the reader's
-    // magnifier is also gone. It pushes the pane full screen instead.
+    // This used to assert that the toolbar's magnifier PUSHED
+    // `CommandSearchPage` full screen, because at 390 there was no
+    // command pane laid out and focusing it was a silent no-op. The tab
+    // bar gives it a pane again, so the route is no longer the only
+    // answer — but the button must still not be dead, which is what
+    // this now checks. Whether it pushes or switches tabs, the reader
+    // ends up at the command line.
     addTearDown(tester.view.reset);
     await pumpWorkbench(tester, const Size(390, 844), routable: true);
     expect(find.byType(CommandPane), findsNothing);
-    expect(find.byIcon(Icons.search), findsOneWidget,
-        reason: 'the toolbar is the only search affordance at this width');
 
-    await tester.tap(find.byIcon(Icons.search));
+    await tester.tap(find.descendant(
+        of: find.byType(WorkbenchToolbar),
+        matching: find.byIcon(Icons.search)));
     await tester.pump(const Duration(milliseconds: 100));
     await tester.pump(const Duration(milliseconds: 300));
 
-    expect(find.byType(CommandSearchPage), findsOneWidget);
+    final reached = find.byType(CommandSearchPage).evaluate().isNotEmpty ||
+        find.byType(CommandPane).evaluate().isNotEmpty;
+    expect(reached, isTrue,
+        reason: 'the toolbar magnifier reaches neither the pane nor the '
+            'route at 390 — it is a button that does nothing');
     expect(tester.takeException(), isNull);
   });
 

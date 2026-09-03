@@ -132,6 +132,12 @@ import 'package:seeksparks/widgets/originals_sheet.dart';
 /// Both side panes resize via their draggable divider (double-tap or
 /// fling collapses), and widths/open-state persist in
 /// SharedPreferences under `workbench_*` keys.
+/// The three panes, as a phone shows them: one at a time.
+///
+/// Named for what the reader is doing rather than for the desktop pane
+/// it stands in for — a phone's bottom bar is read as verbs.
+enum _PhonePane { search, read, analyse }
+
 class WorkbenchPage extends StatefulWidget {
   const WorkbenchPage({super.key});
 
@@ -189,6 +195,26 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
   /// reader and `open_reader`, where 1024 means something else.
   static bool _isThreePane(double width) =>
       width >= WorkbenchFit.threePaneMinWidth;
+
+  /// Which of the three panes a narrow screen is showing.
+  ///
+  /// THE THREE PANES DO NOT GO AWAY ON A PHONE, THEY TAKE TURNS. Until
+  /// 2026-09-03 a viewport that could not carry all three was refused
+  /// outright — `SmallScreenGate` printed an advisory and sent the
+  /// reader to YsWords — on the owner's own ruling: 「手机不能打开三个
+  /// 栅栏…不能打开三个的，全部都把它显示让他用我的另外一个软件」. The
+  /// ruling's reasoning was sound and its remedy was not, and the owner
+  /// reversed it from what readers actually did: 「很多人看了屏幕限制
+  /// 就不知道怎么做了」. A block tells a reader they are wrong without
+  /// telling them what to do.
+  ///
+  /// What replaces it answers the original objection rather than
+  /// ignoring it. Two columns really is a worse product — search beside
+  /// the text with no word analysis is a reader with a search box, which
+  /// is what YsWords already is. So a narrow screen gets all THREE, one
+  /// at a time, and nothing is missing from the tool; only from the
+  /// screen at any given moment.
+  _PhonePane _phonePane = _PhonePane.read;
 
   /// Owns the workbench state. Created here (not globally in main.dart)
   /// so its MainProvider listener and search state only live while the
@@ -1269,6 +1295,9 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
               WorkbenchToolbar(groups: _buildToolbar(context)),
             ],
             Expanded(child: _buildPanes(context)),
+            // The phone's navigation, between the panes and the status
+            // bar so it sits where a thumb is.
+            if (compact) _buildPhoneBar(context, locale),
             WorkbenchStatusBar(
               message: _statusMessage(locale),
               // Reference and version only on a phone — the rest
@@ -1288,6 +1317,12 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
       builder: (context) {
           final width = MediaQuery.sizeOf(context).width;
           final threePane = _isThreePane(width);
+          // One pane, full width, chosen by the bottom bar. Returning
+          // here rather than collapsing the Row is deliberate: a pane
+          // that is merely narrow still pays for its dividers, its
+          // rails and its own width arithmetic, and on a phone every
+          // one of those is a column of pixels the text needs.
+          if (!threePane) return _buildPhonePane(context);
           final showLeft = _leftOpen && width >= _commandPaneMinWidth;
           final showRight = _rightOpen && threePane;
           final panes = _paneWidths(width);
@@ -1388,6 +1423,82 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
             ? requestForAnalysisTab(_analysisTab)
             : null,
       );
+
+  /// The one pane a narrow screen is showing, full width.
+  ///
+  /// The centre is forced to `reader` here rather than asked for.
+  /// `effectiveCentreMode` already refuses Browse and split below the
+  /// three-pane width — three editions of a verse read as fragments in
+  /// a phone's column, and split needs two reading columns — so this
+  /// only says out loud what that function decides anyway.
+  Widget _buildPhonePane(BuildContext context) {
+    return switch (_phonePane) {
+      _PhonePane.search => _buildCommandFrame(context),
+      _PhonePane.read => _buildReaderFrame(context,
+          splitAvailable: false, analysisAvailable: false),
+      _PhonePane.analyse => _buildAnalysisFrame(context),
+    };
+  }
+
+  /// The bottom bar, and the only navigation a phone gets.
+  ///
+  /// It is not a `NavigationBar`: Material 3's is 80 px tall before its
+  /// labels, which is a fifth of a phone's height spent on three words.
+  /// This is the app's own chrome height, the same 26 px the menu bar
+  /// and toolbar use, so the three bars together cost less than one
+  /// Material navigation bar and the reading column keeps the rest.
+  Widget _buildPhoneBar(BuildContext context, String locale) {
+    final wb = WbColors.of(context);
+    final t = WbType.of(context);
+    Widget tab(_PhonePane pane, IconData icon, String key, String fallback) {
+      final on = _phonePane == pane;
+      return Expanded(
+        child: InkWell(
+          key: ValueKey('workbench-phone-tab-${pane.name}'),
+          onTap: () => setState(() => _phonePane = pane),
+          child: Container(
+            height: t.scaledChrome(30),
+            decoration: BoxDecoration(
+              border: Border(
+                top: BorderSide(
+                    color: on ? wb.accent : Colors.transparent, width: 2),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon,
+                    size: t.scaledChrome(14),
+                    color: on ? wb.accent : wb.mutedText),
+                SizedBox(width: t.scaledChrome(5)),
+                Text(
+                  uiStrings[key]?[locale] ?? fallback,
+                  style: TextStyle(
+                    fontSize: t.scaledChrome(11.5),
+                    color: on ? wb.accent : wb.mutedText,
+                    fontWeight: on ? FontWeight.w700 : FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: wb.chromeBg,
+        border: Border(top: BorderSide(color: wb.border)),
+      ),
+      child: Row(children: [
+        tab(_PhonePane.search, Icons.search, 'wbPhoneSearch', 'Search'),
+        tab(_PhonePane.read, Icons.menu_book_outlined, 'wbPhoneRead', 'Read'),
+        tab(_PhonePane.analyse, Icons.insights_outlined, 'wbPhoneAnalyse',
+            'Analysis'),
+      ]),
+    );
+  }
 
   /// A reader-side action asked for content. Answer it in the Analysis
   /// pane when there is one, and say so — returning false sends the

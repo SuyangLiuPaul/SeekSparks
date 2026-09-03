@@ -36,8 +36,6 @@ import 'package:provider/provider.dart';
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 import 'package:seeksparks/widgets/retired_version_notice.dart'
     show RetiredVersionNotice;
-import 'package:seeksparks/widgets/small_screen_advisory.dart'
-    show SmallScreenGate;
 import 'package:seeksparks/models/wheel_history.dart'
     show WheelHistoryService;
 import 'package:seeksparks/utils/theme_accent.dart'
@@ -855,12 +853,21 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
           // report. Whether this viewport can carry the workbench is
           // known on the first frame and depends on nothing the boot
           // produces, so it is answered on the first frame.
-          home: SmallScreenGate(
-            // Above the router and below the gate: boot may have
-            // substituted a retired reading version, and the reader is
-            // owed that fact wherever they land. Renders its child
-            // untouched until there is something to say.
-            child: RetiredVersionNotice(
+          // 2026-09-03: `SmallScreenGate` used to wrap this, and every
+          // viewport that could not carry three panes got an advisory
+          // instead of the app. It is gone. The workbench now shows the
+          // three panes ONE AT A TIME below that width, with a bottom
+          // bar to move between them — see `_PhonePane` — so a phone
+          // gets the whole tool rather than a notice about it.
+          //
+          // The gate's own reasoning survives in that design: two
+          // columns really is a worse product, so a narrow screen is
+          // never given two. It is given three, in turn.
+          home: Builder(
+            // Boot may have substituted a retired reading version, and
+            // the reader is owed that fact wherever they land. Renders
+            // its child untouched until there is something to say.
+            builder: (context) => RetiredVersionNotice(
               child: _loading
                   ? const Scaffold(
                       body: Center(
@@ -918,17 +925,18 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
 /// Null for every other name, so `home:` still answers `/` and
 /// [appUnknownRoute] still answers a genuinely stray one.
 ///
-/// Wrapping in [SmallScreenGate] is a decision, not an option: the gate
-/// is documented as a hard block and it wraps `home:`, so without the
-/// wrap a phone opening `#/wheel` would get the wheel laid OVER the
-/// advisory instead of the advisory.
+/// 2026-09-03: this used to wrap the page in `SmallScreenGate`, because
+/// the gate was a hard block on `home:` and without the same wrap a
+/// phone opening `#/wheel` would have got the wheel laid OVER the
+/// advisory. The gate is gone, so the wrap is too — a phone opening
+/// `#/wheel` now gets the wheel.
 @visibleForTesting
 Route<dynamic>? appGenerateRoute(RouteSettings settings) {
   final page = pageForUrlPath(settings.name);
   if (page == null) return null;
   return MaterialPageRoute<void>(
     settings: settings,
-    builder: (_) => SmallScreenGate(child: page),
+    builder: (_) => page,
   );
 }
 
