@@ -43,17 +43,25 @@ import 'package:flutter/widgets.dart';
 
 import 'package:seeksparks/pages/radial_chronology_page.dart'
     show RadialChronologyPage, kWheelUrlPath;
+import 'package:seeksparks/pages/strip_chronology_page.dart'
+    show StripChronologyPage, kStripUrlPath;
 
 /// The page [path] names, or null when it names no page.
 ///
 /// Accepts the path with or without its leading `#`, and matches by
-/// prefix so a future `#/wheel?year=-4000` still resolves to the wheel.
+/// prefix so a future `#/wheel?year=-4000` still resolves to the wheel
+/// (and `#/strip?year=-4000` the strip, the same chart's second form —
+/// see `chronologyChartEntryPage` for why there are two).
 Widget? pageForUrlPath(String? path) {
   if (path == null || path.isEmpty) return null;
   final p = path.startsWith('#') ? path.substring(1) : path;
   if (p == kWheelUrlPath || p.startsWith('$kWheelUrlPath/') ||
       p.startsWith('$kWheelUrlPath?')) {
     return const RadialChronologyPage();
+  }
+  if (p == kStripUrlPath || p.startsWith('$kStripUrlPath/') ||
+      p.startsWith('$kStripUrlPath?')) {
+    return const StripChronologyPage();
   }
   return null;
 }
