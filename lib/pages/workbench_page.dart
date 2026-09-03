@@ -26,7 +26,6 @@ import 'package:seeksparks/pages/bible_timeline_page.dart';
 import 'package:seeksparks/pages/bible_trivia_page.dart';
 import 'package:seeksparks/pages/books_page.dart';
 import 'package:seeksparks/pages/chronology_page.dart';
-import 'package:seeksparks/pages/radial_chronology_page.dart';
 import 'package:seeksparks/pages/command_search_page.dart';
 import 'package:seeksparks/pages/evidence_page.dart';
 import 'package:seeksparks/pages/family_tree_page.dart';
@@ -51,6 +50,8 @@ import 'package:seeksparks/services/workbench_warmup.dart'
         defaultParallelVersions,
         kWorkbenchParallelModeKey,
         kWorkbenchParallelVersionsKey;
+import 'package:seeksparks/utils/chronology_chart_entry.dart'
+    show chronologyChartEntryPage;
 import 'package:seeksparks/utils/chapter_navigation.dart'
     show adjacentChapter, nextChapter, previousChapter;
 import 'package:seeksparks/utils/jump_to_reference.dart' as jumper;
@@ -629,8 +630,13 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         // answer different questions: that page is the lifespans of
         // Genesis 5 and 11 on an Anno Mundi axis, this is world
         // history from 4000 BC to the present.
+        // Still one entry, not two: the page behind it is whichever
+        // form the reader had open last (`chronologyChartEntryPage`),
+        // not always the wheel — see that file for why there is no
+        // second "World History Strip" item beside this one.
         WbMenuItem(s('wheelTitle', 'World History Wheel'),
-            () => pushPage(const RadialChronologyPage())),
+            () => pushPage(
+                chronologyChartEntryPage(context.read<AppSettings>()))),
         WbMenuItem(s('library', 'Notes & highlights'),
             () => pushPage(const LibraryPage())),
         WbMenuItem(

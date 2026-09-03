@@ -163,4 +163,12 @@ const Map<String, Map<String, String>> stripStrings = {
     'zh-Hant': '圖表視圖',
     'en': 'Chart view',
   },
+
+  /// The two OPTIONS `stripViewSwitch` names the control for — added
+  /// once a page actually built one (`radial_chronology_page.dart`'s
+  /// AppBar). Short segment labels, not the pages' own titles
+  /// (`wheelTitle` is a whole sentence in Chinese): a segmented
+  /// control reads two words side by side, not two headings.
+  'stripViewWheel': {'zh-Hans': '轮盘', 'zh-Hant': '輪盤', 'en': 'Wheel'},
+  'stripViewStrip': {'zh-Hans': '长条', 'zh-Hant': '長條', 'en': 'Strip'},
 };

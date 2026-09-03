@@ -45,7 +45,11 @@ import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/wheel_history.dart';
 import 'package:seeksparks/pages/radial_chronology_page.dart'
     show RadialChronologyPage, kWheelUrlPath;
+import 'package:seeksparks/pages/strip_chronology_page.dart'
+    show StripChronologyPage, kStripUrlPath;
 import 'package:seeksparks/providers/main_provider.dart';
+import 'package:seeksparks/utils/chronology_chart_entry.dart'
+    show chronologyChartEntryPage;
 import 'package:seeksparks/utils/page_links.dart';
 
 void main() {
@@ -77,6 +81,97 @@ void main() {
       expect(pageForUrlPath('/'), isNull);
       expect(pageForUrlPath(''), isNull);
       expect(pageForUrlPath(null), isNull);
+    });
+
+    // The strip is the same chart's second form, added beside the wheel
+    // in this same function (see `page_links.dart`) — same three checks
+    // the wheel got above, plus the cross-checks below that neither
+    // path can be mistaken for the other's.
+    test('the strip path names the strip page', () {
+      expect(pageForUrlPath(kStripUrlPath), isA<StripChronologyPage>());
+      expect(pageForUrlPath('#$kStripUrlPath'), isA<StripChronologyPage>());
+      expect(pageForUrlPath('$kStripUrlPath?year=-4000'),
+          isA<StripChronologyPage>());
+    });
+
+    test('the wheel and the strip never resolve to each other', () {
+      expect(kWheelUrlPath, isNot(kStripUrlPath));
+      expect(pageForUrlPath(kWheelUrlPath), isNot(isA<StripChronologyPage>()));
+      expect(pageForUrlPath(kStripUrlPath), isNot(isA<RadialChronologyPage>()));
+      // A prefix match on one path must not satisfy the other's guard —
+      // `/strip` is not a prefix of `/wheel` or vice versa, but this
+      // pins that directly rather than trusting the string literals.
+      expect(pageForUrlPath('$kWheelUrlPath/strip'),
+          isA<RadialChronologyPage>(),
+          reason: 'a sub-path still belongs to its own prefix');
+      expect(pageForUrlPath('$kStripUrlPath/wheel'),
+          isA<StripChronologyPage>());
+      expect(samePageUrlPath(kWheelUrlPath, kStripUrlPath), isFalse);
+      // Not a prefix of a different word, same guard as `/wheelbarrow`.
+      expect(pageForUrlPath('/stripped'), isNull);
+      expect(pageForUrlPath('/stripe'), isNull);
+    });
+  });
+
+  group('chronologyChartEntryPage', () {
+    // The entry points in `workbench_page.dart` and `chronology_page.dart`
+    // stay single doors — this is the function both call to decide what
+    // is behind the door, so it is what a fresh reader vs. a reader who
+    // switched forms actually sees.
+    test('a reader who has never switched gets the wheel', () async {
+      SharedPreferences.setMockInitialValues(<String, Object>{});
+      final settings = AppSettings();
+      await settings.loadSettings();
+      expect(
+          chronologyChartEntryPage(settings), isA<RadialChronologyPage>());
+    });
+
+    test('a reader who switched to the strip gets the strip', () async {
+      SharedPreferences.setMockInitialValues(<String, Object>{});
+      final settings = AppSettings();
+      await settings.loadSettings();
+      await settings.setChronologyView('strip');
+      expect(chronologyChartEntryPage(settings), isA<StripChronologyPage>());
+      await settings.setChronologyView('wheel');
+      expect(
+          chronologyChartEntryPage(settings), isA<RadialChronologyPage>());
+    });
+  });
+
+  group('AppSettings.chronologyView', () {
+    test('round-trips through SharedPreferences like notesSortMode does',
+        () async {
+      SharedPreferences.setMockInitialValues(<String, Object>{});
+      final first = AppSettings();
+      await first.loadSettings();
+      expect(first.chronologyView, 'wheel');
+      await first.setChronologyView('strip');
+      expect(first.chronologyView, 'strip');
+
+      // A second instance stands in for the next app launch, reading
+      // whatever the first one persisted.
+      final second = AppSettings();
+      await second.loadSettings();
+      expect(second.chronologyView, 'strip',
+          reason: 'a reader who switched to the strip must not be sent '
+              'back to the wheel on the next launch');
+    });
+
+    test('an unrecognised stored value falls back to the wheel, not a '
+        'crash', () async {
+      SharedPreferences.setMockInitialValues(
+          <String, Object>{'chronologyView': 'donut'});
+      final settings = AppSettings();
+      await settings.loadSettings();
+      expect(settings.chronologyView, 'wheel');
+    });
+
+    test('setChronologyView ignores an unrecognised value', () async {
+      SharedPreferences.setMockInitialValues(<String, Object>{});
+      final settings = AppSettings();
+      await settings.loadSettings();
+      await settings.setChronologyView('donut');
+      expect(settings.chronologyView, 'wheel');
     });
   });
 

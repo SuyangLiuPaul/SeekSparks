@@ -9,6 +9,8 @@ import 'package:seeksparks/models/chronology.dart';
 import 'package:seeksparks/pages/radial_chronology_page.dart';
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/services/chronology_service.dart';
+import 'package:seeksparks/utils/chronology_chart_entry.dart'
+    show chronologyChartEntryPage;
 import 'package:seeksparks/utils/chronology_layout.dart';
 import 'package:seeksparks/utils/font_catalog.dart';
 import 'package:seeksparks/utils/jump_to_reference.dart' as jumper;
@@ -221,8 +223,12 @@ class _ChronologyPageState extends State<ChronologyPage> {
           IconButton(
             icon: const Icon(Icons.donut_large),
             tooltip: wheelStrings['wheelTitle']?[locale] ?? 'Chronology Wheel',
+            // Same door as the workbench's menu item: opens whichever
+            // form the reader had open last, not always the wheel —
+            // see `chronologyChartEntryPage`.
             onPressed: () => Navigator.of(context).push(MaterialPageRoute(
-                builder: (_) => const RadialChronologyPage())),
+                builder: (_) => chronologyChartEntryPage(
+                    context.read<AppSettings>()))),
           ),
           const LanguageSwitcherButton(),
           const HomeIconButton(),

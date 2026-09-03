@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'package:seeksparks/constants/strip_strings.dart';
 import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/biblical_person.dart';
@@ -13,6 +14,7 @@ import 'package:seeksparks/models/wheel_history.dart';
 import 'package:seeksparks/pages/chronology_page.dart';
 import 'package:seeksparks/pages/family_tree_page.dart';
 import 'package:seeksparks/pages/hebrew_kings_page.dart';
+import 'package:seeksparks/pages/strip_chronology_page.dart';
 import 'package:seeksparks/pages/wheel_sheets.dart';
 import 'package:seeksparks/services/chronology_service.dart';
 import 'package:seeksparks/services/family_tree_service.dart';
@@ -1266,6 +1268,48 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
             icon: const Icon(Icons.info_outline),
             tooltip: s('wheelAbout', 'About this chart', locale),
             onPressed: () => _showAbout(context, locale),
+          ),
+          // The wheel and the strip are one chart in two forms, so this
+          // is a SWITCH between the two rather than a second "open the
+          // strip" button — tapping the already-selected 'wheel'
+          // segment is a no-op. `stripStrings` (not `wheelStrings`)
+          // because the two option labels belong with the control's own
+          // name (`stripViewSwitch`), which the strip's own AppBar will
+          // read once it grows one — see that key's doc comment.
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Tooltip(
+              message: stripStrings['stripViewSwitch']?[locale] ??
+                  'Chart view',
+              child: SegmentedButton<String>(
+                showSelectedIcon: false,
+                style: const ButtonStyle(
+                  visualDensity: VisualDensity.compact,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                segments: [
+                  ButtonSegment(
+                    value: 'wheel',
+                    label: Text(stripStrings['stripViewWheel']?[locale] ??
+                        'Wheel'),
+                  ),
+                  ButtonSegment(
+                    value: 'strip',
+                    label: Text(stripStrings['stripViewStrip']?[locale] ??
+                        'Strip'),
+                  ),
+                ],
+                selected: const {'wheel'},
+                onSelectionChanged: (selected) {
+                  if (selected.first != 'strip') return;
+                  context.read<AppSettings>().setChronologyView('strip');
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(
+                        builder: (_) => const StripChronologyPage()),
+                  );
+                },
+              ),
+            ),
           ),
           const LanguageSwitcherButton(),
           const HomeIconButton(),

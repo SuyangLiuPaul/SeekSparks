@@ -138,6 +138,18 @@ const _kNotesSortMode = 'notesSortMode';
 const Set<String> _kNotesSortAllowed = {'canonical', 'recent', 'oldest'};
 const String _kNotesSortDefault = 'canonical';
 
+// 2026-09-04: which form of the chronology chart a reader last had
+// open — the wheel (`RadialChronologyPage`) or the strip
+// (`StripChronologyPage`). The two draw the same corpus in two shapes
+// rather than being separate charts, so every door into either one
+// (`chronologyChartEntryPage`) opens whichever the reader picked last
+// time, and the in-page switch (`stripStrings['stripViewSwitch']`)
+// writes here when they change their mind. Same allowlist-clamp
+// pattern as `_kNotesSortMode`, immediately above.
+const _kChronologyView = 'chronologyView';
+const Set<String> _kChronologyViewAllowed = {'wheel', 'strip'};
+const String _kChronologyViewDefault = 'wheel';
+
 
 class AppSettings extends ChangeNotifier {
   /// User's selected font key — what gets persisted in
@@ -208,6 +220,8 @@ class AppSettings extends ChangeNotifier {
   // 2026-05-24 (v1.3.19): TTS fields removed with the 朗读 feature.
   // 2026-05-24 (v1.2.91): see _kNotesSortMode comment.
   String _notesSortMode = _kNotesSortDefault;
+  // 2026-09-04: see _kChronologyView comment.
+  String _chronologyView = _kChronologyViewDefault;
 
   /// Render section / paragraph headings (e.g. "The Sermon on the
   /// Mount" / "登山宝训") above the matched verse in the reading
@@ -286,6 +300,19 @@ class AppSettings extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_kNotesSortMode, mode);
+  }
+
+  /// 2026-09-04: which chronology chart form to open next — 'wheel' or
+  /// 'strip'. See `_kChronologyView` for why this exists.
+  String get chronologyView => _chronologyView;
+
+  Future<void> setChronologyView(String view) async {
+    if (!_kChronologyViewAllowed.contains(view)) return;
+    if (_chronologyView == view) return;
+    _chronologyView = view;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_kChronologyView, view);
   }
 
   Future<void> setGeminiApiKey(String key) async {
@@ -770,6 +797,13 @@ class AppSettings extends ChangeNotifier {
         ? storedNotesSort
         : _kNotesSortDefault;
 
+    // 2026-09-04: see _kChronologyView comment. Same allowlist-clamp.
+    final storedChronologyView = prefs.getString(_kChronologyView);
+    _chronologyView = (storedChronologyView != null &&
+            _kChronologyViewAllowed.contains(storedChronologyView))
+        ? storedChronologyView
+        : _kChronologyViewDefault;
+
     // 2026-05-25 (v1.3.41): if a userPrefs JSON blob exists, apply
     // it OVER the legacy individual-key reads above — it carries the
     // full settings snapshot and is the source of truth when
@@ -855,6 +889,7 @@ class AppSettings extends ChangeNotifier {
         'showBookIntro': _showBookIntro,
         'aiModel': _aiModel,
         'notesSortMode': _notesSortMode,
+        'chronologyView': _chronologyView,
       };
 
   Future<void> _writeUserPrefsBlob() async {
@@ -963,6 +998,12 @@ class AppSettings extends ChangeNotifier {
         final raw = m['notesSortMode'] as String;
         _notesSortMode =
             _kNotesSortAllowed.contains(raw) ? raw : _kNotesSortDefault;
+      }
+      if (m['chronologyView'] is String) {
+        final raw = m['chronologyView'] as String;
+        _chronologyView = _kChronologyViewAllowed.contains(raw)
+            ? raw
+            : _kChronologyViewDefault;
       }
     } finally {
       _suppressUserPrefsWrite = false;
