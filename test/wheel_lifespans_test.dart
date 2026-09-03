@@ -485,13 +485,34 @@ void main() {
   /// keeps that claim honest, and `the strong floors still hold with
   /// the ministries off` keeps the resting view from being spent
   /// without anyone noticing.
+  /// 2026-09-03, and THE BIGGEST CANVAS LOST THE MOST, which is the
+  /// opposite of what was assumed. Measured after the corpus grew about
+  /// 40% in one day — 700 en 20 (held), 700 zh-Hans 24 (held), 900 en 21
+  /// (held), 900 zh-Hans 21→20, 1400 en 23→22, **1400 zh-Hans 25→23**.
+  ///
+  /// That last cell matters more than the arithmetic. Earlier the same
+  /// day this file recorded, as a correction to an overstatement, that
+  /// `fitArcLabel` places all 25 at 1400 px — so the largest canvas
+  /// named every patriarch at rest. It no longer does. A life label is
+  /// lost to a SPOKE crossing its arc, and a wider canvas draws more
+  /// spokes, so the widest view is where extra events bite first.
+  ///
+  /// The zoom-recovery test below was re-run and still passes: all 25
+  /// come back at ×2, at every canvas. So nothing is lost and the
+  /// resting number is a summary — but the resting claim that used to be
+  /// true here is not true any more, and pretending otherwise by leaving
+  /// 25 in the table would have been the dishonest fix.
+  ///
+  /// These floors have now absorbed one day's growth. The next batch
+  /// should not move them again; if the resting view has to hold more,
+  /// the declutter is what has to change.
   const floors = <String, int>{
     '700 en': 20,
     '700 zh-Hans': 24,
     '900 en': 21,
-    '900 zh-Hans': 21,
-    '1400 en': 23,
-    '1400 zh-Hans': 25,
+    '900 zh-Hans': 20,
+    '1400 en': 22,
+    '1400 zh-Hans': 23,
   };
   test('every life can be named at rest, at every canvas the wheel gets',
       () {

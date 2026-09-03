@@ -595,10 +595,15 @@ void main() {
     await tester.enterText(
         find.byKey(const ValueKey('wheelFindField')), 'Magna Carta');
     await settle(tester);
-    expect(sheetText(tester), contains('1 项'));
+    // Two, not one, since 2026-09-03: `kingdom-of-england`'s note
+    // mentions Magna Carta, so the phrase legitimately reaches the event
+    // and the band. What this test measures is that the list's HEIGHT
+    // tracks its row count, and a short list proves that as well as a
+    // single row does.
+    expect(sheetText(tester), contains('2 项'));
     final one = tester.getSize(list).height;
     expect(one, lessThan(allowance / 2),
-        reason: 'one result must not reserve half the screen');
+        reason: 'a couple of results must not reserve half the screen');
 
     // And the shrink-wrap must not have turned into a cap: a long list
     // still fills the allowance and scrolls.

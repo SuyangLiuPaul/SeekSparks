@@ -5441,6 +5441,692 @@
     "zh-Hans": "法王路易九世出兵所向不是圣地而是突尼斯，登陆后数周即病死营中。由君王亲率的十字军东征时代至此告终。",
     "zh-Hant": "法王路易九世出兵所向不是聖地而是突尼斯，登陸後數週即病死營中。由君王親率的十字軍東征時代至此告終。"
    }
+  },
+  {
+   "id": "ptolemaic-cleopatra-vii",
+   "start": -51,
+   "end": -30,
+   "region": "egypt",
+   "stream": "egypt",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Cleopatra VII",
+    "zh-Hans": "克娄巴特拉七世",
+    "zh-Hant": "克婁巴特拉七世"
+   },
+   "note": {
+    "en": "The band is her reign. The last of the Ptolemies, she held Egypt first with Caesar's backing and then with Mark Antony's; her death in 30 BC ended the Greek kingdom of Egypt that this chart already draws and handed the country to Rome.",
+    "zh-Hans": "此段所画的是她的在位年数。托勒密王朝末代君主，先借凯撒之力、后倚马克·安东尼而据有埃及；主前30年她一死，本图已绘的埃及希腊王国告终，全境归于罗马。",
+    "zh-Hant": "此段所畫的是她的在位年數。托勒密王朝末代君主，先藉凱撒之力、後倚馬克·安東尼而據有埃及；主前30年她一死，本圖已繪的埃及希臘王國告終，全境歸於羅馬。"
+   }
+  },
+  {
+   "id": "seleucid-antiochus-ii",
+   "start": -261,
+   "end": -246,
+   "region": "greece",
+   "stream": "greece",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Antiochus II",
+    "zh-Hans": "安提阿古二世",
+    "zh-Hant": "安提阿古二世"
+   },
+   "note": {
+    "en": "The band is his reign, 261 to 246 BC. He made peace with Ptolemaic Egypt by marrying Berenice, a match that ended with both of them dead and the two kingdoms at war again. Scripture does not name him; the band is here only so that readings of Daniel 11:6 can be measured against a span instead of assumed.",
+    "zh-Hans": "此段所画的是他的在位年数，主前261至246年。他为与托勒密埃及讲和，娶贝勒尼基为后，结果二人俱亡，两国重启战端。经文并未提他的名字；设此带，只为使但以理书 11:6 的各种读法能对着一段年限查考，而非先行认定。",
+    "zh-Hant": "此段所畫的是他的在位年數，主前261至246年。他為與托勒密埃及講和，娶貝勒尼基為后，結果二人俱亡，兩國重啟戰端。經文並未提他的名字；設此帶，只為使但以理書 11:6 的各種讀法能對著一段年限查考，而非先行認定。"
+   }
+  },
+  {
+   "id": "sw-basketmaker-era",
+   "start": -1500,
+   "end": 50,
+   "region": "americas",
+   "stream": "americas",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "Basketmaker Farmers of the Southwest",
+    "zh-Hans": "美国西南部的编篮期农人",
+    "zh-Hant": "美國西南部的編籃期農人"
+   },
+   "note": {
+    "en": "Long before the pueblo villages this chart carries, the people of the Four Corners country grew maize and squash, wove the baskets that name them, and lived in pit houses and dry caves. The band is a period rather than a reign: its edges are drawn from excavation, and no single year opens or closes it.",
+    "zh-Hans": "远在本图所载的普韦布洛村落之前，四角地带的居民已种玉米与南瓜，编织篮器（其名即由此而来），住在半地穴屋与干燥的岩洞之中。此段所画的是一个时期，而非一位君王的年数：其起讫由发掘推定，并无确定的起始或终止年份。",
+    "zh-Hant": "遠在本圖所載的普韋布洛村落之前，四角地帶的居民已種玉米與南瓜，編織籃器（其名即由此而來），住在半地穴屋與乾燥的岩洞之中。此段所畫的是一個時期，而非一位君王的年數：其起訖由發掘推定，並無確定的起始或終止年份。"
+   }
+  },
+  {
+   "id": "rom-valentinian-iii",
+   "start": 425,
+   "end": 455,
+   "region": "rome",
+   "stream": "rome",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Valentinian III",
+    "zh-Hans": "瓦伦提尼安三世",
+    "zh-Hant": "瓦倫提尼安三世"
+   },
+   "note": {
+    "en": "Set on the western throne as a child of six and never a soldier, he reigned thirty years while Africa was lost to the Vandals and Attila came into Gaul and then Italy, where Leo I went out to meet him. His rescript of 445 declared the bishop of Rome's authority over the western churches. He killed his own general Aetius with his own hand and was cut down himself in 455.",
+    "zh-Hans": "他六岁被立于西部皇位，一生不曾统兵，在位三十年间非洲失于汪达尔人，阿提拉先后进入高卢与意大利，良一世出城前去会他。445年他颁下敕令，宣告罗马主教对西方各教会的权柄。他亲手杀了自己的大将埃提乌斯，自己也在455年被杀。",
+    "zh-Hant": "他六歲被立於西部皇位，一生不曾統兵，在位三十年間非洲失於汪達爾人，阿提拉先後進入高盧與義大利，良一世出城前去會他。445年他頒下敕令，宣告羅馬主教對西方各教會的權柄。他親手殺了自己的大將埃提烏斯，自己也在455年被殺。"
+   }
+  },
+  {
+   "id": "pope-stephen-iii",
+   "start": 768,
+   "end": 772,
+   "region": "europe",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Pope Stephen III",
+    "zh-Hans": "教皇斯德望三世",
+    "zh-Hant": "教皇斯德望三世"
+   },
+   "note": {
+    "en": "Elected after a layman had seized the chair by armed force, he called a synod at the Lateran in 769 that barred laymen from the papal election and rejected the eastern council which had condemned images. He is numbered third or fourth, according to whether a Stephen who died in 752 before his consecration is counted.",
+    "zh-Hans": "在一名平信徒以武力强占教皇之位以后，他获选继任，并于769年在拉特兰召开会议，禁止平信徒参与选举教皇，又否定东方那次谴责圣像的会议。他被列为第三世或第四世，视乎752年那位未及祝圣即去世的斯德望算不算在内。",
+    "zh-Hant": "在一名平信徒以武力強佔教皇之位以後，他獲選繼任，並於769年在拉特朗召開會議，禁止平信徒參與選舉教皇，又否定東方那次譴責聖像的會議。他被列為第三世或第四世，視乎752年那位未及祝聖即去世的斯德望算不算在內。"
+   }
+  },
+  {
+   "id": "pope-john-xi",
+   "start": 931,
+   "end": 935,
+   "region": "europe",
+   "stream": "church",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "Pope John XI",
+    "zh-Hans": "教皇若望十一世",
+    "zh-Hant": "教皇若望十一世"
+   },
+   "note": {
+    "en": "Son of Marozia, the Roman noblewoman who then ruled the city, and made pope in his early twenties; contemporaries said he did nothing without her leave, and her other son shut them both up in 933. His reign stands for the century in which a few Roman families disposed of the papacy at will. References end it in 935 or 936.",
+    "zh-Hans": "他是当时把持罗马的贵妇玛罗齐娅之子，二十出头即被立为教皇；同时代的人说他事事都要经母亲许可，后来她的另一个儿子在933年把母子二人一同囚禁。他在位的这一段，正代表教皇之位任凭罗马几个家族摆布的那个世纪。各家所记其终年或作935年，或作936年。",
+    "zh-Hant": "他是當時把持羅馬的貴婦瑪羅齊婭之子，二十出頭即被立為教皇；同時代的人說他事事都要經母親許可，後來她的另一個兒子在933年把母子二人一同囚禁。他在位的這一段，正代表教皇之位任憑羅馬幾個家族擺布的那個世紀。各家所記其終年或作935年，或作936年。"
+   }
+  },
+  {
+   "id": "egypt-dynasty-12",
+   "start": -1985,
+   "end": -1773,
+   "region": "egypt",
+   "stream": "egypt",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "Twelfth Dynasty of Egypt",
+    "zh-Hans": "埃及第十二王朝",
+    "zh-Hant": "埃及第十二王朝"
+   },
+   "note": {
+    "en": "The dynasty at the centre of the Middle Kingdom: the capital moved to Itjtawy, Nubia held to the second cataract, and the Faiyum drained and farmed. The stretch of Egypt Abraham and Jacob would have found already old.",
+    "zh-Hans": "中王国时期居中的一朝：都城迁至伊塔威，努比亚控制至第二瀑布，法尤姆一带排水垦殖。亚伯拉罕与雅各所到的埃及，这一段早已是旧事。",
+    "zh-Hant": "中王國時期居中的一朝：都城遷至伊塔威，努比亞控制至第二瀑布，法尤姆一帶排水墾殖。亞伯拉罕與雅各所到的埃及，這一段早已是舊事。"
+   }
+  },
+  {
+   "id": "kassite-babylon",
+   "start": -1595,
+   "end": -1155,
+   "region": "mesopotamia",
+   "stream": "babylon",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "Kassite Dynasty of Babylon",
+    "zh-Hans": "巴比伦加喜特王朝",
+    "zh-Hant": "巴比倫加喜特王朝"
+   },
+   "note": {
+    "en": "After the Hittite raid ended Hammurabi's line, a people from the Zagros held Babylon for over four centuries — the longest single dynasty the city ever had, and the four hundred years between the Old and the Neo-Babylonian empires.",
+    "zh-Hans": "赫人一次远袭终结了汉谟拉比的王系之后，来自扎格罗斯山的加喜特人统治巴比伦四百余年——是这城历时最久的一朝，填满古巴比伦与新巴比伦两大帝国之间的那四百年。",
+    "zh-Hant": "赫人一次遠襲終結了漢摩拉比的王系之後，來自札格羅斯山的加喜特人統治巴比倫四百餘年——是這城歷時最久的一朝，填滿古巴比倫與新巴比倫兩大帝國之間的那四百年。"
+   }
+  },
+  {
+   "id": "shang-dynasty",
+   "start": -1600,
+   "end": -1046,
+   "region": "asia",
+   "stream": "china",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "Shang Dynasty",
+    "zh-Hans": "商朝",
+    "zh-Hant": "商朝"
+   },
+   "note": {
+    "en": "The earliest Chinese dynasty confirmed by its own writing: the oracle bones of Anyang carry its kings' names, its divinations and its calendar, and are the oldest Chinese script that can still be read.",
+    "zh-Hans": "中国最早有本朝文字可证的王朝：安阳出土的甲骨刻着王名、卜辞与历法，是至今仍可释读的最早汉字。",
+    "zh-Hant": "中國最早有本朝文字可證的王朝：安陽出土的甲骨刻著王名、卜辭與曆法，是至今仍可釋讀的最早漢字。"
+   }
+  },
+  {
+   "id": "zhou-dynasty",
+   "start": -1046,
+   "end": -256,
+   "region": "asia",
+   "stream": "china",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "Zhou Dynasty",
+    "zh-Hans": "周朝",
+    "zh-Hant": "周朝"
+   },
+   "note": {
+    "en": "China's longest dynasty, and the one that first spoke of a mandate a ruler could forfeit. Its later centuries, when the king reigned but the states fought, are when Confucius, Laozi and Mozi taught.",
+    "zh-Hans": "中国历时最久的王朝，也是最先讲「天命可失」的王朝。其后期王室虚位、列国相争，孔子、老子、墨子皆出于此时。",
+    "zh-Hant": "中國歷時最久的王朝，也是最先講「天命可失」的王朝。其後期王室虛位、列國相爭，孔子、老子、墨子皆出於此時。"
+   }
+  },
+  {
+   "id": "nabopolassar-reign",
+   "start": -626,
+   "end": -605,
+   "region": "mesopotamia",
+   "stream": "babylon",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Nabopolassar",
+    "zh-Hans": "那波帕拉萨尔",
+    "zh-Hant": "那波帕拉薩爾"
+   },
+   "note": {
+    "en": "The Chaldean who threw off Assyria, took Nineveh with the Medes in 612 BC and founded the kingdom his son Nebuchadnezzar would use against Jerusalem.",
+    "zh-Hans": "推翻亚述的迦勒底人，主前612年与玛代人同取尼尼微，所立的国后由其子尼布甲尼撒用以攻打耶路撒冷。",
+    "zh-Hant": "推翻亞述的迦勒底人，主前612年與瑪代人同取尼尼微，所立的國後由其子尼布甲尼撒用以攻打耶路撒冷。"
+   }
+  },
+  {
+   "id": "magadha-kingdom",
+   "start": -600,
+   "end": -322,
+   "region": "asia",
+   "stream": "india",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "Kingdom of Magadha",
+    "zh-Hans": "摩揭陀国",
+    "zh-Hant": "摩揭陀國"
+   },
+   "note": {
+    "en": "The Ganges kingdom that grew into the first Indian empire. The Buddha and Mahavira both taught inside it, and its last dynasty was displaced by Chandragupta's Maurya line.",
+    "zh-Hans": "恒河流域的王国，后来长成印度第一个帝国。佛陀与大雄皆在此境内传道，其末代王朝为旃陀罗笈多的孔雀王朝所取代。",
+    "zh-Hant": "恆河流域的王國，後來長成印度第一個帝國。佛陀與大雄皆在此境內傳道，其末代王朝為旃陀羅笈多的孔雀王朝所取代。"
+   }
+  },
+  {
+   "id": "migration-period",
+   "start": 375,
+   "end": 568,
+   "region": "europe",
+   "stream": "europe",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "The Migration Period",
+    "zh-Hans": "民族大迁徙",
+    "zh-Hant": "民族大遷徙"
+   },
+   "note": {
+    "en": "Two centuries in which whole peoples moved west and south across Rome's frontier — Goths, Vandals, Suebi, Burgundians, Franks, Angles, Lombards. The empire did not so much fall as fill up with kingdoms.",
+    "zh-Hans": "两百年间整族整族的人越过罗马边界向西向南迁移——哥特、汪达尔、苏维汇、勃艮第、法兰克、盎格鲁、伦巴第。帝国与其说是倾覆，不如说是被这些王国填满了。",
+    "zh-Hant": "兩百年間整族整族的人越過羅馬邊界向西向南遷移——哥德、汪達爾、蘇維匯、勃艮第、法蘭克、盎格魯、倫巴第。帝國與其說是傾覆，不如說是被這些王國填滿了。"
+   }
+  },
+  {
+   "id": "cimmerians",
+   "start": -750,
+   "end": -600,
+   "region": "anatolia",
+   "stream": "anatolia",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "The Cimmerians",
+    "zh-Hans": "辛梅里安人",
+    "zh-Hant": "辛梅里安人"
+   },
+   "note": {
+    "en": "Horsemen driven off the steppe who broke into Anatolia, ended the kingdom of Phrygia and pressed Lydia and Assyria in turn before they were scattered.",
+    "zh-Hans": "被逐出草原的骑马民族，侵入安纳托利亚，覆灭弗里吉亚王国，先后压迫吕底亚与亚述，最终四散。",
+    "zh-Hant": "被逐出草原的騎馬民族，侵入安納托利亞，覆滅弗里吉亞王國，先後壓迫呂底亞與亞述，最終四散。"
+   }
+  },
+  {
+   "id": "suebic-kingdom",
+   "start": 409,
+   "end": 585,
+   "region": "europe",
+   "stream": "europe",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "Suebic Kingdom of Gallaecia",
+    "zh-Hans": "苏维汇加利西亚王国",
+    "zh-Hant": "蘇維匯加利西亞王國"
+   },
+   "note": {
+    "en": "The first of the barbarian kingdoms to settle inside the empire and mint in its own name, held in the north-west corner of Spain until the Visigoths absorbed it.",
+    "zh-Hans": "最早在帝国境内定居并以己名铸币的蛮族王国，据有西班牙西北一隅，直到被西哥特人并吞。",
+    "zh-Hant": "最早在帝國境內定居並以己名鑄幣的蠻族王國，據有西班牙西北一隅，直到被西哥德人併吞。"
+   }
+  },
+  {
+   "id": "odoacer-italy",
+   "start": 476,
+   "end": 493,
+   "region": "rome",
+   "stream": "europe",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Odoacer's Kingdom in Italy",
+    "zh-Hans": "奥多亚塞的意大利王国",
+    "zh-Hant": "奧多亞塞的義大利王國"
+   },
+   "note": {
+    "en": "The commander of the Heruli and other federate troops deposed the last western emperor, sent the imperial insignia to Constantinople and ruled Italy as king until Theodoric killed him at Ravenna.",
+    "zh-Hans": "统率赫鲁利等同盟部队的将领废黜了西方末代皇帝，把帝国冠冕送往君士坦丁堡，以王的名义统治意大利，直到狄奥多里克在拉文纳杀了他。",
+    "zh-Hant": "統率赫魯利等同盟部隊的將領廢黜了西方末代皇帝，把帝國冠冕送往君士坦丁堡，以王的名義統治義大利，直到狄奧多里克在拉文納殺了他。"
+   }
+  },
+  {
+   "id": "hunnic-empire",
+   "start": 370,
+   "end": 469,
+   "region": "europe",
+   "stream": "europe",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "The Hunnic Empire",
+    "zh-Hans": "匈人帝国",
+    "zh-Hant": "匈人帝國"
+   },
+   "note": {
+    "en": "The steppe power whose arrival on the Danube pushed the Gothic peoples into Rome. Under Attila it took tribute from both empires; within twenty years of his death it had come apart.",
+    "zh-Hans": "其抵达多瑙河一事把哥特诸族推入罗马境内的草原强权。阿提拉在位时向东西两帝国索贡；他死后不到二十年，帝国即告瓦解。",
+    "zh-Hant": "其抵達多瑙河一事把哥德諸族推入羅馬境內的草原強權。阿提拉在位時向東西兩帝國索貢；他死後不到二十年，帝國即告瓦解。"
+   }
+  },
+  {
+   "id": "lombard-kingdom",
+   "start": 568,
+   "end": 774,
+   "region": "europe",
+   "stream": "europe",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Lombard Kingdom of Italy",
+    "zh-Hans": "伦巴第意大利王国",
+    "zh-Hant": "倫巴第義大利王國"
+   },
+   "note": {
+    "en": "The last of the Germanic peoples to enter Italy, ruling from Pavia for two centuries until Charlemagne took the iron crown and left the popes with a Frankish protector instead of a Lombard neighbour.",
+    "zh-Hans": "最后进入意大利的日耳曼民族，以帕维亚为都统治两个世纪，直到查理曼取了铁王冠——教皇由此换来一位法兰克保护者，而非伦巴第近邻。",
+    "zh-Hant": "最後進入義大利的日耳曼民族，以帕維亞為都統治兩個世紀，直到查理曼取了鐵王冠——教皇由此換來一位法蘭克保護者，而非倫巴第近鄰。"
+   }
+  },
+  {
+   "id": "ostrogothic-kingdom",
+   "start": 493,
+   "end": 553,
+   "region": "rome",
+   "stream": "europe",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Ostrogothic Kingdom of Italy",
+    "zh-Hans": "东哥特意大利王国",
+    "zh-Hant": "東哥德義大利王國"
+   },
+   "note": {
+    "en": "Theodoric ruled Italy from Ravenna with Roman law, a Roman senate and an Arian church, and for a generation the peninsula looked as though it had changed hands without changing. Justinian's wars ended it.",
+    "zh-Hans": "狄奥多里克自拉文纳统治意大利，沿用罗马法律与元老院，教会则奉亚流派；有一代之久，这半岛看似只换了主人而未改其旧。查士丁尼的战争终结了它。",
+    "zh-Hant": "狄奧多里克自拉文納統治義大利，沿用羅馬法律與元老院，教會則奉亞流派；有一代之久，這半島看似只換了主人而未改其舊。查士丁尼的戰爭終結了它。"
+   }
+  },
+  {
+   "id": "anglo-saxon-england",
+   "start": 449,
+   "end": 1066,
+   "region": "europe",
+   "stream": "europe",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "Anglo-Saxon England",
+    "zh-Hans": "盎格鲁-撒克逊英格兰",
+    "zh-Hant": "盎格魯-撒克遜英格蘭"
+   },
+   "note": {
+    "en": "From the settlement of Angles, Saxons and Jutes to Hastings: six centuries in which the small kingdoms were converted, then hammered together by Viking pressure into one crown.",
+    "zh-Hans": "自盎格鲁人、撒克逊人、朱特人定居，至黑斯廷斯一战：六百年间，诸小国先后归信，又在维京人的压力下被锤炼成一顶王冠。",
+    "zh-Hant": "自盎格魯人、撒克遜人、朱特人定居，至黑斯廷斯一戰：六百年間，諸小國先後歸信，又在維京人的壓力下被錘鍊成一頂王冠。"
+   }
+  },
+  {
+   "id": "burgundian-kingdom",
+   "start": 411,
+   "end": 534,
+   "region": "europe",
+   "stream": "europe",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "Kingdom of the Burgundians",
+    "zh-Hans": "勃艮第王国",
+    "zh-Hant": "勃艮第王國"
+   },
+   "note": {
+    "en": "Settled on the Rhone and Saone after the Rhine crossing, and remembered chiefly for its written law and for the disaster the Nibelung poems later made of its fall to the Huns.",
+    "zh-Hans": "越过莱茵河后定居于罗讷河与索恩河一带；后世所记者，主要是它的成文法，以及《尼伯龙根》诗篇把它亡于匈人一事写成的那场大祸。",
+    "zh-Hant": "越過萊茵河後定居於隆河與索恩河一帶；後世所記者，主要是它的成文法，以及《尼伯龍根》詩篇把它亡於匈人一事寫成的那場大禍。"
+   }
+  },
+  {
+   "id": "sui-dynasty",
+   "start": 581,
+   "end": 618,
+   "region": "asia",
+   "stream": "china",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Sui Dynasty",
+    "zh-Hans": "隋朝",
+    "zh-Hant": "隋朝"
+   },
+   "note": {
+    "en": "Short, and decisive: it reunited China after nearly four centuries of division, dug the Grand Canal that joined the rice of the south to the capitals of the north, and began the examinations that outlasted it by thirteen hundred years.",
+    "zh-Hans": "国祚甚短，却是转折：结束近四百年的分裂，凿通把江南稻米接上北方都城的大运河，并创设了比它本身多存续一千三百年的科举。",
+    "zh-Hant": "國祚甚短，卻是轉折：結束近四百年的分裂，鑿通把江南稻米接上北方都城的大運河，並創設了比它本身多存續一千三百年的科舉。"
+   }
+  },
+  {
+   "id": "five-dynasties-ten-kingdoms",
+   "start": 907,
+   "end": 960,
+   "region": "asia",
+   "stream": "china",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "Five Dynasties and Ten Kingdoms",
+    "zh-Hans": "五代十国",
+    "zh-Hant": "五代十國"
+   },
+   "note": {
+    "en": "The half-century between Tang and Song, when five short dynasties followed one another in the north while ten states held the south. Printing spread in it, including the first printed Confucian classics.",
+    "zh-Hans": "唐宋之间的半个世纪，北方五朝相继而立，南方十国分据。印刷术于此时推广，儒家经籍的最早刻本即出于其间。",
+    "zh-Hant": "唐宋之間的半個世紀，北方五朝相繼而立，南方十國分據。印刷術於此時推廣，儒家經籍的最早刻本即出於其間。"
+   }
+  },
+  {
+   "id": "song-dynasty",
+   "start": 960,
+   "end": 1279,
+   "region": "asia",
+   "stream": "china",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Song Dynasty",
+    "zh-Hans": "宋朝",
+    "zh-Hant": "宋朝"
+   },
+   "note": {
+    "en": "Driven south of the Huai by the Jurchen in 1127 and never as wide as the Tang, yet the age of paper money, movable type, the mariner's compass and the water-driven clock, and the wealthiest state of its century.",
+    "zh-Hans": "1127年为女真所迫南渡淮水，疆域始终不及唐；然而这是纸币、活字、指南针与水运仪象台之世，也是当时最富庶的国家。",
+    "zh-Hant": "1127年為女真所迫南渡淮水，疆域始終不及唐；然而這是紙幣、活字、指南針與水運儀象臺之世，也是當時最富庶的國家。"
+   }
+  },
+  {
+   "id": "kingdom-of-hungary",
+   "start": 1000,
+   "end": 1526,
+   "region": "europe",
+   "stream": "europe",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Kingdom of Hungary",
+    "zh-Hans": "匈牙利王国",
+    "zh-Hant": "匈牙利王國"
+   },
+   "note": {
+    "en": "Stephen took a crown from the pope at the millennium and made a Christian kingdom of the Magyar settlement. It held the eastern edge of Latin Europe for five centuries, until Mohacs.",
+    "zh-Hans": "千禧之年，伊什特万自教皇受冕，把马扎尔人的居地建成基督教王国。此国守着拉丁欧洲的东缘五百年，直到莫哈奇一役。",
+    "zh-Hant": "千禧之年，伊什特萬自教皇受冕，把馬扎爾人的居地建成基督教王國。此國守著拉丁歐洲的東緣五百年，直到莫哈奇一役。"
+   }
+  },
+  {
+   "id": "kingdom-of-france",
+   "start": 987,
+   "end": 1792,
+   "region": "europe",
+   "stream": "europe",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Kingdom of France",
+    "zh-Hans": "法兰西王国",
+    "zh-Hant": "法蘭西王國"
+   },
+   "note": {
+    "en": "From the election of Hugh Capet to the abolition of the monarchy: eight hundred years under one crown, through the Hundred Years' War, the wars of religion and the reign that ended in the Revolution.",
+    "zh-Hans": "自于格·卡佩获选，至君主制被废：一顶王冠之下的八百年，历经百年战争、宗教战争，终于以大革命收场的那一朝。",
+    "zh-Hant": "自于格·卡佩獲選，至君主制被廢：一頂王冠之下的八百年，歷經百年戰爭、宗教戰爭，終於以大革命收場的那一朝。"
+   }
+  },
+  {
+   "id": "yuan-dynasty",
+   "start": 1271,
+   "end": 1368,
+   "region": "asia",
+   "stream": "china",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Yuan Dynasty",
+    "zh-Hans": "元朝",
+    "zh-Hant": "元朝"
+   },
+   "note": {
+    "en": "Kublai Khan gave the Mongol conquest a Chinese dynastic name and ruled from Dadu, the city under modern Beijing. The first dynasty to rule all China from outside it, and the one Marco Polo described.",
+    "zh-Hans": "忽必烈为蒙古征服取了汉式国号，都于大都，即今北京城下之城。这是第一个自外入主全中国的王朝，也是马可·波罗所记的那一朝。",
+    "zh-Hant": "忽必烈為蒙古征服取了漢式國號，都於大都，即今北京城下之城。這是第一個自外入主全中國的王朝，也是馬可·波羅所記的那一朝。"
+   }
+  },
+  {
+   "id": "qing-dynasty",
+   "start": 1644,
+   "end": 1912,
+   "region": "asia",
+   "stream": "china",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Qing Dynasty",
+    "zh-Hans": "清朝",
+    "zh-Hant": "清朝"
+   },
+   "note": {
+    "en": "The last dynasty. The Manchus took Beijing in 1644 and doubled the empire's extent; the same state met the opium wars, the treaty ports and the missionaries, and ended with a child's abdication.",
+    "zh-Hans": "末代王朝。满洲人于1644年入北京，疆域扩至一倍；同一个国家又遭遇鸦片战争、通商口岸与传教士，终以幼帝退位收场。",
+    "zh-Hant": "末代王朝。滿洲人於1644年入北京，疆域擴至一倍；同一個國家又遭遇鴉片戰爭、通商口岸與傳教士，終以幼帝退位收場。"
+   }
+  },
+  {
+   "id": "the-reformation",
+   "start": 1517,
+   "end": 1648,
+   "region": "europe",
+   "stream": "church",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "The Reformation",
+    "zh-Hans": "宗教改革",
+    "zh-Hant": "宗教改革"
+   },
+   "note": {
+    "en": "From the theses at Wittenberg to the peace that ended the wars they set off. A movement about how a man is justified became a rearrangement of every crown, university and printing press in western Europe.",
+    "zh-Hans": "自威登堡的《九十五条论纲》，至终结其所引发之战争的和约。一场关乎人如何称义的运动，最终重排了西欧的每一顶王冠、每一所大学与每一台印刷机。",
+    "zh-Hant": "自威登堡的《九十五條論綱》，至終結其所引發之戰爭的和約。一場關乎人如何稱義的運動，最終重排了西歐的每一頂王冠、每一所大學與每一臺印刷機。"
+   }
+  },
+  {
+   "id": "huldrych-zwingli",
+   "start": 1484,
+   "end": 1531,
+   "region": "europe",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Huldrych Zwingli",
+    "zh-Hans": "慈运理",
+    "zh-Hant": "慈運理"
+   },
+   "note": {
+    "en": "Preacher at the Grossmunster from 1519, who reformed Zurich from the pulpit by working straight through the books of scripture. He broke with Luther over the Supper and was killed in the field at Kappel.",
+    "zh-Hans": "自1519年任苏黎世大教堂讲道者，逐卷讲解圣经，从讲台上改革了这座城。他因圣餐之见与路德分道，最后阵亡于卡佩尔战场。",
+    "zh-Hant": "自1519年任蘇黎世大教堂講道者，逐卷講解聖經，從講臺上改革了這座城。他因聖餐之見與路德分道，最後陣亡於卡佩爾戰場。"
+   }
+  },
+  {
+   "id": "john-wycliffe",
+   "start": 1328,
+   "end": 1384,
+   "region": "europe",
+   "stream": "church",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "John Wycliffe",
+    "zh-Hans": "威克里夫",
+    "zh-Hant": "威克里夫"
+   },
+   "note": {
+    "en": "Oxford theologian who set scripture above the church that carried it and whose circle put the whole Bible into English. Condemned after his death, and read on by the Lollards and by Bohemia.",
+    "zh-Hans": "牛津神学家，主张圣经的权柄高于承传它的教会，其门人把全本圣经译成英文。他身后被定为异端，罗拉德派与波希米亚人仍继续读他。",
+    "zh-Hant": "牛津神學家，主張聖經的權柄高於承傳它的教會，其門人把全本聖經譯成英文。他身後被定為異端，羅拉德派與波希米亞人仍繼續讀他。"
+   }
+  },
+  {
+   "id": "kingdom-of-england",
+   "start": 927,
+   "end": 1707,
+   "region": "europe",
+   "stream": "europe",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "Kingdom of England",
+    "zh-Hans": "英格兰王国",
+    "zh-Hant": "英格蘭王國"
+   },
+   "note": {
+    "en": "From Athelstan's single crown over the English to the union with Scotland: the kingdom of Magna Carta, of the break with Rome, of the civil war and of the first English Bibles.",
+    "zh-Hans": "自埃塞尔斯坦一冠统辖英人，至与苏格兰合并为止：这是《大宪章》之国、脱离罗马之国、内战之国，也是最早的英文圣经出于其间的国。",
+    "zh-Hant": "自埃塞爾斯坦一冠統轄英人，至與蘇格蘭合併為止：這是《大憲章》之國、脫離羅馬之國、內戰之國，也是最早的英文聖經出於其間的國。"
+   }
+  },
+  {
+   "id": "charlemagne-reign",
+   "start": 768,
+   "end": 814,
+   "region": "europe",
+   "stream": "europe",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Charlemagne",
+    "zh-Hans": "查理曼",
+    "zh-Hant": "查理曼"
+   },
+   "note": {
+    "en": "King of the Franks from 768 and emperor from Christmas 800. He took Lombardy, forced Saxony to the font, and gathered the scholars whose corrected script is the hand later Europe copied.",
+    "zh-Hans": "自768年为法兰克王，自公元800年圣诞日为皇帝。他取伦巴第，以兵威迫撒克逊人受洗，又聚集学者厘定书体，后世欧洲所摹之字即出于此。",
+    "zh-Hant": "自768年為法蘭克王，自公元800年聖誕日為皇帝。他取倫巴第，以兵威迫撒克遜人受洗，又聚集學者釐定書體，後世歐洲所摹之字即出於此。"
+   }
+  },
+  {
+   "id": "east-francia",
+   "start": 843,
+   "end": 962,
+   "region": "europe",
+   "stream": "europe",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "East Francia",
+    "zh-Hans": "东法兰克王国",
+    "zh-Hant": "東法蘭克王國"
+   },
+   "note": {
+    "en": "The eastern share of Charlemagne's empire after Verdun divided it among his grandsons. It kept a separate crown for a hundred and twenty years, and out of it came the German kingdom and then the Holy Roman Empire.",
+    "zh-Hans": "凡尔登条约把查理曼的帝国分与其三孙之后，东边所得的一份。它自立一冠百二十年，日耳曼王国由此而出，神圣罗马帝国又由日耳曼王国而出。",
+    "zh-Hant": "凡爾登條約把查理曼的帝國分與其三孫之後，東邊所得的一份。它自立一冠百二十年，日耳曼王國由此而出，神聖羅馬帝國又由日耳曼王國而出。"
+   }
+  },
+  {
+   "id": "gedaliah-governor",
+   "start": -586,
+   "end": -586,
+   "region": "levant",
+   "stream": "judah",
+   "approximate": true,
+   "basis": "scripture+thiele",
+   "ref": "2 Kings 25:22",
+   "name": {
+    "en": "Gedaliah, Governor at Mizpah",
+    "zh-Hans": "基大利在米斯巴作省长",
+    "zh-Hant": "基大利在米斯巴作省長"
+   },
+   "note": {
+    "en": "After the city fell, Nebuchadnezzar set Gedaliah over the people left in the land. He told them to serve Babylon and it would go well; Ishmael of the royal seed killed him at Mizpah, and the remnant fled to Egypt. The text gives no length for his office, only the month of his death.",
+    "zh-Hans": "城破之后，尼布甲尼撒立基大利管理留在境内的百姓。他劝众人服事巴比伦，必得平安；王室后裔以实玛利在米斯巴杀了他，余民遂逃往埃及。经文未记他在任多久，只记他被杀的月份。",
+    "zh-Hant": "城破之後，尼布甲尼撒立基大利管理留在境內的百姓。他勸眾人服事巴比倫，必得平安；王室後裔以實瑪利在米斯巴殺了他，餘民遂逃往埃及。經文未記他在任多久，只記他被殺的月份。"
+   }
+  },
+  {
+   "id": "jezebel-queen",
+   "start": -874,
+   "end": -841,
+   "region": "levant",
+   "stream": "israel",
+   "approximate": true,
+   "basis": "scripture+thiele",
+   "ref": "1 Kings 16:31",
+   "name": {
+    "en": "Jezebel, Queen of Israel",
+    "zh-Hans": "以色列王后耶洗别",
+    "zh-Hant": "以色列王后耶洗別"
+   },
+   "note": {
+    "en": "Daughter of the king of the Sidonians and wife of Ahab, who set up Baal at Samaria, cut off the prophets of the LORD, and had Naboth killed for his vineyard. The span is Ahab's accession to her death in Jehu's year, as this app's kings file dates them.",
+    "zh-Hans": "西顿王的女儿，亚哈之妻；在撒玛利亚立巴力，杀灭耶和华的先知，又为一座葡萄园害死拿伯。此段自亚哈登基起，至耶户之年她被杀止，年份依本应用的列王年表。",
+    "zh-Hant": "西頓王的女兒，亞哈之妻；在撒瑪利亞立巴力，殺滅耶和華的先知，又為一座葡萄園害死拿伯。此段自亞哈登基起，至耶戶之年她被殺止，年份依本應用的列王年表。"
+   }
   }
  ],
  "ministries": [
@@ -19817,6 +20503,446 @@
     "en": "Three months after Granada fell, Ferdinand and Isabella gave the Jews of their kingdoms, Sicily and Sardinia among them, until the end of July to accept baptism or leave. Perhaps a hundred thousand went, many into Ottoman lands, and Sephardic Judaism was scattered across the Mediterranean.",
     "zh-Hans": "格拉纳达陷落三个月后，斐迪南与伊莎贝拉下令其治下各邦（包括西西里与撒丁尼亚）的犹太人，须在七月底以前受洗或离境。去者或有十万，多往奥斯曼境内，塞法迪犹太人自此散布地中海各地。",
     "zh-Hant": "格拉納達陷落三個月後，斐迪南與伊莎貝拉下令其治下各邦（包括西西里與撒丁尼亞）的猶太人，須在七月底以前受洗或離境。去者或有十萬，多往鄂圖曼境內，塞法迪猶太人自此散布地中海各地。"
+   }
+  },
+  {
+   "id": "moses_flees_midian",
+   "year": -1486,
+   "era": "bible",
+   "stream": "israel",
+   "approximate": true,
+   "basis": "scripture+thiele",
+   "title": {
+    "en": "Moses Flees to Midian",
+    "zh-Hans": "摩西逃往米甸",
+    "zh-Hant": "摩西逃往米甸"
+   },
+   "desc": {
+    "en": "At forty Moses kills an Egyptian, is found out, and runs to Midian, where he stays another forty years. Stephen supplies both figures; counted back from the burning bush, which this chart dates -1446, the flight falls about 1486 BC. The year is only as firm as the birth and exodus years it hangs between.",
+    "zh-Hans": "摩西四十岁时打死一个埃及人，事情败露，逃往米甸，又在那里住了四十年。这两个数字都出自司提反的讲论；从本图所定荆棘火焰之年（前1446年）往前推算，逃亡约在主前1486年。此年的确定程度，全看它所依附的出生与出埃及两个年份。",
+    "zh-Hant": "摩西四十歲時打死一個埃及人，事情敗露，逃往米甸，又在那裡住了四十年。這兩個數字都出自司提反的講論；從本圖所定荊棘火焰之年（前1446年）往前推算，逃亡約在主前1486年。此年的確定程度，全看它所依附的出生與出埃及兩個年份。"
+   },
+   "refs": [
+    "Exodus 2:11-15",
+    "Acts 7:23-24",
+    "Acts 7:29-30"
+   ]
+  },
+  {
+   "id": "land_divided_tribes",
+   "year": -1400,
+   "era": "bible",
+   "stream": "israel",
+   "approximate": true,
+   "basis": "scripture+thiele",
+   "title": {
+    "en": "Canaan Divided among the Tribes",
+    "zh-Hans": "迦南地按支派分定",
+    "zh-Hant": "迦南地按支派分定"
+   },
+   "desc": {
+    "en": "Caleb comes to Joshua at Gilgal and asks for the hill country, reminding him that forty-five years have passed since Kadesh-barnea and that he is now eighty-five; the rest of the land is then parcelled out to the tribes by lot. Those forty-five years, counted from the spying that this chart places in the second year after the exodus, give about 1400 BC.",
+    "zh-Hans": "迦勒在吉甲来见约书亚，求那山地为业，提醒他自加低斯巴尼亚以来已过了四十五年，自己现今八十五岁；此后余地按支派拈阄分定。那四十五年自窥探迦南之年起算，本图定窥探在出埃及后第二年，故此约为主前1400年。",
+    "zh-Hant": "迦勒在吉甲來見約書亞，求那山地為業，提醒他自加低斯巴尼亞以來已過了四十五年，自己現今八十五歲；此後餘地按支派拈鬮分定。那四十五年自窺探迦南之年起算，本圖定窺探在出埃及後第二年，故此約為主前1400年。"
+   },
+   "refs": [
+    "Joshua 14:1",
+    "Joshua 14:10",
+    "Joshua 19:51"
+   ]
+  },
+  {
+   "id": "jacob_blesses_sons",
+   "year": -1859,
+   "era": "bible",
+   "stream": "israel",
+   "approximate": true,
+   "basis": "scripture+thiele",
+   "title": {
+    "en": "Jacob Blesses His Sons and Dies",
+    "zh-Hans": "雅各为众子祝福并去世",
+    "zh-Hant": "雅各為眾子祝福並去世"
+   },
+   "desc": {
+    "en": "Jacob blesses Joseph's two sons, crossing his hands over them, then calls the twelve and blesses each in turn before he dies in Egypt at a hundred and forty-seven. Genesis 47:28 gives him seventeen years in Egypt, counted from the arrival this chart dates -1876; the year moves with that anchor.",
+    "zh-Hans": "雅各先为约瑟的两个儿子祝福，两手交叉按在他们头上；随后召齐十二个儿子，一一为他们祝福，然后在埃及去世，享年一百四十七岁。创世纪 47:28 记他在埃及住了十七年；自本图所定下埃及之年（前1876年）起算即得此年，此年随该锚点而移。",
+    "zh-Hant": "雅各先為約瑟的兩個兒子祝福，兩手交叉按在他們頭上；隨後召齊十二個兒子，一一為他們祝福，然後在埃及去世，享年一百四十七歲。創世紀 47:28 記他在埃及住了十七年；自本圖所定下埃及之年（前1876年）起算即得此年，此年隨該錨點而移。"
+   },
+   "refs": [
+    "Genesis 47:28",
+    "Genesis 48",
+    "Genesis 49",
+    "Genesis 49:33"
+   ]
+  },
+  {
+   "id": "othniel_delivers_israel",
+   "year": -1370,
+   "era": "bible",
+   "stream": "israel",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Othniel, the First of the Judges",
+    "zh-Hans": "俄陀聂：士师中的第一位",
+    "zh-Hant": "俄陀聶：士師中的第一位"
+   },
+   "desc": {
+    "en": "After eight years under Cushan-Rishathaim of Mesopotamia, the Spirit comes upon Othniel the son of Kenaz, Caleb's kinsman, and the land has rest forty years. Judges gives lengths of servitude and rest but never a date, so this year is only a place in the sequence the chart already draws between the conquest and Deborah.",
+    "zh-Hans": "以色列服事米所波大米王古珊利萨田八年之后，神的灵降在基纳斯的儿子、迦勒的亲族俄陀聂身上，此后国中太平四十年。士师记只记服役与安息的年数，从不记年份，故此处的年代不过是本图既有次序中、介乎得地与底波拉之间的一个位置。",
+    "zh-Hant": "以色列服事米所波大米王古珊利薩田八年之後，神的靈降在基納斯的兒子、迦勒的親族俄陀聶身上，此後國中太平四十年。士師記只記服役與安息的年數，從不記年份，故此處的年代不過是本圖既有次序中、介乎得地與底波拉之間的一個位置。"
+   },
+   "refs": [
+    "Judges 3:7-11"
+   ]
+  },
+  {
+   "id": "ehud_delivers_israel",
+   "year": -1320,
+   "era": "bible",
+   "stream": "israel",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Ehud Delivers Israel from Moab",
+    "zh-Hans": "以笏救以色列脱离摩押",
+    "zh-Hant": "以笏救以色列脫離摩押"
+   },
+   "desc": {
+    "en": "Eglon of Moab holds Israel eighteen years until Ehud, the left-handed Benjamite, kills him in his own summer chamber and Israel has rest eighty years. Counting those eighty years back from Deborah, whom this chart dates -1240, gives roughly this year; the book itself supplies no date.",
+    "zh-Hans": "摩押王伊矶伦辖制以色列十八年，直到便雅悯人、左手便利的以笏在他自己的凉楼里将他刺死，此后国中太平八十年。自本图所定底波拉之年（前1240年）上推这八十年，约得此年；士师记本身并未给出任何年份。",
+    "zh-Hant": "摩押王伊磯倫轄制以色列十八年，直到便雅憫人、左手便利的以笏在他自己的涼樓裡將他刺死，此後國中太平八十年。自本圖所定底波拉之年（前1240年）上推這八十年，約得此年；士師記本身並未給出任何年份。"
+   },
+   "refs": [
+    "Judges 3:12-30"
+   ]
+  },
+  {
+   "id": "asa_defeats_zerah",
+   "year": -897,
+   "era": "bible",
+   "stream": "judah",
+   "approximate": true,
+   "basis": "scripture+thiele",
+   "title": {
+    "en": "Asa Routs Zerah the Cushite",
+    "zh-Hans": "亚撒击败古实人谢拉",
+    "zh-Hant": "亞撒擊敗古實人謝拉"
+   },
+   "desc": {
+    "en": "Zerah the Cushite comes against Judah with an army beyond counting, and Asa, praying that with God it is nothing to help the weak against the strong, breaks him at Mareshah. The covenant renewal that follows is dated to Asa's fifteenth year, which on the reign figures this chart uses falls about 896 BC, so the battle stands just before it.",
+    "zh-Hans": "古实人谢拉率大军来攻犹大，亚撒祷告说：在神面前，帮助软弱的胜过强盛的原不算难事，遂在玛利沙将他击溃。战后的立约大会记在亚撒作王第十五年；按本图所用的在位年数推算，约在主前896年，故此役当紧接其前。",
+    "zh-Hant": "古實人謝拉率大軍來攻猶大，亞撒禱告說：在神面前，幫助軟弱的勝過強盛的原不算難事，遂在瑪利沙將他擊潰。戰後的立約大會記在亞撒作王第十五年；按本圖所用的在位年數推算，約在主前896年，故此役當緊接其前。"
+   },
+   "refs": [
+    "2 Chronicles 14:9-15",
+    "2 Chronicles 15:10-12"
+   ]
+  },
+  {
+   "id": "shamshi_adad_i",
+   "year": -1808,
+   "era": "world",
+   "stream": "assyria",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Shamshi-Adad I Rules Upper Mesopotamia",
+    "zh-Hans": "沙姆希阿达一世统治两河北部",
+    "zh-Hant": "沙姆希阿達一世統治兩河北部"
+   },
+   "desc": {
+    "en": "Shamshi-Adad I takes Ashur and rules a kingdom reaching from Mari on the Euphrates to the edge of the Zagros, the first Assyrian territorial state and a rival of Hammurabi's Babylon. His dates shift by decades according to which Mesopotamian chronology is followed; the letters kept from his time give the fullest picture we have of the world the patriarchs moved in.",
+    "zh-Hans": "沙姆希阿达一世夺取亚述城，所建之国西起伯拉河畔的马里，东抵扎格罗斯山麓，是亚述第一个真正的领土国家，与汉摩拉比的巴比伦相抗。他的年代随所取的两河流域纪年体系而前后相差数十年；他那个时代留下的书信档案，是我们了解族长所处世界最完整的一批材料。",
+    "zh-Hant": "沙姆希阿達一世奪取亞述城，所建之國西起伯拉河畔的馬里，東抵扎格羅斯山麓，是亞述第一個真正的領土國家，與漢摩拉比的巴比倫相抗。他的年代隨所取的兩河流域紀年體系而前後相差數十年；他那個時代留下的書信檔案，是我們了解族長所處世界最完整的一批材料。"
+   }
+  },
+  {
+   "id": "tiglath_pileser_i",
+   "year": -1114,
+   "era": "world",
+   "stream": "assyria",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Tiglath-Pileser I Reaches the Mediterranean",
+    "zh-Hans": "提革拉毗列色一世兵抵地中海",
+    "zh-Hant": "提革拉毗列色一世兵抵地中海"
+   },
+   "desc": {
+    "en": "Tiglath-Pileser I carries Assyrian armies west to the Mediterranean coast and north into Anatolia, the high point of the Middle Assyrian kingdom. Israel is still under the judges while he reigns; the empire he prefigures is the one that will one day carry the northern tribes away.",
+    "zh-Hans": "提革拉毗列色一世率亚述大军西抵地中海沿岸，北入安纳托利亚，中亚述王国至此达于极盛。其在位之时，以色列仍在士师治下；他所预示的那个帝国，日后要把北方各支派掳去。",
+    "zh-Hant": "提革拉毗列色一世率亞述大軍西抵地中海沿岸，北入安納托利亞，中亞述王國至此達於極盛。其在位之時，以色列仍在士師治下；他所預示的那個帝國，日後要把北方各支派擄去。"
+   }
+  },
+  {
+   "id": "jimmu_japan",
+   "year": -660,
+   "era": "world",
+   "stream": "japan",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Jimmu, Japan's Legendary First Emperor",
+    "zh-Hans": "神武天皇：日本传说中的开国之君",
+    "zh-Hant": "神武天皇：日本傳說中的開國之君"
+   },
+   "desc": {
+    "en": "Japanese tradition sets the founding of the imperial line by Jimmu in this year. The date comes from chronicles compiled more than thirteen centuries afterwards and is not a record from the time; the Yamato state that archaeology can see begins far nearer the Christian era.",
+    "zh-Hans": "日本传统把皇室的肇始定在这一年。此说出自一千三百多年后编成的史书，并非当时的记载；考古所见的大和政权，成立之期已近于主后。",
+    "zh-Hant": "日本傳統把皇室的肇始定在這一年。此說出自一千三百多年後編成的史書，並非當時的記載；考古所見的大和政權，成立之期已近於主後。"
+   }
+  },
+  {
+   "id": "gonghe_regency",
+   "year": -841,
+   "era": "world",
+   "stream": "china",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "China's Records Become Continuous",
+    "zh-Hans": "中国纪年自此连续",
+    "zh-Hant": "中國紀年自此連續"
+   },
+   "desc": {
+    "en": "King Li of Zhou is driven out and the realm is governed by a regency. From this year the Chinese annals run on without a break, so 841 BC is the earliest year in China's history that can be dated exactly; everything before it, the Zhou conquest of Shang included, is reckoned back by estimate.",
+    "zh-Hans": "周厉王被逐出王都，国政由共和行政维持。自这一年起，中国的编年记载再无中断，主前841年因此是中国历史上第一个可以确切系年的年份；此前诸事，包括武王克商在内，都只能上推估算。",
+    "zh-Hant": "周厲王被逐出王都，國政由共和行政維持。自這一年起，中國的編年記載再無中斷，主前841年因此是中國歷史上第一個可以確切繫年的年份；此前諸事，包括武王克商在內，都只能上推估算。"
+   }
+  },
+  {
+   "id": "zhou_move_east",
+   "year": -770,
+   "era": "world",
+   "stream": "china",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "The Zhou Move East and the Spring and Autumn Age Begins",
+    "zh-Hans": "周室东迁，春秋时代开始",
+    "zh-Hant": "周室東遷，春秋時代開始"
+   },
+   "desc": {
+    "en": "Driven from their western capital, the Zhou kings move east to Luoyang and keep the throne in name while the states around them go their own way. The Spring and Autumn age that opens here runs down to the Persian empire and the years of the return from exile.",
+    "zh-Hans": "周王失去西方旧都，东迁洛邑，虽存王号，四方诸侯却各行其是。自此开始的春秋时代，一直延续到波斯帝国与犹大人归回的年代。",
+    "zh-Hant": "周王失去西方舊都，東遷洛邑，雖存王號，四方諸侯卻各行其是。自此開始的春秋時代，一直延續到波斯帝國與猶大人歸回的年代。"
+   }
+  },
+  {
+   "id": "cambyses_conquers_egypt",
+   "year": -525,
+   "era": "world",
+   "stream": "persia",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Persia Conquers Egypt",
+    "zh-Hans": "波斯征服埃及",
+    "zh-Hant": "波斯征服埃及"
+   },
+   "desc": {
+    "en": "Cambyses defeats Psamtik III at Pelusium and Egypt becomes a Persian province, ending native rule for more than a century. From here until Alexander, the Jews who fled into Egypt after Jerusalem fell and those who went home to Judah live under one and the same Persian crown.",
+    "zh-Hans": "冈比西斯在培琉喜阿姆击败普萨美提克三世，埃及成为波斯的一省，本土王朝中断百余年。自此至亚历山大，耶路撒冷倾覆后逃往埃及的犹大人，与归回犹大地的同胞，同在一个波斯王权之下。",
+    "zh-Hant": "岡比西斯在培琉喜阿姆擊敗普薩美提克三世，埃及成為波斯的一省，本土王朝中斷百餘年。自此至亞歷山大，耶路撒冷傾覆後逃往埃及的猶大人，與歸回猶大地的同胞，同在一個波斯王權之下。"
+   }
+  },
+  {
+   "id": "syria_roman_province",
+   "year": -64,
+   "era": "world",
+   "stream": "rome",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Syria Becomes a Roman Province",
+    "zh-Hans": "叙利亚成为罗马行省",
+    "zh-Hant": "敘利亞成為羅馬行省"
+   },
+   "desc": {
+    "en": "Pompey puts an end to the Seleucid kingdom and makes Syria a province governed from Antioch. The next year he takes Jerusalem, and the governor of Syria named in Luke's account of the nativity holds the office created here.",
+    "zh-Hans": "庞培灭塞琉古王国，以叙利亚为行省，治所设在安提阿。次年他攻取耶路撒冷；路加记主降生时所提的叙利亚巡抚，所任的正是此时所设之职。",
+    "zh-Hant": "龐培滅塞琉古王國，以敘利亞為行省，治所設在安提阿。次年他攻取耶路撒冷；路加記主降生時所提的敘利亞巡撫，所任的正是此時所設之職。"
+   }
+  },
+  {
+   "id": "maya_preclassic_cerros",
+   "year": -50,
+   "era": "world",
+   "stream": "americas",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Preclassic Maya Towns Rise in Belize",
+    "zh-Hans": "前古典期玛雅城邑在伯利兹兴起",
+    "zh-Hant": "前古典期瑪雅城邑在伯利茲興起"
+   },
+   "desc": {
+    "en": "On the coast of what is now Belize, the town of Cerros is rebuilt around masonry temple platforms, one of a number of Maya centres already substantial in the Late Preclassic, centuries before the Classic cities this chart draws. The dating comes from excavation and is approximate.",
+    "zh-Hans": "在今日伯利兹的海岸，塞罗斯环绕石造神庙台基重建；在本图所绘的古典期城市之前数百年，已有若干玛雅中心具此规模。其年代出自发掘，只是约数。",
+    "zh-Hant": "在今日伯利茲的海岸，塞羅斯環繞石造神廟臺基重建；在本圖所繪的古典期城市之前數百年，已有若干瑪雅中心具此規模。其年代出自發掘，只是約數。"
+   }
+  },
+  {
+   "id": "olmec_decline",
+   "year": -400,
+   "era": "world",
+   "stream": "americas",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "The Olmec Centres Are Abandoned",
+    "zh-Hans": "奥尔梅克中心城邑荒废",
+    "zh-Hant": "奧爾梅克中心城邑荒廢"
+   },
+   "desc": {
+    "en": "La Venta and the other great Olmec sites on the Gulf coast are left empty, and the civilisation this chart marks at its rise passes away. The end was gradual and the year is a round one; what the Olmecs began in calendar, writing and carved monument is carried on by those who follow them in Mesoamerica.",
+    "zh-Hans": "墨西哥湾岸的拉文塔与其余奥尔梅克大邑相继废弃，本图标出其兴起的那个文明至此消歇。其衰亡是渐进的，年份取整；他们在历法、文字与石刻纪念物上开创的传统，由其后的中美洲各族承接。",
+    "zh-Hant": "墨西哥灣岸的拉文塔與其餘奧爾梅克大邑相繼廢棄，本圖標出其興起的那個文明至此消歇。其衰亡是漸進的，年份取整；他們在曆法、文字與石刻紀念物上開創的傳統，由其後的中美洲各族承接。"
+   }
+  },
+  {
+   "id": "caligula_emperor",
+   "year": 37,
+   "era": "world",
+   "stream": "rome",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Caligula Becomes Emperor",
+    "zh-Hans": "卡利古拉登基",
+    "zh-Hant": "卡利古拉登基"
+   },
+   "desc": {
+    "en": "Gaius, nicknamed Caligula, succeeds Tiberius. He later orders his own statue set up in the temple at Jerusalem; the governor of Syria delayed the work, and the emperor's murder in 41 ended the matter before the image was ever raised.",
+    "zh-Hans": "该犹（人称卡利古拉）继提比略为帝。他后来下令把自己的像立在耶路撒冷的圣殿里；叙利亚巡抚拖延不办，及至主后41年皇帝遇弑，此像终未立成。",
+    "zh-Hant": "該猶（人稱卡利古拉）繼提比略為帝。他後來下令把自己的像立在耶路撒冷的聖殿裡；敘利亞巡撫拖延不辦，及至主後41年皇帝遇弒，此像終未立成。"
+   }
+  },
+  {
+   "id": "claudius_invades_britain",
+   "year": 43,
+   "era": "world",
+   "stream": "rome",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Rome Conquers Britain",
+    "zh-Hans": "罗马征服不列颠",
+    "zh-Hant": "羅馬征服不列顛"
+   },
+   "desc": {
+    "en": "Claudius sends four legions across the Channel and southern Britain becomes a Roman province. The island stays under Rome for close to four centuries, and the gospel reaches it well within that time.",
+    "zh-Hans": "革老丢遣四个军团渡海，不列颠南部成为罗马行省。此岛归罗马近四百年，福音在这段年日之内即已传到。",
+    "zh-Hant": "革老丟遣四個軍團渡海，不列顛南部成為羅馬行省。此島歸羅馬近四百年，福音在這段年日之內即已傳到。"
+   }
+  },
+  {
+   "id": "constantine_sunday_law",
+   "year": 321,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Sunday Made a Day of Rest by Law",
+    "zh-Hans": "法律定主日为休息日",
+    "zh-Hant": "法律定主日為休息日"
+   },
+   "desc": {
+    "en": "A law of Constantine dated 7 March 321 ordered judges, townspeople and craftsmen to rest on the day of the Sun, while farm work was allowed to go on. It is the first civil legislation behind the Christian observance of Sunday, and the pagan name it uses shows how mixed the empire still was eight years after toleration.",
+    "zh-Hans": "君士坦丁于321年3月7日颁下法令，命法官、城中居民与工匠在「太阳日」歇息，惟农事仍可照作。这是基督徒守主日背后的第一道民法；法令所用的异教日名，也显出宽容令颁布八年之后，帝国仍是混杂的。",
+    "zh-Hant": "君士坦丁於321年3月7日頒下法令，命法官、城中居民與工匠在「太陽日」歇息，惟農事仍可照作。這是基督徒守主日背後的第一道民法；法令所用的異教日名，也顯出寬容令頒布八年之後，帝國仍是混雜的。"
+   }
+  },
+  {
+   "id": "eusebius_church_history",
+   "year": 325,
+   "era": "church",
+   "stream": "church",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Eusebius Writes the First Church History",
+    "zh-Hans": "优西比乌写成第一部教会史",
+    "zh-Hant": "優西比烏寫成第一部教會史"
+   },
+   "desc": {
+    "en": "The bishop of Caesarea gathered letters, documents and lists of bishops into a continuous account running from the apostles to Constantine, and set down which books the churches read as Scripture and which they disputed. He revised the work more than once and the last edition is usually placed about 325, the year he sat at Nicaea. Nearly everything now known about the second-century church has come down through him.",
+    "zh-Hans": "该撒利亚的主教把书信、文献与主教名录汇成一部自使徒时代直到君士坦丁的连贯记述，并写下各教会视哪些书卷为圣经、对哪些有争议。此书他修订过不止一次，末次成书一般定在约325年，即他出席尼西亚会议之年。今日所知二世纪教会的事，几乎全是经他传下来的。",
+    "zh-Hant": "該撒利亞的主教把書信、文獻與主教名錄彙成一部自使徒時代直到君士坦丁的連貫記述，並寫下各教會視哪些書卷為聖經、對哪些有爭議。此書他修訂過不止一次，末次成書一般定在約325年，即他出席尼西亞會議之年。今日所知二世紀教會的事，幾乎全是經他傳下來的。"
+   }
+  },
+  {
+   "id": "fourth_lateran_council",
+   "year": 1215,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Fourth Lateran Council",
+    "zh-Hans": "第四次拉特兰会议",
+    "zh-Hant": "第四次拉特朗會議"
+   },
+   "desc": {
+    "en": "Innocent III gathered some twelve hundred bishops and abbots at Rome. Its first canon used the word transubstantiated of the bread and the wine, the first time a council had fixed that term, and its twenty-first required every believer to confess to a priest and receive communion at least once a year. Both rulings shaped Western worship until the Reformation set itself against them.",
+    "zh-Hans": "英诺森三世在罗马召集约一千二百位主教与院长。会议第一条法规用「化质」一词论饼与酒，是大公会议首次确立这个说法；第二十一条则规定信徒每年至少向神父认罪、领受圣餐一次。这两项决定塑造了西方的敬拜，直到宗教改革起来与之相抗。",
+    "zh-Hant": "英諾森三世在羅馬召集約一千二百位主教與院長。會議第一條法規用「化質」一詞論餅與酒，是大公會議首次確立這個說法；第二十一條則規定信徒每年至少向神父認罪、領受聖餐一次。這兩項決定塑造了西方的敬拜，直到宗教改革起來與之相抗。"
+   }
+  },
+  {
+   "id": "ilkhanate_converts_islam",
+   "year": 1295,
+   "era": "world",
+   "stream": "islam",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "The Mongols of Persia Turn to Islam",
+    "zh-Hans": "波斯的蒙古统治者归入伊斯兰",
+    "zh-Hant": "波斯的蒙古統治者歸入伊斯蘭"
+   },
+   "desc": {
+    "en": "Ghazan professed Islam in 1295 before taking the throne of the Ilkhanate, and his court and army followed him. For two generations Latin and Eastern Christians had hoped for a Mongol alliance against the Muslim powers and had sent friars east on the strength of it; that hope ended here, though the Church of the East went on living under Muslim rulers.",
+    "zh-Hans": "1295年，合赞在登上伊儿汗之位以前公开信奉伊斯兰教，宫廷与军队随之改宗。两代人之久，拉丁与东方的基督徒一直盼望与蒙古结盟以抗衡穆斯林诸国，并因此派修士东行；这盼望到此断绝，惟东方教会仍在穆斯林治下延续。",
+    "zh-Hant": "1295年，合贊在登上伊兒汗之位以前公開信奉伊斯蘭教，宮廷與軍隊隨之改宗。兩代人之久，拉丁與東方的基督徒一直盼望與蒙古結盟以抗衡穆斯林諸國，並因此派修士東行；這盼望到此斷絕，惟東方教會仍在穆斯林治下延續。"
+   }
+  },
+  {
+   "id": "kongo_kingdom_baptism",
+   "year": 1491,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "The King of Kongo Is Baptised",
+    "zh-Hans": "刚果国王受洗",
+    "zh-Hant": "剛果國王受洗"
+   },
+   "desc": {
+    "en": "Nzinga a Nkuwu was baptised in his own capital in 1491 and took the name Joao. His son Afonso I made the faith the kingdom's own, corresponded with Lisbon in Portuguese, and in 1518 saw his son Henrique consecrated a bishop, the first from south of the Sahara. The same ships that brought the priests carried away slaves, and Afonso protested against it in writing.",
+    "zh-Hans": "1491年，恩津加·恩库武在自己的都城受洗，取名若昂。其子阿方索一世使这信仰成为王国自己的信仰，用葡萄牙文与里斯本通信，并在1518年看见儿子恩里克被祝圣为主教，是撒哈拉以南的第一位。载来神父的同一批船也运走奴隶，阿方索曾具书抗议。",
+    "zh-Hant": "1491年，恩津加·恩庫武在自己的都城受洗，取名若昂。其子阿方索一世使這信仰成為王國自己的信仰，用葡萄牙文與里斯本通信，並在1518年看見兒子恩里克被祝聖為主教，是撒哈拉以南的第一位。載來神父的同一批船也運走奴隸，阿方索曾具書抗議。"
+   }
+  },
+  {
+   "id": "treaty_of_karlowitz",
+   "year": 1699,
+   "era": "world",
+   "stream": "europe",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Karlowitz Ends Ottoman Rule in Hungary",
+    "zh-Hans": "卡尔洛维茨和约结束奥斯曼在匈牙利的统治",
+    "zh-Hant": "卡爾洛維茨和約結束鄂圖曼在匈牙利的統治"
+   },
+   "desc": {
+    "en": "Sixteen years after the Turkish army broke before Vienna, the sultan signed away Hungary and Transylvania to Austria, the Morea to Venice and Podolia to Poland. It was the first treaty in which the Ottomans surrendered European provinces they had held for generations, and from then on the frontier moved south instead of north.",
+    "zh-Hans": "土耳其大军在维也纳城下溃败十六年后，苏丹签约将匈牙利与特兰西瓦尼亚割予奥地利，摩里亚割予威尼斯，波多利亚割予波兰。这是奥斯曼帝国第一次以条约交出世代所据的欧洲行省；此后边界不再北进，而是一路南退。",
+    "zh-Hant": "土耳其大軍在維也納城下潰敗十六年後，蘇丹簽約將匈牙利與特蘭西瓦尼亞割予奧地利，摩里亞割予威尼斯，波多利亞割予波蘭。這是鄂圖曼帝國第一次以條約交出世代所據的歐洲行省；此後邊界不再北進，而是一路南退。"
    }
   }
  ]

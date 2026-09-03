@@ -294,8 +294,8 @@ void main() {
     }
     // The guard on the guard: a sweep that saw one record, or one
     // vocabulary word, would pass everything above and prove nothing.
-    expect(checked, 996,
-        reason: '724 events + 190 powers + 82 nations; if this moved, the '
+    expect(checked, 1055,
+        reason: '747 events + 226 powers + 82 nations; if this moved, the '
             'corpus grew and the count should move with it. 2026-09-02 '
             'added 74 church-history records; 2026-09-03 added 42 Roman '
             'and Greek ones, merged two duplicate pairs away, and took 15 '
@@ -309,7 +309,13 @@ void main() {
             'China, India, Arabia, Japan, the Migration and the 181 the '
             'chart never sectioned — and added 17: most of it was here '
             'already, and much of the rest cannot go on a year wheel at '
-            'all. Then the chart\'s DRAWN layer — 990 events, 383 people, 110 bands — was swept in four era slices, 535 candidates, and 137 records came out of it; most of the rest was already here or was damage from the extraction');
+            'all. Then the chart drew a SECOND layer that the index does '
+            'not cover — 990 events, 383 people, 110 bands, 97 nations '
+            'and 18 lifespan bars. 673 of those carry a year and were '
+            'swept in four era slices for 137 records; the 674 the '
+            'extraction could not date, and the bands and nations, went '
+            'the same way for 59 more. Most of the rest was already here '
+            'or was damage from the extraction');
     expect(seen, {'scripture', 'scripture+thiele', 'conventional'},
         reason: 'all three words are in use, so the closed set is doing '
             'work rather than admitting the only value there is');

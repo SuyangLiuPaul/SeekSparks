@@ -147,9 +147,24 @@ void main() {
       () {
     final fromScripture =
         data.powers.where((p) => p.basis != 'conventional').toList();
-    expect(fromScripture.map((p) => p.id).toSet(),
-        <String>{'israel-united-monarchy', 'kingdom-of-israel', 'kingdom-of-judah'},
-        reason: 'the three the sheet used to deny scripture for');
+    // 2026-09-03: two more joined, both people rather than thrones, and
+    // both take their years from the SAME Thiele reckoning the three
+    // kingdoms do — Gedaliah from the fall of Jerusalem that made him
+    // governor, Jezebel from Ahab's accession to Jehu's coup, every one
+    // of those years already on this chart. The set is pinned rather
+    // than counted so that a record cannot drift onto the scripture
+    // baseline without a human naming it here.
+    expect(
+        fromScripture.map((p) => p.id).toSet(),
+        <String>{
+          'israel-united-monarchy',
+          'kingdom-of-israel',
+          'kingdom-of-judah',
+          'gedaliah-governor',
+          'jezebel-queen',
+        },
+        reason: 'the three the sheet used to deny scripture for, and two '
+            'people dated from the same reign figures');
     for (final p in fromScripture) {
       expect(p.refs, isNotEmpty,
           reason: '${p.id} claims basis "${p.basis}" and cites no verse — it '
@@ -158,17 +173,19 @@ void main() {
     }
     // And the converse, so this cannot be satisfied by marking everything
     // conventional again.
-    // 187 since 2026-09-03: 59, plus 57 church-history spans (42
+    // 221 since 2026-09-03: 59, plus 57 church-history spans (42
     // pontificates, 8 Byzantine reigns, 5 crusades, the Latin Empire and
     // the Order of Saint John), plus 30 Roman and Greek, plus Moab,
     // Ammon and Edom, plus the Himyarite kingdom, the Liao and the
     // Tibetan empire, plus the 35 spans the chart's own drawn layer
-    // turned up — popes the chain had skipped, Visigothic and
+    // turned up, and 34 more from its bands — the Chinese dynasties,
+    // the ten kingdoms of the migration, Kassite Babylon —
+    // popes the chain had skipped, Visigothic and
     // Vandal kingdoms, the Jin, Songhai, Mali, Wari and the rest.
     // Every one is conventional and none could be
     // anything else: scripture dates no pope and no emperor, and gives
     // no regnal years for Israel's neighbours either.
-    expect(data.powers.where((p) => p.basis == 'conventional').length, 187);
+    expect(data.powers.where((p) => p.basis == 'conventional').length, 221);
   });
 
   test('both spellings of a power reference reach the model', () {
@@ -183,15 +200,15 @@ void main() {
         .toList();
     final plural =
         records('powers').where((p) => (p['refs'] as List?)?.isNotEmpty ?? false);
-    expect(singular.length, 14);
+    expect(singular.length, 16);
     expect(plural.length, 14);
     for (final p in singular) {
       final parsed = data.powers.firstWhere((q) => q.id == p['id']);
       expect(parsed.refs, contains(p['ref']), reason: p['id'] as String);
     }
     final carried = data.powers.where((p) => p.refs.isNotEmpty).length;
-    expect(carried, 28);
-    expect(data.powers.fold<int>(0, (n, p) => n + p.refs.length), 46);
+    expect(carried, 30);
+    expect(data.powers.fold<int>(0, (n, p) => n + p.refs.length), 48);
   });
 
   /// Extends `wheel_history_asset_test.dart`'s resolvability sweep, which
@@ -210,9 +227,9 @@ void main() {
     };
     // 67 since 2026-09-03: Nahum 3:8 on the sack of Thebes and
     // 2 Kings 17:3-4 on Hoshea's appeal to So of Egypt.
-    expect(byCarrier['event']!.length, 69);
+    expect(byCarrier['event']!.length, 83);
     expect(byCarrier['nation']!.length, 82);
-    expect(byCarrier['power']!.length, 46);
+    expect(byCarrier['power']!.length, 48);
 
     final bad = <String>[];
     for (final entry in byCarrier.entries) {
