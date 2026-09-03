@@ -1057,17 +1057,31 @@ void main() {
       await pump(tester, const Size(1440, 900));
       await openFind(tester);
 
+      // 2026-09-03: this asked about JEHU, and the answer changed —
+      // correctly. `jehu_revolt_jezreel` went onto the wheel with the
+      // Israel section, so Jehu is now a record the wheel draws and the
+      // hand-off must stand aside for him, exactly as the Hezekiah case
+      // below has always demanded. Baasha is the question now: 24 years
+      // over Israel, named nowhere on the chart, and one of 14 kings
+      // still in that position.
       await tester.enterText(
-          find.byKey(const ValueKey('wheelFindField')), 'Jehu');
+          find.byKey(const ValueKey('wheelFindField')), 'Baasha');
       await settle(tester);
       final shown = sheetText(tester);
-      expect(shown, contains('耶户'));
+      expect(shown, contains('巴沙'));
       expect(shown, contains('轮盘画的是列国，不是列王'));
       expect(find.text('犹大与以色列列王'), findsOneWidget);
 
+      // The king who moved, checked from the other side: Jehu now gets
+      // the wheel's own record and not the hand-off.
+      await tester.enterText(
+          find.byKey(const ValueKey('wheelFindField')), 'Jehu');
+      await settle(tester);
+      expect(sheetText(tester), isNot(contains('轮盘画的是列国')));
+
       // A name one letter off is a different question.
       await tester.enterText(
-          find.byKey(const ValueKey('wheelFindField')), 'Jehux');
+          find.byKey(const ValueKey('wheelFindField')), 'Baashax');
       await settle(tester);
       expect(sheetText(tester), isNot(contains('轮盘画的是列国')));
 

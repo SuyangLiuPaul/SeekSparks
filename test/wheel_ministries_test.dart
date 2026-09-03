@@ -97,8 +97,11 @@ void main() {
   });
 
   group('the asset', () {
-    test('thirty-nine ministries, every field read', () {
-      expect(ministries.length, 39);
+    test('forty-two ministries, every field read', () {
+      // 39 on 2026-09-02; three more with the Israel section on
+      // 2026-09-03 — Joshua son of Nun, Eli the priest, and Alexander
+      // Jannaeus.
+      expect(ministries.length, 42);
       // Every KEY in the asset is parsed by the model. The disclosure
       // test makes this rule for the file as a whole; restated here so
       // a field added to a ministry row and never read fails in the
@@ -144,7 +147,7 @@ void main() {
             reason: '${m.id} claims scripture states its years');
       }
       expect(ministries.where((m) => m.basis == 'scripture+thiele').length, 14);
-      expect(ministries.where((m) => m.basis == 'conventional').length, 25);
+      expect(ministries.where((m) => m.basis == 'conventional').length, 28);
     });
 
     test('every span is ordered, inside the axis, and named in three scripts',
@@ -249,9 +252,9 @@ void main() {
         kings: kings,
         ministries: ministries,
       );
-      // 25 lives (kainan2 has no Masoretic figures), 42 reigns, 39
+      // 25 lives (kainan2 has no Masoretic figures), 42 reigns, 42
       // ministries.
-      expect(arcs.length, 106);
+      expect(arcs.length, 109);
       for (final m in ministries) {
         final arc = arcs
             .firstWhere((a) => a.id == '$kMinistryArcPrefix${m.id}');

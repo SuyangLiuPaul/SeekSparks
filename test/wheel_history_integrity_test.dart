@@ -577,8 +577,21 @@ void main() {
     /// A three-year grace absorbs the accession-vs-first-full-year
     /// convention, which is a real disagreement between chronologists and
     /// not the defect being hunted here.
+    /// A DYNASTY IS NOT A REIGN, and English spells it with the king's
+    /// own name. "Jehu's Revolt Ends the House of Ahab" is dated 841 —
+    /// twelve years after Ahab himself died, which is exactly right,
+    /// because what ended then was his LINE. The check read the name and
+    /// called it misplaced.
+    ///
+    /// Narrow on purpose: only `house of X` and `X's house`, and only
+    /// for that occurrence. A title that names the man anywhere else in
+    /// the same sentence is still checked against his reign.
+    String stripDynasties(String lower) => lower
+        .replaceAll(RegExp(r"\bhouse of \w+"), ' ')
+        .replaceAll(RegExp(r"\b\w+'s house\b"), ' ');
+
     List<String> misplaced(String title, int year) {
-      final lower = title.toLowerCase();
+      final lower = stripDynasties(title.toLowerCase());
       final out = <String>[];
       reigns.forEach((name, spans) {
         if (!RegExp('\\b${RegExp.escape(name)}\\b').hasMatch(lower)) return;
@@ -595,6 +608,14 @@ void main() {
       // The same sentence at his own date must NOT be flagged, or the
       // check is just noise.
       expect(misplaced('Ahaziah Reigns in Judah', -841), isEmpty);
+
+      // The dynasty exception, both ways. A house may be named long
+      // after its founder died...
+      expect(misplaced('Jehu\'s Revolt Ends the House of Ahab', -841),
+          isEmpty);
+      // ...but the man himself, in the same sentence, is still checked.
+      expect(misplaced('Ahab Falls with the House of Omri', -841),
+          isNotEmpty);
     });
 
     test('every king the wheel names is inside his reign', () {

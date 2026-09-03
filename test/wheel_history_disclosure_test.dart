@@ -158,32 +158,35 @@ void main() {
     }
     // And the converse, so this cannot be satisfied by marking everything
     // conventional again.
-    // 146 since 2026-09-03: 59, plus the 57 church-history spans (42
+    // 149 since 2026-09-03: 59, plus 57 church-history spans (42
     // pontificates, 8 Byzantine reigns, 5 crusades, the Latin Empire and
-    // the Order of Saint John), plus 30 Roman and Greek ones. Every one
-    // is conventional and none could be anything else: scripture dates
-    // no pope and no emperor.
-    expect(data.powers.where((p) => p.basis == 'conventional').length, 146);
+    // the Order of Saint John), plus 30 Roman and Greek, plus Moab,
+    // Ammon and Edom. Every one is conventional and none could be
+    // anything else: scripture dates no pope and no emperor, and gives
+    // no regnal years for Israel's neighbours either.
+    expect(data.powers.where((p) => p.basis == 'conventional').length, 149);
   });
 
   test('both spellings of a power reference reach the model', () {
-    // 10 records spell it `ref`, 14 spell it `refs`. The model reads both
-    // into one list; if it ever stopped reading one, exactly one of these
-    // counts would drop to zero and nothing else would fail.
+    // 13 records spell it `ref`, 14 spell it `refs`. The model reads
+    // both into one list; if it ever stopped reading one, exactly one of
+    // these counts would drop to zero and nothing else would fail. The
+    // three that joined on 2026-09-03 — Moab, Ammon and Edom — all took
+    // the singular, which is why this half moved and the other did not.
     final singular = records('powers')
         .where((p) => (p['ref'] as String?)?.isNotEmpty ?? false)
         .toList();
     final plural =
         records('powers').where((p) => (p['refs'] as List?)?.isNotEmpty ?? false);
-    expect(singular.length, 10);
+    expect(singular.length, 13);
     expect(plural.length, 14);
     for (final p in singular) {
       final parsed = data.powers.firstWhere((q) => q.id == p['id']);
       expect(parsed.refs, contains(p['ref']), reason: p['id'] as String);
     }
     final carried = data.powers.where((p) => p.refs.isNotEmpty).length;
-    expect(carried, 24);
-    expect(data.powers.fold<int>(0, (n, p) => n + p.refs.length), 42);
+    expect(carried, 27);
+    expect(data.powers.fold<int>(0, (n, p) => n + p.refs.length), 45);
   });
 
   /// Extends `wheel_history_asset_test.dart`'s resolvability sweep, which
@@ -200,9 +203,9 @@ void main() {
       ],
       'power': [for (final p in data.powers) ...p.refs],
     };
-    expect(byCarrier['event']!.length, 55);
+    expect(byCarrier['event']!.length, 65);
     expect(byCarrier['nation']!.length, 82);
-    expect(byCarrier['power']!.length, 42);
+    expect(byCarrier['power']!.length, 45);
 
     final bad = <String>[];
     for (final entry in byCarrier.entries) {

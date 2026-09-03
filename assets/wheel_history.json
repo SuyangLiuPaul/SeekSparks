@@ -4657,6 +4657,66 @@
     "zh-Hans": "383年年方五岁即被立为奥古斯都，395年其父去世后正式独治东部——此次分治自此再未弥合。金口约翰在他在位期间两度被逐出君士坦丁堡。",
     "zh-Hant": "383年年方五歲即被立為奧古斯都，395年其父去世後正式獨治東部——此次分治自此再未彌合。金口約翰在他在位期間兩度被逐出君士坦丁堡。"
    }
+  },
+  {
+   "id": "kingdom-of-moab",
+   "start": -1200,
+   "end": -582,
+   "region": "levant",
+   "stream": "world",
+   "approximate": true,
+   "basis": "conventional",
+   "ref": "Genesis 19:37",
+   "name": {
+    "en": "Kingdom of Moab",
+    "zh-Hans": "摩押国",
+    "zh-Hant": "摩押國"
+   },
+   "note": {
+    "en": "Israel's neighbour east of the Dead Sea, an Iron Age kingdom from about 1200 BC. Its king Mesha left his own account of throwing off Israel's tribute, and Josephus reports Nebuchadnezzar subduing Moab about 582 BC; both ends of the band are rounded.",
+    "zh-Hans": "以色列在死海东边的邻邦，约自公元前1200年成为铁器时代的王国。其王米沙留下自述，记他如何摆脱以色列的进贡；约瑟夫斯记尼布甲尼撒约在前582年制伏摩押。此带两端均为约数。",
+    "zh-Hant": "以色列在死海東邊的鄰邦，約自公元前1200年成為鐵器時代的王國。其王米沙留下自述，記他如何擺脫以色列的進貢；約瑟夫斯記尼布甲尼撒約在前582年制伏摩押。此帶兩端均為約數。"
+   }
+  },
+  {
+   "id": "kingdom-of-ammon",
+   "start": -1200,
+   "end": -582,
+   "region": "levant",
+   "stream": "world",
+   "approximate": true,
+   "basis": "conventional",
+   "ref": "Genesis 19:38",
+   "name": {
+    "en": "Kingdom of Ammon",
+    "zh-Hans": "亚扪国",
+    "zh-Hant": "亞捫國"
+   },
+   "note": {
+    "en": "The kingdom around Rabbah, east of the Jordan, an Iron Age state from about 1200 BC. It oppressed Israel in the days of the judges and warred with Saul, David and Jehoshaphat; Josephus reports Nebuchadnezzar subduing Ammon about 582 BC. Both ends of the band are rounded.",
+    "zh-Hans": "约但河东以拉巴为中心的王国，约自公元前1200年立国。士师时代它欺压以色列，后又与扫罗、大卫、约沙法争战；约瑟夫斯记尼布甲尼撒约在前582年制伏亚扪。此带两端均为约数。",
+    "zh-Hant": "約但河東以拉巴為中心的王國，約自公元前1200年立國。士師時代它欺壓以色列，後又與掃羅、大衛、約沙法爭戰；約瑟夫斯記尼布甲尼撒約在前582年制伏亞捫。此帶兩端均為約數。"
+   }
+  },
+  {
+   "id": "kingdom-of-edom",
+   "start": -1200,
+   "end": -553,
+   "region": "levant",
+   "stream": "world",
+   "approximate": true,
+   "basis": "conventional",
+   "ref": "Genesis 36:8",
+   "name": {
+    "en": "Kingdom of Edom",
+    "zh-Hans": "以东国",
+    "zh-Hant": "以東國"
+   },
+   "note": {
+    "en": "Esau's people in the hill country of Seir, south-east of the Dead Sea, a kingdom from about 1200 BC. It disappears from record in the sixth century, after Babylonian campaigns; the Edomites who moved west into southern Judah became the Idumeans, and the Nabataeans later held the old territory. Both ends of the band are rounded.",
+    "zh-Hans": "以扫的后裔，住在死海东南的西珥山地，约自公元前1200年立国。经巴比伦征伐后，于公元前六世纪不再见于记载；西迁进入犹大南地的以东人成为以土买人，其故地后归拿巴提人。此带两端均为约数。",
+    "zh-Hant": "以掃的後裔，住在死海東南的西珥山地，約自公元前1200年立國。經巴比倫征伐後，於公元前六世紀不再見於記載；西遷進入猶大南地的以東人成為以土買人，其故地後歸拿巴提人。此帶兩端均為約數。"
+   }
   }
  ],
  "ministries": [
@@ -5666,6 +5726,72 @@
     "zh-Hant": "公元26至36年：起始年即本圖已有的 `pilate_prefect`，末年為撒瑪利亞事件後被敘利亞巡撫維特利烏召回，見於約瑟夫的記載；本圖所定公元33年的釘十字架正落在此帶之內，而這也正是設此帶的用處。"
    },
    "anchorKings": []
+  },
+  {
+   "id": "joshua_son_of_nun",
+   "start": -1406,
+   "end": -1380,
+   "region": "levant",
+   "stream": "scripture",
+   "approximate": true,
+   "basis": "conventional",
+   "refs": [
+    "Joshua 24:29",
+    "Joshua 24:31",
+    "Judges 2:8"
+   ],
+   "name": {
+    "en": "Joshua son of Nun",
+    "zh-Hans": "嫩的儿子约书亚",
+    "zh-Hant": "嫩的兒子約書亞"
+   },
+   "note": {
+    "en": "Joshua leads Israel from the crossing of Jordan, which this chart dates -1406, until the judges begin at -1380. Scripture nowhere gives the length of his rule: Joshua 24:29 records only that he died at a hundred and ten, and chronology.json lists his years among the stretches the text leaves unnumbered. Both ends of this band are therefore the app's own anchors, not figures the text states.",
+    "zh-Hans": "约书亚率领以色列，自本图所定过约但河之年（前1406年）起，至士师时期开始的前1380年止。经文并未记他治理的年数：约书亚记 24:29 只记他死时一百一十岁，chronology.json 亦把他的年数列入经文未记年数的几段之中。故此带两端都取自本应用自身的定点，而非经文所记的数字。",
+    "zh-Hant": "約書亞率領以色列，自本圖所定過約但河之年（前1406年）起，至士師時期開始的前1380年止。經文並未記他治理的年數：約書亞記 24:29 只記他死時一百一十歲，chronology.json 亦把他的年數列入經文未記年數的幾段之中。故此帶兩端都取自本應用自身的定點，而非經文所記的數字。"
+   }
+  },
+  {
+   "id": "eli_priest",
+   "start": -1120,
+   "end": -1080,
+   "region": "levant",
+   "stream": "scripture",
+   "approximate": true,
+   "basis": "conventional",
+   "refs": [
+    "1 Samuel 4:11",
+    "1 Samuel 4:18"
+   ],
+   "name": {
+    "en": "Eli the Priest",
+    "zh-Hans": "祭司以利",
+    "zh-Hant": "祭司以利"
+   },
+   "note": {
+    "en": "1 Samuel 4:18 states the interval — he had judged Israel forty years — and ends it on the day the ark was taken and he fell and died. Scripture gives no absolute year, so the band is counted back forty years from -1080, which is where this app already places Samuel's call in 1 Samuel 3, immediately before that day. Both ends are approximate.",
+    "zh-Hans": "撒母耳记上 4:18 记明年数——他作以色列的士师四十年——并把这段年日终止在约柜被掳、他跌倒而死的那日。经文未记绝对年份，故此带自前1080年往前数四十年；前1080年正是本应用已定撒母耳蒙召（撒上第3章）之年，紧在那日之前。此带两端均为约数。",
+    "zh-Hant": "撒母耳記上 4:18 記明年數——他作以色列的士師四十年——並把這段年日終止在約櫃被擄、他跌倒而死的那日。經文未記絕對年份，故此帶自前1080年往前數四十年；前1080年正是本應用已定撒母耳蒙召（撒上第3章）之年，緊在那日之前。此帶兩端均為約數。"
+   }
+  },
+  {
+   "id": "alexander_jannaeus_reign",
+   "start": -103,
+   "end": -76,
+   "region": "levant",
+   "stream": "judah",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Alexander Jannaeus",
+    "zh-Hans": "亚历山大·雅奈乌斯",
+    "zh-Hant": "亞歷山大·雅奈烏斯"
+   },
+   "note": {
+    "en": "The Hasmonean king and high priest who took the Jewish state to its widest extent, and whose long quarrel with the Pharisees hardened the parties the Gospels meet. He reigned 103 to 76 BC, inside the Hasmonean kingdom this chart already draws.",
+    "zh-Hans": "哈斯蒙尼王朝的王兼大祭司，把犹太国的疆域扩至最广；他与法利赛人长年的争斗，使福音书所遇的各派愈发壁垒分明。在位于公元前103至前76年，属本图已绘的哈斯蒙尼王国之内。",
+    "zh-Hant": "哈斯蒙尼王朝的王兼大祭司，把猶太國的疆域擴至最廣；他與法利賽人長年的爭鬥，使福音書所遇的各派愈發壁壘分明。在位於公元前103至前76年，屬本圖已繪的哈斯蒙尼王國之內。"
+   }
   }
  ],
  "events": [
@@ -16498,6 +16624,188 @@
     "en": "The last games recorded at Olympia, in the reign of Theodosius I, closing a contest held since 776 BC by tradition. Archaeology suggests some games went on afterwards, so the end is not as sharp as the date looks.",
     "zh-Hans": "奥林匹亚有记载的最后一届竞技会，在狄奥多西一世治下举行，为传统自主前776年延续的赛会画上句点。考古迹象显示其后仍有若干赛事，故此终结并不如年份看来那样干脆。",
     "zh-Hant": "奧林匹亞有記載的最後一屆競技會，在狄奧多西一世治下舉行，為傳統自主前776年延續的賽會畫上句點。考古跡象顯示其後仍有若干賽事，故此終結並不如年份看來那樣乾脆。"
+   }
+  },
+  {
+   "id": "jehu_revolt_jezreel",
+   "year": -841,
+   "era": "bible",
+   "stream": "israel",
+   "basis": "scripture+thiele",
+   "approximate": false,
+   "refs": [
+    "2 Kings 9:24",
+    "2 Kings 9:33",
+    "2 Kings 10:11"
+   ],
+   "title": {
+    "en": "Jehu's Revolt Ends the House of Ahab",
+    "zh-Hans": "耶户起事，亚哈家灭绝",
+    "zh-Hant": "耶戶起事，亞哈家滅絕"
+   },
+   "desc": {
+    "en": "Jehu shoots Joram at Jezreel, has Jezebel thrown down from her window, and cuts off the rest of Ahab's house; Ahaziah of Judah dies in the same rising. The year is the one hebrew_kings.json already gives for Jehu's accession and the end of three reigns.",
+    "zh-Hans": "耶户在耶斯列射死约兰，命人将耶洗别从窗户扔下，又杀尽亚哈家所余的人；犹大王亚哈谢也死于这场变乱。此年即 hebrew_kings.json 已定的耶户登基之年，也是三个王朝年终止之年。",
+    "zh-Hant": "耶戶在耶斯列射死約蘭，命人將耶洗別從窗戶扔下，又殺盡亞哈家所餘的人；猶大王亞哈謝也死於這場變亂。此年即 hebrew_kings.json 已定的耶戶登基之年，也是三個王朝年終止之年。"
+   }
+  },
+  {
+   "id": "assyrian_eclipse_763",
+   "year": -763,
+   "era": "world",
+   "stream": "assyria",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "An Eclipse Fixes the Assyrian Calendar",
+    "zh-Hans": "一次日食为亚述年表定准",
+    "zh-Hant": "一次日食為亞述年表定準"
+   },
+   "desc": {
+    "en": "The Assyrian eponym list records a solar eclipse in the month Simanu in the year of Bur-Sagale; astronomy places it on 15 June 763 BC. That one fixed day anchors the Assyrian regnal years, and through the Assyrian synchronisms it is what lets Thiele give the kings of Israel and Judah the absolute years this chart draws.",
+    "zh-Hans": "亚述名年表记载布尔-撒加勒任名年官那年西玛努月有日食；据天文推算即公元前763年6月15日。这一确定的日子把亚述历代王年钉住，再借亚述与以色列、犹大的年代对照，锡尔才能给本图所绘的诸王定出绝对年份。",
+    "zh-Hant": "亞述名年表記載布爾-撒加勒任名年官那年西瑪努月有日食；據天文推算即公元前763年6月15日。這一確定的日子把亞述歷代王年釘住，再藉亞述與以色列、猶大的年代對照，錫爾才能給本圖所繪的諸王定出絕對年份。"
+   }
+  },
+  {
+   "id": "abraham_circumcised",
+   "year": -2067,
+   "era": "bible",
+   "stream": "israel",
+   "basis": "scripture+thiele",
+   "approximate": false,
+   "refs": [
+    "Genesis 17:10",
+    "Genesis 17:24"
+   ],
+   "title": {
+    "en": "The Covenant of Circumcision",
+    "zh-Hans": "割礼之约",
+    "zh-Hant": "割禮之約"
+   },
+   "desc": {
+    "en": "God gives Abraham circumcision as the sign of the covenant, and Abraham is circumcised at ninety-nine. That age falls one year before Isaac's birth, which this chart already dates -2066, so the year follows from figures the text itself states.",
+    "zh-Hans": "神将割礼赐给亚伯拉罕作为立约的记号，亚伯拉罕受割礼时年九十九岁。此岁数正在以撒出生前一年，而本图已把以撒出生定于前2066年，故此年出自经文自身所记的数字。",
+    "zh-Hant": "神將割禮賜給亞伯拉罕作為立約的記號，亞伯拉罕受割禮時年九十九歲。此歲數正在以撒出生前一年，而本圖已把以撒出生定於前2066年，故此年出自經文自身所記的數字。"
+   }
+  },
+  {
+   "id": "melchizedek_blesses_abram",
+   "year": -2086,
+   "era": "bible",
+   "stream": "israel",
+   "basis": "conventional",
+   "approximate": true,
+   "refs": [
+    "Genesis 14:18-20"
+   ],
+   "title": {
+    "en": "Melchizedek Blesses Abram",
+    "zh-Hans": "麦基洗德为亚伯兰祝福",
+    "zh-Hant": "麥基洗德為亞伯蘭祝福"
+   },
+   "desc": {
+    "en": "Returning from the slaughter of the kings, Abram is met by Melchizedek king of Salem, priest of the most high God, who brings out bread and wine and receives a tenth of the spoil. Scripture gives no year; Genesis 14 follows directly on the separation of Abram and Lot, which this chart already dates -2086, and stands before the covenant of Genesis 15 at -2080.",
+    "zh-Hans": "亚伯兰杀败诸王回来，撒冷王麦基洗德——至高神的祭司——带着饼和酒出来迎接，并收下所得之物的十分之一。经文未记年份；创世纪第14章紧接亚伯兰与罗得分离之后，本图已把该事定于前2086年，而创世纪第15章立约在前2080年。",
+    "zh-Hant": "亞伯蘭殺敗諸王回來，撒冷王麥基洗德——至高神的祭司——帶著餅和酒出來迎接，並收下所得之物的十分之一。經文未記年份；創世紀第14章緊接亞伯蘭與羅得分離之後，本圖已把該事定於前2086年，而創世紀第15章立約在前2080年。"
+   }
+  },
+  {
+   "id": "egypt_seven_year_famine",
+   "year": -1878,
+   "era": "bible",
+   "stream": "israel",
+   "basis": "scripture+thiele",
+   "approximate": true,
+   "refs": [
+    "Genesis 41:53-54",
+    "Genesis 45:6"
+   ],
+   "title": {
+    "en": "The Seven Years of Famine Begin",
+    "zh-Hans": "七个荒年开始",
+    "zh-Hant": "七個荒年開始"
+   },
+   "desc": {
+    "en": "The seven plenteous years end and the dearth begins in all lands, and it is this famine that brings Jacob's household down into Egypt. Seven years from Joseph's rise, which this chart dates -1885, gives -1878; Genesis 45:6, which puts Jacob's arrival in the famine's second year, would give -1877 against the -1876 already drawn, so the year is carried as approximate.",
+    "zh-Hans": "七个丰年过去，各地都有饥荒，正是这场饥荒把雅各全家带下埃及。自本图所定约瑟得权之年（前1885年）起算七年，即前1878年；而创世纪 45:6 把雅各下埃及放在饥荒第二年，照此当为前1877年，与本图已绘的前1876年相差一年，故此年标为约数。",
+    "zh-Hant": "七個豐年過去，各地都有饑荒，正是這場饑荒把雅各全家帶下埃及。自本圖所定約瑟得權之年（前1885年）起算七年，即前1878年；而創世紀 45:6 把雅各下埃及放在饑荒第二年，照此當為前1877年，與本圖已繪的前1876年相差一年，故此年標為約數。"
+   }
+  },
+  {
+   "id": "pharisees_sadducees_named",
+   "year": -145,
+   "era": "bible",
+   "stream": "judah",
+   "basis": "conventional",
+   "approximate": true,
+   "title": {
+    "en": "The Pharisees and Sadducees Appear",
+    "zh-Hans": "法利赛人与撒都该人兴起",
+    "zh-Hant": "法利賽人與撒都該人興起"
+   },
+   "desc": {
+    "en": "Josephus first names the three Jewish schools — Pharisees, Sadducees and Essenes — in the days of Jonathan the Hasmonean, about the middle of the second century BC. No source gives a founding year, so the date is a rounded one; the two parties the Gospels meet were already in place long before Rome came.",
+    "zh-Hans": "约瑟夫斯最早提到犹太人的三派——法利赛人、撒都该人、爱色尼人——是在哈斯蒙尼家约拿单的时代，约当公元前二世纪中叶。没有史料记其创立之年，故此处只取约数；福音书所遇的这两派，在罗马人到来之前早已存在。",
+    "zh-Hant": "約瑟夫斯最早提到猶太人的三派——法利賽人、撒都該人、愛色尼人——是在哈斯蒙尼家約拿單的時代，約當公元前二世紀中葉。沒有史料記其創立之年，故此處只取約數；福音書所遇的這兩派，在羅馬人到來之前早已存在。"
+   }
+  },
+  {
+   "id": "josephus_antiquities",
+   "year": 93,
+   "era": "world",
+   "stream": "judah",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "Josephus Completes the Jewish Antiquities",
+    "zh-Hans": "约瑟夫斯完成《犹太古史》",
+    "zh-Hant": "約瑟夫斯完成《猶太古史》"
+   },
+   "desc": {
+    "en": "The priest and Roman captive Josephus finishes twenty books of Jewish history, dating the work himself to the thirteenth year of Domitian. With his earlier Jewish War it is the fullest outside account of the world the New Testament is set in, and the source for much of what this chart says about Herod's family and the Roman governors.",
+    "zh-Hans": "祭司出身、后为罗马俘虏的约瑟夫斯完成二十卷犹太史，并自记成书于图密善第十三年。此书连同他早先所著《犹太战记》，是新约背景世界最完整的圣经以外记载，本图论希律家族与罗马巡抚之事多本于此。",
+    "zh-Hant": "祭司出身、後為羅馬俘虜的約瑟夫斯完成二十卷猶太史，並自記成書於圖密善第十三年。此書連同他早先所著《猶太戰記》，是新約背景世界最完整的聖經以外記載，本圖論希律家族與羅馬巡撫之事多本於此。"
+   }
+  },
+  {
+   "id": "carthage_infant_baptism",
+   "year": 253,
+   "era": "church",
+   "stream": "church",
+   "basis": "conventional",
+   "approximate": true,
+   "title": {
+    "en": "Carthage Rules on the Baptism of Infants",
+    "zh-Hans": "迦太基会议议定婴儿受洗",
+    "zh-Hant": "迦太基會議議定嬰兒受洗"
+   },
+   "desc": {
+    "en": "A council of North African bishops under Cyprian answers Fidus that a newborn need not wait until the eighth day for baptism — the earliest surviving conciliar ruling on a practice Tertullian had argued against two generations before. References date the council between 251 and 253.",
+    "zh-Hans": "居普良主持的北非主教会议答复非都斯，议定婴孩受洗不必等到第八日；这是现存最早就此事所作的会议裁定，而两代之前特土良曾撰文反对此举。各家把此会议定在251至253年之间。",
+    "zh-Hant": "居普良主持的北非主教會議答覆非都斯，議定嬰孩受洗不必等到第八日；這是現存最早就此事所作的會議裁定，而兩代之前特土良曾撰文反對此舉。各家把此會議定在251至253年之間。"
+   }
+  },
+  {
+   "id": "ark_brought_to_jerusalem",
+   "year": -1003,
+   "era": "bible",
+   "stream": "israel",
+   "basis": "conventional",
+   "approximate": true,
+   "refs": [
+    "2 Samuel 6:12",
+    "2 Samuel 6:17"
+   ],
+   "title": {
+    "en": "The Ark Brought Up to Jerusalem",
+    "zh-Hans": "约柜运进耶路撒冷",
+    "zh-Hant": "約櫃運進耶路撒冷"
+   },
+   "desc": {
+    "en": "David brings the ark up from the house of Obed-edom and sets it in the tent he had pitched in the city of David, where it stays until Solomon's temple receives it. Scripture gives no year; it follows the capture of Jerusalem, which this chart already dates -1003.",
+    "zh-Hans": "大卫把约柜从俄别以东家中抬上来，安放在他于大卫城所搭的帐幕里，直到所罗门的殿建成才迎入殿中。经文未记年份；此事紧接攻取耶路撒冷之后，而本图已把攻取耶路撒冷定于前1003年。",
+    "zh-Hant": "大衛把約櫃從俄別以東家中抬上來，安放在他於大衛城所搭的帳幕裏，直到所羅門的殿建成才迎入殿中。經文未記年份；此事緊接攻取耶路撒冷之後，而本圖已把攻取耶路撒冷定於前1003年。"
    }
   }
  ]

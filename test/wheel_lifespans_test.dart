@@ -463,22 +463,28 @@ void main() {
   ///     1400 en       25 -> 23   Aaron and Moses
   ///     1400 zh-Hans  25 -> 25   every name
   ///
-  /// **1400 px no longer places all 25 in English, and it did until
-  /// today.** That is worth saying plainly rather than burying: the
-  /// largest canvas was the guarantee that nothing was permanently
-  /// lost, and it has stopped being one for two names. Aaron and Moses
-  /// are the shortest-lived of the 25 by a wide margin — 123 and 120
-  /// years against 900-odd — so they have the least arc to write in,
-  /// and they are the first to go every time.
+  /// **EVERY NUMBER ABOVE IS AT REST, AND THAT IS THE WHOLE OF IT.**
   ///
-  /// An arc that loses its label is still tappable, still selected by
-  /// search, and still named in its own sheet, so what is lost is
-  /// SCANNING, not reach. The numbers are written down rather than the
-  /// floors lowered quietly, and `the strong floors still hold with the
-  /// ministries off` below is what keeps this from becoming a licence
-  /// to keep spending the annulus. If a third layer wants room, the
-  /// answer is no longer "measure the cost" — it is that the cost has
-  /// reached the largest canvas and something has to give first.
+  /// I first wrote here that 1400 px had "stopped being the guarantee
+  /// that nothing is permanently lost" and that something had to give
+  /// before another layer could be added. That was wrong, and wrong in
+  /// the direction that would have stopped work for no reason. Measured
+  /// afterwards: `fitArcLabel` alone places all 25 at 1400 px and 22 at
+  /// 900, and at ×2 zoom it places all 25 at BOTH. The names these
+  /// cells lose are lost to SPOKE COLLISIONS — `placeArcName` dodging
+  /// the event labels crossing the arc — and a small magnification
+  /// clears them, because the legibility floor is `floorPx / zoom` and
+  /// the spoke declutter's own gap is `onScreenPx / labelScale(zoom)`.
+  /// Both layers already re-lay out as the reader zooms; that is not a
+  /// feature waiting to be built.
+  ///
+  /// So what these floors measure is the RESTING view, and an arc that
+  /// loses its label at rest is still tappable, still selected by
+  /// search, still named in its own sheet, and one pinch away from its
+  /// label. `the names all come back with a small zoom` below is what
+  /// keeps that claim honest, and `the strong floors still hold with
+  /// the ministries off` keeps the resting view from being spent
+  /// without anyone noticing.
   const floors = <String, int>{
     '700 en': 20,
     '700 zh-Hans': 24,
@@ -629,6 +635,46 @@ void main() {
           reason: 'at $side px a sub-ring is ${pitch.toStringAsFixed(2)} px '
               'deep — under the nine the spokes use as a target, so a '
               'reader could not tap an arc without zooming');
+    }
+  });
+
+  test('the names all come back with a small zoom', () {
+    // The claim the floors above rest on, and the one I got wrong first
+    // time by asserting it instead of measuring it. `fitArcLabel`'s
+    // legibility floor is `floorPx / zoom`, so magnification lowers it
+    // in world units and a name that could not be written at rest can
+    // be written at ×2. If this ever fails, the resting floors stop
+    // being a display budget and become a real loss.
+    for (final side in [700.0, 900.0, 1400.0]) {
+      final rBands = side * _bandsFrac;
+      final rRim = side * _rimFrac;
+      final inner = scriptureLabelBase(rBands);
+      final a = arcs();
+      final rings = lifeArcRingCount(a);
+      final pitch = ringPitch(rings, inner, rRim);
+      for (final locale in ['en', 'zh-Hans']) {
+        var named = 0;
+        for (final arc in patriarchArcs()) {
+          final band = lifeArcRadii(arc.ring, rings, inner, rRim);
+          final size = fitArcLabel(
+            text: chron.byId(arc.id)!.nameFor(locale),
+            radius: band.centre,
+            sweep: arc.a1 - arc.a0,
+            maxEm: pitch * kArcLabelPitchFraction,
+            desiredSize: _rimFontPx,
+            // Two, not fourteen: the point is that a SMALL zoom is
+            // enough, not that the maximum is.
+            zoom: 2,
+            floorPx: kArcLabelFloorPx,
+            measure: _measureChars,
+          );
+          if (size > 0) named++;
+        }
+        expect(named, 25,
+            reason: 'at $side px, $locale, ×2 zoom places only $named of '
+                'the 25 — the resting floors above are a real loss, not a '
+                'display budget');
+      }
     }
   });
 

@@ -198,15 +198,51 @@ void main() {
     expect(claims.where((c) => c.$1.startsWith('event')), isNotEmpty);
     expect(claims.where((c) => c.$1.startsWith('power')), isNotEmpty);
 
+    // 2026-09-03: `scripture+thiele` is claimed in TWO ways, and this
+    // check only ever knew one of them.
+    //
+    // A record that names a king is inside Thiele's reconstruction and
+    // must sit in it — the original rule, unchanged below. But the
+    // chain of stated intervals is ANCHORED on Thiele and counted
+    // BACKWARDS from him, and `bible_timeline.json` has always spelled
+    // that `scripture+thiele` too: 28 of its events before David carry
+    // it, `creation` at -4114 among them. The first wheel records to be
+    // counted back that way — Abraham's circumcision at -2067 from
+    // Genesis 17:24, and the seven years of famine — failed a rule that
+    // had never met one.
+    //
+    // So a claim before the reconstruction must lie inside the era the
+    // TIMELINE dates the same way. That is a real bound, not a waiver:
+    // it says the chain may be claimed where the chain actually runs,
+    // and nowhere else.
+    final chained = [
+      for (final e in ((json.decode(File('assets/bible_timeline.json')
+              .readAsStringSync()) as Map<String, dynamic>)['events'] as List)
+          .cast<Map<String, dynamic>>())
+        if (e['basis'] == 'scripture+thiele') (e['year'] as num).toInt(),
+    ];
+    expect(chained, isNotEmpty,
+        reason: 'the timeline no longer dates anything by the chain, so '
+            'the bound below is vacuous');
+    final chainStart = chained.reduce((a, b) => a < b ? a : b);
+
     for (final (who, y) in claims) {
-      expect(y, greaterThanOrEqualTo(earliest - 60),
-          reason: '$who at $y claims a Thiele year, but Thiele\'s own '
-              'reconstruction in this app does not reach back that far '
-              '(earliest reign starts $earliest)');
+      if (y < earliest - 60) {
+        expect(y, greaterThanOrEqualTo(chainStart),
+            reason: '$who at $y claims the chain from Thiele\'s anchor, '
+                'but the chain does not reach back that far — the '
+                'timeline\'s own earliest such year is $chainStart');
+        continue;
+      }
       expect(y, lessThanOrEqualTo(latest + 60),
           reason: '$who at $y claims a Thiele year past the end of the '
               'reconstruction (latest reign ends $latest)');
     }
+
+    // The original rule still has teeth: at least one claim really is
+    // inside the reconstruction, so an asset that moved every one of
+    // them back before David could not pass by taking the branch above.
+    expect(claims.where((c) => c.$2 >= earliest - 60), isNotEmpty);
   });
 
   test('every event sits inside the axis the wheel draws', () {
@@ -258,13 +294,14 @@ void main() {
     }
     // The guard on the guard: a sweep that saw one record, or one
     // vocabulary word, would pass everything above and prove nothing.
-    expect(checked, 825,
-        reason: '594 events + 149 powers + 82 nations; if this moved, the '
+    expect(checked, 837,
+        reason: '603 events + 152 powers + 82 nations; if this moved, the '
             'corpus grew and the count should move with it. 2026-09-02 '
             'added 74 church-history records; 2026-09-03 added 42 Roman '
-            'and Greek ones and MERGED two duplicate pairs away — the '
-            'library of Alexandria and the Silk Road were each entered '
-            'twice, ten and eight years apart');
+            'and Greek ones, merged two duplicate pairs away, and took 15 '
+            'of the Israel section — most of that section was already in '
+            'the app, 130 of its 158 names, largely through '
+            'chronology.json\'s own list of the judges');
     expect(seen, {'scripture', 'scripture+thiele', 'conventional'},
         reason: 'all three words are in use, so the closed set is doing '
             'work rather than admitting the only value there is');
