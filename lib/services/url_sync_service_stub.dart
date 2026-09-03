@@ -32,3 +32,6 @@ void claimUrl(String? path, {Object? owner}) {}
 
 /// Native targets: nothing can have claimed a URL there isn't.
 String? get claimedPath => null;
+
+/// Native targets: no address bar to read.
+String? get livePathNow => null;

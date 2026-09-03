@@ -99,6 +99,15 @@ class UrlSyncService {
   /// and nothing pushes a route from the platform either.
   static String? get claimedPath => impl.claimedPath;
 
+  /// What the address bar says right now, without its `#`.
+  ///
+  /// 2026-09-03: needed because the engine reports the wrong thing. It
+  /// keeps ONE history entry, so editing the fragment makes it rewind
+  /// and report the oldest entry's path — a reader who pasted `#/wheel`
+  /// had their own request replaced by the chapter they were reading,
+  /// and got no wheel and a blank address bar. Native answers null.
+  static String? get livePathNow => impl.livePathNow;
+
   /// Initialise. Web reads the boot URL, applies it to providers,
   /// then starts listening for further state / popstate events.
   /// Native targets no-op.

@@ -1061,7 +1061,23 @@ enum BrowserRouteAction {
 /// claimed (`UrlSyncService.claimedPath`, null when the reader link owns
 /// the URL).
 @visibleForTesting
-BrowserRouteAction browserRouteAction(String? path, String? claimedPath) {
+BrowserRouteAction browserRouteAction(String? path, String? claimedPath,
+    {String? livePath}) {
+  // WHAT THE READER TYPED BEATS WHAT THE ENGINE REPORTED. The web
+  // engine keeps exactly ONE history entry, so editing the fragment
+  // makes it rewind and hand us the OLDEST entry's path — the chapter
+  // the reader was on, not the `#/wheel` they just pasted. The result
+  // was no wheel and a blank address bar after a single reader move,
+  // and it looked like the page link was broken when the request had
+  // simply been overwritten in transit.
+  //
+  // So when the reported path names no page, the address bar gets a
+  // say. It is only ever consulted to find a page the report LOST;
+  // a report that already names a page is trusted as-is, and a live
+  // hash that names no page changes nothing.
+  if (pageForUrlPath(path) == null && pageForUrlPath(livePath) != null) {
+    path = livePath;
+  }
   if (pageForUrlPath(path) == null) return BrowserRouteAction.goBack;
   // The page the URL names is the page already open. Nothing to restore.
   if (samePageUrlPath(path, claimedPath)) return BrowserRouteAction.goBack;
@@ -1087,6 +1103,7 @@ class BrowserRouteObserver with WidgetsBindingObserver {
   BrowserRouteObserver({
     required this.navigator,
     this.claimedPath = _liveClaimedPath,
+    this.livePath = _liveHashPath,
   });
 
   /// Looked up late: there is no navigator yet when this is built.
@@ -1099,11 +1116,17 @@ class BrowserRouteObserver with WidgetsBindingObserver {
 
   static String? _liveClaimedPath() => UrlSyncService.claimedPath;
 
+  /// What the address bar says, injectable for the same reason.
+  final String? Function() livePath;
+
+  static String? _liveHashPath() => UrlSyncService.livePathNow;
+
   @override
   Future<bool> didPushRouteInformation(
       RouteInformation routeInformation) async {
     switch (browserRouteAction(
-        routeInformation.uri.toString(), claimedPath())) {
+        routeInformation.uri.toString(), claimedPath(),
+        livePath: livePath())) {
       case BrowserRouteAction.openPage:
         // NOT handled: fall through to `WidgetsApp`, whose `pushNamed`
         // reaches [appGenerateRoute] and opens the page. This is the
@@ -1131,13 +1154,28 @@ class BrowserRouteObserver with WidgetsBindingObserver {
 /// proper `#/<book>/<chapter>?v=` fragment shortly after every
 /// push/pop. No-op on native (stub dispatch).
 class _UrlRestoreObserver extends NavigatorObserver {
-  @override
-  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) =>
-      UrlSyncService.onRouteChanged();
+  /// 2026-09-03: PAGES ONLY. This fired on every push and pop, and a
+  /// popup menu, a dialog and a bottom sheet are all routes — so
+  /// browsing the Resources menu asked the URL layer to rewrite the
+  /// fragment once per menu, and each rewrite spent a browser history
+  /// entry. A reader who opened three menus then pressed Back three
+  /// times went nowhere.
+  ///
+  /// A menu does not change what the address bar should say, so it has
+  /// nothing to restore. `PageRoute` is the line: `MaterialPageRoute` is
+  /// one, and `PopupRoute` — which `DialogRoute`, `ModalBottomSheetRoute`
+  /// and the popup menu all extend — is not.
+  static bool _isPage(Route<dynamic>? route) => route is PageRoute;
 
   @override
-  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) =>
-      UrlSyncService.onRouteChanged();
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    if (_isPage(route)) UrlSyncService.onRouteChanged();
+  }
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    if (_isPage(route)) UrlSyncService.onRouteChanged();
+  }
 }
 
 class _RootRouter extends StatefulWidget {

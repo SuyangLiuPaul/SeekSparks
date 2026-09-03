@@ -191,6 +191,22 @@ String? get _claimedPath => _claim.path;
 /// The claim, read-only. See `UrlSyncService.claimedPath`.
 String? get claimedPath => _claim.path;
 
+/// What the ADDRESS BAR says right now, without its leading `#`.
+///
+/// The engine keeps exactly one history entry of its own, so when a
+/// reader edits the fragment the route information the platform reports
+/// is the OLDEST entry's path, not what they just typed. Anything that
+/// needs to know what the reader asked for has to read the bar.
+String? get livePathNow {
+  try {
+    final h = _window.location.hash;
+    if (h.isEmpty) return null;
+    return h.startsWith('#') ? h.substring(1) : h;
+  } catch (_) {
+    return null;
+  }
+}
+
 bool _isApplyingFromUrl = false;
 Timer? _writeDebounce;
 MainProvider? _mp;

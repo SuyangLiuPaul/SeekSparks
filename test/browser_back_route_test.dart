@@ -316,4 +316,37 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(milliseconds: 50));
   });
+
+  group('the address bar rescues a request the engine lost', () {
+    /// The engine keeps ONE history entry, so a reader who edits the
+    /// fragment has their request rewound: the platform reports the
+    /// OLDEST entry's path instead. Measured on dev v1.6.223 — after a
+    /// single reader move, pasting `#/wheel` gave no wheel and a blank
+    /// address bar, and it read as a broken page link when the request
+    /// had simply been overwritten in transit.
+    test('a lost page path is recovered from the live hash', () {
+      expect(
+          browserRouteAction('/genesis/1?v=bsb', null, livePath: '/wheel'),
+          BrowserRouteAction.openPage);
+    });
+
+    test('but only to FIND a page, never to lose one', () {
+      // A report that already names a page is trusted as it stands.
+      expect(browserRouteAction('/wheel', null, livePath: '/genesis/1'),
+          BrowserRouteAction.openPage);
+      // And a live hash that names no page changes nothing.
+      expect(browserRouteAction('/genesis/1', null, livePath: '/john/3'),
+          BrowserRouteAction.goBack);
+      expect(browserRouteAction('/genesis/1', null, livePath: null),
+          BrowserRouteAction.goBack);
+    });
+
+    test('the page already open still means Back, however it was found', () {
+      // Recovering `/wheel` from the bar while the wheel HOLDS the bar
+      // is the reader pressing Back off it, not asking for a second one.
+      expect(browserRouteAction('/genesis/1', '/wheel', livePath: '/wheel'),
+          BrowserRouteAction.goBack);
+    });
+  });
+
 }
