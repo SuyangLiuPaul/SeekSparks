@@ -356,7 +356,7 @@ class _StripChronologyPageState extends State<StripChronologyPage>
                       key: const ValueKey('chronologyStrip'),
                       behavior: HitTestBehavior.opaque,
                       onTapUp: (e) => _handleTap(context, e.localPosition, data,
-                          kings, patriarchs, locale, rows),
+                          kings, patriarchs, locale, rows, laneFontPx),
                       child: SizedBox(
                         width: contentW,
                         height: contentH,
@@ -429,6 +429,41 @@ class _StripChronologyPageState extends State<StripChronologyPage>
     return rows;
   }
 
+  /// The events one event tick stands for, in year order, the tapped
+  /// one included — so a `+n` badge can be cashed.
+  ///
+  /// Recomputed rather than carried out of the painter, because a
+  /// painter is not a plan: it is handed the same lane and the same
+  /// `pxPerYear` this handler has, and `clusterByX` is a pure function
+  /// of those. What must NOT drift is the gap, which is why it is the
+  /// painter's own `kStripEventClusterEm` and not a second 1.35 written
+  /// here — the set listed has to be the set the badge counted.
+  ///
+  /// Year order, because `showCluster` reads `events.first.year` and
+  /// `events.last.year` for its own header range and asserts neither.
+  List<WheelHistoryEvent> _eventsUnder(
+    int index,
+    StripLane lane,
+    double laneFontPx,
+    WheelHistoryData data,
+  ) {
+    final xs = [
+      for (final s in lane.spans) xForYear(s.startYear, _pxPerYear)
+    ];
+    final clusters = clusterByX(xs, laneFontPx * kStripEventClusterEm);
+    for (final c in clusters) {
+      if (!c.members.contains(index)) continue;
+      final out = [
+        for (final m in c.members)
+          if (find(data.events, (e) => e.id == lane.spans[m].id)
+              case final WheelHistoryEvent e)
+            e
+      ]..sort((a, b) => a.year.compareTo(b.year));
+      return out;
+    }
+    return const [];
+  }
+
   /// Which row [pos.dy] falls in, then which span [pos.dx] falls on
   /// within it — the strip's own `_handleTap`, in the same two-stage
   /// shape as the wheel's (ring, then angle) but simpler: rows do not
@@ -442,6 +477,7 @@ class _StripChronologyPageState extends State<StripChronologyPage>
     List<Patriarch> patriarchs,
     String locale,
     List<StripRow> rows,
+    double laneFontPx,
   ) {
     StripRow? hit;
     for (final row in rows) {
@@ -498,6 +534,20 @@ class _StripChronologyPageState extends State<StripChronologyPage>
     final span = lane.spans[pick.index];
     switch (span.kind) {
       case StripLaneKind.events:
+        // A TICK MAY STAND FOR SEVERAL EVENTS, AND THE BADGE SAYS SO.
+        // Opening only the representative would leave `+3` as a promise
+        // the chart never keeps — the reader is told three more records
+        // are here and given no way to reach them, which is exactly the
+        // silent narrowing #280, #308 and #319 each were. So the same
+        // grouping the painter drew is recomputed here (one shared
+        // `kStripEventClusterEm`, so the set listed IS the set counted)
+        // and a tick standing for more than itself opens the list.
+        final members = _eventsUnder(pick.index, lane, laneFontPx, data);
+        if (members.length > 1) {
+          _select(span.id);
+          showCluster(context, members, data, locale, _select);
+          return;
+        }
         final event = find(data.events, (e) => e.id == span.id);
         if (event == null) return;
         _select(event.id);

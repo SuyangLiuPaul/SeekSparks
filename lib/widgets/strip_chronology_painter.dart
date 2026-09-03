@@ -57,6 +57,23 @@ import 'package:seeksparks/utils/version_mapper.dart'
 /// floored," the same category as the wheel's own hint text).
 const double kStripRefSizeRatio = 0.86;
 
+/// How close two event ticks may be, in ems of the lane's own type,
+/// before one stands for both and carries a `+n` badge.
+///
+/// 1.35 line-heights is the wheel's own heuristic (`_kLabelPx * 1.35`),
+/// and it is right for TICKS in either geometry: it is asking how close
+/// two marks may be before the eye reads them as one, which has nothing
+/// to do with which way the words run. (It is NOT the gate for the
+/// words — see `_paintOneEventRow`, where transposing it to the label
+/// cost a lane of solid black ink.)
+///
+/// PUBLIC, AND SHARED WITH THE PAGE ON PURPOSE. The badge is a promise
+/// that `n` more records are behind this tick, and the page's tap
+/// handler is what has to cash it — so both sides must group by the
+/// same rule or the sheet would list a different set from the one the
+/// badge counted. One constant is the only way to keep that true.
+const double kStripEventClusterEm = 1.35;
+
 /// Row height for one lane at the reader's Font Size, floored so a
 /// label's own line box never exceeds the row it sits in.
 ///
@@ -483,11 +500,7 @@ class StripLanesPainter extends CustomPainter {
     final lane = row.lane!;
     if (lane.spans.isEmpty) return;
     final xs = [for (final s in lane.spans) xForYear(s.startYear, pxPerYear)];
-    // A label needs about 1.35 line-heights of room — the wheel's own
-    // heuristic (`_kLabelPx * 1.35`), transposed straight to linear
-    // content px: §1 states content px equal screen px on this axis, so
-    // nothing here needs the wheel's `_labelScale(zoom)` division.
-    final minGapPx = laneFontPx * 1.35;
+    final minGapPx = laneFontPx * kStripEventClusterEm;
     final pinned = lane.spans.indexWhere((s) => s.id == selectedId);
     final clusters = clusterByX(xs, minGapPx, pinned: pinned);
     final has = selectedId != null;
