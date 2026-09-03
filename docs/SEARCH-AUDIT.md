@@ -277,30 +277,54 @@ guessed at, per the standing instruction for unattended runs.
 
 ---
 
-## 6. What this audit did not cover
+## 6. The live pass — everything §6 used to defer
 
-Named plainly, because #295 asked for the live box and this pass drove
-the engine. These need a human at a browser, or a CDP session against a
-deployed build:
+2026-09-03, driven against **dev v1.6.223** in a real browser at
+1400x900, in both English and Simplified Chinese. Every row below is a
+thing this document previously said "needs a human at a browser". All
+seven were driven; none of them needed a code change.
 
-- **The operator-strip caret sequencing** — whether the strip's caret
-  lands where the reader expects after an operator button.
-- **The command verbs** `d nas` / `d -nas` / `d c` / `p a b c` / `l gen`.
-  `d nas` and version abbreviation resolution *were* driven live in the
-  first pass and are fixed; the others were not.
-- **`l gen` narrowing the scope AND the narrowing being visible.** The
-  scope logic is tested; that the reader can *see* which scope is active
-  is a screen claim and is not.
-- **Reference navigation** — `John 1:1`, `3:16`, a bare `17`.
-- **Strong's proximity actually returning the right verses** — `G25
-  NEAR5 G26` through the live box. That needs the concordance and a
-  browser.
-- **A capped result list admitting the cap** on screen.
-- **The same searches under a Chinese UI locale.** The three locale
-  *strings* are asserted by test; that they render un-truncated in the
-  result header is not.
+| What | Driven | Result |
+|---|---|---|
+| Reference navigation, qualified | `3:16` from John 3 | ✅ went to **John 3:16**, URL became `#/john/3:16?v=bsb`, and the Analysis pane opened that verse's word study unasked |
+| Reference navigation, bare | `17` from John 3 | ✅ **John 3:17** — completed from where the reader was, exactly as `goToReference` claims |
+| `l gen` narrowing | `l gen`, then `.god` | ✅ **199 verses, all Genesis** (unscoped BSB is 3866) |
+| …and the narrowing being VISIBLE | same | ✅ **twice**: a banner over the results reading "Limited to Genesis (1533)", and the status bar's `Limits` chip changing from grey to **`Limits: Genesis`** |
+| Lifting it | bare `l` | ✅ banner gone, chip grey again, and the search **re-ran unscoped by itself** — 3866 |
+| `d nas` | `d nas` | ✅ **refused by name**: "No edition called \"nas\". Available: KJV · LEB · BSB · KJV+S · …". Not a silent literal search. (NASB is in `disabledVersions`; LEB is listed, which is the state after it was restored.) |
+| `d leb` / `d c` | both | ✅ stack became `BSB · KJV · KJV+S · LEB` with a "Loading edition · LEB" line, then `d c` returned it to `BSB` |
+| `p a b c` | `p kjv bsb leb` | ✅ stack set — **but it came back `BSB · KJV · LEB`, not the typed order.** See below. |
+| Strong's proximity | `G25 NEAR5 G26` | ✅ **6 verses, and the right six**: John 15:9, John 17:26, Ephesians 2:4, Ephesians 5:2, 1 John 4:7, 1 John 4:10 |
+| A capped list admitting the cap | `.the` | ✅ nothing to admit — **22,406 verses, all of them listed and scrollable.** The plain text path has no cap; the cap this row was written about is the Strong's one, already pinned by test |
+| The same under a Chinese UI | `G25 NEAR5 G26` in zh-Hans | ✅ header renders **「G25 NEAR5 G26 — 共 6 节」** un-truncated; menus, operator hints, word-card glosses and status bar all render, no absent text |
+| Operator-strip caret sequencing | `.god`, then the `OR` button, then typing | ✅ produced `.god OR love` — **focus and caret return to the field**, so typing continues where the reader expects |
 
----
+### One thing to check, and one non-finding
+
+**`p kjv bsb leb` returned `BSB · KJV · LEB`.** `CommandVerbKind.displaySet`
+is documented as "replace the stack with exactly these, **in this
+order**", and BSB — the search version — came back first regardless.
+That is probably the always-displayed invariant putting the search
+version at the head, which would make the doc comment imprecise rather
+than the code wrong. **Not investigated, not filed as a defect**: it is
+recorded here so the next reader checks it against
+`displaySet` rather than re-discovering it.
+
+**The Enter key is NOT a finding.** Pressing Return via the automation
+never submitted, while the magnifier button always did — and
+`command_pane.dart:769` wires `textInputAction: TextInputAction.search`
+with `onSubmitted: (_) => _submit()`. Synthetic key events do not reach
+Flutter web's hidden text input reliably, so this is an artifact of the
+instrument. It is written down because the raw observation looks exactly
+like a real defect, and the next person to drive this box will see it
+too.
+
+**How the instrument was checked.** The first three queries appeared to
+do nothing, which looked like broken reference navigation. A control —
+`.melchizedek`, a query with a known answer — also did nothing, which is
+what proved the fault was the harness and not the app. With the button
+instead of Return, `.melchizedek` returned **14 verses** and every row
+above followed.
 
 ## 7. Where the claims live
 
