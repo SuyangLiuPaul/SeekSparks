@@ -258,13 +258,17 @@ void main() {
     // in scripture" — false of David's accession, which is counted
     // along reign lengths the text states.
     test('the page has a case for every basis now on the wheel', () {
+      // The wheel's detail sheets — including `basisText`'s switch —
+      // live in `wheel_sheets.dart`, not in the page itself; both are
+      // read here so the assertion still holds after that split.
       final src =
-          File('lib/pages/radial_chronology_page.dart').readAsStringSync();
+          File('lib/pages/radial_chronology_page.dart').readAsStringSync() +
+              File('lib/pages/wheel_sheets.dart').readAsStringSync();
       final bases = merged.map((e) => e.basis).toSet();
       expect(bases, contains('thiele'));
       for (final b in bases) {
         if (b == 'conventional') continue;
-        expect(src, contains("'$b' =>"), reason: 'no _basisText arm for $b');
+        expect(src, contains("'$b' =>"), reason: 'no basisText arm for $b');
       }
     });
 
@@ -414,8 +418,11 @@ void main() {
     });
 
     test('the wheel renders all four apparatus strings', () {
+      // Same split as above: the sheet that prints these keys now
+      // lives in `wheel_sheets.dart`.
       final src =
-          File('lib/pages/radial_chronology_page.dart').readAsStringSync();
+          File('lib/pages/radial_chronology_page.dart').readAsStringSync() +
+              File('lib/pages/wheel_sheets.dart').readAsStringSync();
       for (final key in [
         'timelineDatedBy',
         'timelineSeptuagintYear',

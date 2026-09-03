@@ -3,7 +3,6 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/biblical_person.dart';
@@ -14,26 +13,20 @@ import 'package:seeksparks/models/wheel_history.dart';
 import 'package:seeksparks/pages/chronology_page.dart';
 import 'package:seeksparks/pages/family_tree_page.dart';
 import 'package:seeksparks/pages/hebrew_kings_page.dart';
-import 'package:seeksparks/providers/main_provider.dart';
+import 'package:seeksparks/pages/wheel_sheets.dart';
 import 'package:seeksparks/services/chronology_service.dart';
 import 'package:seeksparks/services/family_tree_service.dart';
 import 'package:seeksparks/services/hebrew_kings_service.dart';
-import 'package:seeksparks/services/timeline_service.dart';
 import 'package:seeksparks/services/url_sync_service.dart';
 import 'package:seeksparks/utils/date_hedge.dart';
 import 'package:seeksparks/utils/font_catalog.dart';
-import 'package:seeksparks/utils/jump_to_reference.dart' as jumper;
-import 'package:seeksparks/utils/navigate_to_reader.dart';
 import 'package:seeksparks/utils/radial_chronology_layout.dart';
-import 'package:seeksparks/utils/reference_parser.dart';
 import 'package:seeksparks/utils/version_mapper.dart'
     show localizedReferenceLabel;
 import 'package:seeksparks/utils/wheel_search.dart';
 import 'package:seeksparks/widgets/home_icon_button.dart';
 import 'package:seeksparks/widgets/language_switcher_button.dart';
 import 'package:seeksparks/widgets/localized_back_button.dart';
-import 'package:seeksparks/widgets/person_detail_sheet.dart';
-import 'package:seeksparks/widgets/verse_popup_sheet.dart' show showVersePopup;
 
 /// World history on one wheel: 4200 BC at twelve o'clock, time sweeping
 /// clockwise to the present, one concentric band per people or
@@ -222,7 +215,7 @@ Color _bandColor(String line, double t, int index) {
 }
 
 /// The family's own colour, for the legend — the middle of its arc.
-Color _lineColor(String line) => _bandColor(line, 0.5, 0);
+Color lineColor(String line) => _bandColor(line, 0.5, 0);
 
 /// Arc ids for the reign band carry this, because [buildSpanArcs] packs
 /// every span in ONE id space and a king and a patriarch could
@@ -261,7 +254,7 @@ const String kMinistryArcPrefix = 'ministry:';
 /// (the kings), but the window a text places a man's work in. Giving it
 /// a Semitic shade would have said it was the same sort of number as
 /// the two beside it.
-Color ministryArcColor() => _lineColor('institution');
+Color ministryArcColor() => lineColor('institution');
 
 /// The ministries as spans for the arc band.
 List<SpanInput> ministrySpans(List<WheelMinistry> ministries) => [
@@ -322,9 +315,7 @@ List<LineageCohort> lineageCohorts({
     byYear.putIfAbsent(y, () => []).add(p);
   }
   final years = byYear.keys.toList()..sort();
-  return [
-    for (final y in years) LineageCohort(year: y, people: byYear[y]!)
-  ];
+  return [for (final y in years) LineageCohort(year: y, people: byYear[y]!)];
 }
 
 /// The selection id a rail mark answers to. A year, not a person: the
@@ -337,6 +328,9 @@ Color lineageRailColor() => _noDescentColor;
 
 /// The tradition the arc band is drawn on. Top-level because
 /// [packWheelBand] defaults to it and the tests read it.
+///
+/// The other one is printed on every sheet; see the class comment for
+/// why it is not an axis toggle.
 const String kDrawnTradition = 'mt';
 
 /// THE BAND'S PACKING, IN ONE PLACE — and the reason it is top-level
@@ -364,20 +358,20 @@ List<LifeArc> packWheelBand({
   int reservedInnerRings = 0,
 }) {
   final packed = buildLifeArcs(
-      patriarchs: chron.patriarchs,
-      tradition: tradition,
-      creationYear: creationYear,
-      minYear: kMinYear,
-      maxYear: kMaxYear,
-      // STATED, not defaulted. `packIntoRings`' own 0.02 rad is 22
-      // years on this axis today and would be some other number of
-      // years the day `kMinYear` moved — a silent repack.
-      minGap: 0.02,
-      alsoPack: [
-        ...kingReignSpans(kings),
-        ...ministrySpans(ministries),
-      ],
-    );
+    patriarchs: chron.patriarchs,
+    tradition: tradition,
+    creationYear: creationYear,
+    minYear: kMinYear,
+    maxYear: kMaxYear,
+    // STATED, not defaulted. `packIntoRings`' own 0.02 rad is 22
+    // years on this axis today and would be some other number of
+    // years the day `kMinYear` moved — a silent repack.
+    minGap: 0.02,
+    alsoPack: [
+      ...kingReignSpans(kings),
+      ...ministrySpans(ministries),
+    ],
+  );
   if (reservedInnerRings == 0) return packed;
   // THE SHIFT LIVES HERE, not at the call site. It was applied in the
   // page for about ten minutes and immediately broke the same test the
@@ -435,34 +429,50 @@ const Map<String, Map<String, String>> wheelStrings = {
   // different places. A field that carries information and is never
   // shown is information held back, so it is shown.
   'wheelKindMinistry': {
-    'zh-Hans': '事奉', 'zh-Hant': '事奉', 'en': 'ministry',
+    'zh-Hans': '事奉',
+    'zh-Hant': '事奉',
+    'en': 'ministry',
   },
   'wheelRegionEgypt': {'zh-Hans': '埃及', 'zh-Hant': '埃及', 'en': 'Egypt'},
   'wheelRegionMesopotamia': {
-    'zh-Hans': '美索不达米亚', 'zh-Hant': '美索不達米亞', 'en': 'Mesopotamia',
+    'zh-Hans': '美索不达米亚',
+    'zh-Hant': '美索不達米亞',
+    'en': 'Mesopotamia',
   },
   'wheelRegionAnatolia': {
-    'zh-Hans': '安纳托利亚', 'zh-Hant': '安納托利亞', 'en': 'Anatolia',
+    'zh-Hans': '安纳托利亚',
+    'zh-Hant': '安納托利亞',
+    'en': 'Anatolia',
   },
   'wheelRegionLevant': {
-    'zh-Hans': '黎凡特', 'zh-Hant': '黎凡特', 'en': 'The Levant',
+    'zh-Hans': '黎凡特',
+    'zh-Hant': '黎凡特',
+    'en': 'The Levant',
   },
   'wheelRegionPersia': {'zh-Hans': '波斯', 'zh-Hant': '波斯', 'en': 'Persia'},
   'wheelRegionGreece': {'zh-Hans': '希腊', 'zh-Hant': '希臘', 'en': 'Greece'},
   'wheelRegionRome': {'zh-Hans': '罗马', 'zh-Hant': '羅馬', 'en': 'Rome'},
   'wheelRegionIslamic': {
-    'zh-Hans': '伊斯兰世界', 'zh-Hant': '伊斯蘭世界', 'en': 'The Islamic world',
+    'zh-Hans': '伊斯兰世界',
+    'zh-Hant': '伊斯蘭世界',
+    'en': 'The Islamic world',
   },
   'wheelRegionEurope': {'zh-Hans': '欧洲', 'zh-Hant': '歐洲', 'en': 'Europe'},
   'wheelRegionAsia': {'zh-Hans': '亚洲', 'zh-Hant': '亞洲', 'en': 'Asia'},
   'wheelRegionAmericas': {
-    'zh-Hans': '美洲', 'zh-Hant': '美洲', 'en': 'The Americas',
+    'zh-Hans': '美洲',
+    'zh-Hant': '美洲',
+    'en': 'The Americas',
   },
   'wheelRegionModern': {
-    'zh-Hans': '现代世界', 'zh-Hant': '現代世界', 'en': 'The modern world',
+    'zh-Hans': '现代世界',
+    'zh-Hant': '現代世界',
+    'en': 'The modern world',
   },
   'wheelRefs': {
-    'zh-Hans': '经文出处', 'zh-Hant': '經文出處', 'en': 'References',
+    'zh-Hans': '经文出处',
+    'zh-Hant': '經文出處',
+    'en': 'References',
   },
   'wheelMinistryAnchors': {
     'zh-Hans': '所据王年',
@@ -484,7 +494,9 @@ const Map<String, Map<String, String>> wheelStrings = {
         'this layer carries a reference for their year.',
   },
   'wheelLineageCount': {
-    'zh-Hans': '{n} 位', 'zh-Hant': '{n} 位', 'en': '{n} people',
+    'zh-Hans': '{n} 位',
+    'zh-Hant': '{n} 位',
+    'en': '{n} people',
   },
   'wheelReigns': {
     'zh-Hans': '犹大与以色列列王',
@@ -507,22 +519,28 @@ const Map<String, Map<String, String>> wheelStrings = {
     'en': 'reigns (Thiele)',
   },
   'wheelAbout': {
-    'zh-Hans': '关于本图', 'zh-Hant': '關於本圖', 'en': 'About this chart',
+    'zh-Hans': '关于本图',
+    'zh-Hant': '關於本圖',
+    'en': 'About this chart',
   },
   'wheelAboutProvenance': {
-    'zh-Hans': '年份的来源', 'zh-Hant': '年份的來源',
+    'zh-Hans': '年份的来源',
+    'zh-Hant': '年份的來源',
     'en': 'Where the dates come from',
   },
   'wheelAboutCoverage': {
-    'zh-Hans': '本图收录什么', 'zh-Hant': '本圖收錄什麼',
+    'zh-Hans': '本图收录什么',
+    'zh-Hant': '本圖收錄什麼',
     'en': 'What is on the chart',
   },
   'wheelAboutScope': {
-    'zh-Hans': '民族表止于何处', 'zh-Hant': '民族表止於何處',
+    'zh-Hans': '民族表止于何处',
+    'zh-Hant': '民族表止於何處',
     'en': 'Where the table of nations stops',
   },
   'wheelAboutAxis': {
-    'zh-Hans': '年代轴止于何处', 'zh-Hant': '年代軸止於何處',
+    'zh-Hans': '年代轴止于何处',
+    'zh-Hant': '年代軸止於何處',
     'en': 'Where the axis stops',
   },
   'wheelTitle': {
@@ -931,7 +949,7 @@ double _measureLabel(String text, double size) => (TextPainter(
       textDirection: TextDirection.ltr,
       maxLines: 1,
     )..layout())
-    .width;
+        .width;
 
 /// A tangential label's width: the sum of its characters, because
 /// `_charsOnArc` sets them one at a time along the curve. Shaping the
@@ -1131,7 +1149,8 @@ class _Spoke {
   int get hidden => members.length - 1;
 }
 
-class _RadialChronologyPageState extends State<RadialChronologyPage> {
+class _RadialChronologyPageState extends State<RadialChronologyPage>
+    with WheelSheets<RadialChronologyPage> {
   Future<WheelHistoryData>? _future;
   final _viewer = TransformationController();
 
@@ -1220,9 +1239,6 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
     super.dispose();
   }
 
-  String _s(String key, String fallback, String locale) =>
-      uiStrings[key]?[locale] ?? wheelStrings[key]?[locale] ?? fallback;
-
   void _select(String? id) => setState(() => _selectedId = id);
 
   @override
@@ -1234,21 +1250,21 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
       backgroundColor: wb.paneBg,
       appBar: AppBar(
         leading: const LocalizedBackButton(),
-        title: Text(_s('wheelTitle', 'World History Wheel', locale)),
+        title: Text(s('wheelTitle', 'World History Wheel', locale)),
         actions: [
           IconButton(
             icon: const Icon(Icons.search),
-            tooltip: _s('wheelFind', 'Find', locale),
+            tooltip: s('wheelFind', 'Find', locale),
             onPressed: () => _showSearch(context, locale),
           ),
           IconButton(
             icon: const Icon(Icons.filter_list),
-            tooltip: _s('wheelFilter', 'Filter', locale),
+            tooltip: s('wheelFilter', 'Filter', locale),
             onPressed: () => _showFilter(context, locale),
           ),
           IconButton(
             icon: const Icon(Icons.info_outline),
-            tooltip: _s('wheelAbout', 'About this chart', locale),
+            tooltip: s('wheelAbout', 'About this chart', locale),
             onPressed: () => _showAbout(context, locale),
           ),
           const LanguageSwitcherButton(),
@@ -1262,8 +1278,8 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
             return Center(
               child: Padding(
                 padding: const EdgeInsets.all(24),
-                child:
-                    Text('${snap.error}', style: TextStyle(color: wb.mutedText)),
+                child: Text('${snap.error}',
+                    style: TextStyle(color: wb.mutedText)),
               ),
             );
           }
@@ -1283,27 +1299,12 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
   List<WheelStream> _visible(WheelHistoryData d) =>
       d.streams.where((s) => !_hidden.contains(s.id)).toList();
 
-  /// Per-band colours, computed from the FULL stream list rather than
-  /// the visible one — hiding a band must not recolour the rest.
-  Map<String, Color> _colorsFor(WheelHistoryData data) {
-    final byLine = <String, List<String>>{};
-    for (final s in data.streams) {
-      byLine.putIfAbsent(s.line, () => []).add(s.id);
-    }
-    final out = <String, Color>{};
-    for (final s in data.streams) {
-      final family = byLine[s.line]!;
-      out[s.id] = streamColor(s.line, family.indexOf(s.id), family.length);
-    }
-    return out;
-  }
-
   Widget _body(BuildContext context, WheelHistoryData data, String locale) {
     final wb = WbColors.of(context);
     final t = WbType.of(context);
     final streams = _visible(data);
     final ringOf = {for (var i = 0; i < streams.length; i++) streams[i].id: i};
-    final colors = _colorsFor(data);
+    final colors = colorsFor(data);
 
     return LayoutBuilder(builder: (context, box) {
       _viewportSize = Size(box.maxWidth, box.maxHeight);
@@ -1375,52 +1376,53 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
                         opacity: (1.6 - _zoom).clamp(0.0, 1.0),
                         child: Transform.scale(
                           scale: 1 / _zoom,
-                      child: SizedBox(
-                        width: hubD * 0.94,
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              _s('wheelTitle', 'World History Wheel', locale),
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: wb.text,
-                                fontSize: t.scaled(12),
-                                fontWeight: FontWeight.w600,
-                              ),
+                          child: SizedBox(
+                            width: hubD * 0.94,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  s('wheelTitle', 'World History Wheel',
+                                      locale),
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: wb.text,
+                                    fontSize: t.scaled(12),
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                SizedBox(height: t.scaled(4)),
+                                Text(
+                                  '${yearLabel(kMinYear, locale)} – '
+                                  '${yearLabel(kMaxYear, locale)}',
+                                  style: TextStyle(
+                                      color: wb.mutedText,
+                                      fontSize: t.scaled(11)),
+                                ),
+                                SizedBox(height: t.scaled(3)),
+                                Text(
+                                  // Bands, powers, events — and the lives,
+                                  // last and only when the layer is on, so
+                                  // the count is of what is actually drawn
+                                  // rather than of what the file holds.
+                                  '${streams.length} · ${data.powers.length} · '
+                                  '${data.events.length}'
+                                  '${lives.isEmpty ? '' : ' · ${lives.length}'}',
+                                  style: TextStyle(
+                                      color: wb.mutedText,
+                                      fontSize: t.scaled(11)),
+                                ),
+                                SizedBox(height: t.scaled(3)),
+                                Text(
+                                  s('wheelHint', '', locale),
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                      color: wb.mutedText,
+                                      fontSize: t.scaled(11)),
+                                ),
+                              ],
                             ),
-                            SizedBox(height: t.scaled(4)),
-                            Text(
-                              '${yearLabel(kMinYear, locale)} – '
-                              '${yearLabel(kMaxYear, locale)}',
-                              style: TextStyle(
-                                  color: wb.mutedText,
-                                  fontSize: t.scaled(11)),
-                            ),
-                            SizedBox(height: t.scaled(3)),
-                            Text(
-                              // Bands, powers, events — and the lives,
-                              // last and only when the layer is on, so
-                              // the count is of what is actually drawn
-                              // rather than of what the file holds.
-                              '${streams.length} · ${data.powers.length} · '
-                              '${data.events.length}'
-                              '${lives.isEmpty ? '' : ' · ${lives.length}'}',
-                              style: TextStyle(
-                                  color: wb.mutedText,
-                                  fontSize: t.scaled(11)),
-                            ),
-                            SizedBox(height: t.scaled(3)),
-                            Text(
-                              _s('wheelHint', '', locale),
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                  color: wb.mutedText,
-                                  fontSize: t.scaled(11)),
-                            ),
-                          ],
-                        ),
-                      ),
+                          ),
                         ),
                       ),
                     ),
@@ -1466,14 +1468,13 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
           width: t.scaled(46),
           child: Text('${(_zoom * 100).round()}%',
               textAlign: TextAlign.center,
-              style:
-                  TextStyle(color: wb.mutedText, fontSize: t.scaled(11))),
+              style: TextStyle(color: wb.mutedText, fontSize: t.scaled(11))),
         ),
         Container(width: 1, height: t.scaled(18), color: wb.border),
         btn(Icons.add, '+', () => _zoomBy(1.4)),
         Container(width: 1, height: t.scaled(18), color: wb.border),
-        btn(Icons.center_focus_strong,
-            _s('wheelReset', 'Reset', locale), _resetZoom),
+        btn(Icons.center_focus_strong, s('wheelReset', 'Reset', locale),
+            _resetZoom),
       ]),
     );
   }
@@ -1489,7 +1490,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
         ring,
         angleForSpan(p.start, kMinYear, kMaxYear),
         angleForSpan(p.endFor(kMaxYear), kMinYear, kMaxYear),
-        colors[p.stream] ?? _lineColor('none'),
+        colors[p.stream] ?? lineColor('none'),
       ));
     }
     return out;
@@ -1607,7 +1608,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
           [for (final m in clusters[p.index].members) all[m]],
           kept[p.index],
           p.label,
-          colors[kept[p.index].stream] ?? _lineColor('none'),
+          colors[kept[p.index].stream] ?? lineColor('none'),
           p.title,
           p.ref,
           badge: p.badge,
@@ -1616,20 +1617,6 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
   }
 
   // ── the lifespans ──────────────────────────────────────────────────
-
-  /// The tradition the ARCS are drawn on. The other one is printed on
-  /// every sheet; see the class comment for why it is not an axis
-  /// toggle.
-  static const String _kDrawnTradition = kDrawnTradition;
-
-  /// The creation year, or null when the asset does not carry it.
-  ///
-  /// One field, read in one place. `TimelineService` has parsed it by
-  /// the time any wheel data exists (`WheelHistoryService.load` awaits
-  /// it), and a null here means the layer draws nothing — never a
-  /// literal. A silent -4000 is the calendar this anchor replaced, and
-  /// it would put Methuselah's death four years after the flood spoke.
-  int? get _creationYear => TimelineService.instance.meta.creation?.year;
 
   /// The 25 Masoretic lives, packed into sub-rings of the annulus and
   /// fitted with whatever name each can legibly carry.
@@ -1681,8 +1668,8 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
     // man twice, in two styles, saying two different kinds of thing.
     final drawn = <String>{
       for (final p in chron.patriarchs) p.id,
-      for (final k in HebrewKingsService.instance.cached?.kings ??
-          const <HebrewKing>[])
+      for (final k
+          in HebrewKingsService.instance.cached?.kings ?? const <HebrewKing>[])
         k.id,
       for (final e in data.events)
         for (final link in e.people) link.id,
@@ -1718,13 +1705,12 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
   ) {
     if (_hidden.contains(kLifespanLayerId)) return const [];
     final chron = ChronologyService.instance.cached;
-    final creation = _creationYear;
+    final creation = creationYear;
     if (chron == null || creation == null) return const [];
 
     final kings = _hidden.contains(kReignLayerId)
         ? const <HebrewKing>[]
-        : (HebrewKingsService.instance.cached?.kings ??
-            const <HebrewKing>[]);
+        : (HebrewKingsService.instance.cached?.kings ?? const <HebrewKing>[]);
     final ministries = _hidden.contains(kMinistryLayerId)
         ? const <WheelMinistry>[]
         : (WheelHistoryService.instance.cached?.ministries ??
@@ -1813,11 +1799,11 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
         // the two reign lines the same way, from the `line` that
         // `kingReignSpans` derived from the king's own `kingdom`.
         color: switch (arc.line) {
-          'seth' => _lineColor('none'),
+          'seth' => lineColor('none'),
           'judah' => kingdomArcColor(Kingdom.judah),
           'israel' => kingdomArcColor(Kingdom.israel),
           'ministry' => ministryArcColor(),
-          _ => _lineColor('shem'),
+          _ => lineColor('shem'),
         },
         name: drawn,
         nameA0: a0,
@@ -1837,9 +1823,9 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
             Container(
                 width: t.scaled(10),
                 height: t.scaled(10),
-                color: _lineColor(line)),
+                color: lineColor(line)),
             SizedBox(width: t.scaled(6)),
-            Text(_s(key, fallback, locale),
+            Text(s(key, fallback, locale),
                 style: TextStyle(color: wb.mutedText, fontSize: t.scaled(11))),
           ]),
         );
@@ -1868,13 +1854,12 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
               Container(
                   width: t.scaled(10),
                   height: t.scaled(4),
-                  color: _lineColor('shem').withValues(alpha: 0.5)),
+                  color: lineColor('shem').withValues(alpha: 0.5)),
               SizedBox(width: t.scaled(6)),
               Text(
-                '${_s('wheelLifespans', 'Genesis lifespans', locale)} · '
-                '${_s('wheelLifespansTradition', 'Masoretic', locale)}',
-                style: TextStyle(
-                    color: wb.mutedText, fontSize: t.scaled(11)),
+                '${s('wheelLifespans', 'Genesis lifespans', locale)} · '
+                '${s('wheelLifespansTradition', 'Masoretic', locale)}',
+                style: TextStyle(color: wb.mutedText, fontSize: t.scaled(11)),
               ),
             ]),
             // THE REIGNS SHARE THE BAND AND ARE NOT THE SAME CLAIM.
@@ -1886,22 +1871,22 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
             // named by kingdom, because that is what the two hues mean.
             if (!_hidden.contains(kReignLayerId))
               for (final kingdom in const [Kingdom.judah, Kingdom.israel])
-              Padding(
-                padding: EdgeInsets.only(top: t.scaled(2)),
-                child: Row(mainAxisSize: MainAxisSize.min, children: [
-                  Container(
-                      width: t.scaled(10),
-                      height: t.scaled(4),
-                      color: kingdomArcColor(kingdom).withValues(alpha: 0.5)),
-                  SizedBox(width: t.scaled(6)),
-                  Text(
-                    '${kingdomLabel(locale, kingdom)} · '
-                    '${_s('wheelKingsThiele', 'reigns (Thiele)', locale)}',
-                    style: TextStyle(
-                        color: wb.mutedText, fontSize: t.scaled(11)),
-                  ),
-                ]),
-              ),
+                Padding(
+                  padding: EdgeInsets.only(top: t.scaled(2)),
+                  child: Row(mainAxisSize: MainAxisSize.min, children: [
+                    Container(
+                        width: t.scaled(10),
+                        height: t.scaled(4),
+                        color: kingdomArcColor(kingdom).withValues(alpha: 0.5)),
+                    SizedBox(width: t.scaled(6)),
+                    Text(
+                      '${kingdomLabel(locale, kingdom)} · '
+                      '${s('wheelKingsThiele', 'reigns (Thiele)', locale)}',
+                      style: TextStyle(
+                          color: wb.mutedText, fontSize: t.scaled(11)),
+                    ),
+                  ]),
+                ),
             // A THIRD KIND OF CLAIM IN THE SAME ANNULUS. A lifespan is a
             // stated age; a reign is a synchronised reconstruction; a
             // ministry is the window a text places a man's work in, and
@@ -1919,9 +1904,9 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
                       color: ministryArcColor().withValues(alpha: 0.5)),
                   SizedBox(width: t.scaled(6)),
                   Text(
-                    _s('wheelMinistries', 'Prophets & apostles', locale),
-                    style: TextStyle(
-                        color: wb.mutedText, fontSize: t.scaled(11)),
+                    s('wheelMinistries', 'Prophets & apostles', locale),
+                    style:
+                        TextStyle(color: wb.mutedText, fontSize: t.scaled(11)),
                   ),
                 ]),
               ),
@@ -1941,17 +1926,17 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
                       color: lineageRailColor().withValues(alpha: 0.6)),
                   SizedBox(width: t.scaled(14)),
                   Text(
-                    _s('wheelLineage', 'Genealogy (approximate)', locale),
-                    style: TextStyle(
-                        color: wb.mutedText, fontSize: t.scaled(11)),
+                    s('wheelLineage', 'Genealogy (approximate)', locale),
+                    style:
+                        TextStyle(color: wb.mutedText, fontSize: t.scaled(11)),
                   ),
                 ]),
               ),
           ],
           SizedBox(height: t.scaled(3)),
-          Text(_s('wheelShadeNote', '', locale),
+          Text(s('wheelShadeNote', '', locale),
               style: TextStyle(color: wb.mutedText, fontSize: t.scaled(11))),
-          Text(_s('wheelClusterLegend', '', locale),
+          Text(s('wheelClusterLegend', '', locale),
               style: TextStyle(color: wb.mutedText, fontSize: t.scaled(11))),
         ],
       ),
@@ -1971,7 +1956,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
           final t = WbType.of(c);
           final data = snap.data;
           if (data == null) return const SizedBox(height: 120);
-          final colors = _colorsFor(data);
+          final colors = colorsFor(data);
           return StatefulBuilder(builder: (c, setSheet) {
             return ConstrainedBox(
               constraints: BoxConstraints(
@@ -1982,7 +1967,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
                 children: [
                   Row(children: [
                     Expanded(
-                      child: Text(_s('wheelFilter', 'Filter', locale),
+                      child: Text(s('wheelFilter', 'Filter', locale),
                           style: TextStyle(
                               color: wb.text,
                               fontSize: t.scaled(15),
@@ -1991,7 +1976,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
                     TextButton(
                       onPressed: () =>
                           setSheet(() => setState(() => _hidden.clear())),
-                      child: Text(_s('wheelAll', 'All', locale)),
+                      child: Text(s('wheelAll', 'All', locale)),
                     ),
                     TextButton(
                       onPressed: () => setSheet(() => setState(() {
@@ -2001,7 +1986,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
                             _hidden.add(kMinistryLayerId);
                             _hidden.add(kLineageLayerId);
                           })),
-                      child: Text(_s('wheelNone', 'None', locale)),
+                      child: Text(s('wheelNone', 'None', locale)),
                     ),
                   ]),
                   // The lifespans are a LAYER, not a band: they belong
@@ -2021,18 +2006,18 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
                           }
                         })),
                     title: Text(
-                        _s('wheelLifespans', 'Genesis lifespans', locale),
+                        s('wheelLifespans', 'Genesis lifespans', locale),
                         style: TextStyle(
                             color: wb.text, fontSize: t.scaled(12.5))),
                     subtitle: Text(
-                      _s('wheelLifespansNote', '', locale),
+                      s('wheelLifespansNote', '', locale),
                       style: TextStyle(
                           color: wb.mutedText, fontSize: t.scaled(11)),
                     ),
                     secondary: Container(
                         width: t.scaled(12),
                         height: t.scaled(12),
-                        color: _lineColor('shem')),
+                        color: lineColor('shem')),
                   ),
                   // The other two layers in the same annulus. Separate
                   // switches because they are separate kinds of claim,
@@ -2051,11 +2036,11 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
                           }
                         })),
                     title: Text(
-                        _s('wheelReigns', 'Reigns of Judah & Israel', locale),
+                        s('wheelReigns', 'Reigns of Judah & Israel', locale),
                         style: TextStyle(
                             color: wb.text, fontSize: t.scaled(12.5))),
                     subtitle: Text(
-                      _s('wheelKingsThiele', 'reigns (Thiele)', locale),
+                      s('wheelKingsThiele', 'reigns (Thiele)', locale),
                       style: TextStyle(
                           color: wb.mutedText, fontSize: t.scaled(11)),
                     ),
@@ -2074,11 +2059,11 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
                           }
                         })),
                     title: Text(
-                        _s('wheelMinistries', 'Prophets & apostles', locale),
+                        s('wheelMinistries', 'Prophets & apostles', locale),
                         style: TextStyle(
                             color: wb.text, fontSize: t.scaled(12.5))),
                     subtitle: Text(
-                      _s('wheelMinistriesNote', '', locale),
+                      s('wheelMinistriesNote', '', locale),
                       style: TextStyle(
                           color: wb.mutedText, fontSize: t.scaled(11)),
                     ),
@@ -2097,11 +2082,11 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
                           }
                         })),
                     title: Text(
-                        _s('wheelLineage', 'Genealogy (approximate)', locale),
+                        s('wheelLineage', 'Genealogy (approximate)', locale),
                         style: TextStyle(
                             color: wb.text, fontSize: t.scaled(12.5))),
                     subtitle: Text(
-                      _s('wheelLineageNote', '', locale),
+                      s('wheelLineageNote', '', locale),
                       style: TextStyle(
                           color: wb.mutedText, fontSize: t.scaled(11)),
                     ),
@@ -2110,28 +2095,30 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
                         height: t.scaled(12),
                         color: lineageRailColor()),
                   ),
-                  for (final s in data.streams)
+                  for (final stream in data.streams)
                     CheckboxListTile(
                       dense: true,
-                      value: !_hidden.contains(s.id),
+                      value: !_hidden.contains(stream.id),
                       onChanged: (_) => setSheet(() => setState(() {
-                            if (!_hidden.remove(s.id)) _hidden.add(s.id);
+                            if (!_hidden.remove(stream.id)) {
+                              _hidden.add(stream.id);
+                            }
                           })),
-                      title: Text(s.nameFor(locale),
+                      title: Text(stream.nameFor(locale),
                           style: TextStyle(
                               color: wb.text, fontSize: t.scaled(12.5))),
                       subtitle: Text(
-                        '${_s('wheelPowers', 'Powers', locale)} '
-                        '${data.powersOf(s.id).length} · '
-                        '${_s('wheelEvents', 'Events', locale)} '
-                        '${data.eventsOf(s.id).length}',
+                        '${s('wheelPowers', 'Powers', locale)} '
+                        '${data.powersOf(stream.id).length} · '
+                        '${s('wheelEvents', 'Events', locale)} '
+                        '${data.eventsOf(stream.id).length}',
                         style: TextStyle(
                             color: wb.mutedText, fontSize: t.scaled(11)),
                       ),
                       secondary: Container(
                           width: t.scaled(12),
                           height: t.scaled(12),
-                          color: colors[s.id] ?? _lineColor(s.line)),
+                          color: colors[stream.id] ?? lineColor(stream.line)),
                     ),
                 ],
               ),
@@ -2156,8 +2143,8 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
           final data = snap.data;
           if (data == null) return const SizedBox(height: 120);
           final meta = data.meta;
-          Widget section(String headingKey, String headingFallback,
-                  String body) =>
+          Widget section(
+                  String headingKey, String headingFallback, String body) =>
               body.isEmpty
                   ? const SizedBox.shrink()
                   : Padding(
@@ -2165,7 +2152,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(_s(headingKey, headingFallback, locale),
+                          Text(s(headingKey, headingFallback, locale),
                               style: TextStyle(
                                   color: wb.mutedText,
                                   fontSize: t.scaled(12),
@@ -2173,13 +2160,12 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
                           SizedBox(height: t.scaled(4)),
                           Text(body,
                               style: TextStyle(
-                                  color: wb.mutedText,
-                                  fontSize: t.scaled(12))),
+                                  color: wb.mutedText, fontSize: t.scaled(12))),
                         ],
                       ),
                     );
-          return _sheet(c, [
-            Text(_s('wheelAbout', 'About this chart', locale),
+          return buildSheet(c, [
+            Text(s('wheelAbout', 'About this chart', locale),
                 style: TextStyle(
                     color: wb.text,
                     fontSize: t.scaled(15),
@@ -2191,8 +2177,8 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
                 meta.coverageFor(locale)),
             section('wheelAboutScope', 'Where the table of nations stops',
                 meta.scopeFor(locale)),
-            section('wheelAboutAxis', 'Where the axis stops',
-                meta.axisFor(locale)),
+            section(
+                'wheelAboutAxis', 'Where the axis stops', meta.axisFor(locale)),
           ]);
         },
       ),
@@ -2206,30 +2192,19 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
   /// reopen it.
   final _findCtl = TextEditingController();
 
-  String _fill(String key, String fallback, String locale,
-      Map<String, Object> values) {
-    var out = _s(key, fallback, locale);
-    for (final e in values.entries) {
-      out = out.replaceAll('{${e.key}}', '${e.value}');
-    }
-    return out;
-  }
-
   String _kindLabel(WheelHitKind kind, String locale) => switch (kind) {
-        WheelHitKind.event => _s('wheelKindEvent', 'event', locale),
-        WheelHitKind.power => _s('wheelKindPower', 'power', locale),
-        WheelHitKind.nation => _s('wheelKindNation', 'nation', locale),
-        WheelHitKind.stream => _s('wheelKindBand', 'band', locale),
-        WheelHitKind.patriarch => _s('wheelKindLife', 'life', locale),
-        WheelHitKind.ministry =>
-          _s('wheelKindMinistry', 'ministry', locale),
+        WheelHitKind.event => s('wheelKindEvent', 'event', locale),
+        WheelHitKind.power => s('wheelKindPower', 'power', locale),
+        WheelHitKind.nation => s('wheelKindNation', 'nation', locale),
+        WheelHitKind.stream => s('wheelKindBand', 'band', locale),
+        WheelHitKind.patriarch => s('wheelKindLife', 'life', locale),
+        WheelHitKind.ministry => s('wheelKindMinistry', 'ministry', locale),
         // The one label in this switch that names a NON-record. It sits
         // in the same column as "event" and "ministry" so the reader
         // can see at a glance that this row is a different kind of
         // answer before they open it — and the year column beside it is
         // empty, which is the same statement said twice.
-        WheelHitKind.omission =>
-          _s('wheelKindOmission', 'no date', locale),
+        WheelHitKind.omission => s('wheelKindOmission', 'no date', locale),
       };
 
   /// The year column of a result row.
@@ -2240,10 +2215,10 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
   /// "Babylon 626–539 BC".
   String _hitYears(WheelHit hit, WheelHistoryData data, String locale) {
     if (hit.kind == WheelHitKind.power) {
-      final p = _find(data.powers, (p) => p.id == hit.id);
+      final p = find(data.powers, (p) => p.id == hit.id);
       if (p != null) {
         final end = p.ongoing
-            ? _s('wheelPresent', 'present', locale)
+            ? s('wheelPresent', 'present', locale)
             : yearLabel(p.end!, locale);
         return '${yearLabel(p.start, locale)} – $end';
       }
@@ -2254,25 +2229,17 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
   /// Why this row is in the list, when the title alone does not show it.
   String _hitVia(WheelHit hit, String locale) => switch (hit.via) {
         WheelHitVia.otherLocale => hit.matched,
-        WheelHitVia.otherSpelling => _fill(
-            'wheelNameKjv', 'King James Version: {name}', locale,
-            {'name': hit.matched}),
-        WheelHitVia.description => _s('wheelFindInDesc', 'in the description',
-            locale),
-        WheelHitVia.person => _s('wheelFindPerson', 'names {name}', locale)
+        WheelHitVia.otherSpelling => fill('wheelNameKjv',
+            'King James Version: {name}', locale, {'name': hit.matched}),
+        WheelHitVia.description =>
+          s('wheelFindInDesc', 'in the description', locale),
+        WheelHitVia.person => s('wheelFindPerson', 'names {name}', locale)
             .replaceFirst('{name}', hit.matched),
         WheelHitVia.reference => localizedReferenceLabel(hit.matched, locale),
-        WheelHitVia.yearSpan => _s('wheelFindSpan', 'spans it', locale),
-        WheelHitVia.yearNear => _s('wheelFindNear', 'nearby', locale),
+        WheelHitVia.yearSpan => s('wheelFindSpan', 'spans it', locale),
+        WheelHitVia.yearNear => s('wheelFindNear', 'nearby', locale),
         _ => '',
       };
-
-  static T? _find<T>(List<T> xs, bool Function(T) test) {
-    for (final x in xs) {
-      if (test(x)) return x;
-    }
-    return null;
-  }
 
   /// The command line BibleWorks' Timeline has and this wheel did not.
   ///
@@ -2294,7 +2261,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
           final data = snap.data;
           if (data == null) return const SizedBox(height: 120);
           final t = WbType.of(c);
-          final colors = _colorsFor(data);
+          final colors = colorsFor(data);
           return StatefulBuilder(builder: (c, setSheet) {
             final query = _findCtl.text;
             final result = searchWheel(
@@ -2310,8 +2277,8 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
               // the text can answer.
               patriarchs:
                   ChronologyService.instance.cached?.patriarchs ?? const [],
-              creationYear: _creationYear,
-              tradition: _kDrawnTradition,
+              creationYear: creationYear,
+              tradition: kDrawnTradition,
             );
             return Padding(
               padding: EdgeInsets.only(
@@ -2330,13 +2297,11 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
                           TextStyle(color: wb.text, fontSize: t.scaled(13.5)),
                       decoration: InputDecoration(
                         isDense: true,
-                        prefixIcon:
-                            Icon(Icons.search, size: t.scaled(17)),
+                        prefixIcon: Icon(Icons.search, size: t.scaled(17)),
                         prefixIconConstraints: BoxConstraints(
                             minWidth: t.scaled(34), minHeight: t.scaled(20)),
-                        hintText:
-                            _s('wheelFindHint', 'A name, a verse or a year',
-                                locale),
+                        hintText: s('wheelFindHint',
+                            'A name, a verse or a year', locale),
                         hintStyle: TextStyle(
                             color: wb.mutedText, fontSize: t.scaled(13)),
                         suffixIcon: query.isEmpty
@@ -2382,8 +2347,9 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
                       // app holds a record for is exactly the false
                       // absence this hand-off exists to stop.
                       final person = _amPersonFor(query);
-                      final noYears =
-                          person == null ? _amPersonWithoutFigures(query) : null;
+                      final noYears = person == null
+                          ? _amPersonWithoutFigures(query)
+                          : null;
                       final king = person == null && noYears == null
                           ? _kingFor(query)
                           : null;
@@ -2391,19 +2357,19 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
                         return const SizedBox.shrink();
                       }
                       final line = person != null
-                          ? _fill('wheelFindAmElsewhere', '', locale,
+                          ? fill('wheelFindAmElsewhere', '', locale,
                               {'name': person.localizedName(locale)})
                           : noYears != null
-                              ? _fill('wheelFindNoYears', '', locale,
+                              ? fill('wheelFindNoYears', '', locale,
                                   {'name': noYears.localizedName(locale)})
-                              : _fill('wheelFindKingElsewhere', '', locale,
+                              : fill('wheelFindKingElsewhere', '', locale,
                                   {'name': king!.nameFor(locale)});
                       final label = person != null
-                          ? _s('timelineOpenChronology',
-                              'Open Bible Chronology', locale)
+                          ? s('timelineOpenChronology', 'Open Bible Chronology',
+                              locale)
                           : noYears != null
-                              ? _s('familyTree', 'Family Tree', locale)
-                              : _s('hebrewKings', 'Kings of Judah & Israel',
+                              ? s('familyTree', 'Family Tree', locale)
+                              : s('hebrewKings', 'Kings of Judah & Israel',
                                   locale);
                       return Padding(
                         padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
@@ -2433,8 +2399,8 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
                                   );
                                 },
                                 style: TextButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 8),
+                                  padding:
+                                      const EdgeInsets.symmetric(horizontal: 8),
                                   minimumSize: Size.zero,
                                   tapTargetSize:
                                       MaterialTapTargetSize.shrinkWrap,
@@ -2480,10 +2446,10 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
                               children: [
                                 Padding(
                                   padding: EdgeInsets.only(top: t.scaled(3)),
-                                  child: _swatch(
+                                  child: swatch(
                                       t,
                                       colors[hit.streamId] ??
-                                          _lineColor('none')),
+                                          lineColor('none')),
                                 ),
                                 SizedBox(width: t.scaled(8)),
                                 Expanded(
@@ -2502,7 +2468,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
                                           [
                                             if (via.isNotEmpty) via,
                                             if (hit.streamHidden)
-                                              _s(
+                                              s(
                                                   'wheelFindHiddenBand',
                                                   'band hidden — opening '
                                                       'this shows it again',
@@ -2599,7 +2565,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
   /// claim about one man, and a loose match would make that claim about
   /// the wrong one.
   ///
-  /// The lookup is synchronous for the same reason `_showPerson`'s is —
+  /// The lookup is synchronous for the same reason `showPerson`'s is —
   /// [WheelHistoryService.load] awaits the family tree before it
   /// returns, so a page drawing the wheel is a page past that await.
   BiblicalPerson? _amPersonFor(String query) {
@@ -2689,8 +2655,8 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
   HebrewKing? _kingFor(String query) {
     final q = foldForWheelSearch(query);
     if (q.isEmpty) return null;
-    for (final k in HebrewKingsService.instance.cached?.kings ??
-        const <HebrewKing>[]) {
+    for (final k
+        in HebrewKingsService.instance.cached?.kings ?? const <HebrewKing>[]) {
       for (final field in [...k.names.values, ...?k.altNames?.values]) {
         for (final n in field.split(',')) {
           if (n.trim().isNotEmpty && foldForWheelSearch(n) == q) return k;
@@ -2707,7 +2673,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
   String _searchStatus(String query, WheelSearchResult result,
       WheelHistoryData data, String locale) {
     if (query.trim().isEmpty) {
-      return _fill('wheelFindTeach', '', locale, {
+      return fill('wheelFindTeach', '', locale, {
         'e': data.events.length,
         'p': data.powers.length,
         'm': data.ministries.length,
@@ -2717,19 +2683,19 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
       });
     }
     if (result.isEmpty) {
-      return _fill('wheelFindNone', 'Nothing here matches “{q}”.', locale,
+      return fill('wheelFindNone', 'Nothing here matches “{q}”.', locale,
           {'q': query.trim()});
     }
     final parts = <String>[
       if (result.hits.length == 1)
-        _fill('wheelFindCountOne', '{n} result', locale, {'n': 1})
+        fill('wheelFindCountOne', '{n} result', locale, {'n': 1})
       else
-        _fill('wheelFindCount', '{n} results', locale,
-            {'n': result.hits.length}),
+        fill(
+            'wheelFindCount', '{n} results', locale, {'n': result.hits.length}),
       if (result.years.isNotEmpty)
         result.years.map((y) => yearLabel(y, locale)).join(' · '),
       if (result.nearestShown > 0)
-        _fill('wheelFindNearNote', '', locale, {'n': result.nearestShown}),
+        fill('wheelFindNearNote', '', locale, {'n': result.nearestShown}),
     ];
     return parts.join(' · ');
   }
@@ -2754,34 +2720,33 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
     // move, which is itself the point being made.
     if (hit.kind == WheelHitKind.omission) {
       final o = data.omissionById(hit.id);
-      if (o != null) _showOmission(context, o, locale);
+      if (o != null) showOmission(context, o, locale);
       return;
     }
     setState(() {
       _hidden.remove(hit.streamId);
       // A nation of Genesis 10 is not drawn on the axis — it is the
       // descent behind a band — so what gets selected is that band.
-      _selectedId =
-          hit.kind == WheelHitKind.nation ? hit.streamId : hit.id;
+      _selectedId = hit.kind == WheelHitKind.nation ? hit.streamId : hit.id;
     });
     _panTo(hit, data);
     switch (hit.kind) {
       case WheelHitKind.event:
-        final e = _find(data.events, (e) => e.id == hit.id);
-        if (e != null) _showEvent(context, e, data, locale);
+        final e = find(data.events, (e) => e.id == hit.id);
+        if (e != null) showEvent(context, e, data, locale);
       case WheelHitKind.power:
-        final p = _find(data.powers, (p) => p.id == hit.id);
-        if (p != null) _showPower(context, p, data, locale);
+        final p = find(data.powers, (p) => p.id == hit.id);
+        if (p != null) showPower(context, p, data, locale, _select);
       case WheelHitKind.nation:
       case WheelHitKind.stream:
-        final s = _find(data.streams, (s) => s.id == hit.streamId);
-        if (s != null) _showStream(context, s, data, locale);
+        final s = find(data.streams, (s) => s.id == hit.streamId);
+        if (s != null) showStream(context, s, data, locale, _select);
       case WheelHitKind.patriarch:
         final man = ChronologyService.instance.cached?.byId(hit.id);
-        if (man != null) _showPatriarch(context, man, locale);
+        if (man != null) showPatriarch(context, man, locale);
       case WheelHitKind.ministry:
         final m = data.ministryById(hit.id);
-        if (m != null) _showMinistry(context, m, locale);
+        if (m != null) showMinistry(context, m, locale);
       // Unreachable — the early return above owns this kind. Written
       // out rather than left to a default so that a kind added later
       // fails at compile time here, which is how the ministry kind was
@@ -2829,7 +2794,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
     if (hit.kind == WheelHitKind.patriarch ||
         hit.kind == WheelHitKind.ministry) {
       final chron = ChronologyService.instance.cached;
-      final creation = _creationYear;
+      final creation = creationYear;
       if (chron == null || creation == null) return;
       // The SAME layer set the painter used, hidden layers included:
       // a pan computed over arcs the reader has switched off would
@@ -2849,10 +2814,10 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
       final wanted = hit.kind == WheelHitKind.ministry
           ? '$kMinistryArcPrefix${hit.id}'
           : hit.id;
-      final arc = _find(all, (a) => a.id == wanted);
+      final arc = find(all, (a) => a.id == wanted);
       if (arc == null) return;
-      lifeRadius = lifeArcRadii(arc.ring, lifeArcRingCount(all),
-              scriptureLabelBase(rBands), rRim)
+      lifeRadius = lifeArcRadii(
+              arc.ring, lifeArcRingCount(all), scriptureLabelBase(rBands), rRim)
           .centre;
       lifeAngle = (arc.a0 + arc.a1) / 2;
     }
@@ -2869,12 +2834,12 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
         angle = lifeAngle!;
         radius = lifeRadius!;
       case WheelHitKind.event:
-        final e = _find(data.events, (e) => e.id == hit.id);
+        final e = find(data.events, (e) => e.id == hit.id);
         if (e == null) return;
         angle = angleForSpan(e.year, kMinYear, kMaxYear);
         radius = (rBands + rRim) / 2;
       case WheelHitKind.power:
-        final p = _find(data.powers, (p) => p.id == hit.id);
+        final p = find(data.powers, (p) => p.id == hit.id);
         if (p == null) return;
         angle = (angleForSpan(p.start, kMinYear, kMaxYear) +
                 angleForSpan(p.endFor(kMaxYear), kMinYear, kMaxYear)) /
@@ -2962,9 +2927,9 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
     void openSpoke(_Spoke s) {
       _select(s.event.id);
       if (s.members.length > 1) {
-        _showCluster(context, s.members, data, locale);
+        showCluster(context, s.members, data, locale, _select);
       } else {
-        _showEvent(context, s.event, data, locale);
+        showEvent(context, s.event, data, locale);
       }
     }
 
@@ -3013,7 +2978,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
             return;
           }
           _select('$kLineageArcPrefix${m.cohort.year}');
-          _showCohort(context, m.cohort, locale);
+          showCohort(context, m.cohort, locale);
           return;
         }
       }
@@ -3054,11 +3019,11 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
           final king = l.king;
           final ministry = l.ministry;
           if (man != null) {
-            _showPatriarch(context, man, locale);
+            showPatriarch(context, man, locale);
           } else if (king != null) {
-            _showKing(context, king, locale);
+            showKing(context, king, locale);
           } else if (ministry != null) {
-            _showMinistry(context, ministry, locale);
+            showMinistry(context, ministry, locale);
           }
           return;
         }
@@ -3107,7 +3072,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
         final arc = inBand[pick.index];
         {
           _select(arc.power.id);
-          _showPower(context, arc.power, data, locale);
+          showPower(context, arc.power, data, locale, _select);
           return;
         }
       }
@@ -3124,1394 +3089,11 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
       }
       if (best >= 0) {
         _select(streams[best].id);
-        _showStream(context, streams[best], data, locale);
+        showStream(context, streams[best], data, locale, _select);
         return;
       }
     }
     if (_selectedId != null) _select(null);
-  }
-
-  /// Read the verse without leaving the wheel.
-  ///
-  /// The app already has a verse sheet the rest of the pages use, so
-  /// this reuses it rather than inventing a second way to show a
-  /// verse: same type, same versions, same behaviour, and nothing new
-  /// on screen. A chart that asserts something about scripture should
-  /// let the reader check the text in one tap, not send them away and
-  /// lose their place on the wheel.
-  Future<void> _readVerse(BuildContext context, String raw) async {
-    final ref = parseReference(raw);
-    if (ref == null) return;
-    await showVersePopup(context, ref);
-  }
-
-  /// Leave the wheel and open the reader at the verse — the long way,
-  /// for when the reader wants the surrounding chapter.
-  Future<void> _jump(BuildContext context, String raw) async {
-    final ref = parseReference(raw);
-    if (ref == null) return;
-    final mp = context.read<MainProvider>();
-    final result = await jumper.resolveAndPrepareJump(reference: ref, mp: mp);
-    if (!context.mounted) return;
-    final ok = await jumper.showJumpResultSnackBar(context, result);
-    if (!ok || !context.mounted) return;
-    navigateToReader(context);
-  }
-
-  // ── detail sheets ──────────────────────────────────────────────────
-
-  Widget _sheet(BuildContext sheet, List<Widget> children) => ConstrainedBox(
-        constraints:
-            BoxConstraints(maxHeight: MediaQuery.of(sheet).size.height * 0.7),
-        child: ListView(
-          shrinkWrap: true,
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
-          children: children,
-        ),
-      );
-
-  Widget _swatch(WbType t, Color c) =>
-      Container(width: t.scaled(10), height: t.scaled(10), color: c);
-
-  /// Tap reads the verse in place; long-press opens the reader at it.
-  ///
-  /// The reference is STORED in English — that is the form
-  /// [parseReference] reads on the way back — and localised only here,
-  /// at the print site. So `r` goes to the handlers and
-  /// [localizedReferenceLabel] goes on screen; passing the localised
-  /// string to either handler would break the tap.
-  Widget _refRow(BuildContext context, List<String> refs, WbColors wb,
-          WbType t, String locale) =>
-      Wrap(spacing: 10, runSpacing: 4, children: [
-        for (final r in refs)
-          InkWell(
-            onTap: () => _readVerse(context, r),
-            onLongPress: () => _jump(context, r),
-            child: Text(localizedReferenceLabel(r, locale),
-                style: TextStyle(color: wb.link, fontSize: t.scaled(11))),
-          ),
-      ]);
-
-  /// The people a record names, as tappable names in the page's own
-  /// idiom — a `Wrap` of plain text, like [_refRow], and not a boxed
-  /// chip. Two reasons: `workbench_theme.dart:16` forbids rounded
-  /// corners and a copied chip carried two of them into the timeline
-  /// page one phase ago; and the sheet already has a reference row that
-  /// looks like this, so a second visual language here would suggest a
-  /// difference in kind that does not exist.
-  ///
-  /// They are deliberately NOT [WbColors.link]. On this page that
-  /// colour means "this leaves for the reader", which a verse chip does
-  /// and a person does not — tapping a person opens their record
-  /// without moving the wheel. The underline says tappable; the colour
-  /// says where it goes.
-  Widget _personRow(BuildContext context, List<WheelPersonLink> people,
-          WbColors wb, WbType t, String locale) =>
-      Wrap(spacing: 10, runSpacing: 4, children: [
-        for (final p in people)
-          InkWell(
-            onTap: () => _showPerson(context, p.id, locale),
-            child: Text(
-              p.nameFor(locale),
-              style: TextStyle(
-                color: wb.text,
-                fontSize: t.scaled(11),
-                decoration: TextDecoration.underline,
-                decorationColor: wb.mutedText,
-              ),
-            ),
-          ),
-      ]);
-
-  /// Open one person's family-tree record over the wheel.
-  ///
-  /// The lookup is synchronous and safe here because
-  /// [WheelHistoryService.load] awaits the family tree before it
-  /// returns any record — a page showing a person link is a page that
-  /// is past that await. The null branch is a belt: the merge already
-  /// drops an id the tree does not hold, so this row can only name
-  /// people who resolve.
-  Future<void> _showPerson(
-      BuildContext context, String personId, String locale) async {
-    final person = FamilyTreeService.instance.byId(personId);
-    if (person == null) return;
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      constraints: const BoxConstraints(maxWidth: 720),
-      builder: (sheetCtx) => DraggableScrollableSheet(
-        initialChildSize: 0.65,
-        minChildSize: 0.35,
-        maxChildSize: 0.95,
-        expand: false,
-        builder: (_, scrollController) => PersonDetailSheet(
-          person: person,
-          locale: locale,
-          scrollController: scrollController,
-          onPersonTap: (other) {
-            Navigator.of(sheetCtx).maybePop();
-            _showPerson(context, other.id, locale);
-          },
-        ),
-      ),
-    );
-  }
-
-  /// The asset's `region` in the reader's language.
-  ///
-  /// Returns empty for a value this app has no word for, which is the
-  /// honest failure: a raw `mesopotamia` printed into a Chinese sheet
-  /// would be worse than saying nothing, and
-  /// `wheel_history_disclosure_test.dart` pins that every region in the
-  /// asset has a label so the empty branch stays unreachable.
-  String _regionLabel(String region, String locale) => switch (region) {
-        'egypt' => _s('wheelRegionEgypt', 'Egypt', locale),
-        'mesopotamia' => _s('wheelRegionMesopotamia', 'Mesopotamia', locale),
-        'anatolia' => _s('wheelRegionAnatolia', 'Anatolia', locale),
-        'levant' => _s('wheelRegionLevant', 'The Levant', locale),
-        'persia' => _s('wheelRegionPersia', 'Persia', locale),
-        'greece' => _s('wheelRegionGreece', 'Greece', locale),
-        'rome' => _s('wheelRegionRome', 'Rome', locale),
-        'islamic' => _s('wheelRegionIslamic', 'The Islamic world', locale),
-        'europe' => _s('wheelRegionEurope', 'Europe', locale),
-        'asia' => _s('wheelRegionAsia', 'Asia', locale),
-        'americas' => _s('wheelRegionAmericas', 'The Americas', locale),
-        'modern' => _s('wheelRegionModern', 'The modern world', locale),
-        _ => '',
-      };
-
-  String _basisText(String basis, String locale) => switch (basis) {
-        'scripture' => _s('wheelBasisScripture', 'stated in scripture', locale),
-        'scripture+thiele' =>
-          _s('wheelBasisThiele', 'interval from scripture', locale),
-        'thiele' => _s('wheelBasisThieleOnly', 'year from Thiele', locale),
-        _ => _s('wheelBasisConventional', 'conventional date', locale),
-      };
-
-  void _showEvent(BuildContext context, WheelHistoryEvent e,
-      WheelHistoryData data, String locale) {
-    final wb = WbColors.of(context);
-    final stream = data.streams.firstWhere((s) => s.id == e.stream,
-        orElse: () => const WheelStream(id: '', line: 'none', names: {}));
-    final approx = e.approximate ? approximatePrefix(locale) : '';
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: wb.paneBg,
-      shape: const RoundedRectangleBorder(),
-      isScrollControlled: true,
-      // `WbType.of` WATCHES, and a tap handler is not a build — resolving
-      // it out here threw before the sheet ever opened, so no detail sheet
-      // on this page could be opened in a debug build. Resolved against
-      // the sheet's own context instead, which is also what keeps an open
-      // sheet responsive to the Font Size slider. `WbColors.of` reads a
-      // theme extension and is safe either side of the boundary.
-      builder: (sheet) {
-        final t = WbType.of(sheet);
-        return _sheet(sheet, [
-          Row(children: [
-            _swatch(t, _colorsFor(data)[stream.id] ?? _lineColor(stream.line)),
-            SizedBox(width: t.scaled(8)),
-            Expanded(
-              child: Text(e.titleFor(locale),
-                  style: TextStyle(
-                      color: wb.text,
-                      fontSize: t.scaled(15),
-                      fontWeight: FontWeight.w600)),
-            ),
-            Text(stream.nameFor(locale),
-                style: TextStyle(color: wb.mutedText, fontSize: t.scaled(11))),
-          ]),
-          SizedBox(height: t.scaled(4)),
-          Text('$approx${yearLabel(e.year, locale)}',
-              style: TextStyle(color: wb.mutedText, fontSize: t.scaled(12))),
-          if (e.descFor(locale).isNotEmpty) ...[
-            SizedBox(height: t.scaled(8)),
-            Text(e.descFor(locale),
-                style: TextStyle(color: wb.text, fontSize: t.scaled(12))),
-          ],
-          if (e.refs.isNotEmpty) ...[
-            SizedBox(height: t.scaled(8)),
-            _refRow(context, e.refs, wb, t, locale),
-          ],
-          SizedBox(height: t.scaled(10)),
-          Text(
-            e.approximate
-                ? '${_basisText(e.basis, locale)} · '
-                    '${_s('wheelApprox', 'approximate', locale)}'
-                : _basisText(e.basis, locale),
-            style: TextStyle(color: wb.mutedText, fontSize: t.scaled(11)),
-          ),
-          // The apparatus the merge left behind, in the timeline page's
-          // own words — the same three blocks, the same shared strings,
-          // so the two surfaces cannot drift into saying different
-          // things about one event.
-          if (e.septuagintYear != null) ...[
-            SizedBox(height: t.scaled(4)),
-            Text(
-              _s('timelineSeptuagintYear', 'On the Septuagint: {year}.', locale)
-                  .replaceFirst('{year}', yearLabel(e.septuagintYear!, locale)),
-              style: TextStyle(color: wb.mutedText, fontSize: t.scaled(11)),
-            ),
-          ],
-          // Kept apart from the reference row above and labelled: those
-          // are where the event is told, these are where its year was
-          // counted from, and on nine of them the two name no chapter
-          // in common.
-          if (e.datingRefs.isNotEmpty) ...[
-            SizedBox(height: t.scaled(8)),
-            Text(
-              _s('timelineDatedBy', 'Dated by', locale),
-              style: TextStyle(
-                  color: wb.mutedText,
-                  fontSize: t.scaled(11),
-                  fontWeight: FontWeight.w600),
-            ),
-            SizedBox(height: t.scaled(4)),
-            _refRow(context, e.datingRefs, wb, t, locale),
-          ],
-          // The people, under the timeline page's own label, for the
-          // same reason the three blocks above reuse its wording: one
-          // event, two surfaces, and nothing gained by a second
-          // vocabulary. Last of the record's own content and above
-          // nothing, because it is the only row here that opens
-          // another sheet rather than adding to this one.
-          if (e.people.isNotEmpty) ...[
-            SizedBox(height: t.scaled(8)),
-            Text(
-              uiStrings['timelinePeople']?[locale] ??
-                  uiStrings['timelinePeople']?['en'] ??
-                  'People',
-              style: TextStyle(
-                  color: wb.mutedText,
-                  fontSize: t.scaled(11),
-                  fontWeight: FontWeight.w600),
-            ),
-            SizedBox(height: t.scaled(4)),
-            _personRow(context, e.people, wb, t, locale),
-          ],
-          // The seam. These eight are not counted back from the Thiele
-          // anchor the way everything below Abraham is, and the wheel
-          // draws both on one axis — which is the strongest invitation
-          // in the app to read them as equally fixed. Disclosed, not
-          // repaired: fixing it means fixing a year for the creation.
-          if (e.timelineEra == 'antediluvian') ...[
-            SizedBox(height: t.scaled(8)),
-            Text(
-              uiStrings['timelineAntediluvianBasis']?[locale] ??
-                  uiStrings['timelineAntediluvianBasis']?['en'] ??
-                  '',
-              style: TextStyle(
-                  color: wb.mutedText, fontSize: t.scaled(11), height: 1.5),
-            ),
-            SizedBox(height: t.scaled(4)),
-            Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: TextButton(
-                onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => const ChronologyPage(),
-                  ),
-                ),
-                style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  foregroundColor: wb.link,
-                ),
-                child: Text(
-                  _s('timelineOpenChronology', 'Open Bible Chronology', locale),
-                  style: TextStyle(
-                      fontSize: t.scaled(11.5), fontWeight: FontWeight.w700),
-                ),
-              ),
-            ),
-          ],
-        ]);
-      },
-    );
-  }
-
-  /// The epoch both chains are anchored at.
-  ///
-  /// Abram leaving Haran is the one year the Masoretic and the
-  /// Septuagint reckonings share on this axis — the wheel's own
-  /// `abram_called`, from Thiele — so it is what turns the Greek's
-  /// Anno Mundi figures into BC years without a second anchor being
-  /// invented here: `creationLxx = creationMt + haran.mt - haran.lxx`.
-  /// An id, not a figure; the numbers are the asset's.
-  static const String _kAnchorEpoch = 'haran';
-
-  /// One life, printed — and printed in BOTH traditions.
-  ///
-  /// WHY BOTH. The wheel DRAWS the Masoretic, because its axis is
-  /// absolute and the Greek chain puts the creation 1,366 years
-  /// earlier: carrying it would cost about a fifth of the angular
-  /// resolution of all ~665 events for the sake of nineteen arcs, and
-  /// would put a second flood 780 years before the first. But a chart
-  /// that draws one tradition and never names the other has chosen in
-  /// silence, which is the objection this app has answered three times
-  /// before. So the ARC is Masoretic and the SHEET is both: each
-  /// tradition's own Anno Mundi years, its own total, its own verses,
-  /// under its own name out of the asset.
-  ///
-  /// THE ARC AND THE SPOKE MUST NOT DISAGREE. The birth year here and
-  /// the birth year on this man's own event spoke are the same
-  /// arithmetic on the same anchor — `_meta.creation.year` plus the
-  /// figure — computed from one field, never from two.
-  /// A rail mark's sheet: the year, and everybody the tree places in it.
-  ///
-  /// THE DISCLAIMER COMES FIRST, before the year is even repeated,
-  /// because it is the most important thing on the sheet. All 192 of
-  /// these people have an EMPTY `datingRefs` in `family_tree.json` —
-  /// 191 `conventional`, one `thiele`, and not one resting on a verse.
-  /// The year is where the genealogy PLACES them so that a tree can be
-  /// drawn, and a reader who takes it for a date has been misled by
-  /// this app rather than by the asset, which says so plainly.
-  void _showCohort(
-      BuildContext context, LineageCohort cohort, String locale) {
-    final wb = WbColors.of(context);
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: wb.paneBg,
-      shape: const RoundedRectangleBorder(),
-      isScrollControlled: true,
-      builder: (sheet) {
-        final t = WbType.of(sheet);
-        return _sheet(sheet, [
-          Text(yearLabel(cohort.year, locale),
-              style: TextStyle(
-                  color: wb.text,
-                  fontSize: t.scaled(16),
-                  fontWeight: FontWeight.w600)),
-          SizedBox(height: t.scaled(4)),
-          Text(
-            _s('wheelLineageNote', '', locale),
-            style: TextStyle(
-                color: wb.mutedText, fontSize: t.scaled(11), height: 1.4),
-          ),
-          SizedBox(height: t.scaled(12)),
-          Text(
-            _fill('wheelLineageCount', '{n} people', locale,
-                {'n': cohort.people.length}),
-            style: TextStyle(
-                color: wb.mutedText,
-                fontSize: t.scaled(11),
-                fontWeight: FontWeight.w600),
-          ),
-          SizedBox(height: t.scaled(4)),
-          for (final p in cohort.people)
-            InkWell(
-              onTap: () {
-                Navigator.of(sheet).pop();
-                _showPerson(context, p.id, locale);
-              },
-              child: Padding(
-                padding: EdgeInsets.symmetric(vertical: t.scaled(3)),
-                child: Row(children: [
-                  Expanded(
-                    child: Text(p.localizedName(locale),
-                        style: TextStyle(
-                            color: wb.link, fontSize: t.scaled(12.5))),
-                  ),
-                  if (p.role != null && p.role!.isNotEmpty)
-                    Text(p.role!,
-                        style: TextStyle(
-                            color: wb.mutedText, fontSize: t.scaled(11))),
-                ]),
-              ),
-            ),
-        ]);
-      },
-    );
-  }
-
-  /// A ministry arc's own sheet.
-  ///
-  /// The note is the point of it. A reign arc can show its years and be
-  /// understood; a ministry arc cannot, because the years were REACHED
-  /// rather than read, and by a different route for almost every man.
-  /// So the note — which says which verse fixed which end, and where
-  /// the tighter window would be — is not an extra here, it is the
-  /// record. Printed before the references, not after them.
-  void _showMinistry(
-      BuildContext context, WheelMinistry ministry, String locale) {
-    final wb = WbColors.of(context);
-
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: wb.paneBg,
-      shape: const RoundedRectangleBorder(),
-      isScrollControlled: true,
-      builder: (sheet) {
-        final t = WbType.of(sheet);
-        final note = ministry.noteFor(locale);
-        return _sheet(sheet, [
-          Text(ministry.nameFor(locale),
-              style: TextStyle(
-                  color: wb.text,
-                  fontSize: t.scaled(16),
-                  fontWeight: FontWeight.w600)),
-          SizedBox(height: t.scaled(4)),
-          Text(
-            '${yearLabel(ministry.start, locale)} – '
-            '${yearLabel(ministry.end, locale)}',
-            style: TextStyle(color: wb.text, fontSize: t.scaled(12.5)),
-          ),
-          SizedBox(height: t.scaled(3)),
-          // WHAT THE SPAN RESTS ON, unconditionally and before anything
-          // else the sheet says. Twenty-five of the thirty-nine are
-          // `conventional`; a reader who is not told cannot tell those
-          // from the fourteen the text and Thiele fix between them.
-          Text(
-            ministry.approximate
-                ? '${_basisText(ministry.basis, locale)} · '
-                    '${_s('wheelApprox', 'approximate', locale)}'
-                : _basisText(ministry.basis, locale),
-            style: TextStyle(color: wb.mutedText, fontSize: t.scaled(11)),
-          ),
-          if (note.isNotEmpty) ...[
-            SizedBox(height: t.scaled(10)),
-            Text(note,
-                style: TextStyle(
-                    color: wb.text, fontSize: t.scaled(12), height: 1.45)),
-          ],
-          if (ministry.refs.isNotEmpty) ...[
-            SizedBox(height: t.scaled(12)),
-            Text(_s('wheelRefs', 'References', locale),
-                style: TextStyle(
-                    color: wb.mutedText,
-                    fontSize: t.scaled(11),
-                    fontWeight: FontWeight.w600)),
-            SizedBox(height: t.scaled(3)),
-            Wrap(
-              spacing: t.scaled(6),
-              runSpacing: t.scaled(4),
-              children: [
-                for (final ref in ministry.refs)
-                  InkWell(
-                    onTap: () {
-                      Navigator.of(sheet).pop();
-                      _jump(context, ref);
-                    },
-                    child: Container(
-                      padding: EdgeInsets.symmetric(
-                          horizontal: t.scaled(6), vertical: t.scaled(2)),
-                      decoration: BoxDecoration(
-                          border: Border.all(color: wb.border)),
-                      child: Text(ref,
-                          style: TextStyle(
-                              color: wb.accent, fontSize: t.scaled(11))),
-                    ),
-                  ),
-              ],
-            ),
-          ],
-          // The reigns the span was reached FROM, named rather than
-          // implied. They are not a formula — see `WheelMinistry` — so
-          // they are labelled as what they are: the anchors, not the
-          // arithmetic.
-          if (ministry.anchorKings.isNotEmpty) ...[
-            SizedBox(height: t.scaled(10)),
-            Text(
-              '${_s('wheelMinistryAnchors', 'Anchored on the reigns of', locale)}: '
-              '${[
-                for (final id in ministry.anchorKings)
-                  HebrewKingsService.instance.cached?.byId(id)?.nameFor(locale) ??
-                      id
-              ].join(' · ')}',
-              style: TextStyle(color: wb.mutedText, fontSize: t.scaled(11)),
-            ),
-          ],
-        ]);
-      },
-    );
-  }
-
-  /// The sheet for a record that is not on the chart, and says so.
-  ///
-  /// SHAPED LIKE [_showMinistry] AND MISSING ITS SECOND LINE, which is
-  /// the whole design. A ministry sheet reads name / years / basis /
-  /// note / references; this one reads name / "not drawn, and here is
-  /// why not" / note / references. The reader who has just come from
-  /// Isaiah's sheet sees the same furniture with the years taken out of
-  /// it, which states the difference faster than any sentence could.
-  ///
-  /// THE REFERENCES ARE THE POINT OF THE SHEET, not an appendix. Every
-  /// other claim on this wheel can be checked against a verse; a claim
-  /// that a book supplies no anchor can only be checked by reading the
-  /// verse that would have supplied one. So Joel 1:1 is tappable here
-  /// for exactly the reason Isaiah 1:1 is tappable there — except that
-  /// opening it is what proves the record right.
-  ///
-  /// No basis line, deliberately. `_basisText` answers "what does this
-  /// year rest on", and there is no year; printing `conventional` over
-  /// a record whose content is that no date can be reached would be the
-  /// contradiction this sheet exists to remove.
-  void _showOmission(
-      BuildContext context, WheelOmission omission, String locale) {
-    final wb = WbColors.of(context);
-
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: wb.paneBg,
-      shape: const RoundedRectangleBorder(),
-      isScrollControlled: true,
-      builder: (sheet) {
-        final t = WbType.of(sheet);
-        final note = omission.noteFor(locale);
-        return _sheet(sheet, [
-          Text(omission.nameFor(locale),
-              style: TextStyle(
-                  color: wb.text,
-                  fontSize: t.scaled(16),
-                  fontWeight: FontWeight.w600)),
-          SizedBox(height: t.scaled(4)),
-          Text(
-            _s('wheelOmissionNoSpan',
-                'Not drawn on this chart: the text gives no year to draw it '
-                    'at.',
-                locale),
-            style: TextStyle(color: wb.mutedText, fontSize: t.scaled(11.5)),
-          ),
-          if (note.isNotEmpty) ...[
-            SizedBox(height: t.scaled(10)),
-            Text(note,
-                style: TextStyle(
-                    color: wb.text, fontSize: t.scaled(12), height: 1.45)),
-          ],
-          if (omission.refs.isNotEmpty) ...[
-            SizedBox(height: t.scaled(12)),
-            Text(_s('wheelRefs', 'References', locale),
-                style: TextStyle(
-                    color: wb.mutedText,
-                    fontSize: t.scaled(11),
-                    fontWeight: FontWeight.w600)),
-            SizedBox(height: t.scaled(3)),
-            Wrap(
-              spacing: t.scaled(6),
-              runSpacing: t.scaled(4),
-              children: [
-                for (final ref in omission.refs)
-                  InkWell(
-                    onTap: () {
-                      Navigator.of(sheet).pop();
-                      _jump(context, ref);
-                    },
-                    child: Container(
-                      padding: EdgeInsets.symmetric(
-                          horizontal: t.scaled(6), vertical: t.scaled(2)),
-                      decoration: BoxDecoration(
-                          border: Border.all(color: wb.border)),
-                      child: Text(localizedReferenceLabel(ref, locale),
-                          style: TextStyle(
-                              color: wb.accent, fontSize: t.scaled(11))),
-                    ),
-                  ),
-              ],
-            ),
-          ],
-        ]);
-      },
-    );
-  }
-
-  /// A reign arc's own sheet.
-  ///
-  /// NOT a push to [HebrewKingsPage]. That page cannot be opened on a
-  /// particular king — `_showPower` already says so where it lists a
-  /// kingdom's kings, and it declines to make its rows tappable for
-  /// exactly that reason. A tap that landed the reader at the top of a
-  /// 42-king chart would be a worse answer than none, so the arc
-  /// answers here and offers the chart as a next step rather than as
-  /// the destination.
-  ///
-  /// The years are `formatReignYears`, shared with that page, so the
-  /// wheel and the chart cannot come to word the same reign differently.
-  void _showKing(BuildContext context, HebrewKing king, String locale) {
-    final wb = WbColors.of(context);
-    final houseKing = HebrewKingsService.instance.cached?.byId(king.house);
-
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: wb.paneBg,
-      shape: const RoundedRectangleBorder(),
-      isScrollControlled: true,
-      builder: (sheet) {
-        final t = WbType.of(sheet);
-        final alt = king.altNames?[locale];
-        final note = king.notes?[locale];
-
-        Widget refRow(String label, String ref) => Padding(
-              padding: EdgeInsets.symmetric(vertical: t.scaled(2)),
-              child: InkWell(
-                onTap: () {
-                  Navigator.of(sheet).pop();
-                  _jump(context, ref);
-                },
-                child: Row(children: [
-                  Expanded(
-                    child: Text(label,
-                        style: TextStyle(
-                            color: wb.mutedText, fontSize: t.scaled(11))),
-                  ),
-                  // LOCALISED for the eye, RAW for the jump. This row
-                  // printed `ref` straight through, so a Chinese reader
-                  // opening a king saw "1 Kings 16:29" — every other
-                  // sheet on this page goes through
-                  // `localizedReferenceLabel` and this one never did.
-                  // It went unseen because the arcs that open these
-                  // sheets were mostly too thin to tap; the finger-sized
-                  // hit target of 2026-09-03 is what surfaced it.
-                  Text(localizedReferenceLabel(ref, locale),
-                      style: TextStyle(
-                          color: wb.accent, fontSize: t.scaled(11.5))),
-                ]),
-              ),
-            );
-
-        return _sheet(sheet, [
-          Text(king.nameFor(locale),
-              style: TextStyle(
-                  color: wb.text,
-                  fontSize: t.scaled(16),
-                  fontWeight: FontWeight.w600)),
-          if (alt != null && alt.isNotEmpty)
-            Text(alt,
-                style:
-                    TextStyle(color: wb.mutedText, fontSize: t.scaled(11))),
-          SizedBox(height: t.scaled(4)),
-          Text(
-            [
-              kingdomLabel(locale, king.kingdom),
-              if (houseKing != null)
-                (uiStrings['kingsHouseOf']?[locale] ?? 'House of {name}')
-                    .replaceAll('{name}', houseKing.nameFor(locale)),
-              formatReignYears(locale, king.reignStart, king.reignEnd),
-            ].join(' · '),
-            style: TextStyle(color: wb.mutedText, fontSize: t.scaled(11.5)),
-          ),
-          // THE ARC IS THE HULL, THE SPANS ARE THE REIGN. A co-regency
-          // and the sole reign after it are drawn as one arc, because
-          // two arcs for one man cannot be read as one man. So the
-          // parts are named here — and for the seven kings who have
-          // more than one span, this is the only place the wheel says
-          // that their arc is not a single interval.
-          if (king.spans.length > 1 ||
-              king.spans.first.kind != SpanKind.sole) ...[
-            SizedBox(height: t.scaled(10)),
-            Text(_s('kingsReign', 'Reign', locale),
-                style: TextStyle(
-                    color: wb.mutedText,
-                    fontSize: t.scaled(11),
-                    fontWeight: FontWeight.w600)),
-            SizedBox(height: t.scaled(3)),
-            for (final span in king.spans)
-              Text(
-                '${spanKindLabel(locale, span.kind)} · '
-                '${formatReignYears(locale, span.start, span.end)}',
-                style: TextStyle(color: wb.text, fontSize: t.scaled(12)),
-              ),
-          ],
-          if (note != null && note.isNotEmpty) ...[
-            SizedBox(height: t.scaled(8)),
-            Text(note,
-                style: TextStyle(
-                    color: wb.mutedText,
-                    fontSize: t.scaled(11),
-                    height: 1.4)),
-          ],
-          SizedBox(height: t.scaled(12)),
-          Text(_s('kingsPassages', 'Where it is told', locale),
-              style: TextStyle(
-                  color: wb.mutedText,
-                  fontSize: t.scaled(11),
-                  fontWeight: FontWeight.w600)),
-          if (king.accessionRef != null)
-            refRow(_s('kingsAccession', 'Accession synchronism', locale),
-                king.accessionRef!),
-          if (king.kingsRef != null)
-            refRow(_s('kingsInKings', 'In Kings', locale), king.kingsRef!),
-          if (king.chroniclesRef != null)
-            refRow(_s('kingsInChronicles', 'In Chronicles', locale),
-                king.chroniclesRef!)
-          // The absence is information, and the kings page says so in
-          // the same words. A northern king with no Chronicles row and
-          // no sentence would read as a gap in this app.
-          else if (king.kingdom == Kingdom.israel)
-            Padding(
-              padding: EdgeInsets.only(top: t.scaled(2)),
-              child: Text(
-                _s(
-                    'kingsNoChronicles',
-                    'Chronicles follows the line of David and gives the '
-                        'northern kings no parallel account.',
-                    locale),
-                style: TextStyle(
-                    color: wb.mutedText,
-                    fontSize: t.scaled(11),
-                    height: 1.4),
-              ),
-            ),
-          SizedBox(height: t.scaled(8)),
-          Align(
-            alignment: AlignmentDirectional.centerStart,
-            child: TextButton(
-              onPressed: () {
-                Navigator.of(sheet).pop();
-                Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => const HebrewKingsPage(),
-                  ),
-                );
-              },
-              style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                minimumSize: Size.zero,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-              // `hebrewKings`, the key the wheel already opens this
-              // page under from the power sheet — one label for one
-              // destination, in one place.
-              child: Text(
-                  _s('hebrewKings', 'Kings of Judah & Israel', locale)),
-            ),
-          ),
-        ]);
-      },
-    );
-  }
-
-  void _showPatriarch(BuildContext context, Patriarch man, String locale) {
-    final wb = WbColors.of(context);
-    final chron = ChronologyService.instance.cached;
-    final creation = _creationYear;
-    if (chron == null || creation == null) return;
-    final anchor = _find(chron.epochs, (e) => e.id == _kAnchorEpoch);
-
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: wb.paneBg,
-      shape: const RoundedRectangleBorder(),
-      isScrollControlled: true,
-      builder: (sheet) {
-        final t = WbType.of(sheet);
-        final mt = man.figures[_kDrawnTradition];
-
-        /// One tradition's block: its name, the years it counts, the
-        /// total it states, and the verses each figure rests on.
-        List<Widget> tradition(String id, {required bool drawn}) {
-          final f = man.figures[id];
-          if (f == null) return const [];
-          final name = chron.traditionById(id).nameFor(locale);
-          // The BC year only where this app can honestly compute one:
-          // the Masoretic from the derived anchor, the Septuagint from
-          // the same anchor shifted by the one epoch both chains share.
-          final shift = id == _kDrawnTradition
-              ? 0
-              : (anchor == null
-                  ? null
-                  : (anchor.years[_kDrawnTradition] ?? 0) -
-                      (anchor.years[id] ?? 0));
-          final bc = shift == null ? null : creation + shift + f.birthAm;
-          final bcEnd = shift == null ? null : creation + shift + f.deathAm;
-          final refs = f.refs.values.toSet().toList();
-          return [
-            SizedBox(height: t.scaled(8)),
-            Text(
-              drawn
-                  ? '$name · ${_s('wheelLifespansNote', '', locale)}'
-                  : name,
-              style: TextStyle(
-                  color: wb.mutedText,
-                  fontSize: t.scaled(11),
-                  fontWeight: FontWeight.w600),
-            ),
-            SizedBox(height: t.scaled(3)),
-            Text(
-              [
-                _fill('wheelLifeAm', 'Anno Mundi {a}–{b}', locale,
-                    {'a': f.birthAm, 'b': f.deathAm}),
-                _fill('wheelLifeYears', '{n} years', locale,
-                    {'n': f.lifespan}),
-                if (bc != null && bcEnd != null)
-                  '${yearLabel(bc, locale)} – ${yearLabel(bcEnd, locale)}',
-              ].join(' · '),
-              style: TextStyle(color: wb.text, fontSize: t.scaled(12)),
-            ),
-            // NOT `timelineSeptuagintYear`, and the reason is the
-            // asset's own. That string's body is about Exodus 12:40 —
-            // the Greek counting its 430 years in Egypt AND Canaan,
-            // which shifts the exodus block by 215 — and
-            // `bible_timeline.json`'s `_meta.septuagintYear` states
-            // plainly that the pre-Abraham years are "not this shift
-            // but a different number for each of them", and declines
-            // to print one under that sentence for exactly this
-            // reason. Printing 4193 BC under a paragraph about the
-            // sojourn would be a figure the sentence does not
-            // describe. So this block says what is actually true of a
-            // Genesis 5 figure, and the year in it is derived.
-            if (!drawn && bc != null) ...[
-              SizedBox(height: t.scaled(3)),
-              Text(
-                _fill('wheelLifeSeptuagintChain', '', locale,
-                    {'year': yearLabel(creation + shift!, locale)}),
-                style: TextStyle(
-                    color: wb.mutedText, fontSize: t.scaled(11), height: 1.4),
-              ),
-            ],
-            if (refs.isNotEmpty) ...[
-              SizedBox(height: t.scaled(4)),
-              _refRow(context, refs, wb, t, locale),
-            ],
-          ];
-        }
-
-        final person = FamilyTreeService.instance.byId(man.id);
-        return _sheet(sheet, [
-          Row(children: [
-            _swatch(
-                t,
-                man.line == 'seth'
-                    ? _lineColor('none')
-                    : _lineColor('shem')),
-            SizedBox(width: t.scaled(8)),
-            Expanded(
-              child: Text(man.nameFor(locale),
-                  style: TextStyle(
-                      color: wb.text,
-                      fontSize: t.scaled(15),
-                      fontWeight: FontWeight.w600)),
-            ),
-            Text(_s('wheelLifespans', 'Genesis lifespans', locale),
-                style:
-                    TextStyle(color: wb.mutedText, fontSize: t.scaled(11))),
-          ]),
-          if (mt != null) ...[
-            SizedBox(height: t.scaled(4)),
-            Text(
-              '${yearLabel(creation + mt.birthAm, locale)} – '
-              '${yearLabel(creation + mt.deathAm, locale)} · '
-              '${_fill('wheelLifeYears', '{n} years', locale, {'n': mt.lifespan})}',
-              style: TextStyle(color: wb.mutedText, fontSize: t.scaled(12)),
-            ),
-          ],
-          // The other spelling, when there is one. The reader may have
-          // arrived here from the KJV's Genesis 5 and has to be told in
-          // as many words that the arc named "Kenan" is the Cainan they
-          // were reading about — the app cannot leave them to infer it
-          // from four letters in common.
-          if (man.nameKjv.isNotEmpty) ...[
-            SizedBox(height: t.scaled(2)),
-            Text(
-              _fill('wheelNameKjv', 'King James Version: {name}', locale,
-                  {'name': man.nameKjv}),
-              style: TextStyle(color: wb.mutedText, fontSize: t.scaled(11)),
-            ),
-          ],
-          SizedBox(height: t.scaled(8)),
-          Text(
-            _s('wheelLifeContemporaries', '', locale),
-            style: TextStyle(
-                color: wb.mutedText, fontSize: t.scaled(11), height: 1.5),
-          ),
-          for (final id in [
-            _kDrawnTradition,
-            ...chron.traditions
-                .map((x) => x.id)
-                .where((x) => x != _kDrawnTradition)
-          ])
-            ...tradition(id, drawn: id == _kDrawnTradition),
-          SizedBox(height: t.scaled(10)),
-          Text(_basisText('scripture+thiele', locale),
-              style:
-                  TextStyle(color: wb.mutedText, fontSize: t.scaled(11))),
-          // The whole chain the BC years hang on — 1 Kings 6:1 down to
-          // Genesis 5:3 — under the timeline page's own label. Long, and
-          // that length is the honest one.
-          if (TimelineService.instance.meta.creation!.datingRefs
-              .isNotEmpty) ...[
-            SizedBox(height: t.scaled(8)),
-            Text(
-              _s('timelineDatedBy', 'Dated by', locale),
-              style: TextStyle(
-                  color: wb.mutedText,
-                  fontSize: t.scaled(11),
-                  fontWeight: FontWeight.w600),
-            ),
-            SizedBox(height: t.scaled(4)),
-            _refRow(context, TimelineService.instance.meta.creation!.datingRefs,
-                wb, t, locale),
-          ],
-          // The family-tree record, when the tree holds this man.
-          //
-          // FIVE ROWS WERE MISSING HERE AND NOTHING SAID SO. The lookup
-          // is by the chart's own id, and the chart used to key five of
-          // the twenty-five on the Authorised Version's spelling — enos,
-          // cainan, mahalaleel, salah, nahor — while the tree keys them
-          // enosh, kenan, mahalalel, shelah, nahor_elder. So those five
-          // sheets simply had no "People" row, by the same rule
-          // `_personRow` follows, which is to link what resolves and
-          // claim nothing about what does not: the rule was right and
-          // the key was wrong. The ids are the tree's now and all
-          // twenty-five resolve. The null branch stays, because the rule
-          // is still the rule — the wheel draws men the tree may not
-          // hold — but it is no longer standing in for a defect.
-          if (person != null) ...[
-            SizedBox(height: t.scaled(8)),
-            Text(
-              uiStrings['timelinePeople']?[locale] ??
-                  uiStrings['timelinePeople']?['en'] ??
-                  'People',
-              style: TextStyle(
-                  color: wb.mutedText,
-                  fontSize: t.scaled(11),
-                  fontWeight: FontWeight.w600),
-            ),
-            SizedBox(height: t.scaled(4)),
-            _personRow(
-              context,
-              [
-                WheelPersonLink(id: man.id, names: man.names),
-              ],
-              wb,
-              t,
-              locale,
-            ),
-          ],
-          SizedBox(height: t.scaled(4)),
-          Align(
-            alignment: AlignmentDirectional.centerStart,
-            child: TextButton(
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (_) => const ChronologyPage(),
-                ),
-              ),
-              style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                minimumSize: Size.zero,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                foregroundColor: wb.link,
-              ),
-              child: Text(
-                _s('timelineOpenChronology', 'Open Bible Chronology', locale),
-                style: TextStyle(
-                    fontSize: t.scaled(11.5), fontWeight: FontWeight.w700),
-              ),
-            ),
-          ),
-        ]);
-      },
-    );
-  }
-
-  /// Everything one spoke stands for, when it stands for more than one
-  /// event.
-  ///
-  /// This is the other half of the `+65` badge and the reason the badge
-  /// can be told the truth: the events a rim has no room to name are
-  /// not lost, they are one tap away, in year order, each opening its
-  /// own sheet. Which one the rim names is stated here rather than left
-  /// to be inferred — it is the earliest in the stretch, which is an
-  /// arbitrary choice among the members and should read as one.
-  void _showCluster(BuildContext context, List<WheelHistoryEvent> events,
-      WheelHistoryData data, String locale) {
-    final wb = WbColors.of(context);
-    final colors = _colorsFor(data);
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: wb.paneBg,
-      shape: const RoundedRectangleBorder(),
-      isScrollControlled: true,
-      builder: (sheet) {
-        final t = WbType.of(sheet);
-        return _sheet(sheet, [
-          Text(
-            '${_s('wheelEvents', 'Events', locale)} · ${events.length}',
-            style: TextStyle(
-                color: wb.text,
-                fontSize: t.scaled(15),
-                fontWeight: FontWeight.w600),
-          ),
-          SizedBox(height: t.scaled(2)),
-          Text(
-            '${yearLabel(events.first.year, locale)} – '
-            '${yearLabel(events.last.year, locale)}',
-            style: TextStyle(color: wb.mutedText, fontSize: t.scaled(12)),
-          ),
-          SizedBox(height: t.scaled(6)),
-          Text(
-            _s('wheelClusterNote',
-                'The rim has room for one name here. Tap any event to open it.',
-                locale),
-            style: TextStyle(color: wb.mutedText, fontSize: t.scaled(11)),
-          ),
-          SizedBox(height: t.scaled(8)),
-          for (final e in events)
-            InkWell(
-              onTap: () {
-                Navigator.of(sheet).pop();
-                _select(e.id);
-                _showEvent(context, e, data, locale);
-              },
-              child: Padding(
-                padding: EdgeInsets.symmetric(vertical: t.scaled(4)),
-                child: Row(children: [
-                  _swatch(t, colors[e.stream] ?? _lineColor('none')),
-                  SizedBox(width: t.scaled(8)),
-                  Expanded(
-                    child: Text(e.titleFor(locale),
-                        style: TextStyle(
-                            color: wb.text, fontSize: t.scaled(12))),
-                  ),
-                  SizedBox(width: t.scaled(8)),
-                  Text(yearLabel(e.year, locale),
-                      style: TextStyle(
-                          color: wb.mutedText, fontSize: t.scaled(11))),
-                ]),
-              ),
-            ),
-        ]);
-      },
-    );
-  }
-
-  void _showPower(BuildContext context, WheelPower p, WheelHistoryData data,
-      String locale) {
-    final wb = WbColors.of(context);
-    final stream = data.streams.firstWhere((s) => s.id == p.stream,
-        orElse: () => const WheelStream(id: '', line: 'none', names: {}));
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: wb.paneBg,
-      shape: const RoundedRectangleBorder(),
-      isScrollControlled: true,
-      builder: (sheet) {
-        final t = WbType.of(sheet);
-        return _sheet(sheet, [
-          Row(children: [
-            _swatch(t, _colorsFor(data)[stream.id] ?? _lineColor(stream.line)),
-            SizedBox(width: t.scaled(8)),
-            Expanded(
-              child: Text(p.nameFor(locale),
-                  style: TextStyle(
-                      color: wb.text,
-                      fontSize: t.scaled(15),
-                      fontWeight: FontWeight.w600)),
-            ),
-          ]),
-          SizedBox(height: t.scaled(4)),
-          Text(
-              [
-                '${yearLabel(p.start, locale)} – '
-                    '${p.ongoing ? _s('wheelPresent', 'present', locale) : yearLabel(p.end!, locale)}',
-                // The place, beside the years. See `wheelRegion*`.
-                if (_regionLabel(p.region, locale) case final where
-                    when where.isNotEmpty)
-                  where,
-              ].join(' · '),
-              style: TextStyle(color: wb.mutedText, fontSize: t.scaled(12))),
-          if (p.noteFor(locale).isNotEmpty) ...[
-            SizedBox(height: t.scaled(8)),
-            Text(p.noteFor(locale),
-                style: TextStyle(color: wb.text, fontSize: t.scaled(12))),
-          ],
-          if (p.refs.isNotEmpty) ...[
-            SizedBox(height: t.scaled(8)),
-            _refRow(context, p.refs, wb, t, locale),
-          ],
-          SizedBox(height: t.scaled(10)),
-          // Ask the record, do not assume. This line used to be a constant
-          // "conventional date, not stated in scripture" — which the three
-          // Israelite kingdoms contradict, and whose verses sit two lines
-          // above it.
-          Text(
-            p.approximate
-                ? '${_basisText(p.basis, locale)} · '
-                    '${_s('wheelApprox', 'approximate', locale)}'
-                : _basisText(p.basis, locale),
-            style: TextStyle(color: wb.mutedText, fontSize: t.scaled(11)),
-          ),
-          // WHO REIGNED IN IT.
-          //
-          // A reader who taps the Kingdom of Judah is asking who, and
-          // until now the sheet answered with two names in the note —
-          // "from Rehoboam to Zedekiah" — and no way to reach the other
-          // eighteen. The app charts all forty-two, on its own page,
-          // and nothing on this wheel led there.
-          //
-          // Read live from `hebrew_kings.json`, never copied into the
-          // wheel's asset: that file IS this app's Thiele chart, and a
-          // copy would drift from it.
-          //
-          // The basis line sits directly above and covers these years —
-          // for these three powers it already reads "interval from
-          // scripture, year from Thiele" — which is why no reign here
-          // carries a second disclosure of its own.
-          //
-          // Rows do not open anything. A king's record lives on a page
-          // this sheet cannot select into, and a row that looks
-          // tappable and merely closes the sheet is worse than a row
-          // that plainly is not. The one tappable thing is the way out.
-          ...(() {
-            final kingdom = kWheelPowerKingdoms[p.id];
-            if (kingdom == null) return const <Widget>[];
-            final kings = HebrewKingsService.instance.cached
-                    ?.ofKingdom(kingdom) ??
-                const <HebrewKing>[];
-            if (kings.isEmpty) return const <Widget>[];
-            return <Widget>[
-              SizedBox(height: t.scaled(12)),
-              Text(
-                _fill('wheelKings', 'Kings · {n}', locale, {'n': kings.length}),
-                style: TextStyle(
-                    color: wb.mutedText,
-                    fontSize: t.scaled(11),
-                    fontWeight: FontWeight.w600),
-              ),
-              SizedBox(height: t.scaled(4)),
-              for (final k in kings)
-                Padding(
-                  padding: EdgeInsets.symmetric(vertical: t.scaled(3)),
-                  child: Row(children: [
-                    Expanded(
-                      child: Text(
-                        k.spans.length > 1
-                            ? '${k.nameFor(locale)} · '
-                                '${_s('kingsCoregency', 'co-regency', locale)}'
-                            : k.nameFor(locale),
-                        style: TextStyle(
-                            color: wb.text, fontSize: t.scaled(11.5)),
-                      ),
-                    ),
-                    Text(
-                      '${yearLabel(k.reignStart, locale)} – '
-                      '${yearLabel(k.reignEnd, locale)}',
-                      style: TextStyle(
-                          color: wb.mutedText, fontSize: t.scaled(11)),
-                    ),
-                  ]),
-                ),
-              Align(
-                alignment: AlignmentDirectional.centerStart,
-                child: TextButton(
-                  onPressed: () => Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => const HebrewKingsPage(),
-                    ),
-                  ),
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    minimumSize: Size.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    foregroundColor: wb.link,
-                  ),
-                  child: Text(
-                    _s('hebrewKings', 'Kings of Judah & Israel', locale),
-                    style: TextStyle(
-                        fontSize: t.scaled(11.5),
-                        fontWeight: FontWeight.w700),
-                  ),
-                ),
-              ),
-            ];
-          })(),
-          // WHAT STOOD AT THE SAME TIME AS IT.
-          //
-          // The wheel draws a power as an arc and its events as spokes
-          // on the same ring, and nothing said the two were related.
-          // That relation is the one thing the printed chart carries
-          // that this app did not — it nests a reign inside a kingdom
-          // inside a people, so the geometry states the parentage.
-          // Stated here in a heading instead, which is the form this
-          // app has always used for containment (a band's sheet lists
-          // its powers; the family tree indents; a book holds its
-          // chapters).
-          //
-          // The heading says SPAN, not ownership, and that wording is
-          // load-bearing: an event on this band inside these years is
-          // not thereby an event of this power.
-          ...(() {
-            final end = p.ongoing ? kMaxYear : p.end!;
-            final within = data
-                .eventsOf(p.stream)
-                .where((e) => e.year >= p.start && e.year <= end)
-                .toList()
-              ..sort((a, b) => a.year.compareTo(b.year));
-            if (within.isEmpty) return const <Widget>[];
-            return <Widget>[
-              SizedBox(height: t.scaled(12)),
-              Text(
-                _fill('wheelWithinSpan', 'Within this span · {n}', locale,
-                    {'n': within.length}),
-                style: TextStyle(
-                    color: wb.mutedText,
-                    fontSize: t.scaled(11),
-                    fontWeight: FontWeight.w600),
-              ),
-              SizedBox(height: t.scaled(4)),
-              for (final e in within)
-                InkWell(
-                  onTap: () {
-                    Navigator.of(sheet).pop();
-                    _select(e.id);
-                    _showEvent(context, e, data, locale);
-                  },
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: t.scaled(3)),
-                    child: Row(children: [
-                      Expanded(
-                        child: Text(e.titleFor(locale),
-                            style: TextStyle(
-                                color: wb.text, fontSize: t.scaled(11.5))),
-                      ),
-                      Text(yearLabel(e.year, locale),
-                          style: TextStyle(
-                              color: wb.mutedText, fontSize: t.scaled(11))),
-                    ]),
-                  ),
-                ),
-            ];
-          })(),
-        ]);
-      },
-    );
-  }
-
-  /// A band, opened: what it is, whom it descends from in Genesis 10 —
-  /// every name a tappable verse — and everything it carries.
-  void _showStream(BuildContext context, WheelStream s, WheelHistoryData data,
-      String locale) {
-    final wb = WbColors.of(context);
-    final nations = data.nationsOf(s.id);
-    final powers = data.powersOf(s.id)
-      ..sort((a, b) => a.start.compareTo(b.start));
-    final events = data.eventsOf(s.id)
-      ..sort((a, b) => a.year.compareTo(b.year));
-
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: wb.paneBg,
-      shape: const RoundedRectangleBorder(),
-      isScrollControlled: true,
-      builder: (sheet) {
-        final t = WbType.of(sheet);
-        return _sheet(sheet, [
-          Row(children: [
-            _swatch(t, _colorsFor(data)[s.id] ?? _lineColor(s.line)),
-            SizedBox(width: t.scaled(8)),
-            Expanded(
-              child: Text(s.nameFor(locale),
-                  style: TextStyle(
-                      color: wb.text,
-                      fontSize: t.scaled(16),
-                      fontWeight: FontWeight.w600)),
-            ),
-          ]),
-          if (nations.isNotEmpty) ...[
-            SizedBox(height: t.scaled(10)),
-            Text(_s('wheelDescent', 'Descent in Genesis 10', locale),
-                style: TextStyle(
-                    color: wb.text,
-                    fontSize: t.scaled(12),
-                    fontWeight: FontWeight.w600)),
-            for (final n in nations)
-              Padding(
-                padding: EdgeInsets.only(top: t.scaled(4)),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(n.nameFor(locale),
-                              style: TextStyle(
-                                  color: wb.text, fontSize: t.scaled(12))),
-                          if (n.noteFor(locale).isNotEmpty)
-                            Text(n.noteFor(locale),
-                                style: TextStyle(
-                                    color: wb.mutedText,
-                                    fontSize: t.scaled(11))),
-                        ],
-                      ),
-                    ),
-                    SizedBox(width: t.scaled(8)),
-                    InkWell(
-                      onTap: () => _readVerse(context, n.ref),
-                      onLongPress: () => _jump(context, n.ref),
-                      child: Text(localizedReferenceLabel(n.ref, locale),
-                          style: TextStyle(
-                              color: wb.link, fontSize: t.scaled(11))),
-                    ),
-                  ],
-                ),
-              ),
-          ],
-          if (powers.isNotEmpty) ...[
-            SizedBox(height: t.scaled(12)),
-            Text('${_s('wheelPowers', 'Powers', locale)} · ${powers.length}',
-                style: TextStyle(
-                    color: wb.text,
-                    fontSize: t.scaled(12),
-                    fontWeight: FontWeight.w600)),
-            for (final p in powers)
-              Padding(
-                padding: EdgeInsets.only(top: t.scaled(3)),
-                child: Row(children: [
-                  Expanded(
-                    child: Text(p.nameFor(locale),
-                        style: TextStyle(
-                            color: wb.text, fontSize: t.scaled(11.5))),
-                  ),
-                  Text(
-                      '${yearLabel(p.start, locale)} – '
-                      '${p.ongoing ? _s('wheelPresent', 'present', locale) : yearLabel(p.end!, locale)}',
-                      style: TextStyle(
-                          color: wb.mutedText, fontSize: t.scaled(11))),
-                ]),
-              ),
-          ],
-          if (events.isNotEmpty) ...[
-            SizedBox(height: t.scaled(12)),
-            Text('${_s('wheelEvents', 'Events', locale)} · ${events.length}',
-                style: TextStyle(
-                    color: wb.text,
-                    fontSize: t.scaled(12),
-                    fontWeight: FontWeight.w600)),
-            // These rows open. They did not until 2026-08-25: a stream's
-            // sheet named every event on it and offered no way to reach
-            // one, so a reader who found what they were looking for here
-            // had to go back and hunt the rim for a tick. That is the
-            // same defect the `+n` badge exists to end — an event the
-            // wheel names and the reader cannot open — and the powers
-            // above are left alone precisely because they do NOT have
-            // it: a power occupies a band, and tapping the band opens it.
-            for (final e in events)
-              InkWell(
-                onTap: () {
-                  Navigator.of(sheet).pop();
-                  _select(e.id);
-                  _showEvent(context, e, data, locale);
-                },
-                child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: t.scaled(3)),
-                  child: Row(children: [
-                    Expanded(
-                      child: Text(e.titleFor(locale),
-                          style: TextStyle(
-                              color: wb.text, fontSize: t.scaled(11.5))),
-                    ),
-                    Text(yearLabel(e.year, locale),
-                        style: TextStyle(
-                            color: wb.mutedText, fontSize: t.scaled(11))),
-                  ]),
-                ),
-              ),
-          ],
-        ]);
-      },
-    );
   }
 }
 
@@ -4628,15 +3210,13 @@ class _WorldWheelPainter extends CustomPainter {
       double innerEdge, Color color, double size) {
     if (text.isEmpty) return;
     final tp = _painter(text, color, size);
-    final r =
-        ringLabelRadius(rRim: innerEdge, clearance: 0, height: tp.height);
+    final r = ringLabelRadius(rRim: innerEdge, clearance: 0, height: tp.height);
     // On the lower half the tangent would run the text upside down, so
     // it is turned the other way — the same rule `_charsOnArc` uses, so
     // every word outside the hub keeps its top pointing outward.
     final flip = math.sin(angle) > 0;
     canvas.save();
-    canvas.translate(
-        c.dx + math.cos(angle) * r, c.dy + math.sin(angle) * r);
+    canvas.translate(c.dx + math.cos(angle) * r, c.dy + math.sin(angle) * r);
     canvas.rotate(angle + (flip ? -math.pi / 2 : math.pi / 2));
     tp.paint(canvas, Offset(-tp.width / 2, -tp.height / 2));
     canvas.restore();
@@ -4655,7 +3235,7 @@ class _WorldWheelPainter extends CustomPainter {
           Paint()
             ..style = PaintingStyle.stroke
             ..strokeWidth = band.width
-            ..color = (colors[streams[i].id] ?? _lineColor(streams[i].line))
+            ..color = (colors[streams[i].id] ?? lineColor(streams[i].line))
                 .withValues(alpha: 0.06));
     }
   }
@@ -4708,8 +3288,7 @@ class _WorldWheelPainter extends CustomPainter {
         text: name,
         radius: band.centre,
         sweep: arc.a1 - arc.a0,
-        maxEm: ringPitch(streams.length, rHub, rBands) *
-            kArcLabelPitchFraction,
+        maxEm: ringPitch(streams.length, rHub, rBands) * kArcLabelPitchFraction,
         desiredSize: rimFont / _labelScale(zoom),
         zoom: zoom,
         floorPx: kArcLabelFloorPx,
@@ -4751,8 +3330,8 @@ class _WorldWheelPainter extends CustomPainter {
       final alpha = sel ? 0.9 : (has ? 0.30 * 0.35 : 0.30);
       // 1 person is a third of the ring, 8 or more fills it. Clamped so
       // the 44-person year does not print into its neighbours.
-      final fill = (0.34 + 0.66 * ((r.cohort.people.length - 1) / 7))
-          .clamp(0.34, 1.0);
+      final fill =
+          (0.34 + 0.66 * ((r.cohort.people.length - 1) / 7)).clamp(0.34, 1.0);
       final half = r.pitch * 0.5 * fill;
       final dir = Offset(math.cos(r.angle), math.sin(r.angle));
       canvas.drawLine(
@@ -4815,8 +3394,7 @@ class _WorldWheelPainter extends CustomPainter {
           c + Offset(math.cos(mid), math.sin(mid)) * l.centre,
           math.min(1.6, l.stroke * 0.28),
           Paint()
-            ..color = l.color
-                .withValues(alpha: (alpha * 2.6).clamp(0.0, 1.0)),
+            ..color = l.color.withValues(alpha: (alpha * 2.6).clamp(0.0, 1.0)),
         );
       }
     }
@@ -4848,7 +3426,7 @@ class _WorldWheelPainter extends CustomPainter {
         text: TextSpan(
           text: streams[i].nameFor(locale),
           style: canvasTextStyle(
-            color: (colors[streams[i].id] ?? _lineColor(streams[i].line))
+            color: (colors[streams[i].id] ?? lineColor(streams[i].line))
                 .withValues(alpha: 0.98),
             fontSize: math.min(bandFont / _labelScale(zoom), band.width * 1.05),
             fontWeight: FontWeight.w600,
@@ -4952,8 +3530,8 @@ class _WorldWheelPainter extends CustomPainter {
     if (s.label.flipped) {
       // On the left half, run the text from the outer end inward so it
       // still reads left to right instead of upside down.
-      canvas.translate(c.dx + math.cos(a) * s.label.rEnd,
-          c.dy + math.sin(a) * s.label.rEnd);
+      canvas.translate(
+          c.dx + math.cos(a) * s.label.rEnd, c.dy + math.sin(a) * s.label.rEnd);
       canvas.rotate(a + math.pi);
     } else {
       canvas.translate(c.dx + math.cos(a) * s.label.rStart,
@@ -4964,9 +3542,7 @@ class _WorldWheelPainter extends CustomPainter {
     final afterTitle = s.title.isEmpty ? 0.0 : tp.width;
     refTp?.paint(canvas, Offset(afterTitle, -refTp.height / 2));
     badgeTp?.paint(
-        canvas,
-        Offset(afterTitle + (refTp?.width ?? 0),
-            -badgeTp.height / 2));
+        canvas, Offset(afterTitle + (refTp?.width ?? 0), -badgeTp.height / 2));
     canvas.restore();
   }
 
