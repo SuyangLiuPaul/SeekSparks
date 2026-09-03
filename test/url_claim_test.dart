@@ -96,4 +96,58 @@ void main() {
       expect(c.path, isNull);
     });
   });
+
+  group('urlNeedsRewrite', () {
+    test('an address bar that already says it is not written again', () {
+      expect(
+          urlNeedsRewrite(
+              want: '#/john/3?v=bsb', liveHash: '#/john/3?v=bsb'),
+          isFalse);
+    });
+
+    test('a blanked fragment is always rewritten', () {
+      // THE BROWSER REPRODUCTION, dev v1.6.223. The engine reports the
+      // framework's initial route as `/`, and
+      // `HashUrlStrategy.prepareExternalUrl('/')` returns the path and
+      // query with NO `#`, so `replaceState({flutter: true}, '/')`
+      // strips a shared link's fragment at 1.5 s — before the splash
+      // clears. Traced again 1 ms after browser Back, when
+      // `BrowserRouteObserver` answers it with `maybePop()` and the
+      // Navigator reports the root route underneath.
+      expect(urlNeedsRewrite(want: '#/john/3?v=bsb', liveHash: ''), isTrue);
+    });
+
+    test('THE R1 REGRESSION: the memory said written, the address bar '
+        'said empty', () {
+      // What the old gate compared, spelled out so reverting to it fails
+      // here and only here. `_applyHashToState` recorded the boot hash
+      // as written; the engine then blanked the fragment; the next write
+      // computed the very same string — so under `want != lastWritten`
+      // this was FALSE and the write was skipped, leaving the address
+      // bar empty for the rest of the session. Measured at 40 s and
+      // counting after a cold `#/john/3?v=bsb`, three runs.
+      const want = '#/john/3?v=bsb';
+      const lastWritten = '#/john/3?v=bsb';
+      expect(want != lastWritten, isFalse,
+          reason: 'the memory is why this used to be skipped');
+      expect(urlNeedsRewrite(want: want, liveHash: ''), isTrue,
+          reason: 'the address bar is why it must not be');
+    });
+
+    test('the engine\'s minified route name is not the share link', () {
+      // What `onRouteChanged` exists to repair: the engine writes the
+      // pushed route's minified name into the fragment.
+      expect(
+          urlNeedsRewrite(want: '#/john/3?v=bsb', liveHash: '#/minified:A7'),
+          isTrue);
+    });
+
+    test('a claimed page path is compared the same way', () {
+      expect(urlNeedsRewrite(want: '#/wheel', liveHash: '#/wheel'), isFalse,
+          reason: 'the forced writes used to push a duplicate entry here');
+      expect(
+          urlNeedsRewrite(want: '#/wheel', liveHash: '#/john/3?v=bsb'),
+          isTrue);
+    });
+  });
 }

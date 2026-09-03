@@ -148,9 +148,14 @@ void setBootDeepLinkCallback(void Function() cb) {
 
 /// Restore the canonical hash after a navigator push/pop. The engine
 /// writes the pushed route's minified name into the fragment
-/// (`#/minified:Xt`); 350 ms later we put the share link back. The
-/// `_lastWrittenUrl = null` reset forces the write even though our
-/// state hasn't changed since the last one.
+/// (`#/minified:Xt`); 350 ms later we put the share link back.
+///
+/// Both of these used to zero `_lastWrittenUrl` first, to force a write
+/// past a gate that remembered what we had written rather than reading
+/// what the address bar says. The gate reads the live hash now
+/// (`urlNeedsRewrite`), so there is nothing to force — and the duplicate
+/// history entry the force used to push when the address bar was already
+/// correct is gone with it.
 void claimUrl(String? path, {Object? owner}) {
   // The claim moves only if `UrlClaim` says it moved — a release from a
   // page that has already been superseded is refused there. See
@@ -159,7 +164,6 @@ void claimUrl(String? path, {Object? owner}) {
   if (!_initialized) return;
   // Write immediately so the address bar is right the moment the page
   // opens, and right again the moment it closes.
-  _lastWrittenUrl = '';
   try {
     _writeStateToUrl();
   } catch (e) {
@@ -171,7 +175,6 @@ void onRouteChanged() {
   if (!_initialized) return;
   Timer(const Duration(milliseconds: 350), () {
     if (_isApplyingFromUrl) return;
-    _lastWrittenUrl = '';
     try {
       _writeStateToUrl();
     } catch (e) {
@@ -190,8 +193,23 @@ String? get claimedPath => _claim.path;
 
 bool _isApplyingFromUrl = false;
 Timer? _writeDebounce;
-String _lastWrittenUrl = '';
 MainProvider? _mp;
+
+/// What the address bar actually says right now, `''` when it carries no
+/// fragment. The write gate compares against THIS and not against a
+/// memory of our own last write — see `urlNeedsRewrite` for the engine
+/// write that made the memory wrong.
+String _liveHash() {
+  try {
+    return _window.location.hash;
+  } catch (e) {
+    // Unreadable location: claim nothing about the address bar rather
+    // than suppressing a write. A redundant write costs one history
+    // entry; a suppressed one costs the share link.
+    debugPrint('[UrlSync] location.hash read failed: $e');
+    return '';
+  }
+}
 
 // ── Public init ─────────────────────────────────────────────────
 
@@ -225,6 +243,50 @@ Future<void> urlSyncInit({
     await _applyHashToState(bootHash, isBoot: true);
   } catch (e, st) {
     debugPrint('[UrlSync] boot apply failed: $e\n$st');
+  }
+
+  // 2026-09-03 (R1): put the SHARED LINK back in the address bar.
+  //
+  // NOTHING ELSE EVER DOES. The engine blanks the fragment when the
+  // framework reports its initial route (see `urlNeedsRewrite`), and the
+  // two things that would rewrite it both sit this boot out:
+  // `_onMpChange` is short-circuited by `_isApplyingFromUrl` for the
+  // whole of the apply above, and `onRouteChanged` never fires because a
+  // boot deep link pushes NO route — `_RootRouter` consumes
+  // `_bootHashLandingPending` in its build and the workbench it lands on
+  // is already `home:`. So the address bar stayed empty until the reader
+  // turned a page: measured at 40 s and counting, three runs, on dev
+  // v1.6.223, after a cold `#/john/3?v=bsb`. Copy the URL in that window
+  // — which is the whole session — and you share the app root.
+  //
+  // ONLY WHEN A DEEP LINK WAS ACTUALLY APPLIED, and the narrowness is
+  // the point. `_writeStateToUrl` would happily write the restored
+  // chapter for a reader who typed no link at all, which would replace
+  // the clean `https://…/` landing URL with `#/genesis/1?v=bsb` on every
+  // plain visit and push a history entry to do it. That is a product
+  // change nobody asked for. It also has a cost measured on this build:
+  // an app entry above the engine's flutter entry is what makes an
+  // address-bar `#/wheel` edit fail (the engine's rewind reports the
+  // OLDEST app entry, not the pasted one — see `browserRouteAction`), so
+  // every entry added at boot takes that door away one step earlier.
+  // Verified pre-existing rather than caused: on UNMODIFIED dev
+  // v1.6.223, one reader move is already enough to break the same door,
+  // `wheels=0` with the address bar left empty.
+  //
+  // Safe to write here rather than after a delay, and the ordering is
+  // measured rather than assumed: the engine's blanking write lands on
+  // the FIRST FRAME — 1.5–1.8 s against a netlify origin, 279 ms against
+  // localhost — while this runs behind `ProfileService.init`,
+  // `restoreState` and `FetchVerses`, and no further engine write
+  // happens until a route is pushed, which `onRouteChanged` covers. If
+  // that order ever inverted the write would be clobbered, not doubled:
+  // `urlNeedsRewrite` makes a redundant write a no-op.
+  if (_bootDeepLinkApplied) {
+    try {
+      _writeStateToUrl();
+    } catch (e) {
+      debugPrint('[UrlSync] boot rewrite failed: $e');
+    }
   }
 
   // (B) Listen for browser back/forward so popstate drives state.
@@ -263,11 +325,10 @@ void _writeStateToUrl() {
   final claimed = _claimedPath;
   if (claimed != null) {
     final newHash = '#$claimed';
-    if (newHash == _lastWrittenUrl) return;
+    if (!urlNeedsRewrite(want: newHash, liveHash: _liveHash())) return;
     try {
       _window.history
           .pushState(kAppHistoryEntryState.jsify(), '', newHash);
-      _lastWrittenUrl = newHash;
     } catch (e) {
       debugPrint('[UrlSync] claimed-path write failed: $e');
     }
@@ -298,12 +359,11 @@ void _writeStateToUrl() {
   // Version is always part of the URL — sharing a link should
   // preserve translation choice.
   final newHash = '#$hashPath?v=${mp.currentVersion}';
-  if (newHash == _lastWrittenUrl) return;
+  if (!urlNeedsRewrite(want: newHash, liveHash: _liveHash())) return;
   try {
     // Not `null`: the engine dereferences the state of whatever entry
     // its teardown lands on. See `kAppHistoryEntryState`.
     _window.history.pushState(kAppHistoryEntryState.jsify(), '', newHash);
-    _lastWrittenUrl = newHash;
   } catch (e) {
     debugPrint('[UrlSync] pushState threw: $e');
   }
@@ -430,9 +490,13 @@ Future<void> _applyHashToState(String rawHash, {bool isBoot = false}) async {
     }
   } finally {
     _isApplyingFromUrl = false;
-    // Don't immediately re-write the URL — let the next legitimate
-    // state change debounce + write it.
-    _lastWrittenUrl = '#$rawHash'.replaceFirst(RegExp(r'^##'), '#');
+    // This used to record the applied hash as "already written", to stop
+    // the write path re-stating a URL we had just read. The gate asks
+    // the address bar now, which answers the same question directly and
+    // without the memory: right after an apply the address bar IS the
+    // applied hash, so a write that would restate it is skipped anyway —
+    // and one that would NOT is a write the reader needs. See
+    // `urlNeedsRewrite` for the case where the two answers differ.
   }
 }
 
