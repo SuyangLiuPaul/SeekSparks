@@ -63,11 +63,22 @@ void main() {
   /// the same discipline `radial_chronology_page_test.dart` uses when
   /// it restates the wheel's own geometry fractions because the real
   /// ones are private to the page.
-  List<StripRow> rowsFor(double pxPerYear) {
+  ///
+  /// [forData]/[forKings]/[forPatriarchs] default to the real, loaded
+  /// corpus; the filter test below passes a hand-filtered
+  /// [WheelHistoryData] through the SAME `buildStripLanes` call to
+  /// predict what hiding one stream must produce, rather than trusting
+  /// a number written into the test.
+  List<StripRow> rowsFor(
+    double pxPerYear, {
+    WheelHistoryData? forData,
+    List<HebrewKing>? forKings,
+    List<Patriarch>? forPatriarchs,
+  }) {
     final lanes = buildStripLanes(
-      wheel: data,
-      kings: kings,
-      patriarchs: patriarchs,
+      wheel: forData ?? data,
+      kings: forKings ?? kings,
+      patriarchs: forPatriarchs ?? patriarchs,
       tradition: kDrawnTradition,
       creationYear: creationYear,
       pxPerYear: pxPerYear,
@@ -88,6 +99,9 @@ void main() {
     }
     return rows;
   }
+
+  double totalHeight(List<StripRow> rows) =>
+      rows.isEmpty ? 0.0 : rows.last.top + rows.last.height;
 
   /// Where one span's row sits, at the page's own starting zoom — the
   /// widest step, `kStripZoomSteps.first`, which is what the page opens
@@ -367,6 +381,174 @@ void main() {
         reason: 'tapping the wheel segment must replace this page with '
             'the wheel, the same pushReplacement the wheel\'s own switch '
             'does in reverse');
+    await unmount(tester);
+  });
+
+  // ── find, filter, about ────────────────────────────────────────────
+  //
+  // Ported from the wheel's own three sheets (`radial_chronology_page
+  // .dart`'s `_showSearch`/`_showFilter`/`_showAbout`), reusing the
+  // shared, form-independent parts unchanged: `searchWheel`
+  // (`utils/wheel_search.dart`) for the index itself and `WheelSheets`
+  // (`pages/wheel_sheets.dart`) for every detail sheet a result opens.
+  // What these three tests each pin is the one thing that reuse could
+  // not carry over on its own — see `strip_chronology_page.dart`'s own
+  // class doc for why.
+
+  /// THE FIND SHEET'S COUNTS ARE THE CORPUS'S OWN, NOT A WRITTEN-IN
+  /// NUMBER. Mirrors `radial_chronology_page_test.dart`'s "the find box
+  /// opens and teaches what it can be asked" — the same six counts, off
+  /// the same loaded [data], so a corpus edit that changes any of them
+  /// fails this test rather than leaving a stale line on screen. Not
+  /// pinned to a literal 851 here on purpose: what the line has to
+  /// stay honest about is that it counts what `snap.data` actually
+  /// loaded — 747 events from `wheel_history.json` plus the 104 the
+  /// service merges in from `bible_timeline.json` — not the smaller
+  /// count either file holds alone.
+  testWidgets(
+      'the find sheet teaches counts equal to the corpus\'s own drawn '
+      'totals', (tester) async {
+    await pump(tester, const Size(1440, 900));
+    await tester.tap(find.byIcon(Icons.search));
+    for (var i = 0; i < 8; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    expect(tester.takeException(), isNull,
+        reason: 'opening the box threw — `WbType.of` watches, and the '
+            'AppBar action is a tap handler, not a build');
+    expect(find.byKey(const ValueKey('stripFindField')), findsOneWidget);
+
+    final text = sheetText(tester);
+    for (final n in [
+      data.events.length,
+      data.powers.length,
+      data.ministries.length,
+      data.nations.length,
+      data.streams.length,
+      data.omissions.length,
+    ]) {
+      expect(text, contains('$n'),
+          reason: 'the box does not tell the reader it can search $n of '
+              'something');
+    }
+    expect(text, isNot(contains('{')),
+        reason: 'an unfilled placeholder reached the screen: $text');
+    await unmount(tester);
+  });
+
+  /// A YEAR QUERY CENTRES THE STRIP ON IT. `scrollToCentre` is the
+  /// layout file's own pure function; this pins that the page actually
+  /// calls it with the record's own year and the live horizontal
+  /// viewport, by comparing the real `Scrollable`'s offset after the
+  /// reveal against the same function called directly with the same
+  /// inputs — not a tolerance on "moved somewhere", the exact target.
+  ///
+  /// Zoomed in first, deliberately: at the page's own opening zoom
+  /// (`kStripZoomSteps.first`) the whole 6226-year axis already fits a
+  /// 900 px pane, `scrollToCentre` would clamp to 0 regardless of
+  /// whether the page called it correctly, and the test would prove
+  /// nothing.
+  testWidgets('a year query scrolls the strip so the record is centred',
+      (tester) async {
+    await pump(tester, const Size(900, 700));
+
+    for (var i = 0; i < 4; i++) {
+      await tester.tap(find.byTooltip('放大'));
+      await tester.pump();
+    }
+    await tester.pump(const Duration(milliseconds: 200));
+    final zoom = kStripZoomSteps[4];
+
+    final event = data.events.firstWhere((e) => e.id == 'magna_carta',
+        orElse: () => data.events
+            .firstWhere((e) => (e.titles['en'] ?? '').contains('Magna Carta')));
+    final zh = event.titles['zh-Hans']!;
+    expect(zh, isNotEmpty);
+
+    await tester.tap(find.byIcon(Icons.search));
+    for (var i = 0; i < 6; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    await tester.enterText(
+        find.byKey(const ValueKey('stripFindField')), 'Magna Carta');
+    for (var i = 0; i < 6; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    await tester.tap(find.text(zh).first);
+    for (var i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    expect(tester.takeException(), isNull);
+
+    final hScrollable = scrollableFor(tester, const ValueKey('stripHScroll'));
+    final viewportW = hScrollable.position.viewportDimension;
+    final expected = scrollToCentre(event.year, zoom, viewportW);
+    expect(hScrollable.position.pixels, closeTo(expected, 0.5),
+        reason: 'the reveal must land exactly where scrollToCentre(year: '
+            '${event.year}) says, not merely somewhere closer than before');
+    await unmount(tester);
+  });
+
+  /// A HIDDEN STREAM'S LANE DISAPPEARS — IT DOES NOT GO BLANK. The
+  /// wheel drops a hidden band's ring entirely rather than leaving a
+  /// gap (`_visible`'s own doc, `radial_chronology_page.dart`); the
+  /// strip's filter has to make the same claim about a LANE, and about
+  /// the stream's own EVENTS too — an event is a spoke ON its stream's
+  /// ring on the wheel, so hiding the ring already takes it with it,
+  /// and the strip's page doc says the filter mirrors that (see
+  /// `_visibleInputs`'s own comment there).
+  ///
+  /// Proven by total content height, not by absence of on-screen text
+  /// — canvas text leaves no widget (this file's own library note) —
+  /// and the expected height is not a hand-counted number but the SAME
+  /// `buildStripLanes` call, run here on a hand-filtered
+  /// [WheelHistoryData] that drops the one stream's own streams/powers/
+  /// events entry exactly the way the page's `_visibleInputs` does.
+  /// That is what catches the real defect this test is for: an
+  /// emptied-but-still-PRESENT row would leave `contentH` unchanged,
+  /// not merely smaller.
+  testWidgets('hiding a stream removes its lane rather than blanking it',
+      (tester) async {
+    await pump(tester, const Size(900, 700));
+    final stream = data.streams.first;
+
+    final baseRows = rowsFor(kStripZoomSteps.first);
+    final beforeHeight = totalHeight(baseRows);
+
+    final visibleData = WheelHistoryData(
+      streams: data.streams.where((s) => s.id != stream.id).toList(),
+      nations: data.nations,
+      powers: data.powers.where((p) => p.stream != stream.id).toList(),
+      ministries: data.ministries,
+      omissions: data.omissions,
+      events: data.events.where((e) => e.stream != stream.id).toList(),
+      meta: data.meta,
+    );
+    final predictedRows = rowsFor(kStripZoomSteps.first, forData: visibleData);
+    final removedHeight = beforeHeight - totalHeight(predictedRows);
+    expect(removedHeight, greaterThan(0),
+        reason: 'this test needs a stream whose own band and/or events '
+            'actually cost at least one lane to prove anything');
+
+    final before =
+        tester.getSize(find.byKey(const ValueKey('chronologyStrip')));
+
+    await tester.tap(find.byIcon(Icons.filter_list));
+    for (var i = 0; i < 8; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    await tester
+        .tap(find.widgetWithText(CheckboxListTile, stream.nameFor('zh-Hans')));
+    for (var i = 0; i < 8; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    expect(tester.takeException(), isNull);
+
+    final after = tester.getSize(find.byKey(const ValueKey('chronologyStrip')));
+    expect(before.height - after.height, closeTo(removedHeight, 0.5),
+        reason: 'the content must shrink by exactly the hidden stream\'s '
+            'own lanes, not merely get shorter, and not stay the same '
+            'height with a blank row in their place');
     await unmount(tester);
   });
 }
