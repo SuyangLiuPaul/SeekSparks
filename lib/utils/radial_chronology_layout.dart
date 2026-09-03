@@ -1169,3 +1169,55 @@ double? placeArcName(
   final ty = (viewH / 2 - scale * py).clamp(viewH * (1 - scale), 0.0);
   return (dx: tx, dy: ty);
 }
+
+/// The half-width, in radians, that a finger-sized target needs at
+/// [radius]. A fixed angle cannot serve a wheel: the same 0.01 rad is
+/// eight pixels of arc out at the rim and one near the hub.
+double fingerHalfWidth(double radius, {double fingerPx = 9}) =>
+    radius > 0 ? (fingerPx / 2) / radius : 0.02;
+
+/// Which arc, of those already filtered to ONE ring, a tap at [angle]
+/// means — and how far into that arc's own target the finger fell, 0 at
+/// the centre and 1 at the edge, so the caller can compare the answer
+/// with a spoke's.
+///
+/// WHY THIS EXISTS. The hit test used to ask `a >= a0 && a <= a1`, an
+/// exact containment with no slack at all, while every other target on
+/// this page — spokes, rail marks — converts a finger into radians at
+/// the tapped radius. Measured against the real corpus, that was not a
+/// rounding matter: **61 of 86 arcs are narrower than a 9 px finger at
+/// 700 px, 55 at 900, and 39 even at 1400** — and four are exactly
+/// **0.00 px wide**, because Zimri, Huldah, Ahaziah of Judah and
+/// Jehoahaz of Judah each begin and end in the same year. Those four
+/// could not be opened by tapping at any zoom, on any canvas, ever. The
+/// owner reported it as 「按也很难按到，打也打不开」, which is what half a
+/// pixel of target feels like from the outside.
+///
+/// So an arc's target is its own sweep OR a finger, whichever is wider,
+/// centred on the arc. A long reign keeps exactly the extent it paints;
+/// a hairline borrows a few pixels from the air either side of it, which
+/// is where its neighbours' own slack would otherwise go unused. Ties go
+/// to the nearer centre, normalised — the same rule the rest of the page
+/// already resolves by, so a reader who aims at the hairline between two
+/// long reigns gets the hairline.
+({int index, double score})? nearestArcAt(
+  double angle,
+  double radius,
+  List<({double a0, double a1})> arcs, {
+  double fingerPx = 9,
+}) {
+  final half = fingerHalfWidth(radius, fingerPx: fingerPx);
+  int? best;
+  var bestScore = double.infinity;
+  for (var i = 0; i < arcs.length; i++) {
+    final a = arcs[i];
+    final centre = (a.a0 + a.a1) / 2;
+    final own = math.max((a.a1 - a.a0).abs() / 2, half);
+    final score = (angle - centre).abs() / own;
+    if (score <= 1 && score < bestScore) {
+      best = i;
+      bestScore = score;
+    }
+  }
+  return best == null ? null : (index: best, score: bestScore);
+}

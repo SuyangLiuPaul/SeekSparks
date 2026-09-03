@@ -3020,10 +3020,30 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
     }
 
     if (r >= scriptureLabelBase(rBands) && r <= rRim && lives.isNotEmpty) {
-      for (final l in lives) {
-        final into = (r - l.centre).abs() / (l.pitch / 2);
-        if (into > 1) continue;
-        if (a >= l.arc.a0 && a <= l.arc.a1) {
+      // RING FIRST, then angle — the ring the finger is in is the only
+      // ring it can mean, and that has always been true here. What
+      // changed on 2026-09-03 is the angle: it asked `a >= a0 && a <= a1`,
+      // exact containment with no slack, while spokes and rail marks
+      // both convert a finger into radians at the tapped radius.
+      //
+      // Measured, that was not a rounding matter. 61 of 86 arcs are
+      // painted thinner than a 9 px finger at 700 px, 55 at 900, 39 even
+      // at 1400 — and Zimri, Huldah, Ahaziah of Judah and Jehoahaz of
+      // Judah are 0.00 px, each beginning and ending in the same year.
+      // Those four could not be opened by tapping at any zoom on any
+      // canvas. Reported as 「按也很难按到，打也打不开」, which is what half
+      // a pixel of target feels like. `nearestArcAt` gives every arc at
+      // least a finger and resolves overlaps by the nearer centre.
+      final inRing = [
+        for (final l in lives)
+          if ((r - l.centre).abs() / (l.pitch / 2) <= 1) l
+      ];
+      final pick = nearestArcAt(
+          a, r, [for (final l in inRing) (a0: l.arc.a0, a1: l.arc.a1)]);
+      if (pick != null) {
+        final l = inRing[pick.index];
+        {
+          final into = pick.score;
           // The one place the two shapes are compared.
           if (bestSpoke case final s? when spokeScore < into) {
             openSpoke(s);
@@ -3070,10 +3090,22 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
     // finger wants. Ink is even thinner — 5.56 and 4.33.
     if (r >= rHub && r <= rBands) {
       final pitch = ringPitch(streams.length, rHub, rBands);
-      for (final arc in arcs) {
-        final band = ringRadii(arc.ring, streams.length, rHub, rBands);
-        if ((r - band.centre).abs() > pitch / 2) continue;
-        if (a >= arc.a0 && a <= arc.a1) {
+      // Same change as the life arcs above, for the same reason: a power
+      // band's angular extent is its span, and plenty of spans on this
+      // chart are a few years inside six thousand. Exact containment
+      // made those unreachable too.
+      final inBand = [
+        for (final arc in arcs)
+          if ((r - ringRadii(arc.ring, streams.length, rHub, rBands).centre)
+                  .abs() <=
+              pitch / 2)
+            arc
+      ];
+      final pick = nearestArcAt(
+          a, r, [for (final arc in inBand) (a0: arc.a0, a1: arc.a1)]);
+      if (pick != null) {
+        final arc = inBand[pick.index];
+        {
           _select(arc.power.id);
           _showPower(context, arc.power, data, locale);
           return;
@@ -3722,7 +3754,15 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
                         style: TextStyle(
                             color: wb.mutedText, fontSize: t.scaled(11))),
                   ),
-                  Text(ref,
+                  // LOCALISED for the eye, RAW for the jump. This row
+                  // printed `ref` straight through, so a Chinese reader
+                  // opening a king saw "1 Kings 16:29" — every other
+                  // sheet on this page goes through
+                  // `localizedReferenceLabel` and this one never did.
+                  // It went unseen because the arcs that open these
+                  // sheets were mostly too thin to tap; the finger-sized
+                  // hit target of 2026-09-03 is what surfaced it.
+                  Text(localizedReferenceLabel(ref, locale),
                       style: TextStyle(
                           color: wb.accent, fontSize: t.scaled(11.5))),
                 ]),
