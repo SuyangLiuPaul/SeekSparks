@@ -4774,6 +4774,673 @@
     "zh-Hans": "松赞干布统一青藏高原，其后继者更于763年一度攻入长安，据城半月。佛教在这几代赞普治下传入西藏，王朝于842年崩解。",
     "zh-Hant": "松贊干布統一青藏高原，其後繼者更於763年一度攻入長安，據城半月。佛教在這幾代贊普治下傳入西藏，王朝於842年崩解。"
    }
+  },
+  {
+   "id": "grc-pericles",
+   "start": -461,
+   "end": -429,
+   "region": "greece",
+   "stream": "greece",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "Pericles",
+    "zh-Hans": "伯里克利",
+    "zh-Hant": "伯里克利"
+   },
+   "note": {
+    "en": "The band is the years he led Athens, from his rise after Cimon's fall to his death in the plague. In them the city rebuilt the Acropolis, paid poor citizens to sit in its courts and assembly, and walked into the war with Sparta. The ancient notices date the beginning of his ascendancy only loosely.",
+    "zh-Hans": "此带表示他主导雅典的岁月，自客蒙失势后崛起，至他死于瘟疫为止。其间雅典重建卫城，以公帑支给贫民出席法庭与公民大会，也一步步走进了与斯巴达的战争。古代记载对他掌权之始只有笼统的年代。",
+    "zh-Hant": "此帶表示他主導雅典的歲月，自客蒙失勢後崛起，至他死於瘟疫為止。其間雅典重建衛城，以公帑支給貧民出席法庭與公民大會，也一步步走進了與斯巴達的戰爭。古代記載對他掌權之始只有籠統的年代。"
+   }
+  },
+  {
+   "id": "hasmonean-john-hyrcanus",
+   "start": -134,
+   "end": -104,
+   "region": "levant",
+   "stream": "judah",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "John Hyrcanus",
+    "zh-Hans": "约翰·许尔坎",
+    "zh-Hant": "約翰·許爾坎"
+   },
+   "note": {
+    "en": "Ruling as high priest and prince, he shook off the last Seleucid claims, destroyed the Samaritan temple on Mount Gerizim, and compelled the Idumeans to the south to be circumcised — the people Herod the Great came from. Both the ruined Gerizim sanctuary and Herod's Idumean descent stand behind the Gospels.",
+    "zh-Hans": "他以大祭司兼君王的身分执政，摆脱塞琉古最后的宗主要求，毁去基利心山上的撒玛利亚圣殿，又强令南方的以土买人受割礼——大希律即出于这族。基利心山圣所的废墟与希律的以土买血统，都是福音书的背景。",
+    "zh-Hant": "他以大祭司兼君王的身分執政，擺脫塞琉古最後的宗主要求，毀去基利心山上的撒瑪利亞聖殿，又強令南方的以土買人受割禮——大希律即出於這族。基利心山聖所的廢墟與希律的以土買血統，都是福音書的背景。"
+   },
+   "ref": "John 4:20"
+  },
+  {
+   "id": "rom-julius-caesar",
+   "start": -100,
+   "end": -44,
+   "region": "rome",
+   "stream": "rome",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "Julius Caesar",
+    "zh-Hans": "尤利乌斯·凯撒",
+    "zh-Hant": "尤利烏斯·凱撒"
+   },
+   "note": {
+    "en": "The band is his life. He conquered Gaul, beat Pompey in the civil war, reformed the calendar the West kept for sixteen centuries, and was made dictator for life; his murder left his heir Octavian to end the Republic as Augustus. Most references give 100 BC for his birth, a few 102.",
+    "zh-Hans": "此带表示他的一生。他征服高卢，在内战中击败庞培，改革了西方沿用十六个世纪的历法，并被立为终身独裁官；他遇刺之后，继承人屋大维终以奥古斯都之名结束了共和。多数记载把他的生年定在公元前100年，也有少数作102年。",
+    "zh-Hant": "此帶表示他的一生。他征服高盧，在內戰中擊敗龐培，改革了西方沿用十六個世紀的曆法，並被立為終身獨裁官；他遇刺之後，繼承人屋大維終以奧古斯都之名結束了共和。多數記載把他的生年定在公元前100年，也有少數作102年。"
+   }
+  },
+  {
+   "id": "rom-province-dacia",
+   "start": 106,
+   "end": 275,
+   "region": "rome",
+   "stream": "rome",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "Roman Dacia",
+    "zh-Hans": "罗马达契亚行省",
+    "zh-Hant": "羅馬達契亞行省"
+   },
+   "note": {
+    "en": "Trajan's two wars north of the Danube, in 101-102 and 105-106, made a province of what is now Romania and its gold paid for his building at Rome. Aurelian withdrew the army and the administration back across the river about 271 to 275 — the first province Rome gave up for good. Both ends are given a little differently in different references.",
+    "zh-Hans": "图拉真于公元101至102年、105至106年两次北渡多瑙河用兵，把今日罗马尼亚一带辟为行省，当地的黄金支付了他在罗马的营建。约公元271至275年间，奥勒良把军队与官署撤回河南岸，这是罗马第一个永久放弃的行省。两端年份各家略有出入。",
+    "zh-Hant": "圖拉真於公元101至102年、105至106年兩次北渡多瑙河用兵，把今日羅馬尼亞一帶闢為行省，當地的黃金支付了他在羅馬的營建。約公元271至275年間，奧勒良把軍隊與官署撤回河南岸，這是羅馬第一個永久放棄的行省。兩端年份各家略有出入。"
+   }
+  },
+  {
+   "id": "rom-antoninus-pius",
+   "start": 138,
+   "end": 161,
+   "region": "rome",
+   "stream": "rome",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Antoninus Pius",
+    "zh-Hans": "安敦宁·毕尤",
+    "zh-Hant": "安敦寧·畢尤"
+   },
+   "note": {
+    "en": "Twenty-three years so quiet that little of them was written down, the middle of the Roman peace. He was the man Hadrian adopted, and the man who adopted Marcus Aurelius in turn; Justin Martyr addressed his first Apology to him.",
+    "zh-Hans": "在位二十三年，平静得几乎无事可记，正当罗马和平的中段。他是哈德良所立的继承人，也亲自立马可·奥勒留为嗣；游斯丁的《第一护教辞》即上呈于他。",
+    "zh-Hant": "在位二十三年，平靜得幾乎無事可記，正當羅馬和平的中段。他是哈德良所立的繼承人，也親自立馬可·奧勒留為嗣；游斯丁的《第一護教辭》即上呈於他。"
+   }
+  },
+  {
+   "id": "rom-commodus",
+   "start": 180,
+   "end": 192,
+   "region": "rome",
+   "stream": "rome",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Commodus",
+    "zh-Hans": "康茂德",
+    "zh-Hant": "康茂德"
+   },
+   "note": {
+    "en": "The son Marcus Aurelius left the throne to. He fought in the arena himself and was strangled in his bedchamber on the last day of 192; the next year four more men claimed the purple. Ancient and modern writers alike mark his reign as the end of the good years.",
+    "zh-Hans": "马可·奥勒留传位于其子。他亲自下场角斗，公元192年最后一天在寝宫被人扼死；次年又有四人争称帝位。古今作者都以他的统治为盛世的终点。",
+    "zh-Hant": "馬可·奧勒留傳位於其子。他親自下場角鬥，公元192年最後一天在寢宮被人扼死；次年又有四人爭稱帝位。古今作者都以他的統治為盛世的終點。"
+   }
+  },
+  {
+   "id": "rom-severan-dynasty",
+   "start": 193,
+   "end": 235,
+   "region": "rome",
+   "stream": "rome",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "The Severan Emperors",
+    "zh-Hans": "塞维鲁诸帝",
+    "zh-Hant": "塞維魯諸帝"
+   },
+   "note": {
+    "en": "Septimius Severus took the throne out of the civil war of 193 and his house held it for forty years, ending with the murder of Severus Alexander. In these reigns nearly every free subject of the empire was made a citizen, in 212, and the persecution that took Perpetua and her companions fell at Carthage.",
+    "zh-Hans": "塞普蒂米乌斯·塞维鲁自公元193年的内战中取得帝位，其家族统治四十年，终于亚历山大·塞维鲁遇弑。这数朝之间，公元212年帝国几乎所有自由人都获得了公民权；佩尔佩图亚等人殉道的逼迫，也发生在迦太基。",
+    "zh-Hant": "塞普蒂米烏斯·塞維魯自公元193年的內戰中取得帝位，其家族統治四十年，終於亞歷山大·塞維魯遇弒。這數朝之間，公元212年帝國幾乎所有自由人都獲得了公民權；佩爾佩圖亞等人殉道的逼迫，也發生在迦太基。"
+   }
+  },
+  {
+   "id": "jin-dynasty",
+   "start": 265,
+   "end": 420,
+   "region": "asia",
+   "stream": "china",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Jin Dynasty",
+    "zh-Hans": "晋朝",
+    "zh-Hant": "晉朝"
+   },
+   "note": {
+    "en": "The house that ended the Three Kingdoms and briefly reunited China in 280, then lost the north to invading peoples early in the fourth century and ruled only the south from Jiankang. Its fall in 420 left China divided until the Sui.",
+    "zh-Hans": "此朝终结三国，于公元280年短暂统一中国，四世纪初又失北方于入侵各族，此后仅以建康为都统治江南。公元420年其亡，中国分裂之局一直延续到隋。",
+    "zh-Hant": "此朝終結三國，於公元280年短暫統一中國，四世紀初又失北方於入侵各族，此後僅以建康為都統治江南。公元420年其亡，中國分裂之局一直延續到隋。"
+   }
+  },
+  {
+   "id": "rom-theodosius-i",
+   "start": 379,
+   "end": 395,
+   "region": "rome",
+   "stream": "rome",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Theodosius I",
+    "zh-Hans": "狄奥多西一世",
+    "zh-Hant": "狄奧多西一世"
+   },
+   "note": {
+    "en": "The last emperor to rule both halves of the empire. He made the Nicene faith the religion of the state, closed the temples, and did public penance to Ambrose of Milan after the massacre at Thessalonica — a bishop calling an emperor to account. At his death the empire passed to his two sons and was never joined again.",
+    "zh-Hans": "他是最后一位同时统治东西两部的皇帝。他立尼西亚信仰为国教，关闭庙宇，又因帖撒罗尼迦的屠城而在米兰的安波罗修面前公开认罪——主教竟能责问皇帝。他死后帝国分归两子，此后再未合一。",
+    "zh-Hant": "他是最後一位同時統治東西兩部的皇帝。他立尼西亞信仰為國教，關閉廟宇，又因帖撒羅尼迦的屠城而在米蘭的安波羅修面前公開認罪——主教竟能責問皇帝。他死後帝國分歸兩子，此後再未合一。"
+   }
+  },
+  {
+   "id": "rom-honorius",
+   "start": 395,
+   "end": 423,
+   "region": "rome",
+   "stream": "rome",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Honorius",
+    "zh-Hans": "霍诺留",
+    "zh-Hant": "霍諾留"
+   },
+   "note": {
+    "en": "The younger son of Theodosius held the western half for twenty-eight years, mostly from behind the marshes at Ravenna. In his reign the Rhine frontier gave way, Britain was left to fend for itself, and Alaric's Goths sacked Rome in 410.",
+    "zh-Hans": "狄奥多西的幼子统治帝国西部二十八年，多半躲在拉文纳的沼泽之后。他在位期间，莱茵防线崩溃，不列颠被弃之自保，公元410年亚拉里克的哥特人劫掠了罗马。",
+    "zh-Hant": "狄奧多西的幼子統治帝國西部二十八年，多半躲在拉文納的沼澤之後。他在位期間，萊茵防線崩潰，不列顛被棄之自保，公元410年亞拉里克的哥特人劫掠了羅馬。"
+   }
+  },
+  {
+   "id": "visigothic-kingdom",
+   "start": 418,
+   "end": 711,
+   "region": "europe",
+   "stream": "europe",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "Visigothic Kingdom",
+    "zh-Hans": "西哥特王国",
+    "zh-Hant": "西哥特王國"
+   },
+   "note": {
+    "en": "Settled in Aquitaine by treaty in 418, pushed south of the Pyrenees by the Franks in 507, and ruling Spain until the Muslim conquest of 711. Arian for most of that time, the kingdom joined the Catholic confession at the third council of Toledo in 589. References date the settlement 416 or 418.",
+    "zh-Hans": "公元418年依约定居于阿基坦，507年被法兰克人逐至比利牛斯山以南，统治西班牙直到711年穆斯林征服。它多数时间持亚流派信仰，至589年第三次托莱多会议才归入大公信仰。各家把定居之年定为416年或418年。",
+    "zh-Hant": "公元418年依約定居於阿基坦，507年被法蘭克人逐至比利牛斯山以南，統治西班牙直到711年穆斯林征服。它多數時間持亞流派信仰，至589年第三次托萊多會議才歸入大公信仰。各家把定居之年定為416年或418年。"
+   }
+  },
+  {
+   "id": "vandal-kingdom-africa",
+   "start": 435,
+   "end": 534,
+   "region": "rome",
+   "stream": "europe",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "Vandal Kingdom in Africa",
+    "zh-Hans": "汪达尔非洲王国",
+    "zh-Hant": "汪達爾非洲王國"
+   },
+   "note": {
+    "en": "Having crossed from Spain in 429 the Vandals took Carthage and with it the grain that fed Rome; a treaty recognised them in 435 and they sacked Rome itself in 455. Justinian's general Belisarius destroyed the kingdom in 533 and 534. Some references date the kingdom from the capture of Carthage in 439 instead.",
+    "zh-Hans": "汪达尔人于公元429年自西班牙渡海，夺取迦太基，也就断了罗马的粮源；435年一纸条约承认其地位，455年他们更洗劫了罗马城。公元533至534年，查士丁尼的将领贝利撒留灭其国。也有记载把此王国自439年攻陷迦太基之年算起。",
+    "zh-Hant": "汪達爾人於公元429年自西班牙渡海，奪取迦太基，也就斷了羅馬的糧源；435年一紙條約承認其地位，455年他們更洗劫了羅馬城。公元533至534年，查士丁尼的將領貝利撒留滅其國。也有記載把此王國自439年攻陷迦太基之年算起。"
+   }
+  },
+  {
+   "id": "suleiman-i",
+   "start": 1520,
+   "end": 1566,
+   "region": "islamic",
+   "stream": "islam",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Suleiman the Magnificent",
+    "zh-Hans": "苏莱曼大帝",
+    "zh-Hant": "蘇萊曼大帝"
+   },
+   "note": {
+    "en": "The tenth Ottoman sultan, called the Lawgiver by his own people. His armies took Belgrade and Rhodes, destroyed the Hungarian kingdom at Mohacs in 1526 and were turned back from Vienna in 1529; the empire reached its high summer under him. Older English books spell his name Solyman.",
+    "zh-Hans": "奥斯曼第十位苏丹，本国称他为「立法者」。他的军队攻取贝尔格莱德与罗得岛，1526年在摩哈赤覆灭匈牙利王国，1529年兵临维也纳而无功；帝国在他手中臻于极盛。旧日英文书籍把他的名字拼作 Solyman。",
+    "zh-Hant": "奧斯曼第十位蘇丹，本國稱他為「立法者」。他的軍隊攻取貝爾格勒與羅得島，1526年在摩哈赤覆滅匈牙利王國，1529年兵臨維也納而無功；帝國在他手中臻於極盛。舊日英文書籍把他的名字拼作 Solyman。"
+   }
+  },
+  {
+   "id": "john-calvin",
+   "start": 1509,
+   "end": 1564,
+   "region": "europe",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "John Calvin",
+    "zh-Hans": "约翰·加尔文",
+    "zh-Hant": "約翰·加爾文"
+   },
+   "note": {
+    "en": "Born at Noyon in Picardy on 10 July 1509, died at Geneva on 27 May 1564. A lawyer's training and a conversion he never described in detail made him the Reformation's systematiser; the Institutes, which this chart carries at 1536, grew through four enlarged editions before he died, and Geneva became a school for preachers sent back into France, Scotland and the Netherlands.",
+    "zh-Hans": "1509年7月10日生于皮卡第的努瓦永，1564年5月27日卒于日内瓦。他受的是法学训练，归主的经过他自己从未细述；他成了改教运动的体系建构者。本图系于1536年的《基督教要义》，在他生前四度增订；日内瓦则成了训练传道人的学校，把人差回法国、苏格兰与荷兰。",
+    "zh-Hant": "1509年7月10日生於皮卡第的努瓦永，1564年5月27日卒於日內瓦。他受的是法學訓練，歸主的經過他自己從未細述；他成了改教運動的體系建構者。本圖繫於1536年的《基督教要義》，在他生前四度增訂；日內瓦則成了訓練傳道人的學校，把人差回法國、蘇格蘭與荷蘭。"
+   }
+  },
+  {
+   "id": "john-knox",
+   "start": 1514,
+   "end": 1572,
+   "region": "europe",
+   "stream": "church",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "John Knox",
+    "zh-Hans": "约翰·诺克斯",
+    "zh-Hant": "約翰·諾克斯"
+   },
+   "note": {
+    "en": "The preacher of the Scottish Reformation: a galley slave of the French, an exile in England and in Calvin's Geneva, and from 1559 the voice that carried Scotland to a reformed settlement. His birth year is genuinely disputed, references giving anything from 1505 to 1515; this band uses the commonly cited c. 1514, and his death on 24 November 1572 is certain.",
+    "zh-Hans": "苏格兰改教的传道人：曾在法国船上作桨奴，先后流亡英格兰与加尔文的日内瓦，自1559年起以他的讲道把苏格兰带入改革宗的体制。他的生年确有争议，各家所记自1505至1515年不等；此年段取通行的约1514年，而他卒于1572年11月24日则无疑问。",
+    "zh-Hant": "蘇格蘭改教的傳道人：曾在法國船上作槳奴，先後流亡英格蘭與加爾文的日內瓦，自1559年起以他的講道把蘇格蘭帶入改革宗的體制。他的生年確有爭議，各家所記自1505至1515年不等；此年段取通行的約1514年，而他卒於1572年11月24日則無疑問。"
+   }
+  },
+  {
+   "id": "mehmed-iv",
+   "start": 1648,
+   "end": 1687,
+   "region": "islamic",
+   "stream": "islam",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Mehmed IV",
+    "zh-Hans": "穆罕默德四世",
+    "zh-Hant": "穆罕默德四世"
+   },
+   "note": {
+    "en": "He came to the throne a child of six, and under the Koprulu grand viziers the empire recovered: Crete was taken in 1669 and Podolia in 1672, the widest the Ottoman reach in Europe ever was. It broke before Vienna in 1683, when a relief army scattered the besiegers, and the sultan was deposed four years later. English books of that century write him Mohammed IV.",
+    "zh-Hans": "他六岁登位，在科普鲁律家族任大维齐尔期间，帝国重振：1669年取克里特，1672年取波多利亚，为奥斯曼在欧洲版图之最广。1683年折于维也纳城下，援军击溃围城之师，四年后苏丹被废。当时的英文书籍把他写作 Mohammed IV。",
+    "zh-Hant": "他六歲登位，在科普魯律家族任大維齊爾期間，帝國重振：1669年取克里特，1672年取波多利亞，為奧斯曼在歐洲版圖之最廣。1683年折於維也納城下，援軍擊潰圍城之師，四年後蘇丹被廢。當時的英文書籍把他寫作 Mohammed IV。"
+   }
+  },
+  {
+   "id": "peter-the-great",
+   "start": 1682,
+   "end": 1725,
+   "region": "europe",
+   "stream": "europe",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Peter the Great",
+    "zh-Hans": "彼得大帝",
+    "zh-Hant": "彼得大帝"
+   },
+   "note": {
+    "en": "Proclaimed tsar in 1682 as a boy sharing the throne with his half-brother Ivan V, who died in 1696; he then ruled alone, destroyed Sweden's army at Poltava in 1709 and took the title of emperor in 1721. He built a navy, a new capital and a European bureaucracy, and left the patriarchate vacant in favour of the synod of clergy this chart carries at 1721.",
+    "zh-Hans": "1682年他还是孩童便被立为沙皇，与同父异母的兄长伊凡五世共治；伊凡五世卒于1696年，此后他独掌大权。1709年他在波尔塔瓦歼灭瑞典军队，1721年称帝。他建海军、立新都、设欧式官僚体系，又虚悬牧首之位，改以本图系于1721年的圣治会管辖教会。",
+    "zh-Hant": "1682年他還是孩童便被立為沙皇，與同父異母的兄長伊凡五世共治；伊凡五世卒於1696年，此後他獨掌大權。1709年他在波爾塔瓦殲滅瑞典軍隊，1721年稱帝。他建海軍、立新都、設歐式官僚體系，又虛懸牧首之位，改以本圖繫於1721年的聖治會管轄教會。"
+   }
+  },
+  {
+   "id": "catherine-the-great",
+   "start": 1762,
+   "end": 1796,
+   "region": "europe",
+   "stream": "europe",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Catherine the Great",
+    "zh-Hans": "叶卡捷琳娜大帝",
+    "zh-Hant": "葉卡捷琳娜大帝"
+   },
+   "note": {
+    "en": "A German princess who took the Russian throne in 1762 after her husband was deposed and killed. Two wars with the Ottomans, 1768 to 1774 and 1787 to 1792, carried Russia to the Black Sea and the Crimea, and three partitions removed Poland from the map; she wrote to the philosophers of the Enlightenment and tightened serfdom in the same years.",
+    "zh-Hans": "她本是德意志的公主，1762年在丈夫被废并遇害后取得俄国皇位。两次对奥斯曼的战争（1768–1774、1787–1792）把俄国带到黑海与克里米亚，三次瓜分则把波兰从地图上抹去；她与启蒙时代的哲人通信，同一些年间却把农奴制收得更紧。",
+    "zh-Hant": "她本是德意志的公主，1762年在丈夫被廢並遇害後取得俄國皇位。兩次對奧斯曼的戰爭（1768–1774、1787–1792）把俄國帶到黑海與克里米亞，三次瓜分則把波蘭從地圖上抹去；她與啟蒙時代的哲人通信，同一些年間卻把農奴制收得更緊。"
+   }
+  },
+  {
+   "id": "pope-pius-xii",
+   "start": 1939,
+   "end": 1958,
+   "region": "europe",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Pope Pius XII",
+    "zh-Hans": "教皇庇护十二世",
+    "zh-Hant": "教皇庇護十二世"
+   },
+   "note": {
+    "en": "Elected months before the Second World War and pope through it and the reconstruction after it. His refusal to condemn the destruction of Europe's Jews by name is argued over still: his defenders point to Jews sheltered in Roman houses and convents on his authority, his critics to the words he did not say.",
+    "zh-Hans": "他在第二次世界大战爆发前数月当选，历经整场战争与战后重建。他始终未点名谴责欧洲犹太人所遭的杀戮，至今仍有争议：为他辩护的人指出，罗马的宅院与修院曾奉他之命收容犹太人；责备他的人则指着他没有说出口的话。",
+    "zh-Hant": "他在第二次世界大戰爆發前數月當選，歷經整場戰爭與戰後重建。他始終未點名譴責歐洲猶太人所遭的殺戮，至今仍有爭議：為他辯護的人指出，羅馬的宅院與修院曾奉他之命收容猶太人；責備他的人則指著他沒有說出口的話。"
+   }
+  },
+  {
+   "id": "pope-paul-vi",
+   "start": 1963,
+   "end": 1978,
+   "region": "europe",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Pope Paul VI",
+    "zh-Hans": "教皇保禄六世",
+    "zh-Hant": "教皇保祿六世"
+   },
+   "note": {
+    "en": "He carried the Second Vatican Council to its close in 1965 and had to put its decisions into effect, including the mass in the languages people speak. In the same year he and the Ecumenical Patriarch lifted the mutual anathemas of 1054, which this chart carries; he was the first pope in centuries to travel, going to Jerusalem, India, the United Nations and Uganda.",
+    "zh-Hans": "他把第二次梵蒂冈会议带到1965年闭幕，并须将会议的决定付诸实行，包括改用各民族语言举行弥撒。同年他与东正教普世牧首解除了1054年彼此的绝罚，本图已载此事。他是数百年来第一位出访的教皇，去过耶路撒冷、印度、联合国与乌干达。",
+    "zh-Hant": "他把第二次梵蒂岡會議帶到1965年閉幕，並須將會議的決定付諸實行，包括改用各民族語言舉行彌撒。同年他與東正教普世牧首解除了1054年彼此的絕罰，本圖已載此事。他是數百年來第一位出訪的教皇，去過耶路撒冷、印度、聯合國與烏干達。"
+   }
+  },
+  {
+   "id": "pope-john-paul-ii",
+   "start": 1978,
+   "end": 2005,
+   "region": "europe",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Pope John Paul II",
+    "zh-Hans": "教皇若望保禄二世",
+    "zh-Hant": "教皇若望保祿二世"
+   },
+   "note": {
+    "en": "The first non-Italian pope in four and a half centuries, elected after his predecessor of thirty-three days died, and pope for twenty-six years. He visited more than a hundred countries, his 1979 return to Poland is widely counted among the pressures that brought communist rule down there, and he asked forgiveness in 2000 for wrongs done in the church's name; the abuse of children by clergy went largely unaddressed in his lifetime.",
+    "zh-Hans": "他是四个半世纪以来第一位非意大利籍教皇，在只做了三十三天的前任去世后当选，在位二十六年。他到访过一百多个国家；1979年重返波兰一行，普遍被算作压垮当地共产政权的力量之一。2000年他为教会名下所行的种种过错求宽恕；至于圣职人员侵害儿童一事，在他有生之年基本未获处理。",
+    "zh-Hant": "他是四個半世紀以來第一位非義大利籍教皇，在只做了三十三天的前任去世後當選，在位二十六年。他到訪過一百多個國家；1979年重返波蘭一行，普遍被算作壓垮當地共產政權的力量之一。2000年他為教會名下所行的種種過錯求寬恕；至於聖職人員侵害兒童一事，在他有生之年基本未獲處理。"
+   }
+  },
+  {
+   "id": "pope-benedict-xvi",
+   "start": 2005,
+   "end": 2013,
+   "region": "europe",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Pope Benedict XVI",
+    "zh-Hans": "教皇本笃十六世",
+    "zh-Hant": "教皇本篤十六世"
+   },
+   "note": {
+    "en": "A German theologian who had guarded doctrine for his predecessor for twenty-four years before being elected himself. He began to act against clergy who had abused children, and in February 2013 resigned the office, the first pope to do so of his own will since the fifteenth century.",
+    "zh-Hans": "他是德国神学家，当选之前曾为前任掌管教义二十四年。他开始对侵害儿童的圣职人员采取处置；2013年2月辞去教皇之职，是十五世纪以来第一位自愿退位的教皇。",
+    "zh-Hant": "他是德國神學家，當選之前曾為前任掌管教義二十四年。他開始對侵害兒童的聖職人員採取處置；2013年2月辭去教皇之職，是十五世紀以來第一位自願退位的教皇。"
+   }
+  },
+  {
+   "id": "pope-francis",
+   "start": 2013,
+   "end": 2025,
+   "region": "europe",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Pope Francis",
+    "zh-Hans": "教皇方济各",
+    "zh-Hant": "教皇方濟各"
+   },
+   "note": {
+    "en": "The first pope from the Americas and the first Jesuit, elected while his predecessor was still living. He pressed the church toward the poor, migrants and the care of the earth, and toward the churches of Asia, Africa and Latin America where most of its members now are; he died in 2025.",
+    "zh-Hans": "他是第一位来自美洲、也是第一位耶稣会出身的教皇，当选时前任仍在世。他推动教会转向贫穷人、移民与对大地的看顾，也转向亚洲、非洲与拉丁美洲——今日大多数信徒所在之处。他于2025年去世。",
+    "zh-Hant": "他是第一位來自美洲、也是第一位耶穌會出身的教皇，當選時前任仍在世。他推動教會轉向貧窮人、移民與對大地的看顧，也轉向亞洲、非洲與拉丁美洲——今日大多數信徒所在之處。他於2025年去世。"
+   }
+  },
+  {
+   "id": "pope-leo-xiv",
+   "start": 2025,
+   "end": null,
+   "ongoing": true,
+   "region": "europe",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Pope Leo XIV",
+    "zh-Hans": "教皇良十四世",
+    "zh-Hant": "教皇良十四世"
+   },
+   "note": {
+    "en": "Elected in May 2025, the first pope born in the United States, after decades of work as a missionary and bishop in Peru. His election is already on this chart as an event; the band is drawn open because the reign is not finished.",
+    "zh-Hans": "他于2025年5月当选，是第一位生于美国的教皇，此前数十年在秘鲁作宣教士与主教。本图已把他的当选列为事件；此段作开口绘制，因在位尚未结束。",
+    "zh-Hant": "他於2025年5月當選，是第一位生於美國的教皇，此前數十年在秘魯作宣教士與主教。本圖已把他的當選列為事件；此段作開口繪製，因在位尚未結束。"
+   }
+  },
+  {
+   "id": "suiko-reign",
+   "start": 593,
+   "end": 628,
+   "region": "asia",
+   "stream": "japan",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Empress Suiko",
+    "zh-Hans": "推古天皇",
+    "zh-Hant": "推古天皇"
+   },
+   "note": {
+    "en": "The first woman to reign in Japan in the historical record. Buddhism took hold at court in her years, and her regent Prince Shotoku issued the seventeen articles of 604.",
+    "zh-Hans": "日本有史可考的第一位女帝。其在位期间佛教在朝廷立足，摄政圣德太子于604年颁十七条宪法。",
+    "zh-Hant": "日本有史可考的第一位女帝。其在位期間佛教在朝廷立足，攝政聖德太子於604年頒十七條憲法。"
+   }
+  },
+  {
+   "id": "tiwanaku-state",
+   "start": 500,
+   "end": 1000,
+   "region": "americas",
+   "stream": "americas",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "Tiwanaku",
+    "zh-Hans": "蒂亚瓦纳科",
+    "zh-Hant": "蒂亞瓦納科"
+   },
+   "note": {
+    "en": "The highland state on the shore of Lake Titicaca, whose cut-stone gateways and raised fields fed a large population nearly four thousand metres up. It left no writing, so both ends of the span are set by excavation and are approximate.",
+    "zh-Hans": "的的喀喀湖畔的高原政权，以切石门阙与台田著称，在海拔近四千米处养活了众多人口。它没有文字留存，故起讫两端皆由发掘推定，只是约数。",
+    "zh-Hant": "的的喀喀湖畔的高原政權，以切石門闕與臺田著稱，在海拔近四千米處養活了眾多人口。它沒有文字留存，故起訖兩端皆由發掘推定，只是約數。"
+   }
+  },
+  {
+   "id": "wari-empire",
+   "start": 600,
+   "end": 1000,
+   "region": "americas",
+   "stream": "americas",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "Wari Empire",
+    "zh-Hans": "瓦里帝国",
+    "zh-Hant": "瓦里帝國"
+   },
+   "note": {
+    "en": "The first Andean state to hold wide territory by roads, storehouses and planted colonies, centred near modern Ayacucho in Peru. Like Tiwanaku it left no writing, and its span is approximate at both ends.",
+    "zh-Hans": "安第斯地区第一个凭道路、仓储与移民据点统治广土的政权，中心在今秘鲁阿亚库乔一带。与蒂亚瓦纳科一样没有文字留存，起讫年代皆为约数。",
+    "zh-Hant": "安第斯地區第一個憑道路、倉儲與移民據點統治廣土的政權，中心在今秘魯阿亞庫喬一帶。與蒂亞瓦納科一樣沒有文字留存，起訖年代皆為約數。"
+   }
+  },
+  {
+   "id": "toltec-state",
+   "start": 950,
+   "end": 1150,
+   "region": "americas",
+   "stream": "americas",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "Toltecs of Tula",
+    "zh-Hans": "图拉的托尔特克人",
+    "zh-Hant": "圖拉的托爾特克人"
+   },
+   "note": {
+    "en": "The Toltecs built a capital at Tula north of the valley of Mexico, and the Aztecs afterwards remembered them as the founders of civilisation and craft. Those later accounts mix history with legend, and the fall of Tula is dated anywhere from about 1150 to 1180.",
+    "zh-Hans": "托尔特克人在墨西哥谷地以北的图拉建都，后来的阿兹特克人追念他们为文明与工艺的开创者。这些后世记述史实与传说杂糅，图拉的覆亡有约1150至1180年的不同说法。",
+    "zh-Hant": "托爾特克人在墨西哥谷地以北的圖拉建都，後來的阿茲特克人追念他們為文明與工藝的開創者。這些後世記述史實與傳說雜糅，圖拉的覆亡有約1150至1180年的不同說法。"
+   }
+  },
+  {
+   "id": "chimu-kingdom",
+   "start": 900,
+   "end": 1470,
+   "region": "americas",
+   "stream": "americas",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "Chimu Kingdom of Chan Chan",
+    "zh-Hans": "昌昌的奇穆王国",
+    "zh-Hant": "昌昌的奇穆王國"
+   },
+   "note": {
+    "en": "A kingdom of the northern Peruvian coast whose capital Chan Chan was the largest city ever built of mud brick, watered by long canals led down from the mountain rivers. The Inca absorbed it about 1470; the opening of the span is approximate.",
+    "zh-Hans": "秘鲁北部沿海的王国，都城昌昌是有史以来最大的土坯城，靠自山间河流引来的长渠灌溉。约1470年为印加所并；起始年份只是约数。",
+    "zh-Hant": "秘魯北部沿海的王國，都城昌昌是有史以來最大的土坯城，靠自山間河流引來的長渠灌溉。約1470年為印加所併；起始年份只是約數。"
+   }
+  },
+  {
+   "id": "aztec-empire",
+   "start": 1428,
+   "end": 1521,
+   "region": "americas",
+   "stream": "americas",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Aztec Empire",
+    "zh-Hans": "阿兹特克帝国",
+    "zh-Hant": "阿茲特克帝國"
+   },
+   "note": {
+    "en": "Tenochtitlan, Texcoco and Tlacopan bound themselves in a triple alliance in 1428 and took tribute from most of central Mexico, under Moctezuma I, Ahuitzotl and their successors, until Cortes and his native allies destroyed the capital in 1521.",
+    "zh-Hans": "1428年，特诺奇蒂特兰、特斯科科与特拉科潘结成三方同盟，历蒙特祖玛一世、阿维索特等君主，向墨西哥中部大部分地区征贡，直到1521年科尔特斯与其土著盟军攻灭都城。",
+    "zh-Hant": "1428年，特諾奇提特蘭、特斯科科與特拉科潘結成三方同盟，歷蒙特祖瑪一世、阿維索特等君主，向墨西哥中部大部分地區徵貢，直到1521年科爾特斯與其土著盟軍攻滅都城。"
+   }
+  },
+  {
+   "id": "pope-gregory-ii",
+   "start": 715,
+   "end": 731,
+   "region": "europe",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Pope Gregory II",
+    "zh-Hans": "教皇格列高利二世",
+    "zh-Hant": "教皇格列高利二世"
+   },
+   "note": {
+    "en": "He sent Boniface to preach in Germany and refused the eastern emperor's order against images, a refusal that began to loosen Rome from Constantinople.",
+    "zh-Hans": "他差遣卜尼法斯往德意志传教，又拒不奉行东帝禁绝圣像的敕令；罗马与君士坦丁堡的疏离自此开端。",
+    "zh-Hant": "他差遣卜尼法斯往德意志傳教，又拒不奉行東帝禁絕聖像的敕令；羅馬與君士坦丁堡的疏離自此開端。"
+   }
+  },
+  {
+   "id": "pope-sylvester-ii",
+   "start": 999,
+   "end": 1003,
+   "region": "europe",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Pope Sylvester II",
+    "zh-Hans": "教皇思维二世",
+    "zh-Hant": "教皇思維二世"
+   },
+   "note": {
+    "en": "Gerbert of Aurillac, the best-taught man of his day, who had studied in Spain and brought Arabic arithmetic and the abacus north. The first Frenchman to hold the see, and pope at the turn of the millennium.",
+    "zh-Hans": "即奥里亚克的热尔贝，当世学问最深的人，曾在西班牙求学，把阿拉伯算术与算盘带到北方。他是首位出任此位的法兰西人，也是千年之交的教皇。",
+    "zh-Hant": "即奧里亞克的熱爾貝，當世學問最深的人，曾在西班牙求學，把阿拉伯算術與算盤帶到北方。他是首位出任此位的法蘭西人，也是千年之交的教皇。"
+   }
+  },
+  {
+   "id": "pope-paschal-ii",
+   "start": 1099,
+   "end": 1118,
+   "region": "europe",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Pope Paschal II",
+    "zh-Hans": "教皇巴斯加二世",
+    "zh-Hant": "教皇巴斯加二世"
+   },
+   "note": {
+    "en": "Elected in the weeks after the First Crusade took Jerusalem. He recognised the Hospitallers as an order in 1113, and spent his reign in the long quarrel with the emperors over who appoints bishops.",
+    "zh-Hans": "第一次十字军攻取耶路撒冷后数周内当选。1113年他确认医院骑士团为修会，其在位年间大半消磨在与皇帝争主教任命权的长期纠纷中。",
+    "zh-Hant": "第一次十字軍攻取耶路撒冷後數週內當選。1113年他確認醫院騎士團為修會，其在位年間大半消磨在與皇帝爭主教任命權的長期糾紛中。"
+   }
+  },
+  {
+   "id": "pope-gregory-ix",
+   "start": 1227,
+   "end": 1241,
+   "region": "europe",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Pope Gregory IX",
+    "zh-Hans": "教皇格列高利九世",
+    "zh-Hant": "教皇格列高利九世"
+   },
+   "note": {
+    "en": "He excommunicated the emperor Frederick II twice, issued the collection of canon law used for the next seven centuries, and in 1231 gave the pursuit of heresy to inquisitors appointed from Rome.",
+    "zh-Hans": "他两次将皇帝腓特烈二世逐出教会，颁行此后七百年通用的教会法汇编，并于1231年把查究异端之事交给由罗马委派的裁判官。",
+    "zh-Hant": "他兩次將皇帝腓特烈二世逐出教會，頒行此後七百年通用的教會法彙編，並於1231年把查究異端之事交給由羅馬委派的裁判官。"
+   }
+  },
+  {
+   "id": "eighth-crusade",
+   "start": 1270,
+   "end": 1270,
+   "region": "levant",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Eighth Crusade",
+    "zh-Hans": "第八次十字军东征",
+    "zh-Hant": "第八次十字軍東征"
+   },
+   "note": {
+    "en": "Louis IX of France sailed against Tunis rather than the Holy Land and died of disease in the camp within weeks of landing. His death closed the age of crusades led by kings.",
+    "zh-Hans": "法王路易九世出兵所向不是圣地而是突尼斯，登陆后数周即病死营中。由君王亲率的十字军东征时代至此告终。",
+    "zh-Hant": "法王路易九世出兵所向不是聖地而是突尼斯，登陸後數週即病死營中。由君王親率的十字軍東征時代至此告終。"
+   }
   }
  ],
  "ministries": [
@@ -17310,6 +17977,1846 @@
     "en": "The San Andreas fault ruptures and the fire that follows destroys most of the city. It falls in the same year as the Azusa Street revival across the bay in Los Angeles, which this chart already carries; the two are often told together and were not connected.",
     "zh-Hans": "圣安地列斯断层错动，随后的大火烧毁全城大半。此事与本图已有的洛杉矶阿苏萨街复兴同在一年；二者常被合在一处讲述，其实并无关联。",
     "zh-Hant": "聖安地列斯斷層錯動，隨後的大火燒毀全城大半。此事與本圖已有的洛杉磯阿蘇薩街復興同在一年；二者常被合在一處講述，其實並無關聯。"
+   }
+  },
+  {
+   "id": "caral_supe_valley",
+   "year": -2600,
+   "era": "world",
+   "stream": "americas",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Ceremonial Cities Rise in the Supe Valley",
+    "zh-Hans": "苏佩河谷兴起祭祀城邑",
+    "zh-Hant": "蘇佩河谷興起祭祀城邑"
+   },
+   "desc": {
+    "en": "On the desert coast of Peru the Norte Chico peoples raise earthen platform mounds and sunken round plazas at Caral and its neighbours, the oldest monumental building yet found in the Americas. Radiocarbon dates spread over roughly 3000 to 1800 BC, so the year given here is only a marker for a long span.",
+    "zh-Hans": "在秘鲁沙漠海岸，小北文明的居民在卡拉尔及周边营建土筑台基与下沉式圆形广场，是美洲已知最早的巨型建筑。碳十四年代大致散布在公元前3000至1800年之间，故此处所列年份只是一个长时段的标记。",
+    "zh-Hant": "在秘魯沙漠海岸，小北文明的居民在卡拉爾及周邊營建土築臺基與下沉式圓形廣場，是美洲已知最早的巨型建築。碳十四年代大致散佈在公元前3000至1800年之間，故此處所列年份只是一個長時段的標記。"
+   }
+  },
+  {
+   "id": "monte_alban_founded",
+   "year": -500,
+   "era": "world",
+   "stream": "americas",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Monte Alban Founded above Oaxaca",
+    "zh-Hans": "阿尔班山城建于瓦哈卡谷地之上",
+    "zh-Hant": "阿爾班山城建於瓦哈卡谷地之上"
+   },
+   "desc": {
+    "en": "Zapotec builders level a ridge top in southern Mexico and make it a capital that lasted more than a thousand years, leaving carved stones with some of the earliest writing in the Americas. References place the founding near 500 BC; the city's height came centuries later.",
+    "zh-Hans": "萨波特克人削平墨西哥南部的山脊，建成一座延续千年以上的都城，并留下带有美洲最早文字之列的石刻。各家多把建城年代定在公元前500年左右，而其鼎盛则在数百年之后。",
+    "zh-Hant": "薩波特克人削平墨西哥南部的山脊，建成一座延續千年以上的都城，並留下帶有美洲最早文字之列的石刻。各家多把建城年代定在公元前500年左右，而其鼎盛則在數百年之後。"
+   }
+  },
+  {
+   "id": "hamilcar_iberia",
+   "year": -237,
+   "era": "world",
+   "stream": "rome",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Carthage Begins the Conquest of Spain",
+    "zh-Hans": "迦太基着手征服西班牙",
+    "zh-Hant": "迦太基著手征服西班牙"
+   },
+   "desc": {
+    "en": "Having lost Sicily to Rome, Hamilcar Barca crosses to Iberia and begins carving out a Carthaginian province there for its silver and its fighting men. It was from that base that his son Hannibal marched on Italy twenty years later.",
+    "zh-Hans": "迦太基在失去西西里之后，哈米尔卡·巴卡渡海进入伊比利亚，在当地开辟属地，取其白银与兵源。二十年后，他的儿子汉尼拔正是从这个根据地出发进军意大利。",
+    "zh-Hant": "迦太基在失去西西里之後，哈米爾卡·巴卡渡海進入伊比利亞，在當地開闢屬地，取其白銀與兵源。二十年後，他的兒子漢尼拔正是從這個根據地出發進軍義大利。"
+   }
+  },
+  {
+   "id": "second_macedonian_war",
+   "year": -200,
+   "era": "world",
+   "stream": "greece",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Rome Turns East against Macedon",
+    "zh-Hans": "罗马东向对马其顿开战",
+    "zh-Hant": "羅馬東向對馬其頓開戰"
+   },
+   "desc": {
+    "en": "Rome declares war on Philip V and breaks his phalanx at Cynoscephalae three years later, the first time a Roman army settles the affairs of Greece. Within two generations the whole Hellenistic east, the world the New Testament was written into, answered to Rome.",
+    "zh-Hans": "罗马向腓力五世宣战，三年后在库诺斯克法莱击溃其方阵，这是罗马军队首次裁决希腊事务。不过两代人之间，整个希腊化东方——也就是新约成书的那个世界——已尽归罗马。",
+    "zh-Hant": "羅馬向腓力五世宣戰，三年後在庫諾斯克法萊擊潰其方陣，這是羅馬軍隊首次裁決希臘事務。不過兩代人之間，整個希臘化東方——也就是新約成書的那個世界——已盡歸羅馬。"
+   }
+  },
+  {
+   "id": "cimbric_war",
+   "year": -113,
+   "era": "world",
+   "stream": "rome",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "The Cimbri and Teutones Invade the Roman World",
+    "zh-Hans": "辛布里人与条顿人入侵罗马世界",
+    "zh-Hant": "辛布里人與條頓人入侵羅馬世界"
+   },
+   "desc": {
+    "en": "Two migrating northern peoples destroy one Roman army after another until Marius annihilates them in 102 and 101 BC. The emergency let Marius remake the legions as a long-service professional force, the army that a century later made and unmade emperors.",
+    "zh-Hans": "两支南迁的北方民族接连歼灭罗马军团，直到公元前102与101年被马略彻底击破。这场危机使马略得以把军团改造成长期服役的职业军队，一个世纪后正是这支军队废立皇帝。",
+    "zh-Hant": "兩支南遷的北方民族接連殲滅羅馬軍團，直到公元前102與101年被馬略徹底擊破。這場危機使馬略得以把軍團改造成長期服役的職業軍隊，一個世紀後正是這支軍隊廢立皇帝。"
+   }
+  },
+  {
+   "id": "siege_of_tyre",
+   "year": -332,
+   "era": "world",
+   "stream": "phoenicia",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Alexander Takes Tyre",
+    "zh-Hans": "亚历山大攻取推罗",
+    "zh-Hant": "亞歷山大攻取推羅"
+   },
+   "desc": {
+    "en": "Alexander spends seven months building a causeway out to the island city, storms it, and Tyre never leads Phoenicia again; from then on the coast is under Greek rule. Readers of Ezekiel have long weighed the oracle against Tyre beside what the Macedonians did to the mainland town's ruins.",
+    "zh-Hans": "亚历山大用七个月筑堤直通这座岛城，破城之后，推罗再未领袖腓尼基，此后沿海尽归希腊统治。历代读以西结书的人，常把书中论推罗的预言与马其顿人如何处置对岸旧城的废墟对照而读。",
+    "zh-Hant": "亞歷山大用七個月築堤直通這座島城，破城之後，推羅再未領袖腓尼基，此後沿海盡歸希臘統治。歷代讀以西結書的人，常把書中論推羅的預言與馬其頓人如何處置對岸舊城的廢墟對照而讀。"
+   },
+   "refs": [
+    "Ezekiel 26:3-4",
+    "Ezekiel 26:12"
+   ]
+  },
+  {
+   "id": "alexander_at_jerusalem",
+   "year": -332,
+   "era": "world",
+   "stream": "greece",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Alexander at Jerusalem, by Tradition",
+    "zh-Hans": "传说中亚历山大到耶路撒冷",
+    "zh-Hant": "傳說中亞歷山大到耶路撒冷"
+   },
+   "desc": {
+    "en": "Josephus tells that the high priest came out in his robes to meet Alexander, that the city was spared, and that the king was shown the book of Daniel. No writer of Alexander's own day mentions the visit and most historians take the account as later legend; the year is simply that of his march down the coast.",
+    "zh-Hans": "约瑟夫斯记载，大祭司身着礼服出城迎接亚历山大，城因此得免，王并被人指示但以理书的话。亚历山大同时代的作者无一提及此事，多数史家视之为后起的传说；此处年份不过是他沿海南下之年。",
+    "zh-Hant": "約瑟夫斯記載，大祭司身著禮服出城迎接亞歷山大，城因此得免，王並被人指示但以理書的話。亞歷山大同時代的作者無一提及此事，多數史家視之為後起的傳說；此處年份不過是他沿海南下之年。"
+   }
+  },
+  {
+   "id": "moche_culture_peru",
+   "year": 100,
+   "era": "world",
+   "stream": "americas",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "The Moche Build on Peru's North Coast",
+    "zh-Hans": "莫切人在秘鲁北岸兴建",
+    "zh-Hant": "莫切人在祕魯北岸興建"
+   },
+   "desc": {
+    "en": "Along the desert river valleys the Moche raise great adobe pyramids, irrigate the coast, and leave modelled pottery and worked gold of rare skill. The culture is known only from excavation and is dated roughly from the first century to the seventh, so no year within it is fixed.",
+    "zh-Hans": "在沙漠中的河谷地带，莫切人筑起巨大的土砖金字塔，引水灌溉海岸，并留下技艺高超的写实陶器与金器。这一文化只见于考古发掘，年代大致自公元一世纪至七世纪，其中并无确定的年份。",
+    "zh-Hant": "在沙漠中的河谷地帶，莫切人築起巨大的土磚金字塔，引水灌溉海岸，並留下技藝高超的寫實陶器與金器。這一文化只見於考古發掘，年代大致自公元一世紀至七世紀，其中並無確定的年份。"
+   }
+  },
+  {
+   "id": "hopewell_culture",
+   "year": 100,
+   "era": "world",
+   "stream": "americas",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Hopewell Earthworks in the Eastern Woodlands",
+    "zh-Hans": "东部林地的霍普韦尔土垣",
+    "zh-Hant": "東部林地的霍普韋爾土垣"
+   },
+   "desc": {
+    "en": "Peoples of the Ohio and upper Mississippi valleys build enormous geometric earthworks and trade obsidian, copper and sea shell across half a continent. The tradition is dated about 200 BC to AD 500; the year given is only the middle of that span.",
+    "zh-Hans": "俄亥俄河与密西西比河上游的居民筑起巨大的几何形土垣，并把黑曜石、铜与海贝的贸易网铺遍半个大陆。这一传统的年代约在公元前200年至公元500年之间，此处所列不过是其中段。",
+    "zh-Hant": "俄亥俄河與密西西比河上游的居民築起巨大的幾何形土垣，並把黑曜石、銅與海貝的貿易網鋪遍半個大陸。這一傳統的年代約在公元前200年至公元500年之間，此處所列不過是其中段。"
+   }
+  },
+  {
+   "id": "marcomannic_wars",
+   "year": 166,
+   "era": "world",
+   "stream": "rome",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "The Marcomannic Wars on the Danube",
+    "zh-Hans": "多瑙河上的马科曼尼战争",
+    "zh-Hant": "多瑙河上的馬科曼尼戰爭"
+   },
+   "desc": {
+    "en": "Marcomanni, Quadi and other peoples break across the Danube and reach northern Italy; Marcus Aurelius spends most of the rest of his reign in the field against them. It was the first time in generations that the frontier gave way, and it set the pattern for the invasions that followed.",
+    "zh-Hans": "马科曼尼人、夸迪人及其他部族越过多瑙河，一度深入意大利北部；马可·奥勒留其余的在位岁月几乎都在前线度过。这是数代人以来边防首次失守，也成了此后一连串入侵的先例。",
+    "zh-Hant": "馬科曼尼人、夸迪人及其他部族越過多瑙河，一度深入義大利北部；馬可·奧勒留其餘的在位歲月幾乎都在前線度過。這是數代人以來邊防首次失守，也成了此後一連串入侵的先例。"
+   }
+  },
+  {
+   "id": "tiwanaku_rises",
+   "year": 300,
+   "era": "world",
+   "stream": "americas",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Tiwanaku Grows on the Bolivian Altiplano",
+    "zh-Hans": "蒂亚瓦纳科兴起于玻利维亚高原",
+    "zh-Hant": "蒂亞瓦納科興起於玻利維亞高原"
+   },
+   "desc": {
+    "en": "Beside Lake Titicaca a ceremonial centre of finely cut stone becomes the capital of an Andean state whose influence reached far to the south. Estimates of when it turned from village to city range over two centuries, and figures given for its population are reconstructions, not records.",
+    "zh-Hans": "在的的喀喀湖畔，一处以精工石砌著称的祭祀中心发展为安第斯国家的都城，其影响远及南方。学界对它由村落转为城市的时间估计前后相差两个世纪，所传人口数字亦属推算，并非记载。",
+    "zh-Hant": "在的的喀喀湖畔，一處以精工石砌著稱的祭祀中心發展為安第斯國家的都城，其影響遠及南方。學界對它由村落轉為城市的時間估計前後相差兩個世紀，所傳人口數字亦屬推算，並非記載。"
+   }
+  },
+  {
+   "id": "sixteen_kingdoms_china",
+   "year": 304,
+   "era": "world",
+   "stream": "china",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Northern China Breaks into the Sixteen Kingdoms",
+    "zh-Hans": "华北裂为十六国",
+    "zh-Hant": "華北裂為十六國"
+   },
+   "desc": {
+    "en": "Peoples of the steppe and the border set up a run of short-lived states across the north while the Jin court holds only the south. The division lasts until about 439, when the Northern Wei reunite the north; the number sixteen is a later historian's tally, not a fixed count.",
+    "zh-Hans": "塞外与边地各族在北方相继建立短促的政权，晋室则偏安江南。这一分裂局面延续至约公元439年北魏统一北方为止；「十六」之数出于后世史家的归纳，并非定数。",
+    "zh-Hant": "塞外與邊地各族在北方相繼建立短促的政權，晉室則偏安江南。這一分裂局面延續至約公元439年北魏統一北方為止；「十六」之數出於後世史家的歸納，並非定數。"
+   }
+  },
+  {
+   "id": "julian_pagan_restoration",
+   "year": 361,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Julian Tries to Restore the Old Gods",
+    "zh-Hans": "尤利安企图复兴旧神",
+    "zh-Hant": "尤利安企圖復興舊神"
+   },
+   "desc": {
+    "en": "The last pagan emperor reopens the temples, bars Christians from teaching the classics, and gives leave for the Jerusalem temple to be rebuilt. The building work broke off — ancient writers disagree why — and he was dead in Persia within two years, which showed how far the empire had already turned.",
+    "zh-Hans": "这位最后一位异教皇帝重开庙宇，禁止基督徒教授古典文学，并准许重建耶路撒冷的圣殿。工程中途停辍，古代作者对缘由说法不一；不出两年他死于波斯战场，足见帝国的转向已难挽回。",
+    "zh-Hant": "這位最後一位異教皇帝重開廟宇，禁止基督徒教授古典文學，並准許重建耶路撒冷的聖殿。工程中途停輟，古代作者對緣由說法不一；不出兩年他死於波斯戰場，足見帝國的轉向已難挽回。"
+   }
+  },
+  {
+   "id": "edict_of_thessalonica",
+   "year": 380,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "The Nicene Faith Made the Religion of the State",
+    "zh-Hans": "尼西亚信仰成为国教",
+    "zh-Hant": "尼西亞信仰成為國教"
+   },
+   "desc": {
+    "en": "Theodosius I and his fellow emperors order every subject to hold the faith confessed at Nicaea and name all others heretics; within a decade pagan sacrifice is forbidden outright. The church that Diocletian had tried to destroy now had the empire's arm behind it, for good and for ill.",
+    "zh-Hans": "狄奥多西一世与同朝诸帝下诏，令天下臣民一律持守尼西亚所认信的信仰，其余皆定为异端；不出十年，异教献祭亦遭全面禁止。戴克里先曾力图剿灭的教会，如今背后有了帝国的臂膀，其利其弊兼而有之。",
+    "zh-Hant": "狄奧多西一世與同朝諸帝下詔，令天下臣民一律持守尼西亞所認信的信仰，其餘皆定為異端；不出十年，異教獻祭亦遭全面禁止。戴克里先曾力圖剿滅的教會，如今背後有了帝國的臂膀，其利其弊兼而有之。"
+   }
+  },
+  {
+   "id": "tikal_entrada",
+   "year": 378,
+   "era": "world",
+   "stream": "americas",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Tikal Changes Hands in the Maya Lowlands",
+    "zh-Hans": "蒂卡尔在玛雅低地易主",
+    "zh-Hant": "蒂卡爾在瑪雅低地易主"
+   },
+   "desc": {
+    "en": "Maya monuments record the arrival of an outsider, Siyaj K'ak', at Tikal on a day that falls in January 378, the death of the city's king that same day, and a new dynasty with ties to distant Teotihuacan. It is one of the very few events in the pre-Columbian Americas dated to the day by writing of the time.",
+    "zh-Hans": "玛雅石碑记载，一位外来者西亚赫·卡克于相当于公元378年一月的某日抵达蒂卡尔，该城之王同日身亡，随后立起一个与远方特奥蒂瓦坎有渊源的新王朝。这是前哥伦布时期美洲极少数由当时文字精确到日的事件之一。",
+    "zh-Hant": "瑪雅石碑記載，一位外來者西亞赫·卡克於相當於公元378年一月的某日抵達蒂卡爾，該城之王同日身亡，隨後立起一個與遠方特奧蒂瓦坎有淵源的新王朝。這是前哥倫布時期美洲極少數由當時文字精確到日的事件之一。"
+   }
+  },
+  {
+   "id": "theodosian_walls",
+   "year": 413,
+   "era": "world",
+   "stream": "byzantium",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Constantinople's Land Walls Built",
+    "zh-Hans": "君士坦丁堡陆墙建成",
+    "zh-Hant": "君士坦丁堡陸牆建成"
+   },
+   "desc": {
+    "en": "A triple line of wall, towers and moat is thrown across the landward neck of the city in the minority of Theodosius II. An earthquake brought much of it down in 447 and it was rebuilt within months. Those walls kept the city for a thousand years, until gunpowder artillery.",
+    "zh-Hans": "在狄奥多西二世幼年在位期间，一道由城墙、塔楼与壕沟组成的三重防线横筑于城市临陆的地峡上。公元447年地震毁其大半，数月之内即告重建。此后千年，这道城墙一直护住这座城，直到火炮出现。",
+    "zh-Hant": "在狄奧多西二世幼年在位期間，一道由城牆、塔樓與壕溝組成的三重防線橫築於城市臨陸的地峽上。公元447年地震毀其大半，數月之內即告重建。此後千年，這道城牆一直護住這座城，直到火砲出現。"
+   }
+  },
+  {
+   "id": "ponce_de_leon_florida",
+   "year": 1513,
+   "era": "world",
+   "stream": "americas",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Ponce de Leon Names Florida",
+    "zh-Hans": "庞塞·德莱昂命名佛罗里达",
+    "zh-Hant": "龐塞·德萊昂命名佛羅里達"
+   },
+   "desc": {
+    "en": "Juan Ponce de Leon sailed north from Puerto Rico in the spring of 1513 and came ashore on a coast he named La Florida, after the Spanish name for the Easter season. It is the first documented European landing on the mainland of what is now the United States; no settlement held there for another half century.",
+    "zh-Hans": "1513年春，胡安·庞塞·德莱昂自波多黎各北航，登上一片海岸，按西班牙语中复活节节期的名称，把它命名为佛罗里达。这是有记载的欧洲人首次登上今日美国本土；其后又过了半个世纪，才有聚落在那里立稳。",
+    "zh-Hant": "1513年春，胡安·龐塞·德萊昂自波多黎各北航，登上一片海岸，按西班牙語中復活節節期的名稱，把它命名為佛羅里達。這是有記載的歐洲人首次登上今日美國本土；其後又過了半個世紀，才有聚落在那裡立穩。"
+   }
+  },
+  {
+   "id": "fort_caroline",
+   "year": 1564,
+   "era": "church",
+   "stream": "americas",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Huguenots Settle at Fort Caroline",
+    "zh-Hans": "胡格诺派在卡罗琳堡立足",
+    "zh-Hant": "胡格諾派在卡羅琳堡立足"
+   },
+   "desc": {
+    "en": "French Protestants under Rene de Laudonniere built a fort on the St Johns River in Florida in 1564, the second Huguenot attempt at a refuge in the Americas after the short-lived Charlesfort of 1562. A Spanish force under Menendez destroyed the colony in September 1565 and put most of the survivors to death as heretics, then founded St Augustine a few miles away.",
+    "zh-Hans": "1564年，法国新教徒在洛多尼埃率领下，于佛罗里达圣约翰河畔筑堡；这是继1562年短命的查理堡之后，胡格诺派第二次在美洲寻求避难之地。1565年9月，梅嫩德斯率西班牙军攻灭此殖民地，将大部分幸存者以异端处死，随后在数英里外建立圣奥古斯丁。",
+    "zh-Hant": "1564年，法國新教徒在洛多尼埃率領下，於佛羅里達聖約翰河畔築堡；這是繼1562年短命的查理堡之後，胡格諾派第二次在美洲尋求避難之地。1565年9月，梅嫩德斯率西班牙軍攻滅此殖民地，將大部分倖存者以異端處死，隨後在數英里外建立聖奧古斯丁。"
+   }
+  },
+  {
+   "id": "great_bible",
+   "year": 1539,
+   "era": "bible",
+   "stream": "scripture",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "The Great Bible Set in Every Parish",
+    "zh-Hans": "《大圣经》置于各堂区",
+    "zh-Hant": "《大聖經》置於各堂區"
+   },
+   "desc": {
+    "en": "Coverdale's revision, printed in 1539 under Thomas Cromwell's authority, was the first English Bible ordered to be set up and read in every parish church. Its Psalter passed into the Book of Common Prayer and was said aloud in English worship for four centuries after.",
+    "zh-Hans": "科弗代尔的修订本于1539年在托马斯·克伦威尔的批准下印行，是第一部奉命放置于各堂区教会、供人诵读的英文圣经。其诗篇译文后来收入《公祷书》，此后四百年间在英语崇拜中被朗读。",
+    "zh-Hant": "科弗代爾的修訂本於1539年在托馬斯·克倫威爾的批准下印行，是第一部奉命放置於各堂區教會、供人誦讀的英文聖經。其詩篇譯文後來收入《公禱書》，此後四百年間在英語崇拜中被朗讀。"
+   }
+  },
+  {
+   "id": "scottish_reformation",
+   "year": 1560,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Scotland Adopts the Reformation",
+    "zh-Hans": "苏格兰确立改教",
+    "zh-Hant": "蘇格蘭確立改教"
+   },
+   "desc": {
+    "en": "In August 1560 the Scottish parliament abolished the pope's jurisdiction, forbade the mass and approved a confession of faith that Knox and five colleagues had drafted in four days. The First Book of Discipline followed, planning a school in every parish, and the church so settled became the parent of Presbyterian churches everywhere.",
+    "zh-Hans": "1560年8月，苏格兰议会废除教皇的管辖权，禁止弥撒，并批准了诺克斯与另五人在四天内草成的信仰告白。随后颁行《首部纪律书》，计划在每个堂区设立学校；如此立定的教会，成为各地长老宗教会之母。",
+    "zh-Hant": "1560年8月，蘇格蘭議會廢除教皇的管轄權，禁止彌撒，並批准了諾克斯與另五人在四天內草成的信仰告白。隨後頒行《首部紀律書》，計劃在每個堂區設立學校；如此立定的教會，成為各地長老宗教會之母。"
+   }
+  },
+  {
+   "id": "battle_of_lepanto",
+   "year": 1571,
+   "era": "world",
+   "stream": "europe",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Cyprus Lost and Lepanto Won",
+    "zh-Hans": "失塞浦路斯，胜勒班陀",
+    "zh-Hant": "失塞浦路斯，勝勒班陀"
+   },
+   "desc": {
+    "en": "Famagusta surrendered in August 1571 and Cyprus passed from Venice to the Ottomans, a loss Venice confirmed by treaty in 1573. Two months later the galleys of the Holy League destroyed the Ottoman fleet in the Gulf of Patras, the last great battle fought under oar, and Europe stopped believing the sultan could not be beaten at sea.",
+    "zh-Hans": "1571年8月法马古斯塔投降，塞浦路斯由威尼斯转归奥斯曼，威尼斯于1573年以条约确认这一丧失。两个月后，神圣同盟的桨帆船队在帕特雷湾歼灭奥斯曼舰队；这是最后一场以桨帆船决胜的大海战，此后欧洲不再以为苏丹在海上不可战胜。",
+    "zh-Hant": "1571年8月法馬古斯塔投降，塞浦路斯由威尼斯轉歸奧斯曼，威尼斯於1573年以條約確認這一喪失。兩個月後，神聖同盟的槳帆船隊在帕特雷灣殲滅奧斯曼艦隊；這是最後一場以槳帆船決勝的大海戰，此後歐洲不再以為蘇丹在海上不可戰勝。"
+   }
+  },
+  {
+   "id": "synod_of_emden",
+   "year": 1571,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "The Dutch Churches Meet at Emden",
+    "zh-Hans": "荷兰众教会在埃姆登聚集",
+    "zh-Hant": "荷蘭眾教會在埃姆登聚集"
+   },
+   "desc": {
+    "en": "Driven out of the Netherlands by Alva's persecution, delegates of the scattered Dutch congregations met at Emden in East Frisia in October 1571 and agreed an order of consistories, classes and synods. Its first article declared that no congregation should lord it over another; this, and not any single founding day, is where the Dutch Reformed Church takes its shape.",
+    "zh-Hans": "因阿尔瓦的逼迫而流亡在外的荷兰各会众，于1571年10月差派代表在东弗里斯兰的埃姆登聚集，议定了由堂会、区会、总会构成的教政体制。其第一条宣告：任何会众不可辖制别的会众。荷兰改革宗教会的形态由此定下，而非始于某一个建立之日。",
+    "zh-Hant": "因阿爾瓦的逼迫而流亡在外的荷蘭各會眾，於1571年10月差派代表在東弗里斯蘭的埃姆登聚集，議定了由堂會、區會、總會構成的教政體制。其第一條宣告：任何會眾不可轄制別的會眾。荷蘭改革宗教會的形態由此定下，而非始於某一個建立之日。"
+   }
+  },
+  {
+   "id": "songhai_falls",
+   "year": 1591,
+   "era": "world",
+   "stream": "world",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Songhai Falls at Tondibi",
+    "zh-Hans": "桑海亡于通迪比之战",
+    "zh-Hant": "桑海亡於通迪比之戰"
+   },
+   "desc": {
+    "en": "A Moroccan army crossed the Sahara with firearms and broke the far larger Songhai host at Tondibi in March 1591, then took Gao and Timbuktu. The last of the great empires of the Niger bend ended, and Timbuktu's scholars were carried off to Morocco, closing an age of West African learning.",
+    "zh-Hans": "1591年3月，一支携带火器的摩洛哥军队穿越撒哈拉，在通迪比击溃兵力远胜于己的桑海大军，随后攻取加奥与廷巴克图。尼日尔河湾最后一个大帝国就此终结，廷巴克图的学者被掳往摩洛哥，西非治学的一个时代随之关闭。",
+    "zh-Hant": "1591年3月，一支攜帶火器的摩洛哥軍隊穿越撒哈拉，在通迪比擊潰兵力遠勝於己的桑海大軍，隨後攻取加奧與廷巴克圖。尼日爾河灣最後一個大帝國就此終結，廷巴克圖的學者被擄往摩洛哥，西非治學的一個時代隨之關閉。"
+   }
+  },
+  {
+   "id": "first_baptist_church_england",
+   "year": 1612,
+   "era": "church",
+   "stream": "church",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "The First Baptist Church in England",
+    "zh-Hans": "英格兰第一间浸信会",
+    "zh-Hant": "英格蘭第一間浸信會"
+   },
+   "desc": {
+    "en": "Thomas Helwys brought part of an exiled English congregation home from Amsterdam and gathered a church at Spitalfields outside London, the first Baptist congregation on English soil; references date it 1611 or 1612. In the same year he argued in print that the king had no authority over any man's conscience, and he was imprisoned for saying so.",
+    "zh-Hans": "赫尔维斯把一部分流亡阿姆斯特丹的英籍会众带回本国，在伦敦城外的斯皮塔佛德聚集成会，是英格兰本土第一间浸信会；各家所记为1611年或1612年。同一年他著文主张君王无权辖制任何人的良心，因此被下在监里。",
+    "zh-Hant": "赫爾維斯把一部分流亡阿姆斯特丹的英籍會眾帶回本國，在倫敦城外的斯皮塔佛德聚集成會，是英格蘭本土第一間浸信會；各家所記為1611年或1612年。同一年他著文主張君王無權轄制任何人的良心，因此被下在監裡。"
+   }
+  },
+  {
+   "id": "romanov_dynasty_begins",
+   "year": 1613,
+   "era": "world",
+   "stream": "europe",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "The Romanovs Take the Russian Throne",
+    "zh-Hans": "罗曼诺夫家族入主俄国",
+    "zh-Hant": "羅曼諾夫家族入主俄國"
+   },
+   "desc": {
+    "en": "An assembly of the land elected the sixteen-year-old Michael Romanov tsar in 1613, ending the Time of Troubles that had left Moscow occupied and the throne empty. He was not Russia's first tsar, since Ivan IV had taken the title in 1547, but his house held the throne until the revolution of 1917.",
+    "zh-Hans": "1613年，缙绅会议推举年方十六的米哈伊尔·罗曼诺夫为沙皇，结束了莫斯科被占、王位虚悬的「混乱时期」。他并非俄国第一位沙皇——伊凡四世早在1547年已用此称号——但他的家族一直统治到1917年革命。",
+    "zh-Hant": "1613年，縉紳會議推舉年方十六的米哈伊爾·羅曼諾夫為沙皇，結束了莫斯科被佔、王位虛懸的「混亂時期」。他並非俄國第一位沙皇——伊凡四世早在1547年已用此稱號——但他的家族一直統治到1917年革命。"
+   }
+  },
+  {
+   "id": "quakers_gather",
+   "year": 1652,
+   "era": "church",
+   "stream": "church",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "The Quaker Movement Gathers",
+    "zh-Hans": "贵格会运动兴起",
+    "zh-Hant": "貴格會運動興起"
+   },
+   "desc": {
+    "en": "George Fox dated his own decisive discovery to 1647, but the Religious Society of Friends became a movement in 1652, when his preaching in the north of England gathered thousands who met in silence and waited on the inward light. They would not swear oaths, pay tithes or take off their hats to anyone; they were jailed by the thousand, and one of them founded Pennsylvania.",
+    "zh-Hans": "福克斯自记他决定性的领悟在1647年，但公谊会成为一场运动是在1652年：他在英格兰北部的传讲聚集了成千的人，他们静默聚会，等候内里的光。他们不起誓、不缴什一税、不向人脱帽致敬，因而成千被囚；其中一人后来建立了宾夕法尼亚。",
+    "zh-Hant": "福克斯自記他決定性的領悟在1647年，但公誼會成為一場運動是在1652年：他在英格蘭北部的傳講聚集了成千的人，他們靜默聚會，等候內裡的光。他們不起誓、不繳什一稅、不向人脫帽致敬，因而成千被囚；其中一人後來建立了賓夕法尼亞。"
+   }
+  },
+  {
+   "id": "cape_town_founded",
+   "year": 1652,
+   "era": "world",
+   "stream": "world",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "A Dutch Station at the Cape",
+    "zh-Hans": "荷兰人在好望角设站",
+    "zh-Hant": "荷蘭人在好望角設站"
+   },
+   "desc": {
+    "en": "Jan van Riebeeck landed at Table Bay in April 1652 to grow vegetables for company ships on the run to the Indies. The garden became a colony, its free farmers became the Boers, and a European population with a Reformed church took root at the southern tip of Africa, on land its own peoples already held.",
+    "zh-Hans": "1652年4月，范里贝克在桌湾登陆，为往来东印度的商船种植蔬菜。菜园渐成殖民地，其自由农民即后来的布尔人；带着改革宗教会的欧洲人口，就这样在非洲南端扎根，而那片土地本已有它自己的族群居住。",
+    "zh-Hant": "1652年4月，范里貝克在桌灣登陸，為往來東印度的商船種植蔬菜。菜園漸成殖民地，其自由農民即後來的布爾人；帶著改革宗教會的歐洲人口，就這樣在非洲南端扎根，而那片土地本已有它自己的族群居住。"
+   }
+  },
+  {
+   "id": "pascal_night_of_fire",
+   "year": 1654,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Pascal's Night of Fire",
+    "zh-Hans": "帕斯卡的火之夜",
+    "zh-Hant": "帕斯卡的火之夜"
+   },
+   "desc": {
+    "en": "On the night of 23 November 1654 the mathematician Blaise Pascal wrote a few broken lines beginning with the word Fire, naming the God of Abraham, Isaac and Jacob rather than the God of the philosophers. He sewed the paper into his coat and it was found only after his death; the notes for the defence of the faith he never finished were published as the Pensees.",
+    "zh-Hans": "1654年11月23日夜，数学家帕斯卡写下几行断续的字句，起首是「火」，所称的是亚伯拉罕、以撒、雅各的神，而非哲学家的神。他把这张纸缝在衣里，直到他死后才被发现；他为信仰所作、未及写完的辩护笔记，后来以《思想录》之名出版。",
+    "zh-Hant": "1654年11月23日夜，數學家帕斯卡寫下幾行斷續的字句，起首是「火」，所稱的是亞伯拉罕、以撒、雅各的神，而非哲學家的神。他把這張紙縫在衣裡，直到他死後才被發現；他為信仰所作、未及寫完的辯護筆記，後來以《思想錄》之名出版。"
+   }
+  },
+  {
+   "id": "eliot_indian_bible",
+   "year": 1663,
+   "era": "bible",
+   "stream": "scripture",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "The First Bible Printed in the Americas",
+    "zh-Hans": "美洲印行的第一本圣经",
+    "zh-Hant": "美洲印行的第一本聖經"
+   },
+   "desc": {
+    "en": "John Eliot's translation into Massachusett, an Algonquian language of New England, was printed at Cambridge in Massachusetts: the New Testament in 1661 and the whole Bible in 1663. It was the first complete Bible printed anywhere in the Americas, and it was made for a people who had no written form of their language until the work began.",
+    "zh-Hans": "艾略特把圣经译成新英格兰阿尔冈昆语族的马萨诸塞语，在马萨诸塞的剑桥印行：1661年出新约，1663年出全本圣经。这是美洲印行的第一本全备圣经，而所为的那个民族，在此译经之工开始以前，其语言本无文字。",
+    "zh-Hant": "艾略特把聖經譯成新英格蘭阿爾岡昆語族的馬薩諸塞語，在馬薩諸塞的劍橋印行：1661年出新約，1663年出全本聖經。這是美洲印行的第一本全備聖經，而所為的那個民族，在此譯經之工開始以前，其語言本無文字。"
+   }
+  },
+  {
+   "id": "new_york_taken",
+   "year": 1664,
+   "era": "world",
+   "stream": "americas",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "New Amsterdam Becomes New York",
+    "zh-Hans": "新阿姆斯特丹改称纽约",
+    "zh-Hant": "新阿姆斯特丹改稱紐約"
+   },
+   "desc": {
+    "en": "An English squadron appeared off Manhattan in the summer of 1664 and Peter Stuyvesant gave up the town without a shot; it was renamed for the Duke of York. New Netherland ended as a colony, but its Dutch churches, its unusual mixture of tongues and its Hudson river estates outlasted the change of flag.",
+    "zh-Hans": "1664年夏，英国舰队出现在曼哈顿外海，史岱文森未发一弹便交出该城，此城遂以约克公爵之名改称纽约。新尼德兰作为殖民地就此终结，但当地的荷兰教会、罕见的多语并存与哈德逊河沿岸的庄园，都比那面旗帜存留得更久。",
+    "zh-Hant": "1664年夏，英國艦隊出現在曼哈頓外海，史岱文森未發一彈便交出該城，此城遂以約克公爵之名改稱紐約。新尼德蘭作為殖民地就此終結，但當地的荷蘭教會、罕見的多語並存與哈德遜河沿岸的莊園，都比那面旗幟存留得更久。"
+   }
+  },
+  {
+   "id": "asante_empire_founded",
+   "year": 1701,
+   "era": "world",
+   "stream": "world",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "The Asante Empire Founded",
+    "zh-Hans": "阿散蒂帝国建立",
+    "zh-Hant": "阿散蒂帝國建立"
+   },
+   "desc": {
+    "en": "Osei Tutu drew the Akan states together around the golden stool at Kumasi and broke the overlordship of Denkyira at Feyiase, a victory usually dated 1701. The union had been forming since the 1670s, so the year marks the decisive battle rather than a founding day; the empire then grew rich on gold and on selling captives to Atlantic traders for firearms.",
+    "zh-Hans": "奥塞·图图以库马西的金凳把阿肯诸邦联结起来，并在费亚塞击破登基拉的宗主地位，此役通常系于1701年。这一联合自1670年代已在形成，故此年所标的是决定性的战役，而非建国之日；其后帝国靠黄金、并靠向大西洋商人出卖俘虏换取火器而致富。",
+    "zh-Hant": "奧塞·圖圖以庫馬西的金凳把阿肯諸邦聯結起來，並在費亞塞擊破登基拉的宗主地位，此役通常繫於1701年。這一聯合自1670年代已在形成，故此年所標的是決定性的戰役，而非建國之日；其後帝國靠黃金、並靠向大西洋商人出賣俘虜換取火器而致富。"
+   }
+  },
+  {
+   "id": "utendi_wa_tambuka",
+   "year": 1728,
+   "era": "world",
+   "stream": "world",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "The Swahili Epic of Tambuka",
+    "zh-Hans": "斯瓦希里史诗《坦布卡》",
+    "zh-Hant": "斯瓦希里史詩《坦布卡》"
+   },
+   "desc": {
+    "en": "Bwana Mwengo composed this verse epic at the court of Pate on the Kenyan coast in 1728, in Swahili written in Arabic script. It is the oldest surviving dated document in the language, and its subject is the long war between Muslims and Byzantines that began at Mu'tah in 628.",
+    "zh-Hans": "1728年，姆文戈在肯尼亚沿海帕泰城的宫廷中写成这部诗体史诗，用阿拉伯字母书写斯瓦希里语。它是该语言现存最早的有年份文献，所记的是自628年穆塔之役开始、穆斯林与拜占庭之间的长期战争。",
+    "zh-Hant": "1728年，姆文戈在肯亞沿海帕泰城的宮廷中寫成這部詩體史詩，用阿拉伯字母書寫斯瓦希里語。它是該語言現存最早的有年份文獻，所記的是自628年穆塔之役開始、穆斯林與拜占庭之間的長期戰爭。"
+   }
+  },
+  {
+   "id": "georgia_colony_founded",
+   "year": 1733,
+   "era": "world",
+   "stream": "americas",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Georgia Founded at Savannah",
+    "zh-Hans": "佐治亚建于萨凡纳",
+    "zh-Hant": "佐治亞建於薩凡納"
+   },
+   "desc": {
+    "en": "James Oglethorpe received a charter in 1732 for a colony meant to give debtors and persecuted Protestants a fresh start, and laid out Savannah in February 1733; it was the last of the thirteen. John and Charles Wesley served there as chaplains from 1735, and George Whitefield built an orphanage nearby, so the colony stands at the head of two revivals.",
+    "zh-Hans": "1732年，奥格尔索普获颁特许状，要为负债者与受逼迫的新教徒另开生路；1733年2月他规划萨凡纳城，这是十三殖民地中最后建立的一个。约翰与查理·卫斯理自1735年在此任随军牧师，怀特腓也在附近建了孤儿院，两场复兴的起点都与此地相连。",
+    "zh-Hant": "1732年，奧格爾索普獲頒特許狀，要為負債者與受逼迫的新教徒另開生路；1733年2月他規劃薩凡納城，這是十三殖民地中最後建立的一個。約翰與查理·衛斯理自1735年在此任隨軍牧師，懷特腓也在附近建了孤兒院，兩場復興的起點都與此地相連。"
+   }
+  },
+  {
+   "id": "franklin_electricity",
+   "year": 1752,
+   "era": "world",
+   "stream": "americas",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Franklin Draws Lightning from the Sky",
+    "zh-Hans": "富兰克林引下天上的闪电",
+    "zh-Hant": "富蘭克林引下天上的閃電"
+   },
+   "desc": {
+    "en": "Benjamin Franklin, born 1706 and died 1790, argued that lightning is an electrical discharge and tested it in 1752 with a kite and a key. The lightning rod followed at once and was the first thing electricity ever did for ordinary people; the same man later signed both the Declaration of Independence and the peace that ended the war.",
+    "zh-Hans": "富兰克林（1706-1790）主张闪电即是放电，并于1752年以风筝与钥匙加以试验。避雷针随即问世，是电学第一次为寻常百姓所用；此人后来既在《独立宣言》上签名，也在结束战争的和约上签名。",
+    "zh-Hant": "富蘭克林（1706-1790）主張閃電即是放電，並於1752年以風箏與鑰匙加以試驗。避雷針隨即問世，是電學第一次為尋常百姓所用；此人後來既在《獨立宣言》上簽名，也在結束戰爭的和約上簽名。"
+   }
+  },
+  {
+   "id": "fall_of_quebec",
+   "year": 1759,
+   "era": "world",
+   "stream": "americas",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Quebec Falls to the British",
+    "zh-Hans": "魁北克陷于英军",
+    "zh-Hant": "魁北克陷於英軍"
+   },
+   "desc": {
+    "en": "Wolfe's men climbed the cliff by night and beat Montcalm on the Plains of Abraham on 13 September 1759; both commanders died of their wounds and the city surrendered five days later. Montreal followed in 1760 and France gave up New France in 1763, leaving a Catholic, French-speaking people under a Protestant crown.",
+    "zh-Hans": "1759年9月13日，沃尔夫的部队夜间攀上崖壁，在亚伯拉罕平原击败蒙卡姆；两军主帅皆因伤而死，五日后该城投降。1760年蒙特利尔继之陷落，1763年法国放弃新法兰西，留下一群说法语的天主教徒归在新教君主治下。",
+    "zh-Hant": "1759年9月13日，沃爾夫的部隊夜間攀上崖壁，在亞伯拉罕平原擊敗蒙卡姆；兩軍主帥皆因傷而死，五日後該城投降。1760年蒙特利爾繼之陷落，1763年法國放棄新法蘭西，留下一群說法語的天主教徒歸在新教君主治下。"
+   }
+  },
+  {
+   "id": "stamp_act",
+   "year": 1765,
+   "era": "world",
+   "stream": "americas",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "The Stamp Act",
+    "zh-Hans": "印花税法案",
+    "zh-Hant": "印花稅法案"
+   },
+   "desc": {
+    "en": "Parliament taxed every printed sheet in the American colonies in 1765 to help pay for their defence, and met a refusal it had not expected: a colonial congress, boycotts of British goods, and the cry that there must be no taxation without representation. The act was repealed in 1766, but the quarrel it opened ran on to the war.",
+    "zh-Hans": "1765年，英国议会为分摊北美防务开支，对殖民地一切印刷品课税，却遇上意料之外的抗拒：殖民地召开代表大会、抵制英货，并高呼「无代表不纳税」。该法于1766年废止，但由此开启的争端一直延续到战争。",
+    "zh-Hant": "1765年，英國議會為分攤北美防務開支，對殖民地一切印刷品課稅，卻遇上意料之外的抗拒：殖民地召開代表大會、抵制英貨，並高呼「無代表不納稅」。該法於1766年廢止，但由此開啟的爭端一直延續到戰爭。"
+   }
+  },
+  {
+   "id": "california_missions_begin",
+   "year": 1769,
+   "era": "church",
+   "stream": "americas",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "The California Missions Begin",
+    "zh-Hans": "加利福尼亚传教区之始",
+    "zh-Hant": "加利福尼亞傳教區之始"
+   },
+   "desc": {
+    "en": "Franciscans under Junipero Serra founded the mission of San Diego de Alcala in July 1769, the first of twenty-one strung along the coast of Alta California. The chain planted churches, farms and the towns that became San Francisco and Los Angeles; it also gathered indigenous people into a regime of labour and discipline whose cost is still argued over.",
+    "zh-Hans": "1769年7月，方济会士在塞拉带领下建立圣迭戈·德阿尔卡拉传教区，是上加利福尼亚沿岸二十一处传教区中的第一处。这一串传教区带来了教堂、农场，也带来了后来的旧金山与洛杉矶；同时它把原住民纳入劳役与管束的体制，其代价至今仍有争议。",
+    "zh-Hant": "1769年7月，方濟會士在塞拉帶領下建立聖地牙哥·德阿爾卡拉傳教區，是上加利福尼亞沿岸二十一處傳教區中的第一處。這一串傳教區帶來了教堂、農場，也帶來了後來的舊金山與洛杉磯；同時它把原住民納入勞役與管束的體制，其代價至今仍有爭議。"
+   }
+  },
+  {
+   "id": "first_black_baptist_church",
+   "year": 1773,
+   "era": "church",
+   "stream": "americas",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "The First Black Baptist Church",
+    "zh-Hans": "第一间黑人浸信会",
+    "zh-Hant": "第一間黑人浸信會"
+   },
+   "desc": {
+    "en": "A congregation of enslaved people gathered in a barn on the Galphin plantation at Silver Bluff in South Carolina, David George preaching, after George Liele had baptised them; references date the founding somewhere between 1773 and 1775. The war scattered them, and from that one company came Baptist churches in Savannah, in Nova Scotia and in Jamaica.",
+    "zh-Hans": "在南卡罗来纳银崖的加尔芬种植园，一群为奴的人受了黎尔的施洗，在一座谷仓里聚集成会，由大卫·乔治牧养；各家把创立之年记在1773至1775年之间。战争把他们冲散，而由这一群人，日后在萨凡纳、新斯科舍与牙买加各生出浸信会来。",
+    "zh-Hant": "在南卡羅來納銀崖的加爾芬種植園，一群為奴的人受了黎爾的施洗，在一座穀倉裡聚集成會，由大衛·喬治牧養；各家把創立之年記在1773至1775年之間。戰爭把他們沖散，而由這一群人，日後在薩凡納、新斯科舍與牙買加各生出浸信會來。"
+   }
+  },
+  {
+   "id": "american_revolutionary_war",
+   "year": 1775,
+   "era": "world",
+   "stream": "americas",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "The American War of Independence",
+    "zh-Hans": "美国独立战争",
+    "zh-Hant": "美國獨立戰爭"
+   },
+   "desc": {
+    "en": "Fighting began at Lexington and Concord in April 1775, more than a year before the declaration this chart carries at 1776, and ended with the treaty of 1783 that recognised the United States. The churches divided along the same line: most Anglican clergy held to the crown and lost their parishes, while most Presbyterian and Congregational ministers did not.",
+    "zh-Hans": "战事于1775年4月在列克星敦与康科德打响，比本图所记1776年的宣言早了一年有余，至1783年以承认美国的和约告终。教会也照同一条界线分裂：大多数圣公会牧师效忠英王，因而失去堂区；长老会与公理会的传道人则多半不然。",
+    "zh-Hant": "戰事於1775年4月在列克星敦與康科德打響，比本圖所記1776年的宣言早了一年有餘，至1783年以承認美國的和約告終。教會也照同一條界線分裂：大多數聖公會牧師效忠英王，因而失去堂區；長老會與公理會的傳道人則多半不然。"
+   }
+  },
+  {
+   "id": "methodist_church_organised",
+   "year": 1784,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Methodists Become a Church",
+    "zh-Hans": "循道派成为独立教会",
+    "zh-Hant": "循道派成為獨立教會"
+   },
+   "desc": {
+    "en": "In 1784 Wesley settled his preaching houses on a named conference and, since no bishop would ordain men for the new United States, ordained them himself; at Baltimore that Christmas the American preachers organised the Methodist Episcopal Church. Wesley died a clergyman of the Church of England, but from this year Methodism was in fact a separate church.",
+    "zh-Hans": "1784年，卫斯理立据把各处布道所交与一个具名的年会，又因无主教肯为新生的美国按立传道人，遂亲自按立；同年圣诞，美国的传道人在巴尔的摩组成监理宗教会。卫斯理去世时仍是英国国教的牧师，但自这一年起，循道派事实上已是一个独立的教会。",
+    "zh-Hant": "1784年，衛斯理立據把各處佈道所交與一個具名的年會，又因無主教肯為新生的美國按立傳道人，遂親自按立；同年聖誕，美國的傳道人在巴爾的摩組成監理宗教會。衛斯理去世時仍是英國國教的牧師，但自這一年起，循道派事實上已是一個獨立的教會。"
+   }
+  },
+  {
+   "id": "first_fleet_australia",
+   "year": 1788,
+   "era": "world",
+   "stream": "world",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "The First Fleet Reaches Botany Bay",
+    "zh-Hans": "第一舰队抵达植物学湾",
+    "zh-Hant": "第一艦隊抵達植物學灣"
+   },
+   "desc": {
+    "en": "Eleven ships carrying about seven hundred and fifty convicts and their guards anchored in Botany Bay in January 1788, moved at once to Sydney Cove, and proclaimed the colony on 26 January. Britain had lost America as a place to send its prisoners; the continent's own peoples had lived there for tens of thousands of years and were not consulted.",
+    "zh-Hans": "1788年1月，载着约七百五十名囚犯及其看守的十一艘船在植物学湾下锚，随即改泊悉尼湾，并于1月26日宣告建立殖民地。英国已失去美洲这个流放犯人的去处；而这块大陆本有的族群早已在此居住数万年，无人征询他们的意思。",
+    "zh-Hant": "1788年1月，載著約七百五十名囚犯及其看守的十一艘船在植物學灣下錨，隨即改泊雪梨灣，並於1月26日宣告建立殖民地。英國已失去美洲這個流放犯人的去處；而這塊大陸本有的族群早已在此居住數萬年，無人徵詢他們的意思。"
+   }
+  },
+  {
+   "id": "equiano_narrative",
+   "year": 1789,
+   "era": "world",
+   "stream": "world",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Equiano Tells His Own Story",
+    "zh-Hans": "厄奎亚诺自述其生平",
+    "zh-Hant": "厄奎亞諾自述其生平"
+   },
+   "desc": {
+    "en": "Olaudah Equiano, carried off from West Africa as a child, bought his own freedom and published his life in London in 1789; it ran through nine editions while he lived. It is at once an abolitionist argument written by a man who had been counted as cargo and a conversion narrative, and it did much to make the British public willing to end the trade in 1807.",
+    "zh-Hans": "厄奎亚诺幼年被掳离西非，后来赎回自身，于1789年在伦敦出版自传，在他有生之年印行九版。这本书既是一个曾被当作货物计算的人所写的废奴论述，也是一篇归信的见证；1807年英国民意愿意终止奴隶贸易，此书出力甚多。",
+    "zh-Hant": "厄奎亞諾幼年被擄離西非，後來贖回自身，於1789年在倫敦出版自傳，在他有生之年印行九版。這本書既是一個曾被當作貨物計算的人所寫的廢奴論述，也是一篇歸信的見證；1807年英國民意願意終止奴隸貿易，此書出力甚多。"
+   }
+  },
+  {
+   "id": "papal_states_annexed",
+   "year": 1809,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Napoleon Annexes the Papal States",
+    "zh-Hans": "拿破仑吞并教皇国",
+    "zh-Hant": "拿破崙吞併教皇國"
+   },
+   "desc": {
+    "en": "In May 1809 France annexed what remained of the pope's territory and made Rome a French city; Pius VII excommunicated those responsible and was carried off as a prisoner until 1814. It was the first time in a thousand years that the papacy held no land, and the pattern repeated in 1870 and was only settled in 1929, both of which this chart already carries.",
+    "zh-Hans": "1809年5月，法国吞并教皇国仅存的领土，把罗马划为法国城市；庇护七世将主事者逐出教会，随即被掳，囚至1814年才获释。这是一千年来教皇第一次名下无地；同样的局面1870年重演，直到1929年才了结，那两件事本图已有记载。",
+    "zh-Hant": "1809年5月，法國吞併教皇國僅存的領土，把羅馬劃為法國城市；庇護七世將主事者逐出教會，隨即被擄，囚至1814年才獲釋。這是一千年來教皇第一次名下無地；同樣的局面1870年重演，直到1929年才了結，那兩件事本圖已有記載。"
+   }
+  },
+  {
+   "id": "napoleon_invades_russia",
+   "year": 1812,
+   "era": "world",
+   "stream": "europe",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Napoleon's Army Destroyed in Russia",
+    "zh-Hans": "拿破仑大军覆没于俄国",
+    "zh-Hant": "拿破崙大軍覆沒於俄國"
+   },
+   "desc": {
+    "en": "Some six hundred thousand men crossed into Russia in June 1812, reached a burning Moscow in September, and retreated through the winter; only a small fraction came out. The campaign broke French dominance of Europe, and within three years Napoleon had fallen and the powers had redrawn the continent at Vienna.",
+    "zh-Hans": "1812年6月，约六十万大军越境进入俄国，9月抵达已成火海的莫斯科，随后在严冬中撤退，生还者只余极少数。此役折断了法国对欧洲的支配；不出三年，拿破仑倒台，列强在维也纳重划了整个大陆。",
+    "zh-Hant": "1812年6月，約六十萬大軍越境進入俄國，9月抵達已成火海的莫斯科，隨後在嚴冬中撤退，生還者只餘極少數。此役折斷了法國對歐洲的支配；不出三年，拿破崙倒台，列強在維也納重劃了整個大陸。"
+   }
+  },
+  {
+   "id": "shaka_zulu_kingdom",
+   "year": 1816,
+   "era": "world",
+   "stream": "world",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Shaka Builds the Zulu Kingdom",
+    "zh-Hans": "沙卡建立祖鲁王国",
+    "zh-Hant": "沙卡建立祖魯王國"
+   },
+   "desc": {
+    "en": "From about 1816 Shaka welded a small chiefdom into the dominant military power of south-east Africa, and the wars and migrations that followed remade the peoples of the whole region. He was killed in 1828; the kingdom he made lasted until the British broke it in 1879. The early dates rest on oral tradition recorded later and references differ.",
+    "zh-Hans": "约自1816年起，沙卡把一个小部落锻造成东南非最强的军事力量，随之而来的战争与迁徙重塑了整个地区各族的分布。他于1828年被杀；他所建的王国延续到1879年被英国击垮为止。早期年份出自后来记录的口传，各家说法不一。",
+    "zh-Hant": "約自1816年起，沙卡把一個小部落鍛造成東南非最強的軍事力量，隨之而來的戰爭與遷徙重塑了整個地區各族的分佈。他於1828年被殺；他所建的王國延續到1879年被英國擊垮為止。早期年份出自後來記錄的口傳，各家說法不一。"
+   }
+  },
+  {
+   "id": "liberia_settlement",
+   "year": 1822,
+   "era": "world",
+   "stream": "world",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Freed African-Americans Settle Liberia",
+    "zh-Hans": "获释黑人移居利比里亚",
+    "zh-Hant": "獲釋黑人移居賴比瑞亞"
+   },
+   "desc": {
+    "en": "Settlers sent from the United States founded a colony on the West African coast in 1822, which declared itself the republic of Liberia in 1847 and became the first independent state in modern Africa. The settlement was a Christian one, with churches from its first year; it also placed the newcomers over the peoples already living there, and that division shaped the country's later history.",
+    "zh-Hans": "1822年，自美国送出的移民在西非海岸建立聚居地；1847年宣告成立利比里亚共和国，成为近代非洲第一个独立国家。这是一个基督教移居地，头一年就有教会；同时它把外来者置于原住各族之上，这道裂痕影响了此后整部国史。",
+    "zh-Hant": "1822年，自美國送出的移民在西非海岸建立聚居地；1847年宣告成立賴比瑞亞共和國，成為近代非洲第一個獨立國家。這是一個基督教移居地，頭一年就有教會；同時它把外來者置於原住各族之上，這道裂痕影響了此後整部國史。"
+   }
+  },
+  {
+   "id": "greek_independence",
+   "year": 1830,
+   "era": "world",
+   "stream": "greece",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Greece Wins Independence from the Ottomans",
+    "zh-Hans": "希腊脱离奥斯曼独立",
+    "zh-Hant": "希臘脫離鄂圖曼獨立"
+   },
+   "desc": {
+    "en": "A revolt begun in 1821 ended with the powers recognising Greek independence in 1830 and fixing the new kingdom's borders in 1832. It was the first nation prised out of the Ottoman Empire, and the precedent every later Balkan movement appealed to; an Orthodox people came out from under Muslim rule after nearly four centuries.",
+    "zh-Hans": "1821年爆发的起义，最终以列强1830年承认希腊独立、1832年划定新王国疆界告终。这是第一个从奥斯曼帝国分离出来的民族国家，此后巴尔干各地的运动都援引此例；一个东正教民族在将近四百年后脱离了穆斯林统治。",
+    "zh-Hant": "1821年爆發的起義，最終以列強1830年承認希臘獨立、1832年劃定新王國疆界告終。這是第一個從鄂圖曼帝國分離出來的民族國家，此後巴爾幹各地的運動都援引此例；一個東正教民族在將近四百年後脫離了穆斯林統治。"
+   }
+  },
+  {
+   "id": "oxford_movement",
+   "year": 1833,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "The Oxford Movement Begins",
+    "zh-Hans": "牛津运动兴起",
+    "zh-Hant": "牛津運動興起"
+   },
+   "desc": {
+    "en": "From a sermon preached at Oxford in July 1833, a group of English clergy argued in a series of tracts that the Church of England was not a creature of parliament but a branch of the ancient catholic church. The movement recovered liturgy, the sacraments and religious orders across the Anglican world; its best-known writer, John Henry Newman, left for Rome in 1845.",
+    "zh-Hans": "1833年7月牛津的一篇讲道之后，一批英国圣职人员接连发表小册，力主英格兰教会并非议会所造，而是古代大公教会的一支。这场运动使礼仪、圣礼与修会在整个圣公宗世界重新受到重视；其最著名的执笔者纽曼于1845年归向罗马。",
+    "zh-Hant": "1833年7月牛津的一篇講道之後，一批英國聖職人員接連發表小冊，力主英格蘭教會並非議會所造，而是古代大公教會的一支。這場運動使禮儀、聖禮與修會在整個聖公宗世界重新受到重視；其最著名的執筆者紐曼於1845年歸向羅馬。"
+   }
+  },
+  {
+   "id": "burmese_bible",
+   "year": 1834,
+   "era": "bible",
+   "stream": "scripture",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "The Bible Completed in Burmese",
+    "zh-Hans": "缅甸文圣经译成",
+    "zh-Hant": "緬甸文聖經譯成"
+   },
+   "desc": {
+    "en": "Adoniram Judson, whose arrival in Burma this chart already carries, finished a translation of the whole Bible into Burmese in 1834 and a revision in 1840. It is still the version Burmese-speaking churches read, one of the first complete Bibles produced for a language of mainland Asia by the modern missionary movement.",
+    "zh-Hans": "本图已记其抵缅一事的耶德逊，于1834年译成整本缅甸文圣经，1840年完成修订。缅语教会至今仍用此译本；这也是近代宣教运动为亚洲大陆语言译成的最早几部全本圣经之一。",
+    "zh-Hant": "本圖已記其抵緬一事的耶德遜，於1834年譯成整本緬甸文聖經，1840年完成修訂。緬語教會至今仍用此譯本；這也是近代宣教運動為亞洲大陸語言譯成的最早幾部全本聖經之一。"
+   }
+  },
+  {
+   "id": "livingstone_africa",
+   "year": 1841,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "David Livingstone Reaches Africa",
+    "zh-Hans": "李文斯顿抵达非洲",
+    "zh-Hant": "李文斯頓抵達非洲"
+   },
+   "desc": {
+    "en": "Livingstone landed in southern Africa in 1841 and spent thirty years walking the interior, mapping rivers and campaigning against the slave trade that still ran across the continent. His appeal at Cambridge in 1857 sent a generation of missionaries after him; he died in what is now Zambia in 1873, and his opened routes were used by traders and empires as much as by churches.",
+    "zh-Hans": "李文斯顿1841年抵达非洲南部，此后三十年徒步深入内陆，勘绘河流，并力斥当时仍横行大陆的奴隶贸易。1857年他在剑桥的呼吁，送出了整整一代宣教士；1873年他病逝于今日的赞比亚。他所打通的路线，被商旅与帝国所用，不下于被教会所用。",
+    "zh-Hant": "李文斯頓1841年抵達非洲南部，此後三十年徒步深入內陸，勘繪河流，並力斥當時仍橫行大陸的奴隸貿易。1857年他在劍橋的呼籲，送出了整整一代宣教士；1873年他病逝於今日的尚比亞。他所打通的路線，被商旅與帝國所用，不下於被教會所用。"
+   }
+  },
+  {
+   "id": "mormon_pioneers_utah",
+   "year": 1847,
+   "era": "world",
+   "stream": "americas",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Latter-day Saints Settle the Salt Lake Valley",
+    "zh-Hans": "摩尔门信徒定居盐湖谷地",
+    "zh-Hant": "摩爾門信徒定居鹽湖谷地"
+   },
+   "desc": {
+    "en": "Driven west after their founder was killed in 1844, the first companies of Latter-day Saints reached the Salt Lake valley in July 1847 and built a settlement that grew into the state of Utah. The movement had begun in New York in 1830 on the claim of new scripture given through Joseph Smith, a claim historic Christianity does not accept; from this base it grew into a worldwide body of millions with one of the largest missionary programmes of any religion.",
+    "zh-Hans": "创始人1844年被杀后，摩尔门信徒西迁，头几批人于1847年7月抵达盐湖谷地，所建聚落后来发展成犹他州。这一运动1830年始于纽约州，自称借斯密约瑟得着新的经典——历代基督教并不接受此说；他们以此地为基业，日后发展为遍及全球、人数以百万计的团体，并拥有各宗教中规模最大的宣教体系之一。",
+    "zh-Hant": "創始人1844年被殺後，摩爾門信徒西遷，頭幾批人於1847年7月抵達鹽湖谷地，所建聚落後來發展成猶他州。這一運動1830年始於紐約州，自稱藉斯密約瑟得著新的經典——歷代基督教並不接受此說；他們以此地為基業，日後發展為遍及全球、人數以百萬計的團體，並擁有各宗教中規模最大的宣教體系之一。"
+   }
+  },
+  {
+   "id": "edison_phonograph",
+   "year": 1877,
+   "era": "world",
+   "stream": "americas",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Sound First Recorded and Played Back",
+    "zh-Hans": "声音首次录下并放出",
+    "zh-Hant": "聲音首次錄下並放出"
+   },
+   "desc": {
+    "en": "Edison's tinfoil phonograph of 1877 was the first machine to record a voice and give it back, and the wax-cylinder version of 1888 made it a product. For the first time a sound could outlive the moment it was made: within a lifetime music, preaching and the human voice itself could be carried anywhere and kept.",
+    "zh-Hans": "1877年爱迪生的锡箔留声机，是第一台既能录下人声又能放出的机器；1888年的蜡筒机型使它成为商品。声音第一次能存留过发声的那一刻：不出一辈子的工夫，乐曲、讲道以至人的声音本身，都可以被带往各处并长久保存。",
+    "zh-Hant": "1877年愛迪生的錫箔留聲機，是第一台既能錄下人聲又能放出的機器；1888年的蠟筒機型使它成為商品。聲音第一次能存留過發聲的那一刻：不出一輩子的工夫，樂曲、講道以至人的聲音本身，都可以被帶往各處並長久保存。"
+   }
+  },
+  {
+   "id": "congress_of_berlin",
+   "year": 1878,
+   "era": "world",
+   "stream": "europe",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "The Congress of Berlin Redraws the Balkans",
+    "zh-Hans": "柏林会议重划巴尔干",
+    "zh-Hant": "柏林會議重劃巴爾幹"
+   },
+   "desc": {
+    "en": "After a Russian war on the Ottomans, the powers met at Berlin in 1878 and recognised Romania, Serbia and Montenegro as independent states while making Bulgaria self-governing. Ottoman rule in Europe was reduced to a remnant, and the borders and grievances the congress left behind ran straight into the Balkan wars of 1912 and the crisis of 1914.",
+    "zh-Hans": "俄土战争之后，列强1878年会于柏林，承认罗马尼亚、塞尔维亚、黑山为独立国家，并使保加利亚自治。奥斯曼在欧洲的统治只剩残余；这次会议留下的边界与积怨，直通1912年的巴尔干战争与1914年的危机。",
+    "zh-Hant": "俄土戰爭之後，列強1878年會於柏林，承認羅馬尼亞、塞爾維亞、蒙特內哥羅為獨立國家，並使保加利亞自治。鄂圖曼在歐洲的統治只剩殘餘；這次會議留下的邊界與積怨，直通1912年的巴爾幹戰爭與1914年的危機。"
+   }
+  },
+  {
+   "id": "britain_occupies_egypt",
+   "year": 1882,
+   "era": "world",
+   "stream": "egypt",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Britain Occupies Egypt",
+    "zh-Hans": "英国占领埃及",
+    "zh-Hant": "英國佔領埃及"
+   },
+   "desc": {
+    "en": "British forces landed in 1882, put down a nationalist government and stayed. Egypt remained nominally Ottoman until Britain declared a protectorate in 1914, but the occupation is what mattered: it gave Britain the Suez route to India and made Egypt the base from which the Middle East was governed for seventy years.",
+    "zh-Hans": "1882年英军登陆，镇压了民族主义政府，随即驻留不去。埃及名义上仍属奥斯曼，直到1914年英国宣布保护国为止；真正起作用的是这次占领——它把通往印度的苏伊士航路交在英国手中，并使埃及成为此后七十年间统治中东的基地。",
+    "zh-Hant": "1882年英軍登陸，鎮壓了民族主義政府，隨即駐留不去。埃及名義上仍屬鄂圖曼，直到1914年英國宣布保護國為止；真正起作用的是這次佔領——它把通往印度的蘇伊士航路交在英國手中，並使埃及成為此後七十年間統治中東的基地。"
+   }
+  },
+  {
+   "id": "english_revised_version",
+   "year": 1885,
+   "era": "bible",
+   "stream": "scripture",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "The English Revised Version",
+    "zh-Hans": "英文修订译本问世",
+    "zh-Hant": "英文修訂譯本問世"
+   },
+   "desc": {
+    "en": "The first authorised revision of the King James Bible: the New Testament appeared in 1881 and the whole Bible in 1885, the work of British and American scholars using the older Greek manuscripts found in the preceding century. It was never loved as the version it revised, but every later English Bible in that line, the American Standard of 1901 and the Revised Standard this chart already carries, descends from it.",
+    "zh-Hans": "这是钦定本圣经第一次获准修订：新约1881年问世，全本1885年出齐，由英美学者据前一世纪所发现的较早希腊文抄本译成。它从未像所修订的那本那样为人所爱，然而此后同一系统的英文圣经——1901年的美国标准译本，以及本图已载的修订标准译本——都出于它。",
+    "zh-Hant": "這是欽定本聖經第一次獲准修訂：新約1881年問世，全本1885年出齊，由英美學者據前一世紀所發現的較早希臘文抄本譯成。它從未像所修訂的那本那樣為人所愛，然而此後同一系統的英文聖經——1901年的美國標準譯本，以及本圖已載的修訂標準譯本——都出於它。"
+   }
+  },
+  {
+   "id": "battle_of_adwa",
+   "year": 1896,
+   "era": "world",
+   "stream": "world",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Ethiopia Defeats Italy at Adwa",
+    "zh-Hans": "埃塞俄比亚阿杜瓦大捷",
+    "zh-Hant": "衣索比亞阿杜瓦大捷"
+   },
+   "desc": {
+    "en": "On 1 March 1896 the army of Menelik II destroyed an Italian invasion force at Adwa, and Italy recognised Ethiopian independence. In the decades when the rest of Africa was being partitioned, Ethiopia alone kept its own government, and with it the ancient church this chart carries from the fourth century onward.",
+    "zh-Hans": "1896年3月1日，孟尼利克二世的军队在阿杜瓦全歼来犯的意大利军，意大利随即承认埃塞俄比亚独立。在非洲其余各地被瓜分的那几十年里，唯独埃塞俄比亚保住了自己的政权，也保住了本图自四世纪起就记载的那间古老教会。",
+    "zh-Hant": "1896年3月1日，孟尼利克二世的軍隊在阿杜瓦全殲來犯的義大利軍，義大利隨即承認衣索比亞獨立。在非洲其餘各地被瓜分的那幾十年裡，唯獨衣索比亞保住了自己的政權，也保住了本圖自四世紀起就記載的那間古老教會。"
+   }
+  },
+  {
+   "id": "second_boer_war",
+   "year": 1899,
+   "era": "world",
+   "stream": "world",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "The South African War",
+    "zh-Hans": "南非战争爆发",
+    "zh-Hant": "南非戰爭爆發"
+   },
+   "desc": {
+    "en": "Britain fought the two Boer republics from October 1899 to May 1902, taking three years and nearly half a million troops to win. Tens of thousands of Boer and African civilians died in the camps into which the army moved them, and the union of the conquered republics with the British colonies in 1910 created the state whose racial order lasted until 1994.",
+    "zh-Hans": "1899年10月至1902年5月，英国与两个布尔共和国交战，动员近五十万兵力，历时三年方胜。布尔人与非洲人平民被军队迁入营地，死者数以万计。1910年，战败的两共和国与英属殖民地合并，所成之国的种族体制一直维持到1994年。",
+    "zh-Hant": "1899年10月至1902年5月，英國與兩個布爾共和國交戰，動員近五十萬兵力，歷時三年方勝。布爾人與非洲人平民被軍隊遷入營地，死者數以萬計。1910年，戰敗的兩共和國與英屬殖民地合併，所成之國的種族體制一直維持到1994年。"
+   }
+  },
+  {
+   "id": "balkan_wars",
+   "year": 1912,
+   "era": "world",
+   "stream": "europe",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "The Balkan Wars",
+    "zh-Hans": "巴尔干战争",
+    "zh-Hant": "巴爾幹戰爭"
+   },
+   "desc": {
+    "en": "In the first war, from October 1912, Bulgaria, Serbia, Greece and Montenegro drove the Ottomans out of nearly all of Europe; in the second, in 1913, the victors fell out over the spoils. The wars left every Balkan state armed and aggrieved, and the killing that started the First World War eighteen months later came out of that settlement.",
+    "zh-Hans": "第一次战争自1912年10月起，保加利亚、塞尔维亚、希腊、黑山把奥斯曼几乎逐出欧洲；第二次在1913年，战胜各方为分赃反目。两战之后，巴尔干各国既有兵器又有夙怨；十八个月后引发第一次世界大战的那场刺杀，正出自这一局面。",
+    "zh-Hant": "第一次戰爭自1912年10月起，保加利亞、塞爾維亞、希臘、蒙特內哥羅把鄂圖曼幾乎逐出歐洲；第二次在1913年，戰勝各方為分贓反目。兩戰之後，巴爾幹各國既有兵器又有夙怨；十八個月後引發第一次世界大戰的那場刺殺，正出自這一局面。"
+   }
+  },
+  {
+   "id": "rutherford_splits_atom",
+   "year": 1919,
+   "era": "world",
+   "stream": "europe",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Rutherford Splits the Atom",
+    "zh-Hans": "卢瑟福击破原子核",
+    "zh-Hant": "拉塞福擊破原子核"
+   },
+   "desc": {
+    "en": "Rutherford had shown in 1911 that almost all of an atom's mass sits in a tiny nucleus; in 1919 he reported that firing alpha particles at nitrogen turned it into oxygen, the first time one element had been changed into another by hand. The line from that experiment runs directly to nuclear fission in 1938 and to the bombs of 1945 this chart already carries.",
+    "zh-Hans": "卢瑟福1911年已证明原子的质量几乎全集中在极小的核里；1919年他报告用阿尔法粒子轰击氮，把氮变成了氧，这是人手第一次把一种元素变为另一种。自这个实验起，一直可以画到1938年的核裂变，以及本图已载的1945年那两颗原子弹。",
+    "zh-Hant": "拉塞福1911年已證明原子的質量幾乎全集中在極小的核裡；1919年他報告用阿爾法粒子轟擊氮，把氮變成了氧，這是人手第一次把一種元素變為另一種。自這個實驗起，一直可以畫到1938年的核裂變，以及本圖已載的1945年那兩顆原子彈。"
+   }
+  },
+  {
+   "id": "palestine_mandate",
+   "year": 1920,
+   "era": "world",
+   "stream": "israel",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Britain Given the Mandate for Palestine",
+    "zh-Hans": "英国受托管巴勒斯坦",
+    "zh-Hant": "英國受託管巴勒斯坦"
+   },
+   "desc": {
+    "en": "The powers meeting at San Remo in April 1920 assigned Palestine to Britain, and the League of Nations confirmed the mandate in 1922 with the Balfour Declaration written into its text. For twenty-eight years Britain governed the land, trying to hold together a promise of a Jewish national home and the rights of the Arab majority; it gave the mandate up in May 1948, the month the State of Israel was declared.",
+    "zh-Hans": "1920年4月列强在圣雷莫会议上把巴勒斯坦交予英国，1922年国际联盟正式确认此项托管，并把《贝尔福宣言》写入条文。英国治理此地二十八年，一面要兑现犹太民族家园的承诺，一面要保住阿拉伯人多数的权利，终不能两全；1948年5月它交还托管，同月以色列国宣告成立。",
+    "zh-Hant": "1920年4月列強在聖雷莫會議上把巴勒斯坦交予英國，1922年國際聯盟正式確認此項託管，並把《貝爾福宣言》寫入條文。英國治理此地二十八年，一面要兌現猶太民族家園的承諾，一面要保住阿拉伯人多數的權利，終不能兩全；1948年5月它交還託管，同月以色列國宣告成立。"
+   }
+  },
+  {
+   "id": "egypt_independence_1922",
+   "year": 1922,
+   "era": "world",
+   "stream": "egypt",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Egypt Declared Independent",
+    "zh-Hans": "埃及宣告独立",
+    "zh-Hant": "埃及宣告獨立"
+   },
+   "desc": {
+    "en": "Britain ended the protectorate in February 1922 and Egypt became a kingdom, the first Arab country to be called independent in the modern age. The independence was partial: Britain kept its troops, the Suez Canal and control of foreign policy, and did not finally leave until 1956, so the date marks the beginning of a withdrawal rather than its end.",
+    "zh-Hans": "1922年2月英国结束保护国地位，埃及成为王国，是近代第一个被称为独立的阿拉伯国家。这独立并不完全：英国保留驻军、苏伊士运河与外交主导权，直到1956年才真正撤离。所以这一年标志的是撤离的开端，而非终点。",
+    "zh-Hant": "1922年2月英國結束保護國地位，埃及成為王國，是近代第一個被稱為獨立的阿拉伯國家。這獨立並不完全：英國保留駐軍、蘇伊士運河與外交主導權，直到1956年才真正撤離。所以這一年標誌的是撤離的開端，而非終點。"
+   }
+  },
+  {
+   "id": "cs_lewis_conversion",
+   "year": 1931,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "The Conversion of C. S. Lewis",
+    "zh-Hans": "鲁益师归信",
+    "zh-Hant": "魯益師歸信"
+   },
+   "desc": {
+    "en": "An Oxford tutor who had been an atheist since boyhood came to believe in God in 1929 and in Christ in September 1931, after a long night's talk with Tolkien and another friend about myth and truth. He went on to write the broadcast talks that became Mere Christianity and the Narnia stories, and became the most widely read defender of the Christian faith in the English language in the twentieth century.",
+    "zh-Hans": "这位牛津导师自少年时便是无神论者，1929年信有神，1931年9月在与托尔金等友人彻夜谈论神话与真理之后归信基督。他后来写下由广播讲稿结集的《返璞归真》，以及纳尼亚系列故事，成为二十世纪英语世界流传最广的基督信仰辩护者。",
+    "zh-Hant": "這位牛津導師自少年時便是無神論者，1929年信有神，1931年9月在與托爾金等友人徹夜談論神話與真理之後歸信基督。他後來寫下由廣播講稿結集的《返璞歸真》，以及納尼亞系列故事，成為二十世紀英語世界流傳最廣的基督信仰辯護者。"
+   }
+  },
+  {
+   "id": "first_jet_flight",
+   "year": 1939,
+   "era": "world",
+   "stream": "world",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "The First Jet Aircraft Flies",
+    "zh-Hans": "喷气飞机首飞",
+    "zh-Hant": "噴射飛機首飛"
+   },
+   "desc": {
+    "en": "A German Heinkel flew on turbojet power on 27 August 1939, days before the Second World War began, and a British Gloster followed in May 1941; both countries put jet fighters into that war. The first jet airliners entered service in 1952, and within a generation ordinary people crossed oceans in hours.",
+    "zh-Hans": "1939年8月27日，德国的亨克尔机以涡轮喷气动力升空，距第二次世界大战爆发只有数日；英国的格罗斯特机于1941年5月继之，两国都把喷气战斗机投入了那场战争。1952年首批喷气客机投入航线，不过一代人的工夫，寻常百姓便能以小时计跨越大洋。",
+    "zh-Hant": "1939年8月27日，德國的亨克爾機以渦輪噴射動力升空，距第二次世界大戰爆發只有數日；英國的格羅斯特機於1941年5月繼之，兩國都把噴射戰鬥機投入了那場戰爭。1952年首批噴射客機投入航線，不過一代人的工夫，尋常百姓便能以小時計跨越大洋。"
+   }
+  },
+  {
+   "id": "graham_crusades",
+   "year": 1949,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Billy Graham's Crusades Begin",
+    "zh-Hans": "葛培理布道大会兴起",
+    "zh-Hant": "葛培理佈道大會興起"
+   },
+   "desc": {
+    "en": "A tent meeting in Los Angeles in 1949, meant to last three weeks, ran for eight and made Graham a national figure; he went on preaching in stadiums on every inhabited continent for more than fifty years, to more people face to face than any preacher before him. He convened the Lausanne congress of 1974, which this chart already carries, and his conversion as a boy of fifteen in 1934 is where the story begins.",
+    "zh-Hans": "1949年洛杉矶一场原定三周的帐棚聚会，延长至八周，葛培理由此闻名全国。此后五十余年，他在各有人居住的洲的体育场上讲道，当面听道的人数超过在他以前的任何一位传道人。本图已载的1974年洛桑会议即由他召集；而这一切始于1934年他十五岁时的归信。",
+    "zh-Hant": "1949年洛杉磯一場原定三週的帳棚聚會，延長至八週，葛培理由此聞名全國。此後五十餘年，他在各有人居住的洲的體育場上講道，當面聽道的人數超過在他以前的任何一位傳道人。本圖已載的1974年洛桑會議即由他召集；而這一切始於1934年他十五歲時的歸信。"
+   }
+  },
+  {
+   "id": "missionaries_of_charity",
+   "year": 1950,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Mother Teresa Founds the Missionaries of Charity",
+    "zh-Hans": "德兰修女创立仁爱传教会",
+    "zh-Hant": "德蕾莎修女創立仁愛傳教會"
+   },
+   "desc": {
+    "en": "An Albanian nun teaching in Calcutta left her convent in 1948 to work among the dying in the streets, and in 1950 her new order was approved. It spread to more than a hundred countries; she received the Nobel Peace Prize in 1979 and died in 1997. Letters published after her death showed she worked for decades under a sense of God's absence, which is part of why she is read as she is.",
+    "zh-Hans": "这位在加尔各答教书的阿尔巴尼亚裔修女，1948年离开修院，到街头照顾垂死之人；1950年她所创的修会获准成立。修会后来遍及一百多个国家。她1979年获诺贝尔和平奖，1997年去世。她身后出版的书信显示，几十年间她一直在神似乎缺席的感受中做工，这也是今人如此读她的缘故之一。",
+    "zh-Hant": "這位在加爾各答教書的阿爾巴尼亞裔修女，1948年離開修院，到街頭照顧垂死之人；1950年她所創的修會獲准成立。修會後來遍及一百多個國家。她1979年獲諾貝爾和平獎，1997年去世。她身後出版的書信顯示，幾十年間她一直在神似乎缺席的感受中做工，這也是今人如此讀她的緣故之一。"
+   }
+  },
+  {
+   "id": "microprocessor_personal_computer",
+   "year": 1971,
+   "era": "world",
+   "stream": "world",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "The Microprocessor and the Personal Computer",
+    "zh-Hans": "微处理器与个人电脑",
+    "zh-Hant": "微處理器與個人電腦"
+   },
+   "desc": {
+    "en": "Intel put a whole processor on one chip in 1971, and machines built around such chips reached ordinary buyers within a few years: the Altair in 1975, the Apple II in 1977, the IBM PC in 1981. Computing left the institutions that had owned it and went into homes, shops and churches, and the network and the pocket telephone this chart already carries were built on that base.",
+    "zh-Hans": "1971年英特尔把整个处理器做在一枚芯片上，数年之内，以这种芯片为核心的机器就到了寻常买主手中：1975年的牛郎星、1977年的苹果二型、1981年的IBM个人电脑。计算机就此离开原先独占它的机构，进入家庭、店铺与教会；本图已载的网络与随身电话，都建在这个基础上。",
+    "zh-Hant": "1971年英特爾把整個處理器做在一枚晶片上，數年之內，以這種晶片為核心的機器就到了尋常買主手中：1975年的牛郎星、1977年的蘋果二型、1981年的IBM個人電腦。電腦就此離開原先獨佔它的機構，進入家庭、店舖與教會；本圖已載的網路與隨身電話，都建在這個基礎上。"
+   }
+  },
+  {
+   "id": "oslo_accords",
+   "year": 1993,
+   "era": "world",
+   "stream": "israel",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "The Oslo Accords",
+    "zh-Hans": "奥斯陆协议",
+    "zh-Hant": "奧斯陸協議"
+   },
+   "desc": {
+    "en": "In September 1993 Israel and the Palestine Liberation Organisation recognised each other and agreed on limited Palestinian self-government, which began in Gaza and Jericho in 1994. The framework created the Palestinian Authority and remains the legal basis of the arrangement in the territories, but the final settlement it postponed has still not been reached.",
+    "zh-Hans": "1993年9月，以色列与巴勒斯坦解放组织彼此承认，并议定有限的巴勒斯坦自治，1994年自加沙与耶利哥开始施行。这一框架产生了巴勒斯坦自治政府，至今仍是各领土上安排的法律依据；但它所推迟的最终解决，迄今未曾达成。",
+    "zh-Hant": "1993年9月，以色列與巴勒斯坦解放組織彼此承認，並議定有限的巴勒斯坦自治，1994年自加薩與耶利哥開始施行。這一框架產生了巴勒斯坦自治政府，至今仍是各領土上安排的法律依據；但它所推遲的最終解決，迄今未曾達成。"
+   }
+  },
+  {
+   "id": "rwandan_genocide",
+   "year": 1994,
+   "era": "world",
+   "stream": "world",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "The Genocide in Rwanda",
+    "zh-Hans": "卢旺达种族灭绝",
+    "zh-Hant": "盧安達種族滅絕"
+   },
+   "desc": {
+    "en": "Between April and July 1994 some eight hundred thousand people, most of them Tutsi, were killed in about a hundred days, largely by neighbours with hand tools, while foreign governments withdrew their troops. It happened in one of the most thoroughly Christianised countries in Africa, and churches were among the places where people were killed, which the churches themselves have since had to answer for.",
+    "zh-Hans": "1994年4月至7月，约八十万人在百日之内被杀，其中多为图西人，行凶的多是持农具的邻舍，而各国政府则撤走了自己的部队。此事发生在非洲基督教化最彻底的国家之一，教堂也在杀戮之地之列；此后教会自身不得不为此作出交代。",
+    "zh-Hant": "1994年4月至7月，約八十萬人在百日之內被殺，其中多為圖西人，行兇的多是持農具的鄰舍，而各國政府則撤走了自己的部隊。此事發生在非洲基督教化最徹底的國家之一，教堂也在殺戮之地之列；此後教會自身不得不為此作出交代。"
+   }
+  },
+  {
+   "id": "iraq_war_2003",
+   "year": 2003,
+   "era": "world",
+   "stream": "world",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "The Invasion of Iraq",
+    "zh-Hans": "伊拉克战争",
+    "zh-Hant": "伊拉克戰爭"
+   },
+   "desc": {
+    "en": "A United States-led coalition invaded in March 2003 and removed Saddam Hussein within weeks; the weapons the invasion was justified by were not found, and the occupation and insurgency that followed lasted years and cost hundreds of thousands of Iraqi lives. One consequence bears directly on this chart: the Assyrian and Chaldean Christian communities of Mesopotamia, among the oldest anywhere, were reduced by flight and violence to a fraction of their number.",
+    "zh-Hans": "2003年3月，以美国为首的联军入侵伊拉克，数周之内推翻萨达姆；作为出兵理由的武器并未找到，而随之而来的占领与叛乱持续多年，伊拉克人死者以数十万计。有一项后果与本图直接相关：美索不达米亚的亚述与迦勒底基督徒群体——世上最古老的几支之一——因逃亡与暴力，人数只剩零头。",
+    "zh-Hant": "2003年3月，以美國為首的聯軍入侵伊拉克，數週之內推翻薩達姆；作為出兵理由的武器並未找到，而隨之而來的佔領與叛亂持續多年，伊拉克人死者以數十萬計。有一項後果與本圖直接相關：美索不達米亞的亞述與迦勒底基督徒群體——世上最古老的幾支之一——因逃亡與暴力，人數只剩零頭。"
+   }
+  },
+  {
+   "id": "shenzhou_first_chinese_astronaut",
+   "year": 2003,
+   "era": "world",
+   "stream": "china",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "China Launches Its First Astronaut",
+    "zh-Hans": "中国首次载人航天",
+    "zh-Hant": "中國首次載人航天"
+   },
+   "desc": {
+    "en": "Yang Liwei orbited the earth in October 2003, making China the third country to launch a human into space on its own, forty-two years after the Soviet Union and the United States. A two-man flight followed in 2005, a spacewalk in 2008, and China had a crewed station of its own in orbit by 2022.",
+    "zh-Hans": "2003年10月杨利伟绕地飞行，使中国成为第三个自力将人送入太空的国家，距苏、美两国已四十二年。2005年两人乘组升空，2008年出舱行走，到2022年中国已有自己的载人空间站在轨运行。",
+    "zh-Hant": "2003年10月楊利偉繞地飛行，使中國成為第三個自力將人送入太空的國家，距蘇、美兩國已四十二年。2005年兩人乘組升空，2008年出艙行走，到2022年中國已有自己的載人太空站在軌運行。"
+   }
+  },
+  {
+   "id": "sudan_peace_agreement",
+   "year": 2005,
+   "era": "world",
+   "stream": "world",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Peace Agreement Ends Sudan's Civil War",
+    "zh-Hans": "苏丹全面和平协议签署",
+    "zh-Hant": "蘇丹全面和平協議簽署"
+   },
+   "desc": {
+    "en": "The agreement signed in January 2005 ended twenty-two years of war between the Muslim north and the Christian and traditionalist south, in which some two million people had died, most of them of hunger and disease. It promised the south a vote on its own future, and in 2011 South Sudan became an independent state; the peace did not reach Darfur, and did not hold in the south for long.",
+    "zh-Hans": "2005年1月签署的协议，结束了穆斯林北方与基督教及传统信仰南方之间二十二年的战争，其间死者约二百万，多半死于饥饿与疾病。协议许诺南方可就自身前途投票；2011年南苏丹成为独立国家。这和平未及于达尔富尔，在南方也未能维持多久。",
+    "zh-Hant": "2005年1月簽署的協議，結束了穆斯林北方與基督教及傳統信仰南方之間二十二年的戰爭，其間死者約二百萬，多半死於飢餓與疾病。協議許諾南方可就自身前途投票；2011年南蘇丹成為獨立國家。這和平未及於達佛，在南方也未能維持多久。"
+   }
+  },
+  {
+   "id": "north_korea_nuclear_test",
+   "year": 2006,
+   "era": "world",
+   "stream": "world",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "North Korea Tests a Nuclear Weapon",
+    "zh-Hans": "朝鲜试爆核武器",
+    "zh-Hant": "北韓試爆核武器"
+   },
+   "desc": {
+    "en": "North Korea announced in 2005 that it held nuclear weapons and tested one underground in October 2006, the only state to leave the non-proliferation treaty and then build a bomb. Further tests followed, and the question it opened, whether the spread of these weapons can be stopped at all, is still open.",
+    "zh-Hans": "朝鲜2005年宣称拥有核武器，2006年10月进行地下试爆，是唯一退出《不扩散核武器条约》后又造出核弹的国家。此后又有多次试验；它所提出的问题——核武扩散究竟能否被止住——至今没有答案。",
+    "zh-Hant": "北韓2005年宣稱擁有核武器，2006年10月進行地下試爆，是唯一退出《核不擴散條約》後又造出核彈的國家。此後又有多次試驗；它所提出的問題——核武擴散究竟能否被止住——至今沒有答案。"
+   }
+  },
+  {
+   "id": "muhammad_born",
+   "year": 570,
+   "era": "world",
+   "stream": "islam",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Birth of Muhammad",
+    "zh-Hans": "穆罕默德出生",
+    "zh-Hant": "穆罕默德出生"
+   },
+   "desc": {
+    "en": "Islamic tradition places his birth at Mecca in the Year of the Elephant, which later writers reckoned as 570 or 571; no contemporary record fixes the year. His preaching from about 610 and his migration to Medina in 622 begin the movement this chart follows under Islam.",
+    "zh-Hans": "伊斯兰传统把他的出生系于麦加的「象年」，后世著述推算为570或571年，并无同时代的记载可以确定。他约自610年开始传讲，622年迁往麦地那，本图伊斯兰一线即由此展开。",
+    "zh-Hant": "伊斯蘭傳統把他的出生繫於麥加的「象年」，後世著述推算為570或571年，並無同時代的記載可以確定。他約自610年開始傳講，622年遷往麥地那，本圖伊斯蘭一線即由此展開。"
+   }
+  },
+  {
+   "id": "teotihuacan_falls",
+   "year": 550,
+   "era": "world",
+   "stream": "americas",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Teotihuacan's Centre Is Burned",
+    "zh-Hans": "特奥蒂瓦坎中心被焚",
+    "zh-Hant": "特奧蒂瓦坎中心被焚"
+   },
+   "desc": {
+    "en": "The temples along the great avenue were burned and the city's rulers overthrown, though people went on living in the ruins for generations. Excavators date the burning anywhere from about 550 to 650, and the city was largely empty by 750.",
+    "zh-Hans": "大道两旁的神庙被焚，统治者被推翻，但废墟中仍有人续居数代之久。发掘者把焚毁定在约550至650年之间，到750年前后城中已大致空无人烟。",
+    "zh-Hant": "大道兩旁的神廟被焚，統治者被推翻，但廢墟中仍有人續居數代之久。發掘者把焚毀定在約550至650年之間，到750年前後城中已大致空無人煙。"
+   }
+  },
+  {
+   "id": "islam_across_north_africa",
+   "year": 700,
+   "era": "world",
+   "stream": "islam",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Islam Carried across North Africa",
+    "zh-Hans": "伊斯兰教传遍北非",
+    "zh-Hant": "伊斯蘭教傳遍北非"
+   },
+   "desc": {
+    "en": "Arab armies moving west from Egypt founded Kairouan in 670 and had reached the Atlantic by 709, and the Berber peoples came over to Islam in the generations that followed. The conquest ran over sixty years, so this year stands for a process and not an event.",
+    "zh-Hans": "阿拉伯军队自埃及西进，670年建凯鲁万，至709年已抵大西洋；此后数代之间，柏柏尔各族陆续归入伊斯兰。整个征服前后逾六十年，故此年份代表的是一个过程，而非一件事。",
+    "zh-Hant": "阿拉伯軍隊自埃及西進，670年建凱魯萬，至709年已抵大西洋；此後數代之間，柏柏爾各族陸續歸入伊斯蘭。整個征服前後逾六十年，故此年份代表的是一個過程，而非一件事。"
+   }
+  },
+  {
+   "id": "umayyad_conquest_spain",
+   "year": 711,
+   "era": "world",
+   "stream": "islam",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Muslim Armies Cross into Spain",
+    "zh-Hans": "穆斯林军队渡海入西班牙",
+    "zh-Hant": "穆斯林軍隊渡海入西班牙"
+   },
+   "desc": {
+    "en": "A force under Tariq ibn Ziyad crossed from North Africa, defeated the Visigothic king Roderic, and within a few years held most of the Iberian peninsula. Muslim rule there lasted until Granada fell in 1492, and the Latin church of Spain lived under it for nearly eight centuries.",
+    "zh-Hans": "塔里克·伊本·齐亚德率军自北非渡海，击败西哥特王罗德里克，数年之内控制伊比利亚半岛大部。穆斯林在此的统治直到1492年格拉纳达陷落才告终，西班牙的拉丁教会在其治下将近八个世纪。",
+    "zh-Hant": "塔里克·伊本·齊亞德率軍自北非渡海，擊敗西哥特王羅德里克，數年之內控制伊比利亞半島大部。穆斯林在此的統治直到1492年格拉納達陷落才告終，西班牙的拉丁教會在其治下將近八個世紀。"
+   }
+  },
+  {
+   "id": "pueblo_above_ground_villages",
+   "year": 750,
+   "era": "world",
+   "stream": "americas",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Pueblo Villages Built Above Ground",
+    "zh-Hans": "普韦布洛人开始建地上房舍",
+    "zh-Hant": "普韋布洛人開始建地上房舍"
+   },
+   "desc": {
+    "en": "In the Four Corners country of the American Southwest, families moved out of pit houses into rows of masonry rooms built on the surface, the change that names the Pueblo I period. The period is dated about 750 to 900 and no single year opens it.",
+    "zh-Hans": "在美国西南部的四角地带，人们从半地穴住屋迁入地面砌石的连排房舍，这一转变即普韦布洛第一期的标志。该期约在750至900年之间，并无确定的起始年份。",
+    "zh-Hant": "在美國西南部的四角地帶，人們從半地穴住屋遷入地面砌石的連排房舍，這一轉變即普韋布洛第一期的標誌。該期約在750至900年之間，並無確定的起始年份。"
+   }
+  },
+  {
+   "id": "baghdad_founded",
+   "year": 762,
+   "era": "world",
+   "stream": "islam",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Baghdad Founded on the Tigris",
+    "zh-Hans": "巴格达建于底格里斯河畔",
+    "zh-Hant": "巴格達建於底格里斯河畔"
+   },
+   "desc": {
+    "en": "The caliph al-Mansur laid out a round walled city on the Tigris, not far from the ruins of Babylon and Ctesiphon, and made it the seat of the Abbasid caliphate. For five centuries it was the largest city and the chief school of the Muslim world, until the Mongols burned it in 1258.",
+    "zh-Hans": "哈里发曼苏尔在底格里斯河畔筑起圆形城垣，距巴比伦与泰西封的废墟不远，定为阿拔斯王朝的都城。此后五百年间，它是穆斯林世界最大的城市与首要学府，直到1258年被蒙古人焚毁。",
+    "zh-Hant": "哈里發曼蘇爾在底格里斯河畔築起圓形城垣，距巴比倫與泰西封的廢墟不遠，定為阿拔斯王朝的都城。此後五百年間，它是穆斯林世界最大的城市與首要學府，直到1258年被蒙古人焚毀。"
+   }
+  },
+  {
+   "id": "trans_saharan_gold_trade",
+   "year": 800,
+   "era": "world",
+   "stream": "world",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Camel Caravans Carry Gold across the Sahara",
+    "zh-Hans": "驼队载金穿越撒哈拉",
+    "zh-Hant": "駝隊載金穿越撒哈拉"
+   },
+   "desc": {
+    "en": "Regular caravans linked the goldfields south of the desert with the Mediterranean, carrying gold and captives north and salt, cloth and books south. The traffic grew from about the eighth century with no year to open it, and it drew West Africa into the wider Muslim world.",
+    "zh-Hans": "定期的驼队把沙漠以南的金矿地带与地中海连通，北运黄金与奴隶，南运食盐、布匹与书籍。此项贸易约自八世纪起兴盛，无从确定起始年份；西非由此进入更广阔的穆斯林世界。",
+    "zh-Hant": "定期的駝隊把沙漠以南的金礦地帶與地中海連通，北運黃金與奴隸，南運食鹽、布匹與書籍。此項貿易約自八世紀起興盛，無從確定起始年份；西非由此進入更廣闊的穆斯林世界。"
+   }
+  },
+  {
+   "id": "hohokam_canals",
+   "year": 900,
+   "era": "world",
+   "stream": "americas",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Hohokam Canals Water the Sonoran Desert",
+    "zh-Hans": "霍霍坎人开渠灌溉索诺兰沙漠",
+    "zh-Hant": "霍霍坎人開渠灌溉索諾蘭沙漠"
+   },
+   "desc": {
+    "en": "In the valleys of the Salt and Gila rivers the Hohokam dug hundreds of kilometres of irrigation canals by hand and farmed the desert from them for centuries. The system grew from about the seventh century to its greatest reach in the 1300s, so no one year opens it.",
+    "zh-Hans": "在盐河与希拉河谷地，霍霍坎人以人力开凿数百公里灌溉渠，凭此在沙漠中耕作数百年。渠系约自七世纪起逐步扩展，至十四世纪达到最广，故无单一的起始年份。",
+    "zh-Hant": "在鹽河與希拉河谷地，霍霍坎人以人力開鑿數百公里灌溉渠，憑此在沙漠中耕作數百年。渠系約自七世紀起逐步擴展，至十四世紀達到最廣，故無單一的起始年份。"
+   }
+  },
+  {
+   "id": "chaco_great_houses",
+   "year": 900,
+   "era": "world",
+   "stream": "americas",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Great Houses Rise at Chaco Canyon",
+    "zh-Hans": "查科峡谷兴建大屋",
+    "zh-Hant": "查科峽谷興建大屋"
+   },
+   "desc": {
+    "en": "Pueblo Bonito and its neighbours grew into multi-storey stone great houses of hundreds of rooms, with round ceremonial kivas and roads running straight across the desert. Building ran from about 850 to 1130, so this year is a marker inside a long span.",
+    "zh-Hans": "博尼托遗址及其邻近聚落逐渐建成多层石砌大屋，房间数以百计，并有圆形的祭祀「基瓦」，又有笔直的道路横越荒漠。营建约自850年延续至1130年，故此年份只是长期过程中的一个标记。",
+    "zh-Hant": "博尼托遺址及其鄰近聚落逐漸建成多層石砌大屋，房間數以百計，並有圓形的祭祀「基瓦」，又有筆直的道路橫越荒漠。營建約自850年延續至1130年，故此年份只是長期過程中的一個標記。"
+   }
+  },
+  {
+   "id": "kingdom_of_england_united",
+   "year": 927,
+   "era": "world",
+   "stream": "europe",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "One Kingdom of the English",
+    "zh-Hans": "英格兰合为一国",
+    "zh-Hant": "英格蘭合為一國"
+   },
+   "desc": {
+    "en": "Athelstan took York in 927 and was the first to rule all the English kingdoms as one; other references date the beginning instead to Egbert of Wessex about 829. This is the kingdom whose church and English Bible the later parts of this chart follow.",
+    "zh-Hans": "927年埃塞尔斯坦攻取约克，首次以一君统辖英格兰诸国；也有著作把起点定在约829年韦塞克斯的爱格伯特。本图后段所记的英格兰教会与英文圣经，皆出于这一王国。",
+    "zh-Hant": "927年埃塞爾斯坦攻取約克，首次以一君統轄英格蘭諸國；也有著作把起點定在約829年韋塞克斯的愛格伯特。本圖後段所記的英格蘭教會與英文聖經，皆出於這一王國。"
+   }
+  },
+  {
+   "id": "ghana_empire_height",
+   "year": 1000,
+   "era": "world",
+   "stream": "world",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "The Empire of Ghana at Its Height",
+    "zh-Hans": "加纳帝国的鼎盛",
+    "zh-Hant": "加納帝國的鼎盛"
+   },
+   "desc": {
+    "en": "The Soninke kingdom of Ghana, in the grasslands north of the upper Niger, held the southern end of the gold routes and was described by Arab geographers as immensely rich. Its dates rest on those outside accounts alone, and the kingdom gave way to Mali in the thirteenth century.",
+    "zh-Hans": "索宁克人所建的加纳王国位于尼日尔河上游以北的草原地带，扼黄金商路的南端，阿拉伯地理学家称其富庶无比。其年代全凭这些外来记载推定，十三世纪后为马里所取代。",
+    "zh-Hant": "索寧克人所建的加納王國位於尼日爾河上游以北的草原地帶，扼黃金商路的南端，阿拉伯地理學家稱其富庶無比。其年代全憑這些外來記載推定，十三世紀後為馬里所取代。"
+   }
+  },
+  {
+   "id": "mahmud_ghazni_india",
+   "year": 1030,
+   "era": "world",
+   "stream": "india",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Mahmud of Ghazni's Raids into India End",
+    "zh-Hans": "伽色尼的马哈茂德侵印之役告终",
+    "zh-Hant": "伽色尼的馬哈茂德侵印之役告終"
+   },
+   "desc": {
+    "en": "From his capital in Afghanistan Mahmud led some seventeen campaigns into northern India between 1001 and his death in 1030, carrying off the wealth of its temples. His raids opened the way for the Muslim rule of the north that the Delhi Sultanate later made permanent.",
+    "zh-Hans": "马哈茂德以阿富汗为都，自1001年至1030年去世，约十七次出兵印度北部，掠取其庙宇财富。这些征伐为北印度的穆斯林统治开路，其后德里苏丹国将之固定下来。",
+    "zh-Hant": "馬哈茂德以阿富汗為都，自1001年至1030年去世，約十七次出兵印度北部，掠取其廟宇財富。這些征伐為北印度的穆斯林統治開路，其後德里蘇丹國將之固定下來。"
+   }
+  },
+  {
+   "id": "mesa_verde_cliff_dwellings",
+   "year": 1200,
+   "era": "world",
+   "stream": "americas",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Cliff Dwellings Built at Mesa Verde",
+    "zh-Hans": "梅萨维德建崖居",
+    "zh-Hant": "梅薩維德建崖居"
+   },
+   "desc": {
+    "en": "Ancestral Pueblo families built stone villages into the alcoves of the canyon walls at Mesa Verde and Canyon de Chelly, then left the whole region within a century. Tree-ring dates put most of the building between about 1190 and 1280.",
+    "zh-Hans": "先民普韦布洛人在梅萨维德与谢伊峡谷的岩壁凹处砌起石屋村落，却在一个世纪之内举族他迁。树轮年代把多数营建定在约1190至1280年之间。",
+    "zh-Hant": "先民普韋布洛人在梅薩維德與謝伊峽谷的岩壁凹處砌起石屋村落，卻在一個世紀之內舉族他遷。樹輪年代把多數營建定在約1190至1280年之間。"
+   }
+  },
+  {
+   "id": "inca_origins_cuzco",
+   "year": 1200,
+   "era": "world",
+   "stream": "americas",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "The Inca Settle at Cuzco",
+    "zh-Hans": "印加人定居库斯科",
+    "zh-Hant": "印加人定居庫斯科"
+   },
+   "desc": {
+    "en": "Before the empire the Inca were one small Andean people among many, holding the valley of Cuzco under chiefs whose deeds survive only in later oral tradition. The date is traditional, and the king list before Pachacuti in 1438 cannot be fixed to years.",
+    "zh-Hans": "在建立帝国之前，印加不过是安第斯山中的一个小族，据有库斯科河谷，其首领的事迹只见于后世口传。此年份出于传统，1438年帕查库特克之前的王统无法系于确年。",
+    "zh-Hant": "在建立帝國之前，印加不過是安第斯山中的一個小族，據有庫斯科河谷，其首領的事蹟只見於後世口傳。此年份出於傳統，1438年帕查庫特克之前的王統無法繫於確年。"
+   }
+  },
+  {
+   "id": "thule_expansion",
+   "year": 1200,
+   "era": "world",
+   "stream": "americas",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Thule Whalers Spread across the Arctic",
+    "zh-Hans": "图勒人横越北极扩张",
+    "zh-Hant": "圖勒人橫越北極擴張"
+   },
+   "desc": {
+    "en": "The Thule people, ancestors of today's Inuit, moved east from Alaska across the Canadian Arctic and reached Greenland, replacing the earlier Dorset inhabitants. Radiocarbon work has pushed the migration later than older accounts allowed, and reconstructions still differ by about two centuries.",
+    "zh-Hans": "图勒人是今日因纽特人的祖先，自阿拉斯加向东迁越加拿大北极地区，直抵格陵兰，取代了更早的多塞特居民。近年的碳十四测年把这次迁徙推后于旧说，各家复原仍相差约两百年。",
+    "zh-Hant": "圖勒人是今日因紐特人的祖先，自阿拉斯加向東遷越加拿大北極地區，直抵格陵蘭，取代了更早的多塞特居民。近年的碳十四測年把這次遷徙推後於舊說，各家復原仍相差約兩百年。"
+   }
+  },
+  {
+   "id": "saladin_takes_jerusalem",
+   "year": 1187,
+   "era": "world",
+   "stream": "islam",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Saladin Takes Jerusalem",
+    "zh-Hans": "萨拉丁夺取耶路撒冷",
+    "zh-Hant": "薩拉丁奪取耶路撒冷"
+   },
+   "desc": {
+    "en": "After destroying the crusader army at the Horns of Hattin in July, Saladin received the surrender of the city in October and ended eighty-eight years of Latin rule over it. The loss called out the Third Crusade, which won back the coast but never the city.",
+    "zh-Hans": "七月，萨拉丁在哈丁角歼灭十字军主力；十月耶路撒冷开城投降，拉丁人对该城八十八年的统治就此结束。这一失陷引发第三次十字军东征，收复了沿海诸城，却始终未能取回圣城。",
+    "zh-Hant": "七月，薩拉丁在哈丁角殲滅十字軍主力；十月耶路撒冷開城投降，拉丁人對該城八十八年的統治就此結束。這一失陷引發第三次十字軍東征，收復了沿海諸城，卻始終未能取回聖城。"
+   }
+  },
+  {
+   "id": "las_navas_de_tolosa",
+   "year": 1212,
+   "era": "world",
+   "stream": "europe",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Las Navas de Tolosa Breaks Muslim Spain",
+    "zh-Hans": "拉斯纳瓦斯德托洛萨之役重创西班牙穆斯林",
+    "zh-Hant": "拉斯納瓦斯德托洛薩之役重創西班牙穆斯林"
+   },
+   "desc": {
+    "en": "The kings of Castile, Aragon and Navarre, with Portuguese and other contingents, broke the Almohad army in the Sierra Morena on 16 July 1212. After it the Muslim states of Spain never recovered the south, and only Granada survived, until 1492.",
+    "zh-Hans": "1212年7月16日，卡斯蒂利亚、阿拉贡与纳瓦拉诸王联同葡萄牙等处援军，在莫雷纳山击溃阿尔摩哈德大军。此后西班牙的穆斯林政权再未能保住南方，只有格拉纳达支撑到1492年。",
+    "zh-Hant": "1212年7月16日，卡斯蒂利亞、阿拉貢與納瓦拉諸王聯同葡萄牙等處援軍，在莫雷納山擊潰阿爾摩哈德大軍。此後西班牙的穆斯林政權再未能保住南方，只有格拉納達支撐到1492年。"
+   }
+  },
+  {
+   "id": "mali_empire_founded",
+   "year": 1235,
+   "era": "world",
+   "stream": "world",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Sundiata Founds the Empire of Mali",
+    "zh-Hans": "松迪亚塔建立马里帝国",
+    "zh-Hant": "松迪亞塔建立馬里帝國"
+   },
+   "desc": {
+    "en": "Sundiata Keita defeated the Sosso king at Kirina and drew the Mande chiefdoms of the upper Niger into one state that came to hold the western goldfields. Its rulers professed Islam; the story is carried chiefly by griot oral epic, and this is the year usually given for the battle.",
+    "zh-Hans": "松迪亚塔·凯塔在基里纳击败苏苏国王，把尼日尔河上游的曼德诸邦合为一国，进而控制西部金矿。其历代君主奉伊斯兰教；此事主要靠格里奥的口传史诗流传，此处所取是通行的战役年份。",
+    "zh-Hant": "松迪亞塔·凱塔在基里納擊敗蘇蘇國王，把尼日爾河上游的曼德諸邦合為一國，進而控制西部金礦。其歷代君主奉伊斯蘭教；此事主要靠格里奧的口傳史詩流傳，此處所取是通行的戰役年份。"
+   }
+  },
+  {
+   "id": "mayapan_league",
+   "year": 1250,
+   "era": "world",
+   "stream": "americas",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Mayapan Rules Postclassic Yucatan",
+    "zh-Hans": "玛雅潘统治后古典期的尤卡坦",
+    "zh-Hant": "瑪雅潘統治後古典期的尤卡坦"
+   },
+   "desc": {
+    "en": "Three centuries after the classic Maya cities were abandoned, a walled capital at Mayapan governed much of Yucatan until a revolt broke it apart about 1441. Different reconstructions date its founding between about 1220 and 1250.",
+    "zh-Hans": "古典期玛雅城邦荒废三百年后，有城墙的玛雅潘成为都城，统辖尤卡坦大部，至约1441年因内乱瓦解。各家把其建立定在约1220至1250年之间。",
+    "zh-Hant": "古典期瑪雅城邦荒廢三百年後，有城牆的瑪雅潘成為都城，統轄尤卡坦大部，至約1441年因內亂瓦解。各家把其建立定在約1220至1250年之間。"
+   }
+  },
+  {
+   "id": "jews_expelled_england",
+   "year": 1290,
+   "era": "world",
+   "stream": "europe",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Jews Expelled from England",
+    "zh-Hans": "犹太人被逐出英格兰",
+    "zh-Hant": "猶太人被逐出英格蘭"
+   },
+   "desc": {
+    "en": "Edward I ordered every Jew out of the kingdom by All Saints' Day 1290, and no Jewish community was allowed there again until the 1650s. It was the first general expulsion from a European kingdom; France and Spain followed.",
+    "zh-Hans": "1290年，爱德华一世下令全境犹太人须于诸圣日前离境，此后直到1650年代英格兰始终不许犹太社群存在。这是欧洲王国中第一次全境驱逐，法国与西班牙相继效法。",
+    "zh-Hant": "1290年，愛德華一世下令全境猶太人須於諸聖日前離境，此後直到1650年代英格蘭始終不許猶太社群存在。這是歐洲王國中第一次全境驅逐，法國與西班牙相繼效法。"
+   }
+  },
+  {
+   "id": "great_zimbabwe",
+   "year": 1300,
+   "era": "world",
+   "stream": "world",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Great Zimbabwe at Its Height",
+    "zh-Hans": "大津巴布韦的鼎盛",
+    "zh-Hant": "大津巴布韋的鼎盛"
+   },
+   "desc": {
+    "en": "In the highlands between the Zambezi and the Limpopo a Shona kingdom raised massive walls of fitted stone laid without mortar, and traded gold and ivory down to the Indian Ocean coast. Building ran from about 1100 and the site was largely left by about 1450.",
+    "zh-Hans": "在赞比西河与林波波河之间的高原上，绍纳人的王国以不用灰浆的干砌石法筑起巨墙，并把黄金与象牙运往印度洋沿岸交易。营建约始于1100年，至1450年前后该地大致废弃。",
+    "zh-Hant": "在贊比西河與林波波河之間的高原上，紹納人的王國以不用灰漿的乾砌石法築起巨牆，並把黃金與象牙運往印度洋沿岸交易。營建約始於1100年，至1450年前後該地大致廢棄。"
+   }
+  },
+  {
+   "id": "marco_polo_book",
+   "year": 1298,
+   "era": "world",
+   "stream": "europe",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Marco Polo's Travels Written Down",
+    "zh-Hans": "《马可·波罗游记》成书",
+    "zh-Hant": "《馬可·波羅遊記》成書"
+   },
+   "desc": {
+    "en": "Held prisoner at Genoa, the Venetian dictated to a fellow captive an account of his years in the service of Kublai Khan, and copies spread across Europe. Readers doubted much of it, but it shaped what Europe expected of Asia, and Columbus kept an annotated copy.",
+    "zh-Hans": "这位威尼斯人被囚于热那亚时，向同狱者口述他在忽必烈朝中效力多年的见闻，抄本随即传遍欧洲。当时读者多半不信，但此书塑造了欧洲对亚洲的想象，哥伦布也藏有一部，且在书页上留有批注。",
+    "zh-Hant": "這位威尼斯人被囚於熱那亞時，向同獄者口述他在忽必烈朝中效力多年的見聞，抄本隨即傳遍歐洲。當時讀者多半不信，但此書塑造了歐洲對亞洲的想像，哥倫布也藏有一部，且在書頁上留有批註。"
+   }
+  },
+  {
+   "id": "montecorvino_beijing",
+   "year": 1307,
+   "era": "church",
+   "stream": "church",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "A Latin Archbishop at the Mongol Capital",
+    "zh-Hans": "拉丁教会在蒙古都城设总主教",
+    "zh-Hant": "拉丁教會在蒙古都城設總主教"
+   },
+   "desc": {
+    "en": "John of Montecorvino, a Franciscan who had reached Khanbaliq about 1294, was made archbishop there by Clement V in 1307; he had built a church, translated the New Testament and Psalms into Mongolian, and trained a choir of boys. The mission did not outlast Mongol rule in China.",
+    "zh-Hans": "方济各会士孟高维诺约于1294年抵达汗八里（今北京），1307年由教皇克莱孟五世立为该地总主教。他在当地建有教堂，把新约与诗篇译成蒙古文，又训练了一队男童唱诗。这项传教事业未能存续过蒙古人在中国的统治。",
+    "zh-Hant": "方濟各會士孟高維諾約於1294年抵達汗八里（今北京），1307年由教皇克萊孟五世立為該地總主教。他在當地建有教堂，把新約與詩篇譯成蒙古文，又訓練了一隊男童唱詩。這項傳教事業未能存續過蒙古人在中國的統治。"
+   }
+  },
+  {
+   "id": "mansa_musa_hajj",
+   "year": 1324,
+   "era": "world",
+   "stream": "world",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Mansa Musa's Pilgrimage to Mecca",
+    "zh-Hans": "曼萨·穆萨朝觐麦加",
+    "zh-Hant": "曼薩·穆薩朝覲麥加"
+   },
+   "desc": {
+    "en": "The ruler of Mali crossed the Sahara to Mecca with a great train and so much gold that its price in Cairo was said to be depressed for years afterward. The journey put Mali on European maps and drew scholars and builders to Timbuktu; sources date it 1324 or 1325.",
+    "zh-Hans": "马里的君主率庞大随行队伍穿越撒哈拉前往麦加，携金之多，据说使开罗的金价多年不振。此行使马里出现在欧洲的地图上，也把学者与工匠引向廷巴克图；史料把年份记为1324或1325年。",
+    "zh-Hant": "馬里的君主率龐大隨行隊伍穿越撒哈拉前往麥加，攜金之多，據說使開羅的金價多年不振。此行使馬里出現在歐洲的地圖上，也把學者與工匠引向廷巴克圖；史料把年份記為1324或1325年。"
+   }
+  },
+  {
+   "id": "kilwa_swahili_coast",
+   "year": 1331,
+   "era": "world",
+   "stream": "world",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "The Trading Towns of the Swahili Coast",
+    "zh-Hans": "斯瓦希里海岸的贸易城邦",
+    "zh-Hant": "斯瓦希里海岸的貿易城邦"
+   },
+   "desc": {
+    "en": "Kilwa, Mombasa and their neighbours on the East African coast grew rich shipping gold, ivory and slaves into the Indian Ocean trade, building in coral stone and worshipping as Muslims in a Bantu tongue. The year is that of Ibn Battuta's visit to Kilwa, one of the few outside descriptions of the coast at its height.",
+    "zh-Hans": "东非沿岸的基尔瓦、蒙巴萨等城，靠向印度洋输出黄金、象牙与奴隶而致富，以珊瑚石建屋，操班图语而奉伊斯兰教。此处年份取伊本·白图泰到访基尔瓦之年，那是这一带全盛时期少有的外来记述。",
+    "zh-Hant": "東非沿岸的基爾瓦、蒙巴薩等城，靠向印度洋輸出黃金、象牙與奴隸而致富，以珊瑚石建屋，操班圖語而奉伊斯蘭教。此處年份取伊本·白圖泰到訪基爾瓦之年，那是這一帶全盛時期少有的外來記述。"
+   }
+  },
+  {
+   "id": "jews_expelled_france",
+   "year": 1394,
+   "era": "world",
+   "stream": "europe",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Jews Expelled from France",
+    "zh-Hans": "犹太人被逐出法国",
+    "zh-Hant": "猶太人被逐出法國"
+   },
+   "desc": {
+    "en": "Charles VI ordered the Jews out of the royal domain in September 1394, the last of several French expulsions reaching back to 1182. With England already closed and Spain to follow in 1492, the centre of Jewish life in Europe moved east into Poland and the German lands.",
+    "zh-Hans": "1394年9月，查理六世下令犹太人离开王领，这是自1182年以来法国历次驱逐中的最后一次。英格兰早已关门，西班牙于1492年继之，欧洲犹太人的重心自此东移至波兰与德意志各邦。",
+    "zh-Hant": "1394年9月，查理六世下令猶太人離開王領，這是自1182年以來法國歷次驅逐中的最後一次。英格蘭早已關門，西班牙於1492年繼之，歐洲猶太人的重心自此東移至波蘭與德意志各邦。"
+   }
+  },
+  {
+   "id": "battle_of_nicopolis",
+   "year": 1396,
+   "era": "world",
+   "stream": "europe",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Crusaders Crushed at Nicopolis",
+    "zh-Hans": "尼科波利斯十字军覆灭",
+    "zh-Hant": "尼科波利斯十字軍覆滅"
+   },
+   "desc": {
+    "en": "A western army raised to hold back the Ottomans in the Balkans was destroyed by Bayezid I on the Danube on 25 September 1396. It was the last great crusade launched from western Europe, and its failure left Constantinople with nothing to hope for but time.",
+    "zh-Hans": "为阻挡奥斯曼人在巴尔干推进而集结的西方大军，于1396年9月25日在多瑙河畔被巴耶塞特一世全歼。这是西欧发起的最后一次大规模十字军东征，其败使君士坦丁堡再无可指望的援手，只余时间。",
+    "zh-Hant": "為阻擋鄂圖曼人在巴爾幹推進而集結的西方大軍，於1396年9月25日在多瑙河畔被巴耶塞特一世全殲。這是西歐發起的最後一次大規模十字軍東征，其敗使君士坦丁堡再無可指望的援手，只餘時間。"
+   }
+  },
+  {
+   "id": "battle_of_ankara",
+   "year": 1402,
+   "era": "world",
+   "stream": "islam",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Timur Defeats the Ottomans at Ankara",
+    "zh-Hans": "帖木儿在安卡拉击败奥斯曼",
+    "zh-Hant": "帖木兒在安卡拉擊敗鄂圖曼"
+   },
+   "desc": {
+    "en": "Timur broke the Ottoman army on 20 July 1402 and carried Sultan Bayezid off a prisoner, and the Ottoman state fell into ten years of civil war among his sons. Constantinople, which Bayezid had been blockading, gained another fifty years by it.",
+    "zh-Hans": "1402年7月20日，帖木儿击溃奥斯曼军队，掳走苏丹巴耶塞特，奥斯曼随即陷入诸子争位的十年内战。原本被巴耶塞特封锁的君士坦丁堡，因此又多得五十年。",
+    "zh-Hant": "1402年7月20日，帖木兒擊潰鄂圖曼軍隊，擄走蘇丹巴耶塞特，鄂圖曼隨即陷入諸子爭位的十年內戰。原本被巴耶塞特封鎖的君士坦丁堡，因此又多得五十年。"
+   }
+  },
+  {
+   "id": "portuguese_azores_settled",
+   "year": 1439,
+   "era": "world",
+   "stream": "europe",
+   "approximate": true,
+   "basis": "conventional",
+   "title": {
+    "en": "Portugal Settles the Azores",
+    "zh-Hans": "葡萄牙移民亚速尔群岛",
+    "zh-Hant": "葡萄牙移民亞速爾群島"
+   },
+   "desc": {
+    "en": "The crown authorised settlement of the mid-Atlantic islands in 1439, some years after Portuguese ships first sighted them. They became the turning point and victualling station of the Atlantic sailing routes, and Portugal's captains worked south along the African coast in the same years.",
+    "zh-Hans": "1439年，葡萄牙王室准许移民这片大西洋中部的群岛；此前葡船发现该地已有数年。群岛成为大西洋航路的转折点与补给站，同一时期葡萄牙船长也正沿非洲海岸逐步南下。",
+    "zh-Hant": "1439年，葡萄牙王室准許移民這片大西洋中部的群島；此前葡船發現該地已有數年。群島成為大西洋航路的轉折點與補給站，同一時期葡萄牙船長也正沿非洲海岸逐步南下。"
+   }
+  },
+  {
+   "id": "jews_expelled_spain",
+   "year": 1492,
+   "era": "world",
+   "stream": "europe",
+   "approximate": false,
+   "basis": "conventional",
+   "title": {
+    "en": "Jews Expelled from Spain",
+    "zh-Hans": "犹太人被逐出西班牙",
+    "zh-Hant": "猶太人被逐出西班牙"
+   },
+   "desc": {
+    "en": "Three months after Granada fell, Ferdinand and Isabella gave the Jews of their kingdoms, Sicily and Sardinia among them, until the end of July to accept baptism or leave. Perhaps a hundred thousand went, many into Ottoman lands, and Sephardic Judaism was scattered across the Mediterranean.",
+    "zh-Hans": "格拉纳达陷落三个月后，斐迪南与伊莎贝拉下令其治下各邦（包括西西里与撒丁尼亚）的犹太人，须在七月底以前受洗或离境。去者或有十万，多往奥斯曼境内，塞法迪犹太人自此散布地中海各地。",
+    "zh-Hant": "格拉納達陷落三個月後，斐迪南與伊莎貝拉下令其治下各邦（包括西西里與撒丁尼亞）的猶太人，須在七月底以前受洗或離境。去者或有十萬，多往鄂圖曼境內，塞法迪猶太人自此散布地中海各地。"
    }
   }
  ]

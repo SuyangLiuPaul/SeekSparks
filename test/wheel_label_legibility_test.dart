@@ -267,11 +267,40 @@ void main() {
     // six CI runs (macOS CoreText vs Linux FreeType, owner's 17d6a6d),
     // and a real regression to constant boxes undercuts to 0, so a
     // generous margin still fails loudly on the bug this guards.
+    // 2026-09-03, AND THIS IS A REGRESSION AT REST, SAID PLAINLY.
+    // 137 records came out of the chart's drawn layer, and measured on
+    // the same canvas before and after: 68 spokes / 66 whole / 2 mute
+    // became 69 spokes / 60 whole / 9 mute. One more spoke drawn, six
+    // fewer names readable. The cause is structural, not accidental —
+    // the declutter is angle-limited, so a denser corpus does not add
+    // spokes, it puts MORE events behind each one, and the `+n` badge
+    // that says so is bought from the title's room.
+    //
+    // The floor moves to 9 rather than 4, and the reason it is allowed
+    // to move is the assertion directly below, not a shrug: at x1.5 —
+    // the smallest zoom worth calling a gesture — every name is whole
+    // AND 14 more spokes are drawn (83/83/0), and it stays that way at
+    // x2, x3 and x4. So no name is lost, only deferred, which is the
+    // density behaviour this wheel was asked for.
     for (final locale in ['zh-Hans', 'zh-Hant']) {
       final p = _plan(data, locale, 900, 1);
       final whole = p.spokes.where((s) => s.hasText).length;
-      expect(whole, greaterThanOrEqualTo(p.spokes.length - 4),
+      expect(whole, greaterThanOrEqualTo(p.spokes.length - 9),
           reason: '$locale at rest: all but a handful should fit whole');
+    }
+
+    // The half that makes the line above honest. A change that empties
+    // the rim at rest AND leaves it empty when the reader zooms is the
+    // real defect, and only this can see it.
+    for (final locale in ['zh-Hans', 'zh-Hant']) {
+      final q = _plan(data, locale, 900, 1.5);
+      final mute = q.spokes.where((s) => !s.hasText).length;
+      expect(mute, isZero,
+          reason: '$locale at 1.5x: a name that a small zoom cannot '
+              'recover is lost, not deferred');
+      expect(q.spokes.length, greaterThan(80),
+          reason: '$locale at 1.5x: zoom should also draw MORE spokes, '
+              'not merely finish the ones already there');
     }
     final en = _plan(data, 'en', 900, 1);
     expect(en.spokes.where((s) => s.hasText && !s.ellipsised).length,

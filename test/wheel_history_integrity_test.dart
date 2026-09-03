@@ -126,14 +126,37 @@ void main() {
     /// A name and the roman numeral that follows it: `Ramesses II`,
     /// `Tiglath-Pileser III`, `Darius I`. A bare numeral on its own is
     /// ignored — `I` and `V` are ordinary words too often to be evidence.
-    final regnal = RegExp(r'\b([A-Z][A-Za-z-]+)\s+([IVXL]{1,5})\b');
+    ///
+    /// 2026-09-03: it takes the WHOLE run of capitalised words before the
+    /// numeral, not just the last one. With only the last, `John Paul II`
+    /// keyed as `paul ii` and collided with `Paul II` — two popes five
+    /// centuries apart reported as one man reigning twice, which is what
+    /// this check exists to deny. A compound regnal name is a different
+    /// name, not the same one with a word in front.
+    final regnal =
+        RegExp(r'\b((?:[A-Z][A-Za-z-]+\s+)*[A-Z][A-Za-z-]+)\s+([IVXL]{1,5})\b');
+
+    /// …but an HONORIFIC in front is not part of the name, and dropping
+    /// it is what keeps `Pope Paul II` and `Paul II` the same key — the
+    /// clash this check is actually for.
+    const honorifics = {
+      'pope', 'king', 'queen', 'emperor', 'empress', 'pharaoh', 'tsar',
+      'czar', 'sultan', 'caliph', 'saint', 'st', 'antipope',
+    };
+    String regnalKey(RegExpMatch m) {
+      final words = m.group(1)!.split(RegExp(r'\s+'));
+      while (words.length > 1 && honorifics.contains(words.first.toLowerCase())) {
+        words.removeAt(0);
+      }
+      return '${words.join(' ')} ${m.group(2)}'.toLowerCase();
+    }
 
     /// `stream|name numeral` -> the years it is stated at.
     final seen = <String, Set<int>>{};
     final examples = <String>{};
     void note(String stream, String name, int year) {
       for (final m in regnal.allMatches(name)) {
-        final key = '$stream|${m.group(0)!.toLowerCase()}';
+        final key = '$stream|${regnalKey(m)}';
         examples.add(m.group(0)!);
         seen.putIfAbsent(key, () => <int>{}).add(year);
       }
@@ -147,7 +170,7 @@ void main() {
       final end = (p['end'] as num?)?.toInt() ?? start;
       for (final m
           in regnal.allMatches((p['name'] as Map)['en'] as String)) {
-        final key = '${p['stream']}|${m.group(0)!.toLowerCase()}';
+        final key = '${p['stream']}|${regnalKey(m)}';
         examples.add(m.group(0)!);
         reigns.putIfAbsent(key, () => []).add((start: start, end: end));
       }

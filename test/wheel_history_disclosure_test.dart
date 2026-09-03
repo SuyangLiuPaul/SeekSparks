@@ -158,36 +158,40 @@ void main() {
     }
     // And the converse, so this cannot be satisfied by marking everything
     // conventional again.
-    // 152 since 2026-09-03: 59, plus 57 church-history spans (42
+    // 187 since 2026-09-03: 59, plus 57 church-history spans (42
     // pontificates, 8 Byzantine reigns, 5 crusades, the Latin Empire and
     // the Order of Saint John), plus 30 Roman and Greek, plus Moab,
     // Ammon and Edom, plus the Himyarite kingdom, the Liao and the
-    // Tibetan empire. Every one is conventional and none could be
+    // Tibetan empire, plus the 35 spans the chart's own drawn layer
+    // turned up — popes the chain had skipped, Visigothic and
+    // Vandal kingdoms, the Jin, Songhai, Mali, Wari and the rest.
+    // Every one is conventional and none could be
     // anything else: scripture dates no pope and no emperor, and gives
     // no regnal years for Israel's neighbours either.
-    expect(data.powers.where((p) => p.basis == 'conventional').length, 152);
+    expect(data.powers.where((p) => p.basis == 'conventional').length, 187);
   });
 
   test('both spellings of a power reference reach the model', () {
-    // 13 records spell it `ref`, 14 spell it `refs`. The model reads
+    // 14 records spell it `ref`, 14 spell it `refs`. The model reads
     // both into one list; if it ever stopped reading one, exactly one of
     // these counts would drop to zero and nothing else would fail. The
     // three that joined on 2026-09-03 — Moab, Ammon and Edom — all took
-    // the singular, which is why this half moved and the other did not.
+    // the singular, and so did `hasmonean-john-hyrcanus` later the same
+    // day, which is why this half has moved twice and the other has not.
     final singular = records('powers')
         .where((p) => (p['ref'] as String?)?.isNotEmpty ?? false)
         .toList();
     final plural =
         records('powers').where((p) => (p['refs'] as List?)?.isNotEmpty ?? false);
-    expect(singular.length, 13);
+    expect(singular.length, 14);
     expect(plural.length, 14);
     for (final p in singular) {
       final parsed = data.powers.firstWhere((q) => q.id == p['id']);
       expect(parsed.refs, contains(p['ref']), reason: p['id'] as String);
     }
     final carried = data.powers.where((p) => p.refs.isNotEmpty).length;
-    expect(carried, 27);
-    expect(data.powers.fold<int>(0, (n, p) => n + p.refs.length), 45);
+    expect(carried, 28);
+    expect(data.powers.fold<int>(0, (n, p) => n + p.refs.length), 46);
   });
 
   /// Extends `wheel_history_asset_test.dart`'s resolvability sweep, which
@@ -206,9 +210,9 @@ void main() {
     };
     // 67 since 2026-09-03: Nahum 3:8 on the sack of Thebes and
     // 2 Kings 17:3-4 on Hoshea's appeal to So of Egypt.
-    expect(byCarrier['event']!.length, 67);
+    expect(byCarrier['event']!.length, 69);
     expect(byCarrier['nation']!.length, 82);
-    expect(byCarrier['power']!.length, 45);
+    expect(byCarrier['power']!.length, 46);
 
     final bad = <String>[];
     for (final entry in byCarrier.entries) {
