@@ -4796,6 +4796,28 @@ class _WorldWheelPainter extends CustomPainter {
       if (l.name.isNotEmpty && l.nameSize > 0) {
         _tangentialLabel(canvas, c, l.centre, l.name, l.nameA0, l.nameSweep,
             l.nameSize, sel ? 1.0 : 0.75);
+      } else {
+        // A NAMELESS ARC STILL SAYS IT IS SOMETHING. Reported with a
+        // screenshot of two of these: 「很多就像一个线一样，按也很难按到，
+        // 打也打不开」. The tap half is fixed (`nearestArcAt` gives every
+        // arc at least a finger), but a target the reader cannot see is
+        // not a target either — a bare two-tick bar reads as noise, not
+        // as a record with a sheet behind it.
+        //
+        // A dot at the arc's own centre, NOT a widened arc. Painting a
+        // seven-day reign as wide as a finger would make Zimri look like
+        // twenty years on a chart whose whole claim is that width means
+        // duration. The dot says "there is something here" without
+        // saying anything false about how long it lasted, which is the
+        // same bargain the spokes' `+n` badge already strikes.
+        final mid = l.arc.a0 + l.arc.sweep / 2;
+        canvas.drawCircle(
+          c + Offset(math.cos(mid), math.sin(mid)) * l.centre,
+          math.min(1.6, l.stroke * 0.28),
+          Paint()
+            ..color = l.color
+                .withValues(alpha: (alpha * 2.6).clamp(0.0, 1.0)),
+        );
       }
     }
     final chosen = _find(lives, (l) => l.id == selectedId);
