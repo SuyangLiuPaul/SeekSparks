@@ -28,7 +28,7 @@ void setBootDeepLinkCallback(void Function() cb) {}
 void onRouteChanged() {}
 
 /// Native targets: no URL bar, nothing for a page to claim.
-void claimUrl(String? path) {}
+void claimUrl(String? path, {Object? owner}) {}
 
 /// Native targets: nothing can have claimed a URL there isn't.
 String? get claimedPath => null;

@@ -265,7 +265,8 @@ void main() {
   ///
   /// They are not. The wheel's selection lives in `_selectedId`, in
   /// `State`, and the address bar is claimed with a CONSTANT: the page
-  /// calls `claimUrl(kWheelUrlPath)` on open and `claimUrl(null)` on
+  /// calls `claimUrl(kWheelUrlPath, owner: this)` on open and
+  /// `claimUrl(null, owner: this)` on
   /// close, and `kWheelUrlPath` is the literal `/wheel`. There is no
   /// second argument, no interpolation, no query, and the page reads and
   /// writes no `SharedPreferences` at all — so no id of any kind is
@@ -284,8 +285,16 @@ void main() {
     expect(RegExp(r'claimUrl\(').allMatches(src).length, 2,
         reason: 'the page claims the URL on open and releases it on close, '
             'and nothing else may write the address bar');
-    expect(src, contains('claimUrl(kWheelUrlPath)'));
-    expect(src, contains('claimUrl(null)'));
+    // 2026-09-03: both calls carry `owner: this` now, so a wheel that
+    // is closing cannot release a claim the wheel that replaced it
+    // holds (`UrlClaim`). What this test is about is unchanged — the
+    // PATH is still the constant and still carries no record id — so
+    // the match stops before the argument list ends rather than
+    // pretending the extra argument is not there.
+    expect(src, contains('claimUrl(kWheelUrlPath, owner: this)'));
+    expect(src, contains('claimUrl(null, owner: this)'));
+    expect(src, isNot(contains("claimUrl('")),
+        reason: 'the path must stay the constant, never a literal');
     expect(src, contains("const String kWheelUrlPath = '/wheel';"),
         reason: 'the claimed path is a literal — the moment it is built '
             'from a record id, a saved link starts carrying one');

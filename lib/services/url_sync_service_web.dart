@@ -43,6 +43,7 @@ import 'package:seeksparks/constants/bible_versions.dart'
 import 'package:seeksparks/constants/book_slugs.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/providers/main_provider.dart';
+import 'package:seeksparks/utils/url_claim.dart';
 import 'package:seeksparks/services/fetch_books.dart';
 import 'package:seeksparks/services/fetch_verses.dart';
 import 'package:seeksparks/utils/history_state_repair.dart';
@@ -150,9 +151,11 @@ void setBootDeepLinkCallback(void Function() cb) {
 /// (`#/minified:Xt`); 350 ms later we put the share link back. The
 /// `_lastWrittenUrl = null` reset forces the write even though our
 /// state hasn't changed since the last one.
-void claimUrl(String? path) {
-  if (_claimedPath == path) return;
-  _claimedPath = path;
+void claimUrl(String? path, {Object? owner}) {
+  // The claim moves only if `UrlClaim` says it moved — a release from a
+  // page that has already been superseded is refused there. See
+  // `UrlClaim` for the ordering that makes that necessary.
+  if (!_claim.set(path, owner: owner)) return;
   if (!_initialized) return;
   // Write immediately so the address bar is right the moment the page
   // opens, and right again the moment it closes.
@@ -177,11 +180,13 @@ void onRouteChanged() {
   });
 }
 /// A page's claim on the URL, or null when the reader link owns it.
-/// See `UrlSyncService.claimUrl`.
-String? _claimedPath;
+/// See `UrlSyncService.claimUrl` and `UrlClaim`.
+final UrlClaim _claim = UrlClaim();
+
+String? get _claimedPath => _claim.path;
 
 /// The claim, read-only. See `UrlSyncService.claimedPath`.
-String? get claimedPath => _claimedPath;
+String? get claimedPath => _claim.path;
 
 bool _isApplyingFromUrl = false;
 Timer? _writeDebounce;
@@ -317,7 +322,15 @@ Future<void> _applyHashToState(String rawHash, {bool isBoot = false}) async {
   // recording API went with the post-splash push it existed for, so no
   // cold-open push can quietly come back without re-adding it.
   final path = rawHash.startsWith('#') ? rawHash.substring(1) : rawHash;
-  if (path.startsWith('/wheel')) return;
+  // 2026-09-03: and a hash handed over while a PAGE owns the address bar
+  // is a history entry from underneath that page — Back off the wheel
+  // delivers one — so it does not drive the reader either. Both halves
+  // of the rule, and the browser reproduction behind the second, are in
+  // `urlMayDriveReader`.
+  if (!urlMayDriveReader(
+      path: path, isBoot: isBoot, claimedPath: _claim.path)) {
+    return;
+  }
 
   final parsed = _parseHash(rawHash);
   if (parsed == null) return;

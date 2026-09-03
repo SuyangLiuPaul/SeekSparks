@@ -1150,15 +1150,33 @@ class _RootRouter extends StatefulWidget {
 
 class _RootRouterState extends State<_RootRouter> {
   /// The splash is a cold-start affordance, and as of 2026-08-08 this
-  /// router can be torn down mid-session: SmallScreenGate wraps `home:`,
-  /// so dragging a desktop window below the workbench's width and back
-  /// unmounts and remounts this subtree. Replaying the splash on the way
-  /// back would be a regression introduced by that move, so "the splash
-  /// has been shown" is session state rather than widget state.
+  /// router could be torn down mid-session: SmallScreenGate wrapped
+  /// `home:`, so dragging a desktop window below the workbench's width
+  /// and back unmounted and remounted this subtree. Replaying the splash
+  /// on the way back would have been a regression introduced by that
+  /// move, so "the splash has been shown" is session state rather than
+  /// widget state.
+  ///
+  /// 2026-09-03: THE TEARDOWN IS GONE WITH THE GATE. `home:` is now
+  /// `Builder → RetiredVersionNotice → _RootRouter`, and
+  /// `RetiredVersionNotice.build` returns `widget.child` untouched on
+  /// every path — it speaks through a SnackBar, never a wrapper — so
+  /// nothing above this router changes shape mid-session and this state
+  /// is not torn down. `retired_version_notice_passthrough_test.dart`
+  /// holds that shape, because it is the whole reason the pair below is
+  /// safe.
+  ///
+  /// Both flags stay static anyway, and [_deepLinkHandled] became static
+  /// with this note. They are two halves of one fact — "this session has
+  /// already booted" — and splitting them across static and instance
+  /// storage is what the open item flagged. Note the asymmetry ran the
+  /// SAFE way: on a remount `_showHome` starts true, so `_advance` (and
+  /// with it `_handleDeepLink`) never ran at all, which would have
+  /// DROPPED a boot link rather than re-firing one. Neither happens now.
   static bool _splashDone = false;
+  static bool _deepLinkHandled = false;
 
   bool _showHome = _splashDone;
-  bool _deepLinkHandled = false;
 
   /// v1.3.62 UX: set (via the UrlSyncService callback) when a boot
   /// hash deep link (`#/<book>/<ch>?v=`) was applied — the next home

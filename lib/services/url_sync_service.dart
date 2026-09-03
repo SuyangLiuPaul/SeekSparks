@@ -78,7 +78,15 @@ class UrlSyncService {
   /// instead. A page calls this with its own path on open and with
   /// null on close; while a claim is held, that path is what gets
   /// written and what a shared link reopens. Native targets no-op.
-  static void claimUrl(String? path) => impl.claimUrl(path);
+  /// 2026-09-03: [owner] identifies the CALLING page, and a release
+  /// (`path: null`) from a page that no longer holds the claim is
+  /// refused. Flutter disposes a closing route after the next route's
+  /// `initState`, so without it, closing and reopening the wheel left
+  /// the claim null with a wheel on screen and the reader's own link in
+  /// the address bar underneath it. Omitting [owner] releases
+  /// unconditionally, as this always did.
+  static void claimUrl(String? path, {Object? owner}) =>
+      impl.claimUrl(path, owner: owner);
 
   /// The path a page currently holds through [claimUrl], or null when
   /// the reader link owns the URL.

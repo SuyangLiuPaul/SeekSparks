@@ -1127,7 +1127,9 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
     // Own the address bar while this page is up, so a reader who
     // shares the link sends people to the wheel and not to whatever
     // chapter they happened to have open behind it.
-    UrlSyncService.claimUrl(kWheelUrlPath);
+    // `owner: this` so this State's own release cannot clear a claim a
+    // LATER wheel has taken over — see `UrlClaim`.
+    UrlSyncService.claimUrl(kWheelUrlPath, owner: this);
   }
 
   void _onZoom() {
@@ -1179,7 +1181,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage> {
 
   @override
   void dispose() {
-    UrlSyncService.claimUrl(null);
+    UrlSyncService.claimUrl(null, owner: this);
     _viewer.removeListener(_onZoom);
     _viewer.dispose();
     _findCtl.dispose();
