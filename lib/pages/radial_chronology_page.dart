@@ -3180,7 +3180,27 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
     while (a < startRad) {
       a += 2 * math.pi;
     }
-    if (a - startRad > sweepRad) return;
+    // OUTSIDE THE SWEEP IS BLANK PAPER, AND BLANK PAPER DESELECTS.
+    //
+    // The wheel sweeps 320 degrees, so a 40-degree wedge carries no
+    // band, no arc and no label — and on a phone at deep zoom that
+    // wedge is most of what is on the screen. This used to `return`
+    // outright, which meant the one part of the chart a reader would
+    // naturally tap to say "never mind" was the one part that could not
+    // say it: the selection stayed, and everything else on the wheel
+    // stayed dimmed to 0.35 with no way back short of the reset button.
+    // Reported from an iPhone at 1049%: 「这个可以选中，但是按空白地方
+    // 不能取消选中」.
+    //
+    // The fall-through at the end of this method has always cleared the
+    // selection for a tap that hit nothing — inside the hub, or outside
+    // the rim. This makes the empty wedge the same kind of nothing,
+    // rather than a hole the gesture fell into before it could get
+    // there.
+    if (a - startRad > sweepRad) {
+      if (_selectedId != null) _select(null);
+      return;
+    }
 
     final rHub = side * _kHubFrac;
     final rBands = side * _kBandsFrac;
