@@ -115,6 +115,26 @@ verify_version_in() {
   return 1
 }
 
+# Recover from a stale build rather than only reporting one.
+#
+# `flutter clean` is the known fix and this script has now needed it
+# twice in one afternoon — including once WITHIN a single invocation,
+# where the iOS framework verified correctly and the APK built minutes
+# later from the same defines did not. Building two targets in one run
+# is apparently enough to leave the second reading a stale kernel, so a
+# check that only reports leaves the operator to run three commands by
+# hand every time. This makes the command do what its name says.
+#
+# Once only. If a clean rebuild still lacks the version string then the
+# cause is not the cache, and looping would just hide it.
+clean_rebuild() {
+  local build_fn="$1"
+  echo "==> stale build detected; flutter clean and rebuilding once" >&2
+  "$FLUTTER" clean
+  "$FLUTTER" pub get
+  "$build_fn"
+}
+
 IOS_DEVICES=(
   "00008140-000C5D6910E3C01C|iPhone 16 Pro Max"
   "00008103-000A24441131001E|iPad Pro 11-inch"
@@ -129,10 +149,13 @@ rc=0
 if [[ "$DO_IOS" = "1" ]]; then
   echo ""
   echo "→ flutter build ios --release ${DEFINES[*]}"
-  "$FLUTTER" build ios --release "${DEFINES[@]}"
-  verify_version_in \
-    "$PROJECT/build/ios/iphoneos/Runner.app/Frameworks/App.framework/App" \
-    "the iOS App.framework"
+  build_ios() { "$FLUTTER" build ios --release "${DEFINES[@]}"; }
+  IOS_APP_BIN="$PROJECT/build/ios/iphoneos/Runner.app/Frameworks/App.framework/App"
+  build_ios
+  if ! verify_version_in "$IOS_APP_BIN" "the iOS App.framework"; then
+    clean_rebuild build_ios
+    verify_version_in "$IOS_APP_BIN" "the iOS App.framework"
+  fi
   if [[ "$DO_INSTALL" = "1" ]]; then
     for entry in "${IOS_DEVICES[@]}"; do
       udid="${entry%|*}"; name="${entry#*|}"
@@ -157,13 +180,27 @@ fi
 if [[ "$DO_ANDROID" = "1" ]]; then
   echo ""
   echo "→ flutter build apk --release --flavor intl ${DEFINES[*]}"
-  "$FLUTTER" build apk --release --flavor intl "${DEFINES[@]}"
+  build_apk() {
+    "$FLUTTER" build apk --release --flavor intl "${DEFINES[@]}"
+  }
+  build_apk
   APK="$PROJECT/build/app/outputs/flutter-apk/app-intl-release.apk"
   # The version lives in the compiled Dart, so unpack libapp.so rather
   # than scanning the whole 166 MB archive.
-  SO_DIR="$(mktemp -d)"
-  unzip -o -q "$APK" "lib/arm64-v8a/libapp.so" -d "$SO_DIR" 2>/dev/null || true
-  verify_version_in "$SO_DIR/lib/arm64-v8a/libapp.so" "the APK's libapp.so"
+  check_apk() {
+    # A fresh directory per attempt, so a rebuild is never verified
+    # against the previous attempt's extracted copy — which would make
+    # the retry pass on stale evidence, the exact failure this whole
+    # check exists to catch.
+    local dir
+    dir="$(mktemp -d)"
+    unzip -o -q "$APK" "lib/arm64-v8a/libapp.so" -d "$dir" 2>/dev/null || true
+    verify_version_in "$dir/lib/arm64-v8a/libapp.so" "the APK's libapp.so"
+  }
+  if ! check_apk; then
+    clean_rebuild build_apk
+    check_apk
+  fi
   if [[ "$DO_INSTALL" = "1" ]]; then
     for entry in "${ANDROID_DEVICES[@]}"; do
       serial="${entry%|*}"; name="${entry#*|}"
@@ -178,5 +215,12 @@ if [[ "$DO_ANDROID" = "1" ]]; then
 fi
 
 echo ""
-echo "✓ native v$APP_VERSION built${DO_INSTALL:+ and installed}."
+# `${DO_INSTALL:+...}` was wrong here: DO_INSTALL is "0" under
+# --no-install, which is NON-EMPTY, so the script claimed it had
+# installed when it had not.
+if [[ "$DO_INSTALL" = "1" ]]; then
+  echo "✓ native v$APP_VERSION built and installed."
+else
+  echo "✓ native v$APP_VERSION built (not installed)."
+fi
 exit "$rc"
