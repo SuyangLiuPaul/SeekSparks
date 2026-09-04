@@ -285,6 +285,7 @@ filenames alone:
 | [`AGENTS.md`](AGENTS.md) | **Start here if you're an AI (or a human) picking this project up.** The five-minute orientation: where Flutter lives, the non-negotiable rules, the three traps that have cost the most time, and the current layout. |
 | [`PROJECT_STATE.md`](PROJECT_STATE.md) | The compact, current-state answer to "where is this project right now" — what's built, what's queued, what version is deployed where. Maintained every iteration by the unattended work loop. |
 | [`HANDOFF.md`](HANDOFF.md) | Append-only running log, newest entry on top, one entry per ship. This is where the *history* of a decision lives, in more detail than `PROJECT_STATE.md` keeps. |
+| [`docs/OPEN-ITEMS.md`](docs/OPEN-ITEMS.md) | Everything **not** done, in one place: bugs, unfinished features, decisions waiting on the owner, and operational landmines. Every item is marked either verified on a date or carried forward unchecked, so a reader knows which are facts and which are leads. |
 | `docs/DATA-INTEGRITY.md` | Every cross-check ever run against the bundled data, numbered, with a measured count and a verdict for each — the log this README's own numbers are drawn from. |
 | `docs/WHEEL-PROVENANCE.md` | Where every date on the World History Wheel came from, and the audit that confirmed none of them were lifted from a copyrighted chart. |
 | `docs/PARITY-BACKLOG.md` | What SeekSparks still owes each of the sources it draws on, and what it has deliberately decided not to build. |

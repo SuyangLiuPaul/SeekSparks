@@ -34,6 +34,7 @@ apart.
 |---|---|
 | `AGENTS.md` | this file — the contract |
 | `PROJECT_STATE.md` | the queue, and what version is where |
+| `docs/OPEN-ITEMS.md` | **everything not done** — bugs, unfinished work, decisions waiting on the owner, landmines. Each item says whether it was verified or is carried forward unchecked |
 | `HANDOFF.md` | append-only log, newest on top, one entry per ship |
 | `README.md` | GitHub-facing: what the app is, how to run it, licensing |
 | `docs/DATA-INTEGRITY.md` | every data check ever run, numbered |
