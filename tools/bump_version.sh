@@ -66,14 +66,34 @@ awk -v new="$NEW" '
 ' "$PUBSPEC" >"$TMP"
 mv "$TMP" "$PUBSPEC"
 
-# Update lib/constants/app_version.dart — the `defaultValue: '...'`
-# inside the kAppVersion String.fromEnvironment call.
+# Update lib/constants/app_version.dart — BOTH version literals.
+#
+# 2026-09-05: this block matched `const String kAppVersion =
+# String.fromEnvironment(` and had therefore been a NO-OP since
+# 2026-06-29, when that declaration was split in two to guard the
+# empty-define case: the environment read moved to `_envAppVersion` and
+# `kAppVersion` became a ternary with a SECOND copy of the literal. The
+# awk pattern matched neither, silently, so the fallback froze at
+# 1.3.113 while pubspec went on to 1.6.234.
+#
+# That literal is what every NATIVE build prints, because only
+# release_web.sh passes --dart-define=APP_VERSION: the loading page,
+# the workbench footer, Settings and About on the iPhone, the iPad and
+# the Mi Pad all announced a version 121 patch releases old, next to an
+# Android package manager reporting the real one. Reported as
+# 「为什么loading page和各个地方的版本号对不上」.
+#
+# Both literals are rewritten now, and test/app_version_fallback_test
+# fails if either drifts from pubspec — so this cannot go quiet again.
 TMP="$(mktemp)"
 awk -v new="$NEW" '
-  /const String kAppVersion = String\.fromEnvironment\(/ { in_block = 1 }
+  /_envAppVersion = String\.fromEnvironment\(/ { in_block = 1 }
   in_block && /defaultValue:/ {
     sub(/defaultValue: '\''[^'\'']*'\''/, "defaultValue: '\''" new "'\''")
     in_block = 0
+  }
+  /^const String kAppVersion = _envAppVersion == / {
+    sub(/\? '\''[^'\'']*'\''/, "? '\''" new "'\''")
   }
   { print }
 ' "$APP_VERSION_DART" >"$TMP"

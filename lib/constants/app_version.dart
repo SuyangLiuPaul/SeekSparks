@@ -2172,11 +2172,20 @@
 // which sat on such a build while it couldn't update). Guard the empty case so
 // kAppVersion can never render blank again. Same hazard the script already
 // fixed for APP_RELEASE_TIME by moving it to a source constant.
+// 2026-09-05: and the fallback then went STALE, which is the other half
+// of the same hazard. Only tools/release_web.sh passes the define, so
+// every NATIVE build — iPhone, iPad, Mi Pad — printed this literal on
+// the loading page, the workbench footer, Settings and About, while
+// Android's package manager reported pubspec's real version on the same
+// device. It read 1.3.113 against a shipped 1.6.234. "Never blank" had
+// quietly become "confidently wrong", which is worse, because nobody
+// doubts a version that looks like one. test/app_version_fallback_test
+// now pins both literals below to pubspec.yaml.
 const String _envAppVersion = String.fromEnvironment(
   'APP_VERSION',
-  defaultValue: '1.3.113',
+  defaultValue: '1.6.235',
 );
-const String kAppVersion = _envAppVersion == '' ? '1.3.113' : _envAppVersion;
+const String kAppVersion = _envAppVersion == '' ? '1.6.235' : _envAppVersion;
 
 /// 2026-05-10 (v1.2.20): paired with `kAppVersion` so the About
 /// footer's "Last updated …" stamp moves in lockstep with every
@@ -2215,7 +2224,7 @@ const String kAppVersion = _envAppVersion == '' ? '1.3.113' : _envAppVersion;
 /// for the build, which in practice means dev workflow only.
 const String kAppReleaseTime = String.fromEnvironment(
   'APP_RELEASE_TIME',
-  defaultValue: '2026-09-04T00:01:57Z',
+  defaultValue: '2026-09-04T00:18:31Z',
 );
 
 /// Returns a user-locale-formatted release time string. Parses
