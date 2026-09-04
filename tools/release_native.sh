@@ -51,6 +51,11 @@ done
 cd "$PROJECT"
 
 APP_VERSION="$(awk '/^version:/ {print $2; exit}' pubspec.yaml || true)"
+# `%%+*` strips pubspec's `+build` suffix — that number is Android's
+# versionCode and iOS's CFBundleVersion, and showing it to a reader or
+# passing it as APP_VERSION would print `1.6.236+1060236` on the About
+# page.
+APP_VERSION="${APP_VERSION%%+*}"
 # The sentinel matters more than it looks. `String.fromEnvironment`'s
 # defaultValue applies only when the key is ABSENT — shipping
 # `--dart-define=APP_VERSION=` with an empty shell variable OVERRIDES

@@ -28,6 +28,11 @@ if [[ "$BUMP" = "1" ]]; then
   "$PROJECT/tools/bump_version.sh"
 fi
 APP_VERSION="$(awk '/^version:/ {print $2; exit}' "$PROJECT/pubspec.yaml")"
+# `%%+*` strips pubspec's `+build` suffix — that number is Android's
+# versionCode and iOS's CFBundleVersion, and showing it to a reader or
+# passing it as APP_VERSION would print `1.6.236+1060236` on the About
+# page.
+APP_VERSION="${APP_VERSION%%+*}"
 echo "==> APP_VERSION=$APP_VERSION"
 
 cd "$PROJECT"

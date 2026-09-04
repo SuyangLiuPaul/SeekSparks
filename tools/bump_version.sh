@@ -26,8 +26,31 @@ PROJECT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PUBSPEC="$PROJECT/pubspec.yaml"
 APP_VERSION_DART="$PROJECT/lib/constants/app_version.dart"
 
+# The plain X.Y.Z, with any `+build` suffix stripped. Every caller
+# wants this one: the suffix is Android's versionCode / iOS's
+# CFBundleVersion, never a thing to show a reader or to pass as
+# --dart-define=APP_VERSION.
 current_version() {
-  awk '/^version:/ {print $2; exit}' "$PUBSPEC"
+  local v
+  v="$(awk '/^version:/ {print $2; exit}' "$PUBSPEC")"
+  printf '%s\n' "${v%%+*}"
+}
+
+# Android refuses an update whose versionCode is not greater, and
+# `flutter.versionCode` is pubspec's `+build` — which this project never
+# set, so every release built as versionCode 1. `adb install -r` does not
+# care, which is why it went unnoticed, but nothing that resembles a real
+# update channel would install one build over another.
+#
+# Derived from the semver rather than counted, so it cannot drift from it
+# and no state has to be carried between machines: major*1000000 +
+# minor*10000 + patch. 1.6.236 -> 1060236. Strictly increasing while
+# minor < 100 and patch < 10000, and 2.0.0 -> 2000000 clears every 1.x,
+# which is the property that matters. Well under Android's 2100000000 cap.
+version_code() {
+  local ma mi pa
+  IFS='.' read -r ma mi pa <<<"$1"
+  printf '%s\n' "$(( ma * 1000000 + mi * 10000 + pa ))"
 }
 
 case "${1:-}" in
@@ -53,15 +76,16 @@ case "${1:-}" in
     ;;
 esac
 
-echo "==> bumping version: $(current_version) → $NEW"
+CODE="$(version_code "$NEW")"
+echo "==> bumping version: $(current_version) → $NEW (versionCode $CODE)"
 
 # Update pubspec.yaml — single `version: X.Y.Z` line at root.
 # sed -i variants differ between BSD (macOS default) and GNU; use
 # a temp file for portability.
 TMP="$(mktemp)"
-awk -v new="$NEW" '
+awk -v new="$NEW" -v code="$CODE" '
   BEGIN { done = 0 }
-  /^version:/ && !done { print "version: " new; done = 1; next }
+  /^version:/ && !done { print "version: " new "+" code; done = 1; next }
   { print }
 ' "$PUBSPEC" >"$TMP"
 mv "$TMP" "$PUBSPEC"
@@ -120,4 +144,4 @@ awk -v rt="$RELEASE_TIME" '
 ' "$APP_VERSION_DART" >"$TMP"
 mv "$TMP" "$APP_VERSION_DART"
 
-echo "✓ pubspec.yaml + app_version.dart now at $NEW (release time: $RELEASE_TIME)"
+echo "✓ pubspec.yaml + app_version.dart now at $NEW+$CODE (release time: $RELEASE_TIME)"

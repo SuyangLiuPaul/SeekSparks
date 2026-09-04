@@ -72,4 +72,46 @@ void main() {
     // And the constant itself, under a test run with no define.
     expect(kAppVersion, declared);
   });
+
+  test('pubspec carries a versionCode, derived from the semver', () {
+    // Android refuses an update whose versionCode is not GREATER than
+    // the installed one, and `flutter.versionCode` — which
+    // android/app/build.gradle.kts passes through — is pubspec's
+    // `+build` suffix. This project never set one, so every release
+    // built as versionCode 1. `adb install -r` does not care, which is
+    // why it went unnoticed across 235 patch releases, but nothing
+    // resembling a real update channel would install one build over
+    // another.
+    //
+    // Derived rather than counted, so it cannot drift from the version
+    // beside it and no state has to travel between machines. The one
+    // property that matters is that it never goes BACKWARDS: a lower
+    // versionCode is unrecoverable in the field, since the only way past
+    // it is an uninstall, and this app has no cloud sync to restore
+    // from.
+    final line = File('pubspec.yaml')
+        .readAsLinesSync()
+        .firstWhere((l) => l.startsWith('version:'));
+    final field = line.split(':')[1].trim();
+    expect(field, contains('+'),
+        reason: 'pubspec.yaml must carry a +build suffix — without one '
+            'flutter.versionCode is 1 for every release ever shipped');
+
+    final semver = field.split('+').first;
+    final code = int.parse(field.split('+').last);
+    final parts = semver.split('.').map(int.parse).toList();
+    expect(parts, hasLength(3));
+    final (major, minor, patch) = (parts[0], parts[1], parts[2]);
+
+    expect(code, major * 1000000 + minor * 10000 + patch,
+        reason: 'tools/bump_version.sh derives the code this way; if the '
+            'two disagree, one of them was edited by hand');
+    // The bounds the scheme rests on, asserted rather than assumed.
+    expect(minor, lessThan(100),
+        reason: 'minor >= 100 would carry into the major digits and the '
+            'code could go backwards on the next major release');
+    expect(patch, lessThan(10000),
+        reason: 'patch >= 10000 would carry into the minor digits');
+    expect(code, lessThan(2100000000), reason: "Android's own cap");
+  });
 }
