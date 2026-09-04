@@ -68,6 +68,48 @@ fi
 DEFINES=(--dart-define="APP_VERSION=$APP_VERSION")
 echo "==> APP_VERSION=$APP_VERSION (release time stamped in source)"
 
+# Verify the BUILT ARTEFACT carries the version, not just the command line.
+#
+# 2026-09-04: release_native.sh's first run passed
+# `--dart-define=APP_VERSION=1.6.235`, gradle reported success, a fresh
+# APK appeared — and its compiled Dart still contained 1.3.113 and no
+# 1.6.235 at all. A stale `.dart_tool` kernel had been reused, so the
+# source change and the define both went into a build that ignored
+# them; the tablet then showed v1.3.113 next to a package manager
+# reporting 1.6.235, which is the ORIGINAL complaint reappearing from a
+# completely different cause. `flutter clean` fixed it.
+#
+# kAppVersion is a compile-time const, so the string is in the binary
+# verbatim or the build is wrong. Checking that is two seconds against
+# a twenty-minute round trip to a device, and it turns the silent
+# failure into a loud one — which is the only kind worth having, since
+# every other signal in that run said success.
+verify_version_in() {
+  local artefact="$1" label="$2"
+  if [[ "$APP_VERSION" = "unknown" ]]; then return 0; fi
+  if [[ ! -e "$artefact" ]]; then
+    echo "ERROR: $label not found at $artefact" >&2
+    return 1
+  fi
+  # NOT `strings ... | grep -q`: this script runs under `set -o
+  # pipefail`, and `grep -q` exits the moment it matches, which kills
+  # `strings` with SIGPIPE (141) and makes the whole pipeline report
+  # FAILURE on the success case. Caught here first time out, reporting
+  # a stale build against a framework that was in fact correct — a
+  # check that cries wolf gets switched off, so it has to be right.
+  local hits
+  hits="$(strings "$artefact" 2>/dev/null | grep -cx "$APP_VERSION" || true)"
+  if [[ "${hits:-0}" -gt 0 ]]; then
+    echo "    verified: $label carries $APP_VERSION"
+    return 0
+  fi
+  echo "ERROR: $label does NOT contain $APP_VERSION." >&2
+  echo "       The build reused a stale kernel and would ship the old" >&2
+  echo "       version string. Run: flutter clean && flutter pub get" >&2
+  echo "       and build again. NOT installing." >&2
+  return 1
+}
+
 IOS_DEVICES=(
   "00008140-000C5D6910E3C01C|iPhone 16 Pro Max"
   "00008103-000A24441131001E|iPad Pro 11-inch"
@@ -83,6 +125,9 @@ if [[ "$DO_IOS" = "1" ]]; then
   echo ""
   echo "→ flutter build ios --release ${DEFINES[*]}"
   "$FLUTTER" build ios --release "${DEFINES[@]}"
+  verify_version_in \
+    "$PROJECT/build/ios/iphoneos/Runner.app/Frameworks/App.framework/App" \
+    "the iOS App.framework"
   if [[ "$DO_INSTALL" = "1" ]]; then
     for entry in "${IOS_DEVICES[@]}"; do
       udid="${entry%|*}"; name="${entry#*|}"
@@ -109,6 +154,11 @@ if [[ "$DO_ANDROID" = "1" ]]; then
   echo "→ flutter build apk --release --flavor intl ${DEFINES[*]}"
   "$FLUTTER" build apk --release --flavor intl "${DEFINES[@]}"
   APK="$PROJECT/build/app/outputs/flutter-apk/app-intl-release.apk"
+  # The version lives in the compiled Dart, so unpack libapp.so rather
+  # than scanning the whole 166 MB archive.
+  SO_DIR="$(mktemp -d)"
+  unzip -o -q "$APK" "lib/arm64-v8a/libapp.so" -d "$SO_DIR" 2>/dev/null || true
+  verify_version_in "$SO_DIR/lib/arm64-v8a/libapp.so" "the APK's libapp.so"
   if [[ "$DO_INSTALL" = "1" ]]; then
     for entry in "${ANDROID_DEVICES[@]}"; do
       serial="${entry%|*}"; name="${entry#*|}"
