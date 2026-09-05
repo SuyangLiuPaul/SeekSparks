@@ -18,8 +18,17 @@
 #   tools/bump_version.sh --print   # just print current version
 #   tools/bump_version.sh --set 1.3.10  # set explicit version
 #
-# Called automatically by tools/yswords-ios-reinstall.sh before
-# every multi-platform build. Web build wrapper does the same.
+# Called automatically by tools/release_web.sh (line 28), which is the
+# ONLY entrypoint that starts a release cycle. tools/release_native.sh
+# deliberately does NOT call it, so web and native ship the same X.Y.Z
+# instead of drifting a patch apart.
+#
+# 2026-09-06: this used to say "called automatically by
+# tools/yswords-ios-reinstall.sh". That was inherited from the parent
+# repo and is false here — nothing in this repository invokes that
+# script, and its PROJECT= points at the parent app in any case. The
+# reference to it two paragraphs above is history and is accurate: it
+# describes what YsWords does, not what happens here.
 set -euo pipefail
 
 PROJECT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

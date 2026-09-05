@@ -122,12 +122,12 @@ version before (see `AGENTS.md`).
 - English-word → original-language reverse lookup and a spaced-repetition vocabulary trainer
   are not built.
 - Morphology-tag colour styling is not built.
-- The native iOS/Android builds still carry YsWords' own app identity — bundle ID
+- The native iOS/Android builds still carry THIS app's own identity, taken in `0def09c` (2026-08-23) — it is not YsWords', which stays `com.example.yswords` — bundle ID
   `com.example.yahwehswords`, display name "Yahweh's Sword" / 雅伟之剑 — a fork leftover that
   was never rebranded (`android/app/build.gradle.kts`, `ios/Runner/Info.plist`). It hasn't
   mattered because these builds are only ever installed on the maintainer's own three test
   devices, never distributed, but it means the earlier claim that this fork's native identity
-  can't collide with YsWords' was never actually true — only the web build's identity is
+  can't collide with YsWords' is in fact true — re-verified 2026-09-06: Sword `com.example.yahwehswords`, Words `com.example.yswords`, World `com.yswords.yahwehsworld`, no two alike — only the web build's identity is
   independent (see "Why this fork is safe to run standalone" below).
 
 ---

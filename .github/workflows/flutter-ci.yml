@@ -28,7 +28,7 @@
 #      previously-passing test breaks the build.
 #
 # Runs on ubuntu-latest. iOS / macOS / Android builds are NOT
-# exercised here — they're built daily by the local launchd job
+# exercised here — they're built daily by a local launchd job — WRONG, corrected 2026-09-06: the sibling apps have such a job, this one has none, and launchd is TCC-blocked from ~/Documents so it could not run from this repo anyway
 # (tools/yswords-ios-reinstall.sh) which catches platform-
 # specific build failures (CocoaPods, NDK, Gradle).
 name: Flutter CI
