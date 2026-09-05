@@ -508,12 +508,21 @@ WheelSearchResult searchWheel({
           kind: WheelHitKind.ministry,
           via: WheelHitVia.yearSpan,
           id: m.id,
-          streamId: m.stream,
+          // The LAYER, not the band — see [kLifespanLayerId], which
+          // states the rule: a layer's hit carries the layer's id so
+          // the page's "un-hide what you found" step needs no special
+          // case. The patriarchs followed it and the ministries did
+          // not, so searching out a ministry while its layer was off
+          // un-hid the band (never the problem), left the layer off,
+          // and then `_panTo` rebuilt the annulus without ministries,
+          // found no arc and returned in silence. The reader got the
+          // sheet and a wheel that did not move.
+          streamId: kMinistryLayerId,
           title: m.nameFor(locale),
           year: m.start,
           matched: '',
           rank: 1,
-          streamHidden: hidden(m.stream),
+          streamHidden: hidden(kMinistryLayerId),
         ));
       }
     }
@@ -671,12 +680,14 @@ WheelSearchResult searchWheel({
       kind: WheelHitKind.ministry,
       via: c.$2,
       id: m.id,
-      streamId: m.stream,
+      // The layer, not the band — see the note on the year-span hit
+      // above and the rule stated at [kLifespanLayerId].
+      streamId: kMinistryLayerId,
       title: m.nameFor(locale),
       year: m.start,
       matched: c.$3,
       rank: c.$1,
-      streamHidden: hidden(m.stream),
+      streamHidden: hidden(kMinistryLayerId),
     ));
   }
   // The records that say the chart draws nothing, and why.

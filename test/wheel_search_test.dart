@@ -323,19 +323,62 @@ void main() {
     /// hiding it — flagging it would tell the reader to switch
     /// something on that would not make it appear.
     test('hiding every band still returns everything, all flagged', () {
-      final all = find('*', hidden: {for (final s in data.streams) s.id});
+      // 2026-09-05: there are now THREE classes here, not two, and the
+      // third arrived when the ministries were corrected to carry their
+      // LAYER id instead of the band they happen to sit over.
+      //
+      // The qualification in the doc comment above is what decides it.
+      // Hiding every band does not remove a ministry arc — that arc
+      // lives in the annulus and answers to its own switch — so
+      // flagging it here would be the very thing this test exists to
+      // forbid: telling the reader to switch on something that would
+      // not make the record appear. Same argument as the omissions,
+      // reached from the other side.
+      final bandIds = {for (final s in data.streams) s.id};
+      final all = find('*', hidden: bandIds);
       expect(all.hits, hasLength(1228));
-      final drawn =
-          all.hits.where((h) => h.kind != WheelHitKind.omission).toList();
-      expect(drawn, hasLength(1228 - data.omissions.length));
-      expect(drawn.every((h) => h.streamHidden), isTrue);
-      final undrawn =
-          all.hits.where((h) => h.kind == WheelHitKind.omission).toList();
-      expect(undrawn, hasLength(data.omissions.length));
-      expect(undrawn.every((h) => !h.streamHidden), isTrue,
+
+      final onABand =
+          all.hits.where((h) => bandIds.contains(h.streamId)).toList();
+      final onALayer = all.hits
+          .where((h) =>
+              h.streamId.isNotEmpty && !bandIds.contains(h.streamId))
+          .toList();
+      final onNothing =
+          all.hits.where((h) => h.streamId.isEmpty).toList();
+      expect(onABand.length + onALayer.length + onNothing.length,
+          all.hits.length,
+          reason: 'a hit fell into none of the three classes');
+
+      expect(onABand, isNotEmpty);
+      expect(onABand.every((h) => h.streamHidden), isTrue);
+
+      expect(onALayer, isNotEmpty,
+          reason: 'no layer-borne records — this branch is vacuous, and '
+              'the ministries were the first of them');
+      expect(onALayer.every((h) => !h.streamHidden), isTrue,
+          reason: 'a band filter claimed to hide a record that is not on '
+              'a band; switching every band back on would not reveal it');
+
+      expect(onNothing, hasLength(data.omissions.length));
+      expect(onNothing.every((h) => h.kind == WheelHitKind.omission), isTrue);
+      expect(onNothing.every((h) => !h.streamHidden), isTrue,
           reason: 'a record on no band was reported as hidden by a band');
-      expect(undrawn.every((h) => h.streamId.isEmpty), isTrue,
-          reason: 'an omission was given a band, which a filter can hide');
+    });
+
+    test('hiding a LAYER flags the records that layer draws', () {
+      // The other half of the same rule: a ministry is not hidden by a
+      // band filter, and it IS hidden by its own.
+      final all = find('*', hidden: const {kMinistryLayerId});
+      final ministries =
+          all.hits.where((h) => h.kind == WheelHitKind.ministry).toList();
+      expect(ministries, isNotEmpty);
+      expect(ministries.every((h) => h.streamHidden), isTrue,
+          reason: 'the ministries layer is off and its records do not say so');
+      final others =
+          all.hits.where((h) => h.kind != WheelHitKind.ministry).toList();
+      expect(others.every((h) => !h.streamHidden), isTrue,
+          reason: 'one layer being off flagged records of another kind');
     });
   });
 
