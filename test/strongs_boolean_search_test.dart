@@ -165,20 +165,23 @@ void main() {
     });
   });
 
-  group('nearPairs', () {
+  group('proximityPairs', () {
     test('empty for a query with no NEAR operator', () {
       final q = parseStrongsBoolean('G25 AND G26 NOT G27')!;
-      expect(nearPairs(q), isEmpty);
+      expect(proximityPairs(q), isEmpty);
     });
 
     test('extracts (termIndex, termIndex+1, maxWords) for each NEAR', () {
       final q = parseStrongsBoolean('G25 NEAR5 G26')!;
-      expect(nearPairs(q), [(0, 1, 5)]);
+      expect(proximityPairs(q), [(a: 0, b: 1, maxWords: 5, ordered: false)]);
     });
 
     test('finds every NEAR in a longer chain, ignoring other ops', () {
       final q = parseStrongsBoolean('G25 AND G26 NEAR3 G27 OR H1 NEAR8 H2')!;
-      expect(nearPairs(q), [(1, 2, 3), (3, 4, 8)]);
+      expect(proximityPairs(q), [
+        (a: 1, b: 2, maxWords: 3, ordered: false),
+        (a: 3, b: 4, maxWords: 8, ordered: false),
+      ]);
     });
   });
 }

@@ -335,8 +335,10 @@ class _CommandPaneState extends State<CommandPane> {
     }
     if (!mounted) return;
     final wb = context.read<WorkbenchProvider>();
+    final appSettings = context.read<AppSettings>();
     final running = wb.runSearch(raw,
-        locale: context.read<AppSettings>().locale);
+        locale: appSettings.locale,
+        ketivQere: appSettings.ketivQereSearchScope);
     // Keep the caret here. `TextInputAction.search` unfocuses the field
     // by default, which is right for a one-shot search box and wrong for
     // a command line: after a search you refine it — widen the context,
@@ -551,6 +553,12 @@ class _CommandPaneState extends State<CommandPane> {
 
   /// Insert the NEAR operator at the strip's current distance.
   void _insertNear() => _insertToken('NEAR$_nearDistance');
+
+  /// The same, for the directional operator. Both buttons share
+  /// `_nearDistance` — it is one window width, and two independent
+  /// numbers behind two adjacent buttons would be a second thing to
+  /// learn for no gain.
+  void _insertBefore() => _insertToken('BEFORE$_nearDistance');
 
   /// Widen or narrow the word distance, rewriting the token already on
   /// the line so the number in the query and the number on the button
@@ -886,6 +894,17 @@ class _CommandPaneState extends State<CommandPane> {
                       'Within {n} words of each other, either order'),
                   _insertNear,
                   dimmed: dim),
+              // Directly beside NEAR, because the difference between the
+              // two is the only thing about either that is hard to learn,
+              // and a reader who never sees them together has no reason
+              // to suspect the unordered one is answering a different
+              // question than the one they asked.
+              op(
+                  'BEFORE$_nearDistance',
+                  tip('searchOpBeforeTip',
+                      'The first, then the second within {n} words'),
+                  _insertBefore,
+                  dimmed: dim),
               _OperatorButton(
                 label: '?',
                 tooltip: uiStrings['cmdSyntaxToggle']?[locale] ?? 'Syntax help',
@@ -1047,6 +1066,7 @@ class _CommandPaneState extends State<CommandPane> {
           [
             'cmdSyntaxStrongsBool',
             'cmdSyntaxStrongsNear',
+            'cmdSyntaxStrongsBefore',
             'cmdSyntaxStrongsWild',
           ]
         ),

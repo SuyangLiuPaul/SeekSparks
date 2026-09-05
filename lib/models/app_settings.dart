@@ -11,6 +11,8 @@ import 'package:seeksparks/services/notification_scheduler.dart'
     as scheduler;
 import 'package:seeksparks/services/profile_service.dart';
 import 'package:seeksparks/utils/font_catalog.dart';
+import 'package:seeksparks/utils/ketiv_qere.dart'
+    show KetivQereSearchScope;
 
 /// The range the Font Size slider offers, in points, and the value that
 /// counts as "unscaled".
@@ -95,6 +97,12 @@ const _kNotificationsEnabled = 'notificationsEnabled';
 // 2026-05-24 (v1.3.0): per-category notification prefs. Stored as a
 // JSON string mapping category id → NotificationCategoryPrefs JSON.
 const _kNotificationCategories = 'notificationCategories';
+// 2026-09-05 (bwh29): the two Masoretic search switches. New keys — no
+// existing preference key is renamed, and a reader who has never opened
+// the control gets `false` for both, which is the behaviour the app has
+// always had. See `KetivQereSearchScope`.
+const _kExcludeKetivFromSearch = 'excludeKetivFromSearch';
+const _kExcludeQereFromSearch = 'excludeQereFromSearch';
 const _kShowSectionTitles = 'showSectionTitles';
 const _kShowBookIntro = 'showBookIntro';
 // User-supplied Gemini API key (BYOK). When non-empty, AI calls are
@@ -227,6 +235,8 @@ class AppSettings extends ChangeNotifier {
   /// Mount" / "登山宝训") above the matched verse in the reading
   /// pane. Default ON — gives chapters useful structure. Toggle in
   /// Settings → Reading.
+  bool _excludeKetivFromSearch = false;
+  bool _excludeQereFromSearch = false;
   bool _showSectionTitles = true;
 
   /// Render the collapsible book-intro card at the top of chapter 1
@@ -261,6 +271,19 @@ class AppSettings extends ChangeNotifier {
   NotificationCategoryPrefs notificationCategory(String categoryId) =>
       _notificationCategories[categoryId] ??
       NotificationCategoryPrefs.defaultFor(categoryId);
+  bool get excludeKetivFromSearch => _excludeKetivFromSearch;
+  bool get excludeQereFromSearch => _excludeQereFromSearch;
+
+  /// The two switches as the one value the search engines take.
+  ///
+  /// A value object rather than two booleans threaded separately,
+  /// because a caller that reads one and forgets the other answers half
+  /// the reader's question without saying so.
+  KetivQereSearchScope get ketivQereSearchScope => KetivQereSearchScope(
+        excludeKetiv: _excludeKetivFromSearch,
+        excludeQere: _excludeQereFromSearch,
+      );
+
   bool get showSectionTitles => _showSectionTitles;
   bool get showBookIntro => _showBookIntro;
 
@@ -458,6 +481,22 @@ class AppSettings extends ChangeNotifier {
     await prefs.setBool(_kShowStrongsInOriginals, enabled);
   }
 
+  Future<void> setExcludeKetivFromSearch(bool enabled) async {
+    if (_excludeKetivFromSearch == enabled) return;
+    _excludeKetivFromSearch = enabled;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_kExcludeKetivFromSearch, enabled);
+  }
+
+  Future<void> setExcludeQereFromSearch(bool enabled) async {
+    if (_excludeQereFromSearch == enabled) return;
+    _excludeQereFromSearch = enabled;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_kExcludeQereFromSearch, enabled);
+  }
+
   Future<void> setAutoExpandFirstRef(bool enabled) async {
     if (_autoExpandFirstRef == enabled) return;
     _autoExpandFirstRef = enabled;
@@ -574,6 +613,8 @@ class AppSettings extends ChangeNotifier {
     _boldVerseText = false;
     _showStrongsInOriginals = true;
     _autoExpandFirstRef = false;
+    _excludeKetivFromSearch = false;
+    _excludeQereFromSearch = false;
     _notificationsEnabled = false;
     _showSectionTitles = true;
     _showBookIntro = true;
@@ -752,6 +793,9 @@ class AppSettings extends ChangeNotifier {
     _showStrongsInOriginals =
         prefs.getBool(_kShowStrongsInOriginals) ?? true;
     _autoExpandFirstRef = prefs.getBool(_kAutoExpandFirstRef) ?? false;
+    _excludeKetivFromSearch =
+        prefs.getBool(_kExcludeKetivFromSearch) ?? false;
+    _excludeQereFromSearch = prefs.getBool(_kExcludeQereFromSearch) ?? false;
     _notificationsEnabled = prefs.getBool(_kNotificationsEnabled) ?? false;
     // 2026-05-24 (v1.3.0): load per-category notification prefs.
     // Stored as one JSON object keyed by category id. Missing keys
@@ -883,6 +927,8 @@ class AppSettings extends ChangeNotifier {
         'booksViewMode': _booksViewMode,
         'boldVerseText': _boldVerseText,
         'showStrongsInOriginals': _showStrongsInOriginals,
+        'excludeKetivFromSearch': _excludeKetivFromSearch,
+        'excludeQereFromSearch': _excludeQereFromSearch,
         'autoExpandFirstRef': _autoExpandFirstRef,
         'notificationsEnabled': _notificationsEnabled,
         'showSectionTitles': _showSectionTitles,
@@ -979,6 +1025,12 @@ class AppSettings extends ChangeNotifier {
       }
       if (m['autoExpandFirstRef'] is bool) {
         _autoExpandFirstRef = m['autoExpandFirstRef'] as bool;
+      }
+      if (m['excludeKetivFromSearch'] is bool) {
+        _excludeKetivFromSearch = m['excludeKetivFromSearch'] as bool;
+      }
+      if (m['excludeQereFromSearch'] is bool) {
+        _excludeQereFromSearch = m['excludeQereFromSearch'] as bool;
       }
       if (m['notificationsEnabled'] is bool) {
         _notificationsEnabled = m['notificationsEnabled'] as bool;

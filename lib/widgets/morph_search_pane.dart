@@ -18,8 +18,10 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import 'package:seeksparks/constants/book_groups.dart';
+import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/services/morph_search_service.dart';
@@ -106,6 +108,7 @@ class _MorphSearchPaneState extends State<MorphSearchPane> {
       books: MorphSearchService.booksFor(
           _scope, widget.englishBook, _query.scheme),
       chapter: _scope == MorphScope.chapter ? widget.chapter : null,
+      ketivQere: context.read<AppSettings>().ketivQereSearchScope,
     );
     if (!mounted || token != _run) return;
     setState(() {

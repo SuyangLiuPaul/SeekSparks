@@ -13,6 +13,8 @@ import 'package:seeksparks/services/search_service.dart';
 import 'package:seeksparks/services/vocabulary_service.dart';
 import 'package:seeksparks/utils/ai_ref_resolution.dart';
 import 'package:seeksparks/utils/command_query.dart';
+import 'package:seeksparks/utils/ketiv_qere.dart'
+    show KetivQereSearchScope;
 import 'package:seeksparks/utils/command_verb.dart' show LimitSpec;
 import 'package:seeksparks/utils/compound_query.dart';
 import 'package:seeksparks/utils/romanised_lemma.dart';
@@ -429,7 +431,20 @@ class WorkbenchProvider extends ChangeNotifier {
   /// begins with `.`, `/`, `'` or `;`. Everything else is unchanged,
   /// which is the point — a reader who has never heard of a control
   /// character still has the substring search they had yesterday.
-  Future<void> runSearch(String raw, {String locale = 'en'}) async {
+  /// Run the command line.
+  ///
+  /// [ketivQere] is bwh29's pair of search switches. Passed in rather
+  /// than read from `AppSettings`, for the reason [runAiSearch] gives:
+  /// this provider is constructed with a [MainProvider] and nothing
+  /// else, and reaching for the settings here would make every test that
+  /// touches the workbench need one. It defaults to
+  /// [KetivQereSearchScope.both], which is what the engine did before
+  /// the setting existed.
+  Future<void> runSearch(
+    String raw, {
+    String locale = 'en',
+    KetivQereSearchScope ketivQere = KetivQereSearchScope.both,
+  }) async {
     final query = raw.trim();
     lastQuery = query;
     _lastLocale = locale;
@@ -485,7 +500,8 @@ class WorkbenchProvider extends ChangeNotifier {
       final bq = parseStrongsBoolean(query);
       if (bq != null) {
         strongsQueryLabel = query.toUpperCase();
-        final composed = await SearchService.runStrongsBoolean(bq);
+        final composed =
+            await SearchService.runStrongsBoolean(bq, ketivQere: ketivQere);
         final refs = _limitRefs(composed.refs);
         strongsRefs = refs;
         // No occurrence total exists for a composed expression: it is a

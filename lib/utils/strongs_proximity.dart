@@ -1,5 +1,5 @@
-// SeekSparks addition: word-order proximity check for the NEARn operator
-// in `strongs_boolean_search.dart`.
+// SeekSparks addition: word-order proximity check for the NEARn and
+// BEFOREn operators in `strongs_boolean_search.dart`.
 //
 // Whether two Strong's numbers are "within N words" of each other can only
 // be answered from a verse's actual word order, which the concordance
@@ -26,11 +26,23 @@ bool _matches(String strongsNumber, StrongsTerm term) {
 /// When [termA] and [termB] are the same term (e.g. a repeated word), two
 /// distinct occurrences still count — the check only looks at position,
 /// not term identity.
+///
+/// [ordered] is `BEFOREn` rather than `NEARn` (2026-09-05): [termA] must
+/// come FIRST. It defaults to false, which is the question this function
+/// answered for its first three months and the one every existing caller
+/// is asking.
+///
+/// Note what ordering does NOT change: the pair still has to be two
+/// distinct words, and the distance is still `b - a`. What it removes is
+/// the mirror half of the search — with [ordered] set, an occurrence of
+/// B four words *before* A no longer satisfies the query, which is the
+/// entire reason a directional result set differs from an unordered one.
 bool verseSatisfiesProximity({
   required List<String> strongsNumbersInOrder,
   required StrongsTerm termA,
   required StrongsTerm termB,
   required int maxWords,
+  bool ordered = false,
 }) {
   final aPositions = <int>[];
   final bPositions = <int>[];
@@ -42,7 +54,11 @@ bool verseSatisfiesProximity({
   for (final a in aPositions) {
     for (final b in bPositions) {
       if (a == b) continue; // same word can't satisfy proximity to itself
-      if ((a - b).abs() <= maxWords) return true;
+      if (ordered) {
+        if (b > a && b - a <= maxWords) return true;
+      } else if ((a - b).abs() <= maxWords) {
+        return true;
+      }
     }
   }
   return false;

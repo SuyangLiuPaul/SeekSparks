@@ -26,6 +26,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seeksparks/constants/text_patterns.dart';
 import 'package:seeksparks/utils/diacritics.dart';
+import 'package:seeksparks/utils/plain_search.dart';
 import 'package:seeksparks/utils/search_highlight.dart';
 
 /// `ὁ θεός` — the query as she typed it.
@@ -215,9 +216,18 @@ void main() {
 
     /// What `SearchService.scanText` does to the query, against the key
     /// `MainProvider.searchKeys` builds.
+    ///
+    /// 2026-09-05: this used to spell the query rule out by hand
+    /// (`.replaceAll(' ', '')`), and when the rule changed the probe
+    /// went on testing the old one — it read `ὁ θεός` as `οθεος` and
+    /// found 12 verses where the engine finds 1,486. It now calls the
+    /// same two functions the scan calls, which is the standing rule in
+    /// this codebase: a probe that re-implements a sanitiser is the
+    /// thing that ends up wrong.
     int hits(String query) {
-      final q = foldDiacritics(query).replaceAll(' ', '').toLowerCase();
-      return keys.where((k) => k.contains(q)).length;
+      final segments =
+          plainSearchSegments(foldDiacritics(query).toLowerCase());
+      return keys.where((k) => plainSearchMatches(k, segments)).length;
     }
 
     test('the edition is the size it was measured at', () {

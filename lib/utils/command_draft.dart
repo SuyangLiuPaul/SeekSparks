@@ -6,7 +6,7 @@
 //
 //   . / '        line mode   — first position only, mutually exclusive
 //   ! *          modifiers   — attach to a word of a TEXT search
-//   AND OR NOT NEARn         — combine two STRONG'S NUMBERS
+//   AND OR NOT NEARn BEFOREn — combine two STRONG'S NUMBERS
 //
 // Nothing on screen says which is which, and two of them mean different
 // things in the two grammars (`*` is a character wildcard glued to a word,
@@ -170,9 +170,10 @@ const int _maxHebrew = 8700;
 
 final RegExp _termRe = RegExp(r'^([gGhH])0*(\d+)\*?$');
 final RegExp _wordCombinerRe = RegExp(r'^(AND|OR|NOT)$');
-final RegExp _nearRe = RegExp(r'^(NEAR|WITHIN)(\d+)$', caseSensitive: false);
+final RegExp _nearRe =
+    RegExp(r'^(NEAR|WITHIN|BEFORE|THEN)(\d+)$', caseSensitive: false);
 final RegExp _nearInLineRe =
-    RegExp(r'(NEAR|WITHIN)(\d+)', caseSensitive: false);
+    RegExp(r'(NEAR|WITHIN|BEFORE|THEN)(\d+)', caseSensitive: false);
 
 bool _isStrongsTerm(String token) {
   final m = _termRe.firstMatch(token);
@@ -195,10 +196,11 @@ bool _isCombiner(String token) =>
 /// prose costs the reader nothing but a missed suggestion, so that is the
 /// side to err on.
 final RegExp _typedCombinerRe =
-    RegExp(r'^(AND|OR|NOT|NEAR\d*|WITHIN\d*)$');
+    RegExp(r'^(AND|OR|NOT|NEAR\d*|WITHIN\d*|BEFORE\d*|THEN\d*)$');
 
 /// `NEAR` / `WITHIN` with the distance missing.
-final RegExp _bareNearRe = RegExp(r'^(NEAR|WITHIN)$', caseSensitive: false);
+final RegExp _bareNearRe =
+    RegExp(r'^(NEAR|WITHIN|BEFORE|THEN)$', caseSensitive: false);
 
 /// Read [text] as a draft query. Cheap enough to call on every keystroke.
 ///
@@ -326,14 +328,26 @@ CommandDraft analyseCommandDraft(String text, {int nearDistance = 5}) {
 ///   yahweh AND god    →  .yahweh god
 ///   yahweh OR god     →  /yahweh god
 ///   yahweh NOT god    →  .yahweh !god
-///   yahweh NEAR5 god  →  'yahweh *4 god
+///   yahweh NEAR5 god  →  'yahweh *4 god   (unordered → ordered: partial)
+///   yahweh BEFORE5 god → 'yahweh *4 god   (ordered → ordered: exact)
 ///
-/// The NEAR case is the one worth reading twice. `NEARn` is a word
+/// The proximity case is the one worth reading twice. `NEARn` is a word
 /// DISTANCE and admits `n - 1` words in between (`strongs_proximity.dart`
 /// tests `(a - b).abs() <= n`), while `*n` inside a phrase is the number
 /// of words in between (`GapElement(0, n)`) — so the distance drops by
-/// one on the way across. It is also only HALF the operator: a phrase is
-/// ordered and NEAR is not. Callers say so; the rewrite cannot.
+/// one on the way across, for both operators.
+///
+/// Direction is the other half, and 2026-09-05 changed which half is
+/// missing. A phrase is ORDERED. `NEARn` is not, so `'yahweh *4 god` was
+/// only ever half of `yahweh NEAR5 god` and the caller had to say so.
+/// `BEFOREn` IS ordered, so
+///
+///     yahweh BEFORE5 god  →  'yahweh *4 god
+///
+/// is the first exact translation this function has ever been able to
+/// make between the two grammars — same words, same order, same window.
+/// Both still route through the same rewrite; what differs is how much
+/// the caller has to apologise for it.
 ///
 /// Mixed operators return null. `a AND b OR c` has a precedence the text
 /// grammar does not express, and inventing one would silently answer a
@@ -355,6 +369,11 @@ String? suggestTextEquivalent(List<String> tokens, {int nearDistance = 5}) {
       nearAt = words.length;
       final digits = RegExp(r'\d+$').firstMatch(t)?.group(0);
       if (digits != null) distance = int.parse(digits);
+    } else if (t.startsWith('BEFORE') || t.startsWith('THEN')) {
+      kinds.add('BEFORE');
+      nearAt = words.length;
+      final digits = RegExp(r'\d+$').firstMatch(t)?.group(0);
+      if (digits != null) distance = int.parse(digits);
     } else {
       kinds.add(t);
       if (t == 'NOT') notFrom.add(words.length);
@@ -373,6 +392,7 @@ String? suggestTextEquivalent(List<String> tokens, {int nearDistance = 5}) {
       ];
       return '.${out.join(' ')}';
     case 'NEAR':
+    case 'BEFORE':
       final gap = (distance - 1).clamp(0, kMaxWordGap);
       final out = [...words]..insert(nearAt, '*$gap');
       return "'${out.join(' ')}";
@@ -430,9 +450,20 @@ String? describeCommandDraft(CommandDraft draft, String locale) {
           .replaceAll('{op}', op);
     case CommandDraftHint.nearWindow:
       final n = draft.near?.distance ?? 5;
-      return (uiStrings['cmdDraftNearWindow']?[locale] ??
-              'Within {n} words of each other, in either order '
-                  '(up to {gap} words in between).')
+      // The whole point of the directional operator is that it answers a
+      // different question, so the line under the strip may not read the
+      // same for both. A reader who taps BEFORE and is told "in either
+      // order" has been told the operator does not work.
+      final keyword = draft.near?.keyword.toUpperCase() ?? 'NEAR';
+      final ordered = keyword == 'BEFORE' || keyword == 'THEN';
+      return (uiStrings[ordered
+                      ? 'cmdDraftBeforeWindow'
+                      : 'cmdDraftNearWindow']?[locale] ??
+              (ordered
+                  ? 'The first, then the second within {n} words '
+                      '(up to {gap} words in between).'
+                  : 'Within {n} words of each other, in either order '
+                      '(up to {gap} words in between).'))
           .replaceAll('{n}', '$n')
           .replaceAll('{gap}', '${n - 1}');
     case CommandDraftHint.combinerOnWords:
@@ -440,7 +471,10 @@ String? describeCommandDraft(CommandDraft draft, String locale) {
       // described as though it were on screen.
       final key = draft.suggestion == null
           ? 'cmdDraftWordsNoFix'
-          : (op.startsWith('NEAR') || op.startsWith('WITHIN')
+          : (op.startsWith('NEAR') ||
+                  op.startsWith('WITHIN') ||
+                  op.startsWith('BEFORE') ||
+                  op.startsWith('THEN')
               ? 'cmdDraftWordsNearFix'
               : 'cmdDraftWordsFix');
       return (uiStrings[key]?[locale] ??

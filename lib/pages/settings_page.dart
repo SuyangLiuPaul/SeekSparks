@@ -930,6 +930,68 @@ class _SettingsPageBodyState extends State<_SettingsPageBody> {
                       onChanged: (val) =>
                           settings.setShowStrongsInOriginals(val),
                     ),
+                    // bwh29's two switches. Placed beside the other
+                    // originals-text controls rather than under a
+                    // "search" heading, because what they are about is
+                    // the Hebrew text — a reader looking for them will
+                    // look where the K/Q marks they can see are
+                    // configured.
+                    const Divider(height: 1),
+                    SwitchListTile(
+                      title: Text(
+                        uiStrings['excludeKetivFromSearch']
+                                ?[settings.locale] ??
+                            'Exclude the Ketiv (written form) from searches',
+                        style: TextStyle(
+                          fontSize: settings.fontSize + 2,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: settings.fontFamily,
+                          fontFamilyFallback: kCjkFontFallback,
+                        ),
+                      ),
+                      subtitle: Text(
+                        uiStrings['excludeKetivFromSearchSubtitle']
+                                ?[settings.locale] ??
+                            '1,103 verses of the Hebrew Bible carry two '
+                                'readings.',
+                        style: TextStyle(
+                          fontSize: settings.fontSize,
+                          fontFamily: settings.fontFamily,
+                          fontFamilyFallback: kCjkFontFallback,
+                        ),
+                      ),
+                      value: settings.excludeKetivFromSearch,
+                      onChanged: (val) =>
+                          settings.setExcludeKetivFromSearch(val),
+                    ),
+                    const Divider(height: 1),
+                    SwitchListTile(
+                      title: Text(
+                        uiStrings['excludeQereFromSearch']
+                                ?[settings.locale] ??
+                            'Exclude the Qere (read form) from searches',
+                        style: TextStyle(
+                          fontSize: settings.fontSize + 2,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: settings.fontFamily,
+                          fontFamilyFallback: kCjkFontFallback,
+                        ),
+                      ),
+                      subtitle: Text(
+                        uiStrings['excludeQereFromSearchSubtitle']
+                                ?[settings.locale] ??
+                            'The same, for the form the Masoretes direct '
+                                'be read.',
+                        style: TextStyle(
+                          fontSize: settings.fontSize,
+                          fontFamily: settings.fontFamily,
+                          fontFamilyFallback: kCjkFontFallback,
+                        ),
+                      ),
+                      value: settings.excludeQereFromSearch,
+                      onChanged: (val) =>
+                          settings.setExcludeQereFromSearch(val),
+                    ),
                     const Divider(height: 1),
                     SwitchListTile(
                       title: Text(

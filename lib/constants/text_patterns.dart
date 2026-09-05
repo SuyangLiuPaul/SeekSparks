@@ -3,6 +3,7 @@
 // fetch_verses to ensure consistent text processing.
 
 import 'package:seeksparks/utils/diacritics.dart' show foldDiacritics;
+import 'package:seeksparks/utils/plain_search.dart' show collapseSearchSpaces;
 import 'package:seeksparks/utils/scripture_markup.dart' show isReferentGloss;
 
 /// Matches `<note:...>` tags embedded in verse text.
@@ -155,22 +156,31 @@ String sanitizeForSearchKey(String text) =>
     sanitizeForSearch(text).replaceAll(_squareBracketPattern, '');
 
 /// The whole corpus-key contract in one place: [sanitizeForSearchKey],
-/// diacritics folded, spaces gone, lower-cased.
+/// diacritics folded, lower-cased, and whitespace normalized by
+/// [collapseSearchSpaces].
 ///
 /// 2026-08-16 (#321). The fold cannot go in [sanitizeForSearchKey]
 /// itself, because that also builds `MainProvider.wordKeys`, and the
 /// Phrases and Related panes PRINT `wordKeys` — folding it would put
 /// unaccented Greek and unpointed Hebrew on the reader's screen. This
-/// key is lower-cased with its spaces taken out; it has no reader, and
-/// it is the only corpus in the app that does not.
+/// key is lower-cased; it has no reader, and it is the only corpus in
+/// the app that does not.
+///
+/// 2026-09-05: the spaces are no longer taken out. They were, and that
+/// made a plain search a substring scan over a space-less corpus, in
+/// which KJV `forth` reached the 2,542 verses that say "for the" and
+/// marked nothing in any of them. [collapseSearchSpaces] keeps one
+/// space per gap and removes a gap only between Han characters, which is
+/// the one script that needs the old rule. The prefilter in
+/// `command_query.dart` is unaffected — it tests a single metacharacter-
+/// free run, which never spanned a space, so keeping the spaces makes
+/// that filter strictly more selective and cannot lose it a hit.
 ///
 /// Named rather than inlined so the tests can build a key the same way
 /// the provider does. The last time a probe re-implemented a sanitiser
 /// instead of calling it, the probe was the thing that was wrong.
-String searchCorpusKey(String scriptureText) =>
-    foldDiacritics(sanitizeForSearchKey(scriptureText))
-        .replaceAll(' ', '')
-        .toLowerCase();
+String searchCorpusKey(String scriptureText) => collapseSearchSpaces(
+    foldDiacritics(sanitizeForSearchKey(scriptureText)).toLowerCase());
 
 /// 2026-05-19 (v1.2.58): clipboard / preview formatter.
 ///

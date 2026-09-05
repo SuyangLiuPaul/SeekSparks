@@ -103,3 +103,83 @@ String? ketivQereNote(String? kq, String locale) => switch (kq) {
         },
       _ => null,
     };
+
+// ── Which readings a SEARCH counts (bwh29) ──────────────────────────
+
+/// The two switches BibleWorks' help topic bwh29 puts on a search:
+/// exclude the Ketiv, exclude the Qere, independently.
+///
+/// 2026-09-05. Everything above this line is about DISPLAY, and display
+/// was the half that shipped on 2026-08-18 (`c82a823`): the K/Q mark,
+/// the note, the four roles, and counts that include both readings.
+/// `docs/PARITY-BACKLOG.md`'s Qere/Kethib row says what was left — "what
+/// is genuinely missing is the **setting**" — and this is it.
+///
+/// Both off is the default and is BibleWorks' default too: a search
+/// counts what is written and what is read, and the 1,103 verses that
+/// carry both contribute both. Turning one off is a textual-critical
+/// question a reader asks deliberately ("show me the consonantal text
+/// only"), never a tidying-up the app should do on their behalf.
+///
+/// Both ON is permitted, because bwh29's two checkboxes are independent
+/// and refusing the fourth corner would be inventing a rule the source
+/// does not have. It is a legitimate, if narrow, question — "search only
+/// the words the Masoretes left alone" — and the result count says so
+/// honestly rather than the control being disabled.
+class KetivQereSearchScope {
+  const KetivQereSearchScope({
+    this.excludeKetiv = false,
+    this.excludeQere = false,
+  });
+
+  /// Leave out what the consonantal text WRITES (`k`, and `kx`).
+  final bool excludeKetiv;
+
+  /// Leave out what the Masoretes direct be READ (`q`, and `qx`).
+  final bool excludeQere;
+
+  /// Both readings count — the default, and BibleWorks' own.
+  static const KetivQereSearchScope both = KetivQereSearchScope();
+
+  bool get isDefault => !excludeKetiv && !excludeQere;
+
+  /// Whether a word whose role is [kq] takes part in a search.
+  ///
+  /// An ordinary word — `kq == null`, which is 438,821 minus the 2,509
+  /// marked ones — always takes part. bwh17 describes a wildcard as
+  /// matching "Qere, Kethib, and neither", and "neither" is not a thing
+  /// either switch is about; a setting that could empty the Hebrew Bible
+  /// is a setting nobody wants.
+  ///
+  /// **The `kx` / `qx` question is settled here by reusing
+  /// [OriginalWord.isKetiv] / [OriginalWord.isQere], and it is a
+  /// judgement call worth naming.** Those two getters have said since
+  /// the roles landed that *Ketiv velo Qere* is a Ketiv and *Qere velo
+  /// Ketiv* is a Qere, and the display layer has shipped on that reading
+  /// for three weeks — `kx` prints `K`, `qx` prints `Q`. Answering the
+  /// search question differently from the mark on the screen would be
+  /// the worse of the two mistakes. It is fourteen words either way (6
+  /// `kx`, 8 `qx`); if a specialist rules that BibleWorks' third WTM
+  /// suffix `Rx` makes them their own class, this is the one function to
+  /// change and the ruling will not have to be chased through the
+  /// engines.
+  bool admits(String? kq) => switch (kq) {
+        'k' || 'kx' => !excludeKetiv,
+        'q' || 'qx' => !excludeQere,
+        _ => true,
+      };
+
+  @override
+  bool operator ==(Object other) =>
+      other is KetivQereSearchScope &&
+      other.excludeKetiv == excludeKetiv &&
+      other.excludeQere == excludeQere;
+
+  @override
+  int get hashCode => Object.hash(excludeKetiv, excludeQere);
+
+  @override
+  String toString() =>
+      'KetivQereSearchScope(excludeKetiv: $excludeKetiv, '
+      'excludeQere: $excludeQere)';
+}

@@ -145,9 +145,14 @@ void main() {
       ]);
 
     test('searchKeys holds the title, without its footnote', () {
-      expect(mp.searchKeys.first, contains('nathantheprophet'));
-      expect(mp.searchKeys.first, contains('begraciousto'));
-      expect(mp.searchKeys.first, isNot(contains('hebrewbiblecounts')));
+      // 2026-09-05: spelled with the spaces, because `searchCorpusKey`
+      // stopped removing them — a plain search that steps over a word
+      // gap is the `forth` / "for the" defect. What this test is really
+      // about is unchanged: the superscription is in the key and the
+      // `<note:>` popup is not.
+      expect(mp.searchKeys.first, contains('nathan the prophet'));
+      expect(mp.searchKeys.first, contains('be gracious to'));
+      expect(mp.searchKeys.first, isNot(contains('hebrew bible counts')));
     });
 
     test('wordKeys keeps the boundaries the tokenizers need', () {

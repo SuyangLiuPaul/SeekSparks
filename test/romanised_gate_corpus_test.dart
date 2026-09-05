@@ -85,18 +85,31 @@ void main() {
     ).indices.length;
   }
 
-  test('a plain search matches inside words, so an empty page is the '
-      'wrong gate', () {
-    // Every one of these is an artefact of the scan stripping spaces
-    // before it matches: `these are`, `the ostrich`, `these days`,
-    // `Jehovahshalom`, `Abishalom`, `unto Rahab`, `Issachar is`. A gate
-    // on `textResults.isEmpty` would have offered nothing for θεός,
-    // χάρις, שָׁלוֹם and תּוֹרָה — the four words most likely to be typed.
-    expect(plain(kjv, 'theos'), 4);
+  test('a plain search matches inside words, so an empty page is still '
+      'the wrong gate', () {
+    // 2026-09-05 REMEASURED, and the reason is worth keeping. These
+    // counts used to be 4, 3, 1, 1, 26, and most of that was the plain
+    // scan stripping spaces before it matched: `these are`, `the
+    // ostrich`, `these days`, `unto Rahab`, `Issachar is` are word gaps
+    // the reader never typed, and `plain_search.dart` no longer steps
+    // over them. Four of the five now return an empty page.
+    //
+    // `shalom` does not, and it is the whole argument in one word:
+    // Judges 6:24 `Jehovahshalom` and 1 Kings 15:2 / 15:10 `Abishalom`
+    // are matches INSIDE a word, which the boundary rule deliberately
+    // keeps — they are markable, and a reader searching `shalom` can
+    // see why the verse is there. So a gate on `textResults.isEmpty`
+    // would still be wrong for שָׁלוֹם, and `_measureLemmaOffer` still
+    // has to ask the word engine instead.
+    //
+    // The honest report: this fix narrowed the gate's necessity from
+    // five words to two (`shalom`, and `hesed` below). It did not
+    // remove it.
+    expect(plain(kjv, 'theos'), 0);
     expect(plain(kjv, 'shalom'), 3);
-    expect(plain(kjv, 'charis'), 1);
-    expect(plain(kjv, 'torah'), 1);
-    expect(plain(kjv, 'nabi'), 26);
+    expect(plain(kjv, 'charis'), 0);
+    expect(plain(kjv, 'torah'), 0);
+    expect(plain(kjv, 'nabi'), 0);
   });
 
   test('read as words, those four occur nowhere, so the offer is made',

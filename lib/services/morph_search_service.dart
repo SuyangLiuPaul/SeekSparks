@@ -16,6 +16,8 @@ library;
 import 'package:seeksparks/constants/book_groups.dart';
 import 'package:seeksparks/models/original_word.dart';
 import 'package:seeksparks/services/originals_service.dart';
+import 'package:seeksparks/utils/ketiv_qere.dart'
+    show KetivQereSearchScope;
 import 'package:seeksparks/utils/morph_query.dart';
 import 'package:seeksparks/utils/morphology.dart';
 
@@ -101,11 +103,22 @@ class MorphSearchService {
             : canonicalOtBooks,
       };
 
+  /// Run [query] over [books].
+  ///
+  /// [ketivQere] is bwh29's pair of search switches. It defaults to
+  /// [KetivQereSearchScope.both], which counts every reading and is what
+  /// this service did before the setting existed — so a caller that does
+  /// not pass it gets the old behaviour rather than a silent change.
+  ///
+  /// The filter sits before [MorphFacets.add] deliberately: an excluded
+  /// word must not appear in the facet counts either, or the pane would
+  /// offer a reader a facet that returns nothing when they tap it.
   static Future<MorphSearchResult> run(
     MorphQuery query, {
     required List<String> books,
     int? chapter,
     int limit = 300,
+    KetivQereSearchScope ketivQere = KetivQereSearchScope.both,
   }) async {
     final hits = <MorphHit>[];
     final facets = MorphFacets(query);
@@ -125,6 +138,7 @@ class MorphSearchService {
 
         final words = verses[ref]!;
         for (var i = 0; i < words.length; i++) {
+          if (!ketivQere.admits(words[i].ketivQere)) continue;
           final parsedWord = parse(words[i].morph);
           if (parsedWord == null || parsedWord.scheme != query.scheme) {
             continue;

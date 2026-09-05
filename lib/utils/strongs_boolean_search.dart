@@ -8,11 +8,15 @@
 //   G25 NOT G26     → verses with G25 but WITHOUT G26
 //   G25 !G26        → the same; `!` is the NOT alias, spaced or glued
 //   G25 NEAR5 G26   → verses where G25 and G26 occur within 5 words of
-//                     each other (proximity is resolved separately — see
-//                     `nearPairs` and `lib/utils/strongs_proximity.dart` —
-//                     since it needs per-verse word order, not just set
-//                     membership; the plain evaluator below treats NEAR
-//                     like AND as a safe first-pass filter)
+//                     each other, IN EITHER ORDER (proximity is resolved
+//                     separately — see `proximityPairs` and
+//                     `lib/utils/strongs_proximity.dart` — since it needs
+//                     per-verse word order, not just set membership; the
+//                     plain evaluator below treats both proximity
+//                     operators like AND as a safe first-pass filter)
+//   G25 BEFORE5 G26 → the DIRECTIONAL form, 2026-09-05: G25 and then
+//                     G26, within 5 words. `THEN5` is the same operator.
+//                     See the block comment on [StrongsOp.before].
 //   G25 G26         → implicit AND (adjacent terms)
 //   G25* AND H7225  → "G25*" is a PREFIX wildcard: any Greek number whose
 //                     digits start with "25" (G25, G250, G251, … G2599)
@@ -60,21 +64,64 @@ class StrongsTerm {
 
 /// A parsed boolean query: N terms joined by N-1 operators
 /// (`ops[i]` joins `terms[i]` and `terms[i+1]`). Evaluated left to right.
-/// `nearDistance[i]` holds the word-count for `ops[i] == StrongsOp.near`
-/// (null for every other operator) — parallel-indexed to `ops`.
+/// `nearDistance[i]` holds the word-count for whichever proximity
+/// operator sits at `ops[i]` — [StrongsOp.near] or [StrongsOp.before] —
+/// and null for every other operator; parallel-indexed to `ops`.
+///
+/// The field keeps its name after the directional operator landed. It is
+/// public API with callers in `search_service.dart`, `command_draft.dart`
+/// and four test files, and "the distance on the proximity operator" is
+/// what it always meant.
 class StrongsBooleanQuery {
   final List<StrongsTerm> terms;
   final List<StrongsOp> ops;
   final List<int?> nearDistance;
   const StrongsBooleanQuery(this.terms, this.ops, [this.nearDistance = const []]);
 
-  /// True when any operator is a proximity NEAR — the caller then needs
-  /// the async per-verse word-order pass (see `strongs_proximity.dart`)
-  /// on top of plain set algebra.
-  bool get hasProximity => ops.contains(StrongsOp.near);
+  /// True when any operator is a proximity operator, ordered or not — the
+  /// caller then needs the async per-verse word-order pass (see
+  /// `strongs_proximity.dart`) on top of plain set algebra.
+  bool get hasProximity =>
+      ops.contains(StrongsOp.near) || ops.contains(StrongsOp.before);
 }
 
-enum StrongsOp { and, or, not, near }
+enum StrongsOp {
+  and,
+  or,
+  not,
+
+  /// `NEAR5` / `WITHIN5` — within N words, **in either order**.
+  near,
+
+  /// `BEFORE5` / `THEN5` — within N words, **left term first**.
+  ///
+  /// 2026-09-05. BibleWorks writes proximity as `*n` BETWEEN the two
+  /// words (bwh17, bwh20 `('faith *4 love)`) and it is directional:
+  /// "faith followed within 4 words by love". Ours was `NEARn` and
+  /// unordered, and `docs/PARITY-BACKLOG.md` names the right half of
+  /// that as the substantive gap — "an unordered answer to a directional
+  /// question is a different result set", not a different spelling.
+  ///
+  /// **Spelled as a word, not as `*n`, and that is a decision rather
+  /// than an omission.** `*` is already this app's wildcard in two
+  /// grammars: `G25*` is a Strong's prefix wildcard three lines below
+  /// here, and `'faith * christ` is a one-word gap in
+  /// `command_query.dart`. `G25 *4 G26` would therefore have to be told
+  /// apart from a wildcard by position alone, inside a parser whose
+  /// whole contract is that an unrecognised token aborts the parse so
+  /// the line can fall through to a text search. Adopting `*n` as a
+  /// parity alias is the owner's call and is left open; `BEFOREn` costs
+  /// nothing and collides with nothing.
+  ///
+  /// The unordered form is untouched. `NEAR5` still means what it meant,
+  /// and the two are a different result set on purpose — which is the
+  /// point of having both.
+  before,
+}
+
+/// Whether [op] needs the per-verse word-order pass.
+bool isProximityOp(StrongsOp op) =>
+    op == StrongsOp.near || op == StrongsOp.before;
 
 /// Largest word distance accepted after NEAR / WITHIN.
 ///
@@ -93,6 +140,7 @@ const int kMaxHebrewStrongs = 8700;
 
 final RegExp _termRe = RegExp(r'^([gGhH])0*(\d+)(\*?)$');
 final RegExp _nearRe = RegExp(r'^(?:NEAR|WITHIN)(\d+)$');
+final RegExp _beforeRe = RegExp(r'^(?:BEFORE|THEN)(\d+)$');
 
 /// Parse [input] into a boolean Strong's query, or return null when the
 /// input is NOT a boolean Strong's expression (the caller then falls back to
@@ -153,6 +201,15 @@ StrongsBooleanQuery? parseStrongsBoolean(String input) {
         expectingTerm = true;
         continue;
       }
+      final beforeM = _beforeRe.firstMatch(upper);
+      if (beforeM != null) {
+        final n = int.parse(beforeM.group(1)!);
+        if (n < 1 || n > kMaxNearDistance) return null;
+        ops.add(StrongsOp.before);
+        nearDistance.add(n);
+        expectingTerm = true;
+        continue;
+      }
     }
     final m = _termRe.firstMatch(tok);
     if (m == null) return null; // not a Strong's term where one was needed
@@ -186,7 +243,7 @@ StrongsBooleanQuery? parseStrongsBoolean(String input) {
 /// guard — [diagnoseStrongsBoolean] needs to recognise a term SHAPE first
 /// and decide separately whether its number is in range.
 final RegExp _termShapeRe = RegExp(r'^([gGhH])0*(\d+)(\*?)$');
-final RegExp _nearWordRe = RegExp(r'^(?:NEAR|WITHIN)(\d*)$');
+final RegExp _nearWordRe = RegExp(r'^(?:NEAR|WITHIN|BEFORE|THEN)(\d*)$');
 const _strongsOpWords = {'AND', '&', '+', 'OR', '|', '/', 'NOT', '!'};
 
 /// Why a line that LOOKS like a Strong's expression did not parse — or
@@ -282,11 +339,12 @@ CommandIssue? diagnoseStrongsBoolean(String input) {
 /// Evaluate [query] to the set of verse-reference labels (e.g. "John 3:16")
 /// that satisfy it. [refsFor] resolves a single term to its occurrence set
 /// (handling wildcard expansion + concordance lookup); this function only
-/// applies the AND/OR/NOT set algebra, left to right. A NEAR operator is
-/// treated as AND here (both terms must co-occur in the verse) — the
-/// caller narrows a NEAR result further with the async per-verse
-/// word-order check in `strongs_proximity.dart` before showing it to the
-/// user, since true proximity needs word position, not just set membership.
+/// applies the AND/OR/NOT set algebra, left to right. BOTH proximity
+/// operators are treated as AND here (both terms must co-occur in the
+/// verse) — the caller narrows the result further with the async
+/// per-verse word-order check in `strongs_proximity.dart` before showing
+/// it to the user, since true proximity needs word position, not just set
+/// membership, and DIRECTION needs it twice over.
 Set<String> evaluateStrongsBoolean(
   StrongsBooleanQuery query,
   Set<String> Function(StrongsTerm term) refsFor,
@@ -298,6 +356,7 @@ Set<String> evaluateStrongsBoolean(
     switch (query.ops[i]) {
       case StrongsOp.and:
       case StrongsOp.near:
+      case StrongsOp.before:
         acc = acc.intersection(next);
         break;
       case StrongsOp.or:
@@ -311,15 +370,30 @@ Set<String> evaluateStrongsBoolean(
   return acc;
 }
 
-/// The (termIndex, termIndex+1, maxWords) triples in [query] whose operator
-/// is NEAR — i.e. the adjacent-term pairs that need the extra per-verse
-/// word-order check on top of the plain set algebra above.
-List<(int, int, int)> nearPairs(StrongsBooleanQuery query) {
-  final out = <(int, int, int)>[];
+/// The adjacent-term pairs in [query] joined by a proximity operator —
+/// the ones that need the extra per-verse word-order check on top of the
+/// plain set algebra above.
+///
+/// `ordered` is the whole difference between `NEARn` and `BEFOREn`, and
+/// it is carried here rather than re-derived from `ops` by the caller,
+/// because a caller that forgets to look would silently answer the
+/// unordered question to a directional query — which is the exact
+/// failure `docs/PARITY-BACKLOG.md` describes.
+///
+/// Renamed from `nearPairs` on 2026-09-05: it no longer returns only the
+/// NEAR pairs, and a name that says NEAR while returning BEFORE too is
+/// how a caller comes to drop the flag.
+List<({int a, int b, int maxWords, bool ordered})> proximityPairs(
+    StrongsBooleanQuery query) {
+  final out = <({int a, int b, int maxWords, bool ordered})>[];
   for (var i = 0; i < query.ops.length; i++) {
-    if (query.ops[i] == StrongsOp.near) {
-      out.add((i, i + 1, query.nearDistance[i]!));
-    }
+    if (!isProximityOp(query.ops[i])) continue;
+    out.add((
+      a: i,
+      b: i + 1,
+      maxWords: query.nearDistance[i]!,
+      ordered: query.ops[i] == StrongsOp.before,
+    ));
   }
   return out;
 }

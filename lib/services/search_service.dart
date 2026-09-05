@@ -3,6 +3,9 @@ import 'package:seeksparks/services/concordance_service.dart';
 import 'package:seeksparks/services/fetch_books.dart' show standardBookOrder;
 import 'package:seeksparks/services/originals_service.dart';
 import 'package:seeksparks/utils/diacritics.dart' show foldDiacritics;
+import 'package:seeksparks/utils/ketiv_qere.dart'
+    show KetivQereSearchScope;
+import 'package:seeksparks/utils/plain_search.dart';
 import 'package:seeksparks/utils/strongs_boolean_search.dart';
 import 'package:seeksparks/utils/strongs_proximity.dart';
 
@@ -36,11 +39,16 @@ class TextSearchResult {
 class SearchService {
   SearchService._();
 
-  /// Pure substring scan over the parallel `verses` / `searchKeys`
-  /// arrays (`searchKeys[i]` is the sanitized lowercase form of
-  /// `verses[i].text`, precomputed once per `setVerses` by
-  /// MainProvider — collapsing each search from O(n × regex chain) to
-  /// O(n × String.contains)).
+  /// The plain scan — a command line with no control character — over
+  /// the parallel `verses` / `searchKeys` arrays (`searchKeys[i]` is the
+  /// sanitized lowercase form of `verses[i].text`, precomputed once per
+  /// `setVerses` by MainProvider — collapsing each search from O(n ×
+  /// regex chain) to O(n × String.contains)).
+  ///
+  /// A substring scan, but not one that may step over a word gap the
+  /// reader did not type: the rule and the reason are in
+  /// `plain_search.dart`. In Chinese it is still the plain substring
+  /// scan it always was, which is what that script needs.
   ///
   /// Scoping mirrors SearchPage: [filterBook] wins; otherwise the
   /// current book is used unless [searchAll] is true.
@@ -56,8 +64,23 @@ class SearchService {
     // Both sides folded, or `ὁ θεός` finds nothing in a corpus that
     // spells it `ο θεος` — #321. `searchKeys` is folded where it is
     // built; this is the other half of the same comparison.
-    final queryNorm =
-        foldDiacritics(query).replaceAll(' ', '').toLowerCase();
+    //
+    // 2026-09-05: and both sides whitespace-normalized the same way, by
+    // `plain_search.dart`, which is what stops `forth` from listing the
+    // 2,542 KJV verses that say "for the". The segments are the runs the
+    // reader typed with no space between them; each must sit next to the
+    // last in the verse, separated by nothing but whitespace they did
+    // type. See [plainSearchMatches].
+    final segments = plainSearchSegments(
+        foldDiacritics(query).toLowerCase());
+    // A blank query listed every verse before this change, because the
+    // empty string is a substring of everything, and it keeps doing so:
+    // the callers guard it, and quietly turning "everything" into
+    // "nothing" is not this fix's business.
+    final matchAll = segments.isEmpty;
+    // Every segment is a necessary condition; the longest is the
+    // cheapest way to reject a verse before the walk.
+    final prefilter = plainSearchPrefilter(segments);
     final matches = <Verse>[];
     final localCounts = <String, int>{};
     final useFilter = filterBook != null;
@@ -69,7 +92,9 @@ class SearchService {
       if (useFilter && verse.book != filterTarget) continue;
       if (useCurBook && verse.book != filterTarget) continue;
       scanCount++;
-      if (searchKeys[i].contains(queryNorm)) {
+      final key = searchKeys[i];
+      if (matchAll ||
+          (key.contains(prefilter) && plainSearchMatches(key, segments))) {
         matches.add(verse);
         localCounts[verse.book] = (localCounts[verse.book] ?? 0) + 1;
       }
@@ -99,8 +124,24 @@ class SearchService {
   /// against the bundled concordance, narrowing NEAR candidates with
   /// the real per-verse original-language word order. Returns matching
   /// verse refs in canonical order.
+  /// [ketivQere] is bwh29's pair of search switches, applied to the
+  /// per-verse word order the proximity pass reads.
+  ///
+  /// This is the one place in the Strong's path where the setting CAN be
+  /// applied, and saying why matters. The set algebra above it runs on
+  /// `ConcordanceService`, which is a verse-level occurrence index and
+  /// carries no Masoretic role per word — so a Ketiv-only occurrence
+  /// still puts its verse in the candidate set. The proximity narrowing
+  /// reads `assets/originals/<book>.json`, which does carry the role,
+  /// and an excluded word is dropped from the word order before any
+  /// distance is measured. A reader who excludes the Ketiv therefore
+  /// gets an honest answer from `G25 NEAR5 G26` and an unfiltered one
+  /// from `G25 AND G26`; closing that needs a role-aware concordance
+  /// index, which is a data change, not a parameter.
   static Future<StrongsBooleanResult> runStrongsBoolean(
-      StrongsBooleanQuery query) async {
+    StrongsBooleanQuery query, {
+    KetivQereSearchScope ketivQere = KetivQereSearchScope.both,
+  }) async {
     // Resolve each term to its occurrence label-set (expanding wildcards),
     // then apply the AND/OR set algebra.
     final termRefs = <StrongsTerm, Set<String>>{};
@@ -131,12 +172,16 @@ class SearchService {
     }
     var resultLabels = evaluateStrongsBoolean(
         query, (t) => termRefs[t] ?? const <String>{});
-    // SeekSparks addition: a NEARn operator needs actual word order, which
-    // the set algebra above can't see — narrow the AND-style candidate set
-    // with a per-verse word-position check (assets/originals/<book>.json
-    // via OriginalsService), one NEAR pair at a time.
+    // SeekSparks addition: a proximity operator needs actual word order,
+    // which the set algebra above can't see — narrow the AND-style
+    // candidate set with a per-verse word-position check
+    // (assets/originals/<book>.json via OriginalsService), one pair at a
+    // time. `pair.ordered` is `BEFOREn` rather than `NEARn`: it must be
+    // passed through, or a directional query is answered with the
+    // unordered result set and nothing on screen says so.
     if (query.hasProximity && resultLabels.isNotEmpty) {
-      for (final (i, j, maxWords) in nearPairs(query)) {
+      for (final pair in proximityPairs(query)) {
+        final (i, j, maxWords) = (pair.a, pair.b, pair.maxWords);
         final termA = query.terms[i];
         final termB = query.terms[j];
         final keep = <String>{};
@@ -146,12 +191,19 @@ class SearchService {
           final words = await OriginalsService.forVerse(
               parsed.englishBook, parsed.chapter, parsed.verse);
           if (words == null) continue;
-          final numsInOrder = words.map((w) => w.strongs).toList();
+          // Dropped, not blanked: a placeholder would still occupy a
+          // word position and push the two terms apart, so excluding a
+          // reading would silently narrow every window it sits inside.
+          final numsInOrder = [
+            for (final w in words)
+              if (ketivQere.admits(w.ketivQere)) w.strongs
+          ];
           if (verseSatisfiesProximity(
               strongsNumbersInOrder: numsInOrder,
               termA: termA,
               termB: termB,
-              maxWords: maxWords)) {
+              maxWords: maxWords,
+              ordered: pair.ordered)) {
             keep.add(label);
           }
         }
