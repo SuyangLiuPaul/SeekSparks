@@ -3,6 +3,10 @@ import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
 
 import 'package:seeksparks/models/hebrew_king.dart';
+import 'package:seeksparks/utils/kings_contemporaries.dart'
+    as kings_query;
+import 'package:seeksparks/utils/kings_contemporaries.dart'
+    show ContemporaryTally;
 
 /// The chart's own header, as opposed to its records.
 ///
@@ -69,15 +73,29 @@ class HebrewKingsData {
   /// it is computed rather than stored: a hand-written contemporaries
   /// list would be a second copy of the dates, free to drift from the
   /// first.
-  List<HebrewKing> contemporariesOf(HebrewKing k) {
-    if (k.kingdom == Kingdom.united) return const [];
-    final other = k.kingdom == Kingdom.judah ? Kingdom.israel : Kingdom.judah;
-    final out = kings
-        .where((e) => e.kingdom == other && reignsOverlap(e, k))
-        .toList();
-    out.sort((a, b) => a.reignStart.compareTo(b.reignStart));
-    return out;
-  }
+  ///
+  /// The rule lives in `utils/kings_contemporaries.dart` and every
+  /// surface that asks — the chart, the wheel's reign sheet, the year
+  /// lookup — arrives at the same function rather than at a copy of it.
+  List<HebrewKing> contemporariesOf(HebrewKing k) =>
+      kings_query.contemporariesOf(kings, k);
+
+  /// [contemporariesOf] counted: how many overlapped, and how many of
+  /// those held the throne rather than merely claimed it.
+  ContemporaryTally tallyFor(HebrewKing k) =>
+      ContemporaryTally.of(contemporariesOf(k));
+
+  /// Who was on a throne in [year] — negative for BC.
+  List<HebrewKing> reigningIn(int year, {Kingdom? kingdom}) =>
+      kings_query.reigningInYear(kings, year, kingdom: kingdom);
+
+  /// Kings matching [query] in the reader's [locale].
+  List<HebrewKing> search(
+    String query,
+    String locale, {
+    String Function(String reference, String locale)? refLabel,
+  }) =>
+      kings_query.searchKings(kings, query, locale, refLabel: refLabel);
 
   /// The earliest and latest year any king in the file touches, used to
   /// scale the chart axis.

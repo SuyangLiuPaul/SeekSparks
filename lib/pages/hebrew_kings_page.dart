@@ -9,10 +9,14 @@ import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/hebrew_king.dart';
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/services/hebrew_kings_service.dart';
+import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 import 'package:seeksparks/utils/jump_to_reference.dart' as jumper;
 import 'package:seeksparks/utils/kings_chart_layout.dart';
+import 'package:seeksparks/utils/kings_contemporaries.dart';
 import 'package:seeksparks/utils/navigate_to_reader.dart';
 import 'package:seeksparks/utils/reference_parser.dart';
+import 'package:seeksparks/utils/version_mapper.dart'
+    show localizedReferenceLabel;
 import 'package:seeksparks/widgets/home_icon_button.dart';
 import 'package:seeksparks/widgets/language_switcher_button.dart';
 import 'package:seeksparks/widgets/localized_back_button.dart';
@@ -71,10 +75,19 @@ class _HebrewKingsPageState extends State<HebrewKingsPage> {
   Future<HebrewKingsData>? _future;
   String? _selectedId;
 
+  final TextEditingController _search = TextEditingController();
+  String _query = '';
+
   @override
   void initState() {
     super.initState();
     _future = HebrewKingsService.instance.load();
+  }
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
   }
 
   void _select(String? id) {
@@ -203,6 +216,50 @@ class _HebrewKingsPageState extends State<HebrewKingsPage> {
     );
   }
 
+  /// Select [king], and on a narrow layout open his sheet too.
+  ///
+  /// The side panel only exists above [_sideBySideMinWidth], so a
+  /// selection made from the year lookup or from a search result would
+  /// otherwise land silently on a chart the reader cannot see under the
+  /// sheet they are still looking at.
+  void _openKing(HebrewKingsData data, HebrewKing king, String locale) {
+    setState(() => _selectedId = king.id);
+    if (MediaQuery.of(context).size.width < _sideBySideMinWidth) {
+      _showDetailSheet(data, king, locale);
+    }
+  }
+
+  /// The chart read backwards: name a year, get both thrones.
+  ///
+  /// A sheet rather than a third mode of the body. The chart and the
+  /// search results are both lists of kings and can take turns in the
+  /// same space; "who reigned in 841" is a different question with a
+  /// two-column answer, and making it a mode would mean the reader
+  /// loses the chart to ask it.
+  Future<void> _showYearLookup(HebrewKingsData data, String locale) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      constraints: const BoxConstraints(maxWidth: 720),
+      shape: const RoundedRectangleBorder(),
+      builder: (sheetCtx) => DraggableScrollableSheet(
+        initialChildSize: 0.62,
+        minChildSize: 0.35,
+        maxChildSize: 0.95,
+        expand: false,
+        builder: (_, controller) => _YearLookupSheet(
+          data: data,
+          locale: locale,
+          scrollController: controller,
+          onOpenKing: (k) {
+            Navigator.of(sheetCtx).maybePop();
+            _openKing(data, k, locale);
+          },
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final locale = context.watch<AppSettings>().locale;
@@ -261,18 +318,43 @@ class _HebrewKingsPageState extends State<HebrewKingsPage> {
                 _showDetailSheet(data, k, locale);
               }
 
+              final onSelect = sideBySide ? _select : selectNarrow;
+              final searching = _query.trim().isNotEmpty;
+
               final chart = Column(
                 children: [
                   _Header(data: data, locale: locale),
+                  _ControlBar(
+                    locale: locale,
+                    controller: _search,
+                    query: _query,
+                    onQuery: (v) => setState(() => _query = v),
+                    onYearLookup: () => _showYearLookup(data, locale),
+                  ),
                   Expanded(
-                    child: _Chart(
-                      data: data,
-                      locale: locale,
-                      selected: selected,
-                      contemporaryIds:
-                          contemporaries.map((e) => e.id).toSet(),
-                      onSelect: sideBySide ? _select : selectNarrow,
-                    ),
+                    // SEARCH REPLACES THE CHART, it does not dim it.
+                    // The chart's whole content is the time axis; a
+                    // filtered chart with 38 of 42 bands greyed is
+                    // harder to read than either the chart or the list,
+                    // and `family_tree_page` already answers the same
+                    // question with a list. Clearing the box brings the
+                    // chart straight back with the selection intact.
+                    child: searching
+                        ? _SearchResults(
+                            data: data,
+                            locale: locale,
+                            query: _query,
+                            selectedId: _selectedId,
+                            onSelect: onSelect,
+                          )
+                        : _Chart(
+                            data: data,
+                            locale: locale,
+                            selected: selected,
+                            contemporaryIds:
+                                contemporaries.map((e) => e.id).toSet(),
+                            onSelect: onSelect,
+                          ),
                   ),
                 ],
               );
@@ -983,6 +1065,9 @@ class _DetailPanel extends StatelessWidget {
     final houseKing = data.byId(k.house);
     final otherKingdom =
         k.kingdom == Kingdom.judah ? Kingdom.israel : Kingdom.judah;
+    // Derived here, every time, from the list actually being drawn.
+    // Nothing in this file knows that Asa's answer is eight.
+    final tally = ContemporaryTally.of(contemporaries);
 
     return ListView(
       controller: scrollController,
@@ -1092,39 +1177,30 @@ class _DetailPanel extends StatelessWidget {
           _SectionTitle(
             '${_s('kingsContemporaries', 'On the other throne')} · '
             '${kingdomLabel(locale, otherKingdom)} · '
-            '${contemporaries.length}',
+            '${tally.total}',
           ),
           if (contemporaries.isEmpty)
             Text(
               _s('kingsNoContemporaries', 'No overlapping reign.'),
               style: TextStyle(fontSize: type.chrome, color: wb.mutedText),
-            ),
-          for (final c in contemporaries)
-            InkWell(
-              onTap: () => onSelect(c.id),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 3),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        c.nameFor(locale),
-                        style:
-                            TextStyle(fontSize: type.text, color: wb.link),
-                      ),
-                    ),
-                    Text(
-                      formatReignYears(locale, c.reignStart, c.reignEnd),
-                      style: TextStyle(
-                        fontSize: type.chrome,
-                        color: wb.mutedText,
-                        fontFeatures: const [FontFeature.tabularFigures()],
-                      ),
-                    ),
-                  ],
-                ),
+            )
+          else ...[
+            kingsTallyLines(context, tally, otherKingdom, locale),
+            const SizedBox(height: 7),
+            for (final c in contemporaries)
+              _ContemporaryRow(
+                king: c,
+                locale: locale,
+                onTap: () => onSelect(c.id),
+                onRefTap: (ref) => _jump(context, ref),
               ),
-            ),
+            if (tally.hasRivals) ...[
+              const SizedBox(height: 8),
+              kingsRivalExplanation(context, locale),
+            ],
+            const SizedBox(height: 9),
+            kingsChronologyCaveat(context, locale),
+          ],
         ],
       ],
     );
@@ -1194,6 +1270,757 @@ class _RefRow extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------
+// Contemporaries: the count, the rival mark, and the caveat that must
+// travel with both.
+//
+// These three are top-level and public because `wheel_sheets.dart`
+// shows the same section when a reign arc is tapped. A second copy
+// would be a second set of words for the same fact, free to drift —
+// which is exactly what happened to this page's reference rows before
+// they were routed through `localizedReferenceLabel`.
+// ---------------------------------------------------------------------
+
+/// "Rival claimant", as a pill.
+///
+/// The outline-only swatch already says it on the chart, but a row in a
+/// list has no swatch, and a reader counting names needs to see which
+/// of them the count is treating differently. Localised, because the
+/// distinction is the point rather than decoration.
+Widget kingsRivalBadge(BuildContext context, String locale, {double? size}) {
+  final wb = WbColors.of(context);
+  final type = WbType.of(context);
+  final fs = size ?? type.chrome - 1;
+  return Container(
+    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+    decoration: BoxDecoration(
+      border: Border.all(
+        color: wb.mutedText.withValues(alpha: 0.7),
+        width: WbMetrics.hairline,
+      ),
+    ),
+    child: Text(
+      uiStrings['kingsRivalClaimant']?[locale] ?? 'Rival claimant',
+      style: TextStyle(
+        fontSize: fs,
+        color: wb.mutedText,
+        fontFamilyFallback: kCjkFontFallback,
+      ),
+    ),
+  );
+}
+
+/// The two numbers, side by side: how many held the throne, and how
+/// many were claimants. Both are read off [tally], which is read off
+/// `spans[].kind`.
+///
+/// The rival line is omitted when there are none — an explicit
+/// "Rival claimants · 0" would imply the question is usually live, and
+/// on this data it is live for exactly one man.
+Widget kingsTallyLines(
+  BuildContext context,
+  ContemporaryTally tally,
+  Kingdom kingdom,
+  String locale,
+) {
+  final wb = WbColors.of(context);
+  final type = WbType.of(context);
+
+  String fill(String key, String fallback, int n) =>
+      (uiStrings[key]?[locale] ?? fallback).replaceAll('{n}', '$n');
+
+  Widget line(SpanKind kind, String text) => Padding(
+        padding: const EdgeInsets.only(bottom: 2),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _bandDecoration(kind, _hueFor(kingdom), wb, width: 16, height: 9),
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                text,
+                style: TextStyle(
+                  fontSize: type.chrome,
+                  color: wb.mutedText,
+                  fontFamilyFallback: kCjkFontFallback,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      line(
+        SpanKind.sole,
+        fill('kingsTallyReigning', 'Reigning kings · {n}', tally.reigning),
+      ),
+      if (tally.hasRivals)
+        line(
+          SpanKind.rival,
+          fill('kingsTallyRival', 'Rival claimants · {n}', tally.rivals),
+        ),
+    ],
+  );
+}
+
+/// A count of contemporaries is a function of the dates, and the dates
+/// are one scholar's reconstruction. Wherever this app prints such a
+/// count, it prints this underneath.
+Widget kingsChronologyCaveat(
+  BuildContext context,
+  String locale, {
+  double? size,
+}) {
+  final wb = WbColors.of(context);
+  final type = WbType.of(context);
+  return Text(
+    uiStrings['kingsTallyBasis']?[locale] ??
+        'How many contemporaries a reign has depends on the chronology: '
+            'the overlaps here are counted on Thiele\'s years, and Albright, '
+            'Galil or Kitchen would move the boundaries and can change the '
+            'count.',
+    style: TextStyle(
+      fontSize: size ?? type.chrome,
+      color: wb.mutedText,
+      height: 1.35,
+      fontFamilyFallback: kCjkFontFallback,
+    ),
+  );
+}
+
+/// Why Tibni is on a chart of kings at all. Shown under the list when
+/// the tally counted a claimant, so the extra name is explained where
+/// it is seen rather than in an About sheet the reader may never open.
+Widget kingsRivalExplanation(
+  BuildContext context,
+  String locale, {
+  double? size,
+}) {
+  final wb = WbColors.of(context);
+  final type = WbType.of(context);
+  return Text(
+    uiStrings['kingsRivalClaimantWhy']?[locale] ??
+        '1 Kings 16:21-22 gives him no regnal formula and never says he '
+            'reigned; his dates are an inference of this chronology. He is '
+            'not among the nineteen kings of Israel, but his years do fall '
+            'inside reigns in the other kingdom, so he is shown.',
+    style: TextStyle(
+      fontSize: size ?? type.chrome,
+      color: wb.mutedText,
+      height: 1.35,
+      fontFamilyFallback: kCjkFontFallback,
+    ),
+  );
+}
+
+/// A king's own passages, as one muted line. Tapping opens the reader.
+///
+/// The brief for a row in any of these lists is that it must carry the
+/// king's OWN reference — a contemporaries list whose rows are bare
+/// names makes the reader select each man in turn to find out where he
+/// is told, which is the work the list was supposed to save.
+class _KingRefLine extends StatelessWidget {
+  const _KingRefLine({required this.king, required this.locale, this.onTap});
+
+  final HebrewKing king;
+  final String locale;
+  final void Function(String reference)? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final wb = WbColors.of(context);
+    final type = WbType.of(context);
+    final refs = <String>[
+      if (king.kingsRef != null) king.kingsRef!,
+      if (king.chroniclesRef != null) king.chroniclesRef!,
+    ];
+    if (refs.isEmpty) return const SizedBox.shrink();
+    final label =
+        refs.map((r) => localizedReferenceLabel(r, locale)).join(' · ');
+    final text = Text(
+      label,
+      maxLines: 2,
+      overflow: TextOverflow.ellipsis,
+      style: TextStyle(
+        fontSize: type.chrome,
+        color: onTap == null ? wb.mutedText : wb.link,
+        fontFamilyFallback: kCjkFontFallback,
+      ),
+    );
+    if (onTap == null) return text;
+    // The FIRST reference is the one a tap opens. Kings is the primary
+    // account for both kingdoms and is always first in `refs`; offering
+    // a chooser for the second would be a menu inside a list row.
+    return InkWell(onTap: () => onTap!(refs.first), child: text);
+  }
+}
+
+/// One name in a contemporaries list: who, when, whether he actually
+/// held the throne, and where he is told.
+class _ContemporaryRow extends StatelessWidget {
+  const _ContemporaryRow({
+    required this.king,
+    required this.locale,
+    required this.onTap,
+    required this.onRefTap,
+  });
+
+  final HebrewKing king;
+  final String locale;
+  final VoidCallback onTap;
+  final void Function(String reference) onRefTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final wb = WbColors.of(context);
+    final type = WbType.of(context);
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Flexible(
+                  child: Text(
+                    king.nameFor(locale),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: type.text,
+                      color: wb.link,
+                      fontFamilyFallback: kCjkFontFallback,
+                    ),
+                  ),
+                ),
+                if (king.isRival) ...[
+                  const SizedBox(width: 5),
+                  kingsRivalBadge(context, locale),
+                ],
+                const Spacer(),
+                Text(
+                  formatReignYears(locale, king.reignStart, king.reignEnd),
+                  style: TextStyle(
+                    fontSize: type.chrome,
+                    color: wb.mutedText,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ],
+            ),
+            _KingRefLine(
+              king: king,
+              locale: locale,
+              onTap: onRefTap,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------
+// Search, and the year lookup
+// ---------------------------------------------------------------------
+
+/// The search box, and the button that opens the year lookup.
+///
+/// The field is `atlas_page`'s and `naves_page`'s, down to the
+/// `paneAltBg` fill and the square hairline borders — four pages in
+/// this app already search this way and a fifth idiom would only make
+/// the app look assembled from parts.
+class _ControlBar extends StatelessWidget {
+  const _ControlBar({
+    required this.locale,
+    required this.controller,
+    required this.query,
+    required this.onQuery,
+    required this.onYearLookup,
+  });
+
+  final String locale;
+  final TextEditingController controller;
+  final String query;
+  final ValueChanged<String> onQuery;
+  final VoidCallback onYearLookup;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = WbColors.of(context);
+    final t = WbType.of(context);
+    String s(String key, String fallback) =>
+        uiStrings[key]?[locale] ?? fallback;
+
+    final field = TextField(
+      controller: controller,
+      style: TextStyle(
+        fontSize: t.text,
+        color: c.text,
+        fontFamilyFallback: kCjkFontFallback,
+      ),
+      decoration: InputDecoration(
+        isDense: true,
+        filled: true,
+        fillColor: c.paneAltBg,
+        hintText: s('kingsSearchHint', 'Search a king or a reference…'),
+        hintStyle: TextStyle(
+          fontSize: t.text,
+          color: c.mutedText,
+          fontFamilyFallback: kCjkFontFallback,
+        ),
+        prefixIcon: Icon(Icons.search, size: t.text + 3, color: c.mutedText),
+        prefixIconConstraints:
+            const BoxConstraints(minWidth: 30, minHeight: 30),
+        suffixIcon: query.isEmpty
+            ? null
+            : IconButton(
+                icon: Icon(Icons.close, size: t.text + 1, color: c.mutedText),
+                visualDensity: VisualDensity.compact,
+                onPressed: () {
+                  controller.clear();
+                  onQuery('');
+                },
+              ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.zero,
+          borderSide: BorderSide(color: c.border, width: WbMetrics.hairline),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.zero,
+          borderSide: BorderSide(color: c.border, width: WbMetrics.hairline),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.zero,
+          borderSide: BorderSide(color: c.text, width: WbMetrics.hairline),
+        ),
+      ),
+      onChanged: onQuery,
+    );
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 8, 8, 8),
+      decoration: BoxDecoration(
+        color: c.chromeBg,
+        border: Border(
+          bottom: BorderSide(color: c.border, width: WbMetrics.hairline),
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(child: field),
+          const SizedBox(width: 6),
+          TextButton.icon(
+            onPressed: onYearLookup,
+            icon: Icon(Icons.today_outlined, size: t.text + 3),
+            label: Text(
+              s('kingsYearLookup', 'Who was reigning in…'),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: t.chrome,
+                fontFamilyFallback: kCjkFontFallback,
+              ),
+            ),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Matching kings, grouped by throne so the answer keeps the shape the
+/// chart has.
+class _SearchResults extends StatelessWidget {
+  const _SearchResults({
+    required this.data,
+    required this.locale,
+    required this.query,
+    required this.selectedId,
+    required this.onSelect,
+  });
+
+  final HebrewKingsData data;
+  final String locale;
+  final String query;
+  final String? selectedId;
+  final void Function(String?) onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    final wb = WbColors.of(context);
+    final type = WbType.of(context);
+    String s(String key, String fallback) =>
+        uiStrings[key]?[locale] ?? fallback;
+
+    final matches = data.search(
+      query,
+      locale,
+      refLabel: localizedReferenceLabel,
+    );
+
+    if (matches.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Text(
+            s('kingsNoMatches', 'No king matches that search.'),
+            style: TextStyle(
+              color: wb.mutedText,
+              fontFamilyFallback: kCjkFontFallback,
+            ),
+          ),
+        ),
+      );
+    }
+
+    final count = (s('kingsSearchCount', '{count} of {total} kings'))
+        .replaceAll('{count}', '${matches.length}')
+        .replaceAll('{total}', '${data.kings.length}');
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 16),
+      children: [
+        Text(
+          count,
+          style: TextStyle(
+            fontSize: type.chrome,
+            color: wb.mutedText,
+            fontFamilyFallback: kCjkFontFallback,
+          ),
+        ),
+        const SizedBox(height: 6),
+        for (final k in matches)
+          _SearchResultRow(
+            king: k,
+            locale: locale,
+            isSelected: k.id == selectedId,
+            onTap: () => onSelect(k.id),
+          ),
+      ],
+    );
+  }
+}
+
+class _SearchResultRow extends StatelessWidget {
+  const _SearchResultRow({
+    required this.king,
+    required this.locale,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  final HebrewKing king;
+  final String locale;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final wb = WbColors.of(context);
+    final type = WbType.of(context);
+    final alt = king.altNameFor(locale);
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        color: isSelected ? wb.selectionBg : Colors.transparent,
+        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 3,
+                  height: type.text + 2,
+                  color: _hueFor(king.kingdom),
+                ),
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    king.nameFor(locale),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: type.text,
+                      color: wb.text,
+                      fontWeight: FontWeight.w600,
+                      fontFamilyFallback: kCjkFontFallback,
+                    ),
+                  ),
+                ),
+                if (king.isRival) ...[
+                  const SizedBox(width: 5),
+                  kingsRivalBadge(context, locale),
+                ],
+                const Spacer(),
+                Text(
+                  formatReignYears(locale, king.reignStart, king.reignEnd),
+                  style: TextStyle(
+                    fontSize: type.chrome,
+                    color: wb.mutedText,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ],
+            ),
+            Padding(
+              padding: const EdgeInsets.only(left: 9, top: 1),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    [
+                      kingdomLabel(locale, king.kingdom),
+                      if (alt != null && alt.isNotEmpty) alt,
+                    ].join(' · '),
+                    style: TextStyle(
+                      fontSize: type.chrome,
+                      color: wb.mutedText,
+                      fontFamilyFallback: kCjkFontFallback,
+                    ),
+                  ),
+                  _KingRefLine(king: king, locale: locale),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// "Who was reigning in 841 BC?" — both thrones, for one year.
+///
+/// EVERY YEAR IN THIS FILE IS BC and the field takes a bare number, so
+/// the sheet says so three times over: in the note under the field, in
+/// the range it offers, and in the heading over the answer, which goes
+/// through [formatReignYears] and therefore reads "841 BC" /
+/// "公元前841年" exactly as the chart does.
+class _YearLookupSheet extends StatefulWidget {
+  const _YearLookupSheet({
+    required this.data,
+    required this.locale,
+    required this.onOpenKing,
+    this.scrollController,
+  });
+
+  final HebrewKingsData data;
+  final String locale;
+  final void Function(HebrewKing) onOpenKing;
+  final ScrollController? scrollController;
+
+  @override
+  State<_YearLookupSheet> createState() => _YearLookupSheetState();
+}
+
+class _YearLookupSheetState extends State<_YearLookupSheet> {
+  final TextEditingController _field = TextEditingController();
+
+  /// The year asked about, as stored in the asset — negative for BC.
+  /// Null until the box holds a number inside the chart's extent.
+  int? _year;
+
+  @override
+  void dispose() {
+    _field.dispose();
+    super.dispose();
+  }
+
+  void _onChanged(String raw) {
+    // A reader types the magnitude ("870"), because that is how a BC
+    // year is written everywhere else on this page. A leading minus is
+    // accepted too and means the same thing, so that pasting a value
+    // out of the asset does not silently ask about AD 870.
+    final digits = raw.replaceAll(RegExp(r'[^0-9]'), '');
+    final n = int.tryParse(digits);
+    setState(() => _year = n == null || n == 0 ? null : -n);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final wb = WbColors.of(context);
+    final type = WbType.of(context);
+    final locale = widget.locale;
+    String s(String key, String fallback) =>
+        uiStrings[key]?[locale] ?? fallback;
+
+    final extent = reignExtent(widget.data.kings);
+    final year = _year;
+
+    final judah = year == null
+        ? const <HebrewKing>[]
+        : widget.data.reigningIn(year, kingdom: Kingdom.judah);
+    final israel = year == null
+        ? const <HebrewKing>[]
+        : widget.data.reigningIn(year, kingdom: Kingdom.israel);
+    final united = year == null
+        ? const <HebrewKing>[]
+        : widget.data.reigningIn(year, kingdom: Kingdom.united);
+
+    Widget group(Kingdom kingdom, List<HebrewKing> kings) => Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _SectionTitle(kingdomLabel(locale, kingdom)),
+              if (kings.isEmpty)
+                Text(
+                  s('kingsYearNoneHere', 'None'),
+                  style: TextStyle(
+                    fontSize: type.chrome,
+                    color: wb.mutedText,
+                    fontFamilyFallback: kCjkFontFallback,
+                  ),
+                ),
+              for (final k in kings)
+                _ContemporaryRow(
+                  king: k,
+                  locale: locale,
+                  onTap: () => widget.onOpenKing(k),
+                  // A reference tap inside this sheet would have to
+                  // close it, navigate, and lose the year the reader
+                  // just typed. The row still PRINTS the reference —
+                  // opening it is one tap further, through the king.
+                  onRefTap: (_) => widget.onOpenKing(k),
+                ),
+            ],
+          ),
+        );
+
+    return ListView(
+      controller: widget.scrollController,
+      padding: const EdgeInsets.all(14),
+      children: [
+        Text(
+          s('kingsYearLookup', 'Who was reigning in…'),
+          style: TextStyle(
+            // `scaled`, not `text + 3`: an additive offset is a ratio of
+            // 1.25 at the default and 1.08 at 40 pt, so the heading
+            // stops outranking the body as the reader turns the slider
+            // up. See WbType.scaledSmall's comment for the argument.
+            fontSize: type.scaled(15),
+            fontWeight: FontWeight.w700,
+            color: wb.text,
+            fontFamilyFallback: kCjkFontFallback,
+          ),
+        ),
+        const SizedBox(height: 10),
+        SizedBox(
+          width: 180,
+          child: TextField(
+            controller: _field,
+            autofocus: true,
+            keyboardType: TextInputType.number,
+            style: TextStyle(
+              fontSize: type.text,
+              color: wb.text,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+            decoration: InputDecoration(
+              isDense: true,
+              filled: true,
+              fillColor: wb.paneAltBg,
+              hintText: s('kingsYearHint', 'Year'),
+              hintStyle: TextStyle(
+                fontSize: type.text,
+                color: wb.mutedText,
+                fontFamilyFallback: kCjkFontFallback,
+              ),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.zero,
+                borderSide:
+                    BorderSide(color: wb.border, width: WbMetrics.hairline),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.zero,
+                borderSide:
+                    BorderSide(color: wb.border, width: WbMetrics.hairline),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.zero,
+                borderSide:
+                    BorderSide(color: wb.text, width: WbMetrics.hairline),
+              ),
+            ),
+            onChanged: _onChanged,
+          ),
+        ),
+        const SizedBox(height: 5),
+        Text(
+          [
+            s('kingsYearBcNote', 'Years are BC — enter 870 for 870 BC.'),
+            if (extent != null)
+              s('kingsYearRange', 'This chart runs from {from} to {to}.')
+                  .replaceAll(
+                      '{from}',
+                      formatReignYears(
+                          locale, extent.$1, extent.$1))
+                  .replaceAll(
+                      '{to}',
+                      formatReignYears(locale, extent.$2, extent.$2)),
+          ].join(' '),
+          style: TextStyle(
+            fontSize: type.chrome,
+            color: wb.mutedText,
+            height: 1.35,
+            fontFamilyFallback: kCjkFontFallback,
+          ),
+        ),
+        const SizedBox(height: 14),
+        if (year != null) ...[
+          Text(
+            formatReignYears(locale, year, year),
+            style: TextStyle(
+              fontSize: type.scaled(13),
+              fontWeight: FontWeight.w700,
+              color: wb.text,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
+          const SizedBox(height: 8),
+          if (judah.isEmpty && israel.isEmpty && united.isEmpty)
+            Text(
+              s('kingsYearNoOne',
+                  'No king in this chart was on a throne that year.'),
+              style: TextStyle(
+                fontSize: type.text,
+                color: wb.mutedText,
+                fontFamilyFallback: kCjkFontFallback,
+              ),
+            )
+          else ...[
+            // The united monarchy only has an answer before 931, and
+            // printing an empty "United monarchy · None" beside every
+            // divided-kingdom year would be noise. Judah and Israel are
+            // always shown, because "None" IS the answer after 722 and
+            // after 586 and is the fact the reader came for.
+            if (united.isNotEmpty) group(Kingdom.united, united),
+            group(Kingdom.judah, judah),
+            group(Kingdom.israel, israel),
+          ],
+          const SizedBox(height: 4),
+          kingsChronologyCaveat(context, locale),
+        ],
+      ],
     );
   }
 }

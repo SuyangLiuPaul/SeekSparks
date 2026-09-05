@@ -24,6 +24,8 @@ import 'package:seeksparks/services/hebrew_kings_service.dart';
 import 'package:seeksparks/services/timeline_service.dart';
 import 'package:seeksparks/utils/date_hedge.dart';
 import 'package:seeksparks/utils/jump_to_reference.dart' as jumper;
+import 'package:seeksparks/utils/kings_contemporaries.dart'
+    show ContemporaryTally;
 import 'package:seeksparks/utils/navigate_to_reader.dart';
 import 'package:seeksparks/utils/reference_parser.dart';
 import 'package:seeksparks/utils/version_mapper.dart'
@@ -824,6 +826,88 @@ mixin WheelSheets<T extends StatefulWidget> on State<T> {
                     color: wb.mutedText, fontSize: t.scaled(11), height: 1.4),
               ),
             ),
+          // ON THE OTHER THRONE.
+          //
+          // The synchronism is the reason 1-2 Kings is one book and not
+          // two, and it was the one thing this sheet could not say: a
+          // reader who tapped Ahab's arc got Ahab's own years and had
+          // to leave for the chart to learn that Asa and Jehoshaphat
+          // stood opposite him.
+          //
+          // SAME DERIVATION AS THE CHART'S, not a second one — this
+          // calls `contemporariesOf` on the loaded data, which is
+          // `utils/kings_contemporaries.dart`, which is
+          // `closedIntervalsOverlap`. The tally, the rival mark and the
+          // caveat are the chart's own widgets, so the wheel and the
+          // chart cannot come to word the same overlap differently.
+          //
+          // Rows DO open here, unlike the kingdom sheet's — this sheet
+          // takes the king as a parameter, so a contemporary can be
+          // shown in place rather than pointing at a page that opens on
+          // no one in particular.
+          ...(() {
+            final data = HebrewKingsService.instance.cached;
+            if (data == null) return const <Widget>[];
+            final contemporaries = data.contemporariesOf(king);
+            if (contemporaries.isEmpty) return const <Widget>[];
+            final tally = ContemporaryTally.of(contemporaries);
+            final other = king.kingdom == Kingdom.judah
+                ? Kingdom.israel
+                : Kingdom.judah;
+            return <Widget>[
+              SizedBox(height: t.scaled(12)),
+              Text(
+                '${s('kingsContemporaries', 'On the other throne', locale)}'
+                ' · ${kingdomLabel(locale, other)} · ${tally.total}',
+                style: TextStyle(
+                    color: wb.mutedText,
+                    fontSize: t.scaled(11),
+                    fontWeight: FontWeight.w600),
+              ),
+              SizedBox(height: t.scaled(4)),
+              kingsTallyLines(sheet, tally, other, locale),
+              SizedBox(height: t.scaled(5)),
+              for (final c in contemporaries)
+                InkWell(
+                  onTap: () {
+                    Navigator.of(sheet).pop();
+                    showKing(context, c, locale);
+                  },
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: t.scaled(3)),
+                    child: Row(children: [
+                      Flexible(
+                        child: Text(
+                          c.nameFor(locale),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                              color: wb.accent, fontSize: t.scaled(11.5)),
+                        ),
+                      ),
+                      if (c.isRival) ...[
+                        SizedBox(width: t.scaled(5)),
+                        kingsRivalBadge(sheet, locale, size: t.scaled(10)),
+                      ],
+                      const Spacer(),
+                      Text(
+                        formatReignYears(locale, c.reignStart, c.reignEnd),
+                        style: TextStyle(
+                            color: wb.mutedText, fontSize: t.scaled(11)),
+                      ),
+                    ]),
+                  ),
+                ),
+              if (tally.hasRivals) ...[
+                SizedBox(height: t.scaled(6)),
+                kingsRivalExplanation(sheet, locale, size: t.scaled(10.5)),
+              ],
+              // This sheet has no basis line above it the way the
+              // kingdom sheet does, so the count carries its own.
+              SizedBox(height: t.scaled(6)),
+              kingsChronologyCaveat(sheet, locale, size: t.scaled(10.5)),
+            ];
+          })(),
           SizedBox(height: t.scaled(8)),
           Align(
             alignment: AlignmentDirectional.centerStart,

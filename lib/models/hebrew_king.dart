@@ -87,7 +87,23 @@ class HebrewKing {
   /// decoration.
   final String? accessionRef;
 
-  bool get isRival => spans.every((s) => s.kind == SpanKind.rival);
+  /// True when this man never held the throne on his own account —
+  /// every one of his spans is a [SpanKind.rival] claim.
+  ///
+  /// THIS IS THE ONLY TEST FOR RIVAL STATUS IN THE APP, and it reads
+  /// `spans`, never a list of names. Tibni is the one man in the file
+  /// it is true of: 1 Kings 16:21-22 gives him no regnal formula and
+  /// never says he reigned, so he is not among the canonical nineteen
+  /// kings of Israel, and his dates are Thiele's inference. Omri is
+  /// NOT rival by this test — his `rival` span is followed by a `sole`
+  /// one, because the four years against Tibni ended with him on the
+  /// throne alone.
+  ///
+  /// The `isNotEmpty` guard is not decoration: `every` on an empty list
+  /// is true, so a king whose `spans` failed to parse would silently
+  /// be demoted to a claimant and drop out of every reigning count.
+  bool get isRival =>
+      spans.isNotEmpty && spans.every((s) => s.kind == SpanKind.rival);
 
   ReignSpan? get soleReign {
     for (final s in spans) {
@@ -167,7 +183,7 @@ class KingsEpoch {
       );
 }
 
-/// Two kings are contemporaries when their reigns share any year.
+/// THE OVERLAP RULE, written once.
 ///
 /// The comparison is over CLOSED intervals, and that is deliberate.
 /// Ahaziah of Judah reigned only in 841 BC and Jehu of Israel came to
@@ -175,5 +191,28 @@ class KingsEpoch {
 /// report the two men who met that year as never having overlapped.
 /// Several reigns here are a single year or less (Zimri's seven days,
 /// Shallum's month), and a half-open rule erases them.
-bool reignsOverlap(HebrewKing a, HebrewKing b) =>
-    a.reignStart <= b.reignEnd && b.reignStart <= a.reignEnd;
+///
+/// Nor is a touch at one end an artefact to be filtered out. Asa of
+/// Judah acceded in Jeroboam I's twentieth year (1 Kings 15:9) and
+/// Nadab in Asa's second (1 Kings 15:25); on Thiele's figures the two
+/// men share about a year and on Albright's about twelve. The shared
+/// year is the synchronism the text itself supplies, so it counts.
+///
+/// [reignsOverlap] and [reignTouchesYear] both go through here so that
+/// the chart, the wheel sheet and the year lookup cannot come to
+/// disagree about who was reigning when.
+bool closedIntervalsOverlap(int aStart, int aEnd, int bStart, int bEnd) =>
+    aStart <= bEnd && bStart <= aEnd;
+
+/// Two kings are contemporaries when their reigns share any year.
+bool reignsOverlap(HebrewKing a, HebrewKing b) => closedIntervalsOverlap(
+      a.reignStart,
+      a.reignEnd,
+      b.reignStart,
+      b.reignEnd,
+    );
+
+/// Whether [k] was on the throne in [year] — the same closed-interval
+/// rule applied to a window one year wide. Years are negative for BC.
+bool reignTouchesYear(HebrewKing k, int year) =>
+    closedIntervalsOverlap(k.reignStart, k.reignEnd, year, year);
