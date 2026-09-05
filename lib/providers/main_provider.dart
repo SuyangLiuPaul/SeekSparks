@@ -1357,8 +1357,57 @@ class MainProvider extends ChangeNotifier {
   void setCurrentChapter({required String book, required int chapter}) {
     currentBook = book;
     currentChapter = chapter;
+    _settleCursorInCurrentChapter();
     if (isPrimary) saveCurrentState();
     notifyListeners();
+  }
+
+  /// THE CURSOR LIVES IN THE CHAPTER THE WORKSPACE SAYS IT IS ON.
+  ///
+  /// `currentVerse` is the workspace cursor, and several surfaces read
+  /// the REFERENCE off it rather than off `currentBook`/`currentChapter`
+  /// — the reading pane's header opens the book/chapter/verse picker at
+  /// `currentVerse.book` / `.chapter` (`bible_reading_pane.dart`, the
+  /// `onBookTap` that pushes `BooksPage`), which is why a cursor left
+  /// behind shows up as a picker that opens on the chapter you were on
+  /// BEFORE you navigated.
+  ///
+  /// Every in-app caller of [setCurrentChapter] pairs it with
+  /// `updateCurrentVerse` — the reader's swipe, the toolbar arrows, the
+  /// picker, both version-switch paths, `jump_to_reference`. One does
+  /// not: `url_sync_service_web.dart` moves the reference from a hash
+  /// and only touches the cursor when the link carried a `:verse`. So a
+  /// chapter-only link, and browser Back or Forward onto a
+  /// chapter-only history entry, moved the reference and left the
+  /// cursor where it was.
+  ///
+  /// The reader's own PageView cannot repair it, and the reason is the
+  /// gate that fixed a different bug: an external chapter change moves
+  /// the `PageController` to the new index, `onPageChanged` fires with
+  /// that index, and its first line is `if (idx == currentChapterPageIdx)
+  /// return` — true, because the provider moved FIRST. So `_switchTo`,
+  /// which is what would have called `updateCurrentVerse`, never runs.
+  ///
+  /// Fixing it in the provider rather than at the two ends means no
+  /// future caller can perform half the move. The rule is only applied
+  /// when the cursor is actually outside the new chapter, so a caller
+  /// that follows with its own `updateCurrentVerse` (a specific verse
+  /// from a search hit) still wins.
+  ///
+  /// A chapter the loaded corpus does not carry leaves the cursor
+  /// alone: callers treat a null cursor as "nothing open yet", which is
+  /// a bigger lie than a stale one — the same rule, and the same
+  /// reason, as [_realignCursorTo].
+  void _settleCursorInCurrentChapter() {
+    final cur = currentVerse;
+    if (cur != null &&
+        cur.book == currentBook &&
+        cur.chapter == currentChapter) {
+      return;
+    }
+    final inChapter = versesInChapter(currentBook ?? '', currentChapter ?? 0);
+    if (inChapter.isEmpty) return;
+    currentVerse = inChapter.first;
   }
 
   // Method to add a verse to the list and notify listeners
@@ -1736,7 +1785,6 @@ class MainProvider extends ChangeNotifier {
         await prefs.setBool('migrated_locale_default_v1346', true);
       }
       currentVersion = v;
-      _realignBookTo(v);
     } else {
       // 2026-05-25 (v1.3.40): no saved version yet → fresh install.
       // Pick a sensible default based on the user's locale. The
@@ -1760,6 +1808,30 @@ class MainProvider extends ChangeNotifier {
     }
     if (savedBook != null) currentBook = savedBook;
     if (savedChapter != null) currentChapter = savedChapter;
+    // AFTER the saved book lands, not before it. [_realignBookTo] used
+    // to be called inside the `savedVersion != null` branch above,
+    // where `currentBook` is still the class default `null` — so its
+    // own first line (`if (book == null || book.isEmpty) return`)
+    // returned every time and the boot path realigned NOTHING. The
+    // only two writers of `currentVersion` here are the two branches
+    // above, and both can hand back an edition in a DIFFERENT language
+    // from the one the saved book was written in:
+    //
+    //   • the v1.3.46 migration, which is the reachable one. An
+    //     en-locale reader with the old class default saved
+    //     (`cuvs-yhwh`, books keyed 创世纪) is moved to the English
+    //     default. Version becomes `bsb`, book stays 创世纪, and
+    //     `versesInChapter('创世纪', 1)` matches nothing in a corpus
+    //     keyed on 'Genesis' — the blank pane [_realignBookTo] exists
+    //     to prevent, arriving on the first frame after an upgrade
+    //     instead of after a version switch.
+    //   • `resolveReadingVersion`, if a future `retiredVersionSuccessors`
+    //     row ever crosses languages. None does today; the guard costs
+    //     nothing and does not depend on that staying true.
+    //
+    // Reads `currentVersion` rather than a branch-local `v` so the
+    // no-saved-version branch is covered by the same line.
+    _realignBookTo(currentVersion);
 
     await _loadHighlights();
     await _loadNotes();

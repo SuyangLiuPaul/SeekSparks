@@ -54,6 +54,81 @@ void main() {
     mp.setVersion('bsb');
     expect(mp.currentBook, isNull);
   });
+
+  _boot();
+}
+
+/// THE SAME BLANK PANE, ONE FRAME EARLIER.
+///
+/// `setVersion` is not the only thing that moves a reader between
+/// corpora. `restoreState` does it twice — the v1.3.46 en-locale
+/// migration off `cuvs-yhwh`, and `resolveReadingVersion` substituting a
+/// retired code — and it restores the saved BOOK separately. The
+/// realign call sat in the version branch, above the line that assigns
+/// the book, so it ran with `currentBook` still null and returned on its
+/// own first line every single time. The boot path realigned nothing,
+/// and the reader who was migrated got the blank pane on launch instead
+/// of on a version switch.
+///
+/// These drive `restoreState` with the prefs an affected device
+/// actually holds, which is the only way to see it: the state is set
+/// up by one branch and broken by another, so neither half is wrong on
+/// its own.
+void _boot() {
+  test('boot: the v1.3.46 migration does not strand a Chinese book '
+      'in an English corpus', () async {
+    // What an en-locale device that has never run the migration holds:
+    // the pre-v1.3.40 class default, and a book spelled the way that
+    // edition spells it.
+    SharedPreferences.setMockInitialValues({
+      'locale': 'en',
+      'version': 'cuvs-yhwh',
+      'book': '创世纪',
+      'chapter': 1,
+    });
+    final mp = MainProvider();
+    await mp.restoreState();
+
+    expect(mp.currentVersion, localeDefaultVersion('en'),
+        reason: 'precondition — the migration is what makes the pair '
+            'disagree, so if it stops firing this test proves nothing');
+    expect(mp.currentBook, 'Genesis',
+        reason: 'the migration moved the reader to an English corpus; a '
+            'book left spelled 创世纪 matches no verse in it and the '
+            'pane boots BLANK');
+  });
+
+  test('boot: a book and version that already agree are left alone',
+      () async {
+    SharedPreferences.setMockInitialValues({
+      'locale': 'zh-Hans',
+      'version': 'cuvs-yhwh',
+      'book': '创世纪',
+      'chapter': 1,
+    });
+    final mp = MainProvider();
+    await mp.restoreState();
+    expect(mp.currentVersion, 'cuvs-yhwh');
+    expect(mp.currentBook, '创世纪');
+  });
+
+  test('boot: a retired code is carried to its successor with its book',
+      () async {
+    // `cuv` → `cuvs-yhwh`, same language, so this pins that the realign
+    // does not MANGLE a book on the substitution path. Every successor
+    // row is same-language today; the row that crosses languages is the
+    // one this guard is waiting for.
+    SharedPreferences.setMockInitialValues({
+      'locale': 'zh-Hans',
+      'version': 'cuv',
+      'book': '约翰福音',
+      'chapter': 3,
+    });
+    final mp = MainProvider();
+    await mp.restoreState();
+    expect(mp.currentVersion, 'cuvs-yhwh');
+    expect(mp.currentBook, '约翰福音');
+  });
 }
 
 /// The set that caused the outage, guarded directly.
