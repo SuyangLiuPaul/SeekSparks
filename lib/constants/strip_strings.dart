@@ -73,13 +73,32 @@ const Map<String, Map<String, String>> stripStrings = {
   /// One heading for both kingdoms' reigns, where the wheel gives Judah
   /// and Israel a legend row each (`wheelKingsThiele`, once per
   /// `Kingdom`). The strip groups them under one sticky heading with two
-  /// lanes beneath it — the heading names the pair, the lanes keep them
-  /// apart, matching how `kingdomArcColor` already keeps their hues apart
-  /// within one shared family.
+  /// lanes beneath it, and THE HEADING IS THE ONLY PLACE THE TWO
+  /// KINGDOMS ARE NAMED: the lanes are told apart by `kingdomArcColor`'s
+  /// two hues within one family and by nothing else on the canvas. The
+  /// filter sheet's "Reigns of Judah & Israel" is a modal, not the
+  /// screen. So the kingdom names cannot be dropped from this string —
+  /// there is nowhere for a reader to recover them.
+  ///
+  /// 2026-09-05: `Kings of Judah & Israel` became `Judah & Israel
+  /// kings`. At the default type setting on a 375 px phone the sticky
+  /// column gives a heading 134 px, and the old wording measured 142.9
+  /// px in the bundled Roboto at the weight the painter draws
+  /// (`FontWeight.w600`, 13.8 px) — ellipsised at default settings on
+  /// the commonest phone width. The new wording is 125.3 px, 8.7 px
+  /// clear, and it parallels `stripLaneMinistries`' form. `Judah &
+  /// Israel` alone would have been 88.3 px and was rejected for a
+  /// different reason: two of the stream bands in the lane group
+  /// directly below are named exactly `Israel` and `Judah`, so a
+  /// heading identical to two band names beneath it would mislead.
+  /// Candidates under about 8 px of margin (`Kings of Judah/Israel`
+  /// 132.3, `Kings, Judah & Israel` 130.0) were rejected because the
+  /// app's default font is the SYSTEM face — San Francisco, Segoe UI —
+  /// not Roboto, and a face 3% wider puts them back over.
   'stripLaneKings': {
     'zh-Hans': '犹大与以色列列王',
     'zh-Hant': '猶大與以色列列王',
-    'en': 'Kings of Judah & Israel',
+    'en': 'Judah & Israel kings',
   },
 
   /// Same wording as `wheelStrings['wheelMinistries']`.
@@ -97,10 +116,25 @@ const Map<String, Map<String, String>> stripStrings = {
   /// are homogeneous: every one is "a people or institution's own band,"
   /// differing only in which people. See the wheel's own header comment,
   /// "WHY BANDS AND NOT ONE STREAM OF DATES."
+  ///
+  /// 2026-09-05: the English is `Peoples`, which is INCOMPLETE and is
+  /// the deliberate sacrifice. `Peoples & institutions` measured 135.5
+  /// px against the 134 px a heading gets in the sticky column at the
+  /// default type setting on a 375 px phone (bundled Roboto,
+  /// `FontWeight.w600`, 13.8 px), so it was ellipsised. The problem word
+  /// is `institutions` itself, about 70 px: no wording that keeps it and
+  /// a conjunction fits with a margin worth having — `Nations &
+  /// institutions` is 133.6, which is 0.4 px, and the app's default font
+  /// is the system face rather than Roboto. `Peoples & powers` (110.9)
+  /// would have fitted and is FALSE: three of the 22 bands — The Church,
+  /// Scripture, Elsewhere — are not powers. Incomplete beats wrong, and
+  /// what the shorter heading drops is recoverable in place, because
+  /// every band carries its own name in the lane beside it. The Chinese
+  /// keeps 民族与机构 whole: it fits, at 65 px against 114.
   'stripLaneStreams': {
     'zh-Hans': '民族与机构',
     'zh-Hant': '民族與機構',
-    'en': 'Peoples & institutions',
+    'en': 'Peoples',
   },
 
   // ── scroll-edge indicators ───────────────────────────────────────────
