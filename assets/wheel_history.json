@@ -6127,6 +6127,102 @@
     "zh-Hans": "西顿王的女儿，亚哈之妻；在撒玛利亚立巴力，杀灭耶和华的先知，又为一座葡萄园害死拿伯。此段自亚哈登基起，至耶户之年她被杀止，年份依本应用的列王年表。",
     "zh-Hant": "西頓王的女兒，亞哈之妻；在撒瑪利亞立巴力，殺滅耶和華的先知，又為一座葡萄園害死拿伯。此段自亞哈登基起，至耶戶之年她被殺止，年份依本應用的列王年表。"
    }
+  },
+  {
+   "id": "qin-dynasty",
+   "start": -221,
+   "end": -206,
+   "region": "asia",
+   "stream": "china",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "Qin Dynasty",
+    "zh-Hans": "秦朝",
+    "zh-Hant": "秦朝"
+   },
+   "note": {
+    "en": "The first empire to hold all of China, under the king of Qin who took the title of First Emperor. It set one script, one coinage and one axle width across the country and joined the northern walls into one line, and it fell within four years of his death. References close it at 207 or at 206 BC, so the band's end is rounded.",
+    "zh-Hans": "第一个统一全中国的帝国，由自称始皇帝的秦王所建。它在全国推行一种文字、一种钱币、一种车轨，并把北边各段长城连成一线；始皇死后不出四年即亡。各家或断其亡于公元前207年，或断于前206年，故此带末端取约数。",
+    "zh-Hant": "第一個統一全中國的帝國，由自稱始皇帝的秦王所建。它在全國推行一種文字、一種錢幣、一種車軌，並把北邊各段長城連成一線；始皇死後不出四年即亡。各家或斷其亡於公元前207年，或斷於前206年，故此帶末端取約數。"
+   }
+  },
+  {
+   "id": "three-kingdoms-china",
+   "start": 220,
+   "end": 280,
+   "region": "asia",
+   "stream": "china",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "The Three Kingdoms",
+    "zh-Hans": "三国",
+    "zh-Hant": "三國"
+   },
+   "note": {
+    "en": "Wei, Shu and Wu divided China when the Han ended in 220, and the division closed when the Jin took Wu in 280. Some references stop the period at 265, where the Jin house itself begins, so the band's end is rounded; this chart takes the reunification, which is the year the Jin band already names.",
+    "zh-Hans": "公元220年汉亡，魏、蜀、吴三分中国；280年晋灭吴，分裂乃止。有的著作把此期断至265年，即晋室自身之始，故此带末端取约数；本图取统一之年，也就是晋朝那一带已经点明的年份。",
+    "zh-Hant": "公元220年漢亡，魏、蜀、吳三分中國；280年晉滅吳，分裂乃止。有的著作把此期斷至265年，即晉室自身之始，故此帶末端取約數；本圖取統一之年，也就是晉朝那一帶已經點明的年份。"
+   }
+  },
+  {
+   "id": "northern-southern-dynasties",
+   "start": 420,
+   "end": 589,
+   "region": "asia",
+   "stream": "china",
+   "approximate": true,
+   "basis": "conventional",
+   "name": {
+    "en": "Northern and Southern Dynasties",
+    "zh-Hans": "南北朝",
+    "zh-Hant": "南北朝"
+   },
+   "note": {
+    "en": "After the Jin fell in 420 rival houses held the north and the south until the Sui reunited the country in 589. It is the stretch in which Buddhism took root through Chinese society. References that count the northern line from its own founding open the period in 386 instead, so the band's start is rounded.",
+    "zh-Hans": "公元420年晋亡，南北各有王朝对峙，直到589年隋朝再度统一。佛教正是在这段年月里深入中国社会。有的著作从北方政权自身立国之年算起，把此期起点定在386年，故此带起端取约数。",
+    "zh-Hant": "公元420年晉亡，南北各有王朝對峙，直到589年隋朝再度統一。佛教正是在這段年月裡深入中國社會。有的著作從北方政權自身立國之年算起，把此期起點定在386年，故此帶起端取約數。"
+   }
+  },
+  {
+   "id": "mamluk-sultanate",
+   "start": 1250,
+   "end": 1517,
+   "region": "islamic",
+   "stream": "islam",
+   "approximate": false,
+   "basis": "conventional",
+   "name": {
+    "en": "Mamluk Sultanate",
+    "zh-Hans": "马木留克苏丹国",
+    "zh-Hant": "馬木留克蘇丹國"
+   },
+   "note": {
+    "en": "The soldier-slave sultans who took Egypt in 1250 and Syria ten years after, and held them until the Ottomans took Cairo in 1517. They stopped the Mongols at Ain Jalut in 1260 and took Acre, the last crusader city, in 1291. Jerusalem was theirs for the whole of that time, which is the stretch this chart otherwise leaves between the Abbasids and the Ottomans.",
+    "zh-Hans": "以奴隶出身的军人为苏丹，1250年据有埃及，十年后又据叙利亚，直到1517年奥斯曼军攻取开罗为止。他们1260年在阿音札鲁特挡住蒙古军，1291年攻下十字军最后一座城阿卡。这两百多年间耶路撒冷一直在他们手中，而本图在阿拔斯与奥斯曼之间原是空的。",
+    "zh-Hant": "以奴隸出身的軍人為蘇丹，1250年據有埃及，十年後又據敘利亞，直到1517年奧斯曼軍攻取開羅為止。他們1260年在阿音札魯特擋住蒙古軍，1291年攻下十字軍最後一座城阿卡。這兩百多年間耶路撒冷一直在他們手中，而本圖在阿拔斯與奧斯曼之間原是空的。"
+   }
+  },
+  {
+   "id": "judges-of-israel",
+   "start": -1380,
+   "end": -1050,
+   "region": "levant",
+   "stream": "israel",
+   "approximate": true,
+   "basis": "conventional",
+   "ref": "Judges 2:16",
+   "name": {
+    "en": "The Judges of Israel",
+    "zh-Hans": "以色列的士师时期",
+    "zh-Hant": "以色列的士師時期"
+   },
+   "note": {
+    "en": "The stretch between Joshua's death and Israel's first king; both ends are years this chart already draws. NO JUDGE IS DRAWN INSIDE IT, and that is deliberate: the years the book states for the judges add to about 530 while 1 Kings 6:1 allows 479 from the exodus to the temple, so this app counts them by verse and does not put them on the axis. The band is marked approximate for the same reason.",
+    "zh-Hans": "自约书亚去世到以色列立第一位王之间的年月；两端都取自本图已经画出的年份。带内不画任何一位士师，这是有意的：士师记所记各段年数合计约530年，而列王纪上6:1只容出埃及至建殿共479年，故本应用按经文逐条计数，不把他们排在年轴上。此带标为约数，也是同一缘故。",
+    "zh-Hant": "自約書亞去世到以色列立第一位王之間的年月；兩端都取自本圖已經畫出的年份。帶內不畫任何一位士師，這是有意的：士師記所記各段年數合計約530年，而列王紀上6:1只容出埃及至建殿共479年，故本應用按經文逐條計數，不把他們排在年軸上。此帶標為約數，也是同一緣故。"
+   }
   }
  ],
  "ministries": [
@@ -11743,24 +11839,6 @@
    }
   },
   {
-   "id": "movable_type_china",
-   "year": 1040,
-   "era": "world",
-   "stream": "china",
-   "basis": "conventional",
-   "approximate": true,
-   "title": {
-    "en": "Movable Type Invented in China",
-    "zh-Hans": "中国发明活字印刷",
-    "zh-Hant": "中國發明活字印刷"
-   },
-   "desc": {
-    "en": "Bi Sheng cuts characters in clay that can be set and reset, four centuries before printing reaches Europe.",
-    "zh-Hans": "毕昇以胶泥刻字，可随意排版重组，比印刷术传入欧洲早了四百年。",
-    "zh-Hant": "畢昇以膠泥刻字，可隨意排版重組，比印刷術傳入歐洲早了四百年。"
-   }
-  },
-  {
    "id": "gunpowder_formula",
    "year": 1044,
    "era": "world",
@@ -11791,9 +11869,9 @@
     "zh-Hant": "畢昇發明活字印刷"
    },
    "desc": {
-    "en": "Shen Kuo records Bi Sheng cutting movable type in fired clay, some time between 1041 and 1048.",
-    "zh-Hans": "沈括记载毕昇于1041至1048年间以胶泥刻制活字。",
-    "zh-Hant": "沈括記載畢昇於1041至1048年間以膠泥刻製活字。"
+    "en": "Shen Kuo records Bi Sheng cutting movable type in fired clay, some time between 1041 and 1048 — four centuries before movable type reaches Europe.",
+    "zh-Hans": "沈括记载毕昇于1041至1048年间以胶泥刻制活字，比活字印刷传入欧洲早了四百年。",
+    "zh-Hant": "沈括記載畢昇於1041至1048年間以膠泥刻製活字，比活字印刷傳入歐洲早了四百年。"
    }
   },
   {
@@ -12673,9 +12751,9 @@
     "zh-Hant": "哥倫布抵達加勒比海"
    },
    "desc": {
-    "en": "Three Spanish ships make landfall in the Bahamas, opening permanent contact between Europe and America.",
-    "zh-Hans": "三艘西班牙船只在巴哈马登陆，欧洲与美洲自此长期接触。",
-    "zh-Hant": "三艘西班牙船隻在巴哈馬登陸，歐洲與美洲自此長期接觸。"
+    "en": "Three Spanish ships make landfall in the Bahamas, opening permanent contact between Europe and America, and with it a lasting exchange of people, crops and diseases between the two hemispheres.",
+    "zh-Hans": "三艘西班牙船只在巴哈马登陆，欧洲与美洲自此长期接触，两个半球之间的人口、作物与疾病也从此长期交流。",
+    "zh-Hant": "三艘西班牙船隻在巴哈馬登陸，歐洲與美洲自此長期接觸，兩個半球之間的人口、作物與疾病也從此長期交流。"
    }
   },
   {
@@ -12712,24 +12790,6 @@
     "en": "Alexander VI drew a line down the Atlantic and granted Spain the newly found lands west of it, Portugal those to the east; the two crowns moved the line themselves by treaty the next year.",
     "zh-Hans": "亚历山大六世在大西洋上划下一线，线西新发现的土地归西班牙，线东归葡萄牙；次年两国另订条约，自行把此线西移。",
     "zh-Hant": "亞歷山大六世在大西洋上劃定一線，線西新發現的土地歸西班牙，線東歸葡萄牙；翌年兩國另訂條約，自行將此線西移。"
-   }
-  },
-  {
-   "id": "columbian_exchange",
-   "year": 1500,
-   "era": "world",
-   "stream": "americas",
-   "basis": "conventional",
-   "approximate": true,
-   "title": {
-    "en": "Columbus Reaches the Americas",
-    "zh-Hans": "哥伦布抵达美洲",
-    "zh-Hant": "哥倫布抵達美洲"
-   },
-   "desc": {
-    "en": "The crossing opened a lasting exchange of people, crops and diseases between the two hemispheres.",
-    "zh-Hans": "这次横渡开启了两个半球之间人口、作物与疾病的长期交流。",
-    "zh-Hant": "這次橫渡開啟了兩個半球之間人口、作物與疾病的長期交流。"
    }
   },
   {
@@ -15493,7 +15553,7 @@
    "id": "wright_first_flight",
    "year": 1903,
    "era": "world",
-   "stream": "world",
+   "stream": "americas",
    "basis": "conventional",
    "approximate": false,
    "title": {
@@ -15505,24 +15565,6 @@
     "en": "The Wright brothers flew a powered aeroplane at Kitty Hawk, North Carolina, in December 1903.",
     "zh-Hans": "1903年12月，莱特兄弟在北卡罗来纳州小鹰镇完成首次动力飞行。",
     "zh-Hant": "1903年12月，萊特兄弟在北卡羅來納州小鷹鎮完成首次動力飛行。"
-   }
-  },
-  {
-   "id": "powered_flight",
-   "year": 1903,
-   "era": "world",
-   "stream": "americas",
-   "basis": "conventional",
-   "approximate": false,
-   "title": {
-    "en": "Wright Brothers Fly at Kitty Hawk",
-    "zh-Hans": "莱特兄弟在小鹰镇试飞",
-    "zh-Hant": "萊特兄弟在小鷹鎮試飛"
-   },
-   "desc": {
-    "en": "The Wright brothers fly a heavier-than-air machine under its own power at Kitty Hawk.",
-    "zh-Hans": "莱特兄弟在小鹰镇驾驶重于空气的动力飞行器升空。",
-    "zh-Hant": "萊特兄弟在小鷹鎮駕駛重於空氣的動力飛行器升空。"
    }
   },
   {
@@ -15547,24 +15589,6 @@
    "id": "einstein_relativity",
    "year": 1905,
    "era": "world",
-   "stream": "world",
-   "basis": "conventional",
-   "approximate": false,
-   "title": {
-    "en": "Einstein Publishes Relativity",
-    "zh-Hans": "爱因斯坦发表相对论",
-    "zh-Hant": "愛因斯坦發表相對論"
-   },
-   "desc": {
-    "en": "Einstein set out special relativity in 1905 and the general theory of gravity ten years later.",
-    "zh-Hans": "爱因斯坦1905年提出狭义相对论，十年后又提出广义相对论。",
-    "zh-Hant": "愛因斯坦1905年提出狹義相對論，十年後又提出廣義相對論。"
-   }
-  },
-  {
-   "id": "special_relativity",
-   "year": 1905,
-   "era": "world",
    "stream": "europe",
    "basis": "conventional",
    "approximate": false,
@@ -15574,9 +15598,9 @@
     "zh-Hant": "愛因斯坦發表狹義相對論"
    },
    "desc": {
-    "en": "Space and time are shown to depend on the observer's motion, and mass to be a form of energy.",
-    "zh-Hans": "空间与时间被证明取决于观测者的运动，质量亦是能量的一种形式。",
-    "zh-Hant": "空間與時間被證明取決於觀測者的運動，質量亦是能量的一種形式。"
+    "en": "Space and time are shown to depend on the observer's motion, and mass to be a form of energy. The general theory of gravity followed ten years later.",
+    "zh-Hans": "空间与时间被证明取决于观测者的运动，质量亦是能量的一种形式。十年之后又有广义相对论。",
+    "zh-Hant": "空間與時間被證明取決於觀測者的運動，質量亦是能量的一種形式。十年之後又有廣義相對論。"
    }
   },
   {
@@ -20943,6 +20967,42 @@
     "en": "Sixteen years after the Turkish army broke before Vienna, the sultan signed away Hungary and Transylvania to Austria, the Morea to Venice and Podolia to Poland. It was the first treaty in which the Ottomans surrendered European provinces they had held for generations, and from then on the frontier moved south instead of north.",
     "zh-Hans": "土耳其大军在维也纳城下溃败十六年后，苏丹签约将匈牙利与特兰西瓦尼亚割予奥地利，摩里亚割予威尼斯，波多利亚割予波兰。这是奥斯曼帝国第一次以条约交出世代所据的欧洲行省；此后边界不再北进，而是一路南退。",
     "zh-Hant": "土耳其大軍在維也納城下潰敗十六年後，蘇丹簽約將匈牙利與特蘭西瓦尼亞割予奧地利，摩里亞割予威尼斯，波多利亞割予波蘭。這是鄂圖曼帝國第一次以條約交出世代所據的歐洲行省；此後邊界不再北進，而是一路南退。"
+   }
+  },
+  {
+   "id": "pope_john_paul_i",
+   "year": 1978,
+   "era": "church",
+   "stream": "church",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "John Paul I Reigns Thirty-Three Days",
+    "zh-Hans": "若望保禄一世在位三十三天",
+    "zh-Hant": "若望保祿一世在位三十三天"
+   },
+   "desc": {
+    "en": "Albino Luciani was elected on 26 August 1978 and found dead on 28 September, so one year holds two conclaves and three popes. He is a moment on this chart and not a band because a reign of thirty-three days has no width on an axis six thousand years long — the same reason Leo V is drawn this way.",
+    "zh-Hans": "阿尔比诺·卢恰尼于1978年8月26日当选，9月28日被发现去世，故这一年之内有两次教宗选举、三位教宗。本图把他画为一个点而非一条带，因为三十三天在长达六千年的年轴上没有宽度——良五世也是照此画的。",
+    "zh-Hant": "阿爾比諾·盧恰尼於1978年8月26日當選，9月28日被發現去世，故這一年之內有兩次教宗選舉、三位教宗。本圖把他畫為一個點而非一條帶，因為三十三天在長達六千年的年軸上沒有寬度——良五世也是照此畫的。"
+   }
+  },
+  {
+   "id": "kanto_earthquake",
+   "year": 1923,
+   "era": "world",
+   "stream": "japan",
+   "basis": "conventional",
+   "approximate": false,
+   "title": {
+    "en": "The Great Kanto Earthquake",
+    "zh-Hans": "关东大地震",
+    "zh-Hant": "關東大地震"
+   },
+   "desc": {
+    "en": "A quake of about magnitude 7.9 struck the Tokyo and Yokohama plain around noon on 1 September 1923. The fires that followed did most of the killing; counts of the dead and missing run from about 105,000 to 140,000, and it is the deadliest natural disaster in Japan's recorded history.",
+    "zh-Hans": "1923年9月1日近正午，东京、横滨一带发生约7.9级地震。随后的大火造成绝大部分死亡；死亡与失踪合计的估数在约十万五千至十四万之间，是日本有记载以来最惨重的天灾。",
+    "zh-Hant": "1923年9月1日近正午，東京、橫濱一帶發生約7.9級地震。隨後的大火造成絕大部分死亡；死亡與失蹤合計的估數在約十萬五千至十四萬之間，是日本有記載以來最慘重的天災。"
    }
   }
  ]

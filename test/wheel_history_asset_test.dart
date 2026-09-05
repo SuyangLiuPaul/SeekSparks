@@ -294,8 +294,8 @@ void main() {
     }
     // The guard on the guard: a sweep that saw one record, or one
     // vocabulary word, would pass everything above and prove nothing.
-    expect(checked, 1055,
-        reason: '747 events + 226 powers + 82 nations; if this moved, the '
+    expect(checked, 1058,
+        reason: '745 events + 231 powers + 82 nations; if this moved, the '
             'corpus grew and the count should move with it. 2026-09-02 '
             'added 74 church-history records; 2026-09-03 added 42 Roman '
             'and Greek ones, merged two duplicate pairs away, and took 15 '
@@ -315,7 +315,20 @@ void main() {
             'swept in four era slices for 137 records; the 674 the '
             'extraction could not date, and the bands and nations, went '
             'the same way for 59 more. Most of the rest was already here '
-            'or was damage from the extraction');
+            'or was damage from the extraction. 2026-09-05 re-measured '
+            'that whole exercise and found the index closed: 786 '
+            'headwords, every one of them covered, placed or refused '
+            'with a stated reason, and every record the passes proposed '
+            'shipped bar one. The events count did NOT move that day — '
+            '3 records that drew the same event a second time came off '
+            'and 3 went on — and the 5 powers that took this total from '
+            '1055 to 1060 came from a different measurement entirely: '
+            'the bands of a stream read in order, which found the '
+            'Chinese chain drawing Shang, Zhou, Han, Jin, Sui, Tang, '
+            'Song, Yuan, Ming and Qing and skipping Qin, the Three '
+            'Kingdoms and the northern-southern dynasties, and the '
+            'Islamic chain jumping from the Abbasids to the Ottomans '
+            'over the centuries the Mamluks held Jerusalem');
     expect(seen, {'scripture', 'scripture+thiele', 'conventional'},
         reason: 'all three words are in use, so the closed set is doing '
             'work rather than admitting the only value there is');

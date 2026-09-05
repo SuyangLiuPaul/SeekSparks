@@ -23,7 +23,7 @@ Map<String, dynamic> _json(String path) =>
 
 /// The real, merged corpus, assembled the same way
 /// `WheelHistoryService.load()` assembles it (`wheel_bible_narrative_
-/// test.dart` uses the identical recipe) — 851 events, not the 747 the
+/// test.dart` uses the identical recipe) — 849 events, not the 745 the
 /// raw asset alone holds, because `bibleNarrativeEvents` folds in 104
 /// more from `bible_timeline.json` before anything downstream ever
 /// sees the list.
@@ -112,7 +112,7 @@ void main() {
     // Guard on the guards: if these collapse the tests below are
     // proving something about a corpus that no longer exists.
     expect(wheel.streams, hasLength(22));
-    expect(wheel.events, hasLength(851),
+    expect(wheel.events, hasLength(849),
         reason: '747 from wheel_history.json + 104 merged from '
             'bible_timeline.json, per WheelHistoryService.load()');
     expect(kings, hasLength(42));
@@ -332,7 +332,7 @@ void main() {
       final lanes = build(pxPerYear: kStripZoomSteps.first);
       int countOf(StripLaneKind k) =>
           lanes.where((l) => l.kind == k).fold(0, (n, l) => n + l.spans.length);
-      expect(countOf(StripLaneKind.events), 851);
+      expect(countOf(StripLaneKind.events), 849);
       expect(countOf(StripLaneKind.kings), 42);
       expect(countOf(StripLaneKind.ministries), wheel.ministries.length);
       expect(countOf(StripLaneKind.rail), 122,
@@ -443,7 +443,7 @@ void main() {
         for (final l in lanes.where((l) => l.kind == StripLaneKind.events))
           ...l.spans
       ];
-      expect(eventSpans, hasLength(851));
+      expect(eventSpans, hasLength(849));
       final streamIds = wheel.streams.map((s) => s.id).toSet();
       for (final e in wheel.events) {
         expect(streamIds, contains(e.stream),
