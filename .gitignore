@@ -69,3 +69,19 @@ tools/src/
 assets/nasb-ev.json
 assets/nsn-plus.json
 assets/tagged/nsn-plus/
+
+# 2026-09-05: `output/` is NOT this project's. It holds two files —
+# `pdf/神要开道路_G调和弦版.pdf` and `imagegen/神要开道路_G调和弦版.png`,
+# 3.7 MB together, a Chinese worship song's chord chart. The PDF names
+# ReportLab as its producer and stamps itself `D:20260811144203+10'00'`,
+# matching both files' mtimes; nothing in this repository imports
+# ReportLab, and `reportlab`, `imagegen` and the song title appear
+# nowhere in it. So some other tool ran with this checkout as its
+# working directory and left its output here.
+#
+# Ignored rather than moved, because it is the owner's file and moving
+# someone's document out from under them is worse than a line here. The
+# hazard it removes is real though: 3.7 MB of unrelated binary sitting
+# untracked and unignored in a shared checkout is one careless `git add`
+# from being committed. Move it somewhere it belongs and delete this.
+output/

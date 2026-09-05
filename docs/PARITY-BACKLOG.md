@@ -95,16 +95,31 @@ file should read.
   inside a phrase. *Done:* `'!the god` slot exclusion parses and is
   covered by a test.
 - **Verse context limits for AND (`;10`)** — **HAVE.** bwh16.
-- **Proximity** — **PARTIAL, and divergent by choice.** We spell it
-  `G25 NEAR5 G26`, unordered. BibleWorks writes `*n` *between* the words
-  and it is **directional** — "followed within 9 words"
-  (bwh17, bwh20 `('faith *4 love)`). #294 landed the teaching pass
-  (operators dim until the line holds a number, hint row, tooltips).
-  *Done:* decide deliberately whether to accept `*n` as a parity alias —
-  which collides with our wildcard `*` and needs resolving — or to keep
-  `NEARn` and **say in the help that we differ**. Directionality is the
-  substantive gap, not the spelling: an unordered answer to a directional
-  question is a different result set.
+- **Proximity** — **HAVE, and divergent in spelling by choice.**
+  *(Updated 2026-09-05.)* We spell it `G25 NEAR5 G26`, unordered, and
+  **`G25 BEFORE5 G26`**, directional — which is the query BibleWorks
+  writes `*n` *between* the words (bwh17, bwh20 `('faith *4 love)`).
+  #294 landed the teaching pass (operators dim until the line holds a
+  number, hint row, tooltips).
+  This row used to say the directional half was the substantive gap and
+  the spelling was not, and that reading held: `BEFOREn` and `NEARn`
+  return different verses over the same pair, and `NEARn` returns
+  exactly what it always did —
+  `test/strongs_directional_proximity_test.dart` asserts both, in that
+  order, because a directional operator that agrees with the unordered
+  one everywhere has not been implemented.
+  The spelling stays ours, and the difference is now *taught* rather
+  than merely declared: `suggestTextEquivalent` in `command_draft.dart`
+  translates `yahweh BEFORE5 god` into the phrase grammar's `'yahweh *4
+  god`, which is the first EXACT translation between the two grammars
+  it has ever been able to make — same words, same order, same window
+  (`NEARn` could only ever be half of one, because a phrase is ordered
+  and `NEARn` is not). The distance drops by one on the way across:
+  `NEARn`/`BEFOREn` are a word distance, `*n` is the count of words in
+  between.
+  *Still deliberately absent:* `*n` itself as an input alias, which
+  collides with our wildcard `*` and needs that resolved before it can
+  be accepted rather than around it.
 - **Regular expressions (`~`)** — **REJECTED**, reason at
   `command_query.dart:67`: user-supplied regex over 31k verses is a
   denial-of-service waiting to happen, and BibleWorks itself calls the
@@ -131,8 +146,29 @@ file should read.
   so joining them needs a reference→index map and a decision about what a
   proximity join means across a tagged layer. The compound parser refuses
   it by name (`CommandIssue.compoundGroupOperator`) rather than guessing.
-- **A plain search matches across word boundaries** — **DEFECT, found
-  2026-08-19, not yet fixed.** A query with no control character is a
+- **A plain search matches across word boundaries** — **FIXED
+  2026-09-05**, `lib/utils/plain_search.dart`, pinned by
+  `test/plain_search_boundary_test.dart` against the real editions. The
+  defect and its measurement are kept below, unedited, because the
+  numbers are how the fix was checked to be the same bug: KJV `forth`
+  went 3,419 → 877 and `asa` 1,301 → 207, and the 2,542 and 1,094 rows
+  that difference removes are exactly the counts this entry recorded in
+  August. Two things the entry did not anticipate. The rule is stated on
+  the CHARACTERS, not on a locale or a mode: whitespace in the verse may
+  be stepped over only where Han characters stand on both sides of it,
+  so there is no Chinese branch to get wrong, and a verse mixing 和合本
+  text with a Latin proper name gets the Latin rule at the Latin. And
+  the old rule over-counted in the direction nobody expects — stripping
+  spaces let a query that HAS a space match text that does not, so
+  `for the` was 9 verses too many as well. Nine Chinese probes across
+  both Chinese editions and four Greek probes over `lxxwh` return
+  identical counts before and after; the 14 verses of stray spaces
+  inside Han runs in `cuvs-yhwh.json` (玛拉基书 2:1 「这 诫命」,
+  历代志上 21:20 「就和他 四个儿子」) are what makes the Han exception
+  load-bearing rather than theoretical, and they are stepped over in
+  the search layer because the scripture text is frozen.
+
+  *The original entry, for the record:* A query with no control character is a
   substring match over the *space-stripped* verse key, so in the KJV
   `forth` lists the **2,542** verses that say "for the", `asa` the
   **1,094** that say "as a", `end` matches "seven days", `oar` matches
@@ -150,6 +186,18 @@ file should read.
   spaces differently; that is the same bug with new numbers. This is
   also why the romanised-input offer (§3.7) gates on the word-aware
   engine and not on an empty result list.
+
+  *And that last sentence needed remeasuring rather than deleting.* The
+  §3.7 gate is still necessary and is now necessary for a different
+  reason. `test/romanised_gate_corpus_test.dart` measured five romanised
+  probes against the KJV at 4, 3, 1, 1, 26 plain hits; after the fix four
+  of the five are **0**, because those hits were the word gaps. `shalom`
+  is still 3 — Judges 6:24 `Jehovahshalom` and 1 Kings 15:2 and 15:10
+  `Abishalom` — and those are matches INSIDE a word, which the boundary
+  rule keeps deliberately, because they are markable and a reader can
+  see why the verse is there. So an `isEmpty` gate would still be wrong
+  for שָׁלוֹם. The fix narrowed the gate's necessity from five words to
+  two; it did not remove it.
 - **Cross-version searches** — **ABSENT.** bwh16. "Find verses where the
   KJV says X and the LXX says Y." We have every version loaded and a
   parallel view; nothing can query across two at once. *Done:* one
@@ -169,14 +217,39 @@ file should read.
   stripped. bwh17 makes both a **setting** ("Including Vowel Points in
   Hebrew Searches and Accents in Greek"). Ours is a hardcoded asymmetry.
   *Done:* one setting, honestly labelled, applied to both languages.
-- **Qere / Kethib** — **ABSENT.** bwh17 has Qere/Kethib search codes and
-  the status bar carries a Qere/Kethib display setting. Grepping `lib/`
-  for `Qere|Kethib|Ketiv` returns **nothing**. We do hold the data —
-  v1.6.92 recovered 1,235 Hebrew words from the OSHB Qere nesting — so
-  this is a surfacing job, not a data job. `docs/DATA-INTEGRITY.md`'s
-  open item 2 (four verses printing both forms) is the same seam.
-  *Done:* a reader-side setting for which form is shown, and the pair
-  visible on demand.
+- **Qere / Kethib** — **PARTIAL.** *(Corrected 2026-09-05. This row
+  said `ABSENT` on the strength of "grepping `lib/` for
+  `Qere|Kethib|Ketiv` returns nothing", which was true when written on
+  2026-08-12 and stopped being true six days later. It is exactly the
+  failure §1 warns about — re-grep before starting.)*
+  `lib/utils/ketiv_qere.dart` landed `c82a823` 2026-08-18. All four
+  Masoretic roles are modelled (`k`, `q`, `kx` *Ketiv velo Qere*, `qx`
+  *Qere velo Ketiv*) on `OriginalWord.ketivQere`
+  (`lib/models/original_word.dart:17`), and the pair is **displayed**:
+  the inline `K`/`Q` mark and its note in `browse_window.dart:1695`,
+  `:1700`, `:1857`, in `word_analysis_pane.dart:353`, `:371`, and in
+  `originals_sheet.dart:940`, `:1310`. `test/ketiv_qere_test.dart` pins
+  it. Counts include both readings, which is BibleWorks' own default.
+  What is genuinely missing is the **setting**: bwh29's two switches for
+  excluding either reading from searches, and bwh17's Qere/Kethib search
+  codes — grep finds nothing for either in the query or settings layer.
+  `docs/DATA-INTEGRITY.md`'s open item 2 (four verses printing both
+  forms) is the same seam.
+
+  **The setting shipped 2026-09-05** and this row is now the same
+  `PARTIAL` for a smaller reason. bwh29's two switches are
+  `excludeKetivFromSearch` / `excludeQereFromSearch` in
+  `app_settings.dart`, reachable in Settings, carried to both engines as
+  one value object (`KetivQereSearchScope` — two booleans threaded
+  separately is how a caller reads one and forgets the other), honoured
+  by `search_service.dart`, `morph_search_service.dart` and
+  `workbench_provider.dart`, and **defaulting to `both`**, which is
+  BibleWorks' own default and what this app has always done, so a reader
+  who never opens the control sees no change. Pinned by
+  `test/ketiv_qere_search_setting_test.dart`.
+  *Still missing, and it is the smaller half:* bwh17's Qere/Kethib
+  **search codes** — a way to ask for one reading inside a query rather
+  than as a mode the whole session sits in.
 - **Search limits (`l gen`)** — **HAVE**, extended past bwh16 by #280's
   scope model (books, groups, 希伯来圣经/希腊圣经). `l` stops at chapter
   granularity on purpose (`command_verb.dart:71-79`): verse-granular
@@ -519,11 +592,26 @@ not a wiring bug, and an audit that reports it as one is wrong.
 
 ## 4. Source 2 — Eagle's View
 
-**Verdict: fully landed. Nothing is sitting unwired.**
+**Verdict: every asset is declared, and every SERVICE is reached. That is
+what this audit established, and on 2026-09-05 it turned out not to be
+enough.**
 
 Audited 2026-08-12, three ways (present on disk / declared in
-`pubspec.yaml` / referenced from `lib/`). Every asset produced by the six
-`tools/import_eaglesview*.py` scripts is declared and reachable:
+`pubspec.yaml` / referenced from `lib/`). Those three checks stop at the
+service boundary: a service can be referenced from `lib/` while a whole
+public branch of it has no caller. Re-checked per MEMBER on 2026-09-05,
+three did — `ModernConcordanceService.topics()` (the entire 341-topic
+index), `GreekStatsService.books()` and with it the AOSurvey attribution,
+which is assigned nowhere else, and `SynopsisService.byVerse`.
+
+The old verdict line read "fully landed, nothing is sitting unwired". It
+was true of assets and false of the reader's experience, and the table
+below cannot tell those apart — **re-run
+`test/data_surface_reachability_test.dart` rather than re-deriving this
+table**, because that test audits the axis this one is blind to.
+
+Every asset produced by the six `tools/import_eaglesview*.py` scripts is
+declared and its service reached:
 
 | Import | Asset | Reached by |
 |---|---|---|
@@ -539,10 +627,13 @@ Two things worth carrying forward rather than re-deriving:
 - The **Modern Concordance importer writes outside the bundle by
   default** and needs an explicit rights acknowledgement flag. That is
   intentional. Do not "fix" it by pointing it at `assets/`.
-- The `nsn-plus` mention in `tagged_text_service.dart:164` is a **stale
-  comment** listing a version that was never imported. Harmless, but it
-  is what made an automated audit call the gitignored files a live bug.
-  Worth deleting the next time that file is open.
+- ~~The `nsn-plus` mention in `tagged_text_service.dart:164` is a
+  **stale comment**~~ — **removed 2026-09-05**, next time that file was
+  open, as this entry asked. It was in a "measured over the shipped
+  assets" list, and nsn-plus is not shipped: the tagged editions tracked
+  in git and declared in `pubspec.yaml` are bsb, cuvs-plus, cuvs-yhwh,
+  kjvs and lxxwh, and nothing else. Struck rather than re-measured, and
+  the comment says so.
 
 The historical failure this axis existed to catch — `bible_names.json`
 and `thayer.json` committed but absent from `pubspec.yaml`, so

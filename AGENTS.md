@@ -34,7 +34,7 @@ apart.
 |---|---|
 | `AGENTS.md` | this file — the contract |
 | `PROJECT_STATE.md` | the queue, and what version is where |
-| `docs/OPEN-ITEMS.md` | **everything not done** — bugs, unfinished work, decisions waiting on the owner, landmines. Each item says whether it was verified or is carried forward unchecked |
+| `docs/OPEN-ITEMS.md` | **everything not done** — bugs, unfinished work, decisions waiting on the owner, landmines. Each item says whether it was verified or is carried forward unchecked. Read it **with** `docs/PARITY-BACKLOG.md`: neither is complete alone, and the two are maintained separately |
 | `HANDOFF.md` | append-only log, newest on top, one entry per ship |
 | `README.md` | GitHub-facing: what the app is, how to run it, licensing |
 | `docs/DATA-INTEGRITY.md` | every data check ever run, numbered |
@@ -44,6 +44,14 @@ apart.
 `HANDOFF.md` is canonical for *what happened*; `README.md` is allowed to
 drift and is the least trustworthy of the four. When two documents
 disagree, the tree wins, then `HANDOFF.md`.
+
+**A document saying something is not done is not evidence that it is not
+done.** On 2026-09-05 `docs/OPEN-ITEMS.md` was found listing two shipped
+features as open, one of them under a `[verified]` tag; `docs/PARITY-BACKLOG.md`
+had an `ABSENT` row whose supporting grep had been false for three
+weeks; and `docs/bibleworks-reference.md` §6 was a v1.3.0 snapshot with
+six of thirteen rows closed. **Grep before you start.** It costs a
+minute and has repeatedly saved whole iterations.
 
 ---
 

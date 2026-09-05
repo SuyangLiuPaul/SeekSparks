@@ -39,7 +39,13 @@ covered by this MIT licence and is subject to its own terms:
   • CBOL Chinese definitions — CC-BY-NC-SA 4.0. Non-commercial use only;
     derivatives must keep the same licence.
 
-  • Sermons (assets/sermons/) — © Liang Jia-keng, used with permission.
+  • Sermons (assets/sermons/) — preached by Pastor Eric H.H. Chang
+    (张熙和牧师). © Liang Jia-keng, used with permission. Authorship and
+    rights are two separate facts here: the corpus was built from Pastor
+    Chang's sermon tree, while the © line names the party who granted
+    permission. See the note above `aboutLicenseSermons` in
+    lib/constants/ui_strings.dart — the rights half is unconfirmed and
+    needs the corpus owner.
 
   • Maps (assets/maps/) — public domain / Creative Commons. Per-map
     attributions live in the in-app About → Attributions screen.

@@ -117,23 +117,33 @@ translator notes · accents · vowels · Qere/Kethib · keyboard layout.
 
 ## 6. Gap list against SeekSparks (as of v1.3.0)
 
+> ⚠️ **STALE — this is a v1.3.0 snapshot, and the tree is at 1.6.236.**
+> The left column (what BibleWorks does) is still good; the right column
+> is a photograph of SeekSparks taken on 2026-08-06 and has not been
+> maintained since. On 2026-09-05 a pass re-read the code for every row
+> and found **six of the thirteen already closed** — marked ✅ below with
+> the file and commit that closed them. The seven unmarked rows were
+> **not** re-checked in that pass: treat them as v1.3.0 claims, and grep
+> before believing any of them. `docs/PARITY-BACKLOG.md` is the
+> maintained list; this table is kept for the BibleWorks column.
+
 Ordered by how much each changes the feel, not by effort.
 
 | # | BibleWorks behaviour | SeekSparks now |
 | --- | --- | --- |
-| 1 | Hover fills the **Analysis window** | hover fills popup + status bar only |
-| 2 | **Shift freezes** the analysis | — |
-| 3 | Browse **single vs multiple version** mode | multiple only |
-| 4 | **Inline Strong's numbers** toggle in Browse | — |
-| 5 | **Search hits highlighted** in Browse | — |
-| 6 | **Difference highlighting** between same-language versions | — |
-| 7 | **Bible outline dropdown** in the Browse header | — (we have `SectionTitleService`) |
-| 8 | Analysis **split into two columns**, draggable tabs | single column, 3 tabs |
-| 9 | Status-bar items are **double-click toggles** | read-only |
-| 10 | Command line: bare **version abbreviation** switches version | — |
-| 11 | Search window **tabs** (multiple workspaces) | one |
-| 12 | Column chrome collapses in **two stages** (controls, then column) | one stage |
-| 13 | Verse-history and search-history dropdowns | search history exists elsewhere |
+| 1 | Hover fills the **Analysis window** | ✅ **CLOSED.** `_analysisWord` (pinned word, else last hovered) feeds the Analysis column via `_browseFocus` — `lib/pages/workbench_page.dart:1900-1912`. `790fccb` 2026-08-06 |
+| 2 | **Shift freezes** the analysis | ✅ **CLOSED**, and gone past: Shift still suspends the latch (`workbench_page.dart:1973`, `_analysisFrozen:381`), but a click *pins* a word instead, which works on a pad with no keyboard — `lib/utils/analysis_focus.dart`, `49c6932` 2026-08-07 |
+| 3 | Browse **single vs multiple version** mode | multiple only *(v1.3.0 claim, not re-checked)* |
+| 4 | **Inline Strong's numbers** toggle in Browse | ✅ **CLOSED.** `lib/utils/strongs_inline.dart`, drawn at `browse_window.dart:1822`, toggled from `workbench_page.dart:920`. `31b6946` 2026-08-06 |
+| 5 | **Search hits highlighted** in Browse | ✅ **CLOSED.** `lib/utils/search_highlight.dart`, fed into Browse at `workbench_page.dart:835`, `:1869`. `5f96e64` 2026-08-06 |
+| 6 | **Difference highlighting** between same-language versions | ✅ **CLOSED.** `lib/utils/version_diff.dart` (LCS, same-language, first version is the base — bwh30), setting at `workbench_page.dart:520`. `1bff852` 2026-08-18 |
+| 7 | **Bible outline dropdown** in the Browse header | — (we have `SectionTitleService`) *(v1.3.0 claim, not re-checked)* |
+| 8 | Analysis **split into two columns**, draggable tabs | single column, 3 tabs *(v1.3.0 claim, not re-checked)* |
+| 9 | Status-bar items are **double-click toggles** | read-only *(v1.3.0 claim, not re-checked)* |
+| 10 | Command line: bare **version abbreviation** switches version | ✅ **CLOSED.** `command_pane.dart:299-310` switches before reference-parsing or search; matcher in `lib/utils/version_abbreviation.dart`. `790fccb` 2026-08-06, abbreviations (`d nas` → NASB) `3cc3be7` 2026-08-09 |
+| 11 | Search window **tabs** (multiple workspaces) | one *(v1.3.0 claim, not re-checked)* |
+| 12 | Column chrome collapses in **two stages** (controls, then column) | one stage *(v1.3.0 claim, not re-checked)* |
+| 13 | Verse-history and search-history dropdowns | search history exists elsewhere *(v1.3.0 claim, not re-checked)* |
 
 Tabs backed by data we do not have — Mss, EPUB, Leningradensis, User
 Lexicon, Resource Summary — are deliberately **not** on this list.
