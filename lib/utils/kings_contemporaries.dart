@@ -10,9 +10,21 @@
 /// second copy of "whose reigns touch" is the one defect that would be
 /// invisible until two screens disagreed in front of a reader.
 ///
-/// NOTHING HERE IS A LIST OF NAMES. Every count is derived from
-/// `spans[].kind` and the year fields, so re-dating a king in
-/// `assets/hebrew_kings.json` moves the counts with him.
+/// NOTHING HERE IS A LIST OF NAMES, and it is worth being exact about
+/// what each half of a tally is derived from, because a 2026-09-06
+/// audit found this paragraph claiming more than the code did.
+///
+///   the TOTAL      — the year fields, through [reignsOverlap], which
+///                    compares the hull `reignStart..reignEnd`. It does
+///                    not read `spans`. See [reignsOverlap]'s own
+///                    comment for why the hull and not the spans, and
+///                    for the builder and the asset test that keep the
+///                    hull equal to the span union.
+///   the SPLIT      — `spans[].kind`, through [HebrewKing.isRival] and
+///                    [SpanKind.heldThrone].
+///
+/// Both move when a king is re-dated in `assets/hebrew_kings.json`,
+/// which is the property that matters; neither consults a name.
 library;
 
 import 'package:seeksparks/models/hebrew_king.dart';

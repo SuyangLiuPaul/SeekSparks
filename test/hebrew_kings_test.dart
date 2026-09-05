@@ -27,6 +27,7 @@ import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/hebrew_king.dart';
 import 'package:seeksparks/pages/hebrew_kings_page.dart';
+import 'package:seeksparks/pages/wheel_sheets.dart';
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/services/hebrew_kings_service.dart';
 import 'package:seeksparks/utils/kings_chart_layout.dart';
@@ -48,6 +49,73 @@ HebrewKing _king({
       reignStart: start,
       reignEnd: end,
     );
+
+/// WHO SHOULD BE IN A CONTEMPORARIES LIST, derived from the asset's own
+/// dates instead of typed out.
+///
+/// The two Asa assertions below used to be a hand-maintained literal
+/// list of eight ids. That is the drift the design comment on
+/// `contemporariesOf` says these tests exist to prevent, one level up:
+/// re-dating a king in `assets/hebrew_kings.json` left a literal to be
+/// edited by hand, and an author who edited both had a test that agreed
+/// with him by construction.
+///
+/// This is a RESTATEMENT of the rule, not a re-implementation of the
+/// algorithm (AGENTS.md forbids the second: a test that owns a copy of
+/// the algorithm passes over its copy while the shipped code is wrong).
+/// One line — other kingdom, closed intervals — so that any threshold,
+/// name filter or half-open comparison added to the shipped function
+/// shows up as a missing or extra id, for EVERY king rather than for
+/// the one the literal happened to cover.
+///
+/// The number 8 itself is still pinned, once, where it belongs: in the
+/// widget test that reads it off Asa's panel as a reader does.
+Set<String> expectedContemporaryIds(HebrewKingsData data, HebrewKing k) {
+  if (k.kingdom == Kingdom.united) return const {};
+  final other = k.kingdom == Kingdom.judah ? Kingdom.israel : Kingdom.judah;
+  return {
+    for (final e in data.kings)
+      if (e.kingdom == other &&
+          e.reignStart <= k.reignEnd &&
+          k.reignStart <= e.reignEnd)
+        e.id,
+  };
+}
+
+/// A minimal host for `WheelSheets`, so the wheel's own reign sheet can
+/// be opened from a test.
+///
+/// THIS IS NOT THE OLD SHAPE OF THAT TEST. The group below used to pump
+/// the four public helpers the sheet is built from and reason that
+/// pumping them "proves what that sheet prints". It proved what the
+/// HELPERS print. The defect found on 2026-09-06 was in the sheet's own
+/// wiring — an `if (contemporaries.isEmpty) return []` above the
+/// helpers — and no amount of pumping helpers could ever have seen it.
+/// `showKing` is a method on the `WheelSheets` mixin and needs nothing
+/// but a `State`, so the sheet itself can be opened and read; the arc
+/// that opens it in the app is Canvas and still cannot be tapped, but
+/// that was never the part in doubt.
+class _SheetHost extends StatefulWidget {
+  const _SheetHost({required this.king, required this.locale});
+
+  final HebrewKing king;
+  final String locale;
+
+  @override
+  State<_SheetHost> createState() => _SheetHostState();
+}
+
+class _SheetHostState extends State<_SheetHost> with WheelSheets<_SheetHost> {
+  @override
+  Widget build(BuildContext context) => Scaffold(
+        body: Center(
+          child: TextButton(
+            onPressed: () => showKing(context, widget.king, widget.locale),
+            child: const Text('open'),
+          ),
+        ),
+      );
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -273,13 +341,28 @@ void main() {
       expect(data.byId('pekah')!.spans.first.kind, SpanKind.rival);
     });
 
-    test('Asa overlaps the northern kings the synchronisms require', () {
-      final asa = data.byId('asa')!;
-      expect(
-        data.contemporariesOf(asa).map((k) => k.id).toList(),
-        ['jeroboam_i', 'nadab', 'baasha', 'elah', 'zimri', 'tibni', 'omri',
-            'ahab'],
-      );
+    test('every king overlaps exactly the men the dates put beside him',
+        () {
+      // Asa is the case the design turns on, but a threshold added to
+      // `contemporariesOf` need not land on Asa, so every king is asked.
+      for (final k in data.kings) {
+        expect(
+          data.contemporariesOf(k).map((e) => e.id).toSet(),
+          expectedContemporaryIds(data, k),
+          reason: k.id,
+        );
+      }
+
+      // Asa's answer is the eight northern men inside 911-870, and the
+      // list is chronological because the chart's whole meaning is the
+      // time axis.
+      final asa = data.contemporariesOf(data.byId('asa')!);
+      expect(asa.length,
+          expectedContemporaryIds(data, data.byId('asa')!).length);
+      for (var i = 1; i < asa.length; i++) {
+        expect(asa[i - 1].reignStart, lessThanOrEqualTo(asa[i].reignStart),
+            reason: '${asa[i - 1].id} before ${asa[i].id}');
+      }
     });
 
     test('contemporaries are symmetric and cross the border', () {
@@ -369,28 +452,55 @@ void main() {
       data = HebrewKingsData.fromJson(json.decode(text) as Map<String, dynamic>);
     });
 
-    test('Asa: eight contemporaries, seven of them kings', () {
+    test('Asa: the dates give the total, the spans give the split', () {
       final asa = data.byId('asa')!;
       final contemporaries = data.contemporariesOf(asa);
 
+      // DERIVED, NOT LISTED — see `expectedContemporaryIds`.
       expect(
-        contemporaries.map((k) => k.id).toList(),
-        ['jeroboam_i', 'nadab', 'baasha', 'elah', 'zimri', 'tibni', 'omri',
-            'ahab'],
+        contemporaries.map((k) => k.id).toSet(),
+        expectedContemporaryIds(data, asa),
       );
 
       final tally = data.tallyFor(asa);
-      expect(tally.total, 8);
-      expect(tally.reigning, 7);
-      expect(tally.rivals, 1);
-      expect(tally.hasRivals, isTrue);
+      // The total is the year fields; nothing about it reads `spans`.
+      expect(tally.total, contemporaries.length);
+      // The split is `spans[].kind`, through `SpanKind.heldThrone`.
+      expect(tally.rivals, contemporaries.where((k) => k.isRival).length);
       expect(tally.reigning + tally.rivals, tally.total);
+      expect(tally.hasRivals, isTrue);
 
-      // The one claimant is Tibni and nobody else.
+      // The one claimant is Tibni and nobody else — a single id with a
+      // scriptural argument (1 Kings 16:21-22), not a maintained list.
       expect(
         contemporaries.where((k) => k.isRival).map((k) => k.id).toList(),
         ['tibni'],
       );
+
+      // AND THE SPLIT REALLY DOES READ THE SPANS. Demote Tibni's kind
+      // without touching a single date and the reigning count moves;
+      // the total does not.
+      final demoted = contemporaries
+          .map((k) => k.id != 'tibni'
+              ? k
+              : HebrewKing(
+                  id: k.id,
+                  kingdom: k.kingdom,
+                  house: k.house,
+                  names: k.names,
+                  spans: [
+                    for (final sp in k.spans)
+                      ReignSpan(
+                          kind: SpanKind.sole, start: sp.start, end: sp.end),
+                  ],
+                  reignStart: k.reignStart,
+                  reignEnd: k.reignEnd,
+                ))
+          .toList();
+      final after = ContemporaryTally.of(demoted);
+      expect(after.total, tally.total);
+      expect(after.reigning, tally.reigning + 1);
+      expect(after.rivals, 0);
     });
 
     test('Jeroboam I counts although he touches Asa only at the edge', () {
@@ -514,6 +624,167 @@ void main() {
       );
       expect(empty.isRival, isFalse);
       expect(ContemporaryTally.of([empty]).reigning, 1);
+    });
+  });
+
+  // ── The two blacklists that used to be silent ───────────────────
+  //
+  // THE ASYMMETRY WAS THE DEFECT. `hebrew_kings_page.dart` holds four
+  // exhaustive `switch` EXPRESSIONS over `SpanKind`, so a fourth kind
+  // stops the RENDERER compiling and cannot ship unseen. The COUNTER
+  // had no such gate twice over: an unrecognised `kind` string parsed
+  // to `SpanKind.sole`, the most consequential reading available, and
+  // `isRival` tested `== SpanKind.rival`, a blacklist of one name out
+  // of an open set. A `captivity` or `exile` kind would have been
+  // tallied as a reigning king and nothing would have said so.
+  group('a new span kind cannot be miscounted in silence', () {
+    test('every kind declares whether it put the man on the throne', () {
+      // A MAP EQUALITY ON PURPOSE. `containsAll` would let a fourth
+      // kind slip in unexamined; this fails the moment `SpanKind.values`
+      // grows, which is the point — the author has to come here and say
+      // which bucket it belongs in, and read the note on `heldThrone`
+      // about the third bucket a captivity kind would need.
+      expect(
+        {for (final k in SpanKind.values) k: k.heldThrone},
+        {
+          SpanKind.sole: true,
+          SpanKind.coregency: true,
+          SpanKind.rival: false,
+        },
+      );
+    });
+
+    test('isRival and the tally follow heldThrone for every kind', () {
+      // Derived over `SpanKind.values`, so a kind added tomorrow is
+      // covered without this test being edited. Reverting `isRival` to
+      // `every((s) => s.kind == SpanKind.rival)` passes on today's three
+      // kinds and fails here on the fourth — which is exactly when it
+      // would otherwise have started printing a wrong number.
+      for (final kind in SpanKind.values) {
+        final k = HebrewKing(
+          id: 'x',
+          kingdom: Kingdom.israel,
+          house: 'x',
+          names: const {'en': 'X'},
+          spans: [ReignSpan(kind: kind, start: -900, end: -890)],
+          reignStart: -900,
+          reignEnd: -890,
+        );
+        expect(k.isRival, !kind.heldThrone, reason: '$kind');
+        expect(ContemporaryTally.of([k]).reigning, kind.heldThrone ? 1 : 0,
+            reason: '$kind');
+        expect(ContemporaryTally.of([k]).rivals, kind.heldThrone ? 0 : 1,
+            reason: '$kind');
+      }
+    });
+
+    test('the three kinds the asset uses still parse to themselves', () {
+      for (final (text, kind) in const [
+        ('sole', SpanKind.sole),
+        ('coregency', SpanKind.coregency),
+        ('rival', SpanKind.rival),
+      ]) {
+        expect(
+          ReignSpan.fromJson({'kind': text, 'start': -900, 'end': -890}).kind,
+          kind,
+        );
+      }
+    });
+
+    test('an unrecognised kind throws instead of becoming a sole reign', () {
+      // It used to answer `SpanKind.sole`: a full reign, counted, drawn
+      // solid, and indistinguishable from a real one. The asset is
+      // generated and parsed by the tests above, so a throw is a red
+      // test here and never a dead chart on a device.
+      expect(
+        () => ReignSpan.fromJson(
+            const {'kind': 'captivity', 'start': -597, 'end': -586}),
+        throwsFormatException,
+      );
+      expect(
+        () => ReignSpan.fromJson(const {'start': -597, 'end': -586}),
+        throwsFormatException,
+      );
+    });
+
+    test('an unrecognised kingdom throws instead of becoming united', () {
+      // The same shape one field away, and worse in effect:
+      // `contemporariesOf` answers empty for the united monarchy, so a
+      // typo'd kingdom dropped a king out of every synchronism in the
+      // app without a single number changing visibly.
+      expect(
+        () => HebrewKing.fromJson(const {
+          'id': 'x',
+          'kingdom': 'samaria',
+          'spans': [
+            {'kind': 'sole', 'start': -900, 'end': -890}
+          ],
+          'reignStart': -900,
+          'reignEnd': -890,
+        }),
+        throwsFormatException,
+      );
+    });
+  });
+
+  // ── The gate the wheel sheet used to write out by hand ──────────
+  group('hasCompoundReign', () {
+    late HebrewKingsData data;
+
+    setUpAll(() async {
+      final text = await rootBundle.loadString('assets/hebrew_kings.json');
+      data = HebrewKingsData.fromJson(json.decode(text) as Map<String, dynamic>);
+    });
+
+    test('a king with no spans answers false rather than throwing', () {
+      // `wheel_sheets.dart` asked this inline as `spans.length > 1 ||
+      // spans.first.kind != SpanKind.sole`. `||` short-circuits the
+      // wrong way round for an empty list, so the second clause ran and
+      // `spans.first` threw the StateError the model guards against one
+      // line above `isRival`.
+      const empty = HebrewKing(
+        id: 'x',
+        kingdom: Kingdom.judah,
+        house: 'x',
+        names: {'en': 'X'},
+        spans: [],
+        reignStart: -900,
+        reignEnd: -890,
+      );
+      expect(() => empty.hasCompoundReign, returnsNormally);
+      expect(empty.hasCompoundReign, isFalse);
+    });
+
+    test('true exactly for the arcs that are not one interval', () {
+      // Derived from the asset, not listed: a king qualifies when he has
+      // more than one span or his single span is not a plain sole reign.
+      final compound = data.kings.where((k) => k.hasCompoundReign).toList();
+      for (final k in data.kings) {
+        expect(
+          k.hasCompoundReign,
+          k.spans.length > 1 || k.spans.first.kind != SpanKind.sole,
+          reason: k.id,
+        );
+      }
+      // TEN on the shipped asset, and the breakdown matters because two
+      // earlier comments got it wrong in two different ways. NINE kings
+      // have more than one span — the six Judean co-regents, Jeroboam
+      // II, and Omri and Pekah, whose rival span precedes a sole one —
+      // and Tibni makes ten: one span, and it is a rival claim, so his
+      // arc is not a plain sole reign either. The wheel sheet said
+      // SEVEN, which is the count of CO-REGENCIES (six in Judah, one in
+      // Israel) and not the count of compound arcs at all.
+      expect(compound.length, 10);
+      expect(data.kings.where((k) => k.spans.length > 1).length, 9);
+      expect(compound.where((k) => k.spans.length == 1).map((k) => k.id),
+          ['tibni']);
+      expect(
+        data.kings
+            .where((k) =>
+                k.spans.any((sp) => sp.kind == SpanKind.coregency))
+            .length,
+        7,
+      );
     });
   });
 
@@ -651,13 +922,14 @@ void main() {
 
   // ── The widgets the WHEEL's reign sheet shares with the page ────
   //
-  // `wheel_sheets.dart` draws its kings on a Canvas, so a tap on a
-  // reign arc cannot be driven from a widget test and canvas text
-  // leaves no semantics node to assert on (AGENTS.md, trap 1). What
-  // CAN be pinned is the content: the wheel sheet builds its
-  // contemporaries block out of these four public helpers, the same
-  // objects the page uses, so pumping them proves what that sheet
-  // prints even though the arc that opens it cannot be tapped here.
+  // `wheel_sheets.dart` draws its kings on a Canvas, so the ARC cannot
+  // be tapped from a widget test and canvas text leaves no semantics
+  // node to assert on (AGENTS.md, trap 1). The SHEET can: `showKing`
+  // lives on the `WheelSheets` mixin and `_SheetHost` above opens it.
+  // So these tests pin the helpers, and the group after them pins the
+  // sheet's own wiring to those helpers — which is the half that was
+  // missing when the sheet dropped its whole contemporaries block for
+  // eight kings while the chart printed "· 0" for them.
   group('the shared contemporaries widgets', () {
     late HebrewKingsData data;
 
@@ -755,6 +1027,135 @@ void main() {
 
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pump(const Duration(milliseconds: 50));
+    });
+  });
+
+  // ── The wheel's reign sheet, opened for real ────────────────────
+  //
+  // WHY THE EMPTY ANSWER IS PRINTED. Eight of the twenty kings of Judah
+  // have no contemporary at all — Hezekiah, Manasseh, Amon, Josiah,
+  // Jehoahaz, Jehoiakim, Jehoiachin and Zedekiah, every one after
+  // Samaria fell in 722 — and until 2026-09-06 the chart said
+  // "On the other throne · Israel · 0 / No overlapping reign." for them
+  // while this sheet said nothing whatever. The sheet's own comment
+  // promised the two "cannot come to word the same overlap
+  // differently". They did, for a fifth of the southern kingdom, and
+  // the silence read as a computation the app had failed to do rather
+  // than as a kingdom that had ceased to exist.
+  //
+  // The united monarchy stays silent, and that is a different fact:
+  // David and Solomon have no other throne to be compared with, so
+  // `contemporariesOf` answers empty by design and a heading reading
+  // "· 0" would invent a question.
+  group('the wheel reign sheet', () {
+    late HebrewKingsData data;
+
+    setUpAll(() async {
+      data = await HebrewKingsService.instance.load();
+    });
+
+    Future<void> open(WidgetTester tester, String id, String locale) async {
+      SharedPreferences.setMockInitialValues(<String, Object>{});
+      await tester.runAsync(HebrewKingsService.instance.load);
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider(create: (_) => MainProvider()),
+            ChangeNotifierProvider(create: (_) => AppSettings()),
+          ],
+          child: MaterialApp(
+            home: _SheetHost(king: data.byId(id)!, locale: locale),
+          ),
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+    }
+
+    Future<void> close(WidgetTester tester) async {
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump(const Duration(milliseconds: 50));
+    }
+
+    testWidgets('Hezekiah gets the heading and the sentence, not silence',
+        (tester) async {
+      expect(data.contemporariesOf(data.byId('hezekiah')!), isEmpty);
+
+      for (final locale in const ['en', 'zh-Hans', 'zh-Hant']) {
+        await open(tester, 'hezekiah', locale);
+        expect(tester.takeException(), isNull, reason: locale);
+
+        // The same join the chart prints, from the same function.
+        expect(
+          find.text(kingsContemporariesHeading(locale, Kingdom.israel, 0)),
+          findsOneWidget,
+          reason: locale,
+        );
+        expect(find.text(uiStrings['kingsNoContemporaries']![locale]!),
+            findsOneWidget,
+            reason: locale);
+
+        // A count that does not exist carries no tally line, no rival
+        // note and no chronology caveat — the chart omits all three
+        // here too, and a caveat about how Thiele's years could move an
+        // overlap is noise under a reign that overlaps nothing.
+        expect(find.textContaining(uiStrings['kingsTallyReigning']![locale]!
+                .replaceAll(' · {n}', '')),
+            findsNothing,
+            reason: locale);
+        expect(find.text(uiStrings['kingsTallyBasis']![locale]!), findsNothing,
+            reason: locale);
+        await close(tester);
+      }
+    });
+
+    testWidgets('Asa gets the count, the split and the claimant',
+        (tester) async {
+      final tally = data.tallyFor(data.byId('asa')!);
+      await open(tester, 'asa', 'zh-Hans');
+      expect(tester.takeException(), isNull);
+
+      expect(
+        find.text(
+            kingsContemporariesHeading('zh-Hans', Kingdom.israel, tally.total)),
+        findsOneWidget,
+      );
+      expect(find.text('在位的王 · ${tally.reigning}'), findsOneWidget);
+      expect(find.text('争位者 · ${tally.rivals}'), findsOneWidget);
+      // The sentence for an empty answer must not appear where there is
+      // an answer.
+      expect(find.text(uiStrings['kingsNoContemporaries']!['zh-Hans']!),
+          findsNothing);
+      await close(tester);
+    });
+
+    testWidgets('the united monarchy is silent, and that is the other fact',
+        (tester) async {
+      expect(data.byId('solomon')!.kingdom, Kingdom.united);
+      await open(tester, 'solomon', 'zh-Hans');
+      expect(tester.takeException(), isNull);
+
+      expect(find.textContaining(uiStrings['kingsContemporaries']!['zh-Hans']!),
+          findsNothing);
+      expect(find.text(uiStrings['kingsNoContemporaries']!['zh-Hans']!),
+          findsNothing);
+      await close(tester);
+    });
+
+    testWidgets('a compound arc names its parts and a simple one does not',
+        (tester) async {
+      // The gate that used to throw on a king with no spans. Uzziah's
+      // arc is a co-regency and a sole reign; Asa's is one interval.
+      expect(data.byId('uzziah')!.hasCompoundReign, isTrue);
+      expect(data.byId('asa')!.hasCompoundReign, isFalse);
+
+      await open(tester, 'uzziah', 'zh-Hans');
+      expect(find.text(uiStrings['kingsReign']!['zh-Hans']!), findsOneWidget);
+      await close(tester);
+
+      await open(tester, 'asa', 'zh-Hans');
+      expect(find.text(uiStrings['kingsReign']!['zh-Hans']!), findsNothing);
+      await close(tester);
     });
   });
 
@@ -887,6 +1288,28 @@ void main() {
       // The badge's text is exactly '争位者'; the tally line above reads
       // '争位者 · 1', so an exact match can only be the badge.
       expect(find.text('争位者'), findsOneWidget);
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump(const Duration(milliseconds: 50));
+    });
+
+    // The other half of the 2026-09-06 disagreement. The chart has
+    // always printed this; the test is here so that the shared helpers
+    // it now routes through cannot be unwired from this side either.
+    testWidgets('Hezekiah\'s panel prints · 0 and says why it is empty',
+        (tester) async {
+      await pump(tester, const Size(1440, 1900));
+      await tester.tapAt(tester.getCenter(find.text('希西家').first));
+      await tester.pump();
+
+      expect(
+        find.text(kingsContemporariesHeading('zh-Hans', Kingdom.israel, 0)),
+        findsOneWidget,
+      );
+      expect(find.text(uiStrings['kingsNoContemporaries']!['zh-Hans']!),
+          findsOneWidget);
+      // No tally under a count of nobody.
+      expect(find.textContaining('在位的王 · '), findsNothing);
 
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pump(const Duration(milliseconds: 50));

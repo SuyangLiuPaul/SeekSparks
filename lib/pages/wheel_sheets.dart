@@ -771,11 +771,20 @@ mixin WheelSheets<T extends StatefulWidget> on State<T> {
           // THE ARC IS THE HULL, THE SPANS ARE THE REIGN. A co-regency
           // and the sole reign after it are drawn as one arc, because
           // two arcs for one man cannot be read as one man. So the
-          // parts are named here — and for the seven kings who have
-          // more than one span, this is the only place the wheel says
-          // that their arc is not a single interval.
-          if (king.spans.length > 1 ||
-              king.spans.first.kind != SpanKind.sole) ...[
+          // parts are named here — and for the ten kings whose arc is
+          // not a single interval, this is the only place the wheel
+          // says so. (Ten, counted off the asset: nine with more than
+          // one span — the six Judean co-regents, Jeroboam II, and Omri
+          // and Pekah, whose rival span precedes a sole one — plus
+          // Tibni, whose one span is a rival claim. This comment used
+          // to say seven, which is the number of CO-REGENCIES and not a
+          // count of compound arcs at all.)
+          //
+          // The test is `hasCompoundReign` rather than the two clauses
+          // written out, because written out here the `||` reached
+          // `spans.first` on an empty list — the `StateError` the model
+          // guards against one line above `isRival`.
+          if (king.hasCompoundReign) ...[
             SizedBox(height: t.scaled(10)),
             Text(s('kingsReign', 'Reign', locale),
                 style: TextStyle(
@@ -845,11 +854,24 @@ mixin WheelSheets<T extends StatefulWidget> on State<T> {
           // takes the king as a parameter, so a contemporary can be
           // shown in place rather than pointing at a page that opens on
           // no one in particular.
+          //
+          // AN EMPTY ANSWER IS PRINTED, NOT DROPPED. Until 2026-09-06
+          // this block began `if (contemporaries.isEmpty) return []`,
+          // which collapsed two different facts into the same silence:
+          // David and Solomon have no other throne to be compared with,
+          // and Hezekiah through Zedekiah — eight of the twenty Judean
+          // kings, every one after Samaria fell in 722 — had one that
+          // was empty. The chart said "· 0" and "No overlapping reign."
+          // for those eight while the sheet said nothing, so the two
+          // surfaces this comment claims cannot word the same overlap
+          // differently were doing exactly that. Only the united
+          // monarchy is silent now, and it is silent for a stated
+          // reason: `contemporariesOf` returns empty by design there.
           ...(() {
             final data = HebrewKingsService.instance.cached;
             if (data == null) return const <Widget>[];
+            if (king.kingdom == Kingdom.united) return const <Widget>[];
             final contemporaries = data.contemporariesOf(king);
-            if (contemporaries.isEmpty) return const <Widget>[];
             final tally = ContemporaryTally.of(contemporaries);
             final other = king.kingdom == Kingdom.judah
                 ? Kingdom.israel
@@ -857,55 +879,63 @@ mixin WheelSheets<T extends StatefulWidget> on State<T> {
             return <Widget>[
               SizedBox(height: t.scaled(12)),
               Text(
-                '${s('kingsContemporaries', 'On the other throne', locale)}'
-                ' · ${kingdomLabel(locale, other)} · ${tally.total}',
+                kingsContemporariesHeading(locale, other, tally.total),
                 style: TextStyle(
                     color: wb.mutedText,
                     fontSize: t.scaled(11),
                     fontWeight: FontWeight.w600),
               ),
               SizedBox(height: t.scaled(4)),
-              kingsTallyLines(sheet, tally, other, locale),
-              SizedBox(height: t.scaled(5)),
-              for (final c in contemporaries)
-                InkWell(
-                  onTap: () {
-                    Navigator.of(sheet).pop();
-                    showKing(context, c, locale);
-                  },
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: t.scaled(3)),
-                    child: Row(children: [
-                      Flexible(
-                        child: Text(
-                          c.nameFor(locale),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                              color: wb.accent, fontSize: t.scaled(11.5)),
+              if (contemporaries.isEmpty)
+                kingsNoContemporariesLine(sheet, locale, size: t.scaled(11)),
+              // The tally lines, the rival note and the basis line all
+              // belong to a count that exists; the chart drops the same
+              // three when the answer is nobody, and a caveat about how
+              // Thiele's years could move an overlap is noise under a
+              // reign that overlaps nothing at all.
+              if (contemporaries.isNotEmpty) ...[
+                kingsTallyLines(sheet, tally, other, locale),
+                SizedBox(height: t.scaled(5)),
+                for (final c in contemporaries)
+                  InkWell(
+                    onTap: () {
+                      Navigator.of(sheet).pop();
+                      showKing(context, c, locale);
+                    },
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(vertical: t.scaled(3)),
+                      child: Row(children: [
+                        Flexible(
+                          child: Text(
+                            c.nameFor(locale),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                                color: wb.accent, fontSize: t.scaled(11.5)),
+                          ),
                         ),
-                      ),
-                      if (c.isRival) ...[
-                        SizedBox(width: t.scaled(5)),
-                        kingsRivalBadge(sheet, locale, size: t.scaled(10)),
-                      ],
-                      const Spacer(),
-                      Text(
-                        formatReignYears(locale, c.reignStart, c.reignEnd),
-                        style: TextStyle(
-                            color: wb.mutedText, fontSize: t.scaled(11)),
-                      ),
-                    ]),
+                        if (c.isRival) ...[
+                          SizedBox(width: t.scaled(5)),
+                          kingsRivalBadge(sheet, locale, size: t.scaled(10)),
+                        ],
+                        const Spacer(),
+                        Text(
+                          formatReignYears(locale, c.reignStart, c.reignEnd),
+                          style: TextStyle(
+                              color: wb.mutedText, fontSize: t.scaled(11)),
+                        ),
+                      ]),
+                    ),
                   ),
-                ),
-              if (tally.hasRivals) ...[
+                if (tally.hasRivals) ...[
+                  SizedBox(height: t.scaled(6)),
+                  kingsRivalExplanation(sheet, locale, size: t.scaled(10.5)),
+                ],
+                // This sheet has no basis line above it the way the
+                // kingdom sheet does, so the count carries its own.
                 SizedBox(height: t.scaled(6)),
-                kingsRivalExplanation(sheet, locale, size: t.scaled(10.5)),
+                kingsChronologyCaveat(sheet, locale, size: t.scaled(10.5)),
               ],
-              // This sheet has no basis line above it the way the
-              // kingdom sheet does, so the count carries its own.
-              SizedBox(height: t.scaled(6)),
-              kingsChronologyCaveat(sheet, locale, size: t.scaled(10.5)),
             ];
           })(),
           SizedBox(height: t.scaled(8)),

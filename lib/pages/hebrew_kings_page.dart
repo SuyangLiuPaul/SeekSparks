@@ -1175,15 +1175,10 @@ class _DetailPanel extends StatelessWidget {
         if (k.kingdom != Kingdom.united) ...[
           const SizedBox(height: 14),
           _SectionTitle(
-            '${_s('kingsContemporaries', 'On the other throne')} · '
-            '${kingdomLabel(locale, otherKingdom)} · '
-            '${tally.total}',
+            kingsContemporariesHeading(locale, otherKingdom, tally.total),
           ),
           if (contemporaries.isEmpty)
-            Text(
-              _s('kingsNoContemporaries', 'No overlapping reign.'),
-              style: TextStyle(fontSize: type.chrome, color: wb.mutedText),
-            )
+            kingsNoContemporariesLine(context, locale)
           else ...[
             kingsTallyLines(context, tally, otherKingdom, locale),
             const SizedBox(height: 7),
@@ -1367,6 +1362,56 @@ Widget kingsTallyLines(
           fill('kingsTallyRival', 'Rival claimants · {n}', tally.rivals),
         ),
     ],
+  );
+}
+
+/// The heading over a contemporaries block — "On the other throne ·
+/// Israel · 8".
+///
+/// COMPOSED IN ONE PLACE, for the same reason the derivation behind it
+/// lives in one place. The chart's detail panel and the wheel's reign
+/// sheet each used to build this string themselves; the sheet's own
+/// comment promised the two "cannot come to word the same overlap
+/// differently", and two copies of a join is exactly how they would.
+String kingsContemporariesHeading(String locale, Kingdom other, int total) =>
+    '${uiStrings['kingsContemporaries']?[locale] ?? 'On the other throne'}'
+    ' · ${kingdomLabel(locale, other)} · $total';
+
+/// What a contemporaries block says when the answer is nobody.
+///
+/// THE ABSENCE IS THE ANSWER, and on this data it is the answer for
+/// eight of the forty kings who had another throne to be compared with
+/// — Hezekiah, Manasseh, Amon, Josiah, Jehoahaz, Jehoiakim, Jehoiachin
+/// and Zedekiah, every Judean king after Samaria fell in 722. The
+/// wheel's reign sheet used to drop the whole section for those eight,
+/// so they read as kings the app had failed to compute rather than as
+/// kings who outlived the other kingdom. The year lookup already
+/// settled this question for itself, in the same words: "Judah and
+/// Israel are always shown, because 'None' IS the answer after 722 and
+/// after 586 and is the fact the reader came for."
+///
+/// This is NOT the "Rival claimants · 0" case one screen down, which is
+/// hidden precisely because that question is live for one king out of
+/// forty-two. "Who stood on the other throne" is the question a chart of
+/// two kingdoms exists to ask.
+///
+/// It says that nobody overlapped, not why. The sentence a reader wants
+/// here names 722 — see the note left with this change.
+Widget kingsNoContemporariesLine(
+  BuildContext context,
+  String locale, {
+  double? size,
+}) {
+  final wb = WbColors.of(context);
+  final type = WbType.of(context);
+  return Text(
+    uiStrings['kingsNoContemporaries']?[locale] ?? 'No overlapping reign.',
+    style: TextStyle(
+      fontSize: size ?? type.chrome,
+      color: wb.mutedText,
+      height: 1.35,
+      fontFamilyFallback: kCjkFontFallback,
+    ),
   );
 }
 

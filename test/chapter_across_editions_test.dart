@@ -175,46 +175,187 @@ void main() {
     });
   });
 
-  // A pure function nothing calls fixes nothing. The defect above was
-  // never in a util — it was inline in a page, in the one of the two
-  // split surfaces that had not been visited since v1.6.47 — so what
-  // has to be pinned is the WIRING, not only the rule. These read the
-  // source for the same reason `page_chrome_pass_test.dart` and the
-  // `*_ratchet_test.dart` family do: the behaviour lives in a widget
-  // path that needs SharedPreferences, two parsed corpora and a layout
-  // pass to reach, and a test that heavy would be skipped, not fixed.
-  group('both split surfaces are wired to the shared rule', () {
-    String read(String path) => File(path).readAsStringSync();
+  // ── What the two split surfaces are wired to ────────────────────
+  //
+  // A pure function nothing calls fixes nothing. The defect was never
+  // in a util — it was inline in a page, in the one of the two split
+  // surfaces that had not been visited since v1.6.47.
+  //
+  // WHAT THIS GROUP IS, said accurately. It reads two source files and
+  // matches text. It CANNOT prove behaviour: the seeding lives in a
+  // widget path that needs SharedPreferences, two parsed corpora and a
+  // layout pass to reach. It used to be called a wiring test and to
+  // claim it pinned the wiring; on 2026-09-06 the Split View defect was
+  // put back with its operands reversed — `pb == v.book` instead of
+  // `v.book == primary.currentBook` — and one mention of the shared
+  // function left in a comment, and all three assertions went green
+  // with the defect live. Measured, not argued: the mutation was run.
+  //
+  // A NEGATIVE MATCH ON EXACT OLD TEXT IS NOT ALLOWED HERE, and should
+  // not be written anywhere else in this suite. It is a blacklist of
+  // one item out of an infinite set, defeated by reordering operands,
+  // renaming a local, or running the formatter. It reads like a
+  // regression pin and is worth nothing. What replaces it:
+  //
+  //   1. comments are STRIPPED before matching, so prose naming a
+  //      function cannot stand in for a call to it;
+  //   2. every call is anchored in an ASSIGNMENT — the value the
+  //      surface actually uses has to come from the shared function,
+  //      not merely appear somewhere in the file;
+  //   3. the one negative left is structural rather than textual:
+  //      neither file may scan another edition's verse list by hand at
+  //      all. `firstWhere(` occurs zero times in either file today, and
+  //      every hand-rolled cross-edition search this project has
+  //      written was one. It is still a blacklist — a `for` loop
+  //      defeats it — and is kept only because it is cheap. The real
+  //      pin for behaviour would be a test that drives
+  //      `_activateSplitView`; it does not exist.
+  group('the two split surfaces call the shared seeding functions', () {
+    // Source with comments removed, so that a sentence naming a
+    // function cannot be mistaken for a call to it.
+    //
+    // String literals are LEFT ALONE: one assertion below is about a
+    // literal (`'secondary_version'`), and a stripper that ate string
+    // bodies would make it pass for the wrong reason. So the scanner
+    // tracks quotes, in order to know that the `//` inside a string
+    // like an https URL does not start a comment.
+    String stripComments(String src) {
+      final out = StringBuffer();
+      var i = 0;
+      String? quote;
+      while (i < src.length) {
+        final c = src[i];
+        if (quote != null) {
+          if (c == r'\' && i + 1 < src.length) {
+            out.write(c);
+            out.write(src[i + 1]);
+            i += 2;
+            continue;
+          }
+          out.write(c);
+          i++;
+          if (c == quote) quote = null;
+          continue;
+        }
+        if (c == "'" || c == '"') {
+          quote = c;
+          out.write(c);
+          i++;
+          continue;
+        }
+        if (src.startsWith('//', i)) {
+          while (i < src.length && src[i] != '\n') {
+            i++;
+          }
+          continue;
+        }
+        if (src.startsWith('/*', i)) {
+          final end = src.indexOf('*/', i + 2);
+          i = end == -1 ? src.length : end + 2;
+          continue;
+        }
+        out.write(c);
+        i++;
+      }
+      return out.toString();
+    }
 
-    test('each seeds its second column through the shared function', () {
+    String read(String path) => stripComments(File(path).readAsStringSync());
+
+    // THE STRIPPER IS PART OF THE ASSERTION, so it is tested rather
+    // than trusted. Every case here is one this group depends on: a
+    // call inside a comment must vanish, a call in code must survive,
+    // and a `//` inside a string must not eat the rest of the line.
+    test('the comment stripper this group depends on actually strips', () {
+      expect(stripComments('// call foo(1);\nbar(2);\n'), '\nbar(2);\n');
+      expect(stripComments('/* foo(1); */ bar(2);'), ' bar(2);');
+      expect(stripComments("var u = 'https://x/y'; foo(1);"),
+          "var u = 'https://x/y'; foo(1);");
+      expect(stripComments("var s = 'a // b'; foo(1);"),
+          "var s = 'a // b'; foo(1);");
+      expect(stripComments('/// doc seedChapterForNewColumn(\ncode();'),
+          '\ncode();');
+      // An escaped quote must not be read as the end of the string.
+      expect(stripComments("var s = 'it\\'s // fine'; foo(1);"),
+          "var s = 'it\\'s // fine'; foo(1);");
+
+      // AND `read` MUST ACTUALLY USE IT. A stripper that exists beside
+      // an unstripped `read` is the same defect one level up, and it
+      // was reachable: unwiring `read` from `stripComments` was the one
+      // mutation of the twelve run against this work that no test
+      // caught. Both files are heavily commented, so a `//` surviving
+      // into `read`'s answer means nothing was stripped.
+      // A line that BEGINS with `//` is unambiguously a comment; a
+      // bare `//` would also match inside a URL string literal, which
+      // `read` deliberately leaves alone.
+      final commentLine = RegExp(r'^\s*//', multiLine: true);
+      for (final path in const [
+        'lib/pages/home_page.dart',
+        'lib/pages/workbench_page.dart',
+      ]) {
+        final raw = File(path).readAsStringSync();
+        expect(commentLine.hasMatch(raw), isTrue, reason: path);
+        expect(commentLine.hasMatch(read(path)), isFalse, reason: path);
+        expect(read(path).length, lessThan(raw.length), reason: path);
+      }
+    });
+
+    test('Split View assigns its seed from seedChapterForNewColumn', () {
       // Two entry points on purpose: a column being constructed needs a
       // landing place when the edition cannot carry the passage, and a
       // column already on a chapter must be left there instead.
-      expect(read('lib/pages/home_page.dart'),
-          contains('seedChapterForNewColumn('),
-          reason: 'Split View constructs its column, so it takes the '
-              'variant with the partial-canon fallback');
-      expect(read('lib/pages/workbench_page.dart'),
-          contains('firstVerseOfChapterAcrossEditions('),
-          reason: 'the workbench column already has a chapter and must '
-              'take the variant that answers null rather than moving it');
+      //
+      // Anchored to `= seedChapterForNewColumn(` rather than to the
+      // bare name, so that the value the column is actually opened on
+      // has to be the shared function's answer.
+      expect(
+        RegExp(r'=\s*seedChapterForNewColumn\s*\(')
+            .hasMatch(read('lib/pages/home_page.dart')),
+        isTrue,
+        reason: 'Split View constructs its column, so it takes the '
+            'variant with the partial-canon fallback — and it must take '
+            'the RESULT of it',
+      );
     });
 
-    test('Split View no longer compares raw book names across providers',
-        () {
-      expect(read('lib/pages/home_page.dart'),
-          isNot(contains('v.book == primary.currentBook')),
-          reason: 'this is the exact comparison that put a reader on '
-              '约翰福音 3 into a second column on Genesis 1');
+    test('the workbench column follows through the shared search', () {
+      expect(
+        RegExp(r'=\s*firstVerseOfChapterAcrossEditions\s*\(')
+            .hasMatch(read('lib/pages/workbench_page.dart')),
+        isTrue,
+        reason: 'the workbench column already has a chapter and must '
+            'take the variant that answers null rather than moving it',
+      );
     });
 
-    test('Split View asks resolveSecondaryVersion which edition to open',
-        () {
+    test("neither surface scans another edition's verses by hand", () {
+      // Structural, not textual: the defect was not one spelling of one
+      // comparison, it was a hand-rolled linear search across a
+      // language boundary. Both files do zero of those now.
+      for (final path in const [
+        'lib/pages/home_page.dart',
+        'lib/pages/workbench_page.dart',
+      ]) {
+        expect(read(path).contains('firstWhere('), isFalse,
+            reason: '$path: a cross-edition search belongs in '
+                'utils/chapter_across_editions.dart, where it round-trips '
+                'through bookNameToEnglish, not inline over verses that '
+                'name their books in another language');
+      }
+    });
+
+    test('Split View asks resolveSecondaryVersion which edition to open', () {
       final src = read('lib/pages/home_page.dart');
-      expect(src, contains('resolveSecondaryVersion('),
-          reason: 'the workbench column and the boot warm-up both do; a '
-              'third answer here warms one Bible and opens another');
-      expect(src, isNot(contains("getString('secondary_version')")),
+      expect(
+        RegExp(r'=\s*resolveSecondaryVersion\s*\(').hasMatch(src),
+        isTrue,
+        reason: 'the workbench column and the boot warm-up both do; a '
+            'third answer here warms one Bible and opens another',
+      );
+      // The one textual negative that is not a blacklist of an old
+      // revision: the constant exists so that this literal appears
+      // nowhere, and there is no other way to spell it.
+      expect(src.contains("'secondary_version'"), isFalse,
           reason: 'use kSecondaryVersionKey, so the three readers of this '
               'preference cannot drift apart on its spelling');
     });
