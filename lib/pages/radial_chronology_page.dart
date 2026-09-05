@@ -357,9 +357,18 @@ List<LifeArc> packWheelBand({
   required List<WheelMinistry> ministries,
   String tradition = kDrawnTradition,
   int reservedInnerRings = 0,
+  // 2026-09-05: the Genesis lifespans are a LAYER, like the reigns and
+  // the ministries, and turning one layer off must not take the other
+  // two with it. Until this parameter existed the page's builder
+  // returned early when the lifespan layer was hidden — before it had
+  // even gathered the kings — so unchecking "Genesis lifespans" also
+  // erased 42 reign arcs, 44 ministry arcs and the genealogy rail,
+  // while all three of their checkboxes went on showing as ticked.
+  // Defaulted true so every other caller is unchanged.
+  bool includePatriarchs = true,
 }) {
   final packed = buildLifeArcs(
-    patriarchs: chron.patriarchs,
+    patriarchs: includePatriarchs ? chron.patriarchs : const [],
     tradition: tradition,
     creationYear: creationYear,
     minYear: kMinYear,
@@ -1919,14 +1928,16 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
     ChronologyData chron,
     int creation,
     List<HebrewKing> kings,
-    List<WheelMinistry> ministries,
-  ) =>
+    List<WheelMinistry> ministries, {
+    bool includePatriarchs = true,
+  }) =>
       packWheelBand(
         chron: chron,
         creationYear: creation,
         kings: kings,
         ministries: ministries,
         reservedInnerRings: _reservedRings,
+        includePatriarchs: includePatriarchs,
       );
 
   /// How many innermost sub-rings the arcs must give up.
@@ -1991,10 +2002,14 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
     String locale,
     double rimFont,
   ) {
-    if (_hidden.contains(kLifespanLayerId)) return const [];
     final chron = ChronologyService.instance.cached;
     final creation = creationYear;
     if (chron == null || creation == null) return const [];
+
+    // Each layer answers for itself. Hiding the patriarchs drops the
+    // patriarch arcs and nothing else — see the note on
+    // `packWheelBand`'s `includePatriarchs` for what this used to do.
+    final showPatriarchs = !_hidden.contains(kLifespanLayerId);
 
     final kings = _hidden.contains(kReignLayerId)
         ? const <HebrewKing>[]
@@ -2007,7 +2022,8 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
     final byMinistryId = {
       for (final m in ministries) '$kMinistryArcPrefix${m.id}': m
     };
-    final arcs = _packBand(chron, creation, kings, ministries);
+    final arcs = _packBand(chron, creation, kings, ministries,
+        includePatriarchs: showPatriarchs);
     if (arcs.isEmpty) return const [];
     // `packWheelBand` has already shifted the arcs off the reserved
     // ring, so the count it yields is the whole annulus.
