@@ -339,9 +339,11 @@ class _FamilyTreePageState extends State<_FamilyTreeBody> {
       body: FutureBuilder<_TreeData>(
         future: _future,
         builder: (context, snap) {
-          if (!snap.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
+          // hasError FIRST. A failed future has `hasData == false`, so
+          // when the spinner guard came first this branch could never be
+          // reached: the localized failure message below was dead code
+          // and a load error showed an endless spinner instead. Reported
+          // 2026-09-05, found in three pages at once.
           if (snap.hasError) {
             return Center(
               child: Padding(
@@ -356,6 +358,9 @@ class _FamilyTreePageState extends State<_FamilyTreeBody> {
                 ),
               ),
             );
+          }
+          if (!snap.hasData) {
+            return const Center(child: CircularProgressIndicator());
           }
           final data = snap.data!;
           final filtered =
