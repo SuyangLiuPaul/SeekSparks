@@ -64,6 +64,7 @@ import 'package:seeksparks/utils/note_reference_parser.dart'
 import 'package:seeksparks/utils/reference_parser.dart';
 import 'package:seeksparks/utils/verse_notes.dart'
     show resolveNotePrefill, verseNoteRangeLabel;
+import 'package:seeksparks/widgets/synopsis_parallels.dart';
 import 'package:seeksparks/widgets/verse_popup_sheet.dart' show showVersePopup;
 import 'package:seeksparks/utils/responsive.dart';
 import 'package:seeksparks/widgets/docked_panel.dart';
@@ -7427,7 +7428,13 @@ class _CrossRefsSheetBody extends StatefulWidget {
 }
 
 class _CrossRefsSheetBodyState extends State<_CrossRefsSheetBody> {
-  late Future<List<BibleReference>> _future;
+  /// Cross-references AND the curated parallels covering this verse.
+  ///
+  /// The phone has no Analysis window, so this sheet is where a phone
+  /// reader asks "what else belongs with this verse" — it must carry
+  /// the same two answers `CrossRefsPane` does, or `byVerse` is
+  /// surfaced for tablet readers only.
+  late Future<(List<BibleReference>, List<SynopsisEvent>)> _future;
   // Index of the current Bible version's verses by canonical book +
   // chapter + verse so the preview text loads instantly.
   late final Map<String, String> _verseIndex;
@@ -7435,13 +7442,19 @@ class _CrossRefsSheetBodyState extends State<_CrossRefsSheetBody> {
   @override
   void initState() {
     super.initState();
-    _future = CrossReferenceService.forVerseOrNearby(
-        widget.englishBook, widget.chapter, widget.verse);
+    _future = _load();
     _verseIndex = {
       for (final v in widget.mainProvider.verses)
         '${toEnglish(v.book) ?? v.book}-${v.chapter}-${v.verse}': v.text,
     };
   }
+
+  Future<(List<BibleReference>, List<SynopsisEvent>)> _load() async => (
+        await CrossReferenceService.forVerseOrNearby(
+            widget.englishBook, widget.chapter, widget.verse),
+        await SynopsisService.byVerse(
+            widget.englishBook, widget.chapter, widget.verse),
+      );
 
   String? _previewFor(BibleReference ref) {
     final v = ref.verseStart ?? 1;
@@ -7507,14 +7520,17 @@ class _CrossRefsSheetBodyState extends State<_CrossRefsSheetBody> {
         ),
         const Divider(height: 1),
         Expanded(
-          child: FutureBuilder<List<BibleReference>>(
+          child: FutureBuilder<(List<BibleReference>, List<SynopsisEvent>)>(
             future: _future,
             builder: (ctx, snap) {
               if (snap.connectionState != ConnectionState.done) {
                 return const Center(child: CircularProgressIndicator());
               }
-              final refs = snap.data ?? const <BibleReference>[];
-              if (refs.isEmpty) {
+              final (refs, parallels) = snap.data ??
+                  (const <BibleReference>[], const <SynopsisEvent>[]);
+              // Both: a verse the harmony covers and TSK does not would
+              // otherwise show "none" over live data.
+              if (refs.isEmpty && parallels.isEmpty) {
                 return Center(
                   child: Padding(
                     padding: const EdgeInsets.all(24),
@@ -7537,23 +7553,72 @@ class _CrossRefsSheetBodyState extends State<_CrossRefsSheetBody> {
                   ),
                 );
               }
-              return ListView.separated(
+              // The curated parallels first, under their own name.
+              // Absent — not denied — when this verse has none: the
+              // synopsis covers the Gospels and the OT books Eagle's
+              // View files, so a denial would print on most verses of
+              // the Bible. The chapter-level answer stays reachable
+              // from the reading pane's own synopsis sheet.
+              final head = <Widget>[
+                if (parallels.isNotEmpty) ...[
+                  _SheetSourceHeading(
+                    text: parallels.first.isGospelHarmony
+                        ? (uiStrings['synopsis']?[locale] ?? 'Gospel Synopsis')
+                        : (uiStrings['synopsisOt']?[locale] ??
+                            'Parallel Passages'),
+                  ),
+                  for (final ev in parallels)
+                    SynopsisRow(
+                      event: ev,
+                      currentBook: widget.englishBook,
+                      locale: locale,
+                      version: widget.mainProvider.currentVersion,
+                      fontFamily:
+                          Provider.of<AppSettings>(ctx, listen: false)
+                              .fontFamily,
+                      padding: const EdgeInsets.fromLTRB(0, 2, 0, 10),
+                      onNavigate: widget.onNavigate,
+                    ),
+                  // Eagle's View's permission is conditional on naming
+                  // the source. The Gospel harmony carries no
+                  // attribution field, so the credit is printed for the
+                  // OT half only rather than claimed over both.
+                  if (!parallels.first.isGospelHarmony)
+                    _SheetAttribution(text: SynopsisService.otAttribution),
+                  if (refs.isNotEmpty)
+                    _SheetSourceHeading(
+                      text: uiStrings['crossRefs']?[locale] ??
+                          'Cross-references',
+                    ),
+                ],
+              ];
+              return ListView.builder(
                 controller: widget.scrollController,
                 padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-                itemCount: refs.length,
-                separatorBuilder: (_, __) => Divider(
-                    height: 1,
-                    thickness: 0.5,
-                    color: scheme.outlineVariant.withValues(alpha: 0.4)),
+                itemCount: refs.length + head.length,
                 itemBuilder: (_, i) {
-                  final r = refs[i];
+                  if (i < head.length) return head[i];
+                  final r = refs[i - head.length];
                   final preview = _previewFor(r);
                   final label = r.toString().replaceFirst(
                         r.englishBook,
                         localeAwareBookName(r.englishBook, locale,
                             widget.mainProvider.currentVersion),
                       );
-                  return InkWell(
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // The rule `ListView.separated` used to draw
+                      // between two cards, carried by the card now the
+                      // list also holds headings that must not be
+                      // ruled off from what they head.
+                      if (i > head.length)
+                        Divider(
+                            height: 1,
+                            thickness: 0.5,
+                            color: scheme.outlineVariant
+                                .withValues(alpha: 0.4)),
+                      InkWell(
                     onTap: () => widget.onNavigate(r),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(vertical: 10),
@@ -7584,6 +7649,8 @@ class _CrossRefsSheetBodyState extends State<_CrossRefsSheetBody> {
                         ],
                       ),
                     ),
+                      ),
+                    ],
                   );
                 },
               );
@@ -7755,7 +7822,7 @@ class _SynopsisSheetBodyState extends State<_SynopsisSheetBody> {
                   separatorBuilder: (_, __) => const Divider(height: 1),
                   itemBuilder: (_, i) {
                     final ev = events[i];
-                    return _SynopsisRow(
+                    return SynopsisRow(
                       event: ev,
                       currentBook: widget.englishBook,
                       locale: widget.locale,
@@ -7766,132 +7833,76 @@ class _SynopsisSheetBodyState extends State<_SynopsisSheetBody> {
                   },
                 ),
         ),
+        // Eagle's View grants this data on condition its source is
+        // named. The service has loaded the string since the OT half
+        // shipped and nothing printed it — the chapter sheet is where
+        // a reader meets these 139 groups, so it is where the credit
+        // has to be. Gospel chapters get nothing: the harmony carries
+        // no attribution field and `_SheetAttribution` collapses on an
+        // empty string, but the test is explicit so a future Gospel
+        // credit cannot be mis-attributed here.
+        if (!SynopsisService.isGospel(widget.englishBook))
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+            child: _SheetAttribution(text: SynopsisService.otAttribution),
+          ),
       ],
     );
   }
 }
 
-class _SynopsisRow extends StatelessWidget {
-  final SynopsisEvent event;
-  final String currentBook;
-  final String locale;
-  final String version;
-  final String fontFamily;
-  final void Function(BibleReference) onNavigate;
+/// Names the work a block of rows came from, inside a sheet.
+///
+/// The Analysis window has `_SourceHeading` in `analysis_tabs.dart` and
+/// this is the same claim in the sheet's own type scale; they are not
+/// shared because the two surfaces resolve their sizing differently
+/// (`WbType.of` there, the reading pane's `context.chromeSize` here)
+/// and a shared widget would have to take a scale argument to say the
+/// same thing twice.
+class _SheetSourceHeading extends StatelessWidget {
+  const _SheetSourceHeading({required this.text});
 
-  const _SynopsisRow({
-    required this.event,
-    required this.currentBook,
-    required this.locale,
-    required this.version,
-    required this.fontFamily,
-    required this.onNavigate,
-  });
+  final String text;
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    // Every passage, in source order. An Old Testament group names any
-    // books it likes and may name one of them twice, so this cannot be
-    // a lookup by Gospel name the way it was.
-    final present = event.passages;
-    final isUnique = event.isGospelHarmony && present.length == 1;
-
+    final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            event.localizedTitle(locale),
-            style: TextStyle(
-              fontSize: context.textSize(14),
-              fontWeight: FontWeight.w600,
-              color: scheme.onSurface,
-              fontFamily: fontFamily,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Wrap(
-            spacing: 6,
-            runSpacing: 4,
-            children: [
-              for (final p in present)
-                _RefChip(
-                  label: _shortLabel(p.book, p.raw),
-                  isCurrentGospel: p.book == currentBook,
-                  onTap: () {
-                    final ref = p.reference;
-                    if (ref != null) onNavigate(ref);
-                  },
-                ),
-              if (isUnique)
-                Padding(
-                  padding: const EdgeInsets.only(left: 4, top: 2),
-                  child: Text(
-                    uiStrings['synopsisOnlyHere']?[locale] ??
-                        'Only in this Gospel',
-                    style: TextStyle(
-                      fontSize: context.textSize(11),
-                      fontStyle: FontStyle.italic,
-                      color: scheme.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ],
+      padding: const EdgeInsets.only(top: 4, bottom: 8),
+      child: Text(
+        text.toUpperCase(),
+        style: theme.textTheme.labelSmall?.copyWith(
+          fontSize: context.chromeSize(11),
+          letterSpacing: 0.8,
+          fontWeight: FontWeight.w700,
+          color: theme.colorScheme.onSurfaceVariant,
+        ),
       ),
     );
   }
-
-  /// Compact chip label like "Mat 5:1-12" or "太 5:1-12". Strips the
-  /// English book name off the raw reference and prepends the
-  /// abbreviation for the reading version's script.
-  ///
-  /// Splitting at the first space, which is what this did, turned
-  /// "2 Chronicles 26:3-15" into "Chronicles 26:3-15" — harmless while
-  /// only the four Gospels reached here, wrong for the thirteen
-  /// numbered books the OT groups name.
-  String _shortLabel(String englishBook, String raw) {
-    if (!raw.startsWith(englishBook)) return raw;
-    final tail = raw.substring(englishBook.length).trim();
-    return '${shortBookName(englishBook, locale, version)} $tail';
-  }
 }
 
-class _RefChip extends StatelessWidget {
-  final String label;
-  final bool isCurrentGospel;
-  final VoidCallback onTap;
+/// The credit a permission-granted dataset must travel with. Eagle's
+/// View's OT synopsis is used by permission on condition its source is
+/// named, and until 2026-09-06 `SynopsisService.otAttribution` was
+/// loaded from the asset and printed nowhere.
+class _SheetAttribution extends StatelessWidget {
+  const _SheetAttribution({required this.text});
 
-  const _RefChip({
-    required this.label,
-    required this.isCurrentGospel,
-    required this.onTap,
-  });
+  final String text;
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final bg = isCurrentGospel
-        ? scheme.primary.withValues(alpha: 0.20)
-        : scheme.primary.withValues(alpha: 0.08);
-    final fg = isCurrentGospel ? scheme.primary : scheme.onSurface;
-    return Material(
-      color: bg,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: context.textSize(12.5),
-              fontWeight: FontWeight.w600,
-              color: fg,
-            ),
-          ),
+    if (text.isEmpty) return const SizedBox.shrink();
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(top: 2, bottom: 14),
+      child: Text(
+        text,
+        style: theme.textTheme.bodySmall?.copyWith(
+          fontSize: context.chromeSize(11),
+          height: 1.35,
+          color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
         ),
       ),
     );

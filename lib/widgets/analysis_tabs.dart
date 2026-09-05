@@ -29,6 +29,8 @@ import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 import 'package:seeksparks/utils/scripture_markup.dart';
 import 'package:seeksparks/services/cross_reference_service.dart';
 import 'package:seeksparks/services/strongs_service.dart';
+import 'package:seeksparks/services/synopsis_service.dart';
+import 'package:seeksparks/widgets/synopsis_parallels.dart';
 import 'package:seeksparks/utils/reference_parser.dart' show BibleReference;
 import 'package:seeksparks/constants/book_groups.dart' show oldTestamentBooks;
 import 'package:seeksparks/utils/search_scope.dart'
@@ -536,6 +538,27 @@ class _TabButton extends StatelessWidget {
 
 /// TSK / OpenBible cross-references for [verse], each rendered with the
 /// referenced text so the pane is readable without navigating away.
+///
+/// 2026-09-06: the curated parallels now sit above them, from
+/// `SynopsisService.byVerse`. That call had no caller in `lib/` at all —
+/// `data_surface_reachability_test.dart` found it orphaned the day that
+/// test was written — because the only synopsis surface was the reading
+/// pane's CHAPTER sheet. So a reader on 2 Kings 24:18 was shown every
+/// parallel in chapter 24 and never told which ones covered the verse
+/// under the cursor, a distinction the data can make (24:18 is inside an
+/// event that 24:17 is not).
+///
+/// It belongs HERE rather than in a fifteenth tab because this pane
+/// already answers the question a parallel answers — what else in
+/// scripture belongs with this verse — and it is one of only four
+/// subjects a reader can reach from the selection bar
+/// (`ReaderAnalysisRequest`). A Parallels tab would have drawn an empty
+/// pane for most of the 66 books and been unreachable from the reader
+/// side, which is how this app has shipped invisible features before.
+///
+/// The two works are NAMED, following `TopicsPane`: a curated harmony
+/// entry and a machine cross-reference are different kinds of claim,
+/// and an unlabelled list would hide that.
 class CrossRefsPane extends StatefulWidget {
   const CrossRefsPane({
     super.key,
@@ -568,7 +591,7 @@ class CrossRefsPane extends StatefulWidget {
 }
 
 class _CrossRefsPaneState extends State<CrossRefsPane> {
-  late Future<List<BibleReference>> _future;
+  late Future<(List<BibleReference>, List<SynopsisEvent>)> _future;
 
   @override
   void initState() {
@@ -586,22 +609,28 @@ class _CrossRefsPaneState extends State<CrossRefsPane> {
     }
   }
 
-  Future<List<BibleReference>> _load() =>
-      CrossReferenceService.forVerseOrNearby(
-          widget.englishBook, widget.chapter, widget.verse);
+  Future<(List<BibleReference>, List<SynopsisEvent>)> _load() async => (
+        await CrossReferenceService.forVerseOrNearby(
+            widget.englishBook, widget.chapter, widget.verse),
+        await SynopsisService.byVerse(
+            widget.englishBook, widget.chapter, widget.verse),
+      );
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final t = WbType.of(context);
-    return FutureBuilder<List<BibleReference>>(
+    return FutureBuilder<(List<BibleReference>, List<SynopsisEvent>)>(
       future: _future,
       builder: (context, snap) {
         if (snap.connectionState != ConnectionState.done) {
           return const Center(child: CircularProgressIndicator());
         }
-        final refs = snap.data ?? const <BibleReference>[];
-        if (refs.isEmpty) {
+        final (refs, parallels) = snap.data ??
+            (const <BibleReference>[], const <SynopsisEvent>[]);
+        // Both, or a verse the harmony covers and TSK does not shows an
+        // empty pane over live data.
+        if (refs.isEmpty && parallels.isEmpty) {
           return _EmptyPane(
             icon: Icons.hub_outlined,
             message: uiStrings['analysisNoCrossRefs']?[widget.locale] ??
@@ -609,13 +638,65 @@ class _CrossRefsPaneState extends State<CrossRefsPane> {
           );
         }
         final index = widget.verseByRef;
-        return ListView.separated(
+
+        // NO "no parallels for this verse" LINE. The synopsis covers
+        // the four Gospels and the OT books Eagle's View files — for
+        // most of the Bible's verses this section is simply absent, and
+        // printing a denial on nearly every verse would be noise. The
+        // chapter-level answer stays recoverable on the same screen
+        // through the reading pane's own synopsis sheet.
+        final parallelHeading = parallels.isEmpty
+            ? null
+            : (parallels.first.isGospelHarmony
+                ? (uiStrings['synopsis']?[widget.locale] ?? 'Gospel Synopsis')
+                : (uiStrings['synopsisOt']?[widget.locale] ??
+                    'Parallel Passages'));
+        final head = <Widget>[
+          if (parallels.isNotEmpty) ...[
+            _SourceHeading(text: parallelHeading!),
+            for (final ev in parallels)
+              SynopsisRow(
+                event: ev,
+                currentBook: widget.englishBook,
+                locale: widget.locale,
+                version: widget.version,
+                fontFamily: t.fontFamily,
+                // The pane is 320–560 px wide; the sheet's 16 px gutter
+                // is paid twice here and the chips are what needs the
+                // width.
+                padding: const EdgeInsets.fromLTRB(0, 2, 0, 10),
+                onNavigate: widget.onOpenRef,
+              ),
+            // Eagle's View's permission is conditional on naming the
+            // source, and until now NOTHING in lib/ printed this — the
+            // chapter sheet loads the string and drops it. The credit
+            // belongs to the OT half only; the Gospel harmony carries
+            // no attribution field, so claiming Eagle's View over a
+            // Matthew/Mark row would be a false credit rather than a
+            // missing one.
+            if (!parallels.first.isGospelHarmony)
+              _Attribution(text: SynopsisService.otAttribution),
+          ],
+          // Named only when it is not the only thing here, so a verse
+          // with no parallels looks exactly as this pane always has.
+          if (parallels.isNotEmpty && refs.isNotEmpty)
+            _SourceHeading(
+              text: uiStrings['crossRefs']?[widget.locale] ??
+                  'Cross-references',
+            ),
+        ];
+
+        // `ListView.builder` rather than `.separated`: the head block
+        // brings its own vertical rhythm (the heading and attribution
+        // pad themselves), so a uniform separator would have to be
+        // suppressed for part of the list anyway.
+        return ListView.builder(
           padding: const EdgeInsets.fromLTRB(12, 8, 12, 20),
           physics: const BouncingScrollPhysics(),
-          itemCount: refs.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 8),
+          itemCount: refs.length + head.length,
           itemBuilder: (context, i) {
-            final r = refs[i];
+            if (i < head.length) return head[i];
+            final r = refs[i - head.length];
             final start = r.verseStart ?? 1;
             final hit = index['${r.englishBook}-${r.chapter}-$start'];
             final label =
@@ -624,6 +705,10 @@ class _CrossRefsPaneState extends State<CrossRefsPane> {
             return InkWell(
               onTap: () => widget.onOpenRef(r),
               child: Container(
+                // The 8 px `ListView.separated` used to put between two
+                // cards, carried on the card itself now the list also
+                // holds headings that pad themselves.
+                margin: EdgeInsets.only(top: i == head.length ? 0 : 8),
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: scheme.surfaceContainerHighest.withValues(alpha: 0.35),

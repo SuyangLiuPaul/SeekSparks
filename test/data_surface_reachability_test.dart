@@ -96,9 +96,14 @@ const List<_Surface> _surfaces = <_Surface>[
   // The OT synopsis.
   _Surface('lib/services/synopsis_service.dart', 'SynopsisService.byChapter',
       'the parallel passages for a chapter'),
+  _Surface('lib/services/synopsis_service.dart', 'SynopsisService.byVerse',
+      'the parallels covering the verse under the cursor'),
   _Surface('lib/services/synopsis_service.dart',
       'SynopsisService.hasSynopsisSync',
       'whether to offer the menu item at all'),
+  _Surface('lib/services/synopsis_service.dart',
+      'SynopsisService.otAttribution',
+      "Eagle's View's credit, which its permission is conditional on"),
 ];
 
 /// Branches that ship unreachable. Empty is the goal. An entry is a
@@ -127,19 +132,6 @@ const Map<String, String> _knownUnsurfaced = <String, String>{
           'synopsis surfaces are entered from the chapter in hand, and '
           'no screen states the size of the work. Harmless; listed so '
           'the next reader does not re-discover it as a defect.',
-  'SynopsisService.byVerse':
-      'OPEN QUESTION, found 2026-09-05 by this test on the day it was '
-          'written — not a decision anyone has taken. The service '
-          'documents it (synopsis_service.dart, the class doc), '
-          'test/ot_synopsis_test.dart drives it four times, and NOTHING '
-          'in lib/ calls it. The reading pane offers its synopsis sheet '
-          'per CHAPTER (bible_reading_pane.dart, hasSynopsisSync -> '
-          'byChapter), so a reader on 2 Kings 24:18 is shown every '
-          'parallel in the chapter and is never told which ones cover '
-          'the verse under the cursor — the distinction the tests show '
-          'the data can make (24:18 is inside an event that 24:17 is '
-          'not). Whether that belongs in the Analysis pane is the '
-          "owner's call, not this test's.",
 };
 
 /// [source] with its comments removed.
