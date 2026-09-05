@@ -2799,6 +2799,15 @@ const uiStrings = {
     'zh-Hant': '兩者相距 {n} 個詞以內，不分先後',
     'en': 'Within {n} words of each other, either order',
   },
+  // 2026-09-05: the directional half. BibleWorks' `*n` is "A followed
+  // within n words by B" and ours was unordered, which is a different
+  // result set rather than a different spelling — so the two tooltips
+  // have to differ in exactly the words 不分先后 / 先后有别.
+  'searchOpBeforeTip': {
+    'zh-Hans': '前者在先，后者在 {n} 个词以内',
+    'zh-Hant': '前者在先，後者在 {n} 個詞以內',
+    'en': 'The first, then the second within {n} words',
+  },
   'searchOpStarTip': {
     'zh-Hans': '前缀通配符（如 G25✶）',
     'zh-Hant': '前綴萬用字元（如 G25✶）',
@@ -3035,14 +3044,18 @@ const uiStrings = {
     'en': 'The word gap after * must be {max} or less.',
   },
   'cmdIssueNearNoDistance': {
-    'zh-Hans': 'NEAR 后面要写数字：G25 NEAR5 G26 表示两词相隔不超过 5 个词。',
-    'zh-Hant': 'NEAR 後面要寫數字：G25 NEAR5 G26 表示兩詞相隔不超過 5 個詞。',
-    'en': "NEAR needs a number: G25 NEAR5 G26 finds them within 5 words.",
+    'zh-Hans': 'NEAR / BEFORE 后面要写数字：G25 NEAR5 G26 表示两词相隔不超过 '
+        '5 个词，G25 BEFORE5 G26 还要求 G25 在前。',
+    'zh-Hant': 'NEAR / BEFORE 後面要寫數字：G25 NEAR5 G26 表示兩詞相隔不超過 '
+        '5 個詞，G25 BEFORE5 G26 還要求 G25 在前。',
+    'en': 'NEAR and BEFORE need a number: G25 NEAR5 G26 finds them within '
+        '5 words, G25 BEFORE5 G26 also requires G25 first.',
   },
   'cmdIssueNearRange': {
-    'zh-Hans': 'NEAR 后面的词距必须在 1 到 {max} 之间。',
-    'zh-Hant': 'NEAR 後面的詞距必須在 1 到 {max} 之間。',
-    'en': 'The word distance after NEAR must be between 1 and {max}.',
+    'zh-Hans': 'NEAR / BEFORE 后面的词距必须在 1 到 {max} 之间。',
+    'zh-Hant': 'NEAR / BEFORE 後面的詞距必須在 1 到 {max} 之間。',
+    'en': 'The word distance after NEAR or BEFORE must be between 1 and '
+        '{max}.',
   },
   'cmdIssueStrongsOperator': {
     'zh-Hans': '运算符两边都要有原文编号，例如 G25 AND G26。',
@@ -3165,6 +3178,14 @@ const uiStrings = {
     'zh-Hant': 'G25 NEAR5 G26 — 相距 5 個詞以內，不分先後（中間最多 4 個詞）',
     'en': 'G25 NEAR5 G26 — within 5 words, either order (up to 4 words between)',
   },
+  // The directional operator, 2026-09-05. It sits directly under the
+  // NEAR line on purpose: the pair is only learnable side by side, and
+  // "不分先后" against "先后有别" is the whole lesson.
+  'cmdSyntaxStrongsBefore': {
+    'zh-Hans': 'G25 BEFORE5 G26 — G25 在前，G26 在其后 5 个词以内（先后有别）',
+    'zh-Hant': 'G25 BEFORE5 G26 — G25 在前，G26 在其後 5 個詞以內（先後有別）',
+    'en': 'G25 BEFORE5 G26 — G25 first, G26 within 5 words after it (order matters)',
+  },
   'cmdSyntaxStrongsWild': {
     'zh-Hans': 'G25✶ — 所有以 G25 开头的编号 · G25 !G26 与 NOT 相同',
     'zh-Hant': 'G25✶ — 所有以 G25 開頭的編號 · G25 !G26 與 NOT 相同',
@@ -3266,6 +3287,12 @@ const uiStrings = {
     'zh-Hant': '{op} 只連接原文編號，不連接詞。這一行會被當成一整串文字去查。',
     'en': "{op} joins two Strong's numbers, not words. "
         'This line will be searched as one literal string.',
+  },
+  'cmdDraftBeforeWindow': {
+    'zh-Hans': '前者在先，后者在其后 {n} 个词以内（中间最多 {gap} 个词）。',
+    'zh-Hant': '前者在先，後者在其後 {n} 個詞以內（中間最多 {gap} 個詞）。',
+    'en': 'The first, then the second within {n} words '
+        '(up to {gap} words in between).',
   },
   'cmdDraftNearNoDistance': {
     'zh-Hans': '{op} 后面要写距离，例如 {op}5。相距几个词以内：',
@@ -5426,6 +5453,42 @@ const uiStrings = {
     'zh-Hant': '在釋經面板每個希伯來/希臘詞卡下方顯示 G####/H#### 徽標。',
     'en': "Display the G#### / H#### badge under each Hebrew/Greek word in the exegesis sheet.",
   },
+  // ── bwh29, 2026-09-05 ─────────────────────────────────────────────
+  // The Masoretic pair was already displayed and counted; what was
+  // missing was the reader's control over whether each takes part in a
+  // search. Both off by default, which is BibleWorks' default too.
+  //
+  // The subtitles say WHICH searches, because the honest answer is not
+  // "all of them": the morphology search and the NEAR / BEFORE word-
+  // order pass read the per-word role, and the concordance-driven
+  // `G25 AND G26` set algebra has no role to read.
+  'excludeKetivFromSearch': {
+    'zh-Hans': '搜索时排除 Ketiv（所写的）',
+    'zh-Hant': '搜尋時排除 Ketiv（所寫的）',
+    'en': 'Exclude the Ketiv (written form) from searches',
+  },
+  'excludeKetivFromSearchSubtitle': {
+    'zh-Hans': '希伯来圣经有 1,103 节经文并列两种读法。开启后，形态搜索与'
+        'NEAR / BEFORE 词距判断都不再计入经文所写的形式。',
+    'zh-Hant': '希伯來聖經有 1,103 節經文並列兩種讀法。開啟後，形態搜尋與'
+        'NEAR / BEFORE 詞距判斷都不再計入經文所寫的形式。',
+    'en': '1,103 verses of the Hebrew Bible carry two readings. With this '
+        'on, the written form is left out of morphology searches and of '
+        'the NEAR / BEFORE word-distance check.',
+  },
+  'excludeQereFromSearch': {
+    'zh-Hans': '搜索时排除 Qere（所读的）',
+    'zh-Hant': '搜尋時排除 Qere（所讀的）',
+    'en': 'Exclude the Qere (read form) from searches',
+  },
+  'excludeQereFromSearchSubtitle': {
+    'zh-Hans': '同上，排除的是马所拉学者指示诵读的形式。两项都开启，就只搜索'
+        '未被标注的字。',
+    'zh-Hant': '同上，排除的是馬所拉學者指示誦讀的形式。兩項都開啟，就只搜尋'
+        '未被標註的字。',
+    'en': 'The same, for the form the Masoretes direct be read. With both '
+        'on, only unmarked words are searched.',
+  },
   'autoExpandFirstRef': {
     'zh-Hans': '自动展开首个经文分组',
     'zh-Hant': '自動展開首個經文分組',
@@ -6752,6 +6815,98 @@ const uiStrings = {
     'zh-Hant': '{name}家',
     'en': 'House of {name}',
   },
+
+  // ── Contemporaries: the count, and what it does and does not claim ──
+  //
+  // Two numbers, never one. Asa of Judah overlaps eight men of the
+  // north, seven of whom are kings of Israel and one of whom — Tibni —
+  // is a claimant. Reporting only 8 overstates the throne; reporting
+  // only 7 hides a man the chart is drawing. Both are printed.
+  'kingsTallyReigning': {
+    'zh-Hans': '在位的王 · {n}',
+    'zh-Hant': '在位的王 · {n}',
+    'en': 'Reigning kings · {n}',
+  },
+  'kingsTallyRival': {
+    'zh-Hans': '争位者 · {n}',
+    'zh-Hant': '爭位者 · {n}',
+    'en': 'Rival claimants · {n}',
+  },
+  'kingsRivalClaimant': {
+    'zh-Hans': '争位者',
+    'zh-Hant': '爭位者',
+    'en': 'Rival claimant',
+  },
+  'kingsRivalClaimantWhy': {
+    'zh-Hans': '《列王纪上》16:21-22 没有给他登基的套语，也没有说他作王；他的年份出于本年代系统的推断。他不在以色列的十九位王之列，但他在位时确与另一国的王同时，故仍列出。',
+    'zh-Hant': '《列王紀上》16:21-22 沒有給他登基的套語，也沒有說他作王；他的年份出於本年代系統的推斷。他不在以色列的十九位王之列，但他在位時確與另一國的王同時，故仍列出。',
+    'en': '1 Kings 16:21-22 gives him no regnal formula and never says he '
+        'reigned; his dates are an inference of this chronology. He is not '
+        'among the nineteen kings of Israel, but his years do fall inside '
+        'reigns in the other kingdom, so he is shown.',
+  },
+  // The disclosure that must travel with every count. A number of
+  // contemporaries is a function of the dates, and the dates are one
+  // scholar's reconstruction.
+  'kingsTallyBasis': {
+    'zh-Hans': '同期君王的数目取决于所用的年代系统：此处按锡尔的年份计算重叠，奥尔布赖特、加利尔或基钦的年份会移动这些界线，数目也可能随之不同。',
+    'zh-Hant': '同期君王的數目取決於所用的年代系統：此處按錫爾的年份計算重疊，奧爾布賴特、加利爾或基欽的年份會移動這些界線，數目也可能隨之不同。',
+    'en': 'How many contemporaries a reign has depends on the chronology: '
+        'the overlaps here are counted on Thiele\'s years, and Albright, '
+        'Galil or Kitchen would move the boundaries and can change the '
+        'count.',
+  },
+
+  // ── Search ──
+  'kingsSearchHint': {
+    'zh-Hans': '按君王姓名或经文搜索…',
+    'zh-Hant': '按君王姓名或經文搜尋…',
+    'en': 'Search a king or a reference…',
+  },
+  'kingsNoMatches': {
+    'zh-Hans': '没有符合的君王。',
+    'zh-Hant': '沒有符合的君王。',
+    'en': 'No king matches that search.',
+  },
+  'kingsSearchCount': {
+    'zh-Hans': '{total} 位君王中的 {count} 位',
+    'zh-Hant': '{total} 位君王中的 {count} 位',
+    'en': '{count} of {total} kings',
+  },
+
+  // ── Reverse lookup: who was reigning in a given year ──
+  'kingsYearLookup': {
+    'zh-Hans': '某一年谁在位',
+    'zh-Hant': '某一年誰在位',
+    'en': 'Who was reigning in…',
+  },
+  'kingsYearHint': {
+    'zh-Hans': '年份',
+    'zh-Hant': '年份',
+    'en': 'Year',
+  },
+  // Every year in this file is BC, and a bare "870" in a box is the
+  // one place a reader could take it for AD. The field says so.
+  'kingsYearBcNote': {
+    'zh-Hans': '年份一律为公元前：输入 870 即公元前 870 年。',
+    'zh-Hant': '年份一律為公元前：輸入 870 即公元前 870 年。',
+    'en': 'Years are BC — enter 870 for 870 BC.',
+  },
+  'kingsYearRange': {
+    'zh-Hans': '本图表涵盖 {from} 至 {to}。',
+    'zh-Hant': '本圖表涵蓋 {from} 至 {to}。',
+    'en': 'This chart runs from {from} to {to}.',
+  },
+  'kingsYearNoOne': {
+    'zh-Hans': '该年没有君王在位。',
+    'zh-Hant': '該年沒有君王在位。',
+    'en': 'No king in this chart was on a throne that year.',
+  },
+  'kingsYearNoneHere': {
+    'zh-Hans': '无',
+    'zh-Hant': '無',
+    'en': 'None',
+  },
   'familyTreeSearchHint': {
     'zh-Hans': '按姓名或简介搜索…',
     'zh-Hant': '按姓名或簡介搜尋…',
@@ -8022,6 +8177,73 @@ const uiStrings = {
     'zh-Hans': '现代汇编（新约）',
     'zh-Hant': '現代彙編（新約）',
     'en': 'Modern Concordance (NT)',
+  },
+
+  // ── The Modern Concordance as a Resource (2026-09-05) ─────────────
+  // The browse side of the concordance. `modernConcordanceTitle` above
+  // is deliberately NOT duplicated: one work carries one name in both
+  // of its doors, the Topics tab and the Resources menu, exactly as
+  // `navesTitle` does.
+  'modernConcordanceUnavailable': {
+    'zh-Hans': '此版本未包含现代汇编。',
+    'zh-Hant': '此版本未包含現代彙編。',
+    'en': 'The Modern Concordance is not bundled in this build.',
+  },
+  // Chinese has no plural, and carries the singular form anyway so a
+  // `{key}One` lookup never falls through to English. 62 of the 341
+  // topics hold exactly one section, so the singular is on screen for
+  // nearly a fifth of the work.
+  'concordanceTopicsAll': {
+    'zh-Hans': '{n} 个主题',
+    'zh-Hant': '{n} 個主題',
+    'en': '{n} topics',
+  },
+  'concordanceTopicsMatching': {
+    'zh-Hans': '{n} 个主题匹配',
+    'zh-Hant': '{n} 個主題符合',
+    'en': '{n} topics match',
+  },
+  'concordanceTopicsMatchingOne': {
+    'zh-Hans': '1 个主题匹配',
+    'zh-Hant': '1 個主題符合',
+    'en': '1 topic matches',
+  },
+  'concordanceNoTopic': {
+    'zh-Hans': '没有名为“{q}”的主题。',
+    'zh-Hant': '沒有名為「{q}」的主題。',
+    'en': 'No topic is named “{q}”.',
+  },
+  // Both columns are searched whatever the reader's locale, so the hint
+  // says so in both — 341 topics carry a Chinese gloss, and 爱 reaches
+  // three topics that no English query finds.
+  'concordanceSearchHint': {
+    'zh-Hans': '搜索主题——中文或英文',
+    'zh-Hant': '搜尋主題——中文或英文',
+    'en': 'Search topics — English or 中文',
+  },
+  // A section groups the Greek words sharing one sense of the topic.
+  // Named for what it holds rather than transliterated, because
+  // "section" alone says nothing to a reader who has not read the
+  // importer.
+  'concordanceSections': {
+    'zh-Hans': '{n} 组希腊原文词',
+    'zh-Hant': '{n} 組希臘原文詞',
+    'en': '{n} sections',
+  },
+  'concordanceSectionsOne': {
+    'zh-Hans': '1 组希腊原文词',
+    'zh-Hant': '1 組希臘原文詞',
+    'en': '1 section',
+  },
+  'concordanceNtTotal': {
+    'zh-Hans': '新约共 {n} 次',
+    'zh-Hant': '新約共 {n} 次',
+    'en': '{n}× in the NT',
+  },
+  'concordanceNtTotalOne': {
+    'zh-Hans': '新约共 1 次',
+    'zh-Hant': '新約共 1 次',
+    'en': '1× in the NT',
   },
   // Nave cited the chapter, not this verse. The distinction is the whole
   // reason chapter citations are indexed separately, so it is printed.

@@ -96,6 +96,11 @@ const List<String> _passed = <String>[
   // door that made that removal possible, and is square by construction.
   'lib/pages/map_viewer_page.dart',
   'lib/pages/illustrations_page.dart',
+  // 2026-09-05: the Modern Concordance browser. Square by construction
+  // rather than by conversion — it was written after the pass, against
+  // `naves_page.dart`, and joins the list on the day it was written so
+  // that it can never quietly grow a card later.
+  'lib/pages/modern_concordance_page.dart',
 ];
 
 /// Files that still carry unconverted chrome, and how much. This is the

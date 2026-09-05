@@ -190,7 +190,16 @@ class TaggedTextService {
   /// whole disputed verses, and there every word inside is a real word
   /// with a real number of its own. Measured over the shipped assets
   /// this rewrites cuvs-yhwh alone — 198 verses — and leaves bsb,
-  /// kjvs, lxxwh, cuvs-plus and nsn-plus byte-identical.
+  /// kjvs, lxxwh and cuvs-plus byte-identical.
+  ///
+  /// (2026-09-05: `nsn-plus` was struck from that list, not
+  /// re-measured. It is not a shipped asset — the five tagged editions
+  /// tracked in git and declared in `pubspec.yaml` are the four above
+  /// plus cuvs-yhwh, and `assets/tagged/nsn-plus/` is Eagle's View NASB,
+  /// gitignored on purpose and never bundled. Naming it here is what
+  /// made an automated audit read the deliberate exclusion as a wiring
+  /// bug; `docs/PARITY-BACKLOG.md` §4 asked for the line to go the next
+  /// time this file was open.)
   @visibleForTesting
   static List<TaggedRun> reuniteGlossRuns(List<TaggedRun> runs) {
     var seen = false;

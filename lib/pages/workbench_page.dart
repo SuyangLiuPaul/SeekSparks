@@ -32,6 +32,7 @@ import 'package:seeksparks/pages/family_tree_page.dart';
 import 'package:seeksparks/pages/hebrew_kings_page.dart';
 import 'package:seeksparks/pages/illustrations_page.dart';
 import 'package:seeksparks/pages/lexicon_page.dart';
+import 'package:seeksparks/pages/modern_concordance_page.dart';
 import 'package:seeksparks/pages/library_page.dart';
 import 'package:seeksparks/pages/naves_page.dart';
 import 'package:seeksparks/pages/phrasing_page.dart';
@@ -54,6 +55,8 @@ import 'package:seeksparks/utils/chronology_chart_entry.dart'
     show chronologyChartEntryPage;
 import 'package:seeksparks/utils/chapter_navigation.dart'
     show adjacentChapter, nextChapter, previousChapter;
+import 'package:seeksparks/utils/chapter_across_editions.dart'
+    show firstVerseOfChapterAcrossEditions, sameChapterAcrossEditions;
 import 'package:seeksparks/utils/jump_to_reference.dart' as jumper;
 import 'package:seeksparks/utils/reference_parser.dart' show BibleReference;
 import 'package:seeksparks/utils/morphology.dart' show describeMorphology;
@@ -606,6 +609,20 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         // A database you CONSULT needs a door of its own.
         WbMenuItem(s('navesTitle', "Nave's Topical Bible"),
             () => pushPage(const NavesPage())),
+        // 2026-09-05: the same argument a third time, for the OTHER
+        // topical index in the same tab. `ModernConcordanceService.topics()`
+        // returned all 341 topics and had no caller in `lib/` for a
+        // month: the reader could be TOLD that Matthew 24:15 is where
+        // the concordance files "Abomination", and could not ask what
+        // else it files, or read a topic's other Greek words — the
+        // Topics tab narrows a topic to the one word that cited the
+        // verse (`analysis_tabs.dart`, `_TopicDetail`).
+        // Beside Nave's and before the Lexicon Browser on purpose: the
+        // three run topics/66 books -> topics/NT Greek -> words, which
+        // is a gradient rather than a duplicate.
+        WbMenuItem(
+            s('modernConcordanceTitle', 'Modern Concordance (NT)'),
+            () => pushPage(const ModernConcordancePage())),
         // bwh35 files the lexicons under Resources for the same reason.
         // Tapping a word has always shown its entry; nothing could show
         // the LIST, so a reader had to already hold the word in order to
@@ -1137,22 +1154,28 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
     // columns matches nothing whenever the columns are in different
     // languages, which is the normal case: `defaultSecondaryVersion`
     // exists precisely to make the two columns differ.
-    final book = bookNameToEnglish[localBook] ?? localBook;
-    if ((bookNameToEnglish[sp.currentBook] ?? sp.currentBook) == book &&
-        sp.currentChapter == chapter) {
+    //
+    // 2026-09-05: the rule moved to `chapter_across_editions.dart` so
+    // this column and `home_page.dart`'s Split View share one copy of
+    // it. They did not: that one still compared the raw strings, and so
+    // seeded its second column on Genesis 1 whenever the two editions
+    // were in different languages.
+    if (sameChapterAcrossEditions(
+      bookA: sp.currentBook,
+      chapterA: sp.currentChapter,
+      bookB: localBook,
+      chapterB: chapter,
+    )) {
       return;
     }
-    final match = sp.verses
-        .where((v) =>
-            (bookNameToEnglish[v.book] ?? v.book) == book &&
-            v.chapter == chapter)
-        .toList();
     // The editions can disagree about what exists — a chapter one of
     // them numbers differently, or a book it does not carry. Leaving the
     // column where it was beats blanking it.
-    if (match.isEmpty) return;
-    sp.setCurrentChapter(book: match.first.book, chapter: chapter);
-    sp.updateCurrentVerse(verse: match.first);
+    final match =
+        firstVerseOfChapterAcrossEditions(sp.verses, localBook, chapter);
+    if (match == null) return;
+    sp.setCurrentChapter(book: match.book, chapter: chapter);
+    sp.updateCurrentVerse(verse: match);
   }
 
   // ── Pane open/collapse ────────────────────────────────────────────

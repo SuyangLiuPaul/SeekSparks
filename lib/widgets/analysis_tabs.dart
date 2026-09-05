@@ -744,6 +744,24 @@ class _WordStatsPaneState extends State<WordStatsPane> {
   }
 
   Future<List<_StatRow>> _load() async {
+    // 2026-09-05: the AOSurvey credit. `GreekStatsService._attribution`
+    // is filled only by `books()` — it reads `index.json`, and that is
+    // where the asset's attribution string lives — so a pane that only
+    // ever called `lookup()` read an EMPTY string. These numbers have
+    // been on screen since the Greek statistics landed (asset
+    // `9eeb6d1`, pane `8c93d93`, both 2026-08-07) with no credit under
+    // them, and unlike Thayer, Hitchcock, Places and the Modern
+    // Concordance this source is permission-granted rather than public
+    // domain (© 2007 AOSurvey Co., Ltd.), so the line is a condition of
+    // shipping it.
+    //
+    // `books()` is awaited for the index it loads, not for a side
+    // effect on a private field: it is 27 rows, a few KB, and cached
+    // after the first call. Moving the index load into `lookup()`
+    // itself would be tidier and belongs in `greek_stats_service.dart`
+    // — see the note in the handover; this file may not edit it.
+    await GreekStatsService.books();
+
     final rows = <_StatRow>[];
     final seen = <String>{};
     final scope = widget.scope;
@@ -823,10 +841,17 @@ class _WordStatsPaneState extends State<WordStatsPane> {
           );
         }
         final max = rows.fold<int>(1, (m, r) => r.inScope > m ? r.inScope : m);
+        // Only when a Greek word is actually on screen. A Hebrew-only
+        // verse shows no AOSurvey number, and crediting a source that
+        // did not answer is its own kind of wrong.
+        final credit = rows.any((r) => r.greek != null) &&
+                GreekStatsService.attribution.isNotEmpty
+            ? GreekStatsService.attribution
+            : null;
         return ListView.separated(
           padding: const EdgeInsets.fromLTRB(12, 8, 12, 20),
           physics: const BouncingScrollPhysics(),
-          itemCount: rows.length + 1,
+          itemCount: rows.length + 1 + (credit == null ? 0 : 1),
           separatorBuilder: (_, __) => const SizedBox(height: 6),
           itemBuilder: (context, i) {
             if (i == 0) {
@@ -861,6 +886,9 @@ class _WordStatsPaneState extends State<WordStatsPane> {
                       fontSize: t.scaled(11), color: scheme.outline),
                 ),
               );
+            }
+            if (credit != null && i == rows.length + 1) {
+              return _Attribution(text: credit);
             }
             final r = rows[i - 1];
             return InkWell(
