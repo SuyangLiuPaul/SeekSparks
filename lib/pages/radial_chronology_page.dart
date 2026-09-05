@@ -4005,6 +4005,29 @@ class _WorldWheelPainter extends CustomPainter {
         maxLines: 1,
       )..layout();
 
+  /// EVERY FIELD ON THIS PAINTER MUST APPEAR BELOW.
+  ///
+  /// Three did not, and one of them was a live bug: `rail` was absent,
+  /// so toggling the genealogy layer repainted nothing. That switch is
+  /// the only one of the four whose effect is invisible to a length —
+  /// it takes `rail` from 107 marks to 0 and shifts every arc's ring by
+  /// one, while `streams`, `arcs`, `spokes` and `lives` all keep exactly
+  /// the counts they had. Every comparison returned equal, so the reader
+  /// pressed a checkbox and the wheel did not move. The other three
+  /// layer switches happen to change `lives.length`, which is why they
+  /// looked fine and this one did not.
+  ///
+  /// `wb` and `colors` were missing for the same reason and are latent
+  /// rather than live: a palette change while the page is open would
+  /// keep the old colours. Compared by identity, which repaints a little
+  /// more often than strictly needed and never less.
+  ///
+  /// Lists are compared by LENGTH, not by content. That is a deliberate
+  /// cheapness — there are 851 spokes — and it is exactly why a field
+  /// that changes shape without changing count has to be listed here
+  /// explicitly. `test/wheel_repaint_coverage_test.dart` reads this
+  /// class's field declarations out of the source and fails if one of
+  /// them is not named in this method.
   @override
   bool shouldRepaint(_WorldWheelPainter old) =>
       old.selectedId != selectedId ||
@@ -4013,6 +4036,9 @@ class _WorldWheelPainter extends CustomPainter {
       old.arcs.length != arcs.length ||
       old.spokes.length != spokes.length ||
       old.lives.length != lives.length ||
+      old.rail.length != rail.length ||
+      old.colors.length != colors.length ||
+      old.wb != wb ||
       old.zoom != zoom ||
       old.rimFont != rimFont ||
       old.endFont != endFont ||
