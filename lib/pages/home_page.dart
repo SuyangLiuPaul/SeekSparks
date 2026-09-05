@@ -29,6 +29,7 @@ import 'package:seeksparks/pages/workbench_page.dart';
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/services/fetch_books.dart';
 import 'package:seeksparks/services/fetch_verses.dart';
+import 'package:seeksparks/utils/chapter_across_editions.dart';
 import 'package:seeksparks/utils/jump_to_reference.dart' as jumper;
 import 'package:seeksparks/utils/navigate_to_reader.dart'
     show kWorkbenchRouteName;
@@ -139,13 +140,25 @@ class _HomePageState extends State<HomePage> {
     // wins: `_persist` has always written `secondary_version`, but
     // nothing ever read it back, so their pick was discarded on every
     // reopen.
+    //
+    // 2026-09-05: through `resolveSecondaryVersion` rather than an
+    // inline `availableVersions.any(...)`. The inline test was a THIRD
+    // answer to a question the app already answers twice — the
+    // workbench's own split column (`workbench_page.dart`) and the boot
+    // warm-up (`workbench_warmup.dart`) both call the shared function —
+    // and it differed in two ways that reach a reader. It did not
+    // lower-case, so a stored code that had ever been written in mixed
+    // case was discarded; and it had no `retiredVersionSuccessors` step,
+    // so a reader whose second column held an edition retired between
+    // releases got the generic default here while the warm-up had
+    // already fetched the successor. `resolveSecondaryVersion`'s own
+    // doc names that exact hazard: the two answering differently means
+    // warming the wrong Bible.
     final prefs = await SharedPreferences.getInstance();
-    final savedSecondary = prefs.getString('secondary_version');
-    final validSaved = savedSecondary != null &&
-        availableVersions.any((v) => v.value == savedSecondary);
-    sp.currentVersion = validSaved
-        ? savedSecondary
-        : defaultSecondaryVersion(primary.currentVersion);
+    sp.currentVersion = resolveSecondaryVersion(
+      primaryVersion: primary.currentVersion,
+      stored: prefs.getString(kSecondaryVersionKey),
+    );
     await FetchVerses.execute(mainProvider: sp);
     await FetchBooks.execute(mainProvider: sp);
 
@@ -167,15 +180,36 @@ class _HomePageState extends State<HomePage> {
       primary.syncHighlights(sp.highlights);
     };
 
-    if (primary.currentBook != null && primary.currentChapter != null) {
-      final match = sp.verses.firstWhere(
-        (v) =>
-            v.book == primary.currentBook &&
-            v.chapter == primary.currentChapter,
-        orElse: () => sp.verses.first,
-      );
-      sp.setCurrentChapter(book: match.book, chapter: match.chapter);
-      sp.updateCurrentVerse(verse: match);
+    // MATCHED IN ENGLISH, NEVER ON THE RAW STRINGS. `Verse.book` carries
+    // the name the EDITION uses — 创世纪 in `cuvs-yhwh`, Genesis in
+    // `bsb`/`kjv`/`leb`, measured on the shipped assets — so the raw
+    // comparison this used to make found nothing whenever the two
+    // columns were in different languages, which is the case Split View
+    // is FOR. The `orElse` then handed back `sp.verses.first`, so a
+    // reader on John 3 opened a second column on Genesis 1, and the
+    // verse-number restore below scrolled it to Genesis 1:16. The
+    // workbench's own second column fixed this in `_followPrimary` at
+    // v1.6.47; this surface kept the old shape. Same rule now, from one
+    // place — see `firstVerseOfChapterAcrossEditions`.
+    //
+    // The fallback to the corpus's first verse SURVIVES, and it has to:
+    // `sp` is a provider constructed moments ago, so its `currentBook`
+    // and `currentChapter` are still null and `FetchVerses` does not set
+    // them — unlike the workbench's column, which is already on a
+    // chapter and can simply be left there. What changes is that the
+    // fallback is now only reachable when the edition really cannot
+    // carry the passage (LJK V2 is Matthew only), instead of on every
+    // cross-language open. See `seedChapterForNewColumn`, which also
+    // stops `verses.first` throwing `StateError` on an edition that
+    // failed to load.
+    final seed = seedChapterForNewColumn(
+      sp.verses,
+      primary.currentBook,
+      primary.currentChapter,
+    );
+    if (seed != null) {
+      sp.setCurrentChapter(book: seed.book, chapter: seed.chapter);
+      sp.updateCurrentVerse(verse: seed);
     }
 
     if (mounted && _secondaryProvider == sp) setState(() {});
