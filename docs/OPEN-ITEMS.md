@@ -79,7 +79,24 @@ the `orElse` then answered Genesis 1. A reader on 约翰福音 3 got a second
 column on Genesis 1, scrolled to Genesis 1:16 by the verse-number
 restore. The rule now lives in `lib/utils/chapter_across_editions.dart`
 and both split surfaces call it;
-`test/chapter_across_editions_test.dart` pins the rule and the wiring.
+`test/chapter_across_editions_test.dart` pins the rule. It also reads
+both pages' source, and on 2026-09-06 that half was measured against
+the defect restored with its operands reversed (`pb == v.book`) and one
+mention of the shared function left in a comment: **all three
+assertions passed**. That sentence — "pins the rule and the wiring" —
+is what let the group go unexamined, which is why it is quoted here
+rather than deleted.
+
+Rewritten: comments are stripped before matching, each call is anchored
+in an assignment, and `isNot(contains('<exact old text>'))` is now
+disallowed outright in that file — it is a blacklist of one item from
+an infinite set, defeated by reordering operands, renaming a local, or
+running the formatter.
+
+It still cannot prove behaviour. The real pin is a test that drives
+`_activateSplitView` — SharedPreferences plus two parsed corpora plus a
+layout pass — and it does not exist. A repo-wide `grep -n "isNot(contains" test/`
+is a cheap follow-up: only the two files touched that day were swept.
 
 Not shown on a device. Everything above is read from the tree and from
 the assets, and the *symptom* was reported on prod; if it recurs, the
@@ -272,14 +289,70 @@ builds and installs **YsWords**. Nothing invokes it — every other
 mention of the filename is a comment. Delete it or repoint it; leaving
 it is the hazard.
 
-### The native identity was never rebranded `[verified 2026-09-04]`
+**Re-checked 2026-09-06, and it is worse than "wrong app".** Nothing
+invokes it; **no launchd job anywhere points into this repo**; and the
+copy here is 414 lines against the parent's current 1218 — a stale
+snapshot rather than a script missing a footnote. There is also no test
+guarding it: the `test/apk_freshness_guard_test.dart` that was believed
+to lift functions out of it **does not exist and never has**
+(`git log --all` finds nothing), so it is entirely free to change or
+delete.
 
-The Dart package is `seeksparks`, but the Android `applicationId` and
-the iOS bundle id are both still `com.example.yahwehswords`. That is a
-fork leftover. It does **not** collide with YsWords (`com.example.yswords`),
-so both install side by side — but the id is not what a reader would
-expect, and changing it now would orphan every installed copy, since
-Android treats a new applicationId as a different app.
+Ruled: delete. Repointing it would create a second hand-run install path
+beside `tools/release_native.sh`, which already derives its project root
+from its own location and cannot have this bug — and the TCC constraint
+above means this file could never become the scheduled artifact anyway.
+**Awaiting the owner's call**, because deleting a tool is a product
+decision rather than a bug fix.
+
+### ~~The native identity was never rebranded~~ `[REFUTED 2026-09-06]`
+
+It was rebranded, on 2026-08-23, in `0def09c` — whose subject line says
+so: *"feat: plain 'AI' labels + standalone native identity (Yahweh's
+Swords)"*. That commit moved `com.example.yswords` to
+`com.example.yahwehswords` across Android (namespace and applicationId),
+iOS (six places) and macOS (xcconfig and both entitlements), and moved
+`MainActivity.kt` between package directories.
+
+Three ids, verified in each tree, no collision: Sword
+`com.example.yahwehswords`, Words `com.example.yswords`, World
+`com.yswords.yahwehsworld`. `README.md:126` is wrong twice about this —
+it calls `com.example.yahwehswords` "YsWords' own app identity", which it
+is not, and says the no-collision claim "was never actually true", which
+it is. The display name is not a leftover either: `brand_marks_test.dart`
+records SeekSparks as the RETIRED mark deliberately.
+
+The only genuine residue is the `com.example.` template prefix, and it
+must stay — Android treats a new applicationId as a different app and
+changing it would orphan every installed copy.
+
+### The English iOS home screen said "Yahweh's Swords" for twelve days `[FIXED 2026-09-06]`
+
+Found while refuting the entry above, which is the useful part: the
+rename to the singular (`8613b3a`, 2026-08-25, *"owner-requested,
+singular"*) touched 11 files and **zero `.lproj` files**.
+
+`ios/Runner/en.lproj/InfoPlist.strings` kept `"Yahweh's Swords"`. It
+ships — `en` is in `knownRegions` and the file is in the
+`InfoPlist.strings` variant group in the Resources phase — and on iOS a
+localized `InfoPlist.strings` **overrides `Info.plist`**. So for twelve
+days an English iPhone showed the plural on its home screen while the
+Android phone beside it showed the singular.
+
+This is the same failure class `brand_marks_test.dart` was written for,
+one layer below where that test looks. `test/native_display_name_test.dart`
+now guards all seven carriers, and restoring the plural fails two of them.
+
+### No scheduled iOS reinstall for this app `[verified 2026-09-06]`
+
+Both sibling apps have a daily launchd job; this one has none, and the
+provisioning profile lapses every seven days — so the two items are the
+same problem seen from two ends.
+
+If one is ever set up, the script must live under
+`~/.config/seeksparks/scripts/`, **not in this repo**: a plist comment in
+the siblings records that launchd is TCC-blocked from reading
+`~/Documents`, which is why both of them run copies from `~/.config/`.
 
 ### `LICENSE` states the sermons' rights but not their authorship `[revised 2026-09-05]`
 
@@ -306,19 +379,19 @@ sermons. If he is not, both the `LICENSE` line and `aboutLicenseSermons`
 (which is user-visible, in three locales) are wrong together and must
 change together.
 
-### A scratch harness is committed into the test suite `[verified 2026-09-05]`
+### ~~A scratch harness is committed into the test suite~~ `[CLOSED 2026-09-06]`
 
-`test/zz_measure_test.dart`, 51 lines, landed in `24c7004`. It holds
-**zero `expect(` calls and two `print(`** — a one-off measurement
-harness for the wheel's Israel band that was committed with the work it
-was written to measure. It runs on every `flutter test` and every CI
-push and cannot fail, so it is not a test; it is a script the suite
-carries. Its name also sorts it last, which is presumably why nobody has
-noticed it.
+`test/zz_measure_test.dart` — 51 lines, zero `expect(`, two `print(`,
+running on every CI job and unable to fail — is deleted (staged with
+`git rm`, not committed).
 
-Either give it assertions (the numbers it prints were worth measuring
-once, so they are probably worth pinning) or delete it. Left alone here
-because it is tracked and neither choice is a bug fix.
+Deleted rather than converted, because converting would have duplicated a
+test that already exists: `wheel_lifespans_test.dart` asserts every
+number this harness printed, as legibility FLOORS with reasons rather
+than as a census. Floors are properties and survive data changes; a
+census pinned to `hebrew_kings.json` would have collided with the kings
+work landing the same day. Mutating `ringPitch` fails three of those
+floors, which is the proof that deleting the harness lost nothing.
 
 ### `output/` is somebody else's work, sitting in this checkout `[verified 2026-09-05]`
 
