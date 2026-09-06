@@ -179,6 +179,27 @@ fi
 
 if [[ "$DO_ANDROID" = "1" ]]; then
   echo ""
+  # flutter/flutter#191801: with product flavors (this app declares
+  # `region`/intl+cn), Gradle's jniLib merge stays "up-to-date" while its
+  # input is rewritten, so the APK ships a new version string over OLD
+  # Dart code. Clearing the merge OUTPUTS first is the only thing that
+  # breaks the wedge - the input, intermediates/flutter, is already
+  # fresh. The rule, the measurements and the retirement conditions live
+  # in tools/clear_stuck_jnilib_merge.sh.
+  #
+  # This runs BEFORE the build, not after check_apk fails, because the
+  # fault is not intermittent: it is every incremental build. Pre-
+  # clearing costs one Android build; recovering costs two plus a
+  # `flutter clean`. check_apk and clean_rebuild below both stay - they
+  # cost nothing when this works and are what would catch a DIFFERENT
+  # cause of a stale APK.
+  #
+  # The script exits 0 on an already-clean tree, which matters here:
+  # this file runs under `set -euo pipefail`, and a bare non-zero would
+  # abort the release instead of building it.
+  echo "→ pre-clearing the Gradle jniLib merge outputs (flutter#191801)"
+  FLUTTER="$FLUTTER" "$PROJECT/tools/clear_stuck_jnilib_merge.sh" "$PROJECT"
+
   echo "→ flutter build apk --release --flavor intl ${DEFINES[*]}"
   build_apk() {
     "$FLUTTER" build apk --release --flavor intl "${DEFINES[@]}"

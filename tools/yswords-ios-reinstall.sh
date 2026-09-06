@@ -243,6 +243,14 @@ fi
 # original com.example.yswords applicationId; the `cn` flavor is
 # installed separately by tools/yswords-cn-install.sh.
 echo ""
+# flutter/flutter#191801: Gradle's jniLib merge goes stale in a
+# flavored build, so the APK ships a new version string over OLD
+# Dart code. Clear the merge OUTPUTS before building - the rule,
+# the evidence and the retirement conditions all live in
+# tools/clear_stuck_jnilib_merge.sh. Exits 0 on an already-clean
+# tree, so this is safe under `set -e`.
+FLUTTER="$FLUTTER" "$PROJECT/tools/clear_stuck_jnilib_merge.sh" "$PROJECT"
+
 echo "→ flutter build apk --release --flavor intl ${DEFINES[*]}"
 if "$FLUTTER" build apk --release --flavor intl "${DEFINES[@]}"; then
   # Warm up mDNS — the first poll after `adb start-server` can come
