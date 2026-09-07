@@ -48,18 +48,16 @@ void main() {
           AnalysisTab.sermons);
     });
 
-    // aiExplain is now the ONLY null, and it is a decision rather than a
-    // deferral: a docked pane promises to follow the selection, and
-    // following it here would spend a network call per verse and give
-    // generated prose the same frame and weight as the corpus. If a
-    // later run wants to change that, this is the test to edit — but it
-    // is a product decision, not a cost one.
-    test('the one subject with no pane keeps its sheet on purpose', () {
-      expect(analysisTabForRequest(ReaderAnalysisRequest.aiExplain), isNull);
+    // 2026-09-07: `aiExplain` was the only request with no tab behind
+    // it, and it left with the AI subsystem. So the claim inverts —
+    // every request now routes to a pane — and that is worth pinning
+    // for the same reason the old one was: a new request added without
+    // a mapping would silently return null and open nothing.
+    test('every subject routes to a pane', () {
       final withoutTab = ReaderAnalysisRequest.values
           .where((r) => analysisTabForRequest(r) == null)
           .toList();
-      expect(withoutTab, [ReaderAnalysisRequest.aiExplain]);
+      expect(withoutTab, isEmpty);
     });
 
     // The inverse feeds the active state on the button that sent the
@@ -141,16 +139,14 @@ void main() {
       w is Icon &&
       (w.icon == Icons.auto_stories || w.icon == Icons.auto_stories_outlined));
 
-  testWidgets('three-pane: 原文 fills the docked pane, no sheet',
-      (tester) async {
+  testWidgets('three-pane: 原文 fills the docked pane, no sheet', (tester) async {
     addTearDown(tester.view.reset);
-    final mp = await pumpReaderWorkbench(
-        tester, const Size(1400, 900));
+    final mp = await pumpReaderWorkbench(tester, const Size(1400, 900));
     expect(find.byType(BibleReadingPane), findsOneWidget);
 
     mp.toggleVerse(
-        verse: const Verse(
-            book: 'Genesis', chapter: 1, verse: 1, text: 'seed 1'));
+        verse:
+            const Verse(book: 'Genesis', chapter: 1, verse: 1, text: 'seed 1'));
     await tester.pump(const Duration(milliseconds: 100));
     expect(originalsButton(), findsOneWidget,
         reason: 'the selection action bar should be up');
@@ -171,7 +167,8 @@ void main() {
     expect(find.byType(BibleReadingPane), findsOneWidget);
     // And the button that sent it there says so, without a hover.
     expect(
-        find.byWidgetPredicate((w) => w is Icon && w.icon == Icons.auto_stories),
+        find.byWidgetPredicate(
+            (w) => w is Icon && w.icon == Icons.auto_stories),
         findsOneWidget);
   });
 
@@ -185,8 +182,8 @@ void main() {
     expect(find.byType(BibleReadingPane), findsOneWidget);
 
     mp.toggleVerse(
-        verse: const Verse(
-            book: 'Genesis', chapter: 1, verse: 1, text: 'seed 1'));
+        verse:
+            const Verse(book: 'Genesis', chapter: 1, verse: 1, text: 'seed 1'));
     await tester.pump(const Duration(milliseconds: 100));
     await tester.tap(originalsButton());
     await tester.pump(const Duration(milliseconds: 300));

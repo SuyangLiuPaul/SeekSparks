@@ -196,11 +196,10 @@ class _MapViewerPageState extends State<MapViewerPage> {
     final line = mapCreditLine(
       p,
       locale,
-      unknownLabel: uiStrings['mapCreditUnknown']?[locale] ??
-          'Source not recorded',
+      unknownLabel:
+          uiStrings['mapCreditUnknown']?[locale] ?? 'Source not recorded',
     );
-    final heading =
-        uiStrings['mapCreditHeading']?[locale] ?? 'Image source';
+    final heading = uiStrings['mapCreditHeading']?[locale] ?? 'Image source';
     return Container(
       decoration: BoxDecoration(
         color: c.chromeBg,
@@ -243,8 +242,7 @@ class _MapViewerPageState extends State<MapViewerPage> {
     );
   }
 
-  Widget _titleBar(
-      BuildContext context, WbColors c, WbType t, String locale) {
+  Widget _titleBar(BuildContext context, WbColors c, WbType t, String locale) {
     final desc = _current.localizedDescription(locale);
     return Container(
       decoration: BoxDecoration(
@@ -301,8 +299,7 @@ class _MapViewerPageState extends State<MapViewerPage> {
     );
   }
 
-  Widget _filmstrip(
-      WbColors c, WbType t, String locale, List<BibleMap> maps) {
+  Widget _filmstrip(WbColors c, WbType t, String locale, List<BibleMap> maps) {
     final title = widget.stripTitle ??
         uiStrings['mapsRelated']?[locale] ??
         'Related illustrations';
@@ -399,7 +396,7 @@ class _StripCard extends StatelessWidget {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.zero,
           side: BorderSide(
-            color: isCurrent ? c.text : c.border,
+            color: isCurrent ? c.text : c.disabledMark,
             width: WbMetrics.hairline,
           ),
         ),

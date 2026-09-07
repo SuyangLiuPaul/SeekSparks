@@ -1,12 +1,35 @@
 // 2026-08-08 (task #279): a ratchet for the thirteen-page chrome pass.
 //
+// 2026-09-07 — HALF THIS RULE IS RETIRED, DELIBERATELY. The owner asked
+// for a modern interface ("现在的好像小时候软件窗口界面 但是我要最现代的界面
+// 风格"), and #279's square-corner clause was one of the three things
+// making the workspace read as 1990s desktop software. See the library
+// doc in `workbench_theme.dart` for the full reasoning.
+//
+// What is retired is "square corners". What is NOT retired, and is the
+// half that was always right, is "no shadows, no cards": a drop shadow
+// under a flat pane is a Material 3 tell in 2026 exactly as it was in
+// 2015, and every reference the modern brief points at (Linear,
+// Raycast, Vercel, Arc) separates surfaces with a hairline instead.
+//
+// And the corner did not simply become legal. It became CENTRALISED,
+// the way font size was in #315: a `Radius.circular` in a converted
+// file must read its number off `WbMetrics.radiusControl` /
+// `radiusSurface` / `radiusPill`. A hardcoded 10 next to a hardcoded 16
+// next to a hardcoded 8 is the mess #279 was reacting to; three shared
+// numbers is not. So the ratchet still ratchets — it just points at
+// "whose number is this?" instead of "is there a corner at all?", and
+// the inventory below did not move by a single site when the rule
+// changed, because nothing in it was ever using the scale.
+//
 // #279 is not one change, it is thirteen — and the failure mode of a
 // long pass is not that a page is missed, it is that a page already
 // done quietly grows a rounded card back a week later. No widget test
 // catches that: a `BorderRadius.circular(10)` renders perfectly, passes
 // every assertion about behaviour, and is wrong only against a rule
-// that lives in prose (`workbench_theme.dart`: *square corners and 1px
-// hairline borders, no shadows, no cards*).
+// that lives in prose (`workbench_theme.dart`: *1px hairline borders,
+// no shadows, no cards, no elevation* — and, since 2026-09-07, *a
+// corner radius comes off the WbMetrics scale or not at all*).
 //
 // So the rule is asserted about the SOURCE, the same species of
 // invariant as `page_reachability_test.dart`. [_passed] is the pass's
@@ -177,7 +200,7 @@ const Map<String, int> _remaining = <String, int>{
 int _countOffences(String stripped) {
   var n = 0;
   for (final line in stripped.split('\n')) {
-    if (line.contains('Radius.circular(')) n++;
+    if (_hardcodedRadius(line)) n++;
     if (line.contains('BoxShadow(')) n++;
     // `elevation: 0` is the rule being stated, not broken.
     final elev = RegExp(r'elevation:\s*([0-9.]+)').firstMatch(line);
@@ -186,24 +209,35 @@ int _countOffences(String stripped) {
   return n;
 }
 
+/// A `Radius.circular(...)` whose argument does not come off the
+/// [WbMetrics] radius scale.
+///
+/// 2026-09-07: this replaces the flat ban. Matching the ARGUMENT and not
+/// just the call is the whole point — `Radius.circular(10)` and
+/// `Radius.circular(WbMetrics.radiusSurface)` are the same call and
+/// opposite things, and a check that cannot tell them apart can only be
+/// all-or-nothing, which is how the rule ended up forbidding corners
+/// outright in the first place.
+bool _hardcodedRadius(String line) {
+  final m = RegExp(r'Radius\.circular\(([^)]*)\)').firstMatch(line);
+  return m != null && !m.group(1)!.contains('WbMetrics.radius');
+}
+
 /// Strips `//` and `/* */` comments so prose about the rule — including
 /// this file's own vocabulary — cannot fail the check it describes.
 String _stripComments(String src) {
   final noBlock = src.replaceAll(RegExp(r'/\*.*?\*/', dotAll: true), '');
-  return noBlock
-      .split('\n')
-      .map((line) {
-        final i = line.indexOf('//');
-        // Leave anything inside a string literal alone; a URL is the
-        // realistic case ('https://…'), and a false strip there could
-        // mask a real offender on the same line.
-        if (i < 0) return line;
-        final before = line.substring(0, i);
-        final quotes = "'".allMatches(before).length +
-            '"'.allMatches(before).length;
-        return quotes.isEven ? before : line;
-      })
-      .join('\n');
+  return noBlock.split('\n').map((line) {
+    final i = line.indexOf('//');
+    // Leave anything inside a string literal alone; a URL is the
+    // realistic case ('https://…'), and a false strip there could
+    // mask a real offender on the same line.
+    if (i < 0) return line;
+    final before = line.substring(0, i);
+    final quotes =
+        "'".allMatches(before).length + '"'.allMatches(before).length;
+    return quotes.isEven ? before : line;
+  }).join('\n');
 }
 
 void main() {
@@ -222,8 +256,8 @@ void main() {
         for (var i = 0; i < lines.length; i++) {
           final line = lines[i];
           final where = '$path:${i + 1}';
-          if (line.contains('Radius.circular(')) {
-            offences.add('$where — rounded corner');
+          if (_hardcodedRadius(line)) {
+            offences.add('$where — corner radius off the WbMetrics scale');
           }
           if (line.contains('BoxShadow(')) {
             offences.add('$where — shadow');
@@ -239,9 +273,13 @@ void main() {
       expect(
         offences,
         isEmpty,
-        reason: 'workbench_theme.dart: "Square corners and 1px hairline '
-            'borders. No shadows, no cards." These pages have already '
-            'been converted:\n  ${offences.join('\n  ')}',
+        reason: 'workbench_theme.dart: "1px hairline borders. No '
+            'shadows, no cards, no elevation." A corner radius is '
+            'allowed since 2026-09-07 but must come off the WbMetrics '
+            'scale — radiusControl (5) for things the pointer acts on, '
+            'radiusSurface (8) for things that contain, radiusPill for '
+            'a badge. These pages have already been converted:\n  '
+            '${offences.join('\n  ')}',
       );
     });
 
@@ -283,10 +321,11 @@ void main() {
           .toList()
         ..sort();
       expect(undeclared, isEmpty,
-          reason: 'New rounded corners, shadows or elevation in a file '
-              'the pass had left clean. Square them, or — if the surface '
-              'genuinely argues for them — add the file to _remaining '
-              'with a note saying why.');
+          reason: 'New off-scale corner radii, shadows or elevation in a '
+              'file the pass had left clean. Point the radius at '
+              'WbMetrics.radiusControl/radiusSurface/radiusPill and drop '
+              'the shadow, or — if the surface genuinely argues for them '
+              '— add the file to _remaining with a note saying why.');
 
       final grown = <String>[];
       final finished = <String>[];

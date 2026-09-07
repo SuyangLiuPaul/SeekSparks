@@ -31,8 +31,6 @@ import 'package:seeksparks/pages/settings_page.dart';
 import 'package:seeksparks/pages/stats_page.dart';
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/services/fetch_books.dart';
-import 'package:seeksparks/services/ai_word_service.dart';
-import 'package:seeksparks/utils/ai_text_cleaner.dart';
 import 'package:seeksparks/utils/chapter_navigation.dart';
 import 'package:seeksparks/utils/chapter_scroll_progress.dart';
 import 'package:seeksparks/services/concordance_service.dart';
@@ -53,7 +51,8 @@ import 'package:seeksparks/utils/haptics.dart';
 // thin wrappers that v1.2.13 removed alongside the version-switch
 // scroll-restore complexity. Only `prepareJumpToVerse` is still
 // used in this file (jump-to-reference flow on a verse tap).
-import 'package:seeksparks/utils/jump_to_reference.dart' show prepareJumpToVerse;
+import 'package:seeksparks/utils/jump_to_reference.dart'
+    show prepareJumpToVerse;
 import 'package:seeksparks/utils/note_reference_parser.dart'
     show
         extractNoteReferences,
@@ -97,6 +96,7 @@ class _PaperTheme {
   static const inkMuted = Color(0xFF7A6A50);
   static const accent = Color(0xFF9C7A3C);
   static const border = Color(0xFFDED0A8);
+
   /// Selected/highlighted-verse background — a deeper tan so the
   /// selection still reads clearly against the cream page instead of
   /// the app's default blue `primaryContainer`.
@@ -275,12 +275,14 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
   bool _chromeVisible = true;
   double _chromeScrollAccumulator = 0;
   StreamSubscription<double>? _scrollOffsetSub;
+
   /// Pane-local messenger so SnackBars (e.g. the "Copied!" toast) appear
   /// only in the pane that triggered them. Without this, `ScaffoldMessenger
   /// .of(context)` resolves to the app-root messenger and the toast is
   /// shown over both panes in split view.
   final GlobalKey<ScaffoldMessengerState> _messengerKey =
       GlobalKey<ScaffoldMessengerState>();
+
   /// Maps whose chapter range covers the current book + chapter exactly.
   List<BibleMap> _chapterMaps = [];
 
@@ -347,11 +349,10 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
   void initState() {
     super.initState();
     final mp = context.read<MainProvider>();
-    final initialChapterIdx = mp.findChapterIndex(
-            mp.currentBook, mp.currentChapter) ??
-        0;
-    _pageController = PageController(
-        initialPage: initialChapterIdx, viewportFraction: 1.0);
+    final initialChapterIdx =
+        mp.findChapterIndex(mp.currentBook, mp.currentChapter) ?? 0;
+    _pageController =
+        PageController(initialPage: initialChapterIdx, viewportFraction: 1.0);
     // The reader menu asks `hasSynopsisSync` while it builds, so the
     // Old Testament index has to be in memory before the first long
     // press. 27 KB, read once per process.
@@ -472,8 +473,7 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
     _chromeScrollAccumulator = 0; // fresh slate on listener switch
     _positionsProvider = provider;
     _attachedPositionsListener = currentListener;
-    currentListener.itemPositions
-        .addListener(_handleItemPositionsChanged);
+    currentListener.itemPositions.addListener(_handleItemPositionsChanged);
     // 2026-05-22 (v1.2.71): no longer subscribing to
     // provider.scrollOffsetListener.changes — that stream stops
     // emitting after the SPL re-mounts (verified bug). Chrome auto-
@@ -482,8 +482,7 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
   }
 
   void _handleItemPositionsChanged() {
-    final positions =
-        _attachedPositionsListener?.itemPositions.value;
+    final positions = _attachedPositionsListener?.itemPositions.value;
     if (positions == null || positions.isEmpty || !mounted) return;
 
     final visible = positions
@@ -758,7 +757,8 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
                     Text(
                       uiStrings['fontSize']?[settings.locale] ?? 'Font size',
                       style: TextStyle(
-                          fontSize: innerCtx.textSize(16), fontWeight: FontWeight.w600),
+                          fontSize: innerCtx.textSize(16),
+                          fontWeight: FontWeight.w600),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 12),
@@ -838,9 +838,8 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
       final bookMaps = results[1];
       // Subtract chapter matches so the "book" section only shows the
       // additional related maps and we don't render duplicates.
-      final extraBookMaps = bookMaps
-          .where((m) => !chapterMaps.any((c) => c.id == m.id))
-          .toList();
+      final extraBookMaps =
+          bookMaps.where((m) => !chapterMaps.any((c) => c.id == m.id)).toList();
       setState(() {
         _chapterMaps = chapterMaps;
         _bookMaps = extraBookMaps;
@@ -953,8 +952,7 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
     _lastSyncedChapterIdx = null;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || !_pageController.hasClients) return;
-      final idx =
-          p.findChapterIndex(p.currentBook, p.currentChapter) ?? 0;
+      final idx = p.findChapterIndex(p.currentBook, p.currentChapter) ?? 0;
       _lastSyncedChapterIdx = idx;
       if (_pageController.page?.round() != idx) {
         _pageController.jumpToPage(idx);
@@ -966,8 +964,7 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
   /// step before AND one step after `(book, chap)`. Idempotent —
   /// cache hits short-circuit. Microtask-scheduled so it never
   /// blocks the active build.
-  void _prewarmAdjacentChapters(
-      MainProvider provider, String book, int chap) {
+  void _prewarmAdjacentChapters(MainProvider provider, String book, int chap) {
     final settings = context.read<AppSettings>();
     final idx = provider.findChapterIndex(book, chap);
     if (idx == null) return;
@@ -1053,8 +1050,7 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
         // paragraph rather than one-verse-per-line. User report:
         // "灵修模式不是一节一行而是全部都一起的". Settings preview
         // mirrors this in getDevotionalFormattedText().
-        final versesText =
-            sorted.map((v) => sanitizeForCopy(v.text)).join(' ');
+        final versesText = sorted.map((v) => sanitizeForCopy(v.text)).join(' ');
         final range = _formatVerseRangeLabels(sorted);
         return '$versesText\n(${first.book} ${first.chapter}:$range)';
       case 'plain':
@@ -1117,7 +1113,8 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
                       'No verses available',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
+                    fontFamily: settings.fontFamily,
+                    fontFamilyFallback: kCjkFontFallback,
                     fontSize: settings.fontSize * 1.1,
                     fontWeight: FontWeight.w600,
                     color: scheme.onSurface,
@@ -1129,7 +1126,8 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
                       'Could not load Bible verses. Please check your connection and retry.',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
+                    fontFamily: settings.fontFamily,
+                    fontFamilyFallback: kCjkFontFallback,
                     fontSize: settings.fontSize * 0.95,
                     color: scheme.onSurfaceVariant,
                   ),
@@ -1141,7 +1139,8 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
                   label: Text(
                     uiStrings['reload']?[locale] ?? 'Reload',
                     style: TextStyle(
-                      fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
+                      fontFamily: settings.fontFamily,
+                      fontFamilyFallback: kCjkFontFallback,
                       fontSize: settings.fontSize,
                     ),
                   ),
@@ -1207,8 +1206,7 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
       final base = uiStrings['loadErrorBody']?[settings.locale] ??
           'Could not load verses.';
       final detail = e.toString();
-      final detailShort =
-          detail.substring(0, detail.length.clamp(0, 100));
+      final detailShort = detail.substring(0, detail.length.clamp(0, 100));
       messenger?.showSnackBar(SnackBar(
         content: Text('$base $detailShort'),
         duration: const Duration(seconds: 3),
@@ -1231,8 +1229,7 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
     final ref = '${v.book}:${v.chapter}:${v.verse}';
     final url =
         'https://seeksparks.netlify.app/?verse=${Uri.encodeComponent(ref)}';
-    final text =
-        _formattedSelectedVerses(verses: mainProvider.selectedVerses);
+    final text = _formattedSelectedVerses(verses: mainProvider.selectedVerses);
     final payload = '$text\n\n$url';
     final ok = await ClipboardHelper.copyText(payload);
     if (!context.mounted) return;
@@ -1252,9 +1249,7 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
               'Share link copied')
           : (uiStrings['shareLinkFailed']?[settings.locale] ??
               'Copy failed — clipboard unavailable'),
-      icon: ok
-          ? Icons.check_circle_rounded
-          : Icons.error_outline_rounded,
+      icon: ok ? Icons.check_circle_rounded : Icons.error_outline_rounded,
       background: ok ? scheme.primary : scheme.error,
     );
   }
@@ -1272,8 +1267,7 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
     //
     // Sharing-to-app is still available via the system's native
     // text-selection menu (long-press the copied text in any app).
-    final text =
-        _formattedSelectedVerses(verses: mainProvider.selectedVerses);
+    final text = _formattedSelectedVerses(verses: mainProvider.selectedVerses);
     // 2026-07-10: copyText never throws (prod copy_fail crash on iOS
     // Safari). Only clear the selection on success so a failed copy
     // can be retried with one tap.
@@ -1299,9 +1293,8 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
             ),
           ],
         ),
-        backgroundColor: ok
-            ? scheme.primary.withValues(alpha: 0.8)
-            : scheme.error,
+        backgroundColor:
+            ok ? scheme.primary.withValues(alpha: 0.8) : scheme.error,
         duration: Duration(milliseconds: ok ? 800 : 1800),
       ),
     );
@@ -1371,8 +1364,7 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
                 mainProvider.currentBook!, mainProvider.currentChapter!)
             : const <Verse>[];
         // ignore: unused_local_variable
-        final hasParagraphData =
-            verses.any((v) => v.isParagraphStart == true);
+        final hasParagraphData = verses.any((v) => v.isParagraphStart == true);
 
         // 2026-05-08 (v1.0.1 perf): paragraph grouping + index maps
         // are stable for a given (book, chapter, paragraphMode,
@@ -1505,7 +1497,8 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
                 'currentChapter=${mainProvider.currentChapter}');
             void tryJump([int attempt = 0]) {
               if (!mounted) {
-                debugPrint('[SeekSparks jump] bail: !mounted (attempt $attempt)');
+                debugPrint(
+                    '[SeekSparks jump] bail: !mounted (attempt $attempt)');
                 return;
               }
               // `canScrollList`, not `isAttached`: attached-but-never
@@ -1578,9 +1571,10 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
                     '— controller never attached');
                 return;
               }
-              Future.delayed(const Duration(milliseconds: 50),
-                  () => tryJump(attempt + 1));
+              Future.delayed(
+                  const Duration(milliseconds: 50), () => tryJump(attempt + 1));
             }
+
             tryJump();
           });
         }
@@ -1661,8 +1655,8 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
                     // v1.3.19: Shift+T (toggle TTS) removed with the
                     // rest of the 朗读 feature.
                     const SingleActivator(LogicalKeyboardKey.question,
-                        shift: true): () =>
-                        _showShortcutsHelp(context, settings.locale),
+                            shift: true):
+                        () => _showShortcutsHelp(context, settings.locale),
                     // 2026-05-24 (v1.3.17): macOS-native ⌘ shortcuts.
                     // Mac users expect Command-prefixed shortcuts for
                     // app-level actions; the bare `[` / `]` / `/`
@@ -1677,14 +1671,14 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
                     const SingleActivator(LogicalKeyboardKey.bracketRight,
                         meta: true): _goToNextChapter,
                     // ⌘F → search. The universal Mac/web convention.
-                    const SingleActivator(LogicalKeyboardKey.keyF,
-                        meta: true): () {
+                    const SingleActivator(LogicalKeyboardKey.keyF, meta: true):
+                        () {
                       if (widget.showSearchAndSettings) _openSearch();
                     },
                     // ⌘, → settings. Standard Mac "open Preferences"
                     // gesture for any well-behaved app.
-                    const SingleActivator(LogicalKeyboardKey.comma,
-                        meta: true): () {
+                    const SingleActivator(LogicalKeyboardKey.comma, meta: true):
+                        () {
                       if (widget.showSearchAndSettings) {
                         pushPage(const SettingsPage());
                       }
@@ -1700,923 +1694,968 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
                   child: Focus(
                     autofocus: true,
                     child: Scaffold(
-                // 2026-08 (ported from YsWords v1.3.156): warm page
-                // background when the 护眼 paper theme is on; null keeps
-                // the normal Material scaffold colour.
-                backgroundColor: settings.readingPaperTheme
-                    ? _PaperTheme.background
-                    : null,
-                // Round 56 fix: when the user opens the note editor
-                // (modal bottom sheet) and the keyboard appears, the
-                // default `resizeToAvoidBottomInset: true` shrinks
-                // the Scaffold body. The LayoutBuilder rebuilds with
-                // a smaller height, the Stack/Padding/SPL chain
-                // re-lays out, and on certain devices the SPL ends
-                // up snapping back to its `initialScrollIndex`
-                // (which can be 0 in cold-mount cases) — user
-                // reports "after click notes and click and typing,
-                // that moment it goes to top". Setting this false
-                // means the keyboard appears OVER the reader; the
-                // bottom sheet handles its own keyboard-avoidance
-                // via `MediaQuery.viewInsets.bottom` in
-                // `_showNoteEditor`'s padding, so the editor still
-                // sits above the keyboard. The reader stays put.
-                resizeToAvoidBottomInset: false,
-                body: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final paneWidth = constraints.maxWidth;
-                    final dc = ResponsiveBreakpoints.classOf(paneWidth);
-                    final isWideScreen = ResponsiveBreakpoints.isTabletOrWider(paneWidth);
+                      // 2026-08 (ported from YsWords v1.3.156): warm page
+                      // background when the 护眼 paper theme is on; null keeps
+                      // the normal Material scaffold colour.
+                      backgroundColor: settings.readingPaperTheme
+                          ? _PaperTheme.background
+                          : null,
+                      // Round 56 fix: when the user opens the note editor
+                      // (modal bottom sheet) and the keyboard appears, the
+                      // default `resizeToAvoidBottomInset: true` shrinks
+                      // the Scaffold body. The LayoutBuilder rebuilds with
+                      // a smaller height, the Stack/Padding/SPL chain
+                      // re-lays out, and on certain devices the SPL ends
+                      // up snapping back to its `initialScrollIndex`
+                      // (which can be 0 in cold-mount cases) — user
+                      // reports "after click notes and click and typing,
+                      // that moment it goes to top". Setting this false
+                      // means the keyboard appears OVER the reader; the
+                      // bottom sheet handles its own keyboard-avoidance
+                      // via `MediaQuery.viewInsets.bottom` in
+                      // `_showNoteEditor`'s padding, so the editor still
+                      // sits above the keyboard. The reader stays put.
+                      resizeToAvoidBottomInset: false,
+                      body: LayoutBuilder(
+                        builder: (context, constraints) {
+                          final paneWidth = constraints.maxWidth;
+                          final dc = ResponsiveBreakpoints.classOf(paneWidth);
+                          final isWideScreen =
+                              ResponsiveBreakpoints.isTabletOrWider(paneWidth);
 
-                    return Stack(
-                      children: [
-                    // 2026-05-24 (v1.2.96): N-page chapter pager —
-                    // one page per chapter in chapterList
-                    // (~1189). Replaces the v1.2.94 3-page model,
-                    // which needed an instant `jumpToPage(1)` to
-                    // re-centre the SPL after every swipe. The
-                    // jump broke the smooth book-flip feel; user
-                    // reported "一松手，就马上跳动到那一章一瞬间".
-                    //
-                    // With one page per chapter, PageController's
-                    // index directly tracks the chapter — swipe
-                    // settles ARE the chapter change, no jump.
-                    // PageView.builder lazily builds + caches
-                    // only the visible page and a couple
-                    // neighbours so memory is bounded.
-                    //
-                    // The active page (idx ==
-                    // _currentChapterPageIdx) renders the full
-                    // SPL with mainProvider's controllers and
-                    // full annotation features; neighbours
-                    // render a lightweight preview while the user
-                    // is dragging towards them. After settle the
-                    // newly-active page rebuilds as the SPL —
-                    // visually the preview → SPL swap happens at
-                    // the same screen position so there is no
-                    // visible snap.
-                    //
-                    // External chapter changes (pendingJump from
-                    // search, library tile, etc.) flow through
-                    // the build-time sync block above which
-                    // animates the PageController to the new
-                    // page when currentChapter shifts outside of
-                    // a user swipe.
-                    // 2026-05-24 (v1.3.3): NotificationListener at
-                    // the PageView level captures scroll deltas
-                    // from ANY child SPL (via bubble-up) so the
-                    // auto-hide chrome works regardless of which
-                    // _ChapterPage is currently visible. v1.2.71
-                    // had this wrapping the single inline SPL —
-                    // now we need it outside the PageView so it
-                    // catches scrolls from all alive _ChapterPage
-                    // instances.
-                    NotificationListener<ScrollNotification>(
-                      onNotification: _onScrollNotification,
-                      child:
-                    Builder(builder: (pageBuildCtx) {
-                      final chapterList = mainProvider.chapterList;
-                      final currentChapterPageIdx =
-                          mainProvider.findChapterIndex(
-                                  mainProvider.currentBook,
-                                  mainProvider.currentChapter) ??
-                              0;
-                      // 2026-05-24 (v1.2.98): sync only on
-                      // EXTERNAL chapter changes. v1.2.96 fired
-                      // on every build where `controllerPage !=
-                      // currentChapterPageIdx`, which during a
-                      // mid-swipe is constantly true (controller
-                      // is interpolating between pages, provider
-                      // still on the old chapter until settle) —
-                      // it scheduled a `jumpToPage(oldChapter)`
-                      // that fought the gesture and landed as a
-                      // visible snap. User: "翻页还是卡顿一下".
-                      //
-                      // Gate on `_lastSyncedChapterIdx` so we
-                      // act exactly once per actual chapter
-                      // change. Builds triggered by anything
-                      // OTHER than a chapter change (selection,
-                      // highlight, font setting, etc.) become
-                      // no-ops for the PageController.
-                      if (_lastSyncedChapterIdx != currentChapterPageIdx) {
-                        final previousSynced = _lastSyncedChapterIdx;
-                        _lastSyncedChapterIdx = currentChapterPageIdx;
-                        if (previousSynced != null &&
-                            !_pageSwipeInFlight &&
-                            _pageController.hasClients) {
-                          final controllerPage =
-                              _pageController.page?.round();
-                          if (controllerPage != null &&
-                              controllerPage != currentChapterPageIdx) {
-                            // Genuine external change — the
-                            // provider's chapter shifted while
-                            // the controller is on a different
-                            // page. Animate over so the user
-                            // sees the transition smoothly
-                            // (jumpToPage would be jarring for
-                            // a jump triggered by tapping a
-                            // search result).
-                            WidgetsBinding.instance
-                                .addPostFrameCallback((_) {
-                              if (!mounted) return;
-                              if (!_pageController.hasClients) return;
-                              if (_pageSwipeInFlight) return;
-                              final delta = (controllerPage -
-                                      currentChapterPageIdx)
-                                  .abs();
-                              if (delta > 3) {
-                                // Big jump (e.g. Gen 1 → John 3):
-                                // animation would scroll through
-                                // hundreds of pages — just jump.
-                                _pageController
-                                    .jumpToPage(currentChapterPageIdx);
-                              } else {
-                                _pageController.animateToPage(
-                                  currentChapterPageIdx,
-                                  duration:
-                                      const Duration(milliseconds: 300),
-                                  curve: Curves.easeOut,
-                                );
-                              }
-                            });
-                          }
-                        }
-                      }
-                      return PageView.builder(
-                      controller: _pageController,
-                      itemCount: chapterList.length,
-                      physics: const PageScrollPhysics(),
-                      onPageChanged: (idx) {
-                        // Idx is the chapter's index in
-                        // chapterList. Translate to (book,
-                        // chapter) and update provider. No
-                        // jumpToPage needed — the page IS the
-                        // new current chapter.
-                        if (idx < 0 || idx >= chapterList.length) {
-                          return;
-                        }
-                        if (idx == currentChapterPageIdx) return;
-                        // v1.3.17: light haptic on chapter-swipe
-                        // commit — iOS Taptic Engine confirms the
-                        // page-snap; Android vibrator pulse.
-                        hapticLight();
-                        _pageSwipeInFlight = true;
-                        final tgt = chapterList[idx];
-                        final provider =
-                            context.read<MainProvider>();
-                        provider.clearSelectedVerses();
-                        provider.clearHighlightIndex();
-                        _switchTo(provider, tgt.book, tgt.chapter);
-                        WidgetsBinding.instance
-                            .addPostFrameCallback((_) {
-                          _pageSwipeInFlight = false;
-                        });
-                      },
-                      itemBuilder: (pageCtx, pageIdx) {
-                        if (pageIdx < 0 ||
-                            pageIdx >= chapterList.length) {
-                          return const SizedBox.shrink();
-                        }
-                        final tgt = chapterList[pageIdx];
-                        // 2026-05-24 (v1.3.3): EVERY page is now a
-                        // `_ChapterPage` — same widget type at every
-                        // index. Adjacent pages stay alive via
-                        // AutomaticKeepAliveClientMixin; the
-                        // preview ↔ SPL widget-tree swap is gone.
-                        // Only the active page's controllers feed
-                        // back into mp; inactive pages render their
-                        // own SPL with local controllers so scroll
-                        // position survives the swipe round-trip.
-                        // ValueKey on (book|chapter) lets the
-                        // PageView cache identify each page
-                        // canonically across version switches /
-                        // chapterList rebuilds.
-                        return _ChapterPage(
-                          key: ValueKey(
-                              '${tgt.book}|${tgt.chapter}'),
-                          book: tgt.book,
-                          chapter: tgt.chapter,
-                          isActive: pageIdx == currentChapterPageIdx,
-                          deviceClass: dc,
-                        );
-                      },
-                    );
-                    }),
-                    ),
-                    // 2026-05-24 (v1.2.91 + v1.3.32): mini reader
-                    // header. When the auto-hide chrome is hidden,
-                    // show a tiny pair of pills at top — version on
-                    // left, book + chapter on right — so the reader
-                    // always knows their bearings. In split view the
-                    // full header is pinned visible, so the mini
-                    // stays hidden.
-                    //
-                    // v1.3.32: tap target now SCROLLS TO TOP of the
-                    // chapter AND re-shows the chrome (user-reported
-                    // "为什么top tap 不go back to top"). The combined
-                    // action is intuitive — user expects "tap top" to
-                    // return to chapter beginning, and bringing the
-                    // full header back is a natural side-effect since
-                    // they've signalled they want to navigate. Chrome
-                    // can still be toggled by tapping verse content.
-                    if (currentVerse != null && !widget.splitViewActive)
-                      _MiniReaderHeader(
-                        visible: !_chromeVisible,
-                        version: mainProvider.currentVersion,
-                        book: currentVerse.book,
-                        chapter: currentVerse.chapter,
-                        locale: settings.locale,
-                        onTap: () {
-                          _scrollChapterToTop();
-                          if (!_chromeVisible) _toggleChrome();
-                        },
-                      ),
-                    // 2026-05-24 (v1.3.8 / v1.3.34): cross-platform
-                    // tap-top → scroll-to-top. iOS's system status-bar
-                    // tap only auto-wires when a Scaffold has a
-                    // primary AppBar driving a PrimaryScrollController;
-                    // our reader uses a custom Positioned _FloatingHeader
-                    // + ScrollablePositionedList (its own ItemScroll-
-                    // Controller, NOT a PrimaryScrollController), so
-                    // neither iOS nor Android get the feature for free.
-                    //
-                    // v1.3.34 fix: user reported "按了顶部没反应". Root
-                    // cause was the previous strip height of
-                    // `topInset.clamp(20, 64)` — on iPhone 16 Pro Max
-                    // / 15 Pro / 14 Pro that's ~59 px which exactly
-                    // covers the Dynamic Island. iOS reserves the
-                    // Island for system gestures (long-press = expand,
-                    // short tap = often swallowed by the system), so
-                    // taps on that zone never reach the Flutter app.
-                    //
-                    // Three changes to make tap-top reliably work:
-                    //   (1) Enlarge the strip to `topInset + 56` —
-                    //       extends down past the Dynamic Island into
-                    //       the mini-header chip row, so a tap
-                    //       anywhere in the top band (not just on the
-                    //       Island) lands on the strip.
-                    //   (2) Switch from `translucent` to `opaque` — the
-                    //       translucent variant put the strip into a
-                    //       three-way gesture arena (strip + mini-
-                    //       header + outer chrome-toggle GestureDetector
-                    //       at line ~1320) where one of the others
-                    //       could win and call _toggleChrome instead
-                    //       of _scrollChapterToTop. Opaque wins
-                    //       definitively for any tap in the strip's
-                    //       bounding box.
-                    //   (3) Combine actions: scroll-to-top + show
-                    //       chrome. Convention: "I'm at the top, here
-                    //       are the navigation controls".
-                    if (currentVerse != null)
-                      Positioned(
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        height:
-                            MediaQuery.of(context).padding.top + 56,
-                        // 2026-05-24 (v1.3.35): wrap the tap-strip in
-                        // IgnorePointer that disables it when chrome
-                        // is visible. Without this gate, the strip's
-                        // opaque GestureDetector covered the chrome's
-                        // top region (status-bar inset + chip row =
-                        // topInset+56 px) and stole taps that should
-                        // have gone to the back-arrow / version / book
-                        // / search / home / 3-dot buttons inside
-                        // _FloatingHeader. User report: "iOS top menu
-                        // 里面所有menu都按不动了".
-                        //
-                        // When chrome is hidden the mini-header chips
-                        // are decorative + the strip is the only thing
-                        // in that band — it should be live so users
-                        // can tap-top to scroll. When chrome is shown
-                        // the FloatingHeader's buttons need first dibs
-                        // on every tap in the top band.
-                        child: IgnorePointer(
-                          ignoring: _chromeVisible,
-                          child: GestureDetector(
-                            behavior: HitTestBehavior.opaque,
-                            onTap: () {
-                              _scrollChapterToTop();
-                              if (_chromeFeatureEnabled &&
-                                  !_chromeVisible) {
-                                _safeChromeSetState(
-                                    () => _chromeVisible = true);
-                              }
-                            },
-                          ),
-                        ),
-                      ),
-                    _FloatingHeader(
-                      // 2026-05-22 (v1.2.71): pin chrome visible in
-                      // split view. Each pane's _FloatingHeader is
-                      // Positioned(top:0) RELATIVE to its own Stack
-                      // — in top/bottom split, the bottom pane's
-                      // header sits at the middle of the screen, and
-                      // the auto-hide animation made it appear to
-                      // "jump around" near the bottom half. With
-                      // chrome pinned, both panes' headers stay
-                      // static.
-                      chromeVisible:
-                          widget.splitViewActive ? true : _chromeVisible,
-                      showBookInfo: currentVerse != null,
-                      book: currentVerse?.book ?? '',
-                      chapter: currentVerse?.chapter ?? 0,
-                      version: mainProvider.currentVersion,
-                      showSidebarToggle: widget.showSidebarToggle,
-                      sidebarOpen: widget.sidebarOpen,
-                      onToggleSidebar: widget.onToggleSidebar,
-                      paragraphMode: settings.paragraphMode,
-                      onToggleParagraphMode: () =>
-                          settings.setParagraphMode(!settings.paragraphMode),
-                      deviceClass: dc,
-                      onToggleSplitView: widget.onToggleSplitView,
-                      splitViewActive: widget.splitViewActive,
-                      onClose: widget.onClose,
-                      showSearchAndSettings: widget.showSearchAndSettings,
-                      hostChrome: widget.hostChrome,
-                      onTextSize: () => _showFontSizeSheet(context, settings),
-                      onOpenWorkbench: widget.onOpenWorkbench,
-                      onOpenParallel: widget.onOpenParallel,
-                      chapterMaps: _chapterMaps,
-                      bookMaps: _bookMaps,
-                      chapterSermons: _chapterSermons,
-                      // The host takes it when it has a docked pane;
-                      // when nobody does, the sheet opens exactly as
-                      // before, which is what keeps the standalone
-                      // reader and every narrow layout unchanged.
-                      onChapterSermons: () => _requestAnalysis(
-                        ReaderAnalysisRequest.sermons,
-                        () => _showChapterSermonsSheet(
-                          context: context,
-                          sermons: _chapterSermons,
-                          locale: settings.locale,
-                          book: currentVerse?.book ?? '',
-                          chapter: currentVerse?.chapter ?? 0,
-                        ),
-                      ),
-                      locale: settings.locale,
-                      onBookTap: isWideScreen && widget.showSidebarToggle
-                          ? () {
-                              mainProvider.clearSelectedVerses();
-                              widget.onToggleSidebar?.call();
-                            }
-                          : () {
-                              mainProvider.clearSelectedVerses();
-                              final chapter =
-                                  mainProvider.currentVerse?.chapter ?? 1;
-                              final book =
-                                  mainProvider.currentVerse?.book ?? '';
-                              final provider =
-                                  context.read<MainProvider>();
-                              pushPage(BooksPage(
-                                  chapterIdx: chapter,
-                                  bookIdx: book,
-                                  providerOverride: provider,
-                                ), reverse: true);
-                            },
-                      onVersionSelected: (version) async {
-                        // 2026-05-10 (v1.2.13): rewritten end-to-end
-                        // per user feedback "整本圣经 change version
-                        // loading 很久，不用 keepnstate 了，快一点".
-                        //
-                        // OLD flow had two problems:
-                        //   1. The snackbar showed "Loading…" but the
-                        //      reading pane kept rendering the OLD
-                        //      version's verses, frozen, for the
-                        //      1–3 s of synchronous json.decode. To
-                        //      the user: "screen looks broken for a
-                        //      bit, then suddenly switches".
-                        //   2. We tried to preserve the user's
-                        //      chapter-relative verse number across
-                        //      the switch (`_captureChapterRelative
-                        //      VerseNum` + `_scrollToVerseInChapter`)
-                        //      which adds layout-measurement work
-                        //      AND complexity for marginal benefit
-                        //      — the user said outright "不用 keep
-                        //      state 了".
-                        //
-                        // NEW flow:
-                        //   • Set `versionSwitching = true` IMMED-
-                        //     IATELY → the reading pane stack paints
-                        //     an opaque overlay over the old verses
-                        //     (see build() below). User sees a clean
-                        //     loading screen, not frozen text.
-                        //   • Skip _captureChapterRelativeVerseNum.
-                        //   • Skip _scrollToVerseInChapter — the
-                        //     chapter-level reset (jumpToTop after
-                        //     setCurrentChapter) lands the user at
-                        //     the top of the same chapter in the
-                        //     new version. Same passage, just no
-                        //     verse-precise scroll restore.
-                        //   • Clear flag at the end so overlay goes
-                        //     away.
-                        if (!mounted) return;
-                        final p = context.read<MainProvider>();
-                        final messenger = _messengerKey.currentState;
-                        p.clearSelectedVerses();
-                        final prevVersion = p.currentVersion;
-                        final prevEn = toEnglish(p.currentBook);
-                        // 2026-05-10 (v1.2.14): instant-switch path.
-                        // If we already have this version's parsed
-                        // verses in MainProvider's per-version LRU
-                        // cache (populated whenever setVerses fires
-                        // with a non-empty list), skip the entire
-                        // json.decode + FetchVerses pipeline and
-                        // just swap the verse list in. No overlay,
-                        // no spinner, no yield, ~0 ms wall-clock.
-                        // This is what makes "back to a previously-
-                        // visited version" truly "一瞬间" (instant)
-                        // — the user's expected behaviour that
-                        // v1.2.13's overlay made feel slower than
-                        // it should.
-                        if (p.useCachedVersion(version)) {
-                          // Books are derived from verses; rebuild
-                          // them (pure in-memory, fast). No overlay
-                          // because this whole branch should be
-                          // imperceptible.
-                          await FetchBooks.execute(mainProvider: p);
-                          if (!mounted) return;
-                          final targetBook = prevEn == null
-                              ? null
-                              : translateBookName(prevEn, version);
-                          final targetChapter = p.currentChapter;
-                          final match = p.verses.firstWhere(
-                            (v) =>
-                                (targetBook == null ||
-                                    v.book == targetBook) &&
-                                (targetChapter == null ||
-                                    v.chapter == targetChapter),
-                            orElse: () => p.verses.first,
-                          );
-                          p.setCurrentChapter(
-                              book: match.book,
-                              chapter: match.chapter);
-                          p.updateCurrentVerse(verse: match);
-                          p.jumpToTop();
-                          if (mounted) _visibleItemIndexNotifier.value = 0;
-                          // Canon may have resized (e.g. LJK NT-only →
-                          // full): force the PageView onto the new
-                          // chapter so it doesn't stay on a stale page.
-                          _reanchorPageForVersionSwitch(p);
-                          return;
-                        }
-                        // Slow path (cache miss): show overlay then
-                        // run the full parse pipeline.
-                        // Lookup the target version's short label so
-                        // the overlay can show "Loading KJV…" instead
-                        // of the generic "Loading version…".
-                        final destLabel = bibleVersions
-                            .firstWhere(
-                              (v) => v.value == version,
-                              orElse: () => const BibleVersionInfo(
-                                  value: '',
-                                  shortLabel: '',
-                                  menuLabel: '',
-                                  language: 'zh-Hans'),
-                            )
-                            .shortLabel;
-                        p.setVersionSwitching(true, to: destLabel);
-                        // Yield once so the overlay actually paints
-                        // before we kick off the heavy json.decode
-                        // that blocks the main thread for 1–3 s.
-                        await Future<void>.delayed(Duration.zero);
-                        try {
-                          p.setVersion(version);
-                          await FetchVerses.execute(mainProvider: p);
-                          if (!mounted) return;
-                          await FetchBooks.execute(mainProvider: p);
-                          if (!mounted) return;
-                          // Failure-recovery: revert to previous
-                          // version so the user keeps reading what
-                          // they had instead of getting an empty
-                          // shell.
-                          if (p.verses.isEmpty && prevVersion.isNotEmpty) {
-                            p.setVersion(prevVersion);
-                            await FetchVerses.execute(mainProvider: p);
-                            await FetchBooks.execute(mainProvider: p);
-                          }
-                          if (p.verses.isEmpty) {
-                            messenger?.showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  uiStrings['loadErrorBody']?[
-                                          settings.locale] ??
-                                      'Could not load verses. Please retry.',
-                                ),
-                                duration: const Duration(seconds: 3),
-                              ),
-                            );
-                            return;
-                          }
-                          // Land on the same chapter in the new
-                          // version (book name translated, chapter
-                          // number reused). Top-of-chapter scroll —
-                          // no verse-precise restore.
-                          final targetBook = prevEn == null
-                              ? null
-                              : translateBookName(prevEn, version);
-                          final targetChapter = p.currentChapter;
-                          final match = p.verses.firstWhere(
-                            (v) =>
-                                (targetBook == null ||
-                                    v.book == targetBook) &&
-                                (targetChapter == null ||
-                                    v.chapter == targetChapter),
-                            orElse: () => p.verses.first,
-                          );
-                          p.setCurrentChapter(
-                              book: match.book, chapter: match.chapter);
-                          p.updateCurrentVerse(verse: match);
-                          p.jumpToTop();
-                          if (mounted) _visibleItemIndexNotifier.value = 0;
-                          // Canon may have resized (e.g. LJK NT-only →
-                          // full): force the PageView onto the new
-                          // chapter so it doesn't stay on a stale page.
-                          _reanchorPageForVersionSwitch(p);
-                        } finally {
-                          // Always clear the flag so the overlay
-                          // disappears even on error.
-                          if (mounted) {
-                            p.setVersionSwitching(false);
-                          }
-                        }
-                      },
-                      onSearch: () {
-                        mainProvider.clearSelectedVerses();
-                        _openSearch();
-                      },
-                      onSettings: () {
-                        mainProvider.clearSelectedVerses();
-                        pushPage(SettingsPage());
-                      },
-                      highlightCount:
-                          mainProvider.highlights.length,
-                      // The dedicated Highlights page (Round 34)
-                      // gives a richer experience than the modal
-                      // sheet — search, color filters, copy-all —
-                      // so the floating-header entry now opens it.
-                      // The modal HighlightsSheet remains for the
-                      // long-press color-picker context only.
-                      onHighlights: () => pushPage(const HighlightsPage()),
-                      // Reload — re-runs FetchVerses+FetchBooks on the
-                      // current version. User asked for this so they
-                      // don't have to relaunch the app when verses
-                      // fail to load mid-session.
-                      onReload: _reloadVerses,
-                      // 2026-05-24 (v1.3.19): TTS feature removed —
-                      // no more `onToggleListen` / `isListening` wiring.
-                      // 2026-05-21 (v1.2.69): TodayReadingCard removed
-                      // along with the rest of the reading-plan feature.
-                      belowHeader: null,
-                    ),
-                    // Vertical position indicator on the right edge — a
-                    // thin track + a small "current/total" pill that
-                    // slides top-to-bottom as the user reads, then
-                    // auto-fades after 2 s of inactivity. Kept visible
-                    // during verse selection too — hiding it here was
-                    // bundled onto the same `isSelected` check the
-                    // bottom-bar swap needed, not a deliberate choice.
-                    // Extra bottom clearance while selected: on narrow
-                    // phones _SelectionActionBar wraps to two rows
-                    // (taller than the single-row chrome bar it
-                    // replaces), so the pill needs more room to clear it.
-                    if (verses.isNotEmpty)
-                      Positioned(
-                        right: ResponsiveBreakpoints.headerInset(dc) + 4,
-                        top: MediaQuery.of(context).padding.top +
-                            64 * settings.menuScale +
-                            24,
-                        bottom: MediaQuery.of(context).padding.bottom +
-                            (isSelected ? 100 : 56),
-                        child: IgnorePointer(
-                          // v1.3.16: nested ValueListenableBuilders so
-                          // scroll-tick updates only rebuild THIS
-                          // subtree (the right-edge position pill),
-                          // not the whole pane. Outer listens to the
-                          // visible-item index → derives chapter
-                          // progress + label. Inner listens to the
-                          // show-position bool → drives AnimatedOpacity.
-                          child: ValueListenableBuilder<double>(
-                            valueListenable: _visibleItemPosNotifier,
-                            builder: (context, itemPos, _) =>
-                                ValueListenableBuilder<double>(
-                            valueListenable: _chapterProgressNotifier,
-                            builder: (context, chapterProgress, _) {
-                              // 2026-06-28 (v1.3.110): BAR + NUMBER decoupled.
-                              //  • BAR = PIXEL-proportional scroll fraction,
-                              //    precomputed in _handleItemPositionsChanged
-                              //    from measured item heights → even with the
-                              //    page length in paragraph AND verse mode,
-                              //    0% at top, 100% at the bottom, no jump.
-                              //  • NUMBER = the verse at the TOP of the screen.
-                              // Keep the active chapter's item count fresh for
-                              // the pixel estimator (header + groups + footer).
-                              _progressItemCount = paragraphGroups.length + 2;
-                              final displayVerseIndex =
-                                  paragraphCurrentVerseIndex(
-                                itemPos: itemPos,
-                                itemToVerseIndex: itemToVerseIndex,
-                                groupCount: paragraphGroups.length,
-                                totalVerses: verses.length,
-                              );
-                              return ValueListenableBuilder<bool>(
-                                valueListenable: _showVersePositionNotifier,
-                                builder: (context, showPos, _) => AnimatedOpacity(
-                                  opacity: showPos ? 1.0 : 0.0,
-                                  duration: const Duration(milliseconds: 400),
-                                  child: _VerticalProgressIndicator(
-                                    progress: chapterProgress,
-                                    currentLabel: '${displayVerseIndex + 1}',
-                                    totalLabel: '${verses.length}',
-                                    fontFamily: settings.fontFamily,
-                                    menuScale: settings.menuScale,
-                                  ),
-                                ),
-                              );
-                            },
-                          )),
-                        ),
-                      ),
-                    // 2026-05-21 (v1.2.70 hotfix): bottom bar hidden in
-                    // split-view to avoid the grey-screen layout glitch
-                    // when two Positioned(left:0,right:0) bars co-exist
-                    // inside narrow SizedBox-constrained panes. The
-                    // primary pane's top header still works for nav;
-                    // we'll restore the bottom bar in split view once
-                    // the layout interaction is understood.
-                    // 2026-08-24 (#313): and absent entirely when the
-                    // host draws the chrome. Every button on it has a
-                    // home there — the arrows in the workspace toolbar,
-                    // Notes in the Analysis pane's own tab,
-                    // Illustrations / text size / paragraph mode in this
-                    // column's ⋮ — so what is left here is a bar laid
-                    // over the verse the reader is studying.
-                    if (_chromeFeatureEnabled &&
-                        !widget.hostChrome &&
-                        !isSelected &&
-                        !widget.splitViewActive &&
-                        verses.isNotEmpty)
-                      _BibleReaderBottomBar(
-                        visible: _chromeVisible,
-                        deviceClass: dc,
-                        locale: settings.locale,
-                        onPrevChapter: _goToPreviousChapter,
-                        onNextChapter: _goToNextChapter,
-                        onOpenNotes: () {
-                          mainProvider.clearSelectedVerses();
-                          pushPage(const LibraryPage());
-                        },
-                        onOpenIllustrations: (_chapterMaps.isEmpty &&
-                                _bookMaps.isEmpty)
-                            ? null
-                            : () => _showMapPicker(
-                                  context,
-                                  chapterMaps: _chapterMaps,
-                                  bookMaps: _bookMaps,
-                                  locale: settings.locale,
-                                ),
-                        onFontSize: () => _showFontSizeSheet(context, settings),
-                        paragraphMode: settings.paragraphMode,
-                        onToggleParagraphMode: () => settings
-                            .setParagraphMode(!settings.paragraphMode),
-                      ),
-                    // Bottom bar — selection actions only. (v1.2.69:
-                    // the always-visible reader-progress bar was
-                    // removed; chapter progress is still visible via
-                    // the right-edge pill that fades in while scrolling.)
-                    //
-                    // 2026-05-24 (v1.2.91): switched from
-                    // Align(bottomCenter) → Positioned(bottom/left/
-                    // right: 0) so the bar is anchored to the screen
-                    // edge edge-to-edge instead of floating with
-                    // horizontal margins. Matches the always-visible
-                    // bottom chrome bar's shape — feels like a real
-                    // bottom menu rather than an overlay card.
-                    if (isSelected)
-                      Positioned(
-                        bottom: 0,
-                        left: 0,
-                        right: 0,
-                        child: _SelectionActionBar(
-                              selectedCount:
-                                  mainProvider.selectedVerses.length,
-                              anyHighlighted: mainProvider.selectedVerses
-                                  .any((v) =>
-                                      mainProvider.isVerseHighlighted(v)),
-                              deviceClass: dc,
-                              onCopy: () => _copySelectedVerses(
-                                mainProvider: mainProvider,
-                                settings: settings,
-                              ),
-                              onShare: () => _shareSelectedVerses(
-                                context: context,
-                                mainProvider: mainProvider,
-                                settings: settings,
-                              ),
-                              onClear: mainProvider.clearSelectedVerses,
-                              onHighlight: (color) {
-                                mainProvider.setHighlightsForVerses(
-                                  verses: mainProvider.selectedVerses,
-                                  color: color,
-                                );
-                                mainProvider.clearSelectedVerses();
-                              },
-                              onRemoveHighlight: () {
-                                mainProvider.removeHighlightsForVerses(
-                                  verses: mainProvider.selectedVerses,
-                                );
-                                mainProvider.clearSelectedVerses();
-                              },
-                              // Every one of these five is offered to the
-                              // host first. Four have a docked pane and
-                              // one does not, and routing all five
-                              // through the same door is what makes that
-                              // a recorded decision rather than an
-                              // accident — see `analysisTabForRequest`.
-                              activeRequest: widget.activeAnalysisRequest,
-                              onOriginal: () => _requestAnalysis(
-                                ReaderAnalysisRequest.originals,
-                                () => _showOriginalsSheet(
-                                  context: context,
-                                  verses: mainProvider.selectedVerses,
-                                  locale: settings.locale,
-                                ),
-                              ),
-                              onCrossRefs: () => _requestAnalysis(
-                                ReaderAnalysisRequest.crossRefs,
-                                () => _showCrossRefsSheet(
-                                  context: context,
-                                  verses: mainProvider.selectedVerses,
-                                  locale: settings.locale,
-                                  mainProvider: mainProvider,
-                                ),
-                              ),
-                              onSermons: () => _requestAnalysis(
-                                ReaderAnalysisRequest.sermons,
-                                () => _showRelatedSermonsSheet(
-                                  context: context,
-                                  verses: mainProvider.selectedVerses,
-                                  locale: settings.locale,
-                                  currentVersion: mainProvider.currentVersion,
-                                ),
-                              ),
-                              onAiExplain: () => _requestAnalysis(
-                                ReaderAnalysisRequest.aiExplain,
-                                () => _showAiExplainSheet(
-                                  context: context,
-                                  verses: mainProvider.selectedVerses,
-                                  settings: settings,
-                                  mainProvider: mainProvider,
-                                ),
-                              ),
-                              anyNoted: mainProvider.selectedVerses
-                                  .any(mainProvider.isVerseNoted),
-                              anyBookmarked: mainProvider.selectedVerses
-                                  .any(mainProvider.isBookmarked),
-                              // 2026-05-19 (v1.2.60): pass the FULL
-                              // selection list (sorted by chapter +
-                              // verse) instead of just the first verse.
-                              // Multi-verse notes share text across the
-                              // whole range — WeDevote-style. Single
-                              // selection still works the same way; the
-                              // editor handles both cases uniformly.
-                              // 2026-08-18: offered to the host like the
-                              // four above it. Where there is a docked
-                              // Notes tab (bwh15) the note opens beside
-                              // the verse instead of over it; where
-                              // there is not — a phone, the standalone
-                              // reader — this is the same modal it has
-                              // always been, and the write path is the
-                              // same store either way.
-                              onNote: () => _requestAnalysis(
-                                ReaderAnalysisRequest.notes,
-                                () => showNoteEditor(
-                                  context: context,
-                                  verses:
-                                      mainProvider.selectedVerses.toList()
-                                        ..sort((a, b) {
-                                          if (a.chapter != b.chapter) {
-                                            return a.chapter
-                                                .compareTo(b.chapter);
+                          return Stack(
+                            children: [
+                              // 2026-05-24 (v1.2.96): N-page chapter pager —
+                              // one page per chapter in chapterList
+                              // (~1189). Replaces the v1.2.94 3-page model,
+                              // which needed an instant `jumpToPage(1)` to
+                              // re-centre the SPL after every swipe. The
+                              // jump broke the smooth book-flip feel; user
+                              // reported "一松手，就马上跳动到那一章一瞬间".
+                              //
+                              // With one page per chapter, PageController's
+                              // index directly tracks the chapter — swipe
+                              // settles ARE the chapter change, no jump.
+                              // PageView.builder lazily builds + caches
+                              // only the visible page and a couple
+                              // neighbours so memory is bounded.
+                              //
+                              // The active page (idx ==
+                              // _currentChapterPageIdx) renders the full
+                              // SPL with mainProvider's controllers and
+                              // full annotation features; neighbours
+                              // render a lightweight preview while the user
+                              // is dragging towards them. After settle the
+                              // newly-active page rebuilds as the SPL —
+                              // visually the preview → SPL swap happens at
+                              // the same screen position so there is no
+                              // visible snap.
+                              //
+                              // External chapter changes (pendingJump from
+                              // search, library tile, etc.) flow through
+                              // the build-time sync block above which
+                              // animates the PageController to the new
+                              // page when currentChapter shifts outside of
+                              // a user swipe.
+                              // 2026-05-24 (v1.3.3): NotificationListener at
+                              // the PageView level captures scroll deltas
+                              // from ANY child SPL (via bubble-up) so the
+                              // auto-hide chrome works regardless of which
+                              // _ChapterPage is currently visible. v1.2.71
+                              // had this wrapping the single inline SPL —
+                              // now we need it outside the PageView so it
+                              // catches scrolls from all alive _ChapterPage
+                              // instances.
+                              NotificationListener<ScrollNotification>(
+                                onNotification: _onScrollNotification,
+                                child: Builder(builder: (pageBuildCtx) {
+                                  final chapterList = mainProvider.chapterList;
+                                  final currentChapterPageIdx =
+                                      mainProvider.findChapterIndex(
+                                              mainProvider.currentBook,
+                                              mainProvider.currentChapter) ??
+                                          0;
+                                  // 2026-05-24 (v1.2.98): sync only on
+                                  // EXTERNAL chapter changes. v1.2.96 fired
+                                  // on every build where `controllerPage !=
+                                  // currentChapterPageIdx`, which during a
+                                  // mid-swipe is constantly true (controller
+                                  // is interpolating between pages, provider
+                                  // still on the old chapter until settle) —
+                                  // it scheduled a `jumpToPage(oldChapter)`
+                                  // that fought the gesture and landed as a
+                                  // visible snap. User: "翻页还是卡顿一下".
+                                  //
+                                  // Gate on `_lastSyncedChapterIdx` so we
+                                  // act exactly once per actual chapter
+                                  // change. Builds triggered by anything
+                                  // OTHER than a chapter change (selection,
+                                  // highlight, font setting, etc.) become
+                                  // no-ops for the PageController.
+                                  if (_lastSyncedChapterIdx !=
+                                      currentChapterPageIdx) {
+                                    final previousSynced =
+                                        _lastSyncedChapterIdx;
+                                    _lastSyncedChapterIdx =
+                                        currentChapterPageIdx;
+                                    if (previousSynced != null &&
+                                        !_pageSwipeInFlight &&
+                                        _pageController.hasClients) {
+                                      final controllerPage =
+                                          _pageController.page?.round();
+                                      if (controllerPage != null &&
+                                          controllerPage !=
+                                              currentChapterPageIdx) {
+                                        // Genuine external change — the
+                                        // provider's chapter shifted while
+                                        // the controller is on a different
+                                        // page. Animate over so the user
+                                        // sees the transition smoothly
+                                        // (jumpToPage would be jarring for
+                                        // a jump triggered by tapping a
+                                        // search result).
+                                        WidgetsBinding.instance
+                                            .addPostFrameCallback((_) {
+                                          if (!mounted) return;
+                                          if (!_pageController.hasClients) {
+                                            return;
                                           }
-                                          return a.verse.compareTo(b.verse);
-                                        }),
-                                  locale: settings.locale,
-                                  mainProvider: mainProvider,
-                                ),
-                              ),
-                              onBookmark: () {
-                                final selected =
-                                    mainProvider.selectedVerses.toList();
-                                final allBookmarked = selected.every(
-                                    mainProvider.isBookmarked);
-                                for (final v in selected) {
-                                  if (allBookmarked) {
-                                    if (mainProvider.isBookmarked(v)) {
-                                      mainProvider.toggleBookmark(verse: v);
-                                    }
-                                  } else {
-                                    if (!mainProvider.isBookmarked(v)) {
-                                      mainProvider.toggleBookmark(verse: v);
+                                          if (_pageSwipeInFlight) return;
+                                          final delta = (controllerPage -
+                                                  currentChapterPageIdx)
+                                              .abs();
+                                          if (delta > 3) {
+                                            // Big jump (e.g. Gen 1 → John 3):
+                                            // animation would scroll through
+                                            // hundreds of pages — just jump.
+                                            _pageController.jumpToPage(
+                                                currentChapterPageIdx);
+                                          } else {
+                                            _pageController.animateToPage(
+                                              currentChapterPageIdx,
+                                              duration: const Duration(
+                                                  milliseconds: 300),
+                                              curve: Curves.easeOut,
+                                            );
+                                          }
+                                        });
+                                      }
                                     }
                                   }
-                                }
-                                mainProvider.clearSelectedVerses();
-                              },
-                            ),
-                      ),
-                    // 2026-05-24 (v1.2.91 / v1.3.34 / v1.3.35): iOS-style
-                    // tap-top to scroll-to-top, this time inside the
-                    // verse-select toolbar overlay. v1.3.34 fix
-                    // mirrors the main reader strip above
-                    // (line ~1657): enlarged from
-                    // `topInset.clamp(20, 80)` to `topInset + 56` so
-                    // taps below the Dynamic Island (where iOS
-                    // actually forwards them to the app) still hit
-                    // the strip. v1.3.35: gated by IgnorePointer so
-                    // it doesn't steal taps from the FloatingHeader
-                    // buttons when chrome is visible.
-                    Positioned(
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      height:
-                          MediaQuery.of(context).padding.top + 56,
-                      child: IgnorePointer(
-                        ignoring: _chromeVisible,
-                        child: GestureDetector(
-                        behavior: HitTestBehavior.opaque,
-                        onTap: () {
-                          if (!mainProvider.canScrollList) return;
-                          mainProvider.itemScrollController.scrollTo(
-                            index: 0,
-                            duration:
-                                const Duration(milliseconds: 350),
-                            curve: Curves.easeOut,
-                          );
-                        },
-                      ),
-                      ),
-                    ),
-                    // 2026-05-10 (v1.2.13): version-switch loading
-                    // overlay. Painted on top of everything in the
-                    // Stack while `MainProvider.versionSwitching`
-                    // is true. Opaque background so the user
-                    // doesn't see the OLD version's verses frozen
-                    // for the 1–3 s of synchronous json.decode
-                    // chewing through the new version's 5–10 MB
-                    // JSON. Background uses scaffold colour so
-                    // it blends with the surrounding chrome and
-                    // looks like an intentional loading state,
-                    // not a glitch.
-                    if (mainProvider.versionSwitching)
-                      Positioned.fill(
-                        child: Material(
-                          color: Theme.of(context).colorScheme.surface,
-                          child: Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                SizedBox(
-                                  width: 32,
-                                  height: 32,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 3,
-                                    valueColor:
-                                        AlwaysStoppedAnimation<Color>(
-                                      Theme.of(context)
-                                          .colorScheme
-                                          .primary,
+                                  return PageView.builder(
+                                    controller: _pageController,
+                                    itemCount: chapterList.length,
+                                    physics: const PageScrollPhysics(),
+                                    onPageChanged: (idx) {
+                                      // Idx is the chapter's index in
+                                      // chapterList. Translate to (book,
+                                      // chapter) and update provider. No
+                                      // jumpToPage needed — the page IS the
+                                      // new current chapter.
+                                      if (idx < 0 ||
+                                          idx >= chapterList.length) {
+                                        return;
+                                      }
+                                      if (idx == currentChapterPageIdx) return;
+                                      // v1.3.17: light haptic on chapter-swipe
+                                      // commit — iOS Taptic Engine confirms the
+                                      // page-snap; Android vibrator pulse.
+                                      hapticLight();
+                                      _pageSwipeInFlight = true;
+                                      final tgt = chapterList[idx];
+                                      final provider =
+                                          context.read<MainProvider>();
+                                      provider.clearSelectedVerses();
+                                      provider.clearHighlightIndex();
+                                      _switchTo(
+                                          provider, tgt.book, tgt.chapter);
+                                      WidgetsBinding.instance
+                                          .addPostFrameCallback((_) {
+                                        _pageSwipeInFlight = false;
+                                      });
+                                    },
+                                    itemBuilder: (pageCtx, pageIdx) {
+                                      if (pageIdx < 0 ||
+                                          pageIdx >= chapterList.length) {
+                                        return const SizedBox.shrink();
+                                      }
+                                      final tgt = chapterList[pageIdx];
+                                      // 2026-05-24 (v1.3.3): EVERY page is now a
+                                      // `_ChapterPage` — same widget type at every
+                                      // index. Adjacent pages stay alive via
+                                      // AutomaticKeepAliveClientMixin; the
+                                      // preview ↔ SPL widget-tree swap is gone.
+                                      // Only the active page's controllers feed
+                                      // back into mp; inactive pages render their
+                                      // own SPL with local controllers so scroll
+                                      // position survives the swipe round-trip.
+                                      // ValueKey on (book|chapter) lets the
+                                      // PageView cache identify each page
+                                      // canonically across version switches /
+                                      // chapterList rebuilds.
+                                      return _ChapterPage(
+                                        key: ValueKey(
+                                            '${tgt.book}|${tgt.chapter}'),
+                                        book: tgt.book,
+                                        chapter: tgt.chapter,
+                                        isActive:
+                                            pageIdx == currentChapterPageIdx,
+                                        deviceClass: dc,
+                                      );
+                                    },
+                                  );
+                                }),
+                              ),
+                              // 2026-05-24 (v1.2.91 + v1.3.32): mini reader
+                              // header. When the auto-hide chrome is hidden,
+                              // show a tiny pair of pills at top — version on
+                              // left, book + chapter on right — so the reader
+                              // always knows their bearings. In split view the
+                              // full header is pinned visible, so the mini
+                              // stays hidden.
+                              //
+                              // v1.3.32: tap target now SCROLLS TO TOP of the
+                              // chapter AND re-shows the chrome (user-reported
+                              // "为什么top tap 不go back to top"). The combined
+                              // action is intuitive — user expects "tap top" to
+                              // return to chapter beginning, and bringing the
+                              // full header back is a natural side-effect since
+                              // they've signalled they want to navigate. Chrome
+                              // can still be toggled by tapping verse content.
+                              if (currentVerse != null &&
+                                  !widget.splitViewActive)
+                                _MiniReaderHeader(
+                                  visible: !_chromeVisible,
+                                  version: mainProvider.currentVersion,
+                                  book: currentVerse.book,
+                                  chapter: currentVerse.chapter,
+                                  locale: settings.locale,
+                                  onTap: () {
+                                    _scrollChapterToTop();
+                                    if (!_chromeVisible) _toggleChrome();
+                                  },
+                                ),
+                              // 2026-05-24 (v1.3.8 / v1.3.34): cross-platform
+                              // tap-top → scroll-to-top. iOS's system status-bar
+                              // tap only auto-wires when a Scaffold has a
+                              // primary AppBar driving a PrimaryScrollController;
+                              // our reader uses a custom Positioned _FloatingHeader
+                              // + ScrollablePositionedList (its own ItemScroll-
+                              // Controller, NOT a PrimaryScrollController), so
+                              // neither iOS nor Android get the feature for free.
+                              //
+                              // v1.3.34 fix: user reported "按了顶部没反应". Root
+                              // cause was the previous strip height of
+                              // `topInset.clamp(20, 64)` — on iPhone 16 Pro Max
+                              // / 15 Pro / 14 Pro that's ~59 px which exactly
+                              // covers the Dynamic Island. iOS reserves the
+                              // Island for system gestures (long-press = expand,
+                              // short tap = often swallowed by the system), so
+                              // taps on that zone never reach the Flutter app.
+                              //
+                              // Three changes to make tap-top reliably work:
+                              //   (1) Enlarge the strip to `topInset + 56` —
+                              //       extends down past the Dynamic Island into
+                              //       the mini-header chip row, so a tap
+                              //       anywhere in the top band (not just on the
+                              //       Island) lands on the strip.
+                              //   (2) Switch from `translucent` to `opaque` — the
+                              //       translucent variant put the strip into a
+                              //       three-way gesture arena (strip + mini-
+                              //       header + outer chrome-toggle GestureDetector
+                              //       at line ~1320) where one of the others
+                              //       could win and call _toggleChrome instead
+                              //       of _scrollChapterToTop. Opaque wins
+                              //       definitively for any tap in the strip's
+                              //       bounding box.
+                              //   (3) Combine actions: scroll-to-top + show
+                              //       chrome. Convention: "I'm at the top, here
+                              //       are the navigation controls".
+                              if (currentVerse != null)
+                                Positioned(
+                                  top: 0,
+                                  left: 0,
+                                  right: 0,
+                                  height:
+                                      MediaQuery.of(context).padding.top + 56,
+                                  // 2026-05-24 (v1.3.35): wrap the tap-strip in
+                                  // IgnorePointer that disables it when chrome
+                                  // is visible. Without this gate, the strip's
+                                  // opaque GestureDetector covered the chrome's
+                                  // top region (status-bar inset + chip row =
+                                  // topInset+56 px) and stole taps that should
+                                  // have gone to the back-arrow / version / book
+                                  // / search / home / 3-dot buttons inside
+                                  // _FloatingHeader. User report: "iOS top menu
+                                  // 里面所有menu都按不动了".
+                                  //
+                                  // When chrome is hidden the mini-header chips
+                                  // are decorative + the strip is the only thing
+                                  // in that band — it should be live so users
+                                  // can tap-top to scroll. When chrome is shown
+                                  // the FloatingHeader's buttons need first dibs
+                                  // on every tap in the top band.
+                                  child: IgnorePointer(
+                                    ignoring: _chromeVisible,
+                                    child: GestureDetector(
+                                      behavior: HitTestBehavior.opaque,
+                                      onTap: () {
+                                        _scrollChapterToTop();
+                                        if (_chromeFeatureEnabled &&
+                                            !_chromeVisible) {
+                                          _safeChromeSetState(
+                                              () => _chromeVisible = true);
+                                        }
+                                      },
                                     ),
                                   ),
                                 ),
-                                const SizedBox(height: 18),
-                                Text(
-                                  mainProvider.versionSwitchingTo
-                                          .isNotEmpty
-                                      ? '${uiStrings['loadingVersion']?[settings.locale] ?? 'Loading version'} · ${mainProvider.versionSwitchingTo}'
-                                      : (uiStrings['loadingVersion']
-                                              ?[settings.locale] ??
-                                          'Loading version…'),
-                                  style: TextStyle(
-                                    fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                                    fontSize: settings.fontSize * 0.95,
-                                    fontWeight: FontWeight.w600,
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onSurface,
+                              _FloatingHeader(
+                                // 2026-05-22 (v1.2.71): pin chrome visible in
+                                // split view. Each pane's _FloatingHeader is
+                                // Positioned(top:0) RELATIVE to its own Stack
+                                // — in top/bottom split, the bottom pane's
+                                // header sits at the middle of the screen, and
+                                // the auto-hide animation made it appear to
+                                // "jump around" near the bottom half. With
+                                // chrome pinned, both panes' headers stay
+                                // static.
+                                chromeVisible: widget.splitViewActive
+                                    ? true
+                                    : _chromeVisible,
+                                showBookInfo: currentVerse != null,
+                                book: currentVerse?.book ?? '',
+                                chapter: currentVerse?.chapter ?? 0,
+                                version: mainProvider.currentVersion,
+                                showSidebarToggle: widget.showSidebarToggle,
+                                sidebarOpen: widget.sidebarOpen,
+                                onToggleSidebar: widget.onToggleSidebar,
+                                paragraphMode: settings.paragraphMode,
+                                onToggleParagraphMode: () => settings
+                                    .setParagraphMode(!settings.paragraphMode),
+                                deviceClass: dc,
+                                onToggleSplitView: widget.onToggleSplitView,
+                                splitViewActive: widget.splitViewActive,
+                                onClose: widget.onClose,
+                                showSearchAndSettings:
+                                    widget.showSearchAndSettings,
+                                hostChrome: widget.hostChrome,
+                                onTextSize: () =>
+                                    _showFontSizeSheet(context, settings),
+                                onOpenWorkbench: widget.onOpenWorkbench,
+                                onOpenParallel: widget.onOpenParallel,
+                                chapterMaps: _chapterMaps,
+                                bookMaps: _bookMaps,
+                                chapterSermons: _chapterSermons,
+                                // The host takes it when it has a docked pane;
+                                // when nobody does, the sheet opens exactly as
+                                // before, which is what keeps the standalone
+                                // reader and every narrow layout unchanged.
+                                onChapterSermons: () => _requestAnalysis(
+                                  ReaderAnalysisRequest.sermons,
+                                  () => _showChapterSermonsSheet(
+                                    context: context,
+                                    sermons: _chapterSermons,
+                                    locale: settings.locale,
+                                    book: currentVerse?.book ?? '',
+                                    chapter: currentVerse?.chapter ?? 0,
                                   ),
                                 ),
-                              ],
-                            ),
-                          ),
-                        ),
+                                locale: settings.locale,
+                                onBookTap: isWideScreen &&
+                                        widget.showSidebarToggle
+                                    ? () {
+                                        mainProvider.clearSelectedVerses();
+                                        widget.onToggleSidebar?.call();
+                                      }
+                                    : () {
+                                        mainProvider.clearSelectedVerses();
+                                        final chapter = mainProvider
+                                                .currentVerse?.chapter ??
+                                            1;
+                                        final book =
+                                            mainProvider.currentVerse?.book ??
+                                                '';
+                                        final provider =
+                                            context.read<MainProvider>();
+                                        pushPage(
+                                            BooksPage(
+                                              chapterIdx: chapter,
+                                              bookIdx: book,
+                                              providerOverride: provider,
+                                            ),
+                                            reverse: true);
+                                      },
+                                onVersionSelected: (version) async {
+                                  // 2026-05-10 (v1.2.13): rewritten end-to-end
+                                  // per user feedback "整本圣经 change version
+                                  // loading 很久，不用 keepnstate 了，快一点".
+                                  //
+                                  // OLD flow had two problems:
+                                  //   1. The snackbar showed "Loading…" but the
+                                  //      reading pane kept rendering the OLD
+                                  //      version's verses, frozen, for the
+                                  //      1–3 s of synchronous json.decode. To
+                                  //      the user: "screen looks broken for a
+                                  //      bit, then suddenly switches".
+                                  //   2. We tried to preserve the user's
+                                  //      chapter-relative verse number across
+                                  //      the switch (`_captureChapterRelative
+                                  //      VerseNum` + `_scrollToVerseInChapter`)
+                                  //      which adds layout-measurement work
+                                  //      AND complexity for marginal benefit
+                                  //      — the user said outright "不用 keep
+                                  //      state 了".
+                                  //
+                                  // NEW flow:
+                                  //   • Set `versionSwitching = true` IMMED-
+                                  //     IATELY → the reading pane stack paints
+                                  //     an opaque overlay over the old verses
+                                  //     (see build() below). User sees a clean
+                                  //     loading screen, not frozen text.
+                                  //   • Skip _captureChapterRelativeVerseNum.
+                                  //   • Skip _scrollToVerseInChapter — the
+                                  //     chapter-level reset (jumpToTop after
+                                  //     setCurrentChapter) lands the user at
+                                  //     the top of the same chapter in the
+                                  //     new version. Same passage, just no
+                                  //     verse-precise scroll restore.
+                                  //   • Clear flag at the end so overlay goes
+                                  //     away.
+                                  if (!mounted) return;
+                                  final p = context.read<MainProvider>();
+                                  final messenger = _messengerKey.currentState;
+                                  p.clearSelectedVerses();
+                                  final prevVersion = p.currentVersion;
+                                  final prevEn = toEnglish(p.currentBook);
+                                  // 2026-05-10 (v1.2.14): instant-switch path.
+                                  // If we already have this version's parsed
+                                  // verses in MainProvider's per-version LRU
+                                  // cache (populated whenever setVerses fires
+                                  // with a non-empty list), skip the entire
+                                  // json.decode + FetchVerses pipeline and
+                                  // just swap the verse list in. No overlay,
+                                  // no spinner, no yield, ~0 ms wall-clock.
+                                  // This is what makes "back to a previously-
+                                  // visited version" truly "一瞬间" (instant)
+                                  // — the user's expected behaviour that
+                                  // v1.2.13's overlay made feel slower than
+                                  // it should.
+                                  if (p.useCachedVersion(version)) {
+                                    // Books are derived from verses; rebuild
+                                    // them (pure in-memory, fast). No overlay
+                                    // because this whole branch should be
+                                    // imperceptible.
+                                    await FetchBooks.execute(mainProvider: p);
+                                    if (!mounted) return;
+                                    final targetBook = prevEn == null
+                                        ? null
+                                        : translateBookName(prevEn, version);
+                                    final targetChapter = p.currentChapter;
+                                    final match = p.verses.firstWhere(
+                                      (v) =>
+                                          (targetBook == null ||
+                                              v.book == targetBook) &&
+                                          (targetChapter == null ||
+                                              v.chapter == targetChapter),
+                                      orElse: () => p.verses.first,
+                                    );
+                                    p.setCurrentChapter(
+                                        book: match.book,
+                                        chapter: match.chapter);
+                                    p.updateCurrentVerse(verse: match);
+                                    p.jumpToTop();
+                                    if (mounted) {
+                                      _visibleItemIndexNotifier.value = 0;
+                                    }
+                                    // Canon may have resized (e.g. LJK NT-only →
+                                    // full): force the PageView onto the new
+                                    // chapter so it doesn't stay on a stale page.
+                                    _reanchorPageForVersionSwitch(p);
+                                    return;
+                                  }
+                                  // Slow path (cache miss): show overlay then
+                                  // run the full parse pipeline.
+                                  // Lookup the target version's short label so
+                                  // the overlay can show "Loading KJV…" instead
+                                  // of the generic "Loading version…".
+                                  final destLabel = bibleVersions
+                                      .firstWhere(
+                                        (v) => v.value == version,
+                                        orElse: () => const BibleVersionInfo(
+                                            value: '',
+                                            shortLabel: '',
+                                            menuLabel: '',
+                                            language: 'zh-Hans'),
+                                      )
+                                      .shortLabel;
+                                  p.setVersionSwitching(true, to: destLabel);
+                                  // Yield once so the overlay actually paints
+                                  // before we kick off the heavy json.decode
+                                  // that blocks the main thread for 1–3 s.
+                                  await Future<void>.delayed(Duration.zero);
+                                  try {
+                                    p.setVersion(version);
+                                    await FetchVerses.execute(mainProvider: p);
+                                    if (!mounted) return;
+                                    await FetchBooks.execute(mainProvider: p);
+                                    if (!mounted) return;
+                                    // Failure-recovery: revert to previous
+                                    // version so the user keeps reading what
+                                    // they had instead of getting an empty
+                                    // shell.
+                                    if (p.verses.isEmpty &&
+                                        prevVersion.isNotEmpty) {
+                                      p.setVersion(prevVersion);
+                                      await FetchVerses.execute(
+                                          mainProvider: p);
+                                      await FetchBooks.execute(mainProvider: p);
+                                    }
+                                    if (p.verses.isEmpty) {
+                                      messenger?.showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            uiStrings['loadErrorBody']
+                                                    ?[settings.locale] ??
+                                                'Could not load verses. Please retry.',
+                                          ),
+                                          duration: const Duration(seconds: 3),
+                                        ),
+                                      );
+                                      return;
+                                    }
+                                    // Land on the same chapter in the new
+                                    // version (book name translated, chapter
+                                    // number reused). Top-of-chapter scroll —
+                                    // no verse-precise restore.
+                                    final targetBook = prevEn == null
+                                        ? null
+                                        : translateBookName(prevEn, version);
+                                    final targetChapter = p.currentChapter;
+                                    final match = p.verses.firstWhere(
+                                      (v) =>
+                                          (targetBook == null ||
+                                              v.book == targetBook) &&
+                                          (targetChapter == null ||
+                                              v.chapter == targetChapter),
+                                      orElse: () => p.verses.first,
+                                    );
+                                    p.setCurrentChapter(
+                                        book: match.book,
+                                        chapter: match.chapter);
+                                    p.updateCurrentVerse(verse: match);
+                                    p.jumpToTop();
+                                    if (mounted) {
+                                      _visibleItemIndexNotifier.value = 0;
+                                    }
+                                    // Canon may have resized (e.g. LJK NT-only →
+                                    // full): force the PageView onto the new
+                                    // chapter so it doesn't stay on a stale page.
+                                    _reanchorPageForVersionSwitch(p);
+                                  } finally {
+                                    // Always clear the flag so the overlay
+                                    // disappears even on error.
+                                    if (mounted) {
+                                      p.setVersionSwitching(false);
+                                    }
+                                  }
+                                },
+                                onSearch: () {
+                                  mainProvider.clearSelectedVerses();
+                                  _openSearch();
+                                },
+                                onSettings: () {
+                                  mainProvider.clearSelectedVerses();
+                                  pushPage(SettingsPage());
+                                },
+                                highlightCount: mainProvider.highlights.length,
+                                // The dedicated Highlights page (Round 34)
+                                // gives a richer experience than the modal
+                                // sheet — search, color filters, copy-all —
+                                // so the floating-header entry now opens it.
+                                // The modal HighlightsSheet remains for the
+                                // long-press color-picker context only.
+                                onHighlights: () =>
+                                    pushPage(const HighlightsPage()),
+                                // Reload — re-runs FetchVerses+FetchBooks on the
+                                // current version. User asked for this so they
+                                // don't have to relaunch the app when verses
+                                // fail to load mid-session.
+                                onReload: _reloadVerses,
+                                // 2026-05-24 (v1.3.19): TTS feature removed —
+                                // no more `onToggleListen` / `isListening` wiring.
+                                // 2026-05-21 (v1.2.69): TodayReadingCard removed
+                                // along with the rest of the reading-plan feature.
+                                belowHeader: null,
+                              ),
+                              // Vertical position indicator on the right edge — a
+                              // thin track + a small "current/total" pill that
+                              // slides top-to-bottom as the user reads, then
+                              // auto-fades after 2 s of inactivity. Kept visible
+                              // during verse selection too — hiding it here was
+                              // bundled onto the same `isSelected` check the
+                              // bottom-bar swap needed, not a deliberate choice.
+                              // Extra bottom clearance while selected: on narrow
+                              // phones _SelectionActionBar wraps to two rows
+                              // (taller than the single-row chrome bar it
+                              // replaces), so the pill needs more room to clear it.
+                              if (verses.isNotEmpty)
+                                Positioned(
+                                  right:
+                                      ResponsiveBreakpoints.headerInset(dc) + 4,
+                                  top: MediaQuery.of(context).padding.top +
+                                      64 * settings.menuScale +
+                                      24,
+                                  bottom:
+                                      MediaQuery.of(context).padding.bottom +
+                                          (isSelected ? 100 : 56),
+                                  child: IgnorePointer(
+                                    // v1.3.16: nested ValueListenableBuilders so
+                                    // scroll-tick updates only rebuild THIS
+                                    // subtree (the right-edge position pill),
+                                    // not the whole pane. Outer listens to the
+                                    // visible-item index → derives chapter
+                                    // progress + label. Inner listens to the
+                                    // show-position bool → drives AnimatedOpacity.
+                                    child: ValueListenableBuilder<double>(
+                                        valueListenable:
+                                            _visibleItemPosNotifier,
+                                        builder: (context, itemPos, _) =>
+                                            ValueListenableBuilder<double>(
+                                              valueListenable:
+                                                  _chapterProgressNotifier,
+                                              builder: (context,
+                                                  chapterProgress, _) {
+                                                // 2026-06-28 (v1.3.110): BAR + NUMBER decoupled.
+                                                //  • BAR = PIXEL-proportional scroll fraction,
+                                                //    precomputed in _handleItemPositionsChanged
+                                                //    from measured item heights → even with the
+                                                //    page length in paragraph AND verse mode,
+                                                //    0% at top, 100% at the bottom, no jump.
+                                                //  • NUMBER = the verse at the TOP of the screen.
+                                                // Keep the active chapter's item count fresh for
+                                                // the pixel estimator (header + groups + footer).
+                                                _progressItemCount =
+                                                    paragraphGroups.length + 2;
+                                                final displayVerseIndex =
+                                                    paragraphCurrentVerseIndex(
+                                                  itemPos: itemPos,
+                                                  itemToVerseIndex:
+                                                      itemToVerseIndex,
+                                                  groupCount:
+                                                      paragraphGroups.length,
+                                                  totalVerses: verses.length,
+                                                );
+                                                return ValueListenableBuilder<
+                                                    bool>(
+                                                  valueListenable:
+                                                      _showVersePositionNotifier,
+                                                  builder:
+                                                      (context, showPos, _) =>
+                                                          AnimatedOpacity(
+                                                    opacity:
+                                                        showPos ? 1.0 : 0.0,
+                                                    duration: const Duration(
+                                                        milliseconds: 400),
+                                                    child:
+                                                        _VerticalProgressIndicator(
+                                                      progress: chapterProgress,
+                                                      currentLabel:
+                                                          '${displayVerseIndex + 1}',
+                                                      totalLabel:
+                                                          '${verses.length}',
+                                                      fontFamily:
+                                                          settings.fontFamily,
+                                                      menuScale:
+                                                          settings.menuScale,
+                                                    ),
+                                                  ),
+                                                );
+                                              },
+                                            )),
+                                  ),
+                                ),
+                              // 2026-05-21 (v1.2.70 hotfix): bottom bar hidden in
+                              // split-view to avoid the grey-screen layout glitch
+                              // when two Positioned(left:0,right:0) bars co-exist
+                              // inside narrow SizedBox-constrained panes. The
+                              // primary pane's top header still works for nav;
+                              // we'll restore the bottom bar in split view once
+                              // the layout interaction is understood.
+                              // 2026-08-24 (#313): and absent entirely when the
+                              // host draws the chrome. Every button on it has a
+                              // home there — the arrows in the workspace toolbar,
+                              // Notes in the Analysis pane's own tab,
+                              // Illustrations / text size / paragraph mode in this
+                              // column's ⋮ — so what is left here is a bar laid
+                              // over the verse the reader is studying.
+                              if (_chromeFeatureEnabled &&
+                                  !widget.hostChrome &&
+                                  !isSelected &&
+                                  !widget.splitViewActive &&
+                                  verses.isNotEmpty)
+                                _BibleReaderBottomBar(
+                                  visible: _chromeVisible,
+                                  deviceClass: dc,
+                                  locale: settings.locale,
+                                  onPrevChapter: _goToPreviousChapter,
+                                  onNextChapter: _goToNextChapter,
+                                  onOpenNotes: () {
+                                    mainProvider.clearSelectedVerses();
+                                    pushPage(const LibraryPage());
+                                  },
+                                  onOpenIllustrations: (_chapterMaps.isEmpty &&
+                                          _bookMaps.isEmpty)
+                                      ? null
+                                      : () => _showMapPicker(
+                                            context,
+                                            chapterMaps: _chapterMaps,
+                                            bookMaps: _bookMaps,
+                                            locale: settings.locale,
+                                          ),
+                                  onFontSize: () =>
+                                      _showFontSizeSheet(context, settings),
+                                  paragraphMode: settings.paragraphMode,
+                                  onToggleParagraphMode: () =>
+                                      settings.setParagraphMode(
+                                          !settings.paragraphMode),
+                                ),
+                              // Bottom bar — selection actions only. (v1.2.69:
+                              // the always-visible reader-progress bar was
+                              // removed; chapter progress is still visible via
+                              // the right-edge pill that fades in while scrolling.)
+                              //
+                              // 2026-05-24 (v1.2.91): switched from
+                              // Align(bottomCenter) → Positioned(bottom/left/
+                              // right: 0) so the bar is anchored to the screen
+                              // edge edge-to-edge instead of floating with
+                              // horizontal margins. Matches the always-visible
+                              // bottom chrome bar's shape — feels like a real
+                              // bottom menu rather than an overlay card.
+                              if (isSelected)
+                                Positioned(
+                                  bottom: 0,
+                                  left: 0,
+                                  right: 0,
+                                  child: _SelectionActionBar(
+                                    selectedCount:
+                                        mainProvider.selectedVerses.length,
+                                    anyHighlighted: mainProvider.selectedVerses
+                                        .any((v) =>
+                                            mainProvider.isVerseHighlighted(v)),
+                                    deviceClass: dc,
+                                    onCopy: () => _copySelectedVerses(
+                                      mainProvider: mainProvider,
+                                      settings: settings,
+                                    ),
+                                    onShare: () => _shareSelectedVerses(
+                                      context: context,
+                                      mainProvider: mainProvider,
+                                      settings: settings,
+                                    ),
+                                    onClear: mainProvider.clearSelectedVerses,
+                                    onHighlight: (color) {
+                                      mainProvider.setHighlightsForVerses(
+                                        verses: mainProvider.selectedVerses,
+                                        color: color,
+                                      );
+                                      mainProvider.clearSelectedVerses();
+                                    },
+                                    onRemoveHighlight: () {
+                                      mainProvider.removeHighlightsForVerses(
+                                        verses: mainProvider.selectedVerses,
+                                      );
+                                      mainProvider.clearSelectedVerses();
+                                    },
+                                    // Every one of these five is offered to the
+                                    // host first. Four have a docked pane and
+                                    // one does not, and routing all five
+                                    // through the same door is what makes that
+                                    // a recorded decision rather than an
+                                    // accident — see `analysisTabForRequest`.
+                                    activeRequest: widget.activeAnalysisRequest,
+                                    onOriginal: () => _requestAnalysis(
+                                      ReaderAnalysisRequest.originals,
+                                      () => _showOriginalsSheet(
+                                        context: context,
+                                        verses: mainProvider.selectedVerses,
+                                        locale: settings.locale,
+                                      ),
+                                    ),
+                                    onCrossRefs: () => _requestAnalysis(
+                                      ReaderAnalysisRequest.crossRefs,
+                                      () => _showCrossRefsSheet(
+                                        context: context,
+                                        verses: mainProvider.selectedVerses,
+                                        locale: settings.locale,
+                                        mainProvider: mainProvider,
+                                      ),
+                                    ),
+                                    onSermons: () => _requestAnalysis(
+                                      ReaderAnalysisRequest.sermons,
+                                      () => _showRelatedSermonsSheet(
+                                        context: context,
+                                        verses: mainProvider.selectedVerses,
+                                        locale: settings.locale,
+                                        currentVersion:
+                                            mainProvider.currentVersion,
+                                      ),
+                                    ),
+                                    anyNoted: mainProvider.selectedVerses
+                                        .any(mainProvider.isVerseNoted),
+                                    anyBookmarked: mainProvider.selectedVerses
+                                        .any(mainProvider.isBookmarked),
+                                    // 2026-05-19 (v1.2.60): pass the FULL
+                                    // selection list (sorted by chapter +
+                                    // verse) instead of just the first verse.
+                                    // Multi-verse notes share text across the
+                                    // whole range — WeDevote-style. Single
+                                    // selection still works the same way; the
+                                    // editor handles both cases uniformly.
+                                    // 2026-08-18: offered to the host like the
+                                    // four above it. Where there is a docked
+                                    // Notes tab (bwh15) the note opens beside
+                                    // the verse instead of over it; where
+                                    // there is not — a phone, the standalone
+                                    // reader — this is the same modal it has
+                                    // always been, and the write path is the
+                                    // same store either way.
+                                    onNote: () => _requestAnalysis(
+                                      ReaderAnalysisRequest.notes,
+                                      () => showNoteEditor(
+                                        context: context,
+                                        verses: mainProvider.selectedVerses
+                                            .toList()
+                                          ..sort((a, b) {
+                                            if (a.chapter != b.chapter) {
+                                              return a.chapter
+                                                  .compareTo(b.chapter);
+                                            }
+                                            return a.verse.compareTo(b.verse);
+                                          }),
+                                        locale: settings.locale,
+                                        mainProvider: mainProvider,
+                                      ),
+                                    ),
+                                    onBookmark: () {
+                                      final selected =
+                                          mainProvider.selectedVerses.toList();
+                                      final allBookmarked = selected
+                                          .every(mainProvider.isBookmarked);
+                                      for (final v in selected) {
+                                        if (allBookmarked) {
+                                          if (mainProvider.isBookmarked(v)) {
+                                            mainProvider.toggleBookmark(
+                                                verse: v);
+                                          }
+                                        } else {
+                                          if (!mainProvider.isBookmarked(v)) {
+                                            mainProvider.toggleBookmark(
+                                                verse: v);
+                                          }
+                                        }
+                                      }
+                                      mainProvider.clearSelectedVerses();
+                                    },
+                                  ),
+                                ),
+                              // 2026-05-24 (v1.2.91 / v1.3.34 / v1.3.35): iOS-style
+                              // tap-top to scroll-to-top, this time inside the
+                              // verse-select toolbar overlay. v1.3.34 fix
+                              // mirrors the main reader strip above
+                              // (line ~1657): enlarged from
+                              // `topInset.clamp(20, 80)` to `topInset + 56` so
+                              // taps below the Dynamic Island (where iOS
+                              // actually forwards them to the app) still hit
+                              // the strip. v1.3.35: gated by IgnorePointer so
+                              // it doesn't steal taps from the FloatingHeader
+                              // buttons when chrome is visible.
+                              Positioned(
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                height: MediaQuery.of(context).padding.top + 56,
+                                child: IgnorePointer(
+                                  ignoring: _chromeVisible,
+                                  child: GestureDetector(
+                                    behavior: HitTestBehavior.opaque,
+                                    onTap: () {
+                                      if (!mainProvider.canScrollList) return;
+                                      mainProvider.itemScrollController
+                                          .scrollTo(
+                                        index: 0,
+                                        duration:
+                                            const Duration(milliseconds: 350),
+                                        curve: Curves.easeOut,
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ),
+                              // 2026-05-10 (v1.2.13): version-switch loading
+                              // overlay. Painted on top of everything in the
+                              // Stack while `MainProvider.versionSwitching`
+                              // is true. Opaque background so the user
+                              // doesn't see the OLD version's verses frozen
+                              // for the 1–3 s of synchronous json.decode
+                              // chewing through the new version's 5–10 MB
+                              // JSON. Background uses scaffold colour so
+                              // it blends with the surrounding chrome and
+                              // looks like an intentional loading state,
+                              // not a glitch.
+                              if (mainProvider.versionSwitching)
+                                Positioned.fill(
+                                  child: Material(
+                                    color:
+                                        Theme.of(context).colorScheme.surface,
+                                    child: Center(
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          SizedBox(
+                                            width: 32,
+                                            height: 32,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 3,
+                                              valueColor:
+                                                  AlwaysStoppedAnimation<Color>(
+                                                Theme.of(context)
+                                                    .colorScheme
+                                                    .primary,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 18),
+                                          Text(
+                                            mainProvider.versionSwitchingTo
+                                                    .isNotEmpty
+                                                ? '${uiStrings['loadingVersion']?[settings.locale] ?? 'Loading version'} · ${mainProvider.versionSwitchingTo}'
+                                                : (uiStrings['loadingVersion']
+                                                        ?[settings.locale] ??
+                                                    'Loading version…'),
+                                            style: TextStyle(
+                                              fontFamily: settings.fontFamily,
+                                              fontFamilyFallback:
+                                                  kCjkFontFallback,
+                                              fontSize:
+                                                  settings.fontSize * 0.95,
+                                              fontWeight: FontWeight.w600,
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurface,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          );
+                        },
                       ),
-                  ],
-                );
-                  },
-                ),
-              ),
+                    ),
                   ),
                 ),
               ),
@@ -2700,8 +2739,7 @@ class _VerticalProgressIndicator extends StatelessWidget {
               top: pillTop,
               child: Container(
                 height: pillHeight,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   // 2026-08-09 (#279): opaque, not 0.86/0.92. The drop
@@ -2809,9 +2847,8 @@ class _GlassSurface extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: fillColor,
-        border: anchoredToBottom
-            ? Border(top: hairline)
-            : Border(bottom: hairline),
+        border:
+            anchoredToBottom ? Border(top: hairline) : Border(bottom: hairline),
       ),
       child: child,
     );
@@ -2829,14 +2866,13 @@ class _SelectionActionBar extends StatelessWidget {
   final VoidCallback onOriginal;
   final VoidCallback onCrossRefs;
   final VoidCallback onSermons;
-  /// v1.3.x: AI plain-language explanation of the selected verse(s),
-  /// in the user's locale.
-  final VoidCallback onAiExplain;
   final VoidCallback onNote;
   final VoidCallback onBookmark;
+
   /// True when at least one of the currently-selected verses is
   /// already bookmarked — so the star icon can render filled.
   final bool anyBookmarked;
+
   /// True when at least one of the currently-selected verses already
   /// has a note attached — so the note icon can render filled.
   final bool anyNoted;
@@ -2859,7 +2895,6 @@ class _SelectionActionBar extends StatelessWidget {
     required this.onOriginal,
     required this.onCrossRefs,
     required this.onSermons,
-    required this.onAiExplain,
     required this.onNote,
     required this.onBookmark,
     required this.anyBookmarked,
@@ -2892,7 +2927,8 @@ class _SelectionActionBar extends StatelessWidget {
               Text(
                 uiStrings['highlightColor']?[locale] ?? 'Highlight color',
                 style: TextStyle(
-                    fontSize: sheetCtx.chromeSize(16), fontWeight: FontWeight.w600),
+                    fontSize: sheetCtx.chromeSize(16),
+                    fontWeight: FontWeight.w600),
               ),
               SizedBox(height: 16 * ms),
               Row(
@@ -2930,8 +2966,7 @@ class _SelectionActionBar extends StatelessWidget {
                   },
                   icon: Icon(Icons.highlight_remove, size: 20 * ms),
                   label: Text(
-                    uiStrings['removeHighlight']?[locale] ??
-                        'Remove highlight',
+                    uiStrings['removeHighlight']?[locale] ?? 'Remove highlight',
                   ),
                 ),
               ],
@@ -2949,9 +2984,7 @@ class _SelectionActionBar extends StatelessWidget {
     final label =
         (uiStrings['selectedVerses']?[settings.locale] ?? '{count} selected')
             .replaceAll('{count}', '$selectedCount');
-    final fontSize =
-        context.chromeSize(18)
-            .toDouble();
+    final fontSize = context.chromeSize(18).toDouble();
     final inset = ResponsiveBreakpoints.headerInset(deviceClass);
 
     // 2026-08-11 (#313): when the host answers one of these in a docked
@@ -2969,12 +3002,10 @@ class _SelectionActionBar extends StatelessWidget {
     // Cross-refs → Note → Bookmark → Highlight.
     final actionButtons = <Widget>[
       IconButton(
-        tooltip:
-            uiStrings['originalText']?[settings.locale] ?? 'Original',
+        tooltip: uiStrings['originalText']?[settings.locale] ?? 'Original',
         onPressed: onOriginal,
-        icon: Icon(originalsActive
-            ? Icons.auto_stories
-            : Icons.auto_stories_outlined),
+        icon: Icon(
+            originalsActive ? Icons.auto_stories : Icons.auto_stories_outlined),
         color: originalsActive ? scheme.primary : null,
         // 2026-05-24 (v1.2.94): was VisualDensity.compact (~40 px)
         // which violates Apple HIG's 44 pt minimum. Standard density
@@ -2983,8 +3014,7 @@ class _SelectionActionBar extends StatelessWidget {
         visualDensity: VisualDensity.standard,
       ),
       IconButton(
-        tooltip: uiStrings['crossRefs']?[settings.locale] ??
-            'Cross-references',
+        tooltip: uiStrings['crossRefs']?[settings.locale] ?? 'Cross-references',
         onPressed: onCrossRefs,
         icon: Icon(crossRefsActive ? Icons.hub : Icons.hub_outlined),
         color: crossRefsActive ? scheme.primary : null,
@@ -2995,8 +3025,8 @@ class _SelectionActionBar extends StatelessWidget {
         visualDensity: VisualDensity.standard,
       ),
       IconButton(
-        tooltip: uiStrings['relatedSermons']?[settings.locale] ??
-            'Related sermons',
+        tooltip:
+            uiStrings['relatedSermons']?[settings.locale] ?? 'Related sermons',
         onPressed: onSermons,
         icon: const Icon(Icons.menu_book_outlined),
         // 2026-05-24 (v1.2.94): was VisualDensity.compact (~40 px)
@@ -3005,20 +3035,11 @@ class _SelectionActionBar extends StatelessWidget {
         // tappable on phones.
         visualDensity: VisualDensity.standard,
       ),
-      // v1.3.x: AI plain-language explanation of the selection.
-      IconButton(
-        tooltip:
-            uiStrings['aiExplainVerse']?[settings.locale] ?? 'AI explain',
-        onPressed: onAiExplain,
-        icon: const Icon(Icons.auto_awesome),
-        visualDensity: VisualDensity.standard,
-      ),
       IconButton(
         tooltip: uiStrings['noteAdd']?[settings.locale] ?? 'Note',
         onPressed: onNote,
-        icon: Icon(anyNoted
-            ? Icons.sticky_note_2
-            : Icons.sticky_note_2_outlined),
+        icon:
+            Icon(anyNoted ? Icons.sticky_note_2 : Icons.sticky_note_2_outlined),
         color: anyNoted ? scheme.primary : null,
         // 2026-05-24 (v1.2.94): was VisualDensity.compact (~40 px)
         // which violates Apple HIG's 44 pt minimum. Standard density
@@ -3040,8 +3061,7 @@ class _SelectionActionBar extends StatelessWidget {
         visualDensity: VisualDensity.standard,
       ),
       IconButton(
-        tooltip:
-            uiStrings['highlight']?[settings.locale] ?? 'Highlight',
+        tooltip: uiStrings['highlight']?[settings.locale] ?? 'Highlight',
         onPressed: () => _showColorPicker(context),
         icon: const Icon(Icons.format_color_fill),
         // 2026-05-24 (v1.2.94): was VisualDensity.compact (~40 px)
@@ -3062,7 +3082,8 @@ class _SelectionActionBar extends StatelessWidget {
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
       style: TextStyle(
-        fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
+        fontFamily: settings.fontFamily,
+        fontFamilyFallback: kCjkFontFallback,
         fontSize: fontSize,
         fontWeight: FontWeight.w700,
         color: scheme.onSurface,
@@ -3108,65 +3129,65 @@ class _SelectionActionBar extends StatelessWidget {
             6 * settings.menuScale,
           ),
           child: LayoutBuilder(
-              builder: (ctx, constraints) {
-                // On narrow screens (phones, ~360–600 dp wide) split
-                // the bar into two rows so nothing collides:
-                //   [Clear] [count] [Copy]
-                //   [Original Cross-ref Note Bookmark Highlight]
-                // On wider screens keep everything on one row.
-                final isNarrow = constraints.maxWidth < 560;
-                if (isNarrow) {
-                  return Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Row(
-                        children: [
-                          clearBtn,
-                          Expanded(child: countLabel),
-                          shareBtn,
-                          const SizedBox(width: 4),
-                          Flexible(child: copyBtn),
-                        ],
-                      ),
-                      const SizedBox(height: 2),
-                      // v1.3.x: the action row grew to 7 icons (added
-                      // AI explain). 7 × 48 px standard-density buttons
-                      // overflow a ~320–340 dp phone, so make the row
-                      // horizontally scrollable — it stays centered when
-                      // everything fits and scrolls only when it can't.
-                      // (spaceEvenly needs a bounded width, incompatible
-                      // with a scroll view, so we center a min-width Row.)
-                      SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        physics: const ClampingScrollPhysics(),
-                        child: ConstrainedBox(
-                          constraints:
-                              BoxConstraints(minWidth: constraints.maxWidth),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            mainAxisSize: MainAxisSize.min,
-                            children: actionButtons,
-                          ),
+            builder: (ctx, constraints) {
+              // On narrow screens (phones, ~360–600 dp wide) split
+              // the bar into two rows so nothing collides:
+              //   [Clear] [count] [Copy]
+              //   [Original Cross-ref Note Bookmark Highlight]
+              // On wider screens keep everything on one row.
+              final isNarrow = constraints.maxWidth < 560;
+              if (isNarrow) {
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      children: [
+                        clearBtn,
+                        Expanded(child: countLabel),
+                        shareBtn,
+                        const SizedBox(width: 4),
+                        Flexible(child: copyBtn),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    // v1.3.x: the action row grew to 7 icons (added
+                    // AI explain). 7 × 48 px standard-density buttons
+                    // overflow a ~320–340 dp phone, so make the row
+                    // horizontally scrollable — it stays centered when
+                    // everything fits and scrolls only when it can't.
+                    // (spaceEvenly needs a bounded width, incompatible
+                    // with a scroll view, so we center a min-width Row.)
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      physics: const ClampingScrollPhysics(),
+                      child: ConstrainedBox(
+                        constraints:
+                            BoxConstraints(minWidth: constraints.maxWidth),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          mainAxisSize: MainAxisSize.min,
+                          children: actionButtons,
                         ),
                       ),
-                    ],
-                  );
-                }
-                return Row(
-                  children: [
-                    clearBtn,
-                    Expanded(child: countLabel),
-                    ...actionButtons,
-                    shareBtn,
-                    const SizedBox(width: 4),
-                    Flexible(child: copyBtn),
+                    ),
                   ],
                 );
-              },
-            ),
+              }
+              return Row(
+                children: [
+                  clearBtn,
+                  Expanded(child: countLabel),
+                  ...actionButtons,
+                  shareBtn,
+                  const SizedBox(width: 4),
+                  Flexible(child: copyBtn),
+                ],
+              );
+            },
           ),
         ),
-      );
+      ),
+    );
   }
 }
 
@@ -3226,724 +3247,6 @@ void _showOriginalsSheet({
     shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
     builder: buildSheet,
   );
-}
-
-/// v1.3.x: AI plain-language explanation of the selected verse(s).
-/// Gathers the selection's reference + text, then opens a bottom sheet
-/// that calls the Gemini-backed `aiExplainWord` function in
-/// `task: 'versePlain'` mode and renders the answer in the user's
-/// locale. Reuses the same BYOK key + model tier as the word study.
-void _showAiExplainSheet({
-  required BuildContext context,
-  required List<Verse> verses,
-  required AppSettings settings,
-  required MainProvider mainProvider,
-}) {
-  if (verses.isEmpty) return;
-  // selectedVerses is already sorted by chapter+verse (see the note at
-  // the _SelectionActionBar call site).
-  final first = verses.first;
-  final last = verses.last;
-  final englishBook = bookNameToEnglish[first.book] ?? first.book;
-  final verseStart = first.verse;
-  final verseEnd = last.verse;
-  // Combine the selected verse text with verse labels so the model
-  // sees exactly what the reader is looking at.
-  final buf = StringBuffer();
-  for (final v in verses) {
-    if (buf.isNotEmpty) buf.write(' ');
-    buf.write('${v.verseLabel} ${v.text}');
-  }
-  var verseText = buf.toString().trim();
-  if (verseText.length > 3500) verseText = '${verseText.substring(0, 3500)}…';
-  final refLabel = verseEnd > verseStart
-      ? '${first.book} ${first.chapter}:$verseStart-$verseEnd'
-      : '${first.book} ${first.chapter}:$verseStart';
-
-  showModalBottomSheet<void>(
-    context: context,
-    isScrollControlled: true,
-    backgroundColor: Theme.of(context).colorScheme.surface,
-    constraints: const BoxConstraints(maxWidth: 1100),
-    // Square: a sheet is a window edge here, not a card.
-    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-    builder: (sheetCtx) => _AiExplainSheet(
-      englishBook: englishBook,
-      chapter: first.chapter,
-      verseStart: verseStart,
-      verseEnd: verseEnd,
-      verseText: verseText,
-      refLabel: refLabel,
-      settings: settings,
-      verses: verses,
-      mainProvider: mainProvider,
-    ),
-  );
-}
-
-/// Bottom-sheet body for the AI verse explanation. Fires the request
-/// on mount; shows a spinner, then the prose (or an error + retry).
-class _AiExplainSheet extends StatefulWidget {
-  const _AiExplainSheet({
-    required this.englishBook,
-    required this.chapter,
-    required this.verseStart,
-    required this.verseEnd,
-    required this.verseText,
-    required this.refLabel,
-    required this.settings,
-    required this.verses,
-    required this.mainProvider,
-  });
-
-  final String englishBook;
-  final int chapter;
-  final int verseStart;
-  final int verseEnd;
-  final String verseText;
-  final String refLabel;
-  final AppSettings settings;
-  // v1.3.73: the selected verses + provider, so an answer can be saved
-  // into the passage's note via showNoteEditor.
-  final List<Verse> verses;
-  final MainProvider mainProvider;
-
-  @override
-  State<_AiExplainSheet> createState() => _AiExplainSheetState();
-}
-
-/// v1.3.73: one turn in the AI study conversation. The opening turn has
-/// a null [question] (the passage explanation); later turns carry the
-/// reader's follow-up question.
-class _AiTurn {
-  _AiTurn({this.question});
-  final String? question;
-  String length = 'concise'; // 'concise' | 'default' | 'longer'
-  String? answer;
-  String? error;
-  bool loading = true;
-  String selectedText = ''; // live text selection within the answer
-}
-
-class _AiExplainSheetState extends State<_AiExplainSheet> {
-  // v1.3.73: the panel is now a multi-turn study chat. Generation only
-  // runs on user confirm (never on open); the input clears on success and
-  // is restored only on failure; each answer can be regenerated shorter /
-  // longer and saved (whole or just the selection) into the passage note.
-  final List<_AiTurn> _turns = [];
-  final TextEditingController _questionController = TextEditingController();
-  final FocusNode _questionFocus = FocusNode();
-  final ScrollController _bodyScroll = ScrollController();
-
-  String get _loc => widget.settings.locale;
-  bool get _busy => _turns.any((t) => t.loading);
-
-  @override
-  void dispose() {
-    _questionController.dispose();
-    _questionFocus.dispose();
-    _bodyScroll.dispose();
-    super.dispose();
-  }
-
-  Future<AiWordResult> _request(
-      {String? question, required String length, String? history}) {
-    final key = widget.settings.geminiApiKey.trim();
-    return AiWordService.explainVerse(
-      englishBook: widget.englishBook,
-      chapter: widget.chapter,
-      verseStart: widget.verseStart,
-      verseEnd: widget.verseEnd,
-      verseText: widget.verseText,
-      locale: widget.settings.locale,
-      length: length,
-      userApiKey: key.isEmpty ? null : key,
-      aiModel: widget.settings.aiModel,
-      userQuestion: question,
-      history: history,
-    );
-  }
-
-  // Compact transcript of completed turns before [upto], for follow-up
-  // coherence. Tail-clamped so a long thread can't blow the prompt.
-  String _historyBefore(int upto) {
-    final buf = StringBuffer();
-    for (var i = 0; i < upto && i < _turns.length; i++) {
-      final t = _turns[i];
-      final a = t.answer;
-      if (a == null || a.isEmpty) continue;
-      if (t.question != null && t.question!.isNotEmpty) {
-        buf
-          ..writeln('Q: ${t.question}')
-          ..writeln('A: $a');
-      } else {
-        buf.writeln('Explanation: $a');
-      }
-    }
-    var s = buf.toString().trim();
-    const maxChars = 1800;
-    if (s.length > maxChars) s = s.substring(s.length - maxChars);
-    return s;
-  }
-
-  // Submit the input box. Empty ⇒ opening passage explanation (only when
-  // there are no turns yet); otherwise a follow-up question.
-  Future<void> _submit() async {
-    if (_busy) return;
-    final q = _questionController.text.trim();
-    if (q.isEmpty && _turns.isNotEmpty) return; // need a question to follow up
-    _questionFocus.unfocus();
-    _questionController.clear(); // restored only if this turn fails
-    final turn = _AiTurn(question: q.isEmpty ? null : q);
-    setState(() => _turns.add(turn));
-    _scrollBodyToEnd();
-    await _runTurn(turn, restoreOnFail: q);
-  }
-
-  Future<void> _runTurn(_AiTurn turn, {String? restoreOnFail}) async {
-    if (!mounted) return;
-    final idx = _turns.indexOf(turn);
-    final history = idx > 0 ? _historyBefore(idx) : '';
-    setState(() {
-      turn.loading = true;
-      turn.error = null;
-    });
-    // The service layer now retries transient failures (503 "high demand" /
-    // timeout / network) with backoff, so a redundant client-side cold-start
-    // retry is no longer needed here. restoreOnFail is kept for call-site
-    // compatibility but no longer used — the failed turn now stays on screen
-    // with its question + an inline error instead of being removed.
-    final result = await _request(
-        question: turn.question,
-        length: turn.length,
-        history: history.isEmpty ? null : history);
-    if (!mounted) return;
-    setState(() {
-      turn.loading = false;
-      if (result.unavailable) {
-        final reason = result.unavailableReason ??
-            (uiStrings['aiExplainError']?[_loc] ??
-                'AI explanation is not available right now.');
-        // 2026-06-30 robustness: NEVER drop the turn on failure. If a good
-        // answer already exists (a failed regenerate), keep it and toast the
-        // reason; otherwise show a PERSISTENT inline error + Retry button —
-        // for the OPENING explanation AND follow-up questions alike.
-        // Previously a failed follow-up deleted the turn + showed only a
-        // fleeting toast, so the question vanished with no visible reason
-        // ("追问没回复"). Retry re-runs this same turn with its stored question.
-        if (turn.answer != null) {
-          _snack(reason);
-        } else {
-          turn.error = reason;
-        }
-      } else {
-        turn.answer = cleanAiExplanation(result.explanation);
-        turn.error = null;
-      }
-    });
-    _scrollBodyToEnd();
-  }
-
-  String? _shorter(String length) =>
-      length == 'longer' ? 'default' : (length == 'default' ? 'concise' : null);
-  String? _longer(String length) =>
-      length == 'concise' ? 'default' : (length == 'default' ? 'longer' : null);
-
-  void _regenerate(_AiTurn turn, String length) {
-    if (_busy) return;
-    turn.length = length;
-    _runTurn(turn);
-  }
-
-  void _snack(String msg) {
-    ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-      SnackBar(content: Text(msg), duration: const Duration(seconds: 3)),
-    );
-  }
-
-  void _scrollBodyToEnd() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || !_bodyScroll.hasClients) return;
-      _bodyScroll.animateTo(
-        _bodyScroll.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 280),
-        curve: Curves.easeOut,
-      );
-    });
-  }
-
-  // Save an answer (its current selection if any, else the whole thing)
-  // into the passage note via the normal editor (append-to-existing).
-  void _saveTurnToNote(_AiTurn turn) {
-    final sel = turn.selectedText.trim();
-    final text = sel.isNotEmpty ? sel : (turn.answer ?? '').trim();
-    if (text.isEmpty) return;
-    final attribution = uiStrings['aiNoteAttribution']?[_loc] ?? '— SeekSparks AI';
-    final snippet = '「${widget.refLabel}」\n$text\n$attribution';
-    showNoteEditor(
-      context: context,
-      verses: widget.verses,
-      locale: _loc,
-      mainProvider: widget.mainProvider,
-      appendText: snippet,
-    );
-  }
-
-  String _composeCopyText() {
-    final buf = StringBuffer()..writeln(widget.refLabel);
-    if (widget.verseText.isNotEmpty) {
-      buf
-        ..writeln()
-        ..writeln(widget.verseText);
-    }
-    for (final t in _turns) {
-      final a = t.answer;
-      if (a == null || a.isEmpty) continue;
-      buf.writeln();
-      if (t.question != null && t.question!.isNotEmpty) {
-        buf
-          ..writeln(
-              '${uiStrings['aiAskYourQuestion']?[_loc] ?? 'Your question'}: ${t.question}')
-          ..writeln();
-      }
-      buf.writeln(a);
-    }
-    return buf.toString().trim();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final locale = _loc;
-    final media = MediaQuery.of(context);
-    final canCopy = _turns.any((t) => (t.answer ?? '').isNotEmpty);
-    return SafeArea(
-      child: Padding(
-        padding:
-            EdgeInsets.fromLTRB(20, 16, 20, 16 + media.viewInsets.bottom),
-        child: ConstrainedBox(
-          constraints: BoxConstraints(maxHeight: media.size.height * 0.85),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(Icons.auto_awesome, size: 18, color: scheme.primary),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      '${uiStrings['aiExplainHeader']?[locale] ?? 'AI explanation'} · ${widget.refLabel}',
-                      style: TextStyle(
-                        fontFamily: widget.settings.fontFamily,
-                        fontFamilyFallback: kCjkFontFallback,
-                        fontSize: context.textSize(15),
-                        fontWeight: FontWeight.w700,
-                        color: scheme.onSurface,
-                      ),
-                    ),
-                  ),
-                  if (canCopy)
-                    IconButton(
-                      tooltip: uiStrings['copySelection']?[locale] ?? 'Copy',
-                      icon: const Icon(Icons.copy_rounded),
-                      visualDensity: VisualDensity.compact,
-                      onPressed: () => ClipboardHelper.copyWithFeedback(
-                          context, _composeCopyText()),
-                    ),
-                  IconButton(
-                    tooltip: uiStrings['close']?[locale] ?? 'Close',
-                    icon: const Icon(Icons.close_rounded),
-                    visualDensity: VisualDensity.compact,
-                    onPressed: () => Navigator.of(context).maybePop(),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Flexible(
-                child: SingleChildScrollView(
-                  controller: _bodyScroll,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (widget.verseText.isNotEmpty)
-                        _scriptureBlock(scheme, locale),
-                      if (_turns.isEmpty)
-                        _idleHint(scheme, locale)
-                      else
-                        for (var i = 0; i < _turns.length; i++)
-                          _turnCard(scheme, locale, _turns[i], i),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              _inputArea(scheme, locale),
-              const SizedBox(height: 10),
-              Text(
-                uiStrings['aiExplainVerseDisclaimer']?[locale] ??
-                    'AI-generated; for reference only — let Scripture itself be the authority.',
-                style: TextStyle(
-                  fontFamily: widget.settings.fontFamily,
-                  fontFamilyFallback: kCjkFontFallback,
-                  fontSize: context.textSize(11),
-                  fontStyle: FontStyle.italic,
-                  color: scheme.onSurfaceVariant.withValues(alpha: 0.8),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _scriptureBlock(ColorScheme scheme, String locale) {
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.fromLTRB(14, 10, 12, 12),
-      decoration: BoxDecoration(
-        color: scheme.primary.withValues(alpha: 0.06),
-        border: Border(left: BorderSide(color: scheme.primary, width: 3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            uiStrings['aiExplainScriptureLabel']?[locale] ?? 'Scripture',
-            style: TextStyle(
-              fontFamily: widget.settings.fontFamily,
-              fontFamilyFallback: kCjkFontFallback,
-              fontSize: context.textSize(11),
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.4,
-              color: scheme.primary,
-            ),
-          ),
-          const SizedBox(height: 5),
-          SelectableText(
-            widget.verseText,
-            style: TextStyle(
-              fontFamily: widget.settings.fontFamily,
-              fontFamilyFallback: kCjkFontFallback,
-              fontSize: widget.settings.fontSize,
-              height: widget.settings.lineSpacing,
-              color: scheme.onSurface.withValues(alpha: 0.9),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _idleHint(ColorScheme scheme, String locale) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 22, horizontal: 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(Icons.lightbulb_outline_rounded,
-              size: 18,
-              color: scheme.onSurfaceVariant.withValues(alpha: 0.7)),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              uiStrings['aiExplainIdleHint']?[locale] ??
-                  'Generate an explanation of this passage, or type a question first and confirm.',
-              style: TextStyle(
-                fontFamily: widget.settings.fontFamily,
-                fontFamilyFallback: kCjkFontFallback,
-                fontSize: context.textSize(13),
-                height: 1.4,
-                color: scheme.onSurfaceVariant,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _turnCard(ColorScheme scheme, String locale, _AiTurn turn, int i) {
-    final reading = TextStyle(
-      fontFamily: widget.settings.fontFamily,
-      fontFamilyFallback: kCjkFontFallback,
-      fontSize: widget.settings.fontSize,
-      height: widget.settings.lineSpacing,
-      color: scheme.onSurface,
-    );
-    return Padding(
-      padding: EdgeInsets.only(top: i == 0 ? 0 : 18),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (i > 0)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Divider(
-                  height: 1,
-                  color: scheme.outlineVariant.withValues(alpha: 0.5)),
-            ),
-          if (turn.question != null && turn.question!.isNotEmpty) ...[
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(Icons.help_outline_rounded,
-                    size: 16, color: scheme.primary),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    turn.question!,
-                    style: reading.copyWith(
-                        fontSize: widget.settings.fontSize - 1,
-                        fontWeight: FontWeight.w700),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-          ],
-          if (turn.loading)
-            _loadingRow(scheme, locale, turn.question != null)
-          else if (turn.error != null)
-            _errorBody(scheme, locale, turn.error!, () => _runTurn(turn))
-          else ...[
-            SelectableText(
-              turn.answer ?? '',
-              style: reading,
-              onSelectionChanged: (sel, cause) {
-                final a = turn.answer ?? '';
-                if (sel.isValid &&
-                    !sel.isCollapsed &&
-                    sel.start >= 0 &&
-                    sel.end <= a.length) {
-                  turn.selectedText = sel.textInside(a);
-                } else {
-                  turn.selectedText = '';
-                }
-              },
-            ),
-            const SizedBox(height: 8),
-            _turnActions(scheme, locale, turn),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _turnActions(ColorScheme scheme, String locale, _AiTurn turn) {
-    final shorter = _shorter(turn.length);
-    final longer = _longer(turn.length);
-    return Wrap(
-      spacing: 6,
-      runSpacing: 4,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: [
-        if (shorter != null)
-          _miniChip(
-              scheme,
-              Icons.unfold_less_rounded,
-              uiStrings['aiMoreConcise']?[locale] ?? 'More concise',
-              _busy ? null : () => _regenerate(turn, shorter)),
-        if (longer != null)
-          _miniChip(
-              scheme,
-              Icons.unfold_more_rounded,
-              uiStrings['aiMoreDetail']?[locale] ?? 'More detail',
-              _busy ? null : () => _regenerate(turn, longer)),
-        _miniChip(
-            scheme,
-            Icons.bookmark_add_outlined,
-            uiStrings['aiSaveToNote']?[locale] ?? 'Save to note',
-            () => _saveTurnToNote(turn),
-            filled: true),
-      ],
-    );
-  }
-
-  Widget _miniChip(ColorScheme scheme, IconData icon, String label,
-      VoidCallback? onTap,
-      {bool filled = false}) {
-    final fg = filled ? scheme.onPrimary : scheme.primary;
-    final bg =
-        filled ? scheme.primary : scheme.primary.withValues(alpha: 0.10);
-    return Material(
-      color: onTap == null ? bg.withValues(alpha: 0.4) : bg,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 15, color: fg),
-              const SizedBox(width: 4),
-              Text(
-                label,
-                style: TextStyle(
-                  fontFamily: widget.settings.fontFamily,
-                  fontFamilyFallback: kCjkFontFallback,
-                  fontSize: context.textSize(12),
-                  fontWeight: FontWeight.w600,
-                  color: fg,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _loadingRow(ColorScheme scheme, String locale, bool isQuestion) {
-    final msg = isQuestion
-        ? (uiStrings['aiAskAnswering']?[locale] ?? 'Answering your question…')
-        : (uiStrings['aiExplainGenerating']?[locale] ??
-            'Generating explanation…');
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 24),
-      child: Row(
-        children: [
-          const SizedBox(
-              width: 18,
-              height: 18,
-              child: CircularProgressIndicator(strokeWidth: 2)),
-          const SizedBox(width: 12),
-          Flexible(
-            child: Text(
-              msg,
-              style: TextStyle(
-                fontFamily: widget.settings.fontFamily,
-                fontFamilyFallback: kCjkFontFallback,
-                fontSize: context.textSize(13),
-                color: scheme.onSurfaceVariant,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _inputArea(ColorScheme scheme, String locale) {
-    final firstTurn = _turns.isEmpty;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        TextField(
-          controller: _questionController,
-          focusNode: _questionFocus,
-          minLines: 1,
-          maxLines: 4,
-          textInputAction: TextInputAction.send,
-          onSubmitted: (_) => _submit(),
-          style: TextStyle(
-            fontFamily: widget.settings.fontFamily,
-            fontFamilyFallback: kCjkFontFallback,
-            fontSize: widget.settings.fontSize - 1,
-            color: scheme.onSurface,
-          ),
-          decoration: InputDecoration(
-            isDense: true,
-            hintText: firstTurn
-                ? (uiStrings['aiAskQuestionHint']?[locale] ??
-                    'Ask a question about this passage… (optional)')
-                : (uiStrings['aiFollowUpHint']?[locale] ?? 'Ask a follow-up…'),
-            hintStyle: TextStyle(
-              fontFamily: widget.settings.fontFamily,
-              fontFamilyFallback: kCjkFontFallback,
-              fontSize: widget.settings.fontSize - 2,
-              color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
-            ),
-            filled: true,
-            fillColor: scheme.surfaceContainerHighest.withValues(alpha: 0.5),
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.zero,
-              borderSide: BorderSide.none,
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.zero,
-              borderSide: BorderSide.none,
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.zero,
-              borderSide: BorderSide(color: scheme.primary, width: 1.5),
-            ),
-          ),
-        ),
-        const SizedBox(height: 8),
-        ValueListenableBuilder<TextEditingValue>(
-          valueListenable: _questionController,
-          builder: (context, value, _) {
-            final hasQuestion = value.text.trim().isNotEmpty;
-            // First turn: empty allowed (opening explanation). Later turns:
-            // a follow-up needs a typed question.
-            final canSubmit = !_busy && (firstTurn || hasQuestion);
-            final label = hasQuestion
-                ? (uiStrings['aiAskSend']?[locale] ?? 'Ask')
-                : (uiStrings['aiExplainGenerate']?[locale] ??
-                    'Explain this passage');
-            return FilledButton.icon(
-              onPressed: canSubmit ? _submit : null,
-              icon: Icon(
-                hasQuestion
-                    ? Icons.send_rounded
-                    : Icons.auto_awesome_rounded,
-                size: 18,
-              ),
-              label: Text(
-                label,
-                style: TextStyle(
-                  fontFamily: widget.settings.fontFamily,
-                  fontFamilyFallback: kCjkFontFallback,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              style: FilledButton.styleFrom(
-                backgroundColor: scheme.primary,
-                foregroundColor: scheme.onPrimary,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-              ),
-            );
-          },
-        ),
-      ],
-    );
-  }
-
-  Widget _errorBody(ColorScheme scheme, String locale, String reason,
-      VoidCallback onRetry) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 24),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.cloud_off_rounded,
-              size: 32, color: scheme.onSurfaceVariant),
-          const SizedBox(height: 12),
-          Text(
-            reason,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontFamily: widget.settings.fontFamily,
-              fontFamilyFallback: kCjkFontFallback,
-              fontSize: context.textSize(13),
-              color: scheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 16),
-          FilledButton.tonalIcon(
-            onPressed: onRetry,
-            icon: const Icon(Icons.refresh_rounded, size: 18),
-            label: Text(uiStrings['retry']?[locale] ?? 'Retry'),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 /// Shows a draggable bottom sheet listing the cross-references
@@ -4061,8 +3364,8 @@ class _PreloadedSermonsSheetBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final headerLabel = uiStrings['relatedSermons']?[locale] ??
-        'Related sermons';
+    final headerLabel =
+        uiStrings['relatedSermons']?[locale] ?? 'Related sermons';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -4078,12 +3381,12 @@ class _PreloadedSermonsSheetBody extends StatelessWidget {
                   children: [
                     Text(headerLabel,
                         style: TextStyle(
-                            fontSize: context.textSize(16), fontWeight: FontWeight.w600)),
+                            fontSize: context.textSize(16),
+                            fontWeight: FontWeight.w600)),
                     Text(title,
                         style: TextStyle(
                             fontSize: context.textSize(12),
-                            color:
-                                scheme.onSurface.withValues(alpha: 0.6))),
+                            color: scheme.onSurface.withValues(alpha: 0.6))),
                   ],
                 ),
               ),
@@ -4141,14 +3444,13 @@ class _PreloadedSermonsSheetBody extends StatelessWidget {
                             Text(localizedSermonTopic(s.topic, locale),
                                 style: TextStyle(
                                     fontSize: context.textSize(11),
-                                    color: scheme.primary
-                                        .withValues(alpha: 0.85),
+                                    color:
+                                        scheme.primary.withValues(alpha: 0.85),
                                     fontWeight: FontWeight.w500)),
                           ],
                         ),
                       ),
-                      trailing:
-                          const Icon(Icons.chevron_right, size: 20),
+                      trailing: const Icon(Icons.chevron_right, size: 20),
                       onTap: () {
                         Navigator.of(context).maybePop();
                         pushPage(SermonDetailPage(sermon: s));
@@ -4236,8 +3538,8 @@ class _RelatedSermonsSheetBodyState extends State<_RelatedSermonsSheetBody> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final title = uiStrings['relatedSermons']?[widget.locale] ??
-        'Related sermons';
+    final title =
+        uiStrings['relatedSermons']?[widget.locale] ?? 'Related sermons';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -4245,12 +3547,12 @@ class _RelatedSermonsSheetBodyState extends State<_RelatedSermonsSheetBody> {
           padding: const EdgeInsets.fromLTRB(20, 14, 20, 4),
           child: Row(
             children: [
-              Icon(Icons.menu_book_outlined,
-                  size: 20, color: scheme.primary),
+              Icon(Icons.menu_book_outlined, size: 20, color: scheme.primary),
               const SizedBox(width: 8),
               Text(title,
                   style: TextStyle(
-                      fontSize: context.textSize(16), fontWeight: FontWeight.w600)),
+                      fontSize: context.textSize(16),
+                      fontWeight: FontWeight.w600)),
               const Spacer(),
               IconButton(
                 icon: const Icon(Icons.close, size: 20),
@@ -4276,8 +3578,7 @@ class _RelatedSermonsSheetBodyState extends State<_RelatedSermonsSheetBody> {
                           'No Pastor Eric sermons reference these verses.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                          color:
-                              scheme.onSurface.withValues(alpha: 0.65)),
+                          color: scheme.onSurface.withValues(alpha: 0.65)),
                     ),
                   ),
                 );
@@ -4313,8 +3614,7 @@ class _RelatedSermonsSheetBodyState extends State<_RelatedSermonsSheetBody> {
                           Text(localizedSermonTopic(s.topic, widget.locale),
                               style: TextStyle(
                                   fontSize: context.textSize(11),
-                                  color: scheme.primary
-                                      .withValues(alpha: 0.85),
+                                  color: scheme.primary.withValues(alpha: 0.85),
                                   fontWeight: FontWeight.w500)),
                         ],
                       ),
@@ -4439,6 +3739,7 @@ void showNoteEditor({
   required List<Verse> verses,
   required String locale,
   required MainProvider mainProvider,
+
   /// v1.3.73 — when provided (e.g. "save AI answer to note"), the editor
   /// opens prefilled with the verse's existing note + this text appended
   /// (or just this text if there's no existing note), editable before
@@ -4459,8 +3760,7 @@ void showNoteEditor({
     notes: mainProvider.verseNotes,
     titles: mainProvider.verseNoteTitles,
   );
-  final String? prefillTitle =
-      prefilled.title.isEmpty ? null : prefilled.title;
+  final String? prefillTitle = prefilled.title.isEmpty ? null : prefilled.title;
   // v1.3.73: fold an optional appended snippet (e.g. an AI answer) into
   // the initial body — after the existing note if there is one.
   var initialBody = prefilled.body;
@@ -4566,8 +3866,7 @@ void showNoteEditor({
     final saved = savedItemIndex;
     if (saved == null) return;
     try {
-      final positions =
-          mainProvider.itemPositionsListener.itemPositions.value;
+      final positions = mainProvider.itemPositionsListener.itemPositions.value;
       if (positions.isEmpty) return;
       final visible = positions
           .where((p) => p.itemTrailingEdge > 0 && p.itemLeadingEdge < 1)
@@ -4654,458 +3953,458 @@ void showNoteEditor({
       // we can compare against the previous value.
       double lastViewInsetsBottom = 0;
       return StatefulBuilder(
-      builder: (sheetCtx, setSheetState) {
-      final scheme = Theme.of(sheetCtx).colorScheme;
-      final mq = MediaQuery.of(sheetCtx);
-      // 2026-05-20 (v1.2.63): keyboard show / hide listener. Every
-      // time the bottom inset changes (≥4 px to avoid noise from
-      // sub-pixel layout adjustments), fire restoreScroll multiple
-      // times — same multi-shot pattern as the Focus.onFocusChange
-      // handler, so we beat whatever frame the browser uses to
-      // resize the viewport. Defense-in-depth on top of the 10 s
-      // enforceTimer above.
-      final bottomInset = mq.viewInsets.bottom;
-      if ((bottomInset - lastViewInsetsBottom).abs() > 4.0) {
-        lastViewInsetsBottom = bottomInset;
-        // Schedule restores post-frame so the layout is settled
-        // first; multi-shot at 0 / 50 / 150 / 350 / 800 ms covers
-        // both fast and slow keyboard animations.
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          restoreScroll();
-          for (final delayMs in const [50, 150, 350, 800]) {
-            Future.delayed(
-                Duration(milliseconds: delayMs), restoreScroll);
+        builder: (sheetCtx, setSheetState) {
+          final scheme = Theme.of(sheetCtx).colorScheme;
+          final mq = MediaQuery.of(sheetCtx);
+          // 2026-05-20 (v1.2.63): keyboard show / hide listener. Every
+          // time the bottom inset changes (≥4 px to avoid noise from
+          // sub-pixel layout adjustments), fire restoreScroll multiple
+          // times — same multi-shot pattern as the Focus.onFocusChange
+          // handler, so we beat whatever frame the browser uses to
+          // resize the viewport. Defense-in-depth on top of the 10 s
+          // enforceTimer above.
+          final bottomInset = mq.viewInsets.bottom;
+          if ((bottomInset - lastViewInsetsBottom).abs() > 4.0) {
+            lastViewInsetsBottom = bottomInset;
+            // Schedule restores post-frame so the layout is settled
+            // first; multi-shot at 0 / 50 / 150 / 350 / 800 ms covers
+            // both fast and slow keyboard animations.
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              restoreScroll();
+              for (final delayMs in const [50, 150, 350, 800]) {
+                Future.delayed(Duration(milliseconds: delayMs), restoreScroll);
+              }
+            });
           }
-        });
-      }
-      // v1.2.60: "Delete" button shows when ANY verse in the
-      // multi-verse selection has a note (and Delete clears them all).
-      final hasExisting = verses.any(
-          (v) => (mainProvider.getVerseNote(v) ?? '').isNotEmpty);
-      // 2026-05-24 (v1.2.93): height = viewport minus status bar
-      // ONLY. Do NOT also subtract viewInsets.bottom here — the
-      // Padding below already adds viewInsets.bottom to its
-      // bottom inset, and subtracting in BOTH places is a double
-      // subtraction. With a 400 px iOS keyboard up that bug
-      // squeezed the Expanded body TextField to negative height
-      // (user reported: 标题/chips/buttons visible, no body —
-      // see screenshot in conversation). Fix: sheet container =
-      // full visible area below status bar; Padding handles
-      // keyboard avoidance. Was correct in v1.2.91 compact mode
-      // because height was `null` (intrinsic), but broke when
-      // v1.2.92 made fullscreen the only mode.
-      final fullscreenHeight =
-          mq.size.height - mq.padding.top;
-      return SizedBox(
-        height: fullscreenHeight,
-        child: Padding(
-        padding: EdgeInsets.only(
-          left: 16,
-          right: 16,
-          top: 12,
-          bottom: MediaQuery.of(sheetCtx).viewInsets.bottom + 16,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.max,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 2026-05-24 (v1.2.95): drag handle is now a tappable
-            // dismiss target. User report: "note 打开，关闭在右上角，
-            // ios 有时候按不到，网页版好点". The top-right X near
-            // the notch / Dynamic Island is awkward to thumb on
-            // iOS. The drag pill at top-center IS reachable. Tap
-            // it to dismiss; drag it down to dismiss
-            // (enableDrag: true from v1.2.94). Both dismiss paths
-            // are obvious + thumb-friendly.
-            GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () => Navigator.of(sheetCtx).maybePop(),
-              child: Container(
-                margin: const EdgeInsets.only(bottom: 8),
-                // Extra vertical padding makes the tap target ~28 pt
-                // tall — comfortably hittable without making the
-                // pill itself visually fat.
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                alignment: Alignment.center,
-                child: Container(
-                  width: 56,
-                  height: 5,
-                  decoration: BoxDecoration(
-                    color: scheme.outlineVariant,
-                  ),
-                ),
+          // v1.2.60: "Delete" button shows when ANY verse in the
+          // multi-verse selection has a note (and Delete clears them all).
+          final hasExisting = verses
+              .any((v) => (mainProvider.getVerseNote(v) ?? '').isNotEmpty);
+          // 2026-05-24 (v1.2.93): height = viewport minus status bar
+          // ONLY. Do NOT also subtract viewInsets.bottom here — the
+          // Padding below already adds viewInsets.bottom to its
+          // bottom inset, and subtracting in BOTH places is a double
+          // subtraction. With a 400 px iOS keyboard up that bug
+          // squeezed the Expanded body TextField to negative height
+          // (user reported: 标题/chips/buttons visible, no body —
+          // see screenshot in conversation). Fix: sheet container =
+          // full visible area below status bar; Padding handles
+          // keyboard avoidance. Was correct in v1.2.91 compact mode
+          // because height was `null` (intrinsic), but broke when
+          // v1.2.92 made fullscreen the only mode.
+          final fullscreenHeight = mq.size.height - mq.padding.top;
+          return SizedBox(
+            height: fullscreenHeight,
+            child: Padding(
+              padding: EdgeInsets.only(
+                left: 16,
+                right: 16,
+                top: 12,
+                bottom: MediaQuery.of(sheetCtx).viewInsets.bottom + 16,
               ),
-            ),
-            Row(
-              children: [
-                Icon(Icons.sticky_note_2_outlined,
-                    color: scheme.primary, size: 20),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        uiStrings['noteEdit']?[locale] ?? 'Edit note',
-                        style: TextStyle(
-                          fontSize: sheetCtx.textSize(16),
-                          fontWeight: FontWeight.w700,
-                          color: scheme.onSurface,
+              child: Column(
+                mainAxisSize: MainAxisSize.max,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 2026-05-24 (v1.2.95): drag handle is now a tappable
+                  // dismiss target. User report: "note 打开，关闭在右上角，
+                  // ios 有时候按不到，网页版好点". The top-right X near
+                  // the notch / Dynamic Island is awkward to thumb on
+                  // iOS. The drag pill at top-center IS reachable. Tap
+                  // it to dismiss; drag it down to dismiss
+                  // (enableDrag: true from v1.2.94). Both dismiss paths
+                  // are obvious + thumb-friendly.
+                  GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => Navigator.of(sheetCtx).maybePop(),
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      // Extra vertical padding makes the tap target ~28 pt
+                      // tall — comfortably hittable without making the
+                      // pill itself visually fat.
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      alignment: Alignment.center,
+                      child: Container(
+                        width: 56,
+                        height: 5,
+                        decoration: BoxDecoration(
+                          color: scheme.outlineVariant,
                         ),
                       ),
-                      Text(
-                        ref,
-                        style: TextStyle(
-                          fontSize: sheetCtx.textSize(12),
-                          color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      Icon(Icons.sticky_note_2_outlined,
+                          color: scheme.primary, size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              uiStrings['noteEdit']?[locale] ?? 'Edit note',
+                              style: TextStyle(
+                                fontSize: sheetCtx.textSize(16),
+                                fontWeight: FontWeight.w700,
+                                color: scheme.onSurface,
+                              ),
+                            ),
+                            Text(
+                              ref,
+                              style: TextStyle(
+                                fontSize: sheetCtx.textSize(12),
+                                color: scheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
                         ),
+                      ),
+                      // 2026-05-24 (v1.2.94): enlarged X tap target.
+                      // Default IconButton is 48 pt but with snug
+                      // visualDensity it shrinks below Apple HIG's 44 pt
+                      // minimum, which user called out on iOS: "clicking
+                      // close it hard and it is bad UX". Explicit 28 pt
+                      // icon + EdgeInsets.all(12) padding = 52 pt overall
+                      // — comfortably thumb-tappable near the notch.
+                      IconButton(
+                        icon: const Icon(Icons.close_rounded, size: 28),
+                        padding: const EdgeInsets.all(12),
+                        constraints:
+                            const BoxConstraints(minWidth: 52, minHeight: 52),
+                        tooltip: uiStrings['tooltipClose']?[locale] ?? 'Close',
+                        onPressed: () => Navigator.of(sheetCtx).maybePop(),
                       ),
                     ],
                   ),
-                ),
-                // 2026-05-24 (v1.2.94): enlarged X tap target.
-                // Default IconButton is 48 pt but with snug
-                // visualDensity it shrinks below Apple HIG's 44 pt
-                // minimum, which user called out on iOS: "clicking
-                // close it hard and it is bad UX". Explicit 28 pt
-                // icon + EdgeInsets.all(12) padding = 52 pt overall
-                // — comfortably thumb-tappable near the notch.
-                IconButton(
-                  icon: const Icon(Icons.close_rounded, size: 28),
-                  padding: const EdgeInsets.all(12),
-                  constraints:
-                      const BoxConstraints(minWidth: 52, minHeight: 52),
-                  tooltip: uiStrings['tooltipClose']?[locale] ?? 'Close',
-                  onPressed: () => Navigator.of(sheetCtx).maybePop(),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            // 2026-05-24 (v1.2.91): optional title field. Single
-            // line, no autofocus (focus goes to the body so users
-            // who skip titles aren't slowed down). Empty title is
-            // valid — Library tile falls back to the verse ref as
-            // the header. Library tile renders the title in bold
-            // when set, so a typed title essentially "renames"
-            // the note for at-a-glance recognition in the list.
-            TextField(
-              controller: titleController,
-              maxLines: 1,
-              textInputAction: TextInputAction.next,
-              style: TextStyle(
-                fontSize: sheetCtx.textSize(16),
-                fontWeight: FontWeight.w600,
-                color: scheme.onSurface,
-              ),
-              decoration: InputDecoration(
-                hintText: uiStrings['noteTitleHint']?[locale] ??
-                    'Title (optional)',
-                hintStyle: TextStyle(
-                  fontSize: sheetCtx.textSize(16),
-                  fontWeight: FontWeight.w500,
-                  color: scheme.onSurfaceVariant.withValues(alpha: 0.6),
-                ),
-                border: InputBorder.none,
-                isDense: true,
-                contentPadding:
-                    const EdgeInsets.symmetric(vertical: 4, horizontal: 0),
-              ),
-            ),
-            Divider(
-                color: scheme.outlineVariant.withValues(alpha: 0.6),
-                height: 12,
-                thickness: 1),
-            // 2026-05-24 (v1.2.92): always-fullscreen body TextField.
-            // Was a compact/fullscreen branching (v1.2.62) before
-            // the v1.2.92 simplification. Wrap in Expanded so the
-            // field fills the remaining vertical space of the
-            // fullscreen sheet; maxLines: null + expands: true
-            // give an edge-to-edge editing surface. Focus +
-            // onChanged trigger scroll-restore on the underlying
-            // SPL since the keyboard popup can shift it.
-            Expanded(
-              child: Focus(
-                onFocusChange: (hasFocus) {
-                  if (hasFocus) {
-                    // 2026-07-23: must NOT call restoreScroll()
-                    // synchronously here. This callback runs from
-                    // inside Flutter's own FocusManager.
-                    // applyFocusChangesIfNeeded(), which iterates its
-                    // _dirtyNodes set and calls node._notify() —
-                    // that's what invokes this onFocusChange. If
-                    // restoreScroll's jumpTo() synchronously disposes
-                    // off-screen list-item FocusNodes (e.g. the
-                    // autofocus items in the reading pane behind this
-                    // sheet), FocusNode.dispose() removes itself from
-                    // that same _dirtyNodes set mid-iteration, which
-                    // throws ConcurrentModificationError (prod crash,
-                    // v1.3.143, decoded via source map to
-                    // focus_manager.dart:2008). Future.microtask defers
-                    // just past the end of that synchronous loop —
-                    // same escape hatch already used above for the
-                    // positions-listener restore (see
-                    // Future.microtask(restoreScroll) a few lines up).
-                    Future.microtask(restoreScroll);
-                    for (final delayMs in const [16, 50, 150, 350]) {
-                      Future.delayed(
-                          Duration(milliseconds: delayMs), restoreScroll);
-                    }
-                  }
-                },
-                child: TextField(
-                  controller: controller,
-                  autofocus: true,
-                  maxLines: null,
-                  expands: true,
-                  textAlignVertical: TextAlignVertical.top,
-                  textInputAction: TextInputAction.newline,
-                  onTap: () {
-                    restoreScroll();
-                    for (final delayMs in const [16, 50, 150, 350]) {
-                      Future.delayed(
-                          Duration(milliseconds: delayMs), restoreScroll);
-                    }
-                  },
-                  onChanged: (_) {
-                    restoreScroll();
-                    // 2026-05-20 (v1.2.65): rebuild so the ref-chip
-                    // strip below recomputes from the new note
-                    // text.
-                    setSheetState(() {});
-                  },
-                  decoration: InputDecoration(
-                    hintText: uiStrings['noteHint']?[locale] ??
-                        'Type your note for this verse…',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.zero,
+                  const SizedBox(height: 12),
+                  // 2026-05-24 (v1.2.91): optional title field. Single
+                  // line, no autofocus (focus goes to the body so users
+                  // who skip titles aren't slowed down). Empty title is
+                  // valid — Library tile falls back to the verse ref as
+                  // the header. Library tile renders the title in bold
+                  // when set, so a typed title essentially "renames"
+                  // the note for at-a-glance recognition in the list.
+                  TextField(
+                    controller: titleController,
+                    maxLines: 1,
+                    textInputAction: TextInputAction.next,
+                    style: TextStyle(
+                      fontSize: sheetCtx.textSize(16),
+                      fontWeight: FontWeight.w600,
+                      color: scheme.onSurface,
                     ),
-                    contentPadding: const EdgeInsets.all(12),
-                  ),
-                ),
-              ),
-            ),
-            // 2026-05-20 (v1.2.65): live ref-chip strip. As the
-            // user types or inserts `[Book Ch:V]` references via
-            // the picker, each parseable ref renders as a tappable
-            // ActionChip below the TextField. Tap → opens the same
-            // VersePopupSheet the Library notes view uses, so the
-            // user can preview a referenced verse WITHOUT having
-            // to save the note first. Hidden when no refs present.
-            Builder(builder: (chipCtx) {
-              final refs = extractNoteReferences(controller.text);
-              if (refs.isEmpty) return const SizedBox(height: 12);
-              // 2026-05-20 (v1.2.66): for the "cross-canon indicator"
-              // check (Issue 2 — LJK1/2 are NT only; OT refs are
-              // valid but need a full-canon fallback to read), build
-              // a set of english book names that EXIST in the
-              // currently-loaded verses. Anything outside this set
-              // gets the small fallback marker on its chip.
-              final loadedBooksEn = <String>{
-                for (final v in mainProvider.verses)
-                  bookNameToEnglish[v.book] ?? v.book
-              };
-              // 2026-07-19: bounded single-row, horizontally scrolling
-              // strip instead of an unbounded multi-row Wrap.
-              // extractNoteReferences intentionally does NOT dedup
-              // (see its doc comment), so a note with many (or
-              // repeated) [Book Ch:V] refs used to make the Wrap grow
-              // to N rows — and since it's the only non-flex sibling
-              // of the Expanded body TextField above, every extra row
-              // it claimed shrank the writing area, down to a sliver
-              // for long ref lists. A fixed-height horizontal
-              // ListView caps this strip's footprint at a constant
-              // regardless of ref count. Same bounded-strip pattern
-              // already used elsewhere for "row of chips that must
-              // never compete for vertical space" — see the color
-              // filter row in highlights_page.dart.
-              return Padding(
-                padding: const EdgeInsets.only(top: 10, bottom: 6),
-                child: SizedBox(
-                  height: 44,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: refs.length,
-                    separatorBuilder: (_, __) => const SizedBox(width: 6),
-                    itemBuilder: (_, i) => _buildNoteRefChip(
-                      ref: refs[i],
-                      scheme: scheme,
-                      locale: locale,
-                      currentVersion: mainProvider.currentVersion,
-                      isInCurrentVersion:
-                          loadedBooksEn.contains(refs[i].englishBook),
-                      chipCtx: chipCtx,
+                    decoration: InputDecoration(
+                      hintText: uiStrings['noteTitleHint']?[locale] ??
+                          'Title (optional)',
+                      hintStyle: TextStyle(
+                        fontSize: sheetCtx.textSize(16),
+                        fontWeight: FontWeight.w500,
+                        color: scheme.onSurfaceVariant.withValues(alpha: 0.6),
+                      ),
+                      border: InputBorder.none,
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(
+                          vertical: 4, horizontal: 0),
                     ),
                   ),
-                ),
-              );
-            }),
-            // 2026-05-19 (v1.2.59): "+ Verse Reference" button.
-            // Opens a 3-step picker (book → chapter → verse) and
-            // inserts the chosen `[Book Ch:V]` at the textfield's
-            // cursor position. The reference becomes a tappable
-            // link when viewed in the Library / wherever the note
-            // is displayed.
-            Row(
-              children: [
-                // 2026-05-24 (v1.2.95): thumb-reachable Cancel
-                // button in an OutlinedButton — more visible than
-                // the v1.2.94 plain TextButton so users see it as
-                // a real dismiss option alongside Save / Delete.
-                // Three dismiss paths now: top drag handle (tap or
-                // swipe down), bottom Cancel, top X. All three
-                // work; user picks whichever is comfortable.
-                OutlinedButton(
-                  onPressed: () => Navigator.of(sheetCtx).maybePop(),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: scheme.onSurfaceVariant,
-                    side: BorderSide(
-                      color: scheme.outlineVariant,
-                      width: 0.8,
+                  Divider(
+                      color: scheme.outlineVariant.withValues(alpha: 0.6),
+                      height: 12,
+                      thickness: 1),
+                  // 2026-05-24 (v1.2.92): always-fullscreen body TextField.
+                  // Was a compact/fullscreen branching (v1.2.62) before
+                  // the v1.2.92 simplification. Wrap in Expanded so the
+                  // field fills the remaining vertical space of the
+                  // fullscreen sheet; maxLines: null + expands: true
+                  // give an edge-to-edge editing surface. Focus +
+                  // onChanged trigger scroll-restore on the underlying
+                  // SPL since the keyboard popup can shift it.
+                  Expanded(
+                    child: Focus(
+                      onFocusChange: (hasFocus) {
+                        if (hasFocus) {
+                          // 2026-07-23: must NOT call restoreScroll()
+                          // synchronously here. This callback runs from
+                          // inside Flutter's own FocusManager.
+                          // applyFocusChangesIfNeeded(), which iterates its
+                          // _dirtyNodes set and calls node._notify() —
+                          // that's what invokes this onFocusChange. If
+                          // restoreScroll's jumpTo() synchronously disposes
+                          // off-screen list-item FocusNodes (e.g. the
+                          // autofocus items in the reading pane behind this
+                          // sheet), FocusNode.dispose() removes itself from
+                          // that same _dirtyNodes set mid-iteration, which
+                          // throws ConcurrentModificationError (prod crash,
+                          // v1.3.143, decoded via source map to
+                          // focus_manager.dart:2008). Future.microtask defers
+                          // just past the end of that synchronous loop —
+                          // same escape hatch already used above for the
+                          // positions-listener restore (see
+                          // Future.microtask(restoreScroll) a few lines up).
+                          Future.microtask(restoreScroll);
+                          for (final delayMs in const [16, 50, 150, 350]) {
+                            Future.delayed(
+                                Duration(milliseconds: delayMs), restoreScroll);
+                          }
+                        }
+                      },
+                      child: TextField(
+                        controller: controller,
+                        autofocus: true,
+                        maxLines: null,
+                        expands: true,
+                        textAlignVertical: TextAlignVertical.top,
+                        textInputAction: TextInputAction.newline,
+                        onTap: () {
+                          restoreScroll();
+                          for (final delayMs in const [16, 50, 150, 350]) {
+                            Future.delayed(
+                                Duration(milliseconds: delayMs), restoreScroll);
+                          }
+                        },
+                        onChanged: (_) {
+                          restoreScroll();
+                          // 2026-05-20 (v1.2.65): rebuild so the ref-chip
+                          // strip below recomputes from the new note
+                          // text.
+                          setSheetState(() {});
+                        },
+                        decoration: InputDecoration(
+                          hintText: uiStrings['noteHint']?[locale] ??
+                              'Type your note for this verse…',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.zero,
+                          ),
+                          contentPadding: const EdgeInsets.all(12),
+                        ),
+                      ),
                     ),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 10),
                   ),
-                  child: Text(uiStrings['cancel']?[locale] ?? 'Cancel'),
-                ),
-                const SizedBox(width: 4),
-                if (hasExisting)
-                  TextButton.icon(
-                    onPressed: () {
-                      // 2026-05-19 (v1.2.60): delete clears the note
-                      // from EVERY verse in the selection (multi-verse
-                      // editor). For single-verse selection this is
-                      // identical to the previous behaviour.
-                      for (final v in verses) {
-                        mainProvider.clearVerseNote(verse: v);
-                      }
-                      mainProvider.clearSelectedVerses();
-                      Navigator.of(sheetCtx).maybePop();
-                      // 2026-05-24 (v1.2.91): same confirmation toast
-                      // pattern as the Save button — destructive
-                      // actions deserve at least the same visibility.
-                      final scheme = Theme.of(context).colorScheme;
-                      showFloatingToast(
-                        context,
-                        message: uiStrings['noteDeleted']?[locale] ??
-                            'Note deleted',
-                        icon: Icons.delete_outline_rounded,
-                        background: scheme.error,
-                      );
-                    },
-                    icon: Icon(Icons.delete_outline, color: scheme.error),
-                    label: Text(
-                      uiStrings['noteDelete']?[locale] ?? 'Delete',
-                      style: TextStyle(color: scheme.error),
-                    ),
-                  ),
-                TextButton.icon(
-                  onPressed: () async {
-                    final settings =
-                        Provider.of<AppSettings>(sheetCtx, listen: false);
-                    final inserted = await showNoteReferencePicker(
-                      context: sheetCtx,
-                      locale: locale,
-                      mainProvider: mainProvider,
-                      settings: settings,
+                  // 2026-05-20 (v1.2.65): live ref-chip strip. As the
+                  // user types or inserts `[Book Ch:V]` references via
+                  // the picker, each parseable ref renders as a tappable
+                  // ActionChip below the TextField. Tap → opens the same
+                  // VersePopupSheet the Library notes view uses, so the
+                  // user can preview a referenced verse WITHOUT having
+                  // to save the note first. Hidden when no refs present.
+                  Builder(builder: (chipCtx) {
+                    final refs = extractNoteReferences(controller.text);
+                    if (refs.isEmpty) return const SizedBox(height: 12);
+                    // 2026-05-20 (v1.2.66): for the "cross-canon indicator"
+                    // check (Issue 2 — LJK1/2 are NT only; OT refs are
+                    // valid but need a full-canon fallback to read), build
+                    // a set of english book names that EXIST in the
+                    // currently-loaded verses. Anything outside this set
+                    // gets the small fallback marker on its chip.
+                    final loadedBooksEn = <String>{
+                      for (final v in mainProvider.verses)
+                        bookNameToEnglish[v.book] ?? v.book
+                    };
+                    // 2026-07-19: bounded single-row, horizontally scrolling
+                    // strip instead of an unbounded multi-row Wrap.
+                    // extractNoteReferences intentionally does NOT dedup
+                    // (see its doc comment), so a note with many (or
+                    // repeated) [Book Ch:V] refs used to make the Wrap grow
+                    // to N rows — and since it's the only non-flex sibling
+                    // of the Expanded body TextField above, every extra row
+                    // it claimed shrank the writing area, down to a sliver
+                    // for long ref lists. A fixed-height horizontal
+                    // ListView caps this strip's footprint at a constant
+                    // regardless of ref count. Same bounded-strip pattern
+                    // already used elsewhere for "row of chips that must
+                    // never compete for vertical space" — see the color
+                    // filter row in highlights_page.dart.
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 10, bottom: 6),
+                      child: SizedBox(
+                        height: 44,
+                        child: ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: refs.length,
+                          separatorBuilder: (_, __) => const SizedBox(width: 6),
+                          itemBuilder: (_, i) => _buildNoteRefChip(
+                            ref: refs[i],
+                            scheme: scheme,
+                            locale: locale,
+                            currentVersion: mainProvider.currentVersion,
+                            isInCurrentVersion:
+                                loadedBooksEn.contains(refs[i].englishBook),
+                            chipCtx: chipCtx,
+                          ),
+                        ),
+                      ),
                     );
-                    if (inserted == null || inserted.isEmpty) return;
-                    // Insert at cursor (or append at end if no
-                    // selection / no focus). TextEditingController
-                    // selection is null when the field has never
-                    // been focused — fall back to end-of-text.
-                    final sel = controller.selection;
-                    final cur = controller.text;
-                    if (sel.isValid && sel.start >= 0 && sel.end <= cur.length) {
-                      final before = cur.substring(0, sel.start);
-                      final after = cur.substring(sel.end);
-                      controller.setTextAtomic('$before$inserted$after',
-                          caret: before.length + inserted.length);
-                    } else {
-                      controller.setTextAtomic(cur + inserted);
-                    }
-                  },
-                  icon: Icon(Icons.add_link_rounded, color: scheme.primary),
-                  label: Text(
-                    uiStrings['noteAddReference']?[locale] ??
-                        '+ Verse',
-                    style: TextStyle(color: scheme.primary),
+                  }),
+                  // 2026-05-19 (v1.2.59): "+ Verse Reference" button.
+                  // Opens a 3-step picker (book → chapter → verse) and
+                  // inserts the chosen `[Book Ch:V]` at the textfield's
+                  // cursor position. The reference becomes a tappable
+                  // link when viewed in the Library / wherever the note
+                  // is displayed.
+                  Row(
+                    children: [
+                      // 2026-05-24 (v1.2.95): thumb-reachable Cancel
+                      // button in an OutlinedButton — more visible than
+                      // the v1.2.94 plain TextButton so users see it as
+                      // a real dismiss option alongside Save / Delete.
+                      // Three dismiss paths now: top drag handle (tap or
+                      // swipe down), bottom Cancel, top X. All three
+                      // work; user picks whichever is comfortable.
+                      OutlinedButton(
+                        onPressed: () => Navigator.of(sheetCtx).maybePop(),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: scheme.onSurfaceVariant,
+                          side: BorderSide(
+                            color: scheme.outlineVariant,
+                            width: 0.8,
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 14, vertical: 10),
+                        ),
+                        child: Text(uiStrings['cancel']?[locale] ?? 'Cancel'),
+                      ),
+                      const SizedBox(width: 4),
+                      if (hasExisting)
+                        TextButton.icon(
+                          onPressed: () {
+                            // 2026-05-19 (v1.2.60): delete clears the note
+                            // from EVERY verse in the selection (multi-verse
+                            // editor). For single-verse selection this is
+                            // identical to the previous behaviour.
+                            for (final v in verses) {
+                              mainProvider.clearVerseNote(verse: v);
+                            }
+                            mainProvider.clearSelectedVerses();
+                            Navigator.of(sheetCtx).maybePop();
+                            // 2026-05-24 (v1.2.91): same confirmation toast
+                            // pattern as the Save button — destructive
+                            // actions deserve at least the same visibility.
+                            final scheme = Theme.of(context).colorScheme;
+                            showFloatingToast(
+                              context,
+                              message: uiStrings['noteDeleted']?[locale] ??
+                                  'Note deleted',
+                              icon: Icons.delete_outline_rounded,
+                              background: scheme.error,
+                            );
+                          },
+                          icon: Icon(Icons.delete_outline, color: scheme.error),
+                          label: Text(
+                            uiStrings['noteDelete']?[locale] ?? 'Delete',
+                            style: TextStyle(color: scheme.error),
+                          ),
+                        ),
+                      TextButton.icon(
+                        onPressed: () async {
+                          final settings =
+                              Provider.of<AppSettings>(sheetCtx, listen: false);
+                          final inserted = await showNoteReferencePicker(
+                            context: sheetCtx,
+                            locale: locale,
+                            mainProvider: mainProvider,
+                            settings: settings,
+                          );
+                          if (inserted == null || inserted.isEmpty) return;
+                          // Insert at cursor (or append at end if no
+                          // selection / no focus). TextEditingController
+                          // selection is null when the field has never
+                          // been focused — fall back to end-of-text.
+                          final sel = controller.selection;
+                          final cur = controller.text;
+                          if (sel.isValid &&
+                              sel.start >= 0 &&
+                              sel.end <= cur.length) {
+                            final before = cur.substring(0, sel.start);
+                            final after = cur.substring(sel.end);
+                            controller.setTextAtomic('$before$inserted$after',
+                                caret: before.length + inserted.length);
+                          } else {
+                            controller.setTextAtomic(cur + inserted);
+                          }
+                        },
+                        icon:
+                            Icon(Icons.add_link_rounded, color: scheme.primary),
+                        label: Text(
+                          uiStrings['noteAddReference']?[locale] ?? '+ Verse',
+                          style: TextStyle(color: scheme.primary),
+                        ),
+                      ),
+                      const Spacer(),
+                      FilledButton.icon(
+                        onPressed: () {
+                          // 2026-05-19 (v1.2.60): save the same text to
+                          // every verse in the selection — WeDevote-style
+                          // "passage note". Single-verse selection
+                          // writes one note; multi-verse writes N copies
+                          // of the same text. Library tab groups
+                          // consecutive matching notes back into one
+                          // display tile.
+                          //
+                          // 2026-05-24 (v1.2.91): pass the optional title
+                          // to every verse in the selection too. All
+                          // verses in a passage note share one title so
+                          // the Library tile renders consistently.
+                          // 2026-08 (ported from YsWords v1.3.152/153):
+                          // normalize every [Book Ch:V] ref's book name to the
+                          // current locale/version before persisting. A quick
+                          // English abbreviation typed mid-note (e.g.
+                          // "[1 Kings 17:21]") otherwise stayed English forever
+                          // while the read-only chip strip already showed
+                          // "列王纪上 17:21", which read as inconsistent. Done at
+                          // Save (not on every keystroke) so it never fights the
+                          // live cursor while the user is still typing.
+                          final savedText = normalizeNoteReferenceBookNames(
+                            controller.text,
+                            (canonical) => localeAwareBookName(
+                                canonical, locale, mainProvider.currentVersion),
+                          );
+                          for (final v in verses) {
+                            mainProvider.setVerseNote(
+                              verse: v,
+                              text: savedText,
+                              title: titleController.text,
+                            );
+                          }
+                          mainProvider.clearSelectedVerses();
+                          // 2026-05-24 (v1.2.91): capture inputs BEFORE
+                          // the sheet pops so the toast reflects what
+                          // actually got persisted. An empty body deletes
+                          // the note (see setVerseNote); distinguish the
+                          // two outcomes for the user-facing confirmation.
+                          final wasDeleted = controller.text.trim().isEmpty;
+                          Navigator.of(sheetCtx).maybePop();
+                          // Toast on the reader's outer context (the sheet
+                          // ctx is gone now); use rootOverlay via
+                          // showFloatingToast so we render above any
+                          // closing-sheet animation.
+                          final scheme = Theme.of(context).colorScheme;
+                          showFloatingToast(
+                            context,
+                            message: wasDeleted
+                                ? (uiStrings['noteDeleted']?[locale] ??
+                                    'Note deleted')
+                                : (uiStrings['noteSaved']?[locale] ??
+                                    'Note saved'),
+                            icon: wasDeleted
+                                ? Icons.delete_outline_rounded
+                                : Icons.check_circle_rounded,
+                            background:
+                                wasDeleted ? scheme.error : scheme.primary,
+                          );
+                        },
+                        icon: const Icon(Icons.check_rounded),
+                        label: Text(uiStrings['noteSave']?[locale] ?? 'Save'),
+                      ),
+                    ],
                   ),
-                ),
-                const Spacer(),
-                FilledButton.icon(
-                  onPressed: () {
-                    // 2026-05-19 (v1.2.60): save the same text to
-                    // every verse in the selection — WeDevote-style
-                    // "passage note". Single-verse selection
-                    // writes one note; multi-verse writes N copies
-                    // of the same text. Library tab groups
-                    // consecutive matching notes back into one
-                    // display tile.
-                    //
-                    // 2026-05-24 (v1.2.91): pass the optional title
-                    // to every verse in the selection too. All
-                    // verses in a passage note share one title so
-                    // the Library tile renders consistently.
-                    // 2026-08 (ported from YsWords v1.3.152/153):
-                    // normalize every [Book Ch:V] ref's book name to the
-                    // current locale/version before persisting. A quick
-                    // English abbreviation typed mid-note (e.g.
-                    // "[1 Kings 17:21]") otherwise stayed English forever
-                    // while the read-only chip strip already showed
-                    // "列王纪上 17:21", which read as inconsistent. Done at
-                    // Save (not on every keystroke) so it never fights the
-                    // live cursor while the user is still typing.
-                    final savedText = normalizeNoteReferenceBookNames(
-                      controller.text,
-                      (canonical) => localeAwareBookName(
-                          canonical, locale, mainProvider.currentVersion),
-                    );
-                    for (final v in verses) {
-                      mainProvider.setVerseNote(
-                        verse: v,
-                        text: savedText,
-                        title: titleController.text,
-                      );
-                    }
-                    mainProvider.clearSelectedVerses();
-                    // 2026-05-24 (v1.2.91): capture inputs BEFORE
-                    // the sheet pops so the toast reflects what
-                    // actually got persisted. An empty body deletes
-                    // the note (see setVerseNote); distinguish the
-                    // two outcomes for the user-facing confirmation.
-                    final wasDeleted = controller.text.trim().isEmpty;
-                    Navigator.of(sheetCtx).maybePop();
-                    // Toast on the reader's outer context (the sheet
-                    // ctx is gone now); use rootOverlay via
-                    // showFloatingToast so we render above any
-                    // closing-sheet animation.
-                    final scheme = Theme.of(context).colorScheme;
-                    showFloatingToast(
-                      context,
-                      message: wasDeleted
-                          ? (uiStrings['noteDeleted']?[locale] ??
-                              'Note deleted')
-                          : (uiStrings['noteSaved']?[locale] ??
-                              'Note saved'),
-                      icon: wasDeleted
-                          ? Icons.delete_outline_rounded
-                          : Icons.check_circle_rounded,
-                      background:
-                          wasDeleted ? scheme.error : scheme.primary,
-                    );
-                  },
-                  icon: const Icon(Icons.check_rounded),
-                  label: Text(uiStrings['noteSave']?[locale] ?? 'Save'),
-                ),
-              ],
+                ],
+              ),
             ),
-          ],
-        ),
-        ),
+          );
+        },
       );
-      },
-    );
     },
   ).whenComplete(() {
     // Sheet closed — stop watching positions and stop the
@@ -5196,13 +4495,9 @@ Widget _buildNoteRefChip({
 
   return ActionChip(
     avatar: Icon(
-      isInCurrentVersion
-          ? Icons.menu_book_rounded
-          : Icons.swap_horiz_rounded,
+      isInCurrentVersion ? Icons.menu_book_rounded : Icons.swap_horiz_rounded,
       size: 16,
-      color: isInCurrentVersion
-          ? scheme.primary
-          : scheme.onSurfaceVariant,
+      color: isInCurrentVersion ? scheme.primary : scheme.onSurfaceVariant,
     ),
     label: Text(
       label,
@@ -5265,9 +4560,8 @@ void _showHighlightsSheet({
         final localBook =
             translateBookName(englishBook, mainProvider.currentVersion);
         final match = mainProvider.verses.where(
-          (v) => v.book == localBook &&
-              v.chapter == chapter &&
-              v.verse == verse,
+          (v) =>
+              v.book == localBook && v.chapter == chapter && v.verse == verse,
         );
         if (match.isEmpty) return;
         // pendingJump handshake — see lib/utils/jump_to_reference.dart
@@ -5290,9 +4584,8 @@ void _navigateToConcordanceRef({
   final localBook =
       translateBookName(ref.englishBook, mainProvider.currentVersion);
   final match = mainProvider.verses.where(
-    (v) => v.book == localBook &&
-        v.chapter == ref.chapter &&
-        v.verse == ref.verse,
+    (v) =>
+        v.book == localBook && v.chapter == ref.chapter && v.verse == ref.verse,
   );
   if (match.isEmpty) return;
   // pendingJump handshake — see lib/utils/jump_to_reference.dart
@@ -5399,7 +4692,8 @@ class _MapPickerSheetState extends State<_MapPickerSheet>
   List<_MapTab> _buildTabs() {
     final tabs = <_MapTab>[];
     if (widget.chapterMaps.isNotEmpty) {
-      tabs.add(_MapTab(_MapTabKind.chapter,
+      tabs.add(_MapTab(
+          _MapTabKind.chapter,
           uiStrings['mapsForThisChapter']?[widget.locale] ??
               'For this chapter'));
     }
@@ -5413,7 +4707,8 @@ class _MapPickerSheetState extends State<_MapPickerSheet>
     // TabController/TabBarView asserts — so keep the chapter tab, whose
     // empty state says so in words, and let the footer be the way out.
     if (tabs.isEmpty) {
-      tabs.add(_MapTab(_MapTabKind.chapter,
+      tabs.add(_MapTab(
+          _MapTabKind.chapter,
           uiStrings['mapsForThisChapter']?[widget.locale] ??
               'For this chapter'));
     }
@@ -5448,7 +4743,8 @@ class _MapPickerSheetState extends State<_MapPickerSheet>
               padding: const EdgeInsets.fromLTRB(16, 4, 8, 4),
               child: Row(
                 children: [
-                  Icon(Icons.collections_outlined, size: 18, color: scheme.primary),
+                  Icon(Icons.collections_outlined,
+                      size: 18, color: scheme.primary),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -5534,8 +4830,7 @@ class _MapPickerSheetState extends State<_MapPickerSheet>
           children: [
             if (widget.chapterMaps.isEmpty)
               _FallbackNote(
-                text: uiStrings['mapsNoneForChapterFallback']
-                        ?[widget.locale] ??
+                text: uiStrings['mapsNoneForChapterFallback']?[widget.locale] ??
                     'No map specifically for this chapter — here are related maps:',
               ),
             Expanded(child: _mapList(widget.bookMaps)),
@@ -5654,7 +4949,8 @@ class _MapTile extends StatelessWidget {
       ),
       title: Text(
         map.localizedTitle(locale),
-        style: TextStyle(fontSize: context.textSize(14), fontWeight: FontWeight.w600),
+        style: TextStyle(
+            fontSize: context.textSize(14), fontWeight: FontWeight.w600),
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
       ),
@@ -5663,8 +4959,9 @@ class _MapTile extends StatelessWidget {
               map.localizedDescription(locale),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style:
-                  TextStyle(fontSize: context.textSize(12), color: scheme.onSurfaceVariant),
+              style: TextStyle(
+                  fontSize: context.textSize(12),
+                  color: scheme.onSurfaceVariant),
             )
           : null,
       trailing:
@@ -5884,8 +5181,7 @@ class _ChapterPreview extends StatelessWidget {
     // `books`, but if the version was swapped mid-build the
     // verses list may not include this chapter yet).
     // 2026-05-24 (v1.2.99): use the O(1) index helper.
-    final hasVerses =
-        mainProvider.versesInChapter(book, chapter).isNotEmpty;
+    final hasVerses = mainProvider.versesInChapter(book, chapter).isNotEmpty;
     if (!hasVerses) {
       // 2026-05-24 (v1.3.12): better empty-chapter UI. Previously
       // every empty page rendered as "已到尽头" (End of Bible) —
@@ -5981,8 +5277,7 @@ class _ChapterPreview extends StatelessWidget {
         physics: const NeverScrollableScrollPhysics(),
         itemBuilder: (ctx, idx) {
           if (idx == 0) {
-            return SizedBox(
-                height: topInset + 64 * settings.menuScale + 12);
+            return SizedBox(height: topInset + 64 * settings.menuScale + 12);
           }
           if (idx == verses.length + 1) {
             return SizedBox(height: 96 * settings.menuScale);
@@ -5990,8 +5285,7 @@ class _ChapterPreview extends StatelessWidget {
           final v = verses[idx - 1];
           final inset = ResponsiveBreakpoints.readingPadding(deviceClass);
           return Padding(
-            padding: EdgeInsets.fromLTRB(
-                inset + 16, 4, inset + 16, 4),
+            padding: EdgeInsets.fromLTRB(inset + 16, 4, inset + 16, 4),
             child: Text.rich(
               TextSpan(
                 children: [
@@ -6091,9 +5385,7 @@ class _ChapterPageState extends State<_ChapterPage>
     if (widget.isActive) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
-        context
-            .read<MainProvider>()
-            .setActiveChapterControllers(_controllers);
+        context.read<MainProvider>().setActiveChapterControllers(_controllers);
       });
     }
   }
@@ -6107,9 +5399,7 @@ class _ChapterPageState extends State<_ChapterPage>
     if (widget.isActive && !old.isActive) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
-        context
-            .read<MainProvider>()
-            .setActiveChapterControllers(_controllers);
+        context.read<MainProvider>().setActiveChapterControllers(_controllers);
       });
     }
   }
@@ -6228,8 +5518,7 @@ class _ChapterPageState extends State<_ChapterPage>
             // chrome at scale 1.0, scaling proportionally when
             // the user bumps menuScale.
             final topInset = MediaQuery.of(context).padding.top;
-            return SizedBox(
-                height: topInset + 48 * settings.menuScale + 4);
+            return SizedBox(height: topInset + 48 * settings.menuScale + 4);
           }
           final groupIdx = index - 1;
           if (groupIdx < paragraphGroups.length) {
@@ -6242,8 +5531,7 @@ class _ChapterPageState extends State<_ChapterPage>
             SectionHeading? heading;
             if (settings.showSectionTitles) {
               final firstVerse = group.first;
-              final englishBook =
-                  toEnglish(firstVerse.book) ?? firstVerse.book;
+              final englishBook = toEnglish(firstVerse.book) ?? firstVerse.book;
               heading = SectionTitleService.headingAt(
                 version: mp.currentVersion,
                 englishBook: englishBook,
@@ -6272,11 +5560,8 @@ class _ChapterPageState extends State<_ChapterPage>
                     child: body,
                   );
             final firstVerse = group.first;
-            final englishBook =
-                toEnglish(firstVerse.book) ?? firstVerse.book;
-            if (isFirst &&
-                firstVerse.chapter == 1 &&
-                settings.showBookIntro) {
+            final englishBook = toEnglish(firstVerse.book) ?? firstVerse.book;
+            if (isFirst && firstVerse.chapter == 1 && settings.showBookIntro) {
               final intro = BookIntroService.forBook(englishBook);
               if (intro != null) {
                 rendered = Column(
@@ -6294,8 +5579,7 @@ class _ChapterPageState extends State<_ChapterPage>
             return rendered;
           }
           final bottomInset = MediaQuery.of(context).padding.bottom;
-          final isPhoneWidth =
-              MediaQuery.of(context).size.width < 560;
+          final isPhoneWidth = MediaQuery.of(context).size.width < 560;
           final extra = isSelected
               ? (isPhoneWidth
                   ? 200 * settings.menuScale
@@ -6393,8 +5677,7 @@ class _BibleReaderBottomBar extends StatelessWidget {
           )
         : baseScheme;
     final iconSize =
-        (settings.fontSize.clamp(16.0, 28.0) * settings.menuScale)
-            .toDouble();
+        (settings.fontSize.clamp(16.0, 28.0) * settings.menuScale).toDouble();
     final iconPad = (iconSize * 0.45).clamp(6.0, 10.0);
     // Bottom bar goes edge-to-edge horizontally so the surface meets
     // both screen sides (no margin gap). The inset value used by the
@@ -6439,73 +5722,74 @@ class _BibleReaderBottomBar extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                      _BottomBarBtn(
-                        icon: Icons.chevron_left_rounded,
-                        tooltip:
-                            uiStrings['previousChapter']?[locale] ?? 'Previous',
-                        onTap: onPrevChapter,
-                        iconSize: iconSize,
-                        iconPad: iconPad,
-                        scheme: scheme,
-                      ),
-                      _BottomBarBtn(
-                        icon: Icons.sticky_note_2_outlined,
-                        tooltip:
-                            uiStrings['tabNotes']?[locale] ?? 'Notes',
-                        onTap: onOpenNotes,
-                        iconSize: iconSize,
-                        iconPad: iconPad,
-                        scheme: scheme,
-                      ),
-                      _BottomBarBtn(
-                        // 2026-05-22 (v1.2.72): Illustrations — sits
-                        // between Notes and Font, opens the Maps /
-                        // Illustrations bottom-sheet (For this chapter /
-                        // For this book / All illustrations).
-                        icon: Icons.collections_outlined,
-                        tooltip:
-                            uiStrings['maps']?[locale] ?? 'Illustrations',
-                        onTap: onOpenIllustrations,
-                        iconSize: iconSize,
-                        iconPad: iconPad,
-                        scheme: scheme,
-                      ),
-                      _BottomBarBtn(
-                        icon: Icons.text_fields_rounded,
-                        tooltip:
-                            uiStrings['fontSize']?[locale] ?? 'Font size',
-                        onTap: onFontSize,
-                        iconSize: iconSize,
-                        iconPad: iconPad,
-                        scheme: scheme,
-                      ),
-                      _BottomBarBtn(
-                        // Paragraph mode ON → icon shows "switch to
-                        // verse mode"; OFF → icon shows "switch to
-                        // paragraph mode". Matches the top-header
-                        // toggle so users can flip from either side.
-                        icon: paragraphMode
-                            ? Icons.format_list_numbered_rounded
-                            : Icons.subject_rounded,
-                        tooltip: paragraphMode
-                            ? (uiStrings['verseMode']?[locale] ?? 'Verse mode')
-                            : (uiStrings['paragraphMode']?[locale] ??
-                                'Paragraph mode'),
-                        onTap: onToggleParagraphMode,
-                        iconSize: iconSize,
-                        iconPad: iconPad,
-                        scheme: scheme,
-                        activeColor: paragraphMode ? scheme.primary : null,
-                      ),
-                      _BottomBarBtn(
-                        icon: Icons.chevron_right_rounded,
-                        tooltip: uiStrings['nextChapter']?[locale] ?? 'Next',
-                        onTap: onNextChapter,
-                        iconSize: iconSize,
-                        iconPad: iconPad,
-                        scheme: scheme,
-                      ),
-                    ],
+                        _BottomBarBtn(
+                          icon: Icons.chevron_left_rounded,
+                          tooltip: uiStrings['previousChapter']?[locale] ??
+                              'Previous',
+                          onTap: onPrevChapter,
+                          iconSize: iconSize,
+                          iconPad: iconPad,
+                          scheme: scheme,
+                        ),
+                        _BottomBarBtn(
+                          icon: Icons.sticky_note_2_outlined,
+                          tooltip: uiStrings['tabNotes']?[locale] ?? 'Notes',
+                          onTap: onOpenNotes,
+                          iconSize: iconSize,
+                          iconPad: iconPad,
+                          scheme: scheme,
+                        ),
+                        _BottomBarBtn(
+                          // 2026-05-22 (v1.2.72): Illustrations — sits
+                          // between Notes and Font, opens the Maps /
+                          // Illustrations bottom-sheet (For this chapter /
+                          // For this book / All illustrations).
+                          icon: Icons.collections_outlined,
+                          tooltip:
+                              uiStrings['maps']?[locale] ?? 'Illustrations',
+                          onTap: onOpenIllustrations,
+                          iconSize: iconSize,
+                          iconPad: iconPad,
+                          scheme: scheme,
+                        ),
+                        _BottomBarBtn(
+                          icon: Icons.text_fields_rounded,
+                          tooltip:
+                              uiStrings['fontSize']?[locale] ?? 'Font size',
+                          onTap: onFontSize,
+                          iconSize: iconSize,
+                          iconPad: iconPad,
+                          scheme: scheme,
+                        ),
+                        _BottomBarBtn(
+                          // Paragraph mode ON → icon shows "switch to
+                          // verse mode"; OFF → icon shows "switch to
+                          // paragraph mode". Matches the top-header
+                          // toggle so users can flip from either side.
+                          icon: paragraphMode
+                              ? Icons.format_list_numbered_rounded
+                              : Icons.subject_rounded,
+                          tooltip: paragraphMode
+                              ? (uiStrings['verseMode']?[locale] ??
+                                  'Verse mode')
+                              : (uiStrings['paragraphMode']?[locale] ??
+                                  'Paragraph mode'),
+                          onTap: onToggleParagraphMode,
+                          iconSize: iconSize,
+                          iconPad: iconPad,
+                          scheme: scheme,
+                          activeColor: paragraphMode ? scheme.primary : null,
+                        ),
+                        _BottomBarBtn(
+                          icon: Icons.chevron_right_rounded,
+                          tooltip: uiStrings['nextChapter']?[locale] ?? 'Next',
+                          onTap: onNextChapter,
+                          iconSize: iconSize,
+                          iconPad: iconPad,
+                          scheme: scheme,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -6513,8 +5797,7 @@ class _BibleReaderBottomBar extends StatelessWidget {
           ),
         ),
       ),
-    ),
-  );
+    );
   }
 }
 
@@ -6606,11 +5889,13 @@ class _FloatingHeader extends StatelessWidget {
   /// 2026-08-04 (Workbench): overflow-menu "Workbench" entry. Null
   /// hides it (the Workbench's own center pane passes null).
   final VoidCallback? onOpenWorkbench;
+
   /// 2026-08-04 (Workbench): overflow-menu "Classic Reader" entry —
   /// the way back, shown only by the Workbench's center pane.
   final VoidCallback? onOpenParallel;
   final List<BibleMap> chapterMaps;
   final List<BibleMap> bookMaps;
+
   /// Pastor Eric sermons whose body or passage hint cites any verse
   /// in the current (book, chapter). Drives the "Related sermons"
   /// menu item — count badge + tap-to-open sheet.
@@ -6626,10 +5911,12 @@ class _FloatingHeader extends StatelessWidget {
   final String locale;
   final int highlightCount;
   final VoidCallback? onHighlights;
+
   /// One-tap reload triggered from the overflow menu. Re-runs
   /// FetchVerses + FetchBooks on the current Bible version. Null
   /// hides the menu item.
   final VoidCallback? onReload;
+
   /// Optional widget rendered immediately below the glass header
   /// (still inside the same SafeArea + Positioned region). Used for
   /// the "Today's Reading" card when a reading plan is active.
@@ -6694,11 +5981,9 @@ class _FloatingHeader extends StatelessWidget {
             surfaceContainerHighest: _PaperTheme.surface,
           )
         : baseScheme;
-    final fontSize =
-        context.chromeSize(19);
+    final fontSize = context.chromeSize(19);
     final iconSize =
-        (settings.fontSize.clamp(16.0, 28.0) * settings.menuScale)
-            .toDouble();
+        (settings.fontSize.clamp(16.0, 28.0) * settings.menuScale).toDouble();
     final iconPad = (iconSize * 0.45).clamp(6.0, 10.0);
     // 2026-05-22 (v1.2.71): no more horizontal inset — header is now
     // edge-to-edge (matches bottom-bar pattern).
@@ -6730,8 +6015,8 @@ class _FloatingHeader extends StatelessWidget {
             anchoredToBottom: false,
             paperTheme: settings.readingPaperTheme,
             child: SafeArea(
-            bottom: false,
-            child: Padding(
+              bottom: false,
+              child: Padding(
                 padding: EdgeInsets.symmetric(
                     horizontal: 6 * settings.menuScale,
                     vertical: 4 * settings.menuScale),
@@ -6753,603 +6038,608 @@ class _FloatingHeader extends StatelessWidget {
                           // it now lives here (no duplicate home icons).
                           // Hidden in the split-view secondary pane
                           // (where `onClose` already sits in this slot).
-                          if (onClose == null &&
-                              Navigator.of(context).canPop())
+                          if (onClose == null && Navigator.of(context).canPop())
                             IconButton(
                               onPressed: () => Navigator.of(context)
                                   .popUntil((r) => r.isFirst),
-                              icon: Icon(Icons.home_rounded,
-                                  size: iconSize),
+                              icon: Icon(Icons.home_rounded, size: iconSize),
                               padding: EdgeInsets.all(iconPad),
                               constraints: const BoxConstraints(
                                   minWidth: 36, minHeight: 36),
-                              tooltip:
-                                  uiStrings['home']?[locale] ?? 'Home',
+                              tooltip: uiStrings['home']?[locale] ?? 'Home',
                             ),
                           if (onClose != null)
                             IconButton(
                               onPressed: onClose,
-                          icon: Icon(Icons.close_rounded, size: iconSize),
-                          padding: EdgeInsets.all(iconPad),
-                          constraints: const BoxConstraints(
-                              minWidth: 36, minHeight: 36),
-                          tooltip: uiStrings['tooltipClose']?[locale] ??
-                              'Close',
-                        ),
-                      if (showSidebarToggle)
-                        IconButton(
-                          onPressed: onToggleSidebar,
-                          icon: Icon(
-                            sidebarOpen
-                                ? Icons.chevron_left_rounded
-                                : Icons.menu_book_rounded,
-                            size: iconSize,
-                          ),
-                          padding: EdgeInsets.all(iconPad),
-                          constraints: const BoxConstraints(
-                              minWidth: 36, minHeight: 36),
-                          tooltip: sidebarOpen
-                              ? (uiStrings['close']?[settings.locale] ??
-                                  'Close')
-                              : (uiStrings['bibleBooks']?[settings.locale] ??
-                                  'Bible Books'),
-                        ),
-                      if (showBookInfo) ...[
-                        // 2026-06-14 (v1.3.73): the book name gets layout
-                        // PRIORITY (higher flex) over the version chip. The
-                        // version PopupMenuButton used to be unbounded, so a
-                        // long localized label (e.g. 新译本 / 原文释经版) took
-                        // its full intrinsic width and the Flexible book name
-                        // yielded all the way to an empty ellipsis at narrow
-                        // widths — "书卷不见了". Now both are Flexible and the
-                        // book keeps the larger share; the version ellipsizes.
-                        Flexible(
-                          flex: 3,
-                          child: InkWell(
-                            onTap: onBookTap,
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 6),
-                              // 2026-05-07: short-book-name policy.
-                              // User refined the threshold after
-                              // testing 390 / 414 / 747 widths: the
-                              // full localized name fits at >= 390 px,
-                              // so the cutoff dropped from 450 to 390.
-                              // Below 390 we fold to the short form
-                              // (帖前 / 1Th); at or above we keep the
-                              // formal name. Applies to all locales
-                              // uniformly.
-                              child: Builder(builder: (ctx) {
-                                final screenW =
-                                    MediaQuery.of(ctx).size.width;
-                                final useShort = screenW < 390;
-                                return Text(
-                                  useShort
-                                      ? '${shortBookName(book, locale, version)} $chapter'
-                                      : '$book $chapter',
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                                    fontSize: fontSize,
-                                    fontWeight: FontWeight.w700,
-                                    color: scheme.primary,
-                                    decoration: TextDecoration.none,
+                              icon: Icon(Icons.close_rounded, size: iconSize),
+                              padding: EdgeInsets.all(iconPad),
+                              constraints: const BoxConstraints(
+                                  minWidth: 36, minHeight: 36),
+                              tooltip:
+                                  uiStrings['tooltipClose']?[locale] ?? 'Close',
+                            ),
+                          if (showSidebarToggle)
+                            IconButton(
+                              onPressed: onToggleSidebar,
+                              icon: Icon(
+                                sidebarOpen
+                                    ? Icons.chevron_left_rounded
+                                    : Icons.menu_book_rounded,
+                                size: iconSize,
+                              ),
+                              padding: EdgeInsets.all(iconPad),
+                              constraints: const BoxConstraints(
+                                  minWidth: 36, minHeight: 36),
+                              tooltip: sidebarOpen
+                                  ? (uiStrings['close']?[settings.locale] ??
+                                      'Close')
+                                  : (uiStrings['bibleBooks']
+                                          ?[settings.locale] ??
+                                      'Bible Books'),
+                            ),
+                          if (showBookInfo) ...[
+                            // 2026-06-14 (v1.3.73): the book name gets layout
+                            // PRIORITY (higher flex) over the version chip. The
+                            // version PopupMenuButton used to be unbounded, so a
+                            // long localized label (e.g. 新译本 / 原文释经版) took
+                            // its full intrinsic width and the Flexible book name
+                            // yielded all the way to an empty ellipsis at narrow
+                            // widths — "书卷不见了". Now both are Flexible and the
+                            // book keeps the larger share; the version ellipsizes.
+                            Flexible(
+                              flex: 3,
+                              child: InkWell(
+                                onTap: onBookTap,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 6),
+                                  // 2026-05-07: short-book-name policy.
+                                  // User refined the threshold after
+                                  // testing 390 / 414 / 747 widths: the
+                                  // full localized name fits at >= 390 px,
+                                  // so the cutoff dropped from 450 to 390.
+                                  // Below 390 we fold to the short form
+                                  // (帖前 / 1Th); at or above we keep the
+                                  // formal name. Applies to all locales
+                                  // uniformly.
+                                  child: Builder(builder: (ctx) {
+                                    final screenW =
+                                        MediaQuery.of(ctx).size.width;
+                                    final useShort = screenW < 390;
+                                    return Text(
+                                      useShort
+                                          ? '${shortBookName(book, locale, version)} $chapter'
+                                          : '$book $chapter',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        fontFamily: settings.fontFamily,
+                                        fontFamilyFallback: kCjkFontFallback,
+                                        fontSize: fontSize,
+                                        fontWeight: FontWeight.w700,
+                                        color: scheme.primary,
+                                        decoration: TextDecoration.none,
+                                      ),
+                                    );
+                                  }),
+                                ),
+                              ),
+                            ),
+                            Flexible(
+                              flex: 2,
+                              // 2026-06-22 (v1.3.102): language-grouped popup
+                              // — third design pass. Earlier attempts:
+                              //   • v1.3.98 modal bottom sheet — user found it
+                              //     foreign ("不和谐", slid up from bottom).
+                              //   • v1.3.100 custom PopupMenuEntry subclass —
+                              //     crashed iPhone Safari deep inside
+                              //     PopupMenuRoute layout. Reverted in v1.3.101.
+                              // This pass uses the safer pattern:
+                              //   - InkWell on the chip → computes the chip's
+                              //     RelativeRect and calls
+                              //     `showLanguageGroupedVersionMenu`.
+                              //   - That uses `showMenu` with ONE regular
+                              //     `PopupMenuItem(enabled: false)` whose child
+                              //     is a `StatefulBuilder`-style body managing
+                              //     the language tab + version rows. NO custom
+                              //     PopupMenuEntry subclass.
+                              //   - Selected version returns via the Future;
+                              //     we forward to `onVersionSelected` (the
+                              //     existing pipeline — untouched).
+                              // Shared by primary + split-view secondary panes.
+                              child: Builder(builder: (chipCtx) {
+                                return Tooltip(
+                                  message: uiStrings['changeVersion']
+                                          ?[settings.locale] ??
+                                      'Change Version',
+                                  child: InkWell(
+                                    onTap: () async {
+                                      final box = chipCtx.findRenderObject()
+                                          as RenderBox?;
+                                      final overlay = Overlay.of(chipCtx)
+                                          .context
+                                          .findRenderObject() as RenderBox?;
+                                      if (box == null || overlay == null) {
+                                        return;
+                                      }
+                                      final topLeft = box.localToGlobal(
+                                          Offset.zero,
+                                          ancestor: overlay);
+                                      final bottomRight = box.localToGlobal(
+                                          box.size.bottomRight(Offset.zero),
+                                          ancestor: overlay);
+                                      final position = RelativeRect.fromLTRB(
+                                        topLeft.dx,
+                                        bottomRight.dy + 4,
+                                        overlay.size.width - bottomRight.dx,
+                                        overlay.size.height - bottomRight.dy,
+                                      );
+                                      final picked =
+                                          await showLanguageGroupedVersionMenu(
+                                        context: chipCtx,
+                                        position: position,
+                                        currentVersion: version,
+                                        settings: settings,
+                                      );
+                                      if (picked != null) {
+                                        onVersionSelected(picked);
+                                      }
+                                    },
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 6),
+                                      child: Text(
+                                        shortBibleVersionLabel(version),
+                                        maxLines: 1,
+                                        softWrap: false,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontFamily: settings.fontFamily,
+                                          fontFamilyFallback: kCjkFontFallback,
+                                          fontSize: fontSize * 0.85,
+                                          fontWeight: FontWeight.w600,
+                                          color: scheme.primary
+                                              .withValues(alpha: 0.8),
+                                        ),
+                                      ),
+                                    ),
                                   ),
                                 );
                               }),
                             ),
-                          ),
-                        ),
-                        Flexible(
-                          flex: 2,
-                          // 2026-06-22 (v1.3.102): language-grouped popup
-                          // — third design pass. Earlier attempts:
-                          //   • v1.3.98 modal bottom sheet — user found it
-                          //     foreign ("不和谐", slid up from bottom).
-                          //   • v1.3.100 custom PopupMenuEntry subclass —
-                          //     crashed iPhone Safari deep inside
-                          //     PopupMenuRoute layout. Reverted in v1.3.101.
-                          // This pass uses the safer pattern:
-                          //   - InkWell on the chip → computes the chip's
-                          //     RelativeRect and calls
-                          //     `showLanguageGroupedVersionMenu`.
-                          //   - That uses `showMenu` with ONE regular
-                          //     `PopupMenuItem(enabled: false)` whose child
-                          //     is a `StatefulBuilder`-style body managing
-                          //     the language tab + version rows. NO custom
-                          //     PopupMenuEntry subclass.
-                          //   - Selected version returns via the Future;
-                          //     we forward to `onVersionSelected` (the
-                          //     existing pipeline — untouched).
-                          // Shared by primary + split-view secondary panes.
-                          child: Builder(builder: (chipCtx) {
-                            return Tooltip(
-                              message: uiStrings['changeVersion']
-                                      ?[settings.locale] ??
-                                  'Change Version',
-                              child: InkWell(
-                                onTap: () async {
-                                  final box = chipCtx.findRenderObject()
-                                      as RenderBox?;
-                                  final overlay = Overlay.of(chipCtx)
-                                      .context
-                                      .findRenderObject() as RenderBox?;
-                                  if (box == null || overlay == null) return;
-                                  final topLeft = box.localToGlobal(
-                                      Offset.zero,
-                                      ancestor: overlay);
-                                  final bottomRight = box.localToGlobal(
-                                      box.size.bottomRight(Offset.zero),
-                                      ancestor: overlay);
-                                  final position = RelativeRect.fromLTRB(
-                                    topLeft.dx,
-                                    bottomRight.dy + 4,
-                                    overlay.size.width - bottomRight.dx,
-                                    overlay.size.height - bottomRight.dy,
-                                  );
-                                  final picked =
-                                      await showLanguageGroupedVersionMenu(
-                                    context: chipCtx,
-                                    position: position,
-                                    currentVersion: version,
-                                    settings: settings,
-                                  );
-                                  if (picked != null) {
-                                    onVersionSelected(picked);
-                                  }
-                                },
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 6),
-                                  child: Text(
-                                    shortBibleVersionLabel(version),
-                                    maxLines: 1,
-                                    softWrap: false,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontFamily: settings.fontFamily,
-                                      fontFamilyFallback: kCjkFontFallback,
-                                      fontSize: fontSize * 0.85,
-                                      fontWeight: FontWeight.w600,
-                                      color: scheme.primary
-                                          .withValues(alpha: 0.8),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            );
-                          }),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-                // Right-side actions: Material 3 best practice — keep
-                // the most-used action (Search) visible and consolidate
-                // everything else into a single overflow menu so the
-                // book/chapter label on the left has room to render
-                // (avoids "马可..." truncation in narrow layouts and
-                // split view).
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // 2026-08-24 (#313): and gone when the host draws
-                    // the chrome. The workspace's command line is a
-                    // pane on the same screen and its toolbar carries a
-                    // magnifier of its own, so this one was a second
-                    // door to a door — the exact argument the split
-                    // view's second column already makes below.
-                    // `/` and ⌘F still work; the shortcut is not chrome.
-                    if (showSearchAndSettings && !hostChrome)
-                      IconButton(
-                        onPressed: onSearch,
-                        icon: Icon(Icons.search_rounded, size: iconSize),
-                        padding: EdgeInsets.all(iconPad),
-                        constraints: const BoxConstraints(
-                            minWidth: 36, minHeight: 36),
-                        tooltip: uiStrings['search']?[locale] ?? 'Search',
+                          ],
+                        ],
                       ),
-                    // 2026-06-21: the Home action moved to the LEADING
-                    // slot (it replaced the back-arrow). Keeping a second
-                    // home button here would show two home icons on the
-                    // primary pane, so the right-side one is gone.
-                    // 2026-05-24 (v1.3.14): hide the overflow menu in
-                    // the split-view secondary pane. User asked for
-                    // this — the secondary pane exists only for
-                    // version-comparison reading, so Settings /
-                    // Library / Highlights / Synopsis / Maps /
-                    // Trivia / Listen / etc. (all of which the
-                    // primary pane already exposes) just add noise
-                    // and risk the user changing app state from a
-                    // throwaway pane. `onClose == null` reliably
-                    // identifies the primary pane — `home_page.dart`
-                    // only sets `onClose` on the secondary
-                    // BibleReadingPane.
-                    if (onClose == null)
-                    PopupMenuButton<String>(
-                      icon: Icon(Icons.more_vert_rounded, size: iconSize),
-                      padding: EdgeInsets.all(iconPad),
-                      tooltip: uiStrings['more']?[locale] ?? 'More',
-                      position: PopupMenuPosition.under,
-                      // Each item fires its action via `onTap` (which
-                      // runs the moment the user taps the row, before
-                      // the menu's close animation begins) so layout-
-                      // changing actions like Open Split View take
-                      // effect immediately. Using `onSelected` here
-                      // delayed the callback until after the menu had
-                      // fully animated closed (~250 ms), making the
-                      // first split-view tap feel like it was lost.
-                      itemBuilder: (context) {
-                        final items = <PopupMenuEntry<String>>[];
-                        // 2026-08-24 (#313): `!hostChrome` reads
-                        // "the workspace has no menu bar of its own,
-                        // so this menu is the only one there is".
-                        // Everything it guards navigates the app
-                        // rather than acting on this chapter.
-                        if (highlightCount > 0 && !hostChrome) {
-                          items.add(PopupMenuItem(
-                            value: 'highlights',
-                            onTap: () => onHighlights?.call(),
-                            child: _menuRow(
-                              context,
-                              icon: Icons.format_color_fill,
-                              iconColor: scheme.primary,
-                              label: uiStrings['myHighlights']?[locale] ??
-                                  'My Highlights',
-                              trailing: highlightCount.toString(),
-                            ),
-                          ));
-                        }
-                        // Home — pops everything off the stack so
-                        // the user lands back on the Dashboard root.
-                        // After Round 33 the Dashboard IS the app
-                        // root; any nested stack (Settings, Library,
-                        // Stats etc. on top of the reader) collapses
-                        // to it via popUntil(isFirst).
-                        // 2026-08-24 (#313): never inside the
-                        // workspace. There is no home screen to go to
-                        // — the Workbench IS the app, and this entry
-                        // popped to a route that no longer means
-                        // anything from there.
-                        if (!hostChrome) {
-                          items.add(PopupMenuItem(
-                            value: 'home',
-                            onTap: () {
-                              Navigator.of(context)
-                                  .popUntil((r) => r.isFirst);
-                            },
-                            child: _menuRow(
-                              context,
-                              icon: Icons.home_outlined,
-                              label: uiStrings['home']?[locale] ?? 'Home',
-                            ),
-                          ));
-                        }
-                        // Reload — always available so the user has
-                        // a one-tap recovery when the reader ends up
-                        // empty (failed version switch, network blip,
-                        // race condition). User asked for this
-                        // explicitly: "I need to quit and open app
-                        // again" was their previous workaround.
-                        if (onReload != null) {
-                          items.add(PopupMenuItem(
-                            value: 'reload',
-                            onTap: () => onReload!(),
-                            child: _menuRow(
-                              context,
-                              icon: Icons.refresh,
-                              label:
-                                  uiStrings['reload']?[locale] ?? 'Reload',
-                            ),
-                          ));
-                        }
-                        // Library entry — always shown so the user
-                        // can discover Notes / Bookmarks even before
-                        // creating any.
-                        //
-                        // 2026-08-24 (#313): except inside the
-                        // workspace, where Resources → "Notes &
-                        // highlights" is the same page, and the
-                        // Analysis pane's Notes tab is the wired one.
-                        if (!hostChrome) {
-                          items.add(PopupMenuItem(
-                            value: 'library',
-                            onTap: () {
-                              pushPage(const LibraryPage());
-                            },
-                            child: _menuRow(
-                              context,
-                              icon: Icons.collections_bookmark_outlined,
-                              label:
-                                  uiStrings['library']?[locale] ?? 'Library',
-                            ),
-                          ));
-                        }
-                        // 2026-08-24 (#313): this was the ONLY door to
-                        // `StatsPage` anywhere in the app, and the
-                        // Analysis pane has carried a Stats tab all
-                        // along — the duplicate-implementation case the
-                        // ticket asks to settle. Inside the workspace
-                        // the tab is canonical; the page survives for
-                        // the standalone reader, which has no pane.
-                        if (!hostChrome) {
-                          items.add(PopupMenuItem(
-                            value: 'stats',
-                            onTap: () {
-                              pushPage(const StatsPage());
-                            },
-                            child: _menuRow(
-                              context,
-                              icon: Icons.insights_outlined,
-                              label: uiStrings['statistics']?[locale] ??
-                                  'Statistics',
-                            ),
-                          ));
-                        }
-                        // Bible Evidence — pre-filtered to the
-                        // current English book AND chapter so users
-                        // only see archaeological / manuscript /
-                        // historical findings whose pictures actually
-                        // illustrate the chapter on screen. Falls back
-                        // to book-wide and then to the full archive
-                        // when chapter-specific coverage is thin.
-                        items.add(PopupMenuItem(
-                          value: 'evidence',
-                          onTap: () {
-                            pushPage(EvidencePage(
-                                filterBook: toEnglish(book),
-                                filterChapter: chapter,
+                    ),
+                    // Right-side actions: Material 3 best practice — keep
+                    // the most-used action (Search) visible and consolidate
+                    // everything else into a single overflow menu so the
+                    // book/chapter label on the left has room to render
+                    // (avoids "马可..." truncation in narrow layouts and
+                    // split view).
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // 2026-08-24 (#313): and gone when the host draws
+                        // the chrome. The workspace's command line is a
+                        // pane on the same screen and its toolbar carries a
+                        // magnifier of its own, so this one was a second
+                        // door to a door — the exact argument the split
+                        // view's second column already makes below.
+                        // `/` and ⌘F still work; the shortcut is not chrome.
+                        if (showSearchAndSettings && !hostChrome)
+                          IconButton(
+                            onPressed: onSearch,
+                            icon: Icon(Icons.search_rounded, size: iconSize),
+                            padding: EdgeInsets.all(iconPad),
+                            constraints: const BoxConstraints(
+                                minWidth: 36, minHeight: 36),
+                            tooltip: uiStrings['search']?[locale] ?? 'Search',
+                          ),
+                        // 2026-06-21: the Home action moved to the LEADING
+                        // slot (it replaced the back-arrow). Keeping a second
+                        // home button here would show two home icons on the
+                        // primary pane, so the right-side one is gone.
+                        // 2026-05-24 (v1.3.14): hide the overflow menu in
+                        // the split-view secondary pane. User asked for
+                        // this — the secondary pane exists only for
+                        // version-comparison reading, so Settings /
+                        // Library / Highlights / Synopsis / Maps /
+                        // Trivia / Listen / etc. (all of which the
+                        // primary pane already exposes) just add noise
+                        // and risk the user changing app state from a
+                        // throwaway pane. `onClose == null` reliably
+                        // identifies the primary pane — `home_page.dart`
+                        // only sets `onClose` on the secondary
+                        // BibleReadingPane.
+                        if (onClose == null)
+                          PopupMenuButton<String>(
+                            icon: Icon(Icons.more_vert_rounded, size: iconSize),
+                            padding: EdgeInsets.all(iconPad),
+                            tooltip: uiStrings['more']?[locale] ?? 'More',
+                            position: PopupMenuPosition.under,
+                            // Each item fires its action via `onTap` (which
+                            // runs the moment the user taps the row, before
+                            // the menu's close animation begins) so layout-
+                            // changing actions like Open Split View take
+                            // effect immediately. Using `onSelected` here
+                            // delayed the callback until after the menu had
+                            // fully animated closed (~250 ms), making the
+                            // first split-view tap feel like it was lost.
+                            itemBuilder: (context) {
+                              final items = <PopupMenuEntry<String>>[];
+                              // 2026-08-24 (#313): `!hostChrome` reads
+                              // "the workspace has no menu bar of its own,
+                              // so this menu is the only one there is".
+                              // Everything it guards navigates the app
+                              // rather than acting on this chapter.
+                              if (highlightCount > 0 && !hostChrome) {
+                                items.add(PopupMenuItem(
+                                  value: 'highlights',
+                                  onTap: () => onHighlights?.call(),
+                                  child: _menuRow(
+                                    context,
+                                    icon: Icons.format_color_fill,
+                                    iconColor: scheme.primary,
+                                    label: uiStrings['myHighlights']?[locale] ??
+                                        'My Highlights',
+                                    trailing: highlightCount.toString(),
+                                  ),
+                                ));
+                              }
+                              // Home — pops everything off the stack so
+                              // the user lands back on the Dashboard root.
+                              // After Round 33 the Dashboard IS the app
+                              // root; any nested stack (Settings, Library,
+                              // Stats etc. on top of the reader) collapses
+                              // to it via popUntil(isFirst).
+                              // 2026-08-24 (#313): never inside the
+                              // workspace. There is no home screen to go to
+                              // — the Workbench IS the app, and this entry
+                              // popped to a route that no longer means
+                              // anything from there.
+                              if (!hostChrome) {
+                                items.add(PopupMenuItem(
+                                  value: 'home',
+                                  onTap: () {
+                                    Navigator.of(context)
+                                        .popUntil((r) => r.isFirst);
+                                  },
+                                  child: _menuRow(
+                                    context,
+                                    icon: Icons.home_outlined,
+                                    label: uiStrings['home']?[locale] ?? 'Home',
+                                  ),
+                                ));
+                              }
+                              // Reload — always available so the user has
+                              // a one-tap recovery when the reader ends up
+                              // empty (failed version switch, network blip,
+                              // race condition). User asked for this
+                              // explicitly: "I need to quit and open app
+                              // again" was their previous workaround.
+                              if (onReload != null) {
+                                items.add(PopupMenuItem(
+                                  value: 'reload',
+                                  onTap: () => onReload!(),
+                                  child: _menuRow(
+                                    context,
+                                    icon: Icons.refresh,
+                                    label: uiStrings['reload']?[locale] ??
+                                        'Reload',
+                                  ),
+                                ));
+                              }
+                              // Library entry — always shown so the user
+                              // can discover Notes / Bookmarks even before
+                              // creating any.
+                              //
+                              // 2026-08-24 (#313): except inside the
+                              // workspace, where Resources → "Notes &
+                              // highlights" is the same page, and the
+                              // Analysis pane's Notes tab is the wired one.
+                              if (!hostChrome) {
+                                items.add(PopupMenuItem(
+                                  value: 'library',
+                                  onTap: () {
+                                    pushPage(const LibraryPage());
+                                  },
+                                  child: _menuRow(
+                                    context,
+                                    icon: Icons.collections_bookmark_outlined,
+                                    label: uiStrings['library']?[locale] ??
+                                        'Library',
+                                  ),
+                                ));
+                              }
+                              // 2026-08-24 (#313): this was the ONLY door to
+                              // `StatsPage` anywhere in the app, and the
+                              // Analysis pane has carried a Stats tab all
+                              // along — the duplicate-implementation case the
+                              // ticket asks to settle. Inside the workspace
+                              // the tab is canonical; the page survives for
+                              // the standalone reader, which has no pane.
+                              if (!hostChrome) {
+                                items.add(PopupMenuItem(
+                                  value: 'stats',
+                                  onTap: () {
+                                    pushPage(const StatsPage());
+                                  },
+                                  child: _menuRow(
+                                    context,
+                                    icon: Icons.insights_outlined,
+                                    label: uiStrings['statistics']?[locale] ??
+                                        'Statistics',
+                                  ),
+                                ));
+                              }
+                              // Bible Evidence — pre-filtered to the
+                              // current English book AND chapter so users
+                              // only see archaeological / manuscript /
+                              // historical findings whose pictures actually
+                              // illustrate the chapter on screen. Falls back
+                              // to book-wide and then to the full archive
+                              // when chapter-specific coverage is thin.
+                              items.add(PopupMenuItem(
+                                value: 'evidence',
+                                onTap: () {
+                                  pushPage(EvidencePage(
+                                    filterBook: toEnglish(book),
+                                    filterChapter: chapter,
+                                  ));
+                                },
+                                child: _menuRow(
+                                  context,
+                                  icon: Icons.museum_outlined,
+                                  label: uiStrings['bibleEvidence']?[locale] ??
+                                      'Bible Evidence',
+                                ),
                               ));
-                          },
-                          child: _menuRow(
-                            context,
-                            icon: Icons.museum_outlined,
-                            label: uiStrings['bibleEvidence']?[locale] ??
-                                'Bible Evidence',
+                              // Synopsis — the four Gospels, plus any Old
+                              // Testament book Eagle's View files a parallel
+                              // for. Books with nothing to show do not get
+                              // the item.
+                              // 2026-05-24 (v1.3.19): "Listen to chapter"
+                              // menu item removed with the 朗读 feature.
+                              final synopsisBook = toEnglish(book) ?? book;
+                              if (SynopsisService.hasSynopsisSync(
+                                  synopsisBook)) {
+                                final isGospel =
+                                    SynopsisService.isGospel(synopsisBook);
+                                items.add(PopupMenuItem(
+                                  value: 'synopsis',
+                                  onTap: () => _showSynopsisSheet(
+                                    context: context,
+                                    englishBook: synopsisBook,
+                                    chapter: chapter,
+                                    locale: locale,
+                                  ),
+                                  child: _menuRow(
+                                    context,
+                                    icon: Icons.compare_arrows_rounded,
+                                    label: isGospel
+                                        ? (uiStrings['synopsis']?[locale] ??
+                                            'Gospel Synopsis')
+                                        : (uiStrings['synopsisOt']?[locale] ??
+                                            'Parallel Passages'),
+                                  ),
+                                ));
+                              }
+                              items.add(PopupMenuItem(
+                                value: 'maps',
+                                onTap: () => _showMapPicker(
+                                  context,
+                                  chapterMaps: chapterMaps,
+                                  bookMaps: bookMaps,
+                                  locale: locale,
+                                ),
+                                child: _menuRow(
+                                  context,
+                                  icon: chapterMaps.isNotEmpty
+                                      ? Icons.collections_rounded
+                                      : Icons.collections_outlined,
+                                  iconColor: chapterMaps.isNotEmpty
+                                      ? scheme.primary
+                                      : null,
+                                  label: uiStrings['maps']?[locale] ?? 'Maps',
+                                  trailing: chapterMaps.isNotEmpty
+                                      ? chapterMaps.length.toString()
+                                      : null,
+                                ),
+                              ));
+                              items.add(PopupMenuItem(
+                                value: 'sermons',
+                                onTap: () {
+                                  final handled = onChapterSermons;
+                                  if (handled != null) {
+                                    handled();
+                                    return;
+                                  }
+                                  _showChapterSermonsSheet(
+                                    context: context,
+                                    sermons: chapterSermons,
+                                    locale: locale,
+                                    book: book,
+                                    chapter: chapter,
+                                  );
+                                },
+                                child: _menuRow(
+                                  context,
+                                  icon: chapterSermons.isNotEmpty
+                                      ? Icons.menu_book_rounded
+                                      : Icons.menu_book_outlined,
+                                  iconColor: chapterSermons.isNotEmpty
+                                      ? scheme.primary
+                                      : null,
+                                  label: uiStrings['relatedSermons']?[locale] ??
+                                      'Related sermons',
+                                  trailing: chapterSermons.isNotEmpty
+                                      ? chapterSermons.length.toString()
+                                      : null,
+                                ),
+                              ));
+                              // Round 56: chapter-aware Bible Trivia. Per
+                              // user request, the trivia catalogue should
+                              // also surface inline from the reader (like
+                              // the illustrations / sermons / synopsis
+                              // entries above) so users discover relevant
+                              // entries without having to leave their
+                              // reading.
+                              final triviaCount = trivia
+                                  .triviaForChapter(
+                                    englishBook: toEnglish(book) ?? book,
+                                    chapter: chapter,
+                                  )
+                                  .length;
+                              items.add(PopupMenuItem(
+                                value: 'trivia',
+                                onTap: () => trivia.showBibleTriviaSheet(
+                                  context: context,
+                                  englishBook: toEnglish(book) ?? book,
+                                  chapter: chapter,
+                                  locale: locale,
+                                  settings: context.read<AppSettings>(),
+                                ),
+                                child: _menuRow(
+                                  context,
+                                  icon: triviaCount > 0
+                                      ? Icons.auto_awesome_rounded
+                                      : Icons.auto_awesome_outlined,
+                                  iconColor:
+                                      triviaCount > 0 ? scheme.primary : null,
+                                  label: uiStrings['bibleTrivia']?[locale] ??
+                                      'Bible Trivia',
+                                  trailing:
+                                      triviaCount > 0 ? '$triviaCount' : null,
+                                ),
+                              ));
+                              // 2026-08-04 (Workbench): swap the classic
+                              // reader for the three-pane study workspace.
+                              // Hidden when null — the Workbench's own
+                              // center pane passes null.
+                              if (onOpenWorkbench != null) {
+                                items.add(PopupMenuItem(
+                                  value: 'workbench',
+                                  onTap: () => onOpenWorkbench?.call(),
+                                  child: _menuRow(
+                                    context,
+                                    icon: Icons.view_week_outlined,
+                                    label: uiStrings['workbench']?[locale] ??
+                                        'Workbench',
+                                  ),
+                                ));
+                              }
+                              // 2026-08-04 (Workbench): the way back — only
+                              // the Workbench's center pane shows this.
+                              // 2026-08 (SeekSparks): BibleWorks-style
+                              // parallel Browse — same verse across every
+                              // selected version plus the original line.
+                              if (onOpenParallel != null && !hostChrome) {
+                                items.add(PopupMenuItem(
+                                  value: 'parallel',
+                                  onTap: () => onOpenParallel?.call(),
+                                  child: _menuRow(
+                                    context,
+                                    icon: Icons.view_agenda_outlined,
+                                    label: uiStrings['parallelBrowse']
+                                            ?[locale] ??
+                                        'Parallel',
+                                  ),
+                                ));
+                              }
+                              // Browse / Reader / Split are the workspace's
+                              // three centre modes and its toolbar shows all
+                              // three at once, with the active one lit. A
+                              // buried menu entry for the same switch could
+                              // only ever say less (#313).
+                              if (onToggleSplitView != null && !hostChrome) {
+                                items.add(PopupMenuItem(
+                                  value: 'split',
+                                  onTap: () => onToggleSplitView?.call(),
+                                  child: _menuRow(
+                                    context,
+                                    icon: splitViewActive
+                                        ? Icons.close_fullscreen
+                                        : Icons.vertical_split,
+                                    label: splitViewActive
+                                        ? (uiStrings['closeSplitView']
+                                                ?[locale] ??
+                                            'Close Split View')
+                                        : (uiStrings['openSplitView']
+                                                ?[locale] ??
+                                            'Open Split View'),
+                                  ),
+                                ));
+                              }
+                              // 2026-08-24 (#313): `|| hostChrome` because
+                              // paragraph mode is a property of THIS column's
+                              // text, and inside the workspace the bottom bar
+                              // that used to carry it is gone. Without this
+                              // the setting would be reachable only from
+                              // Settings → Display.
+                              if ((showSidebarToggle || hostChrome) &&
+                                  onToggleParagraphMode != null) {
+                                items.add(PopupMenuItem(
+                                  value: 'paragraph',
+                                  onTap: () => onToggleParagraphMode?.call(),
+                                  child: _menuRow(
+                                    context,
+                                    icon: paragraphMode
+                                        ? Icons.format_align_left
+                                        : Icons.format_list_numbered_rounded,
+                                    iconColor:
+                                        paragraphMode ? scheme.primary : null,
+                                    label: paragraphMode
+                                        ? (uiStrings['paragraphFlow']
+                                                ?[locale] ??
+                                            'Paragraph Flow')
+                                        : (uiStrings['verseByVerse']?[locale] ??
+                                            'Verse by Verse'),
+                                  ),
+                                ));
+                              }
+                              // 2026-08-24 (#313): the bottom bar's `Aa`,
+                              // rehoused. Text size is a property of this
+                              // column's text, so it stays with the column —
+                              // it just stops floating over it.
+                              if (hostChrome && onTextSize != null) {
+                                items.add(PopupMenuItem(
+                                  value: 'textSize',
+                                  onTap: onTextSize,
+                                  child: _menuRow(
+                                    context,
+                                    icon: Icons.text_fields_rounded,
+                                    label: uiStrings['fontSize']?[locale] ??
+                                        'Font size',
+                                  ),
+                                ));
+                              }
+                              // Settings is the workspace's, not the
+                              // column's: File → Settings and the toolbar's
+                              // gear both open it (#313).
+                              if (showSearchAndSettings && !hostChrome) {
+                                items.add(const PopupMenuDivider());
+                                items.add(PopupMenuItem(
+                                  value: 'settings',
+                                  onTap: onSettings,
+                                  child: _menuRow(
+                                    context,
+                                    icon: Icons.settings_outlined,
+                                    label: uiStrings['settings']?[locale] ??
+                                        'Settings',
+                                  ),
+                                ));
+                              }
+                              return items;
+                            },
                           ),
-                        ));
-                        // Synopsis — the four Gospels, plus any Old
-                        // Testament book Eagle's View files a parallel
-                        // for. Books with nothing to show do not get
-                        // the item.
-                        // 2026-05-24 (v1.3.19): "Listen to chapter"
-                        // menu item removed with the 朗读 feature.
-                        final synopsisBook = toEnglish(book) ?? book;
-                        if (SynopsisService.hasSynopsisSync(synopsisBook)) {
-                          final isGospel =
-                              SynopsisService.isGospel(synopsisBook);
-                          items.add(PopupMenuItem(
-                            value: 'synopsis',
-                            onTap: () => _showSynopsisSheet(
-                              context: context,
-                              englishBook: synopsisBook,
-                              chapter: chapter,
-                              locale: locale,
-                            ),
-                            child: _menuRow(
-                              context,
-                              icon: Icons.compare_arrows_rounded,
-                              label: isGospel
-                                  ? (uiStrings['synopsis']?[locale] ??
-                                      'Gospel Synopsis')
-                                  : (uiStrings['synopsisOt']?[locale] ??
-                                      'Parallel Passages'),
-                            ),
-                          ));
-                        }
-                        items.add(PopupMenuItem(
-                          value: 'maps',
-                          onTap: () => _showMapPicker(
-                            context,
-                            chapterMaps: chapterMaps,
-                            bookMaps: bookMaps,
-                            locale: locale,
-                          ),
-                          child: _menuRow(
-                            context,
-                            icon: chapterMaps.isNotEmpty
-                                ? Icons.collections_rounded
-                                : Icons.collections_outlined,
-                            iconColor: chapterMaps.isNotEmpty
-                                ? scheme.primary
-                                : null,
-                            label: uiStrings['maps']?[locale] ?? 'Maps',
-                            trailing: chapterMaps.isNotEmpty
-                                ? chapterMaps.length.toString()
-                                : null,
-                          ),
-                        ));
-                        items.add(PopupMenuItem(
-                          value: 'sermons',
-                          onTap: () {
-                            final handled = onChapterSermons;
-                            if (handled != null) {
-                              handled();
-                              return;
-                            }
-                            _showChapterSermonsSheet(
-                              context: context,
-                              sermons: chapterSermons,
-                              locale: locale,
-                              book: book,
-                              chapter: chapter,
-                            );
-                          },
-                          child: _menuRow(
-                            context,
-                            icon: chapterSermons.isNotEmpty
-                                ? Icons.menu_book_rounded
-                                : Icons.menu_book_outlined,
-                            iconColor: chapterSermons.isNotEmpty
-                                ? scheme.primary
-                                : null,
-                            label: uiStrings['relatedSermons']?[locale] ??
-                                'Related sermons',
-                            trailing: chapterSermons.isNotEmpty
-                                ? chapterSermons.length.toString()
-                                : null,
-                          ),
-                        ));
-                        // Round 56: chapter-aware Bible Trivia. Per
-                        // user request, the trivia catalogue should
-                        // also surface inline from the reader (like
-                        // the illustrations / sermons / synopsis
-                        // entries above) so users discover relevant
-                        // entries without having to leave their
-                        // reading.
-                        final triviaCount = trivia.triviaForChapter(
-                          englishBook: toEnglish(book) ?? book,
-                          chapter: chapter,
-                        ).length;
-                        items.add(PopupMenuItem(
-                          value: 'trivia',
-                          onTap: () => trivia.showBibleTriviaSheet(
-                            context: context,
-                            englishBook: toEnglish(book) ?? book,
-                            chapter: chapter,
-                            locale: locale,
-                            settings: context.read<AppSettings>(),
-                          ),
-                          child: _menuRow(
-                            context,
-                            icon: triviaCount > 0
-                                ? Icons.auto_awesome_rounded
-                                : Icons.auto_awesome_outlined,
-                            iconColor: triviaCount > 0
-                                ? scheme.primary
-                                : null,
-                            label:
-                                uiStrings['bibleTrivia']?[locale] ??
-                                    'Bible Trivia',
-                            trailing: triviaCount > 0
-                                ? '$triviaCount'
-                                : null,
-                          ),
-                        ));
-                        // 2026-08-04 (Workbench): swap the classic
-                        // reader for the three-pane study workspace.
-                        // Hidden when null — the Workbench's own
-                        // center pane passes null.
-                        if (onOpenWorkbench != null) {
-                          items.add(PopupMenuItem(
-                            value: 'workbench',
-                            onTap: () => onOpenWorkbench?.call(),
-                            child: _menuRow(
-                              context,
-                              icon: Icons.view_week_outlined,
-                              label: uiStrings['workbench']?[locale] ??
-                                  'Workbench',
-                            ),
-                          ));
-                        }
-                        // 2026-08-04 (Workbench): the way back — only
-                        // the Workbench's center pane shows this.
-                        // 2026-08 (SeekSparks): BibleWorks-style
-                        // parallel Browse — same verse across every
-                        // selected version plus the original line.
-                        if (onOpenParallel != null && !hostChrome) {
-                          items.add(PopupMenuItem(
-                            value: 'parallel',
-                            onTap: () => onOpenParallel?.call(),
-                            child: _menuRow(
-                              context,
-                              icon: Icons.view_agenda_outlined,
-                              label: uiStrings['parallelBrowse']?[locale] ??
-                                  'Parallel',
-                            ),
-                          ));
-                        }
-                        // Browse / Reader / Split are the workspace's
-                        // three centre modes and its toolbar shows all
-                        // three at once, with the active one lit. A
-                        // buried menu entry for the same switch could
-                        // only ever say less (#313).
-                        if (onToggleSplitView != null && !hostChrome) {
-                          items.add(PopupMenuItem(
-                            value: 'split',
-                            onTap: () => onToggleSplitView?.call(),
-                            child: _menuRow(
-                              context,
-                              icon: splitViewActive
-                                  ? Icons.close_fullscreen
-                                  : Icons.vertical_split,
-                              label: splitViewActive
-                                  ? (uiStrings['closeSplitView']?[locale] ??
-                                      'Close Split View')
-                                  : (uiStrings['openSplitView']?[locale] ??
-                                      'Open Split View'),
-                            ),
-                          ));
-                        }
-                        // 2026-08-24 (#313): `|| hostChrome` because
-                        // paragraph mode is a property of THIS column's
-                        // text, and inside the workspace the bottom bar
-                        // that used to carry it is gone. Without this
-                        // the setting would be reachable only from
-                        // Settings → Display.
-                        if ((showSidebarToggle || hostChrome) &&
-                            onToggleParagraphMode != null) {
-                          items.add(PopupMenuItem(
-                            value: 'paragraph',
-                            onTap: () => onToggleParagraphMode?.call(),
-                            child: _menuRow(
-                              context,
-                              icon: paragraphMode
-                                  ? Icons.format_align_left
-                                  : Icons.format_list_numbered_rounded,
-                              iconColor:
-                                  paragraphMode ? scheme.primary : null,
-                              label: paragraphMode
-                                  ? (uiStrings['paragraphFlow']?[locale] ??
-                                      'Paragraph Flow')
-                                  : (uiStrings['verseByVerse']?[locale] ??
-                                      'Verse by Verse'),
-                            ),
-                          ));
-                        }
-                        // 2026-08-24 (#313): the bottom bar's `Aa`,
-                        // rehoused. Text size is a property of this
-                        // column's text, so it stays with the column —
-                        // it just stops floating over it.
-                        if (hostChrome && onTextSize != null) {
-                          items.add(PopupMenuItem(
-                            value: 'textSize',
-                            onTap: onTextSize,
-                            child: _menuRow(
-                              context,
-                              icon: Icons.text_fields_rounded,
-                              label: uiStrings['fontSize']?[locale] ??
-                                  'Font size',
-                            ),
-                          ));
-                        }
-                        // Settings is the workspace's, not the
-                        // column's: File → Settings and the toolbar's
-                        // gear both open it (#313).
-                        if (showSearchAndSettings && !hostChrome) {
-                          items.add(const PopupMenuDivider());
-                          items.add(PopupMenuItem(
-                            value: 'settings',
-                            onTap: onSettings,
-                            child: _menuRow(
-                              context,
-                              icon: Icons.settings_outlined,
-                              label: uiStrings['settings']?[locale] ??
-                                  'Settings',
-                            ),
-                          ));
-                        }
-                        return items;
-                      },
+                      ],
                     ),
                   ],
                 ),
-              ],
+              ),
             ),
           ),
-        ),
-      ),
         ),
       ),
     );
@@ -7380,11 +6670,9 @@ class _FloatingHeader extends StatelessWidget {
         if (trailing != null) ...[
           const SizedBox(width: 12),
           Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
             decoration: BoxDecoration(
-              color:
-                  scheme.surfaceContainerHighest.withValues(alpha: 0.7),
+              color: scheme.surfaceContainerHighest.withValues(alpha: 0.7),
             ),
             child: Text(
               trailing,
@@ -7573,9 +6861,8 @@ class _CrossRefsSheetBodyState extends State<_CrossRefsSheetBody> {
                       currentBook: widget.englishBook,
                       locale: locale,
                       version: widget.mainProvider.currentVersion,
-                      fontFamily:
-                          Provider.of<AppSettings>(ctx, listen: false)
-                              .fontFamily,
+                      fontFamily: Provider.of<AppSettings>(ctx, listen: false)
+                          .fontFamily,
                       padding: const EdgeInsets.fromLTRB(0, 2, 0, 10),
                       onNavigate: widget.onNavigate,
                     ),
@@ -7587,8 +6874,8 @@ class _CrossRefsSheetBodyState extends State<_CrossRefsSheetBody> {
                     _SheetAttribution(text: SynopsisService.otAttribution),
                   if (refs.isNotEmpty)
                     _SheetSourceHeading(
-                      text: uiStrings['crossRefs']?[locale] ??
-                          'Cross-references',
+                      text:
+                          uiStrings['crossRefs']?[locale] ?? 'Cross-references',
                     ),
                 ],
               ];
@@ -7616,39 +6903,39 @@ class _CrossRefsSheetBodyState extends State<_CrossRefsSheetBody> {
                         Divider(
                             height: 1,
                             thickness: 0.5,
-                            color: scheme.outlineVariant
-                                .withValues(alpha: 0.4)),
+                            color:
+                                scheme.outlineVariant.withValues(alpha: 0.4)),
                       InkWell(
-                    onTap: () => widget.onNavigate(r),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            label,
-                            style: TextStyle(
-                              fontSize: ctx.textSize(13),
-                              fontWeight: FontWeight.w700,
-                              color: scheme.primary,
-                            ),
-                          ),
-                          if (preview != null) ...[
-                            const SizedBox(height: 3),
-                            Text(
-                              preview,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: ctx.textSize(13),
-                                color: scheme.onSurface,
-                                height: 1.4,
+                        onTap: () => widget.onNavigate(r),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                label,
+                                style: TextStyle(
+                                  fontSize: ctx.textSize(13),
+                                  fontWeight: FontWeight.w700,
+                                  color: scheme.primary,
+                                ),
                               ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
+                              if (preview != null) ...[
+                                const SizedBox(height: 3),
+                                Text(
+                                  preview,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: ctx.textSize(13),
+                                    color: scheme.onSurface,
+                                    height: 1.4,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
                       ),
                     ],
                   );
@@ -7940,8 +7227,7 @@ class _SectionHeadingState extends State<_SectionHeading> {
   Widget build(BuildContext buildContext) {
     final settings = buildContext.watch<AppSettings>();
     final scheme = Theme.of(buildContext).colorScheme;
-    final hasContext =
-        widget.context != null && widget.context!.isNotEmpty;
+    final hasContext = widget.context != null && widget.context!.isNotEmpty;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -7950,7 +7236,7 @@ class _SectionHeadingState extends State<_SectionHeading> {
           // is the very first paragraph in the chapter so the
           // heading doesn't push the body too far down.
           padding: EdgeInsets.fromLTRB(
-            12, widget.isFirst ? 6 : 18, 12, _expanded ? 4 : 8),
+              12, widget.isFirst ? 6 : 18, 12, _expanded ? 4 : 8),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
@@ -7968,7 +7254,8 @@ class _SectionHeadingState extends State<_SectionHeading> {
                 child: Text(
                   widget.title,
                   style: TextStyle(
-                    fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
+                    fontFamily: settings.fontFamily,
+                    fontFamilyFallback: kCjkFontFallback,
                     fontSize: buildContext.textSize(20),
                     fontWeight: FontWeight.w700,
                     color: scheme.onSurface,
@@ -7980,29 +7267,26 @@ class _SectionHeadingState extends State<_SectionHeading> {
                 const SizedBox(width: 6),
                 IconButton(
                   // 2026-05-24 (v1.2.94): was VisualDensity.compact (~40 px)
-        // which violates Apple HIG's 44 pt minimum. Standard density
-        // keeps the bar a touch taller but every icon is reliably
-        // tappable on phones.
-        visualDensity: VisualDensity.standard,
+                  // which violates Apple HIG's 44 pt minimum. Standard density
+                  // keeps the bar a touch taller but every icon is reliably
+                  // tappable on phones.
+                  visualDensity: VisualDensity.standard,
                   padding: EdgeInsets.zero,
                   // 2026-05-10 (v1.2.31): bump min tap target from
                   // 32 → 48 dp for Material/WCAG a11y. Glyph stays
                   // at 18 dp.
-                  constraints: const BoxConstraints(
-                      minWidth: 48, minHeight: 48),
+                  constraints:
+                      const BoxConstraints(minWidth: 48, minHeight: 48),
                   iconSize: 18,
                   splashRadius: 18,
                   tooltip: uiStrings['sectionContextTooltip']
                           ?[settings.locale] ??
                       'Background',
                   icon: Icon(
-                    _expanded
-                        ? Icons.info
-                        : Icons.info_outline,
+                    _expanded ? Icons.info : Icons.info_outline,
                     color: scheme.primary,
                   ),
-                  onPressed: () =>
-                      setState(() => _expanded = !_expanded),
+                  onPressed: () => setState(() => _expanded = !_expanded),
                 ),
               ],
             ],
@@ -8015,15 +7299,14 @@ class _SectionHeadingState extends State<_SectionHeading> {
             alignment: Alignment.topLeft,
             child: _expanded
                 ? Padding(
-                    padding:
-                        const EdgeInsets.fromLTRB(23, 0, 12, 10),
+                    padding: const EdgeInsets.fromLTRB(23, 0, 12, 10),
                     child: Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
                         color: scheme.surfaceContainerHigh,
                         border: Border.all(
-                            color: scheme.outlineVariant
-                                .withValues(alpha: 0.6)),
+                            color:
+                                scheme.outlineVariant.withValues(alpha: 0.6)),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -8032,7 +7315,8 @@ class _SectionHeadingState extends State<_SectionHeading> {
                           Text(
                             widget.context!,
                             style: TextStyle(
-                              fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
+                              fontFamily: settings.fontFamily,
+                              fontFamilyFallback: kCjkFontFallback,
                               fontSize: buildContext.textSize(15),
                               fontStyle: FontStyle.italic,
                               color: scheme.onSurface,
@@ -8050,8 +7334,7 @@ class _SectionHeadingState extends State<_SectionHeading> {
                                 fontFamily: settings.fontFamily,
                                 fontFamilyFallback: kCjkFontFallback,
                                 fontSize: buildContext.textSize(12),
-                                color: scheme.onSurface
-                                    .withValues(alpha: 0.62),
+                                color: scheme.onSurface.withValues(alpha: 0.62),
                                 height: 1.4,
                               ),
                             ),
@@ -8109,13 +7392,15 @@ class _BookIntroCardState extends State<_BookIntroCard> {
     final intro = widget.intro;
 
     final textStyle = TextStyle(
-      fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
+      fontFamily: settings.fontFamily,
+      fontFamilyFallback: kCjkFontFallback,
       fontSize: context.textSize(16),
       color: scheme.onSurface,
       height: 1.55,
     );
     final labelStyle = TextStyle(
-      fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
+      fontFamily: settings.fontFamily,
+      fontFamilyFallback: kCjkFontFallback,
       fontSize: context.textSize(13),
       fontWeight: FontWeight.w700,
       letterSpacing: 0.6,
@@ -8166,13 +7451,11 @@ class _BookIntroCardState extends State<_BookIntroCard> {
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Icon(Icons.menu_book_rounded,
-                    size: 16, color: scheme.primary),
+                Icon(Icons.menu_book_rounded, size: 16, color: scheme.primary),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    uiStrings['aboutThisBook']?[locale] ??
-                        'About this book',
+                    uiStrings['aboutThisBook']?[locale] ?? 'About this book',
                     style: labelStyle,
                   ),
                 ),
@@ -8189,7 +7472,8 @@ class _BookIntroCardState extends State<_BookIntroCard> {
             Text(
               intro.getSubtitle(locale),
               style: TextStyle(
-                fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
+                fontFamily: settings.fontFamily,
+                fontFamilyFallback: kCjkFontFallback,
                 fontSize: context.textSize(19),
                 fontWeight: FontWeight.w700,
                 color: scheme.onSurface,
@@ -8217,8 +7501,7 @@ class _BookIntroCardState extends State<_BookIntroCard> {
                           Padding(
                             padding: const EdgeInsets.only(top: 8),
                             child: Column(
-                              crossAxisAlignment:
-                                  CrossAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
                                   (uiStrings['themesLabel']?[locale] ??
@@ -8233,10 +7516,8 @@ class _BookIntroCardState extends State<_BookIntroCard> {
                                   children: [
                                     for (final t in themes)
                                       Container(
-                                        padding: const EdgeInsets
-                                            .symmetric(
-                                            horizontal: 10,
-                                            vertical: 4),
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 10, vertical: 4),
                                         decoration: BoxDecoration(
                                           color: scheme.primary
                                               .withValues(alpha: 0.10),
@@ -8244,8 +7525,7 @@ class _BookIntroCardState extends State<_BookIntroCard> {
                                         child: Text(
                                           t,
                                           style: TextStyle(
-                                            fontFamily:
-                                                settings.fontFamily,
+                                            fontFamily: settings.fontFamily,
                                             fontSize: context.textSize(14),
                                             color: scheme.primary,
                                             fontWeight: FontWeight.w600,
@@ -8271,12 +7551,11 @@ class _BookIntroCardState extends State<_BookIntroCard> {
                               intro.keyPassage,
                               intro.englishBook,
                               locale,
-                              context
-                                  .read<MainProvider>()
-                                  .currentVersion,
+                              context.read<MainProvider>().currentVersion,
                             ),
                             style: TextStyle(
-                              fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
+                              fontFamily: settings.fontFamily,
+                              fontFamilyFallback: kCjkFontFallback,
                               fontSize: context.textSize(17),
                               fontWeight: FontWeight.w700,
                               color: scheme.onSurface,
@@ -8309,8 +7588,7 @@ class _BookIntroCardState extends State<_BookIntroCard> {
                               fontFamily: settings.fontFamily,
                               fontFamilyFallback: kCjkFontFallback,
                               fontSize: context.textSize(12),
-                              color:
-                                  scheme.onSurface.withValues(alpha: 0.62),
+                              color: scheme.onSurface.withValues(alpha: 0.62),
                               height: 1.4,
                             ),
                           ),

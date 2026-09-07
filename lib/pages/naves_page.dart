@@ -228,8 +228,12 @@ class _NavesPageState extends State<NavesPage> {
       body: heads == null
           ? const Center(child: CircularProgressIndicator())
           : heads.isEmpty
-              ? _message(c, _s('navesUnavailable',
-                  "Nave's Topical Bible is not bundled in this build.", locale))
+              ? _message(
+                  c,
+                  _s(
+                      'navesUnavailable',
+                      "Nave's Topical Bible is not bundled in this build.",
+                      locale))
               : _topicId == null
                   ? _indexView(context, c, heads, locale)
                   : _topicView(context, c, locale),
@@ -423,7 +427,8 @@ class _NavesPageState extends State<NavesPage> {
     final t = WbType.of(context);
     if (hits.isEmpty && !_textTier && !_textLoading) {
       return _message(
-          c, _s('navesNoTopic', 'No topic is named “{q}”.', locale)
+          c,
+          _s('navesNoTopic', 'No topic is named “{q}”.', locale)
               .replaceAll('{q}', _query.trim()));
     }
     return CustomScrollView(
@@ -463,8 +468,8 @@ class _NavesPageState extends State<NavesPage> {
               t,
               // The total, never the number shown: 200 rows out of 1,400
               // that says "200" is a lie the reader cannot see.
-              _sn('navesTextHits', '{n} lines mention it',
-                  '1 line mentions it', textResult.total, locale),
+              _sn('navesTextHits', '{n} lines mention it', '1 line mentions it',
+                  textResult.total, locale),
               note: textResult.truncated
                   ? _s('navesTextShowing', 'first {n} shown', locale)
                       .replaceAll('{n}', '${textResult.hits.length}')
@@ -475,7 +480,8 @@ class _NavesPageState extends State<NavesPage> {
             SliverToBoxAdapter(
               child: _message(
                 c,
-                _s('navesNothingAnywhere',
+                _s(
+                        'navesNothingAnywhere',
                         'Nave files nothing under “{q}”, and no entry mentions it.',
                         locale)
                     .replaceAll('{q}', _query.trim()),
@@ -483,8 +489,8 @@ class _NavesPageState extends State<NavesPage> {
             ),
           SliverList(
             delegate: SliverChildBuilderDelegate(
-              (context, i) => _textHitRow(
-                  c, t, heads, textResult.hits[i], locale),
+              (context, i) =>
+                  _textHitRow(c, t, heads, textResult.hits[i], locale),
               childCount: textResult.hits.length,
             ),
           ),
@@ -625,8 +631,7 @@ class _NavesPageState extends State<NavesPage> {
     );
   }
 
-  Widget _iconStep(
-          WbColors c, WbType t, IconData icon, VoidCallback? onTap) =>
+  Widget _iconStep(WbColors c, WbType t, IconData icon, VoidCallback? onTap) =>
       InkWell(
         onTap: onTap,
         hoverColor: c.hoverBg,
@@ -662,8 +667,8 @@ class _NavesPageState extends State<NavesPage> {
 
     return Container(
       color: focused ? c.selectionBg : null,
-      padding: EdgeInsets.fromLTRB(6 + (row.depth - 1).clamp(0, 3) * 14.0,
-          5, 10, 5),
+      padding:
+          EdgeInsets.fromLTRB(6 + (row.depth - 1).clamp(0, 3) * 14.0, 5, 10, 5),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -744,8 +749,7 @@ class _NavesPageState extends State<NavesPage> {
                       text: _s('navesMoreRefs', '+{n} more', locale)
                           .replaceAll('{n}', '$hiddenRefs'),
                       color: c.mutedText,
-                      onTap: () =>
-                          setState(() => _allRefs.add(row.lineIndex)),
+                      onTap: () => setState(() => _allRefs.add(row.lineIndex)),
                     ),
                   // 1,047 of Nave's 4,365 cross-references name a target
                   // in a form that is not one of our headwords. Those
@@ -873,7 +877,7 @@ class _NavesPageState extends State<NavesPage> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.zero,
           side: BorderSide(
-            color: active ? c.text : c.border,
+            color: active ? c.text : c.disabledMark,
             width: WbMetrics.hairline,
           ),
         ),

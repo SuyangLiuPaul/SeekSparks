@@ -1444,10 +1444,13 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
     // Watching the setting here rebuilds the whole Theme whenever it
     // flips, so the new palette flows through every WbColors.of context
     // at once.
-    final paper = context.watch<AppSettings>().readingPaperTheme;
+    final settings = context.watch<AppSettings>();
+    final paper = settings.readingPaperTheme;
     return Theme(
       data: workbenchTheme(Theme.of(context),
-          paper: paper, textScale: WbType.of(context).textScale),
+          paper: paper,
+          textScale: WbType.of(context).textScale,
+          accent: settings.primaryColor),
       child: ChangeNotifierProvider<WorkbenchProvider>.value(
         value: _wb,
         child: Builder(

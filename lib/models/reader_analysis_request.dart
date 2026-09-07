@@ -40,11 +40,10 @@ enum ReaderAnalysisRequest {
   /// about the text; spending the same pixel on "the pane is showing
   /// notes" would make it answer two questions at once.
   notes,
-
-  /// A model's explanation of the selected verses. Deliberately NOT a
-  /// tab: a docked pane promises to follow the selection, and following
-  /// it here would spend a network call per verse and let generated
-  /// prose sit in the same frame, at the same weight, as the corpus.
-  /// This one is a request the reader makes on purpose.
-  aiExplain,
 }
+
+// 2026-09-07: `aiExplain` is gone with the rest of the AI subsystem. It
+// was the one member of this enum with no tab behind it, which is why
+// `analysisTabForRequest` returns a nullable — that nullability now has
+// no live case, and is kept only because the signature is the honest
+// one for a mapping that may not exist.

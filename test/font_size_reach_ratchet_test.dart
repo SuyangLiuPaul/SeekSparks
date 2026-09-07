@@ -289,7 +289,12 @@ void main() {
     'pages/library_page.dart',
     'pages/loading_page.dart',
     'pages/profiles_page.dart',
-    'widgets/gemini_key_card.dart',
+    // 2026-09-07: `widgets/gemini_key_card.dart` left this list because
+    // the file left the repo with the rest of the AI subsystem. The
+    // sibling assertion below ("the tree under test is the one we think
+    // it is") is what caught it, which is the whole reason that
+    // assertion exists — a ratchet naming a file that no longer exists
+    // silently stops ratcheting anything.
     'widgets/onboarding_dialog.dart',
   ];
 

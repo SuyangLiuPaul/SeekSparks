@@ -606,6 +606,7 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
           // and the rest of the story are on `workbenchTheme` itself.
           theme: workbenchTheme(
               textScale: WbType.scaleFor(settings.fontSize),
+              accent: settings.primaryColor,
               ThemeData(
             fontFamily: settings.fontFamily,
             // 2026-05-08 (v1.1.0 — Liquid Glass / v1.1.2 — system
@@ -724,6 +725,7 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
           )),
           darkTheme: workbenchTheme(
               textScale: WbType.scaleFor(settings.fontSize),
+              accent: settings.primaryColor,
               ThemeData(
             fontFamily: settings.fontFamily,
             // 2026-05-08 (v1.1.0 / v1.1.2): same comprehensive OS-

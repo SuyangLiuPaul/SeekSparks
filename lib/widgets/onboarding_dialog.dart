@@ -19,14 +19,16 @@ import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 class OnboardingDialog extends StatefulWidget {
   const OnboardingDialog({super.key});
 
-  /// Storage key for the "I've seen the tour" flag. Bumped to `v3` in
-  /// 2026-05-09 (v1.2.9) — the v2 tour pre-dated the AI features
-  /// (AI Bible search, AI Word explanation / BDAG-style exegesis,
-  /// BYOK Test button) which are now central to the app. Existing
-  /// v2-flag users now see the refreshed 6-slide tour once before
-  /// their flag migrates to v3. Future bumps (v4+) re-introduce
-  /// the tour when more major surfaces ship. v1 → v2 was the last
-  /// such bump, in Round 55.
+  /// Storage key for the "I've seen the tour" flag. A bump re-shows the
+  /// tour once to everyone, so it is spent only when there is something
+  /// new to show. v1 → v2 in Round 55; v2 → v3 in v1.2.9, when the AI
+  /// slide was added.
+  ///
+  /// 2026-09-07 deliberately does NOT bump it. The AI slide was REMOVED
+  /// with the AI subsystem, and a bump would re-run the whole tour to
+  /// tell every existing reader about five things they have already
+  /// seen — a worse outcome than the slide's absence. A bump announces
+  /// an arrival; nothing arrived.
   static const _kSeen = 'onboarding.seen.v3';
 
   static Future<bool> hasSeen() async {
@@ -125,7 +127,8 @@ class _OnboardingDialogState extends State<OnboardingDialog> {
                                     width: 64,
                                     height: 64,
                                     decoration: BoxDecoration(
-                                      color: scheme.primary.withValues(alpha: 0.10),
+                                      color: scheme.primary
+                                          .withValues(alpha: 0.10),
                                       shape: BoxShape.circle,
                                     ),
                                     alignment: Alignment.center,
@@ -137,9 +140,9 @@ class _OnboardingDialogState extends State<OnboardingDialog> {
                                     s.title,
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
-                                      fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                                      fontSize:
-                                          settings.wbType.scaledSmall(22),
+                                      fontFamily: settings.fontFamily,
+                                      fontFamilyFallback: kCjkFontFallback,
+                                      fontSize: settings.wbType.scaledSmall(22),
                                       fontWeight: FontWeight.w700,
                                       color: scheme.onSurface,
                                     ),
@@ -149,9 +152,9 @@ class _OnboardingDialogState extends State<OnboardingDialog> {
                                     s.body,
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
-                                      fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                                      fontSize:
-                                          settings.wbType.scaledSmall(18),
+                                      fontFamily: settings.fontFamily,
+                                      fontFamilyFallback: kCjkFontFallback,
+                                      fontSize: settings.wbType.scaledSmall(18),
                                       height: 1.4,
                                       color: scheme.onSurfaceVariant,
                                     ),
@@ -178,9 +181,7 @@ class _OnboardingDialogState extends State<OnboardingDialog> {
                     width: selected ? 22 : 8,
                     height: 8,
                     decoration: BoxDecoration(
-                      color: selected
-                          ? scheme.primary
-                          : scheme.outlineVariant,
+                      color: selected ? scheme.primary : scheme.outlineVariant,
                       borderRadius: BorderRadius.circular(4),
                     ),
                   );
@@ -191,8 +192,7 @@ class _OnboardingDialogState extends State<OnboardingDialog> {
                 children: [
                   TextButton(
                     onPressed: _finish,
-                    child:
-                        Text(uiStrings['skip']?[locale] ?? 'Skip'),
+                    child: Text(uiStrings['skip']?[locale] ?? 'Skip'),
                   ),
                   const Spacer(),
                   if (_index < slides.length - 1)
@@ -204,8 +204,7 @@ class _OnboardingDialogState extends State<OnboardingDialog> {
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 6, vertical: 4),
-                        child:
-                            Text(uiStrings['next']?[locale] ?? 'Next'),
+                        child: Text(uiStrings['next']?[locale] ?? 'Next'),
                       ),
                     )
                   else
@@ -215,8 +214,7 @@ class _OnboardingDialogState extends State<OnboardingDialog> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 6, vertical: 4),
                         child: Text(
-                            uiStrings['getStarted']?[locale] ??
-                                'Get started'),
+                            uiStrings['getStarted']?[locale] ?? 'Get started'),
                       ),
                     ),
                 ],
@@ -243,20 +241,6 @@ class _OnboardingDialogState extends State<OnboardingDialog> {
           body: uiStrings['onboardReadBody']?[locale] ??
               'Long-press a verse for color highlights, bookmarks, and notes. Tap any reference to jump; tap a Strong\'s word for originals. Search the whole Bible from the header.',
         ),
-        // 2026-05-09 (v1.2.9): AI slide inserted between Read and
-        // Sermons. Read introduces the basic study surface (long-
-        // press / refs / Strong's), AI tells the user what they can
-        // ask the model to do on top of it, then Sermons + Discover
-        // show the rest of the content layer. Order matters — AI
-        // before Sermons so users frame Sermons as "more reading
-        // material" not "AI replaces sermons".
-        _Slide(
-          icon: Icons.smart_toy_outlined,
-          title: uiStrings['onboardAiTitle']?[locale] ??
-              'AI study helpers',
-          body: uiStrings['onboardAiBody']?[locale] ??
-              'Search the Bible by theme ("love", "faith"), tap any Greek or Hebrew word for a BDAG-style deep dive, or ask questions about archaeology and manuscripts. Powered by Gemini — paste your own free key in Settings → AI (and tap Test to verify) to skip the shared developer pool.',
-        ),
         _Slide(
           icon: Icons.headset_mic_rounded,
           title: uiStrings['onboardSermonsTitle']?[locale] ?? 'Sermons',
@@ -271,8 +255,7 @@ class _OnboardingDialogState extends State<OnboardingDialog> {
         ),
         _Slide(
           icon: Icons.tune_rounded,
-          title: uiStrings['onboardCustomizeTitle']?[locale] ??
-              'Your data',
+          title: uiStrings['onboardCustomizeTitle']?[locale] ?? 'Your data',
           body: uiStrings['onboardCustomizeBody']?[locale] ??
               'Highlights, notes and bookmarks are saved on this '
                   'device — no account, no server. Settings → '

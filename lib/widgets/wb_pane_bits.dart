@@ -109,6 +109,9 @@ class WbPaneChip extends StatelessWidget {
       hoverColor: wb.hoverBg,
       splashColor: Colors.transparent,
       highlightColor: Colors.transparent,
+      // 2026-09-07: the ink has to know the chip's corner, or the hover
+      // fill paints a square behind a rounded outline.
+      borderRadius: BorderRadius.circular(WbMetrics.radiusControl),
       child: Container(
         padding: padding,
         decoration: BoxDecoration(
@@ -117,6 +120,7 @@ class WbPaneChip extends StatelessWidget {
             color: on ? fg : wb.border,
             width: WbMetrics.hairline,
           ),
+          borderRadius: BorderRadius.circular(WbMetrics.radiusControl),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -136,9 +140,8 @@ class WbPaneChip extends StatelessWidget {
                   fontSize: t.chrome,
                   color: fg,
                   fontWeight: on ? FontWeight.w600 : FontWeight.w400,
-                  decoration: !on && strikeWhenOff
-                      ? TextDecoration.lineThrough
-                      : null,
+                  decoration:
+                      !on && strikeWhenOff ? TextDecoration.lineThrough : null,
                 ),
               ),
             ),
@@ -203,12 +206,13 @@ class WbIconTap extends StatelessWidget {
       hoverColor: wb.hoverBg,
       splashColor: Colors.transparent,
       highlightColor: Colors.transparent,
+      borderRadius: BorderRadius.circular(WbMetrics.radiusControl),
       child: Padding(
         padding: padding,
         child: Icon(
           icon,
           size: size,
-          color: enabled ? (color ?? wb.link) : wb.border,
+          color: enabled ? (color ?? wb.link) : wb.disabledMark,
         ),
       ),
     );

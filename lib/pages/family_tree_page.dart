@@ -73,11 +73,13 @@ class FamilyTreePage extends StatelessWidget {
     // applied inside `build` would be below that context, so the sheet
     // would come up in the app's palette while the page behind it was
     // cream.
+    final settings = context.watch<AppSettings>();
     return Theme(
       data: workbenchTheme(
         Theme.of(context),
-        paper: context.watch<AppSettings>().readingPaperTheme,
+        paper: settings.readingPaperTheme,
         textScale: WbType.of(context).textScale,
+        accent: settings.primaryColor,
       ),
       child: const _FamilyTreeBody(),
     );

@@ -147,8 +147,9 @@ class _VocabularyPaneState extends State<VocabularyPane> {
       _loading = false;
       // A corpus deck with no floor is 5,399 cards, which is not a deck.
       // Chapter and book decks are already small enough to show whole.
-      final presets = frequencyPresetsFor(
-          words.isEmpty ? null : (words.first.isHebrew
+      final presets = frequencyPresetsFor(words.isEmpty
+          ? null
+          : (words.first.isHebrew
               ? VocabLanguage.hebrew
               : VocabLanguage.greek));
       _minFrequency =
@@ -365,8 +366,9 @@ class _VocabularyPaneState extends State<VocabularyPane> {
             // The article and καί are the top of every frequency list and
             // the last thing anyone needs a card for; off by default,
             // but they are real vocabulary so they stay reachable.
-            _chip(wb, t, _s('vocabParticles', 'Particles'),
-                _includeFunctionWords, () {
+            _chip(
+                wb, t, _s('vocabParticles', 'Particles'), _includeFunctionWords,
+                () {
               setState(() => _includeFunctionWords = !_includeFunctionWords);
               _recompute();
             }),
@@ -458,8 +460,7 @@ class _VocabularyPaneState extends State<VocabularyPane> {
                   child: Text(
                     // The count that matters is the one you sorted by.
                     '${_sort == VocabSort.scopeFrequency && w.scopeCount > 0 ? w.scopeCount : w.corpusCount}',
-                    style:
-                        TextStyle(fontSize: t.chrome, color: wb.mutedText),
+                    style: TextStyle(fontSize: t.chrome, color: wb.mutedText),
                   ),
                 ),
                 SizedBox(
@@ -492,7 +493,7 @@ class _VocabularyPaneState extends State<VocabularyPane> {
                 WbIconTap(
                   icon: learned ? Icons.check_circle : Icons.circle_outlined,
                   size: 14,
-                  color: learned ? wb.link : wb.border,
+                  color: learned ? wb.link : wb.disabledMark,
                   padding: const EdgeInsets.all(3),
                   onTap: () => _toggleLearned(w.strongs),
                 ),
@@ -525,8 +526,7 @@ class _VocabularyPaneState extends State<VocabularyPane> {
               style: TextStyle(fontSize: t.chrome, color: wb.mutedText),
             ),
             const SizedBox(height: 3),
-            Text(w.gloss,
-                style: TextStyle(fontSize: t.chrome, color: wb.text)),
+            Text(w.gloss, style: TextStyle(fontSize: t.chrome, color: wb.text)),
           ],
         ),
       );
@@ -709,14 +709,13 @@ class _VocabularyPaneState extends State<VocabularyPane> {
             runSpacing: 4,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              _stepperField(wb, t, _s('vocabMinList', 'Uses'), _minListWords, 1,
-                  12, (v) {
+              _stepperField(
+                  wb, t, _s('vocabMinList', 'Uses'), _minListWords, 1, 12, (v) {
                 _minListWords = v;
                 _findExamples();
               }),
-              _stepperField(
-                  wb, t, _s('vocabMaxUnknown', 'Unknown'), _maxNonListWords, 0,
-                  10, (v) {
+              _stepperField(wb, t, _s('vocabMaxUnknown', 'Unknown'),
+                  _maxNonListWords, 0, 10, (v) {
                 _maxNonListWords = v;
                 _findExamples();
               }),
@@ -795,7 +794,8 @@ class _VocabularyPaneState extends State<VocabularyPane> {
                     w.text,
                     style: TextStyle(
                       fontSize: t.original,
-                      color: known.contains(w.strongs) ? wb.text : wb.border,
+                      color:
+                          known.contains(w.strongs) ? wb.text : wb.disabledMark,
                     ),
                   ),
               ],

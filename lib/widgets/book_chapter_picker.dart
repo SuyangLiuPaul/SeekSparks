@@ -147,8 +147,7 @@ class _BookChapterPickerState extends State<BookChapterPicker> {
     final newExpand = Map<String, bool>.from(expandStatus);
     bool anyChange = false;
 
-    final inVerseStep =
-        _verseStepBook != null && _verseStepChapter != null;
+    final inVerseStep = _verseStepBook != null && _verseStepChapter != null;
     if (inVerseStep) {
       if (_verseStepBook == widget.currentBook && chapterChanged) {
         // Same book, different chapter (Prev/Next button on the
@@ -171,8 +170,7 @@ class _BookChapterPickerState extends State<BookChapterPicker> {
 
     // Grid mode: drop the drill-in if the reading pane jumped to a
     // different book.
-    if (_gridSelectedBook != null &&
-        _gridSelectedBook != widget.currentBook) {
+    if (_gridSelectedBook != null && _gridSelectedBook != widget.currentBook) {
       newGridSelectedBook = null;
       anyChange = true;
     }
@@ -216,15 +214,13 @@ class _BookChapterPickerState extends State<BookChapterPicker> {
       _initialScrollDone = false;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted || _initialScrollDone) return;
-        final mainProvider =
-            Provider.of<MainProvider>(context, listen: false);
+        final mainProvider = Provider.of<MainProvider>(context, listen: false);
         final filtered = mainProvider.books
             .where((b) => showOldTestament
                 ? _isOldTestament(b.title)
                 : !_isOldTestament(b.title))
             .toList();
-        final idx =
-            filtered.indexWhere((b) => b.title == widget.currentBook);
+        final idx = filtered.indexWhere((b) => b.title == widget.currentBook);
         final currentSettings =
             Provider.of<AppSettings>(context, listen: false);
         if (idx != -1 &&
@@ -315,6 +311,7 @@ class _BookChapterPickerState extends State<BookChapterPicker> {
         Theme.of(context),
         paper: settings.readingPaperTheme,
         textScale: WbType.scaleFor(settings.fontSize),
+        accent: settings.primaryColor,
       ),
       child: Builder(
         builder: (themedContext) => ColoredBox(
@@ -376,159 +373,153 @@ class _BookChapterPickerState extends State<BookChapterPicker> {
         return Column(
           children: [
             _PickerBar(
-                  child: LayoutBuilder(
-                    builder: (context, barConstraints) {
-                      final isNarrow = barConstraints.maxWidth < 300;
+              child: LayoutBuilder(
+                builder: (context, barConstraints) {
+                  final isNarrow = barConstraints.maxWidth < 300;
 
-                      final viewToggle = ToggleButtons(
-                        isSelected: [
-                          settings.booksViewMode != 'grid',
-                          settings.booksViewMode == 'grid',
-                        ],
-                        onPressed: (index) {
-                          final target = index == 1 ? 'grid' : 'list';
-                          settings.setBooksViewMode(target);
-                          setState(() {
-                            _gridSelectedBook = null;
-                            expandStatus.updateAll((key, _) => false);
-                            // Re-expand the current book so list view
-                            // doesn't appear empty after switching from grid.
-                            if (target == 'list' &&
-                                widget.currentBook.isNotEmpty) {
-                              expandStatus[widget.currentBook] = true;
-                            }
-                          });
-                        },
-                        borderRadius: BorderRadius.zero,
-                        borderColor: wb.border,
-                        selectedBorderColor: wb.link,
-                        borderWidth: WbMetrics.hairline,
-                        color: wb.mutedText,
-                        selectedColor: wb.text,
-                        fillColor: wb.selectionBg,
-                        hoverColor: wb.hoverBg,
-                        splashColor: Colors.transparent,
-                        constraints: BoxConstraints(
-                            minWidth: 42 * settings.menuScale, minHeight: 36 * settings.menuScale),
-                        children: [
-                          Tooltip(
-                            message: uiStrings['listView']
-                                    ?[settings.locale] ??
-                                'List',
-                            child: Icon(Icons.list_rounded,
-                                size: settings.fontSize * 1.05),
-                          ),
-                          Tooltip(
-                            message: uiStrings['gridView']
-                                    ?[settings.locale] ??
-                                'Grid',
-                            child: Icon(Icons.grid_view_rounded,
-                                size: settings.fontSize * 1.05),
-                          ),
-                        ],
-                      );
+                  final viewToggle = ToggleButtons(
+                    isSelected: [
+                      settings.booksViewMode != 'grid',
+                      settings.booksViewMode == 'grid',
+                    ],
+                    onPressed: (index) {
+                      final target = index == 1 ? 'grid' : 'list';
+                      settings.setBooksViewMode(target);
+                      setState(() {
+                        _gridSelectedBook = null;
+                        expandStatus.updateAll((key, _) => false);
+                        // Re-expand the current book so list view
+                        // doesn't appear empty after switching from grid.
+                        if (target == 'list' && widget.currentBook.isNotEmpty) {
+                          expandStatus[widget.currentBook] = true;
+                        }
+                      });
+                    },
+                    borderRadius: BorderRadius.zero,
+                    borderColor: wb.border,
+                    selectedBorderColor: wb.link,
+                    borderWidth: WbMetrics.hairline,
+                    color: wb.mutedText,
+                    selectedColor: wb.text,
+                    fillColor: wb.selectionBg,
+                    hoverColor: wb.hoverBg,
+                    splashColor: Colors.transparent,
+                    constraints: BoxConstraints(
+                        minWidth: 42 * settings.menuScale,
+                        minHeight: 36 * settings.menuScale),
+                    children: [
+                      Tooltip(
+                        message:
+                            uiStrings['listView']?[settings.locale] ?? 'List',
+                        child: Icon(Icons.list_rounded,
+                            size: settings.fontSize * 1.05),
+                      ),
+                      Tooltip(
+                        message:
+                            uiStrings['gridView']?[settings.locale] ?? 'Grid',
+                        child: Icon(Icons.grid_view_rounded,
+                            size: settings.fontSize * 1.05),
+                      ),
+                    ],
+                  );
 
-                      // Always use the full label — Hebrew Bible /
-                      // Greek Bible / 希伯来圣经 / 希腊圣经. The button
-                      // text uses FittedBox(scaleDown) (see
-                      // _testamentButton) so the label is shrunk to
-                      // fit when the button is narrow rather than
-                      // truncated with an invisible "…" that made
-                      // "希伯来圣经" look like "希伯来圣" and
-                      // "Hebrew Bible" look like "Hebrew".
-                      final otLabel =
-                          uiStrings['oldTestament']?[settings.locale] ??
-                              'Hebrew Bible';
-                      final ntLabel =
-                          uiStrings['newTestament']?[settings.locale] ??
-                              'Greek Bible';
+                  // Always use the full label — Hebrew Bible /
+                  // Greek Bible / 希伯来圣经 / 希腊圣经. The button
+                  // text uses FittedBox(scaleDown) (see
+                  // _testamentButton) so the label is shrunk to
+                  // fit when the button is narrow rather than
+                  // truncated with an invisible "…" that made
+                  // "希伯来圣经" look like "希伯来圣" and
+                  // "Hebrew Bible" look like "Hebrew".
+                  final otLabel = uiStrings['oldTestament']?[settings.locale] ??
+                      'Hebrew Bible';
+                  final ntLabel = uiStrings['newTestament']?[settings.locale] ??
+                      'Greek Bible';
 
-                      if (isNarrow) {
-                        return Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (hasOldTestament && hasNewTestament)
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: _testamentButton(
-                                      context: context,
-                                      settings: settings,
-                                      selected: showOldTestament,
-                                      label: otLabel,
-                                      onPressed: () =>
-                                          _setTestament(settings, true),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: _testamentButton(
-                                      context: context,
-                                      settings: settings,
-                                      selected: !showOldTestament,
-                                      label: ntLabel,
-                                      onPressed: () =>
-                                          _setTestament(settings, false),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            if (hasOldTestament && hasNewTestament)
-                              const SizedBox(height: 6),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [viewToggle],
-                            ),
-                          ],
-                        );
-                      }
-
-                      return Row(
-                        children: [
-                          if (hasOldTestament && hasNewTestament)
-                            Expanded(
-                              child: SingleChildScrollView(
-                                scrollDirection: Axis.horizontal,
-                                child: Row(
-                                  children: [
-                                    if (hasOldTestament)
-                                      _testamentButton(
-                                        context: context,
-                                        settings: settings,
-                                        selected: showOldTestament,
-                                        label:
-                                            uiStrings['oldTestament']
-                                                    ?[settings.locale] ??
-                                                'Hebrew Bible',
-                                        onPressed: () =>
-                                            _setTestament(settings, true),
-                                      ),
-                                    if (hasOldTestament && hasNewTestament)
-                                      const SizedBox(width: 10),
-                                    if (hasNewTestament)
-                                      _testamentButton(
-                                        context: context,
-                                        settings: settings,
-                                        selected: !showOldTestament,
-                                        label:
-                                            uiStrings['newTestament']
-                                                    ?[settings.locale] ??
-                                                'Greek Bible',
-                                        onPressed: () =>
-                                            _setTestament(settings, false),
-                                      ),
-                                  ],
+                  if (isNarrow) {
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (hasOldTestament && hasNewTestament)
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _testamentButton(
+                                  context: context,
+                                  settings: settings,
+                                  selected: showOldTestament,
+                                  label: otLabel,
+                                  onPressed: () =>
+                                      _setTestament(settings, true),
                                 ),
                               ),
-                            )
-                          else
-                            const Spacer(),
-                          const SizedBox(width: 8),
-                          viewToggle,
-                        ],
-                      );
-                    },
-                  ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: _testamentButton(
+                                  context: context,
+                                  settings: settings,
+                                  selected: !showOldTestament,
+                                  label: ntLabel,
+                                  onPressed: () =>
+                                      _setTestament(settings, false),
+                                ),
+                              ),
+                            ],
+                          ),
+                        if (hasOldTestament && hasNewTestament)
+                          const SizedBox(height: 6),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [viewToggle],
+                        ),
+                      ],
+                    );
+                  }
+
+                  return Row(
+                    children: [
+                      if (hasOldTestament && hasNewTestament)
+                        Expanded(
+                          child: SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: Row(
+                              children: [
+                                if (hasOldTestament)
+                                  _testamentButton(
+                                    context: context,
+                                    settings: settings,
+                                    selected: showOldTestament,
+                                    label: uiStrings['oldTestament']
+                                            ?[settings.locale] ??
+                                        'Hebrew Bible',
+                                    onPressed: () =>
+                                        _setTestament(settings, true),
+                                  ),
+                                if (hasOldTestament && hasNewTestament)
+                                  const SizedBox(width: 10),
+                                if (hasNewTestament)
+                                  _testamentButton(
+                                    context: context,
+                                    settings: settings,
+                                    selected: !showOldTestament,
+                                    label: uiStrings['newTestament']
+                                            ?[settings.locale] ??
+                                        'Greek Bible',
+                                    onPressed: () =>
+                                        _setTestament(settings, false),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        )
+                      else
+                        const Spacer(),
+                      const SizedBox(width: 8),
+                      viewToggle,
+                    ],
+                  );
+                },
+              ),
             ),
             Expanded(
               child: settings.booksViewMode == 'grid'
@@ -604,40 +595,40 @@ class _BookChapterPickerState extends State<BookChapterPicker> {
     return Column(
       children: [
         _PickerBar(
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back_rounded),
-                    tooltip:
-                        uiStrings['back']?[locale] ?? 'Back',
-                    onPressed: _backFromVerseStep,
-                  ),
-                  Expanded(
-                    child: Text(
-                      uiStrings['versePickerTitle']?[locale] ??
-                          'Pick a verse',
-                      style: TextStyle(
-                        fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                        fontSize: settings.fontSize,
-                        fontWeight: FontWeight.w700,
-                        color: wb.text,
-                      ),
-                    ),
-                  ),
-                  // Which chapter's verses these are. It was a separate
-                  // line under the bar; on the strip it sits where the
-                  // Browse window puts its reference, and the grid gets
-                  // that row of vertical space back.
-                  Text(
-                    '$book $chapter',
-                    style: TextStyle(
-                      fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                      fontSize: settings.wbType.scaledSmall(16),
-                      color: wb.mutedText,
-                    ),
-                  ),
-                ],
+          child: Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.arrow_back_rounded),
+                tooltip: uiStrings['back']?[locale] ?? 'Back',
+                onPressed: _backFromVerseStep,
               ),
+              Expanded(
+                child: Text(
+                  uiStrings['versePickerTitle']?[locale] ?? 'Pick a verse',
+                  style: TextStyle(
+                    fontFamily: settings.fontFamily,
+                    fontFamilyFallback: kCjkFontFallback,
+                    fontSize: settings.fontSize,
+                    fontWeight: FontWeight.w700,
+                    color: wb.text,
+                  ),
+                ),
+              ),
+              // Which chapter's verses these are. It was a separate
+              // line under the bar; on the strip it sits where the
+              // Browse window puts its reference, and the grid gets
+              // that row of vertical space back.
+              Text(
+                '$book $chapter',
+                style: TextStyle(
+                  fontFamily: settings.fontFamily,
+                  fontFamilyFallback: kCjkFontFallback,
+                  fontSize: settings.wbType.scaledSmall(16),
+                  color: wb.mutedText,
+                ),
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: 8),
         Expanded(
@@ -700,8 +691,7 @@ class _BookChapterPickerState extends State<BookChapterPicker> {
                     SizedBox(
                       width: tileW * 2 + gap,
                       child: _NumberTile(
-                        label: uiStrings['versePickerTop']?[locale] ??
-                            'Top',
+                        label: uiStrings['versePickerTop']?[locale] ?? 'Top',
                         selected: false,
                         fontSize: fontSize,
                         onTap: () => _onVersePicked(mainProvider, 0),
@@ -714,8 +704,7 @@ class _BookChapterPickerState extends State<BookChapterPicker> {
                           label: '${v.verse}',
                           selected: false,
                           fontSize: fontSize,
-                          onTap: () =>
-                              _onVersePicked(mainProvider, v.verse),
+                          onTap: () => _onVersePicked(mainProvider, v.verse),
                         ),
                       ),
                   ],
@@ -748,7 +737,7 @@ class _BookChapterPickerState extends State<BookChapterPicker> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.zero,
           side: BorderSide(
-            color: selected ? wb.link : wb.border,
+            color: selected ? wb.link : wb.disabledMark,
             width: WbMetrics.hairline,
           ),
         ),
@@ -774,16 +763,17 @@ class _BookChapterPickerState extends State<BookChapterPicker> {
       child: FittedBox(
         fit: BoxFit.scaleDown,
         child: Text(
-        label,
-        maxLines: 1,
-        softWrap: false,
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          fontSize: settings.wbType.scaledSmall(17),
-          fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-          fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+          label,
+          maxLines: 1,
+          softWrap: false,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: settings.wbType.scaledSmall(17),
+            fontFamily: settings.fontFamily,
+            fontFamilyFallback: kCjkFontFallback,
+            fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+          ),
         ),
-      ),
       ),
     );
   }
@@ -798,8 +788,7 @@ class _BookChapterPickerState extends State<BookChapterPicker> {
     // In grid mode, or during transitions before the new list mounts,
     // the controller has no positions and scrollToIndex will throw a
     // null check error inside the scroll_to_index package.
-    if (settings.booksViewMode != 'grid' &&
-        _autoScrollController.hasClients) {
+    if (settings.booksViewMode != 'grid' && _autoScrollController.hasClients) {
       _autoScrollController.scrollToIndex(
         0,
         preferPosition: AutoScrollPosition.begin,
@@ -846,14 +835,14 @@ class _BookChapterPickerState extends State<BookChapterPicker> {
                   book.title,
                   style: TextStyle(
                       fontSize: settings.fontSize,
-                      fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
+                      fontFamily: settings.fontFamily,
+                      fontFamilyFallback: kCjkFontFallback,
                       decoration: TextDecoration.none,
                       fontWeight: expandStatus[book.title] == true
                           ? FontWeight.w700
                           : FontWeight.w400,
-                      color: expandStatus[book.title] == true
-                          ? wb.link
-                          : wb.text),
+                      color:
+                          expandStatus[book.title] == true ? wb.link : wb.text),
                 ),
                 initiallyExpanded: expandStatus[book.title] ?? false,
                 maintainState: true,
@@ -884,31 +873,31 @@ class _BookChapterPickerState extends State<BookChapterPicker> {
         return Column(
           children: [
             _PickerBar(
-                  onTap: () => setState(() => _gridSelectedBook = null),
-                    child: Row(
-                      children: [
-                        Icon(Icons.arrow_back_rounded,
-                            size: settings.fontSize * 1.1,
-                            color: wb.text),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            book.title,
-                            style: TextStyle(
-                              fontSize: settings.fontSize * 1.1,
-                              fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
-                              fontWeight: FontWeight.w600,
-                              color: wb.text,
-                            ),
-                          ),
-                        ),
-                        WbTag(
-                          text: '${book.chapters.length} '
-                              '${uiStrings['chapters']?[settings.locale] ?? 'ch'}',
-                          dense: false,
-                        ),
-                      ],
+              onTap: () => setState(() => _gridSelectedBook = null),
+              child: Row(
+                children: [
+                  Icon(Icons.arrow_back_rounded,
+                      size: settings.fontSize * 1.1, color: wb.text),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      book.title,
+                      style: TextStyle(
+                        fontSize: settings.fontSize * 1.1,
+                        fontFamily: settings.fontFamily,
+                        fontFamilyFallback: kCjkFontFallback,
+                        fontWeight: FontWeight.w600,
+                        color: wb.text,
+                      ),
                     ),
+                  ),
+                  WbTag(
+                    text: '${book.chapters.length} '
+                        '${uiStrings['chapters']?[settings.locale] ?? 'ch'}',
+                    dense: false,
+                  ),
+                ],
+              ),
             ),
             Expanded(
               child: LayoutBuilder(builder: (context, constraints) {
@@ -945,8 +934,7 @@ class _BookChapterPickerState extends State<BookChapterPicker> {
                   min: 4,
                   max: 10,
                 );
-                final cols =
-                    (byMenu < byLabel ? byMenu : byLabel).clamp(4, 10);
+                final cols = (byMenu < byLabel ? byMenu : byLabel).clamp(4, 10);
                 return GridView.builder(
                   padding: const EdgeInsets.all(12),
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -958,9 +946,8 @@ class _BookChapterPickerState extends State<BookChapterPicker> {
                   itemCount: book.chapters.length,
                   itemBuilder: (context, index) {
                     final chapter = book.chapters[index];
-                    final selected =
-                        chapter.title == widget.currentChapter &&
-                            widget.currentBook == book.title;
+                    final selected = chapter.title == widget.currentChapter &&
+                        widget.currentBook == book.title;
                     return _gridChapterTile(context, mainProvider, settings,
                         book, chapter, selected);
                   },
@@ -1115,7 +1102,8 @@ class _BookChapterPickerState extends State<BookChapterPicker> {
                 ),
                 style: TextStyle(
                   fontSize: settings.fontSize * kBookTileFontRatio,
-                  fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
+                  fontFamily: settings.fontFamily,
+                  fontFamilyFallback: kCjkFontFallback,
                   fontWeight: FontWeight.w700,
                   color: fgColor,
                   height: 1.0,
@@ -1131,80 +1119,211 @@ class _BookChapterPickerState extends State<BookChapterPicker> {
 
   String _shortBookTitle(String title) {
     const abbr = <String, String>{
-      'Genesis': 'Gen', 'Exodus': 'Exod', 'Leviticus': 'Lev',
-      'Numbers': 'Num', 'Deuteronomy': 'Deut', 'Joshua': 'Josh',
-      'Judges': 'Judg', 'Ruth': 'Ruth', '1 Samuel': '1Sam',
-      '2 Samuel': '2Sam', '1 Kings': '1Kgs', '2 Kings': '2Kgs',
-      '1 Chronicles': '1Chr', '2 Chronicles': '2Chr', 'Ezra': 'Ezra',
-      'Nehemiah': 'Neh', 'Esther': 'Est', 'Job': 'Job',
-      'Psalms': 'Ps', 'Psalm': 'Ps', 'Proverbs': 'Prov',
-      'Ecclesiastes': 'Eccl', 'Song of Solomon': 'Song',
-      'Song of Songs': 'Song', 'Isaiah': 'Isa', 'Jeremiah': 'Jer',
-      'Lamentations': 'Lam', 'Ezekiel': 'Ezek', 'Daniel': 'Dan',
-      'Hosea': 'Hos', 'Joel': 'Joel', 'Amos': 'Amos',
-      'Obadiah': 'Obad', 'Jonah': 'Jonah', 'Micah': 'Mic',
-      'Nahum': 'Nah', 'Habakkuk': 'Hab', 'Zephaniah': 'Zeph',
-      'Haggai': 'Hag', 'Zechariah': 'Zech', 'Malachi': 'Mal',
-      'Matthew': 'Matt', 'Mark': 'Mark', 'Luke': 'Luke',
-      'John': 'John', 'Acts': 'Acts', 'Romans': 'Rom',
-      '1 Corinthians': '1 Cor', '2 Corinthians': '2 Cor',
-      'Galatians': 'Gal', 'Ephesians': 'Eph', 'Philippians': 'Phil',
-      'Colossians': 'Col', '1 Thessalonians': '1Th',
-      '2 Thessalonians': '2Th', '1 Timothy': '1Tim',
-      '2 Timothy': '2Tim', 'Titus': 'Titus', 'Philemon': 'Phlm',
-      'Hebrews': 'Heb', 'James': 'Jas', '1 Peter': '1Pet',
-      '2 Peter': '2Pet', '1 John': '1Jn', '2 John': '2Jn',
-      '3 John': '3Jn', 'Jude': 'Jude', 'Revelation': 'Rev',
-      '创世纪': '创', '创世记': '创', '創世紀': '創', '創世記': '創',
-      '出埃及记': '出', '出埃及記': '出', '利未记': '利', '利未記': '利',
-      '民数记': '民', '民數記': '民', '申命记': '申', '申命記': '申',
-      '约书亚记': '书', '約書亞記': '書', '士师记': '士', '士師記': '士',
-      '路得记': '得', '路得記': '得', '撒母耳记上': '撒上', '撒母耳記上': '撒上',
-      '撒母耳记下': '撒下', '撒母耳記下': '撒下', '列王纪上': '王上',
-      '列王紀上': '王上', '列王纪下': '王下', '列王紀下': '王下',
-      '历代志上': '代上', '歷代志上': '代上', '历代志下': '代下',
-      '歷代志下': '代下', '以斯拉记': '拉', '以斯拉記': '拉',
-      '尼希米记': '尼', '尼希米記': '尼', '以斯帖记': '斯', '以斯帖記': '斯',
-      '约伯记': '伯', '約伯記': '伯', '诗篇': '诗', '詩篇': '詩',
-      '箴言': '箴', '传道书': '传', '傳道書': '傳', '雅歌': '歌',
-      '以赛亚书': '赛', '以賽亞書': '賽', '耶利米书': '耶', '耶利米書': '耶',
-      '耶利米哀歌': '哀', '以西结书': '结', '以西結書': '結',
-      '但以理书': '但', '但以理書': '但', '何西阿书': '何', '何西阿書': '何',
-      '约珥书': '珥', '約珥書': '珥', '阿摩司书': '摩', '阿摩司書': '摩',
-      '俄巴底亚书': '俄', '俄巴底亞書': '俄', '约拿书': '拿', '約拿書': '拿',
-      '弥迦书': '弥', '彌迦書': '彌', '那鸿书': '鸿', '那鴻書': '鴻',
-      '哈巴谷书': '哈', '哈巴谷書': '哈', '西番雅书': '番', '西番雅書': '番',
-      '哈该书': '该', '哈該書': '該', '撒迦利亚书': '亚', '撒迦利亞書': '亞',
-      '玛拉基书': '玛', '瑪拉基書': '瑪', '马太福音': '太', '馬太福音': '太',
-      '马可福音': '可', '馬可福音': '可', '路加福音': '路',
-      '约翰福音': '约', '約翰福音': '約', '使徒行传': '徒', '使徒行傳': '徒',
-      '罗马书': '罗', '羅馬書': '羅', '哥林多前书': '林前', '哥林多前書': '林前',
-      '哥林多后书': '林后', '哥林多後書': '林後', '加拉太书': '加',
-      '加拉太書': '加', '以弗所书': '弗', '以弗所書': '弗',
-      '腓立比书': '腓', '腓立比書': '腓', '歌罗西书': '西', '歌羅西書': '西',
-      '帖撒罗尼迦前书': '帖前', '帖撒羅尼迦前書': '帖前',
-      '帖撒罗尼迦后书': '帖后', '帖撒羅尼迦後書': '帖後',
-      '提摩太前书': '提前', '提摩太前書': '提前',
-      '提摩太后书': '提后', '提摩太後書': '提後',
-      '提多书': '多', '提多書': '多', '腓利门书': '门', '腓利門書': '門',
-      '希伯来书': '来', '希伯來書': '來', '雅各书': '雅', '雅各書': '雅',
-      '彼得前书': '彼前', '彼得前書': '彼前', '彼得后书': '彼后',
-      '彼得後書': '彼後', '约翰一书': '约一', '約翰一書': '約一',
-      '约翰二书': '约二', '約翰二書': '約二', '约翰三书': '约三',
-      '約翰三書': '約三', '犹大书': '犹', '猶大書': '猶',
-      '启示录': '启', '啟示錄': '啟',
+      'Genesis': 'Gen',
+      'Exodus': 'Exod',
+      'Leviticus': 'Lev',
+      'Numbers': 'Num',
+      'Deuteronomy': 'Deut',
+      'Joshua': 'Josh',
+      'Judges': 'Judg',
+      'Ruth': 'Ruth',
+      '1 Samuel': '1Sam',
+      '2 Samuel': '2Sam',
+      '1 Kings': '1Kgs',
+      '2 Kings': '2Kgs',
+      '1 Chronicles': '1Chr',
+      '2 Chronicles': '2Chr',
+      'Ezra': 'Ezra',
+      'Nehemiah': 'Neh',
+      'Esther': 'Est',
+      'Job': 'Job',
+      'Psalms': 'Ps',
+      'Psalm': 'Ps',
+      'Proverbs': 'Prov',
+      'Ecclesiastes': 'Eccl',
+      'Song of Solomon': 'Song',
+      'Song of Songs': 'Song',
+      'Isaiah': 'Isa',
+      'Jeremiah': 'Jer',
+      'Lamentations': 'Lam',
+      'Ezekiel': 'Ezek',
+      'Daniel': 'Dan',
+      'Hosea': 'Hos',
+      'Joel': 'Joel',
+      'Amos': 'Amos',
+      'Obadiah': 'Obad',
+      'Jonah': 'Jonah',
+      'Micah': 'Mic',
+      'Nahum': 'Nah',
+      'Habakkuk': 'Hab',
+      'Zephaniah': 'Zeph',
+      'Haggai': 'Hag',
+      'Zechariah': 'Zech',
+      'Malachi': 'Mal',
+      'Matthew': 'Matt',
+      'Mark': 'Mark',
+      'Luke': 'Luke',
+      'John': 'John',
+      'Acts': 'Acts',
+      'Romans': 'Rom',
+      '1 Corinthians': '1 Cor',
+      '2 Corinthians': '2 Cor',
+      'Galatians': 'Gal',
+      'Ephesians': 'Eph',
+      'Philippians': 'Phil',
+      'Colossians': 'Col',
+      '1 Thessalonians': '1Th',
+      '2 Thessalonians': '2Th',
+      '1 Timothy': '1Tim',
+      '2 Timothy': '2Tim',
+      'Titus': 'Titus',
+      'Philemon': 'Phlm',
+      'Hebrews': 'Heb',
+      'James': 'Jas',
+      '1 Peter': '1Pet',
+      '2 Peter': '2Pet',
+      '1 John': '1Jn',
+      '2 John': '2Jn',
+      '3 John': '3Jn',
+      'Jude': 'Jude',
+      'Revelation': 'Rev',
+      '创世纪': '创',
+      '创世记': '创',
+      '創世紀': '創',
+      '創世記': '創',
+      '出埃及记': '出',
+      '出埃及記': '出',
+      '利未记': '利',
+      '利未記': '利',
+      '民数记': '民',
+      '民數記': '民',
+      '申命记': '申',
+      '申命記': '申',
+      '约书亚记': '书',
+      '約書亞記': '書',
+      '士师记': '士',
+      '士師記': '士',
+      '路得记': '得',
+      '路得記': '得',
+      '撒母耳记上': '撒上',
+      '撒母耳記上': '撒上',
+      '撒母耳记下': '撒下',
+      '撒母耳記下': '撒下',
+      '列王纪上': '王上',
+      '列王紀上': '王上',
+      '列王纪下': '王下',
+      '列王紀下': '王下',
+      '历代志上': '代上',
+      '歷代志上': '代上',
+      '历代志下': '代下',
+      '歷代志下': '代下',
+      '以斯拉记': '拉',
+      '以斯拉記': '拉',
+      '尼希米记': '尼',
+      '尼希米記': '尼',
+      '以斯帖记': '斯',
+      '以斯帖記': '斯',
+      '约伯记': '伯',
+      '約伯記': '伯',
+      '诗篇': '诗',
+      '詩篇': '詩',
+      '箴言': '箴',
+      '传道书': '传',
+      '傳道書': '傳',
+      '雅歌': '歌',
+      '以赛亚书': '赛',
+      '以賽亞書': '賽',
+      '耶利米书': '耶',
+      '耶利米書': '耶',
+      '耶利米哀歌': '哀',
+      '以西结书': '结',
+      '以西結書': '結',
+      '但以理书': '但',
+      '但以理書': '但',
+      '何西阿书': '何',
+      '何西阿書': '何',
+      '约珥书': '珥',
+      '約珥書': '珥',
+      '阿摩司书': '摩',
+      '阿摩司書': '摩',
+      '俄巴底亚书': '俄',
+      '俄巴底亞書': '俄',
+      '约拿书': '拿',
+      '約拿書': '拿',
+      '弥迦书': '弥',
+      '彌迦書': '彌',
+      '那鸿书': '鸿',
+      '那鴻書': '鴻',
+      '哈巴谷书': '哈',
+      '哈巴谷書': '哈',
+      '西番雅书': '番',
+      '西番雅書': '番',
+      '哈该书': '该',
+      '哈該書': '該',
+      '撒迦利亚书': '亚',
+      '撒迦利亞書': '亞',
+      '玛拉基书': '玛',
+      '瑪拉基書': '瑪',
+      '马太福音': '太',
+      '馬太福音': '太',
+      '马可福音': '可',
+      '馬可福音': '可',
+      '路加福音': '路',
+      '约翰福音': '约',
+      '約翰福音': '約',
+      '使徒行传': '徒',
+      '使徒行傳': '徒',
+      '罗马书': '罗',
+      '羅馬書': '羅',
+      '哥林多前书': '林前',
+      '哥林多前書': '林前',
+      '哥林多后书': '林后',
+      '哥林多後書': '林後',
+      '加拉太书': '加',
+      '加拉太書': '加',
+      '以弗所书': '弗',
+      '以弗所書': '弗',
+      '腓立比书': '腓',
+      '腓立比書': '腓',
+      '歌罗西书': '西',
+      '歌羅西書': '西',
+      '帖撒罗尼迦前书': '帖前',
+      '帖撒羅尼迦前書': '帖前',
+      '帖撒罗尼迦后书': '帖后',
+      '帖撒羅尼迦後書': '帖後',
+      '提摩太前书': '提前',
+      '提摩太前書': '提前',
+      '提摩太后书': '提后',
+      '提摩太後書': '提後',
+      '提多书': '多',
+      '提多書': '多',
+      '腓利门书': '门',
+      '腓利門書': '門',
+      '希伯来书': '来',
+      '希伯來書': '來',
+      '雅各书': '雅',
+      '雅各書': '雅',
+      '彼得前书': '彼前',
+      '彼得前書': '彼前',
+      '彼得后书': '彼后',
+      '彼得後書': '彼後',
+      '约翰一书': '约一',
+      '約翰一書': '約一',
+      '约翰二书': '约二',
+      '約翰二書': '約二',
+      '约翰三书': '约三',
+      '約翰三書': '約三',
+      '犹大书': '犹',
+      '猶大書': '猶',
+      '启示录': '启',
+      '啟示錄': '啟',
     };
     return abbr[title] ?? title;
   }
 
   /// A chapter number in the grid view. Sized by the `GridView` cell.
-  Widget _gridChapterTile(
-      BuildContext context,
-      MainProvider mainProvider,
-      AppSettings settings,
-      Book book,
-      Chapter chapter,
-      bool selected) {
+  Widget _gridChapterTile(BuildContext context, MainProvider mainProvider,
+      AppSettings settings, Book book, Chapter chapter, bool selected) {
     return _NumberTile(
       label: chapter.title.toString(),
       selected: selected,
@@ -1219,9 +1338,8 @@ class _BookChapterPickerState extends State<BookChapterPicker> {
       alignment: WrapAlignment.start,
       children: List.generate(book.chapters.length, (i) {
         final chapter = book.chapters[i];
-        final selected =
-            chapter.title == widget.currentChapter &&
-                widget.currentBook == book.title;
+        final selected = chapter.title == widget.currentChapter &&
+            widget.currentBook == book.title;
         return _chapterTile(
             context, mainProvider, settings, book, chapter, selected);
       }),
@@ -1232,15 +1350,9 @@ class _BookChapterPickerState extends State<BookChapterPicker> {
   /// Only the sizing differs — a fixed square from the breakpoint table
   /// rather than a grid cell — which is why the two share [_NumberTile]
   /// but not a call site.
-  Widget _chapterTile(
-      BuildContext context,
-      MainProvider mainProvider,
-      AppSettings settings,
-      Book book,
-      Chapter chapter,
-      bool selected) {
-    final dc = ResponsiveBreakpoints.classOf(
-        MediaQuery.of(context).size.width);
+  Widget _chapterTile(BuildContext context, MainProvider mainProvider,
+      AppSettings settings, Book book, Chapter chapter, bool selected) {
+    final dc = ResponsiveBreakpoints.classOf(MediaQuery.of(context).size.width);
     // 2026-08-25 (#315, twelfth pass). The grid view next door can trade
     // a column away to make room for a bigger label. This one cannot —
     // it is a `Wrap` of FIXED squares off the breakpoint table (44 to
@@ -1362,7 +1474,7 @@ class _NumberTile extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.zero,
         side: BorderSide(
-          color: selected ? wb.link : wb.border,
+          color: selected ? wb.link : wb.disabledMark,
           width: WbMetrics.hairline,
         ),
       ),

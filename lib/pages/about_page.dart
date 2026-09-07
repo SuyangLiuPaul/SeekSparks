@@ -39,8 +39,7 @@ class AboutPage extends StatelessWidget {
     final settings = context.watch<AppSettings>();
     final locale = settings.locale;
     final scheme = Theme.of(context).colorScheme;
-    final dc = ResponsiveBreakpoints.classOf(
-        MediaQuery.of(context).size.width);
+    final dc = ResponsiveBreakpoints.classOf(MediaQuery.of(context).size.width);
     final maxW = ResponsiveBreakpoints.settingsMaxWidth(dc);
 
     return Scaffold(
@@ -74,11 +73,9 @@ class AboutPage extends StatelessWidget {
               _DisclaimerCard(scheme: scheme, locale: locale),
               const SizedBox(height: 12),
               _ContactCard(scheme: scheme, locale: locale),
-              // 2026-05-06: BYOK card was here briefly but the user
-              // wanted AI to be fully automatic ("auth gemini for
-              // them"). The developer-shared Gemini key already
-              // handles AI for everyone after sign-in — no setup
-              // needed. The BYOK widget (lib/widgets/gemini_key_card)
+              // 2026-09-07: the BYOK card and everything it configured
+              // are gone with the AI subsystem. Historic note: the card
+              // (lib/widgets/gemini_key_card)
               // and Netlify function userApiKey support remain in
               // case we need to re-enable BYOK later.
               const SizedBox(height: 20),
@@ -98,7 +95,7 @@ class AboutPage extends StatelessWidget {
               const SizedBox(height: 20),
               _SectionTitle(
                   text: uiStrings['aboutSectionOther']?[locale] ??
-                      'Maps · Sermons · Fonts · AI · App icon',
+                      'Maps · Sermons · Fonts · App icon',
                   scheme: scheme),
               const SizedBox(height: 6),
               _OtherAttributions(scheme: scheme, locale: locale),
@@ -145,7 +142,7 @@ class AboutPage extends StatelessWidget {
                   // across iOS/web/Android. Never blank — empty input
                   // falls back to an em dash.
                   '${(uiStrings['aboutFooterNote']?[locale] ?? 'Last updated {time}.').replaceFirst('{time}', formatReleaseTimeLocal())}'
-                      ' · v$kAppVersion',
+                  ' · v$kAppVersion',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: t.scaled(11),
@@ -176,8 +173,7 @@ class _Header extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
         child: Row(
           children: [
-            Icon(Icons.menu_book_rounded,
-                color: scheme.primary, size: 32),
+            Icon(Icons.menu_book_rounded, color: scheme.primary, size: 32),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -225,8 +221,7 @@ class _DisclaimerCard extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(Icons.info_outline_rounded,
-                size: 18, color: scheme.tertiary),
+            Icon(Icons.info_outline_rounded, size: 18, color: scheme.tertiary),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
@@ -253,7 +248,8 @@ class _ContactCard extends StatelessWidget {
   static const _email = 'support@yahwehword.com';
 
   Future<void> _open(BuildContext context) async {
-    final uri = 'mailto:$_email?subject=Yahweh%27s%20Sword%20copyright%20enquiry';
+    final uri =
+        'mailto:$_email?subject=Yahweh%27s%20Sword%20copyright%20enquiry';
     if (LinkOpener.isAvailable) {
       final ok = await LinkOpener.open(uri);
       if (ok) return;
@@ -418,8 +414,7 @@ class _AttribRow extends StatelessWidget {
             if (hasUrl) ...[
               const SizedBox(width: 4),
               Icon(Icons.open_in_new_rounded,
-                  size: 14,
-                  color: scheme.primary.withValues(alpha: 0.75)),
+                  size: 14, color: scheme.primary.withValues(alpha: 0.75)),
             ],
           ],
         ),
@@ -447,16 +442,15 @@ class _AttribTable extends StatelessWidget {
 class _ScripturesTable extends StatelessWidget {
   final ColorScheme scheme;
   final String locale;
-  const _ScripturesTable(
-      {required this.scheme, required this.locale});
+  const _ScripturesTable({required this.scheme, required this.locale});
   @override
   Widget build(BuildContext context) {
     final t = WbType.of(context);
     final r = <_AttribRow>[
       _AttribRow(
         name: uiStrings['aboutVerKjv']?[locale] ?? 'KJV (1611 / 1769)',
-        licence: uiStrings['aboutLicensePublicDomain']?[locale] ??
-            'Public domain.',
+        licence:
+            uiStrings['aboutLicensePublicDomain']?[locale] ?? 'Public domain.',
       ),
       _AttribRow(
         name: uiStrings['aboutVerLeb']?[locale] ?? 'LEB (Lexham English Bible)',
@@ -465,8 +459,8 @@ class _ScripturesTable extends StatelessWidget {
         url: 'https://lexhampress.com/product/9461/lexham-english-bible',
       ),
       _AttribRow(
-        name: uiStrings['aboutVerBsb']?[locale] ??
-            'BSB (Berean Standard Bible)',
+        name:
+            uiStrings['aboutVerBsb']?[locale] ?? 'BSB (Berean Standard Bible)',
         licence: uiStrings['aboutLicenseBsb']?[locale] ??
             'Dedicated to the public domain by the publisher.',
         url: 'https://bereanbible.com/',
@@ -489,8 +483,8 @@ class _ScripturesTable extends StatelessWidget {
         url: 'https://www.lockman.org/',
       ),
       _AttribRow(
-        name: uiStrings['aboutVerCuvsYhwh']?[locale] ??
-            'CUVS-YHWH (和合本雅伟版, 简/繁)',
+        name:
+            uiStrings['aboutVerCuvsYhwh']?[locale] ?? 'CUVS-YHWH (和合本雅伟版, 简/繁)',
         licence: uiStrings['aboutLicenseCuvsYhwh']?[locale] ??
             '© Yahweh De Hua Ministry · used with permission.',
         url: 'https://yahwehdehua.net/cn/bible',
@@ -520,8 +514,8 @@ class _ScripturesTable extends StatelessWidget {
         url: 'https://eaglesviewsoftware.com/en/download/',
       ),
       _AttribRow(
-        name: uiStrings['aboutVerCuvsPlus']?[locale] ??
-            "CUV+S 和合本+Strong's（简体）",
+        name:
+            uiStrings['aboutVerCuvsPlus']?[locale] ?? "CUV+S 和合本+Strong's（简体）",
         licence: uiStrings['aboutLicenseEaglesView']?[locale] ??
             "Public domain text · electronic edition from Eagle's View.",
         url: 'https://eaglesviewsoftware.com/en/download/',
@@ -564,8 +558,7 @@ class _LexiconsTable extends StatelessWidget {
             'Public domain (1890s).',
       ),
       _AttribRow(
-        name: uiStrings['aboutLexCbol']?[locale] ??
-            'CBOL Chinese definitions',
+        name: uiStrings['aboutLexCbol']?[locale] ?? 'CBOL Chinese definitions',
         licence: uiStrings['aboutLicenseCbol']?[locale] ??
             'CC-BY-NC-SA 4.0 · non-commercial only; derivatives must keep the licence.',
         url: 'https://bible.fhl.net/',
@@ -573,8 +566,8 @@ class _LexiconsTable extends StatelessWidget {
       _AttribRow(
         name: uiStrings['aboutLexLxx']?[locale] ??
             'LXX (Septuagint) cross-references',
-        licence: uiStrings['aboutLicensePublicDomain']?[locale] ??
-            'Public domain.',
+        licence:
+            uiStrings['aboutLicensePublicDomain']?[locale] ?? 'Public domain.',
       ),
       _AttribRow(
         name: uiStrings['aboutLexInterlinear']?[locale] ??
@@ -610,8 +603,7 @@ class _LexiconsTable extends StatelessWidget {
       // These two are what let the Chinese column identify a word
       // rather than only its verse.
       _AttribRow(
-        name: uiStrings['aboutLexCuvsTagged']?[locale] ??
-            '和合本【雅伟】简体版＋［附原文编号］',
+        name: uiStrings['aboutLexCuvsTagged']?[locale] ?? '和合本【雅伟】简体版＋［附原文编号］',
         licence: uiStrings['aboutLicenseCuvsTagged']?[locale] ??
             '修订编辑：孙树民 · Used with permission (yahwehdehua.net).',
         url: 'https://yahwehdehua.net/cn/resource/bible',
@@ -633,8 +625,7 @@ class _LexiconsTable extends StatelessWidget {
 class _OtherAttributions extends StatelessWidget {
   final ColorScheme scheme;
   final String locale;
-  const _OtherAttributions(
-      {required this.scheme, required this.locale});
+  const _OtherAttributions({required this.scheme, required this.locale});
   @override
   Widget build(BuildContext context) {
     final r = <_AttribRow>[
@@ -678,10 +669,9 @@ class _OtherAttributions extends StatelessWidget {
             '© Liang Jia-keng · used with permission.',
       ),
       _AttribRow(
-        name: uiStrings['aboutFontsBundled']?[locale] ??
-            'Bundled font: Roboto',
-        licence: uiStrings['aboutLicenseRoboto']?[locale] ??
-            'Apache 2.0 · Google.',
+        name: uiStrings['aboutFontsBundled']?[locale] ?? 'Bundled font: Roboto',
+        licence:
+            uiStrings['aboutLicenseRoboto']?[locale] ?? 'Apache 2.0 · Google.',
       ),
       _AttribRow(
         name: uiStrings['aboutFontsCjk']?[locale] ??
@@ -695,11 +685,6 @@ class _OtherAttributions extends StatelessWidget {
                 'Noto Sans Symbols 2 (subsets)',
         licence: uiStrings['aboutLicenseOfl']?[locale] ??
             'SIL OFL · shipped with the app, not downloaded.',
-      ),
-      _AttribRow(
-        name: uiStrings['aboutAi']?[locale] ?? 'AI explanations',
-        licence: uiStrings['aboutLicenseAi']?[locale] ??
-            'Google Gemini API · output redistribution permitted under API terms.',
       ),
       // 66 book introductions, each stating an author and a date, rendered
       // by default at the top of chapter 1. They are the app's own, and the
@@ -724,8 +709,7 @@ class _OtherAttributions extends StatelessWidget {
                 'edition.',
       ),
       _AttribRow(
-        name: uiStrings['aboutTrivia']?[locale] ??
-            'Trivia text + diagrams',
+        name: uiStrings['aboutTrivia']?[locale] ?? 'Trivia text + diagrams',
         licence: uiStrings['aboutLicenseOriginal']?[locale] ??
             'Original to this app · MIT (same as application code).',
         last: true,
@@ -776,8 +760,7 @@ class _AppLicenseCard extends StatelessWidget {
             TextButton.icon(
               icon: const Icon(Icons.code_rounded, size: 16),
               label: Text(
-                uiStrings['aboutOpenRepo']?[locale] ??
-                    'View source on GitHub',
+                uiStrings['aboutOpenRepo']?[locale] ?? 'View source on GitHub',
               ),
               onPressed: () => _openRepo(context),
             ),
@@ -790,4 +773,3 @@ class _AppLicenseCard extends StatelessWidget {
     );
   }
 }
-

@@ -13,12 +13,10 @@ import 'package:seeksparks/utils/cross_version_search.dart'
 import 'package:seeksparks/utils/search_folding.dart' as folding;
 import 'package:seeksparks/models/notification_category.dart';
 import 'package:seeksparks/services/app_icon_service.dart';
-import 'package:seeksparks/services/notification_scheduler.dart'
-    as scheduler;
+import 'package:seeksparks/services/notification_scheduler.dart' as scheduler;
 import 'package:seeksparks/services/profile_service.dart';
 import 'package:seeksparks/utils/font_catalog.dart';
-import 'package:seeksparks/utils/ketiv_qere.dart'
-    show KetivQereSearchScope;
+import 'package:seeksparks/utils/ketiv_qere.dart' show KetivQereSearchScope;
 
 /// The range the Font Size slider offers, in points, and the value that
 /// counts as "unscaled".
@@ -122,26 +120,6 @@ const _kExcludeKetivFromSearch = 'excludeKetivFromSearch';
 const _kExcludeQereFromSearch = 'excludeQereFromSearch';
 const _kShowSectionTitles = 'showSectionTitles';
 const _kShowBookIntro = 'showBookIntro';
-// User-supplied Gemini API key (BYOK). When non-empty, AI calls are
-// routed through the user's own AI Studio key — gives them their own
-// quota (15 RPM / 1500 RPD on the free tier) and keeps the app
-// developer's shared quota for users who haven't pasted a key. The
-// key never leaves this device's localStorage; the AI service only
-// adds it to outbound POST bodies destined for our own Netlify
-// function (which forwards to Google without persisting).
-const _kGeminiApiKey = 'geminiApiKey';
-// 2026-05-10 (v1.2.26): user's chosen AI response-depth tier.
-// Maps to a Gemini model on the server side:
-//   'flash-lite' → 'gemini-2.5-flash-lite' (fast, simple, default)
-//   'flash'      → 'gemini-2.5-flash'      (balanced)
-//   'pro'        → 'gemini-2.5-pro'        (deep, slower, smaller quota)
-const _kAiModel = 'aiModel';
-// Allowlist mirrored on the Netlify function side so a corrupt
-// SharedPrefs entry can't drive the server to a model we don't
-// support. Default 'flash-lite' matches the previous hardcoded
-// MODEL constant in netlify/functions/aiBibleSearch.mjs.
-const Set<String> _kAiModelAllowed = {'flash-lite', 'flash', 'pro'};
-const String _kAiModelDefault = 'flash-lite';
 
 // 2026-05-24 (v1.3.19): TTS voice preference constants removed
 // along with the 朗读 feature. Existing SharedPreferences keys
@@ -158,7 +136,7 @@ const String _kAiModelDefault = 'flash-lite';
 //   'oldest'    → oldest first (reverse of 'recent')
 // Defaults to 'canonical' so existing users see no behaviour
 // change until they pick a different sort. Allowlist-clamped on
-// load to match the established pattern for aiModel + tts*.
+// load to match the established pattern for tts*.
 const _kNotesSortMode = 'notesSortMode';
 const Set<String> _kNotesSortAllowed = {'canonical', 'recent', 'oldest'};
 const String _kNotesSortDefault = 'canonical';
@@ -175,7 +153,6 @@ const _kChronologyView = 'chronologyView';
 const Set<String> _kChronologyViewAllowed = {'wheel', 'strip'};
 const String _kChronologyViewDefault = 'wheel';
 
-
 class AppSettings extends ChangeNotifier {
   /// User's selected font key — what gets persisted in
   /// SharedPreferences (e.g. `'EB Garamond'`). Drives the dropdown
@@ -188,6 +165,7 @@ class AppSettings extends ChangeNotifier {
   /// system's typography out of the box. `'Roboto'` remains a
   /// pickable option in Settings if a user prefers it explicitly.
   String _fontSelection = 'system';
+
   /// Resolved family name passed to TextStyle's `fontFamily`. For
   /// bundled fonts this equals [_fontSelection]; for Google Fonts
   /// it's the registered family name (e.g. `'EBGaramond_regular'`)
@@ -213,13 +191,17 @@ class AppSettings extends ChangeNotifier {
   double _menuScale = 1.0;
   // 2026-05-08 (v1.1.1): card / tile material; classic by default.
   CardMaterial _cardMaterial = CardMaterial.classic;
+
   /// 'list' or 'grid' — persisted choice for the books picker.
   String _booksViewMode = 'grid';
+
   /// Render verse text with FontWeight.w700 instead of normal weight.
   bool _boldVerseText = false;
+
   /// Show the Strong's # badge inside each word chip in the originals
   /// (exegesis) sheet — handy for power users, distracting for some.
   bool _showStrongsInOriginals = true;
+
   /// Auto-expand the first book group in the concordance section of
   /// each Strong's entry so the user sees verse refs immediately.
   bool _autoExpandFirstRef = false;
@@ -236,12 +218,11 @@ class AppSettings extends ChangeNotifier {
   // not in the map fall back to NotificationCategoryPrefs.defaultFor.
   Map<String, NotificationCategoryPrefs> _notificationCategories = {};
 
-  /// User-supplied Gemini API key. When non-empty, AI calls (word
-  /// explanations, AI search) are billed against the user's own
-  /// AI Studio quota instead of the developer-shared key.
-  String _geminiApiKey = '';
-  // 2026-05-10 (v1.2.26): see top-of-file _kAiModel comment.
-  String _aiModel = _kAiModelDefault;
+  // 2026-09-07: `_geminiApiKey` and `_aiModel` removed with the AI
+  // subsystem. Their SharedPreferences keys (`geminiApiKey`, `aiModel`)
+  // are deliberately NOT cleared on upgrade — same treatment the TTS
+  // fields got: orphan data on disk is harmless, and a migration that
+  // deletes keys is a migration that can delete the wrong one.
   // 2026-05-24 (v1.3.19): TTS fields removed with the 朗读 feature.
   // 2026-05-24 (v1.2.91): see _kNotesSortMode comment.
   String _notesSortMode = _kNotesSortDefault;
@@ -268,6 +249,7 @@ class AppSettings extends ChangeNotifier {
   /// sites (`fontFamily: settings.fontFamily`) automatically get the
   /// Google-Fonts-registered name without code changes elsewhere.
   String get fontFamily => _fontFamily;
+
   /// The user's stored selection key — use this for the dropdown
   /// `value:` and for round-tripping back into [setFontFamily].
   String get fontSelection => _fontSelection;
@@ -286,15 +268,16 @@ class AppSettings extends ChangeNotifier {
   bool get showStrongsInOriginals => _showStrongsInOriginals;
   bool get autoExpandFirstRef => _autoExpandFirstRef;
   bool get notificationsEnabled => _notificationsEnabled;
+
   /// Safe per-category lookup. Returns the stored prefs if present,
   /// or the shipped default if the user hasn't touched this category.
   NotificationCategoryPrefs notificationCategory(String categoryId) =>
       _notificationCategories[categoryId] ??
       NotificationCategoryPrefs.defaultFor(categoryId);
+
   /// Which editions the command line searches — see bwh16 and
   /// `cross_version_search.dart`.
-  CrossVersionSearchMode get crossVersionSearchMode =>
-      _crossVersionSearchMode;
+  CrossVersionSearchMode get crossVersionSearchMode => _crossVersionSearchMode;
 
   /// Whether searches fold Hebrew vowel points and Greek accents away.
   ///
@@ -316,27 +299,6 @@ class AppSettings extends ChangeNotifier {
 
   bool get showSectionTitles => _showSectionTitles;
   bool get showBookIntro => _showBookIntro;
-
-  /// User-supplied Gemini API key. Empty string when the user is on
-  /// the developer-shared key. Caller services (AiWordService /
-  /// AiSearchService) read this and include it in their request body
-  /// when set. Never persisted off-device.
-  String get geminiApiKey => _geminiApiKey;
-  bool get hasUserGeminiKey => _geminiApiKey.trim().isNotEmpty;
-
-  /// 2026-05-10 (v1.2.26): user's selected AI response-depth tier
-  /// — one of {'flash-lite', 'flash', 'pro'}. Default 'flash-lite'
-  /// matches the previous hardcoded server default.
-  String get aiModel => _aiModel;
-
-  Future<void> setAiModel(String model) async {
-    if (!_kAiModelAllowed.contains(model)) return;
-    if (_aiModel == model) return;
-    _aiModel = model;
-    notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_kAiModel, model);
-  }
 
   // 2026-05-24 (v1.3.19): `ttsVoiceGender` / `ttsVoiceTier` getters
   // + setters removed with the 朗读 feature.
@@ -368,19 +330,6 @@ class AppSettings extends ChangeNotifier {
     await prefs.setString(_kChronologyView, view);
   }
 
-  Future<void> setGeminiApiKey(String key) async {
-    final trimmed = key.trim();
-    if (_geminiApiKey == trimmed) return;
-    _geminiApiKey = trimmed;
-    notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    if (trimmed.isEmpty) {
-      await prefs.remove(_kGeminiApiKey);
-    } else {
-      await prefs.setString(_kGeminiApiKey, trimmed);
-    }
-  }
-
   /// [selection] is a catalogue key like `'EB Garamond'` (see
   /// [availableFontOptions]). We persist the key as-is and resolve
   /// it through the Google Fonts package when needed so the rest of
@@ -404,8 +353,7 @@ class AppSettings extends ChangeNotifier {
   }
 
   Future<void> setLineSpacing(double spacing) async {
-    final clamped =
-        spacing.clamp(kLineSpacingMin, kLineSpacingMax).toDouble();
+    final clamped = spacing.clamp(kLineSpacingMin, kLineSpacingMax).toDouble();
     if (_lineSpacing == clamped) return;
     _lineSpacing = clamped;
     notifyListeners();
@@ -511,8 +459,7 @@ class AppSettings extends ChangeNotifier {
     await prefs.setBool(_kShowStrongsInOriginals, enabled);
   }
 
-  Future<void> setCrossVersionSearchMode(
-      CrossVersionSearchMode mode) async {
+  Future<void> setCrossVersionSearchMode(CrossVersionSearchMode mode) async {
     if (_crossVersionSearchMode == mode) return;
     _crossVersionSearchMode = mode;
     notifyListeners();
@@ -615,7 +562,6 @@ class AppSettings extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_kShowBookIntro, enabled);
   }
-
 
   Future<void> setMenuScale(double scale) async {
     final clamped = scale.clamp(kMenuScaleMin, kMenuScaleMax).toDouble();
@@ -774,12 +720,13 @@ class AppSettings extends ChangeNotifier {
     _fontSize = ((rawFontSize - kFontSizeMin).roundToDouble() + kFontSizeMin)
         .clamp(kFontSizeMin, kFontSizeMax)
         .toDouble();
-    final rawLineSpacing = prefs.getDouble(_kLineSpacing) ?? kLineSpacingDefault;
+    final rawLineSpacing =
+        prefs.getDouble(_kLineSpacing) ?? kLineSpacingDefault;
     _lineSpacing = ((rawLineSpacing * 10).roundToDouble() / 10)
         .clamp(kLineSpacingMin, kLineSpacingMax)
         .toDouble();
-    _primaryColor =
-        Color(prefs.getInt(_kPrimaryColor) ?? AppIconService.kDefaultPrimaryColor.toARGB32());
+    _primaryColor = Color(prefs.getInt(_kPrimaryColor) ??
+        AppIconService.kDefaultPrimaryColor.toARGB32());
     // The icon has been redesigned three times (2026-08-06, 2026-08-25,
     // then recoloured red on 2026-08-31 so it stops reading as YsWords)
     // and the default seed moved with it every time —
@@ -844,16 +791,13 @@ class AppSettings extends ChangeNotifier {
     final rawBooksView = prefs.getString(_kBooksViewMode) ?? 'grid';
     _booksViewMode = rawBooksView == 'grid' ? 'grid' : 'list';
     _boldVerseText = prefs.getBool(_kBoldVerseText) ?? false;
-    _showStrongsInOriginals =
-        prefs.getBool(_kShowStrongsInOriginals) ?? true;
+    _showStrongsInOriginals = prefs.getBool(_kShowStrongsInOriginals) ?? true;
     _autoExpandFirstRef = prefs.getBool(_kAutoExpandFirstRef) ?? false;
     _crossVersionSearchMode =
         crossVersionModeFromName(prefs.getString(_kCrossVersionSearchMode));
-    _searchIgnoresPointing =
-        prefs.getBool(_kSearchIgnoresPointing) ?? true;
+    _searchIgnoresPointing = prefs.getBool(_kSearchIgnoresPointing) ?? true;
     folding.setSearchIgnoresPointing(_searchIgnoresPointing);
-    _excludeKetivFromSearch =
-        prefs.getBool(_kExcludeKetivFromSearch) ?? false;
+    _excludeKetivFromSearch = prefs.getBool(_kExcludeKetivFromSearch) ?? false;
     _excludeQereFromSearch = prefs.getBool(_kExcludeQereFromSearch) ?? false;
     _notificationsEnabled = prefs.getBool(_kNotificationsEnabled) ?? false;
     // 2026-05-24 (v1.3.0): load per-category notification prefs.
@@ -879,21 +823,12 @@ class AppSettings extends ChangeNotifier {
     }
     _showSectionTitles = prefs.getBool(_kShowSectionTitles) ?? true;
     _showBookIntro = prefs.getBool(_kShowBookIntro) ?? true;
-    _geminiApiKey = prefs.getString(_kGeminiApiKey) ?? '';
-    // 2026-05-10 (v1.2.26): restore aiModel from prefs. Allowlist
-    // -clamp so a corrupt entry doesn't drive the server to an
-    // unsupported model — invalid values fall back to default.
-    final storedAiModel = prefs.getString(_kAiModel);
-    _aiModel = (storedAiModel != null && _kAiModelAllowed.contains(storedAiModel))
-        ? storedAiModel
-        : _kAiModelDefault;
-
     // 2026-05-24 (v1.3.19): TTS voice pref restore removed with the
     // 朗读 feature. The stored SharedPreferences keys are left in
     // place as harmless orphan data.
 
-    // 2026-05-24 (v1.2.91): Library → Notes sort mode. Same
-    // allowlist-clamp pattern as aiModel.
+    // 2026-05-24 (v1.2.91): Library → Notes sort mode. The
+    // allowlist-clamp pattern.
     final storedNotesSort = prefs.getString(_kNotesSortMode);
     _notesSortMode = (storedNotesSort != null &&
             _kNotesSortAllowed.contains(storedNotesSort))
@@ -913,8 +848,8 @@ class AppSettings extends ChangeNotifier {
     // present. Fields the blob doesn't contain fall through to the
     // legacy values we just loaded, which keeps a blob written by an
     // older build forward-compatible with new fields.
-    final userPrefsBlob = prefs.getString(
-        ProfileService.instance.scopedKey('userPrefs'));
+    final userPrefsBlob =
+        prefs.getString(ProfileService.instance.scopedKey('userPrefs'));
     if (userPrefsBlob != null && userPrefsBlob.isNotEmpty) {
       try {
         _applyUserPrefsBlob(jsonDecode(userPrefsBlob) as Map<String, dynamic>);
@@ -922,7 +857,6 @@ class AppSettings extends ChangeNotifier {
     }
 
     notifyListeners();
-
   }
 
   // 2026-05-25 (v1.3.41): debounce timer for the comprehensive
@@ -963,14 +897,10 @@ class AppSettings extends ChangeNotifier {
   /// the ProfileService-scoped `userPrefs` key in SharedPreferences
   /// + bump the paired `userPrefsTimestamp` int.
   ///
-  /// `geminiApiKey` is deliberately excluded — a credential does not
-  /// belong in the general settings blob, for the reasons documented
-  /// near the `_kGeminiApiKey` declaration.
   /// Single source of truth for the sync-eligible settings snapshot.
   /// Used by both the writer and the content-guard primer so the two
   /// can never drift (a drift would defeat the guard and re-open the
-  /// flicker loop). `geminiApiKey` is deliberately excluded — separate
-  /// sync path.
+  /// flicker loop).
   Map<String, dynamic> _userPrefsSnapshot() => {
         'fontFamily': _fontSelection,
         'fontSize': _fontSize,
@@ -994,7 +924,6 @@ class AppSettings extends ChangeNotifier {
         'notificationsEnabled': _notificationsEnabled,
         'showSectionTitles': _showSectionTitles,
         'showBookIntro': _showBookIntro,
-        'aiModel': _aiModel,
         'notesSortMode': _notesSortMode,
         'chronologyView': _chronologyView,
       };
@@ -1060,7 +989,9 @@ class AppSettings extends ChangeNotifier {
       if (m['themeMode'] is String) {
         _themeMode = _parseThemeMode(m['themeMode'] as String);
       }
-      if (m['paragraphMode'] is bool) _paragraphMode = m['paragraphMode'] as bool;
+      if (m['paragraphMode'] is bool) {
+        _paragraphMode = m['paragraphMode'] as bool;
+      }
       if (m['readingPaperTheme'] is bool) {
         _readingPaperTheme = m['readingPaperTheme'] as bool;
       }
@@ -1080,7 +1011,9 @@ class AppSettings extends ChangeNotifier {
         final raw = m['booksViewMode'] as String;
         _booksViewMode = raw == 'grid' ? 'grid' : 'list';
       }
-      if (m['boldVerseText'] is bool) _boldVerseText = m['boldVerseText'] as bool;
+      if (m['boldVerseText'] is bool) {
+        _boldVerseText = m['boldVerseText'] as bool;
+      }
       if (m['showStrongsInOriginals'] is bool) {
         _showStrongsInOriginals = m['showStrongsInOriginals'] as bool;
       }
@@ -1109,11 +1042,6 @@ class AppSettings extends ChangeNotifier {
       }
       if (m['showBookIntro'] is bool) {
         _showBookIntro = m['showBookIntro'] as bool;
-      }
-      if (m['aiModel'] is String) {
-        final raw = m['aiModel'] as String;
-        _aiModel =
-            _kAiModelAllowed.contains(raw) ? raw : _kAiModelDefault;
       }
       if (m['notesSortMode'] is String) {
         final raw = m['notesSortMode'] as String;

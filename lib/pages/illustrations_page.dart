@@ -109,9 +109,8 @@ class _IllustrationsPageState extends State<IllustrationsPage> {
       context: context,
       locale: locale,
       version: context.read<MainProvider>().currentVersion,
-      activeSpec: (books == null || books.isEmpty)
-          ? null
-          : limitSpecForBooks(books),
+      activeSpec:
+          (books == null || books.isEmpty) ? null : limitSpecForBooks(books),
       activeFallbackLabel: null,
     );
     // Null is a cancel; an EMPTY set means "no limit". Same contract the
@@ -178,8 +177,8 @@ class _IllustrationsPageState extends State<IllustrationsPage> {
     final books = _scopeBooks;
     final scopeLabel = (books == null || books.isEmpty)
         ? _s('scopeWholeBible', 'Whole Bible', locale)
-        : scopeDisplayName(spec: limitSpecForBooks(books), locale: locale,
-            version: version);
+        : scopeDisplayName(
+            spec: limitSpecForBooks(books), locale: locale, version: version);
     final scope = _flatButton(
       c,
       t,
@@ -228,8 +227,8 @@ class _IllustrationsPageState extends State<IllustrationsPage> {
           isDense: true,
           filled: true,
           fillColor: c.paneAltBg,
-          hintText: _s('illustrationsSearchHint', 'Search titles and captions',
-              locale),
+          hintText: _s(
+              'illustrationsSearchHint', 'Search titles and captions', locale),
           hintStyle: TextStyle(
             fontSize: t.text,
             color: c.mutedText,
@@ -276,8 +275,8 @@ class _IllustrationsPageState extends State<IllustrationsPage> {
     final t = WbType.of(context);
     final kinds = illustrationKinds(all);
     if (kinds.length < 2) return const SizedBox.shrink();
-    final counts = illustrationKindCounts(all,
-        query: _query, scopeBooks: _scopeBooks);
+    final counts =
+        illustrationKindCounts(all, query: _query, scopeBooks: _scopeBooks);
     return Padding(
       padding: const EdgeInsets.fromLTRB(8, 0, 8, 6),
       child: Wrap(
@@ -318,7 +317,7 @@ class _IllustrationsPageState extends State<IllustrationsPage> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.zero,
           side: BorderSide(
-            color: active ? c.text : c.border,
+            color: active ? c.text : c.disabledMark,
             width: WbMetrics.hairline,
           ),
         ),
@@ -332,8 +331,7 @@ class _IllustrationsPageState extends State<IllustrationsPage> {
               children: [
                 if (icon != null) ...[
                   Icon(icon,
-                      size: t.chrome + 1,
-                      color: active ? c.text : c.mutedText),
+                      size: t.chrome + 1, color: active ? c.text : c.mutedText),
                   const SizedBox(width: 4),
                 ],
                 Flexible(

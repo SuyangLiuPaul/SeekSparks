@@ -2,7 +2,6 @@ import 'dart:async' show unawaited;
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:seeksparks/utils/app_nav.dart';
 import 'package:provider/provider.dart';
 
 import 'package:seeksparks/constants/text_patterns.dart'
@@ -14,17 +13,14 @@ import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/original_word.dart';
 import 'package:seeksparks/models/strongs.dart';
 import 'package:seeksparks/models/verse.dart';
-import 'package:seeksparks/pages/settings_page.dart';
 import 'package:seeksparks/widgets/collapsible_english_ref.dart';
 import 'package:seeksparks/widgets/workbench_chrome.dart'
     show WbToolButton, WbToolIcon;
 import 'package:seeksparks/widgets/left_accent_card.dart';
-import 'package:seeksparks/services/ai_word_service.dart';
 import 'package:seeksparks/services/concordance_service.dart';
 import 'package:seeksparks/services/lxx_service.dart';
 import 'package:seeksparks/services/originals_service.dart';
 import 'package:seeksparks/services/strongs_service.dart';
-import 'package:seeksparks/utils/ai_markdown.dart' show parseAiMarkdown;
 import 'package:seeksparks/utils/clipboard_helper.dart';
 import 'package:seeksparks/utils/ketiv_qere.dart';
 import 'package:seeksparks/utils/morphology.dart';
@@ -154,39 +150,6 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
   // pattern fixed in v1.2.8 (BYOK Test) but not yet here.
   int _lookupGen = 0;
 
-  // ── AI explanation panel ─────────────────────────────────────────
-  // Gemini-powered "explain this word in this verse" feature.
-  // Tap-to-load (not auto) so we don't burn API calls every time the
-  // user pokes at a chip. Keyed by Strong's # so we don't re-show a
-  // stale explanation when the user switches words.
-  //
-  // The panel keeps a *list* of explanation chunks so follow-up
-  // requests (different length / scope) APPEND rather than replace —
-  // the user builds up a longer study by tapping multiple directions.
-  // Each chunk has a label (e.g. "In this chapter") shown as a small
-  // header, and the full transcript can be copied to clipboard.
-  final List<_AiChunk> _aiChunks = [];
-  String? _aiError;
-  bool _aiLoading = false;
-  String? _aiForStrongs;
-
-  /// 2026-05-08 (v1.1.10): heuristic — does this AI-failure message
-  /// indicate a quota / not-configured failure that BYOK can solve?
-  /// Mirrors the helpers in search_page.dart and evidence_page.dart.
-  bool _shouldOfferByokForError(String? msg) {
-    if (msg == null) return false;
-    final lower = msg.toLowerCase();
-    const triggers = [
-      'quota', 'exhausted', 'rate-limit', 'rate limit',
-      'not configured', 'gemini_api_key',
-      '配额', '用完', '没有配置',
-    ];
-    for (final t in triggers) {
-      if (lower.contains(t)) return true;
-    }
-    return false;
-  }
-
   @override
   void initState() {
     super.initState();
@@ -219,7 +182,8 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
     final results = <_VerseOriginals>[];
     for (final v in widget.verses) {
       final english = toEnglish(v.book) ?? v.book;
-      final words = await OriginalsService.forVerse(english, v.chapter, v.verse);
+      final words =
+          await OriginalsService.forVerse(english, v.chapter, v.verse);
       results.add(_VerseOriginals(
         verse: v,
         words: words,
@@ -266,12 +230,6 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
       _refsShowAll.clear();
       _lxxEquivalents = const [];
       _hebrewSources = const [];
-      // Clear any AI explanation from a previous word — keep the panel
-      // tightly scoped to the currently-selected lemma.
-      _aiChunks.clear();
-      _aiError = null;
-      _aiLoading = false;
-      _aiForStrongs = null;
     });
     // Fire both lookups in parallel — Strong's entry is per-language,
     // concordance is a single shared file that gets warmed by the
@@ -315,15 +273,6 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
       _refsShowAll.clear();
       _lxxEquivalents = const [];
       _hebrewSources = const [];
-      // Round 56 fix: navigating to a different lemma (via 完整研经
-      // or a family/synonym chip) means any AI explanation that was
-      // generated for the PREVIOUS lemma is now irrelevant. Clear it
-      // so the AI panel starts empty on the new entry — user re-clicks
-      // to regenerate. Mirrors the clearing already done in _onWordTap.
-      _aiChunks.clear();
-      _aiError = null;
-      _aiLoading = false;
-      _aiForStrongs = null;
     });
     final entryFuture = StrongsService.lookup(strongsNumber);
     final concordanceFuture = ConcordanceService.lookup(strongsNumber);
@@ -362,14 +311,6 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
       _hebrewSources = const [];
       // Restore the word-entry's auto-opened first book.
       _expandedConcordanceBook = null;
-      // Round 56 fix: same clearing rationale as _loadRootEntry —
-      // we're showing a different entry (the original word's vs the
-      // root's), so any AI explanation generated for the root entry
-      // is no longer the right paragraph to show.
-      _aiChunks.clear();
-      _aiError = null;
-      _aiLoading = false;
-      _aiForStrongs = null;
     });
     if (_selectedWord != null) {
       // v1.2.30: bump gen so the new relations chain participates in
@@ -378,131 +319,6 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
       final myGen = ++_lookupGen;
       unawaited(_loadRelations(_selectedWord!.strongs, gen: myGen));
     }
-  }
-
-  /// Asks the AI service to explain the currently-selected original
-  /// word as it functions in [scope] (defaulting to the verse). Each
-  /// call APPENDS a new labeled chunk to [_aiChunks] so the user can
-  /// stack multiple angles (verse → chapter → book → cross-refs) in
-  /// one session. Tap-to-load — never auto-fired.
-  ///
-  /// [length] is one of `default` / `concise` / `longer`.
-  /// [scope]  is one of `verse` / `chapter` / `book` / `wholeBible` /
-  /// `otherChapters`.
-  Future<void> _loadAiExplanation({
-    String length = 'default',
-    String scope = 'verse',
-  }) async {
-    // Round 56 fix: the previous version always asked Gemini to
-    // explain the *original* tapped word in the verse, even when the
-    // user had since navigated to a related root entry via 完整研经
-    // or a word-family chip. The on-screen entry no longer matched
-    // what AI was being asked to explain. Now the AI tracks whichever
-    // lemma is currently displayed: _rootEntry takes precedence, with
-    // _selectedEntry as the fallback for the original word view.
-    final entry = _rootEntry ?? _selectedEntry;
-    if (entry == null) return;
-    final v = widget.verses.isNotEmpty ? widget.verses.first : null;
-    if (v == null) return;
-    final englishBook = toEnglish(v.book) ?? v.book;
-    final entryNumber = entry.number;
-    setState(() {
-      _aiLoading = true;
-      _aiError = null;
-      _aiForStrongs = entryNumber;
-    });
-    // BYOK (2026-05): if the user has pasted their own Gemini API
-    // key in Settings → AI, route the request through that key so
-    // their AI Studio quota is consumed instead of the developer's
-    // shared one. Passed as a body field; the Netlify function
-    // prefers it over the env-var key when present.
-    final settings = context.read<AppSettings>();
-    final userKey = settings.geminiApiKey;
-    final result = await AiWordService.explain(
-      strongs: entryNumber,
-      lemma: entry.lemma,
-      translit: entry.translit,
-      gloss: entry.gloss,
-      englishBook: englishBook,
-      chapter: v.chapter,
-      verse: v.verse,
-      verseText: sanitizeForSearch(v.text),
-      locale: widget.locale,
-      length: length,
-      scope: scope,
-      userApiKey: userKey.isEmpty ? null : userKey,
-      // v1.2.26 — Gemini tier from Settings.
-      aiModel: settings.aiModel,
-    );
-    // Race-check: if the user navigated to another entry while we
-    // were waiting for Gemini, drop the response on the floor — the
-    // displayed entry no longer matches what we asked about.
-    final stillCurrent =
-        (_rootEntry ?? _selectedEntry)?.number == entryNumber;
-    if (!mounted || !stillCurrent) return;
-    setState(() {
-      _aiLoading = false;
-      if (result.unavailable) {
-        _aiError = result.unavailableReason;
-      } else {
-        // 2026-05-11 (v1.2.42): v1.2.37's fellBackToFlash notice
-        // path was removed — v1.2.40's switch to
-        // gemini-3-flash-preview made Deep work on free tier.
-        _aiChunks.add(_AiChunk(
-          label: _chunkLabel(length: length, scope: scope, locale: widget.locale),
-          text: result.explanation,
-        ));
-      }
-    });
-  }
-
-  /// Build the small header shown above each appended explanation —
-  /// e.g. "本节经文" / "In this chapter (more detail)". Uses the
-  /// existing uiStrings entries so all three locales get the right
-  /// label without duplicate logic in the widget tree.
-  String _chunkLabel({
-    required String length,
-    required String scope,
-    required String locale,
-  }) {
-    final scopeKey = switch (scope) {
-      'chapter' => 'aiScopeChapter',
-      'book' => 'aiScopeBook',
-      'wholeBible' => 'aiScopeWholeBible',
-      'otherChapters' => 'aiScopeOtherChapters',
-      'crossTestament' => 'aiScopeCrossTestament',
-      'deepExegesis' => 'aiScopeDeepExegesis',
-      _ => 'aiScopeVerse',
-    };
-    final scopeLabel = uiStrings[scopeKey]?[locale] ?? scope;
-    if (length == 'concise') {
-      final s = uiStrings['aiLengthConcise']?[locale] ?? 'shorter';
-      return '$scopeLabel · $s';
-    }
-    if (length == 'longer') {
-      final s = uiStrings['aiLengthLonger']?[locale] ?? 'more detail';
-      return '$scopeLabel · $s';
-    }
-    return scopeLabel;
-  }
-
-  /// Concatenate every appended chunk for clipboard copy. Plain text
-  /// — labeled headers separated by blank lines so it pastes well
-  /// into Notes / Word / chat.
-  String _aiTranscript() {
-    final w = _selectedWord;
-    final v = widget.verses.isNotEmpty ? widget.verses.first : null;
-    if (w == null || v == null || _aiChunks.isEmpty) return '';
-    final ref = '${v.book} ${v.chapter}:${v.verseLabel} · ${w.text} (${w.strongs})';
-    final buf = StringBuffer()
-      ..writeln(ref)
-      ..writeln();
-    for (final c in _aiChunks) {
-      buf.writeln('— ${c.label} —');
-      buf.writeln(c.text);
-      buf.writeln();
-    }
-    return buf.toString().trim();
   }
 
   Future<void> _loadRelations(String number,
@@ -611,129 +427,128 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
   Widget _buildPanel(BuildContext context, ColorScheme scheme, String locale,
       String title, ScrollController scrollController) {
     return Column(
-          mainAxisSize:
-              widget.embedded ? MainAxisSize.max : MainAxisSize.min,
-          children: [
-            // 2026-08 (SeekSparks): the drag handle is a bottom-sheet
-            // affordance — meaningless in the docked Workbench pane.
-            if (!widget.embedded)
-              Container(
-                margin: const EdgeInsets.only(top: 8),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: scheme.outlineVariant,
-                  borderRadius: _st.r(2),
-                ),
-              ),
-            // 2026-08-09 (task #284): the docked pane draws NO header
-            // here. It used to draw its own — a 16px title, a copy
-            // button and a collapse chevron — and `workbench_page`
-            // suppressed the real `WbPaneTitle` to make room for it.
-            // That was only half the tab: hovering a WORD renders
-            // `WordAnalysisPane` instead, which has no header at all, so
-            // the pane's title and its collapse control appeared and
-            // vanished as the pointer crossed between a word and its
-            // verse. The pane owns them now; this is content.
-            if (!widget.embedded) ...[
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
-                child: Row(
-                  children: [
-                    Icon(Icons.auto_stories, color: scheme.primary, size: 20),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            title,
-                            style: TextStyle(
-                              fontSize: _ty.scaled(16),
-                              fontWeight: FontWeight.w700,
-                              color: scheme.onSurface,
-                            ),
-                          ),
-                          Text(
-                            uiStrings['interlinearHint']?[locale] ??
-                                'Original · Strong\'s gloss',
-                            style: TextStyle(
-                              fontSize: _st.gloss,
-                              color: scheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (_verseOriginals != null)
-                      IconButton(
-                        icon: const Icon(Icons.copy_outlined),
-                        iconSize: 20,
-                        tooltip:
-                            uiStrings['copyTable']?[locale] ?? 'Copy word table',
-                        onPressed: () => _copyInterlinearTable(context),
-                      ),
-                    IconButton(
-                      icon: const Icon(Icons.close),
-                      iconSize: 20,
-                      onPressed: () => Navigator.of(context).maybePop(),
-                    ),
-                  ],
-                ),
-              ),
-              const Divider(height: 1),
-            ]
-            // Copy is the one control that was genuinely this widget's
-            // own — it copies the word table it built — so it stays,
-            // right-aligned at chrome scale. bwh10q puts the Forms tab's
-            // Options button in the body for the same reason.
-            else if (_verseOriginals != null) ...[
-              SizedBox(
-                height: WbType.of(context).paneTitleHeight,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    WbToolIcon(
-                      button: WbToolButton(
-                        icon: Icons.copy_outlined,
-                        tooltip: uiStrings['copyTable']?[locale] ??
-                            'Copy word table',
-                        onPressed: () => _copyInterlinearTable(context),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Divider(height: 1),
-            ],
-            Expanded(
-              child: FutureBuilder<List<_VerseOriginals>>(
-                future: _future,
-                builder: (context, snap) {
-                  if (snap.connectionState != ConnectionState.done) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  final data = snap.data ?? const [];
-                  return ListView(
-                    controller: scrollController,
-                    padding: _st.listPadding,
-                    children: [
-                      for (final vo in data) _buildVerseBlock(vo, scheme),
-                      if (_selectedWord != null) ...[
-                        const SizedBox(height: 16),
-                        _buildEntryCard(context, scheme, locale),
-                      ] else ...[
-                        const SizedBox(height: 16),
-                        _buildHint(scheme, locale),
-                      ],
-                    ],
-                  );
-                },
-              ),
+      mainAxisSize: widget.embedded ? MainAxisSize.max : MainAxisSize.min,
+      children: [
+        // 2026-08 (SeekSparks): the drag handle is a bottom-sheet
+        // affordance — meaningless in the docked Workbench pane.
+        if (!widget.embedded)
+          Container(
+            margin: const EdgeInsets.only(top: 8),
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: scheme.outlineVariant,
+              borderRadius: _st.r(2),
             ),
-          ],
-        );
+          ),
+        // 2026-08-09 (task #284): the docked pane draws NO header
+        // here. It used to draw its own — a 16px title, a copy
+        // button and a collapse chevron — and `workbench_page`
+        // suppressed the real `WbPaneTitle` to make room for it.
+        // That was only half the tab: hovering a WORD renders
+        // `WordAnalysisPane` instead, which has no header at all, so
+        // the pane's title and its collapse control appeared and
+        // vanished as the pointer crossed between a word and its
+        // verse. The pane owns them now; this is content.
+        if (!widget.embedded) ...[
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
+            child: Row(
+              children: [
+                Icon(Icons.auto_stories, color: scheme.primary, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: _ty.scaled(16),
+                          fontWeight: FontWeight.w700,
+                          color: scheme.onSurface,
+                        ),
+                      ),
+                      Text(
+                        uiStrings['interlinearHint']?[locale] ??
+                            'Original · Strong\'s gloss',
+                        style: TextStyle(
+                          fontSize: _st.gloss,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (_verseOriginals != null)
+                  IconButton(
+                    icon: const Icon(Icons.copy_outlined),
+                    iconSize: 20,
+                    tooltip:
+                        uiStrings['copyTable']?[locale] ?? 'Copy word table',
+                    onPressed: () => _copyInterlinearTable(context),
+                  ),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  iconSize: 20,
+                  onPressed: () => Navigator.of(context).maybePop(),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+        ]
+        // Copy is the one control that was genuinely this widget's
+        // own — it copies the word table it built — so it stays,
+        // right-aligned at chrome scale. bwh10q puts the Forms tab's
+        // Options button in the body for the same reason.
+        else if (_verseOriginals != null) ...[
+          SizedBox(
+            height: WbType.of(context).paneTitleHeight,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                WbToolIcon(
+                  button: WbToolButton(
+                    icon: Icons.copy_outlined,
+                    tooltip:
+                        uiStrings['copyTable']?[locale] ?? 'Copy word table',
+                    onPressed: () => _copyInterlinearTable(context),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+        ],
+        Expanded(
+          child: FutureBuilder<List<_VerseOriginals>>(
+            future: _future,
+            builder: (context, snap) {
+              if (snap.connectionState != ConnectionState.done) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              final data = snap.data ?? const [];
+              return ListView(
+                controller: scrollController,
+                padding: _st.listPadding,
+                children: [
+                  for (final vo in data) _buildVerseBlock(vo, scheme),
+                  if (_selectedWord != null) ...[
+                    const SizedBox(height: 16),
+                    _buildEntryCard(context, scheme, locale),
+                  ] else ...[
+                    const SizedBox(height: 16),
+                    _buildHint(scheme, locale),
+                  ],
+                ],
+              );
+            },
+          ),
+        ),
+      ],
+    );
   }
 
   Widget _buildVerseBlock(_VerseOriginals vo, ColorScheme scheme) {
@@ -840,8 +655,8 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
     required int chapter,
     required int verse,
   }) {
-    final isSelected = _selectedWord?.strongs == w.strongs &&
-        _selectedWord?.text == w.text;
+    final isSelected =
+        _selectedWord?.strongs == w.strongs && _selectedWord?.text == w.text;
     // Round 56 (continued — Aramaic highlight): tag chips whose word
     // is Aramaic so the reader can see at a glance which embedded
     // tokens are Aramaic vs. surrounding Hebrew/Greek. Teal matches
@@ -913,15 +728,14 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
               Directionality(
                 textDirection: TextDirection.ltr,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 5, vertical: 1),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
                   decoration: BoxDecoration(
                     color: paletteBg(context, Colors.teal),
                     borderRadius: _st.r(8),
                   ),
                   child: Text(
-                    uiStrings['aramaicWordBadge']?[widget.locale] ??
-                        'Aramaic',
+                    uiStrings['aramaicWordBadge']?[widget.locale] ?? 'Aramaic',
                     style: TextStyle(
                       fontSize: _ty.scaled(11),
                       fontWeight: FontWeight.w700,
@@ -941,8 +755,8 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
               Directionality(
                 textDirection: TextDirection.ltr,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 5, vertical: 1),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
                   decoration: BoxDecoration(
                     borderRadius: _st.r(8),
                     border: Border.all(color: _st.chipBorder),
@@ -1067,8 +881,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
   /// Returns an empty box when this word has no code, which is the
   /// honest rendering for the small fraction the two text editions
   /// couldn't be aligned on.
-  Widget _buildParsingLine(
-      OriginalWord w, ColorScheme scheme, String locale) {
+  Widget _buildParsingLine(OriginalWord w, ColorScheme scheme, String locale) {
     final parse = describeMorphology(w.morph, locale);
     if (parse == null || parse.isEmpty) return const SizedBox.shrink();
     return Padding(
@@ -1144,8 +957,9 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
             style: TextStyle(
               fontSize: bold ? _ty.scaled(15) : _ty.scaled(13.5),
               fontWeight: bold ? FontWeight.w600 : FontWeight.w400,
-              color:
-                  bold ? scheme.onSurface : scheme.onSurface.withValues(alpha: 0.85),
+              color: bold
+                  ? scheme.onSurface
+                  : scheme.onSurface.withValues(alpha: 0.85),
               height: 1.4,
             ),
           ),
@@ -1154,7 +968,8 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
     );
   }
 
-  Widget _buildEntryCard(BuildContext context, ColorScheme scheme, String locale) {
+  Widget _buildEntryCard(
+      BuildContext context, ColorScheme scheme, String locale) {
     final w = _selectedWord!;
     if (_loadingEntry) {
       return const Padding(
@@ -1165,7 +980,8 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
     // When the user has tapped a root link, show that entry instead.
     final isBrowsingRoot = _rootEntry != null;
     final entry = isBrowsingRoot ? _rootEntry : _selectedEntry;
-    final concordance = isBrowsingRoot ? _rootConcordance : _selectedConcordance;
+    final concordance =
+        isBrowsingRoot ? _rootConcordance : _selectedConcordance;
     // The displayed number: root number when browsing, otherwise the word's.
     final displayNumber = entry?.number ?? w.strongs;
     // Round 56 (continued — Aramaic highlight, entry card): tag the
@@ -1209,8 +1025,8 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                   borderRadius: _st.r(6),
                   child: Padding(
                     padding: const EdgeInsets.only(right: 8),
-                    child: Icon(Icons.arrow_back,
-                        size: 18, color: scheme.primary),
+                    child:
+                        Icon(Icons.arrow_back, size: 18, color: scheme.primary),
                   ),
                 ),
               ],
@@ -1237,8 +1053,8 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
               if (entryIsAramaic) ...[
                 const SizedBox(width: 6),
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 6, vertical: 2),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
                     color: _st.dense
                         ? Colors.transparent
@@ -1278,8 +1094,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                 // tap target to 48×48 for Material/WCAG a11y. Was
                 // `padding: zero, constraints: BoxConstraints()` =
                 // ~18 dp tap target (well below 48 dp minimum).
-                constraints:
-                    const BoxConstraints(minWidth: 48, minHeight: 48),
+                constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
                 tooltip: uiStrings['distributionTable']?[locale] ??
                     'Distribution Table',
                 onPressed: () => _showDistributionTable(context),
@@ -1288,9 +1103,9 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                 icon: const Icon(Icons.copy_outlined),
                 iconSize: 18,
                 // v1.2.31: see above — 48 dp minimum tap target.
-                constraints:
-                    const BoxConstraints(minWidth: 48, minHeight: 48),
-                tooltip: uiStrings['copyWordStudy']?[locale] ?? 'Copy word study',
+                constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                tooltip:
+                    uiStrings['copyWordStudy']?[locale] ?? 'Copy word study',
                 onPressed: () => _copyWordEntry(context),
               ),
             ],
@@ -1324,7 +1139,8 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
               Text(
                 [
                   if (entry.translit.isNotEmpty) entry.translit,
-                  if (entry.pronunciation.isNotEmpty) '/${entry.pronunciation}/',
+                  if (entry.pronunciation.isNotEmpty)
+                    '/${entry.pronunciation}/',
                 ].join('  '),
                 style: TextStyle(
                   fontSize: _ty.scaled(13),
@@ -1352,16 +1168,15 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 6, vertical: 2),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
                       color: _st.dense
                           ? Colors.transparent
                           : scheme.tertiaryContainer.withValues(alpha: 0.55),
                       borderRadius: _st.r(4),
-                      border: _st.dense
-                          ? Border.all(color: _st.blockBorder)
-                          : null,
+                      border:
+                          _st.dense ? Border.all(color: _st.blockBorder) : null,
                     ),
                     child: Text(
                       uiStrings['exegesisProperNounBadge']?[locale] ??
@@ -1535,13 +1350,6 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                 ),
               ],
             ],
-            // ── AI explanation (Gemini, opt-in) ───────────────────
-            // Renders a button below the lexicon definition; tap to
-            // request an 80-180 word explanation of the lemma in the
-            // selected verse's specific context. Doesn't auto-fire
-            // on word tap so we don't burn API quota on idle browsing.
-            const SizedBox(height: 12),
-            _buildAiExplainSection(scheme, locale),
             // Derivation / etymology line with tappable Strong's refs.
             // v1.3.x: this is English-only. In a Chinese panel, tuck it
             // behind a collapsed "英文参考" disclosure so the panel reads
@@ -1561,14 +1369,18 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
               const SizedBox(height: 12),
               _buildRelatedSection(
                 uiStrings['wordFamily']?[locale] ?? 'Word Family',
-                _wordFamily, scheme, locale,
+                _wordFamily,
+                scheme,
+                locale,
               ),
             ],
             if (_compareWords.isNotEmpty) ...[
               const SizedBox(height: 12),
               _buildRelatedSection(
                 uiStrings['synonyms']?[locale] ?? 'Synonyms',
-                _compareWords, scheme, locale,
+                _compareWords,
+                scheme,
+                locale,
               ),
             ],
             if (_lxxEquivalents.isNotEmpty) ...[
@@ -1589,7 +1401,9 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
               const SizedBox(height: 12),
               _buildRelatedSection(
                 uiStrings['hebrewSources']?[locale] ?? 'Hebrew Sources',
-                _hebrewSources, scheme, locale,
+                _hebrewSources,
+                scheme,
+                locale,
               ),
             ],
           ] else
@@ -1628,436 +1442,6 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
     );
   }
 
-  /// AI explanation block. Four logical states:
-  ///   - idle: shows the "Explain in this verse with AI" button
-  ///   - loading: spinner + "Asking Gemini…" hint
-  ///   - error: shows the unavailable message + a Try again button
-  ///   - has chunks: renders the appended transcript inside a bounded
-  ///     scroll container, with direction chips below to extend the
-  ///     answer (length: more concise / more detail; scope: this
-  ///     chapter / this book / whole Bible / other chapters) and a
-  ///     Copy button to grab the full transcript.
-  ///
-  /// Always shows a small AI-generated disclaimer below the result so
-  /// the reader doesn't mistake a Gemini paragraph for hand-curated
-  /// scholarship.
-  Widget _buildAiExplainSection(ColorScheme scheme, String locale) {
-    // Round 56 fix: gate the AI panel against the currently-displayed
-    // entry, not the original tapped word. Otherwise after the user
-    // hits 完整研经 / Full study to navigate to a related entry, the
-    // panel keeps showing the previous lemma's chunks (because
-    // _selectedWord doesn't change with the navigation). The chunks
-    // are also cleared in _loadRootEntry / _clearRoot, but this gate
-    // is a defensive second line — it hides any stragglers from a
-    // race or a future code path that updates state without going
-    // through those helpers.
-    final entry = _rootEntry ?? _selectedEntry;
-    final w = _selectedWord;
-    final v = widget.verses.isNotEmpty ? widget.verses.first : null;
-    if (entry == null || w == null || v == null) {
-      return const SizedBox.shrink();
-    }
-    final ref = '${v.book} ${v.chapter}:${v.verseLabel}';
-    final hasChunks =
-        _aiForStrongs == entry.number && _aiChunks.isNotEmpty;
-    final hasError =
-        _aiForStrongs == entry.number && _aiError != null;
-
-    final initialLabel = _aiLoading
-        ? (uiStrings['aiExplainAsking']?[locale] ?? 'Asking Gemini…')
-        : (uiStrings['aiExplainButton']?[locale] ??
-            'Explain in this verse with AI');
-
-    return Container(
-      decoration: BoxDecoration(
-        color: _st.dense
-            ? Colors.transparent
-            : scheme.primaryContainer.withValues(alpha: 0.18),
-        borderRadius: _st.r(10),
-        border: Border.all(
-          color: _st.dense
-              ? _st.blockBorder
-              : scheme.primary.withValues(alpha: 0.18),
-          width: 1,
-        ),
-      ),
-      padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.auto_awesome,
-                  size: 16, color: scheme.primary),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  '${uiStrings['aiExplainHeader']?[locale] ?? 'AI explanation'} · $ref',
-                  style: TextStyle(
-                    fontSize: _ty.scaled(12),
-                    fontWeight: FontWeight.w600,
-                    color: scheme.primary,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          if (!hasChunks && !hasError)
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton.icon(
-                onPressed: _aiLoading
-                    ? null
-                    : () => _loadAiExplanation(),
-                icon: _aiLoading
-                    ? const SizedBox(
-                        width: 14,
-                        height: 14,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.auto_awesome, size: 16),
-                label: Text(initialLabel,
-                    style: TextStyle(fontSize: _ty.scaled(13))),
-                style: TextButton.styleFrom(
-                  visualDensity: VisualDensity.compact,
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 10, vertical: 6),
-                ),
-              ),
-            ),
-          if (hasError) ...[
-            Text(
-              _aiError ?? '',
-              style: TextStyle(
-                fontSize: _ty.scaled(12.5),
-                color: scheme.error,
-                height: 1.4,
-              ),
-            ),
-            const SizedBox(height: 6),
-            // 2026-05-08 (v1.1.10): Try-again is the primary action;
-            // when the failure is quota-related AND the user hasn't
-            // already pasted their own Gemini key, also show a
-            // deep-link to Settings → AI so they can keep
-            // working without waiting for the shared quota to reset.
-            Wrap(
-              spacing: 8,
-              runSpacing: 4,
-              children: [
-                TextButton.icon(
-                  onPressed: _aiLoading
-                      ? null
-                      : () => _loadAiExplanation(),
-                  icon: const Icon(Icons.refresh, size: 16),
-                  label: Text(
-                    uiStrings['aiExplainTryAgain']?[locale] ?? 'Try again',
-                    style: TextStyle(fontSize: _ty.scaled(13)),
-                  ),
-                  style: TextButton.styleFrom(
-                    visualDensity: VisualDensity.compact,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 6),
-                  ),
-                ),
-                if (_shouldOfferByokForError(_aiError) &&
-                    !context.read<AppSettings>().hasUserGeminiKey)
-                  TextButton.icon(
-                    onPressed: () {
-                      pushPage(const SettingsPage(
-                            initialSection: SettingsSection.ai));
-                    },
-                    icon: const Icon(Icons.key_rounded, size: 16),
-                    label: Text(
-                      uiStrings['aiOpenByokSettings']?[locale] ??
-                          'Set up your own Gemini API key',
-                      style: TextStyle(fontSize: _ty.scaled(13)),
-                    ),
-                    style: TextButton.styleFrom(
-                      visualDensity: VisualDensity.compact,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 6),
-                    ),
-                  ),
-              ],
-            ),
-          ],
-          if (hasChunks) ...[
-            // Bounded transcript — long answers scroll inside the
-            // panel. Each direction tap APPENDS a new labeled chunk
-            // so the user builds up a multi-angle study (verse →
-            // chapter → cross-refs) without losing earlier sections.
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxHeight: 320),
-              child: Scrollbar(
-                thumbVisibility: true,
-                child: SingleChildScrollView(
-                  primary: false,
-                  padding: const EdgeInsets.only(right: 6),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      for (int i = 0; i < _aiChunks.length; i++) ...[
-                        if (i > 0)
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8),
-                            child: Divider(
-                              color: scheme.outlineVariant
-                                  .withValues(alpha: 0.6),
-                              height: 1,
-                            ),
-                          ),
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 4),
-                          child: Text(
-                            _aiChunks[i].label,
-                            style: TextStyle(
-                              fontSize: _ty.scaled(11),
-                              fontWeight: FontWeight.w700,
-                              color: scheme.primary,
-                              letterSpacing: 0.3,
-                            ),
-                          ),
-                        ),
-                        // Round 56 (continued — markdown rendering):
-                        // Gemini ignores "no markdown" instructions
-                        // and ships **bold** / ***heading*** markers
-                        // even when told not to. Parse them into
-                        // proper TextSpans (bold/italic) instead of
-                        // showing literal asterisks. Stripped:
-                        // ##/### heading hashes, --- rules, leading
-                        // bullets. User feedback: "the exegesis when
-                        // asking gemini questions, it has *** which
-                        // indicate the format issue".
-                        SelectableText.rich(
-                          TextSpan(
-                            children: parseAiMarkdown(
-                              _aiChunks[i].text,
-                              base: TextStyle(
-                                fontSize: _ty.scaled(14),
-                                color: scheme.onSurface,
-                                height: 1.55,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                      if (_aiLoading) ...[
-                        const SizedBox(height: 10),
-                        Row(
-                          children: [
-                            const SizedBox(
-                              width: 14,
-                              height: 14,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              uiStrings['aiExplainAsking']?[locale] ??
-                                  'Asking Gemini…',
-                              style: TextStyle(
-                                fontSize: _ty.scaled(12),
-                                color:
-                                    scheme.onSurfaceVariant,
-                                fontStyle: FontStyle.italic,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 10),
-            // Direction chips — each tap appends a new chunk in the
-            // requested direction. The first row tunes the LENGTH of
-            // the next response; the second row tunes the SCOPE.
-            // Disabled while a request is in-flight so we don't
-            // queue duplicates.
-            _buildAiDirectionChips(scheme, locale),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    uiStrings['aiExplainDisclaimer']?[locale] ??
-                        'AI-generated. Verify with primary sources for '
-                        'study or teaching use.',
-                    style: TextStyle(
-                      fontSize: _ty.scaled(11),
-                      color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
-                ),
-                TextButton.icon(
-                  onPressed: _aiLoading ? null : _copyAiTranscript,
-                  icon: const Icon(Icons.copy_all_outlined, size: 14),
-                  label: Text(
-                    uiStrings['aiExplainCopy']?[locale] ?? 'Copy',
-                    style: TextStyle(fontSize: _ty.scaled(12)),
-                  ),
-                  style: TextButton.styleFrom(
-                    visualDensity: VisualDensity.compact,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 4),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  /// Two rows of chips below the transcript. Length first (small,
-  /// orthogonal tweak) then Scope (the meatier "where is this word
-  /// used?" question). Tapping any chip appends a new explanation
-  /// chunk via [_loadAiExplanation].
-  Widget _buildAiDirectionChips(ColorScheme scheme, String locale) {
-    final disabled = _aiLoading;
-    Widget chip(String label, VoidCallback onTap, {bool primary = false}) {
-      return ActionChip(
-        avatar: primary
-            ? Icon(Icons.auto_awesome, size: 14, color: scheme.primary)
-            : null,
-        label: Text(label, style: TextStyle(fontSize: _ty.scaled(12))),
-        onPressed: disabled ? null : onTap,
-        visualDensity: VisualDensity.compact,
-        backgroundColor: primary
-            ? scheme.primary.withValues(alpha: 0.10)
-            : scheme.surfaceContainerHighest.withValues(alpha: 0.6),
-        side: BorderSide(
-          color: primary
-              ? scheme.primary.withValues(alpha: 0.4)
-              : scheme.outlineVariant,
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
-      );
-    }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Length row
-        Wrap(
-          spacing: 6,
-          runSpacing: 6,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(top: 6, right: 4),
-              child: Text(
-                uiStrings['aiLengthLabel']?[locale] ?? 'Length',
-                style: TextStyle(
-                  fontSize: _ty.scaled(11),
-                  color: scheme.onSurfaceVariant,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            chip(
-              uiStrings['aiLengthConcise']?[locale] ?? 'More concise',
-              () => _loadAiExplanation(length: 'concise'),
-            ),
-            chip(
-              uiStrings['aiLengthLonger']?[locale] ?? 'More detail',
-              () => _loadAiExplanation(length: 'longer'),
-            ),
-          ],
-        ),
-        const SizedBox(height: 6),
-        // Scope row
-        Wrap(
-          spacing: 6,
-          runSpacing: 6,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(top: 6, right: 4),
-              child: Text(
-                uiStrings['aiScopeLabel']?[locale] ?? 'Scope',
-                style: TextStyle(
-                  fontSize: _ty.scaled(11),
-                  color: scheme.onSurfaceVariant,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            chip(
-              uiStrings['aiScopeChapter']?[locale] ?? 'In this chapter',
-              () => _loadAiExplanation(scope: 'chapter'),
-              primary: true,
-            ),
-            chip(
-              uiStrings['aiScopeBook']?[locale] ?? 'In this book',
-              () => _loadAiExplanation(scope: 'book'),
-              primary: true,
-            ),
-            chip(
-              uiStrings['aiScopeOtherChapters']?[locale] ?? 'Other chapters',
-              () => _loadAiExplanation(scope: 'otherChapters'),
-              primary: true,
-            ),
-            chip(
-              uiStrings['aiScopeWholeBible']?[locale] ?? 'Whole Bible',
-              () => _loadAiExplanation(scope: 'wholeBible'),
-              primary: true,
-            ),
-            // Cross-testament chip is direction-aware: for a Greek
-            // (NT) word it offers "OT background → here"; for a Hebrew
-            // (OT) word it offers "this → NT echoes". The function
-            // figures out the direction from the Strong's prefix.
-            chip(
-              _crossTestamentLabel(locale),
-              () => _loadAiExplanation(scope: 'crossTestament'),
-              primary: true,
-            ),
-            // 2026-05-07: BDAG-level deep exegesis. Pairs the new
-            // 'deep' length (~500-750 words) with a 'deepExegesis'
-            // scope that asks for a structured 5-section analysis:
-            // lexical core, usage in this verse, cultural / historical
-            // context, canonical pattern, theological weight.
-            // Acts as a free-tier substitute for what Logos / Accordance
-            // sells via BDAG / HALOT integration.
-            chip(
-              uiStrings['aiScopeDeepExegesis']?[locale] ?? 'Deep exegesis',
-              () => _loadAiExplanation(
-                  length: 'deep', scope: 'deepExegesis'),
-              primary: true,
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  /// Pick the user-facing label for the cross-testament chip based
-  /// on whether the selected Strong's # is Greek (NT, "G…") or
-  /// Hebrew (OT, "H…"). Falls back to a neutral label when no word
-  /// is selected.
-  String _crossTestamentLabel(String locale) {
-    final n = _selectedWord?.strongs;
-    if (n != null && n.startsWith('G')) {
-      return uiStrings['aiScopeCrossTestamentNtToOt']?[locale] ??
-          'OT background';
-    }
-    if (n != null && n.startsWith('H')) {
-      return uiStrings['aiScopeCrossTestamentOtToNt']?[locale] ??
-          'NT echoes';
-    }
-    return uiStrings['aiScopeCrossTestament']?[locale] ??
-        'Across testaments';
-  }
-
-  /// Copy the entire AI transcript to clipboard with a toast.
-  Future<void> _copyAiTranscript() async {
-    final text = _aiTranscript();
-    if (text.isEmpty) return;
-    if (!mounted) return;
-    await ClipboardHelper.copyWithFeedback(context, text);
-  }
-
   /// Renders [text] with any Strong's refs ([GH]\d+) as tappable blue links.
   /// Recognizers are tracked in [_tapRecognizers] and disposed on state change.
   Widget _buildDerivationRich(String text, ColorScheme scheme) {
@@ -2069,8 +1453,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
         spans.add(TextSpan(text: text.substring(last, m.start)));
       }
       final num = m.group(1)!;
-      final rec = TapGestureRecognizer()
-        ..onTap = () => _loadRootEntry(num);
+      final rec = TapGestureRecognizer()..onTap = () => _loadRootEntry(num);
       _tapRecognizers.add(rec);
       spans.add(TextSpan(
         text: num,
@@ -2102,8 +1485,8 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
 
   // ── Word family + synonyms ──────────────────────────────────────────────────
 
-  Widget _buildRelatedSection(
-      String label, List<StrongsEntry> entries, ColorScheme scheme, String locale,
+  Widget _buildRelatedSection(String label, List<StrongsEntry> entries,
+      ColorScheme scheme, String locale,
       {ConcordanceResult? overrideConcordance, String? overrideHeaderLemma}) {
     // Find which entry (if any) in this section is expanded — only
     // expand inline within the section that owns the chip, so a tap
@@ -2258,13 +1641,14 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
               if (e.number != _pivotFromNumber)
                 InkWell(
                   onTap: () {
-                    final currentNumber = (_rootEntry ?? _selectedEntry)?.number;
+                    final currentNumber =
+                        (_rootEntry ?? _selectedEntry)?.number;
                     _loadRootEntry(e.number, pivotFromNumber: currentNumber);
                   },
                   borderRadius: _st.r(4),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 4, vertical: 2),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -2281,7 +1665,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                       ],
                     ),
                   ),
-              ),
+                ),
             ],
           ),
           const SizedBox(height: 4),
@@ -2302,8 +1686,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
               onTap: () => setState(() => _refsShowAll.add(e.number)),
               borderRadius: _st.r(4),
               child: Padding(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 4, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -2315,8 +1698,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                         color: scheme.primary,
                       ),
                     ),
-                    Icon(Icons.expand_more,
-                        size: 14, color: scheme.primary),
+                    Icon(Icons.expand_more, size: 14, color: scheme.primary),
                   ],
                 ),
               ),
@@ -2329,8 +1711,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
               onTap: () => setState(() => _refsShowAll.remove(e.number)),
               borderRadius: _st.r(4),
               child: Padding(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 4, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -2342,8 +1723,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                         color: scheme.primary,
                       ),
                     ),
-                    Icon(Icons.expand_less,
-                        size: 14, color: scheme.primary),
+                    Icon(Icons.expand_less, size: 14, color: scheme.primary),
                   ],
                 ),
               ),
@@ -2363,83 +1743,84 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-      onTap: () => setState(() {
-        _expandedRelatedNumber = isExpanded ? null : e.number;
-      }),
-      borderRadius: _st.r(8),
-      child: Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: _st.dense ? 5 : 8,
-          vertical: _st.dense ? 4 : 5,
-        ),
-        constraints: BoxConstraints(maxWidth: _st.dense ? 180 : 200),
-        decoration: BoxDecoration(
-          color: isExpanded
-              ? _st.selectedFill
-              : (_st.dense
+        onTap: () => setState(() {
+          _expandedRelatedNumber = isExpanded ? null : e.number;
+        }),
+        borderRadius: _st.r(8),
+        child: Container(
+          padding: EdgeInsets.symmetric(
+            horizontal: _st.dense ? 5 : 8,
+            vertical: _st.dense ? 4 : 5,
+          ),
+          constraints: BoxConstraints(maxWidth: _st.dense ? 180 : 200),
+          decoration: BoxDecoration(
+            color: isExpanded
+                ? _st.selectedFill
+                : (_st.dense
                     ? _st.chipFill
                     : scheme.secondaryContainer.withValues(alpha: 0.55)),
-          borderRadius: _st.r(8),
-          border: Border.all(
-            color: isExpanded
-                ? _st.selectedBorder
-                : (_st.dense ? _st.chipBorder : scheme.outlineVariant),
-            width: _st.dense ? _st.borderWidth : (isExpanded ? 1.5 : 1),
+            borderRadius: _st.r(8),
+            border: Border.all(
+              color: isExpanded
+                  ? _st.selectedBorder
+                  : (_st.dense ? _st.chipBorder : scheme.outlineVariant),
+              width: _st.dense ? _st.borderWidth : (isExpanded ? 1.5 : 1),
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: _st.dense
+                        ? EdgeInsets.zero
+                        : const EdgeInsets.symmetric(
+                            horizontal: 4, vertical: 1),
+                    decoration: BoxDecoration(
+                      color: _st.strongsFill,
+                      borderRadius: _st.r(4),
+                    ),
+                    child: Text(
+                      e.number,
+                      style: TextStyle(
+                        fontSize: _st.micro,
+                        fontWeight: FontWeight.w700,
+                        color: _st.strongs,
+                        letterSpacing: 0.4,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 5),
+                  Flexible(
+                    child: Text(
+                      e.lemma,
+                      style: TextStyle(
+                        fontSize:
+                            _st.dense ? _st.original : _ty.scaledOriginal(15),
+                        fontWeight: FontWeight.w600,
+                        color: scheme.onSurface,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 2),
+              Text(
+                e.localizedGloss(locale),
+                style: TextStyle(
+                  fontSize: _st.gloss,
+                  color: scheme.onSurfaceVariant,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
           ),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  padding: _st.dense
-                      ? EdgeInsets.zero
-                      : const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                  decoration: BoxDecoration(
-                    color: _st.strongsFill,
-                    borderRadius: _st.r(4),
-                  ),
-                  child: Text(
-                    e.number,
-                    style: TextStyle(
-                      fontSize: _st.micro,
-                      fontWeight: FontWeight.w700,
-                      color: _st.strongs,
-                      letterSpacing: 0.4,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 5),
-                Flexible(
-                  child: Text(
-                    e.lemma,
-                    style: TextStyle(
-                      fontSize:
-                          _st.dense ? _st.original : _ty.scaledOriginal(15),
-                      fontWeight: FontWeight.w600,
-                      color: scheme.onSurface,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 2),
-            Text(
-              e.localizedGloss(locale),
-              style: TextStyle(
-                fontSize: _st.gloss,
-                color: scheme.onSurfaceVariant,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-        ),
-      ),
       ),
     );
   }
@@ -2451,7 +1832,8 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
     if (data == null) return;
     final locale = widget.locale;
     final buf = StringBuffer();
-    buf.writeln("Verse\tWord\tStrong's\tLemma\tTransliteration\tPronunciation\tGloss");
+    buf.writeln(
+        "Verse\tWord\tStrong's\tLemma\tTransliteration\tPronunciation\tGloss");
     for (final vo in data) {
       final en = toEnglish(vo.verse.book) ?? vo.verse.book;
       final verseRef =
@@ -2480,7 +1862,8 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
   Future<void> _copyWordEntry(BuildContext ctx) async {
     final isBrowsingRoot = _rootEntry != null;
     final entry = isBrowsingRoot ? _rootEntry : _selectedEntry;
-    final concordance = isBrowsingRoot ? _rootConcordance : _selectedConcordance;
+    final concordance =
+        isBrowsingRoot ? _rootConcordance : _selectedConcordance;
     final w = _selectedWord;
     if (entry == null && w == null) return;
     final locale = widget.locale;
@@ -2505,8 +1888,9 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
           final label =
               '${localeAwareBookName(r.englishBook, locale, widget.currentVersion)} '
               '${r.chapter}:${r.verse}';
-          final verseText =
-              (_lookupVerseText(r) ?? '').replaceAll('\t', ' ').replaceAll('\n', ' ');
+          final verseText = (_lookupVerseText(r) ?? '')
+              .replaceAll('\t', ' ')
+              .replaceAll('\n', ' ');
           buf.writeln([...base, label, verseText].join('\t'));
         }
       } else {
@@ -2591,55 +1975,55 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
         builder: (_, scrollController) => Scaffold(
           backgroundColor: Colors.transparent,
           body: Column(
-          children: [
-            Container(
-              margin: const EdgeInsets.only(top: 8),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: scheme.outlineVariant,
-                // modal-only: the distribution table is always a bottom
-                // sheet, never the docked pane, so it keeps its handle.
-                borderRadius: BorderRadius.circular(2),
+            children: [
+              Container(
+                margin: const EdgeInsets.only(top: 8),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: scheme.outlineVariant,
+                  // modal-only: the distribution table is always a bottom
+                  // sheet, never the docked pane, so it keeps its handle.
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 12, 12, 8),
-              child: Row(
-                children: [
-                  Icon(Icons.table_chart_outlined,
-                      color: scheme.primary, size: 20),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      uiStrings['distributionTable']?[locale] ??
-                          'Distribution Table',
-                      style: TextStyle(
-                        fontSize: _ty.scaled(16),
-                        fontWeight: FontWeight.w700,
-                        color: scheme.onSurface,
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 12, 8),
+                child: Row(
+                  children: [
+                    Icon(Icons.table_chart_outlined,
+                        color: scheme.primary, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        uiStrings['distributionTable']?[locale] ??
+                            'Distribution Table',
+                        style: TextStyle(
+                          fontSize: _ty.scaled(16),
+                          fontWeight: FontWeight.w700,
+                          color: scheme.onSurface,
+                        ),
                       ),
                     ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    iconSize: 20,
-                    onPressed: () => Navigator.of(sheetCtx).maybePop(),
-                  ),
-                ],
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      iconSize: 20,
+                      onPressed: () => Navigator.of(sheetCtx).maybePop(),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const Divider(height: 1),
-            Expanded(
-              child: WordDistributionTable(
-                strongsNumber: number,
-                locale: locale,
-                currentVersion: widget.currentVersion,
-                scrollController: scrollController,
+              const Divider(height: 1),
+              Expanded(
+                child: WordDistributionTable(
+                  strongsNumber: number,
+                  locale: locale,
+                  currentVersion: widget.currentVersion,
+                  scrollController: scrollController,
+                ),
               ),
-            ),
-          ],
-        ),
+            ],
+          ),
         ),
       ),
     );
@@ -2838,8 +2222,7 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                 style: TextStyle(
                   fontSize: _ty.scaled(12),
                   fontWeight: FontWeight.w600,
-                  color:
-                      canNavigate ? scheme.primary : scheme.onSurfaceVariant,
+                  color: canNavigate ? scheme.primary : scheme.onSurfaceVariant,
                 ),
               ),
               if (preview != null) ...[
@@ -2905,15 +2288,6 @@ class _VerseOriginals {
   final bool omitted;
   _VerseOriginals(
       {required this.verse, required this.words, this.omitted = false});
-}
-
-/// One labeled segment in the AI explanation transcript. Multiple
-/// chunks accumulate in [_OriginalsSheetState._aiChunks] as the user
-/// taps successive direction chips (this verse → this chapter → …).
-class _AiChunk {
-  final String label;
-  final String text;
-  const _AiChunk({required this.label, required this.text});
 }
 
 // 2026-05-11 (v1.2.38): the inline markdown parser was extracted
@@ -2984,7 +2358,7 @@ const Set<String> _aramaicGreekStrongs = {
   'G5008', // ταλιθα (talitha)
   'G2891', // κουμι / κουμ (koumi/koum)
   'G2188', // εφφαθα (ephphatha)
-  'G5',    // ἀββα (abba)
+  'G5', // ἀββα (abba)
   'G1682', // ἐλωΐ (eloi)
   'G2982', // λεμα (lema)
   'G4518', // σαβαχθανι (sabachthani)

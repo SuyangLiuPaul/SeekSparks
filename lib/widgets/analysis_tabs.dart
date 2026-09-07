@@ -128,16 +128,17 @@ enum AnalysisTab {
 /// labelled width does not move; 14 also fills the two-row layout
 /// exactly, 7+7, where 13 left a gap).
 ///
-/// [ReaderAnalysisRequest.aiExplain] returns null as a decision, not a
-/// deferral: see the enum. It is now the only one, so a null here means
-/// "deliberately a sheet" rather than "not got to yet".
+/// 2026-09-07: the return type stays nullable although every member now
+/// maps to a tab. `aiExplain` was the one that did not, and it left
+/// with the AI subsystem; keeping the nullable signature is the honest
+/// shape for a mapping that a future request may again not have, and
+/// costs the two call sites nothing.
 AnalysisTab? analysisTabForRequest(ReaderAnalysisRequest request) =>
     switch (request) {
       ReaderAnalysisRequest.originals => AnalysisTab.wordStudy,
       ReaderAnalysisRequest.crossRefs => AnalysisTab.crossRefs,
       ReaderAnalysisRequest.sermons => AnalysisTab.sermons,
       ReaderAnalysisRequest.notes => AnalysisTab.notes,
-      ReaderAnalysisRequest.aiExplain => null,
     };
 
 /// The inverse: which reader-side action the pane is currently
@@ -147,8 +148,7 @@ AnalysisTab? analysisTabForRequest(ReaderAnalysisRequest request) =>
 /// 1400 px screen, in the reader's peripheral vision — the #294 lesson
 /// that a live control with no local feedback reads as a dead one.
 /// Tabs no reader action can reach return null, which is most of them.
-ReaderAnalysisRequest? requestForAnalysisTab(AnalysisTab tab) =>
-    switch (tab) {
+ReaderAnalysisRequest? requestForAnalysisTab(AnalysisTab tab) => switch (tab) {
       AnalysisTab.wordStudy => ReaderAnalysisRequest.originals,
       AnalysisTab.crossRefs => ReaderAnalysisRequest.crossRefs,
       AnalysisTab.sermons => ReaderAnalysisRequest.sermons,
@@ -289,7 +289,8 @@ double _cachedMinLabelledWidth(
   double fontSize,
   double chrome,
 ) {
-  final key = '$chrome:${textScaler.scale(fontSize)}\u0000${labels.join('\u0001')}';
+  final key =
+      '$chrome:${textScaler.scale(fontSize)}\u0000${labels.join('\u0001')}';
   return _minLabelledCache[key] ??= analysisStripMinLabelledWidth(
     labels,
     textScaler: textScaler,
@@ -301,35 +302,77 @@ double _cachedMinLabelledWidth(
 /// The tabs, in strip order: which pane, its glyph, its `uiStrings`
 /// key, and the English fallback for a locale that key does not cover.
 const _kTabs = <(AnalysisTab, IconData, String, String)>[
-  (AnalysisTab.wordStudy, Icons.translate_rounded, 'wordStudyTitle',
-      'Word Study'),
-  (AnalysisTab.crossRefs, Icons.hub_outlined, 'analysisTabCrossRefs',
-      'X-Refs'),
+  (
+    AnalysisTab.wordStudy,
+    Icons.translate_rounded,
+    'wordStudyTitle',
+    'Word Study'
+  ),
+  (AnalysisTab.crossRefs, Icons.hub_outlined, 'analysisTabCrossRefs', 'X-Refs'),
   (AnalysisTab.stats, Icons.bar_chart_rounded, 'analysisTabStats', 'Stats'),
-  (AnalysisTab.kwic, Icons.format_align_center_rounded, 'analysisTabKwic',
-      'KWIC'),
-  (AnalysisTab.related, Icons.linear_scale_rounded, 'analysisTabRelated',
-      'Related'),
-  (AnalysisTab.verseLists, Icons.playlist_add_check_rounded,
-      'analysisTabVerseLists', 'Lists'),
-  (AnalysisTab.phrases, Icons.format_quote_rounded, 'analysisTabPhrases',
-      'Phrases'),
-  (AnalysisTab.vocabulary, Icons.style_outlined, 'analysisTabVocabulary',
-      'Vocab'),
-  (AnalysisTab.morphology, Icons.account_tree_outlined,
-      'analysisTabMorphology', 'Forms'),
+  (
+    AnalysisTab.kwic,
+    Icons.format_align_center_rounded,
+    'analysisTabKwic',
+    'KWIC'
+  ),
+  (
+    AnalysisTab.related,
+    Icons.linear_scale_rounded,
+    'analysisTabRelated',
+    'Related'
+  ),
+  (
+    AnalysisTab.verseLists,
+    Icons.playlist_add_check_rounded,
+    'analysisTabVerseLists',
+    'Lists'
+  ),
+  (
+    AnalysisTab.phrases,
+    Icons.format_quote_rounded,
+    'analysisTabPhrases',
+    'Phrases'
+  ),
+  (
+    AnalysisTab.vocabulary,
+    Icons.style_outlined,
+    'analysisTabVocabulary',
+    'Vocab'
+  ),
+  (
+    AnalysisTab.morphology,
+    Icons.account_tree_outlined,
+    'analysisTabMorphology',
+    'Forms'
+  ),
   (AnalysisTab.topics, Icons.topic_outlined, 'analysisTabTopics', 'Topics'),
-  (AnalysisTab.context, Icons.segment_rounded, 'analysisTabContext',
-      'Context'),
+  (AnalysisTab.context, Icons.segment_rounded, 'analysisTabContext', 'Context'),
   (AnalysisTab.places, Icons.place_outlined, 'analysisTabPlaces', 'Places'),
-  (AnalysisTab.sermons, Icons.record_voice_over_outlined,
-      'analysisTabSermons', 'Sermons'),
-  (AnalysisTab.notes, Icons.sticky_note_2_outlined, 'analysisTabNotes',
-      'Notes'),
-  (AnalysisTab.summary, Icons.summarize_outlined, 'analysisTabSummary',
-      'Summary'),
-  (AnalysisTab.synopsis, Icons.view_column_outlined, 'analysisTabSynopsis',
-      'Parallels'),
+  (
+    AnalysisTab.sermons,
+    Icons.record_voice_over_outlined,
+    'analysisTabSermons',
+    'Sermons'
+  ),
+  (
+    AnalysisTab.notes,
+    Icons.sticky_note_2_outlined,
+    'analysisTabNotes',
+    'Notes'
+  ),
+  (
+    AnalysisTab.summary,
+    Icons.summarize_outlined,
+    'analysisTabSummary',
+    'Summary'
+  ),
+  (
+    AnalysisTab.synopsis,
+    Icons.view_column_outlined,
+    'analysisTabSynopsis',
+    'Parallels'
+  ),
 ];
 
 /// The tab names as they will be drawn in [locale], in strip order.
@@ -415,8 +458,8 @@ class AnalysisTabStrip extends StatelessWidget {
             children: [
               for (var start = 0; start < items.length; start += perRow)
                 Padding(
-                  padding: EdgeInsets.only(
-                      top: start == 0 ? 0 : t.scaledChrome(4)),
+                  padding:
+                      EdgeInsets.only(top: start == 0 ? 0 : t.scaledChrome(4)),
                   child: Row(
                     children: [
                       for (var i = start; i < start + perRow; i++)
@@ -643,8 +686,8 @@ class _CrossRefsPaneState extends State<CrossRefsPane> {
         if (snap.connectionState != ConnectionState.done) {
           return const Center(child: CircularProgressIndicator());
         }
-        final (refs, parallels) = snap.data ??
-            (const <BibleReference>[], const <SynopsisEvent>[]);
+        final (refs, parallels) =
+            snap.data ?? (const <BibleReference>[], const <SynopsisEvent>[]);
         // Both, or a verse the harmony covers and TSK does not shows an
         // empty pane over live data.
         if (refs.isEmpty && parallels.isEmpty) {
@@ -698,8 +741,8 @@ class _CrossRefsPaneState extends State<CrossRefsPane> {
           // with no parallels looks exactly as this pane always has.
           if (parallels.isNotEmpty && refs.isNotEmpty)
             _SourceHeading(
-              text: uiStrings['crossRefs']?[widget.locale] ??
-                  'Cross-references',
+              text:
+                  uiStrings['crossRefs']?[widget.locale] ?? 'Cross-references',
             ),
         ];
 
@@ -984,8 +1027,8 @@ class _WordStatsPaneState extends State<WordStatsPane> {
                 padding: const EdgeInsets.only(bottom: 2),
                 child: Text(
                   hint,
-                  style: TextStyle(
-                      fontSize: t.scaled(11), color: scheme.outline),
+                  style:
+                      TextStyle(fontSize: t.scaled(11), color: scheme.outline),
                 ),
               );
             }
@@ -1034,8 +1077,7 @@ class _WordStatsPaneState extends State<WordStatsPane> {
                     WbMeterBar(
                       fraction: (r.inScope / max).clamp(0.02, 1.0),
                       color: scheme.primary.withValues(alpha: 0.65),
-                      trackColor:
-                          scheme.outlineVariant.withValues(alpha: 0.5),
+                      trackColor: scheme.outlineVariant.withValues(alpha: 0.5),
                     ),
                     // The shape of the word across the canon. Above it,
                     // the bar says how MANY; this says WHERE, which is
@@ -1159,13 +1201,12 @@ Widget _distribution(BuildContext context, GreekWordStats g) {
 /// What the label-less strip would say if it could speak: the heaviest
 /// books, in the unit [d] is counted in, and how to open the full chart.
 String _stripSemantics(SearchDistribution d, String locale, String? version) {
-  final open = uiStrings['wordChartOpen']?[locale] ??
-      'Open the full distribution chart';
-  final unit = uiStrings[
-              d.unit == HitUnit.verses
-                  ? 'hitUnitVerses'
-                  : 'hitUnitOccurrences']?[locale] ??
-          (d.unit == HitUnit.verses ? 'verses' : 'occurrences');
+  final open =
+      uiStrings['wordChartOpen']?[locale] ?? 'Open the full distribution chart';
+  final unit = uiStrings[d.unit == HitUnit.verses
+          ? 'hitUnitVerses'
+          : 'hitUnitOccurrences']?[locale] ??
+      (d.unit == HitUnit.verses ? 'verses' : 'occurrences');
   final top = topBooks(d);
   if (top.isEmpty) return open;
   final label = uiStrings['searchStatsTopIn']?[locale] ?? 'Most in ({unit})';

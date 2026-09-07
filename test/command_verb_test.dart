@@ -184,23 +184,24 @@ void main() {
     });
   });
 
-  group('ai — describe the passages you want', () {
-    test('ai takes everything after it as the question, verbatim', () {
-      final verb = _p('ai 关于焦虑的经文').verb!;
-      expect(verb.kind, CommandVerbKind.askAi);
-      expect(verb.aiQuery, '关于焦虑的经文');
-    });
-
-    test('the question keeps its own punctuation and casing', () {
-      expect(_p('AI  What does Paul say about grace?').verb!.aiQuery,
-          'What does Paul say about grace?');
-    });
-
+  // 2026-09-07: the `ai` verb is gone with the AI subsystem, and this
+  // group goes with it — all but the part that was never about AI.
+  // **Ai is a Canaanite city** (Joshua 7–8, Ezra 2:28), and the verb's
+  // whole shape was built around not stealing that lookup: a mandatory
+  // argument, so a bare `ai` fell through to the text search. Now
+  // nothing beginning with those letters is a verb at all, and these
+  // two pin that the removal did not leave a stub behind.
+  group('ai is a city again, not a verb', () {
     test('a bare ai is NOT a verb — Ai is a city in Joshua', () {
-      // It has to fall through to the text search, or Joshua 7:2
-      // becomes unreachable from the command line.
       expect(_p('ai').isVerb, isFalse);
       expect(_p('AI').isVerb, isFalse);
+    });
+
+    test('ai WITH an argument is not a verb either, any more', () {
+      // This is the line that changed. It used to parse as a question
+      // for the model; it is now a search for "men of Ai".
+      expect(_p('ai men of ai').isVerb, isFalse);
+      expect(_p('ai 关于焦虑的经文').isVerb, isFalse);
     });
 
     test('a word merely starting with "ai" is not the verb', () {
@@ -385,8 +386,8 @@ void main() {
     // the search version is part of the display by definition, so `p`
     // naming three other editions still shows four.
     test('the search version is always first, even if not asked for', () {
-      expect(apply('p bsb', ['kjv'], search: 'cuvs-yhwh'),
-          ['cuvs-yhwh', 'bsb']);
+      expect(
+          apply('p bsb', ['kjv'], search: 'cuvs-yhwh'), ['cuvs-yhwh', 'bsb']);
     });
 
     test('the stack never contains a duplicate', () {

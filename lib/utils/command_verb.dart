@@ -151,8 +151,10 @@ class VerbContext {
       );
 
   /// Every edition in a language group, in registry order.
-  List<String> versionsInLanguage(String language) =>
-      [for (final v in versions) if (v.language == language) v.code];
+  List<String> versionsInLanguage(String language) => [
+        for (final v in versions)
+          if (v.language == language) v.code
+      ];
 
   String labelFor(String code) {
     for (final v in versions) {
@@ -241,17 +243,15 @@ enum CommandVerbKind {
 
   /// `3:16` / `17` — a reference completed from where the reader is.
   goToReference,
-
-  /// `ai 关于焦虑的经文` — describe the passages you want.
-  ///
-  /// The only verb here with no BibleWorks equivalent, and the only one
-  /// whose answer does not come out of the loaded corpus. It sits on the
-  /// command line rather than behind a button because the line is
-  /// already where the other nine ways of asking a question live, and
-  /// because the reader who reaches for it has usually just watched a
-  /// literal search return the wrong verses.
-  askAi,
 }
+
+// 2026-09-07: `askAi` was the tenth kind and is gone with the rest of
+// the AI subsystem. It leaves the grammar cleaner than it found it:
+// **Ai is a Canaanite city** (Joshua 7–8, Ezra 2:28), so the verb had
+// to be spelled `ai <question>` with a mandatory argument just to keep
+// a bare `ai` reaching the text search, and `ai men of ai` was taken as
+// a question anyway. That collision is now simply absent — every line
+// beginning with those two letters is a search for the city again.
 
 class CommandVerb {
   const CommandVerb(
@@ -259,7 +259,6 @@ class CommandVerb {
     this.versions = const [],
     this.limit,
     this.reference,
-    this.aiQuery,
   });
 
   final CommandVerbKind kind;
@@ -269,10 +268,6 @@ class CommandVerb {
 
   final LimitSpec? limit;
   final BibleReference? reference;
-
-  /// Everything after `ai `, verbatim — it is a question in the
-  /// reader's own words, so nothing here parses or normalises it.
-  final String? aiQuery;
 }
 
 /// Why a verb-shaped line was refused.
@@ -323,8 +318,7 @@ class CommandVerbParse {
   const CommandVerbParse.run(CommandVerb this.verb)
       : issue = null,
         detail = '';
-  const CommandVerbParse.refuse(CommandVerbIssue this.issue,
-      [this.detail = ''])
+  const CommandVerbParse.refuse(CommandVerbIssue this.issue, [this.detail = ''])
       : verb = null;
 
   final CommandVerb? verb;
@@ -373,13 +367,34 @@ const Map<String, String> _languageAliases = {
 /// make a terminological point would be the command line lecturing its
 /// user. The label comes back in the project's own terms either way.
 const Set<String> _otAliases = {
-  'ot', 'o.t.', 'old', 'oldtestament', 'hb', 'hebrewbible',
-  '旧约', '舊約', '旧約', '希伯来圣经', '希伯來聖經', '希伯来', '希伯來',
+  'ot',
+  'o.t.',
+  'old',
+  'oldtestament',
+  'hb',
+  'hebrewbible',
+  '旧约',
+  '舊約',
+  '旧約',
+  '希伯来圣经',
+  '希伯來聖經',
+  '希伯来',
+  '希伯來',
 };
 
 const Set<String> _ntAliases = {
-  'nt', 'n.t.', 'new', 'newtestament', 'gb', 'greekbible',
-  '新约', '新約', '希腊圣经', '希臘聖經', '希腊', '希臘',
+  'nt',
+  'n.t.',
+  'new',
+  'newtestament',
+  'gb',
+  'greekbible',
+  '新约',
+  '新約',
+  '希腊圣经',
+  '希臘聖經',
+  '希腊',
+  '希臘',
 };
 
 /// `<book> <chapter>` / `<book> <c1>-<c2>`. The book part is lazy and
@@ -392,8 +407,8 @@ final RegExp _bookChapterRe =
 final RegExp _bareVerseRe = RegExp(r'^(\d{1,3})$');
 
 /// `3:16` and `3:16-18` — a chapter and verse with the book left off.
-final RegExp _chapterVerseRe = RegExp(
-    r'^(\d{1,3})\s*[:：.]\s*(\d{1,3})(?:\s*[-–—]\s*(\d{1,3}))?$');
+final RegExp _chapterVerseRe =
+    RegExp(r'^(\d{1,3})\s*[:：.]\s*(\d{1,3})(?:\s*[-–—]\s*(\d{1,3}))?$');
 
 /// Splits `l gen, exo` — both the ASCII comma and the CJK one, because
 /// a Chinese reader typing a list gets 、and ，from their IME without
@@ -401,15 +416,6 @@ final RegExp _chapterVerseRe = RegExp(
 final RegExp _listSeparatorRe = RegExp(r'[,，、]');
 
 final RegExp _whitespaceRe = RegExp(r'\s+');
-
-/// `ai <question>`. The argument is mandatory, and that is not a
-/// formality: **Ai is a Canaanite city** (Joshua 7–8, Ezra 2:28), so a
-/// bare `ai` has to keep reaching the text search or the verb would
-/// make a real place unfindable. `ai men of ai` is still taken as a
-/// question — the collision is not fully removable while the verb is a
-/// word, and this is the shape of it: visible, one Esc from undone, and
-/// costing nothing to the far commoner bare lookup.
-final RegExp _aiVerbRe = RegExp(r'^ai\s+(.+)$', caseSensitive: false);
 
 // ── Parse ───────────────────────────────────────────────────────────
 
@@ -424,12 +430,6 @@ final RegExp _aiVerbRe = RegExp(r'^ai\s+(.+)$', caseSensitive: false);
 CommandVerbParse parseCommandVerb(String input, VerbContext ctx) {
   final raw = input.trim();
   if (raw.isEmpty) return const CommandVerbParse.none();
-
-  final ai = _aiVerbRe.firstMatch(raw);
-  if (ai != null) {
-    return CommandVerbParse.run(
-        CommandVerb(CommandVerbKind.askAi, aiQuery: ai.group(1)!.trim()));
-  }
 
   final head = raw.substring(0, 1).toLowerCase();
   // A verb letter must stand alone: `d nas` is a verb, `dog` is a word.
@@ -452,15 +452,14 @@ CommandVerbParse parseCommandVerb(String input, VerbContext ctx) {
 
 CommandVerbParse _parseDisplay(String rest, VerbContext ctx) {
   if (rest.isEmpty) {
-    return const CommandVerbParse.refuse(
-        CommandVerbIssue.displayNeedsArgument);
+    return const CommandVerbParse.refuse(CommandVerbIssue.displayNeedsArgument);
   }
 
   // `c` before version lookup, not after: it is a keyword, and a future
   // edition whose abbreviation is "C" must not be able to shadow it.
   if (rest.toLowerCase() == 'c') {
-    return CommandVerbParse.run(
-        CommandVerb(CommandVerbKind.displayClear, versions: [ctx.searchVersion]));
+    return CommandVerbParse.run(CommandVerb(CommandVerbKind.displayClear,
+        versions: [ctx.searchVersion]));
   }
 
   final tokens = rest.split(_whitespaceRe).where((t) => t.isNotEmpty).toList();
@@ -488,7 +487,10 @@ CommandVerbParse _parseDisplay(String rest, VerbContext ctx) {
       return CommandVerbParse.refuse(CommandVerbIssue.cannotRemoveSearchVersion,
           ctx.labelFor(ctx.searchVersion));
     }
-    final present = [for (final c in codes) if (ctx.displayVersions.contains(c)) c];
+    final present = [
+      for (final c in codes)
+        if (ctx.displayVersions.contains(c)) c
+    ];
     if (present.isEmpty) {
       return CommandVerbParse.refuse(
           CommandVerbIssue.notDisplayed, ctx.labelFor(codes.first));
@@ -497,7 +499,10 @@ CommandVerbParse _parseDisplay(String rest, VerbContext ctx) {
         CommandVerb(CommandVerbKind.displayRemove, versions: present));
   }
 
-  final missing = [for (final c in codes) if (!ctx.displayVersions.contains(c)) c];
+  final missing = [
+    for (final c in codes)
+      if (!ctx.displayVersions.contains(c)) c
+  ];
   if (missing.isEmpty) {
     return CommandVerbParse.refuse(
         CommandVerbIssue.alreadyDisplayed, ctx.labelFor(codes.first));
@@ -628,7 +633,10 @@ CommandVerbParse _parseRelativeReference(String raw, VerbContext ctx) {
     return CommandVerbParse.run(CommandVerb(
       CommandVerbKind.goToReference,
       reference: BibleReference(
-          englishBook: book, chapter: chapter, verseStart: verse, verseEnd: verse),
+          englishBook: book,
+          chapter: chapter,
+          verseStart: verse,
+          verseEnd: verse),
     ));
   }
 
@@ -676,15 +684,16 @@ String describeVerbIssue(
 }) {
   switch (issue) {
     case CommandVerbIssue.displayNeedsArgument:
-      return _s('cmdvNeedsArgument', locale,
+      return _s(
+          'cmdvNeedsArgument',
+          locale,
           'After d, name an edition (d kjv), a language (d english), '
-          'a removal (d -kjv) or c to clear.');
+              'a removal (d -kjv) or c to clear.');
     case CommandVerbIssue.unknownVersion:
       final base = _s('cmdvUnknownVersion', locale, 'No edition called "{x}".')
           .replaceAll('{x}', detail);
       if (available.isEmpty) return base;
-      return '$base ${_s('cmdvAvailable', locale, 'Available: {list}')
-          .replaceAll('{list}', available.join(' · '))}';
+      return '$base ${_s('cmdvAvailable', locale, 'Available: {list}').replaceAll('{list}', available.join(' · '))}';
     case CommandVerbIssue.cannotRemoveSearchVersion:
       return _s(
               'cmdvCannotRemoveSearch',
@@ -706,17 +715,20 @@ String describeVerbIssue(
                   'Try l gen, l matt 5-7, l nt, or l on its own to clear.')
           .replaceAll('{x}', detail);
     case CommandVerbIssue.emptyScope:
-      return _s('cmdvEmptyScope', locale,
-              'This edition has no verses in {x}.')
+      return _s('cmdvEmptyScope', locale, 'This edition has no verses in {x}.')
           .replaceAll('{x}', detail);
     case CommandVerbIssue.noCurrentPassage:
-      return _s('cmdvNoPassage', locale,
+      return _s(
+          'cmdvNoPassage',
+          locale,
           'Open a chapter first — a bare number is a verse in the chapter '
-          'you are reading.');
+              'you are reading.');
     case CommandVerbIssue.verseListFileUnsupported:
-      return _s('cmdvVlsFile', locale,
+      return _s(
+          'cmdvVlsFile',
+          locale,
           'Verse-list files are not read here. Build the list in the '
-          'Verse Lists tab and switch its filter on.');
+              'Verse Lists tab and switch its filter on.');
   }
 }
 
@@ -767,7 +779,6 @@ List<String> applyDisplayVerb(
     case CommandVerbKind.limitSet:
     case CommandVerbKind.limitClear:
     case CommandVerbKind.goToReference:
-    case CommandVerbKind.askAi:
       add(current);
   }
   return next;

@@ -289,7 +289,7 @@ class _SearchScopeSheetState extends State<SearchScopeSheet> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.zero,
         side: BorderSide(
-          color: selected ? wb.text : wb.border,
+          color: selected ? wb.text : wb.disabledMark,
           width: WbMetrics.hairline,
         ),
       ),

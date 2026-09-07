@@ -1,7 +1,8 @@
 // 2026-08-09 (task #279): the Analysis pane's shared controls.
 //
 // The chrome assertions here are the same species as `wb_surfaces_test`
-// — square corners, hairline borders, colours off the WbColors
+// — corners off the WbMetrics scale, hairline borders, colours off the
+// WbColors
 // extension so all three palettes work.
 //
 // The one that is not about chrome is `does not overflow a 256 px pane`,
@@ -36,9 +37,8 @@ void main() {
           home: Scaffold(
             body: Align(
               alignment: Alignment.topLeft,
-              child: width == null
-                  ? child
-                  : SizedBox(width: width, child: child),
+              child:
+                  width == null ? child : SizedBox(width: width, child: child),
             ),
           ),
         ),
@@ -56,8 +56,7 @@ void main() {
     // minimum because the Analysis pane can be dragged below it while
     // the window stays wide.
     const paneWidth = 256.0;
-    const longLabel =
-        'in the beginning was the word and the word was with god';
+    const longLabel = 'in the beginning was the word and the word was with god';
 
     testWidgets('does not overflow a 256 px pane', (tester) async {
       await tester.pumpWidget(host(
@@ -88,16 +87,15 @@ void main() {
       expect(tester.takeException(), isNull);
       final count = tester.getSize(find.text('1234'));
       expect(count.width, greaterThan(0));
-      expect(tester.getSize(find.text(longLabel)).width,
-          lessThan(paneWidth));
+      expect(tester.getSize(find.text(longLabel)).width, lessThan(paneWidth));
     });
 
-    testWidgets('is a square hairline box, filled only when on',
-        (tester) async {
+    testWidgets('is a hairline box, filled only when on', (tester) async {
       await tester
           .pumpWidget(host(const WbPaneChip(label: 'aorist', on: true)));
       final on = decorationOf(tester, find.byType(WbPaneChip));
-      expect(on.borderRadius, isNull, reason: 'square corners');
+      expect(on.borderRadius, BorderRadius.circular(WbMetrics.radiusControl),
+          reason: 'the corner comes off the WbMetrics scale');
       expect(on.boxShadow, anyOf(isNull, isEmpty), reason: 'no shadows');
       expect(on.color, WbColors.light.selectionBg);
       expect((on.border! as Border).top.width, WbMetrics.hairline);
@@ -135,18 +133,17 @@ void main() {
 
     testWidgets('strikes the label only when asked, and only when off',
         (tester) async {
-      await tester.pumpWidget(host(const WbPaneChip(
-          label: 'the', on: false, strikeWhenOff: true)));
+      await tester.pumpWidget(
+          host(const WbPaneChip(label: 'the', on: false, strikeWhenOff: true)));
       expect(tester.widget<Text>(find.text('the')).style!.decoration,
           TextDecoration.lineThrough);
 
-      await tester.pumpWidget(host(
-          const WbPaneChip(label: 'the', on: true, strikeWhenOff: true)));
+      await tester.pumpWidget(
+          host(const WbPaneChip(label: 'the', on: true, strikeWhenOff: true)));
       expect(tester.widget<Text>(find.text('the')).style!.decoration, isNull);
 
       // A sort chip that is not the current sort is not "excluded".
-      await tester
-          .pumpWidget(host(const WbPaneChip(label: 'the', on: false)));
+      await tester.pumpWidget(host(const WbPaneChip(label: 'the', on: false)));
       expect(tester.widget<Text>(find.text('the')).style!.decoration, isNull);
     });
 
@@ -182,24 +179,29 @@ void main() {
     testWidgets('a null callback is the disabled state', (tester) async {
       await tester.pumpWidget(
           host(const WbIconTap(icon: Icons.arrow_forward, onTap: null)));
+      // 2026-09-07: `disabledMark`, not `border`. The two used to be
+      // the same colour, which is how a disabled glyph ended up reading
+      // the structural token in the first place; when the modern pass
+      // took the border down to a real hairline, "off" would have gone
+      // invisible.
       expect(tester.widget<Icon>(find.byType(Icon)).color,
-          WbColors.light.border);
+          WbColors.light.disabledMark);
       expect(tester.widget<InkWell>(find.byType(InkWell)).onTap, isNull);
     });
 
     testWidgets('defaults to the link colour when it does something',
         (tester) async {
       var taps = 0;
-      await tester.pumpWidget(host(
-          WbIconTap(icon: Icons.arrow_forward, onTap: () => taps++)));
+      await tester.pumpWidget(
+          host(WbIconTap(icon: Icons.arrow_forward, onTap: () => taps++)));
       expect(tester.widget<Icon>(find.byType(Icon)).color, WbColors.light.link);
       await tester.tap(find.byType(WbIconTap));
       expect(taps, 1);
     });
 
     testWidgets('wraps in a Tooltip only when given one', (tester) async {
-      await tester.pumpWidget(host(
-          WbIconTap(icon: Icons.check, onTap: () {}, tooltip: 'Learned')));
+      await tester.pumpWidget(
+          host(WbIconTap(icon: Icons.check, onTap: () {}, tooltip: 'Learned')));
       expect(find.byType(Tooltip), findsOneWidget);
 
       await tester.pumpWidget(host(WbIconTap(icon: Icons.check, onTap: () {})));

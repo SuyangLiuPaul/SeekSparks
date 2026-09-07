@@ -438,8 +438,7 @@ const uiStrings = {
   // distinct from "我的高亮" (Highlights).
   'library': {'zh-Hans': '我的收藏', 'zh-Hant': '我的收藏', 'en': 'Library'},
   'statistics': {'zh-Hans': '圣经工具', 'zh-Hant': '聖經工具', 'en': 'Bible Tools'},
-  'statsOverview':
-      {'zh-Hans': '总览', 'zh-Hant': '總覽', 'en': 'Overview'},
+  'statsOverview': {'zh-Hans': '总览', 'zh-Hant': '總覽', 'en': 'Overview'},
   'statsBooks': {'zh-Hans': '书卷', 'zh-Hant': '書卷', 'en': 'Books'},
   // Round 56: replaces the per-book Statistics tab with a
   // Strong's-first lookup tool. Tapping a result opens the full
@@ -1023,8 +1022,7 @@ const uiStrings = {
   'languagesCardSubtitle': {
     'zh-Hans': '圣经原本由三种语言写成 —— 看看每一种各自承担哪些经文。',
     'zh-Hant': '聖經原本由三種語言寫成 —— 看看每一種各自承擔哪些經文。',
-    'en':
-        'The three source languages and where each appears in the canon.',
+    'en': 'The three source languages and where each appears in the canon.',
   },
   'languageWordCount': {
     'zh-Hans': '{n} 词',
@@ -1048,10 +1046,8 @@ const uiStrings = {
     'en': 'Most of the Old Testament',
   },
   'languageHebrewSections': {
-    'zh-Hans':
-        '旧约 39 卷的绝大部分 —— 摩西五经、历史书、诗歌智慧书、绝大多数先知书。',
-    'zh-Hant':
-        '舊約 39 卷的絕大部分 —— 摩西五經、歷史書、詩歌智慧書、絕大多數先知書。',
+    'zh-Hans': '旧约 39 卷的绝大部分 —— 摩西五经、历史书、诗歌智慧书、绝大多数先知书。',
+    'zh-Hant': '舊約 39 卷的絕大部分 —— 摩西五經、歷史書、詩歌智慧書、絕大多數先知書。',
     'en':
         'Nearly all 39 books of the Old Testament — Pentateuch, histories, poetry / wisdom, and almost the entire prophetic corpus.',
   },
@@ -1145,10 +1141,9 @@ const uiStrings = {
     'en': 'Aramaic in the Bible',
   },
   'aramSheetSubtitle': {
-    'zh-Hans': '点击任一段进入释经面板 — 字字对照原文 + Gemini AI 解释。',
-    'zh-Hant': '點擊任一段進入釋經面板 — 字字對照原文 + Gemini AI 解釋。',
-    'en':
-        'Tap any entry to open the verse with word-by-word breakdown and Gemini AI explanation.',
+    'zh-Hans': '点击任一段进入释经面板 — 字字对照原文。',
+    'zh-Hant': '點擊任一段進入釋經面板 — 字字對照原文。',
+    'en': 'Tap any entry to open the verse with a word-by-word breakdown.',
   },
   'aramGroupOt': {
     'zh-Hans': '旧约段落',
@@ -1259,10 +1254,8 @@ const uiStrings = {
     'en': 'Mark 7:34 — "ephphatha"',
   },
   'aramDescEphphatha': {
-    'zh-Hans':
-        '亚兰文，意为「开了吧」。耶稣对一位耳聋舌结的人说话医治时所用的原话。马可同样紧接着翻译给希腊读者听。',
-    'zh-Hant':
-        '亞蘭文，意為「開了吧」。耶穌對一位耳聾舌結的人說話醫治時所用的原話。馬可同樣緊接著翻譯給希臘讀者聽。',
+    'zh-Hans': '亚兰文，意为「开了吧」。耶稣对一位耳聋舌结的人说话医治时所用的原话。马可同样紧接着翻译给希腊读者听。',
+    'zh-Hant': '亞蘭文，意為「開了吧」。耶穌對一位耳聾舌結的人說話醫治時所用的原話。馬可同樣緊接著翻譯給希臘讀者聽。',
     'en':
         'Aramaic for "be opened." Spoken by Jesus over a deaf-mute man\'s ears at the moment of healing. Mark again preserves the original word and glosses it in Greek.',
   },
@@ -1365,8 +1358,7 @@ const uiStrings = {
   'lookupFeatureFamily': {
     'zh-Hans': '词族（亲属词）+ 同义词对比，相关字根一目了然',
     'zh-Hant': '詞族（親屬詞）+ 同義詞對比，相關字根一目了然',
-    'en':
-        'Word family + synonym comparison — see related lemmas at a glance.',
+    'en': 'Word family + synonym comparison — see related lemmas at a glance.',
   },
   'lookupFeatureConcordance': {
     'zh-Hans': '可点击的经文索引（concordance），该字出现的每一节经文一键直达',
@@ -1377,8 +1369,7 @@ const uiStrings = {
   'lookupFeatureCopy': {
     'zh-Hans': '一键复制原文对照表格，方便讲道预备或笔记',
     'zh-Hant': '一鍵複製原文對照表格，方便講道預備或筆記',
-    'en':
-        'Copy the interlinear table to clipboard for sermon prep or notes.',
+    'en': 'Copy the interlinear table to clipboard for sermon prep or notes.',
   },
   // Round 56: Word Distribution tab — exposes the
   // WordDistributionTable widget (previously only reachable via
@@ -1409,15 +1400,13 @@ const uiStrings = {
   'statsChapters': {'zh-Hans': '章数', 'zh-Hant': '章數', 'en': 'Chapters'},
   'statsVerses': {'zh-Hans': '节数', 'zh-Hant': '節數', 'en': 'Verses'},
   'statsWords': {'zh-Hans': '字词数', 'zh-Hant': '字詞數', 'en': 'Words'},
-  'statsChars':
-      {'zh-Hans': '字符数', 'zh-Hant': '字符數', 'en': 'Characters'},
+  'statsChars': {'zh-Hans': '字符数', 'zh-Hant': '字符數', 'en': 'Characters'},
   'statsAvgWordsVerse': {
     'zh-Hans': '平均字词/节',
     'zh-Hant': '平均字詞/節',
     'en': 'Avg w/v',
   },
-  'statsTime':
-      {'zh-Hans': '阅读时间(分)', 'zh-Hant': '閱讀時間(分)', 'en': 'Time (m)'},
+  'statsTime': {'zh-Hans': '阅读时间(分)', 'zh-Hant': '閱讀時間(分)', 'en': 'Time (m)'},
   'statsReadingTime': {
     'zh-Hans': '阅读时间 @ 200 wpm',
     'zh-Hant': '閱讀時間 @ 200 wpm',
@@ -1438,8 +1427,7 @@ const uiStrings = {
     'zh-Hant': '最短(按字詞數)',
     'en': 'Shortest (by word count)',
   },
-  'statsVocabulary':
-      {'zh-Hans': '词汇', 'zh-Hant': '詞彙', 'en': 'Vocabulary'},
+  'statsVocabulary': {'zh-Hans': '词汇', 'zh-Hant': '詞彙', 'en': 'Vocabulary'},
   'statsTopWords': {
     'zh-Hans': '高频字词',
     'zh-Hant': '高頻字詞',
@@ -1460,8 +1448,7 @@ const uiStrings = {
     'zh-Hant': '在所選範圍內僅出現一次的字詞。',
     'en': 'Words appearing only once in the selected scope.',
   },
-  'statsNoHapax':
-      {'zh-Hans': '— 无 —', 'zh-Hant': '— 無 —', 'en': '— none —'},
+  'statsNoHapax': {'zh-Hans': '— 无 —', 'zh-Hant': '— 無 —', 'en': '— none —'},
   'statsScope': {'zh-Hans': '范围:', 'zh-Hant': '範圍:', 'en': 'Scope:'},
   'statsAllCanon': {
     'zh-Hans': '整本圣经',
@@ -1634,22 +1621,6 @@ const uiStrings = {
     'en':
         'Long-press a verse for color highlights, bookmarks, and notes. Tap any reference to jump; tap a Strong\'s word for originals. Search the whole Bible from the header.',
   },
-  // 2026-05-09 (v1.2.9): user pointed out the v2 tour didn't even
-  // mention AI — now central to v1.2.0–v1.2.8 (search by theme,
-  // BDAG-style word study, evidence Q&A, BYOK key-test). New slide
-  // sits between "Read" and "Sermons" so the natural reading-flow
-  // intro leads into "and here's what AI can do on top of it".
-  'onboardAiTitle': {
-    'zh-Hans': 'AI 研经助手',
-    'zh-Hant': 'AI 研經助手',
-    'en': 'AI study helpers',
-  },
-  'onboardAiBody': {
-    'zh-Hans': '按主题搜经文（"爱"、"信心"），点希腊文／希伯来文原文看 BDAG 级深度释义，对考古和手稿提具体问题。AI 由 Gemini 驱动——可在 设置 → AI 粘贴自己的免费密钥（按 Test 验证），用自己的额度跳过共享池。',
-    'zh-Hant': '按主題搜經文（「愛」、「信心」），點希臘文／希伯來文原文看 BDAG 級深度釋義，對考古和手稿提具體問題。AI 由 Gemini 驅動——可在 設定 → AI 貼上自己的免費密鑰（按 Test 驗證），用自己的額度跳過共享池。',
-    'en':
-        'Search the Bible by theme ("love", "faith"), tap any Greek or Hebrew word for a BDAG-style deep dive, or ask questions about archaeology and manuscripts. Powered by Gemini — paste your own free key in Settings → AI (and tap Test to verify) to skip the shared developer pool.',
-  },
   'onboardSermonsTitle': {
     'zh-Hans': '讲道',
     'zh-Hant': '講道',
@@ -1684,7 +1655,8 @@ const uiStrings = {
   'onboardCustomizeBody': {
     'zh-Hans': '高亮、笔记、书签都保存在这台设备上——不需要账号，也不上传服务器。要换设备，用「设置 → 导出我的数据」。',
     'zh-Hant': '螢光標記、筆記、書籤都儲存在這台裝置上——不需要帳號，也不上傳伺服器。要換裝置，用「設定 → 匯出我的資料」。',
-    'en': 'Highlights, notes and bookmarks are saved on this device — no account, no server. Settings → Export my data moves them to another device.',
+    'en':
+        'Highlights, notes and bookmarks are saved on this device — no account, no server. Settings → Export my data moves them to another device.',
   },
   // 2026-08-08 (v1.6.62): the slide above used to pitch Google
   // sign-in for cross-device sync, with China-only variants that
@@ -1812,17 +1784,6 @@ const uiStrings = {
     'zh-Hant': '聖經歷史地圖（55 張圖）',
     'en': 'Bible-history maps (55 images)',
   },
-  // ── AI BYOK + Drive sync (2026-05-06) ────────────────────────
-  'settingsSectionAi': {
-    'zh-Hans': 'AI 释义',
-    'zh-Hant': 'AI 釋義',
-    'en': 'AI',
-  },
-  'aboutSectionAi': {
-    'zh-Hans': 'AI（高级 · 可选）',
-    'zh-Hant': 'AI（進階 · 可選）',
-    'en': 'AI (advanced · optional)',
-  },
   // ── Exegesis sheet — proper-noun complementary glosses ────────
   // 2026-05-07: for proper nouns (people, places, deities) the
   // English Strong's lexicon gives etymology while the Chinese CBOL
@@ -1838,9 +1799,8 @@ const uiStrings = {
   'exegesisProperNounNote': {
     'zh-Hans': '英文给词源，中文给身份——都是对的，互相补充。',
     'zh-Hant': '英文給詞源，中文給身份——都是對的，互相補充。',
-    'en':
-        'English gives etymology; Chinese gives biblical identification — '
-            'both correct, complementary perspectives.',
+    'en': 'English gives etymology; Chinese gives biblical identification — '
+        'both correct, complementary perspectives.',
   },
   'exegesisProperNounRoleLabel': {
     'zh-Hans': '此处指',
@@ -1870,250 +1830,6 @@ const uiStrings = {
     'zh-Hans': '英文参考',
     'zh-Hant': '英文參考',
     'en': 'English reference',
-  },
-  // ── AI Bible search (2026-05-07) ─────────────────────────────
-  // Triggered from the search page's no-results state. Lets the
-  // user ask Gemini for Bible references that match a fuzzy /
-  // thematic query when exact-text search returns nothing.
-  // 2026-05-07: rebrand. The user prefers the SeekSparks brand to be
-  // surfaced rather than a generic "AI" label, with a "for reference
-  // only" caveat to set expectations about LLM-generated content.
-  // Older "ask AI" wording across the search page maps to the new
-  // "search with SeekSparks AI" copy.
-  'askAiForVerses': {
-    'zh-Hans': '用AI 智能搜索（仅供参考）',
-    'zh-Hant': '用AI 智慧搜尋（僅供參考）',
-    'en': 'Search with AI (reference only)',
-  },
-  'aiSearching': {
-    'zh-Hans': '雅伟之剑正在搜索…',
-    'zh-Hant': '雅偉之劍正在搜尋…',
-    'en': 'AI searching…',
-  },
-  'aiBibleSearchHeader': {
-    'zh-Hans': '雅伟之剑为「{query}」找到了 {count} 处经文（仅供参考）',
-    'zh-Hant': '雅偉之劍為「{query}」找到了 {count} 處經文（僅供參考）',
-    'en': 'AI found {count} passages for "{query}" (reference only)',
-  },
-  'aiBibleSearchNoMatches': {
-    'zh-Hans': 'AI 没有找到相关经文，换个说法再试一下吧。',
-    'zh-Hant': 'AI 沒有找到相關經文，換個說法再試一下吧。',
-    'en':
-        'AI didn\'t find any matching passages. Try rephrasing.',
-  },
-  // 2026-05-08 (v1.1.5): tag + snackbar for AI ref cards that don't
-  // resolve to a verse in the user's currently-loaded Bible version.
-  'aiRefOnlyTag': {
-    'zh-Hans': '仅参考',
-    'zh-Hant': '僅參考',
-    'en': 'reference only',
-  },
-  'aiRefNotInVersion': {
-    'zh-Hans': '这段经文不在您当前的圣经版本中。在「设置」里切换版本后即可阅读。',
-    'zh-Hant': '這段經文不在您當前的聖經版本中。在「設定」裡切換版本後即可閱讀。',
-    'en':
-        'This passage isn\'t in your current Bible version. Switch versions in Settings to read it.',
-  },
-  // 2026-05-08 (v1.1.10): deep-link CTA for the BYOK Gemini key.
-  // Shown under the AI error notice when the failure is a quota /
-  // not-configured one AND the user hasn't already set up their own
-  // key. Tapping navigates to Settings → SeekSparks AI section and
-  // scrolls the GeminiKeyCard into view.
-  'aiOpenByokSettings': {
-    'zh-Hans': '使用您自己的 Gemini Key',
-    'zh-Hant': '使用您自己的 Gemini Key',
-    'en': 'Set up your own Gemini API key',
-  },
-  // 2026-05-08 (v1.1.11): client-side fallback strings for the
-  // AI services (ai_bible_search_service.dart + ai_search_service.dart).
-  // Used only when the Netlify function returns a 429/503 without
-  // a parseable `error` body — in normal operation the backend
-  // sends a user-locale message that's surfaced directly.
-  'aiQuotaExhaustedFallback': {
-    'zh-Hans': 'AI 今天的共享配额已用完。明天再试，或在「设置 → '
-        'AI」粘贴您自己的 Gemini API Key 用您的配额。',
-    'zh-Hant': 'AI 今天的共享配額已用完。明天再試，或在「設定 → '
-        'AI」貼上您自己的 Gemini API Key 用您的配額。',
-    'en':
-        'AI quota for the developer\'s shared key is used up for today. Try again tomorrow, or paste your own Gemini API key in Settings → AI to use your own quota.',
-  },
-  'aiNotConfiguredFallback': {
-    'zh-Hans': 'AI 还没有配置。开发者需要在 Netlify 环境变量里设置 '
-        'GEMINI_API_KEY。',
-    'zh-Hant': 'AI 還沒有配置。開發者需要在 Netlify 環境變數裡設置 '
-        'GEMINI_API_KEY。',
-    'en':
-        'AI is not configured. The developer needs to set GEMINI_API_KEY in Netlify env.',
-  },
-  'aiBibleSearchSomeMissing': {
-    'zh-Hans': 'AI 还找到 {n} 处经文，但您当前圣经版本中没有匹配（仅供参考）。',
-    'zh-Hant': 'AI 還找到 {n} 處經文，但您當前聖經版本中沒有匹配（僅供參考）。',
-    'en':
-        'AI also suggested {n} passages not in your current '
-            'Bible version (reference only).',
-  },
-  // 2026-05-07 (post-fix v3): AI-result note when the active search
-  // filter (e.g. "Search current book") excluded some of the
-  // passages SeekSparks returned. Distinct from
-  // aiBibleSearchSomeMissing which is for refs not present in the
-  // user's loaded Bible version at all.
-  'aiBibleSearchOutOfScope': {
-    'zh-Hans': 'AI 还推荐了 {n} 处经文，但当前筛选范围之外（仅供参考）。',
-    'zh-Hant': 'AI 還推薦了 {n} 處經文，但當前篩選範圍之外（僅供參考）。',
-    'en':
-        'AI also suggested {n} passages outside your current '
-            'filter scope.',
-  },
-  // 2026-05-07: italic caveat shown directly below the AI search
-  // button. v10 wording aligned with the welcome disclaimer:
-  // AI is auxiliary; verify against Scripture; the Spirit guides.
-  'aiReferenceOnly': {
-    'zh-Hans': 'AI 只是辅助，请以经文为准，让圣灵亲自带领你。',
-    'zh-Hant': 'AI 只是輔助，請以經文為準，讓聖靈親自帶領你。',
-    'en':
-        'AI is only an aid — verify against Scripture and let the Spirit guide you.',
-  },
-  'aiByokTitle': {
-    'zh-Hans': '使用我自己的 Gemini API 密钥',
-    'zh-Hant': '使用我自己的 Gemini API 金鑰',
-    'en': 'Use my own Gemini API key',
-  },
-  'aiByokBody': {
-    // 2026-05-10 (v1.2.17): wording softened from "never synced
-    // across devices" to "lives on this device" — the key now
-    // syncs via the user's own Firebase project to their other
-    // signed-in devices when they're signed in. The new
-    // `aiByokSyncedNote` ui-string carries the explicit cloud-sync
-    // disclosure and only renders below the input when the
-    // condition (signed in + key present + intl build) matches.
-    'zh-Hans': '从 Google AI Studio 获取免费密钥并粘贴在这里——之后 AI 功能（原文释义、AI 搜索）'
-        '将走您自己的额度（每分钟 15 次，每日 1500 次），而不是与开发者池共享。'
-        '密钥保存在本设备本地。',
-    'zh-Hant': '從 Google AI Studio 取得免費金鑰並貼在這裡——之後 AI 功能（原文釋義、AI 搜尋）'
-        '將走您自己的配額（每分鐘 15 次，每日 1500 次），而不是與開發者池共享。'
-        '金鑰保存在本裝置本地。',
-    'en':
-        'Paste your free Gemini API key from AI Studio so AI features '
-            '(word explanations, AI search) use your own quota (15 RPM / '
-            '1500 RPD) instead of the shared developer pool. The key '
-            'lives on this device.',
-  },
-  'aiByokGetKey': {
-    'zh-Hans': '获取免费密钥',
-    'zh-Hant': '取得免費金鑰',
-    'en': 'Get free key',
-  },
-  // 2026-05-10 (v1.2.26): AI model picker — three tiers, mapped to
-  // Gemini models on the server.
-  //   '快' / 'Fast'      → flash-lite (default; fastest, simplest)
-  //   '标准' / 'Standard'→ flash      (balanced)
-  //   '深入' / 'Deep'    → pro        (deepest analysis, slower,
-  //                                    smaller free-tier quota —
-  //                                    BYOK key recommended)
-  'aiModelTitle': {
-    'zh-Hans': 'AI 响应深度',
-    'zh-Hant': 'AI 回應深度',
-    'en': 'AI response depth',
-  },
-  'aiModelBody': {
-    'zh-Hans': '选择 AI 回答的速度与详尽度——不同档位对应不同的 Gemini 模型。',
-    'zh-Hant': '選擇 AI 回答的速度與詳盡度——不同檔位對應不同的 Gemini 模型。',
-    'en':
-        'Choose the speed-vs-depth trade-off — each tier maps to a different Gemini model.',
-  },
-  'aiModelFast': {
-    'zh-Hans': '快',
-    'zh-Hant': '快',
-    'en': 'Fast',
-  },
-  'aiModelStandard': {
-    'zh-Hans': '标准',
-    'zh-Hant': '標準',
-    'en': 'Standard',
-  },
-  'aiModelDeep': {
-    'zh-Hans': '深入',
-    'zh-Hant': '深入',
-    'en': 'Deep',
-  },
-  // 2026-05-10 (v1.2.27): per-tier detail panel — surfaces under
-  // the SegmentedButton, updates as the user picks. Tells them
-  // (a) which actual Gemini model the tier maps to, (b) which is
-  // the default, (c) relative speed vs depth, and (d) free-tier
-  // quota reality so they know when to BYOK.
-  'aiModelFastDetail': {
-    'zh-Hans': '快 (默认) · Gemini 2.5 Flash-Lite。最快、最简明的回答，约 1-3 秒。免费配额最大——开发者共享池基本不会耗尽。适合日常研经、快速查询。',
-    'zh-Hant': '快 (預設) · Gemini 2.5 Flash-Lite。最快、最簡明的回答，約 1-3 秒。免費配額最大——開發者共享池基本不會耗盡。適合日常研經、快速查詢。',
-    'en':
-        'Fast (default) · Gemini 2.5 Flash-Lite. Quickest answers (~1-3 s), brief and direct. Largest free-tier quota — the shared developer pool almost never runs out. Best for everyday study and quick lookups.',
-  },
-  'aiModelStandardDetail': {
-    'zh-Hans': '标准 · Gemini 2.5 Flash。速度和深度的平衡，约 3-6 秒。免费配额中等，平时充足，高峰时段可能耗尽。适合需要稍详细解释的场景。',
-    'zh-Hant': '標準 · Gemini 2.5 Flash。速度和深度的平衡,約 3-6 秒。免費配額中等,平時充足,高峰時段可能耗盡。適合需要稍詳細解釋的場景。',
-    'en':
-        'Standard · Gemini 2.5 Flash. Balanced speed and depth (~3-6 s). Mid-range free-tier quota — usually fine, can run out at peak hours. Best when you want a bit more detail than Fast gives.',
-  },
-  'aiModelDeepDetail': {
-    'zh-Hans': '深入 · Gemini 3 Flash Preview。带"思考"模式的高速推理模型——接近 Pro 级别的释经深度，但速度快得多（约 4-8 秒）。**免费配额可用**：~250 RPD，独立于 Standard / Fast 配额池。Google 在 2026 年 4 月把 gemini-2.5-pro 收费了——所以我们改用这款，免费即可使用，不需要 BYOK。BYOK 仍然推荐用于高频使用（您自己的密钥有独立配额，更稳定）。',
-    'zh-Hant': '深入 · Gemini 3 Flash Preview。帶「思考」模式的高速推理模型——接近 Pro 級別的釋經深度，但速度快得多（約 4-8 秒）。**免費配額可用**：~250 RPD，獨立於 Standard / Fast 配額池。Google 在 2026 年 4 月把 gemini-2.5-pro 收費了——所以我們改用這款，免費即可使用，不需要 BYOK。BYOK 仍然推薦用於高頻使用（您自己的密鑰有獨立配額，更穩定）。',
-    'en':
-        'Deep · Gemini 3 Flash Preview. High-speed thinking model with near-Pro reasoning quality — substantially faster than Pro (~4-8 s). **Free-tier compatible** at ~250 RPD, with quota separate from the Standard / Fast pools. Google moved gemini-2.5-pro behind a paywall in April 2026, so Yahweh\'s Sword switched Deep to this model — free, no BYOK needed. BYOK still recommended for heavy use (your own key has its own quota pool).',
-  },
-  // 2026-05-11 (v1.2.42): three short-lived strings were removed
-  // here as dead code:
-  //   • `aiDeepFellBackToStandard` (v1.2.37) — surfaced when the
-  //     backend silently downgraded Pro → Flash for no-BYOK users.
-  //     Obsolete after v1.2.40 switched Deep to
-  //     `gemini-3-flash-preview` (works on free tier; no silent
-  //     downgrade).
-  //   • `aiModelDeepDisabledTooltip` (v1.2.39) — tooltip on the
-  //     locked Deep segment when BYOK was missing. v1.2.41 reverted
-  //     the gating because Deep works without BYOK now.
-  //   • `aiModelDeepLockedNote` (v1.2.39) — italic note under the
-  //     locked picker. Same reason.
-  // 2026-05-09 (v1.2.7): "Test" button + result row in the BYOK
-  // card. Lets the user verify their pasted key actually
-  // authenticates against Gemini before saving — previously they
-  // had to commit, navigate to the search page, run a query, and
-  // hope the result wasn't a fallback to the dev's shared pool.
-  'aiByokTest': {
-    'zh-Hans': '测试',
-    'zh-Hant': '測試',
-    'en': 'Test',
-  },
-  'aiByokTesting': {
-    'zh-Hans': '测试中…',
-    'zh-Hant': '測試中…',
-    'en': 'Testing…',
-  },
-  'aiByokTestOk': {
-    'zh-Hans': '密钥可用！AI 功能将使用您的额度。',
-    'zh-Hant': '金鑰可用！AI 功能將使用您的配額。',
-    'en': 'Key works! AI features will use your quota.',
-  },
-  'aiByokTestFailed': {
-    'zh-Hans': '测试失败。',
-    'zh-Hant': '測試失敗。',
-    'en': 'Test failed.',
-  },
-  'aiByokTestInvalidShape': {
-    'zh-Hans': '看起来不像 Gemini API 密钥。它应该以 AIza… 开头'
-        '（可以从 aistudio.google.com/apikey 复制一个）。',
-    'zh-Hant': '看起來不像 Gemini API 金鑰。它應該以 AIza… 開頭'
-        '（可以從 aistudio.google.com/apikey 複製一個）。',
-    'en':
-        "Doesn't look like a Gemini API key. It should start with "
-            'AIza… (you can copy one from aistudio.google.com/apikey).',
-  },
-  'aiByokTestUnexpected': {
-    'zh-Hans': 'AI 服务返回了意外的响应。',
-    'zh-Hant': 'AI 服務返回了意外的回應。',
-    'en': 'Unexpected response from the AI service.',
-  },
-  'aiByokTestTimeout': {
-    'zh-Hans': 'AI 服务响应超时，请稍后再试。',
-    'zh-Hant': 'AI 服務回應逾時，請稍後再試。',
-    'en': 'The AI service did not respond in time. Try again.',
   },
   'show': {'zh-Hans': '显示', 'zh-Hant': '顯示', 'en': 'Show'},
   'hide': {'zh-Hans': '隐藏', 'zh-Hant': '隱藏', 'en': 'Hide'},
@@ -2150,21 +1866,20 @@ const uiStrings = {
   //     "nothing is downloaded at runtime". Emoji are deliberately not
   //     bundled, but those are drawn by the OS, not fetched.
   //
-  // What remains is verified: AI runs against a live Gemini call, and
-  // the news digest is fetched from the yswords-data CDN
+  // What remains is verified: the news digest is fetched from the
+  // yswords-data CDN
   // (`NotificationCategoryIds.newsDigest`). Bible Evidence also
   // refreshes over the network but is NOT listed — it ships a bundled
   // snapshot and works offline, so naming it would make the note
   // over-warn, which is the same defect pointing the other way.
   'offlinePackNetworkNote': {
-    'zh-Hans': '以下功能仍需要网络：AI 释义 / AI 搜索，以及新闻摘要的实时更新。'
+    'zh-Hans': '以下功能仍需要网络：新闻摘要的实时更新。'
         '其余内容（含字体）已随应用打包，离线可用。',
-    'zh-Hant': '以下功能仍需要網路：AI 釋義 / AI 搜尋，以及新聞摘要的即時更新。'
+    'zh-Hant': '以下功能仍需要網路：新聞摘要的即時更新。'
         '其餘內容（含字體）已隨應用打包，離線可用。',
-    'en':
-        'Network is still required for: AI explanations / search, and '
-            'refreshing the news digest. Everything else, fonts '
-            'included, is bundled with the app and works offline.',
+    'en': 'Network is still required for: '
+        'refreshing the news digest. Everything else, fonts '
+        'included, is bundled with the app and works offline.',
   },
   'offlinePackDownload': {
     'zh-Hans': '下载',
@@ -2368,10 +2083,8 @@ const uiStrings = {
     'en': 'Unique lemmas in book',
   },
   'statsOriginalsHideStopwordsDesc': {
-    'zh-Hans':
-        '过滤"the/and/in/of/who/that"等高频虚词与冠词，让真正有意义的圣经词汇浮上来。',
-    'zh-Hant':
-        '過濾「the/and/in/of/who/that」等高頻虛詞與冠詞，讓真正有意義的聖經詞彙浮上來。',
+    'zh-Hans': '过滤"the/and/in/of/who/that"等高频虚词与冠词，让真正有意义的圣经词汇浮上来。',
+    'zh-Hant': '過濾「the/and/in/of/who/that」等高頻虛詞與冠詞，讓真正有意義的聖經詞彙浮上來。',
     'en':
         'Filter out high-frequency function words like the, and, in, of, who, that — surfacing the meaningful content vocabulary instead.',
   },
@@ -2648,7 +2361,8 @@ const uiStrings = {
   'notificationsBlocked': {
     'zh-Hans': '浏览器已禁止此站点通知。请到浏览器设置中允许后再开启。',
     'zh-Hant': '瀏覽器已禁止此站點通知。請到瀏覽器設定中允許後再開啟。',
-    'en': 'Permission blocked at the browser level. Re-enable in browser settings, then toggle on here.',
+    'en':
+        'Permission blocked at the browser level. Re-enable in browser settings, then toggle on here.',
   },
   'notificationsDenied': {
     'zh-Hans': '浏览器拒绝了通知权限。',
@@ -2733,23 +2447,20 @@ const uiStrings = {
   'searchHelpBasicWord': {
     'zh-Hans': '直接输入字词或短句，可在当前圣经版本中查找包含该内容的经文。',
     'zh-Hant': '直接輸入字詞或短句，可在當前聖經版本中查找包含該內容的經文。',
-    'en':
-        'Type a word or phrase to find every verse that contains it '
-            '(in your current Bible version).',
+    'en': 'Type a word or phrase to find every verse that contains it '
+        '(in your current Bible version).',
   },
   'searchHelpBasicRef': {
     'zh-Hans': '输入经文位置可直接跳转，例如「约 3:16」「John 3:16」「Rom 12:1-2」。',
     'zh-Hant': '輸入經文位置可直接跳轉，例如「約 3:16」「John 3:16」「Rom 12:1-2」。',
-    'en':
-        'Type a reference like "John 3:16", "约 3:16", or '
-            '"Rom 12:1-2" to jump directly to that verse.',
+    'en': 'Type a reference like "John 3:16", "约 3:16", or '
+        '"Rom 12:1-2" to jump directly to that verse.',
   },
   'searchHelpBasicRecent': {
     'zh-Hans': '点击上方任一最近搜索可重复查询；点击右侧 × 可单独删除某条记录。',
     'zh-Hant': '點擊上方任一最近搜尋可重複查詢；點擊右側 × 可單獨刪除某條記錄。',
-    'en':
-        'Tap any recent search above to repeat it. Tap × to remove a '
-            'single entry, or "Clear all" to wipe history.',
+    'en': 'Tap any recent search above to repeat it. Tap × to remove a '
+        'single entry, or "Clear all" to wipe history.',
   },
   'searchHelpAdvancedTitle': {
     'zh-Hans': '进阶',
@@ -2759,9 +2470,8 @@ const uiStrings = {
   'searchHelpAdvStrongs': {
     'zh-Hans': '输入 Strong\'s 编号（如「G2316」「H7200」）打开词典与经文索引。',
     'zh-Hant': '輸入 Strong\'s 編號（如「G2316」「H7200」）打開詞典與經文索引。',
-    'en':
-        'Strong\'s number: type "G2316" / "H7200" to open the lexicon '
-            'entry plus every verse that uses that word.',
+    'en': 'Strong\'s number: type "G2316" / "H7200" to open the lexicon '
+        'entry plus every verse that uses that word.',
   },
   // v1.3.91: operator tooltips, reused by the command-line strip (#294).
   'booleanSearchHeader': {
@@ -3069,7 +2779,8 @@ const uiStrings = {
   'cmdIssueStrongsOperator': {
     'zh-Hans': '运算符两边都要有原文编号，例如 G25 AND G26。',
     'zh-Hant': '運算子兩邊都要有原文編號，例如 G25 AND G26。',
-    'en': "Every operator needs a Strong's number on both sides — for example G25 AND G26.",
+    'en':
+        "Every operator needs a Strong's number on both sides — for example G25 AND G26.",
   },
   'cmdIssueStrongsRange': {
     'zh-Hans': '此处的原文编号范围是 G1–G{g} 和 H1–H{h}。',
@@ -3177,7 +2888,8 @@ const uiStrings = {
   'cmdSyntaxStrongsBool': {
     'zh-Hans': 'G25 AND G26 — 两个编号都出现 · OR 任一 · NOT 有前者没后者',
     'zh-Hant': 'G25 AND G26 — 兩個編號都出現 · OR 任一 · NOT 有前者沒後者',
-    'en': 'G25 AND G26 — both numbers · OR either · NOT the first not the second',
+    'en':
+        'G25 AND G26 — both numbers · OR either · NOT the first not the second',
   },
   // 2026-09-07. The cross-version conjunction, on the TEXT card rather
   // than the Strong's one: it is `.`/`/` with a version tag, so it
@@ -3199,7 +2911,8 @@ const uiStrings = {
   'cmdSyntaxStrongsNear': {
     'zh-Hans': 'G25 NEAR5 G26 — 相距 5 个词以内，不分先后（中间最多 4 个词）',
     'zh-Hant': 'G25 NEAR5 G26 — 相距 5 個詞以內，不分先後（中間最多 4 個詞）',
-    'en': 'G25 NEAR5 G26 — within 5 words, either order (up to 4 words between)',
+    'en':
+        'G25 NEAR5 G26 — within 5 words, either order (up to 4 words between)',
   },
   // The directional operator, 2026-09-05. It sits directly under the
   // NEAR line on purpose: the pair is only learnable side by side, and
@@ -3207,7 +2920,8 @@ const uiStrings = {
   'cmdSyntaxStrongsBefore': {
     'zh-Hans': 'G25 BEFORE5 G26 — G25 在前，G26 在其后 5 个词以内（先后有别）',
     'zh-Hant': 'G25 BEFORE5 G26 — G25 在前，G26 在其後 5 個詞以內（先後有別）',
-    'en': 'G25 BEFORE5 G26 — G25 first, G26 within 5 words after it (order matters)',
+    'en':
+        'G25 BEFORE5 G26 — G25 first, G26 within 5 words after it (order matters)',
   },
   'cmdSyntaxStrongsWild': {
     'zh-Hans': 'G25✶ — 所有以 G25 开头的编号 · G25 !G26 与 NOT 相同',
@@ -3269,7 +2983,8 @@ const uiStrings = {
   'cmdOpTipStar': {
     'zh-Hans': '✶ 接在词后是通配符（faith✶、G25✶）；单独一个是词距',
     'zh-Hant': '✶ 接在詞後是萬用字元（faith✶、G25✶）；單獨一個是詞距',
-    'en': '✶ after a word it is a wildcard (faith✶, G25✶); alone it is a word gap',
+    'en':
+        '✶ after a word it is a wildcard (faith✶, G25✶); alone it is a word gap',
   },
   // Live hints under the strip — the reported failure ("clicked NEAR5,
   // nothing happens") occurs BEFORE there is a query to read back, so the
@@ -3603,15 +3318,6 @@ const uiStrings = {
     'en': 'd kjv / d -kjv / d c stack editions · p kjv bsb restack · '
         'l gen scope the search · 17 verse 17 of this chapter',
   },
-  // 2026-08-08: the `ai` verb gets its own line rather than joining the
-  // list above — it is the only command that leaves the device, and the
-  // reader should be able to see that before typing it.
-  'cmdSyntaxAi': {
-    'zh-Hans': 'ai 关于焦虑的经文 — 描述你想找什么，AI 给出经文出处（仅供参考）',
-    'zh-Hant': 'ai 關於焦慮的經文 — 描述你想找什麼，AI 給出經文出處（僅供參考）',
-    'en': 'ai verses about anxiety — describe what you want; '
-        'AI answers with references (reference only)',
-  },
   // #299/#321. `cmdTryAndHint` lived here until v1.6.144: on an empty
   // result it printed "try .<your words>" without ever running that
   // query, so a reader whose words are simply not in the edition was
@@ -3716,45 +3422,30 @@ const uiStrings = {
   'searchHelpAdvLemma': {
     'zh-Hans': '直接输入希腊文（ἀγάπη）或希伯来文（אהבה）原文词，匹配后会打开对应的词典条目。',
     'zh-Hant': '直接輸入希臘文（ἀγάπη）或希伯來文（אהבה）原文詞，匹配後會打開對應的詞典條目。',
-    'en':
-        'Greek / Hebrew: type the original-language word (e.g. ἀγάπη '
-            'or אהבה). Matching opens the lexicon entry directly.',
+    'en': 'Greek / Hebrew: type the original-language word (e.g. ἀγάπη '
+        'or אהבה). Matching opens the lexicon entry directly.',
   },
   'searchHelpAdvTranslit': {
     'zh-Hans': '输入音译形式（如「agape」「shalom」「logos」）：完全匹配会直接打开词典；'
         '部分匹配则在搜索结果上方显示「您是否在找…」提示。',
     'zh-Hant': '輸入音譯形式（如「agape」「shalom」「logos」）：完全匹配會直接打開詞典；'
         '部分匹配則在搜尋結果上方顯示「您是否在找…」提示。',
-    'en':
-        'Transliteration: type "agape", "shalom", "logos". Exact '
-            'matches open the lexicon; partial matches surface as a '
-            '"Did you mean…" card alongside text results.',
-  },
-  'searchHelpAdvAi': {
-    'zh-Hans': 'AI 搜索：当关键字搜索没有结果时，可以点击「用AI 智能搜索」'
-        '让 AI 帮你查找主题或模糊查询（如「最爱的章节」）。结果仅供参考，使用前请自行核对。',
-    'zh-Hant': 'AI 搜尋：當關鍵字搜尋沒有結果時，可以點擊「用AI 智慧搜尋」'
-        '讓 AI 幫你查找主題或模糊查詢（如「最愛的章節」）。結果僅供參考，使用前請自行核對。',
-    'en':
-        'AI search: when keyword search returns nothing, tap '
-            '"Search with AI" for fuzzy or thematic queries '
-            '(e.g. "the love chapter"). Results are for reference '
-            'only — verify before use.',
+    'en': 'Transliteration: type "agape", "shalom", "logos". Exact '
+        'matches open the lexicon; partial matches surface as a '
+        '"Did you mean…" card alongside text results.',
   },
   'searchHelpFooter': {
     'zh-Hans': '搜索范围跟随当前阅读的圣经版本，如果结果不符合预期，可在「设置」中切换版本。',
     'zh-Hant': '搜尋範圍跟隨當前閱讀的聖經版本，如果結果不符合預期，可在「設定」中切換版本。',
-    'en':
-        'Search scans the Bible version you currently have loaded — '
-            'change versions in Settings if matches feel off.',
+    'en': 'Search scans the Bible version you currently have loaded — '
+        'change versions in Settings if matches feel off.',
   },
   // Inline tip shown in the no-recents empty state.
   'searchHintQuickList': {
     'zh-Hans': '提示：可输入字词、参考（如「约 3:16」）、Strong\'s 编号「G2316」，或直接输入希腊文 / 希伯来文。',
     'zh-Hant': '提示：可輸入字詞、參考（如「約 3:16」）、Strong\'s 編號「G2316」，或直接輸入希臘文 / 希伯來文。',
-    'en':
-        'Tip: try a word, a reference like "John 3:16", a Strong\'s '
-            'number "G2316", or Greek/Hebrew text directly.',
+    'en': 'Tip: try a word, a reference like "John 3:16", a Strong\'s '
+        'number "G2316", or Greek/Hebrew text directly.',
   },
   // "Did you mean lexicon entry…" card surfaced when a Latin-token
   // query weakly matches a Greek/Hebrew lemma (replaces the previous
@@ -3775,9 +3466,8 @@ const uiStrings = {
   'searchModeTextTip': {
     'zh-Hans': '在当前圣经中查找包含这个字词或短句的经节（按 Enter 也可触发）。',
     'zh-Hant': '在當前聖經中查找包含這個字詞或短句的經節（按 Enter 也可觸發）。',
-    'en':
-        'Find verses containing this word or phrase. Pressing Enter '
-            'also triggers this mode.',
+    'en': 'Find verses containing this word or phrase. Pressing Enter '
+        'also triggers this mode.',
   },
   'searchModeWordStudy': {
     'zh-Hans': '原文 / Strong\'s',
@@ -3789,34 +3479,18 @@ const uiStrings = {
         '或音译形式（agape）。直接跳转到对应词典条目与经文索引。',
     'zh-Hant': 'Strong\'s 編號（G2316 / H7200）、希臘文 / 希伯來文原文，'
         '或音譯形式（agape）。直接跳轉到對應詞典條目與經文索引。',
-    'en':
-        'Strong\'s numbers (G2316 / H7200), Greek / Hebrew text, or '
-            'transliteration (agape). Jumps to the lexicon entry plus '
-            'concordance.',
-  },
-  'searchModeAi': {
-    'zh-Hans': 'AI',
-    'zh-Hant': 'AI',
-    'en': 'AI',
-  },
-  'searchModeAiTip': {
-    'zh-Hans': '通过AI 进行模糊或主题搜索（如「最爱的章节」）。结果仅供参考，'
-        '使用前请自行核对。',
-    'zh-Hant': '透過AI 進行模糊或主題搜尋（如「最愛的章節」）。結果僅供參考，'
-        '使用前請自行核對。',
-    'en':
-        'Fuzzy / thematic search via AI (e.g. "the love '
-            'chapter"). Results are reference-only — verify before use.',
+    'en': 'Strong\'s numbers (G2316 / H7200), Greek / Hebrew text, or '
+        'transliteration (agape). Jumps to the lexicon entry plus '
+        'concordance.',
   },
   'searchWordStudyNoMatch': {
     'zh-Hans': '没有匹配的词典条目。可以尝试 Strong\'s 编号（G2316 / H7200）、'
         '希腊文 / 希伯来文原文，或精确的音译形式（如「agape」）。',
     'zh-Hant': '沒有匹配的詞典條目。可以嘗試 Strong\'s 編號（G2316 / H7200）、'
         '希臘文 / 希伯來文原文，或精確的音譯形式（如「agape」）。',
-    'en':
-        'No lexicon entry matched. Try a Strong\'s number '
-            '(G2316 / H7200), a Greek / Hebrew word, or an exact '
-            'transliteration ("agape").',
+    'en': 'No lexicon entry matched. Try a Strong\'s number '
+        '(G2316 / H7200), a Greek / Hebrew word, or an exact '
+        'transliteration ("agape").',
   },
   // 2026-05-07 (post-fix): scope banner shown in the no-results
   // state. Helps the user spot when a stuck filter is the reason for
@@ -3991,8 +3665,7 @@ const uiStrings = {
   'evidenceScopeBookFallback': {
     'zh-Hans': '{book} 第 {chapter} 章暂无相关条目 — 显示 {book} 全部 {n} 条',
     'zh-Hant': '{book} 第 {chapter} 章暫無相關條目 — 顯示 {book} 全部 {n} 條',
-    'en':
-        'No entries for {book} {chapter} — showing all {n} from {book}',
+    'en': 'No entries for {book} {chapter} — showing all {n} from {book}',
   },
   'evidenceWidenBook': {
     'zh-Hans': '查看 {book} 全部',
@@ -4041,25 +3714,10 @@ const uiStrings = {
     'zh-Hant': '間接證據',
     'en': 'Circumstantial',
   },
-  // SeekSparks AI search (Round 39, Stage 4 — Cloud Functions Gemini
-  // proxy). Used by the Bible Evidence search button. Rebranded
-  // 2026-05-07 from "Ask AI" so the SeekSparks brand is in front of the
-  // user instead of a generic "AI" label, with reference-only caveat
-  // surfaced via the disclaimer strings.
-  'askAi': {
-    'zh-Hans': '问雅伟之剑',
-    'zh-Hant': '問雅偉之劍',
-    'en': 'Ask Yahweh\'s Sword',
-  },
   'ask': {
     'zh-Hans': '提问',
     'zh-Hant': '提問',
     'en': 'Ask',
-  },
-  'askAiHint': {
-    'zh-Hans': '例如：出埃及有何证据？',
-    'zh-Hant': '例如：出埃及有何證據？',
-    'en': 'e.g. What evidence supports the Exodus?',
   },
   'citations': {
     'zh-Hans': '引用条目',
@@ -4178,14 +3836,13 @@ const uiStrings = {
     'zh-Hant': '本應用是非商業的個人 / 教會研經工具。應用代碼以 MIT 授權開源，'
         '但聖經文本、字典資料、講道文本、地圖等資源仍由其各自版權方所有，僅在'
         '研習用途下使用。本應用與下方列出的任何出版社、機構、字體廠商均無附屬關係。',
-    'en':
-        'This is a non-commercial personal / community Bible-study tool. '
-            'The application code is open source under MIT, but bundled '
-            'scripture texts, lexicon data, sermons, maps and other '
-            'resources remain the copyright of their respective rights '
-            'holders and are reproduced under fair-use / personal-study '
-            'exemptions. This app is not affiliated with or endorsed by '
-            'any publisher, ministry, or font foundry listed below.',
+    'en': 'This is a non-commercial personal / community Bible-study tool. '
+        'The application code is open source under MIT, but bundled '
+        'scripture texts, lexicon data, sermons, maps and other '
+        'resources remain the copyright of their respective rights '
+        'holders and are reproduced under fair-use / personal-study '
+        'exemptions. This app is not affiliated with or endorsed by '
+        'any publisher, ministry, or font foundry listed below.',
   },
   'aboutContactTitle': {
     'zh-Hans': '联系方式 · 版权下架请求',
@@ -4197,11 +3854,10 @@ const uiStrings = {
         '一封邮件即可——我会及时回复并配合处理。',
     'zh-Hant': '歡迎反饋、提問，或如果您是版權方對本應用中的任何內容有疑義，請通過下方郵箱聯絡我。'
         '一封郵件即可——我會及時回覆並配合處理。',
-    'en':
-        'Feedback and questions are welcome. If you are a rights '
-            'holder and have any concern about content included in this '
-            'app, a single email is sufficient — I will respond and act '
-            'promptly.',
+    'en': 'Feedback and questions are welcome. If you are a rights '
+        'holder and have any concern about content included in this '
+        'app, a single email is sufficient — I will respond and act '
+        'promptly.',
   },
   'aboutContactSla': {
     'zh-Hans': '一般 24 小时内回复 · 如确认下架，72 小时内移除。',
@@ -4220,9 +3876,9 @@ const uiStrings = {
     'en': "Strong's lexicons & original-language data",
   },
   'aboutSectionOther': {
-    'zh-Hans': '地图 · 讲道 · 字体 · AI · 其他',
-    'zh-Hant': '地圖 · 講道 · 字體 · AI · 其他',
-    'en': 'Maps · Sermons · Fonts · AI · Other',
+    'zh-Hans': '地图 · 讲道 · 字体 · 其他',
+    'zh-Hant': '地圖 · 講道 · 字體 · 其他',
+    'en': 'Maps · Sermons · Fonts · Other',
   },
   'aboutSectionAppLicense': {
     'zh-Hans': '应用代码许可证',
@@ -4252,21 +3908,29 @@ const uiStrings = {
   },
   'wordListTitle': {'zh-Hans': '词汇表', 'zh-Hant': '詞彙表', 'en': 'Word List'},
   'wordListScopeChapter': {
-    'zh-Hans': '本章', 'zh-Hant': '本章', 'en': 'This chapter',
+    'zh-Hans': '本章',
+    'zh-Hant': '本章',
+    'en': 'This chapter',
   },
   'wordListScopeBook': {
-    'zh-Hans': '整卷', 'zh-Hant': '整卷', 'en': 'Whole book',
+    'zh-Hans': '整卷',
+    'zh-Hant': '整卷',
+    'en': 'Whole book',
   },
   'wordListDistinct': {'zh-Hans': '个词', 'zh-Hant': '個詞', 'en': 'distinct'},
   'wordListTotal': {'zh-Hans': '字', 'zh-Hant': '字', 'en': 'words'},
   'wordListHapax': {
-    'zh-Hans': '只出现一次', 'zh-Hant': '只出現一次', 'en': 'used once',
+    'zh-Hans': '只出现一次',
+    'zh-Hant': '只出現一次',
+    'en': 'used once',
   },
   'wordListSortFreq': {'zh-Hans': '按词频', 'zh-Hant': '按詞頻', 'en': 'Frequency'},
   'wordListSortRare': {'zh-Hans': '最罕见', 'zh-Hant': '最罕見', 'en': 'Rarest'},
   'wordListSortNum': {'zh-Hans': '按编号', 'zh-Hant': '按編號', 'en': 'Number'},
   'wordListSortAlpha': {
-    'zh-Hans': '按字母', 'zh-Hant': '按字母', 'en': 'Alphabetical',
+    'zh-Hans': '按字母',
+    'zh-Hant': '按字母',
+    'en': 'Alphabetical',
   },
   'wordListNone': {
     'zh-Hans': '此段没有原文数据。',
@@ -4278,11 +3942,15 @@ const uiStrings = {
   // the list. The filter chips name their bucket and carry its count, so
   // no number on this screen is ambiguous about what it counted (#308).
   'wlCmpScope': {
-    'zh-Hans': '比较两卷', 'zh-Hant': '比較兩卷', 'en': 'Compare two books',
+    'zh-Hans': '比较两卷',
+    'zh-Hant': '比較兩卷',
+    'en': 'Compare two books',
   },
   'wlCmpWith': {'zh-Hans': '与', 'zh-Hant': '與', 'en': 'with'},
   'wlCmpChoose': {
-    'zh-Hans': '选择一卷书', 'zh-Hant': '選擇一卷書', 'en': 'Choose a book',
+    'zh-Hans': '选择一卷书',
+    'zh-Hant': '選擇一卷書',
+    'en': 'Choose a book',
   },
   'wlCmpIntro': {
     'zh-Hans': '选两卷书，看它们共用哪些原文词、哪些只属于其中一卷，'
@@ -4297,7 +3965,9 @@ const uiStrings = {
   'wlCmpBoth': {'zh-Hans': '两卷都有', 'zh-Hant': '兩卷都有', 'en': 'In both'},
   'wlCmpOnly': {'zh-Hans': '只在', 'zh-Hant': '只在', 'en': 'Only in'},
   'wlCmpNowhere': {
-    'zh-Hans': '别处没有', 'zh-Hant': '別處沒有', 'en': 'Nowhere else',
+    'zh-Hans': '别处没有',
+    'zh-Hant': '別處沒有',
+    'en': 'Nowhere else',
   },
   'wlCmpNowhereHint': {
     'zh-Hans': '这些词在全本圣经中的每一次出现，都在这两卷之内。',
@@ -4328,14 +3998,18 @@ const uiStrings = {
   },
   'wlCmpBible': {'zh-Hans': '圣经', 'zh-Hant': '聖經', 'en': 'Bible'},
   'wlCmpSortRare': {
-    'zh-Hans': '圣经中最罕见', 'zh-Hant': '聖經中最罕見',
+    'zh-Hans': '圣经中最罕见',
+    'zh-Hant': '聖經中最罕見',
     'en': 'Rarest in the Bible',
   },
   'wlCmpSortCombined': {
-    'zh-Hans': '两卷合计', 'zh-Hant': '兩卷合計', 'en': 'Combined count',
+    'zh-Hans': '两卷合计',
+    'zh-Hant': '兩卷合計',
+    'en': 'Combined count',
   },
   'wlCmpEmptyBucket': {
-    'zh-Hans': '这一组没有词。', 'zh-Hant': '這一組沒有詞。',
+    'zh-Hans': '这一组没有词。',
+    'zh-Hant': '這一組沒有詞。',
     'en': 'No words in this group.',
   },
   'searchStatsTop': {'zh-Hans': '最多出现于', 'zh-Hant': '最多出現於', 'en': 'Most in'},
@@ -4538,8 +4212,7 @@ const uiStrings = {
   'aboutLicenseNasb': {
     'zh-Hans': '© Lockman 基金会 · 在出版方引用规定下使用。',
     'zh-Hant': '© Lockman 基金會 · 在出版方引用規定下使用。',
-    'en':
-        '© The Lockman Foundation · used under quotation provisions.',
+    'en': '© The Lockman Foundation · used under quotation provisions.',
   },
   'aboutVerCuvsYhwh': {
     'zh-Hans': '雅简+ / 雅繁+ 和合本雅伟版（简 / 繁）',
@@ -4549,13 +4222,13 @@ const uiStrings = {
   'aboutLicenseCuvsYhwh': {
     'zh-Hans': '© 雅伟的话事工 · 经授权使用。',
     'zh-Hant': '© 雅偉的話事工 · 經授權使用。',
-    'en':
-        '© Yahweh De Hua Ministry · used with permission.',
+    'en': '© Yahweh De Hua Ministry · used with permission.',
   },
   'aboutVerLjk': {
     'zh-Hans': '梁简 / 梁繁 梁家铿译本（2025年 · 第二版，简 / 繁）',
     'zh-Hant': '梁简 / 梁繁 梁家鏗譯本（2025年 · 第二版，簡 / 繁）',
-    'en': '梁简 / 梁繁 — Liang Jiakeng translation (2025, 2nd ed., simplified / traditional)',
+    'en':
+        '梁简 / 梁繁 — Liang Jiakeng translation (2025, 2nd ed., simplified / traditional)',
   },
   'aboutLicenseLjk': {
     'zh-Hans': '© 圣经释经事工 · 经授权使用。',
@@ -4569,12 +4242,11 @@ const uiStrings = {
     'zh-Hant': 'NIV（新國際譯本）此前曾內置，但已於 2026 年 5 月移除——'
         'Biblica / Zondervan 對全文保有商業版權，未經出版方授權不得再分發完整文本。'
         '需要 NIV 的讀者請使用 Bible Gateway / YouVersion 等官方渠道。',
-    'en':
-        'NIV (New International Version) was previously bundled but '
-            'removed in 2026-05. Biblica / Zondervan retain commercial '
-            'copyright on the full text and we cannot redistribute the '
-            'JSON bundle without an explicit publisher licence. Readers '
-            'seeking NIV should use Bible Gateway / YouVersion.',
+    'en': 'NIV (New International Version) was previously bundled but '
+        'removed in 2026-05. Biblica / Zondervan retain commercial '
+        'copyright on the full text and we cannot redistribute the '
+        'JSON bundle without an explicit publisher licence. Readers '
+        'seeking NIV should use Bible Gateway / YouVersion.',
   },
   // Lexicons.
   'aboutLexStrongs': {
@@ -5048,10 +4720,9 @@ const uiStrings = {
         '共 29,319 条经文索引。',
     'zh-Hant': '公有領域（R.A. Torrey, 1834）· 與 OpenBible.info 社群投票資料合併（CC-BY）。'
         '共 29,319 條經文索引。',
-    'en':
-        'Public domain (R.A. Torrey, 1834) · merged with '
-            'OpenBible.info community votes (CC-BY). 29,319 source '
-            'verses indexed.',
+    'en': 'Public domain (R.A. Torrey, 1834) · merged with '
+        'OpenBible.info community votes (CC-BY). 29,319 source '
+        'verses indexed.',
   },
   // Other resources.
   // `aboutMaps` / `aboutLicenseMaps` were removed by #300. The second
@@ -5106,18 +4777,8 @@ const uiStrings = {
   'aboutFontsScripts': {
     'zh-Hans': '内置字体：Noto Sans Hebrew / Noto Sans / Noto Sans Symbols 2（子集）',
     'zh-Hant': '內置字體：Noto Sans Hebrew / Noto Sans / Noto Sans Symbols 2（子集）',
-    'en': 'Bundled fonts: Noto Sans Hebrew / Noto Sans / Noto Sans Symbols 2 (subsets)',
-  },
-  'aboutAi': {
-    'zh-Hans': 'AI 经文释义（仅供参考）',
-    'zh-Hant': 'AI 經文釋義（僅供參考）',
-    'en': 'AI explanations (reference only)',
-  },
-  'aboutLicenseAi': {
-    'zh-Hans': 'Google Gemini API · 输出可在 API 条款下重新分发。',
-    'zh-Hant': 'Google Gemini API · 輸出可在 API 條款下重新分發。',
     'en':
-        'Google Gemini API · output redistribution permitted under API terms.',
+        'Bundled fonts: Noto Sans Hebrew / Noto Sans / Noto Sans Symbols 2 (subsets)',
   },
   'aboutBookIntros': {
     'zh-Hans': '书卷简介（66 卷）',
@@ -5148,8 +4809,7 @@ const uiStrings = {
   'aboutLicenseOriginal': {
     'zh-Hans': '本应用原创内容 · MIT（与应用代码同许可）。',
     'zh-Hant': '本應用原創內容 · MIT（與應用程式碼同授權）。',
-    'en':
-        'Original to this app · MIT (same as application code).',
+    'en': 'Original to this app · MIT (same as application code).',
   },
   'aboutAppLicenseHeading': {
     'zh-Hans': '应用代码：MIT 许可证',
@@ -5161,11 +4821,10 @@ const uiStrings = {
         '内置的第三方资源不在此 MIT 许可范围内——见上方各表格。',
     'zh-Hant': '本倉庫內的 Dart / Flutter 原始碼（lib/ 目錄及建構設定）以 MIT 授權開源。'
         '內置的第三方資源不在此 MIT 授權範圍內——見上方各表格。',
-    'en':
-        'The Dart / Flutter source code in this repository (under '
-            '`lib/` and the build configuration) is open source under '
-            'the MIT licence. Bundled third-party resources are NOT '
-            'covered by MIT — see the tables above for each item.',
+    'en': 'The Dart / Flutter source code in this repository (under '
+        '`lib/` and the build configuration) is open source under '
+        'the MIT licence. Bundled third-party resources are NOT '
+        'covered by MIT — see the tables above for each item.',
   },
   'aboutOpenRepo': {
     'zh-Hans': '在 GitHub 查看源代码',
@@ -5272,15 +4931,13 @@ const uiStrings = {
   'localOnlyDataNotice': {
     'zh-Hans': '高亮、笔记、书签都只保存在这台设备上。要换设备，请用下方的「导出我的数据」。',
     'zh-Hant': '螢光標記、筆記、書籤都只儲存在這台裝置上。要換裝置，請用下方的「匯出我的資料」。',
-    'en':
-        'Highlights, notes and bookmarks stay on this device. '
-            'Use "Export my data" below to move them to another one.',
+    'en': 'Highlights, notes and bookmarks stay on this device. '
+        'Use "Export my data" below to move them to another one.',
   },
   'welcomeLocalOnlyNotice': {
     'zh-Hans': '账号仅保存在本设备，不需要密码、不上传服务器。',
     'zh-Hant': '帳號僅保存在本裝置，不需要密碼、不上傳伺服器。',
-    'en':
-        'Profiles are stored only on this device. No password, no server.',
+    'en': 'Profiles are stored only on this device. No password, no server.',
   },
   'welcomeNameHint': {
     'zh-Hans': '您的姓名',
@@ -5468,9 +5125,8 @@ const uiStrings = {
   'readingPaperThemeSubtitle': {
     'zh-Hans': '阅经页面改用暖色纸质背景与更柔和的配色，长时间阅读更舒适。',
     'zh-Hant': '閱經頁面改用暖色紙質背景與更柔和的配色，長時間閱讀更舒適。',
-    'en':
-        'Switch the reading pane to a warm, paper-like background for more '
-            'comfortable long reading sessions.',
+    'en': 'Switch the reading pane to a warm, paper-like background for more '
+        'comfortable long reading sessions.',
   },
   'boldVerseText': {
     'zh-Hans': '加粗经文',
@@ -5490,7 +5146,8 @@ const uiStrings = {
   'showStrongsBadgeSubtitle': {
     'zh-Hans': '在释经面板每个希伯来/希腊词卡下方显示 G####/H#### 徽标。',
     'zh-Hant': '在釋經面板每個希伯來/希臘詞卡下方顯示 G####/H#### 徽標。',
-    'en': "Display the G#### / H#### badge under each Hebrew/Greek word in the exegesis sheet.",
+    'en':
+        "Display the G#### / H#### badge under each Hebrew/Greek word in the exegesis sheet.",
   },
   // ── bwh29, 2026-09-05 ─────────────────────────────────────────────
   // The Masoretic pair was already displayed and counted; what was
@@ -5888,7 +5545,8 @@ const uiStrings = {
   'autoExpandFirstRefSubtitle': {
     'zh-Hans': '在释经面板自动打开第一处经文分组,免去一次点击。',
     'zh-Hant': '在釋經面板自動打開第一處經文分組,免去一次點擊。',
-    'en': "Automatically open the first book group of concordance refs in the exegesis sheet.",
+    'en':
+        "Automatically open the first book group of concordance refs in the exegesis sheet.",
   },
   'zoomIn': {'zh-Hans': '放大', 'zh-Hant': '放大', 'en': 'Zoom in'},
   'zoomOut': {'zh-Hans': '缩小', 'zh-Hant': '縮小', 'en': 'Zoom out'},
@@ -6105,10 +5763,9 @@ const uiStrings = {
         '如果服务暂时不可用，会自动打开您的邮件应用作为备用。',
     'zh-Hant': '點擊「發送」即可直接寄到開發者的信箱。'
         '如果服務暫時不可用，會自動開啟您的郵件應用作為備用。',
-    'en':
-        'Tap "Send" and your feedback goes straight to the developer\'s '
-            'inbox. If the service is temporarily unavailable, your mail '
-            'app opens as a fallback.',
+    'en': 'Tap "Send" and your feedback goes straight to the developer\'s '
+        'inbox. If the service is temporarily unavailable, your mail '
+        'app opens as a fallback.',
   },
   'feedbackCategoryLabel': {
     'zh-Hans': '反馈类别',
@@ -6194,9 +5851,8 @@ const uiStrings = {
         '请粘贴到您的邮件中发到 support@yahwehword.com。',
     'zh-Hant': '郵件應用不可用，回饋已複製到剪貼簿。'
         '請貼到您的郵件中發到 support@yahwehword.com。',
-    'en':
-        'Mail app unavailable — feedback copied to clipboard. '
-            'Paste it into your email to support@yahwehword.com.',
+    'en': 'Mail app unavailable — feedback copied to clipboard. '
+        'Paste it into your email to support@yahwehword.com.',
   },
   'feedbackPrivacyNote': {
     'zh-Hans': '为方便排查问题，发送时会一并附上：界面语言、圣经版本、'
@@ -6207,12 +5863,11 @@ const uiStrings = {
         '當前閱讀位置、螢幕尺寸與主題、時區與提交時間、'
         '瀏覽器與系統資訊（IP 由伺服器自動記錄）。'
         '只用於回覆您和定位問題，不會用於其他用途。',
-    'en':
-        'To help debug your report, the submission also includes: '
-            'app locale, Bible version, last position, screen size + '
-            'theme, timezone + timestamp, browser + OS (IP is logged '
-            'server-side). Used only to reply and reproduce — nothing '
-            'else.',
+    'en': 'To help debug your report, the submission also includes: '
+        'app locale, Bible version, last position, screen size + '
+        'theme, timezone + timestamp, browser + OS (IP is logged '
+        'server-side). Used only to reply and reproduce — nothing '
+        'else.',
   },
   'interfaceLanguage': {
     'zh-Hans': '界面语言',
@@ -6292,7 +5947,8 @@ const uiStrings = {
   'copyCenterMarkHitsHelp': {
     'zh-Hans': '粘贴到 Word／Google 文档时高亮；纯文本不带标记',
     'zh-Hant': '貼上 Word／Google 文件時醒目提示；純文字不帶標記',
-    'en': 'Highlighted when pasted into Word or Docs; plain text carries no mark',
+    'en':
+        'Highlighted when pasted into Word or Docs; plain text carries no mark',
   },
   'sendFeedback': {
     'zh-Hans': '发送反馈',
@@ -6442,7 +6098,8 @@ const uiStrings = {
   'loadErrorBody': {
     'zh-Hans': '无法加载圣经经文，请检查网络或重试。',
     'zh-Hant': '無法載入聖經經文，請檢查網絡或重試。',
-    'en': 'Could not load Bible verses. Please check your connection and retry.',
+    'en':
+        'Could not load Bible verses. Please check your connection and retry.',
   },
   // 2026-05-10 (v1.2.10): in-flight progress strings shown on the
   // splash while FetchVerses.execute() is retrying. Keeps users
@@ -6620,207 +6277,6 @@ const uiStrings = {
     'zh-Hans': '按经文筛选',
     'zh-Hant': '按經文篩選',
     'en': 'Filter by passage',
-  },
-  'aiExplainHeader': {
-    'zh-Hans': 'AI 释义',
-    'zh-Hant': 'AI 釋義',
-    'en': 'AI explanation',
-  },
-  'aiExplainButton': {
-    'zh-Hans': '让 AI 解释此词在这节经文中的含义（仅供参考）',
-    'zh-Hant': '讓 AI 解釋此詞在這節經文中的含義（僅供參考）',
-    'en':
-        'Let AI explain this word in this verse (reference only)',
-  },
-  // v1.3.x: reading-pane selection-bar AI verse explanation.
-  'aiExplainVerse': {
-    'zh-Hans': 'AI 解释经文',
-    'zh-Hant': 'AI 解釋經文',
-    'en': 'AI explain',
-  },
-  'aiExplainVerseDisclaimer': {
-    'zh-Hans': 'AI 生成的解释，仅供参考；请以圣经原文为准。',
-    'zh-Hant': 'AI 生成的解釋，僅供參考；請以聖經原文為準。',
-    'en':
-        'AI-generated; for reference only — let Scripture itself be the authority.',
-  },
-  'aiExplainError': {
-    'zh-Hans': 'AI 解释暂时不可用，请稍后再试。',
-    'zh-Hant': 'AI 解釋暫時不可用，請稍後再試。',
-    'en': 'AI explanation is not available right now.',
-  },
-  // v1.3.68: optional "ask a question about this passage" box in the
-  // reading-pane AI panel.
-  'aiAskQuestionHint': {
-    'zh-Hans': '想问关于这段经文的问题？（可选）',
-    'zh-Hant': '想問關於這段經文的問題？（可選）',
-    'en': 'Ask a question about this passage… (optional)',
-  },
-  'aiAskSend': {
-    'zh-Hans': '提问',
-    'zh-Hant': '提問',
-    'en': 'Ask',
-  },
-  'aiAskYourQuestion': {
-    'zh-Hans': '你的问题',
-    'zh-Hant': '你的問題',
-    'en': 'Your question',
-  },
-  'aiAskAnswering': {
-    'zh-Hans': '正在回答你的问题…',
-    'zh-Hant': '正在回答你的問題…',
-    'en': 'Answering your question…',
-  },
-  'aiAskClear': {
-    'zh-Hans': '返回经文解释',
-    'zh-Hant': '返回經文解釋',
-    'en': 'Back to explanation',
-  },
-  'aiExplainScriptureLabel': {
-    'zh-Hans': '经文',
-    'zh-Hant': '經文',
-    'en': 'Scripture',
-  },
-  // v1.3.71: panel no longer auto-generates on open — the user confirms
-  // first (empty question ⇒ explanation, with question ⇒ answer).
-  'aiExplainIdleHint': {
-    'zh-Hans': '可以直接生成这段经文的解释，或先输入你的问题再确认。',
-    'zh-Hant': '可以直接生成這段經文的解釋，或先輸入你的問題再確認。',
-    'en':
-        'Generate an explanation of this passage, or type a question first and confirm.',
-  },
-  'aiExplainGenerate': {
-    'zh-Hans': '解释这段经文',
-    'zh-Hant': '解釋這段經文',
-    'en': 'Explain this passage',
-  },
-  'aiExplainGenerating': {
-    'zh-Hans': '正在生成解释…',
-    'zh-Hant': '正在生成解釋…',
-    'en': 'Generating explanation…',
-  },
-  // v1.3.73: multi-turn study chat — follow-ups, length controls,
-  // save-to-note.
-  'aiFollowUpHint': {
-    'zh-Hans': '继续追问…',
-    'zh-Hant': '繼續追問…',
-    'en': 'Ask a follow-up…',
-  },
-  'aiMoreConcise': {
-    'zh-Hans': '更简短',
-    'zh-Hant': '更簡短',
-    'en': 'More concise',
-  },
-  'aiMoreDetail': {
-    'zh-Hans': '更详细',
-    'zh-Hant': '更詳細',
-    'en': 'More detail',
-  },
-  'aiSaveToNote': {
-    'zh-Hans': '存入笔记',
-    'zh-Hant': '存入筆記',
-    'en': 'Save to note',
-  },
-  'aiNoteAttribution': {
-    'zh-Hans': '——AI 生成，仅供参考',
-    'zh-Hant': '——AI 生成，僅供參考',
-    'en': '— generated by AI, for reference',
-  },
-  'aiExplainAsking': {
-    'zh-Hans': 'AI 正在生成解释…',
-    'zh-Hant': 'AI 正在生成解釋…',
-    'en': 'AI is generating an explanation…',
-  },
-  'aiExplainRegenerate': {
-    'zh-Hans': '重新生成',
-    'zh-Hant': '重新生成',
-    'en': 'Regenerate',
-  },
-  'aiExplainDisclaimer': {
-    'zh-Hans': 'AI 生成内容仅供参考，如用于研经或教导请核对原始资料。',
-    'zh-Hant': 'AI 生成內容僅供參考，如用於研經或教導請核對原始資料。',
-    'en':
-        'AI-generated content for reference only — verify with '
-            'primary sources before using for study or teaching.',
-  },
-  'aiExplainTryAgain': {
-    'zh-Hans': '重试',
-    'zh-Hant': '重試',
-    'en': 'Try again',
-  },
-  'aiExplainCopy': {
-    'zh-Hans': '复制',
-    'zh-Hant': '複製',
-    'en': 'Copy',
-  },
-  'aiLengthLabel': {
-    'zh-Hans': '长度',
-    'zh-Hant': '長度',
-    'en': 'Length',
-  },
-  'aiLengthConcise': {
-    'zh-Hans': '更简短',
-    'zh-Hant': '更簡短',
-    'en': 'More concise',
-  },
-  'aiLengthLonger': {
-    'zh-Hans': '更详细',
-    'zh-Hant': '更詳細',
-    'en': 'More detail',
-  },
-  'aiScopeLabel': {
-    'zh-Hans': '范围',
-    'zh-Hant': '範圍',
-    'en': 'Scope',
-  },
-  'aiScopeVerse': {
-    'zh-Hans': '本节经文',
-    'zh-Hant': '本節經文',
-    'en': 'In this verse',
-  },
-  'aiScopeChapter': {
-    'zh-Hans': '本章',
-    'zh-Hant': '本章',
-    'en': 'In this chapter',
-  },
-  'aiScopeBook': {
-    'zh-Hans': '本书卷',
-    'zh-Hant': '本書卷',
-    'en': 'In this book',
-  },
-  'aiScopeOtherChapters': {
-    'zh-Hans': '其他章节',
-    'zh-Hant': '其他章節',
-    'en': 'Other chapters',
-  },
-  'aiScopeWholeBible': {
-    'zh-Hans': '全本圣经',
-    'zh-Hant': '全本聖經',
-    'en': 'Whole Bible',
-  },
-  'aiScopeCrossTestament': {
-    'zh-Hans': '跨新旧约',
-    'zh-Hant': '跨新舊約',
-    'en': 'Across testaments',
-  },
-  'aiScopeCrossTestamentNtToOt': {
-    'zh-Hans': '旧约背景',
-    'zh-Hant': '舊約背景',
-    'en': 'OT background',
-  },
-  'aiScopeCrossTestamentOtToNt': {
-    'zh-Hans': '新约对应',
-    'zh-Hant': '新約對應',
-    'en': 'NT echoes',
-  },
-  // 2026-05-07: BDAG-level deep exegesis chip — 5-section structured
-  // analysis (lexical core / verse usage / cultural context /
-  // canonical pattern / theological weight). Free-tier substitute
-  // for what Logos+BDAG charges $200+ for.
-  'aiScopeDeepExegesis': {
-    'zh-Hans': '深度释经（BDAG 级 · 雅伟之剑智能分析，仅供参考）',
-    'zh-Hant': '深度釋經（BDAG 級 · 雅偉之劍智慧分析，僅供參考）',
-    'en': 'Deep exegesis (BDAG-level · AI, reference only)',
   },
   'familyTree': {
     'zh-Hans': '圣经家谱',
@@ -7127,8 +6583,10 @@ const uiStrings = {
     'en': 'Chronology',
   },
   'kingsSystemsDiffer': {
-    'zh-Hans': '各年代系统在以尼散月或提斯利月为岁首、登基年的算法、共同摄政以及与亚述、巴比伦的同步年代上有分歧；采用奥尔布赖特或加利尔系统的注释书会给出不同的年份。',
-    'zh-Hant': '各年代系統在以尼散月或提斯利月為歲首、登基年的算法、共同攝政以及與亞述、巴比倫的同步年代上有分歧；採用奧爾布賴特或加利爾系統的註釋書會給出不同的年份。',
+    'zh-Hans':
+        '各年代系统在以尼散月或提斯利月为岁首、登基年的算法、共同摄政以及与亚述、巴比伦的同步年代上有分歧；采用奥尔布赖特或加利尔系统的注释书会给出不同的年份。',
+    'zh-Hant':
+        '各年代系統在以尼散月或提斯利月為歲首、登基年的算法、共同攝政以及與亞述、巴比倫的同步年代上有分歧；採用奧爾布賴特或加利爾系統的註釋書會給出不同的年份。',
     'en': 'Chronologies differ over the Nisan or Tishri new year, '
         'accession-year reckoning, co-regencies and the Assyrian and '
         'Babylonian synchronisms; a commentary following Albright or Galil '
@@ -7229,8 +6687,10 @@ const uiStrings = {
     'en': 'Rival claimant',
   },
   'kingsRivalClaimantWhy': {
-    'zh-Hans': '《列王纪上》16:21-22 没有给他登基的套语，也没有说他作王；他的年份出于本年代系统的推断。他不在以色列的十九位王之列，但他在位时确与另一国的王同时，故仍列出。',
-    'zh-Hant': '《列王紀上》16:21-22 沒有給他登基的套語，也沒有說他作王；他的年份出於本年代系統的推斷。他不在以色列的十九位王之列，但他在位時確與另一國的王同時，故仍列出。',
+    'zh-Hans':
+        '《列王纪上》16:21-22 没有给他登基的套语，也没有说他作王；他的年份出于本年代系统的推断。他不在以色列的十九位王之列，但他在位时确与另一国的王同时，故仍列出。',
+    'zh-Hant':
+        '《列王紀上》16:21-22 沒有給他登基的套語，也沒有說他作王；他的年份出於本年代系統的推斷。他不在以色列的十九位王之列，但他在位時確與另一國的王同時，故仍列出。',
     'en': '1 Kings 16:21-22 gives him no regnal formula and never says he '
         'reigned; his dates are an inference of this chronology. He is not '
         'among the nineteen kings of Israel, but his years do fall inside '
@@ -7240,8 +6700,10 @@ const uiStrings = {
   // contemporaries is a function of the dates, and the dates are one
   // scholar's reconstruction.
   'kingsTallyBasis': {
-    'zh-Hans': '同期君王的数目取决于所用的年代系统：此处按锡尔的年份计算重叠，奥尔布赖特、加利尔或基钦的年份会移动这些界线，数目也可能随之不同。',
-    'zh-Hant': '同期君王的數目取決於所用的年代系統：此處按錫爾的年份計算重疊，奧爾布賴特、加利爾或基欽的年份會移動這些界線，數目也可能隨之不同。',
+    'zh-Hans':
+        '同期君王的数目取决于所用的年代系统：此处按锡尔的年份计算重叠，奥尔布赖特、加利尔或基钦的年份会移动这些界线，数目也可能随之不同。',
+    'zh-Hant':
+        '同期君王的數目取決於所用的年代系統：此處按錫爾的年份計算重疊，奧爾布賴特、加利爾或基欽的年份會移動這些界線，數目也可能隨之不同。',
     'en': 'How many contemporaries a reign has depends on the chronology: '
         'the overlaps here are counted on Thiele\'s years, and Albright, '
         'Galil or Kitchen would move the boundaries and can change the '
@@ -7516,12 +6978,14 @@ const uiStrings = {
     'zh-Hant': '亞伯拉罕、以撒、雅各與十二支派 · 約公元前 2200 – 1700',
   },
   'familyTreeEraSubMosaic': {
-    'en': 'Aaron the High Priest, Moses the Lawgiver & Miriam · ~BC 1500 – 1400',
+    'en':
+        'Aaron the High Priest, Moses the Lawgiver & Miriam · ~BC 1500 – 1400',
     'zh-Hans': '大祭司亚伦、律法颁布者摩西、米利暗 · 约公元前 1500 – 1400',
     'zh-Hant': '大祭司亞倫、律法頒布者摩西、米利暗 · 約公元前 1500 – 1400',
   },
   'familyTreeEraSubDavidic': {
-    'en': 'Perez through Boaz & Ruth to Jesse, father of David · ~BC 1900 – 1050',
+    'en':
+        'Perez through Boaz & Ruth to Jesse, father of David · ~BC 1900 – 1050',
     'zh-Hans': '法勒斯经波阿斯和路得到大卫之父耶西 · 约公元前 1900 – 1050',
     'zh-Hant': '法勒斯經波阿斯和路得到大衛之父耶西 · 約公元前 1900 – 1050',
   },
@@ -7694,7 +7158,7 @@ const uiStrings = {
     'zh-Hant':
         '此處各年與其下各條同用一條年數鏈上溯而得：自王上 6:1 上溯至出埃及，再經出 12:40 與創 47:9、25:26、21:5 上溯至亞伯蘭，再經創世記 11 章、創 7:6 與創世記 5 章上溯至創世——共二十五段經文自述的年數，止於公元前 4114 年。經文未記公元前年份，故所從上溯的定點仍取自錫爾（Thiele）。伊甸園、墮落、該隱殺亞伯、巴別塔四條並無經文自述的年數，仍以「約」標示。經文自身的年數（以創世為起點）另繪於「聖經年代」一圖。',
   },
-'timelineOpenChronology': {
+  'timelineOpenChronology': {
     'en': 'Open Bible Chronology',
     'zh-Hans': '打开「圣经年代」',
     'zh-Hant': '開啟「聖經年代」',
@@ -7880,7 +7344,8 @@ const uiStrings = {
   'mapsNoneForChapterFallback': {
     'zh-Hans': '本章无专属插图，以下是相关内容：',
     'zh-Hant': '本章無專屬插畫，以下是相關內容：',
-    'en': 'No illustration specifically for this chapter — here are related ones:',
+    'en':
+        'No illustration specifically for this chapter — here are related ones:',
   },
   // Per-book group label in the All-illustrations tab. {book} is the
   // localized book name; {n} is the count.
@@ -7941,7 +7406,8 @@ const uiStrings = {
   'noHighlights': {
     'zh-Hans': '还没有高亮内容。\n选中经文，点击高亮按钮即可保存。',
     'zh-Hant': '還沒有高亮內容。\n選中經文，點擊高亮按鈕即可儲存。',
-    'en': 'No highlights yet.\nSelect a verse and tap the highlight button to save.',
+    'en':
+        'No highlights yet.\nSelect a verse and tap the highlight button to save.',
   },
   'highlightsVerseCount': {
     'zh-Hans': '{count} 节',
@@ -8230,12 +7696,20 @@ const uiStrings = {
     'zh-Hant': '先看詞義',
     'en': 'Gloss first',
   },
-  'vocabDrillStart': {'zh-Hans': '开始背诵', 'zh-Hant': '開始背誦', 'en': 'Start drill'},
+  'vocabDrillStart': {
+    'zh-Hans': '开始背诵',
+    'zh-Hant': '開始背誦',
+    'en': 'Start drill'
+  },
   'vocabDrillRestart': {'zh-Hans': '再来一轮', 'zh-Hant': '再來一輪', 'en': 'Go again'},
   'vocabDrillKnew': {'zh-Hans': '记得', 'zh-Hant': '記得', 'en': 'Knew it'},
   'vocabDrillMissed': {'zh-Hans': '忘了', 'zh-Hant': '忘了', 'en': 'Missed'},
   'vocabDrillSkip': {'zh-Hans': '跳过', 'zh-Hant': '跳過', 'en': 'Skip'},
-  'vocabTapReveal': {'zh-Hans': '点一下看答案', 'zh-Hant': '點一下看答案', 'en': 'Tap to reveal'},
+  'vocabTapReveal': {
+    'zh-Hans': '点一下看答案',
+    'zh-Hant': '點一下看答案',
+    'en': 'Tap to reveal'
+  },
   'vocabMarkLearned': {'zh-Hans': '已学会', 'zh-Hant': '已學會', 'en': 'Learned'},
   'vocabFirstTime': {'zh-Hans': '一次答对', 'zh-Hant': '一次答對', 'en': 'first time'},
   'vocabAllLearned': {
@@ -8321,8 +7795,9 @@ const uiStrings = {
   'fitYsWords': {
     'zh-Hans': '若只是在手机上读经，雅伟之言正是为此而生——同一家族，手机优先。',
     'zh-Hant': '若只是在手機上讀經，雅偉之言正是為此而生——同一家族，手機優先。',
-    'en': 'For reading on a phone, Yahweh\'s Words is built for exactly that — same '
-        'family, phone-first.',
+    'en':
+        'For reading on a phone, Yahweh\'s Words is built for exactly that — same '
+            'family, phone-first.',
   },
   // The same recommendation, demoted, for the rotate case. This device
   // is not too small; it is merely held the wrong way round, so
@@ -8332,8 +7807,9 @@ const uiStrings = {
   'fitYsWordsAside': {
     'zh-Hans': '若想竖着读，同一家族的雅伟之言是为此而生的手机读经器。',
     'zh-Hant': '若想直向閱讀，同一家族的雅偉之言是為此而生的手機讀經器。',
-    'en': 'Prefer to read in portrait? Yahweh\'s Words is the phone-first reader in '
-        'the same family.',
+    'en':
+        'Prefer to read in portrait? Yahweh\'s Words is the phone-first reader in '
+            'the same family.',
   },
   'fitOpenYsWords': {
     'zh-Hans': '打开雅伟之言',
@@ -9990,21 +9466,28 @@ const uiStrings = {
         'it has not been converted.',
   },
   'familyTreeAbout': {
-    'zh-Hans': '关于本图表', 'zh-Hant': '關於本圖表', 'en': 'About this chart',
+    'zh-Hans': '关于本图表',
+    'zh-Hant': '關於本圖表',
+    'en': 'About this chart',
   },
   'familyTreeAboutYears': {
-    'zh-Hans': '年份的含义', 'zh-Hant': '年份的含義',
+    'zh-Hans': '年份的含义',
+    'zh-Hant': '年份的含義',
     'en': 'What the years mean',
   },
   'familyTreeAboutPrecision': {
-    'zh-Hans': '每个年份的确定程度', 'zh-Hant': '每個年份的確定程度',
+    'zh-Hans': '每个年份的确定程度',
+    'zh-Hant': '每個年份的確定程度',
     'en': 'How exact each year is',
   },
   'familyTreeAboutCounts': {
-    'zh-Hans': '共 277 人', 'zh-Hant': '共 277 人', 'en': '277 people',
+    'zh-Hans': '共 277 人',
+    'zh-Hant': '共 277 人',
+    'en': '277 people',
   },
   'familyTreeDatingBasis': {
-    'zh-Hans': '此年份的出处', 'zh-Hant': '此年份的出處',
+    'zh-Hans': '此年份的出处',
+    'zh-Hant': '此年份的出處',
     'en': 'Where this year comes from',
   },
 
@@ -10019,14 +9502,18 @@ const uiStrings = {
   // sentences already exist as `timelineBasis*` and the sheet reuses them,
   // so the app states each of those facts exactly one way.
   'timelineAbout': {
-    'zh-Hans': '关于本图表', 'zh-Hant': '關於本圖表', 'en': 'About this chart',
+    'zh-Hans': '关于本图表',
+    'zh-Hant': '關於本圖表',
+    'en': 'About this chart',
   },
   'timelineAboutAnchor': {
-    'zh-Hans': '各年自何处起算', 'zh-Hant': '各年自何處起算',
+    'zh-Hans': '各年自何处起算',
+    'zh-Hant': '各年自何處起算',
     'en': 'What every year is counted from',
   },
   'timelineAboutHowMany': {
-    'zh-Hans': '各类年份各有多少', 'zh-Hant': '各類年份各有多少',
+    'zh-Hans': '各类年份各有多少',
+    'zh-Hant': '各類年份各有多少',
     'en': 'How many rest on what',
   },
   'timelineAboutSeptuagint': {

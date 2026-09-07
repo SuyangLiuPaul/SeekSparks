@@ -287,16 +287,14 @@ class _PlaceMapViewState extends State<PlaceMapView> {
             for (final p in _context)
               if (p.located) (p.lat!, p.lon!),
           ];
-    final bounds = boundsOf(pts)?.padded() ??
-        const GeoBounds(29.0, 32.0, 35.0, 39.0);
+    final bounds =
+        boundsOf(pts)?.padded() ?? const GeoBounds(29.0, 32.0, 35.0, 39.0);
     return MapProjection.fit(bounds, size);
   }
 
   MapProjection _projectionFor(Size size) {
     if (_proj == null || _size != size) {
-      final next = _proj == null
-          ? _fitted(size)
-          : _proj!.copyWith(size: size);
+      final next = _proj == null ? _fitted(size) : _proj!.copyWith(size: size);
       _proj = next;
       _size = size;
       // The projection can only be built once the pane has been
@@ -321,7 +319,8 @@ class _PlaceMapViewState extends State<PlaceMapView> {
     // between zooming a map and rescaling a picture.
     final after = next.project(lat, lon);
     final moved = next.copyWith(
-      centreLat: next.centreLat + (after.dy - focal.dy) / next.pixelsPerDegreeLat,
+      centreLat:
+          next.centreLat + (after.dy - focal.dy) / next.pixelsPerDegreeLat,
       centreLon: next.centreLon - (after.dx - focal.dx) / _lonScaleOf(next),
     );
     setState(() {
@@ -421,7 +420,8 @@ class _PlaceMapViewState extends State<PlaceMapView> {
                 return Listener(
                   onPointerSignal: (s) {
                     if (s is PointerScrollEvent) {
-                      _zoomBy(s.scrollDelta.dy > 0 ? 0.88 : 1.14, s.localPosition);
+                      _zoomBy(
+                          s.scrollDelta.dy > 0 ? 0.88 : 1.14, s.localPosition);
                     }
                   },
                   child: GestureDetector(
@@ -438,16 +438,15 @@ class _PlaceMapViewState extends State<PlaceMapView> {
                       final start = _panStart;
                       if (base == null || start == null) return;
                       final zoomed = proj.copyWith(
-                        pixelsPerDegreeLat:
-                            (base * d.scale).clamp(0.6, 8000.0),
+                        pixelsPerDegreeLat: (base * d.scale).clamp(0.6, 8000.0),
                       );
                       final dx = d.localFocalPoint.dx - start.dx;
                       final dy = d.localFocalPoint.dy - start.dy;
                       setState(() {
                         _touched = true;
                         _proj = zoomed.copyWith(
-                          centreLat: _panStartLat! +
-                              dy / zoomed.pixelsPerDegreeLat,
+                          centreLat:
+                              _panStartLat! + dy / zoomed.pixelsPerDegreeLat,
                           centreLon: _panStartLon! - dx / _lonScaleOf(zoomed),
                         );
                       });
@@ -519,8 +518,7 @@ class _PlaceMapViewState extends State<PlaceMapView> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     textAlign: TextAlign.right,
-                    style:
-                        TextStyle(fontSize: t.chrome, color: c.mutedText),
+                    style: TextStyle(fontSize: t.chrome, color: c.mutedText),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -579,7 +577,7 @@ class _PlaceMapViewState extends State<PlaceMapView> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.zero,
           side: BorderSide(
-            color: shown ? c.text : c.border,
+            color: shown ? c.text : c.disabledMark,
             width: WbMetrics.hairline,
           ),
         ),
@@ -695,8 +693,7 @@ class _PlaceMapViewState extends State<PlaceMapView> {
                         .replaceAll('{n}', '$_unlocatedCount'),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style:
-                        TextStyle(fontSize: t.chrome, color: c.mutedText),
+                    style: TextStyle(fontSize: t.chrome, color: c.mutedText),
                   ),
                 ),
             ],
@@ -724,8 +721,7 @@ class _PlaceMapViewState extends State<PlaceMapView> {
                   // dozen places and the far end of that list is noise.
                   reading.measured.map((e) {
                     final name = e.place.displayName(widget.script);
-                    final days =
-                        walkingDaysFor(e.km, band: widget.travelBand);
+                    final days = walkingDaysFor(e.km, band: widget.travelBand);
                     final walk = days == null
                         ? ''
                         : ' · ${formatTravelDays(days, widget.locale)}';
@@ -966,7 +962,9 @@ class _MapPainter extends CustomPainter {
   /// True when the marker would land outside the pane. Generous by 40 px
   /// so a label anchored just past the edge still resolves.
   bool _offPane(Offset o, Size size) =>
-      o.dx < -40 || o.dy < -40 || o.dx > size.width + 40 ||
+      o.dx < -40 ||
+      o.dy < -40 ||
+      o.dx > size.width + 40 ||
       o.dy > size.height + 40;
 
   double _radiusFor(BiblePlace p, bool strong) =>
@@ -1020,8 +1018,7 @@ class _MapPainter extends CustomPainter {
       if (length < 0.01) continue;
       // Shifted off the chord only where the chord is shared. See
       // [corridorLanes].
-      final lane =
-          Offset(-span.dy / length, span.dx / length) * lanes[i];
+      final lane = Offset(-span.dy / length, span.dx / length) * lanes[i];
       final a = a0 + lane;
       final b = b0 + lane;
 
@@ -1100,8 +1097,7 @@ class _MapPainter extends CustomPainter {
       final on0 = t < from ? from : t;
       final on1 = t + pattern[0];
       if (on1 > on0) {
-        canvas.drawLine(
-            a + dir * on0, a + dir * (on1 > to ? to : on1), paint);
+        canvas.drawLine(a + dir * on0, a + dir * (on1 > to ? to : on1), paint);
       }
       t += period;
     }
@@ -1205,7 +1201,10 @@ class _MapPainter extends CustomPainter {
         // The halo takes the mark's own silhouette too. A round halo
         // under a diamond leaves four pale ears sticking out past its
         // points, which at this size reads as a second, blurrier marker.
-        paintJourneyMark(canvas, o, 4.8,
+        paintJourneyMark(
+            canvas,
+            o,
+            4.8,
             Paint()..color = colors.paneBg.withValues(alpha: 0.9 * faded),
             style.mark);
 
@@ -1235,7 +1234,8 @@ class _MapPainter extends CustomPainter {
 
         final tp = TextPainter(
           text: TextSpan(
-            text: formatOrdinals(ordinals[markerKeyFor(m.place)] ?? const <int>[]),
+            text: formatOrdinals(
+                ordinals[markerKeyFor(m.place)] ?? const <int>[]),
             style: TextStyle(
               fontSize: labelSize - 2,
               fontWeight: FontWeight.w700,
@@ -1294,9 +1294,8 @@ class _MapPainter extends CustomPainter {
             // concluded the filter had been ignored. bwh33 does the same
             // thing from the other end — its Auto-dim exists so black
             // labels can be read over an overlay.
-            color: isSel
-                ? colors.link
-                : (strong ? colors.text : colors.mutedText),
+            color:
+                isSel ? colors.link : (strong ? colors.text : colors.mutedText),
             fontFamilyFallback: kCjkFontFallback,
           ),
         ),

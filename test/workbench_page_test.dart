@@ -21,6 +21,7 @@ import 'package:seeksparks/models/verse.dart';
 import 'package:seeksparks/pages/command_search_page.dart';
 import 'package:seeksparks/pages/workbench_page.dart';
 import 'package:seeksparks/providers/main_provider.dart';
+import 'package:seeksparks/services/app_icon_service.dart';
 import 'package:seeksparks/utils/workbench_fit.dart';
 import 'package:seeksparks/widgets/bible_reading_pane.dart';
 import 'package:seeksparks/widgets/browse_window.dart';
@@ -425,7 +426,14 @@ void main() {
     final browseFinder = find.byType(BrowseWindow);
     expect(browseFinder, findsOneWidget);
     final ctx = tester.element(browseFinder);
-    expect(WbColors.of(ctx), WbColors.paper,
+    // 2026-09-07: `.tinted(...)` because the workbench now passes the
+    // reader's Primary Color through to `workbenchTheme`, and these
+    // pump a default AppSettings — which carries the default swatch.
+    // The claim under test is unchanged: paper mode reaches the
+    // workbench chrome, and it is PAPER that arrives, not the neutral
+    // light palette wearing a tint.
+    expect(WbColors.of(ctx),
+        WbColors.paper.tinted(AppIconService.kDefaultPrimaryColor),
         reason: 'paper mode should reach the workbench chrome');
   });
 
@@ -436,7 +444,8 @@ void main() {
     await pumpWorkbenchPaper(tester, paper: false);
 
     final ctx = tester.element(find.byType(BrowseWindow));
-    expect(WbColors.of(ctx), WbColors.light,
+    expect(WbColors.of(ctx),
+        WbColors.light.tinted(AppIconService.kDefaultPrimaryColor),
         reason: 'paper off should keep the neutral light palette');
   });
 }

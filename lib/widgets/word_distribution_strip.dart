@@ -79,7 +79,7 @@ class WordDistributionStrip extends StatelessWidget {
           currentBook: currentBook,
           hebrew: wb.link,
           greek: wb.strongsLexical,
-          empty: wb.border,
+          empty: wb.disabledMark,
           marker: wb.text,
         ),
       ),

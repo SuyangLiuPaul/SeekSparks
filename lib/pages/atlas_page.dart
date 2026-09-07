@@ -701,8 +701,8 @@ class _AtlasPageState extends State<AtlasPage> {
                             onOpenRoute: (id) {
                               final j = _routeById(id);
                               if (j != null) {
-                                _readRoute(j, context, locale, script,
-                                    box.maxWidth);
+                                _readRoute(
+                                    j, context, locale, script, box.maxWidth);
                               }
                             },
                           );
@@ -916,7 +916,7 @@ class _AtlasPageState extends State<AtlasPage> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.zero,
           side: BorderSide(
-            color: active ? c.text : c.border,
+            color: active ? c.text : c.disabledMark,
             width: WbMetrics.hairline,
           ),
         ),
@@ -1548,8 +1548,8 @@ class _DetailPanel extends StatelessWidget {
 
   Widget _journeyHere(BuildContext context, WbColors c, WbType t,
       String version, PlaceOnJourney e) {
-    final style = journeyStyleFor(c, e.journey.journey.style,
-        e.journey.journey.mark);
+    final style =
+        journeyStyleFor(c, e.journey.journey.style, e.journey.journey.mark);
     final lit = activeRouteIds.contains(e.id);
     return InkWell(
       onTap: () => onOpenRoute(e.id),
@@ -1598,13 +1598,13 @@ class _DetailPanel extends StatelessWidget {
   /// wilderness badges run 1-40 over 42 stations; printing "Stop 4" for
   /// Pi-hahiroth here would put a number on the page that no marker on
   /// the map agrees with.
-  Widget _journeyRowHere(
-      WbColors c, WbType t, String version, ItineraryRow r) {
+  Widget _journeyRowHere(WbColors c, WbType t, String version, ItineraryRow r) {
     final ordinal = r.placed?.ordinal;
     final how = <String>[
       if (ordinal != null)
         _s('atlasPlaceJourneyStop', 'Stop {n}').replaceAll('{n}', '$ordinal'),
-      if (r.placed == null) _s('journeyNoLocationTag', 'No location on our map'),
+      if (r.placed == null)
+        _s('journeyNoLocationTag', 'No location on our map'),
       if (r.stop.isAside) _s('journeyAsideTag', 'Named, not reached'),
       if (!r.stop.isAside && !r.stop.attested)
         _s('journeyProvisionalTag', 'Provisional'),
@@ -1637,8 +1637,7 @@ class _DetailPanel extends StatelessWidget {
               onTap: () => onJump(ref),
               hoverColor: c.hoverBg,
               child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                 child: Text(
                   '${localeAwareBookName(ref.englishBook, locale, version)}'
                   ' ${ref.chapter}:${ref.verse}',
@@ -2082,8 +2081,7 @@ class _JourneyPanel extends StatelessWidget {
                     style: TextStyle(
                       fontSize: t.chrome,
                       height: 1.4,
-                      fontWeight:
-                          b == band ? FontWeight.w700 : FontWeight.w400,
+                      fontWeight: b == band ? FontWeight.w700 : FontWeight.w400,
                       color: b == band ? c.text : c.link,
                       fontFamilyFallback: kCjkFontFallback,
                     ),

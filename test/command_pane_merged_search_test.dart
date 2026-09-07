@@ -3,8 +3,12 @@
 /// SeekSparks had two searches with different feature sets — the
 /// command line had the grammar, Strong's booleans and the `l` limit;
 /// the standalone page had AI passage search and a persisted recents
-/// list. These prove the survivor has both, because the merge is only
-/// worth doing if nothing was quietly dropped on the way.
+/// list. These prove the survivor kept what was worth keeping, because
+/// the merge is only worth doing if nothing was quietly dropped.
+///
+/// 2026-09-07: the AI half is gone — removed at the owner's request,
+/// not lost. What is left of that group is the one assertion that was
+/// never about AI: `ai` is a Canaanite city and has to stay findable.
 library;
 
 import 'package:flutter/material.dart';
@@ -16,7 +20,6 @@ import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/verse.dart';
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/providers/workbench_provider.dart';
-import 'package:seeksparks/services/ai_bible_search_service.dart';
 import 'package:seeksparks/services/concordance_service.dart';
 import 'package:seeksparks/services/recent_searches_service.dart';
 import 'package:seeksparks/widgets/command_pane.dart';
@@ -36,14 +39,6 @@ const _seed = [
       text: 'And the peace of God, which passeth all understanding'),
 ];
 
-AiBibleRef _ref(String book, int chapter, int start, int end, String reason) =>
-    AiBibleRef(
-        book: book,
-        chapter: chapter,
-        verseStart: start,
-        verseEnd: end,
-        reason: reason);
-
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -59,7 +54,6 @@ void main() {
 
   Future<WorkbenchProvider> pump(
     WidgetTester tester, {
-    Future<AiBibleSearchResult> Function(String query)? ask,
     Map<String, Object> prefs = const {},
   }) async {
     tester.view.devicePixelRatio = 1.0;
@@ -70,7 +64,7 @@ void main() {
     final mp = MainProvider()
       ..setVerses(_seed)
       ..currentVersion = 'kjv';
-    final wb = WorkbenchProvider(mainProvider: mp)..aiAsk = ask;
+    final wb = WorkbenchProvider(mainProvider: mp);
     addTearDown(wb.dispose);
     final settings = AppSettings();
     await settings.setLocale('en');
@@ -103,60 +97,15 @@ void main() {
     }
   }
 
-  group('ai — the passage search the standalone page had', () {
-    testWidgets('renders each reference with the reason for it',
-        (tester) async {
-      // A bare list of references from a model is indistinguishable
-      // from a list out of a concordance. The reason is the result.
-      await pump(tester,
-          ask: (_) async => AiBibleSearchResult(refs: [
-                _ref('Philippians', 4, 6, 7, 'Paul answers anxiety with prayer')
-              ], hits: 1));
-      await submit(tester, 'ai verses about anxiety');
-      expect(find.textContaining('Philippians 4:6-7'), findsOneWidget);
-      expect(find.textContaining('answers anxiety with prayer'), findsOneWidget);
-      expect(find.textContaining('reference only'), findsWidgets,
-          reason: 'the caveat rides above the list');
-    });
-
-    testWidgets('a passage this edition lacks is shown, not dropped',
-        (tester) async {
-      await pump(tester,
-          ask: (_) async => AiBibleSearchResult(refs: [
-                _ref('Philippians', 4, 6, 6, 'prayer'),
-                _ref('Tobit', 4, 7, 7, 'almsgiving'),
-              ], hits: 2));
-      await submit(tester, 'ai verses about anxiety');
-      expect(find.textContaining('Tobit 4:7'), findsOneWidget);
-      expect(find.textContaining('not in your current Bible version'),
-          findsOneWidget);
-    });
-
-    testWidgets('a failure names itself instead of showing an empty list',
-        (tester) async {
-      await pump(tester,
-          ask: (_) async =>
-              AiBibleSearchResult.unavailable('Quota exhausted for today.'));
-      await submit(tester, 'ai verses about anxiety');
-      expect(find.textContaining('Quota exhausted'), findsOneWidget);
-      // The reader can fix a quota failure with their own key, so the
-      // way to do that is offered right here.
-      expect(find.textContaining('Gemini API key'), findsOneWidget);
-    });
-
+  group('ai is a city, and always was', () {
     testWidgets('Ai the city is still findable', (tester) async {
-      // Joshua 7-8. A bare `ai` must stay a text search or the verb
-      // makes a real place unreachable.
+      // Joshua 7-8. This used to guard against the `ai` VERB stealing
+      // the lookup; with the verb gone it guards against the removal
+      // having left anything behind that still intercepts those two
+      // letters.
       final wb = await pump(tester);
       await submit(tester, 'ai');
-      expect(wb.hasAiResults, isFalse);
       expect(wb.searchPerformed, isTrue);
-    });
-
-    testWidgets('a search that finds nothing offers the model', (tester) async {
-      await pump(tester);
-      await submit(tester, 'quantum');
-      expect(find.textContaining('Search with AI'), findsOneWidget);
     });
   });
 
@@ -214,8 +163,7 @@ void main() {
       // you just mistyped.
       await tester.sendKeyEvent(LogicalKeyboardKey.arrowUp);
       await tester.pump();
-      expect(
-          tester.widget<TextField>(find.byType(TextField)).controller!.text,
+      expect(tester.widget<TextField>(find.byType(TextField)).controller!.text,
           'yahweh NEAR5 god');
     });
 

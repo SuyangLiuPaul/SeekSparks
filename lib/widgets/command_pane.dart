@@ -10,16 +10,10 @@ import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/wb_centre_mode.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/verse.dart';
-import 'package:seeksparks/pages/settings_page.dart'
-    show SettingsPage, SettingsSection;
 import 'package:seeksparks/providers/workbench_provider.dart';
-import 'package:seeksparks/services/ai_bible_search_service.dart'
-    show AiBibleRef;
 import 'package:seeksparks/services/concordance_service.dart';
 import 'package:seeksparks/services/fetch_verses.dart';
 import 'package:seeksparks/services/recent_searches_service.dart';
-import 'package:seeksparks/utils/ai_markdown.dart' show parseAiMarkdown;
-import 'package:seeksparks/utils/app_nav.dart' show pushPage;
 import 'package:seeksparks/utils/atomic_text_edit.dart';
 import 'package:seeksparks/utils/clipboard_helper.dart';
 import 'package:seeksparks/utils/copy_marking.dart'
@@ -365,8 +359,8 @@ class _CommandPaneState extends State<CommandPane> {
     // text scan for "yahwehnear5god", finds nothing, and gets filed as a
     // search that worked. It then sits in Recents inviting the reader to
     // run it again forever.
-    final refused =
-        analyseCommandDraft(raw, nearDistance: _nearDistance).willNotRunAsWritten;
+    final refused = analyseCommandDraft(raw, nearDistance: _nearDistance)
+        .willNotRunAsWritten;
     if (wb.commandIssue == null && !refused) await _commitRecent(raw);
   }
 
@@ -439,31 +433,9 @@ class _CommandPaneState extends State<CommandPane> {
         wb.setCentreMode(WbCentreMode.browse);
         wb.showVerbNotice(describeDisplayStack(
             [for (final c in stack) shortBibleVersionLabel(c)], locale));
-      case CommandVerbKind.askAi:
-        // Clear before awaiting, not after: the request takes seconds
-        // and every other verb empties the line the instant it runs.
-        // Leaving the question sitting there under a spinner reads as
-        // a field that stopped accepting input.
-        final raw = _controller.text.trim();
-        _controller.clear();
-        setState(() {});
-        _focus.requestFocus();
-        await wb.runAiSearch(
-          question: verb.aiQuery!,
-          locale: locale,
-          userApiKey:
-              settings.geminiApiKey.isEmpty ? null : settings.geminiApiKey,
-          aiModel: settings.aiModel,
-        );
-        if (!mounted) return;
-        // The whole line, `ai ` and all, so tapping the recent re-asks
-        // the model rather than text-searching the question.
-        if (wb.aiRefs?.isNotEmpty ?? false) await _commitRecent(raw);
-        return;
       case CommandVerbKind.browseOn:
         wb.setCentreMode(WbCentreMode.browse);
-        wb.showVerbNotice(
-            uiStrings['cmdvBrowseOn']?[locale] ?? 'Browse view.');
+        wb.showVerbNotice(uiStrings['cmdvBrowseOn']?[locale] ?? 'Browse view.');
       case CommandVerbKind.limitSet:
         final spec = verb.limit!;
         final label = scopeDisplayName(
@@ -476,8 +448,7 @@ class _CommandPaneState extends State<CommandPane> {
         if (!mounted) return;
         wb.showVerbNotice(applied
             ? null
-            : describeVerbIssue(
-                CommandVerbIssue.emptyScope, label, locale));
+            : describeVerbIssue(CommandVerbIssue.emptyScope, label, locale));
       case CommandVerbKind.limitClear:
         await wb.setSearchLimit(null, null);
         if (!mounted) return;
@@ -671,8 +642,8 @@ class _CommandPaneState extends State<CommandPane> {
     widget.onVerseOpened?.call();
   }
 
-  Future<void> _copyAllStrongsRefs(
-      WorkbenchProvider wb, AppSettings settings, List<ConcordanceRef> refs) async {
+  Future<void> _copyAllStrongsRefs(WorkbenchProvider wb, AppSettings settings,
+      List<ConcordanceRef> refs) async {
     final mp = wb.mainProvider;
     final hl = highlightsForQuery(wb.lastQuery);
     // A Strong's number cannot be located in a verse without that
@@ -693,11 +664,10 @@ class _CommandPaneState extends State<CommandPane> {
     }
     final lines = <String>[wb.strongsQueryLabel ?? '', ''];
     for (final r in refs) {
-      final displayBook =
-          localeAwareBookName(r.englishBook, settings.locale, mp.currentVersion);
-      final clean =
-          _cleanPreview(wb.verseByRef['${r.englishBook}-${r.chapter}-${r.verse}']
-                  ?.text ??
+      final displayBook = localeAwareBookName(
+          r.englishBook, settings.locale, mp.currentVersion);
+      final clean = _cleanPreview(
+          wb.verseByRef['${r.englishBook}-${r.chapter}-${r.verse}']?.text ??
               '');
       // Every book in the copy is loaded first (above), so a copy of
       // 22 books is marked in all 22 — not in the handful the reader
@@ -785,8 +755,7 @@ class _CommandPaneState extends State<CommandPane> {
               textInputAction: TextInputAction.search,
               onSubmitted: (_) => _submit(),
               onChanged: (_) => setState(() {}), // toggle clear button
-              style: TextStyle(
-                  fontSize: t.text, height: t.lineHeight),
+              style: TextStyle(fontSize: t.text, height: t.lineHeight),
               decoration: InputDecoration(
                 hintText: uiStrings['commandSearchHint']?[locale] ??
                     "Search text, or Strong's: G25 AND G26",
@@ -921,8 +890,7 @@ class _CommandPaneState extends State<CommandPane> {
               // operator.
               _OperatorButton(
                 label: '⌥',
-                tooltip:
-                    uiStrings['builderTitle']?[locale] ?? 'Build a search',
+                tooltip: uiStrings['builderTitle']?[locale] ?? 'Build a search',
                 selected: false,
                 onTap: _openBuilder,
               ),
@@ -1092,10 +1060,7 @@ class _CommandPaneState extends State<CommandPane> {
             'cmdSyntaxStrongsWild',
           ]
         ),
-        (
-          'cmdSyntaxSectionCommands',
-          ['cmdSyntaxVerbs', 'cmdSyntaxAi', 'cmdSyntaxHistory']
-        ),
+        ('cmdSyntaxSectionCommands', ['cmdSyntaxVerbs', 'cmdSyntaxHistory']),
       ];
       return Container(
         width: double.infinity,
@@ -1172,8 +1137,7 @@ class _CommandPaneState extends State<CommandPane> {
     final line = await showCommandBuilder(context, locale);
     if (line == null || !mounted) return;
     _controller.text = line;
-    _controller.selection =
-        TextSelection.collapsed(offset: line.length);
+    _controller.selection = TextSelection.collapsed(offset: line.length);
     _focus.requestFocus();
     setState(() {});
   }
@@ -1246,7 +1210,8 @@ class _CommandPaneState extends State<CommandPane> {
         children: [
           if (notice != null) _verbNoticeStrip(wb, scheme, notice, t),
           if (wb.hasSearchLimit) _limitBanner(context, wb, scheme, locale),
-          Expanded(child: _buildResultsBody(context, wb, settings, scheme, locale)),
+          Expanded(
+              child: _buildResultsBody(context, wb, settings, scheme, locale)),
         ],
       );
     }
@@ -1256,8 +1221,8 @@ class _CommandPaneState extends State<CommandPane> {
   /// What the last verb did, above the results rather than instead of
   /// them: `d nas` must not throw away a hit list you spent three
   /// commands building.
-  Widget _verbNoticeStrip(WorkbenchProvider wb, ColorScheme scheme,
-      String notice, WbType t) {
+  Widget _verbNoticeStrip(
+      WorkbenchProvider wb, ColorScheme scheme, String notice, WbType t) {
     return Material(
       color: scheme.secondaryContainer,
       child: InkWell(
@@ -1306,11 +1271,11 @@ class _CommandPaneState extends State<CommandPane> {
       version: context.read<MainProvider>().currentVersion,
       maxNames: 3,
     );
-    final label = (uiStrings['vlmLimitBanner']?[locale] ??
-            'Limited to {name} ({count})')
-        .replaceAll('{name}',
-            name.isEmpty ? (uiStrings['vlmMain']?[locale] ?? 'Main') : name)
-        .replaceAll('{count}', '${wb.searchLimit?.length ?? 0}');
+    final label =
+        (uiStrings['vlmLimitBanner']?[locale] ?? 'Limited to {name} ({count})')
+            .replaceAll('{name}',
+                name.isEmpty ? (uiStrings['vlmMain']?[locale] ?? 'Main') : name)
+            .replaceAll('{count}', '${wb.searchLimit?.length ?? 0}');
     return Material(
       color: scheme.tertiaryContainer,
       child: InkWell(
@@ -1319,7 +1284,8 @@ class _CommandPaneState extends State<CommandPane> {
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           child: Row(
             children: [
-              Icon(Icons.filter_alt, size: 14, color: scheme.onTertiaryContainer),
+              Icon(Icons.filter_alt,
+                  size: 14, color: scheme.onTertiaryContainer),
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
@@ -1349,31 +1315,6 @@ class _CommandPaneState extends State<CommandPane> {
 
   Widget _buildResultsBody(BuildContext context, WorkbenchProvider wb,
       AppSettings settings, ColorScheme scheme, String locale) {
-    if (wb.aiBusy) {
-      // Named, unlike the plain search spinner: an AI round-trip takes
-      // seconds, not milliseconds, and an unlabelled spinner that long
-      // reads as a hang.
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(strokeWidth: 2.2)),
-            const SizedBox(height: 10),
-            Text(
-              uiStrings['aiSearching']?[locale] ?? 'SeekSparks AI searching…',
-              style: TextStyle(
-                fontSize: settings.fontSize - 2,
-                color: scheme.outline,
-                fontFamilyFallback: kCjkFontFallback,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
     if (wb.searching) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -1389,13 +1330,10 @@ class _CommandPaneState extends State<CommandPane> {
       return _noResults(settings, scheme, locale,
           message: describeCommandIssue(issue, locale));
     }
-    final aiRefs = wb.aiRefs;
-    if (aiRefs != null) {
-      return _buildAiResults(context, wb, settings, scheme, locale, aiRefs);
-    }
     final strongsRefs = wb.strongsRefs;
     if (strongsRefs != null) {
-      return _buildStrongsResults(context, wb, settings, scheme, locale, strongsRefs);
+      return _buildStrongsResults(
+          context, wb, settings, scheme, locale, strongsRefs);
     }
     return _buildTextResults(context, wb, settings, scheme, locale);
   }
@@ -1685,193 +1623,12 @@ class _CommandPaneState extends State<CommandPane> {
     });
   }
 
-  /// Hand the current line to the model. Used by the button that
-  /// appears when a literal search finds nothing — the moment the
-  /// feature is actually for.
-  Future<void> _askAi(String question) async {
-    final settings = context.read<AppSettings>();
-    final wb = context.read<WorkbenchProvider>();
-    await wb.runAiSearch(
-      question: question,
-      locale: settings.locale,
-      userApiKey: settings.geminiApiKey.isEmpty ? null : settings.geminiApiKey,
-      aiModel: settings.aiModel,
-    );
-    if (!mounted) return;
-    if (wb.aiRefs?.isNotEmpty ?? false) await _commitRecent('ai $question');
-  }
-
-  /// Whether the failure the model reported is one the reader can fix
-  /// by supplying their own key. Matched on the message because that is
-  /// all the service returns; the alternative — offering the key setup
-  /// after every failure — teaches readers to ignore it.
-  bool _shouldOfferByok(String? notice) {
-    if (notice == null) return false;
-    final lower = notice.toLowerCase();
-    const triggers = [
-      'quota',
-      'exhausted',
-      'rate-limit',
-      'rate limit',
-      'not configured',
-      'gemini_api_key',
-      '配额',
-      '用完',
-      '没有配置',
-    ];
-    for (final t in triggers) {
-      if (lower.contains(t)) return true;
-    }
-    return false;
-  }
-
-  /// The model's answer: references and the sentence that justifies
-  /// each one.
-  ///
-  /// A different list from the other three because the unit is
-  /// different — a reference and an argument, not a verse and its
-  /// text — and because a reference the loaded edition does not carry
-  /// still has to appear. See `resolveAiRefs`.
-  Widget _buildAiResults(
+  Widget _buildStrongsResults(
       BuildContext context,
       WorkbenchProvider wb,
       AppSettings settings,
       ColorScheme scheme,
       String locale,
-      List<AiBibleRef> refs) {
-    if (refs.isEmpty) {
-      return _noResults(settings, scheme, locale,
-          message: wb.aiNotice, byokNotice: wb.aiNotice);
-    }
-    final wbc = WbColors.of(context);
-    final t = WbType.of(context);
-    final header = (uiStrings['aiBibleSearchHeader']?[locale] ??
-            'SeekSparks AI found {count} passages for "{query}" '
-                '(reference only)')
-        .replaceAll('{query}', wb.aiQuery ?? '')
-        .replaceAll('{count}', '${refs.length}');
-    final notice = wb.aiNotice;
-    return Column(
-      children: [
-        _resultHeader(header, () => _copyAllAiRefs(wb, settings, refs),
-            settings, locale),
-        // The caveat rides above the list, not under it: it qualifies
-        // every row and a footer on a scrolling list is unread.
-        Container(
-          width: double.infinity,
-          color: wbc.chromeBg,
-          padding: const EdgeInsets.fromLTRB(8, 5, 8, 6),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                uiStrings['aiReferenceOnly']?[locale] ??
-                    'AI is only an aid — verify against Scripture.',
-                style: TextStyle(
-                  fontSize: t.chrome,
-                  color: wbc.mutedText,
-                  fontStyle: FontStyle.italic,
-                  fontFamilyFallback: kCjkFontFallback,
-                ),
-              ),
-              if (notice != null) ...[
-                const SizedBox(height: 3),
-                Text.rich(
-                  TextSpan(
-                    children: parseAiMarkdown(
-                      notice,
-                      base: TextStyle(
-                        fontSize: t.chrome,
-                        color: wbc.mutedText,
-                        height: 1.4,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-        Expanded(
-          child: ListView.builder(
-            itemCount: refs.length,
-            itemBuilder: (context, index) {
-              final ref = refs[index];
-              final unresolved = wb.aiUnresolved.contains(ref.display);
-              final displayBook = localeAwareBookName(
-                  ref.book, locale, wb.mainProvider.currentVersion);
-              final label = ref.verseStart == ref.verseEnd
-                  ? '$displayBook ${ref.chapter}:${ref.verseStart}'
-                  : '$displayBook ${ref.chapter}:'
-                      '${ref.verseStart}-${ref.verseEnd}';
-              return _AiRefRow(
-                reference: label,
-                reason: ref.reason,
-                unresolved: unresolved,
-                unresolvedTag:
-                    uiStrings['aiRefOnlyTag']?[locale] ?? 'reference only',
-                onTap: () {
-                  if (unresolved) {
-                    ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(
-                      content: Text(uiStrings['aiRefNotInVersion']?[locale] ??
-                          "This passage isn't in your current Bible version."),
-                      duration: const Duration(seconds: 3),
-                    ));
-                    return;
-                  }
-                  final verse = _firstVerseOf(wb, ref);
-                  if (verse != null) _openVerse(verse);
-                },
-                onLongPress: () => ClipboardHelper.copyWithFeedback(
-                    context, '$label  ${ref.reason}'.trim()),
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-  /// The first verse of [ref] the loaded edition actually has. Not
-  /// necessarily `verseStart`: a versification difference can leave a
-  /// range starting one verse late.
-  Verse? _firstVerseOf(WorkbenchProvider wb, AiBibleRef ref) {
-    for (var v = ref.verseStart; v <= ref.verseEnd; v++) {
-      final hit = wb.verseByRef['${ref.book}-${ref.chapter}-$v'];
-      if (hit != null) return hit;
-    }
-    return null;
-  }
-
-  /// Copies the answer, reasons included — the reasons are the part a
-  /// reader pastes into a study document.
-  Future<void> _copyAllAiRefs(
-      WorkbenchProvider wb, AppSettings settings, List<AiBibleRef> refs) async {
-    final locale = settings.locale;
-    final lines = <String>[wb.aiQuery ?? '', ''];
-    for (final ref in refs) {
-      final displayBook = localeAwareBookName(
-          ref.book, locale, wb.mainProvider.currentVersion);
-      final label = ref.verseStart == ref.verseEnd
-          ? '$displayBook ${ref.chapter}:${ref.verseStart}'
-          : '$displayBook ${ref.chapter}:${ref.verseStart}-${ref.verseEnd}';
-      lines.add('$label  ${ref.reason}'.trim());
-    }
-    lines
-      ..add('')
-      ..add(uiStrings['aiReferenceOnly']?[locale] ??
-          'AI is only an aid — verify against Scripture.');
-    await ClipboardHelper.copyWithFeedback(
-      context,
-      lines.join('\n'),
-      messageOverride: (uiStrings['copyAllResultsToast']?[locale] ??
-              'Copied {n} matches')
-          .replaceAll('{n}', refs.length.toString()),
-    );
-  }
-
-  Widget _buildStrongsResults(BuildContext context, WorkbenchProvider wb,
-      AppSettings settings, ColorScheme scheme, String locale,
       List<ConcordanceRef> refs) {
     if (refs.isEmpty) {
       // "No results found" alone conflates three different facts — see
@@ -1939,10 +1696,11 @@ class _CommandPaneState extends State<CommandPane> {
               final ref = refs[index];
               final displayBook = localeAwareBookName(
                   ref.englishBook, locale, wb.mainProvider.currentVersion);
-              final preview = _cleanPreview(
-                  wb.verseByRef['${ref.englishBook}-${ref.chapter}-${ref.verse}']
-                          ?.text ??
-                      '');
+              final preview = _cleanPreview(wb
+                      .verseByRef[
+                          '${ref.englishBook}-${ref.chapter}-${ref.verse}']
+                      ?.text ??
+                  '');
               final runs = TaggedTextService.cachedForVerse(
                 version: wb.mainProvider.currentVersion,
                 englishBook: ref.englishBook,
@@ -1979,7 +1737,10 @@ class _CommandPaneState extends State<CommandPane> {
                 onLongPress: () => ClipboardHelper.copyMarkedWithFeedback(
                     context,
                     '$displayBook ${ref.chapter}:${ref.verse}  '
-                    '${markVerseHits(preview, highlight: hl, runs: runs?.map((x) => (text: x.text, strongs: x.strongs)).toList())}'),
+                    '${markVerseHits(preview, highlight: hl, runs: runs?.map((x) => (
+                          text: x.text,
+                          strongs: x.strongs
+                        )).toList())}'),
               );
             },
           ),
@@ -2018,8 +1779,8 @@ class _CommandPaneState extends State<CommandPane> {
       _tagPending.clear();
       await Future.wait(batch.map((k) {
         final i = k.indexOf('/');
-        return TaggedTextService.prefetchBook(k.substring(0, i),
-            k.substring(i + 1));
+        return TaggedTextService.prefetchBook(
+            k.substring(0, i), k.substring(i + 1));
       }));
       if (mounted) setState(() {});
     });
@@ -2030,12 +1791,9 @@ class _CommandPaneState extends State<CommandPane> {
     final results = wb.textResults;
     final hl = highlightsForQuery(wb.lastQuery);
     if (results.isEmpty) {
-      // The one place the model earns its keep: the literal scan has
-      // said the words are not there, so "describe what you mean
-      // instead" is the next thing to try rather than a competing mode.
-      // Before that, though, two cheaper answers: a looser query that is
-      // known to return verses, or — when there is none — the word that
-      // is the reason there are none.
+      // Two answers, in order of how much they actually know: a looser
+      // query that is known to return verses, or — when there is none —
+      // the word that is the REASON there are none.
       // The cross-version report belongs HERE most of all. bwh16's own
       // use case for the mode is a phrase "that occurs in some version
       // but you don't remember which one", and the moment a reader is
@@ -2048,36 +1806,38 @@ class _CommandPaneState extends State<CommandPane> {
           _broadenOffer(wb, locale, align: CrossAxisAlignment.center) ??
               _romanisedOffer(wb, locale, align: CrossAxisAlignment.center);
       final hits = wb.crossVersionHits;
-      return _noResults(settings, scheme, locale,
-          message: _missingWords(wb, locale),
-          below: hits == null
-              ? offer
-              : Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    CrossVersionStrip(
-                      hits: hits,
-                      locale: locale,
-                      searching: wb.crossVersionSearching,
-                      onVersionTap: (code) =>
-                          _switchReadingVersion(context, code),
-                    ),
-                    if (offer != null) ...[
-                      const SizedBox(height: 10),
-                      offer,
-                    ],
+      return _noResults(
+        settings,
+        scheme,
+        locale,
+        message: _missingWords(wb, locale),
+        below: hits == null
+            ? offer
+            : Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CrossVersionStrip(
+                    hits: hits,
+                    locale: locale,
+                    searching: wb.crossVersionSearching,
+                    onVersionTap: (code) =>
+                        _switchReadingVersion(context, code),
+                  ),
+                  if (offer != null) ...[
+                    const SizedBox(height: 10),
+                    offer,
                   ],
-                ),
-          aiQuery: wb.lastQuery);
+                ],
+              ),
+      );
     }
     // `??` and not a pair: broadening needs two words to have anything
     // to loosen, the romanised offer needs exactly one, so at most one
     // of them is ever non-null. This branch reaches the second only
     // through the substring artefacts — `shalom` finding Jehovahshalom
     // — which is precisely when the reader still wants H7965.
-    final offer =
-        _broadenOffer(wb, locale, align: CrossAxisAlignment.start) ??
-            _romanisedOffer(wb, locale, align: CrossAxisAlignment.start);
+    final offer = _broadenOffer(wb, locale, align: CrossAxisAlignment.start) ??
+        _romanisedOffer(wb, locale, align: CrossAxisAlignment.start);
     return Column(
       children: [
         _resultHeader(
@@ -2164,8 +1924,7 @@ class _CommandPaneState extends State<CommandPane> {
   /// describing a search nobody is looking at any more. Re-running
   /// costs one pass over a corpus that is now in [_corpusCache]
   /// anyway.
-  Future<void> _switchReadingVersion(
-      BuildContext context, String code) async {
+  Future<void> _switchReadingVersion(BuildContext context, String code) async {
     final mp = context.read<MainProvider>();
     if (code == mp.currentVersion) return;
     final wb = context.read<WorkbenchProvider>();
@@ -2177,18 +1936,17 @@ class _CommandPaneState extends State<CommandPane> {
     if (query.isNotEmpty) {
       wb.crossVersionMode = settings.crossVersionSearchMode;
       await wb.runSearch(query,
-          locale: settings.locale,
-          ketivQere: settings.ketivQereSearchScope);
+          locale: settings.locale, ketivQere: settings.ketivQereSearchScope);
     }
     if (!mounted) return;
     setState(() {});
   }
 
-  Widget _resultHeader(
-      String summary, VoidCallback onCopy, AppSettings settings, String locale) {
+  Widget _resultHeader(String summary, VoidCallback onCopy,
+      AppSettings settings, String locale) {
     return Builder(builder: (context) {
       final wbc = WbColors.of(context);
-    final t = WbType.of(context);
+      final t = WbType.of(context);
       return Container(
         height: t.paneTitleHeight,
         decoration: BoxDecoration(
@@ -2226,19 +1984,20 @@ class _CommandPaneState extends State<CommandPane> {
     });
   }
 
-  /// [aiQuery] offers to hand the line to the model; [byokNotice] is
-  /// the failure text to test before offering the reader their own API
-  /// key. Both are absent for the grammar's own errors — a query the
-  /// parser refused is a typo, not a question too hard for a literal
-  /// search.
+  /// [below] is the one offer this pane still makes when a search comes
+  /// back empty: a looser query that is KNOWN to return verses.
   ///
-  /// [below] sits above both buttons: a looser query that is known to
-  /// return verses outranks handing the line to a model.
+  /// 2026-09-07: it used to make two more — hand the line to a model,
+  /// and set up your own API key when the model refused. Both went with
+  /// the AI subsystem. What is left is the honest shape of an empty
+  /// result in a concordance tool: say the search found nothing, say
+  /// WHY if the reason is knowable (see `strongs_absence.dart`), and
+  /// offer the query that would have worked.
   Widget _noResults(AppSettings settings, ColorScheme scheme, String locale,
-      {String? message, Widget? below, String? aiQuery, String? byokNotice}) {
+      {String? message, Widget? below}) {
     return Builder(builder: (context) {
       final wbc = WbColors.of(context);
-    final t = WbType.of(context);
+      final t = WbType.of(context);
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -2252,64 +2011,20 @@ class _CommandPaneState extends State<CommandPane> {
               ),
               if (message != null) ...[
                 const SizedBox(height: 8),
-                Text.rich(
-                  TextSpan(
-                    children: parseAiMarkdown(
-                      message,
-                      base: TextStyle(
-                        fontSize: t.text - 1,
-                        height: 1.5,
-                        color: wbc.mutedText,
-                        fontFamilyFallback: kCjkFontFallback,
-                      ),
-                    ),
-                  ),
+                Text(
+                  message,
                   textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: t.text - 1,
+                    height: 1.5,
+                    color: wbc.mutedText,
+                    fontFamilyFallback: kCjkFontFallback,
+                  ),
                 ),
               ],
               if (below != null) ...[
                 const SizedBox(height: 10),
                 below,
-              ],
-              if (aiQuery != null && aiQuery.trim().length >= 2) ...[
-                const SizedBox(height: 12),
-                OutlinedButton.icon(
-                  icon: const Icon(Icons.auto_awesome, size: 14),
-                  label: Text(
-                    uiStrings['askAiForVerses']?[locale] ??
-                        'Search with SeekSparks AI (reference only)',
-                    style: TextStyle(
-                        fontSize: t.chrome,
-                        fontFamilyFallback: kCjkFontFallback),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    shape: const RoundedRectangleBorder(),
-                    side: BorderSide(color: wbc.border),
-                    foregroundColor: wbc.link,
-                  ),
-                  onPressed: () => _askAi(aiQuery),
-                ),
-              ],
-              if (_shouldOfferByok(byokNotice) &&
-                  !settings.hasUserGeminiKey) ...[
-                const SizedBox(height: 10),
-                OutlinedButton.icon(
-                  icon: const Icon(Icons.key_rounded, size: 14),
-                  label: Text(
-                    uiStrings['aiOpenByokSettings']?[locale] ??
-                        'Set up your own Gemini API key',
-                    style: TextStyle(
-                        fontSize: t.chrome,
-                        fontFamilyFallback: kCjkFontFallback),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    shape: const RoundedRectangleBorder(),
-                    side: BorderSide(color: wbc.border),
-                    foregroundColor: wbc.text,
-                  ),
-                  onPressed: () => pushPage(
-                      const SettingsPage(initialSection: SettingsSection.ai)),
-                ),
               ],
             ],
           ),
@@ -2401,120 +2116,6 @@ class _RecentRowState extends State<_RecentRow> {
   }
 }
 
-/// One AI suggestion: the reference, then the model's reason for it.
-///
-/// Two lines rather than [_ResultRow]'s one because the reason IS the
-/// result here — a bare list of references from a model is indistinguishable
-/// from a list of references from a concordance, and the reader has no
-/// way to judge which ones to trust.
-class _AiRefRow extends StatefulWidget {
-  const _AiRefRow({
-    required this.reference,
-    required this.reason,
-    required this.unresolved,
-    required this.unresolvedTag,
-    required this.onTap,
-    required this.onLongPress,
-  });
-
-  final String reference;
-  final String reason;
-  final bool unresolved;
-  final String unresolvedTag;
-  final VoidCallback onTap;
-  final VoidCallback onLongPress;
-
-  @override
-  State<_AiRefRow> createState() => _AiRefRowState();
-}
-
-class _AiRefRowState extends State<_AiRefRow> {
-  bool _hovering = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final wbc = WbColors.of(context);
-    final t = WbType.of(context);
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hovering = true),
-      onExit: (_) => setState(() => _hovering = false),
-      child: GestureDetector(
-        onTap: widget.onTap,
-        onLongPress: widget.onLongPress,
-        behavior: HitTestBehavior.opaque,
-        child: Container(
-          decoration: BoxDecoration(
-            color: _hovering ? wbc.hoverBg : null,
-            border: Border(bottom: BorderSide(color: wbc.border)),
-          ),
-          padding: const EdgeInsets.symmetric(
-              horizontal: WbMetrics.rowPadH, vertical: 4),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Flexible(
-                    child: Text(
-                      widget.reference,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: t.text,
-                        height: t.lineHeight,
-                        fontWeight: FontWeight.w600,
-                        color: widget.unresolved ? wbc.mutedText : wbc.link,
-                        fontFamilyFallback: kCjkFontFallback,
-                      ),
-                    ),
-                  ),
-                  if (widget.unresolved) ...[
-                    const SizedBox(width: 6),
-                    Container(
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                      decoration: BoxDecoration(border: Border.all(color: wbc.border)),
-                      child: Text(
-                        widget.unresolvedTag,
-                        style: TextStyle(
-                            fontSize: t.chrome, color: wbc.mutedText),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-              if (widget.reason.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(top: 1),
-                  child: Text.rich(
-                    TextSpan(
-                      children: parseAiMarkdown(
-                        widget.reason,
-                        base: TextStyle(
-                          fontSize: t.chrome,
-                          height: 1.35,
-                          color: wbc.mutedText,
-                        ),
-                      ),
-                    ),
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// One search hit, printed the way BibleWorks prints it: a single tight
-/// line, coloured reference first, verse text after. The card list this
-/// replaces cost about four times the vertical space per hit, which
-/// meant a 40-hit search showed six results instead of the whole screen
-/// full that makes a result list useful.
 class _ResultRow extends StatefulWidget {
   const _ResultRow({
     required this.reference,
@@ -2564,12 +2165,10 @@ class _ResultRowState extends State<_ResultRow> {
             TextSpan(children: [
               TextSpan(
                 text: '${widget.reference}  ',
-                style: TextStyle(
-                    color: wbc.link, fontWeight: FontWeight.w600),
+                style: TextStyle(color: wbc.link, fontWeight: FontWeight.w600),
               ),
               if (widget.spans == null)
-                TextSpan(
-                    text: widget.text, style: TextStyle(color: wbc.text))
+                TextSpan(text: widget.text, style: TextStyle(color: wbc.text))
               else
                 for (final s in widget.spans!)
                   TextSpan(

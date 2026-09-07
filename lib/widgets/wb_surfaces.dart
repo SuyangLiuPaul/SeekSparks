@@ -93,9 +93,16 @@ class WbPanel extends StatelessWidget {
     final hasHeader = title != null;
 
     return Container(
+      // 2026-09-07: `clipBehavior` is not optional here. The header
+      // strip paints its own fill edge-to-edge, so without the clip the
+      // panel's two top corners would be rounded on the border and
+      // square on the chrome underneath it — the corner would read as a
+      // rendering bug rather than as a radius.
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: alt ? wb.paneAltBg : wb.paneBg,
         border: Border.all(color: wb.border, width: WbMetrics.hairline),
+        borderRadius: BorderRadius.circular(WbMetrics.radiusSurface),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -273,14 +280,16 @@ class WbTag extends StatelessWidget {
         decoration: BoxDecoration(
           color: wb.paneAltBg,
           border: Border.all(color: wb.border, width: WbMetrics.hairline),
+          borderRadius: BorderRadius.circular(WbMetrics.radiusControl),
         ),
         child: body,
       );
     }
     return Material(
       color: wb.paneAltBg,
+      clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.zero,
+        borderRadius: BorderRadius.circular(WbMetrics.radiusControl),
         side: BorderSide(color: wb.border, width: WbMetrics.hairline),
       ),
       child: InkWell(
@@ -327,14 +336,16 @@ class WbTile extends StatelessWidget {
         decoration: BoxDecoration(
           color: alt ? wb.paneAltBg : null,
           border: Border.all(color: wb.border, width: WbMetrics.hairline),
+          borderRadius: BorderRadius.circular(WbMetrics.radiusControl),
         ),
         child: body,
       );
     }
     return Material(
       color: alt ? wb.paneAltBg : wb.paneBg,
+      clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.zero,
+        borderRadius: BorderRadius.circular(WbMetrics.radiusControl),
         side: BorderSide(color: wb.border, width: WbMetrics.hairline),
       ),
       child: InkWell(

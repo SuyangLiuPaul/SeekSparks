@@ -138,8 +138,7 @@ class _EvidenceDetailPageState extends State<EvidenceDetailPage> {
                                     WebHtmlElementStrategy.prefer,
                                 cacheWidth: 1200,
                                 cacheHeight: 480,
-                                errorBuilder: (_, __, ___) =>
-                                    _HeroShimmer(
+                                errorBuilder: (_, __, ___) => _HeroShimmer(
                                   category: evidence.category,
                                   showCategoryIcon: true,
                                 ),
@@ -196,10 +195,9 @@ class _EvidenceDetailPageState extends State<EvidenceDetailPage> {
                               child: Center(
                                 child: _ArrowChip(
                                   icon: Icons.chevron_left_rounded,
-                                  onTap: () => _imagePageController
-                                      .previousPage(
-                                    duration: const Duration(
-                                        milliseconds: 250),
+                                  onTap: () =>
+                                      _imagePageController.previousPage(
+                                    duration: const Duration(milliseconds: 250),
                                     curve: Curves.easeOutCubic,
                                   ),
                                 ),
@@ -215,8 +213,7 @@ class _EvidenceDetailPageState extends State<EvidenceDetailPage> {
                                 child: _ArrowChip(
                                   icon: Icons.chevron_right_rounded,
                                   onTap: () => _imagePageController.nextPage(
-                                    duration: const Duration(
-                                        milliseconds: 250),
+                                    duration: const Duration(milliseconds: 250),
                                     curve: Curves.easeOutCubic,
                                   ),
                                 ),
@@ -235,8 +232,7 @@ class _EvidenceDetailPageState extends State<EvidenceDetailPage> {
                         child: ListView.separated(
                           scrollDirection: Axis.horizontal,
                           itemCount: images.length,
-                          separatorBuilder: (_, __) =>
-                              const SizedBox(width: 8),
+                          separatorBuilder: (_, __) => const SizedBox(width: 8),
                           itemBuilder: (_, i) {
                             final active = i == _imageIndex;
                             return InkWell(
@@ -255,7 +251,9 @@ class _EvidenceDetailPageState extends State<EvidenceDetailPage> {
                                   // way the workbench says "this one"
                                   // everywhere else.
                                   border: Border.all(
-                                    color: active ? scheme.primary : wb.border,
+                                    color: active
+                                        ? scheme.primary
+                                        : wb.disabledMark,
                                     width: active ? 2 : WbMetrics.hairline,
                                   ),
                                 ),
@@ -266,8 +264,7 @@ class _EvidenceDetailPageState extends State<EvidenceDetailPage> {
                                       WebHtmlElementStrategy.prefer,
                                   cacheWidth: 200,
                                   cacheHeight: 144,
-                                  errorBuilder: (_, __, ___) =>
-                                      _HeroShimmer(
+                                  errorBuilder: (_, __, ___) => _HeroShimmer(
                                     category: evidence.category,
                                     showCategoryIcon: true,
                                   ),
@@ -299,7 +296,8 @@ class _EvidenceDetailPageState extends State<EvidenceDetailPage> {
                     child: Text(
                       evidence.localizedTitle(locale),
                       style: TextStyle(
-                        fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
+                        fontFamily: settings.fontFamily,
+                        fontFamilyFallback: kCjkFontFallback,
                         // 2026-08-25 (#315): was
                         // `(fs + 6).clamp(20.0, 32.0)`, which saturated
                         // at 26 pt and left the artefact's own name
@@ -367,7 +365,8 @@ class _EvidenceDetailPageState extends State<EvidenceDetailPage> {
                 Text(
                   evidence.localizedSummary(locale),
                   style: TextStyle(
-                    fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
+                    fontFamily: settings.fontFamily,
+                    fontFamilyFallback: kCjkFontFallback,
                     fontSize: fs,
                     fontStyle: FontStyle.italic,
                     color: scheme.onSurface,
@@ -385,7 +384,8 @@ class _EvidenceDetailPageState extends State<EvidenceDetailPage> {
                   child: Text(
                     evidence.localizedDescription(locale),
                     style: TextStyle(
-                      fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
+                      fontFamily: settings.fontFamily,
+                      fontFamilyFallback: kCjkFontFallback,
                       fontSize: fs,
                       color: scheme.onSurface,
                       height: 1.55,
@@ -402,13 +402,12 @@ class _EvidenceDetailPageState extends State<EvidenceDetailPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (evidence
-                        .localizedCorrelation(locale)
-                        .isNotEmpty) ...[
+                    if (evidence.localizedCorrelation(locale).isNotEmpty) ...[
                       Text(
                         evidence.localizedCorrelation(locale),
                         style: TextStyle(
-                          fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
+                          fontFamily: settings.fontFamily,
+                          fontFamilyFallback: kCjkFontFallback,
                           fontSize: fs,
                           color: scheme.onSurface,
                           height: 1.55,
@@ -456,9 +455,9 @@ class _EvidenceDetailPageState extends State<EvidenceDetailPage> {
     final version = context.read<MainProvider>().currentVersion;
     final category =
         uiStrings['category${evidence.category}']?[locale] ?? evidence.category;
-    final confidence =
-        uiStrings['confidence${evidence.confidenceLevel}']?[locale] ??
-            evidence.confidenceLevel;
+    final confidence = uiStrings['confidence${evidence.confidenceLevel}']
+            ?[locale] ??
+        evidence.confidenceLevel;
     final reference =
         localizedReferenceLabel(evidence.scriptureReference, locale, version);
     final body = StringBuffer()
@@ -621,7 +620,8 @@ class _Meta extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
+                fontFamily: settings.fontFamily,
+                fontFamilyFallback: kCjkFontFallback,
                 fontSize: t.scaledSmall(15),
                 color: scheme.onSurfaceVariant,
                 fontWeight: FontWeight.w500,
@@ -653,8 +653,7 @@ class _Section extends StatelessWidget {
   const _Section({required this.label, required this.child});
 
   @override
-  Widget build(BuildContext context) =>
-      WbPanel(title: label, child: child);
+  Widget build(BuildContext context) => WbPanel(title: label, child: child);
 }
 
 class _ReferenceChip extends StatelessWidget {
@@ -686,13 +685,11 @@ class _ReferenceChip extends StatelessWidget {
         onTap: onTap,
         hoverColor: wb.hoverBg,
         child: Padding(
-          padding:
-              const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.menu_book_outlined,
-                  size: 16, color: scheme.primary),
+              Icon(Icons.menu_book_outlined, size: 16, color: scheme.primary),
               const SizedBox(width: 6),
               Text(
                 // This widget has taken a `locale` since it was
@@ -702,20 +699,21 @@ class _ReferenceChip extends StatelessWidget {
                 // Chinese version. Same defect class as #283.
                 localizedReferenceLabel(reference, locale, currentVersion),
                 style: TextStyle(
-                  fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
+                  fontFamily: settings.fontFamily,
+                  fontFamilyFallback: kCjkFontFallback,
                   fontSize: settings.fontSize,
                   fontWeight: FontWeight.w700,
                   color: scheme.primary,
                 ),
               ),
               const SizedBox(width: 6),
-              Icon(Icons.arrow_forward,
-                  size: 14, color: scheme.primary),
+              Icon(Icons.arrow_forward, size: 14, color: scheme.primary),
               const SizedBox(width: 2),
               Text(
                 uiStrings['readInBible']?[locale] ?? 'Read',
                 style: TextStyle(
-                  fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
+                  fontFamily: settings.fontFamily,
+                  fontFamilyFallback: kCjkFontFallback,
                   fontSize: t.scaledSmall(15),
                   fontWeight: FontWeight.w600,
                   color: scheme.primary,
@@ -763,7 +761,8 @@ class _SourceTile extends StatelessWidget {
                 child: Text(
                   text,
                   style: TextStyle(
-                    fontFamily: settings.fontFamily, fontFamilyFallback: kCjkFontFallback,
+                    fontFamily: settings.fontFamily,
+                    fontFamilyFallback: kCjkFontFallback,
                     fontSize: t.scaledSmall(17),
                     color: scheme.onSurface,
                     height: 1.4,

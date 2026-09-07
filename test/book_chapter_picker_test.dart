@@ -21,6 +21,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/constants/workbench_theme.dart';
+import 'package:seeksparks/services/app_icon_service.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/book.dart';
 import 'package:seeksparks/models/chapter.dart';
@@ -228,7 +229,13 @@ void main() {
       final inner = tester.element(find.text('Gen'));
       expect(Theme.of(ctx).extension<WbColors>(), isNull,
           reason: 'the host is deliberately unthemed in this test');
-      expect(Theme.of(inner).extension<WbColors>(), WbColors.light);
+      // 2026-09-07: `.tinted(...)` because the picker now passes the
+      // reader's Primary Color through to `workbenchTheme`. A default
+      // AppSettings carries the default swatch, so this is the light
+      // palette re-pointed at the app's own ink — still the light
+      // palette, which is what the assertion is about.
+      expect(Theme.of(inner).extension<WbColors>(),
+          WbColors.light.tinted(AppIconService.kDefaultPrimaryColor));
     });
 
     testWidgets('a dark host gets the dark palette, not the light fallback',
@@ -238,7 +245,8 @@ void main() {
       // exactly the failure a self-theming widget has to rule out.
       await pump(tester, mode: ThemeMode.dark);
       final inner = tester.element(find.text('Gen'));
-      expect(Theme.of(inner).extension<WbColors>(), WbColors.dark);
+      expect(Theme.of(inner).extension<WbColors>(),
+          WbColors.dark.tinted(AppIconService.kDefaultPrimaryColor));
     });
   });
 }

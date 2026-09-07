@@ -2,24 +2,20 @@ import 'dart:async' show unawaited;
 
 import 'package:flutter/foundation.dart';
 
-import 'package:seeksparks/constants/bible_versions.dart'
-    show loadableVersions;
+import 'package:seeksparks/constants/bible_versions.dart' show loadableVersions;
 import 'package:seeksparks/models/verse.dart';
 import 'package:seeksparks/models/wb_centre_mode.dart';
 import 'package:seeksparks/providers/main_provider.dart';
-import 'package:seeksparks/services/ai_bible_search_service.dart';
 import 'package:seeksparks/services/concordance_service.dart';
 import 'package:seeksparks/services/search_service.dart';
 import 'package:seeksparks/services/vocabulary_service.dart';
-import 'package:seeksparks/utils/ai_ref_resolution.dart';
 import 'package:seeksparks/constants/text_patterns.dart'
     show sanitizeForSearchKey, searchCorpusKey;
 import 'package:seeksparks/services/fetch_verses.dart' show FetchVerses;
 import 'package:seeksparks/utils/command_query.dart';
 import 'package:seeksparks/utils/cross_version_query.dart';
 import 'package:seeksparks/utils/cross_version_search.dart';
-import 'package:seeksparks/utils/ketiv_qere.dart'
-    show KetivQereSearchScope;
+import 'package:seeksparks/utils/ketiv_qere.dart' show KetivQereSearchScope;
 import 'package:seeksparks/utils/command_verb.dart' show LimitSpec;
 import 'package:seeksparks/utils/compound_query.dart';
 import 'package:seeksparks/utils/romanised_lemma.dart';
@@ -168,33 +164,9 @@ class WorkbenchProvider extends ChangeNotifier {
   /// several MB of assets that nothing else on the page needs.
   LemmaOffer? lemmaOffer;
 
-  // ── AI passage search ─────────────────────────────────────────────
   //
   // A fourth result shape beside text, Strong's and command queries,
   // and the only one whose answer does not come out of the corpus.
-  // Kept as its own state rather than folded into [textResults]
-  // because the reader has to be able to tell the difference: these
-  // are suggestions from a model, they carry a stated reason, and some
-  // of them will not be in the loaded edition at all.
-
-  bool aiBusy = false;
-
-  /// The question, as asked. Null when the last search was not an AI one.
-  String? aiQuery;
-
-  /// Every reference the AI returned that survived the search limit, in
-  /// its order — including the ones that resolved to nothing.
-  List<AiBibleRef>? aiRefs;
-
-  /// `AiBibleRef.display` of the references with no verse behind them.
-  Set<String> aiUnresolved = const {};
-
-  /// Why some of the answer is missing, or why there is no answer.
-  /// Model-authored prose in the reader's locale, or a service error.
-  String? aiNotice;
-
-  bool get hasAiResults => aiRefs != null;
-
   /// Search limit — restrict results to these
   /// `'EnglishBook-chapter-verse'` keys. Null means unrestricted.
   ///
@@ -267,7 +239,9 @@ class WorkbenchProvider extends ChangeNotifier {
     final keys = <String>{};
     for (final v in mainProvider.verses) {
       final book = toEnglish(v.book) ?? v.book;
-      if (spec.covers(book, v.chapter)) keys.add('$book-${v.chapter}-${v.verse}');
+      if (spec.covers(book, v.chapter)) {
+        keys.add('$book-${v.chapter}-${v.verse}');
+      }
     }
     if (keys.isEmpty) return false;
     await setSearchLimit(keys, label, spec: spec);
@@ -477,10 +451,9 @@ class WorkbenchProvider extends ChangeNotifier {
   /// Run the command line.
   ///
   /// [ketivQere] is bwh29's pair of search switches. Passed in rather
-  /// than read from `AppSettings`, for the reason [runAiSearch] gives:
-  /// this provider is constructed with a [MainProvider] and nothing
-  /// else, and reaching for the settings here would make every test that
-  /// touches the workbench need one. It defaults to
+  /// than read from `AppSettings`: this provider is constructed with a
+  /// [MainProvider] and nothing else, and reaching for the settings here
+  /// would make every test that touches the workbench need one. It defaults to
   /// [KetivQereSearchScope.both], which is what the engine did before
   /// the setting existed.
   Future<void> runSearch(
@@ -515,7 +488,6 @@ class WorkbenchProvider extends ChangeNotifier {
     crossVersionHits = null;
     crossVersionConjunction = null;
     textResults = const [];
-    _clearAi();
     _notify();
 
     try {
@@ -613,9 +585,8 @@ class WorkbenchProvider extends ChangeNotifier {
         // (#295). Run it as `.faith*` instead. Only when that parses:
         // otherwise the reader would be shown a command error for a line
         // they never wrote as a command.
-        final promoted = needsWildcardPromotion(query)
-            ? parseCommandQuery('.$query')
-            : null;
+        final promoted =
+            needsWildcardPromotion(query) ? parseCommandQuery('.$query') : null;
         if (promoted?.query != null) {
           commandQuery = promoted!.query;
           textResults = _runCommand(promoted.query!);
@@ -991,8 +962,7 @@ class WorkbenchProvider extends ChangeNotifier {
   /// An edition that will not load makes the whole query empty rather
   /// than quietly dropping its condition — "the KJV says X and the CSB
   /// says Y" minus the CSB is a different question with more answers.
-  Future<List<Verse>> _runCrossVersionConjunction(
-      CrossVersionQuery xv) async {
+  Future<List<Verse>> _runCrossVersionConjunction(CrossVersionQuery xv) async {
     final perVersion = <Set<String>>[];
     for (final term in xv.terms) {
       final corpus = await _corpusFor(term.version);
@@ -1026,7 +996,8 @@ class WorkbenchProvider extends ChangeNotifier {
     );
   }
 
-  List<ConcordanceRef> _limitRefs(List<ConcordanceRef> refs) => applySearchLimit(
+  List<ConcordanceRef> _limitRefs(List<ConcordanceRef> refs) =>
+      applySearchLimit(
         refs,
         searchLimit,
         (r) => '${r.englishBook}-${r.chapter}-${r.verse}',
@@ -1054,120 +1025,7 @@ class WorkbenchProvider extends ChangeNotifier {
     commandIssue = null;
     verbNotice = null;
     textResults = const [];
-    _clearAi();
     _notify();
-  }
-
-  void _clearAi() {
-    aiBusy = false;
-    aiQuery = null;
-    aiRefs = null;
-    aiUnresolved = const {};
-    aiNotice = null;
-  }
-
-  /// The AI call itself, injectable so everything around it — clearing
-  /// the other result shapes, the busy flag, the scope closure, the
-  /// mirror into [textResults] — can be tested without a network.
-  /// Production never sets this.
-  @visibleForTesting
-  Future<AiBibleSearchResult> Function(String query)? aiAsk;
-
-  /// Ask the model for passages matching [question], then join its
-  /// answer to the loaded edition.
-  ///
-  /// Takes the AI settings as arguments rather than reading them: this
-  /// provider is constructed with a [MainProvider] and nothing else,
-  /// and reaching for `AppSettings` here would make every test that
-  /// touches the workbench need one.
-  Future<void> runAiSearch({
-    required String question,
-    required String locale,
-    String? userApiKey,
-    String? aiModel,
-  }) async {
-    final query = question.trim();
-    if (query.isEmpty) return;
-
-    // The AI answer replaces whatever was on screen, exactly as a new
-    // text search would. Leaving the old hits under a new header is
-    // the bug that makes a results pane untrustworthy.
-    strongsQueryLabel = null;
-    strongsRefs = null;
-    strongsCounts = null;
-    strongsByBook = const <String, int>{};
-    strongsListTruncated = false;
-    strongsCorpusVerses = null;
-    strongsCorpusOccurrences = null;
-    commandQuery = null;
-    compoundQuery = null;
-    compoundGroupCounts = null;
-    broadening = null;
-    termsMissing = null;
-    lemmaOffer = null;
-    commandIssue = null;
-    verbNotice = null;
-    textResults = const [];
-    lastQuery = query;
-    _clearAi();
-
-    aiBusy = true;
-    aiQuery = query;
-    searchPerformed = false;
-    _notify();
-
-    try {
-      final result = await (aiAsk?.call(query) ??
-          AiBibleSearchService.ask(
-            query: query,
-            locale: locale,
-            userApiKey:
-                (userApiKey == null || userApiKey.isEmpty) ? null : userApiKey,
-            aiModel: aiModel,
-          ));
-
-      if (result.unavailable) {
-        aiRefs = const [];
-        aiNotice = result.unavailableReason;
-        return;
-      }
-
-      final limit = searchLimit;
-      final resolution = resolveAiRefs(
-        refs: result.refs,
-        verses: mainProvider.verses,
-        inScope: limit == null
-            ? null
-            : (ref) {
-                for (var v = ref.verseStart; v <= ref.verseEnd; v++) {
-                  if (limit.contains('${ref.book}-${ref.chapter}-$v')) {
-                    return true;
-                  }
-                }
-                return false;
-              },
-      );
-
-      aiRefs = resolution.kept;
-      aiUnresolved = resolution.unresolvedDisplays;
-      // The resolved verses also become the ordinary result set, so
-      // everything downstream that consumes a hit list — the Verse
-      // List Manager, "limit to these results", the copy paths —
-      // works on an AI answer without knowing where it came from.
-      textResults = resolution.verses;
-      aiNotice = describeAiGaps(
-        locale: locale,
-        outOfScope: resolution.outOfScope,
-        unresolved: resolution.unresolvedDisplays.length,
-        empty: resolution.kept.isEmpty,
-      );
-    } finally {
-      // Unconditional: an exception escaping the service would
-      // otherwise leave the pane spinning with no way back.
-      aiBusy = false;
-      searchPerformed = true;
-      _notify();
-    }
   }
 
   // ── Ref → Verse lookup (shared by command pane + analysis pane) ──

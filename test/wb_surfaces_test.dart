@@ -6,14 +6,20 @@
 //    and elevated. That is where the app's pills actually came from:
 //    not from the pages, but from the components the theme forgot to
 //    mention. The guard below walks every component the theme claims
-//    and asserts a zero corner radius, so a future `copyWith` that
-//    drops one is a red test rather than a re-rounded button somebody
-//    notices in a screenshot six weeks later.
+//    and asserts a rectangle whose corner comes off the WbMetrics
+//    scale, so a future `copyWith` that drops one is a red test rather
+//    than a re-STADIUMED button somebody notices in a screenshot six
+//    weeks later. (2026-09-07: the assertion used to be "radius zero".
+//    The owner asked for a modern interface and the square-corner rule
+//    was retired — see `workbench_theme.dart`. What the guard defends
+//    is unchanged in kind: no pills, no circles, no shadows, and one
+//    shared set of numbers instead of thirty.)
 //
-// 2. The PAGE SURFACES in `wb_surfaces.dart` — that they honour
-//    workbench_theme.dart:16 ("square corners and 1px hairline
-//    borders, no shadows, no cards") and that they read their colours
-//    from the WbColors extension, so all three palettes work.
+// 2. The PAGE SURFACES in `wb_surfaces.dart` — that they honour the
+//    rule stated in `workbench_theme.dart` ("1px hairline borders, no
+//    shadows, no cards", with corners off the WbMetrics scale) and that
+//    they read their colours from the WbColors extension, so all three
+//    palettes work.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -23,15 +29,41 @@ import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/widgets/wb_surfaces.dart';
 
-/// Every shape the theme sets must be a rectangle with square corners.
-/// `StadiumBorder` and `CircleBorder` are failures by construction; a
-/// `RoundedRectangleBorder` is only acceptable at radius zero.
-void _expectSquare(ShapeBorder? shape, String what) {
+/// The corners the theme is allowed to draw: the WbMetrics scale, plus
+/// zero for the handful of components deliberately left square.
+final _allowedRadii = <double>{
+  0,
+  WbMetrics.radiusControl,
+  WbMetrics.radiusSurface,
+};
+
+/// Every shape the theme sets must be a rectangle whose corner comes off
+/// the scale. `StadiumBorder` and `CircleBorder` are failures by
+/// construction — those are the M3 defaults this theme exists to
+/// displace, and a pill is the one shape no amount of "modern" argues
+/// for on a 22px-tall desktop control.
+///
+/// 2026-09-07: this is the successor to `_expectSquare`. Asserting the
+/// NUMBER SET rather than a single number is the point — it still fails
+/// on a stray `BorderRadius.circular(16)`, which was the real risk all
+/// along, while letting the theme have a corner at all.
+void _expectOnScale(ShapeBorder? shape, String what) {
   expect(shape, isNotNull, reason: '$what should set an explicit shape');
   expect(shape, isA<RoundedRectangleBorder>(),
       reason: '$what should be a rectangle, not a pill or a circle');
-  final r = (shape! as RoundedRectangleBorder).borderRadius;
-  expect(r, BorderRadius.zero, reason: '$what should have square corners');
+  final r = (shape! as RoundedRectangleBorder).borderRadius as BorderRadius;
+  for (final corner in <Radius>[
+    r.topLeft,
+    r.topRight,
+    r.bottomLeft,
+    r.bottomRight
+  ]) {
+    expect(corner.x, corner.y,
+        reason: '$what should have circular corners, not elliptical');
+    expect(_allowedRadii, contains(corner.x),
+        reason: '$what has a ${corner.x}px corner, which is not on the '
+            'WbMetrics scale (${_allowedRadii.join(", ")})');
+  }
 }
 
 OutlinedBorder? _buttonShape(ButtonStyle? style) =>
@@ -49,37 +81,47 @@ void main() {
 
   themes.forEach((name, theme) {
     group('workbenchTheme($name) component chrome', () {
-      test('every button family is square', () {
-        _expectSquare(
+      test('no button family is a pill', () {
+        _expectOnScale(
             _buttonShape(theme.filledButtonTheme.style), 'FilledButton');
-        _expectSquare(
+        _expectOnScale(
             _buttonShape(theme.outlinedButtonTheme.style), 'OutlinedButton');
-        _expectSquare(
+        _expectOnScale(
             _buttonShape(theme.elevatedButtonTheme.style), 'ElevatedButton');
-        _expectSquare(_buttonShape(theme.textButtonTheme.style), 'TextButton');
-        _expectSquare(
+        _expectOnScale(_buttonShape(theme.textButtonTheme.style), 'TextButton');
+        _expectOnScale(
             _buttonShape(theme.segmentedButtonTheme.style), 'SegmentedButton');
-        expect(theme.toggleButtonsTheme.borderRadius, BorderRadius.zero);
+        expect(theme.toggleButtonsTheme.borderRadius,
+            BorderRadius.circular(WbMetrics.radiusControl));
       });
 
-      test('chips are square boxes, not pills', () {
-        _expectSquare(theme.chipTheme.shape, 'Chip');
+      test('chips are boxes, not pills', () {
+        _expectOnScale(theme.chipTheme.shape, 'Chip');
         // A chip that signalled selection by fill alone would be a
         // colour-only cue. The tick has to survive the flattening.
         expect(theme.chipTheme.showCheckmark, isTrue);
       });
 
-      test('containers — card, sheet, dialog, menus — are square', () {
-        _expectSquare(theme.cardTheme.shape, 'Card');
-        _expectSquare(theme.bottomSheetTheme.shape, 'BottomSheet');
-        _expectSquare(theme.dialogTheme.shape, 'Dialog');
-        _expectSquare(theme.popupMenuTheme.shape, 'PopupMenu');
-        _expectSquare(theme.menuTheme.style?.shape?.resolve(<WidgetState>{}),
+      test('containers — card, sheet, dialog, menus — stay on the scale', () {
+        _expectOnScale(theme.cardTheme.shape, 'Card');
+        // The bottom sheet is the one asymmetric shape: rounded on the
+        // two corners the reader can see, square on the two that are
+        // off the bottom edge of the window.
+        _expectOnScale(theme.bottomSheetTheme.shape, 'BottomSheet');
+        final sheet = (theme.bottomSheetTheme.shape! as RoundedRectangleBorder)
+            .borderRadius as BorderRadius;
+        expect(sheet.bottomLeft, Radius.zero);
+        expect(sheet.bottomRight, Radius.zero);
+        expect(sheet.topLeft.x, WbMetrics.radiusSurface);
+
+        _expectOnScale(theme.dialogTheme.shape, 'Dialog');
+        _expectOnScale(theme.popupMenuTheme.shape, 'PopupMenu');
+        _expectOnScale(theme.menuTheme.style?.shape?.resolve(<WidgetState>{}),
             'MenuAnchor');
-        _expectSquare(theme.snackBarTheme.shape, 'SnackBar');
-        _expectSquare(theme.listTileTheme.shape, 'ListTile');
-        _expectSquare(theme.expansionTileTheme.shape, 'ExpansionTile');
-        _expectSquare(theme.expansionTileTheme.collapsedShape,
+        _expectOnScale(theme.snackBarTheme.shape, 'SnackBar');
+        _expectOnScale(theme.listTileTheme.shape, 'ListTile');
+        _expectOnScale(theme.expansionTileTheme.shape, 'ExpansionTile');
+        _expectOnScale(theme.expansionTileTheme.collapsedShape,
             'ExpansionTile (collapsed)');
       });
 
@@ -107,10 +149,15 @@ void main() {
       test('text fields are hairline boxes, not filled pills', () {
         final border = theme.inputDecorationTheme.enabledBorder;
         expect(border, isA<OutlineInputBorder>());
-        expect((border! as OutlineInputBorder).borderRadius, BorderRadius.zero);
+        expect((border! as OutlineInputBorder).borderRadius,
+            BorderRadius.circular(WbMetrics.radiusControl));
       });
 
-      test('the progress indicator has square ends', () {
+      test('the progress indicator still has square ends', () {
+        // The deliberate exception to the 2026-09-07 pass. A progress
+        // bar is a measurement, and a rounded cap on a bar that is 2%
+        // full draws something wider than 2%. Chrome may round; data
+        // may not.
         expect(theme.progressIndicatorTheme.borderRadius, BorderRadius.zero);
       });
 
@@ -155,11 +202,12 @@ void main() {
   }
 
   group('WbPanel', () {
-    testWidgets('is a square hairline box on the pane background',
-        (tester) async {
+    testWidgets('is a hairline box on the pane background', (tester) async {
       await tester.pumpWidget(host(const WbPanel(child: Text('body'))));
       final d = decorationOf(tester, find.byType(WbPanel));
-      expect(d.borderRadius, isNull, reason: 'square corners');
+      // A panel CONTAINS, so it takes the surface radius, not the
+      // control one.
+      expect(d.borderRadius, BorderRadius.circular(WbMetrics.radiusSurface));
       expect(d.boxShadow, anyOf(isNull, isEmpty), reason: 'no shadows');
       expect(d.color, WbColors.light.paneBg);
       expect((d.border! as Border).top.width, WbMetrics.hairline);
@@ -210,7 +258,7 @@ void main() {
       expect(tester.widget<Text>(find.text('H3068')).style!.color, hue);
       final d = decorationOf(tester, find.byType(WbTag));
       expect(d.color, WbColors.light.paneAltBg);
-      expect(d.borderRadius, isNull);
+      expect(d.borderRadius, BorderRadius.circular(WbMetrics.radiusControl));
     });
 
     testWidgets('defaults to muted when it is only a label', (tester) async {
@@ -221,10 +269,11 @@ void main() {
   });
 
   group('WbTile', () {
-    testWidgets('is a plain square box when it does not tap', (tester) async {
+    testWidgets('is a plain box when it does not tap', (tester) async {
       await tester.pumpWidget(host(const WbTile(child: Text('row'))));
       expect(find.byType(InkWell), findsNothing);
-      expect(decorationOf(tester, find.byType(WbTile)).borderRadius, isNull);
+      expect(decorationOf(tester, find.byType(WbTile)).borderRadius,
+          BorderRadius.circular(WbMetrics.radiusControl));
     });
 
     testWidgets('taps, and says so by lighting up rather than by a card',
@@ -239,7 +288,7 @@ void main() {
         find.descendant(
             of: find.byType(WbTile), matching: find.byType(Material)),
       );
-      _expectSquare(material.shape, 'WbTile');
+      _expectOnScale(material.shape, 'WbTile');
       await tester.tap(find.text('row'));
       expect(taps, 1);
     });

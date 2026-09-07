@@ -13,13 +13,48 @@
 /// The rules this encodes, taken from BibleWorks 10:
 ///   * ~12px body text on a ~1.3 line height — roughly half the vertical
 ///     space per line that the reading app uses.
-///   * Square corners and 1px hairline borders. No shadows, no cards.
+///   * 1px hairline borders. No shadows, no cards, no elevation.
 ///   * A neutral ground. The ONLY saturated colour in the whole window
 ///     is the per-version tag and the blue of a clickable reference —
 ///     which is exactly why those read as information rather than
 ///     decoration.
 ///   * Chrome (menu bar, pane titles, status bar) one step smaller
 ///     again, at 11px.
+///
+/// **2026-09-07 — the square-corner rule is retired, at the owner's
+/// request.** The brief was "现在的好像小时候软件窗口界面 但是我要最现代的
+/// 界面风格": the workspace read as 1990s desktop software and should
+/// read as current desktop software instead. Two things were doing
+/// that, and neither of them was density:
+///
+///   1. **A grey chrome bar.** [WbColors.chromeBg] was #E9EBEF against
+///      a #FFFFFF pane — a full value step, which is exactly how Win32
+///      and Motif drew a toolbar, and how nothing drawn after about
+///      2015 does. Linear, Raycast, Vercel and Arc all put chrome on
+///      the SAME ground as content and separate it with a hairline.
+///      Chrome is now within a couple of percent of the pane; the
+///      border does the separating.
+///   2. **A drawn rule instead of a hairline.** [WbColors.border] was
+///      #BCC2CC — 2.2:1 against white, which the eye reads as a LINE,
+///      not as an edge. The modern equivalent is ~8% black. Sixty-seven
+///      borders at 2.2:1 is a wireframe; the same sixty-seven at 8% is
+///      structure you stop noticing.
+///
+/// Corner radius is the third, and it is the one the old rule forbade
+/// outright. It comes back the way font size came back in #315 — as a
+/// SCALE on [WbMetrics] ([WbMetrics.radiusControl] /
+/// [WbMetrics.radiusSurface] / [WbMetrics.radiusPill]) rather than as
+/// thirty independently chosen numbers. `test/page_chrome_pass_test.dart`
+/// was the ratchet that held the old rule; it now enforces the new one
+/// — a `Radius.circular` in a converted file must read its number off
+/// [WbMetrics], and shadows and elevation stay banned, because "no
+/// cards" was the half of #279 that was always right. A rounded corner
+/// is a 2015 convention; a drop shadow under a flat pane is still a
+/// Material 3 tell.
+///
+/// What did NOT change is density. 12px body text on a 1.32 line height
+/// is the reason this tool can show four translations of a verse at
+/// once, and modern does not mean airy.
 library;
 
 import 'dart:math' as math;
@@ -110,6 +145,28 @@ abstract final class WbMetrics {
 
   /// Hairline. BibleWorks separates everything with a single pixel.
   static const double hairline = 1.0;
+
+  /// The corner radius scale (2026-09-07). Three numbers, not thirty —
+  /// the same reason [WbType] owns font size.
+  ///
+  /// Sized off the two references the brief points at. Linear runs 4 /
+  /// 6 / 12; Raycast runs 8 for buttons and inputs and 16–20 for cards.
+  /// Both are drawn at a comfortable reading density; this workspace is
+  /// drawn at BibleWorks density, where a chip is 18px tall and a 12px
+  /// radius on an 18px box is not a rounded rectangle, it is a lozenge.
+  /// So the scale is pulled one step tighter than Linear's: the corner
+  /// should be legible at the size the thing is actually drawn.
+
+  /// Chips, buttons, inputs, tags — anything the pointer acts on.
+  static const double radiusControl = 5.0;
+
+  /// Panels, popovers, sheets, docked windows — anything that CONTAINS.
+  /// One step larger, so a control inside a surface never looks like it
+  /// is fighting the surface's own corner.
+  static const double radiusSurface = 8.0;
+
+  /// Count badges and version tags, where the shape IS the affordance.
+  static const double radiusPill = 999.0;
 }
 
 /// The Workbench palette. Kept separate from `ColorScheme` because most
@@ -122,6 +179,7 @@ class WbColors extends ThemeExtension<WbColors> {
     required this.paneAltBg,
     required this.chromeBg,
     required this.border,
+    required this.disabledMark,
     required this.text,
     required this.mutedText,
     required this.link,
@@ -145,6 +203,22 @@ class WbColors extends ThemeExtension<WbColors> {
   final Color chromeBg;
 
   final Color border;
+
+  /// An inactive glyph: an unticked checkbox, an off toggle's icon, the
+  /// empty half of a magnitude bar, a stepper that has run out of rows.
+  ///
+  /// 2026-09-07: this used to be [border], and that worked only by
+  /// accident — the old border was #BCC2CC, dark enough to read as a
+  /// mark. The modern pass took the border down to a true hairline
+  /// (~7% black), which is right for an EDGE and invisible for a GLYPH:
+  /// ten "off" icons would have quietly disappeared. They are two roles
+  /// and they are now two fields, which is also why the border was free
+  /// to move at all.
+  ///
+  /// Deliberately below [mutedText]: "off" should be legible and should
+  /// not compete with text that is on.
+  final Color disabledMark;
+
   final Color text;
   final Color mutedText;
 
@@ -245,16 +319,38 @@ class WbColors extends ThemeExtension<WbColors> {
   // picked before the icon existed. Both now carry a slight bias toward
   // the mark's ink (#27395A), so the workspace and the icon read as one
   // family instead of two unrelated palettes.
+  //
+  // 2026-09-07: retuned for the modern pass (see the library doc). The
+  // hues did not move — this is the same navy-biased neutral family and
+  // the same link blue. What moved is the DISTANCE between surfaces.
+  // Chrome used to sit a full value step below the pane, which is a
+  // 1990s toolbar; it now sits within 2% of it and the hairline does the
+  // work. The border used to be 2.2:1 against the pane, which the eye
+  // reads as a drawn line; it is now ~1.15:1, which the eye reads as an
+  // edge. Text, link, Strong's hues and the four data marks (pin,
+  // sibling, diff, accent) are untouched: every one of them is
+  // contrast-audited against a fill, and "modern" is a claim about
+  // chrome, not about legibility.
   static const light = WbColors(
     paneBg: Color(0xFFFFFFFF),
-    paneAltBg: Color(0xFFF6F7F9),
-    chromeBg: Color(0xFFE9EBEF),
-    border: Color(0xFFBCC2CC),
+    // A zebra you can feel and not point at. #F6F7F9 was already close;
+    // half a step closer keeps the version boundary findable without
+    // striping the page.
+    paneAltBg: Color(0xFFFAFAFC),
+    // Was #E9EBEF — the grey toolbar. Now effectively the pane.
+    chromeBg: Color(0xFFFBFBFD),
+    // Was #BCC2CC (2.2:1). ~7% black on white.
+    border: Color(0xFFE3E5EA),
+    disabledMark: Color(0xFFAFB6C2),
     text: Color(0xFF16202E),
-    mutedText: Color(0xFF66707F),
+    // One step lighter, now that it no longer has to survive a grey bar.
+    mutedText: Color(0xFF737D8C),
     link: Color(0xFF27395A),
-    selectionBg: Color(0xFFDCE5F1),
-    hoverBg: Color(0xFFEFF2F7),
+    // The selection is the one place that got MORE presence, not less:
+    // with the chrome flattened it is now the strongest fill on screen,
+    // which is right — it is the only one that means "here".
+    selectionBg: Color(0xFFDDE7F5),
+    hoverBg: Color(0xFFF1F3F7),
     strongsLexical: Color(0xFF1E7A3C),
     strongsGrammar: Color(0xFF1B57C4),
     pinMark: Color(0xFF8A6A12),
@@ -264,15 +360,29 @@ class WbColors extends ThemeExtension<WbColors> {
 
   static const dark = WbColors(
     // Straight off the icon's ground gradient: #152238 → #060B14.
-    paneBg: Color(0xFF101A2B),
-    paneAltBg: Color(0xFF152238),
-    chromeBg: Color(0xFF1B2942),
-    border: Color(0xFF33415A),
+    //
+    // 2026-09-07: pulled toward the dark end of that same gradient.
+    // #101A2B was the middle of it, which left no room BELOW the pane —
+    // every other surface had to go lighter, and a dark theme built
+    // entirely of lighter-than-the-ground panels is the one that reads
+    // as a skin over a light app. Starting at #0B1320 gives the ladder
+    // somewhere to go and matches what Linear (#010102) and Raycast
+    // (#040506) do: a near-black ground, with the content the brightest
+    // thing in the window.
+    paneBg: Color(0xFF0B1320),
+    paneAltBg: Color(0xFF101A2A),
+    chromeBg: Color(0xFF0E1725),
+    // ~9% white, the dark-side equivalent of light's 7% black.
+    border: Color(0xFF1E2A3C),
+    disabledMark: Color(0xFF4A5A73),
     text: Color(0xFFDCE5F1),
-    mutedText: Color(0xFF8B9AB3),
-    link: Color(0xFF9FB2CC),
-    selectionBg: Color(0xFF243A5C),
-    hoverBg: Color(0xFF1D2C46),
+    mutedText: Color(0xFF8291A8),
+    // Was #9FB2CC — a desaturated grey-blue that only read as a link
+    // because it was slightly cooler than the text beside it. On the
+    // deeper ground it can afford real saturation.
+    link: Color(0xFF8FB3F0),
+    selectionBg: Color(0xFF1C3253),
+    hoverBg: Color(0xFF15202F),
     strongsLexical: Color(0xFF5FC183),
     strongsGrammar: Color(0xFF77A6F0),
     pinMark: Color(0xFFE8C24A),
@@ -293,16 +403,21 @@ class WbColors extends ThemeExtension<WbColors> {
   /// tinted dark mode — see bible_reading_pane.dart).
   static const paper = WbColors(
     paneBg: Color(0xFFF7F1E0),
-    paneAltBg: Color(0xFFEFE5C9),
-    chromeBg: Color(0xFFE6D9B5),
-    border: Color(0xFFDED0A8),
+    // 2026-09-07: the same flattening as light and dark. Paper had the
+    // worst case of it — #E6D9B5 chrome under #F7F1E0 content is a
+    // two-step drop, so the workbench read as a cream page sitting in a
+    // beige window frame. Chrome is now one shade off the page.
+    paneAltBg: Color(0xFFF2EAD3),
+    chromeBg: Color(0xFFF3ECD8),
+    border: Color(0xFFE7DCBC),
+    disabledMark: Color(0xFFC3B287),
     text: Color(0xFF4A3826),
     mutedText: Color(0xFF7A6A50),
     // Hyperlink blue is the one BibleWorks colour readers already know;
     // a gold link on cream is harder to read, not easier.
     link: Color(0xFF27395A),
-    selectionBg: Color(0xFFE3D19D),
-    hoverBg: Color(0xFFEFE5C9),
+    selectionBg: Color(0xFFE8D8A6),
+    hoverBg: Color(0xFFF0E7CC),
     strongsLexical: Color(0xFF1E7A3C),
     strongsGrammar: Color(0xFF1B57C4),
     pinMark: Color(0xFF7A5C0A),
@@ -316,6 +431,7 @@ class WbColors extends ThemeExtension<WbColors> {
     Color? paneAltBg,
     Color? chromeBg,
     Color? border,
+    Color? disabledMark,
     Color? text,
     Color? mutedText,
     Color? link,
@@ -332,6 +448,7 @@ class WbColors extends ThemeExtension<WbColors> {
         paneAltBg: paneAltBg ?? this.paneAltBg,
         chromeBg: chromeBg ?? this.chromeBg,
         border: border ?? this.border,
+        disabledMark: disabledMark ?? this.disabledMark,
         text: text ?? this.text,
         mutedText: mutedText ?? this.mutedText,
         link: link ?? this.link,
@@ -352,13 +469,13 @@ class WbColors extends ThemeExtension<WbColors> {
       paneAltBg: Color.lerp(paneAltBg, other.paneAltBg, t)!,
       chromeBg: Color.lerp(chromeBg, other.chromeBg, t)!,
       border: Color.lerp(border, other.border, t)!,
+      disabledMark: Color.lerp(disabledMark, other.disabledMark, t)!,
       text: Color.lerp(text, other.text, t)!,
       mutedText: Color.lerp(mutedText, other.mutedText, t)!,
       link: Color.lerp(link, other.link, t)!,
       selectionBg: Color.lerp(selectionBg, other.selectionBg, t)!,
       hoverBg: Color.lerp(hoverBg, other.hoverBg, t)!,
-      strongsLexical:
-          Color.lerp(strongsLexical, other.strongsLexical, t)!,
+      strongsLexical: Color.lerp(strongsLexical, other.strongsLexical, t)!,
       strongsGrammar: Color.lerp(strongsGrammar, other.strongsGrammar, t)!,
       pinMark: Color.lerp(pinMark, other.pinMark, t)!,
       siblingBg: Color.lerp(siblingBg, other.siblingBg, t)!,
@@ -380,6 +497,7 @@ class WbColors extends ThemeExtension<WbColors> {
           other.paneAltBg == paneAltBg &&
           other.chromeBg == chromeBg &&
           other.border == border &&
+          other.disabledMark == disabledMark &&
           other.text == text &&
           other.mutedText == mutedText &&
           other.link == link &&
@@ -388,7 +506,12 @@ class WbColors extends ThemeExtension<WbColors> {
           other.strongsLexical == strongsLexical &&
           other.strongsGrammar == strongsGrammar &&
           other.pinMark == pinMark &&
-          other.siblingBg == siblingBg);
+          other.siblingBg == siblingBg &&
+          // 2026-09-07: diffMark was missing from both == and hashCode
+          // since it was added. Two palettes differing only in their
+          // difference mark compared EQUAL, which is exactly the kind of
+          // thing the value-equality note below was written to prevent.
+          other.diffMark == diffMark);
 
   @override
   int get hashCode => Object.hash(
@@ -396,6 +519,7 @@ class WbColors extends ThemeExtension<WbColors> {
         paneAltBg,
         chromeBg,
         border,
+        disabledMark,
         text,
         mutedText,
         link,
@@ -405,7 +529,124 @@ class WbColors extends ThemeExtension<WbColors> {
         strongsGrammar,
         pinMark,
         siblingBg,
+        diffMark,
       );
+
+  /// This palette, re-pointed at the reader's chosen accent.
+  ///
+  /// 2026-09-07 (owner's brief: *"可以换多个颜色界面跟着换并且 app 图标也跟着
+  /// 换"*). SeekSparks already had the picker — seven swatches in
+  /// Settings → Primary Color, each mapped to an app-icon variant by
+  /// `AppIconService.variantForColor`, defaulting to the icon's own ink
+  /// #B23A32. What it did not have was any effect on the WORKBENCH,
+  /// which is the app: the three palettes above are const, so a reader
+  /// who picked green got a green icon, a green phone reader — and the
+  /// same navy workspace as before.
+  ///
+  /// Only THREE roles move, and that restraint is the design, not a
+  /// shortcut. The workbench's rule is one saturated thing in a neutral
+  /// window; re-tinting the ground, the borders and the text would not
+  /// make the app "greener", it would make it a green-tinted photograph
+  /// of itself, and it is what separates a themable tool from a skinned
+  /// one. Linear does exactly this with #5e6ad2 — links, selection,
+  /// focus, and nothing else.
+  ///
+  ///   * [link] — every clickable reference. THE place the accent goes.
+  ///   * [selectionBg] — the current verse. Reads as "the accent, very
+  ///     dilute", which is what a selection should be.
+  ///   * [hoverBg] — the same, one step further toward the pane, so the
+  ///     hover→selection pair still reads as one family.
+  ///
+  /// Untouched on purpose: [strongsLexical] / [strongsGrammar] (green
+  /// and blue are a CONVENTION the reader learns — a Strong's number
+  /// that changed hue with the theme would stop meaning anything),
+  /// [pinMark] and [siblingBg] and [diffMark] (each contrast-audited
+  /// against a specific fill, and each carrying a fixed meaning), and
+  /// every neutral.
+  ///
+  /// The link and the selected row are driven to a MEASURED contrast,
+  /// not to a chosen lightness — which is the correction the test for
+  /// this function forced. A fixed band (`lightness.clamp(0.24, 0.38)`)
+  /// looks like the right answer and is wrong by construction, because
+  /// HSL lightness is not luminance: at L=0.38 the picker's red clears
+  /// 5.5:1 on white while its orange manages 3.97 and its green 4.45.
+  /// The eye does not read lightness, so neither does this.
+  ///
+  /// So the hue and the (floored) saturation are chosen, and then the
+  /// lightness is walked toward the legible side until the pair
+  /// actually measures 4.5:1. It costs a handful of `Color` allocations
+  /// once per theme build.
+  WbColors tinted(Color accent) {
+    final hsl = HSLColor.fromColor(accent);
+    final dark = isDark;
+
+    // The link. Saturation is floored so a near-grey swatch still reads
+    // as a colour rather than as a second grey, and capped so a vivid
+    // one does not read as neon on cream.
+    final link = _drivenToContrast(
+      hsl.withSaturation(hsl.saturation.clamp(0.28, 0.85)),
+      on: paneBg,
+      want: 4.5,
+      darker: !dark,
+    );
+
+    // The selection. Same hue, most of the chroma spent — it sits UNDER
+    // body text, so it is driven against [text], not against the pane.
+    final selection = _drivenToContrast(
+      hsl.withSaturation(hsl.saturation.clamp(0.15, 0.45)).withLightness(
+            dark ? 0.20 : 0.90,
+          ),
+      on: text,
+      want: 4.5,
+      darker: dark,
+    );
+
+    // Hover is the selection, most of the way back to the pane: a
+    // pointer resting on a row should be quieter than a row that is
+    // chosen. Derived rather than computed independently, so the pair
+    // always reads as one family whatever the reader picked.
+    final hover = Color.lerp(selection, paneBg, 0.55)!;
+
+    return copyWith(link: link, selectionBg: selection, hoverBg: hover);
+  }
+
+  /// Walk [seed]'s lightness until it clears [want] against [on].
+  ///
+  /// [darker] says which way legibility lies: toward black on a light
+  /// ground, toward white on a dark one. Steps of 0.02 — fine enough
+  /// that the result is still visibly the colour that was asked for,
+  /// coarse enough to terminate in at most 50 iterations. Returns the
+  /// best it reached if the target is unreachable, which is the right
+  /// failure: a black-on-black link is worse than a slightly-too-pale
+  /// one, and the test for this function is what actually holds the
+  /// line on the swatches the picker offers.
+  static Color _drivenToContrast(
+    HSLColor seed, {
+    required Color on,
+    required double want,
+    required bool darker,
+  }) {
+    var hsl = seed;
+    for (var i = 0; i < 50; i++) {
+      final candidate = hsl.toColor();
+      if (_contrastRatio(candidate, on) >= want) return candidate;
+      final next = darker ? hsl.lightness - 0.02 : hsl.lightness + 0.02;
+      if (next <= 0 || next >= 1) return candidate;
+      hsl = hsl.withLightness(next);
+    }
+    return hsl.toColor();
+  }
+
+  /// WCAG relative-contrast ratio, 1..21.
+  static double _contrastRatio(Color a, Color b) {
+    double channel(double v) =>
+        v <= 0.03928 ? v / 12.92 : math.pow((v + 0.055) / 1.055, 2.4) as double;
+    double luminance(Color c) =>
+        0.2126 * channel(c.r) + 0.7152 * channel(c.g) + 0.0722 * channel(c.b);
+    final la = luminance(a), lb = luminance(b);
+    final hi = math.max(la, lb), lo = math.min(la, lb);
+    return (hi + 0.05) / (lo + 0.05);
+  }
 
   static WbColors of(BuildContext context) =>
       Theme.of(context).extension<WbColors>() ?? light;
@@ -559,8 +800,7 @@ TextSpan versificationSpan(ScriptureSpan span, WbColors wb,
 /// eye seeing green at all.
 TextDecoration wordMarkUnderline(WordMark mark) => switch (mark) {
       WordMark.hover || WordMark.pinned => TextDecoration.underline,
-      WordMark.none || WordMark.hit || WordMark.sibling =>
-        TextDecoration.none,
+      WordMark.none || WordMark.hit || WordMark.sibling => TextDecoration.none,
     };
 
 /// Per-version tag colour. BibleWorks prints a short version code at the
@@ -664,14 +904,19 @@ ThemeData workbenchTheme(
   ThemeData parent, {
   bool paper = false,
   double textScale = 1.0,
+  Color? accent,
 }) {
   final brightness = parent.brightness;
   // Paper wins over light/dark — see [WbColors.paper]. A reader who
   // turned paper on wants paper everywhere in the workbench, including
   // in dark mode (warm cream is the whole point).
-  final wb = paper
+  final base0 = paper
       ? WbColors.paper
       : (brightness == Brightness.dark ? WbColors.dark : WbColors.light);
+  // [accent] is `AppSettings.primaryColor` — the same value that drives
+  // the app icon. Null leaves the palette exactly as it was, which is
+  // what every test that asserts against the const instances relies on.
+  final wb = accent == null ? base0 : base0.tinted(accent);
   final base = brightness == Brightness.dark
       ? ThemeData.dark(useMaterial3: true)
       : ThemeData.light(useMaterial3: true);
@@ -724,9 +969,8 @@ ThemeData workbenchTheme(
   /// UI resolves to, so a fix applied only to `englishLike` would have
   /// reached the English app and left the Chinese one deaf.
   TextTheme onScaleAll(TextTheme t) {
-    TextStyle? s(TextStyle? r) => r?.fontSize == null
-        ? r
-        : r!.copyWith(fontSize: onScale(r.fontSize!));
+    TextStyle? s(TextStyle? r) =>
+        r?.fontSize == null ? r : r!.copyWith(fontSize: onScale(r.fontSize!));
     return t.copyWith(
       displayLarge: s(t.displayLarge),
       displayMedium: s(t.displayMedium),
@@ -803,13 +1047,15 @@ ThemeData workbenchTheme(
       tall: onScaleAll(base.typography.tall),
     ),
     iconTheme: IconThemeData(color: wb.mutedText, size: 15),
-    // Square, hairline-bordered, no elevation — everywhere.
+    // Hairline-bordered, no elevation — everywhere. The corner comes
+    // off the scale (2026-09-07); the flatness does not move.
     cardTheme: CardThemeData(
       color: wb.paneBg,
       elevation: 0,
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.zero,
+        borderRadius:
+            BorderRadius.all(Radius.circular(WbMetrics.radiusSurface)),
         side: BorderSide(color: wb.border),
       ),
     ),
@@ -824,24 +1070,27 @@ ThemeData workbenchTheme(
       fillColor: wb.paneBg,
       contentPadding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.zero,
+        borderRadius:
+            BorderRadius.all(Radius.circular(WbMetrics.radiusControl)),
         borderSide: BorderSide(color: wb.border),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.zero,
+        borderRadius:
+            BorderRadius.all(Radius.circular(WbMetrics.radiusControl)),
         borderSide: BorderSide(color: wb.border),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.zero,
+        borderRadius:
+            BorderRadius.all(Radius.circular(WbMetrics.radiusControl)),
         borderSide: BorderSide(color: wb.link, width: 1.4),
       ),
       hintStyle: body(WbMetrics.text, c: wb.mutedText),
     ),
     // ---- Component chrome (2026-08-08, task #279) ------------------
     //
-    // Everything below is the SAME rule as `cardTheme` above — square
-    // corners, a 1px hairline, no elevation — applied to the Material
-    // components the app actually uses. It is here rather than in the
+    // Everything below is the SAME rule as `cardTheme` above — a corner
+    // off the WbMetrics scale, a 1px hairline, no elevation — applied to
+    // the Material components the app actually uses. It is here rather than in the
     // pages because of how this function is built: `base` is a FRESH
     // `ThemeData.light/dark`, so the caller's per-widget themes are
     // discarded, and only three components (card, input, tooltip) were
@@ -864,23 +1113,33 @@ ThemeData workbenchTheme(
     // touch target shrunk to workbench scale would be a different and
     // much riskier change.
 
-    // Pills, all four families. M3 gives every button a StadiumBorder.
+    // M3 gives every button a StadiumBorder — a full-height pill, which
+    // is the single loudest 2014-Material tell left in the window. The
+    // 2026-09-07 pass did not put the pill back; it replaced the pill
+    // with a 5px corner, which is what every reference the brief names
+    // draws a button as.
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
-        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+        shape: const RoundedRectangleBorder(
+            borderRadius:
+                BorderRadius.all(Radius.circular(WbMetrics.radiusControl))),
         elevation: 0,
       ),
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
-        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+        shape: const RoundedRectangleBorder(
+            borderRadius:
+                BorderRadius.all(Radius.circular(WbMetrics.radiusControl))),
         side: BorderSide(color: wb.border),
         foregroundColor: wb.text,
       ),
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
-        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+        shape: const RoundedRectangleBorder(
+            borderRadius:
+                BorderRadius.all(Radius.circular(WbMetrics.radiusControl))),
         elevation: 0,
         backgroundColor: wb.paneBg,
         foregroundColor: wb.text,
@@ -889,13 +1148,17 @@ ThemeData workbenchTheme(
     ),
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(
-        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+        shape: const RoundedRectangleBorder(
+            borderRadius:
+                BorderRadius.all(Radius.circular(WbMetrics.radiusControl))),
         foregroundColor: wb.link,
       ),
     ),
     segmentedButtonTheme: SegmentedButtonThemeData(
       style: SegmentedButton.styleFrom(
-        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+        shape: const RoundedRectangleBorder(
+            borderRadius:
+                BorderRadius.all(Radius.circular(WbMetrics.radiusControl))),
         side: BorderSide(color: wb.border),
         selectedBackgroundColor: wb.selectionBg,
         selectedForegroundColor: wb.text,
@@ -903,7 +1166,7 @@ ThemeData workbenchTheme(
       ),
     ),
     toggleButtonsTheme: ToggleButtonsThemeData(
-      borderRadius: BorderRadius.zero,
+      borderRadius: BorderRadius.all(Radius.circular(WbMetrics.radiusControl)),
       borderColor: wb.border,
       selectedBorderColor: wb.link,
       fillColor: wb.selectionBg,
@@ -918,7 +1181,9 @@ ThemeData workbenchTheme(
       selectedColor: wb.selectionBg,
       checkmarkColor: wb.text,
       side: BorderSide(color: wb.border),
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+      shape: const RoundedRectangleBorder(
+          borderRadius:
+              BorderRadius.all(Radius.circular(WbMetrics.radiusControl))),
       labelStyle: body(WbMetrics.text),
       secondaryLabelStyle: body(WbMetrics.text, c: wb.mutedText),
       elevation: 0,
@@ -934,8 +1199,14 @@ ThemeData workbenchTheme(
       elevation: 0,
       modalElevation: 0,
       showDragHandle: false,
+      // Top corners only: a bottom sheet is anchored to the bottom edge
+      // of the window, and rounding the two corners that are off-screen
+      // is how a sheet ends up with a 1px sliver of pane showing under
+      // it.
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.zero,
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(WbMetrics.radiusSurface),
+        ),
         side: BorderSide(color: wb.border),
       ),
     ),
@@ -944,7 +1215,8 @@ ThemeData workbenchTheme(
       surfaceTintColor: Colors.transparent,
       elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.zero,
+        borderRadius:
+            BorderRadius.all(Radius.circular(WbMetrics.radiusSurface)),
         side: BorderSide(color: wb.border),
       ),
     ),
@@ -953,7 +1225,8 @@ ThemeData workbenchTheme(
       surfaceTintColor: Colors.transparent,
       elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.zero,
+        borderRadius:
+            BorderRadius.all(Radius.circular(WbMetrics.radiusSurface)),
         side: BorderSide(color: wb.border),
       ),
       textStyle: body(WbMetrics.text),
@@ -965,7 +1238,8 @@ ThemeData workbenchTheme(
         elevation: const WidgetStatePropertyAll(0),
         shape: WidgetStatePropertyAll(
           RoundedRectangleBorder(
-            borderRadius: BorderRadius.zero,
+            borderRadius:
+                BorderRadius.all(Radius.circular(WbMetrics.radiusSurface)),
             side: BorderSide(color: wb.border),
           ),
         ),
@@ -974,7 +1248,9 @@ ThemeData workbenchTheme(
     snackBarTheme: const SnackBarThemeData(
       // `behavior` is left alone: floating vs fixed is layout, and a
       // fixed SnackBar ignores `shape` anyway.
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+      shape: RoundedRectangleBorder(
+          borderRadius:
+              BorderRadius.all(Radius.circular(WbMetrics.radiusControl))),
       elevation: 0,
     ),
     // The page's own title strip. Flat, neutral, hairline underneath —
@@ -998,23 +1274,32 @@ ThemeData workbenchTheme(
       overlayColor: WidgetStatePropertyAll(wb.hoverBg),
     ),
     listTileTheme: ListTileThemeData(
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+      shape: const RoundedRectangleBorder(
+          borderRadius:
+              BorderRadius.all(Radius.circular(WbMetrics.radiusControl))),
       selectedTileColor: wb.selectionBg,
       selectedColor: wb.text,
       iconColor: wb.mutedText,
       textColor: wb.text,
     ),
     expansionTileTheme: ExpansionTileThemeData(
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-      collapsedShape:
-          const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+      shape: const RoundedRectangleBorder(
+          borderRadius:
+              BorderRadius.all(Radius.circular(WbMetrics.radiusControl))),
+      collapsedShape: const RoundedRectangleBorder(
+          borderRadius:
+              BorderRadius.all(Radius.circular(WbMetrics.radiusControl))),
       iconColor: wb.mutedText,
       collapsedIconColor: wb.mutedText,
       textColor: wb.text,
       collapsedTextColor: wb.text,
     ),
-    // M3 gave the linear indicator rounded caps and a gap; a progress
-    // bar in this window is a measurement, so it gets square ends.
+    // The one component the 2026-09-07 pass deliberately left square.
+    // M3 gives the linear indicator rounded caps; a progress bar in this
+    // window is a MEASUREMENT, and a rounded cap on a bar that is 2%
+    // full draws something wider than 2%. Every other corner in the
+    // theme is chrome, where the shape means nothing; this one is data,
+    // where it does.
     progressIndicatorTheme: ProgressIndicatorThemeData(
       color: wb.link,
       linearTrackColor: wb.paneAltBg,
@@ -1123,7 +1408,8 @@ class WbType {
   /// 20 pt, so the repair is invisible to a reader who never moved the
   /// slider and changes only the range the slider could not reach.
   double scaledSmall(double atDefault) {
-    assert(atDefault >= WbMetrics.smallPrintFloor,
+    assert(
+        atDefault >= WbMetrics.smallPrintFloor,
         'small print designed at $atDefault px is already below the '
         '${WbMetrics.smallPrintFloor} px floor at the default setting — '
         'raise the design size rather than relying on the floor');
@@ -1234,8 +1520,8 @@ class WbType {
       // Floored: see [WbMetrics.originalFloor]. A reader who sets 12 pt
       // is asking the rest of the app to be dense; they are not asking
       // for an unreadable qamats.
-      original: math.max(WbMetrics.original * textScale,
-          WbMetrics.originalFloor),
+      original:
+          math.max(WbMetrics.original * textScale, WbMetrics.originalFloor),
       lineHeight: leading.toDouble(),
       menuBarHeight: WbMetrics.menuBarHeight * chromeScale,
       toolbarHeight: WbMetrics.toolbarHeight * chromeScale,
