@@ -73,14 +73,30 @@ void main() {
   // FlutterError.onError + PlatformDispatcher hooks itself, so
   // we don't pre-set them here — ErrorReporter chains them
   // properly.
-  runZonedGuarded<void>(() {
+  runZonedGuarded<void>(() async {
     WidgetsFlutterBinding.ensureInitialized();
-  // bwh47: put any edition the reader imported back in the catalog
-  // before the first pane asks what versions exist. Failure is silent by
-  // design — a browser that will not open IndexedDB should give the
-  // reader the app, not an error about a feature they may never have
-  // used.
-  unawaited(VersionImportService.restore());
+    // bwh47: put any edition the reader imported back in the catalog
+    // BEFORE anything asks what versions exist.
+    //
+    // Awaited, and it has to be. `MainProvider.restoreState` reads the
+    // saved version and checks `isKnownVersion`; with this running in
+    // the background a reader whose last edition was an imported one is
+    // told "the edition is no longer available" and dropped back to the
+    // BSB — which is exactly what the first dev run did, and it is the
+    // kind of race that would have looked like data loss to them.
+    //
+    // Bounded, because the cost of being wrong the other way is worse:
+    // a browser that hangs opening IndexedDB must not hang the app. A
+    // second is far more than the handful of records this reads, and a
+    // timeout leaves the registry empty, which is the no-imports state
+    // the app already handles everywhere.
+    //
+    // Failure stays silent by design: a reader who has never imported
+    // anything should get the app, not an error about a feature they
+    // have not used.
+    await VersionImportService.restore()
+        .timeout(const Duration(seconds: 1), onTimeout: () {})
+        .catchError((_) {});
     ErrorReporter.init();
 
     runApp(
