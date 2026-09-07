@@ -390,6 +390,86 @@ void main() {
     });
   });
 
+  group('the pane may only offer an agreement both terms can carry', () {
+    // Found on the screen, not in the suite. With `particle` chosen the
+    // pane offered `Gender`; choosing it returned "no word in this range
+    // has that form" over the whole Hebrew Bible — correctly, because a
+    // particle carries no gender and the engine refuses to call two
+    // absences an agreement. A chip that can only ever return nothing is
+    // a promise the app cannot keep.
+    //
+    // The pane intersects `morphSlotsFor` across both terms; this pins
+    // the fact the intersection relies on, so a table edit that gave
+    // particles a gender would fail here rather than reappear as an
+    // empty result nobody can explain.
+    test('a Hebrew particle carries no gender, number or person', () {
+      final slots = morphSlotsFor(MorphScheme.semitic, 'T').toSet();
+      expect(slots.contains(MorphSlot.gender), isFalse);
+      expect(slots.contains(MorphSlot.number), isFalse);
+    });
+
+    test('a Hebrew noun carries gender and number', () {
+      final slots = morphSlotsFor(MorphScheme.semitic, 'N').toSet();
+      expect(slots, contains(MorphSlot.gender));
+      expect(slots, contains(MorphSlot.number));
+    });
+
+    test('case is Greek-only, so it can never be offered on Hebrew', () {
+      for (final p in morphPartsOfSpeech(MorphScheme.semitic)) {
+        expect(morphSlotsFor(MorphScheme.semitic, p),
+            isNot(contains(MorphSlot.grammaticalCase)),
+            reason: p);
+      }
+      final greekCarriers = [
+        for (final p in morphPartsOfSpeech(MorphScheme.greek))
+          if (morphSlotsFor(MorphScheme.greek, p)
+              .contains(MorphSlot.grammaticalCase))
+            p,
+      ];
+      expect(greekCarriers, isNotEmpty,
+          reason: 'if nothing in Greek took a case the chip would be dead '
+              'everywhere and this guard would prove nothing');
+    });
+
+    test('and the engine is what makes the offer matter', () {
+      // The rule the chip would otherwise promise to apply: a particle
+      // and a noun cannot be shown to agree in gender, because the
+      // particle states none.
+      final particle = MorphQuery(scheme: MorphScheme.semitic, constraints: {
+        MorphSlot.pos: {'T'},
+      });
+      final noun = MorphQuery(scheme: MorphScheme.semitic, constraints: {
+        MorphSlot.pos: {'N'},
+      });
+      expect(
+        findConstruction(
+          MorphConstruction(
+            terms: [
+              ConstructionTerm(query: particle),
+              ConstructionTerm(query: noun),
+            ],
+            agreements: const [
+              AgreementRule(a: 0, b: 1, features: {MorphSlot.gender}),
+            ],
+          ),
+          [w('א', 'HTd'), w('ב', 'HNcmsa')],
+        ),
+        isNull,
+      );
+      // Without the impossible rule, the same pair is a hit.
+      expect(
+        findConstruction(
+          MorphConstruction(terms: [
+            ConstructionTerm(query: particle),
+            ConstructionTerm(query: noun),
+          ]),
+          [w('א', 'HTd'), w('ב', 'HNcmsa')],
+        ),
+        isNotNull,
+      );
+    });
+  });
+
   group('shape', () {
     test('one term and no agreement is not a construction', () {
       expect(

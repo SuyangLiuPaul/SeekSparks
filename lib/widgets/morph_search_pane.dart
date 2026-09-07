@@ -445,6 +445,22 @@ class _MorphSearchPaneState extends State<MorphSearchPane> {
     );
   }
 
+  /// Which feature slots the given parts of speech can express.
+  ///
+  /// Empty [poss] means "nothing chosen yet", which is the union over
+  /// every part of speech — the same convention
+  /// `MorphQuery.activeSlots()` uses, so the agreement row opens as wide
+  /// as the rows above it and narrows for the same reason.
+  Set<MorphSlot> carriedBy(Set<String> poss) {
+    final chosen =
+        poss.isNotEmpty ? poss : morphPartsOfSpeech(_query.scheme).toSet();
+    final live = <MorphSlot>{};
+    for (final p in chosen) {
+      live.addAll(morphSlotsFor(_query.scheme, p));
+    }
+    return live;
+  }
+
   /// bwh17's agreement, as far as one pane can carry it.
   ///
   /// The reader has already built the first form in the rows above.
@@ -461,14 +477,27 @@ class _MorphSearchPaneState extends State<MorphSearchPane> {
   Widget _agreementRow(WbColors wb, WbType t) {
     final poss = morphPartsOfSpeech(_query.scheme);
     if (poss.isEmpty) return const SizedBox.shrink();
-    // Case is Greek-only and state is Semitic-only; person is shared.
-    // Offering a feature the scheme cannot express would be offering a
-    // rule that can only ever refuse.
+    // Only features BOTH terms can actually carry.
+    //
+    // Found on the screen, not in the suite: with `particle` chosen for
+    // the first term the pane offered `Gender`, and choosing it returned
+    // "no word in this range has that form" over the whole Hebrew Bible
+    // — correctly, because a particle carries no gender and the engine
+    // refuses to call two absences an agreement. But a chip that can
+    // only ever return nothing is a promise the app cannot keep, and the
+    // reader has no way to see why. So the offer is intersected with
+    // what the chosen parts of speech can express on each side, exactly
+    // as `MorphQuery.activeSlots()` does for the rows above.
+    final shared = carriedBy(_query.valuesFor(MorphSlot.pos))
+        .intersection(carriedBy(_secondPos));
     final features = <MorphSlot>[
-      MorphSlot.gender,
-      MorphSlot.number,
-      if (_query.scheme == MorphScheme.greek) MorphSlot.grammaticalCase,
-      MorphSlot.person,
+      for (final f in const [
+        MorphSlot.gender,
+        MorphSlot.number,
+        MorphSlot.grammaticalCase,
+        MorphSlot.person,
+      ])
+        if (shared.contains(f)) f,
     ];
     return Padding(
       padding: const EdgeInsets.only(bottom: 6, top: 2),
@@ -501,6 +530,15 @@ class _MorphSearchPaneState extends State<MorphSearchPane> {
                     if (_secondPos.isEmpty) {
                       _agree = <MorphSlot>{};
                       _agreeLemma = false;
+                    } else {
+                      // A feature the new selection cannot carry would
+                      // otherwise stay silently ON, with its chip gone
+                      // from the row and every result refused by a rule
+                      // the reader can no longer see.
+                      _agree = _agree
+                          .intersection(carriedBy(_secondPos))
+                          .intersection(
+                              carriedBy(_query.valuesFor(MorphSlot.pos)));
                     }
                   }),
                   foreground:

@@ -496,7 +496,16 @@ cannot express. The engine will already answer it.
   from **any**. On the five-English stack, BibleWorks' union rule paints
   58.3% of the base row; the intersection rule paints 0.1%. The two
   rules are identical for two versions. See the library doc.
-- **External Links Manager** — **ABSENT**, low priority. bwh12.
+- **External Links Manager** — **REJECTED 2026-09-07.** bwh12. It maps a
+  verse or a word to a URL on a Windows box — the reader clicks and a
+  browser opens someone else's site. Two reasons it is not for this app,
+  and the second is the real one: it is a **desktop shell integration**,
+  and this app's surfaces are a browser tab and a tablet where "launch
+  an external program" is not a thing that happens; and what it links
+  OUT to is what this app is trying to BE — a reader who has to leave
+  for the lexicon, the atlas, the concordance or the topical index is a
+  reader we have failed, and all four are already here. Re-open only if
+  a reader names a resource they want that this app will never carry.
 
 ### 3.4 The Analysis window
 
@@ -603,16 +612,33 @@ Mapped against BibleWorks' own tab set (bwh10):
   rather than BibleWorks' symbol set. Note bwh25 ships **pre-made Greek
   New Testament diagrams**; we have no equivalent corpus and should not
   invent one.
-- **Parallel-Aligned Hebrew/LXX (bwh30, Tov-Polak)** — **ABSENT.** A
-  word-level alignment of the Hebrew Bible against the Septuagint, with
-  the Tov-Polak analysis columns. We have both texts (`assets/originals/`,
-  `assets/lxxwh.json`) and a 7 KB `assets/strongs/lxx_hebrew_to_greek.json`
-  — a Strong's-to-Strong's mapping, **not** a verse-level alignment. The
-  Tov-Polak database itself is licensed and must not be copied.
-  *Done, conservatively:* a Hebrew↔Greek pane driven by the Strong's
-  correspondence we already own, labelled honestly as a lexical
-  correspondence and **not** as a scholarly alignment. Do not imply
-  Tov-Polak.
+- **Parallel-Aligned Hebrew/LXX (bwh30, Tov-Polak)** — **REJECTED on
+  licence 2026-09-07, with the two halves separated.** The row read
+  ABSENT and proposed a conservative build; checked against the code,
+  what it proposed already ships and what is left is the licensed part.
+  *What bwh30 is:* a **word-level** alignment of the Hebrew Bible
+  against the Septuagint, with the Tov-Polak columns saying how each
+  Greek word renders its Hebrew — added, omitted, transposed, a
+  different Vorlage. The scholarship IS the alignment; the two texts are
+  public domain and the pairing is not.
+  *The verse-level parallel already ships.* Both texts are here — the
+  Hebrew as the Browse window's `WTT` row, the Septuagint as the
+  `LXX+WH` catalog edition — and the ordered version stack (#288) puts
+  them in adjacent columns. Verified on seeksparks-dev 2026-09-07: WTT
+  displayed beside KJV / BSB / KJV+S, LXX+WH offered in the picker.
+  *The lexical correspondence already ships too, and is already labelled
+  honestly.* `assets/strongs/lxx_hebrew_to_greek.json` is 214 curated
+  Hebrew→Greek Strong's correspondences, CC0, reached by `LxxService`
+  from `word_distribution_table.dart` and `originals_sheet.dart`. That
+  is what this row proposed building; it was built before the row was
+  written. It is **not** an alignment and claims not to be — 214 of
+  8,674 Hebrew numbers, chosen for theological weight.
+  *So what remains is exactly the licensed part*, which makes this
+  REJECTED rather than ABSENT: a word-level alignment of the whole
+  Hebrew Bible cannot be derived from a 214-entry lexical table, and the
+  database that has it belongs to someone else. Re-open on an
+  openly-licensed alignment — CATSS is the candidate, and reading its
+  terms is the first move, not importing it.
 - **Vocabulary flashcards (bwh40)** — **PARTIAL.** Vocab tab +
   `vocabulary_store.dart`. bwh40 adds learned/not-learned marking,
   filtering, timed sessions, printing and an **Example Verse Finder**.
@@ -675,8 +701,16 @@ Mapped against BibleWorks' own tab set (bwh10):
   different ask and is BLOCKED on hosting.
 - **Bagster's Daily Light (bwh36)** — **REJECTED.** Devotional. Wrong
   product; that is YsWords' job.
-- **External Resources Manager / Ermie (bwh32)** — **ABSENT**, low
-  priority.
+- **External Resources Manager / Ermie (bwh32)** — **REJECTED
+  2026-09-07**, and for the same reason as the External Links Manager in
+  §3.3. Ermie indexes the PDFs, Word files and saved pages a scholar
+  keeps OUTSIDE BibleWorks and makes them searchable from inside it.
+  That is a **desktop file-system feature**: a browser tab cannot read
+  the reader's disk and a tablet has no folder of PDFs to index. What
+  this app has instead is the sermon library — 1,147 transcripts,
+  searchable and reference-indexed — which is the same need answered
+  with material we ship rather than material we point at. Re-open if a
+  desktop build ever has readers who ask for it.
 - **Report Generator (bwh28)** — **ABSENT.** Generates a formatted study
   report for a passage: text, lexicon entries for each word, filtered by
   morphology and frequency. This is a genuinely good idea we have all the
