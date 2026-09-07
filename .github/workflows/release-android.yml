@@ -4,9 +4,16 @@
 # publishes it as a downloadable release asset. Mirrors
 # release-windows.yml so the release set stays consistent.
 #
-# Flavor: builds the `intl` flavor (applicationId com.example.yswords)
-# — the same flavor installed on the user's phones / Mi Pad. The `cn`
-# flavor (applicationIdSuffix .cn) is intentionally not built here.
+# Flavor: builds the `intl` flavor — the same flavor installed on the
+# user's phones / Mi Pad. The `cn` flavor (applicationIdSuffix .cn) is
+# intentionally not built here.
+#
+# 2026-09-08: this comment said the applicationId is
+# `com.example.yswords`. It is `com.example.yahwehswords`
+# (android/app/build.gradle.kts:66) — a fork leftover in the prose, not
+# in the build. Worth correcting rather than leaving: read literally it
+# says this APK installs OVER YsWords on the same device, which would
+# make cutting a release look dangerous when it is not.
 #
 # Signing: android/app/build.gradle.kts signs the release build with
 # the DEBUG keystore, so no signing secret is needed — the APK is

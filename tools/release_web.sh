@@ -86,3 +86,13 @@ deploy_sites "${SITES[@]}"
 echo
 echo "✓ v$APP_VERSION deployed."
 echo "  next: git commit + push"
+# 2026-09-08: and then the tag, which is the step that had been missing
+# since the update path shipped. Everything else in that path worked —
+# the API call, the tile, the APK workflow — but nothing ever pushed a
+# `v*` tag, so 255 versions produced two GitHub Releases and a phone
+# asking "am I up to date?" was told yes, nineteen versions late. Named
+# here because this is the script people actually run; `tag_release.sh`
+# carries the reasoning and does the checking.
+echo "  then:  tools/tag_release.sh   # cuts the GitHub Release + APK"
+echo "         (without it the in-app update check keeps reporting the"
+echo "          last tag, which is not the build you just deployed)"
