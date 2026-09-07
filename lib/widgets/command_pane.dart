@@ -2004,10 +2004,38 @@ class _CommandPaneState extends State<CommandPane> {
       // Before that, though, two cheaper answers: a looser query that is
       // known to return verses, or — when there is none — the word that
       // is the reason there are none.
+      // The cross-version report belongs HERE most of all. bwh16's own
+      // use case for the mode is a phrase "that occurs in some version
+      // but you don't remember which one", and the moment a reader is
+      // looking for that is the moment the edition in front of them
+      // came back empty — `propitiation` finds nothing in the CSB,
+      // which renders it "atoning sacrifice", and everything in the
+      // KJV. Showing the strip only beside a hit list would hide it
+      // exactly when it answers the question.
+      final offer =
+          _broadenOffer(wb, locale, align: CrossAxisAlignment.center) ??
+              _romanisedOffer(wb, locale, align: CrossAxisAlignment.center);
+      final hits = wb.crossVersionHits;
       return _noResults(settings, scheme, locale,
           message: _missingWords(wb, locale),
-          below: _broadenOffer(wb, locale, align: CrossAxisAlignment.center) ??
-              _romanisedOffer(wb, locale, align: CrossAxisAlignment.center),
+          below: hits == null
+              ? offer
+              : Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CrossVersionStrip(
+                      hits: hits,
+                      locale: locale,
+                      searching: wb.crossVersionSearching,
+                      onVersionTap: (code) =>
+                          _switchReadingVersion(context, code),
+                    ),
+                    if (offer != null) ...[
+                      const SizedBox(height: 10),
+                      offer,
+                    ],
+                  ],
+                ),
           aiQuery: wb.lastQuery);
     }
     // `??` and not a pair: broadening needs two words to have anything
