@@ -50,14 +50,30 @@ Both belong to Raymond / Paul. The 雅伟的话 note raises the same two
 against *that* project, which is the only one of the three that ships
 the text.
 
-**2026-09-07 — the extension names yahwehword.com, not this app.** In
-the Yahwehdehua Work Group, Pastor Raymond — the Raymond Suen named as
-licensee above — sent this PDF and said "we can stretch this permission
-to cover your Yahwehword.com". That lifts gate 2 for *that* site. It
-says nothing about SeekSparks / Yahweh's Swords, so gate 2 still stands
-here and is one question away from being answered. (The territory line
-is Holman's term, not Raymond's, and is untouched for either.) The
-yswords copy of this file records the exchange in full.
+### 2026-09-07 — gate 2 is lifted, and it reaches this app
+
+In the Yahwehdehua Work Group, Pastor Raymond — the Raymond Suen named
+as licensee above — sent this PDF and said "we can stretch this
+permission to cover your Yahwehword.com".
+
+That names the site, not this app, and this note first recorded it as
+covering yswords only. **The owner then corrected that: this app is one
+of the Yahweh's Words products, so the extension reaches it too.** He is
+the publisher of both and that is his to say — and the repo says the
+same thing on its own:
+
+  * `pubspec.yaml` describes SeekSparks as "**forked from YsWords**"
+  * the iOS display name in `ios/Runner/Info.plist` is **Yahweh's Sword**
+  * the bundle id is `com.example.yahwehswords`
+
+So gate 2 no longer stands here. **Gate 1 — territory — does.** Hong
+Kong / Mainland China is *Holman's* term, not Raymond's, so extending
+his own permission does not move it, and this app ships to the App
+Store, Play and the web unfenced. That is one question back to Raymond
+before any CSB text ships, in either app; it is not an objection to
+anything he said.
+
+The yswords copy of this file records the exchange in full.
 
 Note the shape of the grant while reading it: what was licensed is the
 CSB **with Strong's numbers**, for a bilingual CUV/CSB work. This repo
