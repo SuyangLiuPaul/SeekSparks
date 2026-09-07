@@ -198,11 +198,53 @@ file should read.
   see why the verse is there. So an `isEmpty` gate would still be wrong
   for שָׁלוֹם. The fix narrowed the gate's necessity from five words to
   two; it did not remove it.
-- **Cross-version searches** — **ABSENT.** bwh16. "Find verses where the
-  KJV says X and the LXX says Y." We have every version loaded and a
-  parallel view; nothing can query across two at once. *Done:* one
-  operator that takes a version tag per term, results listed once per
-  verse with both hits shown.
+- **Cross-version searches** — **HAVE, 2026-09-07, and this entry was
+  wrong about what the feature is.** It read: *"Find verses where the KJV
+  says X and the LXX says Y … one operator that takes a version tag per
+  term."* bwh16 offers no such operator. What it ships is a **mode**, set
+  from `Search | Cross Versions Search Mode`, which runs the one query
+  the reader typed against **several editions of the same language** and
+  reports the hits per version — its own stated use case is looking for a
+  phrase "that occurs in some version but you don't remember which one".
+  Building the entry as written would have shipped a cross-language
+  conjunction under the name of a same-language broadcast and left the
+  actual feature missing. §3's warning about guessing a feature from its
+  name, second confirmed instance after `NEAR5`.
+  `lib/utils/cross_version_search.dart` (which editions),
+  `WorkbenchProvider._measureCrossVersion` (running them),
+  `lib/widgets/cross_version_strip.dart` (the report),
+  `AppSettings.crossVersionSearchMode` (the mode, persisted by name).
+  Three of BibleWorks' four modes; the fourth is rejected below.
+  Two deliberate divergences, both recorded in the library comment:
+  **"same language" means the same script** (简体 and 繁體 are one
+  language and two corpora — 雅伟 is not a substring of 雅偉, so
+  broadcasting across the boundary would report zeros that say nothing
+  about the text), and the pass runs **after** the reading version's
+  results are on screen rather than before, because the other editions
+  are several MB each and cannot change the answer already showing.
+  *Text shapes only, on purpose:* a Strong's search is answered from the
+  shared concordance and the tagged layer rather than from an edition's
+  text, so "the same search in the LEB" is not a question it can be
+  asked. The pass declines and the strip draws nothing.
+- **Cross-version searches — the PRUNE mode** — **REJECTED 2026-09-07.**
+  bwh16's fourth option removes editions with no hits from the display
+  list. Its value is "show me only the versions that hit", and the strip
+  already answers that by printing the count for every edition searched,
+  zeros included. The Browse stack is an ordered list the reader
+  arranges by hand — #288 made the order first-class — and a search is a
+  question, not an instruction to redecorate. Re-open only if a reader
+  asks for it.
+- **A cross-VERSION conjunction (`kjv:X . lxx:Y`)** — **ABSENT, and it is
+  not bwh16.** This is what the old entry above described, and it is
+  worth having on its own account: adjudicating the CSB's divine name on
+  2026-09-07 needed exactly this query three times in one day (which
+  verses read 雅伟 in the Chinese while the English says Lord; which
+  carry H3068 in kjvs while the CSB leaves a bare "Lord"), and each time
+  it was run by hand in Python against the raw assets. BibleWorks reaches
+  it only through the Graphical Search Engine, so read §3.2 before
+  picking this up — the decision to reject the GSE was about its
+  *interface*, not about this class of query. *Done:* a version tag per
+  term, results listed once per verse with each edition's hit shown.
 - **Morphological searches (Greek/Hebrew)** — **PARTIAL.**
   `lib/services/morph_search_service.dart` + `lib/widgets/morph_search_pane.dart`
   exist and the Forms tab surfaces them. bwh17 goes considerably further:
@@ -800,6 +842,27 @@ visual defect this project has shipped. A widget test that asserts a
 ---
 
 ## 8. Picking the next item
+
+**2026-09-07 — the owner made this document the GOLDEN TASK.** His
+words: 「sword包含eaglesview和BibleWorks所有的功能,涉及license的不用抄但是
+可以学并且Document住,一旦完成这个任务,这两个APP就可以free掉放在T7里面」and
+「这个作为golden task先high priority做完」.
+
+Three things follow, and they change how this file is used:
+
+* **§3 is the register of the whole task**, and finishing it is what
+  releases both applications to the T7. §4 (Eagle's View) is closed.
+* **Licence-gated entries are still deliverables** — the instruction is
+  *不用抄但是可以学并且Document住*. Mark them `REJECTED`, write down what
+  the feature is and what it would take, and that entry is done. Nothing
+  from the ISO is imported; the extracted help is a specification, which
+  is what makes this lawful. Louw-Nida, HALOT, BDAG, TDNT, CNTTS and
+  Tov-Polak stay out.
+* **An entry is finished when the verdict here is honest**, not when
+  something ships under its name. Correcting an entry that describes the
+  wrong feature is worth more than building it — see §3.1 Cross-version
+  searches, where the recorded *Done* criterion was a feature BibleWorks
+  does not have.
 
 In rough order of value, if nothing else is pressing.
 

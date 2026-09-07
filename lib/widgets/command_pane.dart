@@ -45,6 +45,7 @@ import 'package:seeksparks/utils/search_stats.dart';
 import 'package:seeksparks/utils/strongs_absence.dart';
 import 'package:seeksparks/utils/strongs_result_counts.dart';
 import 'package:seeksparks/utils/version_abbreviation.dart';
+import 'package:seeksparks/widgets/cross_version_strip.dart';
 import 'package:seeksparks/widgets/search_stats_strip.dart';
 
 /// The Workbench's left pane: a BibleWorks-style command line (text, a
@@ -336,6 +337,11 @@ class _CommandPaneState extends State<CommandPane> {
     if (!mounted) return;
     final wb = context.read<WorkbenchProvider>();
     final appSettings = context.read<AppSettings>();
+    // bwh16's Cross Versions Search Mode. Carried in rather than read
+    // from settings inside the provider, for the same reason
+    // `ketivQere` is: the provider is Flutter-free of InheritedWidgets
+    // and the call site is the one place that already holds both.
+    wb.crossVersionMode = appSettings.crossVersionSearchMode;
     final running = wb.runSearch(raw,
         locale: appSettings.locale,
         ketivQere: appSettings.ketivQereSearchScope);
@@ -2020,6 +2026,16 @@ class _CommandPaneState extends State<CommandPane> {
           settings,
           locale,
         ),
+        // Directly under the count, above the broadening offer: it is a
+        // fact about the search that was just run, where the offer is a
+        // suggestion about the next one.
+        if (wb.crossVersionHits != null)
+          CrossVersionStrip(
+            hits: wb.crossVersionHits!,
+            locale: locale,
+            searching: wb.crossVersionSearching,
+            onVersionTap: (code) => _switchReadingVersion(context, code),
+          ),
         // Under the count, not over it: the reader asked for this list
         // and it is the answer. The offer is the thing to try next, and
         // it only exists here because the list is short enough to have
@@ -2075,6 +2091,39 @@ class _CommandPaneState extends State<CommandPane> {
   }
 
   /// The hit-count strip above the list, e.g. "G25 AND G26 — 14 verses".
+  /// Open the edition a cross-version row names, and land on its hits.
+  ///
+  /// The report's whole purpose is to be acted on — learning that the
+  /// BSB has eleven of these and the KJV none is only useful if the
+  /// eleven are one tap away.
+  ///
+  /// The query is re-run afterwards, and it has to be. Switching the
+  /// reading version alone would leave the hit list showing the old
+  /// edition's verses under the new edition's name, and would leave the
+  /// strip marking the old edition as the one being read — a report
+  /// describing a search nobody is looking at any more. Re-running
+  /// costs one pass over a corpus that is now in [_corpusCache]
+  /// anyway.
+  Future<void> _switchReadingVersion(
+      BuildContext context, String code) async {
+    final mp = context.read<MainProvider>();
+    if (code == mp.currentVersion) return;
+    final wb = context.read<WorkbenchProvider>();
+    final settings = context.read<AppSettings>();
+    final query = wb.lastQuery;
+    mp.setVersion(code);
+    await FetchVerses.execute(mainProvider: mp);
+    if (!mounted) return;
+    if (query.isNotEmpty) {
+      wb.crossVersionMode = settings.crossVersionSearchMode;
+      await wb.runSearch(query,
+          locale: settings.locale,
+          ketivQere: settings.ketivQereSearchScope);
+    }
+    if (!mounted) return;
+    setState(() {});
+  }
+
   Widget _resultHeader(
       String summary, VoidCallback onCopy, AppSettings settings, String locale) {
     return Builder(builder: (context) {

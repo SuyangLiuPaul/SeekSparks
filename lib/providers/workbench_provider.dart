@@ -12,7 +12,11 @@ import 'package:seeksparks/services/concordance_service.dart';
 import 'package:seeksparks/services/search_service.dart';
 import 'package:seeksparks/services/vocabulary_service.dart';
 import 'package:seeksparks/utils/ai_ref_resolution.dart';
+import 'package:seeksparks/constants/text_patterns.dart'
+    show sanitizeForSearchKey, searchCorpusKey;
+import 'package:seeksparks/services/fetch_verses.dart' show FetchVerses;
 import 'package:seeksparks/utils/command_query.dart';
+import 'package:seeksparks/utils/cross_version_search.dart';
 import 'package:seeksparks/utils/ketiv_qere.dart'
     show KetivQereSearchScope;
 import 'package:seeksparks/utils/command_verb.dart' show LimitSpec;
@@ -281,6 +285,35 @@ class WorkbenchProvider extends ChangeNotifier {
   /// would have been wrong in split mode without failing to compile.
   WbCentreMode centreMode = WbCentreMode.browse;
 
+  /// bwh16's *Cross Versions Search Mode*, mirrored from `AppSettings`
+  /// by the page that owns both.
+  ///
+  /// Held here rather than read from settings, because the provider must
+  /// not depend on a Flutter InheritedWidget to answer "how wide was
+  /// that search" — the same reason [parallelVersions] lives here.
+  CrossVersionSearchMode crossVersionMode = CrossVersionSearchMode.currentOnly;
+
+  /// The per-version report, once a broadcast search has finished.
+  ///
+  /// Null until then, and null for every `currentOnly` search, which is
+  /// the gate the strip uses. Filled AFTER the reader already has the
+  /// reading version's results on screen: the other editions are several
+  /// MB each and the answer to the question they asked does not wait on
+  /// the answers to the questions they did not.
+  CrossVersionHits? crossVersionHits;
+
+  /// True while the other editions are still being read.
+  bool crossVersionSearching = false;
+
+  /// version code → (verses, wordKeys, searchKeys), kept for the session.
+  ///
+  /// A broadcast over five English editions is five asset loads and five
+  /// key builds, ~40 MB of string work; doing that again on the next
+  /// keystroke would make the mode unusable. Keyed by version, never
+  /// evicted — the corpora are immutable and the ceiling is the number
+  /// of editions the app ships.
+  final Map<String, _VersionCorpus> _corpusCache = {};
+
   List<String> _parallelVersions = const [];
 
   /// The comparison editions in the Browse stack, in display order.
@@ -469,6 +502,7 @@ class WorkbenchProvider extends ChangeNotifier {
     lemmaOffer = null;
     commandIssue = null;
     verbNotice = null;
+    crossVersionHits = null;
     textResults = const [];
     _clearAi();
     _notify();
@@ -593,6 +627,10 @@ class WorkbenchProvider extends ChangeNotifier {
       // lexicons, several MB the reader has not necessarily paid for
       // yet, and none of it can change the result that was just shown.
       unawaited(_measureLemmaOffer(query, locale));
+      // Same reasoning, one step further out: every other edition is a
+      // separate asset load, and none of them can change the result the
+      // reader is already reading.
+      unawaited(_measureCrossVersion());
     }
   }
 
@@ -775,6 +813,149 @@ class WorkbenchProvider extends ChangeNotifier {
     );
   }
 
+  /// One edition's three parallel arrays, in the shapes the engines
+  /// take. Built once per version and cached in [_corpusCache].
+  ///
+  /// Built the same way `MainProvider` builds its own — same two key
+  /// functions, same `absence` skip — because a broadcast that folded
+  /// diacritics on one edition and not another would report a
+  /// difference between the editions that is really a difference
+  /// between two copies of this code.
+  static _VersionCorpus _buildCorpus(List<Verse> verses) {
+    final words = List<String>.filled(verses.length, '', growable: false);
+    final keys = List<String>.filled(verses.length, '', growable: false);
+    final books = <String>[];
+    for (int i = 0; i < verses.length; i++) {
+      final v = verses[i];
+      books.add(v.book);
+      if (v.absence != null) continue;
+      words[i] = sanitizeForSearchKey(v.scriptureText);
+      keys[i] = searchCorpusKey(v.scriptureText);
+    }
+    return _VersionCorpus(
+        verses: verses, wordKeys: words, searchKeys: keys, books: books);
+  }
+
+  Future<_VersionCorpus?> _corpusFor(String version) async {
+    final hit = _corpusCache[version];
+    if (hit != null) return hit;
+    // The reading version is already parsed and already keyed; loading a
+    // second copy of it would double the memory and could not disagree.
+    if (version == mainProvider.currentVersion) {
+      final built = _VersionCorpus(
+        verses: mainProvider.verses,
+        wordKeys: mainProvider.wordKeys,
+        searchKeys: mainProvider.searchKeys,
+        books: [for (final v in mainProvider.verses) v.book],
+      );
+      _corpusCache[version] = built;
+      return built;
+    }
+    final loaded = await FetchVerses.loadVerseList(version);
+    if (loaded == null) return null;
+    final built = _buildCorpus(loaded);
+    _corpusCache[version] = built;
+    return built;
+  }
+
+  /// How many verses of [corpus] the query the reader just ran matches.
+  ///
+  /// Re-runs the SAME parsed query rather than re-parsing the string:
+  /// the parse is where a query can be rejected, and an edition that
+  /// silently reinterpreted the line would make the per-version report
+  /// a comparison of two different searches.
+  ///
+  /// Returns null when the shape has no per-edition meaning — see
+  /// [_measureCrossVersion].
+  int? _countIn(_VersionCorpus corpus) {
+    final cq = commandQuery;
+    final compound = compoundQuery;
+    List<int> indices;
+    if (compound != null) {
+      indices = runCompoundQuery(
+        query: compound,
+        texts: corpus.wordKeys,
+        searchKeys: corpus.searchKeys,
+        books: corpus.books,
+      ).indices;
+    } else if (cq != null) {
+      indices = runCommandQuery(
+        query: cq,
+        texts: corpus.wordKeys,
+        searchKeys: corpus.searchKeys,
+        books: corpus.books,
+      ).indices;
+    } else {
+      final scan = SearchService.scanText(
+        verses: corpus.verses,
+        searchKeys: corpus.searchKeys,
+        query: lastQuery,
+        bookOrder: mainProvider.bookOrder,
+        searchAll: true,
+      );
+      return applySearchLimit(
+        scan.matches,
+        searchLimit,
+        (v) => '${toEnglish(v.book) ?? v.book}-${v.chapter}-${v.verse}',
+      ).length;
+    }
+    return applySearchLimit(
+      [for (final i in indices) corpus.verses[i]],
+      searchLimit,
+      (v) => '${toEnglish(v.book) ?? v.book}-${v.chapter}-${v.verse}',
+    ).length;
+  }
+
+  /// bwh16's cross-version pass: the same query, the other editions,
+  /// one row each.
+  ///
+  /// **Text shapes only.** A Strong's search is answered from the shared
+  /// concordance and the tagged layer, not from an edition's text, so
+  /// "the same search in the LEB" is not a question it can be asked —
+  /// the LEB carries no Strong's numbers of its own. Rather than
+  /// broadcast something that would return the reading version's answer
+  /// five times over, the pass declines and leaves [crossVersionHits]
+  /// null, and the strip draws nothing. The mode stays set; it applies
+  /// again on the next text search.
+  Future<void> _measureCrossVersion() async {
+    if (crossVersionMode == CrossVersionSearchMode.currentOnly) return;
+    if (strongsRefs != null || commandIssue != null) return;
+    if (lastQuery.isEmpty) return;
+    final targets = crossVersionTargets(
+      mode: crossVersionMode,
+      reading: mainProvider.currentVersion,
+      stack: parallelVersions,
+    );
+    if (targets.length < 2) return;
+
+    final asked = lastQuery;
+    crossVersionSearching = true;
+    _notify();
+    final rows = <VersionHits>[];
+    for (final code in targets) {
+      final corpus = await _corpusFor(code);
+      // The reader typed again while an edition was loading. Abandon
+      // quietly: the newer search has already reset these fields and
+      // writing a stale report over them is worse than no report.
+      if (lastQuery != asked) {
+        crossVersionSearching = false;
+        return;
+      }
+      if (corpus == null) {
+        rows.add(VersionHits(version: code, count: 0, searched: false));
+        continue;
+      }
+      rows.add(VersionHits(version: code, count: _countIn(corpus) ?? 0));
+    }
+    crossVersionHits = CrossVersionHits(
+      mode: crossVersionMode,
+      reading: mainProvider.currentVersion,
+      perVersion: rows,
+    );
+    crossVersionSearching = false;
+    _notify();
+  }
+
   List<ConcordanceRef> _limitRefs(List<ConcordanceRef> refs) => applySearchLimit(
         refs,
         searchLimit,
@@ -784,6 +965,8 @@ class WorkbenchProvider extends ChangeNotifier {
   void clearResults() {
     searching = false;
     searchPerformed = false;
+    crossVersionHits = null;
+    crossVersionSearching = false;
     strongsQueryLabel = null;
     strongsRefs = null;
     strongsCounts = null;
@@ -971,4 +1154,24 @@ class WorkbenchProvider extends ChangeNotifier {
     mainProvider.removeListener(_onMainChanged);
     super.dispose();
   }
+}
+
+/// One edition's corpus in the three shapes the search engines take.
+///
+/// A record rather than four loose maps keyed by version: the arrays are
+/// parallel, and three maps that can be updated independently is how a
+/// `searchKeys` for one edition comes to be indexed against another
+/// edition's `verses`.
+class _VersionCorpus {
+  const _VersionCorpus({
+    required this.verses,
+    required this.wordKeys,
+    required this.searchKeys,
+    required this.books,
+  });
+
+  final List<Verse> verses;
+  final List<String> wordKeys;
+  final List<String> searchKeys;
+  final List<String> books;
 }

@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:seeksparks/models/app_style_preset.dart' show CardMaterial;
+import 'package:seeksparks/utils/cross_version_search.dart'
+    show CrossVersionSearchMode, crossVersionModeFromName;
 import 'package:seeksparks/models/notification_category.dart';
 import 'package:seeksparks/services/app_icon_service.dart';
 import 'package:seeksparks/services/notification_scheduler.dart'
@@ -101,6 +103,12 @@ const _kNotificationCategories = 'notificationCategories';
 // existing preference key is renamed, and a reader who has never opened
 // the control gets `false` for both, which is the behaviour the app has
 // always had. See `KetivQereSearchScope`.
+// 2026-09-07 (bwh16, "Cross Version Searches"): how wide the command
+// line casts. Stored as the enum's `name`, not its index, so inserting a
+// mode later cannot silently reinterpret a saved preference. Unknown or
+// missing → `currentOnly`, which is what this app has always done and
+// what BibleWorks defaults to.
+const _kCrossVersionSearchMode = 'crossVersionSearchMode';
 const _kExcludeKetivFromSearch = 'excludeKetivFromSearch';
 const _kExcludeQereFromSearch = 'excludeQereFromSearch';
 const _kShowSectionTitles = 'showSectionTitles';
@@ -235,6 +243,8 @@ class AppSettings extends ChangeNotifier {
   /// Mount" / "登山宝训") above the matched verse in the reading
   /// pane. Default ON — gives chapters useful structure. Toggle in
   /// Settings → Reading.
+  CrossVersionSearchMode _crossVersionSearchMode =
+      CrossVersionSearchMode.currentOnly;
   bool _excludeKetivFromSearch = false;
   bool _excludeQereFromSearch = false;
   bool _showSectionTitles = true;
@@ -271,6 +281,10 @@ class AppSettings extends ChangeNotifier {
   NotificationCategoryPrefs notificationCategory(String categoryId) =>
       _notificationCategories[categoryId] ??
       NotificationCategoryPrefs.defaultFor(categoryId);
+  /// Which editions the command line searches — see bwh16 and
+  /// `cross_version_search.dart`.
+  CrossVersionSearchMode get crossVersionSearchMode =>
+      _crossVersionSearchMode;
   bool get excludeKetivFromSearch => _excludeKetivFromSearch;
   bool get excludeQereFromSearch => _excludeQereFromSearch;
 
@@ -481,6 +495,15 @@ class AppSettings extends ChangeNotifier {
     await prefs.setBool(_kShowStrongsInOriginals, enabled);
   }
 
+  Future<void> setCrossVersionSearchMode(
+      CrossVersionSearchMode mode) async {
+    if (_crossVersionSearchMode == mode) return;
+    _crossVersionSearchMode = mode;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_kCrossVersionSearchMode, mode.name);
+  }
+
   Future<void> setExcludeKetivFromSearch(bool enabled) async {
     if (_excludeKetivFromSearch == enabled) return;
     _excludeKetivFromSearch = enabled;
@@ -613,6 +636,7 @@ class AppSettings extends ChangeNotifier {
     _boldVerseText = false;
     _showStrongsInOriginals = true;
     _autoExpandFirstRef = false;
+    _crossVersionSearchMode = CrossVersionSearchMode.currentOnly;
     _excludeKetivFromSearch = false;
     _excludeQereFromSearch = false;
     _notificationsEnabled = false;
@@ -793,6 +817,8 @@ class AppSettings extends ChangeNotifier {
     _showStrongsInOriginals =
         prefs.getBool(_kShowStrongsInOriginals) ?? true;
     _autoExpandFirstRef = prefs.getBool(_kAutoExpandFirstRef) ?? false;
+    _crossVersionSearchMode =
+        crossVersionModeFromName(prefs.getString(_kCrossVersionSearchMode));
     _excludeKetivFromSearch =
         prefs.getBool(_kExcludeKetivFromSearch) ?? false;
     _excludeQereFromSearch = prefs.getBool(_kExcludeQereFromSearch) ?? false;
@@ -927,6 +953,7 @@ class AppSettings extends ChangeNotifier {
         'booksViewMode': _booksViewMode,
         'boldVerseText': _boldVerseText,
         'showStrongsInOriginals': _showStrongsInOriginals,
+        'crossVersionSearchMode': _crossVersionSearchMode.name,
         'excludeKetivFromSearch': _excludeKetivFromSearch,
         'excludeQereFromSearch': _excludeQereFromSearch,
         'autoExpandFirstRef': _autoExpandFirstRef,
@@ -1025,6 +1052,10 @@ class AppSettings extends ChangeNotifier {
       }
       if (m['autoExpandFirstRef'] is bool) {
         _autoExpandFirstRef = m['autoExpandFirstRef'] as bool;
+      }
+      if (m['crossVersionSearchMode'] is String) {
+        _crossVersionSearchMode =
+            crossVersionModeFromName(m['crossVersionSearchMode'] as String);
       }
       if (m['excludeKetivFromSearch'] is bool) {
         _excludeKetivFromSearch = m['excludeKetivFromSearch'] as bool;

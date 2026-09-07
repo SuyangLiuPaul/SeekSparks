@@ -5487,6 +5487,53 @@ const uiStrings = {
   // "all of them": the morphology search and the NEAR / BEFORE word-
   // order pass read the per-word role, and the concordance-driven
   // `G25 AND G26` set algebra has no role to read.
+  // 2026-09-07 (bwh16, "Cross Version Searches"). The mode names are
+  // BibleWorks' own, said in this app's vocabulary: it calls the Browse
+  // stack "display versions" and calls every installed edition "all same
+  // language versions", and both phrases mean nothing to a reader who
+  // has never used it.
+  'crossVersionSearchMode': {
+    'zh-Hans': '跨译本搜索',
+    'zh-Hant': '跨譯本搜尋',
+    'en': 'Cross-version search',
+  },
+  'crossVersionSearchModeSubtitle': {
+    'zh-Hans': '同一个查询，同时在多个同语言的译本里跑一遍，并列出每个译本'
+        '各命中多少节。只对文字搜索有效——Strong 编号的检索走的是共用汇编，'
+        '不属于任何一个译本的正文。',
+    'zh-Hant': '同一個查詢，同時在多個同語言的譯本裡跑一遍，並列出每個譯本'
+        '各命中多少節。只對文字搜尋有效——Strong 編號的檢索走的是共用彙編，'
+        '不屬於任何一個譯本的正文。',
+    'en': 'Runs the same query against several editions of the same '
+        'language and reports how many verses each one matches. Text '
+        'searches only — a Strong\'s search is answered from the shared '
+        'concordance, which belongs to no single edition.',
+  },
+  'crossVersionModeCurrentOnly': {
+    'zh-Hans': '只搜当前译本',
+    'zh-Hant': '只搜當前譯本',
+    'en': 'Current edition only',
+  },
+  'crossVersionModeDisplayStack': {
+    'zh-Hans': '搜对照栏里的同语言译本',
+    'zh-Hant': '搜對照欄裡的同語言譯本',
+    'en': 'The editions in the Browse stack',
+  },
+  'crossVersionModeSameLanguage': {
+    'zh-Hans': '搜所有同语言译本',
+    'zh-Hant': '搜所有同語言譯本',
+    'en': 'Every edition of this language',
+  },
+  'crossVersionSummary': {
+    'zh-Hans': '{total} 个译本中，{hit} 个有',
+    'zh-Hant': '{total} 個譯本中，{hit} 個有',
+    'en': 'Found in {hit} of {total} editions',
+  },
+  'crossVersionUnread': {
+    'zh-Hans': '无法读取',
+    'zh-Hant': '無法讀取',
+    'en': 'could not be read',
+  },
   'excludeKetivFromSearch': {
     'zh-Hans': '搜索时排除 Ketiv（所写的）',
     'zh-Hant': '搜尋時排除 Ketiv（所寫的）',

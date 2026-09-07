@@ -13,6 +13,8 @@ import 'package:seeksparks/constants/app_version.dart';
 import 'package:seeksparks/constants/text_patterns.dart' show sanitizeForCopy;
 import 'package:seeksparks/constants/sermon_credit.dart';
 import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/utils/cross_version_search.dart'
+    show CrossVersionSearchMode;
 import 'package:seeksparks/constants/workbench_theme.dart'
     show WbMetrics, WbType, WbSettingsScale;
 import 'package:provider/provider.dart';
@@ -929,6 +931,61 @@ class _SettingsPageBodyState extends State<_SettingsPageBody> {
                       value: settings.showStrongsInOriginals,
                       onChanged: (val) =>
                           settings.setShowStrongsInOriginals(val),
+                    ),
+                    // bwh16's Cross Versions Search Mode. A dropdown
+                    // and not three switches: the modes are exclusive
+                    // and widen in one direction, so a list the reader
+                    // reads top to bottom says that and a row of
+                    // toggles does not.
+                    const Divider(height: 1),
+                    ListTile(
+                      title: Text(
+                        uiStrings['crossVersionSearchMode']
+                                ?[settings.locale] ??
+                            'Cross-version search',
+                        style: TextStyle(
+                          fontSize: settings.fontSize + 2,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: settings.fontFamily,
+                          fontFamilyFallback: kCjkFontFallback,
+                        ),
+                      ),
+                      subtitle: Text(
+                        uiStrings['crossVersionSearchModeSubtitle']
+                                ?[settings.locale] ??
+                            'Runs the same query against several editions '
+                                'of the same language.',
+                        style: TextStyle(
+                          fontSize: settings.fontSize,
+                          fontFamily: settings.fontFamily,
+                          fontFamilyFallback: kCjkFontFallback,
+                        ),
+                      ),
+                      trailing: DropdownButton<CrossVersionSearchMode>(
+                        value: settings.crossVersionSearchMode,
+                        underline: const SizedBox.shrink(),
+                        onChanged: (m) {
+                          if (m != null) {
+                            settings.setCrossVersionSearchMode(m);
+                          }
+                        },
+                        items: [
+                          for (final m in CrossVersionSearchMode.values)
+                            DropdownMenuItem(
+                              value: m,
+                              child: Text(
+                                uiStrings[_crossVersionModeKey(m)]
+                                        ?[settings.locale] ??
+                                    m.name,
+                                style: TextStyle(
+                                  fontSize: settings.fontSize,
+                                  fontFamily: settings.fontFamily,
+                                  fontFamilyFallback: kCjkFontFallback,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
                     // bwh29's two switches. Placed beside the other
                     // originals-text controls rather than under a
@@ -3396,4 +3453,20 @@ class _ImportDialogState extends State<_ImportDialog> {
 /// where `context.watch` is not available.
 extension _SettingsSmallPrint on AppSettings {
   double smallPrint(double atDefault) => wbType.scaledSmall(atDefault);
+}
+
+/// The ui_strings key naming one cross-version mode.
+///
+/// A switch and not `'crossVersionMode${m.name}'`: a key built by string
+/// concatenation is invisible to a grep for the key, which is how a
+/// locale ends up missing a line nobody can find.
+String _crossVersionModeKey(CrossVersionSearchMode m) {
+  switch (m) {
+    case CrossVersionSearchMode.currentOnly:
+      return 'crossVersionModeCurrentOnly';
+    case CrossVersionSearchMode.displayStack:
+      return 'crossVersionModeDisplayStack';
+    case CrossVersionSearchMode.sameLanguage:
+      return 'crossVersionModeSameLanguage';
+  }
 }
