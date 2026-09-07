@@ -2348,10 +2348,30 @@ class _OperatorButton extends StatelessWidget {
           style: TextStyle(
             fontSize: t.chrome,
             fontWeight: FontWeight.w600,
+            // 2026-09-08: was `mutedText.withValues(alpha: 0.55)`, which
+            // measured 1.97:1 on the chrome — and 2.03:1 before the
+            // modern pass, so this is an old defect rather than a new
+            // one, found by `palette_legibility_walk_test.dart` once the
+            // walk was widened to reach the workbench.
+            //
+            // The button is NOT disabled. `onTap` is live whatever
+            // `dimmed` says, and the class doc above is explicit about
+            // it: *drawn back rather than disabled*. So the WCAG
+            // exemption for inactive components does not apply, and a
+            // control a reader can press but cannot read is the worst of
+            // the three states this button has.
+            //
+            // The dim signal does not need the label to carry it. Plain
+            // `mutedText` is 4.03:1 — readable — and still a full step
+            // back from `text` at ~13:1, so "this operator will not do
+            // anything to the line as it stands" still reads at a
+            // glance. The border beside it already fades to 45%, which
+            // is where a hint of that kind belongs: on the edge, where
+            // nothing has to be legible.
             color: selected
                 ? wbc.link
                 : dimmed
-                    ? wbc.mutedText.withValues(alpha: 0.55)
+                    ? wbc.mutedText
                     : wbc.text,
           ),
         ),

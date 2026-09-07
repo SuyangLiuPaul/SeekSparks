@@ -252,7 +252,15 @@ class WbToolIcon extends StatelessWidget {
             Icon(
               button.icon,
               size: 15,
-              color: enabled ? wb.text : wb.mutedText.withValues(alpha: 0.5),
+              // 2026-09-08: `disabledMark`, not an ad-hoc 50% muted.
+              // `enabled` here is `onPressed != null` — genuinely
+              // inactive, unlike the status fields and the operator
+              // buttons, which stay tappable while drawn back and were
+              // both raised to full `mutedText` the same day. The token
+              // exists to say exactly this, and saying it in the token
+              // is what lets `palette_legibility_walk_test.dart` tell an
+              // exempt control from an unreadable one.
+              color: enabled ? wb.text : wb.disabledMark,
             ),
             if (button.label != null) ...[
               const SizedBox(width: 4),
@@ -413,9 +421,16 @@ class WorkbenchStatusBar extends StatelessWidget {
                     fontSize: t.chrome,
                     fontWeight:
                         f.enabled ? FontWeight.w600 : FontWeight.w400,
-                    color: f.enabled
-                        ? wb.text
-                        : wb.mutedText.withValues(alpha: 0.55),
+                    // 2026-09-08: was `.withValues(alpha: 0.55)`, 1.98:1
+                    // on the chrome. `enabled` here means the thing the
+                    // field CONTROLS is on — Limits is "off" when
+                    // nothing is limiting — and the field stays
+                    // double-clickable either way, so this is a live
+                    // control that could not be read. The weight above
+                    // already carries the distinction on its own
+                    // channel; the colour does not have to spend
+                    // legibility to repeat it.
+                    color: f.enabled ? wb.text : wb.mutedText,
                   ),
                 ),
               ),

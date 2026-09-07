@@ -41,6 +41,23 @@
 // MEANT to recede, and a rule that forbade that would be a rule about
 // taste. 3:1 forbids only the failure this exists to catch, which is
 // text that has effectively vanished.
+//
+// **One exemption, and it is a narrow one: [WbColors.disabledMark].**
+// WCAG excludes inactive components from contrast requirements, and it
+// is right to — darkening a disabled control until it measures 3:1 makes
+// it look enabled, which trades a legibility complaint for a lie. The
+// exemption is keyed on the TOKEN rather than on a measured threshold so
+// it cannot widen: a surface claiming the exemption has to say
+// `disabledMark`, and `wb_surfaces_test.dart` pins that token's own
+// floor against the border it was split out of.
+//
+// Two things this exemption is NOT for, both found and fixed the day the
+// walk was widened: the command pane's dimmed operator buttons and the
+// status bar's "off" fields. Both were drawn at `mutedText` × 0.55
+// (1.98:1) and both stay TAPPABLE — `dimmed` and `enabled` there mean
+// "this will not change the line yet" and "the thing this controls is
+// off", not "you cannot press this". A control a reader can press and
+// cannot read is the failure, not the exemption.
 library;
 
 import 'dart:math' as math;
@@ -53,9 +70,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/pages/about_page.dart';
+import 'package:seeksparks/pages/atlas_page.dart';
 import 'package:seeksparks/pages/bible_timeline_page.dart';
 import 'package:seeksparks/pages/bible_trivia_page.dart';
 import 'package:seeksparks/pages/chronology_page.dart';
+import 'package:seeksparks/pages/command_search_page.dart';
+import 'package:seeksparks/pages/evidence_page.dart';
 import 'package:seeksparks/pages/family_tree_page.dart';
 import 'package:seeksparks/pages/hebrew_kings_page.dart';
 import 'package:seeksparks/pages/highlights_page.dart';
@@ -64,21 +84,47 @@ import 'package:seeksparks/pages/lexicon_page.dart';
 import 'package:seeksparks/pages/library_page.dart';
 import 'package:seeksparks/pages/modern_concordance_page.dart';
 import 'package:seeksparks/pages/naves_page.dart';
+import 'package:seeksparks/pages/profile_edit_page.dart';
 import 'package:seeksparks/pages/profiles_page.dart';
+import 'package:seeksparks/pages/radial_chronology_page.dart';
 import 'package:seeksparks/pages/sermons_page.dart';
 import 'package:seeksparks/pages/settings_page.dart';
 import 'package:seeksparks/pages/stats_page.dart';
+import 'package:seeksparks/pages/strip_chronology_page.dart';
+import 'package:seeksparks/pages/workbench_page.dart';
 import 'package:seeksparks/providers/main_provider.dart';
 
-/// The pages this walk can pump.
+/// The pages this walk pumps: every page class whose constructor takes
+/// no required argument.
 ///
-/// Everything with a no-argument constructor that does not need a loaded
-/// corpus. The reader itself, the Atlas, Phrasing, the word list and the
-/// Strong's entry page all take required arguments or need bible data;
-/// they are covered by their own widget tests, and adding a fake corpus
-/// here would make this file about fixtures instead of about colour.
+/// The first version of this list held sixteen of the app's thirty-two
+/// pages and the file's own comment called that "every page". It was
+/// not, and the gap was not random — the eight that could have been
+/// added trivially included `WorkbenchPage`, which IS the app, plus the
+/// wheel, the strip, the Atlas and Evidence. Worse, of the ninety
+/// `scheme.outline` ink sites this walk was written to catch, the
+/// heaviest concentrations live in exactly the files those pages build.
+/// A coverage claim is worth what its denominator is.
+///
+/// Nine are still absent, and the denominator is written down rather
+/// than left silent. Books, LoadingPage, MapViewer, SermonDetail,
+/// EvidenceDetail, StrongsEntry, Phrasing and WordList each take a
+/// REQUIRED argument naming a book, a chapter, a sermon or a Strong's
+/// number. HomePage takes none but needs the same thing by another
+/// route: it is the classic single-pane reader, and on a cold pump it
+/// draws no text at all — the tautology guard below caught it claiming
+/// a pass over an empty screen, which is precisely what that guard is
+/// for. Reaching any of the nine means building a corpus, and this file
+/// would then be about fixtures instead of about colour.
 final _pages = <String, Widget Function()>{
   'About': () => const AboutPage(),
+  'Atlas': () => const AtlasPage(),
+  'Command Search': () => const CommandSearchPage(),
+  'Evidence': () => const EvidencePage(),
+  'Profile Edit': () => const ProfileEditPage(),
+  'Radial Chronology': () => const RadialChronologyPage(),
+  'Strip Chronology': () => const StripChronologyPage(),
+  'Workbench': () => const WorkbenchPage(),
   'Bible Timeline': () => const BibleTimelinePage(),
   'Bible Trivia': () => const BibleTriviaPage(),
   'Chronology': () => const ChronologyPage(),
@@ -119,6 +165,16 @@ void main() {
           addTearDown(tester.view.reset);
 
           final settings = AppSettings();
+          // 2026-09-08: the paper case has to set the SETTING, not just
+          // the ambient theme. `WorkbenchPage` re-themes its own subtree
+          // from `settings.readingPaperTheme` — correctly, because paper
+          // is the reader's choice and not the ancestor's — so a paper
+          // ambient theme over a default AppSettings left the whole
+          // workbench rendering `WbColors.light` inside a test labelled
+          // "paper". The walk caught it as light ink on a light chrome
+          // in the paper case, which is the fixture being wrong rather
+          // than the app.
+          if (cfg.paper) await settings.setReadingPaperTheme(true);
           await tester.pumpWidget(
             MultiProvider(
               providers: [
@@ -157,6 +213,9 @@ void main() {
             final colour = span.style?.color;
             if (colour == null) continue;
 
+            // The one exemption. See the library doc.
+            if (colour == wb.disabledMark) continue;
+
             final bg = _paintedBehind(element) ?? wb.groundBg;
             if (_paintedBehind(element) == null) unbacked++;
             judged++;
@@ -165,8 +224,8 @@ void main() {
             if (ratio < 3.0) {
               final shown =
                   text.length > 28 ? '${text.substring(0, 28)}…' : text;
-              faint.add('"$shown" is ${ratio.toStringAsFixed(2)}:1 on '
-                  '#${_hex(bg)}');
+              faint.add('"$shown" — ink #${_hex(colour)} on #${_hex(bg)} '
+                  'is ${ratio.toStringAsFixed(2)}:1');
             }
           }
 
