@@ -1,8 +1,10 @@
 /// Split View's second column, seeded across a language boundary.
 ///
 /// THE DEFECT THIS PINS, reproduced 2026-09-05 by reading the code and
-/// the assets together. `home_page.dart::_activateSplitView` seeded the
-/// second column with
+/// the assets together. Historic — `home_page.dart` was retired on
+/// 2026-09-08 and Split View lives in the Workbench now, but the defect
+/// is why this file exists. `_activateSplitView` seeded the second
+/// column with
 ///
 ///     sp.verses.firstWhere(
 ///       (v) => v.book == primary.currentBook && v.chapter == …,
@@ -289,8 +291,9 @@ void main() {
       // bare `//` would also match inside a URL string literal, which
       // `read` deliberately leaves alone.
       final commentLine = RegExp(r'^\s*//', multiLine: true);
+      // 2026-09-08: was two files. `home_page.dart` is retired — one
+      // reading surface now — so the group's "two split surfaces" is one.
       for (final path in const [
-        'lib/pages/home_page.dart',
         'lib/pages/workbench_page.dart',
       ]) {
         final raw = File(path).readAsStringSync();
@@ -300,7 +303,21 @@ void main() {
       }
     });
 
-    test('Split View assigns its seed from seedChapterForNewColumn', () {
+    // 2026-09-08, and this one found a live bug rather than needing a
+    // path update. It asserted that `home_page.dart`'s Split View seeded
+    // from `seedChapterForNewColumn`. That surface was retired the same
+    // day — and the Workbench's Split View, now the only one, had NEVER
+    // called it. `_openSecondColumn` fetched the edition and left the
+    // landing to `_followPrimary`, whose fallback for an edition that
+    // cannot carry the passage is to RETURN and leave the column where
+    // it was. Correct for a column that is already somewhere; a fresh
+    // `MainProvider` is nowhere, so opening Split View on a
+    // partial-canon edition (LJK V2 is Matthew only) from Genesis left
+    // the new column on no chapter at all.
+    //
+    // Invisible while the classic reader existed to carry the assertion.
+    // The claim now names the file that has to make it.
+    test('a column built from cold seeds from seedChapterForNewColumn', () {
       // Two entry points on purpose: a column being constructed needs a
       // landing place when the edition cannot carry the passage, and a
       // column already on a chapter must be left there instead.
@@ -310,11 +327,10 @@ void main() {
       // has to be the shared function's answer.
       expect(
         RegExp(r'=\s*seedChapterForNewColumn\s*\(')
-            .hasMatch(read('lib/pages/home_page.dart')),
+            .hasMatch(read('lib/pages/workbench_page.dart')),
         isTrue,
-        reason: 'Split View constructs its column, so it takes the '
-            'variant with the partial-canon fallback — and it must take '
-            'the RESULT of it',
+        reason: 'the constructing path takes the variant with the '
+            'partial-canon fallback — and it must take the RESULT of it',
       );
     });
 
@@ -333,7 +349,6 @@ void main() {
       // comparison, it was a hand-rolled linear search across a
       // language boundary. Both files do zero of those now.
       for (final path in const [
-        'lib/pages/home_page.dart',
         'lib/pages/workbench_page.dart',
       ]) {
         expect(read(path).contains('firstWhere('), isFalse,
@@ -345,7 +360,8 @@ void main() {
     });
 
     test('Split View asks resolveSecondaryVersion which edition to open', () {
-      final src = read('lib/pages/home_page.dart');
+      // 2026-09-08: read from the Workbench, which owns Split View now.
+      final src = read('lib/pages/workbench_page.dart');
       expect(
         RegExp(r'=\s*resolveSecondaryVersion\s*\(').hasMatch(src),
         isTrue,

@@ -137,10 +137,14 @@ import 'package:seeksparks/providers/main_provider.dart';
 /// book name, a chapter number, a locale, a version code, an empty
 /// verse list. A scalar is not a corpus. They are in the list now.
 ///
+/// (HomePage was a fourth until 2026-09-08, when the classic
+/// single-pane reader was retired — one reading surface now. It had
+/// drawn no text at all on a cold pump, which the tautology guard
+/// caught it doing while claiming a pass.)
+///
 /// What genuinely remains: MapViewer, SermonDetail and EvidenceDetail
 /// each take a domain OBJECT (`BibleMap`, `Sermon`, `BibleEvidence`);
-/// HomePage — the classic single-pane reader — takes nothing but draws
-/// no text at all on a cold pump; and Phrasing takes scalars and was
+/// and Phrasing takes scalars and was
 /// briefly in the list on that basis, until the exemption-width guard
 /// below reported it rendering THREE strings of which two were disabled
 /// buttons. Scalar arguments got it constructed and did not get it

@@ -147,6 +147,50 @@ void main() {
       }
     });
 
+    test('the app has ONE accent, not two', () {
+      // 2026-09-08, reported with a screenshot of the phone tab bar:
+      // the selected "Read" tab was drawn in gold — underline, icon and
+      // label — while the heading, the verse numbers and the book
+      // banner beside it were all the reader's chosen red. `accent` was
+      // the one role named "the single accent" that did not follow the
+      // accent, because `tinted` moved link/selection/hover and left it
+      // on a fixed #C9A227.
+      //
+      // Asserted as a RELATION rather than a value: link and accent
+      // stay separate fields because they are separate claims, but a
+      // window cannot have two accents and be said to have a theme
+      // colour.
+      for (final swatch in _picker) {
+        for (final palette in _palettes.values) {
+          final t = palette.tinted(swatch);
+          final linkHue = HSLColor.fromColor(t.link).hue;
+          final accentHue = HSLColor.fromColor(t.accent).hue;
+          if (HSLColor.fromColor(swatch).saturation < 0.2) continue;
+          final delta = (linkHue - accentHue).abs();
+          expect(math.min(delta, 360 - delta), lessThan(12),
+              reason: '${_hex(swatch)}: link and accent are different '
+                  'hues, so the window has two accent colours');
+        }
+      }
+    });
+
+    test('the active state is legible on the chrome it sits on', () {
+      // The tab bar, the toolbar toggles and the status fields all
+      // spend this colour on chrome, not on the pane.
+      final failures = <String>[];
+      _palettes.forEach((name, palette) {
+        for (final swatch in _picker) {
+          final t = palette.tinted(swatch);
+          final ratio = _contrast(t.accent, t.chromeBg);
+          if (ratio < 4.5) {
+            failures.add('$name + ${_hex(swatch)}: accent is '
+                '${ratio.toStringAsFixed(2)}:1 on chrome');
+          }
+        }
+      });
+      expect(failures, isEmpty, reason: failures.join('\n'));
+    });
+
     test('two different swatches give two different workspaces', () {
       // The complaint this whole change answers: picking a colour
       // changed the icon and nothing else.
@@ -155,6 +199,7 @@ void main() {
       expect(green.link, isNot(purple.link));
       expect(green.selectionBg, isNot(purple.selectionBg));
       expect(green.hoverBg, isNot(purple.hoverBg));
+      expect(green.accent, isNot(purple.accent));
     });
   });
 

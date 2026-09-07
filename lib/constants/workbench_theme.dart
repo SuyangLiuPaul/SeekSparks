@@ -617,10 +617,20 @@ class WbColors extends ThemeExtension<WbColors> {
   /// focus, and nothing else.
   ///
   ///   * [link] — every clickable reference. THE place the accent goes.
+  ///   * [accent] — the active state: a selected tab, a live toggle, a
+  ///     focused row.
   ///   * [selectionBg] — the current verse. Reads as "the accent, very
   ///     dilute", which is what a selection should be.
   ///   * [hoverBg] — the same, one step further toward the pane, so the
-  ///     hover→selection pair still reads as one family.
+  ///     hover-to-selection pair still reads as one family.
+  ///
+  /// 2026-09-08: [accent] joined the list, reported as a screenshot of
+  /// the phone tab bar with the selected **Read** tab drawn in gold
+  /// underline, gold icon and gold label while the heading, the verse
+  /// numbers and the book banner beside it were all the reader's chosen
+  /// red. It was the one role called "the single accent" that did not
+  /// follow the accent. Four roles move together now, and a theme
+  /// change moves the whole window instead of most of it.
   ///
   /// Untouched on purpose: [strongsLexical] / [strongsGrammar] (green
   /// and blue are a CONVENTION the reader learns — a Strong's number
@@ -666,13 +676,35 @@ class WbColors extends ThemeExtension<WbColors> {
       darker: dark,
     );
 
+    // The active state. Same treatment as the link and it lands on the
+    // same value — there is no reason for one app to have two accents,
+    // and having two was the defect. They stay two FIELDS because they
+    // are two claims ("this is clickable" / "this is on") and a later
+    // change to one must not silently move the other.
+    //
+    // Driven against [chromeBg] rather than [paneBg]: the tab bar, the
+    // toolbar toggles and the status fields that spend this colour all
+    // sit on chrome, which since the modern pass is within 2% of the
+    // pane anyway.
+    final activeAccent = _drivenToContrast(
+      hsl.withSaturation(hsl.saturation.clamp(0.28, 0.85)),
+      on: chromeBg,
+      want: 4.5,
+      darker: !dark,
+    );
+
     // Hover is the selection, most of the way back to the pane: a
     // pointer resting on a row should be quieter than a row that is
     // chosen. Derived rather than computed independently, so the pair
     // always reads as one family whatever the reader picked.
     final hover = Color.lerp(selection, paneBg, 0.55)!;
 
-    return copyWith(link: link, selectionBg: selection, hoverBg: hover);
+    return copyWith(
+      link: link,
+      accent: activeAccent,
+      selectionBg: selection,
+      hoverBg: hover,
+    );
   }
 
   /// Walk [seed]'s lightness until it clears [want] against [on].

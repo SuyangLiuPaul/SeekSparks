@@ -59,7 +59,10 @@ import 'package:seeksparks/utils/chronology_chart_entry.dart'
 import 'package:seeksparks/utils/chapter_navigation.dart'
     show adjacentChapter, nextChapter, previousChapter;
 import 'package:seeksparks/utils/chapter_across_editions.dart'
-    show firstVerseOfChapterAcrossEditions, sameChapterAcrossEditions;
+    show
+        firstVerseOfChapterAcrossEditions,
+        sameChapterAcrossEditions,
+        seedChapterForNewColumn;
 import 'package:seeksparks/utils/jump_to_reference.dart' as jumper;
 import 'package:seeksparks/utils/reference_parser.dart' show BibleReference;
 import 'package:seeksparks/utils/morphology.dart' show describeMorphology;
@@ -1327,7 +1330,35 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
       _secondary = sp;
       _secondaryLoading = false;
     });
-    _followPrimary();
+
+    // 2026-09-08: seed the fresh column HERE rather than leaving it to
+    // `_followPrimary`, which cannot do this job and never could.
+    //
+    // `_followPrimary` answers "the first column moved, follow it", and
+    // its fallback for an edition that cannot carry the passage is to
+    // RETURN — leaving the column where it was, which is right for a
+    // column that is already somewhere. This one is not: a fresh
+    // `MainProvider` has a null `currentBook` and `currentChapter`, and
+    // `FetchVerses` does not set them. So opening Split View on a
+    // partial-canon edition — LJK V2 is Matthew only, and a reader in
+    // Genesis asking for it is the real case — left the new column on no
+    // chapter at all.
+    //
+    // `seedChapterForNewColumn` is the variant written for exactly this
+    // and was wired only into the classic reader's Split View, which was
+    // retired the same day. Its absence here was invisible while that
+    // surface existed to be tested instead; `chapter_across_editions_test`
+    // went red the moment the last caller went away, which is the only
+    // reason this was found rather than shipped.
+    final seed = seedChapterForNewColumn(
+      sp.verses,
+      primary.currentBook,
+      primary.currentChapter,
+    );
+    if (seed != null) {
+      sp.setCurrentChapter(book: seed.book, chapter: seed.chapter);
+      sp.updateCurrentVerse(verse: seed);
+    }
     primary.addListener(_followPrimary);
   }
 

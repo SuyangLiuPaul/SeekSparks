@@ -159,7 +159,11 @@ const Map<String, int> _remaining = <String, int>{
   'lib/pages/loading_page.dart': 3,
   'lib/pages/phrasing_page.dart': 3,
   'lib/widgets/highlights_sheet.dart': 3,
-  'lib/pages/home_page.dart': 2,
+  // 2026-09-08: `lib/pages/home_page.dart` (2) left this inventory
+  // because the file left the repo — the classic single-pane reader is
+  // retired and the Workbench is the only reading surface. Two
+  // unconverted sites went with it; the ratchet's numbers may only go
+  // down, and this is the honest way for them to.
   'lib/pages/sermon_detail_page.dart': 2,
   'lib/widgets/onboarding_dialog.dart': 2,
   'lib/widgets/search_stats_strip.dart': 2,

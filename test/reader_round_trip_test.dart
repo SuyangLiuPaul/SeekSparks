@@ -70,11 +70,40 @@ void main() {
             'test.');
   });
 
+  test('there is exactly one reading surface', () {
+    // 2026-09-08, at the owner's decision: 「reader 并进去吧」.
+    //
+    // `home_page.dart` — the classic single-pane reader — is retired.
+    // Its own doc had said for a month that it "holds no capability the
+    // Workbench lacks" and that retiring it was "a product decision
+    // about whether the app has one reading surface or two, not
+    // cleanup". The decision has now been made.
+    //
+    // The three things that still opened it were `open_reader.dart`'s
+    // width branch, `navigate_to_reader.dart`'s no-reader fallback, and
+    // the boot route in `loading_page.dart`. All three now land on the
+    // Workbench, which `main.dart` has handed EVERY width since
+    // 2026-08-06 and which degrades to exactly the centre reading pane
+    // below 600 — so the width branch had been choosing between the
+    // Workbench and a narrower copy of the Workbench.
+    //
+    // Asserted about the FILE, because a page nothing imports is
+    // invisible to every other kind of test — the lesson
+    // `page_reachability_test.dart` was written for.
+    expect(File('lib/pages/home_page.dart').existsSync(), isFalse,
+        reason: 'The classic reader is back. If that is deliberate, this '
+            'is the test to change — but it is a product decision about '
+            'having one reading surface or two, not a refactor.');
+  });
+
   test('no page reaches the reader by pushing HomePage itself', () {
-    // The ratchet. Seven pages had grown their own copy of
-    // "prepare the jump, then push HomePage", which is what made a
-    // single wrong predicate break the round-trip everywhere at once.
-    // A new Resource must go through the canonical helper.
+    // The ratchet, and it outlives the class it is named for: seven
+    // pages had grown their own copy of "prepare the jump, then push
+    // HomePage", which is what made a single wrong predicate break the
+    // round-trip everywhere at once. `HomePage` is gone, so this can no
+    // longer compile even if someone wrote it — but the shape it
+    // forbids is "push your own reader instead of returning to the
+    // one that exists", and that is still writable with WorkbenchPage.
     final offenders = <String>[];
     for (final entry in Directory('lib').listSync(recursive: true)) {
       if (entry is! File || !entry.path.endsWith('.dart')) continue;
@@ -85,16 +114,16 @@ void main() {
       // open_reader.dart is the deep-link entry point: it runs before
       // any navigator stack exists, so it has nothing to pop back to.
       if (path == 'lib/utils/open_reader.dart') continue;
-      // Code only. Several files discuss the old pattern in prose —
-      // including `home_page.dart`, which documents why its callers
-      // stopped using it — and a ratchet that fires on its own
-      // explanation gets deleted rather than fixed.
+      // Code only. Several files discuss the old pattern in prose, and
+      // a ratchet that fires on its own explanation gets deleted rather
+      // than fixed.
       final code = entry
           .readAsLinesSync()
           .where((l) => !l.trimLeft().startsWith('//'))
           .join('\n');
       if (code.contains('pushPage(const HomePage()') ||
-          code.contains('Get.off(() => const HomePage()')) {
+          code.contains('Get.off(() => const HomePage()') ||
+          code.contains('Get.off(() => const WorkbenchPage()')) {
         offenders.add(path);
       }
     }

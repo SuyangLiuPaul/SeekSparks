@@ -26,11 +26,17 @@
 import 'package:flutter/material.dart';
 import 'package:seeksparks/utils/app_nav.dart';
 
-import 'package:seeksparks/pages/home_page.dart';
+import 'package:seeksparks/pages/workbench_page.dart';
 
-/// The canonical route name for HomePage. All Get.to / Get.off
-/// pushes of HomePage MUST pass this as `routeName:` so popUntil
-/// can detect existing instances reliably.
+/// The classic single-pane reader's route name.
+///
+/// 2026-09-08: nothing PUSHES this any more — `HomePage` is retired and
+/// the Workbench is the only reading surface. The constant stays, and
+/// `routeIsReader` still answers true to it, because a route name
+/// outlives the page: a restored navigator stack or a session that
+/// began before the upgrade can still carry `/HomePage`, and the one
+/// thing that must not happen there is the walk concluding "no reader
+/// exists" and pushing a second one on top.
 const String kHomePageRouteName = '/HomePage';
 
 /// 2026-08-04 (Workbench): the three-pane Workbench IS a reader on
@@ -87,6 +93,14 @@ void navigateToReader(BuildContext context) {
     return false;
   });
   if (!foundExistingReader) {
-    pushPage(const HomePage(), routeName: kHomePageRouteName);
+    // 2026-09-08: the Workbench, not the classic reader — there is one
+    // reading surface now. In practice this branch is nearly dead: the
+    // root of the stack IS the Workbench at every width, and
+    // `routeIsReader(isFirst: true)` says so, which is exactly the fix
+    // `reader_round_trip_test.dart` was written to hold. It stays for
+    // the case that test describes — a stack whose root is somehow not
+    // a reader — and now recovers INTO the workspace instead of
+    // ejecting the reader out of it.
+    pushPage(const WorkbenchPage(), routeName: kWorkbenchRouteName);
   }
 }

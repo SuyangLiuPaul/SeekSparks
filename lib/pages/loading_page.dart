@@ -22,7 +22,7 @@ import '../constants/ui_strings.dart';
 import '../utils/reference_parser.dart';
 import '../utils/responsive.dart';
 import '../utils/version_mapper.dart' show translateBookName;
-import 'home_page.dart';
+import 'workbench_page.dart';
 
 class LoadingPage extends StatefulWidget {
   final List<Verse> verses;
@@ -325,8 +325,11 @@ class _LoadingPageState extends State<LoadingPage> {
       if (advance != null) {
         advance();
       } else {
+        // 2026-09-08: the Workbench. This boot route was the last
+        // place the app could still land a reader that was not the
+        // workspace.
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const HomePage()),
+          MaterialPageRoute(builder: (_) => const WorkbenchPage()),
         );
       }
     });
