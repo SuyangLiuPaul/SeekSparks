@@ -45,6 +45,8 @@ import 'package:seeksparks/utils/search_stats.dart';
 import 'package:seeksparks/utils/strongs_absence.dart';
 import 'package:seeksparks/utils/strongs_result_counts.dart';
 import 'package:seeksparks/utils/version_abbreviation.dart';
+import 'package:seeksparks/widgets/command_builder_sheet.dart'
+    show showCommandBuilder;
 import 'package:seeksparks/widgets/cross_version_strip.dart';
 import 'package:seeksparks/widgets/search_stats_strip.dart';
 
@@ -911,6 +913,19 @@ class _CommandPaneState extends State<CommandPane> {
                       'The first, then the second within {n} words'),
                   _insertBefore,
                   dimmed: dim),
+              // bwh16's Command Line Assistant, next to the `?` because
+              // the two answer the same reader: `?` shows the syntax,
+              // this one writes it for them. A wrench rather than a
+              // word — every other button on this strip is the operator
+              // it inserts, and a labelled one would read as a fifth
+              // operator.
+              _OperatorButton(
+                label: '⌥',
+                tooltip:
+                    uiStrings['builderTitle']?[locale] ?? 'Build a search',
+                selected: false,
+                onTap: _openBuilder,
+              ),
               _OperatorButton(
                 label: '?',
                 tooltip: uiStrings['cmdSyntaxToggle']?[locale] ?? 'Syntax help',
@@ -1145,6 +1160,22 @@ class _CommandPaneState extends State<CommandPane> {
         ),
       );
     });
+  }
+
+  /// bwh16's Command Line Assistant.
+  ///
+  /// Writes the line it builds into the field and leaves it there,
+  /// unrun. §3.1: "writes it into the command line so the reader can
+  /// see the syntax it produced."
+  Future<void> _openBuilder() async {
+    final locale = context.read<AppSettings>().locale;
+    final line = await showCommandBuilder(context, locale);
+    if (line == null || !mounted) return;
+    _controller.text = line;
+    _controller.selection =
+        TextSelection.collapsed(offset: line.length);
+    _focus.requestFocus();
+    setState(() {});
   }
 
   /// One line of the syntax card.

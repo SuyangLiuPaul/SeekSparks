@@ -393,16 +393,33 @@ file should read.
   as the Analysis pane's Morphology tab. Eighth "grep it first" case,
   and the one that should sharpen §3.2: a GSE-class *builder* ships
   here; what is rejected there is the GSE's diagram, not its power.
-- **Command Line Assistant (bwh16)** — **PARTIAL.** The half that is
-  genuinely missing, now that the morphology half is separated from it:
-  a guided builder for the **text** grammar — the one that constructs
-  `.love god;10` or `'faith * christ` for a reader who does not know
-  what `;10` means. #294 and #299 gave the operator strip, per-button
-  tooltips, a context-sensitive hint row and a tappable example card,
-  which is the *teaching*. *Done:* a builder that composes the line from
-  parts — pick AND/OR/phrase, add terms, set the verse context — and
-  writes it into the command line so the reader can see the syntax it
-  produced.
+- **Command Line Assistant (bwh16)** — **HAVE, 2026-09-07.** The row
+  separated the teaching from the building and asked for the second:
+  *"a builder that composes the line from parts — pick AND/OR/phrase,
+  add terms, set the verse context — and writes it into the command line
+  so the reader can see the syntax it produced."*
+  `lib/utils/command_builder.dart` composes,
+  `lib/widgets/command_builder_sheet.dart` is the sheet, on the operator
+  strip beside the `?`. **It writes the line and does not run it**, which
+  is the design: an assistant that ran the search teaches nothing and has
+  to be reopened every time, where one that leaves its work in the box
+  gives the reader a line they can read, edit and type themselves next
+  time. The line is visible the whole way through, so the syntax appears
+  as they answer questions about MEANING — the shapes are named "all of
+  them, same verse", never "AND (`.`)", because the reader who needs this
+  sheet is the one who does not know what `.` means.
+  **It invents no rule the grammar does not have**, and that took a
+  correction. It was written with a "a phrase needs two words" guard, on
+  the assumption that `CommandIssue.phraseNotMultiToken` refused a
+  one-token phrase. It does not — that issue is about a NEGATED
+  multi-token term — and `'love` parses. The guard came out: a builder
+  that refuses what the command line accepts teaches a grammar the app
+  does not have. Caught because `test/command_builder_test.dart` runs
+  every shape it can produce back through the real parser, which is the
+  only way a builder can be checked against the thing it is a front for.
+  `;N` is offered only on the two shapes where it means what the reader
+  will read it to mean, and switching to a phrase DROPS it rather than
+  carrying it into a shape where it means something else.
 - **Semantic domains (Louw-Nida)** — **REJECTED 2026-09-07, on licence,
   and this is the documented form the golden task asks for.**
   *What the feature is:* the *Greek-English Lexicon of the New Testament

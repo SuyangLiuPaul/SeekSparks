@@ -5588,6 +5588,60 @@ const uiStrings = {
   },
   // 2026-09-07 (bwh38, side by side). "Parallels" is the strip label —
   // "Synopsis" is the scholar's word and this strip is read by everyone.
+  // 2026-09-07 (bwh16's Command Line Assistant). The reasons are
+  // written as what the reader should DO next, not as what is wrong:
+  // a builder exists for someone who does not know the syntax, and
+  // "phrase needs ≥2 tokens" is the syntax talking back.
+  'builderTitle': {
+    'zh-Hans': '搭一条查询',
+    'zh-Hant': '搭一條查詢',
+    'en': 'Build a search',
+  },
+  'builderNeedsTerm': {
+    'zh-Hans': '先加一个词',
+    'zh-Hant': '先加一個詞',
+    'en': 'Add a word first',
+  },
+  'builderKindAnd': {
+    'zh-Hans': '都出现（同一节）',
+    'zh-Hant': '都出現（同一節）',
+    'en': 'All of them, same verse',
+  },
+  'builderKindOr': {
+    'zh-Hans': '任一出现',
+    'zh-Hant': '任一出現',
+    'en': 'Any of them',
+  },
+  'builderKindPhrase': {
+    'zh-Hans': '连着出现（有先后）',
+    'zh-Hant': '連著出現（有先後）',
+    'en': 'Next to each other, in order',
+  },
+  'builderKindLinear': {
+    'zh-Hans': '连着出现，可跨节',
+    'zh-Hant': '連著出現，可跨節',
+    'en': 'The same, across verse breaks',
+  },
+  'builderAddWord': {
+    'zh-Hans': '加一个词',
+    'zh-Hant': '加一個詞',
+    'en': 'Add a word',
+  },
+  'builderWithin': {
+    'zh-Hans': '相隔 {n} 节以内',
+    'zh-Hant': '相隔 {n} 節以內',
+    'en': 'within {n} verses',
+  },
+  'builderNoContext': {
+    'zh-Hans': '同一节',
+    'zh-Hant': '同一節',
+    'en': 'same verse',
+  },
+  'builderUse': {
+    'zh-Hans': '写入命令行',
+    'zh-Hant': '寫入命令列',
+    'en': 'Put it on the command line',
+  },
   'analysisTabSynopsis': {
     'zh-Hans': '平行',
     'zh-Hant': '平行',
