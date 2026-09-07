@@ -20,7 +20,7 @@ import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/utils/cross_version_search.dart'
     show CrossVersionSearchMode;
 import 'package:seeksparks/constants/workbench_theme.dart'
-    show WbMetrics, WbType, WbSettingsScale;
+    show WbColors, WbMetrics, WbType, WbSettingsScale;
 import 'package:provider/provider.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/app_style_preset.dart';
@@ -260,91 +260,65 @@ class _SettingsPageBodyState extends State<_SettingsPageBody> {
                           ?[settings.locale] ??
                       'Display'),
                 ),
+                // 2026-09-07: Font Size, Menu Size and Line Spacing used
+                // to be three separate Cards holding one slider each —
+                // the same widget written out three times with the
+                // label and the range changed. Three cards for three
+                // rows of the same KIND of setting is what made this
+                // page read as a list of unrelated boxes rather than as
+                // a settings panel; every reference in the modern brief
+                // groups a family of controls into one surface with a
+                // divider between rows. So: one card, one row widget,
+                // three calls.
                 Card(
                   child: Padding(
                     padding: EdgeInsets.symmetric(
-                        horizontal: 16 * s, vertical: 12 * s),
+                        horizontal: 16 * s, vertical: 4 * s),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Text(
-                          uiStrings['fontSize']?[settings.locale] ??
+                        _SliderRow(
+                          settings: settings,
+                          s: s,
+                          label: uiStrings['fontSize']?[settings.locale] ??
                               'Font Size',
-                          style: TextStyle(
-                            fontFamily: settings.fontFamily,
-                            fontFamilyFallback: kCjkFontFallback,
-                            fontSize: settings.fontSize + 2,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        Slider(
                           value: settings.fontSize,
                           min: kFontSizeMin,
                           max: kFontSizeMax,
                           divisions: (kFontSizeMax - kFontSizeMin).round(),
-                          label: '${settings.fontSize.toInt()} pt',
-                          onChanged: (val) => settings.setFontSize(val),
+                          readout: '${settings.fontSize.toInt()} pt',
+                          onChanged: settings.setFontSize,
                         ),
-                      ],
-                    ),
-                  ),
-                ),
-                SizedBox(height: 16 * s),
-                Card(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(
-                        horizontal: 16 * s, vertical: 12 * s),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          uiStrings['menuScale']?[settings.locale] ??
+                        const Divider(height: 1),
+                        _SliderRow(
+                          settings: settings,
+                          s: s,
+                          label: uiStrings['menuScale']?[settings.locale] ??
                               'Menu Size',
-                          style: TextStyle(
-                            fontFamily: settings.fontFamily,
-                            fontFamilyFallback: kCjkFontFallback,
-                            fontSize: settings.fontSize + 2,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        Slider(
                           value: settings.menuScale,
                           min: kMenuScaleMin,
                           max: kMenuScaleMax,
                           divisions:
                               ((kMenuScaleMax - kMenuScaleMin) * 10).round(),
-                          label: '${settings.menuScale.toStringAsFixed(1)}x',
-                          onChanged: (val) => settings.setMenuScale(val),
+                          readout:
+                              '${settings.menuScale.toStringAsFixed(1)}x',
+                          onChanged: settings.setMenuScale,
                         ),
-                      ],
-                    ),
-                  ),
-                ),
-                SizedBox(height: 16 * s),
-                Card(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(
-                        horizontal: 16 * s, vertical: 12 * s),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          uiStrings['lineSpacing']?[settings.locale] ??
+                        const Divider(height: 1),
+                        _SliderRow(
+                          settings: settings,
+                          s: s,
+                          label: uiStrings['lineSpacing']?[settings.locale] ??
                               'Line Spacing',
-                          style: TextStyle(
-                            fontFamily: settings.fontFamily,
-                            fontFamilyFallback: kCjkFontFallback,
-                            fontSize: settings.fontSize + 2,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        Slider(
                           value: settings.lineSpacing,
                           min: kLineSpacingMin,
                           max: kLineSpacingMax,
                           divisions: ((kLineSpacingMax - kLineSpacingMin) * 10)
                               .round(),
-                          label: settings.lineSpacing.toStringAsFixed(1),
+                          readout: settings.lineSpacing.toStringAsFixed(1),
+                          // The only one that rounds: line spacing is
+                          // stored to one decimal and a raw slider value
+                          // would persist 1.2000000000000002.
                           onChanged: (val) => settings.setLineSpacing(
                               double.parse(val.toStringAsFixed(1))),
                         ),
@@ -1453,6 +1427,90 @@ class _AccountSectionState extends State<_AccountSection> {
 /// give the long settings list visual structure (Display / Reading
 /// / App / Account / Reading plans) without forcing a refactor of
 /// the existing card layout.
+/// One labelled slider in the Display card.
+///
+/// 2026-09-07. Extracted because it existed three times: Font Size,
+/// Menu Size and Line Spacing were the same twenty lines with a
+/// different label and range, which is exactly the shape a fourth copy
+/// gets added to. It also carries the readout the three copies did not
+/// have — a `Slider`'s `label` only appears WHILE the thumb is held, so
+/// the page never showed the reader what their current size actually
+/// was unless they were mid-drag.
+class _SliderRow extends StatelessWidget {
+  const _SliderRow({
+    required this.settings,
+    required this.s,
+    required this.label,
+    required this.value,
+    required this.min,
+    required this.max,
+    required this.divisions,
+    required this.readout,
+    required this.onChanged,
+  });
+
+  final AppSettings settings;
+  final double s;
+  final String label;
+  final double value;
+  final double min;
+  final double max;
+  final int divisions;
+
+  /// The current value, formatted for a human — `14 pt`, `1.2x`.
+  final String readout;
+
+  final ValueChanged<double> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final wb = WbColors.of(context);
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 8 * s),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontFamily: settings.fontFamily,
+                    fontFamilyFallback: kCjkFontFallback,
+                    fontSize: settings.fontSize,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              // Tabular-ish: the readout sits at a fixed end of the row
+              // so three stacked rows do not have three different
+              // right edges.
+              Text(
+                readout,
+                style: TextStyle(
+                  fontFamily: settings.fontFamily,
+                  fontFamilyFallback: kCjkFontFallback,
+                  fontSize: settings.smallPrint(13),
+                  color: wb.mutedText,
+                ),
+              ),
+            ],
+          ),
+          Slider(
+            value: value,
+            min: min,
+            max: max,
+            divisions: divisions,
+            label: readout,
+            onChanged: onChanged,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _SectionHeader extends StatelessWidget {
   final String label;
   const _SectionHeader(this.label);

@@ -178,6 +178,7 @@ class WbColors extends ThemeExtension<WbColors> {
     required this.paneBg,
     required this.paneAltBg,
     required this.chromeBg,
+    required this.groundBg,
     required this.border,
     required this.disabledMark,
     required this.text,
@@ -201,6 +202,27 @@ class WbColors extends ThemeExtension<WbColors> {
 
   /// Menu bar, toolbar, pane title strips, status bar.
   final Color chromeBg;
+
+  /// The GROUND a page or a window sits on — `scaffoldBackgroundColor`,
+  /// and the gap the reader sees between the workbench's three panes.
+  ///
+  /// 2026-09-07. This used to be [chromeBg], and that worked only while
+  /// chrome was a grey bar: #E9EBEF under a white card was a ground by
+  /// accident. Flattening the chrome took the ground with it, and a
+  /// settings page whose cards sit on a background 1% away from
+  /// themselves has no depth at all — the cards stop being objects.
+  ///
+  /// So the ladder is stated instead of implied, and it is the one
+  /// every reference in the modern brief uses: GROUND (this, the
+  /// darkest step on a light theme), then the pane/card above it, with
+  /// chrome flush against the pane and a hairline between. Four values
+  /// spanning about 5% is a ladder you feel and cannot point at, which
+  /// is the whole difference between depth and stripes.
+  ///
+  /// It is deliberately a step BELOW the pane on light and above it on
+  /// dark — content is the brightest thing in a dark window and the
+  /// calmest thing in a light one.
+  final Color groundBg;
 
   final Color border;
 
@@ -339,6 +361,7 @@ class WbColors extends ThemeExtension<WbColors> {
     paneAltBg: Color(0xFFFAFAFC),
     // Was #E9EBEF — the grey toolbar. Now effectively the pane.
     chromeBg: Color(0xFFFBFBFD),
+    groundBg: Color(0xFFF3F4F7),
     // Was #BCC2CC (2.2:1). ~7% black on white.
     border: Color(0xFFE3E5EA),
     disabledMark: Color(0xFFAFB6C2),
@@ -371,7 +394,13 @@ class WbColors extends ThemeExtension<WbColors> {
     // thing in the window.
     paneBg: Color(0xFF0B1320),
     paneAltBg: Color(0xFF101A2A),
-    chromeBg: Color(0xFF0E1725),
+    // Below the pane, not above it: in a dark window the CONTENT is
+    // the brightest thing and chrome recedes. #0E1725 (the first pass
+    // at this) was brighter than the pane, which is the same
+    // inside-out arrangement the light theme's grey toolbar had, just
+    // harder to see.
+    chromeBg: Color(0xFF090F1C),
+    groundBg: Color(0xFF070D17),
     // ~9% white, the dark-side equivalent of light's 7% black.
     border: Color(0xFF1E2A3C),
     disabledMark: Color(0xFF4A5A73),
@@ -409,6 +438,7 @@ class WbColors extends ThemeExtension<WbColors> {
     // beige window frame. Chrome is now one shade off the page.
     paneAltBg: Color(0xFFF2EAD3),
     chromeBg: Color(0xFFF3ECD8),
+    groundBg: Color(0xFFEFE6CC),
     border: Color(0xFFE7DCBC),
     disabledMark: Color(0xFFC3B287),
     text: Color(0xFF4A3826),
@@ -430,6 +460,7 @@ class WbColors extends ThemeExtension<WbColors> {
     Color? paneBg,
     Color? paneAltBg,
     Color? chromeBg,
+    Color? groundBg,
     Color? border,
     Color? disabledMark,
     Color? text,
@@ -447,6 +478,7 @@ class WbColors extends ThemeExtension<WbColors> {
         paneBg: paneBg ?? this.paneBg,
         paneAltBg: paneAltBg ?? this.paneAltBg,
         chromeBg: chromeBg ?? this.chromeBg,
+        groundBg: groundBg ?? this.groundBg,
         border: border ?? this.border,
         disabledMark: disabledMark ?? this.disabledMark,
         text: text ?? this.text,
@@ -468,6 +500,7 @@ class WbColors extends ThemeExtension<WbColors> {
       paneBg: Color.lerp(paneBg, other.paneBg, t)!,
       paneAltBg: Color.lerp(paneAltBg, other.paneAltBg, t)!,
       chromeBg: Color.lerp(chromeBg, other.chromeBg, t)!,
+      groundBg: Color.lerp(groundBg, other.groundBg, t)!,
       border: Color.lerp(border, other.border, t)!,
       disabledMark: Color.lerp(disabledMark, other.disabledMark, t)!,
       text: Color.lerp(text, other.text, t)!,
@@ -496,6 +529,7 @@ class WbColors extends ThemeExtension<WbColors> {
           other.paneBg == paneBg &&
           other.paneAltBg == paneAltBg &&
           other.chromeBg == chromeBg &&
+          other.groundBg == groundBg &&
           other.border == border &&
           other.disabledMark == disabledMark &&
           other.text == text &&
@@ -518,6 +552,7 @@ class WbColors extends ThemeExtension<WbColors> {
         paneBg,
         paneAltBg,
         chromeBg,
+        groundBg,
         border,
         disabledMark,
         text,
@@ -1008,7 +1043,7 @@ ThemeData workbenchTheme(
 
   return base.copyWith(
     colorScheme: scheme,
-    scaffoldBackgroundColor: wb.chromeBg,
+    scaffoldBackgroundColor: wb.groundBg,
     canvasColor: wb.paneBg,
     dividerColor: wb.border,
     dividerTheme: DividerThemeData(

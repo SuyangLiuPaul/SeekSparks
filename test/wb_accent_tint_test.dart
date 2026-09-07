@@ -139,6 +139,7 @@ void main() {
         expect(t.paneBg, palette.paneBg);
         expect(t.paneAltBg, palette.paneAltBg);
         expect(t.chromeBg, palette.chromeBg);
+        expect(t.groundBg, palette.groundBg);
         expect(t.border, palette.border);
         expect(t.disabledMark, palette.disabledMark);
         expect(t.text, palette.text);

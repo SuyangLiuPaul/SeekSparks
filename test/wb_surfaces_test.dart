@@ -21,6 +21,8 @@
 //    they read their colours from the WbColors extension, so all three
 //    palettes work.
 
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -164,10 +166,106 @@ void main() {
       test('chrome colours come from WbColors, not the ColorScheme', () {
         final wb = theme.extension<WbColors>();
         expect(wb, isNotNull);
-        expect(theme.scaffoldBackgroundColor, wb!.chromeBg);
+        // 2026-09-07: `groundBg`, not `chromeBg`. The two used to be
+        // the same value, which is how the page ground came to be
+        // spelled "the colour of a toolbar"; flattening the chrome
+        // would have taken the ground with it and left every card
+        // floating on a background 1% away from itself.
+        expect(theme.scaffoldBackgroundColor, wb!.groundBg);
         expect(theme.appBarTheme.backgroundColor, wb.chromeBg);
         expect(theme.dividerColor, wb.border);
       });
+    });
+  });
+
+  group('the surface ladder', () {
+    // 2026-09-07. The modern pass replaced a two-value scheme (grey
+    // chrome, white pane) with a four-step ladder, and a ladder only
+    // works if the steps stay in order and stay CLOSE. Both halves fail
+    // in opposite directions and both are easy to reintroduce:
+    //
+    //   * Out of order — chrome darker than the ground, say — and the
+    //     window reads as inside-out.
+    //   * Too far apart and you are back to the 1990s toolbar this
+    //     whole pass removed. #E9EBEF under #FFFFFF was a 6% step and
+    //     that was enough to date the entire app.
+    //
+    // So: ordered, and inside a total span the eye reads as one
+    // surface. Deliberately asserted about the three shipped palettes
+    // rather than about a tinted one, because the tint does not touch
+    // any of these fields.
+    for (final entry in <String, WbColors>{
+      'light': WbColors.light,
+      'dark': WbColors.dark,
+      'paper': WbColors.paper,
+    }.entries) {
+      test('${entry.key} runs ground → pane in one direction', () {
+        final wb = entry.value;
+        final ground = _relativeLuminance(wb.groundBg);
+        final chrome = _relativeLuminance(wb.chromeBg);
+        final alt = _relativeLuminance(wb.paneAltBg);
+        final pane = _relativeLuminance(wb.paneBg);
+
+        if (wb.isDark) {
+          // Dark: content is the BRIGHTEST thing in the window.
+          expect(ground, lessThan(chrome));
+          expect(chrome, lessThan(pane));
+          expect(alt, greaterThan(chrome));
+        } else {
+          // Light: content is the calmest, and the ground is the step
+          // everything else sits on.
+          expect(ground, lessThan(chrome));
+          expect(chrome, lessThanOrEqualTo(pane));
+          expect(alt, lessThanOrEqualTo(pane));
+        }
+      });
+
+      test('${entry.key} keeps the whole ladder inside one surface', () {
+        final wb = entry.value;
+        final steps = [wb.groundBg, wb.chromeBg, wb.paneAltBg, wb.paneBg]
+            .map(_relativeLuminance)
+            .toList();
+        final span = _contrastOf(
+            steps.reduce((a, b) => a > b ? a : b),
+            steps.reduce((a, b) => a < b ? a : b));
+        expect(span, lessThan(1.35),
+            reason: 'ground → pane is a ${span.toStringAsFixed(2)}:1 span. '
+                'Above about 1.35 the steps stop being a ladder and '
+                'start being stripes — which is what the grey toolbar '
+                'was.');
+      });
+    }
+
+    test('the border is an edge, not a drawn line', () {
+      // The other half of the same story. #BCC2CC on white measured
+      // 2.2:1, which the eye reads as a LINE across the window;
+      // sixty-seven of those is a wireframe. A hairline should be
+      // findable and not noticeable.
+      for (final wb in [WbColors.light, WbColors.dark, WbColors.paper]) {
+        final ratio = _contrastOf(
+            _relativeLuminance(wb.border), _relativeLuminance(wb.paneBg));
+        expect(ratio, lessThan(1.6),
+            reason: 'a border at ${ratio.toStringAsFixed(2)}:1 is a rule, '
+                'not a hairline');
+        expect(ratio, greaterThan(1.03),
+            reason: 'and one at ${ratio.toStringAsFixed(2)}:1 is invisible, '
+                'which is the opposite failure');
+      }
+    });
+
+    test('an inactive glyph is legible where a border would not be', () {
+      // `disabledMark` exists because `border` was doing both jobs, and
+      // only got away with it while the border was dark. This is the
+      // assertion that keeps them from collapsing back together.
+      for (final wb in [WbColors.light, WbColors.dark, WbColors.paper]) {
+        final mark = _contrastOf(
+            _relativeLuminance(wb.disabledMark), _relativeLuminance(wb.paneBg));
+        final border = _contrastOf(
+            _relativeLuminance(wb.border), _relativeLuminance(wb.paneBg));
+        expect(mark, greaterThan(border * 1.5),
+            reason: 'an "off" icon has to be visibly darker than the '
+                'hairline it used to borrow its colour from');
+      }
     });
   });
 
@@ -293,4 +391,15 @@ void main() {
       expect(taps, 1);
     });
   });
+}
+
+double _relativeLuminance(Color c) {
+  double channel(double v) =>
+      v <= 0.03928 ? v / 12.92 : math.pow((v + 0.055) / 1.055, 2.4) as double;
+  return 0.2126 * channel(c.r) + 0.7152 * channel(c.g) + 0.0722 * channel(c.b);
+}
+
+double _contrastOf(double a, double b) {
+  final hi = a > b ? a : b, lo = a > b ? b : a;
+  return (hi + 0.05) / (lo + 0.05);
 }
