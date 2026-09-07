@@ -5566,6 +5566,66 @@ const uiStrings = {
   // choosing what the column IS, and the checked state reads as the
   // answer to "is it independent?" rather than as an action they have
   // already taken.
+  // 2026-09-07 (bwh44). The labels say what the key DOES, in the
+  // reader's verb — "jump to the command line", not "focus the command
+  // line input" — because a shortcut sheet is read by someone who does
+  // not yet know the app's nouns.
+  // 2026-09-07 (bwh10's Resource Summary). "Summary" is the strip
+  // label — the strip carries thirteen already and #297's arithmetic is
+  // measured against the widest one, so a longer word here would cost
+  // every tab its label.
+  // 2026-09-07 (bwh47). NOT a licence — a disclaimer, and worded so it
+  // cannot be read as one. `version_attribution.dart` requires that a
+  // text this app cannot vouch for "fail by omitting a line rather than
+  // by asserting a licence it does not have"; this says out loud that
+  // the app does not know, which is the only honest thing it can say
+  // about a file the reader supplied.
+  'aboutLicenseUserSupplied': {
+    'zh-Hans': '读者自行导入的文本 · 本应用未核验其来源或授权 · 仅存于本机',
+    'zh-Hant': '讀者自行匯入的文本 · 本應用未核驗其來源或授權 · 僅存於本機',
+    'en': 'Supplied by you · this app has not verified its source or '
+        'rights · stored on this device only',
+  },
+  'analysisTabSummary': {
+    'zh-Hans': '汇总',
+    'zh-Hant': '匯總',
+    'en': 'Summary',
+  },
+  'resourceSummaryLead': {
+    'zh-Hans': '{n} 项资料与本节相关',
+    'zh-Hant': '{n} 項資料與本節相關',
+    'en': '{n} resources have something here',
+  },
+  'shortcutSheetTitle': {
+    'zh-Hans': '键盘快捷键',
+    'zh-Hant': '鍵盤快捷鍵',
+    'en': 'Keyboard shortcuts',
+  },
+  'shortcutFocusCommand': {
+    'zh-Hans': '跳到命令行',
+    'zh-Hant': '跳到命令列',
+    'en': 'Jump to the command line',
+  },
+  'shortcutCopyCenter': {
+    'zh-Hans': '打开复制中心',
+    'zh-Hant': '開啟複製中心',
+    'en': 'Open the Copy Center',
+  },
+  'shortcutPassageReport': {
+    'zh-Hans': '生成本章研读报告',
+    'zh-Hant': '生成本章研讀報告',
+    'en': 'Build a report for this chapter',
+  },
+  'shortcutSheet': {
+    'zh-Hans': '显示这份快捷键表',
+    'zh-Hant': '顯示這份快捷鍵表',
+    'en': 'Show this list',
+  },
+  'shortcutEscape': {
+    'zh-Hans': '取消分析栏的锁定',
+    'zh-Hant': '取消分析欄的鎖定',
+    'en': 'Unpin the Analysis pane',
+  },
   'secondColumnIndependent': {
     'zh-Hans': '第二栏：独立翻页',
     'zh-Hant': '第二欄：獨立翻頁',

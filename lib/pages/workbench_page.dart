@@ -63,11 +63,21 @@ import 'package:seeksparks/utils/morphology.dart' show describeMorphology;
 import 'package:seeksparks/utils/workbench_fit.dart';
 import 'package:seeksparks/constants/version_attribution.dart'
     show versionAttributionKeys;
+import 'package:seeksparks/services/modern_concordance_service.dart';
+import 'package:seeksparks/services/naves_service.dart';
+import 'package:seeksparks/services/places_service.dart';
+import 'package:seeksparks/widgets/resource_summary_pane.dart';
+import 'package:seeksparks/services/cross_reference_service.dart';
+import 'package:seeksparks/services/sermon_service.dart';
+import 'package:seeksparks/services/synopsis_service.dart';
+import 'package:seeksparks/utils/keyboard_shortcuts.dart';
 import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
 import 'package:seeksparks/widgets/bible_reading_pane.dart';
 import 'package:seeksparks/widgets/command_pane.dart';
 import 'package:seeksparks/widgets/passage_report_sheet.dart'
     show showPassageReport;
+import 'package:seeksparks/widgets/shortcut_sheet.dart'
+    show showShortcutSheet;
 import 'package:seeksparks/widgets/copy_center_sheet.dart'
     show CopyScope, showCopyCenter;
 import 'package:seeksparks/utils/clipboard_helper.dart';
@@ -421,17 +431,37 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
     if (ModalRoute.of(context)?.isCurrent != true) return false;
 
     final keys = HardwareKeyboard.instance;
-    if (e.logicalKey == LogicalKeyboardKey.keyC &&
-        keys.isShiftPressed &&
-        (keys.isControlPressed || keys.isMetaPressed)) {
-      _openCopyCenter();
-      return true;
+    // Dispatched from `kWorkbenchShortcuts`, which is also what the
+    // shortcut sheet prints. One table read twice: a sheet maintained
+    // beside the handler starts true and stops being true the first
+    // time somebody adds a key, and the reader is the last to know.
+    for (final sc in kWorkbenchShortcuts) {
+      if (sc.matches(e, keys)) {
+        _runShortcut(sc.id);
+        return true;
+      }
     }
 
     if (e.logicalKey != LogicalKeyboardKey.escape) return false;
     if (_pinnedKey == null) return false;
     _unpin();
     return false;
+  }
+
+  /// Exhaustive on purpose: adding a row to `kWorkbenchShortcuts` does
+  /// not compile until it is answered here, which is the other half of
+  /// the one-table rule.
+  void _runShortcut(WbShortcutId id) {
+    switch (id) {
+      case WbShortcutId.focusCommandLine:
+        _commandFocus.requestFocus();
+      case WbShortcutId.copyCenter:
+        _openCopyCenter();
+      case WbShortcutId.passageReport:
+        _openPassageReport();
+      case WbShortcutId.shortcutSheet:
+        showShortcutSheet(context, context.read<AppSettings>().locale);
+    }
   }
 
   @override
@@ -693,6 +723,10 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         ),
       ]),
       WbMenu(s('menuHelp', 'Help'), [
+        WbMenuItem(
+          s('shortcutSheetTitle', 'Keyboard shortcuts'),
+          () => showShortcutSheet(context, locale),
+        ),
         WbMenuItem(s('about', 'About & data sources'),
             () => pushPage(const AboutPage())),
         const WbMenuItem.separator(),
@@ -872,6 +906,82 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
   /// The chapter and not the selection: a report is a study document
   /// and the unit people study is a passage. A reader who wants less
   /// filters it in the sheet, where they can see what they are cutting.
+  /// bwh10's Resource Summary: how much each verse-keyed resource has to
+  /// say about this verse.
+  ///
+  /// Every lookup here is the SAME call the tab that owns the resource
+  /// makes, so the number the summary prints and the list the tab shows
+  /// cannot disagree — a summary that counted differently from the page
+  /// it points at would be worse than no summary.
+  ///
+  /// One failure is caught per resource rather than for the batch: an
+  /// asset that will not load should cost its own row a dash, not blank
+  /// the other five.
+  /// Open a tab from the Resource Summary.
+  ///
+  /// A plain setter, not `analysisTabForRequest`: that helper maps a
+  /// READER'S request ("show me the sermons here") onto a tab and is
+  /// allowed to answer null when a sheet is the honest surface. The
+  /// summary is already inside the pane and is naming a tab directly.
+  void _setAnalysisTab(AnalysisTab tab) =>
+      setState(() => _analysisTab = tab);
+
+  Future<List<ResourceCount>> _resourceCounts(
+      String englishBook, int chapter, int verse) async {
+    Future<ResourceCount> count(
+      AnalysisTab tab,
+      String labelKey,
+      String fallback,
+      Future<int> Function() run,
+    ) async {
+      try {
+        return ResourceCount(
+            tab: tab,
+            labelKey: labelKey,
+            fallback: fallback,
+            count: await run());
+      } catch (_) {
+        return ResourceCount(
+            tab: tab,
+            labelKey: labelKey,
+            fallback: fallback,
+            count: 0,
+            unknown: true);
+      }
+    }
+
+    return Future.wait([
+      count(AnalysisTab.crossRefs, 'analysisTabCrossRefs', 'X-Refs',
+          () async =>
+              (await CrossReferenceService.forVerse(englishBook, chapter, verse))
+                  .length),
+      count(AnalysisTab.topics, 'analysisTabTopics', 'Topics', () async {
+        final modern = await ModernConcordanceService.forVerse(
+            englishBook: englishBook, chapter: chapter, verse: verse);
+        final naves = await NavesService.forVerse(
+            englishBook: englishBook, chapter: chapter, verse: verse);
+        return modern.length + naves.length;
+      }),
+      count(AnalysisTab.places, 'analysisTabPlaces', 'Places',
+          () async =>
+              (await PlacesService.forVerse(englishBook, chapter, verse))
+                  .length),
+      count(AnalysisTab.sermons, 'analysisTabSermons', 'Sermons', () async {
+        final s = await SermonService.instance.sermonsForPassage(
+            englishBook: englishBook, chapter: chapter, verse: verse);
+        // The focused verse only. The tab also lists the chapter's
+        // other sermons, but this row answers "does anything cite THIS
+        // verse", and folding the chapter in would make every verse of
+        // a preached chapter look individually cited.
+        return s.verse.length;
+      }),
+      count(AnalysisTab.related, 'analysisTabRelated', 'Related',
+          () async =>
+              (await SynopsisService.byVerse(englishBook, chapter, verse))
+                  .length),
+    ]);
+  }
+
   Future<void> _openPassageReport() async {
     final mp = context.read<MainProvider>();
     final settings = context.read<AppSettings>();
@@ -2647,6 +2757,24 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
             '${bookNameInScript(book, script)} ${v.chapter}:${v.verse}',
           ),
           onOpenJourney: (id) => pushPage(AtlasPage(initialRouteIds: [id])),
+        );
+
+      case AnalysisTab.summary:
+        final v = _analysisVerse(mp, verses);
+        if (v == null) return _analysisHint(context, locale);
+        final book = bookNameToEnglish[v.book] ?? v.book;
+        return FutureBuilder<List<ResourceCount>>(
+          key: ValueKey<String>('summary-${v.id}'),
+          future: _resourceCounts(book, v.chapter, v.verse),
+          builder: (context, snap) => ResourceSummaryPane(
+            reference:
+                '${localeAwareBookName(book, locale, mp.currentVersion)} '
+                '${v.chapter}:${v.verse}',
+            counts: snap.data ?? const <ResourceCount>[],
+            locale: locale,
+            loading: snap.connectionState != ConnectionState.done,
+            onOpenTab: _setAnalysisTab,
+          ),
         );
 
       case AnalysisTab.sermons:

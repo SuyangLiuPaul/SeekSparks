@@ -93,6 +93,12 @@ enum AnalysisTab {
   /// ways to reach it, both of which took the verse off the screen.
   /// Appended for the same reason as `morphology`.
   notes,
+
+  /// 2026-09-07: bwh10's Resource Summary — how much each of the other
+  /// tabs has to say about the focused verse, so a reader can tell
+  /// WHICH of them is worth opening. Appended for the same reason as
+  /// `morphology`: the selected tab is persisted by index.
+  summary,
 }
 
 /// 2026-08-11 (#313): the docked tab that answers [request], or null
@@ -313,6 +319,8 @@ const _kTabs = <(AnalysisTab, IconData, String, String)>[
       'analysisTabSermons', 'Sermons'),
   (AnalysisTab.notes, Icons.sticky_note_2_outlined, 'analysisTabNotes',
       'Notes'),
+  (AnalysisTab.summary, Icons.summarize_outlined, 'analysisTabSummary',
+      'Summary'),
 ];
 
 /// The tab names as they will be drawn in [locale], in strip order.

@@ -83,7 +83,11 @@ void main() {
       expect(AnalysisTab.values.indexOf(AnalysisTab.sermons), 12);
       // ...and `notes` after `sermons` (2026-08-18, the User Notes tab).
       expect(AnalysisTab.values.indexOf(AnalysisTab.notes), 13);
-      expect(AnalysisTab.values, hasLength(14));
+      // ...and `summary` after `notes` (2026-09-07, bwh10's Resource
+      // Summary). Every index above still means what it meant, which is
+      // the only thing this test is for.
+      expect(AnalysisTab.values.indexOf(AnalysisTab.summary), 14);
+      expect(AnalysisTab.values, hasLength(15));
     });
   });
 

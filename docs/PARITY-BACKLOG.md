@@ -562,14 +562,24 @@ Mapped against BibleWorks' own tab set (bwh10):
 | Forms | Forms | **HAVE** |
 | Leningradensis | — | see §5 |
 
-- **Resource Summary tab** — **PARTIAL.** bwh10's docked list of every
-  resource that says something about the focused verse. We answer it in
-  pieces (X-Refs, Topics, Places, sermons) but nothing collects them.
-  `reader_analysis_request.dart` already records that the verse-keyed
-  **sermon list** belongs in a tab for exactly this reason and does not
-  have one (`analysis_tabs.dart:89-92`). *Done:* sermons get a tab, and
-  consider one "everything about this verse" summary above the
-  specialised tabs.
+- **Resource Summary tab** — **HAVE, 2026-09-07.** The row asked for two
+  things. **Sermons got their tab on 2026-08-17** and the row never came
+  back to say so — tenth confirmed case of §1's "grep it first". The
+  second is now built: a `Summary` tab that prints, for the focused
+  verse, how much each verse-keyed resource has to say about it —
+  cross-references, topics (Modern Concordance + Nave's), places,
+  sermons, synopsis parallels — each row tapping through to the tab that
+  holds it.
+  **A count, not a preview**, because twelve tabs already answer twelve
+  questions well and none of them can tell a reader WHICH of the twelve
+  is worth opening for this verse, which is the whole job bwh10 gives
+  its Resource Summary. **A zero is printed, not hidden**: a row that
+  vanishes teaches the reader the resource does not exist, where a 0
+  teaches them it does and this verse is not in it — frequently the
+  interesting fact. An asset that fails to load gets a dash and its own
+  caught failure, so it costs its row rather than the other five.
+  Every lookup is the same call the owning tab makes, so the number and
+  the list it points at cannot disagree.
 - **User Notes tab** — **HAVE**, 2026-08-18. The Notes tab is the
   fourteenth, `lib/widgets/verse_notes_pane.dart`, over the store the app
   has had since v1.2.59 — no new data model, and the modal editor and the
@@ -622,10 +632,21 @@ Mapped against BibleWorks' own tab set (bwh10):
   Logic in `lib/utils/word_list_compare.dart`.
   *Still missing:* compiling a list from **a whole version** and from **a
   command-line or GSE query**, and a morphology filter on the list.
-- **Verse List Manager (bwh27)** — **PARTIAL.** The Lists tab and
-  `verse_list_store.dart` hold and scope lists. bwh27 also **compares two
-  verse lists** and offers a book sort order. *Done:* set operations over
-  two saved lists (in both, in either, in one only).
+- **Verse List Manager (bwh27)** — **HAVE.** *(Corrected 2026-09-07.
+  This row asked for what §8's item 4 recorded as already shipped on
+  2026-08-23 and then never came back to change here — the exact rot §1
+  warns about, and the ninth confirmed case.)*
+  Both halves are there. **Comparing two lists**: `selectCommonWith` and
+  `selectUniqueTo` (`verse_list.dart:285,301`), wired to the Select menu
+  at `verse_list_pane.dart:237,239`, and composed with `deleteSelected`
+  and `invertSelection` they give intersection, difference and symmetric
+  difference; `test/verse_list_test.dart:165-251` asserts all three.
+  **Book sort order**: `sortedAndDeduped()` on the Edit menu, ordering by
+  `canonicalBookIndex` — the canon, not the alphabet.
+  §8 already noted why a grep missed this: the operations are named for
+  what the READER does — select what is common — not for the set algebra
+  underneath, so searching for *intersect/union/difference* finds
+  nothing.
 - **Related Verses Tool (bwh50)** — **HAVE.** Related tab.
 - **Phrase Matching Tool (bwh51)** — **HAVE.** `phrase_match.dart`,
   Phrases tab.
@@ -805,35 +826,40 @@ Mapped against BibleWorks' own tab set (bwh10):
   it changes what "the next chapter" means at 24 seams, and it belongs
   with versification rather than with a settings row. Re-open it as
   *that*, with a reader asking for it, not as bwh29's list widget.
-- **Compiling your own version database (bwh47)** — **BLOCKED on the
-  owner, 2026-09-07, and it is the last thing in §3 that is not ours to
-  settle.** The design pass the row asked for was done; it produced a
-  question rather than a feature, and the question is one sentence:
-  **should this app ship the mechanism by which a reader adds a
-  translation the app itself declined to carry?**
-  *Why it is a question and not a task.* The row is right that a local
-  import is "the honest answer to several licence-blocked items". It is
-  also, in the same breath, the tool that puts the NIV into an app that
-  removed the NIV on licence grounds — the removal is recorded in
-  `bible_versions.dart` and the asset was deleted with it. Building the
-  importer moves that decision from the publisher of record onto the
-  reader, and calls it a feature.
-  *A second problem the row did not name, and it is concrete.* Every
-  bundled text has an attribution key, and
-  `version_attribution.dart` says why in as many words: a future edition
-  must "fail by omitting a line rather than by asserting a licence it
-  does not have". An imported text has no key and no licence the app can
-  verify, so either the Copy Center copies it with no licence line, or
-  the app invents one. Both are worse than not importing.
-  *What a safe version would look like*, so the answer is not
-  "never": import restricted to texts whose licence the app can CHECK —
-  a signed manifest, or a publisher's own file with its terms in it.
-  That is a licensing programme, not a file picker, and it is a
-  different piece of work from the one the row describes.
-  **The owner's call. Answer it in one line and this entry closes either
-  way:** build the plain local importer, or REJECT it with this reasoning
-  as the record.
-- **Custom modules (bwh48)** — **BLOCKED, following bwh47.** Same shape,
+- **Compiling your own version database (bwh47)** — **PARTIAL,
+  2026-09-07. The owner answered the question this was blocked on** —
+  「做纯本地导入器」 — so it is being built, and the two things this row
+  warned about are handled in code rather than left to the reader.
+  *Landed:* `lib/utils/imported_version.dart` — the file format, the
+  validator, and the two invariants. **A `user-` prefix on every
+  imported code**, so an import called "KJV" becomes `user-kjv` and
+  cannot shadow the bundled KJV; `bundledCodesAvoidImportedPrefix()` and
+  its test keep the namespace clean. **A disclaimer, never a licence**:
+  `aboutLicenseUserSupplied` says in all three locales that the reader
+  supplied the text and this app has not verified its source or rights,
+  which is the only honest thing it can say — and an imported code is
+  kept out of `unrestrictedCopyVersions`, so the 500-verse copy ceiling
+  applies to it as it does to the licensed editions.
+  Validation is the substance and it refuses far more than it accepts:
+  a bad shape, a book outside the canon (English or Chinese), a
+  non-string text field, a chapter or verse that is not a positive
+  number, a duplicate reference, a file larger than any Bible. It
+  returns REASONS with the offending row or name, because the reader
+  chose this file on purpose. 18 tests, including one that asserts the
+  validator's canon still agrees with the app's own — the drift that
+  would otherwise accept an import and then leave it unreachable.
+  *What is left:* the STORE and the catalog wiring. The app has
+  `shared_preferences` and nothing else, which on web is localStorage at
+  roughly 5 MB — a New Testament or a single book fits, a whole Bible
+  does not, and a store that failed silently at the quota would be worse
+  than no store. So the remaining work is a persistence tier
+  (IndexedDB through `package:web`, which is already a dependency and
+  which `fetch_helper.dart`'s conditional-export pattern shows how to
+  reach), plus making `bibleVersions` / `isKnownVersion` /
+  `loadableVersions` admit a code that is not a compile-time constant.
+  *Local only remains absolute*: no upload, no share, no sync, and
+  nothing in the shipped half could add one.
+- **Custom modules (bwh48)** — **ABSENT, following bwh47.** Same shape,
   for reference works rather than Bibles, and it inherits the same
   question — a commentary or a dictionary is copyrighted the same way a
   translation is, and the app's own bundled ones (BDB, Thayer, JFB) are
@@ -866,10 +892,26 @@ Mapped against BibleWorks' own tab set (bwh10):
   obvious gate (an empty result list) was wrong.
   *Still absent, deliberately:* a soft keyboard, and romanised terms
   inside the Strong's boolean grammar.
-- **Keyboard shortcuts (bwh44)** — **PARTIAL.** Ctrl+L, Ctrl+Shift+C,
-  Esc. bwh44 has a full function-key set. *Done:* a shortcut sheet and
-  the handful worth having, plus a discoverable list — a shortcut nobody
-  can find is not a feature.
+- **Keyboard shortcuts (bwh44)** — **HAVE, 2026-09-07.** *(The row also
+  claimed Ctrl+L; there was no Ctrl+L. Only Ctrl+Shift+C and Esc
+  existed.)*
+  `lib/utils/keyboard_shortcuts.dart` is the table, and it is the SAME
+  table the handler dispatches from and the sheet prints — including the
+  key names, which `WbShortcut.label` builds rather than anyone typing
+  them twice. A sheet maintained beside the handler starts true and
+  stops being true the first time somebody adds a key, and the reader is
+  the last to know. `WbShortcutId` is an enum so the handler's switch is
+  exhaustive: adding a row does not compile until something answers it.
+  Four chords — jump to the command line, Copy Center, passage report,
+  and F1 for the list itself — on Help and on F1, which is what
+  *"a shortcut nobody can find is not a feature"* asked for.
+  **Not bwh44's function-key set, deliberately.** F1–F12 is a
+  Windows-desktop idiom; F3/F5/F6/F11/F12 belong to the browser and this
+  app's device is a tablet with no function row. F1 survives because
+  help is what F1 means everywhere. Plain Ctrl+C stays the browser's,
+  and Esc is documented on the sheet but NOT in the table — it unpins
+  without consuming the key, so a dialog, a text field and the browser
+  all keep their own.
 
 ### 3.8 What we will never copy
 

@@ -171,8 +171,12 @@ void main() {
       // `workbench.analysisTab` stores an int. Inserting `notes`
       // anywhere but the end moves every reader with a tab open to a
       // different one, silently.
-      expect(AnalysisTab.values.last, AnalysisTab.notes);
-      expect(AnalysisTab.values.length, 14);
+      // 2026-09-07: `summary` was appended after it, so `notes` is no
+      // longer last — but its INDEX is unchanged, which is what this
+      // test is actually about.
+      expect(AnalysisTab.values.indexOf(AnalysisTab.notes), 13);
+      expect(AnalysisTab.values.last, AnalysisTab.summary);
+      expect(AnalysisTab.values.length, 15);
     });
 
     test('the reader\'s note action routes here, both ways', () {
