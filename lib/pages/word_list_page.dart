@@ -26,6 +26,9 @@ import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/constants/workbench_theme.dart' show WbType;
 import 'package:seeksparks/pages/strongs_entry_page.dart';
 import 'package:seeksparks/services/concordance_service.dart';
+import 'package:seeksparks/models/original_word.dart';
+import 'package:seeksparks/constants/book_groups.dart'
+    show canonicalNtBooks, canonicalOtBooks;
 import 'package:seeksparks/services/originals_service.dart';
 import 'package:seeksparks/services/strongs_service.dart';
 import 'package:seeksparks/utils/app_nav.dart';
@@ -34,7 +37,12 @@ import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
 import 'package:seeksparks/utils/word_list.dart';
 import 'package:seeksparks/utils/word_list_compare.dart';
 
-enum _Scope { chapter, book, compare }
+/// bwh26's scopes. `testament` was the row's remaining "compile a list
+/// from a whole version": a version IS its testament here, because
+/// `assets/originals` is the Hebrew Bible and the Greek New Testament
+/// and a word list over "both at once" would put Hebrew and Greek
+/// lemmas in one sorted column, which is two lists printed as one.
+enum _Scope { chapter, book, testament, compare }
 
 /// Which side of a comparison a row is on. Every one of these names a
 /// bucket and carries its own count in the chip, so a number here can
@@ -96,9 +104,16 @@ class _WordListPageState extends State<WordListPage> {
     if (_scope == _Scope.compare) return _loadCompare();
     final token = ++_token;
     setState(() => _loading = true);
-    final words = _scope == _Scope.chapter
-        ? await OriginalsService.forChapter(_englishBook, widget.chapter)
-        : await OriginalsService.forBook(_englishBook);
+    final words = switch (_scope) {
+      _Scope.chapter =>
+        await OriginalsService.forChapter(_englishBook, widget.chapter),
+      _Scope.book => await OriginalsService.forBook(_englishBook),
+      // Book by book, with a yield between each: 39 books is ~430,000
+      // words and doing it in one pass freezes the page for seconds on
+      // the web build, where this list is most used.
+      _Scope.testament => await _testamentWords(),
+      _Scope.compare => const <OriginalWord>[],
+    };
     // Every row is a lemma, so every row needs the lexicon headword —
     // the corpus only carries a romanisation per OCCURRENCE, and the
     // Hebrew Bible carries none at all.
@@ -108,6 +123,19 @@ class _WordListPageState extends State<WordListPage> {
       _entries = buildWordList(words, sort: _sort, lexicon: lexicon);
       _loading = false;
     });
+  }
+
+  /// Every word of the testament the current book belongs to.
+  Future<List<OriginalWord>> _testamentWords() async {
+    final books = canonicalNtBooks.contains(_englishBook)
+        ? canonicalNtBooks
+        : canonicalOtBooks;
+    final out = <OriginalWord>[];
+    for (final b in books) {
+      out.addAll(await OriginalsService.forBook(b));
+      await Future<void>.delayed(Duration.zero);
+    }
+    return out;
   }
 
   Future<void> _loadCompare() async {
@@ -320,6 +348,8 @@ class _WordListPageState extends State<WordListPage> {
                               'This chapter'
                             ),
                             (_Scope.book, 'wordListScopeBook', 'Whole book'),
+                            (_Scope.testament, 'wordListScopeTestament',
+                                'Whole testament'),
                             (_Scope.compare, 'wlCmpScope', 'Compare two books'),
                           ])
                             ChoiceChip(

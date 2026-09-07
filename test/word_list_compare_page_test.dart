@@ -137,6 +137,13 @@ void main() {
     // The modifier, which carries its own count — not the marker on a
     // row. 74 words occur in Jude or 2 Peter and nowhere else in the
     // Bible.
+    // 2026-09-07: scrolled into view first. bwh26's `Whole testament`
+    // scope added a fourth chip to the header, which pushes this one
+    // below the test window's fold — the layout is fine (the
+    // largest-type overflow test still passes), the tap just needed to
+    // reach it.
+    await tester.ensureVisible(find.text('Nowhere else 74'));
+    await tester.pump();
     await tester.tap(find.text('Nowhere else 74'));
     await settle(tester);
     expect(tester.takeException(), isNull);

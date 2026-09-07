@@ -33,6 +33,7 @@ import 'package:seeksparks/services/url_sync_service.dart';
 import 'package:seeksparks/services/workbench_warmup.dart'
     show warmWorkbenchFirstPaint;
 import 'package:provider/provider.dart';
+import 'package:seeksparks/services/version_import_service.dart';
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 import 'package:seeksparks/widgets/retired_version_notice.dart'
     show RetiredVersionNotice;
@@ -74,6 +75,12 @@ void main() {
   // properly.
   runZonedGuarded<void>(() {
     WidgetsFlutterBinding.ensureInitialized();
+  // bwh47: put any edition the reader imported back in the catalog
+  // before the first pane asks what versions exist. Failure is silent by
+  // design — a browser that will not open IndexedDB should give the
+  // reader the app, not an error about a feature they may never have
+  // used.
+  unawaited(VersionImportService.restore());
     ErrorReporter.init();
 
     runApp(

@@ -5580,6 +5580,52 @@ const uiStrings = {
   // by asserting a licence it does not have"; this says out loud that
   // the app does not know, which is the only honest thing it can say
   // about a file the reader supplied.
+  // 2026-09-07 (bwh47). The subtitle says "on this device only" because
+  // that is the reader's first question and the app's own condition —
+  // there is no upload path in the code and there should be none in the
+  // reader's mind either.
+  // 2026-09-07 (bwh26). "Whole testament" and not "whole version":
+  // `assets/originals` IS the Hebrew Bible and the Greek New Testament,
+  // and calling it a version would promise a list over a translation
+  // this scope does not read.
+  'wordListScopeTestament': {
+    'zh-Hans': '整部（旧约／新约）',
+    'zh-Hant': '整部（舊約／新約）',
+    'en': 'Whole testament',
+  },
+  'importVersionTitle': {
+    'zh-Hans': '导入你自己的圣经文本',
+    'zh-Hant': '匯入你自己的聖經文本',
+    'en': 'Import your own Bible',
+  },
+  'importVersionSubtitle': {
+    'zh-Hans': '一个 JSON 经文文件。只存在本机,不上传、不同步、不分享。',
+    'zh-Hant': '一個 JSON 經文檔案。只存在本機,不上傳、不同步、不分享。',
+    'en': 'A JSON file of verses. Stored on this device only — never '
+        'uploaded, synced or shared.',
+  },
+  'importVersionDone': {
+    'zh-Hans': '已导入 {n} 节',
+    'zh-Hant': '已匯入 {n} 節',
+    'en': 'Imported {n} verses',
+  },
+  // Four outcomes, four messages. "Your file is malformed" and "your
+  // browser would not keep it" send the reader in opposite directions.
+  'importVersionNoRoom': {
+    'zh-Hans': '浏览器拒绝保存(可能是隐私模式或空间不足)',
+    'zh-Hant': '瀏覽器拒絕儲存(可能是隱私模式或空間不足)',
+    'en': 'Your browser would not store it (private mode, or no room)',
+  },
+  'importVersionUnsupported': {
+    'zh-Hans': '此设备不支持导入',
+    'zh-Hant': '此裝置不支援匯入',
+    'en': 'Not available on this device',
+  },
+  'importVersionRejected': {
+    'zh-Hans': '这个文件读不了',
+    'zh-Hant': '這個檔案讀不了',
+    'en': 'That file could not be read',
+  },
   'aboutLicenseUserSupplied': {
     'zh-Hans': '读者自行导入的文本 · 本应用未核验其来源或授权 · 仅存于本机',
     'zh-Hant': '讀者自行匯入的文本 · 本應用未核驗其來源或授權 · 僅存於本機',

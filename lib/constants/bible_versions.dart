@@ -242,9 +242,49 @@ const disabledVersions = <String>{
   'nasb',
 };
 
+/// Editions the reader imported — bwh47. code → the name they gave it.
+///
+/// A runtime registry beside the const catalog, because a version the
+/// reader supplies cannot be a compile-time constant and every gate in
+/// this file keys on the catalog. Registered by
+/// `LocalVersionRegistry.restore()` at boot and by the importer;
+/// everything else in the app asks the same three functions it always
+/// did — [isKnownVersion], [loadableVersions], [availableVersions] —
+/// and they consult both.
+///
+/// Empty on native and in every test that does not populate it, so the
+/// app behaves exactly as it did before an import exists.
+final Map<String, String> importedVersionLabels = <String, String>{};
+
+/// The catalog rows for the imported editions, built on demand.
+///
+/// `en` as the language is a deliberate simplification and the honest
+/// one: the app cannot tell what language a supplied file is in, and
+/// guessing from the book names would put a reader's own text on the
+/// wrong tab whenever they guessed differently. They appear on the
+/// English tab, labelled with the name the reader gave them, which is
+/// where they will look for them.
+List<BibleVersionInfo> get importedVersions => [
+      for (final e in importedVersionLabels.entries)
+        BibleVersionInfo(
+          value: e.key,
+          shortLabel: e.value.length <= 6
+              ? e.value
+              : '${e.value.substring(0, 5)}…',
+          menuLabel: e.value,
+          language: 'en',
+          editionYear: '',
+        ),
+    ];
+
 /// Versions shown in the picker (excludes disabled ones).
-List<BibleVersionInfo> get availableVersions =>
-    bibleVersions.where((v) => !disabledVersions.contains(v.value)).toList();
+List<BibleVersionInfo> get availableVersions => [
+      ...bibleVersions.where((v) => !disabledVersions.contains(v.value)),
+      // Last, always. An imported text has not been checked by anyone,
+      // and putting it above the editions that have would be a claim
+      // about it that nothing supports.
+      ...importedVersions,
+    ];
 
 /// The order languages appear in the version picker's language selector.
 /// English first, then Traditional, then Simplified — matches the way

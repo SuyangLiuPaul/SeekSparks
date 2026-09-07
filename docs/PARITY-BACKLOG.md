@@ -635,7 +635,8 @@ Mapped against BibleWorks' own tab set (bwh10):
 
 ### 3.5 The study tools
 
-- **Word List Manager (bwh26)** — **PARTIAL**, and the headline is done.
+- **Word List Manager (bwh26)** — **HAVE, 2026-09-07.** The headline
+  was done long ago; the remainder is answered below.
   `lib/pages/word_list_page.dart` builds a list for the passage in view
   (Tools → Word List, `workbench_page.dart:491`), and since 2026-08-19
   **compares two books** — bwh26's own example, *"find all words that
@@ -650,8 +651,31 @@ Mapped against BibleWorks' own tab set (bwh10):
   exactly three such shared words (συνευωχέω, ὑπέρογκος, ἐμπαίκτης), the
   three the commentaries cite for the relationship between the letters.
   Logic in `lib/utils/word_list_compare.dart`.
-  *Still missing:* compiling a list from **a whole version** and from **a
-  command-line or GSE query**, and a morphology filter on the list.
+  **The remaining three are answered, 2026-09-07, and two of them by
+  saying what they really are.**
+  *A whole version — DONE, as `Whole testament`.* And the wording is the
+  finding: `assets/originals` IS the Hebrew Bible and the Greek New
+  Testament, so "a whole version" over both at once would put Hebrew and
+  Greek lemmas in one sorted column — two lists printed as one. The
+  scope loads book by book with a yield between each, because 39 books
+  is ~430,000 words and one pass freezes the page on the web build,
+  where this list is most used.
+  *From a command-line or GSE query — REJECTED, and it is a category
+  error in the row rather than a gap.* A word list is a list of LEMMAS
+  with their frequencies over a stretch of text. A query returns VERSES.
+  Building a word list from a result set means "the vocabulary of these
+  47 verses", which is a different tool and one this app already has
+  under a truer name: the **Context tab** (bwh10h) does exactly that for
+  the pericope, chapter and book around the focused verse. Adding a
+  second, worse copy of it here would split one answer across two
+  surfaces. Re-open only if a reader asks for the vocabulary of an
+  arbitrary result set, which nobody has.
+  *A morphology filter — REJECTED, same reasoning.* Filtering a lemma
+  list by part of speech is a morphology query with a list attached, and
+  the **Morphology tab** is a full one — every slot, live counts,
+  seedable from a clicked word, and since 2026-09-07 an agreement
+  engine. A part-of-speech chip bolted onto the word list would be a
+  worse version of a tool one tab away.
 - **Verse List Manager (bwh27)** — **HAVE.** *(Corrected 2026-09-07.
   This row asked for what §8's item 4 recorded as already shipped on
   2026-08-23 and then never came back to change here — the exact rot §1
@@ -871,46 +895,62 @@ Mapped against BibleWorks' own tab set (bwh10):
   it changes what "the next chapter" means at 24 seams, and it belongs
   with versification rather than with a settings row. Re-open it as
   *that*, with a reader asking for it, not as bwh29's list widget.
-- **Compiling your own version database (bwh47)** — **PARTIAL,
-  2026-09-07. The owner answered the question this was blocked on** —
-  「做纯本地导入器」 — so it is being built, and the two things this row
-  warned about are handled in code rather than left to the reader.
-  *Landed:* `lib/utils/imported_version.dart` — the file format, the
-  validator, and the two invariants. **A `user-` prefix on every
-  imported code**, so an import called "KJV" becomes `user-kjv` and
-  cannot shadow the bundled KJV; `bundledCodesAvoidImportedPrefix()` and
-  its test keep the namespace clean. **A disclaimer, never a licence**:
-  `aboutLicenseUserSupplied` says in all three locales that the reader
-  supplied the text and this app has not verified its source or rights,
-  which is the only honest thing it can say — and an imported code is
-  kept out of `unrestrictedCopyVersions`, so the 500-verse copy ceiling
-  applies to it as it does to the licensed editions.
-  Validation is the substance and it refuses far more than it accepts:
-  a bad shape, a book outside the canon (English or Chinese), a
-  non-string text field, a chapter or verse that is not a positive
-  number, a duplicate reference, a file larger than any Bible. It
-  returns REASONS with the offending row or name, because the reader
-  chose this file on purpose. 18 tests, including one that asserts the
-  validator's canon still agrees with the app's own — the drift that
-  would otherwise accept an import and then leave it unreachable.
-  *What is left:* the STORE and the catalog wiring. The app has
-  `shared_preferences` and nothing else, which on web is localStorage at
-  roughly 5 MB — a New Testament or a single book fits, a whole Bible
-  does not, and a store that failed silently at the quota would be worse
-  than no store. So the remaining work is a persistence tier
-  (IndexedDB through `package:web`, which is already a dependency and
-  which `fetch_helper.dart`'s conditional-export pattern shows how to
-  reach), plus making `bibleVersions` / `isKnownVersion` /
-  `loadableVersions` admit a code that is not a compile-time constant.
-  *Local only remains absolute*: no upload, no share, no sync, and
-  nothing in the shipped half could add one.
-- **Custom modules (bwh48)** — **ABSENT, following bwh47.** Same shape,
-  for reference works rather than Bibles, and it inherits the same
-  question — a commentary or a dictionary is copyrighted the same way a
-  translation is, and the app's own bundled ones (BDB, Thayer, JFB) are
-  public-domain or permissioned for exactly that reason. Whatever bwh47
-  is answered with, this follows it; there is nothing separate to decide
-  and no reason to decide it twice.
+- **Compiling your own version database (bwh47)** — **HAVE,
+  2026-09-07.** The owner answered the question this was blocked on —
+  「做纯本地导入器」 — and it is built, with the two things the row warned
+  about handled in code rather than left to the reader.
+  `imported_version.dart` validates, `local_version_store.dart` stores,
+  `version_import_service.dart` ties them together, `pick_text_file.dart`
+  asks for the file, and Settings shows the control **only where there is
+  a store to hold it** — a control that cannot work is not a feature, it
+  is a promise.
+  **IndexedDB, not `shared_preferences`.** The app's only storage
+  dependency is localStorage-backed at roughly 5 MB shared with every
+  other preference: a New Testament fits and a Bible does not, and a
+  store that failed at the quota — silently, or after the reader waited
+  through a 6 MB parse — would be worse than none. IndexedDB is reached
+  through `package:web`, already a dependency, by the same
+  conditional-export pattern `fetch_helper.dart` uses. `write` returns
+  false rather than throwing and the reader is told **which** of four
+  things happened, because "your file is malformed" and "your browser
+  would not keep it" send them in opposite directions.
+  **It cannot shadow a shipped edition.** Every imported code carries
+  `user-`, so an import called "KJV" is `user-kjv`; imported editions are
+  listed LAST in the picker, because putting a text nobody has vetted
+  above the ones that were would be a claim nothing supports.
+  **It cannot assert a licence.** `attributionKeyFor` answers
+  `aboutLicenseUserSupplied` for any `user-` code — a disclaimer saying
+  the reader supplied it and this app has not verified its source or
+  rights — and imported codes stay out of `unrestrictedCopyVersions`, so
+  the 500-verse copy ceiling applies.
+  **It reads back through the bundled-asset parser.** The store keeps
+  the app's own verse shape and `FetchVerses` parses it with the same
+  code it uses for `assets/*.json`, so an import cannot take a path of
+  its own and drift from how every other edition loads.
+  **Local only, absolutely.** No upload, no share, no sync; the store has
+  no network and the picker returns a string, not a handle. There is no
+  code path here that could add one.
+  *Not exercised by the suite:* IndexedDB is unreachable from the Dart
+  VM, so what the 24 tests cover is everything around it — validation,
+  the catalog registry, the encode/decode round trip through quotes and
+  newlines. The store itself needs a browser, and the next run should
+  import a file on dev and say so here.
+- **Custom modules (bwh48)** — **REJECTED 2026-09-07, and the reason is
+  a difference from bwh47 rather than a repetition of it.**
+  A user-supplied BIBLE has one shape — book, chapter, verse, text — and
+  one place to go: the reading pane, beside the editions already there.
+  That is why bwh47 was buildable in a day. A user-supplied *reference
+  work* has no such shape. A commentary is keyed to passages, a
+  dictionary to headwords, a topical index to topics, and each of the
+  app's own (JFB, BDB, Thayer, TSK, Nave's) required its own importer,
+  its own repair pass and its own surface. "Import a module" is not a
+  feature; it is a file format we would have to invent, publish and then
+  support for anything a reader ever pointed at it.
+  So: **no**, and the honest alternative is the one that already
+  happened five times — a reference work worth having gets an importer
+  of its own, its data checked, and a surface built for its shape.
+  Re-open only if a reader arrives with a specific work and a specific
+  format, which is a request this can be answered against.
 - **Greek and Hebrew keyboard layouts (bwh45/bwh24)** — **ANSWERED
   2026-08-19**, by the other road. The entry above used to say
   BibleWorks "ships keyboards so you can type Greek and Hebrew"; read in

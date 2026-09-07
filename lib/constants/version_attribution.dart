@@ -13,6 +13,9 @@
 /// a line rather than by asserting a licence it does not have.
 library;
 
+import 'package:seeksparks/utils/imported_version.dart'
+    show isImportedVersion, kImportedAttributionKey;
+
 const versionAttributionKeys = <String, String>{
   'kjv': 'aboutLicensePublicDomain',
   'leb': 'aboutLicenseLeb',
@@ -30,8 +33,14 @@ const versionAttributionKeys = <String, String>{
   'biblexg-v2-tr': 'aboutLicenseLjk',
 };
 
-String? attributionKeyFor(String versionCode) =>
-    versionAttributionKeys[versionCode];
+String? attributionKeyFor(String versionCode) {
+  // bwh47. An imported text has no key of its own and this app cannot
+  // verify what it is, so it carries a DISCLAIMER rather than a licence
+  // — which is this file's own rule, stated at the top: fail by omitting
+  // a line rather than by asserting one we do not have.
+  if (isImportedVersion(versionCode)) return kImportedAttributionKey;
+  return versionAttributionKeys[versionCode];
+}
 
 /// Editions whose text may be copied out in any quantity: the
 /// translation itself is public domain, so no permission is being spent.

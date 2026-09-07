@@ -12,6 +12,10 @@ import 'package:flutter/services.dart' show Clipboard;
 import 'package:seeksparks/constants/app_version.dart';
 import 'package:seeksparks/constants/text_patterns.dart' show sanitizeForCopy;
 import 'package:seeksparks/constants/sermon_credit.dart';
+import 'package:seeksparks/constants/bible_versions.dart';
+import 'package:seeksparks/services/local_version_store.dart';
+import 'package:seeksparks/services/version_import_service.dart';
+import 'package:seeksparks/utils/pick_text_file.dart';
 import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/utils/cross_version_search.dart'
     show CrossVersionSearchMode;
@@ -932,6 +936,70 @@ class _SettingsPageBodyState extends State<_SettingsPageBody> {
                       onChanged: (val) =>
                           settings.setShowStrongsInOriginals(val),
                     ),
+                    // bwh47. Under the search/originals block
+                    // because it is about which TEXTS the app holds,
+                    // and shown only where there is a store to hold
+                    // them — a control that cannot work is not a
+                    // feature, it is a promise.
+                    if (canPickTextFile && LocalVersionStore.isAvailable) ...[
+                      const Divider(height: 1),
+                      ListTile(
+                        title: Text(
+                          uiStrings['importVersionTitle']?[settings.locale] ??
+                              'Import your own Bible',
+                          style: TextStyle(
+                            fontSize: settings.fontSize + 2,
+                            fontWeight: FontWeight.w600,
+                            fontFamily: settings.fontFamily,
+                            fontFamilyFallback: kCjkFontFallback,
+                          ),
+                        ),
+                        subtitle: Text(
+                          uiStrings['importVersionSubtitle']
+                                  ?[settings.locale] ??
+                              'A JSON file of verses. Stored on this '
+                                  'device only.',
+                          style: TextStyle(
+                            fontSize: settings.fontSize,
+                            fontFamily: settings.fontFamily,
+                            fontFamilyFallback: kCjkFontFallback,
+                          ),
+                        ),
+                        trailing: const Icon(Icons.file_open_outlined),
+                        onTap: () => _importVersion(context, settings),
+                      ),
+                      for (final e in importedVersionLabels.entries)
+                        ListTile(
+                          dense: true,
+                          title: Text(
+                            e.value,
+                            style: TextStyle(
+                              fontSize: settings.fontSize,
+                              fontFamily: settings.fontFamily,
+                              fontFamilyFallback: kCjkFontFallback,
+                            ),
+                          ),
+                          subtitle: Text(
+                            uiStrings['aboutLicenseUserSupplied']
+                                    ?[settings.locale] ??
+                                'Supplied by you',
+                            style: TextStyle(
+                              fontSize: settings.fontSize - 1,
+                              fontFamily: settings.fontFamily,
+                              fontFamilyFallback: kCjkFontFallback,
+                            ),
+                          ),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.delete_outline),
+                            onPressed: () async {
+                              await VersionImportService.forget(e.key);
+                              if (context.mounted) {
+                                (context as Element).markNeedsBuild();
+                              }
+                            },
+                          ),
+                        ),
+                    ],
                     // bwh16's Cross Versions Search Mode. A dropdown
                     // and not three switches: the modes are exclusive
                     // and widen in one direction, so a list the reader
@@ -3500,4 +3568,35 @@ String _crossVersionModeKey(CrossVersionSearchMode m) {
     case CrossVersionSearchMode.sameLanguage:
       return 'crossVersionModeSameLanguage';
   }
+}
+
+/// bwh47's import, from the reader's side.
+///
+/// Reads the file, validates it, stores it, and says which of the four
+/// things happened — because "your file is malformed" and "your browser
+/// would not keep it" send the reader in completely different
+/// directions, and a single "import failed" would send them the wrong
+/// way half the time.
+Future<void> _importVersion(BuildContext context, AppSettings settings) async {
+  final picked = await pickTextFile();
+  if (picked == null || !context.mounted) return;
+  final name = picked.name.replaceAll(RegExp(r'\.[A-Za-z0-9]+$'), '');
+  final result = await VersionImportService.import(picked.text, name);
+  if (!context.mounted) return;
+  final locale = settings.locale;
+  String s(String key, String fallback) =>
+      uiStrings[key]?[locale] ?? fallback;
+  final message = switch (result.outcome) {
+    ImportOutcome.imported => s('importVersionDone', 'Imported {n} verses')
+        .replaceAll('{n}', '${result.verseCount}'),
+    ImportOutcome.couldNotStore =>
+      s('importVersionNoRoom', 'Your browser would not store it'),
+    ImportOutcome.unsupported =>
+      s('importVersionUnsupported', 'Not available on this device'),
+    ImportOutcome.rejected =>
+      '${s('importVersionRejected', 'That file could not be read')}'
+          '${result.detail == null ? '' : ' (${result.detail})'}',
+  };
+  ScaffoldMessenger.of(context)
+      .showSnackBar(SnackBar(content: Text(message)));
 }

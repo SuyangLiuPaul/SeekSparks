@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:seeksparks/services/local_version_store.dart';
+import 'package:seeksparks/utils/imported_version.dart' show isImportedVersion;
 import 'package:seeksparks/models/verse.dart';
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/services/error_reporter.dart';
@@ -233,8 +235,9 @@ class FetchVerses {
         }
         final paraMap =
             await _loadParagraphMap().timeout(attemptTimeout);
-        final verses =
-            await _loadAndParse(path, paraMap).timeout(attemptTimeout);
+        final verses = await _loadAndParse(path, paraMap,
+                suppliedJson: await _importedJson(version))
+            .timeout(attemptTimeout);
         // 2026-06-14 (v1.3.73): stale-switch guard. `version` was read
         // from `currentVersion` at the top of execute(); the parse above
         // is async, so a user who switches versions AGAIN before it
@@ -315,7 +318,8 @@ class FetchVerses {
     try {
       final path = 'assets/${version.toLowerCase()}.json';
       final paraMap = await _loadParagraphMap();
-      final list = await _loadAndParse(path, paraMap);
+      final list = await _loadAndParse(path, paraMap,
+          suppliedJson: await _importedJson(version.toLowerCase()));
       return list.isEmpty ? null : list;
     } catch (e, st) {
       debugPrint('Background loadVerseList($version) failed: $e\n$st');
@@ -323,12 +327,26 @@ class FetchVerses {
     }
   }
 
+  /// The reader's own imported edition (bwh47), or null when [version]
+  /// is not one or the store cannot be reached.
+  ///
+  /// Checked BEFORE the bundle, and it has to be: an imported code
+  /// carries the `user-` prefix so it can never name an asset, and a
+  /// rootBundle miss on web comes back as `index.html` with a 200 —
+  /// which `assertJsonPayload` would then report as a corrupt asset
+  /// rather than as a text that is simply not in the bundle.
+  static Future<String?> _importedJson(String version) async {
+    if (!isImportedVersion(version)) return null;
+    return LocalVersionStore.read(version);
+  }
+
   static Future<List<Verse>> _loadAndParse(
     String path,
-    Map<String, Map<String, _ParaInfo>> paraMap,
-  ) async {
-    final jsonString = await rootBundle.loadString(path);
-    assertJsonPayload(jsonString, path);
+    Map<String, Map<String, _ParaInfo>> paraMap, {
+    String? suppliedJson,
+  }) async {
+    final jsonString = suppliedJson ?? await rootBundle.loadString(path);
+    if (suppliedJson == null) assertJsonPayload(jsonString, path);
     final dynamic decoded = json.decode(jsonString);
 
     List<Map<String, dynamic>> rawList;
