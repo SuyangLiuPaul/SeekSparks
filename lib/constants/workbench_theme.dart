@@ -177,6 +177,7 @@ class WbColors extends ThemeExtension<WbColors> {
   const WbColors({
     required this.paneBg,
     required this.paneAltBg,
+    required this.accent,
     required this.chromeBg,
     required this.groundBg,
     required this.border,
@@ -320,7 +321,28 @@ class WbColors extends ThemeExtension<WbColors> {
 
   /// The mark's gold. The single accent, used sparingly — an active
   /// toggle, a focused row — the way the icon uses it on the page.
-  Color get accent => const Color(0xFFC9A227);
+  ///
+  /// 2026-09-08: was one hardcoded #C9A227 for all three palettes, and
+  /// that only ever worked for the fills. Thirteen call sites use it and
+  /// **seven of them print it as TEXT** — the chronology chart's epoch
+  /// labels and four 11px labels in the wheel sheets among them. #C9A227
+  /// measures 2.42:1 on the light pane and 2.14:1 on cream: not faint,
+  /// gone. `palette_legibility_walk_test.dart` found the Hebrew Kings
+  /// one; the wheel sheets it cannot pump.
+  ///
+  /// The fix was already written down two fields below. [pinMark] exists
+  /// as its own field precisely because *"a pin has to be legible on all
+  /// three palettes and one gold is not"* — the identical problem,
+  /// diagnosed and solved for one role while the role it was carved out
+  /// of kept the broken value. So the accent now takes the same audited
+  /// per-palette treatment: 5.06 / 10.85 / 5.54 against the pane, 4.6 /
+  /// 11.35 / 5.01 against the ground, and still unmistakably the app's
+  /// gold.
+  ///
+  /// [pinMark] stays a separate field even where the value now coincides.
+  /// "The accent" and "this word is held" are two claims, and a future
+  /// change to one must not silently move the other.
+  final Color accent;
 
   /// Is the palette in force a dark one?
   ///
@@ -355,6 +377,7 @@ class WbColors extends ThemeExtension<WbColors> {
   // chrome, not about legibility.
   static const light = WbColors(
     paneBg: Color(0xFFFFFFFF),
+    accent: Color(0xFF8A6A12),
     // A zebra you can feel and not point at. #F6F7F9 was already close;
     // half a step closer keeps the version boundary findable without
     // striping the page.
@@ -393,6 +416,7 @@ class WbColors extends ThemeExtension<WbColors> {
     // (#040506) do: a near-black ground, with the content the brightest
     // thing in the window.
     paneBg: Color(0xFF0B1320),
+    accent: Color(0xFFE8C24A),
     paneAltBg: Color(0xFF101A2A),
     // Below the pane, not above it: in a dark window the CONTENT is
     // the brightest thing and chrome recedes. #0E1725 (the first pass
@@ -432,6 +456,7 @@ class WbColors extends ThemeExtension<WbColors> {
   /// tinted dark mode — see bible_reading_pane.dart).
   static const paper = WbColors(
     paneBg: Color(0xFFF7F1E0),
+    accent: Color(0xFF7A5C0A),
     // 2026-09-07: the same flattening as light and dark. Paper had the
     // worst case of it — #E6D9B5 chrome under #F7F1E0 content is a
     // two-step drop, so the workbench read as a cream page sitting in a
@@ -457,6 +482,7 @@ class WbColors extends ThemeExtension<WbColors> {
 
   @override
   WbColors copyWith({
+    Color? accent,
     Color? paneBg,
     Color? paneAltBg,
     Color? chromeBg,
@@ -475,6 +501,7 @@ class WbColors extends ThemeExtension<WbColors> {
     Color? diffMark,
   }) =>
       WbColors(
+        accent: accent ?? this.accent,
         paneBg: paneBg ?? this.paneBg,
         paneAltBg: paneAltBg ?? this.paneAltBg,
         chromeBg: chromeBg ?? this.chromeBg,
@@ -497,6 +524,7 @@ class WbColors extends ThemeExtension<WbColors> {
   WbColors lerp(ThemeExtension<WbColors>? other, double t) {
     if (other is! WbColors) return this;
     return WbColors(
+      accent: Color.lerp(accent, other.accent, t)!,
       paneBg: Color.lerp(paneBg, other.paneBg, t)!,
       paneAltBg: Color.lerp(paneAltBg, other.paneAltBg, t)!,
       chromeBg: Color.lerp(chromeBg, other.chromeBg, t)!,
@@ -526,6 +554,7 @@ class WbColors extends ThemeExtension<WbColors> {
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is WbColors &&
+          other.accent == accent &&
           other.paneBg == paneBg &&
           other.paneAltBg == paneAltBg &&
           other.chromeBg == chromeBg &&
@@ -549,6 +578,7 @@ class WbColors extends ThemeExtension<WbColors> {
 
   @override
   int get hashCode => Object.hash(
+        accent,
         paneBg,
         paneAltBg,
         chromeBg,
@@ -965,7 +995,25 @@ ThemeData workbenchTheme(
     surface: wb.paneBg,
     onSurface: wb.text,
     onSurfaceVariant: wb.mutedText,
-    outline: wb.border,
+    // 2026-09-08 — these two were BOTH `wb.border`, and that was a live
+    // defect the moment the modern pass took the border down to a
+    // hairline. This codebase uses the two roles with a clean split
+    // that the single mapping hid: `outlineVariant` appears 18 times
+    // and every one is a border or a divider; `outline` appears 90
+    // times across 23 files and every one is INK — an empty-state icon,
+    // a column label, a units suffix, a "no results" line.
+    //
+    // At #BCC2CC those 90 sat at 2.10:1 on white: faint, and legible.
+    // At #E3E5EA they are 1.15:1, which is not faint, it is gone. The
+    // Library page's 48px empty-state icon is the one
+    // `palette_legibility_walk_test.dart` could reach and it found it at
+    // 1.15:1; the other 89 are on pages that walk cannot pump.
+    //
+    // So the roles are split to match how they are actually used, which
+    // is also closer to Material's own definitions than the old mapping
+    // was — `outlineVariant` is the decorative-boundary role, and ink
+    // was never what `outline` was for.
+    outline: wb.mutedText,
     outlineVariant: wb.border,
     primary: wb.link,
     surfaceContainerHighest: wb.paneAltBg,

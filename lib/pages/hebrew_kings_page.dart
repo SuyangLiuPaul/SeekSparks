@@ -68,8 +68,29 @@ const double _sideBySideMinWidth = 900;
 const double _minColumnWidth = 220;
 const double _minChartWidth = _axisWidth + 2 * _minColumnWidth;
 
+/// The two kingdoms' hues. A complementary pair — Judah's blue against
+/// Israel's orange — so a reader scanning the chart tells the columns
+/// apart by hue before reading a single name.
+///
+/// 2026-09-08: Israel was #C4885B, which is the exact mirror of Judah's
+/// blue in HSL and therefore looked like a matched pair, and is not one.
+/// Perceived lightness is not HSL lightness: at the same L and S the
+/// orange measured **2.99:1 on the white pane and 2.65:1 on cream**
+/// where the blue measured 3.68 and 3.26. Both hues label real text —
+/// the kingdom heading, the king's name in the list — so one half of the
+/// pair was under the 3:1 floor and the other was not, on a chart whose
+/// entire job is comparing the two columns.
+///
+/// Found by `palette_legibility_walk_test.dart`, and PRE-EXISTING rather
+/// than anything the modern pass moved: both constants are hardcoded and
+/// neither pane background changed.
+///
+/// Darkened by 0.08 HSL lightness, hue and saturation untouched. It now
+/// measures 3.82 / 3.39 / 4.87 against the light, paper and dark panes,
+/// against the blue's 3.68 / 3.26 / 5.06 — which is what "a matched
+/// pair" was supposed to mean in the first place.
 const Color _judahHue = Color(0xFF5B87C4);
-const Color _israelHue = Color(0xFFC4885B);
+const Color _israelHue = Color(0xFFB57341);
 
 class _HebrewKingsPageState extends State<HebrewKingsPage> {
   Future<HebrewKingsData>? _future;
