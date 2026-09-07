@@ -66,12 +66,14 @@ same thing on its own:
   * the iOS display name in `ios/Runner/Info.plist` is **Yahweh's Sword**
   * the bundle id is `com.example.yahwehswords`
 
-So gate 2 no longer stands here. **Gate 1 — territory — does.** Hong
-Kong / Mainland China is *Holman's* term, not Raymond's, so extending
-his own permission does not move it, and this app ships to the App
-Store, Play and the web unfenced. That is one question back to Raymond
-before any CSB text ships, in either app; it is not an objection to
-anything he said.
+So gate 2 no longer stands here. **Gate 1 — territory — was put to the
+owner and answered on 2026-09-07: worldwide distribution is fine**, the
+CSB being freely readable online and these apps being free.
+
+Recorded as what it is — the owner's decision, not a variation of the
+written grant, which still reads Hong Kong / Mainland China on its face.
+The yswords copy of this file says the same. Anyone reading later should
+know which of the two they are looking at.
 
 The yswords copy of this file records the exchange in full.
 
