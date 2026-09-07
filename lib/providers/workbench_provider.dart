@@ -16,6 +16,7 @@ import 'package:seeksparks/constants/text_patterns.dart'
     show sanitizeForSearchKey, searchCorpusKey;
 import 'package:seeksparks/services/fetch_verses.dart' show FetchVerses;
 import 'package:seeksparks/utils/command_query.dart';
+import 'package:seeksparks/utils/cross_version_query.dart';
 import 'package:seeksparks/utils/cross_version_search.dart';
 import 'package:seeksparks/utils/ketiv_qere.dart'
     show KetivQereSearchScope;
@@ -305,6 +306,15 @@ class WorkbenchProvider extends ChangeNotifier {
   /// True while the other editions are still being read.
   bool crossVersionSearching = false;
 
+  /// The editions a cross-version CONJUNCTION named, once one has run —
+  /// `.kjv:propitiation csb:atoning`. Null for every other shape.
+  ///
+  /// Distinct from [crossVersionHits], which belongs to the broadcast:
+  /// one asks who else says it, the other asks where two editions
+  /// disagree, and a reader who cannot tell which answer they are
+  /// looking at has been given neither.
+  CrossVersionQuery? crossVersionConjunction;
+
   /// version code → (verses, wordKeys, searchKeys), kept for the session.
   ///
   /// A broadcast over five English editions is five asset loads and five
@@ -503,11 +513,24 @@ class WorkbenchProvider extends ChangeNotifier {
     commandIssue = null;
     verbNotice = null;
     crossVersionHits = null;
+    crossVersionConjunction = null;
     textResults = const [];
     _clearAi();
     _notify();
 
     try {
+      // A cross-version conjunction first. It opens with the same `.`
+      // or `/` as an ordinary AND/OR search and is told apart by a
+      // `version:` prefix that names an edition this build can load, so
+      // it can never take a line the ordinary parser would have wanted:
+      // `parseCrossVersionQuery` returns null for everything else.
+      final xv = parseCrossVersionQuery(query, mainProvider.currentVersion);
+      if (xv != null && xv.isCrossVersion) {
+        crossVersionConjunction = xv;
+        textResults = await _runCrossVersionConjunction(xv);
+        return;
+      }
+
       // Compound first: it is the only shape that can open with `(`, and
       // it declines every line that is not unambiguously compound, so it
       // cannot take a plain `(hello)` away from the text scan below.
@@ -956,6 +979,53 @@ class WorkbenchProvider extends ChangeNotifier {
     _notify();
   }
 
+  /// Run each edition's half of a conjunction and combine by verse id.
+  ///
+  /// Ids and not indices: the editions are separate corpora and a
+  /// verse's position in one says nothing about its position in
+  /// another. The verses HANDED BACK are the reading version's, because
+  /// that is the text on screen and a result list that showed a verse
+  /// from an edition the reader is not reading would be answering with
+  /// a page they cannot see.
+  ///
+  /// An edition that will not load makes the whole query empty rather
+  /// than quietly dropping its condition — "the KJV says X and the CSB
+  /// says Y" minus the CSB is a different question with more answers.
+  Future<List<Verse>> _runCrossVersionConjunction(
+      CrossVersionQuery xv) async {
+    final perVersion = <Set<String>>[];
+    for (final term in xv.terms) {
+      final corpus = await _corpusFor(term.version);
+      if (corpus == null) return const [];
+      final parse = parseCommandQuery(term.query);
+      final q = parse.query;
+      if (q == null) {
+        commandIssue = parse.issue ?? CommandIssue.emptyBody;
+        return const [];
+      }
+      final result = runCommandQuery(
+        query: q,
+        texts: corpus.wordKeys,
+        searchKeys: corpus.searchKeys,
+        books: corpus.books,
+      );
+      perVersion.add({
+        for (final i in result.indices) corpus.verses[i].id,
+      });
+    }
+    final ids = combineCrossVersion(perVersion, all: xv.all);
+    final reading = await _corpusFor(mainProvider.currentVersion);
+    if (reading == null) return const [];
+    return applySearchLimit(
+      [
+        for (final v in reading.verses)
+          if (ids.contains(v.id)) v,
+      ],
+      searchLimit,
+      (v) => '${toEnglish(v.book) ?? v.book}-${v.chapter}-${v.verse}',
+    );
+  }
+
   List<ConcordanceRef> _limitRefs(List<ConcordanceRef> refs) => applySearchLimit(
         refs,
         searchLimit,
@@ -967,6 +1037,7 @@ class WorkbenchProvider extends ChangeNotifier {
     searchPerformed = false;
     crossVersionHits = null;
     crossVersionSearching = false;
+    crossVersionConjunction = null;
     strongsQueryLabel = null;
     strongsRefs = null;
     strongsCounts = null;

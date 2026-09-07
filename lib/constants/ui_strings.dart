@@ -3179,6 +3179,20 @@ const uiStrings = {
     'zh-Hant': 'G25 AND G26 — 兩個編號都出現 · OR 任一 · NOT 有前者沒後者',
     'en': 'G25 AND G26 — both numbers · OR either · NOT the first not the second',
   },
+  // 2026-09-07. The cross-version conjunction, on the TEXT card rather
+  // than the Strong's one: it is `.`/`/` with a version tag, so it
+  // belongs beside the operators it extends. The example names two
+  // editions that really do differ here — the KJV has "propitiation"
+  // three times and the CSB renders it "atoning sacrifice" — so a reader
+  // who taps it gets verses rather than an empty list.
+  'cmdSyntaxCrossVersion': {
+    'zh-Hans': '.kjv:propitiation csb:atoning — 跨译本：同一节里 KJV 有前者、'
+        'CSB 有后者',
+    'zh-Hant': '.kjv:propitiation csb:atoning — 跨譯本：同一節裡 KJV 有前者、'
+        'CSB 有後者',
+    'en': '.kjv:propitiation csb:atoning — across editions: the KJV says '
+        'one and the CSB the other, same verse',
+  },
   // The number is a word DISTANCE, not a gap: NEAR5 admits four words in
   // between, so it is BibleWorks' `*4` and not its `*5`. Saying so here is
   // cheaper than a reader discovering it from a hit count.
@@ -5548,6 +5562,15 @@ const uiStrings = {
   // 2026-09-07 (bwh28, the Report Generator). "Passage report" and not
   // "Report": the noun on its own reads as a bug report in an app that
   // has one.
+  // 2026-09-07 (bwh12). "Independent" and not "unlink": the reader is
+  // choosing what the column IS, and the checked state reads as the
+  // answer to "is it independent?" rather than as an action they have
+  // already taken.
+  'secondColumnIndependent': {
+    'zh-Hans': '第二栏：独立翻页',
+    'zh-Hant': '第二欄：獨立翻頁',
+    'en': 'Second column: independent',
+  },
   'reportTitle': {
     'zh-Hans': '经文研读报告',
     'zh-Hant': '經文研讀報告',

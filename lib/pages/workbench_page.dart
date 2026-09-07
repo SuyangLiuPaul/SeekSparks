@@ -491,6 +491,24 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
           checked: _rightOpen,
         ),
         const WbMenuItem.separator(),
+        // bwh12. Disabled rather than hidden when there is no second
+        // column: the reader is choosing how the column BEHAVES, and a
+        // control that vanishes teaches nothing about what it does.
+        WbMenuItem(
+          s('secondColumnIndependent', 'Second column: independent'),
+          _secondary == null
+              ? null
+              : () => setState(() {
+                    _secondaryFollows = !_secondaryFollows;
+                    // Turning following back ON re-aims the column at
+                    // once. Waiting for the next page turn would leave
+                    // the reader looking at a column that says it
+                    // follows and does not.
+                    if (_secondaryFollows) _followPrimary();
+                  }),
+          checked: _secondary != null && !_secondaryFollows,
+        ),
+        const WbMenuItem.separator(),
         WbMenuItem(
           s('parallelBrowse', 'Browse (parallel versions)'),
           () => _setCentreMode(WbCentreMode.browse),
@@ -1185,7 +1203,19 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
   /// — where the two editions disagree about verse boundaries, the
   /// reader aligns them by eye and a scroll-linked column would fight
   /// them for it.
+  /// bwh12's independent browse window, as far as one column can carry
+  /// it: false means the second column stops following the first.
+  ///
+  /// Default TRUE, which is what this column has always done — two
+  /// editions of one chapter. bwh12's own default is two independent
+  /// windows, and ours is the opposite on purpose: this column exists
+  /// inside a workbench where the reader's usual question is "what does
+  /// the other edition say HERE", and a column that wandered off every
+  /// time they turned a page would have to be re-aimed constantly.
+  bool _secondaryFollows = true;
+
   void _followPrimary() {
+    if (!_secondaryFollows) return;
     final sp = _secondary;
     if (sp == null) return;
     final primary = _wb.mainProvider;

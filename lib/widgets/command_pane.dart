@@ -1065,6 +1065,7 @@ class _CommandPaneState extends State<CommandPane> {
             'cmdSyntaxGap',
             'cmdSyntaxContext',
             'cmdSyntaxCompound',
+            'cmdSyntaxCrossVersion',
           ]
         ),
         (

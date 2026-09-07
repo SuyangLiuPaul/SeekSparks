@@ -241,17 +241,30 @@ file should read.
   arranges by hand — #288 made the order first-class — and a search is a
   question, not an instruction to redecorate. Re-open only if a reader
   asks for it.
-- **A cross-VERSION conjunction (`kjv:X . lxx:Y`)** — **ABSENT, and it is
-  not bwh16.** This is what the old entry above described, and it is
-  worth having on its own account: adjudicating the CSB's divine name on
-  2026-09-07 needed exactly this query three times in one day (which
-  verses read 雅伟 in the Chinese while the English says Lord; which
-  carry H3068 in kjvs while the CSB leaves a bare "Lord"), and each time
-  it was run by hand in Python against the raw assets. BibleWorks reaches
-  it only through the Graphical Search Engine, so read §3.2 before
-  picking this up — the decision to reject the GSE was about its
-  *interface*, not about this class of query. *Done:* a version tag per
-  term, results listed once per verse with each edition's hit shown.
+- **A cross-VERSION conjunction (`kjv:X . lxx:Y`)** — **HAVE,
+  2026-09-07.** Not bwh16 — this is what the old cross-version row
+  described, and BibleWorks reaches it only through the GSE, so it is
+  ours rather than a port. It earned its place: adjudicating the CSB's
+  divine name that same morning needed exactly this query three times,
+  and each time it was run by hand in Python against the raw assets.
+  `lib/utils/cross_version_query.dart` parses,
+  `WorkbenchProvider._runCrossVersionConjunction` runs it, and the `?`
+  card teaches it with a worked example that really does return verses —
+  `.kjv:propitiation csb:atoning`, the KJV having it three times and the
+  CSB rendering it "atoning sacrifice".
+  The control character keeps its job and a term may carry a `code:`
+  prefix. **A prefix is only a prefix when it names an edition this
+  build can load**, which is the whole ambiguity defence: `H1254:` is
+  not a version, so it stays a search term and no reader loses a colon
+  they meant literally. The phrase forms (`'`, `;`) are refused rather
+  than split, because a phrase is an ORDER over adjacent tokens and
+  cutting it per edition would run each half as its own term and quietly
+  return the wrong verses.
+  Combined by verse ID, never by index — the editions are separate
+  corpora and a verse's position in one says nothing about its position
+  in another. An edition that will not load makes the query EMPTY rather
+  than dropping its condition: "the KJV says X and the CSB says Y" minus
+  the CSB is a different question with more answers.
 - **Morphological searches (Greek/Hebrew)** — **HAVE, 2026-09-07.** The
   row asked for a decision — "an agreement operator, or an explicit
   REJECTED … but decide it, do not leave it accidental". Decided by
@@ -461,14 +474,30 @@ cannot express. The engine will already answer it.
   `d c` ambiguity. Re-open only alongside a favourites UI.
 - **Browse modes** — **HAVE.** Browse / reader / split
   (`lib/models/wb_centre_mode.dart`).
-- **Multiple synchronised browse windows** — **ABSENT.** bwh12. Two
-  independent chapters open side by side, optionally synchronised. Our
-  split mode is two *versions* of the **same** chapter. This is a real
-  exegetical need (compare Kings with Chronicles) and we hold the data
-  for it: `assets/ot_synopsis.json` and `gospel_synopsis.json` already
-  align the parallels. *Done:* split mode gains an "independent
-  reference" toggle, and the synopsis assets feed a "jump the other pane
-  to the parallel" action.
+- **Multiple synchronised browse windows** — **PARTIAL, 2026-09-07.**
+  bwh12. The row asked for two things and the first has landed.
+  *Independent reference — DONE.* The workbench's second column followed
+  the primary unconditionally (`_followPrimary`, wired to the primary's
+  listener), which is what made the row's "two versions of the same
+  chapter" true. `View → Second column: independent` now stops it
+  following, and turning following back on re-aims the column at once
+  rather than waiting for the next page turn. Default stays FOLLOWING,
+  deliberately and against bwh12's own default: this column lives in a
+  workbench where the usual question is "what does the other edition say
+  HERE", and a column that wandered off on every page turn would have to
+  be re-aimed constantly.
+  *A finding worth carrying:* the two surfaces did not agree. The
+  workbench column follows by listener; `home_page.dart`'s Split View
+  seeds its second pane once at activation and installs no listener, so
+  it was ALREADY independent. Two behaviours under one name, which is
+  the shape of defect `chapter_across_editions.dart` was extracted to
+  stop.
+  *What is left, and it is the smaller half:* the synopsis assets
+  feeding a **"jump the OTHER pane to the parallel"** action.
+  `SynopsisService.byVerse` and `synopsis_parallels.dart` already show
+  the parallels and a tap already navigates — but it navigates the pane
+  the reader is in, which is the opposite of what a Kings/Chronicles
+  comparison wants. *Done:* the same chip, opening in the other column.
 - **Comparing Bible versions (difference highlighting)** — **HAVE**
   (v1.6.147). View ▸ *Highlight version differences*, off by default and
   greyed with a reason when the stack holds no two editions of one
@@ -776,16 +805,41 @@ Mapped against BibleWorks' own tab set (bwh10):
   it changes what "the next chapter" means at 24 seams, and it belongs
   with versification rather than with a settings row. Re-open it as
   *that*, with a reader asking for it, not as bwh29's list widget.
-- **Compiling your own version database (bwh47)** — **ABSENT.**
-  BibleWorks lets a user compile and install their own Bible text. Ours
-  are baked into the bundle. This is how a user brings a translation we
-  cannot ship for licence reasons — which makes it the honest answer to
-  several licence-blocked items (#278 NASB). *Done:* an import path for a
-  user-supplied version file, stored locally, never uploaded. **Sizeable;
-  needs a real design pass, and must not become a piracy convenience —
-  local only, no sharing.**
-- **Custom modules (bwh48)** — **ABSENT.** Same shape as above, for
-  reference works rather than Bibles. Lower priority.
+- **Compiling your own version database (bwh47)** — **BLOCKED on the
+  owner, 2026-09-07, and it is the last thing in §3 that is not ours to
+  settle.** The design pass the row asked for was done; it produced a
+  question rather than a feature, and the question is one sentence:
+  **should this app ship the mechanism by which a reader adds a
+  translation the app itself declined to carry?**
+  *Why it is a question and not a task.* The row is right that a local
+  import is "the honest answer to several licence-blocked items". It is
+  also, in the same breath, the tool that puts the NIV into an app that
+  removed the NIV on licence grounds — the removal is recorded in
+  `bible_versions.dart` and the asset was deleted with it. Building the
+  importer moves that decision from the publisher of record onto the
+  reader, and calls it a feature.
+  *A second problem the row did not name, and it is concrete.* Every
+  bundled text has an attribution key, and
+  `version_attribution.dart` says why in as many words: a future edition
+  must "fail by omitting a line rather than by asserting a licence it
+  does not have". An imported text has no key and no licence the app can
+  verify, so either the Copy Center copies it with no licence line, or
+  the app invents one. Both are worse than not importing.
+  *What a safe version would look like*, so the answer is not
+  "never": import restricted to texts whose licence the app can CHECK —
+  a signed manifest, or a publisher's own file with its terms in it.
+  That is a licensing programme, not a file picker, and it is a
+  different piece of work from the one the row describes.
+  **The owner's call. Answer it in one line and this entry closes either
+  way:** build the plain local importer, or REJECT it with this reasoning
+  as the record.
+- **Custom modules (bwh48)** — **BLOCKED, following bwh47.** Same shape,
+  for reference works rather than Bibles, and it inherits the same
+  question — a commentary or a dictionary is copyrighted the same way a
+  translation is, and the app's own bundled ones (BDB, Thayer, JFB) are
+  public-domain or permissioned for exactly that reason. Whatever bwh47
+  is answered with, this follows it; there is nothing separate to decide
+  and no reason to decide it twice.
 - **Greek and Hebrew keyboard layouts (bwh45/bwh24)** — **ANSWERED
   2026-08-19**, by the other road. The entry above used to say
   BibleWorks "ships keyboards so you can type Greek and Hebrew"; read in
