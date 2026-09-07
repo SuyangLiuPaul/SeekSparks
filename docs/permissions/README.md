@@ -50,6 +50,15 @@ Both belong to Raymond / Paul. The 雅伟的话 note raises the same two
 against *that* project, which is the only one of the three that ships
 the text.
 
+**2026-09-07 — the extension names yahwehword.com, not this app.** In
+the Yahwehdehua Work Group, Pastor Raymond — the Raymond Suen named as
+licensee above — sent this PDF and said "we can stretch this permission
+to cover your Yahwehword.com". That lifts gate 2 for *that* site. It
+says nothing about SeekSparks / Yahweh's Swords, so gate 2 still stands
+here and is one question away from being answered. (The territory line
+is Holman's term, not Raymond's, and is untouched for either.) The
+yswords copy of this file records the exchange in full.
+
 Note the shape of the grant while reading it: what was licensed is the
 CSB **with Strong's numbers**, for a bilingual CUV/CSB work. This repo
 already carries Strong's tagging of its own (`kjvs`, and the tagged
