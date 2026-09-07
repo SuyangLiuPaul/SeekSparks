@@ -1,3 +1,8 @@
+import 'package:seeksparks/constants/bible_versions.dart'
+    show importedVersionScripts;
+import 'package:seeksparks/utils/imported_version.dart'
+    show isImportedVersion;
+
 const englishToChinese = {
   // Old Testament (Simplified)
   "Genesis": "创世纪",
@@ -283,6 +288,16 @@ BookScript bookScriptFor(String locale, [String? version]) {
     // code ends with "-tr").
     final v = version.trim().toLowerCase();
     if (_englishVersionCodes.contains(v)) return BookScript.english;
+    // bwh47. An imported edition is not in the const set above and
+    // never can be, so it answers from the script the validator
+    // recorded from its own book names. Without this an English import
+    // gets 創世紀 beside its English text — which is exactly what the
+    // first browser test of the importer showed.
+    if (isImportedVersion(v)) {
+      return (importedVersionScripts[v] ?? 'en') == 'en'
+          ? BookScript.english
+          : BookScript.simplified;
+    }
     return v.endsWith('-tr') ? BookScript.traditional : BookScript.simplified;
   }
   if (locale == 'zh-Hant') return BookScript.traditional;

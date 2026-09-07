@@ -16,10 +16,12 @@ class LocalVersionStore {
 
   static Future<String?> read(String code) async => null;
 
-  static Future<bool> write(String code, String label, String json) async =>
+  static Future<bool> write(String code, String label, String json,
+          {String script = 'en'}) async =>
       false;
 
-  static Future<Map<String, String>> labels() async => const <String, String>{};
+  static Future<Map<String, Map<String, String>>> labels() async =>
+      const <String, Map<String, String>>{};
 
   static Future<void> delete(String code) async {}
 }

@@ -90,14 +90,16 @@ class LocalVersionStore {
     return rec?['json'];
   }
 
-  /// code → the name the reader gave it.
-  static Future<Map<String, String>> labels() async {
+  /// code → `{label, script}` for every imported edition.
+  static Future<Map<String, Map<String, String>>> labels() async {
     final codes = await listCodes();
-    final out = <String, String>{};
+    final out = <String, Map<String, String>>{};
     for (final c in codes) {
       final rec = await _readRecord(c);
       final label = rec?['label'];
-      if (label != null) out[c] = label;
+      if (label != null) {
+        out[c] = {'label': label, 'script': rec?['script'] ?? 'en'};
+      }
     }
     return out;
   }
@@ -124,7 +126,13 @@ class LocalVersionStore {
           done.complete(null);
           return;
         }
-        done.complete({'json': j, 'label': field('label') ?? code});
+        // A record written before `script` existed reads as `en`,
+        // which is what it behaved as.
+        done.complete({
+          'json': j,
+          'label': field('label') ?? code,
+          'script': field('script') ?? 'en',
+        });
       }.toJS;
       req.onerror = (web.Event _) { done.complete(null); }.toJS;
       return null;
@@ -134,10 +142,12 @@ class LocalVersionStore {
   /// Returns false when nothing was written — quota, private mode, or a
   /// browser that refuses the database. NEVER true on a guess: the
   /// caller says "saved" only when the transaction said so.
-  static Future<bool> write(String code, String label, String json) async {
+  static Future<bool> write(String code, String label, String json,
+      {String script = 'en'}) async {
     final ok = await _run<bool>('readwrite', (store, done) {
       final rec = JSObject()
         ..setProperty('label'.toJS, label.toJS)
+        ..setProperty('script'.toJS, script.toJS)
         ..setProperty('json'.toJS, json.toJS);
       final req = store.put(rec, code.toJS);
       req.onsuccess = (web.Event _) { done.complete(true); }.toJS;

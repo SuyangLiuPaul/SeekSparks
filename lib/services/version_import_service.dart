@@ -10,7 +10,7 @@
 library;
 
 import 'package:seeksparks/constants/bible_versions.dart'
-    show importedVersionLabels;
+    show importedVersionLabels, importedVersionScripts;
 import 'package:seeksparks/services/local_version_store.dart';
 import 'package:seeksparks/utils/imported_version.dart';
 
@@ -53,10 +53,15 @@ class VersionImportService {
   /// about a feature they may never have used.
   static Future<void> restore() async {
     if (!LocalVersionStore.isAvailable) return;
-    final labels = await LocalVersionStore.labels();
+    final records = await LocalVersionStore.labels();
     importedVersionLabels
       ..clear()
-      ..addAll(labels);
+      ..addAll({for (final e in records.entries) e.key: e.value['label']!});
+    importedVersionScripts
+      ..clear()
+      ..addAll({
+        for (final e in records.entries) e.key: e.value['script'] ?? 'en'
+      });
   }
 
   /// Validate [raw], store it, and register it.
@@ -81,11 +86,13 @@ class VersionImportService {
     // a bundled asset, so an import cannot take a code path of its own
     // and drift from how every other edition is loaded.
     final payload = _encode(v);
-    final wrote = await LocalVersionStore.write(v.code, v.label, payload);
+    final wrote = await LocalVersionStore.write(v.code, v.label, payload,
+        script: v.script);
     if (!wrote) {
       return const VersionImportResult(ImportOutcome.couldNotStore);
     }
     importedVersionLabels[v.code] = v.label;
+    importedVersionScripts[v.code] = v.script;
     return VersionImportResult(ImportOutcome.imported,
         code: v.code, verseCount: v.verseCount);
   }
@@ -98,6 +105,7 @@ class VersionImportService {
   static Future<void> forget(String code) async {
     await LocalVersionStore.delete(code);
     importedVersionLabels.remove(code);
+    importedVersionScripts.remove(code);
   }
 
   static String _encode(ImportedVersion v) {

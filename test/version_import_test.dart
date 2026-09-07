@@ -13,10 +13,14 @@ import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:seeksparks/constants/bible_versions.dart';
+import 'package:seeksparks/constants/book_name_mapping.dart';
 import 'package:seeksparks/utils/imported_version.dart';
 
 void main() {
-  tearDown(importedVersionLabels.clear);
+  tearDown(() {
+    importedVersionLabels.clear();
+    importedVersionScripts.clear();
+  });
 
   group('the catalog admits an imported edition, and only then', () {
     test('nothing changes until one is registered', () {
@@ -49,6 +53,25 @@ void main() {
           availableVersions.where((v) => v.value == 'kjv').toList();
       expect(kjv, hasLength(1));
       expect(kjv.single.menuLabel, 'King James Version');
+    });
+
+    test('the reference beside a verse is in the verse\'s own script', () {
+      // The defect the dev run found. An imported code is not in the
+      // const English set and never can be, so without the recorded
+      // script it falls through to Chinese and an English import gets
+      // 創世紀 beside its English text.
+      importedVersionLabels['user-probe'] = 'Probe';
+      importedVersionScripts['user-probe'] = 'en';
+      expect(bookScriptFor('zh-Hans', 'user-probe'), BookScript.english);
+      importedVersionScripts['user-probe'] = 'zh-Hans';
+      expect(bookScriptFor('en', 'user-probe'), BookScript.simplified);
+    });
+
+    test('an edition registered without a script reads as English', () {
+      // A record written before `script` existed behaved as English, so
+      // that is what it keeps behaving as.
+      importedVersionLabels['user-old'] = 'Old';
+      expect(bookScriptFor('zh-Hans', 'user-old'), BookScript.english);
     });
 
     test('a long name is shortened for the badge, not for the menu', () {

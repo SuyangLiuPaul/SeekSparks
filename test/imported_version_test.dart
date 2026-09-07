@@ -150,6 +150,23 @@ void main() {
       expect(r.detail, 'Hezekiah');
     });
 
+    test('the script is recorded from the file\'s own book names', () {
+      // Found by testing on dev, not by the suite: an English import
+      // showed 創世紀 beside its English text, because a version code
+      // outside the const English set falls through to Chinese in
+      // `bookScriptFor`. The validator already had to match every book
+      // against a canon, so it knows which one answered — recording it
+      // is free and guessing is not.
+      expect(parseImportedVersion(oneVerse, 'x').version!.script, 'en');
+      final zh = parseImportedVersion(
+        fileOf([
+          {'book': '创世记', 'chapter': '1', 'verse': '1', 'text': '起初'}
+        ]),
+        'x',
+      );
+      expect(zh.version!.script, 'zh-Hans');
+    });
+
     test('a Chinese book name is accepted', () {
       // The feature would be English-only otherwise, in an app whose
       // first audience reads 和合本.

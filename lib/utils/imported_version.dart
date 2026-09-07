@@ -111,6 +111,7 @@ class ImportedVersion {
     required this.code,
     required this.label,
     required this.verses,
+    required this.script,
   });
 
   /// Always begins [kImportedVersionPrefix].
@@ -120,6 +121,18 @@ class ImportedVersion {
   final String label;
 
   final List<ImportedVerse> verses;
+
+  /// `en` or `zh-Hans`, decided by the book names the FILE uses.
+  ///
+  /// Not a guess and not a setting: the validator already had to match
+  /// every book against a canon, so it knows which one answered. It has
+  /// to be stored, because the reference labels beside the text are
+  /// chosen from the version code alone (`bookScriptFor`), and an
+  /// imported Chinese Bible whose references read "Genesis" — or an
+  /// English one whose references read 創世記, which is what the first
+  /// browser test of this feature actually showed — is the same class
+  /// of defect `book_name_mapping.dart` warns about in capitals.
+  final String script;
 
   /// Always true. A field rather than a getter so a caller that receives
   /// one of these through a shared interface cannot forget to ask.
@@ -236,8 +249,16 @@ ImportResult parseImportedVersion(
   if (verses.isEmpty) {
     return const ImportResult.failed(ImportProblem.noVerses);
   }
-  return ImportResult.ok(
-      ImportedVersion(code: code, label: label.trim(), verses: verses));
+  // Whichever canon the file's own book names came from. Mixed files
+  // cannot arise — a name is in one list or the other, and a name in
+  // neither was refused above.
+  final zh = verses.any((v) => _kBookNamesZh.contains(v.book));
+  return ImportResult.ok(ImportedVersion(
+    code: code,
+    label: label.trim(),
+    verses: verses,
+    script: zh ? 'zh-Hans' : 'en',
+  ));
 }
 
 /// Every book name any bundled edition uses.

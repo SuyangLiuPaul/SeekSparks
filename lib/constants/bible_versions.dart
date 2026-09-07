@@ -256,14 +256,25 @@ const disabledVersions = <String>{
 /// app behaves exactly as it did before an import exists.
 final Map<String, String> importedVersionLabels = <String, String>{};
 
+/// code → `en` or `zh-Hans`, the script the imported file's own book
+/// names are written in.
+///
+/// Separate from the label map because it answers a different question
+/// and has a different reader: the label is what the picker prints,
+/// this is what `bookScriptFor` needs so the reference beside a verse is
+/// in the same language as the verse. Defaults to `en` for a code that
+/// is registered without one, which is the old behaviour.
+final Map<String, String> importedVersionScripts = <String, String>{};
+
 /// The catalog rows for the imported editions, built on demand.
 ///
-/// `en` as the language is a deliberate simplification and the honest
-/// one: the app cannot tell what language a supplied file is in, and
-/// guessing from the book names would put a reader's own text on the
-/// wrong tab whenever they guessed differently. They appear on the
-/// English tab, labelled with the name the reader gave them, which is
-/// where they will look for them.
+/// The language is the one the file's own BOOK NAMES are written in,
+/// recorded by the validator at import time — not a guess, and not a
+/// setting the reader has to find. It decides the picker tab and, more
+/// importantly, `bookScriptFor`: the first browser test of this feature
+/// showed an English import whose references read 創世紀 beside its own
+/// English text, because a code outside the English set falls through
+/// to Chinese.
 List<BibleVersionInfo> get importedVersions => [
       for (final e in importedVersionLabels.entries)
         BibleVersionInfo(
@@ -272,7 +283,7 @@ List<BibleVersionInfo> get importedVersions => [
               ? e.value
               : '${e.value.substring(0, 5)}…',
           menuLabel: e.value,
-          language: 'en',
+          language: importedVersionScripts[e.key] ?? 'en',
           editionYear: '',
         ),
     ];
