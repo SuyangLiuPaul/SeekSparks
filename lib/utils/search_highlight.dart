@@ -35,7 +35,8 @@ library;
 
 import 'package:seeksparks/utils/command_query.dart';
 import 'package:seeksparks/utils/compound_query.dart';
-import 'package:seeksparks/utils/diacritics.dart';
+import 'package:seeksparks/utils/search_folding.dart'
+    show foldSearchMarks, foldSearchMarksAligned;
 import 'package:seeksparks/utils/strongs_boolean_search.dart';
 
 /// What an active query marks.
@@ -127,7 +128,7 @@ SearchHighlight highlightsForQuery(String rawQuery) {
   //
   // Folded to match what the corpus was searched with. `literalCore`
   // above is already folded, because `TokenMatcher.compile` built it.
-  final terms = foldDiacritics(q)
+  final terms = foldSearchMarks(q)
       .toLowerCase()
       .split(RegExp(r'\s+'))
       .where((t) => t.isNotEmpty)
@@ -167,7 +168,7 @@ List<HighlightSpan> splitOnTerms(String text, List<String> terms) {
   if (text.isEmpty || terms.isEmpty) {
     return text.isEmpty ? const [] : [HighlightSpan(text, false)];
   }
-  final folded = foldDiacriticsAligned(text);
+  final folded = foldSearchMarksAligned(text);
   final lower = folded.folded.toLowerCase();
   // Every character the fold can emit is a base letter or was already
   // untouched, and none of those lower-case to more than one unit — so

@@ -95,7 +95,7 @@
 library;
 
 import 'package:seeksparks/constants/ui_strings.dart';
-import 'package:seeksparks/utils/diacritics.dart' show foldDiacritics;
+import 'package:seeksparks/utils/search_folding.dart' show foldSearchMarks;
 import 'package:seeksparks/utils/phrase_match.dart' show phraseTokens;
 import 'package:seeksparks/utils/related_verses.dart' show isCjkChar, isWordChar;
 import 'package:seeksparks/utils/strongs_boolean_search.dart'
@@ -203,7 +203,7 @@ class TokenMatcher {
   /// [source] keeps the accents the reader typed and the echo can quote
   /// the line back to them unchanged (#321).
   factory TokenMatcher.compile(String source) {
-    final lower = foldDiacritics(source).toLowerCase();
+    final lower = foldSearchMarks(source).toLowerCase();
     if (!_hasMeta(lower)) {
       return TokenMatcher._(source, lower, null, lower);
     }
@@ -804,7 +804,7 @@ CommandSearchResult runCommandQuery({
     if (cached != null) return cached;
     tokenized++;
     final built = [
-      for (final t in phraseTokens(texts[i])) foldDiacritics(t.text)
+      for (final t in phraseTokens(texts[i])) foldSearchMarks(t.text)
     ];
     tokenCache[i] = built;
     return built;

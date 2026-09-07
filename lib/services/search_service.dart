@@ -2,7 +2,7 @@ import 'package:seeksparks/models/verse.dart';
 import 'package:seeksparks/services/concordance_service.dart';
 import 'package:seeksparks/services/fetch_books.dart' show standardBookOrder;
 import 'package:seeksparks/services/originals_service.dart';
-import 'package:seeksparks/utils/diacritics.dart' show foldDiacritics;
+import 'package:seeksparks/utils/search_folding.dart' show foldSearchMarks;
 import 'package:seeksparks/utils/ketiv_qere.dart'
     show KetivQereSearchScope;
 import 'package:seeksparks/utils/plain_search.dart';
@@ -72,7 +72,7 @@ class SearchService {
     // last in the verse, separated by nothing but whitespace they did
     // type. See [plainSearchMatches].
     final segments = plainSearchSegments(
-        foldDiacritics(query).toLowerCase());
+        foldSearchMarks(query).toLowerCase());
     // A blank query listed every verse before this change, because the
     // empty string is a substring of everything, and it keeps doing so:
     // the callers guard it, and quietly turning "everything" into

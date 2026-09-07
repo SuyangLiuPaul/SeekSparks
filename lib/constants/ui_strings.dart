@@ -5534,6 +5534,27 @@ const uiStrings = {
     'zh-Hant': '無法讀取',
     'en': 'could not be read',
   },
+  // 2026-09-07 (bwh17, "Including Vowel Points in Hebrew Searches and
+  // Accents in Greek"). Worded as what the reader gets, not as what the
+  // code does: "ignore" is the ON state and it is the default, so the
+  // switch reads true for the behaviour they already have.
+  'searchIgnoresPointing': {
+    'zh-Hans': '搜索时忽略希伯来元音点与希腊重音',
+    'zh-Hant': '搜尋時忽略希伯來元音點與希臘重音',
+    'en': 'Ignore Hebrew vowel points and Greek accents in searches',
+  },
+  'searchIgnoresPointingSubtitle': {
+    'zh-Hans': '开启（默认）时，ברא 和 בָּרָא、θεος 和 θεός 一样能找到对方——'
+        '照着屏幕上看到的打就行。关闭后点与重音都算数，'
+        'בָּרָא 与 בָּרָה 是两个不同的词,搜索会把它们分开。',
+    'zh-Hant': '開啟（預設）時，ברא 和 בָּרָא、θεος 和 θεός 一樣能找到對方——'
+        '照著螢幕上看到的打就行。關閉後點與重音都算數，'
+        'בָּרָא 與 בָּרָה 是兩個不同的詞，搜尋會把它們分開。',
+    'en': 'On by default: ברא finds בָּרָא and θεος finds θεός, so you '
+        'can type what you see. Turn it off and the pointing counts — '
+        'בָּרָא and בָּרָה are different words, and the search will tell '
+        'them apart.',
+  },
   'excludeKetivFromSearch': {
     'zh-Hans': '搜索时排除 Ketiv（所写的）',
     'zh-Hant': '搜尋時排除 Ketiv（所寫的）',

@@ -2,7 +2,7 @@
 // Used across loading_page, home_page, search_page, verse_widget, and
 // fetch_verses to ensure consistent text processing.
 
-import 'package:seeksparks/utils/diacritics.dart' show foldDiacritics;
+import 'package:seeksparks/utils/search_folding.dart' show foldSearchMarks;
 import 'package:seeksparks/utils/plain_search.dart' show collapseSearchSpaces;
 import 'package:seeksparks/utils/scripture_markup.dart' show isReferentGloss;
 
@@ -180,7 +180,7 @@ String sanitizeForSearchKey(String text) =>
 /// the provider does. The last time a probe re-implemented a sanitiser
 /// instead of calling it, the probe was the thing that was wrong.
 String searchCorpusKey(String scriptureText) => collapseSearchSpaces(
-    foldDiacritics(sanitizeForSearchKey(scriptureText)).toLowerCase());
+    foldSearchMarks(sanitizeForSearchKey(scriptureText)).toLowerCase());
 
 /// 2026-05-19 (v1.2.58): clipboard / preview formatter.
 ///

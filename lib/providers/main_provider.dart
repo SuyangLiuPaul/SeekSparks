@@ -12,6 +12,8 @@ import 'package:seeksparks/services/error_reporter.dart';
 import 'package:seeksparks/services/fetch_books.dart' show bookNameToEnglish;
 import 'package:seeksparks/utils/build_books_from_verses.dart'
     show booksMatchVerses, buildBooksFromVerses;
+import 'package:seeksparks/utils/search_folding.dart'
+    show searchFoldingGeneration;
 import 'package:seeksparks/utils/version_mapper.dart' show translateBookName;
 import 'package:seeksparks/services/fetch_verses.dart' show FetchVerses;
 import 'package:seeksparks/services/profile_service.dart';
@@ -417,6 +419,13 @@ class MainProvider extends ChangeNotifier {
   // that to a single-pass O(n) the first time the user searches.
   List<String>? _searchKeysCache;
   int _searchKeysCacheLength = -1;
+  // The folding switch (bwh17) is a global with one writer, and this is
+  // the only cache of folded text in the app. `search_folding.dart`
+  // bumps a counter on every change; comparing it here is what stops a
+  // reader who turns pointing ON from searching a corpus that is still
+  // folded — which finds nothing and looks like a broken search rather
+  // than a stale cache.
+  int _searchKeysCacheFolding = -1;
 
   /// Returns the parallel `List<String>` of normalized, lowercased,
   /// whitespace-stripped verse text — the form a substring search
@@ -435,7 +444,8 @@ class MainProvider extends ChangeNotifier {
   /// taken out is the one corpus in this class with no reader.
   List<String> get searchKeys {
     if (_searchKeysCache != null &&
-        _searchKeysCacheLength == verses.length) {
+        _searchKeysCacheLength == verses.length &&
+        _searchKeysCacheFolding == searchFoldingGeneration) {
       return _searchKeysCache!;
     }
     final out = List<String>.filled(verses.length, '', growable: false);
@@ -448,6 +458,7 @@ class MainProvider extends ChangeNotifier {
     }
     _searchKeysCache = out;
     _searchKeysCacheLength = verses.length;
+    _searchKeysCacheFolding = searchFoldingGeneration;
     return out;
   }
 

@@ -254,11 +254,34 @@ file should read.
   and we cannot express it at all. *Done:* an agreement operator, or an
   explicit `REJECTED` saying the GSE-class query is out of scope (see
   3.2) — but decide it, do not leave it accidental.
-- **Accents and vowel points in search** — **PARTIAL.** Hebrew points are
-  stripped when the query contains Hebrew; Greek accents are not
-  stripped. bwh17 makes both a **setting** ("Including Vowel Points in
-  Hebrew Searches and Accents in Greek"). Ours is a hardcoded asymmetry.
-  *Done:* one setting, honestly labelled, applied to both languages.
+- **Accents and vowel points in search** — **HAVE, 2026-09-07.** This
+  row was half wrong when it was read. It said "Hebrew points are
+  stripped … Greek accents are not stripped … a hardcoded asymmetry",
+  which was true on 2026-08-12 and stopped being true on 2026-08-16:
+  **#321 folded both**, on both sides of the comparison, because Aunty
+  Rosa searched `ὁ θεός` against a corpus spelled `ο θεος` and got a
+  blank page. Sixth confirmed case of §1's "grep it first".
+  What was genuinely missing is the half the row mentioned in passing —
+  bwh17's **setting**. Shipped as `searchIgnoresPointing` (default ON,
+  which is what the app has done since #321), the switch itself in
+  `lib/utils/search_folding.dart`, persisted by `AppSettings`, in
+  Settings beside bwh29's two Masoretic switches because all three are
+  about how the Hebrew and Greek are read.
+  **Why a switch and not a threaded parameter**, since the shape will
+  look wrong to the next reader: six sites fold and they must agree —
+  the corpus key, the plain scan's query, `TokenMatcher`'s compile, the
+  command matcher's verse tokens, and both halves of the highlighter.
+  Two of them run inside `parseCommandQuery`, which is deliberately
+  Flutter-free and has no settings in scope. The failure mode of getting
+  it wrong is not a crash but a **silent asymmetry** — fold one side and
+  not the other and the search finds nothing, which is the exact defect
+  #321 existed to fix — so one switch that cannot be half-applied beats
+  six parameters that can. `test/search_folding_test.dart` mutation-
+  checks precisely that: making the corpus key ignore the switch turns
+  three of its assertions red.
+  Anything that caches folded text must invalidate on
+  `searchFoldingGeneration`. `MainProvider.searchKeys` is the only such
+  cache and does.
 - **Qere / Kethib** — **PARTIAL.** *(Corrected 2026-09-05. This row
   said `ABSENT` on the strength of "grepping `lib/` for
   `Qere|Kethib|Ketiv` returns nothing", which was true when written on
@@ -303,10 +326,29 @@ file should read.
   a tappable example card — which is most of the *teaching* but none of
   the *building*. *Done:* a picker that assembles a morphology query from
   parts of speech and features without the reader typing a code.
-- **Semantic domains (Louw-Nida)** — **ABSENT.** bwh26 loads them in both
-  the GSE and the Word List Manager. Grep returns nothing.
-  **Licence-gated:** Louw-Nida is UBS copyright. Do not import. Record as
-  `REJECTED` unless an openly-licensed domain set turns up.
+- **Semantic domains (Louw-Nida)** — **REJECTED 2026-09-07, on licence,
+  and this is the documented form the golden task asks for.**
+  *What the feature is:* the *Greek-English Lexicon of the New Testament
+  Based on Semantic Domains* (Louw & Nida, UBS, 1988) files every NT
+  Greek lexeme under 93 numbered domains and their sub-domains, so a
+  reader can ask for a MEANING rather than a word — every term in domain
+  25, "Attitudes and Emotions", regardless of which lexeme carries it.
+  bwh26 loads that index into the GSE and the Word List Manager, and it
+  is the single most distinctive thing BibleWorks can do that a
+  concordance cannot: it is the difference between "where does ἀγάπη
+  occur" and "where is love spoken of".
+  *What it would take:* the lexeme→domain mapping (~5,000 entries over
+  ~5,600 headwords) plus the domain names and their tree. The domain
+  NUMBERS attached to a word are arguably facts; the domain scheme, its
+  wording and the assignment of a word to a domain are the authors'
+  analysis, and that is the whole work.
+  *Why not:* UBS holds it and licenses it commercially. Nothing in this
+  repo may carry it, and there is no complete openly-licensed substitute
+  — the nearest, UBS's own *Semantic Dictionary of Biblical Hebrew*, is
+  the same rightsholder and covers the other testament.
+  *Re-open only on new information:* an openly-licensed domain set, or a
+  licence. Not on a fresh opinion about how useful it would be — its
+  usefulness was never the question.
 
 ### 3.2 The Graphical Search Engine — REJECTED, provisionally
 
@@ -575,7 +617,20 @@ Mapped against BibleWorks' own tab set (bwh10):
 - **Options / settings** — **HAVE**, and then some (`settings_page.dart`,
   3,313 lines; #281 flagged the size, #311/#315 fixed the type controls).
 - **Book name abbreviations, version abbreviations** — **HAVE.**
-- **Changing book order** — **ABSENT**, low value.
+- **Changing book order** — **REJECTED 2026-09-07.** bwh29 lets a reader
+  reorder the canon. Two of the three reasons anyone does that are
+  already answered here by something better: the Hebrew-Bible and
+  Greek-Bible groupings are a first-class SEARCH SCOPE (#280's scope
+  model, 希伯来圣经 / 希腊圣经), and version display order — the one
+  ordering readers actually rearrange — is its own settled feature
+  (#288, `version_stack.dart`).
+  The third reason is real and is the only thing that would re-open
+  this: the **Tanakh order** (Torah / Nevi'im / Ketuvim), which is not a
+  preference but a different canon shape, and in which Chronicles ends
+  the Bible. That is a canon variant rather than a drag-to-reorder list,
+  it changes what "the next chapter" means at 24 seams, and it belongs
+  with versification rather than with a settings row. Re-open it as
+  *that*, with a reader asking for it, not as bwh29's list widget.
 - **Compiling your own version database (bwh47)** — **ABSENT.**
   BibleWorks lets a user compile and install their own Bible text. Ours
   are baked into the bundle. This is how a user brings a translation we

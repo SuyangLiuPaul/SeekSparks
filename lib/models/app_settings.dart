@@ -7,6 +7,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:seeksparks/models/app_style_preset.dart' show CardMaterial;
 import 'package:seeksparks/utils/cross_version_search.dart'
     show CrossVersionSearchMode, crossVersionModeFromName;
+// Prefixed: this class has a setter of the same name, and an
+// unqualified call inside it would recurse into itself rather than
+// reach the switch.
+import 'package:seeksparks/utils/search_folding.dart' as folding;
 import 'package:seeksparks/models/notification_category.dart';
 import 'package:seeksparks/services/app_icon_service.dart';
 import 'package:seeksparks/services/notification_scheduler.dart'
@@ -109,6 +113,11 @@ const _kNotificationCategories = 'notificationCategories';
 // missing → `currentOnly`, which is what this app has always done and
 // what BibleWorks defaults to.
 const _kCrossVersionSearchMode = 'crossVersionSearchMode';
+// 2026-09-07 (bwh17, "Including Vowel Points in Hebrew Searches and
+// Accents in Greek"). Default TRUE — folding is what the app has done
+// since #321, and turning it off is the scholarly option, not the
+// ordinary one.
+const _kSearchIgnoresPointing = 'searchIgnoresPointing';
 const _kExcludeKetivFromSearch = 'excludeKetivFromSearch';
 const _kExcludeQereFromSearch = 'excludeQereFromSearch';
 const _kShowSectionTitles = 'showSectionTitles';
@@ -245,6 +254,7 @@ class AppSettings extends ChangeNotifier {
   /// Settings → Reading.
   CrossVersionSearchMode _crossVersionSearchMode =
       CrossVersionSearchMode.currentOnly;
+  bool _searchIgnoresPointing = true;
   bool _excludeKetivFromSearch = false;
   bool _excludeQereFromSearch = false;
   bool _showSectionTitles = true;
@@ -285,6 +295,12 @@ class AppSettings extends ChangeNotifier {
   /// `cross_version_search.dart`.
   CrossVersionSearchMode get crossVersionSearchMode =>
       _crossVersionSearchMode;
+
+  /// Whether searches fold Hebrew vowel points and Greek accents away.
+  ///
+  /// Mirrors the switch in `search_folding.dart`, which is where the six
+  /// call sites read it; this is the persisted half.
+  bool get searchIgnoresPointing => _searchIgnoresPointing;
   bool get excludeKetivFromSearch => _excludeKetivFromSearch;
   bool get excludeQereFromSearch => _excludeQereFromSearch;
 
@@ -504,6 +520,18 @@ class AppSettings extends ChangeNotifier {
     await prefs.setString(_kCrossVersionSearchMode, mode.name);
   }
 
+  Future<void> setSearchIgnoresPointing(bool enabled) async {
+    if (_searchIgnoresPointing == enabled) return;
+    _searchIgnoresPointing = enabled;
+    // Push it into the switch BEFORE notifying: a listener that rebuilds
+    // a search on the notification must see the new value, not the one
+    // that is about to be written.
+    folding.setSearchIgnoresPointing(enabled);
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_kSearchIgnoresPointing, enabled);
+  }
+
   Future<void> setExcludeKetivFromSearch(bool enabled) async {
     if (_excludeKetivFromSearch == enabled) return;
     _excludeKetivFromSearch = enabled;
@@ -637,6 +665,8 @@ class AppSettings extends ChangeNotifier {
     _showStrongsInOriginals = true;
     _autoExpandFirstRef = false;
     _crossVersionSearchMode = CrossVersionSearchMode.currentOnly;
+    _searchIgnoresPointing = true;
+    folding.setSearchIgnoresPointing(true);
     _excludeKetivFromSearch = false;
     _excludeQereFromSearch = false;
     _notificationsEnabled = false;
@@ -819,6 +849,9 @@ class AppSettings extends ChangeNotifier {
     _autoExpandFirstRef = prefs.getBool(_kAutoExpandFirstRef) ?? false;
     _crossVersionSearchMode =
         crossVersionModeFromName(prefs.getString(_kCrossVersionSearchMode));
+    _searchIgnoresPointing =
+        prefs.getBool(_kSearchIgnoresPointing) ?? true;
+    folding.setSearchIgnoresPointing(_searchIgnoresPointing);
     _excludeKetivFromSearch =
         prefs.getBool(_kExcludeKetivFromSearch) ?? false;
     _excludeQereFromSearch = prefs.getBool(_kExcludeQereFromSearch) ?? false;
@@ -954,6 +987,7 @@ class AppSettings extends ChangeNotifier {
         'boldVerseText': _boldVerseText,
         'showStrongsInOriginals': _showStrongsInOriginals,
         'crossVersionSearchMode': _crossVersionSearchMode.name,
+        'searchIgnoresPointing': _searchIgnoresPointing,
         'excludeKetivFromSearch': _excludeKetivFromSearch,
         'excludeQereFromSearch': _excludeQereFromSearch,
         'autoExpandFirstRef': _autoExpandFirstRef,
@@ -1052,6 +1086,10 @@ class AppSettings extends ChangeNotifier {
       }
       if (m['autoExpandFirstRef'] is bool) {
         _autoExpandFirstRef = m['autoExpandFirstRef'] as bool;
+      }
+      if (m['searchIgnoresPointing'] is bool) {
+        _searchIgnoresPointing = m['searchIgnoresPointing'] as bool;
+        folding.setSearchIgnoresPointing(_searchIgnoresPointing);
       }
       if (m['crossVersionSearchMode'] is String) {
         _crossVersionSearchMode =

@@ -987,6 +987,37 @@ class _SettingsPageBodyState extends State<_SettingsPageBody> {
                         ],
                       ),
                     ),
+                    // bwh17's switch. Beside bwh29's two, because all
+                    // three are about how the Hebrew and Greek are read
+                    // rather than about the search box.
+                    const Divider(height: 1),
+                    SwitchListTile(
+                      title: Text(
+                        uiStrings['searchIgnoresPointing']
+                                ?[settings.locale] ??
+                            'Ignore Hebrew vowel points and Greek accents '
+                                'in searches',
+                        style: TextStyle(
+                          fontSize: settings.fontSize + 2,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: settings.fontFamily,
+                          fontFamilyFallback: kCjkFontFallback,
+                        ),
+                      ),
+                      subtitle: Text(
+                        uiStrings['searchIgnoresPointingSubtitle']
+                                ?[settings.locale] ??
+                            'On by default, so you can type what you see.',
+                        style: TextStyle(
+                          fontSize: settings.fontSize,
+                          fontFamily: settings.fontFamily,
+                          fontFamilyFallback: kCjkFontFallback,
+                        ),
+                      ),
+                      value: settings.searchIgnoresPointing,
+                      onChanged: (val) =>
+                          settings.setSearchIgnoresPointing(val),
+                    ),
                     // bwh29's two switches. Placed beside the other
                     // originals-text controls rather than under a
                     // "search" heading, because what they are about is
