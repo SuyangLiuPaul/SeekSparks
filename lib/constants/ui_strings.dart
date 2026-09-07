@@ -1,3 +1,12 @@
+/// The credit line the 2017 Holman grant requires for the CSB, on the
+/// copyright or title page, word for word. Declared once so the three
+/// locales below cannot drift apart — they must not be translated.
+const _kCsbCredit =
+    'Scripture quotations marked CSB\u00AE, are taken from the Christian '
+    'Standard Bible\u00AE, Copyright \u00A9 2017 by Holman Bible Publishers. '
+    'Used by permission. Christian Standard Bible\u00AE, and CSB\u00AE are '
+    'federally registered trademarks of Holman Bible Publishers.';
+
 const uiStrings = {
   // The phone's bottom bar. Verbs, not pane names: a bottom bar is
   // read as "what am I doing", and 搜索 / 阅读 / 分析 is how the three
@@ -4490,6 +4499,22 @@ const uiStrings = {
     'zh-Hans': '出版方已将本译本释出至公有领域。',
     'zh-Hant': '出版方已將本譯本釋出至公有領域。',
     'en': 'Dedicated to the public domain by the publisher.',
+  },
+  'aboutVerCsb': {
+    'zh-Hans': 'CSB（基督教标准译本 2017 · 含 Strong 编号）',
+    'zh-Hant': 'CSB（基督教標準譯本 2017 · 含 Strong 編號）',
+    'en': "CSB (Christian Standard Bible, 2017, with Strong's)",
+  },
+  // NOT translated, and not shortened. The 2017 Holman grant names this
+  // sentence and requires it on the copyright or title page — which in
+  // this app is this page — word for word, so all three locales carry
+  // the same English. `test/csb_asset_test.dart` quotes it in full
+  // rather than a fragment: a paraphrase is a breach of the grant, and a
+  // test that checked only the opening words would not notice one.
+  'aboutLicenseCsb': {
+    'zh-Hans': _kCsbCredit,
+    'zh-Hant': _kCsbCredit,
+    'en': _kCsbCredit,
   },
   'aboutVerNasb': {
     'zh-Hans': 'NASB 2020 新美国标准译本',

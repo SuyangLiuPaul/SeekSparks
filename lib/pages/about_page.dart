@@ -472,6 +472,17 @@ class _ScripturesTable extends StatelessWidget {
         url: 'https://bereanbible.com/',
       ),
       _AttribRow(
+        name: uiStrings['aboutVerCsb']?[locale] ??
+            "CSB (Christian Standard Bible, 2017, with Strong's)",
+        licence: uiStrings['aboutLicenseCsb']?[locale] ??
+            'Scripture quotations marked CSB\u00AE, are taken from the '
+                'Christian Standard Bible\u00AE, Copyright \u00A9 2017 by '
+                'Holman Bible Publishers. Used by permission. Christian '
+                'Standard Bible\u00AE, and CSB\u00AE are federally '
+                'registered trademarks of Holman Bible Publishers.',
+        url: 'https://csbible.com/',
+      ),
+      _AttribRow(
         name: uiStrings['aboutVerNasb']?[locale] ?? 'NASB 2020',
         licence: uiStrings['aboutLicenseNasb']?[locale] ??
             '© The Lockman Foundation · used under quotation provisions.',

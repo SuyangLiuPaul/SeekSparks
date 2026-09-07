@@ -27,17 +27,15 @@ document in three places, not three documents.)
 | Fee | GRATIS **provided the work is distributed free**; if it becomes a salable product the permission terminates |
 | Termination | When the Work is no longer available |
 
-### This app does not ship the CSB
+### This app ships the CSB — since 2026-09-07
 
-Filed on 2026-09-07 at the owner's request. Nothing a reader sees
-changed, and no licence string moved. The eleven bundled texts are KJV,
-KJVS, LEB, NASB 2020, BSB, LXX/WH, CUVS-YHWH (简/繁), CUVS-PLUS and
-LJK1/LJK2 — none of them is the CSB.
+The eleven bundled texts became twelve. The other eleven are KJV, KJVS,
+LEB, NASB 2020, BSB, LXX/WH, CUVS-YHWH (简/繁), CUVS-PLUS and LJK1/LJK2.
 
-It is here so the paperwork sits in the same repo as the app it would
-govern, if it ever does.
+Both gates below were answered before it was added — read them, then the
+2026-09-07 sections that close them.
 
-**Two things gate ever using it here, and neither is ours to decide:**
+**The two gates, as they stood:**
 
 1. **Territory.** The grant is Hong Kong / Mainland China. This app
    ships to the App Store, Play and the web without a territory fence.
@@ -46,9 +44,24 @@ govern, if it ever does.
    is a different work by a different publisher of record, so the grant
    does not reach it on its face.
 
-Both belong to Raymond / Paul. The 雅伟的话 note raises the same two
-against *that* project, which is the only one of the three that ships
-the text.
+Neither was ours to decide, and neither was decided here.
+
+**What shipping it involved.** `tools/import_csb.py`, its own importer
+rather than the YsWords one, because what was licensed is the CSB *with
+Strong's Numbers* and this app has a tagged layer to put them in:
+`assets/csb.json` plus `assets/tagged/csb/`. The credit line below is
+rendered on the About screen, verbatim, in all three locales, and
+`test/csb_asset_test.dart` quotes it in full so a paraphrase fails the
+build. Copying verses out carries that line and is capped at 500 like
+the other licensed editions — the grant is gratis only while the work is
+distributed free.
+
+**One thing the reader should be told plainly:** the text is not the
+module as received. 967 verses had lost CSB's own small-caps LORD and
+read a bare "Lord"; the importer restores the divine name in them, on
+the module's own typographic evidence and against two independent
+witnesses. The 雅伟的话 note records the same kind of edit — its 5,041
+verses — as an editorial change the grant does not mention either way.
 
 ### 2026-09-07 — gate 2 is lifted, and it reaches this app
 
@@ -78,16 +91,19 @@ know which of the two they are looking at.
 The yswords copy of this file records the exchange in full.
 
 Note the shape of the grant while reading it: what was licensed is the
-CSB **with Strong's numbers**, for a bilingual CUV/CSB work. This repo
-already carries Strong's tagging of its own (`kjvs`, and the tagged
-data under `assets/tagged/`), so a future CSB here would be a question
-about **whose** Strong's data ships with it, not only about the verse
-text.
+CSB **with Strong's numbers**, for a bilingual CUV/CSB work. That
+question — **whose** Strong's data ships with the text — is answered by
+using the module's own: `assets/tagged/csb/` is built from the tags
+inside the licensed module itself, not by grafting this repo's Eagle's
+View alignment onto it. Word-level tagging has to travel with the exact
+text it was aligned against; the note on `kjvs` in
+`lib/constants/bible_versions.dart` records what happens when it does
+not.
 
 ### The credit line, verbatim
 
-If the CSB is ever added, the grant requires this on the copyright or
-title page — which in this app is the About screen — word for word:
+The grant requires this on the copyright or title page — which in this
+app is the About screen — word for word:
 
 > Scripture quotations marked CSB®, are taken from the Christian
 > Standard Bible®, Copyright © 2017 by Holman Bible Publishers. Used by

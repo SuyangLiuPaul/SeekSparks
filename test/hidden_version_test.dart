@@ -120,7 +120,7 @@ void main() {
         }
       }
       expect(versionsForLanguage('en').map((v) => v.value),
-          <String>['kjv', _restored, 'bsb', 'kjvs']);
+          <String>['kjv', _restored, 'bsb', 'csb', 'kjvs']);
     });
 
     test('the command line cannot summon them by abbreviation', () {

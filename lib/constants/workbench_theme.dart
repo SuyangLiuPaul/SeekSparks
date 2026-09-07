@@ -601,6 +601,7 @@ const Map<String, Color> kVersionTagColors = {
   'kjv': Color(0xFF1F7A3D),
   'kjvs': Color(0xFF2F9E57),
   'bsb': Color(0xFF14806B),
+  'csb': Color(0xFF0F6E8C),
   // Chinese — 和合本 family in amber, 梁家铿译本 in purple.
   'cuvs-yhwh': Color(0xFFB0721A), // 雅简+
   'cuvs-yhwh-tr': Color(0xFFC98A2E), // 雅繁+

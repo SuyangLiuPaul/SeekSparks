@@ -77,6 +77,24 @@ const bibleVersions = <BibleVersionInfo>[
     language: 'en',
     editionYear: '2020 / public domain',
   ),
+  // 2026-09-07: the Christian Standard Bible. The 2017 Holman grant, the
+  // licensee's extension of it to the Yahweh's Words products and the
+  // owner's decision on territory are all in `docs/permissions/`; the
+  // credit line it requires is `aboutLicenseCsb`, and it is required
+  // verbatim, which is why `test/csb_asset_test.dart` quotes it in full.
+  //
+  // What was licensed is the CSB **with Strong's Numbers**, so this row
+  // is tagged — see `TaggedTextService.taggedVersions`. The badge stays
+  // plain `CSB` rather than `CSB+S`: Holman's own naming rule is to use
+  // CSB in running text and in Scripture references, and there is no
+  // second, untagged CSB row for a suffix to tell it apart from.
+  BibleVersionInfo(
+    value: 'csb',
+    shortLabel: 'CSB',
+    menuLabel: 'Christian Standard Bible',
+    language: 'en',
+    editionYear: "2017 / with Strong's",
+  ),
   // 2026-08-07: the three editions below come from Eagle's View, the
   // electronic statistical concordance by Pastor Ho
   // (eaglesviewsoftware.com), imported by tools/import_eaglesview.py.

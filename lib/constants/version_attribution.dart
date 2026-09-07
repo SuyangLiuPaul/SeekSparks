@@ -18,6 +18,7 @@ const versionAttributionKeys = <String, String>{
   'leb': 'aboutLicenseLeb',
   'nasb': 'aboutLicenseNasb',
   'bsb': 'aboutLicenseBsb',
+  'csb': 'aboutLicenseCsb',
   // The three Eagle's View imports share one line: the texts themselves are
   // public domain, the electronic edition and its Strong's alignment are not.
   'kjvs': 'aboutLicenseEaglesView',

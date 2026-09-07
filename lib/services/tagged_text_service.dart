@@ -77,6 +77,13 @@ class TaggedTextService {
     'kjvs',
     'lxxwh',
     'cuvs-plus',
+    // 2026-09-07: `csb`. What Holman licensed is the CSB *with Strong's
+    // Numbers* (docs/permissions/README.md), so for this edition the
+    // tagging is the licensed article rather than an addition to it —
+    // hence its own importer, tools/import_csb.py, instead of the
+    // YsWords one that drops the numbers. Its `g` lists are all empty:
+    // the module carries Strong's and no tense/voice/mood at all.
+    'csb',
     // 'cuv-yhwd' was here. Removed with its catalog row — it duplicated
     // cuvs-yhwh's text AND its tagging, only coarser. See the note at the
     // end of lib/constants/bible_versions.dart.

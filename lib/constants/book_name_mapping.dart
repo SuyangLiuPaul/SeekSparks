@@ -255,6 +255,9 @@ const _englishVersionCodes = <String>{
   'bsb',
   'kjvs',
   'lxxwh',
+  // 2026-09-07: `csb` joins them on the way in, not afterwards. The
+  // paragraph above is the record of what "afterwards" cost.
+  'csb',
 };
 
 /// Which of the three book-name spellings a surface should print.

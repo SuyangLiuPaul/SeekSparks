@@ -18,7 +18,7 @@ void main() {
   });
 
   test('language matches the naming convention', () {
-    const english = {'kjv', 'leb', 'nasb', 'bsb', 'kjvs'};
+    const english = {'kjv', 'leb', 'nasb', 'bsb', 'csb', 'kjvs'};
     const greek = {'lxxwh'};
     for (final v in bibleVersions) {
       if (greek.contains(v.value)) {
