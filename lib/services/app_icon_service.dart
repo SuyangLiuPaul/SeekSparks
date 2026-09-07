@@ -162,6 +162,27 @@ class AppIconService {
     return null;
   }
 
+  /// The bundled image that matches [color], for anything in-app that
+  /// draws the mark — the splash, chiefly.
+  ///
+  /// 2026-09-08, reported as 「loading page那个icon颜色也没有跟着变」. The
+  /// six variants have shipped in `assets/themed_icons/` since the icon
+  /// swap was built, and only the OS ever saw them: the home screen, the
+  /// dock and the favicon all changed with the reader's colour while the
+  /// splash — the first thing the app draws, and the one place the mark
+  /// is largest — stayed on the default asset.
+  ///
+  /// Returns `assets/loading.png` for the default swatch, which IS that
+  /// icon. Tinting was considered and is wrong: the mark is full-colour
+  /// (ink ground, gold sparks), so a colour filter turns it into a solid
+  /// square — `loading_page.dart` carries a note from whoever tried.
+  static String splashAssetForColor(Color? color) {
+    final variant = color == null ? null : variantForColor(color);
+    return variant == null
+        ? 'assets/loading.png'
+        : 'assets/themed_icons/$variant.png';
+  }
+
   /// iOS naming: `AppIcon-<Variant>` (matches CFBundleAlternateIcons
   /// key). Null = primary icon.
   static String? _iosNameForVariant(String? variant) =>

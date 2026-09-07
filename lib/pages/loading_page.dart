@@ -22,6 +22,7 @@ import '../constants/ui_strings.dart';
 import '../utils/reference_parser.dart';
 import '../utils/responsive.dart';
 import '../utils/version_mapper.dart' show translateBookName;
+import 'package:seeksparks/services/app_icon_service.dart';
 import 'workbench_page.dart';
 
 class LoadingPage extends StatefulWidget {
@@ -563,7 +564,8 @@ class _LoadingPageState extends State<LoadingPage> {
                   ClipRRect(
                     borderRadius: BorderRadius.circular(logoSize * 0.22),
                     child: Image.asset(
-                      'assets/loading.png',
+                      AppIconService.splashAssetForColor(
+                          settings.primaryColor),
                       width: logoSize,
                       height: logoSize,
                     ),
@@ -795,7 +797,8 @@ class _LoadingPageState extends State<LoadingPage> {
             ClipRRect(
               borderRadius: BorderRadius.circular(logoSize * 0.22),
               child: Image.asset(
-                'assets/loading.png',
+                AppIconService.splashAssetForColor(
+                    settings.primaryColor),
                 width: logoSize,
                 height: logoSize,
               ),

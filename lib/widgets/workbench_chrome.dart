@@ -16,7 +16,7 @@ library;
 import 'package:flutter/material.dart';
 
 import 'package:seeksparks/constants/bible_versions.dart'
-    show shortBibleVersionLabel;
+    show fullBibleVersionLabel, shortBibleVersionLabel;
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 import 'package:seeksparks/utils/version_gutter.dart';
 import 'package:seeksparks/constants/workbench_theme.dart';
@@ -268,8 +268,7 @@ class WbToolIcon extends StatelessWidget {
                 button.label!,
                 style: TextStyle(
                   fontSize: t.chrome,
-                  fontWeight:
-                      button.active ? FontWeight.w700 : FontWeight.w400,
+                  fontWeight: button.active ? FontWeight.w700 : FontWeight.w400,
                   color: enabled ? wb.text : wb.mutedText,
                 ),
               ),
@@ -419,8 +418,7 @@ class WorkbenchStatusBar extends StatelessWidget {
                   f.label,
                   style: TextStyle(
                     fontSize: t.chrome,
-                    fontWeight:
-                        f.enabled ? FontWeight.w600 : FontWeight.w400,
+                    fontWeight: f.enabled ? FontWeight.w600 : FontWeight.w400,
                     // 2026-09-08: was `.withValues(alpha: 0.55)`, 1.98:1
                     // on the chrome. `enabled` here means the thing the
                     // field CONTROLS is on — Limits is "off" when
@@ -482,22 +480,38 @@ class WbVersionTag extends StatelessWidget {
     final t = WbType.of(context);
     final fontSize = t.chrome - 0.5;
     final label = shortBibleVersionLabel(code).toUpperCase();
-    return SizedBox(
-      width: width ?? versionGutterWidthForLabels([label], fontSize),
-      child: Text(
-        label,
-        maxLines: 1,
-        // Ellipsis, not clip. If a future label outgrows the gutter
-        // again, "CUV+S…" is honest about being shortened; "CUV+S("
-        // looks like the string itself is damaged.
-        overflow: TextOverflow.ellipsis,
-        style: TextStyle(
-          fontSize: fontSize,
-          fontWeight: FontWeight.w700,
-          height: t.lineHeight,
-          color: versionTagColor(code),
-          letterSpacing: 0.2,
-          fontFamilyFallback: kCjkFontFallback,
+    // 2026-09-08: the tag says what it can fit; the tooltip says what it
+    // means. Reported as 「BGT BSB 雅简这些别人看简写不知道什么意思」 — a
+    // parallel view has room for four characters and no room for
+    // 和合本雅伟版(简体), so the gutter had been printing a code the
+    // reader was expected to already know.
+    //
+    // `triggerMode: tap` matters more than the tooltip does. A hover
+    // tooltip answers the question on a desktop and leaves it unanswered
+    // on the iPad and the phone, which is where an unfamiliar reader
+    // actually is. Tap is the gesture they will try, and this is the
+    // pattern `browse_window.dart` already uses for its two other
+    // explain-yourself affordances.
+    return Tooltip(
+      message: fullBibleVersionLabel(code),
+      triggerMode: TooltipTriggerMode.tap,
+      child: SizedBox(
+        width: width ?? versionGutterWidthForLabels([label], fontSize),
+        child: Text(
+          label,
+          maxLines: 1,
+          // Ellipsis, not clip. If a future label outgrows the gutter
+          // again, "CUV+S…" is honest about being shortened; "CUV+S("
+          // looks like the string itself is damaged.
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontSize: fontSize,
+            fontWeight: FontWeight.w700,
+            height: t.lineHeight,
+            color: versionTagColor(code),
+            letterSpacing: 0.2,
+            fontFamilyFallback: kCjkFontFallback,
+          ),
         ),
       ),
     );
@@ -536,9 +550,7 @@ class _HoverBoxState extends State<_HoverBox> {
     final wb = WbColors.of(context);
     final interactive = widget.onTap != null || widget.onDoubleTap != null;
     return MouseRegion(
-      cursor: interactive
-          ? SystemMouseCursors.click
-          : SystemMouseCursors.basic,
+      cursor: interactive ? SystemMouseCursors.click : SystemMouseCursors.basic,
       onEnter: (_) => setState(() => _hovering = true),
       onExit: (_) => setState(() => _hovering = false),
       child: GestureDetector(

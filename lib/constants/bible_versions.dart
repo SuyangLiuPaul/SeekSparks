@@ -365,6 +365,27 @@ String shortBibleVersionLabel(String version) {
 /// Bible" — as opposed to the gutter badge [shortBibleVersionLabel]
 /// prints. Falls back to the raw code so an unknown one is visible
 /// rather than blank.
+/// The edition's full name, plus its year when the catalog states one.
+///
+/// 2026-09-08, reported as 「BGT BSB 雅简这些别人看简写不知道什么意思」. The
+/// Browse gutter prints four-character tags because that is what a
+/// parallel view has room for — and a reader who has not memorised the
+/// catalog has no way in from there. Every one of those tags has a full
+/// name sitting in `bibleVersions`; this is the string that says it.
+///
+/// Falls back to [menuBibleVersionLabel] for an edition with no year,
+/// and to the raw code for one that is not in the catalog at all —
+/// which is what an imported edition is, and its code IS its name.
+String fullBibleVersionLabel(String version) {
+  for (final v in bibleVersions) {
+    if (v.value != version) continue;
+    return v.editionYear.isEmpty
+        ? v.menuLabel
+        : '${v.menuLabel} · ${v.editionYear}';
+  }
+  return menuBibleVersionLabel(version);
+}
+
 String menuBibleVersionLabel(String version) {
   for (final v in bibleVersions) {
     if (v.value == version) return v.menuLabel;
