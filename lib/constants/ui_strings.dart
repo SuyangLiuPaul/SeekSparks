@@ -3802,6 +3802,32 @@ const uiStrings = {
     'zh-Hant': '下載',
     'en': 'Download',
   },
+  // 2026-09-08: the daily check's own line. Deliberately shorter than
+  // `updateAvailableBody` — that one is a dialog the reader OPENED and
+  // can be read at leisure; this arrives unasked while they are trying
+  // to read a verse, so it says the one fact and offers the one action.
+  'updateAvailableBar': {
+    'zh-Hans': '新版本 v{new} 可用',
+    'zh-Hant': '新版本 v{new} 可用',
+    'en': 'Version v{new} is available',
+  },
+  // The switch in Settings → App. Named for what it DOES rather than
+  // for the machinery: a reader deciding whether to leave it on is
+  // deciding about a daily network request, not about a scheduler.
+  'settingsAutoCheckUpdates': {
+    'zh-Hans': '每天检查更新',
+    'zh-Hant': '每天檢查更新',
+    'en': 'Check for updates daily',
+  },
+  'settingsAutoCheckUpdatesHint': {
+    'zh-Hans': '每天一次向 GitHub 询问是否有新版本。只在确实有新版时提示，'
+        '没有就完全安静。关掉后仍可在「关于」页手动检查。',
+    'zh-Hant': '每天一次向 GitHub 詢問是否有新版本。只在確實有新版時提示，'
+        '沒有就完全安靜。關掉後仍可在「關於」頁手動檢查。',
+    'en': 'Asks GitHub once a day whether a newer release exists. Says '
+        'nothing unless one does. You can still check by hand on the '
+        'About page with this off.',
+  },
   // 2026-06-18 (v1.3.89): test-notification confirmation. {platform} is
   // filled in with the actual device (iOS/Android/macOS/Windows/Linux/
   // browser) — it used to hardcode "iOS" on every device.

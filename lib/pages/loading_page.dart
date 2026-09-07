@@ -597,10 +597,17 @@ class _LoadingPageState extends State<LoadingPage> {
                         style: TextStyle(
                           fontSize: settings.fontSize * 0.68,
                           letterSpacing: 0.3,
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSurface
-                              .withValues(alpha: 0.42),
+                          // 2026-09-08: was `onSurface` at 42%, which
+                          // measured 2.59:1 on the light splash and
+                          // 2.19:1 on cream. This is the version string
+                          // — the one thing on this screen anybody ever
+                          // needs to READ off a support screenshot — and
+                          // it was the least legible thing on it.
+                          // `onSurfaceVariant` is the role for secondary
+                          // text and carries the app's `mutedText`:
+                          // still visibly secondary, and 4.17:1.
+                          color:
+                              Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ],
@@ -809,10 +816,9 @@ class _LoadingPageState extends State<LoadingPage> {
               style: TextStyle(
                 fontSize: settings.fontSize * 0.68,
                 letterSpacing: 0.3,
-                color: Theme.of(context)
-                    .colorScheme
-                    .onSurface
-                    .withValues(alpha: 0.42),
+                // Same change as the version line above — this is the
+                // other half of the same splash.
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
             SizedBox(height: 30 * s),

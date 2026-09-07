@@ -121,6 +121,24 @@ const _kExcludeQereFromSearch = 'excludeQereFromSearch';
 const _kShowSectionTitles = 'showSectionTitles';
 const _kShowBookIntro = 'showBookIntro';
 
+// 2026-09-08: whether the app asks GitHub once a day whether a newer
+// release exists. Native only — the PWA is always current on reload, so
+// there is nothing to ask about on the web.
+//
+// A SETTING rather than always-on, because a background network call
+// nobody asked for is a thing a reader is entitled to refuse. Default
+// true: the check is one request a day, the reader is on a sideloaded
+// build with no store to update it, and a build that cannot tell you it
+// is out of date is how this app came to be nineteen versions behind
+// its own newest release without anyone noticing.
+const _kAutoCheckUpdates = 'autoCheckUpdates';
+
+// When that check last ran, as millisecondsSinceEpoch. Kept beside the
+// switch rather than inside the service so a reset clears both together
+// — a stale timestamp with the switch back on would silently skip the
+// first day.
+const _kLastUpdateCheck = 'lastUpdateCheckMs';
+
 // 2026-05-24 (v1.3.19): TTS voice preference constants removed
 // along with the 朗读 feature. Existing SharedPreferences keys
 // (`ttsVoiceGender`, `ttsVoiceTier`) are left untouched on disk
@@ -244,6 +262,8 @@ class AppSettings extends ChangeNotifier {
   /// when an intro is authored for that book. Default ON. Toggle in
   /// Settings → Reading.
   bool _showBookIntro = true;
+  bool _autoCheckUpdates = true;
+  int _lastUpdateCheckMs = 0;
 
   /// The resolved family for TextStyle.fontFamily. Existing call
   /// sites (`fontFamily: settings.fontFamily`) automatically get the
@@ -299,6 +319,39 @@ class AppSettings extends ChangeNotifier {
 
   bool get showSectionTitles => _showSectionTitles;
   bool get showBookIntro => _showBookIntro;
+
+  /// Ask GitHub once a day whether a newer release exists. See
+  /// [_kAutoCheckUpdates].
+  bool get autoCheckUpdates => _autoCheckUpdates;
+
+  /// When the daily check last ran. Epoch 0 means never.
+  DateTime get lastUpdateCheck =>
+      DateTime.fromMillisecondsSinceEpoch(_lastUpdateCheckMs);
+
+  /// True when the switch is on AND a day has passed. The caller still
+  /// has to decide whether the PLATFORM supports updating at all —
+  /// that is `UpdateService.isSupported`, and it is not a setting.
+  bool updateCheckDueAt(DateTime now) =>
+      _autoCheckUpdates &&
+      now.difference(lastUpdateCheck) >= const Duration(days: 1);
+
+  Future<void> setAutoCheckUpdates(bool enabled) async {
+    if (_autoCheckUpdates == enabled) return;
+    _autoCheckUpdates = enabled;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_kAutoCheckUpdates, enabled);
+  }
+
+  /// Records that the check ran. Deliberately stamped whatever the
+  /// ANSWER was, including a failure: a device that is offline every
+  /// morning would otherwise retry on every launch all day, which is
+  /// the opposite of what "once a day" is for.
+  Future<void> markUpdateChecked(DateTime when) async {
+    _lastUpdateCheckMs = when.millisecondsSinceEpoch;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_kLastUpdateCheck, _lastUpdateCheckMs);
+  }
 
   // 2026-05-24 (v1.3.19): `ttsVoiceGender` / `ttsVoiceTier` getters
   // + setters removed with the 朗读 feature.
@@ -618,6 +671,8 @@ class AppSettings extends ChangeNotifier {
     _notificationsEnabled = false;
     _showSectionTitles = true;
     _showBookIntro = true;
+    _autoCheckUpdates = true;
+    _lastUpdateCheckMs = 0;
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     // Wipe every preference key we've ever written. Loop is the
@@ -644,6 +699,8 @@ class AppSettings extends ChangeNotifier {
       _kNotificationsEnabled,
       _kShowSectionTitles,
       _kShowBookIntro,
+      _kAutoCheckUpdates,
+      _kLastUpdateCheck,
       // The dashboard was deleted when the Workbench became the app
       // (no home screen), but installs from before then still carry
       // its keys. Same treatment as 'offlineMode' above: the constants
@@ -823,6 +880,8 @@ class AppSettings extends ChangeNotifier {
     }
     _showSectionTitles = prefs.getBool(_kShowSectionTitles) ?? true;
     _showBookIntro = prefs.getBool(_kShowBookIntro) ?? true;
+    _autoCheckUpdates = prefs.getBool(_kAutoCheckUpdates) ?? true;
+    _lastUpdateCheckMs = prefs.getInt(_kLastUpdateCheck) ?? 0;
     // 2026-05-24 (v1.3.19): TTS voice pref restore removed with the
     // 朗读 feature. The stored SharedPreferences keys are left in
     // place as harmless orphan data.

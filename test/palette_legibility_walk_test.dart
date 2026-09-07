@@ -42,7 +42,23 @@
 // taste. 3:1 forbids only the failure this exists to catch, which is
 // text that has effectively vanished.
 //
-// **One exemption, and it is a narrow one: [WbColors.disabledMark].**
+// **Disabled controls are exempt, and disabled is decided STRUCTURALLY
+// — by finding an ancestor control whose callback is null, not by
+// recognising a colour.** WCAG excludes inactive components and it is
+// right to: darkening a disabled control until it measures 3:1 makes it
+// look enabled, which trades a legibility complaint for a lie.
+//
+// The colour-based version of this exemption was tried first and does
+// not work. Material paints a disabled `IconButton` at `onSurface` ×
+// 38%, and an attempt to redirect that through the app's own
+// `disabledMark` via `iconButtonTheme` had no effect at all inside an
+// `AppBar`, where `IconTheme` wins over the button theme. Asking the
+// TREE "is this control dead?" needs to know none of that, and cannot
+// be defeated by a widget that paints its disabled state some third
+// way.
+//
+// **A second exemption, kept because it is a real role:
+// [WbColors.disabledMark].**
 // WCAG excludes inactive components from contrast requirements, and it
 // is right to — darkening a disabled control until it measures 3:1 makes
 // it look enabled, which trades a legibility complaint for a lie. The
@@ -72,6 +88,7 @@ import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/pages/about_page.dart';
 import 'package:seeksparks/pages/atlas_page.dart';
 import 'package:seeksparks/pages/bible_timeline_page.dart';
+import 'package:seeksparks/pages/books_page.dart';
 import 'package:seeksparks/pages/bible_trivia_page.dart';
 import 'package:seeksparks/pages/chronology_page.dart';
 import 'package:seeksparks/pages/command_search_page.dart';
@@ -82,6 +99,7 @@ import 'package:seeksparks/pages/highlights_page.dart';
 import 'package:seeksparks/pages/illustrations_page.dart';
 import 'package:seeksparks/pages/lexicon_page.dart';
 import 'package:seeksparks/pages/library_page.dart';
+import 'package:seeksparks/pages/loading_page.dart';
 import 'package:seeksparks/pages/modern_concordance_page.dart';
 import 'package:seeksparks/pages/naves_page.dart';
 import 'package:seeksparks/pages/profile_edit_page.dart';
@@ -90,7 +108,9 @@ import 'package:seeksparks/pages/radial_chronology_page.dart';
 import 'package:seeksparks/pages/sermons_page.dart';
 import 'package:seeksparks/pages/settings_page.dart';
 import 'package:seeksparks/pages/stats_page.dart';
+import 'package:seeksparks/pages/strongs_entry_page.dart';
 import 'package:seeksparks/pages/strip_chronology_page.dart';
+import 'package:seeksparks/pages/word_list_page.dart';
 import 'package:seeksparks/pages/workbench_page.dart';
 import 'package:seeksparks/providers/main_provider.dart';
 
@@ -106,16 +126,27 @@ import 'package:seeksparks/providers/main_provider.dart';
 /// heaviest concentrations live in exactly the files those pages build.
 /// A coverage claim is worth what its denominator is.
 ///
-/// Nine are still absent, and the denominator is written down rather
-/// than left silent. Books, LoadingPage, MapViewer, SermonDetail,
-/// EvidenceDetail, StrongsEntry, Phrasing and WordList each take a
-/// REQUIRED argument naming a book, a chapter, a sermon or a Strong's
-/// number. HomePage takes none but needs the same thing by another
-/// route: it is the classic single-pane reader, and on a cold pump it
-/// draws no text at all — the tautology guard below caught it claiming
-/// a pass over an empty screen, which is precisely what that guard is
-/// for. Reaching any of the nine means building a corpus, and this file
-/// would then be about fixtures instead of about colour.
+/// Four are still absent, and the denominator is written down rather
+/// than left silent.
+///
+/// The previous version of this comment said NINE were out of reach
+/// because they "take a required argument naming a book, a chapter, a
+/// sermon or a Strong's number", and that reaching them "means building
+/// a corpus". Half of that was wrong and it was the lazy half: Books,
+/// LoadingPage, StrongsEntry, Phrasing and WordList take SCALARS — a
+/// book name, a chapter number, a locale, a version code, an empty
+/// verse list. A scalar is not a corpus. They are in the list now.
+///
+/// What genuinely remains: MapViewer, SermonDetail and EvidenceDetail
+/// each take a domain OBJECT (`BibleMap`, `Sermon`, `BibleEvidence`);
+/// HomePage — the classic single-pane reader — takes nothing but draws
+/// no text at all on a cold pump; and Phrasing takes scalars and was
+/// briefly in the list on that basis, until the exemption-width guard
+/// below reported it rendering THREE strings of which two were disabled
+/// buttons. Scalar arguments got it constructed and did not get it
+/// populated, and one checkable string is not coverage. Both were
+/// caught by guards rather than noticed, which is the argument for
+/// having them.
 final _pages = <String, Widget Function()>{
   'About': () => const AboutPage(),
   'Atlas': () => const AtlasPage(),
@@ -126,6 +157,10 @@ final _pages = <String, Widget Function()>{
   'Strip Chronology': () => const StripChronologyPage(),
   'Workbench': () => const WorkbenchPage(),
   'Bible Timeline': () => const BibleTimelinePage(),
+  // Scalars only. The page resolves the book and chapter itself, and a
+  // chapter it cannot resolve renders its own empty state — which is a
+  // screen a reader can reach, so it is one this walk should read.
+  'Books': () => const BooksPage(bookIdx: 'Genesis', chapterIdx: 1),
   'Bible Trivia': () => const BibleTriviaPage(),
   'Chronology': () => const ChronologyPage(),
   'Family Tree': () => const FamilyTreePage(),
@@ -134,12 +169,20 @@ final _pages = <String, Widget Function()>{
   'Illustrations': () => const IllustrationsPage(),
   'Lexicon': () => const LexiconPage(),
   'Library': () => const LibraryPage(),
+  'Loading': () => const LoadingPage(verses: []),
   'Modern Concordance': () => const ModernConcordancePage(),
   "Nave's Topical": () => const NavesPage(),
   'Profiles': () => const ProfilesPage(),
   'Sermons': () => const SermonsPage(),
   'Settings': () => const SettingsPage(),
   'Stats': () => const StatsPage(),
+  "Strong's Entry": () => const StrongsEntryPage(number: 'H1'),
+  'Word List': () => const WordListPage(
+        book: 'Genesis',
+        chapter: 1,
+        locale: 'en',
+        version: 'bsb',
+      ),
 };
 
 const _palettes = <String, ({bool dark, bool paper})>{
@@ -203,6 +246,7 @@ void main() {
           final faint = <String>[];
           var judged = 0;
           var unbacked = 0;
+          var exempted = 0;
 
           for (final element in find.byType(RichText).evaluate()) {
             final rt = element.widget as RichText;
@@ -213,8 +257,11 @@ void main() {
             final colour = span.style?.color;
             if (colour == null) continue;
 
-            // The one exemption. See the library doc.
-            if (colour == wb.disabledMark) continue;
+            // The two exemptions. See the library doc.
+            if (colour == wb.disabledMark || _insideDisabledControl(element)) {
+              exempted++;
+              continue;
+            }
 
             final bg = _paintedBehind(element) ?? wb.groundBg;
             if (_paintedBehind(element) == null) unbacked++;
@@ -224,8 +271,11 @@ void main() {
             if (ratio < 3.0) {
               final shown =
                   text.length > 28 ? '${text.substring(0, 28)}…' : text;
-              faint.add('"$shown" — ink #${_hex(colour)} on #${_hex(bg)} '
-                  'is ${ratio.toStringAsFixed(2)}:1');
+              final alpha = colour.a < 1.0
+                  ? ' @${(colour.a * 100).round()}%'
+                  : '';
+              faint.add('"$shown" — ink #${_hex(colour)}$alpha on '
+                  '#${_hex(bg)} is ${ratio.toStringAsFixed(2)}:1');
             }
           }
 
@@ -239,6 +289,16 @@ void main() {
           // The other half of "is this instrument still working". A
           // refactor that puts every string behind a paint this resolver
           // cannot see would leave `faint` empty for the wrong reason.
+          // An exemption that swallows the page is not an exemption, it
+          // is a way to pass. Disabled controls are a minority of any
+          // real screen; if they ever become most of one, either the
+          // page is broken or `_insideDisabledControl` has started
+          // saying yes to things that are not controls.
+          expect(exempted, lessThan(judged),
+              reason: '$pageName: $exempted of ${judged + exempted} strings '
+                  'claimed the disabled exemption — more than were '
+                  'checked. The exemption has stopped being narrow.');
+
           expect(unbacked, lessThan(judged),
               reason: '$pageName: the background resolver found nothing '
                   'behind ANY of its $judged strings, so every one was '
@@ -251,6 +311,39 @@ void main() {
       });
     });
   });
+}
+
+/// True when [element] sits inside a control that cannot be used.
+///
+/// Structural, not chromatic: it asks the widgets whether their callback
+/// is null. That is the same question the framework asks when it decides
+/// to grey the thing, so the two can never disagree — and unlike a
+/// colour test it keeps working when a widget paints its disabled state
+/// in a way this file has never seen.
+///
+/// Stops at the first control it meets, live or dead. A disabled button
+/// inside an enabled toolbar is disabled; an enabled button inside a
+/// disabled-looking container is not.
+bool _insideDisabledControl(Element element) {
+  var disabled = false;
+  element.visitAncestorElements((ancestor) {
+    final w = ancestor.widget;
+    if (w is IconButton) {
+      disabled = w.onPressed == null;
+      return false;
+    }
+    if (w is TextButton || w is FilledButton || w is OutlinedButton) {
+      disabled = (w as ButtonStyleButton).onPressed == null &&
+          w.onLongPress == null;
+      return false;
+    }
+    if (w is InkWell) {
+      disabled = w.onTap == null && w.onLongPress == null;
+      return false;
+    }
+    return true;
+  });
+  return disabled;
 }
 
 /// The colour painted immediately behind [element], found by walking up
@@ -286,6 +379,9 @@ Color? _paintedBehind(Element element) {
   return found;
 }
 
+/// RGB only. The alpha is reported separately by the caller, because a
+/// composited eight-digit hex is unreadable and the interesting fact is
+/// almost always "this ink is fine, someone put it behind an opacity".
 String _hex(Color c) => c
     .toARGB32()
     .toRadixString(16)

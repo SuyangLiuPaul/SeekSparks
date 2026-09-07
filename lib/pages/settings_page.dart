@@ -23,6 +23,7 @@ import 'package:seeksparks/constants/workbench_theme.dart'
     show WbColors, WbMetrics, WbType, WbSettingsScale;
 import 'package:provider/provider.dart';
 import 'package:seeksparks/models/app_settings.dart';
+import 'package:seeksparks/services/update_service.dart';
 import 'package:seeksparks/models/app_style_preset.dart';
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/services/app_icon_service.dart';
@@ -1250,6 +1251,32 @@ class _SettingsPageBodyState extends State<_SettingsPageBody> {
                     ),
                   ),
                 ),
+                // 2026-09-08: the daily update check's switch. It lives
+                // under App rather than under About — About is where you
+                // check by hand, this is a standing preference about a
+                // daily network request, and the two are different
+                // questions. Hidden entirely on the web, where the PWA
+                // serves the newest build on reload and there is nothing
+                // to ask about.
+                if (UpdateService.isSupported) ...[
+                  SizedBox(height: 12 * s),
+                  Card(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 4, vertical: 4 * s),
+                      child: _SettingsSwitch(
+                        settings: settings,
+                        icon: Icons.system_update_alt_rounded,
+                        label: uiStrings['settingsAutoCheckUpdates']
+                                ?[settings.locale] ??
+                            'Check for updates daily',
+                        subtitle: uiStrings['settingsAutoCheckUpdatesHint']
+                            ?[settings.locale],
+                        value: settings.autoCheckUpdates,
+                        onChanged: settings.setAutoCheckUpdates,
+                      ),
+                    ),
+                  ),
+                ],
                 // 2026-05-06: Account section moved to TOP of Settings
                 // (was after Display/Reading/App). User feedback: tapping
                 // a profile chip on the dashboard navigates here, so

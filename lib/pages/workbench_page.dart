@@ -1,3 +1,4 @@
+import 'dart:async' show unawaited;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'
     show HardwareKeyboard, KeyDownEvent, KeyEvent, LogicalKeyboardKey;
@@ -41,6 +42,8 @@ import 'package:seeksparks/pages/sermons_page.dart';
 import 'package:seeksparks/pages/settings_page.dart';
 import 'package:seeksparks/pages/word_list_page.dart';
 import 'package:seeksparks/providers/main_provider.dart';
+import 'package:seeksparks/services/link_opener.dart';
+import 'package:seeksparks/services/update_check_scheduler.dart';
 import 'package:seeksparks/providers/workbench_provider.dart';
 import 'package:seeksparks/services/concordance_service.dart';
 import 'package:seeksparks/services/fetch_books.dart';
@@ -409,6 +412,45 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
     _wb.onBrowseStateChanged = _persistPrefs;
     _restorePrefs();
     HardwareKeyboard.instance.addHandler(_onGlobalKey);
+    // 2026-09-08: the daily update check. After the first frame, never
+    // before it — this is a network call about a version number and the
+    // reader opened the app to read a verse. `unawaited` is the point:
+    // nothing on screen waits for it, and every path through
+    // `runDailyUpdateCheck` that is not "there is a newer build"
+    // returns null and says nothing at all.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(_maybeOfferUpdate());
+    });
+  }
+
+  /// Offer a newer release, once a day, if there is one.
+  ///
+  /// A SnackBar rather than a dialog. A dialog on launch takes the app
+  /// away from the reader to tell them something that is true all day
+  /// and can wait; a bar states the fact, carries the one action, and
+  /// goes away on its own. Six seconds because it has a button —
+  /// the default four is not long enough to read a sentence and decide.
+  Future<void> _maybeOfferUpdate() async {
+    final settings = context.read<AppSettings>();
+    final info = await runDailyUpdateCheck(settings);
+    if (!mounted || info == null) return;
+    final locale = settings.locale;
+    final label = (uiStrings['updateAvailableBar']?[locale] ??
+            'Version v{new} is available')
+        .replaceAll('{new}', info.latestVersion);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(label),
+        duration: const Duration(seconds: 6),
+        action: LinkOpener.isAvailable
+            ? SnackBarAction(
+                label: uiStrings['updateDownload']?[locale] ?? 'Download',
+                onPressed: () => LinkOpener.open(info.downloadUrl),
+              )
+            : null,
+      ),
+    );
   }
 
   /// Esc releases the pin; Ctrl/Cmd+Shift+C opens the Copy Center.
