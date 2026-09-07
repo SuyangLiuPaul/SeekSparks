@@ -5538,6 +5538,14 @@ const uiStrings = {
   // Accents in Greek"). Worded as what the reader gets, not as what the
   // code does: "ignore" is the ON state and it is the default, so the
   // switch reads true for the behaviour they already have.
+  // 2026-09-07 (bwh17's Qere/Kethib search codes). "Masoretic reading"
+  // rather than "Ketiv/Qere": the chips already say Ketiv and Qere, and
+  // the row label's job is to say what KIND of thing is being chosen.
+  'morphReadingSlot': {
+    'zh-Hans': '马所拉读法',
+    'zh-Hant': '馬所拉讀法',
+    'en': 'Masoretic reading',
+  },
   'searchIgnoresPointing': {
     'zh-Hans': '搜索时忽略希伯来元音点与希腊重音',
     'zh-Hant': '搜尋時忽略希伯來元音點與希臘重音',

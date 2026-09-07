@@ -137,8 +137,17 @@ class MorphSearchService {
         if (chapter != null && c != chapter) continue;
 
         final words = verses[ref]!;
+        // A query that NAMES a reading overrides the session setting.
+        // bwh17's codes and bwh29's switches are the same subject asked
+        // two ways, and when they disagree the more specific and more
+        // recent statement of intent is the one the reader just typed —
+        // otherwise "find me the Qere" returns nothing at all to a
+        // reader who once turned the Qere off and forgot.
+        final gate =
+            query.readings.isEmpty ? ketivQere : KetivQereSearchScope.both;
         for (var i = 0; i < words.length; i++) {
-          if (!ketivQere.admits(words[i].ketivQere)) continue;
+          if (!gate.admits(words[i].ketivQere)) continue;
+          if (!query.admitsReading(words[i].ketivQere)) continue;
           final parsedWord = parse(words[i].morph);
           if (parsedWord == null || parsedWord.scheme != query.scheme) {
             continue;

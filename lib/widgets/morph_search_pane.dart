@@ -25,6 +25,8 @@ import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/services/morph_search_service.dart';
+import 'package:seeksparks/utils/ketiv_qere.dart'
+    show ketivQereLabel;
 import 'package:seeksparks/utils/morph_query.dart';
 import 'package:seeksparks/utils/morphology.dart';
 import 'package:seeksparks/utils/short_book_name.dart';
@@ -260,6 +262,7 @@ class _MorphSearchPaneState extends State<MorphSearchPane> {
                 _slotRow(wb, t, MorphSlot.pos, result.facets),
                 for (final slot in _query.activeSlots())
                   _slotRow(wb, t, slot, result.facets),
+                _readingRow(wb, t),
               ],
             ),
           ),
@@ -347,6 +350,53 @@ class _MorphSearchPaneState extends State<MorphSearchPane> {
               for (final v in live)
                 _valueChip(wb, t, slot, v, facets.countOf(slot, v),
                     chosen.contains(v)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// bwh17's Qere/Kethib search codes, as a row of their own.
+  ///
+  /// Last, and only for the Semitic scheme: the Masoretic apparatus has
+  /// nothing to say about Greek, and a row of two chips that can never
+  /// return anything is worse than no row.
+  ///
+  /// No counts on these chips, unlike every other row. The facets are
+  /// tallied from parsed morphology codes and the reading is not one —
+  /// see `MorphQuery.readings` — so a number here would either be a
+  /// second tally with different rules or a confident zero. A chip that
+  /// says nothing is honest; a chip that says 0 is not.
+  Widget _readingRow(WbColors wb, WbType t) {
+    if (_query.scheme != MorphScheme.semitic) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            _s('morphReadingSlot', 'Masoretic reading'),
+            style: TextStyle(
+              fontSize: t.chrome,
+              color: wb.mutedText,
+              letterSpacing: 0.4,
+            ),
+          ),
+          const SizedBox(height: 3),
+          Wrap(
+            spacing: 4,
+            runSpacing: 4,
+            children: [
+              for (final r in const ['k', 'q'])
+                WbPaneChip(
+                  label: ketivQereLabel(r, widget.locale) ?? r,
+                  on: _query.readings.contains(r),
+                  onTap: () => _apply(_query.toggledReading(r)),
+                  foreground: _query.readings.contains(r)
+                      ? wb.strongsGrammar
+                      : wb.text,
+                ),
             ],
           ),
         ],

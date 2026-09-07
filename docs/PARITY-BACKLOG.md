@@ -90,10 +90,17 @@ file should read.
 - **Wildcards `*` `?`, bracket sets `[abc]` `{abc}`** — **HAVE.** bwh16.
 - **Word gaps inside phrases (`*`, `*3`)** — **HAVE**, and note this is
   *our* spelling of BibleWorks' proximity. See NEAR below.
-- **NOT (`!`)** — **PARTIAL.** Works in AND/OR. bwh16 also documents
-  "Using the NOT Operator with Phrase Searches"; ours does not accept it
-  inside a phrase. *Done:* `'!the god` slot exclusion parses and is
-  covered by a test.
+- **NOT (`!`)** — **HAVE.** *(Corrected 2026-09-07. The row said
+  PARTIAL, "ours does not accept it inside a phrase", and named a *Done*
+  that was already done when it was written.)* `TokenElement.negated`
+  and `_matchFrom`'s `matches(...) == negated` implement the slot
+  inversion, `parseCommandQuery` accepts a `!` on a single-token term
+  inside a phrase and refuses it on a multi-token one
+  (`CommandIssue.phraseNotMultiToken`), and
+  `test/command_query_test.dart:131-156, 229-235, 336, 377` covers
+  `'!the god`, the Chinese refusal, the echo string, **and BibleWorks'
+  own forum failure case** `'!your *5 house`. Seventh confirmed case of
+  §1's "grep it first".
 - **Verse context limits for AND (`;10`)** — **HAVE.** bwh16.
 - **Proximity** — **HAVE, and divergent in spelling by choice.**
   *(Updated 2026-09-05.)* We spell it `G25 NEAR5 G26`, unordered, and
@@ -282,7 +289,7 @@ file should read.
   Anything that caches folded text must invalidate on
   `searchFoldingGeneration`. `MainProvider.searchKeys` is the only such
   cache and does.
-- **Qere / Kethib** — **PARTIAL.** *(Corrected 2026-09-05. This row
+- **Qere / Kethib** — **HAVE.** *(Corrected 2026-09-05. This row
   said `ABSENT` on the strength of "grepping `lib/` for
   `Qere|Kethib|Ketiv` returns nothing", which was true when written on
   2026-08-12 and stopped being true six days later. It is exactly the
@@ -312,20 +319,53 @@ file should read.
   BibleWorks' own default and what this app has always done, so a reader
   who never opens the control sees no change. Pinned by
   `test/ketiv_qere_search_setting_test.dart`.
-  *Still missing, and it is the smaller half:* bwh17's Qere/Kethib
-  **search codes** — a way to ask for one reading inside a query rather
-  than as a mode the whole session sits in.
+  **The search codes shipped 2026-09-07 and this row is now HAVE.**
+  bwh17's Qere/Kethib codes — asking for one reading *inside* a query
+  rather than as a mode the whole session sits in — are
+  `MorphQuery.readings`, a row of their own in the morphology pane
+  (Semitic only; the Masoretic apparatus has nothing to say about
+  Greek), honoured by `MorphSearchService`.
+  Two decisions worth reading before changing anything here:
+  **it is not a `MorphSlot`**, because every slot is parsed out of the
+  morphology CODE and the reading is a property of the WORD
+  (`OriginalWord.ketivQere`) — BibleWorks can treat them alike because
+  its WTM codes end in `Rk`/`Rq`/`Rx` and ours do not, and inventing a
+  code character to parse back out would be pretending; and **the codes
+  SELECT while bwh29's switches EXCLUDE**, so they disagree about the
+  436,312 unmarked words. Getting that backwards makes "find me the
+  Qere" return the whole Hebrew Bible, which is what
+  `test/morph_reading_query_test.dart` mutation-checks. When a query
+  names a reading it overrides the session setting, because otherwise a
+  reader who once turned the Qere off gets nothing and no explanation.
 - **Search limits (`l gen`)** — **HAVE**, extended past bwh16 by #280's
   scope model (books, groups, 希伯来圣经/希腊圣经). `l` stops at chapter
   granularity on purpose (`command_verb.dart:71-79`): verse-granular
   scoping is the Verse List Manager's job.
-- **Command Line Assistant / Morphology Assistant** — **PARTIAL.** bwh16
-  and bwh17 both ship a guided builder that constructs a query for a
-  reader who does not know the syntax. #294 and #299 gave us the
-  operator strip, per-button tooltips, a context-sensitive hint row and
-  a tappable example card — which is most of the *teaching* but none of
-  the *building*. *Done:* a picker that assembles a morphology query from
-  parts of speech and features without the reader typing a code.
+- **Morphology Assistant (bwh17)** — **HAVE, and it always was.**
+  *(Split out of the row below and corrected 2026-09-07.)* That row said
+  "none of the *building*" and set as its *Done* "a picker that
+  assembles a morphology query from parts of speech and features without
+  the reader typing a code". `lib/widgets/morph_search_pane.dart` is
+  that picker and it landed `c033f75` on **2026-08-07, five days before
+  the row was written** — its commit message is "a Graphical Search
+  Engine, not just a parse line". It renders a chip row per `MorphSlot`
+  (pos, tense, voice, mood, case, degree, subtype, stem, conjugation,
+  state, person, gender, number), each value carrying the number of
+  words choosing it would return, narrowing as the reader commits, and
+  seedable from a word they clicked (`MorphQuery.fromWord`). Reachable
+  as the Analysis pane's Morphology tab. Eighth "grep it first" case,
+  and the one that should sharpen §3.2: a GSE-class *builder* ships
+  here; what is rejected there is the GSE's diagram, not its power.
+- **Command Line Assistant (bwh16)** — **PARTIAL.** The half that is
+  genuinely missing, now that the morphology half is separated from it:
+  a guided builder for the **text** grammar — the one that constructs
+  `.love god;10` or `'faith * christ` for a reader who does not know
+  what `;10` means. #294 and #299 gave the operator strip, per-button
+  tooltips, a context-sensitive hint row and a tappable example card,
+  which is the *teaching*. *Done:* a builder that composes the line from
+  parts — pick AND/OR/phrase, add terms, set the verse context — and
+  writes it into the command line so the reader can see the syntax it
+  produced.
 - **Semantic domains (Louw-Nida)** — **REJECTED 2026-09-07, on licence,
   and this is the documented form the golden task asks for.**
   *What the feature is:* the *Greek-English Lexicon of the New Testament

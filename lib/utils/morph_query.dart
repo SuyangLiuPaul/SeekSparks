@@ -31,6 +31,7 @@ class MorphQuery {
     required this.scheme,
     this.aramaic = false,
     this.constraints = const <MorphSlot, Set<String>>{},
+    this.readings = const <String>{},
   });
 
   /// Seed a query from a word the reader clicked, pinning every feature
@@ -61,7 +62,27 @@ class MorphQuery {
 
   final Map<MorphSlot, Set<String>> constraints;
 
-  bool get isEmpty => constraints.values.every((v) => v.isEmpty);
+  /// bwh17's Qere/Kethib search codes: `{'k'}`, `{'q'}`, or empty for
+  /// "either, and unmarked words too".
+  ///
+  /// NOT a [MorphSlot], and the reason is worth stating because the
+  /// obvious refactor is to make it one. Every slot is parsed out of the
+  /// morphology CODE; the reading is a property of the WORD in the
+  /// Masoretic text, carried on `OriginalWord.ketivQere`. BibleWorks can
+  /// treat them alike because its WTM codes end in `Rk`/`Rq`/`Rx` — ours
+  /// do not, and pretending otherwise would mean inventing a code
+  /// character and then parsing it back out.
+  ///
+  /// **This SELECTS; bwh29's two settings EXCLUDE.** The distinction is
+  /// the whole difference between the two features and it decides what
+  /// an unmarked word does: `KetivQereSearchScope` admits every ordinary
+  /// word because a switch that could empty the Hebrew Bible is a switch
+  /// nobody wants, while asking for the Qere must not return 436,312
+  /// words that are not one.
+  final Set<String> readings;
+
+  bool get isEmpty =>
+      constraints.values.every((v) => v.isEmpty) && readings.isEmpty;
 
   Set<String> valuesFor(MorphSlot slot) =>
       constraints[slot] ?? const <String>{};
@@ -70,7 +91,34 @@ class MorphQuery {
         scheme: scheme,
         aramaic: aramaic,
         constraints: {...constraints, slot: values},
+        readings: readings,
       );
+
+  MorphQuery withReadings(Set<String> values) => MorphQuery(
+        scheme: scheme,
+        aramaic: aramaic,
+        constraints: constraints,
+        readings: values,
+      );
+
+  MorphQuery toggledReading(String value) {
+    final next = {...readings};
+    if (!next.remove(value)) next.add(value);
+    return withReadings(next);
+  }
+
+  /// Whether a word whose Masoretic role is [kq] answers this query.
+  ///
+  /// `kx` (*Ketiv velo Qere*) counts as a Ketiv and `qx` (*Qere velo
+  /// Ketiv*) as a Qere, which is what `OriginalWord.isKetiv`/`isQere`
+  /// and the display layer have said since the roles landed; a reader
+  /// asking for the Ketiv wants the six words written and marked not to
+  /// be read, not a fifth category.
+  bool admitsReading(String? kq) {
+    if (readings.isEmpty) return true;
+    if (kq == null) return false;
+    return readings.contains(kq.startsWith('k') ? 'k' : 'q');
+  }
 
   MorphQuery toggled(MorphSlot slot, String value) {
     final next = {...valuesFor(slot)};
