@@ -91,19 +91,36 @@ void main() {
     });
 
     test('no function key the browser owns', () {
-      // bwh44 is an F1–F12 set, which is a Windows-desktop idiom. F3,
-      // F5, F6, F11 and F12 belong to the browser; F1 survives because
-      // help is what F1 means and browsers leave it alone.
-      const takenByBrowser = [
-        LogicalKeyboardKey.f3,
-        LogicalKeyboardKey.f5,
-        LogicalKeyboardKey.f6,
-        LogicalKeyboardKey.f11,
-        LogicalKeyboardKey.f12,
-      ];
+      // bwh44 is an F1–F12 set, a Windows-desktop idiom. F3, F5, F6,
+      // F11 and F12 belong to the browser; F1, F2 and F4 do not, which
+      // is the one place bwh44's idiom survives the move to a tab.
       for (final s in kWorkbenchShortcuts) {
-        expect(takenByBrowser.contains(s.key), isFalse, reason: s.id.name);
+        expect(kBrowserOwnedFunctionKeys.contains(s.key), isFalse,
+            reason: s.id.name);
       }
+    });
+
+    test('no Ctrl/Cmd chord the browser owns either', () {
+      // The correction this list exists for. The first version of the
+      // table put the command line on Cmd+K and the report on
+      // Cmd+Shift+R — the address-bar search and a hard reload. Neither
+      // fails loudly: the app never sees the key, or the reader loses a
+      // browser function they use daily. Found the first time they were
+      // pressed in a real browser, which is the only place a shortcut
+      // can be tested at all.
+      for (final s in kWorkbenchShortcuts) {
+        if (!s.ctrlOrMeta) continue;
+        expect(kBrowserOwnedChords.contains((s.key, s.shift)), isFalse,
+            reason: '${s.id.name} takes a chord the browser answers');
+      }
+    });
+
+    test('the reserved list still names the two that were given back', () {
+      // If either of these left the list, the guard above would stop
+      // proving anything about the mistake it was written for.
+      expect(kBrowserOwnedChords,
+          contains((LogicalKeyboardKey.keyK, false)));
+      expect(kBrowserOwnedChords, contains((LogicalKeyboardKey.keyR, true)));
     });
 
     test('Esc is documented but not claimed', () {

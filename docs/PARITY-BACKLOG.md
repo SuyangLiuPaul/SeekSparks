@@ -990,11 +990,21 @@ Mapped against BibleWorks' own tab set (bwh10):
   Four chords — jump to the command line, Copy Center, passage report,
   and F1 for the list itself — on Help and on F1, which is what
   *"a shortcut nobody can find is not a feature"* asked for.
-  **Not bwh44's function-key set, deliberately.** F1–F12 is a
-  Windows-desktop idiom; F3/F5/F6/F11/F12 belong to the browser and this
-  app's device is a tablet with no function row. F1 survives because
-  help is what F1 means everywhere. Plain Ctrl+C stays the browser's,
-  and Esc is documented on the sheet but NOT in the table — it unpins
+  **What the browser owns, this app does not take** — and that rule cost
+  a correction. The first version put the command line on
+  **Ctrl/Cmd+K** and the report on **Ctrl/Cmd+Shift+R**: the address-bar
+  search and a hard reload. Neither fails loudly — the app simply never
+  sees the key, or the reader loses a browser function they use daily —
+  and both were found the first time they were pressed in a real
+  browser, because a shortcut cannot be tested anywhere else. They moved
+  to **F2** and **F4**, which Chrome, Firefox and Safari leave alone in
+  page context (F3 is find, F5 reload, F6 the address bar, F11
+  fullscreen, F12 the developer tools), and which is the one place
+  bwh44's own function-key idiom survives the move to a tab.
+  `kBrowserOwnedFunctionKeys` and `kBrowserOwnedChords` now hold the
+  reserved set and the test asserts against both, so the next row added
+  meets the list rather than the reader. Plain Ctrl+C stays the
+  browser's, and Esc is on the sheet but NOT in the table — it unpins
   without consuming the key, so a dialog, a text field and the browser
   all keep their own.
 
