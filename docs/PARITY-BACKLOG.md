@@ -711,19 +711,47 @@ Mapped against BibleWorks' own tab set (bwh10):
   searchable and reference-indexed — which is the same need answered
   with material we ship rather than material we point at. Re-open if a
   desktop build ever has readers who ask for it.
-- **Report Generator (bwh28)** — **ABSENT.** Generates a formatted study
-  report for a passage: text, lexicon entries for each word, filtered by
-  morphology and frequency. This is a genuinely good idea we have all the
-  parts for (word list, lexicons, morphology, frequency) and no assembly.
-  *Done:* "Report for this passage" producing rich text or HTML that
-  survives pasting — coordinate with #312's export work so there is one
-  export path, not two.
+- **Report Generator (bwh28)** — **HAVE, 2026-09-07.** The row was right
+  that we had "all the parts … and no assembly"; this is the assembly.
+  `lib/utils/passage_report.dart` shapes and renders (Flutter-free, so
+  the renderers are testable without assets),
+  `lib/services/passage_report_service.dart` gathers, and
+  `lib/widgets/passage_report_sheet.dart` is the surface, on the Tools
+  menu beside Word List and Phrasing — bwh07's split, since a report
+  OPERATES on the text in front of the reader.
+  **One export path, as the row asked**: it leaves by
+  `ClipboardHelper.copyRichWithFeedback`, an HTML flavour beside a
+  Markdown one, and says honestly which of the two landed rather than
+  claiming a formatting the reader will not find in the document.
+  Markdown and not plain text because a report set with tabs looks
+  assembled until the first proportional font.
+  **The filters are the feature, and the default is one.** bwh28 filters
+  by morphology and by frequency for the same reason: a report on
+  Romans 8 that prints a lexicon entry for every καί is a phone book, so
+  the sheet opens on words the corpus uses 50 times or fewer and
+  "every word" is one chip away. A filtered report SAYS how many of how
+  many, in both renderings — a short list must not read as a short
+  passage.
+  **It invents nothing.** Surface and parse from `assets/originals`,
+  gloss from the Strong's lexicon in the reader's own language, count
+  from the bundled concordance; a number the lexicon does not know
+  prints no gloss rather than borrowing its neighbour's, and a word the
+  concordance cannot count is KEPT by a frequency filter, because
+  dropping it would answer a different question silently. The edition's
+  licence line travels with the report.
 
 ### 3.6 Notes, copying, export
 
 - **Copy / Copy Center (bwh27b)** — **HAVE**, `copy_center_sheet.dart`.
-- **Export options, verse ranges, format choice** — **PARTIAL.** bwh28.
-  *Done:* fold into the Report Generator entry above.
+- **Export options, verse ranges, format choice** — **HAVE, 2026-09-07**,
+  folded into the Report Generator above exactly as this row asked.
+  The Copy Center (`copy_center_sheet.dart`) already held bwh28's ranges
+  and bwh29's Output Format Options and already put a `text/html`
+  flavour on the clipboard beside the plain one; what it did not have
+  was a document worth that formatting. The report is that document, and
+  both exits now run through `ClipboardHelper` — one path, which is what
+  made this row a dependency of the other rather than a feature of its
+  own.
 - **User notes database** — **HAVE as a docked surface**, 2026-08-18.
   See 3.4. Notes are still exportable in both formats
   (`export_service.dart`), which now reads a verse key through the same

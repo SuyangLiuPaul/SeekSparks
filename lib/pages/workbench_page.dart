@@ -61,9 +61,13 @@ import 'package:seeksparks/utils/jump_to_reference.dart' as jumper;
 import 'package:seeksparks/utils/reference_parser.dart' show BibleReference;
 import 'package:seeksparks/utils/morphology.dart' show describeMorphology;
 import 'package:seeksparks/utils/workbench_fit.dart';
+import 'package:seeksparks/constants/version_attribution.dart'
+    show versionAttributionKeys;
 import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
 import 'package:seeksparks/widgets/bible_reading_pane.dart';
 import 'package:seeksparks/widgets/command_pane.dart';
+import 'package:seeksparks/widgets/passage_report_sheet.dart'
+    show showPassageReport;
 import 'package:seeksparks/widgets/copy_center_sheet.dart'
     show CopyScope, showCopyCenter;
 import 'package:seeksparks/utils/clipboard_helper.dart';
@@ -579,6 +583,13 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
             version: mp.currentVersion,
           )),
         ),
+        // bwh28. Tools rather than Resources because it OPERATES on the
+        // text in front of the reader — bwh07's own split, and the same
+        // reason Word List and Phrasing sit above it.
+        WbMenuItem(
+          s('reportTitle', 'Passage report'),
+          mp.verses.isEmpty ? null : _openPassageReport,
+        ),
         WbMenuItem(s('bibleEvidence', 'Bible Evidence'),
             () => pushPage(const EvidencePage())),
         WbMenuItem(s('timeline', 'Timeline'),
@@ -836,6 +847,40 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
       ));
     }
     return scopes;
+  }
+
+  /// bwh28's Report Generator, over the chapter the reader is in.
+  ///
+  /// The chapter and not the selection: a report is a study document
+  /// and the unit people study is a passage. A reader who wants less
+  /// filters it in the sheet, where they can see what they are cutting.
+  Future<void> _openPassageReport() async {
+    final mp = context.read<MainProvider>();
+    final settings = context.read<AppSettings>();
+    final book = mp.currentBook;
+    final chapter = mp.currentChapter;
+    if (book == null || chapter == null) return;
+    final verses = [
+      for (final v in mp.verses)
+        if (v.book == book && v.chapter == chapter) v,
+    ];
+    if (verses.isEmpty) return;
+    final english = bookNameToEnglish[book] ?? book;
+    final key = versionAttributionKeys[mp.currentVersion];
+    final out = await showPassageReport(
+      context,
+      title: '$book $chapter',
+      versionLabel: shortBibleVersionLabel(mp.currentVersion),
+      englishBook: english,
+      verses: verses,
+      // The licence travels with the text, for the same reason the Copy
+      // Center carries it: a report is publisher text landing on
+      // someone else's page.
+      licence: key == null ? null : uiStrings[key]?[settings.locale],
+    );
+    if (out == null || !mounted) return;
+    await ClipboardHelper.copyRichWithFeedback(
+        context, out.html, out.markdown);
   }
 
   Future<void> _openCopyCenter() async {

@@ -174,6 +174,39 @@ abstract class ClipboardHelper {
     );
   }
 
+  /// Put a rich document on the clipboard with its plain fallback, and
+  /// say honestly which one landed.
+  ///
+  /// The Report Generator's exit (bwh28). It goes through here rather
+  /// than building its own so there is ONE export path — which is what
+  /// §3.5's entry asked for in as many words — and so that a report
+  /// pasted into a plain-text field reports itself as plain rather than
+  /// claiming a formatting the reader will not find.
+  ///
+  /// Distinct from [copyMarkedWithFeedback] because that one DERIVES
+  /// both flavours from one marked string; a report is authored as two,
+  /// and squeezing it through the sentinel format would mean inventing
+  /// marks for text nobody searched.
+  static Future<void> copyRichWithFeedback(
+    BuildContext context,
+    String html,
+    String plain, {
+    String? messageOverride,
+  }) async {
+    final r = await copyRich(html, plain);
+    if (!context.mounted) return;
+    final locale = _localeFor(context);
+    if (!r.copied) return copyWithFeedback(context, plain);
+    _toast(
+      context,
+      r.formatted
+          ? (messageOverride ?? (uiStrings['copied']?[locale] ?? 'Copied!'))
+          : (uiStrings['copiedPlain']?[locale] ??
+              'Copied as plain text'),
+      ok: true,
+    );
+  }
+
   /// Share-first with copy-as-fallback. On platforms with the Web
   /// Share API (most mobile browsers + recent desktop Chrome/Edge),
   /// opens the system share sheet so users can post to Messages /

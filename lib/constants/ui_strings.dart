@@ -5545,6 +5545,54 @@ const uiStrings = {
   // completes — "With a second word … agreeing in … next to it" — rather
   // than as the query algebra underneath, which is what the Graphical
   // Search Engine draws and what §3.2 declined to draw.
+  // 2026-09-07 (bwh28, the Report Generator). "Passage report" and not
+  // "Report": the noun on its own reads as a bug report in an app that
+  // has one.
+  'reportTitle': {
+    'zh-Hans': '经文研读报告',
+    'zh-Hant': '經文研讀報告',
+    'en': 'Passage report',
+  },
+  'reportVerseText': {
+    'zh-Hans': '经文',
+    'zh-Hant': '經文',
+    'en': 'Verse text',
+  },
+  'reportWords': {
+    'zh-Hans': '原文词',
+    'zh-Hant': '原文詞',
+    'en': 'Words',
+  },
+  'reportParsing': {
+    'zh-Hans': '词形解析',
+    'zh-Hant': '詞形解析',
+    'en': 'Parsing',
+  },
+  'reportFrequency': {
+    'zh-Hans': '出现次数',
+    'zh-Hant': '出現次數',
+    'en': 'Frequency',
+  },
+  'reportRarity': {
+    'zh-Hans': '只列出现不超过',
+    'zh-Hant': '只列出現不超過',
+    'en': 'Only words used at most',
+  },
+  'reportEveryWord': {
+    'zh-Hans': '全部词',
+    'zh-Hant': '全部詞',
+    'en': 'every word',
+  },
+  'reportWordCount': {
+    'zh-Hans': '{n} 个词',
+    'zh-Hant': '{n} 個詞',
+    'en': '{n} words',
+  },
+  'copiedPlain': {
+    'zh-Hans': '已复制（纯文本）',
+    'zh-Hant': '已複製（純文字）',
+    'en': 'Copied as plain text',
+  },
   'morphAgreementSlot': {
     'zh-Hans': '再加一个词',
     'zh-Hant': '再加一個詞',
