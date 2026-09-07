@@ -99,6 +99,13 @@ enum AnalysisTab {
   /// WHICH of them is worth opening. Appended for the same reason as
   /// `morphology`: the selected tab is persisted by index.
   summary,
+
+  /// 2026-09-07: bwh38's synopsis, laid out side by side. §3.5 parked
+  /// this behind #292 — "giving it a 13th Analysis tab first would build
+  /// the wrong home" — and #292 closed 2026-09-02, so this is the
+  /// re-decision `docs/PRODUCT-AUDIT.md` §7.4 asked for. Appended for
+  /// the same reason as `morphology`.
+  synopsis,
 }
 
 /// 2026-08-11 (#313): the docked tab that answers [request], or null
@@ -321,6 +328,8 @@ const _kTabs = <(AnalysisTab, IconData, String, String)>[
       'Notes'),
   (AnalysisTab.summary, Icons.summarize_outlined, 'analysisTabSummary',
       'Summary'),
+  (AnalysisTab.synopsis, Icons.view_column_outlined, 'analysisTabSynopsis',
+      'Parallels'),
 ];
 
 /// The tab names as they will be drawn in [locale], in strip order.

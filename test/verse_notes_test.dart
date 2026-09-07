@@ -175,8 +175,8 @@ void main() {
       // longer last — but its INDEX is unchanged, which is what this
       // test is actually about.
       expect(AnalysisTab.values.indexOf(AnalysisTab.notes), 13);
-      expect(AnalysisTab.values.last, AnalysisTab.summary);
-      expect(AnalysisTab.values.length, 15);
+      expect(AnalysisTab.values.last, AnalysisTab.synopsis);
+      expect(AnalysisTab.values.length, 16);
     });
 
     test('the reader\'s note action routes here, both ways', () {

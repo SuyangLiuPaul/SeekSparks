@@ -5586,6 +5586,36 @@ const uiStrings = {
     'en': 'Supplied by you · this app has not verified its source or '
         'rights · stored on this device only',
   },
+  // 2026-09-07 (bwh38, side by side). "Parallels" is the strip label —
+  // "Synopsis" is the scholar's word and this strip is read by everyone.
+  'analysisTabSynopsis': {
+    'zh-Hans': '平行',
+    'zh-Hant': '平行',
+    'en': 'Parallels',
+  },
+  'synopsisRemoveBlanks': {
+    'zh-Hans': '隐藏未记载的 {n} 卷',
+    'zh-Hant': '隱藏未記載的 {n} 卷',
+    'en': 'Hide the {n} silent',
+  },
+  'synopsisNoParallel': {
+    'zh-Hans': '本段没有平行经文。',
+    'zh-Hant': '本段沒有平行經文。',
+    'en': 'This passage has no parallel.',
+  },
+  // Two different silences, and they must not be worded alike: the
+  // source naming no passage is a fact about the EVENT, and the edition
+  // not carrying one is a fact about the EDITION.
+  'synopsisSilent': {
+    'zh-Hans': '此卷未记载',
+    'zh-Hant': '此卷未記載',
+    'en': 'No parallel here',
+  },
+  'synopsisNotInEdition': {
+    'zh-Hans': '本译本不含此段',
+    'zh-Hant': '本譯本不含此段',
+    'en': 'Not in this edition',
+  },
   'analysisTabSummary': {
     'zh-Hans': '汇总',
     'zh-Hant': '匯總',

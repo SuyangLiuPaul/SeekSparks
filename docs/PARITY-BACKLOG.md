@@ -474,7 +474,7 @@ cannot express. The engine will already answer it.
   `d c` ambiguity. Re-open only alongside a favourites UI.
 - **Browse modes** — **HAVE.** Browse / reader / split
   (`lib/models/wb_centre_mode.dart`).
-- **Multiple synchronised browse windows** — **PARTIAL, 2026-09-07.**
+- **Multiple synchronised browse windows** — **HAVE, 2026-09-07.**
   bwh12. The row asked for two things and the first has landed.
   *Independent reference — DONE.* The workbench's second column followed
   the primary unconditionally (`_followPrimary`, wired to the primary's
@@ -492,12 +492,15 @@ cannot express. The engine will already answer it.
   it was ALREADY independent. Two behaviours under one name, which is
   the shape of defect `chapter_across_editions.dart` was extracted to
   stop.
-  *What is left, and it is the smaller half:* the synopsis assets
-  feeding a **"jump the OTHER pane to the parallel"** action.
-  `SynopsisService.byVerse` and `synopsis_parallels.dart` already show
-  the parallels and a tap already navigates — but it navigates the pane
-  the reader is in, which is the opposite of what a Kings/Chronicles
-  comparison wants. *Done:* the same chip, opening in the other column.
+  *The second half is answered, differently and better, 2026-09-07.*
+  The row wanted the synopsis to "jump the OTHER pane to the parallel".
+  bwh38's own answer turned out to be stronger and is what shipped: the
+  `Parallels` tab lays every passage of the entry side by side in one
+  pane (see §3.5). A reader comparing Kings with Chronicles now reads
+  them beside each other instead of aiming a second column at one of
+  them — which is the exegetical need this row was written for, and it
+  works for a three- or four-way parallel that two panes could not hold
+  at all.
 - **Comparing Bible versions (difference highlighting)** — **HAVE**
   (v1.6.147). View ▸ *Highlight version differences*, off by default and
   greyed with a reason when the stack holds no two editions of one
@@ -651,17 +654,24 @@ Mapped against BibleWorks' own tab set (bwh10):
 - **Phrase Matching Tool (bwh51)** — **HAVE.** `phrase_match.dart`,
   Phrases tab.
 - **KWIC (bwh31)** — **HAVE.**
-- **Diagramming module (bwh25)** — **PARTIAL, and diverging on purpose.**
+- **Diagramming module (bwh25)** — **REJECTED as BibleWorks builds it,
+  2026-09-07, and the divergence is the decision rather than a gap.**
   BibleWorks' Diagrammer is a symbol canvas — you drag connectors and
-  boxes. Ours is `lib/pages/phrasing_page.dart`, line-based Biblearc-style
-  phrasing, which #307 and #312 have been deepening at the request of a
-  real outside user (Pastor Raymond HK). **That is the right divergence**
-  — phrasing is practised far more widely than symbol diagramming, and it
-  has an actual user asking for it. Track the remaining #312 items
-  (default range = the sentence, richer export, controls that teach)
-  rather than BibleWorks' symbol set. Note bwh25 ships **pre-made Greek
-  New Testament diagrams**; we have no equivalent corpus and should not
-  invent one.
+  boxes. Ours is `lib/pages/phrasing_page.dart`, line-based
+  Biblearc-style phrasing, which #307 and #312 have been deepening **at
+  the request of a real outside user** (Pastor Raymond HK). That is the
+  right divergence twice over: phrasing is practised far more widely
+  than symbol diagramming, and it has somebody asking for it where the
+  symbol canvas has nobody.
+  This row stays REJECTED rather than PARTIAL because keeping it open
+  implied we owed the symbol set, and we do not — the phrasing work is
+  tracked as #312 (default range = the sentence, richer export, controls
+  that teach) and belongs there, not under a BibleWorks feature it is
+  not trying to be.
+  bwh25 also ships **pre-made Greek New Testament diagrams**. We have no
+  equivalent corpus, and should not invent one: a diagram is an
+  interpretation, and shipping ours as if it were the text would be the
+  same error as printing a paraphrase in a parallel column.
 - **Parallel-Aligned Hebrew/LXX (bwh30, Tov-Polak)** — **REJECTED on
   licence 2026-09-07, with the two halves separated.** The row read
   ABSENT and proposed a conservative build; checked against the code,
@@ -689,12 +699,19 @@ Mapped against BibleWorks' own tab set (bwh10):
   database that has it belongs to someone else. Re-open on an
   openly-licensed alignment — CATSS is the candidate, and reading its
   terms is the first move, not importing it.
-- **Vocabulary flashcards (bwh40)** — **PARTIAL.** Vocab tab +
-  `vocabulary_store.dart`. bwh40 adds learned/not-learned marking,
-  filtering, timed sessions, printing and an **Example Verse Finder**.
-  *Done:* pick the two that matter for retention (learned marking,
-  example verse) and reject the rest — printing flashcards is a paper-era
-  feature.
+- **Vocabulary flashcards (bwh40)** — **HAVE.** *(Corrected 2026-09-07.
+  Eleventh "grep it first" case: the row asked for the two that matter
+  for retention and both were already shipping.)*
+  **Learned marking** is `VocabularyStore` — a persisted set of Strong's
+  numbers, deliberately NOT synced, because a device disagreeing with
+  another about what you have learned is worse than not syncing at all —
+  and the pane filters on it (`vocabulary_pane.dart:74,134,188`).
+  **The Example Verse Finder** is `findExampleVerses` /
+  `ExampleVerse`, drawn per card with its own count
+  (`vocabulary_pane.dart:101,218,724,752`).
+  *Rejected, as the row itself proposed:* **printing** is a paper-era
+  feature, and timed drill sessions are a study app inside a study app —
+  neither is worth the surface. Re-open only on a reader asking.
 - **Lexicon Browser (bwh35)** — **HAVE** for Strong's, **PARTIAL** for
   the rest. Shipped 2026-08-23: `lib/pages/lexicon_page.dart` +
   `lib/utils/lexicon_browse.dart`, opened from `Resources`. Both lexicons
@@ -714,36 +731,47 @@ Mapped against BibleWorks' own tab set (bwh10):
   provenance (#300). bwh33's route/travel-speed tooling is **REJECTED**;
   it is a cartography editor, not a study feature.
 - **Timeline (bwh39)** — **HAVE.**
-- **Synopsis window (bwh38)** — **PARTIAL.** We hold both synopsis
-  assets — 71 gospel events and 139 Old Testament groups — and both are
-  now reachable from the reader menu on every book they cover. What
-  bwh38 has and we do not is the **display**: an editable SDF verse list
-  on top, and below it the parallel passages laid out **side by side,
-  one Browse column per passage**, with a "Remove Blanks" toggle. Ours
-  is a sheet of tappable chips, so a reader compares two passages by
-  jumping between them instead of reading them beside each other, which
-  is the whole point of a synopsis. See 3.3's independent-pane item —
-  same fix, and `docs/PRODUCT-AUDIT.md` §7.4 says the sheet stays until
-  #292 lands.
-  *(2026-08-12: this entry previously cited bwh43, which is the
-  morphology code tables, and claimed the assets were "surfaced inside
-  the reader" — true of the gospel half only. The 139 OT groups had no
-  reachable entry point at all. Fixed; see `docs/DATA-INTEGRITY.md`
-  check 25.)*
-- **TSK / Nave's / Bible Outline (bwh34)** — **PARTIAL.** TSK is in
-  `cross_references.json`. **Nave's Topical Bible SHIPPED** (2026-08-19,
-  merged undeployed — the release that carries it will bump the version):
-  5,322 topics, 29,379 lines, 77,974 references, entered from the verse
-  in the Topics tab above the Modern Concordance, which is a different
-  work and NT-only. Imported by `tools/import_naves.py` from CCEL's ThML
-  edition; see `docs/DATA-INTEGRITY.md` check 42 for the two upstream
-  defect classes it had to repair before any of it was true.
-  What is still missing is BibleWorks' *browsable* side (bwh36_RWP): the
-  entry list, the lookup box and the history list under `Resources |
-  X-Refs`. The data is already there and tested — `NavesService.search`
-  and `NavesService.topic` — so that is a UI slice, not an import.
-  Bible Outline ≈ our `book_introductions.json` +
-  `section_titles.json`, **PARTIAL**.
+- **Synopsis window (bwh38)** — **HAVE, 2026-09-07.** The row named the
+  defect exactly — *"ours is a sheet of tappable chips, so a reader
+  compares two passages by jumping between them instead of reading them
+  beside each other, which is the whole point of a synopsis"* — and
+  parked the fix behind #292. **#292 closed 2026-09-02**, so the gate
+  came off and this is the re-decision `docs/PRODUCT-AUDIT.md` §7.4
+  asked for: a docked `Parallels` tab, one column per passage, drawn
+  from the reader's OWN edition so the synopsis is read in the
+  translation they chose.
+  **Columns, not a table**, and that is a claim about the sources: the
+  passages do not align verse-for-verse — Matthew tells in four verses
+  what Luke tells in eleven — so a table would have to invent a
+  correspondence the evangelists do not have. Reading them beside each
+  other IS the comparison; aligning them would be an argument.
+  **bwh38's "Remove Blanks" is here and is off by default**, because
+  silence is a finding: "only in Matthew and Luke" is a fact about the
+  passage, so the blank columns are removable rather than removed. The
+  count is printed on the toggle so a reader sees what it costs, and the
+  book they are standing in is never dropped — a synopsis that hid the
+  passage the reader is IN would be answering about somewhere else.
+  **Two silences, worded differently**, which is the thing a synopsis
+  can most easily lie about: "no parallel here" is a fact about the
+  EVENT and "not in this edition" is a fact about the EDITION, and
+  blurring them would make an argument from silence out of a missing
+  asset. An unresolvable reference still gets its column, because the
+  source said that book records the event and hiding it on our parser's
+  limitation would narrow the reader's synopsis for our reasons.
+- **TSK / Nave's / Bible Outline (bwh34)** — **HAVE.** *(Corrected
+  2026-09-07 — twelfth "grep it first" case, and §8 had already recorded
+  the answer on 2026-08-22 without editing this row.)*
+  TSK is `cross_references.json`. **Nave's Topical Bible** ships —
+  5,322 topics, 29,379 lines, 77,974 references, imported by
+  `tools/import_naves.py` from CCEL's ThML edition after two repair
+  passes (`docs/DATA-INTEGRITY.md` check 42). Both halves are reachable:
+  **verse-entered** in the Topics tab, and **browsable** as
+  `lib/pages/naves_page.dart` under Resources (`workbench_page.dart:671`)
+  with the entry list, the lookup box and the topic view bwh36_RWP
+  describes. Bible Outline is `book_introductions.json` +
+  `section_titles.json`.
+  The general lesson this row is the second instance of: *"public domain
+  and openly available" says nothing about whether the data is right.*
 - **Read Text module (bwh53)** — **REJECTED.** Audio reading of the
   biblical text. TTS was built and removed at v1.3.19
   (`ui_strings.dart:4833`, `app_settings.dart:86`). Do not resurrect it

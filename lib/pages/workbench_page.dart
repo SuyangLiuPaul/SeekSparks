@@ -67,6 +67,7 @@ import 'package:seeksparks/services/modern_concordance_service.dart';
 import 'package:seeksparks/services/naves_service.dart';
 import 'package:seeksparks/services/places_service.dart';
 import 'package:seeksparks/widgets/resource_summary_pane.dart';
+import 'package:seeksparks/widgets/synopsis_columns_pane.dart';
 import 'package:seeksparks/services/cross_reference_service.dart';
 import 'package:seeksparks/services/sermon_service.dart';
 import 'package:seeksparks/services/synopsis_service.dart';
@@ -2757,6 +2758,37 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
             '${bookNameInScript(book, script)} ${v.chapter}:${v.verse}',
           ),
           onOpenJourney: (id) => pushPage(AtlasPage(initialRouteIds: [id])),
+        );
+
+      case AnalysisTab.synopsis:
+        final v = _analysisVerse(mp, verses);
+        if (v == null) return _analysisHint(context, locale);
+        final book = bookNameToEnglish[v.book] ?? v.book;
+        return FutureBuilder<List<SynopsisEvent>>(
+          key: ValueKey<String>('synopsis-${v.id}'),
+          future: SynopsisService.byVerse(book, v.chapter, v.verse),
+          builder: (context, snap) {
+            if (snap.connectionState != ConnectionState.done) {
+              return const Center(
+                child: SizedBox(
+                  width: 14,
+                  height: 14,
+                  child: CircularProgressIndicator(strokeWidth: 1.6),
+                ),
+              );
+            }
+            return SynopsisColumnsPane(
+              events: snap.data ?? const <SynopsisEvent>[],
+              // The reader's own edition, so the synopsis is read in the
+              // translation they chose rather than one this pane picked.
+              verses: mp.verses,
+              englishBook: book,
+              locale: locale,
+              bookLabel: (english) =>
+                  localeAwareBookName(english, locale, mp.currentVersion),
+              onOpenRef: (ref) => _onCrossRefTap(ref),
+            );
+          },
         );
 
       case AnalysisTab.summary:

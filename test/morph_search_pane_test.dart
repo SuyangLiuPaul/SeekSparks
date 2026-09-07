@@ -87,7 +87,10 @@ void main() {
       // Summary). Every index above still means what it meant, which is
       // the only thing this test is for.
       expect(AnalysisTab.values.indexOf(AnalysisTab.summary), 14);
-      expect(AnalysisTab.values, hasLength(15));
+      // ...and `synopsis` after `summary` (2026-09-07, bwh38 side by
+      // side, unblocked when #292 closed).
+      expect(AnalysisTab.values.indexOf(AnalysisTab.synopsis), 15);
+      expect(AnalysisTab.values, hasLength(16));
     });
   });
 

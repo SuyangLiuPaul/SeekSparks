@@ -308,10 +308,13 @@ host claims the request, which on web is only below the 992 px gate.
   Stays a sheet. It is a *navigator*: you open it to jump somewhere, and
   it closes when you do. A docked pane promises to follow the selection,
   and this does the opposite — it changes the selection.
-* **`_showSynopsisSheet` (7450)** — stays a sheet **for now**, and the
-  reason is #292: the Kings/Chronicles parallel is about to acquire a
-  Resource of its own, and giving it a 13th Analysis tab first would
-  build the wrong home. Re-decide when #292 lands.
+* **`_showSynopsisSheet` (7450)** — ~~stays a sheet **for now**~~ —
+  **re-decided 2026-09-07, and it is a pane.** #292 closed on
+  2026-09-02, which lifted the only reason to wait. The `Parallels` tab
+  lays one column per passage (bwh38), so the Kings/Chronicles
+  comparison is read side by side rather than jumped between. The sheet
+  survives below the 992 px gate, where a row of columns does not fit —
+  the same narrow-width fallback `originals_sheet` is.
 * **`originals_sheet.dart:2513` `_showDistributionTable`** — a sheet
   opened *from* a sheet. It draws #290's word distribution, which the
   Stats tab also draws. Not double-counted here as an offender because
