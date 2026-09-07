@@ -64,7 +64,12 @@ void main() {
     expect(versionsForLanguage('en').map((v) => v.value),
         isNot(contains('nasb')));
     expect(versionsForLanguage('zh-Hans').map((v) => v.value),
-        containsAll(<String>['cuvs-yhwh', 'biblexg-v2', 'cuvs-plus']));
+        containsAll(<String>['cuvs-yhwh', 'biblexg-v2']));
+    // The same shape as the 'nasb' line above: hidden means the picker
+    // does not list it, asserted in the one function that fills the
+    // picker. `cuvs-plus` was in the containsAll until 2026-09-08.
+    expect(versionsForLanguage('zh-Hans').map((v) => v.value),
+        isNot(contains('cuvs-plus')));
     expect(versionsForLanguage('zh-Hant').map((v) => v.value),
         containsAll(<String>['cuvs-yhwh-tr', 'biblexg-v2-tr']));
   });
@@ -94,7 +99,20 @@ void main() {
     // for a few hours the same day and came back once its licence had
     // been checked. Pinned exactly, so neither a second edition can be
     // hidden nor the LEB re-hidden without someone saying so here.
-    expect(disabledVersions, <String>{'nasb'},
+    //
+    // 2026-09-08 — and here is someone saying so. `cuvs-plus`
+    // (和合本+Strong's, 简体) is hidden at the owner's instruction:
+    // 「有雅+ 就不用和合本+了」. It is a supersession, not a licensing
+    // question — `cuvs-yhwh` is the same base text with the divine name
+    // restored in 4,857 places, so the picker was listing one text
+    // twice. Its successor is recorded in `retiredVersionSuccessors`
+    // and its asset still ships (the tagged-layer and verse-alignment
+    // tests read it as a cross-check corpus).
+    //
+    // The two entries are separate decisions with separate futures: the
+    // NASB may come back if its publisher answers, `cuvs-plus` will
+    // not.
+    expect(disabledVersions, <String>{'nasb', 'cuvs-plus'},
         reason: 'hiding an edition is a product decision, not a detail — '
             'it belongs in a diff someone reads');
   });

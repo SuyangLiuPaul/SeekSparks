@@ -269,6 +269,13 @@ class OfflinePackService extends ChangeNotifier {
   /// open. `assets/leb.json` was absent for the same reason for a few
   /// hours the same day and is back, because the LEB is on offer again.
   /// (`assets/niv.json` went in 2026-05 with its picker entry.)
+  ///
+  /// 2026-09-08: `assets/cuvs-plus.json` joins the NASB for the same
+  /// reason and a different cause — 和合本+Strong's is superseded by
+  /// 和合本雅伟版 and hidden (「有雅+ 就不用和合本+了」). 5.3 MB the pack no
+  /// longer spends. The asset still ships, because the tagged-layer and
+  /// verse-alignment tests read it as a cross-check corpus; what stops
+  /// is pre-fetching it over the reader's connection.
   static const List<String> _bibleUrls = [
     'assets/kjv.json',
     'assets/kjvs.json',
@@ -276,7 +283,6 @@ class OfflinePackService extends ChangeNotifier {
     'assets/leb.json',
     'assets/cuvs-yhwh.json',
     'assets/cuvs-yhwh-tr.json',
-    'assets/cuvs-plus.json',
     'assets/biblexg-v2.json',
     'assets/biblexg-v2-tr.json',
   ];

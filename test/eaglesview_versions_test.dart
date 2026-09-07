@@ -17,11 +17,25 @@ void main() {
   const imported = ['kjvs', 'lxxwh', 'cuvs-plus'];
 
   group("Eagle's View versions", () {
-    test('all three are in the catalog and enabled', () {
-      final codes = availableVersions.map((v) => v.value).toSet();
+    test('all three are in the catalog; two of them are offered', () {
+      // 2026-09-08: this asserted all three were in `availableVersions`.
+      // `cuvs-plus` is now hidden — 「有雅+ 就不用和合本+了」 — so the
+      // claim splits in two, and both halves are worth keeping.
+      //
+      // The IMPORT is what this file is about, and hiding an edition
+      // does not un-import it: the row, the tagging, the canon coverage
+      // and the asset are all still exactly what the Eagle's View
+      // import produced. What changed is only whether a reader is
+      // offered it.
+      final catalogue = bibleVersions.map((v) => v.value).toSet();
       for (final c in imported) {
-        expect(codes, contains(c), reason: '$c missing from the picker');
+        expect(catalogue, contains(c), reason: '$c left the catalog');
       }
+      final offered = availableVersions.map((v) => v.value).toSet();
+      expect(offered, containsAll(['kjvs', 'lxxwh']));
+      expect(offered, isNot(contains('cuvs-plus')),
+          reason: 'cuvs-plus is superseded by cuvs-yhwh and hidden; '
+              'see disabledVersions');
     });
 
     test('all three are registered as Strong\'s-tagged', () {
@@ -42,7 +56,8 @@ void main() {
       // They are different editions of one translation. Collapsing them
       // would silently attach EV's word tagging to text it was not
       // aligned against.
-      expect(availableVersions.map((v) => v.value), containsAll(['kjv', 'kjvs']));
+      expect(
+          availableVersions.map((v) => v.value), containsAll(['kjv', 'kjvs']));
       expect(shortBibleVersionLabel('kjvs'), isNot(shortBibleVersionLabel('kjv')));
     });
 

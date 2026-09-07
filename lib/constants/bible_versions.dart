@@ -170,13 +170,28 @@ const bibleVersions = <BibleVersionInfo>[
     menuLabel: '梁家铿譯本(繁體)',
     language: 'zh-Hant',
   ),
-  // Deliberately LAST among the 简体 rows, not next to its two sibling
-  // Eagle's View imports. `defaultSecondaryVersion` seeds a new split
-  // pane with the first other edition in the same language, and this is
-  // the standard 和合本 — the same base text as 和合本雅伟版, differing
-  // mostly by the 4,857 divine-name restorations. Opening it beside
-  // 雅伟版 would make Split View compare a text against itself. 梁家铿译本
-  // is a genuinely different translation, so it keeps the default.
+  // 2026-09-08 — HIDDEN from the interface at the owner's instruction:
+  // 「有雅+ 就不用和合本+了」. See [disabledVersions]. The row stays in the
+  // catalog because a hidden edition still needs its label, its tag
+  // colour and its attribution — `availableVersions` is what does the
+  // hiding, not this list.
+  //
+  // The reason was already written down here before it was acted on.
+  // This row used to carry a note explaining why it sat LAST among the
+  // 简体 rows: `defaultSecondaryVersion` seeds a split pane with the
+  // first other edition in the same language, and this is the standard
+  // 和合本 — the same base text as 和合本雅伟版, differing mostly by the
+  // 4,857 divine-name restorations, so opening it beside 雅伟版 made
+  // Split View compare a text against itself. Ordering avoided that in
+  // one surface. Hiding answers it everywhere.
+  //
+  // The ASSET is untouched and still ships. That is not caution, it is
+  // load-bearing: `cuvs-plus` is one of the five editions
+  // `tagged_layer_coverage_test.dart` sweeps against each other, and
+  // `verse_alignment_test.dart` and `divine_name_gloss_test.dart` both
+  // read it as a cross-check corpus. Deleting it would take out
+  // integrity checks that have nothing to do with whether a reader can
+  // pick the edition.
   BibleVersionInfo(
     value: 'cuvs-plus',
     shortLabel: '和简+',
@@ -240,6 +255,13 @@ const bibleVersions = <BibleVersionInfo>[
 /// the question had not been asked, not because the answers matched.
 const disabledVersions = <String>{
   'nasb',
+  // 2026-09-08 — 「有雅+ 就不用和合本+了」. Not a licensing question like
+  // the NASB above: `cuvs-plus` is the standard 和合本 and `cuvs-yhwh`
+  // is the same base text with the divine name restored in the 4,857
+  // places the received text had it, so the picker was offering the
+  // reader a choice between a text and the same text. The successor is
+  // recorded in [retiredVersionSuccessors].
+  'cuvs-plus',
 };
 
 /// Editions the reader imported — bwh47. code → the name they gave it.
@@ -452,6 +474,13 @@ const Map<String, String> retiredVersionSuccessors = <String, String>{
   // `cuvs-yhwh`, sharing all 31,102 references. See the catalog comment
   // above — this successor is the same text, not an approximation.
   'cuv-yhwd': 'cuvs-yhwh',
+  // 2026-09-08 — 和合本+Strong's → 和合本雅伟版. Hidden rather than
+  // removed (see [disabledVersions]), and the same relation `cuv` has to
+  // `cuvs-yhwh` two rows above: one base text, one of them restoring the
+  // divine name. A reader sitting on `cuvs-plus`, or following a
+  // `?v=cuvs-plus` link, lands on the edition that supersedes it instead
+  // of falling through to the locale default.
+  'cuvs-plus': 'cuvs-yhwh',
   // 梁家铿译本 LJK1 → LJK2.
   'biblexg': 'biblexg-v2',
   'biblexg-tr': 'biblexg-v2-tr',

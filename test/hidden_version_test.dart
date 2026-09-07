@@ -50,8 +50,20 @@ import 'package:seeksparks/services/workbench_warmup.dart'
     show defaultParallelVersions, sanitiseParallelVersions;
 import 'package:seeksparks/utils/version_abbreviation.dart';
 
-/// The edition this change is about.
-const _hidden = <String>['nasb'];
+/// The editions this file is about.
+///
+/// 2026-09-08: `cuvs-plus` joins the NASB, for an unrelated reason and
+/// with the same mechanism. The owner's instruction was 「有雅+ 就不用
+/// 和合本+了」 — the picker was offering 和合本+Strong's beside
+/// 和合本雅伟版, which is one base text listed twice, differing mostly by
+/// the 4,857 places the successor restores the divine name.
+///
+/// The two entries are NOT the same decision and should not be collapsed
+/// into one: the NASB is hidden pending a licensing answer from its
+/// publisher and could come back, while `cuvs-plus` is superseded and is
+/// not expected to. What they share is the requirement below — nothing
+/// offers them, and nobody is stranded on them.
+const _hidden = <String>['nasb', 'cuvs-plus'];
 
 /// The edition that was hidden with it and is visible again. Every place
 /// `_hidden` is asserted absent, this is asserted PRESENT, so a re-hide
@@ -71,7 +83,13 @@ void main() {
         expect(bibleVersions.any((v) => v.value == code), isTrue,
             reason: '$code was removed from the catalog — that is a bigger '
                 'change than the one that was asked for');
-        expect(bibleVersionLanguage(code), 'en');
+        // The language is asserted to be the row's OWN, not a literal.
+        // It used to read `'en'`, which was true only while the NASB was
+        // the only entry; `cuvs-plus` is zh-Hans, and a successor that
+        // crossed languages is the failure the stranding group below
+        // checks for.
+        expect(bibleVersionLanguage(code),
+            bibleVersions.firstWhere((v) => v.value == code).language);
         expect(menuBibleVersionLabel(code), isNot(code),
             reason: '$code has no menuLabel left to print');
         expect(kVersionTagColors.containsKey(code), isTrue);
@@ -184,38 +202,59 @@ void main() {
   });
 
   group('nobody is stranded on one', () {
-    test('a saved reading version resolves to BSB, not to the locale', () {
-      // The substitution has to preserve LANGUAGE. A zh-Hans-locale
-      // reader who deliberately chose an English Bible must not be handed
-      // 和合本 because the fallback happened to be their UI locale.
+    test('a saved reading version resolves to the successor, not the locale',
+        () {
+      // The substitution has to preserve LANGUAGE, and the fallback
+      // offered here is deliberately the WRONG language in both cases —
+      // a zh-Hans-locale reader who chose the NASB on purpose must not
+      // be handed 和合本 just because the fallback happened to be their
+      // UI locale, and the same in reverse for `cuvs-plus`.
+      //
+      // 2026-09-08: expected against `retiredVersionSuccessors` rather
+      // than the literal 'bsb'. With two hidden editions in two
+      // languages there is no single right answer, and writing one in
+      // would have made this test assert the NASB's answer about a
+      // Chinese edition.
       for (final code in _hidden) {
-        expect(
-          resolveReadingVersion(
-              stored: code, fallback: localeDefaultVersion('zh-Hans')),
-          'bsb',
-        );
+        final successor = retiredVersionSuccessors[code];
+        expect(successor, isNotNull,
+            reason: '$code is hidden with no recorded successor');
+        for (final locale in const ['zh-Hans', 'zh-Hant', 'en']) {
+          expect(
+            resolveReadingVersion(
+                stored: code, fallback: localeDefaultVersion(locale)),
+            successor,
+            reason: '$code under a $locale fallback',
+          );
+        }
         expect(
           resolveReadingVersion(
               stored: ' ${code.toUpperCase()} ',
               fallback: localeDefaultVersion('zh-Hant')),
-          'bsb',
+          successor,
+          reason: 'padding and case must not defeat the substitution',
         );
-        expect(bibleVersionLanguage('bsb'), bibleVersionLanguage(code),
-            reason: '$code -> bsb crosses languages');
+        expect(bibleVersionLanguage(successor!), bibleVersionLanguage(code),
+            reason: '$code -> $successor crosses languages');
+        expect(disabledVersions.contains(successor), isFalse,
+            reason: '$code lands on another hidden edition');
       }
     });
 
-    test('a shared ?v=nasb link lands on BSB and says so', () {
+    test('a shared ?v=<hidden> link lands on the successor and says so', () {
       // What `UrlSyncService` does with a link's version: resolve it,
       // and raise a notice when the answer differs from what was asked
       // for. The fallback there is the version already on screen, never
       // a locale default — a stale link is a reason to ignore the link,
       // not to move someone off the Bible they were reading.
       for (final code in _hidden) {
-        final onScreen = 'cuvs-yhwh';
+        // Deliberately a fallback that is NOT the successor, so the
+        // assertion below proves the successor table was consulted
+        // rather than the fallback being echoed back.
+        const onScreen = 'kjv';
         final resolved =
             resolveReadingVersion(stored: code, fallback: onScreen);
-        expect(resolved, 'bsb');
+        expect(resolved, retiredVersionSuccessors[code]);
         expect(resolved, isNot(code),
             reason: 'differing from the request is what raises the notice');
         expect(isKnownVersion(resolved), isTrue);

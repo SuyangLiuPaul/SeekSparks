@@ -69,22 +69,30 @@ void main() {
       // attribute. Here the picker's language IS the script, and 雅伟 is
       // not a substring of 雅偉 — so broadcasting across the boundary
       // reports zeros that mean nothing about the text.
+      //
+      // 2026-09-08: the second 简体 edition in these stacks used to be
+      // `cuvs-plus`, which is now hidden. It was only ever a stand-in
+      // for "another edition in the same script" — the subject is the
+      // script boundary — so `biblexg-v2` takes its place and the claim
+      // is unchanged. (That `cuvs-plus` is now dropped from a stack is
+      // covered by the hidden-edition test below, which reads
+      // `disabledVersions` rather than naming a code.)
       expect(
         crossVersionTargets(
           mode: CrossVersionSearchMode.displayStack,
           reading: 'cuvs-yhwh',
-          stack: const ['cuvs-yhwh-tr', 'cuvs-plus'],
+          stack: const ['cuvs-yhwh-tr', 'biblexg-v2'],
         ),
-        ['cuvs-yhwh', 'cuvs-plus'],
+        ['cuvs-yhwh', 'biblexg-v2'],
       );
       expect(
         crossVersionTargets(
           mode: CrossVersionSearchMode.displayStack,
           reading: 'cuvs-yhwh',
-          stack: const ['cuvs-yhwh-tr', 'cuvs-plus'],
+          stack: const ['cuvs-yhwh-tr', 'biblexg-v2'],
           searchAcrossScripts: true,
         ),
-        ['cuvs-yhwh', 'cuvs-yhwh-tr', 'cuvs-plus'],
+        ['cuvs-yhwh', 'cuvs-yhwh-tr', 'biblexg-v2'],
       );
     });
 
@@ -102,10 +110,13 @@ void main() {
     });
 
     test('a hidden edition is not reached through the side door', () {
-      // `disabledVersions` holds the NASB: the owner took it off every
-      // surface a reader picks from and left the asset bundled. A
-      // broadcast that searched it would put it back on screen with a
-      // hit count beside its name.
+      // `disabledVersions` holds the NASB and, since 2026-09-08,
+      // `cuvs-plus`: the owner took each off every surface a reader
+      // picks from and left the assets bundled. A broadcast that
+      // searched one would put it back on screen with a hit count beside
+      // its name. Deliberately written against `disabledVersions` rather
+      // than a list of codes, which is why it kept passing when the set
+      // grew.
       final targets = crossVersionTargets(
         mode: CrossVersionSearchMode.sameLanguage,
         reading: 'kjv',
@@ -125,12 +136,12 @@ void main() {
       final targets = crossVersionTargets(
         mode: CrossVersionSearchMode.displayStack,
         reading: 'cuvs-yhwh',
-        stack: const ['cuv-yhwd', 'cuvs-plus'],
+        stack: const ['cuv-yhwd', 'biblexg-v2'],
       );
       expect(targets, isNot(contains('cuv-yhwd')));
       // It maps onto the reading version, so it collapses rather than
       // producing a column comparing a text against itself.
-      expect(targets, ['cuvs-yhwh', 'cuvs-plus']);
+      expect(targets, ['cuvs-yhwh', 'biblexg-v2']);
     });
 
     test('an unknown reading version searches nothing at all', () {
