@@ -18,6 +18,7 @@ import 'package:seeksparks/models/original_word.dart';
 import 'package:seeksparks/services/originals_service.dart';
 import 'package:seeksparks/utils/ketiv_qere.dart'
     show KetivQereSearchScope;
+import 'package:seeksparks/utils/morph_construction.dart';
 import 'package:seeksparks/utils/morph_query.dart';
 import 'package:seeksparks/utils/morphology.dart';
 
@@ -179,6 +180,85 @@ class MorphSearchService {
       total: total,
       scanned: scanned,
       facets: facets,
+    );
+  }
+
+  /// Run a CONSTRUCTION — two or more forms plus the agreements that
+  /// must hold between them (`morph_construction.dart`).
+  ///
+  /// A separate entry point rather than a flag on [run], because the two
+  /// answer different questions and the difference shows in the result:
+  /// [run] reports every WORD that matches and tallies facets from them,
+  /// while this reports each VERSE once, at the position where the whole
+  /// construction was found. Facets would be meaningless here — a facet
+  /// count says "choosing this value would return N words", and in a
+  /// construction a value's effect depends on the other term.
+  ///
+  /// The hit points at the FIRST term, because that is what the reader
+  /// built the query around and what the verse list should scroll to.
+  static Future<MorphSearchResult> runConstruction(
+    MorphConstruction construction, {
+    required List<String> books,
+    int? chapter,
+    int limit = 300,
+    KetivQereSearchScope ketivQere = KetivQereSearchScope.both,
+  }) async {
+    final hits = <MorphHit>[];
+    var total = 0;
+    var scanned = 0;
+    final head = construction.terms.first.query;
+
+    for (final book in books) {
+      final verses = await OriginalsService.versesOfBook(book);
+      final refs = verses.keys.toList()..sort(_byReference);
+      for (final ref in refs) {
+        final split = ref.indexOf(':');
+        if (split < 0) continue;
+        final c = int.tryParse(ref.substring(0, split));
+        final v = int.tryParse(ref.substring(split + 1));
+        if (c == null || v == null) continue;
+        if (chapter != null && c != chapter) continue;
+
+        final all = verses[ref]!;
+        // The Ketiv/Qere gate is applied by REMOVING words rather than
+        // by skipping them in place, because a construction counts the
+        // distance between its terms: leaving an excluded word in the
+        // list would let it consume a gap it is not part of.
+        final gate = head.readings.isEmpty
+            ? ketivQere
+            : KetivQereSearchScope.both;
+        final words = [
+          for (final w in all)
+            if (gate.admits(w.ketivQere)) w,
+        ];
+        if (words.length < construction.terms.length) continue;
+        scanned += words.length;
+        final hit = findConstruction(construction, words, parse: parse);
+        if (hit == null) continue;
+        total++;
+        if (hits.length < limit) {
+          final at = hit.positions.first;
+          final parsedWord = parse(words[at].morph);
+          if (parsedWord == null) continue;
+          hits.add(MorphHit(
+            book: book,
+            chapter: c,
+            verse: v,
+            wordIndex: at,
+            word: words[at],
+            parsed: parsedWord,
+            morphemeIndex: hit.morphemes.first,
+          ));
+        }
+      }
+      await Future<void>.delayed(Duration.zero);
+    }
+
+    return MorphSearchResult(
+      hits: hits,
+      total: total,
+      scanned: scanned,
+      facets: MorphFacets(head),
     );
   }
 

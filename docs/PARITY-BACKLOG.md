@@ -252,15 +252,39 @@ file should read.
   picking this up — the decision to reject the GSE was about its
   *interface*, not about this class of query. *Done:* a version tag per
   term, results listed once per verse with each edition's hit shown.
-- **Morphological searches (Greek/Hebrew)** — **PARTIAL.**
-  `lib/services/morph_search_service.dart` + `lib/widgets/morph_search_pane.dart`
-  exist and the Forms tab surfaces them. bwh17 goes considerably further:
-  **morphological agreement**, **lemma agreement**, and **context
-  dependency** — "an adjective agreeing in case, number and gender with
-  the noun two words back" is the class of query BibleWorks is famous for
-  and we cannot express it at all. *Done:* an agreement operator, or an
-  explicit `REJECTED` saying the GSE-class query is out of scope (see
-  3.2) — but decide it, do not leave it accidental.
+- **Morphological searches (Greek/Hebrew)** — **HAVE, 2026-09-07.** The
+  row asked for a decision — "an agreement operator, or an explicit
+  REJECTED … but decide it, do not leave it accidental". Decided by
+  building it.
+  `lib/utils/morph_construction.dart` is the engine: **sequence** (two
+  or more forms, in order, within a distance), **morphological
+  agreement** (named features that must hold the SAME value across two
+  forms, whatever that value is), and **lemma agreement** (the same
+  Strong's twice — a figura etymologica, `מוֹת תָּמוּת`, without naming
+  the root). `MorphSearchService.runConstruction` runs it; the
+  morphology pane's "With a second word … agreeing in …" row reaches it.
+  **The two ways this can look right and be wrong**, both mutation-
+  checked in `test/morph_construction_test.dart`:
+  *Agreement is not a feature filter.* "Same gender" is not "masculine",
+  and running the query once per gender is a different question that
+  also returns the disagreeing pairs. A feature the code does not state
+  therefore cannot be shown to agree — treating two absences as a match
+  makes every uninflected pair "agree in gender", which looks like the
+  feature working and silently doubles the hits.
+  *A term matches a MORPHEME, not a word.* `HC/Vqw3ms/Sp3fs` is
+  conjunction + verb + suffix, its verb is masculine and its suffix
+  feminine, and 32% of the Hebrew Bible has more than one morpheme, so
+  which one the agreement is read off decides the answer. The engine
+  backtracks over (position, morpheme) pairs — which is what
+  `MorphQuery.matchAll` was written for, and its own doc said so before
+  this landed.
+  *Still out of scope, and named rather than left as an absence:*
+  bwh17's **context dependency** in the full sense — "this word's
+  referent is that word's subject" — needs a syntactic parse of the
+  original, which is a dataset this repo does not have and cannot
+  derive. Morphological agreement is answerable from the codes we ship;
+  syntactic dependency is not, and the difference is the line an honest
+  verdict has to draw.
 - **Accents and vowel points in search** — **HAVE, 2026-09-07.** This
   row was half wrong when it was read. It said "Hebrew points are
   stripped … Greek accents are not stripped … a hardcoded asymmetry",
@@ -390,22 +414,41 @@ file should read.
   licence. Not on a fresh opinion about how useful it would be — its
   usefulness was never the question.
 
-### 3.2 The Graphical Search Engine — REJECTED, provisionally
+### 3.2 The Graphical Search Engine — re-decided 2026-09-07: the DIAGRAM is REJECTED, the power is not
 
 bwh18/19/21/22 — four whole help chapters, a visual query builder with
 word boxes, merge boxes, ordering/proximity boxes and five kinds of
 agreement window. It is BibleWorks' deepest feature and its most-cited
 one in reviews.
 
-**Rejected for now, and the reason is honest:** the GSE is a UI for
-expressing queries the *engine underneath* can answer. Our engine cannot
-answer agreement or context-dependency queries at all (3.1), so building
-the GSE first would be building a steering wheel for an engine that does
-not turn. The order is engine, then builder.
+This section said: *"the GSE is a UI for expressing queries the engine
+underneath can answer. Our engine cannot answer agreement or
+context-dependency queries at all (3.1), so building the GSE first would
+be building a steering wheel for an engine that does not turn. The order
+is engine, then builder. **Re-open when 3.1's agreement work lands.**"*
 
-Re-open when 3.1's agreement work lands. If it never lands, this stays
-rejected and that is a defensible product position — most Logos and
-Accordance users never touch their equivalents either.
+**It landed** (`morph_construction.dart`, §3.1). So this is re-opened
+and re-decided, and the answer splits in two:
+
+* **The power ships.** Sequence, distance, morphological agreement and
+  lemma agreement are exactly the queries the GSE's ordering, proximity
+  and agreement boxes express, and they are reachable from the
+  morphology pane. What the pane cannot yet build is a construction of
+  more than two terms or one whose second term is constrained past its
+  part of speech; the engine takes both, so that is a UI ceiling and not
+  an engine one.
+* **The diagram stays rejected**, and now for a reason about the reader
+  rather than about the engine. The GSE is a canvas of boxes joined by
+  lines, on a Windows desktop, built for a mouse. This app's target
+  device is a tablet with no hover (§7), and a query canvas is the one
+  surface where a drag that misses by four pixels changes the question
+  being asked. The sentence-shaped row that shipped instead — "With a
+  second word … agreeing in … next to it" — says the same thing in the
+  space of three chip rows, and a reader can tell what it asks without
+  being taught a diagram.
+
+Re-open the DIAGRAM only if a reader asks for a query the sentence form
+cannot express. The engine will already answer it.
 
 ### 3.3 Browse window and version display
 

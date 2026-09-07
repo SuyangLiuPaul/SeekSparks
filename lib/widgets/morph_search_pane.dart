@@ -27,6 +27,7 @@ import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/services/morph_search_service.dart';
 import 'package:seeksparks/utils/ketiv_qere.dart'
     show ketivQereLabel;
+import 'package:seeksparks/utils/morph_construction.dart';
 import 'package:seeksparks/utils/morph_query.dart';
 import 'package:seeksparks/utils/morphology.dart';
 import 'package:seeksparks/utils/short_book_name.dart';
@@ -67,6 +68,35 @@ class MorphSearchPane extends StatefulWidget {
 class _MorphSearchPaneState extends State<MorphSearchPane> {
   MorphScope _scope = MorphScope.book;
   late MorphQuery _query;
+
+  // bwh17's agreement, as far as one pane can carry it: the reader has
+  // already built the FIRST form above; this is the second, and what
+  // must hold between them. Off until a part of speech is chosen, so the
+  // pane opens exactly as it did.
+  Set<String> _secondPos = <String>{};
+  Set<MorphSlot> _agree = <MorphSlot>{};
+  bool _agreeLemma = false;
+  int _agreeGap = 0;
+
+  bool get _isConstruction => _secondPos.isNotEmpty;
+
+  MorphConstruction get _construction => MorphConstruction(
+        terms: [
+          ConstructionTerm(query: _query),
+          ConstructionTerm(
+            query: MorphQuery(
+              scheme: _query.scheme,
+              aramaic: _query.aramaic,
+              constraints: {MorphSlot.pos: _secondPos},
+            ),
+            gapMax: _agreeGap,
+          ),
+        ],
+        agreements: [
+          if (_agree.isNotEmpty || _agreeLemma)
+            AgreementRule(a: 0, b: 1, features: _agree, lemma: _agreeLemma),
+        ],
+      );
   MorphSearchResult? _result;
   bool _busy = false;
 
@@ -90,6 +120,9 @@ class _MorphSearchPaneState extends State<MorphSearchPane> {
       // Crossing the testament line invalidates every constraint: the
       // two schemes share almost no letters.
       _query = MorphQuery(scheme: scheme);
+      _secondPos = <String>{};
+      _agree = <MorphSlot>{};
+      _agreeLemma = false;
       _search();
     } else if (widget.englishBook != old.englishBook ||
         (_scope == MorphScope.chapter && widget.chapter != old.chapter)) {
@@ -105,13 +138,15 @@ class _MorphSearchPaneState extends State<MorphSearchPane> {
   Future<void> _search() async {
     final token = ++_run;
     setState(() => _busy = true);
-    final result = await MorphSearchService.run(
-      _query,
-      books: MorphSearchService.booksFor(
-          _scope, widget.englishBook, _query.scheme),
-      chapter: _scope == MorphScope.chapter ? widget.chapter : null,
-      ketivQere: context.read<AppSettings>().ketivQereSearchScope,
-    );
+    final books = MorphSearchService.booksFor(
+        _scope, widget.englishBook, _query.scheme);
+    final chapter = _scope == MorphScope.chapter ? widget.chapter : null;
+    final kq = context.read<AppSettings>().ketivQereSearchScope;
+    final result = _isConstruction
+        ? await MorphSearchService.runConstruction(_construction,
+            books: books, chapter: chapter, ketivQere: kq)
+        : await MorphSearchService.run(_query,
+            books: books, chapter: chapter, ketivQere: kq);
     if (!mounted || token != _run) return;
     setState(() {
       _result = result;
@@ -121,6 +156,11 @@ class _MorphSearchPaneState extends State<MorphSearchPane> {
 
   void _apply(MorphQuery next) {
     setState(() => _query = next);
+    _search();
+  }
+
+  void _applyAgreement(VoidCallback mutate) {
+    setState(mutate);
     _search();
   }
 
@@ -263,6 +303,7 @@ class _MorphSearchPaneState extends State<MorphSearchPane> {
                 for (final slot in _query.activeSlots())
                   _slotRow(wb, t, slot, result.facets),
                 _readingRow(wb, t),
+                _agreementRow(wb, t),
               ],
             ),
           ),
@@ -399,6 +440,123 @@ class _MorphSearchPaneState extends State<MorphSearchPane> {
                 ),
             ],
           ),
+        ],
+      ),
+    );
+  }
+
+  /// bwh17's agreement, as far as one pane can carry it.
+  ///
+  /// The reader has already built the first form in the rows above.
+  /// This adds the SECOND — a part of speech is enough to be useful and
+  /// keeps the pane one column wide — plus how far away it may sit and
+  /// what must hold between the two.
+  ///
+  /// The agreement chips are the point, and they are not feature
+  /// filters: "same gender" is not "masculine", and running the query
+  /// once per gender is a different question that also returns the
+  /// disagreeing pairs. Choosing no part of speech leaves the pane
+  /// exactly as it was, so nothing here costs a reader who does not want
+  /// it.
+  Widget _agreementRow(WbColors wb, WbType t) {
+    final poss = morphPartsOfSpeech(_query.scheme);
+    if (poss.isEmpty) return const SizedBox.shrink();
+    // Case is Greek-only and state is Semitic-only; person is shared.
+    // Offering a feature the scheme cannot express would be offering a
+    // rule that can only ever refuse.
+    final features = <MorphSlot>[
+      MorphSlot.gender,
+      MorphSlot.number,
+      if (_query.scheme == MorphScheme.greek) MorphSlot.grammaticalCase,
+      MorphSlot.person,
+    ];
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6, top: 2),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            _s('morphAgreementSlot', 'With a second word'),
+            style: TextStyle(
+              fontSize: t.chrome,
+              color: wb.mutedText,
+              letterSpacing: 0.4,
+            ),
+          ),
+          const SizedBox(height: 3),
+          Wrap(
+            spacing: 4,
+            runSpacing: 4,
+            children: [
+              for (final p in poss)
+                WbPaneChip(
+                  // Same helper the part-of-speech row above uses, so
+                  // the two lists cannot end up named differently.
+                  label: morphSlotLabel(_query.scheme, p, MorphSlot.pos, p,
+                          widget.locale, aramaic: _query.aramaic) ??
+                      p,
+                  on: _secondPos.contains(p),
+                  onTap: () => _applyAgreement(() {
+                    if (!_secondPos.remove(p)) _secondPos.add(p);
+                    if (_secondPos.isEmpty) {
+                      _agree = <MorphSlot>{};
+                      _agreeLemma = false;
+                    }
+                  }),
+                  foreground:
+                      _secondPos.contains(p) ? wb.strongsGrammar : wb.text,
+                ),
+            ],
+          ),
+          if (_isConstruction) ...[
+            const SizedBox(height: 5),
+            Text(
+              _s('morphAgreeingIn', 'agreeing in'),
+              style: TextStyle(
+                fontSize: t.chrome,
+                color: wb.mutedText,
+                letterSpacing: 0.4,
+              ),
+            ),
+            const SizedBox(height: 3),
+            Wrap(
+              spacing: 4,
+              runSpacing: 4,
+              children: [
+                for (final f in features)
+                  WbPaneChip(
+                    label: morphSlotName(f, widget.locale),
+                    on: _agree.contains(f),
+                    onTap: () => _applyAgreement(() {
+                      if (!_agree.remove(f)) _agree.add(f);
+                    }),
+                    foreground:
+                        _agree.contains(f) ? wb.strongsGrammar : wb.text,
+                  ),
+                // Lemma agreement is a different axis from the feature
+                // chips beside it — it is how you find a figura
+                // etymologica (מוֹת תָּמוּת, "dying you shall die")
+                // without naming the root.
+                WbPaneChip(
+                  label: _s('morphAgreeLemma', 'same root'),
+                  on: _agreeLemma,
+                  onTap: () =>
+                      _applyAgreement(() => _agreeLemma = !_agreeLemma),
+                  foreground: _agreeLemma ? wb.strongsGrammar : wb.text,
+                ),
+                for (final g in const [0, 2, 5])
+                  WbPaneChip(
+                    label: g == 0
+                        ? _s('morphGapAdjacent', 'next to it')
+                        : _s('morphGapWithin', 'within {n}')
+                            .replaceAll('{n}', '$g'),
+                    on: _agreeGap == g,
+                    onTap: () => _applyAgreement(() => _agreeGap = g),
+                    foreground: _agreeGap == g ? wb.strongsGrammar : wb.text,
+                  ),
+              ],
+            ),
+          ],
         ],
       ),
     );

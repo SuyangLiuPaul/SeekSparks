@@ -5541,6 +5541,35 @@ const uiStrings = {
   // 2026-09-07 (bwh17's Qere/Kethib search codes). "Masoretic reading"
   // rather than "Ketiv/Qere": the chips already say Ketiv and Qere, and
   // the row label's job is to say what KIND of thing is being chosen.
+  // 2026-09-07 (bwh17's agreement). Worded as a sentence the reader
+  // completes — "With a second word … agreeing in … next to it" — rather
+  // than as the query algebra underneath, which is what the Graphical
+  // Search Engine draws and what §3.2 declined to draw.
+  'morphAgreementSlot': {
+    'zh-Hans': '再加一个词',
+    'zh-Hant': '再加一個詞',
+    'en': 'With a second word',
+  },
+  'morphAgreeingIn': {
+    'zh-Hans': '两者需一致于',
+    'zh-Hant': '兩者需一致於',
+    'en': 'agreeing in',
+  },
+  'morphAgreeLemma': {
+    'zh-Hans': '同一词根',
+    'zh-Hant': '同一詞根',
+    'en': 'same root',
+  },
+  'morphGapAdjacent': {
+    'zh-Hans': '紧挨着',
+    'zh-Hant': '緊挨著',
+    'en': 'next to it',
+  },
+  'morphGapWithin': {
+    'zh-Hans': '相隔 {n} 词以内',
+    'zh-Hant': '相隔 {n} 詞以內',
+    'en': 'within {n}',
+  },
   'morphReadingSlot': {
     'zh-Hans': '马所拉读法',
     'zh-Hant': '馬所拉讀法',
