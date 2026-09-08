@@ -1,10 +1,11 @@
+import 'package:seeksparks/constants/text_patterns.dart'
+    show normalizeDivineNamesInQuery;
 import 'package:seeksparks/models/verse.dart';
 import 'package:seeksparks/services/concordance_service.dart';
 import 'package:seeksparks/services/fetch_books.dart' show standardBookOrder;
 import 'package:seeksparks/services/originals_service.dart';
 import 'package:seeksparks/utils/search_folding.dart' show foldSearchMarks;
-import 'package:seeksparks/utils/ketiv_qere.dart'
-    show KetivQereSearchScope;
+import 'package:seeksparks/utils/ketiv_qere.dart' show KetivQereSearchScope;
 import 'package:seeksparks/utils/plain_search.dart';
 import 'package:seeksparks/utils/strongs_boolean_search.dart';
 import 'package:seeksparks/utils/strongs_proximity.dart';
@@ -71,8 +72,12 @@ class SearchService {
     // reader typed with no space between them; each must sit next to the
     // last in the verse, separated by nothing but whitespace they did
     // type. See [plainSearchMatches].
+    // `normalizeDivineNamesInQuery` first: the corpus key had 耶和华
+    // rewritten to 雅伟 when it was built, so a query that keeps the
+    // reader's spelling is being compared against a text that no longer
+    // holds it. See that function for the measurement.
     final segments = plainSearchSegments(
-        foldSearchMarks(query).toLowerCase());
+        foldSearchMarks(normalizeDivineNamesInQuery(query)).toLowerCase());
     // A blank query listed every verse before this change, because the
     // empty string is a substring of everything, and it keeps doing so:
     // the callers guard it, and quietly turning "everything" into
@@ -170,8 +175,8 @@ class SearchService {
       }
       termRefs[t] = labels;
     }
-    var resultLabels = evaluateStrongsBoolean(
-        query, (t) => termRefs[t] ?? const <String>{});
+    var resultLabels =
+        evaluateStrongsBoolean(query, (t) => termRefs[t] ?? const <String>{});
     // SeekSparks addition: a proximity operator needs actual word order,
     // which the set algebra above can't see — narrow the AND-style
     // candidate set with a per-verse word-position check

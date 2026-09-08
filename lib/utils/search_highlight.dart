@@ -33,6 +33,8 @@
 /// Pure matching. The widget decides what a highlight looks like.
 library;
 
+import 'package:seeksparks/constants/text_patterns.dart'
+    show normalizeDivineNamesInQuery;
 import 'package:seeksparks/utils/command_query.dart';
 import 'package:seeksparks/utils/compound_query.dart';
 import 'package:seeksparks/utils/search_folding.dart'
@@ -113,8 +115,7 @@ SearchHighlight highlightsForQuery(String rawQuery) {
         numbers.add(t.number.toUpperCase());
       }
     }
-    return SearchHighlight(
-        strongsNumbers: numbers, strongsPrefixes: prefixes);
+    return SearchHighlight(strongsNumbers: numbers, strongsPrefixes: prefixes);
   }
 
   // A bare Strong's number is not "boolean" but still a number query.
@@ -128,7 +129,10 @@ SearchHighlight highlightsForQuery(String rawQuery) {
   //
   // Folded to match what the corpus was searched with. `literalCore`
   // above is already folded, because `TokenMatcher.compile` built it.
-  final terms = foldSearchMarks(q)
+  // Normalised the same way the query was, or the reader is handed a
+  // verse whose hit they cannot find: 耶和华 matches a verse that spells
+  // it 雅伟, and marking the literal the reader typed would mark nothing.
+  final terms = foldSearchMarks(normalizeDivineNamesInQuery(q))
       .toLowerCase()
       .split(RegExp(r'\s+'))
       .where((t) => t.isNotEmpty)

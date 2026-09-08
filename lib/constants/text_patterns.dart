@@ -82,6 +82,33 @@ String _normalizeDivineNames(String text) {
   return out;
 }
 
+/// The same rewrite, for a QUERY rather than for verse text.
+///
+/// **The index was normalised and the query was not, and that made the
+/// most common name in the Bible unsearchable.** Measured 2026-09-08
+/// over the shipped assets: `耶和华` occurs **0** times in
+/// `cuvs-yhwh.json` and `耶和华`/`耶和華` **0** times in
+/// `cuvs-yhwh-tr.json`, because [_normalizeDivineNames] rewrote all
+/// 7,339 of them to 雅伟 / 雅偉 when the corpus key was built. A reader
+/// who typed 耶和华 — the spelling in every printed Chinese Bible, and
+/// the one this app's own `_aliasToStrongs` table already accepts for a
+/// Strong's lookup — got an empty result list and no explanation.
+///
+/// This is not broadening and it is not a synonym. It is the other half
+/// of a one-sided transform: whatever the corpus key does to the text,
+/// the query key must do to the query, or the two are not comparable.
+/// `fuzzy_search.dart`'s synonym rung covers the same ground, but that
+/// switch is off by default and this is not a case where a reader should
+/// have to opt in to finding the divine name.
+///
+/// Only the Chinese half moves here. The English half is already
+/// symmetric by accident — [_normalizeDivineNames] rewrites only the
+/// ALL-CAPS `LORD`, and a query is lower-cased before it is compared, so
+/// `lord` has never matched it and the Adonai / kyrios distinction the
+/// original comment is careful about survives untouched.
+String normalizeDivineNamesInQuery(String query) =>
+    query.replaceAll('耶和华', '雅伟').replaceAll('耶和華', '雅偉');
+
 /// Strips popup-only annotation markup from verse text, returning
 /// clean readable text suitable for clipboard copy. Preserves the
 /// inner content of `{clarification}` and `[supplied]` brackets
@@ -241,8 +268,7 @@ String _collapsePostStripDuplicates(String text) {
 /// names, but preserves leading/trailing whitespace so adjacent
 /// chunks don't collide. Used by `buildVerseContentSpans`.
 String displayCleanup(String chunk) {
-  return _normalizeDivineNames(
-      chunk.replaceAll(_pilcrowPattern, ''));
+  return _normalizeDivineNames(chunk.replaceAll(_pilcrowPattern, ''));
 }
 
 final _previewMultiSpace = RegExp(r'\s{2,}');

@@ -62,8 +62,6 @@
 ///
 /// Detected and reported by name rather than silently mis-parsed:
 ///
-/// * `( )` compound searches — a second grammar layer (sub-searches
-///   combined with their own verse contexts) and its own feature.
 /// * `~` regular expressions — BibleWorks itself calls this one "for
 ///   those hardy souls"; it is English-only there, case-sensitive, and a
 ///   user-supplied regex over 31k verses is a denial-of-service waiting
@@ -72,6 +70,14 @@
 ///   hand-edited proprietary database we may not ship. Porter stemming
 ///   (its other mode) is implementable but BibleWorks' own help calls it
 ///   "more of a curiosity than a refined tool".
+///
+/// ## Formerly on that list: `( )` compound searches
+///
+/// Shipped 2026-08-19 in `compound_query.dart` and wired through
+/// `WorkbenchProvider`. The entry above outlived the feature by three
+/// weeks, which is worth more than a one-line correction: a
+/// "deliberately not implemented" ledger is only useful if it is true,
+/// and a stale entry is how a second implementation gets started.
 ///
 /// ## Formerly on that list: `@` Strong's tag binding
 ///
@@ -160,11 +166,14 @@
 /// Flutter-free on purpose: this parses and matches, nothing else.
 library;
 
+import 'package:seeksparks/constants/text_patterns.dart'
+    show normalizeDivineNamesInQuery;
 import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/utils/search_folding.dart' show foldSearchMarks;
 import 'package:seeksparks/utils/phrase_match.dart' show phraseTokens;
 import 'package:seeksparks/utils/punctuation_gate.dart';
-import 'package:seeksparks/utils/related_verses.dart' show isCjkChar, isWordChar;
+import 'package:seeksparks/utils/related_verses.dart'
+    show isCjkChar, isWordChar;
 import 'package:seeksparks/utils/strongs_boolean_search.dart'
     show kMaxNearDistance, kMaxGreekStrongs, kMaxHebrewStrongs;
 import 'package:seeksparks/utils/strongs_tag_binding.dart';
@@ -299,7 +308,12 @@ class TokenMatcher {
   /// [source] keeps the accents the reader typed and the echo can quote
   /// the line back to them unchanged (#321).
   factory TokenMatcher.compile(String source) {
-    final lower = foldSearchMarks(source).toLowerCase();
+    // The divine name is normalised into the corpus key, so it has to be
+    // normalised out of the query too — see
+    // `normalizeDivineNamesInQuery`. [source] keeps what the reader
+    // typed, so the echo still quotes their line back unchanged.
+    final lower =
+        foldSearchMarks(normalizeDivineNamesInQuery(source)).toLowerCase();
     if (!_hasMeta(lower)) {
       return TokenMatcher._(source, lower, null, lower);
     }
@@ -462,8 +476,7 @@ class QueryTerm {
   /// Derived rather than stored, because it is exactly the state of the
   /// elements — a term whose positions are negated is a term looking for
   /// some OTHER word in that slot.
-  bool get wordNegated =>
-      elements.any((e) => e is TokenElement && e.negated);
+  bool get wordNegated => elements.any((e) => e is TokenElement && e.negated);
 
   /// The best single literal a corpus prefilter can test for, or '' when
   /// the term is all wildcards. See [TokenMatcher.literalCore].
@@ -623,7 +636,9 @@ bool needsWildcardPromotion(String raw) {
 /// with references, version abbreviations and plain text.
 CommandParse parseCommandQuery(String raw) {
   final trimmed = raw.trim();
-  if (trimmed.isEmpty) return const CommandParse.failed(CommandIssue.notACommand);
+  if (trimmed.isEmpty) {
+    return const CommandParse.failed(CommandIssue.notACommand);
+  }
 
   final control = trimmed[0];
   // `(` opens a compound search, which is `compound_query.dart`'s
@@ -842,8 +857,8 @@ CommandParse parseCommandQuery(String raw) {
   // word — but `'!man@444` is not: a negated position that carries a tag
   // still has to land on a tagged word, so it constrains.
   if (kind == CommandKind.phrase &&
-      !sequence.any((e) =>
-          e is TokenElement && (!e.negated || e.tag != null))) {
+      !sequence
+          .any((e) => e is TokenElement && (!e.negated || e.tag != null))) {
     return const CommandParse.failed(CommandIssue.emptyBody);
   }
   // A `@` query reads its tokens off the TAGGED runs, which are stored as
@@ -862,7 +877,8 @@ CommandParse parseCommandQuery(String raw) {
     control: control,
     terms: List.unmodifiable(terms),
     outline: List.unmodifiable(outline),
-    sequence: List.unmodifiable(kind == CommandKind.phrase ? sequence : const []),
+    sequence:
+        List.unmodifiable(kind == CommandKind.phrase ? sequence : const []),
     verseContext: verseContext,
     punctuation: punctuation,
   ));
@@ -906,9 +922,8 @@ List<QueryElement> _compileTerm(String term,
     {StrongsTagBinding? tag, bool negated = false}) {
   final out = <QueryElement>[];
   final n = term.length;
-  final hasCjk = [
-    for (var k = 0; k < n; k++) term.codeUnitAt(k)
-  ].any(isCjkChar);
+  final hasCjk =
+      [for (var k = 0; k < n; k++) term.codeUnitAt(k)].any(isCjkChar);
   var i = 0;
   while (i < n) {
     final c = term.codeUnitAt(i);
@@ -1001,7 +1016,8 @@ bool _isAllMeta(String run) {
 /// [gaps] and [gate] are the punctuation test: `gaps` is
 /// `punctuationGapFlags` for the same tokens (length `tokens.length + 1`)
 /// and `gate` says what to do with it. An inactive gate ignores both.
-bool matchSequenceAt(List<String> tokens, int start, List<QueryElement> sequence,
+bool matchSequenceAt(
+        List<String> tokens, int start, List<QueryElement> sequence,
         {List<String>? tags,
         List<bool>? gaps,
         PunctuationGate gate = PunctuationGate.off}) =>
@@ -1554,12 +1570,18 @@ String describeCommandQuery(CommandQuery query, String locale) {
     if (tag == null) return word;
     final (key, fallback) = switch ((tag.form, tag.negated)) {
       (StrongsTagForm.number, false) => ('cmdEchoTagIs', '{w} rendering {n}'),
-      (StrongsTagForm.number, true) =>
-        ('cmdEchoTagNot', '{w} not rendering {n}'),
-      (StrongsTagForm.any, false) || (StrongsTagForm.none, true) =>
-        ('cmdEchoTagAny', '{w} with an original-language tag'),
-      (StrongsTagForm.any, true) || (StrongsTagForm.none, false) =>
-        ('cmdEchoTagNone', '{w} with no original-language tag'),
+      (StrongsTagForm.number, true) => (
+          'cmdEchoTagNot',
+          '{w} not rendering {n}'
+        ),
+      (StrongsTagForm.any, false) || (StrongsTagForm.none, true) => (
+          'cmdEchoTagAny',
+          '{w} with an original-language tag'
+        ),
+      (StrongsTagForm.any, true) || (StrongsTagForm.none, false) => (
+          'cmdEchoTagNone',
+          '{w} with no original-language tag'
+        ),
     };
     return s(key, fallback)
         .replaceAll('{w}', word)
@@ -1626,23 +1648,30 @@ String describeCommandQuery(CommandQuery query, String locale) {
   if (query.punctuation.isActive) {
     buf.write(partSep);
     final custom = query.punctuation.isCustom;
-    final (key, fallback) =
-        switch ((query.punctuation.mode, custom)) {
-      (PunctuationMode.exclude, false) =>
-        ('cmdEchoPunctNone', 'not crossing a sentence end'),
-      (PunctuationMode.exclude, true) =>
-        ('cmdEchoPunctNoneOf', 'with none of {chars} between'),
-      (PunctuationMode.require, false) =>
-        ('cmdEchoPunctSome', 'crossing a sentence end'),
-      (PunctuationMode.require, true) =>
-        ('cmdEchoPunctSomeOf', 'with one of {chars} between'),
+    final (key, fallback) = switch ((query.punctuation.mode, custom)) {
+      (PunctuationMode.exclude, false) => (
+          'cmdEchoPunctNone',
+          'not crossing a sentence end'
+        ),
+      (PunctuationMode.exclude, true) => (
+          'cmdEchoPunctNoneOf',
+          'with none of {chars} between'
+        ),
+      (PunctuationMode.require, false) => (
+          'cmdEchoPunctSome',
+          'crossing a sentence end'
+        ),
+      (PunctuationMode.require, true) => (
+          'cmdEchoPunctSomeOf',
+          'with one of {chars} between'
+        ),
       // The allow branch is unreachable behind `isActive`, and is spelled
       // out so that a fourth mode could not be added without the echo
       // failing to compile.
       (PunctuationMode.allow, _) => ('', ''),
     };
-    buf.write(s(key, fallback)
-        .replaceAll('{chars}', query.punctuation.characters));
+    buf.write(
+        s(key, fallback).replaceAll('{chars}', query.punctuation.characters));
   }
   return buf.toString();
 }
@@ -1658,39 +1687,44 @@ String? describeCommandIssue(CommandIssue issue, String locale) {
     CommandIssue.notACommand => null,
     CommandIssue.emptyBody =>
       s('cmdIssueEmpty', 'Type what to search for after the operator.'),
-    CommandIssue.regexUnsupported => s('cmdIssueRegex',
-        'Regular expression searches (~) are not supported.'),
-    CommandIssue.fuzzyUnsupported => s('cmdIssueFuzzy',
-        'Fuzzy stemming searches (=) are not supported.'),
-    CommandIssue.strongsTagNoWord => s('cmdIssueStrongsTagNoWord',
+    CommandIssue.regexUnsupported =>
+      s('cmdIssueRegex', 'Regular expression searches (~) are not supported.'),
+    CommandIssue.fuzzyUnsupported =>
+      s('cmdIssueFuzzy', 'Fuzzy stemming searches (=) are not supported.'),
+    CommandIssue.strongsTagNoWord => s(
+        'cmdIssueStrongsTagNoWord',
         "A Strong's tag follows a word: .man@444, or .*@444 for every "
-        'rendering of it.'),
-    CommandIssue.strongsTagNumber => s('cmdIssueStrongsTagNumber',
+            'rendering of it.'),
+    CommandIssue.strongsTagNumber => s(
+        'cmdIssueStrongsTagNumber',
         "After @ put a Strong's number — .man@444 for Greek, .man@0430 or "
-        '.man@H430 for Hebrew — or @* for any tag and @- for none.'),
-    CommandIssue.strongsTagNotOneWord => s('cmdIssueStrongsTagNotOneWord',
+            '.man@H430 for Hebrew — or @* for any tag and @- for none.'),
+    CommandIssue.strongsTagNotOneWord => s(
+        'cmdIssueStrongsTagNotOneWord',
         "! in front of a tagged word can only stand in front of a single "
-        'word — for example .!man@444.'),
+            'word — for example .!man@444.'),
     // The six editions are named, not counted. "Switch to a tagged
     // edition" is a refusal the reader cannot act on without opening the
     // version picker and reading twelve rows to find out which ones
     // qualify — and `test/strongs_tag_binding_test.dart` fails if this
     // list and `TaggedTextService.taggedVersions` ever disagree.
-    CommandIssue.strongsTagNoTaggedText => s('cmdIssueStrongsTagNoTaggedText',
+    CommandIssue.strongsTagNoTaggedText => s(
+        'cmdIssueStrongsTagNoTaggedText',
         "This edition carries no Strong's tagging, so @ has nothing to "
-        'match against. Switch to BSB, CSB, KJV+S, LXX+WH, 雅简+ or 和简+ '
-        'and run it again.'),
-    CommandIssue.strongsTagUnsupportedHere => s('cmdIssueStrongsTagHere',
+            'match against. Switch to BSB, CSB, KJV+S, LXX+WH, 雅简+ or 和简+ '
+            'and run it again.'),
+    CommandIssue.strongsTagUnsupportedHere => s(
+        'cmdIssueStrongsTagHere',
         "Strong's tags (@) work in a plain . / ' ; search only — not "
-        'inside a compound ( ) search or a cross-version one.'),
+            'inside a compound ( ) search or a cross-version one.'),
     CommandIssue.phraseNotMultiToken => s('cmdIssuePhraseNot',
         'In a phrase, ! can only stand in front of a single word.'),
-    CommandIssue.contextTooLarge => s('cmdIssueContext',
-            'The verse context after ; must be {max} or less.')
-        .replaceAll('{max}', '$kMaxVerseContext'),
-    CommandIssue.gapTooLarge => s('cmdIssueGap',
-            'The word gap after * must be {max} or less.')
-        .replaceAll('{max}', '$kMaxWordGap'),
+    CommandIssue.contextTooLarge =>
+      s('cmdIssueContext', 'The verse context after ; must be {max} or less.')
+          .replaceAll('{max}', '$kMaxVerseContext'),
+    CommandIssue.gapTooLarge =>
+      s('cmdIssueGap', 'The word gap after * must be {max} or less.')
+          .replaceAll('{max}', '$kMaxWordGap'),
     CommandIssue.compoundUnclosed => s('cmdIssueCompoundUnclosed',
         'Every ( in a compound search needs a matching ).'),
     CommandIssue.compoundSeparator => s('cmdIssueCompoundSeparator',
@@ -1713,16 +1747,19 @@ String? describeCommandIssue(CommandIssue issue, String locale) {
             "Strong's numbers here run G1–G{g} and H1–H{h}.")
         .replaceAll('{g}', '$kMaxGreekStrongs')
         .replaceAll('{h}', '$kMaxHebrewStrongs'),
-    CommandIssue.punctuationSetInvalid => s('cmdIssuePunctSet',
+    CommandIssue.punctuationSetInvalid => s(
+        'cmdIssuePunctSet',
         'After %- or %+ put punctuation marks only — for example %-.?! or '
-        '%-。！？ — or nothing at all to use the sentence-ending marks.'),
+            '%-。！？ — or nothing at all to use the sentence-ending marks.'),
     CommandIssue.punctuationRepeated => s('cmdIssuePunctRepeated',
         'One punctuation test per search: write %- or %+ once.'),
-    CommandIssue.punctuationNeedsPhrase => s('cmdIssuePunctPhraseOnly',
+    CommandIssue.punctuationNeedsPhrase => s(
+        'cmdIssuePunctPhraseOnly',
         "%- and %+ ask what lies BETWEEN words, so they need an ordered "
-        "search — ' or ; — not . or /."),
-    CommandIssue.punctuationWithStrongsTag => s('cmdIssuePunctStrongsTag',
+            "search — ' or ; — not . or /."),
+    CommandIssue.punctuationWithStrongsTag => s(
+        'cmdIssuePunctStrongsTag',
         "The Strong's tagging carries no punctuation, so %- and %+ cannot "
-        'be combined with @.'),
+            'be combined with @.'),
   };
 }
