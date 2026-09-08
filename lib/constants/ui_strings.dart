@@ -9915,4 +9915,53 @@ const uiStrings = {
     'en': '~And God said — regular expression, and the one search that '
         'tells God from god',
   },
+
+  // ====== Interlinear version picker (2026-09-08) ======
+  // Appended as one contiguous block at the end; this file is
+  // append-only and nothing above is reordered.
+  //
+  // The Exegesis panel used to print the reader's own verse as plain
+  // prose above a grid of original-language cards. It now prints a
+  // TAGGED edition instead — the translation's words in reading order
+  // with each run's Strong's number in the line — and lets the reader
+  // say which edition that is. These are the strings the choice needs.
+
+  /// The picker's own label. 「对照」 rather than 「译本」 alone because
+  /// the panel already sits inside a reading version and a second bare
+  /// 译本 would read as a command to change it.
+  'interlinearVersion': {
+    'zh-Hans': '对照译本',
+    'zh-Hant': '對照譯本',
+    'en': 'Interlinear version',
+  },
+
+  /// Said when the reader's own Bible has no Strong's alignment, naming
+  /// both editions. `strip_chronology_layout.dart`: nothing narrows in
+  /// silence — a panel that quietly showed someone else's translation
+  /// would be answering a question the reader did not ask.
+  'interlinearSubstituted': {
+    'zh-Hans': '{reading}没有原文编号对照，下面显示的是{shown}。',
+    'zh-Hant': '{reading}沒有原文編號對照，下面顯示的是{shown}。',
+    'en': '{reading} carries no Strong\'s alignment, so the line below is '
+        '{shown}.',
+  },
+
+  /// A tagged edition that simply has nothing for THIS verse — a book
+  /// outside its canon, or a verse its base text does not carry. The
+  /// plain translation line is shown in its place, so this says why the
+  /// numbers are missing rather than why the text is.
+  'interlinearVerseMissing': {
+    'zh-Hans': '{shown}没有这节经文的原文编号对照。',
+    'zh-Hant': '{shown}沒有這節經文的原文編號對照。',
+    'en': '{shown} has no tagged text for this verse.',
+  },
+
+  /// Defensive: no edition on offer at all. Unreachable while any
+  /// tagged edition ships, and written out anyway so that "the list is
+  /// empty" can never render as a picker with nothing in it.
+  'interlinearNone': {
+    'zh-Hans': '本程序目前没有带原文编号的译本可供对照。',
+    'zh-Hant': '本程式目前沒有帶原文編號的譯本可供對照。',
+    'en': 'No bundled edition carries a Strong\'s alignment.',
+  },
 };

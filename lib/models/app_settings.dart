@@ -173,6 +173,34 @@ const _kChronologyView = 'chronologyView';
 const Set<String> _kChronologyViewAllowed = {'wheel', 'strip'};
 const String _kChronologyViewDefault = 'wheel';
 
+// 2026-09-08: which tagged edition the Exegesis panel draws its
+// interlinear against — 「我想好像微读圣经一样可以选译本」.
+//
+// WHY THIS PERSISTS, since the panel already has a sensible default
+// without it. Left unset the panel follows the reader's own Bible
+// (`resolveInterlinearEdition`), which is right for the reader who
+// never opens the picker and is most of them. Touching the picker is
+// therefore not "show me this once" — it is a reader saying their
+// reading version and their study version are different texts, which is
+// an ordinary thing to want (雅简+ is the tagged Chinese edition; 梁简
+// and 雅繁+ are not) and a tedious thing to re-say every time a verse is
+// selected. So an explicit pick is a preference and outlives the
+// session; the follow-the-reader default is what nobody picked.
+//
+// NOT allowlisted here, unlike `_kChronologyView` above: the legal set
+// is `interlinearEditions`, which is computed from the catalog and the
+// tagged-asset set and so cannot be written as a const. The clamp is
+// applied where it is read — an unoffered code resolves to the default
+// rather than being honoured — which also means an edition that leaves
+// `availableVersions` after a reader picked it degrades quietly to the
+// default instead of blanking the panel.
+//
+// `''` is "never picked". A code is never *cleared* to `''` by the
+// picker, because the picker cannot offer "follow my reading version"
+// as a row without that row meaning something different from every
+// other row in the list.
+const _kInterlinearVersion = 'interlinearVersion';
+
 class AppSettings extends ChangeNotifier {
   /// User's selected font key — what gets persisted in
   /// SharedPreferences (e.g. `'EB Garamond'`). Drives the dropdown
@@ -248,6 +276,8 @@ class AppSettings extends ChangeNotifier {
   String _notesSortMode = _kNotesSortDefault;
   // 2026-09-04: see _kChronologyView comment.
   String _chronologyView = _kChronologyViewDefault;
+  // 2026-09-08: see _kInterlinearVersion comment.
+  String _interlinearVersion = '';
 
   /// Render section / paragraph headings (e.g. "The Sermon on the
   /// Mount" / "登山宝训") above the matched verse in the reading
@@ -399,6 +429,19 @@ class AppSettings extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_kChronologyView, view);
+  }
+
+  /// 2026-09-08: the reader's standing pick of interlinear edition, or
+  /// `''` when they have never made one. See `_kInterlinearVersion` for
+  /// why it persists and why it is not clamped here.
+  String get interlinearVersion => _interlinearVersion;
+
+  Future<void> setInterlinearVersion(String version) async {
+    if (_interlinearVersion == version) return;
+    _interlinearVersion = version;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_kInterlinearVersion, version);
   }
 
   /// [selection] is a catalogue key like `'EB Garamond'` (see
@@ -935,6 +978,12 @@ class AppSettings extends ChangeNotifier {
         ? storedChronologyView
         : _kChronologyViewDefault;
 
+    // 2026-09-08: see _kInterlinearVersion. No allowlist clamp on the
+    // way in — the legal set is computed, and a code that has since
+    // left it is turned back into the default by
+    // `resolveInterlinearEdition`, which is the only reader.
+    _interlinearVersion = prefs.getString(_kInterlinearVersion) ?? '';
+
     // 2026-05-25 (v1.3.41): if a userPrefs JSON blob exists, apply
     // it OVER the legacy individual-key reads above — it carries the
     // full settings snapshot and is the source of truth when
@@ -1019,6 +1068,7 @@ class AppSettings extends ChangeNotifier {
         'showBookIntro': _showBookIntro,
         'notesSortMode': _notesSortMode,
         'chronologyView': _chronologyView,
+        'interlinearVersion': _interlinearVersion,
       };
 
   Future<void> _writeUserPrefsBlob() async {
@@ -1146,6 +1196,9 @@ class AppSettings extends ChangeNotifier {
         _chronologyView = _kChronologyViewAllowed.contains(raw)
             ? raw
             : _kChronologyViewDefault;
+      }
+      if (m['interlinearVersion'] is String) {
+        _interlinearVersion = m['interlinearVersion'] as String;
       }
     } finally {
       _suppressUserPrefsWrite = false;

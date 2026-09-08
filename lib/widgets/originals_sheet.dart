@@ -4,6 +4,8 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'package:seeksparks/constants/bible_versions.dart'
+    show fullBibleVersionLabel;
 import 'package:seeksparks/constants/text_patterns.dart'
     show sanitizeForSearch, versePreviewText;
 import 'package:seeksparks/constants/ui_strings.dart';
@@ -21,9 +23,12 @@ import 'package:seeksparks/services/concordance_service.dart';
 import 'package:seeksparks/services/lxx_service.dart';
 import 'package:seeksparks/services/originals_service.dart';
 import 'package:seeksparks/services/strongs_service.dart';
+import 'package:seeksparks/services/tagged_text_service.dart';
 import 'package:seeksparks/utils/clipboard_helper.dart';
+import 'package:seeksparks/utils/interlinear_editions.dart';
 import 'package:seeksparks/utils/ketiv_qere.dart';
 import 'package:seeksparks/utils/morphology.dart';
+import 'package:seeksparks/widgets/interlinear_verse_text.dart';
 import 'package:seeksparks/utils/search_stats.dart' show HitUnit;
 import 'package:seeksparks/utils/theme_color_helpers.dart';
 import 'package:seeksparks/utils/version_mapper.dart'
@@ -150,6 +155,40 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
   // pattern fixed in v1.2.8 (BYOK Test) but not yet here.
   int _lookupGen = 0;
 
+  // ── the interlinear (2026-09-08) ──────────────────────────────────
+  //
+  // 「这个原文的时候现在是一个个单词翻译 但是我想好像微读圣经一样可以选
+  // 译本 我提供这么多 然后这样看也容易些」. The panel used to print the
+  // reader's own verse as plain prose above the word grid; it now
+  // prints a TAGGED edition with the numbers set into the line, and the
+  // reader says which edition. See `utils/interlinear_editions.dart`
+  // for which editions may be offered, and `widgets/
+  // interlinear_verse_text.dart` for how a verse is set.
+  //
+  // The word grid stays. It is not the same data and does not answer
+  // the same question: the grid is the ORIGINAL — lemma, translit,
+  // parsing, gloss, out of `assets/originals/` — and the interlinear is
+  // a TRANSLATION carrying numbers, out of `assets/tagged/`. Deleting
+  // the grid would take the Hebrew off a Hebrew panel. It is also the
+  // only thing left when a verse has no tagged text, which happens.
+
+  /// The choice the panel resolved this build — which edition, and
+  /// whether it is the reader's own or a substitute.
+  InterlinearChoice _choice =
+      (version: null, source: InterlinearSource.none);
+
+  /// `"Genesis-1-1"` → that verse's runs in [_choice], or null when the
+  /// edition has nothing for it. Missing key = not loaded yet.
+  Map<String, List<TaggedRun>?> _runs = const {};
+
+  /// The edition [_runs] was loaded for, so a rebuild that did not
+  /// change the choice does not reload it.
+  String? _runsFor;
+
+  /// Same staleness guard as [_lookupGen], for the same reason: a
+  /// reader can change the picker twice before the first load lands.
+  int _runsGen = 0;
+
   @override
   void initState() {
     super.initState();
@@ -158,6 +197,67 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
       for (final v in widget.allVerses)
         '${(toEnglish(v.book) ?? v.book)}-${v.chapter}-${v.verse}': v.text,
     };
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Subscribed with `listen: true` on purpose — this is the canonical
+    // place to do it, and it is what makes the panel reload when the
+    // reader picks a different edition (the pick is a persisted
+    // setting, so the picker writes to AppSettings and the reload
+    // arrives back here). Guarded by [_runsFor]: AppSettings notifies
+    // for every preference in the app, and all but one of those must
+    // cost nothing.
+    final chosen = Provider.of<AppSettings>(context).interlinearVersion;
+    _choice = resolveInterlinearEdition(
+      chosen: chosen,
+      currentVersion: widget.currentVersion,
+    );
+    if (_choice.version != _runsFor) _loadInterlinear(_choice.version);
+  }
+
+  Future<void> _loadInterlinear(String? version) async {
+    final myGen = ++_runsGen;
+    _runsFor = version;
+    if (version == null) {
+      if (mounted) setState(() => _runs = const {});
+      return;
+    }
+    final out = <String, List<TaggedRun>?>{};
+    for (final v in widget.verses) {
+      final english = toEnglish(v.book) ?? v.book;
+      out['$english-${v.chapter}-${v.verse}'] =
+          await TaggedTextService.forVerse(
+        version: version,
+        englishBook: english,
+        chapter: v.chapter,
+        verse: v.verse,
+      );
+    }
+    if (!mounted || myGen != _runsGen) return;
+    setState(() => _runs = out);
+  }
+
+  /// Open what a tapped Strong's number has always opened: the word
+  /// entry card, by way of [_onWordTap].
+  ///
+  /// The originals row is preferred over the run because it carries the
+  /// things the card prints that a translation cannot — the pointed
+  /// Hebrew, the transliteration, the morphology, the Ketiv/Qere role.
+  /// The run is the fallback for a number the originals asset does not
+  /// have a word for, which is what `browse_window.dart` already does
+  /// when a tagged translation word is clicked: the number is still
+  /// real and still has a lexicon entry, so refusing the tap would be
+  /// worse than showing the entry under the translation's own word.
+  void _onRunTap(TaggedRun run, _VerseOriginals vo) {
+    for (final w in vo.words ?? const <OriginalWord>[]) {
+      if (w.strongs == run.strongs) {
+        _onWordTap(w);
+        return;
+      }
+    }
+    _onWordTap(OriginalWord(text: run.text.trim(), strongs: run.strongs));
   }
 
   /// Scroll controller for the embedded (docked-pane) presentation; the
@@ -534,6 +634,12 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
                 controller: scrollController,
                 padding: _st.listPadding,
                 children: [
+                  // Scrolls with the content rather than being pinned
+                  // above it: at 375 pt the panel's whole job is to
+                  // show a verse and an entry card, and a permanently
+                  // parked control row would spend a line of that on
+                  // something a reader touches once.
+                  _buildInterlinearPicker(scheme, locale),
                   for (final vo in data) _buildVerseBlock(vo, scheme),
                   if (_selectedWord != null) ...[
                     const SizedBox(height: 16),
@@ -551,6 +657,149 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
     );
   }
 
+  /// The picker, and the one sentence it sometimes has to say.
+  ///
+  /// A menu rather than a row of chips, and the rows carry
+  /// [fullBibleVersionLabel] rather than the four-character gutter tag.
+  /// That is the complaint filed against this app on the same day the
+  /// feature was asked for — 「BGT BSB 雅简这些别人看简写不知道什么意思」
+  /// — and a chip row of `BSB / CSB / KJV+S / LXX+WH / 雅简+` would be a
+  /// fresh instance of it, in a picker whose entire purpose is letting
+  /// a reader choose a text they recognise.
+  Widget _buildInterlinearPicker(ColorScheme scheme, String locale) {
+    final offered = interlinearEditions;
+    final label = uiStrings['interlinearVersion']?[locale] ??
+        'Interlinear version';
+
+    if (offered.isEmpty || _choice.version == null) {
+      return Padding(
+        padding: EdgeInsets.only(bottom: _st.dense ? 8 : 12),
+        child: Text(
+          uiStrings['interlinearNone']?[locale] ??
+              'No bundled edition carries a Strong\'s alignment.',
+          style: TextStyle(
+            fontSize: _st.gloss,
+            color: scheme.onSurfaceVariant,
+            fontStyle: FontStyle.italic,
+          ),
+        ),
+      );
+    }
+
+    final shown = _choice.version!;
+    return Padding(
+      padding: EdgeInsets.only(bottom: _st.dense ? 8 : 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Wrap, not Row: at 375 pt "Interlinear version" beside
+          // "和合本雅伟版(简体)" is wider than the column, and a Row
+          // would either overflow or ellipsise the edition name — which
+          // is the one string on this line the reader is here to read.
+          Wrap(
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 8,
+            runSpacing: 4,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: _st.ref,
+                  fontWeight: FontWeight.w600,
+                  color: scheme.onSurfaceVariant,
+                ),
+              ),
+              PopupMenuButton<String>(
+                tooltip: label,
+                initialValue: shown,
+                onSelected: (code) =>
+                    context.read<AppSettings>().setInterlinearVersion(code),
+                itemBuilder: (_) => [
+                  for (final code in offered)
+                    PopupMenuItem<String>(
+                      value: code,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            code == shown
+                                ? Icons.check
+                                : Icons.check_box_outline_blank,
+                            size: _ty.scaled(14),
+                            color: code == shown
+                                ? _st.accent
+                                : Colors.transparent,
+                          ),
+                          const SizedBox(width: 6),
+                          Flexible(
+                            child: Text(
+                              fullBibleVersionLabel(code),
+                              style: TextStyle(fontSize: _st.body),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+                child: Container(
+                  padding: _st.dense
+                      ? const EdgeInsets.symmetric(horizontal: 6, vertical: 3)
+                      : const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: _st.chipFill,
+                    borderRadius: _st.r(8),
+                    border:
+                        Border.all(color: _st.chipBorder, width: _st.borderWidth),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          fullBibleVersionLabel(shown),
+                          style: TextStyle(
+                            fontSize: _st.body,
+                            fontWeight: FontWeight.w600,
+                            color: scheme.onSurface,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Icon(
+                        Icons.arrow_drop_down,
+                        size: _ty.scaled(18),
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          // Nothing narrows in silence: a reader whose Bible has no
+          // tagging is told whose translation they are looking at
+          // instead, by name, rather than left to notice.
+          if (_choice.source == InterlinearSource.substituted &&
+              widget.currentVersion != null) ...[
+            SizedBox(height: _st.dense ? 3 : 5),
+            Text(
+              (uiStrings['interlinearSubstituted']?[locale] ??
+                      '{reading} carries no Strong\'s alignment, so the line '
+                          'below is {shown}.')
+                  .replaceAll(
+                      '{reading}', fullBibleVersionLabel(widget.currentVersion!))
+                  .replaceAll('{shown}', fullBibleVersionLabel(shown)),
+              style: TextStyle(
+                fontSize: _st.gloss,
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   Widget _buildVerseBlock(_VerseOriginals vo, ColorScheme scheme) {
     final ref = '${vo.verse.book} ${vo.verse.chapter}:${vo.verse.verse}';
     final isHebrew = (vo.words ?? const []).isNotEmpty &&
@@ -565,6 +814,14 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
     // reads cleanly. We keep `[...]` (e.g. KJV italicized supplied
     // words) since that's part of the published text.
     final verseText = sanitizeForSearch(vo.verse.text);
+    // 2026-09-08: the runs of the chosen interlinear edition, when it
+    // has this verse. Null covers three states the block treats alike
+    // because the reader cannot act differently on them — not loaded
+    // yet, this edition has no such book, this edition has no such
+    // verse — and only the third is worth a sentence, so the note below
+    // waits until the load has actually landed for this edition.
+    final runs = _runs['$englishBook-${vo.verse.chapter}-${vo.verse.verse}'];
+    final loaded = _runsFor != null && _runs.isNotEmpty;
 
     return Padding(
       padding: EdgeInsets.only(bottom: _st.dense ? 10 : 16),
@@ -580,12 +837,15 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
               letterSpacing: 0.4,
             ),
           ),
-          if (verseText.isNotEmpty) ...[
+          if (runs != null || verseText.isNotEmpty) ...[
             SizedBox(height: _st.dense ? 3 : 6),
-            // Show the verse as it appears in the user's current
-            // version above the original-language line so the reader
-            // can compare their translation to the Hebrew/Greek and
-            // the per-word glosses below.
+            // The translation line, in the same place it has always
+            // been: above the original-language row so the reader can
+            // read down from the sentence to the words. What changed on
+            // 2026-09-08 is what is IN it — the chosen edition's own
+            // words with their Strong's numbers in the line, instead of
+            // the current version's text as plain prose. Same block,
+            // same accent rule, more in it.
             LeftAccentCard(
               // v1.3.x: was Container(BoxDecoration(border:
               // Border(left:...), borderRadius:...)) — non-uniform
@@ -598,15 +858,42 @@ class _OriginalsSheetState extends State<OriginalsSheet> {
               // workbench density unchanged: it is what says "this line
               // is the translation, the row under it is the original".
               accentWidth: 3,
-              child: Text(
-                verseText,
+              child: runs != null
+                  ? InterlinearVerseText(
+                      runs: runs,
+                      style: _st,
+                      // The reader's own switch for Strong's numbers in
+                      // this panel. Off leaves the line as running
+                      // prose, which is what the panel printed before
+                      // today — honest, and still the edition they
+                      // picked rather than the one they are reading.
+                      showNumbers:
+                          context.watch<AppSettings>().showStrongsInOriginals,
+                      highlightStrongs: _selectedWord?.strongs,
+                      onTapRun: (run) => _onRunTap(run, vo),
+                    )
+                  : Text(
+                      verseText,
+                      style: TextStyle(
+                        fontSize: _st.body,
+                        color: scheme.onSurface,
+                        height: _st.dense ? WbMetrics.lineHeight : 1.5,
+                      ),
+                    ),
+            ),
+            if (runs == null && loaded && _choice.version != null) ...[
+              SizedBox(height: _st.dense ? 2 : 4),
+              Text(
+                (uiStrings['interlinearVerseMissing']?[widget.locale] ??
+                        '{shown} has no tagged text for this verse.')
+                    .replaceAll(
+                        '{shown}', fullBibleVersionLabel(_choice.version!)),
                 style: TextStyle(
-                  fontSize: _st.body,
-                  color: scheme.onSurface,
-                  height: _st.dense ? WbMetrics.lineHeight : 1.5,
+                  fontSize: _st.gloss,
+                  color: scheme.onSurfaceVariant,
                 ),
               ),
-            ),
+            ],
           ],
           SizedBox(height: _st.dense ? 6 : 10),
           if (words == null || words.isEmpty)
