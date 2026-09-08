@@ -1068,7 +1068,7 @@ const List<_AramaicEntry> _aramaicPassages = [
 /// Each row is tappable: Hebrew / Greek open the standard verse
 /// picker → OriginalsSheet, Aramaic opens a curated list of all
 /// Aramaic passages (small enough to enumerate fully). The
-/// OriginalsSheet already has Gemini AI explain built in, so all
+/// OriginalsSheet carries the word-by-word originals panel, so all
 /// three flows give the user the same exegesis affordance.
 class _BibleLanguagesCard extends StatelessWidget {
   final _OverviewView view;
@@ -1108,7 +1108,7 @@ class _BibleLanguagesCard extends StatelessWidget {
               settings: settings,
               // Hebrew → standard verse picker. User picks any OT
               // verse and the OriginalsSheet shows word-by-word
-              // breakdown (with Gemini AI explain).
+              // breakdown.
               onTap: () => _ExegesisLauncher.pickAndStudy(
                 context: rowCtx,
                 locale: locale,
@@ -1170,7 +1170,7 @@ class _BibleLanguagesCard extends StatelessWidget {
   }
 
   /// Open the curated Aramaic-passages list. Each entry tap opens
-  /// the same OriginalsSheet (with Gemini AI explain) Hebrew/Greek
+  /// the same OriginalsSheet Hebrew/Greek
   /// rows reach via the verse picker.
   void _openAramaicSheet(
       BuildContext context, String locale, AppSettings settings) {
@@ -1192,7 +1192,7 @@ class _BibleLanguagesCard extends StatelessWidget {
 ///   • the actual Aramaic / transliterated phrase (where applicable)
 ///   • a one-line factual description in the user's locale
 ///   • a 'Study →' affordance that opens the OriginalsSheet for
-///     the starting verse — and from there Gemini AI explain is
+///     the starting verse — and from there the originals panel is
 ///     one tap away inside the sheet itself.
 ///
 /// We deliberately don't render the verse text in this sheet —
@@ -1258,7 +1258,7 @@ class _AramaicPassagesSheet extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 uiStrings['aramSheetSubtitle']?[locale] ??
-                    'Tap any entry to open the verse with word-by-word breakdown and Gemini AI explanation.',
+                    'Tap any entry to open the verse with a word-by-word breakdown.',
                 style: TextStyle(
                   fontSize: settings.wbType.scaledSmall(12),
                   color: WbColors.of(context).mutedText,
@@ -1562,7 +1562,7 @@ class _LanguageRow extends StatelessWidget {
 
   /// Round 56: tappable affordance — Hebrew/Greek opens the verse
   /// picker, Aramaic opens the curated passages sheet. Each path
-  /// ultimately lands on the OriginalsSheet which has Gemini AI
+  /// ultimately lands on the OriginalsSheet which has the originals
   /// explain built in.
   final VoidCallback? onTap;
 

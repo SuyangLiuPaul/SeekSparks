@@ -37,10 +37,10 @@ modern, free, cross-platform stack. SeekSparks does not use the BibleWorks name,
 of its code or data; the search grammar and UI here are an independent design informed by
 BibleWorks 10's own published help file (`docs/bibleworks-reference.md`).
 
-Current release: **v1.6.236** (`pubspec.yaml`). It has grown well past its original "v1" scope
-— a BibleWorks-style radial/strip chronology wheel, an atlas of 1,276 places, and its own
-serverless AI-search backend are among the additions since the fork, and none of them are in
-YsWords.
+Current release: see `pubspec.yaml`. It has grown well past its original "v1" scope — a
+BibleWorks-style radial/strip chronology wheel with a year cursor on both forms, an atlas of
+1,276 places, KWIC, phrasing, a word-list manager and Eagle's View's Modern Concordance are
+among the additions since the fork, and none of them are in YsWords.
 
 ---
 
@@ -116,7 +116,7 @@ version before (see `AGENTS.md`).
 | Atlas, maps & illustrations | 1,276 biblical places with verse links, journey maps, and 1,192 illustration plates (public-domain classics — Tissot, Schnorr, Doré, Rembrandt and others — plus 40 licensed Sweet Publishing plates and 151 whose original source was never recorded, each disclosed in-app rather than assumed public domain). |
 | Bible Evidence, Sermons, Timeline, Trivia, Family Tree, Nave's Topical Bible, Hebrew Kings | Sermons: 289 messages by Eric H.H. Chang (张熙和牧师), in English, Simplified, and Traditional Chinese. Family Tree: 277 people. All inherited from YsWords at fork time and independently audited and corrected since — see `docs/DATA-INTEGRITY.md` for the running list of every cross-check. |
 | Highlights, bookmarks, notes | Local-first, persisted with `shared_preferences`. Since cloud sync was removed app-wide (see below), this is the *only* place this data lives — the Settings export/import card (Markdown or JSON) is the way to move it between devices. |
-| AI search (optional) | An AI-assisted search mode alongside the exact-match one, plus an AI word-explanation card — both call small serverless functions this app owns (`netlify/functions/`, Gemini-backed). This is the one place the app leaves its own device; everything else above runs entirely offline once loaded. |
+| No AI, anywhere | Removed in full on 2026-09-07 at the owner's instruction — the search mode, the word-explanation card, the `ai` command verb, the BYOK key card and the three serverless functions behind them. Nothing in this app calls a model, and nothing here should propose adding one back. Everything runs entirely offline once loaded. |
 
 **Known gaps, stated plainly:**
 - English-word → original-language reverse lookup and a spaced-repetition vocabulary trainer
@@ -159,9 +159,10 @@ materially different, stricter query than `G25 NEAR20 G26`.
   all any more, in either app; the Settings export/import card is the migration path instead.
   Earlier notes in this README describing a placeholder `firebase_options.dart` are stale —
   that file doesn't exist in this tree any more.
-- **Own serverless functions, own site.** The AI-search / AI-explain-word / error-report /
-  feedback functions in `netlify/functions/` run on SeekSparks' own Netlify site with their
-  own environment variables — they are not proxied through, or shared with, YsWords' backend.
+- **Own serverless functions, own site.** The error-report and feedback functions in
+  `netlify/functions/` run on SeekSparks' own Netlify site with their own environment
+  variables — they are not proxied through, or shared with, YsWords' backend. (The three AI
+  functions that used to sit beside them went with the AI removal.)
 - **Own GitHub repo, own Netlify sites** (dev + prod) — no shared deploy target with YsWords.
 - **Independent web identity.** Dart package name `seeksparks` (not `yswords`) and its own
   local-storage keys — running this build alongside YsWords in the same browser profile won't
@@ -178,12 +179,11 @@ materially different, stricter query than `G25 NEAR20 G26`.
 ## Architecture at a glance
 
 A static Flutter web build for the reading experience, plus a small serverless API this app
-owns for the two features that genuinely need a model call (AI search, AI word explanation)
-and for error/feedback reporting. Bible text, Strong's lexicons, and the concordance index all
-ship as bundled JSON in `assets/`; structured search is pure Dart logic
+owns for error and feedback reporting. Bible text, Strong's lexicons, and the concordance
+index all ship as bundled JSON in `assets/`; structured search is pure Dart logic
 (`lib/utils/strongs_boolean_search.dart` + `lib/utils/strongs_proximity.dart`) over that
-already-loaded data — no server round-trip, no new indexing pipeline. Only the AI-assisted
-search mode leaves the device.
+already-loaded data — no server round-trip, no new indexing pipeline. **Nothing the reader
+does leaves the device**, which stopped being a qualified claim when the AI subsystem went.
 
 `lib/` (measured by file count):
 
@@ -202,7 +202,7 @@ lib/
   widgets/      (61 files)  Shared UI — command_pane.dart (Workbench's left pane),
                              docked_panel.dart (the right-docked panel primitive),
                              word_analysis_pane.dart, analysis_tabs.dart
-netlify/functions/          The AI search / word-explain / error-report / feedback backend
+netlify/functions/          The error-report / feedback backend
 ```
 
 A newcomer (human or AI) reading this repo cold should start with, in order: `AGENTS.md`

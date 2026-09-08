@@ -2,18 +2,21 @@
   command = "echo 'Flutter web pre-built'"
   publish = "build/web"
 
-# Netlify Functions for the AI-search Gemini proxy. Source lives in
-# `netlify/functions/`; the function URL is exposed at
-# `/.netlify/functions/aiSearch` and (via the explicit `path` config
-# inside the function) also at `/api/aiSearch`.
+# Netlify Functions. Source lives in `netlify/functions/`; each is
+# exposed at `/.netlify/functions/<name>` and (via the explicit `path`
+# config inside the function) also at `/api/<name>`.
 #
-# `included_files` ships `assets/bible_evidence.json` inside the
-# function bundle so the prompt builder can read it without a
-# network roundtrip on every invocation.
+# 2026-09-08: `aiSearch`, `aiBibleSearch` and `aiExplainWord` were
+# deleted here, three weeks after the app-side AI removal (v1.6.252)
+# had already cut every call path to them. They stayed deployed and
+# reachable in the meantime — an app with no AI in it, still answering
+# on three AI endpoints. `included_files` went with them: it existed to
+# put `assets/bible_evidence.json` inside the bundle for the prompt
+# builder, and the two functions left (error reports, feedback) read no
+# asset at all.
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
-  included_files = ["assets/bible_evidence.json"]
 
 # Static-file SPA fallback. The Netlify Function URLs (`/api/*` and
 # `/.netlify/functions/*`) are matched and served by Netlify BEFORE

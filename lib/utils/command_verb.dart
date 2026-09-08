@@ -24,7 +24,10 @@
 ///     l             lift the limit
 ///     3:16          chapter 3 verse 16 OF THE CURRENT BOOK
 ///     17            verse 17 OF THE CURRENT CHAPTER
-///     ai <question> ask for passages by describing them
+///
+/// (`ai <question>` was here until 2026-09-07 and is gone with the rest
+/// of the AI subsystem — see the note above `CommandVerb` for why its
+/// removal made the grammar cleaner rather than poorer.)
 ///
 /// ## What a naive reading of "add a command verb" would miss
 ///
