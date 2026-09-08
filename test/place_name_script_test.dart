@@ -4,8 +4,8 @@
 // assets/bible_places.json's `s`/`t` fields were produced by an opencc
 // profile that does Taiwan-idiom substitution, not plain script
 // conversion — correct for UI vocabulary, wrong for proper nouns. It
-// wrote 穀 (grain) where the Bible's own traditional edition always
-// writes 谷 (valley), and transliterated a handful of English headwords
+// wrote 穀 (grain) where these place names need 谷 (valley), and
+// transliterated a handful of English headwords
 // (埃布尔 for "Abel") instead of using the CUV's own 亞伯. Deriving a
 // simplified<->traditional character map from assets/cuvs-yhwh.json and
 // assets/cuvs-yhwh-tr.json (31,102 verse pairs, all equal length) and
@@ -113,14 +113,43 @@ void main() {
             'repair that must be removed from the allow-list: $failing');
   });
 
-  test('no traditional place name contains 穀 — our Bible never uses it',
-      () {
+  // CORRECTED 2026-09-08. This test is right and its original reason was
+  // not, so the reason is restated rather than the assertion changed.
+  //
+  // Check 53 argued 穀 is wrong in a place name because "the traditional
+  // CUV always writes 谷" — measured as 谷 244 / 穀 0 across the 31,102
+  // verses of assets/cuvs-yhwh-tr.json. That zero is not a fact about the
+  // 和合本. It is a fact about OUR conversion: cuvs-yhwh-tr.json was made
+  // from the Simplified edition by a pass that resolved each ambiguous
+  // Simplified character once and for all, and Simplified 谷 is either 谷
+  // (valley) or 穀 (grain). The zero is the collapse, not a convention —
+  // the same file reads 「因為谷不可勝數」 at 創世紀 41:49, where Joseph
+  // stores grain, not terrain.
+  //
+  // The measurement that settles it: yswords carries an independently
+  // repaired copy of this same edition, in which the split was restored.
+  // There 穀 occurs 68 times and every one is grain (五穀, 踹穀, 穀種,
+  // 炒穀) — while the place names are spelt exactly as check 53 wrote
+  // them: 亞割谷 x5, 欣嫩子谷 x10, 谷門 x4, and no 亞割穀 / 欣嫩子穀 /
+  // 穀門 anywhere. So the 46 repairs were substantively correct and stay.
+  //
+  // The reason they are correct is semantic, not statistical: the Valley
+  // of Achor, the Valley of Hinnom and the Valley Gate are valleys. Do
+  // not re-derive this rule from a character frequency in our own
+  // Traditional asset — that asset cannot witness the 谷/穀 distinction,
+  // because it is the file that lost it.
+  test('valley place names are spelt 谷 because they are valleys, not '
+      'because our Traditional asset happens to lack 穀', () {
     final offenders = places
         .where((r) => r['t'] != null && (r['t'] as String).contains('穀'))
         .map((r) => r['n'] as String)
         .toList();
     expect(offenders, isEmpty,
-        reason: 'assets/cuvs-yhwh-tr.json uses 谷 (valley) 244 times and '
-            '穀 (grain) 0 times in 31,102 verses; offenders: $offenders');
+        reason: 'every place name carrying 谷 in this atlas is a valley '
+            '(亞割谷, 欣嫩子谷, 谷門, 汲淪谷); 穀 is grain and cannot be '
+            'right in any of them. NB: do NOT justify this from '
+            'assets/cuvs-yhwh-tr.json, whose 穀 count of 0 is an artifact '
+            'of our own Simplified-to-Traditional collapse; offenders: '
+            '$offenders');
   });
 }

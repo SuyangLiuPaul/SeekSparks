@@ -7087,13 +7087,46 @@ authority:**
 
 4 + 47 = **51 suspects out of 1,273**.
 
-**The largest class: 谷 (valley) rendered as 穀 (grain).** Over the whole
-31,102-verse traditional edition, 穀 occurs **0** times and 谷 occurs **244**
-times, including the exact strings 亞割谷 ×5, 欣嫩子谷 ×10, 谷門 ×4. The atlas
-printed 亞割穀, 欣嫩子穀, 穀門 — 穀 is *grain*, 谷 is *valley*; a 繁體 reader was
-being shown "the Grain of Achor". This class covered 24 of the 25 places
-carrying 穀 (Gudgodah's `s`/`t` mismatch — 谷歌大/穀歌大, literally "Google" —
-was the 25th).
+**The largest class: 谷 (valley) rendered as 穀 (grain).** The atlas printed
+亞割穀, 欣嫩子穀, 穀門 — 穀 is *grain*, 谷 is *valley*; a 繁體 reader was being
+shown "the Grain of Achor". This class covered 24 of the 25 places carrying
+穀 (Gudgodah's `s`/`t` mismatch — 谷歌大/穀歌大, literally "Google" — was the
+25th).
+
+> **Correction, 2026-09-08 — the repairs were right; this paragraph's
+> reason was wrong.** As originally written it argued from a corpus count:
+> "over the whole 31,102-verse traditional edition, 穀 occurs **0** times
+> and 谷 occurs **244** times". Both numbers are still true of
+> `assets/cuvs-yhwh-tr.json`, and the inference drawn from them — that the
+> traditional CUV *always writes* 谷 — is not.
+>
+> That zero is our own artifact. `cuvs-yhwh-tr.json` is not the publisher's
+> Traditional edition; the publisher has never shipped one. It is our
+> conversion of the Simplified text, made by a pass that resolved each
+> ambiguous Simplified character once and for all — and Simplified 谷 is
+> either 谷 (valley) or 穀 (grain). The file therefore reads 「因為谷不可勝
+> 數」 at 創世紀 41:49, where Joseph is storing *grain*. The same collapse
+> hit other one-to-many pairs in the same way — measured 2026-09-08, this
+> asset contains 髮 0 / 發 1,375, 麵 0 / 面 2,184, 鬚 0, 牆 0, 崙 0, 穀 0.
+> **Recorded as a property of the asset, not as work to do:** 和合本雅偉版
+> is the publisher's text and they declined our corrections to it (owner,
+> 2026-09-02, 「cuvs yhwh这个不用管 因为出版方说这个不要」), so the reading
+> assets are read-only. The point here is only that the file cannot serve
+> as a witness about Traditional orthography.
+>
+> The correct justification is semantic: the Valley of Achor, the Valley of
+> Hinnom, the Valley Gate and the Kidron Valley are valleys, so 谷 is right
+> and 穀 could not be. Independent confirmation: yswords carries a repaired
+> copy of this same edition in which the split was restored — there 穀
+> occurs 68 times, every one of them grain (五穀, 踹穀, 穀種, 炒穀), while
+> the place names are spelt exactly as this check wrote them (亞割谷 ×5,
+> 欣嫩子谷 ×10, 谷門 ×4, and no 穀 spelling of any of them).
+>
+> **Do not use `cuvs-yhwh-tr.json` as a witness for the 谷/穀 distinction,
+> or for any other one-to-many Simplified→Traditional split.** It is the
+> file that lost the distinction, so it can only ever vote one way. The
+> guard test `test/place_name_script_test.dart` has been restated to assert
+> the same thing for the semantic reason instead.
 
 **The adjudication rule.** For each suspect, with `SP` the concatenated
 simplified CUV and `TR` the traditional: if `SP` attests `s` and `TR` does

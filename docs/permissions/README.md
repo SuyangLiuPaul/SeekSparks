@@ -125,6 +125,81 @@ change the grant does not mention either way.
 
 ---
 
+## Eagle's View — a spoken grant, recorded here because nothing else was
+
+**Original: none.** There is no document for this one, and that is the
+point of this section: six attribution strings in the app say *"used by
+permission"*, and until 2026-09-08 the only record of that permission was
+a note in another repository's memory directory. This section is not a
+grant. It is the record of what was said, by whom, and when, so the
+claim on the About screen has a file behind it and the gap is visible
+rather than assumed away.
+
+| | |
+|---|---|
+| Date | 2026-08-07 |
+| Grantor | The owner's pastor, author of Eagle's View (eaglesviewsoftware.com; the binaries name **AO Survey Pty Ltd**) |
+| Form | **Spoken / relayed by the owner.** Not a signed document, not an email on file |
+| Asked | Two questions, put explicitly, both answered "with permission" |
+
+**What was asked and granted, verbatim from the record of the exchange:**
+
+1. reusing and publicly distributing **AOSurvey's verse-to-Strong's
+   tagging and alignment** — not merely the underlying public-domain
+   text;
+2. reusing and publicly distributing the **Modern Concordance's**
+   bilingual topic / section / subsection scheme, its verse links and
+   its corpus statistics — despite that scheme following the
+   copyrighted *Modern Concordance to the New Testament* (Darton,
+   Longman & Todd, 1976).
+
+### What rests on it
+
+Eight datasets ship from Eagle's View, and the app's own wording splits
+them in two. **The split is load-bearing and must not be flattened.**
+
+| Asset | Credit as shown | Rests on the grant? |
+|---|---|---|
+| `assets/greek_stats/` | AOSurvey © 2007 · **used by permission** | yes |
+| `assets/concordance/` (341 topics) | Eagle's View, following *Modern Concordance* 1976 · **used by permission** | yes |
+| `assets/ot_synopsis.json` | **used by permission** | yes |
+| `assets/bible_places.json` (1,276 places) | **used by permission** | yes |
+| `assets/bible_names.json` | Hitchcock's Bible Names, 1869, public domain · **supplied with** Eagle's View | no — PD in its own right |
+| `assets/thayer.json` | Thayer 1889, public domain · **supplied with** Eagle's View | no — PD in its own right |
+| `kjvs`, `lxxwh`, `cuvs-plus` | "Public domain text · electronic edition from Eagle's View" | the *alignment* does; the text is PD |
+
+*"Used by permission"* marks AOSurvey's own labour — the statistics, the
+verse-to-Strong's alignment, the topic scheme. *"Supplied with"* marks a
+public-domain reference work that merely travelled on the same disc.
+`lib/constants/version_attribution.dart` states the same distinction for
+the three texts: *"the texts themselves are public domain, the electronic
+edition and its Strong's alignment are not."*
+
+### What was deliberately NOT taken
+
+- **The NASB modules** (`NASB`, `nsn+`). The database carries the
+  *publisher's* own notice — "you do not have permission to redistribute,
+  modify, or profit from this text in any way" — which is Lockman's to
+  waive and not the ministry's. `assets/nasb-ev.json`,
+  `assets/nsn-plus.json` and `assets/tagged/nsn-plus/` are gitignored so
+  a stray `git add -A` cannot publish them; `git ls-files` returns zero
+  rows for all three.
+- **RSV and NET** (in the vendor's `Bibles.zip`) — under active
+  copyright, never touched.
+- **The pinyin index** (22,991 entries, `Index.mdb`). Not named in either
+  question above, so it is outside the grant as recorded. Not imported.
+
+### What is still missing
+
+A document. The grant is real and was given directly to the owner, but
+it exists here as a note of a conversation. The CSB above shows what the
+same claim looks like when it is on file. If the pastor is willing to put
+the two answers in writing — even a one-paragraph email — it belongs in
+this directory beside the CSB PDF, and this section should then say so
+and cite it.
+
+---
+
 ## The other bundled texts
 
 No document on file for these; their licence strings live in
