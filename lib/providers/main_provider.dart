@@ -1750,13 +1750,40 @@ class MainProvider extends ChangeNotifier {
         stored: savedVersion,
         fallback: localeDefaultVersion(localeForResolve),
       );
-      if (isPrimary && v != savedVersion.toLowerCase()) {
+      final retired = savedVersion.toLowerCase();
+      if (isPrimary && v != retired) {
         // Only the primary pane speaks: the split column raising its own
         // notice would tell the reader the same thing twice.
-        retiredVersionNotice = (
-          requested: savedVersion.toLowerCase(),
-          substituted: v,
-        );
+        //
+        // 2026-09-09: and only ONCE PER RETIRED CODE, which is what the
+        // field's own docstring has always promised — "a substitution is
+        // news exactly once, and a notice that reappears on every launch
+        // is a nag about a decision the reader cannot change". It was
+        // keeping that promise only within a session.
+        //
+        // Rewriting the stored preference is NOT enough and was tried
+        // first: `savedVersion` is read from the synced `lastRead` blob
+        // BEFORE it falls back to the local pref (see above), so a cloud
+        // copy still naming the retired edition re-supplies it on every
+        // launch no matter what this device writes. The sentinel does
+        // not care where the value came from.
+        //
+        // Reported as a black bar at the bottom of the loading screen,
+        // every time Sword opened: 「为什么有提示 BSB Y 不能提供？不应该
+        // 有这个任何 popup 啊」. The reader was right twice over — they
+        // had not asked for anything, and BSB-Y is the edition being
+        // GIVEN, not the one being refused. `bsb` joined
+        // `disabledVersions` on 2026-09-08 and everyone whose preference
+        // was `bsb` has been told so on every launch since.
+        //
+        // Keyed BY CODE, not a single boolean: retiring a second edition
+        // later is news again, and deserves to be said again.
+        const toldKey = 'retired_version_told';
+        final told = prefs.getStringList(toldKey) ?? const <String>[];
+        if (!told.contains(retired)) {
+          retiredVersionNotice = (requested: retired, substituted: v);
+          await prefs.setStringList(toldKey, [...told, retired]);
+        }
       }
       // 2026-05-26 (v1.3.46): one-time migration for English-locale
       // users whose saved version is the v1.3.40-era class-level

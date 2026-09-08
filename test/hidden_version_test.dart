@@ -52,6 +52,7 @@ import 'package:seeksparks/constants/version_attribution.dart';
 import 'package:seeksparks/constants/workbench_theme.dart'
     show kVersionTagColors;
 import 'package:seeksparks/providers/main_provider.dart';
+import 'package:seeksparks/services/profile_service.dart';
 import 'package:seeksparks/services/workbench_warmup.dart'
     show defaultParallelVersions, sanitiseParallelVersions;
 import 'package:seeksparks/utils/version_abbreviation.dart';
@@ -388,6 +389,60 @@ void main() {
           reason: 'a silent swap reads as the app forgetting their choice');
       expect(mp.retiredVersionNotice!.requested, 'nasb');
       expect(mp.retiredVersionNotice!.substituted, 'bsb-yhwh');
+    });
+
+    // 2026-09-09. `retiredVersionNotice`'s own docstring promises "a
+    // substitution is news exactly once, and a notice that reappears on
+    // every launch is a nag about a decision the reader cannot change",
+    // and until today it only kept that promise WITHIN a session. It
+    // cleared the field and left the stored preference alone, so the
+    // next launch re-read the retired code, re-resolved it, and said the
+    // same sentence again — forever.
+    //
+    // Reported as a black bar at the bottom of the loading screen every
+    // time Sword opened: 「为什么有提示 BSB Y 不能提供？不应该有这个任何
+    // popup 啊」. The reader was right twice — they had not asked for
+    // anything, and BSB-Y is the edition being GIVEN, not the one being
+    // refused. `bsb` went into `disabledVersions` on 2026-09-08, and
+    // anyone whose saved preference was `bsb` has been told about it on
+    // every launch since.
+    test('a retired edition is announced once, not on every launch',
+        () async {
+      // THE CONDITION THAT ACTUALLY REPRODUCES IT. Rewriting the local
+      // preference is not enough and was tried first: `restoreState`
+      // reads the synced `lastRead` blob BEFORE it falls back to the
+      // per-key pref, so a cloud copy still naming the retired edition
+      // re-supplies it on every launch however many times this device
+      // writes its own. That is why the reader saw the bar every time
+      // rather than once.
+      final lastRead = ProfileService.instance.scopedKey('lastRead');
+      const blob = '{"version":"bsb","book":"John","chapter":1}';
+      SharedPreferences.setMockInitialValues({
+        lastRead: blob,
+        'version': 'bsb',
+        'locale': 'en',
+        'migrated_locale_default_v1346': true,
+      });
+
+      final first = MainProvider();
+      await first.restoreState();
+      expect(first.currentVersion, 'bsb-yhwh');
+      expect(first.retiredVersionNotice, isNotNull,
+          reason: 'the first launch after the retirement owes them the '
+              'truth about which Bible they are looking at');
+      expect(first.retiredVersionNotice!.requested, 'bsb');
+
+      // The blob still says `bsb` — this device cannot make the cloud
+      // forget, and that is the point.
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(lastRead, blob);
+
+      final second = MainProvider();
+      await second.restoreState();
+      expect(second.currentVersion, 'bsb-yhwh');
+      expect(second.retiredVersionNotice, isNull,
+          reason: 'this is the nag the docstring forbids — 「为什么有提示 '
+              'BSB Y 不能提供？不应该有这个任何 popup 啊」');
     });
 
     test('a saved LEB reader keeps the LEB, and is told nothing', () async {
