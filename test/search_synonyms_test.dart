@@ -84,7 +84,13 @@ void main() {
       }
       expect(kCuvSimplifiedChars, expectedS.toString());
       expect(kCuvTraditionalChars, expectedT.toString());
-      expect(kCuvSimplifiedChars.length, 1107);
+      // 1,107 until 2026-09-08, when repairing the Traditional
+      // edition's one-to-many collapses gave four Simplified characters
+      // a second Traditional form they had never had here (松→鬆, 胡→鬍,
+      // 谷→穀, 采→採 were each opposite themselves before) and gave four
+      // more a second entry (发→髮, 仑→崙, 墙→牆, 须→鬚). Regenerate
+      // with tools/build_cuv_char_table.py rather than hand-patching.
+      expect(kCuvSimplifiedChars.length, 1115);
     });
 
     test('no Traditional character stands opposite two Simplified ones, so '
