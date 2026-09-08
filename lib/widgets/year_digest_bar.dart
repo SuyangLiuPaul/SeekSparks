@@ -178,9 +178,14 @@ class _YearDigestBarState extends State<YearDigestBar> {
               SizedBox(width: t.scaled(10)),
               Expanded(
                 child: Text(
-                  summary.isEmpty
-                      ? widget.s('chronoYearNothing', 'nothing dated here')
-                      : summary,
+                  // Empty when there is nothing to count, because the
+                  // line underneath already says it in a full sentence.
+                  // Printing "nothing dated here" beside "No record in
+                  // this chart is dated to this year" said the same
+                  // thing twice in one glance, which reads as two
+                  // findings rather than one. Seen on a phone, where the
+                  // two lines are four millimetres apart.
+                  summary,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(color: wb.mutedText, fontSize: t.scaled(11)),
                 ),

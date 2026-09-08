@@ -229,16 +229,54 @@ mixin WheelSheets<T extends StatefulWidget> on State<T> {
 
   // ── detail sheets ──────────────────────────────────────────────────
 
-  Widget buildSheet(BuildContext sheet, List<Widget> children) =>
-      ConstrainedBox(
-        constraints:
-            BoxConstraints(maxHeight: MediaQuery.of(sheet).size.height * 0.7),
-        child: ListView(
+  /// The scaffold every detail sheet on both chronology forms is built
+  /// in — ten of them in this file.
+  ///
+  /// IT CARRIES THE CLOSE BUTTON, AND UNTIL 2026-09-08 NOTHING DID.
+  /// `workbench_theme` sets `showDragHandle: false` for every sheet in
+  /// the app, deliberately, on the rule that a sheet's own header
+  /// carries a close button instead — `bible_trivia_page.dart` states
+  /// that rule where it follows it. These ten never got the other half.
+  /// So on a phone the only way out was tapping the scrim, which nothing
+  /// says: an iPhone reader's reflex is to swipe down, and a swipe down
+  /// here scrolls the sheet's own `ListView` instead.
+  ///
+  /// Found by running the build on a simulator and being unable to shut
+  /// the sheet the wheel had just opened. No widget test could have
+  /// caught it — every one of them dismisses by popping the route.
+  ///
+  /// It is `Stack`ed rather than prepended as a row so the button sits
+  /// over the content's top-right corner without pushing every sheet's
+  /// first line down by a button's height, and it is outside the
+  /// `ListView` so it does not scroll away from the reader who is
+  /// looking for it.
+  Widget buildSheet(BuildContext sheet, List<Widget> children) {
+    final wb = WbColors.of(sheet);
+    final t = WbType.of(sheet);
+    return ConstrainedBox(
+      constraints:
+          BoxConstraints(maxHeight: MediaQuery.of(sheet).size.height * 0.7),
+      child: Stack(children: [
+        ListView(
           shrinkWrap: true,
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
+          // Room on the right of the first line for the button above.
+          padding: EdgeInsets.fromLTRB(16, 14, t.scaled(40), 24),
           children: children,
         ),
-      );
+        Positioned(
+          top: 0,
+          right: 0,
+          child: IconButton(
+            iconSize: t.scaled(18),
+            visualDensity: VisualDensity.compact,
+            tooltip: MaterialLocalizations.of(sheet).closeButtonTooltip,
+            icon: Icon(Icons.close, color: wb.mutedText),
+            onPressed: () => Navigator.of(sheet).maybePop(),
+          ),
+        ),
+      ]),
+    );
+  }
 
   Widget swatch(WbType t, Color c) =>
       Container(width: t.scaled(10), height: t.scaled(10), color: c);

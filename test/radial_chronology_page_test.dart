@@ -104,8 +104,7 @@ void main() {
   /// form is localised. If a future edit ever localises at the source
   /// instead of at the print site, the model's refs stop parsing and every
   /// tap on this page dies silently — so pin the storage form too.
-  test('references are stored in English and localised only for display',
-      () {
+  test('references are stored in English and localised only for display', () {
     final stored = <String>[
       for (final e in data.events) ...e.refs,
       for (final n in data.nations)
@@ -155,11 +154,12 @@ void main() {
         // the wheel behaving, not a failure.
         if (find.byType(BottomSheet).evaluate().isEmpty) continue;
         sheets++;
-        for (final para
-            in tester.renderObjectList<RenderParagraph>(find.byType(RichText))) {
+        for (final para in tester
+            .renderObjectList<RenderParagraph>(find.byType(RichText))) {
           final plain = para.text.toPlainText();
           refsSeen += anyRef.allMatches(plain).length;
-          offenders.addAll(englishRef.allMatches(plain).map((m) => m.group(0)!));
+          offenders
+              .addAll(englishRef.allMatches(plain).map((m) => m.group(0)!));
         }
         tester.state<NavigatorState>(find.byType(Navigator).first).pop();
         await tester.pump(const Duration(milliseconds: 400));
@@ -267,9 +267,18 @@ void main() {
               .position;
           final seen = <int>{};
           void harvest() {
+            // Scoped to the LIST, not to the whole sheet. `buildSheet`
+            // puts a close button in a `Stack` beside the list, and it
+            // is an `IconButton` — so it carries an ink well and was
+            // counted as a third openable row against a sheet that
+            // states two. What this test is about is whether every
+            // event the sheet CLAIMS is reachable; chrome outside the
+            // list is not one of them.
             for (final ink in find
                 .descendant(
-                    of: find.byType(BottomSheet),
+                    of: find.descendant(
+                        of: find.byType(BottomSheet),
+                        matching: find.byType(ListView)),
                     matching: find.byType(InkWell))
                 .evaluate()) {
               final box = ink.renderObject as RenderBox?;
@@ -287,8 +296,8 @@ void main() {
           // That is an arena question, and this test is not asking it.
           var at = 0.0;
           while (seen.length < stated && at < pos.maxScrollExtent) {
-            at = math.min(at + pos.viewportDimension * 0.8,
-                pos.maxScrollExtent);
+            at =
+                math.min(at + pos.viewportDimension * 0.8, pos.maxScrollExtent);
             pos.jumpTo(at);
             await tester.pump();
             harvest();
@@ -389,8 +398,7 @@ void main() {
     await unmount(tester);
   });
 
-  testWidgets('the About sheet says where the dates come from',
-      (tester) async {
+  testWidgets('the About sheet says where the dates come from', (tester) async {
     await pump(tester, const Size(1440, 900));
     await tester.tap(find.byIcon(Icons.info_outline));
     await settle(tester);
@@ -401,8 +409,8 @@ void main() {
     // Read from the asset, never hardcoded: the sheet must be showing the
     // file's own header, not a sentence written in the page. This page's
     // shipped default is zh-Hans, so assert the Chinese strings.
-    expect(text, contains('创世记'));       // provenance, zh-Hans
-    expect(text, contains('版权保护'));     // provenance, zh-Hans
+    expect(text, contains('创世记')); // provenance, zh-Hans
+    expect(text, contains('版权保护')); // provenance, zh-Hans
     // The axis moved to 4200 BC when the creation anchor was derived
     // and the lifespans went back on it as arcs. Read from the asset,
     // so this catches the sheet and the file drifting apart.
@@ -426,8 +434,8 @@ void main() {
       // Identified by its English title rather than its id, so a data
       // edit that renames the record fails loudly here instead of
       // quietly selecting a different one.
-      return data.events.firstWhere(
-          (e) => (e.titles['en'] ?? '').contains('Magna Carta'));
+      return data.events
+          .firstWhere((e) => (e.titles['en'] ?? '').contains('Magna Carta'));
     });
     final zh = event.titles['zh-Hans']!;
     expect(zh, isNotEmpty);
@@ -514,8 +522,7 @@ void main() {
       (tester) async {
     await pump(tester, const Size(1440, 900));
     await openFind(tester);
-    await tester.enterText(
-        find.byKey(const ValueKey('wheelFindField')), '约珥');
+    await tester.enterText(find.byKey(const ValueKey('wheelFindField')), '约珥');
     await settle(tester);
 
     final listed = sheetText(tester);
@@ -579,7 +586,8 @@ void main() {
   /// screen. Every other test was green — they all read text, and the
   /// text was right. A list's height is not something reading its rows
   /// can see.
-  testWidgets('the result list is as tall as its results, not as tall as '
+  testWidgets(
+      'the result list is as tall as its results, not as tall as '
       'it is allowed', (tester) async {
     const height = 900.0;
     await pump(tester, const Size(1440, height));
@@ -701,7 +709,8 @@ void main() {
     await unmount(tester);
   });
 
-  testWidgets('the era note on the wheel says what the years rest on, with '
+  testWidgets(
+      'the era note on the wheel says what the years rest on, with '
       'a door out', (tester) async {
     final e = injected('flood');
     await pump(tester, const Size(1440, 900));
@@ -1012,8 +1021,7 @@ void main() {
       // Judah) is a SUBSTRING of 耶罗波安 (Jeroboam of Israel), so the
       // obvious assertion fails on a list that is perfectly correct.
       // Only the names that cannot collide are asked about.
-      final israelNames =
-          israel.map((k) => k.nameFor('zh-Hans')).toList();
+      final israelNames = israel.map((k) => k.nameFor('zh-Hans')).toList();
       var asked = 0;
       for (final k in kings.ofKingdom(Kingdom.judah)) {
         final n = k.nameFor('zh-Hans');
@@ -1077,8 +1085,7 @@ void main() {
     /// this app did not — it nests a reign inside a kingdom inside a
     /// people, so the geometry states the parentage. The app states it
     /// in a heading instead, which is the form it has always used.
-    testWidgets('a power lists what fell inside its own span',
-        (tester) async {
+    testWidgets('a power lists what fell inside its own span', (tester) async {
       await pump(tester, const Size(1440, 900));
       await openPower(tester, 'Kingdom of Judah', '南国犹大');
       await scrollSheet(tester);
