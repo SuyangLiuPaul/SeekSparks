@@ -646,8 +646,19 @@ class _StripChronologyPageState extends State<StripChronologyPage>
                 ? _vCtl.position.maxScrollExtent
                 : math.max(0.0, contentH - (box.maxHeight - rulerH)),
           ),
+          // Lifted clear of the "more below" banner when that banner is
+          // showing. Found on an iPhone 17: the cluster is right-aligned
+          // and the banner is a full-width strip at `bottom: 0`, so on a
+          // 402 pt phone the zoom controls sat on top of the one hint
+          // that tells the reader there are more lanes underneath.
           Positioned(
-              right: 10, bottom: 10, child: _zoomControls(locale, t, wb)),
+              right: 10,
+              bottom: 10 +
+                  (_vMoreBelow(
+                          math.max(0.0, contentH - (box.maxHeight - rulerH)))
+                      ? stripScrollBannerHeight(t)
+                      : 0.0),
+              child: _zoomControls(locale, t, wb)),
         ])),
         // Always, not only once a year is picked — see [YearDigestBar]'s
         // own doc: a row that appears on the first tap takes its height
@@ -1646,6 +1657,15 @@ class _StripChronologyPageState extends State<StripChronologyPage>
   /// current OFFSET is still read off the controller (`_hCtl.offset`,
   /// guarded by `hasClients`), because before attachment it is
   /// genuinely 0 — the one thing a fresh page cannot be wrong about.
+  /// Whether the "more below" banner is showing — the zoom cluster has
+  /// to know, because it is right-aligned over a full-width banner.
+  bool _vMoreBelow(double fallbackMaxScrollY) {
+    final maxScrollY =
+        _vCtl.hasClients ? _vCtl.position.maxScrollExtent : fallbackMaxScrollY;
+    return maxScrollY > 0.5 &&
+        (!_vCtl.hasClients || _vCtl.offset < maxScrollY - 0.5);
+  }
+
   List<Widget> _scrollIndicators({
     required double headerW,
     required WbColors wb,
@@ -1861,6 +1881,11 @@ class _PanByMouseScrollBehavior extends MaterialScrollBehavior {
         PointerDeviceKind.unknown,
       };
 }
+
+/// The height of a scroll-edge banner, so the zoom cluster can sit
+/// above one instead of on it. Mirrors `banner`'s own box: an icon plus
+/// 2 px of padding top and bottom.
+double stripScrollBannerHeight(WbType t) => t.scaledChrome(14) + 4;
 
 double _measureText(String text, double size) => (TextPainter(
       text: TextSpan(text: text, style: canvasTextStyle(fontSize: size)),

@@ -141,8 +141,16 @@ class _YearDigestBarState extends State<YearDigestBar> {
       // already the wheel's weakest target at about 8.7 px. So the
       // buttons lose their 48 px Material slot, the scrubber gets the
       // height of its own thumb, and nothing here is padded twice.
-      padding: EdgeInsets.fromLTRB(
-          t.scaled(12), t.scaled(2), t.scaled(4), t.scaled(4)),
+      // The home indicator sits over this row otherwise. Found by
+      // running the wheel on an iPhone 17 simulator: the chip lane is
+      // the bottom-most thing on the page, so `viewPadding.bottom` is
+      // the difference between a tappable chip and one under the bar
+      // the OS draws. `viewPadding`, not `padding` — the latter is zero
+      // once something else in the tree has consumed the inset, and
+      // this widget is the last row of a `Column`, not inside a
+      // `Scaffold` body that already ate it.
+      padding: EdgeInsets.fromLTRB(t.scaled(12), t.scaled(2), t.scaled(4),
+          t.scaled(4) + MediaQuery.viewPaddingOf(context).bottom),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,

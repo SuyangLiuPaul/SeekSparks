@@ -31,6 +31,8 @@ import 'package:seeksparks/pages/hebrew_kings_page.dart';
 import 'package:seeksparks/pages/illustrations_page.dart';
 import 'package:seeksparks/pages/lexicon_page.dart';
 import 'package:seeksparks/pages/modern_concordance_page.dart';
+import 'package:seeksparks/pages/projection_page.dart';
+import 'package:seeksparks/constants/projection_strings.dart';
 import 'package:seeksparks/pages/library_page.dart';
 import 'package:seeksparks/pages/naves_page.dart';
 import 'package:seeksparks/pages/phrasing_page.dart';
@@ -752,6 +754,16 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         // second "World History Strip" item beside this one.
         WbMenuItem(s('wheelTitle', 'World History Wheel'),
             () => pushPage(chronologyChartEntryPage(settings))),
+        // 2026-09-08: projection had a route and no door. `#/project`
+        // is typeable on the web and unreachable on iOS and Android,
+        // which have no address bar — so on the two platforms a Sunday
+        // service is most likely to be driven from, the feature did not
+        // exist. Found by opening the build on a simulator and looking
+        // for it in this menu.
+        WbMenuItem(
+            projectionStrings['projectionTitle']?[locale] ??
+                projectionStrings['projectionTitle']!['en']!,
+            () => pushPage(const ProjectionPage())),
         WbMenuItem(s('library', 'Notes & highlights'),
             () => pushPage(const LibraryPage())),
         WbMenuItem(
