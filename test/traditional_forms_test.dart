@@ -166,12 +166,23 @@ void main() {
       expect(_verse(xg, '馬可福音', 6, 7), contains('制服不潔的靈'));
     });
 
-    test('every 隻 is accounted for, 46 of them by a numeral', () {
+    test('every 隻 is accounted for, 48 of them by a numeral', () {
       // Positional, the rule that made 只 tractable in the 雅偉 repair.
-      // 46 follow a numeral outright; the set also carries 船 for the
+      // 48 follow a numeral outright; the set also carries 船 for the
       // compound 船隻 ×3 and 隻 for 一隻隻 (約翰福音 10:3, a classifier
       // reduplication), so this asserts "none is unexplained" rather
       // than "all are classifiers".
+      //
+      // 2026-09-08: 50 → 52, and this test is why the count is written
+      // down rather than derived. `tools/repair_tr_classifier_biblexg
+      // .py` repaired two classifiers the Traditional conversion had
+      // left as the Simplified adverb — 馬太福音 10:29 「兩只麻雀」 and
+      // 路加福音 5:7 「把兩只船」. The first refuted itself inside one
+      // sentence: 「兩只麻雀…牠們一隻也不會掉在地上」. Both new 隻 follow
+      // 兩, so `odd` is unchanged and only `seen` moved — which is
+      // exactly the shape a correct repair should have here, and the
+      // reason to update this number by hand after checking it rather
+      // than to make the test compute its own expectation.
       const det = '一二三四五六七八九十百千萬兩幾每那船隻';
       final odd = <String>[];
       var seen = 0;
@@ -185,7 +196,7 @@ void main() {
           }
         }
       }
-      expect(seen, 50, reason: 'the assertion is vacuous if 隻 disappears');
+      expect(seen, 52, reason: 'the assertion is vacuous if 隻 disappears');
       expect(odd, isEmpty);
     });
 
