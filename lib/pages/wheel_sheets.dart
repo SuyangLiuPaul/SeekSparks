@@ -5,6 +5,8 @@ import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/chronology.dart' show Patriarch;
 import 'package:seeksparks/models/hebrew_king.dart';
+import 'package:seeksparks/models/strip_lanes.dart'
+    show StripLaneKind, kStripKingPrefix, kStripMinistryPrefix;
 import 'package:seeksparks/models/wheel_history.dart';
 import 'package:seeksparks/pages/chronology_page.dart';
 import 'package:seeksparks/pages/hebrew_kings_page.dart';
@@ -28,6 +30,7 @@ import 'package:seeksparks/utils/kings_contemporaries.dart'
     show ContemporaryTally;
 import 'package:seeksparks/utils/navigate_to_reader.dart';
 import 'package:seeksparks/utils/reference_parser.dart';
+import 'package:seeksparks/utils/year_digest.dart';
 import 'package:seeksparks/utils/version_mapper.dart'
     show localizedReferenceLabel;
 import 'package:seeksparks/widgets/person_detail_sheet.dart';
@@ -81,6 +84,96 @@ mixin WheelSheets<T extends StatefulWidget> on State<T> {
       if (test(x)) return x;
     }
     return null;
+  }
+
+  // ── the year readout, shared by both forms ───────────────────────
+  //
+  // These two live on the mixin for the same reason every `show*`
+  // method does: the wheel and the strip must resolve an id to a NAME
+  // and to a SHEET the same way, or the two views of one corpus will
+  // quietly start naming the same record differently. The strip had
+  // private copies for about an hour; this is where they belong.
+
+  /// The name a year-readout row prints for one record.
+  String digestLabel(
+    YearDigestItem item,
+    WheelHistoryData data,
+    List<HebrewKing> kings,
+    List<Patriarch> patriarchs,
+    String locale,
+  ) {
+    switch (item.kind) {
+      case StripLaneKind.events:
+        return find(data.events, (e) => e.id == item.id)?.titleFor(locale) ??
+            item.id;
+      case StripLaneKind.lives:
+        return find(patriarchs, (p) => p.id == item.id)?.nameFor(locale) ??
+            item.id;
+      case StripLaneKind.kings:
+        final id = item.id.substring(kStripKingPrefix.length);
+        return find(kings, (k) => k.id == id)?.nameFor(locale) ?? id;
+      case StripLaneKind.ministries:
+        final id = item.id.substring(kStripMinistryPrefix.length);
+        return find(data.ministries, (m) => m.id == id)?.nameFor(locale) ?? id;
+      case StripLaneKind.stream:
+        return find(data.powers, (p) => p.id == item.id)?.nameFor(locale) ??
+            item.id;
+      case StripLaneKind.rail:
+        // The genealogy rail's mark is a COHORT — several people placed
+        // in one year by descent with no verse dating them — so there
+        // is no single name to print. It says what it is instead, and
+        // the sheet behind it is where the names are.
+        return s('wheelLineage', 'Genealogy', locale);
+      case StripLaneKind.ruler:
+        return item.id;
+    }
+  }
+
+  /// Open the record a year-readout row names.
+  ///
+  /// No `+n` branch, unlike a tap on the chart itself: a readout row
+  /// already names exactly one record, so there is no cluster to cash.
+  void openDigestRecord(
+    BuildContext context,
+    YearDigestItem item,
+    WheelHistoryData data,
+    List<HebrewKing> kings,
+    List<Patriarch> patriarchs,
+    String locale,
+    void Function(String?) select,
+  ) {
+    switch (item.kind) {
+      case StripLaneKind.events:
+        final event = find(data.events, (e) => e.id == item.id);
+        if (event == null) return;
+        select(event.id);
+        showEvent(context, event, data, locale);
+      case StripLaneKind.lives:
+        final man = ChronologyService.instance.cached?.byId(item.id);
+        if (man == null) return;
+        select(man.id);
+        showPatriarch(context, man, locale);
+      case StripLaneKind.kings:
+        final id = item.id.substring(kStripKingPrefix.length);
+        final king = find(kings, (k) => k.id == id);
+        if (king == null) return;
+        select(item.id);
+        showKing(context, king, locale);
+      case StripLaneKind.ministries:
+        final id = item.id.substring(kStripMinistryPrefix.length);
+        final ministry = find(data.ministries, (m) => m.id == id);
+        if (ministry == null) return;
+        select(item.id);
+        showMinistry(context, ministry, locale);
+      case StripLaneKind.stream:
+        final power = find(data.powers, (p) => p.id == item.id);
+        if (power == null) return;
+        select(power.id);
+        showPower(context, power, data, locale, select);
+      case StripLaneKind.rail:
+      case StripLaneKind.ruler:
+        break;
+    }
   }
 
   /// Per-band colours, computed from the FULL stream list rather than
@@ -873,9 +966,8 @@ mixin WheelSheets<T extends StatefulWidget> on State<T> {
             if (king.kingdom == Kingdom.united) return const <Widget>[];
             final contemporaries = data.contemporariesOf(king);
             final tally = ContemporaryTally.of(contemporaries);
-            final other = king.kingdom == Kingdom.judah
-                ? Kingdom.israel
-                : Kingdom.judah;
+            final other =
+                king.kingdom == Kingdom.judah ? Kingdom.israel : Kingdom.judah;
             return <Widget>[
               SizedBox(height: t.scaled(12)),
               Text(

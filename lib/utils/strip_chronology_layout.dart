@@ -66,9 +66,38 @@ const int kStripMaxYear = 2026;
 ///
 /// Chosen so each step roughly doubles and the ends are the two things a
 /// reader actually wants: 0.15 fits the whole axis on a phone (6226 x
-/// 0.15 = 934 px), and 24 puts a single year at two thirds of an inch,
-/// which is what it takes to separate the 140 events after 1900.
-const List<double> kStripZoomSteps = [0.15, 0.3, 0.6, 1.5, 3, 6, 12, 24];
+/// 0.15 = 934 px), and the top step names every record in the densest
+/// stretch the corpus has.
+///
+/// WHY THE TOP IS 96 AND NOT 24. The ladder stopped at 24 until the
+/// owner reported the obvious: 「zoom in max 也有上限 这个还有很多没有
+/// 显示出来」 — you reach the last step and records are still hidden.
+/// That was true and it was arithmetic, not taste. The densest window
+/// in the corpus is AD 1559-2008: 298 events across 449 years, or 0.66
+/// events per year. At 24 px/year consecutive events are ~36 px apart,
+/// which is under one word of a title, so the events lane can only draw
+/// `+n` badges there however far the reader zooms — the reader is told
+/// records are present and shown none of them, which is the same silent
+/// narrowing rule 2 forbids. 96 px/year puts ~145 px between them, and
+/// 145 px is a title. So the ceiling is not "as far as we felt like
+/// going"; it is the scale at which the WORST case in the shipped
+/// corpus can name itself, and there is nothing above it worth having.
+///
+/// The whole axis at the top step is 6226 x 96 = 597,696 content px.
+/// That is a scroll extent, not a raster: both scroll views clip to the
+/// viewport, and the painters cull to `visibleX0`/`visibleX1`.
+const List<double> kStripZoomSteps = [
+  0.15,
+  0.3,
+  0.6,
+  1.5,
+  3,
+  6,
+  12,
+  24,
+  48,
+  96,
+];
 
 /// The zoom the strip OPENS on — deliberately not the widest step.
 ///
@@ -85,6 +114,25 @@ const List<double> kStripZoomSteps = [0.15, 0.3, 0.6, 1.5, 3, 6, 12, 24];
 /// strip buys; spending it to reproduce a single crowded screen would be
 /// paying for the ticket and staying home.
 const double kStripInitialPxPerYear = 1.5;
+
+/// The lane/type zoom ladder — the strip's SECOND axis, and the one
+/// that was designed and never given a control.
+///
+/// The library doc above promises "a reader can open one century to 20
+/// px/year without touching the lane height". That promise had only
+/// half a mechanism: `pxPerYear` was a stepper on screen, lane height
+/// was `stripLaneHeightPx(textScale)` off the global Font Size, and a
+/// reader zooming the time axis watched the labels stay exactly as
+/// small as they were. Multiplying the text scale by one of these steps
+/// gives the other half, and keeps the two axes independent — which is
+/// the whole reason a strip beats a wheel here.
+///
+/// 1 is the reader's own Font Size, so the default multiplies nothing.
+/// The ends are a deliberate ±: 0.7 packs more lanes on screen for a
+/// scan, 2.4 is roughly a doubling of every label for a phone held at
+/// arm's length. Everything in between roughly steps by a third, which
+/// is about the smallest change in type size a reader notices as one.
+const List<double> kStripLaneZoomSteps = [0.7, 0.85, 1, 1.3, 1.7, 2.4];
 
 /// x, in content pixels from the strip's left edge, for [year].
 ///

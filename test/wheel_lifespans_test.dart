@@ -86,7 +86,7 @@ double _measureLabel(String text, double size) => (TextPainter(
       textDirection: TextDirection.ltr,
       maxLines: 1,
     )..layout())
-    .width;
+        .width;
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -130,8 +130,8 @@ void main() {
   List<LifeArc> arcs() => packWheelBand(
         chron: chron,
         creationYear: creation,
-        kings: HebrewKingsService.instance.cached?.kings ??
-            const <HebrewKing>[],
+        kings:
+            HebrewKingsService.instance.cached?.kings ?? const <HebrewKing>[],
         ministries: WheelHistoryService.instance.cached?.ministries ??
             const <WheelMinistry>[],
         tradition: _drawn,
@@ -258,8 +258,13 @@ void main() {
     expect(personIds, containsAll(moved.difference({'nahor_elder'})));
     // And the spellings they replaced are gone, so nothing can join on
     // one and silently find nothing.
-    for (final old in const ['enos', 'cainan', 'mahalaleel', 'salah',
-        'nahor']) {
+    for (final old in const [
+      'enos',
+      'cainan',
+      'mahalaleel',
+      'salah',
+      'nahor'
+    ]) {
       expect(chronIds, isNot(contains(old)), reason: old);
       expect(personIds, isNot(contains(old)), reason: old);
     }
@@ -402,8 +407,17 @@ void main() {
   /// Greek only, so `inTradition('mt')` excludes him structurally.
   test('no arc for a man the Masoretic gives no figures', () {
     final placed = {for (final a in arcs()) a.id};
-    for (final id in ['eve', 'cain', 'abel', 'ham', 'japheth', 'levi',
-      'kohath', 'amram', 'kainan2']) {
+    for (final id in [
+      'eve',
+      'cain',
+      'abel',
+      'ham',
+      'japheth',
+      'levi',
+      'kohath',
+      'amram',
+      'kainan2'
+    ]) {
       expect(placed, isNot(contains(id)), reason: id);
     }
     // Structurally, not by a list: the record exists and is excluded
@@ -412,7 +426,8 @@ void main() {
     expect(kainan, isNotNull, reason: 'the record went — rewrite this test');
     expect(kainan!.figures.containsKey(_drawn), isFalse);
     expect(kainan.figures.containsKey('lxx'), isTrue);
-    expect(chron.inTradition(_drawn).map((p) => p.id), isNot(contains('kainan2')));
+    expect(
+        chron.inTradition(_drawn).map((p) => p.id), isNot(contains('kainan2')));
   });
 
   // ── 5. the names, measured in the shipped faces ────────────────────
@@ -514,8 +529,7 @@ void main() {
     '1400 en': 22,
     '1400 zh-Hans': 23,
   };
-  test('every life can be named at rest, at every canvas the wheel gets',
-      () {
+  test('every life can be named at rest, at every canvas the wheel gets', () {
     for (final side in [700.0, 900.0, 1400.0]) {
       for (final locale in ['en', 'zh-Hans']) {
         final rBands = side * _bandsFrac;
@@ -593,15 +607,20 @@ void main() {
             floorPx: kArcLabelFloorPx,
             measure: _measureChars,
           );
-          if (size <= 0) { missing.add('${arc.id}:size'); continue; }
+          if (size <= 0) {
+            missing.add('${arc.id}:size');
+            continue;
+          }
           final needed = _measureChars(name, size) / band.centre;
           final at = placeArcName(arc.a0, arc.a1, occupied, needed);
-          if (at == null) { missing.add('${arc.id}:place'); continue; }
+          if (at == null) {
+            missing.add('${arc.id}:place');
+            continue;
+          }
           named++;
           // Inside its own arc, and clear of every spoke title.
           expect(at, greaterThanOrEqualTo(arc.a0 - 1e-9), reason: arc.id);
-          expect(at + needed, lessThanOrEqualTo(arc.a1 + 1e-9),
-              reason: arc.id);
+          expect(at + needed, lessThanOrEqualTo(arc.a1 + 1e-9), reason: arc.id);
           for (final o in occupied) {
             expect(at >= o.end - 1e-9 || at + needed <= o.start + 1e-9, isTrue,
                 reason: '${arc.id} name crosses a planned spoke label at '
@@ -752,10 +771,24 @@ void main() {
     await tester.pump(const Duration(milliseconds: 50));
   }
 
-  String sheetText(WidgetTester tester) => tester
-      .widgetList<Text>(find.byType(Text))
-      .map((w) => w.data ?? w.textSpan?.toPlainText() ?? '')
-      .join('\n');
+  /// The text INSIDE the open sheet, and nothing else on the screen.
+  ///
+  /// It used to read every `Text` in the tree, which was the same thing
+  /// for as long as a tap's only visible effect was a sheet. Once the
+  /// wheel grew a year readout that names what else the tapped year
+  /// holds, 「a life is not in the sheet」 and 「a life is nowhere on
+  /// screen」 stopped being the same claim — and only the first is what
+  /// any of these tests is about. An empty string when no sheet is open
+  /// keeps every `isNot(contains(...))` here meaning what it meant.
+  String sheetText(WidgetTester tester) {
+    final sheet = find.byType(BottomSheet);
+    if (sheet.evaluate().isEmpty) return '';
+    return tester
+        .widgetList<Text>(
+            find.descendant(of: sheet, matching: find.byType(Text)))
+        .map((w) => w.data ?? w.textSpan?.toPlainText() ?? '')
+        .join('\n');
+  }
 
   /// Where a life sits on the canvas: its sub-ring centre, at an angle
   /// in the middle of its own span.
@@ -841,8 +874,7 @@ void main() {
       var text = '';
       for (final f in const [0.5, 0.35, 0.65, 0.2, 0.8]) {
         await tester.tapAt(rect.topLeft +
-            pointOn(arc, rect.width,
-                atAngle: arc.a0 + (arc.a1 - arc.a0) * f));
+            pointOn(arc, rect.width, atAngle: arc.a0 + (arc.a1 - arc.a0) * f));
         await tester.pump(const Duration(milliseconds: 400));
         text = sheetText(tester);
         if (text.contains(man.$2) && text.contains('列祖寿数')) break;
@@ -933,8 +965,7 @@ void main() {
     final wheel = await WheelHistoryService.instance.load();
     const locale = 'zh-Hans';
     final titleSize = _rimFontPx;
-    final all = wheel.events.toList()
-      ..sort((x, y) => x.year.compareTo(y.year));
+    final all = wheel.events.toList()..sort((x, y) => x.year.compareTo(y.year));
     final angles = [
       for (final e in all) angleForSpan(e.year, kMinYear, kMaxYear)
     ];
@@ -949,8 +980,8 @@ void main() {
             title: all[c.representative].titleFor(locale),
             ref: all[c.representative].refs.isEmpty
                 ? ''
-                : localizedReferenceLabel(all[c.representative].refs.first,
-                    locale),
+                : localizedReferenceLabel(
+                    all[c.representative].refs.first, locale),
             badge: c.hidden == 0 ? '' : '+${c.hidden}',
           )
       ],
@@ -1006,7 +1037,29 @@ void main() {
     await pump(tester, const Size(900, 900));
     final rect = tester.getRect(find.byKey(const ValueKey('chronologyWheel')));
     final arc = arcs().firstWhere((a) => a.id == 'methuselah');
-    final at = rect.topLeft + pointOn(arc, rect.width);
+
+    // FIND A POINT THAT OPENS HIM, rather than assuming the mid-angle
+    // does. Spokes win ties and the finger target is 9 LOGICAL pixels —
+    // an absolute width — so which of two overlapping lives answers a
+    // tap depends on how large the canvas happens to be. The mid-angle
+    // worked until the wheel lost ~90 px to the year readout and Lamech
+    // started taking it, which is a fact about tie-breaking at a smaller
+    // canvas and not about the filter this test is for. The sibling test
+    // above already walks its span for the same reason.
+    var at = rect.topLeft + pointOn(arc, rect.width);
+    for (final f in const [0.5, 0.35, 0.65, 0.2, 0.8]) {
+      final probe = rect.topLeft +
+          pointOn(arc, rect.width, atAngle: arc.a0 + (arc.a1 - arc.a0) * f);
+      await tester.tapAt(probe);
+      await tester.pump(const Duration(milliseconds: 400));
+      final opened = sheetText(tester).contains('玛土撒拉');
+      await unmount(tester);
+      await pump(tester, const Size(900, 900));
+      if (opened) {
+        at = probe;
+        break;
+      }
+    }
 
     await tester.tap(find.byIcon(Icons.filter_list));
     // The filter sheet is a `FutureBuilder` on the page's own load, and
@@ -1057,15 +1110,16 @@ void main() {
         );
 
     final m = find('Methuselah');
-    expect(m.hits.any((h) => h.kind == WheelHitKind.patriarch && h.id == 'methuselah'),
+    expect(
+        m.hits.any(
+            (h) => h.kind == WheelHitKind.patriarch && h.id == 'methuselah'),
         isTrue);
     // And his birth spoke is still there: the two answer different
     // questions and a reader gets both.
     expect(m.hits.any((h) => h.kind == WheelHitKind.event), isTrue);
     // The layer id, not a stream id — this is what lets the page's
     // existing "un-hide what you found" step work with no special case.
-    expect(
-        m.hits.firstWhere((h) => h.kind == WheelHitKind.patriarch).streamId,
+    expect(m.hits.firstWhere((h) => h.kind == WheelHitKind.patriarch).streamId,
         kLifespanLayerId);
     expect(wheel.streams.map((s) => s.id), isNot(contains(kLifespanLayerId)));
 
@@ -1086,7 +1140,8 @@ void main() {
 
     // A name one letter off finds nothing, so no sentence is put in
     // front of a reader about a man they did not ask for.
-    expect(find('Methuselahx').hits.where((h) => h.kind == WheelHitKind.patriarch),
+    expect(
+        find('Methuselahx').hits.where((h) => h.kind == WheelHitKind.patriarch),
         isEmpty);
 
     // And with no anchor the lives are not indexed at all — never at a
@@ -1099,8 +1154,8 @@ void main() {
       patriarchs: chron.patriarchs,
       creationYear: null,
     );
-    expect(noAnchor.hits.where((h) => h.kind == WheelHitKind.patriarch),
-        isEmpty);
+    expect(
+        noAnchor.hits.where((h) => h.kind == WheelHitKind.patriarch), isEmpty);
   });
 
   // ── 9. no lifespan literal in Dart ─────────────────────────────────
@@ -1118,18 +1173,18 @@ void main() {
           '${f.deathAm}',
         ]
     }..removeWhere((s) =>
-            // 0, 65, 70 … are not distinctive, and a round hundred is a
-            // layout constant everywhere in Flutter (`FontWeight.w600`,
-            // `maxWidth: 720`), so this checks the figures that could
-            // only have come from Genesis.
-            s.length < 3 ||
-            int.parse(s) % 10 == 0 ||
-            // The axis ends are written in this file as constants and
-            // one of them collides with a Septuagint figure (Anno Mundi
-            // 2026 is Arphaxad's death in the Greek). Named rather than
-            // widened away.
-            int.parse(s) == kMaxYear ||
-            int.parse(s) == -kMinYear);
+        // 0, 65, 70 … are not distinctive, and a round hundred is a
+        // layout constant everywhere in Flutter (`FontWeight.w600`,
+        // `maxWidth: 720`), so this checks the figures that could
+        // only have come from Genesis.
+        s.length < 3 ||
+        int.parse(s) % 10 == 0 ||
+        // The axis ends are written in this file as constants and
+        // one of them collides with a Septuagint figure (Anno Mundi
+        // 2026 is Arphaxad's death in the Greek). Named rather than
+        // widened away.
+        int.parse(s) == kMaxYear ||
+        int.parse(s) == -kMinYear);
     for (final path in [
       'lib/pages/radial_chronology_page.dart',
       'lib/utils/radial_chronology_layout.dart',
@@ -1138,8 +1193,8 @@ void main() {
       // Comments are prose about the data and may name it; code may not.
       final code = src
           .split('\n')
-          .where((l) => !l.trimLeft().startsWith('//') &&
-              !l.trimLeft().startsWith('///'))
+          .where((l) =>
+              !l.trimLeft().startsWith('//') && !l.trimLeft().startsWith('///'))
           .join('\n');
       for (final f in figures) {
         expect(RegExp('(?<![0-9A-Za-z.])$f(?![0-9])').hasMatch(code), isFalse,

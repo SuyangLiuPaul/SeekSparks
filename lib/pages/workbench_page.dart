@@ -6,10 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:seeksparks/constants/bible_versions.dart'
-    show
-        kSecondaryVersionKey,
-        resolveSecondaryVersion,
-        shortBibleVersionLabel;
+    show kSecondaryVersionKey, resolveSecondaryVersion, shortBibleVersionLabel;
 import 'package:seeksparks/constants/app_version.dart'
     show kAppVersion, formatReleaseTimeLocal;
 import 'package:seeksparks/constants/book_name_mapping.dart'
@@ -83,8 +80,7 @@ import 'package:seeksparks/widgets/bible_reading_pane.dart';
 import 'package:seeksparks/widgets/command_pane.dart';
 import 'package:seeksparks/widgets/passage_report_sheet.dart'
     show showPassageReport;
-import 'package:seeksparks/widgets/shortcut_sheet.dart'
-    show showShortcutSheet;
+import 'package:seeksparks/widgets/shortcut_sheet.dart' show showShortcutSheet;
 import 'package:seeksparks/widgets/copy_center_sheet.dart'
     show CopyScope, showCopyCenter;
 import 'package:seeksparks/utils/clipboard_helper.dart';
@@ -546,8 +542,8 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
           shortcut: 'Ctrl+Shift+C',
         ),
         const WbMenuItem.separator(),
-        WbMenuItem(s('settings', 'Settings…'),
-            () => pushPage(const SettingsPage())),
+        WbMenuItem(
+            s('settings', 'Settings…'), () => pushPage(const SettingsPage())),
         // "Exit to reader" used to sit here and replace the whole route
         // with HomePage. There is nothing left to exit to: the reader is
         // the centre pane in three arrangements (View menu, below), and
@@ -628,10 +624,9 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         const WbMenuItem.separator(),
         WbMenuItem(
           s('menuDarkMode', 'Dark mode'),
-          () => settings.setThemeMode(
-              settings.themeMode == ThemeMode.dark
-                  ? ThemeMode.light
-                  : ThemeMode.dark),
+          () => settings.setThemeMode(settings.themeMode == ThemeMode.dark
+              ? ThemeMode.light
+              : ThemeMode.dark),
           checked: Theme.of(context).brightness == Brightness.dark,
         ),
       ]),
@@ -688,12 +683,12 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
             () => pushPage(const EvidencePage())),
         WbMenuItem(s('timeline', 'Timeline'),
             () => pushPage(const BibleTimelinePage())),
-        WbMenuItem(s('trivia', 'Trivia'),
-            () => pushPage(const BibleTriviaPage())),
+        WbMenuItem(
+            s('trivia', 'Trivia'), () => pushPage(const BibleTriviaPage())),
       ]),
       WbMenu(s('menuResources', 'Resources'), [
-        WbMenuItem(s('sermons', 'Sermons'),
-            () => pushPage(const SermonsPage())),
+        WbMenuItem(
+            s('sermons', 'Sermons'), () => pushPage(const SermonsPage())),
         // Resources, not Tools: bwh07 splits the two on whether the
         // item OPERATES on the current text (Word List, KWIC, Phrase
         // Matching) or is a reference database you CONSULT (maps,
@@ -701,8 +696,8 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         // `assets/family_tree.json` is the second kind, and bwh07 files
         // the map module here too — which is the whole argument for the
         // Atlas being a window rather than a lens over the reader.
-        WbMenuItem(s('atlasTitle', 'Bible Atlas'),
-            () => pushPage(const AtlasPage())),
+        WbMenuItem(
+            s('atlasTitle', 'Bible Atlas'), () => pushPage(const AtlasPage())),
         // The "Bible Views picture set" named above is the one entry
         // bwh07 stops to describe, and ours had no door: 1,192 plates
         // reachable only by already reading a chapter that matched one.
@@ -725,8 +720,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         // Beside Nave's and before the Lexicon Browser on purpose: the
         // three run topics/66 books -> topics/NT Greek -> words, which
         // is a gradient rather than a duplicate.
-        WbMenuItem(
-            s('modernConcordanceTitle', 'Modern Concordance (NT)'),
+        WbMenuItem(s('modernConcordanceTitle', 'Modern Concordance (NT)'),
             () => pushPage(const ModernConcordancePage())),
         // bwh35 files the lexicons under Resources for the same reason.
         // Tapping a word has always shown its entry; nothing could show
@@ -794,8 +788,8 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
   /// belongs to the workspace toolbar. `[` and `]` still work.
   void _stepChapter(int step) {
     final mp = context.read<MainProvider>();
-    final target =
-        adjacentChapter(mp.books, mp.currentBook, mp.currentChapter, step: step);
+    final target = adjacentChapter(mp.books, mp.currentBook, mp.currentChapter,
+        step: step);
     if (target == null) return;
     final verses = mp.versesInChapter(target.book, target.chapter);
     if (verses.isEmpty) return;
@@ -969,8 +963,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
   /// READER'S request ("show me the sermons here") onto a tab and is
   /// allowed to answer null when a sheet is the honest surface. The
   /// summary is already inside the pane and is naming a tab directly.
-  void _setAnalysisTab(AnalysisTab tab) =>
-      setState(() => _analysisTab = tab);
+  void _setAnalysisTab(AnalysisTab tab) => setState(() => _analysisTab = tab);
 
   Future<List<ResourceCount>> _resourceCounts(
       String englishBook, int chapter, int verse) async {
@@ -997,10 +990,13 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
     }
 
     return Future.wait([
-      count(AnalysisTab.crossRefs, 'analysisTabCrossRefs', 'X-Refs',
-          () async =>
-              (await CrossReferenceService.forVerse(englishBook, chapter, verse))
-                  .length),
+      count(
+          AnalysisTab.crossRefs,
+          'analysisTabCrossRefs',
+          'X-Refs',
+          () async => (await CrossReferenceService.forVerse(
+                  englishBook, chapter, verse))
+              .length),
       count(AnalysisTab.topics, 'analysisTabTopics', 'Topics', () async {
         final modern = await ModernConcordanceService.forVerse(
             englishBook: englishBook, chapter: chapter, verse: verse);
@@ -1008,7 +1004,10 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
             englishBook: englishBook, chapter: chapter, verse: verse);
         return modern.length + naves.length;
       }),
-      count(AnalysisTab.places, 'analysisTabPlaces', 'Places',
+      count(
+          AnalysisTab.places,
+          'analysisTabPlaces',
+          'Places',
           () async =>
               (await PlacesService.forVerse(englishBook, chapter, verse))
                   .length),
@@ -1021,7 +1020,10 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         // a preached chapter look individually cited.
         return s.verse.length;
       }),
-      count(AnalysisTab.related, 'analysisTabRelated', 'Related',
+      count(
+          AnalysisTab.related,
+          'analysisTabRelated',
+          'Related',
           () async =>
               (await SynopsisService.byVerse(englishBook, chapter, verse))
                   .length),
@@ -1053,8 +1055,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
       licence: key == null ? null : uiStrings[key]?[settings.locale],
     );
     if (out == null || !mounted) return;
-    await ClipboardHelper.copyRichWithFeedback(
-        context, out.html, out.markdown);
+    await ClipboardHelper.copyRichWithFeedback(context, out.html, out.markdown);
   }
 
   Future<void> _openCopyCenter() async {
@@ -1106,8 +1107,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
       if (book != null && chapter != null)
         WbStatusField(
           '${localeAwareBookName(bookNameToEnglish[book] ?? book, locale, mp.currentVersion)} $chapter',
-          onTap: () =>
-              pushPage(BooksPage(bookIdx: book, chapterIdx: chapter)),
+          onTap: () => pushPage(BooksPage(bookIdx: book, chapterIdx: chapter)),
         ),
       WbStatusField(
         shortBibleVersionLabel(mp.currentVersion),
@@ -1235,8 +1235,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
     // gets squeezed to nothing on a just-barely-desktop screen (e.g.
     // iPad Pro 11" portrait = 1024).
     final maxSide = width * 0.32;
-    final left =
-        showLeft ? (_leftWidth > maxSide ? maxSide : _leftWidth) : 0.0;
+    final left = showLeft ? (_leftWidth > maxSide ? maxSide : _leftWidth) : 0.0;
     final right =
         showRight ? (_rightWidth > maxSide ? maxSide : _rightWidth) : 0.0;
     // Everything between the centre and the window edges that is not a
@@ -1323,7 +1322,8 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
     // A highlight is a note about a VERSE, not about an edition, so
     // marking one in either column has to show in the other — otherwise
     // the same verse is highlighted on the left and plain on the right.
-    primary.onHighlightsMutated = () => _secondary?.syncHighlights(primary.highlights);
+    primary.onHighlightsMutated =
+        () => _secondary?.syncHighlights(primary.highlights);
     sp.onHighlightsMutated = () => primary.syncHighlights(sp.highlights);
 
     setState(() {
@@ -1494,8 +1494,8 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
   /// [BibleReference] (a range) rather than a concordance hit. A
   /// chapter-only reference lands on verse 1.
   void _onCrossRefTap(BibleReference ref) {
-    final verse =
-        _wb.verseByRef['${ref.englishBook}-${ref.chapter}-${ref.verseStart ?? 1}'];
+    final verse = _wb
+        .verseByRef['${ref.englishBook}-${ref.chapter}-${ref.verseStart ?? 1}'];
     if (verse == null) return;
     jumper.prepareJumpToVerse(verse, _wb.mainProvider);
     _wb.focusVerse(verse);
@@ -1605,76 +1605,70 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
   Widget _buildPanes(BuildContext context) {
     return Builder(
       builder: (context) {
-          final width = MediaQuery.sizeOf(context).width;
-          final threePane = _isThreePane(width);
-          // One pane, full width, chosen by the bottom bar. Returning
-          // here rather than collapsing the Row is deliberate: a pane
-          // that is merely narrow still pays for its dividers, its
-          // rails and its own width arithmetic, and on a phone every
-          // one of those is a column of pixels the text needs.
-          if (!threePane) return _buildPhonePane(context);
-          final showLeft = _leftOpen && width >= _commandPaneMinWidth;
-          final showRight = _rightOpen && threePane;
-          final panes = _paneWidths(width);
-          final leftW = panes.left;
-          final rightW = panes.right;
+        final width = MediaQuery.sizeOf(context).width;
+        final threePane = _isThreePane(width);
+        // One pane, full width, chosen by the bottom bar. Returning
+        // here rather than collapsing the Row is deliberate: a pane
+        // that is merely narrow still pays for its dividers, its
+        // rails and its own width arithmetic, and on a phone every
+        // one of those is a column of pixels the text needs.
+        if (!threePane) return _buildPhonePane(context);
+        final showLeft = _leftOpen && width >= _commandPaneMinWidth;
+        final showRight = _rightOpen && threePane;
+        final panes = _paneWidths(width);
+        final leftW = panes.left;
+        final rightW = panes.right;
 
-          return ColoredBox(
-            color: WbColors.of(context).chromeBg,
-            child: Row(
-                children: [
-                  if (showLeft) ...[
-                    SizedBox(
-                        width: leftW,
-                        child: _buildCommandFrame(context)),
-                    _buildDivider(context,
-                        key: const ValueKey('workbench-divider-left'),
-                        isLeft: true),
-                  ] else if (width >= _commandPaneMinWidth) ...[
-                    _buildCollapsedRail(context,
-                        key: const ValueKey('workbench-rail-left'),
-                        isLeft: true),
-                  ],
-                  Expanded(
-                    // A persisted mode is a wish, not an instruction:
-                    // Browse needs the three-pane width before three
-                    // editions of a verse stop reading as fragments,
-                    // split needs two reading columns, and where neither
-                    // holds the chapter reader always does. The
-                    // preference is kept for the next screen that can
-                    // honour it — see `effectiveCentreMode`.
-                    child: _chartStrongs != null
-                        ? _buildChartFrame(context, _chartStrongs!)
-                        : switch (effectiveCentreMode(
-                            preferred:
-                                context.watch<WorkbenchProvider>().centreMode,
-                            centreWidth: panes.centre,
-                            threePane: threePane,
-                          )) {
-                            WbCentreMode.browse => _buildParallelFrame(context),
-                            WbCentreMode.split => _buildSplitFrame(context),
-                            WbCentreMode.reader => _buildReaderFrame(context,
-                                splitAvailable: splitFitsIn(panes.centre),
-                                analysisAvailable: threePane),
-                          },
-                  ),
-                  if (showRight) ...[
-                    _buildDivider(context,
-                        key: const ValueKey('workbench-divider-right'),
-                        isLeft: false),
-                    SizedBox(
-                        width: rightW,
-                        child: _buildAnalysisFrame(context)),
-                  ] else if (threePane) ...[
-                    _buildCollapsedRail(context,
-                        key: const ValueKey('workbench-rail-right'),
-                        isLeft: false),
-                  ],
-                ],
-            ),
-          );
-        },
-      );
+        return ColoredBox(
+          color: WbColors.of(context).chromeBg,
+          child: Row(
+            children: [
+              if (showLeft) ...[
+                SizedBox(width: leftW, child: _buildCommandFrame(context)),
+                _buildDivider(context,
+                    key: const ValueKey('workbench-divider-left'),
+                    isLeft: true),
+              ] else if (width >= _commandPaneMinWidth) ...[
+                _buildCollapsedRail(context,
+                    key: const ValueKey('workbench-rail-left'), isLeft: true),
+              ],
+              Expanded(
+                // A persisted mode is a wish, not an instruction:
+                // Browse needs the three-pane width before three
+                // editions of a verse stop reading as fragments,
+                // split needs two reading columns, and where neither
+                // holds the chapter reader always does. The
+                // preference is kept for the next screen that can
+                // honour it — see `effectiveCentreMode`.
+                child: _chartStrongs != null
+                    ? _buildChartFrame(context, _chartStrongs!)
+                    : switch (effectiveCentreMode(
+                        preferred:
+                            context.watch<WorkbenchProvider>().centreMode,
+                        centreWidth: panes.centre,
+                        threePane: threePane,
+                      )) {
+                        WbCentreMode.browse => _buildParallelFrame(context),
+                        WbCentreMode.split => _buildSplitFrame(context),
+                        WbCentreMode.reader => _buildReaderFrame(context,
+                            splitAvailable: splitFitsIn(panes.centre),
+                            analysisAvailable: threePane),
+                      },
+              ),
+              if (showRight) ...[
+                _buildDivider(context,
+                    key: const ValueKey('workbench-divider-right'),
+                    isLeft: false),
+                SizedBox(width: rightW, child: _buildAnalysisFrame(context)),
+              ] else if (threePane) ...[
+                _buildCollapsedRail(context,
+                    key: const ValueKey('workbench-rail-right'), isLeft: false),
+              ],
+            ],
+          ),
+        );
+      },
+    );
   }
 
   // ── Centre: the chapter reader ────────────────────────────────────
@@ -1906,7 +1900,8 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         unit: HitUnit.occurrences,
       ),
       ranks: <String, int>{
-        for (final e in greek?.books.entries ?? const <String, (int, int?)>{}.entries)
+        for (final e
+            in greek?.books.entries ?? const <String, (int, int?)>{}.entries)
           if (e.value.$2 != null) e.key: e.value.$2!,
       },
     );
@@ -2051,9 +2046,8 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
     // Browse and Analysis share ONE cursor, so this pane has no private
     // pin: it shows whatever verse the workspace is focused on.
     final localBook = sel?.book ?? mp.currentBook;
-    final book = localBook == null
-        ? null
-        : (bookNameToEnglish[localBook] ?? localBook);
+    final book =
+        localBook == null ? null : (bookNameToEnglish[localBook] ?? localBook);
     final chapter = sel?.chapter ?? mp.currentChapter;
     final verse = sel?.verse ?? mp.currentVerse?.verse ?? 1;
 
@@ -2102,12 +2096,10 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
                     'Choose versions',
                 onPressed: () => _pickParallelVersions(context),
               ),
-              WbToolButton(
-                icon: Icons.menu_book_outlined,
-                label: uiStrings['classicReaderShort']?[locale] ?? 'Reader',
-                tooltip: uiStrings['classicReader']?[locale] ?? 'Chapter reader',
-                onPressed: () => _setCentreMode(WbCentreMode.reader),
-              ),
+              // No Reader button here. The toolbar above already carries
+              // Browse / Reader / Split as one labelled group, and a
+              // second way into the same mode inside the pane it would
+              // leave read as a different control than the one it is.
             ],
           ),
           // `NAS ▾ Genesis ▾ 1 ▾ 1 ▾` — how you move in BibleWorks, and
@@ -2583,8 +2575,8 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         // selection changes (the sheet caches its Future in initState,
         // so a bare field swap wouldn't reload).
         return OriginalsSheet(
-          key: ValueKey<String>(
-              'analysis-${verses.map((v) => v.id).join('|')}'),
+          key:
+              ValueKey<String>('analysis-${verses.map((v) => v.id).join('|')}'),
           verses: verses,
           allVerses: mp.verses,
           locale: locale,
@@ -2718,8 +2710,8 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
           ),
           onSetSearchLimit: (list) => list == null
               ? wb.setSearchLimit(null, null)
-              : wb.setSearchLimit(verseListKeys(list),
-                  list.name.isEmpty ? null : list.name),
+              : wb.setSearchLimit(
+                  verseListKeys(list), list.name.isEmpty ? null : list.name),
         );
 
       case AnalysisTab.phrases:
@@ -3027,8 +3019,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
   /// panes can now follow the pointer instead of needing a selection.
   Verse? _analysisVerse(MainProvider mp, List<Verse> verses) {
     final h = _analysisWord;
-    return pickAnalysisVerse(
-        verses, h == null ? null : _verseAt(mp, h.verse));
+    return pickAnalysisVerse(verses, h == null ? null : _verseAt(mp, h.verse));
   }
 
   Widget _analysisHint(BuildContext context, String locale) => Center(

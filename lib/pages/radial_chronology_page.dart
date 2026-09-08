@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/gestures.dart' show kTouchSlop;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -10,6 +11,8 @@ import 'package:seeksparks/models/biblical_person.dart';
 import 'package:seeksparks/models/chronology.dart'
     show ChronologyData, Patriarch;
 import 'package:seeksparks/models/hebrew_king.dart';
+import 'package:seeksparks/models/strip_lanes.dart'
+    show StripLane, buildStripLanes;
 import 'package:seeksparks/models/wheel_history.dart';
 import 'package:seeksparks/pages/chronology_page.dart';
 import 'package:seeksparks/pages/family_tree_page.dart';
@@ -23,11 +26,15 @@ import 'package:seeksparks/services/url_sync_service.dart';
 import 'package:seeksparks/utils/date_hedge.dart';
 import 'package:seeksparks/utils/font_catalog.dart';
 import 'package:seeksparks/utils/radial_chronology_layout.dart';
+import 'package:seeksparks/utils/strip_chronology_layout.dart'
+    show kStripZoomSteps;
 import 'package:seeksparks/utils/version_mapper.dart'
     show localizedReferenceLabel;
 import 'package:seeksparks/utils/wheel_search.dart';
 import 'package:seeksparks/widgets/localized_back_button.dart';
+import 'package:seeksparks/utils/year_digest.dart' show buildYearDigest;
 import 'package:seeksparks/widgets/wheel_chrome_bar.dart';
+import 'package:seeksparks/widgets/year_digest_bar.dart';
 
 /// World history on one wheel: 4200 BC at twelve o'clock, time sweeping
 /// clockwise to the present, one concentric band per people or
@@ -123,6 +130,27 @@ const String kWheelUrlPath = '/wheel';
 // room before Adam. The cost is 3.2% of angular resolution everywhere.
 const int kMinYear = -4200;
 const int kMaxYear = 2026;
+
+/// How far in the wheel will go.
+///
+/// WHY IT MOVED FROM 14 TO 40. The owner reported 「zoom in max 也有
+/// 上限 这个还有很多没有显示出来」 with the wheel sitting at its old
+/// ceiling of 1400%, and that was a fair reading of what was on screen:
+/// the 22 stream rings share `side x 0.17`, so at 1400% on a 390 px
+/// phone a ring is about 42 px and the events crowded onto the busiest
+/// stretch of the rim still overlap. 40x is 4000%, which is where the
+/// 140 post-1900 events — 8.06x their share of the axis — finally have
+/// room to print their own titles.
+///
+/// This is NOT the same fix the strip got, and the difference is the
+/// whole reason both forms exist. `InteractiveViewer` scales both axes
+/// together, so raising this ceiling magnifies Methuselah's 969 years
+/// along with Zimri's seven days: the crowding gets pushed off the
+/// screen rather than resolved. The strip's ladder separates the two
+/// axes and actually resolves it. Raising this is worth doing because a
+/// reader who is on the wheel should not hit a wall; it does not make
+/// the wheel the right instrument for a dense century.
+const double kWheelMaxScale = 40;
 
 // Wheel geometry as fractions of the square's side.
 //   hub  .. bands   the stream bands, one ring each
@@ -429,6 +457,67 @@ Color streamColor(String line, int index, int count) =>
 /// ui_strings.dart because the unattended loop shares this checkout and
 /// edits that file; fold these in on a quiet merge.
 const Map<String, Map<String, String>> wheelStrings = {
+  // ── the year cursor, shared by both forms ─────────────────────────
+  //
+  // The wheel and the strip draw the same corpus and now answer the
+  // same question — "which year is this, and what happened in it" —
+  // so they share one vocabulary for the answer. Splitting these into
+  // two tables is how two views of one corpus start telling a reader
+  // two different things about the same year.
+  'chronoYearHappened': {
+    'zh-Hans': '当年发生',
+    'zh-Hant': '當年發生',
+    'en': 'This year',
+  },
+  'chronoYearOngoing': {
+    'zh-Hans': '正在进行',
+    'zh-Hant': '正在進行',
+    'en': 'Under way',
+  },
+  // A beginning and an end, as marks rather than words: they sit
+  // INSIDE a chip beside a name, where a word would double its width.
+  'chronoYearBegins': {'zh-Hans': '起', 'zh-Hant': '起', 'en': 'begins'},
+  'chronoYearEnds': {'zh-Hans': '止', 'zh-Hant': '止', 'en': 'ends'},
+  'chronoYearAlive': {
+    'zh-Hans': '{n} 人在世',
+    'zh-Hant': '{n} 人在世',
+    'en': '{n} alive',
+  },
+  'chronoYearReigning': {
+    'zh-Hans': '{n} 位在位',
+    'zh-Hant': '{n} 位在位',
+    'en': '{n} reigning',
+  },
+  'chronoYearUnderWay': {
+    'zh-Hans': '{n} 项进行中',
+    'zh-Hant': '{n} 項進行中',
+    'en': '{n} under way',
+  },
+  // Said when the year holds nothing at all. NOT "nothing happened in
+  // this year" — the corpus is a selection, and the chart may not
+  // claim history was empty because its own asset is.
+  'chronoYearNothing': {
+    'zh-Hans': '本表未收录这一年',
+    'zh-Hant': '本表未收錄這一年',
+    'en': 'nothing dated here',
+  },
+  'chronoYearEmpty': {
+    'zh-Hans': '本表没有记录定在这一年。',
+    'zh-Hant': '本表沒有記錄定在這一年。',
+    'en': 'No record in this chart is dated to this year.',
+  },
+  'chronoYearClear': {
+    'zh-Hans': '清除年份线',
+    'zh-Hant': '清除年份線',
+    'en': 'Clear the year line',
+  },
+  'chronoYearExpand': {'zh-Hans': '展开', 'zh-Hant': '展開', 'en': 'More'},
+  'chronoYearCollapse': {'zh-Hans': '收起', 'zh-Hant': '收起', 'en': 'Less'},
+  'chronoYearHint': {
+    'zh-Hans': '点一下图表，读出那一年',
+    'zh-Hant': '點一下圖表，讀出那一年',
+    'en': 'Tap the chart to read off a year',
+  },
   // WHERE A POWER WAS, in the asset's own twelve-value vocabulary.
   //
   // `region` used to be excused as unread on the grounds that it was
@@ -1222,6 +1311,88 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
     if ((z - _zoom).abs() > 0.02) setState(() => _zoom = z);
   }
 
+  /// Run [go] only if the pointer that just lifted never travelled.
+  ///
+  /// The `Listener` this serves is deliberately NOT a `GestureDetector`
+  /// with `onTapDown`: a `TapGestureRecognizer` fires `onTapDown` when
+  /// it wins the arena or when 100 ms elapse, so on the sibling chart a
+  /// quick tap did nothing while press-and-hold worked, and no widget
+  /// test could see the difference (`tapAt` sends down and up with
+  /// nothing between). A `Listener` is not in the arena, so the wheel's
+  /// own tap handler and the year cursor both get the press: tapping an
+  /// event opens its sheet AND lands the cursor on its year.
+  ///
+  /// The slop is measured in global coordinates — the frame the
+  /// question "did the finger travel" is actually about, and the one
+  /// that survives whatever the `InteractiveViewer` has done to the
+  /// transform in between.
+  void _commitPress(PointerUpEvent e, VoidCallback go) {
+    final origin = _pressOrigin;
+    _pressOrigin = null;
+    if (origin == null) return;
+    if ((e.position - origin).distance > kTouchSlop) return;
+    go();
+  }
+
+  /// The year at a point on the square canvas, or null if the point is
+  /// outside the 320-degree sweep.
+  ///
+  /// The inverse of [angleForSpan] and nothing else — no radius term,
+  /// because on this wheel radius is the LAYER and angle alone is the
+  /// year. That is the claim the chart makes, so a cursor placed on the
+  /// hub and one placed on the rim at the same angle name the same
+  /// year, which is exactly right.
+  int? _yearAt(Offset local, double side) {
+    final c = side / 2;
+    var a = math.atan2(local.dy - c, local.dx - c);
+    while (a < startRad) {
+      a += 2 * math.pi;
+    }
+    if (a - startRad > sweepRad) return null;
+    final t = (a - startRad) / sweepRad;
+    return (kMinYear + t * (kMaxYear - kMinYear)).round();
+  }
+
+  /// Put the cursor on a year without moving the view. Ported from the
+  /// strip's own `_placeCursor`, for the same reason: moving the wheel
+  /// out from under the thing the reader just pointed at is how a
+  /// crosshair becomes unusable.
+  void _placeCursor(int year) =>
+      setState(() => _cursorYear = year.clamp(kMinYear, kMaxYear));
+
+  /// The lanes behind the year readout, rebuilt when the filter changes
+  /// and not otherwise — see [_digestLanes].
+  List<StripLane> _lanesFor(WheelHistoryData data) {
+    final key = (_hidden.toList()..sort()).join(',');
+    final cached = _digestLanes;
+    if (cached != null && _digestLanesKey == key) return cached;
+    final creation = creationYear;
+    final lanes = buildStripLanes(
+      wheel: data,
+      kings: _hidden.contains(kReignLayerId)
+          ? const <HebrewKing>[]
+          : (HebrewKingsService.instance.cached?.kings ?? const <HebrewKing>[]),
+      // The wheel's own honest fallback: with no creation anchor the
+      // lifespans are not drawn, so they must not be counted either.
+      patriarchs: (_hidden.contains(kLifespanLayerId) || creation == null)
+          ? const <Patriarch>[]
+          : (ChronologyService.instance.cached?.patriarchs ?? const []),
+      familyTreePeople: _hidden.contains(kLineageLayerId)
+          ? const <BiblicalPerson>[]
+          : (FamilyTreeService.instance.cached ?? const <BiblicalPerson>[]),
+      tradition: kDrawnTradition,
+      creationYear: creation ?? 0,
+      // The densest step on the ladder, so the packer merges nothing:
+      // this list is read for its RECORDS, never painted, and a digest
+      // that dropped a record because two of them would have collided
+      // at some pixel width would be answering a question nobody asked.
+      pxPerYear: kStripZoomSteps.last,
+    );
+    _digestLanes = lanes;
+    _digestLanesKey = key;
+    return lanes;
+  }
+
   /// Zoom about the centre of what the reader is LOOKING AT.
   ///
   /// A bare `scale()` multiplies the matrix about the child's own
@@ -1235,7 +1406,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
     if (size == null) return;
     final m = _viewer.value.clone();
     final z = m.getMaxScaleOnAxis();
-    final applied = (z * factor).clamp(0.8, 14.0) / z;
+    final applied = (z * factor).clamp(0.8, kWheelMaxScale) / z;
     if ((applied - 1).abs() < 0.001) return;
 
     // The scene point currently under the middle of the viewport.
@@ -1256,6 +1427,31 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
       MatrixUtils.transformPoint(Matrix4.inverted(m), viewportPoint);
 
   Size? _viewportSize;
+
+  /// The year the cursor rests on, or null before the reader has put it
+  /// anywhere — the wheel's half of the answer to 「没有线根本不知道
+  /// 哪一年」. On a wheel the line is a SPOKE: year is angle here, so
+  /// the rule that means "this year" runs hub to rim, not top to
+  /// bottom.
+  int? _cursorYear;
+
+  /// Where the current press started, in global coordinates. See
+  /// [_commitPress] and the `Listener` in [_body] for why the cursor
+  /// commits on UP rather than DOWN.
+  Offset? _pressOrigin;
+
+  /// The strip's lanes, built once per corpus and kept only to answer
+  /// "what happened in this year".
+  ///
+  /// The wheel has no lanes of its own, and it does not need them to
+  /// PAINT — it needs them so that the year readout it shows and the
+  /// year readout the strip shows are the same list. `buildStripLanes`
+  /// is a pure function of a corpus this page already holds, so the
+  /// alternative was a second traversal of events, reigns, lifespans
+  /// and bands written against the same records — which is how the two
+  /// forms would start disagreeing about a year.
+  List<StripLane>? _digestLanes;
+  String? _digestLanesKey;
 
   /// The side of the square canvas at the last layout — what turns a
   /// year into a point search can pan to.
@@ -1287,8 +1483,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
             context,
             s('wheelTitle', 'World History Wheel', locale),
             MediaQuery.sizeOf(context).width),
-        titleSpacing:
-            wheelChromeTitleSpacing(MediaQuery.sizeOf(context).width),
+        titleSpacing: wheelChromeTitleSpacing(MediaQuery.sizeOf(context).width),
         // Six actions plus the back button used to be typed out here
         // unconditionally, and measured on the real page at 375 px —
         // reachable at any width since `#/wheel` stopped being gated by
@@ -1318,16 +1513,14 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
           // reads too.
           viewSwitch: wheelViewSwitch(
             locale: locale,
-            narrow:
-                MediaQuery.sizeOf(context).width < kWheelNarrowPaneWidth,
+            narrow: MediaQuery.sizeOf(context).width < kWheelNarrowPaneWidth,
             ss: (key, fallback) => stripStrings[key]?[locale] ?? fallback,
             selected: const {'wheel'},
             onSelectionChanged: (selected) {
               if (selected.first != 'strip') return;
               context.read<AppSettings>().setChronologyView('strip');
               Navigator.of(context).pushReplacement(
-                MaterialPageRoute(
-                    builder: (_) => const StripChronologyPage()),
+                MaterialPageRoute(builder: (_) => const StripChronologyPage()),
               );
             },
           ),
@@ -1368,98 +1561,184 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
     final ringOf = {for (var i = 0; i < streams.length; i++) streams[i].id: i};
     final colors = colorsFor(data);
 
-    return LayoutBuilder(builder: (context, box) {
-      _viewportSize = Size(box.maxWidth, box.maxHeight);
-      final side = math.min(box.maxWidth, box.maxHeight);
-      _side = side;
-      final hubD = side * _kHubFrac * 2;
-      final rHub = side * _kHubFrac;
-      final rBands = side * _kBandsFrac;
-      final rRim = side * _kRimFrac;
+    // The readout is a ROW OF THE LAYOUT and the wheel is inside an
+    // `Expanded` above it — not a panel floating over the chart. The
+    // reader placed the cursor in order to look at that part of the
+    // wheel, and covering it is the crosshair defect in a second form.
+    // It sits OUTSIDE the `LayoutBuilder` so `side` is measured against
+    // the height the wheel actually gets, rather than the height it
+    // would have had without a readout.
+    return Column(children: [
+      Expanded(
+        child: LayoutBuilder(builder: (context, box) {
+          _viewportSize = Size(box.maxWidth, box.maxHeight);
+          final side = math.min(box.maxWidth, box.maxHeight);
+          _side = side;
+          final hubD = side * _kHubFrac * 2;
+          final rHub = side * _kHubFrac;
+          final rBands = side * _kBandsFrac;
+          final rRim = side * _kRimFrac;
 
-      final arcs = _buildArcs(data, ringOf, colors, streams.length, rHub,
-          rBands, locale, t.scaledChrome(_kLabelPx));
-      final spokes = _buildSpokes(data, ringOf, rBands, rRim, colors, locale,
-          t.scaledChrome(_kLabelPx));
-      // AFTER the spokes, because the arc names have to dodge the spoke
-      // titles and cannot know where they are until they are planned.
-      final lives = _buildLifespans(
-          rBands, rRim, spokes, locale, t.scaledChrome(_kLabelPx));
-      final rail = _buildRail(rBands, rRim, lives);
+          final arcs = _buildArcs(data, ringOf, colors, streams.length, rHub,
+              rBands, locale, t.scaledChrome(_kLabelPx));
+          final spokes = _buildSpokes(data, ringOf, rBands, rRim, colors,
+              locale, t.scaledChrome(_kLabelPx));
+          // AFTER the spokes, because the arc names have to dodge the spoke
+          // titles and cannot know where they are until they are planned.
+          final lives = _buildLifespans(
+              rBands, rRim, spokes, locale, t.scaledChrome(_kLabelPx));
+          final rail = _buildRail(rBands, rRim, lives);
 
-      return Stack(children: [
-        Positioned.fill(
-          child: InteractiveViewer(
-            transformationController: _viewer,
-            maxScale: 14,
-            minScale: 0.8,
-            child: Center(
-              child: SizedBox(
-                width: side,
-                height: side,
-                child: GestureDetector(
-                  // The wheel is one square canvas and every band, arc
-                  // and spoke is painted, not laid out, so a test can
-                  // only reach a detail sheet by tapping a computed
-                  // point. This key is how it finds the square and its
-                  // centre — same reason as `chronologyAxis` on the
-                  // sibling page.
-                  key: const ValueKey('chronologyWheel'),
-                  behavior: HitTestBehavior.opaque,
-                  onTapUp: (e) => _handleTap(context, e.localPosition, side,
-                      data, streams, arcs, spokes, lives, rail, locale),
-                  child: Stack(children: [
-                    CustomPaint(
-                      size: Size(side, side),
-                      painter: _WorldWheelPainter(
-                        streams: streams,
-                        colors: colors,
-                        arcs: arcs,
-                        spokes: spokes,
-                        lives: lives,
-                        rail: rail,
-                        locale: locale,
-                        selectedId: _selectedId,
-                        wb: wb,
-                        zoom: _zoom,
-                        rimFont: t.scaledChrome(_kLabelPx),
-                        endFont: t.scaledChrome(11),
-                        bandFont: t.scaledChrome(10),
+          return Stack(children: [
+            Positioned.fill(
+              child: InteractiveViewer(
+                transformationController: _viewer,
+                maxScale: kWheelMaxScale,
+                minScale: 0.8,
+                child: Center(
+                  child: SizedBox(
+                    width: side,
+                    height: side,
+                    child: Listener(
+                      onPointerDown: (e) => _pressOrigin = e.position,
+                      onPointerUp: (e) => _commitPress(e, () {
+                        final year = _yearAt(e.localPosition, side);
+                        // Outside the 320-degree sweep is blank paper, and
+                        // blank paper names no year — the same rule
+                        // `_handleTap` already applies to the empty wedge.
+                        if (year != null) _placeCursor(year);
+                      }),
+                      onPointerCancel: (_) => _pressOrigin = null,
+                      child: GestureDetector(
+                        // The wheel is one square canvas and every band, arc
+                        // and spoke is painted, not laid out, so a test can
+                        // only reach a detail sheet by tapping a computed
+                        // point. This key is how it finds the square and its
+                        // centre — same reason as `chronologyAxis` on the
+                        // sibling page.
+                        key: const ValueKey('chronologyWheel'),
+                        behavior: HitTestBehavior.opaque,
+                        onTapUp: (e) => _handleTap(
+                            context,
+                            e.localPosition,
+                            side,
+                            data,
+                            streams,
+                            arcs,
+                            spokes,
+                            lives,
+                            rail,
+                            locale),
+                        child: Stack(children: [
+                          CustomPaint(
+                            size: Size(side, side),
+                            painter: _WorldWheelPainter(
+                              streams: streams,
+                              colors: colors,
+                              arcs: arcs,
+                              spokes: spokes,
+                              lives: lives,
+                              rail: rail,
+                              locale: locale,
+                              selectedId: _selectedId,
+                              wb: wb,
+                              zoom: _zoom,
+                              rimFont: t.scaledChrome(_kLabelPx),
+                              endFont: t.scaledChrome(11),
+                              bandFont: t.scaledChrome(10),
+                            ),
+                          ),
+                          // THE LINE, and on a wheel it is a spoke: year is
+                          // angle here, so the rule that says "this year"
+                          // runs hub to rim. Hit-transparent, because a rule
+                          // that swallowed taps would answer 「没有线根本不
+                          // 知道哪一年」 by breaking the chart underneath it.
+                          if (_cursorYear case final int y)
+                            Positioned.fill(
+                              child: IgnorePointer(
+                                child: CustomPaint(
+                                  key: const ValueKey('wheelYearCursor'),
+                                  painter: _YearSpokePainter(
+                                    year: y,
+                                    side: side,
+                                    rHub: rHub,
+                                    rRim: rRim,
+                                    color: wb.accent,
+                                    zoom: _zoom,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          // The hub says where you are; it is not part of the
+                          // chart. Inside the zoomable child it was magnified
+                          // with everything else and swallowed the middle of
+                          // the screen at 384%. It now shrinks against the
+                          // zoom and fades out entirely once the reader has
+                          // zoomed in to read — by then they know what they
+                          // are looking at, and the space is worth more than
+                          // the caption.
+                          Center(
+                            child: Opacity(
+                              opacity: (1.6 - _zoom).clamp(0.0, 1.0),
+                              child: Transform.scale(
+                                scale: 1 / _zoom,
+                                child: _hubCaption(context, locale, t, wb, hubD,
+                                    streams, data, lives),
+                              ),
+                            ),
+                          ),
+                        ]),
                       ),
                     ),
-                    // The hub says where you are; it is not part of the
-                    // chart. Inside the zoomable child it was magnified
-                    // with everything else and swallowed the middle of
-                    // the screen at 384%. It now shrinks against the
-                    // zoom and fades out entirely once the reader has
-                    // zoomed in to read — by then they know what they
-                    // are looking at, and the space is worth more than
-                    // the caption.
-                    Center(
-                      child: Opacity(
-                        opacity: (1.6 - _zoom).clamp(0.0, 1.0),
-                        child: Transform.scale(
-                          scale: 1 / _zoom,
-                          child: _hubCaption(context, locale, t, wb, hubD,
-                              streams, data, lives),
-                        ),
-                      ),
-                    ),
-                  ]),
+                  ),
                 ),
               ),
             ),
-          ),
-        ),
-        Positioned(
-            left: 10,
-            bottom: 10,
-            child: side < kWheelNarrowPaneWidth
-                ? _legendChip(context, locale, t, wb)
-                : _legend(locale, t, wb)),
-        Positioned(right: 10, bottom: 10, child: _zoomControls(locale, t, wb)),
-      ]);
-    });
+            Positioned(
+                left: 10,
+                bottom: 10,
+                child: side < kWheelNarrowPaneWidth
+                    ? _legendChip(context, locale, t, wb)
+                    : _legend(locale, t, wb)),
+            Positioned(
+                right: 10, bottom: 10, child: _zoomControls(locale, t, wb)),
+          ]);
+        }),
+      ),
+      // Always present. It used to appear on the first tap, and that
+      // took ~90 px out of a wheel whose `side` is `min(width, height)`
+      // — so pointing at the chart rescaled it by about a tenth and
+      // moved the very thing just pointed at. Two wheel tests caught it.
+      YearDigestBar(
+        digest: _cursorYear == null
+            ? null
+            : buildYearDigest(year: _cursorYear!, lanes: _lanesFor(data)),
+        yearText: _cursorYear == null ? '' : yearLabel(_cursorYear!, locale),
+        hint: s('chronoYearHint', 'Tap the chart to read off a year', locale),
+        label: (item) => digestLabel(
+            item,
+            data,
+            HebrewKingsService.instance.cached?.kings ?? const <HebrewKing>[],
+            ChronologyService.instance.cached?.patriarchs ??
+                const <Patriarch>[],
+            locale),
+        onOpen: (item) => openDigestRecord(
+            context,
+            item,
+            data,
+            HebrewKingsService.instance.cached?.kings ?? const <HebrewKing>[],
+            ChronologyService.instance.cached?.patriarchs ??
+                const <Patriarch>[],
+            locale,
+            _select),
+        onClear: () => setState(() => _cursorYear = null),
+        s: (key, fallback) => s(key, fallback, locale),
+        fill: (key, fallback, values) => fill(key, fallback, locale, values),
+        onYear: _placeCursor,
+        minYear: kMinYear,
+        maxYear: kMaxYear,
+      ),
+    ]);
   }
 
   /// The hub's caption — title, year range, counts, hint — sized to fit
@@ -1665,8 +1944,7 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
         ),
         child: Padding(
           padding: EdgeInsets.all(t.scaled(8)),
-          child: Icon(Icons.legend_toggle,
-              size: t.scaled(20), color: wb.text),
+          child: Icon(Icons.legend_toggle, size: t.scaled(20), color: wb.text),
         ),
       ),
     );
@@ -1766,7 +2044,12 @@ class _RadialChronologyPageState extends State<RadialChronologyPage>
     final planned = planArcNames(
       requests: [
         for (final arc in geo)
-          (ring: arc.ring, a0: arc.a0, a1: arc.a1, name: arc.power.nameFor(locale))
+          (
+            ring: arc.ring,
+            a0: arc.a0,
+            a1: arc.a1,
+            name: arc.power.nameFor(locale)
+          )
       ],
       ringCount: ringCount,
       rHub: rHub,
@@ -4043,4 +4326,66 @@ class _WorldWheelPainter extends CustomPainter {
       old.rimFont != rimFont ||
       old.endFont != endFont ||
       old.bandFont != bandFont;
+}
+
+/// The year spoke — the wheel's own year cursor.
+///
+/// A LINE FROM HUB TO RIM, because on this chart year is angle and
+/// nothing else: a cursor placed near the hub and one placed at the rim
+/// on the same bearing name the same year, which is exactly the claim
+/// `angleForSpan` makes. There is no radial component to a year here,
+/// so there is none in the rule that marks one.
+///
+/// Its width divides by the zoom, the same way every label on this
+/// chart divides by `_labelScale`. A 2 px rule at 4000% would be an
+/// 80 px wedge covering about eight centuries — a mark claiming to be
+/// exactly one year has to hold its ON-SCREEN width as the reader zooms
+/// in, or it stops being true the further in they go.
+class _YearSpokePainter extends CustomPainter {
+  const _YearSpokePainter({
+    required this.year,
+    required this.side,
+    required this.rHub,
+    required this.rRim,
+    required this.color,
+    required this.zoom,
+  });
+
+  final int year;
+  final double side;
+  final double rHub;
+  final double rRim;
+  final Color color;
+  final double zoom;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = Offset(side / 2, side / 2);
+    final a = angleForSpan(year, kMinYear, kMaxYear);
+    final dir = Offset(math.cos(a), math.sin(a));
+    canvas.drawLine(
+      c + dir * rHub,
+      c + dir * (rRim + kAxisLabelClearance),
+      Paint()
+        ..color = color
+        ..strokeWidth = 2 / zoom,
+    );
+    // A dot on the rim end. The line alone reads as one more century
+    // tick at low zoom — `_paintCenturies` draws 62 of those — and the
+    // dot is what says "this one is yours".
+    canvas.drawCircle(
+      c + dir * (rRim + kAxisLabelClearance),
+      3 / zoom,
+      Paint()..color = color,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_YearSpokePainter old) =>
+      old.year != year ||
+      old.side != side ||
+      old.rHub != rHub ||
+      old.rRim != rRim ||
+      old.color != color ||
+      old.zoom != zoom;
 }

@@ -32,6 +32,21 @@ const Map<String, Map<String, String>> stripStrings = {
   'stripZoomIn': {'zh-Hans': '放大', 'zh-Hant': '放大', 'en': 'Zoom in'},
   'stripZoomOut': {'zh-Hans': '缩小', 'zh-Hant': '縮小', 'en': 'Zoom out'},
 
+  /// The SECOND zoom — lane height and label size, independent of the
+  /// time axis. Worded about the TYPE and not about the rows, because
+  /// that is what the reader who asked for this was looking at: 「就算
+  /// zoom in 之后字也没有相应变大」.
+  'stripTypeBigger': {
+    'zh-Hans': '字大一点',
+    'zh-Hant': '字大一點',
+    'en': 'Larger type',
+  },
+  'stripTypeSmaller': {
+    'zh-Hans': '字小一点',
+    'zh-Hant': '字小一點',
+    'en': 'Smaller type',
+  },
+
   /// `pxPerYearToFit` collapsed to the whole 6226-year axis — the strip's
   /// answer to the wheel's "everything is always on screen" default.
   'stripFitAll': {

@@ -63,6 +63,36 @@
 /// strings are reused; only the "which lanes does hiding actually
 /// remove" plumbing is the strip's own, because a lane is not a ring.
 ///
+/// THE YEAR CURSOR, AND WHY IT IS A `Listener` AND NOT A TAP. Added
+/// 2026-09-08 on the owner's report, which named the defect exactly:
+/// 「没有线根本不知道哪一年，然后那一年也要显示当年发生什么事情」. The
+/// axis only exists at the TOP of this page, so once a reader scrolls
+/// down the lanes there is genuinely nothing on screen saying which
+/// year a bar's edge is at. A press anywhere — the lanes or the sticky
+/// ruler — commits `_cursorYear` on pointer UP within `kTouchSlop`, and
+/// the shared `YearDigestBar` below says what that year holds.
+///
+/// The gesture is inherited whole from yswords' `chronology_chart.dart`
+/// including the reason it is not a `GestureDetector`: a
+/// `TapGestureRecognizer` fires `onTapDown` when it WINS the arena or
+/// when 100 ms elapse, so `onTapDown` gave a chart where press-and-hold
+/// worked and a quick tap did nothing — and no widget test could see it,
+/// because `tapAt` sends down and up with nothing in between. A
+/// `Listener` is not in the arena, so it coexists with this page's own
+/// tap handler rather than competing with it: one press opens an
+/// event's sheet AND lands the cursor on its year.
+/// `test/year_cursor_test.dart` pins the drag half, and that test has
+/// been mutation-checked — moving the commit to `onPointerDown` turns
+/// it red and nothing else.
+///
+/// TWO ZOOMS, NOT ONE. `_pxPerYear` walks `kStripZoomSteps` (now up to
+/// 96 px/year — the scale at which the corpus's densest window, AD
+/// 1559-2008, can name every record it holds) and `_laneZoom` walks
+/// `kStripLaneZoomSteps`, which multiplies the type size and the lane
+/// height. Keeping them apart is this page's whole argument; the wheel
+/// cannot, and that is why the wheel still crowds however far in it
+/// goes.
+///
 /// REVEALING A FOUND RECORD IS `scrollToCentre` PLUS ITS OWN VERTICAL
 /// HALF. The horizontal half is the layout file's own
 /// `scrollToCentre` — the strip's `focusTranslation`, deliberately
@@ -76,6 +106,7 @@ library;
 
 import 'dart:math' as math;
 
+import 'package:flutter/gestures.dart' show PointerDeviceKind, kTouchSlop;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -104,12 +135,14 @@ import 'package:seeksparks/services/hebrew_kings_service.dart';
 import 'package:seeksparks/services/url_sync_service.dart';
 import 'package:seeksparks/utils/font_catalog.dart' show canvasTextStyle;
 import 'package:seeksparks/utils/strip_chronology_layout.dart';
+import 'package:seeksparks/utils/year_digest.dart';
 import 'package:seeksparks/utils/version_mapper.dart'
     show localizedReferenceLabel;
 import 'package:seeksparks/utils/wheel_search.dart';
 import 'package:seeksparks/widgets/localized_back_button.dart';
 import 'package:seeksparks/widgets/strip_chronology_painter.dart';
 import 'package:seeksparks/widgets/wheel_chrome_bar.dart';
+import 'package:seeksparks/widgets/year_digest_bar.dart';
 
 /// The address this page owns, in the same shape as `kWheelUrlPath`.
 ///
@@ -170,6 +203,31 @@ class _StripChronologyPageState extends State<StripChronologyPage>
 
   double _viewportW = 0;
 
+  /// The year the cursor rests on, or null before the reader has put it
+  /// anywhere. Null is a real state and not "year zero": an untouched
+  /// strip shows no rule and no readout, because a line drawn where
+  /// nobody pointed is a claim about a year the reader did not choose.
+  int? _cursorYear;
+
+  /// Where the current press started, in GLOBAL coordinates — the slop
+  /// test for [_placeCursor]. See the `Listener` in [_body] for why the
+  /// cursor commits on UP rather than DOWN, and why global is the right
+  /// frame for the question "did the finger travel".
+  Offset? _pressOrigin;
+
+  /// The SECOND zoom, and the reason this page exists.
+  ///
+  /// The strip's whole argument is that time and lanes are separate
+  /// axes (`strip_chronology_layout.dart`'s library doc), and until now
+  /// only one of the two had a control: `_pxPerYear` bought more room
+  /// along the axis while every label stayed at the reader's Font Size.
+  /// The owner reported exactly that — 「就算 zoom in 之后字也没有相应
+  /// 变大」 — and the fix is not to fold the two axes back together
+  /// (that is the wheel's defect, where `InteractiveViewer` magnifies a
+  /// seven-day reign and Methuselah's 969 years by the same factor).
+  /// It is to expose the axis that was designed and never wired up.
+  double _laneZoom = 1;
+
   @override
   void initState() {
     super.initState();
@@ -225,6 +283,27 @@ class _StripChronologyPageState extends State<StripChronologyPage>
         snapZoom(pxPerYearToFit(kStripMinYear, kStripMaxYear, _viewportW)));
   }
 
+  void _laneZoomStep(int delta) {
+    final i = kStripLaneZoomSteps.indexOf(_laneZoom);
+    final next =
+        (i < 0 ? 1 : i + delta).clamp(0, kStripLaneZoomSteps.length - 1);
+    setState(() => _laneZoom = kStripLaneZoomSteps[next]);
+  }
+
+  /// Put the cursor on a year, WITHOUT scrolling.
+  ///
+  /// Ported whole from yswords' `chronology_chart.dart` `_placeCursor`,
+  /// including the reason it does not scroll: moving the view out from
+  /// under the thing the reader just pointed at is the classic way a
+  /// crosshair becomes unusable.
+  void _placeCursor(int year) =>
+      setState(() => _cursorYear = year.clamp(kStripMinYear, kStripMaxYear));
+
+  /// The same, from a content-x — what a press on the lanes or on the
+  /// ruler means.
+  void _placeCursorAtX(double x) =>
+      _placeCursor(yearForX(x, _pxPerYear).round());
+
   /// `stripStrings`' own lookup — `s()` (from [WheelSheets]) reads
   /// `uiStrings`/`wheelStrings`, neither of which carries this page's
   /// vocabulary.
@@ -244,8 +323,7 @@ class _StripChronologyPageState extends State<StripChronologyPage>
             context,
             _kPageTitle[locale] ?? _kPageTitle['en']!,
             MediaQuery.sizeOf(context).width),
-        titleSpacing:
-            wheelChromeTitleSpacing(MediaQuery.sizeOf(context).width),
+        titleSpacing: wheelChromeTitleSpacing(MediaQuery.sizeOf(context).width),
         // Same three, same order, same tooltips as the wheel's own
         // toolbar (`radial_chronology_page.dart`'s `build`) — a
         // reader switching forms should find Find/Filter/About in
@@ -322,9 +400,12 @@ class _StripChronologyPageState extends State<StripChronologyPage>
         ? const <Patriarch>[]
         : (chron?.patriarchs ?? const []);
 
-    final laneFontPx = t.scaledSmall(12);
+    // Both zooms, applied where each belongs: `_pxPerYear` decides how
+    // much axis a year buys, `_laneZoom` decides how big the type on
+    // that axis is. Neither touches the other.
+    final laneFontPx = t.scaledSmall(12) * _laneZoom;
     final headingFontPx = laneFontPx * 1.15;
-    final tickFontPx = t.scaledChrome(11);
+    final tickFontPx = t.scaledChrome(11) * _laneZoom;
     final rows = _currentRows(data, kings, patriarchs, t.textScale);
     final contentW = stripContentWidth(_pxPerYear);
     final contentH = rows.isEmpty ? 0.0 : rows.last.top + rows.last.height;
@@ -356,99 +437,222 @@ class _StripChronologyPageState extends State<StripChronologyPage>
       final visibleX1 = visibleX0 +
           (_hCtl.hasClients ? _hCtl.position.viewportDimension : _viewportW);
 
-      return Stack(children: [
-        Column(children: [
-          Row(children: [
-            SizedBox(width: headerW, height: rulerH),
-            Expanded(
-              child: ClipRect(
-                child: SingleChildScrollView(
-                  controller: _rulerHCtl,
-                  scrollDirection: Axis.horizontal,
-                  physics: const NeverScrollableScrollPhysics(),
-                  key: const ValueKey('stripRulerHScroll'),
-                  child: CustomPaint(
-                    size: Size(contentW, rulerH),
-                    painter: StripRulerPainter(
-                      pxPerYear: _pxPerYear,
-                      locale: locale,
-                      wb: wb,
-                      tickFontPx: tickFontPx,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ]),
-          Expanded(
-            child: Row(children: [
-              SizedBox(
-                width: headerW,
+      // The readout is a row BELOW everything, and the zoom controls
+      // and the scroll-edge indicators are pinned inside the part
+      // above it. All three were in one Stack when the readout first
+      // landed, and `Positioned(bottom: 10)` then put the zoom cluster
+      // on top of the readout it was meant to sit above.
+      return Column(children: [
+        Expanded(
+            child: Stack(children: [
+          Column(children: [
+            Row(children: [
+              SizedBox(width: headerW, height: rulerH),
+              Expanded(
                 child: ClipRect(
                   child: SingleChildScrollView(
-                    controller: _headerVCtl,
+                    controller: _rulerHCtl,
+                    scrollDirection: Axis.horizontal,
                     physics: const NeverScrollableScrollPhysics(),
-                    key: const ValueKey('stripHeaderVScroll'),
-                    child: CustomPaint(
-                      size: Size(headerW, contentH),
-                      painter: StripLaneHeaderPainter(
-                        rows: rows,
-                        locale: locale,
-                        wb: wb,
-                        laneFontPx: laneFontPx,
-                        headingFontPx: headingFontPx,
-                        palette: palette,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Expanded(
-                child: SingleChildScrollView(
-                  controller: _hCtl,
-                  scrollDirection: Axis.horizontal,
-                  key: const ValueKey('stripHScroll'),
-                  child: SingleChildScrollView(
-                    controller: _vCtl,
-                    key: const ValueKey('stripVScroll'),
-                    child: GestureDetector(
-                      key: const ValueKey('chronologyStrip'),
-                      behavior: HitTestBehavior.opaque,
-                      onTapUp: (e) => _handleTap(context, e.localPosition, data,
-                          kings, patriarchs, locale, rows, laneFontPx),
+                    key: const ValueKey('stripRulerHScroll'),
+                    // The ruler answers a press too. It is the one row on
+                    // the page that is ONLY about the year, so it is where
+                    // a reader who wants "which year is this" points
+                    // first, and a ruler that ignored the press would be
+                    // the odd one out.
+                    child: Listener(
+                      onPointerDown: (e) => _pressOrigin = e.position,
+                      onPointerUp: (e) => _commitPress(e, () {
+                        _placeCursorAtX(e.localPosition.dx);
+                      }),
+                      onPointerCancel: (_) => _pressOrigin = null,
                       child: SizedBox(
                         width: contentW,
-                        height: contentH,
-                        child: CustomPaint(
-                          painter: StripLanesPainter(
-                            rows: rows,
-                            pxPerYear: _pxPerYear,
-                            locale: locale,
-                            selectedId: _selectedId,
-                            wb: wb,
-                            laneFontPx: laneFontPx,
-                            palette: palette,
-                            visibleX0: visibleX0,
-                            visibleX1: visibleX1,
+                        height: rulerH,
+                        child: Stack(children: [
+                          Positioned.fill(
+                            child: CustomPaint(
+                              painter: StripRulerPainter(
+                                pxPerYear: _pxPerYear,
+                                locale: locale,
+                                wb: wb,
+                                tickFontPx: tickFontPx,
+                              ),
+                            ),
                           ),
-                        ),
+                          if (_cursorYear case final int y)
+                            Positioned(
+                              left: xForYear(y, _pxPerYear) - _kCursorHalfWidth,
+                              top: 0,
+                              bottom: 0,
+                              width: _kCursorHalfWidth * 2,
+                              child: IgnorePointer(
+                                child: ColoredBox(color: wb.accent),
+                              ),
+                            ),
+                        ]),
                       ),
                     ),
                   ),
                 ),
               ),
             ]),
+            Expanded(
+              child: Row(children: [
+                SizedBox(
+                  width: headerW,
+                  child: ClipRect(
+                    child: SingleChildScrollView(
+                      controller: _headerVCtl,
+                      physics: const NeverScrollableScrollPhysics(),
+                      key: const ValueKey('stripHeaderVScroll'),
+                      child: CustomPaint(
+                        size: Size(headerW, contentH),
+                        painter: StripLaneHeaderPainter(
+                          rows: rows,
+                          locale: locale,
+                          wb: wb,
+                          laneFontPx: laneFontPx,
+                          headingFontPx: headingFontPx,
+                          palette: palette,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  // A MOUSE DRAGS THIS. Flutter's default scroll behaviour
+                  // gives a mouse the wheel and nothing else, and the
+                  // gesture for a HORIZONTAL scroll view is shift-wheel,
+                  // which nobody guesses — the same defect yswords fixed
+                  // on its own chart after the owner asked for it in
+                  // as many words. Touch could always swipe; the mouse
+                  // now grabs, and the cursor says so before anyone tries.
+                  child: MouseRegion(
+                    cursor: SystemMouseCursors.grab,
+                    child: ScrollConfiguration(
+                      behavior: const _PanByMouseScrollBehavior(),
+                      child: SingleChildScrollView(
+                        controller: _hCtl,
+                        scrollDirection: Axis.horizontal,
+                        key: const ValueKey('stripHScroll'),
+                        child: SingleChildScrollView(
+                          controller: _vCtl,
+                          key: const ValueKey('stripVScroll'),
+                          // WHY A RAW `Listener` AROUND THE TAP DETECTOR,
+                          // and not a second `onTapDown`. Inherited whole
+                          // from yswords' chronology chart, where the bug
+                          // was found on a device and could not be
+                          // reproduced in a widget test: a
+                          // `TapGestureRecognizer` fires `onTapDown` when
+                          // it WINS the arena or when 100 ms elapse,
+                          // whichever comes first — so press-and-hold set
+                          // the cursor and a quick tap did nothing at all,
+                          // because the arena resolved first and an inner
+                          // recogniser took the press. `tapAt` sends down
+                          // and up with nothing between, so both paths
+                          // pass in a test.
+                          //
+                          // A `Listener` is not in the arena, so nothing
+                          // can take the press away from it. Committing on
+                          // UP within `kTouchSlop` is what keeps a scroll
+                          // drag from dragging the cursor along with it,
+                          // and is why this COEXISTS with the tap detector
+                          // below rather than competing: tapping an event
+                          // opens its sheet AND lands the cursor on that
+                          // year, which is what a reader means by pointing
+                          // at something.
+                          child: Listener(
+                            onPointerDown: (e) => _pressOrigin = e.position,
+                            onPointerUp: (e) => _commitPress(e, () {
+                              _placeCursorAtX(e.localPosition.dx);
+                            }),
+                            onPointerCancel: (_) => _pressOrigin = null,
+                            child: GestureDetector(
+                              key: const ValueKey('chronologyStrip'),
+                              behavior: HitTestBehavior.opaque,
+                              onTapUp: (e) => _handleTap(
+                                  context,
+                                  e.localPosition,
+                                  data,
+                                  kings,
+                                  patriarchs,
+                                  locale,
+                                  rows,
+                                  laneFontPx),
+                              child: SizedBox(
+                                width: contentW,
+                                height: contentH,
+                                child: Stack(children: [
+                                  Positioned.fill(
+                                    child: CustomPaint(
+                                      painter: StripLanesPainter(
+                                        rows: rows,
+                                        pxPerYear: _pxPerYear,
+                                        locale: locale,
+                                        selectedId: _selectedId,
+                                        wb: wb,
+                                        laneFontPx: laneFontPx,
+                                        palette: palette,
+                                        visibleX0: visibleX0,
+                                        visibleX1: visibleX1,
+                                      ),
+                                    ),
+                                  ),
+                                  // THE LINE. Drawn over everything and
+                                  // hit-transparent: 「没有线根本不知道哪
+                                  // 一年」 was the whole report, and a rule
+                                  // that swallowed taps would answer it by
+                                  // breaking the chart underneath.
+                                  if (_cursorYear case final int y)
+                                    Positioned(
+                                      key: const ValueKey('stripYearCursor'),
+                                      left: xForYear(y, _pxPerYear) -
+                                          _kCursorHalfWidth,
+                                      top: 0,
+                                      bottom: 0,
+                                      width: _kCursorHalfWidth * 2,
+                                      child: IgnorePointer(
+                                        child: ColoredBox(color: wb.accent),
+                                      ),
+                                    ),
+                                ]),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ]),
+            ),
+          ]),
+          ..._scrollIndicators(
+            headerW: headerW,
+            wb: wb,
+            t: t,
+            locale: locale,
+            maxScrollX: math.max(0.0, contentW - _viewportW),
+            // Read off the position once there is one. The computed form
+            // (`contentH - (box.maxHeight - rulerH)`) assumed the ruler
+            // was the only other row in this Column, and stopped being
+            // true the moment the year readout became a second one — it
+            // would have claimed more scroll room than there is and left
+            // the "more below" arrow showing at the bottom of the stack.
+            // The fallback stays for the FIRST frame, where a
+            // `ScrollPosition` does not exist yet and `.position` throws.
+            maxScrollY: _vCtl.hasClients
+                ? _vCtl.position.maxScrollExtent
+                : math.max(0.0, contentH - (box.maxHeight - rulerH)),
           ),
-        ]),
-        ..._scrollIndicators(
-          headerW: headerW,
-          wb: wb,
-          t: t,
-          locale: locale,
-          maxScrollX: math.max(0.0, contentW - _viewportW),
-          maxScrollY: math.max(0.0, contentH - (box.maxHeight - rulerH)),
-        ),
-        Positioned(right: 10, bottom: 10, child: _zoomControls(locale, t, wb)),
+          Positioned(
+              right: 10, bottom: 10, child: _zoomControls(locale, t, wb)),
+        ])),
+        // Always, not only once a year is picked — see [YearDigestBar]'s
+        // own doc: a row that appears on the first tap takes its height
+        // out of the chart at the moment the reader is looking at it.
+        _digestBar(context, _cursorYear, data, kings, patriarchs, locale, rows),
       ]);
     });
   }
@@ -644,8 +848,8 @@ class _StripChronologyPageState extends State<StripChronologyPage>
         // `LineageCohort` rather than the sheet being widened to take
         // both: two types with the same two fields is the smaller
         // duplication, and `showCohort` belongs to neither form.
-        final year = int.tryParse(
-            span.id.substring(kStripLineagePrefix.length));
+        final year =
+            int.tryParse(span.id.substring(kStripLineagePrefix.length));
         if (year == null) return;
         final drawn = <String>{
           for (final p in patriarchs) p.id,
@@ -752,7 +956,7 @@ class _StripChronologyPageState extends State<StripChronologyPage>
       creationYear: creationYear ?? 0,
       pxPerYear: _pxPerYear,
     );
-    return _buildRows(lanes, textScale);
+    return _buildRows(lanes, textScale * _laneZoom);
   }
 
   void _showFilter(BuildContext context, String locale) {
@@ -1515,9 +1719,69 @@ class _StripChronologyPageState extends State<StripChronologyPage>
     ];
   }
 
-  /// The one zoom axis this page has — `kStripZoomSteps`, unlike the
-  /// wheel's shared `InteractiveViewer` zoom, because lane height is a
-  /// constant (`kLaneHeight`'s own doc).
+  /// Run [go] only if the pointer that just lifted never travelled —
+  /// the test that separates a point from a drag, and the reason the
+  /// year cursor and the scroll views can share one pointer.
+  ///
+  /// The distance is measured in GLOBAL coordinates. The reason first
+  /// written for that in yswords was wrong and is worth recording so
+  /// nobody re-derives it: it LOOKS as though a pan would carry the
+  /// scrolling content along with the pointer and leave `localPosition`
+  /// unchanged, making a 300 pt drag measure as a stationary press. It
+  /// does not — Flutter routes every event of a pointer through the
+  /// hit-test result captured at DOWN, transforms included. Global
+  /// stays because it is the frame the question is actually about.
+  void _commitPress(PointerUpEvent e, VoidCallback go) {
+    final origin = _pressOrigin;
+    _pressOrigin = null;
+    if (origin == null) return;
+    if ((e.position - origin).distance > kTouchSlop) return;
+    go();
+  }
+
+  /// The readout under the line — the shared [YearDigestBar], given
+  /// this page's own vocabulary for the records it names.
+  ///
+  /// Built from `rows`, not from the corpus, so a lane the reader has
+  /// filtered away is absent from the readout too: the digest and the
+  /// picture are the same list read two ways.
+  Widget _digestBar(
+    BuildContext context,
+    int? year,
+    WheelHistoryData data,
+    List<HebrewKing> kings,
+    List<Patriarch> patriarchs,
+    String locale,
+    List<StripRow> rows,
+  ) =>
+      YearDigestBar(
+        digest: year == null
+            ? null
+            : buildYearDigest(
+                year: year,
+                lanes: [
+                  for (final r in rows)
+                    if (r.lane case final StripLane lane) lane
+                ],
+              ),
+        yearText: year == null ? '' : yearLabel(year, locale),
+        hint: s('chronoYearHint', 'Tap the chart to read off a year', locale),
+        label: (item) => digestLabel(item, data, kings, patriarchs, locale),
+        onOpen: (item) => openDigestRecord(
+            context, item, data, kings, patriarchs, locale, _select),
+        onClear: () => setState(() => _cursorYear = null),
+        s: (key, fallback) => s(key, fallback, locale),
+        fill: (key, fallback, values) => fill(key, fallback, locale, values),
+        onYear: _placeCursor,
+        minYear: kStripMinYear,
+        maxYear: kStripMaxYear,
+      );
+
+  /// The TWO zoom axes this page has, which is the whole difference
+  /// between a strip and a wheel: `kStripZoomSteps` decides how much
+  /// axis a year buys, `kStripLaneZoomSteps` decides how big the type
+  /// on it is, and neither touches the other. The wheel's single
+  /// `InteractiveViewer` scale cannot separate them.
   Widget _zoomControls(String locale, WbType t, WbColors wb) {
     Widget btn(IconData icon, String tip, VoidCallback? go) => InkWell(
           onTap: go,
@@ -1534,6 +1798,7 @@ class _StripChronologyPageState extends State<StripChronologyPage>
           ),
         );
     final i = kStripZoomSteps.indexOf(_pxPerYear);
+    final j = kStripLaneZoomSteps.indexOf(_laneZoom);
     return Container(
       decoration: BoxDecoration(
         color: wb.paneBg.withValues(alpha: 0.94),
@@ -1554,9 +1819,47 @@ class _StripChronologyPageState extends State<StripChronologyPage>
             i < kStripZoomSteps.length - 1 ? () => _zoomStep(1) : null),
         Container(width: 1, height: t.scaled(18), color: wb.border),
         btn(Icons.fit_screen, ss('stripFitAll', locale), _fitAll),
+        Container(width: 1, height: t.scaled(18), color: wb.border),
+        // The second axis. Deliberately in the SAME control cluster as
+        // the first and deliberately not merged with it: a reader who
+        // wants bigger type reaches for the same corner they already
+        // reach for, and still gets to keep the span of years they are
+        // looking at.
+        btn(Icons.text_decrease, ss('stripTypeSmaller', locale),
+            j > 0 ? () => _laneZoomStep(-1) : null),
+        btn(Icons.text_increase, ss('stripTypeBigger', locale),
+            j < kStripLaneZoomSteps.length - 1 ? () => _laneZoomStep(1) : null),
       ]),
     );
   }
+}
+
+/// Half the painted width of the year rule, in logical pixels.
+///
+/// Two pixels total, the same as yswords' own scrub cursor. Wider reads
+/// as a band — a claim about a stretch of years — and this is a claim
+/// about exactly one.
+const double _kCursorHalfWidth = 1;
+
+/// A mouse may drag this chart, not only wheel it.
+///
+/// Flutter's default gives a mouse the wheel and nothing else, and the
+/// gesture for a HORIZONTAL scroll view is shift-wheel, which nobody
+/// guesses. Identical to yswords' own `_PanByMouseScrollBehavior` — the
+/// same fix for the same report, kept as two small classes rather than
+/// a shared package because five lines are cheaper to read twice than
+/// to depend on across two apps.
+class _PanByMouseScrollBehavior extends MaterialScrollBehavior {
+  const _PanByMouseScrollBehavior();
+
+  @override
+  Set<PointerDeviceKind> get dragDevices => const {
+        PointerDeviceKind.touch,
+        PointerDeviceKind.mouse,
+        PointerDeviceKind.stylus,
+        PointerDeviceKind.invertedStylus,
+        PointerDeviceKind.unknown,
+      };
 }
 
 double _measureText(String text, double size) => (TextPainter(
