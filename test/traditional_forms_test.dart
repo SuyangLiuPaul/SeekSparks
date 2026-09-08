@@ -29,8 +29,9 @@ List<Map<String, dynamic>> _load(String name) =>
 
 String _verse(List<Map<String, dynamic>> d, String b, int c, int v) =>
     d.firstWhere((x) =>
-        x['book'] == b && x['chapter'] == '$c' && x['verse'] == '$v')['text']
-        as String;
+        x['book'] == b &&
+        x['chapter'] == '$c' &&
+        x['verse'] == '$v')['text'] as String;
 
 void main() {
   late List<Map<String, dynamic>> tr;
@@ -166,23 +167,87 @@ void main() {
       expect(_verse(xg, '馬可福音', 6, 7), contains('制服不潔的靈'));
     });
 
-    test('every 隻 is accounted for, 48 of them by a numeral', () {
+    /// THE SEVEN READINGS THAT ARE THE PUBLISHER'S, NOT OUR DEFECTS.
+    ///
+    /// This group is a port from the YsWords tree
+    /// (`test/traditional_conversion_test.dart`), and it is here because
+    /// SeekSparks ships the same 梁家鏗譯本 and had no equivalent guard —
+    /// which is how this repo came to make the very mistake that tree
+    /// had already made, caught and reverted.
+    ///
+    /// 2026-09-03, over there: a Traditional glyph audit found readings
+    /// that look exactly like one-to-many 简→繁 conversion errors, wrote
+    /// a guarded idempotent repair, and applied it. A test caught it and
+    /// the commit was reverted in full. Every reading was then checked
+    /// against the source rather than argued about — 讀_繁_註釋本 2025
+    /// 第二版, five volumes, `pdftotext -enc UTF-8` — and **the printed
+    /// edition reads every one of them exactly as we carry them.**
+    ///
+    /// 2026-09-08, here: I repeated it. I found 馬太福音 10:29's
+    /// 「兩只麻雀…牠們一隻也不會掉在地上」, reasoned that a verse spelling
+    /// one classifier two ways nine characters apart must be a converter
+    /// hole, wrote the same kind of guarded idempotent repair, ran it on
+    /// both trees and shipped it to prod. It was the publisher's own
+    /// inconsistency. The YsWords test note had already recorded that
+    /// this exact argument "is the argument the reverted pass found most
+    /// convincing" — which is now twice true.
+    ///
+    /// **The rule this file exists for: conformity to the publisher's
+    /// Traditional edition, not to good Chinese.** An inconsistency in a
+    /// translator's Bible is a reason to ask them, never a licence to
+    /// edit them. Pinned individually so the next pass fails on the
+    /// specific reading it is about to change, not on a neighbour.
+    test('the readings that are the publisher\'s own, not conversion errors',
+        () {
+      expect(all, contains('兩只麻雀'),
+          reason: '馬太福音 10:29 — 只 and 隻 nine characters apart in the '
+              "publisher's own verse. Theirs, not ours");
+      expect(all, contains('五隻麻雀'),
+          reason: '路加福音 12:6 — the parallel, where the print DOES set '
+              '隻. Two printed spellings of one word is not our defect');
+      expect(all, contains('把兩只船裝得滿滿的'),
+          reason: '路加福音 5:7 — the print has it verbatim');
+      expect(all, contains('希斯侖'),
+          reason: '馬太福音 1:3, 路加福音 3:33. The CUV writes 希斯崙 ×17 — '
+              'a different edition, not an authority over this one');
+      expect(all, contains('疾病得到治愈的'),
+          reason: '路加福音 8:2, printed 治愈 though this file sets 治癒 / '
+              '痊癒 elsewhere');
+      expect(all, contains('那致命傷又愈合了'), reason: '啟示錄 13:3');
+      expect(all, contains('致命傷已得愈合的獸'), reason: '啟示錄 13:12');
+    });
+
+    /// WHERE THIS TREE AND YSWORDS DISAGREE ABOUT THE PRINTED TEXT.
+    ///
+    /// 馬可福音 1:23. The YsWords copy carries 會堂里 and pins it, having
+    /// checked it against 讀_繁_註釋本 2025 第二版 and found the printed
+    /// edition reads 里 there "however odd it looks beside 會堂裡
+    /// elsewhere in the same volume". **This tree carries 會堂裡** — the
+    /// reading a 2026-09-03 pass produced over there and had reverted.
+    ///
+    /// So one of the two shipped 梁家鏗譯本 is not the printed text, and
+    /// on the evidence available it is this one. Pinned rather than
+    /// repaired, for the same reason 馬可福音 6:8-11 is pinned above: a
+    /// silent change in either direction should fail a test and be
+    /// looked at, and editing a translator's Bible on the strength of a
+    /// cross-repository diff is the failure mode this whole file is
+    /// about. Reported, not fixed.
+    ///
+    /// If the two trees are ever reconciled from the source, this
+    /// expectation changes WITH the asset — never ahead of it.
+    test('馬可福音 1:23 still differs from the YsWords copy', () {
+      expect(all, contains('會堂裡'));
+      expect(all.contains('會堂里'), isFalse,
+          reason: 'if 會堂里 appears here the trees have been reconciled — '
+              'check against the printed edition and update this pin');
+    });
+
+    test('every 隻 is accounted for, 46 of them by a numeral', () {
       // Positional, the rule that made 只 tractable in the 雅偉 repair.
-      // 48 follow a numeral outright; the set also carries 船 for the
+      // 46 follow a numeral outright; the set also carries 船 for the
       // compound 船隻 ×3 and 隻 for 一隻隻 (約翰福音 10:3, a classifier
       // reduplication), so this asserts "none is unexplained" rather
       // than "all are classifiers".
-      //
-      // 2026-09-08: 50 → 52, and this test is why the count is written
-      // down rather than derived. `tools/repair_tr_classifier_biblexg
-      // .py` repaired two classifiers the Traditional conversion had
-      // left as the Simplified adverb — 馬太福音 10:29 「兩只麻雀」 and
-      // 路加福音 5:7 「把兩只船」. The first refuted itself inside one
-      // sentence: 「兩只麻雀…牠們一隻也不會掉在地上」. Both new 隻 follow
-      // 兩, so `odd` is unchanged and only `seen` moved — which is
-      // exactly the shape a correct repair should have here, and the
-      // reason to update this number by hand after checking it rather
-      // than to make the test compute its own expectation.
       const det = '一二三四五六七八九十百千萬兩幾每那船隻';
       final odd = <String>[];
       var seen = 0;
@@ -196,7 +261,7 @@ void main() {
           }
         }
       }
-      expect(seen, 52, reason: 'the assertion is vacuous if 隻 disappears');
+      expect(seen, 50, reason: 'the assertion is vacuous if 隻 disappears');
       expect(odd, isEmpty);
     });
 
@@ -219,15 +284,24 @@ void main() {
       expect(_verse(xg, '啟示錄', 1, 1), contains('<note:指耶穌基督>'));
 
       for (final w in [
-        '拆毁', '三天之内', '审判臺', '分别為聖', '這话', '是没有',
-        '充满', '脱掉', '温和', '年纪', '信仰内', '耶稣基督',
+        '拆毁',
+        '三天之内',
+        '审判臺',
+        '分别為聖',
+        '這话',
+        '是没有',
+        '充满',
+        '脱掉',
+        '温和',
+        '年纪',
+        '信仰内',
+        '耶稣基督',
       ]) {
         expect(all, isNot(contains(w)), reason: '$w is Simplified');
       }
     });
 
-    test('class B — 馬可福音 1:23 wants 裡, and the other 45 里 are right',
-        () {
+    test('class B — 馬可福音 1:23 wants 裡, and the other 45 里 are right', () {
       expect(_verse(xg, '馬可福音', 1, 23), contains('在他們的會堂裡有一個'));
       expect(all, isNot(contains('會堂里')));
       // 里 itself is not the problem and must not be swept: a unit, an
@@ -253,8 +327,7 @@ void main() {
       expect(all, isNot(contains('矇')));
     });
 
-    test('class D — 舊字形 stragglers are a SEARCH defect, not a meaning one',
-        () {
+    test('class D — 舊字形 stragglers are a SEARCH defect, not a meaning one', () {
       // 説 and 說 are the same character, but a reader who types 開啟
       // finds 1 of this file's 4, and 他說過 misses 馬可福音 14:58.
       expect(_verse(xg, '馬可福音', 14, 58), contains('我們聽見他說過'));
@@ -296,8 +369,7 @@ void main() {
       }
     });
 
-    test('the homograph pairs opencc would flip are correct as they stand',
-        () {
+    test('the homograph pairs opencc would flip are correct as they stand', () {
       // Each of these is a character opencc reports as convertible, read
       // one word at a time against the Simplified twin. Frozen so a
       // future sweep cannot "repair" a word that was never wrong.
