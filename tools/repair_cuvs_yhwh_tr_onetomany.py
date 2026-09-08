@@ -41,9 +41,36 @@ identical to ours:
              maintained in)
 
 The two disagree plenty -- witness 1 has 麵 107 times and witness 2 has
-it zero times -- and where they disagree this script changes nothing.
-That is the point: 183 verses are dropped for exactly that reason, and
-they are reported rather than resolved.
+it zero times -- and where they disagree this script used to change
+nothing, reporting the verses rather than resolving them.
+
+WHO BREAKS THE TIE (2026-09-08)
+-------------------------------
+The owner's ruling: 「参考和合本繁體官方的去决定」. So a third witness
+was consulted -- the 和合本 as 信望愛 (bible.fhl.net, VERSION1=unv)
+prints it -- and it settles all four disputed pairs, in witness 1's
+favour every time:
+
+    創世記 13:18   希伯崙幔利的橡樹        侖 -> 崙   (125 glyphs)
+    創世記 18:6    拿三細亞細麵調和做餅    面 -> 麵   (105)
+    出埃及記 22:29 你要從你莊稼中的穀      谷 -> 穀   (22)
+    利未記 10:6    不可蓬頭散髮            發 -> 髮   (16)
+
+That result is not surprising once stated: witness 2 is the publisher's
+own CONVERTER output, and a converter that maps one Simplified
+character to one Traditional character cannot produce 麵 at all. It is
+a good witness to the edition's words and a poor one to its glyphs, and
+these four are glyph questions.
+
+So `UNV_SETTLED` below lists the pairs a human has checked against the
+official edition, and for those -- and ONLY those -- witness 1's
+positions are taken over witness 2's objection. Any OTHER pair that
+ever falls into disagreement is still reported and still left alone;
+adding to that map means going and reading the verse.
+
+Witness 1 chooses the POSITIONS (which 面 is flour and which is a
+face), and that is what it is good at; the official edition confirms
+the FORM. Both halves are needed and neither is guessed.
 
 Quote style, 説/說 and 着/著 are folded before comparing, because the
 three files use three different conventions there and those are house
@@ -72,6 +99,36 @@ PAIRS = {
     '發': '髮', '谷': '穀', '面': '麵', '松': '鬆',
     '胡': '鬍', '須': '鬚', '采': '採',
     '墻': '牆', '侖': '崙', '崘': '崙',
+}
+
+# 侖 and 墻 are NOT one-to-many, and that is why they get a second,
+# unconditional pass below. 面 needs to know which occurrence is flour
+# and which is a face, so it needs witness 1's positions and can only
+# be applied where the verses align. 侖/崙 and 墻/牆 are plain variant
+# glyphs with one correct form: every 侖 in this file is inside a
+# transliterated name the official edition spells with 崙 (以弗崙,
+# 耶書崙, 希伯崙, 伸崙, 沙崙) and every 墻 means a wall. Checked:
+#
+#     雅歌 2:1        我是沙崙的玫瑰花
+#     尼希米記 2:13   察看耶路撒冷的城牆，見城牆拆毀
+#
+# So the leftovers the alignment pass could not reach -- 8 侖 and 18 墻
+# in verses whose notes or wording differ from both witnesses -- are
+# swept here rather than left as the only two spellings in the file.
+# The pass PRINTS every context it changes: a blanket replacement has
+# to be readable as a list, or the next variant that is not a variant
+# goes through it unseen.
+VARIANT_ONLY = {'侖': '崙', '崘': '崙', '墻': '牆'}
+
+# Pairs a human has checked against the official 和合本繁體, with the
+# verse that was read. A pair in here no longer needs witness 2 to
+# agree; a pair not in here still does. Do not add a line without
+# reading the verse it names.
+UNV_SETTLED = {
+    ('侖', '崙'): '創世記 13:18 希伯崙幔利的橡樹',
+    ('面', '麵'): '創世記 18:6 拿三細亞細麵調和做餅',
+    ('谷', '穀'): '出埃及記 22:29 你要從你莊稼中的穀',
+    ('發', '髮'): '利未記 10:6 不可蓬頭散髮',
 }
 
 
@@ -116,6 +173,7 @@ def main():
     fixes = collections.Counter()
     blocked = collections.Counter()
     disagreements = []
+    by_unv = collections.Counter()
     changed = 0
 
     for r in rows:
@@ -133,7 +191,11 @@ def main():
         if any(PAIRS.get(p[0]) != p[1] for p in s1):
             blocked['verse differs for other reasons too'] += 1
             continue
-        agreed = [p for p in proposed if p in s2]
+        agreed = [p for p in proposed if p in s2 or p in UNV_SETTLED]
+        settled = [p for p in proposed
+                   if p not in s2 and p in UNV_SETTLED]
+        for p in settled:
+            by_unv[p] += 1
         if not agreed:
             blocked['witnesses disagree'] += 1
             disagreements.append((r['id'], proposed))
@@ -158,7 +220,33 @@ def main():
           % (changed, sum(fixes.values())))
     for (x, y), n in fixes.most_common():
         print('    %s -> %s  %d' % (x, y, n))
+    print('of those, taken over witness 2\'s objection because the '
+          'official 和合本繁體 settles the pair:')
+    for (x, y), n in by_unv.most_common():
+        print('    %s -> %s  %4d   %s' % (x, y, n, UNV_SETTLED[(x, y)]))
     print('not changed: %s' % dict(blocked))
+
+    # Second pass: the variant-only glyphs, everywhere they are left.
+    sweep = collections.Counter()
+    contexts = []
+    for r in rows:
+        if not any(ch in r['text'] for ch in VARIANT_ONLY):
+            continue
+        chars = list(r['text'])
+        for i, ch in enumerate(chars):
+            tgt = VARIANT_ONLY.get(ch)
+            if tgt:
+                contexts.append('%s  %s' % (
+                    r['id'], r['text'][max(0, i - 6):i + 7]))
+                chars[i] = tgt
+                sweep[(ch, tgt)] += 1
+        r['text'] = ''.join(chars)
+    print('\nvariant-only sweep: %d glyphs in %d contexts'
+          % (sum(sweep.values()), len(contexts)))
+    for (x, y), n in sweep.most_common():
+        print('    %s -> %s  %d' % (x, y, n))
+    for c in contexts:
+        print('    %s' % c)
     print('\nwitness disagreements (left exactly as they are, %d verses):'
           % len(disagreements))
     for vid, props in disagreements[:15]:

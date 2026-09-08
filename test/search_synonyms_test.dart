@@ -88,9 +88,32 @@ void main() {
       // edition's one-to-many collapses gave four Simplified characters
       // a second Traditional form they had never had here (松→鬆, 胡→鬍,
       // 谷→穀, 采→採 were each opposite themselves before) and gave four
-      // more a second entry (发→髮, 仑→崙, 墙→牆, 须→鬚). Regenerate
-      // with tools/build_cuv_char_table.py rather than hand-patching.
-      expect(kCuvSimplifiedChars.length, 1115);
+      // more a second entry (发→髮, 仑→崙, 墙→牆, 须→鬚). That made it
+      // 1,115.
+      //
+      // 1,114 later the same day: 众 lost its second form. It had 眾
+      // 1,892 times and 衆 four, and four is not a variant reading —
+      // it is four places the edition contradicted itself, in one
+      // verse of scripture and three of the publisher's notes. The
+      // official 和合本繁體 prints 眾 and so does this edition
+      // everywhere else, so there was nothing to weigh;
+      // tools/repair_tr_by_official_cuv.py names the four verses.
+      //
+      // 么 → 麽 1,230 / 麼 11 is the same shape and is still here on
+      // purpose: there the official edition prints 甚麼 and this one
+      // prints 什麽, so "be consistent" and "follow the official text"
+      // point in opposite directions and the owner has to choose.
+      // Regenerate with tools/build_cuv_char_table.py rather than
+      // hand-patching.
+      // 1,113 later the same day: 壳 left the table. The ONLY place it
+      // stood opposite 殼 in 31,102 verses was 以賽亞書 36:17, where the
+      // publisher's text promises 「有五壳和新酒之地」 — five shells and
+      // new wine. The official 和合本繁體 reads 五穀, grain, and
+      // tools/repair_by_official_cuv.py corrects both scripts. With the
+      // typo gone there is no 壳/殼 correspondence left to record, which
+      // is the right answer: the pair was only ever evidence of a
+      // defect.
+      expect(kCuvSimplifiedChars.length, 1113);
     });
 
     test('no Traditional character stands opposite two Simplified ones, so '

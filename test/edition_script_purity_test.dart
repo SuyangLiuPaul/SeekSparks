@@ -29,6 +29,23 @@ const _leftDeliberately = <String>[
   '023033009',
   '023040007',
   '023040008',
+  // 2026-09-08, a second and different reason, so the list is now two
+  // groups and not five sites of one kind. 复 is one Simplified
+  // character standing for three Traditional ones — 復 (again), 複
+  // (compound), 覆 (turn over) — and every converter that has touched
+  // this text mapped all 239 to 復. The official 和合本繁體 prints
+  // 反覆 at these three (bible.fhl.net, VERSION1=unv, read 2026-09-08
+  // on the owner's ruling 「参考和合本繁體官方的去决定」), and
+  // tools/repair_tr_by_official_cuv.py corrected them.
+  //
+  // They land here because the back-conversion above is a majority
+  // vote: 覆 stands opposite 覆 79 times and opposite 复 three, so the
+  // vote sends 覆 back to 覆 and the Simplified edition's own 反复 no
+  // longer matches. That is the vote being right about the common case
+  // and this being the uncommon one — not a defect in either file.
+  '042001029', // 路加福音 1:29  又反覆思想這樣問安
+  '042002019', // 路加福音 2:19  存在心裏，反覆思想
+  '047001017', // 哥林多後書 1:17  豈是反覆不定嗎
   '059001011',
   '060001024',
 ];
@@ -84,7 +101,7 @@ void main() {
 
   test(
       'the traditional edition converts back to the simplified one, '
-      'except at five named sites', () {
+      'except at eight named sites', () {
     // Derive a traditional->simplified map from the corpus itself: for
     // every equal-length verse pair, vote per character position, then
     // take the majority simplified character for each traditional one.
@@ -117,11 +134,13 @@ void main() {
       ..sort();
 
     expect(disagreeing, _leftDeliberately,
-        reason: 'these five verses are left deliberately: the traditional '
-            'edition writes 雕 systematically (83 sites) where the '
-            'simplified edition writes 凋 at these five (5 sites) — the '
-            "traditional edition's own orthography, not a defect. A new "
-            'id appearing here is a defect in one of the two files and '
-            'must be investigated, not added to this list.');
+        reason: 'these eight verses are left deliberately, for two '
+            'different reasons the list above gives one by one: five '
+            'where the traditional edition writes 雕 systematically '
+            '(83 sites) against the simplified edition’s 凋, and three '
+            'where the official 和合本繁體 prints 反覆 and the majority '
+            'vote below cannot see it. Neither is a defect. A new id '
+            'appearing here IS one, and must be investigated rather '
+            'than added to this list.');
   });
 }

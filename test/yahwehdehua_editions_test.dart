@@ -251,9 +251,34 @@ void main() {
       final glossed =
           y.values.where((t) => _body(t).contains('[Yahweh]')).length;
       expect(glossed, 187);
-      expect(y.values.where((t) => _body(t).contains('Lord*')).length, 109,
-          reason: 'the asterisk is the edition\'s own softer marker, used '
-              'where it flags a κύριος rather than restoring it');
+      // 2026-09-08: this used to count `Lord*` and said the asterisk
+      // was "the edition's own softer marker, used where it flags a
+      // κύριος rather than restoring it". That reading was wrong. The
+      // edition marks THREE referents on Lord, exactly as 和合本雅伟版
+      // marks three on 主, and we had expanded only the first: Acts
+      // 2:34 shipped `The Lord [Yahweh] said to my Lord#` with one
+      // marker spelled out and the other left as a printer's mark.
+      //
+      // The publisher's own Chinese edition settles which is which, at
+      // the same verse ids: 108 of the 111 verses carrying `*` read
+      // 主[耶稣] there, and 15 of the 16 carrying `#` read 主[基督].
+      // `tools/expand_bsb_yhwh_markers.py` did the expansion and
+      // records the count.
+      //
+      // The number below is the same 109 the asterisk count was, which
+      // is the point — the same verses, now legible.
+      expect(y.values.where((t) => _body(t).contains('Lord [Jesus]')).length,
+          109,
+          reason: 'the edition marks a κύριος it reads as Jesus');
+      expect(y.values.where((t) => _body(t).contains('Lord [Christ]')).length,
+          14,
+          reason: 'and one it reads as the Christ — Psalm 110:1 and its '
+              'quotations, plus the Lord’s Supper');
+      expect(
+          y.values.where((t) => _body(t).contains('*') || _body(t).contains('#')).length,
+          0,
+          reason: 'no printer\'s mark reaches a reader: the sheet and the '
+              'tagged line both render the run verbatim');
     });
 
     test('ASV-Y respells the name the 1901 translators had already printed',
