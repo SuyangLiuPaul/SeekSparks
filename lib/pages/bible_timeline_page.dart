@@ -294,21 +294,18 @@ class _BibleTimelinePageState extends State<BibleTimelinePage> {
                 children: [
                   _buildSearchField(locale),
                   Padding(
-                    padding:
-                        const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                     child: Row(
                       children: [
                         Text(
                           (uiStrings[filtered.length == 1
-                                          ? 'bibleTimelineCountOne'
-                                          : 'bibleTimelineCount']?[locale] ??
+                                      ? 'bibleTimelineCountOne'
+                                      : 'bibleTimelineCount']?[locale] ??
                                   '{count} events')
-                              .replaceAll(
-                                  '{count}', '${filtered.length}'),
+                              .replaceAll('{count}', '${filtered.length}'),
                           style: TextStyle(
                             fontSize: t.scaled(12),
-                            color: scheme.onSurface
-                                .withValues(alpha: 0.6),
+                            color: scheme.onSurface.withValues(alpha: 0.6),
                           ),
                         ),
                       ],
@@ -318,12 +315,10 @@ class _BibleTimelinePageState extends State<BibleTimelinePage> {
                     child: filtered.isEmpty
                         ? Center(
                             child: Text(
-                              uiStrings['bibleTimelineNoMatches']
-                                      ?[locale] ??
+                              uiStrings['bibleTimelineNoMatches']?[locale] ??
                                   'No events match.',
                               style: TextStyle(
-                                color: scheme.onSurface
-                                    .withValues(alpha: 0.6),
+                                color: scheme.onSurface.withValues(alpha: 0.6),
                               ),
                             ),
                           )
@@ -355,8 +350,7 @@ class _BibleTimelinePageState extends State<BibleTimelinePage> {
                                   }
                                 }),
                                 people: _peopleOf(ev),
-                                onTapRef: (raw) =>
-                                    _jumpToRef(context, raw),
+                                onTapRef: (raw) => _jumpToRef(context, raw),
                                 onTapPerson: _showPerson,
                               );
                             },
@@ -411,8 +405,7 @@ class _BibleTimelinePageState extends State<BibleTimelinePage> {
     final svc = TimelineService.instance;
     final meta = svc.meta;
     final all = svc.allOrEmpty();
-    final septuagintCount =
-        all.where((e) => e.septuagintYear != null).length;
+    final septuagintCount = all.where((e) => e.septuagintYear != null).length;
     String s(String key, String fallback) =>
         uiStrings[key]?[locale] ?? fallback;
     String basisString(String key) =>
@@ -443,7 +436,9 @@ class _BibleTimelinePageState extends State<BibleTimelinePage> {
                 for (final p in body) ...[
                   Text(p,
                       style: TextStyle(
-                          color: wb.mutedText, fontSize: t.chrome, height: 1.35)),
+                          color: wb.mutedText,
+                          fontSize: t.chrome,
+                          height: 1.35)),
                   if (p != body.last) const SizedBox(height: 8),
                 ],
               ],
@@ -486,9 +481,10 @@ class _BibleTimelinePageState extends State<BibleTimelinePage> {
                   ],
                 ),
                 Text(
-                  s('timelineAboutSeptuagint',
+                  s(
+                          'timelineAboutSeptuagint',
                           '{count} events also carry the year the '
-                          'Septuagint gives.')
+                              'Septuagint gives.')
                       .replaceAll('{count}', '$septuagintCount'),
                   style: TextStyle(
                       color: wb.mutedText, fontSize: t.chrome, height: 1.35),
@@ -521,8 +517,7 @@ class _BibleTimelinePageState extends State<BibleTimelinePage> {
       return;
     }
     final mp = context.read<MainProvider>();
-    final result =
-        await jumper.resolveAndPrepareJump(reference: ref, mp: mp);
+    final result = await jumper.resolveAndPrepareJump(reference: ref, mp: mp);
     if (!context.mounted) return;
     final ok = await jumper.showJumpResultSnackBar(context, result);
     if (!ok || !context.mounted) return;
@@ -591,7 +586,13 @@ class _EraDivider extends StatelessWidget {
     // appropriate.
     final color = _eraColor(era);
     final t = WbType.of(context);
-    final fg = _eraColorOn(Theme.of(context).brightness, era);
+    // `eraColorFor`, not a brightness-keyed local: under 护眼纸质 the
+    // ThemeMode can still be dark while every surface on screen is
+    // cream, and this lifted the era title 45% toward white on a cream
+    // page. That is the inversion `WbColors.isDark` exists to prevent,
+    // and `era_palette.dart` had already provided the palette-keyed
+    // form — this was the fourth copy the consolidation missed.
+    final fg = eraColorFor(context, era);
     return Container(
       margin: const EdgeInsets.only(top: 12),
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
@@ -755,8 +756,7 @@ class _EventTile extends StatelessWidget {
                   // v1.3.x: was Container(BoxDecoration(border:
                   // Border(left:...), borderRadius:...)) — non-uniform
                   // border + radius throws in Border.paint.
-                  padding:
-                      const EdgeInsets.fromLTRB(10, 6, 10, 8),
+                  padding: const EdgeInsets.fromLTRB(10, 6, 10, 8),
                   background: scheme.surfaceContainerLow,
                   borderRadius: BorderRadius.circular(8),
                   accentColor: color.withValues(alpha: 0.55),
@@ -780,8 +780,7 @@ class _EventTile extends StatelessWidget {
                                 ? Icons.expand_less_rounded
                                 : Icons.expand_more_rounded,
                             size: 18,
-                            color: scheme.onSurface
-                                .withValues(alpha: 0.5),
+                            color: scheme.onSurface.withValues(alpha: 0.5),
                           ),
                         ],
                       ),
@@ -791,8 +790,7 @@ class _EventTile extends StatelessWidget {
                           event.localizedDesc(locale),
                           style: TextStyle(
                             fontSize: t.scaled(13),
-                            color:
-                                scheme.onSurface.withValues(alpha: 0.85),
+                            color: scheme.onSurface.withValues(alpha: 0.85),
                             height: 1.5,
                           ),
                         ),
@@ -807,8 +805,7 @@ class _EventTile extends StatelessWidget {
                           style: TextStyle(
                             fontSize: t.scaled(11.5),
                             fontStyle: FontStyle.italic,
-                            color:
-                                scheme.onSurface.withValues(alpha: 0.6),
+                            color: scheme.onSurface.withValues(alpha: 0.6),
                             height: 1.45,
                           ),
                         ),
@@ -826,8 +823,7 @@ class _EventTile extends StatelessWidget {
                             style: TextStyle(
                               fontSize: t.scaled(11.5),
                               fontStyle: FontStyle.italic,
-                              color:
-                                  scheme.onSurface.withValues(alpha: 0.6),
+                              color: scheme.onSurface.withValues(alpha: 0.6),
                               height: 1.45,
                             ),
                           ),
@@ -849,8 +845,8 @@ class _EventTile extends StatelessWidget {
                                     '',
                                 style: TextStyle(
                                   fontSize: t.scaled(11),
-                                  color: scheme.onSurface
-                                      .withValues(alpha: 0.55),
+                                  color:
+                                      scheme.onSurface.withValues(alpha: 0.55),
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -886,8 +882,8 @@ class _EventTile extends StatelessWidget {
                                     '',
                                 style: TextStyle(
                                   fontSize: t.scaled(11),
-                                  color: scheme.onSurface
-                                      .withValues(alpha: 0.55),
+                                  color:
+                                      scheme.onSurface.withValues(alpha: 0.55),
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -977,8 +973,10 @@ class _RefChip extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(outlined ? Icons.straighten_rounded : Icons.menu_book_rounded,
-                  size: 11, color: scheme.primary),
+              Icon(
+                  outlined ? Icons.straighten_rounded : Icons.menu_book_rounded,
+                  size: 11,
+                  color: scheme.primary),
               const SizedBox(width: 3),
               Text(
                 _localized(),
@@ -1109,23 +1107,7 @@ String _eraLabel(String era, String locale) {
 // kept in step by hand. The era vocabularies still differ per view;
 // only the colours are shared.
 Color _eraColor(String era) => eraColor(era);
-
-/// 2026-05-10 (v1.2.36): brightness-aware variant of `_eraColor`.
-/// User reported that era titles ("OT / NT / Patriarchs / …") were
-/// hard to read in dark mode — the palette above is tuned for light
-/// surfaces (lightness ~33–44 %) and fades into the dark theme's
-/// `#121212`-ish surface. Lightening via `Color.lerp(c, Colors.white,
-/// 0.45)` keeps the era's hue (so colour-coding still works) while
-/// pushing the value high enough to clear the WCAG contrast threshold
-/// against a dark surface.
-///
-/// Use this everywhere a hardcoded era colour is rendered as text /
-/// icon / chip-foreground; raw `_eraColor` is fine for backgrounds /
-/// borders / accents that DON'T need to clear contrast.
-Color _eraColorOn(Brightness brightness, String era) {
-  final base = _eraColor(era);
-  if (brightness == Brightness.dark) {
-    return Color.lerp(base, Colors.white, 0.45) ?? base;
-  }
-  return base;
-}
+// `_eraColorOn` lived here and was the fourth copy of
+// `liftForDarkGround`, keyed off the wrong question. Its one caller
+// now uses `eraColorFor` (`constants/era_palette.dart`), which asks the
+// palette rather than the ThemeMode.

@@ -12,7 +12,7 @@ import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:seeksparks/constants/bible_versions.dart';
 import 'package:seeksparks/constants/text_patterns.dart';
 import 'package:seeksparks/constants/workbench_theme.dart'
-    show WbMetrics, WbType;
+    show WbColors, WbMetrics, WbType;
 import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/widgets/note_reference_picker_sheet.dart';
 import 'package:seeksparks/models/app_settings.dart';
@@ -89,19 +89,28 @@ import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
 /// dark-mode-aware — Kindle/WeChat Read-style "paper" modes stay warm
 /// regardless of system theme, since the whole point is a paper-like read,
 /// not a tinted dark mode.
-class _PaperTheme {
-  static const background = Color(0xFFF7F1E0);
-  static const surface = Color(0xFFEFE5C9);
-  static const ink = Color(0xFF4A3826);
-  static const inkMuted = Color(0xFF7A6A50);
-  static const accent = Color(0xFF9C7A3C);
-  static const border = Color(0xFFDED0A8);
-
-  /// Selected/highlighted-verse background — a deeper tan so the
-  /// selection still reads clearly against the cream page instead of
-  /// the app's default blue `primaryContainer`.
-  static const selection = Color(0xFFE3D19D);
-}
+/// 2026-09-08: the seven constants that used to live here are gone, and
+/// this is the note about why, because deleting a palette without one is
+/// how it grows back.
+///
+/// They were a SECOND COPY of `WbColors.paper`, which exists — and says
+/// in its own doc that it exists — to end exactly this duplication. Four
+/// of the seven had drifted: the surface was two value-steps below the
+/// page where the palette says one, the border was 1.36:1 against the
+/// palette's 1.21:1 (the drawn line the 2026-09-07 modern pass removed
+/// everywhere else), and the selection was a different tan.
+///
+/// The fifth was the one a reader would actually complain about. Being
+/// `const`, the accent could not pass through `WbColors.tinted`, so in
+/// 护眼 mode the classic reader answered every colour the reader chose
+/// with the same fixed gold — the identical defect reported against the
+/// tab bar on 2026-09-08 and fixed there by promoting `accent` to a
+/// tinted role.
+///
+/// Every site now reads `WbColors.of(context)`. That is already the
+/// paper palette wherever this pane is built: all three call sites are
+/// in `workbench_page.dart`, inside `workbenchTheme(paper: paper,
+/// accent: settings.primaryColor)` (`workbench_page.dart:1523`).
 
 class BibleReadingPane extends StatefulWidget {
   final bool showSidebarToggle;
@@ -1698,7 +1707,7 @@ class _BibleReadingPaneState extends State<BibleReadingPane> {
                       // background when the 护眼 paper theme is on; null keeps
                       // the normal Material scaffold colour.
                       backgroundColor: settings.readingPaperTheme
-                          ? _PaperTheme.background
+                          ? WbColors.of(context).paneBg
                           : null,
                       // Round 56 fix: when the user opens the note editor
                       // (modal bottom sheet) and the keyboard appears, the
@@ -2831,17 +2840,22 @@ class _GlassSurface extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final wb = WbColors.of(context);
     // 2026-05-22 (v1.2.71): surfaceContainerHighest (Material 3's
     // deepest-tinted variant) so the chrome bar reads as a clear visual
     // layer — most distinct from the scaffold background while still
     // feeling like part of the surface family.
     final fillColor =
-        paperTheme ? _PaperTheme.surface : scheme.surfaceContainerHighest;
+        paperTheme ? wb.paneAltBg : scheme.surfaceContainerHighest;
+    // `outlineVariant`, not `outline`. The 2026-09-07 pass split the two
+    // roles apart — `outline` is INK (`wb.mutedText`), `outlineVariant`
+    // is the structural edge (`wb.border`) — and this line kept reading
+    // the ink one, so the classic reader's header and tool strip drew
+    // #B2B7C0 at about 1.97:1 on white where the workbench draws a
+    // 1.27:1 hairline. That is the "drawn line" the pass removed
+    // everywhere else, still on the two bars a reader looks at most.
     final hairline = BorderSide(
-      color: paperTheme
-          ? _PaperTheme.border
-          : scheme.outline.withValues(alpha: isDark ? 0.45 : 0.55),
+      color: paperTheme ? wb.border : scheme.outlineVariant,
       width: WbMetrics.hairline,
     );
     return DecoratedBox(
@@ -5602,19 +5616,20 @@ class _ChapterPageState extends State<_ChapterPage>
     // directly. This is the standard Flutter pattern for re-theming a
     // subtree without touching every call site.
     final baseTheme = Theme.of(context);
+    final wb = WbColors.of(context);
     return Theme(
       data: baseTheme.copyWith(
         colorScheme: baseTheme.colorScheme.copyWith(
-          primary: _PaperTheme.accent,
-          onSurface: _PaperTheme.ink,
-          onSurfaceVariant: _PaperTheme.inkMuted,
-          surface: _PaperTheme.background,
-          primaryContainer: _PaperTheme.selection,
-          onPrimaryContainer: _PaperTheme.ink,
+          primary: wb.accent,
+          onSurface: wb.text,
+          onSurfaceVariant: wb.mutedText,
+          surface: wb.paneBg,
+          primaryContainer: wb.selectionBg,
+          onPrimaryContainer: wb.text,
         ),
         textTheme: baseTheme.textTheme.apply(
-          bodyColor: _PaperTheme.ink,
-          displayColor: _PaperTheme.ink,
+          bodyColor: wb.text,
+          displayColor: wb.text,
         ),
       ),
       child: content,
@@ -5664,16 +5679,19 @@ class _BibleReaderBottomBar extends StatelessWidget {
     // swap for the chrome bar's own contents (icons/labels), so they
     // don't stay blue against the cream surface. Whole-scheme
     // substitution rather than per-widget overrides.
+    final wb = WbColors.of(context);
     final baseScheme = Theme.of(context).colorScheme;
     final scheme = settings.readingPaperTheme
         ? baseScheme.copyWith(
-            primary: _PaperTheme.accent,
-            onSurface: _PaperTheme.ink,
-            onSurfaceVariant: _PaperTheme.inkMuted,
-            outline: _PaperTheme.border,
-            outlineVariant: _PaperTheme.border,
-            surfaceContainerHigh: _PaperTheme.surface,
-            surfaceContainerHighest: _PaperTheme.surface,
+            primary: wb.accent,
+            onSurface: wb.text,
+            onSurfaceVariant: wb.mutedText,
+            // Ink and edge, not the same value twice — the split the
+            // 2026-09-07 pass made and this copy inverted.
+            outline: wb.mutedText,
+            outlineVariant: wb.border,
+            surfaceContainerHigh: wb.paneAltBg,
+            surfaceContainerHighest: wb.paneAltBg,
           )
         : baseScheme;
     final iconSize =
@@ -5969,16 +5987,19 @@ class _FloatingHeader extends StatelessWidget {
     // swap for the chrome bar's own contents (icons/labels), so they
     // don't stay blue against the cream surface. Whole-scheme
     // substitution rather than per-widget overrides.
+    final wb = WbColors.of(context);
     final baseScheme = Theme.of(context).colorScheme;
     final scheme = settings.readingPaperTheme
         ? baseScheme.copyWith(
-            primary: _PaperTheme.accent,
-            onSurface: _PaperTheme.ink,
-            onSurfaceVariant: _PaperTheme.inkMuted,
-            outline: _PaperTheme.border,
-            outlineVariant: _PaperTheme.border,
-            surfaceContainerHigh: _PaperTheme.surface,
-            surfaceContainerHighest: _PaperTheme.surface,
+            primary: wb.accent,
+            onSurface: wb.text,
+            onSurfaceVariant: wb.mutedText,
+            // Ink and edge, not the same value twice — the split the
+            // 2026-09-07 pass made and this copy inverted.
+            outline: wb.mutedText,
+            outlineVariant: wb.border,
+            surfaceContainerHigh: wb.paneAltBg,
+            surfaceContainerHighest: wb.paneAltBg,
           )
         : baseScheme;
     final fontSize = context.chromeSize(19);

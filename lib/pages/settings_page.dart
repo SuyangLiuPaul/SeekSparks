@@ -301,8 +301,7 @@ class _SettingsPageBodyState extends State<_SettingsPageBody> {
                           max: kMenuScaleMax,
                           divisions:
                               ((kMenuScaleMax - kMenuScaleMin) * 10).round(),
-                          readout:
-                              '${settings.menuScale.toStringAsFixed(1)}x',
+                          readout: '${settings.menuScale.toStringAsFixed(1)}x',
                           onChanged: settings.setMenuScale,
                         ),
                         const Divider(height: 1),
@@ -1262,7 +1261,8 @@ class _SettingsPageBodyState extends State<_SettingsPageBody> {
                   SizedBox(height: 12 * s),
                   Card(
                     child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 4, vertical: 4 * s),
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 4, vertical: 4 * s),
                       child: _SettingsSwitch(
                         settings: settings,
                         icon: Icons.system_update_alt_rounded,
@@ -2464,7 +2464,13 @@ class _OfflinePackCardState extends State<_OfflinePackCard> {
       messenger?.showSnackBar(SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.check_circle_outline, color: Colors.white),
+            // NOT white. This SnackBar sets no `backgroundColor`, so
+            // Material 3 paints it `inverseSurface` — which is LIGHT
+            // under a dark theme, and a white tick beside dark text on
+            // a light bar is what a reader saw after an offline pack
+            // finished downloading in dark mode.
+            Icon(Icons.check_circle_outline,
+                color: Theme.of(context).colorScheme.onInverseSurface),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
