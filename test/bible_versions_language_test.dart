@@ -75,7 +75,12 @@ void main() {
     // was hidden alongside it for a few hours the same day and is
     // visible again, so it is asserted PRESENT rather than dropped.
     expect(versionsForLanguage('en').map((v) => v.value),
-        containsAll(<String>['kjv', 'leb', 'bsb', 'kjvs']));
+        containsAll(<String>['kjv', 'leb', 'bsb-yhwh', 'kjvs']));
+    // 2026-09-08: `bsb` joined the hidden set on the same ruling that
+    // hid `cuvs-plus` — 「bsbs 不用，就 bsb yahweh 版本导入」 — so the
+    // English tab must not offer it either.
+    expect(versionsForLanguage('en').map((v) => v.value),
+        isNot(contains('bsb')));
     expect(versionsForLanguage('en').map((v) => v.value),
         isNot(contains('nasb')));
     expect(versionsForLanguage('zh-Hans').map((v) => v.value),
@@ -124,10 +129,18 @@ void main() {
     // and its asset still ships (the tagged-layer and verse-alignment
     // tests read it as a cross-check corpus).
     //
-    // The two entries are separate decisions with separate futures: the
-    // NASB may come back if its publisher answers, `cuvs-plus` will
-    // not.
-    expect(disabledVersions, <String>{'nasb', 'cuvs-plus'},
+    // 2026-09-08, later the same day: `bsb` joined the set on the same
+    // reasoning applied to the English pair — 「bsbs 不用，就 bsb yahweh
+    // 版本导入」. Also a supersession and also not a licensing question:
+    // the BSB is public domain outright since 2023, its asset still
+    // ships as a cross-check corpus, and after the app's render-time
+    // LORD → Yahweh rewrite it and `bsb-yhwh` differ in 636 verses of
+    // 31,086 (2.0%).
+    //
+    // The three entries are separate decisions with separate futures:
+    // the NASB may come back if its publisher answers, `cuvs-plus` and
+    // `bsb` will not.
+    expect(disabledVersions, <String>{'nasb', 'cuvs-plus', 'bsb'},
         reason: 'hiding an edition is a product decision, not a detail — '
             'it belongs in a diff someone reads');
   });
@@ -142,7 +155,12 @@ void main() {
 
   test('the locale-default versions are ones a reader can also pick', () {
     // Mirrors MainProvider.restoreState fresh-install defaults:
-    //   en → bsb, zh-Hant → cuvs-yhwh-tr, zh-Hans → cuvs-yhwh.
+    //   en → bsb-yhwh, zh-Hant → cuvs-yhwh-tr, zh-Hans → cuvs-yhwh.
+    //
+    // 2026-09-08: the English default was `bsb` and is `bsb-yhwh`, on
+    // 「bsbs 不用，就 bsb yahweh 版本导入」. The loop below is the actual
+    // rule and would have caught the move on its own; the literal is
+    // kept so that moving a locale default has to be written down.
     //
     // 2026-09-02: this asked `bibleVersions` — the raw catalog — which
     // was the weaker question. `nasb` satisfied it right up to the day
@@ -150,7 +168,8 @@ void main() {
     // is exactly the state that would have shipped. `availableVersions`
     // is what the picker offers, so that is what a default has to be in.
     final codes = availableVersions.map((v) => v.value).toSet();
-    expect(codes, containsAll(<String>['bsb', 'cuvs-yhwh-tr', 'cuvs-yhwh']));
+    expect(codes,
+        containsAll(<String>['bsb-yhwh', 'cuvs-yhwh-tr', 'cuvs-yhwh']));
     for (final locale in const ['en', 'zh-Hant', 'zh-Hans', 'fr', '']) {
       expect(codes.contains(localeDefaultVersion(locale)), isTrue,
           reason: '$locale opens on an edition the picker does not offer');

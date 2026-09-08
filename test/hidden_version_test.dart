@@ -8,10 +8,16 @@
 /// this app does; only the NASB's permission is still an open question,
 /// and it is open with the publisher rather than here. The pair were
 /// hidden together because the question had not been asked, not because
-/// the answers matched — so this file now holds ONE edition, and the
-/// LEB appears below only as the control that proves the hiding is
-/// narrow. That is a narrower change than a removal and it
-/// has a narrower failure mode, which is what this file is for.
+/// the answers matched — so the LEB is not in [_hidden] and appears
+/// below only as the control that proves the hiding is narrow. That is a
+/// narrower change than a removal and it has a narrower failure mode,
+/// which is what this file is for.
+///
+/// [_hidden] has grown twice since, both on 2026-09-08 and both for the
+/// superseded-by-a-divine-name-edition reason rather than the NASB's
+/// licensing one: `cuvs-plus` in the morning and `bsb` in the
+/// afternoon. Their notes are on [_hidden] itself. The two halves below
+/// are unchanged and are what every entry has to satisfy.
 ///
 /// Two halves, and both have to hold:
 ///
@@ -58,12 +64,23 @@ import 'package:seeksparks/utils/version_abbreviation.dart';
 /// 和合本雅伟版, which is one base text listed twice, differing mostly by
 /// the 4,857 places the successor restores the divine name.
 ///
-/// The two entries are NOT the same decision and should not be collapsed
-/// into one: the NASB is hidden pending a licensing answer from its
-/// publisher and could come back, while `cuvs-plus` is superseded and is
-/// not expected to. What they share is the requirement below — nothing
-/// offers them, and nobody is stranded on them.
-const _hidden = <String>['nasb', 'cuvs-plus'];
+/// 2026-09-08, later the same day: `bsb` joins them, on the owner's
+/// extension of that same ruling to the English pair — 「bsbs 不用，就
+/// bsb yahweh 版本导入」. The relation is identical: one base text
+/// (`bsb`), one row restoring the divine name (`bsb-yhwh`), and after
+/// the app's render-time LORD → Yahweh rewrite the two differ in 636
+/// verses of 31,086 (2.0%). It is explicitly NOT a licensing question —
+/// the BSB has been public domain outright since 2023 — which is why
+/// `unrestrictedCopyVersions` still names it and why the assertions
+/// below about the asset shipping are the ones that matter most here.
+///
+/// The three entries are NOT the same decision and should not be
+/// collapsed into one: the NASB is hidden pending a licensing answer
+/// from its publisher and could come back, while `cuvs-plus` and `bsb`
+/// are superseded and are not expected to. What they share is the
+/// requirement below — nothing offers them, and nobody is stranded on
+/// them.
+const _hidden = <String>['nasb', 'cuvs-plus', 'bsb'];
 
 /// The edition that was hidden with it and is visible again. Every place
 /// `_hidden` is asserted absent, this is asserted PRESENT, so a re-hide
@@ -74,7 +91,7 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('hidden, not removed', () {
-    test('both are still in the catalog, with their rows intact', () {
+    test('all three are still in the catalog, with their rows intact', () {
       // Hiding is not deleting. The row is what `shortBibleVersionLabel`,
       // `menuBibleVersionLabel`, `bibleVersionLanguage` and the notice
       // SnackBar all read, and a reader arriving on a stale `?v=nasb`
@@ -99,7 +116,14 @@ void main() {
       }
     });
 
-    test('both assets still ship, exactly as before', () {
+    // 2026-09-08: the load-bearing one for `bsb`. Hiding it was
+    // explicitly NOT a licensing decision — the BSB is public domain
+    // outright since 2023 — and `assets/bsb.json` is read as a
+    // cross-check corpus by `test/yahwehdehua_editions_test.dart`,
+    // which compares `bsb-yhwh` reference-by-reference against it. If
+    // hiding ever starts taking the asset with it, that comparison
+    // loses its baseline and this line is where it is caught.
+    test('all three assets still ship, exactly as before', () {
       // The same pin as data_integrity_test, restated from the other
       // side: if hiding an edition ever starts taking its asset with it,
       // one of these two files says so.
@@ -112,7 +136,12 @@ void main() {
       }
     });
 
-    test('the hidden set is exactly these two', () {
+    // 2026-09-08: was "these two" (nasb, cuvs-plus); `bsb` makes three,
+    // on 「bsbs 不用，就 bsb yahweh 版本导入」. Pinned as an exact set
+    // rather than a containment so that hiding a fourth edition cannot
+    // happen without this line, and this file's [_hidden] list, both
+    // being edited.
+    test('the hidden set is exactly these three', () {
       expect(disabledVersions, _hidden.toSet());
     });
   });
@@ -142,10 +171,17 @@ void main() {
       // because its job here is to say that the hidden codes are absent
       // AND that nothing else moved when they were hidden — a `where`
       // over the catalog would assert neither.
+      //
+      // 2026-09-08, same day: `bsb` removed from this list (it stood
+      // third, between the LEB and the CSB) when it joined [_hidden].
+      // Seven English rows became six. `bsb-yhwh` does NOT take the
+      // vacated position — it stays where it was appended, after
+      // `kjvs`, because `defaultSecondaryVersion` seeds a split pane
+      // from the first other row in the language and moving it up would
+      // change that answer for every English reader.
       expect(versionsForLanguage('en').map((v) => v.value), <String>[
         'kjv',
         _restored,
-        'bsb',
         'csb',
         'kjvs',
         'bsb-yhwh',
@@ -172,7 +208,14 @@ void main() {
       // The abbreviations that still belong to somebody keep working —
       // narrowing the candidate set must not have cost a live edition.
       expect(matchVersionAbbreviation('kjv', live), 'kjv');
-      expect(matchVersionAbbreviation('bsb', live), 'bsb');
+      // 2026-09-08: was `'bsb'`. Typing `bsb` no longer matches a code
+      // exactly — `bsb` is hidden — so it falls to the prefix rule and
+      // lands on the only live candidate that starts with it, which is
+      // the successor. That is the right answer and it is worth
+      // asserting rather than deleting: a reader with `d bsb` in their
+      // fingers gets the edition that replaced it instead of "no
+      // version named bsb".
+      expect(matchVersionAbbreviation('bsb', live), 'bsb-yhwh');
       expect(matchVersionAbbreviation('lxx', live), 'lxxwh');
     });
 
@@ -184,8 +227,12 @@ void main() {
       }
     });
 
-    test('the English default is BSB', () {
-      expect(localeDefaultVersion('en'), 'bsb');
+    // 2026-09-08: was `'bsb'`, and before 2026-09-02 `'nasb'`. Each
+    // move happened because the previous answer was hidden; the
+    // assertion above ("no locale opens on one") is the rule and this
+    // is the ledger of where the rule has landed.
+    test('the English default is BSB (Yahweh)', () {
+      expect(localeDefaultVersion('en'), 'bsb-yhwh');
     });
 
     test('no first-run Browse stack contains one', () {
@@ -276,22 +323,39 @@ void main() {
     test('a persisted Browse stack keeps its live columns', () {
       // Retired/hidden codes are mapped rather than dropped, so a reader
       // who arranged columns still has columns — and the two that both
-      // land on BSB collapse into one rather than comparing a text
-      // against itself.
-      expect(loadableVersions(['kjv', 'nasb', 'leb']), ['kjv', 'bsb', 'leb']);
-      expect(loadableVersions(['nasb', 'kjvs']), ['bsb', 'kjvs']);
+      // land on the same edition collapse into one rather than comparing
+      // a text against itself.
+      //
+      // 2026-09-08: every expected `'bsb'` below became `'bsb-yhwh'`.
+      // `nasb`'s successor row was repointed past `bsb` when `bsb` was
+      // hidden, rather than left to chain through it — see the note on
+      // `'nasb'` in [retiredVersionSuccessors]. The line below is what
+      // proves the repoint happened, because a chain that this map does
+      // not actually walk would land a saved NASB reader on a hidden
+      // edition.
+      expect(
+          loadableVersions(['kjv', 'nasb', 'leb']), ['kjv', 'bsb-yhwh', 'leb']);
+      expect(loadableVersions(['nasb', 'kjvs']), ['bsb-yhwh', 'kjvs']);
       // A stack made only of the hidden edition still yields a stack.
-      expect(loadableVersions(['nasb']), ['bsb']);
-      expect(sanitiseParallelVersions(['nasb'], 'en'), ['bsb']);
+      expect(loadableVersions(['nasb']), ['bsb-yhwh']);
+      expect(sanitiseParallelVersions(['nasb'], 'en'), ['bsb-yhwh']);
+      // ...and the newly hidden one collapses onto the same successor,
+      // so a reader who had both columns ends with one rather than two
+      // renderings of the same 31,086 verses.
+      expect(loadableVersions(['nasb', 'bsb']), ['bsb-yhwh']);
       // The restored edition passes through untouched — no successor
-      // row, no substitution, no collapse into BSB.
+      // row, no substitution, no collapse.
       expect(loadableVersions(['leb']), ['leb']);
       expect(sanitiseParallelVersions(['leb'], 'en'), ['leb']);
     });
 
     test('a stored split-pane pick does not reopen on a hidden edition', () {
       for (final code in _hidden) {
-        for (final primary in const ['bsb', 'kjv', 'cuvs-yhwh']) {
+        // 2026-09-08: the first primary was `'bsb'`; it is hidden now,
+        // and a primary that is not on offer is not a case this test
+        // has any business asserting about. `bsb-yhwh` is the English
+        // edition that replaced it.
+        for (final primary in const ['bsb-yhwh', 'kjv', 'cuvs-yhwh']) {
           final got =
               resolveSecondaryVersion(primaryVersion: primary, stored: code);
           expect(_hidden.contains(got), isFalse);
@@ -302,7 +366,11 @@ void main() {
       }
     });
 
-    test('boot moves a saved NASB reader to BSB and tells them', () async {
+    // 2026-09-08: the destination was `bsb` until `bsb` was hidden in
+    // its turn; it is `bsb-yhwh` now, straight from the NASB's own
+    // successor row rather than by chaining.
+    test('boot moves a saved NASB reader to BSB (Yahweh) and tells them',
+        () async {
       SharedPreferences.setMockInitialValues({
         'version': 'nasb',
         'locale': 'en',
@@ -314,12 +382,12 @@ void main() {
       final mp = MainProvider();
       await mp.restoreState();
 
-      expect(mp.currentVersion, 'bsb');
+      expect(mp.currentVersion, 'bsb-yhwh');
       expect(isKnownVersion(mp.currentVersion), isTrue);
       expect(mp.retiredVersionNotice, isNotNull,
           reason: 'a silent swap reads as the app forgetting their choice');
       expect(mp.retiredVersionNotice!.requested, 'nasb');
-      expect(mp.retiredVersionNotice!.substituted, 'bsb');
+      expect(mp.retiredVersionNotice!.substituted, 'bsb-yhwh');
     });
 
     test('a saved LEB reader keeps the LEB, and is told nothing', () async {
@@ -354,7 +422,12 @@ void main() {
       await mp.restoreState();
 
       expect(mp.currentVersion, localeDefaultVersion('en'));
-      expect(mp.currentVersion, 'bsb');
+      // 2026-09-08: was 'bsb'. Both lines are kept deliberately — the
+      // first says the migration reads the locale default rather than a
+      // hard-coded target (which is the bug it was written for), and
+      // this one says what that default currently IS, so a silent move
+      // of the English default still shows up in a diff.
+      expect(mp.currentVersion, 'bsb-yhwh');
       expect(availableVersions.any((v) => v.value == mp.currentVersion), isTrue,
           reason: 'the migration would strand the reader on an edition the '
               'picker does not offer');

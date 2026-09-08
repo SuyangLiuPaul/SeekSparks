@@ -34,7 +34,7 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('the picker offers the tagged editions that actually ship', () {
-    test('it lists exactly the seven, in catalog order', () {
+    test('it lists exactly the six, in catalog order', () {
       // 2026-09-08: five became seven. `bsb-yhwh` and `asv-yhwh` are
       // tagged and visible, so `interlinearEditions` — which is
       // `availableVersions` intersected with
@@ -42,8 +42,16 @@ void main() {
       // change at all. Written out in full rather than derived, because
       // the thing worth pinning is the ORDER a reader sees, and that
       // comes from the catalog rather than from either input set.
+      //
+      // 2026-09-08, later the same day: seven became SIX. `bsb` led
+      // this list and was dropped when it joined `disabledVersions`
+      // (「bsbs 不用，就 bsb yahweh 版本导入」) — again with no code
+      // change, which is the intersection earning its keep twice in one
+      // day. `assets/tagged/bsb/` is untouched and still loads; see
+      // `test/bsb_tagged_test.dart`. Note that `bsb-yhwh` does NOT take
+      // the vacated first position: it stays where the catalog puts it,
+      // after `kjvs`.
       expect(interlinearEditions, <String>[
-        'bsb',
         'csb',
         'kjvs',
         'bsb-yhwh',
@@ -83,8 +91,11 @@ void main() {
 
   group('which edition the panel opens on', () {
     test('a reader on a tagged Bible gets their own', () {
-      final choice = resolveInterlinearEdition(currentVersion: 'bsb');
-      expect(choice.version, 'bsb');
+      // 2026-09-08: was `bsb`, which is hidden now and therefore not
+      // "a tagged Bible a reader can be on" any more. `bsb-yhwh` is
+      // tagged, visible, and the English edition that replaced it.
+      final choice = resolveInterlinearEdition(currentVersion: 'bsb-yhwh');
+      expect(choice.version, 'bsb-yhwh');
       expect(choice.source, InterlinearSource.current);
     });
 
@@ -109,8 +120,25 @@ void main() {
     });
 
     test('an untagged English Bible gets an English tagged one', () {
+      // 2026-09-08, and it took two passes. `bsb` held this slot;
+      // hiding it handed the slot to `csb` on catalog order alone,
+      // which meant an English reader who had chosen nothing was
+      // quietly given a LICENSED text, copy-capped at 500 verses, in
+      // the same change that made the public-domain Yahweh editions
+      // this app's defaults. Nobody decided that — catalog order did.
+      //
+      // The substitute now asks [localeDefaultVersion] first. That is
+      // not the hand-ordered ranking `interlinear_editions.dart`
+      // rejects: it is a decision the catalog already makes, in one
+      // place, about which edition a reader of a given language gets
+      // when they have expressed no preference — the same question
+      // being asked here. Only English moves; Chinese was already
+      // getting `cuvs-yhwh` out of catalog order.
       final choice = resolveInterlinearEdition(currentVersion: 'kjv');
-      expect(choice.version, 'bsb');
+      expect(choice.version, 'bsb-yhwh');
+      expect(choice.version, localeDefaultVersion('en'),
+          reason: 'the substitute must track the locale default rather '
+              'than restate it, or the two drift');
       expect(choice.source, InterlinearSource.substituted);
     });
 
@@ -125,10 +153,21 @@ void main() {
         () {
       // `cuvs-plus` was offerable until it was disabled today. A reader
       // who picked it then must not be shown a blank panel now.
+      //
+      // 2026-09-08: the Bible being read was `bsb`, which is now hidden
+      // itself — that would have tested two lapses at once and told us
+      // which neither. `bsb-yhwh` is a live tagged edition, so the only
+      // thing lapsing here is the stored pick.
       final choice = resolveInterlinearEdition(
-          chosen: 'cuvs-plus', currentVersion: 'bsb');
-      expect(choice.version, 'bsb');
+          chosen: 'cuvs-plus', currentVersion: 'bsb-yhwh');
+      expect(choice.version, 'bsb-yhwh');
       expect(choice.source, InterlinearSource.current);
+      // ...and `bsb` is now a second stored pick that has to lapse the
+      // same way, for the same reason and by the same one line of code.
+      final afterBsb = resolveInterlinearEdition(
+          chosen: 'bsb', currentVersion: 'bsb-yhwh');
+      expect(afterBsb.version, 'bsb-yhwh');
+      expect(afterBsb.source, InterlinearSource.current);
     });
   });
 
@@ -335,7 +374,12 @@ void main() {
     // public domain" is 42 characters and is the string that actually
     // decides whether the control row can be a Row. It cannot.
     for (final width in const [375.0, 390.0, 402.0]) {
-      for (final chosen in const ['cuvs-yhwh', 'bsb']) {
+      // 2026-09-08: was `'bsb'`. The English member of this pair is
+      // here for its LABEL LENGTH (see the note above), and a chosen
+      // code that is no longer offerable would lapse to `csb` and
+      // quietly stop testing the long string. `bsb-yhwh`'s label is
+      // longer still.
+      for (final chosen in const ['cuvs-yhwh', 'bsb-yhwh']) {
         testWidgets('lays out $chosen with no overflow at ${width.toInt()} pt',
             (tester) async {
           addTearDown(tester.view.reset);
@@ -377,10 +421,14 @@ void main() {
     testWidgets("the reader's own pick is what the panel opens on",
         (tester) async {
       addTearDown(tester.view.reset);
-      await pumpPanel(tester, 375, currentVersion: 'cuvs-yhwh', chosen: 'bsb');
+      await pumpPanel(tester, 375,
+          currentVersion: 'cuvs-yhwh', chosen: 'bsb-yhwh');
       // Their Bible is tagged and would have been the default; the
       // pick overrides it, and the panel says so by name.
-      expect(find.text(fullBibleVersionLabel('bsb')), findsOneWidget);
+      // 2026-09-08: was `'bsb'`, which no longer survives the
+      // "still offerable" gate and so could not demonstrate a pick
+      // WINNING over anything.
+      expect(find.text(fullBibleVersionLabel('bsb-yhwh')), findsOneWidget);
       expect(find.text(fullBibleVersionLabel('cuvs-yhwh')), findsNothing);
     });
   });

@@ -28,12 +28,16 @@ void main() {
       // bwh16: "The search version however is never removed even if it
       // has no hits." Every mode, every stack.
       for (final mode in CrossVersionSearchMode.values) {
+        // 2026-09-08: the reading version was `'bsb'`, which is hidden
+        // now. `crossVersionTargets` resolves what it is given, so a
+        // hidden code would have made this assert about the successor
+        // table rather than about "first and never dropped".
         final targets = crossVersionTargets(
           mode: mode,
-          reading: 'bsb',
+          reading: 'bsb-yhwh',
           stack: const ['kjv'],
         );
-        expect(targets.first, 'bsb', reason: '$mode');
+        expect(targets.first, 'bsb-yhwh', reason: '$mode');
       }
     });
 
@@ -42,13 +46,20 @@ void main() {
       // reader arranges by hand (#288), and a report that re-sorted it
       // would be describing a different arrangement from the one on
       // screen.
+      // 2026-09-08: the stack was `['csb', 'bsb']` and is now
+      // `['bsb-yhwh', 'csb']` — FLIPPED as well as renamed, and the flip
+      // is the whole point. `bsb` sat BEFORE `csb` in the catalog, so
+      // asking for csb-then-bsb was the reader contradicting registry
+      // order. `bsb-yhwh` sits AFTER `csb`, so the old pair would have
+      // matched registry order and this test would have gone on passing
+      // against an implementation that re-sorted.
       expect(
         crossVersionTargets(
           mode: CrossVersionSearchMode.displayStack,
           reading: 'kjv',
-          stack: const ['csb', 'bsb'],
+          stack: const ['bsb-yhwh', 'csb'],
         ),
-        ['kjv', 'csb', 'bsb'],
+        ['kjv', 'bsb-yhwh', 'csb'],
       );
     });
 
@@ -59,9 +70,12 @@ void main() {
       final targets = crossVersionTargets(
         mode: CrossVersionSearchMode.displayStack,
         reading: 'kjv',
-        stack: const ['bsb', 'cuvs-yhwh', 'lxxwh', 'csb'],
+        stack: const ['bsb-yhwh', 'cuvs-yhwh', 'lxxwh', 'csb'],
       );
-      expect(targets, ['kjv', 'bsb', 'csb']);
+      // 2026-09-08: was `bsb`. Only the code changed — the claim is
+      // that the Chinese and Greek columns drop out and the English
+      // ones survive in the reader's order.
+      expect(targets, ['kjv', 'bsb-yhwh', 'csb']);
     });
 
     test('简体 and 繁體 are different corpora unless asked otherwise', () {

@@ -55,7 +55,7 @@ void main() {
     // reader can choose.
     expect(block, contains("'leb'"),
         reason: 'the LEB is on offer again and is not preloaded');
-    expect(block, contains("'bsb'"));
+    expect(block, contains("'bsb-yhwh'"));
     expect(block, contains("'kjv'"));
   });
 
@@ -67,6 +67,9 @@ void main() {
           reason: '$hidden is hidden and would be downloaded anyway');
     }
     expect(offlineSrc, contains("'assets/leb.json'"));
+    expect(offlineSrc, contains("'assets/bsb-yhwh.json'"),
+        reason: 'bsb-yhwh replaced bsb as the English default and must '
+            'be downloadable');
   });
 
   test('the wheel is warmed only when the boot URL asks for a page', () {

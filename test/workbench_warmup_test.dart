@@ -107,16 +107,23 @@ void main() {
     test('matches what the workbench page falls back to per locale', () {
       // These two must agree or the warm-up loads editions the page
       // then does not display, and the pane still starts cold.
+      // 2026-09-08: the English column in all three stacks was `bsb`
+      // and is `bsb-yhwh`, because `bsb` joined `disabledVersions` that
+      // day (「bsbs 不用，就 bsb yahweh 版本导入」). The production
+      // change is the one that matters — these three lines are the
+      // ledger of it; the loop below is the rule.
       expect(defaultParallelVersions('zh-Hans'),
-          const ['cuvs-yhwh', 'biblexg-v2', 'bsb']);
+          const ['cuvs-yhwh', 'biblexg-v2', 'bsb-yhwh']);
       expect(defaultParallelVersions('zh-Hant'),
-          const ['cuvs-yhwh-tr', 'biblexg-v2-tr', 'bsb']);
+          const ['cuvs-yhwh-tr', 'biblexg-v2-tr', 'bsb-yhwh']);
       // 2026-09-02: was `bsb, nasb, kjv`. With NASB hidden, a default
       // naming it would not simply be stale — `WorkbenchProvider` runs
       // every stack through `loadableVersions`, which maps `nasb` onto
-      // `bsb` and collapses it against the first column, leaving the
-      // English reader with two where every other locale gets three.
-      expect(defaultParallelVersions('en'), const ['bsb', 'kjv', 'kjvs']);
+      // the same successor and collapses it against the first column,
+      // leaving the English reader with two where every other locale
+      // gets three.
+      expect(defaultParallelVersions('en'),
+          const ['bsb-yhwh', 'kjv', 'kjvs']);
       for (final locale in const ['en', 'zh-Hans', 'zh-Hant', 'fr']) {
         final stack = defaultParallelVersions(locale);
         expect(loadableVersions(stack), stack,

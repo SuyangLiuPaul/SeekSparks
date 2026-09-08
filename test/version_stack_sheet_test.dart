@@ -1,5 +1,13 @@
 // 2026-08-08 (task #288): the version picker's contract.
 //
+// 2026-09-08: every `'bsb'` fixture here became `'bsb-yhwh'`. Nothing
+// below is about the BSB — the sheet's contract is staging, ordering and
+// the locked reading row — but the sheet runs its input through
+// `loadableVersions`, so a code that is hidden and has a successor comes
+// back out as something else and every assertion silently becomes a test
+// of the successor table. `bsb` became such a code when it was hidden
+// that day (「bsbs 不用，就 bsb yahweh 版本导入」).
+//
 // Two things the pure model cannot pin. First, the sheet is STAGED, so
 // null means CANCEL — the old checkbox list applied on DISMISS and had
 // no other way to apply, which meant there was no way to back out of an
@@ -92,7 +100,7 @@ void main() {
   testWidgets('dismissing is a CANCEL — the stack is untouched',
       (tester) async {
     final outcome =
-        await _openSheet(tester, comparisons: ['bsb', 'lxxwh']);
+        await _openSheet(tester, comparisons: ['bsb-yhwh', 'lxxwh']);
     await tester.tap(find.byIcon(Icons.close));
     await tester.pumpAndSettle();
 
@@ -101,17 +109,18 @@ void main() {
   });
 
   testWidgets('Apply hands back the drafted order', (tester) async {
-    final outcome = await _openSheet(tester, comparisons: ['bsb', 'lxxwh']);
+    final outcome =
+        await _openSheet(tester, comparisons: ['bsb-yhwh', 'lxxwh']);
     await tester.tap(find.text('Apply'));
     await tester.pumpAndSettle();
 
-    expect(outcome.versions, ['bsb', 'lxxwh']);
+    expect(outcome.versions, ['bsb-yhwh', 'lxxwh']);
   });
 
   testWidgets('a reorder survives into the applied result', (tester) async {
     final outcome =
-        await _openSheet(tester, comparisons: ['bsb', 'lxxwh', 'kjvs']);
-    expect(_shownOrder(tester), ['bsb', 'lxxwh', 'kjvs']);
+        await _openSheet(tester, comparisons: ['bsb-yhwh', 'lxxwh', 'kjvs']);
+    expect(_shownOrder(tester), ['bsb-yhwh', 'lxxwh', 'kjvs']);
 
     // Driving the callback rather than simulating the drag: the gesture
     // is Flutter's to get right, the index convention is ours, and it is
@@ -121,41 +130,41 @@ void main() {
         .widget<ReorderableListView>(find.byType(ReorderableListView))
         .onReorderItem!(2, 0);
     await tester.pump();
-    expect(_shownOrder(tester), ['kjvs', 'bsb', 'lxxwh']);
+    expect(_shownOrder(tester), ['kjvs', 'bsb-yhwh', 'lxxwh']);
 
     await tester.tap(find.text('Apply'));
     await tester.pumpAndSettle();
-    expect(outcome.versions, ['kjvs', 'bsb', 'lxxwh']);
+    expect(outcome.versions, ['kjvs', 'bsb-yhwh', 'lxxwh']);
   });
 
   testWidgets('adding appends to the end, where `d nas` puts it',
       (tester) async {
-    final outcome = await _openSheet(tester, comparisons: ['bsb']);
+    final outcome = await _openSheet(tester, comparisons: ['bsb-yhwh']);
     await tester.tap(find.text('Septuagint + Westcott-Hort'));
     await tester.pump();
-    expect(_shownOrder(tester), ['bsb', 'lxxwh']);
+    expect(_shownOrder(tester), ['bsb-yhwh', 'lxxwh']);
 
     await tester.tap(find.text('Apply'));
     await tester.pumpAndSettle();
-    expect(outcome.versions, ['bsb', 'lxxwh']);
+    expect(outcome.versions, ['bsb-yhwh', 'lxxwh']);
   });
 
   testWidgets('removing a comparison leaves the rest in place',
       (tester) async {
     final outcome =
-        await _openSheet(tester, comparisons: ['bsb', 'lxxwh', 'kjvs']);
+        await _openSheet(tester, comparisons: ['bsb-yhwh', 'lxxwh', 'kjvs']);
     // Row order matches the list, so the second remove button is lxxwh's.
     await tester.tap(find.byIcon(Icons.remove_circle_outline).at(1));
     await tester.pump();
 
     await tester.tap(find.text('Apply'));
     await tester.pumpAndSettle();
-    expect(outcome.versions, ['bsb', 'kjvs']);
+    expect(outcome.versions, ['bsb-yhwh', 'kjvs']);
   });
 
   testWidgets('the reading version is shown, locked, and out of the result',
       (tester) async {
-    final outcome = await _openSheet(tester, comparisons: ['bsb']);
+    final outcome = await _openSheet(tester, comparisons: ['bsb-yhwh']);
     expect(find.text('King James Version'), findsOneWidget);
     expect(find.text('reading'), findsOneWidget);
     // One comparison row => exactly one remove button and one grip.
@@ -164,19 +173,19 @@ void main() {
 
     await tester.tap(find.text('Apply'));
     await tester.pumpAndSettle();
-    expect(outcome.versions, ['bsb']);
+    expect(outcome.versions, ['bsb-yhwh']);
   });
 
   testWidgets('the count is of COLUMNS, so it includes the reading version',
       (tester) async {
-    await _openSheet(tester, comparisons: ['bsb', 'lxxwh']);
+    await _openSheet(tester, comparisons: ['bsb-yhwh', 'lxxwh']);
     expect(find.text('3 versions displayed'), findsOneWidget);
   });
 
   testWidgets('Remove all empties the comparisons without cancelling',
       (tester) async {
     final outcome =
-        await _openSheet(tester, comparisons: ['bsb', 'lxxwh']);
+        await _openSheet(tester, comparisons: ['bsb-yhwh', 'lxxwh']);
     await tester.tap(find.text('Remove all'));
     await tester.pump();
     expect(find.text('Only the edition you are reading'), findsOneWidget);
@@ -190,17 +199,20 @@ void main() {
   testWidgets('a stale comparison from an older build is dropped on open',
       (tester) async {
     final outcome =
-        await _openSheet(tester, comparisons: ['cuv-yhwd', 'bsb']);
+        await _openSheet(tester, comparisons: ['cuv-yhwd', 'bsb-yhwh']);
     await tester.tap(find.text('Apply'));
     await tester.pumpAndSettle();
     // `cuv-yhwd` was retired; its successor is a real edition and takes
     // its place rather than the row vanishing.
-    expect(outcome.versions, ['cuvs-yhwh', 'bsb']);
+    expect(outcome.versions, ['cuvs-yhwh', 'bsb-yhwh']);
   });
 
   testWidgets('the reading version cannot also be offered as available',
       (tester) async {
-    await _openSheet(tester, reading: 'bsb');
-    expect(find.text('Berean Standard Bible'), findsOneWidget);
+    await _openSheet(tester, reading: 'bsb-yhwh');
+    // 2026-09-08: was `bsb` / 'Berean Standard Bible'. `find.text` is an
+    // exact match, so the label has to move with the code — the row is
+    // the Yahweh edition's own menuLabel now.
+    expect(find.text('Berean Standard Bible (Yahweh)'), findsOneWidget);
   });
 }

@@ -59,6 +59,21 @@ String? attributionKeyFor(String versionCode) {
 /// which travels on the clipboard — copying KJV+S copies the 1769 KJV.
 const unrestrictedCopyVersions = <String>{
   'kjv',
+  // 2026-09-08: `bsb` STAYS, and `bsb-yhwh` is deliberately NOT added
+  // beside it. Hiding `bsb` from the picker that day (「bsbs 不用，就 bsb
+  // yahweh 版本导入」) was a visibility decision; this set records a
+  // LICENCE, and the BSB's public-domain dedication is unchanged by
+  // whether the picker lists it. `cuvs-plus` below is the same shape —
+  // hidden since the same morning and still unrestricted — so leaving
+  // `bsb` here keeps one rule rather than two.
+  //
+  // The successor does not inherit the entry. `bsb-yhwh`'s divine-name
+  // reading is 雅伟的话's own editorial work and it DOES travel on the
+  // clipboard, unlike Eagle's View's Strong's alignment; that is the
+  // argument `test/yahwehdehua_editions_test.dart` already makes when it
+  // asserts neither yhwh edition is in this set. Consequence worth
+  // naming: the English locale default is now a capped-copy edition,
+  // which is what the Chinese default `cuvs-yhwh` has always been.
   'bsb',
   'kjvs',
   'lxxwh',

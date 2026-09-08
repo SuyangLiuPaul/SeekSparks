@@ -75,7 +75,15 @@ void main() {
     // screen a reader uses to change edition. The LEB was hidden with it
     // for a few hours the same day and is visible again, so it is
     // asserted PRESENT here — this screen is where a re-hide would show.
-    expect(find.text('Berean Standard Bible'), findsOneWidget);
+    // 2026-09-08: this looked for 'Berean Standard Bible'. `bsb` joined
+    // `disabledVersions` on 「bsbs 不用，就 bsb yahweh 版本导入」, so the
+    // plain BSB is no longer reachable from the one screen a reader uses
+    // to change edition; the Yahweh edition that replaced it is. Both
+    // are asserted, in both directions — `find.text` is an exact match,
+    // so 'Berean Standard Bible' cannot accidentally be satisfied by
+    // 'Berean Standard Bible (Yahweh)'.
+    expect(find.text('Berean Standard Bible (Yahweh)'), findsOneWidget);
+    expect(find.text('Berean Standard Bible'), findsNothing);
     expect(find.text('King James Version'), findsOneWidget);
     expect(find.text('Lexham English Bible'), findsOneWidget);
     expect(find.text('New American Standard Bible'), findsNothing);

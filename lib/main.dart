@@ -496,8 +496,11 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
       // spent on nothing. **The LEB came back the same day** and this
       // list did not follow it until 2026-09-03 — the same oversight,
       // in the same shape, as the one that left `assets/leb.json` out
-      // of the offline pack. The NASB stays out: it is still hidden.
-      'bsb',
+      // of the offline pack. The NASB stays out: it is still hidden,
+      // and 2026-09-08 `bsb` joined it there — 「bsbs 不用，就 bsb
+      // yahweh 版本导入」 — so the warm-up follows to bsb-yhwh, the
+      // edition that is now the English locale default.
+      'bsb-yhwh',
       'kjv',
       'leb',
       // Traditional Chinese variant.

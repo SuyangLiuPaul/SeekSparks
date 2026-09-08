@@ -170,6 +170,25 @@ const bibleVersions = <BibleVersionInfo>[
   // `bsb` into [disabledVersions] and a `'bsb': 'bsb-yhwh'` row in
   // [retiredVersionSuccessors].
   //
+  // **He did.** 2026-09-08, later the same day, having been shown the
+  // 636-verse figure: 「bsbs 不用，就 bsb yahweh 版本导入」 in Words, and
+  // then the same for here. Both lines are written, plus the one the
+  // note above named as a consequence rather than as work: the English
+  // `localeDefaultVersion` moved to `bsb-yhwh`, and the first-run Browse
+  // stacks in `workbench_warmup.dart` moved with it in all three
+  // locales.
+  //
+  // The `unrestrictedCopyVersions` entry did NOT move, which the note
+  // above got wrong. That set records a LICENCE, not a visibility:
+  // `bsb` stays in it (public domain, hidden or not — `cuvs-plus` sits
+  // there on the same footing) and `bsb-yhwh` stays out of it, because
+  // its divine-name reading is 雅伟的话's own editorial work and travels
+  // on the clipboard. `test/yahwehdehua_editions_test.dart` had already
+  // pinned that, and it is right. The consequence is real and is the
+  // owner's to revisit if he dislikes it: the English default is now a
+  // 500-verse-capped copy edition, exactly as the Chinese default
+  // `cuvs-yhwh` already was.
+  //
   // `test/no_duplicate_version_text_test.dart` was consulted before
   // either row was written, not after: it scores this pair at 83.7%
   // agreement, under its 90% gate, because it reads the ASSETS and the
@@ -353,6 +372,18 @@ const disabledVersions = <String>{
   // reader a choice between a text and the same text. The successor is
   // recorded in [retiredVersionSuccessors].
   'cuvs-plus',
+  // 2026-09-08 — 「bsbs 不用，就 bsb yahweh 版本导入」, the same ruling
+  // the owner gave for Words and the same relation `cuvs-plus` has to
+  // `cuvs-yhwh` above: one base text and one row restoring the divine
+  // name. Not a licensing question — the BSB is public domain outright
+  // since 2023 and needed no grant at all — but after this app's
+  // render-time LORD -> Yahweh rewrite the two display identically in
+  // all but 636 verses (2.0%): 299 "Lord GOD" -> "Lord Yahweh", 27
+  // "Yah", 310 NT restorations. The successor is in
+  // [retiredVersionSuccessors]; `localeDefaultVersion('en')` moved with
+  // it, because hiding a locale default without moving it strands every
+  // fresh English install.
+  'bsb',
 };
 
 /// Editions the reader imported — bwh47. code → the name they gave it.
@@ -593,6 +624,10 @@ const Map<String, String> retiredVersionSuccessors = <String, String>{
   // `?v=cuvs-plus` link, lands on the edition that supersedes it instead
   // of falling through to the locale default.
   'cuvs-plus': 'cuvs-yhwh',
+  // 2026-09-08 — BSB → BSB (Yahweh). Same text, same public domain,
+  // the name restored. A reader sitting on `bsb`, or following a
+  // `?v=bsb` link, lands on the edition that supersedes it.
+  'bsb': 'bsb-yhwh',
   // 梁家铿译本 LJK1 → LJK2.
   'biblexg': 'biblexg-v2',
   'biblexg-tr': 'biblexg-v2-tr',
@@ -616,7 +651,11 @@ const Map<String, String> retiredVersionSuccessors = <String, String>{
   // stored `leb` is a Bible the reader can still find in the picker and
   // must be left alone; a successor row would silently move readers off
   // an edition that is on offer.
-  'nasb': 'bsb',
+  // 2026-09-08: was 'bsb', which is itself hidden now. Pointed straight
+  // at 'bsb-yhwh' rather than left to chain through a hidden row --
+  // whether this map resolves transitively is not something a stranded
+  // reader should depend on.
+  'nasb': 'bsb-yhwh',
 };
 
 /// Whether [code] names an edition this build can actually load.
@@ -642,8 +681,11 @@ String localeDefaultVersion(String locale) {
     case 'en':
       // 2026-09-02: was 'nasb'. NASB is hidden from the interface now
       // (see [disabledVersions]), so it can no longer be what a fresh
-      // English install opens on. BSB is the owner's replacement.
-      return 'bsb';
+      // English install opens on. BSB was the owner's replacement.
+      // 2026-09-08: and `bsb` is hidden in its turn, so this moves with
+      // it rather than pointing at something the picker will not show.
+      // Same translation; the Yahweh edition only restores the name.
+      return 'bsb-yhwh';
     case 'zh-Hant':
       return 'cuvs-yhwh-tr';
     case 'zh-Hans':

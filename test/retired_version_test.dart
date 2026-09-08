@@ -133,7 +133,15 @@ void main() {
         resolveReadingVersion(stored: '  CUV-YHWD ', fallback: 'bsb'),
         'cuvs-yhwh',
       );
-      expect(resolveReadingVersion(stored: 'BSB', fallback: 'kjv'), 'bsb');
+      // 2026-09-08: was `'bsb'`. `bsb` is hidden now and has a
+      // successor row, so uppercase `BSB` no longer round-trips to
+      // itself — it normalises AND substitutes, in one step. That is
+      // still this test's point (case must not defeat the lookup), but
+      // it no longer covers the live-code half, so `KJVS` below does.
+      expect(resolveReadingVersion(stored: 'BSB', fallback: 'kjv'),
+          'bsb-yhwh');
+      expect(resolveReadingVersion(stored: 'KJVS', fallback: 'kjv'), 'kjvs',
+          reason: 'a LIVE code, upper-cased, must come back as itself');
     });
 
     test('every retired code resolves to something loadable', () {
@@ -200,22 +208,29 @@ void main() {
       await mp.restoreState();
 
       // The English locale default. It was NASB until 2026-09-02, when
-      // NASB was hidden from the interface; BSB replaced it.
-      expect(mp.currentVersion, 'bsb');
+      // NASB was hidden from the interface and BSB replaced it; it is
+      // `bsb-yhwh` since 2026-09-08, when BSB was hidden in its turn
+      // (「bsbs 不用，就 bsb yahweh 版本导入」).
+      expect(mp.currentVersion, 'bsb-yhwh');
       expect(isKnownVersion(mp.currentVersion), isTrue);
     });
 
     test('a live saved version is left alone and raises no notice',
         () async {
+      // 2026-09-08: the saved version was `'bsb'`, which is no longer a
+      // LIVE one — it is hidden and has a successor, so it would now
+      // exercise the substitution path and prove the opposite of what
+      // this test is named for. `bsb-yhwh` is the English edition that
+      // replaced it and is live.
       SharedPreferences.setMockInitialValues({
-        'version': 'bsb',
+        'version': 'bsb-yhwh',
         'locale': 'en',
       });
 
       final mp = MainProvider();
       await mp.restoreState();
 
-      expect(mp.currentVersion, 'bsb');
+      expect(mp.currentVersion, 'bsb-yhwh');
       expect(mp.retiredVersionNotice, isNull,
           reason: 'nothing was substituted, so there is nothing to say');
     });
@@ -271,24 +286,38 @@ void main() {
       // A reader who arranged four columns should still have four.
       expect(
         loadableVersions(['kjv', 'biblexg', 'bsb']),
-        ['kjv', 'biblexg-v2', 'bsb'],
+        // 2026-09-08: the third column was `'bsb'` in and `'bsb'` out.
+        // It is still `'bsb'` going in — a persisted stack is exactly
+        // where a now-hidden code turns up — and comes out as its
+        // successor, which is this test's own claim (mapped, not
+        // dropped) applied to a second code in the same list.
+        ['kjv', 'biblexg-v2', 'bsb-yhwh'],
       );
     });
 
     test('order is preserved — the stack is a layout, not a set', () {
       // Three live editions. `nasb` stood in the third slot until
-      // 2026-09-02; it now resolves to `bsb` and collapses against the
+      // 2026-09-02; it resolves to `bsb-yhwh` and collapses against the
       // first entry, which would have made this read as an ordering
       // failure when it is really a deduplication (covered below).
-      expect(loadableVersions(['bsb', 'kjv', 'kjvs']), ['bsb', 'kjv', 'kjvs']);
+      //
+      // 2026-09-08: the first column was `'bsb'` and is `'bsb-yhwh'`.
+      // The three have to be LIVE codes for this to be about order at
+      // all — a hidden code here would be testing substitution again.
+      expect(loadableVersions(['bsb-yhwh', 'kjv', 'kjvs']),
+          ['bsb-yhwh', 'kjv', 'kjvs']);
     });
 
     test('codes that collapse onto one edition are deduplicated', () {
       // cuv and cuv-yhwd both resolve to cuvs-yhwh; a Browse stack
       // comparing a text against itself is worse than a missing column.
       expect(
-        loadableVersions(['cuv', 'cuv-yhwd', 'cuvs-yhwh', 'bsb']),
-        ['cuvs-yhwh', 'bsb'],
+        loadableVersions(['cuv', 'cuv-yhwd', 'cuvs-yhwh', 'bsb-yhwh']),
+        // 2026-09-08: the tail column was `'bsb'`, now `'bsb-yhwh'` —
+        // it is here only as the survivor that proves the collapse is
+        // local to the three that collide, so it has to be a code that
+        // maps to itself.
+        ['cuvs-yhwh', 'bsb-yhwh'],
       );
     });
 

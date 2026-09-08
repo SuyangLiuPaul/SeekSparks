@@ -21,14 +21,16 @@
 /// bearing:
 ///
 ///   * `TaggedTextService.taggedVersions` — the editions that have the
-///     alignment at all. Six.
+///     alignment at all. Eight.
 ///   * `availableVersions` — the editions the app is willing to show a
 ///     reader anywhere. That is where `disabledVersions` is applied.
 ///
-/// `assets/tagged/` holds SEVEN directories on disk and only five may
-/// appear here. The two that drop out drop out for unrelated reasons,
-/// which is why the gate is a set intersection and not a hand-written
-/// list that would have to remember both:
+/// `assets/tagged/` holds NINE directories on disk and only six may
+/// appear here. (2026-09-08: was "SEVEN … only five", before `bsb-yhwh`
+/// and `asv-yhwh` were imported and before `bsb` was hidden.) The three
+/// that drop out drop out for unrelated reasons, which is why the gate
+/// is a set intersection and not a hand-written list that would have to
+/// remember all three:
 ///
 ///   * **`nsn-plus`** (Eagle's View NASB) is not in `taggedVersions`,
 ///     is `.gitignore`d, and is not declared in `pubspec.yaml`. It is
@@ -43,6 +45,32 @@
 ///     text and the same text. Reading it off `availableVersions` means
 ///     that decision is made in ONE place; a second list here would be
 ///     the way it silently comes back.
+///   * **`bsb`** (2026-09-08, the same afternoon) for the same reason as
+///     `cuvs-plus` and by the same mechanism: 「bsbs 不用，就 bsb yahweh
+///     版本导入」. It IS tagged and IS bundled — `assets/tagged/bsb/` is
+///     untouched and `test/bsb_tagged_test.dart` still reads it — and it
+///     drops out here solely because `availableVersions` no longer
+///     carries it. No code changed to make that happen, which is the
+///     intersection earning its keep for the second time in one day.
+///
+/// That third exclusion moved the substitute an untagged English reader
+/// lands on, and it took two passes to land somewhere defensible. `bsb`
+/// held the slot; hiding it handed the slot to `csb`, purely because
+/// catalog order put `csb` next — which meant an English reader who had
+/// chosen nothing was quietly given a LICENSED text, copy-capped at 500
+/// verses, in the same change that made the public-domain Yahweh
+/// editions this app's defaults. Nobody decided that; catalog order did.
+///
+/// So the substitute now consults [localeDefaultVersion] first. That is
+/// NOT the hand-ordered ranking rejected below: it is a decision the
+/// catalog already makes, in one place, about which edition a reader of
+/// a given language should get when they have expressed no preference —
+/// which is exactly the question being asked here. English resolves to
+/// `bsb-yhwh` and Chinese to `cuvs-yhwh`, and Chinese was already
+/// getting that answer from catalog order, so only English moves.
+///
+/// When the locale default is not itself tagged the rule falls through
+/// to catalog order unchanged, which is why that path is still here.
 ///
 /// `lxxwh` stays, and that is deliberate rather than an oversight of a
 /// Greek row in a translation picker. For the Old Testament the LXX is
@@ -141,6 +169,14 @@ InterlinearChoice resolveInterlinearEdition({
 
   final wanted = current == null ? null : _scriptFamilyOf(current);
   if (wanted != null) {
+    // The edition this reader's language opens on when nothing has been
+    // chosen — the same question this substitute is answering. Only
+    // used when it is itself tagged; otherwise catalog order decides,
+    // as it always did.
+    final byLocale = localeDefaultVersion(bibleVersionLanguage(current!));
+    if (offered.contains(byLocale) && _scriptFamilyOf(byLocale) == wanted) {
+      return (version: byLocale, source: InterlinearSource.substituted);
+    }
     for (final code in offered) {
       if (_scriptFamilyOf(code) == wanted) {
         return (version: code, source: InterlinearSource.substituted);

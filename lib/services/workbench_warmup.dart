@@ -61,12 +61,23 @@ const String kWorkbenchParallelVersionsKey = 'workbench.parallelVersions';
 /// Lives here rather than in `WorkbenchPage` for the same reason as the
 /// keys: the warm-up has to predict what the page will choose on a
 /// first run, when nothing is persisted yet.
+/// 2026-09-08: all three stacks named `bsb` in their English slot and
+/// all three now name `bsb-yhwh`, because `bsb` joined [disabledVersions]
+/// that day (「bsbs 不用，就 bsb yahweh 版本导入」). This is the SAME
+/// failure the 2026-09-02 note below describes, one edition along: a
+/// default stack naming a hidden edition is not merely stale, because
+/// `WorkbenchProvider.parallelVersions` runs every assignment through
+/// `loadableVersions`, which would have rewritten the seed on the way to
+/// the screen. Here it does not collapse a column — `bsb` and
+/// `bsb-yhwh` are not both in any stack — so nothing would have LOOKED
+/// wrong; the defaults would simply have stopped being the thing the
+/// warm-up predicts, and the pane would start cold in every locale.
 List<String> defaultParallelVersions(String locale) {
   switch (locale) {
     case 'zh-Hans':
-      return const ['cuvs-yhwh', 'biblexg-v2', 'bsb'];
+      return const ['cuvs-yhwh', 'biblexg-v2', 'bsb-yhwh'];
     case 'zh-Hant':
-      return const ['cuvs-yhwh-tr', 'biblexg-v2-tr', 'bsb'];
+      return const ['cuvs-yhwh-tr', 'biblexg-v2-tr', 'bsb-yhwh'];
     default:
       // 2026-09-02: was `bsb, nasb, kjv`. NASB is hidden from the
       // interface now, and a default stack naming a hidden edition is
@@ -80,7 +91,7 @@ List<String> defaultParallelVersions(String locale) {
       // because there is no fourth: it earns the slot on its Strong's
       // tagging, which neither BSB's nor KJV's column carries in the
       // same form.
-      return const ['bsb', 'kjv', 'kjvs'];
+      return const ['bsb-yhwh', 'kjv', 'kjvs'];
   }
 }
 

@@ -279,7 +279,16 @@ class OfflinePackService extends ChangeNotifier {
   static const List<String> _bibleUrls = [
     'assets/kjv.json',
     'assets/kjvs.json',
-    'assets/bsb.json',
+    // 2026-09-08: the plain BSB entry that stood here was replaced by
+    // the Yahweh edition when `bsb` was hidden (「bsbs 不用」). The asset
+    // still SHIPS — integrity tests read it as a cross-check corpus, and
+    // it is public domain, so there is no distribution question — but
+    // downloading a Bible the picker will not offer is bandwidth spent
+    // on nothing. `test/boot_warm_up_test.dart` enforces the pairing by
+    // SCANNING this file's text for `assets/<hidden>.json`, so the
+    // retired path is described above rather than quoted: a commented-out
+    // line would read as a live one to that scan.
+    'assets/bsb-yhwh.json',
     'assets/leb.json',
     'assets/cuvs-yhwh.json',
     'assets/cuvs-yhwh-tr.json',

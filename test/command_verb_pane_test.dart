@@ -97,13 +97,21 @@ void main() {
     testWidgets('adds an edition and says what you are now looking at',
         (tester) async {
       final wb = await pump(tester);
+      // 2026-09-08: the TYPED token is deliberately still `bsb`. `bsb`
+      // was hidden that day (「bsbs 不用，就 bsb yahweh 版本导入」) and
+      // what a reader with `d bsb` in their fingers now gets is the
+      // successor, because the abbreviation matcher falls from an exact
+      // code match to an unambiguous prefix over `availableVersions`.
+      // Changing the input to `d bsb-yhwh` would have deleted exactly
+      // the case worth keeping. Was `['bsb']` / `KJV · BSB`.
       await submit(tester, 'd bsb');
-      expect(wb.parallelVersions, ['bsb']);
+      expect(wb.parallelVersions, ['bsb-yhwh']);
       expect(wb.centreMode, WbCentreMode.browse);
       // The stack lands in the centre pane, which is not on screen in
       // this test and is collapsed away on a phone — so the command has
       // to report itself or it looks unimplemented.
-      expect(find.textContaining('Browse stack: KJV · BSB'), findsOneWidget);
+      expect(
+          find.textContaining('Browse stack: KJV · BSB-Y'), findsOneWidget);
     });
 
     testWidgets('d c leaves the search version, which can never leave',
@@ -137,7 +145,13 @@ void main() {
     testWidgets('a language stacks every edition in it', (tester) async {
       final wb = await pump(tester);
       await submit(tester, 'd english');
-      expect(wb.parallelVersions, contains('bsb'));
+      // 2026-09-08: was `contains('bsb')`. The `d <language>` verb
+      // stacks `versionsForLanguage`, so a hidden edition must not
+      // appear in it — which makes the negative assertion below worth
+      // as much as the positive one.
+      expect(wb.parallelVersions, contains('bsb-yhwh'));
+      expect(wb.parallelVersions, isNot(contains('bsb')),
+          reason: 'd english must not reach past availableVersions');
       expect(wb.parallelVersions, isNot(contains('kjv')),
           reason: 'the search version is implicit, never doubled');
     });
@@ -147,10 +161,15 @@ void main() {
     testWidgets('order is the point; the checkbox dialog cannot express it',
         (tester) async {
       final wb = await pump(tester);
+      // 2026-09-08: typed tokens unchanged, expectations follow `bsb`
+      // to its successor. The two submissions are each other's reverse,
+      // which is the assertion; `bsb-yhwh` sits AFTER `lxxwh` in the
+      // catalog, so the second line is still the one that would fail on
+      // an implementation that re-sorted into registry order.
       await submit(tester, 'p bsb lxxwh');
-      expect(wb.parallelVersions, ['bsb', 'lxxwh']);
+      expect(wb.parallelVersions, ['bsb-yhwh', 'lxxwh']);
       await submit(tester, 'p lxxwh bsb');
-      expect(wb.parallelVersions, ['lxxwh', 'bsb']);
+      expect(wb.parallelVersions, ['lxxwh', 'bsb-yhwh']);
     });
 
     testWidgets('bare p just turns Browse on', (tester) async {
