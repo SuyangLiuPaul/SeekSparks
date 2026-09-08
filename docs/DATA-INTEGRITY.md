@@ -5805,6 +5805,24 @@ them properly is a job of its own, not a coda to an audit. The complete
 list is regenerable from `tools/audit_tagged_layer.py`. It is now the
 leading numbered item under "Next, in order".
 
+> **DONE, and this section is kept for the reasoning rather than the
+> queue (2026-09-09).** All 79 are repaired. `tools/audit_tagged_layer.py`
+> now reports **5 text disagreements on `cuvs-yhwh`, 99.9839% agreement**,
+> and every one of the five is a note rendered `<note: …>` on one side
+> and `〔…〕` on the other — placement, not a word. Every verse named
+> above was checked in the current asset: 士師記 12:7 says 士師六年,
+> 以賽亞書 23:1 names 推羅, 士師記 9:57 has its 他, and so on through the
+> list.
+>
+> The 15 `#` are gone too, and by a different route than this section
+> imagined. They were never a defect in the tagged layer alone: the
+> publisher marks THREE referents on 主 and the English edition uses the
+> same three markers, which is why bsb-yhwh was shipping `Lord#` and
+> `Lord*` raw in 129 verses. `tools/expand_bsb_yhwh_markers.py` spells
+> all of them out. See the 2026-09-09 entry below.
+>
+> Do not cite the "64" as outstanding. It was outstanding for six days.
+
 The test therefore **bounds this at ≤ 372 rather than pinning it**, so
 normalising 阿 to 啊 does not fail the suite — but the bound is a holding
 position over a known defect, not a clean result, and must not be cited
@@ -7265,3 +7283,128 @@ it belongs to its own measurement, not to this one. The two unresolved stop
 ids are `Mount Shepher` and `Rephidim`; `lib/utils/journey_route.dart`
 already treats an unresolved stop as a designed condition rather than an
 error, so this is disclosed, not a new defect.
+
+---
+
+## Check 55 — the official 和合本繁體, and what it settled (2026-09-09)
+
+Four one-to-many glyph disputes had been standing since check 54, left
+alone because `repair_cuvs_yhwh_tr_onetomany.py` requires two witnesses
+to agree and its two disagreed. The owner's ruling settled how to
+decide them: 「参考和合本繁體官方的去决定」.
+
+**The witness.** The 和合本 as 信望愛 prints it — bible.fhl.net,
+`VERSION1=unv` — read verse by verse. A full machine-readable copy of
+the same text also exists in the Yahweh's Words repository's history at
+git blob **7a2dc43** (`assets/cuv-tr.json` as it stood before v1.4.5,
+the plain 耶和華 edition, 31,103 verses). The two were checked against
+each other at 創世記 13:18, 18:6, 出埃及記 22:29, 利未記 10:6, 雅歌 2:1,
+尼希米記 2:13, 創世記 41:43 and 耶利米書 2:22 and agree character for
+character, including the 、/， distinction. Treat the blob as the
+official text; it is far cheaper to consult than the site.
+
+**What it settled, all four in witness 1's favour:**
+
+| verse read | pair | glyphs |
+|---|---|---|
+| 創世記 13:18 希伯崙幔利的橡樹 | 侖 → 崙 | 125 |
+| 創世記 18:6 拿三細亞細麵調和做餅 | 面 → 麵 | 105 |
+| 出埃及記 22:29 你要從你莊稼中的穀 | 谷 → 穀 | 22 |
+| 利未記 10:6 不可蓬頭散髮 | 發 → 髮 | 16 |
+
+That result is not surprising once stated, and the surprise is that it
+took a third witness to see it: **witness 2 is the publisher's own
+CONVERTER output**, and a converter that maps one Simplified character
+to one Traditional cannot produce 麵 at all. It is a good witness to the
+edition's words and a poor one to its glyphs, and these were glyph
+questions. 316 verses, 366 glyphs. `UNV_SETTLED` in that script records
+which pairs a human has actually read; a pair not in it still needs both
+witnesses.
+
+**Then a second, unconditional pass for 侖 and 墻**, because unlike 面
+they are not one-to-many: every 侖 left in the file was inside a
+transliterated name the official spells with 崙 (以弗崙, 耶書崙, 希伯崙,
+伸崙, 沙崙) and every 墻 meant a wall. 27 glyphs, and the pass prints
+every context it touches — a blanket replacement has to be readable as a
+list or the next variant that is not a variant goes through it unseen.
+The atlas follows the scripture (25 place names), because
+`place_name_script_test` un-witnesses 希伯侖 the moment the corpus stops
+containing it.
+
+**Six defects in the publisher's current text**, each read against the
+official first, each also present in Yahweh's Words and fixed there the
+same day (`tools/repair_by_official_cuv.py`):
+
+- **以賽亞書 36:17** `有五壳和新酒` → 五谷 / 五穀. Not a word; the
+  promise is 五穀和新酒. Present in BOTH scripts, so no
+  simplified-leak sweep could ever have seen it — only reading the
+  verse finds this one.
+- **詩篇 57:8** `當醒起；！`, **馬太福音 25:13** `那日子，，那時辰`,
+  **希伯來書 8:2** `所支的，，不是` — an edit doubled a mark. None is a
+  reading; they are keystrokes.
+- **約書亞記 10:3** 何鹹 → 何咸, which is the reverse of what it looks
+  like. 咸 reads as a Simplified leak for 鹹 and is not: the official
+  prints 何咸 and our own Simplified reads 咸. Recorded in the tool so
+  the next leak sweep does not move it back.
+- **馬太福音 17:21** — the one verse in the edition with a note nested
+  inside a note. Whatever converted 〔…〕 to `<note: …>` matched to the
+  FIRST 〕, which is the inner one, so the note closed early and 。」〕
+  stood outside it as if it were scripture.
+
+**Three more, 反復 → 反覆** at 路加福音 1:29, 2:19 and 哥林多後書 1:17.
+复 stands for 復, 複 and 覆; every converter that has touched this text
+mapped all 239 to 復, which is right 236 times.
+`edition_script_purity_test` now carries them as a second named group
+with its own reason: the back-conversion there is a majority vote, 覆
+stands opposite 覆 79 times and opposite 复 three, so the vote is right
+about the common case and this is the uncommon one.
+
+**And 众 → 眾** in four places the edition contradicted itself (1,892
+against 4). 么 → 麽 1,230 / 麼 11 is the same shape and is deliberately
+NOT settled: there the official prints 甚麼 and this edition prints
+什麽, so "be internally consistent" and "follow the official" point in
+opposite directions, and 民數記 24:13 spells it both ways inside one
+verse. **That one is open and belongs to the owner.**
+
+### bsb-yhwh shipped two of its three divine-name markers raw
+
+和合本雅偉版 marks three referents on 主 and this app renders all three
+in brackets. The publisher's English edition uses the same three markers
+with the same meanings, and our import expanded only the first, so
+Acts 2:34 shipped
+
+    The Lord [Yahweh] said to my Lord#, "Sit at My right hand
+
+— one marker spelled out and the other left as a printer's mark — and
+109 verses showed an English reader `"Lord*,"`. One verse carrying both
+conventions at once is the whole argument.
+
+The meanings are **not guessed**. `import_ydh_texts.py` used to claim
+`Lord*` marked "a Kyrios the edition read as Adonai rather than YHWH";
+that was wrong, and the evidence against it is the publisher's own
+Chinese edition at the same verse ids: of the 111 verses carrying `*`,
+**108 read 主[耶稣]**, and of the 16 carrying `#`, **15 read 主[基督]**.
+A marker meaning "Adonai, not YHWH" could not land on 主[耶稣] 108 times
+out of 111. `tools/expand_bsb_yhwh_markers.py` expands them in place —
+`Lord's#` becomes `Lord's [Christ]`, not `Lord [Christ]'s`, because
+where the annotation attaches in an English possessive is an editorial
+question and this is a notation change.
+
+129 verses, 139 runs, in the reading asset and the tagged layer both.
+It also incidentally returns the tagged line to the 16 verses
+`TaggedTextService.carriesImporterMarkup` was dropping for the `#` — but
+that guard is not the reason and is not relaxed: the 111 `Lord*` verses
+never tripped it and were showing a reader a stray asterisk just the
+same.
+
+### Still open
+
+- **么 → 麽 / 麼**, above. The owner's call.
+- **6,217 enumeration commas here against the official's 6,349.**
+  出埃及記 39:24 reads 「用藍色紫色朱紅色線」 where the official prints
+  「用藍色、紫色、朱紅色線」 — a list of three colours with no separator.
+  Yahweh's Words had an older copy that still carried them and could
+  restore from its own history; this app has no such baseline, so
+  putting 132 marks back means taking them from another edition one at a
+  time. Recorded with the measurement so it is a known gap rather than a
+  surprise.
