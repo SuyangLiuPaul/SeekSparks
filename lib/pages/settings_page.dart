@@ -16,6 +16,7 @@ import 'package:seeksparks/constants/bible_versions.dart';
 import 'package:seeksparks/services/local_version_store.dart';
 import 'package:seeksparks/services/version_import_service.dart';
 import 'package:seeksparks/utils/pick_text_file.dart';
+import 'package:seeksparks/constants/fuzzy_search_strings.dart';
 import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/utils/cross_version_search.dart'
     show CrossVersionSearchMode;
@@ -1091,6 +1092,38 @@ class _SettingsPageBodyState extends State<_SettingsPageBody> {
                         value: settings.searchIgnoresPointing,
                         onChanged: (val) =>
                             settings.setSearchIgnoresPointing(val),
+                      ),
+                      // Off by default and said so in the subtitle. The
+                      // literal rung always runs first, so this can only
+                      // add rows — and each added row names the rung
+                      // that found it, which is what keeps an exact
+                      // search explainable while it is on.
+                      const Divider(height: 1),
+                      SwitchListTile(
+                        title: Text(
+                          fuzzySearchStrings['fuzzySearchSetting']
+                                  ?[settings.locale] ??
+                              fuzzySearchStrings['fuzzySearchSetting']!['en']!,
+                          style: TextStyle(
+                            fontSize: settings.fontSize + 2,
+                            fontWeight: FontWeight.w600,
+                            fontFamily: settings.fontFamily,
+                            fontFamilyFallback: kCjkFontFallback,
+                          ),
+                        ),
+                        subtitle: Text(
+                          fuzzySearchStrings['fuzzySearchSettingSubtitle']
+                                  ?[settings.locale] ??
+                              fuzzySearchStrings['fuzzySearchSettingSubtitle']![
+                                  'en']!,
+                          style: TextStyle(
+                            fontSize: settings.fontSize,
+                            fontFamily: settings.fontFamily,
+                            fontFamilyFallback: kCjkFontFallback,
+                          ),
+                        ),
+                        value: settings.fuzzySearch,
+                        onChanged: (val) => settings.setFuzzySearch(val),
                       ),
                       // bwh29's two switches. Placed beside the other
                       // originals-text controls rather than under a

@@ -10,6 +10,7 @@ import 'package:seeksparks/utils/cross_version_search.dart'
 // Prefixed: this class has a setter of the same name, and an
 // unqualified call inside it would recurse into itself rather than
 // reach the switch.
+import 'package:seeksparks/utils/fuzzy_search.dart' as fuzzy;
 import 'package:seeksparks/utils/search_folding.dart' as folding;
 import 'package:seeksparks/models/notification_category.dart';
 import 'package:seeksparks/services/app_icon_service.dart';
@@ -116,6 +117,7 @@ const _kCrossVersionSearchMode = 'crossVersionSearchMode';
 // since #321, and turning it off is the scholarly option, not the
 // ordinary one.
 const _kSearchIgnoresPointing = 'searchIgnoresPointing';
+const _kFuzzySearch = 'fuzzySearch';
 const _kExcludeKetivFromSearch = 'excludeKetivFromSearch';
 const _kExcludeQereFromSearch = 'excludeQereFromSearch';
 const _kShowSectionTitles = 'showSectionTitles';
@@ -254,6 +256,7 @@ class AppSettings extends ChangeNotifier {
   CrossVersionSearchMode _crossVersionSearchMode =
       CrossVersionSearchMode.currentOnly;
   bool _searchIgnoresPointing = true;
+  bool _fuzzySearch = false;
   bool _excludeKetivFromSearch = false;
   bool _excludeQereFromSearch = false;
   bool _showSectionTitles = true;
@@ -304,6 +307,21 @@ class AppSettings extends ChangeNotifier {
   /// Mirrors the switch in `search_folding.dart`, which is where the six
   /// call sites read it; this is the persisted half.
   bool get searchIgnoresPointing => _searchIgnoresPointing;
+
+  /// Whether a query that finds nothing literally is allowed to be
+  /// broadened — script, synonym, stem, segmentation.
+  ///
+  /// **Off by default, and that is the point.** This app's search is
+  /// exact and auditable; a query that quietly matched something the
+  /// reader did not type would make a result list unexplainable. The
+  /// literal rung always runs first and always wins, so switching this
+  /// on can only ADD rows, never replace one — and every added row names
+  /// the rung that found it.
+  ///
+  /// Mirrors the switch in `fuzzy_search.dart`, the same split
+  /// [searchIgnoresPointing] has with `search_folding.dart`: that file
+  /// is where the call sites read it, this is the persisted half.
+  bool get fuzzySearch => _fuzzySearch;
   bool get excludeKetivFromSearch => _excludeKetivFromSearch;
   bool get excludeQereFromSearch => _excludeQereFromSearch;
 
@@ -532,6 +550,18 @@ class AppSettings extends ChangeNotifier {
     await prefs.setBool(_kSearchIgnoresPointing, enabled);
   }
 
+  Future<void> setFuzzySearch(bool enabled) async {
+    if (_fuzzySearch == enabled) return;
+    _fuzzySearch = enabled;
+    // Into the switch BEFORE notifying, for the reason
+    // `setSearchIgnoresPointing` records: a listener that re-runs a
+    // search on the notification has to see the new value.
+    fuzzy.setFuzzySearchEnabled(enabled);
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_kFuzzySearch, enabled);
+  }
+
   Future<void> setExcludeKetivFromSearch(bool enabled) async {
     if (_excludeKetivFromSearch == enabled) return;
     _excludeKetivFromSearch = enabled;
@@ -666,6 +696,8 @@ class AppSettings extends ChangeNotifier {
     _crossVersionSearchMode = CrossVersionSearchMode.currentOnly;
     _searchIgnoresPointing = true;
     folding.setSearchIgnoresPointing(true);
+    _fuzzySearch = false;
+    fuzzy.setFuzzySearchEnabled(false);
     _excludeKetivFromSearch = false;
     _excludeQereFromSearch = false;
     _notificationsEnabled = false;
@@ -854,6 +886,8 @@ class AppSettings extends ChangeNotifier {
         crossVersionModeFromName(prefs.getString(_kCrossVersionSearchMode));
     _searchIgnoresPointing = prefs.getBool(_kSearchIgnoresPointing) ?? true;
     folding.setSearchIgnoresPointing(_searchIgnoresPointing);
+    _fuzzySearch = prefs.getBool(_kFuzzySearch) ?? false;
+    fuzzy.setFuzzySearchEnabled(_fuzzySearch);
     _excludeKetivFromSearch = prefs.getBool(_kExcludeKetivFromSearch) ?? false;
     _excludeQereFromSearch = prefs.getBool(_kExcludeQereFromSearch) ?? false;
     _notificationsEnabled = prefs.getBool(_kNotificationsEnabled) ?? false;
