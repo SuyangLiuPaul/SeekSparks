@@ -221,7 +221,9 @@ void main() {
       // BibleWorks has these and we do not. Silently searching for the
       // literal `~` would be the worse answer: it returns nothing and
       // looks like the word is absent.
-      expect(issueOf('~word'), CommandIssue.regexUnsupported);
+      // `~word` is a search since 2026-09-08 (`regex_program.dart`).
+      // What is unsupported now is another dialect's syntax inside it.
+      expect(issueOf(r'~wo\w+d'), CommandIssue.regexUnsupportedOperator);
       expect(issueOf('=word'), CommandIssue.fuzzyUnsupported);
       // `@` is a tag *within* a word list, so it is caught in the body of
       // a command. A bare `@G25` never was a command and is left to the

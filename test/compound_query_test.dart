@@ -152,8 +152,20 @@ void main() {
     });
 
     test("a group's own grammar error is reported as itself", () {
-      expect(_issue('(.a).(~b)'), CommandIssue.regexUnsupported);
+      expect(_issue(r'(.a).(~b{2})'), CommandIssue.regexUnsupportedOperator);
       expect(_issue('(.a).(.)'), CommandIssue.emptyBody);
+    });
+
+    test('a well-formed ~ group parses here and is refused by the caller', () {
+      // 2026-09-08: `~` became a search, so this grammar now reads
+      // `(.a).(~b)` without complaint. It is still refused — but by
+      // `WorkbenchProvider`, which is the only place that can say why:
+      // `runCompoundQuery` keeps only each group's verse list, so a
+      // `~` group's budget refusal would arrive as "no verse matched".
+      // See `regex_query_corpus_test.dart`.
+      expect(parseCompoundQuery('(.a).(~b)').query, isNotNull);
+      expect(parseCompoundQuery('(.a).(~b)').query!.groups.last.kind,
+          CommandKind.regex);
     });
 
     test('the group ceiling is enforced', () {

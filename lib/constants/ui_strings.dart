@@ -9806,4 +9806,113 @@ const uiStrings = {
     'en': "The Strong's tagging carries no punctuation, so %- and %+ cannot "
         'be combined with @.',
   },
+  // ── 2026-09-08: the `~` regular expression search, and the corrected
+  // refusal for `=`. `command_query.dart` and `regex_program.dart` carry
+  // the reasoning; these are the sentences the reader sees.
+  //
+  // `cmdIssueRegex` and `cmdIssueFuzzy` above are left where they are and
+  // are no longer read. Both said "not supported", which stopped being
+  // true for one of them and was never quite true for the other — bwh16
+  // binds `=` to LINK stemming, not to the Porter mode. This file is
+  // append-only while more than one agent is working in it, so the
+  // correction is a new key rather than an edit.
+
+  /// The echo for a `~` search: the pattern, quoted back.
+  'cmdEchoRegex': {
+    'zh-Hans': '正则表达式：{pattern}',
+    'zh-Hant': '正規表示式：{pattern}',
+    'en': 'Regular expression: {pattern}',
+  },
+
+  /// Said on every `~` echo, because it is the one search in this app
+  /// that tells `God` from `god` and nothing on screen would otherwise
+  /// say so. bwh16 makes the same point in the same breath.
+  'cmdEchoRegexCase': {
+    'zh-Hans': '区分大小写',
+    'zh-Hant': '區分大小寫',
+    'en': 'upper and lower case are different',
+  },
+
+  'cmdIssueRegexSyntax': {
+    'zh-Hans': '这个正则表达式不完整——请检查 ( )、[ ]、" 是否成对，'
+        '以及每个 * + ? 前面是否有内容。',
+    'zh-Hant': '這個正規表示式不完整——請檢查 ( )、[ ]、" 是否成對，'
+        '以及每個 * + ? 前面是否有內容。',
+    'en': 'That regular expression is incomplete — check the ( ) [ ] and " '
+        'pairs, and that every * + ? follows something.',
+  },
+
+  /// Names the whole supported set rather than the one character that
+  /// was refused: a reader who typed `\d` has a dialect in mind, not a
+  /// typo, and the useful answer is which dialect this box speaks.
+  'cmdIssueRegexOperator': {
+    'zh-Hans': r'~ 搜索支持 \ " . ^ $ [ - ] ( ) ? * + 和 |，仅此而已：'
+        r'没有花括号次数，没有 \d 或 \w，也没有 (?: 与 (?= 。',
+    'zh-Hant': r'~ 搜尋支援 \ " . ^ $ [ - ] ( ) ? * + 和 |，僅此而已：'
+        r'沒有花括號次數，沒有 \d 或 \w，也沒有 (?: 與 (?= 。',
+    'en': r'This ~ search supports \ " . ^ $ [ - ] ( ) ? * + and | and '
+        r'nothing else — no braced repeat count, no \d or \w, no (?: or (?=.',
+  },
+
+  'cmdIssueRegexTooComplex': {
+    'zh-Hans': '这个正则表达式太长了。',
+    'zh-Hant': '這個正規表示式太長了。',
+    'en': 'That regular expression is too long.',
+  },
+
+  /// The refusal that replaces a scan nobody would wait for. It names
+  /// the fix rather than the limit, because "too costly" is not
+  /// something a reader can act on and "add a plain word" is.
+  'cmdIssueRegexTooCostly': {
+    'zh-Hans': '这个正则表达式要把整本圣经读太多遍。加一个普通的词进去——'
+        '~said.*light 要读的比 ~.*light 少得多。',
+    'zh-Hant': '這個正規表示式要把整本聖經讀太多遍。加一個普通的詞進去——'
+        '~said.*light 要讀的比 ~.*light 少得多。',
+    'en': 'That regular expression would have to read the whole Bible too '
+        'many times. Add a plain word to it — ~said.*light reads far '
+        'less than ~.*light.',
+  },
+
+  'cmdIssueRegexHere': {
+    'zh-Hans': '~ 正则表达式只能单独使用，不能放进复合（ ）搜索里。',
+    'zh-Hant': '~ 正規表示式只能單獨使用，不能放進複合（ ）搜尋裡。',
+    'en': 'A ~ regular expression works on its own, not inside a compound '
+        '( ) search.',
+  },
+
+  /// `=` — the entry that stayed on the "deliberately not implemented"
+  /// list, with a refusal that is finally accurate about WHAT was not
+  /// implemented and offers the line that does the same job.
+  ///
+  /// bwh16 binds `=` to LINK stemming (its `elm.txt` database), never to
+  /// the Porter mode, so "fuzzy stemming is not supported" named the
+  /// wrong feature. What a reader can do instead is type the wildcard
+  /// themselves, which is literally what BibleWorks' Porter mode does to
+  /// their query before it runs.
+  'cmdIssueFuzzyLink': {
+    'zh-Hans': '= 是 BibleWorks 的同源词库搜索，那份词库是人工编辑的专有数据，'
+        '本程序不能随附。请自己加通配符——.faith* work*——'
+        '或在设置里打开「找不到时放宽搜索」。',
+    'zh-Hant': '= 是 BibleWorks 的同源詞庫搜尋，那份詞庫是人工編輯的專有資料，'
+        '本程式不能隨附。請自己加萬用字元——.faith* work*——'
+        '或在設定裡打開「找不到時放寬搜尋」。',
+    'en': '= is BibleWorks\' link-stemming search, and the word list behind '
+        'it is a hand-edited proprietary file we cannot ship. Type the '
+        'wildcard yourself — .faith* work* — or turn on "Broaden a search '
+        'that finds nothing" in Settings.',
+  },
+  /// The `?` card's line for `~`, added when the operator shipped.
+  ///
+  /// The example follows the text being searched (`exampleLocaleFor`),
+  /// so the Chinese columns show a Chinese pattern — one that is also
+  /// the argument for the operator existing at all, since `神.说` has no
+  /// spelling in the token grammar. The prose carries the one fact that
+  /// surprises everybody: this is the only search in the app that tells
+  /// `God` from `god`.
+  'cmdSyntaxRegex': {
+    'zh-Hans': '~神.说 — 正则表达式：神、任一个字、说；区分大小写',
+    'zh-Hant': '~神.說 — 正規表示式：神、任一個字、說；區分大小寫',
+    'en': '~And God said — regular expression, and the one search that '
+        'tells God from god',
+  },
 };

@@ -62,14 +62,103 @@
 ///
 /// Detected and reported by name rather than silently mis-parsed:
 ///
-/// * `~` regular expressions — BibleWorks itself calls this one "for
-///   those hardy souls"; it is English-only there, case-sensitive, and a
-///   user-supplied regex over 31k verses is a denial-of-service waiting
-///   to happen without a timeout budget.
-/// * `=` fuzzy link stemming — BibleWorks drives it from `elm.txt`, a
-///   hand-edited proprietary database we may not ship. Porter stemming
-///   (its other mode) is implementable but BibleWorks' own help calls it
-///   "more of a curiosity than a refined tool".
+/// * `=` fuzzy link stemming. See below — this entry stands, and the
+///   reason it stands is not the one it used to give.
+///
+/// ## Formerly on that list: `~` regular expressions
+///
+/// 2026-09-08. Shipped in `regex_program.dart` and parsed by
+/// [_parseRegex]. The old entry gave three reasons and every one of them
+/// turned out to be a constraint rather than a veto:
+///
+/// * *"a user-supplied regex over 31k verses is a denial-of-service
+///   waiting to happen without a timeout budget"* — true, and Dart has
+///   no timeout to offer: `RegExp` backtracks, cannot be cancelled, and
+///   on the web build takes the browser tab with it. But bwh43i prints
+///   BibleWorks' whole operator table and it contains no backreference,
+///   so the language is REGULAR and a Thompson NFA simulation matches it
+///   in time linear in the text. The bound is structural rather than
+///   supervised: there is no pathological pattern to time out, and
+///   `regex_program.dart`'s test drives `(a+)+$` — the textbook
+///   catastrophic backtracker — against 4,000 characters to say so. What
+///   remains is total corpus work, which [kRegexStepBudget] bounds
+///   before the scan starts rather than during it.
+/// * *"it is English-only there"* — theirs, not ours. BibleWorks'
+///   engine indexes whitespace-delimited words; this one matches the
+///   verse string, so the script has no say in it. `~神.说` and
+///   `~[神主]的` mean exactly what they look like, and a character class
+///   or an alternation over Han is something the token grammar above
+///   cannot express at all: `_compileTerm` splits a Han term one
+///   character per position before it ever sees a `[`.
+/// * *"case-sensitive"* — kept, and it is the reason this one search
+///   runs against `MainProvider.wordKeys` instead of `searchKeys`.
+///   `searchKeys` is the one corpus in this app that is lower-cased;
+///   matching there would have made `~god` and `~God` the same search
+///   while bwh16 offers `~god` specifically as the way to tell them
+///   apart. See [_runRegex] for what that costs — the vowel-point
+///   folding switch does not reach a `~` search, and `~LORD` finds
+///   nothing because the corpus spells it `Yahweh`.
+///
+/// A regex hit is highlighted by its REQUIRED LITERAL — the longest run
+/// of fixed characters every match must contain — carried on one
+/// synthetic [QueryTerm] so that `search_highlight.dart` marks
+/// `~And God said` without knowing this kind exists. `~(cat|dog)s` marks
+/// only the `s`, and `~[a-z]+` marks nothing, which under-marks in the
+/// same direction `.faith*` already does. It is not the matched span:
+/// a span is per-verse and `highlightsForQuery` is a function of the
+/// query alone.
+///
+/// ## Why `=` stays on that list, for a different reason than it gave
+///
+/// 2026-09-08, re-examined after `porter_stemmer.dart` landed. The old
+/// entry implied a choice — no `elm.txt`, but Porter "is implementable".
+/// Reading bwh16 again shows there is no choice to make, because
+/// **BibleWorks' `=` is not the Porter mode.** The help is explicit:
+/// "If you want to do a fuzzy link SEARCH without switching to fuzzylink
+/// mode just precede your command line search with an equals sign."
+/// Porter is one of three states of a right-click menu and is never
+/// bound to a control character. So the character `=` has exactly one
+/// meaning in BibleWorks, and it is the `elm.txt` one — a hand-edited
+/// proprietary word list we may not ship. That half of the entry stands
+/// untouched.
+///
+/// Which leaves the real question: should `=` be given a NEW meaning
+/// here, now that the app has a stemmer? Three measurements say no.
+///
+/// * **BibleWorks' Porter mode is a query rewrite, and this grammar
+///   already has the operator it rewrites to.** bwh16: "A wild card is
+///   appended to the word before the search is done… 'eating' would be
+///   replaced with 'eat*'." So `=.faith works` is `.faith* work*` and
+///   nothing else. Over the KJV: `.faith works` finds 15 verses,
+///   `.faith* work*` finds 23. A second spelling of a line the reader
+///   can already type, returning the same 23.
+/// * **On the edition this command line exists for, it would do
+///   nothing.** Porter is a 20th-century algorithm and the KJV is not
+///   20th-century English. `believeth`, `loveth`, `worketh`, `saith`,
+///   `doeth` and `healeth` all stem to themselves, so `=.believeth`
+///   would run `.believeth*` and return the same 39 verses as
+///   `.believeth`. `fuzzy_search.dart` documents this hole rather than
+///   patching it, for a good reason — a patched Porter no longer matches
+///   the published vector it is tested against — and an operator whose
+///   headline case is a no-op is worse than no operator.
+/// * **It would be silently inert for the readers this app is for.**
+///   Porter has no claim on Han text, so `=.爱 神` and `.爱 神` are the
+///   same search. A control character that changes nothing for the
+///   和合本 reader is `strip_chronology_layout.dart`'s "nothing narrows
+///   in silence" rule facing the other way.
+///
+/// And a fourth reason that is about the shape of the app rather than
+/// about `=`. The stem rung already exists, in `fuzzy_search.dart`,
+/// behind a switch that is off by default and LABELS every row it
+/// widens into ("word form"). A `=` operator would be a second,
+/// unlabelled route to the same widening, inside the one grammar that
+/// file deliberately does not touch. Two doors to one room is how one of
+/// them stops being maintained.
+///
+/// So `=` is still refused — and the refusal is now accurate about what
+/// was not implemented, and names the line that does the same job
+/// (`cmdIssueFuzzyLink`). If `elm.txt`-style link data is ever licensed
+/// or rebuilt, `=` is the character waiting for it.
 ///
 /// ## Formerly on that list: `( )` compound searches
 ///
@@ -172,11 +261,15 @@ import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/utils/search_folding.dart' show foldSearchMarks;
 import 'package:seeksparks/utils/phrase_match.dart' show phraseTokens;
 import 'package:seeksparks/utils/punctuation_gate.dart';
+import 'package:seeksparks/utils/regex_program.dart';
 import 'package:seeksparks/utils/related_verses.dart'
     show isCjkChar, isWordChar;
 import 'package:seeksparks/utils/strongs_boolean_search.dart'
     show kMaxNearDistance, kMaxGreekStrongs, kMaxHebrewStrongs;
 import 'package:seeksparks/utils/strongs_tag_binding.dart';
+
+export 'package:seeksparks/utils/regex_program.dart'
+    show RegexProgram, RegexProblem, kMaxRegexProgram;
 
 export 'package:seeksparks/utils/punctuation_gate.dart'
     show
@@ -220,6 +313,58 @@ const int kMaxVerseContext = 176;
 /// nothing it cost.
 const int kMaxWordGap = 202;
 
+/// Most NFA state-steps one `~` search may cost, worst case.
+///
+/// **Not a timeout, and that is the point.** `regex_program.dart`
+/// explains why a clock is the wrong instrument — one `RegExp.hasMatch`
+/// call is uninterruptible, so a timer set beside a catastrophic pattern
+/// is never read again — and the instrument here is a bound CHECKED
+/// BEFORE THE SCAN, which makes it a promise rather than a hope. The
+/// simulation queues each of the program's states onto each of its two
+/// lists at most once per character position, so
+/// `states x (characters + 1) x 2` is an exact ceiling, computable from
+/// the compiled pattern and the candidate set without running anything.
+///
+/// Measured over the shipped KJV — 31,102 verses, 4,094,632 characters
+/// of `wordKeys` — on the development machine (Apple silicon, VM):
+///
+///     pattern                          states  ceiling   measured
+///     ~And God said                        13    106 M      26 ms
+///     ~[a-z]+eth                            6     49 M      21 ms
+///     ~(cat|dog)                            9     74 M     158 ms
+///     ~^[A-Za-z]+( [A-Za-z]+){5}$ *        20    164 M     190 ms
+///     ~(alpha|bravo|…|juliet)              72    590 M    1076 ms
+///     ~(alpha|bravo|…|tango)              143   1171 M    2141 ms
+///                                    (* written out; no {n} here)
+///
+/// The last two are the shape that actually costs what the ceiling says
+/// — a wide alternation with no literal to prefilter on — and they land
+/// at 548 and 547 million ceiling-steps per second, which is why the
+/// ceiling is a usable predictor and not just an upper bound. Everything
+/// with a literal in it finishes an order of magnitude under its
+/// ceiling, because the prefilter has already thrown most of the corpus
+/// away and the loop stops at the first accepting state.
+///
+/// 600 M is therefore about 1.1 seconds of the worst case here, and it
+/// is placed to admit the ten-way alternation and refuse the twenty-way
+/// one. A reader who wants twenty words has `/` — an OR search answers
+/// it in a fraction of the time and is what the operator is for.
+///
+/// **What this does not cover.** The budget is in steps, not seconds:
+/// a slower device takes proportionally longer for the same admitted
+/// search, so this bounds WORK and not wall-clock. It also does not make
+/// the search asynchronous — like every other shape on this command line
+/// it runs on the UI thread (`WorkbenchProvider._runCommand` says why),
+/// so an admitted worst case is an admitted stall. What it does
+/// guarantee is that the stall is finite, bounded, and known before it
+/// starts.
+///
+/// A search over the ceiling is refused by name
+/// ([CommandIssue.regexTooCostly]) rather than started and abandoned:
+/// a half-finished scan returns a short list, and a short list looks
+/// like an answer.
+const int kRegexStepBudget = 600000000;
+
 /// Most groups one compound search may hold (`compound_query.dart`).
 ///
 /// Every group is a separate pass over the corpus, and the command line
@@ -252,7 +397,11 @@ const int kMaxCompoundGroups = 6;
 enum CommandIssue {
   notACommand,
   emptyBody,
-  regexUnsupported,
+  regexSyntax,
+  regexUnsupportedOperator,
+  regexTooComplex,
+  regexTooCostly,
+  regexUnsupportedHere,
   fuzzyUnsupported,
   strongsTagNoWord,
   strongsTagNumber,
@@ -524,6 +673,20 @@ enum CommandKind {
   /// `'` and `;` — the terms in order, adjacent unless a gap says
   /// otherwise.
   phrase,
+
+  /// `~` — a regular expression over the verse string, matched by
+  /// `regex_program.dart` rather than by the token machinery above.
+  ///
+  /// The odd one out of this enum on purpose. Every other kind is a
+  /// sequence of TOKEN positions; this one is a pattern over CHARACTERS,
+  /// and BibleWorks says so itself — bwh16 describes `~And God said` as
+  /// a search "for all verses that contain the 12 letters". It is in
+  /// this enum anyway, and not in a parallel type of its own, because
+  /// everything downstream of the parse — the prefilter, the echo, the
+  /// highlighter, the compound gate — wants exactly one question
+  /// answered ("what does this line search for?") and two parallel
+  /// answers is how one of them silently stops being updated.
+  regex,
 }
 
 /// One item of a query as the reader wrote it: a term, or a gap between
@@ -545,9 +708,23 @@ class CommandQuery {
     required this.sequence,
     required this.verseContext,
     this.punctuation = PunctuationGate.off,
+    this.regex,
   });
 
   final CommandKind kind;
+
+  /// The compiled `~` pattern, non-null exactly when [kind] is
+  /// [CommandKind.regex].
+  ///
+  /// [terms] is not empty for a regex query even though the pattern is
+  /// not a term: it carries one synthetic term whose
+  /// [QueryTerm.literalCore] is the string every match must contain, so
+  /// that `search_highlight.dart` marks `~And God said` without knowing
+  /// this kind exists. That term matches nothing on its own and is never
+  /// run — [runCommandQuery] dispatches on [kind] before it looks at
+  /// terms — which is why the synthetic [TokenMatcher] deliberately has
+  /// neither a literal nor a pattern.
+  final RegexProgram? regex;
 
   /// The control character as typed — kept so the echo can quote it back
   /// and so `'` and `;` stay distinguishable in the UI even though they
@@ -600,7 +777,16 @@ class CommandQuery {
 /// The characters that turn a line into a command, in first position
 /// only. Exported so the UI's control chips and the parser cannot
 /// disagree about what counts as one.
-const String kCommandControls = "./';";
+///
+/// `~` joined the four on 2026-09-08. It is not one of the four
+/// TOKEN operators and it does not appear on the operator strip, but it
+/// does turn a line into a command, and everything that reads this
+/// constant is asking exactly that question: `fuzzy_result_label.dart`
+/// asks it before labelling a row the plain matcher never produced,
+/// `_setControl` asks it before swapping a leading operator for another,
+/// `needsWildcardPromotion` asks it before rewriting a bare `faith*`.
+/// All three want the same answer for `~` that they want for `.`.
+const String kCommandControls = "./';~";
 
 /// True when [raw] carries no control character but uses `*`, so the
 /// plain substring scan can only return nothing.
@@ -641,16 +827,20 @@ CommandParse parseCommandQuery(String raw) {
   }
 
   final control = trimmed[0];
+  // `~` first, and before the body is touched: everything below this
+  // splits the line on whitespace, and in a regular expression a space
+  // is a character like any other.
+  if (control == '~') return _parseRegex(trimmed.substring(1));
+  // `=` is BibleWorks' link-stemming search and is still refused; see
+  // "Why `=` stays on that list" above for what changed about the
+  // reason and what did not change about the answer.
+  if (control == '=') {
+    return const CommandParse.failed(CommandIssue.fuzzyUnsupported);
+  }
   // `(` opens a compound search, which is `compound_query.dart`'s
   // grammar, not this one. Callers try that parser first; by the time a
   // `(` line reaches here it has already been declined there, so the
   // honest answer is that this parser has no claim on it.
-  if (control == '~') {
-    return const CommandParse.failed(CommandIssue.regexUnsupported);
-  }
-  if (control == '=') {
-    return const CommandParse.failed(CommandIssue.fuzzyUnsupported);
-  }
   if (!kCommandControls.contains(control)) {
     return const CommandParse.failed(CommandIssue.notACommand);
   }
@@ -884,6 +1074,59 @@ CommandParse parseCommandQuery(String raw) {
   ));
 }
 
+/// `~pattern` — bwh16's regular expression search.
+///
+/// The body is NOT trimmed and NOT split on whitespace, because in a
+/// regular expression a space is a character like any other: `~God said`
+/// is eight characters in a row and would become two unrelated patterns
+/// under the term loop below.
+///
+/// The divine name is normalised the way [TokenMatcher.compile]
+/// normalises it for a term, and for the same reason: the corpus this
+/// runs against has already had 耶和华 rewritten to 雅伟, so a pattern
+/// that was not rewritten too can only find nothing. The rewrite is
+/// safe to apply to a pattern because neither spelling contains a
+/// metacharacter.
+CommandParse _parseRegex(String body) {
+  if (body.isEmpty) return const CommandParse.failed(CommandIssue.emptyBody);
+  final compiled = compileBibleworksRegex(normalizeDivineNamesInQuery(body));
+  final problem = compiled.problem;
+  if (problem != null) {
+    return CommandParse.failed(switch (problem) {
+      RegexProblem.syntax => CommandIssue.regexSyntax,
+      RegexProblem.unsupported => CommandIssue.regexUnsupportedOperator,
+      RegexProblem.tooComplex => CommandIssue.regexTooComplex,
+    });
+  }
+  final program = compiled.program!;
+  // One synthetic term, carrying the required literal and nothing else.
+  // Built with the private constructor rather than through
+  // [TokenMatcher.compile] on purpose: the literal can legitimately
+  // contain a `*` or a `[` (`~a\*b`, `~"**"`), and `compile` would read
+  // those as its own wildcards and turn a fixed string into a pattern.
+  final core = foldSearchMarks(program.requiredLiteral).toLowerCase();
+  final terms = <QueryTerm>[
+    if (core.isNotEmpty)
+      QueryTerm(
+        source: program.requiredLiteral,
+        elements: [
+          TokenElement(
+              TokenMatcher._(program.requiredLiteral, null, null, core))
+        ],
+        negated: false,
+      ),
+  ];
+  return CommandParse.ok(CommandQuery(
+    kind: CommandKind.regex,
+    control: '~',
+    terms: List.unmodifiable(terms),
+    outline: const [],
+    sequence: const [],
+    verseContext: 0,
+    regex: program,
+  ));
+}
+
 /// `*` → exactly one word; `*3` → three or fewer.
 ///
 /// [gap] is null when the piece is an ordinary pattern rather than a gap.
@@ -1092,6 +1335,7 @@ class CommandSearchResult {
     required this.indices,
     required this.tokenized,
     this.candidatesWithoutTagging = 0,
+    this.regexBudgetExceeded = false,
   });
 
   /// Matching corpus indices, ascending — which for a canonically
@@ -1113,6 +1357,18 @@ class CommandSearchResult {
   /// 1,533), which is why nothing renders it yet; it exists so that a
   /// partial import cannot become an empty result list with no trace.
   final int candidatesWithoutTagging;
+
+  /// For a `~` query: the scan was refused before it started because its
+  /// worst case is larger than [kRegexStepBudget], and [indices] is
+  /// empty for that reason rather than because no verse matched.
+  ///
+  /// A flag and not an exception, because the caller has to be able to
+  /// tell the reader WHICH kind of empty this is —
+  /// `WorkbenchProvider.runSearch` turns it into
+  /// [CommandIssue.regexTooCostly]. Returning a partial list would be
+  /// the worse answer: a short list looks like an answer and a refusal
+  /// does not.
+  final bool regexBudgetExceeded;
 }
 
 /// Run [query] over a parallel corpus.
@@ -1160,6 +1416,10 @@ CommandSearchResult runCommandQuery({
       !query.usesStrongsTags || taggedTokens != null,
       'a @ query needs taggedTokens — an untagged edition must be refused '
       'by name (CommandIssue.strongsTagNoTaggedText), not searched to zero');
+
+  if (query.kind == CommandKind.regex) {
+    return _runRegex(query, texts, searchKeys);
+  }
 
   // The prefilter tests a query literal against a verse key, so both
   // sides have to be spelled the same way. `searchKeys` arrives folded
@@ -1366,6 +1626,93 @@ CommandSearchResult runCommandQuery({
   return done(out);
 }
 
+/// Run a `~` pattern over the corpus.
+///
+/// Matched against [texts] — `MainProvider.wordKeys` — and NOT against
+/// [searchKeys], and that choice is the whole case-sensitivity story.
+///
+/// bwh16 is explicit that a regular expression search is "unlike most
+/// BibleWorks normal searches, case sensitive", and offers `~god` as the
+/// way to find the lower-case spelling. [searchKeys] is the only corpus
+/// in this app that is lower-cased, so running the pattern there would
+/// mean quietly answering a different question from the one the reader
+/// asked and from the one the manual documents. [texts] is
+/// `sanitizeForSearchKey` output: the same text, markup stripped,
+/// case and accents intact. So `~God` and `~god` differ here exactly as
+/// they do in BibleWorks, and the promise is one we can keep.
+///
+/// Two consequences the reader should know and the echo says
+/// (`cmdEchoRegexCase`):
+///
+///   * The bwh17 "ignore vowel points and accents" switch does not
+///     reach a `~` search. Folding lives in [searchKeys]; [texts] is
+///     unfolded, so `~αγαπη` does not find ἀγάπη and `~ἀγάπη` does.
+///   * `~LORD` finds nothing in any English edition, because
+///     `sanitizeForSearchKey` has already rewritten the all-caps divine
+///     name to `Yahweh` — the corpus does not contain those four
+///     letters. `~Yahweh` finds them. This is the same asymmetry
+///     `normalizeDivineNamesInQuery` fixes for the Chinese spelling, and
+///     it cannot be fixed the same way here: the rewrite is one-way and
+///     `LORD` and `Lord` are a distinction the corpus deliberately keeps.
+///
+/// The prefilter is the required literal's longest WHITESPACE-FREE run,
+/// which is usually not the whole literal — `~And God said` filters on
+/// "said". A run with a space in it is not safe to test against
+/// [searchKeys]: `collapseSearchSpaces` removes the gap between two Han
+/// characters, so the literal `神 说` occurs in [texts] and never in
+/// [searchKeys], and the verse would be thrown away before the pattern
+/// saw it. A space-free run cannot be broken by that transform — it only
+/// ever joins characters — so this filter is weaker than it could be and
+/// cannot be wrong.
+CommandSearchResult _runRegex(
+    CommandQuery query, List<String> texts, List<String> searchKeys) {
+  final program = query.regex!;
+  final core = _regexPrefilterCore(program.requiredLiteral);
+
+  final candidates = <int>[];
+  var characters = 0;
+  for (var i = 0; i < texts.length; i++) {
+    // An empty key is a reference the edition prints an instruction for
+    // rather than scripture — `MainProvider.wordKeys` blanks every verse
+    // with an `absence`. Only a pattern that matches the empty string
+    // could hit one, and such a pattern matches every verse anyway, so
+    // skipping them costs no real answer and keeps 見上節 out of a
+    // result list.
+    if (texts[i].isEmpty) continue;
+    if (core.isNotEmpty && !searchKeys[i].contains(core)) continue;
+    candidates.add(i);
+    characters += texts[i].length;
+  }
+
+  // Checked before a single character is examined: this is the entire
+  // difference between a budget and a wish.
+  if (program.stepCeilingFor(characters) > kRegexStepBudget) {
+    return const CommandSearchResult(
+        indices: [], tokenized: 0, regexBudgetExceeded: true);
+  }
+
+  final out = <int>[];
+  for (final i in candidates) {
+    if (program.hasMatch(texts[i])) out.add(i);
+  }
+  // `tokenized` counts the verses the search had to open, which for this
+  // kind is the candidate set: nothing is tokenized, and reporting 0
+  // would make the one honest measure of prefilter effectiveness read as
+  // "no work was done".
+  return CommandSearchResult(indices: out, tokenized: candidates.length);
+}
+
+/// The longest run of [literal] with no whitespace in it, folded and
+/// lower-cased to meet `MainProvider.searchKeys`.
+String _regexPrefilterCore(String literal) {
+  var best = '';
+  for (final run in literal.split(RegExp(r'\s+'))) {
+    if (run.length > best.length) best = run;
+  }
+  if (best.isEmpty) return '';
+  return foldSearchMarks(best).toLowerCase();
+}
+
 /// Whether some window of at most `n+1` consecutive verses of the same
 /// book contains [v] and an occurrence of every term.
 bool _windowSatisfies(
@@ -1502,6 +1849,14 @@ List<int> _allIndices(int length) => [for (var i = 0; i < length; i++) i];
 bool _verseSatisfies(CommandQuery query, List<String> tokens,
     List<String>? tags, List<bool>? gaps, PunctuationGate gate) {
   switch (query.kind) {
+    case CommandKind.regex:
+      // Unreachable by construction: [runCommandQuery] hands a `~` query
+      // to [_runRegex] before this function is ever on the call stack,
+      // because a regular expression matches the verse STRING and all
+      // this function is given is its tokens. Spelled out rather than
+      // defaulted so that a fifth kind cannot be added without meeting
+      // this comment.
+      throw StateError('a ~ query matches text, not tokens');
     case CommandKind.phrase:
       if (!sequenceOccurs(tokens, query.sequence,
           tags: tags, gaps: gaps, gate: gate)) {
@@ -1596,6 +1951,18 @@ String describeCommandQuery(CommandQuery query, String locale) {
 
   final buf = StringBuffer();
   switch (query.kind) {
+    case CommandKind.regex:
+      // Two sentences and not one. The first quotes the pattern back,
+      // which is all the other kinds need; the second says the thing
+      // about this kind that a reader coming from every other search box
+      // in the app will otherwise get wrong, because bwh16 says it too
+      // and because it is the only search here that tells `God` from
+      // `god`.
+      buf.write(s('cmdEchoRegex', 'Regular expression: {pattern}')
+          .replaceAll('{pattern}', query.regex!.source));
+      buf.write(partSep);
+      buf.write(s('cmdEchoRegexCase', 'upper and lower case are different'));
+      return buf.toString();
     case CommandKind.and:
       buf.write(s('cmdEchoAll', 'All of: {terms}')
           .replaceAll('{terms}', positives.join(listSep)));
@@ -1687,10 +2054,36 @@ String? describeCommandIssue(CommandIssue issue, String locale) {
     CommandIssue.notACommand => null,
     CommandIssue.emptyBody =>
       s('cmdIssueEmpty', 'Type what to search for after the operator.'),
-    CommandIssue.regexUnsupported =>
-      s('cmdIssueRegex', 'Regular expression searches (~) are not supported.'),
-    CommandIssue.fuzzyUnsupported =>
-      s('cmdIssueFuzzy', 'Fuzzy stemming searches (=) are not supported.'),
+    CommandIssue.regexSyntax => s(
+        'cmdIssueRegexSyntax',
+        'That regular expression is incomplete — check the ( ) [ ] and " '
+            'pairs, and that every * + ? follows something.'),
+    CommandIssue.regexUnsupportedOperator => s(
+        'cmdIssueRegexOperator',
+        r'This ~ search supports \ " . ^ $ [ - ] ( ) ? * + and | and '
+            r'nothing else — no braced repeat count, no \d or \w, no (?: '
+            r'or (?=.'),
+    CommandIssue.regexTooComplex =>
+      s('cmdIssueRegexTooComplex', 'That regular expression is too long.'),
+    CommandIssue.regexTooCostly => s(
+        'cmdIssueRegexTooCostly',
+        'That regular expression would have to read the whole Bible too '
+            'many times. Add a plain word to it — ~said.*light reads far '
+            'less than ~.*light.'),
+    CommandIssue.regexUnsupportedHere => s(
+        'cmdIssueRegexHere',
+        r"A ~ regular expression works on its own, not inside a compound "
+            '( ) search.'),
+    // Not "fuzzy stemming": bwh16 binds `=` to LINK stemming and to
+    // nothing else — Porter is a right-click MODE there, never a control
+    // character — so the old sentence named a feature the operator does
+    // not have. See the ledger entry in this file's library comment.
+    CommandIssue.fuzzyUnsupported => s(
+        'cmdIssueFuzzyLink',
+        "= is BibleWorks' link-stemming search, and the word list behind "
+            'it is a hand-edited proprietary file we cannot ship. Type the '
+            'wildcard yourself — .faith* work* — or turn on "Broaden a '
+            'search that finds nothing" in Settings.'),
     CommandIssue.strongsTagNoWord => s(
         'cmdIssueStrongsTagNoWord',
         "A Strong's tag follows a word: .man@444, or .*@444 for every "

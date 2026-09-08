@@ -90,7 +90,12 @@ void main() {
       // `(` belongs to the compound grammar in `compound_query.dart`, so
       // this parser has no claim on it — the caller tries that one first.
       expect(_issue('(.grace work)/(.faith)'), CommandIssue.notACommand);
-      expect(_issue('~And God said'), CommandIssue.regexUnsupported);
+      // `~And God said` was here until 2026-09-08 and is now a search;
+      // see `regex_query_corpus_test.dart`. What is still named rather
+      // than half-run is a pattern written in a dialect bwh43i's table
+      // has no entry for.
+      expect(_issue(r'~go{2,3}d'), CommandIssue.regexUnsupportedOperator);
+      expect(_issue('~(unclosed'), CommandIssue.regexSyntax);
       expect(_issue('=.faith works'), CommandIssue.fuzzyUnsupported);
       // `.man@444` itself is a search since 2026-09-08 — see
       // `strongs_tag_binding_test.dart`. What is still named rather than

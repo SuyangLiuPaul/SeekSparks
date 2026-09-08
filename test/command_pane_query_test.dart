@@ -97,9 +97,13 @@ void main() {
     });
 
     test('an unsupported operator is reported, not half-run', () async {
+      // `~` itself became a search on 2026-09-08. A pattern written in
+      // another dialect still has to be named: reading `\d` as the
+      // letter `d`, which is what bwh43i's table says it means, would
+      // answer a question the reader did not ask.
       final wb = WorkbenchProvider(mainProvider: _mp());
-      await wb.runSearch('~And God said');
-      expect(wb.commandIssue, CommandIssue.regexUnsupported);
+      await wb.runSearch(r'~go\d+d');
+      expect(wb.commandIssue, CommandIssue.regexUnsupportedOperator);
       expect(wb.textResults, isEmpty);
       wb.dispose();
     });
@@ -289,10 +293,10 @@ void main() {
 
     testWidgets('a refused query explains itself', (tester) async {
       await pump(tester);
-      await submit(tester, '~beginn.*');
+      await submit(tester, '~beginn(.*');
       expect(
           find.textContaining(
-              describeCommandIssue(CommandIssue.regexUnsupported, 'en')!),
+              describeCommandIssue(CommandIssue.regexSyntax, 'en')!),
           findsOneWidget);
     });
 

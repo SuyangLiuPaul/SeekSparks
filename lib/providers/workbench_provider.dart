@@ -518,6 +518,18 @@ class WorkbenchProvider extends ChangeNotifier {
           commandIssue = CommandIssue.strongsTagUnsupportedHere;
           return;
         }
+        // Same gate, one operator along. `runCompoundQuery` runs each
+        // group as a separate full pass and keeps only the verse lists,
+        // so a `~` group's budget refusal
+        // ([CommandSearchResult.regexBudgetExceeded]) has nowhere to be
+        // reported — the compound would show "no verse matched (~…)",
+        // which is the one thing that is not true. Refused by name
+        // instead of answered wrongly.
+        if (compound.query?.groups.any((g) => g.kind == CommandKind.regex) ??
+            false) {
+          commandIssue = CommandIssue.regexUnsupportedHere;
+          return;
+        }
         compoundQuery = compound.query;
         commandIssue = compound.issue;
         if (compound.query != null) {
@@ -818,6 +830,17 @@ class WorkbenchProvider extends ChangeNotifier {
           ? _taggedLookup(mainProvider.currentVersion, verses)
           : null,
     );
+    // A `~` search whose worst case is over `kRegexStepBudget` is
+    // refused before it starts, and comes back as an empty list with the
+    // flag set. Turning it into an issue here rather than at the call
+    // site is what keeps the three paths that run a command query —
+    // `runSearch`, the wildcard promotion, and the broadening probe —
+    // from each having to remember: an empty list that means "refused"
+    // must never be shown as an empty list that means "no verse".
+    if (result.regexBudgetExceeded) {
+      commandIssue = CommandIssue.regexTooCostly;
+      return const [];
+    }
     return applySearchLimit(
       [for (final i in result.indices) verses[i]],
       searchLimit,
@@ -954,12 +977,19 @@ class WorkbenchProvider extends ChangeNotifier {
         books: corpus.books,
       ).indices;
     } else if (cq != null) {
-      indices = runCommandQuery(
+      final result = runCommandQuery(
         query: cq,
         texts: corpus.wordKeys,
         searchKeys: corpus.searchKeys,
         books: corpus.books,
-      ).indices;
+      );
+      // A `~` pattern that fits the budget on the reading edition can
+      // exceed it on a longer one — the ceiling is `states x characters`
+      // and the editions differ in length. Reporting the empty list as
+      // a count would put "LEB: 0" in the strip for a search the LEB was
+      // never asked, which is the one thing this strip must not do.
+      if (result.regexBudgetExceeded) return null;
+      indices = result.indices;
     } else {
       final scan = SearchService.scanText(
         verses: corpus.verses,

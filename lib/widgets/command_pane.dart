@@ -1050,6 +1050,12 @@ class _CommandPaneState extends State<CommandPane> {
             'cmdSyntaxContext',
             'cmdSyntaxCompound',
             'cmdSyntaxCrossVersion',
+            // Last in the text section on purpose. bwh16 calls `~` a
+            // search "for those hardy souls", and it is: everything
+            // above it is a token operator with a plain-language echo,
+            // and this one asks the reader to know a second notation.
+            // A reader who never scrolls to it has lost nothing.
+            'cmdSyntaxRegex',
           ]
         ),
         (
