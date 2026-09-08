@@ -2096,16 +2096,23 @@ String? describeCommandIssue(CommandIssue issue, String locale) {
         'cmdIssueStrongsTagNotOneWord',
         "! in front of a tagged word can only stand in front of a single "
             'word — for example .!man@444.'),
-    // The six editions are named, not counted. "Switch to a tagged
+    // The eight editions are named, not counted. "Switch to a tagged
     // edition" is a refusal the reader cannot act on without opening the
-    // version picker and reading twelve rows to find out which ones
+    // version picker and reading fourteen rows to find out which ones
     // qualify — and `test/strongs_tag_binding_test.dart` fails if this
     // list and `TaggedTextService.taggedVersions` ever disagree.
+    //
+    // 2026-09-08: the key gained a `V2` when `bsb-yhwh` and `asv-yhwh`
+    // brought the count from six to eight. `ui_strings.dart` is
+    // append-only, so the sentence could not be corrected in place; the
+    // new key is appended there and the old one is left untouched and
+    // unread. The V2 entry's own doc comment says what to do if that
+    // rule is ever lifted.
     CommandIssue.strongsTagNoTaggedText => s(
-        'cmdIssueStrongsTagNoTaggedText',
+        'cmdIssueStrongsTagNoTaggedTextV2',
         "This edition carries no Strong's tagging, so @ has nothing to "
-            'match against. Switch to BSB, CSB, KJV+S, LXX+WH, 雅简+ or 和简+ '
-            'and run it again.'),
+            'match against. Switch to BSB, BSB-Y, CSB, ASV-Y, KJV+S, '
+            'LXX+WH, 雅简+ or 和简+ and run it again.'),
     CommandIssue.strongsTagUnsupportedHere => s(
         'cmdIssueStrongsTagHere',
         "Strong's tags (@) work in a plain . / ' ; search only — not "

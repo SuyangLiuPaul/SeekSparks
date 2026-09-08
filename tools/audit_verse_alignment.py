@@ -336,7 +336,10 @@ def load_originals_nt():
 
 
 POOLS = {
-    'English': ['kjv', 'kjvs', 'bsb', 'nasb', 'leb'],
+    # 2026-09-08: bsb-yhwh / asv-yhwh. `csb` is still absent and that is
+    # an oversight from its own import, not a decision about it.
+    'English': ['kjv', 'kjvs', 'bsb', 'nasb', 'leb', 'bsb-yhwh',
+                'asv-yhwh'],
     'Chinese': ['cuvs-yhwh', 'cuvs-plus', 'cuvs-yhwh-tr',
                 'biblexg-v2', 'biblexg-v2-tr'],
     'Greek': ['lxxwh'],
@@ -349,6 +352,11 @@ TRADITIONAL = {'cuvs-yhwh-tr', 'biblexg-v2-tr'}
 # contradiction rather than a hint.
 FAMILIES = [
     ('kjv', 'kjvs', 'KJV and KJV+S are one text, one tagged'),
+    # The English counterpart of the 和合本 pair below: one translation,
+    # two divine-name treatments. Agreement should be near-total at the
+    # right alignment, so a preference for a neighbouring verse here is
+    # a contradiction and not a hint.
+    ('bsb', 'bsb-yhwh', 'BSB, two divine-name treatments'),
     ('cuvs-yhwh', 'cuvs-plus', '和合本, two divine-name treatments'),
     ('cuvs-yhwh', 'cuvs-yhwh-tr', '和合本雅伟版, two scripts'),
     ('biblexg-v2', 'biblexg-v2-tr', '梁家鏗譯本, two scripts'),

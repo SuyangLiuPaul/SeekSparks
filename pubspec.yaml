@@ -93,6 +93,12 @@ flutter:
     - assets/cuvs-plus.json
     - assets/lxxwh.json
     - assets/csb.json
+    # 2026-09-08, tools/import_yahwehdehua_texts.py. Listed one
+    # file at a time like every other edition: an undeclared
+    # asset does not 404 on web, it returns the SPA fallback with
+    # a 200 and boot dies in json.decode.
+    - assets/bsb-yhwh.json
+    - assets/asv-yhwh.json
     # NIV (Biblica/Zondervan) removed in 2026-05 — its complete text
     # cannot be redistributed without a publisher licence.
     # CUV, CUV-tr, CNV, CNV-tr, biblexg (LJK1), biblexg-tr removed
@@ -145,6 +151,14 @@ flutter:
     - assets/tagged/cuvs-plus/
     - assets/tagged/lxxwh/
     - assets/tagged/csb/
+    # One directory per tagged edition. Flutter does not recurse
+    # into the parent, so a tagged set that is not listed here does
+    # not ship — which is also how the licensed Eagle's View set is
+    # kept out of the build. Do not name that set in a comment:
+    # test/data_integrity_test.dart proves it is unbundled by
+    # grepping this file for its path, and a mention is a match.
+    - assets/tagged/bsb-yhwh/
+    - assets/tagged/asv-yhwh/
     - assets/greek_stats/
     - assets/greek_stats/w/
     - assets/concordance/

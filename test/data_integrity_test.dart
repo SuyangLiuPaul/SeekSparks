@@ -36,6 +36,12 @@ const _versions = <String>[
   'cuvs-plus',
   'biblexg-v2',
   'biblexg-v2-tr',
+  // 2026-09-08. An edition that is not in this list is not swept by any
+  // of the checks below — versification, invisible characters, character
+  // repertoire, whitespace — and nothing says so. `csb` has been in that
+  // state since it was imported; these two are not joining it.
+  'bsb-yhwh',
+  'asv-yhwh',
 ];
 
 final _bookField = RegExp(r'"book":\s*"([^"]+)"');
@@ -732,7 +738,12 @@ void main() {
       // −2 in v1.6.118: 使徒行傳 8:40 was cut across two rows in both
       // biblexg files, the second numbered 8:41, a reference no
       // versification tradition has. See check 30.
-      expect(records, 295532);
+      // +62,172 in 2026-09-08: `bsb-yhwh` and `asv-yhwh`, 31,086 records
+      // each. Neither contributes a single census ROW below — no merge
+      // markers, no OMIT, no blanks — which is the interesting half:
+      // these two English editions store the sixteen absent references
+      // by leaving them out, not by writing a placeholder into them.
+      expect(records, 357704);
       expect(census, {
         // 70, not 71, since the publisher's 2026-08-29 revision: 約伯記
         // 10:21 was a 见上节 placeholder in every edition we had, and that
@@ -873,9 +884,19 @@ void main() {
         'lxxwh': 302,
         'biblexg-v2': 38,
         'biblexg-v2-tr': 34,
+        // 2026-09-08: the same sixteen as `bsb`, and the same sixteen in
+        // each. Both sources store the Received-Text verses empty and
+        // `import_yahwehdehua_texts.py` omits them, which is what
+        // `assets/bsb.json` has always done — so three English editions
+        // now agree, verse for verse, about which references the
+        // critical text does not carry. Any other number here would mean
+        // the import lost verses somewhere else.
+        'bsb-yhwh': 16,
+        'asv-yhwh': 16,
       });
-      // Unused otherwise, but it is the count the docs quote.
-      expect(absentByEdition.values.reduce((a, b) => a + b), 424);
+      // Unused otherwise, but it is the count the docs quote. 424 + 32
+      // on 2026-09-08, the two new editions' sixteen apiece.
+      expect(absentByEdition.values.reduce((a, b) => a + b), 456);
     });
 
     test('the two transposed Septuagint passages stay repaired', () {

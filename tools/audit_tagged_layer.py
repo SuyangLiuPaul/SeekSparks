@@ -87,7 +87,12 @@ CANON = [
 # `TaggedTextService.taggedVersions`. `nsn-plus` is deliberately absent:
 # the Eagle's View NASB is licensed, never committed and never deployed,
 # so an audit that reads it would pass here and fail everywhere else.
-EDITIONS = ["bsb", "kjvs", "lxxwh", "cuvs-yhwh", "cuvs-plus"]
+# 2026-09-08: bsb-yhwh / asv-yhwh, the two 雅伟的话 divine-name editions
+# (tools/import_yahwehdehua_texts.py). `csb` is still missing from this
+# list and from tools/audit_verse_alignment.py; that is a gap, not a
+# decision.
+EDITIONS = ["bsb", "kjvs", "lxxwh", "cuvs-yhwh", "cuvs-plus",
+            "bsb-yhwh", "asv-yhwh"]
 
 # Mirrors `kVerseAbsenceMarkers` in lib/utils/verse_text_absence.dart.
 # A verse whose whole text is one of these is a placeholder for words

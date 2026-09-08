@@ -84,6 +84,20 @@ class TaggedTextService {
     // YsWords one that drops the numbers. Its `g` lists are all empty:
     // the module carries Strong's and no tense/voice/mood at all.
     'csb',
+    // 2026-09-08: `bsb-yhwh` and `asv-yhwh`, from the 雅伟的话 export.
+    // Both tag BOTH Testaments — 381,806 numbered runs of 388,624
+    // (98.2%) and 346,817 of 346,832 (100.0%) — and both are `g`-free,
+    // like `csb` and unlike the Eagle's View sets: neither module
+    // carries a tense/voice/mood code anywhere, so the key is not
+    // written at all rather than written empty.
+    //
+    // The BSB one also carries 52,688 IMPLIED numbers, which is the
+    // largest such set in the app. Its source marks them with a trailing
+    // `x` — `eat<WH398><WH4480x>` — meaning the lemma is in the Hebrew
+    // and has no English word of its own. Those go to `TaggedRun.i`,
+    // never to `.s`; see the header of tools/import_yahwehdehua_texts.py.
+    'bsb-yhwh',
+    'asv-yhwh',
     // 'cuv-yhwd' was here. Removed with its catalog row — it duplicated
     // cuvs-yhwh's text AND its tagging, only coarser. See the note at the
     // end of lib/constants/bible_versions.dart.

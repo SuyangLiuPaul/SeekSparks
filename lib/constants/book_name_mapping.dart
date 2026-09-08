@@ -263,6 +263,13 @@ const _englishVersionCodes = <String>{
   // 2026-09-07: `csb` joins them on the way in, not afterwards. The
   // paragraph above is the record of what "afterwards" cost.
   'csb',
+  // 2026-09-08: `bsb-yhwh` and `asv-yhwh`, likewise on the way in.
+  // Their book names come from `assets/kjv.json` by canonical position
+  // — `import_yahwehdehua_texts.py` refuses to run if the source's own
+  // 66 names and the KJV's do not match one for one — so they are as
+  // English as `bsb`'s and would fail in exactly the same way.
+  'bsb-yhwh',
+  'asv-yhwh',
 };
 
 /// Which of the three book-name spellings a surface should print.

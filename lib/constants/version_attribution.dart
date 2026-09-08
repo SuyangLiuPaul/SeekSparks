@@ -22,6 +22,15 @@ const versionAttributionKeys = <String, String>{
   'nasb': 'aboutLicenseNasb',
   'bsb': 'aboutLicenseBsb',
   'csb': 'aboutLicenseCsb',
+  // The two 雅伟的话 divine-name editions. They do NOT share a line, and
+  // that is the point of writing two: the BSB is public domain because
+  // its publisher dedicated it, the ASV because 1901 is long past
+  // copyright, and a shared "public domain" sentence would say neither.
+  // In both, the Yahweh reading is the ministry's own editorial work,
+  // which each line credits — a reader copying a verse out is copying
+  // that work, not only the base translation.
+  'bsb-yhwh': 'aboutLicenseBsbYhwh',
+  'asv-yhwh': 'aboutLicenseAsvYhwh',
   // The three Eagle's View imports share one line: the texts themselves are
   // public domain, the electronic edition and its Strong's alignment are not.
   'kjvs': 'aboutLicenseEaglesView',

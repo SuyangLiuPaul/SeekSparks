@@ -115,6 +115,97 @@ const bibleVersions = <BibleVersionInfo>[
     language: 'en',
     editionYear: "1769 / with Strong's + TVM",
   ),
+  // 2026-09-08: the two divine-name editions from the 雅伟的话 project's
+  // own exported database, by `tools/import_yahwehdehua_texts.py`. Both
+  // base translations are public domain, both carry Strong's tagging in
+  // both Testaments, and in both the Yahweh reading is the ministry's
+  // own restoration work rather than a third party's — which is why
+  // neither needs a permission on file. `docs/permissions/README.md`
+  // says so in the shape that file uses.
+  //
+  // They are LAST among the English rows, after `kjvs`, deliberately.
+  // `defaultSecondaryVersion` seeds a new split pane with the first
+  // OTHER row in the same language, so inserting either of them higher
+  // would silently change which edition opens beside `kjv` and `bsb`
+  // for every reader — a change to a default that has nothing to do
+  // with adding a text. `test/default_secondary_version_test.dart` pins
+  // those two answers.
+  //
+  // ⚠️ AN OPEN QUESTION FOR THE OWNER, recorded rather than decided.
+  // `bsb-yhwh` is the same translation as `bsb`, and the reader-visible
+  // difference is smaller than it looks. `bsb` stores "the LORD" in
+  // 13,172 verses, but `text_patterns.dart::_normalizeDivineNames`
+  // already rewrites all-caps LORD to Yahweh on the way to the screen,
+  // so the two render identically in most of them. Measured
+  // reference-by-reference over the 31,086 they share, AFTER that
+  // normalisation, 636 verses still differ — 2.0%:
+  //
+  //   * 326 in the OT. 299 of them are "Lord GOD" — Adonai plus YHWH,
+  //     which the BSB sets in small caps and this edition reads "Lord
+  //     Yahweh" (Gen 15:2, 2 Sam 7:18-22, 1 Kgs 8:53). The app's
+  //     normaliser rewrites `LORD` and cannot touch `GOD`. The other 27
+  //     are the short form יָהּ, printed "Yah" here and "the LORD" in the
+  //     BSB — "His name is Yah" (Ps 68:4), "the throne of Yah" (Ex
+  //     17:16), and Exodus 15:2, which opens the Song of the Sea.
+  //   * 310 in the NT, where κύριος is either restored as
+  //     `Lord [Yahweh]` (188 verses — Matt 1:20, 1 Cor 1:31) or flagged
+  //     with an asterisk (113 verses, 1 Cor 2:8). Nothing else in this
+  //     catalog makes a claim about the divine name in the New
+  //     Testament at all, and `[Yahweh]` is not a new convention for it:
+  //     `bracketSpanKind` already types that exact token as
+  //     `ScriptureSpanKind.divineName` for 和合本雅伟版's `主[雅伟]`.
+  //   * plus 237 translator's footnotes across 224 verses ("not in the
+  //     Hebrew") that the plain BSB does not carry at all.
+  //
+  // That is a real editorial claim and it is the ministry's own, which
+  // is why the row ships. But on 2026-09-08 — the same day — the owner
+  // hid `cuvs-plus` with 「有雅+ 就不用和合本+了」, and the relation there
+  // is exactly this one: one base text, one row restoring the divine
+  // name. Applied here that would mean hiding `bsb`, not this. It was
+  // NOT done, because `bsb` is the English locale default
+  // (`localeDefaultVersion`), is the only English row in
+  // `unrestrictedCopyVersions` with tagging, and taking the English
+  // default off the interface is the owner's call and not an
+  // importer's. If he wants the same rule applied, it is two lines:
+  // `bsb` into [disabledVersions] and a `'bsb': 'bsb-yhwh'` row in
+  // [retiredVersionSuccessors].
+  //
+  // `test/no_duplicate_version_text_test.dart` was consulted before
+  // either row was written, not after: it scores this pair at 83.7%
+  // agreement, under its 90% gate, because it reads the ASSETS and the
+  // assets really do differ in 13,172 verses. Passing that gate is not
+  // the same as earning the row, which is what the paragraphs above are
+  // for.
+  BibleVersionInfo(
+    value: 'bsb-yhwh',
+    shortLabel: 'BSB-Y',
+    menuLabel: 'Berean Standard Bible (Yahweh)',
+    language: 'en',
+    editionYear: "2020 / divine name restored, with Strong's",
+  ),
+  // The ASV has no plain counterpart in this catalog and needs none of
+  // the argument above: it is a different translation from everything
+  // here (11.1% agreement with `kjv`, its nearest relative, and 0.0%
+  // with `bsb`), and at 1901 it is the oldest English text in the app
+  // after the KJV.
+  //
+  // "(Yahweh)" is not decoration on this row either, and it is not the
+  // usual restoration. The 1901 ASV is the one major English Bible that
+  // already PRINTED the divine name — as *Jehovah*, and this edition
+  // reads Yahweh 6,828 times in the same places. So what it changes is
+  // the spelling of a name the translators had already chosen to print,
+  // which is a smaller claim than the one `bsb-yhwh` makes and a
+  // different one. Four verses keep JEHOVAH, all four in the all-caps
+  // inscription "HOLY TO JEHOVAH" or "JEHOVAH THY GOD" (Ex 28:36,
+  // Ex 39:30, Deut 28:58, Zech 14:20). The source left the small-caps
+  // form alone; so does this, rather than tidying a text on the way in.
+  BibleVersionInfo(
+    value: 'asv-yhwh',
+    shortLabel: 'ASV-Y',
+    menuLabel: 'American Standard Version (Yahweh)',
+    language: 'en',
+    editionYear: "1901 / Jehovah as Yahweh, with Strong's",
+  ),
   BibleVersionInfo(
     value: 'lxxwh',
     shortLabel: 'LXX+WH',

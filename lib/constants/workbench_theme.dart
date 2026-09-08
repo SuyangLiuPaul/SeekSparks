@@ -939,6 +939,14 @@ const Map<String, Color> kVersionTagColors = {
   'kjvs': Color(0xFF2F9E57),
   'bsb': Color(0xFF14806B),
   'csb': Color(0xFF0F6E8C),
+  // The two 雅伟的话 divine-name editions. Each sits a step from its
+  // nearest relative rather than anywhere in the blue/green range that
+  // happened to be free: `bsb-yhwh` is a lighter teal beside `bsb`'s,
+  // so the gutter says at a glance that they are two editions of one
+  // translation. `asv-yhwh` has no relative here and takes the unused
+  // slate-blue between `nasb` and `csb`.
+  'bsb-yhwh': Color(0xFF3AA48D),
+  'asv-yhwh': Color(0xFF3F5E8F),
   // Chinese — 和合本 family in amber, 梁家铿译本 in purple.
   'cuvs-yhwh': Color(0xFFB0721A), // 雅简+
   'cuvs-yhwh-tr': Color(0xFFC98A2E), // 雅繁+

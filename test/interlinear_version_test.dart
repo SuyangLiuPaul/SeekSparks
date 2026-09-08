@@ -34,9 +34,23 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('the picker offers the tagged editions that actually ship', () {
-    test('it lists exactly the five, in catalog order', () {
-      expect(interlinearEditions,
-          <String>['bsb', 'csb', 'kjvs', 'lxxwh', 'cuvs-yhwh']);
+    test('it lists exactly the seven, in catalog order', () {
+      // 2026-09-08: five became seven. `bsb-yhwh` and `asv-yhwh` are
+      // tagged and visible, so `interlinearEditions` — which is
+      // `availableVersions` intersected with
+      // `TaggedTextService.taggedVersions` — picks them up with no code
+      // change at all. Written out in full rather than derived, because
+      // the thing worth pinning is the ORDER a reader sees, and that
+      // comes from the catalog rather than from either input set.
+      expect(interlinearEditions, <String>[
+        'bsb',
+        'csb',
+        'kjvs',
+        'bsb-yhwh',
+        'asv-yhwh',
+        'lxxwh',
+        'cuvs-yhwh',
+      ]);
     });
 
     test('nsn-plus is never offered, because the app does not contain it', () {

@@ -17,6 +17,17 @@ const sectionTitleSetByVersion = <String, String>{
   'kjv': 'english-classic',
   'leb': 'english-classic',
   'nasb': 'english-classic',
+  // 2026-09-08: BSB-Y and ASV-Y. Nothing tests this map, so an omission
+  // here is silent — the edition simply renders with no section
+  // headings and nobody is told why. `bsb`, `csb`, `kjvs`, `lxxwh` and
+  // `cuvs-plus` are all in that state today and it is not deliberate;
+  // these two are wired up rather than joining them.
+  //
+  // 'english-classic' rather than a set of their own: the headings are
+  // neutral and version-independent by design, and these two follow the
+  // same versification as every other English edition here.
+  'bsb-yhwh': 'english-classic',
+  'asv-yhwh': 'english-classic',
   // 'niv' entry removed in 2026-05 along with the NIV version itself
   // (see lib/constants/bible_versions.dart for the licence rationale).
 

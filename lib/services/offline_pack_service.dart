@@ -285,6 +285,21 @@ class OfflinePackService extends ChangeNotifier {
     'assets/cuvs-yhwh-tr.json',
     'assets/biblexg-v2.json',
     'assets/biblexg-v2-tr.json',
+    // 2026-09-08: BSB-Y and ASV-Y, 12.1 MB between them. Added because
+    // the rule this list is held to is "a visible edition is
+    // downloadable offline like every other edition a reader can
+    // choose" — `offline_pack_urls_test.dart` says it in those words —
+    // and both are visible.
+    //
+    // ⚠️ `assets/csb.json` and `assets/lxxwh.json` are visible too and
+    // are NOT here. That is a gap, not a precedent: they were never
+    // added when they were imported, so a reader who downloads the pack
+    // and goes offline finds two editions in the picker that will not
+    // open. Not fixed in this change, because it is somebody's
+    // bandwidth and the decision to spend 15 MB more of it is not an
+    // importer's to make quietly.
+    'assets/bsb-yhwh.json',
+    'assets/asv-yhwh.json',
   ];
 
   static const List<String> _toolsUrls = [

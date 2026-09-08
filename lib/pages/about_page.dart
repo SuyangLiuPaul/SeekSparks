@@ -465,6 +465,31 @@ class _ScripturesTable extends StatelessWidget {
             'Dedicated to the public domain by the publisher.',
         url: 'https://bereanbible.com/',
       ),
+      // BSB-Y goes directly under BSB, because it is an edition OF that
+      // text and the reader comparing the two rows is the reader this
+      // page is for. ASV-Y follows it as the other half of the same
+      // 2026-09-08 import. Their licence lines are deliberately two
+      // different sentences rather than one shared "public domain" —
+      // see `aboutLicenseBsbYhwh` and `aboutLicenseAsvYhwh`.
+      _AttribRow(
+        name: uiStrings['aboutVerBsbYhwh']?[locale] ??
+            "BSB-Y (Berean Standard Bible, Yahweh edition, with Strong's)",
+        licence: uiStrings['aboutLicenseBsbYhwh']?[locale] ??
+            'Translation dedicated to the public domain by the publisher · '
+                'the divine-name restoration is © Yahweh De Hua Ministry, '
+                'used with permission.',
+        url: 'https://yahwehdehua.net/en/bible',
+      ),
+      _AttribRow(
+        name: uiStrings['aboutVerAsvYhwh']?[locale] ??
+            'ASV-Y (American Standard Version 1901, Yahweh edition, with '
+                "Strong's)",
+        licence: uiStrings['aboutLicenseAsvYhwh']?[locale] ??
+            "Public domain (1901) · this edition respells the translators' "
+                'own Jehovah as Yahweh, © Yahweh De Hua Ministry, used with '
+                'permission.',
+        url: 'https://yahwehdehua.net/en/bible',
+      ),
       _AttribRow(
         name: uiStrings['aboutVerCsb']?[locale] ??
             "CSB (Christian Standard Bible, 2017, with Strong's)",

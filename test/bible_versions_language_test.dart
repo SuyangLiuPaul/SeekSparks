@@ -18,7 +18,22 @@ void main() {
   });
 
   test('language matches the naming convention', () {
-    const english = {'kjv', 'leb', 'nasb', 'bsb', 'csb', 'kjvs'};
+    // `bsb-yhwh` and `asv-yhwh` joined on 2026-09-08. They have to be
+    // named here rather than derived: the `else` branch below assumes
+    // anything unlisted is Simplified Chinese, so an English code that
+    // is not in this set fails with "should be Simplified" — which is
+    // the same shape of mistake `_englishVersionCodes` in
+    // `book_name_mapping.dart` once made in production.
+    const english = {
+      'kjv',
+      'leb',
+      'nasb',
+      'bsb',
+      'bsb-yhwh',
+      'csb',
+      'asv-yhwh',
+      'kjvs',
+    };
     const greek = {'lxxwh'};
     for (final v in bibleVersions) {
       if (greek.contains(v.value)) {

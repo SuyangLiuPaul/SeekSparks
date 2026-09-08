@@ -137,8 +137,20 @@ void main() {
               reason: '${v.value} is on the $lang tab');
         }
       }
-      expect(versionsForLanguage('en').map((v) => v.value),
-          <String>['kjv', _restored, 'bsb', 'csb', 'kjvs']);
+      // 2026-09-08: `bsb-yhwh` and `asv-yhwh` appended after `kjvs`.
+      // The list is still written out in full rather than filtered,
+      // because its job here is to say that the hidden codes are absent
+      // AND that nothing else moved when they were hidden — a `where`
+      // over the catalog would assert neither.
+      expect(versionsForLanguage('en').map((v) => v.value), <String>[
+        'kjv',
+        _restored,
+        'bsb',
+        'csb',
+        'kjvs',
+        'bsb-yhwh',
+        'asv-yhwh',
+      ]);
     });
 
     test('the command line cannot summon them by abbreviation', () {

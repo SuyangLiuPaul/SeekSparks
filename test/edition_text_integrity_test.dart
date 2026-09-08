@@ -24,6 +24,11 @@ import 'package:flutter_test/flutter_test.dart';
 /// View NASB is licensed, never committed, and a test that named it
 /// would fail on any clone but this one.
 const kEditionAssets = <String>[
+  // 2026-09-08: the two 雅伟的话 divine-name editions. This list is what
+  // caught `leb.json`'s 31,199 newline-padded verses, so a new import
+  // that is not in it is a new import nothing has looked at.
+  'assets/asv-yhwh.json',
+  'assets/bsb-yhwh.json',
   'assets/biblexg-v2-tr.json',
   'assets/biblexg-v2.json',
   'assets/bsb.json',

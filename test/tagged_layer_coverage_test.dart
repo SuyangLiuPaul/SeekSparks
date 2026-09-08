@@ -55,7 +55,21 @@ const _books = <String>[
 // `nsn-plus` is deliberately not here. The Eagle's View NASB is licensed,
 // never committed and never deployed, so a test that read it would pass
 // on this machine and fail on every other.
-const _editions = <String>['bsb', 'kjvs', 'lxxwh', 'cuvs-yhwh', 'cuvs-plus'];
+// 2026-09-08: `bsb-yhwh` and `asv-yhwh`. They need no exception set of
+// their own — the two departure tables above are `bsb`'s and `lxxwh`'s —
+// which is the result, not the assumption: their tagged layer and their
+// plain text agree on all 62,172 verses between them, because the
+// importer builds both from one pass and never normalises the joined
+// string.
+const _editions = <String>[
+  'bsb',
+  'kjvs',
+  'lxxwh',
+  'cuvs-yhwh',
+  'cuvs-plus',
+  'bsb-yhwh',
+  'asv-yhwh',
+];
 
 /// The 21 verses of real Greek that no tagged record covers.
 ///
@@ -333,7 +347,17 @@ void main() {
         _editions.map((e) => sweeps[e]!.flatVerses).reduce((a, b) => a + b);
     final compared =
         _editions.map((e) => sweeps[e]!.compared).reduce((a, b) => a + b);
-    expect(flat, 155193);
-    expect(compared, 155082);
+    // +62,172 on 2026-09-08, when `bsb-yhwh` and `asv-yhwh` joined the
+    // sweep: 31,086 verses each, and every one of them compared. The
+    // two numbers move together by exactly that, which is the point of
+    // asserting both — a gap opening between them would mean the sweep
+    // had started skipping verses rather than checking them.
+    expect(flat, 217365);
+    // 18 fewer than `flat`, all of them in the two new editions: verses
+    // whose SOURCE carries no Strong's tag at all, so no tagged record
+    // was written. `test/yahwehdehua_editions_test.dart` names all
+    // eighteen — Psalm 91:7-16 is ten of them — rather than leaving
+    // them as a difference between two totals.
+    expect(compared, 217236);
   });
 }

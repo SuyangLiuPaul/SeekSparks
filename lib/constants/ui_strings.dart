@@ -9964,4 +9964,86 @@ const uiStrings = {
     'zh-Hant': '本程式目前沒有帶原文編號的譯本可供對照。',
     'en': 'No bundled edition carries a Strong\'s alignment.',
   },
+
+  // ── 2026-09-08 · BSB-Y and ASV-Y, the two 雅伟的话 divine-name
+  // editions (tools/import_yahwehdehua_texts.py). Appended as one block
+  // at the end of the file; nothing above this line moved.
+
+  /// Each edition leads with the badge the gutter prints, which is what
+  /// `test/version_label_scheme_test.dart` holds the older rows to: an
+  /// attribution a reader cannot match to the text it covers is doing
+  /// half its job.
+  'aboutVerBsbYhwh': {
+    'zh-Hans': 'BSB-Y（Berean 标准译本 · 雅伟版 · 含 Strong 编号）',
+    'zh-Hant': 'BSB-Y（Berean 標準譯本 · 雅偉版 · 含 Strong 編號）',
+    'en': "BSB-Y (Berean Standard Bible, Yahweh edition, with Strong's)",
+  },
+
+  /// Two sentences, and the second one is the reason this edition does
+  /// not simply reuse `aboutLicenseBsb`. The base translation is public
+  /// domain because Bible Hub dedicated it; the divine-name reading is
+  /// the ministry's own editorial work, and a reader copying a verse out
+  /// is copying that work as well as the translation. Saying only
+  /// "public domain" would credit nobody for the part that makes this a
+  /// separate edition.
+  'aboutLicenseBsbYhwh': {
+    'zh-Hans': '译本本身已由出版方释出至公有领域；恢复神名的编辑工作 '
+        '© 雅伟的话事工，经授权使用。',
+    'zh-Hant': '譯本本身已由出版方釋出至公有領域；恢復神名的編輯工作 '
+        '© 雅偉的話事工，經授權使用。',
+    'en': 'Translation dedicated to the public domain by the publisher · '
+        'the divine-name restoration is © Yahweh De Hua Ministry, used '
+        'with permission.',
+  },
+
+  'aboutVerAsvYhwh': {
+    'zh-Hans': 'ASV-Y（1901 美国标准译本 · 雅伟版 · 含 Strong 编号）',
+    'zh-Hant': 'ASV-Y（1901 美國標準譯本 · 雅偉版 · 含 Strong 編號）',
+    'en': "ASV-Y (American Standard Version 1901, Yahweh edition, with "
+        "Strong's)",
+  },
+
+  /// Not the same sentence as BSB-Y's, and not by accident. The ASV is
+  /// public domain because 1901 is long past copyright — nobody
+  /// dedicated it — and its divine name was already printed by the 1901
+  /// translators as *Jehovah*, so what the ministry did here is respell
+  /// a name the edition already carried. A shared line would have said
+  /// neither of those things about either text.
+  'aboutLicenseAsvYhwh': {
+    'zh-Hans': '1901 年译本，已属公有领域；本版将译者原有的 Jehovah 改写为 '
+        'Yahweh，该编辑工作 © 雅伟的话事工，经授权使用。',
+    'zh-Hant': '1901 年譯本，已屬公有領域；本版將譯者原有的 Jehovah 改寫為 '
+        'Yahweh，該編輯工作 © 雅偉的話事工，經授權使用。',
+    'en': 'Public domain (1901) · this edition respells the translators\' '
+        'own Jehovah as Yahweh, © Yahweh De Hua Ministry, used with '
+        'permission.',
+  },
+
+  /// Supersedes `cmdIssueStrongsTagNoTaggedText`, which named six
+  /// editions and now has to name eight.
+  ///
+  /// A new key rather than an edit, because this file is append-only:
+  /// the older entry is left exactly where it was and is no longer
+  /// read — `describeCommandIssue` in `lib/utils/command_query.dart`
+  /// asks for this key instead. That is the whole difference between
+  /// the two; if the append-only rule is ever lifted, the right cleanup
+  /// is to fold this back into the original name, not to keep a V3.
+  ///
+  /// Named editions, not "a tagged edition": the reader has to be able
+  /// to act on the refusal without opening the version picker and
+  /// reading fourteen rows to work out which eight qualify. The labels
+  /// are `bibleVersions[].shortLabel`, and
+  /// `test/strongs_tag_binding_test.dart` fails if this sentence and
+  /// `TaggedTextService.taggedVersions` ever stop agreeing — in both
+  /// directions, so it also fails if the sentence offers an edition
+  /// that cannot answer.
+  'cmdIssueStrongsTagNoTaggedTextV2': {
+    'zh-Hans': '本译本没有原文编号标记，@ 无从比对。请换到 BSB、BSB-Y、CSB、'
+        'ASV-Y、KJV+S、LXX+WH、雅简+ 或 和简+ 再搜索。',
+    'zh-Hant': '本譯本沒有原文編號標記，@ 無從比對。請換到 BSB、BSB-Y、CSB、'
+        'ASV-Y、KJV+S、LXX+WH、雅简+ 或 和简+ 再搜尋。',
+    'en': "This edition carries no Strong's tagging, so @ has nothing to "
+        'match against. Switch to BSB, BSB-Y, CSB, ASV-Y, KJV+S, LXX+WH, '
+        '雅简+ or 和简+ and run it again.',
+  },
 };
