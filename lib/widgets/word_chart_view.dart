@@ -56,7 +56,7 @@ class WordChartView extends StatefulWidget {
     required this.version,
     required this.onClose,
     this.currentBook,
-    this.ranks = const <String, int>{},
+    this.scaledToLuke = const <String, int>{},
     this.scopeName,
   });
 
@@ -80,11 +80,25 @@ class WordChartView extends StatefulWidget {
   /// chart answers "and where am I in this?".
   final String? currentBook;
 
-  /// This word's rank among the words of a given book, where it is
-  /// known. The Eagle's View Greek profile carries it; nothing carries
-  /// it for Hebrew, so the map is simply empty there and the rows omit
-  /// the figure rather than printing a zero.
-  final Map<String, int> ranks;
+  /// This word's count in a given book **rescaled to Luke's length**,
+  /// where it is known. Empty for Hebrew, so those rows omit the figure
+  /// rather than printing a zero.
+  ///
+  /// IT IS NOT A RANK, WHICH IS WHAT THIS FIELD SAID UNTIL 2026-09-08.
+  /// The Eagle's View per-book pair is `[count, count × k]` for one
+  /// constant `k` per book, and `k` is that book's length against
+  /// Luke's — proved on the shipped asset: all 18,949 pairs satisfy it
+  /// with zero contradictions, and **in Luke `k == 1`, so the second
+  /// number equals the first for all 2,033 of its words**, which no
+  /// rank could. The reading it replaces was visibly impossible and
+  /// nobody caught it: ἀγάπη showed `#171` in Philemon, a book with 140
+  /// distinct words, and βδέλυγμα showed `#6` in Revelation where its
+  /// real rank is 343 of 907.
+  ///
+  /// The Eagle's View export DOES carry rank columns (`R(A)`, `R(R)`)
+  /// and they are **empty for all 5,696 words**, which is presumably how
+  /// the wrong column came to be read as one.
+  final Map<String, int> scaledToLuke;
 
   /// The active search limit's name, when there is one. The chart itself
   /// is always whole-Bible — the per-book counts come from the
@@ -234,8 +248,9 @@ class _WordChartViewState extends State<WordChartView> {
   Widget _row(WbColors c, WbType t, BookHits b) {
     final d = widget.distribution;
     final isCurrent = b.englishBook == widget.currentBook;
-    final name = localeAwareBookName(b.englishBook, widget.locale, widget.version);
-    final rank = widget.ranks[b.englishBook];
+    final name =
+        localeAwareBookName(b.englishBook, widget.locale, widget.version);
+    final scaled = widget.scaledToLuke[b.englishBook];
     final fill = b.isOldTestament ? c.link : c.strongsLexical;
     final share = d.total == 0 ? 0.0 : b.count / d.total;
 
@@ -317,13 +332,16 @@ class _WordChartViewState extends State<WordChartView> {
           ),
           SizedBox(
             width: 40,
-            child: rank == null
+            child: scaled == null
                 ? const SizedBox.shrink()
+                // `≈`, not `#`. The figure is a count under a
+                // counterfactual, so it is approximate by construction —
+                // and the glyph is the fastest way to stop it reading as
+                // an ordinal, which is exactly how it was misread.
                 : Tooltip(
-                    message: _s('wordChartRankInBook', 'Ranked #{n} in that book')
-                        .replaceAll('{n}', '$rank'),
+                    message: _s('greekStatsByLuke', "Scaled to Luke's length"),
                     child: Text(
-                      '#$rank',
+                      '≈$scaled',
                       textAlign: TextAlign.right,
                       style: TextStyle(
                         fontSize: t.chrome,
@@ -352,13 +370,15 @@ class _WordChartViewState extends State<WordChartView> {
       // the command pane's strip can never claim different units for the
       // same arithmetic — the drift #308 exists to stop.
       if (d.unit == HitUnit.occurrences)
-        _s('wordChartUnit',
+        _s(
+            'wordChartUnit',
             'Counted by occurrence, not by verse — one verse may carry the '
-            'word more than once.')
+                'word more than once.')
       else
-        _s('wordChartUnitVerses',
+        _s(
+            'wordChartUnitVerses',
             'Counted by verse, not by occurrence — a verse carrying the '
-            'word twice counts once.'),
+                'word twice counts once.'),
       if (scope != null && scope.isNotEmpty)
         _s('wordChartWholeBible',
                 'Whole Bible — not narrowed by the active limit ({name})')

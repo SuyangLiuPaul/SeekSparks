@@ -38,6 +38,7 @@ import 'package:seeksparks/utils/search_scope.dart'
 import 'package:seeksparks/utils/search_stats.dart';
 import 'package:seeksparks/utils/verse_list.dart' show applySearchLimit;
 import 'package:seeksparks/utils/version_mapper.dart' show localeAwareBookName;
+import 'package:seeksparks/widgets/greek_relative_ranking.dart';
 import 'package:seeksparks/widgets/word_distribution_strip.dart';
 import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/widgets/wb_pane_bits.dart';
@@ -993,10 +994,23 @@ class _WordStatsPaneState extends State<WordStatsPane> {
                 GreekStatsService.attribution.isNotEmpty
             ? GreekStatsService.attribution
             : null;
+        // An Old Testament verse must SAY that the corpus profile stops
+        // at the Greek New Testament. Silence here is the shape of a
+        // bug: the Greek block simply does not appear, and a reader who
+        // saw it on the previous verse has no way to tell "there is no
+        // Hebrew equivalent" from "it has not loaded yet". Conditioned
+        // on a Hebrew word actually being present rather than on the
+        // absence of Greek, so an untagged verse says nothing instead
+        // of explaining a limit that is not the one it hit.
+        final noHebrewEquivalent = rows.every((r) => r.greek == null) &&
+            rows.any((r) => r.word.strongs.toUpperCase().startsWith('H'));
         return ListView.separated(
           padding: const EdgeInsets.fromLTRB(12, 8, 12, 20),
           physics: const BouncingScrollPhysics(),
-          itemCount: rows.length + 1 + (credit == null ? 0 : 1),
+          itemCount: rows.length +
+              1 +
+              (credit == null ? 0 : 1) +
+              (noHebrewEquivalent ? 1 : 0),
           separatorBuilder: (_, __) => const SizedBox(height: 6),
           itemBuilder: (context, i) {
             if (i == 0) {
@@ -1032,8 +1046,11 @@ class _WordStatsPaneState extends State<WordStatsPane> {
                 ),
               );
             }
-            if (credit != null && i == rows.length + 1) {
-              return _Attribution(text: credit);
+            if (i == rows.length + 1) {
+              if (noHebrewEquivalent) {
+                return GreekStatsUnavailableNote(locale: widget.locale);
+              }
+              if (credit != null) return _Attribution(text: credit);
             }
             final r = rows[i - 1];
             return InkWell(
@@ -1098,7 +1115,18 @@ class _WordStatsPaneState extends State<WordStatsPane> {
                             : () => widget.onOpenChart!(r.word.strongs),
                       ),
                     ],
-                    if (r.greek != null) _distribution(context, r.greek!),
+                    if (r.greek != null)
+                      GreekRelativeRanking(
+                        // Keyed by the word, not by the row's position:
+                        // the block holds an expanded/collapsed flag, and
+                        // an unkeyed element in a rebuilt list would hand
+                        // one word's open panel to whichever word landed
+                        // at that index next.
+                        key: ValueKey(r.word.strongs),
+                        stats: r.greek!,
+                        locale: widget.locale,
+                        currentBook: widget.currentBook,
+                      ),
                     if (r.gloss.isNotEmpty) ...[
                       const SizedBox(height: 3),
                       Text(
@@ -1122,82 +1150,6 @@ class _WordStatsPaneState extends State<WordStatsPane> {
   }
 }
 
-/// Where a Greek word actually lives in the New Testament.
-///
-/// The bar above this says how often the word occurs. That single number
-/// hides the fact worth knowing: βδέλυγμα occurs 6 times, but three of
-/// them are in Revelation and the rest are one apiece in the Synoptics.
-/// So this strip spends its space on the shape rather than repeating the
-/// total — the books the word is commonest in, with its rank inside each,
-/// and the author split when the word is spread widely enough for that
-/// to say anything.
-Widget _distribution(BuildContext context, GreekWordStats g) {
-  final theme = Theme.of(context);
-  final t = WbType.of(context);
-  final scheme = theme.colorScheme;
-  final top = g.byFrequency.take(4).toList();
-  if (top.isEmpty) return const SizedBox.shrink();
-
-  // Author groupings are only informative when the word crosses them.
-  // A word confined to Paul does not need to be told it is 100% Paul.
-  const groups = {
-    'gospelsActs': 'G+A',
-    'paul': 'Paul',
-    'john': 'John',
-    'otherAuthors': 'Other',
-  };
-  final present = groups.keys.where((k) => (g.totals[k] ?? 0) > 0).toList();
-
-  return Padding(
-    padding: const EdgeInsets.only(top: 4),
-    child: Wrap(
-      spacing: 5,
-      runSpacing: 3,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: [
-        for (final e in top)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-            decoration: BoxDecoration(
-              color: scheme.primary.withValues(alpha: 0.09),
-              border: Border.all(
-                color: scheme.primary.withValues(alpha: 0.28),
-              ),
-            ),
-            child: Text(
-              // "Rev 3" — and "Rev 3 ·#6" when the source knows the
-              // word's rank inside that book, which is the number
-              // BibleWorks cannot give you.
-              e.value.$2 == null
-                  ? '${_abbr(e.key)} ${e.value.$1}'
-                  : '${_abbr(e.key)} ${e.value.$1} ·#${e.value.$2}',
-              style: theme.textTheme.labelSmall?.copyWith(
-                fontSize: t.scaled(11),
-                color: scheme.primary,
-                fontFeatures: const [FontFeature.tabularFigures()],
-              ),
-            ),
-          ),
-        if (g.books.length > top.length)
-          Text(
-            '+${g.books.length - top.length}',
-            style: theme.textTheme.labelSmall
-                ?.copyWith(fontSize: t.scaled(11), color: scheme.outline),
-          ),
-        if (present.length > 1)
-          Text(
-            present.map((k) => '${groups[k]} ${g.totals[k]}').join(' / '),
-            style: theme.textTheme.labelSmall?.copyWith(
-              fontSize: t.scaled(11),
-              color: scheme.onSurfaceVariant,
-              fontFeatures: const [FontFeature.tabularFigures()],
-            ),
-          ),
-      ],
-    ),
-  );
-}
-
 /// What the label-less strip would say if it could speak: the heaviest
 /// books, in the unit [d] is counted in, and how to open the full chart.
 String _stripSemantics(SearchDistribution d, String locale, String? version) {
@@ -1215,15 +1167,6 @@ String _stripSemantics(SearchDistribution d, String locale, String? version) {
       '${localeAwareBookName(b.englishBook, locale, version)} ${b.count}'
   ].join(' · ');
   return '${label.replaceAll('{unit}', unit)}: $heads · $open';
-}
-
-/// "1 Corinthians" -> "1Co". The pane is 320-560 px wide and these sit
-/// four to a row, so the full name is not an option.
-String _abbr(String book) {
-  final parts = book.split(' ');
-  return parts.length == 1
-      ? book.substring(0, book.length < 3 ? book.length : 3)
-      : '${parts[0]}${parts[1].substring(0, 2)}';
 }
 
 class _StatRow {

@@ -8,6 +8,8 @@ import 'package:seeksparks/models/wb_centre_mode.dart';
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/services/concordance_service.dart';
 import 'package:seeksparks/services/search_service.dart';
+import 'package:seeksparks/services/tagged_text_service.dart'
+    show TaggedTextService;
 import 'package:seeksparks/services/vocabulary_service.dart';
 import 'package:seeksparks/constants/text_patterns.dart'
     show sanitizeForSearchKey, searchCorpusKey;
@@ -508,6 +510,14 @@ class WorkbenchProvider extends ChangeNotifier {
       // cannot take a plain `(hello)` away from the text scan below.
       final compound = parseCompoundQuery(query);
       if (compound.isCompound) {
+        // A `@` inside a compound group parses, but `runCompoundQuery`
+        // has no tagged text to hand its groups and would return an
+        // empty list that looks like an answer. Refused by name instead;
+        // making the compound engine tag-aware is its own change.
+        if (compound.query?.groups.any((g) => g.usesStrongsTags) ?? false) {
+          commandIssue = CommandIssue.strongsTagUnsupportedHere;
+          return;
+        }
         compoundQuery = compound.query;
         commandIssue = compound.issue;
         if (compound.query != null) {
@@ -518,10 +528,26 @@ class WorkbenchProvider extends ChangeNotifier {
 
       final parse = parseCommandQuery(query);
       if (parse.isCommand) {
-        commandQuery = parse.query;
+        final cq = parse.query;
+        // The honest-failure gate for `@`. Six of the twelve bundled
+        // editions carry Strong's tagging and six do not, and running
+        // `.man@444` against one of the six that do not can only produce
+        // an empty list — which the reader would read as "the BSB never
+        // renders ἄνθρωπος as man" rather than as "this edition cannot
+        // be asked". Refused by name, BEFORE the search, and the sentence
+        // names the six editions that can answer it.
+        if (cq != null && cq.usesStrongsTags) {
+          final version = mainProvider.currentVersion;
+          if (!TaggedTextService.supports(version)) {
+            commandIssue = CommandIssue.strongsTagNoTaggedText;
+            return;
+          }
+          await _prefetchTagging(version);
+        }
+        commandQuery = cq;
         commandIssue = parse.issue;
-        if (parse.query != null) {
-          textResults = _runCommand(parse.query!);
+        if (cq != null) {
+          textResults = _runCommand(cq);
         }
         return;
       }
@@ -728,6 +754,12 @@ class WorkbenchProvider extends ChangeNotifier {
     // not know, and the useful thing to say about an empty compound is
     // WHICH group was empty, which `compoundGroupCounts` already holds.
     if (compoundQuery != null) return;
+    // Nor does a `@` line. `broadenedCommandLine` drops operators to
+    // widen a query, and the widest reading of `.man@444` — `.man` — is
+    // a different question, not a looser one: it answers over the text
+    // instead of over the alignment. `termPresence` below would also run
+    // the tag terms with no tagging to test them against.
+    if (commandQuery?.usesStrongsTags ?? false) return;
     final current = textResults.length;
     if (current > kBroadenBelow) return;
 
@@ -782,12 +814,61 @@ class WorkbenchProvider extends ChangeNotifier {
       texts: mainProvider.wordKeys,
       searchKeys: mainProvider.searchKeys,
       books: [for (final v in verses) v.book],
+      taggedTokens: query.usesStrongsTags
+          ? _taggedLookup(mainProvider.currentVersion, verses)
+          : null,
     );
     return applySearchLimit(
       [for (final i in result.indices) verses[i]],
       searchLimit,
       (v) => '${toEnglish(v.book) ?? v.book}-${v.chapter}-${v.verse}',
     );
+  }
+
+  /// Load the whole edition's Strong's tagging, so a `@` query can be
+  /// answered synchronously afterwards.
+  ///
+  /// All 66 books, not the ones a prefilter thinks it needs. A `@` query
+  /// can reach any verse — `.*@444` reaches all of them — and a book
+  /// left unloaded would come back as verses with no tagging, which is
+  /// indistinguishable from verses that do not match. The cost is one
+  /// asset decode per book on the first `@` search of a session and
+  /// nothing afterwards (`TaggedTextService` caches by book): ~12 MB for
+  /// the BSB, ~31 MB for LXX+WH, which is the widest edition. The
+  /// spinner `runSearch` has already raised covers it.
+  Future<void> _prefetchTagging(String version) async {
+    final seen = <String>{};
+    for (final v in mainProvider.verses) {
+      final book = toEnglish(v.book) ?? v.book;
+      if (seen.add(book)) await TaggedTextService.prefetchBook(version, book);
+    }
+  }
+
+  /// Corpus index → that verse's tagged tokens, memoised for one search.
+  ///
+  /// Reads the CACHE rather than awaiting, because `runCommandQuery` is
+  /// synchronous and [_prefetchTagging] has already filled it. A null
+  /// here therefore means the edition genuinely has no entry for the
+  /// verse, and `CommandSearchResult.candidatesWithoutTagging` counts
+  /// those rather than letting them pass as non-matches.
+  TaggedTokensLookup _taggedLookup(String version, List<Verse> verses) {
+    final cache = List<List<TaggedToken>?>.filled(verses.length, null);
+    final resolved = List<bool>.filled(verses.length, false);
+    return (i) {
+      if (resolved[i]) return cache[i];
+      resolved[i] = true;
+      final v = verses[i];
+      final runs = TaggedTextService.cachedForVerse(
+        version: version,
+        englishBook: toEnglish(v.book) ?? v.book,
+        chapter: v.chapter,
+        verse: v.verse,
+      );
+      if (runs == null) return null;
+      return cache[i] = taggedRunTokens([
+        for (final r in runs) (text: r.text, strongs: r.strongs),
+      ]);
+    };
   }
 
   /// Run a parsed compound query, keeping each group's own count.
@@ -914,6 +995,13 @@ class WorkbenchProvider extends ChangeNotifier {
   Future<void> _measureCrossVersion() async {
     if (crossVersionMode == CrossVersionSearchMode.currentOnly) return;
     if (strongsRefs != null || commandIssue != null) return;
+    // A `@` query declines for the same reason a Strong's search does,
+    // one step further along: the OTHER editions each have their own
+    // tagging (or none), so "the same search in the LEB" is not a
+    // question the LEB can be asked, and six of the twelve would answer
+    // zero because they carry no tagging rather than because they lack
+    // the word.
+    if (commandQuery?.usesStrongsTags ?? false) return;
     if (lastQuery.isEmpty) return;
     final targets = crossVersionTargets(
       mode: crossVersionMode,
@@ -971,6 +1059,13 @@ class WorkbenchProvider extends ChangeNotifier {
       final q = parse.query;
       if (q == null) {
         commandIssue = parse.issue ?? CommandIssue.emptyBody;
+        return const [];
+      }
+      // Same refusal as the compound path: each half runs over a
+      // different edition's corpus, and this loop has no tagging for any
+      // of them.
+      if (q.usesStrongsTags) {
+        commandIssue = CommandIssue.strongsTagUnsupportedHere;
         return const [];
       }
       final result = runCommandQuery(

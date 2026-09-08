@@ -92,7 +92,10 @@ void main() {
       expect(_issue('(.grace work)/(.faith)'), CommandIssue.notACommand);
       expect(_issue('~And God said'), CommandIssue.regexUnsupported);
       expect(_issue('=.faith works'), CommandIssue.fuzzyUnsupported);
-      expect(_issue('.man@444'), CommandIssue.strongsTagUnsupported);
+      // `.man@444` itself is a search since 2026-09-08 — see
+      // `strongs_tag_binding_test.dart`. What is still named rather than
+      // half-run is an `@` whose number cannot be read.
+      expect(_issue('.man@44x'), CommandIssue.strongsTagNumber);
     });
 
     test('a verse context beyond the longest chapter is refused', () {

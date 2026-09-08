@@ -41,6 +41,8 @@
 
 import 'package:flutter/widgets.dart';
 
+import 'package:seeksparks/pages/projection_page.dart'
+    show ProjectionPage, kProjectionUrlPath;
 import 'package:seeksparks/pages/radial_chronology_page.dart'
     show RadialChronologyPage, kWheelUrlPath;
 import 'package:seeksparks/pages/strip_chronology_page.dart'
@@ -52,6 +54,9 @@ import 'package:seeksparks/pages/strip_chronology_page.dart'
 /// prefix so a future `#/wheel?year=-4000` still resolves to the wheel
 /// (and `#/strip?year=-4000` the strip, the same chart's second form —
 /// see `chronologyChartEntryPage` for why there are two).
+///
+/// Three pages as of 2026-09-08: the wheel, the strip, and `#/project`,
+/// the projection view.
 Widget? pageForUrlPath(String? path) {
   if (path == null || path.isEmpty) return null;
   final p = path.startsWith('#') ? path.substring(1) : path;
@@ -62,6 +67,15 @@ Widget? pageForUrlPath(String? path) {
   if (p == kStripUrlPath || p.startsWith('$kStripUrlPath/') ||
       p.startsWith('$kStripUrlPath?')) {
     return const StripChronologyPage();
+  }
+  // 2026-09-08. `#/project` is the projection view, and it is a page for
+  // the same two reasons the wheel is: it claims the address bar while
+  // it is open, and a cold open at that path has to reach the projection
+  // on the FIRST frame rather than after a splash and a workbench — a
+  // church laptop opens this link with a room already sitting down.
+  if (p == kProjectionUrlPath || p.startsWith('$kProjectionUrlPath/') ||
+      p.startsWith('$kProjectionUrlPath?')) {
+    return const ProjectionPage();
   }
   return null;
 }

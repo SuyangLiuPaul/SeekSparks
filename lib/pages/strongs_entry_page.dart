@@ -1,3 +1,5 @@
+import 'dart:async' show unawaited;
+
 import 'package:flutter/material.dart';
 import 'package:seeksparks/utils/app_nav.dart';
 import 'package:provider/provider.dart';
@@ -8,7 +10,9 @@ import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/strongs.dart';
+import 'package:seeksparks/pages/modern_concordance_page.dart';
 import 'package:seeksparks/providers/main_provider.dart';
+import 'package:seeksparks/services/concordance_reverse_index.dart';
 import 'package:seeksparks/services/concordance_service.dart';
 import 'package:seeksparks/services/strongs_service.dart';
 import 'package:seeksparks/utils/clipboard_helper.dart';
@@ -16,6 +20,7 @@ import 'package:seeksparks/utils/jump_to_reference.dart' show prepareJumpToVerse
 import 'package:seeksparks/utils/version_mapper.dart'
     show translateBookName, localeAwareBookName, toEnglish;
 import 'package:seeksparks/widgets/collapsible_english_ref.dart';
+import 'package:seeksparks/widgets/concordance_topics_section.dart';
 import 'package:seeksparks/widgets/home_icon_button.dart';
 import 'package:seeksparks/widgets/language_switcher_button.dart';
 import 'package:seeksparks/widgets/localized_back_button.dart';
@@ -44,6 +49,8 @@ class _StrongsEntryPageState extends State<StrongsEntryPage> {
   List<StrongsEntry> _family = const [];
   List<StrongsEntry> _compare = const [];
   ConcordanceResult? _concordance;
+  List<ConcordanceFiling> _filings = const [];
+  Map<String, StrongsEntry> _filingNeighbours = const {};
   bool _loading = true;
   bool _notFound = false;
 
@@ -74,6 +81,37 @@ class _StrongsEntryPageState extends State<StrongsEntryPage> {
       _compare = compare;
       _concordance = concordance;
       _loading = false;
+    });
+    // Deliberately NOT awaited into the load above. The Modern
+    // Concordance has no Strong's -> topic index, so the first lookup
+    // reads all 341 topic files; making the whole page wait on that
+    // would trade a lexicon entry that arrives now for one that arrives
+    // late, and the answer it is waiting for is a footnote to the
+    // entry, not the entry. A Hebrew number returns before touching an
+    // asset, which is also what keeps this off the path of the widget
+    // tests that mount H430 and H1.
+    unawaited(_loadConcordance());
+  }
+
+  /// Where Eagle's View's Modern Concordance files this word.
+  ///
+  /// The neighbour numbers are resolved through [StrongsService] so the
+  /// chips can be the page's own related-word chips — a neighbour that
+  /// rendered as a bare number beside "Word family" chips would read as
+  /// a different, lesser kind of link. [StrongsService.lookupAll] rather
+  /// than a lookup per number: after the first call each is a map read,
+  /// and one word can carry a hundred neighbours.
+  Future<void> _loadConcordance() async {
+    final filings = await ConcordanceReverseIndex.filings(widget.number);
+    if (filings.isEmpty || !mounted) return;
+    final neighbours = await StrongsService.lookupAll(<String>{
+      for (final f in filings)
+        for (final n in f.neighbours) n.strongs,
+    });
+    if (!mounted) return;
+    setState(() {
+      _filings = filings;
+      _filingNeighbours = neighbours;
     });
   }
 
@@ -334,6 +372,38 @@ class _StrongsEntryPageState extends State<StrongsEntryPage> {
                       ),
                 ),
             ],
+          ),
+        ],
+        if (_filings.isNotEmpty) ...[
+          const SizedBox(height: 20),
+          ConcordanceTopicsSection(
+            title: _sectionTitle(
+              '${uiStrings['strongsConcordanceTopics']?[locale] ??
+                  'Modern Concordance topics'} (${_filings.length})',
+              scheme,
+              settings,
+            ),
+            filings: _filings,
+            attribution: ConcordanceReverseIndex.attribution,
+            locale: locale,
+            chipFor: (number) {
+              final entry = _filingNeighbours[number];
+              if (entry == null) return null;
+              return _RelatedChip(
+                entry: entry,
+                locale: locale,
+                // Same reason as the Word family chips above: a
+                // StrongsEntryPage -> StrongsEntryPage push shares its
+                // GetX route name and is otherwise silently dropped.
+                onTap: () => pushPage(
+                  StrongsEntryPage(number: entry.number),
+                  preventDuplicates: false,
+                ),
+              );
+            },
+            onOpenTopic: (topicId) => pushPage(
+              ModernConcordancePage(initialTopicId: topicId),
+            ),
           ),
         ],
         if (_concordance != null && _concordance!.refs.isNotEmpty) ...[

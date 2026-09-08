@@ -8,6 +8,31 @@
 // words (as bundled in `assets/originals/<book>.json`, already loaded via
 // `OriginalsService.forVerse`), it answers the yes/no proximity question.
 // No asset/Flutter dependency, so it stays unit-testable on its own.
+//
+// ── No punctuation test here, and the reason is a count ──────────────
+//
+// 2026-09-08. `command_query.dart` gained the GSE ordering box's
+// punctuation test (`punctuation_gate.dart`): `'love *5 god %-` finds the
+// two words within five of each other but refuses a pair separated by a
+// sentence end. `G25 BEFORE5 G26` is the same question about the same
+// kind of span and would want the same answer — BibleWorks itself offers
+// it there, and bwh21's Punctuation Tab names the maqqef and the sof
+// passuq as the Hebrew marks to put in the group.
+//
+// It cannot be built on this data. `verseSatisfiesProximity` is handed
+// one verse's Strong's numbers in order, and its source —
+// `assets/originals/<book>.json` — is a list of `{w, s, m}` records with
+// no separators at all: 55,026 word entries sampled across genesis.json,
+// psalms.json and john.json contain ZERO punctuation characters,
+// Hebrew (׃ ׀ ־) or otherwise. The marks were dropped before the asset
+// shipped, so there is nothing between two words for a test to read.
+// `lxxwh.json`, the only original-language running text bundled, is the
+// same story: unaccented, unpointed and unpunctuated.
+//
+// Re-open only on new information — a pointed Hebrew or a punctuated
+// Greek edition landing in `assets/` with its sof passuq and ano teleia
+// intact. Not on a fresh opinion about how useful the feature would be;
+// its usefulness was never the question.
 
 import 'strongs_boolean_search.dart' show StrongsTerm;
 

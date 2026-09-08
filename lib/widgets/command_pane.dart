@@ -14,6 +14,7 @@ import 'package:seeksparks/providers/workbench_provider.dart';
 import 'package:seeksparks/services/concordance_service.dart';
 import 'package:seeksparks/services/fetch_verses.dart';
 import 'package:seeksparks/services/recent_searches_service.dart';
+import 'package:seeksparks/utils/fuzzy_result_label.dart';
 import 'package:seeksparks/utils/atomic_text_edit.dart';
 import 'package:seeksparks/utils/clipboard_helper.dart';
 import 'package:seeksparks/utils/copy_marking.dart'
@@ -1890,7 +1891,30 @@ class _CommandPaneState extends State<CommandPane> {
               // PARITY-BACKLOG §3.1.
               final clean = sanitizeForSearch(v.scriptureText);
               return _ResultRow(
-                reference: '$displayBook ${v.chapter}:${v.verseLabel}',
+                // The only place the fuzzy layer touches this app's UI.
+                // A row the looser reading found says which reading
+                // found it; a literal row is returned untouched, and so
+                // is every row while the switch is off. The rule is the
+                // one `strip_chronology_layout.dart` states for a view
+                // that narrowed — "nothing narrows in silence" — read
+                // against a search that widened instead. The copy path
+                // below deliberately keeps the bare reference: a label
+                // is a fact about this search, not about the verse.
+                //
+                // It rides inside the reference's own TextSpan, so it
+                // takes the link colour and w600 the reference already
+                // has and reads as part of it rather than as a second
+                // control. In Chinese it is three characters and in
+                // English two words, out of a row that gives the
+                // snippet two lines before it ellipsises — see
+                // `fuzzy_search_strings.dart` on why they are that
+                // short.
+                reference: fuzzyLabelledReference(
+                  '$displayBook ${v.chapter}:${v.verseLabel}',
+                  query: wb.lastQuery,
+                  scriptureText: v.scriptureText,
+                  locale: locale,
+                ),
                 text: clean,
                 // Mark what was found. Without this the hit list is a
                 // table of contents — the same argument search_highlight

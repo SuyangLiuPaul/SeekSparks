@@ -9547,4 +9547,263 @@ const uiStrings = {
     'zh-Hant': '另有 {count} 項事件載有七十士譯本所給的年份。',
     'en': '{count} events also carry the year the Septuagint gives.',
   },
+
+  // ── The Modern Concordance on a Strong's entry (2026-09-08) ────────
+  // The lexicon page could already say what a word MEANS and where it
+  // OCCURS; these name the third thing the app was already holding —
+  // the subject Eagle's View files the word under, and the Greek words
+  // it puts beside it there. 现代汇编 matches `modernConcordanceTitle`
+  // so the work has one name across the app.
+  //
+  // Nothing here may read as a semantic-domain lexicon. 义项 and 词族
+  // describe the concordance's own two levels (a subsection heading is
+  // a sense, a section is a word family); 语义域 would name a different
+  // kind of work, and Louw-Nida is not licensed here.
+  'strongsConcordanceTopics': {
+    'zh-Hans': '现代汇编主题',
+    'zh-Hant': '現代彙編主題',
+    'en': 'Modern Concordance topics',
+  },
+  'strongsConcordanceNote': {
+    'zh-Hans': '现代汇编将本词归入的主题，以及在同处与它并列的希腊文词。',
+    'zh-Hant': '現代彙編將本詞歸入的主題，以及在同處與它並列的希臘文詞。',
+    'en': 'Where the Modern Concordance files this word, and which Greek '
+        'words it puts beside it.',
+  },
+  'strongsConcordanceSameSense': {
+    'zh-Hans': '同一义项',
+    'zh-Hant': '同一義項',
+    'en': 'Same sense',
+  },
+  'strongsConcordanceSameFamily': {
+    'zh-Hans': '同一词族',
+    'zh-Hant': '同一詞族',
+    'en': 'Same word family',
+  },
+  // 2026-09-08: the command line's `@` Strong's tag binding (bwh16,
+  // `lib/utils/strongs_tag_binding.dart`). `.man@444` asks a question no
+  // other shape in this box can ask — an English word AND the original
+  // word behind it — so the echo has to say both halves out loud, and
+  // the four refusals have to say which half was wrong.
+  //
+  // `{w}` is the word, `{n}` the normalised number (G444 / H6635). The
+  // Chinese wording says 原文 rather than 编号 because the reader is being
+  // told what the word RENDERS, not which catalogue row it sits in.
+  'cmdEchoTagAnyWord': {
+    'zh-Hans': '任意词',
+    'zh-Hant': '任意詞',
+    'en': 'any word',
+  },
+  'cmdEchoTagIs': {
+    'zh-Hans': '{w}（原文 {n}）',
+    'zh-Hant': '{w}（原文 {n}）',
+    'en': '{w} rendering {n}',
+  },
+  'cmdEchoTagNot': {
+    'zh-Hans': '{w}（原文非 {n}）',
+    'zh-Hant': '{w}（原文非 {n}）',
+    'en': '{w} not rendering {n}',
+  },
+  'cmdEchoTagAny': {
+    'zh-Hans': '{w}（有原文编号）',
+    'zh-Hant': '{w}（有原文編號）',
+    'en': '{w} with an original-language tag',
+  },
+  'cmdEchoTagNone': {
+    'zh-Hans': '{w}（无原文编号）',
+    'zh-Hant': '{w}（無原文編號）',
+    'en': '{w} with no original-language tag',
+  },
+  'cmdIssueStrongsTagNoWord': {
+    'zh-Hans': '原文编号要跟在词后面：.man@444；若要找该编号的所有译法，用 .*@444。',
+    'zh-Hant': '原文編號要跟在詞後面：.man@444；若要找該編號的所有譯法，用 .*@444。',
+    'en': "A Strong's tag follows a word: .man@444, or .*@444 for every "
+        'rendering of it.',
+  },
+  'cmdIssueStrongsTagNumber': {
+    'zh-Hans': '@ 后面要写原文编号——希腊文 .man@444，希伯来文 .man@0430 或 '
+        '.man@H430；@* 表示有编号，@- 表示没有编号。',
+    'zh-Hant': '@ 後面要寫原文編號——希臘文 .man@444，希伯來文 .man@0430 或 '
+        '.man@H430；@* 表示有編號，@- 表示沒有編號。',
+    'en': "After @ put a Strong's number — .man@444 for Greek, .man@0430 or "
+        '.man@H430 for Hebrew — or @* for any tag and @- for none.',
+  },
+  'cmdIssueStrongsTagNotOneWord': {
+    'zh-Hans': '带原文编号的 ! 只能放在单个词之前，例如 .!man@444。',
+    'zh-Hant': '帶原文編號的 ! 只能放在單個詞之前，例如 .!man@444。',
+    'en': "! in front of a tagged word can only stand in front of a single "
+        'word — for example .!man@444.',
+  },
+  // Named editions, not "a tagged edition": the reader has to be able to
+  // act on this without opening the version picker and reading twelve rows
+  // to work out which six qualify. The labels are
+  // `bibleVersions[].shortLabel`, and `test/strongs_tag_binding_test.dart`
+  // fails if this sentence and `TaggedTextService.taggedVersions` ever stop
+  // agreeing.
+  'cmdIssueStrongsTagNoTaggedText': {
+    'zh-Hans': '本译本没有原文编号标记，@ 无从比对。请换到 BSB、CSB、KJV+S、'
+        'LXX+WH、雅简+ 或 和简+ 再搜索。',
+    'zh-Hant': '本譯本沒有原文編號標記，@ 無從比對。請換到 BSB、CSB、KJV+S、'
+        'LXX+WH、雅简+ 或 和简+ 再搜尋。',
+    'en': "This edition carries no Strong's tagging, so @ has nothing to "
+        'match against. Switch to BSB, CSB, KJV+S, LXX+WH, 雅简+ or 和简+ '
+        'and run it again.',
+  },
+  'cmdIssueStrongsTagHere': {
+    'zh-Hans': "原文编号标记（@）只能用在普通的 . / ' ; 搜索里，不能用在 ( ) "
+        '组合搜索或跨译本搜索中。',
+    'zh-Hant': "原文編號標記（@）只能用在普通的 . / ' ; 搜尋裡，不能用在 ( ) "
+        '組合搜尋或跨譯本搜尋中。',
+    'en': "Strong's tags (@) work in a plain . / ' ; search only — not "
+        'inside a compound ( ) search or a cross-version one.',
+  },
+
+  // ====== Eagle's View Greek NT relative ranking (2026-09-08) ======
+  // The labels are the feature. The asset's per-book pair is (count,
+  // count rescaled to Luke's length), and the pane printed the second
+  // number as a RANK for a month — so every string here exists to keep
+  // the two orders apart and to put the baseline on screen beside the
+  // ratio that depends on it. Appended as one block; nothing above is
+  // reordered.
+  'greekStatsRelativeToggle': {
+    'zh-Hans': '相对排名',
+    'zh-Hant': '相對排名',
+    'en': 'Relative ranking',
+  },
+  'greekStatsCorpus': {
+    'zh-Hans': '威斯科特—霍特希腊文新约 · 27 卷',
+    'zh-Hant': '威斯科特—霍特希臘文新約 · 27 卷',
+    'en': 'Westcott–Hort Greek New Testament · 27 books',
+  },
+  'greekStatsRankInBook': {
+    'zh-Hans': '{book}：{count} 次 · 第 {rank} 名／共 {total} 词',
+    'zh-Hant': '{book}：{count} 次 · 第 {rank} 名／共 {total} 詞',
+    'en': 'In {book}: {count}× · #{rank} of {total} words',
+  },
+  'greekStatsNotInBook': {
+    'zh-Hans': '{book} 中未出现',
+    'zh-Hant': '{book} 中未出現',
+    'en': 'Not in {book}',
+  },
+  // Closes the one ambiguity the rank line leaves: which of the two
+  // orders it is in. The answer is "both", and saying so is cheaper
+  // than picking one and hoping the reader guesses right.
+  'greekStatsRankSameEitherWay': {
+    'zh-Hans': '在同一卷内两种排序一致——折算只是把该卷每个次数乘以同一个系数。',
+    'zh-Hant': '在同一卷內兩種排序一致——折算只是把該卷每個次數乘以同一個係數。',
+    'en': 'Within one book the two orders agree — scaling multiplies every '
+        'count in it by the same number.',
+  },
+  'greekStatsByCount': {
+    'zh-Hans': '出现次数',
+    'zh-Hant': '出現次數',
+    'en': 'Times it occurs',
+  },
+  'greekStatsByLuke': {
+    'zh-Hans': '折算到路加篇幅',
+    'zh-Hant': '折算到路加篇幅',
+    'en': "Scaled to Luke's length",
+  },
+  // The baseline sentence. `ratioVsLuke` without Luke's own length on
+  // screen is a number divided by something the reader cannot see.
+  'greekStatsLukeBaseline': {
+    'zh-Hans': '基准：路加福音，共 {words} 词——上面每个数字都按“若该卷与路加'
+        '等长”折算，短书信才能与长福音书相比。',
+    'zh-Hant': '基準：路加福音，共 {words} 詞——上面每個數字都按「若該卷與路加'
+        '等長」折算，短書信才能與長福音書相比。',
+    'en': 'Baseline: Luke, {words} running words — every figure above is '
+        'rescaled as if the book were that long, so a short letter can be '
+        'read beside a long Gospel.',
+  },
+  // "about" is load-bearing, not hedging: the ratio printed here is
+  // index.json's published length ratio, and the scaled figures above
+  // were computed by the source program from a divisor about 1.5% away
+  // from it. See the note on GreekBookCount. Multiplying a count by this
+  // ratio lands near the figure above, not always on it.
+  'greekStatsLukeThisBook': {
+    'zh-Hans': '路加福音的篇幅约为{book}的 {ratio} 倍。',
+    'zh-Hant': '路加福音的篇幅約為{book}的 {ratio} 倍。',
+    'en': 'Luke is about {ratio}× the length of {book}.',
+  },
+  'greekStatsGroups': {
+    'zh-Hans': '按作者群',
+    'zh-Hant': '按作者群',
+    'en': 'By author group',
+  },
+  // Not a footnote: the four totals genuinely overlap, so a row of them
+  // without this sentence prints an arithmetic error.
+  'greekStatsGroupsOverlap': {
+    'zh-Hans': '四组有重叠——约翰福音同时计入“福音+徒”与“约翰”——所以相加不等于'
+        '新约的 {total} 次。',
+    'zh-Hant': '四組有重疊——約翰福音同時計入「福音+徒」與「約翰」——所以相加不等於'
+        '新約的 {total} 次。',
+    'en': "These overlap — John's Gospel is counted in both Gospels+Acts and "
+        'John — so they do not add up to the {total} in the New Testament.',
+  },
+  'greekStatsNoHebrew': {
+    'zh-Hans': '仅限希腊文新约——本语料统计没有希伯来文的对应部分。',
+    'zh-Hant': '僅限希臘文新約——本語料統計沒有希伯來文的對應部分。',
+    'en': 'Greek New Testament only — this corpus profile has no Hebrew '
+        'equivalent.',
+  },
+  'greekGroupGospelsActs': {
+    'zh-Hans': '福音+徒',
+    'zh-Hant': '福音+徒',
+    'en': 'Gospels+Acts',
+  },
+  'greekGroupPaul': {'zh-Hans': '保罗', 'zh-Hant': '保羅', 'en': 'Paul'},
+  'greekGroupJohn': {'zh-Hans': '约翰', 'zh-Hant': '約翰', 'en': 'John'},
+  'greekGroupOther': {'zh-Hans': '其他', 'zh-Hant': '其他', 'en': 'Other'},
+
+  // ── The GSE ordering box's punctuation test (2026-09-08) ──────────
+  // `command_query.dart` / `punctuation_gate.dart`. The Chinese wording
+  // says 句末标点 rather than listing the marks, because the default set
+  // is per script and a 和合本 reader must not be shown `. ? !`.
+  'cmdEchoPunctNone': {
+    'zh-Hans': '不跨越句末标点',
+    'zh-Hant': '不跨越句末標點',
+    'en': 'not crossing a sentence end',
+  },
+  'cmdEchoPunctSome': {
+    'zh-Hans': '中间隔着句末标点',
+    'zh-Hant': '中間隔著句末標點',
+    'en': 'crossing a sentence end',
+  },
+  'cmdEchoPunctNoneOf': {
+    'zh-Hans': '中间不出现 {chars}',
+    'zh-Hant': '中間不出現 {chars}',
+    'en': 'with none of {chars} between',
+  },
+  'cmdEchoPunctSomeOf': {
+    'zh-Hans': '中间出现 {chars} 之一',
+    'zh-Hant': '中間出現 {chars} 之一',
+    'en': 'with one of {chars} between',
+  },
+  'cmdIssuePunctSet': {
+    'zh-Hans': '%- 或 %+ 后面只能写标点符号，例如 %-。！？ 或 %-.?!；'
+        '不写则使用各语文的句末标点。',
+    'zh-Hant': '%- 或 %+ 後面只能寫標點符號，例如 %-。！？ 或 %-.?!；'
+        '不寫則使用各語文的句末標點。',
+    'en': 'After %- or %+ put punctuation marks only — for example %-.?! or '
+        '%-。！？ — or nothing at all to use the sentence-ending marks.',
+  },
+  'cmdIssuePunctRepeated': {
+    'zh-Hans': '一次搜索只能有一个标点条件：%- 或 %+ 只写一次。',
+    'zh-Hant': '一次搜尋只能有一個標點條件：%- 或 %+ 只寫一次。',
+    'en': 'One punctuation test per search: write %- or %+ once.',
+  },
+  'cmdIssuePunctPhraseOnly': {
+    'zh-Hans': "%- 和 %+ 问的是两词「之间」有什么，所以只能用在有词序的搜索里"
+        "（' 或 ;），不能用在 . 或 / 上。",
+    'zh-Hant': "%- 和 %+ 問的是兩詞「之間」有什麼，所以只能用在有詞序的搜尋裡"
+        "（' 或 ;），不能用在 . 或 / 上。",
+    'en': "%- and %+ ask what lies BETWEEN words, so they need an ordered "
+        "search — ' or ; — not . or /.",
+  },
+  'cmdIssuePunctStrongsTag': {
+    'zh-Hans': '原文编号数据里没有标点，所以 %- 和 %+ 不能与 @ 同用。',
+    'zh-Hant': '原文編號資料裡沒有標點，所以 %- 和 %+ 不能與 @ 同用。',
+    'en': "The Strong's tagging carries no punctuation, so %- and %+ cannot "
+        'be combined with @.',
+  },
 };

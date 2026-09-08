@@ -79,9 +79,28 @@
 /// in `related_verses.dart`'s tokenizer, so nothing about `כָּל־הָאָרֶץ`
 /// changes in either direction.
 ///
+/// ## 2026-09-08: the looser reading, and where it plugs in
+///
+/// [plainSearchMatches] now has two behaviours, and the switch between
+/// them is `fuzzy_search.dart`'s single global — OFF unless a reader
+/// asked for it. With it off, this file computes what it computed the
+/// day it was written, character for character;
+/// `test/fuzzy_search_test.dart` pins that with the same probes the
+/// table above was measured with.
+///
+/// The insertion point is here rather than in `SearchService.scanText`
+/// for a reason worth stating: **the corpus key and the query key are
+/// built by the same two functions in this file**, which is what makes
+/// them comparable at all, and any broadening that did not go through
+/// both would be the silent asymmetry `search_folding.dart` warns
+/// about. A rung that rewrites the query is applied here, where the
+/// query is already folded, lower-cased and space-normalised, and
+/// nowhere else.
+///
 /// Pure string work: no Flutter, no assets, no I/O.
 library;
 
+import 'package:seeksparks/utils/fuzzy_search.dart';
 import 'package:seeksparks/utils/related_verses.dart' show isCjkChar;
 
 /// Whether [c] separates words rather than belonging to one.
@@ -157,7 +176,19 @@ List<String> plainSearchSegments(String foldedLowerQuery) {
 /// Every segment is a necessary condition, so the longest is the most
 /// selective; callers that hold a `List<String>` of keys use this to
 /// skip the [plainSearchMatches] walk for most of the corpus.
+///
+/// **It returns the empty string while fuzzy search is on, and it has
+/// to.** A prefilter is an assertion that a verse without this exact run
+/// of characters cannot match, and every fuzzy rung exists precisely to
+/// match a verse that does not contain what the reader typed — the
+/// Traditional spelling of a name shares no character with the
+/// Simplified one. Keeping the prefilter would silently cancel the whole
+/// feature, which is worse than paying for it: the empty string is a
+/// substring of everything, so callers written against the old contract
+/// keep working and simply stop skipping. What that costs is recorded on
+/// [plainSearchMatchKind].
 String plainSearchPrefilter(List<String> segments) {
+  if (fuzzySearchEnabled) return '';
   var best = '';
   for (final s in segments) {
     if (s.length > best.length) best = s;
@@ -172,7 +203,14 @@ String plainSearchPrefilter(List<String> segments) {
 /// through [collapseSearchSpaces]. The single-segment case, which is
 /// almost every search anyone runs, is one `String.contains` and costs
 /// exactly what the old space-stripped scan cost.
-bool plainSearchMatches(String key, List<String> segments) {
+///
+/// The literal rule, and only ever the literal rule: this function does
+/// not read the fuzzy switch and never will. Every looser rung is
+/// expressed as a REWRITTEN segment list handed back to this same
+/// matcher, so a broadened hit obeys the same contiguity a typed one
+/// does, and there is exactly one implementation of what "next to each
+/// other" means.
+bool plainSearchMatchesLiteral(String key, List<String> segments) {
   if (segments.isEmpty) return false;
   final first = segments.first;
   if (segments.length == 1) return key.contains(first);
@@ -197,3 +235,96 @@ bool plainSearchMatches(String key, List<String> segments) {
     from = start + 1;
   }
 }
+
+
+// — The looser reading ---------------------------------------------
+
+String? _readingKey;
+FuzzyReading? _reading;
+int _readingGeneration = -1;
+
+/// The expansion of [segments], built once per query rather than once
+/// per verse.
+///
+/// A one-entry memo, because a scan asks the same question 31,102 times
+/// in a row and then never asks it again. Keyed on the generation too,
+/// so a reading cannot outlive the switch that shaped it.
+FuzzyReading _readingFor(List<String> segments) {
+  final key = segments.join(' ');
+  if (_reading != null &&
+      _readingKey == key &&
+      _readingGeneration == fuzzySearchGeneration) {
+    return _reading!;
+  }
+  _readingKey = key;
+  _readingGeneration = fuzzySearchGeneration;
+  return _reading = fuzzyReading(segments);
+}
+
+/// How [key] matched [segments] — literally, on one of the looser
+/// rungs, or not at all.
+///
+/// The literal rung is always tried first and always wins, so switching
+/// fuzzy search on can only ADD rows to a result list: no verse that
+/// matched before stops matching, and none is relabelled.
+///
+/// A result list uses this to mark the rows a reader would otherwise
+/// have to guess about — the rule `strip_chronology_layout.dart` states
+/// as "nothing narrows in silence", applied to a view that widened.
+/// Asking a second time about a verse already known to match costs one
+/// more pass over that verse and nothing else; the query's expansion is
+/// memoized, not rebuilt.
+///
+/// **Cost, measured over the 31,102-verse KJV corpus key.** With the
+/// switch off, a whole-corpus scan of `loved` takes 7 ms — the same two
+/// `String.contains` calls it always was. With it on, the same scan
+/// takes 93 ms: it has lost its prefilter, so every verse is walked, and
+/// it stems every word of every verse that did not already match. A
+/// second identical scan also takes 93 ms, which is the useful half of
+/// that measurement — the memo saves the stemming of 13,000 distinct
+/// words, and what is left is the string building, which no cache can
+/// avoid without holding a second copy of the corpus.
+///
+/// 93 ms is inside the budget `WorkbenchProvider._runCommand` already
+/// documents for a synchronous command scan ("the low hundreds of
+/// milliseconds"), it is paid only by a reader who turned the feature
+/// on, and it is paid only on the search that reader asked for. If it
+/// ever needs to come down, the answer is a stemmed corpus key cached
+/// beside `MainProvider.searchKeys` and invalidated on
+/// [fuzzySearchGeneration] — which is what that counter is for.
+FuzzyMatch plainSearchMatchKind(String key, List<String> segments) {
+  if (segments.isEmpty) return FuzzyMatch.none;
+  if (plainSearchMatchesLiteral(key, segments)) return FuzzyMatch.literal;
+  if (!fuzzySearchEnabled) return FuzzyMatch.none;
+  final reading = _readingFor(segments);
+  for (final (kind, variant) in reading.variants) {
+    if (plainSearchMatchesLiteral(key, variant)) return kind;
+  }
+  if (reading.stems.isNotEmpty &&
+      plainSearchMatchesLiteral(stemSearchKey(key), reading.stems)) {
+    return FuzzyMatch.stem;
+  }
+  // The loosest rung, and the only one that drops adjacency. Two
+  // conjuncts minimum — `segmentedConjuncts` guarantees it — because
+  // one fragment of a query is not a broader reading of it, it is a
+  // different and shorter search.
+  if (reading.conjuncts.length >= 2) {
+    var all = true;
+    for (final c in reading.conjuncts) {
+      if (!key.contains(c)) {
+        all = false;
+        break;
+      }
+    }
+    if (all) return FuzzyMatch.segmented;
+  }
+  return FuzzyMatch.none;
+}
+
+/// Whether [key] is a hit for [segments] at all.
+///
+/// The signature every caller already had, and identical to
+/// [plainSearchMatchesLiteral] while the fuzzy switch is off — which is
+/// the shipped default and the state every existing test runs in.
+bool plainSearchMatches(String key, List<String> segments) =>
+    plainSearchMatchKind(key, segments) != FuzzyMatch.none;

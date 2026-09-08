@@ -226,7 +226,9 @@ void main() {
       // `@` is a tag *within* a word list, so it is caught in the body of
       // a command. A bare `@G25` never was a command and is left to the
       // substring scan, same as any other line that starts with a symbol.
-      expect(issueOf('.@G25'), CommandIssue.strongsTagUnsupported);
+      // `.@G25` is a tag with no word in front of it; bwh16 spells "any
+      // word" as `*`, so `.*@G25` is the line that was meant.
+      expect(issueOf('.@G25'), CommandIssue.strongsTagNoWord);
       expect(issueOf('@G25'), CommandIssue.notACommand);
     });
 

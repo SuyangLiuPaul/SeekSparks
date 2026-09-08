@@ -1870,7 +1870,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
                 oldTestamentBooks: oldTestamentBooks,
                 unit: HitUnit.occurrences,
               ),
-          ranks: data?.ranks ?? const <String, int>{},
+          scaledToLuke: data?.scaledToLuke ?? const <String, int>{},
           locale: locale,
           version: version,
           currentBook: currentBook,
@@ -1899,7 +1899,10 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
         // verse list beside it. Naming that is the whole of #308.
         unit: HitUnit.occurrences,
       ),
-      ranks: <String, int>{
+      // The second element is the count rescaled to Luke's length, not
+      // a rank — see `WordChartView.scaledToLuke`. It was passed as
+      // `ranks:` and drawn as `#171` in a book with 140 distinct words.
+      scaledToLuke: <String, int>{
         for (final e
             in greek?.books.entries ?? const <String, (int, int?)>{}.entries)
           if (e.value.$2 != null) e.key: e.value.$2!,
@@ -3147,14 +3150,16 @@ class _ChartData {
     required this.lemma,
     required this.gloss,
     required this.distribution,
-    required this.ranks,
+    required this.scaledToLuke,
   });
 
   final String lemma;
   final String gloss;
   final SearchDistribution distribution;
 
-  /// Book name → this word's rank among that book's words. Empty for
-  /// Hebrew, which no bundled profile ranks.
-  final Map<String, int> ranks;
+  /// Book name → this word's count in that book **rescaled to Luke's
+  /// length**. Empty for Hebrew. Not a rank — see
+  /// `WordChartView.scaledToLuke` for the proof and for what the wrong
+  /// reading printed.
+  final Map<String, int> scaledToLuke;
 }
