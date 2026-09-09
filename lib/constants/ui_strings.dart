@@ -10202,4 +10202,28 @@ const uiStrings = {
         'match against. Switch to BSB, BSB-Y, CSB, ASV-Y, KJV+S, LXX+WH, '
         '雅简+ or 和简+ and run it again.',
   },
+  // 2026-09-09. Appended as its own block at the end, not filed beside
+  // `moreActions`, per this file's convention: several sessions edit it
+  // at once and an interleaved insert is a merge conflict with no diff
+  // worth reading.
+  //
+  // The selection bar's two overflow chevrons used to share one label,
+  // so VoiceOver/TalkBack announced "More" on the control that scrolls
+  // BACK. A sighted reader gets the direction from the glyph; this is
+  // the same information for readers who cannot see it.
+  'moreActionsBack': {
+    'zh-Hans': '前面的操作',
+    'zh-Hant': '前面的操作',
+    'en': 'Previous actions',
+  },
+  // 2026-09-09. English needs a singular; the two Chinese locales do
+  // not (「1 项改动」 is correct as it stands, and a special case there
+  // would be a mistranslation, not a politeness). Appended per this
+  // file's end-of-file convention rather than filed beside
+  // `changelogCount`.
+  'changelogCountOne': {
+    'zh-Hans': '{n} 项改动',
+    'zh-Hant': '{n} 項改動',
+    'en': '{n} change',
+  },
 };

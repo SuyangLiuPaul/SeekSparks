@@ -158,7 +158,11 @@ class _ChangelogPageState extends State<ChangelogPage> {
               // Changes, not versions. How often we deploy is our
               // business; what changed is theirs.
               Text(
-                (uiStrings['changelogCount']?[locale] ?? '{n} changes')
+                (day.noteCount == 1
+                        ? (uiStrings['changelogCountOne']?[locale] ??
+                            '{n} change')
+                        : (uiStrings['changelogCount']?[locale] ??
+                            '{n} changes'))
                     .replaceAll('{n}', '${day.noteCount}'),
                 style: TextStyle(
                   fontSize: t.scaledChrome(WbMetrics.smallPrintFloor),
