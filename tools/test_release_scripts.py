@@ -211,6 +211,39 @@ class ReleaseWeb(unittest.TestCase):
         self.assertLess(gen, build)
         self.assertIn('for v1.0.0', r.stdout[gen:build])
 
+    def test_the_release_time_has_exactly_one_source(self):
+        """One version must not carry two 'last updated' times.
+
+        tools/bump_version.sh stamps kAppReleaseTime's defaultValue into
+        app_version.dart (v1.3.59, "builds no longer need to pass
+        APP_RELEASE_TIME at all"). This script used to compute its own
+        `date -u` and pass it as a dart-define, which OVERRIDES the
+        stamped constant — so the web bundle said one time while the
+        APK, the iOS build and the source said another. On a
+        `--no-bump` re-cut (which is what the prod step is) the gap is
+        however long is between the two runs.
+
+        Asserted on the source rather than by running the script,
+        because the defect is the presence of the flag, and a run only
+        shows it when two clocks happen to differ.
+        """
+        script = (pathlib.Path(__file__).parent / 'release_web.sh').read_text()
+        code = [
+            ln for ln in script.splitlines()
+            if 'APP_RELEASE_TIME' in ln and not ln.lstrip().startswith('#')
+        ]
+        self.assertEqual(
+            code, [],
+            'release_web.sh must neither compute nor pass APP_RELEASE_TIME; '
+            'bump_version.sh stamps it into app_version.dart. Offending '
+            f'lines: {code}')
+
+        bump = (pathlib.Path(__file__).parent / 'bump_version.sh').read_text()
+        self.assertIn(
+            'kAppReleaseTime', bump,
+            'if the stamping ever leaves bump_version.sh, the assertion '
+            'above stops meaning "one source" and starts meaning "none"')
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -120,11 +120,24 @@ deploy_sites() {
   fi
 }
 
-# APP_RELEASE_TIME was never passed here, so `kAppReleaseTime` kept
-# falling back to the hardcoded default in app_version.dart — the
-# "last updated" the app showed was whenever that constant was last
-# hand-edited, not when the bundle was actually built.
-APP_RELEASE_TIME="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+# 2026-09-09: the release time is NOT computed here, and must not be.
+#
+# The comment that stood here said APP_RELEASE_TIME "was never passed,
+# so kAppReleaseTime kept falling back to a hand-edited default" — and
+# then the next line computed one and passed it, which is the opposite
+# of what the paragraph argued. Both halves were out of date:
+# tools/bump_version.sh has stamped kAppReleaseTime's defaultValue into
+# app_version.dart since v1.3.59, precisely so that "builds no longer
+# need to pass APP_RELEASE_TIME at all" (its own words).
+#
+# Passing one anyway gave a version TWO release times. The APK from
+# release-android.yml, the iOS build and the checked-in source all read
+# the stamped constant; only web read this `date`. On a `--no-bump`
+# re-cut — which docs/release-policy.md's prod step is — they diverge by
+# however long is between the two runs, and the About page's "last
+# updated" disagrees across platforms for one version number. That
+# disagreement is the exact symptom v1.3.59 introduced the stamping to
+# end.
 
 # 2026-09-09: refresh the bundled changelog before the build, or the
 # app ships a "What's new" page that stops at whenever somebody last
@@ -160,8 +173,7 @@ python3 "$PROJECT/tools/build_changelog.py" \
 echo "==> building web bundle"
 "$FLUTTER" build web --release \
   --no-web-resources-cdn \
-  --dart-define="APP_VERSION=$APP_VERSION" \
-  --dart-define="APP_RELEASE_TIME=$APP_RELEASE_TIME"
+  --dart-define="APP_VERSION=$APP_VERSION"
 
 # "id:name:host" — the host is what verify_site re-fetches version.json
 # from after the deploy, so it must be the address readers actually
