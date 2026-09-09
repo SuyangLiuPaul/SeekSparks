@@ -15,6 +15,17 @@ PROJECT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 FLUTTER="${FLUTTER:-$HOME/flutter/bin/flutter}"
 NETLIFY="${NETLIFY:-$HOME/Documents/CodingProject/SmartHome/node_modules/.bin/netlify}"
 
+# The netlify CLI lives in another project's node_modules, so a cleanup
+# over there can silently disarm releases here. Say so up front.
+if [ ! -x "$NETLIFY" ]; then
+  echo "netlify CLI not found or not executable at:" >&2
+  echo "  $NETLIFY" >&2
+  echo "Restore it with:" >&2
+  echo "  (cd ~/Documents/CodingProject/SmartHome && npm install netlify-cli --no-save --legacy-peer-deps)" >&2
+  echo "or point NETLIFY= at another copy." >&2
+  exit 1
+fi
+
 BUMP=1
 INCLUDE_PROD=0
 for arg in "$@"; do
@@ -38,15 +49,36 @@ echo "==> APP_VERSION=$APP_VERSION"
 cd "$PROJECT"
 
 # Deploy build/web to each "id:name" entry (parallel, then wait).
+# Every deploy's exit status is checked. The previous version backgrounded
+# them and called a bare `wait`, which returns the status of the LAST job
+# and was never read anyway -- so on 2026-09-09, with the netlify binary
+# missing entirely, this script printed "deployed" for two sites it had
+# not reached. A release script that lies about deploying is worse than
+# one that fails.
 deploy_sites() {
+  local -a pids=() names=()
+  local failed=0
   for entry in "$@"; do
     id="${entry%:*}"
     name="${entry#*:}"
     echo "==> deploying $name ($id)"
     "$NETLIFY" deploy --prod --site "$id" --dir build/web \
       --message "v$APP_VERSION $name" &
+    pids+=("$!")
+    names+=("$name")
   done
-  wait
+  local i
+  for i in "${!pids[@]}"; do
+    if ! wait "${pids[$i]}"; then
+      echo "!!! deploy FAILED: ${names[$i]}" >&2
+      failed=1
+    fi
+  done
+  if [ "$failed" -ne 0 ]; then
+    echo "!!! at least one site did not receive this build. Nothing was" >&2
+    echo "!!! released. Fix the cause and re-run; do not tag." >&2
+    exit 1
+  fi
 }
 
 echo "==> building web bundle"
