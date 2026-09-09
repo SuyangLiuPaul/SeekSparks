@@ -21,6 +21,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 
 import 'package:seeksparks/constants/app_version.dart';
+import 'package:seeksparks/services/app_update_installer.dart';
 
 /// Result of an update check. [updateAvailable] is the only thing the UI
 /// branches on; the URLs are pre-resolved for the current platform.
@@ -38,6 +39,19 @@ class UpdateInfo {
     required this.downloadUrl,
     required this.releaseUrl,
   });
+
+  /// Whether [downloadUrl] is an APK the app can install itself, or
+  /// only the release page.
+  ///
+  /// 2026-09-09 (review finding 3): the Android workflow can lag the
+  /// tag by several minutes, and in that window the latest release has
+  /// no `.apk` asset yet, so [downloadUrl] is the release's HTML page.
+  /// "Update now" then downloaded that page and reported "did not
+  /// finish". Decided HERE, on the resolved URL, so the widgets ask one
+  /// question instead of each re-parsing the name. The path rather than
+  /// the whole string, so a query string could not hide the extension.
+  bool get hasApk =>
+      (Uri.tryParse(downloadUrl)?.path ?? '').toLowerCase().endsWith('.apk');
 }
 
 class UpdateService {
@@ -85,7 +99,9 @@ class UpdateService {
       final current = kAppVersion;
       final releaseUrl = (body['html_url'] as String?) ?? releasesPage;
       final assets = (body['assets'] as List?) ?? const [];
-      final downloadUrl = _assetUrlForPlatform(assets) ?? releaseUrl;
+      final downloadUrl =
+          _assetUrlForPlatform(assets, cnFlavour: await _isCnFlavour()) ??
+              releaseUrl;
 
       return UpdateInfo(
         updateAvailable: isNewer(latest, current),
@@ -123,16 +139,62 @@ class UpdateService {
     });
   }
 
+  /// The suffix `build.gradle.kts` gives the China flavour's
+  /// applicationId, and the marker a release asset built for it
+  /// carries in its name.
+  static const String cnPackageSuffix = '.cn';
+  static const String cnAssetMarker = '-cn';
+
+  /// Whether the running build is the `.cn` flavour, asked of the
+  /// platform once per check. Only Android has flavours; everywhere
+  /// else the answer is no without a channel round-trip.
+  static Future<bool> _isCnFlavour() async {
+    try {
+      if (!Platform.isAndroid) return false;
+    } catch (_) {
+      return false;
+    }
+    final pkg = await AppUpdateInstaller.packageName();
+    return pkg != null && pkg.endsWith(cnPackageSuffix);
+  }
+
+  /// The APK for THIS flavour, or null when the release has none.
+  ///
+  /// 2026-09-09 (review finding 7): the `.cn` flavour has a different
+  /// applicationId, so handing it the international APK would not
+  /// update it — Android would install a SECOND app beside it. So a
+  /// cn build takes only an asset whose name carries [cnAssetMarker],
+  /// and an intl build refuses one that does; either way "no matching
+  /// asset" is null, and the caller falls back to the release page —
+  /// which [UpdateInfo.hasApk] then reports as "browser only". One
+  /// place, and public so it can be exercised with fake asset lists.
+  static String? androidAssetUrl(
+    List<dynamic> assets, {
+    required bool cnFlavour,
+  }) {
+    for (final a in assets) {
+      if (a is! Map) continue;
+      final name = ((a['name'] as String?) ?? '').toLowerCase();
+      final url = (a['browser_download_url'] as String?) ?? '';
+      if (url.isEmpty || !name.endsWith('.apk')) continue;
+      if (name.contains(cnAssetMarker) == cnFlavour) return url;
+    }
+    return null;
+  }
+
   /// Pick the release asset whose name matches the current platform, by
   /// the substrings the release-build workflows use in their filenames
   /// (`SeekSparks-Android-…apk`, `…Windows…zip`, `…macOS…zip`, `…Linux…tar.gz`).
   /// iOS has no directly-installable asset, so it returns null → the UI
   /// falls back to the release page.
-  static String? _assetUrlForPlatform(List<dynamic> assets) {
+  static String? _assetUrlForPlatform(
+    List<dynamic> assets, {
+    required bool cnFlavour,
+  }) {
     String? needle;
     try {
       if (Platform.isAndroid) {
-        needle = '.apk';
+        return androidAssetUrl(assets, cnFlavour: cnFlavour);
       } else if (Platform.isWindows) {
         needle = 'Windows';
       } else if (Platform.isMacOS) {

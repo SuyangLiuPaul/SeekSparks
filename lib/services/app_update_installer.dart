@@ -31,7 +31,7 @@ import 'dart:async';
 import 'dart:io' show File;
 
 import 'package:flutter/foundation.dart'
-    show TargetPlatform, defaultTargetPlatform, kIsWeb;
+    show TargetPlatform, defaultTargetPlatform, kIsWeb, visibleForTesting;
 import 'package:flutter/services.dart'
     show MethodChannel, MissingPluginException, PlatformException;
 import 'package:http/http.dart' as http;
@@ -63,14 +63,87 @@ enum UpdateInstallOutcome {
   /// an APK.
   downloadFailed,
 
+  /// The reader pressed Cancel. Nothing to report: they know.
+  ///
+  /// 2026-09-09 (review finding 1): its own outcome rather than a
+  /// flavour of [downloadFailed], because the UI's response to a
+  /// failure is a dialog offering the browser, and a reader who just
+  /// said "stop" should not be asked a second question.
+  cancelled,
+
   /// The platform cannot do this at all. Never returned on Android.
   unsupported,
+}
+
+/// A handle the UI holds to stop a download it started.
+///
+/// 2026-09-09 (review finding 1): before this the only way out of the
+/// progress dialog was the Android Back button, which closed the
+/// dialog and left the download running unseen — and a second "Update
+/// now" opened a second write stream on the same `update.apk`. The
+/// token is checked between chunks, and [whenCancelled] is raced
+/// against the connect and the next chunk so a stalled connection
+/// cannot delay the reader's Cancel by the length of a timeout.
+class UpdateCancelToken {
+  final Completer<void> _done = Completer<void>();
+
+  bool get isCancelled => _done.isCompleted;
+
+  /// Completes when [cancel] is called; never completes otherwise.
+  Future<void> get whenCancelled => _done.future;
+
+  void cancel() {
+    if (!_done.isCompleted) _done.complete();
+  }
 }
 
 class AppUpdateInstaller {
   AppUpdateInstaller._();
 
   static const MethodChannel _channel = MethodChannel('yswords/apk_installer');
+
+  /// How long a download may go without a byte before it is given up.
+  ///
+  /// 2026-09-09 (review finding 2): a connection that stalls after the
+  /// headers — a train tunnel, a wifi hand-off — used to freeze the
+  /// progress dialog forever, with nothing on screen the reader could
+  /// press. Thirty seconds is long enough for a slow link to breathe
+  /// and short enough that the failed dialog arrives while the reader
+  /// is still looking.
+  static const Duration defaultIdleTimeout = Duration(seconds: 30);
+
+  /// How long to wait for the response headers.
+  static const Duration defaultConnectTimeout = Duration(seconds: 30);
+
+  static Future<String?>? _packageName;
+
+  /// The applicationId this build is running as, or null where the
+  /// platform side cannot say.
+  ///
+  /// 2026-09-09 (review finding 7): asked once and remembered. The
+  /// answer decides which release asset is an update for THIS app —
+  /// `.cn` and the international build are different packages, and
+  /// Android would install the wrong one as a second app rather than
+  /// refuse it. Only [UpdateService] reads this; it is the one place
+  /// that picks assets.
+  static Future<String?> packageName() {
+    if (!isSupported) return Future<String?>.value(null);
+    return _packageName ??= () async {
+      try {
+        return await _channel.invokeMethod<String>('packageName');
+      } on PlatformException {
+        return null;
+      } on MissingPluginException {
+        return null;
+      }
+    }();
+  }
+
+  /// Forget the remembered [packageName], so a test can answer it
+  /// differently. Never needed in the app: a package cannot change
+  /// its own name while running.
+  @visibleForTesting
+  static void resetPackageNameCache() => _packageName = null;
 
   /// Android only. See the file header for why every other platform
   /// keeps the browser route rather than getting a button.
@@ -102,16 +175,22 @@ class AppUpdateInstaller {
     }
   }
 
-  /// Send the reader to the OS switch for this app.
-  static Future<void> requestPermission() async {
-    if (!isSupported) return;
+  /// Send the reader to the OS switch for this app, and report whether
+  /// they came back with it on.
+  ///
+  /// 2026-09-09 (review finding 4): the platform side now answers only
+  /// when the settings screen has closed (`onActivityResult`), so the
+  /// value here is "granted NOW", after the reader's trip — not "the
+  /// screen opened". A false is either a reader who declined or a ROM
+  /// without the screen, and both leave them exactly where they were.
+  static Future<bool> requestPermission() async {
+    if (!isSupported) return false;
     try {
-      await _channel.invokeMethod<bool>('requestPermission');
+      return await _channel.invokeMethod<bool>('requestPermission') ?? false;
     } on PlatformException {
-      // Nothing to say: the screen either opened or the ROM does not
-      // have it, and both leave the reader exactly where they were.
+      return false;
     } on MissingPluginException {
-      // ditto
+      return false;
     }
   }
 
@@ -125,13 +204,24 @@ class AppUpdateInstaller {
   /// The download is streamed rather than buffered. A release APK is
   /// ~90 MB and this runs on a mid-range tablet; `http.get` would hold
   /// the whole thing in memory before a single byte reached disk.
+  ///
+  /// [cancelToken] lets the UI stop it (finding 1); [idleTimeout] and
+  /// [connectTimeout] stop it when the network does not (finding 2).
+  /// Both timeouts are [downloadFailed] — the reader sees the same
+  /// "did not finish" dialog with the browser as the way out.
   static Future<UpdateInstallOutcome> downloadAndInstall(
     String url, {
     void Function(double? fraction)? onProgress,
     http.Client? client,
+    UpdateCancelToken? cancelToken,
+    Duration idleTimeout = defaultIdleTimeout,
+    Duration connectTimeout = defaultConnectTimeout,
   }) async {
     if (!isSupported) return UpdateInstallOutcome.unsupported;
     if (!await canInstall()) return UpdateInstallOutcome.permissionNeeded;
+    if (cancelToken?.isCancelled ?? false) {
+      return UpdateInstallOutcome.cancelled;
+    }
 
     final String dir;
     try {
@@ -145,9 +235,19 @@ class AppUpdateInstaller {
     final http$ = client ?? http.Client();
     File? file;
     try {
-      final response =
-          await http$.send(http.Request('GET', Uri.parse(url)));
-      if (response.statusCode != 200) return UpdateInstallOutcome.downloadFailed;
+      // Raced against the token so a Cancel pressed while the server
+      // is still thinking returns at once rather than after the
+      // connect timeout.
+      final response = await _unlessCancelled(
+        http$
+            .send(http.Request('GET', Uri.parse(url)))
+            .timeout(connectTimeout),
+        cancelToken,
+      );
+      if (response == null) return UpdateInstallOutcome.cancelled;
+      if (response.statusCode != 200) {
+        return UpdateInstallOutcome.downloadFailed;
+      }
       final total = response.contentLength;
 
       // One fixed name, overwritten every time. Keeping a file per
@@ -159,16 +259,40 @@ class AppUpdateInstaller {
       var received = 0;
       var head = <int>[];
       try {
-        await for (final chunk in response.stream) {
-          sink.add(chunk);
-          received += chunk.length;
-          if (head.length < kZipMagic.length) {
-            head = [...head, ...chunk].take(kZipMagic.length).toList();
-          }
-          onProgress?.call(total == null || total == 0 ? null : received / total);
-        }
+        // A subscription rather than `await for`, because a Cancel has
+        // to be able to stop the reading — `await for` can only look
+        // at the token once the next chunk has arrived, and the chunk
+        // that never arrives is the case Cancel exists for.
+        final done = Completer<void>();
+        final sub = response.stream.timeout(idleTimeout).listen(
+          (chunk) {
+            sink.add(chunk);
+            received += chunk.length;
+            if (head.length < kZipMagic.length) {
+              head = [...head, ...chunk].take(kZipMagic.length).toList();
+            }
+            onProgress?.call(
+                total == null || total == 0 ? null : received / total);
+          },
+          onError: (Object e, StackTrace st) {
+            if (!done.isCompleted) done.completeError(e, st);
+          },
+          onDone: () {
+            if (!done.isCompleted) done.complete();
+          },
+          cancelOnError: true,
+        );
+        cancelToken?.whenCancelled.then((_) {
+          sub.cancel();
+          if (!done.isCompleted) done.complete();
+        });
+        await done.future;
       } finally {
         await sink.close();
+      }
+      if (cancelToken?.isCancelled ?? false) {
+        await _discard(file);
+        return UpdateInstallOutcome.cancelled;
       }
 
       // Both halves matter and they catch different lies. A truncated
@@ -192,6 +316,17 @@ class AppUpdateInstaller {
     } finally {
       if (owned) http$.close();
     }
+  }
+
+  /// [future]'s value, or null the moment [token] is cancelled first.
+  /// `Future.any` listens to both, so a late error from the abandoned
+  /// future is not an unhandled one.
+  static Future<T?> _unlessCancelled<T>(
+    Future<T> future,
+    UpdateCancelToken? token,
+  ) {
+    if (token == null) return future;
+    return Future.any<T?>([future, token.whenCancelled.then((_) => null)]);
   }
 
   static bool _startsWithZipMagic(List<int> head) {

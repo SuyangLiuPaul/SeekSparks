@@ -11,6 +11,7 @@
 // `AppUpdateInstaller.isSupported` reads `defaultTargetPlatform`
 // precisely so this file can exist; see the comment on it.
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -64,13 +65,16 @@ void main() {
   late Directory dir;
   late List<MethodCall> calls;
   bool permitted = true;
+  String? packageName = 'com.example.yahwehswords';
 
   setUp(() async {
     TestWidgetsFlutterBinding.ensureInitialized();
     debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    AppUpdateInstaller.resetPackageNameCache();
     dir = await Directory.systemTemp.createTemp('update_test');
     calls = <MethodCall>[];
     permitted = true;
+    packageName = 'com.example.yahwehswords';
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(
       const MethodChannel('yswords/apk_installer'),
@@ -83,6 +87,13 @@ void main() {
             return dir.path;
           case 'install':
             return true;
+          case 'packageName':
+            return packageName;
+          case 'requestPermission':
+            // The platform side answers when the reader comes BACK
+            // from settings, with the switch's state at that moment.
+            permitted = true;
+            return true;
         }
         return null;
       },
@@ -91,6 +102,7 @@ void main() {
 
   tearDown(() async {
     debugDefaultTargetPlatformOverride = null;
+    AppUpdateInstaller.resetPackageNameCache();
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(
             const MethodChannel('yswords/apk_installer'), null);
@@ -221,6 +233,130 @@ void main() {
       expect(seen, isNotEmpty);
       expect(seen.every((f) => f == null), isTrue,
           reason: 'a bar that guesses is worse than one that admits it');
+    });
+  });
+
+  // 2026-09-09 (review finding 1): the reader's Stop button.
+  group('cancelling', () {
+    test('mid-download stops the read, discards the partial file and is '
+        'its own outcome — not a failure the UI would apologise for',
+        () async {
+      final body = StreamController<List<int>>();
+      final token = UpdateCancelToken();
+      final client = MockClient.streaming((request, _) async =>
+          http.StreamedResponse(body.stream, 200, contentLength: 4096));
+      final seen = <double?>[];
+      final pending = AppUpdateInstaller.downloadAndInstall(
+        'https://example.invalid/app.apk',
+        client: client,
+        cancelToken: token,
+        onProgress: seen.add,
+      );
+      // Half the file arrives, then the reader presses Stop. The
+      // stream is deliberately never closed: a cancel that only took
+      // effect at the next chunk would hang here.
+      body.add(_apkBytes(2048));
+      while (seen.isEmpty) {
+        await Future<void>.delayed(const Duration(milliseconds: 5));
+      }
+      token.cancel();
+      final outcome = await pending.timeout(const Duration(seconds: 5));
+      expect(outcome, UpdateInstallOutcome.cancelled);
+      expect(downloaded().existsSync(), isFalse);
+      expect(calls.any((c) => c.method == 'install'), isFalse);
+      await body.close();
+    });
+
+    test('before the connect answers returns at once, not after the '
+        'connect timeout', () async {
+      final never = Completer<http.StreamedResponse>();
+      final token = UpdateCancelToken();
+      final client = MockClient.streaming((request, _) => never.future);
+      final pending = AppUpdateInstaller.downloadAndInstall(
+        'https://example.invalid/app.apk',
+        client: client,
+        cancelToken: token,
+        connectTimeout: const Duration(hours: 1),
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+      token.cancel();
+      expect(
+        await pending.timeout(const Duration(seconds: 5)),
+        UpdateInstallOutcome.cancelled,
+      );
+    });
+
+    test('a token cancelled before the call downloads nothing', () async {
+      final token = UpdateCancelToken()..cancel();
+      final outcome = await AppUpdateInstaller.downloadAndInstall(
+        'https://example.invalid/app.apk',
+        client: _serving(_apkBytes()),
+        cancelToken: token,
+      );
+      expect(outcome, UpdateInstallOutcome.cancelled);
+      expect(calls.any((c) => c.method == 'updateDir'), isFalse);
+    });
+  });
+
+  // 2026-09-09 (review finding 2): a network that stops without
+  // saying so used to freeze the progress dialog forever.
+  group('a connection that stalls', () {
+    test('after some bytes is given up at the idle timeout, and the '
+        'partial file with it', () async {
+      final body = StreamController<List<int>>();
+      final client = MockClient.streaming((request, _) async =>
+          http.StreamedResponse(body.stream, 200, contentLength: 4096));
+      final pending = AppUpdateInstaller.downloadAndInstall(
+        'https://example.invalid/app.apk',
+        client: client,
+        idleTimeout: const Duration(milliseconds: 50),
+      );
+      body.add(_apkBytes(2048));
+      // The rest never comes.
+      final outcome = await pending.timeout(const Duration(seconds: 5));
+      expect(outcome, UpdateInstallOutcome.downloadFailed);
+      expect(downloaded().existsSync(), isFalse);
+      await body.close();
+    });
+
+    test('before the headers is given up at the connect timeout',
+        () async {
+      final never = Completer<http.StreamedResponse>();
+      final client = MockClient.streaming((request, _) => never.future);
+      final outcome = await AppUpdateInstaller.downloadAndInstall(
+        'https://example.invalid/app.apk',
+        client: client,
+        connectTimeout: const Duration(milliseconds: 50),
+      ).timeout(const Duration(seconds: 5));
+      expect(outcome, UpdateInstallOutcome.downloadFailed);
+      expect(downloaded().existsSync(), isFalse);
+    });
+  });
+
+  // 2026-09-09 (review finding 7): which package this build is.
+  group('packageName', () {
+    test('is asked of the platform once and remembered', () async {
+      expect(await AppUpdateInstaller.packageName(), 'com.example.yahwehswords');
+      packageName = 'com.example.yahwehswords.cn';
+      expect(await AppUpdateInstaller.packageName(), 'com.example.yahwehswords',
+          reason: 'a package cannot change its name while running');
+      expect(calls.where((c) => c.method == 'packageName').length, 1);
+    });
+
+    test('is null off Android, without a channel round-trip', () async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+      expect(await AppUpdateInstaller.packageName(), isNull);
+      expect(calls, isEmpty);
+    });
+  });
+
+  // 2026-09-09 (review finding 4): the trip to settings reports how it
+  // ended, so the caller can carry on without another tap.
+  group('requestPermission', () {
+    test('returns what the platform side saw on the way back', () async {
+      permitted = false;
+      expect(await AppUpdateInstaller.requestPermission(), isTrue);
+      expect(await AppUpdateInstaller.canInstall(), isTrue);
     });
   });
 }

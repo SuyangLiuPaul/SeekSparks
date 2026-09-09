@@ -41,7 +41,6 @@ import 'package:seeksparks/pages/sermons_page.dart';
 import 'package:seeksparks/pages/settings_page.dart';
 import 'package:seeksparks/pages/word_list_page.dart';
 import 'package:seeksparks/providers/main_provider.dart';
-import 'package:seeksparks/services/link_opener.dart';
 import 'package:seeksparks/services/update_check_scheduler.dart';
 import 'package:seeksparks/providers/workbench_provider.dart';
 import 'package:seeksparks/services/concordance_service.dart';
@@ -72,6 +71,8 @@ import 'package:seeksparks/services/modern_concordance_service.dart';
 import 'package:seeksparks/services/naves_service.dart';
 import 'package:seeksparks/services/places_service.dart';
 import 'package:seeksparks/widgets/resource_summary_pane.dart';
+import 'package:seeksparks/widgets/update_check_tile.dart'
+    show buildUpdateAvailableBar;
 import 'package:seeksparks/widgets/synopsis_columns_pane.dart';
 import 'package:seeksparks/services/cross_reference_service.dart';
 import 'package:seeksparks/services/sermon_service.dart';
@@ -430,27 +431,18 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
   /// A SnackBar rather than a dialog. A dialog on launch takes the app
   /// away from the reader to tell them something that is true all day
   /// and can wait; a bar states the fact, carries the one action, and
-  /// goes away on its own. Six seconds because it has a button —
-  /// the default four is not long enough to read a sentence and decide.
+  /// goes away on its own.
+  ///
+  /// 2026-09-09 (review finding 6): the bar itself is built beside the
+  /// About page's dialog in `update_check_tile.dart`, so that its
+  /// action on Android is the same in-app install and not a trip to
+  /// the browser the About page had already stopped asking for.
   Future<void> _maybeOfferUpdate() async {
     final settings = context.read<AppSettings>();
     final info = await runDailyUpdateCheck(settings);
     if (!mounted || info == null) return;
-    final locale = settings.locale;
-    final label = (uiStrings['updateAvailableBar']?[locale] ??
-            'Version v{new} is available')
-        .replaceAll('{new}', info.latestVersion);
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(label),
-        duration: const Duration(seconds: 6),
-        action: LinkOpener.isAvailable
-            ? SnackBarAction(
-                label: uiStrings['updateDownload']?[locale] ?? 'Download',
-                onPressed: () => LinkOpener.open(info.downloadUrl),
-              )
-            : null,
-      ),
+      buildUpdateAvailableBar(context, info, locale: settings.locale),
     );
   }
 

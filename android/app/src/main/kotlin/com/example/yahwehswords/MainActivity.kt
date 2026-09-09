@@ -61,6 +61,17 @@ class MainActivity : FlutterActivity() {
     private var pendingIconName: String? = null
     private var hasPendingIcon = false
 
+    // 2026-09-09 (review finding 4): the "install unknown apps"
+    // request answers Dart only when the reader comes BACK from the
+    // settings screen, not when it opens. Before this, `success(true)`
+    // was sent the instant `startActivity` returned, so Dart could not
+    // tell "the screen opened" from "they granted it", and the reader
+    // returned to a dialog telling them to press a button that was no
+    // longer on screen. The pending result is held here and completed
+    // in `onActivityResult` with the switch's state at that moment.
+    private var pendingPermissionResult: MethodChannel.Result? = null
+    private val requestUnknownSources = 0x5EEC
+
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "yswords/android_icon")
@@ -129,21 +140,38 @@ class MainActivity : FlutterActivity() {
                             }
                         result.success(allowed)
                     }
+                    // 2026-09-09 (review finding 7): which package this
+                    // build IS, so Dart can pick the release asset that
+                    // updates it. The `.cn` flavour has a different
+                    // applicationId; the international APK would be
+                    // installed beside it as a second app, not over it.
+                    "packageName" -> result.success(packageName)
                     // Opens the OS screen for THIS app specifically.
                     // Deliberately not a general Settings deep-link:
                     // the reader is one tap from the switch that
                     // matters, and lands back here by pressing Back.
+                    //
+                    // The reply is deferred to onActivityResult and
+                    // says whether the switch is on NOW — see
+                    // `pendingPermissionResult`. A second request
+                    // while one is open gets the same deferred answer.
                     "requestPermission" -> {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            if (pendingPermissionResult != null) {
+                                result.success(false)
+                                return@setMethodCallHandler
+                            }
                             try {
-                                startActivity(
+                                pendingPermissionResult = result
+                                startActivityForResult(
                                     Intent(
                                         Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
                                         Uri.parse("package:$packageName")
-                                    )
+                                    ),
+                                    requestUnknownSources
                                 )
-                                result.success(true)
                             } catch (e: Exception) {
+                                pendingPermissionResult = null
                                 result.success(false)
                             }
                         } else {
@@ -206,6 +234,22 @@ class MainActivity : FlutterActivity() {
                     else -> result.notImplemented()
                 }
             }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode != requestUnknownSources) return
+        // The settings screen's own result code says nothing useful;
+        // the switch is re-read instead, which is the only fact Dart
+        // needs to decide whether to carry on with the install.
+        val granted =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                packageManager.canRequestPackageInstalls()
+            } else {
+                true
+            }
+        pendingPermissionResult?.success(granted)
+        pendingPermissionResult = null
     }
 
     override fun onStop() {
