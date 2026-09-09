@@ -78,6 +78,7 @@ import 'package:seeksparks/widgets/highlights_sheet.dart';
 import 'package:seeksparks/widgets/originals_sheet.dart';
 import 'package:seeksparks/widgets/verse_widget.dart';
 import 'package:seeksparks/widgets/paragraph_group_widget.dart';
+import 'package:seeksparks/widgets/overflow_hint_scroll.dart';
 import 'package:seeksparks/widgets/version_picker_sheet.dart'
     show showLanguageGroupedVersionMenu;
 import 'package:seeksparks/utils/font_catalog.dart' show kCjkFontFallback;
@@ -3171,17 +3172,19 @@ class _SelectionActionBar extends StatelessWidget {
                     // everything fits and scrolls only when it can't.
                     // (spaceEvenly needs a bounded width, incompatible
                     // with a scroll view, so we center a min-width Row.)
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      physics: const ClampingScrollPhysics(),
-                      child: ConstrainedBox(
-                        constraints:
-                            BoxConstraints(minWidth: constraints.maxWidth),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          mainAxisSize: MainAxisSize.min,
-                          children: actionButtons,
-                        ),
+                    // 2026-09-09: the row is scrollable but nothing said so. Eight
+                    // icons end at the screen edge looking complete, and the reader
+                    // never swipes. OverflowHintScroll fades the edge that has more
+                    // behind it into the bar's colour and puts a tappable chevron
+                    // there. fadeColor must match _GlassSurface's fill.
+                    OverflowHintScroll(
+                      fadeColor: scheme.surfaceContainerHighest,
+                      minWidth: constraints.maxWidth,
+                      moreLabel: uiStrings['moreActions']?[settings.locale] ?? 'More',
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        mainAxisSize: MainAxisSize.min,
+                        children: actionButtons,
                       ),
                     ),
                   ],
