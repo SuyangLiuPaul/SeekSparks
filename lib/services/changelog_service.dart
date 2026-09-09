@@ -65,21 +65,30 @@ class ChangelogService {
     final cached = _cache;
     if (cached != null) return cached;
     try {
-      final raw = await rootBundle.loadString(assetPath);
-      final decoded = jsonDecode(raw) as Map<String, dynamic>;
-      final entries = (decoded['entries'] as List<dynamic>)
-          .map((e) => e as Map<String, dynamic>)
-          .map((e) => ChangelogEntry(
-                version: e['version'] as String,
-                date: e['date'] as String,
-                notes: (e['notes'] as List<dynamic>).cast<String>(),
-              ))
-          .where((e) => e.notes.isNotEmpty)
-          .toList();
-      return _cache = groupByDay(entries);
+      return _cache = groupByDay(parse(await rootBundle.loadString(assetPath)));
     } catch (_) {
       return _cache = const <ChangelogDay>[];
     }
+  }
+
+  /// The asset's JSON, as entries in the order the generator wrote them.
+  ///
+  /// Public and THROWING, unlike [load] (review finding 5, 2026-09-09):
+  /// the catch-all above turns any shape mistake in the generated file
+  /// into an empty page while the suite stays green, so the test needs
+  /// a way to run the real asset through the real parser and see the
+  /// exception rather than the empty state.
+  static List<ChangelogEntry> parse(String raw) {
+    final decoded = jsonDecode(raw) as Map<String, dynamic>;
+    return (decoded['entries'] as List<dynamic>)
+        .map((e) => e as Map<String, dynamic>)
+        .map((e) => ChangelogEntry(
+              version: e['version'] as String,
+              date: e['date'] as String,
+              notes: (e['notes'] as List<dynamic>).cast<String>(),
+            ))
+        .where((e) => e.notes.isNotEmpty)
+        .toList();
   }
 
   /// Group consecutive entries sharing a date.
@@ -103,4 +112,9 @@ class ChangelogService {
 
   /// Test seam: forget the cached parse.
   static void resetForTest() => _cache = null;
+
+  /// Test seam: hand the page a changelog without going through the
+  /// asset, so a layout test can put a day of its own choosing on
+  /// screen (review finding 3, 2026-09-09).
+  static void setForTest(List<ChangelogDay> days) => _cache = days;
 }

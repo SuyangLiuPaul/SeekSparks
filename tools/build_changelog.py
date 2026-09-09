@@ -60,9 +60,26 @@ Versions whose every commit was filtered out are dropped rather than
 shown empty. Everything older than the window stays on GitHub, which
 the page links to.
 
+THE BUILD'S OWN VERSION (review finding 1, 2026-09-09). Anchoring on
+`release:` commits has a hole at the top: that commit is written AFTER
+the build it names has been deployed, so the asset baked into v1.6.272
+could only ever reach v1.6.271. The page's 「你的版本」 badge compares
+against the running version and therefore never rendered, and "what's
+new" was always one version behind — on a page whose whole purpose is
+the top entry. So the top entry is now SYNTHESISED: `--head-version`
+(the just-bumped pubspec version; read from pubspec.yaml when absent)
+names it, and its notes are every commit after the most recent
+`release:` anchor up to HEAD — exactly the commits the release commit
+will span once it exists. If the anchor for that version is already
+in the history (a `--no-bump` re-run, or a regenerate after the
+commit) it is folded in rather than listed twice. The asset records
+which version it was built for under `head`, so a test can prove the
+generator ran after the bump and not before.
+
 Usage:
   tools/build_changelog.py            # write assets/changelog.json
   tools/build_changelog.py --check    # print, write nothing
+  tools/build_changelog.py --head-version 1.6.272 --head-date 2026-09-09
 """
 
 import argparse
@@ -89,15 +106,56 @@ ANCHOR = re.compile(
 # `type` or `type(scope)` — the scoped form is why `chore(release):`
 # survived the first draft of this filter and put twelve release lines
 # into the notes.
+#
+# 2026-09-09 (review finding 2): widened to the bookkeeping subjects
+# this repository ACTUALLY writes, which the conventional-commit list
+# above never covered — `tests:`, `audit:` / `audit_p0:`, `tools:`,
+# `tools+docs:`, `state:` (the PROJECT_STATE row under another name),
+# `fix CI:`, `fix(ci):`, `fix(lint):` and `fix(release):`. Each is
+# real work and none of it is visible in the app; letting them through
+# put "tools: the release script this repo already had the workflows
+# for" in front of a reader.
 DROP = re.compile(
     r'^(?:'
-    r'(?:release|docs?|chore|ci|test|build|style|refactor)'
+    r'(?:release|docs?|chore|ci|tests?|build|style|refactor'
+    r'|audit(?:_p0)?|tools(?:\+docs)?|state)'
     r'(?:\([^)]*\))?:'
+    r'|fix\s*(?:\(\s*(?:ci|lint|release)\s*\)|CI)\s*:'
     r'|PROJECT_STATE\b'
     r'|Merge (?:branch|pull request)\b'
     r')',
     re.IGNORECASE,
 )
+
+# The conventional-commit token on a subject that IS a change:
+# `feat(wheel): the Bible on the wheel` → `the Bible on the wheel`.
+# `feat`, `fix(#315)`, `perf(...)` are developer vocabulary — the reader
+# was never told what a scope is, and an issue number points at a
+# tracker they cannot open. Only the tokens go; free-form area labels
+# this repo also uses (`search:`, `versions:`, `cuvs-yhwh:`) are the
+# note's own words and stay.
+PREFIX = re.compile(
+    r'^(?:'
+    r'(?:feat|fix|perf|refactor|revert|style|tests?|build|ci|chore|docs?)'
+    r'(?:\([^)]*\))?!?'
+    r'|#\d+'  # `#317: ...` — a tracker number on its own
+    r'):\s*',
+    re.IGNORECASE,
+)
+
+
+def strip_prefix(subject: str) -> str:
+    return PREFIX.sub('', subject, count=1).strip()
+
+
+def pubspec_version() -> str:
+    """The `version:` in pubspec.yaml, without the `+build` suffix —
+    that number is Android's versionCode, never a thing to show."""
+    text = (PROJECT / 'pubspec.yaml').read_text(encoding='utf-8')
+    m = re.search(r'^version:\s*([0-9]+\.[0-9]+\.[0-9]+)', text, re.MULTILINE)
+    if not m:
+        raise SystemExit('pubspec.yaml has no version: line')
+    return m.group(1)
 
 # No single version may fill the whole page. Nothing in this repo's
 # history comes near it; it is here so that a first release, or a
@@ -106,13 +164,15 @@ DROP = re.compile(
 MAX_NOTES_PER_VERSION = 12
 
 
-def git(*args: str) -> str:
+def git(*args: str, repo: pathlib.Path = PROJECT) -> str:
     return subprocess.run(
-        ['git', *args], cwd=PROJECT, capture_output=True, text=True, check=True
+        ['git', *args], cwd=repo, capture_output=True, text=True, check=True
     ).stdout.strip()
 
 
-def released_versions(limit: int) -> list[tuple[str, str, str]]:
+def released_versions(
+    limit: int, repo: pathlib.Path = PROJECT,
+) -> list[tuple[str, str, str]]:
     """`(version, sha, date)` for the newest [limit] release commits.
 
     Walked newest-first and stopped at [limit], so the initial commit
@@ -121,6 +181,7 @@ def released_versions(limit: int) -> list[tuple[str, str, str]]:
     """
     out = git(
         'log', '--format=%H\x1f%cs\x1f%s', '--no-merges', '--all',
+        repo=repo,
     ).splitlines()
     found: list[tuple[str, str, str]] = []
     seen: set[str] = set()
@@ -142,24 +203,67 @@ def released_versions(limit: int) -> list[tuple[str, str, str]]:
     return found
 
 
-def notes_between(older_sha: str | None, newer_sha: str) -> list[str]:
+def notes_between(
+    older_sha: str | None, newer_sha: str, repo: pathlib.Path = PROJECT,
+) -> list[str]:
     span = f'{older_sha}..{newer_sha}' if older_sha else newer_sha
-    subjects = git('log', '--no-merges', '--format=%s', span).splitlines()
+    subjects = git(
+        'log', '--no-merges', '--format=%s', span, repo=repo,
+    ).splitlines()
     kept: list[str] = []
     for s in subjects:
         s = s.strip()
         if not s or DROP.match(s):
+            continue
+        s = strip_prefix(s)
+        if not s:
             continue
         if s not in kept:  # a cherry-pick should not read as two changes
             kept.append(s)
     return kept
 
 
-def build(max_entries: int) -> dict:
+def build(
+    max_entries: int,
+    head_version: str | None = None,
+    head_date: str | None = None,
+    repo: pathlib.Path = PROJECT,
+) -> dict:
     # One extra, so the oldest kept entry still has a predecessor to
     # measure against rather than reaching back to the initial commit.
-    versions = released_versions(max_entries)
+    versions = released_versions(max_entries, repo=repo)
     entries = []
+    head: dict | None = None
+    if head_version:
+        # Finding 1: the build's own version, whose `release:` commit
+        # does not exist yet. Its span is everything after the newest
+        # anchor — and if that anchor already names this very version,
+        # the span starts at the one before it, so a re-run after the
+        # release commit lists the version once, not once as HEAD and
+        # once as an anchor.
+        if versions and versions[0][0] == head_version:
+            versions = versions[1:]
+        base = versions[0][1] if versions else None
+        notes = notes_between(base, 'HEAD', repo=repo)
+        head = {
+            'version': head_version,
+            'date': head_date or git('log', '-1', '--format=%cs', 'HEAD',
+                                     repo=repo),
+            'notes': len(notes),
+        }
+        if notes:
+            entries.append({
+                'version': head_version,
+                'date': head['date'],
+                'notes': notes[:MAX_NOTES_PER_VERSION],
+            })
+        else:
+            # A data-only or tooling-only release. Recorded under
+            # `head` so the asset still says which build it was made
+            # for, but not listed: an empty row is a version number
+            # pretending to be news, same as anywhere else on the page.
+            print(f'note: v{head_version} has no reader-visible change '
+                  'since the last release; not listed', file=sys.stderr)
     for i, (version, sha, date) in enumerate(versions):
         if len(entries) >= max_entries:
             break
@@ -169,7 +273,7 @@ def build(max_entries: int) -> dict:
             # beginning of the repository, stop. The page links to
             # GitHub for everything older, which is where it is.
             break
-        notes = notes_between(older, sha)
+        notes = notes_between(older, sha, repo=repo)
         if not notes:
             # A version whose every commit was bookkeeping. Dropping it
             # rather than showing an empty row is the difference between
@@ -180,16 +284,33 @@ def build(max_entries: int) -> dict:
             'date': date,
             'notes': notes[:MAX_NOTES_PER_VERSION],
         })
-    return {'entries': entries}
+    data: dict = {'entries': entries}
+    if head is not None:
+        data['head'] = head
+    return data
 
 
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument('--check', action='store_true')
     ap.add_argument('--max-entries', type=int, default=DEFAULT_MAX_ENTRIES)
+    ap.add_argument(
+        '--head-version', default=None,
+        help='the version being built (default: pubspec.yaml); its '
+             'entry is synthesised from the commits after the last '
+             'release: anchor, because its own anchor does not exist yet',
+    )
+    ap.add_argument(
+        '--head-date', default=None,
+        help='YYYY-MM-DD for the head entry (default: the HEAD commit date)',
+    )
     args = ap.parse_args()
 
-    data = build(args.max_entries)
+    data = build(
+        args.max_entries,
+        head_version=args.head_version or pubspec_version(),
+        head_date=args.head_date,
+    )
     if not data['entries']:
         print('refusing to write an empty changelog', file=sys.stderr)
         return 1

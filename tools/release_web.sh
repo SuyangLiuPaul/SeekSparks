@@ -48,7 +48,34 @@ echo "==> APP_VERSION=$APP_VERSION"
 
 cd "$PROJECT"
 
-# Deploy build/web to each "id:name" entry (parallel, then wait).
+# 2026-09-09 (review finding 6): whether a site got the build is decided
+# by asking the SITE, not by the CLI's exit code. Words' sibling script
+# recorded the case this guards — `netlify deploy` exited 0, and Netlify
+# later marked the deploy "canceled", so the site went on serving the
+# previous version under a "✓ deployed" line. No exit code can carry a
+# state the service sets after the process has ended; re-fetching
+# version.json can. Three attempts with a pause, because a single
+# dropped connection must not be able to fail a release that succeeded.
+# `RELEASE_VERIFY_SLEEP` exists for the script's own test, which has no
+# reason to wait ten seconds to see the failure path.
+RELEASE_VERIFY_SLEEP="${RELEASE_VERIFY_SLEEP:-5}"
+verify_site() {
+  local name="$1" host="$2" served="" attempt
+  for attempt in 1 2 3; do
+    served="$(curl -fsS --max-time 30 "https://$host/version.json" 2>/dev/null \
+      | sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')"
+    if [[ "$served" = "$APP_VERSION" ]]; then
+      echo "  ✓ $name — https://$host serves v$APP_VERSION"
+      return 0
+    fi
+    if [[ "$attempt" != "3" ]]; then sleep "$RELEASE_VERIFY_SLEEP"; fi
+  done
+  echo "  ✗ $name — https://$host serves version '${served:-none}', expected $APP_VERSION" >&2
+  return 1
+}
+
+# Deploy build/web to each "id:name:host" entry (parallel, then wait),
+# then verify every one of them against what it actually serves.
 # Every deploy's exit status is checked. The previous version backgrounded
 # them and called a bare `wait`, which returns the status of the LAST job
 # and was never read anyway -- so on 2026-09-09, with the netlify binary
@@ -56,16 +83,16 @@ cd "$PROJECT"
 # not reached. A release script that lies about deploying is worse than
 # one that fails.
 deploy_sites() {
-  local -a pids=() names=()
-  local failed=0
+  local -a pids=() names=() hosts=()
+  local failed=0 id name host
   for entry in "$@"; do
-    id="${entry%:*}"
-    name="${entry#*:}"
+    IFS=':' read -r id name host <<<"$entry"
     echo "==> deploying $name ($id)"
     "$NETLIFY" deploy --prod --site "$id" --dir build/web \
       --message "v$APP_VERSION $name" &
     pids+=("$!")
     names+=("$name")
+    hosts+=("$host")
   done
   local i
   for i in "${!pids[@]}"; do
@@ -79,9 +106,20 @@ deploy_sites() {
     echo "!!! released. Fix the cause and re-run; do not tag." >&2
     exit 1
   fi
+  echo "==> verifying what each site serves"
+  for i in "${!names[@]}"; do
+    if ! verify_site "${names[$i]}" "${hosts[$i]}"; then
+      failed=1
+    fi
+  done
+  if [ "$failed" -ne 0 ]; then
+    echo "!!! the CLI reported success but at least one site above is not" >&2
+    echo "!!! serving v$APP_VERSION. Nothing counts as released until it" >&2
+    echo "!!! does. Re-run the deploy for that site; do not tag." >&2
+    exit 1
+  fi
 }
 
-echo "==> building web bundle"
 # APP_RELEASE_TIME was never passed here, so `kAppReleaseTime` kept
 # falling back to the hardcoded default in app_version.dart — the
 # "last updated" the app showed was whenever that constant was last
@@ -92,12 +130,19 @@ APP_RELEASE_TIME="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 # app ships a "What's new" page that stops at whenever somebody last
 # remembered to run the generator by hand.
 #
-# It is generated from the `release: vX.Y.Z` commits, so the version
-# being released now is NOT in it — its own release commit does not
-# exist yet. That is correct rather than a lag to work around: the page
-# lists versions that have shipped, and this one has not.
-echo "==> refreshing assets/changelog.json"
-python3 "$PROJECT/tools/build_changelog.py"
+# AFTER the bump and BEFORE `flutter build`, and told which version it
+# is building for (review finding 1, 2026-09-09). The earlier comment
+# here argued the opposite — that the version being released "has not
+# shipped" and so belonged off the page. That was wrong from the
+# reader's side: they open "What's new" ON this version, the page's
+# badge marks the running version, and with the entry missing the
+# badge never rendered and the top of the page was always one release
+# stale. The generator synthesises this version's entry from the
+# commits after the last `release:` anchor, which is exactly what the
+# release commit made after this deploy will span.
+echo "==> refreshing assets/changelog.json for v$APP_VERSION"
+python3 "$PROJECT/tools/build_changelog.py" \
+  --head-version "$APP_VERSION" --head-date "$(date +%Y-%m-%d)"
 #
 # --no-web-resources-cdn is LOAD-BEARING, not an optimisation.
 #
@@ -112,17 +157,22 @@ python3 "$PROJECT/tools/build_changelog.py"
 # v1.6.62 removed Firebase and google_fonts to get Google off the boot
 # path. Leaving this flag off would have left the single largest
 # Google dependency in place and made that work cosmetic.
+echo "==> building web bundle"
 "$FLUTTER" build web --release \
   --no-web-resources-cdn \
   --dart-define="APP_VERSION=$APP_VERSION" \
   --dart-define="APP_RELEASE_TIME=$APP_RELEASE_TIME"
 
+# "id:name:host" — the host is what verify_site re-fetches version.json
+# from after the deploy, so it must be the address readers actually
+# use, not the Netlify alias (prod answers at both; the custom domain
+# is the one that matters).
 SITES=(
-  "94de1ce4-b58e-4368-84f4-34165e7f6be5:dev"
+  "94de1ce4-b58e-4368-84f4-34165e7f6be5:dev:seeksparks-dev.netlify.app"
 )
 if [[ "$INCLUDE_PROD" = "1" ]]; then
   echo "==> --include-prod set; build will also go to seeksparks prod."
-  SITES+=("7ae9dbe7-c297-4240-817e-a8e7f8cf6cfc:prod")
+  SITES+=("7ae9dbe7-c297-4240-817e-a8e7f8cf6cfc:prod:sword.yahwehword.com")
 fi
 deploy_sites "${SITES[@]}"
 

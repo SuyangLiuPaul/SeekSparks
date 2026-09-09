@@ -3797,6 +3797,20 @@ const uiStrings = {
         'GitHub, then install: Android opens the APK; desktop unzips and '
         'runs. iOS uses the web app.',
   },
+  // 2026-09-09 (review finding 5): the body an Android reader sees
+  // when the in-app path is available. The one above still described
+  // the browser trip — "download it from GitHub, open the APK" — right
+  // over a button that does neither, and mentioned desktops and iOS to
+  // a phone. This says what "Update now" will actually do, and that
+  // the next screen is Android's.
+  'updateAvailableBodyAndroid': {
+    'zh-Hans': '新版本 v{new} 已发布（当前 v{cur}）。点「立即更新」会在应用内'
+        '下载并安装，安卓会让你确认一次。',
+    'zh-Hant': '新版本 v{new} 已發佈（目前 v{cur}）。點「立即更新」會在應用程式內'
+        '下載並安裝，Android 會請你確認一次。',
+    'en': 'Version v{new} is available (you have v{cur}). "Update now" '
+        'downloads and installs it here; Android will ask you to confirm.',
+  },
   // 2026-09-09: the changelog page, from 「也要有历史的release note但是
   // 不要全部的而是足够的不然太多」.
   //
@@ -3837,6 +3851,18 @@ const uiStrings = {
     'zh-Hant': '這個版本沒有隨包的更新記錄。',
     'en': 'No release notes are bundled with this build.',
   },
+  // 2026-09-09 (review finding 4): the notes under a Chinese title are
+  // English commit subjects, and nothing on the page said why. One
+  // caption in the two Chinese locales; 'en' is deliberately EMPTY —
+  // the page renders nothing for an empty string, and an English
+  // reader is not owed a note that the English is in English. Not a
+  // translation: the notes are not translated, and this app does not
+  // pretend otherwise.
+  'changelogLanguageNote': {
+    'zh-Hans': '更新记录以英文记录。',
+    'zh-Hant': '更新記錄以英文記錄。',
+    'en': '',
+  },
   'changelogOpen': {
     'zh-Hans': '更新记录',
     'zh-Hant': '更新記錄',
@@ -3869,10 +3895,19 @@ const uiStrings = {
     'zh-Hant': '正在下載更新…',
     'en': 'Downloading update…',
   },
-  // Shown while the length is unknown, which is also the moment the
-  // reader most needs to be told what is about to happen — the next
+  // 2026-09-09 (review finding 1): the progress dialog's one button.
+  // Its own key rather than `cancel` because a reader mid-download is
+  // stopping something, not declining something.
+  'updateCancelDownload': {
+    'zh-Hans': '停止下载',
+    'zh-Hant': '停止下載',
+    'en': 'Stop download',
+  },
+  // Shown under the progress bar for the whole download: the next
   // thing on screen will be an Android system dialog, and an
-  // unexplained one looks like something went wrong.
+  // unexplained one looks like something went wrong. (Until
+  // 2026-09-09 it showed only while the length was unknown, and
+  // GitHub always sends one, so nobody ever saw it.)
   'updateDownloadingHint': {
     'zh-Hans': '下载完成后，安卓会让你确认安装。',
     'zh-Hant': '下載完成後，Android 會讓你確認安裝。',
@@ -3886,14 +3921,21 @@ const uiStrings = {
     'zh-Hant': '允許本應用安裝更新',
     'en': 'Allow installing updates',
   },
+  // 2026-09-09 (review finding 4): "then press Update again" is gone —
+  // the install now carries on by itself when the reader comes back
+  // with the switch on, and there was no Update button on the screen
+  // they came back to. Finding 8: the zh-Hant switch is named as
+  // Android's zh-TW build names it, 「安裝不明應用程式」, not a
+  // character-swapped 「安裝未知應用」 the reader would search the
+  // settings screen for in vain.
   'updatePermissionBody': {
     'zh-Hans': '安卓对每个应用单独询问一次。请打开本应用的「安装未知应用」'
-        '开关，然后再按一次「立即更新」。',
-    'zh-Hant': 'Android 對每個應用單獨詢問一次。請打開本應用的「安裝未知'
-        '應用」開關，然後再按一次「立即更新」。',
+        '开关，回来后会自动继续更新。',
+    'zh-Hant': 'Android 對每個應用程式單獨詢問一次。請開啟本應用程式的'
+        '「安裝不明應用程式」開關，回來後會自動繼續更新。',
     'en': 'Android asks each app separately before it may install one. '
-        'Turn on "Install unknown apps" for this app, then press Update '
-        'again.',
+        'Turn on "Install unknown apps" for this app; the update continues '
+        'when you come back.',
   },
   'updatePermissionOpen': {
     'zh-Hans': '打开设置',
@@ -7303,6 +7345,11 @@ const uiStrings = {
     'en': 'Share',
     'zh-Hans': '分享',
     'zh-Hant': '分享',
+  },
+  'moreActions': {
+    'en': 'More',
+    'zh-Hans': '更多',
+    'zh-Hant': '更多',
   },
   'shareLinkCopied': {
     'en': 'Share link copied',

@@ -66,9 +66,29 @@ if [[ "$fallback" != "$VERSION" ]]; then
   exit 1
 fi
 
+# 2026-09-09 (review finding 7): "already exists" used to be decided
+# from the LOCAL tag alone. The tag is created before it is pushed, so
+# a push that failed — no network, a rejected credential — left the
+# local tag behind and exited 1; the very next run then saw that tag,
+# printed "nothing to do", and exited 0. The release-android.yml build
+# never fired, the GitHub Release never appeared, and the script had
+# said everything was fine. Now: a local tag that origin does not have
+# is pushed, and a push that fails takes the local tag with it, so no
+# run can inherit a half-done state from the one before.
 if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
-  echo "Tag $TAG already exists — nothing to do."
-  echo "(A version is released once. Bump before releasing again.)"
+  if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null 2>&1; then
+    echo "Tag $TAG already exists on origin — nothing to do."
+    echo "(A version is released once. Bump before releasing again.)"
+    exit 0
+  fi
+  echo "==> $TAG exists locally but origin does not have it — pushing"
+  if [[ "$DRY" = "1" ]]; then
+    echo "--dry-run: would push the existing $TAG, firing release-android.yml"
+    exit 0
+  fi
+  git push origin "$TAG"
+  echo
+  echo "✓ $TAG pushed."
   exit 0
 fi
 
@@ -79,7 +99,12 @@ if [[ "$DRY" = "1" ]]; then
 fi
 
 git tag -a "$TAG" -m "$TAG"
-git push origin "$TAG"
+if ! git push origin "$TAG"; then
+  git tag -d "$TAG" >/dev/null
+  echo "!!! push of $TAG failed; the local tag was removed so the next" >&2
+  echo "!!! run starts clean instead of reporting 'nothing to do'." >&2
+  exit 1
+fi
 
 echo
 echo "✓ $TAG pushed."
