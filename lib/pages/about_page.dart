@@ -5,6 +5,8 @@ import 'package:seeksparks/constants/app_version.dart';
 import 'package:seeksparks/constants/sermon_credit.dart';
 import 'package:seeksparks/widgets/update_check_tile.dart';
 import 'package:seeksparks/constants/ui_strings.dart';
+import 'package:seeksparks/pages/changelog_page.dart';
+import 'package:seeksparks/utils/app_nav.dart';
 import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/map_provenance.dart';
@@ -792,6 +794,17 @@ class _AppLicenseCard extends StatelessWidget {
             // 2026-06-16 (v1.3.88): native-only "Check for updates" against
             // the GitHub release feed (hides itself on web — PWA is current).
             UpdateCheckTile(locale: locale, scheme: scheme),
+            // 2026-09-09: and what changed. NOT behind
+            // `UpdateService.isSupported` like the tile above it — the
+            // changelog is bundled, so it reads on the web too, where
+            // it is the only answer to "what changed" the reader has.
+            TextButton.icon(
+              icon: const Icon(Icons.history_rounded, size: 16),
+              label: Text(
+                uiStrings['changelogOpen']?[locale] ?? "What's new",
+              ),
+              onPressed: () => pushPage(const ChangelogPage()),
+            ),
           ],
         ),
       ),

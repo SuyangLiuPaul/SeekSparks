@@ -55,6 +55,17 @@ echo "==> building web bundle"
 # "last updated" the app showed was whenever that constant was last
 # hand-edited, not when the bundle was actually built.
 APP_RELEASE_TIME="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+# 2026-09-09: refresh the bundled changelog before the build, or the
+# app ships a "What's new" page that stops at whenever somebody last
+# remembered to run the generator by hand.
+#
+# It is generated from the `release: vX.Y.Z` commits, so the version
+# being released now is NOT in it — its own release commit does not
+# exist yet. That is correct rather than a lag to work around: the page
+# lists versions that have shipped, and this one has not.
+echo "==> refreshing assets/changelog.json"
+python3 "$PROJECT/tools/build_changelog.py"
 #
 # --no-web-resources-cdn is LOAD-BEARING, not an optimisation.
 #
