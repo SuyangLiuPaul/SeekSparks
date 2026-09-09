@@ -123,9 +123,22 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           tag="${{ steps.ver.outputs.tag }}"
-          gh release view "$tag" >/dev/null 2>&1 || \
+          # A release is the only thing the in-app updater reads: it polls
+          # releases/latest (lib/services/update_service.dart). A manual run
+          # takes an arbitrary ref, and `gh release create` would CREATE the
+          # tag on that ref — so a mistyped tag would publish an unreviewed
+          # build straight to every reader. Only the tag-push path may cut a
+          # release; a manual run attaches to one that already exists.
+          if ! gh release view "$tag" >/dev/null 2>&1; then
+            if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+              echo "::error::Release '$tag' does not exist. A manual run only attaches to an existing release; to cut a new one push the tag (tools/tag_release.sh). The build is still available above as a workflow artifact."
+              exit 1
+            fi
+            # create-if-missing; `|| true` guards the race where a
+            # sibling platform workflow created it a moment earlier.
             gh release create "$tag" \
               --title "$tag" \
               --notes "Automated macOS desktop build (unsigned). Unzip, then clear the quarantine flag so Gatekeeper allows it: \`xattr -dr com.apple.quarantine SeekSparks.app\` (or right-click the app → Open the first time)." \
               || true
+          fi
           gh release upload "$tag" "$PKG" --clobber
