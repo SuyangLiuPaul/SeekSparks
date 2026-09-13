@@ -4,6 +4,8 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:seeksparks/constants/bible_versions.dart';
+import 'package:seeksparks/constants/version_attribution.dart';
+import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/constants/book_names.dart' show standardBookOrder;
 import 'package:seeksparks/utils/phrasing.dart' show isRtlText;
 
@@ -118,6 +120,18 @@ void main() {
       final picker =
           File('lib/widgets/version_picker_sheet.dart').readAsStringSync();
       expect(picker.contains("case 'he':"), isTrue);
+    });
+
+    test('the Copy Center and the gutter both know it', () {
+      // Registering an edition is more than the catalogue row: without
+      // these two it reaches the Copy Center with no licence line and
+      // the gutter with a hashed colour. Both were missed on the way in
+      // and caught by the catalogue-wide guards; pinned here so the
+      // edition's own file says what registering it means.
+      expect(attributionKeyFor('wlc'), 'aboutLicenseWlc');
+      expect(unrestrictedCopyVersions.contains('wlc'), isTrue,
+          reason: 'the Hebrew text itself is public domain');
+      expect(kVersionTagColors.containsKey('wlc'), isTrue);
     });
 
     test('About carries the attribution CC BY 4.0 asks for', () {

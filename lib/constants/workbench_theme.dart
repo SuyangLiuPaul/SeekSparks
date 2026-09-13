@@ -932,6 +932,10 @@ const Map<String, Color> kVersionTagColors = {
   'bgt': Color(0xFF9C1F1F), // Greek NT
   'original': Color(0xFF9C1F1F),
   'lxxwh': Color(0xFFB03030), // LXX+WH — Greek, so the red family
+  // The WLC sits beside `wtt`, the Browse window's Hebrew row, without
+  // taking its colour: one is a label, this is an edition a reader can
+  // open, and the gutter has to tell them apart.
+  'wlc': Color(0xFF7E2438), // WLC — Hebrew, a step deeper than `wtt`
   // English
   'nasb': Color(0xFF1B4F9C),
   'leb': Color(0xFF2A6BAF),

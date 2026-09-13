@@ -36,6 +36,11 @@ const versionAttributionKeys = <String, String>{
   'kjvs': 'aboutLicenseEaglesView',
   'lxxwh': 'aboutLicenseEaglesView',
   'cuvs-plus': 'aboutLicenseEaglesView',
+  // The WLC states both of its licences in its own OSIS headers: the
+  // Hebrew text is public domain, the lemma and morphology are CC BY
+  // 4.0. One line carries both, because a reader in the Copy Center is
+  // owed the second half too.
+  'wlc': 'aboutLicenseWlc',
   'cuvs-yhwh': 'aboutLicenseCuvsYhwh',
   'cuvs-yhwh-tr': 'aboutLicenseCuvsYhwh',
   'biblexg-v2': 'aboutLicenseLjk',
@@ -77,6 +82,10 @@ const unrestrictedCopyVersions = <String>{
   'bsb',
   'kjvs',
   'lxxwh',
+  // The WLC for the same reason as the three above it: what is licensed
+  // is the lemma and morphology layer, and that does not travel on the
+  // clipboard. Copying a verse of the WLC copies public-domain Hebrew.
+  'wlc',
   'cuvs-plus',
 };
 
