@@ -1727,6 +1727,24 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
   /// asserted.
   Widget _buildPhonePane(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
+    // The chart FIRST, and outside the three-way switch — exactly as
+    // the wide layout puts it ahead of the centre mode.
+    //
+    // 2026-09-14, owner-reported from an iPhone: 「手机上按了这些没有
+    // 反应，不像 iPad browser 看到中间那一部分」, said of the word
+    // distribution strips in the Analysis pane. Tapping one called
+    // `_openChart`, which set `_chartStrongs` and rebuilt — and this
+    // switch did not read that field, so the screen did not change.
+    // The reader's own words locate it: on a wide screen the chart
+    // opens in the CENTRE pane, and a phone does not draw one. Of the
+    // six `_build*Frame` surfaces, this was the only one a phone could
+    // never reach; `workbench_phone_reach_test.dart` now fails if a
+    // seventh is added and left out.
+    //
+    // `WordChartView` carries its own close control, wired to
+    // `_closeChart`, so full width needs nothing else to get back.
+    final chart = _chartStrongs;
+    if (chart != null) return _buildChartFrame(context, chart);
     return switch (_phonePane) {
       _PhonePane.search => _buildCommandFrame(context),
       _PhonePane.read => switch (effectiveCentreMode(
