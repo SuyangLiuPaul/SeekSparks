@@ -794,8 +794,25 @@ class _VocabularyPaneState extends State<VocabularyPane> {
                     w.text,
                     style: TextStyle(
                       fontSize: t.original,
-                      color:
-                          known.contains(w.strongs) ? wb.text : wb.disabledMark,
+                      // An unlearned word is drawn QUIETLY, not drawn
+                      // OFF. This used to be `wb.disabledMark`, which
+                      // measures 2.04:1 on the light pane, 1.85 on
+                      // paper and 2.66 in dark — and these are pointed
+                      // Hebrew and accented Greek, content the reader
+                      // came here to look at.
+                      //
+                      // `WbMetrics.originalFloor` exists because "a
+                      // qamats at 8 px is ABSENT, and the app is then
+                      // showing a vowel it is not showing". A word at
+                      // 1.85:1 is absent for the same reason, by colour
+                      // instead of by size. `disabledMark`'s own doc
+                      // scopes it to an unticked checkbox, an off
+                      // toggle, the empty half of a bar — the tick
+                      // beside this row is such a thing, and still
+                      // uses it. A word is not.
+                      color: known.contains(w.strongs)
+                          ? wb.text
+                          : wb.mutedText,
                     ),
                   ),
               ],

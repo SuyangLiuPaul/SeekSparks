@@ -389,8 +389,21 @@ class WbColors extends ThemeExtension<WbColors> {
     border: Color(0xFFE3E5EA),
     disabledMark: Color(0xFFAFB6C2),
     text: Color(0xFF16202E),
-    // One step lighter, now that it no longer has to survive a grey bar.
-    mutedText: Color(0xFF737D8C),
+    // 2026-09-14: #737D8C measured 4.17:1 on the pane and 3.34:1 on
+    // `selectionBg`, and this ink is drawn at 11–12 px — far under the
+    // 18.66 px large-text threshold, so the bar is 4.5:1 and it missed
+    // on every surface. It had been #66707F (5.01:1) until the
+    // flattening one commit up went "one step lighter, now that it no
+    // longer has to survive a grey bar"; that argument is about CHROME,
+    // and this value is TEXT, which the same commit's own header says
+    // it left untouched.
+    //
+    // This is darker than the #66707F it regressed from, because that
+    // value did not clear the bar on `selectionBg` either (4.02) — and
+    // `analysis_pin_bar.dart` draws muted text on exactly that fill.
+    // Now: 5.62 pane, 5.39 alt, 5.44 chrome, 5.11 ground, 5.06 hover,
+    // 4.51 selection. `workbench_muted_contrast_test.dart` holds it.
+    mutedText: Color(0xFF606875),
     link: Color(0xFF27395A),
     // The selection is the one place that got MORE presence, not less:
     // with the chrome flattened it is now the strongest fill on screen,
@@ -429,7 +442,10 @@ class WbColors extends ThemeExtension<WbColors> {
     border: Color(0xFF1E2A3C),
     disabledMark: Color(0xFF4A5A73),
     text: Color(0xFFDCE5F1),
-    mutedText: Color(0xFF8291A8),
+    // Lifted 2026-09-14 for the same reason as light's: 4.03:1 on
+    // `selectionBg`, which is where the pin bar prints. Now 6.59 pane,
+    // 5.81 hover, 4.56 selection.
+    mutedText: Color(0xFF8B9BB3),
     // Was #9FB2CC — a desaturated grey-blue that only read as a link
     // because it was slightly cooler than the text beside it. On the
     // deeper ground it can afford real saturation.
@@ -467,7 +483,10 @@ class WbColors extends ThemeExtension<WbColors> {
     border: Color(0xFFE7DCBC),
     disabledMark: Color(0xFFC3B287),
     text: Color(0xFF4A3826),
-    mutedText: Color(0xFF7A6A50),
+    // Darkened 2026-09-14 with the other two: 3.70:1 on `selectionBg`
+    // and 4.21–4.44 on the rest, all under the bar. Now 5.68 pane,
+    // 5.33 alt, 5.43 chrome, 5.14 ground, 5.19 hover, 4.51 selection.
+    mutedText: Color(0xFF6B5D46),
     // Hyperlink blue is the one BibleWorks colour readers already know;
     // a gold link on cream is harder to read, not easier.
     link: Color(0xFF27395A),
