@@ -289,4 +289,54 @@ const Map<String, Map<String, String>> projectionStrings = {
     'zh-Hant': '開啟投影視窗（拖到投影機螢幕上）',
     'en': 'Open the projector window (drag it to the projector display)',
   },
+  // 2026-09-13: the order of service and the countdown. 程序 is what a
+  // Chinese-speaking church prints on the sheet; VideoPsalm calls the
+  // first of these an agenda.
+  'projectionAgenda': {
+    'zh-Hans': '程序（聚会顺序）',
+    'zh-Hant': '程序（聚會順序）',
+    'en': 'Order of service',
+  },
+  'projectionAgendaNone': {
+    'zh-Hans': '还没有程序',
+    'zh-Hant': '還沒有程序',
+    'en': 'No order of service yet',
+  },
+  'projectionAgendaAddCurrent': {
+    'zh-Hans': '加入墙上这段',
+    'zh-Hant': '加入牆上這段',
+    'en': 'Add what is on the wall',
+  },
+  'projectionAgendaAddBlank': {
+    'zh-Hans': '加一个黑屏',
+    'zh-Hant': '加一個黑屏',
+    'en': 'Add a blank',
+  },
+  'projectionAgendaRemove': {'zh-Hans': '移除', 'zh-Hant': '移除', 'en': 'Remove'},
+  'projectionAgendaNext': {
+    'zh-Hans': '下一个：{item}',
+    'zh-Hant': '下一個：{item}',
+    'en': 'Next: {item}',
+  },
+  'projectionAgendaEnd': {
+    'zh-Hans': '程序到此为止',
+    'zh-Hant': '程序到此為止',
+    'en': 'end of the order',
+  },
+  'projectionCountdown': {'zh-Hans': '倒计时', 'zh-Hant': '倒數計時', 'en': 'Countdown'},
+  'projectionCountdownMinutes': {
+    'zh-Hans': '{n} 分钟',
+    'zh-Hant': '{n} 分鐘',
+    'en': '{n} minutes',
+  },
+  'projectionCountdownSoon': {
+    'zh-Hans': '聚会还有',
+    'zh-Hant': '聚會還有',
+    'en': 'The service begins in',
+  },
+  'projectionCountdownNow': {
+    'zh-Hans': '就要开始了',
+    'zh-Hant': '就要開始了',
+    'en': 'We are beginning',
+  },
 };

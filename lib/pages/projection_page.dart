@@ -164,6 +164,7 @@ import 'package:seeksparks/constants/projection_strings.dart';
 import 'package:seeksparks/constants/workbench_theme.dart'
     show WbColors, WbMetrics, WbType;
 import 'package:seeksparks/models/app_settings.dart';
+import 'package:seeksparks/models/projection_agenda.dart';
 import 'package:seeksparks/services/projection_broadcast.dart';
 import 'package:seeksparks/models/verse.dart';
 import 'package:seeksparks/providers/main_provider.dart';
@@ -193,6 +194,14 @@ const String kProjectionUrlPath = '/project';
 /// way. Four seconds is long enough to move from one button to the next
 /// and short enough that a bar left on the wall is measured in seconds.
 const Duration kProjectionControlsLinger = Duration(seconds: 4);
+
+/// The countdown lengths offered, in minutes.
+///
+/// A short list rather than a picker: the operator is choosing before a
+/// service, not scheduling, and five values cover what a church actually
+/// counts down — the last song, the last few minutes, and the quarter
+/// hour a hall takes to fill.
+const List<int> kProjectionCountdownMinutes = <int>[1, 3, 5, 10, 15];
 
 /// How long the controls take to fade in and out.
 ///
@@ -240,6 +249,19 @@ enum ProjectionCommand {
 
   /// Open (or close) the strip of saved setups.
   openPresets,
+
+  /// Open (or close) the order of service.
+  openAgenda,
+
+  /// Put the NEXT agenda item on the wall.
+  agendaNext,
+
+  /// Put the PREVIOUS agenda item on the wall.
+  agendaPrevious,
+
+  /// Open (or close) the countdown strip — or take a running countdown
+  /// down, which is what it does while one is up.
+  countdown,
 
   /// Open the follower window — `web/stage.html` on a BroadcastChannel.
   /// Web only; the button and the key are absent elsewhere. See
@@ -321,6 +343,23 @@ ProjectionCommand? projectionCommandFor(LogicalKeyboardKey key) {
   }
   if (key == LogicalKeyboardKey.keyV) {
     return ProjectionCommand.openSecondVersionPicker;
+  }
+  // The order of service: A opens it, and the two brackets step it —
+  // the pair a presentation tool uses for previous / next slide, and
+  // neither of them a browser chord. C is the countdown; bare, so it
+  // never fights Cmd+C, which kBrowserOwnedChords names and the
+  // modifier guard in _onKey already lets through.
+  if (key == LogicalKeyboardKey.keyA) {
+    return ProjectionCommand.openAgenda;
+  }
+  if (key == LogicalKeyboardKey.bracketRight) {
+    return ProjectionCommand.agendaNext;
+  }
+  if (key == LogicalKeyboardKey.bracketLeft) {
+    return ProjectionCommand.agendaPrevious;
+  }
+  if (key == LogicalKeyboardKey.keyC) {
+    return ProjectionCommand.countdown;
   }
   // D for display. Not a browser chord (kBrowserOwnedChords names C V X
   // F P S T W N L K R); a bare letter the operator hits once, at the
@@ -484,7 +523,7 @@ ProjectionCursor projectionChapterStep(
 /// the same fading band is the same information without either problem,
 /// and it keeps every target in the band the operator's hand is already
 /// in.
-enum ProjectionPanel { grounds, editions, presets }
+enum ProjectionPanel { grounds, editions, presets, agenda, countdown }
 
 
 /// The language family of an edition code, for the companion pairing —
@@ -545,6 +584,32 @@ class _ProjectionPageState extends State<ProjectionPage> {
   /// The strip of choices open under the buttons, or null.
   ProjectionPanel? _panel;
 
+  /// The settings this page reads outside `build`. `listen: false`
+  /// because every caller here is a command handler, not a builder —
+  /// `build` watches them itself.
+  AppSettings get _settings =>
+      Provider.of<AppSettings>(context, listen: false);
+
+  /// When the countdown runs out, or null when none is running. An END
+  /// TIME rather than a remaining duration: a timer that ticks a number
+  /// down drifts, and one paused by a suspended tab comes back wrong.
+  /// Wall-clock arithmetic on every build cannot.
+  DateTime? _countdownEnd;
+  Timer? _countdownTicker;
+
+  /// Time left, floored at zero, or null when nothing is counting.
+  Duration? get _countdownLeft {
+    final end = _countdownEnd;
+    if (end == null) return null;
+    final left = end.difference(DateTime.now());
+    return left.isNegative ? Duration.zero : left;
+  }
+
+  /// Where in the agenda the wall is, or null when it is simply
+  /// following the reader. Not persisted: an order of service survives
+  /// the week, but the place you had reached in it is this morning's.
+  int? _agendaAt;
+
   /// The second edition's code once it has been resolved, and its text
   /// indexed as `'<English book>|<chapter>'` → verse number → text.
   ///
@@ -575,6 +640,7 @@ class _ProjectionPageState extends State<ProjectionPage> {
   void dispose() {
     _controlsTimer?.cancel();
     UrlSyncService.claimUrl(null, owner: this);
+    _countdownTicker?.cancel();
     ProjectionBroadcast.close();
     _focus.dispose();
     super.dispose();
@@ -695,6 +761,21 @@ class _ProjectionPageState extends State<ProjectionPage> {
         _togglePanel(ProjectionPanel.editions);
       case ProjectionCommand.openPresets:
         _togglePanel(ProjectionPanel.presets);
+      case ProjectionCommand.openAgenda:
+        _togglePanel(ProjectionPanel.agenda);
+      case ProjectionCommand.agendaNext:
+        _stepAgenda(mp, 1);
+      case ProjectionCommand.agendaPrevious:
+        _stepAgenda(mp, -1);
+      case ProjectionCommand.countdown:
+        // While one is running the button takes it down rather than
+        // asking how long again: one key, both directions, which is
+        // what an operator with their eyes on the room needs.
+        if (_countdownEnd != null) {
+          _stopCountdown();
+        } else {
+          _togglePanel(ProjectionPanel.countdown);
+        }
       case ProjectionCommand.openStage:
         if (ProjectionBroadcast.isSupported) ProjectionBroadcast.openStage();
       case ProjectionCommand.leave:
@@ -913,6 +994,7 @@ class _ProjectionPageState extends State<ProjectionPage> {
                         _secondTextsFor(shown, settings.projectionSecondOn),
                     secondCode: _secondCode,
                     secondLoading: _secondLoading,
+                    countdownRemaining: _countdownLeft,
                   ),
                 ),
                 // THE CONTROLS SIT AT THE TOP, AND THE REFERENCE AT THE
@@ -986,8 +1068,20 @@ class _ProjectionPageState extends State<ProjectionPage> {
     }
     final paint = projectionGroundPaintFor(ground);
     const wb = WbColors.dark;
+    final left = _countdownLeft;
     return ProjectionFrame(
       blank: _blank,
+      countdown: left == null ? null : formatProjectionCountdown(left),
+      countdownLabel: left == null
+          ? null
+          : _s(
+              left == Duration.zero
+                  ? 'projectionCountdownNow'
+                  : 'projectionCountdownSoon',
+              left == Duration.zero
+                  ? 'We are beginning'
+                  : 'The service begins in',
+              settings.locale),
       typeSize: kProjectionTypeSteps[settings.projectionTypeStep],
       reference: _referenceFor(shown),
       tags: [
@@ -1111,6 +1205,22 @@ class _ProjectionPageState extends State<ProjectionPage> {
               _button(t, Icons.bookmarks_outlined, 'projectionPresets',
                   'Saved setups', locale, ProjectionCommand.openPresets, mp,
                   settings, active: _panel == ProjectionPanel.presets),
+              _divider(wb, t),
+              _button(
+                  t,
+                  _countdownEnd == null
+                      ? Icons.timer_outlined
+                      : Icons.timer_off_outlined,
+                  'projectionCountdown',
+                  'Countdown',
+                  locale,
+                  ProjectionCommand.countdown,
+                  mp,
+                  settings,
+                  active: _panel == ProjectionPanel.countdown),
+              _button(t, Icons.list_alt_outlined, 'projectionAgenda',
+                  'Order of service', locale, ProjectionCommand.openAgenda, mp,
+                  settings, active: _panel == ProjectionPanel.agenda),
               if (ProjectionBroadcast.isSupported)
                 _button(t, Icons.open_in_new, 'projectionOpenStage',
                     'Open the projector window', locale,
@@ -1131,6 +1241,16 @@ class _ProjectionPageState extends State<ProjectionPage> {
         // one-window line is the answer to the question the operator is
         // about to ask, said before they ask it rather than in a
         // release note nobody reads.
+        // What is coming, for the person driving. A projector operator
+        // reads one item ahead of the room; before this the only way to
+        // know what `]` would do was to press it and find out in front
+        // of everybody. Shown only when there IS an order of service.
+        if (_nextAgendaLabel(locale) != null)
+          _hint(
+              wb,
+              t,
+              (_s('projectionAgendaNext', 'Next: {item}', locale))
+                  .replaceAll('{item}', _nextAgendaLabel(locale)!)),
         _hint(wb, t, _s('projectionKeysHint', 'Arrows change verse', locale)),
         _hint(
             wb,
@@ -1243,6 +1363,90 @@ class _ProjectionPageState extends State<ProjectionPage> {
               ),
           ],
         );
+      case ProjectionPanel.countdown:
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (final m in kProjectionCountdownMinutes)
+              _chip(
+                wb,
+                t,
+                (_s('projectionCountdownMinutes', '{n} minutes', locale))
+                    .replaceAll('{n}', '$m'),
+                selected: false,
+                icon: Icons.timer_outlined,
+                onTap: () {
+                  _startCountdown(m);
+                  _closePanel();
+                },
+              ),
+          ],
+        );
+      case ProjectionPanel.agenda:
+        final items = settings.projectionAgenda;
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _chip(
+              wb,
+              t,
+              _s('projectionAgendaAddCurrent', 'Add what is on the wall',
+                  locale),
+              selected: false,
+              icon: Icons.add,
+              onTap: () {
+                final item = _currentAsAgendaItem(mp);
+                if (item == null) return;
+                unawaited(
+                    settings.setProjectionAgenda([...items, item]));
+              },
+            ),
+            _chip(
+              wb,
+              t,
+              _s('projectionAgendaAddBlank', 'Add a blank', locale),
+              selected: false,
+              icon: Icons.visibility_off_outlined,
+              onTap: () => unawaited(settings
+                  .setProjectionAgenda([...items, const AgendaItem.blank()])),
+            ),
+            if (items.isEmpty)
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: t.scaledChrome(8)),
+                child: Text(
+                  _s('projectionAgendaNone', 'No order of service yet',
+                      locale),
+                  style: TextStyle(color: wb.mutedText, fontSize: t.chrome),
+                ),
+              ),
+            for (var i = 0; i < items.length; i++)
+              _chip(
+                wb,
+                t,
+                items[i].label,
+                selected: i == _agendaAt,
+                onTap: () {
+                  _showAgendaItem(mp, i);
+                  _closePanel();
+                },
+                onRemove: () {
+                  final next = [...items]..removeAt(i);
+                  // The place in the list moves with the list, or goes
+                  // away with it.
+                  if (_agendaAt != null) {
+                    if (_agendaAt == i) {
+                      _agendaAt = null;
+                    } else if (_agendaAt! > i) {
+                      _agendaAt = _agendaAt! - 1;
+                    }
+                  }
+                  unawaited(settings.setProjectionAgenda(next));
+                },
+                removeLabel:
+                    _s('projectionAgendaRemove', 'Remove', locale),
+              ),
+          ],
+        );
       case ProjectionPanel.presets:
         final presets = settings.projectionPresets;
         return Row(
@@ -1301,6 +1505,113 @@ class _ProjectionPageState extends State<ProjectionPage> {
         ProjectionGround.vignette =>
           _s('projectionGroundVignette', 'Gradient', locale),
       };
+
+  // ── the countdown ─────────────────────────────────────────────────
+
+  /// Start a countdown of [minutes].
+  ///
+  /// The ticker only exists to repaint: the number is computed from
+  /// [_countdownEnd] on every build, so a dropped or throttled tick
+  /// shows a stale frame at worst and never a wrong time. It stops
+  /// itself at zero — the wall keeps saying 「就要开始了」 until the
+  /// operator takes it down, which is the state the room is in.
+  void _startCountdown(int minutes) {
+    _countdownTicker?.cancel();
+    setState(() {
+      _blank = false;
+      _countdownEnd = DateTime.now().add(Duration(minutes: minutes));
+    });
+    _countdownTicker = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      if (_countdownLeft == Duration.zero) timer.cancel();
+      setState(() {});
+    });
+  }
+
+  void _stopCountdown() {
+    _countdownTicker?.cancel();
+    _countdownTicker = null;
+    setState(() => _countdownEnd = null);
+  }
+
+  // ── the order of service ──────────────────────────────────────────
+  //
+  // See `projection_agenda.dart` for why the rows are references rather
+  // than copies of the text, and why there is no per-item styling.
+
+  /// Put agenda row [index] on the wall.
+  ///
+  /// A row whose book the loaded edition does not have moves the cursor
+  /// nowhere and leaves the wall as it was. Silently: the operator is
+  /// mid-service, and an error dialog on a projector is worse than a
+  /// passage that did not change.
+  void _showAgendaItem(MainProvider mp, int index) {
+    final items = _settings.projectionAgenda;
+    if (index < 0 || index >= items.length) return;
+    final item = items[index];
+    setState(() => _agendaAt = index);
+    if (item.kind == AgendaKind.blank) {
+      setState(() => _blank = true);
+      return;
+    }
+    final chapter = mp.findChapterIndex(item.book, item.chapter);
+    if (chapter == null) return;
+    final verses = _versesAt(mp, chapter);
+    // By printed number, not by position: an edition that merges 4-5
+    // into one row would otherwise put a different verse on the wall
+    // than the agenda names.
+    final at = verses.indexWhere((v) => v.verse == item.verse);
+    if (at < 0) return;
+    setState(() {
+      _blank = false;
+      _cursor = ProjectionCursor(chapter, at, count: item.count);
+    });
+  }
+
+  /// `]` and `[`. From nowhere, `]` starts at the top — which is what an
+  /// operator pressing it at the start of a service means.
+  void _stepAgenda(MainProvider mp, int delta) {
+    final items = _settings.projectionAgenda;
+    if (items.isEmpty) return;
+    final at = _agendaAt;
+    final next = at == null ? (delta > 0 ? 0 : items.length - 1) : at + delta;
+    if (next < 0 || next >= items.length) return;
+    _showAgendaItem(mp, next);
+  }
+
+  /// The passage on the wall right now, as an agenda row.
+  AgendaItem? _currentAsAgendaItem(MainProvider mp) {
+    final cursor = _cursor ?? _readerCursor(mp);
+    if (cursor == null) return null;
+    final verses = _versesAt(mp, cursor.chapter);
+    if (cursor.verse >= verses.length) return null;
+    final v = verses[cursor.verse];
+    return AgendaItem(
+      kind: AgendaKind.passage,
+      book: v.book,
+      chapter: v.chapter,
+      verse: v.verse,
+      count: cursor.count,
+    );
+  }
+
+  /// The label of the row `]` would put up next, or null when there is
+  /// no order of service. From nowhere it names the FIRST row, because
+  /// that is what `]` does from nowhere — the hint describes the key,
+  /// not the list.
+  String? _nextAgendaLabel(String locale) {
+    final items = _settings.projectionAgenda;
+    if (items.isEmpty) return null;
+    final at = _agendaAt;
+    final next = at == null ? 0 : at + 1;
+    if (next >= items.length) {
+      return _s('projectionAgendaEnd', 'end of the order', locale);
+    }
+    return items[next].label;
+  }
 
   void _closePanel() {
     setState(() => _panel = null);
