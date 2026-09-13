@@ -544,23 +544,89 @@ class _HoverBox extends StatefulWidget {
 
 class _HoverBoxState extends State<_HoverBox> {
   bool _hovering = false;
+  bool _focused = false;
+
+  /// How much of the pane's ink a hover lays over a fill that is
+  /// already saying something.
+  ///
+  /// Measured rather than chosen: over `selectionBg` this is a 1.21
+  /// step in light and 1.32 in dark, against the 1.111 that plain
+  /// `hoverBg` makes over `paneBg` — so it is at least as visible as
+  /// the hover this app already relies on, and it stays inside the
+  /// selection's own hue. Blending `hoverBg` over the selection was
+  /// tried and measured first: it lands within 1.04 of `hoverBg`
+  /// itself, which is the bug rather than the fix.
+  static const double _kActiveHoverInk = 0.10;
 
   @override
   Widget build(BuildContext context) {
     final wb = WbColors.of(context);
     final interactive = widget.onTap != null || widget.onDoubleTap != null;
+    final onTap = widget.onTap;
+
+    // Hover is a step FROM the current fill, not a replacement for it.
+    //
+    // It used to be `_hovering ? wb.hoverBg : widget.baseColor`, so
+    // putting the pointer on a toggle that was ON — "Hide Strong's
+    // numbers", say — dropped `selectionBg` and painted the ordinary
+    // hover instead. The only signal that the toggle was on vanished
+    // at the exact moment the reader was aiming at it.
+    final base = widget.baseColor;
+    final Color? fill = !(interactive && _hovering)
+        ? base
+        : base == null
+            ? wb.hoverBg
+            : Color.alphaBlend(
+                wb.text.withValues(alpha: _kActiveHoverInk), base);
+
     return MouseRegion(
       cursor: interactive ? SystemMouseCursors.click : SystemMouseCursors.basic,
       onEnter: (_) => setState(() => _hovering = true),
       onExit: (_) => setState(() => _hovering = false),
-      child: GestureDetector(
-        onTap: widget.onTap,
-        onDoubleTap: widget.onDoubleTap,
-        behavior: HitTestBehavior.opaque,
-        child: Container(
-          padding: widget.padding,
-          color: _hovering && interactive ? wb.hoverBg : widget.baseColor,
-          child: widget.child,
+      // Every chrome control in this workspace is drawn by this box, so
+      // this is the one place that decides whether the Workbench can be
+      // driven from the keyboard. Until 2026-09-14 the answer was no:
+      // of 499 tappable nodes on the Browse screen only 41 were in the
+      // tab order, and the whole top strip — Next chapter, Search,
+      // Analysis, Choose versions, Command line, Copy Center, Settings
+      // — was outside it. A `MouseRegion` over a `GestureDetector`
+      // creates no focus node, so the engine never exposes anything to
+      // focus. The library doc calls this "a dense, flat, neutral,
+      // keyboard-driven desktop tool"; that word is the requirement.
+      child: FocusableActionDetector(
+        enabled: interactive,
+        mouseCursor: MouseCursor.defer,
+        onShowFocusHighlight: (v) {
+          if (v != _focused) setState(() => _focused = v);
+        },
+        actions: <Type, Action<Intent>>{
+          ActivateIntent: CallbackAction<ActivateIntent>(
+            onInvoke: (_) {
+              onTap?.call();
+              return null;
+            },
+          ),
+        },
+        child: GestureDetector(
+          onTap: widget.onTap,
+          onDoubleTap: widget.onDoubleTap,
+          behavior: HitTestBehavior.opaque,
+          child: Container(
+            padding: widget.padding,
+            color: fill,
+            // A FOREGROUND decoration: the ring is painted over the
+            // control rather than added to it, so a focused button is
+            // the same size as an unfocused one and the strip does not
+            // reflow as the reader tabs along it.
+            foregroundDecoration: _focused
+                ? BoxDecoration(
+                    border: Border.all(color: wb.link, width: 2),
+                    borderRadius:
+                        BorderRadius.circular(WbMetrics.radiusControl),
+                  )
+                : null,
+            child: widget.child,
+          ),
         ),
       ),
     );
