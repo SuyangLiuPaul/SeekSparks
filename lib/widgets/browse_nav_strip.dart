@@ -17,6 +17,9 @@ import 'package:flutter/material.dart';
 
 import 'package:seeksparks/constants/bible_versions.dart'
     show availableVersions;
+import 'package:seeksparks/constants/book_groups.dart' show kBibleDivisions;
+import 'package:seeksparks/utils/version_mapper.dart' show toEnglish;
+import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/verse.dart';
 
@@ -29,6 +32,7 @@ class BrowseNavStrip extends StatelessWidget {
     required this.chapter,
     required this.verse,
     required this.bookLabel,
+    required this.locale,
     required this.onVersion,
     required this.onBook,
     required this.onChapter,
@@ -47,6 +51,9 @@ class BrowseNavStrip extends StatelessWidget {
 
   /// How [localBook] should read in the UI's language.
   final String Function(String localBook) bookLabel;
+
+  /// The reader's language, for the division headers.
+  final String locale;
 
   final ValueChanged<String> onVersion;
   final ValueChanged<String> onBook;
@@ -99,6 +106,12 @@ class BrowseNavStrip extends StatelessWidget {
           _Dropdown<String>(
             value: localBook,
             items: [for (final b in books) (b, bookLabel(b))],
+            // 2026-09-13, owner-reported against this very strip:
+            // 「为什么这个不是两行新约旧约」. The sidebar picker has had
+            // a table of contents since the 09-03 report; this menu was
+            // still 66 undivided rows. Same table, same matcher — one
+            // answer to "where does this book sit", not two.
+            headerBefore: _divisionHeaders(books, locale),
             onChanged: onBook,
             minWidth: 96,
           ),
@@ -138,6 +151,34 @@ class BrowseNavStrip extends StatelessWidget {
   }
 }
 
+/// Which division header, if any, goes immediately above each book.
+///
+/// Keyed by the book as the corpus spells it, so the menu can stay a
+/// flat ordered list and simply have a header inserted before the first
+/// member of each division. Matching goes through `toEnglish`, the same
+/// way `book_chapter_picker.dart` does it, so one table serves every
+/// edition and locale.
+///
+/// A book the table does not recognise gets no header and keeps its
+/// place. A menu that hides a book is worse than an undivided one.
+Map<String, String> _divisionHeaders(List<String> books, String locale) {
+  final out = <String, String>{};
+  final claimed = <String>{};
+  for (final division in kBibleDivisions) {
+    for (final book in books) {
+      if (claimed.contains(book)) continue;
+      final english = toEnglish(book) ?? book;
+      if (!division.books.contains(english)) continue;
+      claimed.add(book);
+      // Only the FIRST member of the division carries the header.
+      out.putIfAbsent(
+          book, () => uiStrings[division.id]?[locale] ?? division.id);
+      break;
+    }
+  }
+  return out;
+}
+
 /// A compact hairline-bordered dropdown. Material's own `DropdownButton`
 /// is far too tall and padded for a 26px strip.
 class _Dropdown<T> extends StatelessWidget {
@@ -146,7 +187,11 @@ class _Dropdown<T> extends StatelessWidget {
     required this.items,
     required this.onChanged,
     required this.minWidth,
+    this.headerBefore = const {},
   });
+
+  /// A section header to draw above the item with this value. Empty for
+  /// the menus that are one list — versions, chapters, verses.
 
   final T? value;
 
@@ -154,6 +199,7 @@ class _Dropdown<T> extends StatelessWidget {
   final List<(T, String)> items;
   final ValueChanged<T> onChanged;
   final double minWidth;
+  final Map<T, String> headerBefore;
 
   @override
   Widget build(BuildContext context) {
@@ -179,7 +225,25 @@ class _Dropdown<T> extends StatelessWidget {
       ),
       onSelected: onChanged,
       itemBuilder: (context) => [
-        for (final (v, text) in items)
+        for (final (v, text) in items) ...[
+          // `enabled: false` so the header cannot be chosen — it is a
+          // label, and a menu row that closes the menu and changes
+          // nothing is a trap.
+          if (headerBefore[v] case final header?)
+            PopupMenuItem<T>(
+              enabled: false,
+              height: 20,
+              padding: const EdgeInsets.fromLTRB(8, 2, 8, 0),
+              child: Text(
+                header,
+                style: TextStyle(
+                  fontSize: t.chrome * 0.85,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.4,
+                  color: wb.mutedText,
+                ),
+              ),
+            ),
           PopupMenuItem<T>(
             value: v,
             height: 22,
@@ -193,6 +257,7 @@ class _Dropdown<T> extends StatelessWidget {
               ),
             ),
           ),
+        ],
       ],
       child: Container(
         constraints: BoxConstraints(minWidth: minWidth),

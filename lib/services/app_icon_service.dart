@@ -38,7 +38,7 @@ import 'dart:io' show Platform;
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
-import 'package:flutter/material.dart' show Color, Colors;
+import 'package:flutter/material.dart' show Color, HSLColor;
 import 'package:flutter/services.dart'
     show MethodChannel, PlatformException, rootBundle;
 
@@ -129,37 +129,43 @@ class AppIconService {
   /// silently reverting the icon to primary. Value comparison works for
   /// both the const swatch and the restored plain colour.
   static String? variantForColor(Color color) {
-    final v = color.toARGB32();
-    bool isVal(Color c) => v == c.toARGB32();
-    if (isVal(Colors.red) || isVal(Colors.deepOrange)) {
-      return 'Red';
-    }
-    if (isVal(Colors.orange) ||
-        isVal(Colors.amber) ||
-        isVal(Colors.yellow) ||
-        isVal(Colors.lime)) {
-      return 'Orange';
-    }
-    if (isVal(Colors.lightGreen) ||
-        isVal(Colors.green) ||
-        isVal(Colors.teal)) {
-      return 'Green';
-    }
-    if (isVal(Colors.deepPurple) ||
-        isVal(Colors.purple) ||
-        isVal(Colors.indigo)) {
-      return 'Purple';
-    }
-    if (isVal(Colors.pink)) {
-      return 'Pink';
-    }
-    if (isVal(Colors.brown) ||
-        isVal(Colors.grey) ||
-        isVal(Colors.blueGrey)) {
-      return 'Dark';
-    }
-    // light blue / cyan / blue → primary (no variant)
-    return null;
+    // The DEFAULT swatch keeps the default mark, because the default
+    // mark IS that colour — `kDefaultPrimaryColor` was sampled from it.
+    if (color.toARGB32() == kDefaultPrimaryColor.toARGB32()) return null;
+
+    // Everything else is decided by HUE, in bands.
+    //
+    // 2026-09-13, owner-reported: 「为什么这个 logo 颜色没有跟着主题颜色
+    // 变」 — indigo app name, red mark. The rule until now was a list of
+    // exact ARGB matches ending in `return null` for "the blue family",
+    // and that last line is inherited from YsWords, where THE DEFAULT
+    // ICON IS BLUE. In this fork the default icon is red (changed
+    // 2026-08-31 so it stops reading as YsWords), so the inherited rule
+    // handed every blue-themed reader a red logo — and any colour not
+    // in the seven-swatch list at all, such as one restored from an
+    // older build, landed in the same place.
+    //
+    // Bands rather than "nearest of five hue centres": `Colors.blue`
+    // sits 84.6° from green's centre and 84.4° from purple's, and a
+    // two-tenths-of-a-degree margin is not a decision anybody can
+    // reason about or keep stable. Each boundary below is placed
+    // between two Material hues that must land differently, and every
+    // picker swatch still resolves exactly where it always did —
+    // `app_icon_variant_test.dart` holds each one.
+    final hsl = HSLColor.fromColor(color);
+
+    // Too little colour to match a hue to: brown (0.25), blueGrey
+    // (0.18) and grey (0.00) are the picker's neutrals, and the
+    // threshold sits above all three and below `Colors.green` (0.39),
+    // the least saturated colour that must still read as its own hue.
+    if (hsl.saturation < 0.32) return 'Dark';
+
+    final h = hsl.hue % 360;
+    if (h >= 345 || h < 20) return 'Red'; // red 4°, deepOrange 14°
+    if (h < 70) return 'Orange'; // orange 36°, amber 45°, lime 66°
+    if (h < 195) return 'Green'; // lightGreen 88°, green 122°, teal 174°
+    if (h < 315) return 'Purple'; // blue 207°, indigo 231°, purple 291°
+    return 'Pink'; // pink 340°
   }
 
   /// The bundled image that matches [color], for anything in-app that

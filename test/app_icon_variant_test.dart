@@ -36,13 +36,44 @@ void main() {
       expect(AppIconService.variantForColor(restored(Colors.blueGrey)), 'Dark');
     });
 
-    test('blue family maps to the primary icon (no variant)', () {
-      expect(AppIconService.variantForColor(Colors.lightBlue), isNull);
-      expect(AppIconService.variantForColor(Colors.blue), isNull);
-      expect(AppIconService.variantForColor(Colors.cyan), isNull);
+    // 2026-09-13. This test used to assert the opposite — that the blue
+    // family fell through to "no variant" — and that rule was wrong in
+    // this fork. It is inherited from YsWords, where THE DEFAULT ICON IS
+    // BLUE, so "blue → default" put a blue mark on a blue theme. This
+    // app's default icon has been RED since 2026-08-31, so the same line
+    // handed every blue-themed reader a red logo. The owner reported it
+    // as 「为什么这个 logo 颜色没有跟着主题颜色变」: indigo app name,
+    // red mark.
+    test('the blue family lands on the nearest mark, not the red default',
+        () {
+      expect(AppIconService.variantForColor(Colors.lightBlue), 'Purple');
+      expect(AppIconService.variantForColor(Colors.blue), 'Purple');
+      // Cyan is on the green side of the band edge, which is where a
+      // reader would put it if asked to choose between these six.
+      expect(AppIconService.variantForColor(Colors.cyan), 'Green');
       // Plain-Color form too.
       expect(AppIconService.variantForColor(Color(Colors.blue.toARGB32())),
-          isNull);
+          'Purple');
+    });
+
+    test('a colour no swatch can produce still follows the theme', () {
+      // The case that made this visible: an indigo restored from an
+      // older build, which no current swatch can produce and which the
+      // exact-match list therefore sent to the default icon.
+      expect(AppIconService.variantForColor(const Color(0xFF3730A3)),
+          'Purple');
+      // And one from nowhere near the palette at all.
+      expect(AppIconService.variantForColor(const Color(0xFF00FF7F)), 'Green');
+    });
+
+    test('the neutrals are the mark with no hue in it', () {
+      // brown 0.25, blueGrey 0.18, grey 0.00 — all under the saturation
+      // floor; `Colors.green` at 0.39 is the least saturated colour that
+      // must still read as its own hue, and it does.
+      for (final c in [Colors.brown, Colors.grey, Colors.blueGrey]) {
+        expect(AppIconService.variantForColor(c), 'Dark', reason: '$c');
+      }
+      expect(AppIconService.variantForColor(Colors.green), 'Green');
     });
 
     // SeekSparks fork: the app's own brand blue (swatch 0 / the default

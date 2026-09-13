@@ -2121,6 +2121,7 @@ class _WorkbenchPageState extends State<WorkbenchPage> {
               verse: verse,
               bookLabel: (b) => localeAwareBookName(
                   bookNameToEnglish[b] ?? b, locale, mp.currentVersion),
+              locale: locale,
               onVersion: (v) => _switchVersion(v),
               onBook: (b) => _goTo(book: b, chapter: 1, verse: 1),
               onChapter: (c) => _goTo(book: localBook!, chapter: c, verse: 1),
