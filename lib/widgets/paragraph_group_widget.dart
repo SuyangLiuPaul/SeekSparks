@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+
+import 'package:seeksparks/utils/phrasing.dart' show isRtlText;
 import 'package:provider/provider.dart';
 
 import 'package:seeksparks/models/app_settings.dart';
@@ -315,6 +317,11 @@ class ParagraphGroupWidget extends StatelessWidget {
                   padding: blockPadding,
                   child: RichText(
                     textAlign: TextAlign.start,
+                    // See `verse_widget.dart`: the script decides, and a
+                    // paragraph is Hebrew if any verse in it is.
+                    textDirection: group.any((v) => isRtlText(v.text))
+                        ? TextDirection.rtl
+                        : null,
                     text: TextSpan(
                       style: TextStyle(
                         fontSize: settings.fontSize,

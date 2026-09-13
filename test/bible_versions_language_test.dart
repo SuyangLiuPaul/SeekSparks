@@ -8,7 +8,9 @@ import 'package:seeksparks/constants/bible_versions.dart';
 void main() {
   // 2026-08-07: `grc` joined them with the Eagle's View LXX+WH import —
   // the first original-language column the picker has ever carried.
-  const validLanguages = {'en', 'zh-Hant', 'zh-Hans', 'grc'};
+  // 2026-09-13: `he` joined it with the WLC, so the originals column now
+  // holds both testaments in the languages they were written in.
+  const validLanguages = {'en', 'zh-Hant', 'zh-Hans', 'he', 'grc'};
 
   test('every available version declares a valid language', () {
     for (final v in availableVersions) {
@@ -35,9 +37,12 @@ void main() {
       'kjvs',
     };
     const greek = {'lxxwh'};
+    const hebrew = {'wlc'};
     for (final v in bibleVersions) {
       if (greek.contains(v.value)) {
         expect(v.language, 'grc', reason: '${v.value} should be Greek');
+      } else if (hebrew.contains(v.value)) {
+        expect(v.language, 'he', reason: '${v.value} should be Hebrew');
       } else if (english.contains(v.value)) {
         expect(v.language, 'en', reason: '${v.value} should be English');
       } else if (v.value.endsWith('-tr')) {
@@ -51,7 +56,7 @@ void main() {
   });
 
   test('bibleLanguageOrder lists every language that has versions', () {
-    expect(bibleLanguageOrder, ['en', 'zh-Hant', 'zh-Hans', 'grc']);
+    expect(bibleLanguageOrder, ['en', 'zh-Hant', 'zh-Hans', 'he', 'grc']);
     for (final lang in bibleLanguageOrder) {
       expect(versionsForLanguage(lang), isNotEmpty);
     }

@@ -98,6 +98,7 @@ flutter:
     - assets/bsb.json
     - assets/kjvs.json
     - assets/cuvs-plus.json
+    - assets/wlc.json
     - assets/lxxwh.json
     - assets/csb.json
     # 2026-09-08, tools/import_yahwehdehua_texts.py. Listed one

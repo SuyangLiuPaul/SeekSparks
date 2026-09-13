@@ -534,6 +534,14 @@ class _ScripturesTable extends StatelessWidget {
         url: 'https://eaglesviewsoftware.com/en/download/',
       ),
       _AttribRow(
+        name: uiStrings['aboutVerWlc']?[locale] ??
+            'WLC (Westminster Leningrad Codex)',
+        licence: uiStrings['aboutLicenseWlc']?[locale] ??
+            'Public-domain Hebrew text. Lemma and morphology from the '
+                'Open Scriptures Hebrew Bible, CC BY 4.0.',
+        url: 'https://github.com/openscriptures/morphhb',
+      ),
+      _AttribRow(
         name: uiStrings['aboutVerLxxwh']?[locale] ??
             'LXX+WH (Septuagint + Westcott-Hort)',
         licence: uiStrings['aboutLicenseEaglesView']?[locale] ??

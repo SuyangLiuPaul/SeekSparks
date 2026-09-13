@@ -226,6 +226,18 @@ const bibleVersions = <BibleVersionInfo>[
     editionYear: "1901 / Jehovah as Yahweh, with Strong's",
   ),
   BibleVersionInfo(
+    value: 'wlc',
+    shortLabel: 'WLC',
+    menuLabel: 'Westminster Leningrad Codex',
+    language: 'he',
+    // Old Testament only, and pointed: the consonants carry the vowel
+    // points and the cantillation marks as the Masoretes set them. Worth
+    // saying, because a reader expecting a consonantal text will see the
+    // difference immediately — and because the 27 books it does NOT have
+    // is the first thing anyone notices.
+    editionYear: 'Hebrew OT / pointed, with cantillation',
+  ),
+  BibleVersionInfo(
     value: 'lxxwh',
     shortLabel: 'LXX+WH',
     menuLabel: 'Septuagint + Westcott-Hort',
@@ -449,7 +461,7 @@ List<BibleVersionInfo> get availableVersions => [
 /// available version are kept (defensive against a future all-disabled
 /// language).
 List<String> get bibleLanguageOrder {
-  const order = ['en', 'zh-Hant', 'zh-Hans', 'grc'];
+  const order = ['en', 'zh-Hant', 'zh-Hans', 'he', 'grc'];
   final present = availableVersions.map((v) => v.language).toSet();
   return order.where(present.contains).toList();
 }

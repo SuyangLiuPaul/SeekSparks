@@ -10317,4 +10317,22 @@ const uiStrings = {
     'zh-Hant': '還有 {n} 項未列出',
     'en': '{n} more not listed',
   },
+  // 2026-09-13: the Hebrew Old Testament. The attribution row is what
+  // the Open Scriptures lemma/morphology's CC BY 4.0 licence asks for;
+  // the WLC text under it is public domain, and both statements are in
+  // the source files' own OSIS headers.
+  'versionLangHebrew': {'zh-Hans': '希伯来文', 'zh-Hant': '希伯來文', 'en': 'Hebrew'},
+  'aboutVerWlc': {
+    'zh-Hans': 'WLC 希伯来文圣经（列宁格勒抄本）',
+    'zh-Hant': 'WLC 希伯來文聖經（列寧格勒抄本）',
+    'en': 'WLC (Westminster Leningrad Codex)',
+  },
+  'aboutLicenseWlc': {
+    'zh-Hans': '希伯来文本身属公有领域；词根与词形数据来自 Open Scriptures '
+        'Hebrew Bible，采用 CC BY 4.0 授权。',
+    'zh-Hant': '希伯來文本身屬公有領域；詞根與詞形資料來自 Open Scriptures '
+        'Hebrew Bible，採用 CC BY 4.0 授權。',
+    'en': 'Public-domain Hebrew text. Lemma and morphology from the '
+        'Open Scriptures Hebrew Bible, CC BY 4.0.',
+  },
 };

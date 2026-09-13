@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import 'package:seeksparks/utils/phrasing.dart' show isRtlText;
 import 'package:provider/provider.dart';
 
 import 'package:seeksparks/models/app_settings.dart';
@@ -233,6 +235,22 @@ class VerseWidget extends StatelessWidget {
                           leftIndent, vertPadding, baseIndent, vertPadding),
                       child: RichText(
                         textAlign: TextAlign.start,
+                        // 2026-09-13: Hebrew reads right to left, and
+                        // until the WLC shipped nothing in a verse ever
+                        // did — so both painters inherited the app's
+                        // LTR Directionality and would have drawn the
+                        // Masoretic text backwards, which is not a
+                        // layout fault but an unreadable verse.
+                        //
+                        // Decided by the SCRIPT of the text, not by the
+                        // edition code, which is the rule `isRtlText`'s
+                        // own doc states and the one that survives a
+                        // Hebrew quotation inside an English verse.
+                        // Null where there is no Hebrew, so every
+                        // existing verse keeps the Directionality it
+                        // has always had.
+                        textDirection:
+                            isRtlText(verse.text) ? TextDirection.rtl : null,
                         text: TextSpan(
                           style: settings.boldVerseText
                               ? const TextStyle(fontWeight: FontWeight.w600)

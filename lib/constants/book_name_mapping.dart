@@ -270,6 +270,11 @@ const _englishVersionCodes = <String>{
   // English as `bsb`'s and would fail in exactly the same way.
   'bsb-yhwh',
   'asv-yhwh',
+  // 2026-09-13: `wlc`, the Hebrew Old Testament, on the way in too. Like
+  // `lxxwh` it is neither English nor Chinese; like every entry here its
+  // corpus keys books in English, which is the only question this set
+  // asks.
+  'wlc',
 };
 
 /// Which of the three book-name spellings a surface should print.
