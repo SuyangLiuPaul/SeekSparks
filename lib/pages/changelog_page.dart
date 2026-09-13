@@ -231,9 +231,13 @@ class _ChangelogPageState extends State<ChangelogPage> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Same line-height as the note beside it, or the glyph
+                  // sits on a shorter line and reads as floating above
+                  // the first line of every note.
                   Text('·  ',
                       style: TextStyle(
                           fontSize: t.scaled(14),
+                          height: 1.5,
                           color: scheme.onSurfaceVariant)),
                   // No maxLines: a note that does not fit makes the
                   // row taller. Truncating a changelog entry hides
@@ -250,6 +254,18 @@ class _ChangelogPageState extends State<ChangelogPage> {
                     ),
                   ),
                 ],
+              ),
+            ),
+          if (entry.omitted > 0)
+            Padding(
+              padding: const EdgeInsets.only(top: 6, left: 2),
+              child: Text(
+                (uiStrings['changelogOmitted']?[locale] ?? '{n} more not listed')
+                    .replaceAll('{n}', '${entry.omitted}'),
+                style: TextStyle(
+                  fontSize: t.scaledChrome(WbMetrics.smallPrintFloor),
+                  color: scheme.onSurfaceVariant,
+                ),
               ),
             ),
         ],
@@ -283,6 +299,21 @@ class _ChangelogPageState extends State<ChangelogPage> {
               ),
               onPressed: () => LinkOpener.open(
                 'https://github.com/${UpdateService.repo}/releases',
+              ),
+            )
+          else
+            // The line above promises GitHub; on a platform where this
+            // app cannot open a browser the promise still has to point
+            // somewhere. The address, selectable, is the honest fallback
+            // — a reader can copy it into whatever they do have.
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: SelectableText(
+                'https://github.com/${UpdateService.repo}/releases',
+                style: TextStyle(
+                  fontSize: t.scaledChrome(WbMetrics.smallPrintFloor),
+                  color: scheme.primary,
+                ),
               ),
             ),
         ],

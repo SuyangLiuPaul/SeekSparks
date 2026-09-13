@@ -66,6 +66,36 @@ if [[ "$fallback" != "$VERSION" ]]; then
   exit 1
 fi
 
+# 2026-09-13: a tag names a build EVERY reader's updater will fetch, so it
+# must name a commit that is on origin/main and that CI has passed. Both
+# checks are skipped, loudly, when they cannot be made — no origin/main
+# yet (a fresh repository, or the test fixture), or an origin that is
+# not GitHub (nothing to ask about CI) — rather than refusing a release
+# for want of a signal that does not exist.
+git fetch -q origin main 2>/dev/null || true
+if git rev-parse --verify -q origin/main >/dev/null; then
+  if ! git merge-base --is-ancestor HEAD origin/main; then
+    echo "REFUSING: HEAD ($(git rev-parse --short HEAD)) is not on origin/main." >&2
+    echo "Push first. A tag on a commit nobody else has is a release nobody" >&2
+    echo "can reproduce, and the APK built from it cannot be traced." >&2
+    exit 1
+  fi
+  origin_url="$(git remote get-url origin 2>/dev/null || true)"
+  if [[ "$origin_url" == *github.com* ]] && command -v gh >/dev/null 2>&1; then
+    sha="$(git rev-parse HEAD)"
+    conclusion="$(gh run list --commit "$sha" --workflow=flutter-ci.yml \
+      --json conclusion --jq '.[0].conclusion // ""' 2>/dev/null || true)"
+    if [[ "$conclusion" != "success" ]]; then
+      echo "REFUSING: Flutter CI for $sha is '${conclusion:-not run}', not success." >&2
+      echo "Wait for the green run, or fix the red one. tools/release_github.sh" >&2
+      echo "in YsWords makes the same demand for the same reason." >&2
+      exit 1
+    fi
+  fi
+else
+  echo "note: origin/main not found; skipping the on-main and CI checks." >&2
+fi
+
 # 2026-09-09 (review finding 7): "already exists" used to be decided
 # from the LOCAL tag alone. The tag is created before it is pushed, so
 # a push that failed — no network, a rejected credential — left the

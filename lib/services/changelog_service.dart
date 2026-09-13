@@ -27,10 +27,17 @@ class ChangelogEntry {
   /// generator rather than shipped as a blank row.
   final List<String> notes;
 
+  /// How many notes the generator's per-version cap dropped — zero for
+  /// almost every version. Non-zero is shown, because a version that
+  /// quietly looks smaller than it was is a changelog that lies by
+  /// omission.
+  final int omitted;
+
   const ChangelogEntry({
     required this.version,
     required this.date,
     required this.notes,
+    this.omitted = 0,
   });
 }
 
@@ -86,6 +93,7 @@ class ChangelogService {
               version: e['version'] as String,
               date: e['date'] as String,
               notes: (e['notes'] as List<dynamic>).cast<String>(),
+              omitted: (e['omitted'] as num?)?.toInt() ?? 0,
             ))
         .where((e) => e.notes.isNotEmpty)
         .toList();

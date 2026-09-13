@@ -90,6 +90,32 @@ class TagRelease(unittest.TestCase):
     def local_tags(self) -> str:
         return git(self.work, 'tag', '-l').stdout
 
+    def test_a_commit_origin_main_does_not_have_is_refused(self):
+        # 2026-09-13. Once origin has a main, the tag must sit on it: a
+        # commit only this machine has is a release nobody can reproduce.
+        git(self.work, 'push', '-q', 'origin', 'main')
+        (self.work / 'pubspec.yaml').write_text(
+            'name: x\nversion: 1.0.1+1000001\n', encoding='utf-8')
+        (self.work / 'lib' / 'constants' / 'app_version.dart').write_text(
+            "const String _envAppVersion = String.fromEnvironment(\n"
+            "  'APP_VERSION',\n"
+            "  defaultValue: '1.0.1',\n"
+            ");\n", encoding='utf-8')
+        git(self.work, 'commit', '-q', '-am', 'release: v1.0.1')
+        r = self.run_script()
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn('not on origin/main', r.stderr)
+        self.assertNotIn('refs/tags/v1.0.1', self.remote_tags())
+        self.assertNotIn('v1.0.1', self.local_tags(),
+                         'a refused tag must not be left behind locally')
+
+    def test_without_an_origin_main_the_checks_are_skipped_not_failed(self):
+        # The fixture's origin has no main at all (every older test below
+        # relies on that). The script says so and carries on.
+        r = self.run_script()
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertIn('skipping the on-main and CI checks', r.stderr)
+
     def test_a_local_tag_origin_lacks_is_pushed_not_reported_done(self):
         # The state a failed push leaves behind.
         git(self.work, 'tag', '-a', 'v1.0.0', '-m', 'v1.0.0')

@@ -180,7 +180,11 @@ def released_versions(
     exact failure the tag-based first draft had.
     """
     out = git(
-        'log', '--format=%H\x1f%cs\x1f%s', '--no-merges', '--all',
+        # HEAD, not --all: the build is cut from HEAD, and a `release:`
+        # commit on an unmerged branch or a stray worktree is not this
+        # build's history. With --all such an anchor became a shipped
+        # row — reproduced by review with a throwaway branch.
+        'log', '--format=%H\x1f%cs\x1f%s', '--no-merges', 'HEAD',
         repo=repo,
     ).splitlines()
     found: list[tuple[str, str, str]] = []
@@ -256,6 +260,9 @@ def build(
                 'version': head_version,
                 'date': head['date'],
                 'notes': notes[:MAX_NOTES_PER_VERSION],
+                # What the cap dropped, so the page can SAY so instead of a
+                # version quietly looking smaller than it was.
+                'omitted': max(0, len(notes) - MAX_NOTES_PER_VERSION),
             })
         else:
             # A data-only or tooling-only release. Recorded under
@@ -283,6 +290,9 @@ def build(
             'version': version,
             'date': date,
             'notes': notes[:MAX_NOTES_PER_VERSION],
+            # What the cap dropped, so the page can SAY so instead of a
+            # version quietly looking smaller than it was.
+            'omitted': max(0, len(notes) - MAX_NOTES_PER_VERSION),
         })
     data: dict = {'entries': entries}
     if head is not None:
