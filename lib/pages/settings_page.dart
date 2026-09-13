@@ -28,7 +28,6 @@ import 'package:seeksparks/services/update_service.dart';
 import 'package:seeksparks/models/app_style_preset.dart';
 import 'package:seeksparks/providers/main_provider.dart';
 import 'package:seeksparks/widgets/projection_stage.dart';
-import 'package:seeksparks/pages/projection_page.dart' show kProjectionTypeSteps;
 import 'package:seeksparks/models/verse.dart';
 import 'package:seeksparks/constants/projection_strings.dart';
 import 'package:seeksparks/constants/projection_setup.dart';
