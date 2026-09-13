@@ -236,6 +236,7 @@ const _kProjectionTypeStep = 'projectionTypeStep';
 const _kProjectionSecondOn = 'projectionSecondOn';
 const _kProjectionSecondVersion = 'projectionSecondVersion';
 const _kProjectionGround = 'projectionGround';
+const _kProjectionLayout = 'projectionLayout';
 // One key for the whole list, as JSON — the shape `_kNotificationCategories`
 // already uses. A key per preset would put an unbounded number of keys
 // in SharedPreferences and give nothing back: the list is always read
@@ -261,6 +262,18 @@ List<AgendaItem> _decodeStoredAgenda(String? raw) {
     return decodeAgenda(jsonDecode(raw));
   } catch (_) {
     return const [];
+  }
+}
+
+/// The wall's layout off disk. A blob written by a build that did not
+/// have the setting, or one that is corrupt, means the wall the app
+/// shipped with rather than a crash on the first frame.
+ProjectionLayout _decodeStoredLayout(String? raw) {
+  if (raw == null || raw.isEmpty) return ProjectionLayout.standard;
+  try {
+    return ProjectionLayout.fromJson(jsonDecode(raw));
+  } catch (_) {
+    return ProjectionLayout.standard;
   }
 }
 
@@ -366,6 +379,7 @@ class AppSettings extends ChangeNotifier {
   final Map<String, String> _projectionCompanions = <String, String>{};
   List<AgendaItem> _projectionAgenda = const [];
   ProjectionGround _projectionGround = kProjectionGroundDefault;
+  ProjectionLayout _projectionLayout = ProjectionLayout.standard;
   List<ProjectionPreset> _projectionPresets = const <ProjectionPreset>[];
 
   /// Render section / paragraph headings (e.g. "The Sermon on the
@@ -639,6 +653,21 @@ class AppSettings extends ChangeNotifier {
     await prefs.setString(_kProjectionGround, ground.name);
   }
 
+  /// How the passage is set on the wall — see [ProjectionLayout].
+  ///
+  /// One value rather than four preferences for the reason the preset
+  /// bundle gives: a caller that remembers three of them and forgets
+  /// the fourth writes a wall the operator did not ask for.
+  ProjectionLayout get projectionLayout => _projectionLayout;
+
+  Future<void> setProjectionLayout(ProjectionLayout layout) async {
+    if (_projectionLayout == layout) return;
+    _projectionLayout = layout;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_kProjectionLayout, jsonEncode(layout.toJson()));
+  }
+
   /// The operator's named setups, oldest first.
   List<ProjectionPreset> get projectionPresets => _projectionPresets;
 
@@ -670,6 +699,7 @@ class AppSettings extends ChangeNotifier {
         secondOn: _projectionSecondOn,
         secondVersion: _projectionSecondVersion,
         ground: _projectionGround,
+        layout: _projectionLayout,
       );
 
   /// Recall a preset.
@@ -680,6 +710,7 @@ class AppSettings extends ChangeNotifier {
   Future<void> applyProjectionSetup(ProjectionSetup setup) async {
     await setProjectionTypeStep(setup.typeStep);
     await setProjectionGround(setup.ground);
+    await setProjectionLayout(setup.layout);
     await setProjectionSecondVersion(setup.secondVersion);
     await setProjectionSecondOn(setup.secondOn);
   }
@@ -1042,6 +1073,7 @@ class AppSettings extends ChangeNotifier {
       _kProjectionCompanions,
       _kProjectionAgenda,
       _kProjectionGround,
+      _kProjectionLayout,
       // The dashboard was deleted when the Workbench became the app
       // (no home screen), but installs from before then still carry
       // its keys. Same treatment as 'offlineMode' above: the constants
@@ -1270,6 +1302,7 @@ class AppSettings extends ChangeNotifier {
     _projectionAgenda = _decodeStoredAgenda(prefs.getString(_kProjectionAgenda));
     _projectionGround =
         projectionGroundFromName(prefs.getString(_kProjectionGround));
+    _projectionLayout = _decodeStoredLayout(prefs.getString(_kProjectionLayout));
     _projectionPresets =
         decodeProjectionPresets(prefs.getString(_kProjectionPresets));
 

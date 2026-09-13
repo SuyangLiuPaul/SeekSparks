@@ -135,6 +135,7 @@ class ProjectionStage extends StatelessWidget {
     this.secondCode,
     this.secondLoading = false,
     this.countdownRemaining,
+    this.layout = ProjectionLayout.standard,
   });
 
   /// The verse on the wall, or null when the corpus has not arrived.
@@ -176,6 +177,12 @@ class ProjectionStage extends StatelessWidget {
   /// Which dark the passage sits on. Every option is dark; see
   /// `projection_setup.dart`.
   final ProjectionGround ground;
+
+  /// How the passage is set: centred or start-aligned, verse by verse
+  /// or run together, numbered or plain, and where the reference goes.
+  /// See [ProjectionLayout] — every field is the operator's, and none
+  /// of them is inferred from the passage.
+  final ProjectionLayout layout;
 
   final bool secondOn;
   /// The second edition's text per verse in [verses], by position;
@@ -271,12 +278,13 @@ class ProjectionStage extends StatelessWidget {
                   ),
                 ),
               ),
-              Positioned(
-                left: side,
-                bottom: top * _kReferenceInsetShare,
-                right: side,
-                child: _reference(wb),
-              ),
+              if (layout.reference == ProjectionReferencePlace.corner)
+                Positioned(
+                  left: side,
+                  bottom: top * _kReferenceInsetShare,
+                  right: side,
+                  child: _reference(wb),
+                ),
             ],
           );
         },
@@ -320,14 +328,83 @@ class ProjectionStage extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          for (var i = 0; i < verses.length; i++)
-            _line(wb, verses[i].text, verses[i].verseLabel, typeSize, wb.text),
+          ..._firstLines(wb),
           if (secondOn) ...[
             SizedBox(height: typeSize * _kBlockGapShare),
             ..._secondLines(wb),
           ],
+          // Under the passage, INSIDE the block the FittedBox scales —
+          // so on a long reading the address shrinks with the words it
+          // belongs to instead of sitting at full size beneath type
+          // that has been wound down to fit.
+          if (layout.reference == ProjectionReferencePlace.under &&
+              verses.isNotEmpty) ...[
+            SizedBox(height: typeSize * _kReferenceUnderGapShare),
+            _referenceText(wb, TextAlign.center),
+          ],
         ],
       );
+
+  /// The gap between the passage and a reference set beneath it. Wider
+  /// than a line and narrower than the gap between editions: it belongs
+  /// to the passage, and it is not part of it.
+  static const double _kReferenceUnderGapShare = 0.5;
+
+  /// The first edition — one block per verse, or the whole passage run
+  /// together as the printed page has it.
+  List<Widget> _firstLines(WbColors wb) {
+    if (layout.flow == ProjectionFlow.continuous) {
+      return [_runTogether(wb, [for (final v in verses) v.text], typeSize,
+          wb.text)];
+    }
+    return [
+      for (var i = 0; i < verses.length; i++)
+        _line(wb, verses[i].text, verses[i].verseLabel, typeSize, wb.text),
+    ];
+  }
+
+  /// The verses as one paragraph. Numbers, when they are on, sit inline
+  /// in front of each verse exactly as a printed Bible sets them —
+  /// which is the only way a run-together passage can carry them at all.
+  Widget _runTogether(
+      WbColors wb, List<String> texts, double size, Color ink) {
+    final numbered = layout.numbers && verses.length > 1;
+    return Text.rich(
+      TextSpan(children: [
+        for (var i = 0; i < texts.length; i++) ...[
+          // The separator goes BEFORE the number, not before the text.
+          // Put it after and the number closes up against the previous
+          // sentence — `…beginning.2  The earth…` — which is not how
+          // any printed Bible sets a paragraph, and is what the test
+          // below caught.
+          if (i > 0) const TextSpan(text: ' '),
+          if (numbered)
+            TextSpan(
+              text: '${verses[i].verseLabel} ',
+              style: TextStyle(
+                color: wb.mutedText,
+                fontSize: size * kProjectionReferenceScale * 1.6,
+              ),
+            ),
+          TextSpan(text: texts[i]),
+        ],
+      ]),
+      textAlign: _textAlign,
+      style: TextStyle(
+        color: ink,
+        fontFamilyFallback: kCjkFontFallback,
+        fontSize: size,
+        height: WbMetrics.lineHeight,
+      ),
+    );
+  }
+
+  /// Centred, or aligned to where the line starts. `TextAlign.start`
+  /// rather than `left` — a Hebrew passage starts on the right, and the
+  /// setting is about the measure, not about a side of the screen.
+  TextAlign get _textAlign => layout.align == ProjectionAlign.start
+      ? TextAlign.start
+      : TextAlign.center;
 
   /// One verse of the wall. With more than one verse up, each carries
   /// its number in the muted colour — small, because the room reads the
@@ -335,7 +412,7 @@ class ProjectionStage extends StatelessWidget {
   /// place in a printed Bible. A single verse carries none; the
   /// reference below already names it.
   Widget _line(WbColors wb, String text, String label, double size, Color ink) {
-    final numbered = verses.length > 1;
+    final numbered = layout.numbers && verses.length > 1;
     return Text.rich(
       TextSpan(children: [
         if (numbered)
@@ -348,7 +425,7 @@ class ProjectionStage extends StatelessWidget {
           ),
         TextSpan(text: text),
       ]),
-      textAlign: TextAlign.center,
+      textAlign: _textAlign,
       style: TextStyle(
         color: ink,
         fontFamilyFallback: kCjkFontFallback,
@@ -369,7 +446,7 @@ class ProjectionStage extends StatelessWidget {
       return [
         Text(
           _secondBody(null),
-          textAlign: TextAlign.center,
+          textAlign: _textAlign,
           style: TextStyle(
             color: wb.mutedText,
             fontFamilyFallback: kCjkFontFallback,
@@ -377,6 +454,15 @@ class ProjectionStage extends StatelessWidget {
             height: WbMetrics.lineHeight,
           ),
         ),
+      ];
+    }
+    if (layout.flow == ProjectionFlow.continuous) {
+      // One paragraph, like the first edition above it. A verse the
+      // companion lacks still takes its place in the line — dropping it
+      // silently would put two different passages on the wall.
+      return [
+        _runTogether(wb, [for (final t in texts) _secondBody(t)], size,
+            texts.every((t) => t != null) ? wb.text : wb.mutedText),
       ];
     }
     return [
@@ -409,12 +495,20 @@ class ProjectionStage extends StatelessWidget {
   /// tell which translation is which is worse than one edition.
   Widget _reference(WbColors wb) {
     if (verses.isEmpty) return const SizedBox.shrink();
+    return _referenceText(wb, TextAlign.start);
+  }
+
+  /// The reference itself, wherever it is being put. One builder, so
+  /// the corner and the devotional placement can never start naming
+  /// different editions.
+  Widget _referenceText(WbColors wb, TextAlign align) {
     final tags = <String>[
       shortBibleVersionLabel(versionCode),
       if (secondOn && secondCode != null) shortBibleVersionLabel(secondCode!),
     ];
     return Text(
       '$reference · ${tags.join(" · ")}',
+      textAlign: align,
       style: TextStyle(
         color: wb.mutedText,
         fontFamilyFallback: kCjkFontFallback,

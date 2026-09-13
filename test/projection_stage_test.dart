@@ -41,6 +41,7 @@ Future<void> _stage(
   bool secondLoading = false,
   double typeSize = 64,
   ProjectionGround ground = kProjectionGroundDefault,
+  ProjectionLayout layout = ProjectionLayout.standard,
   Size surface = const Size(1280, 800),
 }) async {
   tester.view.physicalSize = surface;
@@ -62,6 +63,7 @@ Future<void> _stage(
         secondTexts: secondTexts,
         secondCode: secondOn ? _second : null,
         secondLoading: secondLoading,
+        layout: layout,
       ),
     ),
   ));
@@ -85,6 +87,8 @@ Set<Color> _wallColours(WidgetTester tester) => <Color>{
 String _s(String key) => projectionStrings[key]![_locale]!;
 
 void main() {
+  _layoutTests();
+
   group('one edition', () {
     testWidgets('puts the verse and its reference on the wall',
         (tester) async {
@@ -286,6 +290,156 @@ void main() {
       expect(painted.height, greaterThanOrEqualTo(declared),
           reason: 'one line at 64 px cannot paint shorter than 64 px '
               'unless the fit shrank it');
+    });
+  });
+}
+
+/// The layout the operator sets — 2026-09-13, asked for as "middle
+/// aligned，verse by verse 还是连在一起，plain txt，include ref,
+/// devotional format".
+///
+/// Four independent choices rather than a list of named formats, so
+/// what is pinned here is each choice on its own and the combination
+/// that has a name.
+void _layoutTests() {
+  const verses = [
+    Verse(book: 'Genesis', chapter: 1, verse: 1, text: 'In the beginning.'),
+    Verse(book: 'Genesis', chapter: 1, verse: 2, text: 'The earth was void.'),
+  ];
+
+  /// Every `Text` the wall is currently drawing, in tree order.
+  List<Text> textsOn(WidgetTester tester) =>
+      tester.widgetList<Text>(find.byType(Text)).toList();
+
+  group('the layout the operator sets', () {
+    testWidgets('centred by default, from the margin when asked',
+        (tester) async {
+      await _stage(tester, verses: verses);
+      expect(
+          textsOn(tester).where((t) => t.textAlign == TextAlign.center).length,
+          greaterThan(0));
+
+      await _stage(tester,
+          verses: verses,
+          layout: const ProjectionLayout(align: ProjectionAlign.start));
+      // `start`, never `left`: a Hebrew passage starts on the right, and
+      // the setting is about the measure, not a side of the screen.
+      expect(textsOn(tester).any((t) => t.textAlign == TextAlign.left), isFalse);
+      expect(textsOn(tester).any((t) => t.textAlign == TextAlign.start), isTrue);
+    });
+
+    testWidgets('verse by verse is two blocks; run together is one',
+        (tester) async {
+      await _stage(tester, verses: verses);
+      expect(find.textContaining('In the beginning.', findRichText: true),
+          findsOneWidget);
+      expect(find.textContaining('The earth was void.', findRichText: true),
+          findsOneWidget);
+      // Separate blocks: no single widget holds both.
+      expect(
+          find.textContaining('In the beginning. The earth was void.',
+              findRichText: true),
+          findsNothing);
+
+      await _stage(tester,
+          verses: verses,
+          layout: const ProjectionLayout(flow: ProjectionFlow.continuous));
+      // One paragraph. The numbers are still on here, so they sit
+      // INLINE in front of each verse exactly as a printed Bible sets
+      // them — which is the only way a run-together passage can carry
+      // them at all. Turning them off is the next test.
+      expect(
+          find.textContaining('In the beginning. 2 The earth was void.',
+              findRichText: true),
+          findsOneWidget);
+    });
+
+    testWidgets('numbers off gives scripture with nothing in front of it',
+        (tester) async {
+      await _stage(tester, verses: verses);
+      expect(find.textContaining('1 In the beginning.', findRichText: true),
+          findsOneWidget);
+
+      await _stage(tester,
+          verses: verses, layout: const ProjectionLayout(numbers: false));
+      expect(find.textContaining('1 In the beginning.', findRichText: true),
+          findsNothing);
+      expect(find.textContaining('In the beginning.', findRichText: true),
+          findsOneWidget);
+    });
+
+    testWidgets('a single verse still carries no number, numbers on or off',
+        (tester) async {
+      // Unchanged rule: the reference below already names it. The
+      // setting governs the many-verse case.
+      for (final on in [true, false]) {
+        await _stage(tester, layout: ProjectionLayout(numbers: on));
+        expect(find.textContaining('1 ${_verse.text}', findRichText: true),
+            findsNothing,
+            reason: 'numbers: $on');
+      }
+    });
+
+    testWidgets('the reference moves, and can be taken off the wall',
+        (tester) async {
+      const ref = 'Genesis 1:1';
+      await _stage(tester, verses: verses);
+      expect(find.textContaining(ref), findsOneWidget);
+
+      await _stage(tester,
+          verses: verses,
+          layout: const ProjectionLayout(
+              reference: ProjectionReferencePlace.under));
+      // Still exactly one — under the passage rather than in the corner,
+      // not in both places.
+      expect(find.textContaining(ref), findsOneWidget);
+
+      await _stage(tester,
+          verses: verses,
+          layout: const ProjectionLayout(
+              reference: ProjectionReferencePlace.off));
+      expect(find.textContaining(ref), findsNothing);
+      // The words are still there: taking the address off the wall is
+      // not blanking it.
+      expect(find.textContaining('In the beginning.', findRichText: true),
+          findsOneWidget);
+    });
+
+    testWidgets('the devotional combination is what the word means',
+        (tester) async {
+      await _stage(tester, verses: verses, layout: ProjectionLayout.devotional);
+      expect(ProjectionLayout.devotional.isDevotional, isTrue);
+      expect(ProjectionLayout.standard.isDevotional, isFalse);
+      // One paragraph, no numbers, the address beneath the words.
+      expect(
+          find.textContaining('In the beginning. The earth was void.',
+              findRichText: true),
+          findsOneWidget);
+      expect(find.textContaining('1 In the beginning', findRichText: true),
+          findsNothing);
+      expect(find.textContaining('Genesis 1:1'), findsOneWidget);
+    });
+
+    testWidgets('blanking still beats every layout', (tester) async {
+      // The blank key is a shutter over the whole stage, reference
+      // included, whatever the layout is set to.
+      await _stage(tester,
+          verses: verses, blank: true, layout: ProjectionLayout.devotional);
+      expect(find.textContaining('In the beginning', findRichText: true),
+          findsNothing);
+      expect(find.textContaining('Genesis'), findsNothing);
+    });
+
+    testWidgets('the companion edition follows the same flow', (tester) async {
+      await _stage(tester,
+          verses: verses,
+          secondOn: true,
+          secondTexts: const ['起初。', '地是空虚的。'],
+          layout: const ProjectionLayout(flow: ProjectionFlow.continuous));
+      expect(find.textContaining('起初。 2 地是空虚的。', findRichText: true),
+          findsOneWidget,
+          reason: 'two editions on one wall, set two different ways, is '
+              'two walls');
     });
   });
 }

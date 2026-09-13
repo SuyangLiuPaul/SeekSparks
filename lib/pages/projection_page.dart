@@ -995,6 +995,7 @@ class _ProjectionPageState extends State<ProjectionPage> {
                     secondCode: _secondCode,
                     secondLoading: _secondLoading,
                     countdownRemaining: _countdownLeft,
+                    layout: settings.projectionLayout,
                   ),
                 ),
                 // THE CONTROLS SIT AT THE TOP, AND THE REFERENCE AT THE
@@ -1103,6 +1104,10 @@ class _ProjectionPageState extends State<ProjectionPage> {
       radial: !paint.isFlat,
       ink: hex(wb.text),
       muted: hex(wb.mutedText),
+      // The follower paints the operator's layout, not a default one.
+      // A wall that is set devotionally in the app and numbered in the
+      // window on the projector is two walls.
+      layout: settings.projectionLayout,
     );
   }
 

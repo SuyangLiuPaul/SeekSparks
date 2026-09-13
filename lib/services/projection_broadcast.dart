@@ -30,6 +30,9 @@ import 'projection_broadcast_stub.dart'
     if (dart.library.js_interop) 'projection_broadcast_web.dart'
     if (dart.library.io) 'projection_broadcast_io.dart';
 
+import 'package:seeksparks/constants/projection_setup.dart'
+    show ProjectionLayout;
+
 /// What the follower paints. Plain data so it serialises as JSON and so
 /// a test can assert on it without a browser.
 class ProjectionFrame {
@@ -47,6 +50,7 @@ class ProjectionFrame {
     required this.radial,
     required this.ink,
     required this.muted,
+    this.layout = ProjectionLayout.standard,
   });
 
   final bool blank;
@@ -76,6 +80,11 @@ class ProjectionFrame {
   final String ink;
   final String muted;
 
+  /// How the passage is set — see `projection_setup.dart`. Sent with
+  /// every frame rather than negotiated once, so a follower that opens
+  /// mid-service paints what the wall is doing now.
+  final ProjectionLayout layout;
+
   Map<String, Object?> toJson() => {
         'v': 1,
         'blank': blank,
@@ -90,6 +99,7 @@ class ProjectionFrame {
         'ground': {'colors': groundColors, 'radial': radial},
         'ink': ink,
         'muted': muted,
+        'layout': layout.toJson(),
       };
 }
 

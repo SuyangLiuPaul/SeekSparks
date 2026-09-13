@@ -34,6 +34,8 @@ double _contrast(Color a, Color b) {
 }
 
 void main() {
+  _layoutPersistenceTests();
+
   group('every ground is a dark ground', () {
     test('no ground paints a colour brighter than the ceiling', () {
       // THE rule. A projector cannot make a wall darker than the room
@@ -255,3 +257,65 @@ void main() {
 
 /// The single preset a one-entry store decodes to.
 ProjectionPreset _only(String raw) => decodeProjectionPresets(raw).single;
+
+/// The layout as a saved value — 2026-09-13.
+///
+/// A preset that forgets the layout is a preset that does not restore
+/// what the operator set, which is the same argument `ProjectionSetup`
+/// itself was written for.
+void _layoutPersistenceTests() {
+  group('the layout survives a round trip', () {
+    test('a preset carries it', () {
+      const setup = ProjectionSetup(
+        typeStep: 3,
+        secondOn: true,
+        secondVersion: 'bsb',
+        ground: ProjectionGround.black,
+        layout: ProjectionLayout.devotional,
+      );
+      final back = ProjectionSetup.fromJson(
+          jsonDecode(jsonEncode(setup.toJson())) as Map<String, dynamic>);
+      expect(back, setup);
+      expect(back.layout.isDevotional, isTrue);
+    });
+
+    test('a preset written before the setting existed means the shipped wall',
+        () {
+      final back = ProjectionSetup.fromJson(<String, dynamic>{
+        'typeStep': 2,
+        'secondOn': false,
+        'secondVersion': '',
+        'ground': 'deep',
+      });
+      expect(back.layout, ProjectionLayout.standard);
+      expect(back.layout.numbers, isTrue);
+      expect(back.layout.reference, ProjectionReferencePlace.corner);
+    });
+
+    test('a corrupt layout is the shipped wall, not a crash', () {
+      for (final junk in <Object?>[
+        null,
+        'devotional',
+        42,
+        <String, dynamic>{'flow': 'sideways', 'reference': 'ceiling'},
+      ]) {
+        expect(ProjectionLayout.fromJson(junk), ProjectionLayout.standard,
+            reason: '$junk');
+      }
+    });
+
+    test('the two named layouts are not the same wall', () {
+      expect(ProjectionLayout.standard, isNot(ProjectionLayout.devotional));
+      expect(ProjectionLayout.standard.isDevotional, isFalse);
+      expect(ProjectionLayout.devotional.isDevotional, isTrue);
+      // isDevotional asks about the three fields the word means, and
+      // says nothing about alignment — a devotional card set from the
+      // margin is still a devotional card.
+      expect(
+          ProjectionLayout.devotional
+              .copyWith(align: ProjectionAlign.start)
+              .isDevotional,
+          isTrue);
+    });
+  });
+}

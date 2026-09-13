@@ -249,6 +249,142 @@ ProjectionGround projectionGroundFromName(String? name) =>
       orElse: () => kProjectionGroundDefault,
     );
 
+/// Where the passage sits against the measure.
+///
+/// Centred is the default and is what a projected verse has always
+/// been: a short block of scripture reads as a unit, and the room's
+/// eyes are already travelling. Start-aligned exists because a LONG
+/// passage centred is hard work — every line begins in a different
+/// place, and at the back of a hall that costs a beat per line. The
+/// name is `start`, not `left`, because a Hebrew passage starts on the
+/// right.
+enum ProjectionAlign { centre, start }
+
+/// Whether the verses are separate blocks or one paragraph.
+///
+/// Verse by verse is what a preacher working through a passage wants:
+/// each verse is a unit, and the number is beside it. Continuous is
+/// what a reading wants — the same words as the printed page has them,
+/// with nothing between the sentences. Neither is the right default for
+/// the other, which is why this is a choice and not a guess about the
+/// verse count.
+enum ProjectionFlow { verseByVerse, continuous }
+
+/// Where the reference goes, if anywhere.
+///
+/// The corner is where it has always been, and it is right for a
+/// sermon: the room glances down, finds the place, and looks back up.
+/// Under the passage is the devotional setting — the verse, then its
+/// address, centred beneath it, the way a printed card sets it. Off is
+/// for a wall that is not a Bible reading at all: a call to worship, a
+/// line the congregation is about to say together.
+enum ProjectionReferencePlace { corner, under, off }
+
+ProjectionAlign projectionAlignFromName(String? name) =>
+    ProjectionAlign.values.firstWhere((v) => v.name == name,
+        orElse: () => ProjectionAlign.centre);
+
+ProjectionFlow projectionFlowFromName(String? name) =>
+    ProjectionFlow.values.firstWhere((v) => v.name == name,
+        orElse: () => ProjectionFlow.verseByVerse);
+
+ProjectionReferencePlace projectionReferencePlaceFromName(String? name) =>
+    ProjectionReferencePlace.values.firstWhere((v) => v.name == name,
+        orElse: () => ProjectionReferencePlace.corner);
+
+/// How the wall is set, as opposed to what colour it is.
+///
+/// Four independent choices rather than a list of named formats. A
+/// "devotional mode" switch would have to decide what happens to the
+/// operator's other three settings when it is turned off, and every
+/// answer to that is wrong for somebody. [devotional] below is the
+/// combination people mean by the word, offered as a value the settings
+/// screen can name — not as a mode that overwrites anything.
+class ProjectionLayout {
+  const ProjectionLayout({
+    this.align = ProjectionAlign.centre,
+    this.flow = ProjectionFlow.verseByVerse,
+    this.numbers = true,
+    this.reference = ProjectionReferencePlace.corner,
+  });
+
+  final ProjectionAlign align;
+  final ProjectionFlow flow;
+
+  /// Whether verse numbers are drawn at all.
+  ///
+  /// They have never been drawn for a single verse — the reference
+  /// already names it — and this does not change that. It governs the
+  /// case where there is more than one: `true` keeps the numbers,
+  /// `false` gives plain scripture with nothing in front of the words.
+  final bool numbers;
+
+  final ProjectionReferencePlace reference;
+
+  /// The shipped wall: centred, verse by verse, numbered, reference in
+  /// the corner.
+  static const ProjectionLayout standard = ProjectionLayout();
+
+  /// What people mean by "devotional format": the words as one
+  /// paragraph, no numbers in front of them, and the address centred
+  /// underneath. Reachable from the settings screen as three ordinary
+  /// choices; named here so the hint under them is not a lie.
+  static const ProjectionLayout devotional = ProjectionLayout(
+    flow: ProjectionFlow.continuous,
+    numbers: false,
+    reference: ProjectionReferencePlace.under,
+  );
+
+  bool get isDevotional =>
+      flow == devotional.flow &&
+      numbers == devotional.numbers &&
+      reference == devotional.reference;
+
+  ProjectionLayout copyWith({
+    ProjectionAlign? align,
+    ProjectionFlow? flow,
+    bool? numbers,
+    ProjectionReferencePlace? reference,
+  }) =>
+      ProjectionLayout(
+        align: align ?? this.align,
+        flow: flow ?? this.flow,
+        numbers: numbers ?? this.numbers,
+        reference: reference ?? this.reference,
+      );
+
+  Map<String, dynamic> toJson() => <String, dynamic>{
+        'align': align.name,
+        'flow': flow.name,
+        'numbers': numbers,
+        'reference': reference.name,
+      };
+
+  /// Off disk, so every field falls back rather than throws — a preset
+  /// written by a build that did not have this at all is a valid
+  /// preset, and it means the wall it shipped with.
+  factory ProjectionLayout.fromJson(Object? raw) {
+    final m = raw is Map ? raw : const <String, dynamic>{};
+    return ProjectionLayout(
+      align: projectionAlignFromName(m['align'] as String?),
+      flow: projectionFlowFromName(m['flow'] as String?),
+      numbers: m['numbers'] is bool ? m['numbers'] as bool : true,
+      reference: projectionReferencePlaceFromName(m['reference'] as String?),
+    );
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      other is ProjectionLayout &&
+      other.align == align &&
+      other.flow == flow &&
+      other.numbers == numbers &&
+      other.reference == reference;
+
+  @override
+  int get hashCode => Object.hash(align, flow, numbers, reference);
+}
+
 /// One complete operator setup: everything a preset remembers, and
 /// everything the projection page restores when it opens.
 ///
@@ -260,6 +396,7 @@ class ProjectionSetup {
     required this.secondOn,
     required this.secondVersion,
     required this.ground,
+    this.layout = ProjectionLayout.standard,
   });
 
   /// Index into [kProjectionTypeSteps].
@@ -275,17 +412,25 @@ class ProjectionSetup {
 
   final ProjectionGround ground;
 
+  /// How the passage is set — see [ProjectionLayout]. Part of the
+  /// preset for the same reason the other four are: an operator who
+  /// saves 「主日敬拜」 with the devotional setting and gets the
+  /// numbered, corner-referenced wall back has not saved a setup.
+  final ProjectionLayout layout;
+
   ProjectionSetup copyWith({
     int? typeStep,
     bool? secondOn,
     String? secondVersion,
     ProjectionGround? ground,
+    ProjectionLayout? layout,
   }) =>
       ProjectionSetup(
         typeStep: typeStep ?? this.typeStep,
         secondOn: secondOn ?? this.secondOn,
         secondVersion: secondVersion ?? this.secondVersion,
         ground: ground ?? this.ground,
+        layout: layout ?? this.layout,
       );
 
   Map<String, dynamic> toJson() => <String, dynamic>{
@@ -293,6 +438,7 @@ class ProjectionSetup {
         'secondOn': secondOn,
         'secondVersion': secondVersion,
         'ground': ground.name,
+        'layout': layout.toJson(),
       };
 
   /// Every field is validated, because this comes off disk. A preset
@@ -309,6 +455,7 @@ class ProjectionSetup {
             m['secondVersion'] is String ? m['secondVersion'] as String : '',
         ground: projectionGroundFromName(
             m['ground'] is String ? m['ground'] as String : null),
+        layout: ProjectionLayout.fromJson(m['layout']),
       );
 
   @override
@@ -317,14 +464,18 @@ class ProjectionSetup {
       other.typeStep == typeStep &&
       other.secondOn == secondOn &&
       other.secondVersion == secondVersion &&
-      other.ground == ground;
+      other.ground == ground &&
+      other.layout == layout;
 
   @override
-  int get hashCode => Object.hash(typeStep, secondOn, secondVersion, ground);
+  int get hashCode =>
+      Object.hash(typeStep, secondOn, secondVersion, ground, layout);
 
   @override
   String toString() => 'ProjectionSetup(step $typeStep, second '
-      '${secondOn ? secondVersion : "off"}, ${ground.name})';
+      '${secondOn ? secondVersion : "off"}, ${ground.name}, '
+      '${layout.align.name}/${layout.flow.name}/'
+      '${layout.numbers ? "numbered" : "plain"}/${layout.reference.name})';
 }
 
 /// A named setup — "morning service", "youth", "两个译本".

@@ -339,4 +339,66 @@ const Map<String, Map<String, String>> projectionStrings = {
     'zh-Hant': '就要開始了',
     'en': 'We are beginning',
   },
+  // The wall's layout — four independent choices, added 2026-09-13
+  // when the owner asked for "middle aligned, verse by verse 还是连在
+  // 一起, plain text, include ref, devotional format".
+  'projectionAlign': {'zh-Hans': '对齐', 'zh-Hant': '對齊', 'en': 'Alignment'},
+  'projectionAlignCentre': {
+    'zh-Hans': '居中',
+    'zh-Hant': '置中',
+    'en': 'Centred',
+  },
+  'projectionAlignStart': {
+    // NOT 「靠左」: a Hebrew passage starts on the right.
+    'zh-Hans': '顶头对齐',
+    'zh-Hant': '頂頭對齊',
+    'en': 'From the margin',
+  },
+  'projectionFlow': {'zh-Hans': '经文排法', 'zh-Hant': '經文排法', 'en': 'Verses'},
+  'projectionFlowVerseByVerse': {
+    'zh-Hans': '一节一行',
+    'zh-Hant': '一節一行',
+    'en': 'Verse by verse',
+  },
+  'projectionFlowContinuous': {
+    'zh-Hans': '连成一段',
+    'zh-Hant': '連成一段',
+    'en': 'Run together',
+  },
+  'projectionNumbers': {
+    'zh-Hans': '显示节号',
+    'zh-Hant': '顯示節號',
+    'en': 'Verse numbers',
+  },
+  'projectionReferencePlace': {
+    'zh-Hans': '经文出处',
+    'zh-Hant': '經文出處',
+    'en': 'Reference',
+  },
+  'projectionReferenceCorner': {
+    'zh-Hans': '放在角落',
+    'zh-Hant': '放在角落',
+    'en': 'In the corner',
+  },
+  'projectionReferenceUnder': {
+    'zh-Hans': '放在经文下方',
+    'zh-Hant': '放在經文下方',
+    'en': 'Under the passage',
+  },
+  'projectionReferenceOff': {
+    'zh-Hans': '不显示',
+    'zh-Hant': '不顯示',
+    'en': 'Not shown',
+  },
+  'projectionLayoutDevotionalHint': {
+    'zh-Hans': '连成一段 + 关掉节号 + 出处放下方，就是灵修卡片的排法。',
+    'zh-Hant': '連成一段 + 關掉節號 + 出處放下方，就是靈修卡片的排法。',
+    'en': 'Run together, numbers off, reference underneath — that is the '
+        'devotional setting.',
+  },
+  'projectionLayoutDevotionalOn': {
+    'zh-Hans': '现在就是灵修排法。',
+    'zh-Hant': '現在就是靈修排法。',
+    'en': 'This is the devotional setting.',
+  },
 };

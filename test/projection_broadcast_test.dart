@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:seeksparks/constants/projection_setup.dart';
 import 'package:seeksparks/services/projection_broadcast.dart';
 
 /// The projector's second screen, without a second Flutter engine.
@@ -44,6 +45,64 @@ void main() {
             'positions must line up');
     expect(j['ground'], {'colors': ['#0b1320'], 'radial': false});
     expect(j['reference'], '创世纪 1:1–2');
+  });
+
+  test('the frame carries the layout, and the follower reads every field',
+      () {
+    // 2026-09-13. The wall gained four layout choices; a follower that
+    // ignored them would put a numbered, corner-referenced wall on the
+    // projector while the app showed a devotional one. Two walls.
+    const f = ProjectionFrame(
+      blank: false,
+      typeSize: 76,
+      reference: '诗篇 23:1',
+      tags: ['和合本'],
+      verses: [{'label': '1', 'text': '耶和华是我的牧者。'}],
+      second: null,
+      secondNote: null,
+      groundColors: ['#000000'],
+      radial: false,
+      ink: '#ffffff',
+      muted: '#888888',
+      layout: ProjectionLayout.devotional,
+    );
+    final j = jsonDecode(jsonEncode(f.toJson())) as Map<String, dynamic>;
+    expect(j['layout'], {
+      'align': 'centre',
+      'flow': 'continuous',
+      'numbers': false,
+      'reference': 'under',
+    });
+
+    final html = File('web/stage.html').readAsStringSync();
+    for (final key in ['align', 'flow', 'numbers', 'reference']) {
+      expect(html.contains(key), isTrue, reason: 'stage.html reads $key');
+    }
+    expect(html.contains("L.flow === 'continuous'"), isTrue);
+    expect(html.contains("L.align === 'start'"), isTrue);
+    expect(html.contains('L.numbers !== false'), isTrue,
+        reason: 'a frame with no layout means the wall this page has '
+            'always drawn, not numbers off');
+    expect(html.contains('refunder'), isTrue,
+        reason: 'the reference set under the passage scales with it');
+  });
+
+  test('a frame with no layout is the wall the app shipped with', () {
+    final j = jsonDecode(jsonEncode(const ProjectionFrame(
+      blank: false,
+      typeSize: 76,
+      reference: '',
+      tags: [],
+      verses: [],
+      second: null,
+      secondNote: null,
+      groundColors: ['#000000'],
+      radial: false,
+      ink: '#ffffff',
+      muted: '#888888',
+    ).toJson())) as Map<String, dynamic>;
+    expect((j['layout'] as Map)['flow'], 'verseByVerse');
+    expect((j['layout'] as Map)['reference'], 'corner');
   });
 
   test('stage.html exists, joins the same channel, and says hello', () {
