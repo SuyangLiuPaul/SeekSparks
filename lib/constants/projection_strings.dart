@@ -283,4 +283,10 @@ const Map<String, Map<String, String>> projectionStrings = {
         'B blacks out · G changes the ground · V picks the second '
         'edition · R saved setups · Esc leaves',
   },
+  // 2026-09-13: the follower window. Web only.
+  'projectionOpenStage': {
+    'zh-Hans': '打开投影窗口（拖到投影仪屏幕上）',
+    'zh-Hant': '開啟投影視窗（拖到投影機螢幕上）',
+    'en': 'Open the projector window (drag it to the projector display)',
+  },
 };
