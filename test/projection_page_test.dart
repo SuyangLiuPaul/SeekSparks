@@ -21,6 +21,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:seeksparks/constants/bible_versions.dart'
+    show
+        isKnownVersion,
+        kSecondaryVersionKey,
+        menuBibleVersionLabel,
+        resolveSecondaryVersion;
 import 'package:seeksparks/constants/projection_strings.dart';
 import 'package:seeksparks/models/app_settings.dart';
 import 'package:seeksparks/models/verse.dart';
@@ -70,9 +76,48 @@ Widget _app(MainProvider mp, AppSettings settings, {Widget? home}) =>
 
 /// Unmount the page so its auto-hide timer is cancelled by `dispose`
 /// rather than left pending at teardown.
+///
+/// The extra second is for `AppSettings`, not for the page: every
+/// setup control writes a setting now, and `notifyListeners` arms a
+/// 600 ms debounce for the user-prefs blob that no widget owns and
+/// `dispose` therefore cannot cancel. Nothing here is testing that
+/// write; it simply has to be let run. (The sibling `pump` of one
+/// second in the Font Size test predates this and is the same
+/// mechanism.)
 Future<void> _leave(WidgetTester tester) async {
   await tester.pumpWidget(const SizedBox());
   await tester.pump();
+  await tester.pump(const Duration(seconds: 1));
+}
+
+/// A settings object as a real launch produces one: loaded from
+/// whatever is in SharedPreferences.
+///
+/// Reopening the projection with one of these is the only honest test
+/// of persistence — a field kept on the object in memory would pass a
+/// test that reused the same instance and fail the operator on Sunday.
+Future<AppSettings> _loaded() async {
+  final settings = AppSettings();
+  await settings.loadSettings();
+  return settings;
+}
+
+/// Let the second-edition load finish: `build` schedules it after the
+/// frame, and it awaits SharedPreferences and the corpus before it can
+/// paint.
+Future<void> _settleSecond(WidgetTester tester) async {
+  for (var i = 0; i < 6; i++) {
+    await tester.pump(const Duration(milliseconds: 10));
+  }
+}
+
+/// One verse of another edition, cached so `preloadVersion` is a hit
+/// and no asset is read — a real multi-megabyte load never completes
+/// inside a widget test's fake-async zone.
+void _seedSecondEdition(MainProvider mp, String code, String text) {
+  mp.cacheVersionForTest(code, <Verse>[
+    Verse(book: 'Genesis', chapter: 1, verse: 1, text: text),
+  ]);
 }
 
 void main() {
@@ -258,6 +303,301 @@ void main() {
     });
   });
 
+  // ── 2026-09-09 ────────────────────────────────────────────────────
+  //
+  // 「projector setting怎么没做好 背景也不能set或者preset两个经文也不能
+  // 调整这个功能要完整」. Everything below is one of those three
+  // complaints, driven the way the operator drives it.
+  //
+  // Every one of these reopens the page against a FRESH `AppSettings`
+  // built by `loadSettings()`, because that is the difference between a
+  // setting and a field: an object reused across the two pumps would
+  // pass while the operator lost their setup every Sunday.
+
+  group('the operator\'s setup outlives the page', () {
+    testWidgets('the type size is where they left it, and the blank is not',
+        (tester) async {
+      final settings = await _loaded();
+      await pump(tester, _reader(), settings: settings);
+      await tester.sendKeyEvent(LogicalKeyboardKey.equal);
+      await tester.pump();
+      await tester.sendKeyEvent(LogicalKeyboardKey.equal);
+      await tester.pump();
+      // ...and black the wall out on the way out the door.
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyB);
+      await tester.pump();
+      expect(find.text(_text('Genesis', 1, 1)), findsNothing,
+          reason: 'precondition: the wall really is blanked');
+      await _leave(tester);
+
+      final reopened = await _loaded();
+      expect(reopened.projectionTypeStep, kProjectionTypeDefaultStep + 2,
+          reason: 'two presses of the size key are two rungs, and they '
+              'went to disk');
+      await pump(tester, _reader(), settings: reopened);
+      expect(
+        tester.widget<Text>(find.text(_text('Genesis', 1, 1))).style!.fontSize,
+        kProjectionTypeSteps[kProjectionTypeDefaultStep + 2],
+        reason: 'and the WALL is at that size, not just the setting',
+      );
+      expect(find.text(_text('Genesis', 1, 1)), findsOneWidget,
+          reason: 'the blank does NOT come back: nobody is looking at a '
+              'dark wall to notice it is stale, and reopening onto one '
+              'is a fault the operator has to diagnose mid-service');
+      await _leave(tester);
+    });
+
+    testWidgets('the ground they chose is still the ground', (tester) async {
+      final settings = await _loaded();
+      await pump(tester, _reader(), settings: settings);
+      expect(settings.projectionGround, ProjectionGround.deep,
+          reason: 'the default is what shipped, so an existing operator '
+              'sees no change at all');
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyG);
+      await tester.pump();
+      final chosen = settings.projectionGround;
+      expect(chosen, isNot(ProjectionGround.deep));
+      await _leave(tester);
+
+      final reopened = await _loaded();
+      expect(reopened.projectionGround, chosen);
+      await pump(tester, _reader(), settings: reopened);
+      final wall = tester
+          .widgetList<ColoredBox>(find.byType(ColoredBox))
+          .map((b) => b.color)
+          .toSet();
+      expect(wall, contains(projectionGroundPaintFor(chosen).base),
+          reason: 'the ground has to be PAINTED on reopening, not merely '
+              'remembered');
+      await _leave(tester);
+    });
+
+    testWidgets('the second edition is back on, and is the same edition',
+        (tester) async {
+      SharedPreferences.setMockInitialValues({kSecondaryVersionKey: 'kjv'});
+      final settings = await _loaded();
+      final mp = _reader();
+      _seedSecondEdition(mp, 'kjv', 'a second edition on the wall');
+      await pump(tester, mp, settings: settings);
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyP);
+      await tester.pump();
+      await _settleSecond(tester);
+      expect(find.text('a second edition on the wall'), findsOneWidget,
+          reason: 'precondition: the second block is really loaded');
+      await _leave(tester);
+
+      final reopened = await _loaded();
+      expect(reopened.projectionSecondOn, isTrue);
+      final mp2 = _reader();
+      _seedSecondEdition(mp2, 'kjv', 'a second edition on the wall');
+      await pump(tester, mp2, settings: reopened);
+      await _settleSecond(tester);
+      expect(find.text('a second edition on the wall'), findsOneWidget,
+          reason: 'the wall opens with two editions because that is how '
+              'the operator left it — the old page needed the P key '
+              'pressed again every single service');
+      await _leave(tester);
+    });
+  });
+
+  group('the second edition is the projection\'s own', () {
+    testWidgets('it is seeded from Split View once and then stops following',
+        (tester) async {
+      // The borrow this replaces was invisible from both ends: the
+      // projection read `secondary_version`, which is the READER's
+      // split column, so changing one silently changed the other and
+      // no control on either surface said so.
+      SharedPreferences.setMockInitialValues({kSecondaryVersionKey: 'kjv'});
+      final settings = await _loaded();
+      final mp = _reader();
+      _seedSecondEdition(mp, 'kjv', 'the borrowed edition');
+      _seedSecondEdition(mp, 'leb', 'the reader changed their split view');
+      await pump(tester, mp, settings: settings);
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyP);
+      await tester.pump();
+      await _settleSecond(tester);
+      expect(find.text('the borrowed edition'), findsOneWidget,
+          reason: 'the seed: an operator who already had the pairing they '
+              'wanted must see no change on the day this shipped');
+      expect(settings.projectionSecondVersion, 'kjv',
+          reason: 'and the projection now owns that answer');
+
+      // The reader goes back to their desk and changes the split view.
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(kSecondaryVersionKey, 'leb');
+      await _leave(tester);
+
+      final reopened = await _loaded();
+      expect(reopened.projectionSecondVersion, 'kjv',
+          reason: 'the two are different jobs; the wall does not move '
+              'because someone rearranged a reading pane');
+      final mp2 = _reader();
+      _seedSecondEdition(mp2, 'kjv', 'the borrowed edition');
+      _seedSecondEdition(mp2, 'leb', 'the reader changed their split view');
+      await pump(tester, mp2, settings: reopened);
+      await _settleSecond(tester);
+      expect(find.text('the borrowed edition'), findsOneWidget);
+      expect(find.text('the reader changed their split view'), findsNothing);
+      await _leave(tester);
+    });
+
+    testWidgets('and the operator can pick it, from the projection page',
+        (tester) async {
+      final settings = await _loaded();
+      final mp = _reader();
+      _seedSecondEdition(mp, 'kjv', 'the edition the operator picked');
+      await pump(tester, mp, settings: settings);
+
+      // V opens the strip. Before this there was no way in at all.
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyV);
+      await tester.pump();
+      final label = find.text(menuBibleVersionLabel('kjv'));
+      expect(label, findsOneWidget,
+          reason: 'the strip names editions in full — a room reading '
+              '「BGT BSB 雅简」 from forty feet cannot decode a tag');
+      await tester.ensureVisible(label);
+      await tester.pumpAndSettle();
+      await tester.tap(label);
+      await tester.pump();
+      await _settleSecond(tester);
+
+      expect(settings.projectionSecondVersion, 'kjv');
+      expect(settings.projectionSecondOn, isTrue,
+          reason: 'picking an edition is asking to see it; a second press '
+              'to turn it on is the feature being unfinished again');
+      expect(find.text('the edition the operator picked'), findsOneWidget);
+      await _leave(tester);
+    });
+
+    testWidgets('the picker does not offer the edition already on the wall',
+        (tester) async {
+      final mp = _reader();
+      await pump(tester, mp, settings: await _loaded());
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyV);
+      await tester.pump();
+      expect(find.text(menuBibleVersionLabel(mp.currentVersion)), findsNothing,
+          reason: 'a wall carrying the same text twice is the one outcome '
+              'worse than a wall carrying it once');
+      await _leave(tester);
+    });
+  });
+
+  group('presets', () {
+    const morning = ProjectionPreset(
+      name: 'morning service',
+      setup: ProjectionSetup(
+        typeStep: 8,
+        secondOn: false,
+        secondVersion: 'kjv',
+        ground: ProjectionGround.black,
+      ),
+    );
+
+    testWidgets('a saved setup is on the strip and puts itself back',
+        (tester) async {
+      final settings = await _loaded();
+      await settings.setProjectionPresets(const [morning]);
+      await pump(tester, _reader(), settings: settings);
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyR);
+      await tester.pump();
+      final chip = find.text('morning service');
+      expect(chip, findsOneWidget);
+      await tester.ensureVisible(chip);
+      await tester.pumpAndSettle();
+      await tester.tap(chip);
+      await tester.pump();
+
+      expect(settings.projectionTypeStep, 8);
+      expect(settings.projectionGround, ProjectionGround.black);
+      expect(settings.projectionSecondVersion, 'kjv');
+      expect(
+        tester.widget<Text>(find.text(_text('Genesis', 1, 1))).style!.fontSize,
+        kProjectionTypeSteps[8],
+        reason: 'recalled onto the WALL, not just into the settings object',
+      );
+      await _leave(tester);
+    });
+
+    testWidgets('one that names an edition this build no longer has lands '
+        'on one it does', (tester) async {
+      // `nasb` is in the catalog and hidden by `disabledVersions`, so
+      // `isKnownVersion` is false for it — exactly the shape of a
+      // preset saved two releases ago. The wall must not go blank over
+      // it, and the resolver that answers is the SAME one the loader
+      // uses, not a second opinion.
+      const stale = ProjectionPreset(
+        name: 'from an older build',
+        setup: ProjectionSetup(
+          typeStep: 5,
+          secondOn: true,
+          secondVersion: 'nasb',
+          ground: ProjectionGround.deep,
+        ),
+      );
+      final settings = await _loaded();
+      await settings.setProjectionPresets(const [stale]);
+      final mp = _reader();
+      await pump(tester, mp, settings: settings);
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyR);
+      await tester.pump();
+      final chip = find.text('from an older build');
+      await tester.ensureVisible(chip);
+      await tester.pumpAndSettle();
+      await tester.tap(chip);
+      await tester.pump();
+      await _settleSecond(tester);
+
+      expect(settings.projectionSecondVersion, isNot('nasb'));
+      expect(isKnownVersion(settings.projectionSecondVersion), isTrue,
+          reason: 'a retired code must land on an edition this build can '
+              'actually load');
+      expect(
+          settings.projectionSecondVersion,
+          resolveSecondaryVersion(
+              primaryVersion: mp.currentVersion, stored: 'nasb'),
+          reason: 'and it must land where the second-edition loader would '
+              'have put it — one resolver, not two');
+      expect(tester.takeException(), isNull);
+      await _leave(tester);
+    });
+
+    testWidgets('saving one names it, and it survives the page',
+        (tester) async {
+      final settings = await _loaded();
+      await pump(tester, _reader(), settings: settings);
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyG);
+      await tester.pump();
+      final ground = settings.projectionGround;
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyR);
+      await tester.pump();
+      final save = find.text(projectionStrings['projectionPresetSave']!['en']!);
+      await tester.ensureVisible(save);
+      await tester.pumpAndSettle();
+      await tester.tap(save);
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextField), 'youth night');
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pumpAndSettle();
+
+      await _leave(tester);
+      final reopened = await _loaded();
+      expect(reopened.projectionPresets.map((p) => p.name), ['youth night']);
+      expect(reopened.projectionPresets.single.setup.ground, ground,
+          reason: 'a preset stores the setup that was on the wall when it '
+              'was saved');
+      // `loadSettings` notifies, which arms the blob debounce; this test
+      // is the one that ends on a fresh AppSettings with no pump after
+      // it. See `_leave`.
+      await tester.pump(const Duration(seconds: 1));
+    });
+  });
+
   group('leaving', () {
     testWidgets('puts the reader back exactly where they were',
         (tester) async {
@@ -353,17 +693,30 @@ void main() {
     await _leave(tester);
   });
 
-  testWidgets('the control bar shrinks to a phone instead of overflowing',
+  testWidgets('the control bar scrolls on a phone, and SAYS it scrolls',
       (tester) async {
-    // Ten buttons are wider than 375 px. The failure mode this guards is
-    // not an ugly bar, it is the framework's yellow-and-black overflow
-    // stripe — on a church wall.
+    // Fourteen buttons are far wider than 375 px, and a projection
+    // driven from a phone is a real if unusual configuration. The
+    // failure mode this has always guarded is the framework's
+    // yellow-and-black overflow stripe on a church wall.
+    //
+    // 2026-09-09 it guards a second one. The bar used to answer the
+    // narrow case with `FittedBox(scaleDown)`, which was fine at ten
+    // icons and is not at fourteen: shrink-to-fit on a strip whose
+    // premise is "hit it without looking" takes the targets under a
+    // fingertip. It scrolls now — and an edge with more behind it has
+    // to say so, because a row that ends at the screen edge looking
+    // complete is a row nobody swipes (`overflow_hint_scroll.dart`:
+    // 「不往右划根本不知道」).
     tester.view.physicalSize = const Size(375, 812);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
     await tester.pumpWidget(_app(_reader(), AppSettings()));
     await tester.pump();
+    await tester.pump();
     expect(tester.takeException(), isNull);
+    expect(find.byIcon(Icons.chevron_right_rounded), findsWidgets,
+        reason: 'the operator has to be told the rest of the bar is there');
     await _leave(tester);
   });
 

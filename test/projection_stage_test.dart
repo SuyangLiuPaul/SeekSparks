@@ -15,6 +15,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:seeksparks/constants/bible_versions.dart'
     show shortBibleVersionLabel;
+import 'package:seeksparks/constants/projection_setup.dart';
 import 'package:seeksparks/constants/projection_strings.dart';
 import 'package:seeksparks/constants/workbench_theme.dart' show WbColors;
 import 'package:seeksparks/models/verse.dart';
@@ -33,12 +34,13 @@ const _verse = Verse(
 
 Future<void> _stage(
   WidgetTester tester, {
-  Verse? verse = _verse,
+  List<Verse> verses = const [_verse],
   bool blank = false,
   bool secondOn = false,
-  String? secondText,
+  List<String?>? secondTexts,
   bool secondLoading = false,
   double typeSize = 64,
+  ProjectionGround ground = kProjectionGroundDefault,
   Size surface = const Size(1280, 800),
 }) async {
   tester.view.physicalSize = surface;
@@ -47,16 +49,17 @@ Future<void> _stage(
   await tester.pumpWidget(MaterialApp(
     home: Scaffold(
       body: ProjectionStage(
-        verse: verse,
-        reference: verse == null
+        verses: verses,
+        reference: verses.isEmpty
             ? ''
-            : '${verse.book} ${verse.chapter}:${verse.verseLabel}',
+            : '${verses.first.book} ${verses.first.chapter}:${verses.first.verseLabel}',
         versionCode: _reading,
         typeSize: typeSize,
         blank: blank,
         locale: _locale,
+        ground: ground,
         secondOn: secondOn,
-        secondText: secondText,
+        secondTexts: secondTexts,
         secondCode: secondOn ? _second : null,
         secondLoading: secondLoading,
       ),
@@ -64,6 +67,20 @@ Future<void> _stage(
   ));
   await tester.pump();
 }
+
+/// Every colour the stage is currently painting the wall with — the
+/// flat fills AND the gradient's stops, because "what is on the wall"
+/// has to mean the same thing for both kinds of ground.
+Set<Color> _wallColours(WidgetTester tester) => <Color>{
+      for (final box in tester.widgetList<ColoredBox>(find.byType(ColoredBox)))
+        box.color,
+      for (final box
+          in tester.widgetList<DecoratedBox>(find.byType(DecoratedBox)))
+        ...switch (box.decoration) {
+          BoxDecoration(gradient: final LinearGradient g) => g.colors,
+          _ => const <Color>[],
+        },
+    };
 
 String _s(String key) => projectionStrings[key]![_locale]!;
 
@@ -93,7 +110,7 @@ void main() {
     testWidgets('stacks the second under the first, both on the wall',
         (tester) async {
       const other = 'Im Anfang schuf Gott Himmel und Erde.';
-      await _stage(tester, secondOn: true, secondText: other);
+      await _stage(tester, secondOn: true, secondTexts: [other]);
 
       expect(find.text(_verse.text), findsOneWidget);
       expect(find.text(other), findsOneWidget);
@@ -109,7 +126,7 @@ void main() {
     });
 
     testWidgets('names both editions in the corner', (tester) async {
-      await _stage(tester, secondOn: true, secondText: 'anything');
+      await _stage(tester, secondOn: true, secondTexts: ['anything']);
       expect(
         find.text('Genesis 1:1 · ${shortBibleVersionLabel(_reading)} · '
             '${shortBibleVersionLabel(_second)}'),
@@ -122,7 +139,7 @@ void main() {
     testWidgets('sets the second edition smaller, so one of them leads',
         (tester) async {
       const other = 'Im Anfang schuf Gott Himmel und Erde.';
-      await _stage(tester, secondOn: true, secondText: other, typeSize: 64);
+      await _stage(tester, secondOn: true, secondTexts: [other], typeSize: 64);
       final lead = tester.widget<Text>(find.text(_verse.text)).style!.fontSize!;
       final follow = tester.widget<Text>(find.text(other)).style!.fontSize!;
       expect(follow, lessThan(lead));
@@ -133,7 +150,7 @@ void main() {
         (tester) async {
       // Real: the LJK editions are New Testament only, so an Old
       // Testament reading has nothing to put in the second block.
-      await _stage(tester, secondOn: true, secondText: null);
+      await _stage(tester, secondOn: true, secondTexts: null);
       expect(find.text(_s('projectionSecondVersionMissing')), findsOneWidget,
           reason: 'silence in the second block reads as a bug from the '
               'fourth row back');
@@ -150,7 +167,7 @@ void main() {
   group('the blank state', () {
     testWidgets('shows nothing at all — no verse, no reference, no note',
         (tester) async {
-      await _stage(tester, blank: true, secondOn: true, secondText: 'x');
+      await _stage(tester, blank: true, secondOn: true, secondTexts: ['x']);
       expect(find.byType(Text), findsNothing);
     });
 
@@ -171,6 +188,61 @@ void main() {
       expect(dark, contains(WbColors.dark.groundBg));
       expect(lit, contains(WbColors.dark.groundBg));
     });
+
+    testWidgets('and does so for EVERY ground, not just the default one',
+        (tester) async {
+      // The claim above used to be free: there was one ground, so
+      // blanking could not land anywhere else. With a choice it becomes
+      // a property that has to hold four times over, and the one that
+      // would break it is the gradient — cutting a gradient to black is
+      // the flash the blank key exists not to be.
+      for (final ground in ProjectionGround.values) {
+        await _stage(tester, ground: ground);
+        final lit = _wallColours(tester);
+        await _stage(tester, ground: ground, blank: true);
+        final blanked = _wallColours(tester);
+        expect(blanked, containsAll(projectionGroundPaintFor(ground).stops),
+            reason: '${ground.name}: the blanked wall must be painted with '
+                'the ground the operator chose');
+        expect(lit.intersection(blanked),
+            containsAll(projectionGroundPaintFor(ground).stops),
+            reason: '${ground.name}: lit and blank must be the same wall '
+                'with the text taken off it');
+      }
+    });
+  });
+
+  group('the ground the operator chose', () {
+    testWidgets('is the one on the wall', (tester) async {
+      await _stage(tester, ground: ProjectionGround.black);
+      expect(_wallColours(tester), contains(const Color(0xFF000000)));
+      expect(_wallColours(tester), isNot(contains(WbColors.dark.groundBg)),
+          reason: 'a ground that was chosen and not painted is the '
+              'setting doing nothing, which is the whole report');
+    });
+
+    testWidgets('is a real gradient when the operator asks for one',
+        (tester) async {
+      await _stage(tester, ground: ProjectionGround.vignette);
+      final stops = projectionGroundPaintFor(ProjectionGround.vignette).stops;
+      expect(_wallColours(tester), containsAll(stops));
+      expect(stops.first, isNot(stops.last),
+          reason: 'a gradient between one colour and itself is a flat fill '
+              'wearing a name');
+    });
+
+    testWidgets('does not move the scripture, only what is behind it',
+        (tester) async {
+      // The stage's whole job is the passage; a background feature that
+      // moved the text would be a background feature that broke the
+      // thing it decorates.
+      await _stage(tester);
+      final on = tester.getRect(find.text(_verse.text));
+      await _stage(tester, ground: ProjectionGround.vignette);
+      expect(tester.getRect(find.text(_verse.text)), on);
+      expect(tester.widget<Text>(find.text(_verse.text)).style!.color,
+          WbColors.dark.text);
+    });
   });
 
   group('a verse too long for the room', () {
@@ -189,7 +261,7 @@ void main() {
             'provinces, to each province in its own script and to each '
             'people in their own language.',
       );
-      await _stage(tester, verse: long, typeSize: 160);
+      await _stage(tester, verses: [long], typeSize: 160);
 
       final painted = tester.getRect(find.text(long.text));
       expect(painted.width, lessThanOrEqualTo(1280.0));
@@ -207,7 +279,7 @@ void main() {
       // that fits is drawn at exactly the size that was asked for.
       const short =
           Verse(book: 'John', chapter: 11, verse: 35, text: 'Jesus wept.');
-      await _stage(tester, verse: short, typeSize: 64);
+      await _stage(tester, verses: [short], typeSize: 64);
       final painted = tester.getRect(find.text(short.text));
       final declared =
           tester.widget<Text>(find.text(short.text)).style!.fontSize!;

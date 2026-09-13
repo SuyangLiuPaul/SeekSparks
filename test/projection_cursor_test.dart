@@ -157,6 +157,40 @@ void main() {
       }
     });
 
+    test('G steps the ground, V picks the edition, R opens saved setups', () {
+      // 2026-09-09, and all three go through THIS map rather than being
+      // button-only. The bar and the keyboard dispatch one enum through
+      // one switch, which is the property that stops the two drifting —
+      // a setup control reachable only by pointer would be the first
+      // thing on this page an operator could not do without looking.
+      expect(projectionCommandFor(LogicalKeyboardKey.keyG),
+          ProjectionCommand.cycleBackground,
+          reason: 'the ground CYCLES rather than opening a strip: it is '
+              'the one setup change worth making mid-service');
+      expect(projectionCommandFor(LogicalKeyboardKey.keyV),
+          ProjectionCommand.openSecondVersionPicker);
+      expect(projectionCommandFor(LogicalKeyboardKey.keyR),
+          ProjectionCommand.openPresets);
+    });
+
+    test('the three new letters took nothing that was already bound', () {
+      // The failure this guards is silent: a new binding that shadows an
+      // old one leaves the operator pressing a key that used to advance
+      // the verse and now opens a menu, in front of a room.
+      final before = <LogicalKeyboardKey, ProjectionCommand>{
+        LogicalKeyboardKey.keyB: ProjectionCommand.blank,
+        LogicalKeyboardKey.period: ProjectionCommand.blank,
+        LogicalKeyboardKey.keyP: ProjectionCommand.toggleSecondVersion,
+        LogicalKeyboardKey.escape: ProjectionCommand.leave,
+        LogicalKeyboardKey.space: ProjectionCommand.nextVerse,
+        LogicalKeyboardKey.backspace: ProjectionCommand.previousVerse,
+      };
+      before.forEach((key, command) {
+        expect(projectionCommandFor(key), command,
+            reason: '${key.keyLabel} moved');
+      });
+    });
+
     test('a key the projection has no use for is left to the browser', () {
       expect(projectionCommandFor(LogicalKeyboardKey.keyF), isNull);
       expect(projectionCommandFor(LogicalKeyboardKey.f5), isNull,

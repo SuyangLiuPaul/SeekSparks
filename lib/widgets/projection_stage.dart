@@ -34,6 +34,31 @@
 /// paragraph that has been interrupted, and the room needs to know at a
 /// glance which one is the sermon's text.
 ///
+/// ## THE GROUND IS CHOSEN, AND BLANKING GOES TO THE SAME GROUND
+///
+/// 2026-09-09. This used to paint one fixed colour, `WbColors.dark`'s
+/// `groundBg`, and the blank state painted the same one — which is why
+/// the blank key was honest. The operator can now choose
+/// ([ProjectionGround]), and the honesty is now a property that has to
+/// be maintained rather than one that falls out of there being no
+/// choice: [blank] paints the SAME [ProjectionGroundPaint] the lit
+/// state does, whatever the choice is. Blanking is a shutter over the
+/// text, not a different screen.
+///
+/// Every ground is dark, and `projection_setup.dart`'s library doc
+/// argues why at length: a projector adds light, so a light ground
+/// washes the room and makes the blank key a flash. That file is also
+/// where the two numbers live that stop this from being a matter of
+/// taste — a luminance ceiling on any colour a ground paints, and a
+/// contrast floor for scripture against it, both asserted in
+/// `projection_setup_test.dart`.
+///
+/// One ground is a gradient rather than a flat fill, and it is drawn
+/// with a `DecoratedBox` where the flat ones stay a `ColoredBox`. Not an
+/// implementation detail: a one-colour `LinearGradient` would paint
+/// identically and would make the default ground stop being the plain
+/// fill of the app's own `groundBg` that it has always been.
+///
 /// ## EVERY STYLE HERE PINS `kCjkFontFallback`, INCLUDING THE REFERENCE
 ///
 /// The app theme already carries the bundled CJK subset in its own
@@ -52,6 +77,7 @@ import 'package:flutter/material.dart';
 
 import 'package:seeksparks/constants/bible_versions.dart'
     show shortBibleVersionLabel;
+import 'package:seeksparks/constants/projection_setup.dart';
 import 'package:seeksparks/constants/projection_strings.dart';
 import 'package:seeksparks/constants/workbench_theme.dart'
     show WbColors, WbMetrics;
@@ -97,20 +123,23 @@ const double kProjectionVerticalMargin = 0.11;
 class ProjectionStage extends StatelessWidget {
   const ProjectionStage({
     super.key,
-    required this.verse,
+    required this.verses,
     required this.reference,
     required this.versionCode,
     required this.typeSize,
     required this.blank,
     required this.locale,
+    this.ground = kProjectionGroundDefault,
     this.secondOn = false,
-    this.secondText,
+    this.secondTexts,
     this.secondCode,
     this.secondLoading = false,
   });
 
   /// The verse on the wall, or null when the corpus has not arrived.
-  final Verse? verse;
+  /// The verses on the wall — one, or the block a selection opened.
+  /// Empty is the empty state.
+  final List<Verse> verses;
 
   /// Book, chapter and verse as the room reads it — built by the page,
   /// because the reference and the text must name the same edition.
@@ -121,26 +150,38 @@ class ProjectionStage extends StatelessWidget {
   /// The size the operator asked for. A ceiling — see the library doc.
   final double typeSize;
 
-  /// The blank key. The wall goes to the ground colour and stays there:
-  /// the passage is not merely hidden, the whole stage is, reference
+  /// The blank key. The wall goes to the ground and stays there: the
+  /// passage is not merely hidden, the whole stage is, reference
   /// included. A "blank" screen that still names a verse tells the room
   /// where the sermon is while the preacher is somewhere else.
+  ///
+  /// "The ground" is [ground], not black — see the library doc. Cutting
+  /// to black from a ground that is not black is a flash, which is the
+  /// one thing the blank key must not be.
   final bool blank;
 
   final String locale;
 
+  /// Which dark the passage sits on. Every option is dark; see
+  /// `projection_setup.dart`.
+  final ProjectionGround ground;
+
   final bool secondOn;
-  final String? secondText;
+  /// The second edition's text per verse in [verses], by position;
+  /// null when the block is off or not loaded.
+  final List<String?>? secondTexts;
   final String? secondCode;
   final bool secondLoading;
 
   @override
   Widget build(BuildContext context) {
     final wb = WbColors.dark;
-    if (blank) return ColoredBox(color: wb.groundBg);
+    // ONE call for both states, so the blanked wall cannot drift away
+    // from the lit one. A second `_ground(...)` written out in the
+    // blank branch is exactly how the flash would come back.
+    if (blank) return _ground();
 
-    return ColoredBox(
-      color: wb.groundBg,
+    return _ground(
       child: LayoutBuilder(
         builder: (context, box) {
           final side = box.maxWidth * kProjectionSideMargin;
@@ -152,7 +193,7 @@ class ProjectionStage extends StatelessWidget {
                 child: Padding(
                   padding: EdgeInsets.symmetric(horizontal: side, vertical: top),
                   child: Center(
-                    child: verse == null
+                    child: verses.isEmpty
                         ? _emptyState(wb)
                         : FittedBox(
                             fit: BoxFit.scaleDown,
@@ -177,6 +218,22 @@ class ProjectionStage extends StatelessWidget {
     );
   }
 
+  /// The wall's own paint, with [child] on top of it.
+  ///
+  /// A flat ground stays a `ColoredBox` so the default is still the
+  /// plain fill of `WbColors.dark.groundBg` it has always been — a
+  /// one-colour gradient would render the same and would quietly change
+  /// what the blank-state test is looking at.
+  Widget _ground({Widget? child}) {
+    final paint = projectionGroundPaintFor(ground);
+    final gradient = paint.gradient;
+    if (gradient == null) return ColoredBox(color: paint.base, child: child);
+    return DecoratedBox(
+      decoration: BoxDecoration(gradient: gradient),
+      child: child,
+    );
+  }
+
   /// How far up from the bottom edge the reference sits, as a share of
   /// the vertical margin — inside the margin the passage respects, so it
   /// can never collide with the text above it.
@@ -197,47 +254,83 @@ class ProjectionStage extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            verse!.text,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: wb.text,
-              fontFamilyFallback: kCjkFontFallback,
-              fontSize: typeSize,
-              height: WbMetrics.lineHeight,
-            ),
-          ),
+          for (var i = 0; i < verses.length; i++)
+            _line(wb, verses[i].text, verses[i].verseLabel, typeSize, wb.text),
           if (secondOn) ...[
             SizedBox(height: typeSize * _kBlockGapShare),
-            Text(
-              _secondBody(),
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                // A missing or still-loading second edition is
-                // apparatus, not scripture, and must not be mistaken for
-                // the verse — the same rule `versificationSpan` follows
-                // in the workbench.
-                color: secondText == null ? wb.mutedText : wb.text,
-                fontFamilyFallback: kCjkFontFallback,
-                fontSize: typeSize * kProjectionSecondScale,
-                height: WbMetrics.lineHeight,
-              ),
-            ),
+            ..._secondLines(wb),
           ],
         ],
       );
+
+  /// One verse of the wall. With more than one verse up, each carries
+  /// its number in the muted colour — small, because the room reads the
+  /// words and the number is only there so a listener can find their
+  /// place in a printed Bible. A single verse carries none; the
+  /// reference below already names it.
+  Widget _line(WbColors wb, String text, String label, double size, Color ink) {
+    final numbered = verses.length > 1;
+    return Text.rich(
+      TextSpan(children: [
+        if (numbered)
+          TextSpan(
+            text: '$label ',
+            style: TextStyle(
+              color: wb.mutedText,
+              fontSize: size * kProjectionReferenceScale * 1.6,
+            ),
+          ),
+        TextSpan(text: text),
+      ]),
+      textAlign: TextAlign.center,
+      style: TextStyle(
+        color: ink,
+        fontFamilyFallback: kCjkFontFallback,
+        fontSize: size,
+        height: WbMetrics.lineHeight,
+      ),
+    );
+  }
+
+  /// The second edition, verse for verse under the first — or one line
+  /// of apparatus when it has nothing to show, in the muted colour so it
+  /// cannot be mistaken for scripture (the rule `versificationSpan`
+  /// follows in the workbench).
+  List<Widget> _secondLines(WbColors wb) {
+    final texts = secondTexts;
+    final size = typeSize * kProjectionSecondScale;
+    if (secondLoading || texts == null || texts.every((t) => t == null)) {
+      return [
+        Text(
+          _secondBody(null),
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: wb.mutedText,
+            fontFamilyFallback: kCjkFontFallback,
+            fontSize: size,
+            height: WbMetrics.lineHeight,
+          ),
+        ),
+      ];
+    }
+    return [
+      for (var i = 0; i < verses.length; i++)
+        _line(wb, _secondBody(texts[i]), verses[i].verseLabel, size,
+            texts[i] == null ? wb.mutedText : wb.text),
+    ];
+  }
 
   /// The gap between the two editions, as a share of the passage size —
   /// so it stays a gap at every step of the ladder instead of vanishing
   /// at 160 px and swallowing the wall at 32.
   static const double _kBlockGapShare = 0.6;
 
-  String _secondBody() {
+  String _secondBody(String? text) {
     if (secondLoading) {
       return _s('projectionSecondVersionLoading',
           'Loading the second edition', locale);
     }
-    return secondText ??
+    return text ??
         _s('projectionSecondVersionMissing',
             'This edition has no text here', locale);
   }
@@ -249,7 +342,7 @@ class ProjectionStage extends StatelessWidget {
   /// in what?* — and because a second edition on the wall with no way to
   /// tell which translation is which is worse than one edition.
   Widget _reference(WbColors wb) {
-    if (verse == null) return const SizedBox.shrink();
+    if (verses.isEmpty) return const SizedBox.shrink();
     final tags = <String>[
       shortBibleVersionLabel(versionCode),
       if (secondOn && secondCode != null) shortBibleVersionLabel(secondCode!),

@@ -129,6 +129,16 @@ const Map<String, Map<String, String>> projectionStrings = {
     'en': 'Loading the second edition',
   },
 
+  /// 2026-09-09 — 「两个经文也不能调整」. The switch that adds a second
+  /// edition shipped without a way to say WHICH, because the projection
+  /// silently borrowed Split View's saved second column. This is the
+  /// button that asks the question out loud.
+  'projectionSecondVersionPick': {
+    'zh-Hans': '选第二译本',
+    'zh-Hant': '選第二譯本',
+    'en': 'Choose the second edition',
+  },
+
   /// Shown in place of the second block when the edition is on but has
   /// no text for this reference — an NT-only edition under an Old
   /// Testament reading, which the catalog genuinely ships (see
@@ -138,6 +148,103 @@ const Map<String, Map<String, String>> projectionStrings = {
     'zh-Hans': '这个译本没有这处经文',
     'zh-Hant': '這個譯本沒有這處經文',
     'en': 'This edition has no text here',
+  },
+
+  // ── the ground, and the four darks ─────────────────────────────────
+  //
+  // Named for what the operator SEES, not for the mechanism. 「渐变」 is
+  // the exception and is deliberate: a gradient is the one option whose
+  // point the name has to carry, because "深蓝" and "暖黑" describe
+  // themselves and a two-stop dark does not.
+  //
+  // The 简/繁 columns differ only where a character does — 选/選, 译/譯,
+  // 设/設, 预/預, 删/刪, 键/鍵, 变/變, 个/個 — following the rule this
+  // file's library doc writes down.
+
+  'projectionBackground': {
+    'zh-Hans': '背景',
+    'zh-Hant': '背景',
+    'en': 'Background',
+  },
+  'projectionGroundDeep': {
+    'zh-Hans': '深蓝',
+    'zh-Hant': '深藍',
+    'en': 'Deep navy',
+  },
+  'projectionGroundBlack': {
+    'zh-Hans': '纯黑',
+    'zh-Hant': '純黑',
+    'en': 'Black',
+  },
+  'projectionGroundWarm': {
+    'zh-Hans': '暖黑',
+    'zh-Hant': '暖黑',
+    'en': 'Warm dark',
+  },
+  'projectionGroundVignette': {
+    'zh-Hans': '渐变',
+    'zh-Hant': '漸變',
+    'en': 'Gradient',
+  },
+
+  // ── saved setups ───────────────────────────────────────────────────
+  //
+  // 「预设」 rather than 「模板」 or 「场景」: a preset is what every
+  // presentation tool in the room already calls this, and an operator
+  // who has driven ProPresenter or PowerPoint knows the word.
+
+  'projectionPresets': {
+    'zh-Hans': '预设',
+    'zh-Hant': '預設',
+    'en': 'Saved setups',
+  },
+  'projectionPresetSave': {
+    'zh-Hans': '保存当前设置',
+    'zh-Hant': '儲存目前設定',
+    'en': 'Save this setup',
+  },
+  'projectionPresetSaveTitle': {
+    'zh-Hans': '给这套设置起个名字',
+    'zh-Hant': '給這套設定取個名字',
+    'en': 'Name this setup',
+  },
+  'projectionPresetDefaultName': {
+    'zh-Hans': '主日崇拜',
+    'zh-Hant': '主日崇拜',
+    'en': 'Sunday service',
+  },
+  'projectionPresetCancel': {
+    'zh-Hans': '取消',
+    'zh-Hant': '取消',
+    'en': 'Cancel',
+  },
+  'projectionPresetDelete': {
+    'zh-Hans': '删掉这套设置',
+    'zh-Hant': '刪掉這套設定',
+    'en': 'Delete this setup',
+  },
+  'projectionPresetNone': {
+    'zh-Hans': '还没有保存过设置',
+    'zh-Hant': '還沒有儲存過設定',
+    'en': 'No saved setups yet',
+  },
+
+  // ── the control strip's own two edges ──────────────────────────────
+  //
+  // Read out loud by a screen reader and by nothing else — the chevrons
+  // say the same thing with a glyph. Two strings and not one, for the
+  // reason `OverflowHintScroll` records: the two chevrons do opposite
+  // things and a reader who cannot see them hears only this.
+
+  'projectionMoreControls': {
+    'zh-Hans': '更多控制',
+    'zh-Hant': '更多控制',
+    'en': 'More controls',
+  },
+  'projectionPreviousControls': {
+    'zh-Hans': '前面的控制',
+    'zh-Hant': '前面的控制',
+    'en': 'Previous controls',
   },
 
   // ── the empty state ────────────────────────────────────────────────
@@ -162,10 +269,18 @@ const Map<String, Map<String, String>> projectionStrings = {
         'from the laptop keyboard.',
   },
 
+  /// 2026-09-09: three keys added — G steps the ground, V opens the
+  /// edition strip, R opens the saved setups. Mnemonic in English and
+  /// therefore not in Chinese, which is why the line names the LETTER
+  /// and then says what it does: an operator reading the 简体 line still
+  /// has a QWERTY keyboard under their hands.
   'projectionKeysHint': {
-    'zh-Hans': '方向键 / 空格换节 · PgUp PgDn 换章 · B 黑屏 · Esc 退出',
-    'zh-Hant': '方向鍵 / 空白鍵換節 · PgUp PgDn 換章 · B 黑屏 · Esc 退出',
+    'zh-Hans': '方向键 / 空格换节 · PgUp PgDn 换章 · B 黑屏 · '
+        'G 换背景 · V 选译本 · R 预设 · Esc 退出',
+    'zh-Hant': '方向鍵 / 空白鍵換節 · PgUp PgDn 換章 · B 黑屏 · '
+        'G 換背景 · V 選譯本 · R 預設 · Esc 退出',
     'en': 'Arrows / Space change verse · PgUp PgDn change chapter · '
-        'B blacks out · Esc leaves',
+        'B blacks out · G changes the ground · V picks the second '
+        'edition · R saved setups · Esc leaves',
   },
 };
