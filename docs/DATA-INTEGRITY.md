@@ -4392,6 +4392,19 @@ plate's declared chapter range covering a verse that names the place*. It
 reaches **79 of 1,271 places, 218 pairs, 149 distinct plates** — a join
 rate of **6.2%**, and all 218 pairs were read by hand.
 
+**2026-09-13.** The twenty-four Doré plates the collection was missing
+(`tools/import_commons_plates.py`, index 1,192 → 1,216) moved it to
+**81 places, 224 pairs, 155 distinct plates — 6.4%**, and the scope
+partition to **296/58**. Six pairs are new and each was read against
+the text before the numbers moved: Jabesh ← the Jabesh-Gileadites
+recovering Saul's body (1 Sam 31:11), Jabesh-gilead ← the Benjaminites
+taking its virgins (Judg 21:8), Jerusalem ← the plague (2 Sam 24:15)
+and Nehemiah's night ride round the walls (Neh 2:13), Samaria ← the
+famine (2 Kgs 6:24) and the lions among its settlers (2 Kgs 17:25).
+Jabesh and Jabesh-gilead are two gazetteer rows for one town, which is
+the gazetteer's business and not the join's. The rule itself did not
+change; only the corpus it runs over.
+
 The rejected alternatives are worth the space, because three of them look
 better on paper:
 
@@ -4473,9 +4486,10 @@ to the surface that introduced it.
 
 ### Frozen
 
-`test/place_illustrations_test.dart` holds the join rate (79/218/149),
+`test/place_illustrations_test.dart` holds the join rate (81/224/155,
+was 79/218/149 before the 2026-09-13 top-up),
 the name and chapter halves as separate rules, the Doré boundary, the
-scope partition, the 292/56 the `0 / n` header exists for, and the
+scope partition, the 296/58 the `0 / n` header exists for, and the
 assertion that `Antioch 1` and `Antioch 2` get identical strips — so the
 day the gazetteer learns to tell them apart, that test fails and the
 prose above gets revisited.

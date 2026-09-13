@@ -4866,9 +4866,9 @@ const uiStrings = {
     'en': 'Image source',
   },
   'aboutIllustrations': {
-    'zh-Hans': '插图与地图（1,192 幅）',
-    'zh-Hant': '插圖與地圖（1,192 幅）',
-    'en': 'Illustrations and maps (1,192 plates)',
+    'zh-Hans': '插图与地图（1,216 幅）',
+    'zh-Hant': '插圖與地圖（1,216 幅）',
+    'en': 'Illustrations and maps (1,216 plates)',
   },
   'aboutIllustrationsPd': {
     'zh-Hans': '公有领域 · 迪索、施诺尔、多雷、伦勃朗等（作者逝世逾百年）。',
@@ -7538,7 +7538,7 @@ const uiStrings = {
   },
   // 2026-08-09: the Illustrations window under Resources. bwh07 files a
   // picture database there ("Bible Views") and gives it a paragraph of
-  // its own; until now this corpus of 1,192 plates could only be reached
+  // its own; until now this corpus of 1,216 plates could only be reached
   // from a chapter that happened to match one.
   'illustrationsSearchHint': {
     'zh-Hans': '搜索插图标题或说明',

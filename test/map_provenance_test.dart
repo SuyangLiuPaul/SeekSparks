@@ -130,8 +130,11 @@ void main() {
       expect(unrecorded.length, 151);
     });
 
-    test('the archive is still 1,192 plates', () {
-      expect(entries.length, 1192);
+    test('the archive is 1,216 plates', () {
+      // 1,192 until 2026-09-13, when the twenty-four Doré plates the
+      // collection was missing were imported — see
+      // `tools/import_commons_plates.py`.
+      expect(entries.length, 1216);
     });
   });
 

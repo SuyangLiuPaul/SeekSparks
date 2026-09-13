@@ -674,7 +674,7 @@ class _OtherAttributions extends StatelessWidget {
       // 40 plates, the same standing as the MorphGNT and OSHB rows.
       _AttribRow(
         name: uiStrings['aboutIllustrations']?[locale] ??
-            'Illustrations and maps (1,192 plates)',
+            'Illustrations and maps (1,216 plates)',
         licence: uiStrings['aboutIllustrationsPd']?[locale] ??
             'Public domain · Tissot, Schnorr, Doré, Rembrandt and others '
                 '(artists dead over a century).',

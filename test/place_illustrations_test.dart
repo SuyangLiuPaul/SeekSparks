@@ -178,20 +178,33 @@ void main() {
         pairs += r.total;
         distinct.addAll(r.inScope.map((m) => m.id));
       }
-      // 79 of 1,266 places — 6.2%. All 218 pairs were read by hand before
-      // the feature shipped; moving these numbers means re-reading the
-      // ones that changed, not editing the expectation.
-      expect(joined, 79);
-      expect(pairs, 218);
-      expect(distinct.length, 149);
+      // 81 of 1,266 places — 6.4%. All 218 pairs were read by hand
+      // before the feature shipped; moving these numbers means
+      // re-reading the ones that changed, not editing the expectation.
+      //
+      // 2026-09-13: 79 → 81, 218 → 224, 149 → 155, 1,192 → 1,216 plates.
+      // The twenty-four Doré plates the collection was missing
+      // (`tools/import_commons_plates.py`) made SIX new pairs, and all
+      // six were re-read against the text before these numbers moved:
+      //   Jabesh ← Jabesh-Gileadites Recover the Bodies of Saul (1 Sam 31:11)
+      //   Jabesh-gilead ← The Benjaminites Take the Virgins (Judg 21:8)
+      //   Jerusalem ← The Plague of Jerusalem (2 Sam 24:15)
+      //   Jerusalem ← Nehemiah Views the Ruins of the Walls (Neh 2:13)
+      //   Samaria ← A Famine in Samaria (2 Kgs 6:24)
+      //   Samaria ← Lions among the Settlers in Samaria (2 Kgs 17:25)
+      // Jabesh and Jabesh-gilead are two gazetteer entries for one town;
+      // that is the gazetteer's business, not the join's.
+      expect(joined, 81);
+      expect(pairs, 224);
+      expect(distinct.length, 155);
       expect(places.length, 1266);
-      expect(plates.length, 1192);
+      expect(plates.length, 1216);
     });
 
     test('how much of the join a scope can hide', () {
       // The size of the case the panel prints "0 / n" for. If this went
-      // to zero the header branch would be dead code; while it is 292 a
-      // strip that vanished under a scope would be telling 56 places'
+      // to zero the header branch would be dead code; while it is 296 a
+      // strip that vanished under a scope would be telling 58 places'
       // readers that no picture of them exists. Counted by id, the unit
       // the 79 above uses — by NAME it is 48, because the ordinal groups
       // share a name and check 38 says nothing can tell them apart.
@@ -207,8 +220,11 @@ void main() {
           }
         }
       }
-      expect(pairs, 292);
-      expect(hidden.length, 56);
+      expect(pairs, 296);
+      // 56 before the 2026-09-13 top-up: Jabesh and Jabesh-gilead join
+      // the count with it, since each is named by one plate out of a
+      // book their other references do not reach.
+      expect(hidden.length, 58);
     });
 
     test('every excluded name is real, and costs nothing today', () {
@@ -240,7 +256,9 @@ void main() {
       expect(forId('Joppa').inScope.map((m) => m.title['en']),
           contains('Peters Vision At Joppa (Schnorr)'));
       expect(forId('Babel').total, 5);
-      expect(forId('Jerusalem').total, 36);
+      // 36 before the 2026-09-13 Doré top-up added the plague and
+      // Nehemiah's night ride round the walls.
+      expect(forId('Jerusalem').total, 38);
     });
 
     test('an ordinal cannot split the plates, and does not pretend to', () {

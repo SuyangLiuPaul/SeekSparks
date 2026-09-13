@@ -1,7 +1,7 @@
 /// 2026-08-09 (SeekSparks): the picture database's index — pure.
 ///
-/// **What this is the index OF.** `assets/maps_index.json` holds 1,192
-/// illustrations: 55 bundled Bible-history maps and 1,137 public-domain
+/// **What this is the index OF.** `assets/maps_index.json` holds 1,216
+/// illustrations: 55 bundled Bible-history maps and 1,161 public-domain
 /// plates (Doré, Tissot, Schnorr) on the yswords-data CDN. Every one
 /// carries a title AND a description in `en` / `zh-Hans` / `zh-Hant`,
 /// and a book→chapter-range map covering 66 books. It is one of the
@@ -22,7 +22,7 @@
 /// Views is a photograph archive of the Holy Land, browsed by place. It
 /// has no notion of which passage a picture belongs to. This corpus
 /// does — every plate is book- and chapter-scoped — so the index can be
-/// ordered CANONICALLY and scoped by book, which turns a bag of 1,192
+/// ordered CANONICALLY and scoped by book, which turns a bag of 1,216
 /// pictures into a walk through scripture. That is the whole argument
 /// for [illustrationAnchor] being scope-aware rather than a fixed sort:
 /// scoped to Acts, the index is not "the pictures that mention Acts", it
