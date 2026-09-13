@@ -161,3 +161,79 @@ const otMinorProphets = <String>[
   'Hosea', 'Joel', 'Amos', 'Obadiah', 'Jonah', 'Micah', 'Nahum',
   'Habakkuk', 'Zephaniah', 'Haggai', 'Zechariah', 'Malachi',
 ];
+
+// ── The canonical divisions, for the book picker's table of contents ─
+//
+// 2026-09-13. Ported from YsWords, where it answered the same report on
+// 2026-09-03: the picker showed a testament as a flat run of tiles, and
+// a reader does not scan the canon as 39 equal things. They scan it as
+// Law / History / Poetry / Prophets — which is what the owner meant by
+// 「sword显示book没有分开旧约和新约」: the testament toggle was there,
+// but INSIDE a testament nothing was, and 39 undivided books read as
+// not divided at all.
+//
+// The NT split is the traditional five (Gospels, Acts, Pauline, General,
+// Revelation), not the analytical `ntGospelsActs` / `ntJohannine` /
+// `ntOtherApostolic` groupings above — those exist for the word-
+// distribution table and deliberately overlap. Do not merge the two
+// sets; they answer different questions.
+class BibleDivision {
+  /// Key into `uiStrings` — 'divLaw', 'divHistory', …
+  final String id;
+  final bool oldTestament;
+
+  /// Canonical ENGLISH titles, in canonical order. Localised titles are
+  /// matched through `toEnglish` at the call site, so one table serves
+  /// every locale and every edition.
+  final List<String> books;
+
+  const BibleDivision({
+    required this.id,
+    required this.oldTestament,
+    required this.books,
+  });
+}
+
+const kBibleDivisions = <BibleDivision>[
+  BibleDivision(id: 'divLaw', oldTestament: true, books: otPentateuch),
+  BibleDivision(id: 'divHistory', oldTestament: true, books: otHistory),
+  BibleDivision(id: 'divWisdom', oldTestament: true, books: otWisdom),
+  BibleDivision(
+      id: 'divMajorProphets', oldTestament: true, books: otMajorProphets),
+  BibleDivision(
+      id: 'divMinorProphets', oldTestament: true, books: otMinorProphets),
+  BibleDivision(
+    id: 'divGospels',
+    oldTestament: false,
+    books: <String>['Matthew', 'Mark', 'Luke', 'John'],
+  ),
+  BibleDivision(
+    id: 'divActs',
+    oldTestament: false,
+    books: <String>['Acts'],
+  ),
+  BibleDivision(id: 'divPauline', oldTestament: false, books: ntPauline),
+  BibleDivision(
+    id: 'divGeneralEpistles',
+    oldTestament: false,
+    books: <String>[
+      'Hebrews', 'James', '1 Peter', '2 Peter',
+      '1 John', '2 John', '3 John', 'Jude',
+    ],
+  ),
+  BibleDivision(
+    id: 'divRevelation',
+    oldTestament: false,
+    books: <String>['Revelation'],
+  ),
+];
+
+/// Division id for a canonical ENGLISH book title, or null when the
+/// table does not know it. Callers must render the unknown ones anyway
+/// — a picker that silently drops a book is worse than an ugly one.
+String? divisionIdForEnglishBook(String englishTitle) {
+  for (final d in kBibleDivisions) {
+    if (d.books.contains(englishTitle)) return d.id;
+  }
+  return null;
+}

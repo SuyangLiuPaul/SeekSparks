@@ -48,7 +48,7 @@ import 'package:seeksparks/providers/main_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:scroll_to_index/scroll_to_index.dart';
 import 'package:seeksparks/constants/book_groups.dart'
-    show oldTestamentBooks, newTestamentBooks;
+    show oldTestamentBooks, newTestamentBooks, kBibleDivisions;
 import 'package:seeksparks/constants/ui_strings.dart';
 import 'package:seeksparks/constants/workbench_theme.dart';
 import 'package:seeksparks/models/app_settings.dart';
@@ -66,6 +66,10 @@ import 'package:seeksparks/widgets/wb_surfaces.dart' show WbTag;
 /// `letterSpacing` the painted string had; two numbers describing one
 /// thing drift, so there is one number.
 const double kBookTileFontRatio = 1.15;
+
+/// Division headers, as a share of the reading size — the same shape as
+/// the tile ratios here, so the ratchet on literal sizes sees nothing new.
+const double kBookDivisionFontRatio = 0.82;
 
 /// Padding on each side of the tile's label, inside the tile.
 const double kBookTilePadding = 7.0;
@@ -797,16 +801,111 @@ class _BookChapterPickerState extends State<BookChapterPicker> {
     }
   }
 
+  /// The visible testament, grouped in canonical division order.
+  ///
+  /// 2026-09-13: both views draw these groups with a header each. The
+  /// testament toggle above was already there, but inside a testament
+  /// the books ran on as one undivided list of 39, and that is what
+  /// 「没有分开旧约和新约」 felt like from the reader's side — a table of
+  /// contents with no sections.
+  ///
+  /// Anything the table does not recognise — an edition with unusual
+  /// titles, an apocryphal book, a future canon — lands in the
+  /// catch-all at the end rather than vanishing. A picker that loses a
+  /// book is worse than an ugly one.
+  List<(String id, List<Book> books)> _divisionsFor(List<Book> filteredBooks) {
+    final unplaced = <Book>[...filteredBooks];
+    final out = <(String, List<Book>)>[];
+    for (final division in kBibleDivisions) {
+      if (division.oldTestament != showOldTestament) continue;
+      final members = <Book>[];
+      for (final english in division.books) {
+        final match = unplaced
+            .firstWhereOrNull((b) => (toEnglish(b.title) ?? b.title) == english);
+        if (match != null) {
+          members.add(match);
+          unplaced.remove(match);
+        }
+      }
+      if (members.isNotEmpty) out.add((division.id, members));
+    }
+    if (unplaced.isNotEmpty) out.add(('divOther', unplaced));
+    return out;
+  }
+
+  Widget _divisionHeader(BuildContext context, AppSettings settings,
+      String id, int count, WbColors wb) {
+    final unit = uiStrings['booksUnit']?[settings.locale] ?? 'books';
+    final label = uiStrings[id]?[settings.locale] ?? id;
+    final size = settings.fontSize * kBookDivisionFontRatio;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 6),
+      child: Row(
+        children: [
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: size,
+                fontFamily: settings.fontFamily,
+                fontFamilyFallback: kCjkFontFallback,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.4,
+                color: wb.link,
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Container(height: WbMetrics.hairline, color: wb.border),
+          ),
+          const SizedBox(width: 10),
+          Text(
+            '$count $unit',
+            style: TextStyle(
+              fontSize: size,
+              fontFamily: settings.fontFamily,
+              fontFamilyFallback: kCjkFontFallback,
+              color: wb.mutedText,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildListView(BuildContext context, MainProvider mainProvider,
       AppSettings settings, List<Book> filteredBooks) {
     final wb = WbColors.of(context);
+    // AutoScrollTag indices are the book's index in `filteredBooks`, NOT
+    // its row position — the headers sit between rows and carry no tag,
+    // so the initial-scroll handshake in initState / didUpdateWidget
+    // stays correct without knowing this view groups anything.
+    final tagIndexOf = <String, int>{
+      for (var i = 0; i < filteredBooks.length; i++) filteredBooks[i].title: i,
+    };
+    final rows = <Widget>[];
+    for (final (id, books) in _divisionsFor(filteredBooks)) {
+      rows.add(_divisionHeader(context, settings, id, books.length, wb));
+      for (final book in books) {
+        rows.add(_bookListRow(
+            context, mainProvider, settings, book, tagIndexOf[book.title] ?? 0, wb));
+      }
+    }
     return ListView.builder(
-      itemCount: filteredBooks.length,
+      itemCount: rows.length,
       physics: const BouncingScrollPhysics(),
       controller: _autoScrollController,
-      itemBuilder: (context, index) {
-        Book book = filteredBooks[index];
-        return AutoScrollTag(
+      padding: const EdgeInsets.only(bottom: 16),
+      itemBuilder: (context, index) => rows[index],
+    );
+  }
+
+  Widget _bookListRow(BuildContext context, MainProvider mainProvider,
+      AppSettings settings, Book book, int index, WbColors wb) {
+    return AutoScrollTag(
           key: ValueKey(index),
           controller: _autoScrollController,
           index: index,
@@ -858,8 +957,6 @@ class _BookChapterPickerState extends State<BookChapterPicker> {
             ),
           ),
         );
-      },
-    );
   }
 
   Widget _buildGridView(BuildContext context, MainProvider mainProvider,
@@ -1006,20 +1103,35 @@ class _BookChapterPickerState extends State<BookChapterPicker> {
       // worse way to find Habakkuk than a label 14% under size.
       final floor = byLabel >= 4 ? 4 : (byLabel < 2 ? 2 : byLabel);
       final cols = (byMenu < byLabel ? byMenu : byLabel).clamp(floor, 10);
-      return GridView.builder(
-        padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: cols,
-          crossAxisSpacing: 8,
-          mainAxisSpacing: 8,
-          childAspectRatio: 1.0,
-        ),
-        itemCount: filteredBooks.length,
-        itemBuilder: (context, index) {
-          final book = filteredBooks[index];
-          final isCurrent = widget.currentBook == book.title;
-          return _bookTile(context, settings, book, isCurrent, wb);
-        },
+      // One grid per division under its header, in a single scroll.
+      // The inner grids are unscrollable and shrink-wrapped so the
+      // outer list owns the scroll; the column count is solved once
+      // above and shared, so tiles line up across sections.
+      final sections = <Widget>[];
+      for (final (id, books) in _divisionsFor(filteredBooks)) {
+        sections.add(_divisionHeader(context, settings, id, books.length, wb));
+        sections.add(GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: cols,
+            crossAxisSpacing: 8,
+            mainAxisSpacing: 8,
+            childAspectRatio: 1.0,
+          ),
+          itemCount: books.length,
+          itemBuilder: (context, index) {
+            final book = books[index];
+            final isCurrent = widget.currentBook == book.title;
+            return _bookTile(context, settings, book, isCurrent, wb);
+          },
+        ));
+      }
+      return ListView(
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.only(bottom: 12),
+        children: sections,
       );
     });
   }
